@@ -2,7 +2,8 @@ import logging.config
 
 import yaml
 
-from app.config.db import load_db_config, load_storage_config
+from app.config.db import load_db_config
+from app.config.storage import load_storage_config
 from app.models.config import Config
 from app.models.config.main import Paths, BotConfig, BotApiConfig, BotApiType
 

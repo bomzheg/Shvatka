@@ -6,7 +6,8 @@ from pathlib import Path
 from aiogram.client.session.aiohttp import AiohttpSession
 from aiogram.client.telegram import TelegramAPIServer
 
-from app.models.config.db import DBConfig, StorageConfig
+from app.models.config.db import DBConfig
+from app.models.config.storage import StorageConfig
 
 
 @dataclass

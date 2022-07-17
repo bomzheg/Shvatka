@@ -1,0 +1,25 @@
+version: '3.2'
+
+services:
+
+  template_bot:
+    container_name: template_bot
+    restart: always
+    image: bomzheg/aiogram_template
+    volumes:
+      - type: "bind"
+        source: "${HOME}/TemplateBot/log"
+        target: "/log"
+      - type: "bind"
+        source: "./config"
+        target: "/config"
+    env_file: config/.env
+    entrypoint: [ "python3", "-m", "app"]
+    networks:
+      - reverse-proxy
+
+
+networks:
+  reverse-proxy:
+    external:
+      name: nginx-revers-proxy

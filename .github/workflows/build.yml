@@ -1,0 +1,24 @@
+# This workflow will install Python dependencies, run tests and lint with a single version of Python
+# For more information see: https://help.github.com/actions/language-and-framework-guides/using-python-with-github-actions
+
+name: TemplateBotBuild
+
+on:
+  push:
+    branches: [ master ]
+
+jobs:
+  call-test-workflow:
+    uses: ./.github/workflows/test.yml
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: mr-smithers-excellent/docker-build-push@v5.6
+        with:
+          image: bomzheg/aiogram_template
+          addLatest: true
+          registry: docker.io
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}

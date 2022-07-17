@@ -24,8 +24,11 @@ def main():
     dp = Dispatcher()
     setup_middlewares(dp, create_pool(config.db), config.bot)
     setup_handlers(dp, config.bot)
-
-    bot = Bot(config.bot.token, parse_mode="HTML")
+    bot = Bot(
+        token=config.bot.token,
+        parse_mode="HTML",
+        session=config.bot.create_session(),
+    )
 
     logger.info("started")
     try:

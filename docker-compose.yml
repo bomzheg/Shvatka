@@ -17,7 +17,32 @@ services:
     entrypoint: [ "python3", "-m", "app"]
     networks:
       - reverse-proxy
+      - botapi
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
+  telegram-bot-api:
+    image: aiogram/telegram-bot-api:latest
+    environment:
+      TELEGRAM_API_ID: "6"
+      TELEGRAM_API_HASH: "eb06d4abfb49dc3eeb1aeb98ae0f581e"
+      TELEGRAM_LOCAL: 1
+    volumes:
+      - telegram-bot-api-data:/var/lib/telegram-bot-api
+    networks:
+      - botapi
+
+  nginx:
+    image: nginx:latest
+    volumes:
+      - telegram-bot-api-data:/usr/share/nginx/html/var/lib/telegram-bot-api:ro
+    environment:
+      - NGINX_PORT=80
+    networks:
+      - botapi
+
+volumes:
+  telegram-bot-api-data:
 
 networks:
   reverse-proxy:

@@ -3,6 +3,10 @@ bot:
   log_chat: -1001234567890
   superusers:
     - 666
+  botapi:
+    type: local
+    botapi_url: "http://telegram-bot-api:8081"
+    file_url: "http://nginx:80"
 db:
   type: postgresql
   connector: asyncpg

@@ -6,3 +6,4 @@ sqlalchemy>=1.4
 alembic
 asyncpg
 ujson
+redis>=4.2.0

@@ -21,7 +21,7 @@ def main():
     setup_logging(paths)
     config = load_config(paths)
 
-    dp = Dispatcher()
+    dp = Dispatcher(storage=(config.storage.create_storage()))
     setup_middlewares(dp, create_pool(config.db), config.bot)
     setup_handlers(dp, config.bot)
     bot = Bot(

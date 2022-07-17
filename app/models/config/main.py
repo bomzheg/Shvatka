@@ -6,7 +6,7 @@ from pathlib import Path
 from aiogram.client.session.aiohttp import AiohttpSession
 from aiogram.client.telegram import TelegramAPIServer
 
-from app.models.config.db import DBConfig
+from app.models.config.db import DBConfig, StorageConfig
 
 
 @dataclass
@@ -14,6 +14,7 @@ class Config:
     paths: Paths
     db: DBConfig
     bot: BotConfig
+    storage: StorageConfig
 
     @property
     def app_dir(self) -> Path:

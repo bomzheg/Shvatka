@@ -13,3 +13,5 @@ db:
   login: test
   password: test
   name: test
+storage:
+  type: memory

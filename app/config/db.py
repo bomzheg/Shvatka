@@ -1,5 +1,6 @@
+from typing import Any
 
-from app.models.config.db import DBConfig
+from app.models.config.db import DBConfig, RedisConfig, StorageConfig, StorageType
 
 
 def load_db_config(db_dict: dict) -> DBConfig:
@@ -12,4 +13,19 @@ def load_db_config(db_dict: dict) -> DBConfig:
         password=db_dict.get('password', None),
         name=db_dict.get('name', None),
         path=db_dict.get('path', None),
+    )
+
+
+def load_storage_config(dct: dict[str, Any]) -> StorageConfig:
+    config = StorageConfig(type_=StorageType[dct["type"]])
+    if config.type_ == StorageType.redis:
+        config.redis = load_redis_config(dct["redis"])
+    return config
+
+
+def load_redis_config(redis_dict: dict) -> RedisConfig:
+    return RedisConfig(
+        url=redis_dict["url"],
+        port=redis_dict.get("port", None),
+        db=redis_dict.get("db", None),
     )

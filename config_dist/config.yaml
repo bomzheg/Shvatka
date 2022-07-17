@@ -10,4 +10,4 @@ db:
   port: 5432
   login: postgres
   password: postgres
-  name: aiogram_template_bot
+  name: shvatka

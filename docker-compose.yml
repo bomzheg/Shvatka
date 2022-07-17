@@ -2,13 +2,13 @@ version: '3.2'
 
 services:
 
-  template_bot:
-    container_name: template_bot
+  shvatka_bot:
+    container_name: shvatka_bot
     restart: always
-    image: bomzheg/aiogram_template
+    image: bomzheg/shvatka_bot
     volumes:
       - type: "bind"
-        source: "${HOME}/TemplateBot/log"
+        source: "${HOME}/ShvatkaBot/log"
         target: "/log"
       - type: "bind"
         source: "./config"

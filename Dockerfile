@@ -7,7 +7,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 FROM python:3.10-slim-buster
 LABEL maintainer="bomzheg <bomzheg@gmail.com>" \
-      description="Template Telegram Bot"
+      description="Shvatka Telegram Bot"
 ENV VIRTUAL_ENV=/opt/venv
 COPY --from=builder $VIRTUAL_ENV $VIRTUAL_ENV
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"

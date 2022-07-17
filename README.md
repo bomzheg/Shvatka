@@ -1,1 +1,1 @@
-# Simple Aiogram 3.x template
+# Aiogram 3.x telegram bot

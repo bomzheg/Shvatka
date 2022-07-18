@@ -46,6 +46,11 @@ class Player(Base):
         back_populates="player",
         foreign_keys="PlayerInTeam.player_id",
     )
+    captain_by_team = relationship(
+        "Team",
+        back_populates="captain",
+        foreign_keys="Team.captain_id",
+    )
 
     def __repr__(self):
         rez = (

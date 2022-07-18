@@ -18,10 +18,10 @@ class Waiver(Base):
     __tablename__ = "waivers"
     __mapper_args__ = {"eager_defaults": True}
     id = Column(Integer, primary_key=True)
-    user_id = Column(ForeignKey("users.id"), nullable=False)
-    user = relationship(
-        "User",
-        foreign_keys=user_id,
+    player_id = Column(ForeignKey("players.id"), nullable=False)
+    player = relationship(
+        "Player",
+        foreign_keys=player_id,
         back_populates="played_games",
     )
     team_id = Column(ForeignKey("teams.id"), nullable=False)

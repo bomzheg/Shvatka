@@ -24,9 +24,9 @@ class Game(Base):
     __tablename__ = "games"
     __mapper_args__ = {"eager_defaults": True}
     id = Column(Integer, primary_key=True)
-    author_id = Column(ForeignKey("users.id"), nullable=False)
+    author_id = Column(ForeignKey("players.id"), nullable=False)
     author = relationship(
-        "User",
+        "Player",
         foreign_keys=author_id,
         back_populates="my_games",
     )

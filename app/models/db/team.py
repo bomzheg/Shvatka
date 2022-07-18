@@ -15,9 +15,9 @@ class Team(Base):
         foreign_keys=chat_id,
         back_populates="team",
     )
-    captain_id = Column(ForeignKey("users.id"))
+    captain_id = Column(ForeignKey("players.id"))
     captain = relationship(
-        "User",
+        "Player",
         foreign_keys=captain_id,
         back_populates="captain_by_team",
     )

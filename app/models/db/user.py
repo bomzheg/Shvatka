@@ -14,30 +14,11 @@ class User(Base):
     username = Column(Text, nullable=True)
     is_bot = Column(Boolean, default=False)
 
-    my_games = relationship(
-        "Game",
-        back_populates="author",
-        foreign_keys="Game.author_id",
-    )
-    my_levels = relationship(
-        "Level",
-        back_populates="author",
-        foreign_keys="Level.author_id",
-    )
-    typed_keys = relationship(
-        "KeyTime",
+    player = relationship(
+        "Player",
         back_populates="user",
-        foreign_keys="KeyTime.user_id",
-    )
-    organizers = relationship(
-        "Organizer",
-        back_populates="user",
-        foreign_keys="Organizer.user_id",
-    )
-    played_games = relationship(
-        "Waiver",
-        back_populates="user",
-        foreign_keys="Waiver.user_id",
+        foreign_keys="Player.user_id",
+        uselist=False,
     )
 
     def __repr__(self):

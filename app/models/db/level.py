@@ -15,9 +15,9 @@ class Level(Base):
         foreign_keys=game_id,
         back_populates="levels",
     )
-    author_id = Column(ForeignKey("users.id"), nullable=False)
+    author_id = Column(ForeignKey("players.id"), nullable=False)
     author = relationship(
-        "User",
+        "Player",
         foreign_keys=author_id,
         back_populates="my_levels",
     )

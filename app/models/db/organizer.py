@@ -8,10 +8,10 @@ class Organizer(Base):
     __tablename__ = "organizers"
     __mapper_args__ = {"eager_defaults": True}
     id = Column(Integer, primary_key=True)
-    user_id = Column(ForeignKey("users.id"), nullable=False)
+    player_id = Column(ForeignKey("players.id"), nullable=False)
     user = relationship(
-        "User",
-        foreign_keys=user_id,
+        "Player",
+        foreign_keys=player_id,
         back_populates="organizers",
     )
     game_id = Column(ForeignKey("games.id"), nullable=False)

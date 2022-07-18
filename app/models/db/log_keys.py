@@ -8,10 +8,10 @@ class KeyTime(Base):
     __tablename__ = "log_keys"
     __mapper_args__ = {"eager_defaults": True}
     id = Column(Integer, primary_key=True)
-    user_id = Column(ForeignKey("users.id"), nullable=False)
+    player_id = Column(ForeignKey("players.id"), nullable=False)
     user = relationship(
-        "User",
-        foreign_keys=user_id,
+        "Player",
+        foreign_keys=player_id,
         back_populates="typed_keys",
     )
     team_id = Column(ForeignKey("teams.id"), nullable=False)

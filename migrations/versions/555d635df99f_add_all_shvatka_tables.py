@@ -166,5 +166,5 @@ def downgrade():
     op.drop_table('games')
     op.drop_table('players')
     op.drop_table('files_info')
-    game_status.drop("game_status")
-    waiver_status.drop("waiver_status")
+    game_status.drop(op.get_bind(), checkfirst=False)
+    waiver_status.drop(op.get_bind(), checkfirst=False)

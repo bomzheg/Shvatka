@@ -2,7 +2,7 @@ from dataclasses import dataclass, field
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.dao import UserDao, ChatDao
+from app.dao import ChatDao, UserDao
 
 
 @dataclass

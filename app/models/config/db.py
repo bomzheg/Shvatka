@@ -46,4 +46,3 @@ class RedisConfig:
     def create_redis(self) -> Redis:
         logger.info("created storage for %s", self)
         return Redis(host=self.url, port=self.port, db=self.db)
-

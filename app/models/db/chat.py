@@ -1,4 +1,5 @@
 from sqlalchemy import Column, Text, BigInteger, Enum
+from sqlalchemy.orm import relationship
 
 from app.enums.chat_type import ChatType
 from app.models.db.base import Base
@@ -12,6 +13,12 @@ class Chat(Base):
     type = Column(Enum(ChatType))
     title = Column(Text, nullable=True)
     username = Column(Text, nullable=True)
+
+    team = relationship(
+        "Team",
+        back_populates="chat",
+        foreign_keys="Team.chat_id",
+    )
 
     def __repr__(self):
         rez = (

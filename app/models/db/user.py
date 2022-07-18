@@ -1,4 +1,5 @@
 from sqlalchemy import Column, Text, BigInteger, Boolean
+from sqlalchemy.orm import relationship
 
 from app.models.db.base import Base
 
@@ -13,10 +14,18 @@ class User(Base):
     username = Column(Text, nullable=True)
     is_bot = Column(Boolean, default=False)
 
+    player = relationship(
+        "Player",
+        back_populates="user",
+        foreign_keys="Player.user_id",
+        uselist=False,
+    )
+
     def __repr__(self):
         rez = (
             f"<User "
-            f"ID={self.tg_id} "
+            f"id={self.id} "
+            f"tg_id={self.tg_id} "
             f"name={self.first_name} {self.last_name} "
         )
         if self.username:

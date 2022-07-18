@@ -9,7 +9,7 @@ class Organizer(Base):
     __mapper_args__ = {"eager_defaults": True}
     id = Column(Integer, primary_key=True)
     player_id = Column(ForeignKey("players.id"), nullable=False)
-    user = relationship(
+    player = relationship(
         "Player",
         foreign_keys=player_id,
         back_populates="organizers",

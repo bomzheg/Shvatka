@@ -43,7 +43,7 @@ class Player(Base):
     )
     teams = relationship(
         "PlayerInTeam",
-        back_populates="players",
+        back_populates="player",
         foreign_keys="PlayerInTeam.player_id",
     )
 

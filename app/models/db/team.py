@@ -40,6 +40,6 @@ class Team(Base):
     )
     players = relationship(
         "PlayerInTeam",
-        back_populates="teams",
+        back_populates="team",
         foreign_keys="PlayerInTeam.team_id",
     )

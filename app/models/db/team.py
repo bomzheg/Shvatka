@@ -38,3 +38,8 @@ class Team(Base):
         back_populates="team",
         foreign_keys="Waiver.team_id",
     )
+    players = relationship(
+        "PlayerInTeam",
+        back_populates="teams",
+        foreign_keys="PlayerInTeam.team_id",
+    )

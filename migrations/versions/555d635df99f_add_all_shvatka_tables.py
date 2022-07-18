@@ -123,7 +123,7 @@ def upgrade():
         sa.PrimaryKeyConstraint('id')
     )
     op.create_table(
-        'users_in_teams',
+        'players_in_teams',
         sa.Column('id', sa.Integer(), nullable=False),
         sa.Column('player_id', sa.BigInteger(), nullable=False),
         sa.Column('team_id', sa.Integer(), nullable=False),
@@ -157,7 +157,7 @@ def upgrade():
 
 def downgrade():
     op.drop_table('waivers')
-    op.drop_table('users_in_teams')
+    op.drop_table('players_in_teams')
     op.drop_table('organizers')
     op.drop_table('log_keys')
     op.drop_table('levels_times')

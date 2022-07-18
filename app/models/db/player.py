@@ -41,6 +41,11 @@ class Player(Base):
         back_populates="player",
         foreign_keys="Waiver.player_id",
     )
+    teams = relationship(
+        "PlayerInTeam",
+        back_populates="players",
+        foreign_keys="PlayerInTeam.player_id",
+    )
 
     def __repr__(self):
         rez = (

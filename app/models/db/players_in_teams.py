@@ -5,7 +5,7 @@ from app.models.db import Base
 
 
 class PlayerInTeam(Base):
-    __tablename__ = "users_in_teams"
+    __tablename__ = "players_in_teams"
     __mapper_args__ = {"eager_defaults": True}
     id = Column(Integer, primary_key=True)
     player_id = Column(ForeignKey("players.id"), nullable=False)

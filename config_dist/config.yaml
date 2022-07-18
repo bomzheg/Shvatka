@@ -14,7 +14,7 @@ db:
   port: 5432
   login: postgres
   password: postgres
-  name: shvatka
+  name: shvatka_bot
 storage:
   type: memory
   # type: redis

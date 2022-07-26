@@ -10,11 +10,11 @@ on:
 jobs:
   call-test-workflow:
     uses: ./.github/workflows/test.yml
-#  build:
-#    runs-on: ubuntu-latest
-#
-#    steps:
-#      - uses: actions/checkout@v2
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
 #      - uses: mr-smithers-excellent/docker-build-push@v5.6
 #        with:
 #          image: bomzheg/shvatka

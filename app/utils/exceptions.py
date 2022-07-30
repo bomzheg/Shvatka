@@ -188,6 +188,11 @@ class TestingNotAllowed(PermissionsError, LevelError):
     permission_name = "level_test"
 
 
+class NotAuthorizedForEdit(PermissionsError):
+    notify_user = "Редактирование недоступно для этого пользователя"
+    permission_name = "level_edit"
+
+
 class UserTeamError(SHError):
     notify_user = "Проблема связанные с членством игрока в команде"
 

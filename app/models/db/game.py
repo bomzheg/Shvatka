@@ -1,23 +1,14 @@
 from __future__ import annotations
 
-import enum
 import secrets
 
 from sqlalchemy import Column, Integer, ForeignKey, Text, Enum, BigInteger, DateTime
 from sqlalchemy.orm import relationship
 
 from app.models.db import Base
+from app.models.enums.game_status import GameStatus
 
 _TOKEN_LEN = 32  # обязательно кратно 4
-
-
-class GameStatus(str, enum.Enum):
-    underconstruction = 'underconstruction'
-    ready = 'ready'
-    getting_waivers = 'getting_waivers'
-    started = 'started'
-    finished = 'finished'
-    complete = 'complete'
 
 
 class Game(Base):
@@ -59,19 +50,7 @@ class Game(Base):
     )
     start_at = Column(DateTime)
     published_channel_id = Column(BigInteger)
-    manage_token = Column(Text, default=secrets.token_urlsafe(_TOKEN_LEN*3//4))
-
-
-status_desc = {
-    GameStatus.underconstruction: 'в процессе создания',
-    GameStatus.ready: 'полностью готова',
-    GameStatus.getting_waivers: 'сбор вейверов',
-    GameStatus.started: 'началась',
-    GameStatus.finished: 'все команды финишировали',
-    GameStatus.complete: 'завершена'
-}
-active_statuses = [
-    GameStatus.getting_waivers,
-    GameStatus.started,
-    GameStatus.finished
-]
+    manage_token = Column(
+        Text,
+        default=secrets.token_urlsafe(_TOKEN_LEN * 3 // 4),
+    )

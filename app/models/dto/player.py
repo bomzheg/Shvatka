@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from app.models.dto import User
+from .user import User
 
 
 @dataclass

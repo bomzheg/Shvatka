@@ -41,7 +41,7 @@ async def cancel_state(message: Message, state: FSMContext):
 async def chat_migrate(message: Message, chat: dto.Chat, dao: HolderDao):
     new_id = message.migrate_to_chat_id
     await update_chat_id(chat, new_id, dao.chat)
-    logger.info(f"Migrate chat from %s to %s", message.chat.id, new_id)
+    logger.info("Migrate chat from %s to %s", message.chat.id, new_id)
 
 
 def setup_base(dp: Dispatcher):

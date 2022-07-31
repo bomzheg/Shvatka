@@ -7,5 +7,3 @@ def test_from_aiogram_to_dto():
     expected = create_dto_user()
     actual = dto.User.from_aiogram(source)
     assert expected == actual
-
-

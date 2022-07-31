@@ -7,5 +7,3 @@ def test_mapper_from_aiogram_to_dto():
     expected = create_dto_chat()
     actual = dto.Chat.from_aiogram(source)
     assert expected == actual
-
-

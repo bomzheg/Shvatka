@@ -8,6 +8,7 @@ from tests.utils.user import assert_user
 
 @pytest.mark.asyncio
 async def test_save_user(dao: HolderDao):
+    await dao.player.delete_all()
     await dao.user.delete_all()
 
     data = dict(event_from_user=create_tg_user())
@@ -20,6 +21,7 @@ async def test_save_user(dao: HolderDao):
 
 @pytest.mark.asyncio
 async def test_upsert_user(dao: HolderDao):
+    await dao.player.delete_all()
     await dao.user.delete_all()
 
     old_tg_user = create_tg_user(username="tom_riddle_friend")

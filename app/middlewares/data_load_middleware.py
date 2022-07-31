@@ -6,6 +6,7 @@ from aiogram.types import TelegramObject
 from app.dao.holder import HolderDao
 from app.models import dto
 from app.services.chat import upsert_chat
+from app.services.player import upsert_player
 from app.services.user import upsert_user
 
 
@@ -19,6 +20,7 @@ class LoadDataMiddleware(BaseMiddleware):
     ) -> Any:
         holder_dao = data["dao"]
         data["user"] = await save_user(data, holder_dao)
+        data["player"] = await save_player(data["user"], holder_dao)
         data["chat"] = await save_chat(data, holder_dao)
         result = await handler(event, data)
         return result
@@ -29,6 +31,10 @@ async def save_user(data: dict[str, Any], holder_dao: HolderDao) -> dto.User:
         dto.User.from_aiogram(data["event_from_user"]),
         holder_dao.user
     )
+
+
+async def save_player(user: dto.User, holder_dao: HolderDao) -> dto.Player:
+    return await upsert_player(user, holder_dao.player)
 
 
 async def save_chat(data: dict[str, Any], holder_dao: HolderDao) -> dto.Chat:

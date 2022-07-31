@@ -53,12 +53,9 @@ class Player(Base):
     )
 
     def __repr__(self):
-        rez = (
+        return (
             f"<Player "
             f"id={self.id} "
-            f"tg_id={self.tg_id} "
-            f"name={self.first_name} {self.last_name} "
+            f"user_id={self.user_id} "
+            f">"
         )
-        if self.username:
-            rez += f"username=@{self.username}"
-        return rez + ">"

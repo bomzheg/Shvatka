@@ -9,6 +9,7 @@ from tests.utils.chat import assert_dto_chat, assert_db_chat
 
 @pytest.mark.asyncio
 async def test_save_chat(dao: HolderDao):
+    await dao.team.delete_all()
     await dao.chat.delete_all()
 
     data = dict(event_chat=create_tg_chat())
@@ -21,6 +22,7 @@ async def test_save_chat(dao: HolderDao):
 
 @pytest.mark.asyncio
 async def test_migrate_to_supergroup(dao: HolderDao):
+    await dao.team.delete_all()
     await dao.chat.delete_all()
 
     old_chat = create_dto_chat()
@@ -41,6 +43,7 @@ async def test_migrate_to_supergroup(dao: HolderDao):
 
 @pytest.mark.asyncio
 async def test_upsert_chat(dao: HolderDao):
+    await dao.team.delete_all()
     await dao.chat.delete_all()
 
     data = dict(event_chat=create_tg_chat(username="extra_chat"))

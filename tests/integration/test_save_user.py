@@ -8,6 +8,7 @@ from tests.utils.user import assert_user
 
 @pytest.mark.asyncio
 async def test_save_user(dao: HolderDao):
+    await dao.team.delete_all()
     await dao.player.delete_all()
     await dao.user.delete_all()
 
@@ -21,6 +22,7 @@ async def test_save_user(dao: HolderDao):
 
 @pytest.mark.asyncio
 async def test_upsert_user(dao: HolderDao):
+    await dao.team.delete_all()
     await dao.player.delete_all()
     await dao.user.delete_all()
 

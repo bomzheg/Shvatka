@@ -20,7 +20,8 @@ class PlayerDao(BaseDAO[db.Player]):
         result = await self.session.execute(
             select(db.Player).where(db.Player.user_id == user.db_id)
         )
-        return result.scalar_one()
+        player = result.scalar_one()
+        return dto.Player.from_db(player, user)
 
     async def create_for_user(self, user: dto.User) -> dto.Player:
         player = db.Player(
@@ -28,7 +29,4 @@ class PlayerDao(BaseDAO[db.Player]):
         )
         self.session.add(player)
         await self.flush(player)
-        return dto.Player(
-            id=player.id,
-            user=user,
-        )
+        return dto.Player.from_db(player, user)

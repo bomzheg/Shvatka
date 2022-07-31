@@ -11,23 +11,24 @@ USERNAME = "ultra_chat"
 
 
 def create_dto_chat():
-    expected = dto.Chat(
+    return dto.Chat(
         tg_id=CHAT_ID,
         type=TYPE,
         username=USERNAME,
         title=TITLE,
     )
-    return expected
 
 
-def create_tg_chat():
-    source = tg.Chat(
-        id=CHAT_ID,
-        title=TITLE,
-        type=TYPE.name,
-        username=USERNAME,
+def create_tg_chat(
+    id_: int = CHAT_ID, title: str = TITLE,
+    type_: ChatType = TYPE, username: str = USERNAME,
+):
+    return tg.Chat(
+        id=id_,
+        title=title,
+        type=type_.name,
+        username=username,
     )
-    return source
 
 
 def create_db_chat():

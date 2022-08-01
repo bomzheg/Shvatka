@@ -1,4 +1,6 @@
-from sqlalchemy import Column, Integer, ForeignKey, Text, Boolean, DateTime
+from datetime import datetime
+
+from sqlalchemy import Column, Integer, ForeignKey, Text, Boolean, DateTime, func
 from sqlalchemy.orm import relationship
 
 from app.models.db import Base
@@ -20,7 +22,7 @@ class PlayerInTeam(Base):
         foreign_keys=team_id,
         back_populates="players",
     )
-    date_joined = Column(DateTime)
+    date_joined = Column(DateTime, default=datetime.utcnow(), server_default=func.now())
     role = Column(Text)
     _emoji = Column("emoji", Text)
     date_left = Column(DateTime)

@@ -40,12 +40,4 @@ class TeamDao(BaseDAO[db.Team]):
             team = result.scalar_one()
         except NoResultFound:
             return None
-        return dto.Team(
-            id=team.id,
-            chat=chat,
-            name=team.name,
-            description=team.description,
-            captain=dto.Player.from_db(
-                player=team.captain, user=dto.User.from_db(team.captain.user),
-            ),
-        )
+        return dto.Team.from_db(chat, team)

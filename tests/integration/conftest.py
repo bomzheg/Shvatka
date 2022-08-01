@@ -14,14 +14,20 @@ logger = logging.getLogger(__name__)
 
 
 @pytest_asyncio.fixture
-async def session(pool: sessionmaker) -> AsyncSession:
-    async with pool() as session_:
-        yield session_
+async def dao(session: AsyncSession) -> HolderDao:
+    dao_ = HolderDao(session=session)
+    await dao_.player_in_team.delete_all()
+    await dao_.team.delete_all()
+    await dao_.chat.delete_all()
+    await dao_.player.delete_all()
+    await dao_.user.delete_all()
+    return dao_
 
 
 @pytest_asyncio.fixture
-async def dao(session: AsyncSession) -> HolderDao:
-    return HolderDao(session=session)
+async def session(pool: sessionmaker) -> AsyncSession:
+    async with pool() as session_:
+        yield session_
 
 
 @pytest.fixture(scope="session")

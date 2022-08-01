@@ -18,6 +18,9 @@ SHError
 |-PermissionsError
 | |-CantBeAuthor
 """
+from typing import Any
+
+from app.models import dto
 
 
 class SHError(Exception):
@@ -27,9 +30,15 @@ class SHError(Exception):
         self,
         text: str = "",
         user_id: int = None,
+        player_id: int = None,
         chat_id: int = None,
         team_id: int = None,
         game_id: int = None,
+        user: dto.User = None,
+        player: dto.Player = None,
+        chat: dto.Chat = None,
+        team: dto.Team = None,
+        game: Any = None,
         alarm: bool = False,
         *args,
         **kwargs
@@ -37,9 +46,15 @@ class SHError(Exception):
         super(SHError, self).__init__(args, kwargs)
         self.text = text
         self.user_id = user_id
+        self.player_id = player_id
         self.chat_id = chat_id
         self.team_id = team_id
         self.game_id = game_id
+        self.user = user
+        self.player = player
+        self.chat = chat
+        self.team = team
+        self.game = game
         self.alarm = alarm
 
     def __str__(self):
@@ -195,6 +210,10 @@ class NotAuthorizedForEdit(PermissionsError):
 
 class UserTeamError(SHError):
     notify_user = "Проблема связанные с членством игрока в команде"
+
+
+class UserAlreadyInTeam(UserTeamError):
+    notify_user = "Игрок уже состоит в команде"
 
 
 class UserNotInTeam(UserTeamError):

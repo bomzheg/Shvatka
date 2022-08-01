@@ -11,9 +11,9 @@ class Player:
     id: int
     user: User
 
-    @staticmethod
-    def from_db(player: db.Player, user: User) -> Player:
-        return Player(
+    @classmethod
+    def from_db(cls, player: db.Player, user: User) -> Player:
+        return cls(
             id=player.id,
             user=user,
         )

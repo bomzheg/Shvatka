@@ -7,9 +7,6 @@ from tests.fixtures.user_constants import create_tg_user
 
 @pytest.mark.asyncio
 async def test_save_player(dao: HolderDao):
-    await dao.player.delete_all()
-    await dao.user.delete_all()
-
     data = dict(event_from_user=create_tg_user())
     saved_user = await save_user(data, dao)
     actual_player = await save_player(saved_user, dao)

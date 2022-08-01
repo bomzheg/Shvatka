@@ -3,25 +3,32 @@ from aiogram import types as tg
 from app.enums.chat_type import ChatType
 from app.models import dto, db
 
-CHAT_ID = 42
 NEW_CHAT_ID = -10048
-TITLE = "My awesome chat"
-TYPE = ChatType.group
-USERNAME = "ultra_chat"
+AWESOME_CHAT_DTO = dto.Chat(
+    tg_id=42,
+    type=ChatType.group,
+    username="ultra_chat",
+    title="My awesome chat",
+)
+NOT_SO_GOOD_CHAT_DTO = dto.Chat(
+    tg_id=9,
+    type=ChatType.supergroup,
+    username="dummy_group",
+    title="boring chat",
+)
 
 
 def create_dto_chat():
-    return dto.Chat(
-        tg_id=CHAT_ID,
-        type=TYPE,
-        username=USERNAME,
-        title=TITLE,
-    )
+    return AWESOME_CHAT_DTO
+
+
+def create_another_chat():
+    return NOT_SO_GOOD_CHAT_DTO
 
 
 def create_tg_chat(
-    id_: int = CHAT_ID, title: str = TITLE,
-    type_: ChatType = TYPE, username: str = USERNAME,
+    id_: int = AWESOME_CHAT_DTO.tg_id, title: str = AWESOME_CHAT_DTO.title,
+    type_: ChatType = AWESOME_CHAT_DTO.type, username: str = AWESOME_CHAT_DTO.username,
 ):
     return tg.Chat(
         id=id_,
@@ -33,8 +40,8 @@ def create_tg_chat(
 
 def create_db_chat():
     return db.Chat(
-        tg_id=CHAT_ID,
-        type=TYPE,
-        username=USERNAME,
-        title=TITLE,
+        tg_id=AWESOME_CHAT_DTO.tg_id,
+        type=AWESOME_CHAT_DTO.type,
+        username=AWESOME_CHAT_DTO.username,
+        title=AWESOME_CHAT_DTO.title,
     )

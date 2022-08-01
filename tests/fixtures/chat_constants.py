@@ -1,3 +1,5 @@
+from copy import copy
+
 from aiogram import types as tg
 
 from app.enums.chat_type import ChatType
@@ -19,11 +21,11 @@ NOT_SO_GOOD_CHAT_DTO = dto.Chat(
 
 
 def create_dto_chat():
-    return AWESOME_CHAT_DTO
+    return copy(AWESOME_CHAT_DTO)
 
 
 def create_another_chat():
-    return NOT_SO_GOOD_CHAT_DTO
+    return copy(NOT_SO_GOOD_CHAT_DTO)
 
 
 def create_tg_chat(

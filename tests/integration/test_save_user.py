@@ -2,16 +2,12 @@ import pytest
 
 from app.dao.holder import HolderDao
 from app.middlewares.data_load_middleware import save_user
-from tests.fixtures.user_constants import create_tg_user, create_dto_harry
+from tests.fixtures.user_constants import create_tg_user, create_dto_harry, OLD_HARRY_USERNAME
 from tests.utils.user import assert_user
 
 
 @pytest.mark.asyncio
 async def test_save_user(dao: HolderDao):
-    await dao.team.delete_all()
-    await dao.player.delete_all()
-    await dao.user.delete_all()
-
     data = dict(event_from_user=create_tg_user())
     actual = await save_user(data, dao)
     expected = create_dto_harry()
@@ -22,15 +18,11 @@ async def test_save_user(dao: HolderDao):
 
 @pytest.mark.asyncio
 async def test_upsert_user(dao: HolderDao):
-    await dao.team.delete_all()
-    await dao.player.delete_all()
-    await dao.user.delete_all()
-
-    old_tg_user = create_tg_user(username="tom_riddle_friend")
+    old_tg_user = create_tg_user(username=OLD_HARRY_USERNAME)
     data = dict(event_from_user=old_tg_user)
     old = await save_user(data, dao)
     expected_old = create_dto_harry()
-    expected_old.username = "tom_riddle_friend"
+    expected_old.username = OLD_HARRY_USERNAME
     assert_user(expected_old, old)
 
     data = dict(event_from_user=create_tg_user())

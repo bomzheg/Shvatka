@@ -1,7 +1,10 @@
+from copy import copy
+
 from aiogram.types import User
 
 from app.models import dto, db
 
+OLD_HARRY_USERNAME = "tom_riddle_friend"
 HARRY_DTO = dto.User(
     tg_id=666,
     first_name="Harry",
@@ -41,15 +44,15 @@ def create_tg_user(
 
 
 def create_dto_harry() -> dto.User:
-    return HARRY_DTO
+    return copy(HARRY_DTO)
 
 
 def create_dto_hermione() -> dto.User:
-    return HERMIONE_DTO
+    return copy(HERMIONE_DTO)
 
 
 def create_dto_ron() -> dto.User:
-    return RON_DTO
+    return copy(RON_DTO)
 
 
 def create_db_user() -> db.User:

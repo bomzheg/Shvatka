@@ -1,7 +1,7 @@
 """add table users
 
 Revision ID: 4e570bc94610
-Revises: 
+Revises:
 Create Date: 2022-02-02 23:37:50.228477
 
 """

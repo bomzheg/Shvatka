@@ -24,7 +24,7 @@ class PlayerInTeamDao(BaseDAO[db.PlayerInTeam]):
             )
             .where(
                 db.PlayerInTeam.player_id == player.id,
-                db.PlayerInTeam.date_left == None,
+                db.PlayerInTeam.date_left == None,  # noqa: E711
             )
         )
         try:

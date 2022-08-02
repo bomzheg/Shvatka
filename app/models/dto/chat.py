@@ -17,6 +17,7 @@ class Chat:
     title: str | None = None
     first_name: str | None = None
     last_name: str | None = None
+    description: str | None = None
 
     @property
     def full_name(self):

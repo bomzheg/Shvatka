@@ -1,23 +1,3 @@
-"""
-Иерархия исключений:
-SHError
-|-ScenarioNotCorrect (ValueError)
-|-FileNotFound (AttributeError)
-|-ActionCantBeNow
-|-SHDataBreach
-|-GameError
-| |-GameStatusError
-| | |-AnotherGameIsActive
-| | | |-AnotherGameWasStarted
-| | |
-| | |-GameNotCompleted
-| | |-CantDeleteActiveGame
-| | |-CantDeleteCompletedGame
-| | |-GameNotFinished
-| |-GameNotFound
-|-PermissionsError
-| |-CantBeAuthor
-"""
 from typing import Any
 
 from app.models import dto
@@ -57,7 +37,7 @@ class SHError(Exception):
         self.game = game
         self.alarm = alarm
 
-    def __str__(self):
+    def __repr__(self):
         result_msg = f"Error: {self.text}"
         if self.user_id:
             result_msg += f", by user {self.user_id}"
@@ -68,6 +48,13 @@ class SHError(Exception):
         if self.notify_user:
             result_msg += f". Information for user: {self.notify_user}"
         return result_msg
+
+    def __str__(self):
+        return (
+            f"Error.\ntype: {self.__class__.__name__}\n"
+            f"text: {self.text}\n"
+            f"notify info: {self.notify_user}"
+        )
 
 
 class ScenarioNotCorrect(SHError):
@@ -208,15 +195,19 @@ class NotAuthorizedForEdit(PermissionsError):
     permission_name = "level_edit"
 
 
-class UserTeamError(SHError):
+class TeamError(SHError):
+    notify_user = "Проблема связанные с командой"
+
+
+class PlayerTeamError(SHError):
     notify_user = "Проблема связанные с членством игрока в команде"
 
 
-class UserAlreadyInTeam(UserTeamError):
+class PlayerAlreadyInTeam(PlayerTeamError):
     notify_user = "Игрок уже состоит в команде"
 
 
-class UserNotInTeam(UserTeamError):
+class PlayerNotInTeam(PlayerTeamError):
     notify_user = "Игрок не в команде"
 
 

@@ -5,7 +5,7 @@ from sqlalchemy.orm import joinedload
 
 from app.dao import BaseDAO
 from app.models import db, dto
-from app.utils.exceptions import UserAlreadyInTeam
+from app.utils.exceptions import PlayerAlreadyInTeam
 
 
 class PlayerInTeamDao(BaseDAO[db.PlayerInTeam]):
@@ -39,7 +39,7 @@ class PlayerInTeamDao(BaseDAO[db.PlayerInTeam]):
 
     async def add_in_team(self, player: dto.Player, team: dto.Team, role: str):
         if players_team := await self.get_team(player):
-            raise UserAlreadyInTeam(
+            raise PlayerAlreadyInTeam(
                 player=player,
                 team=players_team,
                 text=f"user {player.id} already in team {players_team.id}",

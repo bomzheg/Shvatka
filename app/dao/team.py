@@ -1,10 +1,11 @@
-from sqlalchemy.exc import NoResultFound
+from sqlalchemy.exc import NoResultFound, IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import joinedload
 
 from app.dao import BaseDAO
 from app.models import db, dto
+from app.utils.exceptions import TeamError
 
 
 class TeamDao(BaseDAO[db.Team]):
@@ -16,10 +17,15 @@ class TeamDao(BaseDAO[db.Team]):
             chat_id=chat.db_id,
             captain_id=captain.id,
             name=chat.title,
-            description=None,
+            description=chat.description,
         )
         self.session.add(team)
-        await self.flush(team)
+        try:
+            await self.flush(team)
+        except IntegrityError as e:
+            raise TeamError(
+                chat=chat, player=captain, text="team in this chat exists",
+            ) from e
         return dto.Team(
             id=team.id,
             chat=chat,

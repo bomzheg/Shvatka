@@ -6,7 +6,7 @@ from app.services.player import upsert_player, add_player_in_team, get_my_team, 
 from app.services.team import create_team
 from app.services.user import upsert_user
 from app.utils.defaults_constants import DEFAULT_ROLE, CAPTAIN_ROLE
-from app.utils.exceptions import UserAlreadyInTeam
+from app.utils.exceptions import PlayerAlreadyInTeam
 from tests.fixtures.chat_constants import create_dto_chat, create_another_chat
 from tests.fixtures.user_constants import create_dto_harry, create_dto_hermione, create_dto_ron
 
@@ -26,13 +26,13 @@ async def test_add_player_to_team(dao: HolderDao):
     assert 2 == await dao.player_in_team.count()
     assert DEFAULT_ROLE == await get_my_role(player, dao.player_in_team)
 
-    with pytest.raises(UserAlreadyInTeam):
+    with pytest.raises(PlayerAlreadyInTeam):
         await add_player_in_team(captain, team, dao.player_in_team)
 
-    with pytest.raises(UserAlreadyInTeam):
+    with pytest.raises(PlayerAlreadyInTeam):
         await add_player_in_team(player, team, dao.player_in_team)
 
-    with pytest.raises(UserAlreadyInTeam):
+    with pytest.raises(PlayerAlreadyInTeam):
         await create_team(await upsert_chat(create_another_chat(), dao.chat), player, dao)
 
     assert 2 == await dao.player_in_team.count()
@@ -43,10 +43,10 @@ async def test_add_player_to_team(dao: HolderDao):
     assert 3 == await dao.player_in_team.count()
     assert CAPTAIN_ROLE == await get_my_role(player_ron, dao.player_in_team)
 
-    with pytest.raises(UserAlreadyInTeam):
+    with pytest.raises(PlayerAlreadyInTeam):
         await add_player_in_team(captain, rons_team, dao.player_in_team)
 
-    with pytest.raises(UserAlreadyInTeam):
+    with pytest.raises(PlayerAlreadyInTeam):
         await add_player_in_team(player, rons_team, dao.player_in_team)
 
     assert 3 == await dao.player_in_team.count()

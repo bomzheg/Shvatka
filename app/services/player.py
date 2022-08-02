@@ -17,6 +17,10 @@ async def get_my_team(player: dto.Player, dao: PlayerInTeamDao) -> dto.Team:
     return await dao.get_team(player)
 
 
+async def get_my_role(player: dto.Player, dao: PlayerInTeamDao) -> str:
+    return await dao.get_role(player)
+
+
 async def add_player_in_team(
     player: dto.Player, team: dto.Team,
     dao: PlayerInTeamDao, role: str = DEFAULT_ROLE,

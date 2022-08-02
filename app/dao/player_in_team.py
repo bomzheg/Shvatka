@@ -51,3 +51,16 @@ class PlayerInTeamDao(BaseDAO[db.PlayerInTeam]):
         )
         self.session.add(player_in_team)
         await self.flush(player_in_team)
+
+    async def get_role(self, player: dto.Player) -> str:
+        return (await self._get_my_team(player)).role
+
+    async def _get_my_team(self, player: dto.Player) -> db.PlayerInTeam:
+        result = await self.session.execute(
+            select(db.PlayerInTeam)
+            .where(
+                db.PlayerInTeam.player_id == player.id,
+                db.PlayerInTeam.date_left == None,  # noqa: E711
+            )
+        )
+        return result.scalar_one()

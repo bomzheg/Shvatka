@@ -10,7 +10,7 @@ class CommandsGroup:
 
     def __str__(self):
         return f"{self.group_name}\n" + "\n".join(
-            map(lambda x: f"/{x.UPDATE_COMMANDS} - {x.description}", self.commands))
+            map(lambda x: f"/{x.command} - {x.description}", self.commands))
 
 
 START_COMMAND = BotCommand(command="start", description="начало работы с ботом")

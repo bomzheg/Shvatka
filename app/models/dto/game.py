@@ -4,7 +4,6 @@ from datetime import datetime
 from app.models.enums import GameStatus
 from app.models.enums.game_status import active_statuses
 from app.utils.datetime_utils import tz_game, tz_utc
-from app.utils.exceptions import NotAuthorizedForEdit
 
 
 @dataclass
@@ -60,10 +59,3 @@ class Game:
 
     def is_author_id(self, user_id: int) -> bool:
         return self.author_id == user_id
-
-    def check_user_can_edit_game(self, user_id: int):
-        if not self.is_author_id(user_id):
-            raise NotAuthorizedForEdit(
-                "Edit available only for author",
-                user_id=user_id, game_id=self.id,
-            )

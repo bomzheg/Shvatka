@@ -38,12 +38,7 @@ class PlayerInTeamDao(BaseDAO[db.PlayerInTeam]):
         return await self.get_team(player) is not None
 
     async def add_in_team(self, player: dto.Player, team: dto.Team, role: str):
-        if players_team := await self.get_team(player):
-            raise PlayerAlreadyInTeam(
-                player=player,
-                team=players_team,
-                text=f"user {player.id} already in team {players_team.id}",
-            )
+        await self.check_player_free(player)
         player_in_team = db.PlayerInTeam(
             player_id=player.id,
             team_id=team.id,
@@ -51,6 +46,14 @@ class PlayerInTeamDao(BaseDAO[db.PlayerInTeam]):
         )
         self.session.add(player_in_team)
         await self.flush(player_in_team)
+
+    async def check_player_free(self, player: dto.Player):
+        if players_team := await self.get_team(player):
+            raise PlayerAlreadyInTeam(
+                player=player,
+                team=players_team,
+                text=f"user {player.id} already in team {players_team.id}",
+            )
 
     async def get_role(self, player: dto.Player) -> str:
         return (await self._get_my_team(player)).role

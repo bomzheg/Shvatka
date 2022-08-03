@@ -5,7 +5,7 @@ from sqlalchemy.orm import joinedload
 
 from app.dao import BaseDAO
 from app.models import db, dto
-from app.utils.exceptions import TeamError
+from app.utils.exceptions import TeamError, AnotherTeamInChat
 
 
 class TeamDao(BaseDAO[db.Team]):
@@ -24,7 +24,7 @@ class TeamDao(BaseDAO[db.Team]):
             await self.flush(team)
         except IntegrityError as e:
             raise TeamError(
-                chat=chat, player=captain, text="team in this chat exists",
+                chat=chat, player=captain, text="can't create team",
             ) from e
         return dto.Team(
             id=team.id,
@@ -47,3 +47,9 @@ class TeamDao(BaseDAO[db.Team]):
         except NoResultFound:
             return None
         return dto.Team.from_db(chat, team)
+
+    async def check_no_team_in_chat(self, chat: dto.Chat):
+        if team := await self.get_by_chat(chat):
+            raise AnotherTeamInChat(
+                chat=chat, team=team, text="team in this chat exists",
+            )

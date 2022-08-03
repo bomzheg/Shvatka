@@ -211,6 +211,10 @@ class PlayerNotInTeam(PlayerTeamError):
     notify_user = "Игрок не в команде"
 
 
+class AnotherTeamInChat(PlayerTeamError):
+    notify_user = "В чате уже есть другая команда"
+
+
 class UserWithoutUserIdError(SHError):
     def __init__(self, username: str = None, **kwargs):
         super().__init__(**kwargs)

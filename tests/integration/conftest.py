@@ -12,6 +12,7 @@ from testcontainers.postgres import PostgresContainer
 from app.dao.holder import HolderDao
 from app.main_factory import create_dispatcher
 from app.models.config import Config
+from tests.mocks.config import DBConfig
 
 logger = logging.getLogger(__name__)
 
@@ -54,7 +55,7 @@ def postgres_url(app_config: Config) -> str:
         with PostgresContainer("postgres:11") as postgres:
             postgres_url_ = postgres.get_connection_url().replace("psycopg2", "asyncpg")
             logger.info("postgres url %s", postgres_url_)
-            setattr(app_config.db, "uri", postgres_url_)
+            app_config.db = DBConfig(postgres_url_)
             yield postgres_url_
 
 

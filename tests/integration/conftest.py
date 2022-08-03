@@ -54,11 +54,7 @@ def postgres_url(app_config: Config) -> str:
         with PostgresContainer("postgres:11") as postgres:
             postgres_url_ = postgres.get_connection_url().replace("psycopg2", "asyncpg")
             logger.info("postgres url %s", postgres_url_)
-            app_config.db.port = postgres.port_to_expose
-            app_config.db.host = postgres.get_container_host_ip()
-            app_config.db.login = postgres.POSTGRES_USER
-            app_config.db.password = postgres.POSTGRES_PASSWORD
-            app_config.db.name = postgres.POSTGRES_DB
+            setattr(app_config.db, "uri", postgres_url_)
             yield postgres_url_
 
 

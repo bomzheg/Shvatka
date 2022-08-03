@@ -3,11 +3,14 @@ import os
 
 import pytest
 import pytest_asyncio
+from aiogram import Dispatcher, Bot
+from mockito import mock
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 from testcontainers.postgres import PostgresContainer
 
 from app.dao.holder import HolderDao
+from app.main_factory import create_dispatcher
 from app.models.config import Config
 
 logger = logging.getLogger(__name__)
@@ -16,12 +19,17 @@ logger = logging.getLogger(__name__)
 @pytest_asyncio.fixture
 async def dao(session: AsyncSession) -> HolderDao:
     dao_ = HolderDao(session=session)
-    await dao_.player_in_team.delete_all()
-    await dao_.team.delete_all()
-    await dao_.chat.delete_all()
-    await dao_.player.delete_all()
-    await dao_.user.delete_all()
+    await clear_data(dao_)
     return dao_
+
+
+async def clear_data(dao: HolderDao):
+    await dao.player_in_team.delete_all()
+    await dao.team.delete_all()
+    await dao.chat.delete_all()
+    await dao.player.delete_all()
+    await dao.user.delete_all()
+    await dao.commit()
 
 
 @pytest_asyncio.fixture
@@ -46,4 +54,21 @@ def postgres_url(app_config: Config) -> str:
         with PostgresContainer("postgres:11") as postgres:
             postgres_url_ = postgres.get_connection_url().replace("psycopg2", "asyncpg")
             logger.info("postgres url %s", postgres_url_)
+            app_config.db.port = postgres.port_to_expose
+            app_config.db.host = postgres.get_container_host_ip()
+            app_config.db.login = postgres.POSTGRES_USER
+            app_config.db.password = postgres.POSTGRES_PASSWORD
+            app_config.db.name = postgres.POSTGRES_DB
             yield postgres_url_
+
+
+@pytest.fixture(scope="session")
+def dp(postgres_url: str, app_config: Config) -> Dispatcher:
+    return create_dispatcher(app_config)
+
+
+@pytest.fixture(scope="session")
+def bot(app_config: Config) -> Bot:
+    dummy = mock(Bot)
+    setattr(dummy, "id", 123)
+    return dummy

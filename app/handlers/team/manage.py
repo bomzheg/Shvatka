@@ -6,10 +6,11 @@ from aiogram.types import Message
 from aiogram.utils.text_decorations import html_decoration as hd
 
 from app.dao.holder import HolderDao
+from app.filters.game_status import GameStatusFilter
 from app.filters.is_admin import is_admin_filter
 from app.models import dto
 from app.services.team import create_team
-from app.utils.exceptions import TeamError, GameStatusError, PlayerAlreadyInTeam, AnotherTeamInChat
+from app.utils.exceptions import TeamError, PlayerAlreadyInTeam, AnotherTeamInChat
 from app.views.commands import CREATE_TEAM_COMMAND
 
 logger = logging.getLogger(__name__)
@@ -62,6 +63,6 @@ def setup_team_manage(dp: Dispatcher):
     dp.message.register(
         cmd_create_team,
         Command(commands=CREATE_TEAM_COMMAND.command),
-        GameStatusError(running=False),
+        GameStatusFilter(running=False),
         F.chat.type == "supergroup",
     )

@@ -1,17 +1,18 @@
 from typing import Any, Union, Dict
 
 from aiogram.dispatcher.filters import BaseFilter
+from aiogram.types import Message
 
 from app.models import dto
 from app.models.enums import GameStatus
 
 
 class GameStatusFilter(BaseFilter):
-    active: bool
-    running: bool
-    status: GameStatus
+    active: bool | None = None
+    running: bool | None = None
+    status: GameStatus | None = None
 
-    async def __call__(self, game: dto.Game) -> Union[bool, Dict[str, Any]]:
+    async def __call__(self, message: Message, game: dto.Game) -> Union[bool, Dict[str, Any]]:
         if self.active is not None:
             return self.check_active(game)
         if self.running is not None:

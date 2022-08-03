@@ -26,6 +26,7 @@ class LoadDataMiddleware(BaseMiddleware):
         chat = await save_chat(data, holder_dao)
         data["chat"] = chat
         data["team"] = await load_team(chat, holder_dao)
+        data["game"] = None
         result = await handler(event, data)
         return result
 

@@ -26,7 +26,7 @@ async def test_get_team(dao: HolderDao):
     assert await get_by_chat(chat, dao.team) is None
 
     await test_save_team(dao)
-    chat = (await dao.chat.get_all())[0][0]
+    chat = (await dao.chat.get_all())[0]
 
     team = await get_by_chat(dto.Chat.from_db(chat), dao.team)
     assert team.id is not None

@@ -8,6 +8,7 @@ from app.middlewares import setup_middlewares
 from app.models.config import Config
 from app.models.config.main import Paths
 from app.models.db import create_pool
+from app.services.username_resolver.user_getter import UserGetter
 
 
 def create_bot(config: Config) -> Bot:
@@ -18,9 +19,9 @@ def create_bot(config: Config) -> Bot:
     )
 
 
-def create_dispatcher(config: Config) -> Dispatcher:
+def create_dispatcher(config: Config, user_getter: UserGetter) -> Dispatcher:
     dp = Dispatcher(storage=(config.storage.create_storage()))
-    setup_middlewares(dp, create_pool(config.db), config.bot)
+    setup_middlewares(dp, create_pool(config.db), config.bot, user_getter)
     setup_handlers(dp, config.bot)
     return dp
 

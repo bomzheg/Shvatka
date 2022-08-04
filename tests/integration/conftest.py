@@ -12,6 +12,7 @@ from testcontainers.postgres import PostgresContainer
 from app.dao.holder import HolderDao
 from app.main_factory import create_dispatcher
 from app.models.config import Config
+from app.services.username_resolver.user_getter import UserGetter
 from tests.mocks.config import DBConfig
 
 logger = logging.getLogger(__name__)
@@ -60,8 +61,14 @@ def postgres_url(app_config: Config) -> str:
 
 
 @pytest.fixture(scope="session")
-def dp(postgres_url: str, app_config: Config) -> Dispatcher:
-    return create_dispatcher(app_config)
+def dp(postgres_url: str, app_config: Config, user_getter: UserGetter) -> Dispatcher:
+    return create_dispatcher(app_config, user_getter)
+
+
+@pytest.fixture(scope="session")
+def user_getter() -> UserGetter:
+    dummy = mock(UserGetter)
+    return dummy
 
 
 @pytest.fixture(scope="session")

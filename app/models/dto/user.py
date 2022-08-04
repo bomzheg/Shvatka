@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 from dataclasses import dataclass
 
 from aiogram import types as tg
@@ -14,6 +15,16 @@ class User:
     first_name: str | None = None
     last_name: str | None = None
     is_bot: bool | None = None
+
+    @property
+    def fullname(self) -> str:
+        if self.last_name is not None:
+            return ' '.join((self.first_name, self.last_name))
+        return self.first_name
+
+    @property
+    def name_mention(self) -> str:
+        return self.fullname or self.username or self.tg_id
 
     @classmethod
     def from_aiogram(cls, user: tg.User) -> User:

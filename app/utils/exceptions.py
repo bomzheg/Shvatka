@@ -207,6 +207,10 @@ class PlayerAlreadyInTeam(PlayerTeamError):
     notify_user = "Игрок уже состоит в команде"
 
 
+class PlayerRestoredInTeam(PlayerTeamError):
+    notify_user = "Игрок восстановлен в команде"
+
+
 class PlayerNotInTeam(PlayerTeamError):
     notify_user = "Игрок не в команде"
 
@@ -215,8 +219,17 @@ class AnotherTeamInChat(PlayerTeamError):
     notify_user = "В чате уже есть другая команда"
 
 
-class UserWithoutUserIdError(SHError):
+class UsernameResolverError(SHError):
+    notify_user = "Не удалось найти пользователя по username"
+
     def __init__(self, username: str = None, **kwargs):
         super().__init__(**kwargs)
         self.username = username
-        self.text = "Не удалось найти пользователя по username"
+
+
+class NoUsernameFound(UsernameResolverError):
+    notify_user = "К сожалению по этому username ничего не найдено"
+
+
+class MultipleUsernameFound(UsernameResolverError):
+    notify_user = "К сожалению по этому username найдено несколько пользователей"

@@ -1,3 +1,5 @@
+from datetime import date
+
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
@@ -5,7 +7,7 @@ from sqlalchemy.orm import joinedload
 
 from app.dao import BaseDAO
 from app.models import db, dto
-from app.utils.exceptions import PlayerAlreadyInTeam
+from app.utils.exceptions import PlayerAlreadyInTeam, PlayerRestoredInTeam
 
 
 class PlayerInTeamDao(BaseDAO[db.PlayerInTeam]):
@@ -39,6 +41,10 @@ class PlayerInTeamDao(BaseDAO[db.PlayerInTeam]):
 
     async def add_in_team(self, player: dto.Player, team: dto.Team, role: str):
         await self.check_player_free(player)
+        if player_in_team := await self.need_restore(player, team):
+            player_in_team.date_left = None
+            await self.session.merge(player_in_team)
+            raise PlayerRestoredInTeam(player=player, team=team)
         player_in_team = db.PlayerInTeam(
             player_id=player.id,
             team_id=team.id,
@@ -54,6 +60,17 @@ class PlayerInTeamDao(BaseDAO[db.PlayerInTeam]):
                 team=players_team,
                 text=f"user {player.id} already in team {players_team.id}",
             )
+
+    async def need_restore(self, player: dto.Player, team: dto.Team) -> db.PlayerInTeam:
+        result = await self.session.execute(
+            select(db.PlayerInTeam)
+            .where(
+                db.PlayerInTeam.player_id == player.id,
+                db.PlayerInTeam.date_left == date.today(),
+                db.PlayerInTeam.team_id == team.id,
+            )
+        )
+        return result.scalars().one_or_none()
 
     async def get_role(self, player: dto.Player) -> str:
         return (await self._get_my_team(player)).role

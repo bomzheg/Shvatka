@@ -1,6 +1,7 @@
 from app.dao import PlayerDao, PlayerInTeamDao
 from app.models import dto
 from app.utils.defaults_constants import DEFAULT_ROLE
+from app.utils.exceptions import PlayerRestoredInTeam
 
 
 async def upsert_player(user: dto.User, dao: PlayerDao) -> dto.Player:
@@ -25,5 +26,9 @@ async def add_player_in_team(
     player: dto.Player, team: dto.Team,
     dao: PlayerInTeamDao, role: str = DEFAULT_ROLE,
 ):
-    await dao.add_in_team(player, team, role=role)
+    try:
+        await dao.add_in_team(player, team, role=role)
+    except PlayerRestoredInTeam:
+        await dao.commit()
+        raise
     await dao.commit()

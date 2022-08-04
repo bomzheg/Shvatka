@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
@@ -16,6 +17,7 @@ class Config:
     db: DBConfig
     bot: BotConfig
     storage: StorageConfig
+    tg_client: TgClientConfig
 
     @property
     def app_dir(self) -> Path:
@@ -58,6 +60,13 @@ class BotConfig:
         if self.bot_api.is_local:
             return AiohttpSession(api=self.bot_api.create_server())
         return None
+
+
+@dataclass
+class TgClientConfig:
+    bot_token: str
+    api_hash: str = 'eb06d4abfb49dc3eeb1aeb98ae0f581e'
+    api_id: int = 6
 
 
 @dataclass

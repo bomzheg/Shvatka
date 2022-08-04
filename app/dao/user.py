@@ -1,10 +1,11 @@
-from sqlalchemy.exc import NoResultFound
+from sqlalchemy.exc import NoResultFound, MultipleResultsFound
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
 from app.dao.base import BaseDAO
-from app.models.db import User
 from app.models import dto
+from app.models.db import User
+from app.utils.exceptions import MultipleUsernameFound, NoUsernameFound
 
 
 class UserDao(BaseDAO[User]):
@@ -16,6 +17,18 @@ class UserDao(BaseDAO[User]):
             select(User).where(User.tg_id == tg_id)
         )
         return result.scalar_one()
+
+    async def get_by_username(self, username: str) -> dto.User:
+        result = await self.session.execute(
+            select(User).where(User.username == username)
+        )
+        try:
+            user = result.scalar_one()
+        except MultipleResultsFound as e:
+            raise MultipleUsernameFound(username=username) from e
+        except NoResultFound as e:
+            raise NoUsernameFound(username=username) from e
+        return dto.User.from_db(user)
 
     async def upsert_user(self, user: dto.User) -> dto.User:
         try:
@@ -30,6 +43,9 @@ class UserDao(BaseDAO[User]):
 
 
 def update_fields(target: User, source: dto.User) -> bool:
+    if source.first_name is None:
+        # this user is created from username only
+        return False
     if all([
         target.first_name == source.first_name,
         target.last_name == source.last_name,

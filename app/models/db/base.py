@@ -5,12 +5,11 @@ from sqlalchemy.orm import sessionmaker
 
 from app.models.config.db import DBConfig
 
-
 Base = declarative_base()
 
 
 def create_pool(db_config: DBConfig) -> sessionmaker:
-    engine = create_async_engine(url=make_url(db_config.uri))
+    engine = create_async_engine(url=make_url(db_config.uri), echo=True)
     pool = sessionmaker(bind=engine, class_=AsyncSession,
                         expire_on_commit=False, autoflush=False)
     return pool

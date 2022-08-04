@@ -51,6 +51,16 @@ def create_dto_hermione() -> dto.User:
     return copy(HERMIONE_DTO)
 
 
+def create_tg_from_dto(user: dto.User) -> User:
+    return User(
+        id=user.tg_id,
+        username=user.username,
+        first_name=user.first_name,
+        last_name=user.last_name,
+        is_bot=user.is_bot,
+    )
+
+
 def create_dto_ron() -> dto.User:
     return copy(RON_DTO)
 

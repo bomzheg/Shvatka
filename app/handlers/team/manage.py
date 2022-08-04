@@ -88,7 +88,7 @@ async def cmd_add_in_team(
         return await message.reply(
             "Не могу добавить этого пользователя. Вероятно его нет в чате"
         )
-    role = " ".join(command.args) or DEFAULT_ROLE
+    role = command.args or DEFAULT_ROLE
     try:
         await add_player_in_team(target, team, dao.player_in_team, role)
     except PlayerAlreadyInTeam as e:

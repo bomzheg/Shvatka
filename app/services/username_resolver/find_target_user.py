@@ -102,4 +102,4 @@ async def get_db_user_by_tg_user(
 
     tg_user = await user_getter.get_user_by_username(target.username)
 
-    return await dao.user.upsert_user(tg_user)
+    return await dao.user.upsert_user(dto.User.from_aiogram(tg_user))

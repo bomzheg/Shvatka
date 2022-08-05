@@ -1,6 +1,7 @@
 import logging
 import os
 
+import dataclass_factory
 import pytest
 import pytest_asyncio
 from aiogram import Dispatcher, Bot
@@ -62,7 +63,7 @@ def postgres_url(app_config: Config) -> str:
 
 @pytest.fixture(scope="session")
 def dp(postgres_url: str, app_config: Config, user_getter: UserGetter) -> Dispatcher:
-    return create_dispatcher(app_config, user_getter)
+    return create_dispatcher(app_config, user_getter, dataclass_factory.Factory())
 
 
 @pytest.fixture(scope="session")

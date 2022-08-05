@@ -9,7 +9,6 @@ from pyrogram import Client
 from pyrogram.errors import RPCError, UsernameNotOccupied, FloodWait
 
 from app.models.config.main import TgClientConfig
-from app.services.username_resolver.restrict_call import RestrictCall
 from app.utils.exceptions import UsernameResolverError, NoUsernameFound
 
 logger = logging.getLogger(__name__)
@@ -32,7 +31,6 @@ class UserGetter:
         except RPCError:
             return None
 
-    @RestrictCall(SLEEP_TIME)
     async def get_user_by_username(self, username: str) -> User:
         logger.info("get user of username %s", username)
         try:

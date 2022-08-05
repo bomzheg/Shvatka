@@ -81,7 +81,7 @@ async def cmd_add_in_team(
     try:
         chat_member = await bot.get_chat_member(team.chat.tg_id, target.user.tg_id)
     except TelegramBadRequest:
-        return await message.reply("Не могу найти этого пользователя")
+        return await message.reply("Не могу найти этого пользователя (его нет в чате?)")
     if chat_member.user.is_bot:
         return
     if chat_member.status == "left":

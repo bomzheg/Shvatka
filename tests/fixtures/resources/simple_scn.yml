@@ -1,0 +1,49 @@
+name: "My new game"
+levels:
+  - id: first
+    keys: [ "SHHELLO" ]
+    time_hints:
+      - time: 0
+        hint:
+          - type: text
+            text: "загадка"
+          - type: text
+            text: "(сложная)"
+      - time: 1
+        hint:
+          - type: text
+            text: "подсказка"
+      - time: 2
+        hint:
+          - type: gps
+            latitude: 55.579282598950165
+            longitude: 37.910306366539395
+      - time: 5
+        hint:
+          - time: text
+            text: "SHHELLO"
+  - id: second
+    keys:
+      - "SH123"
+      - "SH321"
+    time_hints:
+      - time: 0
+        hint:
+          - type: text
+            text: "загадка"
+          - type: text
+            text: "(сложная)"
+      - time: 1
+        hint:
+          - type: text
+            text: "подсказка"
+      - time: 2
+        hint:
+          - type: text
+            text: "подсказка"
+          - type: text
+            text: "(простая)"
+      - time: 5
+        hint:
+          - time: text
+            text: "SHHELLO"

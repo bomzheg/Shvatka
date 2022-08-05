@@ -42,7 +42,7 @@ class Paths:
 
     @property
     def logging_config_file(self) -> Path:
-        return self.config_path / "logging.yaml"
+        return self.config_path / "logging.yml"
 
     @property
     def log_path(self) -> Path:

@@ -2,10 +2,11 @@ import asyncio
 from pathlib import Path
 
 import pytest
+from dataclass_factory import Factory
 
 from app.config.logging_config import setup_logging
-from app.models.config.main import Paths, Config
 from app.config.main import load_config
+from app.models.config.main import Paths, Config
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -27,3 +28,8 @@ def event_loop():
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
         return loop
+
+
+@pytest.fixture(scope="session")
+def dcf():
+    return Factory()

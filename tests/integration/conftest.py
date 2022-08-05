@@ -1,10 +1,10 @@
 import logging
 import os
 
-import dataclass_factory
 import pytest
 import pytest_asyncio
 from aiogram import Dispatcher, Bot
+from dataclass_factory import Factory
 from mockito import mock
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
@@ -62,8 +62,8 @@ def postgres_url(app_config: Config) -> str:
 
 
 @pytest.fixture(scope="session")
-def dp(postgres_url: str, app_config: Config, user_getter: UserGetter) -> Dispatcher:
-    return create_dispatcher(app_config, user_getter, dataclass_factory.Factory())
+def dp(postgres_url: str, app_config: Config, user_getter: UserGetter, dcf: Factory) -> Dispatcher:
+    return create_dispatcher(app_config, user_getter, dcf)
 
 
 @pytest.fixture(scope="session")

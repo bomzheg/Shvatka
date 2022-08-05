@@ -1,6 +1,7 @@
 import asyncio
 import logging
 
+import dataclass_factory
 from sqlalchemy.orm import close_all_sessions
 
 from app.config import load_config
@@ -16,9 +17,10 @@ async def main():
 
     setup_logging(paths)
     config = load_config(paths)
+    dcf = dataclass_factory.Factory()
 
     async with UserGetter(config.tg_client) as user_getter:
-        dp = create_dispatcher(config, user_getter)
+        dp = create_dispatcher(config, user_getter, dcf)
         bot = create_bot(config)
 
         logger.info("started")
@@ -26,6 +28,7 @@ async def main():
             await dp.start_polling(bot)
         finally:
             close_all_sessions()
+            await bot.session.close()
             logger.info("stopped")
 
 

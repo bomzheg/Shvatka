@@ -2,6 +2,7 @@ import os
 from pathlib import Path
 
 from aiogram import Bot, Dispatcher
+from dataclass_factory import Factory
 
 from app.handlers import setup_handlers
 from app.middlewares import setup_middlewares
@@ -19,9 +20,11 @@ def create_bot(config: Config) -> Bot:
     )
 
 
-def create_dispatcher(config: Config, user_getter: UserGetter) -> Dispatcher:
+def create_dispatcher(
+    config: Config, user_getter: UserGetter, dcf: Factory
+) -> Dispatcher:
     dp = Dispatcher(storage=(config.storage.create_storage()))
-    setup_middlewares(dp, create_pool(config.db), config.bot, user_getter)
+    setup_middlewares(dp, create_pool(config.db), config.bot, user_getter, dcf)
     setup_handlers(dp, config.bot)
     return dp
 

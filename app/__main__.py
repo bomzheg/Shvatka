@@ -23,7 +23,7 @@ async def main():
 
         logger.info("started")
         try:
-            dp.run_polling(bot)
+            await dp.start_polling(bot)
         finally:
             close_all_sessions()
             logger.info("stopped")

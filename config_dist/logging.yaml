@@ -20,4 +20,7 @@ handlers:
 root:
   level: DEBUG
   handlers: [console]
+loggers:
+  pyrogram:
+    level: WARNING
 disable_existing_loggers: false

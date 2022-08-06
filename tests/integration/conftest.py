@@ -14,6 +14,8 @@ from app.dao.holder import HolderDao
 from app.main_factory import create_dispatcher
 from app.models.config import Config
 from app.services.username_resolver.user_getter import UserGetter
+from tests.fixtures.conftest import fixtures_resource_path  # noqa: F401
+from tests.fixtures.scn_fixtures import simple_scn  # noqa: F401
 from tests.mocks.config import DBConfig
 
 logger = logging.getLogger(__name__)
@@ -27,6 +29,7 @@ async def dao(session: AsyncSession) -> HolderDao:
 
 
 async def clear_data(dao: HolderDao):
+    await dao.level.delete_all()
     await dao.player_in_team.delete_all()
     await dao.team.delete_all()
     await dao.chat.delete_all()

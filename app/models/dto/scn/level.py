@@ -7,7 +7,7 @@ SHKey: typing.TypeAlias = str
 
 
 @dataclass
-class LeveScenario:
+class LevelScenario:
     id: str
     time_hints: list[TimeHint]
     keys: set[SHKey] = field(default_factory=set)

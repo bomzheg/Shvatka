@@ -1,7 +1,7 @@
 name: "My new game"
 levels:
   - id: first
-    keys: [ "SHHELLO" ]
+    keys: [ "SHOOT" ]
     time_hints:
       - time: 0
         hint:
@@ -21,7 +21,7 @@ levels:
       - time: 5
         hint:
           - time: text
-            text: "SHHELLO"
+            text: "SHOOT"
   - id: second
     keys:
       - "SH123"
@@ -46,4 +46,4 @@ levels:
       - time: 5
         hint:
           - time: text
-            text: "SHHELLO"
+            text: "SH123\nSH321"

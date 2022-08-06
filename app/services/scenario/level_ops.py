@@ -1,7 +1,7 @@
 from dataclass_factory import Factory
 
-from app.models.dto.scn.level import LeveScenario
+from app.models.dto.scn.level import LevelScenario
 
 
-def load_level(dct: dict, dcf: Factory) -> LeveScenario:
-    return dcf.load(dct, LeveScenario)
+def load_level(dct: dict, dcf: Factory) -> LevelScenario:
+    return dcf.load(dct, LevelScenario)

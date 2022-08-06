@@ -22,7 +22,11 @@ class Game(Base):
         back_populates="my_games",
     )
     name = Column(Text)
-    status = Column(Enum(GameStatus))
+    status = Column(
+        Enum(GameStatus),
+        server_default=GameStatus.underconstruction,
+        nullable=False,
+    )
     levels = relationship(
         "Level",
         back_populates="game",

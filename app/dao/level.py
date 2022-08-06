@@ -1,6 +1,6 @@
-from sqlalchemy import select
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
 
 from app.dao import BaseDAO
 from app.models import db, dto
@@ -11,7 +11,14 @@ class LevelDao(BaseDAO[db.Level]):
     def __init__(self, session: AsyncSession):
         super().__init__(db.Level, session)
 
-    async def upsert(self, author: dto.Player, scn: LevelScenario) -> dto.Level:
+    async def upsert(
+        self,
+        author: dto.Player,
+        scn: LevelScenario,
+        game: dto.Game = None,
+        no_in_game: int = None,
+    ) -> dto.Level:
+        assert (game is None) == (no_in_game is None)
         try:
             level = await self.get_by_author_and_scn(author, scn)
         except NoResultFound:
@@ -21,6 +28,9 @@ class LevelDao(BaseDAO[db.Level]):
             )
             self.save(level)
         level.scenario = scn
+        if game is not None and no_in_game is not None:
+            level.game_id = game.id
+            level.number_in_game = no_in_game
         await self.flush(level)
         return dto.Level.from_db(level, author)
 
@@ -32,3 +42,16 @@ class LevelDao(BaseDAO[db.Level]):
             )
         )
         return result.scalar_one()
+
+    async def unlink_all(self, game: dto.Game):
+        result = await self.session.execute(
+            select(db.Level).where(
+                db.Level.game_id == game.id,
+                db.Level.author_id == game.author.id,
+            )
+        )
+        levels: list[db.Level] = result.scalars().all()
+        for level in levels:
+            level.game_id = None
+            level.number_in_game = None
+        await self.flush(*levels)

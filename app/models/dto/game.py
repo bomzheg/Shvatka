@@ -1,20 +1,26 @@
-from dataclasses import dataclass
+from __future__ import annotations
+
+from dataclasses import dataclass, field
 from datetime import datetime
 
+from app.models import db
 from app.models.enums import GameStatus
 from app.models.enums.game_status import active_statuses
 from app.utils.datetime_utils import tz_game, tz_utc
+from .level import Level
+from .player import Player
 
 
 @dataclass
 class Game:
     id: int
-    author_id: int
+    author: Player
     name: str
     status: GameStatus
     start_at: datetime
     published_channel_id: int
     manage_token: str
+    levels: list[Level] = field(default_factory=list)
 
     def is_active(self):
         return self.status in active_statuses
@@ -58,4 +64,16 @@ class Game:
         return self.status in (GameStatus.underconstruction, GameStatus.ready, GameStatus.getting_waivers)
 
     def is_author_id(self, user_id: int) -> bool:
-        return self.author_id == user_id
+        return self.author.id == user_id
+
+    @classmethod
+    def from_db(cls, game: db.Game, author: Player) -> Game:
+        return cls(
+            id=game.id,
+            author=author,
+            name=game.name,
+            status=game.status,
+            start_at=game.start_at,
+            published_channel_id=game.published_channel_id,
+            manage_token=game.manage_token,
+        )

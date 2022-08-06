@@ -30,3 +30,8 @@ class PlayerDao(BaseDAO[db.Player]):
         self.session.add(player)
         await self.flush(player)
         return dto.Player.from_db(player, user)
+
+    async def promote(self, actor: dto.Player, target: dto.Player):
+        target_player = await self.get_by_id(target.id)
+        target_player.can_be_author = True
+        target_player.promoted_by_id = actor.id

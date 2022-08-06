@@ -9,7 +9,7 @@ class FileInfo(Base):
     id = Column(Integer, primary_key=True)
     file_id = Column(Text)
     file_path = Column(Text)
-    guid_ = Column(Text)
+    guid_ = Column(Text, unique=True)
     original_filename = Column(Text)
     extension = Column(Text)
     content_type = Column(Text)

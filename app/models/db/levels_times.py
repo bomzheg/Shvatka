@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, ForeignKey, DateTime
+from sqlalchemy import Column, Integer, ForeignKey, DateTime, UniqueConstraint
 from sqlalchemy.orm import relationship
 
 from app.models.db import Base
@@ -22,3 +22,7 @@ class LevelTime(Base):
     )
     level_number = Column(Integer)
     start_at = Column(DateTime)
+
+    __table_args__ = (
+        UniqueConstraint("game_id", "team_id", "level_number"),
+    )

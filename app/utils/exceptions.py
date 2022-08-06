@@ -183,6 +183,11 @@ class PermissionsError(SHError):
         self.permission_name = permission_name
 
 
+class PromoteError(PermissionsError):
+    notify_user = "Ошибка распространения права быть автором"
+    permission_name = "can_be_author"
+
+
 class CantBeAuthor(PermissionsError):
     notify_user = "Пользователь не имеет права быть автором"
     permission_name = "can_be_author"

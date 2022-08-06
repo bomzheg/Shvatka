@@ -14,6 +14,9 @@ from tests.fixtures.user_constants import create_dto_harry
 @pytest.mark.asyncio
 async def test_game_simple(simple_scn: dict, dao: HolderDao, dcf: Factory):
     author = await upsert_player(await upsert_user(create_dto_harry(), dao.user), dao.player)
+    await dao.player.promote(author, author)
+    await dao.commit()
+    author.can_be_author = True
     game = await upsert_game(simple_scn, author, dao, dcf)
 
     assert await dao.game.count() == 1

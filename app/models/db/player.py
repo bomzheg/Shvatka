@@ -1,4 +1,4 @@
-from sqlalchemy import Column, BigInteger, ForeignKey
+from sqlalchemy import Column, BigInteger, ForeignKey, Boolean
 from sqlalchemy.orm import relationship
 
 from app.models.db.base import Base
@@ -8,7 +8,9 @@ class Player(Base):
     __tablename__ = "players"
     __mapper_args__ = {"eager_defaults": True}
     id = Column(BigInteger, primary_key=True)
-    user_id = Column(ForeignKey("users.id"))
+    can_be_author = Column(Boolean, server_default="f", nullable=False)
+    promoted_by_id = Column(ForeignKey("players.id"))
+    user_id = Column(ForeignKey("users.id"), unique=True)
     user = relationship(
         "User",
         back_populates="player",

@@ -1,7 +1,7 @@
 from typing import Any
 
 from dataclass_factory import Factory
-from sqlalchemy import Column, Integer, Text, ForeignKey, JSON, TypeDecorator
+from sqlalchemy import Column, Integer, Text, ForeignKey, JSON, TypeDecorator, UniqueConstraint
 from sqlalchemy.engine import Dialect
 from sqlalchemy.orm import relationship
 
@@ -45,3 +45,7 @@ class Level(Base):
     )
     number_in_game = Column(Integer, nullable=True)
     scenario: LevelScenario = Column(ScenarioField)
+
+    __table_args__ = (
+        UniqueConstraint("author_id", "name_id"),
+    )

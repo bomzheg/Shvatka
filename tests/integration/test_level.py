@@ -12,6 +12,9 @@ from tests.fixtures.user_constants import create_dto_harry
 @pytest.mark.asyncio
 async def test_simple_level(simple_scn: dict, dao: HolderDao, dcf: Factory):
     author = await upsert_player(await upsert_user(create_dto_harry(), dao.user), dao.player)
+    await dao.player.promote(author, author)
+    await dao.commit()
+    author.can_be_author = True
     lvl = await upsert_raw_level(simple_scn["levels"][0], author, dcf, dao.level)
 
     assert lvl.db_id is not None

@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, ForeignKey, Boolean
+from sqlalchemy import Column, Integer, ForeignKey, Boolean, UniqueConstraint
 from sqlalchemy.orm import relationship
 
 from app.models.db import Base
@@ -24,3 +24,7 @@ class Organizer(Base):
     can_see_log_keys = Column(Boolean, default=False)
     can_validate_waivers = Column(Boolean, default=False)
     deleted = Column(Boolean, default=False)
+
+    __table_args__ = (
+        UniqueConstraint("player_id", "game_id"),
+    )

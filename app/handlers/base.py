@@ -44,7 +44,7 @@ async def chat_migrate(message: Message, chat: dto.Chat, dao: HolderDao):
     logger.info("Migrate chat from %s to %s", message.chat.id, new_id)
 
 
-def setup_base(dp: Dispatcher):
+def setup(dp: Dispatcher):
     dp.message.register(
         chat_id, Command(commands=["idchat", CHAT_ID_COMMAND.command], commands_prefix="/!")
     )

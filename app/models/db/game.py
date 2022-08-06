@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import secrets
 
-from sqlalchemy import Column, Integer, ForeignKey, Text, Enum, BigInteger, DateTime
+from sqlalchemy import Column, Integer, ForeignKey, Text, Enum, BigInteger, DateTime, UniqueConstraint
 from sqlalchemy.orm import relationship
 
 from app.models.db import Base
@@ -57,4 +57,8 @@ class Game(Base):
     manage_token = Column(
         Text,
         default=secrets.token_urlsafe(_TOKEN_LEN * 3 // 4),
+    )
+
+    __table_args__ = (
+        UniqueConstraint("author_id", "name"),
     )

@@ -17,7 +17,7 @@ async def leave_chat(message: Message, bot: Bot):
     await bot.leave_chat(message.chat.id)
 
 
-def setup_superuser(dp: Dispatcher, bot_config: BotConfig):
+def setup(dp: Dispatcher, bot_config: BotConfig):
     is_superuser_ = partial(is_superuser, superusers=bot_config.superusers)
 
     dp.message.register(exception, is_superuser_, Command(commands=UPDATE_COMMANDS.command))

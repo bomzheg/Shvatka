@@ -2,10 +2,12 @@ from dataclass_factory import Factory
 
 from app.dao.holder import HolderDao
 from app.models import dto
+from app.services.player import check_allow_be_author
 from app.services.scenario.game_ops import load_game
 
 
 async def upsert_game(scn: dict, author: dto.Player, dao: HolderDao, dcf: Factory) -> dto.Game:
+    check_allow_be_author(author)
     game_scn = load_game(scn, dcf)
     game = await dao.game.upsert_game(author, game_scn)
     await dao.level.unlink_all(game)

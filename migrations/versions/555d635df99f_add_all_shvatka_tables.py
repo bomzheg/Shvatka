@@ -39,25 +39,31 @@ def upgrade():
         sa.Column('original_filename', sa.Text(), nullable=True),
         sa.Column('extension', sa.Text(), nullable=True),
         sa.Column('content_type', sa.Text(), nullable=True),
-        sa.PrimaryKeyConstraint('id')
+        sa.PrimaryKeyConstraint('id'),
+        sa.UniqueConstraint("guid_"),
     )
     op.create_table(
         'players',
         sa.Column('id', sa.BigInteger(), nullable=False),
         sa.Column('user_id', sa.BigInteger(), nullable=True),
+        sa.Column('can_be_author', sa.Boolean(), server_default='f', nullable=False),
+        sa.Column('promoted_by_id', sa.BigInteger(), nullable=True),
         sa.ForeignKeyConstraint(['user_id'], ['users.id'], ),
-        sa.PrimaryKeyConstraint('id')
+        sa.ForeignKeyConstraint(['promoted_by_id'], ['players.id'], ),
+        sa.UniqueConstraint("user_id"),
+        sa.PrimaryKeyConstraint('id'),
     )
     op.create_table(
         'games',
         sa.Column('id', sa.Integer(), nullable=False),
         sa.Column('author_id', sa.BigInteger(), nullable=False),
         sa.Column('name', sa.Text(), nullable=True),
-        sa.Column('status', game_status, nullable=True),
+        sa.Column('status', game_status, nullable=False),
         sa.Column('start_at', sa.DateTime(), nullable=True),
         sa.Column('published_channel_id', sa.BigInteger(), nullable=True),
         sa.Column('manage_token', sa.Text(), nullable=True),
         sa.ForeignKeyConstraint(['author_id'], ['players.id'], ),
+        sa.UniqueConstraint("name", "author_id"),
         sa.PrimaryKeyConstraint('id')
     )
     op.create_table(
@@ -69,6 +75,7 @@ def upgrade():
         sa.Column('description', sa.Text(), nullable=True),
         sa.ForeignKeyConstraint(['captain_id'], ['players.id'], ),
         sa.ForeignKeyConstraint(['chat_id'], ['chats.id'], ),
+        sa.UniqueConstraint("chat_id"),
         sa.PrimaryKeyConstraint('id')
     )
     op.create_table(
@@ -81,6 +88,7 @@ def upgrade():
         sa.Column('scenario', sa.JSON(), nullable=True),
         sa.ForeignKeyConstraint(['author_id'], ['players.id'], ),
         sa.ForeignKeyConstraint(['game_id'], ['games.id'], ),
+        sa.UniqueConstraint("name_id", "author_id"),
         sa.PrimaryKeyConstraint('id')
     )
     op.create_table(
@@ -92,6 +100,7 @@ def upgrade():
         sa.Column('start_at', sa.DateTime(), nullable=True),
         sa.ForeignKeyConstraint(['game_id'], ['games.id'], ),
         sa.ForeignKeyConstraint(['team_id'], ['teams.id'], ),
+        sa.UniqueConstraint("game_id", "team_id", "level_number"),
         sa.PrimaryKeyConstraint('id')
     )
     op.create_table(
@@ -120,6 +129,7 @@ def upgrade():
         sa.Column('deleted', sa.Boolean(), nullable=True),
         sa.ForeignKeyConstraint(['game_id'], ['games.id'], ),
         sa.ForeignKeyConstraint(['player_id'], ['players.id'], ),
+        sa.UniqueConstraint("game_id", "player_id"),
         sa.PrimaryKeyConstraint('id')
     )
     op.create_table(
@@ -151,6 +161,7 @@ def upgrade():
         sa.ForeignKeyConstraint(['game_id'], ['games.id'], ),
         sa.ForeignKeyConstraint(['player_id'], ['players.id'], ),
         sa.ForeignKeyConstraint(['team_id'], ['teams.id'], ),
+        sa.UniqueConstraint("game_id", "team_id", "player_id"),
         sa.PrimaryKeyConstraint('id')
     )
 

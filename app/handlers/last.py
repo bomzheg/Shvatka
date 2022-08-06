@@ -1,17 +1,16 @@
 import logging
 import re
 
-from aiogram import types, Dispatcher
+from aiogram import types, Dispatcher, Router
 from aiogram.dispatcher.event.bases import SkipHandler
 from aiogram.dispatcher.filters import StateFilter, Command, CommandObject
 from aiogram.dispatcher.fsm.context import FSMContext
 from aiogram.dispatcher.fsm.state import any_state
 
-logger = logging.getLogger(__name__)
+from app.views.texts import YOU_ARE_IN_STATE_MSG
 
-YOU_ARE_IN_STATE_MSG = "Вы находитесь в диалоге (например в середине написания уровня, " \
-                       "тестирования уровня и тому подобное). " \
-                       "Если Вы не помните такого или не понимаете о чём речь - жмите /cancel"
+logger = logging.getLogger(__name__)
+router = Router(name=__name__)
 
 
 async def message_in_state(message: types.Message, state: FSMContext, command: CommandObject):
@@ -50,7 +49,9 @@ async def callback_in_state(callback_query: types.CallbackQuery):
     await callback_query.message.answer(YOU_ARE_IN_STATE_MSG)
 
 
-def setup_last_handlers(dp: Dispatcher):
-    dp.message.register(message_in_state, Command(commands=re.compile('.*')))
-    dp.callback_query.register(not_supported_callback)
-    dp.callback_query.register(callback_in_state, StateFilter(state=any_state))
+def setup(dp: Dispatcher):
+    router.message.register(message_in_state, Command(commands=re.compile('.*')))
+    router.callback_query.register(not_supported_callback)
+    router.callback_query.register(callback_in_state, StateFilter(state=any_state))
+
+    dp.include_router(router)

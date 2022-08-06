@@ -1,26 +1,30 @@
 import re
 from datetime import datetime
-from typing import Optional
+from typing import Optional, Iterable
 
 from app.utils import datetime_utils
+from app.views.texts import KEY_PREFIXES
 
-KEY_PREFIXES = ("SH", "СХ")
 KEY_PREFIXES_REGEXP = "|".join(KEY_PREFIXES)
 KEY_REGEXP = re.compile(rf"^(?:{KEY_PREFIXES_REGEXP})[A-Z\dА-ЯЁ]+$")
 LEVEL_ID_REGEXP = re.compile(r"[^a-zA-Z\d_-]")
 
 
-def is_key_normal(key_expectant: str) -> Optional[str]:
+def is_key_valid(key_expectant: str) -> bool:
+    return normalize_key(key_expectant) is not None
+
+
+def normalize_key(key_expectant: str) -> Optional[str]:
     rez = re.search(KEY_REGEXP, key_expectant.strip())
     return None if rez is None else rez.group(0)
 
 
-def is_multiple_keys_normal(keys: str) -> bool:
+def is_multiple_keys_normal(keys: Iterable[str]) -> bool:
     """
     Возвращает True если в строке (keys) содержатся только правильные ключи,
     по одному на строку
     """
-    return all(is_key_normal(key) is not None for key in keys.splitlines())
+    return all(map(is_key_valid, keys))
 
 
 def is_level_id_correct(id_expectant: str) -> bool:

@@ -7,6 +7,7 @@ from sqlalchemy.orm import close_all_sessions
 from app.config import load_config
 from app.config.logging_config import setup_logging
 from app.main_factory import create_bot, create_dispatcher, get_paths
+from app.models.schems import schemas
 from app.services.username_resolver.user_getter import UserGetter
 
 logger = logging.getLogger(__name__)
@@ -17,7 +18,7 @@ async def main():
 
     setup_logging(paths)
     config = load_config(paths)
-    dcf = dataclass_factory.Factory()
+    dcf = dataclass_factory.Factory(schemas=schemas)
 
     async with UserGetter(config.tg_client) as user_getter:
         dp = create_dispatcher(config, user_getter, dcf)

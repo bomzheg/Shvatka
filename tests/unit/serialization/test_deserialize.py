@@ -1,8 +1,12 @@
+from copy import deepcopy
+
+import pytest
 from dataclass_factory import Factory
 
 from app.enums.hint_type import HintType
 from app.services.scenario.game_ops import load_game
 from app.services.scenario.level_ops import load_level
+from app.utils.exceptions import ScenarioNotCorrect
 
 
 def test_deserialize_game(simple_scn: dict, dcf: Factory):
@@ -19,3 +23,20 @@ def test_deserialize_level(simple_scn: dict, dcf: Factory):
     assert HintType.text.name == level.time_hints[0].hint[0].type
     assert "загадка" == level.time_hints[0].hint[0].text
     assert HintType.gps.name == level.time_hints[2].hint[0].type
+
+
+def test_deserialize_invalid_level(simple_scn: dict, dcf: Factory):
+    level_source = simple_scn["levels"][0]
+    level = deepcopy(level_source)
+    level["id"] = "привет"
+    with pytest.raises(ScenarioNotCorrect):
+        load_level(level, dcf)
+
+    level["keys"] = {"SHCamelCase"}
+    with pytest.raises(ScenarioNotCorrect):
+        load_level(level, dcf)
+
+    level = deepcopy(level_source)
+    level["time_hints"] = level.pop("time-hints")
+    with pytest.raises(ScenarioNotCorrect):
+        load_level(level, dcf)

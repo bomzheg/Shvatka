@@ -7,6 +7,7 @@ from dataclass_factory import Factory
 from app.config.logging_config import setup_logging
 from app.config.main import load_config
 from app.models.config.main import Paths, Config
+from app.models.schems import schemas
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -32,4 +33,4 @@ def event_loop():
 
 @pytest.fixture(scope="session")
 def dcf():
-    return Factory()
+    return Factory(schemas=schemas)

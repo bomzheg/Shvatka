@@ -20,6 +20,7 @@ class SHError(Exception):
         team: dto.Team = None,
         game: Any = None,
         alarm: bool = False,
+        notify_user: str = None,
         *args,
         **kwargs
     ):
@@ -36,6 +37,7 @@ class SHError(Exception):
         self.team = team
         self.game = game
         self.alarm = alarm
+        self.notify_user = notify_user or self.notify_user
 
     def __repr__(self):
         result_msg = f"Error: {self.text}"
@@ -60,9 +62,10 @@ class SHError(Exception):
 class ScenarioNotCorrect(SHError):
     notify_user = "JSON-файл некорректен"
 
-    def __init__(self, *args, level_id: int = None, **kwargs):
+    def __init__(self, *args, level_id: int = None, name_id: str = None, **kwargs):
         super(ScenarioNotCorrect, self).__init__(*args, **kwargs)
         self.level_id = level_id
+        self.name_id = name_id
 
     def __str__(self):
         result = super().__str__()

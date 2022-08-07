@@ -33,7 +33,7 @@ async def not_supported_callback(callback_query: types.CallbackQuery):
         show_alert=True
     )
     logger.warning(
-        "User {user} press unsupported button in query {query}",
+        "User %s press unsupported button in query %s",
         callback_query.from_user.id,
         callback_query.json(),
     )
@@ -41,7 +41,7 @@ async def not_supported_callback(callback_query: types.CallbackQuery):
 
 async def callback_in_state(callback_query: types.CallbackQuery):
     logger.warning(
-        "user {user} click {query} in state",
+        "user %s click %s in state",
         callback_query.from_user.id,
         callback_query.data,
     )

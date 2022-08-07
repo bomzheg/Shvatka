@@ -1,5 +1,6 @@
 from dataclass_factory import Factory
 
+from app.dao import GameDao
 from app.dao.holder import HolderDao
 from app.models import dto
 from app.services.player import check_allow_be_author
@@ -18,3 +19,12 @@ async def upsert_game(scn: dict, author: dto.Player, dao: HolderDao, dcf: Factor
     game.levels = levels
     await dao.commit()
     return game
+
+
+async def get_authors_games(author: dto.Player, dao: GameDao) -> list[dto.Game]:
+    check_allow_be_author(author)
+    return await dao.get_all_by_author(author)
+
+
+async def get_game(id_: int, author: dto.Player, dao: GameDao) -> dto.Game:
+    return await dao.get_one_by_id(id_, author)

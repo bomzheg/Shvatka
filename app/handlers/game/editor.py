@@ -2,14 +2,16 @@ import logging
 
 import yaml
 from aiogram import Router, Dispatcher, Bot
-from aiogram.dispatcher.filters import ContentTypesFilter
+from aiogram.dispatcher.filters import ContentTypesFilter, Command
 from aiogram.types import Message
+from aiogram_dialog import StartMode, DialogManager
 from dataclass_factory import Factory
 
 from app.dao.holder import HolderDao
 from app.filters.game_status import GameStatusFilter
 from app.models import dto
 from app.services.game import upsert_game
+from app.states import MyGamesPanel
 from app.utils.exceptions import ScenarioNotCorrect
 
 router = Router(name=__name__)
@@ -28,6 +30,10 @@ async def cmd_save_game(m: Message, dao: HolderDao, dcf: Factory, bot: Bot, play
     await m.reply("Успешно сохранено")
 
 
+async def get_manage(_: Message, dialog_manager: DialogManager):
+    await dialog_manager.start(MyGamesPanel.choose_game, mode=StartMode.RESET_STACK)
+
+
 def setup(dp: Dispatcher):
     router.message.filter(
         GameStatusFilter(active=False),  # TODO can_be_author=True
@@ -35,4 +41,5 @@ def setup(dp: Dispatcher):
 
     router.message.register(cmd_save_game, ContentTypesFilter(content_types="document"))
     # TODO refactor it filters^ (state?)
+    router.message.register(get_manage, Command(commands="my_games"))
     dp.include_router(router)

@@ -2,9 +2,11 @@ import os
 from pathlib import Path
 
 from aiogram import Bot, Dispatcher
+from aiogram_dialog import DialogRegistry
 from dataclass_factory import Factory
 
 from app.handlers import setup_handlers
+from app.handlers.dialogs import setup_dialogs
 from app.middlewares import setup_middlewares
 from app.models.config import Config
 from app.models.config.main import Paths
@@ -25,6 +27,8 @@ def create_dispatcher(
 ) -> Dispatcher:
     dp = Dispatcher(storage=(config.storage.create_storage()))
     setup_middlewares(dp, create_pool(config.db), config.bot, user_getter, dcf)
+    registry = DialogRegistry(dp)
+    setup_dialogs(registry)
     setup_handlers(dp, config.bot)
     return dp
 

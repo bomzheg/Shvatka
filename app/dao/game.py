@@ -37,3 +37,16 @@ class GameDao(BaseDAO[db.Game]):
             )
         )
         return result.scalar_one()
+
+    async def get_one_by_id(self, id_: int, author: dto.Player) -> dto.Game:
+        return dto.Game.from_db(await self.get_by_id(id_), author)
+
+    async def get_all_by_author(self, author: dto.Player) -> list[dto.Game]:
+        result = await self.session.execute(
+            select(db.Game).where(
+                db.Game.author_id == author.id,
+                db.Game.status != GameStatus.complete,
+            )
+        )
+        games = result.scalars().all()
+        return [dto.Game.from_db(game, author) for game in games]

@@ -3,6 +3,7 @@ import logging
 from functools import partial
 
 from aiogram import Dispatcher, Bot
+from aiogram.dispatcher.filters import ExceptionTypeFilter
 from aiogram.exceptions import AiogramError
 from aiogram.types import Update
 from aiogram.utils.markdown import html_decoration as hd
@@ -39,13 +40,16 @@ async def handle(update: Update, exception: Exception, log_chat_id: int, bot: Bo
         return
     await bot.send_message(
         log_chat_id,
-        f"Получено исключение {exception.__class__.__name__}\n"
+        f"Получено исключение {hd.quote(str(exception))}\n"
         f"во время обработки апдейта {hd.quote(json.dumps(update.dict(exclude_none=True), default=str))}\n"
-        f"{hd.quote(exception.args[0])}"
     )
 
 
 def setup(dp: Dispatcher, log_chat_id: int):
+    dp.errors.register(
+        partial(handle_sh_error, log_chat_id=log_chat_id),
+        ExceptionTypeFilter(exception=SHError)
+    )
     dp.errors.register(
         partial(handle, log_chat_id=log_chat_id)
     )

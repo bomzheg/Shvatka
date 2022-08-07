@@ -2,7 +2,7 @@ import logging
 
 from app.dao import PlayerDao, PlayerInTeamDao
 from app.models import dto
-from app.utils.defaults_constants import DEFAULT_ROLE
+from app.utils.defaults_constants import DEFAULT_ROLE, EMOJI_BY_ROLE, DEFAULT_EMOJI
 from app.utils.exceptions import PlayerRestoredInTeam, CantBeAuthor, PromoteError
 
 logger = logging.getLogger(__name__)
@@ -23,7 +23,12 @@ async def get_my_team(player: dto.Player, dao: PlayerInTeamDao) -> dto.Team:
 
 
 async def get_my_role(player: dto.Player, dao: PlayerInTeamDao) -> str:
-    return await dao.get_role(player)
+    return (await dao.get_player_in_team(player)).role
+
+
+async def get_my_emoji(player: dto.Player, dao: PlayerInTeamDao) -> str:
+    pit = await dao.get_player_in_team(player)
+    return pit.emoji or EMOJI_BY_ROLE.get(pit.role, DEFAULT_EMOJI)
 
 
 async def promote(actor: dto.Player, target: dto.Player, dao: PlayerDao):
@@ -43,15 +48,20 @@ async def promote(actor: dto.Player, target: dto.Player, dao: PlayerDao):
     logger.info("player %s promoted for target %s", actor.id, target.id)
 
 
-async def add_player_in_team(
+async def join_to_team(
     player: dto.Player, team: dto.Team,
     dao: PlayerInTeamDao, role: str = DEFAULT_ROLE,
 ):
     try:
-        await dao.add_in_team(player, team, role=role)
+        await dao.join_to_team(player, team, role=role)
     except PlayerRestoredInTeam:
         await dao.commit()
         raise
+    await dao.commit()
+
+
+async def leave(player: dto.Player, dao: PlayerInTeamDao):
+    await dao.leave_team(player)
     await dao.commit()
 
 

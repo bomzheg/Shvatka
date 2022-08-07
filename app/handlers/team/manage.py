@@ -12,7 +12,7 @@ from app.filters.has_target import HasTargetFilter
 from app.filters.is_admin import is_admin_filter
 from app.filters.is_team import IsTeamFilter
 from app.models import dto
-from app.services.player import add_player_in_team
+from app.services.player import join_to_team
 from app.services.team import create_team
 from app.utils.defaults_constants import DEFAULT_ROLE
 from app.utils.exceptions import TeamError, PlayerAlreadyInTeam, AnotherTeamInChat, PlayerRestoredInTeam
@@ -90,7 +90,7 @@ async def cmd_add_in_team(
         )
     role = command.args or DEFAULT_ROLE
     try:
-        await add_player_in_team(target, team, dao.player_in_team, role)
+        await join_to_team(target, team, dao.player_in_team, role)
     except PlayerAlreadyInTeam as e:
         return await message.reply(
             f"Игрок {hd.quote(target.user.fullname)} уже находится в команде "

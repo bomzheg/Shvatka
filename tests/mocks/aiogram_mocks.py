@@ -1,23 +1,10 @@
 import typing
 from dataclasses import dataclass
-from typing import Union
 
 from aiogram import Bot
 from aiogram.methods import SendMessage
-from aiogram.types import ChatMemberOwner, ChatMemberAdministrator, ChatMemberMember, ChatMemberRestricted, \
-    ChatMemberLeft, ChatMemberBanned, Chat, User
+from aiogram.types import ChatMemberOwner, ChatMemberMember, Chat, User
 from mockito import when
-
-administrators: typing.TypeAlias = list[
-    Union[
-        ChatMemberOwner,
-        ChatMemberAdministrator,
-        ChatMemberMember,
-        ChatMemberRestricted,
-        ChatMemberLeft,
-        ChatMemberBanned,
-    ]
-]
 
 T = typing.TypeVar("T")
 

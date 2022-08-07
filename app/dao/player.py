@@ -1,6 +1,9 @@
+from typing import Iterable
+
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
+from sqlalchemy.orm import joinedload
 
 from app.dao import BaseDAO
 from app.models import db, dto
@@ -35,3 +38,23 @@ class PlayerDao(BaseDAO[db.Player]):
         target_player = await self._get_by_id(target.id)
         target_player.can_be_author = True
         target_player.promoted_by_id = actor.id
+
+    async def get_by_ids_with_user_and_pit(self, ids: Iterable[int]) -> list[dto.VotedPlayer]:
+        result = await self.session.execute(
+            select(db.Player, db.PlayerInTeam)
+            .options(
+                joinedload(db.Player.user, innerjoin=True),
+            )
+            .join(db.Player.teams)
+            .where(
+                db.Player.id.in_(ids),
+                db.PlayerInTeam.date_left == None,  # noqa: E711
+            )
+        )
+        players = result.all()
+        return [
+            dto.VotedPlayer(
+                dto.Player.from_db(player, dto.User.from_db(player.user)),
+                dto.PlayerInTeam.from_db(pit),
+            ) for player, pit in players
+        ]

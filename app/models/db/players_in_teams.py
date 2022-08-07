@@ -24,7 +24,7 @@ class PlayerInTeam(Base):
     )
     date_joined = Column(DateTime, default=datetime.utcnow(), server_default=func.now())
     role = Column(Text)
-    _emoji = Column("emoji", Text)
+    emoji = Column("emoji", Text)
     date_left = Column(DateTime)
 
     can_manage_waivers = Column(Boolean, default=False)

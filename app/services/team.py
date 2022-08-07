@@ -9,7 +9,7 @@ async def create_team(chat: dto.Chat, captain: dto.Player, dao: HolderDao) -> dt
     await dao.team.check_no_team_in_chat(chat)
 
     team = await dao.team.create(chat, captain)
-    await dao.player_in_team.add_in_team(captain, team, CAPTAIN_ROLE)
+    await dao.player_in_team.join_to_team(captain, team, CAPTAIN_ROLE)
     await dao.commit()
     return team
 

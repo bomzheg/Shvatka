@@ -1,9 +1,7 @@
 from __future__ import annotations
-from dataclasses import dataclass
 
 import logging
-
-from redis.asyncio.client import Redis
+from dataclasses import dataclass
 
 logger = logging.getLogger(__name__)
 
@@ -42,7 +40,3 @@ class RedisConfig:
     url: str
     port: int = 6379
     db: int = 1
-
-    def create_redis(self) -> Redis:
-        logger.info("created storage for %s", self)
-        return Redis(host=self.url, port=self.port, db=self.db)

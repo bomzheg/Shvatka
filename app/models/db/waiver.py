@@ -1,17 +1,8 @@
-import enum
-
 from sqlalchemy import Column, Integer, ForeignKey, Text, Enum
 from sqlalchemy.orm import relationship
 
 from app.models.db import Base
-
-
-class Played(str, enum.Enum):
-    yes = 'yes'
-    no = 'no'
-    think = 'think'
-    revoked = 'revoked'
-    not_allowed = 'not_allowed'
+from app.models.enums.played import Played
 
 
 class Waiver(Base):

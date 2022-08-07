@@ -11,6 +11,7 @@ from sqlalchemy.orm import sessionmaker
 from testcontainers.postgres import PostgresContainer
 
 from app.dao.holder import HolderDao
+from app.dao.redis.pool import PollDao
 from app.main_factory import create_dispatcher
 from app.models.config import Config
 from app.services.username_resolver.user_getter import UserGetter
@@ -81,3 +82,8 @@ def bot(app_config: Config) -> Bot:
     dummy = mock(Bot)
     setattr(dummy, "id", 123)
     return dummy
+
+
+@pytest.fixture
+def mock_poll_dao() -> PollDao:
+    return mock(PollDao)

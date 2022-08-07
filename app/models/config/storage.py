@@ -8,6 +8,7 @@ from aiogram.dispatcher.fsm.storage.base import BaseStorage
 from aiogram.dispatcher.fsm.storage.memory import MemoryStorage
 from aiogram.dispatcher.fsm.storage.redis import RedisStorage
 
+from app.dao.redis.base import create_redis
 from app.models.config.db import RedisConfig
 
 logger = logging.getLogger(__name__)
@@ -29,6 +30,6 @@ class StorageConfig:
             case StorageType.memory:
                 return MemoryStorage()
             case StorageType.redis:
-                return RedisStorage(self.redis.create_redis())
+                return RedisStorage(create_redis(self.redis))
             case _:
                 raise NotImplementedError

@@ -1,3 +1,4 @@
+from sqlalchemy import update
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
@@ -50,3 +51,10 @@ class GameDao(BaseDAO[db.Game]):
         )
         games = result.scalars().all()
         return [dto.Game.from_db(game, author) for game in games]
+
+    async def start_waivers(self, game: dto.Game):
+        await self.session.execute(
+            update(db.Game)
+            .where(db.Game.id == game.id)
+            .values(status=GameStatus.getting_waivers)
+        )

@@ -5,7 +5,7 @@ from dataclass_factory import Factory
 
 from app.dao.holder import HolderDao
 from app.models.enums import GameStatus
-from app.services.game import upsert_game, get_authors_games
+from app.services.game import upsert_game, get_authors_games, start_waivers, get_game
 from app.services.player import upsert_player
 from app.services.user import upsert_user
 from tests.fixtures.user_constants import create_dto_harry
@@ -63,3 +63,7 @@ async def test_game_simple(simple_scn: dict, dao: HolderDao, dcf: Factory):
     gotten_games = await get_authors_games(author, dao.game)
     assert 1 == len(gotten_games)
     assert game.id == gotten_games[0].id
+
+    await start_waivers(game, author, dao.game)
+    game = await get_game(game.id, author, dao.game)
+    assert GameStatus.getting_waivers == game.status

@@ -5,6 +5,7 @@ from app.dao.holder import HolderDao
 from app.models import dto
 from app.services.player import check_allow_be_author
 from app.services.scenario.game_ops import load_game
+from app.utils.exceptions import NotAuthorizedForEdit
 
 
 async def upsert_game(scn: dict, author: dto.Player, dao: HolderDao, dcf: Factory) -> dto.Game:
@@ -28,3 +29,15 @@ async def get_authors_games(author: dto.Player, dao: GameDao) -> list[dto.Game]:
 
 async def get_game(id_: int, author: dto.Player, dao: GameDao) -> dto.Game:
     return await dao.get_by_id(id_, author)
+
+
+async def start_waivers(game: dto.Game, author: dto.Player, dao: GameDao):
+    check_allow_be_author(author)
+    check_is_author(game, author)
+    await dao.start_waivers(game)
+    await dao.commit()
+
+
+def check_is_author(game: dto.Game, player: dto.Player):
+    if not game.is_author_id(player.id):
+        raise NotAuthorizedForEdit(permission_name="game_edit", player=player, game=game)

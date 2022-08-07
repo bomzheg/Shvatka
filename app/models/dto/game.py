@@ -63,8 +63,8 @@ class Game:
     def can_be_edited(self) -> bool:
         return self.status in (GameStatus.underconstruction, GameStatus.ready, GameStatus.getting_waivers)
 
-    def is_author_id(self, user_id: int) -> bool:
-        return self.author.id == user_id
+    def is_author_id(self, player_id: int) -> bool:
+        return self.author.id == player_id
 
     @classmethod
     def from_db(cls, game: db.Game, author: Player) -> Game:

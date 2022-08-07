@@ -1,3 +1,4 @@
+from sqlalchemy import update
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
@@ -44,14 +45,14 @@ class LevelDao(BaseDAO[db.Level]):
         return result.scalar_one()
 
     async def unlink_all(self, game: dto.Game):
-        result = await self.session.execute(
-            select(db.Level).where(
+        await self.session.execute(
+            update(db.Level)
+            .where(
                 db.Level.game_id == game.id,
                 db.Level.author_id == game.author.id,
             )
+            .values(
+                game_id=None,
+                number_in_game=None,
+            )
         )
-        levels: list[db.Level] = result.scalars().all()
-        for level in levels:
-            level.game_id = None
-            level.number_in_game = None
-        await self._flush(*levels)

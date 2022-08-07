@@ -2,7 +2,7 @@ from aiogram_dialog import Dialog, Window
 from aiogram_dialog.widgets.kbd import ScrollingGroup, Select, SwitchTo, Button
 from aiogram_dialog.widgets.text import Const, Format
 
-from app.handlers.dialogs.getters import get_my_games, get_game
+from app.handlers.dialogs.getters import get_my_games, get_game, already_getting_waivers
 from app.handlers.dialogs.handlers import select_my_game, start_waivers
 from app.states import MyGamesPanel
 
@@ -25,7 +25,10 @@ games = Dialog(
         getter=get_my_games,
     ),
     Window(
-        Format("Редактирование {game.name}"),
+        Format(
+            "Редактирование <b>{game.name}</b>\n"
+            "текущий статус: <b>{game.status}</b>\n"
+        ),
         SwitchTo(
             Const("Назад к списку игр"),
             id="to_my_games",
@@ -35,6 +38,7 @@ games = Dialog(
             Const("Начать сборку вейверов"),
             id="start_waiver",
             on_click=start_waivers,
+            when=already_getting_waivers
         ),
         state=MyGamesPanel.game_menu,
         getter=get_game,

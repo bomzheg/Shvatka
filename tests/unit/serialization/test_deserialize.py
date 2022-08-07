@@ -3,7 +3,7 @@ from copy import deepcopy
 import pytest
 from dataclass_factory import Factory
 
-from app.enums.hint_type import HintType
+from app.models.enums.hint_type import HintType
 from app.services.scenario.game_ops import load_game
 from app.services.scenario.level_ops import load_level
 from app.utils.exceptions import ScenarioNotCorrect

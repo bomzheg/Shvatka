@@ -7,7 +7,7 @@ from aiogram.types import Update, Message
 from mockito import ANY
 
 from app.dao.holder import HolderDao
-from app.enums.chat_type import ChatType
+from app.models.enums.chat_type import ChatType
 from app.services.player import upsert_player, get_my_role
 from app.services.user import upsert_user
 from app.views.commands import CREATE_TEAM_COMMAND, ADD_IN_TEAM_COMMAND

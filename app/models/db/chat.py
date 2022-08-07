@@ -1,8 +1,8 @@
 from sqlalchemy import Column, Text, BigInteger, Enum
 from sqlalchemy.orm import relationship
 
-from app.enums.chat_type import ChatType
 from app.models.db.base import Base
+from app.models.enums.chat_type import ChatType
 
 
 class Chat(Base):

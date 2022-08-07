@@ -4,7 +4,7 @@ import typing
 from abc import ABC
 from dataclasses import dataclass
 
-from app.enums.hint_type import HintLiteral, HintType
+from app.models.enums.hint_type import HintLiteral, HintType
 
 
 class BaseHint(ABC):

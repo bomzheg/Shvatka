@@ -31,6 +31,10 @@ async def get_game(id_: int, author: dto.Player, dao: GameDao) -> dto.Game:
     return await dao.get_by_id(id_, author)
 
 
+async def get_active(dao: GameDao) -> dto.Game:
+    return await dao.get_active_game()
+
+
 async def start_waivers(game: dto.Game, author: dto.Player, dao: GameDao):
     check_allow_be_author(author)
     check_is_author(game, author)

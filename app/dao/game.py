@@ -2,11 +2,13 @@ from sqlalchemy import update
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
+from sqlalchemy.orm import joinedload
 
 from app.dao import BaseDAO
 from app.models import db, dto
 from app.models.dto.scn.game import GameScenario
 from app.models.enums import GameStatus
+from app.models.enums.game_status import active_statuses
 
 
 class GameDao(BaseDAO[db.Game]):
@@ -57,4 +59,21 @@ class GameDao(BaseDAO[db.Game]):
             update(db.Game)
             .where(db.Game.id == game.id)
             .values(status=GameStatus.getting_waivers)
+        )
+
+    async def get_active_game(self) -> dto.Game | None:
+        result = await self.session.execute(
+            select(db.Game)
+            .where(db.Game.status.in_(active_statuses))
+            .options(
+                joinedload(db.Game.author)
+                .joinedload(db.Player.user)
+            )
+        )
+        try:
+            game: db.Game = result.scalar_one()
+        except NoResultFound:
+            return None
+        return dto.Game.from_db(
+            game, dto.Player.from_db(game.author, dto.User.from_db(game.author.user))
         )

@@ -6,6 +6,7 @@ from aiogram.types import TelegramObject
 from app.dao.holder import HolderDao
 from app.models import dto
 from app.services.chat import upsert_chat
+from app.services.game import get_active
 from app.services.player import upsert_player
 from app.services.team import get_by_chat
 from app.services.user import upsert_user
@@ -19,14 +20,14 @@ class LoadDataMiddleware(BaseMiddleware):
             event: TelegramObject,
             data: dict[str, Any]
     ) -> Any:
-        holder_dao = data["dao"]
+        holder_dao: HolderDao = data["dao"]
         user = await save_user(data, holder_dao)
         data["user"] = user
         data["player"] = await save_player(user, holder_dao)
         chat = await save_chat(data, holder_dao)
         data["chat"] = chat
         data["team"] = await load_team(chat, holder_dao)
-        data["game"] = None
+        data["game"] = await get_active(holder_dao.game)
         result = await handler(event, data)
         return result
 

@@ -1,7 +1,7 @@
 from aiogram import Bot
 
-from app.enums.chat_type import ChatType
 from app.models import dto
+from app.models.enums.chat_type import ChatType
 
 
 async def is_admin_filter(bot: Bot, chat: dto.Chat, user: dto.User) -> bool:

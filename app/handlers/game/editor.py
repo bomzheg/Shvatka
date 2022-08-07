@@ -36,7 +36,7 @@ async def get_manage(_: Message, dialog_manager: DialogManager):
 
 def setup(dp: Dispatcher):
     router.message.filter(
-        GameStatusFilter(active=False),  # TODO can_be_author=True
+        GameStatusFilter(running=False),  # TODO can_be_author=True
     )
 
     router.message.register(cmd_save_game, ContentTypesFilter(content_types="document"))

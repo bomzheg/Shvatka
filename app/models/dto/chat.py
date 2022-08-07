@@ -4,8 +4,8 @@ from dataclasses import dataclass
 
 from aiogram import types as tg
 
-from app.enums.chat_type import ChatType
 from app.models import db
+from app.models.enums.chat_type import ChatType
 
 
 @dataclass

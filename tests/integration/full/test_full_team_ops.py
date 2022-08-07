@@ -36,7 +36,7 @@ async def test_create_team(dp: Dispatcher, bot: Bot, dao: HolderDao):
     await dp.feed_update(bot, update)
     assert await dao.team.count() == 1
     assert await dao.player_in_team.count() == 1
-    team = (await dao.team.get_all())[0]
+    team = (await dao.team._get_all())[0]
 
     assert chat.title == team.name
 

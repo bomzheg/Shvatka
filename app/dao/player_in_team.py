@@ -51,7 +51,7 @@ class PlayerInTeamDao(BaseDAO[db.PlayerInTeam]):
             role=role,
         )
         self.session.add(player_in_team)
-        await self.flush(player_in_team)
+        await self._flush(player_in_team)
 
     async def check_player_free(self, player: dto.Player):
         if players_team := await self.get_team(player):

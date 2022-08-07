@@ -14,17 +14,17 @@ class BaseDAO(Generic[Model]):
         self.model = model
         self.session = session
 
-    async def get_all(self) -> List[Model]:
+    async def _get_all(self) -> List[Model]:
         result = await self.session.execute(select(self.model))
         return result.scalars().all()
 
-    async def get_by_id(self, id_: int) -> Model:
+    async def _get_by_id(self, id_: int) -> Model:
         result = await self.session.execute(
             select(self.model).where(self.model.id == id_)
         )
         return result.scalar_one()
 
-    def save(self, obj: Model):
+    def _save(self, obj: Model):
         self.session.add(obj)
 
     async def delete_all(self):
@@ -41,5 +41,5 @@ class BaseDAO(Generic[Model]):
     async def commit(self):
         await self.session.commit()
 
-    async def flush(self, *objects):
+    async def _flush(self, *objects):
         await self.session.flush(objects)

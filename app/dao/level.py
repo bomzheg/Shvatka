@@ -26,12 +26,12 @@ class LevelDao(BaseDAO[db.Level]):
                 author_id=author.id,
                 name_id=scn.id,
             )
-            self.save(level)
+            self._save(level)
         level.scenario = scn
         if game is not None and no_in_game is not None:
             level.game_id = game.id
             level.number_in_game = no_in_game
-        await self.flush(level)
+        await self._flush(level)
         return dto.Level.from_db(level, author)
 
     async def get_by_author_and_scn(self, author: dto.Player, scn: LevelScenario) -> db.Level:
@@ -54,4 +54,4 @@ class LevelDao(BaseDAO[db.Level]):
         for level in levels:
             level.game_id = None
             level.number_in_game = None
-        await self.flush(*levels)
+        await self._flush(*levels)

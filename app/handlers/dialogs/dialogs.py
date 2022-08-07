@@ -1,9 +1,9 @@
 from aiogram_dialog import Dialog, Window
-from aiogram_dialog.widgets.kbd import ScrollingGroup, Select, SwitchTo
+from aiogram_dialog.widgets.kbd import ScrollingGroup, Select, SwitchTo, Button
 from aiogram_dialog.widgets.text import Const, Format
 
 from app.handlers.dialogs.getters import get_my_games, get_game
-from app.handlers.dialogs.handlers import select_my_game
+from app.handlers.dialogs.handlers import select_my_game, start_waivers
 from app.states import MyGamesPanel
 
 games = Dialog(
@@ -30,6 +30,11 @@ games = Dialog(
             Const("Назад к списку игр"),
             id="to_my_games",
             state=MyGamesPanel.choose_game,
+        ),
+        Button(
+            Const("Начать сборку вейверов"),
+            id="start_waiver",
+            on_click=start_waivers,
         ),
         state=MyGamesPanel.game_menu,
         getter=get_game,

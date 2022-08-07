@@ -25,8 +25,8 @@ class GameDao(BaseDAO[db.Game]):
                 name=scn.name,
                 status=GameStatus.underconstruction,
             )
-            self.save(game)
-        await self.flush(game)
+            self._save(game)
+        await self._flush(game)
         return dto.Game.from_db(game, author)
 
     async def get_by_author_and_scn(self, author: dto.Player, scn: GameScenario) -> db.Game:
@@ -38,8 +38,8 @@ class GameDao(BaseDAO[db.Game]):
         )
         return result.scalar_one()
 
-    async def get_one_by_id(self, id_: int, author: dto.Player) -> dto.Game:
-        return dto.Game.from_db(await self.get_by_id(id_), author)
+    async def get_by_id(self, id_: int, author: dto.Player) -> dto.Game:
+        return dto.Game.from_db(await self._get_by_id(id_), author)
 
     async def get_all_by_author(self, author: dto.Player) -> list[dto.Game]:
         result = await self.session.execute(

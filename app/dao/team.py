@@ -21,7 +21,7 @@ class TeamDao(BaseDAO[db.Team]):
         )
         self.session.add(team)
         try:
-            await self.flush(team)
+            await self._flush(team)
         except IntegrityError as e:
             raise TeamError(
                 chat=chat, player=captain, text="can't create team",

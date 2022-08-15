@@ -3,8 +3,8 @@ import logging
 from functools import partial
 
 from aiogram import Dispatcher, Bot
-from aiogram.dispatcher.filters import ExceptionTypeFilter
 from aiogram.exceptions import AiogramError
+from aiogram.filters import ExceptionTypeFilter
 from aiogram.types import Update
 from aiogram.utils.markdown import html_decoration as hd
 

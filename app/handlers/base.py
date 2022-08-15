@@ -1,8 +1,8 @@
 import logging
 
 from aiogram import Dispatcher
-from aiogram.dispatcher.filters import Command, ContentTypesFilter
-from aiogram.dispatcher.fsm.context import FSMContext
+from aiogram.filters import Command, ContentTypesFilter
+from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, ReplyKeyboardRemove, ContentType
 from aiogram.utils.markdown import html_decoration as hd
 

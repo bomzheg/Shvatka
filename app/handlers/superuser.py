@@ -1,7 +1,7 @@
 from functools import partial
 
 from aiogram import Dispatcher, Bot
-from aiogram.dispatcher.filters import Command
+from aiogram.filters import Command
 from aiogram.types import Message
 
 from app.filters.superusers import is_superuser

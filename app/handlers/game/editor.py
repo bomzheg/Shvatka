@@ -2,7 +2,7 @@ import logging
 
 import yaml
 from aiogram import Router, Dispatcher, Bot
-from aiogram.dispatcher.filters import ContentTypesFilter, Command
+from aiogram.filters import ContentTypesFilter, Command
 from aiogram.types import Message
 from aiogram_dialog import StartMode, DialogManager
 from dataclass_factory import Factory

@@ -1,8 +1,8 @@
 import logging
 
 from aiogram import Bot, Dispatcher, F
-from aiogram.dispatcher.filters import Command, CommandObject
 from aiogram.exceptions import TelegramBadRequest
+from aiogram.filters import Command, CommandObject
 from aiogram.types import Message
 from aiogram.utils.text_decorations import html_decoration as hd
 

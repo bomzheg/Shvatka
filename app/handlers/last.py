@@ -3,9 +3,9 @@ import re
 
 from aiogram import types, Dispatcher, Router
 from aiogram.dispatcher.event.bases import SkipHandler
-from aiogram.dispatcher.filters import StateFilter, Command, CommandObject
-from aiogram.dispatcher.fsm.context import FSMContext
-from aiogram.dispatcher.fsm.state import any_state
+from aiogram.filters import StateFilter, Command, CommandObject
+from aiogram.fsm.context import FSMContext
+from aiogram.fsm.state import any_state
 
 from app.views.texts import YOU_ARE_IN_STATE_MSG
 

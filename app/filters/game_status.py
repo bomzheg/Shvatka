@@ -1,6 +1,6 @@
 from typing import Any, Union, Dict
 
-from aiogram.dispatcher.filters import BaseFilter
+from aiogram.filters import BaseFilter
 from aiogram.types import Message
 
 from app.models import dto

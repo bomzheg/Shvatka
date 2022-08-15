@@ -4,9 +4,9 @@ import logging
 from dataclasses import dataclass
 from enum import Enum
 
-from aiogram.dispatcher.fsm.storage.base import BaseStorage
-from aiogram.dispatcher.fsm.storage.memory import MemoryStorage
-from aiogram.dispatcher.fsm.storage.redis import RedisStorage
+from aiogram.fsm.storage.base import BaseStorage
+from aiogram.fsm.storage.memory import MemoryStorage
+from aiogram.fsm.storage.redis import RedisStorage
 
 from app.dao.redis.base import create_redis
 from app.models.config.db import RedisConfig

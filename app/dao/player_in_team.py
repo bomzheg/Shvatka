@@ -26,7 +26,7 @@ class PlayerInTeamDao(BaseDAO[db.PlayerInTeam]):
             )
             .where(
                 db.PlayerInTeam.player_id == player.id,
-                db.PlayerInTeam.date_left == None,  # noqa: E711
+                db.PlayerInTeam.date_left.is_(None),  # noqa: E711
             )
         )
         try:
@@ -85,7 +85,7 @@ class PlayerInTeamDao(BaseDAO[db.PlayerInTeam]):
             select(db.PlayerInTeam)
             .where(
                 db.PlayerInTeam.player_id == player.id,
-                db.PlayerInTeam.date_left == None,  # noqa: E711
+                db.PlayerInTeam.date_left.is_(None),  # noqa: E711
             )
         )
         return result.scalar_one()

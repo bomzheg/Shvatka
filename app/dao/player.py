@@ -48,7 +48,7 @@ class PlayerDao(BaseDAO[db.Player]):
             .join(db.Player.teams)
             .where(
                 db.Player.id.in_(ids),
-                db.PlayerInTeam.date_left == None,  # noqa: E711
+                db.PlayerInTeam.date_left.is_(None),  # noqa
             )
         )
         players = result.all()

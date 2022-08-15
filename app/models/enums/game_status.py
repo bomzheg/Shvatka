@@ -20,8 +20,13 @@ status_desc = {
     GameStatus.finished: 'все команды финишировали',
     GameStatus.complete: 'завершена'
 }
-active_statuses = [
+ACTIVE_STATUSES = (
     GameStatus.getting_waivers,
     GameStatus.started,
     GameStatus.finished
-]
+)
+EDITABLE_STATUSES = (
+    GameStatus.underconstruction,
+    GameStatus.ready,
+    GameStatus.getting_waivers,
+)

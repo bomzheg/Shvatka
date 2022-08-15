@@ -1,8 +1,8 @@
-from .chat import Chat
-from .game import Game
-from .level import Level
-from .player import Player
-from .player_in_team import PlayerInTeam
-from .pool import VotedPlayer
-from .team import Team
-from .user import User
+from .chat import Chat  # noqa: F401
+from .game import Game  # noqa: F401
+from .level import Level  # noqa: F401
+from .player import Player  # noqa: F401
+from .player_in_team import PlayerInTeam  # noqa: F401
+from .pool import VotedPlayer  # noqa: F401
+from .team import Team  # noqa: F401
+from .user import User  # noqa: F401

@@ -67,7 +67,9 @@ def postgres_url(app_config: Config) -> str:
 
 
 @pytest.fixture(scope="session")
-def dp(postgres_url: str, app_config: Config, user_getter: UserGetter, dcf: Factory) -> Dispatcher:
+def dp(
+    postgres_url: str, app_config: Config, user_getter: UserGetter, dcf: Factory,
+) -> Dispatcher:
     return create_dispatcher(app_config, user_getter, dcf)
 
 

@@ -41,7 +41,8 @@ async def handle(update: Update, exception: Exception, log_chat_id: int, bot: Bo
     await bot.send_message(
         log_chat_id,
         f"Получено исключение {hd.quote(str(exception))}\n"
-        f"во время обработки апдейта {hd.quote(json.dumps(update.dict(exclude_none=True), default=str))}\n"
+        f"во время обработки апдейта "
+        f"{hd.quote(json.dumps(update.dict(exclude_none=True), default=str))}\n"
     )
 
 

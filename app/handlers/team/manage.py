@@ -15,15 +15,17 @@ from app.models import dto
 from app.services.player import join_to_team
 from app.services.team import create_team
 from app.utils.defaults_constants import DEFAULT_ROLE
-from app.utils.exceptions import TeamError, PlayerAlreadyInTeam, AnotherTeamInChat, PlayerRestoredInTeam
+from app.utils.exceptions import (
+    TeamError, PlayerAlreadyInTeam, AnotherTeamInChat, PlayerRestoredInTeam,
+)
 from app.views.commands import CREATE_TEAM_COMMAND, ADD_IN_TEAM_COMMAND
 from app.views.texts import NOT_SUPERGROUP_ERROR
 
 logger = logging.getLogger(__name__)
 
 
-# TODO все кнопки для редактирования команды останутся доступны для капитана если он сменил команду и снова капитан
-#  другой команды
+# TODO все кнопки для редактирования команды останутся доступны для капитана,
+#  если он сменил команду и снова капитан другой команды
 # TODO аналогично это может сработать для кнопок старой команды игрока с полномочиями
 async def cmd_create_team(
     message: Message, chat: dto.Chat, player: dto.Player, dao: HolderDao,

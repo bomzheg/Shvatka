@@ -2,7 +2,9 @@ from __future__ import annotations
 
 import secrets
 
-from sqlalchemy import Column, Integer, ForeignKey, Text, Enum, BigInteger, DateTime, UniqueConstraint
+from sqlalchemy import (
+    Column, Integer, ForeignKey, Text, Enum, BigInteger, DateTime, UniqueConstraint,
+)
 from sqlalchemy.orm import relationship
 
 from app.models.db import Base

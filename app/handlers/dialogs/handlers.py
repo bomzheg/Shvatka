@@ -4,6 +4,8 @@ from aiogram.types import CallbackQuery
 from aiogram_dialog import DialogManager
 from aiogram_dialog.widgets.kbd import Button
 
+from app.dao import GameDao
+from app.models import dto
 from app.services import game
 from app.services.game import get_game
 from app.states import MyGamesPanel
@@ -23,5 +25,7 @@ async def start_waivers(c: CallbackQuery, widget: Button, manager: DialogManager
     await c.answer()
     context_data = manager.data
     data = manager.current_context().dialog_data
-    game_ = await get_game(int(data["my_game_id"]), context_data["player"], context_data["dao"].game)
-    await game.start_waivers(game_, context_data["player"], context_data["dao"].game)
+    player: dto.Player = context_data["player"]
+    game_dao: GameDao = context_data["dao"].game
+    game_ = await get_game(int(data["my_game_id"]), player, game_dao)
+    await game.start_waivers(game_, player, game_dao)

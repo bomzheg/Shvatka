@@ -5,7 +5,7 @@ from datetime import datetime
 
 from app.models import db
 from app.models.enums import GameStatus
-from app.models.enums.game_status import active_statuses
+from app.models.enums.game_status import ACTIVE_STATUSES, EDITABLE_STATUSES
 from app.utils.datetime_utils import tz_game, tz_utc
 from .level import Level
 from .player import Player
@@ -23,7 +23,7 @@ class Game:
     levels: list[Level] = field(default_factory=list)
 
     def is_active(self):
-        return self.status in active_statuses
+        return self.status in ACTIVE_STATUSES
 
     def is_getting_waivers(self):
         return self.status == GameStatus.getting_waivers
@@ -61,7 +61,7 @@ class Game:
 
     @property
     def can_be_edited(self) -> bool:
-        return self.status in (GameStatus.underconstruction, GameStatus.ready, GameStatus.getting_waivers)
+        return self.status in EDITABLE_STATUSES
 
     def is_author_id(self, player_id: int) -> bool:
         return self.author.id == player_id

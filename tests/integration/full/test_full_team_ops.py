@@ -12,8 +12,12 @@ from app.services.player import upsert_player, get_my_role
 from app.services.user import upsert_user
 from app.views.commands import CREATE_TEAM_COMMAND, ADD_IN_TEAM_COMMAND
 from tests.fixtures.chat_constants import create_tg_chat
-from tests.fixtures.user_constants import create_tg_user, create_dto_hermione, create_tg_from_dto
-from tests.mocks.aiogram_mocks import mock_chat_owners, mock_get_chat, mock_reply, mock_chat_member
+from tests.fixtures.user_constants import (
+    create_tg_user, create_dto_hermione, create_tg_from_dto,
+)
+from tests.mocks.aiogram_mocks import (
+    mock_chat_owners, mock_get_chat, mock_reply, mock_chat_member,
+)
 
 
 @pytest.mark.asyncio

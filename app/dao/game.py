@@ -8,7 +8,7 @@ from app.dao import BaseDAO
 from app.models import db, dto
 from app.models.dto.scn.game import GameScenario
 from app.models.enums import GameStatus
-from app.models.enums.game_status import active_statuses
+from app.models.enums.game_status import ACTIVE_STATUSES
 
 
 class GameDao(BaseDAO[db.Game]):
@@ -64,7 +64,7 @@ class GameDao(BaseDAO[db.Game]):
     async def get_active_game(self) -> dto.Game | None:
         result = await self.session.execute(
             select(db.Game)
-            .where(db.Game.status.in_(active_statuses))
+            .where(db.Game.status.in_(ACTIVE_STATUSES))
             .options(
                 joinedload(db.Game.author)
                 .joinedload(db.Player.user)

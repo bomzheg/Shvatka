@@ -5,7 +5,9 @@ from app.models.dto import VotedPlayer
 from app.models.enums.played import Played
 
 
-async def get_voted_list(team: dto.Team, dao: HolderDao, poll: PollDao) -> dict[Played, list[VotedPlayer]]:
+async def get_voted_list(
+    team: dto.Team, dao: HolderDao, poll: PollDao
+) -> dict[Played, list[VotedPlayer]]:
     poll_date = await poll.get_dict_player_vote(team.id)
     voted_players = await dao.player.get_by_ids_with_user_and_pit(poll_date.keys())
     result = {}

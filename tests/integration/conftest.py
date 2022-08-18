@@ -1,6 +1,5 @@
 import logging
 import os
-import random
 
 import pytest
 import pytest_asyncio
@@ -75,8 +74,7 @@ def redis(app_config: Config) -> Redis:
     if os.name == "nt":  # windows testcontainers now not working
         yield create_redis(app_config.redis)
     else:
-        redis_port = random.randint(10_000, 100_000)
-        with RedisContainer("redis:latest", port_to_expose=redis_port) as redis_container:
+        with RedisContainer("redis:latest") as redis_container:
             url = redis_container.get_container_host_ip()
             port = redis_container.port_to_expose
             app_config.redis.url = url

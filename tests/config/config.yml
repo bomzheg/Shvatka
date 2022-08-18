@@ -8,7 +8,7 @@ bot:
 redis:
   url: localhost
   port: 6379
-  db: 0
+  db: 1
 db:
   type: postgresql
   connector: asyncpg

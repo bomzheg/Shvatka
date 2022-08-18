@@ -76,7 +76,7 @@ def redis(app_config: Config) -> Redis:
     else:
         with RedisContainer("redis:latest") as redis_container:
             url = redis_container.get_container_host_ip()
-            port = redis_container.port_to_expose
+            port = redis_container.get_exposed_port(redis_container.port_to_expose)
             app_config.redis.url = url
             app_config.redis.port = port
             redis = create_redis(app_config.redis)

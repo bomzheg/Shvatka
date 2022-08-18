@@ -7,7 +7,7 @@ from pathlib import Path
 from aiogram.client.session.aiohttp import AiohttpSession
 from aiogram.client.telegram import TelegramAPIServer
 
-from app.models.config.db import DBConfig
+from app.models.config.db import DBConfig, RedisConfig
 from app.models.config.storage import StorageConfig
 
 
@@ -18,6 +18,7 @@ class Config:
     bot: BotConfig
     storage: StorageConfig
     tg_client: TgClientConfig
+    redis: RedisConfig
 
     @property
     def app_dir(self) -> Path:

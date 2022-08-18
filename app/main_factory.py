@@ -5,6 +5,7 @@ from aiogram import Bot, Dispatcher
 from aiogram_dialog import DialogRegistry
 from dataclass_factory import Factory
 
+from app.dao.redis.base import create_redis
 from app.handlers import setup_handlers
 from app.handlers.dialogs import setup_dialogs
 from app.middlewares import setup_middlewares
@@ -26,7 +27,14 @@ def create_dispatcher(
     config: Config, user_getter: UserGetter, dcf: Factory
 ) -> Dispatcher:
     dp = Dispatcher(storage=(config.storage.create_storage()))
-    setup_middlewares(dp, create_pool(config.db), config.bot, user_getter, dcf)
+    setup_middlewares(
+        dp,
+        create_pool(config.db),
+        config.bot,
+        user_getter,
+        dcf,
+        create_redis(config.redis),
+    )
     registry = DialogRegistry(dp)
     setup_dialogs(registry)
     setup_handlers(dp, config.bot)

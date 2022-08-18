@@ -15,3 +15,7 @@ async def get_voted_list(
         vote = poll_date[voted.player.id]
         result.setdefault(vote, []).append(voted)
     return result
+
+
+async def add_vote(team: dto.Team, player: dto.Player, vote: Played, poll: PollDao):
+    await poll.add_player_vote(team.id, player.id, vote.name)

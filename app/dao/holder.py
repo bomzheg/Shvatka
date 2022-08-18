@@ -1,3 +1,4 @@
+from redis.asyncio.client import Redis  # noqa
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.dao import (
@@ -5,10 +6,11 @@ from app.dao import (
     LevelTimeDao, KeyTimeDao, OrganizerDao, PlayerDao,
     PlayerInTeamDao, TeamDao, WaiverDao,
 )
+from app.dao.redis.pool import PollDao
 
 
 class HolderDao:
-    def __init__(self, session: AsyncSession):
+    def __init__(self, session: AsyncSession, redis: Redis):
         self.session = session
         self.user = UserDao(self.session)
         self.chat = ChatDao(self.session)
@@ -22,6 +24,7 @@ class HolderDao:
         self.player_in_team = PlayerInTeamDao(self.session)
         self.team = TeamDao(self.session)
         self.waiver = WaiverDao(self.session)
+        self.poll = PollDao(redis)
 
     async def commit(self):
         await self.session.commit()

@@ -1,17 +1,20 @@
 import logging
 import os
+import random
 
 import pytest
 import pytest_asyncio
 from aiogram import Dispatcher, Bot
 from dataclass_factory import Factory
 from mockito import mock
+from redis.asyncio.client import Redis  # noqa
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 from testcontainers.postgres import PostgresContainer
+from testcontainers.redis import RedisContainer
 
 from app.dao.holder import HolderDao
-from app.dao.redis.pool import PollDao
+from app.dao.redis.base import create_redis
 from app.main_factory import create_dispatcher
 from app.models.config import Config
 from app.services.username_resolver.user_getter import UserGetter
@@ -23,13 +26,14 @@ logger = logging.getLogger(__name__)
 
 
 @pytest_asyncio.fixture
-async def dao(session: AsyncSession) -> HolderDao:
-    dao_ = HolderDao(session=session)
+async def dao(session: AsyncSession, redis: Redis) -> HolderDao:
+    dao_ = HolderDao(session=session, redis=redis)
     await clear_data(dao_)
     return dao_
 
 
 async def clear_data(dao: HolderDao):
+    await dao.poll.delete_all()
     await dao.level.delete_all()
     await dao.game.delete_all()
     await dao.player_in_team.delete_all()
@@ -67,6 +71,21 @@ def postgres_url(app_config: Config) -> str:
 
 
 @pytest.fixture(scope="session")
+def redis(app_config: Config) -> Redis:
+    if os.name == "nt":  # windows testcontainers now not working
+        yield create_redis(app_config.redis)
+    else:
+        redis_port = random.randint(10_000, 100_000)
+        with RedisContainer("redis:latest", port_to_expose=redis_port) as redis_container:
+            url = redis_container.get_container_host_ip()
+            port = redis_container.port_to_expose
+            app_config.redis.url = url
+            app_config.redis.port = port
+            redis = create_redis(app_config.redis)
+            yield redis
+
+
+@pytest.fixture(scope="session")
 def dp(
     postgres_url: str, app_config: Config, user_getter: UserGetter, dcf: Factory,
 ) -> Dispatcher:
@@ -84,8 +103,3 @@ def bot(app_config: Config) -> Bot:
     dummy = mock(Bot)
     setattr(dummy, "id", 123)
     return dummy
-
-
-@pytest.fixture
-def mock_poll_dao() -> PollDao:
-    return mock(PollDao)

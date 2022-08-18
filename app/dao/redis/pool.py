@@ -28,7 +28,7 @@ class PollDao:
         keys = await self.get_list_of_keys_pool(team_id=team_id)
         rez_list = []
         for key in keys:
-            if vote == await self.redis.get(key, encoding='utf-8'):
+            if vote == await self._get(key):
                 rez_list.append(
                     self.parse_player_id(key=key, team_id=team_id)
                 )
@@ -36,7 +36,7 @@ class PollDao:
 
     async def get_player_vote(self, team_id: int, player_id: int) -> str:
         key = self._create_key(team_id=team_id, player_id=player_id)
-        return await self.redis.get(key, encoding='utf-8')
+        return await self._get(key)
 
     async def add_player_vote(self, team_id: int, player_id: int, vote_var: str) -> None:
         key = self._create_key(team_id=team_id, player_id=player_id)
@@ -56,7 +56,7 @@ class PollDao:
             self.parse_player_id(
                 key=key,
                 team_id=team_id
-            ): Played[await self.redis.get(key, encoding='utf-8')]
+            ): Played[await self._get(key)]
             for key in await self.get_list_of_keys_pool(team_id=team_id)
         }
 
@@ -66,7 +66,7 @@ class PollDao:
 
     async def get_pool_msg_id(self, chat_id: int, game_id: int) -> int | None:
         key = self._create_msg_prefix(chat_id, game_id)
-        msg_id = await self.redis.get(key, encoding='utf-8')
+        msg_id = await self._get(key)
         return None if msg_id is None else int(msg_id)
 
     async def get_voted_team_ids(self) -> set[int]:
@@ -105,10 +105,14 @@ class PollDao:
         player_id = key[len(f"{self.prefix}:{team_id}:"):]
         return int(player_id)
 
-    async def remove_all_poll_data(self) -> None:
+    async def delete_all(self) -> None:
         keys: list = await self.redis.keys(f'{self.prefix}:*')
         keys.extend(await self.redis.keys(f'{self.msg_prefix}:*'))
         if len(keys) == 0:
             return logger.warning("pool-keys to delete not found")
         logger.warning("Next keys was deleted %s", ", ".join([key.decode() for key in keys]))
         await self.redis.delete(*keys)
+
+    async def _get(self, key: str, encoding: str = "utf-8"):
+        value = await self.redis.get(key)
+        return value.decode(encoding)

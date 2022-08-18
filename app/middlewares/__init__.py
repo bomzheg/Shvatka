@@ -1,5 +1,6 @@
 from aiogram import Dispatcher
 from dataclass_factory import Factory
+from redis.asyncio.client import Redis  # noqa
 from sqlalchemy.orm import sessionmaker
 
 from app.middlewares.config_middleware import ConfigMiddleware
@@ -12,9 +13,9 @@ from app.services.username_resolver.user_getter import UserGetter
 
 def setup_middlewares(
     dp: Dispatcher, pool: sessionmaker, bot_config: BotConfig,
-    user_getter: UserGetter, dcf: Factory,
+    user_getter: UserGetter, dcf: Factory, redis: Redis
 ):
     dp.update.middleware(ConfigMiddleware(bot_config))
-    dp.update.middleware(InitMiddleware(pool, user_getter, dcf))
+    dp.update.middleware(InitMiddleware(pool, user_getter, dcf, redis))
     dp.update.middleware(LoadDataMiddleware())
     dp.message.middleware(FixTargetMiddleware())

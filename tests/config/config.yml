@@ -5,6 +5,10 @@ bot:
     - 46866565
   botapi:
     type: official
+redis:
+  url: localhost
+  port: 6379
+  db: 0
 db:
   type: postgresql
   connector: asyncpg

@@ -2,7 +2,7 @@ import logging.config
 
 import yaml
 
-from app.config.db import load_db_config
+from app.config.db import load_db_config, load_redis_config
 from app.config.storage import load_storage_config
 from app.models.config import Config
 from app.models.config.main import Paths, BotConfig, BotApiConfig, BotApiType, TgClientConfig
@@ -20,7 +20,8 @@ def load_config(paths: Paths) -> Config:
         db=load_db_config(config_dct["db"]),
         bot=bot_config,
         storage=load_storage_config(config_dct["storage"]),
-        tg_client=TgClientConfig(bot_token=bot_config.token)
+        tg_client=TgClientConfig(bot_token=bot_config.token),
+        redis=load_redis_config(config_dct["redis"]),
     )
 
 

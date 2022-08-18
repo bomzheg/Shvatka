@@ -3,6 +3,7 @@ version: '3.2'
 services:
 
   shvatka_bot:
+    profiles: [ "bot" ]
     container_name: shvatka_bot
     restart: always
     image: bomzheg/shvatka_bot
@@ -13,15 +14,16 @@ services:
       - type: "bind"
         source: "./config"
         target: "/config"
-    env_file: config/.env
     entrypoint: [ "python3", "-m", "app"]
     networks:
       - reverse-proxy
       - botapi
+      - redis
     extra_hosts:
       - "host.docker.internal:host-gateway"
 
   telegram-bot-api:
+    profiles: [ "botapi" ]
     image: aiogram/telegram-bot-api:latest
     environment:
       TELEGRAM_API_ID: "6"
@@ -33,6 +35,7 @@ services:
       - botapi
 
   nginx:
+    profiles: [ "botapi" ]
     image: nginx:latest
     volumes:
       - telegram-bot-api-data:/usr/share/nginx/html/var/lib/telegram-bot-api:ro
@@ -41,10 +44,33 @@ services:
     networks:
       - botapi
 
+  redis-dev:
+    profiles: [ "dev" ]
+    image: "redis:6-alpine"
+    entrypoint: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    networks:
+      - redis
+    ports:
+      - "6379:6379"
+
+  redis:
+    profiles: [ "bot" ]
+    image: "redis:6-alpine"
+    entrypoint: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    networks:
+      - redis
+
 volumes:
   telegram-bot-api-data:
+  redis_data:
 
 networks:
   reverse-proxy:
     external:
       name: nginx-revers-proxy
+  redis:
+  botapi:

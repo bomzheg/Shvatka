@@ -241,3 +241,7 @@ class NoUsernameFound(UsernameResolverError):
 
 class MultipleUsernameFound(UsernameResolverError):
     notify_user = "К сожалению по этому username найдено несколько пользователей"
+
+
+class WaiverForbidden(GameError):
+    notify_user = "данному игроку запрещено подавать вейверы на эту игру"

@@ -33,6 +33,7 @@ async def dao(session: AsyncSession, redis: Redis) -> HolderDao:
 
 async def clear_data(dao: HolderDao):
     await dao.poll.delete_all()
+    await dao.waiver.delete_all()
     await dao.level.delete_all()
     await dao.game.delete_all()
     await dao.player_in_team.delete_all()

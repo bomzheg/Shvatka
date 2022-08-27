@@ -6,4 +6,6 @@ class Played(str, enum.Enum):
     no = 'no'
     think = 'think'
     revoked = 'revoked'
+    """не допущен капитаном"""
     not_allowed = 'not_allowed'
+    """не допущен организаторами"""

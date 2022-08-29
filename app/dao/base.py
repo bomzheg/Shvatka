@@ -32,6 +32,9 @@ class BaseDAO(Generic[Model]):
             delete(self.model)
         )
 
+    async def _delete(self, obj: Model):
+        await self.session.delete(obj)
+
     async def count(self):
         result = await self.session.execute(
             select(func.count(self.model.id))

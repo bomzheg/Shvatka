@@ -1,6 +1,7 @@
 import logging
 
 from app.dao import PlayerDao, PlayerInTeamDao
+from app.dao.holder import HolderDao
 from app.models import dto
 from app.utils.defaults_constants import DEFAULT_ROLE, EMOJI_BY_ROLE, DEFAULT_EMOJI
 from app.utils.exceptions import PlayerRestoredInTeam, CantBeAuthor, PromoteError
@@ -48,20 +49,26 @@ async def promote(actor: dto.Player, target: dto.Player, dao: PlayerDao):
     logger.info("player %s promoted for target %s", actor.id, target.id)
 
 
-async def join_to_team(
+async def join_team(
     player: dto.Player, team: dto.Team,
     dao: PlayerInTeamDao, role: str = DEFAULT_ROLE,
 ):
     try:
-        await dao.join_to_team(player, team, role=role)
+        await dao.join_team(player, team, role=role)
     except PlayerRestoredInTeam:
         await dao.commit()
         raise
     await dao.commit()
 
 
-async def leave(player: dto.Player, dao: PlayerInTeamDao):
-    await dao.leave_team(player)
+async def leave(player: dto.Player, dao: HolderDao):
+    if game := await dao.game.get_active_game():
+        await dao.waiver.delete(dto.Waiver(
+            player=player,
+            game=game,
+            team=await dao.player_in_team.get_team(player),
+        ))
+    await dao.player_in_team.leave_team(player)
     await dao.commit()
 
 

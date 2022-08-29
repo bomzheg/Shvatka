@@ -39,7 +39,7 @@ class PlayerInTeamDao(BaseDAO[db.PlayerInTeam]):
     async def have_team(self, player: dto.Player) -> bool:
         return await self.get_team(player) is not None
 
-    async def join_to_team(self, player: dto.Player, team: dto.Team, role: str):
+    async def join_team(self, player: dto.Player, team: dto.Team, role: str):
         await self.check_player_free(player)
         if player_in_team := await self.need_restore(player, team):
             player_in_team.date_left = None

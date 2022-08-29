@@ -3,9 +3,9 @@ from contextlib import suppress
 import pytest
 
 from app.dao.holder import HolderDao
-from app.models import db, dto
-from app.models.enums import GameStatus
+from app.models import db
 from app.models.enums.played import Played
+from app.services.game import create_game
 from app.services.player import join_to_team, leave
 from app.services.waiver import get_voted_list, add_vote
 from app.utils.exceptions import PlayerRestoredInTeam, WaiverForbidden
@@ -16,16 +16,12 @@ from tests.utils.team import create_first_team
 @pytest.mark.asyncio
 async def test_get_voted_list(dao: HolderDao):
     captain = await create_harry_player(dao)
+    await dao.player.promote(captain, captain)
+    await dao.commit()
+    captain.can_be_author = True
     team = await create_first_team(captain, dao)
     player = await create_hermi_player(dao)
-    game_db = db.Game(
-        author_id=captain.id,
-        name="good game",
-        status=GameStatus.underconstruction,
-    )
-    dao.game._save(game_db)
-    await dao.game.commit()
-    game = dto.Game.from_db(game=game_db, author=captain)
+    game = await create_game(captain, "good_game", dao.game)
 
     await join_to_team(player, team, dao.player_in_team)
     await add_vote(game, team, captain, Played.yes, dao)

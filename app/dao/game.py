@@ -77,3 +77,13 @@ class GameDao(BaseDAO[db.Game]):
         return dto.Game.from_db(
             game, dto.Player.from_db(game.author, dto.User.from_db(game.author.user))
         )
+
+    async def create_game(self, author: dto.Player, name: str) -> dto.Game:
+        game_db = db.Game(
+            author_id=author.id,
+            name=name,
+            status=GameStatus.underconstruction,
+        )
+        self._save(game_db)
+        await self._flush(game_db)
+        return dto.Game.from_db(game_db, author)

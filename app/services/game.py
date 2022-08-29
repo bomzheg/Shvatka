@@ -22,6 +22,13 @@ async def upsert_game(scn: dict, author: dto.Player, dao: HolderDao, dcf: Factor
     return game
 
 
+async def create_game(author: dto.Player, name: str, dao: GameDao) -> dto.Game:
+    check_allow_be_author(author)
+    game = await dao.create_game(author, name)
+    await dao.commit()
+    return game
+
+
 async def get_authors_games(author: dto.Player, dao: GameDao) -> list[dto.Game]:
     check_allow_be_author(author)
     return await dao.get_all_by_author(author)

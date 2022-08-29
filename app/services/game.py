@@ -43,7 +43,7 @@ async def start_waivers(game: dto.Game, author: dto.Player, dao: GameDao):
     await dao.commit()
 
 
-def check_no_game_active(dao: GameDao):
+async def check_no_game_active(dao: GameDao):
     if game := await dao.get_active_game():
         raise AnotherGameIsActive(
             game=game,

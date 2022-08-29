@@ -5,7 +5,7 @@ from app.dao.holder import HolderDao
 from app.models import dto
 from app.services.player import check_allow_be_author
 from app.services.scenario.game_ops import load_game
-from app.utils.exceptions import NotAuthorizedForEdit
+from app.utils.exceptions import NotAuthorizedForEdit, AnotherGameIsActive
 
 
 async def upsert_game(scn: dict, author: dto.Player, dao: HolderDao, dcf: Factory) -> dto.Game:
@@ -38,8 +38,17 @@ async def get_active(dao: GameDao) -> dto.Game:
 async def start_waivers(game: dto.Game, author: dto.Player, dao: GameDao):
     check_allow_be_author(author)
     check_is_author(game, author)
+    await check_no_game_active(dao)
     await dao.start_waivers(game)
     await dao.commit()
+
+
+def check_no_game_active(dao: GameDao):
+    if game := await dao.get_active_game():
+        raise AnotherGameIsActive(
+            game=game,
+            game_status=game.status,
+        )
 
 
 def check_is_author(game: dto.Game, player: dto.Player):

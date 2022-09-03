@@ -12,6 +12,9 @@ async def get_voted_list(
     voted_players = await dao.player.get_by_ids_with_user_and_pit(poll_date.keys())
     result = {}
     for voted in voted_players:
+        if voted.pit.team_id != team.id:
+            # if user change team after vote
+            continue
         vote = poll_date[voted.player.id]
         result.setdefault(vote, []).append(voted)
     return result

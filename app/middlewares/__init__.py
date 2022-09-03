@@ -1,6 +1,6 @@
 from aiogram import Dispatcher
 from dataclass_factory import Factory
-from redis.asyncio.client import Redis  # noqa
+from redis.asyncio.client import Redis
 from sqlalchemy.orm import sessionmaker
 
 from app.middlewares.config_middleware import ConfigMiddleware

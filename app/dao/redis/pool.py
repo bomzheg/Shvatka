@@ -1,6 +1,6 @@
 import logging
 
-from redis.asyncio.client import Redis  # noqa
+from redis.asyncio.client import Redis
 
 from app.models.enums.played import Played
 

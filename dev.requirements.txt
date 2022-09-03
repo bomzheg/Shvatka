@@ -4,5 +4,8 @@ pytest
 pytest-ordering
 pytest-asyncio==0.18.3
 sqlalchemy2-stubs
+types-python-dateutil
+types-redis
+types-PyYAML
 testcontainers[postgresql]
 mockito

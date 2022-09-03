@@ -6,7 +6,7 @@ import pytest_asyncio
 from aiogram import Dispatcher, Bot
 from dataclass_factory import Factory
 from mockito import mock
-from redis.asyncio.client import Redis  # noqa
+from redis.asyncio.client import Redis
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 from testcontainers.postgres import PostgresContainer

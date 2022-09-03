@@ -3,7 +3,7 @@ from typing import Callable, Any, Awaitable
 from aiogram import BaseMiddleware
 from aiogram.types import TelegramObject
 from dataclass_factory import Factory
-from redis.asyncio.client import Redis  # noqa
+from redis.asyncio.client import Redis
 from sqlalchemy.orm import sessionmaker
 
 from app.dao.holder import HolderDao

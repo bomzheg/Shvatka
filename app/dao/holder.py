@@ -1,4 +1,4 @@
-from redis.asyncio.client import Redis  # noqa
+from redis.asyncio.client import Redis
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.dao import (

@@ -48,6 +48,10 @@ async def test_get_voted_list(dao: HolderDao):
 
     with suppress(PlayerRestoredInTeam):
         await join_team(player, team, dao.player_in_team)
+    await approve_waivers(game, team, captain, dao)
+    # vote not restored after restored player in team
+    assert 1 == await dao.waiver.count()
+
     waiver = db.Waiver(
         player_id=player.id,
         team_id=team.id,

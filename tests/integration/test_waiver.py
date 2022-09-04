@@ -7,7 +7,7 @@ from app.models import db
 from app.models.enums.played import Played
 from app.services.game import create_game, start_waivers
 from app.services.player import join_team, leave
-from app.services.waiver import get_voted_list, add_vote, approve_waivers
+from app.services.waiver import get_vote_to_voted, add_vote, approve_waivers
 from app.utils.exceptions import PlayerRestoredInTeam, WaiverForbidden
 from tests.utils.player import create_hermi_player, create_harry_player
 from tests.utils.team import create_first_team
@@ -28,7 +28,7 @@ async def test_get_voted_list(dao: HolderDao):
     await add_vote(game, team, captain, Played.yes, dao)
     await add_vote(game, team, player, Played.yes, dao)
 
-    actual = await get_voted_list(team, dao)
+    actual = await get_vote_to_voted(team, dao)
     assert len(actual) == 1
     actual_voted = actual[Played.yes]
     assert len(actual_voted) == 2
@@ -37,7 +37,7 @@ async def test_get_voted_list(dao: HolderDao):
     assert 2 == await dao.waiver.count()
 
     await leave(player, dao)
-    actual = await get_voted_list(team, dao)
+    actual = await get_vote_to_voted(team, dao)
     assert len(actual) == 1
     actual_voted = actual[Played.yes]
     assert len(actual_voted) == 1

@@ -63,11 +63,13 @@ async def join_team(
 
 async def leave(player: dto.Player, dao: HolderDao):
     if game := await dao.game.get_active_game():
+        team = await dao.player_in_team.get_team(player)
         await dao.waiver.delete(dto.Waiver(
             player=player,
             game=game,
-            team=await dao.player_in_team.get_team(player),
+            team=team,
         ))
+        await dao.poll.del_player_vote(team_id=team.id, player_id=player.id)
     await dao.player_in_team.leave_team(player)
     await dao.commit()
 

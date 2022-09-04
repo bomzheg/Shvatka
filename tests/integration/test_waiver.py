@@ -1,5 +1,3 @@
-from contextlib import suppress
-
 import pytest
 
 from app.dao.holder import HolderDao
@@ -46,7 +44,7 @@ async def test_get_voted_list(dao: HolderDao):
     await approve_waivers(game, team, captain, dao)
     assert 1 == await dao.waiver.count()
 
-    with suppress(PlayerRestoredInTeam):
+    with pytest.raises(PlayerRestoredInTeam):
         await join_team(player, team, dao.player_in_team)
     await approve_waivers(game, team, captain, dao)
     # vote not restored after restored player in team

@@ -1,4 +1,4 @@
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -26,7 +26,7 @@ class PlayerInTeamDao(BaseDAO[db.PlayerInTeam]):
             )
             .where(
                 db.PlayerInTeam.player_id == player.id,
-                db.PlayerInTeam.date_left.is_(None),  # noqa: E711
+                get_not_leaved_clause(),
             )
         )
         try:
@@ -67,11 +67,13 @@ class PlayerInTeamDao(BaseDAO[db.PlayerInTeam]):
             )
 
     async def need_restore(self, player: dto.Player, team: dto.Team) -> db.PlayerInTeam:
+        today = date.today()
         result = await self.session.execute(
             select(db.PlayerInTeam)
             .where(
                 db.PlayerInTeam.player_id == player.id,
-                db.PlayerInTeam.date_left == date.today(),
+                db.PlayerInTeam.date_left >= today,
+                db.PlayerInTeam.date_left < today + timedelta(days=1),
                 db.PlayerInTeam.team_id == team.id,
             )
         )
@@ -85,7 +87,12 @@ class PlayerInTeamDao(BaseDAO[db.PlayerInTeam]):
             select(db.PlayerInTeam)
             .where(
                 db.PlayerInTeam.player_id == player.id,
-                db.PlayerInTeam.date_left.is_(None),  # noqa: E711
+                get_not_leaved_clause(),
             )
         )
         return result.scalar_one()
+
+
+def get_not_leaved_clause():
+    # noinspection PyUnresolvedReferences
+    return db.PlayerInTeam.date_left.is_(None)  # noqa: E711

@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from sqlalchemy import update
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -87,3 +89,10 @@ class GameDao(BaseDAO[db.Game]):
         self._save(game_db)
         await self._flush(game_db)
         return dto.Game.from_db(game_db, author)
+
+    async def set_start_at(self, game: dto.Game, start_at: datetime):
+        await self.session.execute(
+            update(db.Game)
+            .where(db.Game.id == game.id)
+            .values(start_at=start_at)
+        )

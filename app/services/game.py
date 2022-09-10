@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from dataclass_factory import Factory
 
 from app.dao import GameDao
@@ -5,6 +7,7 @@ from app.dao.holder import HolderDao
 from app.models import dto
 from app.services.player import check_allow_be_author
 from app.services.scenario.game_ops import load_game
+from app.services.scheduler import Scheduler
 from app.utils.exceptions import NotAuthorizedForEdit, AnotherGameIsActive
 
 
@@ -47,6 +50,25 @@ async def start_waivers(game: dto.Game, author: dto.Player, dao: GameDao):
     check_is_author(game, author)
     await check_no_game_active(dao)
     await dao.start_waivers(game)
+    await dao.commit()
+
+
+async def plain_start(
+    game: dto.Game,
+    author: dto.Player,
+    start_at: datetime,
+    dao: GameDao,
+    scheduler: Scheduler,
+):
+    check_allow_be_author(author)
+    check_is_author(game, author)
+    await check_no_game_active(dao)
+    await dao.set_start_at(game, start_at)
+    game.start_at = start_at
+
+    await scheduler.plain_prepare(game)
+    await scheduler.plain_start(game)
+
     await dao.commit()
 
 

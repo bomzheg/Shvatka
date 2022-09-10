@@ -3,15 +3,16 @@ from typing import AsyncContextManager
 
 from app.dao.holder import HolderDao
 from app.models import dto
+from app.models.dto.scheduled_context import ScheduledContext
 from app.services.game_play import prepare_game, start_game
 from app.services.scheduler.context import ScheduledContextHolder
 
 
 @asynccontextmanager
-async def prepare_context() -> AsyncContextManager[dto.ScheduledContext]:
+async def prepare_context() -> AsyncContextManager[ScheduledContext]:
     async with ScheduledContextHolder.poll() as session:
         dao = HolderDao(session=session, redis=ScheduledContextHolder.redis)
-        yield dto.ScheduledContext(dao=dao, bot=ScheduledContextHolder.bot)
+        yield ScheduledContext(dao=dao, bot=ScheduledContextHolder.bot)
 
 
 async def prepare_game_wrapper(game: dto.Game):

@@ -10,3 +10,4 @@ ujson
 redis>=4.2.0
 pyrogram
 dataclass_factory~=2.16
+apscheduler<4

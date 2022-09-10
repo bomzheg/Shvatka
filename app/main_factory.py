@@ -4,14 +4,16 @@ from pathlib import Path
 from aiogram import Bot, Dispatcher
 from aiogram_dialog import DialogRegistry
 from dataclass_factory import Factory
+from redis.asyncio.client import Redis
+from sqlalchemy.orm import sessionmaker
 
-from app.dao.redis.base import create_redis
 from app.handlers import setup_handlers
 from app.handlers.dialogs import setup_dialogs
 from app.middlewares import setup_middlewares
 from app.models.config import Config
+from app.models.config.db import RedisConfig
 from app.models.config.main import Paths
-from app.models.db import create_pool
+from app.services.scheduler.scheduler import Scheduler
 from app.services.username_resolver.user_getter import UserGetter
 
 
@@ -24,21 +26,29 @@ def create_bot(config: Config) -> Bot:
 
 
 def create_dispatcher(
-    config: Config, user_getter: UserGetter, dcf: Factory
+    config: Config, user_getter: UserGetter, dcf: Factory, pool: sessionmaker,
+    redis: Redis, scheduler: Scheduler,
 ) -> Dispatcher:
     dp = Dispatcher(storage=(config.storage.create_storage()))
     setup_middlewares(
-        dp,
-        create_pool(config.db),
-        config.bot,
-        user_getter,
-        dcf,
-        create_redis(config.redis),
+        dp=dp,
+        pool=pool,
+        bot_config=config.bot,
+        user_getter=user_getter,
+        dcf=dcf,
+        redis=redis,
+        scheduler=scheduler,
     )
     registry = DialogRegistry(dp)
     setup_dialogs(registry)
     setup_handlers(dp, config.bot)
     return dp
+
+
+def create_scheduler(
+    pool: sessionmaker, redis: Redis, bot: Bot, redis_config: RedisConfig
+) -> Scheduler:
+    return Scheduler(redis_config=redis_config, pool=pool, redis=redis, bot=bot)
 
 
 def get_paths() -> Paths:

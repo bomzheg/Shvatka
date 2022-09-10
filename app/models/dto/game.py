@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, timedelta
 
+from app.config.constants import TIME_TO_PREPARING_GAME
 from app.models import db
 from app.models.enums import GameStatus
 from app.models.enums.game_status import ACTIVE_STATUSES, EDITABLE_STATUSES
@@ -42,6 +43,10 @@ class Game:
 
     def get_utc_start_datetime(self):
         return self.get_started_datetime(tz=tz_utc)
+
+    @property
+    def prepared_at(self):
+        return self.start_at - timedelta(minutes=TIME_TO_PREPARING_GAME)
 
     @property
     def can_be_delete(self) -> bool:

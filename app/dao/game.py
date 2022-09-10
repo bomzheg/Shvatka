@@ -57,10 +57,16 @@ class GameDao(BaseDAO[db.Game]):
         return [dto.Game.from_db(game, author) for game in games]
 
     async def start_waivers(self, game: dto.Game):
+        await self.set_status(game, GameStatus.getting_waivers)
+
+    async def start(self, game: dto.Game):
+        await self.set_status(game, GameStatus.started)
+
+    async def set_status(self, game: dto.Game, status: GameStatus):
         await self.session.execute(
             update(db.Game)
             .where(db.Game.id == game.id)
-            .values(status=GameStatus.getting_waivers)
+            .values(status=status)
         )
 
     async def get_active_game(self) -> dto.Game | None:

@@ -13,17 +13,6 @@ class PollDao:
         self.msg_prefix = "msg_poll"
         self.redis = redis
 
-    async def get_dict_vote_player(self, team_id: int) -> dict[Played, list[int]]:
-        """
-        :param team_id:
-        :return: словарь в формате vote:[player_id1, player_id2, ...]
-        """
-        in_dict = await self.get_dict_player_vote(team_id)
-        out_dict = dict()
-        for player_id, vote in in_dict.items():
-            out_dict.setdefault(vote, []).append(player_id)
-        return out_dict
-
     async def get_list_player_with_vote(self, team_id: int, vote: str) -> list[int]:
         keys = await self.get_list_of_keys_pool(team_id=team_id)
         rez_list = []

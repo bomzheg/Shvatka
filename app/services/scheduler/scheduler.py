@@ -50,7 +50,7 @@ class Scheduler:
     async def plain_prepare(self, game: dto.Game):
         self.scheduler.add_job(
             func=prepare_game_wrapper,
-            kwargs={"game": game},
+            kwargs={"game_id": game.id, "author_id": game.author.id},
             trigger='date',
             run_date=game.prepared_at.astimezone(tz=tz_utc),
             timezone=tz_utc,
@@ -59,7 +59,7 @@ class Scheduler:
     async def plain_start(self, game: dto.Game):
         self.scheduler.add_job(
             func=start_game_wrapper,
-            kwargs={"game": game},
+            kwargs={"game_id": game.id, "author_id": game.author.id},
             trigger='date',
             run_date=game.start_at.astimezone(tz=tz_utc),
             timezone=tz_utc,

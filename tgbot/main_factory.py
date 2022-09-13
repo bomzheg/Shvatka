@@ -3,6 +3,9 @@ import os
 from pathlib import Path
 
 from aiogram import Bot, Dispatcher
+from aiogram.fsm.storage.base import BaseStorage
+from aiogram.fsm.storage.memory import MemoryStorage
+from aiogram.fsm.storage.redis import RedisStorage
 from aiogram_dialog import DialogRegistry
 from dataclass_factory import Factory
 from redis.asyncio.client import Redis
@@ -13,6 +16,7 @@ from sqlalchemy.orm import sessionmaker
 from shvatka.models.config import Config
 from shvatka.models.config.db import RedisConfig, DBConfig
 from shvatka.models.config.main import Paths
+from shvatka.models.config.storage import StorageConfig, StorageType
 from shvatka.services.scheduler.scheduler import Scheduler
 from shvatka.services.username_resolver.user_getter import UserGetter
 from tgbot.dialogs import setup_dialogs
@@ -34,7 +38,7 @@ def create_dispatcher(
     config: Config, user_getter: UserGetter, dcf: Factory, pool: sessionmaker,
     redis: Redis, scheduler: Scheduler,
 ) -> Dispatcher:
-    dp = Dispatcher(storage=(config.storage.create_storage()))
+    dp = Dispatcher(storage=create_storage(config.storage))
     setup_middlewares(
         dp=dp,
         pool=pool,
@@ -48,6 +52,17 @@ def create_dispatcher(
     setup_dialogs(registry)
     setup_handlers(dp, config.bot)
     return dp
+
+
+def create_storage(config: StorageConfig) -> BaseStorage:
+    logger.info("creating storage for type %s", config.type_)
+    match config.type_:
+        case StorageType.memory:
+            return MemoryStorage()
+        case StorageType.redis:
+            return RedisStorage(create_redis(config.redis))
+        case _:
+            raise NotImplementedError
 
 
 def create_scheduler(

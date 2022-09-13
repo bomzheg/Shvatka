@@ -12,8 +12,8 @@ from app.models.config.db import RedisConfig
 from app.models.config.main import Paths
 from app.services.scheduler.scheduler import Scheduler
 from app.services.username_resolver.user_getter import UserGetter
+from tgbot.dialogs import setup_dialogs
 from tgbot.handlers import setup_handlers
-from tgbot.handlers.dialogs import setup_dialogs
 from tgbot.middlewares import setup_middlewares
 
 

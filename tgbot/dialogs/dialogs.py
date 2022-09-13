@@ -2,8 +2,8 @@ from aiogram_dialog import Dialog, Window
 from aiogram_dialog.widgets.kbd import ScrollingGroup, Select, SwitchTo, Button
 from aiogram_dialog.widgets.text import Const, Format
 
-from tgbot.handlers.dialogs.getters import get_my_games, get_game, already_getting_waivers
-from tgbot.handlers.dialogs.handlers import select_my_game, start_waivers
+from tgbot.dialogs.getters import get_my_games, get_game, already_getting_waivers
+from tgbot.dialogs.handlers import select_my_game, start_waivers
 from tgbot.states import MyGamesPanel
 
 games = Dialog(

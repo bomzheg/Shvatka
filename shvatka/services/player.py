@@ -1,6 +1,6 @@
 import logging
 
-from shvatka.dao import PlayerDao, PlayerInTeamDao
+from shvatka.dal.player import PlayerUpserter, PlayerTeamChecker, PlayerPromoter, TeamJoiner
 from shvatka.dao.holder import HolderDao
 from shvatka.models import dto
 from shvatka.utils.defaults_constants import DEFAULT_ROLE, EMOJI_BY_ROLE, DEFAULT_EMOJI
@@ -9,30 +9,30 @@ from shvatka.utils.exceptions import PlayerRestoredInTeam, CantBeAuthor, Promote
 logger = logging.getLogger(__name__)
 
 
-async def upsert_player(user: dto.User, dao: PlayerDao) -> dto.Player:
+async def upsert_player(user: dto.User, dao: PlayerUpserter) -> dto.Player:
     player_user = await dao.upsert_player(user)
     await dao.commit()
     return player_user
 
 
-async def have_team(player: dto.Player, dao: PlayerInTeamDao) -> bool:
+async def have_team(player: dto.Player, dao: PlayerTeamChecker) -> bool:
     return await dao.have_team(player)
 
 
-async def get_my_team(player: dto.Player, dao: PlayerInTeamDao) -> dto.Team:
+async def get_my_team(player: dto.Player, dao: PlayerTeamChecker) -> dto.Team:
     return await dao.get_team(player)
 
 
-async def get_my_role(player: dto.Player, dao: PlayerInTeamDao) -> str:
+async def get_my_role(player: dto.Player, dao: PlayerTeamChecker) -> str:
     return (await dao.get_player_in_team(player)).role
 
 
-async def get_my_emoji(player: dto.Player, dao: PlayerInTeamDao) -> str:
+async def get_my_emoji(player: dto.Player, dao: PlayerTeamChecker) -> str:
     pit = await dao.get_player_in_team(player)
     return pit.emoji or EMOJI_BY_ROLE.get(pit.role, DEFAULT_EMOJI)
 
 
-async def promote(actor: dto.Player, target: dto.Player, dao: PlayerDao):
+async def promote(actor: dto.Player, target: dto.Player, dao: PlayerPromoter):
     if not actor.can_be_author:
         raise CantBeAuthor(
             notify_user="Чтобы повысить другого пользователя - "
@@ -51,7 +51,7 @@ async def promote(actor: dto.Player, target: dto.Player, dao: PlayerDao):
 
 async def join_team(
     player: dto.Player, team: dto.Team,
-    dao: PlayerInTeamDao, role: str = DEFAULT_ROLE,
+    dao: TeamJoiner, role: str = DEFAULT_ROLE,
 ):
     try:
         await dao.join_team(player, team, role=role)

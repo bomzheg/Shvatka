@@ -2,7 +2,7 @@ import logging
 
 from aiogram import Dispatcher
 
-from app.models.config.main import BotConfig
+from shvatka.models.config.main import BotConfig
 from tgbot.handlers import base, game
 from tgbot.handlers import errors
 from tgbot.handlers import last

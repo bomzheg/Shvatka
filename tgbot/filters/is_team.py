@@ -1,6 +1,6 @@
 from aiogram.filters import BaseFilter
 
-from app.models import dto
+from shvatka.models import dto
 
 
 class IsTeamFilter(BaseFilter):

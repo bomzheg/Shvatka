@@ -1,11 +1,12 @@
 import asyncio
 import logging.config
+
 from alembic import context
 from sqlalchemy import pool
 from sqlalchemy.ext.asyncio import AsyncEngine
 from sqlalchemy.future import create_engine
 
-from app.models.db import Base
+from shvatka.models.db import Base
 
 config = context.config
 

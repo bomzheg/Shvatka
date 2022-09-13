@@ -6,16 +6,16 @@ from aiogram.filters import Command, CommandObject
 from aiogram.types import Message
 from aiogram.utils.text_decorations import html_decoration as hd
 
-from app.dao.holder import HolderDao
-from app.models import dto
-from app.services.player import join_team
-from app.services.team import create_team
-from app.utils.defaults_constants import DEFAULT_ROLE
-from app.utils.exceptions import (
+from shvatka.dao.holder import HolderDao
+from shvatka.models import dto
+from shvatka.services.player import join_team
+from shvatka.services.team import create_team
+from shvatka.utils.defaults_constants import DEFAULT_ROLE
+from shvatka.utils.exceptions import (
     TeamError, PlayerAlreadyInTeam, AnotherTeamInChat, PlayerRestoredInTeam,
 )
-from app.views.commands import CREATE_TEAM_COMMAND, ADD_IN_TEAM_COMMAND
-from app.views.texts import NOT_SUPERGROUP_ERROR
+from shvatka.views.commands import CREATE_TEAM_COMMAND, ADD_IN_TEAM_COMMAND
+from shvatka.views.texts import NOT_SUPERGROUP_ERROR
 from tgbot.filters.game_status import GameStatusFilter
 from tgbot.filters.has_target import HasTargetFilter
 from tgbot.filters.is_admin import is_admin_filter

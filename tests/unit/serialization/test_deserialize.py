@@ -3,10 +3,10 @@ from copy import deepcopy
 import pytest
 from dataclass_factory import Factory
 
-from app.models.enums.hint_type import HintType
-from app.services.scenario.game_ops import load_game
-from app.services.scenario.level_ops import load_level
-from app.utils.exceptions import ScenarioNotCorrect
+from shvatka.models.enums.hint_type import HintType
+from shvatka.services.scenario.game_ops import load_game
+from shvatka.services.scenario.level_ops import load_level
+from shvatka.utils.exceptions import ScenarioNotCorrect
 
 
 def test_deserialize_game(simple_scn: dict, dcf: Factory):

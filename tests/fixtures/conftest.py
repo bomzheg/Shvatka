@@ -1,6 +1,6 @@
 import pytest
 
-from app.models.config.main import Paths
+from shvatka.models.config.main import Paths
 
 
 @pytest.fixture

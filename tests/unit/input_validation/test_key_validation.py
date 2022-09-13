@@ -1,6 +1,6 @@
 import random
 
-from app.utils.input_validation import normalize_key, is_multiple_keys_normal, is_key_valid
+from shvatka.utils.input_validation import normalize_key, is_multiple_keys_normal, is_key_valid
 
 
 def test_normal_single_key(valid_keys: list[str]):

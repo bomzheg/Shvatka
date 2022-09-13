@@ -3,22 +3,22 @@ from typing import Callable, Any, Awaitable
 from aiogram import BaseMiddleware
 from aiogram.types import TelegramObject
 
-from app.dao.holder import HolderDao
-from app.models import dto
-from app.services.chat import upsert_chat
-from app.services.game import get_active
-from app.services.player import upsert_player
-from app.services.team import get_by_chat
-from app.services.user import upsert_user
+from shvatka.dao.holder import HolderDao
+from shvatka.models import dto
+from shvatka.services.chat import upsert_chat
+from shvatka.services.game import get_active
+from shvatka.services.player import upsert_player
+from shvatka.services.team import get_by_chat
+from shvatka.services.user import upsert_user
 
 
 class LoadDataMiddleware(BaseMiddleware):
 
     async def __call__(
-            self,
-            handler: Callable[[TelegramObject, dict[str, Any]], Awaitable[Any]],
-            event: TelegramObject,
-            data: dict[str, Any]
+        self,
+        handler: Callable[[TelegramObject, dict[str, Any]], Awaitable[Any]],
+        event: TelegramObject,
+        data: dict[str, Any]
     ) -> Any:
         holder_dao: HolderDao = data["dao"]
         user = await save_user(data, holder_dao)

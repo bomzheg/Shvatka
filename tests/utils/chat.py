@@ -1,4 +1,4 @@
-from app.models import dto, db
+from shvatka.models import dto, db
 
 
 def assert_dto_chat(expected: dto.Chat, actual: dto.Chat):

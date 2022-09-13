@@ -14,5 +14,5 @@ ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 VOLUME /log
 VOLUME /config
 EXPOSE 3000
-COPY app app
+COPY shvatka app
 ENTRYPOINT ["python3", "-m", "app"]

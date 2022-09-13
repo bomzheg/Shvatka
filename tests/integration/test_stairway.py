@@ -10,7 +10,7 @@ from alembic.command import downgrade, upgrade
 from alembic.config import Config
 from alembic.script import Script, ScriptDirectory
 
-from app.models.config.main import Paths
+from shvatka.models.config.main import Paths
 
 
 def get_revisions():

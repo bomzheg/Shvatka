@@ -6,11 +6,11 @@ from aiogram.methods import SendMessage
 from aiogram.types import Update, Message
 from mockito import ANY
 
-from app.dao.holder import HolderDao
-from app.models.enums.chat_type import ChatType
-from app.services.player import upsert_player, get_my_role
-from app.services.user import upsert_user
-from app.views.commands import CREATE_TEAM_COMMAND, ADD_IN_TEAM_COMMAND
+from shvatka.dao.holder import HolderDao
+from shvatka.models.enums.chat_type import ChatType
+from shvatka.services.player import upsert_player, get_my_role
+from shvatka.services.user import upsert_user
+from shvatka.views.commands import CREATE_TEAM_COMMAND, ADD_IN_TEAM_COMMAND
 from tests.fixtures.chat_constants import create_tg_chat
 from tests.fixtures.user_constants import (
     create_tg_user, create_dto_hermione, create_tg_from_dto,

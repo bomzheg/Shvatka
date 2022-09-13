@@ -4,10 +4,10 @@ from pathlib import Path
 import pytest
 from dataclass_factory import Factory
 
-from app.config.logging_config import setup_logging
-from app.config.main import load_config
-from app.models.config.main import Paths, Config
-from app.models.schems import schemas
+from shvatka.config.logging_config import setup_logging
+from shvatka.config.main import load_config
+from shvatka.models.config.main import Paths, Config
+from shvatka.models.schems import schemas
 
 
 @pytest.fixture(scope="session", autouse=True)

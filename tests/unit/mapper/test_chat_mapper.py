@@ -1,4 +1,4 @@
-from app.models import dto
+from shvatka.models import dto
 from tests.fixtures.chat_constants import create_tg_chat, create_dto_chat
 
 

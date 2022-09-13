@@ -1,9 +1,9 @@
 import pytest
 
-from app.dao.holder import HolderDao
-from app.services.player import join_team, get_my_team, get_my_role
-from app.utils.defaults_constants import DEFAULT_ROLE, CAPTAIN_ROLE
-from app.utils.exceptions import PlayerAlreadyInTeam
+from shvatka.dao.holder import HolderDao
+from shvatka.services.player import join_team, get_my_team, get_my_role
+from shvatka.utils.defaults_constants import DEFAULT_ROLE, CAPTAIN_ROLE
+from shvatka.utils.exceptions import PlayerAlreadyInTeam
 from tests.utils.player import create_hermi_player, create_harry_player, create_ron_player
 from tests.utils.team import create_first_team, create_second_team
 

@@ -1,7 +1,7 @@
 from mockito import when
 
-from app.dao.redis.pool import PollDao
-from app.models.enums.played import Played
+from shvatka.dao.redis.pool import PollDao
+from shvatka.models.enums.played import Played
 from tests.mocks.aiogram_mocks import mock_coro
 
 

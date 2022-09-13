@@ -3,8 +3,8 @@ from typing import Any, Union, Dict
 from aiogram.filters import BaseFilter
 from aiogram.types import Message
 
-from app.models import dto
-from app.models.enums import GameStatus
+from shvatka.models import dto
+from shvatka.models.enums import GameStatus
 
 
 class GameStatusFilter(BaseFilter):

@@ -2,11 +2,11 @@ from aiogram_dialog import DialogManager
 from aiogram_dialog.context.context import Context
 from aiogram_dialog.widgets.when import Whenable
 
-from app.dao.holder import HolderDao
-from app.models import dto
-from app.models.enums import GameStatus
-from app.services import game
-from app.services.game import get_authors_games
+from shvatka.dao.holder import HolderDao
+from shvatka.models import dto
+from shvatka.models.enums import GameStatus
+from shvatka.services import game
+from shvatka.services.game import get_authors_games
 
 
 async def get_my_games(dao: HolderDao, player: dto.Player, **_) -> dict[str, list[dto.Game]]:

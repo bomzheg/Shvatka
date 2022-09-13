@@ -1,7 +1,7 @@
-from app.dao.holder import HolderDao
-from app.models import dto
-from app.services.player import upsert_player
-from app.services.user import upsert_user
+from shvatka.dao.holder import HolderDao
+from shvatka.models import dto
+from shvatka.services.player import upsert_player
+from shvatka.services.user import upsert_user
 from tests.fixtures.user_constants import create_dto_hermione, create_dto_harry, create_dto_ron
 
 

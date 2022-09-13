@@ -12,11 +12,11 @@ from sqlalchemy.orm import sessionmaker, close_all_sessions
 from testcontainers.postgres import PostgresContainer
 from testcontainers.redis import RedisContainer
 
-from app.dao.holder import HolderDao
-from app.dao.redis.base import create_redis
-from app.models.config import Config
-from app.services.scheduler import Scheduler
-from app.services.username_resolver.user_getter import UserGetter
+from shvatka.dao.holder import HolderDao
+from shvatka.dao.redis.base import create_redis
+from shvatka.models.config import Config
+from shvatka.services.scheduler import Scheduler
+from shvatka.services.username_resolver.user_getter import UserGetter
 from tests.fixtures.conftest import fixtures_resource_path  # noqa: F401
 from tests.fixtures.scn_fixtures import simple_scn  # noqa: F401
 from tests.mocks.config import DBConfig

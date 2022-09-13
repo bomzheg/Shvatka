@@ -1,4 +1,4 @@
-from app.utils.input_validation import is_level_id_correct
+from shvatka.utils.input_validation import is_level_id_correct
 
 
 def test_normal_id(valid_id: list[str]):

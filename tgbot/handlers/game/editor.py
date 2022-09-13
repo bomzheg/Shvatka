@@ -7,10 +7,10 @@ from aiogram.types import Message
 from aiogram_dialog import StartMode, DialogManager
 from dataclass_factory import Factory
 
-from app.dao.holder import HolderDao
-from app.models import dto
-from app.services.game import upsert_game
-from app.utils.exceptions import ScenarioNotCorrect
+from shvatka.dao.holder import HolderDao
+from shvatka.models import dto
+from shvatka.services.game import upsert_game
+from shvatka.utils.exceptions import ScenarioNotCorrect
 from tgbot.filters.game_status import GameStatusFilter
 from tgbot.states import MyGamesPanel
 

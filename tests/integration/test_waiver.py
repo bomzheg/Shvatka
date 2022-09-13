@@ -1,12 +1,12 @@
 import pytest
 
-from app.dao.holder import HolderDao
-from app.models import db
-from app.models.enums.played import Played
-from app.services.game import create_game, start_waivers
-from app.services.player import join_team, leave
-from app.services.waiver import get_vote_to_voted, add_vote, approve_waivers
-from app.utils.exceptions import PlayerRestoredInTeam, WaiverForbidden
+from shvatka.dao.holder import HolderDao
+from shvatka.models import db
+from shvatka.models.enums.played import Played
+from shvatka.services.game import create_game, start_waivers
+from shvatka.services.player import join_team, leave
+from shvatka.services.waiver import get_vote_to_voted, add_vote, approve_waivers
+from shvatka.utils.exceptions import PlayerRestoredInTeam, WaiverForbidden
 from tests.utils.player import create_hermi_player, create_harry_player
 from tests.utils.team import create_first_team
 

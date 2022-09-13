@@ -6,10 +6,10 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, ReplyKeyboardRemove, ContentType
 from aiogram.utils.markdown import html_decoration as hd
 
-from app.dao.holder import HolderDao
-from app.models import dto
-from app.services.chat import update_chat_id
-from app.views.commands import CANCEL_COMMAND, CHAT_ID_COMMAND
+from shvatka.dao.holder import HolderDao
+from shvatka.models import dto
+from shvatka.services.chat import update_chat_id
+from shvatka.views.commands import CANCEL_COMMAND, CHAT_ID_COMMAND
 
 logger = logging.getLogger(__name__)
 

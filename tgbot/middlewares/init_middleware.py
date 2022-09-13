@@ -6,9 +6,9 @@ from dataclass_factory import Factory
 from redis.asyncio.client import Redis
 from sqlalchemy.orm import sessionmaker
 
-from app.dao.holder import HolderDao
-from app.services.scheduler.scheduler import Scheduler
-from app.services.username_resolver.user_getter import UserGetter
+from shvatka.dao.holder import HolderDao
+from shvatka.services.scheduler.scheduler import Scheduler
+from shvatka.services.username_resolver.user_getter import UserGetter
 
 
 class InitMiddleware(BaseMiddleware):

@@ -1,7 +1,7 @@
-from app.dao.holder import HolderDao
-from app.models import dto
-from app.services.chat import upsert_chat
-from app.services.team import create_team
+from shvatka.dao.holder import HolderDao
+from shvatka.models import dto
+from shvatka.services.chat import upsert_chat
+from shvatka.services.team import create_team
 from tests.fixtures.chat_constants import create_dto_chat, create_another_chat
 
 

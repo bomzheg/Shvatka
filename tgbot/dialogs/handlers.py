@@ -4,10 +4,10 @@ from aiogram.types import CallbackQuery
 from aiogram_dialog import DialogManager
 from aiogram_dialog.widgets.kbd import Button
 
-from app.dao import GameDao
-from app.models import dto
-from app.services import game
-from app.services.game import get_game
+from shvatka.dao import GameDao
+from shvatka.models import dto
+from shvatka.services import game
+from shvatka.services.game import get_game
 from tgbot.states import MyGamesPanel
 
 

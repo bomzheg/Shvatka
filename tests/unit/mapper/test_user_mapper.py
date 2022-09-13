@@ -1,4 +1,4 @@
-from app.models import dto
+from shvatka.models import dto
 from tests.fixtures.user_constants import create_tg_user, create_dto_harry
 
 

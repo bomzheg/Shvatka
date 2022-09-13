@@ -1,7 +1,7 @@
 import pytest
 
-from app.dao.holder import HolderDao
-from app.services.chat import update_chat_id, upsert_chat
+from shvatka.dao.holder import HolderDao
+from shvatka.services.chat import update_chat_id, upsert_chat
 from tests.fixtures.chat_constants import (
     create_tg_chat, create_db_chat, create_dto_chat, NEW_CHAT_ID,
 )

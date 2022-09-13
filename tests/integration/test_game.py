@@ -3,11 +3,11 @@ from copy import deepcopy
 import pytest
 from dataclass_factory import Factory
 
-from app.dao.holder import HolderDao
-from app.models.enums import GameStatus
-from app.services.game import upsert_game, get_authors_games, start_waivers, get_active
-from app.services.player import upsert_player
-from app.services.user import upsert_user
+from shvatka.dao.holder import HolderDao
+from shvatka.models.enums import GameStatus
+from shvatka.services.game import upsert_game, get_authors_games, start_waivers, get_active
+from shvatka.services.player import upsert_player
+from shvatka.services.user import upsert_user
 from tests.fixtures.user_constants import create_dto_harry
 
 

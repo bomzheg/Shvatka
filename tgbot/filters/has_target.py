@@ -1,8 +1,8 @@
 from aiogram.filters import BaseFilter
 from aiogram.types import Message
 
-from app.models import dto
-from app.services.username_resolver.find_target_user import get_target_user
+from shvatka.models import dto
+from shvatka.services.username_resolver.find_target_user import get_target_user
 
 
 class HasTargetFilter(BaseFilter):

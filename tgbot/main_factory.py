@@ -7,11 +7,11 @@ from dataclass_factory import Factory
 from redis.asyncio.client import Redis
 from sqlalchemy.orm import sessionmaker
 
-from app.models.config import Config
-from app.models.config.db import RedisConfig
-from app.models.config.main import Paths
-from app.services.scheduler.scheduler import Scheduler
-from app.services.username_resolver.user_getter import UserGetter
+from shvatka.models.config import Config
+from shvatka.models.config.db import RedisConfig
+from shvatka.models.config.main import Paths
+from shvatka.services.scheduler.scheduler import Scheduler
+from shvatka.services.username_resolver.user_getter import UserGetter
 from tgbot.dialogs import setup_dialogs
 from tgbot.handlers import setup_handlers
 from tgbot.middlewares import setup_middlewares

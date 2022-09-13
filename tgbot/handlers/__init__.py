@@ -2,12 +2,12 @@ import logging
 
 from aiogram import Dispatcher
 
-from app.handlers import base, game
-from app.handlers import errors
-from app.handlers import last
-from app.handlers import superuser
-from app.handlers import team
 from app.models.config.main import BotConfig
+from tgbot.handlers import base, game
+from tgbot.handlers import errors
+from tgbot.handlers import last
+from tgbot.handlers import superuser
+from tgbot.handlers import team
 
 logger = logging.getLogger(__name__)
 

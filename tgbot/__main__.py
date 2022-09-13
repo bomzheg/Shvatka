@@ -7,10 +7,10 @@ from sqlalchemy.orm import close_all_sessions
 from app.config import load_config
 from app.config.logging_config import setup_logging
 from app.dao.redis.base import create_redis
-from app.main_factory import create_bot, create_dispatcher, get_paths, create_scheduler
 from app.models.db import create_pool
 from app.models.schems import schemas
 from app.services.username_resolver.user_getter import UserGetter
+from tgbot.main_factory import create_bot, create_dispatcher, get_paths, create_scheduler
 
 logger = logging.getLogger(__name__)
 

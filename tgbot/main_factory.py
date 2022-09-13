@@ -7,14 +7,14 @@ from dataclass_factory import Factory
 from redis.asyncio.client import Redis
 from sqlalchemy.orm import sessionmaker
 
-from app.handlers import setup_handlers
-from app.handlers.dialogs import setup_dialogs
-from app.middlewares import setup_middlewares
 from app.models.config import Config
 from app.models.config.db import RedisConfig
 from app.models.config.main import Paths
 from app.services.scheduler.scheduler import Scheduler
 from app.services.username_resolver.user_getter import UserGetter
+from tgbot.handlers import setup_handlers
+from tgbot.handlers.dialogs import setup_dialogs
+from tgbot.middlewares import setup_middlewares
 
 
 def create_bot(config: Config) -> Bot:

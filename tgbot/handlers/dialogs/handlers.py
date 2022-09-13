@@ -8,7 +8,7 @@ from app.dao import GameDao
 from app.models import dto
 from app.services import game
 from app.services.game import get_game
-from app.states import MyGamesPanel
+from tgbot.states import MyGamesPanel
 
 
 async def select_my_game(c: CallbackQuery, widget: Any, manager: DialogManager, item_id: str):

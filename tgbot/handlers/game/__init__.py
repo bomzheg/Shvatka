@@ -1,6 +1,6 @@
 from aiogram import Dispatcher
 
-from app.handlers.game import editor
+from tgbot.handlers.game import editor
 
 
 def setup(dp: Dispatcher):

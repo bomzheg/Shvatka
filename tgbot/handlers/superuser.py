@@ -4,9 +4,9 @@ from aiogram import Dispatcher, Bot
 from aiogram.filters import Command
 from aiogram.types import Message
 
-from app.filters.superusers import is_superuser
 from app.models.config.main import BotConfig
 from app.views.commands import UPDATE_COMMANDS, GET_OUT
+from tgbot.filters.superusers import is_superuser
 
 
 async def exception(message: Message):

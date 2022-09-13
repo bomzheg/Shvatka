@@ -7,10 +7,6 @@ from aiogram.types import Message
 from aiogram.utils.text_decorations import html_decoration as hd
 
 from app.dao.holder import HolderDao
-from app.filters.game_status import GameStatusFilter
-from app.filters.has_target import HasTargetFilter
-from app.filters.is_admin import is_admin_filter
-from app.filters.is_team import IsTeamFilter
 from app.models import dto
 from app.services.player import join_team
 from app.services.team import create_team
@@ -20,6 +16,10 @@ from app.utils.exceptions import (
 )
 from app.views.commands import CREATE_TEAM_COMMAND, ADD_IN_TEAM_COMMAND
 from app.views.texts import NOT_SUPERGROUP_ERROR
+from tgbot.filters.game_status import GameStatusFilter
+from tgbot.filters.has_target import HasTargetFilter
+from tgbot.filters.is_admin import is_admin_filter
+from tgbot.filters.is_team import IsTeamFilter
 
 logger = logging.getLogger(__name__)
 

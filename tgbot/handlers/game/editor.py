@@ -8,11 +8,11 @@ from aiogram_dialog import StartMode, DialogManager
 from dataclass_factory import Factory
 
 from app.dao.holder import HolderDao
-from app.filters.game_status import GameStatusFilter
 from app.models import dto
 from app.services.game import upsert_game
-from app.states import MyGamesPanel
 from app.utils.exceptions import ScenarioNotCorrect
+from tgbot.filters.game_status import GameStatusFilter
+from tgbot.states import MyGamesPanel
 
 router = Router(name=__name__)
 logger = logging.getLogger(__name__)

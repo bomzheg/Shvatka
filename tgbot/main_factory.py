@@ -1,3 +1,4 @@
+import logging
 import os
 from pathlib import Path
 
@@ -5,16 +6,20 @@ from aiogram import Bot, Dispatcher
 from aiogram_dialog import DialogRegistry
 from dataclass_factory import Factory
 from redis.asyncio.client import Redis
+from sqlalchemy.engine import make_url
+from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
 
 from shvatka.models.config import Config
-from shvatka.models.config.db import RedisConfig
+from shvatka.models.config.db import RedisConfig, DBConfig
 from shvatka.models.config.main import Paths
 from shvatka.services.scheduler.scheduler import Scheduler
 from shvatka.services.username_resolver.user_getter import UserGetter
 from tgbot.dialogs import setup_dialogs
 from tgbot.handlers import setup_handlers
 from tgbot.middlewares import setup_middlewares
+
+logger = logging.getLogger(__name__)
 
 
 def create_bot(config: Config) -> Bot:
@@ -55,3 +60,15 @@ def get_paths() -> Paths:
     if path := os.getenv("BOT_PATH"):
         return Paths(Path(path))
     return Paths(Path(__file__).parent.parent)
+
+
+def create_pool(db_config: DBConfig) -> sessionmaker:
+    engine = create_async_engine(url=make_url(db_config.uri), echo=True)
+    pool = sessionmaker(bind=engine, class_=AsyncSession,
+                        expire_on_commit=False, autoflush=False)
+    return pool
+
+
+def create_redis(config: RedisConfig) -> Redis:
+    logger.info("created redis for %s", config)
+    return Redis(host=config.url, port=config.port, db=config.db)

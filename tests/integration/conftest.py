@@ -13,14 +13,13 @@ from testcontainers.postgres import PostgresContainer
 from testcontainers.redis import RedisContainer
 
 from shvatka.dao.holder import HolderDao
-from shvatka.dao.redis.base import create_redis
 from shvatka.models.config import Config
 from shvatka.services.scheduler import Scheduler
 from shvatka.services.username_resolver.user_getter import UserGetter
 from tests.fixtures.conftest import fixtures_resource_path  # noqa: F401
 from tests.fixtures.scn_fixtures import simple_scn  # noqa: F401
 from tests.mocks.config import DBConfig
-from tgbot.main_factory import create_dispatcher, create_scheduler
+from tgbot.main_factory import create_dispatcher, create_scheduler, create_redis
 
 logger = logging.getLogger(__name__)
 

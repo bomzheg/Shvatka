@@ -8,8 +8,8 @@ from aiogram.fsm.storage.base import BaseStorage
 from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.fsm.storage.redis import RedisStorage
 
-from shvatka.dao.redis.base import create_redis
 from shvatka.models.config.db import RedisConfig
+from tgbot.main_factory import create_redis
 
 logger = logging.getLogger(__name__)
 

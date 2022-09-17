@@ -1,7 +1,8 @@
 import logging
 
-from shvatka.dal.player import PlayerUpserter, PlayerTeamChecker, PlayerPromoter, TeamJoiner
-from shvatka.dao.holder import HolderDao
+from shvatka.dal.player import (
+    PlayerUpserter, PlayerTeamChecker, PlayerPromoter, TeamJoiner, TeamLeaver,
+)
 from shvatka.models import dto
 from shvatka.utils.defaults_constants import DEFAULT_ROLE, EMOJI_BY_ROLE, DEFAULT_EMOJI
 from shvatka.utils.exceptions import PlayerRestoredInTeam, CantBeAuthor, PromoteError
@@ -61,7 +62,7 @@ async def join_team(
     await dao.commit()
 
 
-async def leave(player: dto.Player, dao: HolderDao):
+async def leave(player: dto.Player, dao: TeamLeaver):
     if game := await dao.game.get_active_game():
         team = await dao.player_in_team.get_team(player)
         await dao.waiver.delete(dto.Waiver(

@@ -1,5 +1,13 @@
 from typing import Protocol
 
 
-class Committer(Protocol):
+class Reader(Protocol):
+    pass
+
+
+class Writer(Protocol):
+    pass
+
+
+class Committer(Writer):
     async def commit(self) -> None: pass

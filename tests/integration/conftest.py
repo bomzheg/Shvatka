@@ -61,37 +61,44 @@ def pool(postgres_url: str) -> sessionmaker:
 
 @pytest.fixture(scope="session")
 def postgres_url(app_config: Config) -> str:
-    if os.name == "nt":  # windows testcontainers now not working
-        yield app_config.db.uri
-    else:
-        with PostgresContainer("postgres:11") as postgres:
-            postgres_url_ = postgres.get_connection_url().replace("psycopg2", "asyncpg")
-            logger.info("postgres url %s", postgres_url_)
-            app_config.db = DBConfig(postgres_url_)
-            yield postgres_url_
+    postgres = PostgresContainer("postgres:11")
+    if os.name == "nt":  # TODO workaround from testcontainers/testcontainers-python#108
+        postgres.get_container_host_ip = lambda: 'localhost'
+    try:
+        postgres.start()
+        postgres_url_ = postgres.get_connection_url().replace("psycopg2", "asyncpg")
+        logger.info("postgres url %s", postgres_url_)
+        app_config.db = DBConfig(postgres_url_)
+        yield postgres_url_
+    finally:
+        postgres.stop()
 
 
-@pytest_asyncio.fixture(scope="session")
-async def redis(app_config: Config) -> Redis:
-    if os.name == "nt":  # windows testcontainers now not working
-        async with create_redis(app_config.redis) as r:
-            yield r
-    else:
-        with RedisContainer("redis:latest") as redis_container:
-            url = redis_container.get_container_host_ip()
-            port = redis_container.get_exposed_port(redis_container.port_to_expose)
-            app_config.redis.url = url
-            app_config.redis.port = port
-            r = create_redis(app_config.redis)
-            yield r
+@pytest.fixture(scope="session")
+def redis(app_config: Config) -> Redis:
+    redis_container = RedisContainer("redis:latest")
+    if os.name == "nt":  # TODO workaround from testcontainers/testcontainers-python#108
+        redis_container.get_container_host_ip = lambda: 'localhost'
+    try:
+        redis_container.start()
+        url = redis_container.get_container_host_ip()
+        port = redis_container.get_exposed_port(redis_container.port_to_expose)
+        app_config.redis.url = url
+        app_config.redis.port = port
+        r = create_redis(app_config.redis)
+        yield r
+    finally:
+        redis_container.stop()
 
 
 @pytest_asyncio.fixture(scope="session")
 async def scheduler(pool: sessionmaker, redis: Redis, bot: Bot, app_config: Config):
     s = create_scheduler(pool=pool, redis=redis, bot=bot, redis_config=app_config.redis)
-    await s.start()
-    yield s
-    await s.close()
+    try:
+        await s.start()
+        yield s
+    finally:
+        await s.close()
 
 
 @pytest.fixture(scope="session")

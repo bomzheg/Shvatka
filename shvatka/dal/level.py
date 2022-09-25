@@ -10,7 +10,7 @@ class LevelUpserter(Committer):
         scn: LevelScenario,
         game: dto.Game = None,
         no_in_game: int = None,
-    ) -> None:
+    ) -> dto.Level:
         pass
 
     async def unlink_all(self, game: dto.Game) -> None:

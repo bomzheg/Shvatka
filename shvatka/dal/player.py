@@ -1,4 +1,5 @@
 from shvatka.dal.base import Committer, Reader
+from shvatka.dal.game import ActiveGameFinder
 from shvatka.models import dto
 
 
@@ -20,10 +21,6 @@ class PlayerPromoter(Committer):
 
 class TeamJoiner(Committer):
     async def join_team(self, player: dto.Player, team: dto.Team, role: str) -> None: pass
-
-
-class ActiveGameFinder(Reader):
-    async def get_active_game(self) -> dto.Game | None: pass
 
 
 class PlayerTeamLeaver(Reader):

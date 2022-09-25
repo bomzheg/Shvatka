@@ -2,8 +2,8 @@ from datetime import datetime
 
 from dataclass_factory import Factory
 
-from shvatka.dao import GameDao
-from shvatka.dao.holder import HolderDao
+from shvatka.dal.game import GameUpserter, GameCreator, GameAuthorsFinder, GameByIdGetter, ActiveGameFinder, \
+    WaiverStarter, GameStartPlanner
 from shvatka.models import dto
 from shvatka.services.player import check_allow_be_author
 from shvatka.services.scenario.game_ops import load_game
@@ -11,7 +11,7 @@ from shvatka.services.scheduler import Scheduler
 from shvatka.utils.exceptions import NotAuthorizedForEdit, AnotherGameIsActive
 
 
-async def upsert_game(scn: dict, author: dto.Player, dao: HolderDao, dcf: Factory) -> dto.Game:
+async def upsert_game(scn: dict, author: dto.Player, dao: GameUpserter, dcf: Factory) -> dto.Game:
     check_allow_be_author(author)
     game_scn = load_game(scn, dcf)
     game = await dao.game.upsert_game(author, game_scn)
@@ -25,27 +25,27 @@ async def upsert_game(scn: dict, author: dto.Player, dao: HolderDao, dcf: Factor
     return game
 
 
-async def create_game(author: dto.Player, name: str, dao: GameDao) -> dto.Game:
+async def create_game(author: dto.Player, name: str, dao: GameCreator) -> dto.Game:
     check_allow_be_author(author)
     game = await dao.create_game(author, name)
     await dao.commit()
     return game
 
 
-async def get_authors_games(author: dto.Player, dao: GameDao) -> list[dto.Game]:
+async def get_authors_games(author: dto.Player, dao: GameAuthorsFinder) -> list[dto.Game]:
     check_allow_be_author(author)
     return await dao.get_all_by_author(author)
 
 
-async def get_game(id_: int, author: dto.Player, dao: GameDao) -> dto.Game:
+async def get_game(id_: int, author: dto.Player, dao: GameByIdGetter) -> dto.Game:
     return await dao.get_by_id(id_, author)
 
 
-async def get_active(dao: GameDao) -> dto.Game:
+async def get_active(dao: ActiveGameFinder) -> dto.Game:
     return await dao.get_active_game()
 
 
-async def start_waivers(game: dto.Game, author: dto.Player, dao: GameDao):
+async def start_waivers(game: dto.Game, author: dto.Player, dao: WaiverStarter):
     check_allow_be_author(author)
     check_is_author(game, author)
     await check_no_game_active(dao)
@@ -57,7 +57,7 @@ async def plain_start(
     game: dto.Game,
     author: dto.Player,
     start_at: datetime,
-    dao: GameDao,
+    dao: GameStartPlanner,
     scheduler: Scheduler,
 ):
     check_allow_be_author(author)
@@ -72,7 +72,7 @@ async def plain_start(
     await dao.commit()
 
 
-async def check_no_game_active(dao: GameDao):
+async def check_no_game_active(dao: ActiveGameFinder):
     if game := await dao.get_active_game():
         raise AnotherGameIsActive(
             game=game,

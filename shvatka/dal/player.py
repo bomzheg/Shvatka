@@ -22,6 +22,8 @@ class PlayerPromoter(Committer):
 class TeamJoiner(Committer):
     async def join_team(self, player: dto.Player, team: dto.Team, role: str) -> None: pass
 
+    async def check_player_free(self, player: dto.Player): pass
+
 
 class PlayerTeamLeaver(Reader):
     async def leave_team(self, player: dto.Player) -> None: pass

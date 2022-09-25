@@ -54,6 +54,7 @@ async def join_team(
     player: dto.Player, team: dto.Team,
     dao: TeamJoiner, role: str = DEFAULT_ROLE,
 ):
+    await dao.check_player_free(player)
     try:
         await dao.join_team(player, team, role=role)
     except PlayerRestoredInTeam:

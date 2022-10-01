@@ -7,7 +7,7 @@ from aiogram.filters import StateFilter, Command, CommandObject
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import any_state
 
-from shvatka.views.texts import YOU_ARE_IN_STATE_MSG
+from tgbot.views.texts import YOU_ARE_IN_STATE_MSG
 
 logger = logging.getLogger(__name__)
 router = Router(name=__name__)

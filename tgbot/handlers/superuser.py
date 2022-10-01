@@ -5,8 +5,8 @@ from aiogram.filters import Command
 from aiogram.types import Message
 
 from shvatka.models.config.main import BotConfig
-from shvatka.views.commands import UPDATE_COMMANDS, GET_OUT
 from tgbot.filters.superusers import is_superuser
+from tgbot.views.commands import UPDATE_COMMANDS, GET_OUT
 
 
 async def exception(message: Message):

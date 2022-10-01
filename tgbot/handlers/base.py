@@ -9,7 +9,7 @@ from aiogram.utils.markdown import html_decoration as hd
 from db.dao.holder import HolderDao
 from shvatka.models import dto
 from shvatka.services.chat import update_chat_id
-from shvatka.views.commands import CANCEL_COMMAND, CHAT_ID_COMMAND
+from tgbot.views.commands import CANCEL_COMMAND, CHAT_ID_COMMAND
 
 logger = logging.getLogger(__name__)
 

@@ -14,12 +14,12 @@ from shvatka.utils.defaults_constants import DEFAULT_ROLE
 from shvatka.utils.exceptions import (
     TeamError, PlayerAlreadyInTeam, AnotherTeamInChat, PlayerRestoredInTeam,
 )
-from shvatka.views.commands import CREATE_TEAM_COMMAND, ADD_IN_TEAM_COMMAND
-from shvatka.views.texts import NOT_SUPERGROUP_ERROR
 from tgbot.filters.game_status import GameStatusFilter
 from tgbot.filters.has_target import HasTargetFilter
 from tgbot.filters.is_admin import is_admin_filter
 from tgbot.filters.is_team import IsTeamFilter
+from tgbot.views.commands import CREATE_TEAM_COMMAND, ADD_IN_TEAM_COMMAND
+from tgbot.views.texts import NOT_SUPERGROUP_ERROR
 
 logger = logging.getLogger(__name__)
 

@@ -3,14 +3,15 @@ from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
-from shvatka.models import db, dto
+from db import models
+from shvatka.models import dto
 from shvatka.models.dto.scn.level import LevelScenario
 from .base import BaseDAO
 
 
-class LevelDao(BaseDAO[db.Level]):
+class LevelDao(BaseDAO[models.Level]):
     def __init__(self, session: AsyncSession):
-        super().__init__(db.Level, session)
+        super().__init__(models.Level, session)
 
     async def upsert(
         self,
@@ -23,7 +24,7 @@ class LevelDao(BaseDAO[db.Level]):
         try:
             level = await self.get_by_author_and_scn(author, scn)
         except NoResultFound:
-            level = db.Level(
+            level = models.Level(
                 author_id=author.id,
                 name_id=scn.id,
             )
@@ -35,21 +36,21 @@ class LevelDao(BaseDAO[db.Level]):
         await self._flush(level)
         return dto.Level.from_db(level, author)
 
-    async def get_by_author_and_scn(self, author: dto.Player, scn: LevelScenario) -> db.Level:
+    async def get_by_author_and_scn(self, author: dto.Player, scn: LevelScenario) -> models.Level:
         result = await self.session.execute(
-            select(db.Level).where(
-                db.Level.name_id == scn.id,
-                db.Level.author_id == author.id,
+            select(models.Level).where(
+                models.Level.name_id == scn.id,
+                models.Level.author_id == author.id,
             )
         )
         return result.scalar_one()
 
     async def unlink_all(self, game: dto.Game):
         await self.session.execute(
-            update(db.Level)
+            update(models.Level)
             .where(
-                db.Level.game_id == game.id,
-                db.Level.author_id == game.author.id,
+                models.Level.game_id == game.id,
+                models.Level.author_id == game.author.id,
             )
             .values(
                 game_id=None,

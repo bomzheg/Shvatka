@@ -1,31 +1,32 @@
-from sqlalchemy import Column, Integer, ForeignKey, Text, Enum
+from sqlalchemy import Column, Integer, ForeignKey, Text, Boolean, DateTime
 from sqlalchemy.orm import relationship
 
-from shvatka.models.db import Base
-from shvatka.models.enums.played import Played
+from db.models import Base
 
 
-class Waiver(Base):
-    __tablename__ = "waivers"
+class KeyTime(Base):
+    __tablename__ = "log_keys"
     __mapper_args__ = {"eager_defaults": True}
     id = Column(Integer, primary_key=True)
     player_id = Column(ForeignKey("players.id"), nullable=False)
     player = relationship(
         "Player",
         foreign_keys=player_id,
-        back_populates="played_games",
+        back_populates="typed_keys",
     )
     team_id = Column(ForeignKey("teams.id"), nullable=False)
     team = relationship(
         "Team",
         foreign_keys=team_id,
-        back_populates="played_games",
+        back_populates="typed_keys",
     )
     game_id = Column(ForeignKey("games.id"), nullable=False)
     game = relationship(
         "Game",
         foreign_keys=game_id,
-        back_populates="waivers",
+        back_populates="log_keys",
     )
-    role = Column(Text)
-    played = Column(Enum(Played), nullable=True)
+    level_number = Column(Integer)
+    enter_time = Column(DateTime)
+    key_text = Column(Text)
+    is_correct: bool | None = Column(Boolean, nullable=True)

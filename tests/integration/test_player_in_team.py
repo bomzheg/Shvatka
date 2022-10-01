@@ -1,6 +1,6 @@
 import pytest
 
-from shvatka.dao.holder import HolderDao
+from db.dao.holder import HolderDao
 from shvatka.services.player import join_team, get_my_team, get_my_role
 from shvatka.utils.defaults_constants import DEFAULT_ROLE, CAPTAIN_ROLE
 from shvatka.utils.exceptions import PlayerAlreadyInTeam

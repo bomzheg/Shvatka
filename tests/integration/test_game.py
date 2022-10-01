@@ -3,7 +3,7 @@ from copy import deepcopy
 import pytest
 from dataclass_factory import Factory
 
-from shvatka.dao.holder import HolderDao
+from db.dao.holder import HolderDao
 from shvatka.models.enums import GameStatus
 from shvatka.services.game import upsert_game, get_authors_games, start_waivers, get_active
 from shvatka.services.player import upsert_player

@@ -3,8 +3,8 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 
+from db import models
 from shvatka.config.constants import TIME_TO_PREPARING_GAME
-from shvatka.models import db
 from shvatka.models.enums import GameStatus
 from shvatka.models.enums.game_status import ACTIVE_STATUSES, EDITABLE_STATUSES
 from shvatka.utils.datetime_utils import tz_game, tz_utc
@@ -72,7 +72,7 @@ class Game:
         return self.author.id == player_id
 
     @classmethod
-    def from_db(cls, game: db.Game, author: Player) -> Game:
+    def from_db(cls, game: models.Game, author: Player) -> Game:
         return cls(
             id=game.id,
             author=author,

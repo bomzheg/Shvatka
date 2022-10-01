@@ -1,6 +1,6 @@
 import pytest
 
-from shvatka.dao.holder import HolderDao
+from db.dao.holder import HolderDao
 from shvatka.models import dto
 from shvatka.services.chat import upsert_chat
 from shvatka.services.player import upsert_player

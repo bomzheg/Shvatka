@@ -4,7 +4,7 @@ from dataclasses import dataclass
 
 from aiogram import types as tg
 
-from shvatka.models import db
+from db import models
 
 
 @dataclass
@@ -37,7 +37,7 @@ class User:
         )
 
     @classmethod
-    def from_db(cls, user: db.User) -> User:
+    def from_db(cls, user: models.User) -> User:
         return cls(
             db_id=user.id,
             tg_id=user.tg_id,

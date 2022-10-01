@@ -1,6 +1,6 @@
 import pytest
 
-from shvatka.dao.holder import HolderDao
+from db.dao.holder import HolderDao
 from tests.fixtures.user_constants import create_tg_user, create_dto_harry, OLD_HARRY_USERNAME
 from tests.utils.user import assert_user
 from tgbot.middlewares.data_load_middleware import save_user

@@ -3,7 +3,7 @@ from datetime import datetime
 from sqlalchemy import Column, Integer, ForeignKey, Text, Boolean, DateTime, func
 from sqlalchemy.orm import relationship
 
-from shvatka.models.db import Base
+from db.models import Base
 
 
 class PlayerInTeam(Base):

@@ -5,13 +5,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import joinedload
 
-from shvatka.models import db, dto
+from db import models
+from shvatka.models import dto
 from .base import BaseDAO
 
 
-class PlayerDao(BaseDAO[db.Player]):
+class PlayerDao(BaseDAO[models.Player]):
     def __init__(self, session: AsyncSession):
-        super().__init__(db.Player, session)
+        super().__init__(models.Player, session)
 
     async def upsert_player(self, user: dto.User) -> dto.Player:
         try:
@@ -21,23 +22,23 @@ class PlayerDao(BaseDAO[db.Player]):
 
     async def get_by_id(self, id_: int):
         player = await self.session.execute(
-            select(db.Player)
-            .where(db.Player.id == id_)
+            select(models.Player)
+            .where(models.Player.id == id_)
             .options(
-                joinedload(db.Player.user, innerjoin=True)
+                joinedload(models.Player.user, innerjoin=True)
             )
         )
         return dto.Player.from_db(player, dto.User.from_db(player.user))
 
     async def get_by_user(self, user: dto.User) -> dto.Player:
         result = await self.session.execute(
-            select(db.Player).where(db.Player.user_id == user.db_id)
+            select(models.Player).where(models.Player.user_id == user.db_id)
         )
         player = result.scalar_one()
         return dto.Player.from_db(player, user)
 
     async def create_for_user(self, user: dto.User) -> dto.Player:
-        player = db.Player(
+        player = models.Player(
             user_id=user.db_id
         )
         self.session.add(player)
@@ -51,14 +52,14 @@ class PlayerDao(BaseDAO[db.Player]):
 
     async def get_by_ids_with_user_and_pit(self, ids: Iterable[int]) -> list[dto.VotedPlayer]:
         result = await self.session.execute(
-            select(db.Player, db.PlayerInTeam)
+            select(models.Player, models.PlayerInTeam)
             .options(
-                joinedload(db.Player.user, innerjoin=True),
+                joinedload(models.Player.user, innerjoin=True),
             )
-            .join(db.Player.teams)
+            .join(models.Player.teams)
             .where(
-                db.Player.id.in_(ids),  # noqa
-                db.PlayerInTeam.date_left.is_(None),  # noqa
+                models.Player.id.in_(ids),  # noqa
+                models.PlayerInTeam.date_left.is_(None),  # noqa
             )
         )
         players = result.all()

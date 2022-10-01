@@ -3,17 +3,18 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import joinedload
 
-from shvatka.models import db, dto
+from db import models
+from shvatka.models import dto
 from shvatka.utils.exceptions import TeamError, AnotherTeamInChat
 from .base import BaseDAO
 
 
-class TeamDao(BaseDAO[db.Team]):
+class TeamDao(BaseDAO[models.Team]):
     def __init__(self, session: AsyncSession):
-        super().__init__(db.Team, session)
+        super().__init__(models.Team, session)
 
     async def create(self, chat: dto.Chat, captain: dto.Player) -> dto.Team:
-        team = db.Team(
+        team = models.Team(
             chat_id=chat.db_id,
             captain_id=captain.id,
             name=chat.title,
@@ -37,10 +38,10 @@ class TeamDao(BaseDAO[db.Team]):
     async def get_by_chat(self, chat: dto.Chat) -> dto.Team | None:
         try:
             result = await self.session.execute(
-                select(db.Team)
-                .where(db.Team.chat_id == chat.db_id)
+                select(models.Team)
+                .where(models.Team.chat_id == chat.db_id)
                 .options(
-                    joinedload(db.Team.captain).joinedload(db.Player.user),
+                    joinedload(models.Team.captain).joinedload(models.Player.user),
                 )
             )
             team = result.scalar_one()

@@ -1,4 +1,4 @@
-from shvatka.dao.holder import HolderDao
+from db.dao.holder import HolderDao
 from shvatka.models import dto
 from shvatka.services.player import upsert_player
 from shvatka.services.user import upsert_user

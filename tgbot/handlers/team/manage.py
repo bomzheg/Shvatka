@@ -6,7 +6,7 @@ from aiogram.filters import Command, CommandObject
 from aiogram.types import Message
 from aiogram.utils.text_decorations import html_decoration as hd
 
-from shvatka.dao.holder import HolderDao
+from db.dao.holder import HolderDao
 from shvatka.models import dto
 from shvatka.services.player import join_team
 from shvatka.services.team import create_team

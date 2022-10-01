@@ -5,7 +5,7 @@ from sqlalchemy import Column, Integer, Text, ForeignKey, JSON, TypeDecorator, U
 from sqlalchemy.engine import Dialect
 from sqlalchemy.orm import relationship
 
-from shvatka.models.db import Base
+from db.models import Base
 from shvatka.models.dto.scn.level import LevelScenario
 
 

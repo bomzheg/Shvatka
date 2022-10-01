@@ -7,7 +7,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import relationship
 
-from shvatka.models.db import Base
+from db.models import Base
 from shvatka.models.enums.game_status import GameStatus
 
 _TOKEN_LEN = 32  # обязательно кратно 4

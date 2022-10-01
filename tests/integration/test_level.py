@@ -1,7 +1,7 @@
 import pytest
 from dataclass_factory import Factory
 
-from shvatka.dao.holder import HolderDao
+from db.dao.holder import HolderDao
 from shvatka.models.dto.scn.level import LevelScenario
 from shvatka.services.level import upsert_raw_level
 from shvatka.services.player import upsert_player

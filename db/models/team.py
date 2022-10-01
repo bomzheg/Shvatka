@@ -1,7 +1,7 @@
 from sqlalchemy import Column, Integer, Text, ForeignKey
 from sqlalchemy.orm import relationship
 
-from shvatka.models.db import Base
+from db.models import Base
 
 
 class Team(Base):

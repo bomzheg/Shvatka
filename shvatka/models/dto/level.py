@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from shvatka.models import db
+from db import models
 from shvatka.models.dto.scn.level import LevelScenario
 from .player import Player
 
@@ -17,7 +17,7 @@ class Level:
     number_in_game: int | None = None
 
     @classmethod
-    def from_db(cls, level: db.Level, author: Player) -> Level:
+    def from_db(cls, level: models.Level, author: Player) -> Level:
         return cls(
             db_id=level.id,
             name_id=level.name_id,

@@ -4,7 +4,7 @@ from dataclasses import dataclass
 
 from aiogram import types as tg
 
-from shvatka.models import db
+from db import models
 from shvatka.models.enums.chat_type import ChatType
 
 
@@ -41,7 +41,7 @@ class Chat:
         )
 
     @classmethod
-    def from_db(cls, chat: db.Chat) -> Chat:
+    def from_db(cls, chat: models.Chat) -> Chat:
         return cls(
             tg_id=chat.tg_id,
             db_id=chat.id,

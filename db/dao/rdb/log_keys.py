@@ -1,9 +1,9 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from shvatka.models import db
+from db import models
 from .base import BaseDAO
 
 
-class LevelTimeDao(BaseDAO[db.LevelTime]):
+class KeyTimeDao(BaseDAO[models.KeyTime]):
     def __init__(self, session: AsyncSession):
-        super().__init__(db.LevelTime, session)
+        super().__init__(models.KeyTime, session)

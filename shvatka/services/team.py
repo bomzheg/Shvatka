@@ -1,5 +1,5 @@
+from db.dao import TeamDao
 from shvatka.dal.team import TeamCreator
-from shvatka.dao import TeamDao
 from shvatka.models import dto
 from shvatka.utils.defaults_constants import CAPTAIN_ROLE
 

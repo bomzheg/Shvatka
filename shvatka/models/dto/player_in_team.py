@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime
 
-from shvatka.models import db
+from db import models
 
 
 @dataclass
@@ -23,7 +23,7 @@ class PlayerInTeam:
     can_remove_players: bool
 
     @classmethod
-    def from_db(cls, pit: db.PlayerInTeam) -> PlayerInTeam:
+    def from_db(cls, pit: models.PlayerInTeam) -> PlayerInTeam:
         return cls(
             id=pit.id,
             player_id=pit.player_id,

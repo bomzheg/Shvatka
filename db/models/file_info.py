@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer, Text
 
-from shvatka.models.db import Base
+from db.models import Base
 
 
 class FileInfo(Base):

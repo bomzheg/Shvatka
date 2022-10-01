@@ -1,7 +1,7 @@
 from sqlalchemy import Column, BigInteger, ForeignKey, Boolean
 from sqlalchemy.orm import relationship
 
-from shvatka.models.db.base import Base
+from db.models.base import Base
 
 
 class Player(Base):

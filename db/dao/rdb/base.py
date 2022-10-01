@@ -4,7 +4,7 @@ from sqlalchemy import delete, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
-from shvatka.models.db.base import Base
+from db.models import Base
 
 Model = TypeVar('Model', Base, Base)
 

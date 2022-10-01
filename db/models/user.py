@@ -1,7 +1,7 @@
 from sqlalchemy import Column, Text, BigInteger, Boolean
 from sqlalchemy.orm import relationship
 
-from shvatka.models.db.base import Base
+from db.models.base import Base
 
 
 class User(Base):

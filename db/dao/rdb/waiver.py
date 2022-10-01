@@ -1,14 +1,15 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
-from shvatka.models import db, dto
+from db import models
+from shvatka.models import dto
 from shvatka.models.enums.played import Played
 from .base import BaseDAO
 
 
-class WaiverDao(BaseDAO[db.Waiver]):
+class WaiverDao(BaseDAO[models.Waiver]):
     def __init__(self, session: AsyncSession):
-        super().__init__(db.Waiver, session)
+        super().__init__(models.Waiver, session)
 
     async def is_excluded(
         self, game: dto.Game, player: dto.Player, team: dto.Team,
@@ -22,7 +23,7 @@ class WaiverDao(BaseDAO[db.Waiver]):
         if waiver_db := await self.get_or_none(waiver.game, waiver.player, waiver.team):
             waiver_db.played = waiver.played
         else:
-            waiver_db = db.Waiver(
+            waiver_db = models.Waiver(
                 player_id=waiver.player.id,
                 team_id=waiver.team.id,
                 game_id=waiver.game.id,
@@ -37,13 +38,13 @@ class WaiverDao(BaseDAO[db.Waiver]):
 
     async def get_or_none(
         self, game: dto.Game, player: dto.Player, team: dto.Team,
-    ) -> db.Waiver | None:
+    ) -> models.Waiver | None:
         result = await self.session.execute(
             select(self.model)
             .where(
-                db.Waiver.team_id == team.id,
-                db.Waiver.player_id == player.id,
-                db.Waiver.game_id == game.id,
+                models.Waiver.team_id == team.id,
+                models.Waiver.player_id == player.id,
+                models.Waiver.game_id == game.id,
             )
         )
         return result.scalars().one_or_none()

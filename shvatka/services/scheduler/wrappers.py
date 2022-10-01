@@ -1,7 +1,7 @@
 from contextlib import asynccontextmanager
 from typing import AsyncContextManager
 
-from shvatka.dao.holder import HolderDao
+from db.dao.holder import HolderDao
 from shvatka.models.dto.scheduled_context import ScheduledContext
 from shvatka.services.game_play import prepare_game, start_game
 from shvatka.services.scheduler.context import ScheduledContextHolder

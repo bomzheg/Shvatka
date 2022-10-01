@@ -6,7 +6,7 @@ from sqlalchemy import pool
 from sqlalchemy.ext.asyncio import AsyncEngine
 from sqlalchemy.future import create_engine
 
-from shvatka.models.db import Base
+from db.models import Base
 
 config = context.config
 

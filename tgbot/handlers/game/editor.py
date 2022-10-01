@@ -7,7 +7,7 @@ from aiogram.types import Message
 from aiogram_dialog import StartMode, DialogManager
 from dataclass_factory import Factory
 
-from shvatka.dao.holder import HolderDao
+from db.dao.holder import HolderDao
 from shvatka.models import dto
 from shvatka.services.game import upsert_game
 from shvatka.utils.exceptions import ScenarioNotCorrect

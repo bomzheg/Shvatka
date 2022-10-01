@@ -12,7 +12,7 @@ from sqlalchemy.orm import sessionmaker, close_all_sessions
 from testcontainers.postgres import PostgresContainer
 from testcontainers.redis import RedisContainer
 
-from shvatka.dao.holder import HolderDao
+from db.dao.holder import HolderDao
 from shvatka.models.config import Config
 from shvatka.services.scheduler import Scheduler
 from shvatka.services.username_resolver.user_getter import UserGetter

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from shvatka.models import db
+from db import models
 from .chat import Chat
 from .player import Player
 from .user import User
@@ -17,7 +17,7 @@ class Team:
     captain: Player
 
     @classmethod
-    def from_db(cls, chat: Chat, team: db.Team) -> Team:
+    def from_db(cls, chat: Chat, team: models.Team) -> Team:
         return cls(
             id=team.id,
             chat=chat,

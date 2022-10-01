@@ -4,7 +4,7 @@ from aiogram.types import CallbackQuery
 from aiogram_dialog import DialogManager
 from aiogram_dialog.widgets.kbd import Button
 
-from shvatka.dao import GameDao
+from db.dao import GameDao
 from shvatka.models import dto
 from shvatka.services import game
 from shvatka.services.game import get_game

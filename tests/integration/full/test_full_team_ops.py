@@ -6,7 +6,7 @@ from aiogram.methods import SendMessage
 from aiogram.types import Update, Message
 from mockito import ANY
 
-from shvatka.dao.holder import HolderDao
+from db.dao.holder import HolderDao
 from shvatka.models.enums.chat_type import ChatType
 from shvatka.services.player import upsert_player, get_my_role
 from shvatka.services.user import upsert_user

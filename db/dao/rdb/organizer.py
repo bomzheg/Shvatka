@@ -1,9 +1,9 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from shvatka.models import db
+from db import models
 from .base import BaseDAO
 
 
-class KeyTimeDao(BaseDAO[db.KeyTime]):
+class OrganizerDao(BaseDAO[models.Organizer]):
     def __init__(self, session: AsyncSession):
-        super().__init__(db.KeyTime, session)
+        super().__init__(models.Organizer, session)

@@ -2,7 +2,7 @@ from dataclasses import dataclass
 
 from aiogram import Bot
 
-from shvatka.dao.holder import HolderDao
+from db.dao.holder import HolderDao
 
 
 @dataclass

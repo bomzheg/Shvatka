@@ -1,7 +1,7 @@
 from sqlalchemy import Column, Integer, ForeignKey, Boolean, UniqueConstraint
 from sqlalchemy.orm import relationship
 
-from shvatka.models.db import Base
+from db.models import Base
 
 
 class Organizer(Base):

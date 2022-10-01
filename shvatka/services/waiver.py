@@ -1,4 +1,4 @@
-from shvatka.dao.holder import HolderDao
+from db.dao.holder import HolderDao
 from shvatka.models import dto
 from shvatka.models.enums.played import Played
 from shvatka.utils.exceptions import WaiverForbidden, PermissionsError

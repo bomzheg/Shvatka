@@ -1,7 +1,7 @@
 import pytest
 
-from shvatka.dao.holder import HolderDao
-from shvatka.models import db
+from db import models
+from db.dao.holder import HolderDao
 from shvatka.models.enums.played import Played
 from shvatka.services.game import create_game, start_waivers
 from shvatka.services.player import join_team, leave
@@ -50,7 +50,7 @@ async def test_get_voted_list(dao: HolderDao):
     # vote not restored after restored player in team
     assert 1 == await dao.waiver.count()
 
-    waiver = db.Waiver(
+    waiver = models.Waiver(
         player_id=player.id,
         team_id=team.id,
         game_id=game.id,

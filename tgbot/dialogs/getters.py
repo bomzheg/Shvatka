@@ -2,7 +2,7 @@ from aiogram_dialog import DialogManager
 from aiogram_dialog.context.context import Context
 from aiogram_dialog.widgets.when import Whenable
 
-from shvatka.dao.holder import HolderDao
+from db.dao.holder import HolderDao
 from shvatka.models import dto
 from shvatka.models.enums import GameStatus
 from shvatka.services import game

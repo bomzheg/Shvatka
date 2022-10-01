@@ -15,7 +15,7 @@ from shvatka.models.config.main import Paths
 
 def get_revisions():
     # Get directory object with Alembic migrations
-    revisions_dir = ScriptDirectory("migrations")
+    revisions_dir = ScriptDirectory("db/migrations")
 
     # Get & sort migrations, from first to last
     revisions = list(revisions_dir.walk_revisions('base', 'heads'))
@@ -26,7 +26,7 @@ def get_revisions():
 @pytest.fixture()
 def alembic_config(postgres_url: str, paths: Paths) -> Config:
     alembic_cfg = Config(str(paths.app_dir.parent / "alembic.ini"))
-    alembic_cfg.set_main_option("script_location", str(paths.app_dir.parent / "migrations"))
+    alembic_cfg.set_main_option("script_location", str(paths.app_dir.parent / "db" / "migrations"))
     alembic_cfg.set_main_option("sqlalchemy.url", postgres_url)
     return alembic_cfg
 

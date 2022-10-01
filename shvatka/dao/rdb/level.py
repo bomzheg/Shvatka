@@ -3,9 +3,9 @@ from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
-from shvatka.dao import BaseDAO
 from shvatka.models import db, dto
 from shvatka.models.dto.scn.level import LevelScenario
+from .base import BaseDAO
 
 
 class LevelDao(BaseDAO[db.Level]):

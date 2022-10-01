@@ -1,12 +1,12 @@
 from redis.asyncio.client import Redis
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from shvatka.dao import (
+from .rdb import (
     ChatDao, UserDao, FileInfoDao, GameDao, LevelDao,
     LevelTimeDao, KeyTimeDao, OrganizerDao, PlayerDao,
     PlayerInTeamDao, TeamDao, WaiverDao,
 )
-from shvatka.dao.redis.pool import PollDao
+from .redis import PollDao
 
 
 class HolderDao:

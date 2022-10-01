@@ -2,10 +2,10 @@ from sqlalchemy.exc import NoResultFound, MultipleResultsFound
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
-from shvatka.dao.base import BaseDAO
 from shvatka.models import dto
 from shvatka.models.db import User
 from shvatka.utils.exceptions import MultipleUsernameFound, NoUsernameFound
+from .base import BaseDAO
 
 
 class UserDao(BaseDAO[User]):

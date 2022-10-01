@@ -1,9 +1,9 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
-from shvatka.dao import BaseDAO
 from shvatka.models import db, dto
 from shvatka.models.enums.played import Played
+from .base import BaseDAO
 
 
 class WaiverDao(BaseDAO[db.Waiver]):

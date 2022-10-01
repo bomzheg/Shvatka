@@ -3,9 +3,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import joinedload
 
-from shvatka.dao import BaseDAO
 from shvatka.models import db, dto
 from shvatka.utils.exceptions import TeamError, AnotherTeamInChat
+from .base import BaseDAO
 
 
 class TeamDao(BaseDAO[db.Team]):

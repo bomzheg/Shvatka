@@ -7,11 +7,11 @@ from sqlalchemy.future import select
 from sqlalchemy.orm import joinedload
 
 from shvatka.dal.game import ActiveGameFinder
-from shvatka.dao import BaseDAO
 from shvatka.models import db, dto
 from shvatka.models.dto.scn.game import GameScenario
 from shvatka.models.enums import GameStatus
 from shvatka.models.enums.game_status import ACTIVE_STATUSES
+from .base import BaseDAO
 
 
 class GameDao(BaseDAO[db.Game], ActiveGameFinder):

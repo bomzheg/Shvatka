@@ -2,9 +2,9 @@ from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
-from shvatka.dao import BaseDAO
 from shvatka.models import dto
 from shvatka.models.db import Chat
+from .base import BaseDAO
 
 
 class ChatDao(BaseDAO[Chat]):

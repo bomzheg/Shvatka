@@ -5,8 +5,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import joinedload
 
-from shvatka.dao import BaseDAO
 from shvatka.models import db, dto
+from .base import BaseDAO
 
 
 class PlayerDao(BaseDAO[db.Player]):
@@ -57,7 +57,7 @@ class PlayerDao(BaseDAO[db.Player]):
             )
             .join(db.Player.teams)
             .where(
-                db.Player.id.in_(ids),
+                db.Player.id.in_(ids),  # noqa
                 db.PlayerInTeam.date_left.is_(None),  # noqa
             )
         )

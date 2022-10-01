@@ -5,9 +5,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import joinedload
 
-from shvatka.dao import BaseDAO
 from shvatka.models import db, dto
 from shvatka.utils.exceptions import PlayerAlreadyInTeam, PlayerRestoredInTeam
+from .base import BaseDAO
 
 
 class PlayerInTeamDao(BaseDAO[db.PlayerInTeam]):

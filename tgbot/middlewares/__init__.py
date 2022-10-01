@@ -4,7 +4,7 @@ from redis.asyncio.client import Redis
 from sqlalchemy.orm import sessionmaker
 
 from shvatka.models.config.main import BotConfig
-from shvatka.services.scheduler.scheduler import Scheduler
+from shvatka.scheduler import Scheduler
 from shvatka.services.username_resolver.user_getter import UserGetter
 from tgbot.middlewares.config_middleware import ConfigMiddleware
 from tgbot.middlewares.data_load_middleware import LoadDataMiddleware

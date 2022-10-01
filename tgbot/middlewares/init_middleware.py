@@ -7,7 +7,7 @@ from redis.asyncio.client import Redis
 from sqlalchemy.orm import sessionmaker
 
 from db.dao.holder import HolderDao
-from shvatka.services.scheduler.scheduler import Scheduler
+from shvatka.scheduler import Scheduler
 from shvatka.services.username_resolver.user_getter import UserGetter
 
 

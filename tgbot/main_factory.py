@@ -13,11 +13,12 @@ from sqlalchemy.engine import make_url
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
 
+from scheduler import ApScheduler
 from shvatka.models.config import Config
 from shvatka.models.config.db import RedisConfig, DBConfig
 from shvatka.models.config.main import Paths
 from shvatka.models.config.storage import StorageConfig, StorageType
-from shvatka.services.scheduler.scheduler import Scheduler
+from shvatka.scheduler import Scheduler
 from shvatka.services.username_resolver.user_getter import UserGetter
 from tgbot.dialogs import setup_dialogs
 from tgbot.handlers import setup_handlers
@@ -68,7 +69,7 @@ def create_storage(config: StorageConfig) -> BaseStorage:
 def create_scheduler(
     pool: sessionmaker, redis: Redis, bot: Bot, redis_config: RedisConfig
 ) -> Scheduler:
-    return Scheduler(redis_config=redis_config, pool=pool, redis=redis, bot=bot)
+    return ApScheduler(redis_config=redis_config, pool=pool, redis=redis, bot=bot)
 
 
 def get_paths() -> Paths:

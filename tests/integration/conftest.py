@@ -14,7 +14,7 @@ from testcontainers.redis import RedisContainer
 
 from db.dao.holder import HolderDao
 from shvatka.models.config import Config
-from shvatka.services.scheduler import Scheduler
+from shvatka.scheduler import Scheduler
 from shvatka.services.username_resolver.user_getter import UserGetter
 from tests.fixtures.conftest import fixtures_resource_path  # noqa: F401
 from tests.fixtures.scn_fixtures import simple_scn  # noqa: F401
@@ -93,12 +93,10 @@ def redis(app_config: Config) -> Redis:
 
 @pytest_asyncio.fixture(scope="session")
 async def scheduler(pool: sessionmaker, redis: Redis, bot: Bot, app_config: Config):
-    s = create_scheduler(pool=pool, redis=redis, bot=bot, redis_config=app_config.redis)
-    try:
-        await s.start()
-        yield s
-    finally:
-        await s.close()
+    async with create_scheduler(
+        pool=pool, redis=redis, bot=bot, redis_config=app_config.redis,
+    ) as sched:
+        yield sched
 
 
 @pytest.fixture(scope="session")

@@ -7,16 +7,17 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from redis import Redis
 from sqlalchemy.orm import sessionmaker
 
+from scheduler.context import ScheduledContextHolder
+from scheduler.wrappers import prepare_game_wrapper, start_game_wrapper
 from shvatka.models import dto
 from shvatka.models.config.db import RedisConfig
-from shvatka.services.scheduler.context import ScheduledContextHolder
-from shvatka.services.scheduler.wrappers import prepare_game_wrapper, start_game_wrapper
+from shvatka.scheduler import Scheduler
 from shvatka.utils.datetime_utils import tz_utc
 
 logger = logging.getLogger(__name__)
 
 
-class Scheduler:
+class ApScheduler(Scheduler):
     def __init__(
         self,
         redis_config: RedisConfig,

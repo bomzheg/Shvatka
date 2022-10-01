@@ -2,9 +2,9 @@ from contextlib import asynccontextmanager
 from typing import AsyncContextManager
 
 from db.dao.holder import HolderDao
+from scheduler.context import ScheduledContextHolder
 from shvatka.models.dto.scheduled_context import ScheduledContext
 from shvatka.services.game_play import prepare_game, start_game
-from shvatka.services.scheduler.context import ScheduledContextHolder
 
 
 @asynccontextmanager

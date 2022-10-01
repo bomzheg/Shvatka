@@ -5,9 +5,9 @@ from dataclass_factory import Factory
 from shvatka.dal.game import GameUpserter, GameCreator, GameAuthorsFinder, GameByIdGetter, ActiveGameFinder, \
     WaiverStarter, GameStartPlanner
 from shvatka.models import dto
+from shvatka.scheduler import Scheduler
 from shvatka.services.player import check_allow_be_author
 from shvatka.services.scenario.game_ops import load_game
-from shvatka.services.scheduler import Scheduler
 from shvatka.utils.exceptions import NotAuthorizedForEdit, AnotherGameIsActive
 
 

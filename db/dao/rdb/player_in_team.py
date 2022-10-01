@@ -35,7 +35,7 @@ class PlayerInTeamDao(BaseDAO[models.PlayerInTeam]):
         except NoResultFound:
             return None
         team: models.Team = player_in_team.team
-        return dto.Team.from_db(team.chat.to_dto(), team)
+        return team.to_dto(team.chat.to_dto())
 
     async def have_team(self, player: dto.Player) -> bool:
         return await self.get_team(player) is not None
@@ -81,7 +81,7 @@ class PlayerInTeamDao(BaseDAO[models.PlayerInTeam]):
         return result.scalars().one_or_none()
 
     async def get_player_in_team(self, player: dto.Player) -> dto.PlayerInTeam:
-        return dto.PlayerInTeam.from_db(await self._get_my_player_in_team(player))
+        return (await self._get_my_player_in_team(player)).to_dto()
 
     async def _get_my_player_in_team(self, player: dto.Player) -> models.PlayerInTeam:
         result = await self.session.execute(

@@ -28,14 +28,14 @@ class PlayerDao(BaseDAO[models.Player]):
                 joinedload(models.Player.user, innerjoin=True)
             )
         )
-        return dto.Player.from_db(player, dto.User.from_db(player.user))
+        return player.to_dto(player.user.to_dto())
 
     async def get_by_user(self, user: dto.User) -> dto.Player:
         result = await self.session.execute(
             select(models.Player).where(models.Player.user_id == user.db_id)
         )
         player = result.scalar_one()
-        return dto.Player.from_db(player, user)
+        return player.to_dto(user)
 
     async def create_for_user(self, user: dto.User) -> dto.Player:
         player = models.Player(
@@ -43,7 +43,7 @@ class PlayerDao(BaseDAO[models.Player]):
         )
         self.session.add(player)
         await self._flush(player)
-        return dto.Player.from_db(player, user)
+        return player.to_dto(user)
 
     async def promote(self, actor: dto.Player, target: dto.Player):
         target_player = await self._get_by_id(target.id)
@@ -65,7 +65,7 @@ class PlayerDao(BaseDAO[models.Player]):
         players = result.all()
         return [
             dto.VotedPlayer(
-                dto.Player.from_db(player, dto.User.from_db(player.user)),
-                dto.PlayerInTeam.from_db(pit),
+                player.to_dto(player.user.to_dto()),
+                pit.to_dto(),
             ) for player, pit in players
         ]

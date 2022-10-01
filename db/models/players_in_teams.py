@@ -4,6 +4,7 @@ from sqlalchemy import Column, Integer, ForeignKey, Text, Boolean, DateTime, fun
 from sqlalchemy.orm import relationship
 
 from db.models import Base
+from shvatka.models import dto
 
 
 class PlayerInTeam(Base):
@@ -32,3 +33,20 @@ class PlayerInTeam(Base):
     can_change_team_name = Column(Boolean, default=False)
     can_add_players = Column(Boolean, default=False)
     can_remove_players = Column(Boolean, default=False)
+
+    def to_dto(self) -> dto.PlayerInTeam:
+        return dto.PlayerInTeam(
+            id=self.id,
+            player_id=self.player_id,
+            team_id=self.team_id,
+            date_joined=self.date_joined,
+            date_left=self.date_left,
+            role=self.role,
+            emoji=self.emoji,
+
+            can_manage_waivers=self.can_manage_waivers,
+            can_manage_players=self.can_manage_players,
+            can_change_team_name=self.can_change_team_name,
+            can_add_players=self.can_add_players,
+            can_remove_players=self.can_remove_players,
+        )

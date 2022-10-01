@@ -2,6 +2,7 @@ from sqlalchemy import Column, Text, BigInteger, Boolean
 from sqlalchemy.orm import relationship
 
 from db.models.base import Base
+from shvatka.models import dto
 
 
 class User(Base):
@@ -31,3 +32,13 @@ class User(Base):
         if self.username:
             rez += f"username=@{self.username}"
         return rez + ">"
+
+    def to_dto(self) -> dto.User:
+        return dto.User(
+            db_id=self.id,
+            tg_id=self.tg_id,
+            username=self.username,
+            first_name=self.first_name,
+            last_name=self.last_name,
+            is_bot=self.is_bot,
+        )

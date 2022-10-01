@@ -28,7 +28,7 @@ class UserDao(BaseDAO[User]):
             raise MultipleUsernameFound(username=username) from e
         except NoResultFound as e:
             raise NoUsernameFound(username=username) from e
-        return dto.User.from_db(user)
+        return user.to_dto()
 
     async def upsert_user(self, user: dto.User) -> dto.User:
         try:
@@ -39,7 +39,7 @@ class UserDao(BaseDAO[User]):
         if was_changed:
             self._save(saved_user)
             await self._flush(saved_user)
-        return dto.User.from_db(saved_user)
+        return saved_user.to_dto()
 
 
 def update_fields(target: User, source: dto.User) -> bool:

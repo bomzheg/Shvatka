@@ -85,7 +85,7 @@ class GameDao(BaseDAO[models.Game], ActiveGameFinder):
         except NoResultFound:
             return None
         return game.to_dto(
-            dto.Player.from_db(game.author, dto.User.from_db(game.author.user))
+            game.author.to_dto(game.author.user.to_dto())
         )
 
     async def create_game(self, author: dto.Player, name: str) -> dto.Game:

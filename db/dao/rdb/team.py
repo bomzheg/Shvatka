@@ -47,7 +47,7 @@ class TeamDao(BaseDAO[models.Team]):
             team = result.scalar_one()
         except NoResultFound:
             return None
-        return dto.Team.from_db(chat, team)
+        return team.to_dto(chat)
 
     async def check_no_team_in_chat(self, chat: dto.Chat):
         if team := await self.get_by_chat(chat):

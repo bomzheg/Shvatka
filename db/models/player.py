@@ -2,6 +2,7 @@ from sqlalchemy import Column, BigInteger, ForeignKey, Boolean
 from sqlalchemy.orm import relationship
 
 from db.models.base import Base
+from shvatka.models import dto
 
 
 class Player(Base):
@@ -60,4 +61,11 @@ class Player(Base):
             f"id={self.id} "
             f"user_id={self.user_id} "
             f">"
+        )
+
+    def to_dto(self, user: dto.User) -> dto.Player:
+        return dto.Player(
+            id=self.id,
+            user=user,
+            can_be_author=self.can_be_author,
         )

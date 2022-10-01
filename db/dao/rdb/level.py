@@ -34,7 +34,7 @@ class LevelDao(BaseDAO[models.Level]):
             level.game_id = game.id
             level.number_in_game = no_in_game
         await self._flush(level)
-        return dto.Level.from_db(level, author)
+        return level.to_dto(author)
 
     async def get_by_author_and_scn(self, author: dto.Player, scn: LevelScenario) -> models.Level:
         result = await self.session.execute(

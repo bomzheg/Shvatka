@@ -2,6 +2,7 @@ from sqlalchemy import Column, Integer, Text, ForeignKey
 from sqlalchemy.orm import relationship
 
 from db.models import Base
+from shvatka.models import dto
 
 
 class Team(Base):
@@ -43,3 +44,14 @@ class Team(Base):
         back_populates="team",
         foreign_keys="PlayerInTeam.team_id",
     )
+
+    def to_dto(self, chat: dto.Chat) -> dto.Team:
+        return dto.Team(
+            id=self.id,
+            chat=chat,
+            name=self.name,
+            description=self.description,
+            captain=self.captain.to_dto(
+                user=self.captain.user.to_dto(),
+            ),
+        )

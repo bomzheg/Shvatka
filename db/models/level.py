@@ -6,6 +6,7 @@ from sqlalchemy.engine import Dialect
 from sqlalchemy.orm import relationship
 
 from db.models import Base
+from shvatka.models import dto
 from shvatka.models.dto.scn.level import LevelScenario
 
 
@@ -49,3 +50,13 @@ class Level(Base):
     __table_args__ = (
         UniqueConstraint("author_id", "name_id"),
     )
+
+    def to_dto(self, author: dto.Player) -> dto.Level:
+        return dto.Level(
+            db_id=self.id,
+            name_id=self.name_id,
+            author=author,
+            scenario=self.scenario,
+            game_id=self.game_id,
+            number_in_game=self.number_in_game,
+        )

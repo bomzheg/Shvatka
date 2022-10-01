@@ -1,7 +1,7 @@
 import logging
 
 from shvatka.models import dto
-from shvatka.models.dto.scheduled_context import ScheduledContext
+from shvatka.scheduler import ScheduledContext
 
 logger = logging.getLogger(__name__)
 

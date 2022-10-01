@@ -7,5 +7,5 @@ from db.dao.holder import HolderDao
 
 @dataclass
 class ScheduledContext:
-    dao: HolderDao
-    bot: Bot
+    dao: HolderDao  # need wrappers or protocols
+    bot: Bot  # need wrappers or protocols

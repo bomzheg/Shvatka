@@ -3,7 +3,7 @@ from typing import AsyncContextManager
 
 from db.dao.holder import HolderDao
 from scheduler.context import ScheduledContextHolder
-from shvatka.models.dto.scheduled_context import ScheduledContext
+from shvatka.scheduler import ScheduledContext
 from shvatka.services.game_play import prepare_game, start_game
 
 

@@ -21,5 +21,5 @@ class WaiverVoteGetter(PollGetWaivers):
     async def get_by_ids_with_user_and_pit(self, ids: Iterable[int]) -> list[dto.VotedPlayer]: pass
 
 
-class WaiverApprover(Committer):
-    pass
+class WaiverApprover(Committer, WaiverVoteGetter):
+    async def upsert(self, waiver: dto.Waiver): pass

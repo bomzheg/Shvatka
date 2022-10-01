@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from typing import Iterable
 
 from db.dao import PollDao, WaiverDao, PlayerDao
-from shvatka.dal.waiver import WaiverVoteAdder, WaiverVoteGetter
+from shvatka.dal.waiver import WaiverVoteAdder, WaiverVoteGetter, WaiverApprover
 from shvatka.models import dto
 from shvatka.models.enums.played import Played
 
@@ -31,3 +31,15 @@ class WaiverVoteGetterImpl(WaiverVoteGetter):
 
     async def get_by_ids_with_user_and_pit(self, ids: Iterable[int]) -> list[dto.VotedPlayer]:
         return await self.player.get_by_ids_with_user_and_pit(ids)
+
+
+@dataclass
+class WaiverApproverImpl(WaiverApprover):
+    vote_getter: WaiverVoteGetter
+    waiver: WaiverDao
+
+    async def upsert(self, waiver: dto.Waiver) -> None:
+        return await self.waiver.upsert(waiver)
+
+    async def commit(self):
+        return await self.waiver.commit()

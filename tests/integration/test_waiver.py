@@ -31,7 +31,7 @@ async def test_get_voted_list(dao: HolderDao):
     actual_voted = actual[Played.yes]
     assert len(actual_voted) == 2
 
-    await approve_waivers(game, team, captain, dao)
+    await approve_waivers(game, team, captain, dao.waiver_approver)
     assert 2 == await dao.waiver.count()
 
     await leave(player, dao)
@@ -41,12 +41,12 @@ async def test_get_voted_list(dao: HolderDao):
     assert len(actual_voted) == 1
     assert actual_voted[0].player.id == captain.id
 
-    await approve_waivers(game, team, captain, dao)
+    await approve_waivers(game, team, captain, dao.waiver_approver)
     assert 1 == await dao.waiver.count()
 
     with pytest.raises(PlayerRestoredInTeam):
         await join_team(player, team, dao.player_in_team)
-    await approve_waivers(game, team, captain, dao)
+    await approve_waivers(game, team, captain, dao.waiver_approver)
     # vote not restored after restored player in team
     assert 1 == await dao.waiver.count()
 
@@ -62,5 +62,5 @@ async def test_get_voted_list(dao: HolderDao):
     with pytest.raises(WaiverForbidden):
         await add_vote(game, team, player, Played.yes, dao.waiver_vote_adder)
 
-    await approve_waivers(game, team, captain, dao)
+    await approve_waivers(game, team, captain, dao.waiver_approver)
     assert 2 == await dao.waiver.count()

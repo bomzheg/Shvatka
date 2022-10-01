@@ -1,5 +1,4 @@
-from db.dao.holder import HolderDao
-from shvatka.dal.waiver import WaiverVoteAdder, WaiverVoteGetter
+from shvatka.dal.waiver import WaiverVoteAdder, WaiverVoteGetter, WaiverApprover
 from shvatka.models import dto
 from shvatka.models.enums.played import Played
 from shvatka.utils.exceptions import WaiverForbidden, PermissionsError
@@ -35,9 +34,9 @@ async def add_vote(
     await dao.add_player_vote(team.id, player.id, vote.name)
 
 
-async def approve_waivers(game: dto.Game, team: dto.Team, approver: dto.Player, dao: HolderDao):
+async def approve_waivers(game: dto.Game, team: dto.Team, approver: dto.Player, dao: WaiverApprover):
     await check_allow_approve_waivers(approver, team)
-    for vote in await get_voted_list(team, dao.waiver_vote_getter):
+    for vote in await get_voted_list(team, dao):
         if vote.vote == Played.not_allowed:
             continue
         waiver = dto.Waiver(
@@ -46,7 +45,7 @@ async def approve_waivers(game: dto.Game, team: dto.Team, approver: dto.Player, 
             game=game,
             played=vote.vote,
         )
-        await dao.waiver.upsert(waiver)
+        await dao.upsert(waiver)
     await dao.commit()
 
 

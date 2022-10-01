@@ -34,8 +34,7 @@ class WaiverVoteGetterImpl(WaiverVoteGetter):
 
 
 @dataclass
-class WaiverApproverImpl(WaiverApprover):
-    vote_getter: WaiverVoteGetter
+class WaiverApproverImpl(WaiverApprover, WaiverVoteGetterImpl):
     waiver: WaiverDao
 
     async def upsert(self, waiver: dto.Waiver) -> None:

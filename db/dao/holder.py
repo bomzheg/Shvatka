@@ -42,4 +42,4 @@ class HolderDao:
 
     @property
     def waiver_approver(self) -> WaiverApprover:
-        return WaiverApproverImpl(vote_getter=self.waiver_vote_getter, waiver=self.waiver)
+        return WaiverApproverImpl(poll=self.poll, player=self.player, waiver=self.waiver)

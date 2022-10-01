@@ -8,6 +8,7 @@ from sqlalchemy import (
 from sqlalchemy.orm import relationship
 
 from db.models import Base
+from shvatka.models import dto
 from shvatka.models.enums.game_status import GameStatus
 
 _TOKEN_LEN = 32  # обязательно кратно 4
@@ -64,3 +65,14 @@ class Game(Base):
     __table_args__ = (
         UniqueConstraint("author_id", "name"),
     )
+
+    def to_dto(self, author: dto.Player) -> dto.Game:
+        return dto.Game(
+            id=self.id,
+            author=author,
+            name=self.name,
+            status=self.status,
+            start_at=self.start_at,
+            published_channel_id=self.published_channel_id,
+            manage_token=self.manage_token,
+        )

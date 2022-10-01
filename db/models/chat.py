@@ -2,6 +2,7 @@ from sqlalchemy import Column, Text, BigInteger, Enum
 from sqlalchemy.orm import relationship
 
 from db.models.base import Base
+from shvatka.models import dto
 from shvatka.models.enums.chat_type import ChatType
 
 
@@ -29,3 +30,12 @@ class Chat(Base):
         if self.username:
             rez += f"username=@{self.username}"
         return rez + ">"
+
+    def to_dto(self) -> dto.Chat:
+        return dto.Chat(
+            tg_id=self.tg_id,
+            db_id=self.id,
+            title=self.title,
+            type=self.type,
+            username=self.username,
+        )

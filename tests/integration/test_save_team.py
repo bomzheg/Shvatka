@@ -1,7 +1,6 @@
 import pytest
 
 from db.dao.holder import HolderDao
-from shvatka.models import dto
 from shvatka.services.chat import upsert_chat
 from shvatka.services.player import upsert_player
 from shvatka.services.team import create_team, get_by_chat
@@ -28,6 +27,6 @@ async def test_get_team(dao: HolderDao):
     await test_save_team(dao)
     chat = (await dao.chat._get_all())[0]
 
-    team = await get_by_chat(dto.Chat.from_db(chat), dao.team)
+    team = await get_by_chat(chat.to_dto(), dao.team)
     assert team.id is not None
     assert team.name == chat.title

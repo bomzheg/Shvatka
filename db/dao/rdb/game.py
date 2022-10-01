@@ -34,7 +34,7 @@ class GameDao(BaseDAO[models.Game], ActiveGameFinder):
             )
             self._save(game)
         await self._flush(game)
-        return dto.Game.from_db(game, author)
+        return game.to_dto(author)
 
     async def get_by_author_and_scn(self, author: dto.Player, scn: GameScenario) -> models.Game:
         result = await self.session.execute(
@@ -46,7 +46,7 @@ class GameDao(BaseDAO[models.Game], ActiveGameFinder):
         return result.scalar_one()
 
     async def get_by_id(self, id_: int, author: dto.Player) -> dto.Game:
-        return dto.Game.from_db(await self._get_by_id(id_), author)
+        return (await self._get_by_id(id_)).to_dto(author)
 
     async def get_all_by_author(self, author: dto.Player) -> list[dto.Game]:
         result = await self.session.execute(
@@ -56,7 +56,7 @@ class GameDao(BaseDAO[models.Game], ActiveGameFinder):
             )
         )
         games = result.scalars().all()
-        return [dto.Game.from_db(game, author) for game in games]
+        return [game.to_dto(author) for game in games]
 
     async def start_waivers(self, game: dto.Game):
         await self.set_status(game, GameStatus.getting_waivers)
@@ -84,8 +84,8 @@ class GameDao(BaseDAO[models.Game], ActiveGameFinder):
             game: models.Game = result.scalar_one()
         except NoResultFound:
             return None
-        return dto.Game.from_db(
-            game, dto.Player.from_db(game.author, dto.User.from_db(game.author.user))
+        return game.to_dto(
+            dto.Player.from_db(game.author, dto.User.from_db(game.author.user))
         )
 
     async def create_game(self, author: dto.Player, name: str) -> dto.Game:
@@ -96,7 +96,7 @@ class GameDao(BaseDAO[models.Game], ActiveGameFinder):
         )
         self._save(game_db)
         await self._flush(game_db)
-        return dto.Game.from_db(game_db, author)
+        return game_db.to_dto(author)
 
     async def set_start_at(self, game: dto.Game, start_at: datetime):
         await self.session.execute(

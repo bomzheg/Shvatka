@@ -1,6 +1,8 @@
 from redis.asyncio.client import Redis
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from shvatka.dal.waiver import WaiverVoteAdder, WaiverVoteGetter
+from .complex import WaiverVoteAdderImpl, WaiverVoteGetterImpl
 from .rdb import (
     ChatDao, UserDao, FileInfoDao, GameDao, LevelDao,
     LevelTimeDao, KeyTimeDao, OrganizerDao, PlayerDao,
@@ -28,3 +30,11 @@ class HolderDao:
 
     async def commit(self):
         await self.session.commit()
+
+    @property
+    def waiver_vote_adder(self) -> WaiverVoteAdder:
+        return WaiverVoteAdderImpl(poll=self.poll, waiver=self.waiver)
+
+    @property
+    def waiver_vote_getter(self) -> WaiverVoteGetter:
+        return WaiverVoteGetterImpl(poll=self.poll, player=self.player)

@@ -1,4 +1,3 @@
-from .holder import HolderDao  # noqa: F401
 from .rdb import (
     BaseDAO,
     ChatDao,

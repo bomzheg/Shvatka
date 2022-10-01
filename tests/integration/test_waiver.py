@@ -23,10 +23,10 @@ async def test_get_voted_list(dao: HolderDao):
     await start_waivers(game, captain, dao.game)
 
     await join_team(player, team, dao.player_in_team)
-    await add_vote(game, team, captain, Played.yes, dao)
-    await add_vote(game, team, player, Played.yes, dao)
+    await add_vote(game, team, captain, Played.yes, dao.waiver_vote_adder)
+    await add_vote(game, team, player, Played.yes, dao.waiver_vote_adder)
 
-    actual = await get_vote_to_voted(team, dao)
+    actual = await get_vote_to_voted(team, dao.waiver_vote_getter)
     assert len(actual) == 1
     actual_voted = actual[Played.yes]
     assert len(actual_voted) == 2
@@ -35,7 +35,7 @@ async def test_get_voted_list(dao: HolderDao):
     assert 2 == await dao.waiver.count()
 
     await leave(player, dao)
-    actual = await get_vote_to_voted(team, dao)
+    actual = await get_vote_to_voted(team, dao.waiver_vote_getter)
     assert len(actual) == 1
     actual_voted = actual[Played.yes]
     assert len(actual_voted) == 1
@@ -60,7 +60,7 @@ async def test_get_voted_list(dao: HolderDao):
     dao.waiver._save(waiver)
     await dao.waiver.commit()
     with pytest.raises(WaiverForbidden):
-        await add_vote(game, team, player, Played.yes, dao)
+        await add_vote(game, team, player, Played.yes, dao.waiver_vote_adder)
 
     await approve_waivers(game, team, captain, dao)
     assert 2 == await dao.waiver.count()

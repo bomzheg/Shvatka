@@ -1,11 +1,12 @@
 from db.dao.holder import HolderDao
+from shvatka.dal.waiver import WaiverVoteAdder, WaiverVoteGetter
 from shvatka.models import dto
 from shvatka.models.enums.played import Played
 from shvatka.utils.exceptions import WaiverForbidden, PermissionsError
 
 
 async def get_vote_to_voted(
-    team: dto.Team, dao: HolderDao,
+    team: dto.Team, dao: WaiverVoteGetter,
 ) -> dict[Played, list[dto.VotedPlayer]]:
     result = {}
     for vote in await get_voted_list(team, dao):
@@ -15,10 +16,10 @@ async def get_vote_to_voted(
 
 
 async def get_voted_list(
-    team: dto.Team, dao: HolderDao,
+    team: dto.Team, dao: WaiverVoteGetter,
 ) -> list[dto.Vote]:
-    poll_date = await dao.poll.get_dict_player_vote(team.id)
-    voted_players = await dao.player.get_by_ids_with_user_and_pit(poll_date.keys())
+    poll_date = await dao.get_dict_player_vote(team.id)
+    voted_players = await dao.get_by_ids_with_user_and_pit(poll_date.keys())
     result = []
     for voted in voted_players:
         vote = poll_date[voted.player.id]
@@ -27,16 +28,16 @@ async def get_voted_list(
 
 
 async def add_vote(
-    game: dto.Game, team: dto.Team, player: dto.Player, vote: Played, dao: HolderDao,
+    game: dto.Game, team: dto.Team, player: dto.Player, vote: Played, dao: WaiverVoteAdder,
 ):
-    if await dao.waiver.is_excluded(game=game, player=player, team=team):
+    if await dao.is_excluded(game=game, player=player, team=team):
         raise WaiverForbidden(player=player, team=team, game=game)
-    await dao.poll.add_player_vote(team.id, player.id, vote.name)
+    await dao.add_player_vote(team.id, player.id, vote.name)
 
 
 async def approve_waivers(game: dto.Game, team: dto.Team, approver: dto.Player, dao: HolderDao):
     await check_allow_approve_waivers(approver, team)
-    for vote in await get_voted_list(team, dao):
+    for vote in await get_voted_list(team, dao.waiver_vote_getter):
         if vote.vote == Played.not_allowed:
             continue
         waiver = dto.Waiver(
@@ -50,6 +51,7 @@ async def approve_waivers(game: dto.Game, team: dto.Team, approver: dto.Player, 
 
 
 async def check_allow_approve_waivers(player: dto.Player, team: dto.Team):
+    #  TODO async for check permissions in db
     if team.captain.id != player.id:
         raise PermissionsError(
             permission_name="manage_waivers",

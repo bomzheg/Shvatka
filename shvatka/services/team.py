@@ -1,5 +1,4 @@
-from db.dao import TeamDao
-from shvatka.dal.team import TeamCreator
+from shvatka.dal.team import TeamCreator, TeamGetter
 from shvatka.models import dto
 from shvatka.utils.defaults_constants import CAPTAIN_ROLE
 
@@ -14,5 +13,5 @@ async def create_team(chat: dto.Chat, captain: dto.Player, dao: TeamCreator) -> 
     return team
 
 
-async def get_by_chat(chat: dto.Chat, dao: TeamDao) -> dto.Team | None:
+async def get_by_chat(chat: dto.Chat, dao: TeamGetter) -> dto.Team | None:
     return await dao.get_by_chat(chat)

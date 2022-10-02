@@ -1,5 +1,8 @@
+from typing import Iterable
+
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
+from sqlalchemy.orm import joinedload
 
 from db import models
 from shvatka.models import dto
@@ -48,3 +51,25 @@ class WaiverDao(BaseDAO[models.Waiver]):
             )
         )
         return result.scalars().one_or_none()
+
+    async def get_agree_teams(self, game: dto.Game) -> Iterable[dto.Team]:
+        result = await self.session.execute(
+            select(models.Waiver)
+            .distinct(models.Waiver.team_id)  # Postgresql feature
+            .options(
+                joinedload(models.Waiver.team)
+                .joinedload(models.Team.chat),
+                joinedload(models.Waiver.team)
+                .joinedload(models.Team.captain)
+                .joinedload(models.Player.user)
+            )
+            .where(
+                models.Waiver.game_id == game.id,
+                models.Waiver.played == Played.yes,
+            )
+        )
+        teams: Iterable[models.Team] = map(lambda w: w.team, result.scalars().all())
+        return [
+            team.to_dto(team.chat.to_dto())
+            for team in teams
+        ]

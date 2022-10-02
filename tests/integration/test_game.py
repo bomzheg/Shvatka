@@ -53,6 +53,8 @@ async def test_game_simple(simple_scn: dict, dao: HolderDao, dcf: Factory):
     game = await upsert_game(another_scn, author, dao.game_upserter, dcf)
 
     assert await dao.game.count() == 1
+    assert 1 == await dao.organizer.get_orgs_count(game)
+    assert author == (await dao.organizer.get_orgs(game))[0].player
     assert await dao.level.count() == 2
 
     assert game.name == "My new game"

@@ -33,6 +33,7 @@ async def test_get_voted_list(dao: HolderDao):
 
     await approve_waivers(game, team, captain, dao.waiver_approver)
     assert 2 == await dao.waiver.count()
+    assert [team] == await dao.waiver.get_agree_teams(game)
 
     await leave(player, dao.team_leaver)
     actual = await get_vote_to_voted(team, dao.waiver_vote_getter)
@@ -43,6 +44,7 @@ async def test_get_voted_list(dao: HolderDao):
 
     await approve_waivers(game, team, captain, dao.waiver_approver)
     assert 1 == await dao.waiver.count()
+    assert [team] == await dao.waiver.get_agree_teams(game)
 
     with pytest.raises(PlayerRestoredInTeam):
         await join_team(player, team, dao.player_in_team)
@@ -64,3 +66,4 @@ async def test_get_voted_list(dao: HolderDao):
 
     await approve_waivers(game, team, captain, dao.waiver_approver)
     assert 2 == await dao.waiver.count()
+    assert [team] == await dao.waiver.get_agree_teams(game)

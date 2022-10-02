@@ -5,6 +5,7 @@ from db.dao.holder import HolderDao
 from scheduler.context import ScheduledContextHolder
 from shvatka.scheduler import ScheduledContext
 from shvatka.services.game_play import prepare_game, start_game
+from tgbot.views.game import GameBotViewPreparer
 
 
 @asynccontextmanager
@@ -18,7 +19,7 @@ async def prepare_game_wrapper(game_id: int, author_id: int):
     async with prepare_context as context:
         author = await context.dao.player.get_by_id(author_id)
         game = await context.dao.game.get_by_id(game_id, author)
-        await prepare_game(game, context)
+        await prepare_game(game, context.dao.game_preparer, GameBotViewPreparer(context.bot))
 
 
 async def start_game_wrapper(game_id: int, author_id: int):

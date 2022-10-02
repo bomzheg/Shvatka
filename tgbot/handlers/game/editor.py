@@ -22,7 +22,7 @@ async def cmd_save_game(m: Message, dao: HolderDao, dcf: Factory, bot: Bot, play
     """TODO refactor it =)"""
     document = await bot.download(m.document.file_id)
     try:
-        await upsert_game(yaml.safe_load(document), player, dao, dcf)
+        await upsert_game(yaml.safe_load(document), player, dao.game_upserter, dcf)
     except ScenarioNotCorrect as e:
         await m.reply(f"Ошибка {e}\n попробуйте исправить файл")
         logger.error("game scenario from player %s has problems", player.id, exc_info=e)

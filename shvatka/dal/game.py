@@ -6,14 +6,9 @@ from shvatka.models import dto
 from shvatka.models.dto.scn.game import GameScenario
 
 
-class _GameJustUpserter(Committer):
+class GameUpserter(Committer, LevelUpserter):
     async def upsert_game(self, author: dto.Player, scn: GameScenario) -> dto.Game:
         pass
-
-
-class GameUpserter(Committer):
-    game: _GameJustUpserter
-    level: LevelUpserter
 
 
 class GameCreator(Committer):

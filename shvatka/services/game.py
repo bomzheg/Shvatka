@@ -14,11 +14,11 @@ from shvatka.utils.exceptions import NotAuthorizedForEdit, AnotherGameIsActive
 async def upsert_game(scn: dict, author: dto.Player, dao: GameUpserter, dcf: Factory) -> dto.Game:
     check_allow_be_author(author)
     game_scn = load_game(scn, dcf)
-    game = await dao.game.upsert_game(author, game_scn)
-    await dao.level.unlink_all(game)
+    game = await dao.upsert_game(author, game_scn)
+    await dao.unlink_all(game)
     levels = []
     for number, level in enumerate(game_scn.levels):
-        saved_level = await dao.level.upsert(author, level, game, number)
+        saved_level = await dao.upsert(author, level, game, number)
         levels.append(saved_level)
     game.levels = levels
     await dao.commit()

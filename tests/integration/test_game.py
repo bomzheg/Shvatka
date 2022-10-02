@@ -17,7 +17,7 @@ async def test_game_simple(simple_scn: dict, dao: HolderDao, dcf: Factory):
     await dao.player.promote(author, author)
     await dao.commit()
     author.can_be_author = True
-    game = await upsert_game(simple_scn, author, dao, dcf)
+    game = await upsert_game(simple_scn, author, dao.game_upserter, dcf)
 
     assert await dao.game.count() == 1
     assert await dao.level.count() == 2
@@ -34,7 +34,7 @@ async def test_game_simple(simple_scn: dict, dao: HolderDao, dcf: Factory):
     another_scn = deepcopy(simple_scn)
     another_scn["levels"].append(another_scn["levels"].pop(0))
 
-    game = await upsert_game(another_scn, author, dao, dcf)
+    game = await upsert_game(another_scn, author, dao.game_upserter, dcf)
 
     assert await dao.game.count() == 1
     assert await dao.level.count() == 2
@@ -50,7 +50,7 @@ async def test_game_simple(simple_scn: dict, dao: HolderDao, dcf: Factory):
 
     another_scn["levels"].pop()
 
-    game = await upsert_game(another_scn, author, dao, dcf)
+    game = await upsert_game(another_scn, author, dao.game_upserter, dcf)
 
     assert await dao.game.count() == 1
     assert await dao.level.count() == 2

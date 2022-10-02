@@ -5,11 +5,11 @@ from shvatka.utils.defaults_constants import CAPTAIN_ROLE
 
 
 async def create_team(chat: dto.Chat, captain: dto.Player, dao: TeamCreator) -> dto.Team:
-    await dao.player_in_team.check_player_free(captain)
-    await dao.team.check_no_team_in_chat(chat)
+    await dao.check_player_free(captain)
+    await dao.check_no_team_in_chat(chat)
 
-    team = await dao.team.create(chat, captain)
-    await dao.player_in_team.join_team(captain, team, CAPTAIN_ROLE)
+    team = await dao.create(chat, captain)
+    await dao.join_team(captain, team, CAPTAIN_ROLE)
     await dao.commit()
     return team
 

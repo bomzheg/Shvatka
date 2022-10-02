@@ -2,9 +2,12 @@ from redis.asyncio.client import Redis
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from shvatka.dal.game import GameUpserter
+from shvatka.dal.player import TeamLeaver
+from shvatka.dal.team import TeamCreator
 from shvatka.dal.waiver import WaiverVoteAdder, WaiverVoteGetter, WaiverApprover
 from .complex import WaiverVoteAdderImpl, WaiverVoteGetterImpl
 from .complex.game import GameUpserterImpl
+from .complex.team import TeamCreatorImpl, TeamLeaverImpl
 from .complex.waiver import WaiverApproverImpl
 from .rdb import (
     ChatDao, UserDao, FileInfoDao, GameDao, LevelDao,
@@ -44,8 +47,23 @@ class HolderDao:
 
     @property
     def waiver_approver(self) -> WaiverApprover:
-        return WaiverApproverImpl(poll=self.poll, player=self.player, waiver=self.waiver)
+        return WaiverApproverImpl(
+            poll=self.poll, player=self.player, waiver=self.waiver,
+        )
 
     @property
     def game_upserter(self) -> GameUpserter:
         return GameUpserterImpl(game=self.game, level=self.level)
+
+    @property
+    def team_creator(self) -> TeamCreator:
+        return TeamCreatorImpl(
+            team=self.team, player_in_team=self.player_in_team,
+        )
+
+    @property
+    def team_leaver(self) -> TeamLeaver:
+        return TeamLeaverImpl(
+            game=self.game, player_in_team=self.player_in_team,
+            waiver=self.waiver, poll=self.poll,
+        )

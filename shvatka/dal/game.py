@@ -6,7 +6,7 @@ from shvatka.models import dto
 from shvatka.models.dto.scn.game import GameScenario
 
 
-class GameUpserter(Committer, LevelUpserter):
+class GameUpserter(LevelUpserter):
     async def upsert_game(self, author: dto.Player, scn: GameScenario) -> dto.Game:
         pass
 

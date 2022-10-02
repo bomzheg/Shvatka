@@ -34,7 +34,7 @@ async def test_get_voted_list(dao: HolderDao):
     await approve_waivers(game, team, captain, dao.waiver_approver)
     assert 2 == await dao.waiver.count()
 
-    await leave(player, dao)
+    await leave(player, dao.team_leaver)
     actual = await get_vote_to_voted(team, dao.waiver_vote_getter)
     assert len(actual) == 1
     actual_voted = actual[Played.yes]

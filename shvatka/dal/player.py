@@ -22,11 +22,7 @@ class PlayerPromoter(Committer):
 class TeamJoiner(Committer):
     async def join_team(self, player: dto.Player, team: dto.Team, role: str) -> None: pass
 
-    async def check_player_free(self, player: dto.Player): pass
-
-
-class PlayerTeamLeaver(Reader):
-    async def leave_team(self, player: dto.Player) -> None: pass
+    async def check_player_free(self, player: dto.Player) -> None: pass
 
 
 class WaiverRemover(Reader):
@@ -37,12 +33,12 @@ class PollVoteDeleter(Reader):
     async def del_player_vote(self, team_id: int, player_id: int) -> None: pass
 
 
-class TeamLeaver(Committer):
-    class _PlayerTeamCheckerAndLeaver(PlayerTeamChecker, PlayerTeamLeaver):
+class TeamLeaver(Committer, ActiveGameFinder, WaiverRemover):
+    async def del_player_vote(self, team_id: int, player_id: int) -> None:
         pass
 
-    game: ActiveGameFinder
-    team: PlayerTeamChecker
-    player_in_team: _PlayerTeamCheckerAndLeaver
-    waiver: WaiverRemover
-    poll: PollVoteDeleter
+    async def get_team(self, player: dto.Player) -> dto.Team:
+        pass
+
+    async def leave_team(self, player: dto.Player) -> None:
+        pass

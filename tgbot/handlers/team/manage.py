@@ -24,9 +24,6 @@ from tgbot.views.texts import NOT_SUPERGROUP_ERROR
 logger = logging.getLogger(__name__)
 
 
-# TODO все кнопки для редактирования команды останутся доступны для капитана,
-#  если он сменил команду и снова капитан другой команды
-# TODO аналогично это может сработать для кнопок старой команды игрока с полномочиями
 async def cmd_create_team(
     message: Message, chat: dto.Chat, player: dto.Player, dao: HolderDao,
     bot: Bot,
@@ -42,7 +39,7 @@ async def cmd_create_team(
 
     chat.description = (await bot.get_chat(chat.tg_id)).description
     try:
-        await create_team(chat, player, dao)
+        await create_team(chat, player, dao.team_creator)
     except PlayerAlreadyInTeam as e:
         return await message.reply(
             f"Вы уже находитесь в другой команде ({hd.quote(e.team.name)}).\n"

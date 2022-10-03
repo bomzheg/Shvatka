@@ -1,7 +1,7 @@
 import logging
 
-from aiogram import Dispatcher
-from aiogram.filters import Command, ContentTypesFilter
+from aiogram import Dispatcher, F
+from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, ReplyKeyboardRemove, ContentType
 from aiogram.utils.markdown import html_decoration as hd
@@ -46,9 +46,9 @@ async def chat_migrate(message: Message, chat: dto.Chat, dao: HolderDao):
 
 def setup(dp: Dispatcher):
     dp.message.register(
-        chat_id, Command(commands=["idchat", CHAT_ID_COMMAND.command], commands_prefix="/!")
+        chat_id, Command(commands=["idchat", CHAT_ID_COMMAND.command], prefix="/!")
     )
     dp.message.register(cancel_state, Command(commands=CANCEL_COMMAND.command))
     dp.message.register(
-        chat_migrate, ContentTypesFilter(content_types=ContentType.MIGRATE_TO_CHAT_ID)
+        chat_migrate, F.content_types == ContentType.MIGRATE_TO_CHAT_ID
     )

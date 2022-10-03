@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from typing import Any, Union, Dict
 
 from aiogram.filters import BaseFilter
@@ -7,6 +8,7 @@ from shvatka.models import dto
 from shvatka.models.enums import GameStatus
 
 
+@dataclass
 class GameStatusFilter(BaseFilter):
     active: bool | None = None
     running: bool | None = None

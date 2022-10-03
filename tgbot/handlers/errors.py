@@ -49,7 +49,7 @@ async def handle(update: Update, exception: Exception, log_chat_id: int, bot: Bo
 def setup(dp: Dispatcher, log_chat_id: int):
     dp.errors.register(
         partial(handle_sh_error, log_chat_id=log_chat_id),
-        ExceptionTypeFilter(exception=SHError)
+        ExceptionTypeFilter(SHError)
     )
     dp.errors.register(
         partial(handle, log_chat_id=log_chat_id)

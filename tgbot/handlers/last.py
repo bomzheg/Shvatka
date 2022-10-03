@@ -52,6 +52,6 @@ async def callback_in_state(callback_query: types.CallbackQuery):
 def setup(dp: Dispatcher):
     router.message.register(message_in_state, Command(commands=re.compile('.*')))
     router.callback_query.register(not_supported_callback)
-    router.callback_query.register(callback_in_state, StateFilter(state=any_state))
+    router.callback_query.register(callback_in_state, StateFilter(any_state))
 
     dp.include_router(router)

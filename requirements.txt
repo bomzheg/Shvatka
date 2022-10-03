@@ -1,8 +1,8 @@
 pyyaml>=6.0
 python-dateutil
 colorlog
-aiogram==3.0.0b4
-aiogram_dialog==2.0.0b9
+aiogram>=3.0.0b5
+aiogram_dialog>=2.0.0b11
 sqlalchemy>=1.4
 alembic
 asyncpg

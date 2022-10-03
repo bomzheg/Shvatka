@@ -1,8 +1,8 @@
 import logging
 
 import yaml
-from aiogram import Router, Dispatcher, Bot
-from aiogram.filters import ContentTypesFilter, Command
+from aiogram import Router, Dispatcher, Bot, F
+from aiogram.filters import Command
 from aiogram.types import Message
 from aiogram_dialog import StartMode, DialogManager
 from dataclass_factory import Factory
@@ -39,7 +39,7 @@ def setup(dp: Dispatcher):
         GameStatusFilter(running=False),  # TODO can_be_author=True
     )
 
-    router.message.register(cmd_save_game, ContentTypesFilter(content_types="document"))
+    router.message.register(cmd_save_game, F.content_types == "document")
     # TODO refactor it filters^ (state?)
     router.message.register(get_manage, Command(commands="my_games"))
     dp.include_router(router)

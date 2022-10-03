@@ -1,6 +1,6 @@
 from aiogram_dialog import DialogManager
-from aiogram_dialog.context.context import Context
-from aiogram_dialog.widgets.when import Whenable
+from aiogram_dialog.api.entities import Context
+from aiogram_dialog.widgets.common import Whenable
 
 from db.dao.holder import HolderDao
 from shvatka.models import dto

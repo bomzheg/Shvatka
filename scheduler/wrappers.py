@@ -2,8 +2,7 @@ from contextlib import asynccontextmanager
 from typing import AsyncContextManager
 
 from db.dao.holder import HolderDao
-from scheduler.context import ScheduledContextHolder
-from shvatka.scheduler import ScheduledContext
+from scheduler.context import ScheduledContextHolder, ScheduledContext
 from shvatka.services.game_play import prepare_game, start_game
 from tgbot.views.game import GameBotViewPreparer
 

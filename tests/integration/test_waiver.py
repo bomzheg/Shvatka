@@ -7,21 +7,18 @@ from shvatka.services.game import create_game, start_waivers
 from shvatka.services.player import join_team, leave
 from shvatka.services.waiver import get_vote_to_voted, add_vote, approve_waivers
 from shvatka.utils.exceptions import PlayerRestoredInTeam, WaiverForbidden
-from tests.utils.player import create_hermi_player, create_harry_player
+from tests.utils.player import create_hermi_player, create_promoted_harry
 from tests.utils.team import create_first_team
 
 
 @pytest.mark.asyncio
 async def test_get_voted_list(dao: HolderDao):
-    captain = await create_harry_player(dao)
-    await dao.player.promote(captain, captain)
-    await dao.commit()
-    captain.can_be_author = True
+    captain = await create_promoted_harry(dao)
     team = await create_first_team(captain, dao)
-    player = await create_hermi_player(dao)
     game = await create_game(captain, "good_game", dao.game)
     await start_waivers(game, captain, dao.game)
 
+    player = await create_hermi_player(dao)
     await join_team(player, team, dao.player_in_team)
     await add_vote(game, team, captain, Played.yes, dao.waiver_vote_adder)
     await add_vote(game, team, player, Played.yes, dao.waiver_vote_adder)

@@ -48,3 +48,6 @@ class GameStarterImpl(GameStarter):
     async def get_puzzle(self, game: dto.Game, level_number: int) -> TimeHint:
         scenario = await self.level.get_scenario(game, level_number)
         return scenario.time_hints[0]
+
+    async def commit(self) -> None:
+        await self.game.commit()

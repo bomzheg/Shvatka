@@ -18,4 +18,4 @@ class LevelTimeDao(BaseDAO[models.LevelTime]):
             level_number=level_number,
             start_at=datetime.utcnow(),
         )
-        self.session.add(level_time)
+        self._save(level_time)

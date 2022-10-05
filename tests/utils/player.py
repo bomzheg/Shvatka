@@ -13,5 +13,13 @@ async def create_harry_player(dao: HolderDao) -> dto.Player:
     return await upsert_player(await upsert_user(create_dto_harry(), dao.user), dao.player)
 
 
+async def create_promoted_harry(dao: HolderDao) -> dto.Player:
+    captain = await create_harry_player(dao)
+    await dao.player.promote(captain, captain)
+    await dao.commit()
+    captain.can_be_author = True
+    return captain
+
+
 async def create_ron_player(dao: HolderDao) -> dto.Player:
     return await upsert_player(await upsert_user(create_dto_ron(), dao.user), dao.player)

@@ -35,6 +35,8 @@ async def clear_data(dao: HolderDao):
     await dao.poll.delete_all()
     await dao.waiver.delete_all()
     await dao.level.delete_all()
+    await dao.level_time.delete_all()
+    await dao.key_time.delete_all()
     await dao.game.delete_all()
     await dao.player_in_team.delete_all()
     await dao.team.delete_all()
@@ -119,5 +121,5 @@ def user_getter() -> UserGetter:
 @pytest.fixture(scope="session")
 def bot(app_config: Config) -> Bot:
     dummy = mock(Bot)
-    setattr(dummy, "id", 123)
+    setattr(dummy, "id", int(app_config.bot.token.split(":")[0]))
     return dummy

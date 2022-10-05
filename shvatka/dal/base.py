@@ -10,4 +10,5 @@ class Writer(Protocol):
 
 
 class Committer(Writer):
-    async def commit(self) -> None: pass
+    async def commit(self) -> None:
+        raise NotImplementedError

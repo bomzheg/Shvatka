@@ -1,12 +1,14 @@
+from abc import ABCMeta
+
 from shvatka.dal.base import Committer
 from shvatka.models import dto
 
 
-class ChatUpserter(Committer):
+class ChatUpserter(Committer, metaclass=ABCMeta):
     async def upsert_chat(self, chat: dto.Chat) -> dto.Chat:
-        pass
+        raise NotImplementedError
 
 
-class ChatIdUpdater(Committer):
+class ChatIdUpdater(Committer, metaclass=ABCMeta):
     async def update_chat_id(self, chat: dto.Chat, new_id: int) -> None:
-        pass
+        raise NotImplementedError

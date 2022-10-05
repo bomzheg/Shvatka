@@ -5,8 +5,11 @@ from shvatka.models import dto
 
 
 class GamePreparer(Writer):
-    async def delete_poll_data(self) -> None: pass
+    async def delete_poll_data(self) -> None:
+        raise NotImplementedError
 
-    async def get_agree_teams(self, game: dto.Game) -> Iterable[dto.Team]: pass
+    async def get_agree_teams(self, game: dto.Game) -> Iterable[dto.Team]:
+        raise NotImplementedError
 
-    async def get_orgs(self, game: dto.Game) -> Iterable[dto.Organizer]: pass
+    async def get_orgs(self, game: dto.Game) -> Iterable[dto.Organizer]:
+        raise NotImplementedError

@@ -26,7 +26,7 @@ async def main():
         UserGetter(config.tg_client) as user_getter,
         create_redis(config.redis) as redis,
         create_scheduler(
-            pool=pool, redis=redis, bot=bot, redis_config=config.redis,
+            pool=pool, redis=redis, bot=bot, redis_config=config.redis, game_log_chat=config.bot.log_chat
         ) as scheduler,
     ):
         dp = create_dispatcher(

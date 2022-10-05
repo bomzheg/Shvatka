@@ -52,7 +52,7 @@ class WaiverDao(BaseDAO[models.Waiver]):
         )
         return result.scalars().one_or_none()
 
-    async def get_agree_teams(self, game: dto.Game) -> Iterable[dto.Team]:
+    async def get_played_teams(self, game: dto.Game) -> Iterable[dto.Team]:
         result = await self.session.execute(
             select(models.Waiver)
             .distinct(models.Waiver.team_id)  # Postgresql feature

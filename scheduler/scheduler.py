@@ -24,10 +24,13 @@ class ApScheduler(Scheduler):
         pool: sessionmaker,
         redis: Redis,
         bot: Bot,
+        game_log_chat: int,
     ):
         ScheduledContextHolder.poll = pool
         ScheduledContextHolder.redis = redis
         ScheduledContextHolder.bot = bot
+        ScheduledContextHolder.scheduler = self
+        ScheduledContextHolder.game_log_chat = game_log_chat
         self.job_store = RedisJobStore(
             jobs_key="SH.jobs",
             run_times_key="SH.run_times",

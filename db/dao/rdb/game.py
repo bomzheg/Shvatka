@@ -104,3 +104,10 @@ class GameDao(BaseDAO[models.Game], ActiveGameFinder):
             .where(models.Game.id == game.id)
             .values(start_at=start_at)
         )
+
+    def set_started(self, game: dto.Game):
+        await self.session.execute(
+            update(models.Game)
+            .where(models.Game.id == game.id)
+            .values(status=GameStatus.started)
+        )

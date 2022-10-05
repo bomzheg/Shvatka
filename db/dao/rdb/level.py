@@ -45,6 +45,17 @@ class LevelDao(BaseDAO[models.Level]):
         )
         return result.scalar_one()
 
+    async def get_scenario(self, game: dto.Game, level_number: int) -> LevelScenario:
+        result = await self.session.execute(
+            select(models.Level)
+            .where(
+                models.Level.game_id == game.id,
+                models.Level.number_in_game == level_number,
+            )
+        )
+        level: models.Level = result.scalar_one()
+        return level.scenario
+
     async def unlink_all(self, game: dto.Game):
         await self.session.execute(
             update(models.Level)

@@ -94,7 +94,7 @@ def redis(app_config: Config) -> Redis:
 @pytest_asyncio.fixture(scope="session")
 async def scheduler(pool: sessionmaker, redis: Redis, bot: Bot, app_config: Config):
     async with create_scheduler(
-        pool=pool, redis=redis, bot=bot, redis_config=app_config.redis,
+        pool=pool, redis=redis, bot=bot, redis_config=app_config.redis, game_log_chat=app_config.bot.log_chat,
     ) as sched:
         yield sched
 

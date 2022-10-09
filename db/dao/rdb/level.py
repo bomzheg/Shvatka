@@ -2,6 +2,7 @@ from sqlalchemy import update
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
+from sqlalchemy.orm import joinedload
 
 from db import models
 from shvatka.models import dto
@@ -22,7 +23,7 @@ class LevelDao(BaseDAO[models.Level]):
     ) -> dto.Level:
         assert (game is None) == (no_in_game is None)
         try:
-            level = await self.get_by_author_and_scn(author, scn)
+            level = await self._get_by_author_and_scn(author, scn)
         except NoResultFound:
             level = models.Level(
                 author_id=author.id,
@@ -36,7 +37,7 @@ class LevelDao(BaseDAO[models.Level]):
         await self._flush(level)
         return level.to_dto(author)
 
-    async def get_by_author_and_scn(self, author: dto.Player, scn: LevelScenario) -> models.Level:
+    async def _get_by_author_and_scn(self, author: dto.Player, scn: LevelScenario) -> models.Level:
         result = await self.session.execute(
             select(models.Level).where(
                 models.Level.name_id == scn.id,
@@ -45,16 +46,19 @@ class LevelDao(BaseDAO[models.Level]):
         )
         return result.scalar_one()
 
-    async def get_scenario(self, game: dto.Game, level_number: int) -> LevelScenario:
+    async def get_by_id(self, id_: int) -> dto.Level:
         result = await self.session.execute(
             select(models.Level)
             .where(
-                models.Level.game_id == game.id,
-                models.Level.number_in_game == level_number,
+                models.Level.id == id_,
+            )
+            .options(
+                joinedload(models.Level.author)
+                .joinedload(models.Player.user)
             )
         )
         level: models.Level = result.scalar_one()
-        return level.scenario
+        return level.to_dto(level.author.to_dto(level.author.user.to_dto()))
 
     async def unlink_all(self, game: dto.Game):
         await self.session.execute(

@@ -1,4 +1,5 @@
 import logging
+from datetime import datetime
 
 from aiogram import Bot
 from apscheduler.executors.asyncio import AsyncIOExecutor
@@ -8,7 +9,7 @@ from redis import Redis
 from sqlalchemy.orm import sessionmaker
 
 from scheduler.context import ScheduledContextHolder
-from scheduler.wrappers import prepare_game_wrapper, start_game_wrapper
+from scheduler.wrappers import prepare_game_wrapper, start_game_wrapper, send_hint_wrapper
 from shvatka.models import dto
 from shvatka.models.config.db import RedisConfig
 from shvatka.scheduler import Scheduler
@@ -66,6 +67,15 @@ class ApScheduler(Scheduler):
             kwargs={"game_id": game.id, "author_id": game.author.id},
             trigger='date',
             run_date=game.start_at.astimezone(tz=tz_utc),
+            timezone=tz_utc,
+        )
+
+    async def plain_hint(self, level: dto.Level, team: dto.Team, hint_number: int, run_at: datetime):
+        self.scheduler.add_job(
+            func=send_hint_wrapper,
+            kwargs={"level_id": level.db_id, "team_id": team.id, "hint_number": hint_number},
+            trigger='date',
+            run_date=run_at,
             timezone=tz_utc,
         )
 

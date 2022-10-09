@@ -1,6 +1,7 @@
 from datetime import datetime
 
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
 
 from db import models
 from shvatka.models import dto
@@ -19,3 +20,19 @@ class LevelTimeDao(BaseDAO[models.LevelTime]):
             start_at=datetime.utcnow(),
         )
         self._save(level_time)
+
+    async def is_team_on_level(self, team: dto.Team, level: dto.Level) -> bool:
+        return await self.get_current_level(team=team, game_id=level.game_id) == level.number_in_game
+
+    async def get_current_level(self, team: dto.Team, game_id: int) -> int:
+        result = await self.session.execute(
+            select(models.LevelTime)
+            .where(
+                models.LevelTime.team_id == team.id,
+                models.LevelTime.game_id == game_id,
+            )
+            .order_by(models.LevelTime.level_number)
+            .limit(1)
+        )
+        return result.scalar_one().level_number
+

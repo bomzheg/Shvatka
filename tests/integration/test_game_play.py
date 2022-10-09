@@ -6,7 +6,7 @@ from db.dao.holder import HolderDao
 from shvatka.models.enums.played import Played
 from shvatka.scheduler import Scheduler
 from shvatka.services.game import start_waivers, upsert_game
-from shvatka.services.game_play import start_game
+from shvatka.services.game_play import start_game, send_hint
 from shvatka.services.player import join_team
 from shvatka.services.waiver import add_vote, approve_waivers
 from shvatka.views.game import GameView, GameLogWriter
@@ -29,10 +29,16 @@ async def test_game_play(simple_scn: dict, dao: HolderDao, dcf: Factory):
     await approve_waivers(game, team, captain, dao.waiver_approver)
 
     dummy_view = mock(GameView)
-    when(dummy_view).send_puzzle(team, ANY).thenReturn(mock_coro(None))
+    when(dummy_view).send_puzzle(team, game.get_hint(0, 0)).thenReturn(mock_coro(None))
     dummy_log = mock(GameLogWriter)
     when(dummy_log).log("Game started").thenReturn(mock_coro(None))
     dummy_sched = mock(Scheduler)
-    when(dummy_sched).plain_hint(game, team, 0, ANY).thenReturn(mock_coro(None))
+    when(dummy_sched).plain_hint(game.levels[0], team, 1, ANY).thenReturn(mock_coro(None))
     await start_game(game, dao.game_starter, dummy_log, dummy_view, dummy_sched)
     assert 1 == await dao.level_time.count()
+
+    when(dummy_view).send_hint(team, game.get_hint(0, 1)).thenReturn(mock_coro(None))
+    when(dummy_sched).plain_hint(game.levels[0], team, 2, ANY).thenReturn(mock_coro(None))
+    await send_hint(
+        level=game.levels[0], hint_number=1, team=team, dao=dao.level_time, view=dummy_view, scheduler=dummy_sched,
+    )

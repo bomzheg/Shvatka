@@ -4,6 +4,7 @@ from dataclasses import dataclass
 
 from shvatka.models.dto.scn.level import LevelScenario
 from .player import Player
+from .scn.time_hint import TimeHint
 
 
 @dataclass
@@ -14,4 +15,10 @@ class Level:
     scenario: LevelScenario
     game_id: int | None = None
     number_in_game: int | None = None
+
+    def get_hint(self, hint_number: int) -> TimeHint:
+        return self.scenario.get_hint(hint_number)
+
+    def is_last_hint(self, hint_number: int) -> bool:
+        return self.scenario.is_last_hint(hint_number)
 

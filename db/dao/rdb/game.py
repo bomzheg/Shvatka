@@ -45,6 +45,23 @@ class GameDao(BaseDAO[models.Game], ActiveGameFinder):
         )
         return result.scalar_one()
 
+    async def get_full(self, id_: int) -> dto.FullGame:
+        result = await self.session.execute(
+            select(models.Game)
+            .options(
+                joinedload(models.Game.levels),
+                joinedload(models.Game.author)
+                .joinedload(models.Player.user)
+            )
+            .where(models.Game.id == id_)
+        )
+        game_db: models.Game = result.scalar_one()
+        author = game_db.author.to_dto(game_db.author.user.to_dto())
+        return game_db.to_full_dto(
+            author=author,
+            levels=[level.to_dto(author) for level in game_db.levels],
+        )
+
     async def get_by_id(self, id_: int, author: dto.Player) -> dto.Game:
         return (await self._get_by_id(id_)).to_dto(author)
 

@@ -36,14 +36,14 @@ class TeamDao(BaseDAO[models.Team]):
         )
 
     async def get_by_chat(self, chat: dto.Chat) -> dto.Team | None:
-        try:
-            result = await self.session.execute(
-                select(models.Team)
-                .where(models.Team.chat_id == chat.db_id)
-                .options(
-                    joinedload(models.Team.captain).joinedload(models.Player.user),
-                )
+        result = await self.session.execute(
+            select(models.Team)
+            .where(models.Team.chat_id == chat.db_id)
+            .options(
+                joinedload(models.Team.captain).joinedload(models.Player.user),
             )
+        )
+        try:
             team = result.scalar_one()
         except NoResultFound:
             return None
@@ -54,3 +54,15 @@ class TeamDao(BaseDAO[models.Team]):
             raise AnotherTeamInChat(
                 chat=chat, team=team, text="team in this chat exists",
             )
+
+    async def get_by_id(self, id_: int):
+        result = await self.session.execute(
+            select(models.Team)
+            .where(models.Team.id == id_)
+            .options(
+                joinedload(models.Team.captain).joinedload(models.Player.user),
+                joinedload(models.Team.chat),
+            )
+        )
+        team: models.Team = result.scalar_one()
+        return team.to_dto(team.chat.to_dto())

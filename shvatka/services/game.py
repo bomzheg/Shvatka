@@ -11,7 +11,7 @@ from shvatka.services.scenario.game_ops import load_game
 from shvatka.utils.exceptions import NotAuthorizedForEdit, AnotherGameIsActive
 
 
-async def upsert_game(scn: dict, author: dto.Player, dao: GameUpserter, dcf: Factory) -> dto.Game:
+async def upsert_game(scn: dict, author: dto.Player, dao: GameUpserter, dcf: Factory) -> dto.FullGame:
     check_allow_be_author(author)
     game_scn = load_game(scn, dcf)
     game = await dao.upsert_game(author, game_scn)
@@ -20,9 +20,8 @@ async def upsert_game(scn: dict, author: dto.Player, dao: GameUpserter, dcf: Fac
     for number, level in enumerate(game_scn.levels):
         saved_level = await dao.upsert(author, level, game, number)
         levels.append(saved_level)
-    game.levels = levels
     await dao.commit()
-    return game
+    return game.to_full_game(levels)
 
 
 async def create_game(author: dto.Player, name: str, dao: GameCreator) -> dto.Game:

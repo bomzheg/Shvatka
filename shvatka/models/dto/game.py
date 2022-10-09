@@ -9,6 +9,7 @@ from shvatka.models.enums.game_status import ACTIVE_STATUSES, EDITABLE_STATUSES
 from shvatka.utils.datetime_utils import tz_game, tz_utc
 from .level import Level
 from .player import Player
+from .scn.time_hint import TimeHint
 
 
 @dataclass
@@ -20,7 +21,6 @@ class Game:
     start_at: datetime
     published_channel_id: int
     manage_token: str
-    levels: list[Level] = field(default_factory=list)
 
     def is_active(self):
         return self.status in ACTIVE_STATUSES
@@ -69,3 +69,23 @@ class Game:
 
     def is_author_id(self, player_id: int) -> bool:
         return self.author.id == player_id
+
+    def to_full_game(self, levels: list[Level]) -> FullGame:
+        return FullGame(
+            id=self.id,
+            author=self.author,
+            name=self.name,
+            status=self.status,
+            start_at=self.start_at,
+            published_channel_id=self.published_channel_id,
+            manage_token=self.manage_token,
+            levels=levels,
+        )
+
+
+@dataclass
+class FullGame(Game):
+    levels: list[Level] = field(default_factory=list)
+
+    def get_hint(self, level_number: int, hint_number: int) -> TimeHint:
+        return self.levels[level_number].get_hint(hint_number)

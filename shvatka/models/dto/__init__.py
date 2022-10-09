@@ -1,5 +1,5 @@
 from .chat import Chat  # noqa: F401
-from .game import Game  # noqa: F401
+from .game import Game, FullGame  # noqa: F401
 from .level import Level  # noqa: F401
 from .organizer import Organizer  # noqa: F401
 from .player import Player  # noqa: F401

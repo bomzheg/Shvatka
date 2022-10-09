@@ -76,3 +76,6 @@ class Game(Base):
             published_channel_id=self.published_channel_id,
             manage_token=self.manage_token,
         )
+
+    def to_full_dto(self, author: dto.Player, levels: list[dto.Level]) -> dto.FullGame:
+        return self.to_dto(author).to_full_game(levels)

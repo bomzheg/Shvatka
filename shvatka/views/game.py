@@ -15,6 +15,9 @@ class GameView(Protocol):
     async def send_puzzle(self, team: dto.Team, puzzle: TimeHint):
         raise NotImplementedError
 
+    async def send_hint(self, team: dto.Team, hint: TimeHint):
+        raise NotImplementedError
+
 
 class GameLogWriter(Protocol):
     async def log(self, message: str):

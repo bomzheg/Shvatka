@@ -6,17 +6,18 @@ from db.dao.holder import HolderDao
 from shvatka.models.enums.played import Played
 from shvatka.scheduler import Scheduler
 from shvatka.services.game import start_waivers, upsert_game
-from shvatka.services.game_play import start_game, send_hint
+from shvatka.services.game_play import start_game, send_hint, check_key
 from shvatka.services.player import join_team
 from shvatka.services.waiver import add_vote, approve_waivers
-from shvatka.views.game import GameView, GameLogWriter
+from shvatka.utils.key_checker_lock import KeyCheckerFactory
+from shvatka.views.game import GameView, GameLogWriter, OrgNotifier
 from tests.mocks.aiogram_mocks import mock_coro
 from tests.utils.player import create_promoted_harry, create_hermi_player
 from tests.utils.team import create_first_team
 
 
 @pytest.mark.asyncio
-async def test_game_play(simple_scn: dict, dao: HolderDao, dcf: Factory):
+async def test_game_play(simple_scn: dict, dao: HolderDao, dcf: Factory, locker: KeyCheckerFactory):
     captain = await create_promoted_harry(dao)
     team = await create_first_team(captain, dao)
     game = await upsert_game(simple_scn, captain, dao.game_upserter, dcf)
@@ -41,4 +42,11 @@ async def test_game_play(simple_scn: dict, dao: HolderDao, dcf: Factory):
     when(dummy_sched).plain_hint(game.levels[0], team, 2, ANY).thenReturn(mock_coro(None))
     await send_hint(
         level=game.levels[0], hint_number=1, team=team, dao=dao.level_time, view=dummy_view, scheduler=dummy_sched,
+    )
+
+    dummy_org_notifier = mock(OrgNotifier)
+    when(dummy_view).correct_key(team=team).thenReturn(mock_coro(None))
+    await check_key(
+        key="SH123", player=captain, team=team, game=game, dao=dao.key_checker, view=dummy_view, game_log=dummy_log,
+        org_notifier=dummy_org_notifier, locker=locker,
     )

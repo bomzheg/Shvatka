@@ -16,10 +16,11 @@ from db.dao.holder import HolderDao
 from shvatka.models.config import Config
 from shvatka.scheduler import Scheduler
 from shvatka.services.username_resolver.user_getter import UserGetter
+from shvatka.utils.key_checker_lock import KeyCheckerFactory
 from tests.fixtures.conftest import fixtures_resource_path  # noqa: F401
 from tests.fixtures.scn_fixtures import simple_scn  # noqa: F401
 from tests.mocks.config import DBConfig
-from tgbot.main_factory import create_dispatcher, create_scheduler, create_redis
+from tgbot.main_factory import create_dispatcher, create_scheduler, create_redis, create_lock_factory
 
 logger = logging.getLogger(__name__)
 
@@ -102,13 +103,18 @@ async def scheduler(pool: sessionmaker, redis: Redis, bot: Bot, app_config: Conf
 
 
 @pytest.fixture(scope="session")
+def locker() -> KeyCheckerFactory:
+    return create_lock_factory()
+
+
+@pytest.fixture(scope="session")
 def dp(
     pool: sessionmaker, app_config: Config, user_getter: UserGetter,
-    dcf: Factory, redis: Redis, scheduler: Scheduler,
+    dcf: Factory, redis: Redis, scheduler: Scheduler, locker: KeyCheckerFactory,
 ) -> Dispatcher:
     return create_dispatcher(
         config=app_config, user_getter=user_getter, dcf=dcf, pool=pool,
-        redis=redis, scheduler=scheduler,
+        redis=redis, scheduler=scheduler, locker=locker,
     )
 
 

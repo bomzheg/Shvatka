@@ -8,7 +8,8 @@ from shvatka.config import load_config
 from shvatka.config.logging_config import setup_logging
 from shvatka.models.schems import schemas
 from shvatka.services.username_resolver.user_getter import UserGetter
-from tgbot.main_factory import create_bot, create_dispatcher, get_paths, create_scheduler, create_pool, create_redis
+from tgbot.main_factory import create_bot, create_dispatcher, get_paths, create_scheduler, create_pool, create_redis, \
+    create_lock_factory
 
 logger = logging.getLogger(__name__)
 
@@ -31,7 +32,7 @@ async def main():
     ):
         dp = create_dispatcher(
             config=config, user_getter=user_getter, dcf=dcf, pool=pool,
-            redis=redis, scheduler=scheduler,
+            redis=redis, scheduler=scheduler, locker=create_lock_factory()
         )
 
         logger.info("started")

@@ -22,3 +22,6 @@ class Level:
     def is_last_hint(self, hint_number: int) -> bool:
         return self.scenario.is_last_hint(hint_number)
 
+    def get_keys(self):
+        return self.scenario.get_keys()
+

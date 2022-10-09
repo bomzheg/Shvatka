@@ -13,6 +13,7 @@ from sqlalchemy.engine import make_url
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
 
+from db.locker import MemoryLockFactory
 from scheduler import ApScheduler
 from shvatka.models.config import Config
 from shvatka.models.config.db import RedisConfig, DBConfig
@@ -20,6 +21,7 @@ from shvatka.models.config.main import Paths
 from shvatka.models.config.storage import StorageConfig, StorageType
 from shvatka.scheduler import Scheduler
 from shvatka.services.username_resolver.user_getter import UserGetter
+from shvatka.utils.key_checker_lock import KeyCheckerFactory
 from tgbot.dialogs import setup_dialogs
 from tgbot.handlers import setup_handlers
 from tgbot.middlewares import setup_middlewares
@@ -37,7 +39,7 @@ def create_bot(config: Config) -> Bot:
 
 def create_dispatcher(
     config: Config, user_getter: UserGetter, dcf: Factory, pool: sessionmaker,
-    redis: Redis, scheduler: Scheduler,
+    redis: Redis, scheduler: Scheduler, locker: KeyCheckerFactory,
 ) -> Dispatcher:
     dp = Dispatcher(storage=create_storage(config.storage))
     setup_middlewares(
@@ -48,6 +50,7 @@ def create_dispatcher(
         dcf=dcf,
         redis=redis,
         scheduler=scheduler,
+        locker=locker,
     )
     registry = DialogRegistry(dp)
     setup_dialogs(registry)
@@ -83,6 +86,10 @@ def create_pool(db_config: DBConfig) -> sessionmaker:
     pool = sessionmaker(bind=engine, class_=AsyncSession,
                         expire_on_commit=False, autoflush=False)
     return pool
+
+
+def create_lock_factory() -> KeyCheckerFactory:
+    return MemoryLockFactory()
 
 
 def create_redis(config: RedisConfig) -> Redis:

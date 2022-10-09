@@ -72,3 +72,18 @@ class LevelDao(BaseDAO[models.Level]):
                 number_in_game=None,
             )
         )
+
+    async def get_by_number(self, game: dto.Game, level_number: int) -> dto.Level:
+        result = await self.session.execute(
+            select(models.Level)
+            .where(
+                models.Level.game_id == game.id,
+                models.Level.number_in_game == level_number,
+            )
+            .options(
+                joinedload(models.Level.author)
+                .joinedload(models.Player.user)
+            )
+        )
+        level: models.Level = result.scalar_one()
+        return level.to_dto(level.author.to_dto(level.author.user.to_dto()))

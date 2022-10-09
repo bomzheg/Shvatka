@@ -1,8 +1,8 @@
 from dataclasses import dataclass
 from typing import Iterable
 
-from db.dao import PollDao, WaiverDao, OrganizerDao, GameDao, LevelTimeDao, LevelDao
-from shvatka.dal.game_play import GamePreparer
+from db.dao import PollDao, WaiverDao, OrganizerDao, GameDao, LevelTimeDao, LevelDao, KeyTimeDao
+from shvatka.dal.game_play import GamePreparer, KeyChecker
 from shvatka.dal.level_times import GameStarter
 from shvatka.models import dto
 
@@ -42,3 +42,31 @@ class GameStarterImpl(GameStarter):
 
     async def commit(self) -> None:
         await self.game.commit()
+
+
+@dataclass
+class KeyCheckerImpl(KeyChecker):
+    level_time: LevelTimeDao
+    level: LevelDao
+    key_time: KeyTimeDao
+
+    async def get_current_level(self, team: dto.Team, game: dto.Game) -> dto.Level:
+        return await self.level.get_by_number(
+            game=game,
+            level_number=await self.level_time.get_current_level(team=team, game_id=game.id)
+        )
+
+    async def get_correct_typed_keys(self, level: dto.Level, game: dto.Game, team: dto.Team) -> set[str]:
+        return await self.key_time.get_correct_typed_keys(level, game, team)
+
+    async def save_key(self, key: str, team: dto.Team, level: dto.Level, game: dto.Game, player: dto.Player,
+                       is_correct: bool) -> None:
+        await self.key_time.save_key(
+            key=key, team=team, level=level, game=game, player=player, is_correct=is_correct,
+        )
+
+    async def level_up(self, team: dto.Team, level: dto.Level, game: dto.Game) -> None:
+        await self.level_time.set_to_level(team=team, game=game, level_number=level.number_in_game)
+
+    async def commit(self) -> None:
+        await self.key_time.commit()

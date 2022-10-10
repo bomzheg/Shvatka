@@ -6,13 +6,13 @@ from shvatka.utils.key_checker_lock import KeyCheckerLock, KeyCheckerFactory
 
 class MemoryLock(KeyCheckerLock):
     def __init__(self):
-        self._lock = asyncio.Lock()
+        self.lock = asyncio.Lock()
 
     async def acquire(self):
-        await self._lock.acquire()
+        await self.lock.acquire()
 
     async def release(self):
-        self._lock.release()
+        self.lock.release()
 
 
 class MemoryLockFactory(KeyCheckerFactory):

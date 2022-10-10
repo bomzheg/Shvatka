@@ -66,7 +66,7 @@ class KeyCheckerImpl(KeyChecker):
         )
 
     async def level_up(self, team: dto.Team, level: dto.Level, game: dto.Game) -> None:
-        await self.level_time.set_to_level(team=team, game=game, level_number=level.number_in_game)
+        await self.level_time.set_to_level(team=team, game=game, level_number=level.number_in_game + 1)
 
     async def commit(self) -> None:
         await self.key_time.commit()

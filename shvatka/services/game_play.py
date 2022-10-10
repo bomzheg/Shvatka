@@ -79,13 +79,16 @@ async def check_key(
 
     if is_correct is None:
         await view.duplicate_key(team=team, key=key)
-    elif is_level_up:
-        # TODO check finish game
-        next_level = await dao.get_current_level(team, game)
-        await view.send_puzzle(team=team, puzzle=next_level.get_hint(0))
-        await org_notifier.notify(LevelUp(team=team, new_level=next_level))
-    else:
+    elif is_correct:
         await view.correct_key(team=team)
+        if is_level_up:
+            # TODO check finish game
+            next_level = await dao.get_current_level(team, game)
+
+            await view.send_puzzle(team=team, puzzle=next_level.get_hint(0))
+            await org_notifier.notify(LevelUp(team=team, new_level=next_level))
+    else:
+        await view.wrong_key(team=team)
 
 
 async def send_hint(

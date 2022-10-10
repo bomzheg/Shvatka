@@ -1,6 +1,6 @@
 import pytest
 from dataclass_factory import Factory
-from mockito import mock, when, ANY
+from mockito import mock, when, ANY, unstub
 
 from db.dao.holder import HolderDao
 from shvatka.models.enums.played import Played
@@ -10,7 +10,7 @@ from shvatka.services.game_play import start_game, send_hint, check_key
 from shvatka.services.player import join_team
 from shvatka.services.waiver import add_vote, approve_waivers
 from shvatka.utils.key_checker_lock import KeyCheckerFactory
-from shvatka.views.game import GameView, GameLogWriter, OrgNotifier
+from shvatka.views.game import GameView, GameLogWriter, OrgNotifier, LevelUp
 from tests.mocks.aiogram_mocks import mock_coro
 from tests.utils.player import create_promoted_harry, create_hermi_player
 from tests.utils.team import create_first_team
@@ -45,8 +45,22 @@ async def test_game_play(simple_scn: dict, dao: HolderDao, dcf: Factory, locker:
     )
 
     dummy_org_notifier = mock(OrgNotifier)
-    when(dummy_view).correct_key(team=team).thenReturn(mock_coro(None))
-    await check_key(
-        key="SH123", player=captain, team=team, game=game, dao=dao.key_checker, view=dummy_view, game_log=dummy_log,
+    key_kwargs = dict(
+        player=captain, team=team, game=game, dao=dao.key_checker, view=dummy_view, game_log=dummy_log,
         org_notifier=dummy_org_notifier, locker=locker,
     )
+
+    when(dummy_view).wrong_key(team=team).thenReturn(mock_coro(None))
+    await check_key(key="SHWRONG", **key_kwargs)
+
+    when(dummy_view).correct_key(team=team).thenReturn(mock_coro(None))
+    await check_key(key="SH123", **key_kwargs)
+
+    when(dummy_view).duplicate_key(team=team, key="SH123").thenReturn(mock_coro(None))
+    await check_key(key="SH123", **key_kwargs)
+
+    unstub(dummy_view)
+    when(dummy_view).correct_key(team=team).thenReturn(mock_coro(None))
+    when(dummy_view).send_puzzle(team=team, puzzle=game.get_hint(1, 0)).thenReturn(mock_coro(None))
+    when(dummy_org_notifier).notify(LevelUp(team=team, new_level=game.levels[1])).thenReturn(mock_coro(None))
+    await check_key(key="SH321", **key_kwargs)

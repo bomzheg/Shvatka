@@ -27,6 +27,9 @@ class GameView(Protocol):
     async def correct_key(self, team: dto.Team) -> None:
         raise NotImplementedError
 
+    async def wrong_key(self, team: dto.Team) -> None:
+        raise NotImplementedError
+
 
 class GameLogWriter(Protocol):
     async def log(self, message: str) -> None:

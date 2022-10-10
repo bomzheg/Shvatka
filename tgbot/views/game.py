@@ -31,6 +31,9 @@ class BotView(GameViewPreparer, GameView):
     async def correct_key(self, team: dto.Team) -> None:
         pass
 
+    async def wrong_key(self, team: dto.Team) -> None:
+        pass
+
 
 @dataclass
 class GameBotLog(GameLogWriter):

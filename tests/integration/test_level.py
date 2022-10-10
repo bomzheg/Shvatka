@@ -26,4 +26,4 @@ async def test_simple_level(simple_scn: dict, dao: HolderDao, dcf: Factory):
     assert lvl.game_id is None
     assert lvl.number_in_game is None
 
-    assert lvl.scenario.keys == {"SHOOT"}
+    assert lvl.scenario.keys == {"SH123", "SH321"}

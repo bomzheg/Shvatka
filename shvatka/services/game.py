@@ -2,8 +2,10 @@ from datetime import datetime
 
 from dataclass_factory import Factory
 
-from shvatka.dal.game import GameUpserter, GameCreator, GameAuthorsFinder, GameByIdGetter, ActiveGameFinder, \
-    WaiverStarter, GameStartPlanner
+from shvatka.dal.game import (
+    GameUpserter, GameCreator, GameAuthorsFinder, GameByIdGetter,
+    ActiveGameFinder, WaiverStarter, GameStartPlanner
+)
 from shvatka.models import dto
 from shvatka.scheduler import Scheduler
 from shvatka.services.player import check_allow_be_author
@@ -11,7 +13,9 @@ from shvatka.services.scenario.game_ops import load_game
 from shvatka.utils.exceptions import NotAuthorizedForEdit, AnotherGameIsActive
 
 
-async def upsert_game(scn: dict, author: dto.Player, dao: GameUpserter, dcf: Factory) -> dto.FullGame:
+async def upsert_game(
+    scn: dict, author: dto.Player, dao: GameUpserter, dcf: Factory,
+) -> dto.FullGame:
     check_allow_be_author(author)
     game_scn = load_game(scn, dcf)
     game = await dao.upsert_game(author, game_scn)
@@ -31,7 +35,9 @@ async def create_game(author: dto.Player, name: str, dao: GameCreator) -> dto.Ga
     return game
 
 
-async def get_authors_games(author: dto.Player, dao: GameAuthorsFinder) -> list[dto.Game]:
+async def get_authors_games(
+    author: dto.Player, dao: GameAuthorsFinder,
+) -> list[dto.Game]:
     check_allow_be_author(author)
     return await dao.get_all_by_author(author)
 
@@ -81,4 +87,6 @@ async def check_no_game_active(dao: ActiveGameFinder):
 
 def check_is_author(game: dto.Game, player: dto.Player):
     if not game.is_author_id(player.id):
-        raise NotAuthorizedForEdit(permission_name="game_edit", player=player, game=game)
+        raise NotAuthorizedForEdit(
+            permission_name="game_edit", player=player, game=game,
+        )

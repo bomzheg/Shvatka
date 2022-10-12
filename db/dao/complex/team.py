@@ -30,10 +30,10 @@ class TeamCreatorImpl(TeamCreator):
 @dataclass
 class TeamLeaverImpl(TeamLeaver):
     game: GameDao
-
     player_in_team: PlayerInTeamDao
     waiver: WaiverDao
     poll: PollDao
+
     async def del_player_vote(self, team_id: int, player_id: int) -> None:
         return await self.poll.del_player_vote(team_id, player_id)
 

@@ -10,4 +10,3 @@ class Player:
     id: int
     can_be_author: bool
     user: User
-

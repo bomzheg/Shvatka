@@ -14,7 +14,9 @@ class KeyTimeDao(BaseDAO[models.KeyTime]):
     def __init__(self, session: AsyncSession):
         super().__init__(models.KeyTime, session)
 
-    async def get_correct_typed_keys(self, level: dto.Level, game: dto.Game, team: dto.Team) -> set[str]:
+    async def get_correct_typed_keys(
+        self, level: dto.Level, game: dto.Game, team: dto.Team,
+    ) -> set[str]:
         result = await self.session.execute(
             select(models.KeyTime)
             .where(
@@ -26,8 +28,10 @@ class KeyTimeDao(BaseDAO[models.KeyTime]):
         )
         return {key.key_text for key in result.scalars().all()}
 
-    async def save_key(self, key: str, team: dto.Team, level: dto.Level, game: dto.Game, player: dto.Player,
-                       is_correct: bool) -> None:
+    async def save_key(
+        self, key: str, team: dto.Team, level: dto.Level, game: dto.Game,
+        player: dto.Player, is_correct: bool,
+    ) -> None:
         key_time = models.KeyTime(
             key_text=key,
             team_id=team.id,

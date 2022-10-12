@@ -1,4 +1,4 @@
 from .waiver import (
-    WaiverVoteGetterImpl,
-    WaiverVoteAdderImpl,
+    WaiverVoteGetterImpl,  # noqa: F401
+    WaiverVoteAdderImpl,  # noqa: F401
 )

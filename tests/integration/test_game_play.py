@@ -23,7 +23,8 @@ from tests.utils.time_key import assert_time_key
 
 @pytest.mark.asyncio
 async def test_game_play(
-    simple_scn: dict, dao: HolderDao, dcf: Factory, locker: KeyCheckerFactory, check_dao: HolderDao,
+    simple_scn: dict, dao: HolderDao, dcf: Factory,
+    locker: KeyCheckerFactory, check_dao: HolderDao,
 ):
     captain = await create_promoted_harry(dao)
     team = await create_first_team(captain, dao)
@@ -48,13 +49,14 @@ async def test_game_play(
     when(dummy_view).send_hint(team, game.get_hint(0, 1)).thenReturn(mock_coro(None))
     when(dummy_sched).plain_hint(game.levels[0], team, 2, ANY).thenReturn(mock_coro(None))
     await send_hint(
-        level=game.levels[0], hint_number=1, team=team, dao=dao.level_time, view=dummy_view, scheduler=dummy_sched,
+        level=game.levels[0], hint_number=1, team=team,
+        dao=dao.level_time, view=dummy_view, scheduler=dummy_sched,
     )
 
     dummy_org_notifier = mock(OrgNotifier)
     key_kwargs = dict(
-        player=captain, team=team, game=game, dao=dao.key_checker, view=dummy_view, game_log=dummy_log,
-        org_notifier=dummy_org_notifier, locker=locker,
+        player=captain, team=team, game=game, dao=dao.key_checker, view=dummy_view,
+        game_log=dummy_log, org_notifier=dummy_org_notifier, locker=locker,
     )
 
     when(dummy_view).wrong_key(team=team).thenReturn(mock_coro(None))
@@ -79,8 +81,10 @@ async def test_game_play(
 
     unstub(dummy_view)
     when(dummy_view).correct_key(team=team).thenReturn(mock_coro(None))
-    when(dummy_view).send_puzzle(team=team, puzzle=game.get_hint(1, 0)).thenReturn(mock_coro(None))
-    when(dummy_org_notifier).notify(LevelUp(team=team, new_level=game.levels[1])).thenReturn(mock_coro(None))
+    when(dummy_view).send_puzzle(team=team, puzzle=game.get_hint(1, 0))\
+        .thenReturn(mock_coro(None))
+    when(dummy_org_notifier).notify(LevelUp(team=team, new_level=game.levels[1]))\
+        .thenReturn(mock_coro(None))
     await check_key(key="SH321", **key_kwargs)
     keys = await get_typed_keys(game, check_dao.key_time)
 

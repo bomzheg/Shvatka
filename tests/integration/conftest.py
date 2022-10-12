@@ -20,7 +20,9 @@ from shvatka.utils.key_checker_lock import KeyCheckerFactory
 from tests.fixtures.conftest import fixtures_resource_path  # noqa: F401
 from tests.fixtures.scn_fixtures import simple_scn  # noqa: F401
 from tests.mocks.config import DBConfig
-from tgbot.main_factory import create_dispatcher, create_scheduler, create_redis, create_lock_factory
+from tgbot.main_factory import (
+    create_dispatcher, create_scheduler, create_redis, create_lock_factory,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -103,7 +105,8 @@ def redis(app_config: Config) -> Redis:
 @pytest_asyncio.fixture(scope="session")
 async def scheduler(pool: sessionmaker, redis: Redis, bot: Bot, app_config: Config):
     async with create_scheduler(
-        pool=pool, redis=redis, bot=bot, redis_config=app_config.redis, game_log_chat=app_config.bot.log_chat,
+        pool=pool, redis=redis, bot=bot, redis_config=app_config.redis,
+        game_log_chat=app_config.bot.log_chat,
     ) as sched:
         yield sched
 

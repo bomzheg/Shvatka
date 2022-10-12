@@ -70,7 +70,9 @@ class ApScheduler(Scheduler):
             timezone=tz_utc,
         )
 
-    async def plain_hint(self, level: dto.Level, team: dto.Team, hint_number: int, run_at: datetime):
+    async def plain_hint(
+        self, level: dto.Level, team: dto.Team, hint_number: int, run_at: datetime,
+    ):
         self.scheduler.add_job(
             func=send_hint_wrapper,
             kwargs={"level_id": level.db_id, "team_id": team.id, "hint_number": hint_number},

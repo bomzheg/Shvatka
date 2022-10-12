@@ -8,8 +8,15 @@ from shvatka.config import load_config
 from shvatka.config.logging_config import setup_logging
 from shvatka.models.schems import schemas
 from shvatka.services.username_resolver.user_getter import UserGetter
-from tgbot.main_factory import create_bot, create_dispatcher, get_paths, create_scheduler, create_pool, create_redis, \
-    create_lock_factory
+from tgbot.main_factory import (
+    create_bot,
+    create_dispatcher,
+    get_paths,
+    create_scheduler,
+    create_pool,
+    create_redis,
+    create_lock_factory,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -27,7 +34,8 @@ async def main():
         UserGetter(config.tg_client) as user_getter,
         create_redis(config.redis) as redis,
         create_scheduler(
-            pool=pool, redis=redis, bot=bot, redis_config=config.redis, game_log_chat=config.bot.log_chat
+            pool=pool, redis=redis, bot=bot, redis_config=config.redis,
+            game_log_chat=config.bot.log_chat
         ) as scheduler,
     ):
         dp = create_dispatcher(

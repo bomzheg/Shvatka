@@ -72,7 +72,10 @@ def create_storage(config: StorageConfig) -> BaseStorage:
 def create_scheduler(
     pool: sessionmaker, redis: Redis, bot: Bot, redis_config: RedisConfig, game_log_chat: int,
 ) -> Scheduler:
-    return ApScheduler(redis_config=redis_config, pool=pool, redis=redis, bot=bot, game_log_chat=game_log_chat)
+    return ApScheduler(
+        redis_config=redis_config, pool=pool, redis=redis,
+        bot=bot, game_log_chat=game_log_chat,
+    )
 
 
 def get_paths() -> Paths:

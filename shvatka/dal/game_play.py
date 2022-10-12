@@ -20,11 +20,14 @@ class KeyChecker(Committer, metaclass=ABCMeta):
     async def get_current_level(self, team: dto.Team, game: dto.Game) -> dto.Level:
         raise NotImplementedError
 
-    async def get_correct_typed_keys(self, level: dto.Level, game: dto.Game, team: dto.Team) -> set[str]:
+    async def get_correct_typed_keys(
+        self, level: dto.Level, game: dto.Game, team: dto.Team,
+    ) -> set[str]:
         raise NotImplementedError
 
     async def save_key(
-        self, key: str, team: dto.Team, level: dto.Level, game: dto.Game, player: dto.Player, is_correct: bool
+        self, key: str, team: dto.Team, level: dto.Level, game: dto.Game,
+        player: dto.Player, is_correct: bool,
     ) -> None:
         raise NotImplementedError
 

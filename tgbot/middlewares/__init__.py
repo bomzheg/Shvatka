@@ -20,7 +20,8 @@ def setup_middlewares(
 ):
     dp.update.middleware(ConfigMiddleware(bot_config))
     dp.update.middleware(InitMiddleware(
-        pool=pool, user_getter=user_getter, dcf=dcf, redis=redis, scheduler=scheduler, locker=locker,
+        pool=pool, user_getter=user_getter, dcf=dcf, redis=redis,
+        scheduler=scheduler, locker=locker,
     ))
     dp.update.middleware(LoadDataMiddleware())
     dp.message.middleware(FixTargetMiddleware())

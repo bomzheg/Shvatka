@@ -16,4 +16,3 @@ class TeamCreator(TeamJoiner, metaclass=ABCMeta):
 
     async def create(self, chat: dto.Chat, captain: dto.Player) -> dto.Team:
         raise NotImplementedError
-

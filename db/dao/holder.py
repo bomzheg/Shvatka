@@ -77,7 +77,9 @@ class HolderDao:
 
     @property
     def game_starter(self) -> GameStarter:
-        return GameStarterImpl(game=self.game, waiver=self.waiver, level_times=self.level_time, level=self.level)
+        return GameStarterImpl(
+            game=self.game, waiver=self.waiver, level_times=self.level_time, level=self.level,
+        )
 
     @property
     def key_checker(self) -> KeyChecker:

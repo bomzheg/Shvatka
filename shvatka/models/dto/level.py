@@ -24,4 +24,3 @@ class Level:
 
     def get_keys(self):
         return self.scenario.get_keys()
-

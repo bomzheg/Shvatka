@@ -13,7 +13,9 @@ from shvatka.views.game import GameViewPreparer, GameLogWriter, GameView, OrgNot
 logger = logging.getLogger(__name__)
 
 
-async def prepare_game(game: dto.Game, game_preparer: GamePreparer, view_preparer: GameViewPreparer):
+async def prepare_game(
+    game: dto.Game, game_preparer: GamePreparer, view_preparer: GameViewPreparer,
+):
     await game_preparer.delete_poll_data()
     await view_preparer.prepare_game_view(
         game=game,
@@ -43,7 +45,9 @@ async def start_game(
     hint = game.get_hint(0, 1)
 
     hint_time = now + calculate_next_hint_timedelta(puzzle, hint)
-    await asyncio.gather(*[scheduler.plain_hint(game.levels[0], team, 1, hint_time) for team in teams])
+    await asyncio.gather(
+        *[scheduler.plain_hint(game.levels[0], team, 1, hint_time) for team in teams]
+    )
 
     await dao.commit()
     await game_log.log("Game started")
@@ -70,7 +74,9 @@ async def check_key(
                 is_correct = None
             else:
                 typed_keys.add(key)
-        await dao.save_key(key=key, team=team, level=level, game=game, player=player, is_correct=is_correct)
+        await dao.save_key(
+            key=key, team=team, level=level, game=game, player=player, is_correct=is_correct,
+        )
         is_level_up = False
         if typed_keys == keys:
             await dao.level_up(team=team, level=level, game=game)
@@ -100,7 +106,10 @@ async def send_hint(
     scheduler: Scheduler,
 ):
     if not await dao.is_team_on_level(team, level):
-        logger.debug("team %s is not on level %s, skip sending hint #%s", team.id, level.db_id, hint_number)
+        logger.debug(
+            "team %s is not on level %s, skip sending hint #%s",
+            team.id, level.db_id, hint_number,
+        )
         return
     await view.send_hint(team, level.get_hint(hint_number))
     next_hint_number = hint_number + 1
@@ -116,5 +125,7 @@ async def send_hint(
     await scheduler.plain_hint(level, team, next_hint_number, next_hint_time)
 
 
-def calculate_next_hint_timedelta(current_hint: TimeHint, next_hint: TimeHint) -> timedelta:
+def calculate_next_hint_timedelta(
+    current_hint: TimeHint, next_hint: TimeHint,
+) -> timedelta:
     return timedelta(minutes=(next_hint.time - current_hint.time))

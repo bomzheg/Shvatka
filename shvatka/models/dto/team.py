@@ -13,3 +13,11 @@ class Team:
     name: str
     description: str
     captain: Player
+
+    def __eq__(self, other) -> bool:
+        if not isinstance(other, Team):
+            return False
+        return self.id == other.id
+
+    def __hash__(self):
+        return hash(self.id)

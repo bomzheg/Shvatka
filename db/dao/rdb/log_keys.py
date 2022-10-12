@@ -1,7 +1,9 @@
 from datetime import datetime
+from itertools import groupby
 
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
+from sqlalchemy.orm import joinedload
 
 from db import models
 from shvatka.models import dto
@@ -36,3 +38,22 @@ class KeyTimeDao(BaseDAO[models.KeyTime]):
             enter_time=datetime.utcnow(),
         )
         self._save(key_time)
+
+    async def get_typed_keys(self, game: dto.Game) -> dict[dto.Team, list[dto.KeyTime]]:
+        result = await self.session.execute(
+            select(models.KeyTime)
+            .where(models.KeyTime.game_id == game.id)
+            .options(
+                joinedload(models.KeyTime.team).joinedload(models.Team.chat),
+                joinedload(models.KeyTime.player).joinedload(models.Player.user)
+            )
+            .order_by(models.KeyTime.enter_time)
+        )
+        keys: list[models.KeyTime] = result.scalars().all()
+        grouped = {team: list(key) for team, key in groupby(keys, lambda k: k.team)}
+        return {
+            team.to_dto(team.chat.to_dto()): [
+                key.to_dto(key.player.to_dto(key.player.user.to_dto())) for key in keys
+            ]
+            for team, keys in grouped.items()
+        }

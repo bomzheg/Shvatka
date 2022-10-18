@@ -35,6 +35,14 @@ async def add_vote(
 
 
 async def approve_waivers(game: dto.Game, team: dto.Team, approver: dto.Player, dao: WaiverApprover):
+    """
+    Captain must approve waivers, for send it to orgs
+    :param game:
+    :param team:
+    :param approver: player who approve waivers. In most case - Captain
+    :param dao:
+    :return:
+    """
     await check_allow_approve_waivers(approver, team)
     for vote in await get_voted_list(team, dao):
         if vote.vote == Played.not_allowed:

@@ -92,6 +92,7 @@ async def check_key(
             next_level = await dao.get_current_level(team, game)
 
             await view.send_puzzle(team=team, puzzle=next_level.get_hint(0))
+            # TODO schedule next level
             await org_notifier.notify(LevelUp(team=team, new_level=next_level))
     else:
         await view.wrong_key(team=team)

@@ -17,6 +17,9 @@ class GamePreparer(Writer):
 
 
 class KeyChecker(Committer, metaclass=ABCMeta):
+    async def is_key_duplicate(self, level: dto.Level, team: dto.Team, key: str) -> bool:
+        raise NotImplementedError
+
     async def get_current_level(self, team: dto.Team, game: dto.Game) -> dto.Level:
         raise NotImplementedError
 

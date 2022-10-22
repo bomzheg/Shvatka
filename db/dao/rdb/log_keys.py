@@ -28,6 +28,18 @@ class KeyTimeDao(BaseDAO[models.KeyTime]):
         )
         return {key.key_text for key in result.scalars().all()}
 
+    async def is_duplicate(self, level: dto.Level, team: dto.Team, key: str) -> bool:
+        result = await self.session.execute(
+            select(self.model.id)
+            .where(
+                models.KeyTime.game_id == level.game_id,
+                models.KeyTime.level_number == level.number_in_game,
+                models.KeyTime.team_id == team.id,
+                models.KeyTime.key_text == key,
+            )
+        )
+        return result.scalar() is not None
+
     async def save_key(
         self, key: str, team: dto.Team, level: dto.Level, game: dto.Game,
         player: dto.Player, is_correct: bool, is_duplicate: bool,

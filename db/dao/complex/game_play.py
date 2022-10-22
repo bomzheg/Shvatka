@@ -50,6 +50,9 @@ class KeyCheckerImpl(KeyChecker):
     level: LevelDao
     key_time: KeyTimeDao
 
+    async def is_key_duplicate(self, level: dto.Level, team: dto.Team, key: str) -> bool:
+        return await self.key_time.is_duplicate(level, team, key)
+
     async def get_current_level(self, team: dto.Team, game: dto.Game) -> dto.Level:
         return await self.level.get_by_number(
             game=game,

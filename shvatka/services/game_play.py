@@ -68,17 +68,12 @@ async def check_key(
         level = await dao.get_current_level(team, game)
         keys = level.get_keys()
         is_correct = key in keys
-        typed_keys = await dao.get_correct_typed_keys(level=level, game=game, team=team)
-        if key in typed_keys:
-            is_duplicate = True
-        else:
-            is_duplicate = False
-        if is_correct:
-            typed_keys.add(key)
+        is_duplicate = await dao.is_key_duplicate(level, team, key)
         await dao.save_key(
             key=key, team=team, level=level, game=game, player=player,
             is_correct=is_correct, is_duplicate=is_duplicate,
         )
+        typed_keys = await dao.get_correct_typed_keys(level=level, game=game, team=team)
         is_level_up = False
         if typed_keys == keys:
             await dao.level_up(team=team, level=level, game=game)

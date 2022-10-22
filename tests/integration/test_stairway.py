@@ -10,8 +10,6 @@ from alembic.command import downgrade, upgrade
 from alembic.config import Config
 from alembic.script import Script, ScriptDirectory
 
-from tgbot.config.models.main import Paths
-
 
 def get_revisions():
     # Get directory object with Alembic migrations
@@ -23,12 +21,9 @@ def get_revisions():
     return revisions
 
 
-@pytest.fixture()
-def alembic_config(postgres_url: str, paths: Paths) -> Config:
-    alembic_cfg = Config(str(paths.app_dir.parent / "alembic.ini"))
-    alembic_cfg.set_main_option("script_location", str(paths.app_dir.parent / "db" / "migrations"))
-    alembic_cfg.set_main_option("sqlalchemy.url", postgres_url)
-    return alembic_cfg
+@pytest.fixture(scope="module", autouse=True)
+def drop_db(alembic_config: Config):
+    downgrade(alembic_config, "base")
 
 
 @pytest.mark.first

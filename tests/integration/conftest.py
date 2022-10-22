@@ -4,6 +4,8 @@ import os
 import pytest
 import pytest_asyncio
 from aiogram import Dispatcher, Bot
+from alembic.command import upgrade
+from alembic.config import Config as AlembicConfig
 from dataclass_factory import Factory
 from mockito import mock
 from redis.asyncio.client import Redis
@@ -18,7 +20,7 @@ from shvatka.utils.key_checker_lock import KeyCheckerFactory
 from tests.fixtures.conftest import fixtures_resource_path  # noqa: F401
 from tests.fixtures.scn_fixtures import simple_scn  # noqa: F401
 from tests.mocks.config import DBConfig
-from tgbot.config.models.main import Config
+from tgbot.config.models.main import Config, Paths
 from tgbot.main_factory import (
     create_dispatcher, create_scheduler, create_redis, create_lock_factory,
 )
@@ -138,3 +140,16 @@ def bot(app_config: Config) -> Bot:
     dummy = mock(Bot)
     setattr(dummy, "id", int(app_config.bot.token.split(":")[0]))
     return dummy
+
+
+@pytest.fixture(scope="session")
+def alembic_config(postgres_url: str, paths: Paths) -> AlembicConfig:
+    alembic_cfg = AlembicConfig(str(paths.app_dir.parent / "alembic.ini"))
+    alembic_cfg.set_main_option("script_location", str(paths.app_dir.parent / "db" / "migrations"))
+    alembic_cfg.set_main_option("sqlalchemy.url", postgres_url)
+    return alembic_cfg
+
+
+@pytest.fixture(scope="session", autouse=True)
+def upgrade_schema_db(alembic_config: Config):
+    upgrade(alembic_config, "head")

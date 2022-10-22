@@ -30,7 +30,7 @@ class KeyTimeDao(BaseDAO[models.KeyTime]):
 
     async def save_key(
         self, key: str, team: dto.Team, level: dto.Level, game: dto.Game,
-        player: dto.Player, is_correct: bool,
+        player: dto.Player, is_correct: bool, is_duplicate: bool,
     ) -> None:
         key_time = models.KeyTime(
             key_text=key,
@@ -39,6 +39,7 @@ class KeyTimeDao(BaseDAO[models.KeyTime]):
             game_id=game.id,
             player_id=player.id,
             is_correct=is_correct,
+            is_duplicate=is_duplicate,
             enter_time=datetime.utcnow(),
         )
         self._save(key_time)

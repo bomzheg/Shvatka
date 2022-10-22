@@ -63,10 +63,11 @@ class KeyCheckerImpl(KeyChecker):
 
     async def save_key(
         self, key: str, team: dto.Team, level: dto.Level, game: dto.Game,
-        player: dto.Player, is_correct: bool,
+        player: dto.Player, is_correct: bool, is_duplicate: bool,
     ) -> None:
         await self.key_time.save_key(
-            key=key, team=team, level=level, game=game, player=player, is_correct=is_correct,
+            key=key, team=team, level=level, game=game, player=player,
+            is_correct=is_correct, is_duplicate=is_duplicate,
         )
 
     async def level_up(self, team: dto.Team, level: dto.Level, game: dto.Game) -> None:

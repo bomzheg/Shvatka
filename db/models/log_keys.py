@@ -30,13 +30,14 @@ class KeyTime(Base):
     level_number = Column(Integer)
     enter_time = Column(DateTime)
     key_text = Column(Text)
-    is_correct: bool | None = Column(Boolean, nullable=True)
+    is_correct: bool = Column(Boolean, nullable=False)
+    is_duplicate: bool = Column(Boolean, nullable=False)
 
     def to_dto(self, player: dto.Player) -> dto.KeyTime:
         return dto.KeyTime(
             text=self.key_text,
-            is_correct=self.is_correct is not False,
-            is_duplicate=self.is_correct is None,
+            is_correct=self.is_correct,
+            is_duplicate=self.is_duplicate,
             at=self.enter_time,
             level_number=self.level_number,
             player=player,

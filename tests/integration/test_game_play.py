@@ -6,6 +6,7 @@ from mockito import mock, when, ANY, unstub
 
 from db.dao.holder import HolderDao
 from shvatka.models import dto
+from shvatka.models.enums import GameStatus
 from shvatka.models.enums.played import Played
 from shvatka.scheduler import Scheduler
 from shvatka.services.game import start_waivers, upsert_game
@@ -55,7 +56,7 @@ async def test_game_play(
 
     dummy_org_notifier = mock(OrgNotifier)
     key_kwargs = dict(
-        player=captain, team=team, game=game, dao=dao.key_checker, view=dummy_view,
+        player=captain, team=team, game=game, dao=dao.game_player, view=dummy_view,
         game_log=dummy_log, org_notifier=dummy_org_notifier, locker=locker, scheduler=scheduler,
     )
     when(dummy_view).wrong_key(key=ANY).thenReturn(mock_coro(None))
@@ -85,10 +86,22 @@ async def test_game_play(
     when(dummy_org_notifier).notify(LevelUp(team=team, new_level=game.levels[1]))\
         .thenReturn(mock_coro(None))
     await check_key(key="SH321", **key_kwargs)
+
+    unstub(dummy_view)
+    dummy_view = mock(GameView)
+    when(dummy_log).log("Game finished").thenReturn(mock_coro(None))
+    when(dummy_org_notifier).notify(LevelUp(team=team, new_level=game.levels[1])) \
+        .thenReturn(mock_coro(None))
+    when(dummy_view).correct_key(key=ANY).thenReturn(mock_coro(None))
+    when(dummy_view).game_finished(team).thenReturn(mock_coro(None))
+    when(dummy_view).game_finished_by_all(team).thenReturn(mock_coro(None))
+    key_kwargs["view"] = dummy_view
+    await check_key(key="SHOOT", **key_kwargs)
+
     keys = await get_typed_keys(game, check_dao.key_time)
 
     assert [team] == list(keys.keys())
-    assert 4 == len(keys[team])
+    assert 5 == len(keys[team])
     assert_time_key(
         dto.KeyTime(
             text="SHWRONG", is_correct=False, is_duplicate=False,
@@ -117,3 +130,12 @@ async def test_game_play(
         ),
         list(keys[team])[3]
     )
+    assert_time_key(
+        dto.KeyTime(
+            text="SHOOT", is_correct=True, is_duplicate=False,
+            at=datetime.utcnow(), level_number=0, player=captain,
+        ),
+        list(keys[team])[4]
+    )
+    assert await dao.game_player.is_all_team_finished(game)
+    assert GameStatus.finished == (await dao.game.get_by_id(game.id, captain)).status

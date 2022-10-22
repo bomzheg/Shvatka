@@ -63,6 +63,7 @@ class GamePlayerImpl(GamePlayer):
         for team in await self.get_played_teams(game):
             if not await self.is_team_finished(team, game):
                 return False
+        return True
 
     async def is_key_duplicate(self, level: dto.Level, team: dto.Team, key: str) -> bool:
         return await self.key_time.is_duplicate(level, team, key)

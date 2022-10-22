@@ -92,6 +92,7 @@ async def check_key(
             async with locker.lock_globally():
                 if await dao.is_team_finished(team, game):
                     await finish_team(team, game, view, game_log, dao, locker)
+                    return
             next_level = await dao.get_current_level(team, game)
 
             await view.send_puzzle(team=team, puzzle=next_level.get_hint(0))

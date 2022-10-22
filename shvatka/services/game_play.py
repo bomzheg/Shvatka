@@ -67,11 +67,10 @@ async def check_key(
     async with locker(team):
         level = await dao.get_current_level(team, game)
         keys = level.get_keys()
-        is_correct = key in keys
-        is_duplicate = await dao.is_key_duplicate(level, team, key)
-        await dao.save_key(
+        new_key = await dao.save_key(
             key=key, team=team, level=level, game=game, player=player,
-            is_correct=is_correct, is_duplicate=is_duplicate,
+            is_correct=key in keys,
+            is_duplicate=await dao.is_key_duplicate(level, team, key),
         )
         typed_keys = await dao.get_correct_typed_keys(level=level, game=game, team=team)
         is_level_up = False
@@ -80,10 +79,10 @@ async def check_key(
             is_level_up = True
         await dao.commit()
 
-    if is_duplicate:
-        await view.duplicate_key(team=team, key=key)
-    elif is_correct:
-        await view.correct_key(team=team)
+    if new_key.is_duplicate:
+        await view.duplicate_key(key=new_key)
+    elif new_key.is_correct:
+        await view.correct_key(key=new_key)
         if is_level_up:
             # TODO check finish game
             next_level = await dao.get_current_level(team, game)
@@ -92,7 +91,7 @@ async def check_key(
             # TODO schedule next level
             await org_notifier.notify(LevelUp(team=team, new_level=next_level))
     else:
-        await view.wrong_key(team=team)
+        await view.wrong_key(key=new_key)
 
 
 async def send_hint(

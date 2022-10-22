@@ -31,7 +31,7 @@ class KeyChecker(Committer, metaclass=ABCMeta):
     async def save_key(
         self, key: str, team: dto.Team, level: dto.Level, game: dto.Game,
         player: dto.Player, is_correct: bool, is_duplicate: bool,
-    ) -> None:
+    ) -> dto.KeyTime:
         raise NotImplementedError
 
     async def level_up(self, team: dto.Team, level: dto.Level, game: dto.Game) -> None:

@@ -21,13 +21,13 @@ class GameView(Protocol):
     async def send_hint(self, team: dto.Team, hint: TimeHint) -> None:
         raise NotImplementedError
 
-    async def duplicate_key(self, team: dto.Team, key: str) -> None:
+    async def duplicate_key(self, key: dto.KeyTime) -> None:
         raise NotImplementedError
 
-    async def correct_key(self, team: dto.Team) -> None:
+    async def correct_key(self, key: dto.KeyTime) -> None:
         raise NotImplementedError
 
-    async def wrong_key(self, team: dto.Team) -> None:
+    async def wrong_key(self, key: dto.KeyTime) -> None:
         raise NotImplementedError
 
 

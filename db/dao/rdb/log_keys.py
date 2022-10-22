@@ -43,7 +43,7 @@ class KeyTimeDao(BaseDAO[models.KeyTime]):
     async def save_key(
         self, key: str, team: dto.Team, level: dto.Level, game: dto.Game,
         player: dto.Player, is_correct: bool, is_duplicate: bool,
-    ) -> None:
+    ) -> dto.KeyTime:
         key_time = models.KeyTime(
             key_text=key,
             team_id=team.id,
@@ -55,6 +55,8 @@ class KeyTimeDao(BaseDAO[models.KeyTime]):
             enter_time=datetime.utcnow(),
         )
         self._save(key_time)
+        await self._flush(key_time)
+        return key_time.to_dto(player)
 
     async def get_typed_keys(self, game: dto.Game) -> dict[dto.Team, list[dto.KeyTime]]:
         result = await self.session.execute(

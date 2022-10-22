@@ -24,7 +24,7 @@ from tests.utils.time_key import assert_time_key
 @pytest.mark.asyncio
 async def test_game_play(
     simple_scn: dict, dao: HolderDao, dcf: Factory,
-    locker: KeyCheckerFactory, check_dao: HolderDao,
+    locker: KeyCheckerFactory, check_dao: HolderDao, scheduler: Scheduler,
 ):
     captain = await create_promoted_harry(dao)
     team = await create_first_team(captain, dao)
@@ -56,10 +56,9 @@ async def test_game_play(
     dummy_org_notifier = mock(OrgNotifier)
     key_kwargs = dict(
         player=captain, team=team, game=game, dao=dao.key_checker, view=dummy_view,
-        game_log=dummy_log, org_notifier=dummy_org_notifier, locker=locker,
+        game_log=dummy_log, org_notifier=dummy_org_notifier, locker=locker, scheduler=scheduler,
     )
-
-    when(dummy_view).wrong_key(team=team).thenReturn(mock_coro(None))
+    when(dummy_view).wrong_key(key=ANY).thenReturn(mock_coro(None))
     await check_key(key="SHWRONG", **key_kwargs)
     keys = await get_typed_keys(game, check_dao.key_time)
 
@@ -73,14 +72,14 @@ async def test_game_play(
         list(keys[team])[0]
     )
 
-    when(dummy_view).correct_key(team=team).thenReturn(mock_coro(None))
+    when(dummy_view).correct_key(key=ANY).thenReturn(mock_coro(None))
     await check_key(key="SH123", **key_kwargs)
 
-    when(dummy_view).duplicate_key(team=team, key="SH123").thenReturn(mock_coro(None))
+    when(dummy_view).duplicate_key(key=ANY).thenReturn(mock_coro(None))
     await check_key(key="SH123", **key_kwargs)
 
     unstub(dummy_view)
-    when(dummy_view).correct_key(team=team).thenReturn(mock_coro(None))
+    when(dummy_view).correct_key(key=ANY).thenReturn(mock_coro(None))
     when(dummy_view).send_puzzle(team=team, puzzle=game.get_hint(1, 0))\
         .thenReturn(mock_coro(None))
     when(dummy_org_notifier).notify(LevelUp(team=team, new_level=game.levels[1]))\

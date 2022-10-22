@@ -57,12 +57,13 @@ async def check_key(
     key: str,
     player: dto.Player,
     team: dto.Team,
-    game: dto.Game,
+    game: dto.FullGame,
     dao: KeyChecker,
     view: GameView,
     game_log: GameLogWriter,
     org_notifier: OrgNotifier,
     locker: KeyCheckerFactory,
+    scheduler: Scheduler,
 ):
     async with locker(team):
         level = await dao.get_current_level(team, game)
@@ -88,7 +89,12 @@ async def check_key(
             next_level = await dao.get_current_level(team, game)
 
             await view.send_puzzle(team=team, puzzle=next_level.get_hint(0))
-            # TODO schedule next level
+            await scheduler.plain_hint(
+                level=next_level,
+                team=team,
+                hint_number=0,
+                run_at=calculate_first_hint_time(next_level),
+            )
             await org_notifier.notify(LevelUp(team=team, new_level=next_level))
     else:
         await view.wrong_key(key=new_key)
@@ -120,6 +126,10 @@ async def send_hint(
         level.get_hint(hint_number), level.get_hint(next_hint_number),
     )
     await scheduler.plain_hint(level, team, next_hint_number, next_hint_time)
+
+
+def calculate_first_hint_time(next_level: dto.Level):
+    return datetime.utcnow() + calculate_next_hint_timedelta(next_level.get_hint(0), next_level.get_hint(1))
 
 
 def calculate_next_hint_timedelta(

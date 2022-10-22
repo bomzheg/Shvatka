@@ -31,25 +31,29 @@ async def start_game(
     view: GameView,
     scheduler: Scheduler,
 ):
+    """
+    Для начала игры нужно сделать несколько вещей:
+    * пометить игру как начатую
+    * поставить команды на первый уровень
+    * отправить загадку первого уровня
+    * запланировать подсказку первого уровня
+    * записать в лог игры, что игра началась
+    """
     now = datetime.utcnow()
     await dao.set_game_started(game)
     logger.info("game %s started", game.id)
-
     teams = await dao.get_played_teams(game)
 
     await dao.set_teams_to_first_level(game, teams)
+    await dao.commit()
 
-    puzzle = game.get_hint(0, 0)
+    puzzle = game.get_hint(level_number=0, hint_number=0)
     await asyncio.gather(*[view.send_puzzle(team, puzzle) for team in teams])
 
-    hint = game.get_hint(0, 1)
-
-    hint_time = now + calculate_next_hint_timedelta(puzzle, hint)
     await asyncio.gather(
-        *[scheduler.plain_hint(game.levels[0], team, 1, hint_time) for team in teams]
+        *[schedule_first_hint(scheduler, team, game.levels[0], now) for team in teams]
     )
 
-    await dao.commit()
     await game_log.log("Game started")
 
 
@@ -89,12 +93,7 @@ async def check_key(
             next_level = await dao.get_current_level(team, game)
 
             await view.send_puzzle(team=team, puzzle=next_level.get_hint(0))
-            await scheduler.plain_hint(
-                level=next_level,
-                team=team,
-                hint_number=0,
-                run_at=calculate_first_hint_time(next_level),
-            )
+            await schedule_first_hint(scheduler, team, next_level)
             await org_notifier.notify(LevelUp(team=team, new_level=next_level))
     else:
         await view.wrong_key(key=new_key)
@@ -122,14 +121,34 @@ async def send_hint(
             hint_number, team.id, level.db_id,
         )
         return
-    next_hint_time = datetime.utcnow() + calculate_next_hint_timedelta(
+    next_hint_time = calculate_next_hint_time(
         level.get_hint(hint_number), level.get_hint(next_hint_number),
     )
     await scheduler.plain_hint(level, team, next_hint_number, next_hint_time)
 
 
-def calculate_first_hint_time(next_level: dto.Level):
-    return datetime.utcnow() + calculate_next_hint_timedelta(next_level.get_hint(0), next_level.get_hint(1))
+async def schedule_first_hint(
+    scheduler: Scheduler,
+    team: dto.Team,
+    next_level: dto.Level,
+    now: datetime = None,
+):
+    await scheduler.plain_hint(
+        level=next_level,
+        team=team,
+        hint_number=1,
+        run_at=calculate_first_hint_time(next_level, now),
+    )
+
+
+def calculate_first_hint_time(next_level: dto.Level, now: datetime = None) -> datetime:
+    return calculate_next_hint_time(next_level.get_hint(0), next_level.get_hint(1), now)
+
+
+def calculate_next_hint_time(current: TimeHint, next_: TimeHint, now: datetime = None) -> datetime:
+    if now is None:
+        now = datetime.utcnow()
+    return now + calculate_next_hint_timedelta(current, next_)
 
 
 def calculate_next_hint_timedelta(

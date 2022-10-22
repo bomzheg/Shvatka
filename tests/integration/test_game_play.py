@@ -42,7 +42,7 @@ async def test_game_play(
     dummy_log = mock(GameLogWriter)
     when(dummy_log).log("Game started").thenReturn(mock_coro(None))
     dummy_sched = mock(Scheduler)
-    when(dummy_sched).plain_hint(game.levels[0], team, 1, ANY).thenReturn(mock_coro(None))
+    when(dummy_sched).plain_hint(level=game.levels[0], team=team, hint_number=1, run_at=ANY).thenReturn(mock_coro(None))
     await start_game(game, dao.game_starter, dummy_log, dummy_view, dummy_sched)
     assert 1 == await check_dao.level_time.count()
 

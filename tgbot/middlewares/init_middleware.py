@@ -8,8 +8,8 @@ from sqlalchemy.orm import sessionmaker
 
 from db.dao.holder import HolderDao
 from shvatka.scheduler import Scheduler
-from shvatka.services.username_resolver.user_getter import UserGetter
 from shvatka.utils.key_checker_lock import KeyCheckerFactory
+from tgbot.username_resolver.user_getter import UserGetter
 
 
 class InitMiddleware(BaseMiddleware):

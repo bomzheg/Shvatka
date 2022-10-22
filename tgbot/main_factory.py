@@ -20,11 +20,11 @@ from shvatka.models.config.db import RedisConfig, DBConfig
 from shvatka.models.config.main import Paths
 from shvatka.models.config.storage import StorageConfig, StorageType
 from shvatka.scheduler import Scheduler
-from shvatka.services.username_resolver.user_getter import UserGetter
 from shvatka.utils.key_checker_lock import KeyCheckerFactory
 from tgbot.dialogs import setup_dialogs
 from tgbot.handlers import setup_handlers
 from tgbot.middlewares import setup_middlewares
+from tgbot.username_resolver.user_getter import UserGetter
 
 logger = logging.getLogger(__name__)
 

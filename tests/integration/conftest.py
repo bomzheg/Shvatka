@@ -15,7 +15,6 @@ from testcontainers.redis import RedisContainer
 from db.dao.holder import HolderDao
 from shvatka.models.config import Config
 from shvatka.scheduler import Scheduler
-from shvatka.services.username_resolver.user_getter import UserGetter
 from shvatka.utils.key_checker_lock import KeyCheckerFactory
 from tests.fixtures.conftest import fixtures_resource_path  # noqa: F401
 from tests.fixtures.scn_fixtures import simple_scn  # noqa: F401
@@ -23,6 +22,7 @@ from tests.mocks.config import DBConfig
 from tgbot.main_factory import (
     create_dispatcher, create_scheduler, create_redis, create_lock_factory,
 )
+from tgbot.username_resolver.user_getter import UserGetter
 
 logger = logging.getLogger(__name__)
 

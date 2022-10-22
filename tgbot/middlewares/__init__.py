@@ -5,12 +5,12 @@ from sqlalchemy.orm import sessionmaker
 
 from shvatka.models.config.main import BotConfig
 from shvatka.scheduler import Scheduler
-from shvatka.services.username_resolver.user_getter import UserGetter
 from shvatka.utils.key_checker_lock import KeyCheckerFactory
 from tgbot.middlewares.config_middleware import ConfigMiddleware
 from tgbot.middlewares.data_load_middleware import LoadDataMiddleware
 from tgbot.middlewares.fix_target_middleware import FixTargetMiddleware
 from tgbot.middlewares.init_middleware import InitMiddleware
+from tgbot.username_resolver.user_getter import UserGetter
 
 
 def setup_middlewares(

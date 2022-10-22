@@ -2,7 +2,7 @@ from aiogram.filters import BaseFilter
 from aiogram.types import Message
 
 from shvatka.models import dto
-from shvatka.services.username_resolver.find_target_user import get_target_user
+from tgbot.username_resolver.find_target_user import get_target_user
 
 
 class HasTargetFilter(BaseFilter):

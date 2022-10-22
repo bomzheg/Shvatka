@@ -7,7 +7,6 @@ from sqlalchemy.orm import close_all_sessions
 from shvatka.config import load_config
 from shvatka.config.logging_config import setup_logging
 from shvatka.models.schems import schemas
-from shvatka.services.username_resolver.user_getter import UserGetter
 from tgbot.main_factory import (
     create_bot,
     create_dispatcher,
@@ -17,6 +16,7 @@ from tgbot.main_factory import (
     create_redis,
     create_lock_factory,
 )
+from tgbot.username_resolver.user_getter import UserGetter
 
 logger = logging.getLogger(__name__)
 

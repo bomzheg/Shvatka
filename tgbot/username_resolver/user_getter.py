@@ -8,8 +8,8 @@ from aiogram.types import User
 from pyrogram import Client
 from pyrogram.errors import RPCError, UsernameNotOccupied, FloodWait
 
-from shvatka.models.config.main import TgClientConfig
 from shvatka.utils.exceptions import UsernameResolverError, NoUsernameFound
+from tgbot.config.models.bot import TgClientConfig
 
 logger = logging.getLogger(__name__)
 SLEEP_TIME = 50

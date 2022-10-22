@@ -3,7 +3,7 @@ from typing import Callable, Any, Awaitable
 from aiogram import BaseMiddleware
 from aiogram.types import TelegramObject
 
-from shvatka.models.config.main import BotConfig
+from tgbot.config.models.bot import BotConfig
 
 
 class ConfigMiddleware(BaseMiddleware):

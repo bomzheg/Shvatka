@@ -4,7 +4,7 @@ from aiogram import Dispatcher, Bot
 from aiogram.filters import Command
 from aiogram.types import Message
 
-from shvatka.models.config.main import BotConfig
+from tgbot.config.models.bot import BotConfig
 from tgbot.filters.superusers import is_superuser
 from tgbot.views.commands import UPDATE_COMMANDS, GET_OUT
 

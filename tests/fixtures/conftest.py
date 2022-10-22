@@ -1,6 +1,6 @@
 import pytest
 
-from shvatka.models.config.main import Paths
+from tgbot.config.models.main import Paths
 
 
 @pytest.fixture

@@ -8,10 +8,10 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from redis import Redis
 from sqlalchemy.orm import sessionmaker
 
+from db.config.models.db import RedisConfig
 from scheduler.context import ScheduledContextHolder
 from scheduler.wrappers import prepare_game_wrapper, start_game_wrapper, send_hint_wrapper
 from shvatka.models import dto
-from shvatka.models.config.db import RedisConfig
 from shvatka.scheduler import Scheduler
 from shvatka.utils.datetime_utils import tz_utc
 

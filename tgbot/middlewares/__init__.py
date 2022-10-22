@@ -3,9 +3,9 @@ from dataclass_factory import Factory
 from redis.asyncio.client import Redis
 from sqlalchemy.orm import sessionmaker
 
-from shvatka.models.config.main import BotConfig
 from shvatka.scheduler import Scheduler
 from shvatka.utils.key_checker_lock import KeyCheckerFactory
+from tgbot.config.models.bot import BotConfig
 from tgbot.middlewares.config_middleware import ConfigMiddleware
 from tgbot.middlewares.data_load_middleware import LoadDataMiddleware
 from tgbot.middlewares.fix_target_middleware import FixTargetMiddleware

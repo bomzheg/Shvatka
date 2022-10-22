@@ -1,7 +1,7 @@
 from typing import Any
 
-from shvatka.config.db import load_redis_config
-from shvatka.models.config.storage import StorageConfig, StorageType
+from db.config.models.storage import StorageConfig, StorageType
+from db.config.parser.db import load_redis_config
 
 
 def load_storage_config(dct: dict[str, Any]) -> StorageConfig:

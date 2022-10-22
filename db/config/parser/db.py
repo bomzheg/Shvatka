@@ -1,4 +1,4 @@
-from shvatka.models.config.db import DBConfig, RedisConfig
+from db.config.models.db import DBConfig, RedisConfig
 
 
 def load_db_config(db_dict: dict) -> DBConfig:

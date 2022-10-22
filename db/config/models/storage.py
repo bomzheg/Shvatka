@@ -4,7 +4,7 @@ import logging
 from dataclasses import dataclass
 from enum import Enum
 
-from shvatka.models.config.db import RedisConfig
+from db.config.models.db import RedisConfig
 
 logger = logging.getLogger(__name__)
 

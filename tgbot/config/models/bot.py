@@ -2,52 +2,9 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import Enum
-from pathlib import Path
 
 from aiogram.client.session.aiohttp import AiohttpSession
 from aiogram.client.telegram import TelegramAPIServer
-
-from shvatka.models.config.db import DBConfig, RedisConfig
-from shvatka.models.config.storage import StorageConfig
-
-
-@dataclass
-class Config:
-    paths: Paths
-    db: DBConfig
-    bot: BotConfig
-    storage: StorageConfig
-    tg_client: TgClientConfig
-    redis: RedisConfig
-
-    @property
-    def app_dir(self) -> Path:
-        return self.paths.app_dir
-
-    @property
-    def config_path(self) -> Path:
-        return self.paths.config_path
-
-    @property
-    def log_path(self) -> Path:
-        return self.paths.log_path
-
-
-@dataclass
-class Paths:
-    app_dir: Path
-
-    @property
-    def config_path(self) -> Path:
-        return self.app_dir / "config"
-
-    @property
-    def logging_config_file(self) -> Path:
-        return self.config_path / "logging.yml"
-
-    @property
-    def log_path(self) -> Path:
-        return self.app_dir / "log"
 
 
 @dataclass

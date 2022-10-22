@@ -13,14 +13,13 @@ from sqlalchemy.engine import make_url
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
 
+from db.config.models.db import RedisConfig, DBConfig
+from db.config.models.storage import StorageConfig, StorageType
 from db.locker import MemoryLockFactory
 from scheduler import ApScheduler
-from shvatka.models.config import Config
-from shvatka.models.config.db import RedisConfig, DBConfig
-from shvatka.models.config.main import Paths
-from shvatka.models.config.storage import StorageConfig, StorageType
 from shvatka.scheduler import Scheduler
 from shvatka.utils.key_checker_lock import KeyCheckerFactory
+from tgbot.config.models.main import Config, Paths
 from tgbot.dialogs import setup_dialogs
 from tgbot.handlers import setup_handlers
 from tgbot.middlewares import setup_middlewares

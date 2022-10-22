@@ -2,7 +2,7 @@ import logging.config
 
 import yaml
 
-from shvatka.models.config.main import Paths
+from tgbot.config.models.main import Paths
 
 logger = logging.getLogger(__name__)
 

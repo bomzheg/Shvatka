@@ -16,8 +16,17 @@ class GamePreparer(Writer):
         raise NotImplementedError
 
 
-class KeyChecker(Committer, metaclass=ABCMeta):
+class GamePlayer(Committer, metaclass=ABCMeta):
     async def is_key_duplicate(self, level: dto.Level, team: dto.Team, key: str) -> bool:
+        raise NotImplementedError
+
+    async def get_played_teams(self, game: dto.Game) -> Iterable[dto.Team]:
+        raise NotImplementedError
+
+    async def is_team_finished(self, team: dto.Team, game: dto.FullGame) -> bool:
+        raise NotImplementedError
+
+    async def is_all_team_finished(self, game: dto.FullGame) -> bool:
         raise NotImplementedError
 
     async def get_current_level(self, team: dto.Team, game: dto.Game) -> dto.Level:
@@ -35,4 +44,7 @@ class KeyChecker(Committer, metaclass=ABCMeta):
         raise NotImplementedError
 
     async def level_up(self, team: dto.Team, level: dto.Level, game: dto.Game) -> None:
+        raise NotImplementedError
+
+    async def finish(self, game: dto.Game) -> None:
         raise NotImplementedError

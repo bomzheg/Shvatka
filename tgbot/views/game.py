@@ -25,13 +25,20 @@ class BotView(GameViewPreparer, GameView):
     async def send_hint(self, team: dto.Team, hint: TimeHint) -> None:
         pass
 
-    async def duplicate_key(self, team: dto.Team, key: str) -> None:
+    async def duplicate_key(self, key: dto.KeyTime) -> None:
         pass
 
-    async def correct_key(self, team: dto.Team) -> None:
+    async def correct_key(self, key: dto.KeyTime) -> None:
         pass
 
-    async def wrong_key(self, team: dto.Team) -> None:
+    async def wrong_key(self, key: dto.KeyTime) -> None:
+        pass
+
+    async def game_finished(self, team: dto.Team) -> None:
+        pass
+
+    async def game_finished_by_all(self, team: dto.Team) -> None:
+        """todo change bot commands"""
         pass
 
 

@@ -123,8 +123,7 @@ class GameDao(BaseDAO[models.Game], ActiveGameFinder):
         )
 
     async def set_started(self, game: dto.Game):
-        await self.session.execute(
-            update(models.Game)
-            .where(models.Game.id == game.id)
-            .values(status=GameStatus.started)
-        )
+        await self.set_status(game, GameStatus.started)
+
+    async def set_finished(self, game: dto.Game):
+        await self.set_status(game, GameStatus.finished)

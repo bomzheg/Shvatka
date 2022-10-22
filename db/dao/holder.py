@@ -2,14 +2,14 @@ from redis.asyncio.client import Redis
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from shvatka.dal.game import GameUpserter
-from shvatka.dal.game_play import GamePreparer, KeyChecker
+from shvatka.dal.game_play import GamePreparer, GamePlayer
 from shvatka.dal.level_times import GameStarter
 from shvatka.dal.player import TeamLeaver
 from shvatka.dal.team import TeamCreator
 from shvatka.dal.waiver import WaiverVoteAdder, WaiverVoteGetter, WaiverApprover
 from .complex import WaiverVoteAdderImpl, WaiverVoteGetterImpl
 from .complex.game import GameUpserterImpl
-from .complex.game_play import GamePreparerImpl, GameStarterImpl, KeyCheckerImpl
+from .complex.game_play import GamePreparerImpl, GameStarterImpl, GamePlayerImpl
 from .complex.team import TeamCreatorImpl, TeamLeaverImpl
 from .complex.waiver import WaiverApproverImpl
 from .rdb import (
@@ -82,5 +82,8 @@ class HolderDao:
         )
 
     @property
-    def key_checker(self) -> KeyChecker:
-        return KeyCheckerImpl(level_time=self.level_time, level=self.level, key_time=self.key_time)
+    def key_checker(self) -> GamePlayer:
+        return GamePlayerImpl(
+            level_time=self.level_time, level=self.level, key_time=self.key_time,
+            waiver=self.waiver, game=self.game,
+        )

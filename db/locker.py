@@ -18,6 +18,10 @@ class MemoryLock(KeyCheckerLock):
 class MemoryLockFactory(KeyCheckerFactory):
     def __init__(self):
         self.locks: dict[int, MemoryLock] = {}
+        self.global_lock = MemoryLock()
+
+    def lock_globally(self):
+        return self.global_lock
 
     def lock(self, team: dto.Team) -> KeyCheckerLock:
         return self.locks.setdefault(team.id, MemoryLock())

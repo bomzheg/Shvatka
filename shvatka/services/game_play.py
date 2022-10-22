@@ -2,7 +2,7 @@ import asyncio
 import logging
 from datetime import timedelta, datetime
 
-from shvatka.dal.game_play import GamePreparer, KeyChecker
+from shvatka.dal.game_play import GamePreparer, GamePlayer
 from shvatka.dal.level_times import GameStarter, LevelTimeChecker
 from shvatka.models import dto
 from shvatka.models.dto.scn.time_hint import TimeHint
@@ -62,14 +62,14 @@ async def check_key(
     player: dto.Player,
     team: dto.Team,
     game: dto.FullGame,
-    dao: KeyChecker,
+    dao: GamePlayer,
     view: GameView,
     game_log: GameLogWriter,
     org_notifier: OrgNotifier,
     locker: KeyCheckerFactory,
     scheduler: Scheduler,
 ):
-    async with locker(team):
+    async with locker(team):  # несколько конкурентных ключей от одной команды - последовательно
         level = await dao.get_current_level(team, game)
         keys = level.get_keys()
         new_key = await dao.save_key(
@@ -89,7 +89,9 @@ async def check_key(
     elif new_key.is_correct:
         await view.correct_key(key=new_key)
         if is_level_up:
-            # TODO check finish game
+            async with locker.lock_globally():
+                if await dao.is_team_finished(team, game):
+                    await finish_team(team, game, view, game_log, dao, locker)
             next_level = await dao.get_current_level(team, game)
 
             await view.send_puzzle(team=team, puzzle=next_level.get_hint(0))
@@ -97,6 +99,24 @@ async def check_key(
             await org_notifier.notify(LevelUp(team=team, new_level=next_level))
     else:
         await view.wrong_key(key=new_key)
+
+
+async def finish_team(
+    team: dto.Team,
+    game: dto.FullGame,
+    view: GameView,
+    game_log: GameLogWriter,
+    dao: GamePlayer,
+    locker: KeyCheckerFactory,
+):
+    await view.game_finished(team)
+    if await dao.is_all_team_finished(game):
+        await dao.finish(game)
+        await dao.commit()
+        await game_log.log("Game finished")
+        locker.clear()
+        for team in await dao.get_played_teams(game):
+            await view.game_finished_by_all(team)
 
 
 async def send_hint(

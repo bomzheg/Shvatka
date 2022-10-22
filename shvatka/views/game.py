@@ -30,6 +30,12 @@ class GameView(Protocol):
     async def wrong_key(self, key: dto.KeyTime) -> None:
         raise NotImplementedError
 
+    async def game_finished(self, team: dto.Team) -> None:
+        raise NotImplementedError
+
+    async def game_finished_by_all(self, team: dto.Team) -> None:
+        raise NotImplementedError
+
 
 class GameLogWriter(Protocol):
     async def log(self, message: str) -> None:

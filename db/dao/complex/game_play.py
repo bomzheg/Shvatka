@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from typing import Iterable
 
 from db.dao import PollDao, WaiverDao, OrganizerDao, GameDao, LevelTimeDao, LevelDao, KeyTimeDao
-from shvatka.dal.game_play import GamePreparer, KeyChecker
+from shvatka.dal.game_play import GamePreparer, GamePlayer
 from shvatka.dal.level_times import GameStarter
 from shvatka.models import dto
 
@@ -45,10 +45,24 @@ class GameStarterImpl(GameStarter):
 
 
 @dataclass
-class KeyCheckerImpl(KeyChecker):
+class GamePlayerImpl(GamePlayer):
     level_time: LevelTimeDao
     level: LevelDao
     key_time: KeyTimeDao
+    waiver: WaiverDao
+    game: GameDao
+
+    async def is_team_finished(self, team: dto.Team, game: dto.FullGame) -> bool:
+        level_number = await self.level_time.get_current_level(team, game.id)
+        return level_number == len(game.levels)
+
+    async def get_played_teams(self, game: dto.Game) -> Iterable[dto.Team]:
+        return await self.waiver.get_played_teams(game)
+
+    async def is_all_team_finished(self, game: dto.FullGame) -> bool:
+        for team in await self.get_played_teams(game):
+            if not await self.is_team_finished(team, game):
+                return False
 
     async def is_key_duplicate(self, level: dto.Level, team: dto.Team, key: str) -> bool:
         return await self.key_time.is_duplicate(level, team, key)
@@ -77,6 +91,9 @@ class KeyCheckerImpl(KeyChecker):
         await self.level_time.set_to_level(
             team=team, game=game, level_number=level.number_in_game + 1,
         )
+
+    async def finish(self, game: dto.Game) -> None:
+        await self.game.set_finished(game)
 
     async def commit(self) -> None:
         await self.key_time.commit()

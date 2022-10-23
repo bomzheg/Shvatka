@@ -21,7 +21,7 @@ class KeyCheckerFactory(Protocol):
     def lock(self, team: dto.Team) -> KeyCheckerLock:
         raise NotImplementedError
 
-    def lock_globally(self):
+    def lock_globally(self) -> KeyCheckerLock:
         raise NotImplementedError
 
     def __call__(self, team: dto.Team) -> KeyCheckerLock:

@@ -12,3 +12,20 @@ class KeyTime:
     at: datetime
     level_number: int
     player: dto.Player
+
+
+@dataclass(frozen=True)
+class InsertedKey(KeyTime):
+    is_level_up: bool
+
+    @classmethod
+    def from_key_time(cls, key_time: KeyTime, is_level_up: bool):
+        return cls(
+            text=key_time.text,
+            is_correct=key_time.is_correct,
+            is_duplicate=key_time.is_duplicate,
+            at=key_time.at,
+            level_number=key_time.level_number,
+            player=key_time.player,
+            is_level_up=is_level_up,
+        )

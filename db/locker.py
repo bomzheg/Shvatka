@@ -20,7 +20,7 @@ class MemoryLockFactory(KeyCheckerFactory):
         self.locks: dict[int, MemoryLock] = {}
         self.global_lock = MemoryLock()
 
-    def lock_globally(self):
+    def lock_globally(self) -> KeyCheckerLock:
         return self.global_lock
 
     def lock(self, team: dto.Team) -> KeyCheckerLock:

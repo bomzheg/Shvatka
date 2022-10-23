@@ -92,6 +92,34 @@ async def check_key(
     :param locker: локи для обеспечения последовательного исполнения определённых операций.
     :param scheduler: планировщик подсказок.
     """
+    new_key = await submit_key(key=key, player=player, team=team, game=game, dao=dao, locker=locker)
+    if new_key.is_duplicate:
+        await view.duplicate_key(key=new_key)
+        return
+    elif new_key.is_correct:
+        await view.correct_key(key=new_key)
+        if new_key.is_level_up:
+            async with locker.lock_globally():
+                if await dao.is_team_finished(team, game):
+                    await finish_team(team, game, view, game_log, dao, locker)
+                    return
+            next_level = await dao.get_current_level(team, game)
+
+            await view.send_puzzle(team=team, puzzle=next_level.get_hint(0))
+            await schedule_first_hint(scheduler, team, next_level)
+            await org_notifier.notify(LevelUp(team=team, new_level=next_level))
+    else:
+        await view.wrong_key(key=new_key)
+
+
+async def submit_key(
+    key: str,
+    player: dto.Player,
+    team: dto.Team,
+    game: dto.Game,
+    dao: GamePlayer,
+    locker: KeyCheckerFactory,
+) -> dto.InsertedKey:
     async with locker(team):  # несколько конкурентных ключей от одной команды - последовательно
         level = await dao.get_current_level(team, game)
         keys = level.get_keys()
@@ -106,24 +134,7 @@ async def check_key(
             await dao.level_up(team=team, level=level, game=game)
             is_level_up = True
         await dao.commit()
-
-    if new_key.is_duplicate:
-        await view.duplicate_key(key=new_key)
-        return
-    elif new_key.is_correct:
-        await view.correct_key(key=new_key)
-        if is_level_up:
-            async with locker.lock_globally():
-                if await dao.is_team_finished(team, game):
-                    await finish_team(team, game, view, game_log, dao, locker)
-                    return
-            next_level = await dao.get_current_level(team, game)
-
-            await view.send_puzzle(team=team, puzzle=next_level.get_hint(0))
-            await schedule_first_hint(scheduler, team, next_level)
-            await org_notifier.notify(LevelUp(team=team, new_level=next_level))
-    else:
-        await view.wrong_key(key=new_key)
+    return dto.InsertedKey.from_key_time(new_key, is_level_up)
 
 
 async def finish_team(

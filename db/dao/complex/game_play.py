@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from typing import Iterable
 
 from db.dao import PollDao, WaiverDao, OrganizerDao, GameDao, LevelTimeDao, LevelDao, KeyTimeDao
-from shvatka.dal.game_play import GamePreparer, GamePlayer
+from shvatka.dal.game_play import GamePreparer, GamePlayerDao
 from shvatka.dal.level_times import GameStarter
 from shvatka.models import dto
 
@@ -45,7 +45,7 @@ class GameStarterImpl(GameStarter):
 
 
 @dataclass
-class GamePlayerImpl(GamePlayer):
+class GamePlayerDaoImpl(GamePlayerDao):
     level_time: LevelTimeDao
     level: LevelDao
     key_time: KeyTimeDao

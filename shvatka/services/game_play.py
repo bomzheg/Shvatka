@@ -2,7 +2,7 @@ import asyncio
 import logging
 from datetime import timedelta, datetime
 
-from shvatka.dal.game_play import GamePreparer, GamePlayer
+from shvatka.dal.game_play import GamePreparer, GamePlayerDao
 from shvatka.dal.level_times import GameStarter, LevelTimeChecker
 from shvatka.models import dto
 from shvatka.models.dto.scn.time_hint import TimeHint
@@ -62,7 +62,7 @@ async def check_key(
     player: dto.Player,
     team: dto.Team,
     game: dto.FullGame,
-    dao: GamePlayer,
+    dao: GamePlayerDao,
     view: GameView,
     game_log: GameLogWriter,
     org_notifier: OrgNotifier,
@@ -117,7 +117,7 @@ async def submit_key(
     player: dto.Player,
     team: dto.Team,
     game: dto.Game,
-    dao: GamePlayer,
+    dao: GamePlayerDao,
     locker: KeyCheckerFactory,
 ) -> dto.InsertedKey:
     async with locker(team):  # несколько конкурентных ключей от одной команды - последовательно
@@ -142,7 +142,7 @@ async def finish_team(
     game: dto.FullGame,
     view: GameView,
     game_log: GameLogWriter,
-    dao: GamePlayer,
+    dao: GamePlayerDao,
     locker: KeyCheckerFactory,
 ):
     """

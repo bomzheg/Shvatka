@@ -7,7 +7,7 @@ from sqlalchemy.future import select
 from sqlalchemy.orm import joinedload
 
 from db import models
-from shvatka.dal.game import ActiveGameFinder
+from shvatka.dal.game import ActiveGameFinder, GameByIdGetter, WaiverStarter
 from shvatka.models import dto
 from shvatka.models.dto.scn.game import GameScenario
 from shvatka.models.enums import GameStatus
@@ -15,7 +15,7 @@ from shvatka.models.enums.game_status import ACTIVE_STATUSES
 from .base import BaseDAO
 
 
-class GameDao(BaseDAO[models.Game], ActiveGameFinder):
+class GameDao(BaseDAO[models.Game], ActiveGameFinder, GameByIdGetter, WaiverStarter):
     def __init__(self, session: AsyncSession):
         super().__init__(models.Game, session)
 

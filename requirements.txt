@@ -11,3 +11,9 @@ redis>=4.2.0
 pyrogram
 dataclass_factory~=2.16
 apscheduler<4
+
+fastapi==0.85.1
+uvicorn
+python-multipart
+python-jose[cryptography]
+passlib[bcrypt]

@@ -24,8 +24,8 @@ class ApScheduler(Scheduler):
         redis_config: RedisConfig,
         pool: sessionmaker,
         redis: Redis,
-        bot: Bot,
-        game_log_chat: int,
+        bot: Bot = None,
+        game_log_chat: int = None,
     ):
         ScheduledContextHolder.poll = pool
         ScheduledContextHolder.redis = redis

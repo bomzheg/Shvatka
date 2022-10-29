@@ -7,7 +7,7 @@ from aiogram import types as tg
 
 @dataclass
 class User:
-    tg_id: int
+    tg_id: int | None = None
     db_id: int | None = None
     username: str | None = None
     first_name: str | None = None

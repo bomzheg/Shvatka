@@ -9,13 +9,11 @@ from aiogram.fsm.storage.redis import RedisStorage
 from aiogram_dialog import DialogRegistry
 from dataclass_factory import Factory
 from redis.asyncio.client import Redis
-from sqlalchemy.engine import make_url
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
 
-from db.config.models.db import RedisConfig, DBConfig
+from db.config.models.db import RedisConfig
 from db.config.models.storage import StorageConfig, StorageType
-from db.locker import MemoryLockFactory
+from db.fatory import create_redis
 from scheduler import ApScheduler
 from shvatka.scheduler import Scheduler
 from shvatka.utils.key_checker_lock import KeyCheckerFactory
@@ -81,19 +79,3 @@ def get_paths() -> Paths:
     if path := os.getenv("BOT_PATH"):
         return Paths(Path(path))
     return Paths(Path(__file__).parent.parent)
-
-
-def create_pool(db_config: DBConfig) -> sessionmaker:
-    engine = create_async_engine(url=make_url(db_config.uri), echo=True)
-    pool = sessionmaker(bind=engine, class_=AsyncSession,
-                        expire_on_commit=False, autoflush=False)
-    return pool
-
-
-def create_lock_factory() -> KeyCheckerFactory:
-    return MemoryLockFactory()
-
-
-def create_redis(config: RedisConfig) -> Redis:
-    logger.info("created redis for %s", config)
-    return Redis(host=config.url, port=config.port, db=config.db)

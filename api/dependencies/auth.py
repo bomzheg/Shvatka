@@ -64,7 +64,7 @@ class AuthProvider:
         encoded_jwt = jwt.encode(to_encode, self.secret_key, algorithm=self.algorythm)
         return encoded_jwt
 
-    async def get_current_user(self, token: str = Depends(oauth2_scheme), dao: dao_provider = Depends()):
+    async def get_current_user(self, token: str = Depends(oauth2_scheme), dao: HolderDao = Depends(dao_provider)):
         credentials_exception = HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Could not validate credentials",
@@ -84,7 +84,7 @@ class AuthProvider:
             raise credentials_exception
         return user
 
-    async def login(self, form_data: OAuth2PasswordRequestForm = Depends(), dao: dao_provider = Depends()):
+    async def login(self, form_data: OAuth2PasswordRequestForm = Depends(), dao: HolderDao = Depends(dao_provider)):
         user = await self.authenticate_user(form_data.username, form_data.password, dao)
         if not user:
             raise HTTPException(

@@ -1,17 +1,12 @@
-import yaml
 
-from api.config.models.main import Paths, Config
-from db.config.parser.db import load_db_config, load_redis_config
-from db.config.parser.storage import load_storage_config
+from api.config.models.main import ApiConfig
+from common.config.models.paths import Paths
+from common.config.parser.config_file_reader import read_config
+from common.config.parser.main import load_config as load_common_config
 
 
-def load_config(paths: Paths) -> Config:
-    with (paths.config_path / "config.yml").open("r") as f:
-        config_dct = yaml.safe_load(f)
-
-    return Config(
-        paths=paths,
-        db=load_db_config(config_dct["db"]),
-        storage=load_storage_config(config_dct["storage"]),
-        redis=load_redis_config(config_dct["redis"]),
+def load_config(paths: Paths) -> ApiConfig:
+    config_dct = read_config(paths)
+    return ApiConfig.from_base(
+        base=load_common_config(config_dct, paths),
     )

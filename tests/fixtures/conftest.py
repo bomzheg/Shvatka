@@ -1,6 +1,6 @@
 import pytest
 
-from tgbot.config.models.main import Paths
+from common.config.models.paths import Paths
 
 
 @pytest.fixture

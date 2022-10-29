@@ -2,7 +2,7 @@ import logging.config
 
 import yaml
 
-from tgbot.config.models.main import Paths
+from common.config.models.paths import Paths
 
 logger = logging.getLogger(__name__)
 

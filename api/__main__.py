@@ -4,12 +4,12 @@ import dataclass_factory
 import uvicorn as uvicorn
 
 from api import dependencies, routes
-from api.config.parser.logging_config import setup_logging
 from api.config.parser.main import load_config
 from api.main_factory import (
     get_paths,
     create_app,
 )
+from common.config.parser.logging_config import setup_logging
 from db.fatory import create_pool, create_redis
 from shvatka.models.schems import schemas
 

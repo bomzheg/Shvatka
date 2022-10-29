@@ -4,9 +4,9 @@ import logging
 import dataclass_factory
 from sqlalchemy.orm import close_all_sessions
 
+from common.config.parser.logging_config import setup_logging
 from db.fatory import create_pool, create_lock_factory
 from shvatka.models.schems import schemas
-from tgbot.config.parser.logging_config import setup_logging
 from tgbot.config.parser.main import load_config
 from tgbot.main_factory import (
     create_bot,

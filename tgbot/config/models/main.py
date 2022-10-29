@@ -1,47 +1,31 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from pathlib import Path
 
-from db.config.models.db import DBConfig, RedisConfig
+from common.config.models.main import Config
 from db.config.models.storage import StorageConfig
 from tgbot.config.models.bot import BotConfig, TgClientConfig
 
 
 @dataclass
-class Config:
-    paths: Paths
-    db: DBConfig
+class TgBotConfig(Config):
     bot: BotConfig
     storage: StorageConfig
     tg_client: TgClientConfig
-    redis: RedisConfig
 
-    @property
-    def app_dir(self) -> Path:
-        return self.paths.app_dir
-
-    @property
-    def config_path(self) -> Path:
-        return self.paths.config_path
-
-    @property
-    def log_path(self) -> Path:
-        return self.paths.log_path
-
-
-@dataclass
-class Paths:
-    app_dir: Path
-
-    @property
-    def config_path(self) -> Path:
-        return self.app_dir / "config"
-
-    @property
-    def logging_config_file(self) -> Path:
-        return self.config_path / "logging.yml"
-
-    @property
-    def log_path(self) -> Path:
-        return self.app_dir / "log"
+    @classmethod
+    def from_base(
+        cls,
+        base: Config,
+        bot: BotConfig,
+        storage: StorageConfig,
+        tg_client: TgClientConfig,
+    ):
+        return cls(
+            paths=base.paths,
+            db=base.db,
+            redis=base.redis,
+            bot=bot,
+            storage=storage,
+            tg_client=tg_client,
+        )

@@ -14,15 +14,17 @@ from sqlalchemy.orm import sessionmaker, close_all_sessions
 from testcontainers.postgres import PostgresContainer
 from testcontainers.redis import RedisContainer
 
+from common.config.models.paths import Paths
 from db.dao.holder import HolderDao
+from db.fatory import create_lock_factory
 from shvatka.scheduler import Scheduler
 from shvatka.utils.key_checker_lock import KeyCheckerFactory
 from tests.fixtures.conftest import fixtures_resource_path  # noqa: F401
 from tests.fixtures.scn_fixtures import simple_scn  # noqa: F401
 from tests.mocks.config import DBConfig
-from tgbot.config.models.main import Config, Paths
+from tgbot.config.models.main import TgBotConfig
 from tgbot.main_factory import (
-    create_dispatcher, create_scheduler, create_redis, create_lock_factory,
+    create_dispatcher, create_scheduler, create_redis,
 )
 from tgbot.username_resolver.user_getter import UserGetter
 
@@ -73,7 +75,7 @@ def pool(postgres_url: str) -> sessionmaker:
 
 
 @pytest.fixture(scope="session")
-def postgres_url(app_config: Config) -> str:
+def postgres_url(app_config: TgBotConfig) -> str:
     postgres = PostgresContainer("postgres:11")
     if os.name == "nt":  # TODO workaround from testcontainers/testcontainers-python#108
         postgres.get_container_host_ip = lambda: 'localhost'
@@ -88,7 +90,7 @@ def postgres_url(app_config: Config) -> str:
 
 
 @pytest.fixture(scope="session")
-def redis(app_config: Config) -> Redis:
+def redis(app_config: TgBotConfig) -> Redis:
     redis_container = RedisContainer("redis:latest")
     if os.name == "nt":  # TODO workaround from testcontainers/testcontainers-python#108
         redis_container.get_container_host_ip = lambda: 'localhost'
@@ -105,7 +107,7 @@ def redis(app_config: Config) -> Redis:
 
 
 @pytest_asyncio.fixture(scope="session")
-async def scheduler(pool: sessionmaker, redis: Redis, bot: Bot, app_config: Config):
+async def scheduler(pool: sessionmaker, redis: Redis, bot: Bot, app_config: TgBotConfig):
     async with create_scheduler(
         pool=pool, redis=redis, bot=bot, redis_config=app_config.redis,
         game_log_chat=app_config.bot.log_chat,
@@ -120,7 +122,7 @@ def locker() -> KeyCheckerFactory:
 
 @pytest.fixture(scope="session")
 def dp(
-    pool: sessionmaker, app_config: Config, user_getter: UserGetter,
+    pool: sessionmaker, app_config: TgBotConfig, user_getter: UserGetter,
     dcf: Factory, redis: Redis, scheduler: Scheduler, locker: KeyCheckerFactory,
 ) -> Dispatcher:
     return create_dispatcher(
@@ -136,7 +138,7 @@ def user_getter() -> UserGetter:
 
 
 @pytest.fixture(scope="session")
-def bot(app_config: Config) -> Bot:
+def bot(app_config: TgBotConfig) -> Bot:
     dummy = mock(Bot)
     setattr(dummy, "id", int(app_config.bot.token.split(":")[0]))
     return dummy
@@ -151,5 +153,5 @@ def alembic_config(postgres_url: str, paths: Paths) -> AlembicConfig:
 
 
 @pytest.fixture(scope="session", autouse=True)
-def upgrade_schema_db(alembic_config: Config):
+def upgrade_schema_db(alembic_config: AlembicConfig):
     upgrade(alembic_config, "head")

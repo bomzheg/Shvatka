@@ -1,6 +1,4 @@
 import logging
-import os
-from pathlib import Path
 
 from aiogram import Bot, Dispatcher
 from aiogram.fsm.storage.base import BaseStorage
@@ -11,13 +9,15 @@ from dataclass_factory import Factory
 from redis.asyncio.client import Redis
 from sqlalchemy.orm import sessionmaker
 
+from common.config.models.paths import Paths
+from common.config.parser.paths import common_get_paths
 from db.config.models.db import RedisConfig
 from db.config.models.storage import StorageConfig, StorageType
 from db.fatory import create_redis
 from scheduler import ApScheduler
 from shvatka.scheduler import Scheduler
 from shvatka.utils.key_checker_lock import KeyCheckerFactory
-from tgbot.config.models.main import Config, Paths
+from tgbot.config.models.main import TgBotConfig
 from tgbot.dialogs import setup_dialogs
 from tgbot.handlers import setup_handlers
 from tgbot.middlewares import setup_middlewares
@@ -26,7 +26,7 @@ from tgbot.username_resolver.user_getter import UserGetter
 logger = logging.getLogger(__name__)
 
 
-def create_bot(config: Config) -> Bot:
+def create_bot(config: TgBotConfig) -> Bot:
     return Bot(
         token=config.bot.token,
         parse_mode="HTML",
@@ -35,7 +35,7 @@ def create_bot(config: Config) -> Bot:
 
 
 def create_dispatcher(
-    config: Config, user_getter: UserGetter, dcf: Factory, pool: sessionmaker,
+    config: TgBotConfig, user_getter: UserGetter, dcf: Factory, pool: sessionmaker,
     redis: Redis, scheduler: Scheduler, locker: KeyCheckerFactory,
 ) -> Dispatcher:
     dp = Dispatcher(storage=create_storage(config.storage))
@@ -76,6 +76,4 @@ def create_scheduler(
 
 
 def get_paths() -> Paths:
-    if path := os.getenv("BOT_PATH"):
-        return Paths(Path(path))
-    return Paths(Path(__file__).parent.parent)
+    return common_get_paths("BOT_PATH")

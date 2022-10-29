@@ -67,10 +67,6 @@ class Token(BaseModel):
     token_type: str
 
 
-class TokenData(BaseModel):
-    username: str | None = None
-
-
 def get_current_user():
     raise NotImplementedError
 
@@ -119,11 +115,10 @@ class AuthProvider:
             username: str = payload.get("sub")
             if username is None:
                 raise credentials_exception
-            token_data = TokenData(username=username)
         except JWTError:
             raise credentials_exception
         try:
-            user = await dao.user.get_by_username(username=token_data.username)
+            user = await dao.user.get_by_username(username=username)
         except NoUsernameFound:
             raise credentials_exception
         return user
@@ -139,7 +134,7 @@ class AuthProvider:
         access_token = self.create_access_token(
             data={"sub": user.username}, expires_delta=self.access_token_expire
         )
-        return {"access_token": access_token, "token_type": "bearer"}
+        return Token(access_token=access_token, token_type="bearer")
 
     async def tg_login_page(self):
         return TG_WIDGET_HTML.format(
@@ -154,10 +149,10 @@ class AuthProvider:
         access_token = self.create_access_token(
             data={"sub": user.username}, expires_delta=self.access_token_expire
         )
-        return {"access_token": access_token, "token_type": "bearer"}
+        return Token(access_token=access_token, token_type="bearer")
 
     def setup_auth_routes(self):
-        self.router.add_api_route("/auth/token", self.login, methods=["POST"], response_model=Token)
+        self.router.add_api_route("/auth/token", self.login, methods=["POST"])
         self.router.add_api_route("/auth/login", self.tg_login_page, response_class=HTMLResponse, methods=["GET"])
         self.router.add_api_route("/auth/login/data", self.tg_login_result, methods=["GET"])
         return self.router

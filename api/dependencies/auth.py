@@ -1,21 +1,65 @@
+import hashlib
+import hmac
 import logging
 from datetime import timedelta, datetime
 
-from fastapi import Depends, HTTPException
+from fastapi import Depends, HTTPException, APIRouter
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from jose import jwt, JWTError
 from passlib.context import CryptContext
 from pydantic import BaseModel
 from starlette import status
+from starlette.responses import HTMLResponse
 
 from api.config.models.auth import AuthConfig
 from api.dependencies.db import dao_provider
 from db.dao.holder import HolderDao
 from shvatka.models import dto
+from shvatka.services.user import upsert_user
 from shvatka.utils.exceptions import NoUsernameFound
 
+TG_WIDGET_HTML = """
+        <html>
+            <head>
+                <title>Authenticate by TG</title>
+            </head>
+            <body>
+                <script 
+                    async src="https://telegram.org/js/telegram-widget.js?21" 
+                    data-telegram-login="{bot_username}" 
+                    data-size="large" 
+                    data-auth-url="{auth_url}" 
+                    data-request-access="write"
+                ></script>
+            </body>
+        </html>
+        """
 logger = logging.getLogger(__name__)
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/token")
+
+
+class UserTgAuth(BaseModel):
+    id: int
+    first_name: str
+    auth_date: datetime
+    hash: str
+    photo_url: str
+    username: str | None = None
+    last_name: str | None = None
+
+    def to_dto(self):
+        return dto.User(
+            tg_id=self.id,
+            first_name=self.first_name,
+            last_name=self.last_name,
+            username=self.username,
+            is_bot=False,
+        )
+
+    def to_tg_spec(self) -> str:
+        data = self.dict(exclude={"hash"})
+        data["auth_date"] = int(self.auth_date.timestamp())
+        return "\n".join([f"{key}={data[key]}" for key in sorted(data.keys())])
 
 
 class Token(BaseModel):
@@ -33,12 +77,14 @@ def get_current_user():
 
 class AuthProvider:
     def __init__(self, config: AuthConfig):
+        self.config = config
         self.pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
         # to get a string like this run:
         # openssl rand -hex 32
         self.secret_key = config.secret_key
         self.algorythm = "HS256"
         self.access_token_expire = config.token_expire
+        self.router = APIRouter()
 
     def verify_password(self, plain_password: str, hashed_password: str) -> bool:
         return self.pwd_context.verify(plain_password, hashed_password)
@@ -94,3 +140,32 @@ class AuthProvider:
             data={"sub": user.username}, expires_delta=self.access_token_expire
         )
         return {"access_token": access_token, "token_type": "bearer"}
+
+    async def tg_login_page(self):
+        return TG_WIDGET_HTML.format(
+            bot_username=self.config.bot_username,
+            auth_url=self.config.auth_url,
+        )
+
+    async def tg_login_result(self, user: UserTgAuth = Depends(), dao: HolderDao = Depends(dao_provider)):
+        logger.info("user %s", user)
+        check_tg_hash(user, self.config.bot_token)
+        await upsert_user(user.to_dto(), dao.user)
+        access_token = self.create_access_token(
+            data={"sub": user.username}, expires_delta=self.access_token_expire
+        )
+        return {"access_token": access_token, "token_type": "bearer"}
+
+    def setup_auth_routes(self):
+        self.router.add_api_route("/auth/token", self.login, methods=["POST"], response_model=Token)
+        self.router.add_api_route("/auth/login", self.tg_login_page, response_class=HTMLResponse, methods=["GET"])
+        self.router.add_api_route("/auth/login/data", self.tg_login_result, methods=["GET"])
+        return self.router
+
+
+def check_tg_hash(user: UserTgAuth, bot_token: str):
+    data_check = user.to_tg_spec().encode("utf-8")
+    secret_key = hashlib.sha256(bot_token.encode('utf-8')).digest()
+    hmac_string = hmac.new(secret_key, data_check, hashlib.sha256).hexdigest()
+    if hmac_string != user.hash:
+        raise HTTPException(status_code=401, detail="something wrong")

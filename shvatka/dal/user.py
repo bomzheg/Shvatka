@@ -9,6 +9,11 @@ class UserUpserter(Committer, metaclass=ABCMeta):
         raise NotImplementedError
 
 
+class UserPasswordSetter(Committer, metaclass=ABCMeta):
+    async def set_password(self, user: dto.User, hashed_password: str):
+        raise NotImplementedError
+
+
 class UserByUsernameResolver(Reader, metaclass=ABCMeta):
     async def get_by_username(self, username: str) -> dto.User:
         pass

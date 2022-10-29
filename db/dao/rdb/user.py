@@ -30,6 +30,11 @@ class UserDao(BaseDAO[User]):
             raise NoUsernameFound(username=username) from e
         return user.to_dto()
 
+    async def set_password(self, user: dto.User, hashed_password: str):
+        db_user = await self._get_by_id(user.db_id)
+        db_user.hashed_password = hashed_password
+        user.hashed_password = hashed_password
+
     async def upsert_user(self, user: dto.User) -> dto.User:
         try:
             saved_user = await self.get_by_tg_id(user.tg_id)

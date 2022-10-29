@@ -55,4 +55,4 @@ def setup(router: APIRouter):
     router.add_api_route("/users/0", read_users_me, methods=["GET"], response_model=dto.User)
     router.add_api_route("/users/0/items", read_own_items, methods=["GET"])
     router.add_api_route("/login", login_page, response_class=HTMLResponse, methods=["GET"])
-    router.add_api_route("/login", login_post, methods=["POST"])
+    router.add_api_route("/login/data", login_post, methods=["GET"])

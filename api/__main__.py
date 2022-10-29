@@ -28,6 +28,7 @@ def main():
         app=app,
         pool=pool,
         redis=create_redis(config.redis),
+        config=config
     )
     routes.setup(app.router)
 

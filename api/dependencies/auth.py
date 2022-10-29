@@ -8,6 +8,7 @@ from passlib.context import CryptContext
 from pydantic import BaseModel
 from starlette import status
 
+from api.config.models.auth import AuthConfig
 from api.dependencies.db import dao_provider
 from db.dao.holder import HolderDao
 from shvatka.models import dto
@@ -31,13 +32,13 @@ def get_current_user():
 
 
 class AuthProvider:
-    def __init__(self):
+    def __init__(self, config: AuthConfig):
         self.pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
         # to get a string like this run:
         # openssl rand -hex 32
-        self.secret_key = "09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7"
+        self.secret_key = config.secret_key
         self.algorythm = "HS256"
-        self.access_token_expire_minutes = 30
+        self.access_token_expire = config.token_expire
 
     def verify_password(self, plain_password: str, hashed_password: str) -> bool:
         return self.pwd_context.verify(plain_password, hashed_password)
@@ -54,12 +55,9 @@ class AuthProvider:
             return None
         return user
 
-    def create_access_token(self, data: dict, expires_delta: timedelta | None = None):
+    def create_access_token(self, data: dict, expires_delta: timedelta):
         to_encode = data.copy()
-        if expires_delta:
-            expire = datetime.utcnow() + expires_delta
-        else:
-            expire = datetime.utcnow() + timedelta(minutes=15)
+        expire = datetime.utcnow() + expires_delta
         to_encode.update({"exp": expire})
         encoded_jwt = jwt.encode(to_encode, self.secret_key, algorithm=self.algorythm)
         return encoded_jwt
@@ -92,8 +90,7 @@ class AuthProvider:
                 detail="Incorrect username or password",
                 headers={"WWW-Authenticate": "Bearer"},
             )
-        access_token_expires = timedelta(minutes=self.access_token_expire_minutes)
         access_token = self.create_access_token(
-            data={"sub": user.username}, expires_delta=access_token_expires
+            data={"sub": user.username}, expires_delta=self.access_token_expire
         )
         return {"access_token": access_token, "token_type": "bearer"}

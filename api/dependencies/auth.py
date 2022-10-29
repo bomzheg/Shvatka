@@ -1,12 +1,15 @@
+import hashlib
+import hmac
 import logging
 from datetime import timedelta, datetime
 
-from fastapi import Depends, HTTPException
+from fastapi import Depends, HTTPException, APIRouter
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from jose import jwt, JWTError
 from passlib.context import CryptContext
 from pydantic import BaseModel
 from starlette import status
+from starlette.responses import HTMLResponse
 
 from api.config.models.auth import AuthConfig
 from api.dependencies.db import dao_provider
@@ -16,6 +19,21 @@ from shvatka.utils.exceptions import NoUsernameFound
 
 logger = logging.getLogger(__name__)
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+
+
+class UserTgAuth(BaseModel):
+    id: int
+    first_name: str
+    auth_date: datetime
+    hash: str
+    photo_url: str
+    username: str | None = None
+    last_name: str | None = None
+
+    def to_tg_spec(self) -> str:
+        data = self.dict(exclude={"hash"})
+        data["auth_date"] = int(self.auth_date.timestamp())
+        return "\n".join([f"{key}={data[key]}" for key in sorted(data.keys())])
 
 
 class Token(BaseModel):
@@ -33,6 +51,7 @@ def get_current_user():
 
 class AuthProvider:
     def __init__(self, config: AuthConfig):
+        self.config = config
         self.pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
         # to get a string like this run:
         # openssl rand -hex 32
@@ -94,3 +113,42 @@ class AuthProvider:
             data={"sub": user.username}, expires_delta=self.access_token_expire
         )
         return {"access_token": access_token, "token_type": "bearer"}
+
+    async def login_page(self):
+        return """
+        <html>
+            <head>
+                <title>Authenticate by TG</title>
+            </head>
+            <body>
+                <script 
+                    async src="https://telegram.org/js/telegram-widget.js?21" 
+                    data-telegram-login="{bot_username}" 
+                    data-size="large" 
+                    data-auth-url="{auth_url}" 
+                    data-request-access="write"
+                ></script>
+            </body>
+        </html>
+        """.format(
+            bot_username=self.config.bot_username,
+            auth_url=self.config.auth_url,
+        )
+
+    async def login_post(self, user: UserTgAuth = Depends()):
+        logger.info("user %s", user)
+        check_tg_hash(user, self.config.bot_token)
+        return user
+
+    def setup_auth_routes(self, router: APIRouter):
+        router.add_api_route("/token", self.login, methods=["POST"], response_model=Token)
+        router.add_api_route("/login", self.login_page, response_class=HTMLResponse, methods=["GET"])
+        router.add_api_route("/login/data", self.login_post, methods=["GET"])
+
+
+def check_tg_hash(user: UserTgAuth, bot_token: str):
+    data_check = user.to_tg_spec().encode("utf-8")
+    secret_key = hashlib.sha256(bot_token.encode('utf-8')).digest()
+    hmac_string = hmac.new(secret_key, data_check, hashlib.sha256).hexdigest()
+    if hmac_string != user.hash:
+        raise HTTPException(status_code=401, detail="something wrong")

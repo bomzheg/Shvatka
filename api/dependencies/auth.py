@@ -8,17 +8,13 @@ from passlib.context import CryptContext
 from pydantic import BaseModel
 from starlette import status
 
+from api.dependencies.db import dao_provider
+from db.dao.holder import HolderDao
+from shvatka.models import dto
+from shvatka.utils.exceptions import NoUsernameFound
+
 logger = logging.getLogger(__name__)
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
-fake_users_db = {
-    "johndoe": {
-        "username": "johndoe",
-        "full_name": "John Doe",
-        "email": "johndoe@example.com",
-        "hashed_password": "$2b$12$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW",
-        "disabled": False,
-    }
-}
 
 
 class Token(BaseModel):
@@ -30,37 +26,13 @@ class TokenData(BaseModel):
     username: str | None = None
 
 
-class User(BaseModel):
-    username: str
-    email: str | None = None
-    full_name: str | None = None
-    disabled: bool | None = None
-
-
-class UserInDB(User):
-    hashed_password: str
-
-
-def get_user(db, username: str):
-    if username in db:
-        user_dict = db[username]
-        return UserInDB(**user_dict)
-
-
 def get_current_user():
     raise NotImplementedError
-
-
-async def get_current_active_user(current_user: User = Depends(get_current_user)):
-    if current_user.disabled:
-        raise HTTPException(status_code=400, detail="Inactive user")
-    return current_user
 
 
 class AuthProvider:
     def __init__(self):
         self.pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-        self.db = fake_users_db
         # to get a string like this run:
         # openssl rand -hex 32
         self.secret_key = "09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7"
@@ -73,12 +45,13 @@ class AuthProvider:
     def get_password_hash(self, password: str) -> str:
         return self.pwd_context.hash(password)
 
-    def authenticate_user(self, username: str, password: str):
-        user = get_user(self.db, username)
-        if not user:
-            return False
+    async def authenticate_user(self, username: str, password: str, dao: HolderDao) -> dto.User | None:
+        try:
+            user = await dao.user.get_by_username(username)
+        except NoUsernameFound:
+            return None
         if not self.verify_password(password, user.hashed_password):
-            return False
+            return None
         return user
 
     def create_access_token(self, data: dict, expires_delta: timedelta | None = None):
@@ -91,7 +64,7 @@ class AuthProvider:
         encoded_jwt = jwt.encode(to_encode, self.secret_key, algorithm=self.algorythm)
         return encoded_jwt
 
-    async def get_current_user(self, token: str = Depends(oauth2_scheme)):
+    async def get_current_user(self, token: str = Depends(oauth2_scheme), dao: dao_provider = Depends()):
         credentials_exception = HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Could not validate credentials",
@@ -105,13 +78,14 @@ class AuthProvider:
             token_data = TokenData(username=username)
         except JWTError:
             raise credentials_exception
-        user = get_user(fake_users_db, username=token_data.username)
-        if user is None:
+        try:
+            user = await dao.user.get_by_username(username=token_data.username)
+        except NoUsernameFound:
             raise credentials_exception
         return user
 
-    async def login(self, form_data: OAuth2PasswordRequestForm = Depends()):
-        user = self.authenticate_user(form_data.username, form_data.password)
+    async def login(self, form_data: OAuth2PasswordRequestForm = Depends(), dao: dao_provider = Depends()):
+        user = await self.authenticate_user(form_data.username, form_data.password, dao)
         if not user:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,

@@ -23,6 +23,7 @@ def upgrade():
         sa.Column('first_name', sa.Text(), nullable=True),
         sa.Column('last_name', sa.Text(), nullable=True),
         sa.Column('username', sa.Text(), nullable=True),
+        sa.Column('hashed_password', sa.Text(), nullable=True),
         sa.Column('is_bot', sa.Boolean(), nullable=True),
         sa.PrimaryKeyConstraint('id'),
         sa.UniqueConstraint('tg_id'),

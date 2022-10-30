@@ -21,6 +21,11 @@ class PlayerTeamChecker(Reader):
         raise NotImplementedError
 
 
+class PlayerInTeamGetter(Reader):
+    async def get_player_in_team(self, player: dto.Player) -> dto.PlayerInTeam:
+        raise NotImplementedError
+
+
 class PlayerPromoter(Committer, metaclass=ABCMeta):
     async def promote(self, actor: dto.Player, target: dto.Player) -> None:
         raise NotImplementedError

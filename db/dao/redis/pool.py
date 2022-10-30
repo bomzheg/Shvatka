@@ -104,4 +104,6 @@ class PollDao:
 
     async def _get(self, key: str, encoding: str = "utf-8"):
         value = await self.redis.get(key)
+        if value is None:
+            return None
         return value.decode(encoding)

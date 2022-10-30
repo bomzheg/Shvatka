@@ -2,17 +2,21 @@ from abc import ABCMeta
 from typing import Iterable
 
 from shvatka.dal.base import Reader, Writer, Committer
+from shvatka.dal.player import PlayerInTeamGetter
 from shvatka.models import dto
 from shvatka.models.enums.played import Played
 
 
-class WaiverVoteAdder(Writer):
+class WaiverVoteAdder(Writer, PlayerInTeamGetter):
     async def add_player_vote(self, team_id: int, player_id: int, vote_var: str) -> None:
         raise NotImplementedError
 
     async def is_excluded(
         self, game: dto.Game, player: dto.Player, team: dto.Team,
     ) -> bool:
+        raise NotImplementedError
+
+    async def get_player_in_team(self, player: dto.Player) -> dto.PlayerInTeam:
         raise NotImplementedError
 
 

@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import Iterable
 
-from db.dao import PollDao, WaiverDao, PlayerDao
+from db.dao import PollDao, WaiverDao, PlayerDao, PlayerInTeamDao
 from shvatka.dal.waiver import WaiverVoteAdder, WaiverVoteGetter, WaiverApprover
 from shvatka.models import dto
 from shvatka.models.enums.played import Played
@@ -11,6 +11,7 @@ from shvatka.models.enums.played import Played
 class WaiverVoteAdderImpl(WaiverVoteAdder):
     poll: PollDao
     waiver: WaiverDao
+    player_in_team: PlayerInTeamDao
 
     async def is_excluded(
         self, game: dto.Game, player: dto.Player, team: dto.Team,
@@ -19,6 +20,9 @@ class WaiverVoteAdderImpl(WaiverVoteAdder):
 
     async def add_player_vote(self, team_id: int, player_id: int, vote_var: str) -> None:
         return await self.poll.add_player_vote(team_id, player_id, vote_var)
+
+    async def get_player_in_team(self, player: dto.Player) -> dto.PlayerInTeam:
+        return await self.player_in_team.get_player_in_team(player)
 
 
 @dataclass

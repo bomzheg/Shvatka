@@ -42,7 +42,7 @@ class HolderDao:
 
     @property
     def waiver_vote_adder(self) -> WaiverVoteAdder:
-        return WaiverVoteAdderImpl(poll=self.poll, waiver=self.waiver)
+        return WaiverVoteAdderImpl(poll=self.poll, waiver=self.waiver, player_in_team=self.player_in_team)
 
     @property
     def waiver_vote_getter(self) -> WaiverVoteGetter:

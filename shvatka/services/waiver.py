@@ -1,6 +1,7 @@
 from shvatka.dal.waiver import WaiverVoteAdder, WaiverVoteGetter, WaiverApprover
 from shvatka.models import dto
 from shvatka.models.enums.played import Played
+from shvatka.services.player import check_player_on_team
 from shvatka.utils.exceptions import WaiverForbidden, PermissionsError
 
 
@@ -29,6 +30,7 @@ async def get_voted_list(
 async def add_vote(
     game: dto.Game, team: dto.Team, player: dto.Player, vote: Played, dao: WaiverVoteAdder,
 ):
+    await check_player_on_team(player, team, dao)
     if await dao.is_excluded(game=game, player=player, team=team):
         raise WaiverForbidden(player=player, team=team, game=game)
     await dao.add_player_vote(team.id, player.id, vote.name)

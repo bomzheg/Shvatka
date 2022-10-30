@@ -22,7 +22,7 @@ jobs:
           python-version: '3.10'
       - name: Install dependencies
         run: |
-          pexport POETRY_HOME=/opt/poetry
+          export POETRY_HOME=/opt/poetry
           python3 install-poetry.py --version 1.2.0
           $POETRY_HOME/bin/poetry install --with test
       - name: Lint with flake8

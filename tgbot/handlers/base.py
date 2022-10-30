@@ -5,6 +5,7 @@ from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, ReplyKeyboardRemove, ContentType
 from aiogram.utils.markdown import html_decoration as hd
+from aiogram_dialog import DialogManager
 
 from db.dao.holder import HolderDao
 from shvatka.models import dto
@@ -27,8 +28,9 @@ async def chat_id(message: Message):
     await message.reply(text, disable_notification=True)
 
 
-async def cancel_state(message: Message, state: FSMContext):
+async def cancel_state(message: Message, state: FSMContext, dialog_manager: DialogManager):
     current_state = await state.get_state()
+    await dialog_manager.done()
     if current_state is None:
         return
     logger.info('Cancelling state %s', current_state)

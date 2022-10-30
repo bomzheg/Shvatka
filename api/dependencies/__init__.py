@@ -11,7 +11,7 @@ def setup(app: FastAPI, pool: sessionmaker, redis: Redis, config: ApiConfig):
     db_provider = DbProvider(pool=pool, redis=redis)
 
     auth_provider = AuthProvider(config.auth)
-    app.include_router(auth_provider.setup_auth_routes())
+    app.include_router(auth_provider.router)
 
     app.dependency_overrides[get_current_user] = auth_provider.get_current_user
     app.dependency_overrides[dao_provider] = db_provider.dao

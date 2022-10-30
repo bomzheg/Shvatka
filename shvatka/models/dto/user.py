@@ -13,7 +13,6 @@ class User:
     first_name: str | None = None
     last_name: str | None = None
     is_bot: bool | None = None
-    hashed_password: str | None = None
 
     @property
     def fullname(self) -> str:
@@ -33,4 +32,30 @@ class User:
             first_name=user.first_name,
             last_name=user.last_name,
             is_bot=user.is_bot,
+        )
+
+    def add_password(self, hashed_password: str) -> UserWithCreds:
+        return UserWithCreds(
+            tg_id=self.tg_id,
+            db_id=self.db_id,
+            username=self.username,
+            first_name=self.first_name,
+            last_name=self.last_name,
+            is_bot=self.is_bot,
+            hashed_password=hashed_password,
+        )
+
+
+@dataclass
+class UserWithCreds(User):
+    hashed_password: str | None = None
+
+    def without_password(self) -> User:
+        return User(
+            tg_id=self.tg_id,
+            db_id=self.db_id,
+            username=self.username,
+            first_name=self.first_name,
+            last_name=self.last_name,
+            is_bot=self.is_bot,
         )

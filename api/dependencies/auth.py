@@ -81,6 +81,7 @@ class AuthProvider:
         self.algorythm = "HS256"
         self.access_token_expire = config.token_expire
         self.router = APIRouter()
+        self.setup_auth_routes()
 
     def verify_password(self, plain_password: str, hashed_password: str) -> bool:
         return self.pwd_context.verify(plain_password, hashed_password)
@@ -88,23 +89,32 @@ class AuthProvider:
     def get_password_hash(self, password: str) -> str:
         return self.pwd_context.hash(password)
 
-    async def authenticate_user(self, username: str, password: str, dao: HolderDao) -> dto.User | None:
+    async def authenticate_user(self, username: str, password: str, dao: HolderDao) -> dto.User:
+        http_status_401 = HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect username or password",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
         try:
-            user = await dao.user.get_by_username(username)
+            user = await dao.user.get_by_username_with_password(username)
         except NoUsernameFound:
-            return None
+            raise http_status_401
         if not self.verify_password(password, user.hashed_password):
-            return None
-        return user
+            raise http_status_401
+        return user.without_password()
 
-    def create_access_token(self, data: dict, expires_delta: timedelta):
+    def create_access_token(self, data: dict, expires_delta: timedelta) -> Token:
         to_encode = data.copy()
         expire = datetime.utcnow() + expires_delta
         to_encode.update({"exp": expire})
         encoded_jwt = jwt.encode(to_encode, self.secret_key, algorithm=self.algorythm)
-        return encoded_jwt
+        return Token(access_token=encoded_jwt, token_type="bearer")
 
-    async def get_current_user(self, token: str = Depends(oauth2_scheme), dao: HolderDao = Depends(dao_provider)):
+    async def get_current_user(
+        self,
+        token: str = Depends(oauth2_scheme),
+        dao: HolderDao = Depends(dao_provider),
+    ) -> Token:
         credentials_exception = HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Could not validate credentials",
@@ -123,18 +133,15 @@ class AuthProvider:
             raise credentials_exception
         return user
 
-    async def login(self, form_data: OAuth2PasswordRequestForm = Depends(), dao: HolderDao = Depends(dao_provider)):
+    async def login(
+        self,
+        form_data: OAuth2PasswordRequestForm = Depends(),
+        dao: HolderDao = Depends(dao_provider),
+    ) -> Token:
         user = await self.authenticate_user(form_data.username, form_data.password, dao)
-        if not user:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Incorrect username or password",
-                headers={"WWW-Authenticate": "Bearer"},
-            )
-        access_token = self.create_access_token(
+        return self.create_access_token(
             data={"sub": user.username}, expires_delta=self.access_token_expire
         )
-        return Token(access_token=access_token, token_type="bearer")
 
     async def tg_login_page(self):
         return TG_WIDGET_HTML.format(
@@ -142,20 +149,21 @@ class AuthProvider:
             auth_url=self.config.auth_url,
         )
 
-    async def tg_login_result(self, user: UserTgAuth = Depends(), dao: HolderDao = Depends(dao_provider)):
-        logger.info("user %s", user)
+    async def tg_login_result(
+        self,
+        user: UserTgAuth = Depends(),
+        dao: HolderDao = Depends(dao_provider),
+    ) -> Token:
         check_tg_hash(user, self.config.bot_token)
         await upsert_user(user.to_dto(), dao.user)
-        access_token = self.create_access_token(
+        return self.create_access_token(
             data={"sub": user.username}, expires_delta=self.access_token_expire
         )
-        return Token(access_token=access_token, token_type="bearer")
 
     def setup_auth_routes(self):
         self.router.add_api_route("/auth/token", self.login, methods=["POST"])
         self.router.add_api_route("/auth/login", self.tg_login_page, response_class=HTMLResponse, methods=["GET"])
         self.router.add_api_route("/auth/login/data", self.tg_login_result, methods=["GET"])
-        return self.router
 
 
 def check_tg_hash(user: UserTgAuth, bot_token: str):
@@ -163,4 +171,4 @@ def check_tg_hash(user: UserTgAuth, bot_token: str):
     secret_key = hashlib.sha256(bot_token.encode('utf-8')).digest()
     hmac_string = hmac.new(secret_key, data_check, hashlib.sha256).hexdigest()
     if hmac_string != user.hash:
-        raise HTTPException(status_code=401, detail="something wrong")
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="something wrong")

@@ -19,7 +19,7 @@ def upgrade():
     op.create_table(
         'users',
         sa.Column('id', sa.BigInteger(), nullable=False),
-        sa.Column('tg_id', sa.BigInteger(), nullable=True),
+        sa.Column('tg_id', sa.BigInteger(), nullable=False),
         sa.Column('first_name', sa.Text(), nullable=True),
         sa.Column('last_name', sa.Text(), nullable=True),
         sa.Column('username', sa.Text(), nullable=True),

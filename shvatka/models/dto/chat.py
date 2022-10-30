@@ -20,7 +20,7 @@ class Chat:
 
     @property
     def full_name(self):
-        return self.first_name + " " + self.last_name or ""
+        return self.first_name + " " + (self.last_name or "")
 
     @property
     def name(self):

@@ -12,14 +12,15 @@ from tgbot.config.parser.main import load_config
 
 
 @pytest.fixture(scope="session", autouse=True)
-def app_config(paths: Paths) -> TgBotConfig:
-    setup_logging(paths)
+def bot_config(paths: Paths) -> TgBotConfig:
     return load_config(paths)
 
 
 @pytest.fixture(scope="session")
 def paths():
-    return Paths(Path(__file__).parent)
+    paths = Paths(Path(__file__).parent)
+    setup_logging(paths)
+    return paths
 
 
 @pytest.fixture(scope="session")

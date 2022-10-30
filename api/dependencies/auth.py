@@ -110,6 +110,11 @@ class AuthProvider:
         encoded_jwt = jwt.encode(to_encode, self.secret_key, algorithm=self.algorythm)
         return Token(access_token=encoded_jwt, token_type="bearer")
 
+    def create_user_token(self, user: dto.User) -> Token:
+        return self.create_access_token(
+            data={"sub": user.username}, expires_delta=self.access_token_expire
+        )
+
     async def get_current_user(
         self,
         token: str = Depends(oauth2_scheme),
@@ -139,9 +144,7 @@ class AuthProvider:
         dao: HolderDao = Depends(dao_provider),
     ) -> Token:
         user = await self.authenticate_user(form_data.username, form_data.password, dao)
-        return self.create_access_token(
-            data={"sub": user.username}, expires_delta=self.access_token_expire
-        )
+        return self.create_user_token(user)
 
     async def tg_login_page(self):
         return TG_WIDGET_HTML.format(
@@ -156,9 +159,7 @@ class AuthProvider:
     ) -> Token:
         check_tg_hash(user, self.config.bot_token)
         await upsert_user(user.to_dto(), dao.user)
-        return self.create_access_token(
-            data={"sub": user.username}, expires_delta=self.access_token_expire
-        )
+        return self.create_user_token(user.to_dto())
 
     def setup_auth_routes(self):
         self.router.add_api_route("/auth/token", self.login, methods=["POST"])

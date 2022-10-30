@@ -2,6 +2,7 @@ import logging
 
 import dataclass_factory
 import uvicorn as uvicorn
+from fastapi import FastAPI
 
 from api import dependencies, routes
 from api.config.parser.main import load_config
@@ -16,7 +17,7 @@ from shvatka.models.schems import schemas
 logger = logging.getLogger(__name__)
 
 
-def main():
+def main() -> FastAPI:
     paths = get_paths()
 
     setup_logging(paths)
@@ -32,7 +33,7 @@ def main():
     )
     routes.setup(app.router)
 
-    logger.info("started")
+    logger.info("app prepared")
     return app
 
 

@@ -15,6 +15,7 @@ from testcontainers.postgres import PostgresContainer
 from testcontainers.redis import RedisContainer
 
 from common.config.models.paths import Paths
+from db.config.models.db import RedisConfig
 from db.dao.holder import HolderDao
 from db.fatory import create_lock_factory
 from shvatka.scheduler import Scheduler
@@ -75,7 +76,7 @@ def pool(postgres_url: str) -> sessionmaker:
 
 
 @pytest.fixture(scope="session")
-def postgres_url(app_config: TgBotConfig) -> str:
+def postgres_url() -> str:
     postgres = PostgresContainer("postgres:11")
     if os.name == "nt":  # TODO workaround from testcontainers/testcontainers-python#108
         postgres.get_container_host_ip = lambda: 'localhost'
@@ -83,14 +84,13 @@ def postgres_url(app_config: TgBotConfig) -> str:
         postgres.start()
         postgres_url_ = postgres.get_connection_url().replace("psycopg2", "asyncpg")
         logger.info("postgres url %s", postgres_url_)
-        app_config.db = DBConfig(postgres_url_)
         yield postgres_url_
     finally:
         postgres.stop()
 
 
 @pytest.fixture(scope="session")
-def redis(app_config: TgBotConfig) -> Redis:
+def redis() -> Redis:
     redis_container = RedisContainer("redis:latest")
     if os.name == "nt":  # TODO workaround from testcontainers/testcontainers-python#108
         redis_container.get_container_host_ip = lambda: 'localhost'
@@ -98,19 +98,25 @@ def redis(app_config: TgBotConfig) -> Redis:
         redis_container.start()
         url = redis_container.get_container_host_ip()
         port = redis_container.get_exposed_port(redis_container.port_to_expose)
-        app_config.redis.url = url
-        app_config.redis.port = port
-        r = create_redis(app_config.redis)
+        r = create_redis(RedisConfig(url=url, port=int(port), ))
         yield r
     finally:
         redis_container.stop()
 
 
+@pytest.fixture(autouse=True)
+def patch_api_config(bot_config: TgBotConfig, postgres_url: str, redis: Redis):
+    bot_config.db = DBConfig(postgres_url)
+    bot_config.redis.url = redis.connection_pool.connection_kwargs["host"]
+    bot_config.redis.port = redis.connection_pool.connection_kwargs["port"]
+    bot_config.redis.db = redis.connection_pool.connection_kwargs["db"]
+
+
 @pytest_asyncio.fixture(scope="session")
-async def scheduler(pool: sessionmaker, redis: Redis, bot: Bot, app_config: TgBotConfig):
+async def scheduler(pool: sessionmaker, redis: Redis, bot: Bot, bot_config: TgBotConfig):
     async with create_scheduler(
-        pool=pool, redis=redis, bot=bot, redis_config=app_config.redis,
-        game_log_chat=app_config.bot.log_chat,
+        pool=pool, redis=redis, bot=bot, redis_config=bot_config.redis,
+        game_log_chat=bot_config.bot.log_chat,
     ) as sched:
         yield sched
 
@@ -122,11 +128,11 @@ def locker() -> KeyCheckerFactory:
 
 @pytest.fixture(scope="session")
 def dp(
-    pool: sessionmaker, app_config: TgBotConfig, user_getter: UserGetter,
+    pool: sessionmaker, bot_config, user_getter: UserGetter,
     dcf: Factory, redis: Redis, scheduler: Scheduler, locker: KeyCheckerFactory,
 ) -> Dispatcher:
     return create_dispatcher(
-        config=app_config, user_getter=user_getter, dcf=dcf, pool=pool,
+        config=bot_config, user_getter=user_getter, dcf=dcf, pool=pool,
         redis=redis, scheduler=scheduler, locker=locker,
     )
 
@@ -138,9 +144,9 @@ def user_getter() -> UserGetter:
 
 
 @pytest.fixture(scope="session")
-def bot(app_config: TgBotConfig) -> Bot:
+def bot(bot_config) -> Bot:
     dummy = mock(Bot)
-    setattr(dummy, "id", int(app_config.bot.token.split(":")[0]))
+    setattr(dummy, "id", int(bot_config.bot.token.split(":")[0]))
     return dummy
 
 

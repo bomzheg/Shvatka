@@ -9,3 +9,4 @@ types-redis
 types-PyYAML
 testcontainers[postgresql]
 mockito
+httpx # for fastapi testclient

@@ -59,7 +59,7 @@ class UserTgAuth(BaseModel):
     def to_tg_spec(self) -> str:
         data = self.dict(exclude={"hash"})
         data["auth_date"] = int(self.auth_date.timestamp())
-        return "\n".join([f"{key}={data[key]}" for key in sorted(data.keys())])
+        return "\n".join([f"{key}={data[key]}" for key in sorted(data.keys()) if data.get(key)])
 
 
 class Token(BaseModel):

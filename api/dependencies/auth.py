@@ -43,7 +43,7 @@ class UserTgAuth(BaseModel):
     first_name: str
     auth_date: datetime
     hash: str
-    photo_url: str
+    photo_url: str | None = None
     username: str | None = None
     last_name: str | None = None
 

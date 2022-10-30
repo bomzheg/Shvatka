@@ -12,7 +12,10 @@ class UserDao(BaseDAO[User]):
     def __init__(self, session: AsyncSession):
         super().__init__(User, session)
 
-    async def get_by_tg_id(self, tg_id: int) -> User:
+    async def get_by_id(self, id_: int) -> dto.User:
+        return (await self._get_by_id(id_)).to_dto()
+
+    async def _get_by_tg_id(self, tg_id: int) -> User:
         result = await self.session.execute(
             select(User).where(User.tg_id == tg_id)
         )
@@ -45,7 +48,7 @@ class UserDao(BaseDAO[User]):
 
     async def upsert_user(self, user: dto.User) -> dto.User:
         try:
-            saved_user = await self.get_by_tg_id(user.tg_id)
+            saved_user = await self._get_by_tg_id(user.tg_id)
         except NoResultFound:
             saved_user = User(tg_id=user.tg_id)
         was_changed = update_fields(source=user, target=saved_user)

@@ -16,4 +16,9 @@ class UserPasswordSetter(Committer, metaclass=ABCMeta):
 
 class UserByUsernameResolver(Reader, metaclass=ABCMeta):
     async def get_by_username(self, username: str) -> dto.User:
-        pass
+        raise NotImplementedError
+
+
+class UserByIdResolver(Reader, metaclass=ABCMeta):
+    async def get_by_id(self, id_: int) -> dto.User:
+        raise NotImplementedError

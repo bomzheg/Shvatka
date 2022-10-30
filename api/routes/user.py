@@ -1,18 +1,22 @@
 import logging
 
 from fastapi import Depends, APIRouter, HTTPException
-from fastapi.params import Body
+from fastapi.params import Body, Path
 
 from api.dependencies import get_current_user, AuthProvider, dao_provider
 from db.dao.holder import HolderDao
 from shvatka.models import dto
-from shvatka.services.user import set_password
+from shvatka.services.user import set_password, get_user
 
 logger = logging.getLogger(__name__)
 
 
 async def read_users_me(current_user: dto.User = Depends(get_current_user)):
     return current_user
+
+
+async def read_user(id_: int = Path(alias="id"), dao: HolderDao = Depends(dao_provider)) -> dto.User:
+    return await get_user(id_, dao.user)
 
 
 async def set_password_route(
@@ -27,5 +31,6 @@ async def set_password_route(
 
 
 def setup(router: APIRouter):
-    router.add_api_route("/users/0", read_users_me, methods=["GET"], response_model=dto.User)
-    router.add_api_route("/users/0/password", set_password_route, methods=["PUT"])
+    router.add_api_route("/users/me", read_users_me, methods=["GET"], response_model=dto.User)
+    router.add_api_route("/users/me/password", set_password_route, methods=["PUT"])
+    router.add_api_route("/users/{id}", read_user, methods=["GET"])

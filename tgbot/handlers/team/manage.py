@@ -1,6 +1,6 @@
 import logging
 
-from aiogram import Bot, Dispatcher, F
+from aiogram import Bot, F, Router
 from aiogram.exceptions import TelegramBadRequest
 from aiogram.filters import Command, CommandObject
 from aiogram.types import Message
@@ -114,20 +114,21 @@ async def cmd_add_in_team(
     )
 
 
-def setup_team_manage(dp: Dispatcher):
-    dp.message.register(
+def setup_team_manage() -> Router:
+    router = Router(name=__name__)
+    router.message.register(
         cmd_create_team,
         Command(commands=CREATE_TEAM_COMMAND.command),
         GameStatusFilter(running=False),
         F.chat.type == "supergroup",
     )
-    dp.message.register(
+    router.message.register(
         cmd_create_team_group,
         Command(commands=CREATE_TEAM_COMMAND.command),
         GameStatusFilter(running=False),
         F.chat.type == "group",
     )
-    dp.message.register(
+    router.message.register(
         cmd_add_in_team,
         Command(commands=ADD_IN_TEAM_COMMAND.command),
         GameStatusFilter(running=False),
@@ -135,3 +136,4 @@ def setup_team_manage(dp: Dispatcher):
         IsTeamFilter(),
         # can_add_player=True
     )
+    return router

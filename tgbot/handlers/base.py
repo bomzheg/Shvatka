@@ -1,6 +1,6 @@
 import logging
 
-from aiogram import Dispatcher, F
+from aiogram import F, Router
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, ReplyKeyboardRemove, ContentType
@@ -46,11 +46,13 @@ async def chat_migrate(message: Message, chat: dto.Chat, dao: HolderDao):
     logger.info("Migrate chat from %s to %s", message.chat.id, new_id)
 
 
-def setup(dp: Dispatcher):
-    dp.message.register(
+def setup() -> Router:
+    router = Router(name=__name__)
+    router.message.register(
         chat_id, Command(commands=["idchat", CHAT_ID_COMMAND.command], prefix="/!")
     )
-    dp.message.register(cancel_state, Command(commands=CANCEL_COMMAND.command))
-    dp.message.register(
+    router.message.register(cancel_state, Command(commands=CANCEL_COMMAND.command))
+    router.message.register(
         chat_migrate, F.content_types == ContentType.MIGRATE_TO_CHAT_ID
     )
+    return router

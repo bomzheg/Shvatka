@@ -1,7 +1,7 @@
 import logging
 
 import yaml
-from aiogram import Router, Dispatcher, Bot, F
+from aiogram import Router, Bot, F
 from aiogram.filters import Command
 from aiogram.types import Message, ContentType
 from aiogram_dialog import StartMode, DialogManager
@@ -14,7 +14,6 @@ from shvatka.utils.exceptions import ScenarioNotCorrect
 from tgbot.filters.game_status import GameStatusFilter
 from tgbot.states import MyGamesPanel
 
-router = Router(name=__name__)
 logger = logging.getLogger(__name__)
 
 
@@ -34,7 +33,8 @@ async def get_manage(_: Message, dialog_manager: DialogManager):
     await dialog_manager.start(MyGamesPanel.choose_game, mode=StartMode.RESET_STACK)
 
 
-def setup(dp: Dispatcher):
+def setup() -> Router:
+    router = Router(name=__name__)
     router.message.filter(
         GameStatusFilter(running=False),  # TODO can_be_author=True
     )
@@ -42,4 +42,4 @@ def setup(dp: Dispatcher):
     router.message.register(cmd_save_game, F.content_type == ContentType.DOCUMENT)
     # TODO refactor it filters^ (state?)
     router.message.register(get_manage, Command(commands="my_games"))
-    dp.include_router(router)
+    return router

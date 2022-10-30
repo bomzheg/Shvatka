@@ -1,7 +1,7 @@
 import logging
 import re
 
-from aiogram import types, Dispatcher, Router
+from aiogram import types, Router
 from aiogram.dispatcher.event.bases import SkipHandler
 from aiogram.filters import StateFilter, Command, CommandObject
 from aiogram.fsm.context import FSMContext
@@ -10,7 +10,6 @@ from aiogram.fsm.state import any_state
 from tgbot.views.texts import YOU_ARE_IN_STATE_MSG
 
 logger = logging.getLogger(__name__)
-router = Router(name=__name__)
 
 
 async def message_in_state(message: types.Message, state: FSMContext, command: CommandObject):
@@ -49,9 +48,9 @@ async def callback_in_state(callback_query: types.CallbackQuery):
     await callback_query.message.answer(YOU_ARE_IN_STATE_MSG)
 
 
-def setup(dp: Dispatcher):
+def setup() -> Router:
+    router = Router(name=__name__)
     router.message.register(message_in_state, Command(commands=re.compile('.*')))
     router.callback_query.register(not_supported_callback)
     router.callback_query.register(callback_in_state, StateFilter(any_state))
-
-    dp.include_router(router)
+    return router

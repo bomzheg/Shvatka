@@ -5,6 +5,7 @@ from sqlalchemy.orm import sessionmaker
 from api.config.models.main import ApiConfig
 from api.dependencies.auth import get_current_user, AuthProvider, Token
 from api.dependencies.db import DbProvider, dao_provider
+from api.dependencies.player import player_provider, db_player_provider
 
 
 def setup(app: FastAPI, pool: sessionmaker, redis: Redis, config: ApiConfig):
@@ -16,3 +17,4 @@ def setup(app: FastAPI, pool: sessionmaker, redis: Redis, config: ApiConfig):
     app.dependency_overrides[get_current_user] = auth_provider.get_current_user
     app.dependency_overrides[dao_provider] = db_provider.dao
     app.dependency_overrides[AuthProvider] = lambda: auth_provider
+    app.dependency_overrides[player_provider] = db_player_provider

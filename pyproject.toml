@@ -52,7 +52,7 @@ httpx = "^0.23.0"
 optional = true
 
 [tool.poetry.group.win.dependencies]
-python-magic-bin = "^0.4.14"
+python-magic-bin = {path = "python_magic_bin-0.4.14-py2.py3-none-win_amd64.whl"}
 
 
 [build-system]

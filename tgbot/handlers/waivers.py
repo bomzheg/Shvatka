@@ -89,6 +89,10 @@ async def confirm_approve_waivers_handler(
     await c.answer("Вейверы успешно опубликованы!")
 
 
+async def TODO(c: CallbackQuery):
+    await c.answer("UNDERCONSTRUCTION", show_alert=True)
+
+
 def setup() -> Router:
     router = Router(name=__name__)
     # TODO добавить обработку событий ниже, сработавших не в тот статус
@@ -105,4 +109,6 @@ def setup() -> Router:
     #  TODO can_manage_waivers=True
     router.message.register(start_approve_waivers_handler, Command(APPROVE_WAIVERS_COMMAND))
     router.callback_query.register(confirm_approve_waivers_handler, kb.WaiverConfirmCD.filter())
+    router.callback_query.filter(TODO, kb.WaiverManagePlayerCD.filter())
+    router.callback_query.filter(TODO, kb.WaiverAddForceMenuCD.filter())
     return router

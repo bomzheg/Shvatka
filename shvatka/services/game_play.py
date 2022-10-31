@@ -16,12 +16,13 @@ logger = logging.getLogger(__name__)
 async def prepare_game(
     game: dto.Game, game_preparer: GamePreparer, view_preparer: GameViewPreparer,
 ):
-    await game_preparer.delete_poll_data()
     await view_preparer.prepare_game_view(
         game=game,
         teams=await game_preparer.get_agree_teams(game),
         orgs=await game_preparer.get_orgs(game),
+        dao=game_preparer,
     )
+    await game_preparer.delete_poll_data()
 
 
 async def start_game(

@@ -3,13 +3,14 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Protocol, Iterable
 
+from shvatka.dal.game_play import GamePreparer
 from shvatka.models import dto
 from shvatka.models.dto.scn.time_hint import TimeHint
 
 
 class GameViewPreparer(Protocol):
     async def prepare_game_view(
-        self, game: dto.Game, teams: Iterable[dto.Team], orgs: Iterable[dto.Organizer],
+        self, game: dto.Game, teams: Iterable[dto.Team], orgs: Iterable[dto.Organizer], dao: GamePreparer,
     ) -> None:
         raise NotImplementedError
 

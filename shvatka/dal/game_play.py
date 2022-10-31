@@ -15,6 +15,9 @@ class GamePreparer(Writer):
     async def get_orgs(self, game: dto.Game) -> Iterable[dto.Organizer]:
         raise NotImplementedError
 
+    async def get_poll_msg(self, team: dto.Team, game: dto.Game) -> int:
+        raise NotImplementedError
+
 
 class GamePlayerDao(Committer, metaclass=ABCMeta):
     async def is_key_duplicate(self, level: dto.Level, team: dto.Team, key: str) -> bool:

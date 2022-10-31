@@ -22,6 +22,9 @@ class GamePreparerImpl(GamePreparer):
     async def get_orgs(self, game: dto.Game) -> Iterable[dto.Organizer]:
         return await self.org.get_orgs(game)
 
+    async def get_poll_msg(self, team: dto.Team, game: dto.Game) -> int:
+        return await self.poll.get_pool_msg_id(chat_id=team.chat.tg_id, game_id=game.id)
+
 
 @dataclass
 class GameStarterImpl(GameStarter):

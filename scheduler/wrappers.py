@@ -22,7 +22,7 @@ async def prepare_context() -> AsyncContextManager[ScheduledContext]:
 
 
 async def prepare_game_wrapper(game_id: int, author_id: int):
-    async with prepare_context as context:
+    async with prepare_context as context:  # TODO AttributeError: __aenter__
         author = await context.dao.player.get_by_id(author_id)
         game = await context.dao.game.get_by_id(game_id, author)
         await prepare_game(game, context.dao.game_preparer, _create_game_view(context))

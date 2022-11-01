@@ -67,7 +67,7 @@ async def plain_start(
 ):
     check_allow_be_author(author)
     check_is_author(game, author)
-    await check_no_game_active(dao)
+    await check_no_other_game_active(dao, game)
     await dao.set_start_at(game, start_at)
     game.start_at = start_at
 
@@ -75,6 +75,15 @@ async def plain_start(
     await scheduler.plain_start(game)
 
     await dao.commit()
+
+
+async def check_no_other_game_active(dao: ActiveGameFinder, game: dto.Game):
+    if other_game := await dao.get_active_game():
+        if game.id != other_game.id:
+            raise AnotherGameIsActive(
+                game=game,
+                game_status=game.status,
+            )
 
 
 async def check_no_game_active(dao: ActiveGameFinder):

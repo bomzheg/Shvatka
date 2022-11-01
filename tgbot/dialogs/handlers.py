@@ -58,7 +58,7 @@ async def process_time_message(m: Message, dialog_: Any, manager: DialogManager)
 
 
 async def schedule_game(c: CallbackQuery, widget: Button, manager: DialogManager):
-    at = manager.dialog_data["scheduled_date"]
+    at = datetime.combine(manager.dialog_data["scheduled_date"], manager.dialog_data["scheduled_time"])
     game_id = int(manager.dialog_data["my_game_id"])
     player: dto.Player = manager.middleware_data["player"]
     dao: HolderDao = manager.middleware_data["dao"]

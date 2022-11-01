@@ -12,6 +12,7 @@ class KeyTime:
     at: datetime
     level_number: int
     player: dto.Player
+    team: dto.Team
 
 
 @dataclass(frozen=True)
@@ -28,4 +29,5 @@ class InsertedKey(KeyTime):
             level_number=key_time.level_number,
             player=key_time.player,
             is_level_up=is_level_up,
+            team=key_time.team
         )

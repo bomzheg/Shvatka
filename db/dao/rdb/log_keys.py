@@ -56,7 +56,7 @@ class KeyTimeDao(BaseDAO[models.KeyTime]):
         )
         self._save(key_time)
         await self._flush(key_time)
-        return key_time.to_dto(player)
+        return key_time.to_dto(player, team)
 
     async def get_typed_keys(self, game: dto.Game) -> dict[dto.Team, list[dto.KeyTime]]:
         result = await self.session.execute(
@@ -72,7 +72,10 @@ class KeyTimeDao(BaseDAO[models.KeyTime]):
         grouped = {team: list(key) for team, key in groupby(keys, lambda k: k.team)}
         return {
             team.to_dto(team.chat.to_dto()): [
-                key.to_dto(key.player.to_dto(key.player.user.to_dto())) for key in keys
+                key.to_dto(
+                    player=key.player.to_dto(key.player.user.to_dto()),
+                    team=team.to_dto(team.chat.to_dto()),
+                ) for key in keys
             ]
             for team, keys in grouped.items()
         }

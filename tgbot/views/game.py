@@ -2,16 +2,19 @@ from dataclasses import dataclass
 from typing import Iterable
 
 from aiogram import Bot
+from aiogram.utils.markdown import html_decoration as hd
 
 from shvatka.dal.game_play import GamePreparer
 from shvatka.models import dto
 from shvatka.models.dto.scn.time_hint import TimeHint
 from shvatka.views.game import GameViewPreparer, GameView, GameLogWriter, OrgNotifier
+from tgbot.views.hint_sender import HintSender
 
 
 @dataclass
 class BotView(GameViewPreparer, GameView):
     bot: Bot
+    hint_sender: HintSender
 
     async def prepare_game_view(
         self, game: dto.Game, teams: Iterable[dto.Team], orgs: Iterable[dto.Organizer], dao: GamePreparer,
@@ -24,23 +27,36 @@ class BotView(GameViewPreparer, GameView):
                 reply_markup=None,
             )
 
-    async def send_puzzle(self, team: dto.Team, puzzle: TimeHint) -> None:
-        pass
+    async def send_puzzle(self, team: dto.Team, puzzle: TimeHint, level: dto.Level) -> None:
+        await self.hint_sender.send_hints(
+            chat_id=team.chat.tg_id,
+            hint_containers=puzzle.hint,
+            caption=hd.hbold(f"Уровень № {level.number_in_game + 1}")
+        )
 
-    async def send_hint(self, team: dto.Team, hint: TimeHint) -> None:
-        pass
+    async def send_hint(self, team: dto.Team, hint_number: int, level: dto.Level) -> None:
+        hint = level.get_hint(hint_number)
+        if level.is_last_hint(hint_number):
+            hint_caption = f"Последняя подсказка уровня №{level.number_in_game + 1} ({hint.time} мин.):\n"
+        else:
+            hint_caption = f"Уровень №{level.number_in_game + 1}. Подсказка ({hint.time} мин.):\n"
+        await self.hint_sender.send_hints(
+            chat_id=team.chat.tg_id,
+            hint_containers=hint.hint,
+            caption=hint_caption
+        )
 
     async def duplicate_key(self, key: dto.KeyTime) -> None:
-        pass
+        await self.bot.send_message(chat_id=key.team.chat.tg_id, text=f"Ключ {hd.pre(key.text)} уже был введён ранее.")
 
     async def correct_key(self, key: dto.KeyTime) -> None:
-        pass
+        await self.bot.send_message(chat_id=key.team.chat.tg_id, text=f"Ключ {hd.pre(key.text)} верный! Поздравляю!")
 
     async def wrong_key(self, key: dto.KeyTime) -> None:
-        pass
+        await self.bot.send_message(chat_id=key.team.chat.tg_id, text=f"Ключ {hd.pre(key.text)} неверный.")
 
     async def game_finished(self, team: dto.Team) -> None:
-        pass
+        await self.bot.send_message(chat_id=team.chat.tg_id, text=f"Игра завершена! Поздравляю!")
 
     async def game_finished_by_all(self, team: dto.Team) -> None:
         """todo change bot commands"""
@@ -53,7 +69,7 @@ class GameBotLog(GameLogWriter):
     log_chat_id: int
 
     async def log(self, message: str) -> None:
-        pass
+        await self.bot.send_message(chat_id=self.log_chat_id, text=message)
 
 
 class BotOrgNotifier(OrgNotifier):

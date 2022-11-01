@@ -49,7 +49,7 @@ async def start_game(
     await dao.commit()
 
     puzzle = game.get_hint(level_number=0, hint_number=0)
-    await asyncio.gather(*[view.send_puzzle(team, puzzle) for team in teams])
+    await asyncio.gather(*[view.send_puzzle(team, puzzle, game.levels[0]) for team in teams])
 
     await asyncio.gather(
         *[schedule_first_hint(scheduler, team, game.levels[0], now) for team in teams]
@@ -106,7 +106,7 @@ async def check_key(
                     return
             next_level = await dao.get_current_level(team, game)
 
-            await view.send_puzzle(team=team, puzzle=next_level.get_hint(0))
+            await view.send_puzzle(team=team, puzzle=next_level.get_hint(0), level=next_level)
             await schedule_first_hint(scheduler, team, next_level)
             await org_notifier.notify(LevelUp(team=team, new_level=next_level))
     else:
@@ -193,7 +193,7 @@ async def send_hint(
             team.id, level.db_id, hint_number,
         )
         return
-    await view.send_hint(team, level.get_hint(hint_number))
+    await view.send_hint(team, hint_number, level)
     next_hint_number = hint_number + 1
     if level.is_last_hint(next_hint_number):
         logger.debug(

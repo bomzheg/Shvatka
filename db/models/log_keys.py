@@ -33,7 +33,7 @@ class KeyTime(Base):
     is_correct: bool = Column(Boolean, nullable=False)
     is_duplicate: bool = Column(Boolean, nullable=False)
 
-    def to_dto(self, player: dto.Player) -> dto.KeyTime:
+    def to_dto(self, player: dto.Player, team: dto.Team) -> dto.KeyTime:
         return dto.KeyTime(
             text=self.key_text,
             is_correct=self.is_correct,
@@ -41,4 +41,5 @@ class KeyTime(Base):
             at=self.enter_time,
             level_number=self.level_number,
             player=player,
+            team=team,
         )

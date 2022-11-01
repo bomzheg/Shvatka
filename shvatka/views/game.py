@@ -16,10 +16,10 @@ class GameViewPreparer(Protocol):
 
 
 class GameView(Protocol):
-    async def send_puzzle(self, team: dto.Team, puzzle: TimeHint) -> None:
+    async def send_puzzle(self, team: dto.Team, puzzle: TimeHint, level: dto.Level) -> None:
         raise NotImplementedError
 
-    async def send_hint(self, team: dto.Team, hint: TimeHint) -> None:
+    async def send_hint(self, team: dto.Team, hint_number: int, level: dto.Level) -> None:
         raise NotImplementedError
 
     async def duplicate_key(self, key: dto.KeyTime) -> None:

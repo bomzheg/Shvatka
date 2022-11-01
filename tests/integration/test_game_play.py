@@ -39,7 +39,7 @@ async def test_game_play(
     await approve_waivers(game, team, captain, dao.waiver_approver)
 
     dummy_view = mock(GameView)
-    when(dummy_view).send_puzzle(team, game.get_hint(0, 0)).thenReturn(mock_coro(None))
+    when(dummy_view).send_puzzle(team, game.get_hint(0, 0), game.levels[0]).thenReturn(mock_coro(None))
     dummy_log = mock(GameLogWriter)
     when(dummy_log).log("Game started").thenReturn(mock_coro(None))
     dummy_sched = mock(Scheduler)
@@ -47,7 +47,7 @@ async def test_game_play(
     await start_game(game, dao.game_starter, dummy_log, dummy_view, dummy_sched)
     assert 1 == await check_dao.level_time.count()
 
-    when(dummy_view).send_hint(team, game.get_hint(0, 1)).thenReturn(mock_coro(None))
+    when(dummy_view).send_hint(team, 1, game.levels[0]).thenReturn(mock_coro(None))
     when(dummy_sched).plain_hint(game.levels[0], team, 2, ANY).thenReturn(mock_coro(None))
     await send_hint(
         level=game.levels[0], hint_number=1, team=team,
@@ -68,7 +68,7 @@ async def test_game_play(
     assert_time_key(
         dto.KeyTime(
             text="SHWRONG", is_correct=False, is_duplicate=False,
-            at=datetime.utcnow(), level_number=0, player=captain,
+            at=datetime.utcnow(), level_number=0, player=captain, team=team,
         ),
         list(keys[team])[0]
     )
@@ -81,7 +81,7 @@ async def test_game_play(
 
     unstub(dummy_view)
     when(dummy_view).correct_key(key=ANY).thenReturn(mock_coro(None))
-    when(dummy_view).send_puzzle(team=team, puzzle=game.get_hint(1, 0))\
+    when(dummy_view).send_puzzle(team=team, puzzle=game.get_hint(1, 0), level=game.levels[1])\
         .thenReturn(mock_coro(None))
     when(dummy_org_notifier).notify(LevelUp(team=team, new_level=game.levels[1]))\
         .thenReturn(mock_coro(None))
@@ -105,35 +105,35 @@ async def test_game_play(
     assert_time_key(
         dto.KeyTime(
             text="SHWRONG", is_correct=False, is_duplicate=False,
-            at=datetime.utcnow(), level_number=0, player=captain,
+            at=datetime.utcnow(), level_number=0, player=captain, team=team,
         ),
         list(keys[team])[0]
     )
     assert_time_key(
         dto.KeyTime(
             text="SH123", is_correct=True, is_duplicate=False,
-            at=datetime.utcnow(), level_number=0, player=captain,
+            at=datetime.utcnow(), level_number=0, player=captain, team=team,
         ),
         list(keys[team])[1]
     )
     assert_time_key(
         dto.KeyTime(
             text="SH123", is_correct=True, is_duplicate=True,
-            at=datetime.utcnow(), level_number=0, player=captain,
+            at=datetime.utcnow(), level_number=0, player=captain, team=team,
         ),
         list(keys[team])[2]
     )
     assert_time_key(
         dto.KeyTime(
             text="SH321", is_correct=True, is_duplicate=False,
-            at=datetime.utcnow(), level_number=0, player=captain,
+            at=datetime.utcnow(), level_number=0, player=captain, team=team,
         ),
         list(keys[team])[3]
     )
     assert_time_key(
         dto.KeyTime(
             text="SHOOT", is_correct=True, is_duplicate=False,
-            at=datetime.utcnow(), level_number=0, player=captain,
+            at=datetime.utcnow(), level_number=0, player=captain, team=team,
         ),
         list(keys[team])[4]
     )

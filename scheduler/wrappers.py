@@ -5,6 +5,8 @@ from db.dao.holder import HolderDao
 from scheduler.context import ScheduledContextHolder, ScheduledContext
 from shvatka.services.game_play import prepare_game, start_game, send_hint
 from tgbot.views.game import GameBotLog, BotView
+from tgbot.views.hint_content_resolver import HintContentResolver
+from tgbot.views.hint_sender import HintSender
 
 
 @asynccontextmanager
@@ -23,7 +25,7 @@ async def prepare_game_wrapper(game_id: int, author_id: int):
     async with prepare_context as context:
         author = await context.dao.player.get_by_id(author_id)
         game = await context.dao.game.get_by_id(game_id, author)
-        await prepare_game(game, context.dao.game_preparer, BotView(context.bot))
+        await prepare_game(game, context.dao.game_preparer, _create_game_view(context))
 
 
 async def start_game_wrapper(game_id: int, author_id: int):
@@ -35,7 +37,7 @@ async def start_game_wrapper(game_id: int, author_id: int):
             game=game,
             dao=context.dao.game_starter,
             game_log=GameBotLog(bot=context.bot, log_chat_id=context.game_log_chat),
-            view=BotView(bot=context.bot),
+            view=_create_game_view(context),
             scheduler=context.scheduler,
         )
 
@@ -51,6 +53,16 @@ async def send_hint_wrapper(level_id: int, team_id: int, hint_number: int):
             hint_number=hint_number,
             team=team,
             dao=context.dao.level_time,
-            view=BotView(bot=context.bot),
+            view=_create_game_view(context),
             scheduler=context.scheduler,
         )
+
+
+def _create_game_view(context: ScheduledContext) -> BotView:
+    return BotView(
+        bot=context.bot,
+        hint_sender=HintSender(
+            bot=context.bot,
+            resolver=HintContentResolver(dao=context.dao.file_info),
+        ),
+    )

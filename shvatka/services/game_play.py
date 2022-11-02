@@ -7,6 +7,8 @@ from shvatka.dal.level_times import GameStarter, LevelTimeChecker
 from shvatka.models import dto
 from shvatka.models.dto.scn.time_hint import TimeHint
 from shvatka.scheduler import Scheduler
+from shvatka.utils.exceptions import InvalidKey
+from shvatka.utils.input_validation import is_key_valid
 from shvatka.utils.key_checker_lock import KeyCheckerFactory
 from shvatka.views.game import GameViewPreparer, GameLogWriter, GameView, OrgNotifier, LevelUp
 
@@ -93,6 +95,8 @@ async def check_key(
     :param locker: локи для обеспечения последовательного исполнения определённых операций.
     :param scheduler: планировщик подсказок.
     """
+    if not is_key_valid(key):
+        raise InvalidKey(key=key, team=team, player=player, game=game)
     new_key = await submit_key(key=key, player=player, team=team, game=game, dao=dao, locker=locker)
     if new_key.is_duplicate:
         await view.duplicate_key(key=new_key)

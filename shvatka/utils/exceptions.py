@@ -245,3 +245,11 @@ class MultipleUsernameFound(UsernameResolverError):
 
 class WaiverForbidden(GameError):
     notify_user = "данному игроку запрещено подавать вейверы на эту игру"
+
+
+class InvalidKey(SHError):
+    notify_user = "Это не ключ. Например начинается не с SH/СХ, используется что-то кроме букв и цифр"
+
+    def __init__(self, key: str = None, *args, **kwargs):
+        super(InvalidKey, self).__init__(*args, **kwargs)
+        self.key = key

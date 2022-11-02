@@ -6,10 +6,12 @@ from aiogram import Bot
 from aiogram.exceptions import TelegramAPIError
 from aiogram.utils.markdown import html_decoration as hd
 
+from db.dao.holder import HolderDao
 from shvatka.dal.game_play import GamePreparer
 from shvatka.models import dto
 from shvatka.models.dto.scn.time_hint import TimeHint
 from shvatka.views.game import GameViewPreparer, GameView, GameLogWriter, OrgNotifier
+from tgbot.views.hint_content_resolver import HintContentResolver
 from tgbot.views.hint_sender import HintSender
 
 logger = logging.getLogger(__name__)
@@ -80,8 +82,19 @@ class GameBotLog(GameLogWriter):
         await self.bot.send_message(chat_id=self.log_chat_id, text=message)
 
 
+@dataclass
 class BotOrgNotifier(OrgNotifier):
     bot: Bot
 
     async def notify(self, event) -> None:
         pass
+
+
+def create_bot_game_view(bot: Bot, dao: HolderDao) -> BotView:
+    return BotView(
+        bot=bot,
+        hint_sender=HintSender(
+            bot=bot,
+            resolver=HintContentResolver(dao=dao.file_info),
+        ),
+    )

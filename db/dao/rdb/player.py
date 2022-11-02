@@ -21,13 +21,14 @@ class PlayerDao(BaseDAO[models.Player]):
             return await self.create_for_user(user)
 
     async def get_by_id(self, id_: int):
-        player = await self.session.execute(
+        result = await self.session.execute(
             select(models.Player)
             .where(models.Player.id == id_)
             .options(
                 joinedload(models.Player.user, innerjoin=True)
             )
         )
+        player = result.scalar_one()
         return player.to_dto(player.user.to_dto())
 
     async def get_by_user(self, user: dto.User) -> dto.Player:

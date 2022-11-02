@@ -23,7 +23,8 @@ async def test_upsert_player(dao: HolderDao):
     data = dict(event_from_user=create_tg_user())
     saved_user = await save_user(data, dao)
 
-    expected_player = (await dao.player._get_all())[0]
+    saved_player_id = (await dao.player._get_all())[0].id
+    expected_player = await dao.player.get_by_id(saved_player_id)
 
     actual_player = await save_player(saved_user, dao)
-    assert expected_player.id == actual_player.id
+    assert expected_player == actual_player

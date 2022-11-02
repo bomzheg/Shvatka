@@ -1,7 +1,9 @@
+import logging
 from dataclasses import dataclass
 from typing import Iterable
 
 from aiogram import Bot
+from aiogram.exceptions import TelegramAPIError
 from aiogram.utils.markdown import html_decoration as hd
 
 from shvatka.dal.game_play import GamePreparer
@@ -9,6 +11,8 @@ from shvatka.models import dto
 from shvatka.models.dto.scn.time_hint import TimeHint
 from shvatka.views.game import GameViewPreparer, GameView, GameLogWriter, OrgNotifier
 from tgbot.views.hint_sender import HintSender
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -21,11 +25,15 @@ class BotView(GameViewPreparer, GameView):
     ) -> None:
         # TODO set bot commands for orgs, hide bot commands for players
         for team in teams:
-            await self.bot.edit_message_reply_markup(
-                chat_id=team.chat.tg_id,
-                message_id=await dao.get_poll_msg(team=team, game=game),
-                reply_markup=None,
-            )
+            try:
+                await self.bot.edit_message_reply_markup(
+                    chat_id=team.chat.tg_id,
+                    message_id=await dao.get_poll_msg(team=team, game=game),
+                    reply_markup=None,
+                )
+            except TelegramAPIError as e:
+                logger.error("can't remove waivers keyboard for team %s", team.id, exc_info=e)
+
 
     async def send_puzzle(self, team: dto.Team, puzzle: TimeHint, level: dto.Level) -> None:
         await self.hint_sender.send_hints(

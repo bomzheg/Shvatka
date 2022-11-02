@@ -1,9 +1,11 @@
 from copy import deepcopy
 
 import pytest
+import pytest_asyncio
 from dataclass_factory import Factory
 
 from db.dao.holder import HolderDao
+from shvatka.models import dto
 from shvatka.models.enums import GameStatus
 from shvatka.services.game import upsert_game, get_authors_games, start_waivers, get_active
 from shvatka.services.player import upsert_player
@@ -11,12 +13,17 @@ from shvatka.services.user import upsert_user
 from tests.fixtures.user_constants import create_dto_harry
 
 
-@pytest.mark.asyncio
-async def test_game_simple(simple_scn: dict, dao: HolderDao, dcf: Factory):
-    author = await upsert_player(await upsert_user(create_dto_harry(), dao.user), dao.player)
-    await dao.player.promote(author, author)
+@pytest_asyncio.fixture
+async def author(dao: HolderDao):
+    author_ = await upsert_player(await upsert_user(create_dto_harry(), dao.user), dao.player)
+    await dao.player.promote(author_, author_)
     await dao.commit()
-    author.can_be_author = True
+    author_.can_be_author = True
+    return author_
+
+
+@pytest.mark.asyncio
+async def test_game_simple(author: dto.Player, simple_scn: dict, dao: HolderDao, dcf: Factory):
     game = await upsert_game(simple_scn, author, dao.game_upserter, dcf)
 
     assert await dao.game.count() == 1
@@ -70,3 +77,10 @@ async def test_game_simple(simple_scn: dict, dao: HolderDao, dcf: Factory):
     active_game = await get_active(dao.game)
     assert GameStatus.getting_waivers == active_game.status
     assert active_game.id == game.id
+
+
+@pytest.mark.asyncio
+async def test_game_get_full(author: dto.Player, simple_scn: dict, dao: HolderDao, dcf: Factory):
+    game_expected = await upsert_game(simple_scn, author, dao.game_upserter, dcf)
+    game_actual = await dao.game.get_full(game_expected.id)
+    assert game_expected == game_actual

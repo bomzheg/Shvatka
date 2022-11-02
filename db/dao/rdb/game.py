@@ -54,7 +54,7 @@ class GameDao(BaseDAO[models.Game]):
             )
             .where(models.Game.id == id_)
         )
-        game_db: models.Game = result.scalar_one()
+        game_db: models.Game = result.unique().scalar_one()
         author = game_db.author.to_dto(game_db.author.user.to_dto())
         return game_db.to_full_dto(
             author=author,

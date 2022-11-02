@@ -195,7 +195,7 @@ async def send_hint(
         return
     await view.send_hint(team, hint_number, level)
     next_hint_number = hint_number + 1
-    if level.is_last_hint(next_hint_number):
+    if level.is_last_hint(hint_number):
         logger.debug(
             "sent last hint #%s to team %s on level %s, no new scheduling required",
             hint_number, team.id, level.db_id,

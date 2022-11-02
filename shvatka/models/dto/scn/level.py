@@ -16,7 +16,7 @@ class LevelScenario:
         return self.time_hints[hint_number]
 
     def is_last_hint(self, hint_number: int) -> bool:
-        return len(self.time_hints) == hint_number - 1
+        return len(self.time_hints) == hint_number + 1
 
     def get_keys(self):
         return self.keys

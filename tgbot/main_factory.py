@@ -3,8 +3,7 @@ import logging
 from aiogram import Bot, Dispatcher
 from aiogram.fsm.storage.base import BaseStorage
 from aiogram.fsm.storage.memory import MemoryStorage
-from aiogram.fsm.storage.redis import RedisStorage
-from aiogram_dialog import DialogRegistry
+from aiogram.fsm.storage.redis import RedisStorage, DefaultKeyBuilder
 from dataclass_factory import Factory
 from redis.asyncio.client import Redis
 from sqlalchemy.orm import sessionmaker
@@ -18,7 +17,6 @@ from scheduler import ApScheduler
 from shvatka.scheduler import Scheduler
 from shvatka.utils.key_checker_lock import KeyCheckerFactory
 from tgbot.config.models.main import TgBotConfig
-from tgbot.dialogs import setup_dialogs
 from tgbot.handlers import setup_handlers
 from tgbot.middlewares import setup_middlewares
 from tgbot.username_resolver.user_getter import UserGetter
@@ -49,8 +47,6 @@ def create_dispatcher(
         scheduler=scheduler,
         locker=locker,
     )
-    registry = DialogRegistry(dp)
-    setup_dialogs(registry)
     setup_handlers(dp, config.bot)
     return dp
 
@@ -61,7 +57,7 @@ def create_storage(config: StorageConfig) -> BaseStorage:
         case StorageType.memory:
             return MemoryStorage()
         case StorageType.redis:
-            return RedisStorage(create_redis(config.redis))
+            return RedisStorage(create_redis(config.redis), key_builder=DefaultKeyBuilder(with_destiny=True))
         case _:
             raise NotImplementedError
 

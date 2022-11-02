@@ -39,7 +39,7 @@ class BotView(GameViewPreparer, GameView):
         await self.hint_sender.send_hints(
             chat_id=team.chat.tg_id,
             hint_containers=puzzle.hint,
-            caption=hd.hbold(f"Уровень № {level.number_in_game + 1}")
+            caption=hd.bold(f"Уровень № {level.number_in_game + 1}")
         )
 
     async def send_hint(self, team: dto.Team, hint_number: int, level: dto.Level) -> None:

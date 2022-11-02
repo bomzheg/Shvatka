@@ -28,7 +28,7 @@ class KeyTime(Base):
         back_populates="log_keys",
     )
     level_number = Column(Integer)
-    enter_time = Column(DateTime)
+    enter_time = Column(DateTime(timezone=True))
     key_text = Column(Text)
     is_correct: bool = Column(Boolean, nullable=False)
     is_duplicate: bool = Column(Boolean, nullable=False)

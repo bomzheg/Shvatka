@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, time, date
 
 from aiogram_dialog import DialogManager
 from aiogram_dialog.api.entities import Context
@@ -40,5 +40,7 @@ async def get_game_datetime(dao: HolderDao, player: dto.Player, aiogd_context: C
     result = await get_game(dao, player, aiogd_context, **kwargs)
     date_ = aiogd_context.dialog_data.get("scheduled_date", None)
     time_ = aiogd_context.dialog_data.get("scheduled_time", None)
-    result["scheduled_datetime"] = datetime.combine(date_, time_, tzinfo=tz_game)
+    result["scheduled_datetime"] = datetime.combine(
+        date=date.fromisoformat(date_), time=time.fromisoformat(time_), tzinfo=tz_game,
+    )
     return result

@@ -11,6 +11,7 @@ from shvatka.models import dto
 from shvatka.models.dto.scn.game import GameScenario
 from shvatka.models.enums import GameStatus
 from shvatka.models.enums.game_status import ACTIVE_STATUSES
+from shvatka.utils.datetime_utils import tz_utc
 from .base import BaseDAO
 
 
@@ -118,7 +119,7 @@ class GameDao(BaseDAO[models.Game]):
         await self.session.execute(
             update(models.Game)
             .where(models.Game.id == game.id)
-            .values(start_at=start_at)
+            .values(start_at=start_at.astimezone(tz_utc))
         )
 
     async def set_started(self, game: dto.Game):

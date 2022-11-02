@@ -55,7 +55,7 @@ class Game(Base):
         back_populates="game",
         foreign_keys="Waiver.game_id",
     )
-    start_at = Column(DateTime)
+    start_at = Column(DateTime(timezone=True))
     published_channel_id = Column(BigInteger)
     manage_token = Column(
         Text,

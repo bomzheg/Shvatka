@@ -1,4 +1,4 @@
-from datetime import date, datetime
+from datetime import date, datetime, time
 from typing import Any
 
 from aiogram.types import CallbackQuery, Message
@@ -11,7 +11,7 @@ from shvatka.models import dto
 from shvatka.scheduler import Scheduler
 from shvatka.services import game
 from shvatka.services.game import get_game, plain_start
-from shvatka.utils.datetime_utils import TIME_FORMAT
+from shvatka.utils.datetime_utils import TIME_FORMAT, tz_game
 from tgbot.states import MyGamesPanel
 
 
@@ -40,7 +40,7 @@ async def select_date(c: CallbackQuery, widget, manager: DialogManager, selected
     data = manager.dialog_data
     if not isinstance(data, dict):
         data = {}
-    data["scheduled_date"] = selected_date
+    data["scheduled_date"] = selected_date.isoformat()
     await manager.update(data)
     await manager.switch_to(MyGamesPanel.game_schedule_time)
 
@@ -52,13 +52,17 @@ async def process_time_message(m: Message, dialog_: Any, manager: DialogManager)
         await m.answer("Некорректный формат времени. Пожалуйста введите время в формате ЧЧ:ММ")
         return
     data = manager.dialog_data
-    data["scheduled_time"] = time_
+    data["scheduled_time"] = time_.isoformat()
     await manager.update(data)
     await manager.switch_to(MyGamesPanel.game_schedule_confirm)
 
 
 async def schedule_game(c: CallbackQuery, widget: Button, manager: DialogManager):
-    at = datetime.combine(manager.dialog_data["scheduled_date"], manager.dialog_data["scheduled_time"])
+    at = datetime.combine(
+        date=date.fromisoformat(manager.dialog_data["scheduled_date"]),
+        time=time.fromisoformat(manager.dialog_data["scheduled_time"]),
+        tzinfo=tz_game,
+    )
     game_id = int(manager.dialog_data["my_game_id"])
     player: dto.Player = manager.middleware_data["player"]
     dao: HolderDao = manager.middleware_data["dao"]

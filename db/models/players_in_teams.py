@@ -23,10 +23,10 @@ class PlayerInTeam(Base):
         foreign_keys=team_id,
         back_populates="players",
     )
-    date_joined = Column(DateTime, default=datetime.utcnow(), server_default=func.now())
+    date_joined = Column(DateTime(timezone=True), default=datetime.utcnow(), server_default=func.now())
     role = Column(Text)
     emoji = Column("emoji", Text)
-    date_left = Column(DateTime)
+    date_left = Column(DateTime(timezone=True))
 
     can_manage_waivers = Column(Boolean, default=False)
     can_manage_players = Column(Boolean, default=False)

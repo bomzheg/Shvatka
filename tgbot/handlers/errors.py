@@ -45,7 +45,7 @@ async def handle(error: ErrorEvent, log_chat_id: int, bot: Bot):
         log_chat_id,
         f"Получено исключение {hd.quote(str(error.exception))}\n"
         f"во время обработки апдейта "
-        f"{hd.quote(json.dumps(error.update.dict(exclude_none=True), default=str))}\n"
+        f"{hd.quote(json.dumps(error.update.dict(exclude_none=True), default=str)[:3500])}\n"
     )
 
 

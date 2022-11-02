@@ -61,7 +61,6 @@ async def start_approve_waivers_handler(
         msg_id=await get_saved_message(game, team, dao.poll)
     )
     await bot.send_message(**await start_approve_waivers(game, team, player, dao))
-    await m.delete()
 
 
 async def confirm_approve_waivers_handler(
@@ -109,6 +108,7 @@ def setup() -> Router:
     #  TODO can_manage_waivers=True
     router.message.register(start_approve_waivers_handler, Command(APPROVE_WAIVERS_COMMAND))
     router.callback_query.register(confirm_approve_waivers_handler, kb.WaiverConfirmCD.filter())
-    router.callback_query.filter(TODO, kb.WaiverManagePlayerCD.filter())
-    router.callback_query.filter(TODO, kb.WaiverAddForceMenuCD.filter())
+
+    router.callback_query.register(TODO, kb.WaiverManagePlayerCD.filter())
+    router.callback_query.register(TODO, kb.WaiverAddForceMenuCD.filter())
     return router

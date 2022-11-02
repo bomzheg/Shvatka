@@ -21,7 +21,7 @@ class LevelTime(Base):
         back_populates="completed_levels",
     )
     level_number = Column(Integer)
-    start_at = Column(DateTime)
+    start_at = Column(DateTime(timezone=True))
 
     __table_args__ = (
         UniqueConstraint("game_id", "team_id", "level_number"),

@@ -68,8 +68,9 @@ HELP_ADMIN = CommandsGroup("Команды администратора бота
     UPDATE_COMMANDS,
     GET_OUT,
 ])
+MY_GAMES_COMMAND = BotCommand(command="my_games", description="мои игры (включая черновики)")
 HELP_ORG = CommandsGroup("Команды для организаторов:", [
-    BotCommand(command="my_games", description="мои игры (включая черновики)"),
+    MY_GAMES_COMMAND,
     BotCommand(
         command="new_game", description="начать сборку новой игры из ранее написанных уровней"
     ),

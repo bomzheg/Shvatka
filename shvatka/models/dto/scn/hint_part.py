@@ -33,4 +33,19 @@ class ContactHint(BaseHint):
     type: HintLiteral = HintType.contact.name
 
 
-AnyHint: typing.TypeAlias = TextHint | GPSHint | ContactHint
+@dataclass
+class CaptionMixin:
+    caption: str
+
+
+@dataclass
+class FileMixin:
+    file_guid: str
+
+
+@dataclass
+class PhotoHint(BaseHint, CaptionMixin, FileMixin):
+    type: HintLiteral = HintType.photo.name
+
+
+AnyHint: typing.TypeAlias = TextHint | GPSHint | ContactHint | PhotoHint

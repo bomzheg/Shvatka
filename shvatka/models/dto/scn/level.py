@@ -1,7 +1,7 @@
 import typing
 from dataclasses import dataclass, field
 
-from shvatka.models.dto.scn.time_hint import TimeHint
+from .time_hint import TimeHint
 
 SHKey: typing.TypeAlias = str
 

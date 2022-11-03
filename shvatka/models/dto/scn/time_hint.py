@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from shvatka.models.dto.scn.hint_part import AnyHint
+from .hint_part import AnyHint
 
 
 @dataclass

@@ -18,6 +18,7 @@ from common.config.models.paths import Paths
 from db.config.models.db import RedisConfig
 from db.dao.holder import HolderDao
 from db.fatory import create_lock_factory
+from shvatka.clients.file_storage import FileStorage
 from shvatka.scheduler import Scheduler
 from shvatka.utils.key_checker_lock import KeyCheckerFactory
 from tests.fixtures.conftest import fixtures_resource_path  # noqa: F401
@@ -162,3 +163,8 @@ def alembic_config(postgres_url: str, paths: Paths) -> AlembicConfig:
 @pytest.fixture(scope="session", autouse=True)
 def upgrade_schema_db(alembic_config: AlembicConfig):
     upgrade(alembic_config, "head")
+
+
+@pytest.fixture(scope="session")
+def file_storage() -> FileStorage:
+    return mock(FileStorage)

@@ -6,6 +6,7 @@ from mockito import mock, when, ANY, unstub
 
 from db import models
 from db.dao.holder import HolderDao
+from shvatka.clients.file_storage import FileStorage
 from shvatka.models import dto
 from shvatka.models.enums import GameStatus
 from shvatka.models.enums.played import Played
@@ -24,13 +25,13 @@ from tests.utils.time_key import assert_time_key
 
 @pytest.mark.asyncio
 async def test_game_play(
-    simple_scn: dict, dao: HolderDao, dcf: Factory,
+    simple_scn: dict, dao: HolderDao, dcf: Factory, file_storage: FileStorage,
     locker: KeyCheckerFactory, check_dao: HolderDao, scheduler: Scheduler,
     author: dto.Player, hermione: dto.Player,
 ):
     captain = author
     team = await create_first_team(captain, dao)
-    game = await upsert_game(simple_scn, author, dao.game_upserter, dcf)
+    game = await upsert_game(simple_scn, {}, author, dao.game_upserter, dcf, file_storage)
     await start_waivers(game, author, dao.game)
 
     await join_team(hermione, team, dao.player_in_team)
@@ -143,12 +144,12 @@ async def test_game_play(
 
 @pytest.mark.asyncio
 async def test_get_current_hints(
-    simple_scn: dict, dao: HolderDao, dcf: Factory, locker: KeyCheckerFactory,
+    simple_scn: dict, dao: HolderDao, dcf: Factory, locker: KeyCheckerFactory, file_storage: FileStorage,
     author: dto.Player, hermione: dto.Player,
 ):
     captain = author
     team = await create_first_team(captain, dao)
-    game = await upsert_game(simple_scn, author, dao.game_upserter, dcf)
+    game = await upsert_game(simple_scn, {}, author, dao.game_upserter, dcf, file_storage)
     await start_waivers(game, author, dao.game)
 
     await join_team(hermione, team, dao.player_in_team)

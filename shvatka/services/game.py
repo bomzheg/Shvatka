@@ -3,7 +3,7 @@ from io import BytesIO
 
 from dataclass_factory import Factory
 
-from shvatka.clients.FileStorage import FileStorage
+from shvatka.clients.file_storage import FileStorage
 from shvatka.dal.game import (
     GameUpserter, GameCreator, GameAuthorsFinder, GameByIdGetter,
     ActiveGameFinder, WaiverStarter, GameStartPlanner,

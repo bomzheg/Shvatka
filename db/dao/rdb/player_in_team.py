@@ -1,4 +1,4 @@
-from datetime import date, datetime, timedelta
+from datetime import datetime, timedelta
 
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -68,7 +68,7 @@ class PlayerInTeamDao(BaseDAO[models.PlayerInTeam]):
             )
 
     async def need_restore(self, player: dto.Player, team: dto.Team) -> models.PlayerInTeam:
-        today = date.today()
+        today = datetime.utcnow().date()
         result = await self.session.execute(
             select(models.PlayerInTeam)
             .where(

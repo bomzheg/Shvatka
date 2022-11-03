@@ -1,6 +1,6 @@
 from io import BytesIO
 
-from shvatka.clients.FileStorage import FileStorage
+from shvatka.clients.file_storage import FileStorage
 from shvatka.dal.game import GameUpserter
 from shvatka.models import dto
 from shvatka.models.dto.scn import FileContent

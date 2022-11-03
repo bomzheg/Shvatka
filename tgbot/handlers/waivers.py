@@ -10,6 +10,7 @@ from shvatka.services.waiver import add_vote, approve_waivers
 from shvatka.utils.exceptions import PlayerNotInTeam, AnotherGameIsActive
 from tgbot import keyboards as kb
 from tgbot.filters.game_status import GameStatusFilter
+from tgbot.filters.is_team import IsTeamFilter
 from tgbot.services.waiver import swap_saved_message, get_saved_message
 from tgbot.views.commands import START_WAIVERS_COMMAND, APPROVE_WAIVERS_COMMAND
 from tgbot.views.utils import total_remove_msg
@@ -101,10 +102,10 @@ def setup() -> Router:
     router.callback_query.filter(
         GameStatusFilter(status=GameStatus.getting_waivers),
     )
-    # TODO is_team=True, can_manage_waivers=True
-    router.message.register(start_waivers, Command(START_WAIVERS_COMMAND))
+    # TODO can_manage_waivers=True
+    router.message.register(start_waivers, Command(START_WAIVERS_COMMAND), IsTeamFilter())
     # TODO is_team_player
-    router.callback_query.register(add_vote_handler, kb.WaiverVoteCD.filter())
+    router.callback_query.register(add_vote_handler, kb.WaiverVoteCD.filter(), IsTeamFilter())
     #  TODO can_manage_waivers=True
     router.message.register(start_approve_waivers_handler, Command(APPROVE_WAIVERS_COMMAND))
     router.callback_query.register(confirm_approve_waivers_handler, kb.WaiverConfirmCD.filter())

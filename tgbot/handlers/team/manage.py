@@ -120,6 +120,7 @@ def setup_team_manage() -> Router:
         cmd_create_team,
         Command(commands=CREATE_TEAM_COMMAND.command),
         GameStatusFilter(running=False),
+        IsTeamFilter(is_team=False),
         F.chat.type == "supergroup",
     )
     router.message.register(
@@ -134,6 +135,6 @@ def setup_team_manage() -> Router:
         GameStatusFilter(running=False),
         HasTargetFilter(),
         IsTeamFilter(),
-        # can_add_player=True
+        # TODO can_add_player=True
     )
     return router

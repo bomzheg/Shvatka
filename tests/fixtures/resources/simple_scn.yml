@@ -32,11 +32,11 @@ levels:
           - type: text
             text: "загадка"
           - type: text
-            text: "(сложная)"
+            text: "(ну не очень сложная)"
       - time: 1
         hint:
           - type: text
-            text: "подсказка"
+            text: "подсказонька"
       - time: 2
         hint:
           - type: text

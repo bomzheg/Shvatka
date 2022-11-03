@@ -51,3 +51,6 @@ class GamePlayerDao(Committer, metaclass=ABCMeta):
 
     async def finish(self, game: dto.Game) -> None:
         raise NotImplementedError
+
+    async def get_current_level_time(self, team: dto.Team, game: dto.Game) -> dto.LevelTime:
+        raise NotImplementedError

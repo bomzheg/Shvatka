@@ -1,23 +1,23 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import pytest
 from dataclass_factory import Factory
 from mockito import mock, when, ANY, unstub
 
+from db import models
 from db.dao.holder import HolderDao
 from shvatka.models import dto
 from shvatka.models.enums import GameStatus
 from shvatka.models.enums.played import Played
 from shvatka.scheduler import Scheduler
 from shvatka.services.game import start_waivers, upsert_game
-from shvatka.services.game_play import start_game, send_hint, check_key
+from shvatka.services.game_play import start_game, send_hint, check_key, get_available_hints
 from shvatka.services.game_stat import get_typed_keys
 from shvatka.services.player import join_team
 from shvatka.services.waiver import add_vote, approve_waivers
 from shvatka.utils.key_checker_lock import KeyCheckerFactory
 from shvatka.views.game import GameView, GameLogWriter, OrgNotifier, LevelUp
 from tests.mocks.aiogram_mocks import mock_coro
-from tests.utils.player import create_promoted_harry, create_hermi_player
 from tests.utils.team import create_first_team
 from tests.utils.time_key import assert_time_key
 
@@ -26,16 +26,16 @@ from tests.utils.time_key import assert_time_key
 async def test_game_play(
     simple_scn: dict, dao: HolderDao, dcf: Factory,
     locker: KeyCheckerFactory, check_dao: HolderDao, scheduler: Scheduler,
+    author: dto.Player, hermione: dto.Player,
 ):
-    captain = await create_promoted_harry(dao)
+    captain = author
     team = await create_first_team(captain, dao)
-    game = await upsert_game(simple_scn, captain, dao.game_upserter, dcf)
-    await start_waivers(game, captain, dao.game)
+    game = await upsert_game(simple_scn, author, dao.game_upserter, dcf)
+    await start_waivers(game, author, dao.game)
 
-    player = await create_hermi_player(dao)
-    await join_team(player, team, dao.player_in_team)
+    await join_team(hermione, team, dao.player_in_team)
     await add_vote(game, team, captain, Played.yes, dao.waiver_vote_adder)
-    await add_vote(game, team, player, Played.yes, dao.waiver_vote_adder)
+    await add_vote(game, team, hermione, Played.yes, dao.waiver_vote_adder)
     await approve_waivers(game, team, captain, dao.waiver_approver)
 
     dummy_view = mock(GameView)
@@ -139,3 +139,30 @@ async def test_game_play(
     )
     assert await dao.game_player.is_all_team_finished(game)
     assert GameStatus.finished == (await dao.game.get_by_id(game.id, captain)).status
+
+
+@pytest.mark.asyncio
+async def test_get_current_hints(
+    simple_scn: dict, dao: HolderDao, dcf: Factory, locker: KeyCheckerFactory,
+    author: dto.Player, hermione: dto.Player,
+):
+    captain = author
+    team = await create_first_team(captain, dao)
+    game = await upsert_game(simple_scn, author, dao.game_upserter, dcf)
+    await start_waivers(game, author, dao.game)
+
+    await join_team(hermione, team, dao.player_in_team)
+    await add_vote(game, team, captain, Played.yes, dao.waiver_vote_adder)
+    await add_vote(game, team, hermione, Played.yes, dao.waiver_vote_adder)
+    await approve_waivers(game, team, captain, dao.waiver_approver)
+    level_time = models.LevelTime(
+        game_id=game.id,
+        team_id=team.id,
+        level_number=0,
+        start_at=datetime.utcnow() - timedelta(minutes=1),
+    )
+    dao.level_time._save(level_time)
+    await dao.commit()
+    actual_hints = await get_available_hints(game, team, dao.game_player)
+    assert len(actual_hints) == 2
+

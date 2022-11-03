@@ -1,8 +1,30 @@
+import pytest_asyncio
+
 from db.dao.holder import HolderDao
 from shvatka.models import dto
 from shvatka.services.player import upsert_player
 from shvatka.services.user import upsert_user
 from tests.fixtures.user_constants import create_dto_hermione, create_dto_harry, create_dto_ron
+
+
+@pytest_asyncio.fixture
+async def hermione(dao: HolderDao):
+    return await create_hermi_player(dao)
+
+
+@pytest_asyncio.fixture
+async def harry(dao: HolderDao):
+    return await create_harry_player(dao)
+
+
+@pytest_asyncio.fixture
+async def author(dao: HolderDao):
+    return await create_promoted_harry(dao)
+
+
+@pytest_asyncio.fixture
+async def ron(dao: HolderDao):
+    return await create_ron_player(dao)
 
 
 async def create_hermi_player(dao: HolderDao) -> dto.Player:

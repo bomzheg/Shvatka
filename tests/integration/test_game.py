@@ -1,25 +1,12 @@
 from copy import deepcopy
 
 import pytest
-import pytest_asyncio
 from dataclass_factory import Factory
 
 from db.dao.holder import HolderDao
 from shvatka.models import dto
 from shvatka.models.enums import GameStatus
 from shvatka.services.game import upsert_game, get_authors_games, start_waivers, get_active
-from shvatka.services.player import upsert_player
-from shvatka.services.user import upsert_user
-from tests.fixtures.user_constants import create_dto_harry
-
-
-@pytest_asyncio.fixture
-async def author(dao: HolderDao):
-    author_ = await upsert_player(await upsert_user(create_dto_harry(), dao.user), dao.player)
-    await dao.player.promote(author_, author_)
-    await dao.commit()
-    author_.can_be_author = True
-    return author_
 
 
 @pytest.mark.asyncio

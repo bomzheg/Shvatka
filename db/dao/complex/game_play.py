@@ -56,7 +56,7 @@ class GamePlayerDaoImpl(GamePlayerDao):
     game: GameDao
 
     async def is_team_finished(self, team: dto.Team, game: dto.FullGame) -> bool:
-        level_number = await self.level_time.get_current_level(team, game.id)
+        level_number = await self.level_time.get_current_level(team, game)
         return level_number == len(game.levels)
 
     async def get_played_teams(self, game: dto.Game) -> Iterable[dto.Team]:
@@ -74,7 +74,7 @@ class GamePlayerDaoImpl(GamePlayerDao):
     async def get_current_level(self, team: dto.Team, game: dto.Game) -> dto.Level:
         return await self.level.get_by_number(
             game=game,
-            level_number=await self.level_time.get_current_level(team=team, game_id=game.id)
+            level_number=await self.level_time.get_current_level(team=team, game=game)
         )
 
     async def get_correct_typed_keys(
@@ -98,6 +98,9 @@ class GamePlayerDaoImpl(GamePlayerDao):
 
     async def finish(self, game: dto.Game) -> None:
         await self.game.set_finished(game)
+
+    async def get_current_level_time(self, team: dto.Team, game: dto.Game) -> dto.LevelTime:
+        return await self.level_time.get_current_level_time(team=team, game=game)
 
     async def commit(self) -> None:
         await self.key_time.commit()

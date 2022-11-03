@@ -2,6 +2,7 @@ from sqlalchemy import Column, Integer, ForeignKey, DateTime, UniqueConstraint
 from sqlalchemy.orm import relationship
 
 from db.models import Base
+from shvatka.models import dto
 
 
 class LevelTime(Base):
@@ -26,3 +27,13 @@ class LevelTime(Base):
     __table_args__ = (
         UniqueConstraint("game_id", "team_id", "level_number"),
     )
+
+    def to_dto(self, game: dto.Game, team: dto.Team) -> dto.LevelTime:
+        return dto.LevelTime(
+            id=self.id,
+            game=game,
+            team=team,
+            level_number=self.level_number,
+            start_at=self.start_at,
+        )
+

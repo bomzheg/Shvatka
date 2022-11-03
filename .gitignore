@@ -129,13 +129,11 @@ dmypy.json
 .pyre/
 
 # database
-/db_data
 *.db
 *.db-wal
 *.db-shm
 *.sqlite
 *.sqlite3
-/config/jsons/
 
 # logs
 /log
@@ -143,6 +141,7 @@ dmypy.json
 # IDE stuff
 .idea/
 *.iml
+.fleet/
 
 *.xls
 *.xlsx
@@ -152,3 +151,4 @@ dmypy.json
 
 #pyro stuff
 *.session
+*.session-journal

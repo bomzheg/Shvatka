@@ -1,7 +1,8 @@
 from dataclasses import dataclass
 from datetime import datetime
 
-from shvatka.models.dto import Game, Team
+from .game import Game
+from .team import Team
 
 
 @dataclass

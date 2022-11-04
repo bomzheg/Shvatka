@@ -3,9 +3,10 @@ from typing import BinaryIO
 from db.dao import FileInfoDao
 from shvatka.clients.file_storage import FileStorage
 from shvatka.models.dto.scn.hint_part import BaseHint, TextHint, GPSHint, ContactHint, PhotoHint, VenueHint, AudioHint, \
-    VideoHint
+    VideoHint, DocumentHint
 from tgbot.models.hint import BaseHintLinkView, BaseHintContentView, TextHintView, GPSHintView, ContactHintView, \
-    PhotoLinkView, PhotoContentView, VenueHintView, AudioLinkView, AudioContentView, VideoLinkView, VideoContentView
+    PhotoLinkView, PhotoContentView, VenueHintView, AudioLinkView, AudioContentView, VideoLinkView, VideoContentView, \
+    DocumentLinkView, DocumentContentView
 
 
 class HintContentResolver:
@@ -45,6 +46,12 @@ class HintContentResolver:
                 )
             case VideoHint(file_guid=guid, caption=caption, thumb_guid=thumb_guid):
                 return VideoLinkView(
+                    file_id=await self._resolve_file_id(guid),
+                    caption=caption,
+                    thumb=await self._resolve_file_id(thumb_guid),
+                )
+            case DocumentHint(file_guid=guid, caption=caption, thumb_guid=thumb_guid):
+                return DocumentLinkView(
                     file_id=await self._resolve_file_id(guid),
                     caption=caption,
                     thumb=await self._resolve_file_id(thumb_guid),
@@ -100,6 +107,12 @@ class HintContentResolver:
                 )
             case VideoHint(file_guid=guid, caption=caption, thumb_guid=thumb_guid):
                 return VideoContentView(
+                    content=await self._resolve_bytes(guid),
+                    caption=caption,
+                    thumb=await self._resolve_bytes(thumb_guid),
+                )
+            case DocumentHint(file_guid=guid, caption=caption, thumb_guid=thumb_guid):
+                return DocumentContentView(
                     content=await self._resolve_bytes(guid),
                     caption=caption,
                     thumb=await self._resolve_bytes(thumb_guid),

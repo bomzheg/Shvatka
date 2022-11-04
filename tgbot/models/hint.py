@@ -124,6 +124,30 @@ class VideoContentView(BaseHintContentView):
 
 
 @dataclass
+class DocumentLinkView(BaseHintLinkView):
+    file_id: str
+    caption: str
+    thumb: str | None
+
+    def kwargs(self) -> dict:
+        return dict(doceumtn=self.file_id, caption=self.caption, thumb=self.thumb)
+
+
+@dataclass
+class DocumentContentView(BaseHintContentView):
+    content: BinaryIO
+    caption: str
+    thumb: BinaryIO | None
+
+    def kwargs(self) -> dict:
+        return dict(
+            document=_get_input_file(self.content),
+            caption=self.caption,
+            thumb=_get_input_file(self.thumb)
+        )
+
+
+@dataclass
 class ContactHintView(BaseHintLinkView, BaseHintContentView):
     phone_number: str
     first_name: str

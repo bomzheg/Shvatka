@@ -69,4 +69,9 @@ class AudioHint(BaseHint, CaptionMixin, FileMixin, ThumbMixin):
     type: HintLiteral = HintType.audio.name
 
 
-AnyHint: typing.TypeAlias = TextHint | GPSHint | VenueHint | ContactHint | PhotoHint | AudioHint
+@dataclass
+class VideoHint(BaseHint, CaptionMixin, FileMixin, ThumbMixin):
+    type: HintLiteral = HintType.video.name
+
+
+AnyHint: typing.TypeAlias = TextHint | GPSHint | VenueHint | ContactHint | PhotoHint | AudioHint | VideoHint

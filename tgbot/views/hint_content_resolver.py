@@ -2,9 +2,10 @@ from typing import BinaryIO
 
 from db.dao import FileInfoDao
 from shvatka.clients.file_storage import FileStorage
-from shvatka.models.dto.scn.hint_part import BaseHint, TextHint, GPSHint, ContactHint, PhotoHint, VenueHint, AudioHint
+from shvatka.models.dto.scn.hint_part import BaseHint, TextHint, GPSHint, ContactHint, PhotoHint, VenueHint, AudioHint, \
+    VideoHint
 from tgbot.models.hint import BaseHintLinkView, BaseHintContentView, TextHintView, GPSHintView, ContactHintView, \
-    PhotoLinkView, PhotoContentView, VenueHintView, AudioLinkView, AudioContentView
+    PhotoLinkView, PhotoContentView, VenueHintView, AudioLinkView, AudioContentView, VideoLinkView, VideoContentView
 
 
 class HintContentResolver:
@@ -38,6 +39,12 @@ class HintContentResolver:
                 return PhotoLinkView(file_id=await self._resolve_file_id(guid), caption=caption)
             case AudioHint(file_guid=guid, caption=caption, thumb_guid=thumb_guid):
                 return AudioLinkView(
+                    file_id=await self._resolve_file_id(guid),
+                    caption=caption,
+                    thumb=await self._resolve_file_id(thumb_guid),
+                )
+            case VideoHint(file_guid=guid, caption=caption, thumb_guid=thumb_guid):
+                return VideoLinkView(
                     file_id=await self._resolve_file_id(guid),
                     caption=caption,
                     thumb=await self._resolve_file_id(thumb_guid),
@@ -87,6 +94,12 @@ class HintContentResolver:
                 return PhotoContentView(content=await self._resolve_bytes(guid), caption=caption)
             case AudioHint(file_guid=guid, caption=caption, thumb_guid=thumb_guid):
                 return AudioContentView(
+                    content=await self._resolve_bytes(guid),
+                    caption=caption,
+                    thumb=await self._resolve_bytes(thumb_guid),
+                )
+            case VideoHint(file_guid=guid, caption=caption, thumb_guid=thumb_guid):
+                return VideoContentView(
                     content=await self._resolve_bytes(guid),
                     caption=caption,
                     thumb=await self._resolve_bytes(thumb_guid),

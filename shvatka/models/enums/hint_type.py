@@ -7,7 +7,7 @@ HintLiteral = typing.Literal[
     "venue",
     "photo",
     "audio",
-    # "video",
+    "video",
     # "document",
     # "animation",
     # "voice",
@@ -24,7 +24,7 @@ class HintType(enum.Enum):
     venue = "venue"
     photo = "photo"
     audio = "audio"
-    # video = "video"
+    video = "video"
     # document = "document"
     # animation = "animation"
     # voice = "voice"

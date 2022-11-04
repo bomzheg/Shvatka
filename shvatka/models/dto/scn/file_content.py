@@ -35,6 +35,10 @@ class FileContent:
     def local_file_name(self):
         return self.guid + (self.extension or "")
 
+    @property
+    def public_filename(self):
+        return self.original_filename + (self.extension or "")
+
 
 @dataclass
 class SavedFileContent(FileContent):

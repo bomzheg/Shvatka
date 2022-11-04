@@ -157,7 +157,7 @@ class HintContentResolver:
             return None
         file_info = await self.dao.get_by_guid(guid)
         content = await self.storage.get(file_info.file_content_link)
-        content = BytesWithName(content.read(), original_filename=file_info.original_filename)
+        content = BytesWithName(content.read(), original_filename=file_info.public_filename)
         return content
 
 

@@ -4,16 +4,16 @@ import typing
 HintLiteral = typing.Literal[
     "text",
     "gps",
-    # "venue",
+    "venue",
     "photo",
-    # "audio",
-    # "video",
-    # "document",
-    # "animation",
-    # "voice",
-    # "video_note",
+    "audio",
+    "video",
+    "document",
+    "animation",
+    "voice",
+    "video_note",
     "contact",
-    # "sticker",
+    "sticker",
 ]
 
 
@@ -21,13 +21,13 @@ HintLiteral = typing.Literal[
 class HintType(enum.Enum):
     text = "text"
     gps = "gps"
-    # venue = "venue"
+    venue = "venue"
     photo = "photo"
-    # audio = "audio"
-    # video = "video"
-    # document = "document"
-    # animation = "animation"
-    # voice = "voice"
-    # video_note = "video_note"
+    audio = "audio"
+    video = "video"
+    document = "document"
+    animation = "animation"
+    voice = "voice"
+    video_note = "video_note"
     contact = "contact"
-    # sticker = "sticker"
+    sticker = "sticker"

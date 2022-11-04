@@ -17,16 +17,16 @@ class HintSender:
         self.methods = {
             HintType.text: self.bot.send_message,
             HintType.gps: self.bot.send_location,
-            # HintType.venue: self.bot.send_venue,
+            HintType.venue: self.bot.send_venue,
             HintType.photo: self.bot.send_photo,
-            # HintType.audio: self.bot.send_audio,
-            # HintType.video: self.bot.send_video,
-            # HintType.document: self.bot.send_document,
-            # HintType.animation: self.bot.send_animation,
-            # HintType.voice: self.bot.send_voice,
-            # HintType.video_note: self.bot.send_video_note,
+            HintType.audio: self.bot.send_audio,
+            HintType.video: self.bot.send_video,
+            HintType.document: self.bot.send_document,
+            HintType.animation: self.bot.send_animation,
+            HintType.voice: self.bot.send_voice,
+            HintType.video_note: self.bot.send_video_note,
             HintType.contact: self.bot.send_contact,
-            # HintType.sticker: self.bot.send_sticker,
+            HintType.sticker: self.bot.send_sticker,
         }
 
     def method(self, type_content: HintType) -> Callable[..., Awaitable[Message]]:

@@ -11,7 +11,7 @@ from shvatka.models import dto
 from shvatka.models.enums import GameStatus
 from shvatka.models.enums.played import Played
 from shvatka.scheduler import Scheduler
-from shvatka.services.game import start_waivers, upsert_game
+from shvatka.services.game import start_waivers
 from shvatka.services.game_play import start_game, send_hint, check_key, get_available_hints
 from shvatka.services.game_stat import get_typed_keys
 from shvatka.services.player import join_team
@@ -141,11 +141,10 @@ async def test_game_play(
 
 @pytest.mark.asyncio
 async def test_get_current_hints(
-    simple_scn: dict, dao: HolderDao, dcf: Factory, locker: KeyCheckerFactory, file_storage: FileStorage,
+    game: dto.FullGame, dao: HolderDao, dcf: Factory, locker: KeyCheckerFactory, file_storage: FileStorage,
     author: dto.Player, harry: dto.Player, hermione: dto.Player,
     gryffindor: dto.Team,
 ):
-    game = await upsert_game(simple_scn, {}, author, dao.game_upserter, dcf, file_storage)
     await start_waivers(game, author, dao.game)
 
     await join_team(hermione, gryffindor, dao.player_in_team)

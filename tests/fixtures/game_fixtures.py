@@ -1,3 +1,5 @@
+from io import BytesIO
+
 import pytest_asyncio
 from dataclass_factory import Factory
 
@@ -9,6 +11,13 @@ from shvatka.services.game import upsert_game
 
 @pytest_asyncio.fixture
 async def game(
-    simple_scn: dict, author: dto.Player, dao: HolderDao, dcf: Factory, file_storage: FileStorage,
+    complex_scn: dict, author: dto.Player, dao: HolderDao, dcf: Factory, file_storage: FileStorage,
 ) -> dto.FullGame:
-    return await upsert_game(simple_scn, {}, author, dao.game_upserter, dcf, file_storage)
+    return await upsert_game(
+        complex_scn,
+        {"a3bc9b96-3bb8-4dbc-b996-ce1015e66e53": BytesIO(b"123")},
+        author,
+        dao.game_upserter,
+        dcf,
+        file_storage,
+    )

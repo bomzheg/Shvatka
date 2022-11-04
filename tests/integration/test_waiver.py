@@ -4,7 +4,7 @@ from db import models
 from db.dao.holder import HolderDao
 from shvatka.models import dto
 from shvatka.models.enums.played import Played
-from shvatka.services.game import create_game, start_waivers
+from shvatka.services.game import start_waivers
 from shvatka.services.player import join_team, leave
 from shvatka.services.waiver import get_vote_to_voted, add_vote, approve_waivers
 from shvatka.utils.exceptions import PlayerRestoredInTeam, WaiverForbidden
@@ -12,10 +12,9 @@ from shvatka.utils.exceptions import PlayerRestoredInTeam, WaiverForbidden
 
 @pytest.mark.asyncio
 async def test_get_voted_list(
-    harry: dto.Player, hermione: dto.Player, author: dto.Player, gryffindor: dto.Team,
+    harry: dto.Player, hermione: dto.Player, author: dto.Player, gryffindor: dto.Team, game: dto.FullGame,
     dao: HolderDao,
 ):
-    game = await create_game(author, "good_game", dao.game)
     await start_waivers(game, author, dao.game)
 
     await join_team(hermione, gryffindor, dao.player_in_team)

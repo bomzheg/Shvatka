@@ -24,12 +24,10 @@ from tests.utils.time_key import assert_time_key
 
 @pytest.mark.asyncio
 async def test_game_play(
-    simple_scn: dict, dao: HolderDao, dcf: Factory, file_storage: FileStorage,
-    locker: KeyCheckerFactory, check_dao: HolderDao, scheduler: Scheduler,
+    dao: HolderDao, dcf: Factory, locker: KeyCheckerFactory, check_dao: HolderDao, scheduler: Scheduler,
     author: dto.Player, harry: dto.Player, hermione: dto.Player,
-    gryffindor: dto.Team,
+    gryffindor: dto.Team, game: dto.FullGame,
 ):
-    game = await upsert_game(simple_scn, {}, author, dao.game_upserter, dcf, file_storage)
     await start_waivers(game, author, dao.game)
 
     await join_team(hermione, gryffindor, dao.player_in_team)
@@ -42,7 +40,7 @@ async def test_game_play(
     dummy_log = mock(GameLogWriter)
     when(dummy_log).log("Game started").thenReturn(mock_coro(None))
     dummy_sched = mock(Scheduler)
-    when(dummy_sched).plain_hint(level=game.levels[0], team=(gryffindor), hint_number=1, run_at=ANY).thenReturn(
+    when(dummy_sched).plain_hint(level=game.levels[0], team=gryffindor, hint_number=1, run_at=ANY).thenReturn(
         mock_coro(None))
     await start_game(game, dao.game_starter, dummy_log, dummy_view, dummy_sched)
     assert 1 == await check_dao.level_time.count()
@@ -164,4 +162,3 @@ async def test_get_current_hints(
     await dao.commit()
     actual_hints = await get_available_hints(game, gryffindor, dao.game_player)
     assert len(actual_hints) == 2
-

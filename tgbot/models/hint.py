@@ -1,5 +1,8 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
+from typing import BinaryIO
+
+from aiogram.types import BufferedInputFile
 
 
 class BaseHintLinkView(ABC):
@@ -29,6 +32,27 @@ class GPSHintView(BaseHintLinkView, BaseHintContentView):
 
     def kwargs(self) -> dict:
         return dict(latitude=self.latitude, longitude=self.longitude)
+
+
+@dataclass
+class PhotoLinkView(BaseHintLinkView):
+    file_id: str
+    caption: str
+
+    def kwargs(self) -> dict:
+        return dict(photo=self.file_id, caption=self.caption)
+
+
+@dataclass
+class PhotoContentView(BaseHintContentView):
+    content: BinaryIO
+    caption: str
+
+    def kwargs(self) -> dict:
+        return dict(
+            photo=BufferedInputFile(file=self.content.read(), filename=self.content.name),
+            caption=self.caption,
+        )
 
 
 @dataclass

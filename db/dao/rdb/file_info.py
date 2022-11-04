@@ -36,6 +36,9 @@ class FileInfoDao(BaseDAO[models.FileInfo]):
         except NoResultFound:
             return
 
+    async def get_by_guid(self, guid: str) -> FileContent:
+        db_file = await self._get_by_guid(guid)
+        return db_file.to_short_dto()
 
     async def _get_by_guid(self, guid: str) -> models.FileInfo:
         result = await self.session.execute(

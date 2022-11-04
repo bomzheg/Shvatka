@@ -3,7 +3,7 @@ from sqlalchemy.orm import relationship
 
 from db.models import Base
 from shvatka.models import dto
-from shvatka.models.dto.scn import SavedFileContent, TgLink, FileContentLink
+from shvatka.models.dto.scn import SavedFileContent, TgLink, FileContentLink, FileContent
 from shvatka.models.enums.hint_type import HintType
 
 
@@ -31,6 +31,15 @@ class FileInfo(Base):
             original_filename=self.original_filename,
             extension=self.extension,
             author=author,
+            tg_link=TgLink(file_id=self.file_id, content_type=HintType[self.content_type]),
+            file_content_link=FileContentLink(file_path=self.file_path),
+        )
+
+    def to_short_dto(self) -> FileContent:
+        return FileContent(
+            guid=self.guid,
+            original_filename=self.original_filename,
+            extension=self.extension,
             tg_link=TgLink(file_id=self.file_id, content_type=HintType[self.content_type]),
             file_content_link=FileContentLink(file_path=self.file_path),
         )

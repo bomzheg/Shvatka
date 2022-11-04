@@ -27,17 +27,16 @@ from tests.utils.time_key import assert_time_key
 async def test_game_play(
     simple_scn: dict, dao: HolderDao, dcf: Factory, file_storage: FileStorage,
     locker: KeyCheckerFactory, check_dao: HolderDao, scheduler: Scheduler,
-    author: dto.Player, hermione: dto.Player,
+    author: dto.Player, harry: dto.Player, hermione: dto.Player,
 ):
-    captain = author
-    team = await create_first_team(captain, dao)
+    team = await create_first_team(harry, dao)
     game = await upsert_game(simple_scn, {}, author, dao.game_upserter, dcf, file_storage)
     await start_waivers(game, author, dao.game)
 
     await join_team(hermione, team, dao.player_in_team)
-    await add_vote(game, team, captain, Played.yes, dao.waiver_vote_adder)
+    await add_vote(game, team, harry, Played.yes, dao.waiver_vote_adder)
     await add_vote(game, team, hermione, Played.yes, dao.waiver_vote_adder)
-    await approve_waivers(game, team, captain, dao.waiver_approver)
+    await approve_waivers(game, team, harry, dao.waiver_approver)
 
     dummy_view = mock(GameView)
     when(dummy_view).send_puzzle(team, game.get_hint(0, 0), game.levels[0]).thenReturn(mock_coro(None))
@@ -57,7 +56,7 @@ async def test_game_play(
 
     dummy_org_notifier = mock(OrgNotifier)
     key_kwargs = dict(
-        player=captain, team=team, game=game, dao=dao.game_player, view=dummy_view,
+        player=harry, team=team, game=game, dao=dao.game_player, view=dummy_view,
         game_log=dummy_log, org_notifier=dummy_org_notifier, locker=locker, scheduler=scheduler,
     )
     when(dummy_view).wrong_key(key=ANY).thenReturn(mock_coro(None))
@@ -69,7 +68,7 @@ async def test_game_play(
     assert_time_key(
         dto.KeyTime(
             text="SHWRONG", is_correct=False, is_duplicate=False,
-            at=datetime.utcnow(), level_number=0, player=captain, team=team,
+            at=datetime.utcnow(), level_number=0, player=harry, team=team,
         ),
         list(keys[team])[0]
     )
@@ -106,56 +105,55 @@ async def test_game_play(
     assert_time_key(
         dto.KeyTime(
             text="SHWRONG", is_correct=False, is_duplicate=False,
-            at=datetime.utcnow(), level_number=0, player=captain, team=team,
+            at=datetime.utcnow(), level_number=0, player=harry, team=team,
         ),
         list(keys[team])[0]
     )
     assert_time_key(
         dto.KeyTime(
             text="SH123", is_correct=True, is_duplicate=False,
-            at=datetime.utcnow(), level_number=0, player=captain, team=team,
+            at=datetime.utcnow(), level_number=0, player=harry, team=team,
         ),
         list(keys[team])[1]
     )
     assert_time_key(
         dto.KeyTime(
             text="SH123", is_correct=True, is_duplicate=True,
-            at=datetime.utcnow(), level_number=0, player=captain, team=team,
+            at=datetime.utcnow(), level_number=0, player=harry, team=team,
         ),
         list(keys[team])[2]
     )
     assert_time_key(
         dto.KeyTime(
             text="SH321", is_correct=True, is_duplicate=False,
-            at=datetime.utcnow(), level_number=0, player=captain, team=team,
+            at=datetime.utcnow(), level_number=0, player=harry, team=team,
         ),
         list(keys[team])[3]
     )
     assert_time_key(
         dto.KeyTime(
             text="SHOOT", is_correct=True, is_duplicate=False,
-            at=datetime.utcnow(), level_number=0, player=captain, team=team,
+            at=datetime.utcnow(), level_number=0, player=harry, team=team,
         ),
         list(keys[team])[4]
     )
     assert await dao.game_player.is_all_team_finished(game)
-    assert GameStatus.finished == (await dao.game.get_by_id(game.id, captain)).status
+    assert GameStatus.finished == (await dao.game.get_by_id(game.id, harry)).status
 
 
 @pytest.mark.asyncio
 async def test_get_current_hints(
     simple_scn: dict, dao: HolderDao, dcf: Factory, locker: KeyCheckerFactory, file_storage: FileStorage,
-    author: dto.Player, hermione: dto.Player,
+    author: dto.Player, harry: dto.Player, hermione: dto.Player,
 ):
-    captain = author
-    team = await create_first_team(captain, dao)
+    team = await create_first_team(harry, dao)
     game = await upsert_game(simple_scn, {}, author, dao.game_upserter, dcf, file_storage)
     await start_waivers(game, author, dao.game)
 
     await join_team(hermione, team, dao.player_in_team)
-    await add_vote(game, team, captain, Played.yes, dao.waiver_vote_adder)
+    await add_vote(game, team, harry, Played.yes, dao.waiver_vote_adder)
     await add_vote(game, team, hermione, Played.yes, dao.waiver_vote_adder)
-    await approve_waivers(game, team, captain, dao.waiver_approver)
+    await approve_waivers(game, team, harry, dao.waiver_approver)
     level_time = models.LevelTime(
         game_id=game.id,
         team_id=team.id,

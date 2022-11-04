@@ -4,7 +4,7 @@ from db.dao.holder import HolderDao
 from shvatka.models import dto
 from shvatka.services.player import upsert_player
 from shvatka.services.user import upsert_user
-from tests.fixtures.user_constants import create_dto_hermione, create_dto_harry, create_dto_ron
+from tests.fixtures.user_constants import create_dto_hermione, create_dto_harry, create_dto_ron, create_dto_rowling
 
 
 @pytest_asyncio.fixture
@@ -19,7 +19,7 @@ async def harry(dao: HolderDao):
 
 @pytest_asyncio.fixture
 async def author(dao: HolderDao):
-    return await create_promoted_harry(dao)
+    return await create_author(dao)
 
 
 @pytest_asyncio.fixture
@@ -35,12 +35,12 @@ async def create_harry_player(dao: HolderDao) -> dto.Player:
     return await upsert_player(await upsert_user(create_dto_harry(), dao.user), dao.player)
 
 
-async def create_promoted_harry(dao: HolderDao) -> dto.Player:
-    captain = await create_harry_player(dao)
-    await dao.player.promote(captain, captain)
+async def create_author(dao: HolderDao) -> dto.Player:
+    author_ = await upsert_player(await upsert_user(create_dto_rowling(), dao.user), dao.player)
+    await dao.player.promote(author_, author_)
     await dao.commit()
-    captain.can_be_author = True
-    return captain
+    author_.can_be_author = True
+    return author_
 
 
 async def create_ron_player(dao: HolderDao) -> dto.Player:

@@ -3,10 +3,11 @@ from typing import BinaryIO
 from db.dao import FileInfoDao
 from shvatka.clients.file_storage import FileStorage
 from shvatka.models.dto.scn.hint_part import BaseHint, TextHint, GPSHint, ContactHint, PhotoHint, VenueHint, AudioHint, \
-    VideoHint, DocumentHint, AnimationHint, VoiceHint
+    VideoHint, DocumentHint, AnimationHint, VoiceHint, VideoNoteHint
 from tgbot.models.hint import BaseHintLinkView, BaseHintContentView, TextHintView, GPSHintView, ContactHintView, \
     PhotoLinkView, PhotoContentView, VenueHintView, AudioLinkView, AudioContentView, VideoLinkView, VideoContentView, \
-    DocumentLinkView, DocumentContentView, AnimationContentView, AnimationLinkView, VoiceLinkView, VoiceContentView
+    DocumentLinkView, DocumentContentView, AnimationContentView, AnimationLinkView, VoiceLinkView, VoiceContentView, \
+    VideoNoteContentView, VideoNoteLinkView
 
 
 class HintContentResolver:
@@ -64,6 +65,8 @@ class HintContentResolver:
                 )
             case VoiceHint(file_guid=guid, caption=caption):
                 return VoiceLinkView(file_id=await self._resolve_file_id(guid), caption=caption)
+            case VideoNoteHint(file_guid=guid):
+                return VideoNoteLinkView(file_id=await self._resolve_file_id(guid))
             case ContactHint(
                 phone_number=phone_number,
                 first_name=first_name,
@@ -133,6 +136,8 @@ class HintContentResolver:
                 )
             case VoiceHint(file_guid=guid, caption=caption):
                 return VoiceContentView(content=await self._resolve_bytes(guid), caption=caption)
+            case VideoNoteHint(file_guid=guid):
+                return VideoNoteContentView(content=await self._resolve_bytes(guid))
             case ContactHint(
                 phone_number=phone_number,
                 first_name=first_name,

@@ -89,6 +89,11 @@ class VoiceHint(BaseHint, CaptionMixin, FileMixin):
     type: HintLiteral = HintType.voice.name
 
 
+@dataclass
+class VideoNoteHint(BaseHint, FileMixin):
+    type: HintLiteral = HintType.video_note.name
+
+
 AnyHint: typing.TypeAlias = TextHint | GPSHint | VenueHint | ContactHint | \
                             PhotoHint | AudioHint | VideoHint | DocumentHint | \
-                            AnimationHint | VoiceHint
+                            AnimationHint | VoiceHint | VideoNoteHint

@@ -193,6 +193,22 @@ class VoiceContentView(BaseHintContentView):
 
 
 @dataclass
+class VideoNoteLinkView(BaseHintLinkView):
+    file_id: str
+
+    def kwargs(self) -> dict:
+        return dict(animation=self.file_id)
+
+
+@dataclass
+class VideoNoteContentView(BaseHintContentView):
+    content: BinaryIO
+
+    def kwargs(self) -> dict:
+        return dict(animation=_get_input_file(self.content))
+
+
+@dataclass
 class ContactHintView(BaseHintLinkView, BaseHintContentView):
     phone_number: str
     first_name: str

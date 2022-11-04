@@ -6,13 +6,15 @@ import yaml
 
 from shvatka.models.dto.scn.game import RawGameScenario
 
+GUID = "a3bc9b96-3bb8-4dbc-b996-ce1015e66e53"
+
 
 @pytest.fixture
 def complex_scn(fixtures_resource_path: Path) -> RawGameScenario:
     with open(fixtures_resource_path / 'complex_scn.yml', 'r', encoding='utf-8') as f:
         return RawGameScenario(
             scn=yaml.safe_load(f.read()),
-            files={"a3bc9b96-3bb8-4dbc-b996-ce1015e66e53": BytesIO(b"123")},
+            files={GUID: BytesIO(b"123")},
         )
 
 

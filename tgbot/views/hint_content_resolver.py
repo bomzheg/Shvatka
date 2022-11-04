@@ -1,3 +1,4 @@
+import typing
 from typing import BinaryIO
 
 from db.dao import FileInfoDao
@@ -21,24 +22,19 @@ class HintContentResolver:
                 return TextHintView(text=text)
             case GPSHint(latitude=latitude, longitude=longitude):
                 return GPSHintView(latitude=latitude, longitude=longitude)
-            case VenueHint(
-                latitude=latitude,
-                longitude=longitude,
-                title=title,
-                address=address,
-                foursquare_id=foursquare_id,
-                foursquare_type=foursquare_type,
-            ):
-                VenueHintView(
-                    latitude=latitude,
-                    longitude=longitude,
-                    title=title,
-                    address=address,
-                    foursquare_id=foursquare_id,
-                    foursquare_type=foursquare_type,
+            case VenueHint():
+                hint = typing.cast(VenueHint, hint)
+                return VenueHintView(
+                    latitude=hint.latitude,
+                    longitude=hint.longitude,
+                    title=hint.title,
+                    address=hint.address,
+                    foursquare_id=hint.foursquare_id,
+                    foursquare_type=hint.foursquare_type,
                 )
-            case PhotoHint(file_guid=guid, caption=caption):
-                return PhotoLinkView(file_id=await self._resolve_file_id(guid), caption=caption)
+            case PhotoHint():
+                hint = typing.cast(PhotoHint, hint)
+                return PhotoLinkView(file_id=await self._resolve_file_id(hint.file_guid), caption=hint.caption)
             case AudioHint(file_guid=guid, caption=caption, thumb_guid=thumb_guid):
                 return AudioLinkView(
                     file_id=await self._resolve_file_id(guid),
@@ -102,7 +98,7 @@ class HintContentResolver:
                 foursquare_id=foursquare_id,
                 foursquare_type=foursquare_type,
             ):
-                VenueHintView(
+                return VenueHintView(
                     latitude=latitude,
                     longitude=longitude,
                     title=title,

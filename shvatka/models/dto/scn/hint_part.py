@@ -28,11 +28,13 @@ class GPSHint(BaseHint, LocationMixin):
     type: HintLiteral = HintType.gps.name
 
 
+@dataclass
 class VenueHint(BaseHint, LocationMixin):
     title: str
     address: str
     foursquare_id: typing.Optional[str] = None
     foursquare_type: typing.Optional[str] = None
+    type: HintLiteral = HintType.venue.name
 
 
 @dataclass
@@ -46,7 +48,7 @@ class ContactHint(BaseHint):
 
 @dataclass
 class CaptionMixin:
-    caption: str
+    caption: str = None
 
 
 @dataclass
@@ -61,26 +63,26 @@ class PhotoHint(BaseHint, CaptionMixin, FileMixin):
 
 @dataclass
 class ThumbMixin:
-    thumb_guid: str | None
+    thumb_guid: str | None = None
 
 
 @dataclass
-class AudioHint(BaseHint, CaptionMixin, FileMixin, ThumbMixin):
+class AudioHint(BaseHint, CaptionMixin, ThumbMixin, FileMixin):
     type: HintLiteral = HintType.audio.name
 
 
 @dataclass
-class VideoHint(BaseHint, CaptionMixin, FileMixin, ThumbMixin):
+class VideoHint(BaseHint, CaptionMixin, ThumbMixin, FileMixin):
     type: HintLiteral = HintType.video.name
 
 
 @dataclass
-class DocumentHint(BaseHint, CaptionMixin, FileMixin, ThumbMixin):
+class DocumentHint(BaseHint, CaptionMixin, ThumbMixin, FileMixin):
     type: HintLiteral = HintType.document.name
 
 
 @dataclass
-class AnimationHint(BaseHint, CaptionMixin, FileMixin, ThumbMixin):
+class AnimationHint(BaseHint, CaptionMixin, ThumbMixin, FileMixin):
     type: HintLiteral = HintType.animation.name
 
 

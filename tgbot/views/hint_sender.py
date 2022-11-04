@@ -1,4 +1,5 @@
 import asyncio
+import logging
 from typing import Iterable, Callable, Awaitable
 
 from aiogram import Bot
@@ -9,6 +10,7 @@ from shvatka.models.dto.scn.hint_part import BaseHint
 from shvatka.models.enums.hint_type import HintType
 from tgbot.views.hint_content_resolver import HintContentResolver
 
+logger = logging.getLogger(__name__)
 
 class HintSender:
     def __init__(self, bot: Bot, resolver: HintContentResolver):
@@ -38,6 +40,7 @@ class HintSender:
             hint_link = await self.resolver.resolve_link(hint_container)
             return await method(chat_id=chat_id, **hint_link.kwargs())
         except TelegramAPIError:
+            logger.warning("cant send hint by file_id %s", hint_link)
             hint_content = await self.resolver.resolve_content(hint_container)
             return await method(chat_id=chat_id, **hint_content.kwargs())
 

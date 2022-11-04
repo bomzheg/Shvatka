@@ -1,5 +1,6 @@
 import logging
 import os
+from unittest.mock import Mock
 
 import pytest
 import pytest_asyncio
@@ -150,10 +151,15 @@ def user_getter() -> UserGetter:
 
 
 @pytest.fixture(scope="session")
-def bot(bot_config) -> Bot:
-    dummy = mock(Bot)
-    setattr(dummy, "id", int(bot_config.bot.token.split(":")[0]))
-    return dummy
+def bot() -> Bot:
+    return Mock()
+
+
+@pytest.fixture(autouse=True)
+def clean_up_bot(bot: Mock, bot_config: TgBotConfig):
+    bot.reset_mock()
+    setattr(bot, "id", int(bot_config.bot.token.split(":")[0]))
+    return bot
 
 
 @pytest.fixture(scope="session")
@@ -169,6 +175,6 @@ def upgrade_schema_db(alembic_config: AlembicConfig):
     upgrade(alembic_config, "head")
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture
 def file_storage() -> FileStorage:
     return MemoryFileStorage()

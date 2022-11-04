@@ -1,10 +1,11 @@
 from datetime import datetime
+from unittest import mock
 
 import pytest
 from aiogram import Dispatcher, Bot
 from aiogram.methods import SendMessage
 from aiogram.types import Update, Message
-from mockito import ANY
+from mockito import ANY, mock
 
 from db.dao.holder import HolderDao
 from shvatka.models.enums.chat_type import ChatType
@@ -17,11 +18,20 @@ from tests.fixtures.user_constants import (
 from tests.mocks.aiogram_mocks import (
     mock_chat_owners, mock_get_chat, mock_reply, mock_chat_member,
 )
+from tgbot.config.models.main import TgBotConfig
 from tgbot.views.commands import CREATE_TEAM_COMMAND, ADD_IN_TEAM_COMMAND
 
 
+@pytest.fixture
+def bot_mockito(bot_config: TgBotConfig):
+    bot_ = mock(Bot)
+    setattr(bot_, "id", int(bot_config.bot.token.split(":")[0]))
+    return bot_
+
+
 @pytest.mark.asyncio
-async def test_create_team(dp: Dispatcher, bot: Bot, dao: HolderDao):
+async def test_create_team(dp: Dispatcher, bot_mockito: Bot, dao: HolderDao):
+    bot = bot_mockito
     chat = create_tg_chat(type_=ChatType.supergroup)
     harry = create_tg_user()
     mock_chat_owners(bot, chat.id, harry)

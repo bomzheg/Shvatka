@@ -94,6 +94,11 @@ class VideoNoteHint(BaseHint, FileMixin):
     type: HintLiteral = HintType.video_note.name
 
 
+@dataclass
+class StickerHint(BaseHint, FileMixin):
+    type: HintLiteral = HintType.sticker.name
+
+
 AnyHint: typing.TypeAlias = TextHint | GPSHint | VenueHint | ContactHint | \
                             PhotoHint | AudioHint | VideoHint | DocumentHint | \
-                            AnimationHint | VoiceHint | VideoNoteHint
+                            AnimationHint | VoiceHint | VideoNoteHint | StickerHint

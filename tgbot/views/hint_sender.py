@@ -26,7 +26,7 @@ class HintSender:
             HintType.voice: self.bot.send_voice,
             HintType.video_note: self.bot.send_video_note,
             HintType.contact: self.bot.send_contact,
-            # HintType.sticker: self.bot.send_sticker,
+            HintType.sticker: self.bot.send_sticker,
         }
 
     def method(self, type_content: HintType) -> Callable[..., Awaitable[Message]]:

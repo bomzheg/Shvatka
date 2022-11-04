@@ -13,7 +13,7 @@ HintLiteral = typing.Literal[
     "voice",
     "video_note",
     "contact",
-    # "sticker",
+    "sticker",
 ]
 
 
@@ -30,4 +30,4 @@ class HintType(enum.Enum):
     voice = "voice"
     video_note = "video_note"
     contact = "contact"
-    # sticker = "sticker"
+    sticker = "sticker"

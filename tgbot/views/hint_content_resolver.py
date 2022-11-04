@@ -3,11 +3,11 @@ from typing import BinaryIO
 from db.dao import FileInfoDao
 from shvatka.clients.file_storage import FileStorage
 from shvatka.models.dto.scn.hint_part import BaseHint, TextHint, GPSHint, ContactHint, PhotoHint, VenueHint, AudioHint, \
-    VideoHint, DocumentHint, AnimationHint, VoiceHint, VideoNoteHint
+    VideoHint, DocumentHint, AnimationHint, VoiceHint, VideoNoteHint, StickerHint
 from tgbot.models.hint import BaseHintLinkView, BaseHintContentView, TextHintView, GPSHintView, ContactHintView, \
     PhotoLinkView, PhotoContentView, VenueHintView, AudioLinkView, AudioContentView, VideoLinkView, VideoContentView, \
     DocumentLinkView, DocumentContentView, AnimationContentView, AnimationLinkView, VoiceLinkView, VoiceContentView, \
-    VideoNoteContentView, VideoNoteLinkView
+    VideoNoteContentView, VideoNoteLinkView, StickerHintView
 
 
 class HintContentResolver:
@@ -79,6 +79,8 @@ class HintContentResolver:
                     last_name=last_name,
                     vcard=vcard,
                 )
+            case StickerHint(file_guid=guid):
+                return StickerHintView(file_id=await self._resolve_file_id(guid))
 
     async def _resolve_file_id(self, guid: str | None) -> str | None:
         if guid is None:
@@ -150,6 +152,8 @@ class HintContentResolver:
                     last_name=last_name,
                     vcard=vcard,
                 )
+            case StickerHint(file_guid=guid):
+                return StickerHintView(file_id=await self._resolve_file_id(guid))
 
     async def _resolve_bytes(self, guid: str | None) -> BinaryIO | None:
         if guid is None:

@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from typing import BinaryIO
 
 from .file_content import FileContent
 from .level import LevelScenario
@@ -13,3 +14,9 @@ class GameScenario:
 @dataclass
 class UploadedGameScenario(GameScenario):
     files: list[FileContent]
+
+
+@dataclass
+class RawGameScenario:
+    scn: dict
+    files: dict[str, BinaryIO]

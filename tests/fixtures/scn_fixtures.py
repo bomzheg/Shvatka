@@ -1,19 +1,25 @@
 from copy import deepcopy
+from io import BytesIO
 from pathlib import Path
 
 import pytest
 import yaml
 
+from shvatka.models.dto.scn.game import RawGameScenario
+
 
 @pytest.fixture
-def complex_scn(fixtures_resource_path: Path) -> dict:
+def complex_scn(fixtures_resource_path: Path) -> RawGameScenario:
     with open(fixtures_resource_path / 'simple_scn.yml', 'r', encoding='utf-8') as f:
-        return yaml.safe_load(f.read())
+        return RawGameScenario(
+            scn=yaml.safe_load(f.read()),
+            files={"a3bc9b96-3bb8-4dbc-b996-ce1015e66e53": BytesIO(b"123")},
+        )
 
 
 @pytest.fixture
-def simple_scn(complex_scn: dict) -> dict:
-    scn = deepcopy(complex_scn)
+def simple_scn(complex_scn: RawGameScenario) -> RawGameScenario:
+    scn = deepcopy(complex_scn.scn)
     scn["files"] = []
     scn["levels"][0]["time-hints"][1]["hint"][0] = {"type": "text", "text": "подсказка"}
-    return scn
+    return RawGameScenario(scn, {})

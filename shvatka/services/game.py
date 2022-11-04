@@ -1,5 +1,4 @@
 from datetime import datetime
-from io import BytesIO
 
 from dataclass_factory import Factory
 
@@ -9,6 +8,7 @@ from shvatka.dal.game import (
     ActiveGameFinder, WaiverStarter, GameStartPlanner,
 )
 from shvatka.models import dto
+from shvatka.models.dto.scn.game import RawGameScenario
 from shvatka.scheduler import Scheduler
 from shvatka.services.player import check_allow_be_author
 from shvatka.services.scenario.files import upsert_files
@@ -17,12 +17,12 @@ from shvatka.utils.exceptions import NotAuthorizedForEdit, AnotherGameIsActive
 
 
 async def upsert_game(
-    scn: dict, contents: dict[str, BytesIO], author: dto.Player,
+    raw_scn: RawGameScenario, author: dto.Player,
     dao: GameUpserter, dcf: Factory, file_storage: FileStorage,
 ) -> dto.FullGame:
     check_allow_be_author(author)
-    game_scn = parse_uploaded_game(scn, dcf)
-    guids = await upsert_files(author, contents, game_scn.files, dao, file_storage)
+    game_scn = parse_uploaded_game(raw_scn.scn, dcf)
+    guids = await upsert_files(author, raw_scn.files, game_scn.files, dao, file_storage)
     check_all_files_saved(game=game_scn, guids=guids)
     game = await dao.upsert_game(author, game_scn)
     await dao.unlink_all(game)

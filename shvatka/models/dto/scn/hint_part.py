@@ -18,10 +18,21 @@ class TextHint(BaseHint):
 
 
 @dataclass
-class GPSHint(BaseHint):
+class LocationMixin:
     latitude: float
     longitude: float
+
+
+@dataclass
+class GPSHint(BaseHint, LocationMixin):
     type: HintLiteral = HintType.gps.name
+
+
+class VenueHint(BaseHint, LocationMixin):
+    title: str
+    address: str
+    foursquare_id: typing.Optional[str] = None
+    foursquare_type: typing.Optional[str] = None
 
 
 @dataclass
@@ -48,4 +59,4 @@ class PhotoHint(BaseHint, CaptionMixin, FileMixin):
     type: HintLiteral = HintType.photo.name
 
 
-AnyHint: typing.TypeAlias = TextHint | GPSHint | ContactHint | PhotoHint
+AnyHint: typing.TypeAlias = TextHint | GPSHint | VenueHint | ContactHint | PhotoHint

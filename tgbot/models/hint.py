@@ -35,6 +35,26 @@ class GPSHintView(BaseHintLinkView, BaseHintContentView):
 
 
 @dataclass
+class VenueHintView(BaseHintLinkView, BaseHintContentView):
+    latitude: float
+    longitude: float
+    title: str
+    address: str
+    foursquare_id: str | None = None
+    foursquare_type: str | None = None
+
+    def kwargs(self) -> dict:
+        return dict(
+            latitude=self.latitude,
+            longitude=self.longitude,
+            title=self.title,
+            address=self.address,
+            foursquare_id=self.foursquare_id,
+            foursquare_type=self.foursquare_type,
+        )
+
+
+@dataclass
 class PhotoLinkView(BaseHintLinkView):
     file_id: str
     caption: str

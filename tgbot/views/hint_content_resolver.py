@@ -2,9 +2,9 @@ from typing import BinaryIO
 
 from db.dao import FileInfoDao
 from shvatka.clients.file_storage import FileStorage
-from shvatka.models.dto.scn.hint_part import BaseHint, TextHint, GPSHint, ContactHint, PhotoHint
+from shvatka.models.dto.scn.hint_part import BaseHint, TextHint, GPSHint, ContactHint, PhotoHint, VenueHint
 from tgbot.models.hint import BaseHintLinkView, BaseHintContentView, TextHintView, GPSHintView, ContactHintView, \
-    PhotoLinkView, PhotoContentView
+    PhotoLinkView, PhotoContentView, VenueHintView
 
 
 class HintContentResolver:
@@ -18,6 +18,22 @@ class HintContentResolver:
                 return TextHintView(text=text)
             case GPSHint(latitude=latitude, longitude=longitude):
                 return GPSHintView(latitude=latitude, longitude=longitude)
+            case VenueHint(
+                latitude=latitude,
+                longitude=longitude,
+                title=title,
+                address=address,
+                foursquare_id=foursquare_id,
+                foursquare_type=foursquare_type,
+            ):
+                VenueHintView(
+                    latitude=latitude,
+                    longitude=longitude,
+                    title=title,
+                    address=address,
+                    foursquare_id=foursquare_id,
+                    foursquare_type=foursquare_type,
+                )
             case PhotoHint(file_guid=guid, caption=caption):
                 return PhotoLinkView(file_id=await self._resolve_file_id(guid), caption=caption)
             case ContactHint(
@@ -43,6 +59,22 @@ class HintContentResolver:
                 return TextHintView(text=text)
             case GPSHint(latitude=latitude, longitude=longitude):
                 return GPSHintView(latitude=latitude, longitude=longitude)
+            case VenueHint(
+                latitude=latitude,
+                longitude=longitude,
+                title=title,
+                address=address,
+                foursquare_id=foursquare_id,
+                foursquare_type=foursquare_type,
+            ):
+                VenueHintView(
+                    latitude=latitude,
+                    longitude=longitude,
+                    title=title,
+                    address=address,
+                    foursquare_id=foursquare_id,
+                    foursquare_type=foursquare_type,
+                )
             case PhotoHint(file_guid=guid, caption=caption):
                 return PhotoContentView(content=await self._resolve_bytes(guid), caption=caption)
             case ContactHint(

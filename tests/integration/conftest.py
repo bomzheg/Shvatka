@@ -22,7 +22,7 @@ from shvatka.clients.file_storage import FileStorage
 from shvatka.scheduler import Scheduler
 from shvatka.utils.key_checker_lock import KeyCheckerFactory
 from tests.fixtures.conftest import fixtures_resource_path  # noqa: F401
-from tests.fixtures.player import harry, hermione, ron, author  # noqa: F401
+from tests.fixtures.player import harry, hermione, ron, author, draco  # noqa: F401
 from tests.fixtures.scn_fixtures import simple_scn  # noqa: F401
 from tests.fixtures.team import gryffindor  # noqa: F401
 from tests.mocks.config import DBConfig

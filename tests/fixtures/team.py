@@ -9,10 +9,15 @@ from tests.fixtures.chat_constants import create_dto_chat, create_another_chat
 
 @pytest_asyncio.fixture
 async def gryffindor(harry: dto.Player, dao: HolderDao):
-    return await create_first_team(harry, create_dto_chat(), dao)
+    return await create_team_(harry, create_dto_chat(), dao)
 
 
-async def create_first_team(captain: dto.Player, chat: dto.Chat, dao: HolderDao) -> dto.Team:
+@pytest_asyncio.fixture
+async def slytherin(draco: dto.Player, dao: HolderDao):
+    return await create_team_(draco, create_another_chat(), dao)
+
+
+async def create_team_(captain: dto.Player, chat: dto.Chat, dao: HolderDao) -> dto.Team:
     return await create_team(
         await upsert_chat(chat, dao.chat), captain, dao.team_creator,
     )

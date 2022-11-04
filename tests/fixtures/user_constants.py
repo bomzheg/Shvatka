@@ -37,6 +37,15 @@ ROWLING_DTO = dto.User(
 )
 
 
+DRACO_DTO = dto.User(
+    tg_id=777,
+    first_name="Draco",
+    last_name="Malfoy",
+    username="voldemort_fan",
+    is_bot=False,
+)
+
+
 def create_tg_user(
     id_: int = HARRY_DTO.tg_id, username: str = HARRY_DTO.username,
     first_name: str = HARRY_DTO.first_name, last_name: str = HARRY_DTO.last_name,
@@ -74,3 +83,7 @@ def create_dto_ron() -> dto.User:
 
 def create_dto_rowling() -> dto.User:
     return copy(ROWLING_DTO)
+
+
+def create_dto_draco() -> dto.User:
+    return copy(DRACO_DTO)

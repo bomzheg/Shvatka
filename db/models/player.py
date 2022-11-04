@@ -54,6 +54,11 @@ class Player(Base):
         back_populates="captain",
         foreign_keys="Team.captain_id",
     )
+    my_files = relationship(
+        "FileInfo",
+        back_populates="author",
+        foreign_keys="FileInfo.author_id",
+    )
 
     def __repr__(self):
         return (

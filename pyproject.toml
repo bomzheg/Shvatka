@@ -47,6 +47,7 @@ pytest-asyncio = "^0.18.3"
 testcontainers = {extras = ["postgresql"], version = "^3.7.0"}
 mockito = "^1.4.0"
 httpx = "^0.23.0"
+coverage = {extras = ["toml"], version = "^6.5.0"}
 
 [tool.poetry.group.win]
 optional = true
@@ -58,3 +59,17 @@ python-magic-bin = {path = "python_magic_bin-0.4.14-py2.py3-none-win_amd64.whl"}
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.coverage.run]
+omit = [".*", "*/site-packages/*"]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "class .*\bProtocol\\):",
+    "@(abc\\.)?abstractmethod",
+]

@@ -4,14 +4,18 @@ import pytest
 from dataclass_factory import Factory
 
 from db.dao.holder import HolderDao
+from shvatka.clients.file_storage import FileStorage
 from shvatka.models import dto
+from shvatka.models.dto.scn.game import RawGameScenario
 from shvatka.models.enums import GameStatus
 from shvatka.services.game import upsert_game, get_authors_games, start_waivers, get_active
 
 
 @pytest.mark.asyncio
-async def test_game_simple(author: dto.Player, simple_scn: dict, dao: HolderDao, dcf: Factory):
-    game = await upsert_game(simple_scn, author, dao.game_upserter, dcf)
+async def test_game_simple(
+    author: dto.Player, simple_scn: RawGameScenario, dao: HolderDao, dcf: Factory, file_storage: FileStorage,
+):
+    game = await upsert_game(simple_scn, author, dao.game_upserter, dcf, file_storage)
 
     assert await dao.game.count() == 1
     assert await dao.level.count() == 2
@@ -25,10 +29,10 @@ async def test_game_simple(author: dto.Player, simple_scn: dict, dao: HolderDao,
     assert 1 == game.levels[1].number_in_game
     assert "second" == game.levels[1].name_id
 
-    another_scn = deepcopy(simple_scn)
+    another_scn = deepcopy(simple_scn.scn)
     another_scn["levels"].append(another_scn["levels"].pop(0))
 
-    game = await upsert_game(another_scn, author, dao.game_upserter, dcf)
+    game = await upsert_game(RawGameScenario(scn=another_scn, files={}), author, dao.game_upserter, dcf, file_storage)
 
     assert await dao.game.count() == 1
     assert await dao.level.count() == 2
@@ -40,11 +44,11 @@ async def test_game_simple(author: dto.Player, simple_scn: dict, dao: HolderDao,
     assert 1 == game.levels[1].number_in_game
     assert "first" == game.levels[1].name_id
 
-    another_scn = deepcopy(simple_scn)
+    another_scn = deepcopy(simple_scn.scn)
 
     another_scn["levels"].pop()
 
-    game = await upsert_game(another_scn, author, dao.game_upserter, dcf)
+    game = await upsert_game(RawGameScenario(scn=another_scn, files={}), author, dao.game_upserter, dcf, file_storage)
 
     assert await dao.game.count() == 1
     assert 1 == await dao.organizer.get_orgs_count(game)
@@ -67,7 +71,9 @@ async def test_game_simple(author: dto.Player, simple_scn: dict, dao: HolderDao,
 
 
 @pytest.mark.asyncio
-async def test_game_get_full(author: dto.Player, simple_scn: dict, dao: HolderDao, dcf: Factory):
-    game_expected = await upsert_game(simple_scn, author, dao.game_upserter, dcf)
+async def test_game_get_full(
+    author: dto.Player, simple_scn: RawGameScenario, dao: HolderDao, dcf: Factory, file_storage: FileStorage,
+):
+    game_expected = await upsert_game(simple_scn, author, dao.game_upserter, dcf, file_storage)
     game_actual = await dao.game.get_full(game_expected.id)
     assert game_expected == game_actual

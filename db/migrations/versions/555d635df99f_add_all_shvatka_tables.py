@@ -31,18 +31,6 @@ waiver_status = sa.Enum(
 
 def upgrade():
     op.create_table(
-        'files_info',
-        sa.Column('id', sa.Integer(), nullable=False),
-        sa.Column('file_id', sa.Text(), nullable=True),
-        sa.Column('file_path', sa.Text(), nullable=True),
-        sa.Column('guid_', sa.Text(), nullable=True),
-        sa.Column('original_filename', sa.Text(), nullable=True),
-        sa.Column('extension', sa.Text(), nullable=True),
-        sa.Column('content_type', sa.Text(), nullable=True),
-        sa.PrimaryKeyConstraint('id'),
-        sa.UniqueConstraint("guid_"),
-    )
-    op.create_table(
         'players',
         sa.Column('id', sa.BigInteger(), nullable=False),
         sa.Column('user_id', sa.BigInteger(), nullable=True),
@@ -177,6 +165,5 @@ def downgrade():
     op.drop_table('teams')
     op.drop_table('games')
     op.drop_table('players')
-    op.drop_table('files_info')
     game_status.drop(op.get_bind(), checkfirst=False)
     waiver_status.drop(op.get_bind(), checkfirst=False)

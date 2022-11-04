@@ -2,7 +2,6 @@ from copy import copy
 
 from aiogram.types import User
 
-from db import models
 from shvatka.models import dto
 
 OLD_HARRY_USERNAME = "tom_riddle_friend"
@@ -27,6 +26,22 @@ RON_DTO = dto.User(
     first_name="Ron",
     last_name="Weasley",
     username="red_hair",
+    is_bot=False,
+)
+
+ROWLING_DTO = dto.User(
+    tg_id=1,
+    first_name="Joanne",
+    last_name="Rowling",
+    is_bot=False,
+)
+
+
+DRACO_DTO = dto.User(
+    tg_id=777,
+    first_name="Draco",
+    last_name="Malfoy",
+    username="voldemort_fan",
     is_bot=False,
 )
 
@@ -66,11 +81,9 @@ def create_dto_ron() -> dto.User:
     return copy(RON_DTO)
 
 
-def create_db_user() -> models.User:
-    return models.User(
-        tg_id=HARRY_DTO.tg_id,
-        first_name=HARRY_DTO.first_name,
-        last_name=HARRY_DTO.last_name,
-        username=HARRY_DTO.last_name,
-        is_bot=False,
-    )
+def create_dto_rowling() -> dto.User:
+    return copy(ROWLING_DTO)
+
+
+def create_dto_draco() -> dto.User:
+    return copy(DRACO_DTO)

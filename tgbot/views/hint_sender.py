@@ -18,7 +18,7 @@ class HintSender:
             HintType.text: self.bot.send_message,
             HintType.gps: self.bot.send_location,
             # HintType.venue: self.bot.send_venue,
-            # HintType.photo: self.bot.send_photo,
+            HintType.photo: self.bot.send_photo,
             # HintType.audio: self.bot.send_audio,
             # HintType.video: self.bot.send_video,
             # HintType.document: self.bot.send_document,

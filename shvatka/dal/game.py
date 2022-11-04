@@ -4,11 +4,18 @@ from datetime import datetime
 from shvatka.dal.base import Committer, Reader
 from shvatka.dal.level import LevelUpserter
 from shvatka.models import dto
+from shvatka.models.dto.scn import FileContent, SavedFileContent
 from shvatka.models.dto.scn.game import GameScenario
 
 
 class GameUpserter(LevelUpserter, metaclass=ABCMeta):
     async def upsert_game(self, author: dto.Player, scn: GameScenario) -> dto.Game:
+        raise NotImplementedError
+
+    async def upsert_file(self, file: FileContent, author: dto.Player) -> SavedFileContent:
+        raise NotImplementedError
+
+    async def check_author_can_own_guid(self, author: dto.Player, guid: str) -> None:
         raise NotImplementedError
 
 

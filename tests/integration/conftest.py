@@ -18,12 +18,16 @@ from common.config.models.paths import Paths
 from db.config.models.db import RedisConfig
 from db.dao.holder import HolderDao
 from db.fatory import create_lock_factory
+from shvatka.clients.file_storage import FileStorage
 from shvatka.scheduler import Scheduler
 from shvatka.utils.key_checker_lock import KeyCheckerFactory
 from tests.fixtures.conftest import fixtures_resource_path  # noqa: F401
-from tests.fixtures.scn_fixtures import simple_scn  # noqa: F401
+from tests.fixtures.game_fixtures import game  # noqa: F401
+from tests.fixtures.player import harry, hermione, ron, author, draco  # noqa: F401
+from tests.fixtures.scn_fixtures import simple_scn, complex_scn  # noqa: F401
+from tests.fixtures.team import gryffindor  # noqa: F401
 from tests.mocks.config import DBConfig
-from tests.utils.player import harry, hermione, ron, author  # noqa: F401
+from tests.mocks.file_storage import MemoryFileStorage
 from tgbot.config.models.main import TgBotConfig
 from tgbot.main_factory import (
     create_dispatcher, create_scheduler, create_redis,
@@ -48,6 +52,7 @@ async def check_dao(session: AsyncSession, redis: Redis) -> HolderDao:
 
 async def clear_data(dao: HolderDao):
     await dao.poll.delete_all()
+    await dao.file_info.delete_all()
     await dao.waiver.delete_all()
     await dao.level.delete_all()
     await dao.level_time.delete_all()
@@ -162,3 +167,8 @@ def alembic_config(postgres_url: str, paths: Paths) -> AlembicConfig:
 @pytest.fixture(scope="session", autouse=True)
 def upgrade_schema_db(alembic_config: AlembicConfig):
     upgrade(alembic_config, "head")
+
+
+@pytest.fixture(scope="session")
+def file_storage() -> FileStorage:
+    return MemoryFileStorage()

@@ -56,7 +56,7 @@ class HolderDao:
 
     @property
     def game_upserter(self) -> GameUpserter:
-        return GameUpserterImpl(game=self.game, level=self.level)
+        return GameUpserterImpl(game=self.game, level=self.level, file_info=self.file_info)
 
     @property
     def team_creator(self) -> TeamCreator:

@@ -59,4 +59,14 @@ class PhotoHint(BaseHint, CaptionMixin, FileMixin):
     type: HintLiteral = HintType.photo.name
 
 
-AnyHint: typing.TypeAlias = TextHint | GPSHint | VenueHint | ContactHint | PhotoHint
+@dataclass
+class ThumbMixin:
+    thumb_guid: str | None
+
+
+@dataclass
+class AudioHint(BaseHint, CaptionMixin, FileMixin, ThumbMixin):
+    type: HintLiteral = HintType.audio.name
+
+
+AnyHint: typing.TypeAlias = TextHint | GPSHint | VenueHint | ContactHint | PhotoHint | AudioHint

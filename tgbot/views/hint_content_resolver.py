@@ -2,9 +2,9 @@ from typing import BinaryIO
 
 from db.dao import FileInfoDao
 from shvatka.clients.file_storage import FileStorage
-from shvatka.models.dto.scn.hint_part import BaseHint, TextHint, GPSHint, ContactHint, PhotoHint, VenueHint
+from shvatka.models.dto.scn.hint_part import BaseHint, TextHint, GPSHint, ContactHint, PhotoHint, VenueHint, AudioHint
 from tgbot.models.hint import BaseHintLinkView, BaseHintContentView, TextHintView, GPSHintView, ContactHintView, \
-    PhotoLinkView, PhotoContentView, VenueHintView
+    PhotoLinkView, PhotoContentView, VenueHintView, AudioLinkView, AudioContentView
 
 
 class HintContentResolver:
@@ -36,6 +36,12 @@ class HintContentResolver:
                 )
             case PhotoHint(file_guid=guid, caption=caption):
                 return PhotoLinkView(file_id=await self._resolve_file_id(guid), caption=caption)
+            case AudioHint(file_guid=guid, caption=caption, thumb_guid=thumb_guid):
+                return AudioLinkView(
+                    file_id=await self._resolve_file_id(guid),
+                    caption=caption,
+                    thumb=await self._resolve_file_id(thumb_guid),
+                )
             case ContactHint(
                 phone_number=phone_number,
                 first_name=first_name,
@@ -49,7 +55,9 @@ class HintContentResolver:
                     vcard=vcard,
                 )
 
-    async def _resolve_file_id(self, guid: str) -> str:
+    async def _resolve_file_id(self, guid: str | None) -> str | None:
+        if guid is None:
+            return None
         tg_link = (await self.dao.get_by_guid(guid)).tg_link
         return tg_link.file_id
 
@@ -77,6 +85,12 @@ class HintContentResolver:
                 )
             case PhotoHint(file_guid=guid, caption=caption):
                 return PhotoContentView(content=await self._resolve_bytes(guid), caption=caption)
+            case AudioHint(file_guid=guid, caption=caption, thumb_guid=thumb_guid):
+                return AudioContentView(
+                    content=await self._resolve_bytes(guid),
+                    caption=caption,
+                    thumb=await self._resolve_bytes(thumb_guid),
+                )
             case ContactHint(
                 phone_number=phone_number,
                 first_name=first_name,
@@ -90,7 +104,9 @@ class HintContentResolver:
                     vcard=vcard,
                 )
 
-    async def _resolve_bytes(self, guid: str) -> BinaryIO:
+    async def _resolve_bytes(self, guid: str | None) -> BinaryIO | None:
+        if guid is None:
+            return None
         file_info = await self.dao.get_by_guid(guid)
         return await self.storage.get(file_info.file_content_link)
 

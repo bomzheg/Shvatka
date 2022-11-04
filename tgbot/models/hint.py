@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import BinaryIO
 
-from aiogram.types import BufferedInputFile
+from aiogram.types import BufferedInputFile, InputFile
 
 
 class BaseHintLinkView(ABC):
@@ -70,8 +70,32 @@ class PhotoContentView(BaseHintContentView):
 
     def kwargs(self) -> dict:
         return dict(
-            photo=BufferedInputFile(file=self.content.read(), filename=self.content.name),
+            photo=_get_input_file(self.content),
             caption=self.caption,
+        )
+
+
+@dataclass
+class AudioLinkView(BaseHintLinkView):
+    file_id: str
+    caption: str
+    thumb: str | None
+
+    def kwargs(self) -> dict:
+        return dict(audio=self.file_id, caption=self.caption, thumb=self.thumb)
+
+
+@dataclass
+class AudioContentView(BaseHintContentView):
+    content: BinaryIO
+    caption: str
+    thumb: BinaryIO | None
+
+    def kwargs(self) -> dict:
+        return dict(
+            audio=_get_input_file(self.content),
+            caption=self.caption,
+            thumb=_get_input_file(self.thumb)
         )
 
 
@@ -89,3 +113,9 @@ class ContactHintView(BaseHintLinkView, BaseHintContentView):
             last_name=self.last_name,
             vcard=self.vcard,
         )
+
+
+def _get_input_file(content: BinaryIO | None) -> InputFile | None:
+    if content is None:
+        return None
+    return BufferedInputFile(file=content.read(), filename=content.name)

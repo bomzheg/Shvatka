@@ -44,6 +44,14 @@ magic-filter = "*"
 tools = ["diagrams"]
 
 [[package]]
+name = "aiogram-tests"
+version = "1.0.3"
+description = "A library for testing your bots on aiogram"
+category = "dev"
+optional = false
+python-versions = "*"
+
+[[package]]
 name = "aiohttp"
 version = "3.8.3"
 description = "Async http client/server framework (asyncio)"
@@ -713,21 +721,6 @@ pytest = ">=6.1.0"
 testing = ["coverage (==6.2)", "flaky (>=3.5.0)", "hypothesis (>=5.7.1)", "mypy (==0.931)", "pytest-trio (>=0.7.0)"]
 
 [[package]]
-name = "pytest-cov"
-version = "4.0.0"
-description = "Pytest plugin for measuring coverage."
-category = "dev"
-optional = false
-python-versions = ">=3.6"
-
-[package.dependencies]
-coverage = {version = ">=5.2.1", extras = ["toml"]}
-pytest = ">=4.6"
-
-[package.extras]
-testing = ["fields", "hunter", "process-tests", "pytest-xdist", "six", "virtualenv"]
-
-[[package]]
 name = "pytest-ordering"
 version = "0.6"
 description = "pytest plugin to run your tests in a specific order"
@@ -1141,7 +1134,7 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.10"
-content-hash = "745ca036e13faf276fb4d3ce841865f2571964ab28dc6b4b9dfa8362c9df7e67"
+content-hash = "08cc9f12784abd9f8f2fe3146014af458e1dd19b820939eda5b076c5c4975ffd"
 
 [metadata.files]
 aiofiles = [
@@ -1154,6 +1147,10 @@ aiogram = [
 ]
 aiogram-dialog = [
     {file = "aiogram_dialog-2.0.0b12-py3-none-any.whl", hash = "sha256:118cc026270741867bd7981302cc9da3e0966d8376939a366c30d0493309527d"},
+]
+aiogram-tests = [
+    {file = "aiogram_tests-1.0.3-py3-none-any.whl", hash = "sha256:b92fc4dbb652ed115bbcef08d2e020a8e86e575217fb44876d926b5cd681aca0"},
+    {file = "aiogram_tests-1.0.3.tar.gz", hash = "sha256:cdc78e9a65e205a744e944361a844c0f764f7777718dde087821000d49d354b3"},
 ]
 aiohttp = [
     {file = "aiohttp-3.8.3-cp310-cp310-macosx_10_9_universal2.whl", hash = "sha256:ba71c9b4dcbb16212f334126cc3d8beb6af377f6703d9dc2d9fb3874fd667ee9"},
@@ -1952,10 +1949,6 @@ pytest-asyncio = [
     {file = "pytest-asyncio-0.18.3.tar.gz", hash = "sha256:7659bdb0a9eb9c6e3ef992eef11a2b3e69697800ad02fb06374a210d85b29f91"},
     {file = "pytest_asyncio-0.18.3-1-py3-none-any.whl", hash = "sha256:16cf40bdf2b4fb7fc8e4b82bd05ce3fbcd454cbf7b92afc445fe299dabb88213"},
     {file = "pytest_asyncio-0.18.3-py3-none-any.whl", hash = "sha256:8fafa6c52161addfd41ee7ab35f11836c5a16ec208f93ee388f752bea3493a84"},
-]
-pytest-cov = [
-    {file = "pytest-cov-4.0.0.tar.gz", hash = "sha256:996b79efde6433cdbd0088872dbc5fb3ed7fe1578b68cdbba634f14bb8dd0470"},
-    {file = "pytest_cov-4.0.0-py3-none-any.whl", hash = "sha256:2feb1b751d66a8bd934e5edfa2e961d11309dc37b73b0eabe73b5945fee20f6b"},
 ]
 pytest-ordering = [
     {file = "pytest-ordering-0.6.tar.gz", hash = "sha256:561ad653626bb171da78e682f6d39ac33bb13b3e272d406cd555adb6b006bda6"},

@@ -1,4 +1,5 @@
 import typing
+from io import BytesIO
 from typing import BinaryIO
 
 from db.dao import FileInfoDao
@@ -155,5 +156,16 @@ class HintContentResolver:
         if guid is None:
             return None
         file_info = await self.dao.get_by_guid(guid)
-        return await self.storage.get(file_info.file_content_link)
+        content = await self.storage.get(file_info.file_content_link)
+        content = BytesWithName(content.read(), original_filename=file_info.original_filename)
+        return content
 
+
+class BytesWithName(BytesIO):
+    def __init__(self, *args, **kwargs):
+        self._name = kwargs.pop("original_filename", "")
+        super().__init__(*args, **kwargs)
+
+    @property
+    def name(self) -> str:
+        return self._name

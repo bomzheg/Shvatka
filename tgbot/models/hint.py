@@ -177,7 +177,7 @@ class VoiceLinkView(BaseHintLinkView):
     caption: str
 
     def kwargs(self) -> dict:
-        return dict(animation=self.file_id, caption=self.caption)
+        return dict(voice=self.file_id, caption=self.caption)
 
 
 @dataclass
@@ -187,7 +187,7 @@ class VoiceContentView(BaseHintContentView):
 
     def kwargs(self) -> dict:
         return dict(
-            animation=_get_input_file(self.content),
+            voice=_get_input_file(self.content),
             caption=self.caption,
         )
 
@@ -197,7 +197,7 @@ class VideoNoteLinkView(BaseHintLinkView):
     file_id: str
 
     def kwargs(self) -> dict:
-        return dict(animation=self.file_id)
+        return dict(video_note=self.file_id)
 
 
 @dataclass
@@ -205,7 +205,7 @@ class VideoNoteContentView(BaseHintContentView):
     content: BinaryIO
 
     def kwargs(self) -> dict:
-        return dict(animation=_get_input_file(self.content))
+        return dict(video_note=_get_input_file(self.content))
 
 
 @dataclass

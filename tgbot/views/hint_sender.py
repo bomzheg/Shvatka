@@ -36,8 +36,8 @@ class HintSender:
 
     async def send_hint(self, hint_container: BaseHint, chat_id: int) -> Message:
         method = self.method(HintType[hint_container.type])
+        hint_link = await self.resolver.resolve_link(hint_container)
         try:
-            hint_link = await self.resolver.resolve_link(hint_container)
             return await method(chat_id=chat_id, **hint_link.kwargs())
         except TelegramAPIError:
             logger.warning("cant send hint by file_id %s", hint_link)

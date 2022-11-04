@@ -22,7 +22,7 @@ class HintSender:
             HintType.audio: self.bot.send_audio,
             HintType.video: self.bot.send_video,
             HintType.document: self.bot.send_document,
-            # HintType.animation: self.bot.send_animation,
+            HintType.animation: self.bot.send_animation,
             # HintType.voice: self.bot.send_voice,
             # HintType.video_note: self.bot.send_video_note,
             HintType.contact: self.bot.send_contact,

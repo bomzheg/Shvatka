@@ -130,7 +130,7 @@ class DocumentLinkView(BaseHintLinkView):
     thumb: str | None
 
     def kwargs(self) -> dict:
-        return dict(doceumtn=self.file_id, caption=self.caption, thumb=self.thumb)
+        return dict(document=self.file_id, caption=self.caption, thumb=self.thumb)
 
 
 @dataclass
@@ -142,6 +142,30 @@ class DocumentContentView(BaseHintContentView):
     def kwargs(self) -> dict:
         return dict(
             document=_get_input_file(self.content),
+            caption=self.caption,
+            thumb=_get_input_file(self.thumb)
+        )
+
+
+@dataclass
+class AnimationLinkView(BaseHintLinkView):
+    file_id: str
+    caption: str
+    thumb: str | None
+
+    def kwargs(self) -> dict:
+        return dict(animation=self.file_id, caption=self.caption, thumb=self.thumb)
+
+
+@dataclass
+class AnimationContentView(BaseHintContentView):
+    content: BinaryIO
+    caption: str
+    thumb: BinaryIO | None
+
+    def kwargs(self) -> dict:
+        return dict(
+            animation=_get_input_file(self.content),
             caption=self.caption,
             thumb=_get_input_file(self.thumb)
         )

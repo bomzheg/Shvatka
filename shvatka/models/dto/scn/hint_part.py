@@ -79,5 +79,11 @@ class DocumentHint(BaseHint, CaptionMixin, FileMixin, ThumbMixin):
     type: HintLiteral = HintType.document.name
 
 
+@dataclass
+class AnimationHint(BaseHint, CaptionMixin, FileMixin, ThumbMixin):
+    type: HintLiteral = HintType.animation.name
+
+
 AnyHint: typing.TypeAlias = TextHint | GPSHint | VenueHint | ContactHint | \
-                            PhotoHint | AudioHint | VideoHint | DocumentHint
+                            PhotoHint | AudioHint | VideoHint | DocumentHint | \
+                            AnimationHint

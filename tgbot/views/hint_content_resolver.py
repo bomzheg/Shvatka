@@ -3,10 +3,10 @@ from typing import BinaryIO
 from db.dao import FileInfoDao
 from shvatka.clients.file_storage import FileStorage
 from shvatka.models.dto.scn.hint_part import BaseHint, TextHint, GPSHint, ContactHint, PhotoHint, VenueHint, AudioHint, \
-    VideoHint, DocumentHint, AnimationHint
+    VideoHint, DocumentHint, AnimationHint, VoiceHint
 from tgbot.models.hint import BaseHintLinkView, BaseHintContentView, TextHintView, GPSHintView, ContactHintView, \
     PhotoLinkView, PhotoContentView, VenueHintView, AudioLinkView, AudioContentView, VideoLinkView, VideoContentView, \
-    DocumentLinkView, DocumentContentView, AnimationContentView, AnimationLinkView
+    DocumentLinkView, DocumentContentView, AnimationContentView, AnimationLinkView, VoiceLinkView, VoiceContentView
 
 
 class HintContentResolver:
@@ -62,6 +62,8 @@ class HintContentResolver:
                     caption=caption,
                     thumb=await self._resolve_file_id(thumb_guid),
                 )
+            case VoiceHint(file_guid=guid, caption=caption):
+                return VoiceLinkView(file_id=await self._resolve_file_id(guid), caption=caption)
             case ContactHint(
                 phone_number=phone_number,
                 first_name=first_name,
@@ -129,6 +131,8 @@ class HintContentResolver:
                     caption=caption,
                     thumb=await self._resolve_bytes(thumb_guid),
                 )
+            case VoiceHint(file_guid=guid, caption=caption):
+                return VoiceContentView(content=await self._resolve_bytes(guid), caption=caption)
             case ContactHint(
                 phone_number=phone_number,
                 first_name=first_name,

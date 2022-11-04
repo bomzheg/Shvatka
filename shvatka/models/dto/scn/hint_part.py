@@ -84,6 +84,11 @@ class AnimationHint(BaseHint, CaptionMixin, FileMixin, ThumbMixin):
     type: HintLiteral = HintType.animation.name
 
 
+@dataclass
+class VoiceHint(BaseHint, CaptionMixin, FileMixin):
+    type: HintLiteral = HintType.voice.name
+
+
 AnyHint: typing.TypeAlias = TextHint | GPSHint | VenueHint | ContactHint | \
                             PhotoHint | AudioHint | VideoHint | DocumentHint | \
-                            AnimationHint
+                            AnimationHint | VoiceHint

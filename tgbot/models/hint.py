@@ -172,6 +172,27 @@ class AnimationContentView(BaseHintContentView):
 
 
 @dataclass
+class VoiceLinkView(BaseHintLinkView):
+    file_id: str
+    caption: str
+
+    def kwargs(self) -> dict:
+        return dict(animation=self.file_id, caption=self.caption)
+
+
+@dataclass
+class VoiceContentView(BaseHintContentView):
+    content: BinaryIO
+    caption: str
+
+    def kwargs(self) -> dict:
+        return dict(
+            animation=_get_input_file(self.content),
+            caption=self.caption,
+        )
+
+
+@dataclass
 class ContactHintView(BaseHintLinkView, BaseHintContentView):
     phone_number: str
     first_name: str

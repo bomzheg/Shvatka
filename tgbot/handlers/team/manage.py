@@ -12,7 +12,7 @@ from shvatka.services.player import join_team
 from shvatka.services.team import create_team
 from shvatka.utils.defaults_constants import DEFAULT_ROLE
 from shvatka.utils.exceptions import (
-    TeamError, PlayerAlreadyInTeam, AnotherTeamInChat, PlayerRestoredInTeam,
+    TeamError, PlayerAlreadyInTeam, AnotherTeamInChat, PlayerRestoredInTeam, PermissionsError,
 )
 from tgbot.filters.game_status import GameStatusFilter
 from tgbot.filters.has_target import HasTargetFilter
@@ -99,6 +99,11 @@ async def cmd_add_in_team(
         return await message.reply(
             "Игрок возвращён в команду, я сделаю вид что и не покидал"
         )
+    except PermissionsError:
+        return await message.reply(
+            "У тебя нет прав добавлять игроков в команду. Обратись к капитану"
+        )
+
     await message.answer(
         "В команду {team} добавлен игрок "
         "{player} в качестве роли указано: {role}"
@@ -135,6 +140,5 @@ def setup_team_manage() -> Router:
         GameStatusFilter(running=False),
         HasTargetFilter(),
         IsTeamFilter(),
-        # TODO can_add_player=True
     )
     return router

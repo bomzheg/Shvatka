@@ -28,9 +28,9 @@ async def test_get_voted_list(
 
     await approve_waivers(game, gryffindor, harry, dao.waiver_approver)
     assert 2 == await dao.waiver.count()
-    assert [(gryffindor)] == await dao.waiver.get_played_teams(game)
+    assert [gryffindor] == await dao.waiver.get_played_teams(game)
 
-    await leave(hermione, dao.team_leaver)
+    await leave(hermione, hermione, dao.team_leaver)
     actual = await get_vote_to_voted(gryffindor, dao.waiver_vote_getter)
     assert len(actual) == 1
     actual_voted = actual[Played.yes]
@@ -61,4 +61,4 @@ async def test_get_voted_list(
 
     await approve_waivers(game, gryffindor, harry, dao.waiver_approver)
     assert 2 == await dao.waiver.count()
-    assert [(gryffindor)] == await dao.waiver.get_played_teams(game)
+    assert [gryffindor] == await dao.waiver.get_played_teams(game)

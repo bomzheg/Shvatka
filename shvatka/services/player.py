@@ -70,9 +70,14 @@ async def check_player_on_team(player: dto.Player, team: dto.Team, dao: PlayerIn
         raise PlayerNotInTeam(player=player, team=team)
 
 
-async def leave(player: dto.Player, dao: TeamLeaver):
+async def leave(player: dto.Player, remover: dto.Player, dao: TeamLeaver):
+    team = await dao.get_team(player)
+    if not team:
+        raise PlayerNotInTeam(player=player)
+    if player.id != remover.id:  # player itself always can leave
+        team_player = await get_team_player(remover, team, dao)  # team of remover must be the same as player
+        check_can_remove_player(team_player)  # and remover must have permission for remove
     if game := await dao.get_active_game():
-        team = await dao.get_team(player)
         await dao.delete(dto.Waiver(
             player=player,
             game=game,
@@ -86,6 +91,11 @@ async def leave(player: dto.Player, dao: TeamLeaver):
 def check_allow_be_author(player: dto.Player):
     if not player.can_be_author:
         raise CantBeAuthor(player=player)
+
+
+def check_can_remove_player(team_player: dto.FullTeamPlayer):
+    if not team_player.can_remove_players:
+        raise PermissionsError(permission_name="can_remove_players", team=team_player.team, player=team_player.player)
 
 
 def check_can_add_players(team_player: dto.FullTeamPlayer):

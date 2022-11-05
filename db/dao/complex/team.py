@@ -49,5 +49,8 @@ class TeamLeaverImpl(TeamLeaver):
     async def delete(self, waiver: dto.Waiver) -> None:
         return await self.waiver.delete(waiver)
 
+    async def get_player_in_team(self, player: dto.Player) -> dto.PlayerInTeam:
+        return await self.player_in_team.get_player_in_team(player)
+
     async def commit(self) -> None:
         await self.game.commit()

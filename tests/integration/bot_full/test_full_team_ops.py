@@ -1,11 +1,10 @@
 from datetime import datetime
-from unittest import mock
 
 import pytest
-from aiogram import Dispatcher, Bot
-from aiogram.methods import SendMessage
-from aiogram.types import Update, Message
-from mockito import ANY, mock
+from aiogram import Dispatcher
+from aiogram.methods import SendMessage, GetChatAdministrators, GetChat, GetChatMember
+from aiogram.types import Update, Message, ChatMemberOwner, ChatMemberMember
+from aiogram_tests.mocked_bot import MockedBot
 
 from db.dao.holder import HolderDao
 from shvatka.models.enums.chat_type import ChatType
@@ -15,28 +14,24 @@ from tests.fixtures.chat_constants import create_tg_chat
 from tests.fixtures.user_constants import (
     create_tg_user, create_dto_hermione, create_tg_from_dto,
 )
-from tests.mocks.aiogram_mocks import (
-    mock_chat_owners, mock_get_chat, mock_reply, mock_chat_member,
-)
 from tgbot.config.models.main import TgBotConfig
 from tgbot.views.commands import CREATE_TEAM_COMMAND, ADD_IN_TEAM_COMMAND
 
 
 @pytest.fixture
-def bot_mockito(bot_config: TgBotConfig):
-    bot_ = mock(Bot)
-    setattr(bot_, "id", int(bot_config.bot.token.split(":")[0]))
-    return bot_
+def mocked_bot(bot_config: TgBotConfig):
+    bot = MockedBot(token=bot_config.bot.token)
+    return bot
 
 
 @pytest.mark.asyncio
-async def test_create_team(dp: Dispatcher, bot_mockito: Bot, dao: HolderDao):
-    bot = bot_mockito
+async def test_create_team(dp: Dispatcher, mocked_bot: MockedBot, dao: HolderDao):
+    bot = mocked_bot
     chat = create_tg_chat(type_=ChatType.supergroup)
     harry = create_tg_user()
-    mock_chat_owners(bot, chat.id, harry)
-    mock_get_chat(bot, chat)
-    mock_reply(bot, ANY(SendMessage))
+    bot.add_result_for(GetChatAdministrators, ok=True, result=[ChatMemberOwner(user=harry, is_anonymous=False)])
+    bot.add_result_for(GetChat, ok=True, result=chat)
+    bot.add_result_for(SendMessage, ok=True)
     update = Update(
         update_id=1,
         message=Message(
@@ -68,8 +63,8 @@ async def test_create_team(dp: Dispatcher, bot_mockito: Bot, dao: HolderDao):
     )
     await dp.feed_update(bot, update)
 
-    mock_chat_member(bot, chat.id, create_tg_from_dto(hermi))
-    mock_reply(bot, ANY(SendMessage))
+    bot.add_result_for(method=GetChatMember, ok=True, result=ChatMemberMember(user=create_tg_from_dto(hermi)))
+    bot.add_result_for(SendMessage, ok=True)
     update = Update(
         update_id=3,
         message=Message(

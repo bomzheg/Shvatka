@@ -37,7 +37,7 @@ async def get_list_pool(team: dto.Team, dao: HolderDao) -> str:
     return render_votes(votes)
 
 
-async def start_approve_waivers(game: dto.Game, team: dto.Team, approver: dto.Player, dao: HolderDao):
+async def start_approve_waivers(game: dto.Game, team: dto.Team, dao: HolderDao):
     votes = await get_vote_to_voted(team=team, dao=dao.waiver_vote_getter)
     return dict(
         text=f"Играющие в {hd.quote(game.name)} схватчики команды {hd.bold(team.name)}:",

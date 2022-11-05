@@ -65,7 +65,7 @@ async def start_approve_waivers_handler(
     )
     await bot.send_message(
         chat_id=player.user.tg_id,
-        **await start_approve_waivers(game, team, player, dao),
+        **await start_approve_waivers(game, team, dao),
     )
 
 
@@ -91,7 +91,7 @@ async def waiver_main_menu(
         chat_id=team.chat.tg_id,
         msg_id=await get_saved_message(game, team, dao.poll)
     )
-    await c.message.edit_text(**await start_approve_waivers(game, team, player, dao))
+    await c.message.edit_text(**await start_approve_waivers(game, team, dao))
 
 
 async def confirm_approve_waivers_handler(

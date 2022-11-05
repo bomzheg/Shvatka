@@ -11,8 +11,8 @@ class Team:
     id: int
     chat: Chat
     name: str
-    description: str
     captain: Player
+    description: str | None
 
     def __eq__(self, other) -> bool:
         if not isinstance(other, Team):

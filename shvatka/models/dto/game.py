@@ -18,9 +18,9 @@ class Game:
     author: Player
     name: str
     status: GameStatus
-    start_at: datetime
-    published_channel_id: int
     manage_token: str
+    start_at: datetime | None
+    published_channel_id: int | None
 
     def is_active(self):
         return self.status in ACTIVE_STATUSES

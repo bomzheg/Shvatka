@@ -1,5 +1,4 @@
 from datetime import datetime
-from itertools import groupby
 
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
@@ -58,7 +57,7 @@ class KeyTimeDao(BaseDAO[models.KeyTime]):
         await self._flush(key_time)
         return key_time.to_dto(player, team)
 
-    async def get_typed_keys(self, game: dto.Game) -> dict[dto.Team, list[dto.KeyTime]]:
+    async def get_typed_keys(self, game: dto.Game) -> list[dto.KeyTime]:
         result = await self.session.execute(
             select(models.KeyTime)
             .where(models.KeyTime.game_id == game.id)
@@ -69,13 +68,9 @@ class KeyTimeDao(BaseDAO[models.KeyTime]):
             .order_by(models.KeyTime.enter_time)
         )
         keys: list[models.KeyTime] = result.scalars().all()
-        grouped = {team: list(key) for team, key in groupby(keys, lambda k: k.team)}
-        return {
-            team.to_dto(team.chat.to_dto()): [
-                key.to_dto(
-                    player=key.player.to_dto(key.player.user.to_dto()),
-                    team=team.to_dto(team.chat.to_dto()),
-                ) for key in keys
-            ]
-            for team, keys in grouped.items()
-        }
+        return [
+            key.to_dto(
+                player=key.player.to_dto(key.player.user.to_dto()),
+                team=key.team.to_dto(key.team.chat.to_dto()),
+            ) for key in keys
+        ]

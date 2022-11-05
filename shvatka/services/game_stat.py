@@ -5,7 +5,12 @@ from shvatka.models.dto.levels_times import GameStat
 
 
 async def get_typed_keys(game: dto.Game, dao: TypedKeyGetter) -> dict[dto.Team, list[dto.KeyTime]]:
-    return await dao.get_typed_keys(game)
+    keys = await dao.get_typed_keys(game)
+    grouped = {}
+    for key in keys:
+        grouped.setdefault(key.team, []).append(key)
+    return grouped
+
 
 
 async def get_game_stat(game: dto.Game, dao: GameStatDao):

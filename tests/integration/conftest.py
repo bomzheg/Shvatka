@@ -23,10 +23,10 @@ from shvatka.clients.file_storage import FileStorage
 from shvatka.scheduler import Scheduler
 from shvatka.utils.key_checker_lock import KeyCheckerFactory
 from tests.fixtures.conftest import fixtures_resource_path  # noqa: F401
-from tests.fixtures.game_fixtures import game  # noqa: F401
+from tests.fixtures.game_fixtures import game, completed_game  # noqa: F401
 from tests.fixtures.player import harry, hermione, ron, author, draco  # noqa: F401
 from tests.fixtures.scn_fixtures import simple_scn, complex_scn  # noqa: F401
-from tests.fixtures.team import gryffindor  # noqa: F401
+from tests.fixtures.team import gryffindor, slytherin  # noqa: F401
 from tests.mocks.config import DBConfig
 from tests.mocks.file_storage import MemoryFileStorage
 from tgbot.config.models.main import TgBotConfig

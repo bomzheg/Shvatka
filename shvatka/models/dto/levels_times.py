@@ -12,3 +12,8 @@ class LevelTime:
     team: Team
     level_number: int
     start_at: datetime
+
+
+@dataclass
+class GameStat:
+    level_times: dict[Team, list[LevelTime]]

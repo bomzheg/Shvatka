@@ -3,7 +3,7 @@ import pytest
 from db.dao.holder import HolderDao
 from shvatka.services.chat import update_chat_id, upsert_chat
 from tests.fixtures.chat_constants import (
-    create_tg_chat, create_db_chat, create_dto_chat, NEW_CHAT_ID,
+    create_tg_chat, create_db_chat, create_gryffindor_dto_chat, NEW_CHAT_ID,
 )
 from tests.utils.chat import assert_dto_chat, assert_db_chat
 from tgbot.middlewares.data_load_middleware import save_chat
@@ -13,7 +13,7 @@ from tgbot.middlewares.data_load_middleware import save_chat
 async def test_save_chat(dao: HolderDao):
     data = dict(event_chat=create_tg_chat())
     actual = await save_chat(data, dao)
-    expected = create_dto_chat()
+    expected = create_gryffindor_dto_chat()
     assert_dto_chat(expected, actual)
     assert actual.db_id is not None
     assert await dao.chat.count() == 1
@@ -21,7 +21,7 @@ async def test_save_chat(dao: HolderDao):
 
 @pytest.mark.asyncio
 async def test_migrate_to_supergroup(dao: HolderDao):
-    old_chat = create_dto_chat()
+    old_chat = create_gryffindor_dto_chat()
     await upsert_chat(old_chat, dao.chat)
     old_count = await dao.chat.count()
 
@@ -46,7 +46,7 @@ async def test_upsert_chat(dao: HolderDao):
 
     data = dict(event_chat=create_tg_chat())
     actual = await save_chat(data, dao)
-    expected = create_dto_chat()
+    expected = create_gryffindor_dto_chat()
     assert_dto_chat(expected, actual)
 
     assert_dto_chat(expected, actual)

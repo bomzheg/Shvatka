@@ -218,7 +218,6 @@ async def get_available_hints(game: dto.Game, team: dto.Team, dao: GamePlayerDao
     return list(filter(lambda th: th.time <= from_start_level_minutes, level.scenario.time_hints))
 
 
-
 async def schedule_first_hint(
     scheduler: Scheduler,
     team: dto.Team,

@@ -2,6 +2,7 @@ from datetime import datetime
 
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
+from sqlalchemy.orm import joinedload
 
 from db import models
 from shvatka.models import dto
@@ -42,3 +43,28 @@ class LevelTimeDao(BaseDAO[models.LevelTime]):
             .limit(1)
         )
         return result.scalar_one()
+
+    async def get_game_level_times(self, game: dto.Game) -> list[dto.LevelTime]:
+        result = await self.session.execute(
+            select(models.LevelTime)
+            .where(models.LevelTime.game_id == game.id)
+            .options(
+                joinedload(models.LevelTime.team)
+                .joinedload(models.Team.captain)
+                .joinedload(models.Player.user),
+                joinedload(models.LevelTime.team)
+                .joinedload(models.Team.chat),
+            )
+            .order_by(
+                models.LevelTime.team_id,
+                models.LevelTime.level_number,
+            )
+        )
+        return [
+            lt.to_dto(
+                game=game,
+                team=lt.team.to_dto(lt.team.chat.to_dto()),
+            )
+            for lt in result.scalars().all()
+        ]
+

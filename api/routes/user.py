@@ -11,7 +11,7 @@ from shvatka.services.user import set_password, get_user
 logger = logging.getLogger(__name__)
 
 
-async def read_users_me(current_user: dto.User = Depends(get_current_user)):
+async def read_users_me(current_user: dto.User = Depends(get_current_user)) -> dto.User:
     return current_user
 
 

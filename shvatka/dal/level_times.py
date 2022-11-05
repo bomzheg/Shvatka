@@ -19,3 +19,8 @@ class GameStarter(Committer, metaclass=ABCMeta):
 class LevelTimeChecker(Reader):
     async def is_team_on_level(self, team: dto.Team, level: dto.Level) -> bool:
         raise NotImplementedError
+
+
+class GameStatDao(Reader):
+    async def get_game_level_times(self, game: dto.Game) -> list[dto.LevelTime]:
+        raise NotImplementedError

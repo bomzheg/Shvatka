@@ -38,7 +38,7 @@ ROWLING_DTO = dto.User(
 
 
 DRACO_DTO = dto.User(
-    tg_id=777,
+    tg_id=7,
     first_name="Draco",
     last_name="Malfoy",
     username="voldemort_fan",

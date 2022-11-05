@@ -2,8 +2,10 @@ import pytest
 from dataclass_factory import Factory
 from httpx import AsyncClient
 
+from api.models import responses
 from db.dao.holder import HolderDao
 from shvatka.models import dto
+from shvatka.models.enums import GameStatus
 
 
 @pytest.mark.asyncio
@@ -15,6 +17,6 @@ async def test_game(game: dto.FullGame, dao: HolderDao, client: AsyncClient):
     resp.read()
 
     dcf = Factory()
-    actual = dcf.load(resp.json(), dto.Game)
+    actual = dcf.load(resp.json(), responses.Game)
     assert game.id == actual.id
-    assert actual.is_getting_waivers()
+    assert actual.status == GameStatus.getting_waivers

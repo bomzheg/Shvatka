@@ -40,7 +40,6 @@ async def get_list_pool(team: dto.Team, dao: HolderDao) -> str:
 async def start_approve_waivers(game: dto.Game, team: dto.Team, approver: dto.Player, dao: HolderDao):
     votes = await get_vote_to_voted(team=team, dao=dao.waiver_vote_getter)
     return dict(
-        chat_id=approver.user.tg_id,
         text=f"Играющие в {hd.quote(game.name)} схватчики команды {hd.bold(team.name)}:",
         reply_markup=kb.get_kb_manage_waivers(team, map(lambda v: v.player, votes[Played.yes]), game),
         disable_web_page_preview=True,

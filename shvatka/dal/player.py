@@ -15,7 +15,7 @@ class PlayerInTeamGetter(Reader):
         raise NotImplementedError
 
 
-class PlayerTeamChecker(Reader, PlayerInTeamGetter):
+class PlayerTeamChecker(PlayerInTeamGetter, metaclass=ABCMeta):
     async def have_team(self, player: dto.Player) -> bool:
         raise NotImplementedError
 

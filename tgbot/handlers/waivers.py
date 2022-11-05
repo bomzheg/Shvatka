@@ -1,6 +1,7 @@
 from aiogram import Router, Bot
 from aiogram.filters import Command
 from aiogram.types import Message, CallbackQuery
+from aiogram.utils.markdown import html_decoration as hd
 
 from db.dao.holder import HolderDao
 from shvatka.models import dto
@@ -62,7 +63,35 @@ async def start_approve_waivers_handler(
         chat_id=team.chat.tg_id,
         msg_id=await get_saved_message(game, team, dao.poll)
     )
-    await bot.send_message(**await start_approve_waivers(game, team, player, dao))
+    await bot.send_message(
+        chat_id=player.user.tg_id,
+        **await start_approve_waivers(game, team, player, dao),
+    )
+
+
+async def waiver_main_menu(
+    c: CallbackQuery,
+    callback_data: kb.WaiverMainCD,
+    player: dto.Player,
+    game: dto.Game,
+    dao: HolderDao,
+    bot: Bot
+):
+    if game.id != callback_data.game_id:
+        raise AnotherGameIsActive(game=game, player=player)
+    team = await get_my_team(player, dao.player_in_team)
+    if team.id != callback_data.team_id:
+        raise PlayerNotInTeam(
+            player=player, team=team,
+            notify_user="Ты не состоишь в команде, за которую подаёшь вейверы!",
+        )
+    check_allow_approve_waivers(await get_team_player(player, team, dao.waiver_approver))
+    await total_remove_msg(
+        bot=bot,
+        chat_id=team.chat.tg_id,
+        msg_id=await get_saved_message(game, team, dao.poll)
+    )
+    await c.message.edit_text(**await start_approve_waivers(game, team, player, dao))
 
 
 async def confirm_approve_waivers_handler(
@@ -90,6 +119,31 @@ async def confirm_approve_waivers_handler(
     await c.answer("Вейверы успешно опубликованы!")
 
 
+async def waiver_user_menu(
+    c: CallbackQuery,
+    callback_data: kb.WaiverManagePlayerCD,
+    game: dto.Game,
+    player: dto.Player,
+    dao: HolderDao,
+):
+    if game.id != callback_data.game_id:
+        raise AnotherGameIsActive(game=game, player=player)
+    team = await get_my_team(player, dao.player_in_team)
+    if team.id != callback_data.team_id:
+        raise PlayerNotInTeam(
+            player=player, team=team,
+            notify_user="Ты не состоишь в команде, за которую подаёшь вейверы!",
+        )
+
+    await c.answer()
+    await c.message.edit_text(
+        text=f"Схватчик {hd.quote(player.user.name_mention)} команды {hd.quote(team.name)}"
+             f"заявил что хочет участвовать в игре {hd.quote(game.name)}. Что хотите с ним делать?",
+        reply_markup=kb.get_kb_waiver_one_player(team=team, player=player, game=game),
+        disable_web_page_preview=True,
+    )
+
+
 async def TODO(c: CallbackQuery):
     await c.answer("UNDERCONSTRUCTION", show_alert=True)
 
@@ -111,6 +165,7 @@ def setup() -> Router:
     router.message.register(start_approve_waivers_handler, Command(APPROVE_WAIVERS_COMMAND))
     router.callback_query.register(confirm_approve_waivers_handler, kb.WaiverConfirmCD.filter())
 
-    router.callback_query.register(TODO, kb.WaiverManagePlayerCD.filter())
+    router.callback_query.register(waiver_user_menu, kb.WaiverManagePlayerCD.filter())
     router.callback_query.register(TODO, kb.WaiverAddForceMenuCD.filter())
+    router.callback_query.register(TODO, kb.WaiverRemovePlayerCD.filter())
     return router

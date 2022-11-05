@@ -29,6 +29,17 @@ class WaiverManagePlayerCD(CallbackData, prefix="waiver_player"):
     player_id: int
 
 
+class WaiverMainCD(CallbackData, prefix="waiver_main"):
+    game_id: int
+    team_id: int
+
+
+class WaiverRemovePlayerCD(CallbackData, prefix="waiver_remove_player"):
+    game_id: int
+    team_id: int
+    player_id: int
+
+
 def get_kb_waivers(team: dto.Team) -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
     builder.button(text='Играю', callback_data=WaiverVoteCD(vote=Played.yes, team_id=team.id))
@@ -50,5 +61,21 @@ def get_kb_manage_waivers(team: dto.Team, players: Iterable[dto.Player], game: d
             text=player.user.name_mention,
             callback_data=WaiverManagePlayerCD(game_id=game.id, team_id=team.id, player_id=player.id),
         )
+    builder.adjust(1)
+    return builder.as_markup()
+
+
+def get_kb_waiver_one_player(team: dto.Team, player: dto.Player, game: dto.Game) -> InlineKeyboardMarkup:
+    builder = InlineKeyboardBuilder()
+    builder.button(
+        text='К списку игроков',
+        callback_data=WaiverMainCD(game_id=game.id, team_id=team.id)
+    )
+    builder.button(
+        f'Исключить из вейверов',
+        callback_data=WaiverRemovePlayerCD(
+            game_id=game.id, team_id=team.id, player_id=player.id,
+        )
+    )
     builder.adjust(1)
     return builder.as_markup()

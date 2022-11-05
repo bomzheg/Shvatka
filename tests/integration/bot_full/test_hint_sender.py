@@ -119,7 +119,6 @@ async def test_send_photo_by_id(
     assert 0 == len(bot.session.requests)
 
 
-
 @pytest.mark.asyncio
 @pytest.mark.parametrize("tg_method,hint,method_name,content_type", PARAMETERS[:-1])  # we don't send sticker by content
 async def test_send_photo_by_content(
@@ -135,8 +134,8 @@ async def test_send_photo_by_content(
     await hint_sender.resolver.dao.commit()
 
     bot = typing.cast(MockedBot, hint_sender.bot)
-    bot.add_result_for(method=tg_method, ok=True)
     bot.add_result_for(method=tg_method, ok=False, error_code=400, description=BAD_REQUEST_DESC)
+    bot.add_result_for(method=tg_method, ok=True)
 
     await hint_sender.send_hint(hint, CHAT_ID)
 

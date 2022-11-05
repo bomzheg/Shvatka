@@ -48,7 +48,7 @@ testcontainers = {extras = ["postgresql"], version = "^3.7.0"}
 mockito = "^1.4.0"
 httpx = "^0.23.0"
 coverage = {extras = ["toml"], version = "^6.5.0"}
-aiogram-tests = "^1.0.3"
+aiogram-tests = {git = "https://github.com/bomzheg/aiogram_tests.git", branch = "fix/deque-usage"}
 
 [tool.poetry.group.win]
 optional = true

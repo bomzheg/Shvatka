@@ -80,6 +80,28 @@ class PlayerInTeamDao(BaseDAO[models.PlayerInTeam]):
         )
         return result.scalars().one_or_none()
 
+    async def get_players(self, team: dto.Team) -> list[dto.FullTeamPlayer]:
+        result = await self.session.execute(
+            select(models.PlayerInTeam)
+            .where(
+                models.PlayerInTeam.team_id == team.id,
+                not_leaved(),
+            )
+            .options(
+                joinedload(models.PlayerInTeam.player)
+                .joinedload(models.Player.user)
+            )
+        )
+        players: list[models.PlayerInTeam] = result.scalars().all()
+        return [
+            dto.FullTeamPlayer.from_simple(
+                team_player=team_player.to_dto(),
+                player=team_player.player.to_dto(team_player.player.user.to_dto()),
+                team=team,
+            )
+            for team_player in players
+        ]
+
     async def get_player_in_team(self, player: dto.Player) -> dto.PlayerInTeam:
         return (await self._get_my_player_in_team(player)).to_dto()
 

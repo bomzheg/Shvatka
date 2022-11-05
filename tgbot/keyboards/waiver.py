@@ -18,11 +18,6 @@ class WaiverConfirmCD(CallbackData, prefix="confirm_waivers"):
     team_id: int
 
 
-class WaiverAddForceMenuCD(CallbackData, prefix="waiver_add_force"):
-    game_id: int
-    team_id: int
-
-
 class WaiverManagePlayerCD(CallbackData, prefix="waiver_player"):
     game_id: int
     team_id: int
@@ -35,6 +30,17 @@ class WaiverMainCD(CallbackData, prefix="waiver_main"):
 
 
 class WaiverRemovePlayerCD(CallbackData, prefix="waiver_remove_player"):
+    game_id: int
+    team_id: int
+    player_id: int
+
+
+class WaiverAddForceMenuCD(CallbackData, prefix="waiver_add_force"):
+    game_id: int
+    team_id: int
+
+
+class WaiverAddPlayerForceCD(CallbackData, prefix="waiver_add_force"):
     game_id: int
     team_id: int
     player_id: int
@@ -77,5 +83,22 @@ def get_kb_waiver_one_player(team: dto.Team, player: dto.Player, game: dto.Game)
             game_id=game.id, team_id=team.id, player_id=player.id,
         )
     )
+    builder.adjust(1)
+    return builder.as_markup()
+
+
+def get_kb_force_add_waivers(team: dto.Team, players: Iterable[dto.Player], game: dto.Game) -> InlineKeyboardMarkup:
+    builder = InlineKeyboardBuilder()
+    builder.button(
+        f'К списку игроков',
+        callback_data=WaiverMainCD(game_id=game.id, team_id=team.id)
+    )
+    for player in players:
+        builder.button(
+            text=player.user.name_mention,
+            callback_data=WaiverAddPlayerForceCD(
+                game_id=game.id, team_id=team.id, player_id=player.id,
+            )
+        )
     builder.adjust(1)
     return builder.as_markup()

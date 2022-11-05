@@ -60,6 +60,32 @@ async def approve_waivers(game: dto.Game, team: dto.Team, approver: dto.Player, 
     await dao.commit()
 
 
+async def get_voted_yes(team: dto.Team, dao: WaiverApprover) -> list[dto.Vote]:
+    return list(filter(lambda x: x.vote == Played.yes, await get_voted_list(team, dao)))
+
+
+async def get_not_played_team_players(team: dto.Team, dao: WaiverApprover) -> list[dto.Player]:
+    votes_yes = await get_voted_yes(team, dao)
+    players = await dao.get_players(team)
+    not_played = set(players) - set(map(lambda v: v.pit, votes_yes))
+    return list(sorted(map(lambda tp: tp.player, not_played), key=lambda p: p.id))
+
+
+async def revoke_vote_by_captain(
+    game: dto.Game, team: dto.Team, approver: dto.Player, target: dto.Player, dao: WaiverApprover,
+):
+    team_player = await get_team_player(approver, team, dao)
+    check_allow_approve_waivers(team_player)
+    waiver = dto.Waiver(
+        player=target,
+        team=team,
+        game=game,
+        played=Played.revoked,
+    )
+    await dao.upsert(waiver)
+    await dao.commit()
+
+
 def check_allow_approve_waivers(team_player: dto.FullTeamPlayer):
     if not team_player.can_manage_waivers:
         raise PermissionsError(

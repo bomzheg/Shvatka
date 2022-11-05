@@ -23,6 +23,14 @@ class PlayerInTeam:
     _can_add_players: bool
     _can_remove_players: bool
 
+    def __eq__(self, other) -> bool:
+        if not isinstance(other, (PlayerInTeam, FullTeamPlayer)):
+            return False
+        return self.id == other.id
+
+    def __hash__(self):
+        return hash(self.id)
+
 
 @dataclass
 class FullTeamPlayer(PlayerInTeam):
@@ -75,3 +83,11 @@ class FullTeamPlayer(PlayerInTeam):
             team=team,
             player=player,
         )
+
+    def __eq__(self, other) -> bool:
+        if not isinstance(other, (PlayerInTeam, FullTeamPlayer)):
+            return False
+        return self.id == other.id
+
+    def __hash__(self):
+        return hash(self.id)

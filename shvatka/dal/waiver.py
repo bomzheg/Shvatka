@@ -36,3 +36,6 @@ class WaiverApprover(Committer, WaiverVoteGetter, PlayerInTeamGetter, metaclass=
 
     async def get_players(self, team: dto.Team) -> list[dto.FullTeamPlayer]:
         raise NotImplementedError
+
+    async def del_player_vote(self, team_id: int, player_id: int) -> None:
+        raise NotImplementedError

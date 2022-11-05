@@ -53,3 +53,6 @@ class WaiverApproverImpl(WaiverApprover, WaiverVoteGetterImpl):
 
     async def get_players(self, team: dto.Team) -> list[dto.FullTeamPlayer]:
         return await self.player_in_team.get_players(team)
+
+    async def del_player_vote(self, team_id: int, player_id: int) -> None:
+        return await self.poll.del_player_vote(team_id, player_id)

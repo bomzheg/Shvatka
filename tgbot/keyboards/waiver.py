@@ -78,7 +78,7 @@ def get_kb_waiver_one_player(team: dto.Team, player: dto.Player, game: dto.Game)
         callback_data=WaiverMainCD(game_id=game.id, team_id=team.id)
     )
     builder.button(
-        f'Исключить из вейверов',
+        text='Исключить из вейверов',
         callback_data=WaiverRemovePlayerCD(
             game_id=game.id, team_id=team.id, player_id=player.id,
         )
@@ -90,7 +90,7 @@ def get_kb_waiver_one_player(team: dto.Team, player: dto.Player, game: dto.Game)
 def get_kb_force_add_waivers(team: dto.Team, players: Iterable[dto.Player], game: dto.Game) -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
     builder.button(
-        f'К списку игроков',
+        text='К списку игроков',
         callback_data=WaiverMainCD(game_id=game.id, team_id=team.id)
     )
     for player in players:

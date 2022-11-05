@@ -133,7 +133,7 @@ async def waiver_user_menu(
 
     await c.answer()
     await c.message.edit_text(
-        text=f"Схватчик {hd.quote(player.user.name_mention)} команды {hd.quote(team.name)}"
+        text=f"Схватчик {hd.quote(player.user.name_mention)} команды {hd.quote(team.name)} "
              f"заявил что хочет участвовать в игре {hd.quote(game.name)}. Что хотите с ним делать?",
         reply_markup=kb.get_kb_waiver_one_player(team=team, player=player, game=game),
         disable_web_page_preview=True,
@@ -231,6 +231,7 @@ def setup() -> Router:
     router.callback_query.register(confirm_approve_waivers_handler, kb.WaiverConfirmCD.filter())
 
     router.callback_query.register(waiver_user_menu, kb.WaiverManagePlayerCD.filter())
+    router.callback_query.register(waiver_main_menu, kb.WaiverMainCD.filter())
     router.callback_query.register(waiver_remove_user_vote, kb.WaiverRemovePlayerCD.filter())
     router.callback_query.register(waiver_add_force_menu, kb.WaiverAddForceMenuCD.filter())
     router.callback_query.register(add_force_player, kb.WaiverAddPlayerForceCD.filter())

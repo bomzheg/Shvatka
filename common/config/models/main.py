@@ -12,6 +12,7 @@ class Config:
     paths: Paths
     db: DBConfig
     redis: RedisConfig
+    file_storage_config: FileStorageConfig
 
     @property
     def app_dir(self) -> Path:
@@ -24,3 +25,12 @@ class Config:
     @property
     def log_path(self) -> Path:
         return self.paths.log_path
+
+
+@dataclass
+class FileStorageConfig:
+    path: Path
+    mkdir: bool
+    parents: bool
+    exist_ok: bool
+

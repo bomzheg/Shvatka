@@ -28,4 +28,5 @@ class TgBotConfig(Config):
             bot=bot,
             storage=storage,
             tg_client=tg_client,
+            file_storage_config=base.file_storage_config,
         )

@@ -3,6 +3,7 @@ from dataclass_factory import Factory
 from redis.asyncio.client import Redis
 from sqlalchemy.orm import sessionmaker
 
+from shvatka.clients.file_storage import FileStorage
 from shvatka.scheduler import Scheduler
 from shvatka.utils.key_checker_lock import KeyCheckerFactory
 from tgbot.config.models.bot import BotConfig
@@ -16,12 +17,12 @@ from tgbot.username_resolver.user_getter import UserGetter
 def setup_middlewares(
     dp: Dispatcher, pool: sessionmaker, bot_config: BotConfig,
     user_getter: UserGetter, dcf: Factory, redis: Redis, scheduler: Scheduler,
-    locker: KeyCheckerFactory,
+    locker: KeyCheckerFactory, file_storage: FileStorage,
 ):
     dp.update.middleware(ConfigMiddleware(bot_config))
     dp.update.middleware(InitMiddleware(
         pool=pool, user_getter=user_getter, dcf=dcf, redis=redis,
-        scheduler=scheduler, locker=locker,
+        scheduler=scheduler, locker=locker, file_storage=file_storage,
     ))
     dp.update.middleware(LoadDataMiddleware())
     dp.message.middleware(FixTargetMiddleware())

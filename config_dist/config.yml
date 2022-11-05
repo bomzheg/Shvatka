@@ -32,3 +32,8 @@ auth:
   bot-token: ""
   bot-username: ""
   auth-url: "https://example.org/sh/login/data"
+file-storage-config:
+  path: ./local-storage/files
+  mkdir: true
+  exist-ok: true
+  parents: true

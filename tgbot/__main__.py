@@ -13,7 +13,7 @@ from tgbot.main_factory import (
     create_dispatcher,
     get_paths,
     create_scheduler,
-    create_redis,
+    create_redis, create_file_storage,
 )
 from tgbot.username_resolver.user_getter import UserGetter
 
@@ -39,7 +39,8 @@ async def main():
     ):
         dp = create_dispatcher(
             config=config, user_getter=user_getter, dcf=dcf, pool=pool,
-            redis=redis, scheduler=scheduler, locker=create_lock_factory()
+            redis=redis, scheduler=scheduler, locker=create_lock_factory(),
+            file_storage=create_file_storage(config.file_storage_config),
         )
 
         logger.info("started")

@@ -137,10 +137,11 @@ def locker() -> KeyCheckerFactory:
 def dp(
     pool: sessionmaker, bot_config, user_getter: UserGetter,
     dcf: Factory, redis: Redis, scheduler: Scheduler, locker: KeyCheckerFactory,
+    file_storage: FileStorage,
 ) -> Dispatcher:
     return create_dispatcher(
         config=bot_config, user_getter=user_getter, dcf=dcf, pool=pool,
-        redis=redis, scheduler=scheduler, locker=locker,
+        redis=redis, scheduler=scheduler, locker=locker, file_storage=file_storage,
     )
 
 
@@ -175,6 +176,11 @@ def upgrade_schema_db(alembic_config: AlembicConfig):
     upgrade(alembic_config, "head")
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def file_storage() -> FileStorage:
     return MemoryFileStorage()
+
+
+@pytest.fixture(autouse=True)
+def clean_up_memory(file_storage: MemoryFileStorage):
+    file_storage.storage.clear()

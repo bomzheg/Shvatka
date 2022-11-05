@@ -7,6 +7,7 @@ from redis.asyncio.client import Redis
 from sqlalchemy.orm import sessionmaker
 
 from db.dao.holder import HolderDao
+from shvatka.clients.file_storage import FileStorage
 from shvatka.scheduler import Scheduler
 from shvatka.utils.key_checker_lock import KeyCheckerFactory
 from tgbot.username_resolver.user_getter import UserGetter
@@ -16,6 +17,7 @@ class InitMiddleware(BaseMiddleware):
     def __init__(
         self, pool: sessionmaker, user_getter: UserGetter, dcf: Factory,
         redis: Redis, scheduler: Scheduler, locker: KeyCheckerFactory,
+        file_storage: FileStorage,
     ):
         self.pool = pool
         self.user_getter = user_getter
@@ -23,6 +25,7 @@ class InitMiddleware(BaseMiddleware):
         self.redis = redis
         self.scheduler = scheduler
         self.locker = locker
+        self.file_storage = file_storage
 
     async def __call__(
         self,
@@ -34,6 +37,7 @@ class InitMiddleware(BaseMiddleware):
         data["dcf"] = self.dcf
         data["scheduler"] = self.scheduler
         data["locker"] = self.locker
+        data["file_storage"] = self.file_storage
         async with self.pool() as session:
             holder_dao = HolderDao(session, self.redis)
             data["dao"] = holder_dao

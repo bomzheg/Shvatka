@@ -17,4 +17,5 @@ class ApiConfig(Config):
             db=base.db,
             redis=base.redis,
             auth=auth,
+            file_storage_config=base.file_storage_config,
         )

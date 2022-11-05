@@ -3,7 +3,8 @@ import pytest_asyncio
 from dataclass_factory import Factory
 from httpx import AsyncClient
 
-from api.dependencies import AuthProvider, Token
+from api.dependencies import AuthProvider
+from api.models.auth import Token
 from db.dao.holder import HolderDao
 from shvatka.models import dto
 from shvatka.services.user import upsert_user, set_password

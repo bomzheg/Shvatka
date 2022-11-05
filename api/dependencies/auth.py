@@ -7,12 +7,12 @@ from fastapi import Depends, HTTPException, APIRouter
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from jose import jwt, JWTError
 from passlib.context import CryptContext
-from pydantic import BaseModel
 from starlette import status
 from starlette.responses import HTMLResponse
 
 from api.config.models.auth import AuthConfig
 from api.dependencies.db import dao_provider
+from api.models.auth import UserTgAuth, Token
 from db.dao.holder import HolderDao
 from shvatka.models import dto
 from shvatka.services.user import upsert_user
@@ -36,35 +36,6 @@ TG_WIDGET_HTML = """
         """
 logger = logging.getLogger(__name__)
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/token")
-
-
-class UserTgAuth(BaseModel):
-    id: int
-    first_name: str
-    auth_date: datetime
-    hash: str
-    photo_url: str | None = None
-    username: str | None = None
-    last_name: str | None = None
-
-    def to_dto(self):
-        return dto.User(
-            tg_id=self.id,
-            first_name=self.first_name,
-            last_name=self.last_name,
-            username=self.username,
-            is_bot=False,
-        )
-
-    def to_tg_spec(self) -> str:
-        data = self.dict(exclude={"hash"})
-        data["auth_date"] = int(self.auth_date.timestamp())
-        return "\n".join([f"{key}={data[key]}" for key in sorted(data.keys()) if data.get(key)])
-
-
-class Token(BaseModel):
-    access_token: str
-    token_type: str
 
 
 def get_current_user():

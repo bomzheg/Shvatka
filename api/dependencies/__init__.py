@@ -3,7 +3,7 @@ from redis.asyncio.client import Redis
 from sqlalchemy.orm import sessionmaker
 
 from api.config.models.main import ApiConfig
-from api.dependencies.auth import get_current_user, AuthProvider, Token
+from api.dependencies.auth import get_current_user, AuthProvider
 from api.dependencies.db import DbProvider, dao_provider
 from api.dependencies.game import active_game_provider, db_game_provider
 from api.dependencies.player import player_provider, db_player_provider

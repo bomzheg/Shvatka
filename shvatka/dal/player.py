@@ -31,7 +31,7 @@ class PlayerPromoter(Committer, metaclass=ABCMeta):
         raise NotImplementedError
 
 
-class TeamJoiner(Committer, metaclass=ABCMeta):
+class TeamJoiner(Committer, PlayerInTeamGetter, metaclass=ABCMeta):
     async def join_team(self, player: dto.Player, team: dto.Team, role: str) -> None:
         raise NotImplementedError
 

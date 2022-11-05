@@ -70,7 +70,7 @@ async def cmd_create_team_group(message: Message, user: dto.User, chat: dto.Chat
 
 
 async def cmd_add_in_team(
-    message: Message, team: dto.Team, target: dto.Player, bot: Bot,
+    message: Message, team: dto.Team, target: dto.Player, player: dto.Player, bot: Bot,
     command: CommandObject, dao: HolderDao,
 ):
     logger.info(
@@ -89,7 +89,7 @@ async def cmd_add_in_team(
         )
     role = command.args or DEFAULT_ROLE
     try:
-        await join_team(target, team, dao.player_in_team, role)
+        await join_team(target, team, player, dao.player_in_team, role)
     except PlayerAlreadyInTeam as e:
         return await message.reply(
             f"Игрок {hd.quote(target.user.fullname)} уже находится в команде "

@@ -40,9 +40,13 @@ class WaiverVoteGetterImpl(WaiverVoteGetter):
 @dataclass
 class WaiverApproverImpl(WaiverApprover, WaiverVoteGetterImpl):
     waiver: WaiverDao
+    player_in_team: PlayerInTeamDao
 
     async def upsert(self, waiver: dto.Waiver) -> None:
         return await self.waiver.upsert(waiver)
 
     async def commit(self):
         return await self.waiver.commit()
+
+    async def get_player_in_team(self, player: dto.Player) -> dto.PlayerInTeam:
+        return await self.player_in_team.get_player_in_team(player)

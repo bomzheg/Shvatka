@@ -27,7 +27,7 @@ class PlayerInTeamDao(BaseDAO[models.PlayerInTeam]):
             )
             .where(
                 models.PlayerInTeam.player_id == player.id,
-                get_not_leaved_clause(),
+                not_leaved(),
             )
         )
         try:
@@ -88,12 +88,12 @@ class PlayerInTeamDao(BaseDAO[models.PlayerInTeam]):
             select(models.PlayerInTeam)
             .where(
                 models.PlayerInTeam.player_id == player.id,
-                get_not_leaved_clause(),
+                not_leaved(),
             )
         )
         return result.scalar_one()
 
 
-def get_not_leaved_clause():
+def not_leaved():
     # noinspection PyUnresolvedReferences
     return models.PlayerInTeam.date_left.is_(None)  # noqa: E711

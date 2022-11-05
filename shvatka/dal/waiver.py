@@ -30,6 +30,6 @@ class WaiverVoteGetter(PollGetWaivers, metaclass=ABCMeta):
         raise NotImplementedError
 
 
-class WaiverApprover(Committer, WaiverVoteGetter, metaclass=ABCMeta):
+class WaiverApprover(Committer, WaiverVoteGetter, PlayerInTeamGetter, metaclass=ABCMeta):
     async def upsert(self, waiver: dto.Waiver):
         raise NotImplementedError

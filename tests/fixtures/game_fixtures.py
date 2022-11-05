@@ -32,8 +32,8 @@ async def completed_game(
     harry: dto.Player, ron: dto.Player, hermione: dto.Player, draco: dto.Player,
     dao: HolderDao,
 ):
-    await join_team(ron, gryffindor, dao.player_in_team)
-    await join_team(hermione, gryffindor, dao.player_in_team)
+    await join_team(ron, gryffindor, harry, dao.player_in_team)
+    await join_team(hermione, gryffindor, harry, dao.player_in_team)
     await dao.game.start_waivers(game)
 
     await add_vote(game, gryffindor, harry, Played.yes, dao.waiver_vote_adder)

@@ -4,7 +4,7 @@ from db.dao.holder import HolderDao
 from shvatka.models import dto
 from shvatka.services.player import join_team, get_my_team, get_my_role
 from shvatka.utils.defaults_constants import DEFAULT_ROLE, CAPTAIN_ROLE
-from shvatka.utils.exceptions import PlayerAlreadyInTeam
+from shvatka.utils.exceptions import PlayerAlreadyInTeam, PermissionsError
 from tests.fixtures.team import create_second_team
 
 
@@ -16,16 +16,19 @@ async def test_add_player_to_team(
     assert gryffindor == await get_my_team(harry, dao.player_in_team)
     assert CAPTAIN_ROLE == await get_my_role(harry, dao.player_in_team)
 
-    await join_team(hermione, gryffindor, dao.player_in_team)
+    await join_team(hermione, gryffindor, harry, dao.player_in_team)
     assert gryffindor == await get_my_team(hermione, dao.player_in_team)
     assert 2 == await dao.player_in_team.count()
     assert DEFAULT_ROLE == await get_my_role(hermione, dao.player_in_team)
 
     with pytest.raises(PlayerAlreadyInTeam):
-        await join_team(harry, gryffindor, dao.player_in_team)
+        await join_team(harry, gryffindor, harry, dao.player_in_team)
+
+    with pytest.raises(PermissionsError):
+        await join_team(draco, gryffindor, hermione, dao.player_in_team)
 
     with pytest.raises(PlayerAlreadyInTeam):
-        await join_team(hermione, gryffindor, dao.player_in_team)
+        await join_team(hermione, gryffindor, harry, dao.player_in_team)
 
     with pytest.raises(PlayerAlreadyInTeam):
         await create_second_team(hermione, dao)
@@ -38,9 +41,9 @@ async def test_add_player_to_team(
     assert CAPTAIN_ROLE == await get_my_role(draco, dao.player_in_team)
 
     with pytest.raises(PlayerAlreadyInTeam):
-        await join_team(harry, slytherin, dao.player_in_team)
+        await join_team(harry, slytherin, draco, dao.player_in_team)
 
     with pytest.raises(PlayerAlreadyInTeam):
-        await join_team(hermione, slytherin, dao.player_in_team)
+        await join_team(hermione, slytherin, draco, dao.player_in_team)
 
     assert 3 == await dao.player_in_team.count()

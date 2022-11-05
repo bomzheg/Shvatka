@@ -5,7 +5,7 @@ from shvatka.dal.player import (
 )
 from shvatka.models import dto
 from shvatka.utils.defaults_constants import DEFAULT_ROLE, EMOJI_BY_ROLE, DEFAULT_EMOJI
-from shvatka.utils.exceptions import PlayerRestoredInTeam, CantBeAuthor, PromoteError, PlayerNotInTeam
+from shvatka.utils.exceptions import PlayerRestoredInTeam, CantBeAuthor, PromoteError, PlayerNotInTeam, PermissionsError
 
 logger = logging.getLogger(__name__)
 
@@ -51,10 +51,11 @@ async def promote(actor: dto.Player, target: dto.Player, dao: PlayerPromoter):
 
 
 async def join_team(
-    player: dto.Player, team: dto.Team,
+    player: dto.Player, team: dto.Team, manager: dto.Player,
     dao: TeamJoiner, role: str = DEFAULT_ROLE,
 ):
     await dao.check_player_free(player)
+    check_can_add_players(await get_team_player(manager, team, dao))
     try:
         await dao.join_team(player, team, role=role)
     except PlayerRestoredInTeam:
@@ -85,3 +86,18 @@ async def leave(player: dto.Player, dao: TeamLeaver):
 def check_allow_be_author(player: dto.Player):
     if not player.can_be_author:
         raise CantBeAuthor(player=player)
+
+
+def check_can_add_players(team_player: dto.FullTeamPlayer):
+    if not team_player.can_add_player:
+        raise PermissionsError(permission_name="can_add_player", team=team_player.team, player=team_player.player)
+
+
+async def get_team_player(approver: dto.Player, team: dto.Team, dao: PlayerInTeamGetter) -> dto.FullTeamPlayer:
+    team_player = dto.FullTeamPlayer.from_simple(
+        team_player=await dao.get_player_in_team(approver),
+        team=team, player=approver,
+    )
+    if team_player.team_id != team.id:
+        raise PlayerNotInTeam(player=approver, team=team)
+    return team_player

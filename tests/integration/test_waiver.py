@@ -17,7 +17,7 @@ async def test_get_voted_list(
 ):
     await start_waivers(game, author, dao.game)
 
-    await join_team(hermione, gryffindor, dao.player_in_team)
+    await join_team(hermione, gryffindor, harry, dao.player_in_team)
     await add_vote(game, gryffindor, harry, Played.yes, dao.waiver_vote_adder)
     await add_vote(game, gryffindor, hermione, Played.yes, dao.waiver_vote_adder)
 
@@ -42,7 +42,7 @@ async def test_get_voted_list(
     assert [gryffindor] == await dao.waiver.get_played_teams(game)
 
     with pytest.raises(PlayerRestoredInTeam):
-        await join_team(hermione, gryffindor, dao.player_in_team)
+        await join_team(hermione, gryffindor, harry, dao.player_in_team)
     await approve_waivers(game, gryffindor, harry, dao.waiver_approver)
     # vote not restored after restored player in team
     assert 1 == await dao.waiver.count()

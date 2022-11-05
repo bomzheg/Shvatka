@@ -44,9 +44,9 @@ class PlayerInTeam(Base):
             role=self.role,
             emoji=self.emoji,
 
-            can_manage_waivers=self.can_manage_waivers,
-            can_manage_players=self.can_manage_players,
-            can_change_team_name=self.can_change_team_name,
-            can_add_players=self.can_add_players,
-            can_remove_players=self.can_remove_players,
+            _can_manage_waivers=self.can_manage_waivers,
+            _can_manage_players=self.can_manage_players,
+            _can_change_team_name=self.can_change_team_name,
+            _can_add_players=self.can_add_players,
+            _can_remove_players=self.can_remove_players,
         )

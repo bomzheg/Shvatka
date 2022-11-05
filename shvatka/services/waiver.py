@@ -1,7 +1,7 @@
 from shvatka.dal.waiver import WaiverVoteAdder, WaiverVoteGetter, WaiverApprover
 from shvatka.models import dto
 from shvatka.models.enums.played import Played
-from shvatka.services.player import check_player_on_team
+from shvatka.services.player import check_player_on_team, get_team_player
 from shvatka.utils.exceptions import WaiverForbidden, PermissionsError
 
 
@@ -45,7 +45,8 @@ async def approve_waivers(game: dto.Game, team: dto.Team, approver: dto.Player, 
     :param dao:
     :return:
     """
-    await check_allow_approve_waivers(approver, team)
+    team_player = await get_team_player(approver, team, dao)
+    check_allow_approve_waivers(team_player)
     for vote in await get_voted_list(team, dao):
         if vote.vote == Played.not_allowed:
             continue
@@ -59,11 +60,10 @@ async def approve_waivers(game: dto.Game, team: dto.Team, approver: dto.Player, 
     await dao.commit()
 
 
-async def check_allow_approve_waivers(player: dto.Player, team: dto.Team):
-    #  TODO async for check permissions in db
-    if team.captain.id != player.id:
+def check_allow_approve_waivers(team_player: dto.FullTeamPlayer):
+    if not team_player.can_manage_waivers:
         raise PermissionsError(
-            permission_name="manage_waivers",
-            player=player,
-            team=team,
+            permission_name="can_manage_waivers",
+            player=team_player.player,
+            team=team_player.team,
         )

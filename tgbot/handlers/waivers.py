@@ -5,8 +5,8 @@ from aiogram.types import Message, CallbackQuery
 from db.dao.holder import HolderDao
 from shvatka.models import dto
 from shvatka.models.enums import GameStatus
-from shvatka.services.player import get_my_team
-from shvatka.services.waiver import add_vote, approve_waivers
+from shvatka.services.player import get_my_team, get_team_player
+from shvatka.services.waiver import add_vote, approve_waivers, check_allow_approve_waivers
 from shvatka.utils.exceptions import PlayerNotInTeam, AnotherGameIsActive
 from tgbot import keyboards as kb
 from tgbot.filters.game_status import GameStatusFilter
@@ -56,6 +56,7 @@ async def start_approve_waivers_handler(
     bot: Bot
 ):
     team = await get_my_team(player, dao.player_in_team)
+    check_allow_approve_waivers(await get_team_player(player, team, dao.waiver_approver))
     await total_remove_msg(
         bot=bot,
         chat_id=team.chat.tg_id,

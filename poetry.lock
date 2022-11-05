@@ -56,7 +56,7 @@ develop = false
 type = "git"
 url = "https://github.com/bomzheg/aiogram_tests.git"
 reference = "fix/deque-usage"
-resolved_reference = "7217e616bf09d78c1644c86397da4943ae5cf20e"
+resolved_reference = "22e03b9f327d1cae3a9a1923a73d481bbc6f4612"
 
 [[package]]
 name = "aiohttp"

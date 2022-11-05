@@ -1,3 +1,4 @@
+import logging
 from io import BytesIO
 from typing import BinaryIO
 
@@ -5,10 +6,13 @@ from common.config.models.main import FileStorageConfig
 from shvatka.clients.file_storage import FileStorage
 from shvatka.models.dto.scn import FileContentLink, FileContent
 
+logger = logging.getLogger(__name__)
+
 
 class LocalFileStorage(FileStorage):
     def __init__(self, config: FileStorageConfig):
         self.path = config.path
+        logger.info("as local file storage use '%s'", self.path)
         if config.mkdir:
             self.path.mkdir(exist_ok=config.exist_ok, parents=config.parents)
 

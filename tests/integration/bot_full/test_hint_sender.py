@@ -12,10 +12,10 @@ from aiogram_tests.mocked_bot import MockedBot
 from db.dao.holder import HolderDao
 from shvatka.clients.file_storage import FileStorage
 from shvatka.models import dto
-from shvatka.models.dto.scn import TextHint, GPSHint, PhotoHint, FileContent, FileContentLink, TgLink, BaseHint
+from shvatka.models.dto.scn import TextHint, GPSHint, PhotoHint, BaseHint
 from shvatka.models.dto.scn.hint_part import VenueHint, AudioHint, VideoHint, DocumentHint, AnimationHint, VoiceHint, \
     VideoNoteHint, StickerHint
-from shvatka.models.enums.hint_type import HintType
+from tests.fixtures.file_storage_constants import FILE_ID, CHAT_ID, FILE_CONTENT
 from tests.fixtures.scn_fixtures import GUID
 from tgbot.views.hint_content_resolver import HintContentResolver
 from tgbot.views.hint_sender import HintSender
@@ -32,15 +32,6 @@ PARAMETERS = [
     (SendSticker, StickerHint(file_guid=GUID), "sendSticker", "sticker"),
 ]
 
-FILE_ID = "98765"
-CHAT_ID = 111
-FILE_CONTENT = FileContent(
-    guid=GUID,
-    tg_link=TgLink(file_id=FILE_ID, content_type=HintType.photo),
-    extension=".jpg",
-    file_content_link=FileContentLink(file_path=GUID),
-    original_filename="файло",
-)
 
 @pytest_asyncio.fixture
 async def hint_sender(dao: HolderDao, file_storage: FileStorage):

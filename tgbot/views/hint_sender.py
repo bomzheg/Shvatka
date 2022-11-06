@@ -8,7 +8,7 @@ from aiogram.types import Message
 
 from shvatka.models.dto.scn.hint_part import BaseHint
 from shvatka.models.enums.hint_type import HintType
-from tgbot.views.hint_content_resolver import HintContentResolver
+from tgbot.views.hint_factory.hint_content_resolver import HintContentResolver
 
 logger = logging.getLogger(__name__)
 

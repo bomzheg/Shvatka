@@ -10,6 +10,7 @@ from .handlers import process_time_message, select_time, process_hint, on_finish
 time_hint = Dialog(
     Window(
         Const("Время выхода подсказки (можно выбрать или ввести)"),
+        #  TODO can set only time greater that before hint
         MessageInput(func=process_time_message),
         Group(
             Select(

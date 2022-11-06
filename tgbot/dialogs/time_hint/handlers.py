@@ -5,9 +5,10 @@ from aiogram_dialog import DialogManager
 from aiogram_dialog.widgets.kbd import Button
 from dataclass_factory import Factory
 
-from shvatka.models.dto.scn import TextHint, TimeHint
+from shvatka.models.dto.scn import TimeHint
 from shvatka.models.dto.scn.hint_part import AnyHint
 from tgbot.states import TimeHintSG
+from tgbot.views.hint_factory.hint_parser import HintParser
 
 
 async def select_time(c: CallbackQuery, widget: Any, manager: DialogManager, item_id: str):
@@ -36,7 +37,8 @@ async def set_time(time_minutes: int, manager: DialogManager):
 
 async def process_hint(m: Message, dialog_: Any, manager: DialogManager) -> None:
     dcf: Factory = manager.middleware_data["dcf"]
-    hint = TextHint(text=m.text)
+    parser: HintParser = manager.middleware_data["hint_parser"]
+    hint = parser.parse(m, manager.middleware_data["player"])
     manager.dialog_data["hints"].append(dcf.dump(hint))
 
 

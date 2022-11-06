@@ -3,6 +3,7 @@ from aiogram.dispatcher.event.bases import SkipHandler
 from aiogram.types import Message
 
 from db.dao.holder import HolderDao
+from shvatka.clients.file_storage import FileStorage
 from shvatka.models import dto
 from shvatka.scheduler import Scheduler
 from shvatka.services.game_play import check_key
@@ -23,6 +24,7 @@ async def check_key_handler(
     locker: KeyCheckerFactory,
     bot: Bot,
     config: BotConfig,
+    file_storage: FileStorage,
 ):
     try:
         await check_key(
@@ -31,7 +33,7 @@ async def check_key_handler(
             team=team,
             game=await dao.game.get_full(game.id),
             dao=dao.game_player,
-            view=create_bot_game_view(bot=bot, dao=dao),
+            view=create_bot_game_view(bot=bot, dao=dao, storage=file_storage),
             game_log=GameBotLog(bot=bot, log_chat_id=config.log_chat),
             org_notifier=BotOrgNotifier(bot=bot),
             locker=locker,

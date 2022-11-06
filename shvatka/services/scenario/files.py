@@ -13,7 +13,7 @@ async def upsert_files(
     guids = set()
     for file in files:
         await dao.check_author_can_own_guid(author, file.guid)
-        file_link = await file_storage.put(file, contents[file.guid])
+        file_link = await file_storage.put(file.local_file_name, contents[file.guid])
         file.file_content_link = file_link
         await dao.upsert_file(file, author)
         guids.add(file.guid)

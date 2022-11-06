@@ -17,7 +17,7 @@ from shvatka.models.dto.scn.hint_part import VenueHint, AudioHint, VideoHint, Do
     VideoNoteHint, StickerHint
 from tests.fixtures.file_storage_constants import FILE_ID, CHAT_ID, FILE_CONTENT
 from tests.fixtures.scn_fixtures import GUID
-from tgbot.views.hint_content_resolver import HintContentResolver
+from tgbot.views.hint_factory.hint_content_resolver import HintContentResolver
 from tgbot.views.hint_sender import HintSender
 
 BAD_REQUEST_DESC = "Bad Request: wrong remote file identifier specified: Wrong padding in the string"
@@ -120,7 +120,7 @@ async def test_send_photo_by_content(
     method_name: str,
     content_type: str,
 ):
-    await hint_sender.resolver.storage.put(FILE_CONTENT, BytesIO(b"12345"))
+    await hint_sender.resolver.storage.put(FILE_CONTENT.local_file_name, BytesIO(b"12345"))
     await hint_sender.resolver.dao.upsert(file=FILE_CONTENT, author=harry)
     await hint_sender.resolver.dao.commit()
 

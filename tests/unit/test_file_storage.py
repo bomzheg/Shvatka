@@ -18,6 +18,6 @@ async def test_file_storage():
         exist_ok=True,
     )
     file_storage = LocalFileStorage(storage_config)
-    saved = await file_storage.put(FILE_CONTENT, BytesIO(b"12345"))
+    saved = await file_storage.put(FILE_CONTENT.local_file_name, BytesIO(b"12345"))
     loaded = await file_storage.get(saved)
     assert loaded.read() == b"12345"

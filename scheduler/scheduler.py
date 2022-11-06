@@ -11,6 +11,7 @@ from sqlalchemy.orm import sessionmaker
 from db.config.models.db import RedisConfig
 from scheduler.context import ScheduledContextHolder
 from scheduler.wrappers import prepare_game_wrapper, start_game_wrapper, send_hint_wrapper
+from shvatka.clients.file_storage import FileStorage
 from shvatka.models import dto
 from shvatka.scheduler import Scheduler
 from shvatka.utils.datetime_utils import tz_utc
@@ -24,6 +25,7 @@ class ApScheduler(Scheduler):
         redis_config: RedisConfig,
         pool: sessionmaker,
         redis: Redis,
+        file_storage: FileStorage,
         bot: Bot = None,
         game_log_chat: int = None,
     ):
@@ -32,6 +34,7 @@ class ApScheduler(Scheduler):
         ScheduledContextHolder.bot = bot
         ScheduledContextHolder.scheduler = self
         ScheduledContextHolder.game_log_chat = game_log_chat
+        ScheduledContextHolder.file_storage = file_storage
         self.job_store = RedisJobStore(
             jobs_key="SH.jobs",
             run_times_key="SH.run_times",

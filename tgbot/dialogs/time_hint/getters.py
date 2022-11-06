@@ -2,6 +2,7 @@ from aiogram_dialog import DialogManager
 from dataclass_factory import Factory
 
 from shvatka.models.dto.scn.hint_part import AnyHint
+from tgbot.views.utils import render_hints
 
 TIMES_PRESET = [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60]
 
@@ -21,5 +22,5 @@ async def get_hints(dialog_manager: DialogManager, **_):
         "hints": hints,
         "time": time_,
         "has_hints": len(hints) > 0,
-        "hints_count": len(hints),
+        "rendered": render_hints(hints),
     }

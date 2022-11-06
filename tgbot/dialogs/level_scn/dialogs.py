@@ -9,7 +9,7 @@ from .handlers import process_result, start_add_time_hint
 level = Dialog(
     Window(
         Const("Подсказки"),
-        Format("сейчас есть {time_hints_count}"),
+        Format("{rendered}"),
         Button(Const("Добавить"), id="add_time_hint", on_click=start_add_time_hint),
         state=LevelSG.time_hints,
         getter=get_time_hints,

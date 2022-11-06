@@ -38,15 +38,6 @@ class VenueHint(BaseHint, LocationMixin):
 
 
 @dataclass
-class ContactHint(BaseHint):
-    phone_number: str
-    first_name: str
-    last_name: str = None
-    vcard: str = None
-    type: HintLiteral = HintType.contact.name
-
-
-@dataclass
 class CaptionMixin:
     caption: str = None
 
@@ -94,6 +85,15 @@ class VoiceHint(BaseHint, CaptionMixin, FileMixin):
 @dataclass
 class VideoNoteHint(BaseHint, FileMixin):
     type: HintLiteral = HintType.video_note.name
+
+
+@dataclass
+class ContactHint(BaseHint):
+    phone_number: str
+    first_name: str
+    last_name: str = None
+    vcard: str = None
+    type: HintLiteral = HintType.contact.name
 
 
 @dataclass

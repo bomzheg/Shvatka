@@ -12,6 +12,7 @@ from tgbot.views.hint_factory.hint_content_resolver import HintContentResolver
 
 logger = logging.getLogger(__name__)
 
+
 class HintSender:
     def __init__(self, bot: Bot, resolver: HintContentResolver):
         self.bot = bot

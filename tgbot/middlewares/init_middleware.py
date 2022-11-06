@@ -11,6 +11,7 @@ from shvatka.clients.file_storage import FileStorage
 from shvatka.scheduler import Scheduler
 from shvatka.utils.key_checker_lock import KeyCheckerFactory
 from tgbot.username_resolver.user_getter import UserGetter
+from tgbot.views.hint_factory.hint_parser import HintParser
 
 
 class InitMiddleware(BaseMiddleware):
@@ -41,6 +42,9 @@ class InitMiddleware(BaseMiddleware):
         async with self.pool() as session:
             holder_dao = HolderDao(session, self.redis)
             data["dao"] = holder_dao
+            data["hint_parser"] = HintParser(
+                dao=holder_dao.file_info, file_storage=self.file_storage, bot=data["bot"],
+            )
             result = await handler(event, data)
             del data["dao"]
         return result

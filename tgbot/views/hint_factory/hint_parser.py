@@ -52,8 +52,12 @@ class HintParser:
                     file_id=message.audio.thumb.file_id,
                     content_type=HintType.photo,
                     author=author,
+                ) if message.audio.thumb else None
+                return AudioHint(
+                    caption=message.html_text,
+                    file_guid=file_meta.guid,
+                    thumb_guid=thumb.guid if thumb else None,
                 )
-                return AudioHint(caption=message.html_text, file_guid=file_meta.guid, thumb_guid=thumb.guid)
             case ContentType.VIDEO:
                 file_meta = await self.save_content(
                     file_id=message.video.file_id,
@@ -64,8 +68,12 @@ class HintParser:
                     file_id=message.video.thumb.file_id,
                     content_type=HintType.video,
                     author=author,
+                ) if message.video.thumb else None
+                return VideoHint(
+                    caption=message.html_text,
+                    file_guid=file_meta.guid,
+                    thumb_guid=thumb.guid if thumb else None,
                 )
-                return VideoHint(caption=message.html_text, file_guid=file_meta.guid, thumb_guid=thumb.guid)
             case ContentType.DOCUMENT:
                 file_meta = await self.save_content(
                     file_id=message.document.file_id,
@@ -76,8 +84,12 @@ class HintParser:
                     file_id=message.document.thumb.file_id,
                     content_type=HintType.document,
                     author=author,
+                ) if message.document.thumb else None
+                return DocumentHint(
+                    caption=message.html_text,
+                    file_guid=file_meta.guid,
+                    thumb_guid=thumb.guid if thumb else None,
                 )
-                return DocumentHint(caption=message.html_text, file_guid=file_meta.guid, thumb_guid=thumb.guid)
             case ContentType.ANIMATION:
                 file_meta = await self.save_content(
                     file_id=message.animation.file_id,
@@ -88,8 +100,12 @@ class HintParser:
                     file_id=message.animation.thumb.file_id,
                     content_type=HintType.animation,
                     author=author,
+                ) if message.animation.thumb else None
+                return AnimationHint(
+                    caption=message.html_text,
+                    file_guid=file_meta.guid,
+                    thumb_guid=thumb.guid if thumb else None,
                 )
-                return AnimationHint(caption=message.html_text, file_guid=file_meta.guid, thumb_guid=thumb.guid)
             case ContentType.VOICE:
                 file_meta = await self.save_content(
                     file_id=message.voice.file_id,

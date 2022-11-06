@@ -22,10 +22,15 @@ async def process_time_message(m: Message, dialog_: Any, manager: DialogManager)
     except ValueError:
         await m.answer("Некорректный формат времени. Пожалуйста введите время в формате ЧЧ:ММ")
         return
-    await set_time(time_, manager)
+    try:
+        await set_time(time_, manager)
+    except ValueError:
+        await m.answer("Время выхода данной подсказки должно быть больше, чем предыдущей")
 
 
 async def set_time(time_minutes: int, manager: DialogManager):
+    if time_minutes <= int(manager.start_data["previous_time"]):
+        raise ValueError("Время меньше предыдущего")
     data = manager.dialog_data
     if not isinstance(data, dict):
         data = {}

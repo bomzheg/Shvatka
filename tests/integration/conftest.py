@@ -120,10 +120,10 @@ def patch_api_config(bot_config: TgBotConfig, postgres_url: str, redis: Redis):
 
 
 @pytest_asyncio.fixture(scope="session")
-async def scheduler(pool: sessionmaker, redis: Redis, bot: Bot, bot_config: TgBotConfig):
+async def scheduler(pool: sessionmaker, redis: Redis, bot: Bot, bot_config: TgBotConfig, file_storage: FileStorage):
     async with create_scheduler(
         pool=pool, redis=redis, bot=bot, redis_config=bot_config.redis,
-        game_log_chat=bot_config.bot.log_chat,
+        game_log_chat=bot_config.bot.log_chat, file_storage=file_storage,
     ) as sched:
         yield sched
 

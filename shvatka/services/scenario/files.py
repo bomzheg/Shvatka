@@ -3,11 +3,11 @@ from typing.io import BinaryIO
 from shvatka.clients.file_storage import FileStorage
 from shvatka.dal.game import GameUpserter
 from shvatka.models import dto
-from shvatka.models.dto.scn import FileContent
+from shvatka.models.dto.scn import FileMeta
 
 
 async def upsert_files(
-    author: dto.Player, contents: dict[str, BinaryIO], files: list[FileContent],
+    author: dto.Player, contents: dict[str, BinaryIO], files: list[FileMeta],
     dao: GameUpserter, file_storage: FileStorage
 ) -> set[str]:
     guids = set()

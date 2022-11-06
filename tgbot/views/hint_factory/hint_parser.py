@@ -7,7 +7,7 @@ from aiogram.types import Message, ContentType
 from db.dao import FileInfoDao
 from shvatka.clients.file_storage import FileStorage
 from shvatka.models import dto
-from shvatka.models.dto.scn import BaseHint, TextHint, GPSHint, FileContent, TgLink, FileContentLink, PhotoHint
+from shvatka.models.dto.scn import BaseHint, TextHint, GPSHint, FileMeta, TgLink, FileContentLink, PhotoHint
 from shvatka.models.dto.scn.hint_part import VenueHint, AudioHint
 from shvatka.models.enums.hint_type import HintType
 
@@ -18,7 +18,7 @@ class HintParser:
         self.dao = dao
         self.storage = file_storage
 
-    def parse(self, message: Message, author: dto.Player) -> BaseHint:
+    async def parse(self, message: Message, author: dto.Player) -> BaseHint:
         match message.content_type:
             case ContentType.TEXT:
                 return TextHint(text=message.html_text)
@@ -69,9 +69,9 @@ class HintParser:
             case _:
                 raise ValueError()
 
-    async def save_content(self, file_id: str, content_type: HintType, author: dto.Player) -> FileContent:
+    async def save_content(self, file_id: str, content_type: HintType, author: dto.Player) -> FileMeta:
         content = await self.bot.download(file_id, BytesIO())
-        file_meta = FileContent(
+        file_meta = FileMeta(
             guid=str(uuid4()),
             original_filename="unknown",
             extension="",

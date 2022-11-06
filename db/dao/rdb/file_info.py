@@ -4,7 +4,7 @@ from sqlalchemy.future import select
 
 from db import models
 from shvatka.models import dto
-from shvatka.models.dto.scn import FileContent, SavedFileContent
+from shvatka.models.dto.scn import FileMeta, SavedFileMeta
 from shvatka.utils.exceptions import PermissionsError
 from .base import BaseDAO
 
@@ -13,7 +13,7 @@ class FileInfoDao(BaseDAO[models.FileInfo]):
     def __init__(self, session: AsyncSession):
         super().__init__(models.FileInfo, session)
 
-    async def upsert(self, file: FileContent, author: dto.Player) -> SavedFileContent:
+    async def upsert(self, file: FileMeta, author: dto.Player) -> SavedFileMeta:
         try:
             db_file = await self._get_by_guid(file.guid)
         except NoResultFound:
@@ -36,7 +36,7 @@ class FileInfoDao(BaseDAO[models.FileInfo]):
         except NoResultFound:
             return
 
-    async def get_by_guid(self, guid: str) -> FileContent:
+    async def get_by_guid(self, guid: str) -> FileMeta:
         db_file = await self._get_by_guid(guid)
         return db_file.to_short_dto()
 

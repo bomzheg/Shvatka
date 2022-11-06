@@ -26,6 +26,7 @@ async def main():
     setup_logging(paths)
     config = load_config(paths)
     dcf = dataclass_factory.Factory(schemas=schemas)
+    file_storage = create_file_storage(config.file_storage_config)
     pool = create_pool(config.db)
     bot = create_bot(config)
 
@@ -34,13 +35,13 @@ async def main():
         create_redis(config.redis) as redis,
         create_scheduler(
             pool=pool, redis=redis, bot=bot, redis_config=config.redis,
-            game_log_chat=config.bot.log_chat
+            game_log_chat=config.bot.log_chat, file_storage=file_storage,
         ) as scheduler,
     ):
         dp = create_dispatcher(
             config=config, user_getter=user_getter, dcf=dcf, pool=pool,
             redis=redis, scheduler=scheduler, locker=create_lock_factory(),
-            file_storage=create_file_storage(config.file_storage_config),
+            file_storage=file_storage,
         )
 
         logger.info("started")

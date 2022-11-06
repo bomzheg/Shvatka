@@ -21,7 +21,7 @@ class FileContentLink:
 
 
 @dataclass
-class FileContent:
+class FileMeta:
     guid: str
     """GUID for filename in file storage, DB and in archive"""
     original_filename: str
@@ -41,6 +41,6 @@ class FileContent:
 
 
 @dataclass
-class SavedFileContent(FileContent):
+class SavedFileMeta(FileMeta):
     id: int
     author: dto.Player

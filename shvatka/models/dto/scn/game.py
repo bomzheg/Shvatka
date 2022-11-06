@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import BinaryIO
 
-from .file_content import FileContent
+from .file_content import FileMeta
 from .level import LevelScenario
 
 
@@ -13,7 +13,7 @@ class GameScenario:
 
 @dataclass
 class UploadedGameScenario(GameScenario):
-    files: list[FileContent]
+    files: list[FileMeta]
 
 
 @dataclass

@@ -1,4 +1,4 @@
-from .file_content import FileContent, FileContentLink, TgLink, SavedFileContent
+from .file_content import FileMeta, FileContentLink, TgLink, SavedFileMeta
 from .game import GameScenario, UploadedGameScenario
 from .hint_part import (
     BaseHint,

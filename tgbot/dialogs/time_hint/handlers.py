@@ -38,7 +38,7 @@ async def set_time(time_minutes: int, manager: DialogManager):
 async def process_hint(m: Message, dialog_: Any, manager: DialogManager) -> None:
     dcf: Factory = manager.middleware_data["dcf"]
     parser: HintParser = manager.middleware_data["hint_parser"]
-    hint = parser.parse(m, manager.middleware_data["player"])
+    hint = await parser.parse(m, manager.middleware_data["player"])
     manager.dialog_data["hints"].append(dcf.dump(hint))
 
 

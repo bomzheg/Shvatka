@@ -24,7 +24,7 @@ class Game(Base):
         foreign_keys=author_id,
         back_populates="my_games",
     )
-    name = Column(Text)
+    name = Column(Text, unique=True)
     status = Column(
         Enum(GameStatus),
         server_default=GameStatus.underconstruction,

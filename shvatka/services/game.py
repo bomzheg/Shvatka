@@ -5,7 +5,7 @@ from dataclass_factory import Factory
 from shvatka.clients.file_storage import FileStorage
 from shvatka.dal.game import (
     GameUpserter, GameCreator, GameAuthorsFinder, GameByIdGetter,
-    ActiveGameFinder, WaiverStarter, GameStartPlanner,
+    ActiveGameFinder, WaiverStarter, GameStartPlanner, GameNameChecker,
 )
 from shvatka.models import dto
 from shvatka.models.dto.scn.game import RawGameScenario
@@ -13,7 +13,7 @@ from shvatka.scheduler import Scheduler
 from shvatka.services.player import check_allow_be_author
 from shvatka.services.scenario.files import upsert_files
 from shvatka.services.scenario.game_ops import parse_uploaded_game, check_all_files_saved
-from shvatka.utils.exceptions import NotAuthorizedForEdit, AnotherGameIsActive
+from shvatka.utils.exceptions import NotAuthorizedForEdit, AnotherGameIsActive, CantEditGame
 
 
 async def upsert_game(
@@ -22,6 +22,9 @@ async def upsert_game(
 ) -> dto.FullGame:
     check_allow_be_author(author)
     game_scn = parse_uploaded_game(raw_scn.scn, dcf)
+    if not await dao.is_name_available(name=game_scn.name):
+        if not await dao.is_author_game_by_name(name=game_scn.name, author=author):
+            raise CantEditGame(player=author, text=f"cant edit game with name {game_scn.name}")
     guids = await upsert_files(author, raw_scn.files, game_scn.files, dao, file_storage)
     check_all_files_saved(game=game_scn, guids=guids)
     game = await dao.upsert_game(author, game_scn)
@@ -36,6 +39,7 @@ async def upsert_game(
 
 async def create_game(author: dto.Player, name: str, dao: GameCreator) -> dto.Game:
     check_allow_be_author(author)
+    await check_new_game_name_available(name=name, author=author, dao=dao)
     game = await dao.create_game(author, name)
     await dao.commit()
     return game
@@ -98,6 +102,11 @@ async def check_no_game_active(dao: ActiveGameFinder):
             game=game,
             game_status=game.status,
         )
+
+
+async def check_new_game_name_available(name: str, author: dto.Player, dao: GameNameChecker):
+    if not await dao.is_name_available(name):
+        raise CantEditGame(text="другая игра имеет такое имя", player=author)
 
 
 def check_is_author(game: dto.Game, player: dto.Player):

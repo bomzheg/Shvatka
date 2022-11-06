@@ -18,3 +18,8 @@ class LevelSG(StatesGroup):
     level_id = State()
     keys = State()
     time_hints = State()
+
+
+class GameSG(StatesGroup):
+    game_name = State()
+    levels = State()

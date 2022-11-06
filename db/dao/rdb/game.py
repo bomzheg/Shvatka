@@ -127,3 +127,19 @@ class GameDao(BaseDAO[models.Game]):
 
     async def set_finished(self, game: dto.Game):
         await self.set_status(game, GameStatus.finished)
+
+    async def is_name_available(self, name: str) -> bool:
+        return not bool(await self._get_game_by_name(name))
+
+    async def is_author_game_by_name(self, name: str, author: dto.Player) -> bool:
+        result = await self._get_game_by_name(name)
+        if result.author_id != author.id:
+            return False
+        return True
+
+    async def _get_game_by_name(self, name: str) -> models.Game | None:
+        result = await self.session.execute(
+            select(models.Game)
+            .where(models.Game.name == name)
+        )
+        return result.scalar_one_or_none()

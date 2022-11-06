@@ -8,7 +8,12 @@ from shvatka.models.dto.scn import FileMeta, SavedFileMeta
 from shvatka.models.dto.scn.game import GameScenario
 
 
-class GameUpserter(LevelUpserter, metaclass=ABCMeta):
+class GameNameChecker(Reader):
+    async def is_name_available(self, name: str) -> bool:
+        raise NotImplementedError
+
+
+class GameUpserter(LevelUpserter, GameNameChecker, metaclass=ABCMeta):
     async def upsert_game(self, author: dto.Player, scn: GameScenario) -> dto.Game:
         raise NotImplementedError
 
@@ -18,8 +23,11 @@ class GameUpserter(LevelUpserter, metaclass=ABCMeta):
     async def check_author_can_own_guid(self, author: dto.Player, guid: str) -> None:
         raise NotImplementedError
 
+    async def is_author_game_by_name(self, name: str, author: dto.Player) -> bool:
+        raise NotImplementedError
 
-class GameCreator(Committer, metaclass=ABCMeta):
+
+class GameCreator(Committer, GameNameChecker, metaclass=ABCMeta):
     async def create_game(self, author: dto.Player, name: str) -> dto.Game:
         raise NotImplementedError
 

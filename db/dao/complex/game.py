@@ -35,5 +35,11 @@ class GameUpserterImpl(GameUpserter):
     async def check_author_can_own_guid(self, author: dto.Player, guid: str) -> None:
         return await self.file_info.check_author_can_own_guid(author, guid)
 
+    async def is_name_available(self, name: str) -> bool:
+        return await self.game.is_name_available(name)
+
+    async def is_author_game_by_name(self, name: str, author: dto.Player) -> bool:
+        return await self.game.is_author_game_by_name(name, author)
+
     async def commit(self):
         await self.level.commit()

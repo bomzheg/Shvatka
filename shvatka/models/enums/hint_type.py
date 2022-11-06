@@ -1,23 +1,6 @@
 import enum
-import typing
-
-HintLiteral = typing.Literal[
-    "text",
-    "gps",
-    "venue",
-    "photo",
-    "audio",
-    "video",
-    "document",
-    "animation",
-    "voice",
-    "video_note",
-    "contact",
-    "sticker",
-]
 
 
-# noinspection PyArgumentList
 class HintType(enum.Enum):
     text = "text"
     gps = "gps"

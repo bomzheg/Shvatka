@@ -3,18 +3,19 @@ from __future__ import annotations
 import typing
 from abc import ABC
 from dataclasses import dataclass
+from typing import Literal
 
-from shvatka.models.enums.hint_type import HintLiteral, HintType
+from shvatka.models.enums.hint_type import HintType
 
 
 class BaseHint(ABC):
-    type: HintLiteral
+    type: str
 
 
 @dataclass
 class TextHint(BaseHint):
     text: str
-    type: HintLiteral = HintType.text.name
+    type: Literal["text"] = HintType.text.name
 
 
 @dataclass
@@ -25,7 +26,7 @@ class LocationMixin:
 
 @dataclass
 class GPSHint(BaseHint, LocationMixin):
-    type: HintLiteral = HintType.gps.name
+    type: Literal["gps"] = HintType.gps.name
 
 
 @dataclass
@@ -34,7 +35,7 @@ class VenueHint(BaseHint, LocationMixin):
     address: str
     foursquare_id: typing.Optional[str] = None
     foursquare_type: typing.Optional[str] = None
-    type: HintLiteral = HintType.venue.name
+    type: Literal["venue"] = HintType.venue.name
 
 
 @dataclass
@@ -49,7 +50,7 @@ class FileMixin:
 
 @dataclass
 class PhotoHint(BaseHint, CaptionMixin, FileMixin):
-    type: HintLiteral = HintType.photo.name
+    type: Literal["photo"] = HintType.photo.name
 
 
 @dataclass
@@ -59,32 +60,32 @@ class ThumbMixin:
 
 @dataclass
 class AudioHint(BaseHint, CaptionMixin, ThumbMixin, FileMixin):
-    type: HintLiteral = HintType.audio.name
+    type: Literal["audio"] = HintType.audio.name
 
 
 @dataclass
 class VideoHint(BaseHint, CaptionMixin, ThumbMixin, FileMixin):
-    type: HintLiteral = HintType.video.name
+    type: Literal["video"] = HintType.video.name
 
 
 @dataclass
 class DocumentHint(BaseHint, CaptionMixin, ThumbMixin, FileMixin):
-    type: HintLiteral = HintType.document.name
+    type: Literal["document"] = HintType.document.name
 
 
 @dataclass
 class AnimationHint(BaseHint, CaptionMixin, ThumbMixin, FileMixin):
-    type: HintLiteral = HintType.animation.name
+    type: Literal["animation"] = HintType.animation.name
 
 
 @dataclass
 class VoiceHint(BaseHint, CaptionMixin, FileMixin):
-    type: HintLiteral = HintType.voice.name
+    type: Literal["voice"] = HintType.voice.name
 
 
 @dataclass
 class VideoNoteHint(BaseHint, FileMixin):
-    type: HintLiteral = HintType.video_note.name
+    type: Literal["video_note"] = HintType.video_note.name
 
 
 @dataclass
@@ -93,12 +94,12 @@ class ContactHint(BaseHint):
     first_name: str
     last_name: str = None
     vcard: str = None
-    type: HintLiteral = HintType.contact.name
+    type: Literal["contact"] = HintType.contact.name
 
 
 @dataclass
 class StickerHint(BaseHint, FileMixin):
-    type: HintLiteral = HintType.sticker.name
+    type: Literal["sticker"] = HintType.sticker.name
 
 
 AnyHint: typing.TypeAlias = TextHint | GPSHint | VenueHint | ContactHint | \

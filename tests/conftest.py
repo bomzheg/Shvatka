@@ -2,7 +2,7 @@ import asyncio
 from pathlib import Path
 
 import pytest
-from dataclass_factory import Factory
+from dataclass_factory import Factory, Schema, NameStyle
 
 from common.config.models.paths import Paths
 from common.config.parser.logging_config import setup_logging
@@ -35,4 +35,4 @@ def event_loop():
 
 @pytest.fixture(scope="session")
 def dcf():
-    return Factory(schemas=schemas)
+    return Factory(schemas=schemas, default_schema=Schema(name_style=NameStyle.kebab))

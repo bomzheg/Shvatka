@@ -2,6 +2,7 @@ import logging
 
 import dataclass_factory
 import uvicorn as uvicorn
+from dataclass_factory import Schema, NameStyle
 from fastapi import FastAPI
 
 from api import dependencies, routes
@@ -22,7 +23,7 @@ def main() -> FastAPI:
 
     setup_logging(paths)
     config = load_config(paths)
-    dcf = dataclass_factory.Factory(schemas=schemas)
+    dcf = dataclass_factory.Factory(schemas=schemas, default_schema=Schema(name_style=NameStyle.kebab))
     app = create_app()
     pool = create_pool(config.db)
     dependencies.setup(

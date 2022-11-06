@@ -2,6 +2,7 @@ import asyncio
 import logging
 
 import dataclass_factory
+from dataclass_factory import Schema, NameStyle
 from sqlalchemy.orm import close_all_sessions
 
 from common.config.parser.logging_config import setup_logging
@@ -25,7 +26,7 @@ async def main():
 
     setup_logging(paths)
     config = load_config(paths)
-    dcf = dataclass_factory.Factory(schemas=schemas)
+    dcf = dataclass_factory.Factory(schemas=schemas, default_schema=Schema(name_style=NameStyle.kebab))
     file_storage = create_file_storage(config.file_storage_config)
     pool = create_pool(config.db)
     bot = create_bot(config)

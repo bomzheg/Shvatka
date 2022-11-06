@@ -29,7 +29,7 @@ class GameAuthorsFinder(Committer, metaclass=ABCMeta):
         raise NotImplementedError
 
 
-class GameByIdGetter(Committer, metaclass=ABCMeta):
+class GameByIdGetter(Reader, metaclass=ABCMeta):
     async def get_by_id(self, id_: int, author: dto.Player) -> dto.Game:
         raise NotImplementedError
 

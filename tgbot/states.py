@@ -9,6 +9,10 @@ class MyGamesPanel(StatesGroup):
     game_schedule_confirm = State()
 
 
-class TimeHint(StatesGroup):
+class TimeHintSG(StatesGroup):
     time = State()
     hint = State()
+
+
+class LevelSG(StatesGroup):
+    time_hints = State()

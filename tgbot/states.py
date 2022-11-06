@@ -7,3 +7,8 @@ class MyGamesPanel(StatesGroup):
     game_schedule_date = State()
     game_schedule_time = State()
     game_schedule_confirm = State()
+
+
+class TimeHint(StatesGroup):
+    time = State()
+    hint = State()

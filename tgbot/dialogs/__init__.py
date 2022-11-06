@@ -1,7 +1,7 @@
 from aiogram_dialog import DialogRegistry
 
-from tgbot.dialogs.dialogs import games
+from tgbot.dialogs import game_manage
 
 
 def setup_dialogs(registry: DialogRegistry):
-    registry.register(games)
+    game_manage.setup(registry)

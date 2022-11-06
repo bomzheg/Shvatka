@@ -3,10 +3,10 @@ from aiogram_dialog.widgets.input import MessageInput
 from aiogram_dialog.widgets.kbd import ScrollingGroup, Select, SwitchTo, Button, Calendar
 from aiogram_dialog.widgets.text import Const, Format, Case, Jinja
 
-from tgbot.dialogs.getters import get_my_games, get_game, not_getting_waivers, is_getting_waivers, get_game_time, \
-    get_game_datetime
-from tgbot.dialogs.handlers import select_my_game, start_waivers, select_date, process_time_message, schedule_game
 from tgbot.states import MyGamesPanel
+from .getters import get_my_games, get_game, not_getting_waivers, is_getting_waivers, get_game_time, \
+    get_game_datetime
+from .handlers import select_my_game, start_waivers, select_date, process_time_message, schedule_game
 
 games = Dialog(
     Window(

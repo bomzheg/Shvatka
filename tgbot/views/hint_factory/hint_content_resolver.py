@@ -36,45 +36,46 @@ class HintContentResolver:
             case PhotoHint():
                 hint = typing.cast(PhotoHint, hint)
                 return PhotoLinkView(file_id=await self._resolve_file_id(hint.file_guid), caption=hint.caption)
-            case AudioHint(file_guid=guid, caption=caption, thumb_guid=thumb_guid):
+            case AudioHint():
+                hint = typing.cast(AudioHint, hint)
                 return AudioLinkView(
-                    file_id=await self._resolve_file_id(guid),
-                    caption=caption,
-                    thumb=await self._resolve_file_id(thumb_guid),
+                    file_id=await self._resolve_file_id(hint.file_guid),
+                    caption=hint.caption,
+                    thumb=await self._resolve_file_id(hint.thumb_guid),
                 )
-            case VideoHint(file_guid=guid, caption=caption, thumb_guid=thumb_guid):
+            case VideoHint():
+                hint = typing.cast(VideoHint, hint)
                 return VideoLinkView(
-                    file_id=await self._resolve_file_id(guid),
-                    caption=caption,
-                    thumb=await self._resolve_file_id(thumb_guid),
+                    file_id=await self._resolve_file_id(hint.file_guid),
+                    caption=hint.caption,
+                    thumb=await self._resolve_file_id(hint.thumb_guid),
                 )
-            case DocumentHint(file_guid=guid, caption=caption, thumb_guid=thumb_guid):
+            case DocumentHint():
+                hint = typing.cast(DocumentHint, hint)
                 return DocumentLinkView(
-                    file_id=await self._resolve_file_id(guid),
-                    caption=caption,
-                    thumb=await self._resolve_file_id(thumb_guid),
+                    file_id=await self._resolve_file_id(hint.file_guid),
+                    caption=hint.caption,
+                    thumb=await self._resolve_file_id(hint.thumb_guid),
                 )
-            case AnimationHint(file_guid=guid, caption=caption, thumb_guid=thumb_guid):
+            case AnimationHint():
+                hint = typing.cast(AnimationHint, hint)
                 return AnimationLinkView(
-                    file_id=await self._resolve_file_id(guid),
-                    caption=caption,
-                    thumb=await self._resolve_file_id(thumb_guid),
+                    file_id=await self._resolve_file_id(hint.file_guid),
+                    caption=hint.caption,
+                    thumb=await self._resolve_file_id(hint.thumb_guid),
                 )
-            case VoiceHint(file_guid=guid, caption=caption):
-                return VoiceLinkView(file_id=await self._resolve_file_id(guid), caption=caption)
+            case VoiceHint():
+                hint = typing.cast(VoiceHint, hint)
+                return VoiceLinkView(file_id=await self._resolve_file_id(hint.file_guid), caption=hint.caption)
             case VideoNoteHint(file_guid=guid):
                 return VideoNoteLinkView(file_id=await self._resolve_file_id(guid))
-            case ContactHint(
-                phone_number=phone_number,
-                first_name=first_name,
-                last_name=last_name,
-                vcard=vcard,
-            ):
+            case ContactHint():
+                hint = typing.cast(ContactHint, hint)
                 return ContactHintView(
-                    phone_number=phone_number,
-                    first_name=first_name,
-                    last_name=last_name,
-                    vcard=vcard,
+                    phone_number=hint.phone_number,
+                    first_name=hint.first_name,
+                    last_name=hint.last_name,
+                    vcard=hint.vcard,
                 )
             case StickerHint(file_guid=guid):
                 return StickerHintView(file_id=await self._resolve_file_id(guid))
@@ -91,63 +92,59 @@ class HintContentResolver:
                 return TextHintView(text=text)
             case GPSHint(latitude=latitude, longitude=longitude):
                 return GPSHintView(latitude=latitude, longitude=longitude)
-            case VenueHint(
-                latitude=latitude,
-                longitude=longitude,
-                title=title,
-                address=address,
-                foursquare_id=foursquare_id,
-                foursquare_type=foursquare_type,
-            ):
+            case VenueHint():
+                hint = typing.cast(VenueHint, hint)
                 return VenueHintView(
-                    latitude=latitude,
-                    longitude=longitude,
-                    title=title,
-                    address=address,
-                    foursquare_id=foursquare_id,
-                    foursquare_type=foursquare_type,
+                    latitude=hint.latitude,
+                    longitude=hint.longitude,
+                    title=hint.title,
+                    address=hint.address,
+                    foursquare_id=hint.foursquare_id,
+                    foursquare_type=hint.foursquare_type,
                 )
-            case PhotoHint(file_guid=guid, caption=caption):
-                return PhotoContentView(content=await self._resolve_bytes(guid), caption=caption)
-            case AudioHint(file_guid=guid, caption=caption, thumb_guid=thumb_guid):
+            case PhotoHint():
+                hint = typing.cast(PhotoHint, hint)
+                return PhotoContentView(content=await self._resolve_bytes(hint.file_guid), caption=hint.caption)
+            case AudioHint():
+                hint = typing.cast(AudioHint, hint)
                 return AudioContentView(
-                    content=await self._resolve_bytes(guid),
-                    caption=caption,
-                    thumb=await self._resolve_bytes(thumb_guid),
+                    content=await self._resolve_bytes(hint.file_guid),
+                    caption=hint.caption,
+                    thumb=await self._resolve_bytes(hint.thumb_guid),
                 )
-            case VideoHint(file_guid=guid, caption=caption, thumb_guid=thumb_guid):
+            case VideoHint():
+                hint = typing.cast(VideoHint, hint)
                 return VideoContentView(
-                    content=await self._resolve_bytes(guid),
-                    caption=caption,
-                    thumb=await self._resolve_bytes(thumb_guid),
+                    content=await self._resolve_bytes(hint.file_guid),
+                    caption=hint.caption,
+                    thumb=await self._resolve_bytes(hint.thumb_guid),
                 )
-            case DocumentHint(file_guid=guid, caption=caption, thumb_guid=thumb_guid):
+            case DocumentHint():
+                hint = typing.cast(DocumentHint, hint)
                 return DocumentContentView(
-                    content=await self._resolve_bytes(guid),
-                    caption=caption,
-                    thumb=await self._resolve_bytes(thumb_guid),
+                    content=await self._resolve_bytes(hint.file_guid),
+                    caption=hint.caption,
+                    thumb=await self._resolve_bytes(hint.thumb_guid),
                 )
-            case AnimationHint(file_guid=guid, caption=caption, thumb_guid=thumb_guid):
+            case AnimationHint():
+                hint = typing.cast(AnimationHint, hint)
                 return AnimationContentView(
-                    content=await self._resolve_bytes(guid),
-                    caption=caption,
-                    thumb=await self._resolve_bytes(thumb_guid),
+                    content=await self._resolve_bytes(hint.file_guid),
+                    caption=hint.caption,
+                    thumb=await self._resolve_bytes(hint.thumb_guid),
                 )
-            case VoiceHint(file_guid=guid, caption=caption):
-                return VoiceContentView(content=await self._resolve_bytes(guid), caption=caption)
+            case VoiceHint():
+                hint = typing.cast(VoiceHint, hint)
+                return VoiceContentView(content=await self._resolve_bytes(hint.file_guid), caption=hint.caption)
             case VideoNoteHint(file_guid=guid):
                 return VideoNoteContentView(content=await self._resolve_bytes(guid))
-            case ContactHint(
-                phone_number=phone_number,
-                first_name=first_name,
-                last_name=last_name,
-                vcard=vcard,
-            ):
+            case ContactHint():
+                hint = typing.cast(ContactHint, hint)
                 return ContactHintView(
-                    phone_number=phone_number,
-                    first_name=first_name,
-                    last_name=last_name,
-                    vcard=vcard,
+                    phone_number=hint.phone_number,
+                    first_name=hint.first_name,
+                    last_name=hint.last_name,
+                    vcard=hint.vcard,
                 )
             case StickerHint(file_guid=guid):
                 return StickerHintView(file_id=await self._resolve_file_id(guid))

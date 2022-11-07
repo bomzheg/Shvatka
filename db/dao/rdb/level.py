@@ -46,6 +46,14 @@ class LevelDao(BaseDAO[models.Level]):
         )
         return result.scalar_one()
 
+    async def get_all_my(self, author: dto.Player) -> list[dto.Level]:
+        result = await self.session.execute(
+            select(models.Level)
+            .where(models.Level.author_id == author.id)
+        )
+        levels: list[models.Level] = result.scalars().all()
+        return [level.to_dto(author) for level in levels]
+
     async def get_by_id(self, id_: int) -> dto.Level:
         result = await self.session.execute(
             select(models.Level)

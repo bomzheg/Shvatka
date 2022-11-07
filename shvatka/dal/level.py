@@ -1,6 +1,6 @@
 from abc import ABCMeta
 
-from shvatka.dal.base import Committer
+from shvatka.dal.base import Committer, Reader
 from shvatka.models import dto
 from shvatka.models.dto.scn.level import LevelScenario
 
@@ -16,4 +16,9 @@ class LevelUpserter(Committer, metaclass=ABCMeta):
         raise NotImplementedError
 
     async def unlink_all(self, game: dto.Game) -> None:
+        raise NotImplementedError
+
+
+class MyLevelsGetter(Reader):
+    async def get_all_my(self, author: dto.Player) -> list[dto.Level]:
         raise NotImplementedError

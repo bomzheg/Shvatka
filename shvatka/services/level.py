@@ -1,6 +1,6 @@
 from dataclass_factory import Factory
 
-from shvatka.dal.level import LevelUpserter
+from shvatka.dal.level import LevelUpserter, MyLevelsGetter
 from shvatka.models import dto
 from shvatka.models.dto.scn.level import LevelScenario
 from shvatka.services.player import check_allow_be_author
@@ -20,3 +20,7 @@ async def upsert_level(author: dto.Player, scn: LevelScenario, dao: LevelUpserte
     result = await dao.upsert(author, scn)
     await dao.commit()
     return result
+
+
+async def get_all_my_levels(author: dto.Player, dao: MyLevelsGetter) -> list[dto.Level]:
+    return await dao.get_all_my(author)

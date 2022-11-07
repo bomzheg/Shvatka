@@ -7,6 +7,7 @@ from tgbot.states import MyGamesPanel
 from .getters import get_my_games, get_game, not_getting_waivers, is_getting_waivers, get_game_time, \
     get_game_datetime
 from .handlers import select_my_game, start_waivers, select_date, process_time_message, schedule_game
+from ..preview_data import PREVIEW_GAME
 
 games = Dialog(
     Window(
@@ -24,6 +25,7 @@ games = Dialog(
             height=10,
         ),
         state=MyGamesPanel.choose_game,
+        preview_data={"games": [PREVIEW_GAME]},
         getter=get_my_games,
     ),
     Window(
@@ -49,12 +51,14 @@ games = Dialog(
             when=is_getting_waivers
         ),
         state=MyGamesPanel.game_menu,
+        preview_data={"game": PREVIEW_GAME},
         getter=get_game,
     ),
     Window(
         Format("Выбор даты начала игры <b>{game.name}</b>"),
         Calendar(id='select_game_play_date', on_click=select_date),
         state=MyGamesPanel.game_schedule_date,
+        preview_data={"game": PREVIEW_GAME},
         getter=get_game,
     ),
     Window(
@@ -77,6 +81,7 @@ games = Dialog(
             when=lambda data, *args: data["has_time"],
         ),
         getter=get_game_time,
+        preview_data={"game": PREVIEW_GAME, "has_time": True},
         state=MyGamesPanel.game_schedule_time,
     ),
     Window(
@@ -92,6 +97,7 @@ games = Dialog(
             on_click=schedule_game,
         ),
         getter=get_game_datetime,
+        preview_data={"game": PREVIEW_GAME},
         state=MyGamesPanel.game_schedule_confirm,
     ),
 )

@@ -6,6 +6,7 @@ from aiogram_dialog.widgets.text import Const, Format
 from tgbot.states import LevelSG
 from .getters import get_time_hints, get_level_id
 from .handlers import process_result, start_add_time_hint, process_id, process_keys, save_level
+from ..preview_data import RENDERED_HINTS_PREVIEW
 
 level = Dialog(
     Window(
@@ -37,17 +38,18 @@ level = Dialog(
         getter=get_level_id,
     ),
     Window(
-        Format("Подсказки уровня{level_id}:\n"),
+        Format("Подсказки уровня {level_id}:\n"),
         Format("{rendered}"),
         Button(Const("Добавить подсказку"), id="add_time_hint", on_click=start_add_time_hint),
         Button(
             Const("Готово, сохранить"),
             id="save",
             on_click=save_level,
-            when=lambda d, **_: len(d["time_hints"]) > 1,
+            when=lambda d, *_, **__: len(d["time_hints"]) > 1,
         ),
         state=LevelSG.time_hints,
         getter=get_time_hints,
+        preview_data={"time_hints": [], "rendered": RENDERED_HINTS_PREVIEW, "level_id": "Pinky Pie"},
     ),
     on_process_result=process_result,
 )

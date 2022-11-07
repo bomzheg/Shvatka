@@ -6,6 +6,7 @@ from aiogram_dialog.widgets.text import Const, Format, Case
 from tgbot.states import TimeHintSG
 from .getters import get_available_times, get_hints
 from .handlers import process_time_message, select_time, process_hint, on_finish
+from ..preview_data import TIMES_PRESET
 
 time_hint = Dialog(
     Window(
@@ -25,6 +26,7 @@ time_hint = Dialog(
         ),
         state=TimeHintSG.time,
         getter=get_available_times,
+        preview_data={"times": TIMES_PRESET}
     ),
     Window(
         Case(
@@ -46,5 +48,6 @@ time_hint = Dialog(
         ),
         getter=get_hints,
         state=TimeHintSG.hint,
+        preview_data={"has_hints": True, "rendered": "📃🪪"}
     ),
 )

@@ -31,6 +31,7 @@ passlib = {extras = ["bcrypt"], version = "^1.7.4"}
 optional = true
 
 [tool.poetry.group.dev.dependencies]
+aiogram_dialog = {extras = ["tools"],version = "^2.0.0b12"}
 sqlalchemy2-stubs = "^0.0.2a27"
 types-python-dateutil = "^2.8.19"
 types-redis = "^4.3.21"

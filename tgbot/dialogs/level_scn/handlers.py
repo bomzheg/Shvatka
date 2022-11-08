@@ -40,6 +40,8 @@ async def process_keys(m: Message, dialog_: Any, manager: DialogManager):
 
 
 async def process_result(start_data: Data, result: Any, manager: DialogManager):
+    if not result:
+        return
     if new_hint := result["time_hint"]:
         manager.dialog_data.setdefault("time_hints", []).append(new_hint)
 

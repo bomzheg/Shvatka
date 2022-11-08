@@ -1,6 +1,6 @@
 from aiogram_dialog import Dialog, Window
 from aiogram_dialog.widgets.input import MessageInput
-from aiogram_dialog.widgets.kbd import Select, Button, Group
+from aiogram_dialog.widgets.kbd import Select, Button, Group, Back, Cancel
 from aiogram_dialog.widgets.text import Const, Format, Case
 
 from tgbot.states import TimeHintSG
@@ -13,6 +13,7 @@ time_hint = Dialog(
         Const("Время выхода подсказки (можно выбрать или ввести)"),
         #  TODO can set only time greater that before hint
         MessageInput(func=process_time_message),
+        Cancel(text=Const("Вернуться, не нужна подсказка")),
         Group(
             Select(
                 Format("{item}"),
@@ -29,6 +30,7 @@ time_hint = Dialog(
         preview_data={"times": TIMES_PRESET}
     ),
     Window(
+        Format("Подсказка выходящая в {time} мин."),
         Case(
             {
                 False: Const("Присылай сообщения с подсказками (текст, фото, видео итд)"),
@@ -40,6 +42,7 @@ time_hint = Dialog(
             selector="has_hints",
         ),
         MessageInput(func=process_hint),
+        Back(text=Const("Изменить время")),
         Button(
             Const("К следующей подсказке"),
             id="to_next_hint",

@@ -7,8 +7,13 @@ from tgbot.views.utils import render_hints
 
 async def get_available_times(dialog_manager: DialogManager, **_):
     prev_time = int(dialog_manager.start_data.get("previous_time", 0))
-    rounded = (prev_time // 5) * 5 + int((prev_time % 5) != 0) * 5
-    return {"times": list(range(rounded, rounded + 5*12, 5))}
+    if prev_time == -1:
+        # in case of no hints first value in most case must be 0 (puzzle)
+        times = [0]
+    else:
+        rounded = (prev_time // 5) * 5 + 5
+        times = list(range(rounded, rounded + 5*12, 5))
+    return {"times": times}
 
 
 async def get_hints(dialog_manager: DialogManager, **_):

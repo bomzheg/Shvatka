@@ -11,6 +11,7 @@ def load_db_config(db_dict: dict) -> DBConfig:
         password=db_dict.get('password', None),
         name=db_dict.get('name', None),
         path=db_dict.get('path', None),
+        echo=db_dict.get("echo", False),
     )
 
 

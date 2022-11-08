@@ -16,6 +16,7 @@ class DBConfig:
     password: str = None
     name: str = None
     path: str = None
+    echo: bool = False
 
     @property
     def uri(self):

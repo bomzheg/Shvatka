@@ -37,10 +37,17 @@ async def upsert_game(
     return game.to_full_game(levels)
 
 
-async def create_game(author: dto.Player, name: str, dao: GameCreator) -> dto.Game:
+async def create_game(
+    author: dto.Player,
+    name: str,
+    dao: GameCreator,
+    levels: list[dto.Level] = None,
+) -> dto.Game:
     check_allow_be_author(author)
     await check_new_game_name_available(name=name, author=author, dao=dao)
     game = await dao.create_game(author, name)
+    for level in levels:
+        await dao.link_to_game(level, game)
     await dao.commit()
     return game
 

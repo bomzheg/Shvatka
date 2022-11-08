@@ -22,5 +22,5 @@ async def upsert_level(author: dto.Player, scn: LevelScenario, dao: LevelUpserte
     return result
 
 
-async def get_all_my_levels(author: dto.Player, dao: MyLevelsGetter) -> list[dto.Level]:
-    return await dao.get_all_my(author)
+async def get_all_my_free_levels(author: dto.Player, dao: MyLevelsGetter) -> list[dto.Level]:
+    return list(filter(lambda l: l.game_id is None, await dao.get_all_my(author)))

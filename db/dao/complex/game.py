@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
 from db.dao import GameDao, LevelDao, FileInfoDao
-from shvatka.dal.game import GameUpserter
+from shvatka.dal.game import GameUpserter, GameCreator
 from shvatka.models import dto
 from shvatka.models.dto.scn import FileMeta, SavedFileMeta
 from shvatka.models.dto.scn.game import GameScenario
@@ -43,3 +43,21 @@ class GameUpserterImpl(GameUpserter):
 
     async def commit(self):
         await self.level.commit()
+
+
+@dataclass
+class GameCreatorImpl(GameCreator):
+    game: GameDao
+    level: LevelDao
+
+    async def create_game(self, author: dto.Player, name: str) -> dto.Game:
+        return await self.game.create_game(author, name)
+
+    async def link_to_game(self, level: dto.Level, game: dto.Game) -> dto.Level:
+        return await self.level.link_to_game(level, game)
+
+    async def commit(self) -> None:
+        return await self.game.commit()
+
+    async def is_name_available(self, name: str) -> bool:
+        return await self.game.is_name_available(name)

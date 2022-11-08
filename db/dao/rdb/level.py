@@ -81,6 +81,29 @@ class LevelDao(BaseDAO[models.Level]):
             )
         )
 
+    async def link_to_game(self, level: dto.Level, game: dto.Game) -> dto.Level:
+        max_level = await self.get_max_level_number(game)
+        await self.session.execute(
+            update(models.Level)
+            .where(models.Level.id == level.db_id)
+            .values(game_id=game.id, number_in_game=max_level + 1)
+        )
+        level.game_id = game.id
+        level.number_in_game = max_level + 1
+        return level
+
+    async def get_max_level_number(self, game: dto.Game) -> int:
+        result = await self.session.execute(
+            select(models.Level)
+            .where(models.Level.game_id == game.id)
+            .order_by(models.Level.number_in_game.desc())  # noqa
+            .limit(1)
+        )
+        max_level: models.Level | None = result.scalar_one_or_none()
+        if max_level:
+            return max_level.number_in_game
+        return -1
+
     async def get_by_number(self, game: dto.Game, level_number: int) -> dto.Level:
         result = await self.session.execute(
             select(models.Level)

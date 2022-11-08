@@ -31,6 +31,9 @@ class GameCreator(Committer, GameNameChecker, metaclass=ABCMeta):
     async def create_game(self, author: dto.Player, name: str) -> dto.Game:
         raise NotImplementedError
 
+    async def link_to_game(self, level: dto.Level, game: dto.Game) -> dto.Level:
+        raise NotImplementedError
+
 
 class GameAuthorsFinder(Committer, metaclass=ABCMeta):
     async def get_all_by_author(self, author: dto.Player) -> list[dto.Game]:

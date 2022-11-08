@@ -3,12 +3,12 @@ from typing import Any
 from aiogram.types import Message, CallbackQuery
 from aiogram.utils.text_decorations import html_decoration as hd
 from aiogram_dialog import DialogManager
-from aiogram_dialog.widgets.kbd import Button, Multiselect
+from aiogram_dialog.widgets.kbd import Button, ManagedMultiSelectAdapter
 
 from db.dao.holder import HolderDao
 from shvatka.models import dto
-from shvatka.services.game import check_new_game_name_available
-from shvatka.services.level import get_all_my_levels
+from shvatka.services.game import check_new_game_name_available, create_game
+from shvatka.services.level import get_all_my_free_levels
 
 
 async def process_name(m: Message, dialog_: Any, manager: DialogManager):
@@ -32,8 +32,11 @@ async def save_game(c: CallbackQuery, button: Button, manager: DialogManager):
     await c.answer()
     dao: HolderDao = manager.middleware_data["dao"]
     author: dto.Player = manager.middleware_data["player"]
-    levels = await get_all_my_levels(author, dao.level)
-    multiselect: Multiselect = manager.find("my_level_ids")
-    for level in levels:
-        print(multiselect.is_checked(level.db_id, manager))
+    name: str = manager.dialog_data["game_name"]
+    levels = await get_all_my_free_levels(author, dao.level)
+    multiselect: ManagedMultiSelectAdapter = manager.find("my_level_ids")
+    levels = list(filter(lambda l: multiselect.is_checked(l.db_id), levels))
+    game = await create_game(author=author, name=name, dao=dao.game_creator, levels=levels)
+    await c.message.edit_text("Игра успешно сохранена")
+    await manager.done({"game": game})
 

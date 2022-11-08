@@ -12,7 +12,7 @@ from shvatka.scheduler import Scheduler
 from shvatka.services import game
 from shvatka.services.game import get_game, plain_start
 from shvatka.utils.datetime_utils import TIME_FORMAT, tz_game
-from tgbot.states import MyGamesPanel, GameEditSG
+from tgbot.states import MyGamesPanel, GameEditSG, GameSchedule
 
 
 async def select_my_game(c: CallbackQuery, widget: Any, manager: DialogManager, item_id: str):
@@ -23,6 +23,12 @@ async def select_my_game(c: CallbackQuery, widget: Any, manager: DialogManager, 
     data["my_game_id"] = int(item_id)
     await manager.update(data)
     await manager.switch_to(MyGamesPanel.game_menu)
+
+
+async def start_schedule_game(c: CallbackQuery, widget: Button, manager: DialogManager):
+    await c.answer()
+    game_id = manager.dialog_data["my_game_id"]
+    await manager.start(GameSchedule.date, data={"my_game_id": int(game_id)})
 
 
 async def show_scn(c: CallbackQuery, widget: Button, manager: DialogManager):
@@ -48,7 +54,7 @@ async def select_date(c: CallbackQuery, widget, manager: DialogManager, selected
         data = {}
     data["scheduled_date"] = selected_date.isoformat()
     await manager.update(data)
-    await manager.switch_to(MyGamesPanel.game_schedule_time)
+    await manager.switch_to(GameSchedule.time)
 
 
 async def process_time_message(m: Message, dialog_: Any, manager: DialogManager) -> None:
@@ -60,7 +66,7 @@ async def process_time_message(m: Message, dialog_: Any, manager: DialogManager)
     data = manager.dialog_data
     data["scheduled_time"] = time_.isoformat()
     await manager.update(data)
-    await manager.switch_to(MyGamesPanel.game_schedule_confirm)
+    await manager.switch_to(GameSchedule.confirm)
 
 
 async def schedule_game(c: CallbackQuery, widget: Button, manager: DialogManager):
@@ -81,4 +87,4 @@ async def schedule_game(c: CallbackQuery, widget: Button, manager: DialogManager
         scheduler=scheduler,
     )
     await c.answer("Запланировано успешно")
-    await manager.switch_to(MyGamesPanel.game_menu)
+    await manager.done()

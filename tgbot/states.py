@@ -20,7 +20,7 @@ class LevelSG(StatesGroup):
     time_hints = State()
 
 
-class GameSG(StatesGroup):
+class GameWriteSG(StatesGroup):
     game_name = State()
     levels = State()
 

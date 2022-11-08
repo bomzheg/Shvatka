@@ -15,7 +15,7 @@ from shvatka.utils.exceptions import ScenarioNotCorrect
 from tgbot.filters.can_be_author import can_be_author
 from tgbot.filters.game_status import GameStatusFilter
 from tgbot.services.scenario import unpack_scn
-from tgbot.states import MyGamesPanel, LevelSG, GameSG
+from tgbot.states import MyGamesPanel, LevelSG, GameWriteSG
 from tgbot.views.commands import MY_GAMES_COMMAND, NEW_LEVEL_COMMAND, NEW_GAME_COMMAND
 
 logger = logging.getLogger(__name__)
@@ -45,7 +45,7 @@ async def get_level_editor(_: Message, dialog_manager: DialogManager):
 
 
 async def get_game_editor(_: Message, dialog_manager: DialogManager):
-    await dialog_manager.start(GameSG.game_name, mode=StartMode.RESET_STACK)
+    await dialog_manager.start(GameWriteSG.game_name, mode=StartMode.RESET_STACK)
 
 
 def setup() -> Router:

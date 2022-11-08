@@ -3,7 +3,7 @@ from aiogram_dialog.widgets.input import MessageInput
 from aiogram_dialog.widgets.kbd import ScrollingGroup, Multiselect, Button, Select, Cancel
 from aiogram_dialog.widgets.text import Const, Format
 
-from tgbot.states import GameSG, GameEditSG
+from tgbot.states import GameWriteSG, GameEditSG
 from .getters import get_game_name, select_my_levels, select_full_game
 from .handlers import process_name, save_game
 
@@ -22,7 +22,7 @@ game_writer = Dialog(
             "для чтения системным администратором"
         ),
         MessageInput(func=process_name),
-        state=GameSG.game_name,
+        state=GameWriteSG.game_name,
     ),
     Window(
         Format("Игра <b>{game_name}</b>\n\n"),
@@ -47,7 +47,7 @@ game_writer = Dialog(
             id="save_levels",
             on_click=save_game,
         ),
-        state=GameSG.levels,
+        state=GameWriteSG.levels,
         getter=[get_game_name, select_my_levels],
     ),
 )

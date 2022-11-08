@@ -3,7 +3,7 @@ import logging
 from aiogram import Bot, Dispatcher
 from aiogram.fsm.storage.base import BaseStorage
 from aiogram.fsm.storage.memory import MemoryStorage
-from aiogram.fsm.storage.redis import RedisStorage, DefaultKeyBuilder
+from aiogram.fsm.storage.redis import RedisStorage, DefaultKeyBuilder, RedisEventIsolation
 from dataclass_factory import Factory
 from redis.asyncio.client import Redis
 from sqlalchemy.orm import sessionmaker
@@ -39,7 +39,10 @@ def create_dispatcher(
     config: TgBotConfig, user_getter: UserGetter, dcf: Factory, pool: sessionmaker,
     redis: Redis, scheduler: Scheduler, locker: KeyCheckerFactory, file_storage: FileStorage,
 ) -> Dispatcher:
-    dp = Dispatcher(storage=create_storage(config.storage))
+    dp = Dispatcher(
+        storage=create_storage(config.storage),
+        events_isolation=RedisEventIsolation(redis=redis),
+    )
     setup_middlewares(
         dp=dp,
         pool=pool,

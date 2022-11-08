@@ -8,7 +8,7 @@ from tgbot.views.utils import render_hints
 async def get_available_times(dialog_manager: DialogManager, **_):
     prev_time = int(dialog_manager.start_data.get("previous_time", 0))
     rounded = (prev_time // 5) * 5 + int((prev_time % 5) != 0) * 5
-    return {"times": list(range(rounded, rounded + 5*8, 5))}
+    return {"times": list(range(rounded, rounded + 5*12, 5))}
 
 
 async def get_hints(dialog_manager: DialogManager, **_):

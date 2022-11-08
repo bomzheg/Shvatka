@@ -29,8 +29,8 @@ async def chat_id(message: Message):
 
 
 async def cancel_state(message: Message, state: FSMContext, dialog_manager: DialogManager):
-    current_state = await state.get_state()
     await dialog_manager.reset_stack(remove_keyboard=True)
+    current_state = await state.get_state()
     if current_state is None:
         return
     logger.info('Cancelling state %s', current_state)

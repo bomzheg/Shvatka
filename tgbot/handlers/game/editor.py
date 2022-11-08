@@ -41,7 +41,7 @@ async def get_manage(_: Message, dialog_manager: DialogManager):
 
 
 async def get_editor(_: Message, dialog_manager: DialogManager):
-    await dialog_manager.start(LevelSG.time_hints, mode=StartMode.RESET_STACK)
+    await dialog_manager.start(LevelSG.level_id, mode=StartMode.RESET_STACK)
 
 
 def setup() -> Router:

@@ -5,7 +5,8 @@ from aiogram.exceptions import AiogramError
 from aiogram.utils.text_decorations import html_decoration as hd
 
 from shvatka.models.dto.scn import TimeHint, BaseHint
-from shvatka.models.enums.hint_type import HINTS_EMOJI, HintType
+from shvatka.models.enums.hint_type import HintType
+from shvatka.views.texts import HINTS_EMOJI
 
 
 async def total_remove_msg(bot: Bot, chat_id: int = None, msg_id: int = None, inline_msg_id: int = None):

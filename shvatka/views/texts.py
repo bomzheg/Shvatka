@@ -1,3 +1,4 @@
+from shvatka.models.enums.hint_type import HintType
 from shvatka.models.enums.played import Played
 
 KEY_PREFIXES = ("SH", "СХ")
@@ -11,4 +12,19 @@ WAIVER_STATUS_MEANING = {
     Played.yes: "Играют",
     Played.no: "Не играют",
     Played.think: "Размышляют",
+}
+
+HINTS_EMOJI: dict[HintType: str] = {
+    HintType.text: "📃",
+    HintType.gps: "📡",
+    HintType.venue: "🧭",
+    HintType.photo: "🪪",
+    HintType.audio: "📷",
+    HintType.video: "🎼",
+    HintType.document: "🎬",
+    HintType.animation: "📎",
+    HintType.voice: "🌀",
+    HintType.video_note: "🎤",
+    HintType.contact: "🤳",
+    HintType.sticker: "🏷",
 }

@@ -26,14 +26,15 @@ async def process_id(m: Message, dialog_: Any, manager: DialogManager):
 
 
 async def process_keys(m: Message, dialog_: Any, manager: DialogManager):
-    if not is_multiple_keys_normal(m.text):
+    keys = m.text.splitlines()
+    if not is_multiple_keys_normal(keys):
         await m.answer(
             "Ключ должен начинаться на SH или СХ и содержать "
             "только цифры и заглавные буквы кириллицы и латиницы"
         )
         return
     data = manager.dialog_data
-    data["keys"] = m.text.splitlines()
+    data["keys"] = keys
     await manager.update(data)
     await manager.next()
 
@@ -47,7 +48,7 @@ async def start_add_time_hint(c: CallbackQuery, button: Button, manager: DialogM
     await c.answer()
     dcf: Factory = manager.middleware_data["dcf"]
     hints = dcf.load(manager.dialog_data.get("time_hints", []), list[TimeHint])
-    previous_time = hints[-1].time if hints else 0
+    previous_time = hints[-1].time if hints else -1
     await manager.start(state=TimeHintSG.time, data={"previous_time": previous_time})
 
 

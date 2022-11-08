@@ -1,13 +1,13 @@
 from aiogram_dialog import Dialog, Window
 from aiogram_dialog.widgets.input import MessageInput
-from aiogram_dialog.widgets.kbd import ScrollingGroup, Multiselect, Button
+from aiogram_dialog.widgets.kbd import ScrollingGroup, Multiselect, Button, Select, Cancel
 from aiogram_dialog.widgets.text import Const, Format
 
-from tgbot.states import GameSG
-from .getters import get_game_name, select_my_levels
+from tgbot.states import GameSG, GameEditSG
+from .getters import get_game_name, select_my_levels, select_full_game
 from .handlers import process_name, save_game
 
-game = Dialog(
+game_writer = Dialog(
     Window(
         Const(
             "<b>Выбираем название игры</b>\n\n"
@@ -30,16 +30,15 @@ game = Dialog(
             "<b>Уровни</b>\n\n"
             "Выбери уровни которые нужно добавить"
         ),
-        # TODO ScrollGroup of checkbox with level_id
         ScrollingGroup(
             Multiselect(
                 Format("✓ {item.name_id}"),
                 Format("{item.name_id}"),
-                id="my_level_ids",
+                id="my_free_level_ids",
                 item_id_getter=lambda x: x.db_id,
                 items="levels",
             ),
-            id="my_levels_sg",
+            id="my_free_levels_sg",
             width=1,
             height=10,
         ),
@@ -50,5 +49,28 @@ game = Dialog(
         ),
         state=GameSG.levels,
         getter=[get_game_name, select_my_levels],
+    ),
+)
+
+
+game_editor = Dialog(
+    Window(
+        Format("Игра <b>{game.name}</b>\n\n"),
+        Const("<b>Уровни игры</b>"),
+        Button(Const("Добавить уровень"), id="add_level"),
+        Cancel(Const("Назад")),
+        ScrollingGroup(
+            Select(
+                Format("{item.name_id}"),
+                id="game_level_ids",
+                item_id_getter=lambda x: x.db_id,
+                items="levels",
+            ),
+            id="game_levels_sg",
+            width=1,
+            height=10,
+        ),
+        state=GameEditSG.current_levels,
+        getter=select_full_game,
     ),
 )

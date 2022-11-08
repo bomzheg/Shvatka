@@ -6,7 +6,7 @@ from aiogram_dialog.widgets.text import Const, Format, Case, Jinja
 from tgbot.states import MyGamesPanel
 from .getters import get_my_games, get_game, not_getting_waivers, is_getting_waivers, get_game_time, \
     get_game_datetime
-from .handlers import select_my_game, start_waivers, select_date, process_time_message, schedule_game
+from .handlers import select_my_game, start_waivers, select_date, process_time_message, schedule_game, show_scn
 from ..preview_data import PREVIEW_GAME
 
 games = Dialog(
@@ -37,6 +37,11 @@ games = Dialog(
             Const("Назад к списку игр"),
             id="to_my_games",
             state=MyGamesPanel.choose_game,
+        ),
+        Button(
+            Const("Сценарий"),
+            id="game_scn",
+            on_click=show_scn,
         ),
         Button(
             Const("Начать сборку вейверов"),

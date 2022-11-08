@@ -23,3 +23,7 @@ class LevelSG(StatesGroup):
 class GameSG(StatesGroup):
     game_name = State()
     levels = State()
+
+
+class GameEditSG(StatesGroup):
+    current_levels = State()

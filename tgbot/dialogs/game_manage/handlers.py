@@ -12,7 +12,7 @@ from shvatka.scheduler import Scheduler
 from shvatka.services import game
 from shvatka.services.game import get_game, plain_start
 from shvatka.utils.datetime_utils import TIME_FORMAT, tz_game
-from tgbot.states import MyGamesPanel
+from tgbot.states import MyGamesPanel, GameEditSG
 
 
 async def select_my_game(c: CallbackQuery, widget: Any, manager: DialogManager, item_id: str):
@@ -23,6 +23,12 @@ async def select_my_game(c: CallbackQuery, widget: Any, manager: DialogManager, 
     data["my_game_id"] = int(item_id)
     await manager.update(data)
     await manager.switch_to(MyGamesPanel.game_menu)
+
+
+async def show_scn(c: CallbackQuery, widget: Button, manager: DialogManager):
+    await c.answer()
+    game_id = manager.dialog_data["my_game_id"]
+    await manager.start(GameEditSG.current_levels, data={"game_id": int(game_id)})
 
 
 async def start_waivers(c: CallbackQuery, widget: Button, manager: DialogManager):

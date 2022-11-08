@@ -44,6 +44,9 @@ class GameByIdGetter(Reader, metaclass=ABCMeta):
     async def get_by_id(self, id_: int, author: dto.Player) -> dto.Game:
         raise NotImplementedError
 
+    async def get_full(self, id_: int) -> dto.FullGame:
+        raise NotImplementedError
+
 
 class ActiveGameFinder(Reader):
     async def get_active_game(self) -> dto.Game | None:

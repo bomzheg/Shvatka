@@ -103,6 +103,10 @@ class GameError(SHError):
     notify_user = "Ошибка связанная с игрой"
 
 
+class GameHasAnotherAuthor(GameError):
+    notify_user = "У этой игры другой автор"
+
+
 class GameStatusError(GameError):
     def __init__(
         self,

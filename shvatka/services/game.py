@@ -63,6 +63,12 @@ async def get_game(id_: int, author: dto.Player, dao: GameByIdGetter) -> dto.Gam
     return await dao.get_by_id(id_, author)
 
 
+async def get_full_game(id_: int, author: dto.Player, dao: GameByIdGetter) -> dto.FullGame:
+    game = await dao.get_full(id_=id_)
+    check_is_author(game, author)
+    return game
+
+
 async def get_active(dao: ActiveGameFinder) -> dto.Game:
     return await dao.get_active_game()
 

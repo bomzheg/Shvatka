@@ -18,7 +18,7 @@ async def check_key_handler(
     m: Message,
     team: dto.Team,
     player: dto.Player,
-    game: dto.FullGame,
+    game: dto.Game,
     dao: HolderDao,
     scheduler: Scheduler,
     locker: KeyCheckerFactory,

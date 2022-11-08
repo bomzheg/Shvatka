@@ -12,6 +12,7 @@ from shvatka.models.dto.scn.game import GameScenario
 from shvatka.models.enums import GameStatus
 from shvatka.models.enums.game_status import ACTIVE_STATUSES
 from shvatka.utils.datetime_utils import tz_utc
+from shvatka.utils.exceptions import GameHasAnotherAuthor
 from .base import BaseDAO
 
 
@@ -63,7 +64,10 @@ class GameDao(BaseDAO[models.Game]):
         )
 
     async def get_by_id(self, id_: int, author: dto.Player) -> dto.Game:
-        return (await self._get_by_id(id_)).to_dto(author)
+        game = await self._get_by_id(id_)
+        if game.author_id != author.id:
+            raise GameHasAnotherAuthor(game_id=game.id, player=author)
+        return game.to_dto(author)
 
     async def get_all_by_author(self, author: dto.Player) -> list[dto.Game]:
         result = await self.session.execute(

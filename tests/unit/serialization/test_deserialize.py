@@ -11,6 +11,7 @@ from shvatka.models.enums.hint_type import HintType
 from shvatka.services.scenario.game_ops import parse_game
 from shvatka.services.scenario.level_ops import load_level
 from shvatka.utils.exceptions import ScenarioNotCorrect
+from tgbot.views.utils import render_hints
 
 
 def test_deserialize_game(simple_scn: RawGameScenario, dcf: Factory):
@@ -53,3 +54,10 @@ def test_deserialize_all_types(all_types_scn: RawGameScenario, dcf: Factory):
     for i, type_ in enumerate([TextHint, GPSHint, VenueHint, PhotoHint, AudioHint, VideoHint, DocumentHint, AnimationHint, VoiceHint, VideoNoteHint, ContactHint, StickerHint]):
         assert isinstance(hints[i].hint[0], type_)
         assert hints[i].hint[0].type == type_.type
+
+
+def test_render_all_types(all_types_scn: RawGameScenario, dcf: Factory):
+    game_scn = parse_game(all_types_scn.scn, dcf)
+    hints = [time_hint.hint[0] for time_hint in game_scn.levels[0].time_hints]
+    assert 12 == len(hints)
+    assert "📃📡🧭📷🎼🎬📎🌀🎤🤳🪪🏷" == render_hints(hints)

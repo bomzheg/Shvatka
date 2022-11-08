@@ -4,7 +4,6 @@ from aiogram import Bot, Dispatcher
 from aiogram.fsm.storage.base import BaseStorage
 from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.fsm.storage.redis import RedisStorage, DefaultKeyBuilder
-from aiogram_dialog import DialogRegistry
 from dataclass_factory import Factory
 from redis.asyncio.client import Redis
 from sqlalchemy.orm import sessionmaker
@@ -41,7 +40,6 @@ def create_dispatcher(
     redis: Redis, scheduler: Scheduler, locker: KeyCheckerFactory, file_storage: FileStorage,
 ) -> Dispatcher:
     dp = Dispatcher(storage=create_storage(config.storage))
-    registry = DialogRegistry(dp)
     setup_middlewares(
         dp=dp,
         pool=pool,
@@ -53,7 +51,7 @@ def create_dispatcher(
         locker=locker,
         file_storage=file_storage,
     )
-    setup_handlers(dp, config.bot, registry)
+    setup_handlers(dp, config.bot)
     return dp
 
 

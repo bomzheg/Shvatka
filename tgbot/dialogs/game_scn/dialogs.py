@@ -27,14 +27,14 @@ game = Dialog(
     Window(
         Format("Игра <b>{game_name}</b>\n\n"),
         Const(
-            "<b>Уровни<b/>\n\n"
+            "<b>Уровни</b>\n\n"
             "Выбери уровни которые нужно добавить"
         ),
         # TODO ScrollGroup of checkbox with level_id
         ScrollingGroup(
             Multiselect(
-                Format("{item.name_id}"),
                 Format("✓ {item.name_id}"),
+                Format("{item.name_id}"),
                 id="my_level_ids",
                 item_id_getter=lambda x: x.db_id,
                 items="levels",
@@ -48,7 +48,7 @@ game = Dialog(
             id="save_levels",
             on_click=save_game,
         ),
-        state=GameSG.game_name,
+        state=GameSG.levels,
         getter=[get_game_name, select_my_levels],
     ),
 )

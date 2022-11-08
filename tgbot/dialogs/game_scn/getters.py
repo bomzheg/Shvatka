@@ -5,7 +5,7 @@ from shvatka.models import dto
 from shvatka.services.level import get_all_my_levels
 
 
-def get_game_name(dialog_manager: DialogManager, **_):
+async def get_game_name(dialog_manager: DialogManager, **_):
     data = dialog_manager.dialog_data
     return {
         "game_name": data["game_name"],

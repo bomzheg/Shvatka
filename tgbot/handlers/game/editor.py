@@ -15,8 +15,8 @@ from shvatka.utils.exceptions import ScenarioNotCorrect
 from tgbot.filters.can_be_author import can_be_author
 from tgbot.filters.game_status import GameStatusFilter
 from tgbot.services.scenario import unpack_scn
-from tgbot.states import MyGamesPanel, LevelSG
-from tgbot.views.commands import MY_GAMES_COMMAND, NEW_LEVEL_COMMAND
+from tgbot.states import MyGamesPanel, LevelSG, GameSG
+from tgbot.views.commands import MY_GAMES_COMMAND, NEW_LEVEL_COMMAND, NEW_GAME_COMMAND
 
 logger = logging.getLogger(__name__)
 
@@ -40,8 +40,12 @@ async def get_manage(_: Message, dialog_manager: DialogManager):
     await dialog_manager.start(MyGamesPanel.choose_game, mode=StartMode.RESET_STACK)
 
 
-async def get_editor(_: Message, dialog_manager: DialogManager):
+async def get_level_editor(_: Message, dialog_manager: DialogManager):
     await dialog_manager.start(LevelSG.level_id, mode=StartMode.RESET_STACK)
+
+
+async def get_game_editor(_: Message, dialog_manager: DialogManager):
+    await dialog_manager.start(GameSG.game_name, mode=StartMode.RESET_STACK)
 
 
 def setup() -> Router:
@@ -54,5 +58,6 @@ def setup() -> Router:
     router.message.register(cmd_save_game, F.content_type == ContentType.DOCUMENT)
     # TODO refactor it filters^ (state?)
     router.message.register(get_manage, Command(commands=MY_GAMES_COMMAND))
-    router.message.register(get_editor, Command(commands=NEW_LEVEL_COMMAND))
+    router.message.register(get_level_editor, Command(commands=NEW_LEVEL_COMMAND))
+    router.message.register(get_game_editor, Command(commands=NEW_GAME_COMMAND))
     return router

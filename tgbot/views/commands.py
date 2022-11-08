@@ -70,12 +70,11 @@ HELP_ADMIN = CommandsGroup("Команды администратора бота
 ])
 MY_GAMES_COMMAND = BotCommand(command="my_games", description="мои игры (включая черновики)")
 NEW_LEVEL_COMMAND = BotCommand(command="new_level", description="новый уровень")
+NEW_GAME_COMMAND = BotCommand(command="new_game", description="начать сборку новой игры из ранее написанных уровней")
 HELP_ORG = CommandsGroup("Команды для организаторов:", [
     MY_GAMES_COMMAND,
-    BotCommand(
-        command="new_game", description="начать сборку новой игры из ранее написанных уровней"
-    ),
-    BotCommand(command="levels", description="показать список игр"),
+    NEW_GAME_COMMAND,
+    BotCommand(command="levels", description="показать список уровней"),
     NEW_LEVEL_COMMAND,
     GET_WAIVERS_COMMAND,
     SPY_COMMAND,

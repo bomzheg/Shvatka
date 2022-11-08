@@ -9,11 +9,10 @@ from db.dao.holder import HolderDao
 from shvatka.models import dto
 from shvatka.services.game import check_new_game_name_available
 from shvatka.services.level import get_all_my_levels
-from shvatka.utils.input_validation import is_level_id_correct
 
 
 async def process_name(m: Message, dialog_: Any, manager: DialogManager):
-    if not is_level_id_correct(m.text):
+    if m.text.lower().strip() == "мудро":
         return await m.answer(
             "Лол, я ждал эту шутку. "
             "Но нет, игра не может называться {name}".format(name=hd.bold(m.text))

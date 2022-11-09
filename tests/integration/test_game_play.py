@@ -136,7 +136,7 @@ async def test_game_play(
         list(keys[gryffindor])[4]
     )
     assert await dao.game_player.is_all_team_finished(game)
-    assert GameStatus.finished == (await dao.game.get_by_id(game.id, harry)).status
+    assert GameStatus.finished == (await dao.game.get_by_id(game.id, author)).status
 
 
 @pytest.mark.asyncio

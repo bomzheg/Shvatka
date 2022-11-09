@@ -24,3 +24,6 @@ class Level:
 
     def get_keys(self):
         return self.scenario.get_keys()
+
+    def get_guids(self) -> list[str]:
+        return self.scenario.get_guids()

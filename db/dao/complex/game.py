@@ -1,9 +1,10 @@
 from dataclasses import dataclass
 
 from db.dao import GameDao, LevelDao, FileInfoDao
-from shvatka.dal.game import GameUpserter, GameCreator
+from shvatka.dal.game import GameUpserter, GameCreator, GamePackager
 from shvatka.models import dto
 from shvatka.models.dto.scn import FileMeta, SavedFileMeta
+from shvatka.models.dto.scn.file_content import VerifiableFileMeta
 from shvatka.models.dto.scn.game import GameScenario
 from shvatka.models.dto.scn.level import LevelScenario
 
@@ -61,3 +62,17 @@ class GameCreatorImpl(GameCreator):
 
     async def is_name_available(self, name: str) -> bool:
         return await self.game.is_name_available(name)
+
+
+@dataclass
+class GamePackagerImpl(GamePackager):
+    game: GameDao
+    file_info: FileInfoDao
+
+    async def get_full(self, id_: int) -> dto.FullGame:
+        return await self.game.get_full(id_)
+
+    async def get_by_guid(self, guid: str) -> VerifiableFileMeta:
+        return await self.file_info.get_by_guid(guid)
+
+

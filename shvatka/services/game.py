@@ -5,13 +5,13 @@ from dataclass_factory import Factory
 from shvatka.clients.file_storage import FileStorage
 from shvatka.dal.game import (
     GameUpserter, GameCreator, GameAuthorsFinder, GameByIdGetter,
-    ActiveGameFinder, WaiverStarter, GameStartPlanner, GameNameChecker,
+    ActiveGameFinder, WaiverStarter, GameStartPlanner, GameNameChecker, GamePackager,
 )
 from shvatka.models import dto
-from shvatka.models.dto.scn.game import RawGameScenario
+from shvatka.models.dto.scn.game import RawGameScenario, CompleteGameScenario
 from shvatka.scheduler import Scheduler
 from shvatka.services.player import check_allow_be_author
-from shvatka.services.scenario.files import upsert_files
+from shvatka.services.scenario.files import upsert_files, get_file_metas, get_file_contents
 from shvatka.services.scenario.game_ops import parse_uploaded_game, check_all_files_saved
 from shvatka.utils.exceptions import NotAuthorizedForEdit, AnotherGameIsActive, CantEditGame
 
@@ -67,6 +67,22 @@ async def get_full_game(id_: int, author: dto.Player, dao: GameByIdGetter) -> dt
     game = await dao.get_full(id_=id_)
     check_is_author(game, author)
     return game
+
+
+async def get_game_package(
+    id_: int,
+    author: dto.Player,
+    dao: GamePackager,
+    dcf: Factory,
+    file_storage: FileStorage,
+) -> RawGameScenario:
+    game = await dao.get_full(id_=id_)
+    check_is_author(game, author)
+    file_metas = await get_file_metas(game.get_guids(), author, dao)
+    contents = await get_file_contents(file_metas, file_storage)
+    scn = CompleteGameScenario(name=game.name, levels=[level.scenario for level in game.levels], files=file_metas)
+    serialized = dcf.dump(scn)
+    return RawGameScenario(scn=serialized, files=contents)
 
 
 async def get_active(dao: ActiveGameFinder) -> dto.Game:

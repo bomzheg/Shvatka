@@ -5,6 +5,7 @@ from shvatka.dal.base import Committer, Reader
 from shvatka.dal.level import LevelUpserter
 from shvatka.models import dto
 from shvatka.models.dto.scn import FileMeta, SavedFileMeta
+from shvatka.models.dto.scn.file_content import VerifiableFileMeta
 from shvatka.models.dto.scn.game import GameScenario
 
 
@@ -61,3 +62,12 @@ class WaiverStarter(Committer, ActiveGameFinder, metaclass=ABCMeta):
 class GameStartPlanner(Committer, ActiveGameFinder, metaclass=ABCMeta):
     async def set_start_at(self, game: dto.Game, start_at: datetime) -> None:
         raise NotImplementedError
+
+
+class GamePackager(Reader):
+    async def get_full(self, id_: int) -> dto.FullGame:
+        raise NotImplementedError
+
+    async def get_by_guid(self, guid: str) -> VerifiableFileMeta:
+        raise NotImplementedError
+

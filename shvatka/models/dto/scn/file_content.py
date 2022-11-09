@@ -41,6 +41,11 @@ class FileMeta:
 
 
 @dataclass
-class SavedFileMeta(FileMeta):
+class VerifiableFileMeta(FileMeta):
+    author_id: int
+
+
+@dataclass
+class SavedFileMeta(VerifiableFileMeta):
     id: int
     author: dto.Player

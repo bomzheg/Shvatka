@@ -20,3 +20,10 @@ class LevelScenario:
 
     def get_keys(self):
         return self.keys
+
+    def get_guids(self) -> list[str]:
+        guids = []
+        for hint in self.time_hints:
+            guids.extend(hint.get_guids())
+        return guids
+

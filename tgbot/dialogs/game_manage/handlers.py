@@ -1,17 +1,19 @@
 from datetime import date, datetime, time
 from typing import Any
 
-from aiogram.types import CallbackQuery, Message
+from aiogram.types import CallbackQuery, Message, BufferedInputFile
 from aiogram_dialog import DialogManager
 from aiogram_dialog.widgets.kbd import Button
+from dataclass_factory import Factory
 
-from db.dao import GameDao
 from db.dao.holder import HolderDao
+from shvatka.clients.file_storage import FileStorage
 from shvatka.models import dto
 from shvatka.scheduler import Scheduler
 from shvatka.services import game
-from shvatka.services.game import get_game, plain_start
+from shvatka.services.game import plain_start
 from shvatka.utils.datetime_utils import TIME_FORMAT, tz_game
+from tgbot.services.scenario import pack_scn
 from tgbot.states import MyGamesPanel, GameEditSG, GameSchedule
 
 
@@ -37,14 +39,24 @@ async def show_scn(c: CallbackQuery, widget: Button, manager: DialogManager):
     await manager.start(GameEditSG.current_levels, data={"game_id": int(game_id)})
 
 
+async def show_zip_scn(c: CallbackQuery, widget: Button, manager: DialogManager):
+    await c.answer()
+    game_id = manager.dialog_data["my_game_id"]
+    player: dto.Player = manager.middleware_data["player"]
+    dao: HolderDao = manager.middleware_data["dao"]
+    dcf: Factory = manager.middleware_data["dcf"]
+    file_storage: FileStorage = manager.middleware_data["file_storage"]
+    game_ = await game.get_game_package(game_id, player, dao.game_packager, dcf, file_storage)
+    zip = pack_scn(game_)
+    await c.message.answer_document(BufferedInputFile(file=zip.read(), filename="scenario.zip"))
+
+
 async def start_waivers(c: CallbackQuery, widget: Button, manager: DialogManager):
     await c.answer()
-    context_data = manager.middleware_data
-    data = manager.dialog_data
-    player: dto.Player = context_data["player"]
-    game_dao: GameDao = context_data["dao"].game
-    game_ = await get_game(int(data["my_game_id"]), player, game_dao)
-    await game.start_waivers(game_, player, game_dao)
+    player: dto.Player = manager.middleware_data["player"]
+    dao: HolderDao = manager.middleware_data["dao"]
+    game_ = await game.get_game(int(manager.dialog_data["my_game_id"]), player, dao.game)
+    await game.start_waivers(game_, player, dao.game)
 
 
 async def select_date(c: CallbackQuery, widget, manager: DialogManager, selected_date: date):

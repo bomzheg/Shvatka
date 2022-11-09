@@ -1,5 +1,10 @@
-from zipfile import Path as ZipPath
+from io import BytesIO
+from typing import BinaryIO
+from zipfile import Path as ZipPath, ZipFile, ZIP_DEFLATED
 
+import yaml
+
+from shvatka.models.dto.scn.game import RawGameScenario
 from shvatka.utils import exceptions
 from tgbot.models.parsed_zip import ParsedZip
 
@@ -9,7 +14,7 @@ def unpack_scn(zip_file: ZipPath) -> ParsedZip:
     files = {}
     for file in zip_file.iterdir():
         if file.is_file():
-            if is_filename_equals(file.name, ".yaml"):
+            if str(file.name).endswith(".yaml"):
                 if scn is not None:
                     raise exceptions.ScenarioNotCorrect(
                         text=f"Zip contains more that one file "
@@ -25,10 +30,11 @@ def unpack_scn(zip_file: ZipPath) -> ParsedZip:
     return ParsedZip(scn=scn, files=files)
 
 
-def is_filename_equals(
-    filename: str, example_filename: str = None, example_extension: str = ""
-) -> bool:
-    if example_filename is None:
-        return filename.endswith(example_extension)
-    return filename == example_filename + example_extension
-
+def pack_scn(game: RawGameScenario) -> BinaryIO:
+    output = BytesIO()
+    with ZipFile(output, "a", ZIP_DEFLATED, False) as zipfile:
+        zipfile.writestr("scn.yaml", yaml.dump(game.scn, allow_unicode=True).encode("utf8"))
+        for guid, content in game.files.items():
+            zipfile.writestr(guid, content.read())
+    output.seek(0)
+    return output

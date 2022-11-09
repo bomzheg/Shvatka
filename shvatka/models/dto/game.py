@@ -87,5 +87,12 @@ class Game:
 class FullGame(Game):
     levels: list[Level] = field(default_factory=list)
 
+    def get_guids(self) -> list[str]:
+        guids = []
+        for hint in self.levels:
+            guids.extend(hint.get_guids())
+        return guids
+
+
     def get_hint(self, level_number: int, hint_number: int) -> TimeHint:
         return self.levels[level_number].get_hint(hint_number)

@@ -9,6 +9,7 @@ from db.dao.holder import HolderDao
 from shvatka.models import dto
 from shvatka.services.game import check_new_game_name_available, create_game
 from shvatka.services.level import get_all_my_free_levels
+from tgbot.states import LevelManageSG
 
 
 async def process_name(m: Message, dialog_: Any, manager: DialogManager):
@@ -40,3 +41,11 @@ async def save_game(c: CallbackQuery, button: Button, manager: DialogManager):
     await c.message.edit_text("Игра успешно сохранена")
     await manager.done({"game": game})
 
+
+async def edit_level(c: CallbackQuery, widget: Any, manager: DialogManager, item_id: str):
+    await c.answer()
+    await manager.start(LevelManageSG.menu, data={"level_id": int(item_id)})
+
+
+async def add_level(c: CallbackQuery, button: Button, manager: DialogManager):
+    await c.answer("TODO реализовать добавление уровня") # TODO

@@ -48,13 +48,13 @@ games = Dialog(
             Const("Начать сборку вейверов"),
             id="start_waiver",
             on_click=start_waivers,
-            when=not_getting_waivers
+            when=not_getting_waivers,
         ),
         Button(
             Const("Запланировать игру"),
             id="start_schedule_game",
             on_click=start_schedule_game,
-            when=is_getting_waivers
+            when=is_getting_waivers,
         ),
         state=MyGamesPanel.game_menu,
         preview_data={"game": PREVIEW_GAME},

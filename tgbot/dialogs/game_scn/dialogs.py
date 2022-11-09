@@ -5,7 +5,7 @@ from aiogram_dialog.widgets.text import Const, Format
 
 from tgbot.states import GameWriteSG, GameEditSG
 from .getters import get_game_name, select_my_levels, select_full_game
-from .handlers import process_name, save_game
+from .handlers import process_name, save_game, edit_level, add_level
 
 game_writer = Dialog(
     Window(
@@ -57,7 +57,7 @@ game_editor = Dialog(
     Window(
         Format("Игра <b>{game.name}</b>\n\n"),
         Const("<b>Уровни игры</b>"),
-        Button(Const("Добавить уровень"), id="add_level"),
+        Button(Const("Добавить уровень"), id="add_level", on_click=add_level),
         Cancel(Const("Назад")),
         ScrollingGroup(
             Select(
@@ -65,6 +65,7 @@ game_editor = Dialog(
                 id="game_level_ids",
                 item_id_getter=lambda x: x.db_id,
                 items="levels",
+                on_click=edit_level,
             ),
             id="game_levels_sg",
             width=1,

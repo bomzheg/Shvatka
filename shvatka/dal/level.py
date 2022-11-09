@@ -22,3 +22,8 @@ class LevelUpserter(Committer, metaclass=ABCMeta):
 class MyLevelsGetter(Reader):
     async def get_all_my(self, author: dto.Player) -> list[dto.Level]:
         raise NotImplementedError
+
+
+class LevelByIdGetter(Reader):
+    async def get_by_id(self, id_: int) -> dto.Level:
+        raise NotImplementedError

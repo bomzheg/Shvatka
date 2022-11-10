@@ -2,17 +2,15 @@ from abc import ABCMeta
 from typing import Iterable
 
 from shvatka.dal.base import Writer, Committer
+from shvatka.dal.organizer import GameOrgsGetter
 from shvatka.models import dto
 
 
-class GamePreparer(Writer):
+class GamePreparer(Writer, GameOrgsGetter, metaclass=ABCMeta):
     async def delete_poll_data(self) -> None:
         raise NotImplementedError
 
     async def get_agree_teams(self, game: dto.Game) -> Iterable[dto.Team]:
-        raise NotImplementedError
-
-    async def get_orgs(self, game: dto.Game) -> Iterable[dto.Organizer]:
         raise NotImplementedError
 
     async def get_poll_msg(self, team: dto.Team, game: dto.Game) -> int:

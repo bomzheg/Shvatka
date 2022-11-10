@@ -7,6 +7,7 @@ from shvatka.dal.level_times import GameStarter, LevelTimeChecker
 from shvatka.models import dto
 from shvatka.models.dto.scn.time_hint import TimeHint
 from shvatka.scheduler import Scheduler
+from shvatka.services.organizers import get_orgs
 from shvatka.utils.exceptions import InvalidKey
 from shvatka.utils.input_validation import is_key_valid
 from shvatka.utils.key_checker_lock import KeyCheckerFactory
@@ -21,7 +22,7 @@ async def prepare_game(
     await view_preparer.prepare_game_view(
         game=game,
         teams=await game_preparer.get_agree_teams(game),
-        orgs=await game_preparer.get_orgs(game),
+        orgs=await get_orgs(game, game_preparer),
         dao=game_preparer,
     )
     await game_preparer.delete_poll_data()

@@ -1,7 +1,7 @@
+from db.models import Base
+from shvatka.models import dto
 from sqlalchemy import Column, Integer, ForeignKey, Boolean, UniqueConstraint
 from sqlalchemy.orm import relationship
-
-from db.models import Base
 
 
 class Organizer(Base):
@@ -28,3 +28,14 @@ class Organizer(Base):
     __table_args__ = (
         UniqueConstraint("player_id", "game_id"),
     )
+
+    def to_dto(self, player: dto.Player, game: dto.Game) -> dto.SecondaryOrganizer:
+        return dto.SecondaryOrganizer(
+            id=self.id,
+            player=player,
+            game=game,
+            can_spy=self.can_spy,
+            can_see_log_keys=self.can_see_log_keys,
+            can_validate_waivers=self.can_validate_waivers,
+            deleted=self.deleted,
+        )

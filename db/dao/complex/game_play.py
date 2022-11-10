@@ -19,7 +19,7 @@ class GamePreparerImpl(GamePreparer):
     async def get_agree_teams(self, game: dto.Game) -> Iterable[dto.Team]:
         return await self.waiver.get_played_teams(game)
 
-    async def get_orgs(self, game: dto.Game) -> Iterable[dto.Organizer]:
+    async def get_orgs(self, game: dto.Game) -> Iterable[dto.SecondaryOrganizer]:
         return await self.org.get_orgs(game)
 
     async def get_poll_msg(self, team: dto.Team, game: dto.Game) -> int:

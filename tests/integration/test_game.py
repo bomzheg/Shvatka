@@ -2,13 +2,13 @@ from copy import deepcopy
 
 import pytest
 from dataclass_factory import Factory
-
 from db.dao.holder import HolderDao
 from shvatka.clients.file_storage import FileStorage
 from shvatka.models import dto
 from shvatka.models.dto.scn.game import RawGameScenario
 from shvatka.models.enums import GameStatus
 from shvatka.services.game import upsert_game, get_authors_games, start_waivers, get_active
+from shvatka.services.organizers import get_orgs
 
 
 @pytest.mark.asyncio
@@ -52,7 +52,7 @@ async def test_game_simple(
 
     assert await dao.game.count() == 1
     assert 1 == await dao.organizer.get_orgs_count(game)
-    assert author == (await dao.organizer.get_orgs(game))[0].player
+    assert author == (await get_orgs(game, dao.organizer))[0].player
     assert await dao.level.count() == 2
 
     assert game.name == "My new game"

@@ -1,15 +1,18 @@
 from aiogram_dialog import DialogManager
 
-
-async def get_game_id(dialog_manager: DialogManager, **_):
-    data = dialog_manager.dialog_data
-    return {
-        "game_id": data["game_id"]
-    }
+from db.dao.holder import HolderDao
+from shvatka.models import dto
+from shvatka.services import organizers
+from shvatka.services.game import get_game
 
 
 async def get_orgs(dialog_manager: DialogManager, **_):
-
+    game_id = dialog_manager.start_data["game_id"]
+    dao: HolderDao = dialog_manager.middleware_data["dao"]
+    author: dto.Player = dialog_manager.middleware_data["player"]
+    game = await get_game(game_id, author, dao.game)
+    orgs = await organizers.get_secondary_orgs(game, dao.organizer)
     return {
-
+        "game": game,
+        "orgs": orgs,
     }

@@ -14,7 +14,7 @@ from shvatka.services import game
 from shvatka.services.game import plain_start
 from shvatka.utils.datetime_utils import TIME_FORMAT, tz_game
 from tgbot.services.scenario import pack_scn
-from tgbot.states import MyGamesPanel, GameEditSG, GameSchedule
+from tgbot.states import MyGamesPanel, GameEditSG, GameSchedule, GameOrgs
 
 
 async def select_my_game(c: CallbackQuery, widget: Any, manager: DialogManager, item_id: str):
@@ -100,3 +100,9 @@ async def schedule_game(c: CallbackQuery, widget: Button, manager: DialogManager
     )
     await c.answer("Запланировано успешно")
     await manager.done()
+
+
+async def show_game_orgs(c: CallbackQuery, widget: Button, manager: DialogManager):
+    await c.answer()
+    game_id = manager.dialog_data["my_game_id"]
+    await manager.start(GameOrgs.orgs_list, data={"game_id": game_id})

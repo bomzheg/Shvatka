@@ -7,7 +7,7 @@ from tgbot.states import MyGamesPanel, GameSchedule
 from .getters import get_my_games, get_game, not_getting_waivers, is_getting_waivers, get_game_time, \
     get_game_datetime
 from .handlers import select_my_game, start_waivers, select_date, process_time_message, schedule_game, show_scn, \
-    start_schedule_game, show_zip_scn
+    start_schedule_game, show_zip_scn, show_game_orgs
 from ..preview_data import PREVIEW_GAME
 
 games = Dialog(
@@ -43,6 +43,11 @@ games = Dialog(
             Const("Сценарий"),
             id="game_scn",
             on_click=show_scn,
+        ),
+        Button(
+            Const("Организаторы"),
+            id="game_orgs",
+            on_click=show_game_orgs,
         ),
         Button(
             Const("zip-сценарий"),

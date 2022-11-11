@@ -63,10 +63,15 @@ class GameDao(BaseDAO[models.Game]):
             levels=[level.to_dto(author) for level in game_db.levels],
         )
 
-    async def get_by_id(self, id_: int, author: dto.Player) -> dto.Game:
-        game = await self._get_by_id(id_)
-        if game.author_id != author.id:
-            raise GameHasAnotherAuthor(game_id=game.id, player=author)
+    async def get_by_id(self, id_: int, author: dto.Player | None = None) -> dto.Game:
+        if not author:
+            options = [joinedload(models.Game.author).joinedload(models.Player.user)]
+            game = await self._get_by_id(id_, options)
+            author = game.author.to_dto(game.author.user.to_dto())
+        else:
+            game = await self._get_by_id(id_)
+            if author and game.author_id != author.id:
+                raise GameHasAnotherAuthor(game_id=game.id, player=author)
         return game.to_dto(author)
 
     async def get_all_by_author(self, author: dto.Player) -> list[dto.Game]:

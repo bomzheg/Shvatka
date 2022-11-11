@@ -59,7 +59,7 @@ async def get_authors_games(
     return await dao.get_all_by_author(author)
 
 
-async def get_game(id_: int, author: dto.Player, dao: GameByIdGetter) -> dto.Game:
+async def get_game(id_: int, *, author: dto.Player = None, dao: GameByIdGetter) -> dto.Game:
     return await dao.get_by_id(id_, author)
 
 

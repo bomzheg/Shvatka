@@ -17,7 +17,11 @@ async def get_my_games(dao: HolderDao, player: dto.Player, **_) -> dict[str, lis
 
 async def get_game(dao: HolderDao, player: dto.Player, dialog_manager: DialogManager, **_):
     data = dialog_manager.dialog_data
-    return {"game": await game.get_game(data["my_game_id"], player, dao.game)}
+    return {"game": await game.get_game(
+        id_=data["my_game_id"],
+        author=player,
+        dao=dao.game,
+    )}
 
 
 def not_getting_waivers(data: dict, widget: Whenable, manager: DialogManager):

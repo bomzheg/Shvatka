@@ -1,6 +1,6 @@
 from typing import Callable, Any, Awaitable
 
-from aiogram import BaseMiddleware
+from aiogram import BaseMiddleware, types
 from aiogram.types import TelegramObject
 
 from db.dao.holder import HolderDao
@@ -32,23 +32,33 @@ class LoadDataMiddleware(BaseMiddleware):
         return result
 
 
-async def save_user(data: dict[str, Any], holder_dao: HolderDao) -> dto.User:
+async def save_user(data: dict[str, Any], holder_dao: HolderDao) -> dto.User | None:
+    user: types.User = data.get("event_from_user", None)
+    if not user:
+        return None
     return await upsert_user(
-        dto.User.from_aiogram(data["event_from_user"]),
+        dto.User.from_aiogram(user),
         holder_dao.user
     )
 
 
-async def save_player(user: dto.User, holder_dao: HolderDao) -> dto.Player:
+async def save_player(user: dto.User | None, holder_dao: HolderDao) -> dto.Player | None:
+    if not user:
+        return None
     return await upsert_player(user, holder_dao.player)
 
 
-async def save_chat(data: dict[str, Any], holder_dao: HolderDao) -> dto.Chat:
+async def save_chat(data: dict[str, Any], holder_dao: HolderDao) -> dto.Chat | None:
+    chat: dto.Chat = data.get("event_chat", None)
+    if not chat:
+        return None
     return await upsert_chat(
-        dto.Chat.from_aiogram(data["event_chat"]),
+        dto.Chat.from_aiogram(chat),
         holder_dao.chat
     )
 
 
-async def load_team(chat: dto.Chat, holder_dao: HolderDao) -> dto.Team:
+async def load_team(chat: dto.Chat | None, holder_dao: HolderDao) -> dto.Team | None:
+    if not chat:
+        return None
     return await get_by_chat(chat, holder_dao.team)

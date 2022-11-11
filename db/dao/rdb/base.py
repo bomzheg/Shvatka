@@ -3,6 +3,7 @@ from typing import List, TypeVar, Type, Generic
 from sqlalchemy import delete, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
+from sqlalchemy.orm.strategy_options import Load
 
 from db.models import Base
 
@@ -18,10 +19,11 @@ class BaseDAO(Generic[Model]):
         result = await self.session.execute(select(self.model))
         return result.scalars().all()
 
-    async def _get_by_id(self, id_: int) -> Model:
-        result = await self.session.execute(
-            select(self.model).where(self.model.id == id_)
-        )
+    async def _get_by_id(self, id_: int, options: list[Load] = None) -> Model:
+        query = select(self.model).where(self.model.id == id_)
+        if options:
+            query = query.options(*options)
+        result = await self.session.execute(query)
         return result.scalar_one()
 
     def _save(self, obj: Model):

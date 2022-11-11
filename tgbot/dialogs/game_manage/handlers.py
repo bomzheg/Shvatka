@@ -55,7 +55,11 @@ async def start_waivers(c: CallbackQuery, widget: Button, manager: DialogManager
     await c.answer()
     player: dto.Player = manager.middleware_data["player"]
     dao: HolderDao = manager.middleware_data["dao"]
-    game_ = await game.get_game(int(manager.dialog_data["my_game_id"]), player, dao.game)
+    game_ = await game.get_game(
+        id_=int(manager.dialog_data["my_game_id"]),
+        author=player,
+        dao=dao.game,
+    )
     await game.start_waivers(game_, player, dao.game)
 
 

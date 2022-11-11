@@ -48,4 +48,4 @@ async def edit_level(c: CallbackQuery, widget: Any, manager: DialogManager, item
 
 
 async def add_level(c: CallbackQuery, button: Button, manager: DialogManager):
-    await c.answer("TODO реализовать добавление уровня") # TODO
+    await c.answer("TODO реализовать добавление уровня")  # TODO

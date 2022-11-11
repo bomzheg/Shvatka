@@ -17,7 +17,7 @@ from .rdb import (
     LevelTimeDao, KeyTimeDao, OrganizerDao, PlayerDao,
     PlayerInTeamDao, TeamDao, WaiverDao,
 )
-from .redis import PollDao
+from .redis import PollDao, SecureInvite
 
 
 class HolderDao:
@@ -35,7 +35,8 @@ class HolderDao:
         self.player_in_team = PlayerInTeamDao(self.session)
         self.team = TeamDao(self.session)
         self.waiver = WaiverDao(self.session)
-        self.poll = PollDao(redis)
+        self.poll = PollDao(redis=redis)
+        self.secure_invite = SecureInvite(redis=redis)
 
     async def commit(self):
         await self.session.commit()

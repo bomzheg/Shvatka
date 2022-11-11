@@ -13,4 +13,4 @@ from .rdb import (
     UserDao,  # noqa: F401
     WaiverDao,  # noqa: F401
 )
-from .redis import PollDao  # noqa: F401
+from .redis import PollDao, SecureInvite  # noqa: F401

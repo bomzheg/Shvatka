@@ -1,6 +1,7 @@
 from typing import Iterable
 
 from shvatka.dal.organizer import GameOrgsGetter
+from shvatka.dal.secure_invite import InviteSaver, InviteRemover, InviteReader
 from shvatka.models import dto
 from shvatka.utils.exceptions import PermissionsError, GameHasAnotherAuthor
 
@@ -19,3 +20,14 @@ def check_allow_add_orgs(game: dto.Game, manage_token: str, inviter: dto.Player)
     if game.author.id != inviter.id:
         raise GameHasAnotherAuthor(game=game, player=inviter, alarm=True)
 
+
+async def save_invite_to_orgs(game: dto.Game, inviter: dto.Player, dao: InviteSaver) -> str:
+    return await dao.save_new_invite(dct=dict(game_id=game.id, inviter_id=inviter.id))
+
+
+async def dismiss_to_be_org(token: str, dao: InviteRemover):
+    await dao.remove_invite(token)
+
+
+async def agree_to_be_org(token: str, player: dto.Player, dao: InviteReader):
+    pass

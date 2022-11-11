@@ -1,5 +1,7 @@
-from .inline import (
-    AddGameOrg,
+from .organizer import (
+    AddGameOrgID,
+    AgreeBeOrgCD,
+    get_kb_agree_be_org,
 )
 from .waiver import (
     get_kb_waivers,

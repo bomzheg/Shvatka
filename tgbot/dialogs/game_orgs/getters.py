@@ -17,10 +17,9 @@ async def get_orgs(dialog_manager: DialogManager, **_):
         dao=dao.game,
     )
     orgs = await organizers.get_secondary_orgs(game, dao.organizer)
-    inline_query = kb.AddGameOrg(
+    inline_query = kb.AddGameOrgID(
         game_manage_token=game.manage_token,
         game_id=game.id,
-        inviter_id=author.id,
     )
     return {
         "game": game,

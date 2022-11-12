@@ -1,6 +1,7 @@
 import logging
+from contextlib import suppress
 from dataclasses import dataclass
-from typing import Iterable
+from typing import Iterable, cast
 
 from aiogram import Bot
 from aiogram.exceptions import TelegramAPIError
@@ -11,7 +12,7 @@ from shvatka.clients.file_storage import FileStorage
 from shvatka.dal.game_play import GamePreparer
 from shvatka.models import dto
 from shvatka.models.dto.scn.time_hint import TimeHint
-from shvatka.views.game import GameViewPreparer, GameView, GameLogWriter, OrgNotifier, Event
+from shvatka.views.game import GameViewPreparer, GameView, GameLogWriter, OrgNotifier, Event, LevelUp, NewOrg
 from tgbot.views.hint_factory.hint_content_resolver import HintContentResolver
 from tgbot.views.hint_sender import HintSender
 
@@ -36,7 +37,6 @@ class BotView(GameViewPreparer, GameView):
                 )
             except TelegramAPIError as e:
                 logger.error("can't remove waivers keyboard for team %s", team.id, exc_info=e)
-
 
     async def send_puzzle(self, team: dto.Team, puzzle: TimeHint, level: dto.Level) -> None:
         await self.hint_sender.send_hints(
@@ -88,7 +88,30 @@ class BotOrgNotifier(OrgNotifier):
     bot: Bot
 
     async def notify(self, event: Event) -> None:
-        pass
+        match event:
+            case LevelUp():
+                for org in event.orgs_list:
+                    with suppress(TelegramAPIError):
+                        await self.notify_level_up(cast(LevelUp, event), org)
+            case NewOrg():
+                for org in event.orgs_list:
+                    with suppress(TelegramAPIError):
+                        await self.notify_new_org(cast(NewOrg, event), org)
+
+    async def notify_level_up(self, level_up: LevelUp, org: dto.Organizer):
+        await self.bot.send_message(
+            chat_id=org.player.user.tg_id,
+            text=f"Команда {level_up.team} перешла "
+                 f"на уровень {level_up.new_level.number_in_game} "
+                 f"({level_up.new_level.name_id})"
+        )
+
+    async def notify_new_org(self, new_org: NewOrg, org: dto.Organizer):
+        await self.bot.send_message(
+            chat_id=org.player.user.tg_id,
+            text=f"На игру {new_org.game.name} "
+                 f"добавлен новый орг {new_org.org.player.user.name_mention}"
+        )
 
 
 def create_bot_game_view(bot: Bot, dao: HolderDao, storage: FileStorage) -> BotView:

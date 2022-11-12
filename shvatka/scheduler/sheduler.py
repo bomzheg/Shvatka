@@ -15,3 +15,10 @@ class Scheduler(Protocol):
         self, level: dto.Level, team: dto.Team, hint_number: int, run_at: datetime,
     ):
         raise NotImplementedError
+
+
+class LevelTestScheduler(Protocol):
+    async def plain_hint(
+        self, level: dto.Level, tester: dto.Organizer, hint_number: int, run_at: datetime,
+    ):
+        raise NotImplementedError

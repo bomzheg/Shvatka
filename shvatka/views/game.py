@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import timedelta
 from typing import Protocol, Iterable
 
 from shvatka.dal.game_play import GamePreparer
@@ -63,3 +64,10 @@ class LevelUp(Event):
 class NewOrg(Event):
     game: dto.Game
     org: dto.SecondaryOrganizer
+
+
+@dataclass
+class LevelTestCompleted(Event):
+    level: dto.Level
+    tester: dto.Organizer
+    result: timedelta

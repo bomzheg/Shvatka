@@ -1,5 +1,5 @@
 from aiogram_dialog import Dialog, Window
-from aiogram_dialog.widgets.kbd import ScrollingGroup, Select, Cancel, Button
+from aiogram_dialog.widgets.kbd import ScrollingGroup, Select, Cancel, Button, Back
 from aiogram_dialog.widgets.text import Format, Const
 
 from tgbot.states import GameOrgs
@@ -31,7 +31,8 @@ game_orgs = Dialog(
         state=GameOrgs.orgs_list,
     ),
     Window(
-        Format("{org.player.user.name_mention}"),
+        Format("Организатор <b>{org.player.user.name_mention}</b> на игру <b>{org.game.name}</b>"),
+        Back(text=Const("К списку организаторов")),
         Button(
             Format("{can_spy}Может шпионить"),
             id="can_spy",
@@ -43,7 +44,7 @@ game_orgs = Dialog(
             on_click=change_permission_handler,
         ),
         Button(
-            Format("{can_validate_waivers}Может смотреть лог ключей"),
+            Format("{can_validate_waivers}Может принимать вейверы"),
             id="can_validate_waivers",
             on_click=change_permission_handler,
         ),

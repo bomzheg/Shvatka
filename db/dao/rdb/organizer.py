@@ -1,4 +1,4 @@
-from sqlalchemy import update
+from sqlalchemy import update, not_
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import joinedload
@@ -50,7 +50,7 @@ class OrganizerDao(BaseDAO[models.Organizer]):
         await self.session.execute(
             update(models.Organizer)
             .where(models.Organizer.id == org.id)
-            .values(**{permission.value: not permission.value})
+            .values(**{permission.name: not_(getattr(models.Organizer, permission.name))})
         )
 
     async def _get_orgs(self, game: dto.Game) -> list[models.Organizer]:

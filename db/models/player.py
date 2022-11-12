@@ -74,3 +74,6 @@ class Player(Base):
             user=user,
             can_be_author=self.can_be_author,
         )
+
+    def to_dto_user_prefetched(self) -> dto.Player:
+        return self.to_dto(self.user.to_dto())

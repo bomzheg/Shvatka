@@ -57,7 +57,7 @@ class GameDao(BaseDAO[models.Game]):
             .where(models.Game.id == id_)
         )
         game_db: models.Game = result.unique().scalar_one()
-        author = game_db.author.to_dto(game_db.author.user.to_dto())
+        author = game_db.author.to_dto_user_prefetched()
         return game_db.to_full_dto(
             author=author,
             levels=[level.to_dto(author) for level in game_db.levels],
@@ -67,7 +67,7 @@ class GameDao(BaseDAO[models.Game]):
         if not author:
             options = [joinedload(models.Game.author).joinedload(models.Player.user)]
             game = await self._get_by_id(id_, options)
-            author = game.author.to_dto(game.author.user.to_dto())
+            author = game.author.to_dto_user_prefetched()
         else:
             game = await self._get_by_id(id_)
             if author and game.author_id != author.id:
@@ -111,7 +111,7 @@ class GameDao(BaseDAO[models.Game]):
         except NoResultFound:
             return None
         return game.to_dto(
-            game.author.to_dto(game.author.user.to_dto())
+            game.author.to_dto_user_prefetched()
         )
 
     async def create_game(self, author: dto.Player, name: str) -> dto.Game:

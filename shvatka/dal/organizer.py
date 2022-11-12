@@ -14,3 +14,8 @@ class GameOrgsGetter(Reader):
 class OrgAdder(Committer, InviteReader, InviteRemover, GameByIdGetter, GameOrgsGetter, metaclass=ABCMeta):
     async def add_new_org(self, game: dto.Game, player: dto.Player) -> dto.SecondaryOrganizer:
         raise NotImplementedError
+
+
+class OrgByIdGetter(Reader):
+    async def get_by_id(self, id_: int) -> dto.SecondaryOrganizer:
+        raise NotImplementedError

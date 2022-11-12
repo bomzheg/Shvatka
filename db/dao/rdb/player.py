@@ -29,7 +29,7 @@ class PlayerDao(BaseDAO[models.Player]):
             )
         )
         player = result.scalar_one()
-        return player.to_dto(player.user.to_dto())
+        return player.to_dto_user_prefetched()
 
     async def get_by_user(self, user: dto.User) -> dto.Player:
         result = await self.session.execute(
@@ -66,7 +66,7 @@ class PlayerDao(BaseDAO[models.Player]):
         players = result.all()
         return [
             dto.VotedPlayer(
-                player.to_dto(player.user.to_dto()),
+                player.to_dto_user_prefetched(),
                 pit.to_dto(),
             ) for player, pit in players
         ]

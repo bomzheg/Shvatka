@@ -1,4 +1,4 @@
-from shvatka.dal.organizer import GameOrgsGetter, OrgAdder
+from shvatka.dal.organizer import GameOrgsGetter, OrgAdder, OrgByIdGetter
 from shvatka.dal.secure_invite import InviteSaver, InviteRemover
 from shvatka.models import dto
 from shvatka.services.game import get_game
@@ -54,3 +54,5 @@ async def agree_to_be_org(
     return org
 
 
+async def get_org_by_id(id_: int, dao: OrgByIdGetter) -> dto.SecondaryOrganizer:
+    return await dao.get_by_id(id_)

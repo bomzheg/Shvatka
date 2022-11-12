@@ -38,3 +38,4 @@ class GameEditSG(StatesGroup):
 
 class GameOrgs(StatesGroup):
     orgs_list = State()
+    org_menu = State()

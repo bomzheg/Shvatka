@@ -3,7 +3,7 @@ from aiogram_dialog.widgets.kbd import ScrollingGroup, Select, Cancel
 from aiogram_dialog.widgets.text import Format, Const
 
 from tgbot.states import GameOrgs
-from .getters import get_orgs
+from .getters import get_orgs, get_org
 from .handlers import select_org
 from ..widgets.switch_inline import SwitchInlineQuery
 
@@ -29,5 +29,10 @@ game_orgs = Dialog(
         ),
         getter=get_orgs,
         state=GameOrgs.orgs_list,
+    ),
+    Window(
+        Format("{org.player.user.name_mention}"),
+        getter=get_org,
+        state=GameOrgs.org_menu,
     ),
 )

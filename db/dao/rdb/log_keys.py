@@ -70,7 +70,7 @@ class KeyTimeDao(BaseDAO[models.KeyTime]):
         keys: list[models.KeyTime] = result.scalars().all()
         return [
             key.to_dto(
-                player=key.player.to_dto(key.player.user.to_dto()),
+                player=key.player.to_dto_user_prefetched(),
                 team=key.team.to_dto(key.team.chat.to_dto()),
             ) for key in keys
         ]

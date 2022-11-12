@@ -4,6 +4,7 @@ from db.dao.holder import HolderDao
 from shvatka.models import dto
 from shvatka.services import organizers
 from shvatka.services.game import get_game
+from shvatka.services.organizers import get_org_by_id
 from tgbot import keyboards as kb
 
 
@@ -25,4 +26,12 @@ async def get_orgs(dialog_manager: DialogManager, **_):
         "game": game,
         "orgs": orgs,
         "inline_query": inline_query.pack(),
+    }
+
+
+async def get_org(dialog_manager: DialogManager, dao: HolderDao, **_):
+    org_id = dialog_manager.dialog_data["org_id"]
+    org = await get_org_by_id(org_id, dao.organizer)
+    return {
+        "org": org,
     }

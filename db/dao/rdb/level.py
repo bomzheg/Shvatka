@@ -66,7 +66,7 @@ class LevelDao(BaseDAO[models.Level]):
             )
         )
         level: models.Level = result.scalar_one()
-        return level.to_dto(level.author.to_dto(level.author.user.to_dto()))
+        return level.to_dto(level.author.to_dto_user_prefetched())
 
     async def unlink_all(self, game: dto.Game):
         await self.session.execute(
@@ -117,4 +117,4 @@ class LevelDao(BaseDAO[models.Level]):
             )
         )
         level: models.Level = result.scalar_one()
-        return level.to_dto(level.author.to_dto(level.author.user.to_dto()))
+        return level.to_dto(level.author.to_dto_user_prefetched())

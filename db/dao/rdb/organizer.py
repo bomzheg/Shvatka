@@ -15,7 +15,7 @@ class OrganizerDao(BaseDAO[models.Organizer]):
         orgs = await self._get_orgs(game)
         return [
             org.to_dto(
-                player=org.player.to_dto(user=org.player.user.to_dto()),
+                player=org.player.to_dto_user_prefetched(),
                 game=game,
             )
             for org in orgs
@@ -33,6 +33,16 @@ class OrganizerDao(BaseDAO[models.Organizer]):
         await self._flush(org)
         return org.to_dto(player=player, game=game)
 
+    async def get_by_id(self, id_: int) -> dto.SecondaryOrganizer:
+        options = [
+            joinedload(models.Organizer.player).joinedload(models.Player.user),
+            joinedload(models.Organizer.game).joinedload(models.Game.author).joinedload(models.Player.user),
+        ]
+        result = await self._get_by_id(id_, options)
+        return result.to_dto(
+            player=result.player.to_dto_user_prefetched(),
+            game=result.game.to_dto(author=result.game.author.to_dto_user_prefetched()),
+        )
 
     async def _get_orgs(self, game: dto.Game) -> list[models.Organizer]:
         result = await self.session.execute(

@@ -96,7 +96,7 @@ class PlayerInTeamDao(BaseDAO[models.PlayerInTeam]):
         return [
             dto.FullTeamPlayer.from_simple(
                 team_player=team_player.to_dto(),
-                player=team_player.player.to_dto(team_player.player.user.to_dto()),
+                player=team_player.player.to_dto_user_prefetched(),
                 team=team,
             )
             for team_player in players

@@ -1,4 +1,4 @@
-from shvatka.dal.organizer import GameOrgsGetter, OrgAdder, OrgByIdGetter, OrgPermissionFlipper
+from shvatka.dal.organizer import GameOrgsGetter, OrgAdder, OrgByIdGetter, OrgPermissionFlipper, OrgDeletedFlipper
 from shvatka.dal.secure_invite import InviteSaver, InviteRemover
 from shvatka.models import dto
 from shvatka.models.enums.org_permission import OrgPermission
@@ -66,4 +66,10 @@ async def flip_permission(
 ):
     check_allow_manage_orgs(org.game, manager.id)
     await dao.flip_permission(org, permission)
+    await dao.commit()
+
+
+async def flip_deleted(manager: dto.Player, org: dto.SecondaryOrganizer, dao: OrgDeletedFlipper):
+    check_allow_manage_orgs(org.game, manager.id)
+    await dao.flip_deleted(org)
     await dao.commit()

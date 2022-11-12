@@ -5,7 +5,7 @@ from aiogram_dialog.widgets.text import Format, Const, Multi
 
 from tgbot.states import GameOrgs
 from .getters import get_orgs, get_org
-from .handlers import select_org, change_permission_handler
+from .handlers import select_org, change_permission_handler, change_deleted_handler
 from ..widgets.switch_inline import SwitchInlineQuery
 
 game_orgs = Dialog(
@@ -43,19 +43,29 @@ game_orgs = Dialog(
         ),
         Back(text=Const("К списку организаторов")),
         Button(
-            Format("{can_spy}Может шпионить"),
+            Format("{can_spy}Шпионить"),
             id="can_spy",
             on_click=change_permission_handler,
         ),
         Button(
-            Format("{can_see_log_keys}Может смотреть лог ключей"),
+            Format("{can_see_log_keys}Смотреть лог ключей"),
             id="can_see_log_keys",
             on_click=change_permission_handler,
         ),
         Button(
-            Format("{can_validate_waivers}Может принимать вейверы"),
+            Format("{can_validate_waivers}Принимать вейверы"),
             id="can_validate_waivers",
             on_click=change_permission_handler,
+        ),
+        Button(
+            Multi(
+                Const("🗑"),
+                Const("Удалить", when=~F["org"].deleted),
+                Const("Восстановить", when=F["org"].deleted),
+                sep="",
+            ),
+            id="flip_deleted",
+            on_click=change_deleted_handler,
         ),
         getter=get_org,
         state=GameOrgs.org_menu,

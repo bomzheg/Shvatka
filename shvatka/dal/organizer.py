@@ -25,3 +25,8 @@ class OrgByIdGetter(Reader):
 class OrgPermissionFlipper(Committer, OrgByIdGetter, metaclass=ABCMeta):
     async def flip_permission(self, org: dto.SecondaryOrganizer, permission: OrgPermission):
         raise NotImplementedError
+
+
+class OrgDeletedFlipper(Committer, OrgByIdGetter, metaclass=ABCMeta):
+    async def flip_deleted(self, org: dto.SecondaryOrganizer):
+        raise NotImplementedError

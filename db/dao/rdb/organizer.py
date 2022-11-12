@@ -53,6 +53,13 @@ class OrganizerDao(BaseDAO[models.Organizer]):
             .values(**{permission.name: not_(getattr(models.Organizer, permission.name))})
         )
 
+    async def flip_deleted(self, org: dto.SecondaryOrganizer):
+        await self.session.execute(
+            update(models.Organizer)
+            .where(models.Organizer.id == org.id)
+            .values(deleted=not_(models.Organizer.deleted))
+        )
+
     async def _get_orgs(self, game: dto.Game, with_deleted: bool = False) -> list[models.Organizer]:
         if with_deleted:
             deleted_clause = []

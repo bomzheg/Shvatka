@@ -3,6 +3,7 @@ from datetime import datetime
 
 from aiogram import Bot
 from apscheduler.executors.asyncio import AsyncIOExecutor
+from apscheduler.jobstores.base import JobLookupError
 from apscheduler.jobstores.redis import RedisJobStore
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from redis import Redis
@@ -62,6 +63,7 @@ class ApScheduler(Scheduler):
             trigger='date',
             run_date=game.prepared_at.astimezone(tz=tz_utc),
             timezone=tz_utc,
+            id=_prepare_game_key(game),
         )
 
     async def plain_start(self, game: dto.Game):
@@ -71,7 +73,18 @@ class ApScheduler(Scheduler):
             trigger='date',
             run_date=game.start_at.astimezone(tz=tz_utc),
             timezone=tz_utc,
+            id=_start_game_key(game),
         )
+
+    async def cancel_scheduled_game(self, game: dto.Game):
+        try:
+            self.scheduler.remove_job(job_id=_prepare_game_key(game))
+        except JobLookupError as e:
+            logger.error("can't remove job %s for preparing game %s", _prepare_game_key(game), game.id, exc_info=e)
+        try:
+            self.scheduler.remove_job(job_id=_start_game_key(game))
+        except JobLookupError as e:
+            logger.error("can't remove job %s for start game %s", _start_game_key(game), game.id, exc_info=e)
 
     async def plain_hint(
         self, level: dto.Level, team: dto.Team, hint_number: int, run_at: datetime,
@@ -83,6 +96,7 @@ class ApScheduler(Scheduler):
             run_date=run_at,
             timezone=tz_utc,
         )
+
 
     async def start(self):
         self.scheduler.start()
@@ -98,3 +112,11 @@ class ApScheduler(Scheduler):
 
     async def __aexit__(self, exc_type, exc_val, exc_tb):
         await self.close()
+
+
+def _prepare_game_key(game: dto.Game) -> str:
+    return f"game-{game.id}-prepare"
+
+
+def _start_game_key(game: dto.Game) -> str:
+    return f"game-{game.id}-start"

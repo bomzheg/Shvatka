@@ -16,6 +16,9 @@ class Scheduler(Protocol):
     ):
         raise NotImplementedError
 
+    async def cancel_scheduled_game(self, game: dto.Game):
+        raise NotImplementedError
+
 
 class LevelTestScheduler(Protocol):
     async def plain_hint(

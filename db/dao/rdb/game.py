@@ -131,6 +131,13 @@ class GameDao(BaseDAO[models.Game]):
             .values(start_at=start_at.astimezone(tz_utc))
         )
 
+    async def cancel_start(self, game: dto.Game):
+        await self.session.execute(
+            update(models.Game)
+            .where(models.Game.id == game.id)
+            .values(start_at=None)
+        )
+
     async def set_started(self, game: dto.Game):
         await self.set_status(game, GameStatus.started)
 

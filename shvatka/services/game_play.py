@@ -19,6 +19,9 @@ logger = logging.getLogger(__name__)
 async def prepare_game(
     game: dto.Game, game_preparer: GamePreparer, view_preparer: GameViewPreparer,
 ):
+    if not need_prepare_now(game):
+        logger.warning("waked up too early or too late planned %s, now %s", game.start_at, datetime.utcnow())
+        return
     await view_preparer.prepare_game_view(
         game=game,
         teams=await game_preparer.get_agree_teams(game),
@@ -44,6 +47,9 @@ async def start_game(
     * записать в лог игры, что игра началась
     """
     now = datetime.utcnow()
+    if not need_start_now(game):
+        logger.warning("waked up too early or too late planned %s, now %s", game.start_at, now)
+        return
     await dao.set_game_started(game)
     logger.info("game %s started", game.id)
     teams = await dao.get_played_teams(game)
@@ -248,3 +254,31 @@ def calculate_next_hint_timedelta(
     current_hint: TimeHint, next_hint: TimeHint,
 ) -> timedelta:
     return timedelta(minutes=(next_hint.time - current_hint.time))
+
+
+def need_start_now(game: dto.Game) -> bool:
+    if game.start_at is None:
+        return False
+    utcnow = datetime.utcnow()
+    if game.start_at < utcnow:
+        if (utcnow - game.start_at) < timedelta(minutes=30):
+            return True
+        return False
+    else:
+        if (game.start_at - utcnow) < timedelta(minutes=1):
+            return True
+        return False
+
+
+def need_prepare_now(game: dto.Game) -> bool:
+    if game.start_at is None:
+        return False
+    utcnow = datetime.utcnow()
+    if game.start_at < utcnow:
+        if (utcnow - game.start_at) < timedelta(minutes=35):
+            return True
+        return False
+    else:
+        if (game.start_at - utcnow) < timedelta(minutes=6):
+            return True
+        return False

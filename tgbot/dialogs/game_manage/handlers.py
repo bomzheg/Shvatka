@@ -11,7 +11,6 @@ from shvatka.clients.file_storage import FileStorage
 from shvatka.models import dto
 from shvatka.scheduler import Scheduler
 from shvatka.services import game
-from shvatka.services.game import plain_start
 from shvatka.utils.datetime_utils import TIME_FORMAT, tz_game
 from tgbot.services.scenario import pack_scn
 from tgbot.states import MyGamesPanel, GameEditSG, GameSchedule, GameOrgs
@@ -31,6 +30,16 @@ async def start_schedule_game(c: CallbackQuery, widget: Button, manager: DialogM
     await c.answer()
     game_id = manager.dialog_data["my_game_id"]
     await manager.start(GameSchedule.date, data={"my_game_id": int(game_id)})
+
+
+async def cancel_scheduled_game(c: CallbackQuery, widget: Button, manager: DialogManager):
+    await c.answer()
+    game_id = manager.dialog_data["my_game_id"]
+    player: dto.Player = manager.middleware_data["player"]
+    dao: HolderDao = manager.middleware_data["dao"]
+    game_ = await game.get_game(id_=game_id, dao=dao.game)
+    scheduler: Scheduler = manager.middleware_data["scheduler"]
+    await game.cancel_planed_start(game=game_, author=player, scheduler=scheduler, dao=dao.game)
 
 
 async def show_scn(c: CallbackQuery, widget: Button, manager: DialogManager):
@@ -95,7 +104,7 @@ async def schedule_game(c: CallbackQuery, widget: Button, manager: DialogManager
     player: dto.Player = manager.middleware_data["player"]
     dao: HolderDao = manager.middleware_data["dao"]
     scheduler: Scheduler = manager.middleware_data["scheduler"]
-    await plain_start(
+    await game.plain_start(
         game=await dao.game.get_by_id(game_id, player),
         author=player,
         start_at=at,

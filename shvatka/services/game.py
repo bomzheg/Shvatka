@@ -109,10 +109,19 @@ async def plain_start(
     await check_no_other_game_active(dao, game)
     await dao.set_start_at(game, start_at)
     game.start_at = start_at
+    await scheduler.cancel_scheduled_game(game)
 
     await scheduler.plain_prepare(game)
     await scheduler.plain_start(game)
 
+    await dao.commit()
+
+
+async def cancel_planed_start(game: dto.Game, author: dto.Player, scheduler: Scheduler, dao: GameStartPlanner):
+    check_is_author(game, author)
+    await dao.cancel_start(game)
+    game.start_at = None
+    await scheduler.cancel_scheduled_game(game)
     await dao.commit()
 
 

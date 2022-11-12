@@ -8,7 +8,7 @@ from tgbot.states import MyGamesPanel, GameSchedule
 from .getters import get_my_games, get_game, not_getting_waivers, is_getting_waivers, get_game_time, \
     get_game_datetime
 from .handlers import select_my_game, start_waivers, select_date, process_time_message, schedule_game, show_scn, \
-    start_schedule_game, show_zip_scn, show_game_orgs
+    start_schedule_game, show_zip_scn, show_game_orgs, cancel_scheduled_game
 from ..preview_data import PREVIEW_GAME
 
 games = Dialog(
@@ -72,6 +72,12 @@ games = Dialog(
             id="start_schedule_game",
             on_click=start_schedule_game,
             when=is_getting_waivers,
+        ),
+        Button(
+            Const("📥Отменить игру"),
+            id="cancel_scheduled_game",
+            on_click=cancel_scheduled_game,
+            when=F["game"].start_at,
         ),
         state=MyGamesPanel.game_menu,
         preview_data={"game": PREVIEW_GAME},

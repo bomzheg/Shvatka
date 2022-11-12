@@ -63,6 +63,9 @@ class GameStartPlanner(Committer, ActiveGameFinder, metaclass=ABCMeta):
     async def set_start_at(self, game: dto.Game, start_at: datetime) -> None:
         raise NotImplementedError
 
+    async def cancel_start(self, game: dto.Game):
+        raise NotImplementedError
+
 
 class GamePackager(Reader):
     async def get_full(self, id_: int) -> dto.FullGame:

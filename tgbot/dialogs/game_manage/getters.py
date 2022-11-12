@@ -16,9 +16,9 @@ async def get_my_games(dao: HolderDao, player: dto.Player, **_) -> dict[str, lis
 
 
 async def get_game(dao: HolderDao, player: dto.Player, dialog_manager: DialogManager, **_):
-    data = dialog_manager.dialog_data
+    game_id = dialog_manager.dialog_data.get("my_game_id", None) or dialog_manager.start_data["my_game_id"]
     return {"game": await game.get_game(
-        id_=data["my_game_id"],
+        id_=game_id,
         author=player,
         dao=dao.game,
     )}

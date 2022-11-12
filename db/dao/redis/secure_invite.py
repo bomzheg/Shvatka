@@ -27,7 +27,7 @@ class SecureInvite:
         dct_str = await self._get(key, encoding="utf-8")
         if dct_str is None:
             raise SaltNotExist(salt=token, text="this salt does not exist")
-        return json.loads(dct_str)
+        return json.loads(dct_str)['dct']
 
     async def remove_invite(self, token: str):
         await self.redis.delete(self._create_key(token))

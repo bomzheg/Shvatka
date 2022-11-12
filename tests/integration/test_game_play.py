@@ -14,6 +14,7 @@ from shvatka.scheduler import Scheduler
 from shvatka.services.game import start_waivers
 from shvatka.services.game_play import start_game, send_hint, check_key, get_available_hints
 from shvatka.services.game_stat import get_typed_keys
+from shvatka.services.organizers import get_orgs
 from shvatka.services.player import join_team
 from shvatka.services.waiver import add_vote, approve_waivers
 from shvatka.utils.key_checker_lock import KeyCheckerFactory
@@ -24,7 +25,7 @@ from tests.utils.time_key import assert_time_key
 
 @pytest.mark.asyncio
 async def test_game_play(
-    dao: HolderDao, dcf: Factory, locker: KeyCheckerFactory, check_dao: HolderDao, scheduler: Scheduler,
+    dao: HolderDao, locker: KeyCheckerFactory, check_dao: HolderDao, scheduler: Scheduler,
     author: dto.Player, harry: dto.Player, hermione: dto.Player,
     gryffindor: dto.Team, game: dto.FullGame,
 ):
@@ -53,6 +54,7 @@ async def test_game_play(
     )
 
     dummy_org_notifier = mock(OrgNotifier)
+    orgs = await get_orgs(game, dao.organizer)
     key_kwargs = dict(
         player=harry, team=gryffindor, game=game, dao=dao.game_player, view=dummy_view,
         game_log=dummy_log, org_notifier=dummy_org_notifier, locker=locker, scheduler=scheduler,
@@ -81,14 +83,14 @@ async def test_game_play(
     when(dummy_view).correct_key(key=ANY).thenReturn(mock_coro(None))
     when(dummy_view).send_puzzle(team=gryffindor, puzzle=game.get_hint(1, 0), level=game.levels[1]) \
         .thenReturn(mock_coro(None))
-    when(dummy_org_notifier).notify(LevelUp(team=gryffindor, new_level=game.levels[1])) \
+    when(dummy_org_notifier).notify(LevelUp(team=gryffindor, new_level=game.levels[1], orgs_list=orgs)) \
         .thenReturn(mock_coro(None))
     await check_key(key="SH321", **key_kwargs)
 
     unstub(dummy_view)
     dummy_view = mock(GameView)
     when(dummy_log).log("Game finished").thenReturn(mock_coro(None))
-    when(dummy_org_notifier).notify(LevelUp(team=gryffindor, new_level=game.levels[1])) \
+    when(dummy_org_notifier).notify(LevelUp(team=gryffindor, new_level=game.levels[1], orgs_list=orgs)) \
         .thenReturn(mock_coro(None))
     when(dummy_view).correct_key(key=ANY).thenReturn(mock_coro(None))
     when(dummy_view).game_finished(gryffindor).thenReturn(mock_coro(None))

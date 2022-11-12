@@ -13,8 +13,8 @@ class OrganizerDao(BaseDAO[models.Organizer]):
     def __init__(self, session: AsyncSession):
         super().__init__(models.Organizer, session)
 
-    async def get_orgs(self, game: dto.Game) -> list[dto.SecondaryOrganizer]:
-        orgs = await self._get_orgs(game)
+    async def get_orgs(self, game: dto.Game, with_deleted: bool = False) -> list[dto.SecondaryOrganizer]:
+        orgs = await self._get_orgs(game, with_deleted=with_deleted)
         return [
             org.to_dto(
                 player=org.player.to_dto_user_prefetched(),
@@ -53,10 +53,18 @@ class OrganizerDao(BaseDAO[models.Organizer]):
             .values(**{permission.name: not_(getattr(models.Organizer, permission.name))})
         )
 
-    async def _get_orgs(self, game: dto.Game) -> list[models.Organizer]:
+    async def _get_orgs(self, game: dto.Game, with_deleted: bool = False) -> list[models.Organizer]:
+        if with_deleted:
+            deleted_clause = []
+        else:
+            deleted_clause = [models.Organizer.deleted == False]  # noqa
+
         result = await self.session.execute(
             select(models.Organizer)
-            .where(models.Organizer.game_id == game.id)
+            .where(
+                models.Organizer.game_id == game.id,
+                *deleted_clause,
+            )
             .options(
                 joinedload(models.Organizer.player)
                 .joinedload(models.Player.user)

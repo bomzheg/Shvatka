@@ -15,8 +15,10 @@ async def get_spying_orgs(game: dto.Game, dao: GameOrgsGetter) -> list[dto.Organ
     return [org for org in await get_orgs(game, dao) if org.can_spy]
 
 
-async def get_secondary_orgs(game: dto.Game, dao: GameOrgsGetter) -> list[dto.SecondaryOrganizer]:
-    return await dao.get_orgs(game)
+async def get_secondary_orgs(
+    game: dto.Game, dao: GameOrgsGetter, with_deleted: bool = False,
+) -> list[dto.SecondaryOrganizer]:
+    return await dao.get_orgs(game, with_deleted=with_deleted)
 
 
 def check_allow_manage_orgs(game: dto.Game, manager_id: int):

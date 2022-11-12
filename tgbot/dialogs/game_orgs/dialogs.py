@@ -1,6 +1,7 @@
+from aiogram import F
 from aiogram_dialog import Dialog, Window
 from aiogram_dialog.widgets.kbd import ScrollingGroup, Select, Cancel, Button, Back
-from aiogram_dialog.widgets.text import Format, Const
+from aiogram_dialog.widgets.text import Format, Const, Multi
 
 from tgbot.states import GameOrgs
 from .getters import get_orgs, get_org
@@ -17,7 +18,11 @@ game_orgs = Dialog(
         ),
         ScrollingGroup(
             Select(
-                Format("{item.player.user.name_mention}"),
+                Multi(
+                    Const("🗑", when=F["item"].deleted),
+                    Format("{item.player.user.name_mention}"),
+                    sep="",
+                ),
                 id="game_orgs",
                 item_id_getter=lambda x: x.id,
                 items="orgs",
@@ -31,7 +36,11 @@ game_orgs = Dialog(
         state=GameOrgs.orgs_list,
     ),
     Window(
-        Format("Организатор <b>{org.player.user.name_mention}</b> на игру <b>{org.game.name}</b>"),
+        Multi(
+            Const("🗑", when=F["org"].deleted),
+            Format("Организатор <b>{org.player.user.name_mention}</b> на игру <b>{org.game.name}</b>"),
+            sep="",
+        ),
         Back(text=Const("К списку организаторов")),
         Button(
             Format("{can_spy}Может шпионить"),

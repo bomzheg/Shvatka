@@ -8,7 +8,7 @@ from shvatka.models.enums.org_permission import OrgPermission
 
 
 class GameOrgsGetter(Reader):
-    async def get_orgs(self, game: dto.Game) -> list[dto.SecondaryOrganizer]:
+    async def get_orgs(self, game: dto.Game, with_deleted: bool = False) -> list[dto.SecondaryOrganizer]:
         raise NotImplementedError
 
 

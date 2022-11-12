@@ -19,7 +19,7 @@ class GamePreparerImpl(GamePreparer):
     async def get_agree_teams(self, game: dto.Game) -> Iterable[dto.Team]:
         return await self.waiver.get_played_teams(game)
 
-    async def get_orgs(self, game: dto.Game) -> Iterable[dto.SecondaryOrganizer]:
+    async def get_orgs(self, game: dto.Game) -> list[dto.SecondaryOrganizer]:
         return await self.org.get_orgs(game)
 
     async def get_poll_msg(self, team: dto.Team, game: dto.Game) -> int:
@@ -103,7 +103,7 @@ class GamePlayerDaoImpl(GamePlayerDao):
     async def get_current_level_time(self, team: dto.Team, game: dto.Game) -> dto.LevelTime:
         return await self.level_time.get_current_level_time(team=team, game=game)
 
-    async def get_orgs(self, game: dto.Game) -> Iterable[dto.SecondaryOrganizer]:
+    async def get_orgs(self, game: dto.Game) -> list[dto.SecondaryOrganizer]:
         return await self.organizer.get_orgs(game)
 
     async def commit(self) -> None:

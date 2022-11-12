@@ -1,5 +1,3 @@
-from typing import Iterable
-
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import joinedload
@@ -13,7 +11,7 @@ class OrganizerDao(BaseDAO[models.Organizer]):
     def __init__(self, session: AsyncSession):
         super().__init__(models.Organizer, session)
 
-    async def get_orgs(self, game: dto.Game) -> Iterable[dto.SecondaryOrganizer]:
+    async def get_orgs(self, game: dto.Game) -> list[dto.SecondaryOrganizer]:
         orgs = await self._get_orgs(game)
         return [
             org.to_dto(

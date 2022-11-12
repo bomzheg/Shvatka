@@ -1,5 +1,3 @@
-from typing import Iterable
-
 from shvatka.dal.organizer import GameOrgsGetter, OrgAdder
 from shvatka.dal.secure_invite import InviteSaver, InviteRemover
 from shvatka.models import dto
@@ -16,7 +14,7 @@ async def get_spying_orgs(game: dto.Game, dao: GameOrgsGetter) -> list[dto.Organ
     return [org for org in await get_orgs(game, dao) if org.can_spy]
 
 
-async def get_secondary_orgs(game: dto.Game, dao: GameOrgsGetter) -> Iterable[dto.SecondaryOrganizer]:
+async def get_secondary_orgs(game: dto.Game, dao: GameOrgsGetter) -> list[dto.SecondaryOrganizer]:
     return await dao.get_orgs(game)
 
 

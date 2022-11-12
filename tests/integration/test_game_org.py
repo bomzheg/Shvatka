@@ -35,13 +35,17 @@ async def test_dismiss_invite(game: dto.FullGame, author: dto.Player, dao: Holde
 
 @pytest.mark.asyncio
 async def test_agree_invite(
-    game: dto.FullGame, author: dto.Player, harry: dto.Player, dao: HolderDao,
+    game: dto.FullGame, author: dto.Player, harry: dto.Player, dao: HolderDao, check_dao: HolderDao
 ):
     token = await save_invite_to_orgs(game, author, dao.secure_invite)
     org_notifier = OrgNotifierMock()  # TODO check actually invocations
-    actual = await agree_to_be_org(
+    await agree_to_be_org(
         token=token, inviter_id=author.id, player=harry, org_notifier=org_notifier, dao=dao.org_adder,
     )
+    secondary_orgs = await get_secondary_orgs(game, check_dao.organizer)
+    assert 1 == len(secondary_orgs)
+    actual = secondary_orgs[0]
+
     assert game.id == actual.game.id
     assert harry.id == actual.player.id
     assert not actual.can_spy

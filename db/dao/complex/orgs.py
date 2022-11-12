@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-from typing import Iterable
 
 from db.dao import GameDao, OrganizerDao, SecureInvite
 from shvatka.dal.organizer import OrgAdder
@@ -30,5 +29,5 @@ class OrgAdderImpl(OrgAdder):
     async def get_full(self, id_: int) -> dto.FullGame:
         return await self.game.get_full(id_=id_)
 
-    async def get_orgs(self, game: dto.Game) -> Iterable[dto.SecondaryOrganizer]:
+    async def get_orgs(self, game: dto.Game) -> list[dto.SecondaryOrganizer]:
         return await self.organizer.get_orgs(game)

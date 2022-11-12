@@ -1,5 +1,4 @@
 from abc import ABCMeta
-from typing import Iterable
 
 from shvatka.dal.base import Reader, Committer
 from shvatka.dal.game import GameByIdGetter
@@ -8,7 +7,7 @@ from shvatka.models import dto
 
 
 class GameOrgsGetter(Reader):
-    async def get_orgs(self, game: dto.Game) -> Iterable[dto.SecondaryOrganizer]:
+    async def get_orgs(self, game: dto.Game) -> list[dto.SecondaryOrganizer]:
         raise NotImplementedError
 
 

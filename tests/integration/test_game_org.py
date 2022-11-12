@@ -2,8 +2,9 @@ import pytest
 
 from db.dao.holder import HolderDao
 from shvatka.models import dto
+from shvatka.models.enums.org_permission import OrgPermission
 from shvatka.services.organizers import get_orgs, get_spying_orgs, get_secondary_orgs, check_allow_manage_orgs, \
-    check_game_token, save_invite_to_orgs, dismiss_to_be_org, agree_to_be_org
+    check_game_token, save_invite_to_orgs, dismiss_to_be_org, agree_to_be_org, flip_permission
 from shvatka.utils.exceptions import SaltNotExist
 from tests.mocks.org_notifier import OrgNotifierMock
 
@@ -52,3 +53,22 @@ async def test_agree_invite(
     assert not actual.can_see_log_keys
     assert not actual.can_validate_waivers
     assert not actual.deleted
+
+
+@pytest.mark.parametrize("permission", list(OrgPermission))
+@pytest.mark.asyncio
+async def test_flip_permission(
+    game: dto.FullGame, author: dto.Player, harry: dto.Player, dao: HolderDao,
+    check_dao: HolderDao, permission: OrgPermission
+):
+    org = await dao.organizer.add_new(game, harry)
+    await dao.commit()
+    assert not getattr(org, permission.name)
+
+    await flip_permission(author, org, permission, dao.organizer)
+    org = await check_dao.organizer.get_by_id(org.id)
+    assert getattr(org, permission.name)
+
+    await flip_permission(author, org, permission, dao.organizer)
+    org = await check_dao.organizer.get_by_id(org.id)
+    assert not getattr(org, permission.name)

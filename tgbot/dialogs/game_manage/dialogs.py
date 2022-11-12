@@ -1,7 +1,7 @@
 from aiogram import F
 from aiogram_dialog import Dialog, Window
 from aiogram_dialog.widgets.input import MessageInput
-from aiogram_dialog.widgets.kbd import ScrollingGroup, Select, SwitchTo, Button, Calendar
+from aiogram_dialog.widgets.kbd import ScrollingGroup, Select, SwitchTo, Button, Calendar, Cancel
 from aiogram_dialog.widgets.text import Const, Format, Case, Jinja, Multi
 
 from tgbot.states import MyGamesPanel, GameSchedule
@@ -42,33 +42,33 @@ games = Dialog(
             sep="",
         ),
         SwitchTo(
-            Const("Назад к списку игр"),
+            Const("⤴Назад к списку игр"),
             id="to_my_games",
             state=MyGamesPanel.choose_game,
         ),
         Button(
-            Const("Сценарий"),
+            Const("📜Сценарий"),
             id="game_scn",
             on_click=show_scn,
         ),
         Button(
-            Const("Организаторы"),
+            Const("👥Организаторы"),
             id="game_orgs",
             on_click=show_game_orgs,
         ),
         Button(
-            Const("zip-сценарий"),
+            Const("📦zip-сценарий"),
             id="game_zip_scn",
             on_click=show_zip_scn,
         ),
         Button(
-            Const("Начать сборку вейверов"),
+            Const("📝Начать сборку вейверов"),
             id="start_waiver",
             on_click=start_waivers,
             when=not_getting_waivers,
         ),
         Button(
-            Const("Запланировать игру"),
+            Const("📆Запланировать игру"),
             id="start_schedule_game",
             on_click=start_schedule_game,
             when=is_getting_waivers,
@@ -102,7 +102,7 @@ schedule_game_dialog = Dialog(
         ),
         MessageInput(func=process_time_message),
         SwitchTo(
-            Const("Сохранить"),
+            Const("📆Сохранить"),
             id="save_game_schedule",
             state=GameSchedule.confirm,
             when=lambda data, *args: data["has_time"],
@@ -119,10 +119,11 @@ schedule_game_dialog = Dialog(
             "Сохранить?"
         ),
         Button(
-            Const("Да"),
+            Const("✅Да"),
             id="save_scheduled_dt",
             on_click=schedule_game,
         ),
+        Cancel(Const("❌Отменить")),
         getter=get_game_datetime,
         preview_data={"game": PREVIEW_GAME},
         state=GameSchedule.confirm,

@@ -57,8 +57,8 @@ game_editor = Dialog(
     Window(
         Format("Игра <b>{game.name}</b>\n\n"),
         Const("<b>Уровни игры</b>"),
-        Button(Const("Добавить уровень"), id="add_level", on_click=add_level),
-        Cancel(Const("Назад")),
+        Cancel(Const("⤴Назад")),
+        Button(Const("📑Добавить уровень"), id="add_level", on_click=add_level),
         ScrollingGroup(
             Select(
                 Format("{item.name_id}"),

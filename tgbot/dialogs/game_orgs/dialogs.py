@@ -11,9 +11,9 @@ from ..widgets.switch_inline import SwitchInlineQuery
 game_orgs = Dialog(
     Window(
         Format("Список организаторов игры {game.name}"),
-        Cancel(Const("Назад")),
+        Cancel(Const("⤴Назад")),
         SwitchInlineQuery(
-            Const("Добавить организатора"),
+            Const("👋Добавить организатора"),
             Format("{inline_query}"),
         ),
         ScrollingGroup(

@@ -9,17 +9,18 @@ from .handlers import edit_level, show_level
 level_manage = Dialog(
     Window(
         Format("Уровень <b>{level.name_id}</b>"),
+        Cancel(Const("⤴Назад")),
         Button(
-            Const("Редактирование"),
+            Const("✏Редактирование"),
             id="level_edit",
             on_click=edit_level,
+            when="False",
         ),
         Button(
-            Const("Показать"),
+            Const("📂Показать"),
             id="level_show",
             on_click=show_level,
         ),
-        Cancel(Const("Назад")),
         state=LevelManageSG.menu,
         getter=get_level_id,
     ),

@@ -1,6 +1,7 @@
-from shvatka.dal.organizer import GameOrgsGetter, OrgAdder, OrgByIdGetter
+from shvatka.dal.organizer import GameOrgsGetter, OrgAdder, OrgByIdGetter, OrgPermissionFlipper
 from shvatka.dal.secure_invite import InviteSaver, InviteRemover
 from shvatka.models import dto
+from shvatka.models.enums.org_permission import OrgPermission
 from shvatka.services.game import get_game
 from shvatka.utils.exceptions import PermissionsError, GameHasAnotherAuthor, SaltError
 from shvatka.views.game import OrgNotifier, NewOrg
@@ -18,9 +19,9 @@ async def get_secondary_orgs(game: dto.Game, dao: GameOrgsGetter) -> list[dto.Se
     return await dao.get_orgs(game)
 
 
-def check_allow_add_orgs(game: dto.Game, inviter_id: int):
-    if game.author.id != inviter_id:
-        raise GameHasAnotherAuthor(game=game, player_id=inviter_id, alarm=True)
+def check_allow_manage_orgs(game: dto.Game, manager_id: int):
+    if game.author.id != manager_id:
+        raise GameHasAnotherAuthor(game=game, player_id=manager_id, alarm=True)
 
 
 def check_game_token(game: dto.Game, manage_token: str):
@@ -47,7 +48,7 @@ async def agree_to_be_org(
     if data["inviter_id"] != inviter_id:
         raise SaltError(text="Ошибка нарушения данных. токен в зашифрованной и открытой части не совпал", alarm=True)
     game = await get_game(id_=data["game_id"], dao=dao)
-    check_allow_add_orgs(game, inviter_id)
+    check_allow_manage_orgs(game, inviter_id)
     org = await dao.add_new_org(game, player)
     await dao.commit()
     await org_notifier.notify(NewOrg(orgs_list=await get_orgs(game, dao), game=game, org=org))
@@ -56,3 +57,11 @@ async def agree_to_be_org(
 
 async def get_org_by_id(id_: int, dao: OrgByIdGetter) -> dto.SecondaryOrganizer:
     return await dao.get_by_id(id_)
+
+
+async def flip_permission(
+    manager: dto.Player, org: dto.SecondaryOrganizer, permission: OrgPermission, dao: OrgPermissionFlipper,
+):
+    check_allow_manage_orgs(org.game, manager.id)
+    await dao.flip_permission(org, permission)
+    await dao.commit()

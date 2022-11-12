@@ -2,7 +2,7 @@ import pytest
 
 from db.dao.holder import HolderDao
 from shvatka.models import dto
-from shvatka.services.organizers import get_orgs, get_spying_orgs, get_secondary_orgs, check_allow_add_orgs, \
+from shvatka.services.organizers import get_orgs, get_spying_orgs, get_secondary_orgs, check_allow_manage_orgs, \
     check_game_token, save_invite_to_orgs, dismiss_to_be_org, agree_to_be_org
 from shvatka.utils.exceptions import SaltNotExist
 from tests.mocks.org_notifier import OrgNotifierMock
@@ -20,7 +20,7 @@ async def test_only_org(game: dto.FullGame, author: dto.Player, dao: HolderDao):
 
     assert [] == await get_secondary_orgs(game, dao.organizer)
 
-    check_allow_add_orgs(game, author.id)
+    check_allow_manage_orgs(game, author.id)
     check_game_token(game, game.manage_token)
 
 

@@ -5,6 +5,7 @@ from shvatka.models import dto
 from shvatka.services import organizers
 from shvatka.services.game import get_game
 from shvatka.services.organizers import get_org_by_id
+from shvatka.views.texts import PERMISSION_EMOJI
 from tgbot import keyboards as kb
 
 
@@ -34,4 +35,7 @@ async def get_org(dialog_manager: DialogManager, dao: HolderDao, **_):
     org = await get_org_by_id(org_id, dao.organizer)
     return {
         "org": org,
+        "can_spy": PERMISSION_EMOJI[org.can_spy],
+        "can_see_log_keys": PERMISSION_EMOJI[org.can_see_log_keys],
+        "can_validate_waivers": PERMISSION_EMOJI[org.can_validate_waivers],
     }

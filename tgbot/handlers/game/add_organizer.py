@@ -5,7 +5,8 @@ from aiogram.types import InlineQuery, InlineQueryResultArticle, InputTextMessag
 from db.dao.holder import HolderDao
 from shvatka.models import dto
 from shvatka.services.game import get_game
-from shvatka.services.organizers import check_allow_add_orgs, save_invite_to_orgs, dismiss_to_be_org, agree_to_be_org, \
+from shvatka.services.organizers import check_allow_manage_orgs, save_invite_to_orgs, dismiss_to_be_org, \
+    agree_to_be_org, \
     check_game_token
 from tgbot import keyboards as kb
 from tgbot.views.game import BotOrgNotifier
@@ -14,7 +15,7 @@ from tgbot.views.game import BotOrgNotifier
 async def invite_org_inline_query(q: InlineQuery, inline_data: kb.AddGameOrgID, player: dto.Player, dao: HolderDao):
     game = await get_game(id_=inline_data.game_id, dao=dao.game)
     check_game_token(game, inline_data.game_manage_token)
-    check_allow_add_orgs(game, player.id)
+    check_allow_manage_orgs(game, player.id)
     token = await save_invite_to_orgs(game=game, inviter=player, dao=dao.secure_invite)
     result = [
         InlineQueryResultArticle(

@@ -28,3 +28,4 @@ HINTS_EMOJI: dict[HintType: str] = {
     HintType.contact: "🪪",
     HintType.sticker: "🏷",
 }
+PERMISSION_EMOJI = {True: "✅", False: "🚫"}

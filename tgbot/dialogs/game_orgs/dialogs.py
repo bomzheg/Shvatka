@@ -1,10 +1,10 @@
 from aiogram_dialog import Dialog, Window
-from aiogram_dialog.widgets.kbd import ScrollingGroup, Select, Cancel
+from aiogram_dialog.widgets.kbd import ScrollingGroup, Select, Cancel, Button
 from aiogram_dialog.widgets.text import Format, Const
 
 from tgbot.states import GameOrgs
 from .getters import get_orgs, get_org
-from .handlers import select_org
+from .handlers import select_org, change_permission_handler
 from ..widgets.switch_inline import SwitchInlineQuery
 
 game_orgs = Dialog(
@@ -32,6 +32,21 @@ game_orgs = Dialog(
     ),
     Window(
         Format("{org.player.user.name_mention}"),
+        Button(
+            Format("{can_spy}Может шпионить"),
+            id="can_spy",
+            on_click=change_permission_handler,
+        ),
+        Button(
+            Format("{can_see_log_keys}Может смотреть лог ключей"),
+            id="can_see_log_keys",
+            on_click=change_permission_handler,
+        ),
+        Button(
+            Format("{can_validate_waivers}Может смотреть лог ключей"),
+            id="can_validate_waivers",
+            on_click=change_permission_handler,
+        ),
         getter=get_org,
         state=GameOrgs.org_menu,
     ),

@@ -4,6 +4,7 @@ from shvatka.dal.base import Reader, Committer
 from shvatka.dal.game import GameByIdGetter
 from shvatka.dal.secure_invite import InviteReader, InviteRemover
 from shvatka.models import dto
+from shvatka.models.enums.org_permission import OrgPermission
 
 
 class GameOrgsGetter(Reader):
@@ -18,4 +19,9 @@ class OrgAdder(Committer, InviteReader, InviteRemover, GameByIdGetter, GameOrgsG
 
 class OrgByIdGetter(Reader):
     async def get_by_id(self, id_: int) -> dto.SecondaryOrganizer:
+        raise NotImplementedError
+
+
+class OrgPermissionFlipper(Committer, OrgByIdGetter, metaclass=ABCMeta):
+    async def flip_permission(self, org: dto.SecondaryOrganizer, permission: OrgPermission):
         raise NotImplementedError

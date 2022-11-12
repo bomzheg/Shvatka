@@ -1,9 +1,11 @@
+from sqlalchemy import update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import joinedload
 
 from db import models
 from shvatka.models import dto
+from shvatka.models.enums.org_permission import OrgPermission
 from .base import BaseDAO
 
 
@@ -42,6 +44,13 @@ class OrganizerDao(BaseDAO[models.Organizer]):
         return result.to_dto(
             player=result.player.to_dto_user_prefetched(),
             game=result.game.to_dto(author=result.game.author.to_dto_user_prefetched()),
+        )
+
+    async def flip_permission(self, org: dto.SecondaryOrganizer, permission: OrgPermission):
+        await self.session.execute(
+            update(models.Organizer)
+            .where(models.Organizer.id == org.id)
+            .values(**{permission.value: not permission.value})
         )
 
     async def _get_orgs(self, game: dto.Game) -> list[models.Organizer]:

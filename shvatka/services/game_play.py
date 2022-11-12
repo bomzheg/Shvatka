@@ -7,7 +7,7 @@ from shvatka.dal.level_times import GameStarter, LevelTimeChecker
 from shvatka.models import dto
 from shvatka.models.dto.scn.time_hint import TimeHint
 from shvatka.scheduler import Scheduler
-from shvatka.services.organizers import get_orgs
+from shvatka.services.organizers import get_orgs, get_spying_orgs
 from shvatka.utils.exceptions import InvalidKey
 from shvatka.utils.input_validation import is_key_valid
 from shvatka.utils.key_checker_lock import KeyCheckerFactory
@@ -113,7 +113,8 @@ async def check_key(
 
             await view.send_puzzle(team=team, puzzle=next_level.get_hint(0), level=next_level)
             await schedule_first_hint(scheduler, team, next_level)
-            await org_notifier.notify(LevelUp(team=team, new_level=next_level))
+            level_up_event = LevelUp(team=team, new_level=next_level, orgs_list=await get_spying_orgs(game, dao))
+            await org_notifier.notify(level_up_event)
     else:
         await view.wrong_key(key=new_key)
 

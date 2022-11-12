@@ -48,11 +48,18 @@ class OrgNotifier(Protocol):
         raise NotImplementedError
 
 
-class Event(Protocol):
-    pass
+@dataclass
+class Event:
+    orgs_list: list[dto.Organizer]
 
 
 @dataclass
 class LevelUp(Event):
     team: dto.Team
     new_level: dto.Level
+
+
+@dataclass
+class NewOrg(Event):
+    game: dto.Game
+    org: dto.SecondaryOrganizer

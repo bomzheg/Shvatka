@@ -5,13 +5,16 @@ from aiogram.types import InlineQuery, InlineQueryResultArticle, InputTextMessag
 from db.dao.holder import HolderDao
 from shvatka.models import dto
 from shvatka.services.game import get_game
-from shvatka.services.organizers import check_allow_add_orgs, save_invite_to_orgs, dismiss_to_be_org
+from shvatka.services.organizers import check_allow_add_orgs, save_invite_to_orgs, dismiss_to_be_org, agree_to_be_org, \
+    check_game_token
 from tgbot import keyboards as kb
+from tgbot.views.game import BotOrgNotifier
 
 
 async def invite_org_inline_query(q: InlineQuery, inline_data: kb.AddGameOrgID, player: dto.Player, dao: HolderDao):
     game = await get_game(id_=inline_data.game_id, dao=dao.game)
-    check_allow_add_orgs(game, inline_data.game_manage_token, player)
+    check_game_token(game, inline_data.game_manage_token)
+    check_allow_add_orgs(game, player.id)
     token = await save_invite_to_orgs(game=game, inviter=player, dao=dao.secure_invite)
     result = [
         InlineQueryResultArticle(
@@ -35,7 +38,19 @@ async def dismiss_to_be_org_handler(c: CallbackQuery, callback_data: kb.AgreeBeO
     await bot.edit_message_text(text="<i>(Игрок отказался от приглашения)</i>", inline_message_id=c.inline_message_id)
 
 
-async def inviter_click_handler(c: CallbackQuery, callback_data: kb.AgreeBeOrgCD, dao: HolderDao):
+async def agree_to_be_org_handler(c: CallbackQuery, callback_data: kb.AgreeBeOrgCD, player: dto.Player, dao: HolderDao, bot: Bot):
+    await c.answer()
+    await agree_to_be_org(
+        token=callback_data.token,
+        inviter_id=callback_data.inviter_id,
+        player=player,
+        org_notifier=BotOrgNotifier(bot=bot),
+        dao=dao.org_adder,
+    )
+    await bot.edit_message_text(text="<i>(Игрок принял приглашение)</i>", inline_message_id=c.inline_message_id)
+
+
+async def inviter_click_handler(c: CallbackQuery):
     await c.answer("ну и смысл?", cache_time=30)
 
 
@@ -47,4 +62,5 @@ def setup() -> Router:
         MagicData(F.callback_data.inviter_id == F.player.id),
     )
     router.callback_query.register(dismiss_to_be_org_handler, kb.AgreeBeOrgCD.filter(~F.is_agreement))
+    router.callback_query.register(agree_to_be_org_handler, kb.AgreeBeOrgCD.filter(F.is_agreement))
     return router

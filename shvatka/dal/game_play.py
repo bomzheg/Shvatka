@@ -17,7 +17,7 @@ class GamePreparer(Writer, GameOrgsGetter, metaclass=ABCMeta):
         raise NotImplementedError
 
 
-class GamePlayerDao(Committer, metaclass=ABCMeta):
+class GamePlayerDao(Committer, GameOrgsGetter, metaclass=ABCMeta):
     async def is_key_duplicate(self, level: dto.Level, team: dto.Team, key: str) -> bool:
         raise NotImplementedError
 

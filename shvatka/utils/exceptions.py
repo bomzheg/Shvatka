@@ -86,16 +86,18 @@ class SHDataBreach(SHError):
     notify_user = "Действие приведёт к нарушению целостности данных"
 
 
-class SaltNotExist(SHError):
+class SaltError(SHError):
     def __init__(
         self,
-        salt: str = None,
+        token: str = None,
         *args,
         **kwargs
     ):
-        super(SaltNotExist, self).__init__(*args, **kwargs)
-        self.salt = salt
+        super(SaltError, self).__init__(*args, **kwargs)
+        self.token = token
 
+
+class SaltNotExist(SaltError):
     notify_user = "Этот запрос устарел, попробуйте ещё раз"
 
 

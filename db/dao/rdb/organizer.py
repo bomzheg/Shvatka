@@ -1,11 +1,11 @@
 from typing import Iterable
 
-from db import models
-from shvatka.models import dto
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import joinedload
 
+from db import models
+from shvatka.models import dto
 from .base import BaseDAO
 
 
@@ -25,6 +25,16 @@ class OrganizerDao(BaseDAO[models.Organizer]):
 
     async def get_orgs_count(self, game: dto.Game) -> int:
         return len(await self._get_orgs(game)) + 1
+
+    async def add_new(self, game: dto.Game, player: dto.Player) -> dto.SecondaryOrganizer:
+        org = models.Organizer(
+            game_id=game.id,
+            player_id=player.id
+        )
+        self._save(org)
+        await self._flush(org)
+        return org.to_dto(player=player, game=game)
+
 
     async def _get_orgs(self, game: dto.Game) -> list[models.Organizer]:
         result = await self.session.execute(

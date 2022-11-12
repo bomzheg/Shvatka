@@ -11,7 +11,7 @@ from shvatka.clients.file_storage import FileStorage
 from shvatka.dal.game_play import GamePreparer
 from shvatka.models import dto
 from shvatka.models.dto.scn.time_hint import TimeHint
-from shvatka.views.game import GameViewPreparer, GameView, GameLogWriter, OrgNotifier
+from shvatka.views.game import GameViewPreparer, GameView, GameLogWriter, OrgNotifier, Event
 from tgbot.views.hint_factory.hint_content_resolver import HintContentResolver
 from tgbot.views.hint_sender import HintSender
 
@@ -87,7 +87,7 @@ class GameBotLog(GameLogWriter):
 class BotOrgNotifier(OrgNotifier):
     bot: Bot
 
-    async def notify(self, event) -> None:
+    async def notify(self, event: Event) -> None:
         pass
 
 

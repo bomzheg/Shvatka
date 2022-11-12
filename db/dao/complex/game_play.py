@@ -54,6 +54,7 @@ class GamePlayerDaoImpl(GamePlayerDao):
     key_time: KeyTimeDao
     waiver: WaiverDao
     game: GameDao
+    organizer: OrganizerDao
 
     async def is_team_finished(self, team: dto.Team, game: dto.FullGame) -> bool:
         level_number = await self.level_time.get_current_level(team, game)
@@ -101,6 +102,9 @@ class GamePlayerDaoImpl(GamePlayerDao):
 
     async def get_current_level_time(self, team: dto.Team, game: dto.Game) -> dto.LevelTime:
         return await self.level_time.get_current_level_time(team=team, game=game)
+
+    async def get_orgs(self, game: dto.Game) -> Iterable[dto.SecondaryOrganizer]:
+        return await self.organizer.get_orgs(game)
 
     async def commit(self) -> None:
         await self.key_time.commit()

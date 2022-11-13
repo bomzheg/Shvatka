@@ -5,13 +5,14 @@ from shvatka.dal.game import GameUpserter, GameCreator, GamePackager
 from shvatka.dal.game_play import GamePreparer, GamePlayerDao
 from shvatka.dal.level_times import GameStarter
 from shvatka.dal.organizer import OrgAdder
-from shvatka.dal.player import TeamLeaver
+from shvatka.dal.player import TeamLeaver, PlayerPromoter
 from shvatka.dal.team import TeamCreator
 from shvatka.dal.waiver import WaiverVoteAdder, WaiverVoteGetter, WaiverApprover
 from .complex import WaiverVoteAdderImpl, WaiverVoteGetterImpl
 from .complex.game import GameUpserterImpl, GameCreatorImpl, GamePackagerImpl
 from .complex.game_play import GamePreparerImpl, GameStarterImpl, GamePlayerDaoImpl
 from .complex.orgs import OrgAdderImpl
+from .complex.player import PlayerPromoterImpl
 from .complex.team import TeamCreatorImpl, TeamLeaverImpl
 from .complex.waiver import WaiverApproverImpl
 from .rdb import (
@@ -103,3 +104,7 @@ class HolderDao:
     @property
     def org_adder(self) -> OrgAdder:
         return OrgAdderImpl(game=self.game, organizer=self.organizer, secure_invite=self.secure_invite)
+
+    @property
+    def player_promoter(self) -> PlayerPromoter:
+        return PlayerPromoterImpl(player=self.player, secure_invite=self.secure_invite)

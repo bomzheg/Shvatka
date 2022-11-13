@@ -3,9 +3,12 @@ import logging
 from shvatka.dal.player import (
     PlayerUpserter, PlayerTeamChecker, PlayerPromoter, TeamJoiner, TeamLeaver, PlayerInTeamGetter,
 )
+from shvatka.dal.secure_invite import InviteSaver, InviteRemover
 from shvatka.models import dto
+from shvatka.models.enums.invite_type import InviteType
 from shvatka.utils.defaults_constants import DEFAULT_ROLE, EMOJI_BY_ROLE, DEFAULT_EMOJI
-from shvatka.utils.exceptions import PlayerRestoredInTeam, CantBeAuthor, PromoteError, PlayerNotInTeam, PermissionsError
+from shvatka.utils.exceptions import PlayerRestoredInTeam, CantBeAuthor, PromoteError, PlayerNotInTeam, \
+    PermissionsError, SaltError
 
 logger = logging.getLogger(__name__)
 
@@ -103,11 +106,35 @@ def check_can_add_players(team_player: dto.FullTeamPlayer):
         raise PermissionsError(permission_name="can_add_player", team=team_player.team, player=team_player.player)
 
 
-async def get_team_player(approver: dto.Player, team: dto.Team, dao: PlayerInTeamGetter) -> dto.FullTeamPlayer:
+async def get_team_player(player: dto.Player, team: dto.Team, dao: PlayerInTeamGetter) -> dto.FullTeamPlayer:
     team_player = dto.FullTeamPlayer.from_simple(
-        team_player=await dao.get_player_in_team(approver),
-        team=team, player=approver,
+        team_player=await dao.get_player_in_team(player),
+        team=team, player=player,
     )
     if team_player.team_id != team.id:
-        raise PlayerNotInTeam(player=approver, team=team)
+        raise PlayerNotInTeam(player=player, team=team)
     return team_player
+
+
+async def save_promotion_invite(inviter: dto.Player, dao: InviteSaver) -> str:
+    return await dao.save_new_invite(dct=dict(inviter_id=inviter.id, type_=InviteType.promote_author.name))
+
+
+async def dismiss_promotion(token: str, dao: InviteRemover):
+    await dao.remove_invite(token)
+
+
+async def agree_promotion(
+    token: str,
+    inviter_id: int,
+    target: dto.Player,
+    dao: PlayerPromoter,
+):
+    data = await dao.get_invite(token)
+    if data["type_"] != InviteType.promote_author.name:
+        raise SaltError(text="Ошибка нарушения данных. Токен в зашифрованной и открытой части не совпал", alarm=True)
+    if data["inviter_id"] != inviter_id:
+        raise SaltError(text="Ошибка нарушения данных. Токен в зашифрованной и открытой части не совпал", alarm=True)
+    inviter = await dao.get_by_id(inviter_id)
+    await promote(inviter, target, dao)
+

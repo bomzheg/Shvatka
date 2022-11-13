@@ -2,11 +2,17 @@ from abc import ABCMeta
 
 from shvatka.dal.base import Committer, Reader
 from shvatka.dal.game import ActiveGameFinder
+from shvatka.dal.secure_invite import InviteRemover, InviteReader
 from shvatka.models import dto
 
 
 class PlayerUpserter(Committer, metaclass=ABCMeta):
     async def upsert_player(self, user: dto.User) -> dto.Player:
+        raise NotImplementedError
+
+
+class PlayerByIdGetter(Reader):
+    async def get_by_id(self, id_: int) -> dto.Player:
         raise NotImplementedError
 
 
@@ -23,7 +29,7 @@ class PlayerTeamChecker(PlayerInTeamGetter, metaclass=ABCMeta):
         raise NotImplementedError
 
 
-class PlayerPromoter(Committer, metaclass=ABCMeta):
+class PlayerPromoter(Committer, PlayerByIdGetter, InviteReader, InviteRemover, metaclass=ABCMeta):
     async def promote(self, actor: dto.Player, target: dto.Player) -> None:
         raise NotImplementedError
 

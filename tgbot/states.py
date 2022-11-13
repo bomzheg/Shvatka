@@ -43,3 +43,7 @@ class GameOrgs(StatesGroup):
 
 class MainMenu(StatesGroup):
     main = State()
+
+
+class Promotion(StatesGroup):
+    disclaimer = State()

@@ -1,6 +1,7 @@
 from shvatka.dal.organizer import GameOrgsGetter, OrgAdder, OrgByIdGetter, OrgPermissionFlipper, OrgDeletedFlipper
 from shvatka.dal.secure_invite import InviteSaver, InviteRemover
 from shvatka.models import dto
+from shvatka.models.enums.invite_type import InviteType
 from shvatka.models.enums.org_permission import OrgPermission
 from shvatka.services.game import get_game
 from shvatka.utils.exceptions import PermissionsError, GameHasAnotherAuthor, SaltError
@@ -32,7 +33,9 @@ def check_game_token(game: dto.Game, manage_token: str):
 
 
 async def save_invite_to_orgs(game: dto.Game, inviter: dto.Player, dao: InviteSaver) -> str:
-    return await dao.save_new_invite(dct=dict(game_id=game.id, inviter_id=inviter.id))
+    return await dao.save_new_invite(dct=dict(
+        game_id=game.id, inviter_id=inviter.id, type_=InviteType.add_org.name,
+    ))
 
 
 async def dismiss_to_be_org(token: str, dao: InviteRemover):
@@ -47,8 +50,10 @@ async def agree_to_be_org(
     dao: OrgAdder,
 ):
     data = await dao.get_invite(token)
+    if data["type_"] != InviteType.add_org.name:
+        raise SaltError(text="Ошибка нарушения данных. Токен в зашифрованной и открытой части не совпал", alarm=True)
     if data["inviter_id"] != inviter_id:
-        raise SaltError(text="Ошибка нарушения данных. токен в зашифрованной и открытой части не совпал", alarm=True)
+        raise SaltError(text="Ошибка нарушения данных. Токен в зашифрованной и открытой части не совпал", alarm=True)
     game = await get_game(id_=data["game_id"], dao=dao)
     check_allow_manage_orgs(game, inviter_id)
     org = await dao.add_new_org(game, player)

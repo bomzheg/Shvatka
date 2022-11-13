@@ -20,7 +20,7 @@ class PlayerDao(BaseDAO[models.Player]):
         except NoResultFound:
             return await self.create_for_user(user)
 
-    async def get_by_id(self, id_: int):
+    async def get_by_id(self, id_: int) -> dto.Player:
         result = await self.session.execute(
             select(models.Player)
             .where(models.Player.id == id_)

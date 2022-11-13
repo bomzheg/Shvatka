@@ -2,6 +2,7 @@ import pytest
 
 from db.dao.holder import HolderDao
 from shvatka.models import dto
+from shvatka.models.enums.invite_type import InviteType
 from shvatka.models.enums.org_permission import OrgPermission
 from shvatka.services.organizers import get_orgs, get_spying_orgs, get_secondary_orgs, check_allow_manage_orgs, \
     check_game_token, save_invite_to_orgs, dismiss_to_be_org, agree_to_be_org, flip_permission, flip_deleted
@@ -28,7 +29,8 @@ async def test_only_org(game: dto.FullGame, author: dto.Player, dao: HolderDao):
 @pytest.mark.asyncio
 async def test_dismiss_invite(game: dto.FullGame, author: dto.Player, dao: HolderDao):
     token = await save_invite_to_orgs(game, author, dao.secure_invite)
-    assert {"game_id": game.id, "inviter_id": author.id} == await dao.secure_invite.get_invite(token)
+    expected = {"game_id": game.id, "inviter_id": author.id, "type_": InviteType.add_org.name}
+    assert expected == await dao.secure_invite.get_invite(token)
     await dismiss_to_be_org(token, dao.secure_invite)
     with pytest.raises(SaltNotExist):
         await dao.secure_invite.get_invite(token)

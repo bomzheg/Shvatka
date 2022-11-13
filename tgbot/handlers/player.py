@@ -6,7 +6,7 @@ from aiogram_dialog import DialogManager
 from db.dao.holder import HolderDao
 from shvatka.models import dto
 from shvatka.services.player import save_promotion_confirm_invite, check_promotion_invite, \
-    dismiss_promotion
+    dismiss_promotion, agree_promotion
 from shvatka.utils.exceptions import SaltError
 from tgbot import keyboards as kb
 from tgbot.states import MainMenu
@@ -51,6 +51,19 @@ async def dismiss_promotion_handler(c: CallbackQuery, callback_data: kb.AgreePro
     await bot.edit_message_text(text="<i>(Игрок отказался от прав автора)</i>", inline_message_id=c.inline_message_id)
 
 
+async def agree_promotion_handler(
+    c: CallbackQuery, callback_data: kb.AgreePromotionCD, player: dto.Player, dao: HolderDao, bot: Bot,
+):
+    await c.answer()
+    await agree_promotion(
+        token=callback_data.token, inviter_id=callback_data.inviter_id, target=player, dao=dao.player_promoter,
+    )
+    await bot.edit_message_text(
+        text="Успешно. Теперь игрок может самостоятельно писать игры",
+        inline_message_id=c.inline_message_id,
+    )
+
+
 async def inviter_click_handler(c: CallbackQuery):
     await c.answer("ну и смысл?", cache_time=30)
 
@@ -64,4 +77,5 @@ def setup() -> Router:
         MagicData(F.callback_data.inviter_id == F.player.id),
     )
     router.callback_query.register(dismiss_promotion_handler, kb.AgreePromotionCD.filter(~F.is_agreement))
+    router.callback_query.register(agree_promotion_handler, kb.AgreePromotionCD.filter(F.is_agreement))
     return router

@@ -129,7 +129,10 @@ async def check_promotion_invite(inviter: dto.Player, token: str, dao: InviterDa
 
 
 async def save_promotion_confirm_invite(inviter: dto.Player, dao: InviteSaver) -> str:
-    return await dao.save_new_invite(dct=dict(inviter_id=inviter.id, type_=InviteType.promotion_confirm.name))
+    return await dao.save_new_invite(
+        dct=dict(inviter_id=inviter.id, type_=InviteType.promotion_confirm.name),
+        token_len=16,
+    )
 
 
 async def dismiss_promotion(token: str, dao: InviteRemover):
@@ -143,7 +146,7 @@ async def agree_promotion(
     dao: PlayerPromoter,
 ):
     data = await dao.get_invite(token)
-    if data["type_"] != InviteType.promote_author.name:
+    if data["type_"] != InviteType.promotion_confirm.name:
         raise SaltError(text="Ошибка нарушения данных. Токен в зашифрованной и открытой части не совпал", alarm=True)
     if data["inviter_id"] != inviter_id:
         raise SaltError(text="Ошибка нарушения данных. Токен в зашифрованной и открытой части не совпал", alarm=True)

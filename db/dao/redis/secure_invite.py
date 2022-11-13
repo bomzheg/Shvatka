@@ -17,8 +17,8 @@ class SecureInvite:
     def _create_key(self, token: str) -> str:
         return f"{self.prefix}:{token}"
 
-    async def save_new_invite(self, expire=EXPIRE_TIME, **dct: dict) -> str:
-        token = secrets.token_urlsafe(TOKEN_LEN)
+    async def save_new_invite(self, token_len: int = TOKEN_LEN, expire=EXPIRE_TIME, **dct: dict) -> str:
+        token = secrets.token_urlsafe(token_len)
         await self.redis.set(self._create_key(token), json.dumps(dct), ex=expire)
         return token
 

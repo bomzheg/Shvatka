@@ -4,7 +4,7 @@ from shvatka.dal.base import Writer, Reader
 
 
 class InviteSaver(Writer):
-    async def save_new_invite(self, expire=..., **dct: dict) -> str:
+    async def save_new_invite(self, token_len: int = ...,  expire=..., **dct: dict) -> str:
         raise NotImplementedError
 
 

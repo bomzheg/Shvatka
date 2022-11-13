@@ -1,9 +1,11 @@
 from aiogram_dialog import DialogRegistry
 
 from tgbot.dialogs import game_manage, level_scn, time_hint, game_scn, level_manage, game_orgs
+from tgbot.dialogs import main_menu
 
 
 def setup_dialogs(registry: DialogRegistry):
+    main_menu.setup(registry)
     game_manage.setup(registry)
     game_scn.setup(registry)
     level_scn.setup(registry)

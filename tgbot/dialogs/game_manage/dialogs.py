@@ -14,6 +14,7 @@ from ..preview_data import PREVIEW_GAME
 games = Dialog(
     Window(
         Const("Список игр твоего авторства"),
+        Cancel(Const("⤴Назад")),
         ScrollingGroup(
             Select(
                 Format("{item.name}"),

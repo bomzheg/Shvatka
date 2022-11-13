@@ -43,6 +43,7 @@ async def test_game_play(
     dummy_sched = mock(Scheduler)
     when(dummy_sched).plain_hint(level=game.levels[0], team=gryffindor, hint_number=1, run_at=ANY).thenReturn(
         mock_coro(None))
+    game.start_at = datetime.utcnow()
     await start_game(game, dao.game_starter, dummy_log, dummy_view, dummy_sched)
     assert 1 == await check_dao.level_time.count()
 

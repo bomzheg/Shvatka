@@ -1,3 +1,5 @@
+from abc import ABCMeta
+
 from shvatka.dal.base import Writer, Reader
 
 
@@ -14,3 +16,7 @@ class InviteRemover(Writer):
 class InviteReader(Reader):
     async def get_invite(self, token: str) -> dict:
         raise NotImplementedError
+
+
+class InviterDao(InviteSaver, InviteRemover, InviteReader, metaclass=ABCMeta):
+    pass

@@ -3,7 +3,7 @@ import logging
 from shvatka.dal.player import (
     PlayerUpserter, PlayerTeamChecker, PlayerPromoter, TeamJoiner, TeamLeaver, PlayerInTeamGetter,
 )
-from shvatka.dal.secure_invite import InviteSaver, InviteRemover
+from shvatka.dal.secure_invite import InviteSaver, InviteRemover, InviterDao
 from shvatka.models import dto
 from shvatka.models.enums.invite_type import InviteType
 from shvatka.utils.defaults_constants import DEFAULT_ROLE, EMOJI_BY_ROLE, DEFAULT_EMOJI
@@ -118,6 +118,18 @@ async def get_team_player(player: dto.Player, team: dto.Team, dao: PlayerInTeamG
 
 async def save_promotion_invite(inviter: dto.Player, dao: InviteSaver) -> str:
     return await dao.save_new_invite(dct=dict(inviter_id=inviter.id, type_=InviteType.promote_author.name))
+
+
+async def check_promotion_invite(inviter: dto.Player, token: str, dao: InviterDao):
+    data = await dao.get_invite(token)
+    if data["type_"] != InviteType.promote_author.name:
+        raise SaltError(text="Ошибка нарушения данных. Токен в зашифрованной и открытой части не совпал", alarm=True)
+    if data["inviter_id"] != inviter.id:
+        raise SaltError(text="Ошибка нарушения данных. Токен в зашифрованной и открытой части не совпал", alarm=True)
+
+
+async def save_promotion_confirm_invite(inviter: dto.Player, dao: InviteSaver) -> str:
+    return await dao.save_new_invite(dct=dict(inviter_id=inviter.id, type_=InviteType.promotion_confirm.name))
 
 
 async def dismiss_promotion(token: str, dao: InviteRemover):

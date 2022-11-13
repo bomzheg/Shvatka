@@ -7,7 +7,11 @@ from .getters import get_player
 
 main_menu = Dialog(
     Window(
-        Format("Главное меню"),
+        Format(
+            "Привет, {player.user.name_mention}!\n"
+            "Ты находишься в главном меню.\n"
+            "твой id {player.id}"
+        ),
         Cancel(Const("❌Закрыть")),
         Start(Const("🗄Мои игры"), id="my_games", state=MyGamesPanel.choose_game),
         # прошедшие игры

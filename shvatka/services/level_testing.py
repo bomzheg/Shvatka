@@ -24,7 +24,7 @@ async def start_level_test(
 ):
     now = datetime.utcnow()
     await view.send_puzzle(suite=suite)
-    await scheduler.plain_hint(
+    await scheduler.plain_test_hint(
         suite=suite,
         hint_number=1,
         run_at=calculate_first_hint_time(suite.level, now),
@@ -57,7 +57,7 @@ async def send_testing_level_hint(
     next_hint_time = calculate_next_hint_time(
         suite.level.get_hint(hint_number), suite.level.get_hint(next_hint_number),
     )
-    await scheduler.plain_hint(
+    await scheduler.plain_test_hint(
         suite=suite, hint_number=next_hint_number,
         run_at=next_hint_time,
     )

@@ -12,8 +12,7 @@ from shvatka.clients.file_storage import FileStorage
 from shvatka.dal.game_play import GamePreparer
 from shvatka.models import dto
 from shvatka.views.game import GameViewPreparer, GameView, GameLogWriter, OrgNotifier, Event, LevelUp, NewOrg
-from tgbot.views.hint_factory.hint_content_resolver import HintContentResolver
-from tgbot.views.hint_sender import HintSender
+from tgbot.views.hint_sender import HintSender, create_hint_sender
 
 logger = logging.getLogger(__name__)
 
@@ -116,8 +115,5 @@ class BotOrgNotifier(OrgNotifier):
 def create_bot_game_view(bot: Bot, dao: HolderDao, storage: FileStorage) -> BotView:
     return BotView(
         bot=bot,
-        hint_sender=HintSender(
-            bot=bot,
-            resolver=HintContentResolver(dao=dao.file_info, file_storage=storage),
-        ),
+        hint_sender=create_hint_sender(bot=bot, dao=dao, storage=storage),
     )

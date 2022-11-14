@@ -35,6 +35,17 @@ class OrganizerDao(BaseDAO[models.Organizer]):
         await self._flush(org)
         return org.to_dto(player=player, game=game)
 
+    async def get_by_player(self, game: dto.Game, player: dto.Player) -> dto.SecondaryOrganizer:
+        result = await self.session.execute(
+            select(models.Organizer)
+            .where(
+                models.Organizer.game_id == game.id,
+                models.Organizer.player_id == player.id,
+            )
+        )
+        org: models.Organizer = result.scalar_one()
+        return org.to_dto(player=player, game=game)
+
     async def get_by_id(self, id_: int) -> dto.SecondaryOrganizer:
         options = [
             joinedload(models.Organizer.player).joinedload(models.Player.user),

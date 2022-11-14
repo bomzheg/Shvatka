@@ -11,16 +11,17 @@ from sqlalchemy.orm import sessionmaker
 
 from db.config.models.db import RedisConfig
 from scheduler.context import ScheduledContextHolder
-from scheduler.wrappers import prepare_game_wrapper, start_game_wrapper, send_hint_wrapper
+from scheduler.wrappers import prepare_game_wrapper, start_game_wrapper, send_hint_wrapper, \
+    send_hint_for_testing_wrapper
 from shvatka.clients.file_storage import FileStorage
 from shvatka.models import dto
-from shvatka.scheduler import Scheduler
+from shvatka.scheduler import Scheduler, LevelTestScheduler
 from shvatka.utils.datetime_utils import tz_utc
 
 logger = logging.getLogger(__name__)
 
 
-class ApScheduler(Scheduler):
+class ApScheduler(Scheduler, LevelTestScheduler):
     def __init__(
         self,
         redis_config: RedisConfig,
@@ -97,6 +98,21 @@ class ApScheduler(Scheduler):
             timezone=tz_utc,
         )
 
+    async def plain_test_hint(
+        self, suite: dto.LevelTestSuite, hint_number: int, run_at: datetime,
+    ):
+        self.scheduler.add_job(
+            func=send_hint_for_testing_wrapper,
+            kwargs={
+                "level_id": suite.level.db_id,
+                "game_id": suite.level.game_id,
+                "player_id": suite.tester.player.id,
+                "hint_number": hint_number,
+            },
+            trigger="date",
+            run_at=run_at,
+            timezone=tz_utc,
+        )
 
     async def start(self):
         self.scheduler.start()

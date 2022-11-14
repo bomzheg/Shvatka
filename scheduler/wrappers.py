@@ -3,8 +3,11 @@ from typing import AsyncContextManager
 
 from db.dao.holder import HolderDao
 from scheduler.context import ScheduledContextHolder, ScheduledContext
+from shvatka.models import dto
 from shvatka.services.game_play import prepare_game, start_game, send_hint
+from shvatka.services.level_testing import send_testing_level_hint
 from tgbot.views.game import GameBotLog, create_bot_game_view
+from tgbot.views.level_testing import create_level_test_view
 
 
 @asynccontextmanager
@@ -21,7 +24,7 @@ async def prepare_context() -> AsyncContextManager[ScheduledContext]:
 
 
 async def prepare_game_wrapper(game_id: int, author_id: int):
-    async with prepare_context() as context:
+    async with prepare_context() as context:  # type: ScheduledContext
         author = await context.dao.player.get_by_id(author_id)
         game = await context.dao.game.get_by_id(game_id, author)
         await prepare_game(
@@ -32,8 +35,7 @@ async def prepare_game_wrapper(game_id: int, author_id: int):
 
 
 async def start_game_wrapper(game_id: int, author_id: int):
-    async with prepare_context() as context:
-        context: ScheduledContext
+    async with prepare_context() as context:  # type: ScheduledContext
         game = await context.dao.game.get_full(game_id)
         assert author_id == game.author.id
         await start_game(
@@ -46,8 +48,7 @@ async def start_game_wrapper(game_id: int, author_id: int):
 
 
 async def send_hint_wrapper(level_id: int, team_id: int, hint_number: int):
-    async with prepare_context() as context:
-        context: ScheduledContext
+    async with prepare_context() as context:  # type: ScheduledContext
         level = await context.dao.level.get_by_id(level_id)
         team = await context.dao.team.get_by_id(team_id)
 
@@ -60,4 +61,19 @@ async def send_hint_wrapper(level_id: int, team_id: int, hint_number: int):
             scheduler=context.scheduler,
         )
 
+
+async def send_hint_for_testing_wrapper(level_id: int, game_id: int, player_id: int, hint_number: int):
+    async with prepare_context() as context:  # type: ScheduledContext
+        level = await context.dao.level.get_by_id(level_id)
+        game = await context.dao.game.get_by_id(game_id)
+        player = await context.dao.player.get_by_id(player_id)
+        org = await context.dao.organizer.get_by_player(game=game, player=player)
+
+        await send_testing_level_hint(
+            suite=dto.LevelTestSuite(level=level, tester=org),
+            hint_number=hint_number,
+            view=create_level_test_view(context.bot, context.dao, context.file_storage),
+            scheduler=context.scheduler,
+            dao=context.dao.level_testing_complex,
+        )
 

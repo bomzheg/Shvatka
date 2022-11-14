@@ -6,6 +6,8 @@ from aiogram import Bot
 from aiogram.exceptions import TelegramAPIError
 from aiogram.types import Message
 
+from db.dao.holder import HolderDao
+from shvatka.clients.file_storage import FileStorage
 from shvatka.models.dto.scn.hint_part import BaseHint
 from shvatka.models.enums.hint_type import HintType
 from tgbot.views.hint_factory.hint_content_resolver import HintContentResolver
@@ -66,3 +68,10 @@ class HintSender:
         for hint_container in hint_containers:
             await self.send_hint(hint_container, chat_id)
             await asyncio.sleep(sleep)
+
+
+def create_hint_sender(bot: Bot, dao: HolderDao, storage: FileStorage) -> HintSender:
+    return HintSender(
+        bot=bot,
+        resolver=HintContentResolver(dao=dao.file_info, file_storage=storage),
+    )

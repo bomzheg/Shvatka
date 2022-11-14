@@ -21,7 +21,7 @@ class Scheduler(Protocol):
 
 
 class LevelTestScheduler(Protocol):
-    async def plain_hint(
+    async def plain_test_hint(
         self, suite: dto.LevelTestSuite, hint_number: int, run_at: datetime,
     ):
         raise NotImplementedError

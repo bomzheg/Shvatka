@@ -26,5 +26,5 @@ class LevelTestProtocolDao(Committer, metaclass=ABCMeta):
         raise NotImplementedError
 
 
-class LevelTestingDao(Committer, LevelTestProtocolDao, GameByIdGetter, metaclass=ABCMeta):
+class LevelTestingDao(LevelTestProtocolDao, GameByIdGetter, metaclass=ABCMeta):
     pass

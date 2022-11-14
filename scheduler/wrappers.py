@@ -1,9 +1,11 @@
+import typing
 from contextlib import asynccontextmanager
 from typing import AsyncContextManager
 
 from db.dao.holder import HolderDao
 from scheduler.context import ScheduledContextHolder, ScheduledContext
 from shvatka.models import dto
+from shvatka.scheduler import LevelTestScheduler
 from shvatka.services.game_play import prepare_game, start_game, send_hint
 from shvatka.services.level_testing import send_testing_level_hint
 from tgbot.views.game import GameBotLog, create_bot_game_view
@@ -73,7 +75,7 @@ async def send_hint_for_testing_wrapper(level_id: int, game_id: int, player_id: 
             suite=dto.LevelTestSuite(level=level, tester=org),
             hint_number=hint_number,
             view=create_level_test_view(context.bot, context.dao, context.file_storage),
-            scheduler=context.scheduler,
+            scheduler=typing.cast(LevelTestScheduler, context.scheduler),  # TODO typing.cast replace with better hint
             dao=context.dao.level_testing_complex,
         )
 

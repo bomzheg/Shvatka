@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 
-from shvatka.models.dto import Level, Organizer
+from .level import Level
+from .organizer import Organizer
 
 
 @dataclass

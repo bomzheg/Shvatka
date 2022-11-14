@@ -5,8 +5,8 @@ from redis.asyncio import Redis
 from sqlalchemy.orm import sessionmaker
 
 from db.dao.holder import HolderDao
-from scheduler import ApScheduler
 from shvatka.clients.file_storage import FileStorage
+from shvatka.scheduler import Scheduler
 
 
 class ScheduledContextHolder:
@@ -17,7 +17,7 @@ class ScheduledContextHolder:
     poll: sessionmaker
     redis: Redis
     bot: Bot
-    scheduler: ApScheduler
+    scheduler: Scheduler
     file_storage: FileStorage
     game_log_chat: int
 
@@ -27,5 +27,5 @@ class ScheduledContext:
     dao: HolderDao  # need wrappers or protocols
     bot: Bot  # need wrappers or protocols
     file_storage: FileStorage
-    scheduler: ApScheduler
+    scheduler: Scheduler
     game_log_chat: int

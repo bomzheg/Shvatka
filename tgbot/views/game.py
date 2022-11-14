@@ -11,7 +11,6 @@ from db.dao.holder import HolderDao
 from shvatka.clients.file_storage import FileStorage
 from shvatka.dal.game_play import GamePreparer
 from shvatka.models import dto
-from shvatka.models.dto.scn.time_hint import TimeHint
 from shvatka.views.game import GameViewPreparer, GameView, GameLogWriter, OrgNotifier, Event, LevelUp, NewOrg
 from tgbot.views.hint_factory.hint_content_resolver import HintContentResolver
 from tgbot.views.hint_sender import HintSender
@@ -38,10 +37,10 @@ class BotView(GameViewPreparer, GameView):
             except TelegramAPIError as e:
                 logger.error("can't remove waivers keyboard for team %s", team.id, exc_info=e)
 
-    async def send_puzzle(self, team: dto.Team, puzzle: TimeHint, level: dto.Level) -> None:
+    async def send_puzzle(self, team: dto.Team, level: dto.Level) -> None:
         await self.hint_sender.send_hints(
             chat_id=team.chat.tg_id,
-            hint_containers=puzzle.hint,
+            hint_containers=level.get_hint(0).hint,
             caption=hd.bold(f"Уровень № {level.number_in_game + 1}")
         )
 

@@ -57,8 +57,7 @@ async def start_game(
     await dao.set_teams_to_first_level(game, teams)
     await dao.commit()
 
-    puzzle = game.get_hint(level_number=0, hint_number=0)
-    await asyncio.gather(*[view.send_puzzle(team, puzzle, game.levels[0]) for team in teams])
+    await asyncio.gather(*[view.send_puzzle(team, game.levels[0]) for team in teams])
 
     await asyncio.gather(
         *[schedule_first_hint(scheduler, team, game.levels[0], now) for team in teams]
@@ -117,7 +116,7 @@ async def check_key(
                     return
             next_level = await dao.get_current_level(team, game)
 
-            await view.send_puzzle(team=team, puzzle=next_level.get_hint(0), level=next_level)
+            await view.send_puzzle(team=team, level=next_level)
             await schedule_first_hint(scheduler, team, next_level)
             level_up_event = LevelUp(team=team, new_level=next_level, orgs_list=await get_spying_orgs(game, dao))
             await org_notifier.notify(level_up_event)

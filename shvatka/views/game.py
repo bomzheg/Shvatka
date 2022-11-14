@@ -6,7 +6,6 @@ from typing import Protocol, Iterable
 
 from shvatka.dal.game_play import GamePreparer
 from shvatka.models import dto
-from shvatka.models.dto.scn.time_hint import TimeHint
 
 
 class GameViewPreparer(Protocol):
@@ -17,7 +16,7 @@ class GameViewPreparer(Protocol):
 
 
 class GameView(Protocol):
-    async def send_puzzle(self, team: dto.Team, puzzle: TimeHint, level: dto.Level) -> None:
+    async def send_puzzle(self, team: dto.Team, level: dto.Level) -> None:
         raise NotImplementedError
 
     async def send_hint(self, team: dto.Team, hint_number: int, level: dto.Level) -> None:

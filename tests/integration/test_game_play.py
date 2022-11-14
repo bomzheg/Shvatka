@@ -37,7 +37,7 @@ async def test_game_play(
     await approve_waivers(game, gryffindor, harry, dao.waiver_approver)
 
     dummy_view = mock(GameView)
-    when(dummy_view).send_puzzle(gryffindor, game.get_hint(0, 0), game.levels[0]).thenReturn(mock_coro(None))
+    when(dummy_view).send_puzzle(gryffindor, game.levels[0]).thenReturn(mock_coro(None))
     dummy_log = mock(GameLogWriter)
     when(dummy_log).log("Game started").thenReturn(mock_coro(None))
     dummy_sched = mock(Scheduler)
@@ -82,7 +82,7 @@ async def test_game_play(
 
     unstub(dummy_view)
     when(dummy_view).correct_key(key=ANY).thenReturn(mock_coro(None))
-    when(dummy_view).send_puzzle(team=gryffindor, puzzle=game.get_hint(1, 0), level=game.levels[1]) \
+    when(dummy_view).send_puzzle(team=gryffindor, level=game.levels[1]) \
         .thenReturn(mock_coro(None))
     when(dummy_org_notifier).notify(LevelUp(team=gryffindor, new_level=game.levels[1], orgs_list=orgs)) \
         .thenReturn(mock_coro(None))

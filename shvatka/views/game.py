@@ -67,6 +67,5 @@ class NewOrg(Event):
 
 @dataclass
 class LevelTestCompleted(Event):
-    level: dto.Level
-    tester: dto.Organizer
+    suite: dto.LevelTestSuite
     result: timedelta

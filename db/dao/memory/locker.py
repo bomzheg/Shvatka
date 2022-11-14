@@ -17,14 +17,19 @@ class MemoryLock(KeyCheckerLock):
 
 class MemoryLockFactory(KeyCheckerFactory):
     def __init__(self):
-        self.locks: dict[int, MemoryLock] = {}
+        self.team_locks: dict[int, MemoryLock] = {}
+        self.player_locks: dict[int: MemoryLock] = {}
         self.global_lock = MemoryLock()
 
     def lock_globally(self) -> KeyCheckerLock:
         return self.global_lock
 
-    def lock(self, team: dto.Team) -> KeyCheckerLock:
-        return self.locks.setdefault(team.id, MemoryLock())
+    def lock_team(self, team: dto.Team) -> KeyCheckerLock:
+        return self.team_locks.setdefault(team.id, MemoryLock())
+
+    def lock_player(self, player: dto.Player) -> KeyCheckerLock:
+        return self.player_locks.setdefault(player.id, MemoryLock())
 
     def clear(self):
-        self.locks.clear()
+        self.team_locks.clear()
+        self.player_locks.clear()

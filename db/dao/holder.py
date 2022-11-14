@@ -3,6 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from shvatka.dal.game import GameUpserter, GameCreator, GamePackager
 from shvatka.dal.game_play import GamePreparer, GamePlayerDao
+from shvatka.dal.level_testing import LevelTestingDao
 from shvatka.dal.level_times import GameStarter
 from shvatka.dal.organizer import OrgAdder
 from shvatka.dal.player import TeamLeaver, PlayerPromoter
@@ -11,10 +12,12 @@ from shvatka.dal.waiver import WaiverVoteAdder, WaiverVoteGetter, WaiverApprover
 from .complex import WaiverVoteAdderImpl, WaiverVoteGetterImpl
 from .complex.game import GameUpserterImpl, GameCreatorImpl, GamePackagerImpl
 from .complex.game_play import GamePreparerImpl, GameStarterImpl, GamePlayerDaoImpl
+from .complex.level_testing import LevelTestComplex
 from .complex.orgs import OrgAdderImpl
 from .complex.player import PlayerPromoterImpl
 from .complex.team import TeamCreatorImpl, TeamLeaverImpl
 from .complex.waiver import WaiverApproverImpl
+from .memory.level_testing import LevelTestingData
 from .rdb import (
     ChatDao, UserDao, FileInfoDao, GameDao, LevelDao,
     LevelTimeDao, KeyTimeDao, OrganizerDao, PlayerDao,
@@ -40,6 +43,7 @@ class HolderDao:
         self.waiver = WaiverDao(self.session)
         self.poll = PollDao(redis=redis)
         self.secure_invite = SecureInvite(redis=redis)
+        self.level_test = LevelTestingData()
 
     async def commit(self):
         await self.session.commit()
@@ -108,3 +112,7 @@ class HolderDao:
     @property
     def player_promoter(self) -> PlayerPromoter:
         return PlayerPromoterImpl(player=self.player, secure_invite=self.secure_invite)
+
+    @property
+    def level_testing_complex(self) -> LevelTestingDao:
+        return LevelTestComplex(level_testing=self.level_test, game=self.game)

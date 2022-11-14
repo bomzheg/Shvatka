@@ -9,11 +9,15 @@ from shvatka.views.game import OrgNotifier, NewOrg
 
 
 async def get_orgs(game: dto.Game, dao: GameOrgsGetter) -> list[dto.Organizer]:
-    return [dto.PrimaryOrganizer(player=game.author, game=game), *await dao.get_orgs(game)]
+    return [*await get_primary_orgs(game), *await dao.get_orgs(game)]
 
 
 async def get_spying_orgs(game: dto.Game, dao: GameOrgsGetter) -> list[dto.Organizer]:
     return [org for org in await get_orgs(game, dao) if org.can_spy]
+
+
+async def get_primary_orgs(game: dto.Game) -> list[dto.PrimaryOrganizer]:
+    return [dto.PrimaryOrganizer(player=game.author, game=game)]
 
 
 async def get_secondary_orgs(

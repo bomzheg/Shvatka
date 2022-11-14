@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
 
 from db.config.models.db import DBConfig, RedisConfig
-from db.locker import MemoryLockFactory
+from db.dao.memory.locker import MemoryLockFactory
 from shvatka.utils.key_checker_lock import KeyCheckerFactory
 
 logger = logging.getLogger(__name__)

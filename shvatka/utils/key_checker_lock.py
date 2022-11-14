@@ -18,14 +18,17 @@ class KeyCheckerLock(Protocol):
 
 
 class KeyCheckerFactory(Protocol):
-    def lock(self, team: dto.Team) -> KeyCheckerLock:
+    def lock_team(self, team: dto.Team) -> KeyCheckerLock:
+        raise NotImplementedError
+
+    def lock_player(self, player: dto.Player) -> KeyCheckerLock:
         raise NotImplementedError
 
     def lock_globally(self) -> KeyCheckerLock:
         raise NotImplementedError
 
     def __call__(self, team: dto.Team) -> KeyCheckerLock:
-        return self.lock(team)
+        return self.lock_team(team)
 
     def clear(self) -> None:
         raise NotImplementedError

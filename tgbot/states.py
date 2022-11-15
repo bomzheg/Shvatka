@@ -34,6 +34,7 @@ class GameWriteSG(StatesGroup):
 
 class GameEditSG(StatesGroup):
     current_levels = State()
+    add_level = State()
 
 
 class GameOrgs(StatesGroup):

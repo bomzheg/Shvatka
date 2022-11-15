@@ -27,3 +27,8 @@ class MyLevelsGetter(Reader):
 class LevelByIdGetter(Reader):
     async def get_by_id(self, id_: int) -> dto.Level:
         raise NotImplementedError
+
+
+class LevelLinker(Committer, metaclass=ABCMeta):
+    async def link_to_game(self, level: dto.Level, game: dto.Game) -> dto.Level:
+        raise NotImplementedError

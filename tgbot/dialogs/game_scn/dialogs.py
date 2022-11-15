@@ -1,11 +1,11 @@
 from aiogram_dialog import Dialog, Window
 from aiogram_dialog.widgets.input import MessageInput
-from aiogram_dialog.widgets.kbd import ScrollingGroup, Multiselect, Button, Select, Cancel
+from aiogram_dialog.widgets.kbd import ScrollingGroup, Multiselect, Button, Select, Cancel, SwitchTo
 from aiogram_dialog.widgets.text import Const, Format
 
 from tgbot.states import GameWriteSG, GameEditSG
 from .getters import get_game_name, select_my_levels, select_full_game
-from .handlers import process_name, save_game, edit_level, add_level
+from .handlers import process_name, save_game, edit_level, add_level_handler
 
 game_writer = Dialog(
     Window(
@@ -58,7 +58,7 @@ game_editor = Dialog(
         Format("Игра <b>{game.name}</b>\n\n"),
         Const("<b>Уровни игры</b>"),
         Cancel(Const("⤴Назад")),
-        Button(Const("📑Добавить уровень"), id="add_level", on_click=add_level),
+        SwitchTo(Const("📑Добавить уровень"), id="to_add_level", state=GameEditSG.add_level),
         ScrollingGroup(
             Select(
                 Format("{item.name_id}"),
@@ -73,5 +73,26 @@ game_editor = Dialog(
         ),
         state=GameEditSG.current_levels,
         getter=select_full_game,
+    ),
+    Window(
+        Format("Игра <b>{game.name}</b>\n\n"),
+        Const(
+            "<b>Уровни</b>\n\n"
+            "Выбери уровни которые нужно добавить"
+        ),
+        ScrollingGroup(
+            Select(
+                Format("{item.name_id}"),
+                id="level_select",
+                item_id_getter=lambda x: x.db_id,
+                items="levels",
+                on_click=add_level_handler,
+            ),
+            id="my_free_levels_sg",
+            width=1,
+            height=10,
+        ),
+        state=GameEditSG.add_level,
+        getter=[select_full_game, select_my_levels],
     ),
 )

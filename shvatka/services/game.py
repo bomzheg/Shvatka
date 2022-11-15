@@ -7,9 +7,11 @@ from shvatka.dal.game import (
     GameUpserter, GameCreator, GameAuthorsFinder, GameByIdGetter,
     ActiveGameFinder, WaiverStarter, GameStartPlanner, GameNameChecker, GamePackager,
 )
+from shvatka.dal.level import LevelLinker
 from shvatka.models import dto
 from shvatka.models.dto.scn.game import RawGameScenario, CompleteGameScenario
 from shvatka.scheduler import Scheduler
+from shvatka.services.level import check_is_author as check_is_level_author
 from shvatka.services.player import check_allow_be_author
 from shvatka.services.scenario.files import upsert_files, get_file_metas, get_file_contents
 from shvatka.services.scenario.game_ops import parse_uploaded_game, check_all_files_saved
@@ -57,6 +59,14 @@ async def get_authors_games(
 ) -> list[dto.Game]:
     check_allow_be_author(author)
     return await dao.get_all_by_author(author)
+
+
+async def add_level(game: dto.Game, level: dto.Level, author: dto.Player, dao: LevelLinker):
+    check_allow_be_author(author)
+    check_is_author(game=game, player=author)
+    check_is_level_author(level=level, player=author)
+    await dao.link_to_game(level=level, game=game)
+    await dao.commit()
 
 
 async def get_game(id_: int, *, author: dto.Player = None, dao: GameByIdGetter) -> dto.Game:

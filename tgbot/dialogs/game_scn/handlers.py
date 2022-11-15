@@ -7,8 +7,8 @@ from aiogram_dialog.widgets.kbd import Button, ManagedMultiSelectAdapter
 
 from db.dao.holder import HolderDao
 from shvatka.models import dto
-from shvatka.services.game import check_new_game_name_available, create_game
-from shvatka.services.level import get_all_my_free_levels
+from shvatka.services.game import check_new_game_name_available, create_game, get_full_game, add_level
+from shvatka.services.level import get_all_my_free_levels, get_by_id
 from tgbot.states import LevelManageSG
 
 
@@ -47,5 +47,13 @@ async def edit_level(c: CallbackQuery, widget: Any, manager: DialogManager, item
     await manager.start(LevelManageSG.menu, data={"level_id": int(item_id)})
 
 
-async def add_level(c: CallbackQuery, button: Button, manager: DialogManager):
-    await c.answer("TODO реализовать добавление уровня")  # TODO
+async def add_level_handler(c: CallbackQuery, button: Any, manager: DialogManager, item_id: str):
+    await c.answer()
+    game_id = manager.start_data["game_id"]
+    dao: HolderDao = manager.middleware_data["dao"]
+    author: dto.Player = manager.middleware_data["player"]
+    game = await get_full_game(game_id, author=author, dao=dao.game)
+    level = await get_by_id(int(item_id), author=author, dao=dao.level)
+    await add_level(game=game, level=level, author=author, dao=dao.level)
+    await manager.done()
+

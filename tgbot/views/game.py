@@ -11,7 +11,8 @@ from db.dao.holder import HolderDao
 from shvatka.clients.file_storage import FileStorage
 from shvatka.dal.game_play import GamePreparer
 from shvatka.models import dto
-from shvatka.views.game import GameViewPreparer, GameView, GameLogWriter, OrgNotifier, Event, LevelUp, NewOrg
+from shvatka.views.game import GameViewPreparer, GameView, GameLogWriter, OrgNotifier, Event, LevelUp, NewOrg, \
+    LevelTestCompleted
 from tgbot.views.hint_sender import HintSender, create_hint_sender
 
 logger = logging.getLogger(__name__)
@@ -95,11 +96,15 @@ class BotOrgNotifier(OrgNotifier):
                 for org in event.orgs_list:
                     with suppress(TelegramAPIError):
                         await self.notify_new_org(cast(NewOrg, event), org)
+            case LevelTestCompleted():
+                for org in event.orgs_list:
+                    with suppress(TelegramAPIError):
+                        await self.level_test_completed(cast(LevelTestCompleted, event), org)
 
     async def notify_level_up(self, level_up: LevelUp, org: dto.Organizer):
         await self.bot.send_message(
             chat_id=org.player.user.tg_id,
-            text=f"Команда {level_up.team} перешла "
+            text=f"Команда {hd.quote(level_up.team.name)} перешла "
                  f"на уровень {level_up.new_level.number_in_game} "
                  f"({level_up.new_level.name_id})"
         )
@@ -107,8 +112,16 @@ class BotOrgNotifier(OrgNotifier):
     async def notify_new_org(self, new_org: NewOrg, org: dto.Organizer):
         await self.bot.send_message(
             chat_id=org.player.user.tg_id,
-            text=f"На игру {new_org.game.name} "
-                 f"добавлен новый орг {new_org.org.player.user.name_mention}"
+            text=f"На игру {hd.quote(new_org.game.name)} "
+                 f"добавлен новый орг {hd.quote(new_org.org.player.user.name_mention)}"
+        )
+
+    async def level_test_completed(self, event: LevelTestCompleted, org: dto.Organizer):
+        await self.bot.send_message(
+            chat_id=org.player.user.tg_id,
+            text=f"Тестирование уровня {event.suite.level.name_id}.\n"
+                 f"Игрок {hd.quote(event.suite.tester.player.user.name_mention)} "
+                 f"закончил тестирование уровня за {event.result.seconds // 60} минут {event.result.seconds % 60}",
         )
 
 

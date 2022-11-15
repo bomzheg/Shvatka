@@ -121,7 +121,8 @@ class BotOrgNotifier(OrgNotifier):
             chat_id=org.player.user.tg_id,
             text=f"Тестирование уровня {event.suite.level.name_id}.\n"
                  f"Игрок {hd.quote(event.suite.tester.player.user.name_mention)} "
-                 f"закончил тестирование уровня за {event.result.seconds // 60} минут {event.result.seconds % 60}",
+                 f"закончил тестирование уровня за {event.result.seconds // 60} минут "
+                 f"{event.result.seconds % 60} c.",
         )
 
 

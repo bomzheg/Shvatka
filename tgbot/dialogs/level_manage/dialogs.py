@@ -4,7 +4,7 @@ from aiogram_dialog.widgets.text import Const, Format
 
 from tgbot.states import LevelManageSG
 from .getters import get_level_id
-from .handlers import edit_level, show_level
+from .handlers import edit_level, show_level, level_testing
 
 level_manage = Dialog(
     Window(
@@ -20,6 +20,11 @@ level_manage = Dialog(
             Const("📂Показать"),
             id="level_show",
             on_click=show_level,
+        ),
+        Button(
+            Const("🧩Тестировать"),
+            id="level_test",
+            on_click=level_testing,
         ),
         state=LevelManageSG.menu,
         getter=get_level_id,

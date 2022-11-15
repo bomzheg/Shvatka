@@ -110,7 +110,7 @@ class ApScheduler(Scheduler, LevelTestScheduler):
                 "hint_number": hint_number,
             },
             trigger="date",
-            run_at=run_at,
+            run_date=run_at,
             timezone=tz_utc,
         )
 

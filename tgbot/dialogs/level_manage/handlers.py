@@ -13,7 +13,7 @@ from shvatka.scheduler import LevelTestScheduler
 from shvatka.services.game import get_game
 from shvatka.services.level import get_by_id
 from shvatka.services.level_testing import start_level_test, check_level_testing_key
-from shvatka.services.organizers import get_primary_orgs
+from shvatka.services.organizers import get_by_player
 from shvatka.utils.exceptions import InvalidKey
 from shvatka.utils.key_checker_lock import KeyCheckerFactory
 from tgbot.states import LevelTest
@@ -65,8 +65,8 @@ async def level_testing(c: CallbackQuery, button: Button, manager: DialogManager
     org = await get_org(author, level, dao)
     suite = dto.LevelTestSuite(tester=org, level=level)
     view = create_level_test_view(bot=bot, dao=dao, storage=storage)
-    await start_level_test(suite=suite, scheduler=scheduler, view=view, dao=dao.level_test)
     await manager.start(state=LevelTest.wait_key, data={"level_id": level_id})
+    await start_level_test(suite=suite, scheduler=scheduler, view=view, dao=dao.level_test)
 
 
 async def cancel_level_test(c: CallbackQuery, button: Button, manager: DialogManager):
@@ -107,7 +107,4 @@ async def process_key_message(m: Message, dialog_: Any, manager: DialogManager) 
 
 async def get_org(author: dto.Player, level: dto.Level, dao: HolderDao) -> dto.Organizer:
     game = await get_game(level.game_id, author=author, dao=dao.game)
-    orgs = await get_primary_orgs(game)
-    assert 1 == len(orgs)
-    assert orgs[0].player.id == author.id
-    return orgs[0]
+    return await get_by_player(author, game, dao.organizer)

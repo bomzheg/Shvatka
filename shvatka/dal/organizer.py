@@ -22,6 +22,11 @@ class OrgByIdGetter(Reader):
         raise NotImplementedError
 
 
+class OrgByPlayerGetter(Reader):
+    async def get_by_player(self, game: dto.Game, player: dto.Player) -> dto.SecondaryOrganizer:
+        raise NotImplementedError
+
+
 class OrgPermissionFlipper(Committer, OrgByIdGetter, metaclass=ABCMeta):
     async def flip_permission(self, org: dto.SecondaryOrganizer, permission: OrgPermission):
         raise NotImplementedError

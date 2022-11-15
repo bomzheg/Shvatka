@@ -1,4 +1,5 @@
-from shvatka.dal.organizer import GameOrgsGetter, OrgAdder, OrgByIdGetter, OrgPermissionFlipper, OrgDeletedFlipper
+from shvatka.dal.organizer import GameOrgsGetter, OrgAdder, OrgByIdGetter, OrgPermissionFlipper, OrgDeletedFlipper, \
+    OrgByPlayerGetter
 from shvatka.dal.secure_invite import InviteSaver, InviteRemover
 from shvatka.models import dto
 from shvatka.models.enums.invite_type import InviteType
@@ -73,6 +74,12 @@ async def agree_to_be_org(
 
 async def get_org_by_id(id_: int, dao: OrgByIdGetter) -> dto.SecondaryOrganizer:
     return await dao.get_by_id(id_)
+
+
+async def get_by_player(player: dto.Player, game: dto.Game, dao: OrgByPlayerGetter):
+    if game.author.id == player.id:
+        return dto.PrimaryOrganizer(player=player, game=game)
+    return await dao.get_by_player(player=player, game=game)
 
 
 async def flip_permission(

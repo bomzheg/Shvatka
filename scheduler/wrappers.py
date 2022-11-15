@@ -8,6 +8,7 @@ from shvatka.models import dto
 from shvatka.scheduler import LevelTestScheduler
 from shvatka.services.game_play import prepare_game, start_game, send_hint
 from shvatka.services.level_testing import send_testing_level_hint
+from shvatka.services.organizers import get_by_player
 from tgbot.views.game import GameBotLog, create_bot_game_view
 from tgbot.views.level_testing import create_level_test_view
 
@@ -69,7 +70,7 @@ async def send_hint_for_testing_wrapper(level_id: int, game_id: int, player_id: 
         level = await context.dao.level.get_by_id(level_id)
         game = await context.dao.game.get_by_id(game_id)
         player = await context.dao.player.get_by_id(player_id)
-        org = await context.dao.organizer.get_by_player(game=game, player=player)
+        org = await get_by_player(dao=context.dao.organizer, game=game, player=player)
 
         await send_testing_level_hint(
             suite=dto.LevelTestSuite(level=level, tester=org),

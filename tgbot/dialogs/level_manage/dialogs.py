@@ -4,6 +4,7 @@ from aiogram_dialog.widgets.input import MessageInput
 from aiogram_dialog.widgets.kbd import Button, Cancel
 from aiogram_dialog.widgets.text import Const, Format
 
+from tgbot.filters import is_key
 from tgbot.states import LevelManageSG, LevelTest
 from .getters import get_level_id
 from .handlers import edit_level, show_level, level_testing, cancel_level_test, process_key_message
@@ -45,7 +46,7 @@ level_test_dialog = Dialog(
         MessageInput(
             func=process_key_message,
             content_types=ContentType.TEXT,
-            # TODO filter is_key
+            filter=is_key
         ),
         getter=get_level_id,
         state=LevelTest.wait_key,

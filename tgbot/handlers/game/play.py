@@ -10,6 +10,7 @@ from shvatka.services.game_play import check_key
 from shvatka.utils.exceptions import InvalidKey
 from shvatka.utils.key_checker_lock import KeyCheckerFactory
 from tgbot.config.models.bot import BotConfig
+from tgbot.filters import is_key
 from tgbot.filters.game_status import GameStatusFilter
 from tgbot.views.game import GameBotLog, create_bot_game_view, BotOrgNotifier
 
@@ -45,5 +46,7 @@ async def check_key_handler(
 
 def setup() -> Router:
     router = Router(name=__name__)
-    router.message.register(check_key_handler, GameStatusFilter(running=True))  # is_team, is_played_player is_key
+    router.message.register(
+        check_key_handler, GameStatusFilter(running=True), is_key
+    )  # is_team, is_played_player is_key
     return router

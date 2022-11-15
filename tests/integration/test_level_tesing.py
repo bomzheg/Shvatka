@@ -26,7 +26,7 @@ async def test_level_testing(
     suite = dto.LevelTestSuite(level=level, tester=harry_org)
     assert not await dao.level_test.is_still_testing(suite)
 
-    await start_level_test(suite=suite, scheduler=scheduler, view=level_view, dao=dao.level_test)
+    await start_level_test(suite=suite, scheduler=scheduler, view=level_view, dao=dao.level_testing_complex)
     actual_suite, actual_hint_number, actual_run_at = scheduler.calls.pop()
     assert suite == actual_suite
     assert 1 == actual_hint_number
@@ -95,7 +95,7 @@ async def test_send_hint_for_tester_level(
     harry_org = await dao.organizer.add_new(game, harry)
     await dao.commit()
     suite = dto.LevelTestSuite(level=level, tester=harry_org)
-    await start_level_test(suite=suite, scheduler=scheduler, view=level_view, dao=dao.level_test)
+    await start_level_test(suite=suite, scheduler=scheduler, view=level_view, dao=dao.level_testing_complex)
 
     await send_testing_level_hint(suite, 1, level_view, scheduler, dao.level_testing_complex)
     actual_suit, hint_number = level_view.calls["send_hint"].pop()

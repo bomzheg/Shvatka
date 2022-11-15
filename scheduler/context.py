@@ -5,6 +5,7 @@ from redis.asyncio import Redis
 from sqlalchemy.orm import sessionmaker
 
 from db.dao.holder import HolderDao
+from db.dao.memory.level_testing import LevelTestingData
 from shvatka.clients.file_storage import FileStorage
 from shvatka.scheduler import Scheduler
 
@@ -20,6 +21,7 @@ class ScheduledContextHolder:
     scheduler: Scheduler
     file_storage: FileStorage
     game_log_chat: int
+    level_test_dao: LevelTestingData
 
 
 @dataclass

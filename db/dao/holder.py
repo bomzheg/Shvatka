@@ -27,7 +27,7 @@ from .redis import PollDao, SecureInvite
 
 
 class HolderDao:
-    def __init__(self, session: AsyncSession, redis: Redis):
+    def __init__(self, session: AsyncSession, redis: Redis, level_test: LevelTestingData):
         self.session = session
         self.user = UserDao(self.session)
         self.chat = ChatDao(self.session)
@@ -43,7 +43,7 @@ class HolderDao:
         self.waiver = WaiverDao(self.session)
         self.poll = PollDao(redis=redis)
         self.secure_invite = SecureInvite(redis=redis)
-        self.level_test = LevelTestingData()
+        self.level_test = level_test
 
     async def commit(self):
         await self.session.commit()

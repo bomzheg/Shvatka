@@ -10,6 +10,7 @@ from redis import Redis
 from sqlalchemy.orm import sessionmaker
 
 from db.config.models.db import RedisConfig
+from db.dao.memory.level_testing import LevelTestingData
 from scheduler.context import ScheduledContextHolder
 from scheduler.wrappers import prepare_game_wrapper, start_game_wrapper, send_hint_wrapper, \
     send_hint_for_testing_wrapper
@@ -28,6 +29,7 @@ class ApScheduler(Scheduler, LevelTestScheduler):
         pool: sessionmaker,
         redis: Redis,
         file_storage: FileStorage,
+        level_test_dao: LevelTestingData,
         bot: Bot = None,
         game_log_chat: int = None,
     ):
@@ -37,6 +39,7 @@ class ApScheduler(Scheduler, LevelTestScheduler):
         ScheduledContextHolder.scheduler = self
         ScheduledContextHolder.game_log_chat = game_log_chat
         ScheduledContextHolder.file_storage = file_storage
+        ScheduledContextHolder.level_test_dao = level_test_dao
         self.job_store = RedisJobStore(
             jobs_key="SH.jobs",
             run_times_key="SH.run_times",

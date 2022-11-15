@@ -6,6 +6,7 @@ from dataclass_factory import Schema, NameStyle
 from sqlalchemy.orm import close_all_sessions
 
 from common.config.parser.logging_config import setup_logging
+from db.dao.memory.level_testing import LevelTestingData
 from db.fatory import create_pool, create_lock_factory
 from shvatka.models.schems import schemas
 from tgbot.config.parser.main import load_config
@@ -30,6 +31,7 @@ async def main():
     file_storage = create_file_storage(config.file_storage_config)
     pool = create_pool(config.db)
     bot = create_bot(config)
+    level_test_dao = LevelTestingData()
 
     async with (
         UserGetter(config.tg_client) as user_getter,
@@ -37,12 +39,13 @@ async def main():
         create_scheduler(
             pool=pool, redis=redis, bot=bot, redis_config=config.redis,
             game_log_chat=config.bot.log_chat, file_storage=file_storage,
+            level_test_dao=level_test_dao
         ) as scheduler,
     ):
         dp = create_dispatcher(
             config=config, user_getter=user_getter, dcf=dcf, pool=pool,
             redis=redis, scheduler=scheduler, locker=create_lock_factory(),
-            file_storage=file_storage,
+            file_storage=file_storage, level_test_dao=level_test_dao,
         )
 
         logger.info("started")

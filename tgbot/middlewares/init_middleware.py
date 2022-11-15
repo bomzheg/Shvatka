@@ -7,6 +7,7 @@ from redis.asyncio.client import Redis
 from sqlalchemy.orm import sessionmaker
 
 from db.dao.holder import HolderDao
+from db.dao.memory.level_testing import LevelTestingData
 from shvatka.clients.file_storage import FileStorage
 from shvatka.scheduler import Scheduler
 from shvatka.utils.key_checker_lock import KeyCheckerFactory
@@ -18,7 +19,7 @@ class InitMiddleware(BaseMiddleware):
     def __init__(
         self, pool: sessionmaker, user_getter: UserGetter, dcf: Factory,
         redis: Redis, scheduler: Scheduler, locker: KeyCheckerFactory,
-        file_storage: FileStorage,
+        file_storage: FileStorage, level_test_dao: LevelTestingData,
     ):
         self.pool = pool
         self.user_getter = user_getter
@@ -27,6 +28,7 @@ class InitMiddleware(BaseMiddleware):
         self.scheduler = scheduler
         self.locker = locker
         self.file_storage = file_storage
+        self.level_test_dao = level_test_dao
 
     async def __call__(
         self,
@@ -40,7 +42,7 @@ class InitMiddleware(BaseMiddleware):
         data["locker"] = self.locker
         data["file_storage"] = self.file_storage
         async with self.pool() as session:
-            holder_dao = HolderDao(session, self.redis)
+            holder_dao = HolderDao(session, self.redis, self.level_test_dao)
             data["dao"] = holder_dao
             data["hint_parser"] = HintParser(
                 dao=holder_dao.file_info, file_storage=self.file_storage, bot=data["bot"],

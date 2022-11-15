@@ -18,6 +18,7 @@ from testcontainers.redis import RedisContainer
 from common.config.models.paths import Paths
 from db.config.models.db import RedisConfig
 from db.dao.holder import HolderDao
+from db.dao.memory.level_testing import LevelTestingData
 from db.fatory import create_lock_factory
 from shvatka.clients.file_storage import FileStorage
 from shvatka.scheduler import Scheduler
@@ -29,25 +30,31 @@ from tests.fixtures.scn_fixtures import simple_scn, complex_scn  # noqa: F401
 from tests.fixtures.team import gryffindor, slytherin  # noqa: F401
 from tests.mocks.config import DBConfig
 from tests.mocks.file_storage import MemoryFileStorage
+from tests.mocks.scheduler_mock import SchedulerMock
 from tgbot.config.models.main import TgBotConfig
 from tgbot.main_factory import (
-    create_dispatcher, create_scheduler, create_redis,
+    create_dispatcher, create_redis,
 )
 from tgbot.username_resolver.user_getter import UserGetter
 
 logger = logging.getLogger(__name__)
 
 
+@pytest.fixture(scope="session")
+def level_test_dao() -> LevelTestingData:
+    return LevelTestingData()
+
+
 @pytest_asyncio.fixture
-async def dao(session: AsyncSession, redis: Redis) -> HolderDao:
-    dao_ = HolderDao(session=session, redis=redis)
+async def dao(session: AsyncSession, redis: Redis, level_test_dao: LevelTestingData) -> HolderDao:
+    dao_ = HolderDao(session=session, redis=redis, level_test=level_test_dao)
     await clear_data(dao_)
     return dao_
 
 
 @pytest_asyncio.fixture
-async def check_dao(session: AsyncSession, redis: Redis) -> HolderDao:
-    dao_ = HolderDao(session=session, redis=redis)
+async def check_dao(session: AsyncSession, redis: Redis, level_test_dao: LevelTestingData) -> HolderDao:
+    dao_ = HolderDao(session=session, redis=redis, level_test=level_test_dao)
     return dao_
 
 
@@ -121,12 +128,8 @@ def patch_api_config(bot_config: TgBotConfig, postgres_url: str, redis: Redis):
 
 
 @pytest_asyncio.fixture(scope="session")
-async def scheduler(pool: sessionmaker, redis: Redis, bot: Bot, bot_config: TgBotConfig, file_storage: FileStorage):
-    async with create_scheduler(
-        pool=pool, redis=redis, bot=bot, redis_config=bot_config.redis,
-        game_log_chat=bot_config.bot.log_chat, file_storage=file_storage,
-    ) as sched:
-        yield sched
+async def scheduler():
+    return SchedulerMock()
 
 
 @pytest.fixture(scope="session")
@@ -138,11 +141,12 @@ def locker() -> KeyCheckerFactory:
 def dp(
     pool: sessionmaker, bot_config, user_getter: UserGetter,
     dcf: Factory, redis: Redis, scheduler: Scheduler, locker: KeyCheckerFactory,
-    file_storage: FileStorage,
+    file_storage: FileStorage, level_test_dao: LevelTestingData,
 ) -> Dispatcher:
     return create_dispatcher(
         config=bot_config, user_getter=user_getter, dcf=dcf, pool=pool,
         redis=redis, scheduler=scheduler, locker=locker, file_storage=file_storage,
+        level_test_dao=level_test_dao,
     )
 
 

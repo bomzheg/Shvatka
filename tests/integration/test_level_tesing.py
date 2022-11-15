@@ -4,7 +4,7 @@ import pytest
 
 from db.dao.holder import HolderDao
 from shvatka.models import dto
-from shvatka.services.level_testing import start_level_test, check_level_testing_key
+from shvatka.services.level_testing import start_level_test, check_level_testing_key, send_testing_level_hint
 from shvatka.utils.key_checker_lock import KeyCheckerFactory
 from shvatka.views.game import LevelTestCompleted
 from tests.mocks.level_view import LevelViewMock
@@ -24,6 +24,7 @@ async def test_level_testing(
     harry_org = await dao.organizer.add_new(game, harry)
     await dao.commit()
     suite = dto.LevelTestSuite(level=level, tester=harry_org)
+    assert not await dao.level_test.is_still_testing(suite)
 
     await start_level_test(suite=suite, scheduler=scheduler, view=level_view, dao=dao.level_test)
     actual_suite, actual_hint_number, actual_run_at = scheduler.calls.pop()
@@ -60,6 +61,7 @@ async def test_level_testing(
     assert "SHWRONG" == actual_key
 
     await check_level_testing_key("SH321", suite, level_view, org_notifier, locker, dao.level_testing_complex)
+    assert not await dao.level_test.is_still_testing(suite)
     keys = await dao.level_test.get_correct_tested_keys(suite)
     assert {"SH123", "SH321"} == keys
     keys = await dao.level_test.get_all_typed(suite)
@@ -80,3 +82,27 @@ async def test_level_testing(
     assert result == event.result
     assert 1 == len(event.orgs_list)
     assert game.author.id == event.orgs_list[0].player.id
+
+
+@pytest.mark.asyncio
+async def test_send_hint_for_tester_level(
+    game: dto.FullGame, harry: dto.Player, dao: HolderDao, locker: KeyCheckerFactory
+):
+    start_at = datetime.utcnow()
+    level = game.levels[1]
+    scheduler = LevelSchedulerMock()
+    level_view = LevelViewMock()
+    harry_org = await dao.organizer.add_new(game, harry)
+    await dao.commit()
+    suite = dto.LevelTestSuite(level=level, tester=harry_org)
+    await start_level_test(suite=suite, scheduler=scheduler, view=level_view, dao=dao.level_test)
+
+    await send_testing_level_hint(suite, 1, level_view, scheduler, dao.level_testing_complex)
+    actual_suit, hint_number = level_view.calls["send_hint"].pop()
+    assert suite == actual_suit
+    assert 1 == hint_number
+    actual_suit, hint_number, run_at = scheduler.calls.pop()
+    assert suite == actual_suit
+    assert 2 == hint_number
+    assert run_at > start_at
+

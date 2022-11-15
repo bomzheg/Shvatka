@@ -47,3 +47,7 @@ class MainMenu(StatesGroup):
 
 class Promotion(StatesGroup):
     disclaimer = State()
+
+
+class LevelTest(StatesGroup):
+    wait_key = State()

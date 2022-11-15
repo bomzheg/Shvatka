@@ -1,10 +1,12 @@
+from aiogram.types import ContentType
 from aiogram_dialog import Dialog, Window
+from aiogram_dialog.widgets.input import MessageInput
 from aiogram_dialog.widgets.kbd import Button, Cancel
 from aiogram_dialog.widgets.text import Const, Format
 
-from tgbot.states import LevelManageSG
+from tgbot.states import LevelManageSG, LevelTest
 from .getters import get_level_id
-from .handlers import edit_level, show_level, level_testing
+from .handlers import edit_level, show_level, level_testing, cancel_level_test, process_key_message
 
 level_manage = Dialog(
     Window(
@@ -28,5 +30,24 @@ level_manage = Dialog(
         ),
         state=LevelManageSG.menu,
         getter=get_level_id,
+    ),
+)
+
+
+level_test_dialog = Dialog(
+    Window(
+        Format("Идёт тестирование уровня <b>{level.name_id}</b>"),
+        Button(
+            Const("⤴Назад"),
+            id="level_test_cancel",
+            on_click=cancel_level_test,
+        ),
+        MessageInput(
+            func=process_key_message,
+            content_types=ContentType.TEXT,
+            # TODO filter is_key
+        ),
+        getter=get_level_id,
+        state=LevelTest.wait_key,
     ),
 )

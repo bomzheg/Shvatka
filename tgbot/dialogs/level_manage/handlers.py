@@ -1,7 +1,8 @@
 import asyncio
+from typing import Any
 
 from aiogram import Bot
-from aiogram.types import CallbackQuery
+from aiogram.types import CallbackQuery, Message
 from aiogram_dialog import DialogManager
 from aiogram_dialog.widgets.kbd import Button
 
@@ -11,8 +12,12 @@ from shvatka.models import dto
 from shvatka.scheduler import LevelTestScheduler
 from shvatka.services.game import get_game
 from shvatka.services.level import get_by_id
-from shvatka.services.level_testing import start_level_test
+from shvatka.services.level_testing import start_level_test, check_level_testing_key
 from shvatka.services.organizers import get_primary_orgs
+from shvatka.utils.exceptions import InvalidKey
+from shvatka.utils.key_checker_lock import KeyCheckerFactory
+from tgbot.states import LevelTest
+from tgbot.views.game import BotOrgNotifier
 from tgbot.views.hint_factory.hint_content_resolver import HintContentResolver
 from tgbot.views.hint_sender import HintSender
 from tgbot.views.level_testing import create_level_test_view
@@ -57,10 +62,52 @@ async def level_testing(c: CallbackQuery, button: Button, manager: DialogManager
     level_id = manager.start_data["level_id"]
     author: dto.Player = manager.middleware_data["player"]
     level = await get_by_id(level_id, author, dao.level)
-    game = await get_game(level.game_id, author=author, dao=dao.game)
-    orgs = await get_primary_orgs(game)
-    assert orgs[0].player.id == author.id
-    assert 1 == len(orgs)
-    suite = dto.LevelTestSuite(tester=orgs[0], level=level)
+    org = await get_org(author, level, dao)
+    suite = dto.LevelTestSuite(tester=org, level=level)
     view = create_level_test_view(bot=bot, dao=dao, storage=storage)
     await start_level_test(suite=suite, scheduler=scheduler, view=view, dao=dao.level_test)
+    await manager.start(state=LevelTest.wait_key, data={"level_id": level_id})
+
+
+async def cancel_level_test(c: CallbackQuery, button: Button, manager: DialogManager):
+    await c.answer()
+    dao: HolderDao = manager.middleware_data["dao"]
+    level_id = manager.start_data["level_id"]
+    author: dto.Player = manager.middleware_data["player"]
+    level = await get_by_id(level_id, author, dao.level)
+    org = await get_org(author, level, dao)
+    suite = dto.LevelTestSuite(tester=org, level=level)
+    await dao.level_test.cancel_test(suite=suite)
+    await manager.done()
+
+
+async def process_key_message(m: Message, dialog_: Any, manager: DialogManager) -> None:
+    dao: HolderDao = manager.middleware_data["dao"]
+    bot: Bot = manager.middleware_data["bot"]
+    storage: FileStorage = manager.middleware_data["file_storage"]
+    level_id = manager.start_data["level_id"]
+    author: dto.Player = manager.middleware_data["player"]
+    locker: KeyCheckerFactory = manager.middleware_data["locker"]
+    level = await get_by_id(level_id, author, dao.level)
+    org = await get_org(author, level, dao)
+    suite = dto.LevelTestSuite(tester=org, level=level)
+    view = create_level_test_view(bot=bot, dao=dao, storage=storage)
+    try:
+        await check_level_testing_key(
+            key=m.text,
+            suite=suite,
+            view=view,
+            org_notifier=BotOrgNotifier(bot=bot),
+            locker=locker,
+            dao=dao.level_testing_complex,
+        )
+    except InvalidKey:
+        pass
+
+
+async def get_org(author: dto.Player, level: dto.Level, dao: HolderDao) -> dto.Organizer:
+    game = await get_game(level.game_id, author=author, dao=dao.game)
+    orgs = await get_primary_orgs(game)
+    assert 1 == len(orgs)
+    assert orgs[0].player.id == author.id
+    return orgs[0]

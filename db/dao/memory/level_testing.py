@@ -62,10 +62,18 @@ class LevelTestingData(LevelTestProtocolDao):
         bucket = self._get_bucket(suite)
         return bucket.all_typed
 
+    async def cancel_test(self, suite: dto.LevelTestSuite):
+        self._del_bucket(suite)
+
     def _get_bucket(self, suite: dto.LevelTestSuite) -> LevelTestBucket:
         return self._buckets\
             .setdefault(suite.level.db_id, {})\
             .setdefault(suite.tester.player.id, LevelTestBucket())
+
+    def _del_bucket(self, suite: dto.LevelTestSuite):
+        self._buckets \
+            .setdefault(suite.level.db_id, {}) \
+            .pop(suite.tester.player.id, None)
 
     async def delete_all(self):
         self._buckets.clear()

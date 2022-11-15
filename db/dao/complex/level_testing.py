@@ -25,10 +25,10 @@ class LevelTestComplex(LevelTestingDao):
         return await self.level_testing.get_correct_tested_keys(suite)
 
     async def complete_test(self, suite: dto.LevelTestSuite):
-        return await self.complete_test(suite)
+        return await self.level_testing.complete_test(suite)
 
     async def get_testing_result(self, suite: dto.LevelTestSuite) -> timedelta:
-        return await self.get_testing_result(suite)
+        return await self.level_testing.get_testing_result(suite)
 
     async def get_by_id(self, id_: int, author: dto.Player | None = None) -> dto.Game:
         return await self.game.get_by_id(id_=id_, author=author)

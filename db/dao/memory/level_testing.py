@@ -58,6 +58,10 @@ class LevelTestingData(LevelTestProtocolDao):
         bucket = self._get_bucket(suite)
         return bucket.protocol.stop - bucket.protocol.start
 
+    async def get_all_typed(self, suite: dto.LevelTestSuite) -> list[SimpleKey]:
+        bucket = self._get_bucket(suite)
+        return bucket.all_typed
+
     def _get_bucket(self, suite: dto.LevelTestSuite) -> LevelTestBucket:
         return self._buckets\
             .setdefault(suite.level.db_id, {})\

@@ -25,7 +25,6 @@ async def get_org(game: dto.Game, player: dto.Player, dao) -> dto.Organizer:
         return dto.PrimaryOrganizer(player=player, game=game)
 
 
-
 async def get_secondary_orgs(
     game: dto.Game, dao: GameOrgsGetter, with_deleted: bool = False,
 ) -> list[dto.SecondaryOrganizer]:

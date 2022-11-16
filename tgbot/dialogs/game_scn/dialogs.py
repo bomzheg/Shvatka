@@ -1,7 +1,7 @@
 from aiogram_dialog import Dialog, Window
 from aiogram_dialog.widgets.input import MessageInput
 from aiogram_dialog.widgets.kbd import ScrollingGroup, Multiselect, Button, Select, Cancel, SwitchTo
-from aiogram_dialog.widgets.text import Const, Format
+from aiogram_dialog.widgets.text import Const, Format, Jinja
 
 from tgbot.states import GameWriteSG, GameEditSG
 from .getters import get_game_name, select_my_levels, select_full_game
@@ -25,7 +25,7 @@ game_writer = Dialog(
         state=GameWriteSG.game_name,
     ),
     Window(
-        Format("Игра <b>{game_name}</b>\n\n"),
+        Jinja("Игра <b>{{game_name}}</b>\n\n"),
         Const(
             "<b>Уровни</b>\n\n"
             "Выбери уровни которые нужно добавить"
@@ -55,7 +55,7 @@ game_writer = Dialog(
 
 game_editor = Dialog(
     Window(
-        Format("Игра <b>{game.name}</b>\n\n"),
+        Jinja("Игра <b>{{game.name}}</b>\n\n"),
         Const("<b>Уровни игры</b>"),
         Cancel(Const("⤴Назад")),
         SwitchTo(Const("📑Добавить уровень"), id="to_add_level", state=GameEditSG.add_level),
@@ -75,7 +75,7 @@ game_editor = Dialog(
         getter=select_full_game,
     ),
     Window(
-        Format("Игра <b>{game.name}</b>\n\n"),
+        Jinja("Игра <b>{{game.name}}</b>\n\n"),
         Const(
             "<b>Уровни</b>\n\n"
             "Выбери уровни которые нужно добавить"
@@ -93,6 +93,6 @@ game_editor = Dialog(
             height=10,
         ),
         state=GameEditSG.add_level,
-        getter=[select_full_game, select_my_levels],
+        getter=(select_full_game, select_my_levels),
     ),
 )

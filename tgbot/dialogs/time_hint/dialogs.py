@@ -1,7 +1,7 @@
 from aiogram_dialog import Dialog, Window
 from aiogram_dialog.widgets.input import MessageInput
 from aiogram_dialog.widgets.kbd import Select, Button, Group, Back, Cancel
-from aiogram_dialog.widgets.text import Const, Format, Case
+from aiogram_dialog.widgets.text import Const, Format, Case, Jinja
 
 from tgbot.states import TimeHintSG
 from .getters import get_available_times, get_hints
@@ -30,12 +30,12 @@ time_hint = Dialog(
         preview_data={"times": TIMES_PRESET}
     ),
     Window(
-        Format("Подсказка выходящая в {time} мин."),
+        Jinja("Подсказка выходящая в {{time}} мин."),
         Case(
             {
                 False: Const("Присылай сообщения с подсказками (текст, фото, видео итд)"),
-                True: Format(
-                    "{rendered}\n"
+                True: Jinja(
+                    "{{rendered}}\n"
                     "Можно прислать ещё сообщения или перейти к следующей подсказке"
                 ),
             },

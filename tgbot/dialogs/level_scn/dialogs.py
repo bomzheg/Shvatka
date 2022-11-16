@@ -1,7 +1,7 @@
 from aiogram_dialog import Dialog, Window
 from aiogram_dialog.widgets.input import MessageInput
 from aiogram_dialog.widgets.kbd import Button
-from aiogram_dialog.widgets.text import Const, Format
+from aiogram_dialog.widgets.text import Const, Jinja
 
 from tgbot.states import LevelSG
 from .getters import get_time_hints, get_level_id
@@ -26,7 +26,7 @@ level = Dialog(
         state=LevelSG.level_id,
     ),
     Window(
-        Format("Уровень <b>{level_id}</b>\n\n"),
+        Jinja("Уровень <b>{{level_id}}</b>\n\n"),
         Const(
             "<b>Ключи уровня</b>\n\n"
             "Отлично, перейдём к ключам. Ключи принимаются в следующих форматах: "
@@ -38,8 +38,8 @@ level = Dialog(
         getter=get_level_id,
     ),
     Window(
-        Format("Подсказки уровня {level_id}:\n"),
-        Format("{rendered}"),
+        Jinja("Подсказки уровня {{level_id}}:\n"),
+        Jinja("{{rendered}}"),
         Button(Const("Добавить подсказку"), id="add_time_hint", on_click=start_add_time_hint),
         Button(
             Const("Готово, сохранить"),

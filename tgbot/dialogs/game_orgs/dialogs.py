@@ -1,7 +1,7 @@
 from aiogram import F
 from aiogram_dialog import Dialog, Window
 from aiogram_dialog.widgets.kbd import ScrollingGroup, Select, Cancel, Button, Back
-from aiogram_dialog.widgets.text import Format, Const, Multi
+from aiogram_dialog.widgets.text import Format, Const, Multi, Jinja
 
 from tgbot.states import GameOrgs
 from .getters import get_orgs, get_org
@@ -10,7 +10,7 @@ from ..widgets.switch_inline import SwitchInlineQuery
 
 game_orgs = Dialog(
     Window(
-        Format("Список организаторов игры {game.name}"),
+        Jinja("Список организаторов игры {{game.name}}"),
         Cancel(Const("⤴Назад")),
         SwitchInlineQuery(
             Const("👋Добавить организатора"),
@@ -20,7 +20,7 @@ game_orgs = Dialog(
             Select(
                 Multi(
                     Const("🗑", when=F["item"].deleted),
-                    Format("{item.player.user.name_mention}"),
+                    Jinja("{{item.player.user.name_mention}}"),
                     sep="",
                 ),
                 id="game_orgs",
@@ -38,7 +38,7 @@ game_orgs = Dialog(
     Window(
         Multi(
             Const("🗑", when=F["org"].deleted),
-            Format("Организатор <b>{org.player.user.name_mention}</b> на игру <b>{org.game.name}</b>"),
+            Jinja("Организатор <b>{{org.player.user.name_mention}}</b> на игру <b>{{org.game.name}}</b>"),
             sep="",
         ),
         Back(text=Const("К списку организаторов")),

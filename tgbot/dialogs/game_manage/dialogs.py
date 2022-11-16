@@ -33,12 +33,12 @@ games = Dialog(
     ),
     Window(
         Multi(
-            Format(
-                "Выбрана игра: <b>{game.name}</b> с ID {game.id}\n"
-                "Текущий статус: <b>{game.status}</b>\n"
+            Jinja(
+                "Выбрана игра: <b>{{game.name}}</b> с ID {{game.id}}\n"
+                "Текущий статус: <b>{{game.status}}</b>\n"
                 "Дата и время начала: "
             ),
-            Format("{game.start_at}", when=F["game"].start_at),
+            Jinja("{{ game.start_at|user_timezone }}", when=F["game"].start_at),
             Format("не запланирована", when=~F["game"].start_at),
             sep="",
         ),
@@ -101,7 +101,7 @@ games = Dialog(
 
 schedule_game_dialog = Dialog(
     Window(
-        Format("Выбор даты начала игры <b>{game.name}</b>"),
+        Jinja("Выбор даты начала игры <b>{{game.name}}</b>"),
         Calendar(id='select_game_play_date', on_click=select_date),
         state=GameSchedule.date,
         preview_data={"game": PREVIEW_GAME},
@@ -111,8 +111,8 @@ schedule_game_dialog = Dialog(
         Case(
             {
                 False: Const("Введите время в формате ЧЧ:ММ"),
-                True: Format(
-                    "Будет сохранено: {scheduled_time}. "
+                True: Jinja(
+                    "Будет сохранено: {{scheduled_time|user_timezone}}. "
                     "Нажмите \"Далее\", если уверены, "
                     "или отправьте другое время в формате ЧЧ:ММ вместо этого"
                 ),
@@ -133,7 +133,8 @@ schedule_game_dialog = Dialog(
     Window(
         Jinja(
             "Для игры <b>{{game.name}}</b> c id {{game.id}} "
-            "будет установлено время начала игры {{scheduled_datetime}} "
+            "будет установлено время начала игры "
+            "{{scheduled_datetime|user_timezone}} "
             "Если сохранить игра самопроизвольно начнётся в это время.\n\n"
             "Сохранить?"
         ),

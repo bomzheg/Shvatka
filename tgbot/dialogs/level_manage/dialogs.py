@@ -2,7 +2,7 @@ from aiogram.types import ContentType
 from aiogram_dialog import Dialog, Window
 from aiogram_dialog.widgets.input import MessageInput
 from aiogram_dialog.widgets.kbd import Button, Cancel
-from aiogram_dialog.widgets.text import Const, Format
+from aiogram_dialog.widgets.text import Const, Jinja
 
 from tgbot.filters import is_key
 from tgbot.states import LevelManageSG, LevelTest
@@ -11,7 +11,7 @@ from .handlers import edit_level, show_level, level_testing, cancel_level_test, 
 
 level_manage = Dialog(
     Window(
-        Format("Уровень <b>{level.name_id}</b>"),
+        Jinja("Уровень <b>{{level.name_id}}</b>"),
         Cancel(Const("⤴Назад")),
         Button(
             Const("✏Редактирование"),
@@ -37,7 +37,7 @@ level_manage = Dialog(
 
 level_test_dialog = Dialog(
     Window(
-        Format("Идёт тестирование уровня <b>{level.name_id}</b>"),
+        Jinja("Идёт тестирование уровня <b>{{level.name_id}}</b>"),
         Button(
             Const("⤴Назад"),
             id="level_test_cancel",

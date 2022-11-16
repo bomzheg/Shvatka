@@ -36,6 +36,11 @@ class GameCreator(Committer, GameNameChecker, metaclass=ABCMeta):
         raise NotImplementedError
 
 
+class GameRenamer(Committer, metaclass=ABCMeta):
+    async def rename_game(self, game: dto.Game, new_name: str):
+        raise NotImplementedError
+
+
 class GameAuthorsFinder(Committer, metaclass=ABCMeta):
     async def get_all_by_author(self, author: dto.Player) -> list[dto.Game]:
         raise NotImplementedError

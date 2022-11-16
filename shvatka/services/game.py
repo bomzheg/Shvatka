@@ -5,7 +5,7 @@ from dataclass_factory import Factory
 from shvatka.clients.file_storage import FileStorage
 from shvatka.dal.game import (
     GameUpserter, GameCreator, GameAuthorsFinder, GameByIdGetter,
-    ActiveGameFinder, WaiverStarter, GameStartPlanner, GameNameChecker, GamePackager,
+    ActiveGameFinder, WaiverStarter, GameStartPlanner, GameNameChecker, GamePackager, GameRenamer,
 )
 from shvatka.dal.level import LevelLinker
 from shvatka.models import dto
@@ -97,6 +97,11 @@ async def get_game_package(
 
 async def get_active(dao: ActiveGameFinder) -> dto.Game:
     return await dao.get_active_game()
+
+
+async def rename_game(game: dto.Game, new_name: str, dao: GameRenamer):
+    await dao.rename_game(game, new_name)
+    await dao.commit()
 
 
 async def start_waivers(game: dto.Game, author: dto.Player, dao: WaiverStarter):

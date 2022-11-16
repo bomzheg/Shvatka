@@ -138,6 +138,14 @@ class GameDao(BaseDAO[models.Game]):
             .values(start_at=None)
         )
 
+    async def rename_game(self, game: dto.Game, new_name: str):
+        await self.session.execute(
+            update(models.Game)
+            .where(models.Game.id == game.id)
+            .values(name=new_name)
+        )
+
+
     async def set_started(self, game: dto.Game):
         await self.set_status(game, GameStatus.started)
 

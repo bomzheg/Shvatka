@@ -11,6 +11,7 @@ from shvatka.clients.file_storage import FileStorage
 from shvatka.models import dto
 from shvatka.scheduler import Scheduler
 from shvatka.services import game
+from shvatka.services.game import rename_game, get_game
 from shvatka.utils.datetime_utils import TIME_FORMAT, tz_game
 from tgbot.services.scenario import pack_scn
 from tgbot.states import MyGamesPanel, GameEditSG, GameSchedule, GameOrgs
@@ -56,8 +57,14 @@ async def show_zip_scn(c: CallbackQuery, widget: Button, manager: DialogManager)
     dcf: Factory = manager.middleware_data["dcf"]
     file_storage: FileStorage = manager.middleware_data["file_storage"]
     game_ = await game.get_game_package(game_id, player, dao.game_packager, dcf, file_storage)
-    zip = pack_scn(game_)
-    await c.message.answer_document(BufferedInputFile(file=zip.read(), filename="scenario.zip"))
+    zip_ = pack_scn(game_)
+    await c.message.answer_document(BufferedInputFile(file=zip_.read(), filename="scenario.zip"))
+
+
+async def rename_game_handler(m: Message, dialog: Any, dialog_manager: DialogManager):
+    dao: HolderDao = dialog_manager.middleware_data["dao"]
+    game_ = await get_game(dialog_manager.dialog_data["my_game_id"], dao=dao.game)
+    await rename_game(game_, m.text.strip(), dao.game)
 
 
 async def start_waivers(c: CallbackQuery, widget: Button, manager: DialogManager):

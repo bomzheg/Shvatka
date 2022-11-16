@@ -8,7 +8,7 @@ from tgbot.states import MyGamesPanel, GameSchedule
 from .getters import get_my_games, get_game, not_getting_waivers, is_getting_waivers, get_game_time, \
     get_game_datetime
 from .handlers import select_my_game, start_waivers, select_date, process_time_message, schedule_game, show_scn, \
-    start_schedule_game, show_zip_scn, show_game_orgs, cancel_scheduled_game
+    start_schedule_game, show_zip_scn, show_game_orgs, cancel_scheduled_game, rename_game_handler
 from ..preview_data import PREVIEW_GAME
 
 games = Dialog(
@@ -62,6 +62,11 @@ games = Dialog(
             id="game_zip_scn",
             on_click=show_zip_scn,
         ),
+        SwitchTo(
+            Const("✏Переименовать"),
+            id="game_rename",
+            state=MyGamesPanel.rename,
+        ),
         Button(
             Const("📝Начать сборку вейверов"),
             id="start_waiver",
@@ -83,6 +88,13 @@ games = Dialog(
         state=MyGamesPanel.game_menu,
         preview_data={"game": PREVIEW_GAME},
         getter=get_game,
+    ),
+    Window(
+        Jinja("Чтобы переименовать игру {{game.name}} пришли новое имя"),
+        MessageInput(func=rename_game_handler),
+        SwitchTo(Const("⤴Назад"), id="back", state=MyGamesPanel.game_menu),
+        state=MyGamesPanel.rename,
+        getter=get_game
     ),
 )
 

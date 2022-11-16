@@ -20,7 +20,7 @@ async def process_name(m: Message, dialog_: Any, manager: DialogManager):
         )
     author: dto.Player = manager.middleware_data["player"]
     dao: HolderDao = manager.middleware_data["dao"]
-    await check_new_game_name_available(name=m.text, author=author, dao=dao.game)
+    await check_new_game_name_available(name=m.text.strip(), author=author, dao=dao.game)
     data = manager.dialog_data
     if not isinstance(data, dict):
         data = {}

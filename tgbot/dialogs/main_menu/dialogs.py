@@ -1,18 +1,27 @@
 from aiogram import F
 from aiogram_dialog import Dialog, Window
 from aiogram_dialog.widgets.kbd import Cancel, Start
-from aiogram_dialog.widgets.text import Const, Format
+from aiogram_dialog.widgets.text import Const, Format, Jinja
 
 from tgbot.states import MyGamesPanel, MainMenu, Promotion
-from .getters import get_player, get_promotion_token
+from .getters import get_player, get_promotion_token, get_game
 from ..widgets.switch_inline import SwitchInlineQuery
 
 main_menu = Dialog(
     Window(
-        Format(
-            "Привет, {player.user.name_mention}!\n"
+        Jinja(
+            "Привет, {{player.user.name_mention}}!\n"
             "Ты находишься в главном меню.\n"
-            "твой id {player.id}"
+            "твой id {{player.id}}"
+        ),
+        Jinja(
+            "Сейчас активна игра {{game.name}}.\n"
+            "Статус: {{game.status}}\n",
+            when=F["game"],
+        ),
+        Jinja(
+            "Игра запланирована на {{ game.start_at|user_timezone }}",
+            when=F["game"].start_at,
         ),
         Cancel(Const("❌Закрыть")),
         Start(
@@ -32,7 +41,7 @@ main_menu = Dialog(
         # уровни (не привязанные к играм?)
         # promote
         state=MainMenu.main,
-        getter=get_player,
+        getter=(get_player, get_game),
     ),
 )
 

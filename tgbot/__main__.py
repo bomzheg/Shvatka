@@ -18,6 +18,7 @@ from tgbot.main_factory import (
     create_redis, create_file_storage,
 )
 from tgbot.username_resolver.user_getter import UserGetter
+from tgbot.views.jinja_filters import setup_jinja
 
 logger = logging.getLogger(__name__)
 
@@ -31,6 +32,7 @@ async def main():
     file_storage = create_file_storage(config.file_storage_config)
     pool = create_pool(config.db)
     bot = create_bot(config)
+    setup_jinja(bot=bot)
     level_test_dao = LevelTestingData()
 
     async with (

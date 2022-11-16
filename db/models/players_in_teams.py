@@ -5,6 +5,7 @@ from sqlalchemy.orm import relationship
 
 from db.models import Base
 from shvatka.models import dto
+from shvatka.utils.datetime_utils import tz_utc
 
 
 class PlayerInTeam(Base):
@@ -23,7 +24,7 @@ class PlayerInTeam(Base):
         foreign_keys=team_id,
         back_populates="players",
     )
-    date_joined = Column(DateTime(timezone=True), default=datetime.utcnow(), server_default=func.now())
+    date_joined = Column(DateTime(timezone=True), default=datetime.now(tz=tz_utc), server_default=func.now())
     role = Column(Text)
     emoji = Column("emoji", Text)
     date_left = Column(DateTime(timezone=True))

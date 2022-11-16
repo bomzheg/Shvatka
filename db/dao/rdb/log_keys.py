@@ -6,6 +6,7 @@ from sqlalchemy.orm import joinedload
 
 from db import models
 from shvatka.models import dto
+from shvatka.utils.datetime_utils import tz_utc
 from .base import BaseDAO
 
 
@@ -51,7 +52,7 @@ class KeyTimeDao(BaseDAO[models.KeyTime]):
             player_id=player.id,
             is_correct=is_correct,
             is_duplicate=is_duplicate,
-            enter_time=datetime.utcnow(),
+            enter_time=datetime.now(tz=tz_utc),
         )
         self._save(key_time)
         await self._flush(key_time)

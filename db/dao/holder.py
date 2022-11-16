@@ -4,12 +4,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from shvatka.dal.game import GameUpserter, GameCreator, GamePackager
 from shvatka.dal.game_play import GamePreparer, GamePlayerDao
 from shvatka.dal.level_testing import LevelTestingDao
-from shvatka.dal.level_times import GameStarter
+from shvatka.dal.level_times import GameStarter, GameStatDao
 from shvatka.dal.organizer import OrgAdder
 from shvatka.dal.player import TeamLeaver, PlayerPromoter
 from shvatka.dal.team import TeamCreator
 from shvatka.dal.waiver import WaiverVoteAdder, WaiverVoteGetter, WaiverApprover
 from .complex import WaiverVoteAdderImpl, WaiverVoteGetterImpl
+from .complex.Level_times import GameStatImpl
 from .complex.game import GameUpserterImpl, GameCreatorImpl, GamePackagerImpl
 from .complex.game_play import GamePreparerImpl, GameStarterImpl, GamePlayerDaoImpl
 from .complex.level_testing import LevelTestComplex
@@ -116,3 +117,7 @@ class HolderDao:
     @property
     def level_testing_complex(self) -> LevelTestingDao:
         return LevelTestComplex(level_testing=self.level_test, game=self.game)
+
+    @property
+    def game_stat(self) -> GameStatDao:
+        return GameStatImpl(level_times=self.level_time, level=self.level)

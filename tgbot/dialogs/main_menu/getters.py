@@ -2,19 +2,17 @@ from aiogram_dialog import DialogManager
 
 from db.dao.holder import HolderDao
 from shvatka.models import dto
+from shvatka.services.organizers import get_by_player_or_none
 from shvatka.services.player import save_promotion_invite
 from tgbot import keyboards as kb
 
 
-async def get_player(dialog_manager: DialogManager, player: dto.Player, **_):
+async def get_main(dao: HolderDao, player: dto.Player, game: dto.Game, **_):
+    org = await get_by_player_or_none(player=player, game=game, dao=dao.organizer)
     return {
         "player": player,
-    }
-
-
-async def get_game(dialog_manager: DialogManager, game: dto.Game, **_):
-    return {
         "game": game,
+        "org": org
     }
 
 

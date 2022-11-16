@@ -53,3 +53,9 @@ class Promotion(StatesGroup):
 
 class LevelTest(StatesGroup):
     wait_key = State()
+
+
+class OrgSpy(StatesGroup):
+    main = State()
+    spy = State()
+    keys = State()

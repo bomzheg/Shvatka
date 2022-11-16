@@ -6,6 +6,7 @@ from sqlalchemy.orm import joinedload
 
 from db import models
 from shvatka.models import dto
+from shvatka.utils.datetime_utils import tz_utc
 from .base import BaseDAO
 
 
@@ -18,7 +19,7 @@ class LevelTimeDao(BaseDAO[models.LevelTime]):
             game_id=game.id,
             team_id=team.id,
             level_number=level_number,
-            start_at=datetime.utcnow(),
+            start_at=datetime.now(tz=tz_utc),
         )
         self._save(level_time)
 

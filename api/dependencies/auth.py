@@ -16,6 +16,7 @@ from api.models.auth import UserTgAuth, Token
 from db.dao.holder import HolderDao
 from shvatka.models import dto
 from shvatka.services.user import upsert_user
+from shvatka.utils.datetime_utils import tz_utc
 from shvatka.utils.exceptions import NoUsernameFound
 
 TG_WIDGET_HTML = """
@@ -76,7 +77,7 @@ class AuthProvider:
 
     def create_access_token(self, data: dict, expires_delta: timedelta) -> Token:
         to_encode = data.copy()
-        expire = datetime.utcnow() + expires_delta
+        expire = datetime.now(tz=tz_utc) + expires_delta
         to_encode.update({"exp": expire})
         encoded_jwt = jwt.encode(to_encode, self.secret_key, algorithm=self.algorythm)
         return Token(access_token=encoded_jwt, token_type="bearer")

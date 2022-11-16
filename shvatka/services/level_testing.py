@@ -7,6 +7,7 @@ from shvatka.models import dto
 from shvatka.scheduler import LevelTestScheduler
 from shvatka.services.game_play import calculate_first_hint_time, calculate_next_hint_time
 from shvatka.services.organizers import get_primary_orgs
+from shvatka.utils.datetime_utils import tz_utc
 from shvatka.utils.exceptions import InvalidKey
 from shvatka.utils.input_validation import is_key_valid
 from shvatka.utils.key_checker_lock import KeyCheckerFactory
@@ -22,7 +23,7 @@ async def start_level_test(
     view: LevelView,
     dao: LevelTestingDao,
 ):
-    now = datetime.utcnow()
+    now = datetime.now(tz=tz_utc)
     await view.send_puzzle(suite=suite)
     await scheduler.plain_test_hint(
         suite=suite,

@@ -3,8 +3,8 @@ from aiogram_dialog import Dialog, Window
 from aiogram_dialog.widgets.kbd import Cancel, Start
 from aiogram_dialog.widgets.text import Const, Format, Jinja
 
-from tgbot.states import MyGamesPanel, MainMenu, Promotion
-from .getters import get_player, get_promotion_token, get_game
+from tgbot.states import MyGamesPanel, MainMenu, Promotion, OrgSpy
+from .getters import get_promotion_token, get_main
 from ..widgets.switch_inline import SwitchInlineQuery
 
 main_menu = Dialog(
@@ -31,6 +31,12 @@ main_menu = Dialog(
             when=F["player"].can_be_author,
         ),
         Start(
+            Const("👀Шпион"),
+            id="game_spy",
+            state=OrgSpy.main,
+            when=F["org"],
+        ),
+        Start(
             Const("✍Поделиться полномочиями автора"),
             id="promotion",
             state=Promotion.disclaimer,
@@ -41,7 +47,7 @@ main_menu = Dialog(
         # уровни (не привязанные к играм?)
         # promote
         state=MainMenu.main,
-        getter=(get_player, get_game),
+        getter=get_main,
     ),
 )
 

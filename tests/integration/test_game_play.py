@@ -17,6 +17,7 @@ from shvatka.services.game_stat import get_typed_keys
 from shvatka.services.organizers import get_orgs
 from shvatka.services.player import join_team
 from shvatka.services.waiver import add_vote, approve_waivers
+from shvatka.utils.datetime_utils import tz_utc
 from shvatka.utils.key_checker_lock import KeyCheckerFactory
 from shvatka.views.game import GameView, GameLogWriter, OrgNotifier, LevelUp
 from tests.mocks.aiogram_mocks import mock_coro
@@ -43,7 +44,7 @@ async def test_game_play(
     dummy_sched = mock(Scheduler)
     when(dummy_sched).plain_hint(level=game.levels[0], team=gryffindor, hint_number=1, run_at=ANY).thenReturn(
         mock_coro(None))
-    game.start_at = datetime.utcnow()
+    game.start_at = datetime.now(tz=tz_utc)
     await start_game(game, dao.game_starter, dummy_log, dummy_view, dummy_sched)
     assert 1 == await check_dao.level_time.count()
 
@@ -69,7 +70,7 @@ async def test_game_play(
     assert_time_key(
         dto.KeyTime(
             text="SHWRONG", is_correct=False, is_duplicate=False,
-            at=datetime.utcnow(), level_number=0, player=harry, team=gryffindor,
+            at=datetime.now(tz=tz_utc), level_number=0, player=harry, team=gryffindor,
         ),
         list(keys[gryffindor])[0]
     )
@@ -106,35 +107,35 @@ async def test_game_play(
     assert_time_key(
         dto.KeyTime(
             text="SHWRONG", is_correct=False, is_duplicate=False,
-            at=datetime.utcnow(), level_number=0, player=harry, team=gryffindor,
+            at=datetime.now(tz=tz_utc), level_number=0, player=harry, team=gryffindor,
         ),
         list(keys[gryffindor])[0]
     )
     assert_time_key(
         dto.KeyTime(
             text="SH123", is_correct=True, is_duplicate=False,
-            at=datetime.utcnow(), level_number=0, player=harry, team=gryffindor,
+            at=datetime.now(tz=tz_utc), level_number=0, player=harry, team=gryffindor,
         ),
         list(keys[gryffindor])[1]
     )
     assert_time_key(
         dto.KeyTime(
             text="SH123", is_correct=True, is_duplicate=True,
-            at=datetime.utcnow(), level_number=0, player=harry, team=gryffindor,
+            at=datetime.now(tz=tz_utc), level_number=0, player=harry, team=gryffindor,
         ),
         list(keys[gryffindor])[2]
     )
     assert_time_key(
         dto.KeyTime(
             text="SH321", is_correct=True, is_duplicate=False,
-            at=datetime.utcnow(), level_number=0, player=harry, team=gryffindor,
+            at=datetime.now(tz=tz_utc), level_number=0, player=harry, team=gryffindor,
         ),
         list(keys[gryffindor])[3]
     )
     assert_time_key(
         dto.KeyTime(
             text="SHOOT", is_correct=True, is_duplicate=False,
-            at=datetime.utcnow(), level_number=0, player=harry, team=gryffindor,
+            at=datetime.now(tz=tz_utc), level_number=0, player=harry, team=gryffindor,
         ),
         list(keys[gryffindor])[4]
     )
@@ -158,7 +159,7 @@ async def test_get_current_hints(
         game_id=game.id,
         team_id=gryffindor.id,
         level_number=0,
-        start_at=datetime.utcnow() - timedelta(minutes=1),
+        start_at=datetime.now(tz=tz_utc) - timedelta(minutes=1),
     )
     dao.level_time._save(level_time)
     await dao.commit()

@@ -12,11 +12,11 @@ async def get_typed_keys(game: dto.Game, dao: TypedKeyGetter) -> dict[dto.Team, 
     return grouped
 
 
-
 async def get_game_stat(game: dto.Game, dao: GameStatDao):
     """return sorted by level number grouped by teams stat"""
     level_times = await dao.get_game_level_times(game)
+    levels_count = await dao.get_max_level_number(game)
     result = {}
     for lt in level_times:
-        result.setdefault(lt.team, []).append(lt)
+        result.setdefault(lt.team, []).append(lt.to_on_game(levels_count))
     return GameStat(level_times=result)

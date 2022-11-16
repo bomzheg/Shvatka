@@ -10,6 +10,7 @@ from db.dao.holder import HolderDao
 from shvatka.models.enums.chat_type import ChatType
 from shvatka.services.player import upsert_player, get_my_role
 from shvatka.services.user import upsert_user
+from shvatka.utils.datetime_utils import tz_utc
 from tests.fixtures.chat_constants import create_tg_chat
 from tests.fixtures.user_constants import (
     create_tg_user, create_dto_hermione, create_tg_from_dto,
@@ -39,7 +40,7 @@ async def test_create_team(dp: Dispatcher, mocked_bot: MockedBot, dao: HolderDao
             from_user=harry,
             chat=chat,
             text="/" + CREATE_TEAM_COMMAND.command,
-            date=datetime.utcnow(),
+            date=datetime.now(tz=tz_utc),
         ),
     )
     await dp.feed_update(bot, update)
@@ -55,7 +56,7 @@ async def test_create_team(dp: Dispatcher, mocked_bot: MockedBot, dao: HolderDao
         from_user=create_tg_from_dto(hermi),
         chat=chat,
         text="hi everyone",
-        date=datetime.utcnow(),
+        date=datetime.now(tz=tz_utc),
     )
     update = Update(
         update_id=2,
@@ -73,7 +74,7 @@ async def test_create_team(dp: Dispatcher, mocked_bot: MockedBot, dao: HolderDao
             chat=chat,
             text=f"/{ADD_IN_TEAM_COMMAND.command} brain",
             reply_to_message=hermi_message,
-            date=datetime.utcnow(),
+            date=datetime.now(tz=tz_utc),
         ),
     )
     await dp.feed_update(bot, update)

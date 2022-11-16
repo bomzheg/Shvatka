@@ -5,6 +5,7 @@ import pytest
 from db.dao.holder import HolderDao
 from shvatka.models import dto
 from shvatka.services.level_testing import start_level_test, check_level_testing_key, send_testing_level_hint
+from shvatka.utils.datetime_utils import tz_utc
 from shvatka.utils.key_checker_lock import KeyCheckerFactory
 from shvatka.views.game import LevelTestCompleted
 from tests.mocks.level_view import LevelViewMock
@@ -16,7 +17,7 @@ from tests.mocks.scheduler_mock import LevelSchedulerMock
 async def test_level_testing(
     game: dto.FullGame, harry: dto.Player, dao: HolderDao, locker: KeyCheckerFactory
 ):
-    start_at = datetime.utcnow()
+    start_at = datetime.now(tz=tz_utc)
     level = game.levels[0]
     scheduler = LevelSchedulerMock()
     level_view = LevelViewMock()
@@ -73,7 +74,7 @@ async def test_level_testing(
     assert suite == actual_suite
     assert "SH321" == actual_key
     result = await dao.level_test.get_testing_result(suite)
-    assert result <= datetime.utcnow() - start_at
+    assert result <= datetime.now(tz=tz_utc) - start_at
     actual_suite = level_view.calls["level_finished"].pop()
     assert suite == actual_suite
     event = org_notifier.calls.pop()
@@ -88,7 +89,7 @@ async def test_level_testing(
 async def test_send_hint_for_tester_level(
     game: dto.FullGame, harry: dto.Player, dao: HolderDao, locker: KeyCheckerFactory
 ):
-    start_at = datetime.utcnow()
+    start_at = datetime.now(tz=tz_utc)
     level = game.levels[1]
     scheduler = LevelSchedulerMock()
     level_view = LevelViewMock()

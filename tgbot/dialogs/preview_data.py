@@ -2,6 +2,7 @@ from datetime import datetime
 
 from shvatka.models import dto
 from shvatka.models.enums import GameStatus
+from shvatka.utils.datetime_utils import tz_utc
 
 PREVIEW_USER = dto.User(
     db_id=5,
@@ -20,7 +21,7 @@ PREVIEW_GAME = dto.Game(
     id=1,
     author=PREVIEW_AUTHOR,
     name="Схватка это чудо",
-    start_at=datetime.utcnow(),
+    start_at=datetime.now(tz=tz_utc),
     status=GameStatus.getting_waivers,
     manage_token="1",
     published_channel_id=-100123435,

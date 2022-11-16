@@ -1,4 +1,5 @@
 from sqlalchemy import update, not_
+from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import joinedload
@@ -34,6 +35,12 @@ class OrganizerDao(BaseDAO[models.Organizer]):
         self._save(org)
         await self._flush(org)
         return org.to_dto(player=player, game=game)
+
+    async def get_by_player_or_none(self, game: dto.Game, player: dto.Player) -> dto.SecondaryOrganizer | None:
+        try:
+            return await self.get_by_player(game, player)
+        except NoResultFound:
+            return None
 
     async def get_by_player(self, game: dto.Game, player: dto.Player) -> dto.SecondaryOrganizer:
         result = await self.session.execute(

@@ -3,6 +3,7 @@ from datetime import timedelta, datetime
 
 from shvatka.dal.level_testing import LevelTestProtocolDao
 from shvatka.models import dto
+from shvatka.utils.datetime_utils import tz_utc
 
 
 @dataclass
@@ -42,7 +43,7 @@ class LevelTestingData(LevelTestProtocolDao):
 
     async def save_key(self, key: str, suite: dto.LevelTestSuite, is_correct: bool):
         bucket = self._get_bucket(suite)
-        bucket.all_typed.append(SimpleKey(text=key, is_correct=is_correct, at=datetime.utcnow()))
+        bucket.all_typed.append(SimpleKey(text=key, is_correct=is_correct, at=datetime.now(tz=tz_utc)))
         if is_correct:
             bucket.correct_typed.add(key)
 
@@ -52,7 +53,7 @@ class LevelTestingData(LevelTestProtocolDao):
 
     async def complete_test(self, suite: dto.LevelTestSuite):
         bucket = self._get_bucket(suite)
-        bucket.protocol.stop = datetime.utcnow()
+        bucket.protocol.stop = datetime.now(tz=tz_utc)
 
     async def get_testing_result(self, suite: dto.LevelTestSuite) -> timedelta:
         bucket = self._get_bucket(suite)

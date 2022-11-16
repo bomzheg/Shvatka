@@ -7,6 +7,7 @@ from sqlalchemy.orm import joinedload
 
 from db import models
 from shvatka.models import dto
+from shvatka.utils.datetime_utils import tz_utc
 from shvatka.utils.exceptions import PlayerAlreadyInTeam, PlayerRestoredInTeam
 from .base import BaseDAO
 
@@ -56,7 +57,7 @@ class PlayerInTeamDao(BaseDAO[models.PlayerInTeam]):
 
     async def leave_team(self, player: dto.Player):
         pit = await self._get_my_player_in_team(player)
-        pit.date_left = datetime.utcnow()
+        pit.date_left = datetime.now(tz=tz_utc)
         await self._flush(pit)
 
     async def check_player_free(self, player: dto.Player):
@@ -68,7 +69,7 @@ class PlayerInTeamDao(BaseDAO[models.PlayerInTeam]):
             )
 
     async def need_restore(self, player: dto.Player, team: dto.Team) -> models.PlayerInTeam:
-        today = datetime.utcnow().date()
+        today = datetime.now(tz=tz_utc).date()
         result = await self.session.execute(
             select(models.PlayerInTeam)
             .where(

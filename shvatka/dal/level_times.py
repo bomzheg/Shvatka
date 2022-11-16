@@ -24,3 +24,6 @@ class LevelTimeChecker(Reader):
 class GameStatDao(Reader):
     async def get_game_level_times(self, game: dto.Game) -> list[dto.LevelTime]:
         raise NotImplementedError
+
+    async def get_max_level_number(self, game: dto.Game) -> int:
+        raise NotImplementedError

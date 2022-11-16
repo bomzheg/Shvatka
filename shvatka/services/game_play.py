@@ -8,6 +8,7 @@ from shvatka.models import dto
 from shvatka.models.dto.scn.time_hint import TimeHint
 from shvatka.scheduler import Scheduler
 from shvatka.services.organizers import get_orgs, get_spying_orgs
+from shvatka.utils.datetime_utils import tz_utc
 from shvatka.utils.exceptions import InvalidKey
 from shvatka.utils.input_validation import is_key_valid
 from shvatka.utils.key_checker_lock import KeyCheckerFactory
@@ -20,7 +21,7 @@ async def prepare_game(
     game: dto.Game, game_preparer: GamePreparer, view_preparer: GameViewPreparer,
 ):
     if not need_prepare_now(game):
-        logger.warning("waked up too early or too late planned %s, now %s", game.start_at, datetime.utcnow())
+        logger.warning("waked up too early or too late planned %s, now %s", game.start_at, datetime.now(tz=tz_utc))
         return
     await view_preparer.prepare_game_view(
         game=game,
@@ -46,7 +47,7 @@ async def start_game(
     * запланировать подсказку первого уровня
     * записать в лог игры, что игра началась
     """
-    now = datetime.utcnow()
+    now = datetime.now(tz=tz_utc)
     if not need_start_now(game):
         logger.warning("waked up too early or too late planned %s, now %s", game.start_at, now)
         return
@@ -221,7 +222,7 @@ async def send_hint(
 async def get_available_hints(game: dto.Game, team: dto.Team, dao: GamePlayerDao) -> list[TimeHint]:
     level_time = await dao.get_current_level_time(team=team, game=game)
     level = await dao.get_current_level(team=team, game=game)
-    from_start_level_minutes = (datetime.utcnow() - level_time.start_at).seconds // 60
+    from_start_level_minutes = (datetime.now(tz=tz_utc) - level_time.start_at).seconds // 60
     return list(filter(lambda th: th.time <= from_start_level_minutes, level.scenario.time_hints))
 
 
@@ -245,7 +246,7 @@ def calculate_first_hint_time(next_level: dto.Level, now: datetime = None) -> da
 
 def calculate_next_hint_time(current: TimeHint, next_: TimeHint, now: datetime = None) -> datetime:
     if now is None:
-        now = datetime.utcnow()
+        now = datetime.now(tz=tz_utc)
     return now + calculate_next_hint_timedelta(current, next_)
 
 
@@ -258,7 +259,7 @@ def calculate_next_hint_timedelta(
 def need_start_now(game: dto.Game) -> bool:
     if game.start_at is None:
         return False
-    utcnow = datetime.utcnow()
+    utcnow = datetime.now(tz=tz_utc)
     if game.start_at < utcnow:
         if (utcnow - game.start_at) < timedelta(minutes=30):
             return True
@@ -272,7 +273,7 @@ def need_start_now(game: dto.Game) -> bool:
 def need_prepare_now(game: dto.Game) -> bool:
     if game.start_at is None:
         return False
-    utcnow = datetime.utcnow()
+    utcnow = datetime.now(tz=tz_utc)
     if game.start_at < utcnow:
         if (utcnow - game.start_at) < timedelta(minutes=35):
             return True

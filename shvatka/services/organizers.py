@@ -21,11 +21,6 @@ async def get_primary_orgs(game: dto.Game) -> list[dto.PrimaryOrganizer]:
     return [dto.PrimaryOrganizer(player=game.author, game=game)]
 
 
-async def get_org(game: dto.Game, player: dto.Player, dao) -> dto.Organizer:
-    if game.is_author_id(player.id):
-        return dto.PrimaryOrganizer(player=player, game=game)
-
-
 async def get_secondary_orgs(
     game: dto.Game, dao: GameOrgsGetter, with_deleted: bool = False,
 ) -> list[dto.SecondaryOrganizer]:
@@ -77,7 +72,13 @@ async def get_org_by_id(id_: int, dao: OrgByIdGetter) -> dto.SecondaryOrganizer:
     return await dao.get_by_id(id_)
 
 
-async def get_by_player(player: dto.Player, game: dto.Game, dao: OrgByPlayerGetter):
+async def get_by_player_or_none(player: dto.Player, game: dto.Game, dao: OrgByPlayerGetter) -> dto.Organizer | None:
+    if game.author.id == player.id:
+        return dto.PrimaryOrganizer(player=player, game=game)
+    return await dao.get_by_player_or_none(player=player, game=game)
+
+
+async def get_by_player(player: dto.Player, game: dto.Game, dao: OrgByPlayerGetter) -> dto.Organizer:
     if game.author.id == player.id:
         return dto.PrimaryOrganizer(player=player, game=game)
     return await dao.get_by_player(player=player, game=game)

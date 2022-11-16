@@ -26,6 +26,9 @@ class OrgByPlayerGetter(Reader):
     async def get_by_player(self, game: dto.Game, player: dto.Player) -> dto.SecondaryOrganizer:
         raise NotImplementedError
 
+    async def get_by_player_or_none(self, game: dto.Game, player: dto.Player) -> dto.SecondaryOrganizer | None:
+        raise NotImplementedError
+
 
 class OrgPermissionFlipper(Committer, OrgByIdGetter, metaclass=ABCMeta):
     async def flip_permission(self, org: dto.SecondaryOrganizer, permission: OrgPermission):

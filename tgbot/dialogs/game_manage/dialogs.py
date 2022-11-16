@@ -2,7 +2,7 @@ from aiogram import F
 from aiogram_dialog import Dialog, Window
 from aiogram_dialog.widgets.input import MessageInput
 from aiogram_dialog.widgets.kbd import ScrollingGroup, Select, SwitchTo, Button, Calendar, Cancel
-from aiogram_dialog.widgets.text import Const, Format, Case, Jinja, Multi
+from aiogram_dialog.widgets.text import Const, Format, Case, Jinja
 
 from tgbot.states import MyGamesPanel, GameSchedule
 from .getters import get_my_games, get_game, not_getting_waivers, is_getting_waivers, get_game_time, \
@@ -32,15 +32,14 @@ games = Dialog(
         getter=get_my_games,
     ),
     Window(
-        Multi(
-            Jinja(
-                "Выбрана игра: <b>{{game.name}}</b> с ID {{game.id}}\n"
-                "Текущий статус: <b>{{game.status}}</b>\n"
-                "Дата и время начала: "
-            ),
-            Jinja("{{ game.start_at|user_timezone }}", when=F["game"].start_at),
-            Format("не запланирована", when=~F["game"].start_at),
-            sep="",
+        Jinja(
+            "Выбрана игра: <b>{{game.name}}</b> с ID {{game.id}}\n"
+            "Текущий статус: <b>{{game.status}}</b>\n"
+            "Дата и время начала: {% if game.start_at %} "
+            "{{ game.start_at|user_timezone }} "
+            "{% else %} "
+            "не запланирована"
+            "{% endif %}"
         ),
         SwitchTo(
             Const("⤴Назад к списку игр"),

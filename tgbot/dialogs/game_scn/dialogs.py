@@ -80,6 +80,7 @@ game_editor = Dialog(
             "<b>Уровни</b>\n\n"
             "Выбери уровни которые нужно добавить"
         ),
+        SwitchTo(Const("⤴Назад"), id="back", state=GameEditSG.current_levels),
         ScrollingGroup(
             Select(
                 Format("{item.name_id}"),

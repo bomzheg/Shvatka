@@ -112,7 +112,7 @@ schedule_game_dialog = Dialog(
             {
                 False: Const("Введите время в формате ЧЧ:ММ"),
                 True: Jinja(
-                    "Будет сохранено: {{scheduled_time|user_timezone}}. "
+                    "Будет сохранено: {{scheduled_time}}. "
                     "Нажмите \"Далее\", если уверены, "
                     "или отправьте другое время в формате ЧЧ:ММ вместо этого"
                 ),

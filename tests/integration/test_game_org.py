@@ -7,6 +7,7 @@ from shvatka.models.enums.org_permission import OrgPermission
 from shvatka.services.organizers import get_orgs, get_spying_orgs, get_secondary_orgs, check_allow_manage_orgs, \
     check_game_token, save_invite_to_orgs, dismiss_to_be_org, agree_to_be_org, flip_permission, flip_deleted
 from shvatka.utils.exceptions import SaltNotExist
+from shvatka.views.game import NewOrg
 from tests.mocks.org_notifier import OrgNotifierMock
 
 
@@ -41,7 +42,7 @@ async def test_agree_invite(
     game: dto.FullGame, author: dto.Player, harry: dto.Player, dao: HolderDao, check_dao: HolderDao
 ):
     token = await save_invite_to_orgs(game, author, dao.secure_invite)
-    org_notifier = OrgNotifierMock()  # TODO check actually invocations
+    org_notifier = OrgNotifierMock()
     await agree_to_be_org(
         token=token, inviter_id=author.id, player=harry, org_notifier=org_notifier, dao=dao.org_adder,
     )
@@ -55,6 +56,15 @@ async def test_agree_invite(
     assert not actual.can_see_log_keys
     assert not actual.can_validate_waivers
     assert not actual.deleted
+
+    event = org_notifier.calls.pop()
+    assert not org_notifier.calls
+    assert isinstance(event, NewOrg)
+    assert game.id == event.game.id
+    assert actual.id == event.org.id
+    assert harry.id == event.org.player.id
+    assert 1 == len(event.orgs_list)
+    assert author.id == event.orgs_list[0].player.id
 
 
 @pytest.mark.parametrize("permission", list(OrgPermission))

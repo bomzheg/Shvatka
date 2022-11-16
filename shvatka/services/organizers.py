@@ -61,14 +61,15 @@ async def agree_to_be_org(
 ):
     data = await dao.get_invite(token)
     if data["type_"] != InviteType.add_org.name:
-        raise SaltError(text="Ошибка нарушения данных. Токен в зашифрованной и открытой части не совпал", alarm=True)
+        raise SaltError(text="Ошибка нарушения данных. Тип в зашифрованной и открытой части не совпал", alarm=True)
     if data["inviter_id"] != inviter_id:
         raise SaltError(text="Ошибка нарушения данных. Токен в зашифрованной и открытой части не совпал", alarm=True)
     game = await get_game(id_=data["game_id"], dao=dao)
     check_allow_manage_orgs(game, inviter_id)
+    notify_orgs = await get_orgs(game, dao)
     org = await dao.add_new_org(game, player)
     await dao.commit()
-    await org_notifier.notify(NewOrg(orgs_list=await get_orgs(game, dao), game=game, org=org))
+    await org_notifier.notify(NewOrg(orgs_list=notify_orgs, game=game, org=org))
     return org
 
 

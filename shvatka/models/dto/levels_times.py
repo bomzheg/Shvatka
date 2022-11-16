@@ -14,7 +14,7 @@ class LevelTime:
     start_at: datetime
 
     def to_on_game(self, levels_count: int):
-        is_finished = self.level_number <= levels_count
+        is_finished = self.level_number > levels_count
         return LevelTimeOnGame(
             id=self.id,
             game=self.game,

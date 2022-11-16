@@ -20,3 +20,11 @@ async def get_game_stat(game: dto.Game, dao: GameStatDao):
     for lt in level_times:
         result.setdefault(lt.team, []).append(lt.to_on_game(levels_count))
     return GameStat(level_times=result)
+
+
+async def get_game_spy(game: dto.Game, dao: GameStatDao):
+    stat = await get_game_stat(game, dao)
+    result = []
+    for team, lts in stat.level_times.items():
+        result.append(lts[-1])
+    return result

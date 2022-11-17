@@ -1,21 +1,17 @@
 from dataclasses import dataclass
 
-from db.dao import LevelTimeDao, LevelDao, OrganizerDao
-from shvatka.dal.level_times import GameStatDao
+from db.dao import KeyTimeDao, OrganizerDao
+from shvatka.dal.key_log import TypedKeyGetter
 from shvatka.models import dto
 
 
 @dataclass
-class GameStatImpl(GameStatDao):
-    level_times: LevelTimeDao
-    level: LevelDao
+class TypedKeyGetterImpl(TypedKeyGetter):
+    key_time: KeyTimeDao
     organizer: OrganizerDao
 
-    async def get_game_level_times(self, game: dto.Game) -> list[dto.LevelTime]:
-        return await self.level_times.get_game_level_times(game)
-
-    async def get_max_level_number(self, game: dto.Game) -> int:
-        return await self.level.get_max_level_number(game)
+    async def get_typed_keys(self, game: dto.Game) -> list[dto.KeyTime]:
+        return await self.key_time.get_typed_keys(game=game)
 
     async def get_by_player(self, game: dto.Game, player: dto.Player) -> dto.SecondaryOrganizer:
         return await self.organizer.get_by_player(game=game, player=player)

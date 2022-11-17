@@ -2,13 +2,16 @@ from copy import deepcopy
 
 import pytest
 from dataclass_factory import Factory
+
 from db.dao.holder import HolderDao
 from shvatka.clients.file_storage import FileStorage
 from shvatka.models import dto
 from shvatka.models.dto.scn.game import RawGameScenario
 from shvatka.models.enums import GameStatus
 from shvatka.services.game import upsert_game, get_authors_games, start_waivers, get_active
+from shvatka.services.level import upsert_level
 from shvatka.services.organizers import get_orgs
+from shvatka.utils.exceptions import CantEditGame
 
 
 @pytest.mark.asyncio
@@ -77,3 +80,10 @@ async def test_game_get_full(
     game_expected = await upsert_game(simple_scn, author, dao.game_upserter, dcf, file_storage)
     game_actual = await dao.game.get_full(game_expected.id)
     assert game_expected == game_actual
+
+
+@pytest.mark.asyncio
+async def test_cant_change_finished(completed_game: dto.FullGame, dao: HolderDao):
+    level = completed_game.levels[0]
+    with pytest.raises(CantEditGame):
+        await upsert_level(completed_game.author, level.scenario, dao.level)

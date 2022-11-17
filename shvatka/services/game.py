@@ -10,8 +10,9 @@ from shvatka.dal.game import (
 from shvatka.dal.level import LevelLinker
 from shvatka.models import dto
 from shvatka.models.dto.scn.game import RawGameScenario, CompleteGameScenario
+from shvatka.models.enums.game_status import EDITABLE_STATUSES
 from shvatka.scheduler import Scheduler
-from shvatka.services.level import check_is_author as check_is_level_author
+from shvatka.services.level import check_is_author as check_is_level_author, check_can_link_to_game
 from shvatka.services.player import check_allow_be_author
 from shvatka.services.scenario.files import upsert_files, get_file_metas, get_file_contents
 from shvatka.services.scenario.game_ops import parse_uploaded_game, check_all_files_saved
@@ -27,6 +28,8 @@ async def upsert_game(
     if not await dao.is_name_available(name=game_scn.name):
         if not await dao.is_author_game_by_name(name=game_scn.name, author=author):
             raise CantEditGame(player=author, text=f"cant edit game with name {game_scn.name}")
+        game = await dao.get_game_by_name(name=game_scn.name, author=author)
+        check_game_editable(game)
     guids = await upsert_files(author, raw_scn.files, game_scn.files, dao, file_storage)
     check_all_files_saved(game=game_scn, guids=guids)
     game = await dao.upsert_game(author, game_scn)
@@ -49,6 +52,7 @@ async def create_game(
     await check_new_game_name_available(name=name, author=author, dao=dao)
     game = await dao.create_game(author, name)
     for level in levels:
+        check_can_link_to_game(game, level)
         await dao.link_to_game(level, game)
     await dao.commit()
     return game
@@ -64,7 +68,9 @@ async def get_authors_games(
 async def add_level(game: dto.Game, level: dto.Level, author: dto.Player, dao: LevelLinker):
     check_allow_be_author(author)
     check_is_author(game=game, player=author)
+    check_game_editable(game=game)
     check_is_level_author(level=level, player=author)
+    check_can_link_to_game(game=game, level=level, author=author)
     await dao.link_to_game(level=level, game=game)
     await dao.commit()
 
@@ -99,7 +105,9 @@ async def get_active(dao: ActiveGameFinder) -> dto.Game:
     return await dao.get_active_game()
 
 
-async def rename_game(game: dto.Game, new_name: str, dao: GameRenamer):
+async def rename_game(author: dto.Player, game: dto.Game, new_name: str, dao: GameRenamer):
+    check_is_author(game, author)
+    check_game_editable(game)
     await dao.rename_game(game, new_name)
     await dao.commit()
 
@@ -107,6 +115,7 @@ async def rename_game(game: dto.Game, new_name: str, dao: GameRenamer):
 async def start_waivers(game: dto.Game, author: dto.Player, dao: WaiverStarter):
     check_allow_be_author(author)
     check_is_author(game, author)
+    check_game_editable(game)
     await check_no_game_active(dao)
     await dao.start_waivers(game)
     await dao.commit()
@@ -121,6 +130,7 @@ async def plain_start(
 ):
     check_allow_be_author(author)
     check_is_author(game, author)
+    check_game_editable(game)
     await check_no_other_game_active(dao, game)
     await dao.set_start_at(game, start_at)
     game.start_at = start_at
@@ -134,6 +144,7 @@ async def plain_start(
 
 async def cancel_planed_start(game: dto.Game, author: dto.Player, scheduler: Scheduler, dao: GameStartPlanner):
     check_is_author(game, author)
+    check_game_editable(game)
     await dao.cancel_start(game)
     game.start_at = None
     await scheduler.cancel_scheduled_game(game)
@@ -167,3 +178,8 @@ def check_is_author(game: dto.Game, player: dto.Player):
         raise NotAuthorizedForEdit(
             permission_name="game_edit", player=player, game=game,
         )
+
+
+def check_game_editable(game: dto.Game):
+    if game.status not in EDITABLE_STATUSES:
+        raise CantEditGame(game=game, player=game.author, notify_user="Невозможно изменить игру после начала")

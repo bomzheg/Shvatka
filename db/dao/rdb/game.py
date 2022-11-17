@@ -145,12 +145,15 @@ class GameDao(BaseDAO[models.Game]):
             .values(name=new_name)
         )
 
-
     async def set_started(self, game: dto.Game):
         await self.set_status(game, GameStatus.started)
 
     async def set_finished(self, game: dto.Game):
         await self.set_status(game, GameStatus.finished)
+
+    async def get_game_by_name(self, name: str, author: dto.Player) -> dto.Game:
+        game = await self._get_game_by_name(name)
+        return game.to_dto(author)
 
     async def is_name_available(self, name: str) -> bool:
         return not bool(await self._get_game_by_name(name))

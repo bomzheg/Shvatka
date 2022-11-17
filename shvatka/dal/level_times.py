@@ -2,6 +2,7 @@ from abc import ABCMeta
 from typing import Iterable
 
 from shvatka.dal.base import Committer, Reader
+from shvatka.dal.organizer import OrgByPlayerGetter
 from shvatka.models import dto
 
 
@@ -21,7 +22,7 @@ class LevelTimeChecker(Reader):
         raise NotImplementedError
 
 
-class GameStatDao(Reader):
+class GameStatDao(OrgByPlayerGetter, metaclass=ABCMeta):
     async def get_game_level_times(self, game: dto.Game) -> list[dto.LevelTime]:
         raise NotImplementedError
 

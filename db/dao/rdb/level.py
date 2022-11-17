@@ -7,6 +7,8 @@ from sqlalchemy.orm import joinedload
 from db import models
 from shvatka.models import dto
 from shvatka.models.dto.scn.level import LevelScenario
+from shvatka.services.game import check_game_editable
+from shvatka.services.level import check_can_link_to_game
 from .base import BaseDAO
 
 
@@ -30,8 +32,12 @@ class LevelDao(BaseDAO[models.Level]):
                 name_id=scn.id,
             )
             self._save(level)
+        else:
+            if game_ := level.game:  # type: models.Game
+                check_game_editable(game_.to_dto(author))
         level.scenario = scn
         if game is not None and no_in_game is not None:
+            check_can_link_to_game(game, level.to_dto(author), author)
             level.game_id = game.id
             level.number_in_game = no_in_game
         await self._flush(level)
@@ -39,7 +45,9 @@ class LevelDao(BaseDAO[models.Level]):
 
     async def _get_by_author_and_scn(self, author: dto.Player, scn: LevelScenario) -> models.Level:
         result = await self.session.execute(
-            select(models.Level).where(
+            select(models.Level)
+            .options(joinedload(models.Level.game))
+            .where(
                 models.Level.name_id == scn.id,
                 models.Level.author_id == author.id,
             )

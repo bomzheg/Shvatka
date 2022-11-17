@@ -27,6 +27,9 @@ class GameUpserter(LevelUpserter, GameNameChecker, metaclass=ABCMeta):
     async def is_author_game_by_name(self, name: str, author: dto.Player) -> bool:
         raise NotImplementedError
 
+    async def get_game_by_name(self, name: str, author: dto.Player) -> dto.Game:
+        raise NotImplementedError
+
 
 class GameCreator(Committer, GameNameChecker, metaclass=ABCMeta):
     async def create_game(self, author: dto.Player, name: str) -> dto.Game:

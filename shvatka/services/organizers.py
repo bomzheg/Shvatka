@@ -96,3 +96,13 @@ async def flip_deleted(manager: dto.Player, org: dto.SecondaryOrganizer, dao: Or
     check_allow_manage_orgs(org.game, manager.id)
     await dao.flip_deleted(org)
     await dao.commit()
+
+
+def check_can_see_log_keys(org: dto.Organizer):
+    if not org.can_see_log_keys:
+        raise PermissionsError(player=org.player, game=org.game, permission_name="can_see_log_keys")
+
+
+def check_can_spy(org: dto.Organizer):
+    if not org.can_spy:
+        raise PermissionsError(player=org.player, game=org.game, permission_name="can_spy")

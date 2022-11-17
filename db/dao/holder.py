@@ -3,6 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from shvatka.dal.game import GameUpserter, GameCreator, GamePackager
 from shvatka.dal.game_play import GamePreparer, GamePlayerDao
+from shvatka.dal.key_log import TypedKeyGetter
 from shvatka.dal.level_testing import LevelTestingDao
 from shvatka.dal.level_times import GameStarter, GameStatDao
 from shvatka.dal.organizer import OrgAdder
@@ -13,6 +14,7 @@ from .complex import WaiverVoteAdderImpl, WaiverVoteGetterImpl
 from .complex.Level_times import GameStatImpl
 from .complex.game import GameUpserterImpl, GameCreatorImpl, GamePackagerImpl
 from .complex.game_play import GamePreparerImpl, GameStarterImpl, GamePlayerDaoImpl
+from .complex.key_log import TypedKeyGetterImpl
 from .complex.level_testing import LevelTestComplex
 from .complex.orgs import OrgAdderImpl
 from .complex.player import PlayerPromoterImpl
@@ -120,4 +122,8 @@ class HolderDao:
 
     @property
     def game_stat(self) -> GameStatDao:
-        return GameStatImpl(level_times=self.level_time, level=self.level)
+        return GameStatImpl(level_times=self.level_time, level=self.level, organizer=self.organizer)
+
+    @property
+    def typed_keys(self) -> TypedKeyGetter:
+        return TypedKeyGetterImpl(key_time=self.key_time, organizer=self.organizer)

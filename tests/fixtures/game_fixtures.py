@@ -82,6 +82,7 @@ async def completed_game(
         player=draco, is_correct=True, is_duplicate=False,
     )
     await dao.game_player.level_up(slytherin, game.levels[1], game)
+    await dao.game.set_finished(game)
     await dao.commit()
 
     return game

@@ -5,7 +5,7 @@ from shvatka.models import dto
 from shvatka.models.dto.scn.level import LevelScenario
 from shvatka.services.player import check_allow_be_author
 from shvatka.services.scenario.level_ops import load_level
-from shvatka.utils.exceptions import NotAuthorizedForEdit
+from shvatka.utils.exceptions import NotAuthorizedForEdit, SHDataBreach
 
 
 async def upsert_raw_level(
@@ -37,4 +37,12 @@ def check_is_author(level: dto.Level, player: dto.Player):
     if level.author.id != player.id:
         raise NotAuthorizedForEdit(
             permission_name="game_edit", player=player, level=level,
+        )
+
+
+def check_can_link_to_game(game: dto.Game, level: dto.Level, author: dto.Player = None):
+    if level.game_id is not None and level.game_id != game.id:
+        raise SHDataBreach(
+            player=author,
+            notify_user=f"уровень {level.name_id} привязан к другой игре",
         )

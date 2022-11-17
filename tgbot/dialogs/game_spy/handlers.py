@@ -15,7 +15,8 @@ async def keys_handler(c: CallbackQuery, widget: Button, manager: DialogManager)
     telegraph: Telegraph = manager.middleware_data["telegraph"]
     game: dto.Game = manager.middleware_data["game"]
     dao: HolderDao = manager.middleware_data["dao"]
-    keys = await get_typed_keys(game=game, dao=dao.key_time)
+    player: dto.Player = manager.middleware_data["player"]
+    keys = await get_typed_keys(game=game, player=player, dao=dao.key_time)
     text = render_log_keys(keys)
     page = await telegraph.create_page(
         title=f"Лог ключей игры {hd.quote(game.name)}",

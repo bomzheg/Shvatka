@@ -42,6 +42,9 @@ class GameUpserterImpl(GameUpserter):
     async def is_author_game_by_name(self, name: str, author: dto.Player) -> bool:
         return await self.game.is_author_game_by_name(name, author)
 
+    async def get_game_by_name(self, name: str, author: dto.Player) -> dto.Game:
+        return await self.game.get_game_by_name(name=name, author=author)
+
     async def commit(self):
         await self.level.commit()
 

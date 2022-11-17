@@ -16,7 +16,7 @@ async def get_org(dao: HolderDao, player: dto.Player, game: dto.Game, dialog_man
 
 
 async def get_spy(dao: HolderDao, player: dto.Player, game: dto.Game, dialog_manager: DialogManager, **_):
-    stat = await get_game_spy(game, dao.game_stat)
+    stat = await get_game_spy(game, player, dao.game_stat)
     return {
         "stat": stat,
     }

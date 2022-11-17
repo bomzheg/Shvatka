@@ -4,6 +4,7 @@ from aiogram_dialog.widgets.input import MessageInput
 from aiogram_dialog.widgets.kbd import ScrollingGroup, Select, SwitchTo, Button, Calendar, Cancel
 from aiogram_dialog.widgets.text import Const, Format, Case, Jinja
 
+from shvatka.models.enums.game_status import EDITABLE_STATUSES
 from tgbot.states import MyGamesPanel, GameSchedule
 from .getters import get_my_games, get_game, not_getting_waivers, is_getting_waivers, get_game_time, \
     get_game_datetime
@@ -50,11 +51,13 @@ games = Dialog(
             Const("📜Сценарий"),
             id="game_scn",
             on_click=show_scn,
+            when=F["game"].status.in_(EDITABLE_STATUSES),
         ),
         Button(
             Const("👥Организаторы"),
             id="game_orgs",
             on_click=show_game_orgs,
+            when=F["game"].status.in_(EDITABLE_STATUSES),
         ),
         Button(
             Const("📦zip-сценарий"),
@@ -65,6 +68,7 @@ games = Dialog(
             Const("✏Переименовать"),
             id="game_rename",
             state=MyGamesPanel.rename,
+            when=F["game"].status.in_(EDITABLE_STATUSES),
         ),
         Button(
             Const("📝Начать сборку вейверов"),
@@ -82,7 +86,7 @@ games = Dialog(
             Const("📥Отменить игру"),
             id="cancel_scheduled_game",
             on_click=cancel_scheduled_game,
-            when=F["game"].start_at,
+            when=F["game"].start_at & F["game"].status.in_(EDITABLE_STATUSES),
         ),
         state=MyGamesPanel.game_menu,
         preview_data={"game": PREVIEW_GAME},

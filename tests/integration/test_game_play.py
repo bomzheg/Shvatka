@@ -63,7 +63,7 @@ async def test_game_play(
     )
     when(dummy_view).wrong_key(key=ANY).thenReturn(mock_coro(None))
     await check_key(key="SHWRONG", **key_kwargs)
-    keys = await get_typed_keys(game, check_dao.key_time)
+    keys = await get_typed_keys(game=game, player=author, dao=check_dao.typed_keys)
 
     assert [gryffindor] == list(keys.keys())
     assert 1 == len(keys[gryffindor])
@@ -100,7 +100,7 @@ async def test_game_play(
     key_kwargs["view"] = dummy_view
     await check_key(key="SHOOT", **key_kwargs)
 
-    keys = await get_typed_keys(game, check_dao.key_time)
+    keys = await get_typed_keys(game=game, player=author, dao=check_dao.typed_keys)
 
     assert [gryffindor] == list(keys.keys())
     assert 5 == len(keys[gryffindor])

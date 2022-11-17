@@ -60,28 +60,6 @@ reference = "fix/deque-usage"
 resolved_reference = "22e03b9f327d1cae3a9a1923a73d481bbc6f4612"
 
 [[package]]
-name = "aiograph"
-version = "0.2"
-description = "asynchronous Python Telegra.ph API wrapper"
-category = "main"
-optional = false
-python-versions = "*"
-develop = false
-
-[package.dependencies]
-attrs = ">=19.3.0"
-certifi = ">=2018.11.29"
-
-[package.extras]
-dev = ["aiohttp-socks (>=0.2.2)", "attrs (>=19.3.0)", "certifi (>=2018.11.29)", "codecov (>=2.0.15)", "pytest (>=3.5.1)", "pytest-asyncio (>=0.8.0)", "pytest-cov (>=2.5.1)", "wheel (>=0.31.0)"]
-
-[package.source]
-type = "git"
-url = "https://github.com/aiogram/aiograph.git"
-reference = "master"
-resolved_reference = "a00aacebb04c1e743055ba524b978a06027e31ed"
-
-[[package]]
 name = "aiohttp"
 version = "3.8.3"
 description = "Async http client/server framework (asyncio)"
@@ -230,7 +208,7 @@ python-versions = "~=3.5"
 name = "certifi"
 version = "2022.9.24"
 description = "Python package for providing Mozilla's CA Bundle."
-category = "main"
+category = "dev"
 optional = false
 python-versions = ">=3.6"
 
@@ -1208,7 +1186,7 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "1.1"
 python-versions = "~3.10"  # python3.11 failed with install psycopg2 (for testcontainers)
-content-hash = "0871bf86e5afa3e0e44af9fd5c96ea72b4b1f602df290f8c06cc121ca656e77e"
+content-hash = "321278b3b00ed11f70d83b61ba13b11d0bcdc178a3b9f4ee5ef469f62389ec1c"
 
 [metadata.files]
 aiofiles = [
@@ -1223,7 +1201,6 @@ aiogram-dialog = [
     {file = "aiogram_dialog-2.0.0b12-py3-none-any.whl", hash = "sha256:118cc026270741867bd7981302cc9da3e0966d8376939a366c30d0493309527d"},
 ]
 aiogram-tests = []
-aiograph = []
 aiohttp = [
     {file = "aiohttp-3.8.3-cp310-cp310-macosx_10_9_universal2.whl", hash = "sha256:ba71c9b4dcbb16212f334126cc3d8beb6af377f6703d9dc2d9fb3874fd667ee9"},
     {file = "aiohttp-3.8.3-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:d24b8bb40d5c61ef2d9b6a8f4528c2f17f1c5d2d31fed62ec860f6006142e83e"},

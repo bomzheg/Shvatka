@@ -66,20 +66,14 @@ description = "asynchronous Python Telegra.ph API wrapper"
 category = "main"
 optional = false
 python-versions = "*"
-develop = false
 
 [package.dependencies]
-attrs = ">=19.3.0"
+aiohttp = ">=3.4.4"
+attrs = ">=19.1.0"
 certifi = ">=2018.11.29"
 
 [package.extras]
-dev = ["aiohttp-socks (>=0.2.2)", "attrs (>=19.3.0)", "certifi (>=2018.11.29)", "codecov (>=2.0.15)", "pytest (>=3.5.1)", "pytest-asyncio (>=0.8.0)", "pytest-cov (>=2.5.1)", "wheel (>=0.31.0)"]
-
-[package.source]
-type = "git"
-url = "https://github.com/aiogram/aiograph.git"
-reference = "master"
-resolved_reference = "a00aacebb04c1e743055ba524b978a06027e31ed"
+dev = ["aiohttp (>=3.4.4)", "aiohttp-socks (>=0.2.2)", "attrs (>=19.1.0)", "certifi (>=2018.11.29)", "codecov (>=2.0.15)", "pytest (>=3.5.1)", "pytest-asyncio (>=0.8.0)", "pytest-cov (>=2.5.1)", "wheel (>=0.31.0)"]
 
 [[package]]
 name = "aiohttp"
@@ -194,17 +188,17 @@ test = ["flake8 (>=5.0.4,<5.1.0)", "uvloop (>=0.15.3)"]
 
 [[package]]
 name = "attrs"
-version = "22.1.0"
+version = "19.2.0"
 description = "Classes Without Boilerplate"
 category = "main"
 optional = false
-python-versions = ">=3.5"
+python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
 
 [package.extras]
-dev = ["cloudpickle", "coverage[toml] (>=5.0.2)", "furo", "hypothesis", "mypy (>=0.900,!=0.940)", "pre-commit", "pympler", "pytest (>=4.3.0)", "pytest-mypy-plugins", "sphinx", "sphinx-notfound-page", "zope.interface"]
-docs = ["furo", "sphinx", "sphinx-notfound-page", "zope.interface"]
-tests = ["cloudpickle", "coverage[toml] (>=5.0.2)", "hypothesis", "mypy (>=0.900,!=0.940)", "pympler", "pytest (>=4.3.0)", "pytest-mypy-plugins", "zope.interface"]
-tests-no-zope = ["cloudpickle", "coverage[toml] (>=5.0.2)", "hypothesis", "mypy (>=0.900,!=0.940)", "pympler", "pytest (>=4.3.0)", "pytest-mypy-plugins"]
+azure-pipelines = ["coverage", "hypothesis", "pympler", "pytest (>=4.3.0)", "pytest-azurepipelines", "six", "zope.interface"]
+dev = ["coverage", "hypothesis", "pre-commit", "pympler", "pytest (>=4.3.0)", "six", "sphinx", "zope.interface"]
+docs = ["sphinx", "zope.interface"]
+tests = ["coverage", "hypothesis", "pympler", "pytest (>=4.3.0)", "six", "zope.interface"]
 
 [[package]]
 name = "bcrypt"
@@ -1189,7 +1183,7 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "1.1"
 python-versions = "~3.10"  # python3.11 failed with install psycopg2 (for testcontainers)
-content-hash = "d31bf0a43d3086c962bfad6c1d9392a248a59feb88c32a2bd9910ebe2a4a3d5c"
+content-hash = "48586b3fa17a31c636005d2994825f707225a5aecac227b5ed1f7c7a15497688"
 
 [metadata.files]
 aiofiles = [
@@ -1204,7 +1198,10 @@ aiogram-dialog = [
     {file = "aiogram_dialog-2.0.0b12-py3-none-any.whl", hash = "sha256:118cc026270741867bd7981302cc9da3e0966d8376939a366c30d0493309527d"},
 ]
 aiogram-tests = []
-aiograph = []
+aiograph = [
+    {file = "aiograph-0.2-py3-none-any.whl", hash = "sha256:d0db6bf351ae1eb874f7f041d031e3882df781159200d8334dc6b732e6f7bcb2"},
+    {file = "aiograph-0.2.tar.gz", hash = "sha256:e44afe92bd0c73f056f36dae47424a0fcc277d28f9783049408b1e8e5b9b5a1e"},
+]
 aiohttp = [
     {file = "aiohttp-3.8.3-cp310-cp310-macosx_10_9_universal2.whl", hash = "sha256:ba71c9b4dcbb16212f334126cc3d8beb6af377f6703d9dc2d9fb3874fd667ee9"},
     {file = "aiohttp-3.8.3-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:d24b8bb40d5c61ef2d9b6a8f4528c2f17f1c5d2d31fed62ec860f6006142e83e"},
@@ -1353,8 +1350,8 @@ asyncpg = [
     {file = "asyncpg-0.27.0.tar.gz", hash = "sha256:720986d9a4705dd8a40fdf172036f5ae787225036a7eb46e704c45aa8f62c054"},
 ]
 attrs = [
-    {file = "attrs-22.1.0-py2.py3-none-any.whl", hash = "sha256:86efa402f67bf2df34f51a335487cf46b1ec130d02b8d39fd248abfd30da551c"},
-    {file = "attrs-22.1.0.tar.gz", hash = "sha256:29adc2665447e5191d0e7c568fde78b21f9672d344281d0c6e1ab085429b22b6"},
+    {file = "attrs-19.2.0-py2.py3-none-any.whl", hash = "sha256:ec20e7a4825331c1b5ebf261d111e16fa9612c1f7a5e1f884f12bd53a664dfd2"},
+    {file = "attrs-19.2.0.tar.gz", hash = "sha256:f913492e1663d3c36f502e5e9ba6cd13cf19d7fab50aa13239e420fef95e1396"},
 ]
 bcrypt = [
     {file = "bcrypt-4.0.1-cp36-abi3-macosx_10_10_universal2.whl", hash = "sha256:b1023030aec778185a6c16cf70f359cbb6e0c289fd564a7cfa29e727a1c38f8f"},

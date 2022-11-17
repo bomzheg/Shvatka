@@ -28,6 +28,7 @@ jobs:
       - name: Install dependencies
         run: |
           $POETRY_HOME/bin/poetry install --with test
+          $POETRY_HOME/bin/pip install git+https://github.com/aiogram/aiograph.git@master
       - name: Lint with flake8
         run: |
           # stop the build if there are Python syntax errors or undefined names

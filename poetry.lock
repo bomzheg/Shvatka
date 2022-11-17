@@ -60,6 +60,28 @@ reference = "fix/deque-usage"
 resolved_reference = "22e03b9f327d1cae3a9a1923a73d481bbc6f4612"
 
 [[package]]
+name = "aiograph"
+version = "0.2"
+description = "asynchronous Python Telegra.ph API wrapper"
+category = "main"
+optional = false
+python-versions = "*"
+develop = false
+
+[package.dependencies]
+attrs = ">=19.3.0"
+certifi = ">=2018.11.29"
+
+[package.extras]
+dev = ["aiohttp-socks (>=0.2.2)", "attrs (>=19.3.0)", "certifi (>=2018.11.29)", "codecov (>=2.0.15)", "pytest (>=3.5.1)", "pytest-asyncio (>=0.8.0)", "pytest-cov (>=2.5.1)", "wheel (>=0.31.0)"]
+
+[package.source]
+type = "git"
+url = "https://github.com/aiogram/aiograph.git"
+reference = "master"
+resolved_reference = "a00aacebb04c1e743055ba524b978a06027e31ed"
+
+[[package]]
 name = "aiohttp"
 version = "3.8.3"
 description = "Async http client/server framework (asyncio)"
@@ -208,7 +230,7 @@ python-versions = "~=3.5"
 name = "certifi"
 version = "2022.9.24"
 description = "Python package for providing Mozilla's CA Bundle."
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3.6"
 
@@ -612,6 +634,14 @@ argon2 = ["argon2-cffi (>=18.2.0)"]
 bcrypt = ["bcrypt (>=3.1.0)"]
 build-docs = ["cloud-sptheme (>=1.10.1)", "sphinx (>=1.6)", "sphinxcontrib-fulltoc (>=1.2.0)"]
 totp = ["cryptography"]
+
+[[package]]
+name = "pip"
+version = "22.3.1"
+description = "The PyPA recommended tool for installing Python packages."
+category = "main"
+optional = false
+python-versions = ">=3.7"
 
 [[package]]
 name = "pluggy"
@@ -1145,6 +1175,17 @@ optional = ["python-socks", "wsaccel"]
 test = ["websockets"]
 
 [[package]]
+name = "wheel"
+version = "0.38.4"
+description = "A built-package format for Python"
+category = "main"
+optional = false
+python-versions = ">=3.7"
+
+[package.extras]
+test = ["pytest (>=3.0.0)"]
+
+[[package]]
 name = "wrapt"
 version = "1.14.1"
 description = "Module for decorators, wrappers and monkey patching."
@@ -1167,7 +1208,7 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "1.1"
 python-versions = "~3.10"  # python3.11 failed with install psycopg2 (for testcontainers)
-content-hash = "d52eadde2a25528772bee508c4d3b0f12b0147b0fa15d2cc13a0bdb0e21f11c4"
+content-hash = "0871bf86e5afa3e0e44af9fd5c96ea72b4b1f602df290f8c06cc121ca656e77e"
 
 [metadata.files]
 aiofiles = [
@@ -1182,6 +1223,7 @@ aiogram-dialog = [
     {file = "aiogram_dialog-2.0.0b12-py3-none-any.whl", hash = "sha256:118cc026270741867bd7981302cc9da3e0966d8376939a366c30d0493309527d"},
 ]
 aiogram-tests = []
+aiograph = []
 aiohttp = [
     {file = "aiohttp-3.8.3-cp310-cp310-macosx_10_9_universal2.whl", hash = "sha256:ba71c9b4dcbb16212f334126cc3d8beb6af377f6703d9dc2d9fb3874fd667ee9"},
     {file = "aiohttp-3.8.3-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:d24b8bb40d5c61ef2d9b6a8f4528c2f17f1c5d2d31fed62ec860f6006142e83e"},
@@ -1851,6 +1893,10 @@ passlib = [
     {file = "passlib-1.7.4-py2.py3-none-any.whl", hash = "sha256:aa6bca462b8d8bda89c70b382f0c298a20b5560af6cbfa2dce410c0a2fb669f1"},
     {file = "passlib-1.7.4.tar.gz", hash = "sha256:defd50f72b65c5402ab2c573830a6978e5f202ad0d984793c8dde2c4152ebe04"},
 ]
+pip = [
+    {file = "pip-22.3.1-py3-none-any.whl", hash = "sha256:908c78e6bc29b676ede1c4d57981d490cb892eb45cd8c214ab6298125119e077"},
+    {file = "pip-22.3.1.tar.gz", hash = "sha256:65fd48317359f3af8e593943e6ae1506b66325085ea64b706a998c6e83eeaf38"},
+]
 pluggy = [
     {file = "pluggy-1.0.0-py2.py3-none-any.whl", hash = "sha256:74134bbf457f031a36d68416e1509f34bd5ccc019f0bcc952c7b909d06b37bd3"},
     {file = "pluggy-1.0.0.tar.gz", hash = "sha256:4224373bacce55f955a878bf9cfa763c1e360858e330072059e10bad68531159"},
@@ -2278,6 +2324,10 @@ uvicorn = [
 websocket-client = [
     {file = "websocket-client-1.4.2.tar.gz", hash = "sha256:d6e8f90ca8e2dd4e8027c4561adeb9456b54044312dba655e7cae652ceb9ae59"},
     {file = "websocket_client-1.4.2-py3-none-any.whl", hash = "sha256:d6b06432f184438d99ac1f456eaf22fe1ade524c3dd16e661142dc54e9cba574"},
+]
+wheel = [
+    {file = "wheel-0.38.4-py3-none-any.whl", hash = "sha256:b60533f3f5d530e971d6737ca6d58681ee434818fab630c83a734bb10c083ce8"},
+    {file = "wheel-0.38.4.tar.gz", hash = "sha256:965f5259b566725405b05e7cf774052044b1ed30119b5d586b2703aafe8719ac"},
 ]
 wrapt = [
     {file = "wrapt-1.14.1-cp27-cp27m-macosx_10_9_x86_64.whl", hash = "sha256:1b376b3f4896e7930f1f772ac4b064ac12598d1c38d04907e696cc4d794b43d3"},

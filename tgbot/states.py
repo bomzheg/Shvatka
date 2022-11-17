@@ -59,3 +59,7 @@ class OrgSpy(StatesGroup):
     main = State()
     spy = State()
     keys = State()
+
+
+class GamePublish(StatesGroup):
+    prepare = State()

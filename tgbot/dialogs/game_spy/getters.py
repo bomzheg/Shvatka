@@ -20,3 +20,9 @@ async def get_spy(dao: HolderDao, player: dto.Player, game: dto.Game, dialog_man
     return {
         "stat": stat,
     }
+
+
+async def get_keys(dialog_manager: DialogManager, **_):
+    return {
+        "key_link": dialog_manager.dialog_data.get("key_link", None)
+    }

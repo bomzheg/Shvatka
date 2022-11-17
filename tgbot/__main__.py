@@ -15,7 +15,7 @@ from tgbot.main_factory import (
     create_dispatcher,
     get_paths,
     create_scheduler,
-    create_redis, create_file_storage,
+    create_redis, create_file_storage, create_telegraph,
 )
 from tgbot.username_resolver.user_getter import UserGetter
 from tgbot.views.jinja_filters import setup_jinja
@@ -48,6 +48,7 @@ async def main():
             config=config, user_getter=user_getter, dcf=dcf, pool=pool,
             redis=redis, scheduler=scheduler, locker=create_lock_factory(),
             file_storage=file_storage, level_test_dao=level_test_dao,
+            telegraph=create_telegraph(config.bot),
         )
 
         logger.info("started")

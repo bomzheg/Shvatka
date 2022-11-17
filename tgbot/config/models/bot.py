@@ -13,6 +13,7 @@ class BotConfig:
     log_chat: int
     superusers: list[int]
     bot_api: BotApiConfig
+    telegraph_token: str
 
     def create_session(self) -> AiohttpSession | None:
         if self.bot_api.is_local:

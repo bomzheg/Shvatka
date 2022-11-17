@@ -4,6 +4,7 @@ from aiogram import Bot, Dispatcher
 from aiogram.fsm.storage.base import BaseStorage
 from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.fsm.storage.redis import RedisStorage, DefaultKeyBuilder, RedisEventIsolation
+from aiograph import Telegraph
 from dataclass_factory import Factory
 from redis.asyncio.client import Redis
 from sqlalchemy.orm import sessionmaker
@@ -20,6 +21,7 @@ from scheduler import ApScheduler
 from shvatka.clients.file_storage import FileStorage
 from shvatka.scheduler import Scheduler
 from shvatka.utils.key_checker_lock import KeyCheckerFactory
+from tgbot.config.models.bot import BotConfig
 from tgbot.config.models.main import TgBotConfig
 from tgbot.handlers import setup_handlers
 from tgbot.middlewares import setup_middlewares
@@ -39,7 +41,7 @@ def create_bot(config: TgBotConfig) -> Bot:
 def create_dispatcher(
     config: TgBotConfig, user_getter: UserGetter, dcf: Factory, pool: sessionmaker,
     redis: Redis, scheduler: Scheduler, locker: KeyCheckerFactory, file_storage: FileStorage,
-    level_test_dao: LevelTestingData,
+    level_test_dao: LevelTestingData, telegraph: Telegraph,
 ) -> Dispatcher:
     dp = Dispatcher(
         storage=create_storage(config.storage),
@@ -56,6 +58,7 @@ def create_dispatcher(
         locker=locker,
         file_storage=file_storage,
         level_test_dao=level_test_dao,
+        telegraph=telegraph,
     )
     setup_handlers(dp, config.bot)
     return dp
@@ -85,6 +88,11 @@ def create_scheduler(
         bot=bot, game_log_chat=game_log_chat, file_storage=file_storage,
         level_test_dao=level_test_dao,
     )
+
+
+def create_telegraph(bot_config: BotConfig) -> Telegraph:
+    telegraph = Telegraph(token=bot_config.telegraph_token)
+    return telegraph
 
 
 def get_paths() -> Paths:

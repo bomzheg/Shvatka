@@ -1,5 +1,6 @@
 bot:
   token: ""
+  telegraph_token: ""
   log_chat: -1001234567890
   superusers:
     - 666

@@ -2,6 +2,7 @@ from typing import Callable, Any, Awaitable
 
 from aiogram import BaseMiddleware
 from aiogram.types import TelegramObject
+from aiograph import Telegraph
 from dataclass_factory import Factory
 from redis.asyncio.client import Redis
 from sqlalchemy.orm import sessionmaker
@@ -20,6 +21,7 @@ class InitMiddleware(BaseMiddleware):
         self, pool: sessionmaker, user_getter: UserGetter, dcf: Factory,
         redis: Redis, scheduler: Scheduler, locker: KeyCheckerFactory,
         file_storage: FileStorage, level_test_dao: LevelTestingData,
+        telegraph: Telegraph,
     ):
         self.pool = pool
         self.user_getter = user_getter
@@ -29,6 +31,7 @@ class InitMiddleware(BaseMiddleware):
         self.locker = locker
         self.file_storage = file_storage
         self.level_test_dao = level_test_dao
+        self.telegraph = telegraph
 
     async def __call__(
         self,
@@ -41,6 +44,7 @@ class InitMiddleware(BaseMiddleware):
         data["scheduler"] = self.scheduler
         data["locker"] = self.locker
         data["file_storage"] = self.file_storage
+        data["telegraph"] = self.telegraph
         async with self.pool() as session:
             holder_dao = HolderDao(session, self.redis, self.level_test_dao)
             data["dao"] = holder_dao

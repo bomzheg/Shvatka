@@ -5,6 +5,7 @@ from unittest.mock import Mock
 import pytest
 import pytest_asyncio
 from aiogram import Dispatcher, Bot
+from aiograph import Telegraph
 from alembic.command import upgrade
 from alembic.config import Config as AlembicConfig
 from dataclass_factory import Factory
@@ -138,15 +139,20 @@ def locker() -> KeyCheckerFactory:
 
 
 @pytest.fixture(scope="session")
+def telegraph() -> Telegraph:
+    return Telegraph()
+
+
+@pytest.fixture(scope="session")
 def dp(
     pool: sessionmaker, bot_config, user_getter: UserGetter,
     dcf: Factory, redis: Redis, scheduler: Scheduler, locker: KeyCheckerFactory,
-    file_storage: FileStorage, level_test_dao: LevelTestingData,
+    file_storage: FileStorage, level_test_dao: LevelTestingData, telegraph: Telegraph,
 ) -> Dispatcher:
     return create_dispatcher(
         config=bot_config, user_getter=user_getter, dcf=dcf, pool=pool,
         redis=redis, scheduler=scheduler, locker=locker, file_storage=file_storage,
-        level_test_dao=level_test_dao,
+        level_test_dao=level_test_dao, telegraph=telegraph,
     )
 
 

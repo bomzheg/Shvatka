@@ -1,10 +1,13 @@
+from datetime import datetime
+
 from aiogram import F
 from aiogram_dialog import Dialog, Window
 from aiogram_dialog.widgets.kbd import Button, SwitchTo, Cancel
 from aiogram_dialog.widgets.text import Const, Format, Jinja, Multi
 
+from shvatka.utils.datetime_utils import tz_utc
 from tgbot.states import OrgSpy
-from .getters import get_org, get_spy
+from .getters import get_org, get_spy, get_keys
 from .handlers import keys_handler
 
 game_spy = Dialog(
@@ -26,10 +29,10 @@ game_spy = Dialog(
             state=OrgSpy.spy,
             when=F["org"].can_spy & F["game"].is_started,
         ),
-        Button(
+        SwitchTo(
             Const("🔑Лог ключей"),
             id="spy_keys",
-            on_click=keys_handler,
+            state=OrgSpy.keys,
             when=F["game"].is_started & F["org"].can_see_log_keys,
         ),
         state=OrgSpy.main,
@@ -48,9 +51,27 @@ game_spy = Dialog(
             "{% endfor %}",
             when=F["org"].can_spy,
         ),
-        Button(Const("обновить"), id="refresh_spy"),
-        SwitchTo(Const("Назад"), id="back", state=OrgSpy.main),
+        Button(Const("🔄Обновить"), id="refresh_spy"),
+        SwitchTo(Const("⤴Назад"), id="back", state=OrgSpy.main),
         state=OrgSpy.spy,
         getter=(get_spy, get_org),
+    ),
+    Window(
+        Jinja(
+            "Промежуточный лог ключей \n"
+            "для игры <b>{{game.name}}</b> "
+            "(началась в {{game.start_at|user_timezone}}) \n"
+            "по состоянию на {{ now | user_timezone }}\n"
+            "{% if key_link %}"
+            "доступен <a href=\"{{key_link}}\">по ссылке</a>"
+            "{% else %}"
+            "пока недоступен (попробуй обновить)"
+            "{% endif %}"
+        ),
+        Button(Const("🔄Обновить"), id="refresh_spy", on_click=keys_handler),
+        SwitchTo(Const("⤴Назад"), id="back", state=OrgSpy.main),
+        state=OrgSpy.keys,
+        getter=(get_org, get_keys, {"now": datetime.now(tz=tz_utc)}),
+        disable_web_page_preview=True,
     ),
 )

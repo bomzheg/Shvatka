@@ -6,7 +6,8 @@ def load_bot_config(dct: dict) -> BotConfig:
         token=dct["token"],
         log_chat=dct["log_chat"],
         superusers=dct["superusers"],
-        bot_api=load_botapi(dct["botapi"])
+        bot_api=load_botapi(dct["botapi"]),
+        telegraph_token=dct["telegraph_token"],
     )
 
 

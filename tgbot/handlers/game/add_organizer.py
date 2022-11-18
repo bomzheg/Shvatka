@@ -12,7 +12,9 @@ from tgbot import keyboards as kb
 from tgbot.views.game import BotOrgNotifier
 
 
-async def invite_org_inline_query(q: InlineQuery, inline_data: kb.AddGameOrgID, player: dto.Player, dao: HolderDao):
+async def invite_org_inline_query(
+    q: InlineQuery, inline_data: kb.AddGameOrgID, player: dto.Player, dao: HolderDao,
+):
     game = await get_game(id_=inline_data.game_id, dao=dao.game)
     check_game_token(game, inline_data.game_manage_token)
     check_allow_manage_orgs(game, player.id)
@@ -33,13 +35,20 @@ async def invite_org_inline_query(q: InlineQuery, inline_data: kb.AddGameOrgID, 
     await q.answer(results=result, is_personal=True, cache_time=1)
 
 
-async def dismiss_to_be_org_handler(c: CallbackQuery, callback_data: kb.AgreeBeOrgCD, dao: HolderDao, bot: Bot):
+async def dismiss_to_be_org_handler(
+    c: CallbackQuery, callback_data: kb.AgreeBeOrgCD, dao: HolderDao, bot: Bot,
+):
     await dismiss_to_be_org(callback_data.token, dao.secure_invite)
     await c.answer("правильно, лучше поиграть!", show_alert=True)
-    await bot.edit_message_text(text="<i>(Игрок отказался от приглашения)</i>", inline_message_id=c.inline_message_id)
+    await bot.edit_message_text(
+        text="<i>(Игрок отказался от приглашения)</i>",
+        inline_message_id=c.inline_message_id,
+    )
 
 
-async def agree_to_be_org_handler(c: CallbackQuery, callback_data: kb.AgreeBeOrgCD, player: dto.Player, dao: HolderDao, bot: Bot):
+async def agree_to_be_org_handler(
+    c: CallbackQuery, callback_data: kb.AgreeBeOrgCD, player: dto.Player, dao: HolderDao, bot: Bot,
+):
     await c.answer()
     await agree_to_be_org(
         token=callback_data.token,
@@ -48,7 +57,10 @@ async def agree_to_be_org_handler(c: CallbackQuery, callback_data: kb.AgreeBeOrg
         org_notifier=BotOrgNotifier(bot=bot),
         dao=dao.org_adder,
     )
-    await bot.edit_message_text(text="<i>(Игрок принял приглашение)</i>", inline_message_id=c.inline_message_id)
+    await bot.edit_message_text(
+        text="<i>(Игрок принял приглашение)</i>",
+        inline_message_id=c.inline_message_id,
+    )
 
 
 async def inviter_click_handler(c: CallbackQuery):

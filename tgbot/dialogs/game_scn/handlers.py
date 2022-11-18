@@ -1,15 +1,24 @@
+import logging
 from typing import Any
+from zipfile import Path as ZipPath
 
+from aiogram import Bot
 from aiogram.types import Message, CallbackQuery
 from aiogram.utils.text_decorations import html_decoration as hd
 from aiogram_dialog import DialogManager
 from aiogram_dialog.widgets.kbd import Button, ManagedMultiSelectAdapter
+from dataclass_factory import Factory
 
 from db.dao.holder import HolderDao
+from shvatka.clients.file_storage import FileStorage
 from shvatka.models import dto
-from shvatka.services.game import check_new_game_name_available, create_game, get_full_game, add_level
+from shvatka.services.game import check_new_game_name_available, create_game, get_full_game, add_level, upsert_game
 from shvatka.services.level import get_all_my_free_levels, get_by_id
+from shvatka.utils.exceptions import ScenarioNotCorrect
+from tgbot.services.scenario import unpack_scn
 from tgbot.states import LevelManageSG
+
+logger = logging.getLogger(__name__)
 
 
 async def process_name(m: Message, dialog_: Any, manager: DialogManager):
@@ -29,6 +38,26 @@ async def process_name(m: Message, dialog_: Any, manager: DialogManager):
     await manager.next()
 
 
+async def process_zip_scn(
+    m: Message, dialog_: Any, manager: DialogManager
+):
+    player: dto.Player = manager.middleware_data["player"]
+    dao: HolderDao = manager.middleware_data["dao"]
+    bot: Bot = manager.middleware_data["bot"]
+    file_storage: FileStorage = manager.middleware_data["file_storage"]
+    dcf: Factory = manager.middleware_data["dcf"]
+    document = await bot.download(m.document.file_id)
+    try:
+        with unpack_scn(ZipPath(document)).open() as scn:
+            game = await upsert_game(scn, player, dao.game_upserter, dcf, file_storage)
+    except ScenarioNotCorrect as e:
+        await m.reply(f"Ошибка {e}\n попробуйте исправить файл")
+        logger.error("game scenario from player %s has problems", player.id, exc_info=e)
+        return
+    await m.reply("Успешно сохранено")
+    await manager.done(result={"game": game})
+
+
 async def save_game(c: CallbackQuery, button: Button, manager: DialogManager):
     await c.answer()
     dao: HolderDao = manager.middleware_data["dao"]
@@ -39,7 +68,7 @@ async def save_game(c: CallbackQuery, button: Button, manager: DialogManager):
     levels = list(filter(lambda l: multiselect.is_checked(l.db_id), levels))
     game = await create_game(author=author, name=name, dao=dao.game_creator, levels=levels)
     await c.message.edit_text("Игра успешно сохранена")
-    await manager.done({"game": game})
+    await manager.done(result={"game": game})
 
 
 async def edit_level(c: CallbackQuery, widget: Any, manager: DialogManager, item_id: str):

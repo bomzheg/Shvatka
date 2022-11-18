@@ -1,3 +1,5 @@
+from aiogram import F
+from aiogram.types import ContentType
 from aiogram_dialog import Dialog, Window
 from aiogram_dialog.widgets.input import MessageInput
 from aiogram_dialog.widgets.kbd import ScrollingGroup, Multiselect, Button, Select, Cancel, SwitchTo
@@ -5,7 +7,7 @@ from aiogram_dialog.widgets.text import Const, Format, Jinja
 
 from tgbot.states import GameWriteSG, GameEditSG
 from .getters import get_game_name, select_my_levels, select_full_game
-from .handlers import process_name, save_game, edit_level, add_level_handler
+from .handlers import process_name, save_game, edit_level, add_level_handler, process_zip_scn
 
 game_writer = Dialog(
     Window(
@@ -21,7 +23,9 @@ game_writer = Dialog(
             "поскольку ID и название файла попадают в лог-файлы, предназначенные "
             "для чтения системным администратором"
         ),
+        Cancel(Const("⤴Отменить")),
         MessageInput(func=process_name),
+        SwitchTo(Const("Загрузить из zip"), id="game_from_zip", state=GameWriteSG.from_zip),
         state=GameWriteSG.game_name,
     ),
     Window(
@@ -30,6 +34,7 @@ game_writer = Dialog(
             "<b>Уровни</b>\n\n"
             "Выбери уровни которые нужно добавить"
         ),
+        Cancel(Const("⤴Не создавать игру")),
         ScrollingGroup(
             Multiselect(
                 Format("✓ {item.name_id}"),
@@ -49,6 +54,12 @@ game_writer = Dialog(
         ),
         state=GameWriteSG.levels,
         getter=[get_game_name, select_my_levels],
+    ),
+    Window(
+        Const("Жду zip-файл с готовой игрой"),
+        Cancel(Const("⤴Отменить")),
+        MessageInput(func=process_zip_scn, filter=F.content_type == ContentType.DOCUMENT),
+        state=GameWriteSG.from_zip,
     ),
 )
 

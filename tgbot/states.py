@@ -31,6 +31,7 @@ class LevelManageSG(StatesGroup):
 class GameWriteSG(StatesGroup):
     game_name = State()
     levels = State()
+    from_zip = State()
 
 
 class GameEditSG(StatesGroup):

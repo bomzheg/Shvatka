@@ -1,14 +1,22 @@
+from datetime import datetime
+
 from aiogram_dialog import DialogManager
 
 from db.dao.holder import HolderDao
 from shvatka.models import dto
-from shvatka.services.organizers import get_by_player
+from shvatka.services.game import get_game
 
 
-async def get_org(dao: HolderDao, player: dto.Player, game: dto.Game, dialog_manager: DialogManager, **_):
-    org = await get_by_player(player=player, game=game, dao=dao.organizer)
+async def get_org(dao: HolderDao, player: dto.Player, dialog_manager: DialogManager, **_):
+    game_id = dialog_manager.start_data["game_id"]
+    game = await get_game(id_=game_id, author=player, dao=dao.game)
+    started = dialog_manager.dialog_data.get("started", None)
+    started_at = dialog_manager.dialog_data.get("started_at", None)
+    text_invite = dialog_manager.dialog_data.get("text_invite", None)
     return {
         "game": game,
         "player": player,
-        "org": org,
+        "started": started,
+        "started_at": datetime.fromisoformat(started_at) if started_at else None,
+        "text_invite": text_invite,
     }

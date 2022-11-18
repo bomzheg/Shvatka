@@ -4,12 +4,10 @@ from aiogram_dialog.widgets.input import MessageInput
 from aiogram_dialog.widgets.kbd import ScrollingGroup, Select, SwitchTo, Button, Calendar, Cancel
 from aiogram_dialog.widgets.text import Const, Format, Case, Jinja
 
-from shvatka.models.enums.game_status import EDITABLE_STATUSES
 from tgbot.states import MyGamesPanel, GameSchedule
-from .getters import get_my_games, get_game, not_getting_waivers, is_getting_waivers, get_game_time, \
-    get_game_datetime
+from .getters import get_my_games, get_game, get_game_time, get_game_datetime
 from .handlers import select_my_game, start_waivers, select_date, process_time_message, schedule_game, show_scn, \
-    start_schedule_game, show_zip_scn, show_game_orgs, cancel_scheduled_game, rename_game_handler
+    start_schedule_game, show_zip_scn, show_game_orgs, cancel_scheduled_game, rename_game_handler, publish_game
 from ..preview_data import PREVIEW_GAME
 
 games = Dialog(
@@ -51,13 +49,13 @@ games = Dialog(
             Const("📜Сценарий"),
             id="game_scn",
             on_click=show_scn,
-            when=F["game"].status.in_(EDITABLE_STATUSES),
+            when=F["game"].can_be_edited,
         ),
         Button(
             Const("👥Организаторы"),
             id="game_orgs",
             on_click=show_game_orgs,
-            when=F["game"].status.in_(EDITABLE_STATUSES),
+            when=F["game"].can_be_edited,
         ),
         Button(
             Const("📦zip-сценарий"),
@@ -68,25 +66,31 @@ games = Dialog(
             Const("✏Переименовать"),
             id="game_rename",
             state=MyGamesPanel.rename,
-            when=F["game"].status.in_(EDITABLE_STATUSES),
+            when=F["game"].can_change_name,
         ),
         Button(
             Const("📝Начать сборку вейверов"),
             id="start_waiver",
             on_click=start_waivers,
-            when=not_getting_waivers,
+            when=F["game"].can_start_waivers,
+        ),
+        Button(
+            Const("📨Опубликовать"),
+            id="game_publish",
+            on_click=publish_game,
+            when=F["game"].can_be_publish,
         ),
         Button(
             Const("📆Запланировать игру"),
             id="start_schedule_game",
             on_click=start_schedule_game,
-            when=is_getting_waivers,
+            when=F["game"].can_set_start_datetime,
         ),
         Button(
             Const("📥Отменить игру"),
             id="cancel_scheduled_game",
             on_click=cancel_scheduled_game,
-            when=F["game"].start_at & F["game"].status.in_(EDITABLE_STATUSES),
+            when=F["game"].start_at & F["game"].can_set_start_datetime,
         ),
         state=MyGamesPanel.game_menu,
         preview_data={"game": PREVIEW_GAME},

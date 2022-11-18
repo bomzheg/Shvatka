@@ -11,6 +11,7 @@ from aiogram.client.telegram import TelegramAPIServer
 class BotConfig:
     token: str
     log_chat: int
+    game_log_chat: int
     superusers: list[int]
     bot_api: BotApiConfig
     telegraph_token: str

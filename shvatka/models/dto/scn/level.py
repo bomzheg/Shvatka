@@ -27,3 +27,6 @@ class LevelScenario:
             guids.extend(hint.get_guids())
         return guids
 
+    @property
+    def hints_count(self) -> int:
+        return sum((time_hint.hints_count for time_hint in self.time_hints))

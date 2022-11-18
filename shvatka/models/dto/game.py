@@ -52,12 +52,16 @@ class Game:
         return self.status in (GameStatus.underconstruction, GameStatus.ready)
 
     @property
+    def can_start_waivers(self) -> bool:
+        return self.status in (GameStatus.underconstruction, GameStatus.ready)
+
+    @property
     def can_set_start_datetime(self) -> bool:
         return self.status in (GameStatus.ready, GameStatus.getting_waivers)
 
     @property
     def can_be_publish(self) -> bool:
-        return self.status in (GameStatus.finished,)
+        return (self.status in (GameStatus.finished, GameStatus.complete)) and self.published_channel_id is None
 
     @property
     def can_change_name(self) -> bool:
@@ -93,6 +97,9 @@ class FullGame(Game):
             guids.extend(hint.get_guids())
         return guids
 
-
     def get_hint(self, level_number: int, hint_number: int) -> TimeHint:
         return self.levels[level_number].get_hint(hint_number)
+
+    @property
+    def hints_count(self) -> int:
+        return sum((level.hints_count for level in self.levels))

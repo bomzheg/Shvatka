@@ -1,11 +1,9 @@
 from datetime import datetime, time, date
 
 from aiogram_dialog import DialogManager
-from aiogram_dialog.widgets.common import Whenable
 
 from db.dao.holder import HolderDao
 from shvatka.models import dto
-from shvatka.models.enums import GameStatus
 from shvatka.services import game
 from shvatka.services.game import get_authors_games
 from shvatka.utils.datetime_utils import tz_game
@@ -22,14 +20,6 @@ async def get_game(dao: HolderDao, player: dto.Player, dialog_manager: DialogMan
         author=player,
         dao=dao.game,
     )}
-
-
-def not_getting_waivers(data: dict, widget: Whenable, manager: DialogManager):
-    return data["game"].status in (GameStatus.underconstruction, GameStatus.ready)
-
-
-def is_getting_waivers(data: dict, widget: Whenable, manager: DialogManager):
-    return data["game"].status == GameStatus.getting_waivers
 
 
 async def get_game_time(dao: HolderDao, player: dto.Player, dialog_manager: DialogManager, **kwargs):

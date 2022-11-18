@@ -14,7 +14,7 @@ from shvatka.services import game
 from shvatka.services.game import rename_game, get_game
 from shvatka.utils.datetime_utils import TIME_FORMAT, tz_game
 from tgbot.services.scenario import pack_scn
-from tgbot.states import MyGamesPanel, GameEditSG, GameSchedule, GameOrgs
+from tgbot.states import MyGamesPanel, GameEditSG, GameSchedule, GameOrgs, GamePublish
 
 
 async def select_my_game(c: CallbackQuery, widget: Any, manager: DialogManager, item_id: str):
@@ -63,8 +63,9 @@ async def show_zip_scn(c: CallbackQuery, widget: Button, manager: DialogManager)
 
 async def rename_game_handler(m: Message, dialog: Any, dialog_manager: DialogManager):
     dao: HolderDao = dialog_manager.middleware_data["dao"]
+    player: dto.Player = dialog_manager.middleware_data["player"]
     game_ = await get_game(dialog_manager.dialog_data["my_game_id"], dao=dao.game)
-    await rename_game(game_, m.text.strip(), dao.game)
+    await rename_game(player, game_, m.text.strip(), dao.game)
 
 
 async def start_waivers(c: CallbackQuery, widget: Button, manager: DialogManager):
@@ -126,3 +127,9 @@ async def show_game_orgs(c: CallbackQuery, widget: Button, manager: DialogManage
     await c.answer()
     game_id = manager.dialog_data["my_game_id"]
     await manager.start(GameOrgs.orgs_list, data={"game_id": game_id})
+
+
+async def publish_game(c: CallbackQuery, widget: Button, manager: DialogManager):
+    await c.answer()
+    game_id = manager.dialog_data["my_game_id"]
+    await manager.start(GamePublish.prepare, data={"game_id": game_id})

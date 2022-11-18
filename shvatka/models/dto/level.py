@@ -27,3 +27,7 @@ class Level:
 
     def get_guids(self) -> list[str]:
         return self.scenario.get_guids()
+
+    @property
+    def hints_count(self) -> int:
+        return self.scenario.hints_count

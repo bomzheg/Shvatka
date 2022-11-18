@@ -151,6 +151,13 @@ class GameDao(BaseDAO[models.Game]):
     async def set_finished(self, game: dto.Game):
         await self.set_status(game, GameStatus.finished)
 
+    async def set_published_channel_id(self, game: dto.Game, channel_id: int):
+        await self.session.execute(
+            update(models.Game)
+            .where(models.Game.id == game.id)
+            .values(published_channel_id=channel_id)
+        )
+
     async def get_game_by_name(self, name: str, author: dto.Player) -> dto.Game:
         game = await self._get_game_by_name(name)
         return game.to_dto(author)

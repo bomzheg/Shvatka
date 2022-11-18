@@ -13,3 +13,7 @@ class TimeHint:
         for hint in self.hint:
             guids.extend(hint.get_guids())
         return guids
+
+    @property
+    def hints_count(self) -> int:
+        return len(self.hint)

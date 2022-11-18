@@ -2,7 +2,6 @@ from typing import Callable, Any, Awaitable
 
 from aiogram import BaseMiddleware
 from aiogram.types import TelegramObject
-from aiograph import Telegraph
 from dataclass_factory import Factory
 from redis.asyncio.client import Redis
 from sqlalchemy.orm import sessionmaker
@@ -14,6 +13,7 @@ from shvatka.scheduler import Scheduler
 from shvatka.utils.key_checker_lock import KeyCheckerFactory
 from tgbot.username_resolver.user_getter import UserGetter
 from tgbot.views.hint_factory.hint_parser import HintParser
+from tgbot.views.telegraph import Telegraph
 
 
 class InitMiddleware(BaseMiddleware):

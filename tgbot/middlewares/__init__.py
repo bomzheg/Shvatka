@@ -1,5 +1,4 @@
 from aiogram import Dispatcher
-from aiograph import Telegraph
 from dataclass_factory import Factory
 from redis.asyncio.client import Redis
 from sqlalchemy.orm import sessionmaker
@@ -14,6 +13,7 @@ from tgbot.middlewares.data_load_middleware import LoadDataMiddleware
 from tgbot.middlewares.fix_target_middleware import FixTargetMiddleware
 from tgbot.middlewares.init_middleware import InitMiddleware
 from tgbot.username_resolver.user_getter import UserGetter
+from tgbot.views.telegraph import Telegraph
 
 
 def setup_middlewares(

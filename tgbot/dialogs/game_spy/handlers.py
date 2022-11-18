@@ -2,12 +2,12 @@ from aiogram.types import CallbackQuery
 from aiogram.utils.text_decorations import html_decoration as hd
 from aiogram_dialog import DialogManager
 from aiogram_dialog.widgets.kbd import Button
-from aiograph import Telegraph
 
 from db.dao.holder import HolderDao
 from shvatka.models import dto
 from shvatka.services.game_stat import get_typed_keys
 from tgbot.views.keys import render_log_keys
+from tgbot.views.telegraph import Telegraph
 
 
 async def keys_handler(c: CallbackQuery, widget: Button, manager: DialogManager):

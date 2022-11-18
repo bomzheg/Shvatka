@@ -5,7 +5,6 @@ from unittest.mock import Mock
 import pytest
 import pytest_asyncio
 from aiogram import Dispatcher, Bot
-from aiograph import Telegraph
 from alembic.command import upgrade
 from alembic.config import Config as AlembicConfig
 from dataclass_factory import Factory
@@ -37,6 +36,7 @@ from tgbot.main_factory import (
     create_dispatcher, create_redis,
 )
 from tgbot.username_resolver.user_getter import UserGetter
+from tgbot.views.telegraph import Telegraph
 
 logger = logging.getLogger(__name__)
 
@@ -139,13 +139,13 @@ def locker() -> KeyCheckerFactory:
 
 
 @pytest.fixture(scope="session")
-def telegraph() -> Telegraph:
-    return Telegraph()
+def telegraph(bot_config: TgBotConfig) -> Telegraph:
+    return Telegraph(access_token=bot_config.bot.telegraph_token)
 
 
 @pytest.fixture(scope="session")
 def dp(
-    pool: sessionmaker, bot_config, user_getter: UserGetter,
+    pool: sessionmaker, bot_config: TgBotConfig, user_getter: UserGetter,
     dcf: Factory, redis: Redis, scheduler: Scheduler, locker: KeyCheckerFactory,
     file_storage: FileStorage, level_test_dao: LevelTestingData, telegraph: Telegraph,
 ) -> Dispatcher:

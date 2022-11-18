@@ -4,7 +4,6 @@ from aiogram import Bot, Dispatcher
 from aiogram.fsm.storage.base import BaseStorage
 from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.fsm.storage.redis import RedisStorage, DefaultKeyBuilder, RedisEventIsolation
-from aiograph import Telegraph
 from dataclass_factory import Factory
 from redis.asyncio.client import Redis
 from sqlalchemy.orm import sessionmaker
@@ -26,6 +25,7 @@ from tgbot.config.models.main import TgBotConfig
 from tgbot.handlers import setup_handlers
 from tgbot.middlewares import setup_middlewares
 from tgbot.username_resolver.user_getter import UserGetter
+from tgbot.views.telegraph import Telegraph
 
 logger = logging.getLogger(__name__)
 
@@ -91,7 +91,7 @@ def create_scheduler(
 
 
 def create_telegraph(bot_config: BotConfig) -> Telegraph:
-    telegraph = Telegraph(token=bot_config.telegraph_token)
+    telegraph = Telegraph(access_token=bot_config.telegraph_token)
     return telegraph
 
 

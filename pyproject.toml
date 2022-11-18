@@ -28,6 +28,8 @@ python-multipart = "^0.0.5"
 python-jose = {extras = ["cryptography"], version = "^3.3.0"}
 passlib = {extras = ["bcrypt"], version = "^1.7.4"}
 telegraph = {extras = ["aio"], version = "^2.2.0"}
+openpyxl = "^3.0.10"
+
 [tool.poetry.group.dev]
 optional = true
 

@@ -11,9 +11,11 @@ from db.dao.holder import HolderDao
 from shvatka.clients.file_storage import FileStorage
 from shvatka.models import dto
 from shvatka.services.game import get_full_game
+from shvatka.services.game_stat import get_game_stat
 from shvatka.utils.datetime_utils import tz_utc
 from tgbot.config.models.bot import BotConfig
-from tgbot.views.hint_sender import create_hint_sender, GamePublisher
+from tgbot.views.hint_sender import create_hint_sender
+from tgbot.views.results.scenario import GamePublisher
 
 
 async def process_publish_message(message: Message, dialog_: Any, manager: DialogManager):
@@ -41,7 +43,10 @@ async def process_publish_message(message: Message, dialog_: Any, manager: Dialo
     author: dto.Player = manager.middleware_data["player"]
     config: BotConfig = manager.middleware_data["config"]
     game = await get_full_game(id_=game_id, author=author, dao=dao.game)
-    game_publisher = GamePublisher(hint_sender=hint_sender, game=game, channel_id=channel_id, bot=bot, config=config)
+    game_stat = await get_game_stat(game=game, player=author, dao=dao.game_stat)
+    game_publisher = GamePublisher(
+        hint_sender=hint_sender, game=game, channel_id=channel_id, bot=bot, config=config, game_stat=game_stat,
+    )
     await message.answer(
         "Начинаю отправку сценария в канал, в связи с ограничениями платформы, "
         f"отправка займёт около {game_publisher.get_approximate_time().seconds // 60 + 1} мин. "
@@ -57,7 +62,8 @@ async def process_publish_message(message: Message, dialog_: Any, manager: Dialo
 
 
 async def publish_game(game_publisher: GamePublisher, manager: DialogManager):
-    started_msg_id = await game_publisher.publish()
+    started_msg_id = await game_publisher.publish_scn()
+    results_msg_id = await game_publisher.publish_results()
     channel_id = game_publisher.channel_id
     bot = game_publisher.bot
     invite = await get_invite(channel_id=channel_id, bot=bot)
@@ -65,7 +71,7 @@ async def publish_game(game_publisher: GamePublisher, manager: DialogManager):
     text_invite_scn = (
         f"Вход: {invite}\n"
         f"Начало: {no_public_message_link(channel_id, started_msg_id)}\n"
-        # f"Результаты игры: {no_public_message_link(channel_id, results_msg_id)}"
+        f"Результаты игры: {no_public_message_link(channel_id, results_msg_id)}"
     )
     await bot.send_message(
         game_publisher.game.author.user.tg_id,

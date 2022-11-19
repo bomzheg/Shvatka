@@ -15,11 +15,13 @@ class TeamPlayerFilter(BaseFilter):
     can_change_team_name: bool | None = None
     can_add_players: bool | None = None
     can_remove_players: bool | None = None
+    is_captain: bool | None = None
 
     async def __call__(
         self, message: Message, team_player: dto.FullTeamPlayer,
     ) -> Union[bool, dict[str, Any]]:
-
+        if self.is_captain is not None:
+            return team_player.team.captain.id == team_player.player.id
         if self.can_manage_waivers is not None:
             if self.can_manage_waivers != team_player.can_manage_waivers:
                 return False

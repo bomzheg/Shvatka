@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import Iterable
 
-from db.dao import PollDao, WaiverDao, PlayerDao, PlayerInTeamDao
+from db.dao import PollDao, WaiverDao, PlayerDao, TeamPlayerDao
 from shvatka.dal.waiver import WaiverVoteAdder, WaiverVoteGetter, WaiverApprover
 from shvatka.models import dto
 from shvatka.models.enums.played import Played
@@ -11,7 +11,7 @@ from shvatka.models.enums.played import Played
 class WaiverVoteAdderImpl(WaiverVoteAdder):
     poll: PollDao
     waiver: WaiverDao
-    team_player: PlayerInTeamDao
+    team_player: TeamPlayerDao
 
     async def is_excluded(
         self, game: dto.Game, player: dto.Player, team: dto.Team,
@@ -21,7 +21,7 @@ class WaiverVoteAdderImpl(WaiverVoteAdder):
     async def add_player_vote(self, team_id: int, player_id: int, vote_var: str) -> None:
         return await self.poll.add_player_vote(team_id, player_id, vote_var)
 
-    async def get_team_player(self, player: dto.Player) -> dto.PlayerInTeam:
+    async def get_team_player(self, player: dto.Player) -> dto.TeamPlayer:
         return await self.team_player.get_team_player(player)
 
 
@@ -40,7 +40,7 @@ class WaiverVoteGetterImpl(WaiverVoteGetter):
 @dataclass
 class WaiverApproverImpl(WaiverApprover, WaiverVoteGetterImpl):
     waiver: WaiverDao
-    team_player: PlayerInTeamDao
+    team_player: TeamPlayerDao
 
     async def upsert(self, waiver: dto.Waiver) -> None:
         return await self.waiver.upsert(waiver)
@@ -48,7 +48,7 @@ class WaiverApproverImpl(WaiverApprover, WaiverVoteGetterImpl):
     async def commit(self):
         return await self.waiver.commit()
 
-    async def get_team_player(self, player: dto.Player) -> dto.PlayerInTeam:
+    async def get_team_player(self, player: dto.Player) -> dto.TeamPlayer:
         return await self.team_player.get_team_player(player)
 
     async def get_players(self, team: dto.Team) -> list[dto.FullTeamPlayer]:

@@ -2,12 +2,12 @@ from abc import ABCMeta
 from typing import Iterable
 
 from shvatka.dal.base import Reader, Writer, Committer
-from shvatka.dal.player import PlayerInTeamGetter, TeamPlayerGetter
+from shvatka.dal.player import TeamPlayerGetter, TeamPlayersGetter
 from shvatka.models import dto
 from shvatka.models.enums.played import Played
 
 
-class WaiverVoteAdder(Writer, PlayerInTeamGetter):
+class WaiverVoteAdder(Writer, TeamPlayerGetter):
     async def add_player_vote(self, team_id: int, player_id: int, vote_var: str) -> None:
         raise NotImplementedError
 
@@ -16,7 +16,7 @@ class WaiverVoteAdder(Writer, PlayerInTeamGetter):
     ) -> bool:
         raise NotImplementedError
 
-    async def get_team_player(self, player: dto.Player) -> dto.PlayerInTeam:
+    async def get_team_player(self, player: dto.Player) -> dto.TeamPlayer:
         raise NotImplementedError
 
 
@@ -30,7 +30,7 @@ class WaiverVoteGetter(PollGetWaivers, metaclass=ABCMeta):
         raise NotImplementedError
 
 
-class WaiverApprover(Committer, TeamPlayerGetter, WaiverVoteGetter, PlayerInTeamGetter, metaclass=ABCMeta):
+class WaiverApprover(Committer, TeamPlayerGetter, WaiverVoteGetter, TeamPlayersGetter, metaclass=ABCMeta):
     async def upsert(self, waiver: dto.Waiver):
         raise NotImplementedError
 

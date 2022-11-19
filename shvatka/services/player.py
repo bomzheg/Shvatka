@@ -1,7 +1,7 @@
 import logging
 
 from shvatka.dal.player import (
-    PlayerUpserter, PlayerTeamChecker, PlayerPromoter, TeamJoiner, TeamLeaver, PlayerInTeamGetter, TeamPlayerGetter,
+    PlayerUpserter, PlayerTeamChecker, PlayerPromoter, TeamJoiner, TeamLeaver, TeamPlayersGetter, TeamPlayerGetter,
 )
 from shvatka.dal.secure_invite import InviteSaver, InviteRemover, InviterDao
 from shvatka.models import dto
@@ -67,7 +67,7 @@ async def join_team(
     await dao.commit()
 
 
-async def check_player_on_team(player: dto.Player, team: dto.Team, dao: PlayerInTeamGetter):
+async def check_player_on_team(player: dto.Player, team: dto.Team, dao: TeamPlayerGetter):
     pit = await dao.get_team_player(player)
     if pit.team_id != team.id:
         raise PlayerNotInTeam(player=player, team=team)
@@ -106,7 +106,7 @@ def check_can_add_players(team_player: dto.FullTeamPlayer):
         raise PermissionsError(permission_name="can_add_player", team=team_player.team, player=team_player.player)
 
 
-async def get_team_player(player: dto.Player, team: dto.Team, dao: PlayerInTeamGetter) -> dto.FullTeamPlayer:
+async def get_team_player(player: dto.Player, team: dto.Team, dao: TeamPlayerGetter) -> dto.FullTeamPlayer:
     team_player = dto.FullTeamPlayer.from_simple(
         team_player=await dao.get_team_player(player),
         team=team, player=player,
@@ -116,7 +116,7 @@ async def get_team_player(player: dto.Player, team: dto.Team, dao: PlayerInTeamG
     return team_player
 
 
-async def get_team_players(team: dto.Team, dao: TeamPlayerGetter) -> list[dto.FullTeamPlayer]:
+async def get_team_players(team: dto.Team, dao: TeamPlayersGetter) -> list[dto.FullTeamPlayer]:
     return await dao.get_players(team)
 
 
@@ -156,4 +156,3 @@ async def agree_promotion(
         raise SaltError(text="Ошибка нарушения данных. Токен в зашифрованной и открытой части не совпал", alarm=True)
     inviter = await dao.get_by_id(inviter_id)
     await promote(inviter, target, dao)
-

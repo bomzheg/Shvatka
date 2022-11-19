@@ -1,18 +1,18 @@
 from dataclasses import dataclass
 
 from .player import Player
-from .team_player import PlayerInTeam
+from .team_player import TeamPlayer
 from ..enums.played import Played
 
 
 @dataclass
 class VotedPlayer:
     player: Player
-    pit: PlayerInTeam
+    pit: TeamPlayer
 
 
 @dataclass
 class Vote:
     player: Player
-    pit: PlayerInTeam
+    pit: TeamPlayer
     vote: Played

@@ -8,7 +8,7 @@ from .rdb import (
     KeyTimeDao,  # noqa: F401
     OrganizerDao,  # noqa: F401
     PlayerDao,  # noqa: F401
-    PlayerInTeamDao,  # noqa: F401
+    TeamPlayerDao,  # noqa: F401
     TeamDao,  # noqa: F401
     UserDao,  # noqa: F401
     WaiverDao,  # noqa: F401

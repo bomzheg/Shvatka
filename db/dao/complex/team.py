@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from db.dao import PlayerInTeamDao, TeamDao, GameDao, WaiverDao, PollDao
+from db.dao import TeamPlayerDao, TeamDao, GameDao, WaiverDao, PollDao
 from shvatka.dal.player import TeamLeaver
 from shvatka.dal.team import TeamCreator
 from shvatka.models import dto
@@ -8,7 +8,7 @@ from shvatka.models import dto
 
 @dataclass
 class TeamCreatorImpl(TeamCreator):
-    team_player: PlayerInTeamDao
+    team_player: TeamPlayerDao
     team: TeamDao
 
     async def check_no_team_in_chat(self, chat: dto.Chat):
@@ -23,7 +23,7 @@ class TeamCreatorImpl(TeamCreator):
     async def check_player_free(self, player: dto.Player) -> None:
         return await self.team_player.check_player_free(player)
 
-    async def get_team_player(self, player: dto.Player) -> dto.PlayerInTeam:
+    async def get_team_player(self, player: dto.Player) -> dto.TeamPlayer:
         return await self.team_player.get_team_player(player)
 
     async def commit(self):
@@ -33,7 +33,7 @@ class TeamCreatorImpl(TeamCreator):
 @dataclass
 class TeamLeaverImpl(TeamLeaver):
     game: GameDao
-    team_player: PlayerInTeamDao
+    team_player: TeamPlayerDao
     waiver: WaiverDao
     poll: PollDao
 
@@ -52,7 +52,7 @@ class TeamLeaverImpl(TeamLeaver):
     async def delete(self, waiver: dto.Waiver) -> None:
         return await self.waiver.delete(waiver)
 
-    async def get_team_player(self, player: dto.Player) -> dto.PlayerInTeam:
+    async def get_team_player(self, player: dto.Player) -> dto.TeamPlayer:
         return await self.team_player.get_team_player(player)
 
     async def commit(self) -> None:

@@ -40,9 +40,9 @@ class Team(Base):
         foreign_keys="Waiver.team_id",
     )
     players = relationship(
-        "PlayerInTeam",
+        "TeamPlayer",
         back_populates="team",
-        foreign_keys="PlayerInTeam.team_id",
+        foreign_keys="TeamPlayer.team_id",
     )
 
     def to_dto(self, chat: dto.Chat) -> dto.Team:

@@ -53,14 +53,14 @@ class PlayerDao(BaseDAO[models.Player]):
 
     async def get_by_ids_with_user_and_pit(self, ids: Iterable[int]) -> list[dto.VotedPlayer]:
         result = await self.session.execute(
-            select(models.Player, models.PlayerInTeam)
+            select(models.Player, models.TeamPlayer)
             .options(
                 joinedload(models.Player.user, innerjoin=True),
             )
             .join(models.Player.teams)
             .where(
                 models.Player.id.in_(ids),  # noqa
-                models.PlayerInTeam.date_left.is_(None),  # noqa
+                models.TeamPlayer.date_left.is_(None),  # noqa
             )
         )
         players = result.all()

@@ -45,9 +45,9 @@ class Player(Base):
         foreign_keys="Waiver.player_id",
     )
     teams = relationship(
-        "PlayerInTeam",
+        "TeamPlayer",
         back_populates="player",
-        foreign_keys="PlayerInTeam.player_id",
+        foreign_keys="TeamPlayer.player_id",
     )
     captain_by_team = relationship(
         "Team",

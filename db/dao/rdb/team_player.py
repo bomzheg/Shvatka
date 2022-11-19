@@ -12,22 +12,22 @@ from shvatka.utils.exceptions import PlayerAlreadyInTeam, PlayerRestoredInTeam
 from .base import BaseDAO
 
 
-class PlayerInTeamDao(BaseDAO[models.PlayerInTeam]):
+class TeamPlayerDao(BaseDAO[models.TeamPlayer]):
     def __init__(self, session: AsyncSession):
-        super().__init__(models.PlayerInTeam, session)
+        super().__init__(models.TeamPlayer, session)
 
     async def get_team(self, player: dto.Player) -> dto.Team | None:
         result = await self.session.execute(
-            select(models.PlayerInTeam)
+            select(models.TeamPlayer)
             .options(
-                joinedload(models.PlayerInTeam.team)
+                joinedload(models.TeamPlayer.team)
                 .joinedload(models.Team.captain)
                 .joinedload(models.Player.user),
-                joinedload(models.PlayerInTeam.team)
+                joinedload(models.TeamPlayer.team)
                 .joinedload(models.Team.chat)
             )
             .where(
-                models.PlayerInTeam.player_id == player.id,
+                models.TeamPlayer.player_id == player.id,
                 not_leaved(),
             )
         )
@@ -47,7 +47,7 @@ class PlayerInTeamDao(BaseDAO[models.PlayerInTeam]):
             team_player.date_left = None
             await self.session.merge(team_player)
             raise PlayerRestoredInTeam(player=player, team=team)
-        team_player = models.PlayerInTeam(
+        team_player = models.TeamPlayer(
             player_id=player.id,
             team_id=team.id,
             role=role,
@@ -74,32 +74,32 @@ class PlayerInTeamDao(BaseDAO[models.PlayerInTeam]):
                 text=f"user {player.id} already in team {players_team.id}",
             )
 
-    async def need_restore(self, player: dto.Player, team: dto.Team) -> models.PlayerInTeam:
+    async def need_restore(self, player: dto.Player, team: dto.Team) -> models.TeamPlayer:
         today = datetime.now(tz=tz_utc).date()
         result = await self.session.execute(
-            select(models.PlayerInTeam)
+            select(models.TeamPlayer)
             .where(
-                models.PlayerInTeam.player_id == player.id,
-                models.PlayerInTeam.date_left >= today,
-                models.PlayerInTeam.date_left < today + timedelta(days=1),
-                models.PlayerInTeam.team_id == team.id,
+                models.TeamPlayer.player_id == player.id,
+                models.TeamPlayer.date_left >= today,
+                models.TeamPlayer.date_left < today + timedelta(days=1),
+                models.TeamPlayer.team_id == team.id,
             )
         )
         return result.scalars().one_or_none()
 
     async def get_players(self, team: dto.Team) -> list[dto.FullTeamPlayer]:
         result = await self.session.execute(
-            select(models.PlayerInTeam)
+            select(models.TeamPlayer)
             .where(
-                models.PlayerInTeam.team_id == team.id,
+                models.TeamPlayer.team_id == team.id,
                 not_leaved(),
             )
             .options(
-                joinedload(models.PlayerInTeam.player)
+                joinedload(models.TeamPlayer.player)
                 .joinedload(models.Player.user)
             )
         )
-        players: list[models.PlayerInTeam] = result.scalars().all()
+        players: list[models.TeamPlayer] = result.scalars().all()
         return [
             dto.FullTeamPlayer.from_simple(
                 team_player=team_player.to_dto(),
@@ -109,14 +109,14 @@ class PlayerInTeamDao(BaseDAO[models.PlayerInTeam]):
             for team_player in players
         ]
 
-    async def get_team_player(self, player: dto.Player) -> dto.PlayerInTeam:
+    async def get_team_player(self, player: dto.Player) -> dto.TeamPlayer:
         return (await self._get_my_team_player(player)).to_dto()
 
-    async def _get_my_team_player(self, player: dto.Player) -> models.PlayerInTeam:
+    async def _get_my_team_player(self, player: dto.Player) -> models.TeamPlayer:
         result = await self.session.execute(
-            select(models.PlayerInTeam)
+            select(models.TeamPlayer)
             .where(
-                models.PlayerInTeam.player_id == player.id,
+                models.TeamPlayer.player_id == player.id,
                 not_leaved(),
             )
         )
@@ -125,4 +125,4 @@ class PlayerInTeamDao(BaseDAO[models.PlayerInTeam]):
 
 def not_leaved():
     # noinspection PyUnresolvedReferences
-    return models.PlayerInTeam.date_left.is_(None)  # noqa: E711
+    return models.TeamPlayer.date_left.is_(None)  # noqa: E711

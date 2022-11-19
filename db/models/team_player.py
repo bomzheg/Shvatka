@@ -8,7 +8,7 @@ from shvatka.models import dto
 from shvatka.utils.datetime_utils import tz_utc
 
 
-class PlayerInTeam(Base):
+class TeamPlayer(Base):
     __tablename__ = "players_in_teams"
     __mapper_args__ = {"eager_defaults": True}
     id = Column(Integer, primary_key=True)
@@ -35,8 +35,8 @@ class PlayerInTeam(Base):
     can_add_players = Column(Boolean, default=False)
     can_remove_players = Column(Boolean, default=False)
 
-    def to_dto(self) -> dto.PlayerInTeam:
-        return dto.PlayerInTeam(
+    def to_dto(self) -> dto.TeamPlayer:
+        return dto.TeamPlayer(
             id=self.id,
             player_id=self.player_id,
             team_id=self.team_id,

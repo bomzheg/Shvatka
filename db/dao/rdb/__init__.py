@@ -8,6 +8,6 @@ from .log_keys import KeyTimeDao  # noqa: F401
 from .organizer import OrganizerDao  # noqa: F401
 from .player import PlayerDao  # noqa: F401
 from .team import TeamDao  # noqa: F401
-from .team_player import PlayerInTeamDao  # noqa: F401
+from .team_player import TeamPlayerDao  # noqa: F401
 from .user import UserDao  # noqa: F401
 from .waiver import WaiverDao  # noqa: F401

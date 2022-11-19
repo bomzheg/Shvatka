@@ -8,7 +8,7 @@ from .team import Team
 
 
 @dataclass
-class PlayerInTeam:
+class TeamPlayer:
     id: int
     player_id: int
     team_id: int
@@ -24,7 +24,7 @@ class PlayerInTeam:
     _can_remove_players: bool
 
     def __eq__(self, other) -> bool:
-        if not isinstance(other, (PlayerInTeam, FullTeamPlayer)):
+        if not isinstance(other, (TeamPlayer, FullTeamPlayer)):
             return False
         return self.id == other.id
 
@@ -33,7 +33,7 @@ class PlayerInTeam:
 
 
 @dataclass
-class FullTeamPlayer(PlayerInTeam):
+class FullTeamPlayer(TeamPlayer):
     player: Player
     team: Team
 
@@ -62,7 +62,7 @@ class FullTeamPlayer(PlayerInTeam):
         return self.is_captain or self._can_remove_players
 
     @classmethod
-    def from_simple(cls, team_player: PlayerInTeam, player: Player, team: Team):
+    def from_simple(cls, team_player: TeamPlayer, player: Player, team: Team):
         assert team_player.team_id == team.id
         assert team_player.player_id == player.id
         return cls(
@@ -85,7 +85,7 @@ class FullTeamPlayer(PlayerInTeam):
         )
 
     def __eq__(self, other) -> bool:
-        if not isinstance(other, (PlayerInTeam, FullTeamPlayer)):
+        if not isinstance(other, (TeamPlayer, FullTeamPlayer)):
             return False
         return self.id == other.id
 

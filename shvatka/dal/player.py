@@ -16,12 +16,12 @@ class PlayerByIdGetter(Reader):
         raise NotImplementedError
 
 
-class PlayerInTeamGetter(Reader):
-    async def get_team_player(self, player: dto.Player) -> dto.PlayerInTeam:
+class TeamPlayerGetter(Reader):
+    async def get_team_player(self, player: dto.Player) -> dto.TeamPlayer:
         raise NotImplementedError
 
 
-class PlayerTeamChecker(PlayerInTeamGetter, metaclass=ABCMeta):
+class PlayerTeamChecker(TeamPlayerGetter, metaclass=ABCMeta):
     async def have_team(self, player: dto.Player) -> bool:
         raise NotImplementedError
 
@@ -34,7 +34,7 @@ class PlayerPromoter(Committer, PlayerByIdGetter, InviteReader, InviteRemover, m
         raise NotImplementedError
 
 
-class TeamJoiner(Committer, PlayerInTeamGetter, metaclass=ABCMeta):
+class TeamJoiner(Committer, TeamPlayerGetter, metaclass=ABCMeta):
     async def join_team(self, player: dto.Player, team: dto.Team, role: str, as_captain: bool = False) -> None:
         raise NotImplementedError
 
@@ -52,7 +52,7 @@ class PollVoteDeleter(Reader):
         raise NotImplementedError
 
 
-class TeamLeaver(Committer, ActiveGameFinder, WaiverRemover, PlayerInTeamGetter, metaclass=ABCMeta):
+class TeamLeaver(Committer, ActiveGameFinder, WaiverRemover, TeamPlayerGetter, metaclass=ABCMeta):
     async def del_player_vote(self, team_id: int, player_id: int) -> None:
         raise NotImplementedError
 
@@ -63,6 +63,6 @@ class TeamLeaver(Committer, ActiveGameFinder, WaiverRemover, PlayerInTeamGetter,
         raise NotImplementedError
 
 
-class TeamPlayerGetter(Reader):
+class TeamPlayersGetter(Reader):
     async def get_players(self, team: dto.Team) -> list[dto.FullTeamPlayer]:
         raise NotImplementedError

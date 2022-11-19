@@ -24,7 +24,7 @@ from .memory.level_testing import LevelTestingData
 from .rdb import (
     ChatDao, UserDao, FileInfoDao, GameDao, LevelDao,
     LevelTimeDao, KeyTimeDao, OrganizerDao, PlayerDao,
-    PlayerInTeamDao, TeamDao, WaiverDao,
+    TeamPlayerDao, TeamDao, WaiverDao,
 )
 from .redis import PollDao, SecureInvite
 
@@ -41,7 +41,7 @@ class HolderDao:
         self.key_time = KeyTimeDao(self.session)
         self.organizer = OrganizerDao(self.session)
         self.player = PlayerDao(self.session)
-        self.team_player = PlayerInTeamDao(self.session)
+        self.team_player = TeamPlayerDao(self.session)
         self.team = TeamDao(self.session)
         self.waiver = WaiverDao(self.session)
         self.poll = PollDao(redis=redis)

@@ -26,6 +26,7 @@ class LevelSG(StatesGroup):
 
 class LevelManageSG(StatesGroup):
     menu = State()
+    send_to_test = State()
 
 
 class GameWriteSG(StatesGroup):

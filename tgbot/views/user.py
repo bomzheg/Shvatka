@@ -13,5 +13,9 @@ def get_small_card_no_link(user: dto.User) -> str:
 
 def get_small_card(user: dto.User, notification: bool) -> str:
     if notification:
-        return hd.link(user.name_mention, f"tg://user?id={user.tg_id}")
+        return render_small_card_link(user)
     return get_small_card_no_link(user)
+
+
+def render_small_card_link(user: dto.User) -> str:
+    return hd.link(user.name_mention, f"tg://user?id={user.tg_id}")

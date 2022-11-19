@@ -13,13 +13,15 @@ from shvatka.scheduler import LevelTestScheduler
 from shvatka.services.game import get_game
 from shvatka.services.level import get_by_id
 from shvatka.services.level_testing import start_level_test, check_level_testing_key
-from shvatka.services.organizers import get_by_player
+from shvatka.services.organizers import get_by_player, get_org_by_id
 from shvatka.utils.key_checker_lock import KeyCheckerFactory
+from tgbot import keyboards as kb
 from tgbot.states import LevelTest
 from tgbot.views.game import BotOrgNotifier
 from tgbot.views.hint_factory.hint_content_resolver import HintContentResolver
 from tgbot.views.hint_sender import HintSender
 from tgbot.views.level_testing import create_level_test_view
+from tgbot.views.user import render_small_card_link
 
 
 async def edit_level(c: CallbackQuery, button: Button, manager: DialogManager):
@@ -50,6 +52,22 @@ async def show_all_hints(author: dto.Player, hint_sender: HintSender, level: dto
         chat_id=author.user.tg_id,
         text=f"Это был весь уровень {level.name_id}",
     )
+
+
+async def send_to_testing(c: CallbackQuery, widget: Any, manager: DialogManager, org_id: str):
+    dao: HolderDao = manager.middleware_data["dao"]
+    bot: Bot = manager.middleware_data["bot"]
+    author: dto.Player = manager.middleware_data["player"]
+    level = await get_by_id(manager.start_data["level_id"], author, dao.level)
+    org = await get_org_by_id(id_=int(org_id), dao=dao.organizer)
+    await bot.send_message(
+        chat_id=org.player.user.tg_id,
+        text=f"{render_small_card_link(author.user)} "
+             f"предлагает протестировать уровень {level.name_id}. "
+             f"Начать прямо сейчас?",
+        reply_markup=kb.get_kb_level_test_invite(level, org)
+    )
+    await c.answer("Приглашение отправлено")
 
 
 async def level_testing(c: CallbackQuery, button: Button, manager: DialogManager):

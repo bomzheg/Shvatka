@@ -33,10 +33,23 @@ async def get_by_id(id_: int, author: dto.Player, dao: LevelByIdGetter) -> dto.L
     return level
 
 
+async def get_level_by_id_for_org(id_: int, org: dto.SecondaryOrganizer, dao: LevelByIdGetter) -> dto.Level:
+    level = await dao.get_by_id(id_=id_)
+    check_is_org(level, org)
+    return level
+
+
 def check_is_author(level: dto.Level, player: dto.Player):
     if level.author.id != player.id:
         raise NotAuthorizedForEdit(
             permission_name="game_edit", player=player, level=level,
+        )
+
+
+def check_is_org(level: dto.Level, org: dto.SecondaryOrganizer):
+    if level.game_id != org.game.id or org.deleted:
+        raise NotAuthorizedForEdit(
+            permission_name="game_edit", player=org.player, level=level,
         )
 
 

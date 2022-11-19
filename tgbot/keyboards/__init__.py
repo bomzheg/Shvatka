@@ -1,3 +1,7 @@
+from .invite_test_level import (
+    LevelTestInviteCD,
+    get_kb_level_test_invite,
+)
 from .organizer import (
     AddGameOrgID,
     AgreeBeOrgCD,

@@ -1,9 +1,23 @@
+from aiogram import Dispatcher, Router
 from aiogram_dialog import DialogRegistry
 
 from tgbot.dialogs import (
     game_manage, level_scn, time_hint, game_scn, level_manage, game_orgs,
     game_spy, main_menu, game_publish,
 )
+from tgbot.filters import GameStatusFilter
+
+
+def setup(dp: Dispatcher):
+    dialogs_router = Router(name="tgbot.dialogs.common")
+
+    dialogs_router.callback_query.filter(GameStatusFilter(running=False))
+    dialogs_router.message.filter(GameStatusFilter(running=False))
+
+    dp.include_router(dialogs_router)
+    registry = DialogRegistry(dp, default_router=dialogs_router)
+    setup_dialogs(registry)
+    dp.include_router(setup_active_game_dialogs(registry))
 
 
 def setup_dialogs(registry: DialogRegistry):
@@ -14,5 +28,10 @@ def setup_dialogs(registry: DialogRegistry):
     time_hint.setup(registry)
     level_manage.setup(registry)
     game_orgs.setup(registry)
-    game_spy.setup(registry)
     game_publish.setup(registry)
+
+
+def setup_active_game_dialogs(registry: DialogRegistry) -> Router:
+    router = Router(name="tgbot.dialogs.game.running")
+    game_spy.setup(registry, router)
+    return router

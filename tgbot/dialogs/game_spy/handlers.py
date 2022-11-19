@@ -1,5 +1,4 @@
 from aiogram.types import CallbackQuery
-from aiogram.utils.text_decorations import html_decoration as hd
 from aiogram_dialog import DialogManager
 from aiogram_dialog.widgets.kbd import Button
 
@@ -19,7 +18,7 @@ async def keys_handler(c: CallbackQuery, widget: Button, manager: DialogManager)
     keys = await get_typed_keys(game=game, player=player, dao=dao.key_time)
     text = render_log_keys(keys)
     page = await telegraph.create_page(
-        title=f"Лог ключей игры {hd.quote(game.name)}",
-        content=text,
+        title=f"Лог ключей игры {game.name}",
+        html_content=text,
     )
-    manager.dialog_data["key_link"] = page.url
+    manager.dialog_data["key_link"] = page["url"]

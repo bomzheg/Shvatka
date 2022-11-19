@@ -1,10 +1,9 @@
 import logging
 
 from aiogram import Dispatcher
-from aiogram_dialog import DialogRegistry
 
+from tgbot import dialogs
 from tgbot.config.models.bot import BotConfig
-from tgbot.dialogs import setup_dialogs
 from tgbot.handlers import base, game, waivers, player
 from tgbot.handlers import errors
 from tgbot.handlers import last
@@ -20,8 +19,7 @@ def setup_handlers(dp: Dispatcher, bot_config: BotConfig):
     dp.include_router(superuser.setup(bot_config))
     dp.include_router(player.setup())
 
-    registry = DialogRegistry(dp)
-    setup_dialogs(registry)
+    dialogs.setup(dp)
 
     dp.include_router(team.setup())
     dp.include_router(game.setup())

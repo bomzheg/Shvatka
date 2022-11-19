@@ -14,20 +14,23 @@ class KeyEmoji(enum.Enum):
 
 
 def render_log_keys(log_keys: dict[dto.Team, list[dto.KeyTime]]) -> str:
-    text = f"Лог ключей на {datetime.now(tz=tz_game).strftime(DATETIME_FORMAT)}:\n"
+    text = f"Лог ключей на {datetime.now(tz=tz_game).strftime(DATETIME_FORMAT)}:<br/>"
     for team, keys in log_keys.items():
-        text += f"\n{hd.underline(hd.quote(team.name))}:\n"
+        text += f"<hr/>{hd.quote(team.name)}:"
         n_level = keys[0].level_number - 1
-        for key in keys:
+        for i, key in enumerate(keys):
             if n_level < key.level_number:
                 # keys are sorted, so is previous and next level not equals - add caption
                 n_level = key.level_number
-                text += f"Уровень №{n_level + 1}\n"
+                if i > 0:
+                    text += "</ol><br/>"
+                text += f"Уровень №{n_level + 1}<br/><ol>"
             text += (
-                f"{to_emoji(key).value}{hd.quote(key.text)} "
+                f"<li>{to_emoji(key).value}{hd.quote(key.text)} "
                 f"{key.at.astimezone(tz=tz_game).time()} "
-                f"{hd.quote(key.player.user.name_mention)}\n"
+                f"{key.player.user.name_mention}</li>"
             )
+        text += "</ol>"
     return text
 
 

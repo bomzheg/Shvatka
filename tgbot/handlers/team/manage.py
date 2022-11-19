@@ -18,6 +18,7 @@ from tgbot.filters.game_status import GameStatusFilter
 from tgbot.filters.has_target import HasTargetFilter
 from tgbot.filters.is_admin import is_admin_filter
 from tgbot.filters.is_team import IsTeamFilter
+from tgbot.utils.router import disable_router_on_game
 from tgbot.views.commands import CREATE_TEAM_COMMAND, ADD_IN_TEAM_COMMAND
 from tgbot.views.texts import NOT_SUPERGROUP_ERROR
 
@@ -121,6 +122,8 @@ async def cmd_add_in_team(
 
 def setup_team_manage() -> Router:
     router = Router(name=__name__)
+    disable_router_on_game(router)
+
     router.message.register(
         cmd_create_team,
         Command(commands=CREATE_TEAM_COMMAND.command),

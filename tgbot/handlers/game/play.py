@@ -1,6 +1,8 @@
 from aiogram import Bot, Router
 from aiogram.dispatcher.event.bases import SkipHandler
+from aiogram.filters import Command
 from aiogram.types import Message
+from aiogram_dialog import DialogManager
 
 from db.dao.holder import HolderDao
 from shvatka.clients.file_storage import FileStorage
@@ -12,6 +14,8 @@ from shvatka.utils.key_checker_lock import KeyCheckerFactory
 from tgbot.config.models.bot import BotConfig
 from tgbot.filters import is_key
 from tgbot.filters.game_status import GameStatusFilter
+from tgbot.states import OrgSpy
+from tgbot.views.commands import SPY_COMMAND
 from tgbot.views.game import GameBotLog, create_bot_game_view, BotOrgNotifier
 
 
@@ -44,9 +48,15 @@ async def check_key_handler(
         raise SkipHandler
 
 
+async def spy_menu(m: Message, dialog_manager: DialogManager):
+    await dialog_manager.start(OrgSpy.main)
+
+
 def setup() -> Router:
     router = Router(name=__name__)
+    router.message.filter(GameStatusFilter(running=True))
     router.message.register(
-        check_key_handler, GameStatusFilter(running=True), is_key
+        check_key_handler, is_key,
     )  # is_team, is_played_player is_key
+    router.message.register(spy_menu, Command(commands=SPY_COMMAND))  # is_org
     return router

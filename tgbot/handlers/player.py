@@ -10,6 +10,7 @@ from shvatka.services.player import save_promotion_confirm_invite, check_promoti
 from shvatka.utils.exceptions import SaltError
 from tgbot import keyboards as kb
 from tgbot.states import MainMenu
+from tgbot.utils.router import disable_router_on_game
 from tgbot.views.commands import START_COMMAND
 
 
@@ -70,6 +71,8 @@ async def inviter_click_handler(c: CallbackQuery):
 
 def setup() -> Router:
     router = Router(name=__name__)
+    disable_router_on_game(router)
+
     router.message.register(main_menu, Command(START_COMMAND))
     router.inline_query.register(send_promotion_invite, kb.PromotePlayerID.filter())
     router.callback_query.register(

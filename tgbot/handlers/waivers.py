@@ -15,6 +15,7 @@ from tgbot import keyboards as kb
 from tgbot.filters.game_status import GameStatusFilter
 from tgbot.filters.is_team import IsTeamFilter
 from tgbot.services.waiver import swap_saved_message, get_saved_message
+from tgbot.utils.router import disable_router_on_game
 from tgbot.views.commands import START_WAIVERS_COMMAND, APPROVE_WAIVERS_COMMAND
 from tgbot.views.utils import total_remove_msg
 from tgbot.views.waiver import get_waiver_poll_text, start_approve_waivers, get_waiver_final_text
@@ -215,6 +216,8 @@ async def add_force_player(
 
 def setup() -> Router:
     router = Router(name=__name__)
+    disable_router_on_game(router)
+
     # TODO добавить обработку событий ниже, сработавших не в тот статус
     router.message.filter(
         GameStatusFilter(status=GameStatus.getting_waivers),

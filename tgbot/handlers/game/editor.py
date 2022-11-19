@@ -6,8 +6,8 @@ from aiogram.types import Message
 from aiogram_dialog import StartMode, DialogManager
 
 from tgbot.filters.can_be_author import can_be_author
-from tgbot.filters.game_status import GameStatusFilter
 from tgbot.states import MyGamesPanel, LevelSG, GameWriteSG
+from tgbot.utils.router import disable_router_on_game
 from tgbot.views.commands import MY_GAMES_COMMAND, NEW_LEVEL_COMMAND, NEW_GAME_COMMAND
 
 logger = logging.getLogger(__name__)
@@ -27,8 +27,8 @@ async def get_game_editor(_: Message, dialog_manager: DialogManager):
 
 def setup() -> Router:
     router = Router(name=__name__)
+    disable_router_on_game(router)
     router.message.filter(
-        GameStatusFilter(running=False),
         can_be_author,
     )
 

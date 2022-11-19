@@ -9,6 +9,7 @@ from shvatka.services.organizers import check_allow_manage_orgs, save_invite_to_
     agree_to_be_org, \
     check_game_token
 from tgbot import keyboards as kb
+from tgbot.utils.router import disable_router_on_game
 from tgbot.views.game import BotOrgNotifier
 
 
@@ -69,6 +70,8 @@ async def inviter_click_handler(c: CallbackQuery):
 
 def setup() -> Router:
     router = Router(name=__name__)
+    disable_router_on_game(router)
+
     router.inline_query.register(invite_org_inline_query, kb.AddGameOrgID.filter())
     router.callback_query.register(
         inviter_click_handler, kb.AgreeBeOrgCD.filter(),

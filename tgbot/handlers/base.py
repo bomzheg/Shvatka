@@ -51,7 +51,7 @@ def setup() -> Router:
     router.message.register(
         chat_id, Command(commands=["idchat", CHAT_ID_COMMAND.command], prefix="/!")
     )
-    router.message.register(cancel_state, Command(commands=CANCEL_COMMAND.command))
+    router.message.register(cancel_state, Command(commands=CANCEL_COMMAND))
     router.message.register(
         chat_migrate, F.content_types == ContentType.MIGRATE_TO_CHAT_ID
     )

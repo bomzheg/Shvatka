@@ -18,8 +18,8 @@ class TeamPlayerMiddleware(BaseMiddleware):
     ) -> Any:
         dao: HolderDao = data["dao"]
         player: dto.Player = data["player"]
-        team = await get_my_team(player=player, dao=dao.player_in_team)
-        team_player = await get_team_player(player, team, dao.player_in_team)
+        team = await get_my_team(player=player, dao=dao.team_player)
+        team_player = await get_team_player(player, team, dao.team_player)
         data["team_player"] = team_player
         result = await handler(event, data)
         return result

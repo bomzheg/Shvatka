@@ -14,4 +14,4 @@ async def db_team_provider(
     dao: HolderDao = Depends(dao_provider),
     player: dto.Player = Depends(player_provider),
 ) -> dto.Team:
-    return await get_my_team(player, dao.player_in_team)
+    return await get_my_team(player, dao.team_player)

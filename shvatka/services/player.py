@@ -28,11 +28,11 @@ async def get_my_team(player: dto.Player, dao: PlayerTeamChecker) -> dto.Team:
 
 
 async def get_my_role(player: dto.Player, dao: PlayerTeamChecker) -> str:
-    return (await dao.get_player_in_team(player)).role
+    return (await dao.get_team_player(player)).role
 
 
 async def get_my_emoji(player: dto.Player, dao: PlayerTeamChecker) -> str:
-    pit = await dao.get_player_in_team(player)
+    pit = await dao.get_team_player(player)
     return pit.emoji or EMOJI_BY_ROLE.get(pit.role, DEFAULT_EMOJI)
 
 
@@ -68,7 +68,7 @@ async def join_team(
 
 
 async def check_player_on_team(player: dto.Player, team: dto.Team, dao: PlayerInTeamGetter):
-    pit = await dao.get_player_in_team(player)
+    pit = await dao.get_team_player(player)
     if pit.team_id != team.id:
         raise PlayerNotInTeam(player=player, team=team)
 
@@ -108,7 +108,7 @@ def check_can_add_players(team_player: dto.FullTeamPlayer):
 
 async def get_team_player(player: dto.Player, team: dto.Team, dao: PlayerInTeamGetter) -> dto.FullTeamPlayer:
     team_player = dto.FullTeamPlayer.from_simple(
-        team_player=await dao.get_player_in_team(player),
+        team_player=await dao.get_team_player(player),
         team=team, player=player,
     )
     if team_player.team_id != team.id:

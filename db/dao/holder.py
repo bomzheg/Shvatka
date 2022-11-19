@@ -41,7 +41,7 @@ class HolderDao:
         self.key_time = KeyTimeDao(self.session)
         self.organizer = OrganizerDao(self.session)
         self.player = PlayerDao(self.session)
-        self.player_in_team = PlayerInTeamDao(self.session)
+        self.team_player = PlayerInTeamDao(self.session)
         self.team = TeamDao(self.session)
         self.waiver = WaiverDao(self.session)
         self.poll = PollDao(redis=redis)
@@ -53,7 +53,7 @@ class HolderDao:
 
     @property
     def waiver_vote_adder(self) -> WaiverVoteAdder:
-        return WaiverVoteAdderImpl(poll=self.poll, waiver=self.waiver, player_in_team=self.player_in_team)
+        return WaiverVoteAdderImpl(poll=self.poll, waiver=self.waiver, team_player=self.team_player)
 
     @property
     def waiver_vote_getter(self) -> WaiverVoteGetter:
@@ -63,7 +63,7 @@ class HolderDao:
     def waiver_approver(self) -> WaiverApprover:
         return WaiverApproverImpl(
             poll=self.poll, player=self.player, waiver=self.waiver,
-            player_in_team=self.player_in_team
+            team_player=self.team_player
         )
 
     @property
@@ -81,13 +81,13 @@ class HolderDao:
     @property
     def team_creator(self) -> TeamCreator:
         return TeamCreatorImpl(
-            team=self.team, player_in_team=self.player_in_team,
+            team=self.team, team_player=self.team_player,
         )
 
     @property
     def team_leaver(self) -> TeamLeaver:
         return TeamLeaverImpl(
-            game=self.game, player_in_team=self.player_in_team,
+            game=self.game, team_player=self.team_player,
             waiver=self.waiver, poll=self.poll,
         )
 

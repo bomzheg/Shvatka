@@ -16,7 +16,7 @@ class WaiverVoteAdder(Writer, PlayerInTeamGetter):
     ) -> bool:
         raise NotImplementedError
 
-    async def get_player_in_team(self, player: dto.Player) -> dto.PlayerInTeam:
+    async def get_team_player(self, player: dto.Player) -> dto.PlayerInTeam:
         raise NotImplementedError
 
 

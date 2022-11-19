@@ -61,7 +61,7 @@ async def start_approve_waivers_handler(
     dao: HolderDao,
     bot: Bot
 ):
-    team = await get_my_team(player, dao.player_in_team)
+    team = await get_my_team(player, dao.team_player)
     check_allow_approve_waivers(await get_team_player(player, team, dao.waiver_approver))
     await total_remove_msg(
         bot=bot,
@@ -83,7 +83,7 @@ async def waiver_main_menu(
 ):
     if game.id != callback_data.game_id:
         raise AnotherGameIsActive(game=game, player=player)
-    team = await get_my_team(player, dao.player_in_team)
+    team = await get_my_team(player, dao.team_player)
     if team.id != callback_data.team_id:
         raise PlayerNotInTeam(
             player=player, team=team,
@@ -103,7 +103,7 @@ async def confirm_approve_waivers_handler(
 ):
     if game.id != callback_data.game_id:
         raise AnotherGameIsActive(game=game, player=player)
-    team = await get_my_team(player, dao.player_in_team)
+    team = await get_my_team(player, dao.team_player)
     if team.id != callback_data.team_id:
         raise PlayerNotInTeam(
             player=player, team=team,
@@ -127,7 +127,7 @@ async def waiver_user_menu(
 ):
     if game.id != callback_data.game_id:
         raise AnotherGameIsActive(game=game, player=player)
-    team = await get_my_team(player, dao.player_in_team)
+    team = await get_my_team(player, dao.team_player)
     if team.id != callback_data.team_id:
         raise PlayerNotInTeam(
             player=player, team=team,
@@ -152,7 +152,7 @@ async def waiver_remove_user_vote(
 ):
     if game.id != callback_data.game_id:
         raise AnotherGameIsActive(game=game, player=player)
-    team = await get_my_team(player, dao.player_in_team)
+    team = await get_my_team(player, dao.team_player)
     if team.id != callback_data.team_id:
         raise PlayerNotInTeam(
             player=player, team=team,
@@ -173,7 +173,7 @@ async def waiver_add_force_menu(
 ):
     if game.id != callback_data.game_id:
         raise AnotherGameIsActive(game=game, player=player)
-    team = await get_my_team(player, dao.player_in_team)
+    team = await get_my_team(player, dao.team_player)
     if team.id != callback_data.team_id:
         raise PlayerNotInTeam(
             player=player, team=team,
@@ -198,7 +198,7 @@ async def add_force_player(
 ):
     if game.id != callback_data.game_id:
         raise AnotherGameIsActive(game=game, player=player)
-    team = await get_my_team(player, dao.player_in_team)
+    team = await get_my_team(player, dao.team_player)
     if team.id != callback_data.team_id:
         raise PlayerNotInTeam(
             player=player, team=team,

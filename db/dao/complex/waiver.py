@@ -11,7 +11,7 @@ from shvatka.models.enums.played import Played
 class WaiverVoteAdderImpl(WaiverVoteAdder):
     poll: PollDao
     waiver: WaiverDao
-    player_in_team: PlayerInTeamDao
+    team_player: PlayerInTeamDao
 
     async def is_excluded(
         self, game: dto.Game, player: dto.Player, team: dto.Team,
@@ -21,8 +21,8 @@ class WaiverVoteAdderImpl(WaiverVoteAdder):
     async def add_player_vote(self, team_id: int, player_id: int, vote_var: str) -> None:
         return await self.poll.add_player_vote(team_id, player_id, vote_var)
 
-    async def get_player_in_team(self, player: dto.Player) -> dto.PlayerInTeam:
-        return await self.player_in_team.get_player_in_team(player)
+    async def get_team_player(self, player: dto.Player) -> dto.PlayerInTeam:
+        return await self.team_player.get_team_player(player)
 
 
 @dataclass
@@ -40,7 +40,7 @@ class WaiverVoteGetterImpl(WaiverVoteGetter):
 @dataclass
 class WaiverApproverImpl(WaiverApprover, WaiverVoteGetterImpl):
     waiver: WaiverDao
-    player_in_team: PlayerInTeamDao
+    team_player: PlayerInTeamDao
 
     async def upsert(self, waiver: dto.Waiver) -> None:
         return await self.waiver.upsert(waiver)
@@ -48,11 +48,11 @@ class WaiverApproverImpl(WaiverApprover, WaiverVoteGetterImpl):
     async def commit(self):
         return await self.waiver.commit()
 
-    async def get_player_in_team(self, player: dto.Player) -> dto.PlayerInTeam:
-        return await self.player_in_team.get_player_in_team(player)
+    async def get_team_player(self, player: dto.Player) -> dto.PlayerInTeam:
+        return await self.team_player.get_team_player(player)
 
     async def get_players(self, team: dto.Team) -> list[dto.FullTeamPlayer]:
-        return await self.player_in_team.get_players(team)
+        return await self.team_player.get_players(team)
 
     async def del_player_vote(self, team_id: int, player_id: int) -> None:
         return await self.poll.del_player_vote(team_id, player_id)

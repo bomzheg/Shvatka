@@ -12,38 +12,38 @@ from tests.fixtures.team import create_second_team
 async def test_add_player_to_team(
     harry: dto.Player, hermione: dto.Player, draco: dto.Player, gryffindor: dto.Team, dao: HolderDao,
 ):
-    assert 1 == await dao.player_in_team.count()
-    assert gryffindor == await get_my_team(harry, dao.player_in_team)
-    assert CAPTAIN_ROLE == await get_my_role(harry, dao.player_in_team)
+    assert 1 == await dao.team_player.count()
+    assert gryffindor == await get_my_team(harry, dao.team_player)
+    assert CAPTAIN_ROLE == await get_my_role(harry, dao.team_player)
 
-    await join_team(hermione, gryffindor, harry, dao.player_in_team)
-    assert gryffindor == await get_my_team(hermione, dao.player_in_team)
-    assert 2 == await dao.player_in_team.count()
-    assert DEFAULT_ROLE == await get_my_role(hermione, dao.player_in_team)
+    await join_team(hermione, gryffindor, harry, dao.team_player)
+    assert gryffindor == await get_my_team(hermione, dao.team_player)
+    assert 2 == await dao.team_player.count()
+    assert DEFAULT_ROLE == await get_my_role(hermione, dao.team_player)
 
     with pytest.raises(PlayerAlreadyInTeam):
-        await join_team(harry, gryffindor, harry, dao.player_in_team)
+        await join_team(harry, gryffindor, harry, dao.team_player)
 
     with pytest.raises(PermissionsError):
-        await join_team(draco, gryffindor, hermione, dao.player_in_team)
+        await join_team(draco, gryffindor, hermione, dao.team_player)
 
     with pytest.raises(PlayerAlreadyInTeam):
-        await join_team(hermione, gryffindor, harry, dao.player_in_team)
+        await join_team(hermione, gryffindor, harry, dao.team_player)
 
     with pytest.raises(PlayerAlreadyInTeam):
         await create_second_team(hermione, dao)
 
-    assert 2 == await dao.player_in_team.count()
+    assert 2 == await dao.team_player.count()
 
     slytherin = await create_second_team(draco, dao)
 
-    assert 3 == await dao.player_in_team.count()
-    assert CAPTAIN_ROLE == await get_my_role(draco, dao.player_in_team)
+    assert 3 == await dao.team_player.count()
+    assert CAPTAIN_ROLE == await get_my_role(draco, dao.team_player)
 
     with pytest.raises(PlayerAlreadyInTeam):
-        await join_team(harry, slytherin, draco, dao.player_in_team)
+        await join_team(harry, slytherin, draco, dao.team_player)
 
     with pytest.raises(PlayerAlreadyInTeam):
-        await join_team(hermione, slytherin, draco, dao.player_in_team)
+        await join_team(hermione, slytherin, draco, dao.team_player)
 
-    assert 3 == await dao.player_in_team.count()
+    assert 3 == await dao.team_player.count()

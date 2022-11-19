@@ -32,10 +32,10 @@ class PlayerInTeamDao(BaseDAO[models.PlayerInTeam]):
             )
         )
         try:
-            player_in_team = result.scalar_one()
+            team_player = result.scalar_one()
         except NoResultFound:
             return None
-        team: models.Team = player_in_team.team
+        team: models.Team = team_player.team
         return team.to_dto(team.chat.to_dto())
 
     async def have_team(self, player: dto.Player) -> bool:
@@ -43,26 +43,26 @@ class PlayerInTeamDao(BaseDAO[models.PlayerInTeam]):
 
     async def join_team(self, player: dto.Player, team: dto.Team, role: str, as_captain: bool = False):
         await self.check_player_free(player)
-        if player_in_team := await self.need_restore(player, team):
-            player_in_team.date_left = None
-            await self.session.merge(player_in_team)
+        if team_player := await self.need_restore(player, team):
+            team_player.date_left = None
+            await self.session.merge(team_player)
             raise PlayerRestoredInTeam(player=player, team=team)
-        player_in_team = models.PlayerInTeam(
+        team_player = models.PlayerInTeam(
             player_id=player.id,
             team_id=team.id,
             role=role,
         )
         if as_captain:
-            player_in_team.can_remove_players = True
-            player_in_team.can_manage_waivers = True
-            player_in_team.can_add_players = True
-            player_in_team.can_change_team_name = True
-            player_in_team.can_manage_players = True
-        self.session.add(player_in_team)
-        await self._flush(player_in_team)
+            team_player.can_remove_players = True
+            team_player.can_manage_waivers = True
+            team_player.can_add_players = True
+            team_player.can_change_team_name = True
+            team_player.can_manage_players = True
+        self.session.add(team_player)
+        await self._flush(team_player)
 
     async def leave_team(self, player: dto.Player):
-        pit = await self._get_my_player_in_team(player)
+        pit = await self._get_my_team_player(player)
         pit.date_left = datetime.now(tz=tz_utc)
         await self._flush(pit)
 
@@ -109,10 +109,10 @@ class PlayerInTeamDao(BaseDAO[models.PlayerInTeam]):
             for team_player in players
         ]
 
-    async def get_player_in_team(self, player: dto.Player) -> dto.PlayerInTeam:
-        return (await self._get_my_player_in_team(player)).to_dto()
+    async def get_team_player(self, player: dto.Player) -> dto.PlayerInTeam:
+        return (await self._get_my_team_player(player)).to_dto()
 
-    async def _get_my_player_in_team(self, player: dto.Player) -> models.PlayerInTeam:
+    async def _get_my_team_player(self, player: dto.Player) -> models.PlayerInTeam:
         result = await self.session.execute(
             select(models.PlayerInTeam)
             .where(

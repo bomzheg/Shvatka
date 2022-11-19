@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
 from .player import Player
-from .player_in_team import PlayerInTeam
+from .team_player import PlayerInTeam
 from ..enums.played import Played
 
 

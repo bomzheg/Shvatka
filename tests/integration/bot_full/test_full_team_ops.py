@@ -45,7 +45,7 @@ async def test_create_team(dp: Dispatcher, mocked_bot: MockedBot, dao: HolderDao
     )
     await dp.feed_update(bot, update)
     assert await dao.team.count() == 1
-    assert await dao.player_in_team.count() == 1
+    assert await dao.team_player.count() == 1
     team = (await dao.team._get_all())[0]
 
     assert chat.title == team.name
@@ -78,6 +78,6 @@ async def test_create_team(dp: Dispatcher, mocked_bot: MockedBot, dao: HolderDao
         ),
     )
     await dp.feed_update(bot, update)
-    assert await dao.player_in_team.count() == 2
+    assert await dao.team_player.count() == 2
     player = await upsert_player(await upsert_user(hermi, dao.user), dao.player)
-    assert await get_my_role(player, dao.player_in_team) == "brain"
+    assert await get_my_role(player, dao.team_player) == "brain"

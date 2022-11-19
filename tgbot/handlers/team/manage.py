@@ -90,7 +90,7 @@ async def cmd_add_in_team(
         )
     role = command.args or DEFAULT_ROLE
     try:
-        await join_team(target, team, player, dao.player_in_team, role)
+        await join_team(target, team, player, dao.team_player, role)
     except PlayerAlreadyInTeam as e:
         return await message.reply(
             f"Игрок {hd.quote(target.user.fullname)} уже находится в команде "
@@ -128,7 +128,7 @@ async def cmd_team(message: Message, team: dto.Team):
 
 
 async def cmd_players(message: Message, team: dto.Team, dao: HolderDao):
-    players = await get_team_players(team, dao.player_in_team)
+    players = await get_team_players(team, dao.team_player)
     await message.answer(
         text=render_team_players(team=team, players=players, notification=False),
         disable_web_page_preview=True,

@@ -32,7 +32,7 @@ async def test_game_play(
 ):
     await start_waivers(game, author, dao.game)
 
-    await join_team(hermione, gryffindor, harry, dao.player_in_team)
+    await join_team(hermione, gryffindor, harry, dao.team_player)
     await add_vote(game, gryffindor, harry, Played.yes, dao.waiver_vote_adder)
     await add_vote(game, gryffindor, hermione, Played.yes, dao.waiver_vote_adder)
     await approve_waivers(game, gryffindor, harry, dao.waiver_approver)
@@ -151,7 +151,7 @@ async def test_get_current_hints(
 ):
     await start_waivers(game, author, dao.game)
 
-    await join_team(hermione, gryffindor, harry, dao.player_in_team)
+    await join_team(hermione, gryffindor, harry, dao.team_player)
     await add_vote(game, gryffindor, harry, Played.yes, dao.waiver_vote_adder)
     await add_vote(game, gryffindor, hermione, Played.yes, dao.waiver_vote_adder)
     await approve_waivers(game, gryffindor, harry, dao.waiver_approver)

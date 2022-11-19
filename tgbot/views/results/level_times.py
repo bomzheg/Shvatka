@@ -6,6 +6,7 @@ from openpyxl import Workbook
 from openpyxl.worksheet.worksheet import Worksheet
 
 from shvatka.models import dto
+from shvatka.utils.datetime_utils import tz_game
 from shvatka.utils.exceptions import GameNotFinished
 
 
@@ -42,7 +43,7 @@ def export_results(game: dto.FullGame, game_stat: dto.GameStat, file: typing.Any
 def to_array_results(game_stat: dto.GameStat) -> list[TeamLevelsTimes]:
     result = []
     for team, lts in game_stat.level_times.items():
-        levels_times = [LevelTime(lt.level_number, lt.start_at) for lt in lts]
+        levels_times = [LevelTime(lt.level_number, trim_tz(lt.start_at)) for lt in lts]
         result.append(TeamLevelsTimes(team, levels_times))
     return result
 
@@ -73,3 +74,8 @@ def resize_columns(worksheet: Worksheet):
     for col in worksheet.columns:
         new_len = max([2, *[len(str(cell.value or "")) for cell in col]])
         worksheet.column_dimensions[col[0].column_letter].width = new_len
+
+
+def trim_tz(dt: datetime) -> datetime:
+    internal = dt.astimezone(tz=tz_game)
+    return datetime.combine(date=internal.date(), time=internal.time())

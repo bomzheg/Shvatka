@@ -59,7 +59,8 @@ class GamePublisher:
 
     async def publish_results(self):
         file = BytesIO()
-        await export_results(game=self.game, game_stat=self.game_stat, file=file)
+        export_results(game=self.game, game_stat=self.game_stat, file=file)
+        file.seek(0)
         msg = await self.bot.send_document(
             chat_id=self.channel_id,
             document=BufferedInputFile(file=file.read(), filename=f"{self.game.name}.xlsx"),

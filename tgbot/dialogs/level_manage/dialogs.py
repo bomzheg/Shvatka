@@ -45,6 +45,7 @@ level_manage = Dialog(
             "Кому отправить его на тестирование?\n\n"
             "ℹЧтобы добавить кого-то в этот список, нужно добавить организатора из меню игры"
         ),
+        SwitchTo(Const("⤴Назад"), id="back", state=LevelManageSG.menu),
         ScrollingGroup(
             Select(
                 Jinja("{{item.player.user.name_mention}}"),

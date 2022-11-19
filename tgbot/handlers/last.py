@@ -1,10 +1,21 @@
 import logging
+import re
 
 from aiogram import types, Router
+from aiogram.filters import CommandObject, Command
 
 from tgbot.filters import GameStatusFilter
 
 logger = logging.getLogger(__name__)
+
+
+async def message_in_state(message: types.Message, command: CommandObject):
+    await message.reply("Эта команда не поддерживается во время игры")
+    logger.warning(
+        "User %s send unsupported command %s",
+        message.from_user.id,
+        command.text,
+    )
 
 
 async def not_supported_callback_on_running_game(callback_query: types.CallbackQuery):
@@ -34,6 +45,11 @@ async def not_supported_callback(callback_query: types.CallbackQuery):
 
 def setup() -> Router:
     router = Router(name=__name__)
+    router.message.register(
+        message_in_state,
+        Command(commands=re.compile('.*')),
+        GameStatusFilter(running=True),
+    )
     router.callback_query.register(
         not_supported_callback_on_running_game,
         GameStatusFilter(running=True),

@@ -1,16 +1,19 @@
 import asyncio
-import tempfile
 from _operator import add
 from datetime import timedelta
 from functools import reduce
+from io import BytesIO
 
 from aiogram import Bot
+from aiogram.types import BufferedInputFile
 from aiogram.utils.text_decorations import html_decoration as hd
+from telegraph.aio import Telegraph
 
 from shvatka.models import dto
 from shvatka.utils.datetime_utils import DATE_FORMAT
 from tgbot.config.models.bot import BotConfig
 from tgbot.views.hint_sender import HintSender
+from tgbot.views.keys import render_log_keys
 from tgbot.views.results.level_times import export_results
 
 
@@ -23,6 +26,8 @@ class GamePublisher:
         bot: Bot,
         config: BotConfig,
         game_stat: dto.GameStat,
+        telegraph: Telegraph,
+        keys: dict[dto.Team, list[dto.KeyTime]],
     ):
         self.hint_sender = hint_sender
         self.game = game
@@ -30,6 +35,8 @@ class GamePublisher:
         self.bot = bot
         self.config = config
         self.game_stat = game_stat
+        self.telegraph = telegraph
+        self.keys = keys
 
     async def publish_scn(self) -> int:
         msg = await self.bot.send_message(
@@ -51,10 +58,25 @@ class GamePublisher:
         return msg.message_id
 
     async def publish_results(self):
-        file = tempfile.TemporaryFile(mode="wrb")
+        file = BytesIO()
         await export_results(game=self.game, game_stat=self.game_stat, file=file)
-        msg = await self.bot.send_document(self.channel_id, file)
+        msg = await self.bot.send_document(
+            chat_id=self.channel_id,
+            document=BufferedInputFile(file=file.read(), filename=f"{self.game.name}.xlsx"),
+        )
         file.close()
+        return msg.message_id
+
+    async def publish_keys(self) -> int:
+        text = render_log_keys(self.keys)
+        page = await self.telegraph.create_page(
+            title=f"Лог ключей игры {self.game.name}",
+            html_content=text,
+        )
+        msg = await self.bot.send_message(
+            chat_id=self.channel_id,
+            text=hd.link("Лог ключей игры", page["url"]),
+        )
         return msg.message_id
 
     def get_approximate_time(self) -> timedelta:

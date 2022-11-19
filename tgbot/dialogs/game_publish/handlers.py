@@ -6,12 +6,13 @@ from aiogram import Bot
 from aiogram.types import Message
 from aiogram.utils.text_decorations import html_decoration as hd
 from aiogram_dialog import DialogManager
+from telegraph.aio import Telegraph
 
 from db.dao.holder import HolderDao
 from shvatka.clients.file_storage import FileStorage
 from shvatka.models import dto
 from shvatka.services.game import get_full_game
-from shvatka.services.game_stat import get_game_stat
+from shvatka.services.game_stat import get_game_stat, get_typed_keys
 from shvatka.utils.datetime_utils import tz_utc
 from tgbot.config.models.bot import BotConfig
 from tgbot.views.hint_sender import create_hint_sender
@@ -39,13 +40,16 @@ async def process_publish_message(message: Message, dialog_: Any, manager: Dialo
     game_id = manager.start_data["game_id"]
     dao: HolderDao = manager.middleware_data["dao"]
     storage: FileStorage = manager.middleware_data["file_storage"]
-    hint_sender = create_hint_sender(bot=bot, dao=dao, storage=storage)
+    telegraph: Telegraph = manager.middleware_data["telegraph"]
     author: dto.Player = manager.middleware_data["player"]
     config: BotConfig = manager.middleware_data["config"]
+    hint_sender = create_hint_sender(bot=bot, dao=dao, storage=storage)
     game = await get_full_game(id_=game_id, author=author, dao=dao.game)
     game_stat = await get_game_stat(game=game, player=author, dao=dao.game_stat)
+    keys = await get_typed_keys(game=game, player=author, dao=dao.key_time)
     game_publisher = GamePublisher(
-        hint_sender=hint_sender, game=game, channel_id=channel_id, bot=bot, config=config, game_stat=game_stat,
+        hint_sender=hint_sender, game=game, channel_id=channel_id, bot=bot,
+        config=config, game_stat=game_stat, keys=keys, telegraph=telegraph,
     )
     await message.answer(
         "Начинаю отправку сценария в канал, в связи с ограничениями платформы, "
@@ -64,14 +68,16 @@ async def process_publish_message(message: Message, dialog_: Any, manager: Dialo
 async def publish_game(game_publisher: GamePublisher, manager: DialogManager):
     started_msg_id = await game_publisher.publish_scn()
     results_msg_id = await game_publisher.publish_results()
+    keys_msg_id = await game_publisher.publish_keys()
     channel_id = game_publisher.channel_id
     bot = game_publisher.bot
     invite = await get_invite(channel_id=channel_id, bot=bot)
 
     text_invite_scn = (
         f"Вход: {invite}\n"
-        f"Начало: {no_public_message_link(channel_id, started_msg_id)}\n"
-        f"Результаты игры: {no_public_message_link(channel_id, results_msg_id)}"
+        f"Начало сценария: {no_public_message_link(channel_id, started_msg_id)}\n"
+        f"Результаты игры: {no_public_message_link(channel_id, results_msg_id)}\n"
+        f"Лог ключей: {no_public_message_link(channel_id, keys_msg_id)}"
     )
     await bot.send_message(
         game_publisher.game.author.user.tg_id,

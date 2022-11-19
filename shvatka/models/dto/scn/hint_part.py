@@ -53,7 +53,7 @@ class VenueHint(BaseHint, LocationMixin):
 
 @dataclass
 class CaptionMixin:
-    caption: str = None
+    caption: str | None = None
 
 
 @dataclass

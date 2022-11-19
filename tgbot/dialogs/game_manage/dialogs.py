@@ -1,10 +1,10 @@
 from aiogram import F
 from aiogram_dialog import Dialog, Window
 from aiogram_dialog.widgets.input import MessageInput
-from aiogram_dialog.widgets.kbd import ScrollingGroup, Select, SwitchTo, Button, Calendar, Cancel
+from aiogram_dialog.widgets.kbd import ScrollingGroup, Select, SwitchTo, Button, Calendar, Cancel, Start
 from aiogram_dialog.widgets.text import Const, Format, Case, Jinja
 
-from tgbot.states import MyGamesPanel, GameSchedule
+from tgbot.states import MyGamesPanel, GameSchedule, GameWriteSG
 from .getters import get_my_games, get_game, get_game_time, get_game_datetime
 from .handlers import select_my_game, start_waivers, select_date, process_time_message, schedule_game, show_scn, \
     start_schedule_game, show_zip_scn, show_game_orgs, cancel_scheduled_game, rename_game_handler, publish_game
@@ -14,6 +14,7 @@ games = Dialog(
     Window(
         Const("Список игр твоего авторства"),
         Cancel(Const("⤴Назад")),
+        Start(Const("✍Написать игру"), id="write_game", state=GameWriteSG.game_name),
         ScrollingGroup(
             Select(
                 Format("{item.name}"),

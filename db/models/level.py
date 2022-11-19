@@ -24,6 +24,8 @@ class ScenarioField(TypeDecorator):
         return self.dcf.dump(value, LevelScenario)
 
     def process_result_value(self, value: Any, dialect: Dialect) -> LevelScenario | None:
+        if value is None:
+            return None
         return self.dcf.load(value, LevelScenario)
 
 

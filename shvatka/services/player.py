@@ -1,7 +1,7 @@
 import logging
 
 from shvatka.dal.player import (
-    PlayerUpserter, PlayerTeamChecker, PlayerPromoter, TeamJoiner, TeamLeaver, PlayerInTeamGetter,
+    PlayerUpserter, PlayerTeamChecker, PlayerPromoter, TeamJoiner, TeamLeaver, PlayerInTeamGetter, TeamPlayerGetter,
 )
 from shvatka.dal.secure_invite import InviteSaver, InviteRemover, InviterDao
 from shvatka.models import dto
@@ -114,6 +114,10 @@ async def get_team_player(player: dto.Player, team: dto.Team, dao: PlayerInTeamG
     if team_player.team_id != team.id:
         raise PlayerNotInTeam(player=player, team=team)
     return team_player
+
+
+async def get_team_players(team: dto.Team, dao: TeamPlayerGetter) -> list[dto.FullTeamPlayer]:
+    return await dao.get_players(team)
 
 
 async def save_promotion_invite(inviter: dto.Player, dao: InviteSaver) -> str:

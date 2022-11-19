@@ -10,7 +10,7 @@ from aiogram_dialog import DialogManager
 from db.dao.holder import HolderDao
 from shvatka.models import dto
 from shvatka.services.chat import update_chat_id
-from tgbot.views.commands import CANCEL_COMMAND, CHAT_ID_COMMAND
+from tgbot.views.commands import CANCEL_COMMAND, CHAT_ID_COMMAND, ABOUT_COMMAND, CHAT_TYPE_COMMAND
 
 logger = logging.getLogger(__name__)
 
@@ -40,6 +40,28 @@ async def cancel_state(message: Message, state: FSMContext, dialog_manager: Dial
     await message.reply('Диалог прекращён, данные удалены', reply_markup=ReplyKeyboardRemove())
 
 
+async def cmd_about(message: Message):
+    logger.info("User %s read about in %s", message.from_user.id, message.chat.id)
+    await message.reply(
+        "Разработчик бота - @bomzheg\n"
+    )
+
+
+async def chat_type_cmd_supergroup(message: Message):
+    await message.reply(
+        f"Группа имеет тип supergroup, "
+        "ты можешь создать команду в этом чате, отправив /create_team",
+    )
+
+
+async def chat_type_cmd_group(message: Message):
+    await message.reply(
+        f"Группа имеет тип group, "
+        "чтобы создать команду в этом чате - преобразуй группу в супергруппу"
+        "https://telegra.ph/Preobrazovanie-gruppy-v-supergruppu-08-25",
+    )
+
+
 async def chat_migrate(message: Message, chat: dto.Chat, dao: HolderDao):
     new_id = message.migrate_to_chat_id
     await update_chat_id(chat, new_id, dao.chat)
@@ -51,6 +73,9 @@ def setup() -> Router:
     router.message.register(
         chat_id, Command(commands=["idchat", CHAT_ID_COMMAND.command], prefix="/!")
     )
+    router.message.register(cmd_about, Command(commands=ABOUT_COMMAND))
+    router.message.register(chat_type_cmd_group, Command(commands=CHAT_TYPE_COMMAND), F.chat.type == "group")
+    router.message.register(chat_type_cmd_supergroup, Command(commands=CHAT_TYPE_COMMAND), F.chat.type == "supergroup")
     router.message.register(cancel_state, Command(commands=CANCEL_COMMAND))
     router.message.register(
         chat_migrate, F.content_types == ContentType.MIGRATE_TO_CHAT_ID

@@ -8,18 +8,18 @@ from aiogram.utils.text_decorations import html_decoration as hd
 
 from db.dao.holder import HolderDao
 from shvatka.models import dto
-from shvatka.services.player import join_team
+from shvatka.services.player import join_team, get_team_players
 from shvatka.services.team import create_team
 from shvatka.utils.defaults_constants import DEFAULT_ROLE
 from shvatka.utils.exceptions import (
     TeamError, PlayerAlreadyInTeam, AnotherTeamInChat, PlayerRestoredInTeam, PermissionsError,
 )
-from tgbot.filters.game_status import GameStatusFilter
 from tgbot.filters.has_target import HasTargetFilter
 from tgbot.filters.is_admin import is_admin_filter
 from tgbot.filters.is_team import IsTeamFilter
 from tgbot.utils.router import disable_router_on_game
-from tgbot.views.commands import CREATE_TEAM_COMMAND, ADD_IN_TEAM_COMMAND
+from tgbot.views.commands import CREATE_TEAM_COMMAND, ADD_IN_TEAM_COMMAND, TEAM_COMMAND, PLAYERS_COMMAND
+from tgbot.views.team import render_team_card, render_team_players
 from tgbot.views.texts import NOT_SUPERGROUP_ERROR
 
 logger = logging.getLogger(__name__)
@@ -120,6 +120,21 @@ async def cmd_add_in_team(
     )
 
 
+async def cmd_team(message: Message, team: dto.Team):
+    await message.answer(
+        text=render_team_card(team),
+        disable_web_page_preview=True,
+    )
+
+
+async def cmd_players(message: Message, team: dto.Team, dao: HolderDao):
+    players = await get_team_players(team, dao.player_in_team)
+    await message.answer(
+        text=render_team_players(team=team, players=players, notification=False),
+        disable_web_page_preview=True,
+    )
+
+
 def setup_team_manage() -> Router:
     router = Router(name=__name__)
     disable_router_on_game(router)
@@ -127,21 +142,28 @@ def setup_team_manage() -> Router:
     router.message.register(
         cmd_create_team,
         Command(commands=CREATE_TEAM_COMMAND.command),
-        GameStatusFilter(running=False),
         IsTeamFilter(is_team=False),
         F.chat.type == "supergroup",
     )
     router.message.register(
         cmd_create_team_group,
         Command(commands=CREATE_TEAM_COMMAND.command),
-        GameStatusFilter(running=False),
         F.chat.type == "group",
     )
     router.message.register(
         cmd_add_in_team,
         Command(commands=ADD_IN_TEAM_COMMAND.command),
-        GameStatusFilter(running=False),
         HasTargetFilter(),
+        IsTeamFilter(),
+    )
+    router.message.register(
+        cmd_team,
+        Command(commands=TEAM_COMMAND),
+        IsTeamFilter(),
+    )
+    router.message.register(
+        cmd_players,
+        Command(commands=PLAYERS_COMMAND),
         IsTeamFilter(),
     )
     return router

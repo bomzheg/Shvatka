@@ -61,3 +61,8 @@ class TeamLeaver(Committer, ActiveGameFinder, WaiverRemover, PlayerInTeamGetter,
 
     async def leave_team(self, player: dto.Player) -> None:
         raise NotImplementedError
+
+
+class TeamPlayerGetter(Reader):
+    async def get_players(self, team: dto.Team) -> list[dto.FullTeamPlayer]:
+        raise NotImplementedError

@@ -8,11 +8,14 @@ from tgbot import keyboards as kb
 
 
 async def get_main(dao: HolderDao, player: dto.Player, game: dto.Game, **_):
-    org = await get_by_player_or_none(player=player, game=game, dao=dao.organizer)
+    if game:
+        org = await get_by_player_or_none(player=player, game=game, dao=dao.organizer)
+    else:
+        org = None
     return {
         "player": player,
         "game": game,
-        "org": org
+        "org": org,
     }
 
 

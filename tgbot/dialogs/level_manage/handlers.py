@@ -11,7 +11,7 @@ from shvatka.clients.file_storage import FileStorage
 from shvatka.models import dto
 from shvatka.scheduler import LevelTestScheduler
 from shvatka.services.game import get_game
-from shvatka.services.level import get_by_id
+from shvatka.services.level import get_by_id, get_level_by_id_for_org
 from shvatka.services.level_testing import start_level_test, check_level_testing_key
 from shvatka.services.organizers import get_by_player, get_org_by_id
 from shvatka.utils.key_checker_lock import KeyCheckerFactory
@@ -105,8 +105,14 @@ async def process_key_message(m: Message, dialog_: Any, manager: DialogManager) 
     level_id = manager.start_data["level_id"]
     author: dto.Player = manager.middleware_data["player"]
     locker: KeyCheckerFactory = manager.middleware_data["locker"]
-    level = await get_by_id(level_id, author, dao.level)
-    org = await get_org(author, level, dao)
+    try:
+        org_id = manager.start_data["org_id"]
+    except KeyError:
+        level = await get_by_id(level_id, author, dao.level)
+        org = await get_org(author, level, dao)
+    else:
+        org = await get_org_by_id(org_id, dao.organizer)
+        level = await get_level_by_id_for_org(manager.start_data["level_id"], org, dao.level)
     suite = dto.LevelTestSuite(tester=org, level=level)
     view = create_level_test_view(bot=bot, dao=dao, storage=storage)
     await check_level_testing_key(

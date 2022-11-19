@@ -67,7 +67,7 @@ level_test_dialog = Dialog(
     Window(
         Jinja("Идёт тестирование уровня <b>{{level.name_id}}</b>"),
         Button(
-            Const("⤴Назад"),
+            Const("⤴Прервать"),
             id="level_test_cancel",
             on_click=cancel_level_test,
         ),

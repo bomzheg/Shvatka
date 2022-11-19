@@ -18,12 +18,11 @@ def setup_handlers(dp: Dispatcher, bot_config: BotConfig):
     dp.include_router(base.setup())
     dp.include_router(superuser.setup(bot_config))
     dp.include_router(player.setup())
-
-    dialogs.setup(dp)
-
     dp.include_router(team.setup())
     dp.include_router(game.setup())
     dp.include_router(waivers.setup())
+
+    dialogs.setup(dp)
 
     # always must be last registered
     dp.include_router(last.setup())

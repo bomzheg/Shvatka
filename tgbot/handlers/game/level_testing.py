@@ -38,7 +38,9 @@ async def start_test_level(
     level = await get_level_by_id_for_org(callback_data.level_id, org, dao.level)
     suite = dto.LevelTestSuite(tester=org, level=level)
     view = create_level_test_view(bot=bot, dao=dao, storage=file_storage)
-    await dialog_manager.start(LevelTest.wait_key, data={"level_id": callback_data.level_id})
+    await dialog_manager.start(
+        LevelTest.wait_key, data={"level_id": callback_data.level_id, "org_id": org.id},
+    )
     await start_level_test(suite=suite, scheduler=scheduler, view=view, dao=dao.level_testing_complex)
 
 

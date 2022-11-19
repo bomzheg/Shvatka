@@ -12,10 +12,11 @@ from shvatka.services.game_play import check_key
 from shvatka.utils.exceptions import InvalidKey
 from shvatka.utils.key_checker_lock import KeyCheckerFactory
 from tgbot.config.models.bot import BotConfig
-from tgbot.filters import is_key
+from tgbot.filters import is_key, IsTeamFilter
 from tgbot.filters.game_status import GameStatusFilter
+from tgbot.filters.team_player import TeamPlayerFilter
 from tgbot.states import OrgSpy
-from tgbot.views.commands import SPY_COMMAND
+from tgbot.views.commands import SPY_COMMAND, SPY_LEVELS_COMMAND, SPY_KEYS_COMMAND
 from tgbot.views.game import GameBotLog, create_bot_game_view, BotOrgNotifier
 
 
@@ -48,15 +49,25 @@ async def check_key_handler(
         raise SkipHandler
 
 
-async def spy_menu(m: Message, dialog_manager: DialogManager):
+async def spy_menu(_: Message, dialog_manager: DialogManager):
     await dialog_manager.start(OrgSpy.main)
+
+
+async def spy_levels(_: Message, dialog_manager: DialogManager):
+    await dialog_manager.start(OrgSpy.spy)
+
+
+async def spy_keys(_: Message, dialog_manager: DialogManager):
+    await dialog_manager.start(OrgSpy.keys)
 
 
 def setup() -> Router:
     router = Router(name=__name__)
     router.message.filter(GameStatusFilter(running=True))
     router.message.register(
-        check_key_handler, is_key,
-    )  # is_team, is_played_player is_key
+        check_key_handler, is_key, IsTeamFilter(), TeamPlayerFilter(),
+    )  # TODO is playing in this game
     router.message.register(spy_menu, Command(commands=SPY_COMMAND))  # is_org
+    router.message.register(spy_levels, Command(commands=SPY_LEVELS_COMMAND))  # is_org
+    router.message.register(spy_keys, Command(commands=SPY_KEYS_COMMAND))  # is_org
     return router

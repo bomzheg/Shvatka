@@ -48,10 +48,13 @@ GAMES_COMMAND = BotCommand(command="games", description="список игр")
 
 GET_WAIVERS_COMMAND = BotCommand(command="get_waivers", description="показать текущие вейверы")
 SPY_COMMAND = BotCommand(
-    command="spy", description="показать на каких уровнях команды (только во время игры)"
+    command="spy", description="Меню шпиона - организатора"
 )
-GET_KEYS_COMMAND = BotCommand(
-    command="log_keys", description="получить введённые ключи (только во время игры)"
+SPY_LEVELS_COMMAND = BotCommand(
+    command="spy_levels", description="показать на каких уровнях команды (только во время игры)"
+)
+SPY_KEYS_COMMAND = BotCommand(
+    command="spy_keys", description="получить введённые ключи (только во время игры)"
 )
 
 HELP_BASE = CommandsGroup("Базовые команды:", [
@@ -78,7 +81,8 @@ HELP_ORG = CommandsGroup("Команды для организаторов:", [
     NEW_LEVEL_COMMAND,
     GET_WAIVERS_COMMAND,
     SPY_COMMAND,
-    GET_KEYS_COMMAND,
+    SPY_LEVELS_COMMAND,
+    SPY_KEYS_COMMAND,
 ])
 
 HELP_TEAM = CommandsGroup("Команды для управления командой:", [

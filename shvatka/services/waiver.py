@@ -29,10 +29,16 @@ async def get_voted_list(
 
 async def add_vote(
     game: dto.Game, team: dto.Team, player: dto.Player, vote: Played, dao: WaiverVoteAdder,
-):  # TODO Добавить возможность капитану возвращать голос того, кого он исключил из вейверов
-    await check_player_on_team(player, team, dao)
+):
     if await dao.is_excluded(game=game, player=player, team=team):
         raise WaiverForbidden(player=player, team=team, game=game)
+    await force_add_vote(game=game, team=team, player=player, vote=vote, dao=dao)
+
+
+async def force_add_vote(
+    game: dto.Game, team: dto.Team, player: dto.Player, vote: Played, dao: WaiverVoteAdder,
+):
+    await check_player_on_team(player, team, dao)
     await dao.add_player_vote(team.id, player.id, vote.name)
 
 

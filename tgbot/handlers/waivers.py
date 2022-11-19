@@ -14,6 +14,8 @@ from shvatka.utils.exceptions import PlayerNotInTeam, AnotherGameIsActive
 from tgbot import keyboards as kb
 from tgbot.filters.game_status import GameStatusFilter
 from tgbot.filters.is_team import IsTeamFilter
+from tgbot.filters.team_player import TeamPlayerFilter
+from tgbot.middlewares import TeamPlayerMiddleware
 from tgbot.services.waiver import swap_saved_message, get_saved_message
 from tgbot.utils.router import disable_router_on_game
 from tgbot.views.commands import START_WAIVERS_COMMAND, APPROVE_WAIVERS_COMMAND
@@ -218,24 +220,60 @@ def setup() -> Router:
     router = Router(name=__name__)
     disable_router_on_game(router)
 
-    # TODO добавить обработку событий ниже, сработавших не в тот статус
+    player_router = router.include_router(Router(name=__name__ + ".player"))
+    captain_router = router.include_router(Router(name=__name__ + ".captain"))
+
+    # filters
     router.message.filter(
         GameStatusFilter(status=GameStatus.getting_waivers),
     )
     router.callback_query.filter(
         GameStatusFilter(status=GameStatus.getting_waivers),
     )
-    # TODO can_manage_waivers=True
-    router.message.register(start_waivers, Command(START_WAIVERS_COMMAND), IsTeamFilter())
-    # TODO is_team_player
-    router.callback_query.register(add_vote_handler, kb.WaiverVoteCD.filter(), IsTeamFilter())
-    #  TODO can_manage_waivers=True
-    router.message.register(start_approve_waivers_handler, Command(APPROVE_WAIVERS_COMMAND))
-    router.callback_query.register(confirm_approve_waivers_handler, kb.WaiverConfirmCD.filter())
+    player_router.callback_query.filter(TeamPlayerFilter())
+    captain_router.callback_query.filter(TeamPlayerFilter(can_manage_waivers=True))
+    # middlewares
+    captain_router.callback_query.outer_middleware.register(TeamPlayerMiddleware())
 
-    router.callback_query.register(waiver_user_menu, kb.WaiverManagePlayerCD.filter())
-    router.callback_query.register(waiver_main_menu, kb.WaiverMainCD.filter())
-    router.callback_query.register(waiver_remove_user_vote, kb.WaiverRemovePlayerCD.filter())
-    router.callback_query.register(waiver_add_force_menu, kb.WaiverAddForceMenuCD.filter())
-    router.callback_query.register(add_force_player, kb.WaiverAddPlayerForceCD.filter())
+    # handlers
+    captain_router.message.register(
+        start_waivers,
+        Command(START_WAIVERS_COMMAND),
+        IsTeamFilter(),
+    )
+    player_router.callback_query.register(
+        add_vote_handler,
+        kb.WaiverVoteCD.filter(),
+        IsTeamFilter(),
+    )
+    captain_router.message.register(
+        start_approve_waivers_handler,
+        Command(APPROVE_WAIVERS_COMMAND),
+    )
+    captain_router.callback_query.register(
+        confirm_approve_waivers_handler,
+        kb.WaiverConfirmCD.filter(),
+    )
+
+    captain_router.callback_query.register(
+        waiver_user_menu,
+        kb.WaiverManagePlayerCD.filter(),
+    )
+    captain_router.callback_query.register(
+        waiver_main_menu,
+        kb.WaiverMainCD.filter(),
+    )
+    captain_router.callback_query.register(
+        waiver_remove_user_vote,
+        kb.WaiverRemovePlayerCD.filter(),
+    )
+    captain_router.callback_query.register(
+        waiver_add_force_menu,
+        kb.WaiverAddForceMenuCD.filter(),
+    )
+    captain_router.callback_query.register(
+        add_force_player,
+        kb.WaiverAddPlayerForceCD.filter(),
+    )
+    # TODO добавить обработку событий ниже, сработавших не в тот статус
     return router

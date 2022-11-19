@@ -41,7 +41,7 @@ class PlayerInTeamDao(BaseDAO[models.PlayerInTeam]):
     async def have_team(self, player: dto.Player) -> bool:
         return await self.get_team(player) is not None
 
-    async def join_team(self, player: dto.Player, team: dto.Team, role: str):
+    async def join_team(self, player: dto.Player, team: dto.Team, role: str, as_captain: bool = False):
         await self.check_player_free(player)
         if player_in_team := await self.need_restore(player, team):
             player_in_team.date_left = None
@@ -52,6 +52,12 @@ class PlayerInTeamDao(BaseDAO[models.PlayerInTeam]):
             team_id=team.id,
             role=role,
         )
+        if as_captain:
+            player_in_team.can_remove_players = True
+            player_in_team.can_manage_waivers = True
+            player_in_team.can_add_players = True
+            player_in_team.can_change_team_name = True
+            player_in_team.can_manage_players = True
         self.session.add(player_in_team)
         await self._flush(player_in_team)
 

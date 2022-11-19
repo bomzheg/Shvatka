@@ -8,12 +8,13 @@ from shvatka.clients.file_storage import FileStorage
 from shvatka.scheduler import Scheduler
 from shvatka.utils.key_checker_lock import KeyCheckerFactory
 from tgbot.config.models.bot import BotConfig
-from tgbot.middlewares.config_middleware import ConfigMiddleware
-from tgbot.middlewares.data_load_middleware import LoadDataMiddleware
-from tgbot.middlewares.fix_target_middleware import FixTargetMiddleware
-from tgbot.middlewares.init_middleware import InitMiddleware
 from tgbot.username_resolver.user_getter import UserGetter
 from tgbot.views.telegraph import Telegraph
+from .config_middleware import ConfigMiddleware
+from .data_load_middleware import LoadDataMiddleware
+from .fix_target_middleware import FixTargetMiddleware
+from .init_middleware import InitMiddleware
+from .load_team_player import TeamPlayerMiddleware  # noqa: F401
 
 
 def setup_middlewares(

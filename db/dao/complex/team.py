@@ -17,11 +17,14 @@ class TeamCreatorImpl(TeamCreator):
     async def create(self, chat: dto.Chat, captain: dto.Player) -> dto.Team:
         return await self.team.create(chat, captain)
 
-    async def join_team(self, player: dto.Player, team: dto.Team, role: str) -> None:
-        return await self.player_in_team.join_team(player, team, role)
+    async def join_team(self, player: dto.Player, team: dto.Team, role: str, as_captain: bool = False) -> None:
+        return await self.player_in_team.join_team(player, team, role, as_captain)
 
     async def check_player_free(self, player: dto.Player) -> None:
         return await self.player_in_team.check_player_free(player)
+
+    async def get_player_in_team(self, player: dto.Player) -> dto.PlayerInTeam:
+        return await self.player_in_team.get_player_in_team(player)
 
     async def commit(self):
         return await self.team.commit()

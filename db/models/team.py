@@ -9,7 +9,7 @@ class Team(Base):
     __tablename__ = "teams"
     __mapper_args__ = {"eager_defaults": True}
     id = Column(Integer, primary_key=True)
-    name = Column(Text)
+    name = Column(Text, nullable=False)
     chat_id = Column(ForeignKey("chats.id"), unique=True)
     chat = relationship(
         "Chat",

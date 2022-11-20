@@ -1,8 +1,11 @@
-from sqlalchemy import Column, Integer, ForeignKey, Text, Boolean, DateTime
+from datetime import datetime
+
+from sqlalchemy import Column, Integer, ForeignKey, Text, Boolean, DateTime, func
 from sqlalchemy.orm import relationship
 
 from db.models import Base
 from shvatka.models import dto
+from shvatka.utils.datetime_utils import tz_utc
 
 
 class KeyTime(Base):
@@ -27,9 +30,12 @@ class KeyTime(Base):
         foreign_keys=game_id,
         back_populates="log_keys",
     )
-    level_number = Column(Integer)
-    enter_time = Column(DateTime(timezone=True))
-    key_text = Column(Text)
+    level_number = Column(Integer, nullable=False)
+    enter_time = Column(
+        DateTime(timezone=True), default=lambda: datetime.now(tz=tz_utc),
+        server_default=func.now(), nullable=False,
+    )
+    key_text = Column(Text, nullable=False)
     is_correct: bool = Column(Boolean, nullable=False)
     is_duplicate: bool = Column(Boolean, nullable=False)
 

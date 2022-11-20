@@ -33,7 +33,7 @@ class Level(Base):
     __tablename__ = "levels"
     __mapper_args__ = {"eager_defaults": True}
     id = Column(Integer, primary_key=True)
-    name_id = Column(Text)
+    name_id = Column(Text, nullable=False)
     game_id = Column(ForeignKey("games.id"), nullable=True)
     game = relationship(
         "Game",

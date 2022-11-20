@@ -24,16 +24,19 @@ class TeamPlayer(Base):
         foreign_keys=team_id,
         back_populates="players",
     )
-    date_joined = Column(DateTime(timezone=True), default=datetime.now(tz=tz_utc), server_default=func.now())
+    date_joined = Column(
+        DateTime(timezone=True), default=lambda: datetime.now(tz=tz_utc),
+        server_default=func.now(), nullable=False,
+    )
     role = Column(Text)
     emoji = Column("emoji", Text)
     date_left = Column(DateTime(timezone=True))
 
-    can_manage_waivers = Column(Boolean, default=False)
-    can_manage_players = Column(Boolean, default=False)
-    can_change_team_name = Column(Boolean, default=False)
-    can_add_players = Column(Boolean, default=False)
-    can_remove_players = Column(Boolean, default=False)
+    can_manage_waivers = Column(Boolean, default=False, nullable=False)
+    can_manage_players = Column(Boolean, default=False, nullable=False)
+    can_change_team_name = Column(Boolean, default=False, nullable=False)
+    can_add_players = Column(Boolean, default=False, nullable=False)
+    can_remove_players = Column(Boolean, default=False, nullable=False)
 
     def to_dto(self) -> dto.TeamPlayer:
         return dto.TeamPlayer(

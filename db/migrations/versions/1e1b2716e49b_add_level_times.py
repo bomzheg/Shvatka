@@ -22,7 +22,7 @@ def upgrade():
         sa.Column('game_id', sa.Integer(), nullable=False),
         sa.Column('team_id', sa.Integer(), nullable=False),
         sa.Column('level_number', sa.Integer(), nullable=True),
-        sa.Column('start_at', sa.DateTime(timezone=True), nullable=True),
+        sa.Column('start_at', sa.DateTime(timezone=True), nullable=False),
         sa.ForeignKeyConstraint(['game_id'], ['games.id'], ),
         sa.ForeignKeyConstraint(['team_id'], ['teams.id'], ),
         sa.PrimaryKeyConstraint('id'),

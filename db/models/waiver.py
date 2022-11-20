@@ -31,4 +31,4 @@ class Waiver(Base):
         back_populates="waivers",
     )
     role = Column(Text)
-    played = Column(Enum(Played), nullable=True)
+    played = Column(Enum(Played), nullable=False)

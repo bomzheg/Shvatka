@@ -1,7 +1,8 @@
-from db.models import Base
-from shvatka.models import dto
 from sqlalchemy import Column, Integer, ForeignKey, Boolean, UniqueConstraint
 from sqlalchemy.orm import relationship
+
+from db.models import Base
+from shvatka.models import dto
 
 
 class Organizer(Base):
@@ -20,10 +21,10 @@ class Organizer(Base):
         foreign_keys=game_id,
         back_populates="organizers",
     )
-    can_spy = Column(Boolean, default=False)
-    can_see_log_keys = Column(Boolean, default=False)
-    can_validate_waivers = Column(Boolean, default=False)
-    deleted = Column(Boolean, default=False)
+    can_spy = Column(Boolean, default=False, nullable=False)
+    can_see_log_keys = Column(Boolean, default=False, nullable=False)
+    can_validate_waivers = Column(Boolean, default=False, nullable=False)
+    deleted = Column(Boolean, default=False, nullable=False)
 
     __table_args__ = (
         UniqueConstraint("player_id", "game_id"),

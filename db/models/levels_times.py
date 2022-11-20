@@ -1,8 +1,11 @@
-from sqlalchemy import Column, Integer, ForeignKey, DateTime, UniqueConstraint
+from datetime import datetime
+
+from sqlalchemy import Column, Integer, ForeignKey, DateTime, UniqueConstraint, func
 from sqlalchemy.orm import relationship
 
 from db.models import Base
 from shvatka.models import dto
+from shvatka.utils.datetime_utils import tz_utc
 
 
 class LevelTime(Base):
@@ -22,7 +25,10 @@ class LevelTime(Base):
         back_populates="completed_levels",
     )
     level_number = Column(Integer)
-    start_at = Column(DateTime(timezone=True))
+    start_at = Column(
+        DateTime(timezone=True), default=lambda: datetime.now(tz=tz_utc),
+        server_default=func.now(), nullable=False,
+    )
 
     __table_args__ = (
         UniqueConstraint("game_id", "team_id", "level_number"),

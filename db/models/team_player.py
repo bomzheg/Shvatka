@@ -9,7 +9,7 @@ from shvatka.utils.datetime_utils import tz_utc
 
 
 class TeamPlayer(Base):
-    __tablename__ = "players_in_teams"
+    __tablename__ = "team_players"
     __mapper_args__ = {"eager_defaults": True}
     id = Column(Integer, primary_key=True)
     player_id = Column(ForeignKey("players.id"), nullable=False)

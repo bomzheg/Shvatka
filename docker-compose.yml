@@ -6,7 +6,7 @@ services:
     profiles: [ "bot" ]
     container_name: shvatka_bot
     restart: always
-    image: bomzheg/shvatka_bot
+    image: bomzheg/shvatka
     volumes:
       - type: "bind"
         source: "${HOME}/ShvatkaBot/log"
@@ -14,7 +14,7 @@ services:
       - type: "bind"
         source: "./config"
         target: "/config"
-    entrypoint: [ "python3", "-m", "app"]
+    entrypoint: [ "python3", "-m", "tgbot"]
     networks:
       - reverse-proxy
       - botapi

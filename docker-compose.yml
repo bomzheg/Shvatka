@@ -3,7 +3,6 @@ version: '3.2'
 services:
 
   shvatka_bot:
-    profiles: [ "bot" ]
     container_name: shvatka_bot
     restart: always
     image: bomzheg/shvatka:latest
@@ -56,7 +55,6 @@ services:
       - "6379:6379"
 
   redis:
-    profiles: [ "bot" ]
     image: "redis:6-alpine"
     entrypoint: redis-server --appendonly yes
     volumes:

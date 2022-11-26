@@ -6,7 +6,7 @@ services:
     profiles: [ "bot" ]
     container_name: shvatka_bot
     restart: always
-    image: bomzheg/shvatka
+    image: bomzheg/shvatka:latest
     volumes:
       - type: "bind"
         source: "./config"
@@ -71,6 +71,6 @@ volumes:
 networks:
   reverse-proxy:
     external:
-      name: nginx-reverse-proxy
+      name: nginx-revers-proxy
   redis:
   botapi:

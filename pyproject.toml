@@ -54,13 +54,6 @@ httpx = "^0.23.0"
 coverage = {extras = ["toml"], version = "^6.5.0"}
 aiogram-tests = {git = "https://github.com/bomzheg/aiogram_tests.git", branch = "fix/deque-usage"}
 
-[tool.poetry.group.win]
-optional = true
-
-[tool.poetry.group.win.dependencies]
-python-magic-bin = {path = "python_magic_bin-0.4.14-py2.py3-none-win_amd64.whl"}
-
-
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"

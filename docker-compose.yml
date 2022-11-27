@@ -9,7 +9,7 @@ services:
     volumes:
       - type: "bind"
         source: "./config/"
-        target: "/code/config/"
+        target: "/code/shvatka/config/"
         read_only: true
       - type: "bind"
         source: "./files/"

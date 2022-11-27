@@ -8,11 +8,12 @@ services:
     image: bomzheg/shvatka:latest
     volumes:
       - type: "bind"
-        source: "./config"
-        target: "/code/config"
+        source: "./config/"
+        target: "/code/config/"
+        read_only: true
       - type: "bind"
-        source: "./files"
-        target: "/files"
+        source: "./files/"
+        target: "/files/"
     entrypoint: [ "python3", "-m", "tgbot"]
     networks:
       - reverse-proxy

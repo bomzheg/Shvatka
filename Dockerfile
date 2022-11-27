@@ -14,6 +14,6 @@ ENV VIRTUAL_ENV=/opt/venv
 ENV CODE_PATH=/code
 COPY --from=builder $VIRTUAL_ENV $VIRTUAL_ENV
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
-COPY shvatka ${CODE_PATH}/shvatka
+COPY . ${CODE_PATH}/shvatka
 WORKDIR $CODE_PATH/shvatka
 ENTRYPOINT ["python3", "-m", "tgbot"]

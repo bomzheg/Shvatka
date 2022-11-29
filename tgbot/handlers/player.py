@@ -72,10 +72,12 @@ async def inviter_click_handler(c: CallbackQuery):
 
 async def get_my_team_cmd(message: Message, player: dto.Player, dao: HolderDao):
     team = await get_my_team(player, dao.team_player)
-    await message.answer(
-        text=render_team_card(team),
-        disable_web_page_preview=True,
-    )
+    if team:
+        return await message.answer(
+            text=render_team_card(team),
+            disable_web_page_preview=True,
+        )
+    await message.answer("Ты не состоишь в команде")
 
 
 def setup() -> Router:

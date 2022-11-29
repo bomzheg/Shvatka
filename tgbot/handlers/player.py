@@ -6,12 +6,13 @@ from aiogram_dialog import DialogManager
 from db.dao.holder import HolderDao
 from shvatka.models import dto
 from shvatka.services.player import save_promotion_confirm_invite, check_promotion_invite, \
-    dismiss_promotion, agree_promotion
+    dismiss_promotion, agree_promotion, get_my_team
 from shvatka.utils.exceptions import SaltError
 from tgbot import keyboards as kb
 from tgbot.states import MainMenu
 from tgbot.utils.router import disable_router_on_game
-from tgbot.views.commands import START_COMMAND
+from tgbot.views.commands import START_COMMAND, TEAM_COMMAND
+from tgbot.views.team import render_team_card
 
 
 async def main_menu(m: Message, dialog_manager: DialogManager):
@@ -69,6 +70,14 @@ async def inviter_click_handler(c: CallbackQuery):
     await c.answer("ну и смысл?", cache_time=30)
 
 
+async def get_my_team_cmd(message: Message, player: dto.Player, dao: HolderDao):
+    team = await get_my_team(player, dao.team_player)
+    await message.answer(
+        text=render_team_card(team),
+        disable_web_page_preview=True,
+    )
+
+
 def setup() -> Router:
     router = Router(name=__name__)
     disable_router_on_game(router)
@@ -81,4 +90,6 @@ def setup() -> Router:
     )
     router.callback_query.register(dismiss_promotion_handler, kb.AgreePromotionCD.filter(~F.is_agreement))
     router.callback_query.register(agree_promotion_handler, kb.AgreePromotionCD.filter(F.is_agreement))
+
+    router.message.register(get_my_team_cmd, Command(TEAM_COMMAND), F.chat.type == "private")
     return router

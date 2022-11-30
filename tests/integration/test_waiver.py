@@ -6,7 +6,7 @@ from shvatka.models import dto
 from shvatka.models.enums.played import Played
 from shvatka.services.game import start_waivers
 from shvatka.services.player import join_team, leave
-from shvatka.services.waiver import get_vote_to_voted, add_vote, approve_waivers
+from shvatka.services.waiver import get_vote_to_voted, add_vote, approve_waivers, get_all_played
 from shvatka.utils.exceptions import PlayerRestoredInTeam, WaiverForbidden
 
 
@@ -29,6 +29,11 @@ async def test_get_voted_list(
     await approve_waivers(game, gryffindor, harry, dao.waiver_approver)
     assert 2 == await dao.waiver.count()
     assert [gryffindor] == await dao.waiver.get_played_teams(game)
+    waivers = await get_all_played(game, dao.waiver)
+    assert 1 == len(waivers)
+    players = list(waivers[gryffindor])
+    assert 2 == len(players)
+    assert {harry.id, hermione.id} == {player.player.id for player in players}
 
     await leave(hermione, hermione, dao.team_leaver)
     actual = await get_vote_to_voted(gryffindor, dao.waiver_vote_getter)
@@ -62,3 +67,4 @@ async def test_get_voted_list(
     await approve_waivers(game, gryffindor, harry, dao.waiver_approver)
     assert 2 == await dao.waiver.count()
     assert [gryffindor] == await dao.waiver.get_played_teams(game)
+

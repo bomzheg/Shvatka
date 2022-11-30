@@ -1,3 +1,6 @@
+from typing import Iterable
+
+from db.dao import WaiverDao
 from shvatka.dal.waiver import WaiverVoteAdder, WaiverVoteGetter, WaiverApprover
 from shvatka.models import dto
 from shvatka.models.enums.played import Played
@@ -12,6 +15,15 @@ async def get_vote_to_voted(
     for vote in await get_voted_list(team, dao):
         result.setdefault(vote.vote, []) \
             .append(dto.VotedPlayer(player=vote.player, pit=vote.pit))
+    return result
+
+
+async def get_all_played(game: dto.Game, dao: WaiverDao) -> dict[dto.Team, Iterable[dto.VotedPlayer]]:
+    teams = await dao.get_played_teams(game)
+    result = {}
+    for team in teams:
+        players = await dao.get_played(game, team)
+        result[team] = players
     return result
 
 

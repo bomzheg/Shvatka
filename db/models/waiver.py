@@ -2,6 +2,7 @@ from sqlalchemy import Column, Integer, ForeignKey, Text, Enum, UniqueConstraint
 from sqlalchemy.orm import relationship
 
 from db.models import Base
+from shvatka.models import dto
 from shvatka.models.enums.played import Played
 
 
@@ -32,3 +33,11 @@ class Waiver(Base):
     )
     role = Column(Text)
     played = Column(Enum(Played), nullable=False)
+
+    def to_dto(self, player: dto.Player, team: dto.Team, game: dto.Game) -> dto.Waiver:
+        return dto.Waiver(
+            player=player,
+            team=team,
+            game=game,
+            played=self.played,
+        )

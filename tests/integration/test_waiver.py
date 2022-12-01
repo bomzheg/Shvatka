@@ -1,4 +1,5 @@
 import pytest
+import pytest_asyncio
 
 from db import models
 from db.dao.holder import HolderDao
@@ -68,3 +69,85 @@ async def test_get_voted_list(
     assert 2 == await dao.waiver.count()
     assert [gryffindor] == await dao.waiver.get_played_teams(game)
 
+
+@pytest_asyncio.fixture
+async def harry_waiver(
+    harry: dto.Player, gryffindor: dto.Team, game: dto.FullGame, dao: HolderDao,
+):
+    waiver = models.Waiver(
+        player_id=harry.id,
+        team_id=gryffindor.id,
+        game_id=game.id,
+        role="harry",
+        played=Played.yes,
+    )
+    dao.waiver._save(waiver)
+    await dao.waiver.commit()
+    return waiver.to_dto(player=harry, team=gryffindor, game=game)
+
+
+@pytest_asyncio.fixture
+async def hermi_waiver(
+    hermione: dto.Player, harry: dto.Player, gryffindor: dto.Team, game: dto.FullGame, dao: HolderDao,
+):
+    await join_team(hermione, gryffindor, harry, dao.team_player)
+    waiver = models.Waiver(
+        player_id=hermione.id,
+        team_id=gryffindor.id,
+        game_id=game.id,
+        role="hermione",
+        played=Played.yes,
+    )
+    dao.waiver._save(waiver)
+    await dao.waiver.commit()
+    return waiver.to_dto(player=hermione, team=gryffindor, game=game)
+
+
+@pytest_asyncio.fixture
+async def ron_waiver(
+    ron: dto.Player, harry: dto.Player, gryffindor: dto.Team, game: dto.FullGame, dao: HolderDao,
+):
+    await join_team(ron, gryffindor, harry, dao.team_player)
+    waiver = models.Waiver(
+        player_id=ron.id,
+        team_id=gryffindor.id,
+        game_id=game.id,
+        role="ron",
+        played=Played.no,
+    )
+    dao.waiver._save(waiver)
+    await dao.waiver.commit()
+    return waiver.to_dto(player=ron, team=gryffindor, game=game)
+
+
+@pytest_asyncio.fixture
+async def draco_waiver(
+    draco: dto.Player, slytherin: dto.Team, game: dto.FullGame, dao: HolderDao,
+):
+    waiver = models.Waiver(
+        player_id=draco.id,
+        team_id=slytherin.id,
+        game_id=game.id,
+        role="draco",
+        played=Played.yes,
+    )
+    dao.waiver._save(waiver)
+    await dao.waiver.commit()
+    return waiver.to_dto(player=draco, team=slytherin, game=game)
+
+
+@pytest.mark.asyncio
+async def test_waiver_list(
+    harry_waiver: dto.Waiver, hermi_waiver: dto.Waiver, ron_waiver: dto.Waiver,
+    draco_waiver: dto.Waiver,
+    game: dto.FullGame,
+    dao: HolderDao,
+):
+    assert 4 == await dao.waiver.count()
+    waivers = await get_all_played(game, dao.waiver)
+    assert 2 == len(waivers)
+    slytherin_waivers = waivers.pop(draco_waiver.team)
+    gryffindor_waivers = waivers.pop(hermi_waiver.team)
+    assert not waivers
+    assert {harry_waiver.player.id, hermi_waiver.player.id} == {waiver.player.id for waiver in gryffindor_waivers}
+    assert {draco_waiver.player.id} == {waiver.player.id for waiver in slytherin_waivers}

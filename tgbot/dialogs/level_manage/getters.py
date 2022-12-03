@@ -6,15 +6,18 @@ from shvatka.services import organizers
 from shvatka.services.game import get_game
 from shvatka.services.level import get_by_id, get_level_by_id_for_org
 from shvatka.services.organizers import get_org_by_id, get_by_player
+from tgbot.views.utils import render_time_hints
 
 
 async def get_level_id(dialog_manager: DialogManager, **_):
     dao: HolderDao = dialog_manager.middleware_data["dao"]
     author: dto.Player = dialog_manager.middleware_data["player"]
     level, org = await get_level_and_org(author, dao, dialog_manager)
+    hints = level.scenario.time_hints
     return {
         "level": level,
         "org": org,
+        "rendered": render_time_hints(hints) if hints else "пока нет ни одной подсказки",
     }
 
 

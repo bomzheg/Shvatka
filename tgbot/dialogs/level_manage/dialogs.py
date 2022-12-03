@@ -12,7 +12,10 @@ from .handlers import edit_level, show_level, level_testing, cancel_level_test, 
 
 level_manage = Dialog(
     Window(
-        Jinja("Уровень <b>{{level.name_id}}</b>"),
+        Jinja(
+            "Уровень <b>{{level.name_id}}</b>\n"
+            "{{rendered}}"
+        ),
         Cancel(Const("⤴Назад")),
         Button(
             Const("✏Редактирование"),

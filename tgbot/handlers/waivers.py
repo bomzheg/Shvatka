@@ -233,6 +233,7 @@ def setup() -> Router:
     player_router.callback_query.filter(TeamPlayerFilter())
     captain_router.callback_query.filter(TeamPlayerFilter(can_manage_waivers=True))
     # middlewares
+    player_router.callback_query.outer_middleware.register(TeamPlayerMiddleware())
     captain_router.callback_query.outer_middleware.register(TeamPlayerMiddleware())
 
     # handlers

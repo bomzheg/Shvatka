@@ -60,7 +60,10 @@ class GameDao(BaseDAO[models.Game]):
         author = game_db.author.to_dto_user_prefetched()
         return game_db.to_full_dto(
             author=author,
-            levels=[level.to_dto(author) for level in game_db.levels],
+            levels=[
+                level.to_dto(author)
+                for level in sorted(game_db.levels, key=lambda l: l.number_in_game)
+            ],
         )
 
     async def get_by_id(self, id_: int, author: dto.Player | None = None) -> dto.Game:

@@ -1,3 +1,5 @@
+from typing import Iterable
+
 from aiogram.utils.text_decorations import html_decoration as hd
 
 from db.dao.holder import HolderDao
@@ -15,9 +17,22 @@ def render_votes(votes: dict[Played, list[dto.VotedPlayer]]) -> str:
     for vote, users in votes.items():
         users: list[dto.VotedPlayer]
         result += WAIVER_STATUS_MEANING[vote] + f" ({len(users)}):\n"
-        result += "\n".join([get_emoji(voted.pit) + get_small_card_no_link(voted.player.user) for voted in users])
+        result += render_players(users)
         result += "\n\n"
     return result
+
+
+def render_all_teams_waivers(waivers: dict[dto.Team, Iterable[dto.VotedPlayer]]) -> str:
+    result = ""
+    for team, user_waivers in waivers.items():
+        result += hd.bold(hd.quote(team.name)) + ":\n"
+        result += render_players(user_waivers)
+        result += "\n\n"
+    return result
+
+
+def render_players(users: Iterable[dto.VotedPlayer]) -> str:
+    return "\n".join([get_emoji(voted.pit) + get_small_card_no_link(voted.player.user) for voted in users])
 
 
 async def get_waiver_poll_text(team: dto.Team, game: dto.Game, dao: HolderDao):

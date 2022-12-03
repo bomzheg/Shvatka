@@ -46,7 +46,7 @@ ME_COMMAND = BotCommand(command="me", description="мой профиль")  # TO
 LEAVE_COMMAND = BotCommand(command="leave", description="выйти из команды")  # TODO
 GAMES_COMMAND = BotCommand(command="games", description="список игр")  # TODO
 
-GET_WAIVERS_COMMAND = BotCommand(command="get_waivers", description="показать текущие вейверы")  # TODO
+GET_WAIVERS_COMMAND = BotCommand(command="get_waivers", description="показать текущие вейверы")
 SPY_COMMAND = BotCommand(
     command="spy", description="Меню шпиона - организатора"
 )

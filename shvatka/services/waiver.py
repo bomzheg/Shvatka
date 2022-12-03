@@ -1,7 +1,6 @@
 from typing import Iterable
 
-from db.dao import WaiverDao
-from shvatka.dal.waiver import WaiverVoteAdder, WaiverVoteGetter, WaiverApprover
+from shvatka.dal.waiver import WaiverVoteAdder, WaiverVoteGetter, WaiverApprover, GameWaiversGetter
 from shvatka.models import dto
 from shvatka.models.enums.played import Played
 from shvatka.services.player import check_player_on_team, get_team_player
@@ -18,7 +17,7 @@ async def get_vote_to_voted(
     return result
 
 
-async def get_all_played(game: dto.Game, dao: WaiverDao) -> dict[dto.Team, Iterable[dto.VotedPlayer]]:
+async def get_all_played(game: dto.Game, dao: GameWaiversGetter) -> dict[dto.Team, Iterable[dto.VotedPlayer]]:
     teams = await dao.get_played_teams(game)
     result = {}
     for team in teams:

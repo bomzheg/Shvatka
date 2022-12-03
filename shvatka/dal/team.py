@@ -1,6 +1,6 @@
 from abc import ABCMeta
 
-from shvatka.dal.base import Reader
+from shvatka.dal.base import Reader, Committer
 from shvatka.dal.player import TeamJoiner
 from shvatka.models import dto
 
@@ -15,4 +15,9 @@ class TeamCreator(TeamJoiner, metaclass=ABCMeta):
         raise NotImplementedError
 
     async def create(self, chat: dto.Chat, captain: dto.Player) -> dto.Team:
+        raise NotImplementedError
+
+
+class TeamRenamer(Committer, metaclass=ABCMeta):
+    async def rename_team(self, team: dto.Team, new_name: str) -> None:
         raise NotImplementedError

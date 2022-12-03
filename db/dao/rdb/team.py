@@ -1,3 +1,4 @@
+from sqlalchemy import update
 from sqlalchemy.exc import NoResultFound, IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
@@ -66,3 +67,10 @@ class TeamDao(BaseDAO[models.Team]):
         )
         team: models.Team = result.scalar_one()
         return team.to_dto(team.chat.to_dto())
+
+    async def rename_team(self, team: dto.Team, new_name: str) -> None:
+        await self.session.execute(
+            update(models.Team)
+            .where(models.Team.id == team.id)
+            .values(name=new_name)
+        )

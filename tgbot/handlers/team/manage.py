@@ -2,9 +2,10 @@ import logging
 
 from aiogram import Bot, F, Router
 from aiogram.exceptions import TelegramBadRequest
-from aiogram.filters import Command, CommandObject
+from aiogram.filters import Command, CommandObject, or_f
 from aiogram.types import Message
 from aiogram.utils.text_decorations import html_decoration as hd
+from aiogram_dialog import DialogManager
 
 from db.dao.holder import HolderDao
 from shvatka.models import dto
@@ -17,8 +18,12 @@ from shvatka.utils.exceptions import (
 from tgbot.filters.has_target import HasTargetFilter
 from tgbot.filters.is_admin import is_admin_filter
 from tgbot.filters.is_team import IsTeamFilter
+from tgbot.filters.team_player import TeamPlayerFilter
+from tgbot.middlewares import TeamPlayerMiddleware
+from tgbot.states import CaptainsBridgeSG
 from tgbot.utils.router import disable_router_on_game
-from tgbot.views.commands import CREATE_TEAM_COMMAND, ADD_IN_TEAM_COMMAND, TEAM_COMMAND, PLAYERS_COMMAND
+from tgbot.views.commands import CREATE_TEAM_COMMAND, ADD_IN_TEAM_COMMAND, TEAM_COMMAND, PLAYERS_COMMAND, \
+    MANAGE_TEAM_COMMAND
 from tgbot.views.team import render_team_card, render_team_players
 from tgbot.views.texts import NOT_SUPERGROUP_ERROR
 
@@ -135,8 +140,13 @@ async def cmd_players(message: Message, team: dto.Team, dao: HolderDao):
     )
 
 
+async def captains_bridge_cmd(message: Message, dialog_manager: DialogManager):
+    await dialog_manager.start(state=CaptainsBridgeSG.main)
+
+
 def setup_team_manage() -> Router:
     router = Router(name=__name__)
+    router.message.outer_middleware.register(TeamPlayerMiddleware())
     disable_router_on_game(router)
 
     router.message.register(
@@ -165,5 +175,19 @@ def setup_team_manage() -> Router:
         cmd_players,
         Command(commands=PLAYERS_COMMAND),
         IsTeamFilter(),
+    )
+    router.message.register(
+        captains_bridge_cmd,
+        Command(commands=MANAGE_TEAM_COMMAND),
+        or_f(
+            TeamPlayerFilter(is_captain=True),
+            or_f(
+                TeamPlayerFilter(can_manage_players=True),
+                or_f(
+                    TeamPlayerFilter(can_remove_players=True),
+                    TeamPlayerFilter(can_change_team_name=True),
+                )
+            )
+        )
     )
     return router

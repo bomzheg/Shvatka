@@ -65,3 +65,11 @@ class OrgSpy(StatesGroup):
 
 class GamePublish(StatesGroup):
     prepare = State()
+
+
+class CaptainsBridgeSG(StatesGroup):
+    main = State()
+    name = State()
+    description = State()
+    players = State()
+    player = State()

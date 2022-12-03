@@ -1,11 +1,10 @@
 from aiogram import F
 from aiogram_dialog import Dialog, Window
-from aiogram_dialog.widgets.kbd import Cancel, Start
+from aiogram_dialog.widgets.kbd import Cancel, Start, SwitchInlineQuery
 from aiogram_dialog.widgets.text import Const, Format, Jinja
 
 from tgbot.states import MyGamesPanel, MainMenu, Promotion, OrgSpy
 from .getters import get_promotion_token, get_main
-from ..widgets.switch_inline import SwitchInlineQuery
 
 main_menu = Dialog(
     Window(

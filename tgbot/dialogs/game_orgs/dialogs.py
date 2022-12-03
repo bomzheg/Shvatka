@@ -1,12 +1,11 @@
 from aiogram import F
 from aiogram_dialog import Dialog, Window
-from aiogram_dialog.widgets.kbd import ScrollingGroup, Select, Cancel, Button, Back
+from aiogram_dialog.widgets.kbd import ScrollingGroup, Select, Cancel, Button, Back, SwitchInlineQuery
 from aiogram_dialog.widgets.text import Format, Const, Multi, Jinja
 
 from tgbot.states import GameOrgs
 from .getters import get_orgs, get_org
 from .handlers import select_org, change_permission_handler, change_deleted_handler
-from ..widgets.switch_inline import SwitchInlineQuery
 
 game_orgs = Dialog(
     Window(

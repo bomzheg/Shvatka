@@ -9,14 +9,14 @@ from shvatka.services.player import save_promotion_confirm_invite, check_promoti
     dismiss_promotion, agree_promotion, get_my_team
 from shvatka.utils.exceptions import SaltError
 from tgbot import keyboards as kb
-from tgbot.states import MainMenu
+from tgbot import states
 from tgbot.utils.router import disable_router_on_game
 from tgbot.views.commands import START_COMMAND, TEAM_COMMAND
 from tgbot.views.team import render_team_card
 
 
 async def main_menu(m: Message, dialog_manager: DialogManager):
-    await dialog_manager.start(MainMenu.main)
+    await dialog_manager.start(states.MainMenuSG.main)
 
 
 async def send_promotion_invite(

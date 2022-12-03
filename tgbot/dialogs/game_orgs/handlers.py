@@ -8,7 +8,7 @@ from db.dao.holder import HolderDao
 from shvatka.models import dto
 from shvatka.models.enums.org_permission import OrgPermission
 from shvatka.services.organizers import flip_permission, get_org_by_id, flip_deleted
-from tgbot.states import GameOrgs
+from tgbot import states
 
 
 async def select_org(c: CallbackQuery, widget: Any, manager: DialogManager, item_id: str):
@@ -17,7 +17,7 @@ async def select_org(c: CallbackQuery, widget: Any, manager: DialogManager, item
     if data is None:
         data = {}
     data["org_id"] = int(item_id)
-    await manager.switch_to(GameOrgs.org_menu)
+    await manager.switch_to(states.GameOrgsSG.org_menu)
 
 
 async def change_permission_handler(c: CallbackQuery, button: Button, manager: DialogManager):

@@ -15,7 +15,7 @@ from shvatka.services.level_testing import start_level_test, check_level_testing
 from shvatka.services.organizers import get_org_by_id
 from shvatka.utils.key_checker_lock import KeyCheckerFactory
 from tgbot import keyboards as kb
-from tgbot.states import LevelTest
+from tgbot import states
 from tgbot.views.game import BotOrgNotifier
 from tgbot.views.hint_factory.hint_content_resolver import HintContentResolver
 from tgbot.views.hint_sender import HintSender
@@ -82,7 +82,7 @@ async def level_testing(c: CallbackQuery, button: Button, manager: DialogManager
     org = await get_org(author, level, dao)
     suite = dto.LevelTestSuite(tester=org, level=level)
     view = create_level_test_view(bot=bot, dao=dao, storage=storage)
-    await manager.start(state=LevelTest.wait_key, data={"level_id": level_id})
+    await manager.start(state=states.LevelTestSG.wait_key, data={"level_id": level_id})
     await start_level_test(suite=suite, scheduler=scheduler, view=view, dao=dao.level_testing_complex)
 
 

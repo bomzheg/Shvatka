@@ -11,7 +11,7 @@ from shvatka.services.level_testing import start_level_test
 from shvatka.services.organizers import get_org_by_id
 from shvatka.utils.exceptions import PermissionsError
 from tgbot import keyboards as kb
-from tgbot.states import LevelTest
+from tgbot import states
 from tgbot.utils.router import disable_router_on_game
 from tgbot.views.level_testing import create_level_test_view
 
@@ -39,7 +39,7 @@ async def start_test_level(
     suite = dto.LevelTestSuite(tester=org, level=level)
     view = create_level_test_view(bot=bot, dao=dao, storage=file_storage)
     await dialog_manager.start(
-        LevelTest.wait_key, data={"level_id": callback_data.level_id, "org_id": org.id},
+        states.LevelTestSG.wait_key, data={"level_id": callback_data.level_id, "org_id": org.id},
     )
     await start_level_test(suite=suite, scheduler=scheduler, view=view, dao=dao.level_testing_complex)
 

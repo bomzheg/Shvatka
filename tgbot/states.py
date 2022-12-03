@@ -1,13 +1,13 @@
 from aiogram.fsm.state import StatesGroup, State
 
 
-class MyGamesPanel(StatesGroup):
+class MyGamesPanelSG(StatesGroup):
     choose_game = State()
     game_menu = State()
     rename = State()
 
 
-class GameSchedule(StatesGroup):
+class GameScheduleSG(StatesGroup):
     date = State()
     time = State()
     confirm = State()
@@ -40,30 +40,30 @@ class GameEditSG(StatesGroup):
     add_level = State()
 
 
-class GameOrgs(StatesGroup):
+class GameOrgsSG(StatesGroup):
     orgs_list = State()
     org_menu = State()
 
 
-class MainMenu(StatesGroup):
+class MainMenuSG(StatesGroup):
     main = State()
 
 
-class Promotion(StatesGroup):
+class PromotionSG(StatesGroup):
     disclaimer = State()
 
 
-class LevelTest(StatesGroup):
+class LevelTestSG(StatesGroup):
     wait_key = State()
 
 
-class OrgSpy(StatesGroup):
+class OrgSpySG(StatesGroup):
     main = State()
     spy = State()
     keys = State()
 
 
-class GamePublish(StatesGroup):
+class GamePublishSG(StatesGroup):
     prepare = State()
 
 

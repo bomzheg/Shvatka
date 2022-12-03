@@ -13,8 +13,8 @@ from shvatka.scheduler import Scheduler
 from shvatka.services import game
 from shvatka.services.game import rename_game, get_game
 from shvatka.utils.datetime_utils import TIME_FORMAT, tz_game
+from tgbot import states
 from tgbot.services.scenario import pack_scn
-from tgbot.states import MyGamesPanel, GameEditSG, GameSchedule, GameOrgs, GamePublish
 
 
 async def select_my_game(c: CallbackQuery, widget: Any, manager: DialogManager, item_id: str):
@@ -24,13 +24,13 @@ async def select_my_game(c: CallbackQuery, widget: Any, manager: DialogManager, 
         data = {}
     data["my_game_id"] = int(item_id)
     await manager.update(data)
-    await manager.switch_to(MyGamesPanel.game_menu)
+    await manager.switch_to(states.MyGamesPanelSG.game_menu)
 
 
 async def start_schedule_game(c: CallbackQuery, widget: Button, manager: DialogManager):
     await c.answer()
     game_id = manager.dialog_data["my_game_id"]
-    await manager.start(GameSchedule.date, data={"my_game_id": int(game_id)})
+    await manager.start(states.GameScheduleSG.date, data={"my_game_id": int(game_id)})
 
 
 async def cancel_scheduled_game(c: CallbackQuery, widget: Button, manager: DialogManager):
@@ -46,7 +46,7 @@ async def cancel_scheduled_game(c: CallbackQuery, widget: Button, manager: Dialo
 async def show_scn(c: CallbackQuery, widget: Button, manager: DialogManager):
     await c.answer()
     game_id = manager.dialog_data["my_game_id"]
-    await manager.start(GameEditSG.current_levels, data={"game_id": int(game_id)})
+    await manager.start(states.GameEditSG.current_levels, data={"game_id": int(game_id)})
 
 
 async def show_zip_scn(c: CallbackQuery, widget: Button, manager: DialogManager):
@@ -87,7 +87,7 @@ async def select_date(c: CallbackQuery, widget, manager: DialogManager, selected
         data = {}
     data["scheduled_date"] = selected_date.isoformat()
     await manager.update(data)
-    await manager.switch_to(GameSchedule.time)
+    await manager.switch_to(states.GameScheduleSG.time)
 
 
 async def process_time_message(m: Message, dialog_: Any, manager: DialogManager) -> None:
@@ -99,7 +99,7 @@ async def process_time_message(m: Message, dialog_: Any, manager: DialogManager)
     data = manager.dialog_data
     data["scheduled_time"] = time_.isoformat()
     await manager.update(data)
-    await manager.switch_to(GameSchedule.confirm)
+    await manager.switch_to(states.GameScheduleSG.confirm)
 
 
 async def schedule_game(c: CallbackQuery, widget: Button, manager: DialogManager):
@@ -126,10 +126,10 @@ async def schedule_game(c: CallbackQuery, widget: Button, manager: DialogManager
 async def show_game_orgs(c: CallbackQuery, widget: Button, manager: DialogManager):
     await c.answer()
     game_id = manager.dialog_data["my_game_id"]
-    await manager.start(GameOrgs.orgs_list, data={"game_id": game_id})
+    await manager.start(states.GameOrgsSG.orgs_list, data={"game_id": game_id})
 
 
 async def publish_game(c: CallbackQuery, widget: Button, manager: DialogManager):
     await c.answer()
     game_id = manager.dialog_data["my_game_id"]
-    await manager.start(GamePublish.prepare, data={"game_id": game_id})
+    await manager.start(states.GamePublishSG.prepare, data={"game_id": game_id})

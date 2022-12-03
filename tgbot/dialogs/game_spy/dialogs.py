@@ -6,7 +6,7 @@ from aiogram_dialog.widgets.kbd import Button, SwitchTo, Cancel
 from aiogram_dialog.widgets.text import Const, Format, Jinja, Multi
 
 from shvatka.utils.datetime_utils import tz_utc
-from tgbot.states import OrgSpy
+from tgbot import states
 from .getters import get_org, get_spy, get_keys
 from .handlers import keys_handler
 
@@ -26,16 +26,16 @@ game_spy = Dialog(
         SwitchTo(
             Const("📊Текущие уровни"),
             id="spy_levels",
-            state=OrgSpy.spy,
+            state=states.OrgSpySG.spy,
             when=F["org"].can_spy & F["game"].is_started,
         ),
         SwitchTo(
             Const("🔑Лог ключей"),
             id="spy_keys",
-            state=OrgSpy.keys,
+            state=states.OrgSpySG.keys,
             when=F["game"].is_started & F["org"].can_see_log_keys,
         ),
-        state=OrgSpy.main,
+        state=states.OrgSpySG.main,
         getter=get_org,
     ),
     Window(
@@ -52,8 +52,8 @@ game_spy = Dialog(
             when=F["org"].can_spy,
         ),
         Button(Const("🔄Обновить"), id="refresh_spy"),
-        SwitchTo(Const("⤴Назад"), id="back", state=OrgSpy.main),
-        state=OrgSpy.spy,
+        SwitchTo(Const("⤴Назад"), id="back", state=states.OrgSpySG.main),
+        state=states.OrgSpySG.spy,
         getter=(get_spy, get_org),
     ),
     Window(
@@ -69,8 +69,8 @@ game_spy = Dialog(
             "{% endif %}"
         ),
         Button(Const("🔄Обновить"), id="refresh_spy", on_click=keys_handler),
-        SwitchTo(Const("⤴Назад"), id="back", state=OrgSpy.main),
-        state=OrgSpy.keys,
+        SwitchTo(Const("⤴Назад"), id="back", state=states.OrgSpySG.main),
+        state=states.OrgSpySG.keys,
         getter=(get_org, get_keys, {"now": datetime.now(tz=tz_utc)}),
         disable_web_page_preview=True,
     ),

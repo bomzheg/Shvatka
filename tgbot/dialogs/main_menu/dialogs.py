@@ -3,7 +3,7 @@ from aiogram_dialog import Dialog, Window
 from aiogram_dialog.widgets.kbd import Cancel, Start, SwitchInlineQuery
 from aiogram_dialog.widgets.text import Const, Format, Jinja
 
-from tgbot.states import MyGamesPanel, MainMenu, Promotion, OrgSpy
+from tgbot import states
 from .getters import get_promotion_token, get_main
 
 main_menu = Dialog(
@@ -26,26 +26,26 @@ main_menu = Dialog(
         Start(
             Const("🗄Мои игры"),
             id="my_games",
-            state=MyGamesPanel.choose_game,
+            state=states.MyGamesPanelSG.choose_game,
             when=F["player"].can_be_author,
         ),
         Start(
             Const("👀Шпион"),
             id="game_spy",
-            state=OrgSpy.main,
+            state=states.OrgSpySG.main,
             when=F["org"],
         ),
         Start(
             Const("✍Поделиться полномочиями автора"),
             id="promotion",
-            state=Promotion.disclaimer,
+            state=states.PromotionSG.disclaimer,
             when=F["player"].can_be_author,
         ),
         # прошедшие игры
         # ачивки
         # уровни (не привязанные к играм?)
         # promote
-        state=MainMenu.main,
+        state=states.MainMenuSG.main,
         getter=get_main,
     ),
 )
@@ -64,7 +64,7 @@ promote_dialog = Dialog(
             Format("{inline_query}"),
         ),
         Cancel(Const("⤴Назад")),
-        state=Promotion.disclaimer,
+        state=states.PromotionSG.disclaimer,
         getter=get_promotion_token,
     )
 )

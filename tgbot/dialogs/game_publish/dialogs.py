@@ -5,7 +5,7 @@ from aiogram_dialog.widgets.input import MessageInput
 from aiogram_dialog.widgets.kbd import Cancel, Button
 from aiogram_dialog.widgets.text import Const, Jinja
 
-from tgbot.states import GamePublish
+from tgbot import states
 from .getters import get_org
 from .handlers import process_publish_message
 
@@ -35,7 +35,7 @@ game_publish = Dialog(
         Cancel(Const("⤴Назад")),
         Button(Const("🔄Обновить"), id="refresh_publish", when=F["started"]),
         MessageInput(func=process_publish_message, filter=Command("publish")),
-        state=GamePublish.prepare,
+        state=states.GamePublishSG.prepare,
         getter=get_org,
     ),
 )

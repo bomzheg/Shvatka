@@ -11,11 +11,11 @@ from shvatka.scheduler import Scheduler
 from shvatka.services.game_play import check_key
 from shvatka.utils.exceptions import InvalidKey
 from shvatka.utils.key_checker_lock import KeyCheckerFactory
+from tgbot import states
 from tgbot.config.models.bot import BotConfig
 from tgbot.filters import is_key, IsTeamFilter
 from tgbot.filters.game_status import GameStatusFilter
 from tgbot.filters.team_player import TeamPlayerFilter
-from tgbot.states import OrgSpy
 from tgbot.views.commands import SPY_COMMAND, SPY_LEVELS_COMMAND, SPY_KEYS_COMMAND
 from tgbot.views.game import GameBotLog, create_bot_game_view, BotOrgNotifier
 
@@ -50,15 +50,15 @@ async def check_key_handler(
 
 
 async def spy_menu(_: Message, dialog_manager: DialogManager):
-    await dialog_manager.start(OrgSpy.main)
+    await dialog_manager.start(states.OrgSpySG.main)
 
 
 async def spy_levels(_: Message, dialog_manager: DialogManager):
-    await dialog_manager.start(OrgSpy.spy)
+    await dialog_manager.start(states.OrgSpySG.spy)
 
 
 async def spy_keys(_: Message, dialog_manager: DialogManager):
-    await dialog_manager.start(OrgSpy.keys)
+    await dialog_manager.start(states.OrgSpySG.keys)
 
 
 def setup() -> Router:

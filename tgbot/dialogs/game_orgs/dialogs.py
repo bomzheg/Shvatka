@@ -3,7 +3,7 @@ from aiogram_dialog import Dialog, Window
 from aiogram_dialog.widgets.kbd import ScrollingGroup, Select, Cancel, Button, Back, SwitchInlineQuery
 from aiogram_dialog.widgets.text import Format, Const, Multi, Jinja
 
-from tgbot.states import GameOrgs
+from tgbot import states
 from .getters import get_orgs, get_org
 from .handlers import select_org, change_permission_handler, change_deleted_handler
 
@@ -32,7 +32,7 @@ game_orgs = Dialog(
             height=10,
         ),
         getter=get_orgs,
-        state=GameOrgs.orgs_list,
+        state=states.GameOrgsSG.orgs_list,
     ),
     Window(
         Multi(
@@ -67,6 +67,6 @@ game_orgs = Dialog(
             on_click=change_deleted_handler,
         ),
         getter=get_org,
-        state=GameOrgs.org_menu,
+        state=states.GameOrgsSG.org_menu,
     ),
 )

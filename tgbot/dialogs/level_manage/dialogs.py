@@ -5,8 +5,8 @@ from aiogram_dialog.widgets.input import MessageInput
 from aiogram_dialog.widgets.kbd import Button, Cancel, SwitchTo, Select, ScrollingGroup
 from aiogram_dialog.widgets.text import Const, Jinja
 
+from tgbot import states
 from tgbot.filters import is_key
-from tgbot.states import LevelManageSG, LevelTest
 from .getters import get_level_id, get_orgs
 from .handlers import edit_level, show_level, level_testing, cancel_level_test, process_key_message, send_to_testing
 
@@ -36,10 +36,10 @@ level_manage = Dialog(
         SwitchTo(
             Const("🧩Отправить на тестирование"),
             id="send_to_test",
-            state=LevelManageSG.send_to_test,
+            state=states.LevelManageSG.send_to_test,
             when=F["level"].game_id,
         ),
-        state=LevelManageSG.menu,
+        state=states.LevelManageSG.menu,
         getter=get_level_id,
     ),
     Window(
@@ -48,7 +48,7 @@ level_manage = Dialog(
             "Кому отправить его на тестирование?\n\n"
             "ℹЧтобы добавить кого-то в этот список, нужно добавить организатора из меню игры"
         ),
-        SwitchTo(Const("⤴Назад"), id="back", state=LevelManageSG.menu),
+        SwitchTo(Const("⤴Назад"), id="back", state=states.LevelManageSG.menu),
         ScrollingGroup(
             Select(
                 Jinja("{{item.player.user.name_mention}}"),
@@ -61,7 +61,7 @@ level_manage = Dialog(
             width=1,
             height=10,
         ),
-        state=LevelManageSG.send_to_test,
+        state=states.LevelManageSG.send_to_test,
         getter=get_orgs,
     ),
 )
@@ -81,6 +81,6 @@ level_test_dialog = Dialog(
             filter=is_key
         ),
         getter=get_level_id,
-        state=LevelTest.wait_key,
+        state=states.LevelTestSG.wait_key,
     ),
 )

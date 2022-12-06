@@ -21,3 +21,8 @@ class TeamCreator(TeamJoiner, metaclass=ABCMeta):
 class TeamRenamer(Committer, metaclass=ABCMeta):
     async def rename_team(self, team: dto.Team, new_name: str) -> None:
         raise NotImplementedError
+
+
+class TeamDescChanger(Committer, metaclass=ABCMeta):
+    async def change_team_desc(self, team: dto.Team, new_desc: str) -> None:
+        raise NotImplementedError

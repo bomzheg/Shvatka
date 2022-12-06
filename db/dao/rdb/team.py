@@ -74,3 +74,10 @@ class TeamDao(BaseDAO[models.Team]):
             .where(models.Team.id == team.id)
             .values(name=new_name)
         )
+
+    async def change_team_desc(self, team: dto.Team, new_desc: str) -> None:
+        await self.session.execute(
+            update(models.Team)
+            .where(models.Team.id == team.id)
+            .values(description=new_desc)
+        )

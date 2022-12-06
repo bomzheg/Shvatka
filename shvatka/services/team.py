@@ -1,4 +1,4 @@
-from shvatka.dal.team import TeamCreator, TeamGetter, TeamRenamer
+from shvatka.dal.team import TeamCreator, TeamGetter, TeamRenamer, TeamDescChanger
 from shvatka.models import dto
 from shvatka.utils.defaults_constants import CAPTAIN_ROLE
 from shvatka.utils.exceptions import SHDataBreach, PermissionsError
@@ -21,6 +21,12 @@ async def get_by_chat(chat: dto.Chat, dao: TeamGetter) -> dto.Team | None:
 async def rename_team(team: dto.Team, captain: dto.FullTeamPlayer, new_name: str, dao: TeamRenamer):
     check_can_change_name(team=team, captain=captain)
     await dao.rename_team(team=team, new_name=new_name)
+    await dao.commit()
+
+
+async def change_team_desc(team: dto.Team, captain: dto.FullTeamPlayer, new_desc: str, dao: TeamDescChanger):
+    check_can_change_name(team=team, captain=captain)
+    await dao.change_team_desc(team=team, new_desc=new_desc)
     await dao.commit()
 
 

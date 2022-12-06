@@ -2,7 +2,7 @@
 
 [![wakatime](https://wakatime.com/badge/github/bomzheg/ShvatkaBot.svg)](https://wakatime.com/badge/github/bomzheg/ShvatkaBot)
 
-Движок для ночной поисковой игры Схватка https://ru.wikipedia.org/wiki/%D0%A1%D1%85%D0%B2%D0%B0%D1%82%D0%BA%D0%B0_(%D0%B8%D0%B3%D1%80%D0%B0) (похожа на Дозоры, Энакунтер)
+Движок для ночной поисковой игры [Схватка](https://ru.wikipedia.org/wiki/%D0%A1%D1%85%D0%B2%D0%B0%D1%82%D0%BA%D0%B0_(%D0%B8%D0%B3%D1%80%D0%B0)) (похожа на Дозоры, Энакунтер)
 
 Позволяет проводить планировать и проводить игры.
 

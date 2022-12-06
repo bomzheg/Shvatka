@@ -8,7 +8,7 @@ from sqlalchemy.orm import joinedload
 from db import models
 from shvatka.models import dto
 from shvatka.utils.datetime_utils import tz_utc
-from shvatka.utils.exceptions import PlayerAlreadyInTeam, PlayerRestoredInTeam
+from shvatka.utils.exceptions import PlayerAlreadyInTeam, PlayerRestoredInTeam, PlayerNotInTeam
 from .base import BaseDAO
 
 
@@ -120,7 +120,10 @@ class TeamPlayerDao(BaseDAO[models.TeamPlayer]):
                 not_leaved(),
             )
         )
-        return result.scalar_one()
+        try:
+            return result.scalar_one()
+        except NoResultFound:
+            raise PlayerNotInTeam(player=player)
 
 
 def not_leaved():

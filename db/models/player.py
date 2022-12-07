@@ -59,6 +59,11 @@ class Player(Base):
         back_populates="author",
         foreign_keys="FileInfo.author_id",
     )
+    achievements = relationship(
+        "Achievement",
+        foreign_keys="Achievement.player_id",
+        back_populates="player",
+    )
 
     def __repr__(self):
         return (

@@ -1,7 +1,6 @@
 import enum
 
 
-# noinspection PyArgumentList
 class ChatType(enum.Enum):
     private = enum.auto()
     channel = enum.auto()

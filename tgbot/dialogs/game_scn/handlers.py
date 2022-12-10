@@ -11,7 +11,8 @@ from dataclass_factory import Factory
 
 from db.dao.holder import HolderDao
 from shvatka.clients.file_storage import FileStorage
-from shvatka.models import dto
+from shvatka.models import dto, enums
+from shvatka.services.achievement import add_achievement
 from shvatka.services.game import check_new_game_name_available, create_game, get_full_game, add_level, upsert_game
 from shvatka.services.level import get_all_my_free_levels, get_by_id
 from shvatka.utils.exceptions import ScenarioNotCorrect
@@ -22,13 +23,14 @@ logger = logging.getLogger(__name__)
 
 
 async def process_name(m: Message, dialog_: Any, manager: DialogManager):
+    author: dto.Player = manager.middleware_data["player"]
+    dao: HolderDao = manager.middleware_data["dao"]
     if m.text.lower().strip() == "мудро":
+        await add_achievement(player=author, name=enums.Achievement.game_name_joke, dao=dao.achievement)
         return await m.answer(
             "Лол, я ждал эту шутку. "
             "Но нет, игра не может называться {name}".format(name=hd.bold(m.text))
         )
-    author: dto.Player = manager.middleware_data["player"]
-    dao: HolderDao = manager.middleware_data["dao"]
     await check_new_game_name_available(name=m.text.strip(), author=author, dao=dao.game)
     data = manager.dialog_data
     if not isinstance(data, dict):

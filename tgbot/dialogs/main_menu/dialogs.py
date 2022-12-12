@@ -5,6 +5,7 @@ from aiogram_dialog.widgets.text import Const, Format, Jinja
 
 from tgbot import states
 from .getters import get_promotion_token, get_main
+from ..team_manage.getters import get_my_team_
 
 main_menu = Dialog(
     Window(
@@ -41,12 +42,22 @@ main_menu = Dialog(
             state=states.PromotionSG.disclaimer,
             when=F["player"].can_be_author,
         ),
+        Start(
+            Const("🚩Управление командой"),
+            id="to_team_manage",
+            state=states.CaptainsBridgeSG.main,
+            when=(
+                F["team_player"].can_manage_players |
+                F["team_player"].can_change_team_name |
+                F["team_player"].can_remove_players
+            ),
+        ),
         # прошедшие игры
         # ачивки
         # уровни (не привязанные к играм?)
         # promote
         state=states.MainMenuSG.main,
-        getter=get_main,
+        getter=(get_main, get_my_team_),
     ),
 )
 

@@ -3,12 +3,17 @@ from aiogram_dialog import DialogManager
 from db.dao.holder import HolderDao
 from shvatka.models import dto
 from shvatka.services.player import get_full_team_player, get_my_team, get_team_players
+from shvatka.utils.exceptions import PlayerNotInTeam
 from shvatka.views.texts import PERMISSION_EMOJI
 
 
 async def get_my_team_(dao: HolderDao, player: dto.Player, **_) -> dict[str, dto.Team]:
-    team = await get_my_team(player=player, dao=dao.team_player)
-    team_player = await get_full_team_player(player=player, team=team, dao=dao.team_player)
+    try:
+        team = await get_my_team(player=player, dao=dao.team_player)
+        team_player = await get_full_team_player(player=player, team=team, dao=dao.team_player)
+    except PlayerNotInTeam:
+        team = None
+        team_player = None
     return {"team": team, "team_player": team_player}
 
 

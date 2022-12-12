@@ -1,8 +1,8 @@
 import pytest
 
 from db.dao.holder import HolderDao
-from shvatka.models import dto
-from shvatka.services.player import join_team, get_my_team, get_my_role
+from shvatka.models import dto, enums
+from shvatka.services.player import join_team, get_my_team, get_my_role, flip_permission, get_full_team_player
 from shvatka.utils.defaults_constants import DEFAULT_ROLE, CAPTAIN_ROLE
 from shvatka.utils.exceptions import PlayerAlreadyInTeam, PermissionsError
 from tests.fixtures.team import create_second_team
@@ -47,3 +47,19 @@ async def test_add_player_to_team(
         await join_team(hermione, slytherin, draco, dao.team_player)
 
     assert 3 == await dao.team_player.count()
+
+
+@pytest.mark.asyncio
+async def test_flip_permission(
+    harry: dto.Player, hermione: dto.Player, gryffindor: dto.Team,
+    dao: HolderDao, check_dao: HolderDao,
+):
+    await join_team(hermione, gryffindor, harry, dao.team_player)
+    permission = enums.TeamPlayerPermission.can_change_team_name
+    harry_team_player = await get_full_team_player(harry, gryffindor, dao.team_player)
+    hermione_team_player = await get_full_team_player(hermione, gryffindor, dao.team_player)
+    assert not hermione_team_player.can_change_team_name
+    await flip_permission(harry_team_player, hermione_team_player, permission, dao.team_player)
+
+    actual = await get_full_team_player(hermione, gryffindor, check_dao.team_player)
+    assert actual.can_change_team_name

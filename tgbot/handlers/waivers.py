@@ -7,7 +7,7 @@ from db.dao.holder import HolderDao
 from shvatka.models import dto
 from shvatka.models.enums import GameStatus
 from shvatka.models.enums.played import Played
-from shvatka.services.player import get_my_team, get_team_player
+from shvatka.services.player import get_my_team, get_full_team_player
 from shvatka.services.waiver import add_vote, approve_waivers, check_allow_approve_waivers, revoke_vote_by_captain, \
     get_not_played_team_players, force_add_vote
 from shvatka.utils.exceptions import PlayerNotInTeam, AnotherGameIsActive
@@ -62,7 +62,7 @@ async def start_approve_waivers_handler(
     bot: Bot
 ):
     team = await get_my_team(player, dao.team_player)
-    check_allow_approve_waivers(await get_team_player(player, team, dao.waiver_approver))
+    check_allow_approve_waivers(await get_full_team_player(player, team, dao.waiver_approver))
     await total_remove_msg(
         bot=bot,
         chat_id=team.chat.tg_id,
@@ -89,7 +89,7 @@ async def waiver_main_menu(
             player=player, team=team,
             notify_user="Ты не состоишь в команде, за которую подаёшь вейверы!",
         )
-    check_allow_approve_waivers(await get_team_player(player, team, dao.waiver_approver))
+    check_allow_approve_waivers(await get_full_team_player(player, team, dao.waiver_approver))
     await c.message.edit_text(**await start_approve_waivers(game, team, dao))
 
 
@@ -179,7 +179,7 @@ async def waiver_add_force_menu(
             player=player, team=team,
             notify_user="Ты не состоишь в команде, за которую подаёшь вейверы!",
         )
-    check_allow_approve_waivers(await get_team_player(player, team, dao.waiver_approver))
+    check_allow_approve_waivers(await get_full_team_player(player, team, dao.waiver_approver))
     players = await get_not_played_team_players(team=team, dao=dao.waiver_approver)
     await c.answer()
     await c.message.edit_text(
@@ -204,7 +204,7 @@ async def add_force_player(
             player=player, team=team,
             notify_user="Ты не состоишь в команде, за которую подаёшь вейверы!",
         )
-    check_allow_approve_waivers(await get_team_player(player, team, dao.waiver_approver))
+    check_allow_approve_waivers(await get_full_team_player(player, team, dao.waiver_approver))
     target = await dao.player.get_by_id(callback_data.player_id)
     await force_add_vote(game, team, target, Played.yes, dao.waiver_vote_adder)
     players = await get_not_played_team_players(team=team, dao=dao.waiver_approver)

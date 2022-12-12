@@ -5,7 +5,7 @@ from aiogram.types import TelegramObject
 
 from db.dao.holder import HolderDao
 from shvatka.models import dto
-from shvatka.services.player import get_team_player, get_my_team
+from shvatka.services.player import get_full_team_player, get_my_team
 from shvatka.utils.exceptions import PlayerNotInTeam
 
 
@@ -21,7 +21,7 @@ class TeamPlayerMiddleware(BaseMiddleware):
         player: dto.Player = data["player"]
         team = await get_my_team(player=player, dao=dao.team_player)
         try:
-            team_player = await get_team_player(player, team, dao.team_player)
+            team_player = await get_full_team_player(player, team, dao.team_player)
         except PlayerNotInTeam:
             team_player = None
         data["team_player"] = team_player

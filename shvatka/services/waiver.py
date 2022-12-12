@@ -1,9 +1,9 @@
 from typing import Iterable
 
 from shvatka.dal.waiver import WaiverVoteAdder, WaiverVoteGetter, WaiverApprover, GameWaiversGetter
-from shvatka.models import dto
+from shvatka.models import dto, enums
 from shvatka.models.enums.played import Played
-from shvatka.services.player import check_player_on_team, get_team_player
+from shvatka.services.player import check_player_on_team, get_full_team_player
 from shvatka.utils.exceptions import WaiverForbidden, PermissionsError
 
 
@@ -62,7 +62,7 @@ async def approve_waivers(game: dto.Game, team: dto.Team, approver: dto.Player, 
     :param dao:
     :return:
     """
-    team_player = await get_team_player(approver, team, dao)
+    team_player = await get_full_team_player(approver, team, dao)
     check_allow_approve_waivers(team_player)
     for vote in await get_voted_list(team, dao):
         if vote.vote == Played.not_allowed:
@@ -91,7 +91,7 @@ async def get_not_played_team_players(team: dto.Team, dao: WaiverApprover) -> li
 async def revoke_vote_by_captain(
     game: dto.Game, team: dto.Team, approver: dto.Player, target: dto.Player, dao: WaiverApprover,
 ):
-    team_player = await get_team_player(approver, team, dao)
+    team_player = await get_full_team_player(approver, team, dao)
     check_allow_approve_waivers(team_player)
     waiver = dto.Waiver(
         player=target,
@@ -107,7 +107,7 @@ async def revoke_vote_by_captain(
 def check_allow_approve_waivers(team_player: dto.FullTeamPlayer):
     if not team_player.can_manage_waivers:
         raise PermissionsError(
-            permission_name="can_manage_waivers",
+            permission_name=enums.TeamPlayerPermission.can_manage_players.name,
             player=team_player.player,
             team=team_player.team,
         )

@@ -1,7 +1,7 @@
 from shvatka.dal.organizer import GameOrgsGetter, OrgAdder, OrgByIdGetter, OrgPermissionFlipper, OrgDeletedFlipper, \
     OrgByPlayerGetter
 from shvatka.dal.secure_invite import InviteSaver, InviteRemover
-from shvatka.models import dto
+from shvatka.models import dto, enums
 from shvatka.models.enums.invite_type import InviteType
 from shvatka.models.enums.org_permission import OrgPermission
 from shvatka.services.game import get_game
@@ -100,9 +100,17 @@ async def flip_deleted(manager: dto.Player, org: dto.SecondaryOrganizer, dao: Or
 
 def check_can_see_log_keys(org: dto.Organizer):
     if not org.can_see_log_keys:
-        raise PermissionsError(player=org.player, game=org.game, permission_name="can_see_log_keys")
+        raise PermissionsError(
+            permission_name=enums.OrgPermission.can_see_log_keys.name,
+            player=org.player,
+            game=org.game,
+        )
 
 
 def check_can_spy(org: dto.Organizer):
     if not org.can_spy:
-        raise PermissionsError(player=org.player, game=org.game, permission_name="can_spy")
+        raise PermissionsError(
+            permission_name=enums.OrgPermission.can_spy.name,
+            player=org.player,
+            game=org.game,
+        )

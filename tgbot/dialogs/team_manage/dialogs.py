@@ -1,11 +1,11 @@
 from aiogram_dialog import Dialog, Window
 from aiogram_dialog.widgets.input import TextInput
-from aiogram_dialog.widgets.kbd import SwitchTo, Cancel, ScrollingGroup, Select
-from aiogram_dialog.widgets.text import Const, Jinja
+from aiogram_dialog.widgets.kbd import SwitchTo, Cancel, ScrollingGroup, Select, Button
+from aiogram_dialog.widgets.text import Const, Jinja, Format
 
 from tgbot import states
 from .getters import get_my_team_, get_team_with_players, get_selected_player
-from .handlers import rename_team_handler, change_desc_team_handler, select_player
+from .handlers import rename_team_handler, change_desc_team_handler, select_player, change_permission_handler
 
 captains_bridge = Dialog(
     Window(
@@ -59,9 +59,36 @@ captains_bridge = Dialog(
         state=states.CaptainsBridgeSG.players,
     ),
     Window(
-        Jinja("Меню игрока {{selected_player}} команды {{team.name}}"),
+        Jinja(
+            "Меню игрока {{selected_player.user.name_mention}} команды 🚩{{team.name}}"
+        ),
         SwitchTo(Const("⤴В меню команды"), id="back", state=states.CaptainsBridgeSG.main),
         SwitchTo(Const("⤴Назад"), id="back", state=states.CaptainsBridgeSG.players),
+        Button(
+            Format("{can_manage_waivers}Подавать вейверы"),
+            id="can_manage_waivers",
+            on_click=change_permission_handler,
+        ),
+        Button(
+            Format("{can_manage_players}Управлять игроками"),
+            id="can_manage_players",
+            on_click=change_permission_handler,
+        ),
+        Button(
+            Format("{can_change_team_name}Переименовывать команду"),
+            id="can_change_team_name",
+            on_click=change_permission_handler,
+        ),
+        Button(
+            Format("{can_add_players}Добавлять игроков"),
+            id="can_add_players",
+            on_click=change_permission_handler,
+        ),
+        Button(
+            Format("{can_remove_players}Удалять игроков"),
+            id="can_remove_players",
+            on_click=change_permission_handler,
+        ),
         getter=(get_my_team_, get_selected_player),
         state=states.CaptainsBridgeSG.player,
     )

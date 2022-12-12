@@ -3,7 +3,7 @@ from abc import ABCMeta
 from shvatka.dal.base import Committer, Reader
 from shvatka.dal.game import ActiveGameFinder
 from shvatka.dal.secure_invite import InviteRemover, InviteReader
-from shvatka.models import dto
+from shvatka.models import dto, enums
 
 
 class PlayerUpserter(Committer, metaclass=ABCMeta):
@@ -65,4 +65,9 @@ class TeamLeaver(Committer, ActiveGameFinder, WaiverRemover, TeamPlayerGetter, m
 
 class TeamPlayersGetter(Reader):
     async def get_players(self, team: dto.Team) -> list[dto.FullTeamPlayer]:
+        raise NotImplementedError
+
+
+class TeamPlayerPermissionFlipper(Committer):
+    async def flip_permission(self, player: dto.TeamPlayer, permission: enums.TeamPlayerPermission):
         raise NotImplementedError

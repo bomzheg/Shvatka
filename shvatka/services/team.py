@@ -1,5 +1,5 @@
 from shvatka.dal.team import TeamCreator, TeamGetter, TeamRenamer, TeamDescChanger
-from shvatka.models import dto
+from shvatka.models import dto, enums
 from shvatka.utils.defaults_constants import CAPTAIN_ROLE
 from shvatka.utils.exceptions import SHDataBreach, PermissionsError
 
@@ -37,4 +37,8 @@ def check_can_change_name(team: dto.Team, captain: dto.FullTeamPlayer):
         return
     if captain.can_change_team_name:
         return
-    raise PermissionsError(permission_name="can_change_name", team=team, player=captain.player)
+    raise PermissionsError(
+        permission_name=enums.TeamPlayerPermission.can_change_team_name.name,
+        team=team,
+        player=captain.player,
+    )

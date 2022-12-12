@@ -1,12 +1,13 @@
 from datetime import datetime, timedelta
 
+from sqlalchemy import update, not_
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import joinedload
 
 from db import models
-from shvatka.models import dto
+from shvatka.models import dto, enums
 from shvatka.utils.datetime_utils import tz_utc
 from shvatka.utils.exceptions import PlayerAlreadyInTeam, PlayerRestoredInTeam, PlayerNotInTeam
 from .base import BaseDAO
@@ -111,6 +112,13 @@ class TeamPlayerDao(BaseDAO[models.TeamPlayer]):
 
     async def get_team_player(self, player: dto.Player) -> dto.TeamPlayer:
         return (await self._get_my_team_player(player)).to_dto()
+
+    async def flip_permission(self, player: dto.TeamPlayer, permission: enums.TeamPlayerPermission):
+        await self.session.execute(
+            update(models.TeamPlayer)
+            .where(models.TeamPlayer.id == player.id)
+            .values(**{permission.name: not_(getattr(models.TeamPlayer, permission.name))})
+        )
 
     async def _get_my_team_player(self, player: dto.Player) -> models.TeamPlayer:
         result = await self.session.execute(

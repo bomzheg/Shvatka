@@ -2,10 +2,12 @@ from typing import Any
 
 from aiogram.types import Message, CallbackQuery
 from aiogram_dialog import DialogManager
+from aiogram_dialog.widgets.kbd import Button
 
 from db.dao.holder import HolderDao
-from shvatka.models import dto
-from shvatka.services.player import get_my_team, get_team_player
+from shvatka.models import dto, enums
+from shvatka.services.player import get_my_team, get_full_team_player, flip_permission, get_team_player_by_player, \
+    get_player_by_id
 from shvatka.services.team import rename_team, change_team_desc
 from tgbot.states import CaptainsBridgeSG
 
@@ -14,7 +16,7 @@ async def rename_team_handler(m: Message, widget: Any, dialog_manager: DialogMan
     dao: HolderDao = dialog_manager.middleware_data["dao"]
     player: dto.Player = dialog_manager.middleware_data["player"]
     team = await get_my_team(player=player, dao=dao.team_player)
-    team_player = await get_team_player(player=player, team=team, dao=dao.team_player)
+    team_player = await get_full_team_player(player=player, team=team, dao=dao.team_player)
     await rename_team(team=team, captain=team_player, new_name=new_name, dao=dao.team)
 
 
@@ -22,7 +24,7 @@ async def change_desc_team_handler(m: Message, widget: Any, dialog_manager: Dial
     dao: HolderDao = dialog_manager.middleware_data["dao"]
     player: dto.Player = dialog_manager.middleware_data["player"]
     team = await get_my_team(player=player, dao=dao.team_player)
-    team_player = await get_team_player(player=player, team=team, dao=dao.team_player)
+    team_player = await get_full_team_player(player=player, team=team, dao=dao.team_player)
     await change_team_desc(team=team, captain=team_player, new_desc=new_desc, dao=dao.team)
 
 
@@ -30,3 +32,16 @@ async def select_player(c: CallbackQuery, widget: Any, manager: DialogManager, p
     data = manager.dialog_data
     data["selected_player_id"] = int(player_id)
     await manager.switch_to(CaptainsBridgeSG.player)
+
+
+async def change_permission_handler(c: CallbackQuery, button: Button, manager: DialogManager):
+    await c.answer()
+    dao: HolderDao = manager.middleware_data["dao"]
+    captain: dto.Player = manager.middleware_data["player"]
+    team = await get_my_team(captain, dao.team_player)
+    captain_team_player = await get_full_team_player(captain, team, dao.team_player)
+    player_id = manager.dialog_data["selected_player_id"]
+    player = await get_player_by_id(player_id, dao.player)
+    team_player = await get_team_player_by_player(player, dao.team_player)
+    permission = enums.TeamPlayerPermission[button.widget_id]
+    await flip_permission(captain_team_player, team_player, permission, dao.team_player)

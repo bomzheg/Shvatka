@@ -43,7 +43,7 @@ TEAMS_COMMAND = BotCommand(command="teams", description="список коман
 PLAYERS_COMMAND = BotCommand(command="players", description="игроки команды")
 ALL_PLAYERS_COMMAND = BotCommand(command="all_players", description="игроки команды")  # TODO
 ME_COMMAND = BotCommand(command="me", description="мой профиль")  # TODO
-LEAVE_COMMAND = BotCommand(command="leave", description="выйти из команды")  # TODO
+LEAVE_COMMAND = BotCommand(command="leave", description="выйти из команды")
 GAMES_COMMAND = BotCommand(command="games", description="список игр")  # TODO
 
 GET_WAIVERS_COMMAND = BotCommand(command="get_waivers", description="показать текущие вейверы")

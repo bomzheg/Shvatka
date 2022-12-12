@@ -1,17 +1,18 @@
 from aiogram import Router, Bot, F
 from aiogram.filters import Command, MagicData
 from aiogram.types import Message, InlineQuery, InlineQueryResultArticle, InputTextMessageContent, CallbackQuery
+from aiogram.utils.text_decorations import html_decoration as hd
 from aiogram_dialog import DialogManager
 
 from db.dao.holder import HolderDao
 from shvatka.models import dto
 from shvatka.services.player import save_promotion_confirm_invite, check_promotion_invite, \
-    dismiss_promotion, agree_promotion, get_my_team
+    dismiss_promotion, agree_promotion, get_my_team, leave
 from shvatka.utils.exceptions import SaltError
 from tgbot import keyboards as kb
 from tgbot import states
 from tgbot.utils.router import disable_router_on_game
-from tgbot.views.commands import START_COMMAND, TEAM_COMMAND
+from tgbot.views.commands import START_COMMAND, TEAM_COMMAND, LEAVE_COMMAND
 from tgbot.views.team import render_team_card
 
 
@@ -80,6 +81,16 @@ async def get_my_team_cmd(message: Message, player: dto.Player, dao: HolderDao):
     await message.answer("Ты не состоишь в команде")
 
 
+async def leave_handler(message: Message, player: dto.Player, dao: HolderDao, bot: Bot):
+    team = await get_my_team(player, dao.team_player)
+    await leave(player, player, dao.team_leaver)
+    await message.answer(f"Ты вышел из команды {hd.quote(team.name)}")
+    await bot.send_message(
+        chat_id=team.chat.tg_id,
+        text=f"Игрок {hd.quote(player.user.name_mention)} вышел из команды.",
+    )
+
+
 def setup() -> Router:
     router = Router(name=__name__)
     disable_router_on_game(router)
@@ -94,4 +105,5 @@ def setup() -> Router:
     router.callback_query.register(agree_promotion_handler, kb.AgreePromotionCD.filter(F.is_agreement))
 
     router.message.register(get_my_team_cmd, Command(TEAM_COMMAND), F.chat.type == "private")
+    router.message.register(leave_handler, Command(LEAVE_COMMAND))
     return router

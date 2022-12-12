@@ -30,6 +30,7 @@ async def get_selected_player(dao: HolderDao, player: dto.Player, dialog_manager
     selected_team_player = await get_full_team_player(selected_player, team, dao.team_player)
     return {
         "selected_player": selected_player,
+        "selected_team_player": selected_team_player,
         "team": team,
         "team_player": team_player,
         **{key.name: PERMISSION_EMOJI[value] for key, value in selected_team_player.permissions.items()},

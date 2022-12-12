@@ -62,7 +62,7 @@ captains_bridge = Dialog(
         Jinja(
             "Меню игрока {{selected_player.user.name_mention}} команды 🚩{{team.name}}"
         ),
-        SwitchTo(Const("⤴В меню команды"), id="back", state=states.CaptainsBridgeSG.main),
+        SwitchTo(Const("⤴В меню команды"), id="to_main", state=states.CaptainsBridgeSG.main),
         SwitchTo(Const("⤴Назад"), id="back", state=states.CaptainsBridgeSG.players),
         Button(
             Format("{can_manage_waivers}Подавать вейверы"),
@@ -89,7 +89,23 @@ captains_bridge = Dialog(
             id="can_remove_players",
             on_click=change_permission_handler,
         ),
-        getter=(get_my_team_, get_selected_player),
+        SwitchTo(Const("Изгнать"), id="delete", state=states.CaptainsBridgeSG.confirm_delete),
+        getter=get_selected_player,
         state=states.CaptainsBridgeSG.player,
-    )
+    ),
+    Window(
+        Jinja(
+            "Игрок {{selected_player.user.name_mention}} служит в команде {{team.name}} "
+            "c {{selected_team_player.date_joined | user_timezone}}\n"
+            "Сейчас занимает должность {{selected_team_player|player_emoji}}{{selected_team_player.role}}\n"
+            "\n"
+            "Вы уверены что хотите изгнать его из команды?",
+        ),
+        SwitchTo(Const("⤴В меню команды"), id="to_main", state=states.CaptainsBridgeSG.main),
+        SwitchTo(Const("⤴Назад к списку игроков"), id="to_players", state=states.CaptainsBridgeSG.players),
+        SwitchTo(Const("Нет!"), id="back", state=states.CaptainsBridgeSG.player),
+        Button(Const("Да, удалить"), id="delete"),
+        getter=get_selected_player,
+        state=states.CaptainsBridgeSG.confirm_delete,
+    ),
 )

@@ -5,7 +5,8 @@ from aiogram_dialog.widgets.text import Const, Jinja, Format
 
 from tgbot import states
 from .getters import get_my_team_, get_team_with_players, get_selected_player
-from .handlers import rename_team_handler, change_desc_team_handler, select_player, change_permission_handler
+from .handlers import rename_team_handler, change_desc_team_handler, select_player, change_permission_handler, \
+    remove_player_handler
 
 captains_bridge = Dialog(
     Window(
@@ -104,7 +105,7 @@ captains_bridge = Dialog(
         SwitchTo(Const("⤴В меню команды"), id="to_main", state=states.CaptainsBridgeSG.main),
         SwitchTo(Const("⤴Назад к списку игроков"), id="to_players", state=states.CaptainsBridgeSG.players),
         SwitchTo(Const("Нет!"), id="back", state=states.CaptainsBridgeSG.player),
-        Button(Const("Да, удалить"), id="delete"),
+        Button(Const("Да, удалить"), id="delete", on_click=remove_player_handler),
         getter=get_selected_player,
         state=states.CaptainsBridgeSG.confirm_delete,
     ),

@@ -15,6 +15,10 @@ main_menu = Dialog(
             "твой id {{player.id}}"
         ),
         Jinja(
+            "Ты состоишь в команде 🚩{{team.name}} "
+            "в должности {{team_player|player_emoji}}{{team_player.role}}"
+        ),
+        Jinja(
             "Сейчас активна игра {{game.name}}.\n"
             "Статус: {{game.status}}\n",
             when=F["game"],

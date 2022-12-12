@@ -19,7 +19,7 @@ async def get_team_with_players(dao: HolderDao, player: dto.Player, **_) -> dict
     return {
         "team": team,
         "team_player": team_player,
-        "players": players,
+        "players": [tp for tp in players if tp.player.id not in (team.captain.id, player.id)],
     }
 
 

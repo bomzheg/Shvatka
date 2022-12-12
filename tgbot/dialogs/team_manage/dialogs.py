@@ -1,3 +1,4 @@
+from aiogram import F
 from aiogram_dialog import Dialog, Window
 from aiogram_dialog.widgets.input import TextInput
 from aiogram_dialog.widgets.kbd import SwitchTo, Cancel, ScrollingGroup, Select, Button
@@ -21,9 +22,24 @@ captains_bridge = Dialog(
             "{% endif %}"
         ),
         Cancel(Const("⤴Назад")),
-        SwitchTo(Const("✍️Переименовать"), id="rename", state=states.CaptainsBridgeSG.name),
-        SwitchTo(Const("📃Изменить девиз"), id="change_desc", state=states.CaptainsBridgeSG.description),
-        SwitchTo(Const("👥Игроки"), id="players", state=states.CaptainsBridgeSG.players),
+        SwitchTo(
+            Const("✍️Переименовать"),
+            id="rename",
+            state=states.CaptainsBridgeSG.name,
+            when=F["team_player"].can_change_team_name,
+        ),
+        SwitchTo(
+            Const("📃Изменить девиз"),
+            id="change_desc",
+            state=states.CaptainsBridgeSG.description,
+            when=F["team_player"].can_change_team_name,
+        ),
+        SwitchTo(
+            Const("👥Игроки"),
+            id="players",
+            state=states.CaptainsBridgeSG.players,
+            when=F["team_player"].can_manage_players | F["team_player"].can_remove_players,
+        ),
         state=states.CaptainsBridgeSG.main,
         getter=get_my_team_,
     ),
@@ -69,28 +85,39 @@ captains_bridge = Dialog(
             Format("{can_manage_waivers}Подавать вейверы"),
             id="can_manage_waivers",
             on_click=change_permission_handler,
+            when=F["team_player"].can_manage_players & F["team_player"].can_manage_waivers,
         ),
         Button(
             Format("{can_manage_players}Управлять игроками"),
             id="can_manage_players",
             on_click=change_permission_handler,
+            when=F["team_player"].can_manage_players,
         ),
         Button(
             Format("{can_change_team_name}Переименовывать команду"),
             id="can_change_team_name",
             on_click=change_permission_handler,
+            when=F["team_player"].can_manage_players & F["team_player"].can_change_team_name,
         ),
         Button(
             Format("{can_add_players}Добавлять игроков"),
             id="can_add_players",
             on_click=change_permission_handler,
+            when=F["team_player"].can_manage_players & F["team_player"].can_add_players,
         ),
         Button(
             Format("{can_remove_players}Удалять игроков"),
             id="can_remove_players",
             on_click=change_permission_handler,
+            when=F["team_player"].can_manage_players & F["team_player"].can_remove_players,
         ),
-        SwitchTo(Const("Изгнать"), id="delete", state=states.CaptainsBridgeSG.confirm_delete),
+        SwitchTo(
+            Const("Изгнать"),
+            id="delete",
+            state=states.CaptainsBridgeSG.confirm_delete,
+            when=F["team_player"].can_remove_players,
+        ),
+
         getter=get_selected_player,
         state=states.CaptainsBridgeSG.player,
     ),

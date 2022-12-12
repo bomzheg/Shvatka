@@ -32,7 +32,7 @@ class TeamPlayerFilter(BaseFilter):
             if self.can_change_team_name != team_player.can_change_team_name:
                 return False
         if self.can_add_players is not None:
-            if self.can_add_players != team_player.can_add_player:
+            if self.can_add_players != team_player.can_add_players:
                 return False
         if self.can_remove_players is not None:
             if self.can_remove_players != team_player.can_remove_players:

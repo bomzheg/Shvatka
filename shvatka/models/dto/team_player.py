@@ -55,7 +55,7 @@ class FullTeamPlayer(TeamPlayer):
         return self.is_captain or self._can_change_team_name
 
     @property
-    def can_add_player(self) -> bool:
+    def can_add_players(self) -> bool:
         return self.is_captain or self._can_add_players
 
     @property
@@ -68,7 +68,7 @@ class FullTeamPlayer(TeamPlayer):
             enums.TeamPlayerPermission.can_manage_waivers: self.can_manage_waivers,
             enums.TeamPlayerPermission.can_manage_players: self.can_manage_players,
             enums.TeamPlayerPermission.can_change_team_name: self.can_change_team_name,
-            enums.TeamPlayerPermission.can_add_players: self.can_add_player,
+            enums.TeamPlayerPermission.can_add_players: self.can_add_players,
             enums.TeamPlayerPermission.can_remove_players: self.can_remove_players,
         }
     @classmethod

@@ -131,7 +131,7 @@ def check_can_remove_player(team_player: dto.FullTeamPlayer):
 
 
 def check_can_add_players(team_player: dto.FullTeamPlayer):
-    if not team_player.can_add_player:
+    if not team_player.can_add_players:
         raise PermissionsError(
             permission_name=enums.TeamPlayerPermission.can_add_players.name,
             team=team_player.team,

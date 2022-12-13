@@ -5,12 +5,24 @@ from aiogram_dialog import DialogManager
 from db.dao.holder import HolderDao
 from shvatka.models import dto
 from shvatka.services import game
-from shvatka.services.game import get_authors_games
+from shvatka.services.game import get_authors_games, get_completed_games
 from shvatka.utils.datetime_utils import tz_game
 
 
 async def get_my_games(dao: HolderDao, player: dto.Player, **_) -> dict[str, list[dto.Game]]:
     return {"games": await get_authors_games(player, dao.game)}
+
+
+async def get_games(dao: HolderDao, **_) -> dict[str, list[dto.Game]]:
+    return {"games": await get_completed_games(dao.game)}
+
+
+async def get_completed_game(dao: HolderDao, dialog_manager: DialogManager, **_):
+    game_id = dialog_manager.dialog_data.get("game_id", None) or dialog_manager.start_data["game_id"]
+    return {"game": await game.get_game(
+        id_=game_id,
+        dao=dao.game,
+    )}
 
 
 async def get_game(dao: HolderDao, player: dto.Player, dialog_manager: DialogManager, **_):

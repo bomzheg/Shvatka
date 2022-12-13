@@ -5,12 +5,59 @@ from aiogram_dialog.widgets.kbd import ScrollingGroup, Select, SwitchTo, Button,
 from aiogram_dialog.widgets.text import Const, Format, Case, Jinja
 
 from tgbot import states
-from .getters import get_my_games, get_game, get_game_time, get_game_datetime
+from .getters import get_my_games, get_game, get_game_time, get_game_datetime, get_games, get_completed_game
 from .handlers import select_my_game, start_waivers, select_date, process_time_message, schedule_game, show_scn, \
-    start_schedule_game, show_zip_scn, show_game_orgs, cancel_scheduled_game, rename_game_handler, publish_game
+    start_schedule_game, show_zip_scn, show_game_orgs, cancel_scheduled_game, rename_game_handler, publish_game, \
+    select_game
 from ..preview_data import PREVIEW_GAME
 
 games = Dialog(
+    Window(
+        Const("Список прошедших"),
+        Cancel(Const("⤴Назад")),
+        ScrollingGroup(
+            Select(
+                Format("{item.name}"),
+                id="games",
+                item_id_getter=lambda x: x.id,
+                items="games",
+                on_click=select_game,
+            ),
+            id="games_sg",
+            width=1,
+            height=10,
+        ),
+        state=states.CompletedGamesPanelSG.list,
+        preview_data={"games": [PREVIEW_GAME]},
+        getter=get_games,
+    ),
+    Window(
+        Jinja(
+            "Выбрана игра: <b>{{game.name}}</b> с ID {{game.id}}\n"
+            "которая началась: {{ game.start_at|user_timezone }} "
+        ),
+        SwitchTo(
+            Const("⤴Назад к списку игр"),
+            id="to_my_games",
+            state=states.CompletedGamesPanelSG.list,
+        ),
+        Button(
+            Const("👥Организаторы"),
+            id="game_orgs",
+            on_click=show_game_orgs,
+        ),
+        Button(
+            Const("📦zip-сценарий"),
+            id="game_zip_scn",
+            on_click=show_zip_scn,
+        ),
+        state=states.CompletedGamesPanelSG.game,
+        preview_data={"game": PREVIEW_GAME},
+        getter=get_completed_game,
+    ),
+)
+
+my_games = Dialog(
     Window(
         Const("Список игр твоего авторства"),
         Cancel(Const("⤴Назад")),

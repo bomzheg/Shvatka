@@ -27,6 +27,16 @@ async def select_my_game(c: CallbackQuery, widget: Any, manager: DialogManager, 
     await manager.switch_to(states.MyGamesPanelSG.game_menu)
 
 
+async def select_game(c: CallbackQuery, widget: Any, manager: DialogManager, item_id: str):
+    await c.answer()
+    data = manager.dialog_data
+    if not isinstance(data, dict):
+        data = {}
+    data["game_id"] = int(item_id)
+    await manager.update(data)
+    await manager.switch_to(states.CompletedGamesPanelSG.game)
+
+
 async def start_schedule_game(c: CallbackQuery, widget: Button, manager: DialogManager):
     await c.answer()
     game_id = manager.dialog_data["my_game_id"]

@@ -28,7 +28,12 @@ main_menu = Dialog(
         ),
         Cancel(Const("❌Закрыть")),
         Start(
-            Const("🗄Мои игры"),
+            Const("🗄Прошедшие игры"),
+            id="completed_games",
+            state=states.CompletedGamesPanelSG.list,
+        ),
+        Start(
+            Const("🗂Мои игры"),
             id="my_games",
             state=states.MyGamesPanelSG.choose_game,
             when=F["player"].can_be_author,
@@ -55,10 +60,8 @@ main_menu = Dialog(
                 F["team_player"].can_remove_players
             ),
         ),
-        # прошедшие игры
         # ачивки
         # уровни (не привязанные к играм?)
-        # promote
         state=states.MainMenuSG.main,
         getter=(get_main, get_my_team_),
     ),

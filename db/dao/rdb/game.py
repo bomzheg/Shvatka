@@ -97,6 +97,7 @@ class GameDao(BaseDAO[models.Game]):
             .where(
                 models.Game.status == GameStatus.complete,
             )
+            .order_by(models.Game.start_at.desc())  # noqa
         )
         games: list[models.Game] = result.scalars().all()
         return [game.to_dto(game.author.to_dto_user_prefetched()) for game in games]

@@ -12,20 +12,19 @@ main_menu = Dialog(
         Jinja(
             "Привет, {{player.user.name_mention}}!\n"
             "Ты находишься в главном меню.\n"
-            "твой id {{player.id}}"
-        ),
-        Jinja(
+            "{% if team %}"
             "Ты состоишь в команде 🚩{{team.name}} "
-            "в должности {{team_player|player_emoji}}{{team_player.role}}"
-        ),
-        Jinja(
+            "в должности {{team_player|player_emoji}}{{team_player.role}}\n"
+            "{% else %}"
+            "Ты не состоишь в команде\n"
+            "{% endif %}"
+            "{% if game %}"
             "Сейчас активна игра {{game.name}}.\n"
-            "Статус: {{game.status}}\n",
-            when=F["game"],
-        ),
-        Jinja(
-            "Игра запланирована на {{ game.start_at|user_timezone }}",
-            when=F["game"].start_at,
+            "Статус: {{game.status}}\n"
+            "{% endif %}"
+            "{% if game.start_at %}"
+            "Игра запланирована на {{ game.start_at|user_timezone }}"
+            "{% endif %}"
         ),
         Cancel(Const("❌Закрыть")),
         Start(

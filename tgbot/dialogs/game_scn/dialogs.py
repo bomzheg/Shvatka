@@ -5,7 +5,7 @@ from aiogram_dialog.widgets.input import MessageInput
 from aiogram_dialog.widgets.kbd import ScrollingGroup, Multiselect, Button, Select, Cancel, SwitchTo
 from aiogram_dialog.widgets.text import Const, Format, Jinja
 
-from tgbot.states import GameWriteSG, GameEditSG
+from tgbot import states
 from .getters import get_game_name, select_my_levels, select_full_game
 from .handlers import process_name, save_game, edit_level, add_level_handler, process_zip_scn
 
@@ -25,8 +25,8 @@ game_writer = Dialog(
         ),
         Cancel(Const("⤴Отменить")),
         MessageInput(func=process_name),
-        SwitchTo(Const("Загрузить из zip"), id="game_from_zip", state=GameWriteSG.from_zip),
-        state=GameWriteSG.game_name,
+        SwitchTo(Const("Загрузить из zip"), id="game_from_zip", state=states.GameWriteSG.from_zip),
+        state=states.GameWriteSG.game_name,
     ),
     Window(
         Jinja("Игра <b>{{game_name}}</b>\n\n"),
@@ -52,14 +52,14 @@ game_writer = Dialog(
             id="save_levels",
             on_click=save_game,
         ),
-        state=GameWriteSG.levels,
+        state=states.GameWriteSG.levels,
         getter=[get_game_name, select_my_levels],
     ),
     Window(
         Const("Жду zip-файл с готовой игрой"),
         Cancel(Const("⤴Отменить")),
         MessageInput(func=process_zip_scn, filter=F.content_type == ContentType.DOCUMENT),
-        state=GameWriteSG.from_zip,
+        state=states.GameWriteSG.from_zip,
     ),
 )
 
@@ -69,7 +69,7 @@ game_editor = Dialog(
         Jinja("Игра <b>{{game.name}}</b>\n\n"),
         Const("<b>Уровни игры</b>"),
         Cancel(Const("⤴Назад")),
-        SwitchTo(Const("📑Добавить уровень"), id="to_add_level", state=GameEditSG.add_level),
+        SwitchTo(Const("📑Добавить уровень"), id="to_add_level", state=states.GameEditSG.add_level),
         ScrollingGroup(
             Select(
                 Format("{item.name_id}"),
@@ -82,7 +82,7 @@ game_editor = Dialog(
             width=1,
             height=10,
         ),
-        state=GameEditSG.current_levels,
+        state=states.GameEditSG.current_levels,
         getter=select_full_game,
     ),
     Window(
@@ -91,7 +91,7 @@ game_editor = Dialog(
             "<b>Уровни</b>\n\n"
             "Выбери уровни которые нужно добавить"
         ),
-        SwitchTo(Const("⤴Назад"), id="back", state=GameEditSG.current_levels),
+        SwitchTo(Const("⤴Назад"), id="back", state=states.GameEditSG.current_levels),
         ScrollingGroup(
             Select(
                 Format("{item.name_id}"),
@@ -104,7 +104,7 @@ game_editor = Dialog(
             width=1,
             height=10,
         ),
-        state=GameEditSG.add_level,
+        state=states.GameEditSG.add_level,
         getter=(select_full_game, select_my_levels),
     ),
 )

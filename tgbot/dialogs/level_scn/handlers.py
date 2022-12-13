@@ -10,7 +10,7 @@ from shvatka.models import dto
 from shvatka.models.dto.scn import TimeHint, LevelScenario
 from shvatka.services.level import upsert_level
 from shvatka.utils.input_validation import is_level_id_correct, is_multiple_keys_normal, normalize_key
-from tgbot.states import TimeHintSG
+from tgbot import states
 
 
 async def process_id(m: Message, dialog_: Any, manager: DialogManager):
@@ -51,7 +51,7 @@ async def start_add_time_hint(c: CallbackQuery, button: Button, manager: DialogM
     dcf: Factory = manager.middleware_data["dcf"]
     hints = dcf.load(manager.dialog_data.get("time_hints", []), list[TimeHint])
     previous_time = hints[-1].time if hints else -1
-    await manager.start(state=TimeHintSG.time, data={"previous_time": previous_time})
+    await manager.start(state=states.TimeHintSG.time, data={"previous_time": previous_time})
 
 
 async def save_level(c: CallbackQuery, button: Button, manager: DialogManager):

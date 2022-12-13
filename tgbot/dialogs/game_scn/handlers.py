@@ -16,8 +16,8 @@ from shvatka.services.achievement import add_achievement
 from shvatka.services.game import check_new_game_name_available, create_game, get_full_game, add_level, upsert_game
 from shvatka.services.level import get_all_my_free_levels, get_by_id
 from shvatka.utils.exceptions import ScenarioNotCorrect
+from tgbot import states
 from tgbot.services.scenario import unpack_scn
-from tgbot.states import LevelManageSG
 
 logger = logging.getLogger(__name__)
 
@@ -75,7 +75,7 @@ async def save_game(c: CallbackQuery, button: Button, manager: DialogManager):
 
 async def edit_level(c: CallbackQuery, widget: Any, manager: DialogManager, item_id: str):
     await c.answer()
-    await manager.start(LevelManageSG.menu, data={"level_id": int(item_id)})
+    await manager.start(states.LevelManageSG.menu, data={"level_id": int(item_id)})
 
 
 async def add_level_handler(c: CallbackQuery, button: Any, manager: DialogManager, item_id: str):

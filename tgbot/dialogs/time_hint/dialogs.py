@@ -3,7 +3,7 @@ from aiogram_dialog.widgets.input import MessageInput
 from aiogram_dialog.widgets.kbd import Select, Button, Group, Back, Cancel
 from aiogram_dialog.widgets.text import Const, Format, Case, Jinja
 
-from tgbot.states import TimeHintSG
+from tgbot import states
 from .getters import get_available_times, get_hints
 from .handlers import process_time_message, select_time, process_hint, on_finish
 from ..preview_data import TIMES_PRESET
@@ -25,7 +25,7 @@ time_hint = Dialog(
             id="times_group",
             width=3,
         ),
-        state=TimeHintSG.time,
+        state=states.TimeHintSG.time,
         getter=get_available_times,
         preview_data={"times": TIMES_PRESET}
     ),
@@ -50,7 +50,7 @@ time_hint = Dialog(
             on_click=on_finish,
         ),
         getter=get_hints,
-        state=TimeHintSG.hint,
+        state=states.TimeHintSG.hint,
         preview_data={"has_hints": True, "rendered": "📃🪪"}
     ),
 )

@@ -15,12 +15,12 @@ from shvatka.utils.defaults_constants import DEFAULT_ROLE
 from shvatka.utils.exceptions import (
     TeamError, PlayerAlreadyInTeam, AnotherTeamInChat, PlayerRestoredInTeam, PermissionsError,
 )
+from tgbot import states
 from tgbot.filters.has_target import HasTargetFilter
 from tgbot.filters.is_admin import is_admin_filter
 from tgbot.filters.is_team import IsTeamFilter
 from tgbot.filters.team_player import TeamPlayerFilter
 from tgbot.middlewares import TeamPlayerMiddleware
-from tgbot.states import CaptainsBridgeSG
 from tgbot.utils.router import disable_router_on_game
 from tgbot.views.commands import CREATE_TEAM_COMMAND, ADD_IN_TEAM_COMMAND, TEAM_COMMAND, PLAYERS_COMMAND, \
     MANAGE_TEAM_COMMAND
@@ -141,7 +141,7 @@ async def cmd_players(message: Message, team: dto.Team, dao: HolderDao):
 
 
 async def captains_bridge_cmd(message: Message, dialog_manager: DialogManager):
-    await dialog_manager.start(state=CaptainsBridgeSG.main)
+    await dialog_manager.start(state=states.CaptainsBridgeSG.main)
 
 
 def setup_team_manage() -> Router:

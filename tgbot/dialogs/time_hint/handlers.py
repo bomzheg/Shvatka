@@ -7,7 +7,7 @@ from dataclass_factory import Factory
 
 from shvatka.models.dto.scn import TimeHint
 from shvatka.models.dto.scn.hint_part import AnyHint
-from tgbot.states import TimeHintSG
+from tgbot import states
 from tgbot.views.hint_factory.hint_parser import HintParser
 
 
@@ -37,7 +37,7 @@ async def set_time(time_minutes: int, manager: DialogManager):
     data["time"] = int(time_minutes)
     data.setdefault("hints", [])
     await manager.update(data)
-    await manager.switch_to(TimeHintSG.hint)
+    await manager.switch_to(states.TimeHintSG.hint)
 
 
 async def process_hint(m: Message, dialog_: Any, manager: DialogManager) -> None:

@@ -12,7 +12,6 @@ from shvatka.services.player import get_my_team, get_full_team_player, flip_perm
     get_player_by_id, leave
 from shvatka.services.team import rename_team, change_team_desc
 from tgbot import states
-from tgbot.states import CaptainsBridgeSG
 
 
 async def rename_team_handler(m: Message, widget: Any, dialog_manager: DialogManager, new_name: str):
@@ -34,7 +33,7 @@ async def change_desc_team_handler(m: Message, widget: Any, dialog_manager: Dial
 async def select_player(c: CallbackQuery, widget: Any, manager: DialogManager, player_id: str):
     data = manager.dialog_data
     data["selected_player_id"] = int(player_id)
-    await manager.switch_to(CaptainsBridgeSG.player)
+    await manager.switch_to(states.CaptainsBridgeSG.player)
 
 
 async def change_permission_handler(c: CallbackQuery, button: Button, manager: DialogManager):

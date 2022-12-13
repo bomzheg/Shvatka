@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
 from db.dao import PlayerDao, SecureInvite
-from shvatka.dal.player import PlayerPromoter
+from shvatka.interfaces.dal.player import PlayerPromoter
 from shvatka.models import dto
 
 

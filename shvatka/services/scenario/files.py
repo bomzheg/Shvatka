@@ -1,7 +1,7 @@
 from typing.io import BinaryIO
 
-from shvatka.clients.file_storage import FileStorage
-from shvatka.dal.game import GameUpserter, GamePackager
+from shvatka.interfaces.clients.file_storage import FileStorage
+from shvatka.interfaces.dal.game import GameUpserter, GamePackager
 from shvatka.models import dto
 from shvatka.models.dto.scn import FileMeta
 from shvatka.utils.exceptions import NotAuthorizedForEdit

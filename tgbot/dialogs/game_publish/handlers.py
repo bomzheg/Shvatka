@@ -9,7 +9,7 @@ from aiogram_dialog import DialogManager
 from telegraph.aio import Telegraph
 
 from db.dao.holder import HolderDao
-from shvatka.clients.file_storage import FileStorage
+from shvatka.interfaces.clients.file_storage import FileStorage
 from shvatka.models import dto
 from shvatka.services.game import get_full_game
 from shvatka.services.game_stat import get_game_stat, get_typed_keys

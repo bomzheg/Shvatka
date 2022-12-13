@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
 from db.dao import GameDao, OrganizerDao, SecureInvite
-from shvatka.dal.organizer import OrgAdder
+from shvatka.interfaces.dal.organizer import OrgAdder
 from shvatka.models import dto
 
 

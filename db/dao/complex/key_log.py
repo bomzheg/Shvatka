@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
 from db.dao import KeyTimeDao, OrganizerDao
-from shvatka.dal.key_log import TypedKeyGetter
+from shvatka.interfaces.dal.key_log import TypedKeyGetter
 from shvatka.models import dto
 
 

@@ -5,9 +5,9 @@ from aiogram.types import Message
 from aiogram_dialog import DialogManager
 
 from db.dao.holder import HolderDao
-from shvatka.clients.file_storage import FileStorage
+from shvatka.interfaces.clients.file_storage import FileStorage
+from shvatka.interfaces.scheduler import Scheduler
 from shvatka.models import dto
-from shvatka.scheduler import Scheduler
 from shvatka.services.game_play import check_key
 from shvatka.utils.exceptions import InvalidKey
 from shvatka.utils.key_checker_lock import KeyCheckerFactory

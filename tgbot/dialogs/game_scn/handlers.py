@@ -10,7 +10,7 @@ from aiogram_dialog.widgets.kbd import Button, ManagedMultiSelectAdapter
 from dataclass_factory import Factory
 
 from db.dao.holder import HolderDao
-from shvatka.clients.file_storage import FileStorage
+from shvatka.interfaces.clients.file_storage import FileStorage
 from shvatka.models import dto, enums
 from shvatka.services.achievement import add_achievement
 from shvatka.services.game import check_new_game_name_available, create_game, get_full_game, add_level, upsert_game

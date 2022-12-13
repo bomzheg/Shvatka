@@ -1,8 +1,8 @@
 from abc import ABCMeta
 
-from shvatka.dal.base import Reader, Committer
-from shvatka.dal.game import GameByIdGetter
-from shvatka.dal.secure_invite import InviteReader, InviteRemover
+from shvatka.interfaces.dal.base import Reader, Committer
+from shvatka.interfaces.dal.game import GameByIdGetter
+from shvatka.interfaces.dal.secure_invite import InviteReader, InviteRemover
 from shvatka.models import dto
 from shvatka.models.enums.org_permission import OrgPermission
 

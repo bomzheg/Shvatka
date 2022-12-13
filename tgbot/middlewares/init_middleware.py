@@ -8,8 +8,8 @@ from sqlalchemy.orm import sessionmaker
 
 from db.dao.holder import HolderDao
 from db.dao.memory.level_testing import LevelTestingData
-from shvatka.clients.file_storage import FileStorage
-from shvatka.scheduler import Scheduler
+from shvatka.interfaces.clients.file_storage import FileStorage
+from shvatka.interfaces.scheduler import Scheduler
 from shvatka.utils.key_checker_lock import KeyCheckerFactory
 from tgbot.username_resolver.user_getter import UserGetter
 from tgbot.views.hint_factory.hint_parser import HintParser

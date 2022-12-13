@@ -4,8 +4,8 @@ from typing import AsyncContextManager
 
 from db.dao.holder import HolderDao
 from scheduler.context import ScheduledContextHolder, ScheduledContext
+from shvatka.interfaces.scheduler import LevelTestScheduler
 from shvatka.models import dto
-from shvatka.scheduler import LevelTestScheduler
 from shvatka.services.game_play import prepare_game, start_game, send_hint
 from shvatka.services.level_testing import send_testing_level_hint
 from shvatka.services.organizers import get_by_player

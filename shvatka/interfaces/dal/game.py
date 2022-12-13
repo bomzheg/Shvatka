@@ -1,8 +1,8 @@
 from abc import ABCMeta
 from datetime import datetime
 
-from shvatka.dal.base import Committer, Reader
-from shvatka.dal.level import LevelUpserter
+from shvatka.interfaces.dal.base import Committer, Reader
+from shvatka.interfaces.dal.level import LevelUpserter
 from shvatka.models import dto
 from shvatka.models.dto.scn import FileMeta, SavedFileMeta
 from shvatka.models.dto.scn.file_content import VerifiableFileMeta

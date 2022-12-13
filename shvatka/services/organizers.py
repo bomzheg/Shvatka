@@ -1,6 +1,6 @@
-from shvatka.dal.organizer import GameOrgsGetter, OrgAdder, OrgByIdGetter, OrgPermissionFlipper, OrgDeletedFlipper, \
+from shvatka.interfaces.dal.organizer import GameOrgsGetter, OrgAdder, OrgByIdGetter, OrgPermissionFlipper, OrgDeletedFlipper, \
     OrgByPlayerGetter
-from shvatka.dal.secure_invite import InviteSaver, InviteRemover
+from shvatka.interfaces.dal.secure_invite import InviteSaver, InviteRemover
 from shvatka.models import dto, enums
 from shvatka.models.enums.invite_type import InviteType
 from shvatka.models.enums.org_permission import OrgPermission

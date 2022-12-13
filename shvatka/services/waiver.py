@@ -1,6 +1,6 @@
 from typing import Iterable
 
-from shvatka.dal.waiver import WaiverVoteAdder, WaiverVoteGetter, WaiverApprover, GameWaiversGetter
+from shvatka.interfaces.dal.waiver import WaiverVoteAdder, WaiverVoteGetter, WaiverApprover, GameWaiversGetter
 from shvatka.models import dto, enums
 from shvatka.models.enums.played import Played
 from shvatka.services.player import check_player_on_team, get_full_team_player

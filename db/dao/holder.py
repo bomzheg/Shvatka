@@ -1,15 +1,15 @@
 from redis.asyncio.client import Redis
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from shvatka.dal.game import GameUpserter, GameCreator, GamePackager
-from shvatka.dal.game_play import GamePreparer, GamePlayerDao
-from shvatka.dal.key_log import TypedKeyGetter
-from shvatka.dal.level_testing import LevelTestingDao
-from shvatka.dal.level_times import GameStarter, GameStatDao
-from shvatka.dal.organizer import OrgAdder
-from shvatka.dal.player import TeamLeaver, PlayerPromoter
-from shvatka.dal.team import TeamCreator
-from shvatka.dal.waiver import WaiverVoteAdder, WaiverVoteGetter, WaiverApprover
+from shvatka.interfaces.dal.game import GameUpserter, GameCreator, GamePackager
+from shvatka.interfaces.dal.game_play import GamePreparer, GamePlayerDao
+from shvatka.interfaces.dal.key_log import TypedKeyGetter
+from shvatka.interfaces.dal.level_testing import LevelTestingDao
+from shvatka.interfaces.dal.level_times import GameStarter, GameStatDao
+from shvatka.interfaces.dal.organizer import OrgAdder
+from shvatka.interfaces.dal.player import TeamLeaver, PlayerPromoter
+from shvatka.interfaces.dal.team import TeamCreator
+from shvatka.interfaces.dal.waiver import WaiverVoteAdder, WaiverVoteGetter, WaiverApprover
 from .complex import WaiverVoteAdderImpl, WaiverVoteGetterImpl
 from .complex.Level_times import GameStatImpl
 from .complex.game import GameUpserterImpl, GameCreatorImpl, GamePackagerImpl

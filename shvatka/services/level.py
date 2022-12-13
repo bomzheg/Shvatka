@@ -1,6 +1,6 @@
 from dataclass_factory import Factory
 
-from shvatka.dal.level import LevelUpserter, MyLevelsGetter, LevelByIdGetter
+from shvatka.interfaces.dal.level import LevelUpserter, MyLevelsGetter, LevelByIdGetter
 from shvatka.models import dto
 from shvatka.models.dto.scn.level import LevelScenario
 from shvatka.services.player import check_allow_be_author

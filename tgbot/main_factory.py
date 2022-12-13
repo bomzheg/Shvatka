@@ -17,8 +17,8 @@ from db.config.models.storage import StorageConfig, StorageType
 from db.dao.memory.level_testing import LevelTestingData
 from db.fatory import create_redis
 from scheduler import ApScheduler
-from shvatka.clients.file_storage import FileStorage
-from shvatka.scheduler import Scheduler
+from shvatka.interfaces.clients.file_storage import FileStorage
+from shvatka.interfaces.scheduler import Scheduler
 from shvatka.utils.key_checker_lock import KeyCheckerFactory
 from tgbot.config.models.bot import BotConfig
 from tgbot.config.models.main import TgBotConfig

@@ -1,7 +1,7 @@
 from abc import ABCMeta
 
-from shvatka.dal.base import Reader, Committer
-from shvatka.dal.player import TeamJoiner
+from shvatka.interfaces.dal.base import Reader, Committer
+from shvatka.interfaces.dal.player import TeamJoiner
 from shvatka.models import dto
 
 

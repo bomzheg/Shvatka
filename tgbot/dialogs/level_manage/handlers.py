@@ -7,9 +7,9 @@ from aiogram_dialog import DialogManager
 from aiogram_dialog.widgets.kbd import Button
 
 from db.dao.holder import HolderDao
-from shvatka.clients.file_storage import FileStorage
+from shvatka.interfaces.clients.file_storage import FileStorage
+from shvatka.interfaces.scheduler import LevelTestScheduler
 from shvatka.models import dto
-from shvatka.scheduler import LevelTestScheduler
 from shvatka.services.level import get_by_id
 from shvatka.services.level_testing import start_level_test, check_level_testing_key
 from shvatka.services.organizers import get_org_by_id

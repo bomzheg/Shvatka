@@ -1,6 +1,6 @@
 from typing import BinaryIO
 
-from shvatka.clients.file_storage import FileStorage
+from shvatka.interfaces.clients.file_storage import FileStorage
 from shvatka.models.dto.scn import FileContentLink
 
 

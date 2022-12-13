@@ -1,4 +1,4 @@
-from shvatka.dal.team import TeamCreator, TeamGetter, TeamRenamer, TeamDescChanger
+from shvatka.interfaces.dal.team import TeamCreator, TeamGetter, TeamRenamer, TeamDescChanger
 from shvatka.models import dto, enums
 from shvatka.utils.defaults_constants import CAPTAIN_ROLE
 from shvatka.utils.exceptions import SHDataBreach, PermissionsError

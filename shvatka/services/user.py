@@ -1,4 +1,4 @@
-from shvatka.dal.user import UserUpserter, UserPasswordSetter, UserByIdResolver
+from shvatka.interfaces.dal.user import UserUpserter, UserPasswordSetter, UserByIdResolver
 from shvatka.models import dto
 
 

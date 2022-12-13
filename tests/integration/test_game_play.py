@@ -6,11 +6,11 @@ from mockito import mock, when, ANY, unstub
 
 from db import models
 from db.dao.holder import HolderDao
-from shvatka.clients.file_storage import FileStorage
+from shvatka.interfaces.clients.file_storage import FileStorage
+from shvatka.interfaces.scheduler import Scheduler
 from shvatka.models import dto
 from shvatka.models.enums import GameStatus
 from shvatka.models.enums.played import Played
-from shvatka.scheduler import Scheduler
 from shvatka.services.game import start_waivers
 from shvatka.services.game_play import start_game, send_hint, check_key, get_available_hints
 from shvatka.services.game_stat import get_typed_keys

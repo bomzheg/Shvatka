@@ -1,6 +1,6 @@
 from abc import ABCMeta
 
-from shvatka.dal.organizer import OrgByPlayerGetter
+from shvatka.interfaces.dal.organizer import OrgByPlayerGetter
 from shvatka.models import dto
 
 

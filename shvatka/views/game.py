@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from datetime import timedelta
 from typing import Protocol, Iterable
 
-from shvatka.dal.game_play import GamePreparer
+from shvatka.interfaces.dal.game_play import GamePreparer
 from shvatka.models import dto
 
 

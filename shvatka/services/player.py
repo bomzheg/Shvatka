@@ -1,6 +1,6 @@
 import logging
 
-from shvatka.dal.player import (
+from shvatka.interfaces.dal.player import (
     PlayerUpserter,
     PlayerTeamChecker,
     PlayerPromoter,
@@ -10,7 +10,7 @@ from shvatka.dal.player import (
     TeamPlayerGetter,
     PlayerByIdGetter, TeamPlayerPermissionFlipper,
 )
-from shvatka.dal.secure_invite import InviteSaver, InviteRemover, InviterDao
+from shvatka.interfaces.dal.secure_invite import InviteSaver, InviteRemover, InviterDao
 from shvatka.models import dto, enums
 from shvatka.models.enums.invite_type import InviteType
 from shvatka.utils import exceptions

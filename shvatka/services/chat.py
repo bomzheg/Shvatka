@@ -1,4 +1,4 @@
-from shvatka.dal.chat import ChatUpserter, ChatIdUpdater
+from shvatka.interfaces.dal.chat import ChatUpserter, ChatIdUpdater
 from shvatka.models import dto
 
 

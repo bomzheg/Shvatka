@@ -4,7 +4,7 @@ from aiogram import Bot
 from aiogram.utils.markdown import html_decoration as hd
 
 from db.dao.holder import HolderDao
-from shvatka.clients.file_storage import FileStorage
+from shvatka.interfaces.clients.file_storage import FileStorage
 from shvatka.models import dto
 from shvatka.views.level import LevelView
 from tgbot.views.hint_sender import HintSender, create_hint_sender

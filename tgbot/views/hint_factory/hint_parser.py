@@ -6,7 +6,7 @@ from aiogram import Bot
 from aiogram.types import Message, ContentType
 
 from db.dao import FileInfoDao
-from shvatka.clients.file_storage import FileStorage
+from shvatka.interfaces.clients.file_storage import FileStorage
 from shvatka.models import dto
 from shvatka.models.dto.scn import BaseHint, TextHint, GPSHint, FileMeta, TgLink, FileContentLink, PhotoHint
 from shvatka.models.dto.scn.hint_part import VenueHint, AudioHint, VideoHint, DocumentHint, AnimationHint, VoiceHint, \

@@ -1,8 +1,8 @@
 from abc import ABCMeta
 
-from shvatka.dal.base import Committer, Reader
-from shvatka.dal.game import ActiveGameFinder
-from shvatka.dal.secure_invite import InviteRemover, InviteReader
+from shvatka.interfaces.dal.base import Committer, Reader
+from shvatka.interfaces.dal.game import ActiveGameFinder
+from shvatka.interfaces.dal.secure_invite import InviteRemover, InviteReader
 from shvatka.models import dto, enums
 
 

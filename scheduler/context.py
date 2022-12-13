@@ -6,8 +6,8 @@ from sqlalchemy.orm import sessionmaker
 
 from db.dao.holder import HolderDao
 from db.dao.memory.level_testing import LevelTestingData
-from shvatka.clients.file_storage import FileStorage
-from shvatka.scheduler import Scheduler
+from shvatka.interfaces.clients.file_storage import FileStorage
+from shvatka.interfaces.scheduler import Scheduler
 
 
 class ScheduledContextHolder:

@@ -1,7 +1,7 @@
 from dataclasses import dataclass, field
 from datetime import timedelta, datetime
 
-from shvatka.dal.level_testing import LevelTestProtocolDao
+from shvatka.interfaces.dal.level_testing import LevelTestProtocolDao
 from shvatka.models import dto
 from shvatka.utils.datetime_utils import tz_utc
 

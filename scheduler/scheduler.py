@@ -14,9 +14,9 @@ from db.dao.memory.level_testing import LevelTestingData
 from scheduler.context import ScheduledContextHolder
 from scheduler.wrappers import prepare_game_wrapper, start_game_wrapper, send_hint_wrapper, \
     send_hint_for_testing_wrapper
-from shvatka.clients.file_storage import FileStorage
+from shvatka.interfaces.clients.file_storage import FileStorage
+from shvatka.interfaces.scheduler import Scheduler, LevelTestScheduler
 from shvatka.models import dto
-from shvatka.scheduler import Scheduler, LevelTestScheduler
 from shvatka.utils.datetime_utils import tz_utc
 
 logger = logging.getLogger(__name__)

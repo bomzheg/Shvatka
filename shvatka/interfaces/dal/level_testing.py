@@ -1,8 +1,8 @@
 from abc import ABCMeta
 from datetime import datetime, timedelta
 
-from shvatka.dal.base import Committer
-from shvatka.dal.game import GameByIdGetter
+from shvatka.interfaces.dal.base import Committer
+from shvatka.interfaces.dal.game import GameByIdGetter
 from shvatka.models import dto
 
 

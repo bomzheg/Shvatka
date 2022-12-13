@@ -1,8 +1,8 @@
 from abc import ABCMeta
 from typing import Iterable
 
-from shvatka.dal.base import Writer, Committer
-from shvatka.dal.organizer import GameOrgsGetter
+from shvatka.interfaces.dal.base import Writer, Committer
+from shvatka.interfaces.dal.organizer import GameOrgsGetter
 from shvatka.models import dto
 
 

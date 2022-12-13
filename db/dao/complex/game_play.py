@@ -2,8 +2,8 @@ from dataclasses import dataclass
 from typing import Iterable
 
 from db.dao import PollDao, WaiverDao, OrganizerDao, GameDao, LevelTimeDao, LevelDao, KeyTimeDao
-from shvatka.dal.game_play import GamePreparer, GamePlayerDao
-from shvatka.dal.level_times import GameStarter
+from shvatka.interfaces.dal.game_play import GamePreparer, GamePlayerDao
+from shvatka.interfaces.dal.level_times import GameStarter
 from shvatka.models import dto
 
 

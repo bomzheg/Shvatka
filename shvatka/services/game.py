@@ -2,16 +2,16 @@ from datetime import datetime
 
 from dataclass_factory import Factory
 
-from shvatka.clients.file_storage import FileStorage
-from shvatka.dal.game import (
+from shvatka.interfaces.clients.file_storage import FileStorage
+from shvatka.interfaces.dal.game import (
     GameUpserter, GameCreator, GameAuthorsFinder, GameByIdGetter,
     ActiveGameFinder, WaiverStarter, GameStartPlanner, GameNameChecker, GamePackager, GameRenamer,
 )
-from shvatka.dal.level import LevelLinker
+from shvatka.interfaces.dal.level import LevelLinker
+from shvatka.interfaces.scheduler import Scheduler
 from shvatka.models import dto
 from shvatka.models.dto.scn.game import RawGameScenario, CompleteGameScenario
 from shvatka.models.enums.game_status import EDITABLE_STATUSES
-from shvatka.scheduler import Scheduler
 from shvatka.services.level import check_is_author as check_is_level_author, check_can_link_to_game
 from shvatka.services.player import check_allow_be_author
 from shvatka.services.scenario.files import upsert_files, get_file_metas, get_file_contents

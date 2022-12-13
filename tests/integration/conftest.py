@@ -20,8 +20,8 @@ from db.config.models.db import RedisConfig
 from db.dao.holder import HolderDao
 from db.dao.memory.level_testing import LevelTestingData
 from db.fatory import create_lock_factory
-from shvatka.clients.file_storage import FileStorage
-from shvatka.scheduler import Scheduler
+from shvatka.interfaces.clients.file_storage import FileStorage
+from shvatka.interfaces.scheduler import Scheduler
 from shvatka.utils.key_checker_lock import KeyCheckerFactory
 from tests.fixtures.conftest import fixtures_resource_path  # noqa: F401
 from tests.fixtures.game_fixtures import game, completed_game  # noqa: F401

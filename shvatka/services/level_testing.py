@@ -1,10 +1,10 @@
 import logging
 from datetime import datetime
 
-from shvatka.dal.game import GameByIdGetter
-from shvatka.dal.level_testing import LevelTestingDao
+from shvatka.interfaces.dal.game import GameByIdGetter
+from shvatka.interfaces.dal.level_testing import LevelTestingDao
+from shvatka.interfaces.scheduler import LevelTestScheduler
 from shvatka.models import dto
-from shvatka.scheduler import LevelTestScheduler
 from shvatka.services.game_play import calculate_first_hint_time, calculate_next_hint_time
 from shvatka.services.organizers import get_primary_orgs
 from shvatka.utils.datetime_utils import tz_utc

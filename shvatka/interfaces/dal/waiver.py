@@ -1,8 +1,8 @@
 from abc import ABCMeta
 from typing import Iterable
 
-from shvatka.dal.base import Reader, Writer, Committer
-from shvatka.dal.player import TeamPlayerGetter, TeamPlayersGetter
+from shvatka.interfaces.dal.base import Reader, Writer, Committer
+from shvatka.interfaces.dal.player import TeamPlayerGetter, TeamPlayersGetter
 from shvatka.models import dto
 from shvatka.models.enums.played import Played
 

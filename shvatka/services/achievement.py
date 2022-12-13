@@ -1,4 +1,4 @@
-from shvatka.dal.achievement import AchievementAdder
+from shvatka.interfaces.dal.achievement import AchievementAdder
 from shvatka.models import dto, enums
 
 

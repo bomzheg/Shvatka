@@ -3,7 +3,7 @@ from io import BytesIO
 from typing import BinaryIO
 
 from db.dao import FileInfoDao
-from shvatka.clients.file_storage import FileStorage
+from shvatka.interfaces.clients.file_storage import FileStorage
 from shvatka.models.dto.scn.hint_part import BaseHint, TextHint, GPSHint, ContactHint, PhotoHint, VenueHint, AudioHint, \
     VideoHint, DocumentHint, AnimationHint, VoiceHint, VideoNoteHint, StickerHint
 from tgbot.models.hint import BaseHintLinkView, BaseHintContentView, TextHintView, GPSHintView, ContactHintView, \

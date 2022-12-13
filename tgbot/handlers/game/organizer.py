@@ -3,9 +3,9 @@ from aiogram.types import CallbackQuery
 from aiogram_dialog import DialogManager
 
 from db.dao.holder import HolderDao
-from shvatka.clients.file_storage import FileStorage
+from shvatka.interfaces.clients.file_storage import FileStorage
+from shvatka.interfaces.scheduler import LevelTestScheduler
 from shvatka.models import dto
-from shvatka.scheduler import LevelTestScheduler
 from shvatka.services.level import get_level_by_id_for_org
 from shvatka.services.level_testing import start_level_test
 from shvatka.services.organizers import get_org_by_id

@@ -2,11 +2,11 @@ import asyncio
 import logging
 from datetime import timedelta, datetime
 
-from shvatka.dal.game_play import GamePreparer, GamePlayerDao
-from shvatka.dal.level_times import GameStarter, LevelTimeChecker
+from shvatka.interfaces.dal.game_play import GamePreparer, GamePlayerDao
+from shvatka.interfaces.dal.level_times import GameStarter, LevelTimeChecker
+from shvatka.interfaces.scheduler import Scheduler
 from shvatka.models import dto
 from shvatka.models.dto.scn.time_hint import TimeHint
-from shvatka.scheduler import Scheduler
 from shvatka.services.organizers import get_orgs, get_spying_orgs
 from shvatka.utils.datetime_utils import tz_utc
 from shvatka.utils.exceptions import InvalidKey

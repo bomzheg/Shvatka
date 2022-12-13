@@ -1,6 +1,6 @@
 from abc import ABCMeta
 
-from shvatka.dal.base import Committer
+from shvatka.interfaces.dal.base import Committer
 from shvatka.models import dto
 
 

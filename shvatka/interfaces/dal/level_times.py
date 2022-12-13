@@ -1,8 +1,8 @@
 from abc import ABCMeta
 from typing import Iterable
 
-from shvatka.dal.base import Committer, Reader
-from shvatka.dal.organizer import OrgByPlayerGetter
+from shvatka.interfaces.dal.base import Committer, Reader
+from shvatka.interfaces.dal.organizer import OrgByPlayerGetter
 from shvatka.models import dto
 
 

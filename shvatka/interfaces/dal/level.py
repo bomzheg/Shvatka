@@ -1,6 +1,6 @@
 from abc import ABCMeta
 
-from shvatka.dal.base import Committer, Reader
+from shvatka.interfaces.dal.base import Committer, Reader
 from shvatka.models import dto
 from shvatka.models.dto.scn.level import LevelScenario
 

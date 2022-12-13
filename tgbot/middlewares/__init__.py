@@ -4,8 +4,8 @@ from redis.asyncio.client import Redis
 from sqlalchemy.orm import sessionmaker
 
 from db.dao.memory.level_testing import LevelTestingData
-from shvatka.clients.file_storage import FileStorage
-from shvatka.scheduler import Scheduler
+from shvatka.interfaces.clients.file_storage import FileStorage
+from shvatka.interfaces.scheduler import Scheduler
 from shvatka.utils.key_checker_lock import KeyCheckerFactory
 from tgbot.config.models.bot import BotConfig
 from tgbot.username_resolver.user_getter import UserGetter

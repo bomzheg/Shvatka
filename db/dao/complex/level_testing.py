@@ -3,7 +3,7 @@ from datetime import timedelta, datetime
 
 from db.dao import GameDao
 from db.dao.memory.level_testing import LevelTestingData
-from shvatka.dal.level_testing import LevelTestingDao
+from shvatka.interfaces.dal.level_testing import LevelTestingDao
 from shvatka.models import dto
 
 

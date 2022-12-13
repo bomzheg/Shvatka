@@ -7,9 +7,9 @@ from aiogram_dialog.widgets.kbd import Button
 from dataclass_factory import Factory
 
 from db.dao.holder import HolderDao
-from shvatka.clients.file_storage import FileStorage
+from shvatka.interfaces.clients.file_storage import FileStorage
+from shvatka.interfaces.scheduler import Scheduler
 from shvatka.models import dto
-from shvatka.scheduler import Scheduler
 from shvatka.services import game
 from shvatka.services.game import rename_game, get_game
 from shvatka.utils.datetime_utils import TIME_FORMAT, tz_game

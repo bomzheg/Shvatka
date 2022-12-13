@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
 from db.dao import GameDao, LevelDao, FileInfoDao
-from shvatka.dal.game import GameUpserter, GameCreator, GamePackager
+from shvatka.interfaces.dal.game import GameUpserter, GameCreator, GamePackager
 from shvatka.models import dto
 from shvatka.models.dto.scn import FileMeta, SavedFileMeta
 from shvatka.models.dto.scn.file_content import VerifiableFileMeta

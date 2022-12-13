@@ -1,6 +1,6 @@
 from abc import ABCMeta
 
-from shvatka.dal.base import Writer, Reader
+from shvatka.interfaces.dal.base import Writer, Reader
 
 
 class InviteSaver(Writer):

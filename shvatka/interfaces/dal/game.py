@@ -82,3 +82,7 @@ class GamePackager(Reader):
     async def get_by_guid(self, guid: str) -> VerifiableFileMeta:
         raise NotImplementedError
 
+
+class CompletedGameFinder(Reader):
+    async def get_completed_games(self) -> list[dto.Game]:
+        raise NotImplementedError

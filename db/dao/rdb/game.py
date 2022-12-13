@@ -87,6 +87,20 @@ class GameDao(BaseDAO[models.Game]):
         games = result.scalars().all()
         return [game.to_dto(author) for game in games]
 
+    async def get_completed_games(self) -> list[dto.Game]:
+        result = await self.session.execute(
+            select(models.Game)
+            .options(
+                joinedload(models.Game.author)
+                .joinedload(models.Player.user)
+            )
+            .where(
+                models.Game.status == GameStatus.complete,
+            )
+        )
+        games: list[models.Game] = result.scalars().all()
+        return [game.to_dto(game.author.to_dto_user_prefetched()) for game in games]
+
     async def start_waivers(self, game: dto.Game):
         await self.set_status(game, GameStatus.getting_waivers)
 

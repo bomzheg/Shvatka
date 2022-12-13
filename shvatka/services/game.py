@@ -5,7 +5,7 @@ from dataclass_factory import Factory
 from shvatka.interfaces.clients.file_storage import FileStorage
 from shvatka.interfaces.dal.game import (
     GameUpserter, GameCreator, GameAuthorsFinder, GameByIdGetter,
-    ActiveGameFinder, WaiverStarter, GameStartPlanner, GameNameChecker, GamePackager, GameRenamer,
+    ActiveGameFinder, WaiverStarter, GameStartPlanner, GameNameChecker, GamePackager, GameRenamer, CompletedGameFinder,
 )
 from shvatka.interfaces.dal.level import LevelLinker
 from shvatka.interfaces.scheduler import Scheduler
@@ -63,6 +63,10 @@ async def get_authors_games(
 ) -> list[dto.Game]:
     check_allow_be_author(author)
     return await dao.get_all_by_author(author)
+
+
+async def get_completed_games(dao: CompletedGameFinder) -> list[dto.Game]:
+    return await dao.get_completed_games()
 
 
 async def add_level(game: dto.Game, level: dto.Level, author: dto.Player, dao: LevelLinker):

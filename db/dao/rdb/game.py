@@ -38,16 +38,16 @@ class GameDao(BaseDAO[models.Game]):
         return game.to_dto(author)
 
     async def get_by_author_and_scn(self, author: dto.Player, scn: GameScenario) -> models.Game:
-        result = await self.session.execute(
+        result = await self.session.scalars(
             select(models.Game).where(
                 models.Game.name == scn.name,
                 models.Game.author_id == author.id,
             )
         )
-        return result.scalar_one()
+        return result.one()
 
     async def get_full(self, id_: int) -> dto.FullGame:
-        result = await self.session.execute(
+        result = await self.session.scalars(
             select(models.Game)
             .options(
                 joinedload(models.Game.levels),
@@ -56,7 +56,7 @@ class GameDao(BaseDAO[models.Game]):
             )
             .where(models.Game.id == id_)
         )
-        game_db: models.Game = result.unique().scalar_one()
+        game_db: models.Game = result.unique().one()
         author = game_db.author.to_dto_user_prefetched()
         return game_db.to_full_dto(
             author=author,
@@ -78,17 +78,17 @@ class GameDao(BaseDAO[models.Game]):
         return game.to_dto(author)
 
     async def get_all_by_author(self, author: dto.Player) -> list[dto.Game]:
-        result = await self.session.execute(
+        result = await self.session.scalars(
             select(models.Game).where(
                 models.Game.author_id == author.id,
                 models.Game.status != GameStatus.complete,
             )
         )
-        games = result.scalars().all()
+        games = result.all()
         return [game.to_dto(author) for game in games]
 
     async def get_completed_games(self) -> list[dto.Game]:
-        result = await self.session.execute(
+        result = await self.session.scalars(
             select(models.Game)
             .options(
                 joinedload(models.Game.author)
@@ -99,7 +99,7 @@ class GameDao(BaseDAO[models.Game]):
             )
             .order_by(models.Game.start_at.desc())  # noqa
         )
-        games: list[models.Game] = result.scalars().all()
+        games: list[models.Game] = result.all()
         return [game.to_dto(game.author.to_dto_user_prefetched()) for game in games]
 
     async def start_waivers(self, game: dto.Game):
@@ -116,7 +116,7 @@ class GameDao(BaseDAO[models.Game]):
         )
 
     async def get_active_game(self) -> dto.Game | None:
-        result = await self.session.execute(
+        result = await self.session.scalars(
             select(models.Game)
             .where(models.Game.status.in_(ACTIVE_STATUSES))
             .options(
@@ -125,7 +125,7 @@ class GameDao(BaseDAO[models.Game]):
             )
         )
         try:
-            game: models.Game = result.scalar_one()
+            game: models.Game = result.one()
         except NoResultFound:
             return None
         return game.to_dto(
@@ -190,8 +190,8 @@ class GameDao(BaseDAO[models.Game]):
         return True
 
     async def _get_game_by_name(self, name: str) -> models.Game | None:
-        result = await self.session.execute(
+        result = await self.session.scalars(
             select(models.Game)
             .where(models.Game.name == name)
         )
-        return result.scalar_one_or_none()
+        return result.one_or_none()

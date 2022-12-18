@@ -6,7 +6,7 @@ from aiogram.utils.text_decorations import html_decoration as hd
 from aiogram_dialog import DialogManager
 from aiogram_dialog.widgets.kbd import Button
 
-from db.dao.holder import HolderDao
+from infrastructure.db.dao.holder import HolderDao
 from shvatka.models import dto, enums
 from shvatka.services.player import get_my_team, get_full_team_player, flip_permission, get_team_player_by_player, \
     get_player_by_id, leave

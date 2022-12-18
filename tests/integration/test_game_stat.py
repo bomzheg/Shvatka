@@ -3,7 +3,7 @@ from itertools import starmap, pairwise
 
 import pytest
 
-from db.dao.holder import HolderDao
+from infrastructure.db.dao.holder import HolderDao
 from shvatka.models import dto
 from shvatka.services.game_stat import get_game_stat, get_typed_keys
 

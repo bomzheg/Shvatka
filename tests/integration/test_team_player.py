@@ -1,6 +1,6 @@
 import pytest
 
-from db.dao.holder import HolderDao
+from infrastructure.db.dao.holder import HolderDao
 from shvatka.models import dto, enums
 from shvatka.services.player import join_team, get_my_team, get_my_role, flip_permission, get_full_team_player
 from shvatka.utils.defaults_constants import DEFAULT_ROLE, CAPTAIN_ROLE

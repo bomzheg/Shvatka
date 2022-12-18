@@ -13,7 +13,7 @@ from alembic.script import Script, ScriptDirectory
 
 def get_revisions():
     # Get directory object with Alembic migrations
-    revisions_dir = ScriptDirectory("db/migrations")
+    revisions_dir = ScriptDirectory("infrastructure/db/migrations")
 
     # Get & sort migrations, from first to last
     revisions = list(revisions_dir.walk_revisions('base', 'heads'))

@@ -3,7 +3,7 @@ from typing import Callable, Any, Awaitable
 from aiogram import BaseMiddleware
 from aiogram.types import TelegramObject
 
-from db.dao.holder import HolderDao
+from infrastructure.db.dao.holder import HolderDao
 from shvatka.services.player import upsert_player
 from tgbot.username_resolver.find_target_user import get_db_user_by_tg_user
 

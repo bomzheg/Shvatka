@@ -6,8 +6,8 @@ from dataclass_factory import Factory
 from redis.asyncio.client import Redis
 from sqlalchemy.orm import sessionmaker
 
-from db.dao.holder import HolderDao
-from db.dao.memory.level_testing import LevelTestingData
+from infrastructure.db.dao.holder import HolderDao
+from infrastructure.db.dao.memory.level_testing import LevelTestingData
 from shvatka.interfaces.clients.file_storage import FileStorage
 from shvatka.interfaces.scheduler import Scheduler
 from shvatka.utils.key_checker_lock import KeyCheckerFactory

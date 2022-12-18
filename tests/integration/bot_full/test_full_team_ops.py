@@ -6,7 +6,7 @@ from aiogram.methods import SendMessage, GetChatAdministrators, GetChat, GetChat
 from aiogram.types import Update, Message, ChatMemberOwner, ChatMemberMember
 from aiogram_tests.mocked_bot import MockedBot
 
-from db.dao.holder import HolderDao
+from infrastructure.db.dao.holder import HolderDao
 from shvatka.models.enums.chat_type import ChatType
 from shvatka.services.player import upsert_player, get_my_role
 from shvatka.services.user import upsert_user

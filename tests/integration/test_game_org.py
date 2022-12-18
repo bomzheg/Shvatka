@@ -1,6 +1,6 @@
 import pytest
 
-from db.dao.holder import HolderDao
+from infrastructure.db.dao.holder import HolderDao
 from shvatka.models import dto
 from shvatka.models.enums.invite_type import InviteType
 from shvatka.models.enums.org_permission import OrgPermission

@@ -1,6 +1,6 @@
 import pytest
 
-from db.dao.holder import HolderDao
+from infrastructure.db.dao.holder import HolderDao
 from shvatka.models import dto, enums
 from shvatka.services.achievement import add_achievement
 

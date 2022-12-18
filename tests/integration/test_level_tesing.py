@@ -2,7 +2,7 @@ from datetime import datetime
 
 import pytest
 
-from db.dao.holder import HolderDao
+from infrastructure.db.dao.holder import HolderDao
 from shvatka.models import dto
 from shvatka.services.level_testing import start_level_test, check_level_testing_key, send_testing_level_hint
 from shvatka.utils.datetime_utils import tz_utc

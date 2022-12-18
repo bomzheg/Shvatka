@@ -2,7 +2,7 @@ from typing import Iterable
 
 from aiogram.utils.text_decorations import html_decoration as hd
 
-from db.dao.holder import HolderDao
+from infrastructure.db.dao.holder import HolderDao
 from shvatka.models import dto
 from shvatka.models.enums.played import Played
 from shvatka.services.waiver import get_vote_to_voted

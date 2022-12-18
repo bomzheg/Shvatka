@@ -2,7 +2,7 @@ import typing
 from io import BytesIO
 from typing import BinaryIO
 
-from db.dao import FileInfoDao
+from infrastructure.db.dao import FileInfoDao
 from shvatka.interfaces.clients.file_storage import FileStorage
 from shvatka.models.dto.scn.hint_part import BaseHint, TextHint, GPSHint, ContactHint, PhotoHint, VenueHint, AudioHint, \
     VideoHint, DocumentHint, AnimationHint, VoiceHint, VideoNoteHint, StickerHint

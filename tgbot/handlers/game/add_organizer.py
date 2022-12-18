@@ -2,7 +2,7 @@ from aiogram import Router, F, Bot
 from aiogram.filters import MagicData
 from aiogram.types import InlineQuery, InlineQueryResultArticle, InputTextMessageContent, CallbackQuery
 
-from db.dao.holder import HolderDao
+from infrastructure.db.dao.holder import HolderDao
 from shvatka.models import dto
 from shvatka.services.game import get_game
 from shvatka.services.organizers import check_allow_manage_orgs, save_invite_to_orgs, dismiss_to_be_org, \

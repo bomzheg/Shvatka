@@ -1,8 +1,8 @@
 import pytest
 import pytest_asyncio
 
-from db import models
-from db.dao.holder import HolderDao
+from infrastructure.db import models
+from infrastructure.db.dao.holder import HolderDao
 from shvatka.models import dto
 from shvatka.models.enums.played import Played
 from shvatka.services.game import start_waivers

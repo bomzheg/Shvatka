@@ -1,6 +1,6 @@
 from aiogram_dialog import DialogManager
 
-from db.dao.holder import HolderDao
+from infrastructure.db.dao.holder import HolderDao
 from shvatka.models import dto
 from shvatka.services.organizers import get_by_player_or_none
 from shvatka.services.player import save_promotion_invite

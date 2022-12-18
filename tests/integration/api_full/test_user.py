@@ -3,7 +3,7 @@ import pytest_asyncio
 from httpx import AsyncClient
 
 from api.dependencies import AuthProvider
-from db.dao.holder import HolderDao
+from infrastructure.db.dao.holder import HolderDao
 from shvatka.models import dto
 from shvatka.services.user import set_password, upsert_user
 from tests.fixtures.user_constants import create_dto_harry

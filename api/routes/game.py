@@ -3,7 +3,7 @@ from fastapi.params import Depends
 
 from api.dependencies import dao_provider, player_provider, active_game_provider
 from api.models import responses
-from db.dao.holder import HolderDao
+from infrastructure.db.dao.holder import HolderDao
 from shvatka.models import dto
 from shvatka.services.game import get_authors_games
 

@@ -1,7 +1,7 @@
 from fastapi.params import Depends
 
 from api.dependencies import dao_provider, player_provider
-from db.dao.holder import HolderDao
+from infrastructure.db.dao.holder import HolderDao
 from shvatka.models import dto
 from shvatka.services.player import get_my_team
 

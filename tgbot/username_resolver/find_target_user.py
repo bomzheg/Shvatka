@@ -2,7 +2,7 @@ import logging
 
 from aiogram.types import Message
 
-from db.dao.holder import HolderDao
+from infrastructure.db.dao.holder import HolderDao
 from shvatka.models import dto
 from shvatka.utils.exceptions import MultipleUsernameFound, NoUsernameFound
 from .user_getter import UserGetter

@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from common.config.models.paths import Paths
-from db.config.models.db import DBConfig, RedisConfig
+from infrastructure.db.config.models.db import DBConfig, RedisConfig
 
 
 @dataclass

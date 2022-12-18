@@ -4,7 +4,7 @@ from aiogram.types import Message, InlineQuery, InlineQueryResultArticle, InputT
 from aiogram.utils.text_decorations import html_decoration as hd
 from aiogram_dialog import DialogManager
 
-from db.dao.holder import HolderDao
+from infrastructure.db.dao.holder import HolderDao
 from shvatka.models import dto
 from shvatka.services.player import save_promotion_confirm_invite, check_promotion_invite, \
     dismiss_promotion, agree_promotion, get_my_team, leave

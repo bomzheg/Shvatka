@@ -2,7 +2,7 @@ from copy import copy
 
 from aiogram import types as tg
 
-from db import models
+from infrastructure.db import models
 from shvatka.models import dto
 from shvatka.models.enums.chat_type import ChatType
 

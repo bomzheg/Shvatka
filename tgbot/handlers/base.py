@@ -7,7 +7,7 @@ from aiogram.types import Message, ReplyKeyboardRemove, ContentType
 from aiogram.utils.markdown import html_decoration as hd
 from aiogram_dialog import DialogManager
 
-from db.dao.holder import HolderDao
+from infrastructure.db.dao.holder import HolderDao
 from shvatka.models import dto
 from shvatka.services.chat import update_chat_id
 from tgbot.views.commands import CANCEL_COMMAND, CHAT_ID_COMMAND, ABOUT_COMMAND, CHAT_TYPE_COMMAND

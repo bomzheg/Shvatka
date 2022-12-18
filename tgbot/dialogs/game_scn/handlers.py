@@ -9,7 +9,7 @@ from aiogram_dialog import DialogManager
 from aiogram_dialog.widgets.kbd import Button, ManagedMultiSelectAdapter
 from dataclass_factory import Factory
 
-from db.dao.holder import HolderDao
+from infrastructure.db.dao.holder import HolderDao
 from shvatka.interfaces.clients.file_storage import FileStorage
 from shvatka.models import dto, enums
 from shvatka.services.achievement import add_achievement

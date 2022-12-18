@@ -4,8 +4,8 @@ from pathlib import Path
 
 import pytest
 
-from clients.file_storage import LocalFileStorage
 from common.config.models.main import FileStorageConfig
+from infrastructure.clients.file_storage import LocalFileStorage
 from tests.fixtures.file_storage_constants import FILE_META
 
 

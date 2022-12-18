@@ -2,7 +2,7 @@ from dataclass_factory import Factory
 
 from common.config.models.main import Config, FileStorageConfig
 from common.config.models.paths import Paths
-from db.config.parser.db import load_db_config, load_redis_config
+from infrastructure.db.config.parser.db import load_db_config, load_redis_config
 
 
 def load_config(config_dct: dict, paths: Paths, dcf: Factory) -> Config:

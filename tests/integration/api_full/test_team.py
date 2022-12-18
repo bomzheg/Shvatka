@@ -5,7 +5,7 @@ from httpx import AsyncClient
 
 from api.dependencies import AuthProvider
 from api.models.auth import Token
-from db.dao.holder import HolderDao
+from infrastructure.db.dao.holder import HolderDao
 from shvatka.models import dto
 from shvatka.services.user import upsert_user, set_password
 from tests.fixtures.chat_constants import create_gryffindor_dto_chat

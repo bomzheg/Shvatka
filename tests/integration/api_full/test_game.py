@@ -3,7 +3,7 @@ from dataclass_factory import Factory
 from httpx import AsyncClient
 
 from api.models import responses
-from db.dao.holder import HolderDao
+from infrastructure.db.dao.holder import HolderDao
 from shvatka.models import dto
 from shvatka.models.enums import GameStatus
 

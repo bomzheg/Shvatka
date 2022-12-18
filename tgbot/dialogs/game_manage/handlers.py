@@ -6,7 +6,7 @@ from aiogram_dialog import DialogManager
 from aiogram_dialog.widgets.kbd import Button
 from dataclass_factory import Factory
 
-from db.dao.holder import HolderDao
+from infrastructure.db.dao.holder import HolderDao
 from shvatka.interfaces.clients.file_storage import FileStorage
 from shvatka.interfaces.scheduler import Scheduler
 from shvatka.models import dto
@@ -121,7 +121,7 @@ async def schedule_game(c: CallbackQuery, widget: Button, manager: DialogManager
     game_id = int(manager.start_data["my_game_id"])
     player: dto.Player = manager.middleware_data["player"]
     dao: HolderDao = manager.middleware_data["dao"]
-    scheduler: Scheduler = manager.middleware_data["scheduler"]
+    scheduler: Scheduler = manager.middleware_data["infrastructure.scheduler"]
     await game.plain_start(
         game=await dao.game.get_by_id(game_id, player),
         author=player,

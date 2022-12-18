@@ -16,10 +16,10 @@ from testcontainers.postgres import PostgresContainer
 from testcontainers.redis import RedisContainer
 
 from common.config.models.paths import Paths
-from db.config.models.db import RedisConfig
-from db.dao.holder import HolderDao
-from db.dao.memory.level_testing import LevelTestingData
-from db.fatory import create_lock_factory
+from infrastructure.db.config.models.db import RedisConfig
+from infrastructure.db.dao.holder import HolderDao
+from infrastructure.db.dao.memory.level_testing import LevelTestingData
+from infrastructure.db.fatory import create_lock_factory
 from shvatka.interfaces.clients.file_storage import FileStorage
 from shvatka.interfaces.scheduler import Scheduler
 from shvatka.utils.key_checker_lock import KeyCheckerFactory
@@ -178,7 +178,7 @@ def clean_up_bot(bot: Mock, bot_config: TgBotConfig):
 @pytest.fixture(scope="session")
 def alembic_config(postgres_url: str, paths: Paths) -> AlembicConfig:
     alembic_cfg = AlembicConfig(str(paths.app_dir.parent / "alembic.ini"))
-    alembic_cfg.set_main_option("script_location", str(paths.app_dir.parent / "db" / "migrations"))
+    alembic_cfg.set_main_option("script_location", str(paths.app_dir.parent / "infrastructure" / "db" / "migrations"))
     alembic_cfg.set_main_option("sqlalchemy.url", postgres_url)
     return alembic_cfg
 

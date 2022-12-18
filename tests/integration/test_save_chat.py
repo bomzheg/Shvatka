@@ -1,6 +1,6 @@
 import pytest
 
-from db.dao.holder import HolderDao
+from infrastructure.db.dao.holder import HolderDao
 from shvatka.services.chat import update_chat_id, upsert_chat
 from tests.fixtures.chat_constants import (
     create_tg_chat, create_db_chat, create_gryffindor_dto_chat, NEW_CHAT_ID,

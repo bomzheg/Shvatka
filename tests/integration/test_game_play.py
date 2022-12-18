@@ -4,8 +4,8 @@ import pytest
 from dataclass_factory import Factory
 from mockito import mock, when, ANY, unstub
 
-from db import models
-from db.dao.holder import HolderDao
+from infrastructure.db import models
+from infrastructure.db.dao.holder import HolderDao
 from shvatka.interfaces.clients.file_storage import FileStorage
 from shvatka.interfaces.scheduler import Scheduler
 from shvatka.models import dto

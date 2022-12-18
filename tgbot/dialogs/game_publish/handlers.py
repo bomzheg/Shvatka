@@ -8,7 +8,7 @@ from aiogram.utils.text_decorations import html_decoration as hd
 from aiogram_dialog import DialogManager
 from telegraph.aio import Telegraph
 
-from db.dao.holder import HolderDao
+from infrastructure.db.dao.holder import HolderDao
 from shvatka.interfaces.clients.file_storage import FileStorage
 from shvatka.models import dto
 from shvatka.services.game import get_full_game

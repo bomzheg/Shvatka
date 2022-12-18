@@ -1,6 +1,6 @@
 from fastapi.params import Depends
 
-from db.dao.holder import HolderDao
+from infrastructure.db.dao.holder import HolderDao
 from shvatka.models import dto
 from shvatka.services.game import get_active
 from .db import dao_provider

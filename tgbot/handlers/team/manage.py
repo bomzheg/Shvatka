@@ -7,7 +7,7 @@ from aiogram.types import Message
 from aiogram.utils.text_decorations import html_decoration as hd
 from aiogram_dialog import DialogManager
 
-from db.dao.holder import HolderDao
+from infrastructure.db.dao.holder import HolderDao
 from shvatka.models import dto
 from shvatka.services.player import join_team, get_team_players
 from shvatka.services.team import create_team

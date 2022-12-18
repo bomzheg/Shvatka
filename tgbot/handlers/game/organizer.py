@@ -2,7 +2,7 @@ from aiogram import Router, Bot
 from aiogram.types import CallbackQuery
 from aiogram_dialog import DialogManager
 
-from db.dao.holder import HolderDao
+from infrastructure.db.dao.holder import HolderDao
 from shvatka.interfaces.clients.file_storage import FileStorage
 from shvatka.interfaces.scheduler import LevelTestScheduler
 from shvatka.models import dto

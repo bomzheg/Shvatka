@@ -3,7 +3,7 @@ from typing import Callable, Any, Awaitable
 from aiogram import BaseMiddleware
 from aiogram.types import TelegramObject
 
-from db.dao.holder import HolderDao
+from infrastructure.db.dao.holder import HolderDao
 from shvatka.models import dto
 from shvatka.services.player import get_full_team_player, get_my_team
 from shvatka.utils.exceptions import PlayerNotInTeam

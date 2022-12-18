@@ -7,7 +7,7 @@ from aiogram import Bot
 from aiogram.exceptions import TelegramAPIError
 from aiogram.utils.markdown import html_decoration as hd
 
-from db.dao.holder import HolderDao
+from infrastructure.db.dao.holder import HolderDao
 from shvatka.interfaces.clients.file_storage import FileStorage
 from shvatka.interfaces.dal.game_play import GamePreparer
 from shvatka.models import dto

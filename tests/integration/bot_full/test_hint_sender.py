@@ -9,7 +9,7 @@ from aiogram.methods import SendMessage, SendLocation, SendPhoto, SendVenue, Tel
 from aiogram.methods.base import TelegramType
 from aiogram_tests.mocked_bot import MockedBot
 
-from db.dao.holder import HolderDao
+from infrastructure.db.dao.holder import HolderDao
 from shvatka.interfaces.clients.file_storage import FileStorage
 from shvatka.models import dto
 from shvatka.models.dto.scn import TextHint, GPSHint, PhotoHint, BaseHint

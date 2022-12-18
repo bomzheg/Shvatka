@@ -4,7 +4,7 @@ from fastapi import Depends, APIRouter, HTTPException
 from fastapi.params import Body, Path
 
 from api.dependencies import get_current_user, AuthProvider, dao_provider
-from db.dao.holder import HolderDao
+from infrastructure.db.dao.holder import HolderDao
 from shvatka.models import dto
 from shvatka.services.user import set_password, get_user
 

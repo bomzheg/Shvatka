@@ -1,7 +1,7 @@
 from fastapi.params import Depends
 
 from api.dependencies import dao_provider, get_current_user
-from db.dao.holder import HolderDao
+from infrastructure.db.dao.holder import HolderDao
 from shvatka.models import dto
 from shvatka.services.player import upsert_player
 

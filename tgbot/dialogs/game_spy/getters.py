@@ -1,6 +1,6 @@
 from aiogram_dialog import DialogManager
 
-from db.dao.holder import HolderDao
+from infrastructure.db.dao.holder import HolderDao
 from shvatka.models import dto
 from shvatka.services.game_stat import get_game_spy
 from shvatka.services.organizers import get_by_player

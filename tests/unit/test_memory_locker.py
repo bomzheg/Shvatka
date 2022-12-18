@@ -1,6 +1,6 @@
 import pytest
 
-from db.dao.memory.locker import MemoryLockFactory
+from infrastructure.db.dao.memory.locker import MemoryLockFactory
 from shvatka.models import dto
 
 

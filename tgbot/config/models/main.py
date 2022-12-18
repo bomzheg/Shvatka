@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from common.config.models.main import Config
-from db.config.models.storage import StorageConfig
+from infrastructure.db.config.models.storage import StorageConfig
 from tgbot.config.models.bot import BotConfig, TgClientConfig
 
 

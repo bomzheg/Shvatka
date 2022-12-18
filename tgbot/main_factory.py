@@ -8,15 +8,15 @@ from dataclass_factory import Factory
 from redis.asyncio.client import Redis
 from sqlalchemy.orm import sessionmaker
 
-from clients.file_storage import LocalFileStorage
 from common.config.models.main import FileStorageConfig
 from common.config.models.paths import Paths
 from common.config.parser.paths import common_get_paths
-from db.config.models.db import RedisConfig
-from db.config.models.storage import StorageConfig, StorageType
-from db.dao.memory.level_testing import LevelTestingData
-from db.fatory import create_redis
-from scheduler import ApScheduler
+from infrastructure.clients.file_storage import LocalFileStorage
+from infrastructure.db.config.models.db import RedisConfig
+from infrastructure.db.config.models.storage import StorageConfig, StorageType
+from infrastructure.db.dao.memory.level_testing import LevelTestingData
+from infrastructure.db.fatory import create_redis
+from infrastructure.scheduler import ApScheduler
 from shvatka.interfaces.clients.file_storage import FileStorage
 from shvatka.interfaces.scheduler import Scheduler
 from shvatka.utils.key_checker_lock import KeyCheckerFactory

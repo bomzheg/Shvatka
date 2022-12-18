@@ -2,7 +2,7 @@ from datetime import datetime, time, date
 
 from aiogram_dialog import DialogManager
 
-from db.dao.holder import HolderDao
+from infrastructure.db.dao.holder import HolderDao
 from shvatka.models import dto
 from shvatka.services import game
 from shvatka.services.game import get_authors_games, get_completed_games

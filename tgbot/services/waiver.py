@@ -1,6 +1,6 @@
 from aiogram.types import Message
 
-from db.dao import PollDao
+from infrastructure.db.dao import PollDao
 from shvatka.models import dto
 
 

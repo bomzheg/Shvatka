@@ -13,7 +13,7 @@ from starlette.responses import HTMLResponse
 from api.config.models.auth import AuthConfig
 from api.dependencies.db import dao_provider
 from api.models.auth import UserTgAuth, Token
-from db.dao.holder import HolderDao
+from infrastructure.db.dao.holder import HolderDao
 from shvatka.models import dto
 from shvatka.services.user import upsert_user
 from shvatka.utils.datetime_utils import tz_utc

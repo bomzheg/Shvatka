@@ -5,7 +5,7 @@ from aiogram_dialog import Data, DialogManager
 from aiogram_dialog.widgets.kbd import Button
 from dataclass_factory import Factory
 
-from db.dao.holder import HolderDao
+from infrastructure.db.dao.holder import HolderDao
 from shvatka.models import dto
 from shvatka.models.dto.scn import TimeHint, LevelScenario
 from shvatka.services.level import upsert_level

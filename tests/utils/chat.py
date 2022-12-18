@@ -1,4 +1,4 @@
-from db import models
+from infrastructure.db import models
 from shvatka.models import dto
 
 

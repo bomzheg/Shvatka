@@ -3,7 +3,7 @@ import asyncio
 import pytest_asyncio
 from dataclass_factory import Factory
 
-from db.dao.holder import HolderDao
+from infrastructure.db.dao.holder import HolderDao
 from shvatka.interfaces.clients.file_storage import FileStorage
 from shvatka.models import dto
 from shvatka.models.dto.scn.game import RawGameScenario

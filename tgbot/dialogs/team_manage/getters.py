@@ -1,6 +1,6 @@
 from aiogram_dialog import DialogManager
 
-from db.dao.holder import HolderDao
+from infrastructure.db.dao.holder import HolderDao
 from shvatka.models import dto
 from shvatka.services.player import get_full_team_player, get_my_team, get_team_players
 from shvatka.utils.exceptions import PlayerNotInTeam

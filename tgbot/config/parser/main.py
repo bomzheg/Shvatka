@@ -3,7 +3,7 @@ from dataclass_factory import Factory, Schema, NameStyle
 from common.config.models.paths import Paths
 from common.config.parser.config_file_reader import read_config
 from common.config.parser.main import load_config as load_common_config
-from db.config.parser.storage import load_storage_config
+from infrastructure.db.config.parser.storage import load_storage_config
 from tgbot.config.models.bot import TgClientConfig
 from tgbot.config.models.main import TgBotConfig
 from tgbot.config.parser.bot import load_bot_config

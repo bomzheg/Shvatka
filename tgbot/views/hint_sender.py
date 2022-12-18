@@ -7,7 +7,7 @@ from aiogram import Bot
 from aiogram.exceptions import TelegramAPIError
 from aiogram.types import Message
 
-from db.dao.holder import HolderDao
+from infrastructure.db.dao.holder import HolderDao
 from shvatka.interfaces.clients.file_storage import FileStorage
 from shvatka.models.dto.scn.hint_part import BaseHint
 from shvatka.models.enums.hint_type import HintType

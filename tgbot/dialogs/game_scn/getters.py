@@ -1,6 +1,6 @@
 from aiogram_dialog import DialogManager
 
-from db.dao.holder import HolderDao
+from infrastructure.db.dao.holder import HolderDao
 from shvatka.models import dto
 from shvatka.services.game import get_full_game
 from shvatka.services.level import get_all_my_free_levels

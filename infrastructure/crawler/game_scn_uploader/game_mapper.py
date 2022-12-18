@@ -4,7 +4,7 @@ from shvatka.models import dto
 from shvatka.models.dto.scn import BaseHint, TextHint, GPSHint
 from shvatka.models.dto.scn import TimeHint
 from shvatka.models.dto.scn.hint_part import VenueHint
-from tgbot.models import uploadable_game as data
+from ..models import uploadable_game as data
 
 
 def map_game_for_upload(game: dto.FullGame) -> data.GameForUpload:

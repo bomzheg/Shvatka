@@ -3,8 +3,8 @@ import os
 
 from aiohttp import ClientSession, MultipartWriter
 
-from tgbot.models.credentials import Credentials
-from tgbot.models.uploadable_game import (
+from ..models import Credentials
+from ..models import (
     LevelPuzzle, Hint, GameForUpload,
 )
 

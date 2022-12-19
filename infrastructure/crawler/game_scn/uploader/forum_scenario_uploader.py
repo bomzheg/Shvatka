@@ -3,15 +3,11 @@ import os
 
 from aiohttp import ClientSession, MultipartWriter
 
+from infrastructure.crawler.constants import COOKIE_NAME, BASE_URL
 from infrastructure.crawler.models import Credentials
 from infrastructure.crawler.models import (
     LevelPuzzle, Hint, GameForUpload,
 )
-
-COOKIE_NAME = "shvatkasession_id"
-
-admin = "http://www.shvatka.ru/index.php?act=module&module=reps&cmd=scn"
-base_url = "http://www.shvatka.ru/index.php"
 
 
 async def upload(game: GameForUpload):
@@ -40,7 +36,7 @@ async def auth(session: ClientSession, creds: Credentials):
 
 async def remove_all_scn(session: ClientSession):
     async with session.post(
-        base_url,
+        BASE_URL,
         data={
             "act": "module",
             "module": "reps",
@@ -66,7 +62,7 @@ async def add_level_puzzle(session: ClientSession, hint: LevelPuzzle):
     }
     mp = write_multipart(data, hint.text)
     async with session.post(
-        base_url,
+        BASE_URL,
         data=mp,
 
     ) as resp:
@@ -86,7 +82,7 @@ async def add_hint(session: ClientSession, hint: Hint):
     }
     mp = write_multipart(data, hint.text)
     async with session.post(
-        base_url,
+        BASE_URL,
         data=mp,
     ) as resp:
         resp.raise_for_status()
@@ -108,7 +104,7 @@ def preprocess_text(text: str):
 
 
 async def get_login_page(session: ClientSession):
-    async with session.get(base_url, params=dict(act="Login", CODE="00")) as resp:
+    async with session.get(BASE_URL, params=dict(act="Login", CODE="00")) as resp:
         resp.raise_for_status()
         assert resp.ok
         return resp.cookies[COOKIE_NAME].value
@@ -116,7 +112,7 @@ async def get_login_page(session: ClientSession):
 
 async def authorize(session: ClientSession, php_session: str, creds: Credentials):
     async with session.post(
-        base_url,
+        BASE_URL,
         data={
             "CookieDate": "1",
             "act": "Login",

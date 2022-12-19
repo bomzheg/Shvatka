@@ -3,8 +3,8 @@ import os
 
 from aiohttp import ClientSession, MultipartWriter
 
-from ..models import Credentials
-from ..models import (
+from infrastructure.crawler.models import Credentials
+from infrastructure.crawler.models import (
     LevelPuzzle, Hint, GameForUpload,
 )
 

@@ -42,6 +42,7 @@ class GameParser:
         self.levels: list[LevelScenario] = []
         self.hints: list[BaseHint] = []
         self.time_hints: list[TimeHint] = []
+        self.level_number = 0
         self.keys: set[str] = set()
         self.time: int = 0
 
@@ -58,6 +59,7 @@ class GameParser:
                 if self.keys:
                     self.build_level()
                 self.keys = {b.tail for b in element.xpath("./b")}
+                self.level_number = int(element.xpath("./b")[0].text.split()[1].strip("."))
             elif element.tag == "b":
                 self.build_time_hint()
                 hint_caption, number, time, minutes_caption = element.text.split()
@@ -87,11 +89,16 @@ class GameParser:
 
     def build_level(self):
         self.build_time_hint()
-        level = LevelScenario(id="", time_hints=self.time_hints, keys=self.keys)
+        level = LevelScenario(
+            id=f"game_{self.id}:lvl_{self.level_number}",
+            time_hints=self.time_hints,
+            keys=self.keys,
+        )
         self.levels.append(level)
         self.time_hints = []
         self.keys = set()
         self.time = 0
+        self.level_number = 0
 
     def build(self) -> dto.Game:
         self.parse_game_head()

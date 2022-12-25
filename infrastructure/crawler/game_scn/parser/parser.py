@@ -6,9 +6,7 @@ from lxml import etree
 
 from infrastructure.crawler.auth import get_auth_cookie
 from infrastructure.crawler.constants import GAME_URL_TEMPLATE, GAMES_URL
-from shvatka.models import dto
-from shvatka.models.dto.scn import LevelScenario, TimeHint, TextHint, BaseHint
-from shvatka.models.dto.scn.game import ParsedCompletedGameScenario
+from shvatka.models.dto import scn
 
 
 async def get_all_games():
@@ -39,9 +37,9 @@ class GameParser:
         self.name: str = ""
         self.start_at: datetime | None = None
         self.current_hint_parts: list[str] = []
-        self.levels: list[LevelScenario] = []
-        self.hints: list[BaseHint] = []
-        self.time_hints: list[TimeHint] = []
+        self.levels: list[scn.LevelScenario] = []
+        self.hints: list[scn.BaseHint] = []
+        self.time_hints: list[scn.TimeHint] = []
         self.level_number = 0
         self.keys: set[str] = set()
         self.time: int = 0
@@ -70,7 +68,7 @@ class GameParser:
             else:
                 if img := element.xpath(".//img"):
                     self.build_current_hint()
-                    self.hints.append(TextHint(text=img[0].get("src")))
+                    self.hints.append(scn.TextHint(text=img[0].get("src")))
                 if element.text:
                     self.current_hint_parts.append(element.text)
                 if element.tail:
@@ -80,13 +78,13 @@ class GameParser:
     def build_current_hint(self):
         if not self.current_hint_parts:
             return
-        self.hints.append(TextHint(text="\n".join(self.current_hint_parts)))
+        self.hints.append(scn.TextHint(text="\n".join(self.current_hint_parts)))
         self.current_hint_parts = []
 
     def build_time_hint(self):
         self.build_current_hint()
         self.time_hints.append(
-            TimeHint(time=self.time, hint=[
+            scn.TimeHint(time=self.time, hint=[
                 *self.hints,
             ])
         )
@@ -94,7 +92,7 @@ class GameParser:
 
     def build_level(self):
         self.build_time_hint()
-        level = LevelScenario(
+        level = scn.LevelScenario(
             id=f"game_{self.id}:lvl_{self.level_number}",
             time_hints=self.time_hints,
             keys=self.keys,
@@ -105,10 +103,10 @@ class GameParser:
         self.time = 0
         self.level_number = 0
 
-    def build(self) -> dto.Game:
+    def build(self) -> scn.ParsedCompletedGameScenario:
         self.parse_game_head()
         self.parse_scenario()
-        game = ParsedCompletedGameScenario(
+        game = scn.ParsedCompletedGameScenario(
             id=self.id,
             name=self.name,
             start_at=self.start_at,

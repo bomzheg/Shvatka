@@ -1,22 +1,33 @@
+import asyncio
+import logging
+import uuid
 from datetime import datetime
-from pprint import pprint
+from io import BytesIO
+from pathlib import Path
+from typing import BinaryIO
 
+import yaml
 from aiohttp import ClientSession
+from dataclass_factory import Factory
 from lxml import etree
 
 from infrastructure.crawler.auth import get_auth_cookie
 from infrastructure.crawler.constants import GAME_URL_TEMPLATE, GAMES_URL
 from shvatka.models.dto import scn
 
+logger = logging.getLogger(__name__)
+
 
 async def get_all_games():
     games = []
     async with ClientSession(cookies=await get_auth_cookie()) as session:
         for game_id in reversed(await get_games_ids(session)):
+            await asyncio.sleep(1)
             html_text = await download(game_id, session)
-            with open("131.html", "w", encoding="utf8") as f:
-                f.write(html_text)
-            games.append(GameParser(html_text).build())
+            try:
+                games.append(GameParser(html_text).build())
+            except (ValueError, AttributeError) as e:
+                logger.error("cant parsed game %s", game_id, exc_info=e)
     return games
 
 
@@ -43,6 +54,7 @@ class GameParser:
         self.level_number = 0
         self.keys: set[str] = set()
         self.time: int = 0
+        self.files: dict[str, BinaryIO] = {}
 
     def parse_game_head(self):
         self.id = int(self.html.xpath("//div[@class='maintitle']/b")[0].text)
@@ -68,7 +80,9 @@ class GameParser:
             else:
                 if img := element.xpath(".//img"):
                     self.build_current_hint()
-                    self.hints.append(scn.TextHint(text=img[0].get("src")))
+                    guid = str(uuid.uuid4())
+                    self.hints.append(scn.PhotoHint(file_guid=guid))
+                    self.files[guid] = BytesIO(img[0].get("src").encode())  # TODO download link
                 if element.text:
                     self.current_hint_parts.append(element.text)
                 if element.tail:
@@ -111,12 +125,17 @@ class GameParser:
             name=self.name,
             start_at=self.start_at,
             levels=self.levels,
-            files=[],
+            files=self.files,
         )
         return game
 
 
 if __name__ == '__main__':
-    with open("131.html", encoding="utf8") as f:
-        text = f.read()
-    pprint(GameParser(text).build())
+    games: list[scn.ParsedCompletedGameScenario] = asyncio.run(get_all_games())
+    dcf = Factory()
+    for game in games:
+        dct = dcf.dump(game)
+        path = Path() / "scn"
+        path.mkdir(exist_ok=True)
+        with open(path / f"{game.id}.yml", "w", encoding="utf8") as f:
+            yaml.dump(dct, f)

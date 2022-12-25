@@ -130,8 +130,8 @@ class GameParser:
         return game
 
 
-if __name__ == '__main__':
-    games: list[scn.ParsedCompletedGameScenario] = asyncio.run(get_all_games())
+async def save_all_scns_to_files():
+    games = await get_all_games()
     dcf = Factory()
     for game in games:
         dct = dcf.dump(game)
@@ -139,3 +139,7 @@ if __name__ == '__main__':
         path.mkdir(exist_ok=True)
         with open(path / f"{game.id}.yml", "w", encoding="utf8") as f:
             yaml.dump(dct, f)
+
+
+if __name__ == '__main__':
+    asyncio.run(save_all_scns_to_files())

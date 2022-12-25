@@ -68,6 +68,9 @@ class GameParser:
                 time = time.removeprefix("(")
                 self.time = int(time or -1)
             else:
+                if img := element.xpath(".//img"):
+                    self.build_current_hint()
+                    self.hints.append(TextHint(text=img[0].get("src")))
                 if element.text:
                     self.current_hint_parts.append(element.text)
                 if element.tail:
@@ -75,6 +78,8 @@ class GameParser:
         self.build_level()
 
     def build_current_hint(self):
+        if not self.current_hint_parts:
+            return
         self.hints.append(TextHint(text="\n".join(self.current_hint_parts)))
         self.current_hint_parts = []
 

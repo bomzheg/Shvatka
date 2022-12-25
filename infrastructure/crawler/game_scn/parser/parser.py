@@ -8,7 +8,7 @@ from infrastructure.crawler.auth import get_auth_cookie
 from infrastructure.crawler.constants import GAME_URL_TEMPLATE, GAMES_URL
 from shvatka.models import dto
 from shvatka.models.dto.scn import LevelScenario, TimeHint, TextHint, BaseHint
-from shvatka.models.enums import GameStatus
+from shvatka.models.dto.scn.game import ParsedCompletedGameScenario
 
 
 async def get_all_games():
@@ -103,15 +103,12 @@ class GameParser:
     def build(self) -> dto.Game:
         self.parse_game_head()
         self.parse_scenario()
-        game = dto.FullGame(
+        game = ParsedCompletedGameScenario(
             id=self.id,
             name=self.name,
             start_at=self.start_at,
-            author=None,
-            status=GameStatus.complete,
-            manage_token="",
-            published_channel_id=None,
             levels=self.levels,
+            files=[],
         )
         return game
 

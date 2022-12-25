@@ -10,7 +10,7 @@ from shvatka.interfaces.dal.game import (
 from shvatka.interfaces.dal.level import LevelLinker
 from shvatka.interfaces.scheduler import Scheduler
 from shvatka.models import dto
-from shvatka.models.dto.scn.game import RawGameScenario, CompleteGameScenario
+from shvatka.models.dto.scn.game import RawGameScenario, FullGameScenario
 from shvatka.models.enums.game_status import EDITABLE_STATUSES
 from shvatka.services.level import check_is_author as check_is_level_author, check_can_link_to_game
 from shvatka.services.player import check_allow_be_author
@@ -100,7 +100,7 @@ async def get_game_package(
     check_is_author(game, author)
     file_metas = await get_file_metas(game.get_guids(), author, dao)
     contents = await get_file_contents(file_metas, file_storage)
-    scn = CompleteGameScenario(name=game.name, levels=[level.scenario for level in game.levels], files=file_metas)
+    scn = FullGameScenario(name=game.name, levels=[level.scenario for level in game.levels], files=file_metas)
     serialized = dcf.dump(scn)
     return RawGameScenario(scn=serialized, files=contents)
 

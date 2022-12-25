@@ -1,6 +1,6 @@
 from dataclass_factory import Factory
 
-from shvatka.models.dto.scn import GameScenario, CompleteGameScenario
+from shvatka.models.dto.scn import GameScenario, FullGameScenario
 from shvatka.services.scenario.level_ops import check_all_files_saved as check_all_in_level_saved
 
 
@@ -8,11 +8,11 @@ def parse_game(scn: dict, dcf: Factory) -> GameScenario:
     return dcf.load(scn, GameScenario)
 
 
-def parse_uploaded_game(scn: dict, dcf: Factory) -> CompleteGameScenario:
-    return dcf.load(scn, CompleteGameScenario)
+def parse_uploaded_game(scn: dict, dcf: Factory) -> FullGameScenario:
+    return dcf.load(scn, FullGameScenario)
 
 
-def serialize(game: CompleteGameScenario, dcf: Factory) -> dict:
+def serialize(game: FullGameScenario, dcf: Factory) -> dict:
     return dcf.dump(game)
 
 

@@ -12,7 +12,7 @@ class GameScenario:
 
 
 @dataclass
-class CompleteGameScenario(GameScenario):
+class FullGameScenario(GameScenario):
     files: list[FileMeta]
 
 

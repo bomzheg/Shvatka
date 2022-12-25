@@ -1,5 +1,5 @@
 from .file_content import FileMeta, FileContentLink, TgLink, SavedFileMeta
-from .game import GameScenario, CompleteGameScenario
+from .game import GameScenario, FullGameScenario
 from .hint_part import (
     BaseHint,
     TextHint,

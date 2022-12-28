@@ -25,7 +25,7 @@ async def get_all_games():
             await asyncio.sleep(1)
             html_text = await download(game_id, session)
             try:
-                games.append(GameParser(html_text).build())
+                games.append(await GameParser(html_text, session=session).build())
             except (ValueError, AttributeError) as e:
                 logger.error("cant parsed game %s", game_id, exc_info=e)
     return games
@@ -42,8 +42,9 @@ async def download(game_id: int, session: ClientSession) -> str:
 
 
 class GameParser:
-    def __init__(self, html_str: str):
+    def __init__(self, html_str: str, *, session: ClientSession):
         self.html = etree.HTML(html_str, base_url="shvatka.ru")
+        self.session = session
         self.id: int = 0
         self.name: str = ""
         self.start_at: datetime | None = None
@@ -62,7 +63,7 @@ class GameParser:
         started_at_text = self.html.xpath("//div[@class='maintitle']/b/span[@id='dt']")[0].text
         self.start_at = datetime.strptime(started_at_text, "%d.%m.%y в %H:%M")
 
-    def parse_scenario(self):
+    async def parse_scenario(self):
         scn_element, = self.html.xpath("//div[@id='sc']//div[@class='borderwrap']//tr[@class='ipbtable']/td")
         for element in scn_element.xpath("./*"):
             if element.tag == "center":
@@ -82,12 +83,16 @@ class GameParser:
                     self.build_current_hint()
                     guid = str(uuid.uuid4())
                     self.hints.append(scn.PhotoHint(file_guid=guid))
-                    self.files[guid] = BytesIO(img[0].get("src").encode())  # TODO download link
+                    self.files[guid] = await self.download_content(img[0].get("src"))
                 if element.text:
                     self.current_hint_parts.append(element.text)
                 if element.tail:
                     self.current_hint_parts.append(element.tail)
         self.build_level()
+
+    async def download_content(self, url: str) -> BinaryIO:
+        async with self.session.get(url) as resp:
+            return BytesIO(await resp.content.read())
 
     def build_current_hint(self):
         if not self.current_hint_parts:
@@ -117,9 +122,9 @@ class GameParser:
         self.time = 0
         self.level_number = 0
 
-    def build(self) -> scn.ParsedCompletedGameScenario:
+    async def build(self) -> scn.ParsedCompletedGameScenario:
         self.parse_game_head()
-        self.parse_scenario()
+        await self.parse_scenario()
         game = scn.ParsedCompletedGameScenario(
             id=self.id,
             name=self.name,

@@ -6,7 +6,7 @@ from io import BytesIO
 from pathlib import Path
 from typing import BinaryIO
 
-from aiohttp import ClientSession
+from aiohttp import ClientSession, ClientConnectorError, ClientResponseError
 from dataclass_factory import Factory
 from lxml import etree
 
@@ -34,7 +34,7 @@ async def get_all_games() -> list[scn.ParsedCompletedGameScenario]:
 
 async def get_games_ids(session: ClientSession) -> list[int]:
     async with session.get(GAMES_URL) as resp:
-        return [131]
+        return list(range(120, 130))
 
 
 async def download(game_id: int, session: ClientSession) -> str:
@@ -70,37 +70,46 @@ class GameParser:
         scn_element, = self.html.xpath("//div[@id='sc']//div[@class='borderwrap']//tr[@class='ipbtable']/td")
         for element in scn_element.xpath("./*"):
             if element.tag == "center":
-                if self.keys:
-                    self.build_level()
-                self.keys = {b.tail for b in element.xpath("./b")}
-                self.level_number = int(element.xpath("./b")[0].text.split()[1].strip("."))
-            elif element.tag == "b":
-                self.build_time_hint()
-                hint_caption, number, time, minutes_caption = element.text.split()
-                assert hint_caption == "Подсказка"
-                assert minutes_caption == "мин.)"
-                time = time.removeprefix("(")
-                self.time = int(time or -1)
-            else:
-                if img := element.xpath(".//img"):
+                prompt: tuple[str, ...] = element.xpath("./b")[0].text.split()
+                if prompt[0] == "Уровень" and prompt[1].strip(".").isnumeric() and prompt[2] == "Ключ:":
+                    if self.keys:  # if not - it's first level
+                        self.build_level()
+                    self.keys = {b.tail for b in element.xpath("./b")}
+                    self.level_number = int(prompt[1].strip("."))
+                    continue
+            if element.tag == "b":
+                if element.text and len(element.text.split()) == 4:
+                    hint_caption, number, time, minutes_caption = element.text.split()  # type: str
+                    if hint_caption == "Подсказка" and minutes_caption == "мин.)":
+                        self.build_time_hint()
+                        time = time.removeprefix("(")
+                        self.time = int(time or -1)
+                        continue
+            if img_tags := element.xpath("descendant-or-self::img"):
+                for img in img_tags:
                     self.build_current_hint()
                     guid = str(uuid.uuid4())
                     self.hints.append(scn.PhotoHint(file_guid=guid))
-                    self.files[guid] = await self.download_content(img[0].get("src"))
+                    self.files[guid] = await self.download_content(img.get("src"))
                     self.files_meta.append(scn.FileMetaLightweight(
                         guid=guid,
                         original_filename=guid,
                         extension=".jpg",
                     ))
-                if element.text:
-                    self.current_hint_parts.append(element.text)
-                if element.tail:
-                    self.current_hint_parts.append(element.tail)
+            if element.text:
+                self.current_hint_parts.append(element.text)
+            if element.tail:
+                self.current_hint_parts.append(element.tail)
         self.build_level()
 
     async def download_content(self, url: str) -> BinaryIO:
-        async with self.session.get(url) as resp:
-            return BytesIO(await resp.content.read())
+        try:
+            async with self.session.get(url.strip()) as resp:
+                resp.raise_for_status()
+                return BytesIO(await resp.content.read())
+        except (ClientConnectorError, ClientResponseError) as e:
+            logger.error("couldnt load content for url %s", url, exc_info=e)
+            return BytesIO()
 
     def build_current_hint(self):
         if not self.current_hint_parts:

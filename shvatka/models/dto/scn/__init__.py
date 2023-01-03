@@ -1,4 +1,11 @@
-from .file_content import FileMeta, FileContentLink, TgLink, SavedFileMeta
+from .file_content import (
+    FileMeta,
+    FileContentLink,
+    TgLink,
+    SavedFileMeta,
+    StoredFileMeta,
+    FileMetaLightweight,
+)
 from .game import (
     GameScenario,
     FullGameScenario,

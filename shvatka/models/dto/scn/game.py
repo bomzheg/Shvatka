@@ -19,10 +19,10 @@ class FullGameScenario(GameScenario):
 
 
 @dataclass
-class ParsedCompletedGameScenario(GameScenario):
+class ParsedCompletedGameScenario(FullGameScenario):
     id: int
     start_at: datetime
-    files: dict[str, BinaryIO]
+    files_contents: dict[str, BinaryIO]
     status: enums.GameStatus = enums.GameStatus.complete
 
 

@@ -12,6 +12,7 @@ from lxml import etree
 
 from infrastructure.crawler.auth import get_auth_cookie
 from infrastructure.crawler.constants import GAME_URL_TEMPLATE, GAMES_URL
+from shvatka.models import enums
 from shvatka.models.dto import scn
 from tgbot.services.scenario import pack_scn
 
@@ -56,6 +57,7 @@ class GameParser:
         self.keys: set[str] = set()
         self.time: int = 0
         self.files: dict[str, BinaryIO] = {}
+        self.files_meta: list[scn.FileMetaLightweight] = []
 
     def parse_game_head(self):
         self.id = int(self.html.xpath("//div[@class='maintitle']/b")[0].text)
@@ -85,6 +87,11 @@ class GameParser:
                     guid = str(uuid.uuid4())
                     self.hints.append(scn.PhotoHint(file_guid=guid))
                     self.files[guid] = await self.download_content(img[0].get("src"))
+                    self.files_meta.append(scn.FileMetaLightweight(
+                        guid=guid,
+                        original_filename=guid,
+                        extension=".jpg",
+                    ))
                 if element.text:
                     self.current_hint_parts.append(element.text)
                 if element.tail:
@@ -132,7 +139,8 @@ class GameParser:
             name=self.name,
             start_at=self.start_at,
             levels=self.levels,
-            files=self.files,
+            files_contents=self.files,
+            files=self.files_meta,
         )
         return game
 
@@ -143,8 +151,11 @@ async def save_all_scns_to_files():
     path = Path() / "scn"
     path.mkdir(exist_ok=True)
     for game in games:
-        dct = dcf.dump(game, scn.GameScenario)
-        scenario = scn.RawGameScenario(scn=dct, files=game.files)
+        for file in game.files:
+            file.file_content_link = scn.FileContentLink(file.guid)
+            file.tg_link = scn.TgLink(file_id=None, content_type=enums.HintType.photo)
+        dct = dcf.dump(game, scn.FullGameScenario)
+        scenario = scn.RawGameScenario(scn=dct, files=game.files_contents)
         packed_scenario = pack_scn(scenario)
         with open(path / f"{game.id}.zip", "wb") as f:
             f.write(packed_scenario.read())

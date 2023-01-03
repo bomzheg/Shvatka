@@ -21,15 +21,13 @@ class FileContentLink:
 
 
 @dataclass
-class FileMeta:
+class FileMetaLightweight:
     guid: str
     """GUID for filename in file storage, DB and in archive"""
     original_filename: str
     """Filename from user before renamed to guid"""
     extension: str
     """extension with leading dot: ".zip" ".tar.gz" etc"""
-    tg_link: TgLink
-    file_content_link: FileContentLink
 
     @property
     def local_file_name(self):
@@ -38,6 +36,16 @@ class FileMeta:
     @property
     def public_filename(self):
         return self.original_filename + (self.extension or "")
+
+
+@dataclass
+class StoredFileMeta(FileMetaLightweight):
+    file_content_link: FileContentLink
+
+
+@dataclass
+class FileMeta(StoredFileMeta):
+    tg_link: TgLink
 
 
 @dataclass

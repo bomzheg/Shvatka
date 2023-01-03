@@ -6,7 +6,6 @@ from io import BytesIO
 from pathlib import Path
 from typing import BinaryIO
 
-import yaml
 from aiohttp import ClientSession
 from dataclass_factory import Factory
 from lxml import etree
@@ -14,6 +13,7 @@ from lxml import etree
 from infrastructure.crawler.auth import get_auth_cookie
 from infrastructure.crawler.constants import GAME_URL_TEMPLATE, GAMES_URL
 from shvatka.models.dto import scn
+from tgbot.services.scenario import pack_scn
 
 logger = logging.getLogger(__name__)
 
@@ -140,12 +140,14 @@ class GameParser:
 async def save_all_scns_to_files():
     games = await get_all_games()
     dcf = Factory()
+    path = Path() / "scn"
+    path.mkdir(exist_ok=True)
     for game in games:
         dct = dcf.dump(game, scn.GameScenario)
-        path = Path() / "scn"
-        path.mkdir(exist_ok=True)
-        with open(path / f"{game.id}.yml", "w", encoding="utf8") as f:
-            yaml.dump(dct, f, allow_unicode=True)
+        scenario = scn.RawGameScenario(scn=dct, files=game.files)
+        packed_scenario = pack_scn(scenario)
+        with open(path / f"{game.id}.zip", "wb") as f:
+            f.write(packed_scenario.read())
 
 
 if __name__ == '__main__':

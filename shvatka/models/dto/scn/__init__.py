@@ -1,5 +1,10 @@
 from .file_content import FileMeta, FileContentLink, TgLink, SavedFileMeta
-from .game import GameScenario, FullGameScenario, ParsedCompletedGameScenario
+from .game import (
+    GameScenario,
+    FullGameScenario,
+    ParsedCompletedGameScenario,
+    RawGameScenario,
+)
 from .hint_part import (
     BaseHint,
     TextHint,

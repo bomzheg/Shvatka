@@ -18,7 +18,7 @@ from shvatka.models.dto import scn
 logger = logging.getLogger(__name__)
 
 
-async def get_all_games():
+async def get_all_games() -> list[scn.ParsedCompletedGameScenario]:
     games = []
     async with ClientSession(cookies=await get_auth_cookie()) as session:
         for game_id in reversed(await get_games_ids(session)):
@@ -33,7 +33,7 @@ async def get_all_games():
 
 async def get_games_ids(session: ClientSession) -> list[int]:
     async with session.get(GAMES_URL) as resp:
-        return list(range(132))
+        return [131]
 
 
 async def download(game_id: int, session: ClientSession) -> str:
@@ -59,6 +59,7 @@ class GameParser:
 
     def parse_game_head(self):
         self.id = int(self.html.xpath("//div[@class='maintitle']/b")[0].text)
+        logger.info("parsing game %s ...", self.id)
         self.name = self.html.xpath("//div[@class='maintitle']/b/a")[0].text
         started_at_text = self.html.xpath("//div[@class='maintitle']/b/span[@id='dt']")[0].text
         self.start_at = datetime.strptime(started_at_text, "%d.%m.%y в %H:%M")
@@ -117,6 +118,7 @@ class GameParser:
             keys=self.keys,
         )
         self.levels.append(level)
+        logger.debug("for game %s parsed level %s", self.id, self.level_number)
         self.time_hints = []
         self.keys = set()
         self.time = 0
@@ -139,12 +141,13 @@ async def save_all_scns_to_files():
     games = await get_all_games()
     dcf = Factory()
     for game in games:
-        dct = dcf.dump(game)
+        dct = dcf.dump(game, scn.GameScenario)
         path = Path() / "scn"
         path.mkdir(exist_ok=True)
         with open(path / f"{game.id}.yml", "w", encoding="utf8") as f:
-            yaml.dump(dct, f)
+            yaml.dump(dct, f, allow_unicode=True)
 
 
 if __name__ == '__main__':
+    logging.basicConfig(level=logging.DEBUG)
     asyncio.run(save_all_scns_to_files())

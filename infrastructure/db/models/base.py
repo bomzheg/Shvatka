@@ -7,5 +7,5 @@ convention = {
     'fk': 'fk__%(table_name)s__%(column_0_name)s__%(referred_table_name)s',
     'pk': 'pk__%(table_name)s'
 }
-meta = MetaData(convention)
+meta = MetaData(naming_convention=convention)
 Base = declarative_base(metadata=meta)

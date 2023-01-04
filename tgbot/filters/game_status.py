@@ -21,15 +21,16 @@ class GameStatusFilter(BaseFilter):
             return self.check_running(game)
         if self.status is not None:
             return self.check_by_status(game)
+        return True
 
     def check_active(self, game: dto.Game) -> bool:
         if game is not None and game.is_active():
-            return self.active
+            return bool(self.active)
         return not self.active
 
     def check_running(self, game: dto.Game) -> bool:
         if game is not None and game.is_started():
-            return self.running
+            return bool(self.running)
         return not self.running
 
     def check_by_status(self, game: dto.Game) -> bool:

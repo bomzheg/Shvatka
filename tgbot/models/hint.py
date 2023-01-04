@@ -212,8 +212,8 @@ class VideoNoteContentView(BaseHintContentView):
 class ContactHintView(BaseHintLinkView, BaseHintContentView):
     phone_number: str
     first_name: str
-    last_name: str = None
-    vcard: str = None
+    last_name: str | None = None
+    vcard: str | None = None
 
     def kwargs(self) -> dict:
         return dict(

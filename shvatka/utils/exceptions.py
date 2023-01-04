@@ -9,18 +9,18 @@ class SHError(Exception):
     def __init__(
         self,
         text: str = "",
-        user_id: int = None,
-        player_id: int = None,
-        chat_id: int = None,
-        team_id: int = None,
-        game_id: int = None,
-        user: dto.User = None,
-        player: dto.Player = None,
-        chat: dto.Chat = None,
-        team: dto.Team = None,
+        user_id: int | None = None,
+        player_id: int | None = None,
+        chat_id: int | None = None,
+        team_id: int | None = None,
+        game_id: int | None = None,
+        user: dto.User | None = None,
+        player: dto.Player | None = None,
+        chat: dto.Chat | None = None,
+        team: dto.Team | None = None,
         game: Any = None,
-        alarm: bool = False,
-        notify_user: str = None,
+        alarm: bool | None = False,
+        notify_user: str | None = None,
         *args,
         **kwargs
     ):
@@ -62,7 +62,7 @@ class SHError(Exception):
 class ScenarioNotCorrect(SHError):
     notify_user = "JSON-файл некорректен"
 
-    def __init__(self, *args, level_id: int = None, name_id: str = None, **kwargs):
+    def __init__(self, *args, level_id: int | None = None, name_id: str | None = None, **kwargs):
         super(ScenarioNotCorrect, self).__init__(*args, **kwargs)
         self.level_id = level_id
         self.name_id = name_id
@@ -89,7 +89,7 @@ class SHDataBreach(SHError):
 class SaltError(SHError):
     def __init__(
         self,
-        token: str = None,
+        token: str | None = None,
         *args,
         **kwargs
     ):
@@ -112,7 +112,7 @@ class GameHasAnotherAuthor(GameError):
 class GameStatusError(GameError):
     def __init__(
         self,
-        game_status: str = None,
+        game_status: str | None = None,
         *args,
         **kwargs
     ):
@@ -181,7 +181,7 @@ class PermissionsError(SHError):
 
     def __init__(
         self,
-        permission_name: str = None,
+        permission_name: str | None = None,
         *args,
         **kwargs
     ):
@@ -236,7 +236,7 @@ class AnotherTeamInChat(PlayerTeamError):
 class UsernameResolverError(SHError):
     notify_user = "Не удалось найти пользователя по username"
 
-    def __init__(self, username: str = None, **kwargs):
+    def __init__(self, username: str | None = None, **kwargs):
         super().__init__(**kwargs)
         self.username = username
 
@@ -256,6 +256,6 @@ class WaiverForbidden(GameError):
 class InvalidKey(SHError):
     notify_user = "Это не ключ. Например начинается не с SH/СХ, используется что-то кроме букв и цифр"
 
-    def __init__(self, key: str = None, *args, **kwargs):
+    def __init__(self, key: str | None = None, *args, **kwargs):
         super(InvalidKey, self).__init__(*args, **kwargs)
         self.key = key

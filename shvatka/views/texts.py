@@ -14,7 +14,7 @@ WAIVER_STATUS_MEANING = {
     Played.think: "Размышляют",
 }
 
-HINTS_EMOJI: dict[HintType: str] = {
+HINTS_EMOJI: dict[HintType, str] = {
     HintType.text: "📃",
     HintType.gps: "📡",
     HintType.venue: "🧭",

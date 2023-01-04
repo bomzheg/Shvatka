@@ -16,13 +16,15 @@ class User:
 
     @property
     def fullname(self) -> str:
+        if self.first_name is None:
+            return ""
         if self.last_name is not None:
             return ' '.join((self.first_name, self.last_name))
         return self.first_name
 
     @property
     def name_mention(self) -> str:
-        return self.fullname or self.username or self.tg_id
+        return self.fullname or self.username or str(self.tg_id) or str(self.db_id) or "unknown"
 
     @classmethod
     def from_aiogram(cls, user: tg.User) -> User:

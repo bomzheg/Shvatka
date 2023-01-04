@@ -138,8 +138,8 @@ class VideoNoteHint(BaseHint, FileMixin):
 class ContactHint(BaseHint):
     phone_number: str
     first_name: str
-    last_name: str = None
-    vcard: str = None
+    last_name: str | None = None
+    vcard: str | None = None
     type: Literal["contact"] = HintType.contact.name
 
     def get_guids(self) -> list[str]:

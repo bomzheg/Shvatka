@@ -1,5 +1,6 @@
 import logging
 import os
+from typing import Generator, AsyncGenerator
 from unittest.mock import Mock
 
 import pytest
@@ -81,13 +82,13 @@ async def clear_data(dao: HolderDao):
 
 
 @pytest_asyncio.fixture
-async def session(pool: sessionmaker) -> AsyncSession:
+async def session(pool: sessionmaker) -> AsyncGenerator[AsyncSession, None]:
     async with pool() as session_:
         yield session_
 
 
 @pytest.fixture(scope="session")
-def pool(postgres_url: str) -> sessionmaker:
+def pool(postgres_url: str) -> Generator[sessionmaker, None, None]:
     engine = create_async_engine(url=postgres_url)
     pool_ = sessionmaker(bind=engine, class_=AsyncSession, expire_on_commit=False, autoflush=False)
     yield pool_
@@ -95,7 +96,7 @@ def pool(postgres_url: str) -> sessionmaker:
 
 
 @pytest.fixture(scope="session")
-def postgres_url() -> str:
+def postgres_url() -> Generator[str, None, None]:
     postgres = PostgresContainer("postgres:11")
     if os.name == "nt":  # TODO workaround from testcontainers/testcontainers-python#108
         postgres.get_container_host_ip = lambda: "localhost"
@@ -109,7 +110,7 @@ def postgres_url() -> str:
 
 
 @pytest.fixture(scope="session")
-def redis() -> Redis:
+def redis() -> Generator[Redis, None, None]:
     redis_container = RedisContainer("redis:latest")
     if os.name == "nt":  # TODO workaround from testcontainers/testcontainers-python#108
         redis_container.get_container_host_ip = lambda: "localhost"
@@ -130,7 +131,7 @@ def redis() -> Redis:
 
 @pytest.fixture(autouse=True)
 def patch_api_config(bot_config: TgBotConfig, postgres_url: str, redis: Redis):
-    bot_config.db = DBConfig(postgres_url)
+    bot_config.db = DBConfig(postgres_url)  # type: ignore
     bot_config.redis.url = redis.connection_pool.connection_kwargs["host"]
     bot_config.redis.port = redis.connection_pool.connection_kwargs["port"]
     bot_config.redis.db = redis.connection_pool.connection_kwargs["db"]

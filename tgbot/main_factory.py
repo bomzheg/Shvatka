@@ -77,6 +77,8 @@ def create_storage(config: StorageConfig) -> BaseStorage:
         case StorageType.memory:
             return MemoryStorage()
         case StorageType.redis:
+            if config.redis is None:
+                raise ValueError("you have to specify redis config for use redis storage")
             return RedisStorage(
                 create_redis(config.redis), key_builder=DefaultKeyBuilder(with_destiny=True)
             )

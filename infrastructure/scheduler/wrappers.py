@@ -1,6 +1,6 @@
 import typing
 from contextlib import asynccontextmanager
-from typing import AsyncContextManager
+from typing import AsyncIterator
 
 from infrastructure.db.dao.holder import HolderDao
 from infrastructure.scheduler.context import ScheduledContextHolder, ScheduledContext
@@ -14,7 +14,7 @@ from tgbot.views.level_testing import create_level_test_view
 
 
 @asynccontextmanager
-async def prepare_context() -> AsyncContextManager[ScheduledContext]:
+async def prepare_context() -> AsyncIterator[ScheduledContext]:
     async with ScheduledContextHolder.poll() as session:
         dao = HolderDao(
             session=session,

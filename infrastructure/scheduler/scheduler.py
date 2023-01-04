@@ -6,7 +6,7 @@ from apscheduler.executors.asyncio import AsyncIOExecutor
 from apscheduler.jobstores.base import JobLookupError
 from apscheduler.jobstores.redis import RedisJobStore
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from redis import Redis
+from redis.asyncio import Redis
 from sqlalchemy.orm import sessionmaker
 
 from infrastructure.db.config.models.db import RedisConfig
@@ -34,7 +34,7 @@ class ApScheduler(Scheduler, LevelTestScheduler):
         redis: Redis,
         file_storage: FileStorage,
         level_test_dao: LevelTestingData,
-        bot: Bot = None,
+        bot: Bot,
         game_log_chat: int = None,
     ):
         ScheduledContextHolder.poll = pool

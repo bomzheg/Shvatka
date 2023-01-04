@@ -1,5 +1,6 @@
 from contextlib import contextmanager
 from dataclasses import dataclass
+from typing import ContextManager
 from zipfile import Path
 
 import yaml
@@ -13,7 +14,7 @@ class ParsedZip:
     files: dict[str, Path]
 
     @contextmanager
-    def open(self):
+    def open(self) -> ContextManager[RawGameScenario]:
         contents = {}
         try:
             for guid, path in self.files.items():

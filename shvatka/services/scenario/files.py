@@ -3,20 +3,20 @@ from typing.io import BinaryIO
 from shvatka.interfaces.clients.file_storage import FileStorage
 from shvatka.interfaces.dal.game import GameUpserter, GamePackager
 from shvatka.models import dto
+from shvatka.models.dto import scn
 from shvatka.models.dto.scn import FileMeta
 from shvatka.utils.exceptions import NotAuthorizedForEdit
 
 
 async def upsert_files(
-    author: dto.Player, contents: dict[str, BinaryIO], files: list[FileMeta],
+    author: dto.Player, contents: dict[str, BinaryIO], files: list[scn.UploadedFileMeta],
     dao: GameUpserter, file_storage: FileStorage,
 ) -> set[str]:
     guids = set()
     for file in files:
         await dao.check_author_can_own_guid(author, file.guid)
-        file_link = await file_storage.put(file.local_file_name, contents[file.guid])
-        file.file_content_link = file_link
-        await dao.upsert_file(file, author)
+        stored_file = await file_storage.put(file, contents[file.guid])
+        await dao.upsert_file(stored_file, author)
         guids.add(file.guid)
     return guids
 

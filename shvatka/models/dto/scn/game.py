@@ -3,6 +3,7 @@ from datetime import datetime
 from typing import BinaryIO
 
 from shvatka.models import enums
+from . import UploadedFileMeta
 from .file_content import FileMeta
 from .level import LevelScenario
 
@@ -16,6 +17,11 @@ class GameScenario:
 @dataclass
 class FullGameScenario(GameScenario):
     files: list[FileMeta]
+
+
+@dataclass
+class UploadedGameScenario(GameScenario):
+    files: list[UploadedFileMeta]
 
 
 @dataclass

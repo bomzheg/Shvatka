@@ -4,7 +4,7 @@ from typing import BinaryIO
 
 from common.config.models.main import FileStorageConfig
 from shvatka.interfaces.clients.file_storage import FileStorage
-from shvatka.models.dto.scn import FileContentLink
+from shvatka.models.dto import scn
 
 logger = logging.getLogger(__name__)
 
@@ -16,13 +16,22 @@ class LocalFileStorage(FileStorage):
         if config.mkdir:
             self.path.mkdir(exist_ok=config.exist_ok, parents=config.parents)
 
-    async def put(self, local_file_name: str, content: BinaryIO) -> FileContentLink:
+    async def put(self, file_meta: scn.UploadedFileMeta, content: BinaryIO) -> scn.FileMeta:
+        return scn.FileMeta(
+            file_content_link=await self.put_content(file_meta.local_file_name, content),
+            guid=file_meta.guid,
+            original_filename=file_meta.original_filename,
+            extension=file_meta.extension,
+            tg_link=file_meta.tg_link,
+        )
+
+    async def put_content(self, local_file_name: str, content: BinaryIO) -> scn.FileContentLink:
         result_path = self.path / local_file_name
         with result_path.open("wb") as f:
             f.write(content.read())
-        return FileContentLink(file_path=str(result_path))
+        return scn.FileContentLink(file_path=str(result_path))
 
-    async def get(self, file_link: FileContentLink) -> BinaryIO:
+    async def get(self, file_link: scn.FileContentLink) -> BinaryIO:
         with open(file_link.file_path, "rb") as f:
             result = BytesIO(f.read())
         return result

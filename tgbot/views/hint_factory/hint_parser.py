@@ -8,7 +8,8 @@ from aiogram.types import Message, ContentType
 from infrastructure.db.dao import FileInfoDao
 from shvatka.interfaces.clients.file_storage import FileStorage
 from shvatka.models import dto
-from shvatka.models.dto.scn import BaseHint, TextHint, GPSHint, FileMeta, TgLink, FileContentLink, PhotoHint
+from shvatka.models.dto.scn import BaseHint, TextHint, GPSHint, FileMeta, TgLink, PhotoHint, \
+    UploadedFileMeta
 from shvatka.models.dto.scn.hint_part import VenueHint, AudioHint, VideoHint, DocumentHint, AnimationHint, VoiceHint, \
     VideoNoteHint, ContactHint, StickerHint
 from shvatka.models.enums.hint_type import HintType
@@ -146,18 +147,16 @@ class HintParser:
     ) -> FileMeta:
         content = await self.bot.download(file_id, BytesIO())
         extension = "".join(Path(filename).suffixes)
-        file_meta = FileMeta(
+        file_meta = UploadedFileMeta(
             guid=str(uuid4()),
             original_filename=get_name_without_extension(filename, extension),
             extension=extension,
             tg_link=TgLink(file_id=file_id, content_type=content_type),
-            file_content_link=FileContentLink(file_path=""),
         )
-        file_link = await self.storage.put(file_meta.local_file_name, content)
-        file_meta.file_content_link = file_link
-        await self.dao.upsert(file_meta, author)
+        stored_file = await self.storage.put(file_meta, content)
+        await self.dao.upsert(stored_file, author)
         await self.dao.commit()
-        return file_meta
+        return stored_file
 
 
 def get_name_without_extension(name: str, extension: str) -> str:

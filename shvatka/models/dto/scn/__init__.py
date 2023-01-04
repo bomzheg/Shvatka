@@ -5,6 +5,7 @@ from .file_content import (
     SavedFileMeta,
     StoredFileMeta,
     FileMetaLightweight,
+    UploadedFileMeta,
 )
 from .game import (
     GameScenario,

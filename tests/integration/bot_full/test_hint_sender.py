@@ -120,7 +120,7 @@ async def test_send_photo_by_content(
     method_name: str,
     content_type: str,
 ):
-    await hint_sender.resolver.storage.put(FILE_META.local_file_name, BytesIO(b"12345"))
+    await hint_sender.resolver.storage.put_content(FILE_META.local_file_name, BytesIO(b"12345"))
     await hint_sender.resolver.dao.upsert(file=FILE_META, author=harry)
     await hint_sender.resolver.dao.commit()
 

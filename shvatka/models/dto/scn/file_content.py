@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Optional
 
 from shvatka.models import dto
 from shvatka.models.enums.hint_type import HintType
@@ -41,6 +42,11 @@ class FileMetaLightweight:
 @dataclass
 class StoredFileMeta(FileMetaLightweight):
     file_content_link: FileContentLink
+
+
+@dataclass
+class UploadedFileMeta(FileMetaLightweight):
+    tg_link: Optional[TgLink]
 
 
 @dataclass

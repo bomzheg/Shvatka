@@ -3,10 +3,7 @@ from dataclasses import dataclass
 from infrastructure.db.dao import GameDao, LevelDao, FileInfoDao
 from shvatka.interfaces.dal.game import GameUpserter, GameCreator, GamePackager
 from shvatka.models import dto
-from shvatka.models.dto.scn import FileMeta, SavedFileMeta
-from shvatka.models.dto.scn.file_content import VerifiableFileMeta
-from shvatka.models.dto.scn.game import GameScenario
-from shvatka.models.dto.scn.level import LevelScenario
+from shvatka.models.dto import scn
 
 
 @dataclass
@@ -15,22 +12,22 @@ class GameUpserterImpl(GameUpserter):
     level: LevelDao
     file_info: FileInfoDao
 
-    async def upsert_game(self, author: dto.Player, scn: GameScenario) -> dto.Game:
-        return await self.game.upsert_game(author, scn)
+    async def upsert_game(self, author: dto.Player, scenario: scn.GameScenario) -> dto.Game:
+        return await self.game.upsert_game(author, scenario)
 
     async def upsert(
         self,
         author: dto.Player,
-        scn: LevelScenario,
+        scenario: scn.LevelScenario,
         game: dto.Game = None,
         no_in_game: int = None,
     ) -> dto.Level:
-        return await self.level.upsert(author, scn, game, no_in_game)
+        return await self.level.upsert(author, scenario, game, no_in_game)
 
     async def unlink_all(self, game: dto.Game) -> None:
         return await self.level.unlink_all(game)
 
-    async def upsert_file(self, file: FileMeta, author: dto.Player) -> SavedFileMeta:
+    async def upsert_file(self, file: scn.FileMeta, author: dto.Player) -> scn.SavedFileMeta:
         return await self.file_info.upsert(file, author)
 
     async def check_author_can_own_guid(self, author: dto.Player, guid: str) -> None:
@@ -75,7 +72,7 @@ class GamePackagerImpl(GamePackager):
     async def get_full(self, id_: int) -> dto.FullGame:
         return await self.game.get_full(id_)
 
-    async def get_by_guid(self, guid: str) -> VerifiableFileMeta:
+    async def get_by_guid(self, guid: str) -> scn.VerifiableFileMeta:
         return await self.file_info.get_by_guid(guid)
 
 

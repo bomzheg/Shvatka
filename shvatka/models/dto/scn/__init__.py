@@ -6,6 +6,7 @@ from .file_content import (
     StoredFileMeta,
     FileMetaLightweight,
     UploadedFileMeta,
+    VerifiableFileMeta,
 )
 from .game import (
     GameScenario,
@@ -17,6 +18,7 @@ from .game import (
 )
 from .hint_part import (
     BaseHint,
+    FileMixin,
     TextHint,
     GPSHint,
     PhotoHint,

@@ -9,6 +9,7 @@ from shvatka.models.dto import scn
 logger = logging.getLogger(__name__)
 
 
+# TODO split it to file_storage and proxy that upload to tg and file storage
 class LocalFileStorage(FileStorage):
     def __init__(self, config: FileStorageConfig):
         self.path = config.path
@@ -17,6 +18,8 @@ class LocalFileStorage(FileStorage):
             self.path.mkdir(exist_ok=config.exist_ok, parents=config.parents)
 
     async def put(self, file_meta: scn.UploadedFileMeta, content: BinaryIO) -> scn.FileMeta:
+        if not file_meta.tg_link:
+            pass  # TODO upload to telegram
         return scn.FileMeta(
             file_content_link=await self.put_content(file_meta.local_file_name, content),
             guid=file_meta.guid,

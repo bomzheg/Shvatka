@@ -2,14 +2,14 @@ from abc import ABCMeta
 
 from shvatka.interfaces.dal.base import Committer, Reader
 from shvatka.models import dto
-from shvatka.models.dto.scn.level import LevelScenario
+from shvatka.models.dto import scn
 
 
 class LevelUpserter(Committer, metaclass=ABCMeta):
     async def upsert(
         self,
         author: dto.Player,
-        scn: LevelScenario,
+        scenario: scn.LevelScenario,
         game: dto.Game = None,
         no_in_game: int = None,
     ) -> dto.Level:

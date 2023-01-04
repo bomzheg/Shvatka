@@ -6,7 +6,7 @@ from shvatka.interfaces.dal.game_play import GamePreparer, GamePlayerDao
 from shvatka.interfaces.dal.level_times import GameStarter, LevelTimeChecker
 from shvatka.interfaces.scheduler import Scheduler
 from shvatka.models import dto
-from shvatka.models.dto.scn.time_hint import TimeHint
+from shvatka.models.dto import scn
 from shvatka.services.organizers import get_orgs, get_spying_orgs
 from shvatka.utils.datetime_utils import tz_utc
 from shvatka.utils.exceptions import InvalidKey
@@ -91,16 +91,16 @@ async def check_key(
       * уровень последний и все команды финишировали - помечаем игру законченной,
         пишем в лог игры уведомление о финале, уведомляем команды
 
-    :param key: введённый ключ.
-    :param player: игрок, который ввёл ключ.
-    :param team: команда, в которой ввели ключ.
-    :param game: текущая игра.
-    :param dao: слой доступа к бд.
-    :param view: слой отображения данных.
-    :param game_log: логгер игры (публичные уведомления о статусе игры).
-    :param org_notifier: для уведомления оргов о важных событиях.
-    :param locker: локи для обеспечения последовательного исполнения определённых операций.
-    :param scheduler: планировщик подсказок.
+    :param key: Введённый ключ.
+    :param player: Игрок, который ввёл ключ.
+    :param team: Команда, в которой ввели ключ.
+    :param game: Текущая игра.
+    :param dao: Слой доступа к бд.
+    :param view: Слой отображения данных.
+    :param game_log: Логгер игры (публичные уведомления о статусе игры).
+    :param org_notifier: Для уведомления оргов о важных событиях.
+    :param locker: Локи для обеспечения последовательного исполнения определённых операций.
+    :param scheduler: Планировщик подсказок.
     """
     if not is_key_valid(key):
         raise InvalidKey(key=key, team=team, player=player, game=game)
@@ -163,12 +163,12 @@ async def finish_team(
     * уровень последний - поздравляем команду с завершением игры
     * уровень последний и все команды финишировали - помечаем игру законченной,
       пишем в лог игры уведомление о финале, уведомляем команды.
-    :param team: команда закончившая игру.
-    :param game: текущая игра.
-    :param dao: слой доступа к бд.
-    :param view: слой отображения данных.
-    :param game_log: логгер игры (публичные уведомления о статусе игры).
-    :param locker: эту штуку мы просто очистим, если игра кончилась.
+    :param team: Команда закончившая игру.
+    :param game: Текущая игра.
+    :param dao: Слой доступа к бд.
+    :param view: Слой отображения данных.
+    :param game_log: Логгер игры (публичные уведомления о статусе игры).
+    :param locker: Эту штуку мы просто очистим, если игра кончилась.
     """
     await view.game_finished(team)
     if await dao.is_all_team_finished(game):
@@ -192,12 +192,12 @@ async def send_hint(
     Отправить подсказку (запланированную ранее) и запланировать ещё одну.
     Если команда уже на следующем уровне - отправлять не надо.
 
-    :param level: подсказка относится к уровню.
-    :param hint_number: номер подсказки, которую надо отправить.
-    :param team: какой команде надо отправить подсказку.
-    :param dao: слой доступа к данным.
-    :param view: слой отображения.
-    :param scheduler: планировщик.
+    :param level: Подсказка относится к уровню.
+    :param hint_number: Номер подсказки, которую надо отправить.
+    :param team: Какой команде надо отправить подсказку.
+    :param dao: Слой доступа к данным.
+    :param view: Слой отображения.
+    :param scheduler: Планировщик.
     """
     if not await dao.is_team_on_level(team, level):
         logger.debug(
@@ -219,7 +219,7 @@ async def send_hint(
     await scheduler.plain_hint(level, team, next_hint_number, next_hint_time)
 
 
-async def get_available_hints(game: dto.Game, team: dto.Team, dao: GamePlayerDao) -> list[TimeHint]:
+async def get_available_hints(game: dto.Game, team: dto.Team, dao: GamePlayerDao) -> list[scn.TimeHint]:
     level_time = await dao.get_current_level_time(team=team, game=game)
     level = await dao.get_current_level(team=team, game=game)
     from_start_level_minutes = (datetime.now(tz=tz_utc) - level_time.start_at).seconds // 60
@@ -244,14 +244,14 @@ def calculate_first_hint_time(next_level: dto.Level, now: datetime = None) -> da
     return calculate_next_hint_time(next_level.get_hint(0), next_level.get_hint(1), now)
 
 
-def calculate_next_hint_time(current: TimeHint, next_: TimeHint, now: datetime = None) -> datetime:
+def calculate_next_hint_time(current: scn.TimeHint, next_: scn.TimeHint, now: datetime = None) -> datetime:
     if now is None:
         now = datetime.now(tz=tz_utc)
     return now + calculate_next_hint_timedelta(current, next_)
 
 
 def calculate_next_hint_timedelta(
-    current_hint: TimeHint, next_hint: TimeHint,
+    current_hint: scn.TimeHint, next_hint: scn.TimeHint,
 ) -> timedelta:
     return timedelta(minutes=(next_hint.time - current_hint.time))
 

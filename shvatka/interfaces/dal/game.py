@@ -4,9 +4,7 @@ from datetime import datetime
 from shvatka.interfaces.dal.base import Committer, Reader
 from shvatka.interfaces.dal.level import LevelUpserter
 from shvatka.models import dto
-from shvatka.models.dto.scn import FileMeta, SavedFileMeta
-from shvatka.models.dto.scn.file_content import VerifiableFileMeta
-from shvatka.models.dto.scn.game import GameScenario
+from shvatka.models.dto import scn
 
 
 class GameNameChecker(Reader):
@@ -15,10 +13,10 @@ class GameNameChecker(Reader):
 
 
 class GameUpserter(LevelUpserter, GameNameChecker, metaclass=ABCMeta):
-    async def upsert_game(self, author: dto.Player, scn: GameScenario) -> dto.Game:
+    async def upsert_game(self, author: dto.Player, scenario: scn.GameScenario) -> dto.Game:
         raise NotImplementedError
 
-    async def upsert_file(self, file: FileMeta, author: dto.Player) -> SavedFileMeta:
+    async def upsert_file(self, file: scn.FileMeta, author: dto.Player) -> scn.SavedFileMeta:
         raise NotImplementedError
 
     async def check_author_can_own_guid(self, author: dto.Player, guid: str) -> None:
@@ -79,7 +77,7 @@ class GamePackager(Reader):
     async def get_full(self, id_: int) -> dto.FullGame:
         raise NotImplementedError
 
-    async def get_by_guid(self, guid: str) -> VerifiableFileMeta:
+    async def get_by_guid(self, guid: str) -> scn.VerifiableFileMeta:
         raise NotImplementedError
 
 

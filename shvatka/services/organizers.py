@@ -28,7 +28,9 @@ async def get_primary_orgs(game: dto.Game) -> list[dto.PrimaryOrganizer]:
 
 
 async def get_secondary_orgs(
-    game: dto.Game, dao: GameOrgsGetter, with_deleted: bool = False,
+    game: dto.Game,
+    dao: GameOrgsGetter,
+    with_deleted: bool = False,
 ) -> list[dto.SecondaryOrganizer]:
     return await dao.get_orgs(game, with_deleted=with_deleted)
 
@@ -44,9 +46,13 @@ def check_game_token(game: dto.Game, manage_token: str):
 
 
 async def save_invite_to_orgs(game: dto.Game, inviter: dto.Player, dao: InviteSaver) -> str:
-    return await dao.save_new_invite(dct=dict(
-        game_id=game.id, inviter_id=inviter.id, type_=InviteType.add_org.name,
-    ))
+    return await dao.save_new_invite(
+        dct=dict(
+            game_id=game.id,
+            inviter_id=inviter.id,
+            type_=InviteType.add_org.name,
+        )
+    )
 
 
 async def dismiss_to_be_org(token: str, dao: InviteRemover):
@@ -62,9 +68,15 @@ async def agree_to_be_org(
 ):
     data = await dao.get_invite(token)
     if data["type_"] != InviteType.add_org.name:
-        raise SaltError(text="Ошибка нарушения данных. Тип в зашифрованной и открытой части не совпал", alarm=True)
+        raise SaltError(
+            text="Ошибка нарушения данных. Тип в зашифрованной и открытой части не совпал",
+            alarm=True,
+        )
     if data["inviter_id"] != inviter_id:
-        raise SaltError(text="Ошибка нарушения данных. Токен в зашифрованной и открытой части не совпал", alarm=True)
+        raise SaltError(
+            text="Ошибка нарушения данных. Токен в зашифрованной и открытой части не совпал",
+            alarm=True,
+        )
     game = await get_game(id_=data["game_id"], dao=dao)
     check_allow_manage_orgs(game, inviter_id)
     notify_orgs = await get_orgs(game, dao)
@@ -78,20 +90,27 @@ async def get_org_by_id(id_: int, dao: OrgByIdGetter) -> dto.SecondaryOrganizer:
     return await dao.get_by_id(id_)
 
 
-async def get_by_player_or_none(player: dto.Player, game: dto.Game, dao: OrgByPlayerGetter) -> dto.Organizer | None:
+async def get_by_player_or_none(
+    player: dto.Player, game: dto.Game, dao: OrgByPlayerGetter
+) -> dto.Organizer | None:
     if game.author.id == player.id:
         return dto.PrimaryOrganizer(player=player, game=game)
     return await dao.get_by_player_or_none(player=player, game=game)
 
 
-async def get_by_player(player: dto.Player, game: dto.Game, dao: OrgByPlayerGetter) -> dto.Organizer:
+async def get_by_player(
+    player: dto.Player, game: dto.Game, dao: OrgByPlayerGetter
+) -> dto.Organizer:
     if game.author.id == player.id:
         return dto.PrimaryOrganizer(player=player, game=game)
     return await dao.get_by_player(player=player, game=game)
 
 
 async def flip_permission(
-    manager: dto.Player, org: dto.SecondaryOrganizer, permission: OrgPermission, dao: OrgPermissionFlipper,
+    manager: dto.Player,
+    org: dto.SecondaryOrganizer,
+    permission: OrgPermission,
+    dao: OrgPermissionFlipper,
 ):
     check_allow_manage_orgs(org.game, manager.id)
     await dao.flip_permission(org, permission)

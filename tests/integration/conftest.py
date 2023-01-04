@@ -33,7 +33,8 @@ from tests.mocks.file_storage import MemoryFileStorage
 from tests.mocks.scheduler_mock import SchedulerMock
 from tgbot.config.models.main import TgBotConfig
 from tgbot.main_factory import (
-    create_dispatcher, create_redis,
+    create_dispatcher,
+    create_redis,
 )
 from tgbot.username_resolver.user_getter import UserGetter
 from tgbot.views.telegraph import Telegraph
@@ -54,7 +55,9 @@ async def dao(session: AsyncSession, redis: Redis, level_test_dao: LevelTestingD
 
 
 @pytest_asyncio.fixture
-async def check_dao(session: AsyncSession, redis: Redis, level_test_dao: LevelTestingData) -> HolderDao:
+async def check_dao(
+    session: AsyncSession, redis: Redis, level_test_dao: LevelTestingData
+) -> HolderDao:
     dao_ = HolderDao(session=session, redis=redis, level_test=level_test_dao)
     return dao_
 
@@ -86,8 +89,7 @@ async def session(pool: sessionmaker) -> AsyncSession:
 @pytest.fixture(scope="session")
 def pool(postgres_url: str) -> sessionmaker:
     engine = create_async_engine(url=postgres_url)
-    pool_ = sessionmaker(bind=engine, class_=AsyncSession,
-                         expire_on_commit=False, autoflush=False)
+    pool_ = sessionmaker(bind=engine, class_=AsyncSession, expire_on_commit=False, autoflush=False)
     yield pool_
     close_all_sessions()
 
@@ -96,7 +98,7 @@ def pool(postgres_url: str) -> sessionmaker:
 def postgres_url() -> str:
     postgres = PostgresContainer("postgres:11")
     if os.name == "nt":  # TODO workaround from testcontainers/testcontainers-python#108
-        postgres.get_container_host_ip = lambda: 'localhost'
+        postgres.get_container_host_ip = lambda: "localhost"
     try:
         postgres.start()
         postgres_url_ = postgres.get_connection_url().replace("psycopg2", "asyncpg")
@@ -110,12 +112,17 @@ def postgres_url() -> str:
 def redis() -> Redis:
     redis_container = RedisContainer("redis:latest")
     if os.name == "nt":  # TODO workaround from testcontainers/testcontainers-python#108
-        redis_container.get_container_host_ip = lambda: 'localhost'
+        redis_container.get_container_host_ip = lambda: "localhost"
     try:
         redis_container.start()
         url = redis_container.get_container_host_ip()
         port = redis_container.get_exposed_port(redis_container.port_to_expose)
-        r = create_redis(RedisConfig(url=url, port=int(port), ))
+        r = create_redis(
+            RedisConfig(
+                url=url,
+                port=int(port),
+            )
+        )
         yield r
     finally:
         redis_container.stop()
@@ -146,14 +153,28 @@ def telegraph(bot_config: TgBotConfig) -> Telegraph:
 
 @pytest.fixture(scope="session")
 def dp(
-    pool: sessionmaker, bot_config: TgBotConfig, user_getter: UserGetter,
-    dcf: Factory, redis: Redis, scheduler: Scheduler, locker: KeyCheckerFactory,
-    file_storage: FileStorage, level_test_dao: LevelTestingData, telegraph: Telegraph,
+    pool: sessionmaker,
+    bot_config: TgBotConfig,
+    user_getter: UserGetter,
+    dcf: Factory,
+    redis: Redis,
+    scheduler: Scheduler,
+    locker: KeyCheckerFactory,
+    file_storage: FileStorage,
+    level_test_dao: LevelTestingData,
+    telegraph: Telegraph,
 ) -> Dispatcher:
     return create_dispatcher(
-        config=bot_config, user_getter=user_getter, dcf=dcf, pool=pool,
-        redis=redis, scheduler=scheduler, locker=locker, file_storage=file_storage,
-        level_test_dao=level_test_dao, telegraph=telegraph,
+        config=bot_config,
+        user_getter=user_getter,
+        dcf=dcf,
+        pool=pool,
+        redis=redis,
+        scheduler=scheduler,
+        locker=locker,
+        file_storage=file_storage,
+        level_test_dao=level_test_dao,
+        telegraph=telegraph,
     )
 
 
@@ -178,7 +199,9 @@ def clean_up_bot(bot: Mock, bot_config: TgBotConfig):
 @pytest.fixture(scope="session")
 def alembic_config(postgres_url: str, paths: Paths) -> AlembicConfig:
     alembic_cfg = AlembicConfig(str(paths.app_dir.parent / "alembic.ini"))
-    alembic_cfg.set_main_option("script_location", str(paths.app_dir.parent / "infrastructure" / "db" / "migrations"))
+    alembic_cfg.set_main_option(
+        "script_location", str(paths.app_dir.parent / "infrastructure" / "db" / "migrations")
+    )
     alembic_cfg.set_main_option("sqlalchemy.url", postgres_url)
     return alembic_cfg
 

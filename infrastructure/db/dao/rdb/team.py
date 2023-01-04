@@ -26,7 +26,9 @@ class TeamDao(BaseDAO[models.Team]):
             await self._flush(team)
         except IntegrityError as e:
             raise TeamError(
-                chat=chat, player=captain, text="can't create team",
+                chat=chat,
+                player=captain,
+                text="can't create team",
             ) from e
         return dto.Team(
             id=team.id,
@@ -53,7 +55,9 @@ class TeamDao(BaseDAO[models.Team]):
     async def check_no_team_in_chat(self, chat: dto.Chat):
         if team := await self.get_by_chat(chat):
             raise AnotherTeamInChat(
-                chat=chat, team=team, text="team in this chat exists",
+                chat=chat,
+                team=team,
+                text="team in this chat exists",
             )
 
     async def get_by_id(self, id_: int):
@@ -70,14 +74,10 @@ class TeamDao(BaseDAO[models.Team]):
 
     async def rename_team(self, team: dto.Team, new_name: str) -> None:
         await self.session.execute(
-            update(models.Team)
-            .where(models.Team.id == team.id)
-            .values(name=new_name)
+            update(models.Team).where(models.Team.id == team.id).values(name=new_name)
         )
 
     async def change_team_desc(self, team: dto.Team, new_desc: str) -> None:
         await self.session.execute(
-            update(models.Team)
-            .where(models.Team.id == team.id)
-            .values(description=new_desc)
+            update(models.Team).where(models.Team.id == team.id).values(description=new_desc)
         )

@@ -50,17 +50,21 @@ def has_target_user(
 
 
 def is_one_user(user_1: dto.User, user_2: dto.User) -> bool:
-    if all([
-        user_1.tg_id is not None,
-        user_2.tg_id is not None,
-        user_1.tg_id == user_2.tg_id,
-    ]):
+    if all(
+        [
+            user_1.tg_id is not None,
+            user_2.tg_id is not None,
+            user_1.tg_id == user_2.tg_id,
+        ]
+    ):
         return True
-    if all([
-        user_1.username is not None,
-        user_2.username is not None,
-        user_1.username == user_2.username,
-    ]):
+    if all(
+        [
+            user_1.username is not None,
+            user_2.username is not None,
+            user_1.username == user_2.username,
+        ]
+    ):
         return True
 
     return False
@@ -89,7 +93,9 @@ def get_replied_user(message: Message) -> dto.User | None:
 
 
 async def get_db_user_by_tg_user(
-    target: dto.User, user_getter: UserGetter, dao: HolderDao,
+    target: dto.User,
+    user_getter: UserGetter,
+    dao: HolderDao,
 ) -> dto.User:
     if target.tg_id:
         return await dao.user.upsert_user(target)

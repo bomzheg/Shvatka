@@ -12,7 +12,10 @@ class WaiverVoteAdder(Writer, TeamPlayerGetter):
         raise NotImplementedError
 
     async def is_excluded(
-        self, game: dto.Game, player: dto.Player, team: dto.Team,
+        self,
+        game: dto.Game,
+        player: dto.Player,
+        team: dto.Team,
     ) -> bool:
         raise NotImplementedError
 
@@ -30,7 +33,9 @@ class WaiverVoteGetter(PollGetWaivers, metaclass=ABCMeta):
         raise NotImplementedError
 
 
-class WaiverApprover(Committer, TeamPlayerGetter, WaiverVoteGetter, TeamPlayersGetter, metaclass=ABCMeta):
+class WaiverApprover(
+    Committer, TeamPlayerGetter, WaiverVoteGetter, TeamPlayersGetter, metaclass=ABCMeta
+):
     async def upsert(self, waiver: dto.Waiver):
         raise NotImplementedError
 

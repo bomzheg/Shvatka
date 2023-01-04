@@ -17,7 +17,11 @@ async def test_game_level_times(completed_game: dto.FullGame, dao: HolderDao):
 
 
 @pytest.mark.asyncio
-async def test_game_log_keys(completed_game: dto.FullGame, gryffindor: dto.Team, slytherin: dto.Team, dao: HolderDao):
-    actual = await get_typed_keys(game=completed_game, player=completed_game.author, dao=dao.typed_keys)
+async def test_game_log_keys(
+    completed_game: dto.FullGame, gryffindor: dto.Team, slytherin: dto.Team, dao: HolderDao
+):
+    actual = await get_typed_keys(
+        game=completed_game, player=completed_game.author, dao=dao.typed_keys
+    )
     assert 5 == len(actual[gryffindor])
     assert 3 == len(actual[slytherin])

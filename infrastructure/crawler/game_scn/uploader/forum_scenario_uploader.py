@@ -5,7 +5,9 @@ from aiohttp import ClientSession, MultipartWriter
 from infrastructure.crawler.auth import get_auth_cookie
 from infrastructure.crawler.constants import BASE_URL
 from infrastructure.crawler.models import (
-    LevelPuzzle, Hint, GameForUpload,
+    LevelPuzzle,
+    Hint,
+    GameForUpload,
 )
 
 
@@ -23,12 +25,7 @@ async def upload(game: GameForUpload):
 async def remove_all_scn(session: ClientSession):
     async with session.post(
         BASE_URL,
-        data={
-            "act": "module",
-            "module": "reps",
-            "cmd": "scn",
-            "delg": "1"
-        },
+        data={"act": "module", "module": "reps", "cmd": "scn", "delg": "1"},
     ) as resp:
         resp.raise_for_status()
         assert resp.ok
@@ -50,7 +47,6 @@ async def add_level_puzzle(session: ClientSession, hint: LevelPuzzle):
     async with session.post(
         BASE_URL,
         data=mp,
-
     ) as resp:
         resp.raise_for_status()
         assert resp.ok
@@ -87,5 +83,3 @@ def write_multipart(data: dict[str, str], hint_text: str) -> MultipartWriter:
 
 def preprocess_text(text: str):
     return text.encode("cp1251")
-
-

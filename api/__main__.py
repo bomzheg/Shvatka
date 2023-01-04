@@ -23,24 +23,17 @@ def main() -> FastAPI:
 
     setup_logging(paths)
     config = load_config(paths)
-    dcf = dataclass_factory.Factory(schemas=schemas, default_schema=Schema(name_style=NameStyle.kebab))
+    dcf = dataclass_factory.Factory(
+        schemas=schemas, default_schema=Schema(name_style=NameStyle.kebab)
+    )
     app = create_app()
     pool = create_pool(config.db)
-    dependencies.setup(
-        app=app,
-        pool=pool,
-        redis=create_redis(config.redis),
-        config=config
-    )
+    dependencies.setup(app=app, pool=pool, redis=create_redis(config.redis), config=config)
     routes.setup(app.router)
 
     logger.info("app prepared")
     return app
 
 
-if __name__ == '__main__':
-    uvicorn.run(
-        'api:main',
-        factory=True,
-        log_config=None
-    )
+if __name__ == "__main__":
+    uvicorn.run("api:main", factory=True, log_config=None)

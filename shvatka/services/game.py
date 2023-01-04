@@ -4,8 +4,17 @@ from dataclass_factory import Factory
 
 from shvatka.interfaces.clients.file_storage import FileStorage
 from shvatka.interfaces.dal.game import (
-    GameUpserter, GameCreator, GameAuthorsFinder, GameByIdGetter,
-    ActiveGameFinder, WaiverStarter, GameStartPlanner, GameNameChecker, GamePackager, GameRenamer, CompletedGameFinder,
+    GameUpserter,
+    GameCreator,
+    GameAuthorsFinder,
+    GameByIdGetter,
+    ActiveGameFinder,
+    WaiverStarter,
+    GameStartPlanner,
+    GameNameChecker,
+    GamePackager,
+    GameRenamer,
+    CompletedGameFinder,
 )
 from shvatka.interfaces.dal.level import LevelLinker
 from shvatka.interfaces.scheduler import Scheduler
@@ -20,8 +29,11 @@ from shvatka.utils.exceptions import NotAuthorizedForEdit, AnotherGameIsActive, 
 
 
 async def upsert_game(
-    raw_scn: scn.RawGameScenario, author: dto.Player,
-    dao: GameUpserter, dcf: Factory, file_storage: FileStorage,
+    raw_scn: scn.RawGameScenario,
+    author: dto.Player,
+    dao: GameUpserter,
+    dcf: Factory,
+    file_storage: FileStorage,
 ) -> dto.FullGame:
     check_allow_be_author(author)
     game_scn = parse_uploaded_game(raw_scn.scn, dcf)
@@ -59,7 +71,8 @@ async def create_game(
 
 
 async def get_authors_games(
-    author: dto.Player, dao: GameAuthorsFinder,
+    author: dto.Player,
+    dao: GameAuthorsFinder,
 ) -> list[dto.Game]:
     check_allow_be_author(author)
     return await dao.get_all_by_author(author)
@@ -100,7 +113,9 @@ async def get_game_package(
     check_is_author(game, author)
     file_metas = await get_file_metas(game.get_guids(), author, dao)
     contents = await get_file_contents(file_metas, file_storage)
-    scenario = scn.FullGameScenario(name=game.name, levels=[level.scenario for level in game.levels], files=file_metas)
+    scenario = scn.FullGameScenario(
+        name=game.name, levels=[level.scenario for level in game.levels], files=file_metas
+    )
     serialized = dcf.dump(scenario)
     return scn.RawGameScenario(scn=serialized, files=contents)
 
@@ -146,7 +161,9 @@ async def plain_start(
     await dao.commit()
 
 
-async def cancel_planed_start(game: dto.Game, author: dto.Player, scheduler: Scheduler, dao: GameStartPlanner):
+async def cancel_planed_start(
+    game: dto.Game, author: dto.Player, scheduler: Scheduler, dao: GameStartPlanner
+):
     check_is_author(game, author)
     check_game_editable(game)
     await dao.cancel_start(game)
@@ -180,10 +197,14 @@ async def check_new_game_name_available(name: str, author: dto.Player, dao: Game
 def check_is_author(game: dto.Game, player: dto.Player):
     if not game.is_author_id(player.id):
         raise NotAuthorizedForEdit(
-            permission_name="game_edit", player=player, game=game,
+            permission_name="game_edit",
+            player=player,
+            game=game,
         )
 
 
 def check_game_editable(game: dto.Game):
     if game.status not in EDITABLE_STATUSES:
-        raise CantEditGame(game=game, player=game.author, notify_user="Невозможно изменить игру после начала")
+        raise CantEditGame(
+            game=game, player=game.author, notify_user="Невозможно изменить игру после начала"
+        )

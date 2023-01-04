@@ -2,14 +2,14 @@ import enum
 
 
 class Played(str, enum.Enum):
-    yes = 'yes'
+    yes = "yes"
 
-    no = 'no'
+    no = "no"
 
-    think = 'think'
+    think = "think"
 
-    revoked = 'revoked'
+    revoked = "revoked"
     """не допущен капитаном"""
 
-    not_allowed = 'not_allowed'
+    not_allowed = "not_allowed"
     """не допущен организаторами"""

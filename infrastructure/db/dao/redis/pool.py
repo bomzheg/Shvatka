@@ -28,10 +28,7 @@ class PollDao:
         :return: словарь в формате player_id:vote
         """
         return {
-            self.parse_player_id(
-                key=key,
-                team_id=team_id
-            ): Played[await self._get(key)]
+            self.parse_player_id(key=key, team_id=team_id): Played[await self._get(key)]
             for key in await self.get_list_of_keys_pool(team_id=team_id)
         }
 
@@ -56,7 +53,7 @@ class PollDao:
         :param team_id:
         :return: список ключей для команды team_id в формате prefix:team_id:player_id
         """
-        rez = await self.redis.keys(f"{self.prefix}:{team_id}:*", encoding='utf-8')
+        rez = await self.redis.keys(f"{self.prefix}:{team_id}:*", encoding="utf-8")
         return rez
 
     def parse_player_id(self, key: str, team_id: int) -> int:
@@ -66,12 +63,12 @@ class PollDao:
         :param team_id:
         :return: player_id
         """
-        player_id = key[len(f"{self.prefix}:{team_id}:"):]
+        player_id = key[len(f"{self.prefix}:{team_id}:") :]
         return int(player_id)
 
     async def delete_all(self) -> None:
-        keys: list = await self.redis.keys(f'{self.prefix}:*')
-        keys.extend(await self.redis.keys(f'{self.msg_prefix}:*'))
+        keys: list = await self.redis.keys(f"{self.prefix}:*")
+        keys.extend(await self.redis.keys(f"{self.msg_prefix}:*"))
         if len(keys) == 0:
             return logger.warning("pool-keys to delete not found")
         logger.warning("Next keys was deleted %s", ", ".join([key.decode() for key in keys]))

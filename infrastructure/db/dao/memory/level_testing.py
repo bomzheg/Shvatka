@@ -43,7 +43,9 @@ class LevelTestingData(LevelTestProtocolDao):
 
     async def save_key(self, key: str, suite: dto.LevelTestSuite, is_correct: bool):
         bucket = self._get_bucket(suite)
-        bucket.all_typed.append(SimpleKey(text=key, is_correct=is_correct, at=datetime.now(tz=tz_utc)))
+        bucket.all_typed.append(
+            SimpleKey(text=key, is_correct=is_correct, at=datetime.now(tz=tz_utc))
+        )
         if is_correct:
             bucket.correct_typed.add(key)
 
@@ -67,19 +69,15 @@ class LevelTestingData(LevelTestProtocolDao):
         self._del_bucket(suite)
 
     def _get_bucket(self, suite: dto.LevelTestSuite) -> LevelTestBucket:
-        return self._buckets\
-            .setdefault(suite.level.db_id, {})\
-            .setdefault(suite.tester.player.id, LevelTestBucket())
+        return self._buckets.setdefault(suite.level.db_id, {}).setdefault(
+            suite.tester.player.id, LevelTestBucket()
+        )
 
     def _del_bucket(self, suite: dto.LevelTestSuite):
-        self._buckets \
-            .setdefault(suite.level.db_id, {}) \
-            .pop(suite.tester.player.id, None)
+        self._buckets.setdefault(suite.level.db_id, {}).pop(suite.tester.player.id, None)
 
     async def delete_all(self):
         self._buckets.clear()
 
     async def commit(self) -> None:
         pass
-
-

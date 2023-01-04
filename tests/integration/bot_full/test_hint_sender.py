@@ -4,8 +4,20 @@ from typing import Type
 
 import pytest
 import pytest_asyncio
-from aiogram.methods import SendMessage, SendLocation, SendPhoto, SendVenue, TelegramMethod, SendAudio, SendVideo, \
-    SendDocument, SendAnimation, SendVoice, SendVideoNote, SendSticker
+from aiogram.methods import (
+    SendMessage,
+    SendLocation,
+    SendPhoto,
+    SendVenue,
+    TelegramMethod,
+    SendAudio,
+    SendVideo,
+    SendDocument,
+    SendAnimation,
+    SendVoice,
+    SendVideoNote,
+    SendSticker,
+)
 from aiogram.methods.base import TelegramType
 from aiogram_tests.mocked_bot import MockedBot
 
@@ -13,14 +25,24 @@ from infrastructure.db.dao.holder import HolderDao
 from shvatka.interfaces.clients.file_storage import FileStorage
 from shvatka.models import dto
 from shvatka.models.dto.scn import TextHint, GPSHint, PhotoHint, BaseHint
-from shvatka.models.dto.scn.hint_part import VenueHint, AudioHint, VideoHint, DocumentHint, AnimationHint, VoiceHint, \
-    VideoNoteHint, StickerHint
+from shvatka.models.dto.scn.hint_part import (
+    VenueHint,
+    AudioHint,
+    VideoHint,
+    DocumentHint,
+    AnimationHint,
+    VoiceHint,
+    VideoNoteHint,
+    StickerHint,
+)
 from tests.fixtures.file_storage_constants import FILE_ID, CHAT_ID, FILE_META
 from tests.fixtures.scn_fixtures import GUID
 from tgbot.views.hint_factory.hint_content_resolver import HintContentResolver
 from tgbot.views.hint_sender import HintSender
 
-BAD_REQUEST_DESC = "Bad Request: wrong remote file identifier specified: Wrong padding in the string"
+BAD_REQUEST_DESC = (
+    "Bad Request: wrong remote file identifier specified: Wrong padding in the string"
+)
 PARAMETERS = [
     (SendPhoto, PhotoHint(file_guid=GUID), "sendPhoto", "photo"),
     (SendAudio, AudioHint(file_guid=GUID), "sendAudio", "audio"),
@@ -36,7 +58,9 @@ PARAMETERS = [
 @pytest_asyncio.fixture
 async def hint_sender(dao: HolderDao, file_storage: FileStorage):
     bot = MockedBot()
-    return HintSender(bot=bot, resolver=HintContentResolver(dao=dao.file_info, file_storage=file_storage))
+    return HintSender(
+        bot=bot, resolver=HintContentResolver(dao=dao.file_info, file_storage=file_storage)
+    )
 
 
 @pytest.mark.asyncio
@@ -111,7 +135,9 @@ async def test_send_photo_by_id(
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("tg_method,hint,method_name,content_type", PARAMETERS[:-1])  # we don't send sticker by content
+@pytest.mark.parametrize(
+    "tg_method,hint,method_name,content_type", PARAMETERS[:-1]
+)  # we don't send sticker by content
 async def test_send_photo_by_content(
     hint_sender: HintSender,
     harry: dto.Player,

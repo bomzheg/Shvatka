@@ -97,7 +97,6 @@ class VideoHint(BaseHint, CaptionMixin, ThumbMixin, FileMixin):
         return result
 
 
-
 @dataclass
 class DocumentHint(BaseHint, CaptionMixin, ThumbMixin, FileMixin):
     type: Literal["document"] = HintType.document.name
@@ -154,6 +153,17 @@ class StickerHint(BaseHint, FileMixin):
         return []
 
 
-AnyHint: typing.TypeAlias = TextHint | GPSHint | VenueHint | ContactHint | \
-                            PhotoHint | AudioHint | VideoHint | DocumentHint | \
-                            AnimationHint | VoiceHint | VideoNoteHint | StickerHint
+AnyHint: typing.TypeAlias = (
+    TextHint
+    | GPSHint
+    | VenueHint
+    | ContactHint
+    | PhotoHint
+    | AudioHint
+    | VideoHint
+    | DocumentHint
+    | AnimationHint
+    | VoiceHint
+    | VideoNoteHint
+    | StickerHint
+)

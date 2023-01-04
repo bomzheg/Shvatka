@@ -1,7 +1,15 @@
 from dataclasses import dataclass
 from typing import Iterable
 
-from infrastructure.db.dao import PollDao, WaiverDao, OrganizerDao, GameDao, LevelTimeDao, LevelDao, KeyTimeDao
+from infrastructure.db.dao import (
+    PollDao,
+    WaiverDao,
+    OrganizerDao,
+    GameDao,
+    LevelTimeDao,
+    LevelDao,
+    KeyTimeDao,
+)
 from shvatka.interfaces.dal.game_play import GamePreparer, GamePlayerDao
 from shvatka.interfaces.dal.level_times import GameStarter
 from shvatka.models import dto
@@ -19,7 +27,9 @@ class GamePreparerImpl(GamePreparer):
     async def get_agree_teams(self, game: dto.Game) -> Iterable[dto.Team]:
         return await self.waiver.get_played_teams(game)
 
-    async def get_orgs(self, game: dto.Game, with_deleted: bool = False) -> list[dto.SecondaryOrganizer]:
+    async def get_orgs(
+        self, game: dto.Game, with_deleted: bool = False
+    ) -> list[dto.SecondaryOrganizer]:
         return await self.org.get_orgs(game)
 
     async def get_poll_msg(self, team: dto.Team, game: dto.Game) -> int:
@@ -74,27 +84,42 @@ class GamePlayerDaoImpl(GamePlayerDao):
 
     async def get_current_level(self, team: dto.Team, game: dto.Game) -> dto.Level:
         return await self.level.get_by_number(
-            game=game,
-            level_number=await self.level_time.get_current_level(team=team, game=game)
+            game=game, level_number=await self.level_time.get_current_level(team=team, game=game)
         )
 
     async def get_correct_typed_keys(
-        self, level: dto.Level, game: dto.Game, team: dto.Team,
+        self,
+        level: dto.Level,
+        game: dto.Game,
+        team: dto.Team,
     ) -> set[str]:
         return await self.key_time.get_correct_typed_keys(level, game, team)
 
     async def save_key(
-        self, key: str, team: dto.Team, level: dto.Level, game: dto.Game,
-        player: dto.Player, is_correct: bool, is_duplicate: bool,
+        self,
+        key: str,
+        team: dto.Team,
+        level: dto.Level,
+        game: dto.Game,
+        player: dto.Player,
+        is_correct: bool,
+        is_duplicate: bool,
     ) -> dto.KeyTime:
         return await self.key_time.save_key(
-            key=key, team=team, level=level, game=game, player=player,
-            is_correct=is_correct, is_duplicate=is_duplicate,
+            key=key,
+            team=team,
+            level=level,
+            game=game,
+            player=player,
+            is_correct=is_correct,
+            is_duplicate=is_duplicate,
         )
 
     async def level_up(self, team: dto.Team, level: dto.Level, game: dto.Game) -> None:
         await self.level_time.set_to_level(
-            team=team, game=game, level_number=level.number_in_game + 1,
+            team=team,
+            game=game,
+            level_number=level.number_in_game + 1,
         )
 
     async def finish(self, game: dto.Game) -> None:
@@ -103,7 +128,9 @@ class GamePlayerDaoImpl(GamePlayerDao):
     async def get_current_level_time(self, team: dto.Team, game: dto.Game) -> dto.LevelTime:
         return await self.level_time.get_current_level_time(team=team, game=game)
 
-    async def get_orgs(self, game: dto.Game, with_deleted: bool = False) -> list[dto.SecondaryOrganizer]:
+    async def get_orgs(
+        self, game: dto.Game, with_deleted: bool = False
+    ) -> list[dto.SecondaryOrganizer]:
         return await self.organizer.get_orgs(game)
 
     async def commit(self) -> None:

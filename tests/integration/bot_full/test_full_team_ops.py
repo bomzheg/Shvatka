@@ -13,7 +13,9 @@ from shvatka.services.user import upsert_user
 from shvatka.utils.datetime_utils import tz_utc
 from tests.fixtures.chat_constants import create_tg_chat
 from tests.fixtures.user_constants import (
-    create_tg_user, create_dto_hermione, create_tg_from_dto,
+    create_tg_user,
+    create_dto_hermione,
+    create_tg_from_dto,
 )
 from tgbot.config.models.main import TgBotConfig
 from tgbot.views.commands import CREATE_TEAM_COMMAND, ADD_IN_TEAM_COMMAND
@@ -31,7 +33,9 @@ async def test_create_team(dp: Dispatcher, mocked_bot: MockedBot, dao: HolderDao
     bot = mocked_bot
     chat = create_tg_chat(type_=ChatType.supergroup)
     harry = create_tg_user()
-    bot.add_result_for(GetChatAdministrators, ok=True, result=[ChatMemberOwner(user=harry, is_anonymous=False)])
+    bot.add_result_for(
+        GetChatAdministrators, ok=True, result=[ChatMemberOwner(user=harry, is_anonymous=False)]
+    )
     bot.add_result_for(GetChat, ok=True, result=chat)
     bot.add_result_for(SendMessage, ok=True)
     update = Update(
@@ -65,7 +69,9 @@ async def test_create_team(dp: Dispatcher, mocked_bot: MockedBot, dao: HolderDao
     )
     await dp.feed_update(bot, update)
 
-    bot.add_result_for(method=GetChatMember, ok=True, result=ChatMemberMember(user=create_tg_from_dto(hermi)))
+    bot.add_result_for(
+        method=GetChatMember, ok=True, result=ChatMemberMember(user=create_tg_from_dto(hermi))
+    )
     bot.add_result_for(SendMessage, ok=True)
     update = Update(
         update_id=3,

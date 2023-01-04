@@ -66,11 +66,17 @@ class GameParser:
         self.start_at = datetime.strptime(started_at_text, "%d.%m.%y в %H:%M")
 
     async def parse_scenario(self):
-        scn_element, = self.html.xpath("//div[@id='sc']//div[@class='borderwrap']//tr[@class='ipbtable']/td")
+        (scn_element,) = self.html.xpath(
+            "//div[@id='sc']//div[@class='borderwrap']//tr[@class='ipbtable']/td"
+        )
         for element in scn_element.xpath("./*"):
             if element.tag == "center":
                 prompt: tuple[str, ...] = element.xpath("./b")[0].text.split()
-                if prompt[0] == "Уровень" and prompt[1].strip(".").isnumeric() and prompt[2] == "Ключ:":
+                if (
+                    prompt[0] == "Уровень"
+                    and prompt[1].strip(".").isnumeric()
+                    and prompt[2] == "Ключ:"
+                ):
                     if self.keys:  # if not - it's first level
                         self.build_level()
                     self.keys = {b.tail for b in element.xpath("./b")}
@@ -90,11 +96,13 @@ class GameParser:
                     guid = str(uuid.uuid4())
                     self.hints.append(scn.PhotoHint(file_guid=guid))
                     self.files[guid] = await self.download_content(img.get("src"))
-                    self.files_meta.append(scn.FileMetaLightweight(
-                        guid=guid,
-                        original_filename=guid,
-                        extension=".jpg",
-                    ))
+                    self.files_meta.append(
+                        scn.FileMetaLightweight(
+                            guid=guid,
+                            original_filename=guid,
+                            extension=".jpg",
+                        )
+                    )
             if element.text:
                 self.current_hint_parts.append(element.text)
             if element.tail:
@@ -119,9 +127,12 @@ class GameParser:
     def build_time_hint(self):
         self.build_current_hint()
         self.time_hints.append(
-            scn.TimeHint(time=self.time, hint=[
-                *self.hints,
-            ])
+            scn.TimeHint(
+                time=self.time,
+                hint=[
+                    *self.hints,
+                ],
+            )
         )
         self.hints = []
 
@@ -166,6 +177,6 @@ async def save_all_scns_to_files():
             f.write(packed_scenario.read())
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG)
     asyncio.run(save_all_scns_to_files())

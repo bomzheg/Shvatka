@@ -4,6 +4,8 @@ from tests.fixtures.keys_fixtures import valid_keys, wrong_keys
 
 __all__ = [
     "fixtures_resource_path",
-    "valid_id", "wrong_id",
-    "valid_keys", "wrong_keys",
+    "valid_id",
+    "wrong_id",
+    "valid_keys",
+    "wrong_keys",
 ]

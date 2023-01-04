@@ -24,9 +24,7 @@ class PlayerDao(BaseDAO[models.Player]):
         result = await self.session.execute(
             select(models.Player)
             .where(models.Player.id == id_)
-            .options(
-                joinedload(models.Player.user, innerjoin=True)
-            )
+            .options(joinedload(models.Player.user, innerjoin=True))
         )
         player = result.scalar_one()
         return player.to_dto_user_prefetched()
@@ -39,9 +37,7 @@ class PlayerDao(BaseDAO[models.Player]):
         return player.to_dto(user)
 
     async def create_for_user(self, user: dto.User) -> dto.Player:
-        player = models.Player(
-            user_id=user.db_id
-        )
+        player = models.Player(user_id=user.db_id)
         self.session.add(player)
         await self._flush(player)
         return player.to_dto(user)
@@ -68,5 +64,6 @@ class PlayerDao(BaseDAO[models.Player]):
             dto.VotedPlayer(
                 player.to_dto_user_prefetched(),
                 pit.to_dto(),
-            ) for player, pit in players
+            )
+            for player, pit in players
         ]

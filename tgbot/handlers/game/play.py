@@ -65,7 +65,10 @@ def setup() -> Router:
     router = Router(name=__name__)
     router.message.filter(GameStatusFilter(running=True))
     router.message.register(
-        check_key_handler, is_key, IsTeamFilter(), TeamPlayerFilter(),
+        check_key_handler,
+        is_key,
+        IsTeamFilter(),
+        TeamPlayerFilter(),
     )  # TODO is playing in this game
     router.message.register(spy_menu, Command(commands=SPY_COMMAND))  # is_org
     router.message.register(spy_levels, Command(commands=SPY_LEVELS_COMMAND))  # is_org

@@ -66,12 +66,7 @@ class Player(Base):
     )
 
     def __repr__(self):
-        return (
-            f"<Player "
-            f"id={self.id} "
-            f"user_id={self.user_id} "
-            f">"
-        )
+        return f"<Player " f"id={self.id} " f"user_id={self.user_id} " f">"
 
     def to_dto(self, user: dto.User) -> dto.Player:
         return dto.Player(

@@ -49,9 +49,7 @@ class Level(Base):
     number_in_game = Column(Integer, nullable=True)
     scenario: LevelScenario = Column(ScenarioField)
 
-    __table_args__ = (
-        UniqueConstraint("author_id", "name_id"),
-    )
+    __table_args__ = (UniqueConstraint("author_id", "name_id"),)
 
     def to_dto(self, author: dto.Player) -> dto.Level:
         return dto.Level(

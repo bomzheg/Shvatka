@@ -9,7 +9,11 @@ from infrastructure.db.dao.holder import HolderDao
 from shvatka.models import dto
 from shvatka.models.dto import scn
 from shvatka.services.level import upsert_level
-from shvatka.utils.input_validation import is_level_id_correct, is_multiple_keys_normal, normalize_key
+from shvatka.utils.input_validation import (
+    is_level_id_correct,
+    is_multiple_keys_normal,
+    normalize_key,
+)
 from tgbot import states
 
 

@@ -15,7 +15,9 @@ from tgbot.main_factory import (
     create_dispatcher,
     get_paths,
     create_scheduler,
-    create_redis, create_file_storage, create_telegraph,
+    create_redis,
+    create_file_storage,
+    create_telegraph,
 )
 from tgbot.username_resolver.user_getter import UserGetter
 from tgbot.views.jinja_filters import setup_jinja
@@ -28,7 +30,9 @@ async def main():
 
     setup_logging(paths)
     config = load_config(paths)
-    dcf = dataclass_factory.Factory(schemas=schemas, default_schema=Schema(name_style=NameStyle.kebab))
+    dcf = dataclass_factory.Factory(
+        schemas=schemas, default_schema=Schema(name_style=NameStyle.kebab)
+    )
     file_storage = create_file_storage(config.file_storage_config)
     pool = create_pool(config.db)
     bot = create_bot(config)
@@ -39,15 +43,25 @@ async def main():
         UserGetter(config.tg_client) as user_getter,
         create_redis(config.redis) as redis,
         create_scheduler(
-            pool=pool, redis=redis, bot=bot, redis_config=config.redis,
-            game_log_chat=config.bot.log_chat, file_storage=file_storage,
-            level_test_dao=level_test_dao
+            pool=pool,
+            redis=redis,
+            bot=bot,
+            redis_config=config.redis,
+            game_log_chat=config.bot.log_chat,
+            file_storage=file_storage,
+            level_test_dao=level_test_dao,
         ) as scheduler,
     ):
         dp = create_dispatcher(
-            config=config, user_getter=user_getter, dcf=dcf, pool=pool,
-            redis=redis, scheduler=scheduler, locker=create_lock_factory(),
-            file_storage=file_storage, level_test_dao=level_test_dao,
+            config=config,
+            user_getter=user_getter,
+            dcf=dcf,
+            pool=pool,
+            redis=redis,
+            scheduler=scheduler,
+            locker=create_lock_factory(),
+            file_storage=file_storage,
+            level_test_dao=level_test_dao,
             telegraph=create_telegraph(config.bot),
         )
 
@@ -61,5 +75,5 @@ async def main():
             logger.info("stopped")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     asyncio.run(main())

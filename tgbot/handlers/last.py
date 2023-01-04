@@ -22,7 +22,7 @@ async def not_supported_callback_on_running_game(callback_query: types.CallbackQ
     await callback_query.answer(
         "Эта кнопка не поддерживается во время игры. "
         "Попробуй ещё раз, когда все команды финишируют:)",
-        show_alert=True
+        show_alert=True,
     )
     logger.warning(
         "User %s press unsupported button in query %s",
@@ -34,7 +34,7 @@ async def not_supported_callback_on_running_game(callback_query: types.CallbackQ
 async def not_supported_callback(callback_query: types.CallbackQuery):
     await callback_query.answer(
         "Эта кнопка не поддерживается или не предназначена для Вас. хз где вы ее взяли",
-        show_alert=True
+        show_alert=True,
     )
     logger.warning(
         "User %s press unsupported button in query %s",
@@ -47,7 +47,7 @@ def setup() -> Router:
     router = Router(name=__name__)
     router.message.register(
         message_in_state,
-        Command(commands=re.compile('.*')),
+        Command(commands=re.compile(".*")),
         GameStatusFilter(running=True),
     )
     router.callback_query.register(

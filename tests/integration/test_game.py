@@ -16,7 +16,11 @@ from shvatka.utils.exceptions import CantEditGame
 
 @pytest.mark.asyncio
 async def test_game_simple(
-    author: dto.Player, simple_scn: RawGameScenario, dao: HolderDao, dcf: Factory, file_storage: FileStorage,
+    author: dto.Player,
+    simple_scn: RawGameScenario,
+    dao: HolderDao,
+    dcf: Factory,
+    file_storage: FileStorage,
 ):
     game = await upsert_game(simple_scn, author, dao.game_upserter, dcf, file_storage)
 
@@ -35,7 +39,9 @@ async def test_game_simple(
     another_scn = deepcopy(simple_scn.scn)
     another_scn["levels"].append(another_scn["levels"].pop(0))
 
-    game = await upsert_game(RawGameScenario(scn=another_scn, files={}), author, dao.game_upserter, dcf, file_storage)
+    game = await upsert_game(
+        RawGameScenario(scn=another_scn, files={}), author, dao.game_upserter, dcf, file_storage
+    )
 
     assert await dao.game.count() == 1
     assert await dao.level.count() == 2
@@ -51,7 +57,9 @@ async def test_game_simple(
 
     another_scn["levels"].pop()
 
-    game = await upsert_game(RawGameScenario(scn=another_scn, files={}), author, dao.game_upserter, dcf, file_storage)
+    game = await upsert_game(
+        RawGameScenario(scn=another_scn, files={}), author, dao.game_upserter, dcf, file_storage
+    )
 
     assert await dao.game.count() == 1
     assert 1 == await dao.organizer.get_orgs_count(game)
@@ -75,7 +83,11 @@ async def test_game_simple(
 
 @pytest.mark.asyncio
 async def test_game_get_full(
-    author: dto.Player, simple_scn: RawGameScenario, dao: HolderDao, dcf: Factory, file_storage: FileStorage,
+    author: dto.Player,
+    simple_scn: RawGameScenario,
+    dao: HolderDao,
+    dcf: Factory,
+    file_storage: FileStorage,
 ):
     game_expected = await upsert_game(simple_scn, author, dao.game_upserter, dcf, file_storage)
     game_actual = await dao.game.get_full(game_expected.id)

@@ -30,12 +30,7 @@ def patch_api_config(api_config: ApiConfig, postgres_url: str, redis: Redis):
 @pytest.fixture(scope="session")
 def app(api_config: ApiConfig, pool: sessionmaker, redis: Redis) -> FastAPI:
     app = create_app()
-    dependencies.setup(
-        app=app,
-        pool=pool,
-        redis=redis,
-        config=api_config
-    )
+    dependencies.setup(app=app, pool=pool, redis=redis, config=api_config)
     routes.setup(app.router)
     return app
 

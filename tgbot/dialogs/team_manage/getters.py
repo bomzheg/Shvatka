@@ -28,7 +28,9 @@ async def get_team_with_players(dao: HolderDao, player: dto.Player, **_) -> dict
     }
 
 
-async def get_selected_player(dao: HolderDao, player: dto.Player, dialog_manager: DialogManager, **_):
+async def get_selected_player(
+    dao: HolderDao, player: dto.Player, dialog_manager: DialogManager, **_
+):
     team = await get_my_team(player=player, dao=dao.team_player)
     team_player = await get_full_team_player(player=player, team=team, dao=dao.team_player)
     selected_player = await dao.player.get_by_id(dialog_manager.dialog_data["selected_player_id"])
@@ -38,5 +40,8 @@ async def get_selected_player(dao: HolderDao, player: dto.Player, dialog_manager
         "selected_team_player": selected_team_player,
         "team": team,
         "team_player": team_player,
-        **{key.name: PERMISSION_EMOJI[value] for key, value in selected_team_player.permissions.items()},
+        **{
+            key.name: PERMISSION_EMOJI[value]
+            for key, value in selected_team_player.permissions.items()
+        },
     }

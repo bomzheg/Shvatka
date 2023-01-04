@@ -19,11 +19,15 @@ async def slytherin(draco: dto.Player, dao: HolderDao):
 
 async def create_team_(captain: dto.Player, chat: dto.Chat, dao: HolderDao) -> dto.Team:
     return await create_team(
-        await upsert_chat(chat, dao.chat), captain, dao.team_creator,
+        await upsert_chat(chat, dao.chat),
+        captain,
+        dao.team_creator,
     )
 
 
 async def create_second_team(captain: dto.Player, dao: HolderDao) -> dto.Team:
     return await create_team(
-        await upsert_chat(create_slytherin_dto_chat(), dao.chat), captain, dao.team_creator,
+        await upsert_chat(create_slytherin_dto_chat(), dao.chat),
+        captain,
+        dao.team_creator,
     )

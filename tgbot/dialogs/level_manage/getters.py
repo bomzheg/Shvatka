@@ -36,7 +36,9 @@ async def get_orgs(dialog_manager: DialogManager, **_):
 
 
 async def get_level_and_org(
-    author: dto.Player, dao: HolderDao, manager: DialogManager,
+    author: dto.Player,
+    dao: HolderDao,
+    manager: DialogManager,
 ) -> tuple[dto.Level, dto.Organizer]:
     try:
         org_id = manager.start_data["org_id"]

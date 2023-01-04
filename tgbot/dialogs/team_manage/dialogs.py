@@ -6,8 +6,13 @@ from aiogram_dialog.widgets.text import Const, Jinja, Format
 
 from tgbot import states
 from .getters import get_my_team_, get_team_with_players, get_selected_player
-from .handlers import rename_team_handler, change_desc_team_handler, select_player, change_permission_handler, \
-    remove_player_handler
+from .handlers import (
+    rename_team_handler,
+    change_desc_team_handler,
+    select_player,
+    change_permission_handler,
+    remove_player_handler,
+)
 
 captains_bridge = Dialog(
     Window(
@@ -76,9 +81,7 @@ captains_bridge = Dialog(
         state=states.CaptainsBridgeSG.players,
     ),
     Window(
-        Jinja(
-            "Меню игрока {{selected_player.user.name_mention}} команды 🚩{{team.name}}"
-        ),
+        Jinja("Меню игрока {{selected_player.user.name_mention}} команды 🚩{{team.name}}"),
         SwitchTo(Const("⤴В меню команды"), id="to_main", state=states.CaptainsBridgeSG.main),
         SwitchTo(Const("⤴Назад"), id="back", state=states.CaptainsBridgeSG.players),
         Button(
@@ -117,7 +120,6 @@ captains_bridge = Dialog(
             state=states.CaptainsBridgeSG.confirm_delete,
             when=F["team_player"].can_remove_players,
         ),
-
         getter=get_selected_player,
         state=states.CaptainsBridgeSG.player,
     ),
@@ -130,7 +132,11 @@ captains_bridge = Dialog(
             "Вы уверены что хотите изгнать его из команды?",
         ),
         SwitchTo(Const("⤴В меню команды"), id="to_main", state=states.CaptainsBridgeSG.main),
-        SwitchTo(Const("⤴Назад к списку игроков"), id="to_players", state=states.CaptainsBridgeSG.players),
+        SwitchTo(
+            Const("⤴Назад к списку игроков"),
+            id="to_players",
+            state=states.CaptainsBridgeSG.players,
+        ),
         SwitchTo(Const("Нет!"), id="back", state=states.CaptainsBridgeSG.player),
         Button(Const("Да, удалить"), id="delete", on_click=remove_player_handler),
         getter=get_selected_player,

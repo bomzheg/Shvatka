@@ -6,7 +6,7 @@ from redis.asyncio.client import Redis
 from shvatka.utils.exceptions import SaltNotExist
 
 TOKEN_LEN = 32
-EXPIRE_TIME = 12*60
+EXPIRE_TIME = 12 * 60
 
 
 class SecureInvite:
@@ -17,7 +17,9 @@ class SecureInvite:
     def _create_key(self, token: str) -> str:
         return f"{self.prefix}:{token}"
 
-    async def save_new_invite(self, token_len: int = TOKEN_LEN, expire=EXPIRE_TIME, **dct: dict) -> str:
+    async def save_new_invite(
+        self, token_len: int = TOKEN_LEN, expire=EXPIRE_TIME, **dct: dict
+    ) -> str:
         token = secrets.token_urlsafe(token_len)
         await self.redis.set(self._create_key(token), json.dumps(dct), ex=expire)
         return token
@@ -27,7 +29,7 @@ class SecureInvite:
         dct_str = await self._get(key, encoding="utf-8")
         if dct_str is None:
             raise SaltNotExist(salt=token, text="this salt does not exist")
-        return json.loads(dct_str)['dct']
+        return json.loads(dct_str)["dct"]
 
     async def remove_invite(self, token: str):
         await self.redis.delete(self._create_key(token))

@@ -13,7 +13,13 @@ from infrastructure.db.dao.holder import HolderDao
 from shvatka.interfaces.clients.file_storage import FileStorage
 from shvatka.models import dto, enums
 from shvatka.services.achievement import add_achievement
-from shvatka.services.game import check_new_game_name_available, create_game, get_full_game, add_level, upsert_game
+from shvatka.services.game import (
+    check_new_game_name_available,
+    create_game,
+    get_full_game,
+    add_level,
+    upsert_game,
+)
 from shvatka.services.level import get_all_my_free_levels, get_by_id
 from shvatka.services.scenario.scn_zip import unpack_scn
 from shvatka.utils.exceptions import ScenarioNotCorrect
@@ -26,7 +32,9 @@ async def process_name(m: Message, dialog_: Any, manager: DialogManager):
     author: dto.Player = manager.middleware_data["player"]
     dao: HolderDao = manager.middleware_data["dao"]
     if m.text.lower().strip() == "мудро":
-        await add_achievement(player=author, name=enums.Achievement.game_name_joke, dao=dao.achievement)
+        await add_achievement(
+            player=author, name=enums.Achievement.game_name_joke, dao=dao.achievement
+        )
         return await m.answer(
             "Лол, я ждал эту шутку. "
             "Но нет, игра не может называться {name}".format(name=hd.bold(m.text))
@@ -40,9 +48,7 @@ async def process_name(m: Message, dialog_: Any, manager: DialogManager):
     await manager.next()
 
 
-async def process_zip_scn(
-    m: Message, dialog_: Any, manager: DialogManager
-):
+async def process_zip_scn(m: Message, dialog_: Any, manager: DialogManager):
     player: dto.Player = manager.middleware_data["player"]
     dao: HolderDao = manager.middleware_data["dao"]
     bot: Bot = manager.middleware_data["bot"]
@@ -87,4 +93,3 @@ async def add_level_handler(c: CallbackQuery, button: Any, manager: DialogManage
     level = await get_by_id(int(item_id), author=author, dao=dao.level)
     await add_level(game=game, level=level, author=author, dao=dao.level)
     await manager.done()
-

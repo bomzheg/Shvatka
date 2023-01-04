@@ -32,8 +32,10 @@ class KeyTime(Base):
     )
     level_number = Column(Integer, nullable=False)
     enter_time = Column(
-        DateTime(timezone=True), default=lambda: datetime.now(tz=tz_utc),
-        server_default=func.now(), nullable=False,
+        DateTime(timezone=True),
+        default=lambda: datetime.now(tz=tz_utc),
+        server_default=func.now(),
+        nullable=False,
     )
     key_text = Column(Text, nullable=False)
     is_correct: bool = Column(Boolean, nullable=False)

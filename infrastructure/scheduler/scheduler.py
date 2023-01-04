@@ -12,8 +12,12 @@ from sqlalchemy.orm import sessionmaker
 from infrastructure.db.config.models.db import RedisConfig
 from infrastructure.db.dao.memory.level_testing import LevelTestingData
 from infrastructure.scheduler.context import ScheduledContextHolder
-from infrastructure.scheduler.wrappers import prepare_game_wrapper, start_game_wrapper, send_hint_wrapper, \
-    send_hint_for_testing_wrapper
+from infrastructure.scheduler.wrappers import (
+    prepare_game_wrapper,
+    start_game_wrapper,
+    send_hint_wrapper,
+    send_hint_for_testing_wrapper,
+)
 from shvatka.interfaces.clients.file_storage import FileStorage
 from shvatka.interfaces.scheduler import Scheduler, LevelTestScheduler
 from shvatka.models import dto
@@ -49,22 +53,22 @@ class ApScheduler(Scheduler, LevelTestScheduler):
         )
         self.executor = AsyncIOExecutor()
         job_defaults = {
-            'coalesce': False,
-            'max_instances': 20,
-            'misfire_grace_time': 3600,
+            "coalesce": False,
+            "max_instances": 20,
+            "misfire_grace_time": 3600,
         }
         logger.info("configuring shedulder...")
         self.scheduler = AsyncIOScheduler(
-            jobstores={'default': self.job_store},
+            jobstores={"default": self.job_store},
             job_defaults=job_defaults,
-            executors={'default': self.executor},
+            executors={"default": self.executor},
         )
 
     async def plain_prepare(self, game: dto.Game):
         self.scheduler.add_job(
             func=prepare_game_wrapper,
             kwargs={"game_id": game.id, "author_id": game.author.id},
-            trigger='date',
+            trigger="date",
             run_date=game.prepared_at.astimezone(tz=tz_utc),
             timezone=tz_utc,
             id=_prepare_game_key(game),
@@ -74,7 +78,7 @@ class ApScheduler(Scheduler, LevelTestScheduler):
         self.scheduler.add_job(
             func=start_game_wrapper,
             kwargs={"game_id": game.id, "author_id": game.author.id},
-            trigger='date',
+            trigger="date",
             run_date=game.start_at.astimezone(tz=tz_utc),
             timezone=tz_utc,
             id=_start_game_key(game),
@@ -84,25 +88,39 @@ class ApScheduler(Scheduler, LevelTestScheduler):
         try:
             self.scheduler.remove_job(job_id=_prepare_game_key(game))
         except JobLookupError as e:
-            logger.error("can't remove job %s for preparing game %s", _prepare_game_key(game), game.id, exc_info=e)
+            logger.error(
+                "can't remove job %s for preparing game %s",
+                _prepare_game_key(game),
+                game.id,
+                exc_info=e,
+            )
         try:
             self.scheduler.remove_job(job_id=_start_game_key(game))
         except JobLookupError as e:
-            logger.error("can't remove job %s for start game %s", _start_game_key(game), game.id, exc_info=e)
+            logger.error(
+                "can't remove job %s for start game %s", _start_game_key(game), game.id, exc_info=e
+            )
 
     async def plain_hint(
-        self, level: dto.Level, team: dto.Team, hint_number: int, run_at: datetime,
+        self,
+        level: dto.Level,
+        team: dto.Team,
+        hint_number: int,
+        run_at: datetime,
     ):
         self.scheduler.add_job(
             func=send_hint_wrapper,
             kwargs={"level_id": level.db_id, "team_id": team.id, "hint_number": hint_number},
-            trigger='date',
+            trigger="date",
             run_date=run_at,
             timezone=tz_utc,
         )
 
     async def plain_test_hint(
-        self, suite: dto.LevelTestSuite, hint_number: int, run_at: datetime,
+        self,
+        suite: dto.LevelTestSuite,
+        hint_number: int,
+        run_at: datetime,
     ):
         self.scheduler.add_job(
             func=send_hint_for_testing_wrapper,

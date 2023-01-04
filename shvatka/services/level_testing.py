@@ -44,7 +44,9 @@ async def send_testing_level_hint(
     if not await dao.is_still_testing(suite=suite):
         logger.debug(
             "testing %s (%s) completed by player %s, hint doesn't need",
-            suite.level.db_id, suite.level.name_id, suite.tester.player.id,
+            suite.level.db_id,
+            suite.level.name_id,
+            suite.tester.player.id,
         )
         return
     await view.send_hint(hint_number=hint_number, suite=suite)
@@ -52,14 +54,19 @@ async def send_testing_level_hint(
     if suite.level.is_last_hint(hint_number):
         logger.debug(
             "send last hint #%s to player %s by testing level %s (%s)",
-            hint_number, suite.tester.player.id, suite.level.db_id, suite.level.name_id,
+            hint_number,
+            suite.tester.player.id,
+            suite.level.db_id,
+            suite.level.name_id,
         )
         return
     next_hint_time = calculate_next_hint_time(
-        suite.level.get_hint(hint_number), suite.level.get_hint(next_hint_number),
+        suite.level.get_hint(hint_number),
+        suite.level.get_hint(next_hint_number),
     )
     await scheduler.plain_test_hint(
-        suite=suite, hint_number=next_hint_number,
+        suite=suite,
+        hint_number=next_hint_number,
         run_at=next_hint_time,
     )
 
@@ -78,7 +85,8 @@ async def check_level_testing_key(
         keys = suite.level.get_keys()
         is_correct_key = key in keys
         await dao.save_key(
-            key=key, suite=suite,
+            key=key,
+            suite=suite,
             is_correct=is_correct_key,
         )
         typed_keys = await dao.get_correct_tested_keys(suite=suite)

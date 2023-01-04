@@ -38,4 +38,3 @@ async def test_get_team(client: AsyncClient, harry: dto.Player, token: Token, da
     dcf = Factory()
     resp.read()
     assert team == dcf.load(resp.json(), dto.Team)
-

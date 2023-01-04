@@ -25,9 +25,7 @@ async def handle_sh_error(error: ErrorEvent, log_chat_id: int, bot: Bot):
         chat_id = exception.player.user.tg_id
     if chat_id:
         try:
-            await bot.send_message(
-                chat_id=chat_id, text=f"Произошла ошибка\n{exception}"
-            )
+            await bot.send_message(chat_id=chat_id, text=f"Произошла ошибка\n{exception}")
         except AiogramError as e:
             logger.exception("can't send error message to user", exc_info=e)
 
@@ -37,7 +35,9 @@ async def handle_sh_error(error: ErrorEvent, log_chat_id: int, bot: Bot):
 async def handle(error: ErrorEvent, log_chat_id: int, bot: Bot):
     logger.exception(
         "Cause unexpected exception %s, by processing %s",
-        error.exception.__class__.__name__, error.update.dict(exclude_none=True), exc_info=error.exception,
+        error.exception.__class__.__name__,
+        error.update.dict(exclude_none=True),
+        exc_info=error.exception,
     )
     if not log_chat_id:
         return
@@ -45,15 +45,12 @@ async def handle(error: ErrorEvent, log_chat_id: int, bot: Bot):
         log_chat_id,
         f"Получено исключение {hd.quote(str(error.exception))}\n"
         f"во время обработки апдейта "
-        f"{hd.quote(json.dumps(error.update.dict(exclude_none=True), default=str)[:3500])}\n"
+        f"{hd.quote(json.dumps(error.update.dict(exclude_none=True), default=str)[:3500])}\n",
     )
 
 
 def setup(dp: Dispatcher, log_chat_id: int):
     dp.errors.register(
-        partial(handle_sh_error, log_chat_id=log_chat_id),
-        ExceptionTypeFilter(SHError)
+        partial(handle_sh_error, log_chat_id=log_chat_id), ExceptionTypeFilter(SHError)
     )
-    dp.errors.register(
-        partial(handle, log_chat_id=log_chat_id)
-    )
+    dp.errors.register(partial(handle, log_chat_id=log_chat_id))

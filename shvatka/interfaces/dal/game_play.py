@@ -34,13 +34,22 @@ class GamePlayerDao(Committer, GameOrgsGetter, metaclass=ABCMeta):
         raise NotImplementedError
 
     async def get_correct_typed_keys(
-        self, level: dto.Level, game: dto.Game, team: dto.Team,
+        self,
+        level: dto.Level,
+        game: dto.Game,
+        team: dto.Team,
     ) -> set[str]:
         raise NotImplementedError
 
     async def save_key(
-        self, key: str, team: dto.Team, level: dto.Level, game: dto.Game,
-        player: dto.Player, is_correct: bool, is_duplicate: bool,
+        self,
+        key: str,
+        team: dto.Team,
+        level: dto.Level,
+        game: dto.Game,
+        player: dto.Player,
+        is_correct: bool,
+        is_duplicate: bool,
     ) -> dto.KeyTime:
         raise NotImplementedError
 

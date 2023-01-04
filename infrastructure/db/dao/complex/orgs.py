@@ -29,5 +29,7 @@ class OrgAdderImpl(OrgAdder):
     async def get_full(self, id_: int) -> dto.FullGame:
         return await self.game.get_full(id_=id_)
 
-    async def get_orgs(self, game: dto.Game, with_deleted: bool = False) -> list[dto.SecondaryOrganizer]:
+    async def get_orgs(
+        self, game: dto.Game, with_deleted: bool = False
+    ) -> list[dto.SecondaryOrganizer]:
         return await self.organizer.get_orgs(game)

@@ -16,10 +16,14 @@ def render_team_card(team: dto.Team) -> str:
     return rez
 
 
-def render_team_players(team: dto.Team, players: list[dto.FullTeamPlayer], notification=False) -> str:
+def render_team_players(
+    team: dto.Team, players: list[dto.FullTeamPlayer], notification=False
+) -> str:
     rez = f"Список игроков команды {hd.bold(hd.quote(team.name))}:\n"
     for team_player in players:
-        rez += f"{hd.quote(get_emoji(team_player))} " \
-               f"{get_small_card(team_player.player.user, notification)}, " \
-               f"{hd.quote(team_player.role)}\n"
+        rez += (
+            f"{hd.quote(get_emoji(team_player))} "
+            f"{get_small_card(team_player.player.user, notification)}, "
+            f"{hd.quote(team_player.role)}\n"
+        )
     return rez

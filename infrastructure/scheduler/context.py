@@ -15,6 +15,7 @@ class ScheduledContextHolder:
     ATTENTION!
     GLOBAL VARIABLE!
     """
+
     poll: sessionmaker
     redis: Redis
     bot: Bot

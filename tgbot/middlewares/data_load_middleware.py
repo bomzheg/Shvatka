@@ -13,12 +13,11 @@ from shvatka.services.user import upsert_user
 
 
 class LoadDataMiddleware(BaseMiddleware):
-
     async def __call__(
         self,
         handler: Callable[[TelegramObject, dict[str, Any]], Awaitable[Any]],
         event: TelegramObject,
-        data: dict[str, Any]
+        data: dict[str, Any],
     ) -> Any:
         holder_dao: HolderDao = data["dao"]
         user = await save_user(data, holder_dao)
@@ -36,10 +35,7 @@ async def save_user(data: dict[str, Any], holder_dao: HolderDao) -> dto.User | N
     user: types.User = data.get("event_from_user", None)
     if not user:
         return None
-    return await upsert_user(
-        dto.User.from_aiogram(user),
-        holder_dao.user
-    )
+    return await upsert_user(dto.User.from_aiogram(user), holder_dao.user)
 
 
 async def save_player(user: dto.User | None, holder_dao: HolderDao) -> dto.Player | None:
@@ -52,10 +48,7 @@ async def save_chat(data: dict[str, Any], holder_dao: HolderDao) -> dto.Chat | N
     chat: dto.Chat = data.get("event_chat", None)
     if not chat:
         return None
-    return await upsert_chat(
-        dto.Chat.from_aiogram(chat),
-        holder_dao.chat
-    )
+    return await upsert_chat(dto.Chat.from_aiogram(chat), holder_dao.chat)
 
 
 async def load_team(chat: dto.Chat | None, holder_dao: HolderDao) -> dto.Team | None:

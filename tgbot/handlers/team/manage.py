@@ -13,7 +13,11 @@ from shvatka.services.player import join_team, get_team_players
 from shvatka.services.team import create_team
 from shvatka.utils.defaults_constants import DEFAULT_ROLE
 from shvatka.utils.exceptions import (
-    TeamError, PlayerAlreadyInTeam, AnotherTeamInChat, PlayerRestoredInTeam, PermissionsError,
+    TeamError,
+    PlayerAlreadyInTeam,
+    AnotherTeamInChat,
+    PlayerRestoredInTeam,
+    PermissionsError,
 )
 from tgbot import states
 from tgbot.filters.has_target import HasTargetFilter
@@ -22,8 +26,13 @@ from tgbot.filters.is_team import IsTeamFilter
 from tgbot.filters.team_player import TeamPlayerFilter
 from tgbot.middlewares import TeamPlayerMiddleware
 from tgbot.utils.router import disable_router_on_game
-from tgbot.views.commands import CREATE_TEAM_COMMAND, ADD_IN_TEAM_COMMAND, TEAM_COMMAND, PLAYERS_COMMAND, \
-    MANAGE_TEAM_COMMAND
+from tgbot.views.commands import (
+    CREATE_TEAM_COMMAND,
+    ADD_IN_TEAM_COMMAND,
+    TEAM_COMMAND,
+    PLAYERS_COMMAND,
+    MANAGE_TEAM_COMMAND,
+)
 from tgbot.views.team import render_team_card, render_team_players
 from tgbot.views.texts import NOT_SUPERGROUP_ERROR
 
@@ -31,13 +40,13 @@ logger = logging.getLogger(__name__)
 
 
 async def cmd_create_team(
-    message: Message, chat: dto.Chat, player: dto.Player, dao: HolderDao,
+    message: Message,
+    chat: dto.Chat,
+    player: dto.Player,
+    dao: HolderDao,
     bot: Bot,
 ):
-    logger.info(
-        "User %s try create team in %s",
-        message.from_user.id, message.chat.id
-    )
+    logger.info("User %s try create team in %s", message.from_user.id, message.chat.id)
     if not await is_admin_filter(bot, chat, player.user):
         return await message.reply(
             "Создавать команду может только модератор",
@@ -60,7 +69,7 @@ async def cmd_create_team(
         return await message.reply(
             "Несмотря на все наши проверки произошла какая-то ошибка при создании команды.\n"
             f"\n{e}",
-            parse_mode=None
+            parse_mode=None,
         )
     await message.reply(
         "Команда создана.\nДля просмотра информации о команде /team \n"
@@ -76,12 +85,19 @@ async def cmd_create_team_group(message: Message, user: dto.User, chat: dto.Chat
 
 
 async def cmd_add_in_team(
-    message: Message, team: dto.Team, target: dto.Player, player: dto.Player, bot: Bot,
-    command: CommandObject, dao: HolderDao,
+    message: Message,
+    team: dto.Team,
+    target: dto.Player,
+    player: dto.Player,
+    bot: Bot,
+    command: CommandObject,
+    dao: HolderDao,
 ):
     logger.info(
         "Captain %s try to add %s in team %s",
-        message.from_user.id, target.user.tg_id, team.id,
+        message.from_user.id,
+        target.user.tg_id,
+        team.id,
     )
     try:
         chat_member = await bot.get_chat_member(team.chat.tg_id, target.user.tg_id)
@@ -90,9 +106,7 @@ async def cmd_add_in_team(
     if chat_member.user.is_bot:
         return
     if chat_member.status == "left":
-        return await message.reply(
-            "Не могу добавить этого пользователя. Вероятно его нет в чате"
-        )
+        return await message.reply("Не могу добавить этого пользователя. Вероятно его нет в чате")
     role = command.args or DEFAULT_ROLE
     try:
         await join_team(target, team, player, dao.team_player, role)
@@ -102,9 +116,7 @@ async def cmd_add_in_team(
             f"({hd.quote(e.team.name)}).\n"
         )
     except PlayerRestoredInTeam:
-        return await message.reply(
-            "Игрок возвращён в команду, я сделаю вид что и не покидал"
-        )
+        return await message.reply("Игрок возвращён в команду, я сделаю вид что и не покидал")
     except PermissionsError:
         return await message.reply(
             "У тебя нет прав добавлять игроков в команду. Обратись к капитану"
@@ -112,16 +124,16 @@ async def cmd_add_in_team(
 
     await message.answer(
         "В команду {team} добавлен игрок "
-        "{player} в качестве роли указано: {role}"
-        .format(
-            team=hd.bold(team.name),
-            player=hd.bold(target.user.name_mention),
-            role=hd.italic(role)
+        "{player} в качестве роли указано: {role}".format(
+            team=hd.bold(team.name), player=hd.bold(target.user.name_mention), role=hd.italic(role)
         )
     )
     logger.info(
         "Captain %s add to team %s player %s with role %s",
-        message.from_user.id, team.id, target.user.tg_id, role,
+        message.from_user.id,
+        team.id,
+        target.user.tg_id,
+        role,
     )
 
 
@@ -186,8 +198,8 @@ def setup_team_manage() -> Router:
                 or_f(
                     TeamPlayerFilter(can_remove_players=True),
                     TeamPlayerFilter(can_change_team_name=True),
-                )
-            )
-        )
+                ),
+            ),
+        ),
     )
     return router

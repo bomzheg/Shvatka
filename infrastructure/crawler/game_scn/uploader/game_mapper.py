@@ -32,7 +32,7 @@ def map_level_for_upload(level: dto.Level) -> data.LevelForUpload:
                 level_number=level.number_in_game + 1,
                 hint_number=i,
                 next_hint_time=get_or_default(scn.time_hints, i + 1, TimeHint(0, [])).time,
-                text=hint_parts_to_text(hint.hint)
+                text=hint_parts_to_text(hint.hint),
             )
         )
     return data.LevelForUpload(puzzle, hints)

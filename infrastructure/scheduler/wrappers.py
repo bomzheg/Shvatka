@@ -69,7 +69,9 @@ async def send_hint_wrapper(level_id: int, team_id: int, hint_number: int):
         )
 
 
-async def send_hint_for_testing_wrapper(level_id: int, game_id: int, player_id: int, hint_number: int):
+async def send_hint_for_testing_wrapper(
+    level_id: int, game_id: int, player_id: int, hint_number: int
+):
     async with prepare_context() as context:  # type: ScheduledContext
         level = await context.dao.level.get_by_id(level_id)
         game = await context.dao.game.get_by_id(game_id)
@@ -80,7 +82,8 @@ async def send_hint_for_testing_wrapper(level_id: int, game_id: int, player_id: 
             suite=dto.LevelTestSuite(level=level, tester=org),
             hint_number=hint_number,
             view=create_level_test_view(context.bot, context.dao, context.file_storage),
-            scheduler=typing.cast(LevelTestScheduler, context.scheduler),  # TODO typing.cast replace with better hint
+            scheduler=typing.cast(
+                LevelTestScheduler, context.scheduler
+            ),  # TODO typing.cast replace with better hint
             dao=context.dao.level_testing_complex,
         )
-

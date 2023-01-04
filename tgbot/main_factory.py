@@ -39,9 +39,16 @@ def create_bot(config: TgBotConfig) -> Bot:
 
 
 def create_dispatcher(
-    config: TgBotConfig, user_getter: UserGetter, dcf: Factory, pool: sessionmaker,
-    redis: Redis, scheduler: Scheduler, locker: KeyCheckerFactory, file_storage: FileStorage,
-    level_test_dao: LevelTestingData, telegraph: Telegraph,
+    config: TgBotConfig,
+    user_getter: UserGetter,
+    dcf: Factory,
+    pool: sessionmaker,
+    redis: Redis,
+    scheduler: Scheduler,
+    locker: KeyCheckerFactory,
+    file_storage: FileStorage,
+    level_test_dao: LevelTestingData,
+    telegraph: Telegraph,
 ) -> Dispatcher:
     dp = Dispatcher(
         storage=create_storage(config.storage),
@@ -70,7 +77,9 @@ def create_storage(config: StorageConfig) -> BaseStorage:
         case StorageType.memory:
             return MemoryStorage()
         case StorageType.redis:
-            return RedisStorage(create_redis(config.redis), key_builder=DefaultKeyBuilder(with_destiny=True))
+            return RedisStorage(
+                create_redis(config.redis), key_builder=DefaultKeyBuilder(with_destiny=True)
+            )
         case _:
             raise NotImplementedError
 
@@ -80,12 +89,21 @@ def create_file_storage(config: FileStorageConfig) -> FileStorage:
 
 
 def create_scheduler(
-    pool: sessionmaker, redis: Redis, bot: Bot, redis_config: RedisConfig,
-    game_log_chat: int, file_storage: FileStorage, level_test_dao: LevelTestingData,
+    pool: sessionmaker,
+    redis: Redis,
+    bot: Bot,
+    redis_config: RedisConfig,
+    game_log_chat: int,
+    file_storage: FileStorage,
+    level_test_dao: LevelTestingData,
 ) -> Scheduler:
     return ApScheduler(
-        redis_config=redis_config, pool=pool, redis=redis,
-        bot=bot, game_log_chat=game_log_chat, file_storage=file_storage,
+        redis_config=redis_config,
+        pool=pool,
+        redis=redis,
+        bot=bot,
+        game_log_chat=game_log_chat,
+        file_storage=file_storage,
         level_test_dao=level_test_dao,
     )
 

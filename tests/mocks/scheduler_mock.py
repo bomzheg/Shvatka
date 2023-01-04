@@ -22,7 +22,9 @@ class SchedulerMock(Scheduler):
     async def plain_start(self, game: dto.Game):
         self.calls.setdefault("plain_game", []).append(game)
 
-    async def plain_hint(self, level: dto.Level, team: dto.Team, hint_number: int, run_at: datetime):
+    async def plain_hint(
+        self, level: dto.Level, team: dto.Team, hint_number: int, run_at: datetime
+    ):
         self.calls.setdefault("plain_hint", []).append((level, team, hint_number, run_at))
 
     async def cancel_scheduled_game(self, game: dto.Game):

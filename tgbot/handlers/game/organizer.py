@@ -39,9 +39,12 @@ async def start_test_level(
     suite = dto.LevelTestSuite(tester=org, level=level)
     view = create_level_test_view(bot=bot, dao=dao, storage=file_storage)
     await dialog_manager.start(
-        states.LevelTestSG.wait_key, data={"level_id": callback_data.level_id, "org_id": org.id},
+        states.LevelTestSG.wait_key,
+        data={"level_id": callback_data.level_id, "org_id": org.id},
     )
-    await start_level_test(suite=suite, scheduler=scheduler, view=view, dao=dao.level_testing_complex)
+    await start_level_test(
+        suite=suite, scheduler=scheduler, view=view, dao=dao.level_testing_complex
+    )
 
 
 def setup() -> Router:

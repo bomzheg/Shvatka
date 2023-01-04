@@ -63,9 +63,9 @@ async def send_to_testing(c: CallbackQuery, widget: Any, manager: DialogManager,
     await bot.send_message(
         chat_id=org.player.user.tg_id,
         text=f"{render_small_card_link(author.user)} "
-             f"предлагает протестировать уровень {level.name_id}. "
-             f"Начать прямо сейчас?",
-        reply_markup=kb.get_kb_level_test_invite(level, org)
+        f"предлагает протестировать уровень {level.name_id}. "
+        f"Начать прямо сейчас?",
+        reply_markup=kb.get_kb_level_test_invite(level, org),
     )
     await c.answer("Приглашение отправлено")
 
@@ -83,7 +83,9 @@ async def level_testing(c: CallbackQuery, button: Button, manager: DialogManager
     suite = dto.LevelTestSuite(tester=org, level=level)
     view = create_level_test_view(bot=bot, dao=dao, storage=storage)
     await manager.start(state=states.LevelTestSG.wait_key, data={"level_id": level_id})
-    await start_level_test(suite=suite, scheduler=scheduler, view=view, dao=dao.level_testing_complex)
+    await start_level_test(
+        suite=suite, scheduler=scheduler, view=view, dao=dao.level_testing_complex
+    )
 
 
 async def cancel_level_test(c: CallbackQuery, button: Button, manager: DialogManager):

@@ -2,8 +2,16 @@ from aiogram import Dispatcher, Router
 from aiogram_dialog import DialogRegistry
 
 from tgbot.dialogs import (
-    game_manage, level_scn, time_hint, game_scn, level_manage, game_orgs,
-    game_spy, main_menu, game_publish, team_manage,
+    game_manage,
+    level_scn,
+    time_hint,
+    game_scn,
+    level_manage,
+    game_orgs,
+    game_spy,
+    main_menu,
+    game_publish,
+    team_manage,
 )
 from tgbot.filters import GameStatusFilter
 

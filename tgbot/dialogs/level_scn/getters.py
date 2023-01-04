@@ -7,9 +7,7 @@ from tgbot.views.utils import render_time_hints
 
 async def get_level_id(dialog_manager: DialogManager, **_):
     data = dialog_manager.dialog_data
-    return {
-        "level_id": data["level_id"]
-    }
+    return {"level_id": data["level_id"]}
 
 
 async def get_time_hints(dialog_manager: DialogManager, **_):

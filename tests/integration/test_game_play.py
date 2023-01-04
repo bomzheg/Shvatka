@@ -26,9 +26,15 @@ from tests.utils.time_key import assert_time_key
 
 @pytest.mark.asyncio
 async def test_game_play(
-    dao: HolderDao, locker: KeyCheckerFactory, check_dao: HolderDao, scheduler: Scheduler,
-    author: dto.Player, harry: dto.Player, hermione: dto.Player,
-    gryffindor: dto.Team, game: dto.FullGame,
+    dao: HolderDao,
+    locker: KeyCheckerFactory,
+    check_dao: HolderDao,
+    scheduler: Scheduler,
+    author: dto.Player,
+    harry: dto.Player,
+    hermione: dto.Player,
+    gryffindor: dto.Team,
+    game: dto.FullGame,
 ):
     await start_waivers(game, author, dao.game)
 
@@ -42,8 +48,9 @@ async def test_game_play(
     dummy_log = mock(GameLogWriter)
     when(dummy_log).log("Game started").thenReturn(mock_coro(None))
     dummy_sched = mock(Scheduler)
-    when(dummy_sched).plain_hint(level=game.levels[0], team=gryffindor, hint_number=1, run_at=ANY).thenReturn(
-        mock_coro(None))
+    when(dummy_sched).plain_hint(
+        level=game.levels[0], team=gryffindor, hint_number=1, run_at=ANY
+    ).thenReturn(mock_coro(None))
     game.start_at = datetime.now(tz=tz_utc)
     await start_game(game, dao.game_starter, dummy_log, dummy_view, dummy_sched)
     assert 1 == await check_dao.level_time.count()
@@ -51,15 +58,26 @@ async def test_game_play(
     when(dummy_view).send_hint(gryffindor, 1, game.levels[0]).thenReturn(mock_coro(None))
     when(dummy_sched).plain_hint(game.levels[0], gryffindor, 2, ANY).thenReturn(mock_coro(None))
     await send_hint(
-        level=game.levels[0], hint_number=1, team=gryffindor,
-        dao=dao.level_time, view=dummy_view, scheduler=dummy_sched,
+        level=game.levels[0],
+        hint_number=1,
+        team=gryffindor,
+        dao=dao.level_time,
+        view=dummy_view,
+        scheduler=dummy_sched,
     )
 
     dummy_org_notifier = mock(OrgNotifier)
     orgs = await get_orgs(game, dao.organizer)
     key_kwargs = dict(
-        player=harry, team=gryffindor, game=game, dao=dao.game_player, view=dummy_view,
-        game_log=dummy_log, org_notifier=dummy_org_notifier, locker=locker, scheduler=scheduler,
+        player=harry,
+        team=gryffindor,
+        game=game,
+        dao=dao.game_player,
+        view=dummy_view,
+        game_log=dummy_log,
+        org_notifier=dummy_org_notifier,
+        locker=locker,
+        scheduler=scheduler,
     )
     when(dummy_view).wrong_key(key=ANY).thenReturn(mock_coro(None))
     await check_key(key="SHWRONG", **key_kwargs)
@@ -69,10 +87,15 @@ async def test_game_play(
     assert 1 == len(keys[gryffindor])
     assert_time_key(
         dto.KeyTime(
-            text="SHWRONG", is_correct=False, is_duplicate=False,
-            at=datetime.now(tz=tz_utc), level_number=0, player=harry, team=gryffindor,
+            text="SHWRONG",
+            is_correct=False,
+            is_duplicate=False,
+            at=datetime.now(tz=tz_utc),
+            level_number=0,
+            player=harry,
+            team=gryffindor,
         ),
-        list(keys[gryffindor])[0]
+        list(keys[gryffindor])[0],
     )
 
     when(dummy_view).correct_key(key=ANY).thenReturn(mock_coro(None))
@@ -83,17 +106,18 @@ async def test_game_play(
 
     unstub(dummy_view)
     when(dummy_view).correct_key(key=ANY).thenReturn(mock_coro(None))
-    when(dummy_view).send_puzzle(team=gryffindor, level=game.levels[1]) \
-        .thenReturn(mock_coro(None))
-    when(dummy_org_notifier).notify(LevelUp(team=gryffindor, new_level=game.levels[1], orgs_list=orgs)) \
-        .thenReturn(mock_coro(None))
+    when(dummy_view).send_puzzle(team=gryffindor, level=game.levels[1]).thenReturn(mock_coro(None))
+    when(dummy_org_notifier).notify(
+        LevelUp(team=gryffindor, new_level=game.levels[1], orgs_list=orgs)
+    ).thenReturn(mock_coro(None))
     await check_key(key="SH321", **key_kwargs)
 
     unstub(dummy_view)
     dummy_view = mock(GameView)
     when(dummy_log).log("Game finished").thenReturn(mock_coro(None))
-    when(dummy_org_notifier).notify(LevelUp(team=gryffindor, new_level=game.levels[1], orgs_list=orgs)) \
-        .thenReturn(mock_coro(None))
+    when(dummy_org_notifier).notify(
+        LevelUp(team=gryffindor, new_level=game.levels[1], orgs_list=orgs)
+    ).thenReturn(mock_coro(None))
     when(dummy_view).correct_key(key=ANY).thenReturn(mock_coro(None))
     when(dummy_view).game_finished(gryffindor).thenReturn(mock_coro(None))
     when(dummy_view).game_finished_by_all(gryffindor).thenReturn(mock_coro(None))
@@ -106,38 +130,63 @@ async def test_game_play(
     assert 5 == len(keys[gryffindor])
     assert_time_key(
         dto.KeyTime(
-            text="SHWRONG", is_correct=False, is_duplicate=False,
-            at=datetime.now(tz=tz_utc), level_number=0, player=harry, team=gryffindor,
+            text="SHWRONG",
+            is_correct=False,
+            is_duplicate=False,
+            at=datetime.now(tz=tz_utc),
+            level_number=0,
+            player=harry,
+            team=gryffindor,
         ),
-        list(keys[gryffindor])[0]
+        list(keys[gryffindor])[0],
     )
     assert_time_key(
         dto.KeyTime(
-            text="SH123", is_correct=True, is_duplicate=False,
-            at=datetime.now(tz=tz_utc), level_number=0, player=harry, team=gryffindor,
+            text="SH123",
+            is_correct=True,
+            is_duplicate=False,
+            at=datetime.now(tz=tz_utc),
+            level_number=0,
+            player=harry,
+            team=gryffindor,
         ),
-        list(keys[gryffindor])[1]
+        list(keys[gryffindor])[1],
     )
     assert_time_key(
         dto.KeyTime(
-            text="SH123", is_correct=True, is_duplicate=True,
-            at=datetime.now(tz=tz_utc), level_number=0, player=harry, team=gryffindor,
+            text="SH123",
+            is_correct=True,
+            is_duplicate=True,
+            at=datetime.now(tz=tz_utc),
+            level_number=0,
+            player=harry,
+            team=gryffindor,
         ),
-        list(keys[gryffindor])[2]
+        list(keys[gryffindor])[2],
     )
     assert_time_key(
         dto.KeyTime(
-            text="SH321", is_correct=True, is_duplicate=False,
-            at=datetime.now(tz=tz_utc), level_number=0, player=harry, team=gryffindor,
+            text="SH321",
+            is_correct=True,
+            is_duplicate=False,
+            at=datetime.now(tz=tz_utc),
+            level_number=0,
+            player=harry,
+            team=gryffindor,
         ),
-        list(keys[gryffindor])[3]
+        list(keys[gryffindor])[3],
     )
     assert_time_key(
         dto.KeyTime(
-            text="SHOOT", is_correct=True, is_duplicate=False,
-            at=datetime.now(tz=tz_utc), level_number=0, player=harry, team=gryffindor,
+            text="SHOOT",
+            is_correct=True,
+            is_duplicate=False,
+            at=datetime.now(tz=tz_utc),
+            level_number=0,
+            player=harry,
+            team=gryffindor,
         ),
-        list(keys[gryffindor])[4]
+        list(keys[gryffindor])[4],
     )
     assert await dao.game_player.is_all_team_finished(game)
     assert GameStatus.finished == (await dao.game.get_by_id(game.id, author)).status
@@ -145,8 +194,14 @@ async def test_game_play(
 
 @pytest.mark.asyncio
 async def test_get_current_hints(
-    game: dto.FullGame, dao: HolderDao, dcf: Factory, locker: KeyCheckerFactory, file_storage: FileStorage,
-    author: dto.Player, harry: dto.Player, hermione: dto.Player,
+    game: dto.FullGame,
+    dao: HolderDao,
+    dcf: Factory,
+    locker: KeyCheckerFactory,
+    file_storage: FileStorage,
+    author: dto.Player,
+    harry: dto.Player,
+    hermione: dto.Player,
     gryffindor: dto.Team,
 ):
     await start_waivers(game, author, dao.game)

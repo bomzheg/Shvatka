@@ -25,8 +25,10 @@ class TeamPlayer(Base):
         back_populates="players",
     )
     date_joined = Column(
-        DateTime(timezone=True), default=lambda: datetime.now(tz=tz_utc),
-        server_default=func.now(), nullable=False,
+        DateTime(timezone=True),
+        default=lambda: datetime.now(tz=tz_utc),
+        server_default=func.now(),
+        nullable=False,
     )
     role = Column(Text)
     emoji = Column("emoji", Text)
@@ -47,7 +49,6 @@ class TeamPlayer(Base):
             date_left=self.date_left,
             role=self.role,
             emoji=self.emoji,
-
             _can_manage_waivers=self.can_manage_waivers,
             _can_manage_players=self.can_manage_players,
             _can_change_team_name=self.can_change_team_name,

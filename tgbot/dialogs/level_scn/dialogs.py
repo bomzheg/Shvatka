@@ -49,7 +49,11 @@ level = Dialog(
         ),
         state=states.LevelSG.time_hints,
         getter=get_time_hints,
-        preview_data={"time_hints": [], "rendered": RENDERED_HINTS_PREVIEW, "level_id": "Pinky Pie"},
+        preview_data={
+            "time_hints": [],
+            "rendered": RENDERED_HINTS_PREVIEW,
+            "level_id": "Pinky Pie",
+        },
     ),
     on_process_result=process_result,
 )

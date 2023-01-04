@@ -42,7 +42,7 @@ class GamePublisher:
         msg = await self.bot.send_message(
             chat_id=self.channel_id,
             text=f"Сценарий игры {hd.quote(self.game.name)} "
-                 f"({self.game.start_at.strftime(DATE_FORMAT)})",
+            f"({self.game.start_at.strftime(DATE_FORMAT)})",
         )
         for level in self.game.levels:
             level_publisher = LevelPublisher(
@@ -81,7 +81,9 @@ class GamePublisher:
         return msg.message_id
 
     def get_approximate_time(self) -> timedelta:
-        return reduce(add, (LevelPublisher.get_approximate_time(level) for level in self.game.levels))
+        return reduce(
+            add, (LevelPublisher.get_approximate_time(level) for level in self.game.levels)
+        )
 
 
 class LevelPublisher:
@@ -95,8 +97,10 @@ class LevelPublisher:
     async def publish(self):
         for hint_number, hint in enumerate(self.level.scenario.time_hints):
             if hint.time == 0:
-                text = f"🔒 <b>Уровень № {self.level.number_in_game + 1}</b>\n" \
-                       f"Ключи уровня:\n🔑 " + '\n🔑 '.join(self.level.scenario.keys)
+                text = (
+                    f"🔒 <b>Уровень № {self.level.number_in_game + 1}</b>\n"
+                    f"Ключи уровня:\n🔑 " + "\n🔑 ".join(self.level.scenario.keys)
+                )
             elif hint_number == len(self.level.scenario.time_hints) - 1:
                 text = f"🔖 Последняя подсказка уровня №{self.level.number_in_game + 1} ({hint.time} мин.):\n"
             else:
@@ -106,6 +110,7 @@ class LevelPublisher:
 
     @classmethod
     def get_approximate_time(cls, level: dto.Level) -> timedelta:
-        return len(level.scenario.time_hints) * cls.SLEEP + reduce(add, (
-            HintSender.get_approximate_time(hints.hint) for hints in level.scenario.time_hints
-        ))
+        return len(level.scenario.time_hints) * cls.SLEEP + reduce(
+            add,
+            (HintSender.get_approximate_time(hints.hint) for hints in level.scenario.time_hints),
+        )

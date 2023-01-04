@@ -8,13 +8,21 @@ from aiogram_dialog.widgets.kbd import Button
 
 from infrastructure.db.dao.holder import HolderDao
 from shvatka.models import dto, enums
-from shvatka.services.player import get_my_team, get_full_team_player, flip_permission, get_team_player_by_player, \
-    get_player_by_id, leave
+from shvatka.services.player import (
+    get_my_team,
+    get_full_team_player,
+    flip_permission,
+    get_team_player_by_player,
+    get_player_by_id,
+    leave,
+)
 from shvatka.services.team import rename_team, change_team_desc
 from tgbot import states
 
 
-async def rename_team_handler(m: Message, widget: Any, dialog_manager: DialogManager, new_name: str):
+async def rename_team_handler(
+    m: Message, widget: Any, dialog_manager: DialogManager, new_name: str
+):
     dao: HolderDao = dialog_manager.middleware_data["dao"]
     player: dto.Player = dialog_manager.middleware_data["player"]
     team = await get_my_team(player=player, dao=dao.team_player)
@@ -22,7 +30,9 @@ async def rename_team_handler(m: Message, widget: Any, dialog_manager: DialogMan
     await rename_team(team=team, captain=team_player, new_name=new_name, dao=dao.team)
 
 
-async def change_desc_team_handler(m: Message, widget: Any, dialog_manager: DialogManager, new_desc: str):
+async def change_desc_team_handler(
+    m: Message, widget: Any, dialog_manager: DialogManager, new_desc: str
+):
     dao: HolderDao = dialog_manager.middleware_data["dao"]
     player: dto.Player = dialog_manager.middleware_data["player"]
     team = await get_my_team(player=player, dao=dao.team_player)

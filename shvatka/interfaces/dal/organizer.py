@@ -8,11 +8,15 @@ from shvatka.models.enums.org_permission import OrgPermission
 
 
 class GameOrgsGetter(Reader):
-    async def get_orgs(self, game: dto.Game, with_deleted: bool = False) -> list[dto.SecondaryOrganizer]:
+    async def get_orgs(
+        self, game: dto.Game, with_deleted: bool = False
+    ) -> list[dto.SecondaryOrganizer]:
         raise NotImplementedError
 
 
-class OrgAdder(Committer, InviteReader, InviteRemover, GameByIdGetter, GameOrgsGetter, metaclass=ABCMeta):
+class OrgAdder(
+    Committer, InviteReader, InviteRemover, GameByIdGetter, GameOrgsGetter, metaclass=ABCMeta
+):
     async def add_new_org(self, game: dto.Game, player: dto.Player) -> dto.SecondaryOrganizer:
         raise NotImplementedError
 
@@ -26,7 +30,9 @@ class OrgByPlayerGetter(Reader):
     async def get_by_player(self, game: dto.Game, player: dto.Player) -> dto.SecondaryOrganizer:
         raise NotImplementedError
 
-    async def get_by_player_or_none(self, game: dto.Game, player: dto.Player) -> dto.SecondaryOrganizer | None:
+    async def get_by_player_or_none(
+        self, game: dto.Game, player: dto.Player
+    ) -> dto.SecondaryOrganizer | None:
         raise NotImplementedError
 
 

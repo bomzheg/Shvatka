@@ -13,8 +13,7 @@ class AchievementDAO(BaseDAO[models.Achievement]):
 
     async def exist_type(self, achievement: enums.Achievement) -> bool:
         result = await self.session.execute(
-            select(models.Achievement)
-            .where(models.Achievement.name == achievement)
+            select(models.Achievement).where(models.Achievement.name == achievement)
         )
         try:
             result.scalar_one()
@@ -25,16 +24,13 @@ class AchievementDAO(BaseDAO[models.Achievement]):
 
     async def add_achievement(self, achievement: dto.Achievement) -> None:
         db = models.Achievement(
-            player_id=achievement.player.id,
-            name=achievement.name,
-            first=achievement.first
+            player_id=achievement.player.id, name=achievement.name, first=achievement.first
         )
         self._save(db)
 
     async def get_by_player(self, player: dto.Player) -> list[dto.Achievement]:
         result = await self.session.execute(
-            select(models.Achievement)
-            .where(models.Achievement.player_id == player.id)
+            select(models.Achievement).where(models.Achievement.player_id == player.id)
         )
         achievements: list[models.Achievement] = result.scalars().all()
         return [achievement.to_dto(player) for achievement in achievements]

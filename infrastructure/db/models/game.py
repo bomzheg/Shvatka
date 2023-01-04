@@ -3,7 +3,14 @@ from __future__ import annotations
 import secrets
 
 from sqlalchemy import (
-    Column, Integer, ForeignKey, Text, Enum, BigInteger, DateTime, UniqueConstraint,
+    Column,
+    Integer,
+    ForeignKey,
+    Text,
+    Enum,
+    BigInteger,
+    DateTime,
+    UniqueConstraint,
 )
 from sqlalchemy.orm import relationship
 
@@ -45,11 +52,7 @@ class Game(Base):
         back_populates="game",
         foreign_keys="KeyTime.game_id",
     )
-    organizers = relationship(
-        "Organizer",
-        back_populates="game",
-        foreign_keys="Organizer.game_id"
-    )
+    organizers = relationship("Organizer", back_populates="game", foreign_keys="Organizer.game_id")
     waivers = relationship(
         "Waiver",
         back_populates="game",
@@ -62,9 +65,7 @@ class Game(Base):
         default=secrets.token_urlsafe(_TOKEN_LEN * 3 // 4),
     )
 
-    __table_args__ = (
-        UniqueConstraint("author_id", "name"),
-    )
+    __table_args__ = (UniqueConstraint("author_id", "name"),)
 
     def to_dto(self, author: dto.Player) -> dto.Game:
         return dto.Game(

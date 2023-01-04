@@ -48,16 +48,20 @@ class WaiverAddPlayerForceCD(CallbackData, prefix="waiver_add_force"):
 
 def get_kb_waivers(team: dto.Team) -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
-    builder.button(text='Играю', callback_data=WaiverVoteCD(vote=Played.yes, team_id=team.id))
-    builder.button(text='Не могу', callback_data=WaiverVoteCD(vote=Played.no, team_id=team.id))
-    builder.button(text='Думаю', callback_data=WaiverVoteCD(vote=Played.think, team_id=team.id))
+    builder.button(text="Играю", callback_data=WaiverVoteCD(vote=Played.yes, team_id=team.id))
+    builder.button(text="Не могу", callback_data=WaiverVoteCD(vote=Played.no, team_id=team.id))
+    builder.button(text="Думаю", callback_data=WaiverVoteCD(vote=Played.think, team_id=team.id))
     builder.adjust(3)
     return builder.as_markup()
 
 
-def get_kb_manage_waivers(team: dto.Team, players: Iterable[dto.Player], game: dto.Game) -> InlineKeyboardMarkup:
+def get_kb_manage_waivers(
+    team: dto.Team, players: Iterable[dto.Player], game: dto.Game
+) -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
-    builder.button(text="Подтвердить вейверы", callback_data=WaiverConfirmCD(game_id=game.id, team_id=team.id))
+    builder.button(
+        text="Подтвердить вейверы", callback_data=WaiverConfirmCD(game_id=game.id, team_id=team.id)
+    )
     builder.button(
         text="Добавить игрока принудительно",
         callback_data=WaiverAddForceMenuCD(game_id=game.id, team_id=team.id),
@@ -65,40 +69,48 @@ def get_kb_manage_waivers(team: dto.Team, players: Iterable[dto.Player], game: d
     for player in players:
         builder.button(
             text=player.user.name_mention,
-            callback_data=WaiverManagePlayerCD(game_id=game.id, team_id=team.id, player_id=player.id),
+            callback_data=WaiverManagePlayerCD(
+                game_id=game.id, team_id=team.id, player_id=player.id
+            ),
         )
     builder.adjust(1)
     return builder.as_markup()
 
 
-def get_kb_waiver_one_player(team: dto.Team, player: dto.Player, game: dto.Game) -> InlineKeyboardMarkup:
+def get_kb_waiver_one_player(
+    team: dto.Team, player: dto.Player, game: dto.Game
+) -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
     builder.button(
-        text='К списку игроков',
-        callback_data=WaiverMainCD(game_id=game.id, team_id=team.id)
+        text="К списку игроков", callback_data=WaiverMainCD(game_id=game.id, team_id=team.id)
     )
     builder.button(
-        text='Исключить из вейверов',
+        text="Исключить из вейверов",
         callback_data=WaiverRemovePlayerCD(
-            game_id=game.id, team_id=team.id, player_id=player.id,
-        )
+            game_id=game.id,
+            team_id=team.id,
+            player_id=player.id,
+        ),
     )
     builder.adjust(1)
     return builder.as_markup()
 
 
-def get_kb_force_add_waivers(team: dto.Team, players: Iterable[dto.Player], game: dto.Game) -> InlineKeyboardMarkup:
+def get_kb_force_add_waivers(
+    team: dto.Team, players: Iterable[dto.Player], game: dto.Game
+) -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
     builder.button(
-        text='К списку игроков',
-        callback_data=WaiverMainCD(game_id=game.id, team_id=team.id)
+        text="К списку игроков", callback_data=WaiverMainCD(game_id=game.id, team_id=team.id)
     )
     for player in players:
         builder.button(
             text=player.user.name_mention,
             callback_data=WaiverAddPlayerForceCD(
-                game_id=game.id, team_id=team.id, player_id=player.id,
-            )
+                game_id=game.id,
+                team_id=team.id,
+                player_id=player.id,
+            ),
         )
     builder.adjust(1)
     return builder.as_markup()

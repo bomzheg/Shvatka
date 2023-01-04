@@ -16,9 +16,7 @@ class UserDao(BaseDAO[User]):
         return (await self._get_by_id(id_)).to_dto()
 
     async def _get_by_tg_id(self, tg_id: int) -> User:
-        result = await self.session.execute(
-            select(User).where(User.tg_id == tg_id)
-        )
+        result = await self.session.execute(select(User).where(User.tg_id == tg_id))
         return result.scalar_one()
 
     async def get_by_username(self, username: str) -> dto.User:
@@ -30,9 +28,7 @@ class UserDao(BaseDAO[User]):
         return user.to_dto().add_password(user.hashed_password)
 
     async def _get_by_username(self, username: str) -> User:
-        result = await self.session.execute(
-            select(User).where(User.username == username)
-        )
+        result = await self.session.execute(select(User).where(User.username == username))
         try:
             user = result.scalar_one()
         except MultipleResultsFound as e:
@@ -62,12 +58,14 @@ def update_fields(target: User, source: dto.User) -> bool:
     if source.first_name is None:
         # this user is created from username only
         return False
-    if all([
-        target.first_name == source.first_name,
-        target.last_name == source.last_name,
-        target.username == source.username,
-        target.is_bot == source.is_bot,
-    ]):
+    if all(
+        [
+            target.first_name == source.first_name,
+            target.last_name == source.last_name,
+            target.username == source.username,
+            target.is_bot == source.is_bot,
+        ]
+    ):
         return False
     target.first_name = source.first_name
     target.last_name = source.last_name

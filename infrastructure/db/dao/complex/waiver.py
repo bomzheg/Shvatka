@@ -14,7 +14,10 @@ class WaiverVoteAdderImpl(WaiverVoteAdder):
     team_player: TeamPlayerDao
 
     async def is_excluded(
-        self, game: dto.Game, player: dto.Player, team: dto.Team,
+        self,
+        game: dto.Game,
+        player: dto.Player,
+        team: dto.Team,
     ) -> bool:
         return await self.waiver.is_excluded(game, player, team)
 

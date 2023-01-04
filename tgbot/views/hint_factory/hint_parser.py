@@ -8,10 +8,26 @@ from aiogram.types import Message, ContentType
 from infrastructure.db.dao import FileInfoDao
 from shvatka.interfaces.clients.file_storage import FileStorage
 from shvatka.models import dto
-from shvatka.models.dto.scn import BaseHint, TextHint, GPSHint, FileMeta, TgLink, PhotoHint, \
-    UploadedFileMeta
-from shvatka.models.dto.scn.hint_part import VenueHint, AudioHint, VideoHint, DocumentHint, AnimationHint, VoiceHint, \
-    VideoNoteHint, ContactHint, StickerHint
+from shvatka.models.dto.scn import (
+    BaseHint,
+    TextHint,
+    GPSHint,
+    FileMeta,
+    TgLink,
+    PhotoHint,
+    UploadedFileMeta,
+)
+from shvatka.models.dto.scn.hint_part import (
+    VenueHint,
+    AudioHint,
+    VideoHint,
+    DocumentHint,
+    AnimationHint,
+    VoiceHint,
+    VideoNoteHint,
+    ContactHint,
+    StickerHint,
+)
 from shvatka.models.enums.hint_type import HintType
 
 
@@ -26,7 +42,9 @@ class HintParser:
             case ContentType.TEXT:
                 return TextHint(text=message.html_text)
             case ContentType.LOCATION:
-                return GPSHint(longitude=message.location.longitude, latitude=message.location.latitude)
+                return GPSHint(
+                    longitude=message.location.longitude, latitude=message.location.latitude
+                )
             case ContentType.VENUE:
                 return VenueHint(
                     latitude=message.venue.location.latitude,
@@ -49,11 +67,15 @@ class HintParser:
                     content_type=HintType.audio,
                     author=author,
                 )
-                thumb = await self.save_content(
-                    file_id=message.audio.thumb.file_id,
-                    content_type=HintType.photo,
-                    author=author,
-                ) if message.audio.thumb else None
+                thumb = (
+                    await self.save_content(
+                        file_id=message.audio.thumb.file_id,
+                        content_type=HintType.photo,
+                        author=author,
+                    )
+                    if message.audio.thumb
+                    else None
+                )
                 return AudioHint(
                     caption=message.html_text,
                     file_guid=file_meta.guid,
@@ -65,11 +87,15 @@ class HintParser:
                     content_type=HintType.video,
                     author=author,
                 )
-                thumb = await self.save_content(
-                    file_id=message.video.thumb.file_id,
-                    content_type=HintType.video,
-                    author=author,
-                ) if message.video.thumb else None
+                thumb = (
+                    await self.save_content(
+                        file_id=message.video.thumb.file_id,
+                        content_type=HintType.video,
+                        author=author,
+                    )
+                    if message.video.thumb
+                    else None
+                )
                 return VideoHint(
                     caption=message.html_text,
                     file_guid=file_meta.guid,
@@ -81,11 +107,15 @@ class HintParser:
                     content_type=HintType.document,
                     author=author,
                 )
-                thumb = await self.save_content(
-                    file_id=message.document.thumb.file_id,
-                    content_type=HintType.document,
-                    author=author,
-                ) if message.document.thumb else None
+                thumb = (
+                    await self.save_content(
+                        file_id=message.document.thumb.file_id,
+                        content_type=HintType.document,
+                        author=author,
+                    )
+                    if message.document.thumb
+                    else None
+                )
                 return DocumentHint(
                     caption=message.html_text,
                     file_guid=file_meta.guid,
@@ -97,11 +127,15 @@ class HintParser:
                     content_type=HintType.animation,
                     author=author,
                 )
-                thumb = await self.save_content(
-                    file_id=message.animation.thumb.file_id,
-                    content_type=HintType.animation,
-                    author=author,
-                ) if message.animation.thumb else None
+                thumb = (
+                    await self.save_content(
+                        file_id=message.animation.thumb.file_id,
+                        content_type=HintType.animation,
+                        author=author,
+                    )
+                    if message.animation.thumb
+                    else None
+                )
                 return AnimationHint(
                     caption=message.html_text,
                     file_guid=file_meta.guid,
@@ -162,4 +196,4 @@ class HintParser:
 def get_name_without_extension(name: str, extension: str) -> str:
     if not extension:
         return name
-    return name[:-len(extension)]
+    return name[: -len(extension)]

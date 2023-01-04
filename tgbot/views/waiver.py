@@ -32,7 +32,9 @@ def render_all_teams_waivers(waivers: dict[dto.Team, Iterable[dto.VotedPlayer]])
 
 
 def render_players(users: Iterable[dto.VotedPlayer]) -> str:
-    return "\n".join([get_emoji(voted.pit) + get_small_card_no_link(voted.player.user) for voted in users])
+    return "\n".join(
+        [get_emoji(voted.pit) + get_small_card_no_link(voted.player.user) for voted in users]
+    )
 
 
 async def get_waiver_poll_text(team: dto.Team, game: dto.Game, dao: HolderDao):
@@ -56,9 +58,8 @@ async def start_approve_waivers(game: dto.Game, team: dto.Team, dao: HolderDao):
     votes = await get_vote_to_voted(team=team, dao=dao.waiver_vote_getter)
     return dict(
         text=f"Играющие в {hd.quote(game.name)} схватчики команды {hd.bold(hd.quote(team.name))}:",
-        reply_markup=kb.get_kb_manage_waivers(team, map(lambda v: v.player, votes[Played.yes]), game),
+        reply_markup=kb.get_kb_manage_waivers(
+            team, map(lambda v: v.player, votes[Played.yes]), game
+        ),
         disable_web_page_preview=True,
     )
-
-
-

@@ -15,7 +15,11 @@ from shvatka.services.waiver import add_vote, approve_waivers
 
 @pytest_asyncio.fixture
 async def game(
-    complex_scn: RawGameScenario, author: dto.Player, dao: HolderDao, dcf: Factory, file_storage: FileStorage,
+    complex_scn: RawGameScenario,
+    author: dto.Player,
+    dao: HolderDao,
+    dcf: Factory,
+    file_storage: FileStorage,
 ) -> dto.FullGame:
     return await upsert_game(
         complex_scn,
@@ -28,8 +32,13 @@ async def game(
 
 @pytest_asyncio.fixture
 async def completed_game(
-    game: dto.FullGame, gryffindor: dto.Team, slytherin: dto.Team,
-    harry: dto.Player, ron: dto.Player, hermione: dto.Player, draco: dto.Player,
+    game: dto.FullGame,
+    gryffindor: dto.Team,
+    slytherin: dto.Team,
+    harry: dto.Player,
+    ron: dto.Player,
+    hermione: dto.Player,
+    draco: dto.Player,
     dao: HolderDao,
 ):
     await join_team(ron, gryffindor, harry, dao.team_player)
@@ -44,42 +53,82 @@ async def completed_game(
     await dao.game.set_started(game)
 
     await dao.key_time.save_key(
-        key="SHWRONG", team=gryffindor, level=game.levels[0], game=game,
-        player=ron, is_correct=False, is_duplicate=False,
+        key="SHWRONG",
+        team=gryffindor,
+        level=game.levels[0],
+        game=game,
+        player=ron,
+        is_correct=False,
+        is_duplicate=False,
     )
     await dao.key_time.save_key(
-        key="SH123", team=gryffindor, level=game.levels[0], game=game,
-        player=harry, is_correct=True, is_duplicate=False,
+        key="SH123",
+        team=gryffindor,
+        level=game.levels[0],
+        game=game,
+        player=harry,
+        is_correct=True,
+        is_duplicate=False,
     )
     await dao.key_time.save_key(
-        key="SH123", team=slytherin, level=game.levels[0], game=game,
-        player=draco, is_correct=True, is_duplicate=False,
+        key="SH123",
+        team=slytherin,
+        level=game.levels[0],
+        game=game,
+        player=draco,
+        is_correct=True,
+        is_duplicate=False,
     )
     await dao.key_time.save_key(
-        key="SH123", team=gryffindor, level=game.levels[0], game=game,
-        player=hermione, is_correct=True, is_duplicate=True,
+        key="SH123",
+        team=gryffindor,
+        level=game.levels[0],
+        game=game,
+        player=hermione,
+        is_correct=True,
+        is_duplicate=True,
     )
     await dao.key_time.save_key(
-        key="SH321", team=slytherin, level=game.levels[0], game=game,
-        player=draco, is_correct=True, is_duplicate=False,
+        key="SH321",
+        team=slytherin,
+        level=game.levels[0],
+        game=game,
+        player=draco,
+        is_correct=True,
+        is_duplicate=False,
     )
     await dao.game_player.level_up(slytherin, game.levels[0], game)
     await asyncio.sleep(1)
     await dao.key_time.save_key(
-        key="SH123", team=gryffindor, level=game.levels[0], game=game,
-        player=ron, is_correct=True, is_duplicate=False,
+        key="SH123",
+        team=gryffindor,
+        level=game.levels[0],
+        game=game,
+        player=ron,
+        is_correct=True,
+        is_duplicate=False,
     )
     await dao.game_player.level_up(gryffindor, game.levels[0], game)
     await asyncio.sleep(2)
     await dao.key_time.save_key(
-        key="SHOOT", team=gryffindor, level=game.levels[1], game=game,
-        player=hermione, is_correct=True, is_duplicate=False,
+        key="SHOOT",
+        team=gryffindor,
+        level=game.levels[1],
+        game=game,
+        player=hermione,
+        is_correct=True,
+        is_duplicate=False,
     )
     await dao.game_player.level_up(gryffindor, game.levels[1], game)
     await asyncio.sleep(1)
     await dao.key_time.save_key(
-        key="SHOOT", team=slytherin, level=game.levels[1], game=game,
-        player=draco, is_correct=True, is_duplicate=False,
+        key="SHOOT",
+        team=slytherin,
+        level=game.levels[1],
+        game=game,
+        player=draco,
+        is_correct=True,
+        is_duplicate=False,
     )
     await dao.game_player.level_up(slytherin, game.levels[1], game)
     await dao.game.set_finished(game)

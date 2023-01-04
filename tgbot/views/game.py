@@ -11,8 +11,16 @@ from infrastructure.db.dao.holder import HolderDao
 from shvatka.interfaces.clients.file_storage import FileStorage
 from shvatka.interfaces.dal.game_play import GamePreparer
 from shvatka.models import dto
-from shvatka.views.game import GameViewPreparer, GameView, GameLogWriter, OrgNotifier, Event, LevelUp, NewOrg, \
-    LevelTestCompleted
+from shvatka.views.game import (
+    GameViewPreparer,
+    GameView,
+    GameLogWriter,
+    OrgNotifier,
+    Event,
+    LevelUp,
+    NewOrg,
+    LevelTestCompleted,
+)
 from tgbot.views.hint_sender import HintSender, create_hint_sender
 
 logger = logging.getLogger(__name__)
@@ -24,7 +32,11 @@ class BotView(GameViewPreparer, GameView):
     hint_sender: HintSender
 
     async def prepare_game_view(
-        self, game: dto.Game, teams: Iterable[dto.Team], orgs: Iterable[dto.Organizer], dao: GamePreparer,
+        self,
+        game: dto.Game,
+        teams: Iterable[dto.Team],
+        orgs: Iterable[dto.Organizer],
+        dao: GamePreparer,
     ) -> None:
         # TODO set bot commands for orgs, hide bot commands for players
         for team in teams:
@@ -41,29 +53,35 @@ class BotView(GameViewPreparer, GameView):
         await self.hint_sender.send_hints(
             chat_id=team.chat.tg_id,
             hint_containers=level.get_hint(0).hint,
-            caption=hd.bold(f"Уровень № {level.number_in_game + 1}")
+            caption=hd.bold(f"Уровень № {level.number_in_game + 1}"),
         )
 
     async def send_hint(self, team: dto.Team, hint_number: int, level: dto.Level) -> None:
         hint = level.get_hint(hint_number)
         if level.is_last_hint(hint_number):
-            hint_caption = f"Последняя подсказка уровня №{level.number_in_game + 1} ({hint.time} мин.):\n"
+            hint_caption = (
+                f"Последняя подсказка уровня №{level.number_in_game + 1} ({hint.time} мин.):\n"
+            )
         else:
             hint_caption = f"Уровень №{level.number_in_game + 1}. Подсказка ({hint.time} мин.):\n"
         await self.hint_sender.send_hints(
-            chat_id=team.chat.tg_id,
-            hint_containers=hint.hint,
-            caption=hint_caption
+            chat_id=team.chat.tg_id, hint_containers=hint.hint, caption=hint_caption
         )
 
     async def duplicate_key(self, key: dto.KeyTime) -> None:
-        await self.bot.send_message(chat_id=key.team.chat.tg_id, text=f"Ключ {hd.pre(key.text)} уже был введён ранее.")
+        await self.bot.send_message(
+            chat_id=key.team.chat.tg_id, text=f"Ключ {hd.pre(key.text)} уже был введён ранее."
+        )
 
     async def correct_key(self, key: dto.KeyTime) -> None:
-        await self.bot.send_message(chat_id=key.team.chat.tg_id, text=f"Ключ {hd.pre(key.text)} верный! Поздравляю!")
+        await self.bot.send_message(
+            chat_id=key.team.chat.tg_id, text=f"Ключ {hd.pre(key.text)} верный! Поздравляю!"
+        )
 
     async def wrong_key(self, key: dto.KeyTime) -> None:
-        await self.bot.send_message(chat_id=key.team.chat.tg_id, text=f"Ключ {hd.pre(key.text)} неверный.")
+        await self.bot.send_message(
+            chat_id=key.team.chat.tg_id, text=f"Ключ {hd.pre(key.text)} неверный."
+        )
 
     async def game_finished(self, team: dto.Team) -> None:
         await self.bot.send_message(chat_id=team.chat.tg_id, text=f"Игра завершена! Поздравляю!")
@@ -105,24 +123,24 @@ class BotOrgNotifier(OrgNotifier):
         await self.bot.send_message(
             chat_id=org.player.user.tg_id,
             text=f"Команда {hd.quote(level_up.team.name)} перешла "
-                 f"на уровень {level_up.new_level.number_in_game} "
-                 f"({level_up.new_level.name_id})"
+            f"на уровень {level_up.new_level.number_in_game} "
+            f"({level_up.new_level.name_id})",
         )
 
     async def notify_new_org(self, new_org: NewOrg, org: dto.Organizer):
         await self.bot.send_message(
             chat_id=org.player.user.tg_id,
             text=f"На игру {hd.quote(new_org.game.name)} "
-                 f"добавлен новый орг {hd.quote(new_org.org.player.user.name_mention)}"
+            f"добавлен новый орг {hd.quote(new_org.org.player.user.name_mention)}",
         )
 
     async def level_test_completed(self, event: LevelTestCompleted, org: dto.Organizer):
         await self.bot.send_message(
             chat_id=org.player.user.tg_id,
             text=f"Тестирование уровня {event.suite.level.name_id}.\n"
-                 f"Игрок {hd.quote(event.suite.tester.player.user.name_mention)} "
-                 f"закончил тестирование уровня за {event.result.seconds // 60} минут "
-                 f"{event.result.seconds % 60} c.",
+            f"Игрок {hd.quote(event.suite.tester.player.user.name_mention)} "
+            f"закончил тестирование уровня за {event.result.seconds // 60} минут "
+            f"{event.result.seconds % 60} c.",
         )
 
 

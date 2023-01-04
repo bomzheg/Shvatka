@@ -19,19 +19,19 @@ class LevelBotView(LevelView):
         await self.hint_sender.send_hints(
             chat_id=suite.tester.player.user.tg_id,
             hint_containers=suite.level.get_hint(0).hint,
-            caption=hd.bold(f"Тестирование уровня {suite.level.name_id}")
+            caption=hd.bold(f"Тестирование уровня {suite.level.name_id}"),
         )
 
     async def send_hint(self, suite: dto.LevelTestSuite, hint_number: int) -> None:
         hint = suite.level.get_hint(hint_number)
         if suite.level.is_last_hint(hint_number):
-            hint_caption = f"Последняя подсказка уровня {suite.level.name_id} ({hint.time} мин.):\n"
+            hint_caption = (
+                f"Последняя подсказка уровня {suite.level.name_id} ({hint.time} мин.):\n"
+            )
         else:
             hint_caption = f"Уровень {suite.level.name_id}. Подсказка ({hint.time} мин.):\n"
         await self.hint_sender.send_hints(
-            chat_id=suite.tester.player.user.tg_id,
-            hint_containers=hint.hint,
-            caption=hint_caption
+            chat_id=suite.tester.player.user.tg_id, hint_containers=hint.hint, caption=hint_caption
         )
 
     async def correct_key(self, suite: dto.LevelTestSuite, key: str) -> None:

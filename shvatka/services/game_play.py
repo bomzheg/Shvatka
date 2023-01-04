@@ -18,10 +18,16 @@ logger = logging.getLogger(__name__)
 
 
 async def prepare_game(
-    game: dto.Game, game_preparer: GamePreparer, view_preparer: GameViewPreparer,
+    game: dto.Game,
+    game_preparer: GamePreparer,
+    view_preparer: GameViewPreparer,
 ):
     if not need_prepare_now(game):
-        logger.warning("waked up too early or too late planned %s, now %s", game.start_at, datetime.now(tz=tz_utc))
+        logger.warning(
+            "waked up too early or too late planned %s, now %s",
+            game.start_at,
+            datetime.now(tz=tz_utc),
+        )
         return
     await view_preparer.prepare_game_view(
         game=game,
@@ -104,7 +110,9 @@ async def check_key(
     """
     if not is_key_valid(key):
         raise InvalidKey(key=key, team=team, player=player, game=game)
-    new_key = await submit_key(key=key, player=player, team=team, game=game, dao=dao, locker=locker)
+    new_key = await submit_key(
+        key=key, player=player, team=team, game=game, dao=dao, locker=locker
+    )
     if new_key.is_duplicate:
         await view.duplicate_key(key=new_key)
         return
@@ -119,7 +127,9 @@ async def check_key(
 
             await view.send_puzzle(team=team, level=next_level)
             await schedule_first_hint(scheduler, team, next_level)
-            level_up_event = LevelUp(team=team, new_level=next_level, orgs_list=await get_spying_orgs(game, dao))
+            level_up_event = LevelUp(
+                team=team, new_level=next_level, orgs_list=await get_spying_orgs(game, dao)
+            )
             await org_notifier.notify(level_up_event)
     else:
         await view.wrong_key(key=new_key)
@@ -137,7 +147,11 @@ async def submit_key(
         level = await dao.get_current_level(team, game)
         keys = level.get_keys()
         new_key = await dao.save_key(
-            key=key, team=team, level=level, game=game, player=player,
+            key=key,
+            team=team,
+            level=level,
+            game=game,
+            player=player,
             is_correct=key in keys,
             is_duplicate=await dao.is_key_duplicate(level, team, key),
         )
@@ -202,7 +216,9 @@ async def send_hint(
     if not await dao.is_team_on_level(team, level):
         logger.debug(
             "team %s is not on level %s, skip sending hint #%s",
-            team.id, level.db_id, hint_number,
+            team.id,
+            level.db_id,
+            hint_number,
         )
         return
     await view.send_hint(team, hint_number, level)
@@ -210,16 +226,21 @@ async def send_hint(
     if level.is_last_hint(hint_number):
         logger.debug(
             "sent last hint #%s to team %s on level %s, no new scheduling required",
-            hint_number, team.id, level.db_id,
+            hint_number,
+            team.id,
+            level.db_id,
         )
         return
     next_hint_time = calculate_next_hint_time(
-        level.get_hint(hint_number), level.get_hint(next_hint_number),
+        level.get_hint(hint_number),
+        level.get_hint(next_hint_number),
     )
     await scheduler.plain_hint(level, team, next_hint_number, next_hint_time)
 
 
-async def get_available_hints(game: dto.Game, team: dto.Team, dao: GamePlayerDao) -> list[scn.TimeHint]:
+async def get_available_hints(
+    game: dto.Game, team: dto.Team, dao: GamePlayerDao
+) -> list[scn.TimeHint]:
     level_time = await dao.get_current_level_time(team=team, game=game)
     level = await dao.get_current_level(team=team, game=game)
     from_start_level_minutes = (datetime.now(tz=tz_utc) - level_time.start_at).seconds // 60
@@ -244,14 +265,17 @@ def calculate_first_hint_time(next_level: dto.Level, now: datetime = None) -> da
     return calculate_next_hint_time(next_level.get_hint(0), next_level.get_hint(1), now)
 
 
-def calculate_next_hint_time(current: scn.TimeHint, next_: scn.TimeHint, now: datetime = None) -> datetime:
+def calculate_next_hint_time(
+    current: scn.TimeHint, next_: scn.TimeHint, now: datetime = None
+) -> datetime:
     if now is None:
         now = datetime.now(tz=tz_utc)
     return now + calculate_next_hint_timedelta(current, next_)
 
 
 def calculate_next_hint_timedelta(
-    current_hint: scn.TimeHint, next_hint: scn.TimeHint,
+    current_hint: scn.TimeHint,
+    next_hint: scn.TimeHint,
 ) -> timedelta:
     return timedelta(minutes=(next_hint.time - current_hint.time))
 

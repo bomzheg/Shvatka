@@ -2,7 +2,13 @@ import pytest
 
 from infrastructure.db.dao.holder import HolderDao
 from shvatka.models import dto, enums
-from shvatka.services.player import join_team, get_my_team, get_my_role, flip_permission, get_full_team_player
+from shvatka.services.player import (
+    join_team,
+    get_my_team,
+    get_my_role,
+    flip_permission,
+    get_full_team_player,
+)
 from shvatka.utils.defaults_constants import DEFAULT_ROLE, CAPTAIN_ROLE
 from shvatka.utils.exceptions import PlayerAlreadyInTeam, PermissionsError
 from tests.fixtures.team import create_second_team
@@ -10,7 +16,11 @@ from tests.fixtures.team import create_second_team
 
 @pytest.mark.asyncio
 async def test_add_player_to_team(
-    harry: dto.Player, hermione: dto.Player, draco: dto.Player, gryffindor: dto.Team, dao: HolderDao,
+    harry: dto.Player,
+    hermione: dto.Player,
+    draco: dto.Player,
+    gryffindor: dto.Team,
+    dao: HolderDao,
 ):
     assert 1 == await dao.team_player.count()
     assert gryffindor == await get_my_team(harry, dao.team_player)
@@ -51,8 +61,11 @@ async def test_add_player_to_team(
 
 @pytest.mark.asyncio
 async def test_flip_permission(
-    harry: dto.Player, hermione: dto.Player, gryffindor: dto.Team,
-    dao: HolderDao, check_dao: HolderDao,
+    harry: dto.Player,
+    hermione: dto.Player,
+    gryffindor: dto.Team,
+    dao: HolderDao,
+    check_dao: HolderDao,
 ):
     await join_team(hermione, gryffindor, harry, dao.team_player)
     permission = enums.TeamPlayerPermission.can_change_team_name

@@ -43,7 +43,6 @@ class FileInfoDao(BaseDAO[models.FileInfo]):
 
     async def _get_by_guid(self, guid: str) -> models.FileInfo:
         result = await self.session.execute(
-            select(models.FileInfo)
-            .where(models.FileInfo.guid == guid)
+            select(models.FileInfo).where(models.FileInfo.guid == guid)
         )
         return result.scalar_one()

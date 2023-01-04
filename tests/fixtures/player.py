@@ -4,8 +4,13 @@ from infrastructure.db.dao.holder import HolderDao
 from shvatka.models import dto
 from shvatka.services.player import upsert_player
 from shvatka.services.user import upsert_user
-from tests.fixtures.user_constants import create_dto_hermione, create_dto_harry, create_dto_ron, create_dto_rowling, \
-    create_dto_draco
+from tests.fixtures.user_constants import (
+    create_dto_hermione,
+    create_dto_harry,
+    create_dto_ron,
+    create_dto_rowling,
+    create_dto_draco,
+)
 
 
 @pytest_asyncio.fixture

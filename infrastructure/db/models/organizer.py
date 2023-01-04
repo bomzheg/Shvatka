@@ -26,9 +26,7 @@ class Organizer(Base):
     can_validate_waivers = Column(Boolean, default=False, nullable=False)
     deleted = Column(Boolean, default=False, nullable=False)
 
-    __table_args__ = (
-        UniqueConstraint("player_id", "game_id"),
-    )
+    __table_args__ = (UniqueConstraint("player_id", "game_id"),)
 
     def to_dto(self, player: dto.Player, game: dto.Game) -> dto.SecondaryOrganizer:
         return dto.SecondaryOrganizer(

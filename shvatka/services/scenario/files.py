@@ -8,8 +8,11 @@ from shvatka.utils.exceptions import NotAuthorizedForEdit
 
 
 async def upsert_files(
-    author: dto.Player, contents: dict[str, BinaryIO], files: list[scn.UploadedFileMeta],
-    dao: GameUpserter, file_storage: FileStorage,
+    author: dto.Player,
+    contents: dict[str, BinaryIO],
+    files: list[scn.UploadedFileMeta],
+    dao: GameUpserter,
+    file_storage: FileStorage,
 ) -> set[str]:
     guids = set()
     for file in files:
@@ -20,7 +23,9 @@ async def upsert_files(
     return guids
 
 
-async def get_file_metas(guids: list[str], author: dto.Player, dao: GamePackager) -> list[scn.FileMeta]:
+async def get_file_metas(
+    guids: list[str], author: dto.Player, dao: GamePackager
+) -> list[scn.FileMeta]:
     file_metas = []
     for guid in guids:
         file_meta = await dao.get_by_guid(guid)
@@ -34,7 +39,9 @@ async def get_file_metas(guids: list[str], author: dto.Player, dao: GamePackager
     return file_metas
 
 
-async def get_file_contents(file_metas: list[scn.FileMeta], file_storage: FileStorage) -> dict[str, BinaryIO]:
+async def get_file_contents(
+    file_metas: list[scn.FileMeta], file_storage: FileStorage
+) -> dict[str, BinaryIO]:
     contents = {}
     for file_meta in file_metas:
         content = await file_storage.get(file_meta.file_content_link)

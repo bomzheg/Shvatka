@@ -10,7 +10,12 @@ class LevelTestInviteCD(CallbackData, prefix="level_test_invite"):
     org_id: int
 
 
-def get_kb_level_test_invite(level: dto.Level, org: dto.SecondaryOrganizer) -> InlineKeyboardMarkup:
+def get_kb_level_test_invite(
+    level: dto.Level, org: dto.SecondaryOrganizer
+) -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
-    builder.button(text="Тестировать сейчас", callback_data=LevelTestInviteCD(level_id=level.db_id, org_id=org.id))
+    builder.button(
+        text="Тестировать сейчас",
+        callback_data=LevelTestInviteCD(level_id=level.db_id, org_id=org.id),
+    )
     return builder.as_markup()

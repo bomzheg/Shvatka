@@ -38,4 +38,3 @@ class LevelTestComplex(LevelTestingDao):
 
     async def commit(self) -> None:
         return await self.level_testing.commit()
-

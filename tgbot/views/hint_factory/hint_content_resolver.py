@@ -4,12 +4,44 @@ from typing import BinaryIO
 
 from infrastructure.db.dao import FileInfoDao
 from shvatka.interfaces.clients.file_storage import FileStorage
-from shvatka.models.dto.scn.hint_part import BaseHint, TextHint, GPSHint, ContactHint, PhotoHint, VenueHint, AudioHint, \
-    VideoHint, DocumentHint, AnimationHint, VoiceHint, VideoNoteHint, StickerHint
-from tgbot.models.hint import BaseHintLinkView, BaseHintContentView, TextHintView, GPSHintView, ContactHintView, \
-    PhotoLinkView, PhotoContentView, VenueHintView, AudioLinkView, AudioContentView, VideoLinkView, VideoContentView, \
-    DocumentLinkView, DocumentContentView, AnimationContentView, AnimationLinkView, VoiceLinkView, VoiceContentView, \
-    VideoNoteContentView, VideoNoteLinkView, StickerHintView
+from shvatka.models.dto.scn.hint_part import (
+    BaseHint,
+    TextHint,
+    GPSHint,
+    ContactHint,
+    PhotoHint,
+    VenueHint,
+    AudioHint,
+    VideoHint,
+    DocumentHint,
+    AnimationHint,
+    VoiceHint,
+    VideoNoteHint,
+    StickerHint,
+)
+from tgbot.models.hint import (
+    BaseHintLinkView,
+    BaseHintContentView,
+    TextHintView,
+    GPSHintView,
+    ContactHintView,
+    PhotoLinkView,
+    PhotoContentView,
+    VenueHintView,
+    AudioLinkView,
+    AudioContentView,
+    VideoLinkView,
+    VideoContentView,
+    DocumentLinkView,
+    DocumentContentView,
+    AnimationContentView,
+    AnimationLinkView,
+    VoiceLinkView,
+    VoiceContentView,
+    VideoNoteContentView,
+    VideoNoteLinkView,
+    StickerHintView,
+)
 
 
 class HintContentResolver:
@@ -35,7 +67,9 @@ class HintContentResolver:
                 )
             case PhotoHint():
                 hint = typing.cast(PhotoHint, hint)
-                return PhotoLinkView(file_id=await self._resolve_file_id(hint.file_guid), caption=hint.caption)
+                return PhotoLinkView(
+                    file_id=await self._resolve_file_id(hint.file_guid), caption=hint.caption
+                )
             case AudioHint():
                 hint = typing.cast(AudioHint, hint)
                 return AudioLinkView(
@@ -66,7 +100,9 @@ class HintContentResolver:
                 )
             case VoiceHint():
                 hint = typing.cast(VoiceHint, hint)
-                return VoiceLinkView(file_id=await self._resolve_file_id(hint.file_guid), caption=hint.caption)
+                return VoiceLinkView(
+                    file_id=await self._resolve_file_id(hint.file_guid), caption=hint.caption
+                )
             case VideoNoteHint(file_guid=guid):
                 return VideoNoteLinkView(file_id=await self._resolve_file_id(guid))
             case ContactHint():
@@ -104,7 +140,9 @@ class HintContentResolver:
                 )
             case PhotoHint():
                 hint = typing.cast(PhotoHint, hint)
-                return PhotoContentView(content=await self._resolve_bytes(hint.file_guid), caption=hint.caption)
+                return PhotoContentView(
+                    content=await self._resolve_bytes(hint.file_guid), caption=hint.caption
+                )
             case AudioHint():
                 hint = typing.cast(AudioHint, hint)
                 return AudioContentView(
@@ -135,7 +173,9 @@ class HintContentResolver:
                 )
             case VoiceHint():
                 hint = typing.cast(VoiceHint, hint)
-                return VoiceContentView(content=await self._resolve_bytes(hint.file_guid), caption=hint.caption)
+                return VoiceContentView(
+                    content=await self._resolve_bytes(hint.file_guid), caption=hint.caption
+                )
             case VideoNoteHint(file_guid=guid):
                 return VideoNoteContentView(content=await self._resolve_bytes(guid))
             case ContactHint():

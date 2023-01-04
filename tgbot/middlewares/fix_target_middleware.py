@@ -13,7 +13,7 @@ class FixTargetMiddleware(BaseMiddleware):
         self,
         handler: Callable[[TelegramObject, dict[str, Any]], Awaitable[Any]],
         event: TelegramObject,
-        data: dict[str, Any]
+        data: dict[str, Any],
     ) -> Any:
         if target := data.get("target", None):
             dao: HolderDao = data["dao"]

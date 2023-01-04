@@ -5,8 +5,16 @@ from dataclass_factory import Factory
 
 from shvatka.models.dto.scn import TextHint, GPSHint, PhotoHint, ContactHint
 from shvatka.models.dto.scn.game import RawGameScenario
-from shvatka.models.dto.scn.hint_part import VenueHint, AudioHint, VideoHint, DocumentHint, AnimationHint, VoiceHint, \
-    VideoNoteHint, StickerHint
+from shvatka.models.dto.scn.hint_part import (
+    VenueHint,
+    AudioHint,
+    VideoHint,
+    DocumentHint,
+    AnimationHint,
+    VoiceHint,
+    VideoNoteHint,
+    StickerHint,
+)
 from shvatka.models.enums.hint_type import HintType
 from shvatka.services.scenario.game_ops import parse_game
 from shvatka.services.scenario.level_ops import load_level
@@ -51,7 +59,22 @@ def test_deserialize_all_types(all_types_scn: RawGameScenario, dcf: Factory):
     game_scn = parse_game(all_types_scn.scn, dcf)
     hints = game_scn.levels[0].time_hints
     assert 12 == len(hints)
-    for i, type_ in enumerate([TextHint, GPSHint, VenueHint, PhotoHint, AudioHint, VideoHint, DocumentHint, AnimationHint, VoiceHint, VideoNoteHint, ContactHint, StickerHint]):
+    for i, type_ in enumerate(
+        [
+            TextHint,
+            GPSHint,
+            VenueHint,
+            PhotoHint,
+            AudioHint,
+            VideoHint,
+            DocumentHint,
+            AnimationHint,
+            VoiceHint,
+            VideoNoteHint,
+            ContactHint,
+            StickerHint,
+        ]
+    ):
         assert isinstance(hints[i].hint[0], type_)
         assert hints[i].hint[0].type == type_.type
 

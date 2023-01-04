@@ -9,9 +9,7 @@ from shvatka.models.enums.played import Played
 class Waiver(Base):
     __tablename__ = "waivers"
     __mapper_args__ = {"eager_defaults": True}
-    __table_args__ = (
-        UniqueConstraint("game_id", "team_id", "player_id"),
-    )
+    __table_args__ = (UniqueConstraint("game_id", "team_id", "player_id"),)
     id = Column(Integer, primary_key=True)
     player_id = Column(ForeignKey("players.id"), nullable=False)
     player = relationship(

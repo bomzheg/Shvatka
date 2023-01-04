@@ -23,8 +23,10 @@ class Achievement(Base):
         nullable=False,
     )
     at = Column(
-        DateTime(timezone=True), default=lambda: datetime.now(tz=tz_utc),
-        server_default=func.now(), nullable=False,
+        DateTime(timezone=True),
+        default=lambda: datetime.now(tz=tz_utc),
+        server_default=func.now(),
+        nullable=False,
     )
     first = Column(Boolean, nullable=False, default=False, server_default="F")
 
@@ -35,4 +37,3 @@ class Achievement(Base):
             at=self.at,
             first=self.first,
         )
-

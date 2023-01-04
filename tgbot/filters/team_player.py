@@ -10,6 +10,7 @@ from shvatka.models import dto
 @dataclass
 class TeamPlayerFilter(BaseFilter):
     """if multiple values provided used AND semantic"""
+
     can_manage_waivers: bool | None = None
     can_manage_players: bool | None = None
     can_change_team_name: bool | None = None
@@ -18,7 +19,9 @@ class TeamPlayerFilter(BaseFilter):
     is_captain: bool | None = None
 
     async def __call__(
-        self, message: Message, team_player: dto.FullTeamPlayer,
+        self,
+        message: Message,
+        team_player: dto.FullTeamPlayer,
     ) -> Union[bool, dict[str, Any]]:
         if self.is_captain is not None:
             return team_player.team.captain.id == team_player.player.id

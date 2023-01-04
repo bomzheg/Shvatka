@@ -33,7 +33,7 @@ async def authorize(session: ClientSession, php_session: str, creds: Credentials
             "PassWord": creds.password,
             "submit": "%C2%F5%EE%E4",
         },
-        params=dict(s=php_session, act="Login", CODE="01")
+        params=dict(s=php_session, act="Login", CODE="01"),
     ) as resp:
         resp.raise_for_status()
         assert resp.ok

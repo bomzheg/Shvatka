@@ -95,7 +95,7 @@ class AudioContentView(BaseHintContentView):
         return dict(
             audio=_get_input_file(self.content),
             caption=self.caption,
-            thumb=_get_input_file(self.thumb)
+            thumb=_get_input_file(self.thumb),
         )
 
 
@@ -119,7 +119,7 @@ class VideoContentView(BaseHintContentView):
         return dict(
             video=_get_input_file(self.content),
             caption=self.caption,
-            thumb=_get_input_file(self.thumb)
+            thumb=_get_input_file(self.thumb),
         )
 
 
@@ -143,7 +143,7 @@ class DocumentContentView(BaseHintContentView):
         return dict(
             document=_get_input_file(self.content),
             caption=self.caption,
-            thumb=_get_input_file(self.thumb)
+            thumb=_get_input_file(self.thumb),
         )
 
 
@@ -167,7 +167,7 @@ class AnimationContentView(BaseHintContentView):
         return dict(
             animation=_get_input_file(self.content),
             caption=self.caption,
-            thumb=_get_input_file(self.thumb)
+            thumb=_get_input_file(self.thumb),
         )
 
 

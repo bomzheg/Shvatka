@@ -74,5 +74,3 @@ class GamePackagerImpl(GamePackager):
 
     async def get_by_guid(self, guid: str) -> scn.VerifiableFileMeta:
         return await self.file_info.get_by_guid(guid)
-
-

@@ -27,7 +27,7 @@ time_hint = Dialog(
         ),
         state=states.TimeHintSG.time,
         getter=get_available_times,
-        preview_data={"times": TIMES_PRESET}
+        preview_data={"times": TIMES_PRESET},
     ),
     Window(
         Jinja("Подсказка выходящая в {{time}} мин."),
@@ -51,6 +51,6 @@ time_hint = Dialog(
         ),
         getter=get_hints,
         state=states.TimeHintSG.hint,
-        preview_data={"has_hints": True, "rendered": "📃🪪"}
+        preview_data={"has_hints": True, "rendered": "📃🪪"},
     ),
 )

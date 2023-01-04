@@ -47,8 +47,10 @@ DRACO_DTO = dto.User(
 
 
 def create_tg_user(
-    id_: int = HARRY_DTO.tg_id, username: str = HARRY_DTO.username, # noqa (optional str)
-    first_name: str = HARRY_DTO.first_name, last_name: str = HARRY_DTO.last_name,  # noqa (optional str)
+    id_: int = HARRY_DTO.tg_id,
+    username: str = HARRY_DTO.username,  # noqa (optional str)
+    first_name: str = HARRY_DTO.first_name,
+    last_name: str = HARRY_DTO.last_name,  # noqa (optional str)
 ) -> User:
     return User(
         id=id_,

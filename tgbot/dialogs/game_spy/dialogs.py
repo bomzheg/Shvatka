@@ -63,7 +63,7 @@ game_spy = Dialog(
             "(началась в {{game.start_at|user_timezone}}) \n"
             "по состоянию на {{ now | user_timezone }}\n"
             "{% if key_link %}"
-            "доступен <a href=\"{{key_link}}\">по ссылке</a>"
+            'доступен <a href="{{key_link}}">по ссылке</a>'
             "{% else %}"
             "пока недоступен (попробуй обновить)"
             "{% endif %}"

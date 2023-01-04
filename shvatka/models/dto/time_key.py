@@ -29,5 +29,5 @@ class InsertedKey(KeyTime):
             level_number=key_time.level_number,
             player=key_time.player,
             is_level_up=is_level_up,
-            team=key_time.team
+            team=key_time.team,
         )

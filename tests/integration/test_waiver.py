@@ -13,7 +13,11 @@ from shvatka.utils.exceptions import PlayerRestoredInTeam, WaiverForbidden
 
 @pytest.mark.asyncio
 async def test_get_voted_list(
-    harry: dto.Player, hermione: dto.Player, author: dto.Player, gryffindor: dto.Team, game: dto.FullGame,
+    harry: dto.Player,
+    hermione: dto.Player,
+    author: dto.Player,
+    gryffindor: dto.Team,
+    game: dto.FullGame,
     dao: HolderDao,
 ):
     await start_waivers(game, author, dao.game)
@@ -72,7 +76,10 @@ async def test_get_voted_list(
 
 @pytest_asyncio.fixture
 async def harry_waiver(
-    harry: dto.Player, gryffindor: dto.Team, game: dto.FullGame, dao: HolderDao,
+    harry: dto.Player,
+    gryffindor: dto.Team,
+    game: dto.FullGame,
+    dao: HolderDao,
 ):
     waiver = models.Waiver(
         player_id=harry.id,
@@ -88,7 +95,11 @@ async def harry_waiver(
 
 @pytest_asyncio.fixture
 async def hermi_waiver(
-    hermione: dto.Player, harry: dto.Player, gryffindor: dto.Team, game: dto.FullGame, dao: HolderDao,
+    hermione: dto.Player,
+    harry: dto.Player,
+    gryffindor: dto.Team,
+    game: dto.FullGame,
+    dao: HolderDao,
 ):
     await join_team(hermione, gryffindor, harry, dao.team_player)
     waiver = models.Waiver(
@@ -105,7 +116,11 @@ async def hermi_waiver(
 
 @pytest_asyncio.fixture
 async def ron_waiver(
-    ron: dto.Player, harry: dto.Player, gryffindor: dto.Team, game: dto.FullGame, dao: HolderDao,
+    ron: dto.Player,
+    harry: dto.Player,
+    gryffindor: dto.Team,
+    game: dto.FullGame,
+    dao: HolderDao,
 ):
     await join_team(ron, gryffindor, harry, dao.team_player)
     waiver = models.Waiver(
@@ -122,7 +137,10 @@ async def ron_waiver(
 
 @pytest_asyncio.fixture
 async def draco_waiver(
-    draco: dto.Player, slytherin: dto.Team, game: dto.FullGame, dao: HolderDao,
+    draco: dto.Player,
+    slytherin: dto.Team,
+    game: dto.FullGame,
+    dao: HolderDao,
 ):
     waiver = models.Waiver(
         player_id=draco.id,
@@ -138,7 +156,9 @@ async def draco_waiver(
 
 @pytest.mark.asyncio
 async def test_waiver_list(
-    harry_waiver: dto.Waiver, hermi_waiver: dto.Waiver, ron_waiver: dto.Waiver,
+    harry_waiver: dto.Waiver,
+    hermi_waiver: dto.Waiver,
+    ron_waiver: dto.Waiver,
     draco_waiver: dto.Waiver,
     game: dto.FullGame,
     dao: HolderDao,
@@ -149,5 +169,7 @@ async def test_waiver_list(
     slytherin_waivers = waivers.pop(draco_waiver.team)
     gryffindor_waivers = waivers.pop(hermi_waiver.team)
     assert not waivers
-    assert {harry_waiver.player.id, hermi_waiver.player.id} == {waiver.player.id for waiver in gryffindor_waivers}
+    assert {harry_waiver.player.id, hermi_waiver.player.id} == {
+        waiver.player.id for waiver in gryffindor_waivers
+    }
     assert {draco_waiver.player.id} == {waiver.player.id for waiver in slytherin_waivers}

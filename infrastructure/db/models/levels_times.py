@@ -26,13 +26,13 @@ class LevelTime(Base):
     )
     level_number = Column(Integer)
     start_at = Column(
-        DateTime(timezone=True), default=lambda: datetime.now(tz=tz_utc),
-        server_default=func.now(), nullable=False,
+        DateTime(timezone=True),
+        default=lambda: datetime.now(tz=tz_utc),
+        server_default=func.now(),
+        nullable=False,
     )
 
-    __table_args__ = (
-        UniqueConstraint("game_id", "team_id", "level_number"),
-    )
+    __table_args__ = (UniqueConstraint("game_id", "team_id", "level_number"),)
 
     def to_dto(self, game: dto.Game, team: dto.Team) -> dto.LevelTime:
         return dto.LevelTime(
@@ -42,4 +42,3 @@ class LevelTime(Base):
             level_number=self.level_number,
             start_at=self.start_at,
         )
-

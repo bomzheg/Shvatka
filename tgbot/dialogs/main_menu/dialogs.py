@@ -55,9 +55,9 @@ main_menu = Dialog(
             id="to_team_manage",
             state=states.CaptainsBridgeSG.main,
             when=(
-                F["team_player"].can_manage_players |
-                F["team_player"].can_change_team_name |
-                F["team_player"].can_remove_players
+                F["team_player"].can_manage_players
+                | F["team_player"].can_change_team_name
+                | F["team_player"].can_remove_players
             ),
         ),
         # ачивки
@@ -74,7 +74,7 @@ promote_dialog = Dialog(
             "1. нажать кнопку ниже\n"
             "2. выбрать чат с пользователем\n"
             "3. в чате с пользователем, дождавшись, над окном ввода сообщения, "
-            "выбрать кнопку \"Наделить полномочиями\""
+            'выбрать кнопку "Наделить полномочиями"'
         ),
         SwitchInlineQuery(
             Const("✍Поделиться полномочиями автора"),

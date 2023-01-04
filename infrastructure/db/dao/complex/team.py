@@ -17,7 +17,9 @@ class TeamCreatorImpl(TeamCreator):
     async def create(self, chat: dto.Chat, captain: dto.Player) -> dto.Team:
         return await self.team.create(chat, captain)
 
-    async def join_team(self, player: dto.Player, team: dto.Team, role: str, as_captain: bool = False) -> None:
+    async def join_team(
+        self, player: dto.Player, team: dto.Team, role: str, as_captain: bool = False
+    ) -> None:
         return await self.team_player.join_team(player, team, role, as_captain)
 
     async def check_player_free(self, player: dto.Player) -> None:

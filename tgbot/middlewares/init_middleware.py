@@ -18,9 +18,15 @@ from tgbot.views.telegraph import Telegraph
 
 class InitMiddleware(BaseMiddleware):
     def __init__(
-        self, pool: sessionmaker, user_getter: UserGetter, dcf: Factory,
-        redis: Redis, scheduler: Scheduler, locker: KeyCheckerFactory,
-        file_storage: FileStorage, level_test_dao: LevelTestingData,
+        self,
+        pool: sessionmaker,
+        user_getter: UserGetter,
+        dcf: Factory,
+        redis: Redis,
+        scheduler: Scheduler,
+        locker: KeyCheckerFactory,
+        file_storage: FileStorage,
+        level_test_dao: LevelTestingData,
         telegraph: Telegraph,
     ):
         self.pool = pool
@@ -37,7 +43,7 @@ class InitMiddleware(BaseMiddleware):
         self,
         handler: Callable[[TelegramObject, dict[str, Any]], Awaitable[Any]],
         event: TelegramObject,
-        data: dict[str, Any]
+        data: dict[str, Any],
     ) -> Any:
         data["user_getter"] = self.user_getter
         data["dcf"] = self.dcf
@@ -49,7 +55,9 @@ class InitMiddleware(BaseMiddleware):
             holder_dao = HolderDao(session, self.redis, self.level_test_dao)
             data["dao"] = holder_dao
             data["hint_parser"] = HintParser(
-                dao=holder_dao.file_info, file_storage=self.file_storage, bot=data["bot"],
+                dao=holder_dao.file_info,
+                file_storage=self.file_storage,
+                bot=data["bot"],
             )
             result = await handler(event, data)
             del data["dao"]

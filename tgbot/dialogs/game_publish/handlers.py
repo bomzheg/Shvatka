@@ -20,7 +20,7 @@ from tgbot.views.results.scenario import GamePublisher
 
 
 async def process_publish_message(message: Message, dialog_: Any, manager: DialogManager):
-    if not message.forward_from_chat or message.forward_from_chat.type != 'channel':
+    if not message.forward_from_chat or message.forward_from_chat.type != "channel":
         return await message.reply("Это не пересланное из канала сообщение.")
     channel_id = message.forward_from_chat.id
     bot: Bot = manager.middleware_data["bot"]
@@ -30,12 +30,14 @@ async def process_publish_message(message: Message, dialog_: Any, manager: Dialo
         if admin.user.id == bot.id:
             bot_admin = admin
             break
-    if bot_admin is None or bot_admin.status != 'administrator':
+    if bot_admin is None or bot_admin.status != "administrator":
         return await message.answer("Я не админ в том канале.")
     if not bot_admin.can_post_messages:
         return await message.answer("У меня нет прав на отправку сообщений в том канале")
     if not bot_admin.can_invite_users:
-        return await message.answer("У меня нет права управлять пригласительными ссылками в том канале")
+        return await message.answer(
+            "У меня нет права управлять пригласительными ссылками в том канале"
+        )
 
     game_id = manager.start_data["game_id"]
     dao: HolderDao = manager.middleware_data["dao"]
@@ -48,8 +50,14 @@ async def process_publish_message(message: Message, dialog_: Any, manager: Dialo
     game_stat = await get_game_stat(game=game, player=author, dao=dao.game_stat)
     keys = await get_typed_keys(game=game, player=author, dao=dao.key_time)
     game_publisher = GamePublisher(
-        hint_sender=hint_sender, game=game, channel_id=channel_id, bot=bot,
-        config=config, game_stat=game_stat, keys=keys, telegraph=telegraph,
+        hint_sender=hint_sender,
+        game=game,
+        channel_id=channel_id,
+        bot=bot,
+        config=config,
+        game_stat=game_stat,
+        keys=keys,
+        telegraph=telegraph,
     )
     await message.answer(
         "Начинаю отправку сценария в канал, в связи с ограничениями платформы, "
@@ -80,13 +88,12 @@ async def publish_game(game_publisher: GamePublisher, manager: DialogManager):
         f"Лог ключей: {no_public_message_link(channel_id, keys_msg_id)}"
     )
     await bot.send_message(
-        game_publisher.game.author.user.tg_id,
-        f"Сценарий загружен.\n{text_invite_scn}"
+        game_publisher.game.author.user.tg_id, f"Сценарий загружен.\n{text_invite_scn}"
     )
     await bot.send_message(
         game_publisher.config.game_log_chat,
         f"Загружен сценарий игры {hd.bold(hd.quote(game_publisher.game.name))}."
-        f"\n{text_invite_scn}"
+        f"\n{text_invite_scn}",
     )
     await manager.update({"text_invite": text_invite_scn, "started": False})
 

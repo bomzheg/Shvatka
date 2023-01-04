@@ -33,7 +33,7 @@ class LevelDao(BaseDAO[models.Level]):
             )
             self._save(level)
         else:
-            if game_ := level.game:  # type: models.Game
+            if game_ := level.game:
                 check_game_editable(game_.to_dto(author))
         level.scenario = scn
         if game is not None and no_in_game is not None:
@@ -56,8 +56,7 @@ class LevelDao(BaseDAO[models.Level]):
 
     async def get_all_my(self, author: dto.Player) -> list[dto.Level]:
         result = await self.session.execute(
-            select(models.Level)
-            .where(models.Level.author_id == author.id)
+            select(models.Level).where(models.Level.author_id == author.id)
         )
         levels: list[models.Level] = result.scalars().all()
         return [level.to_dto(author) for level in levels]
@@ -68,10 +67,7 @@ class LevelDao(BaseDAO[models.Level]):
             .where(
                 models.Level.id == id_,
             )
-            .options(
-                joinedload(models.Level.author)
-                .joinedload(models.Player.user)
-            )
+            .options(joinedload(models.Level.author).joinedload(models.Player.user))
         )
         level: models.Level = result.scalar_one()
         return level.to_dto(level.author.to_dto_user_prefetched())
@@ -119,10 +115,7 @@ class LevelDao(BaseDAO[models.Level]):
                 models.Level.game_id == game.id,
                 models.Level.number_in_game == level_number,
             )
-            .options(
-                joinedload(models.Level.author)
-                .joinedload(models.Player.user)
-            )
+            .options(joinedload(models.Level.author).joinedload(models.Player.user))
         )
         level: models.Level = result.scalar_one()
         return level.to_dto(level.author.to_dto_user_prefetched())

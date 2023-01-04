@@ -20,16 +20,14 @@ class DBConfig:
 
     @property
     def uri(self):
-        if self.type in ('mysql', 'postgresql'):
+        if self.type in ("mysql", "postgresql"):
             url = (
-                f'{self.type}+{self.connector}://'
-                f'{self.login}:{self.password}'
-                f'@{self.host}:{self.port}/{self.name}'
+                f"{self.type}+{self.connector}://"
+                f"{self.login}:{self.password}"
+                f"@{self.host}:{self.port}/{self.name}"
             )
-        elif self.type == 'sqlite':
-            url = (
-                f'{self.type}://{self.path}'
-            )
+        elif self.type == "sqlite":
+            url = f"{self.type}://{self.path}"
         else:
             raise ValueError("DB_TYPE not mysql, sqlite or postgres")
         logger.debug(url)

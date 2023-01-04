@@ -55,7 +55,7 @@ class HintSender:
         chat_id: int,
         hint_containers: Iterable[BaseHint],
         caption: str | None = None,
-        sleep: int = None
+        sleep: int = None,
     ):
         """
         sending caption if exist and all hint parts in chat with chat_id

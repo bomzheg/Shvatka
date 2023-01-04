@@ -8,14 +8,18 @@ from aiogram_dialog.widgets.text import Const, Jinja
 from tgbot import states
 from tgbot.filters import is_key
 from .getters import get_level_id, get_orgs
-from .handlers import edit_level, show_level, level_testing, cancel_level_test, process_key_message, send_to_testing
+from .handlers import (
+    edit_level,
+    show_level,
+    level_testing,
+    cancel_level_test,
+    process_key_message,
+    send_to_testing,
+)
 
 level_manage = Dialog(
     Window(
-        Jinja(
-            "Уровень <b>{{level.name_id}}</b>\n"
-            "{{rendered}}"
-        ),
+        Jinja("Уровень <b>{{level.name_id}}</b>\n{{rendered}}"),
         Cancel(Const("⤴Назад")),
         Button(
             Const("✏Редактирование"),
@@ -75,11 +79,7 @@ level_test_dialog = Dialog(
             id="level_test_cancel",
             on_click=cancel_level_test,
         ),
-        MessageInput(
-            func=process_key_message,
-            content_types=ContentType.TEXT,
-            filter=is_key
-        ),
+        MessageInput(func=process_key_message, content_types=ContentType.TEXT, filter=is_key),
         getter=get_level_id,
         state=states.LevelTestSG.wait_key,
     ),

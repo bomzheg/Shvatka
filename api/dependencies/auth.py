@@ -135,13 +135,15 @@ class AuthProvider:
 
     def setup_auth_routes(self):
         self.router.add_api_route("/auth/token", self.login, methods=["POST"])
-        self.router.add_api_route("/auth/login", self.tg_login_page, response_class=HTMLResponse, methods=["GET"])
+        self.router.add_api_route(
+            "/auth/login", self.tg_login_page, response_class=HTMLResponse, methods=["GET"]
+        )
         self.router.add_api_route("/auth/login/data", self.tg_login_result, methods=["GET"])
 
 
 def check_tg_hash(user: UserTgAuth, bot_token: str):
     data_check = user.to_tg_spec().encode("utf-8")
-    secret_key = hashlib.sha256(bot_token.encode('utf-8')).digest()
+    secret_key = hashlib.sha256(bot_token.encode("utf-8")).digest()
     hmac_string = hmac.new(secret_key, data_check, hashlib.sha256).hexdigest()
     if hmac_string != user.hash:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="something wrong")

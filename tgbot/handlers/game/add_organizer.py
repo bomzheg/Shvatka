@@ -1,20 +1,32 @@
 from aiogram import Router, F, Bot
 from aiogram.filters import MagicData
-from aiogram.types import InlineQuery, InlineQueryResultArticle, InputTextMessageContent, CallbackQuery
+from aiogram.types import (
+    InlineQuery,
+    InlineQueryResultArticle,
+    InputTextMessageContent,
+    CallbackQuery,
+)
 
 from infrastructure.db.dao.holder import HolderDao
 from shvatka.models import dto
 from shvatka.services.game import get_game
-from shvatka.services.organizers import check_allow_manage_orgs, save_invite_to_orgs, dismiss_to_be_org, \
-    agree_to_be_org, \
-    check_game_token
+from shvatka.services.organizers import (
+    check_allow_manage_orgs,
+    save_invite_to_orgs,
+    dismiss_to_be_org,
+    agree_to_be_org,
+    check_game_token,
+)
 from tgbot import keyboards as kb
 from tgbot.utils.router import disable_router_on_game
 from tgbot.views.game import BotOrgNotifier
 
 
 async def invite_org_inline_query(
-    q: InlineQuery, inline_data: kb.AddGameOrgID, player: dto.Player, dao: HolderDao,
+    q: InlineQuery,
+    inline_data: kb.AddGameOrgID,
+    player: dto.Player,
+    dao: HolderDao,
 ):
     game = await get_game(id_=inline_data.game_id, dao=dao.game)
     check_game_token(game, inline_data.game_manage_token)
@@ -22,7 +34,8 @@ async def invite_org_inline_query(
     token = await save_invite_to_orgs(game=game, inviter=player, dao=dao.secure_invite)
     result = [
         InlineQueryResultArticle(
-            id='1', title="Добавить в организаторы",
+            id="1",
+            title="Добавить в организаторы",
             description=f"Игра {game.name}",
             input_message_content=InputTextMessageContent(
                 message_text=(
@@ -30,14 +43,17 @@ async def invite_org_inline_query(
                     "В случае согласия будет невозможно сыграть в эту игру."
                 )
             ),
-            reply_markup=kb.get_kb_agree_be_org(token=token, inviter=player)
+            reply_markup=kb.get_kb_agree_be_org(token=token, inviter=player),
         )
     ]
     await q.answer(results=result, is_personal=True, cache_time=1)
 
 
 async def dismiss_to_be_org_handler(
-    c: CallbackQuery, callback_data: kb.AgreeBeOrgCD, dao: HolderDao, bot: Bot,
+    c: CallbackQuery,
+    callback_data: kb.AgreeBeOrgCD,
+    dao: HolderDao,
+    bot: Bot,
 ):
     await dismiss_to_be_org(callback_data.token, dao.secure_invite)
     await c.answer("правильно, лучше поиграть!", show_alert=True)
@@ -48,7 +64,11 @@ async def dismiss_to_be_org_handler(
 
 
 async def agree_to_be_org_handler(
-    c: CallbackQuery, callback_data: kb.AgreeBeOrgCD, player: dto.Player, dao: HolderDao, bot: Bot,
+    c: CallbackQuery,
+    callback_data: kb.AgreeBeOrgCD,
+    player: dto.Player,
+    dao: HolderDao,
+    bot: Bot,
 ):
     await c.answer()
     await agree_to_be_org(
@@ -74,9 +94,12 @@ def setup() -> Router:
 
     router.inline_query.register(invite_org_inline_query, kb.AddGameOrgID.filter())
     router.callback_query.register(
-        inviter_click_handler, kb.AgreeBeOrgCD.filter(),
+        inviter_click_handler,
+        kb.AgreeBeOrgCD.filter(),
         MagicData(F.callback_data.inviter_id == F.player.id),
     )
-    router.callback_query.register(dismiss_to_be_org_handler, kb.AgreeBeOrgCD.filter(~F.is_agreement))
+    router.callback_query.register(
+        dismiss_to_be_org_handler, kb.AgreeBeOrgCD.filter(~F.is_agreement)
+    )
     router.callback_query.register(agree_to_be_org_handler, kb.AgreeBeOrgCD.filter(F.is_agreement))
     return router

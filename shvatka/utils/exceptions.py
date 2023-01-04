@@ -22,7 +22,7 @@ class SHError(Exception):
         alarm: bool | None = False,
         notify_user: str | None = None,
         *args,
-        **kwargs
+        **kwargs,
     ):
         super(SHError, self).__init__(args, kwargs)
         self.text = text
@@ -87,12 +87,7 @@ class SHDataBreach(SHError):
 
 
 class SaltError(SHError):
-    def __init__(
-        self,
-        token: str | None = None,
-        *args,
-        **kwargs
-    ):
+    def __init__(self, token: str | None = None, *args, **kwargs):
         super(SaltError, self).__init__(*args, **kwargs)
         self.token = token
 
@@ -110,12 +105,7 @@ class GameHasAnotherAuthor(GameError):
 
 
 class GameStatusError(GameError):
-    def __init__(
-        self,
-        game_status: str | None = None,
-        *args,
-        **kwargs
-    ):
+    def __init__(self, game_status: str | None = None, *args, **kwargs):
         super(GameStatusError, self).__init__(*args, **kwargs)
         self.game_status = game_status
 
@@ -179,12 +169,7 @@ class LevelNotLinked(LevelError):
 class PermissionsError(SHError):
     notify_user = "Ошибка связанная с полномочиями"
 
-    def __init__(
-        self,
-        permission_name: str | None = None,
-        *args,
-        **kwargs
-    ):
+    def __init__(self, permission_name: str | None = None, *args, **kwargs):
         super(PermissionsError, self).__init__(*args, **kwargs)
         self.permission_name = permission_name
 
@@ -254,7 +239,9 @@ class WaiverForbidden(GameError):
 
 
 class InvalidKey(SHError):
-    notify_user = "Это не ключ. Например начинается не с SH/СХ, используется что-то кроме букв и цифр"
+    notify_user = (
+        "Это не ключ. Например начинается не с SH/СХ, используется что-то кроме букв и цифр"
+    )
 
     def __init__(self, key: str | None = None, *args, **kwargs):
         super(InvalidKey, self).__init__(*args, **kwargs)

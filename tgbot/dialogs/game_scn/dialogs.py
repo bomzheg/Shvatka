@@ -2,7 +2,14 @@ from aiogram import F
 from aiogram.types import ContentType
 from aiogram_dialog import Dialog, Window
 from aiogram_dialog.widgets.input import MessageInput
-from aiogram_dialog.widgets.kbd import ScrollingGroup, Multiselect, Button, Select, Cancel, SwitchTo
+from aiogram_dialog.widgets.kbd import (
+    ScrollingGroup,
+    Multiselect,
+    Button,
+    Select,
+    Cancel,
+    SwitchTo,
+)
 from aiogram_dialog.widgets.text import Const, Format, Jinja
 
 from tgbot import states
@@ -30,10 +37,7 @@ game_writer = Dialog(
     ),
     Window(
         Jinja("Игра <b>{{game_name}}</b>\n\n"),
-        Const(
-            "<b>Уровни</b>\n\n"
-            "Выбери уровни которые нужно добавить"
-        ),
+        Const("<b>Уровни</b>\n\n" "Выбери уровни которые нужно добавить"),
         Cancel(Const("⤴Не создавать игру")),
         ScrollingGroup(
             Multiselect(
@@ -87,10 +91,7 @@ game_editor = Dialog(
     ),
     Window(
         Jinja("Игра <b>{{game.name}}</b>\n\n"),
-        Const(
-            "<b>Уровни</b>\n\n"
-            "Выбери уровни которые нужно добавить"
-        ),
+        Const("<b>Уровни</b>\n\n" "Выбери уровни которые нужно добавить"),
         SwitchTo(Const("⤴Назад"), id="back", state=states.GameEditSG.current_levels),
         ScrollingGroup(
             Select(

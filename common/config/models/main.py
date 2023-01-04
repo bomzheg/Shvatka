@@ -33,4 +33,3 @@ class FileStorageConfig:
     mkdir: bool
     parents: bool
     exist_ok: bool
-

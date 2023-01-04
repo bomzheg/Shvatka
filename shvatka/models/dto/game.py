@@ -61,7 +61,9 @@ class Game:
 
     @property
     def can_be_publish(self) -> bool:
-        return (self.status in (GameStatus.finished, GameStatus.complete)) and self.published_channel_id is None
+        return (
+            self.status in (GameStatus.finished, GameStatus.complete)
+        ) and self.published_channel_id is None
 
     @property
     def can_change_name(self) -> bool:

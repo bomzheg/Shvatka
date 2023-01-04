@@ -51,8 +51,7 @@ class GameDao(BaseDAO[models.Game]):
             select(models.Game)
             .options(
                 joinedload(models.Game.levels),
-                joinedload(models.Game.author)
-                .joinedload(models.Player.user)
+                joinedload(models.Game.author).joinedload(models.Player.user),
             )
             .where(models.Game.id == id_)
         )
@@ -90,10 +89,7 @@ class GameDao(BaseDAO[models.Game]):
     async def get_completed_games(self) -> list[dto.Game]:
         result = await self.session.scalars(
             select(models.Game)
-            .options(
-                joinedload(models.Game.author)
-                .joinedload(models.Player.user)
-            )
+            .options(joinedload(models.Game.author).joinedload(models.Player.user))
             .where(
                 models.Game.status == GameStatus.complete,
             )
@@ -110,27 +106,20 @@ class GameDao(BaseDAO[models.Game]):
 
     async def set_status(self, game: dto.Game, status: GameStatus):
         await self.session.execute(
-            update(models.Game)
-            .where(models.Game.id == game.id)
-            .values(status=status)
+            update(models.Game).where(models.Game.id == game.id).values(status=status)
         )
 
     async def get_active_game(self) -> dto.Game | None:
         result = await self.session.scalars(
             select(models.Game)
             .where(models.Game.status.in_(ACTIVE_STATUSES))
-            .options(
-                joinedload(models.Game.author)
-                .joinedload(models.Player.user)
-            )
+            .options(joinedload(models.Game.author).joinedload(models.Player.user))
         )
         try:
             game: models.Game = result.one()
         except NoResultFound:
             return None
-        return game.to_dto(
-            game.author.to_dto_user_prefetched()
-        )
+        return game.to_dto(game.author.to_dto_user_prefetched())
 
     async def create_game(self, author: dto.Player, name: str) -> dto.Game:
         game_db = models.Game(
@@ -151,16 +140,12 @@ class GameDao(BaseDAO[models.Game]):
 
     async def cancel_start(self, game: dto.Game):
         await self.session.execute(
-            update(models.Game)
-            .where(models.Game.id == game.id)
-            .values(start_at=None)
+            update(models.Game).where(models.Game.id == game.id).values(start_at=None)
         )
 
     async def rename_game(self, game: dto.Game, new_name: str):
         await self.session.execute(
-            update(models.Game)
-            .where(models.Game.id == game.id)
-            .values(name=new_name)
+            update(models.Game).where(models.Game.id == game.id).values(name=new_name)
         )
 
     async def set_started(self, game: dto.Game):
@@ -190,8 +175,5 @@ class GameDao(BaseDAO[models.Game]):
         return True
 
     async def _get_game_by_name(self, name: str) -> models.Game | None:
-        result = await self.session.scalars(
-            select(models.Game)
-            .where(models.Game.name == name)
-        )
+        result = await self.session.scalars(select(models.Game).where(models.Game.name == name))
         return result.one_or_none()

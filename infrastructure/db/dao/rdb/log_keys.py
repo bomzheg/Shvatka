@@ -15,11 +15,13 @@ class KeyTimeDao(BaseDAO[models.KeyTime]):
         super().__init__(models.KeyTime, session)
 
     async def get_correct_typed_keys(
-        self, level: dto.Level, game: dto.Game, team: dto.Team,
+        self,
+        level: dto.Level,
+        game: dto.Game,
+        team: dto.Team,
     ) -> set[str]:
         result = await self.session.execute(
-            select(models.KeyTime)
-            .where(
+            select(models.KeyTime).where(
                 models.KeyTime.game_id == game.id,
                 models.KeyTime.level_number == level.number_in_game,
                 models.KeyTime.team_id == team.id,
@@ -30,8 +32,7 @@ class KeyTimeDao(BaseDAO[models.KeyTime]):
 
     async def is_duplicate(self, level: dto.Level, team: dto.Team, key: str) -> bool:
         result = await self.session.execute(
-            select(self.model.id)
-            .where(
+            select(self.model.id).where(
                 models.KeyTime.game_id == level.game_id,
                 models.KeyTime.level_number == level.number_in_game,
                 models.KeyTime.team_id == team.id,
@@ -41,8 +42,14 @@ class KeyTimeDao(BaseDAO[models.KeyTime]):
         return result.scalar() is not None
 
     async def save_key(
-        self, key: str, team: dto.Team, level: dto.Level, game: dto.Game,
-        player: dto.Player, is_correct: bool, is_duplicate: bool,
+        self,
+        key: str,
+        team: dto.Team,
+        level: dto.Level,
+        game: dto.Game,
+        player: dto.Player,
+        is_correct: bool,
+        is_duplicate: bool,
     ) -> dto.KeyTime:
         key_time = models.KeyTime(
             key_text=key,
@@ -64,7 +71,7 @@ class KeyTimeDao(BaseDAO[models.KeyTime]):
             .where(models.KeyTime.game_id == game.id)
             .options(
                 joinedload(models.KeyTime.team).joinedload(models.Team.chat),
-                joinedload(models.KeyTime.player).joinedload(models.Player.user)
+                joinedload(models.KeyTime.player).joinedload(models.Player.user),
             )
             .order_by(models.KeyTime.enter_time)
         )
@@ -73,5 +80,6 @@ class KeyTimeDao(BaseDAO[models.KeyTime]):
             key.to_dto(
                 player=key.player.to_dto_user_prefetched(),
                 team=key.team.to_dto(key.team.chat.to_dto()),
-            ) for key in keys
+            )
+            for key in keys
         ]

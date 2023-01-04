@@ -5,7 +5,9 @@ from shvatka.services.organizers import get_by_player, check_can_see_log_keys, c
 
 
 async def get_typed_keys(
-    game: dto.Game, player: dto.Player, dao: TypedKeyGetter,
+    game: dto.Game,
+    player: dto.Player,
+    dao: TypedKeyGetter,
 ) -> dict[dto.Team, list[dto.KeyTime]]:
     org = await get_by_player(game=game, player=player, dao=dao)
     check_can_see_log_keys(org)

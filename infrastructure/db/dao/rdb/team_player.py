@@ -24,8 +24,7 @@ class TeamPlayerDao(BaseDAO[models.TeamPlayer]):
                 joinedload(models.TeamPlayer.team)
                 .joinedload(models.Team.captain)
                 .joinedload(models.Player.user),
-                joinedload(models.TeamPlayer.team)
-                .joinedload(models.Team.chat)
+                joinedload(models.TeamPlayer.team).joinedload(models.Team.chat),
             )
             .where(
                 models.TeamPlayer.player_id == player.id,
@@ -42,7 +41,9 @@ class TeamPlayerDao(BaseDAO[models.TeamPlayer]):
     async def have_team(self, player: dto.Player) -> bool:
         return await self.get_team(player) is not None
 
-    async def join_team(self, player: dto.Player, team: dto.Team, role: str, as_captain: bool = False):
+    async def join_team(
+        self, player: dto.Player, team: dto.Team, role: str, as_captain: bool = False
+    ):
         await self.check_player_free(player)
         if team_player := await self.need_restore(player, team):
             team_player.date_left = None
@@ -78,8 +79,7 @@ class TeamPlayerDao(BaseDAO[models.TeamPlayer]):
     async def need_restore(self, player: dto.Player, team: dto.Team) -> models.TeamPlayer:
         today = datetime.now(tz=tz_utc).date()
         result = await self.session.execute(
-            select(models.TeamPlayer)
-            .where(
+            select(models.TeamPlayer).where(
                 models.TeamPlayer.player_id == player.id,
                 models.TeamPlayer.date_left >= today,
                 models.TeamPlayer.date_left < today + timedelta(days=1),
@@ -95,10 +95,7 @@ class TeamPlayerDao(BaseDAO[models.TeamPlayer]):
                 models.TeamPlayer.team_id == team.id,
                 not_leaved(),
             )
-            .options(
-                joinedload(models.TeamPlayer.player)
-                .joinedload(models.Player.user)
-            )
+            .options(joinedload(models.TeamPlayer.player).joinedload(models.Player.user))
         )
         players: list[models.TeamPlayer] = result.scalars().all()
         return [
@@ -113,7 +110,9 @@ class TeamPlayerDao(BaseDAO[models.TeamPlayer]):
     async def get_team_player(self, player: dto.Player) -> dto.TeamPlayer:
         return (await self._get_my_team_player(player)).to_dto()
 
-    async def flip_permission(self, player: dto.TeamPlayer, permission: enums.TeamPlayerPermission):
+    async def flip_permission(
+        self, player: dto.TeamPlayer, permission: enums.TeamPlayerPermission
+    ):
         await self.session.execute(
             update(models.TeamPlayer)
             .where(models.TeamPlayer.id == player.id)
@@ -122,8 +121,7 @@ class TeamPlayerDao(BaseDAO[models.TeamPlayer]):
 
     async def _get_my_team_player(self, player: dto.Player) -> models.TeamPlayer:
         result = await self.session.execute(
-            select(models.TeamPlayer)
-            .where(
+            select(models.TeamPlayer).where(
                 models.TeamPlayer.player_id == player.id,
                 not_leaved(),
             )

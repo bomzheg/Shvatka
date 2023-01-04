@@ -30,8 +30,10 @@ def create_slytherin_dto_chat():
 
 
 def create_tg_chat(
-    id_: int = GRYFFINDOR_CHAT_DTO.tg_id, title: str = GRYFFINDOR_CHAT_DTO.title,
-    type_: ChatType = GRYFFINDOR_CHAT_DTO.type, username: str = GRYFFINDOR_CHAT_DTO.username,
+    id_: int = GRYFFINDOR_CHAT_DTO.tg_id,
+    title: str = GRYFFINDOR_CHAT_DTO.title,
+    type_: ChatType = GRYFFINDOR_CHAT_DTO.type,
+    username: str = GRYFFINDOR_CHAT_DTO.username,
 ):
     return tg.Chat(
         id=id_,

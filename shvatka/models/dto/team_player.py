@@ -71,6 +71,7 @@ class FullTeamPlayer(TeamPlayer):
             enums.TeamPlayerPermission.can_add_players: self.can_add_players,
             enums.TeamPlayerPermission.can_remove_players: self.can_remove_players,
         }
+
     @classmethod
     def from_simple(cls, team_player: TeamPlayer, player: Player, team: Team):
         assert team_player.team_id == team.id
@@ -83,13 +84,11 @@ class FullTeamPlayer(TeamPlayer):
             date_left=team_player.date_left,
             role=team_player.role,
             emoji=team_player.emoji,
-
             _can_manage_waivers=team_player._can_manage_waivers,
             _can_manage_players=team_player._can_manage_players,
             _can_change_team_name=team_player._can_change_team_name,
             _can_add_players=team_player._can_add_players,
             _can_remove_players=team_player._can_remove_players,
-
             team=team,
             player=player,
         )

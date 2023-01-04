@@ -16,5 +16,7 @@ class TypedKeyGetterImpl(TypedKeyGetter):
     async def get_by_player(self, game: dto.Game, player: dto.Player) -> dto.SecondaryOrganizer:
         return await self.organizer.get_by_player(game=game, player=player)
 
-    async def get_by_player_or_none(self, game: dto.Game, player: dto.Player) -> dto.SecondaryOrganizer | None:
+    async def get_by_player_or_none(
+        self, game: dto.Game, player: dto.Player
+    ) -> dto.SecondaryOrganizer | None:
         return await self.organizer.get_by_player_or_none(game=game, player=player)

@@ -1,14 +1,41 @@
 from aiogram import F
 from aiogram_dialog import Dialog, Window
 from aiogram_dialog.widgets.input import MessageInput
-from aiogram_dialog.widgets.kbd import ScrollingGroup, Select, SwitchTo, Button, Calendar, Cancel, Start
+from aiogram_dialog.widgets.kbd import (
+    ScrollingGroup,
+    Select,
+    SwitchTo,
+    Button,
+    Calendar,
+    Cancel,
+    Start,
+)
 from aiogram_dialog.widgets.text import Const, Format, Case, Jinja
 
 from tgbot import states
-from .getters import get_my_games, get_game, get_game_time, get_game_datetime, get_games, get_completed_game
-from .handlers import select_my_game, start_waivers, select_date, process_time_message, schedule_game, show_scn, \
-    start_schedule_game, show_zip_scn, show_game_orgs, cancel_scheduled_game, rename_game_handler, publish_game, \
-    select_game
+from .getters import (
+    get_my_games,
+    get_game,
+    get_game_time,
+    get_game_datetime,
+    get_games,
+    get_completed_game,
+)
+from .handlers import (
+    select_my_game,
+    start_waivers,
+    select_date,
+    process_time_message,
+    schedule_game,
+    show_scn,
+    start_schedule_game,
+    show_zip_scn,
+    show_game_orgs,
+    cancel_scheduled_game,
+    rename_game_handler,
+    publish_game,
+    select_game,
+)
 from ..preview_data import PREVIEW_GAME
 
 games = Dialog(
@@ -150,7 +177,7 @@ my_games = Dialog(
         MessageInput(func=rename_game_handler),
         SwitchTo(Const("⤴Назад"), id="back", state=states.MyGamesPanelSG.game_menu),
         state=states.MyGamesPanelSG.rename,
-        getter=get_game
+        getter=get_game,
     ),
 )
 
@@ -158,7 +185,7 @@ my_games = Dialog(
 schedule_game_dialog = Dialog(
     Window(
         Jinja("Выбор даты начала игры <b>{{game.name}}</b>"),
-        Calendar(id='select_game_play_date', on_click=select_date),
+        Calendar(id="select_game_play_date", on_click=select_date),
         state=states.GameScheduleSG.date,
         preview_data={"game": PREVIEW_GAME},
         getter=get_game,
@@ -169,7 +196,7 @@ schedule_game_dialog = Dialog(
                 False: Const("Введите время в формате ЧЧ:ММ"),
                 True: Jinja(
                     "Будет сохранено: {{scheduled_time}}. "
-                    "Нажмите \"Далее\", если уверены, "
+                    'Нажмите "Далее", если уверены, '
                     "или отправьте другое время в формате ЧЧ:ММ вместо этого"
                 ),
             },

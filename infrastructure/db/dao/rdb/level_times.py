@@ -24,7 +24,9 @@ class LevelTimeDao(BaseDAO[models.LevelTime]):
         self._save(level_time)
 
     async def is_team_on_level(self, team: dto.Team, level: dto.Level) -> bool:
-        return (await self._get_current(team.id, level.game_id)).level_number == level.number_in_game
+        return (
+            await self._get_current(team.id, level.game_id)
+        ).level_number == level.number_in_game
 
     async def get_current_level(self, team: dto.Team, game: dto.Game) -> int:
         return (await self.get_current_level_time(team=team, game=game)).level_number
@@ -39,7 +41,7 @@ class LevelTimeDao(BaseDAO[models.LevelTime]):
             .where(
                 models.LevelTime.team_id == team_id,
                 models.LevelTime.game_id == game_id,
-                )
+            )
             .order_by(models.LevelTime.level_number.desc())  # noqa
             .limit(1)
         )
@@ -53,8 +55,7 @@ class LevelTimeDao(BaseDAO[models.LevelTime]):
                 joinedload(models.LevelTime.team)
                 .joinedload(models.Team.captain)
                 .joinedload(models.Player.user),
-                joinedload(models.LevelTime.team)
-                .joinedload(models.Team.chat),
+                joinedload(models.LevelTime.team).joinedload(models.Team.chat),
             )
             .order_by(
                 models.LevelTime.team_id,
@@ -68,4 +69,3 @@ class LevelTimeDao(BaseDAO[models.LevelTime]):
             )
             for lt in result.scalars().all()
         ]
-

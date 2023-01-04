@@ -74,9 +74,7 @@ async def run_migrations_online():
     )
 
     async with connectable.connect() as connection:
-        context.configure(
-            connection=connection, target_metadata=target_metadata
-        )
+        context.configure(connection=connection, target_metadata=target_metadata)
 
         await connection.run_sync(do_run_migrations)
 

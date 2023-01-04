@@ -35,7 +35,9 @@ class PlayerPromoter(Committer, PlayerByIdGetter, InviteReader, InviteRemover, m
 
 
 class TeamJoiner(Committer, TeamPlayerGetter, metaclass=ABCMeta):
-    async def join_team(self, player: dto.Player, team: dto.Team, role: str, as_captain: bool = False) -> None:
+    async def join_team(
+        self, player: dto.Player, team: dto.Team, role: str, as_captain: bool = False
+    ) -> None:
         raise NotImplementedError
 
     async def check_player_free(self, player: dto.Player) -> None:
@@ -69,5 +71,7 @@ class TeamPlayersGetter(Reader):
 
 
 class TeamPlayerPermissionFlipper(Committer):
-    async def flip_permission(self, player: dto.TeamPlayer, permission: enums.TeamPlayerPermission):
+    async def flip_permission(
+        self, player: dto.TeamPlayer, permission: enums.TeamPlayerPermission
+    ):
         raise NotImplementedError

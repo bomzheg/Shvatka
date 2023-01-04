@@ -15,7 +15,9 @@ async def read_users_me(current_user: dto.User = Depends(get_current_user)) -> d
     return current_user
 
 
-async def read_user(id_: int = Path(alias="id"), dao: HolderDao = Depends(dao_provider)) -> dto.User:
+async def read_user(
+    id_: int = Path(alias="id"), dao: HolderDao = Depends(dao_provider)
+) -> dto.User:
     return await get_user(id_, dao.user)
 
 
@@ -23,7 +25,7 @@ async def set_password_route(
     password: str = Body(),
     auth: AuthProvider = Depends(),
     user: dto.User = Depends(get_current_user),
-    dao: HolderDao = Depends(dao_provider)
+    dao: HolderDao = Depends(dao_provider),
 ):
     hashed_password = auth.get_password_hash(password)
     await set_password(user, hashed_password, dao.user)

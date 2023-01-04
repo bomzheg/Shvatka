@@ -15,7 +15,10 @@ class WaiverDao(BaseDAO[models.Waiver]):
         super().__init__(models.Waiver, session)
 
     async def is_excluded(
-        self, game: dto.Game, player: dto.Player, team: dto.Team,
+        self,
+        game: dto.Game,
+        player: dto.Player,
+        team: dto.Team,
     ) -> bool:
         waiver = await self.get_or_none(game, player, team)
         if waiver is None:
@@ -40,11 +43,13 @@ class WaiverDao(BaseDAO[models.Waiver]):
             await self._delete(waiver_db)
 
     async def get_or_none(
-        self, game: dto.Game, player: dto.Player, team: dto.Team,
+        self,
+        game: dto.Game,
+        player: dto.Player,
+        team: dto.Team,
     ) -> models.Waiver | None:
         result = await self.session.execute(
-            select(self.model)
-            .where(
+            select(self.model).where(
                 models.Waiver.team_id == team.id,
                 models.Waiver.player_id == player.id,
                 models.Waiver.game_id == game.id,
@@ -57,8 +62,7 @@ class WaiverDao(BaseDAO[models.Waiver]):
             select(models.Waiver)
             .distinct(models.Waiver.team_id)  # Postgresql feature
             .options(
-                joinedload(models.Waiver.team)
-                .joinedload(models.Team.chat),
+                joinedload(models.Waiver.team).joinedload(models.Team.chat),
                 joinedload(models.Waiver.team)
                 .joinedload(models.Team.captain)
                 .joinedload(models.Player.user),
@@ -69,18 +73,12 @@ class WaiverDao(BaseDAO[models.Waiver]):
             )
         )
         teams: Iterable[models.Team] = map(lambda w: w.team, result.scalars().all())
-        return [
-            team.to_dto(team.chat.to_dto())
-            for team in teams
-        ]
+        return [team.to_dto(team.chat.to_dto()) for team in teams]
 
     async def get_played(self, game: dto.Game, team: dto.Team) -> Iterable[dto.VotedPlayer]:
         result = await self.session.execute(
             select(models.Waiver, models.TeamPlayer)
-            .options(
-                joinedload(models.Waiver.player)
-                .joinedload(models.Player.user)
-            )
+            .options(joinedload(models.Waiver.player).joinedload(models.Player.user))
             .join(models.TeamPlayer, models.Waiver.player_id == models.TeamPlayer.player_id)
             .where(
                 models.Waiver.game_id == game.id,

@@ -22,9 +22,18 @@ from .complex.team import TeamCreatorImpl, TeamLeaverImpl
 from .complex.waiver import WaiverApproverImpl
 from .memory.level_testing import LevelTestingData
 from .rdb import (
-    ChatDao, UserDao, FileInfoDao, GameDao, LevelDao,
-    LevelTimeDao, KeyTimeDao, OrganizerDao, PlayerDao,
-    TeamPlayerDao, TeamDao, WaiverDao,
+    ChatDao,
+    UserDao,
+    FileInfoDao,
+    GameDao,
+    LevelDao,
+    LevelTimeDao,
+    KeyTimeDao,
+    OrganizerDao,
+    PlayerDao,
+    TeamPlayerDao,
+    TeamDao,
+    WaiverDao,
 )
 from .rdb.achievement import AchievementDAO
 from .redis import PollDao, SecureInvite
@@ -55,7 +64,9 @@ class HolderDao:
 
     @property
     def waiver_vote_adder(self) -> WaiverVoteAdder:
-        return WaiverVoteAdderImpl(poll=self.poll, waiver=self.waiver, team_player=self.team_player)
+        return WaiverVoteAdderImpl(
+            poll=self.poll, waiver=self.waiver, team_player=self.team_player
+        )
 
     @property
     def waiver_vote_getter(self) -> WaiverVoteGetter:
@@ -64,8 +75,7 @@ class HolderDao:
     @property
     def waiver_approver(self) -> WaiverApprover:
         return WaiverApproverImpl(
-            poll=self.poll, player=self.player, waiver=self.waiver,
-            team_player=self.team_player
+            poll=self.poll, player=self.player, waiver=self.waiver, team_player=self.team_player
         )
 
     @property
@@ -83,14 +93,17 @@ class HolderDao:
     @property
     def team_creator(self) -> TeamCreator:
         return TeamCreatorImpl(
-            team=self.team, team_player=self.team_player,
+            team=self.team,
+            team_player=self.team_player,
         )
 
     @property
     def team_leaver(self) -> TeamLeaver:
         return TeamLeaverImpl(
-            game=self.game, team_player=self.team_player,
-            waiver=self.waiver, poll=self.poll,
+            game=self.game,
+            team_player=self.team_player,
+            waiver=self.waiver,
+            poll=self.poll,
         )
 
     @property
@@ -100,19 +113,28 @@ class HolderDao:
     @property
     def game_starter(self) -> GameStarter:
         return GameStarterImpl(
-            game=self.game, waiver=self.waiver, level_times=self.level_time, level=self.level,
+            game=self.game,
+            waiver=self.waiver,
+            level_times=self.level_time,
+            level=self.level,
         )
 
     @property
     def game_player(self) -> GamePlayerDao:
         return GamePlayerDaoImpl(
-            level_time=self.level_time, level=self.level, key_time=self.key_time,
-            waiver=self.waiver, game=self.game, organizer=self.organizer,
+            level_time=self.level_time,
+            level=self.level,
+            key_time=self.key_time,
+            waiver=self.waiver,
+            game=self.game,
+            organizer=self.organizer,
         )
 
     @property
     def org_adder(self) -> OrgAdder:
-        return OrgAdderImpl(game=self.game, organizer=self.organizer, secure_invite=self.secure_invite)
+        return OrgAdderImpl(
+            game=self.game, organizer=self.organizer, secure_invite=self.secure_invite
+        )
 
     @property
     def player_promoter(self) -> PlayerPromoter:
@@ -124,7 +146,9 @@ class HolderDao:
 
     @property
     def game_stat(self) -> GameStatDao:
-        return GameStatImpl(level_times=self.level_time, level=self.level, organizer=self.organizer)
+        return GameStatImpl(
+            level_times=self.level_time, level=self.level, organizer=self.organizer
+        )
 
     @property
     def typed_keys(self) -> TypedKeyGetter:

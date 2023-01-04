@@ -8,15 +8,22 @@ from shvatka.interfaces.dal.player import (
     TeamLeaver,
     TeamPlayersGetter,
     TeamPlayerGetter,
-    PlayerByIdGetter, TeamPlayerPermissionFlipper,
+    PlayerByIdGetter,
+    TeamPlayerPermissionFlipper,
 )
 from shvatka.interfaces.dal.secure_invite import InviteSaver, InviteRemover, InviterDao
 from shvatka.models import dto, enums
 from shvatka.models.enums.invite_type import InviteType
 from shvatka.utils import exceptions
 from shvatka.utils.defaults_constants import DEFAULT_ROLE, EMOJI_BY_ROLE, DEFAULT_EMOJI
-from shvatka.utils.exceptions import PlayerRestoredInTeam, CantBeAuthor, PromoteError, PlayerNotInTeam, \
-    PermissionsError, SaltError
+from shvatka.utils.exceptions import (
+    PlayerRestoredInTeam,
+    CantBeAuthor,
+    PromoteError,
+    PlayerNotInTeam,
+    PermissionsError,
+    SaltError,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -56,7 +63,7 @@ async def promote(actor: dto.Player, target: dto.Player, dao: PlayerPromoter):
     if not actor.can_be_author:
         raise CantBeAuthor(
             notify_user="Чтобы повысить другого пользователя - "
-                        "нужно самому обладать такими правами",
+            "нужно самому обладать такими правами",
             player=actor,
         )
     if target.can_be_author:
@@ -70,8 +77,11 @@ async def promote(actor: dto.Player, target: dto.Player, dao: PlayerPromoter):
 
 
 async def join_team(
-    player: dto.Player, team: dto.Team, manager: dto.Player,
-    dao: TeamJoiner, role: str = DEFAULT_ROLE,
+    player: dto.Player,
+    team: dto.Team,
+    manager: dto.Player,
+    dao: TeamJoiner,
+    role: str = DEFAULT_ROLE,
 ):
     await dao.check_player_free(player)
     check_can_add_players(await get_full_team_player(manager, team, dao))
@@ -94,14 +104,18 @@ async def leave(player: dto.Player, remover: dto.Player, dao: TeamLeaver):
     if not team:
         raise PlayerNotInTeam(player=player)
     if player.id != remover.id:  # player itself always can leave
-        team_player = await get_full_team_player(remover, team, dao)  # team of remover must be the same as player
+        team_player = await get_full_team_player(
+            remover, team, dao
+        )  # team of remover must be the same as player
         check_can_remove_player(team_player)  # and remover must have permission for remove
     if game := await dao.get_active_game():
-        await dao.delete(dto.Waiver(
-            player=player,
-            game=game,
-            team=team,
-        ))
+        await dao.delete(
+            dto.Waiver(
+                player=player,
+                game=game,
+                team=team,
+            )
+        )
         await dao.del_player_vote(team_id=team.id, player_id=player.id)
     await dao.leave_team(player)
     await dao.commit()
@@ -139,10 +153,13 @@ def check_can_add_players(team_player: dto.FullTeamPlayer):
         )
 
 
-async def get_full_team_player(player: dto.Player, team: dto.Team, dao: TeamPlayerGetter) -> dto.FullTeamPlayer:
+async def get_full_team_player(
+    player: dto.Player, team: dto.Team, dao: TeamPlayerGetter
+) -> dto.FullTeamPlayer:
     team_player = dto.FullTeamPlayer.from_simple(
         team_player=await dao.get_team_player(player),
-        team=team, player=player,
+        team=team,
+        player=player,
     )
     if team_player.team_id != team.id:
         raise PlayerNotInTeam(player=player, team=team)
@@ -154,15 +171,23 @@ async def get_team_players(team: dto.Team, dao: TeamPlayersGetter) -> list[dto.F
 
 
 async def save_promotion_invite(inviter: dto.Player, dao: InviteSaver) -> str:
-    return await dao.save_new_invite(dct=dict(inviter_id=inviter.id, type_=InviteType.promote_author.name))
+    return await dao.save_new_invite(
+        dct=dict(inviter_id=inviter.id, type_=InviteType.promote_author.name)
+    )
 
 
 async def check_promotion_invite(inviter: dto.Player, token: str, dao: InviterDao):
     data = await dao.get_invite(token)
     if data["type_"] != InviteType.promote_author.name:
-        raise SaltError(text="Ошибка нарушения данных. Токен в зашифрованной и открытой части не совпал", alarm=True)
+        raise SaltError(
+            text="Ошибка нарушения данных. Токен в зашифрованной и открытой части не совпал",
+            alarm=True,
+        )
     if data["inviter_id"] != inviter.id:
-        raise SaltError(text="Ошибка нарушения данных. Токен в зашифрованной и открытой части не совпал", alarm=True)
+        raise SaltError(
+            text="Ошибка нарушения данных. Токен в зашифрованной и открытой части не совпал",
+            alarm=True,
+        )
 
 
 async def save_promotion_confirm_invite(inviter: dto.Player, dao: InviteSaver) -> str:
@@ -184,16 +209,24 @@ async def agree_promotion(
 ):
     data = await dao.get_invite(token)
     if data["type_"] != InviteType.promotion_confirm.name:
-        raise SaltError(text="Ошибка нарушения данных. Токен в зашифрованной и открытой части не совпал", alarm=True)
+        raise SaltError(
+            text="Ошибка нарушения данных. Токен в зашифрованной и открытой части не совпал",
+            alarm=True,
+        )
     if data["inviter_id"] != inviter_id:
-        raise SaltError(text="Ошибка нарушения данных. Токен в зашифрованной и открытой части не совпал", alarm=True)
+        raise SaltError(
+            text="Ошибка нарушения данных. Токен в зашифрованной и открытой части не совпал",
+            alarm=True,
+        )
     inviter = await dao.get_by_id(inviter_id)
     await promote(inviter, target, dao)
 
 
 async def flip_permission(
-    actor: dto.FullTeamPlayer, team_player: dto.TeamPlayer,
-    permission: enums.TeamPlayerPermission, dao: TeamPlayerPermissionFlipper,
+    actor: dto.FullTeamPlayer,
+    team_player: dto.TeamPlayer,
+    permission: enums.TeamPlayerPermission,
+    dao: TeamPlayerPermissionFlipper,
 ):
     check_can_manage_players(actor)
     if actor.player_id == team_player.player_id:

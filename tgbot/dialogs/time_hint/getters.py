@@ -12,7 +12,7 @@ async def get_available_times(dialog_manager: DialogManager, **_):
         times = [0]
     else:
         rounded = (prev_time // 5) * 5 + 5
-        times = list(range(rounded, rounded + 5*12, 5))
+        times = list(range(rounded, rounded + 5 * 12, 5))
     return {"times": times}
 
 

@@ -13,5 +13,5 @@ class HasTargetFilter(BaseFilter):
         target_user = get_target_user(message, self.can_be_same, self.can_be_bot)
         if target_user is None:
             return {}
-        rez = {'target': target_user}
+        rez = {"target": target_user}
         return rez

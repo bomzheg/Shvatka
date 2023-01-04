@@ -1,6 +1,11 @@
 from typing import Iterable
 
-from shvatka.interfaces.dal.waiver import WaiverVoteAdder, WaiverVoteGetter, WaiverApprover, GameWaiversGetter
+from shvatka.interfaces.dal.waiver import (
+    WaiverVoteAdder,
+    WaiverVoteGetter,
+    WaiverApprover,
+    GameWaiversGetter,
+)
 from shvatka.models import dto, enums
 from shvatka.models.enums.played import Played
 from shvatka.services.player import check_player_on_team, get_full_team_player
@@ -8,16 +13,18 @@ from shvatka.utils.exceptions import WaiverForbidden, PermissionsError
 
 
 async def get_vote_to_voted(
-    team: dto.Team, dao: WaiverVoteGetter,
+    team: dto.Team,
+    dao: WaiverVoteGetter,
 ) -> dict[Played, list[dto.VotedPlayer]]:
     result = {}
     for vote in await get_voted_list(team, dao):
-        result.setdefault(vote.vote, []) \
-            .append(dto.VotedPlayer(player=vote.player, pit=vote.pit))
+        result.setdefault(vote.vote, []).append(dto.VotedPlayer(player=vote.player, pit=vote.pit))
     return result
 
 
-async def get_all_played(game: dto.Game, dao: GameWaiversGetter) -> dict[dto.Team, Iterable[dto.VotedPlayer]]:
+async def get_all_played(
+    game: dto.Game, dao: GameWaiversGetter
+) -> dict[dto.Team, Iterable[dto.VotedPlayer]]:
     teams = await dao.get_played_teams(game)
     result = {}
     for team in teams:
@@ -27,7 +34,8 @@ async def get_all_played(game: dto.Game, dao: GameWaiversGetter) -> dict[dto.Tea
 
 
 async def get_voted_list(
-    team: dto.Team, dao: WaiverVoteGetter,
+    team: dto.Team,
+    dao: WaiverVoteGetter,
 ) -> list[dto.Vote]:
     poll_date = await dao.get_dict_player_vote(team.id)
     voted_players = await dao.get_by_ids_with_user_and_pit(poll_date.keys())
@@ -39,7 +47,11 @@ async def get_voted_list(
 
 
 async def add_vote(
-    game: dto.Game, team: dto.Team, player: dto.Player, vote: Played, dao: WaiverVoteAdder,
+    game: dto.Game,
+    team: dto.Team,
+    player: dto.Player,
+    vote: Played,
+    dao: WaiverVoteAdder,
 ):
     if await dao.is_excluded(game=game, player=player, team=team):
         raise WaiverForbidden(player=player, team=team, game=game)
@@ -47,13 +59,19 @@ async def add_vote(
 
 
 async def force_add_vote(
-    game: dto.Game, team: dto.Team, player: dto.Player, vote: Played, dao: WaiverVoteAdder,
+    game: dto.Game,
+    team: dto.Team,
+    player: dto.Player,
+    vote: Played,
+    dao: WaiverVoteAdder,
 ):
     await check_player_on_team(player, team, dao)
     await dao.add_player_vote(team.id, player.id, vote.name)
 
 
-async def approve_waivers(game: dto.Game, team: dto.Team, approver: dto.Player, dao: WaiverApprover):
+async def approve_waivers(
+    game: dto.Game, team: dto.Team, approver: dto.Player, dao: WaiverApprover
+):
     """
     Captain must approve waivers, for send it to orgs
     :param game:
@@ -89,7 +107,11 @@ async def get_not_played_team_players(team: dto.Team, dao: WaiverApprover) -> li
 
 
 async def revoke_vote_by_captain(
-    game: dto.Game, team: dto.Team, approver: dto.Player, target: dto.Player, dao: WaiverApprover,
+    game: dto.Game,
+    team: dto.Team,
+    approver: dto.Player,
+    target: dto.Player,
+    dao: WaiverApprover,
 ):
     team_player = await get_full_team_player(approver, team, dao)
     check_allow_approve_waivers(team_player)

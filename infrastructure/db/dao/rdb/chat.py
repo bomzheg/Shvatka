@@ -12,9 +12,7 @@ class ChatDao(BaseDAO[Chat]):
         super().__init__(Chat, session)
 
     async def get_by_tg_id(self, tg_id: int) -> Chat:
-        result = await self.session.execute(
-            select(Chat).where(Chat.tg_id == tg_id)
-        )
+        result = await self.session.execute(select(Chat).where(Chat.tg_id == tg_id))
         return result.scalar_one()
 
     async def upsert_chat(self, chat: dto.Chat) -> dto.Chat:
@@ -35,11 +33,13 @@ class ChatDao(BaseDAO[Chat]):
 
 
 def update_fields(source: dto.Chat, target: Chat):
-    if all([
-        target.title == source.title,
-        target.username == source.username,
-        target.type == source.type
-    ]):
+    if all(
+        [
+            target.title == source.title,
+            target.username == source.username,
+            target.type == source.type,
+        ]
+    ):
         return False
     target.title = source.name
     target.username = source.username

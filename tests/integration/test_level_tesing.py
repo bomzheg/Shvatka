@@ -4,7 +4,11 @@ import pytest
 
 from infrastructure.db.dao.holder import HolderDao
 from shvatka.models import dto
-from shvatka.services.level_testing import start_level_test, check_level_testing_key, send_testing_level_hint
+from shvatka.services.level_testing import (
+    start_level_test,
+    check_level_testing_key,
+    send_testing_level_hint,
+)
 from shvatka.utils.datetime_utils import tz_utc
 from shvatka.utils.key_checker_lock import KeyCheckerFactory
 from shvatka.views.game import LevelTestCompleted
@@ -27,7 +31,9 @@ async def test_level_testing(
     suite = dto.LevelTestSuite(level=level, tester=harry_org)
     assert not await dao.level_test.is_still_testing(suite)
 
-    await start_level_test(suite=suite, scheduler=scheduler, view=level_view, dao=dao.level_testing_complex)
+    await start_level_test(
+        suite=suite, scheduler=scheduler, view=level_view, dao=dao.level_testing_complex
+    )
     actual_suite, actual_hint_number, actual_run_at = scheduler.calls.pop()
     assert suite == actual_suite
     assert 1 == actual_hint_number
@@ -38,7 +44,9 @@ async def test_level_testing(
 
     assert dao.level_test.is_still_testing(suite)
 
-    await check_level_testing_key("SH123", suite, level_view, org_notifier, locker, dao.level_testing_complex)
+    await check_level_testing_key(
+        "SH123", suite, level_view, org_notifier, locker, dao.level_testing_complex
+    )
     keys = await dao.level_test.get_correct_tested_keys(suite)
     assert {"SH123"} == keys
     keys = await dao.level_test.get_all_typed(suite)
@@ -50,7 +58,9 @@ async def test_level_testing(
     assert suite == actual_suite
     assert "SH123" == actual_key
 
-    await check_level_testing_key("SHWRONG", suite, level_view, org_notifier, locker, dao.level_testing_complex)
+    await check_level_testing_key(
+        "SHWRONG", suite, level_view, org_notifier, locker, dao.level_testing_complex
+    )
     keys = await dao.level_test.get_correct_tested_keys(suite)
     assert {"SH123"} == keys
     keys = await dao.level_test.get_all_typed(suite)
@@ -61,7 +71,9 @@ async def test_level_testing(
     assert suite == actual_suite
     assert "SHWRONG" == actual_key
 
-    await check_level_testing_key("SH321", suite, level_view, org_notifier, locker, dao.level_testing_complex)
+    await check_level_testing_key(
+        "SH321", suite, level_view, org_notifier, locker, dao.level_testing_complex
+    )
     assert not await dao.level_test.is_still_testing(suite)
     keys = await dao.level_test.get_correct_tested_keys(suite)
     assert {"SH123", "SH321"} == keys
@@ -96,7 +108,9 @@ async def test_send_hint_for_tester_level(
     harry_org = await dao.organizer.add_new(game, harry)
     await dao.commit()
     suite = dto.LevelTestSuite(level=level, tester=harry_org)
-    await start_level_test(suite=suite, scheduler=scheduler, view=level_view, dao=dao.level_testing_complex)
+    await start_level_test(
+        suite=suite, scheduler=scheduler, view=level_view, dao=dao.level_testing_complex
+    )
 
     await send_testing_level_hint(suite, 1, level_view, scheduler, dao.level_testing_complex)
     actual_suit, hint_number = level_view.calls["send_hint"].pop()
@@ -106,4 +120,3 @@ async def test_send_hint_for_tester_level(
     assert suite == actual_suit
     assert 2 == hint_number
     assert run_at > start_at
-

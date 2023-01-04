@@ -28,8 +28,7 @@ game_publish = Dialog(
             when=F["started"],
         ),
         Jinja(
-            "Игра {{game.name}} опубликована.\n"
-            "{{text_invite}}",
+            "Игра {{game.name}} опубликована.\n{{text_invite}}",
             when=F["text_invite"],
         ),
         Cancel(Const("⤴Назад")),

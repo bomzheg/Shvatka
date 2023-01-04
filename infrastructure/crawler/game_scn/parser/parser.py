@@ -14,7 +14,7 @@ from infrastructure.crawler.auth import get_auth_cookie
 from infrastructure.crawler.constants import GAME_URL_TEMPLATE, GAMES_URL
 from shvatka.models import enums
 from shvatka.models.dto import scn
-from tgbot.services.scenario import pack_scn
+from shvatka.services.scenario.scn_zip import pack_scn
 
 logger = logging.getLogger(__name__)
 

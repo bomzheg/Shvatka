@@ -15,9 +15,9 @@ from shvatka.models import dto, enums
 from shvatka.services.achievement import add_achievement
 from shvatka.services.game import check_new_game_name_available, create_game, get_full_game, add_level, upsert_game
 from shvatka.services.level import get_all_my_free_levels, get_by_id
+from shvatka.services.scenario.scn_zip import unpack_scn
 from shvatka.utils.exceptions import ScenarioNotCorrect
 from tgbot import states
-from tgbot.services.scenario import unpack_scn
 
 logger = logging.getLogger(__name__)
 

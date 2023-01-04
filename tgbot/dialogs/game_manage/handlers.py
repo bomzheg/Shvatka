@@ -12,9 +12,9 @@ from shvatka.interfaces.scheduler import Scheduler
 from shvatka.models import dto
 from shvatka.services import game
 from shvatka.services.game import rename_game, get_game
+from shvatka.services.scenario.scn_zip import pack_scn
 from shvatka.utils.datetime_utils import TIME_FORMAT, tz_game
 from tgbot import states
-from tgbot.services.scenario import pack_scn
 
 
 async def select_my_game(c: CallbackQuery, widget: Any, manager: DialogManager, item_id: str):

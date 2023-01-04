@@ -3,7 +3,7 @@ from datetime import datetime
 from typing import BinaryIO
 
 from shvatka.models import enums
-from . import UploadedFileMeta
+from . import UploadedFileMeta, FileMetaLightweight
 from .file_content import FileMeta
 from .level import LevelScenario
 
@@ -25,7 +25,12 @@ class UploadedGameScenario(GameScenario):
 
 
 @dataclass
-class ParsedCompletedGameScenario(FullGameScenario):
+class ParsedGameScenario(GameScenario):
+    files: list[FileMetaLightweight]
+
+
+@dataclass
+class ParsedCompletedGameScenario(ParsedGameScenario):
     id: int
     start_at: datetime
     files_contents: dict[str, BinaryIO]

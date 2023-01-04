@@ -12,7 +12,6 @@ from lxml import etree
 
 from infrastructure.crawler.auth import get_auth_cookie
 from infrastructure.crawler.constants import GAME_URL_TEMPLATE, GAMES_URL
-from shvatka.models import enums
 from shvatka.models.dto import scn
 from shvatka.services.scenario.scn_zip import pack_scn
 
@@ -160,10 +159,7 @@ async def save_all_scns_to_files():
     path = Path() / "scn"
     path.mkdir(exist_ok=True)
     for game in games:
-        for file in game.files:
-            file.file_content_link = scn.FileContentLink(file.guid)
-            file.tg_link = scn.TgLink(file_id=None, content_type=enums.HintType.photo)
-        dct = dcf.dump(game, scn.FullGameScenario)
+        dct = dcf.dump(game, scn.ParsedGameScenario)
         scenario = scn.RawGameScenario(scn=dct, files=game.files_contents)
         packed_scenario = pack_scn(scenario)
         with open(path / f"{game.id}.zip", "wb") as f:

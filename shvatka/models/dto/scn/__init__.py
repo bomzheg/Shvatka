@@ -10,8 +10,10 @@ from .file_content import (
 from .game import (
     GameScenario,
     FullGameScenario,
+    ParsedGameScenario,
     ParsedCompletedGameScenario,
     RawGameScenario,
+    UploadedGameScenario,
 )
 from .hint_part import (
     BaseHint,

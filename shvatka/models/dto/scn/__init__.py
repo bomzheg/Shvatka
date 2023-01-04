@@ -20,4 +20,5 @@ from .hint_part import (
     ContactHint,
 )
 from .level import LevelScenario
+from .parsed_zip import ParsedZip
 from .time_hint import TimeHint

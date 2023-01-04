@@ -4,7 +4,7 @@ from zipfile import Path
 
 import yaml
 
-from shvatka.models.dto.scn.game import RawGameScenario
+from .game import RawGameScenario
 
 
 @dataclass

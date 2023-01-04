@@ -28,6 +28,8 @@ jobs:
       - name: Install dependencies
         run: |
           $POETRY_HOME/bin/poetry install --with test
+      - name: Lint with black
+        run: $POETRY_HOME/bin/poetry run black --check --verbose .
       - name: Lint with flake8
         run: |
           # stop the build if there are Python syntax errors or undefined names

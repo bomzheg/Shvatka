@@ -6,7 +6,8 @@ from common.config.models.main import FileStorageConfig
 from shvatka.interfaces.clients.file_storage import FileStorage
 from shvatka.models.dto import scn
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger(
+    __name__)
 
 
 # TODO split it to file_storage and proxy that upload to tg and file storage

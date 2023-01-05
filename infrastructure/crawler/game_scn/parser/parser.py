@@ -1,4 +1,5 @@
 import asyncio
+import importlib.resources
 import logging
 import uuid
 from datetime import datetime
@@ -6,7 +7,13 @@ from io import BytesIO
 from pathlib import Path
 from typing import BinaryIO
 
-from aiohttp import ClientSession, ClientConnectorError, ClientResponseError
+from aiohttp import (
+    ClientSession,
+    ClientConnectorError,
+    ClientResponseError,
+    ServerDisconnectedError,
+    ClientOSError,
+)
 from dataclass_factory import Factory
 from lxml import etree
 
@@ -16,6 +23,13 @@ from shvatka.models.dto import scn
 from shvatka.services.scenario.scn_zip import pack_scn
 
 logger = logging.getLogger(__name__)
+with importlib.resources.path("infrastructure.assets", "parser_error.png") as path:
+    with path.open("rb") as f:
+        PARSER_ERROR_IMG = f.read()
+
+
+class ContentDownloadError(IOError):
+    pass
 
 
 async def get_all_games() -> list[scn.ParsedCompletedGameScenario]:
@@ -27,18 +41,20 @@ async def get_all_games() -> list[scn.ParsedCompletedGameScenario]:
             try:
                 games.append(await GameParser(html_text, session=session).build())
             except (ValueError, AttributeError) as e:
-                logger.error("cant parsed game %s", game_id, exc_info=e)
+                logger.error("cant parse game %s", game_id, exc_info=e)
     return games
 
 
 async def get_games_ids(session: ClientSession) -> list[int]:
     async with session.get(GAMES_URL) as resp:
-        return list(range(120, 130))
+        return list(range(85, 132))
 
 
 async def download(game_id: int, session: ClientSession) -> str:
-    async with session.get(GAME_URL_TEMPLATE.format(game_id=game_id)) as resp:
-        return await resp.text(encoding="cp1251")
+    async with session.get(
+        GAME_URL_TEMPLATE.format(game_id=game_id), allow_redirects=False
+    ) as resp:
+        return await resp.text(encoding="cp1251", errors="backslashreplace")
 
 
 class GameParser:
@@ -71,17 +87,19 @@ class GameParser:
         )
         for element in scn_element.xpath("./*"):
             if element.tag == "center":
-                prompt: tuple[str, ...] = element.xpath("./b")[0].text.split()
-                if (
-                    prompt[0] == "Уровень"
-                    and prompt[1].strip(".").isnumeric()
-                    and prompt[2] == "Ключ:"
-                ):
-                    if self.keys:  # if not - it's first level
-                        self.build_level()
-                    self.keys = {b.tail for b in element.xpath("./b")}
-                    self.level_number = int(prompt[1].strip("."))
-                    continue
+                caption = element.xpath("./b")
+                if caption and caption[0].text:
+                    prompt: tuple[str, ...] = caption[0].text.split()
+                    if (
+                        prompt[0] == "Уровень"
+                        and prompt[1].strip(".").isnumeric()
+                        and prompt[2] == "Ключ:"
+                    ):
+                        if self.keys:  # if not - it's first level
+                            self.build_level()
+                        self.keys = {b.tail for b in element.xpath("./b")}
+                        self.level_number = int(prompt[1].strip("."))
+                        continue
             if element.tag == "b":
                 if element.text and len(element.text.split()) == 4:
                     hint_caption, number, time, minutes_caption = element.text.split()  # type: str
@@ -90,12 +108,24 @@ class GameParser:
                         time = time.removeprefix("(")
                         self.time = int(time or -1)
                         continue
+            if iframe_tags := element.xpath("descendant-or-self::iframe"):
+                for iframe in iframe_tags:
+                    self.current_hint_parts.append(iframe.get("src"))
             if img_tags := element.xpath("descendant-or-self::img"):
                 for img in img_tags:
                     self.build_current_hint()
                     guid = str(uuid.uuid4())
-                    self.hints.append(scn.PhotoHint(file_guid=guid))
-                    self.files[guid] = await self.download_content(img.get("src"))
+                    try:
+                        self.files[guid] = await self.download_content(img.get("src"))
+                        self.hints.append(scn.PhotoHint(file_guid=guid))
+                    except ContentDownloadError:
+                        self.files[guid] = BytesIO(PARSER_ERROR_IMG)
+                        self.hints.append(
+                            scn.PhotoHint(
+                                file_guid=guid,
+                                caption=f"не удалось скачать контент по ссылке {img.get('src')}",
+                            )
+                        )
                     self.files_meta.append(
                         scn.FileMetaLightweight(
                             guid=guid,
@@ -114,9 +144,14 @@ class GameParser:
             async with self.session.get(url.strip()) as resp:
                 resp.raise_for_status()
                 return BytesIO(await resp.content.read())
-        except (ClientConnectorError, ClientResponseError) as e:
+        except (
+            ClientConnectorError,
+            ClientResponseError,
+            ServerDisconnectedError,
+            ClientOSError,
+        ) as e:
             logger.error("couldnt load content for url %s", url, exc_info=e)
-            return BytesIO()
+            raise ContentDownloadError()
 
     def build_current_hint(self):
         if not self.current_hint_parts:

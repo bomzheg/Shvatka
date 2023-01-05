@@ -46,7 +46,7 @@ class StoredFileMeta(FileMetaLightweight):
 
 @dataclass
 class UploadedFileMeta(FileMetaLightweight):
-    tg_link: Optional[TgLink]
+    tg_link: Optional[TgLink] = None
 
 
 @dataclass

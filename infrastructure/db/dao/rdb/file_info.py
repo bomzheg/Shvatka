@@ -24,7 +24,8 @@ class FileInfoDao(BaseDAO[models.FileInfo]):
         db_file.file_path = file.file_content_link.file_path
         db_file.original_filename = file.original_filename
         db_file.extension = file.extension
-        db_file.file_id = file.tg_link.file_id
+        if file.tg_link:
+            db_file.file_id = file.tg_link.file_id
         db_file.content_type = file.tg_link.content_type.name
 
         return db_file.to_dto(author=author)

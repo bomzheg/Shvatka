@@ -13,7 +13,7 @@ from aiohttp import (
     ServerDisconnectedError,
     ClientOSError,
 )
-from dataclass_factory import Factory
+from dataclass_factory import Factory, Schema, NameStyle
 from lxml import etree
 
 from infrastructure.crawler.auth import get_auth_cookie
@@ -167,7 +167,7 @@ class GameParser:
     def build_level(self):
         self.build_time_hint()
         level = scn.LevelScenario(
-            id=f"game_{self.id}:lvl_{self.level_number}",
+            id=f"game_{self.id}-lvl_{self.level_number}",
             time_hints=self.time_hints,
             keys=self.keys,
         )
@@ -197,7 +197,7 @@ async def save_all_scns_to_files():
     # Сценарий не в стандартном формате.
     # До 19 игры сценарий публиковался просто на форуме - тоже не стандарт
     games = await get_all_games([*range(19, 84), *range(85, 132)])
-    dcf = Factory()
+    dcf = Factory(default_schema=Schema(name_style=NameStyle.kebab))
     path = Path() / "scn"
     path.mkdir(exist_ok=True)
     for game in games:

@@ -1,5 +1,4 @@
 import asyncio
-import importlib.resources
 import logging
 import uuid
 from datetime import datetime
@@ -18,24 +17,23 @@ from dataclass_factory import Factory
 from lxml import etree
 
 from infrastructure.crawler.auth import get_auth_cookie
-from infrastructure.crawler.constants import GAME_URL_TEMPLATE, GAMES_URL
+from infrastructure.crawler.constants import GAME_URL_TEMPLATE
+from infrastructure.crawler.game_scn.parser.resourses import load_error_img
 from shvatka.models.dto import scn
 from shvatka.services.scenario.scn_zip import pack_scn
 
 logger = logging.getLogger(__name__)
-with importlib.resources.path("infrastructure.assets", "parser_error.png") as path:
-    with path.open("rb") as f:
-        PARSER_ERROR_IMG = f.read()
+PARSER_ERROR_IMG = load_error_img()
 
 
 class ContentDownloadError(IOError):
     pass
 
 
-async def get_all_games() -> list[scn.ParsedCompletedGameScenario]:
+async def get_all_games(games_ids: list[int]) -> list[scn.ParsedCompletedGameScenario]:
     games = []
     async with ClientSession(cookies=await get_auth_cookie()) as session:
-        for game_id in reversed(await get_games_ids(session)):
+        for game_id in reversed(games_ids):
             await asyncio.sleep(1)
             html_text = await download(game_id, session)
             try:
@@ -43,11 +41,6 @@ async def get_all_games() -> list[scn.ParsedCompletedGameScenario]:
             except (ValueError, AttributeError) as e:
                 logger.error("cant parse game %s", game_id, exc_info=e)
     return games
-
-
-async def get_games_ids(session: ClientSession) -> list[int]:
-    async with session.get(GAMES_URL) as resp:
-        return list(range(85, 132))
 
 
 async def download(game_id: int, session: ClientSession) -> str:
@@ -200,7 +193,7 @@ class GameParser:
 
 
 async def save_all_scns_to_files():
-    games = await get_all_games()
+    games = await get_all_games([*range(19, 84), *range(85, 132)])
     dcf = Factory()
     path = Path() / "scn"
     path.mkdir(exist_ok=True)

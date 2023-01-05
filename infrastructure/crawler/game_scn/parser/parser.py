@@ -193,6 +193,9 @@ class GameParser:
 
 
 async def save_all_scns_to_files():
+    # 85 - игра про Гарри Поттера, проходила на другом движке.
+    # Сценарий не в стандартном формате.
+    # До 19 игры сценарий публиковался просто на форуме - тоже не стандарт
     games = await get_all_games([*range(19, 84), *range(85, 132)])
     dcf = Factory()
     path = Path() / "scn"

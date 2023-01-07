@@ -4,7 +4,7 @@ import pytest_asyncio
 from dataclass_factory import Factory
 
 from infrastructure.db.dao.holder import HolderDao
-from shvatka.interfaces.clients.file_storage import FileStorage
+from shvatka.interfaces.clients.file_storage import FileGateway
 from shvatka.models import dto
 from shvatka.models.dto.scn.game import RawGameScenario
 from shvatka.models.enums.played import Played
@@ -19,14 +19,14 @@ async def game(
     author: dto.Player,
     dao: HolderDao,
     dcf: Factory,
-    file_storage: FileStorage,
+    file_gateway: FileGateway,
 ) -> dto.FullGame:
     return await upsert_game(
         complex_scn,
         author,
         dao.game_upserter,
         dcf,
-        file_storage,
+        file_gateway,
     )
 
 

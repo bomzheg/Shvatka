@@ -1,6 +1,6 @@
 from typing.io import BinaryIO
 
-from shvatka.interfaces.clients.file_storage import FileStorage
+from shvatka.interfaces.clients.file_storage import FileStorage, FileGateway
 from shvatka.interfaces.dal.game import GameUpserter, GamePackager
 from shvatka.models import dto
 from shvatka.models.dto import scn
@@ -12,12 +12,12 @@ async def upsert_files(
     contents: dict[str, BinaryIO],
     files: list[scn.UploadedFileMeta],
     dao: GameUpserter,
-    file_storage: FileStorage,
+    file_gateway: FileGateway,
 ) -> set[str]:
     guids = set()
     for file in files:
         await dao.check_author_can_own_guid(author, file.guid)
-        stored_file = await file_storage.put(file, contents[file.guid])
+        stored_file = await file_gateway.put(file, contents[file.guid], author)
         await dao.upsert_file(stored_file, author)
         guids.add(file.guid)
     return guids

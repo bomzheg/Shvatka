@@ -2,7 +2,7 @@ from datetime import datetime
 
 from dataclass_factory import Factory
 
-from shvatka.interfaces.clients.file_storage import FileStorage
+from shvatka.interfaces.clients.file_storage import FileStorage, FileGateway
 from shvatka.interfaces.dal.game import (
     GameUpserter,
     GameCreator,
@@ -33,7 +33,7 @@ async def upsert_game(
     author: dto.Player,
     dao: GameUpserter,
     dcf: Factory,
-    file_storage: FileStorage,
+    file_gateway: FileGateway,
 ) -> dto.FullGame:
     check_allow_be_author(author)
     game_scn = parse_uploaded_game(raw_scn.scn, dcf)
@@ -42,7 +42,7 @@ async def upsert_game(
             raise CantEditGame(player=author, text=f"cant edit game with name {game_scn.name}")
         game = await dao.get_game_by_name(name=game_scn.name, author=author)
         check_game_editable(game)
-    guids = await upsert_files(author, raw_scn.files, game_scn.files, dao, file_storage)
+    guids = await upsert_files(author, raw_scn.files, game_scn.files, dao, file_gateway)
     check_all_files_saved(game=game_scn, guids=guids)
     game = await dao.upsert_game(author, game_scn)
     await dao.unlink_all(game)

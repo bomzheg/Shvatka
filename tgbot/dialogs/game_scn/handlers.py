@@ -10,7 +10,7 @@ from aiogram_dialog.widgets.kbd import Button, ManagedMultiSelectAdapter
 from dataclass_factory import Factory
 
 from infrastructure.db.dao.holder import HolderDao
-from shvatka.interfaces.clients.file_storage import FileStorage
+from shvatka.interfaces.clients.file_storage import FileGateway
 from shvatka.models import dto, enums
 from shvatka.services.achievement import add_achievement
 from shvatka.services.game import (
@@ -52,12 +52,12 @@ async def process_zip_scn(m: Message, dialog_: Any, manager: DialogManager):
     player: dto.Player = manager.middleware_data["player"]
     dao: HolderDao = manager.middleware_data["dao"]
     bot: Bot = manager.middleware_data["bot"]
-    file_storage: FileStorage = manager.middleware_data["file_storage"]
+    file_gateway: FileGateway = manager.middleware_data["file_gateway"]
     dcf: Factory = manager.middleware_data["dcf"]
     document = await bot.download(m.document.file_id)
     try:
         with unpack_scn(ZipPath(document)).open() as scn:
-            game = await upsert_game(scn, player, dao.game_upserter, dcf, file_storage)
+            game = await upsert_game(scn, player, dao.game_upserter, dcf, file_gateway)
     except ScenarioNotCorrect as e:
         await m.reply(f"Ошибка {e}\n попробуйте исправить файл")
         logger.error("game scenario from player %s has problems", player.id, exc_info=e)

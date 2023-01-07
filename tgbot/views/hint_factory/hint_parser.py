@@ -3,11 +3,12 @@ from pathlib import Path
 from uuid import uuid4
 
 from aiogram import Bot
-from aiogram.types import Message, ContentType
+from aiogram.types import Message, ContentType, PhotoSize
 
 from infrastructure.db.dao import FileInfoDao
 from shvatka.interfaces.clients.file_storage import FileStorage
 from shvatka.models import dto
+from shvatka.models.dto import scn
 from shvatka.models.dto.scn import (
     BaseHint,
     TextHint,
@@ -62,102 +63,42 @@ class HintParser:
                 )
                 return PhotoHint(caption=message.html_text, file_guid=file_meta.guid)
             case ContentType.AUDIO:
-                file_meta = await self.save_content(
-                    file_id=message.audio.file_id,
-                    content_type=HintType.audio,
-                    author=author,
-                    filename=message.audio.file_name,
-                )
-                thumb = (
-                    await self.save_content(
-                        file_id=message.audio.thumb.file_id,
-                        content_type=HintType.photo,
-                        author=author,
-                    )
-                    if message.audio.thumb
-                    else None
-                )
+                file_meta = await self.save_file(message, author)
+                thumb = await self.save_thumb(author, message.audio.thumb)
                 return AudioHint(
                     caption=message.html_text,
                     file_guid=file_meta.guid,
                     thumb_guid=thumb.guid if thumb else None,
                 )
             case ContentType.VIDEO:
-                file_meta = await self.save_content(
-                    file_id=message.video.file_id,
-                    content_type=HintType.video,
-                    author=author,
-                    filename=message.video.file_name,
-                )
-                thumb = (
-                    await self.save_content(
-                        file_id=message.video.thumb.file_id,
-                        content_type=HintType.video,
-                        author=author,
-                    )
-                    if message.video.thumb
-                    else None
-                )
+                file_meta = await self.save_file(message, author)
+                thumb = await self.save_thumb(author, message.video.thumb)
                 return VideoHint(
                     caption=message.html_text,
                     file_guid=file_meta.guid,
                     thumb_guid=thumb.guid if thumb else None,
                 )
             case ContentType.DOCUMENT:
-                file_meta = await self.save_content(
-                    file_id=message.document.file_id,
-                    content_type=HintType.document,
-                    author=author,
-                )
-                thumb = (
-                    await self.save_content(
-                        file_id=message.document.thumb.file_id,
-                        content_type=HintType.document,
-                        author=author,
-                        filename=message.document.file_name,
-                    )
-                    if message.document.thumb
-                    else None
-                )
+                file_meta = await self.save_file(message, author)
+                thumb = await self.save_thumb(author, message.document.thumb)
                 return DocumentHint(
                     caption=message.html_text,
                     file_guid=file_meta.guid,
                     thumb_guid=thumb.guid if thumb else None,
                 )
             case ContentType.ANIMATION:
-                file_meta = await self.save_content(
-                    file_id=message.animation.file_id,
-                    content_type=HintType.animation,
-                    author=author,
-                    filename=message.animation.file_name,
-                )
-                thumb = (
-                    await self.save_content(
-                        file_id=message.animation.thumb.file_id,
-                        content_type=HintType.animation,
-                        author=author,
-                    )
-                    if message.animation.thumb
-                    else None
-                )
+                file_meta = await self.save_file(message, author)
+                thumb = await self.save_thumb(author, message.animation.thumb)
                 return AnimationHint(
                     caption=message.html_text,
                     file_guid=file_meta.guid,
                     thumb_guid=thumb.guid if thumb else None,
                 )
             case ContentType.VOICE:
-                file_meta = await self.save_content(
-                    file_id=message.voice.file_id,
-                    content_type=HintType.voice,
-                    author=author,
-                )
+                file_meta = await self.save_file(message, author)
                 return VoiceHint(caption=message.html_text, file_guid=file_meta.guid)
             case ContentType.VIDEO_NOTE:
-                file_meta = await self.save_content(
-                    file_id=message.video_note.file_id,
-                    content_type=HintType.video_note,
-                    author=author,
-                )
+                file_meta = await self.save_file(message, author)
                 return VideoNoteHint(file_guid=file_meta.guid)
             case ContentType.CONTACT:
                 return ContactHint(
@@ -167,14 +108,76 @@ class HintParser:
                     vcard=message.contact.vcard,
                 )
             case ContentType.STICKER:
-                file_meta = await self.save_content(
+                file_meta = await self.save_file(message, author)
+                return StickerHint(file_guid=file_meta.guid)
+            case _:
+                raise ValueError()
+
+    async def save_file(self, message: Message, author: dto.Player) -> scn.FileMeta:
+        match message.content_type:
+            case ContentType.PHOTO:
+                return await self.save_content(
+                    file_id=message.photo[-1].file_id,
+                    content_type=HintType.photo,
+                    author=author,
+                )
+            case ContentType.AUDIO:
+                return await self.save_content(
+                    file_id=message.audio.file_id,
+                    content_type=HintType.audio,
+                    author=author,
+                    filename=message.audio.file_name,
+                )
+            case ContentType.VIDEO:
+                return await self.save_content(
+                    file_id=message.video.file_id,
+                    content_type=HintType.video,
+                    author=author,
+                    filename=message.video.file_name,
+                )
+            case ContentType.DOCUMENT:
+                return await self.save_content(
+                    file_id=message.document.file_id,
+                    content_type=HintType.document,
+                    author=author,
+                    filename=message.document.file_name,
+                )
+            case ContentType.ANIMATION:
+                return await self.save_content(
+                    file_id=message.animation.file_id,
+                    content_type=HintType.animation,
+                    author=author,
+                    filename=message.animation.file_name,
+                )
+            case ContentType.VOICE:
+                return await self.save_content(
+                    file_id=message.voice.file_id,
+                    content_type=HintType.voice,
+                    author=author,
+                )
+            case ContentType.VIDEO_NOTE:
+                return await self.save_content(
+                    file_id=message.video_note.file_id,
+                    content_type=HintType.video_note,
+                    author=author,
+                )
+            case ContentType.STICKER:
+                return await self.save_content(
                     file_id=message.sticker.file_id,
                     content_type=HintType.sticker,
                     author=author,
                 )
-                return StickerHint(file_guid=file_meta.guid)
             case _:
                 raise ValueError()
+
+    async def save_thumb(self, author: dto.Player, thumb: PhotoSize | None):
+        if thumb:
+            return await self.save_content(
+                file_id=thumb.file_id,
+                content_type=HintType.photo,
+                author=author,
+            )
+        return None
 
     async def save_content(
         self,
@@ -191,7 +194,7 @@ class HintParser:
             extension=extension,
             tg_link=TgLink(file_id=file_id, content_type=content_type),
         )
-        stored_file = await self.storage.put(file_meta, content, author)
+        stored_file = await self.storage.put(file_meta, content)
         await self.dao.upsert(stored_file, author)
         await self.dao.commit()
         return stored_file

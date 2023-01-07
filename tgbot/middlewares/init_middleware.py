@@ -6,6 +6,7 @@ from dataclass_factory import Factory
 from redis.asyncio.client import Redis
 from sqlalchemy.orm import sessionmaker
 
+from infrastructure.clients.file_gateway import BotFileGateway
 from infrastructure.db.dao.holder import HolderDao
 from infrastructure.db.dao.memory.level_testing import LevelTestingData
 from shvatka.interfaces.clients.file_storage import FileStorage
@@ -58,6 +59,9 @@ class InitMiddleware(BaseMiddleware):
                 dao=holder_dao.file_info,
                 file_storage=self.file_storage,
                 bot=data["bot"],
+            )
+            data["file_gateway"] = BotFileGateway(
+                bot=data["bot"], file_storage=self.file_storage, hint_parser=data["hint_parser"]
             )
             result = await handler(event, data)
             del data["dao"]

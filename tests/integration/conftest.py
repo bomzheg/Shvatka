@@ -17,11 +17,12 @@ from testcontainers.postgres import PostgresContainer
 from testcontainers.redis import RedisContainer
 
 from common.config.models.paths import Paths
+from infrastructure.clients.file_gateway import BotFileGateway
 from infrastructure.db.config.models.db import RedisConfig
 from infrastructure.db.dao.holder import HolderDao
 from infrastructure.db.dao.memory.level_testing import LevelTestingData
 from infrastructure.db.fatory import create_lock_factory
-from shvatka.interfaces.clients.file_storage import FileStorage
+from shvatka.interfaces.clients.file_storage import FileStorage, FileGateway
 from shvatka.interfaces.scheduler import Scheduler
 from shvatka.utils.key_checker_lock import KeyCheckerFactory
 from tests.fixtures.conftest import fixtures_resource_path  # noqa: F401
@@ -38,6 +39,7 @@ from tgbot.main_factory import (
     create_redis,
 )
 from tgbot.username_resolver.user_getter import UserGetter
+from tgbot.views.hint_factory.hint_parser import HintParser
 from tgbot.views.telegraph import Telegraph
 
 logger = logging.getLogger(__name__)
@@ -215,6 +217,24 @@ def upgrade_schema_db(alembic_config: AlembicConfig):
 @pytest.fixture(scope="session")
 def file_storage() -> FileStorage:
     return MemoryFileStorage()
+
+
+@pytest.fixture
+def hint_parser(
+    dao: HolderDao,
+    file_storage: FileStorage,
+    bot: Bot,
+):
+    return HintParser(dao=dao.file_info, file_storage=file_storage, bot=bot)
+
+
+@pytest.fixture
+def file_gateway(file_storage: FileStorage, bot: Bot, hint_parser: HintParser) -> FileGateway:
+    return BotFileGateway(
+        bot=bot,
+        file_storage=file_storage,
+        hint_parser=hint_parser,
+    )
 
 
 @pytest.fixture(autouse=True)

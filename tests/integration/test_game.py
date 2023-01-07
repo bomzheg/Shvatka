@@ -4,7 +4,7 @@ import pytest
 from dataclass_factory import Factory
 
 from infrastructure.db.dao.holder import HolderDao
-from shvatka.interfaces.clients.file_storage import FileStorage
+from shvatka.interfaces.clients.file_storage import FileGateway
 from shvatka.models import dto
 from shvatka.models.dto.scn.game import RawGameScenario
 from shvatka.models.enums import GameStatus
@@ -20,9 +20,9 @@ async def test_game_simple(
     simple_scn: RawGameScenario,
     dao: HolderDao,
     dcf: Factory,
-    file_storage: FileStorage,
+    file_gateway: FileGateway,
 ):
-    game = await upsert_game(simple_scn, author, dao.game_upserter, dcf, file_storage)
+    game = await upsert_game(simple_scn, author, dao.game_upserter, dcf, file_gateway)
 
     assert await dao.game.count() == 1
     assert await dao.level.count() == 2
@@ -40,7 +40,7 @@ async def test_game_simple(
     another_scn["levels"].append(another_scn["levels"].pop(0))
 
     game = await upsert_game(
-        RawGameScenario(scn=another_scn, files={}), author, dao.game_upserter, dcf, file_storage
+        RawGameScenario(scn=another_scn, files={}), author, dao.game_upserter, dcf, file_gateway
     )
 
     assert await dao.game.count() == 1
@@ -58,7 +58,7 @@ async def test_game_simple(
     another_scn["levels"].pop()
 
     game = await upsert_game(
-        RawGameScenario(scn=another_scn, files={}), author, dao.game_upserter, dcf, file_storage
+        RawGameScenario(scn=another_scn, files={}), author, dao.game_upserter, dcf, file_gateway
     )
 
     assert await dao.game.count() == 1
@@ -87,9 +87,9 @@ async def test_game_get_full(
     simple_scn: RawGameScenario,
     dao: HolderDao,
     dcf: Factory,
-    file_storage: FileStorage,
+    file_gateway: FileGateway,
 ):
-    game_expected = await upsert_game(simple_scn, author, dao.game_upserter, dcf, file_storage)
+    game_expected = await upsert_game(simple_scn, author, dao.game_upserter, dcf, file_gateway)
     game_actual = await dao.game.get_full(game_expected.id)
     assert game_expected == game_actual
 

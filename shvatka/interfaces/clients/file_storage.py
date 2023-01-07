@@ -1,6 +1,14 @@
 from typing import Protocol, BinaryIO
 
+from shvatka.models import dto
 from shvatka.models.dto import scn
+
+
+class FileGateway(Protocol):
+    async def put(
+        self, file_meta: scn.UploadedFileMeta, content: BinaryIO, author: dto.Player
+    ) -> scn.FileMeta:
+        raise NotImplementedError
 
 
 class FileStorage(Protocol):

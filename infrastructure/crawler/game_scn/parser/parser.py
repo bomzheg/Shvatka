@@ -19,6 +19,7 @@ from lxml import etree
 from infrastructure.crawler.auth import get_auth_cookie
 from infrastructure.crawler.constants import GAME_URL_TEMPLATE
 from infrastructure.crawler.game_scn.parser.resourses import load_error_img
+from shvatka.models import enums
 from shvatka.models.dto import scn
 from shvatka.services.scenario.scn_zip import pack_scn
 
@@ -124,6 +125,7 @@ class GameParser:
                             guid=guid,
                             original_filename=guid,
                             extension=".jpg",
+                            content_type=enums.HintType.photo,
                         )
                     )
             if element.text:
@@ -192,11 +194,11 @@ class GameParser:
         return game
 
 
-async def save_all_scns_to_files():
+async def save_all_scns_to_files(game_ids: list[int]):
     # 85 - игра про Гарри Поттера, проходила на другом движке.
     # Сценарий не в стандартном формате.
     # До 19 игры сценарий публиковался просто на форуме - тоже не стандарт
-    games = await get_all_games([*range(19, 84), *range(85, 132)])
+    games = await get_all_games(game_ids)
     dcf = Factory(default_schema=Schema(name_style=NameStyle.kebab))
     path = Path() / "scn"
     path.mkdir(exist_ok=True)
@@ -210,4 +212,4 @@ async def save_all_scns_to_files():
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG)
-    asyncio.run(save_all_scns_to_files())
+    asyncio.run(save_all_scns_to_files([*range(19, 84), *range(85, 132)]))

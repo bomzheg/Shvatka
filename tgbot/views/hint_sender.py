@@ -1,6 +1,7 @@
 import asyncio
 import logging
 from datetime import timedelta
+from functools import partial
 from typing import Iterable, Callable, Awaitable, Collection
 
 from aiogram import Bot
@@ -9,11 +10,25 @@ from aiogram.types import Message
 
 from infrastructure.db.dao.holder import HolderDao
 from shvatka.interfaces.clients.file_storage import FileStorage
-from shvatka.models.dto.scn.hint_part import BaseHint
-from shvatka.models.enums.hint_type import HintType
+from shvatka.models import enums
+from shvatka.models.dto import scn
 from tgbot.views.hint_factory.hint_content_resolver import HintContentResolver
 
 logger = logging.getLogger(__name__)
+METHODS = {
+    enums.HintType.text: Bot.send_message,
+    enums.HintType.gps: Bot.send_location,
+    enums.HintType.venue: Bot.send_venue,
+    enums.HintType.photo: Bot.send_photo,
+    enums.HintType.audio: Bot.send_audio,
+    enums.HintType.video: Bot.send_video,
+    enums.HintType.document: Bot.send_document,
+    enums.HintType.animation: Bot.send_animation,
+    enums.HintType.voice: Bot.send_voice,
+    enums.HintType.video_note: Bot.send_video_note,
+    enums.HintType.contact: Bot.send_contact,
+    enums.HintType.sticker: Bot.send_sticker,
+}
 
 
 class HintSender:
@@ -22,26 +37,13 @@ class HintSender:
     def __init__(self, bot: Bot, resolver: HintContentResolver):
         self.bot = bot
         self.resolver = resolver
-        self.methods = {
-            HintType.text: self.bot.send_message,
-            HintType.gps: self.bot.send_location,
-            HintType.venue: self.bot.send_venue,
-            HintType.photo: self.bot.send_photo,
-            HintType.audio: self.bot.send_audio,
-            HintType.video: self.bot.send_video,
-            HintType.document: self.bot.send_document,
-            HintType.animation: self.bot.send_animation,
-            HintType.voice: self.bot.send_voice,
-            HintType.video_note: self.bot.send_video_note,
-            HintType.contact: self.bot.send_contact,
-            HintType.sticker: self.bot.send_sticker,
-        }
+        self.methods = {t: partial(m, bot) for t, m in METHODS.items()}
 
-    def method(self, type_content: HintType) -> Callable[..., Awaitable[Message]]:
+    def method(self, type_content: enums.HintType) -> Callable[..., Awaitable[Message]]:
         return self.methods[type_content]
 
-    async def send_hint(self, hint_container: BaseHint, chat_id: int) -> Message:
-        method = self.method(HintType[hint_container.type])
+    async def send_hint(self, hint_container: scn.BaseHint, chat_id: int) -> Message:
+        method = self.method(enums.HintType[hint_container.type])
         hint_link = await self.resolver.resolve_link(hint_container)
         try:
             return await method(chat_id=chat_id, **hint_link.kwargs())
@@ -53,7 +55,7 @@ class HintSender:
     async def send_hints(
         self,
         chat_id: int,
-        hint_containers: Iterable[BaseHint],
+        hint_containers: Iterable[scn.BaseHint],
         caption: str | None = None,
         sleep: int = None,
     ):
@@ -75,7 +77,7 @@ class HintSender:
             await asyncio.sleep(sleep)
 
     @classmethod
-    def get_approximate_time(cls, hints: Collection[BaseHint]) -> timedelta:
+    def get_approximate_time(cls, hints: Collection[scn.BaseHint]) -> timedelta:
         approximate_io_time = timedelta(milliseconds=100)
         return len(hints) * cls.SLEEP + len(hints) * approximate_io_time
 

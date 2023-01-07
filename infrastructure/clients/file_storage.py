@@ -26,6 +26,7 @@ class LocalFileStorage(FileStorage):
             original_filename=file_meta.original_filename,
             extension=file_meta.extension,
             tg_link=file_meta.tg_link,
+            content_type=file_meta.content_type,
         )
 
     async def put_content(self, local_file_name: str, content: BinaryIO) -> scn.FileContentLink:

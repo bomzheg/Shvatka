@@ -2,6 +2,7 @@ import logging
 from typing import BinaryIO
 
 from aiogram import Bot
+from aiogram.types import BufferedInputFile
 
 from shvatka.interfaces.clients.file_storage import FileStorage, FileGateway
 from shvatka.models import dto
@@ -23,8 +24,14 @@ class BotFileGateway(FileGateway):
         self, file_meta: scn.UploadedFileMeta, content: BinaryIO, author: dto.Player
     ) -> scn.FileMeta:
         if not file_meta.tg_link:
-            content = BytesWithName(content.read(), original_filename=file_meta.public_filename)
+            content_ = BytesWithName(content.read(), original_filename=file_meta.public_filename)
             content.seek(0)
-            msg = await hint_sender.METHODS[file_meta.content_type](self.bot, content)
+            msg = await hint_sender.METHODS[file_meta.content_type](
+                self.bot,
+                author.user.tg_id,
+                BufferedInputFile(file=content_.read(), filename=content_.name),
+            )
+            await msg.delete()
+            # FIXME returned new GUID but scn has old. PARSER MUST ONLY PARSE!
             return await self.hint_parser.save_file(msg, author)  # TODO parser must only parse!
         return await self.storage.put(file_meta, content)

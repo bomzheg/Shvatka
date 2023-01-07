@@ -66,6 +66,7 @@ class HintParser:
                     file_id=message.audio.file_id,
                     content_type=HintType.audio,
                     author=author,
+                    filename=message.audio.file_name,
                 )
                 thumb = (
                     await self.save_content(
@@ -86,6 +87,7 @@ class HintParser:
                     file_id=message.video.file_id,
                     content_type=HintType.video,
                     author=author,
+                    filename=message.video.file_name,
                 )
                 thumb = (
                     await self.save_content(
@@ -112,6 +114,7 @@ class HintParser:
                         file_id=message.document.thumb.file_id,
                         content_type=HintType.document,
                         author=author,
+                        filename=message.document.file_name,
                     )
                     if message.document.thumb
                     else None
@@ -126,6 +129,7 @@ class HintParser:
                     file_id=message.animation.file_id,
                     content_type=HintType.animation,
                     author=author,
+                    filename=message.animation.file_name,
                 )
                 thumb = (
                     await self.save_content(
@@ -187,7 +191,7 @@ class HintParser:
             extension=extension,
             tg_link=TgLink(file_id=file_id, content_type=content_type),
         )
-        stored_file = await self.storage.put(file_meta, content)
+        stored_file = await self.storage.put(file_meta, content, author)
         await self.dao.upsert(stored_file, author)
         await self.dao.commit()
         return stored_file

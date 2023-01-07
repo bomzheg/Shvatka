@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Optional
 
 from shvatka.models import dto
@@ -29,6 +29,8 @@ class FileMetaLightweight:
     """Filename from user before renamed to guid"""
     extension: str
     """extension with leading dot: ".zip" ".tar.gz" etc"""
+    content_type: HintType | None = field(kw_only=True, default=None)
+    """type of content"""
 
     @property
     def local_file_name(self):
@@ -40,7 +42,7 @@ class FileMetaLightweight:
 
 
 @dataclass
-class StoredFileMeta(FileMetaLightweight):
+class StoredFileMeta(FileMetaLightweight):  # noqa  FUCK YOU PYCHARM!
     file_content_link: FileContentLink
 
 
@@ -50,16 +52,16 @@ class UploadedFileMeta(FileMetaLightweight):
 
 
 @dataclass
-class FileMeta(StoredFileMeta):
+class FileMeta(StoredFileMeta):  # noqa
     tg_link: TgLink
 
 
 @dataclass
-class VerifiableFileMeta(FileMeta):
+class VerifiableFileMeta(FileMeta):  # noqa
     author_id: int
 
 
 @dataclass
-class SavedFileMeta(VerifiableFileMeta):
+class SavedFileMeta(VerifiableFileMeta):  # noqa
     id: int
     author: dto.Player

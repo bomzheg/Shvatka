@@ -149,10 +149,11 @@ class GameParser:
             raise ContentDownloadError()
 
     def build_current_hint(self):
-        if not self.current_hint_parts:
-            return
-        self.hints.append(scn.TextHint(text="\n".join(self.current_hint_parts)))
+        parts = list(filter(lambda p: p, map(lambda p: p.strip(), self.current_hint_parts)))
         self.current_hint_parts = []
+        if not parts:
+            return
+        self.hints.append(scn.TextHint(text="\n".join(parts)))
 
     def build_time_hint(self):
         self.build_current_hint()

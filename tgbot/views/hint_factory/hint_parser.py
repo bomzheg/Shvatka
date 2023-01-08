@@ -106,7 +106,9 @@ class HintParser:
             case _:
                 raise ValueError()
 
-    async def save_file(self, message: Message, author: dto.Player, guid: str) -> scn.FileMeta | None:
+    async def save_file(
+        self, message: Message, author: dto.Player, guid: str
+    ) -> scn.FileMeta | None:
         match message.content_type:
             case ContentType.PHOTO:
                 return await self.save_content(

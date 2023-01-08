@@ -42,6 +42,7 @@ types-redis = "^4.3.21"
 types-PyYAML = "^6.0.12"
 lxml-stubs = "^0.4.0"
 mypy = "^0.991"
+black = {version = "^22.12.0", extras = ["d"]}
 
 [tool.poetry.group.test]
 optional = true
@@ -55,7 +56,7 @@ testcontainers = {extras = ["postgresql"], version = "^3.7.0"}
 mockito = "^1.4.0"
 httpx = "^0.23.0"
 coverage = {extras = ["toml"], version = "^6.5.0"}
-black = {version = "^22.12.0", extras = ["d"]}
+black = {version = "^22.12.0"}
 aiogram-tests = {git = "https://github.com/bomzheg/aiogram_tests.git", branch = "fix/deque-usage"}
 
 [build-system]

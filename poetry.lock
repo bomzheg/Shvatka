@@ -1275,7 +1275,7 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.10"  # python3.11 failed with install psycopg2 (for testcontainers)
-content-hash = "8213bd2575e5eb352465c6c890112487d64dfee368bd62d2cf615405a96c9d86"
+content-hash = "c983eb76fa1dc514fff05679b4a6db400bc4fad94154117b7b90933112e8297d"
 
 [metadata.files]
 aiofiles = [

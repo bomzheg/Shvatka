@@ -15,7 +15,7 @@ async def get_my_games_list(
     return await get_authors_games(player, dao.game)
 
 
-async def get_active_game(game: dto.Game = Depends(active_game_provider)) -> dto.Game:
+async def get_active_game(game: dto.Game = Depends(active_game_provider)) -> responses.Game:
     return responses.Game.from_core(game)
 
 

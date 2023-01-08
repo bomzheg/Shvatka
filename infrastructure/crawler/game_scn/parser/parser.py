@@ -138,12 +138,15 @@ class GameParser:
         try:
             async with self.session.get(url.strip()) as resp:
                 resp.raise_for_status()
+                if not resp.content_type.startswith("image"):
+                    raise ValueError("response contains no image")
                 return BytesIO(await resp.content.read())
         except (
             ClientConnectorError,
             ClientResponseError,
             ServerDisconnectedError,
             ClientOSError,
+            ValueError,
         ) as e:
             logger.error("couldnt load content for url %s", url, exc_info=e)
             raise ContentDownloadError()
@@ -213,4 +216,4 @@ async def save_all_scns_to_files(game_ids: list[int]):
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG)
-    asyncio.run(save_all_scns_to_files([*range(19, 84), *range(85, 132)]))
+    asyncio.run(save_all_scns_to_files([131]))

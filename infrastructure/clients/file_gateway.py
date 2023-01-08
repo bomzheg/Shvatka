@@ -35,7 +35,6 @@ class BotFileGateway(FileGateway):
             BufferedInputFile(file=content.read(), filename=file_meta.public_filename),
         )
         await msg.delete()
-        saved_file = await self.hint_parser.save_file(
-            msg, author, file_meta.guid
-        )  # TODO parser must only parse!
+        # TODO parser must only parse!
+        saved_file = await self.hint_parser.save_file(msg, author, file_meta.guid)
         return saved_file

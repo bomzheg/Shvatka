@@ -55,7 +55,7 @@ testcontainers = {extras = ["postgresql"], version = "^3.7.0"}
 mockito = "^1.4.0"
 httpx = "^0.23.0"
 coverage = {extras = ["toml"], version = "^6.5.0"}
-black = "^22.12.0"
+black = {version = "^22.12.0", extras = ["d"]}
 aiogram-tests = {git = "https://github.com/bomzheg/aiogram_tests.git", branch = "fix/deque-usage"}
 
 [build-system]

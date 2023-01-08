@@ -216,4 +216,4 @@ async def save_all_scns_to_files(game_ids: list[int]):
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG)
-    asyncio.run(save_all_scns_to_files([131]))
+    asyncio.run(save_all_scns_to_files([*range(19, 84), *range(85, 132)]))

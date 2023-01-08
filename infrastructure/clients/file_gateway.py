@@ -23,12 +23,19 @@ class BotFileGateway(FileGateway):
         self, file_meta: scn.UploadedFileMeta, content: BinaryIO, author: dto.Player
     ) -> scn.FileMeta:
         if not file_meta.tg_link:
-            msg = await hint_sender.METHODS[file_meta.content_type](
-                self.bot,
-                author.user.tg_id,
-                BufferedInputFile(file=content.read(), filename=file_meta.public_filename),
-            )
-            await msg.delete()
-            saved_file = await self.hint_parser.save_file(msg, author, file_meta.guid)
-            return saved_file  # TODO parser must only parse!
+            return await self.renew_file_id(author, content, file_meta)
         return await self.storage.put(file_meta, content)
+
+    async def renew_file_id(
+        self, author: dto.Player, content: BinaryIO, file_meta: scn.UploadedFileMeta
+    ) -> scn.FileMeta:
+        msg = await hint_sender.METHODS[file_meta.content_type](
+            self.bot,
+            author.user.tg_id,
+            BufferedInputFile(file=content.read(), filename=file_meta.public_filename),
+        )
+        await msg.delete()
+        saved_file = await self.hint_parser.save_file(
+            msg, author, file_meta.guid
+        )  # TODO parser must only parse!
+        return saved_file

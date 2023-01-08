@@ -139,7 +139,9 @@ class GameParser:
             async with self.session.get(url.strip()) as resp:
                 resp.raise_for_status()
                 if not resp.content_type.startswith("image"):
-                    raise ValueError("response contains no image")
+                    raise ValueError(
+                        f"response contains no image, content-type is {resp.content_type}"
+                    )
                 return BytesIO(await resp.content.read())
         except (
             ClientConnectorError,
@@ -199,9 +201,6 @@ class GameParser:
 
 
 async def save_all_scns_to_files(game_ids: list[int]):
-    # 85 - игра про Гарри Поттера, проходила на другом движке.
-    # Сценарий не в стандартном формате.
-    # До 19 игры сценарий публиковался просто на форуме - тоже не стандарт
     games = await get_all_games(game_ids)
     dcf = Factory(default_schema=Schema(name_style=NameStyle.kebab))
     path = Path() / "scn"
@@ -216,4 +215,14 @@ async def save_all_scns_to_files(game_ids: list[int]):
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG)
-    asyncio.run(save_all_scns_to_files([*range(19, 84), *range(85, 132)]))
+    unparsable_games_ids = {*range(19), 31, 51, 52, 84}
+    """
+    до 19 - игры публиковались просто на форуме
+    31 - Ночной детектив (не стандарт)
+    51 - не была проведена до конца
+    52, 84 - Тачки и Гарри Поттер - нестандартный движок
+    """
+    all_games_ids = set(range(132))
+    asyncio.run(
+        save_all_scns_to_files(list(sorted(all_games_ids - unparsable_games_ids)))
+    )

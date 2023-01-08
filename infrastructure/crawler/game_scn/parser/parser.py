@@ -223,6 +223,4 @@ if __name__ == "__main__":
     52, 84 - Тачки и Гарри Поттер - нестандартный движок
     """
     all_games_ids = set(range(132))
-    asyncio.run(
-        save_all_scns_to_files(list(sorted(all_games_ids - unparsable_games_ids)))
-    )
+    asyncio.run(save_all_scns_to_files(list(sorted(all_games_ids - unparsable_games_ids))))

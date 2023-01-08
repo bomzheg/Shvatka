@@ -39,6 +39,11 @@ class HintParser:
         self.storage = file_storage
 
     async def parse(self, message: Message, author: dto.Player) -> BaseHint:
+        file_meta = await self.save_file(
+            message=message,
+            author=author,
+            guid=(str(uuid4())),
+        )
         match message.content_type:
             case ContentType.TEXT:
                 return TextHint(text=message.html_text)
@@ -56,14 +61,8 @@ class HintParser:
                     foursquare_type=message.venue.foursquare_type,
                 )
             case ContentType.PHOTO:
-                file_meta = await self.save_content(
-                    file_id=message.photo[-1].file_id,
-                    content_type=HintType.photo,
-                    author=author,
-                )
                 return PhotoHint(caption=message.html_text, file_guid=file_meta.guid)
             case ContentType.AUDIO:
-                file_meta = await self.save_file(message, author)
                 thumb = await self.save_thumb(author, message.audio.thumb)
                 return AudioHint(
                     caption=message.html_text,
@@ -71,7 +70,6 @@ class HintParser:
                     thumb_guid=thumb.guid if thumb else None,
                 )
             case ContentType.VIDEO:
-                file_meta = await self.save_file(message, author)
                 thumb = await self.save_thumb(author, message.video.thumb)
                 return VideoHint(
                     caption=message.html_text,
@@ -79,7 +77,6 @@ class HintParser:
                     thumb_guid=thumb.guid if thumb else None,
                 )
             case ContentType.DOCUMENT:
-                file_meta = await self.save_file(message, author)
                 thumb = await self.save_thumb(author, message.document.thumb)
                 return DocumentHint(
                     caption=message.html_text,
@@ -87,7 +84,6 @@ class HintParser:
                     thumb_guid=thumb.guid if thumb else None,
                 )
             case ContentType.ANIMATION:
-                file_meta = await self.save_file(message, author)
                 thumb = await self.save_thumb(author, message.animation.thumb)
                 return AnimationHint(
                     caption=message.html_text,
@@ -95,10 +91,8 @@ class HintParser:
                     thumb_guid=thumb.guid if thumb else None,
                 )
             case ContentType.VOICE:
-                file_meta = await self.save_file(message, author)
                 return VoiceHint(caption=message.html_text, file_guid=file_meta.guid)
             case ContentType.VIDEO_NOTE:
-                file_meta = await self.save_file(message, author)
                 return VideoNoteHint(file_guid=file_meta.guid)
             case ContentType.CONTACT:
                 return ContactHint(
@@ -108,18 +102,18 @@ class HintParser:
                     vcard=message.contact.vcard,
                 )
             case ContentType.STICKER:
-                file_meta = await self.save_file(message, author)
                 return StickerHint(file_guid=file_meta.guid)
             case _:
                 raise ValueError()
 
-    async def save_file(self, message: Message, author: dto.Player) -> scn.FileMeta:
+    async def save_file(self, message: Message, author: dto.Player, guid: str) -> scn.FileMeta | None:
         match message.content_type:
             case ContentType.PHOTO:
                 return await self.save_content(
                     file_id=message.photo[-1].file_id,
                     content_type=HintType.photo,
                     author=author,
+                    guid=guid,
                 )
             case ContentType.AUDIO:
                 return await self.save_content(
@@ -127,6 +121,7 @@ class HintParser:
                     content_type=HintType.audio,
                     author=author,
                     filename=message.audio.file_name,
+                    guid=guid,
                 )
             case ContentType.VIDEO:
                 return await self.save_content(
@@ -134,6 +129,7 @@ class HintParser:
                     content_type=HintType.video,
                     author=author,
                     filename=message.video.file_name,
+                    guid=guid,
                 )
             case ContentType.DOCUMENT:
                 return await self.save_content(
@@ -141,6 +137,7 @@ class HintParser:
                     content_type=HintType.document,
                     author=author,
                     filename=message.document.file_name,
+                    guid=guid,
                 )
             case ContentType.ANIMATION:
                 return await self.save_content(
@@ -148,27 +145,31 @@ class HintParser:
                     content_type=HintType.animation,
                     author=author,
                     filename=message.animation.file_name,
+                    guid=guid,
                 )
             case ContentType.VOICE:
                 return await self.save_content(
                     file_id=message.voice.file_id,
                     content_type=HintType.voice,
                     author=author,
+                    guid=guid,
                 )
             case ContentType.VIDEO_NOTE:
                 return await self.save_content(
                     file_id=message.video_note.file_id,
                     content_type=HintType.video_note,
                     author=author,
+                    guid=guid,
                 )
             case ContentType.STICKER:
                 return await self.save_content(
                     file_id=message.sticker.file_id,
                     content_type=HintType.sticker,
                     author=author,
+                    guid=guid,
                 )
             case _:
-                raise ValueError()
+                return None
 
     async def save_thumb(self, author: dto.Player, thumb: PhotoSize | None):
         if thumb:
@@ -176,6 +177,7 @@ class HintParser:
                 file_id=thumb.file_id,
                 content_type=HintType.photo,
                 author=author,
+                guid=str(uuid4()),
             )
         return None
 
@@ -184,12 +186,13 @@ class HintParser:
         file_id: str,
         content_type: HintType,
         author: dto.Player,
+        guid: str,
         filename: str = "unknown",
     ) -> FileMeta:
         content = await self.bot.download(file_id, BytesIO())
         extension = "".join(Path(filename).suffixes)
         file_meta = UploadedFileMeta(
-            guid=str(uuid4()),
+            guid=guid,
             original_filename=get_name_without_extension(filename, extension),
             extension=extension,
             tg_link=TgLink(file_id=file_id, content_type=content_type),

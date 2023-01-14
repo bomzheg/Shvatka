@@ -1,13 +1,12 @@
-from abc import ABCMeta
-from typing import Iterable
+from typing import Iterable, Protocol
 
-from shvatka.interfaces.dal.base import Reader, Writer, Committer
+from shvatka.interfaces.dal.base import Committer
 from shvatka.interfaces.dal.player import TeamPlayerGetter, TeamPlayersGetter
 from shvatka.models import dto
 from shvatka.models.enums.played import Played
 
 
-class WaiverVoteAdder(Writer, TeamPlayerGetter):
+class WaiverVoteAdder(Protocol, TeamPlayerGetter):
     async def add_player_vote(self, team_id: int, player_id: int, vote_var: str) -> None:
         raise NotImplementedError
 
@@ -23,18 +22,18 @@ class WaiverVoteAdder(Writer, TeamPlayerGetter):
         raise NotImplementedError
 
 
-class PollGetWaivers(Reader):
+class PollGetWaivers(Protocol):
     async def get_dict_player_vote(self, team_id: int) -> dict[int, Played]:
         raise NotImplementedError
 
 
-class WaiverVoteGetter(PollGetWaivers, metaclass=ABCMeta):
+class WaiverVoteGetter(Protocol, PollGetWaivers):
     async def get_by_ids_with_user_and_pit(self, ids: Iterable[int]) -> list[dto.VotedPlayer]:
         raise NotImplementedError
 
 
 class WaiverApprover(
-    Committer, TeamPlayerGetter, WaiverVoteGetter, TeamPlayersGetter, metaclass=ABCMeta
+    Protocol, Committer, TeamPlayerGetter, WaiverVoteGetter, TeamPlayersGetter
 ):
     async def upsert(self, waiver: dto.Waiver):
         raise NotImplementedError
@@ -43,7 +42,7 @@ class WaiverApprover(
         raise NotImplementedError
 
 
-class GameWaiversGetter(Reader):
+class GameWaiversGetter(Protocol):
     async def get_played_teams(self, game: dto.Game) -> Iterable[dto.Team]:
         raise NotImplementedError
 

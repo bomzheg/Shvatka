@@ -1,11 +1,11 @@
-from abc import ABCMeta
+from typing import Protocol
 
-from shvatka.interfaces.dal.base import Committer, Reader
+from shvatka.interfaces.dal.base import Committer
 from shvatka.models import dto
 from shvatka.models.dto import scn
 
 
-class LevelUpserter(Committer, metaclass=ABCMeta):
+class LevelUpserter(Protocol, Committer):
     async def upsert(
         self,
         author: dto.Player,
@@ -19,16 +19,16 @@ class LevelUpserter(Committer, metaclass=ABCMeta):
         raise NotImplementedError
 
 
-class MyLevelsGetter(Reader):
+class MyLevelsGetter(Protocol):
     async def get_all_my(self, author: dto.Player) -> list[dto.Level]:
         raise NotImplementedError
 
 
-class LevelByIdGetter(Reader):
+class LevelByIdGetter(Protocol):
     async def get_by_id(self, id_: int) -> dto.Level:
         raise NotImplementedError
 
 
-class LevelLinker(Committer, metaclass=ABCMeta):
+class LevelLinker(Protocol, Committer):
     async def link_to_game(self, level: dto.Level, game: dto.Game) -> dto.Level:
         raise NotImplementedError

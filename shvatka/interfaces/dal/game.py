@@ -1,18 +1,18 @@
-from abc import ABCMeta
 from datetime import datetime
+from typing import Protocol
 
-from shvatka.interfaces.dal.base import Committer, Reader
+from shvatka.interfaces.dal.base import Committer
 from shvatka.interfaces.dal.level import LevelUpserter
 from shvatka.models import dto
 from shvatka.models.dto import scn
 
 
-class GameNameChecker(Reader):
+class GameNameChecker(Protocol):
     async def is_name_available(self, name: str) -> bool:
         raise NotImplementedError
 
 
-class GameUpserter(LevelUpserter, GameNameChecker, metaclass=ABCMeta):
+class GameUpserter(Protocol, LevelUpserter, GameNameChecker):
     async def upsert_game(self, author: dto.Player, scenario: scn.GameScenario) -> dto.Game:
         raise NotImplementedError
 
@@ -29,7 +29,7 @@ class GameUpserter(LevelUpserter, GameNameChecker, metaclass=ABCMeta):
         raise NotImplementedError
 
 
-class GameCreator(Committer, GameNameChecker, metaclass=ABCMeta):
+class GameCreator(Protocol, Committer, GameNameChecker):
     async def create_game(self, author: dto.Player, name: str) -> dto.Game:
         raise NotImplementedError
 
@@ -37,17 +37,17 @@ class GameCreator(Committer, GameNameChecker, metaclass=ABCMeta):
         raise NotImplementedError
 
 
-class GameRenamer(Committer, metaclass=ABCMeta):
+class GameRenamer(Protocol, Committer):
     async def rename_game(self, game: dto.Game, new_name: str):
         raise NotImplementedError
 
 
-class GameAuthorsFinder(Committer, metaclass=ABCMeta):
+class GameAuthorsFinder(Protocol, Committer):
     async def get_all_by_author(self, author: dto.Player) -> list[dto.Game]:
         raise NotImplementedError
 
 
-class GameByIdGetter(Reader, metaclass=ABCMeta):
+class GameByIdGetter(Protocol):
     async def get_by_id(self, id_: int, author: dto.Player | None = None) -> dto.Game:
         raise NotImplementedError
 
@@ -55,17 +55,17 @@ class GameByIdGetter(Reader, metaclass=ABCMeta):
         raise NotImplementedError
 
 
-class ActiveGameFinder(Reader):
+class ActiveGameFinder(Protocol):
     async def get_active_game(self) -> dto.Game | None:
         raise NotImplementedError
 
 
-class WaiverStarter(Committer, ActiveGameFinder, metaclass=ABCMeta):
+class WaiverStarter(Protocol, Committer, ActiveGameFinder):
     async def start_waivers(self, game: dto.Game) -> None:
         raise NotImplementedError
 
 
-class GameStartPlanner(Committer, ActiveGameFinder, metaclass=ABCMeta):
+class GameStartPlanner(Protocol, Committer, ActiveGameFinder):
     async def set_start_at(self, game: dto.Game, start_at: datetime) -> None:
         raise NotImplementedError
 
@@ -73,7 +73,7 @@ class GameStartPlanner(Committer, ActiveGameFinder, metaclass=ABCMeta):
         raise NotImplementedError
 
 
-class GamePackager(Reader):
+class GamePackager(Protocol):
     async def get_full(self, id_: int) -> dto.FullGame:
         raise NotImplementedError
 
@@ -81,6 +81,6 @@ class GamePackager(Reader):
         raise NotImplementedError
 
 
-class CompletedGameFinder(Reader):
+class CompletedGameFinder(Protocol):
     async def get_completed_games(self) -> list[dto.Game]:
         raise NotImplementedError

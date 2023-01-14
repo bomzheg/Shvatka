@@ -1,12 +1,12 @@
-from abc import ABCMeta
 from datetime import datetime, timedelta
+from typing import Protocol
 
 from shvatka.interfaces.dal.base import Committer
 from shvatka.interfaces.dal.game import GameByIdGetter
 from shvatka.models import dto
 
 
-class LevelTestProtocolDao(Committer, metaclass=ABCMeta):
+class LevelTestProtocolDao(Protocol, Committer):
     async def save_started_level_test(self, suite: dto.LevelTestSuite, now: datetime):
         raise NotImplementedError
 
@@ -26,5 +26,5 @@ class LevelTestProtocolDao(Committer, metaclass=ABCMeta):
         raise NotImplementedError
 
 
-class LevelTestingDao(LevelTestProtocolDao, GameByIdGetter, metaclass=ABCMeta):
+class LevelTestingDao(Protocol, LevelTestProtocolDao, GameByIdGetter):
     pass

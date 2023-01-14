@@ -1,12 +1,11 @@
-from abc import ABCMeta
-from typing import Iterable
+from typing import Iterable, Protocol
 
-from shvatka.interfaces.dal.base import Writer, Committer
+from shvatka.interfaces.dal.base import Committer
 from shvatka.interfaces.dal.organizer import GameOrgsGetter
 from shvatka.models import dto
 
 
-class GamePreparer(Writer, GameOrgsGetter, metaclass=ABCMeta):
+class GamePreparer(Protocol, GameOrgsGetter):
     async def delete_poll_data(self) -> None:
         raise NotImplementedError
 
@@ -17,7 +16,7 @@ class GamePreparer(Writer, GameOrgsGetter, metaclass=ABCMeta):
         raise NotImplementedError
 
 
-class GamePlayerDao(Committer, GameOrgsGetter, metaclass=ABCMeta):
+class GamePlayerDao(Protocol, Committer, GameOrgsGetter):
     async def is_key_duplicate(self, level: dto.Level, team: dto.Team, key: str) -> bool:
         raise NotImplementedError
 

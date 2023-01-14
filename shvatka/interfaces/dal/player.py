@@ -1,27 +1,27 @@
-from abc import ABCMeta
+from typing import Protocol
 
-from shvatka.interfaces.dal.base import Committer, Reader
+from shvatka.interfaces.dal.base import Committer
 from shvatka.interfaces.dal.game import ActiveGameFinder
 from shvatka.interfaces.dal.secure_invite import InviteRemover, InviteReader
 from shvatka.models import dto, enums
 
 
-class PlayerUpserter(Committer, metaclass=ABCMeta):
+class PlayerUpserter(Protocol, Committer):
     async def upsert_player(self, user: dto.User) -> dto.Player:
         raise NotImplementedError
 
 
-class PlayerByIdGetter(Reader):
+class PlayerByIdGetter(Protocol):
     async def get_by_id(self, id_: int) -> dto.Player:
         raise NotImplementedError
 
 
-class TeamPlayerGetter(Reader):
+class TeamPlayerGetter(Protocol):
     async def get_team_player(self, player: dto.Player) -> dto.TeamPlayer:
         raise NotImplementedError
 
 
-class PlayerTeamChecker(TeamPlayerGetter, metaclass=ABCMeta):
+class PlayerTeamChecker(Protocol, TeamPlayerGetter):
     async def have_team(self, player: dto.Player) -> bool:
         raise NotImplementedError
 
@@ -29,12 +29,12 @@ class PlayerTeamChecker(TeamPlayerGetter, metaclass=ABCMeta):
         raise NotImplementedError
 
 
-class PlayerPromoter(Committer, PlayerByIdGetter, InviteReader, InviteRemover, metaclass=ABCMeta):
+class PlayerPromoter(Protocol, Committer, PlayerByIdGetter, InviteReader, InviteRemover):
     async def promote(self, actor: dto.Player, target: dto.Player) -> None:
         raise NotImplementedError
 
 
-class TeamJoiner(Committer, TeamPlayerGetter, metaclass=ABCMeta):
+class TeamJoiner(Protocol, Committer, TeamPlayerGetter):
     async def join_team(
         self, player: dto.Player, team: dto.Team, role: str, as_captain: bool = False
     ) -> None:
@@ -44,17 +44,17 @@ class TeamJoiner(Committer, TeamPlayerGetter, metaclass=ABCMeta):
         raise NotImplementedError
 
 
-class WaiverRemover(Reader):
+class WaiverRemover(Protocol):
     async def delete(self, waiver: dto.Waiver) -> None:
         raise NotImplementedError
 
 
-class PollVoteDeleter(Reader):
+class PollVoteDeleter(Protocol):
     async def del_player_vote(self, team_id: int, player_id: int) -> None:
         raise NotImplementedError
 
 
-class TeamLeaver(Committer, ActiveGameFinder, WaiverRemover, TeamPlayerGetter, metaclass=ABCMeta):
+class TeamLeaver(Protocol, Committer, ActiveGameFinder, WaiverRemover, TeamPlayerGetter):
     async def del_player_vote(self, team_id: int, player_id: int) -> None:
         raise NotImplementedError
 
@@ -65,12 +65,12 @@ class TeamLeaver(Committer, ActiveGameFinder, WaiverRemover, TeamPlayerGetter, m
         raise NotImplementedError
 
 
-class TeamPlayersGetter(Reader):
+class TeamPlayersGetter(Protocol):
     async def get_players(self, team: dto.Team) -> list[dto.FullTeamPlayer]:
         raise NotImplementedError
 
 
-class TeamPlayerPermissionFlipper(Committer):
+class TeamPlayerPermissionFlipper(Protocol, Committer):
     async def flip_permission(
         self, player: dto.TeamPlayer, permission: enums.TeamPlayerPermission
     ):

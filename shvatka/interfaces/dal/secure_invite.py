@@ -1,22 +1,20 @@
-from abc import ABCMeta
-
-from shvatka.interfaces.dal.base import Writer, Reader
+from typing import Protocol
 
 
-class InviteSaver(Writer):
+class InviteSaver(Protocol):
     async def save_new_invite(self, token_len: int = ..., expire=..., **dct: dict) -> str:
         raise NotImplementedError
 
 
-class InviteRemover(Writer):
+class InviteRemover(Protocol):
     async def remove_invite(self, token: str) -> None:
         raise NotImplementedError
 
 
-class InviteReader(Reader):
+class InviteReader(Protocol):
     async def get_invite(self, token: str) -> dict:
         raise NotImplementedError
 
 
-class InviterDao(InviteSaver, InviteRemover, InviteReader, metaclass=ABCMeta):
+class InviterDao(Protocol, InviteSaver, InviteRemover, InviteReader):
     pass

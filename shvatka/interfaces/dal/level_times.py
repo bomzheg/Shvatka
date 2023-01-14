@@ -1,12 +1,11 @@
-from abc import ABCMeta
-from typing import Iterable
+from typing import Iterable, Protocol
 
-from shvatka.interfaces.dal.base import Committer, Reader
+from shvatka.interfaces.dal.base import Committer
 from shvatka.interfaces.dal.organizer import OrgByPlayerGetter
 from shvatka.models import dto
 
 
-class GameStarter(Committer, metaclass=ABCMeta):
+class GameStarter(Protocol, Committer):
     async def set_game_started(self, game: dto.Game) -> None:
         raise NotImplementedError
 
@@ -17,12 +16,12 @@ class GameStarter(Committer, metaclass=ABCMeta):
         raise NotImplementedError
 
 
-class LevelTimeChecker(Reader):
+class LevelTimeChecker(Protocol):
     async def is_team_on_level(self, team: dto.Team, level: dto.Level) -> bool:
         raise NotImplementedError
 
 
-class GameStatDao(OrgByPlayerGetter, metaclass=ABCMeta):
+class GameStatDao(Protocol, OrgByPlayerGetter):
     async def get_game_level_times(self, game: dto.Game) -> list[dto.LevelTime]:
         raise NotImplementedError
 

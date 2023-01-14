@@ -1,24 +1,24 @@
-from abc import ABCMeta
+from typing import Protocol
 
-from shvatka.interfaces.dal.base import Committer, Reader
+from shvatka.interfaces.dal.base import Committer
 from shvatka.models import dto
 
 
-class UserUpserter(Committer, metaclass=ABCMeta):
+class UserUpserter(Protocol, Committer):
     async def upsert_user(self, user: dto.User) -> dto.User:
         raise NotImplementedError
 
 
-class UserPasswordSetter(Committer, metaclass=ABCMeta):
+class UserPasswordSetter(Protocol, Committer):
     async def set_password(self, user: dto.User, hashed_password: str):
         raise NotImplementedError
 
 
-class UserByUsernameResolver(Reader, metaclass=ABCMeta):
+class UserByUsernameResolver(Protocol):
     async def get_by_username(self, username: str) -> dto.User:
         raise NotImplementedError
 
 
-class UserByIdResolver(Reader, metaclass=ABCMeta):
+class UserByIdResolver(Protocol):
     async def get_by_id(self, id_: int) -> dto.User:
         raise NotImplementedError

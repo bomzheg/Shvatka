@@ -103,3 +103,6 @@ line_length = 99
 
 [tool.mypy]
 ignore_missing_imports = true
+no_implicit_optional = false
+warn_unused_ignores = true
+show_error_codes = true

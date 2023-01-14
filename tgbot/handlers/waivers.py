@@ -160,7 +160,7 @@ async def waiver_remove_user_vote(
     if game.id != callback_data.game_id:
         raise AnotherGameIsActive(game=game, player=player)
     team = await get_my_team(player, dao.team_player)
-    if team.id != callback_data.team_id:
+    if team is None or team.id != callback_data.team_id:
         raise PlayerNotInTeam(
             player=player,
             team=team,
@@ -182,7 +182,7 @@ async def waiver_add_force_menu(
     if game.id != callback_data.game_id:
         raise AnotherGameIsActive(game=game, player=player)
     team = await get_my_team(player, dao.team_player)
-    if team.id != callback_data.team_id:
+    if team is None or team.id != callback_data.team_id:
         raise PlayerNotInTeam(
             player=player,
             team=team,
@@ -208,7 +208,7 @@ async def add_force_player(
     if game.id != callback_data.game_id:
         raise AnotherGameIsActive(game=game, player=player)
     team = await get_my_team(player, dao.team_player)
-    if team.id != callback_data.team_id:
+    if team is None or team.id != callback_data.team_id:
         raise PlayerNotInTeam(
             player=player,
             team=team,

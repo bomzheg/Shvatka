@@ -25,7 +25,7 @@ class PlayerTeamChecker(Protocol, TeamPlayerGetter):
     async def have_team(self, player: dto.Player) -> bool:
         raise NotImplementedError
 
-    async def get_team(self, player: dto.Player) -> dto.Team:
+    async def get_team(self, player: dto.Player) -> dto.Team | None:
         raise NotImplementedError
 
 

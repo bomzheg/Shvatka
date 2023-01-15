@@ -14,8 +14,7 @@ from tgbot.views.user import get_small_card_no_link
 
 def render_votes(votes: dict[Played, list[dto.VotedPlayer]]) -> str:
     result = ""
-    for vote, users in votes.items():
-        users: list[dto.VotedPlayer]
+    for vote, users in votes.items():  # type: Played, list[dto.VotedPlayer]
         result += WAIVER_STATUS_MEANING[vote] + f" ({len(users)}):\n"
         result += render_players(users)
         result += "\n\n"

@@ -60,6 +60,8 @@ async def create_game(
     dao: GameCreator,
     levels: list[dto.Level] = None,
 ) -> dto.Game:
+    if levels is None:
+        levels = []
     check_allow_be_author(author)
     await check_new_game_name_available(name=name, author=author, dao=dao)
     game = await dao.create_game(author, name)
@@ -120,7 +122,7 @@ async def get_game_package(
     return scn.RawGameScenario(scn=serialized, files=contents)
 
 
-async def get_active(dao: ActiveGameFinder) -> dto.Game:
+async def get_active(dao: ActiveGameFinder) -> dto.Game | None:
     return await dao.get_active_game()
 
 

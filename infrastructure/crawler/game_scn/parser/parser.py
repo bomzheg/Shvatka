@@ -19,6 +19,7 @@ from lxml import etree
 from infrastructure.crawler.auth import get_auth_cookie
 from infrastructure.crawler.constants import GAME_URL_TEMPLATE
 from infrastructure.crawler.game_scn.parser.resourses import load_error_img
+from infrastructure.crawler.models.stat import LevelTime
 from shvatka.models import enums
 from shvatka.models.dto import scn
 from shvatka.services.scenario.scn_zip import pack_scn
@@ -134,6 +135,19 @@ class GameParser:
                 self.current_hint_parts.append(element.tail)
         self.build_level()
 
+    def parse_results(self) -> dict[str, list[LevelTime]]:
+        rows = self.html.xpath("//div[@id='tb']//tr[@class='ipbtable']")
+        results = {}
+        for row in rows:
+            cells = row.xpath("./td")
+            team_name = cells[0].xpath("./b")[0].text
+            level_times = []
+            for level_number, cell in enumerate(cells[1:], 1):
+                time = datetime.strptime(cell.text or cell.xpath("./font")[0].text, "%H:%M:%S")
+                level_times.append(LevelTime(level_number, time))
+            results[team_name] = level_times
+        return results
+
     async def download_content(self, url: str) -> BinaryIO:
         try:
             async with self.session.get(url.strip()) as resp:
@@ -189,6 +203,7 @@ class GameParser:
     async def build(self) -> scn.ParsedCompletedGameScenario:
         self.parse_game_head()
         await self.parse_scenario()
+        results = self.parse_results()
         game = scn.ParsedCompletedGameScenario(
             id=self.id,
             name=self.name,

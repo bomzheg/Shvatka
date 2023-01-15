@@ -2,7 +2,7 @@ import asyncio
 import json
 import logging
 import uuid
-from datetime import datetime
+from datetime import datetime, timedelta
 from io import BytesIO
 from pathlib import Path
 from typing import BinaryIO
@@ -24,8 +24,10 @@ from infrastructure.crawler.models.stat import LevelTime, Key, GameStat
 from shvatka.models import enums
 from shvatka.models.dto import scn
 from shvatka.services.scenario.scn_zip import pack_scn
+from shvatka.utils.datetime_utils import tz_local, tz_utc
 
 logger = logging.getLogger(__name__)
+EVENING_TIME = datetime.strptime("20:00:00", "%H:%M:%S").time()
 PARSER_ERROR_IMG = load_error_img()
 
 
@@ -144,8 +146,15 @@ class GameParser:
             team_name = cells[0].xpath("./b")[0].text
             level_times = []
             for level_number, cell in enumerate(cells[1:], 1):
-                time = datetime.strptime(cell.text or cell.xpath("./font")[0].text, "%H:%M:%S")
-                level_times.append(LevelTime(level_number, time))
+                time = datetime.strptime(
+                    cell.text or cell.xpath("./font")[0].text, "%H:%M:%S"
+                ).time()
+                if time < EVENING_TIME:
+                    td = timedelta(days=1)
+                else:
+                    td = timedelta(seconds=0)
+                at = datetime.combine(date=self.start_at.date() + td, time=time, tzinfo=tz_local)
+                level_times.append(LevelTime(level_number, at.astimezone(tz_utc)))
             results[team_name] = level_times
         return results
 
@@ -163,11 +172,14 @@ class GameParser:
                     level += 1
                     continue
                 time, key, player = cells
+                local_date = datetime.strptime(time.text, "%Y-%m-%d %H:%M:%S")
                 keys.append(
                     Key(
                         player=player.xpath("./b")[0].text,
                         value=key.text,
-                        at=datetime.strptime(time.text, "%Y-%m-%d %H:%M:%S"),
+                        at=datetime.combine(
+                            date=local_date.date(), time=local_date.time(), tzinfo=tz_local
+                        ).astimezone(tz_utc),
                         level=level,
                     )
                 )
@@ -248,7 +260,9 @@ async def save_all_scns_to_files(game_ids: list[int]):
     path.mkdir(exist_ok=True)
     for game in games:
         dct = dcf.dump(game, scn.ParsedGameScenario)
-        stat = BytesIO(json.dumps(dcf.dump(game.stat), ensure_ascii=False, indent=2).encode("utf-8"))
+        stat = BytesIO(
+            json.dumps(dcf.dump(game.stat), ensure_ascii=False, indent=2).encode("utf-8")
+        )
         stat.seek(0)
         scenario = scn.RawGameScenario(
             scn=dct, files={**game.files_contents, "results.json": stat}

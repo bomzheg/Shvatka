@@ -19,7 +19,7 @@ from lxml import etree
 from infrastructure.crawler.auth import get_auth_cookie
 from infrastructure.crawler.constants import GAME_URL_TEMPLATE
 from infrastructure.crawler.game_scn.parser.resourses import load_error_img
-from infrastructure.crawler.models.stat import LevelTime
+from infrastructure.crawler.models.stat import LevelTime, Key, GameStat
 from shvatka.models import enums
 from shvatka.models.dto import scn
 from shvatka.services.scenario.scn_zip import pack_scn
@@ -148,6 +148,25 @@ class GameParser:
             results[team_name] = level_times
         return results
 
+    def parse_keys(self) -> dict[str, list[Key]]:
+        tables = self.html.xpath("//div[@id='logs']//table")
+        log_keys = {}
+        for table in tables:
+            rows = table.xpath(".//tr")
+            team_name = rows[0].xpath("./td")[0].text
+            keys = []
+            for row in rows[2:]:
+                time, key, player = row.xpath("./td")
+                keys.append(
+                    Key(
+                        player=player.xpath("./b"),
+                        value=key.text,
+                        at=datetime.strptime(time, "%Y-%m-%d %H:%M:%S"),
+                    )
+                )
+            log_keys[team_name] = keys
+        return log_keys
+
     async def download_content(self, url: str) -> BinaryIO:
         try:
             async with self.session.get(url.strip()) as resp:
@@ -203,7 +222,6 @@ class GameParser:
     async def build(self) -> scn.ParsedCompletedGameScenario:
         self.parse_game_head()
         await self.parse_scenario()
-        results = self.parse_results()
         game = scn.ParsedCompletedGameScenario(
             id=self.id,
             name=self.name,
@@ -211,6 +229,7 @@ class GameParser:
             levels=self.levels,
             files_contents=self.files,
             files=self.files_meta,
+            stat=GameStat(results=self.parse_results(), keys=self.parse_keys()),
         )
         return game
 

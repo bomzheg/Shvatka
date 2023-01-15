@@ -17,5 +17,5 @@ class Key:
 
 @dataclass
 class GameStat:
-    results: dict[str, LevelTime]
+    results: dict[str, list[LevelTime]]
     keys: dict[str, list[Key]]

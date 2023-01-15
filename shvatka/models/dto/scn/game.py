@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import BinaryIO
 
+from infrastructure.crawler.models.stat import GameStat
 from shvatka.models import enums
 from . import UploadedFileMeta, FileMetaLightweight
 from .file_content import FileMeta
@@ -34,6 +35,7 @@ class ParsedCompletedGameScenario(ParsedGameScenario):
     id: int
     start_at: datetime
     files_contents: dict[str, BinaryIO]
+    stat: GameStat
     status: enums.GameStatus = enums.GameStatus.complete
 
 

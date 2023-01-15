@@ -5,7 +5,7 @@ from datetime import datetime
 @dataclass
 class LevelTime:
     number: int
-    at: datetime
+    at: datetime | None
 
 
 @dataclass

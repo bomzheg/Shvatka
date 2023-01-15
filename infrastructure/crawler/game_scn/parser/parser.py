@@ -16,6 +16,7 @@ from aiohttp import (
 )
 from dataclass_factory import Factory, Schema, NameStyle
 from lxml import etree
+from lxml.etree import _Element
 
 from infrastructure.crawler.auth import get_auth_cookie
 from infrastructure.crawler.constants import GAME_URL_TEMPLATE
@@ -44,7 +45,7 @@ async def get_all_games(games_ids: list[int]) -> list[scn.ParsedCompletedGameSce
             try:
                 games.append(await GameParser(html_text, session=session).build())
             except (ValueError, AttributeError) as e:
-                logger.error("cant parse game %s", game_id, exc_info=e)
+                logger.error("can't parse game %s", game_id, exc_info=e)
     return games
 
 
@@ -146,17 +147,28 @@ class GameParser:
             team_name = cells[0].xpath("./b")[0].text
             level_times = []
             for level_number, cell in enumerate(cells[1:], 1):
-                time = datetime.strptime(
-                    cell.text or cell.xpath("./font")[0].text, "%H:%M:%S"
-                ).time()
-                if time < EVENING_TIME:
-                    td = timedelta(days=1)
-                else:
-                    td = timedelta(seconds=0)
-                at = datetime.combine(date=self.start_at.date() + td, time=time, tzinfo=tz_local)
-                level_times.append(LevelTime(level_number, at.astimezone(tz_utc)))
+                try:
+                    at = self.get_result_datetime(cell)
+                except IndexError as e:
+                    logger.error("can't parse results", exc_info=e)
+                    break
+                level_times.append(
+                    LevelTime(number=level_number, at=at.astimezone(tz_utc) if at else None)
+                )
             results[team_name] = level_times
         return results
+
+    def get_result_datetime(self, cell: _Element) -> datetime | None:
+        try:
+            time = datetime.strptime(cell.text or cell.xpath("./font")[0].text, "%H:%M:%S").time()
+        except ValueError:
+            return None
+        if time < EVENING_TIME:
+            td = timedelta(days=1)
+        else:
+            td = timedelta(seconds=0)
+        at = datetime.combine(date=self.start_at.date() + td, time=time, tzinfo=tz_local)
+        return at
 
     def parse_keys(self) -> dict[str, list[Key]]:
         tables = self.html.xpath("//div[@id='logs']//table")
@@ -171,7 +183,11 @@ class GameParser:
                 if len(cells) == 1:
                     level += 1
                     continue
-                time, key, player = cells
+                try:
+                    time, key, player = cells
+                except ValueError as e:
+                    logger.error("can't parse key log", exc_info=e)
+                    continue
                 local_date = datetime.strptime(time.text, "%Y-%m-%d %H:%M:%S")
                 keys.append(
                     Key(

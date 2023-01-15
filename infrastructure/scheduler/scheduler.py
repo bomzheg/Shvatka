@@ -35,7 +35,7 @@ class ApScheduler(Scheduler, LevelTestScheduler):
         file_storage: FileStorage,
         level_test_dao: LevelTestingData,
         bot: Bot,
-        game_log_chat: int = None,
+        game_log_chat: int,
     ):
         ScheduledContextHolder.poll = pool
         ScheduledContextHolder.redis = redis
@@ -75,6 +75,7 @@ class ApScheduler(Scheduler, LevelTestScheduler):
         )
 
     async def plain_start(self, game: dto.Game):
+        assert game.start_at
         self.scheduler.add_job(
             func=start_game_wrapper,
             kwargs={"game_id": game.id, "author_id": game.author.id},

@@ -13,7 +13,7 @@ async def message_in_state(message: types.Message, command: CommandObject):
     await message.reply("Эта команда не поддерживается во время игры")
     logger.warning(
         "User %s send unsupported command %s",
-        message.from_user.id,
+        message.from_user.id,  # type: ignore[union-attr]
         command.text,
     )
 

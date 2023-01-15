@@ -1,3 +1,5 @@
+import typing
+
 from aiogram import Bot, Router
 from aiogram.dispatcher.event.bases import SkipHandler
 from aiogram.filters import Command
@@ -34,7 +36,7 @@ async def check_key_handler(
 ):
     try:
         await check_key(
-            key=m.text,
+            key=typing.cast(str, m.text),
             player=player,
             team=team,
             game=await dao.game.get_full(game.id),

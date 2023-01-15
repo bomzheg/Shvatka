@@ -48,7 +48,7 @@ async def process_publish_message(message: Message, dialog_: Any, manager: Dialo
     hint_sender = create_hint_sender(bot=bot, dao=dao, storage=storage)
     game = await get_full_game(id_=game_id, author=author, dao=dao.game)
     game_stat = await get_game_stat(game=game, player=author, dao=dao.game_stat)
-    keys = await get_typed_keys(game=game, player=author, dao=dao.key_time)
+    keys = await get_typed_keys(game=game, player=author, dao=dao.typed_keys)
     game_publisher = GamePublisher(
         hint_sender=hint_sender,
         game=game,

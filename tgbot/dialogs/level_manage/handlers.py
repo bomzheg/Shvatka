@@ -1,4 +1,5 @@
 import asyncio
+import typing
 from typing import Any
 
 from aiogram import Bot
@@ -108,7 +109,7 @@ async def process_key_message(m: Message, dialog_: Any, manager: DialogManager) 
     suite = dto.LevelTestSuite(tester=org, level=level)
     view = create_level_test_view(bot=bot, dao=dao, storage=storage)
     await check_level_testing_key(
-        key=m.text,
+        key=typing.cast(str, m.text),
         suite=suite,
         view=view,
         org_notifier=BotOrgNotifier(bot=bot),

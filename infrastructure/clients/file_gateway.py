@@ -1,4 +1,5 @@
 import logging
+import typing
 from typing import BinaryIO
 
 from aiogram import Bot
@@ -29,7 +30,8 @@ class BotFileGateway(FileGateway):
     async def renew_file_id(
         self, author: dto.Player, content: BinaryIO, file_meta: scn.UploadedFileMeta
     ) -> scn.FileMeta:
-        msg = await hint_sender.METHODS[file_meta.content_type](
+        assert file_meta.content_type is not None
+        msg = await hint_sender.METHODS[file_meta.content_type](  # type: ignore[operator]
             self.bot,
             author.user.tg_id,
             BufferedInputFile(file=content.read(), filename=file_meta.public_filename),
@@ -37,4 +39,4 @@ class BotFileGateway(FileGateway):
         await msg.delete()
         # TODO parser must only parse!
         saved_file = await self.hint_parser.save_file(msg, author, file_meta.guid)
-        return saved_file
+        return typing.cast(scn.FileMeta, saved_file)

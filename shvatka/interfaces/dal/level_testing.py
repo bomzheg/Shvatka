@@ -6,7 +6,7 @@ from shvatka.interfaces.dal.game import GameByIdGetter
 from shvatka.models import dto
 
 
-class LevelTestProtocolDao(Protocol, Committer):
+class LevelTestProtocolDao(Committer, Protocol):
     async def save_started_level_test(self, suite: dto.LevelTestSuite, now: datetime):
         raise NotImplementedError
 
@@ -26,5 +26,5 @@ class LevelTestProtocolDao(Protocol, Committer):
         raise NotImplementedError
 
 
-class LevelTestingDao(Protocol, LevelTestProtocolDao, GameByIdGetter):
+class LevelTestingDao(LevelTestProtocolDao, GameByIdGetter, Protocol):
     pass

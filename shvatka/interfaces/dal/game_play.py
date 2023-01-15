@@ -5,7 +5,7 @@ from shvatka.interfaces.dal.organizer import GameOrgsGetter
 from shvatka.models import dto
 
 
-class GamePreparer(Protocol, GameOrgsGetter):
+class GamePreparer(GameOrgsGetter, Protocol):
     async def delete_poll_data(self) -> None:
         raise NotImplementedError
 
@@ -16,7 +16,7 @@ class GamePreparer(Protocol, GameOrgsGetter):
         raise NotImplementedError
 
 
-class GamePlayerDao(Protocol, Committer, GameOrgsGetter):
+class GamePlayerDao(Committer, GameOrgsGetter, Protocol):
     async def is_key_duplicate(self, level: dto.Level, team: dto.Team, key: str) -> bool:
         raise NotImplementedError
 

@@ -14,9 +14,7 @@ class GameOrgsGetter(Protocol):
         raise NotImplementedError
 
 
-class OrgAdder(
-    Protocol, Committer, InviteReader, InviteRemover, GameByIdGetter, GameOrgsGetter
-):
+class OrgAdder(Committer, InviteReader, InviteRemover, GameByIdGetter, GameOrgsGetter, Protocol):
     async def add_new_org(self, game: dto.Game, player: dto.Player) -> dto.SecondaryOrganizer:
         raise NotImplementedError
 
@@ -36,11 +34,11 @@ class OrgByPlayerGetter(Protocol):
         raise NotImplementedError
 
 
-class OrgPermissionFlipper(Protocol, Committer, OrgByIdGetter):
+class OrgPermissionFlipper(Committer, OrgByIdGetter, Protocol):
     async def flip_permission(self, org: dto.SecondaryOrganizer, permission: OrgPermission):
         raise NotImplementedError
 
 
-class OrgDeletedFlipper(Protocol, Committer, OrgByIdGetter):
+class OrgDeletedFlipper(Committer, OrgByIdGetter, Protocol):
     async def flip_deleted(self, org: dto.SecondaryOrganizer):
         raise NotImplementedError

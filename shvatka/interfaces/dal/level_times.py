@@ -5,7 +5,7 @@ from shvatka.interfaces.dal.organizer import OrgByPlayerGetter
 from shvatka.models import dto
 
 
-class GameStarter(Protocol, Committer):
+class GameStarter(Committer, Protocol):
     async def set_game_started(self, game: dto.Game) -> None:
         raise NotImplementedError
 
@@ -21,7 +21,7 @@ class LevelTimeChecker(Protocol):
         raise NotImplementedError
 
 
-class GameStatDao(Protocol, OrgByPlayerGetter):
+class GameStatDao(OrgByPlayerGetter, Protocol):
     async def get_game_level_times(self, game: dto.Game) -> list[dto.LevelTime]:
         raise NotImplementedError
 

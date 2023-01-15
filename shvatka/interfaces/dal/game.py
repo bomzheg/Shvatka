@@ -12,7 +12,7 @@ class GameNameChecker(Protocol):
         raise NotImplementedError
 
 
-class GameUpserter(Protocol, LevelUpserter, GameNameChecker):
+class GameUpserter(LevelUpserter, GameNameChecker, Protocol):
     async def upsert_game(self, author: dto.Player, scenario: scn.GameScenario) -> dto.Game:
         raise NotImplementedError
 
@@ -29,7 +29,7 @@ class GameUpserter(Protocol, LevelUpserter, GameNameChecker):
         raise NotImplementedError
 
 
-class GameCreator(Protocol, Committer, GameNameChecker):
+class GameCreator(Committer, GameNameChecker, Protocol):
     async def create_game(self, author: dto.Player, name: str) -> dto.Game:
         raise NotImplementedError
 
@@ -37,12 +37,12 @@ class GameCreator(Protocol, Committer, GameNameChecker):
         raise NotImplementedError
 
 
-class GameRenamer(Protocol, Committer):
+class GameRenamer(Committer, Protocol):
     async def rename_game(self, game: dto.Game, new_name: str):
         raise NotImplementedError
 
 
-class GameAuthorsFinder(Protocol, Committer):
+class GameAuthorsFinder(Committer, Protocol):
     async def get_all_by_author(self, author: dto.Player) -> list[dto.Game]:
         raise NotImplementedError
 
@@ -60,12 +60,12 @@ class ActiveGameFinder(Protocol):
         raise NotImplementedError
 
 
-class WaiverStarter(Protocol, Committer, ActiveGameFinder):
+class WaiverStarter(Committer, ActiveGameFinder, Protocol):
     async def start_waivers(self, game: dto.Game) -> None:
         raise NotImplementedError
 
 
-class GameStartPlanner(Protocol, Committer, ActiveGameFinder):
+class GameStartPlanner(Committer, ActiveGameFinder, Protocol):
     async def set_start_at(self, game: dto.Game, start_at: datetime) -> None:
         raise NotImplementedError
 

@@ -5,7 +5,7 @@ from shvatka.models import dto
 from shvatka.models.dto import scn
 
 
-class LevelUpserter(Protocol, Committer):
+class LevelUpserter(Committer, Protocol):
     async def upsert(
         self,
         author: dto.Player,
@@ -29,6 +29,6 @@ class LevelByIdGetter(Protocol):
         raise NotImplementedError
 
 
-class LevelLinker(Protocol, Committer):
+class LevelLinker(Committer, Protocol):
     async def link_to_game(self, level: dto.Level, game: dto.Game) -> dto.Level:
         raise NotImplementedError

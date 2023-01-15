@@ -6,7 +6,7 @@ from shvatka.models import dto
 from shvatka.models.enums.played import Played
 
 
-class WaiverVoteAdder(Protocol, TeamPlayerGetter):
+class WaiverVoteAdder(TeamPlayerGetter, Protocol):
     async def add_player_vote(self, team_id: int, player_id: int, vote_var: str) -> None:
         raise NotImplementedError
 
@@ -27,14 +27,12 @@ class PollGetWaivers(Protocol):
         raise NotImplementedError
 
 
-class WaiverVoteGetter(Protocol, PollGetWaivers):
+class WaiverVoteGetter(PollGetWaivers, Protocol):
     async def get_by_ids_with_user_and_pit(self, ids: Iterable[int]) -> list[dto.VotedPlayer]:
         raise NotImplementedError
 
 
-class WaiverApprover(
-    Protocol, Committer, TeamPlayerGetter, WaiverVoteGetter, TeamPlayersGetter
-):
+class WaiverApprover(Committer, TeamPlayerGetter, WaiverVoteGetter, TeamPlayersGetter, Protocol):
     async def upsert(self, waiver: dto.Waiver):
         raise NotImplementedError
 

@@ -10,7 +10,7 @@ class TeamGetter(Protocol):
         raise NotImplementedError
 
 
-class TeamCreator(Protocol, TeamJoiner):
+class TeamCreator(TeamJoiner, Protocol):
     async def check_no_team_in_chat(self, chat: dto.Chat) -> None:
         raise NotImplementedError
 
@@ -18,11 +18,11 @@ class TeamCreator(Protocol, TeamJoiner):
         raise NotImplementedError
 
 
-class TeamRenamer(Protocol, Committer):
+class TeamRenamer(Committer, Protocol):
     async def rename_team(self, team: dto.Team, new_name: str) -> None:
         raise NotImplementedError
 
 
-class TeamDescChanger(Protocol, Committer):
+class TeamDescChanger(Committer, Protocol):
     async def change_team_desc(self, team: dto.Team, new_desc: str) -> None:
         raise NotImplementedError

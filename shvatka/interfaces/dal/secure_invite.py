@@ -16,5 +16,5 @@ class InviteReader(Protocol):
         raise NotImplementedError
 
 
-class InviterDao(Protocol, InviteSaver, InviteRemover, InviteReader):
+class InviterDao(InviteSaver, InviteRemover, InviteReader, Protocol):
     pass

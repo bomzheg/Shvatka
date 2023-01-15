@@ -4,12 +4,12 @@ from shvatka.interfaces.dal.base import Committer
 from shvatka.models import dto
 
 
-class UserUpserter(Protocol, Committer):
+class UserUpserter(Committer, Protocol):
     async def upsert_user(self, user: dto.User) -> dto.User:
         raise NotImplementedError
 
 
-class UserPasswordSetter(Protocol, Committer):
+class UserPasswordSetter(Committer, Protocol):
     async def set_password(self, user: dto.User, hashed_password: str):
         raise NotImplementedError
 

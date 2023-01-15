@@ -6,7 +6,7 @@ from shvatka.interfaces.dal.secure_invite import InviteRemover, InviteReader
 from shvatka.models import dto, enums
 
 
-class PlayerUpserter(Protocol, Committer):
+class PlayerUpserter(Committer, Protocol):
     async def upsert_player(self, user: dto.User) -> dto.Player:
         raise NotImplementedError
 
@@ -21,7 +21,7 @@ class TeamPlayerGetter(Protocol):
         raise NotImplementedError
 
 
-class PlayerTeamChecker(Protocol, TeamPlayerGetter):
+class PlayerTeamChecker(TeamPlayerGetter, Protocol):
     async def have_team(self, player: dto.Player) -> bool:
         raise NotImplementedError
 
@@ -29,12 +29,12 @@ class PlayerTeamChecker(Protocol, TeamPlayerGetter):
         raise NotImplementedError
 
 
-class PlayerPromoter(Protocol, Committer, PlayerByIdGetter, InviteReader, InviteRemover):
+class PlayerPromoter(Committer, PlayerByIdGetter, InviteReader, InviteRemover, Protocol):
     async def promote(self, actor: dto.Player, target: dto.Player) -> None:
         raise NotImplementedError
 
 
-class TeamJoiner(Protocol, Committer, TeamPlayerGetter):
+class TeamJoiner(Committer, TeamPlayerGetter, Protocol):
     async def join_team(
         self, player: dto.Player, team: dto.Team, role: str, as_captain: bool = False
     ) -> None:
@@ -54,7 +54,7 @@ class PollVoteDeleter(Protocol):
         raise NotImplementedError
 
 
-class TeamLeaver(Protocol, Committer, ActiveGameFinder, WaiverRemover, TeamPlayerGetter):
+class TeamLeaver(Committer, ActiveGameFinder, WaiverRemover, TeamPlayerGetter, Protocol):
     async def del_player_vote(self, team_id: int, player_id: int) -> None:
         raise NotImplementedError
 
@@ -70,7 +70,7 @@ class TeamPlayersGetter(Protocol):
         raise NotImplementedError
 
 
-class TeamPlayerPermissionFlipper(Protocol, Committer):
+class TeamPlayerPermissionFlipper(Committer, Protocol):
     async def flip_permission(
         self, player: dto.TeamPlayer, permission: enums.TeamPlayerPermission
     ):

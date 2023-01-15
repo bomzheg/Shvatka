@@ -213,9 +213,8 @@ async def save_all_scns_to_files(game_ids: list[int]):
             f.write(packed_scenario.read())
 
 
-if __name__ == "__main__":
-    logging.basicConfig(level=logging.DEBUG)
-    unparsable_games_ids = {*range(19), 31, 51, 52, 84}
+def get_parseable_games():
+    unparseable_games_ids = {*range(19), 31, 51, 52, 84}
     """
     до 19 - игры публиковались просто на форуме
     31 - Ночной детектив (не стандарт)
@@ -223,4 +222,9 @@ if __name__ == "__main__":
     52, 84 - Тачки и Гарри Поттер - нестандартный движок
     """
     all_games_ids = set(range(132))
-    asyncio.run(save_all_scns_to_files(list(sorted(all_games_ids - unparsable_games_ids))))
+    return list(sorted(all_games_ids - unparseable_games_ids))
+
+
+if __name__ == "__main__":
+    logging.basicConfig(level=logging.DEBUG)
+    asyncio.run(save_all_scns_to_files(get_parseable_games()))

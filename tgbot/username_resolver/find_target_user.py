@@ -82,7 +82,7 @@ def get_mentioned_user(message: Message) -> dto.User | None:
             return dto.User.from_aiogram(ent.user)
         elif ent.type == "mention":
             username = ent.extract_from(possible_mentioned_text).lstrip("@")
-            return dto.User(username=username, tg_id=None)
+            return dto.User(username=username, tg_id=None)  # type: ignore
     return None
 
 

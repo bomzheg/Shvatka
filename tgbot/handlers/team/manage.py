@@ -46,7 +46,7 @@ async def cmd_create_team(
     dao: HolderDao,
     bot: Bot,
 ):
-    logger.info("User %s try create team in %s", message.from_user.id, message.chat.id)
+    logger.info("Player %s try create team in %s", player.id, chat.tg_id)
     if not await is_admin_filter(bot, chat, player.user):
         return await message.reply(
             "Создавать команду может только модератор",
@@ -57,12 +57,12 @@ async def cmd_create_team(
         await create_team(chat, player, dao.team_creator)
     except PlayerAlreadyInTeam as e:
         return await message.reply(
-            f"Вы уже находитесь в другой команде ({hd.quote(e.team.name)}).\n"
+            f"Вы уже находитесь в другой команде ({hd.quote(e.team.name)}).\n"  # type: ignore
             "Сперва нужно выйти из другой команды, и затем уже создавать собственную!"
         )
     except AnotherTeamInChat as e:
         return await message.reply(
-            f"В этом чате уже создана команда ({hd.quote(e.team.name)}).\n"
+            f"В этом чате уже создана команда ({hd.quote(e.team.name)}).\n"  # type: ignore
             "Создать другую команду можно только в другом чате!"
         )
     except TeamError as e:
@@ -95,8 +95,8 @@ async def cmd_add_in_team(
 ):
     logger.info(
         "Captain %s try to add %s in team %s",
-        message.from_user.id,
-        target.user.tg_id,
+        player.id,
+        target.id,
         team.id,
     )
     try:
@@ -113,7 +113,7 @@ async def cmd_add_in_team(
     except PlayerAlreadyInTeam as e:
         return await message.reply(
             f"Игрок {hd.quote(target.user.fullname)} уже находится в команде "
-            f"({hd.quote(e.team.name)}).\n"
+            f"({hd.quote(e.team.name)}).\n"  # type: ignore
         )
     except PlayerRestoredInTeam:
         return await message.reply("Игрок возвращён в команду, я сделаю вид что и не покидал")
@@ -130,9 +130,9 @@ async def cmd_add_in_team(
     )
     logger.info(
         "Captain %s add to team %s player %s with role %s",
-        message.from_user.id,
+        player.id,
         team.id,
-        target.user.tg_id,
+        target.id,
         role,
     )
 

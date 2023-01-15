@@ -57,7 +57,7 @@ async def add_vote_handler(
         dao=dao.waiver_vote_adder,
     )
     await c.answer()
-    await c.message.edit_text(
+    await c.message.edit_text(  # type: ignore[union-attr]
         text=await get_waiver_poll_text(team, game, dao),
         reply_markup=kb.get_kb_waivers(team),
         disable_web_page_preview=True,
@@ -69,6 +69,7 @@ async def start_approve_waivers_handler(
 ):
     team = await get_my_team(player, dao.team_player)
     check_allow_approve_waivers(await get_full_team_player(player, team, dao.waiver_approver))
+    assert team is not None
     await total_remove_msg(
         bot=bot, chat_id=team.chat.tg_id, msg_id=await get_saved_message(game, team, dao.poll)
     )
@@ -88,14 +89,16 @@ async def waiver_main_menu(
     if game.id != callback_data.game_id:
         raise AnotherGameIsActive(game=game, player=player)
     team = await get_my_team(player, dao.team_player)
-    if team.id != callback_data.team_id:
+    if not team or team.id != callback_data.team_id:
         raise PlayerNotInTeam(
             player=player,
             team=team,
             notify_user="Ты не состоишь в команде, за которую подаёшь вейверы!",
         )
     check_allow_approve_waivers(await get_full_team_player(player, team, dao.waiver_approver))
-    await c.message.edit_text(**await start_approve_waivers(game, team, dao))
+    await c.message.edit_text(  # type: ignore[union-attr]
+        **await start_approve_waivers(game, team, dao)
+    )
 
 
 async def confirm_approve_waivers_handler(
@@ -109,7 +112,7 @@ async def confirm_approve_waivers_handler(
     if game.id != callback_data.game_id:
         raise AnotherGameIsActive(game=game, player=player)
     team = await get_my_team(player, dao.team_player)
-    if team.id != callback_data.team_id:
+    if not team or team.id != callback_data.team_id:
         raise PlayerNotInTeam(
             player=player,
             team=team,
@@ -134,7 +137,7 @@ async def waiver_user_menu(
     if game.id != callback_data.game_id:
         raise AnotherGameIsActive(game=game, player=player)
     team = await get_my_team(player, dao.team_player)
-    if team.id != callback_data.team_id:
+    if not team or team.id != callback_data.team_id:
         raise PlayerNotInTeam(
             player=player,
             team=team,
@@ -142,7 +145,7 @@ async def waiver_user_menu(
         )
 
     await c.answer()
-    await c.message.edit_text(
+    await c.message.edit_text(  # type: ignore[union-attr]
         text=f"Схватчик {hd.quote(player.user.name_mention)} команды {hd.quote(team.name)} "
         f"заявил что хочет участвовать в игре {hd.quote(game.name)}. Что хотите с ним делать?",
         reply_markup=kb.get_kb_waiver_one_player(team=team, player=player, game=game),
@@ -160,7 +163,7 @@ async def waiver_remove_user_vote(
     if game.id != callback_data.game_id:
         raise AnotherGameIsActive(game=game, player=player)
     team = await get_my_team(player, dao.team_player)
-    if team is None or team.id != callback_data.team_id:
+    if not team or team.id != callback_data.team_id:
         raise PlayerNotInTeam(
             player=player,
             team=team,
@@ -169,7 +172,9 @@ async def waiver_remove_user_vote(
     target = await dao.player.get_by_id(callback_data.player_id)
     await revoke_vote_by_captain(game, team, player, target, dao.waiver_approver)
     await c.answer()
-    await c.message.edit_text(**await start_approve_waivers(game, team, dao))
+    await c.message.edit_text(  # type: ignore[union-attr]
+        **await start_approve_waivers(game, team, dao)
+    )
 
 
 async def waiver_add_force_menu(
@@ -182,7 +187,7 @@ async def waiver_add_force_menu(
     if game.id != callback_data.game_id:
         raise AnotherGameIsActive(game=game, player=player)
     team = await get_my_team(player, dao.team_player)
-    if team is None or team.id != callback_data.team_id:
+    if not team or team.id != callback_data.team_id:
         raise PlayerNotInTeam(
             player=player,
             team=team,
@@ -191,7 +196,7 @@ async def waiver_add_force_menu(
     check_allow_approve_waivers(await get_full_team_player(player, team, dao.waiver_approver))
     players = await get_not_played_team_players(team=team, dao=dao.waiver_approver)
     await c.answer()
-    await c.message.edit_text(
+    await c.message.edit_text(  # type: ignore[union-attr]
         text="Кого из игроков добавить в список вейверов принудительно?",
         reply_markup=kb.get_kb_force_add_waivers(team, players, game),
         disable_web_page_preview=True,
@@ -208,7 +213,7 @@ async def add_force_player(
     if game.id != callback_data.game_id:
         raise AnotherGameIsActive(game=game, player=player)
     team = await get_my_team(player, dao.team_player)
-    if team is None or team.id != callback_data.team_id:
+    if not team or team.id != callback_data.team_id:
         raise PlayerNotInTeam(
             player=player,
             team=team,
@@ -219,7 +224,7 @@ async def add_force_player(
     await force_add_vote(game, team, target, Played.yes, dao.waiver_vote_adder)
     players = await get_not_played_team_players(team=team, dao=dao.waiver_approver)
     await c.answer()
-    await c.message.edit_text(
+    await c.message.edit_text(  # type: ignore[union-attr]
         text="Кого из игроков добавить в список вейверов принудительно?",
         reply_markup=kb.get_kb_force_add_waivers(team, players, game),
         disable_web_page_preview=True,

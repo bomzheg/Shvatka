@@ -112,7 +112,7 @@ async def get_my_team_cmd(message: Message, player: dto.Player, dao: HolderDao):
 async def leave_handler(message: Message, player: dto.Player, dao: HolderDao, bot: Bot):
     team = await get_my_team(player, dao.team_player)
     if team is None:
-        await message.answer("Ты не состоишь в команде")
+        return await message.answer("Ты не состоишь в команде")
     await leave(player, player, dao.team_leaver)
     await message.answer(f"Ты вышел из команды {hd.quote(team.name)}")
     await bot.send_message(

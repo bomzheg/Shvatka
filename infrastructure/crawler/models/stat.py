@@ -10,6 +10,7 @@ class LevelTime:
 
 @dataclass
 class Key:
+    level: int
     player: str
     at: datetime
     value: str

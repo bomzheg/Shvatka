@@ -1,4 +1,5 @@
 import asyncio
+import json
 import logging
 import uuid
 from datetime import datetime
@@ -155,13 +156,19 @@ class GameParser:
             rows = table.xpath(".//tr")
             team_name = rows[0].xpath("./td")[0].text
             keys = []
+            level = 1
             for row in rows[2:]:
-                time, key, player = row.xpath("./td")
+                cells = row.xpath("./td")
+                if len(cells) == 1:
+                    level += 1
+                    continue
+                time, key, player = cells
                 keys.append(
                     Key(
-                        player=player.xpath("./b"),
+                        player=player.xpath("./b")[0].text,
                         value=key.text,
-                        at=datetime.strptime(time, "%Y-%m-%d %H:%M:%S"),
+                        at=datetime.strptime(time.text, "%Y-%m-%d %H:%M:%S"),
+                        level=level,
                     )
                 )
             log_keys[team_name] = keys
@@ -241,16 +248,20 @@ async def save_all_scns_to_files(game_ids: list[int]):
     path.mkdir(exist_ok=True)
     for game in games:
         dct = dcf.dump(game, scn.ParsedGameScenario)
-        scenario = scn.RawGameScenario(scn=dct, files=game.files_contents)
+        stat = BytesIO(json.dumps(dcf.dump(game.stat), ensure_ascii=False, indent=2).encode("utf-8"))
+        stat.seek(0)
+        scenario = scn.RawGameScenario(
+            scn=dct, files={**game.files_contents, "results.json": stat}
+        )
         packed_scenario = pack_scn(scenario)
         with open(path / f"{game.id}.zip", "wb") as f:
             f.write(packed_scenario.read())
 
 
-def get_parseable_games():
+def get_parseable_games_ids():
     unparseable_games_ids = {*range(19), 31, 51, 52, 84}
     """
-    до 19 - игры публиковались просто на форуме
+    до 19 - игры публиковались, просто выкладывались на форуме
     31 - Ночной детектив (не стандарт)
     51 - не была проведена до конца
     52, 84 - Тачки и Гарри Поттер - нестандартный движок
@@ -261,4 +272,4 @@ def get_parseable_games():
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG)
-    asyncio.run(save_all_scns_to_files(get_parseable_games()))
+    asyncio.run(save_all_scns_to_files(get_parseable_games_ids()))

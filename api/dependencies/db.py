@@ -5,7 +5,7 @@ from infrastructure.db.dao.holder import HolderDao
 from infrastructure.db.dao.memory.level_testing import LevelTestingData
 
 
-def dao_provider():
+def dao_provider() -> HolderDao:
     raise NotImplementedError
 
 

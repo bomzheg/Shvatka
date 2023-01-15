@@ -6,12 +6,12 @@ from shvatka.models import dto
 from shvatka.services.player import upsert_player
 
 
-def player_provider():
+def player_provider() -> dto.Player:
     raise NotImplementedError
 
 
 async def db_player_provider(
-    dao: HolderDao = Depends(dao_provider),
-    user: dto.User = Depends(get_current_user),
+    dao: HolderDao = Depends(dao_provider),  # type: ignore[assignment]
+    user: dto.User = Depends(get_current_user),  # type: ignore[assignment]
 ) -> dto.Player:
     return await upsert_player(user, dao.player)

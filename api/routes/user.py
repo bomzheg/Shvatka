@@ -16,13 +16,14 @@ async def read_users_me(current_user: dto.User = Depends(get_current_user)) -> d
 
 
 async def read_user(
-    id_: int = Path(alias="id"), dao: HolderDao = Depends(dao_provider)
+    id_: int = Path(alias="id"),  # type: ignore[assignment]
+    dao: HolderDao = Depends(dao_provider)
 ) -> dto.User:
     return await get_user(id_, dao.user)
 
 
 async def set_password_route(
-    password: str = Body(),
+    password: str = Body(),  # type: ignore[assignment]
     auth: AuthProvider = Depends(),
     user: dto.User = Depends(get_current_user),
     dao: HolderDao = Depends(dao_provider),

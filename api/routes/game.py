@@ -9,13 +9,15 @@ from shvatka.services.game import get_authors_games
 
 
 async def get_my_games_list(
-    player: dto.Player = Depends(player_provider),
-    dao: HolderDao = Depends(dao_provider),
+    player: dto.Player = Depends(player_provider),  # type: ignore[assignment]
+    dao: HolderDao = Depends(dao_provider),  # type: ignore[assignment]
 ) -> list[dto.Game]:
     return await get_authors_games(player, dao.game)
 
 
-async def get_active_game(game: dto.Game = Depends(active_game_provider)) -> responses.Game:
+async def get_active_game(
+    game: dto.Game = Depends(active_game_provider),  # type: ignore[assignment]
+) -> responses.Game:
     return responses.Game.from_core(game)
 
 

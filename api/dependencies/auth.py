@@ -39,7 +39,7 @@ logger = logging.getLogger(__name__)
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/token")
 
 
-def get_current_user():
+def get_current_user() -> dto.User:
     raise NotImplementedError
 
 
@@ -71,7 +71,7 @@ class AuthProvider:
             user = await dao.user.get_by_username_with_password(username)
         except NoUsernameFound:
             raise http_status_401
-        if not self.verify_password(password, user.hashed_password):
+        if not self.verify_password(password, user.hashed_password or ""):
             raise http_status_401
         return user.without_password()
 
@@ -91,7 +91,7 @@ class AuthProvider:
         self,
         token: str = Depends(oauth2_scheme),
         dao: HolderDao = Depends(dao_provider),
-    ) -> Token:
+    ) -> dto.User:
         credentials_exception = HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Could not validate credentials",

@@ -29,7 +29,7 @@ ADD_IN_TEAM_COMMAND = BotCommand(
 )
 MANAGE_TEAM_COMMAND = BotCommand(
     command="manage_team", description="открыть меню управления командой"
-)  # TODO
+)
 REMOVE_FROM_TEAM_COMMAND = BotCommand(
     command="remove_from_team", description="удалить игрока из команды (реплаем по игроку)"
 )  # TODO

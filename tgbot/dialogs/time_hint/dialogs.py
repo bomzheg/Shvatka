@@ -11,7 +11,6 @@ from ..preview_data import TIMES_PRESET
 time_hint = Dialog(
     Window(
         Const("Время выхода подсказки (можно выбрать или ввести)"),
-        #  TODO can set only time greater that before hint
         MessageInput(func=process_time_message),
         Cancel(text=Const("Вернуться, не нужна подсказка")),
         Group(

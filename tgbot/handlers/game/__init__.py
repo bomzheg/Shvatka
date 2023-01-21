@@ -1,6 +1,6 @@
 from aiogram import Router
 
-from tgbot.handlers.game import editor, play, add_organizer, organizer, stat
+from tgbot.handlers.game import editor, play, add_organizer, organizer, stat, waivers
 
 
 def setup() -> Router:
@@ -10,4 +10,5 @@ def setup() -> Router:
     router.include_router(add_organizer.setup())
     router.include_router(organizer.setup())
     router.include_router(stat.setup())
+    router.include_router(waivers.setup())
     return router

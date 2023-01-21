@@ -21,8 +21,7 @@ from tgbot.views.commands import CREATE_TEAM_COMMAND, ADD_IN_TEAM_COMMAND
 
 
 @pytest.mark.asyncio
-async def test_create_team(dp: Dispatcher, mocked_bot: MockedBot, dao: HolderDao):
-    bot = mocked_bot
+async def test_create_team(dp: Dispatcher, bot: MockedBot, dao: HolderDao):
     chat = create_tg_chat(type_=ChatType.supergroup)
     harry = create_tg_user()
     bot.add_result_for(

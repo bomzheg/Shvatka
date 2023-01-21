@@ -6,6 +6,7 @@ import pytest
 import pytest_asyncio
 from aiogram import Dispatcher, Bot
 from aiogram_dialog.test_tools import MockMessageManager
+from aiogram_tests.mocked_bot import MockedBot
 from alembic.command import upgrade
 from alembic.config import Config as AlembicConfig
 from dataclass_factory import Factory
@@ -13,7 +14,6 @@ from mockito import mock
 from redis.asyncio.client import Redis
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker, close_all_sessions
-from src.aiogram_tests.aiogram_tests.mocked_bot import MockedBot
 from testcontainers.postgres import PostgresContainer
 from testcontainers.redis import RedisContainer
 

@@ -17,18 +17,10 @@ from tests.fixtures.user_constants import (
     create_dto_hermione,
     create_tg_from_dto,
 )
-from tgbot.config.models.main import TgBotConfig
 from tgbot.views.commands import CREATE_TEAM_COMMAND, ADD_IN_TEAM_COMMAND
 
 
-@pytest.fixture
-def mocked_bot(bot_config: TgBotConfig):
-    bot = MockedBot(token=bot_config.bot.token)
-    return bot
-
-
 @pytest.mark.asyncio
-@pytest.mark.skip(reason="aiogram_tests now broken?")  # TODO
 async def test_create_team(dp: Dispatcher, mocked_bot: MockedBot, dao: HolderDao):
     bot = mocked_bot
     chat = create_tg_chat(type_=ChatType.supergroup)

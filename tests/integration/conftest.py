@@ -1,7 +1,6 @@
 import logging
 import os
 from typing import Generator, AsyncGenerator
-from unittest.mock import Mock
 
 import pytest
 import pytest_asyncio
@@ -14,6 +13,7 @@ from mockito import mock
 from redis.asyncio.client import Redis
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker, close_all_sessions
+from src.aiogram_tests.aiogram_tests.mocked_bot import MockedBot
 from testcontainers.postgres import PostgresContainer
 from testcontainers.redis import RedisContainer
 
@@ -37,7 +37,8 @@ from tests.mocks.scheduler_mock import SchedulerMock
 from tgbot.config.models.main import TgBotConfig
 from tgbot.handlers import setup_handlers
 from tgbot.main_factory import (
-    create_redis, create_only_dispatcher,
+    create_redis,
+    create_only_dispatcher,
 )
 from tgbot.middlewares import setup_middlewares
 from tgbot.username_resolver.user_getter import UserGetter
@@ -173,7 +174,7 @@ def dp(
     file_storage: FileStorage,
     level_test_dao: LevelTestingData,
     telegraph: Telegraph,
-    message_manager: MockMessageManager
+    message_manager: MockMessageManager,
 ) -> Dispatcher:
     dp = create_only_dispatcher(bot_config, redis)
     setup_middlewares(
@@ -193,22 +194,15 @@ def dp(
     return dp
 
 
-
 @pytest.fixture(scope="session")
 def user_getter() -> UserGetter:
     dummy = mock(UserGetter)
     return dummy
 
 
-@pytest.fixture(scope="session")
-def bot() -> Bot:
-    return Mock()
-
-
-@pytest.fixture(autouse=True)
-def clean_up_bot(bot: Mock, bot_config: TgBotConfig):
-    bot.reset_mock()
-    setattr(bot, "id", int(bot_config.bot.token.split(":")[0]))
+@pytest.fixture
+def bot(bot_config: TgBotConfig):
+    bot = MockedBot(token=bot_config.bot.token)
     return bot
 
 

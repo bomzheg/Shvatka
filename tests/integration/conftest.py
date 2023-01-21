@@ -6,6 +6,7 @@ from unittest.mock import Mock
 import pytest
 import pytest_asyncio
 from aiogram import Dispatcher, Bot
+from aiogram_dialog.test_tools import MockMessageManager
 from alembic.command import upgrade
 from alembic.config import Config as AlembicConfig
 from dataclass_factory import Factory
@@ -34,10 +35,11 @@ from tests.mocks.config import DBConfig
 from tests.mocks.file_storage import MemoryFileStorage
 from tests.mocks.scheduler_mock import SchedulerMock
 from tgbot.config.models.main import TgBotConfig
+from tgbot.handlers import setup_handlers
 from tgbot.main_factory import (
-    create_dispatcher,
-    create_redis,
+    create_redis, create_only_dispatcher,
 )
+from tgbot.middlewares import setup_middlewares
 from tgbot.username_resolver.user_getter import UserGetter
 from tgbot.views.hint_factory.hint_parser import HintParser
 from tgbot.views.telegraph import Telegraph
@@ -155,6 +157,11 @@ def telegraph(bot_config: TgBotConfig) -> Telegraph:
 
 
 @pytest.fixture(scope="session")
+def message_manager():
+    return MockMessageManager()
+
+
+@pytest.fixture(scope="session")
 def dp(
     pool: sessionmaker,
     bot_config: TgBotConfig,
@@ -166,12 +173,15 @@ def dp(
     file_storage: FileStorage,
     level_test_dao: LevelTestingData,
     telegraph: Telegraph,
+    message_manager: MockMessageManager
 ) -> Dispatcher:
-    return create_dispatcher(
-        config=bot_config,
+    dp = create_only_dispatcher(bot_config, redis)
+    setup_middlewares(
+        dp=dp,
+        pool=pool,
+        bot_config=bot_config.bot,
         user_getter=user_getter,
         dcf=dcf,
-        pool=pool,
         redis=redis,
         scheduler=scheduler,
         locker=locker,
@@ -179,6 +189,9 @@ def dp(
         level_test_dao=level_test_dao,
         telegraph=telegraph,
     )
+    setup_handlers(dp, bot_config.bot, dict(message_manager=message_manager))
+    return dp
+
 
 
 @pytest.fixture(scope="session")

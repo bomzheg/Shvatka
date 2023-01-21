@@ -50,10 +50,7 @@ def create_dispatcher(
     level_test_dao: LevelTestingData,
     telegraph: Telegraph,
 ) -> Dispatcher:
-    dp = Dispatcher(
-        storage=create_storage(config.storage),
-        events_isolation=RedisEventIsolation(redis=redis),
-    )
+    dp = create_only_dispatcher(config, redis)
     setup_middlewares(
         dp=dp,
         pool=pool,
@@ -67,7 +64,15 @@ def create_dispatcher(
         level_test_dao=level_test_dao,
         telegraph=telegraph,
     )
-    setup_handlers(dp, config.bot)
+    setup_handlers(dp, config.bot, {})
+    return dp
+
+
+def create_only_dispatcher(config, redis):
+    dp = Dispatcher(
+        storage=create_storage(config.storage),
+        events_isolation=RedisEventIsolation(redis=redis),
+    )
     return dp
 
 

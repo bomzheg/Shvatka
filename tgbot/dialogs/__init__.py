@@ -1,3 +1,5 @@
+from typing import Any
+
 from aiogram import Dispatcher, Router
 from aiogram_dialog import DialogRegistry
 
@@ -16,14 +18,14 @@ from tgbot.dialogs import (
 from tgbot.filters import GameStatusFilter
 
 
-def setup(dp: Dispatcher):
+def setup(dp: Dispatcher, registry_kwargs: dict[str, Any]):
     dialogs_router = Router(name="tgbot.dialogs.common")
 
     dialogs_router.callback_query.filter(GameStatusFilter(running=False))
     dialogs_router.message.filter(GameStatusFilter(running=False))
 
     dp.include_router(dialogs_router)
-    registry = DialogRegistry(dp, default_router=dialogs_router)
+    registry = DialogRegistry(dp, default_router=dialogs_router, **registry_kwargs)
     setup_dialogs(registry)
     dp.include_router(setup_active_game_dialogs(registry))
 

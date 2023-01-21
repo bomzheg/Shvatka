@@ -13,7 +13,7 @@ pyyaml = "^6.0"
 python-dateutil = "^2.8.2"
 colorlog = "^6.7.0"
 aiogram = "^3.0.0b5"
-aiogram_dialog = "^2.0.0b15"
+aiogram_dialog = "^2.0.0b16"
 sqlalchemy = {version = "^1.4", extras = ["asyncio"]}
 alembic = "^1.8.1"
 asyncpg = "^0.27.0"

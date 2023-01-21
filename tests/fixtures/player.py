@@ -24,7 +24,7 @@ async def harry(dao: HolderDao):
 
 
 @pytest_asyncio.fixture
-async def author(dao: HolderDao):
+async def author(dao: HolderDao) -> dto.Player:
     return await create_author(dao)
 
 

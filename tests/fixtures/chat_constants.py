@@ -34,12 +34,16 @@ def create_tg_chat(
     title: str = GRYFFINDOR_CHAT_DTO.title,
     type_: ChatType = GRYFFINDOR_CHAT_DTO.type,
     username: str = GRYFFINDOR_CHAT_DTO.username,
+    first_name: str | None = None,
+    last_name: str | None = None,
 ):
     return tg.Chat(
         id=id_,
         title=title,
         type=type_.name,
         username=username,
+        first_name=first_name,
+        last_name=last_name,
     )
 
 

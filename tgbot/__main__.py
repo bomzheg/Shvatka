@@ -7,7 +7,7 @@ from sqlalchemy.orm import close_all_sessions
 
 from common.config.parser.logging_config import setup_logging
 from infrastructure.db.dao.memory.level_testing import LevelTestingData
-from infrastructure.db.fatory import create_pool, create_lock_factory
+from infrastructure.db.faсtory import create_pool, create_lock_factory
 from shvatka.models.schems import schemas
 from tgbot.config.parser.main import load_config
 from tgbot.main_factory import (

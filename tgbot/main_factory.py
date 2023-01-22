@@ -15,7 +15,7 @@ from infrastructure.clients.file_storage import LocalFileStorage
 from infrastructure.db.config.models.db import RedisConfig
 from infrastructure.db.config.models.storage import StorageConfig, StorageType
 from infrastructure.db.dao.memory.level_testing import LevelTestingData
-from infrastructure.db.fatory import create_redis
+from infrastructure.db.faсtory import create_redis
 from infrastructure.scheduler import ApScheduler
 from shvatka.interfaces.clients.file_storage import FileStorage
 from shvatka.interfaces.scheduler import Scheduler

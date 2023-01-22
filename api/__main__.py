@@ -12,7 +12,7 @@ from api.main_factory import (
     create_app,
 )
 from common.config.parser.logging_config import setup_logging
-from infrastructure.db.fatory import create_pool, create_redis
+from infrastructure.db.faсtory import create_pool, create_redis
 from shvatka.models.schems import schemas
 
 logger = logging.getLogger(__name__)

@@ -22,7 +22,7 @@ from infrastructure.clients.file_gateway import BotFileGateway
 from infrastructure.db.config.models.db import RedisConfig
 from infrastructure.db.dao.holder import HolderDao
 from infrastructure.db.dao.memory.level_testing import LevelTestingData
-from infrastructure.db.fatory import create_lock_factory
+from infrastructure.db.faсtory import create_lock_factory
 from shvatka.interfaces.clients.file_storage import FileStorage, FileGateway
 from shvatka.interfaces.scheduler import Scheduler
 from shvatka.utils.key_checker_lock import KeyCheckerFactory

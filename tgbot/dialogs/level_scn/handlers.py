@@ -25,7 +25,6 @@ async def process_id(m: Message, dialog_: Any, manager: DialogManager):
     if not isinstance(data, dict):
         data = {}
     data["level_id"] = m.text
-    await manager.update(data)
     await manager.next()
 
 
@@ -39,7 +38,6 @@ async def process_keys(m: Message, dialog_: Any, manager: DialogManager):
         return
     data = manager.dialog_data
     data["keys"] = keys
-    await manager.update(data)
     await manager.next()
 
 

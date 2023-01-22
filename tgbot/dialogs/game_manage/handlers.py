@@ -23,7 +23,6 @@ async def select_my_game(c: CallbackQuery, widget: Any, manager: DialogManager, 
     if not isinstance(data, dict):
         data = {}
     data["my_game_id"] = int(item_id)
-    await manager.update(data)
     await manager.switch_to(states.MyGamesPanelSG.game_menu)
 
 
@@ -33,7 +32,6 @@ async def select_game(c: CallbackQuery, widget: Any, manager: DialogManager, ite
     if not isinstance(data, dict):
         data = {}
     data["game_id"] = int(item_id)
-    await manager.update(data)
     await manager.switch_to(states.CompletedGamesPanelSG.game)
 
 
@@ -96,7 +94,6 @@ async def select_date(c: CallbackQuery, widget, manager: DialogManager, selected
     if not isinstance(data, dict):
         data = {}
     data["scheduled_date"] = selected_date.isoformat()
-    await manager.update(data)
     await manager.switch_to(states.GameScheduleSG.time)
 
 
@@ -108,7 +105,6 @@ async def process_time_message(m: Message, dialog_: Any, manager: DialogManager)
         return
     data = manager.dialog_data
     data["scheduled_time"] = time_.isoformat()
-    await manager.update(data)
     await manager.switch_to(states.GameScheduleSG.confirm)
 
 

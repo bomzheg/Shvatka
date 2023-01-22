@@ -36,7 +36,6 @@ async def set_time(time_minutes: int, manager: DialogManager):
         data = {}
     data["time"] = int(time_minutes)
     data.setdefault("hints", [])
-    await manager.update(data)
     await manager.switch_to(states.TimeHintSG.hint)
 
 

@@ -22,7 +22,7 @@ def author_client(author: dto.Player, dp: Dispatcher):
 
 
 @pytest.mark.asyncio
-async def test_create_game(author_client: BotClient, message_manager: MockMessageManager):
+async def test_exit_write_game(author_client: BotClient, message_manager: MockMessageManager):
     await author_client.send("/" + NEW_GAME_COMMAND.command)
     first_message = message_manager.one_message()
     assert "Выбираем название игры" in first_message.text
@@ -30,13 +30,15 @@ async def test_create_game(author_client: BotClient, message_manager: MockMessag
 
     message_manager.reset_history()
     await author_client.send("test_game")
-    first_message = message_manager.sent_messages[1]
-    assert "test_game" in first_message.text
-    assert "Выбери уровни которые нужно добавить" in first_message.text
-    assert first_message.reply_markup
+    new_message = message_manager.one_message()
+    assert "test_game" in new_message.text
+    assert "Выбери уровни которые нужно добавить" in new_message.text
+    assert new_message.reply_markup
 
+    message_manager.reset_history()
     callback_id = await author_client.click(
-        first_message,
+        new_message,
         InlineButtonTextLocator("⤴Не создавать игру"),
     )
     message_manager.assert_answered(callback_id)
+    assert not message_manager.sent_messages

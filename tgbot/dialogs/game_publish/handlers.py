@@ -70,7 +70,6 @@ async def process_publish_message(message: Message, dialog_: Any, manager: Dialo
     await dao.commit()
     manager.dialog_data["started"] = True
     manager.dialog_data["started_at"] = datetime.now(tz=tz_utc).isoformat()
-    await manager.update(manager.dialog_data)
 
 
 async def publish_game(game_publisher: GamePublisher, manager: DialogManager):

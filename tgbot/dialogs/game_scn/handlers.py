@@ -44,7 +44,6 @@ async def process_name(m: Message, dialog_: Any, manager: DialogManager):
     if not isinstance(data, dict):
         data = {}
     data["game_name"] = m.text
-    await manager.update(data)
     await manager.next()
 
 

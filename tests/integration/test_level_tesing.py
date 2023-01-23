@@ -42,7 +42,7 @@ async def test_level_testing(
     actual_suite = level_view.calls["send_puzzle"].pop()
     assert suite == actual_suite
 
-    assert dao.level_test.is_still_testing(suite)
+    assert await dao.level_test.is_still_testing(suite)
 
     await check_level_testing_key(
         "SH123", suite, level_view, org_notifier, locker, dao.level_testing_complex

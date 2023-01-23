@@ -12,7 +12,6 @@ from tgbot.views.hint_factory.hint_parser import HintParser
 
 
 async def select_time(c: CallbackQuery, widget: Any, manager: DialogManager, item_id: str):
-    await c.answer()
     await set_time(int(item_id), manager)
 
 
@@ -48,7 +47,6 @@ async def process_hint(m: Message, dialog_: Any, manager: DialogManager) -> None
 
 async def on_finish(c: CallbackQuery, button: Button, manager: DialogManager):
     dcf: Factory = manager.middleware_data["dcf"]
-    await c.answer()
     hints = dcf.load(manager.dialog_data["hints"], list[AnyHint])
     time_ = manager.dialog_data["time"]
     time_hint = TimeHint(time=time_, hint=hints)

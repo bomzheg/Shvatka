@@ -11,7 +11,10 @@ from tgbot.views.commands import NEW_LEVEL_COMMAND
 @pytest.mark.asyncio
 async def test_exit_write_game(
     author: dto.Player,
-    author_client: BotClient, message_manager: MockMessageManager, dao: HolderDao, bot: MockedBot
+    author_client: BotClient,
+    message_manager: MockMessageManager,
+    dao: HolderDao,
+    bot: MockedBot,
 ):
     bot.auto_mock_success = True
     assert 0 == await dao.level.count()

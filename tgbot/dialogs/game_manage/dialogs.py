@@ -34,7 +34,9 @@ from .handlers import (
     cancel_scheduled_game,
     rename_game_handler,
     publish_game,
-    select_game, show_my_game_orgs, show_my_zip_scn,
+    select_game,
+    show_my_game_orgs,
+    show_my_zip_scn,
 )
 from ..preview_data import PREVIEW_GAME
 

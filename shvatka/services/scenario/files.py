@@ -44,7 +44,9 @@ async def get_file_contents(
     return contents
 
 
-def check_file_meta_can_read(author: dto.Player, file_meta: scn.VerifiableFileMeta, game: dto.Game):
+def check_file_meta_can_read(
+    author: dto.Player, file_meta: scn.VerifiableFileMeta, game: dto.Game
+):
     if game.is_complete():
         return
     if file_meta.author_id != author.id:

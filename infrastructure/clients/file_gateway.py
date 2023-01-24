@@ -34,7 +34,6 @@ class BotFileGateway(FileGateway):
             content = await self.bot.download(file=file.tg_link.file_id)
             return content
 
-
     async def renew_file_id(
         self, author: dto.Player, content: BinaryIO, file_meta: scn.UploadedFileMeta
     ) -> scn.FileMeta:

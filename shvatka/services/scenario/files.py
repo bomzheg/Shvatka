@@ -1,6 +1,6 @@
 from typing.io import BinaryIO
 
-from shvatka.interfaces.clients.file_storage import FileStorage, FileGateway
+from shvatka.interfaces.clients.file_storage import FileGateway
 from shvatka.interfaces.dal.game import GameUpserter, GamePackager
 from shvatka.models import dto
 from shvatka.models.dto import scn
@@ -24,26 +24,32 @@ async def upsert_files(
 
 
 async def get_file_metas(
-    guids: list[str], author: dto.Player, dao: GamePackager
+    game: dto.FullGame, author: dto.Player, dao: GamePackager
 ) -> list[scn.FileMeta]:
     file_metas = []
-    for guid in guids:
+    for guid in game.get_guids():
         file_meta = await dao.get_by_guid(guid)
-        if file_meta.author_id != author.id:
-            raise NotAuthorizedForEdit(
-                permission_name="file_edit",
-                player=author,
-                notify_user="невозможно открыть этот файл",
-            )
+        check_file_meta_can_read(author, file_meta, game)
         file_metas.append(file_meta)
     return file_metas
 
 
 async def get_file_contents(
-    file_metas: list[scn.FileMeta], file_storage: FileStorage
+    file_metas: list[scn.FileMeta], file_gateway: FileGateway
 ) -> dict[str, BinaryIO]:
     contents = {}
     for file_meta in file_metas:
-        content = await file_storage.get(file_meta.file_content_link)
+        content = await file_gateway.get(file_meta)
         contents[file_meta.guid] = content
     return contents
+
+
+def check_file_meta_can_read(author: dto.Player, file_meta: scn.VerifiableFileMeta, game: dto.Game):
+    if game.is_complete():
+        return
+    if file_meta.author_id != author.id:
+        raise NotAuthorizedForEdit(
+            permission_name="file_edit",
+            player=author,
+            notify_user="невозможно открыть этот файл",
+        )

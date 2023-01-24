@@ -7,7 +7,7 @@ from aiogram_dialog.widgets.kbd import Button
 from dataclass_factory import Factory
 
 from infrastructure.db.dao.holder import HolderDao
-from shvatka.interfaces.clients.file_storage import FileStorage
+from shvatka.interfaces.clients.file_storage import FileGateway
 from shvatka.interfaces.scheduler import Scheduler
 from shvatka.models import dto
 from shvatka.services import game
@@ -59,12 +59,22 @@ async def show_scn(c: CallbackQuery, widget: Button, manager: DialogManager):
 
 async def show_zip_scn(c: CallbackQuery, widget: Button, manager: DialogManager):
     await c.answer()
+    game_id = manager.dialog_data["game_id"]
+    await common_show_zip(c, game_id, manager)
+
+
+async def show_my_zip_scn(c: CallbackQuery, widget: Button, manager: DialogManager):
+    await c.answer()
     game_id = manager.dialog_data["my_game_id"]
+    await common_show_zip(c, game_id, manager)
+
+
+async def common_show_zip(c: CallbackQuery, game_id: int, manager: DialogManager):
     player: dto.Player = manager.middleware_data["player"]
     dao: HolderDao = manager.middleware_data["dao"]
     dcf: Factory = manager.middleware_data["dcf"]
-    file_storage: FileStorage = manager.middleware_data["file_storage"]
-    game_ = await game.get_game_package(game_id, player, dao.game_packager, dcf, file_storage)
+    file_gateway: FileGateway = manager.middleware_data["file_gateway"]
+    game_ = await game.get_game_package(game_id, player, dao.game_packager, dcf, file_gateway)
     zip_ = pack_scn(game_)
     await c.message.answer_document(BufferedInputFile(file=zip_.read(), filename="scenario.zip"))
 
@@ -130,6 +140,12 @@ async def schedule_game(c: CallbackQuery, widget: Button, manager: DialogManager
 
 
 async def show_game_orgs(c: CallbackQuery, widget: Button, manager: DialogManager):
+    await c.answer()
+    game_id = manager.dialog_data["game_id"]
+    await manager.start(states.GameOrgsSG.orgs_list, data={"game_id": game_id})
+
+
+async def show_my_game_orgs(c: CallbackQuery, widget: Button, manager: DialogManager):
     await c.answer()
     game_id = manager.dialog_data["my_game_id"]
     await manager.start(states.GameOrgsSG.orgs_list, data={"game_id": game_id})

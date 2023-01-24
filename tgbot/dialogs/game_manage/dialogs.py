@@ -34,7 +34,7 @@ from .handlers import (
     cancel_scheduled_game,
     rename_game_handler,
     publish_game,
-    select_game,
+    select_game, show_my_game_orgs, show_my_zip_scn,
 )
 from ..preview_data import PREVIEW_GAME
 
@@ -130,13 +130,13 @@ my_games = Dialog(
         Button(
             Const("👥Организаторы"),
             id="game_orgs",
-            on_click=show_game_orgs,
+            on_click=show_my_game_orgs,
             when=F["game"].can_be_edited,
         ),
         Button(
             Const("📦zip-сценарий"),
             id="game_zip_scn",
-            on_click=show_zip_scn,
+            on_click=show_my_zip_scn,
         ),
         SwitchTo(
             Const("✏Переименовать"),

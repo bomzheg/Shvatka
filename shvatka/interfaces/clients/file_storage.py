@@ -10,6 +10,9 @@ class FileGateway(Protocol):
     ) -> scn.FileMeta:
         raise NotImplementedError
 
+    async def get(self, file_link: scn.FileMeta) -> BinaryIO:
+        raise NotImplementedError
+
 
 class FileStorage(Protocol):
     async def put(self, file_meta: scn.UploadedFileMeta, content: BinaryIO) -> scn.FileMeta:

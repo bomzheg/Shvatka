@@ -2,7 +2,7 @@ from datetime import datetime
 
 from dataclass_factory import Factory
 
-from shvatka.interfaces.clients.file_storage import FileStorage, FileGateway
+from shvatka.interfaces.clients.file_storage import FileGateway
 from shvatka.interfaces.dal.game import (
     GameUpserter,
     GameCreator,
@@ -109,12 +109,12 @@ async def get_game_package(
     author: dto.Player,
     dao: GamePackager,
     dcf: Factory,
-    file_storage: FileStorage,
+    file_gateway: FileGateway,
 ) -> scn.RawGameScenario:
     game = await dao.get_full(id_=id_)
     check_is_author(game, author)
-    file_metas = await get_file_metas(game.get_guids(), author, dao)
-    contents = await get_file_contents(file_metas, file_storage)
+    file_metas = await get_file_metas(game, author, dao)
+    contents = await get_file_contents(file_metas, file_gateway)
     scenario = scn.FullGameScenario(
         name=game.name, levels=[level.scenario for level in game.levels], files=file_metas
     )
@@ -197,6 +197,8 @@ async def check_new_game_name_available(name: str, author: dto.Player, dao: Game
 
 
 def check_is_author(game: dto.Game, player: dto.Player):
+    if game.is_complete():
+        return  # for completed - available for all
     if not game.is_author_id(player.id):
         raise NotAuthorizedForEdit(
             permission_name="game_edit",

@@ -29,7 +29,7 @@ from shvatka.utils.key_checker_lock import KeyCheckerFactory
 from tests.fixtures.conftest import fixtures_resource_path  # noqa: F401
 from tests.fixtures.game_fixtures import game, finished_game  # noqa: F401
 from tests.fixtures.player import harry, hermione, ron, author, draco  # noqa: F401
-from tests.fixtures.scn_fixtures import simple_scn, complex_scn  # noqa: F401
+from tests.fixtures.scn_fixtures import simple_scn, complex_scn, three_lvl_scn  # noqa: F401
 from tests.fixtures.team import gryffindor, slytherin  # noqa: F401
 from tests.mocks.config import DBConfig
 from tests.mocks.file_storage import MemoryFileStorage

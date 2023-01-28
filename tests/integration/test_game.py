@@ -23,12 +23,12 @@ from shvatka.utils.exceptions import CantEditGame
 @pytest.mark.asyncio
 async def test_game_simple(
     author: dto.Player,
-    simple_scn: RawGameScenario,
+    three_lvl_scn: RawGameScenario,
     dao: HolderDao,
     dcf: Factory,
     file_gateway: FileGateway,
 ):
-    game = await upsert_game(simple_scn, author, dao.game_upserter, dcf, file_gateway)
+    game = await upsert_game(three_lvl_scn, author, dao.game_upserter, dcf, file_gateway)
 
     assert await dao.game.count() == 1
     assert await dao.level.count() == 3
@@ -44,7 +44,7 @@ async def test_game_simple(
     assert 2 == game.levels[2].number_in_game
     assert "third" == game.levels[2].name_id
 
-    another_scn = deepcopy(simple_scn.scn)
+    another_scn = deepcopy(three_lvl_scn.scn)
     another_scn["levels"].append(another_scn["levels"].pop(0))
 
     game = await upsert_game(
@@ -63,7 +63,7 @@ async def test_game_simple(
     assert 2 == game.levels[2].number_in_game
     assert "first" == game.levels[2].name_id
 
-    another_scn = deepcopy(simple_scn.scn)
+    another_scn = deepcopy(three_lvl_scn.scn)
 
     another_scn["levels"].pop()
 

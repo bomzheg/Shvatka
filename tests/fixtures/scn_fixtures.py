@@ -29,6 +29,15 @@ def simple_scn(fixtures_resource_path: Path) -> RawGameScenario:
 
 
 @pytest.fixture
+def three_lvl_scn(fixtures_resource_path: Path) -> RawGameScenario:
+    with open(fixtures_resource_path / "three_lvl_scn.yml", "r", encoding="utf-8") as f:
+        return RawGameScenario(
+            scn=yaml.safe_load(f.read()),
+            files={},
+        )
+
+
+@pytest.fixture
 def all_types_scn(fixtures_resource_path: Path) -> RawGameScenario:
     with open(fixtures_resource_path / "all_types.yml", "r", encoding="utf-8") as f:
         return RawGameScenario(

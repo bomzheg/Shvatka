@@ -62,6 +62,7 @@ class KeyTimeDao(BaseDAO[models.KeyTime]):
             enter_time=datetime.now(tz=tz_utc),
         )
         self._save(key_time)
+        await self._flush(key_time)  # TODO If remove tests are failed. Why?
         return key_time.to_dto(player, team)
 
     async def get_typed_keys(self, game: dto.Game) -> list[dto.KeyTime]:

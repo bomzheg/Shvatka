@@ -119,3 +119,10 @@ class LevelDao(BaseDAO[models.Level]):
         )
         level: models.Level = result.scalar_one()
         return level.to_dto(level.author.to_dto_user_prefetched())
+
+    async def transfer(self, level: dto.Level, new_author: dto.Player):
+        await self.session.execute(
+            update(models.Level)
+            .where(models.Level.id == level.db_id)
+            .values(author_id=new_author.id)
+        )

@@ -1,3 +1,4 @@
+from sqlalchemy import update
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
@@ -43,6 +44,13 @@ class FileInfoDao(BaseDAO[models.FileInfo]):
     async def get_by_guid(self, guid: str) -> VerifiableFileMeta:
         db_file = await self._get_by_guid(guid)
         return db_file.to_short_dto()
+
+    async def transfer(self, file_guid: str, new_author: dto.Player):
+        await self.session.execute(
+            update(models.FileInfo)
+            .where(models.FileInfo.guid == file_guid)
+            .values(author_id=new_author.id)
+        )
 
     async def _get_by_guid(self, guid: str) -> models.FileInfo:
         result = await self.session.execute(

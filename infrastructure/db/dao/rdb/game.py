@@ -90,7 +90,7 @@ class GameDao(BaseDAO[models.Game]):
             .where(
                 models.Game.status == GameStatus.complete,
             )
-            .order_by(models.Game.start_at.desc())  # noqa
+            .order_by(models.Game.number.desc(), models.Game.start_at.desc())  # noqa
         )
         games: list[models.Game] = result.all()
         return [game.to_dto(game.author.to_dto_user_prefetched()) for game in games]
@@ -165,6 +165,11 @@ class GameDao(BaseDAO[models.Game]):
     async def get_game_by_name(self, name: str, author: dto.Player) -> dto.Game:
         game = await self._get_game_by_name(name)
         return game.to_dto(author)
+
+    async def transfer(self, game: dto.Game, new_author: dto.Player):
+        await self.session.execute(
+            update(models.Game).where(models.Game.id == game.id).values(author_id=new_author.id)
+        )
 
     async def is_name_available(self, name: str) -> bool:
         return not bool(await self._get_game_by_name(name))

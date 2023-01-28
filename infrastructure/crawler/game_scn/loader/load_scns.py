@@ -56,21 +56,34 @@ async def main(path: Path):
                     bot=bot,
                 ),
             )
-            player = await dao.player.upsert_player(
+            tech_player = await dao.player.upsert_player(
                 await dao.user.upsert_user(
                     dto.User(
                         tg_id=config.bot.log_chat,
+                        first_name="SYSTEM",
+                        last_name="PARSED UPLOADER",
+                        is_bot=True,
+                    )
+                )
+            )
+            await dao.player.promote(tech_player, tech_player)
+            tech_player.can_be_author = True
+            bot_player = await dao.player.upsert_player(
+                await dao.user.upsert_user(
+                    dto.User(
+                        tg_id=bot.id,
                         first_name="SYSTEM",
                         last_name="PARSER",
                         is_bot=True,
                     )
                 )
             )
-            await dao.player.promote(player, player)
-            player.can_be_author = True
+            await dao.player.promote(bot_player, bot_player)
+            bot_player.can_be_author = True
             await dao.commit()
             await load_scns(
-                player=player,
+                tech_player=tech_player,
+                bot_player=bot_player,
                 dao=dao,
                 file_gateway=file_gateway,
                 dcf=dcf,
@@ -82,14 +95,19 @@ async def main(path: Path):
 
 
 async def load_scns(
-    player: dto.Player, dao: HolderDao, file_gateway: FileGateway, dcf: Factory, path: Path
+    tech_player: dto.Player,
+    bot_player: dto.Player,
+    dao: HolderDao,
+    file_gateway: FileGateway,
+    dcf: Factory,
+    path: Path,
 ):
     for file in path.glob("*.zip"):
         logger.info("loading game from file %s", file.name)
         try:
             with file.open("rb") as game_zip_scn:
                 game = await load_scn(
-                    player=player,
+                    player=tech_player,
                     dao=dao,
                     file_gateway=file_gateway,
                     dcf=dcf,
@@ -104,12 +122,21 @@ async def load_scns(
             game.start_at = results.start_at
             await dao.game.set_number(game, results.id)
             game.number = results.id
+            await transfer_ownership(game, bot_player, dao)
             await dao.commit()
 
         except exceptions.CantEditGame:
             logger.info("game from file %s already loaded", file.name)
         else:
             logger.info("successfully loaded game %s with number %s", game.id, game.number)
+
+
+async def transfer_ownership(game: dto.FullGame, bot_player: dto.Player, dao: HolderDao):
+    for guid in game.get_guids():
+        await dao.file_info.transfer(guid, bot_player)
+    for level in game.levels:
+        await dao.level.transfer(level, bot_player)
+    await dao.game.transfer(game, bot_player)
 
 
 def load_results(game_zip_scn: BinaryIO, dcf: Factory) -> GameStat:
@@ -130,7 +157,7 @@ async def load_scn(
     file_gateway: FileGateway,
     dcf: Factory,
     zip_scn: BinaryIO,
-) -> dto.Game | None:
+) -> dto.FullGame | None:
     try:
         with unpack_scn(ZipPath(zip_scn)).open() as scn:
             game = await upsert_game(scn, player, dao.game_upserter, dcf, file_gateway)
@@ -145,5 +172,5 @@ def get_paths() -> Paths:
     return common_get_paths("CRAWLER_PATH")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     asyncio.run(main(Path(__name__).parent / "scn"))

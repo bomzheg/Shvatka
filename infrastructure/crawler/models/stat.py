@@ -18,5 +18,7 @@ class Key:
 
 @dataclass
 class GameStat:
+    id: int
+    start_at: datetime
     results: dict[str, list[LevelTime]]
     keys: dict[str, list[Key]]

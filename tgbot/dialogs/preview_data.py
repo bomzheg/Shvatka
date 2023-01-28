@@ -25,6 +25,7 @@ PREVIEW_GAME = dto.Game(
     status=GameStatus.getting_waivers,
     manage_token="1",
     published_channel_id=-100123435,
+    number=1,
 )
 TIMES_PRESET = [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60]
 RENDERED_HINTS_PREVIEW = "0: 📃🪪\n10: 📃\n10: 📃\n15: 📃\n20: 📃\n25: 🪪\n30: 📡\n45: 📃"

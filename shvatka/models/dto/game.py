@@ -20,6 +20,7 @@ class Game:
     status: GameStatus
     manage_token: str
     start_at: datetime | None
+    number: int | None
     published_channel_id: int | None
 
     def is_active(self):
@@ -86,6 +87,7 @@ class Game:
             published_channel_id=self.published_channel_id,
             manage_token=self.manage_token,
             levels=levels,
+            number=self.number,
         )
 
 

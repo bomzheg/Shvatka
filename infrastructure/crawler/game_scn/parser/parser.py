@@ -264,7 +264,12 @@ class GameParser:
             levels=self.levels,
             files_contents=self.files,
             files=self.files_meta,
-            stat=GameStat(results=self.parse_results(), keys=self.parse_keys()),
+            stat=GameStat(
+                results=self.parse_results(),
+                keys=self.parse_keys(),
+                id=self.id,
+                start_at=self.start_at,
+            ),
         )
         return game
 

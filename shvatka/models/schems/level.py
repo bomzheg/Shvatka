@@ -17,5 +17,5 @@ class LevelSchema(Schema[scn.LevelScenario]):
     @validate("keys")
     def validate_keys(self, data: set[SHKey]):
         if not is_multiple_keys_normal(data):
-            raise ScenarioNotCorrect(notify_text=INVALID_KEY_ERROR, text="invalid keys")
+            raise ScenarioNotCorrect(notify_user=INVALID_KEY_ERROR, text="invalid keys")
         return data

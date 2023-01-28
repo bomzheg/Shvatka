@@ -78,6 +78,7 @@ class Game(Base):
             start_at=self.start_at,
             published_channel_id=self.published_channel_id,
             manage_token=self.manage_token,
+            number=self.number,
         )
 
     def to_full_dto(self, author: dto.Player, levels: list[dto.Level]) -> dto.FullGame:

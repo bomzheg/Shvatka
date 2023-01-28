@@ -14,7 +14,8 @@ from shvatka.interfaces.dal.game import (
     GameNameChecker,
     GamePackager,
     GameRenamer,
-    CompletedGameFinder, GameCompleter,
+    CompletedGameFinder,
+    GameCompleter,
 )
 from shvatka.interfaces.dal.level import LevelLinker
 from shvatka.interfaces.scheduler import Scheduler

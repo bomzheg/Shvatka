@@ -175,9 +175,7 @@ class GameDao(BaseDAO[models.Game]):
         )
 
     async def get_max_number(self) -> int:
-        result = await self.session.scalar(
-            select(func.max(models.Game.number))
-        )
+        result = await self.session.scalar(select(func.max(models.Game.number)))
         return result or 0
 
     async def is_author_game_by_name(self, name: str, author: dto.Player) -> bool:

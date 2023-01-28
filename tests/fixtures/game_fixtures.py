@@ -31,7 +31,7 @@ async def game(
 
 
 @pytest_asyncio.fixture
-async def completed_game(
+async def finished_game(
     game: dto.FullGame,
     gryffindor: dto.Team,
     slytherin: dto.Team,

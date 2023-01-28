@@ -8,7 +8,13 @@ from shvatka.interfaces.clients.file_storage import FileGateway
 from shvatka.models import dto
 from shvatka.models.dto.scn.game import RawGameScenario
 from shvatka.models.enums import GameStatus
-from shvatka.services.game import upsert_game, get_authors_games, start_waivers, get_active
+from shvatka.services.game import (
+    upsert_game,
+    get_authors_games,
+    start_waivers,
+    get_active,
+    complete_game,
+)
 from shvatka.services.level import upsert_level
 from shvatka.services.organizers import get_orgs
 from shvatka.utils.exceptions import CantEditGame
@@ -101,7 +107,18 @@ async def test_game_get_full(
 
 
 @pytest.mark.asyncio
-async def test_cant_change_finished(completed_game: dto.FullGame, dao: HolderDao):
-    level = completed_game.levels[0]
+async def test_cant_change_finished(finished_game: dto.FullGame, dao: HolderDao):
+    level = finished_game.levels[0]
     with pytest.raises(CantEditGame):
-        await upsert_level(completed_game.author, level.scenario, dao.level)
+        await upsert_level(finished_game.author, level.scenario, dao.level)
+
+
+@pytest.mark.asyncio
+async def test_set_game_completed(
+    finished_game: dto.FullGame, dao: HolderDao, check_dao: HolderDao
+):
+    await complete_game(game=finished_game, dao=dao.game)
+    game = await check_dao.game.get_by_id(finished_game.id, finished_game.author)
+    assert game.is_complete()
+    db_game = await check_dao.game._get_by_id(finished_game.id)
+    assert 1 == db_game.number

@@ -14,7 +14,7 @@ from shvatka.interfaces.dal.game import (
     GameNameChecker,
     GamePackager,
     GameRenamer,
-    CompletedGameFinder,
+    CompletedGameFinder, GameCompleter,
 )
 from shvatka.interfaces.dal.level import LevelLinker
 from shvatka.interfaces.scheduler import Scheduler
@@ -25,6 +25,7 @@ from shvatka.services.level import check_is_author as check_is_level_author, che
 from shvatka.services.player import check_allow_be_author
 from shvatka.services.scenario.files import upsert_files, get_file_metas, get_file_contents
 from shvatka.services.scenario.game_ops import parse_uploaded_game, check_all_files_saved
+from shvatka.utils import exceptions
 from shvatka.utils.exceptions import NotAuthorizedForEdit, AnotherGameIsActive, CantEditGame
 
 
@@ -171,6 +172,14 @@ async def cancel_planed_start(
     await dao.cancel_start(game)
     game.start_at = None
     await scheduler.cancel_scheduled_game(game)
+    await dao.commit()
+
+
+async def complete_game(game: dto.Game, dao: GameCompleter):
+    if not game.is_finished():
+        raise exceptions.GameNotFinished(game=game)
+    await dao.set_number(game, await dao.get_max_number() + 1)
+    await dao.set_completed(game)
     await dao.commit()
 
 

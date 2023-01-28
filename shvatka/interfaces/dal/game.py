@@ -12,6 +12,27 @@ class GameNameChecker(Protocol):
         raise NotImplementedError
 
 
+class MaxGameNumberGetter(Protocol):
+    async def get_max_number(self) -> int:
+        raise NotImplementedError
+
+
+class GameNumberUpdater(Protocol):
+    async def set_number(self, game: dto.Game, number: int) -> None:
+        raise NotImplementedError
+
+
+class GameStatusCompleter(Protocol):
+    async def set_completed(self, game: dto.Game) -> None:
+        raise NotImplementedError
+
+
+class GameCompleter(
+    MaxGameNumberGetter, GameNumberUpdater, GameStatusCompleter, Committer, Protocol
+):
+    pass
+
+
 class GameUpserter(LevelUpserter, GameNameChecker, Protocol):
     async def upsert_game(self, author: dto.Player, scenario: scn.GameScenario) -> dto.Game:
         raise NotImplementedError

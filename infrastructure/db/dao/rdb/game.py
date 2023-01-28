@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import update
+from sqlalchemy import update, func
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
@@ -105,6 +105,7 @@ class GameDao(BaseDAO[models.Game]):
         await self.session.execute(
             update(models.Game).where(models.Game.id == game.id).values(status=status)
         )
+        game.status = status
 
     async def get_active_game(self) -> dto.Game | None:
         result = await self.session.scalars(
@@ -151,6 +152,9 @@ class GameDao(BaseDAO[models.Game]):
     async def set_finished(self, game: dto.Game):
         await self.set_status(game, GameStatus.finished)
 
+    async def set_completed(self, game: dto.Game) -> None:
+        await self.set_status(game, GameStatus.complete)
+
     async def set_published_channel_id(self, game: dto.Game, channel_id: int):
         await self.session.execute(
             update(models.Game)
@@ -164,6 +168,17 @@ class GameDao(BaseDAO[models.Game]):
 
     async def is_name_available(self, name: str) -> bool:
         return not bool(await self._get_game_by_name(name))
+
+    async def set_number(self, game: dto.Game, number: int) -> None:
+        await self.session.execute(
+            update(models.Game).where(models.Game.id == game.id).values(number=number)
+        )
+
+    async def get_max_number(self) -> int:
+        result = await self.session.scalar(
+            select(func.max(models.Game.number))
+        )
+        return result or 0
 
     async def is_author_game_by_name(self, name: str, author: dto.Player) -> bool:
         result = await self._get_game_by_name(name)

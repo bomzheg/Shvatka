@@ -61,6 +61,7 @@ class Game(Base):
     )
     start_at = Column(DateTime(timezone=True))
     published_channel_id = Column(BigInteger)
+    number = Column(Integer)
     manage_token = Column(
         Text,
         default=secrets.token_urlsafe(_TOKEN_LEN * 3 // 4),

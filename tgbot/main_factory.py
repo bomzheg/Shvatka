@@ -8,19 +8,14 @@ from dataclass_factory import Factory
 from redis.asyncio.client import Redis
 from sqlalchemy.orm import sessionmaker
 
-from common.config.models.main import FileStorageConfig
 from common.config.models.paths import Paths
 from common.config.parser.paths import common_get_paths
-from infrastructure.clients.file_storage import LocalFileStorage
-from infrastructure.db.config.models.db import RedisConfig
 from infrastructure.db.config.models.storage import StorageConfig, StorageType
 from infrastructure.db.dao.memory.level_testing import LevelTestingData
 from infrastructure.db.faсtory import create_redis
-from infrastructure.scheduler import ApScheduler
 from shvatka.interfaces.clients.file_storage import FileStorage
 from shvatka.interfaces.scheduler import Scheduler
 from shvatka.utils.key_checker_lock import KeyCheckerFactory
-from tgbot.config.models.bot import BotConfig
 from tgbot.config.models.main import TgBotConfig
 from tgbot.handlers import setup_handlers
 from tgbot.middlewares import setup_middlewares
@@ -89,35 +84,6 @@ def create_storage(config: StorageConfig) -> BaseStorage:
             )
         case _:
             raise NotImplementedError
-
-
-def create_file_storage(config: FileStorageConfig) -> FileStorage:
-    return LocalFileStorage(config)
-
-
-def create_scheduler(
-    pool: sessionmaker,
-    redis: Redis,
-    bot: Bot,
-    redis_config: RedisConfig,
-    game_log_chat: int,
-    file_storage: FileStorage,
-    level_test_dao: LevelTestingData,
-) -> Scheduler:
-    return ApScheduler(
-        redis_config=redis_config,
-        pool=pool,
-        redis=redis,
-        bot=bot,
-        game_log_chat=game_log_chat,
-        file_storage=file_storage,
-        level_test_dao=level_test_dao,
-    )
-
-
-def create_telegraph(bot_config: BotConfig) -> Telegraph:
-    telegraph = Telegraph(access_token=bot_config.telegraph_token)
-    return telegraph
 
 
 def get_paths() -> Paths:

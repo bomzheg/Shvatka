@@ -1,23 +1,19 @@
 import asyncio
 import logging
 
-import dataclass_factory
-from dataclass_factory import Schema, NameStyle
 from sqlalchemy.orm import close_all_sessions
 
 from common.config.parser.logging_config import setup_logging
-from infrastructure.db.dao.memory.level_testing import LevelTestingData
-from infrastructure.db.faсtory import create_pool, create_lock_factory
-from shvatka.models.schems import schemas
+from common.factory import create_telegraph, create_dataclass_factory
+from infrastructure.clients.factory import create_file_storage
+from infrastructure.db.faсtory import create_pool, create_lock_factory, create_level_test_dao
+from infrastructure.scheduler.factory import create_scheduler
 from tgbot.config.parser.main import load_config
 from tgbot.main_factory import (
     create_bot,
     create_dispatcher,
     get_paths,
-    create_scheduler,
     create_redis,
-    create_file_storage,
-    create_telegraph,
 )
 from tgbot.username_resolver.user_getter import UserGetter
 from tgbot.views.jinja_filters import setup_jinja
@@ -30,14 +26,12 @@ async def main():
 
     setup_logging(paths)
     config = load_config(paths)
-    dcf = dataclass_factory.Factory(
-        schemas=schemas, default_schema=Schema(name_style=NameStyle.kebab)
-    )
+    dcf = create_dataclass_factory()
     file_storage = create_file_storage(config.file_storage_config)
     pool = create_pool(config.db)
     bot = create_bot(config)
     setup_jinja(bot=bot)
-    level_test_dao = LevelTestingData()
+    level_test_dao = create_level_test_dao()
 
     async with (
         UserGetter(config.tg_client) as user_getter,

@@ -18,11 +18,12 @@ from testcontainers.postgres import PostgresContainer
 from testcontainers.redis import RedisContainer
 
 from common.config.models.paths import Paths
+from common.factory import create_telegraph
 from infrastructure.clients.file_gateway import BotFileGateway
 from infrastructure.db.config.models.db import RedisConfig
 from infrastructure.db.dao.holder import HolderDao
 from infrastructure.db.dao.memory.level_testing import LevelTestingData
-from infrastructure.db.faсtory import create_lock_factory
+from infrastructure.db.faсtory import create_lock_factory, create_level_test_dao
 from shvatka.interfaces.clients.file_storage import FileStorage, FileGateway
 from shvatka.interfaces.scheduler import Scheduler
 from shvatka.utils.key_checker_lock import KeyCheckerFactory
@@ -50,7 +51,7 @@ logger = logging.getLogger(__name__)
 
 @pytest.fixture(scope="session")
 def level_test_dao() -> LevelTestingData:
-    return LevelTestingData()
+    return create_level_test_dao()
 
 
 @pytest_asyncio.fixture
@@ -154,7 +155,7 @@ def locker() -> KeyCheckerFactory:
 
 @pytest.fixture(scope="session")
 def telegraph(bot_config: TgBotConfig) -> Telegraph:
-    return Telegraph(access_token=bot_config.bot.telegraph_token)
+    return create_telegraph(bot_config=bot_config.bot)
 
 
 @pytest.fixture(scope="session")
@@ -231,7 +232,7 @@ def hint_parser(
     dao: HolderDao,
     file_storage: FileStorage,
     bot: Bot,
-):
+) -> HintParser:
     return HintParser(dao=dao.file_info, file_storage=file_storage, bot=bot)
 
 

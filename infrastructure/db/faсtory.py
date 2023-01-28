@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
 
 from infrastructure.db.config.models.db import DBConfig, RedisConfig
+from infrastructure.db.dao.memory.level_testing import LevelTestingData
 from infrastructure.db.dao.memory.locker import MemoryLockFactory
 from shvatka.utils.key_checker_lock import KeyCheckerFactory
 
@@ -25,3 +26,8 @@ def create_lock_factory() -> KeyCheckerFactory:
 def create_redis(config: RedisConfig) -> Redis:
     logger.info("created redis for %s", config)
     return Redis(host=config.url, port=config.port, db=config.db)
+
+
+def create_level_test_dao():
+    level_test_dao = LevelTestingData()
+    return level_test_dao

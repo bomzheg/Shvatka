@@ -41,6 +41,7 @@ class Game(Base):
         "Level",
         back_populates="game",
         foreign_keys="Level.game_id",
+        order_by="Level.number_in_game",
     )
     level_times = relationship(
         "LevelTime",

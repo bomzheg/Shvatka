@@ -47,4 +47,23 @@ levels:
         hint:
           - time: text
             text: "SHOOT"
+  - id: third
+    keys: [ "SHARP" ]
+    time-hints:
+      - time: 0
+        hint:
+          - type: text
+            text: "yet another puzzle"
+      - time: 1
+        hint:
+          - type: text
+            text: "hint 1"
+      - time: 2
+        hint:
+          - type: text
+            text: "hint 2"
+      - time: 5
+        hint:
+          - time: text
+            text: "SHARP"
 files: []

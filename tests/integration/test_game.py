@@ -25,16 +25,18 @@ async def test_game_simple(
     game = await upsert_game(simple_scn, author, dao.game_upserter, dcf, file_gateway)
 
     assert await dao.game.count() == 1
-    assert await dao.level.count() == 2
+    assert await dao.level.count() == 3
 
     assert game.id is not None
     assert game.name == "My new game"
     assert game.status == GameStatus.underconstruction
-    assert len(game.levels) == 2
+    assert len(game.levels) == 3
     assert 0 == game.levels[0].number_in_game
     assert "first" == game.levels[0].name_id
     assert 1 == game.levels[1].number_in_game
     assert "second" == game.levels[1].name_id
+    assert 2 == game.levels[2].number_in_game
+    assert "third" == game.levels[2].name_id
 
     another_scn = deepcopy(simple_scn.scn)
     another_scn["levels"].append(another_scn["levels"].pop(0))
@@ -44,14 +46,16 @@ async def test_game_simple(
     )
 
     assert await dao.game.count() == 1
-    assert await dao.level.count() == 2
+    assert await dao.level.count() == 3
 
     assert game.name == "My new game"
-    assert len(game.levels) == 2
+    assert len(game.levels) == 3
     assert 0 == game.levels[0].number_in_game
     assert "second" == game.levels[0].name_id
     assert 1 == game.levels[1].number_in_game
-    assert "first" == game.levels[1].name_id
+    assert "third" == game.levels[1].name_id
+    assert 2 == game.levels[2].number_in_game
+    assert "first" == game.levels[2].name_id
 
     another_scn = deepcopy(simple_scn.scn)
 
@@ -64,12 +68,14 @@ async def test_game_simple(
     assert await dao.game.count() == 1
     assert 1 == await dao.organizer.get_orgs_count(game)
     assert author == (await get_orgs(game, dao.organizer))[0].player
-    assert await dao.level.count() == 2
+    assert await dao.level.count() == 3
 
     assert game.name == "My new game"
-    assert len(game.levels) == 1
+    assert len(game.levels) == 2
     assert 0 == game.levels[0].number_in_game
     assert "first" == game.levels[0].name_id
+    assert 1 == game.levels[1].number_in_game
+    assert "second" == game.levels[1].name_id
 
     gotten_games = await get_authors_games(author, dao.game)
     assert 1 == len(gotten_games)

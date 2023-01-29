@@ -11,11 +11,10 @@ class Player(Base):
     id = Column(BigInteger, primary_key=True)
     can_be_author = Column(Boolean, server_default="f", nullable=False)
     promoted_by_id = Column(ForeignKey("players.id"))
-    user_id = Column(ForeignKey("users.id"), unique=True)
     user = relationship(
         "User",
         back_populates="player",
-        foreign_keys=user_id,
+        foreign_keys="User.player_id",
         uselist=False,
     )
 

@@ -31,13 +31,15 @@ class PlayerDao(BaseDAO[models.Player]):
 
     async def get_by_user(self, user: dto.User) -> dto.Player:
         result = await self.session.execute(
-            select(models.Player).where(models.Player.user_id == user.db_id)
+            select(models.Player).join(models.Player.user).where(models.User.id == user.db_id)
         )
         player = result.scalar_one()
         return player.to_dto(user)
 
     async def create_for_user(self, user: dto.User) -> dto.Player:
-        player = models.Player(user_id=user.db_id)
+        user_db = await self.session.get(models.User, user.db_id)
+        player = models.Player()
+        user_db.player = player
         self.session.add(player)
         await self._flush(player)
         return player.to_dto(user)

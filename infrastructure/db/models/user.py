@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Text, BigInteger, Boolean
+from sqlalchemy import Column, Text, BigInteger, Boolean, ForeignKey
 from sqlalchemy.orm import relationship
 
 from infrastructure.db.models.base import Base
@@ -15,11 +15,12 @@ class User(Base):
     username = Column(Text, nullable=True)
     hashed_password = Column(Text, nullable=True)
     is_bot = Column(Boolean, default=False)
+    player_id = Column(ForeignKey("players.id"), unique=True)
 
     player = relationship(
         "Player",
         back_populates="user",
-        foreign_keys="Player.user_id",
+        foreign_keys=player_id,
         uselist=False,
     )
 

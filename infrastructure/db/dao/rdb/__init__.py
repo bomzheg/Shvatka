@@ -1,6 +1,7 @@
 from .base import BaseDAO  # noqa: F401
 from .chat import ChatDao  # noqa: F401
 from .file_info import FileInfoDao  # noqa: F401
+from .forum_user import ForumUserDAO  # noqa: F401
 from .game import GameDao  # noqa: F401
 from .level import LevelDao  # noqa: F401
 from .level_times import LevelTimeDao  # noqa: F401

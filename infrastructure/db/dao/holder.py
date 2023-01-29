@@ -34,6 +34,7 @@ from .rdb import (
     TeamPlayerDao,
     TeamDao,
     WaiverDao,
+    ForumUserDAO,
 )
 from .rdb.achievement import AchievementDAO
 from .redis import PollDao, SecureInvite
@@ -55,6 +56,7 @@ class HolderDao:
         self.team = TeamDao(self.session)
         self.waiver = WaiverDao(self.session)
         self.achievement = AchievementDAO(self.session)
+        self.forum_user = ForumUserDAO(self.session)
         self.poll = PollDao(redis=redis)
         self.secure_invite = SecureInvite(redis=redis)
         self.level_test = level_test

@@ -17,6 +17,12 @@ class Player(Base):
         foreign_keys="User.player_id",
         uselist=False,
     )
+    forum_user = relationship(
+        "ForumUser",
+        back_populates="player",
+        foreign_keys="ForumUser.player_id",
+        uselist=False,
+    )
 
     my_games = relationship(
         "Game",

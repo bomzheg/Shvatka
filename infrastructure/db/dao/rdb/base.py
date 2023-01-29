@@ -20,11 +20,7 @@ class BaseDAO(Generic[Model]):
         return result.scalars().all()
 
     async def _get_by_id(self, id_: int, options: list[Load] = None) -> Model:
-        query = select(self.model).where(self.model.id == id_)
-        if options:
-            query = query.options(*options)
-        result = await self.session.execute(query)
-        return result.scalar_one()
+        return await self.session.get(self.model, id_, options=options)
 
     def _save(self, obj: Model):
         self.session.add(obj)

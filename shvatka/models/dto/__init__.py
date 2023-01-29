@@ -1,5 +1,6 @@
 from .achievement import Achievement  # noqa: F401
 from .chat import Chat  # noqa: F401
+from .forum_user import ForumUser  # noqa: F401
 from .game import Game, FullGame  # noqa: F401
 from .level import Level  # noqa: F401
 from .level_testing import LevelTestSuite  # noqa: F401

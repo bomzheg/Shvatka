@@ -14,7 +14,6 @@ down_revision = "2ab6d1eefd77"
 branch_labels = None
 depends_on = None
 
-
 waiver_status = sa.Enum(
     "yes",
     "no",

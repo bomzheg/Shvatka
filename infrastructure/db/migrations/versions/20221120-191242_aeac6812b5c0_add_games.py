@@ -14,7 +14,6 @@ down_revision = "d81a8894215a"
 branch_labels = None
 depends_on = None
 
-
 game_status = sa.Enum(
     "underconstruction",
     "ready",

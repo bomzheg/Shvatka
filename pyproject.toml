@@ -7,7 +7,7 @@ license = "MIT"
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "~3.11"  # python3.11 failed with install psycopg2 (for testcontainers)
+python = "~3.11"
 wheel = "^0.38.4"
 pyyaml = "^6.0"
 python-dateutil = "^2.8.2"

@@ -1,8 +1,8 @@
 from typing import List, TypeVar, Type, Generic
 
 from sqlalchemy import delete, func
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.future import select
 from sqlalchemy.orm.strategy_options import Load
 
 from infrastructure.db.models import Base

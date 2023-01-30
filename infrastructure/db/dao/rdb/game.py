@@ -1,9 +1,9 @@
 from datetime import datetime
 
+from sqlalchemy import select
 from sqlalchemy import update, func
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.future import select
 from sqlalchemy.orm import joinedload
 
 from infrastructure.db import models

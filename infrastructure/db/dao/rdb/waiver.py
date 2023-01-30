@@ -1,7 +1,7 @@
 from typing import Iterable
 
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.future import select
 from sqlalchemy.orm import joinedload
 
 from infrastructure.db import models

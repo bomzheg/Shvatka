@@ -1,6 +1,6 @@
+from sqlalchemy import select
 from sqlalchemy.exc import NoResultFound, MultipleResultsFound
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.future import select
 
 from infrastructure.db.models import User
 from shvatka.models import dto

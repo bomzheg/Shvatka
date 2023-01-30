@@ -33,7 +33,7 @@ class Game(Base):
     )
     name = Column(Text, unique=True, nullable=False)
     status = Column(
-        Enum(GameStatus),
+        Enum(GameStatus, name="game_status"),
         server_default=GameStatus.underconstruction,
         nullable=False,
     )

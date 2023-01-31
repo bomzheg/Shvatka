@@ -1,5 +1,5 @@
-from sqlalchemy import Column, Text, BigInteger, Enum
-from sqlalchemy.orm import relationship
+from sqlalchemy import Text, BigInteger, Enum
+from sqlalchemy.orm import relationship, mapped_column
 
 from infrastructure.db.models.base import Base
 from shvatka.models import dto
@@ -9,11 +9,11 @@ from shvatka.models.enums.chat_type import ChatType
 class Chat(Base):
     __tablename__ = "chats"
     __mapper_args__ = {"eager_defaults": True}
-    id = Column(BigInteger, primary_key=True)
-    tg_id = Column(BigInteger, unique=True)
-    type = Column(Enum(ChatType))
-    title = Column(Text, nullable=True)
-    username = Column(Text, nullable=True)
+    id = mapped_column(BigInteger, primary_key=True)
+    tg_id = mapped_column(BigInteger, unique=True)
+    type = mapped_column(Enum(ChatType))
+    title = mapped_column(Text, nullable=True)
+    username = mapped_column(Text, nullable=True)
 
     team = relationship(
         "Team",

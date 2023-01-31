@@ -1,5 +1,5 @@
-from sqlalchemy import Column, Text, BigInteger, Boolean, ForeignKey
-from sqlalchemy.orm import relationship
+from sqlalchemy import Text, BigInteger, Boolean, ForeignKey
+from sqlalchemy.orm import relationship, mapped_column
 
 from infrastructure.db.models.base import Base
 from shvatka.models import dto
@@ -8,14 +8,14 @@ from shvatka.models import dto
 class User(Base):
     __tablename__ = "users"
     __mapper_args__ = {"eager_defaults": True}
-    id = Column(BigInteger, primary_key=True)
-    tg_id = Column(BigInteger, unique=True, nullable=False)
-    first_name = Column(Text, nullable=True)
-    last_name = Column(Text, nullable=True)
-    username = Column(Text, nullable=True)
-    hashed_password = Column(Text, nullable=True)
-    is_bot = Column(Boolean, default=False)
-    player_id = Column(ForeignKey("players.id"), unique=True)
+    id = mapped_column(BigInteger, primary_key=True)
+    tg_id = mapped_column(BigInteger, unique=True, nullable=False)
+    first_name = mapped_column(Text, nullable=True)
+    last_name = mapped_column(Text, nullable=True)
+    username = mapped_column(Text, nullable=True)
+    hashed_password = mapped_column(Text, nullable=True)
+    is_bot = mapped_column(Boolean, default=False)
+    player_id = mapped_column(ForeignKey("players.id"), unique=True)
 
     player = relationship(
         "Player",

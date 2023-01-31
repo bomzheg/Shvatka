@@ -1,7 +1,7 @@
 from datetime import datetime
 
-from sqlalchemy import Column, Integer, ForeignKey, Text, Boolean, DateTime, func
-from sqlalchemy.orm import relationship
+from sqlalchemy import Integer, ForeignKey, Text, Boolean, DateTime, func
+from sqlalchemy.orm import relationship, mapped_column
 
 from infrastructure.db.models import Base
 from shvatka.models import dto
@@ -11,34 +11,34 @@ from shvatka.utils.datetime_utils import tz_utc
 class TeamPlayer(Base):
     __tablename__ = "team_players"
     __mapper_args__ = {"eager_defaults": True}
-    id = Column(Integer, primary_key=True)
-    player_id = Column(ForeignKey("players.id"), nullable=False)
+    id = mapped_column(Integer, primary_key=True)
+    player_id = mapped_column(ForeignKey("players.id"), nullable=False)
     player = relationship(
         "Player",
         foreign_keys=player_id,
         back_populates="teams",
     )
-    team_id = Column(ForeignKey("teams.id"), nullable=False)
+    team_id = mapped_column(ForeignKey("teams.id"), nullable=False)
     team = relationship(
         "Team",
         foreign_keys=team_id,
         back_populates="players",
     )
-    date_joined = Column(
+    date_joined = mapped_column(
         DateTime(timezone=True),
         default=lambda: datetime.now(tz=tz_utc),
         server_default=func.now(),
         nullable=False,
     )
-    role = Column(Text)
-    emoji = Column("emoji", Text)
-    date_left = Column(DateTime(timezone=True))
+    role = mapped_column(Text)
+    emoji = mapped_column("emoji", Text)
+    date_left = mapped_column(DateTime(timezone=True))
 
-    can_manage_waivers = Column(Boolean, default=False, nullable=False)
-    can_manage_players = Column(Boolean, default=False, nullable=False)
-    can_change_team_name = Column(Boolean, default=False, nullable=False)
-    can_add_players = Column(Boolean, default=False, nullable=False)
-    can_remove_players = Column(Boolean, default=False, nullable=False)
+    can_manage_waivers = mapped_column(Boolean, default=False, nullable=False)
+    can_manage_players = mapped_column(Boolean, default=False, nullable=False)
+    can_change_team_name = mapped_column(Boolean, default=False, nullable=False)
+    can_add_players = mapped_column(Boolean, default=False, nullable=False)
+    can_remove_players = mapped_column(Boolean, default=False, nullable=False)
 
     def to_dto(self) -> dto.TeamPlayer:
         return dto.TeamPlayer(

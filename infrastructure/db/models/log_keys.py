@@ -1,7 +1,7 @@
 from datetime import datetime
 
-from sqlalchemy import Column, Integer, ForeignKey, Text, Boolean, DateTime, func
-from sqlalchemy.orm import relationship
+from sqlalchemy import Integer, ForeignKey, Text, Boolean, DateTime, func
+from sqlalchemy.orm import relationship, mapped_column, Mapped
 
 from infrastructure.db.models import Base
 from shvatka.models import dto
@@ -11,35 +11,35 @@ from shvatka.utils.datetime_utils import tz_utc
 class KeyTime(Base):
     __tablename__ = "log_keys"
     __mapper_args__ = {"eager_defaults": True}
-    id = Column(Integer, primary_key=True)
-    player_id = Column(ForeignKey("players.id"), nullable=False)
+    id = mapped_column(Integer, primary_key=True)
+    player_id = mapped_column(ForeignKey("players.id"), nullable=False)
     player = relationship(
         "Player",
         foreign_keys=player_id,
         back_populates="typed_keys",
     )
-    team_id = Column(ForeignKey("teams.id"), nullable=False)
+    team_id = mapped_column(ForeignKey("teams.id"), nullable=False)
     team = relationship(
         "Team",
         foreign_keys=team_id,
         back_populates="typed_keys",
     )
-    game_id = Column(ForeignKey("games.id"), nullable=False)
+    game_id = mapped_column(ForeignKey("games.id"), nullable=False)
     game = relationship(
         "Game",
         foreign_keys=game_id,
         back_populates="log_keys",
     )
-    level_number = Column(Integer, nullable=False)
-    enter_time = Column(
+    level_number = mapped_column(Integer, nullable=False)
+    enter_time = mapped_column(
         DateTime(timezone=True),
         default=lambda: datetime.now(tz=tz_utc),
         server_default=func.now(),
         nullable=False,
     )
-    key_text = Column(Text, nullable=False)
-    is_correct: bool = Column(Boolean, nullable=False)
-    is_duplicate: bool = Column(Boolean, nullable=False)
+    key_text = mapped_column(Text, nullable=False)
+    is_correct: Mapped[bool] = mapped_column(Boolean, nullable=False)
+    is_duplicate: Mapped[bool] = mapped_column(Boolean, nullable=False)
 
     def to_dto(self, player: dto.Player, team: dto.Team) -> dto.KeyTime:
         return dto.KeyTime(

@@ -1,4 +1,4 @@
-from typing import List, TypeVar, Type, Generic
+from typing import TypeVar, Type, Generic, Sequence
 
 from sqlalchemy import delete, func
 from sqlalchemy import select
@@ -15,11 +15,11 @@ class BaseDAO(Generic[Model]):
         self.model = model
         self.session = session
 
-    async def _get_all(self) -> List[Model]:
+    async def _get_all(self) -> Sequence[Model]:
         result = await self.session.execute(select(self.model))
         return result.scalars().all()
 
-    async def _get_by_id(self, id_: int, options: list[Load] = None) -> Model:
+    async def _get_by_id(self, id_: int, options: Sequence[Load] = None) -> Model:
         return await self.session.get(self.model, id_, options=options)
 
     def _save(self, obj: Model):

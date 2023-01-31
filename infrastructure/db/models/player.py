@@ -1,5 +1,5 @@
-from sqlalchemy import Column, BigInteger, ForeignKey, Boolean
-from sqlalchemy.orm import relationship
+from sqlalchemy import BigInteger, ForeignKey, Boolean
+from sqlalchemy.orm import relationship, mapped_column
 
 from infrastructure.db.models.base import Base
 from shvatka.models import dto
@@ -8,9 +8,9 @@ from shvatka.models import dto
 class Player(Base):
     __tablename__ = "players"
     __mapper_args__ = {"eager_defaults": True}
-    id = Column(BigInteger, primary_key=True)
-    can_be_author = Column(Boolean, server_default="f", nullable=False)
-    promoted_by_id = Column(ForeignKey("players.id"))
+    id = mapped_column(BigInteger, primary_key=True)
+    can_be_author = mapped_column(Boolean, server_default="f", nullable=False)
+    promoted_by_id = mapped_column(ForeignKey("players.id"))
     user = relationship(
         "User",
         back_populates="player",
@@ -71,7 +71,7 @@ class Player(Base):
     )
 
     def __repr__(self):
-        return f"<Player " f"id={self.id} " f"user_id={self.user_id} " f">"
+        return f"<Player id={self.id} >"
 
     def to_dto(self, user: dto.User) -> dto.Player:
         return dto.Player(

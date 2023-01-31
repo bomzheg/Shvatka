@@ -1,22 +1,24 @@
 from __future__ import annotations
 
 import secrets
+import typing
+from datetime import datetime
 
 from sqlalchemy import (
-    Column,
-    Integer,
     ForeignKey,
     Text,
     Enum,
-    BigInteger,
     DateTime,
     UniqueConstraint,
 )
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, Mapped, mapped_column
 
 from infrastructure.db.models import Base
 from shvatka.models import dto
 from shvatka.models.enums.game_status import GameStatus
+
+if typing.TYPE_CHECKING:
+    from .. import models
 
 _TOKEN_LEN = 32  # обязательно кратно 4
 
@@ -24,45 +26,47 @@ _TOKEN_LEN = 32  # обязательно кратно 4
 class Game(Base):
     __tablename__ = "games"
     __mapper_args__ = {"eager_defaults": True}
-    id = Column(Integer, primary_key=True)
-    author_id = Column(ForeignKey("players.id"), nullable=False)
-    author = relationship(
+    id: Mapped[int] = mapped_column(primary_key=True)
+    author_id: Mapped[int] = mapped_column(ForeignKey("players.id"), nullable=False)
+    author: Mapped[models.Player] = relationship(
         "Player",
         foreign_keys=author_id,
         back_populates="my_games",
     )
-    name = Column(Text, unique=True, nullable=False)
-    status = Column(
+    name: Mapped[str] = mapped_column(unique=True, nullable=False)
+    status: Mapped[GameStatus] = mapped_column(
         Enum(GameStatus, name="game_status"),
         server_default=GameStatus.underconstruction,
         nullable=False,
     )
-    levels = relationship(
+    levels: Mapped[list[models.Level]] = relationship(
         "Level",
         back_populates="game",
         foreign_keys="Level.game_id",
         order_by="Level.number_in_game",
     )
-    level_times = relationship(
+    level_times: Mapped[list[models.LevelTime]] = relationship(
         "LevelTime",
         back_populates="game",
         foreign_keys="LevelTime.game_id",
     )
-    log_keys = relationship(
+    log_keys: Mapped[list[models.KeyTime]] = relationship(
         "KeyTime",
         back_populates="game",
         foreign_keys="KeyTime.game_id",
     )
-    organizers = relationship("Organizer", back_populates="game", foreign_keys="Organizer.game_id")
-    waivers = relationship(
+    organizers: Mapped[list[models.Organizer]] = relationship(
+        "Organizer", back_populates="game", foreign_keys="Organizer.game_id"
+    )
+    waivers: Mapped[list[models.Waiver]] = relationship(
         "Waiver",
         back_populates="game",
         foreign_keys="Waiver.game_id",
     )
-    start_at = Column(DateTime(timezone=True))
-    published_channel_id = Column(BigInteger)
-    number = Column(Integer)
-    manage_token = Column(
+    start_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    published_channel_id: Mapped[int | None]
+    number: Mapped[int | None]
+    manage_token: Mapped[str | None] = mapped_column(
         Text,
         default=secrets.token_urlsafe(_TOKEN_LEN * 3 // 4),
     )

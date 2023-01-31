@@ -1,5 +1,5 @@
-from sqlalchemy import Column, Integer, Text, ForeignKey
-from sqlalchemy.orm import relationship
+from sqlalchemy import Integer, Text, ForeignKey
+from sqlalchemy.orm import mapped_column, relationship
 
 from infrastructure.db.models import Base
 from shvatka.models import dto
@@ -8,21 +8,21 @@ from shvatka.models import dto
 class Team(Base):
     __tablename__ = "teams"
     __mapper_args__ = {"eager_defaults": True}
-    id = Column(Integer, primary_key=True)
-    name = Column(Text, nullable=False)
-    chat_id = Column(ForeignKey("chats.id"), unique=True)
+    id = mapped_column(Integer, primary_key=True)
+    name = mapped_column(Text, nullable=False)
+    chat_id = mapped_column(ForeignKey("chats.id"), unique=True)
     chat = relationship(
         "Chat",
         foreign_keys=chat_id,
         back_populates="team",
     )
-    captain_id = Column(ForeignKey("players.id"))
+    captain_id = mapped_column(ForeignKey("players.id"))
     captain = relationship(
         "Player",
         foreign_keys=captain_id,
         back_populates="captain_by_team",
     )
-    description = Column(Text)
+    description = mapped_column(Text)
 
     completed_levels = relationship(
         "LevelTime",

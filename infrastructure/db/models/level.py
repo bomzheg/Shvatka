@@ -1,9 +1,9 @@
 from typing import Any
 
 from dataclass_factory import Factory
-from sqlalchemy import Column, Integer, Text, ForeignKey, JSON, TypeDecorator, UniqueConstraint
+from sqlalchemy import Integer, Text, ForeignKey, JSON, TypeDecorator, UniqueConstraint
 from sqlalchemy.engine import Dialect
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, mapped_column, Mapped
 
 from infrastructure.db.models import Base
 from shvatka.models import dto
@@ -18,7 +18,7 @@ class ScenarioField(TypeDecorator):
     def coerce_compared_value(self, op: Any, value: Any):
         if isinstance(value, LevelScenario):
             return self
-        return self.impl.coerce_compared_value(op, value)
+        return self.impl().coerce_compared_value(op=op, value=value)
 
     def process_bind_param(self, value: LevelScenario | None, dialect: Dialect):
         return self.dcf.dump(value, LevelScenario)
@@ -32,22 +32,22 @@ class ScenarioField(TypeDecorator):
 class Level(Base):
     __tablename__ = "levels"
     __mapper_args__ = {"eager_defaults": True}
-    id = Column(Integer, primary_key=True)
-    name_id = Column(Text, nullable=False)
-    game_id = Column(ForeignKey("games.id"), nullable=True)
+    id = mapped_column(Integer, primary_key=True)
+    name_id = mapped_column(Text, nullable=False)
+    game_id = mapped_column(ForeignKey("games.id"), nullable=True)
     game = relationship(
         "Game",
         foreign_keys=game_id,
         back_populates="levels",
     )
-    author_id = Column(ForeignKey("players.id"), nullable=False)
+    author_id = mapped_column(ForeignKey("players.id"), nullable=False)
     author = relationship(
         "Player",
         foreign_keys=author_id,
         back_populates="my_levels",
     )
-    number_in_game = Column(Integer, nullable=True)
-    scenario: LevelScenario = Column(ScenarioField)
+    number_in_game = mapped_column(Integer, nullable=True)
+    scenario: Mapped[LevelScenario] = mapped_column(ScenarioField)
 
     __table_args__ = (UniqueConstraint("author_id", "name_id"),)
 

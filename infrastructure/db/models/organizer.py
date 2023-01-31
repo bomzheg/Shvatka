@@ -1,5 +1,5 @@
-from sqlalchemy import Column, Integer, ForeignKey, Boolean, UniqueConstraint
-from sqlalchemy.orm import relationship
+from sqlalchemy import Integer, ForeignKey, Boolean, UniqueConstraint
+from sqlalchemy.orm import relationship, mapped_column
 
 from infrastructure.db.models import Base
 from shvatka.models import dto
@@ -8,23 +8,23 @@ from shvatka.models import dto
 class Organizer(Base):
     __tablename__ = "organizers"
     __mapper_args__ = {"eager_defaults": True}
-    id = Column(Integer, primary_key=True)
-    player_id = Column(ForeignKey("players.id"), nullable=False)
+    id = mapped_column(Integer, primary_key=True)
+    player_id = mapped_column(ForeignKey("players.id"), nullable=False)
     player = relationship(
         "Player",
         foreign_keys=player_id,
         back_populates="organizers",
     )
-    game_id = Column(ForeignKey("games.id"), nullable=False)
+    game_id = mapped_column(ForeignKey("games.id"), nullable=False)
     game = relationship(
         "Game",
         foreign_keys=game_id,
         back_populates="organizers",
     )
-    can_spy = Column(Boolean, default=False, nullable=False)
-    can_see_log_keys = Column(Boolean, default=False, nullable=False)
-    can_validate_waivers = Column(Boolean, default=False, nullable=False)
-    deleted = Column(Boolean, default=False, nullable=False)
+    can_spy = mapped_column(Boolean, default=False, nullable=False)
+    can_see_log_keys = mapped_column(Boolean, default=False, nullable=False)
+    can_validate_waivers = mapped_column(Boolean, default=False, nullable=False)
+    deleted = mapped_column(Boolean, default=False, nullable=False)
 
     __table_args__ = (UniqueConstraint("player_id", "game_id"),)
 

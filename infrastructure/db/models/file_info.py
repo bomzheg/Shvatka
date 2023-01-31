@@ -1,5 +1,5 @@
-from sqlalchemy import Column, Integer, Text, ForeignKey
-from sqlalchemy.orm import relationship
+from sqlalchemy import Integer, Text, ForeignKey
+from sqlalchemy.orm import relationship, mapped_column
 
 from infrastructure.db.models import Base
 from shvatka.models import dto
@@ -11,14 +11,14 @@ from shvatka.models.enums.hint_type import HintType
 class FileInfo(Base):
     __tablename__ = "files_info"
     __mapper_args__ = {"eager_defaults": True}
-    id = Column(Integer, primary_key=True)
-    file_path = Column(Text)
-    guid = Column(Text, unique=True)
-    original_filename = Column(Text)
-    extension = Column(Text)
-    file_id = Column(Text)
-    content_type = Column(Text)
-    author_id = Column(ForeignKey("players.id"), nullable=False)
+    id = mapped_column(Integer, primary_key=True)
+    file_path = mapped_column(Text)
+    guid = mapped_column(Text, unique=True)
+    original_filename = mapped_column(Text)
+    extension = mapped_column(Text)
+    file_id = mapped_column(Text)
+    content_type = mapped_column(Text)
+    author_id = mapped_column(ForeignKey("players.id"), nullable=False)
     author = relationship(
         "Player",
         foreign_keys=author_id,

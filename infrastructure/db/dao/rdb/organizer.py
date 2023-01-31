@@ -1,3 +1,5 @@
+from typing import Sequence
+
 from sqlalchemy import select
 from sqlalchemy import update, not_
 from sqlalchemy.exc import NoResultFound
@@ -82,13 +84,13 @@ class OrganizerDao(BaseDAO[models.Organizer]):
 
     async def _get_orgs(
         self, game: dto.Game, with_deleted: bool = False
-    ) -> list[models.Organizer]:
+    ) -> Sequence[models.Organizer]:
         if with_deleted:
             deleted_clause = []
         else:
             deleted_clause = [models.Organizer.deleted == False]  # noqa
 
-        result = await self.session.execute(
+        result = await self.session.scalars(
             select(models.Organizer)
             .where(
                 models.Organizer.game_id == game.id,
@@ -96,4 +98,4 @@ class OrganizerDao(BaseDAO[models.Organizer]):
             )
             .options(joinedload(models.Organizer.player).joinedload(models.Player.user))
         )
-        return result.scalars().all()
+        return result.all()

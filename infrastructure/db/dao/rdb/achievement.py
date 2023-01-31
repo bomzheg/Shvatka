@@ -1,3 +1,5 @@
+from typing import Sequence
+
 from sqlalchemy import select
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -29,8 +31,8 @@ class AchievementDAO(BaseDAO[models.Achievement]):
         self._save(db)
 
     async def get_by_player(self, player: dto.Player) -> list[dto.Achievement]:
-        result = await self.session.execute(
+        result = await self.session.scalars(
             select(models.Achievement).where(models.Achievement.player_id == player.id)
         )
-        achievements: list[models.Achievement] = result.scalars().all()
+        achievements: Sequence[models.Achievement] = result.all()
         return [achievement.to_dto(player) for achievement in achievements]

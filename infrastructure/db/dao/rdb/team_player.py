@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from typing import Sequence
 
 from sqlalchemy import select
 from sqlalchemy import update, not_
@@ -89,7 +90,7 @@ class TeamPlayerDao(BaseDAO[models.TeamPlayer]):
         return result.scalars().one_or_none()
 
     async def get_players(self, team: dto.Team) -> list[dto.FullTeamPlayer]:
-        result = await self.session.execute(
+        result = await self.session.scalars(
             select(models.TeamPlayer)
             .where(
                 models.TeamPlayer.team_id == team.id,
@@ -97,7 +98,7 @@ class TeamPlayerDao(BaseDAO[models.TeamPlayer]):
             )
             .options(joinedload(models.TeamPlayer.player).joinedload(models.Player.user))
         )
-        players: list[models.TeamPlayer] = result.scalars().all()
+        players: Sequence[models.TeamPlayer] = result.all()
         return [
             dto.FullTeamPlayer.from_simple(
                 team_player=team_player.to_dto(),
@@ -133,5 +134,4 @@ class TeamPlayerDao(BaseDAO[models.TeamPlayer]):
 
 
 def not_leaved():
-    # noinspection PyUnresolvedReferences
-    return models.TeamPlayer.date_left.is_(None)  # noqa: E711
+    return models.TeamPlayer.date_left.is_(None)

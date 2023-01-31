@@ -48,7 +48,7 @@ class LevelTimeDao(BaseDAO[models.LevelTime]):
         return result.scalar_one()
 
     async def get_game_level_times(self, game: dto.Game) -> list[dto.LevelTime]:
-        result = await self.session.execute(
+        result = await self.session.scalars(
             select(models.LevelTime)
             .where(models.LevelTime.game_id == game.id)
             .options(
@@ -67,5 +67,5 @@ class LevelTimeDao(BaseDAO[models.LevelTime]):
                 game=game,
                 team=lt.team.to_dto(lt.team.chat.to_dto()),
             )
-            for lt in result.scalars().all()
+            for lt in result.all()
         ]

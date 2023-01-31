@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Sequence
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -20,7 +21,7 @@ class KeyTimeDao(BaseDAO[models.KeyTime]):
         game: dto.Game,
         team: dto.Team,
     ) -> set[str]:
-        result = await self.session.execute(
+        result = await self.session.scalars(
             select(models.KeyTime).where(
                 models.KeyTime.game_id == game.id,
                 models.KeyTime.level_number == level.number_in_game,
@@ -28,7 +29,7 @@ class KeyTimeDao(BaseDAO[models.KeyTime]):
                 models.KeyTime.is_correct.is_(True),  # noqa
             )
         )
-        return {key.key_text for key in result.scalars().all()}
+        return {key.key_text for key in result.all()}
 
     async def is_duplicate(self, level: dto.Level, team: dto.Team, key: str) -> bool:
         result = await self.session.execute(
@@ -66,7 +67,7 @@ class KeyTimeDao(BaseDAO[models.KeyTime]):
         return key_time.to_dto(player, team)
 
     async def get_typed_keys(self, game: dto.Game) -> list[dto.KeyTime]:
-        result = await self.session.execute(
+        result = await self.session.scalars(
             select(models.KeyTime)
             .where(models.KeyTime.game_id == game.id)
             .options(
@@ -75,7 +76,7 @@ class KeyTimeDao(BaseDAO[models.KeyTime]):
             )
             .order_by(models.KeyTime.enter_time)
         )
-        keys: list[models.KeyTime] = result.scalars().all()
+        keys: Sequence[models.KeyTime] = result.all()
         return [
             key.to_dto(
                 player=key.player.to_dto_user_prefetched(),

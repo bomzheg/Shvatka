@@ -1,6 +1,6 @@
-from typing import Iterable
+from typing import Iterable, Sequence
 
-from sqlalchemy import select
+from sqlalchemy import select, Row
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 
@@ -84,10 +84,10 @@ class WaiverDao(BaseDAO[models.Waiver]):
                 models.Waiver.game_id == game.id,
                 models.Waiver.played == Played.yes,
                 models.Waiver.team_id == team.id,
-                models.TeamPlayer.date_left.is_(None),  # noqa
+                models.TeamPlayer.date_left.is_(None),
             )
         )
-        waivers: list[tuple[models.Waiver, models.TeamPlayer]] = result.all()
+        waivers: Sequence[Row[models.Waiver, models.TeamPlayer]] = result.all()
         return [
             dto.VotedPlayer(
                 player=waiver.player.to_dto_user_prefetched(),

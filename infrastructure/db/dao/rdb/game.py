@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Sequence
 
 from sqlalchemy import select
 from sqlalchemy import update, func
@@ -26,7 +27,7 @@ class GameDao(BaseDAO[models.Game]):
         scn: GameScenario,
     ) -> dto.Game:
         try:
-            game = await self.get_by_author_and_scn(author, scn)
+            game = await self._get_by_author_and_scn(author, scn)
         except NoResultFound:
             game = models.Game(
                 author_id=author.id,
@@ -37,7 +38,7 @@ class GameDao(BaseDAO[models.Game]):
         await self._flush(game)
         return game.to_dto(author)
 
-    async def get_by_author_and_scn(self, author: dto.Player, scn: GameScenario) -> models.Game:
+    async def _get_by_author_and_scn(self, author: dto.Player, scn: GameScenario) -> models.Game:
         result = await self.session.scalars(
             select(models.Game).where(
                 models.Game.name == scn.name,
@@ -92,7 +93,7 @@ class GameDao(BaseDAO[models.Game]):
             )
             .order_by(models.Game.number.desc(), models.Game.start_at.desc())  # noqa
         )
-        games: list[models.Game] = result.all()
+        games: Sequence[models.Game] = result.all()
         return [game.to_dto(game.author.to_dto_user_prefetched()) for game in games]
 
     async def start_waivers(self, game: dto.Game):

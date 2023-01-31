@@ -52,7 +52,7 @@ class TeamDao(BaseDAO[models.Team]):
             return None
         return team.to_dto(chat)
 
-    async def check_no_team_in_chat(self, chat: dto.Chat):
+    async def check_no_team_in_chat(self, chat: dto.Chat) -> None:
         if team := await self.get_by_chat(chat):
             raise AnotherTeamInChat(
                 chat=chat,
@@ -60,7 +60,7 @@ class TeamDao(BaseDAO[models.Team]):
                 text="team in this chat exists",
             )
 
-    async def get_by_id(self, id_: int):
+    async def get_by_id(self, id_: int) -> dto.Team:
         result = await self.session.execute(
             select(models.Team)
             .where(models.Team.id == id_)

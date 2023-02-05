@@ -15,12 +15,13 @@ class TeamDao(BaseDAO[models.Team]):
         super().__init__(models.Team, session)
 
     async def create(self, chat: dto.Chat, captain: dto.Player) -> dto.Team:
+        chat_db = await self.session.get(models.Chat, chat.db_id)
         team = models.Team(
-            chat_id=chat.db_id,
             captain_id=captain.id,
             name=chat.title,
             description=chat.description,
         )
+        chat_db.team = team
         self.session.add(team)
         try:
             await self._flush(team)
@@ -41,7 +42,8 @@ class TeamDao(BaseDAO[models.Team]):
     async def get_by_chat(self, chat: dto.Chat) -> dto.Team | None:
         result = await self.session.execute(
             select(models.Team)
-            .where(models.Team.chat_id == chat.db_id)
+            .join(models.Team.chat)
+            .where(models.Chat.id == chat.db_id)
             .options(
                 joinedload(models.Team.captain).joinedload(models.Player.user),
             )

@@ -1,4 +1,4 @@
-from sqlalchemy import Text, BigInteger, Enum
+from sqlalchemy import Text, BigInteger, Enum, ForeignKey
 from sqlalchemy.orm import relationship, mapped_column
 
 from infrastructure.db.models.base import Base
@@ -15,10 +15,12 @@ class Chat(Base):
     title = mapped_column(Text, nullable=True)
     username = mapped_column(Text, nullable=True)
 
+    team_id = mapped_column(ForeignKey("teams.id"), unique=True, nullable=True)
     team = relationship(
         "Team",
+        foreign_keys=team_id,
         back_populates="chat",
-        foreign_keys="Team.chat_id",
+        uselist=False,
     )
 
     def __repr__(self):

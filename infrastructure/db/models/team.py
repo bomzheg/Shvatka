@@ -10,11 +10,11 @@ class Team(Base):
     __mapper_args__ = {"eager_defaults": True}
     id = mapped_column(Integer, primary_key=True)
     name = mapped_column(Text, nullable=False)
-    chat_id = mapped_column(ForeignKey("chats.id"), unique=True)
     chat = relationship(
         "Chat",
-        foreign_keys=chat_id,
+        foreign_keys="Chat.team_id",
         back_populates="team",
+        uselist=False,
     )
     captain_id = mapped_column(ForeignKey("players.id"))
     captain = relationship(

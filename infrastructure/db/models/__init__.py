@@ -2,6 +2,7 @@ from .achievement import Achievement  # noqa: F401
 from .base import Base  # noqa: F401
 from .chat import Chat  # noqa: F401
 from .file_info import FileInfo  # noqa: F401
+from .forum_team import ForumTeam  # noqa: F401
 from .forum_user import ForumUser  # noqa: F401
 from .game import Game  # noqa: F401
 from .level import Level  # noqa: F401

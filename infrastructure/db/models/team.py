@@ -16,6 +16,11 @@ class Team(Base):
         back_populates="team",
         uselist=False,
     )
+    forum_team = relationship(
+        "ForumTeam",
+        foreign_keys="ForumTeam.team_id",
+        back_populates="team",
+    )
     captain_id = mapped_column(ForeignKey("players.id"))
     captain = relationship(
         "Player",

@@ -12,6 +12,7 @@ class Team:
     chat: Chat
     name: str
     captain: Player
+    is_dummy: bool
     description: str | None
 
     def __eq__(self, other) -> bool:

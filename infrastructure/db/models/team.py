@@ -1,5 +1,5 @@
-from sqlalchemy import Integer, Text, ForeignKey
-from sqlalchemy.orm import mapped_column, relationship
+from sqlalchemy import ForeignKey
+from sqlalchemy.orm import mapped_column, relationship, Mapped
 
 from infrastructure.db.models import Base
 from shvatka.models import dto
@@ -8,8 +8,9 @@ from shvatka.models import dto
 class Team(Base):
     __tablename__ = "teams"
     __mapper_args__ = {"eager_defaults": True}
-    id = mapped_column(Integer, primary_key=True)
-    name = mapped_column(Text, nullable=False)
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(nullable=False)
+    is_dummy: Mapped[bool] = mapped_column(nullable=False, default=False, server_default="f")
     chat = relationship(
         "Chat",
         foreign_keys="Chat.team_id",
@@ -21,13 +22,13 @@ class Team(Base):
         foreign_keys="ForumTeam.team_id",
         back_populates="team",
     )
-    captain_id = mapped_column(ForeignKey("players.id"))
+    captain_id: Mapped[int] = mapped_column(ForeignKey("players.id"))
     captain = relationship(
         "Player",
         foreign_keys=captain_id,
         back_populates="captain_by_team",
     )
-    description = mapped_column(Text)
+    description: Mapped[str]
 
     completed_levels = relationship(
         "LevelTime",
@@ -55,6 +56,7 @@ class Team(Base):
             id=self.id,
             chat=chat,
             name=self.name,
+            is_dummy=self.is_dummy,
             description=self.description,
             captain=self.captain.to_dto(
                 user=self.captain.user.to_dto(),

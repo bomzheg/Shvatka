@@ -37,6 +37,7 @@ class TeamDao(BaseDAO[models.Team]):
             name=team.name,
             description=team.description,
             captain=captain,
+            is_dummy=team.is_dummy,
         )
 
     async def get_by_chat(self, chat: dto.Chat) -> dto.Team | None:

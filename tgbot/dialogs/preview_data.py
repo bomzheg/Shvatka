@@ -15,6 +15,7 @@ PREVIEW_AUTHOR = dto.Player(
     id=1,
     user=PREVIEW_USER,
     can_be_author=True,
+    is_dummy=False,
 )
 
 PREVIEW_GAME = dto.Game(

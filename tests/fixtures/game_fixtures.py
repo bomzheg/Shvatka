@@ -98,7 +98,7 @@ async def finished_game(
         is_duplicate=False,
     )
     await dao.game_player.level_up(slytherin, game.levels[0], game)
-    await asyncio.sleep(1)
+    await asyncio.sleep(0.1)
     await dao.key_time.save_key(
         key="SH123",
         team=gryffindor,
@@ -109,7 +109,7 @@ async def finished_game(
         is_duplicate=False,
     )
     await dao.game_player.level_up(gryffindor, game.levels[0], game)
-    await asyncio.sleep(2)
+    await asyncio.sleep(0.2)
     await dao.key_time.save_key(
         key="SHOOT",
         team=gryffindor,
@@ -120,7 +120,7 @@ async def finished_game(
         is_duplicate=False,
     )
     await dao.game_player.level_up(gryffindor, game.levels[1], game)
-    await asyncio.sleep(1)
+    await asyncio.sleep(0.1)
     await dao.key_time.save_key(
         key="SHOOT",
         team=slytherin,

@@ -115,13 +115,10 @@ async def load_scns(
                 )
                 if not game:
                     continue
-                await dao.game.set_completed(game)
-                game.status = enums.GameStatus.complete
                 results = load_results(game_zip_scn, dcf)
-            await dao.game.set_start_at(game, results.start_at)
-            game.start_at = results.start_at
-            await dao.game.set_number(game, results.id)
-            game.number = results.id
+            await dao.game.set_completed(game)
+            game.status = enums.GameStatus.complete
+            await set_results(game, results, dao)
             await transfer_ownership(game, bot_player, dao)
             await dao.commit()
 
@@ -129,6 +126,37 @@ async def load_scns(
             logger.info("game from file %s already loaded", file.name)
         else:
             logger.info("successfully loaded game %s with number %s", game.id, game.number)
+
+
+async def set_results(game: dto.FullGame, results: GameStat, dao: HolderDao):
+    await dao.game.set_start_at(game, results.start_at)
+    game.start_at = results.start_at
+    await dao.game.set_number(game, results.id)
+    game.number = results.id
+    for forum_team_name, levels in results.results.items():
+        team = await dao.team.get_by_forum_team_name(forum_team_name)
+        await dao.level_time.set_to_level(team, game, 0, results.start_at)
+        for level in levels:
+            await dao.level_time.set_to_level(team, game, level.number, level.at)
+    for forum_team_name, keys in results.keys.items():
+        team = await dao.team.get_by_forum_team_name(forum_team_name)
+        for i, key in enumerate(keys):
+            player = await dao.player.get_by_forum_player_name(key.player)
+            if i == len(keys):
+                is_correct = True
+            elif key.level != keys[i + 1].level:
+                is_correct = True
+            else:
+                is_correct = False
+            await dao.key_time.save_key(
+                key=key.value,
+                team=team,
+                game=game,
+                player=player,
+                level=game.levels[key.level],
+                is_correct=is_correct,
+                is_duplicate=False,
+            )
 
 
 async def transfer_ownership(game: dto.FullGame, bot_player: dto.Player, dao: HolderDao):

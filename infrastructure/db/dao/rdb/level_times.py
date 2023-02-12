@@ -14,12 +14,16 @@ class LevelTimeDao(BaseDAO[models.LevelTime]):
     def __init__(self, session: AsyncSession):
         super().__init__(models.LevelTime, session)
 
-    async def set_to_level(self, team: dto.Team, game: dto.Game, level_number: int):
+    async def set_to_level(
+        self, team: dto.Team, game: dto.Game, level_number: int, at: datetime = None
+    ):
+        if at is None:
+            at = datetime.now(tz=tz_utc)
         level_time = models.LevelTime(
             game_id=game.id,
             team_id=team.id,
             level_number=level_number,
-            start_at=datetime.now(tz=tz_utc),
+            start_at=at,
         )
         self._save(level_time)
 

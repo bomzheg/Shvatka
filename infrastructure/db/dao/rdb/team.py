@@ -82,3 +82,16 @@ class TeamDao(BaseDAO[models.Team]):
         await self.session.execute(
             update(models.Team).where(models.Team.id == team.id).values(description=new_desc)
         )
+
+    async def get_by_forum_team_name(self, name: str) -> dto.Team:
+        result = await self.session.scalars(
+            select(models.Team)
+            .join(models.Team.forum_team)
+            .options(
+                joinedload(models.Team.captain).joinedload(models.Player.user),
+                joinedload(models.Team.chat),
+            )
+            .where(models.ForumTeam.name == name)
+        )
+        team: models.Team = result.one()
+        return team.to_dto(chat=team.chat.to_dto())

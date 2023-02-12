@@ -156,6 +156,8 @@ async def submit_key(
             is_duplicate=await dao.is_key_duplicate(level, team, key),
         )
         typed_keys = await dao.get_correct_typed_keys(level=level, game=game, team=team)
+        if new_key.is_correct:  # add just now added key to typed, because no flush in dao
+            typed_keys.add(new_key.text)
         is_level_up = False
         if typed_keys == keys:
             await dao.level_up(team=team, level=level, game=game)

@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from redis.asyncio.client import Redis
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.ext.asyncio import async_sessionmaker, AsyncSession
 
 from api.config.models.main import ApiConfig
 from api.dependencies.auth import get_current_user, AuthProvider
@@ -10,7 +10,7 @@ from api.dependencies.player import player_provider, db_player_provider
 from api.dependencies.team import team_provider, db_team_provider
 
 
-def setup(app: FastAPI, pool: sessionmaker, redis: Redis, config: ApiConfig):
+def setup(app: FastAPI, pool: async_sessionmaker[AsyncSession], redis: Redis, config: ApiConfig):
     db_provider = DbProvider(pool=pool, redis=redis)
 
     auth_provider = AuthProvider(config.auth)

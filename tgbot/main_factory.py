@@ -6,7 +6,7 @@ from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.fsm.storage.redis import RedisStorage, DefaultKeyBuilder, RedisEventIsolation
 from dataclass_factory import Factory
 from redis.asyncio.client import Redis
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.ext.asyncio import async_sessionmaker, AsyncSession
 
 from common.config.models.paths import Paths
 from common.config.parser.paths import common_get_paths
@@ -37,7 +37,7 @@ def create_dispatcher(
     config: TgBotConfig,
     user_getter: UserGetter,
     dcf: Factory,
-    pool: sessionmaker,
+    pool: async_sessionmaker[AsyncSession],
     redis: Redis,
     scheduler: Scheduler,
     locker: KeyCheckerFactory,

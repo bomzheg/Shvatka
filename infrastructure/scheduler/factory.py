@@ -1,6 +1,6 @@
 from aiogram import Bot
 from redis.asyncio import Redis
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.ext.asyncio import async_sessionmaker, AsyncSession
 
 from infrastructure.db.config.models.db import RedisConfig
 from infrastructure.db.dao.memory.level_testing import LevelTestingData
@@ -10,7 +10,7 @@ from shvatka.interfaces.scheduler import Scheduler
 
 
 def create_scheduler(
-    pool: sessionmaker,
+    pool: async_sessionmaker[AsyncSession],
     redis: Redis,
     bot: Bot,
     redis_config: RedisConfig,

@@ -7,7 +7,7 @@ from apscheduler.jobstores.base import JobLookupError
 from apscheduler.jobstores.redis import RedisJobStore
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from redis.asyncio import Redis
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.ext.asyncio import async_sessionmaker, AsyncSession
 
 from infrastructure.db.config.models.db import RedisConfig
 from infrastructure.db.dao.memory.level_testing import LevelTestingData
@@ -30,7 +30,7 @@ class ApScheduler(Scheduler, LevelTestScheduler):
     def __init__(
         self,
         redis_config: RedisConfig,
-        pool: sessionmaker,
+        pool: async_sessionmaker[AsyncSession],
         redis: Redis,
         file_storage: FileStorage,
         level_test_dao: LevelTestingData,

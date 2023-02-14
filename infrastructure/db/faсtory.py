@@ -2,8 +2,7 @@ import logging
 
 from redis.asyncio import Redis
 from sqlalchemy.engine import make_url
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 
 from infrastructure.db.config.models.db import DBConfig, RedisConfig
 from infrastructure.db.dao.memory.level_testing import LevelTestingData
@@ -13,9 +12,11 @@ from shvatka.utils.key_checker_lock import KeyCheckerFactory
 logger = logging.getLogger(__name__)
 
 
-def create_pool(db_config: DBConfig) -> sessionmaker:
+def create_pool(db_config: DBConfig) -> async_sessionmaker[AsyncSession]:
     engine = create_async_engine(url=make_url(db_config.uri), echo=db_config.echo)
-    pool = sessionmaker(bind=engine, class_=AsyncSession, expire_on_commit=False, autoflush=False)
+    pool: async_sessionmaker[AsyncSession] = async_sessionmaker(
+        bind=engine, expire_on_commit=False, autoflush=False
+    )
     return pool
 
 

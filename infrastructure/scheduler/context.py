@@ -16,7 +16,7 @@ class ScheduledContextHolder:
     GLOBAL VARIABLE!
     """
 
-    poll: sessionmaker
+    pool: sessionmaker
     redis: Redis
     bot: Bot
     scheduler: Scheduler

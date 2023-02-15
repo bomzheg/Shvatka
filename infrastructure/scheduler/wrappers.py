@@ -15,7 +15,7 @@ from tgbot.views.level_testing import create_level_test_view
 
 @asynccontextmanager
 async def prepare_context() -> AsyncIterator[ScheduledContext]:
-    async with ScheduledContextHolder.poll() as session:
+    async with ScheduledContextHolder.pool() as session:
         dao = HolderDao(
             session=session,
             redis=ScheduledContextHolder.redis,

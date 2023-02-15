@@ -37,7 +37,7 @@ class ApScheduler(Scheduler, LevelTestScheduler):
         bot: Bot,
         game_log_chat: int,
     ):
-        ScheduledContextHolder.poll = pool
+        ScheduledContextHolder.pool = pool
         ScheduledContextHolder.redis = redis
         ScheduledContextHolder.bot = bot
         ScheduledContextHolder.scheduler = self

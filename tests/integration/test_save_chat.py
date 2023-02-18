@@ -36,7 +36,7 @@ async def test_migrate_to_supergroup(dao: HolderDao):
     actual = await dao.chat.get_by_tg_id(NEW_CHAT_ID)
 
     assert_db_chat(expected, actual)
-    assert actual.id is not None
+    assert actual.db_id is not None
     assert await dao.chat.count() == old_count
 
 

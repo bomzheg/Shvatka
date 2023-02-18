@@ -64,14 +64,9 @@ class LevelDao(BaseDAO[models.Level]):
         return [level.to_dto(author) for level in levels]
 
     async def get_by_id(self, id_: int) -> dto.Level:
-        result = await self.session.execute(
-            select(models.Level)
-            .where(
-                models.Level.id == id_,
-            )
-            .options(joinedload(models.Level.author).joinedload(models.Player.user))
+        level = await self._get_by_id(
+            id_, (joinedload(models.Level.author).joinedload(models.Player.user),)
         )
-        level: models.Level = result.scalar_one()
         return level.to_dto(level.author.to_dto_user_prefetched())
 
     async def unlink_all(self, game: dto.Game):

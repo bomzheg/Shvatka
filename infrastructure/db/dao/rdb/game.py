@@ -48,15 +48,13 @@ class GameDao(BaseDAO[models.Game]):
         return result.one()
 
     async def get_full(self, id_: int) -> dto.FullGame:
-        result = await self.session.scalars(
-            select(models.Game)
-            .options(
+        game_db = await self._get_by_id(
+            id_,
+            (
                 joinedload(models.Game.levels),
                 joinedload(models.Game.author).joinedload(models.Player.user),
-            )
-            .where(models.Game.id == id_)
+            ),
         )
-        game_db: models.Game = result.unique().one()
         author = game_db.author.to_dto_user_prefetched()
         return game_db.to_full_dto(
             author=author,

@@ -5,18 +5,19 @@ from datetime import date
 
 
 @dataclass
-class Team:
+class ParsedTeam:
     name: str
     url: str
     id: int
     games: list[int]
-    players: list[Player]
+    players: list[ParsedPlayer]
 
 
-@dataclass
-class Player:
+@dataclass(frozen=True)
+class ParsedPlayer:
     name: str
     role: str
     url: str
     games: list[int]
     registered_at: date
+    forum_id: int | None

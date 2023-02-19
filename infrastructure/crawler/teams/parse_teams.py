@@ -11,10 +11,10 @@ from lxml import etree
 
 from infrastructure.crawler.auth import get_auth_cookie
 from infrastructure.crawler.constants import TEAMS_URL
-from infrastructure.crawler.models.team import Player, Team
+from infrastructure.crawler.models.team import ParsedPlayer, ParsedTeam
 
 
-async def get_all_teams() -> list[Team]:
+async def get_all_teams() -> list[ParsedTeam]:
     async with ClientSession(cookies=await get_auth_cookie()) as session:
         teams_html_text = await download_teams(session)
         teams = await TeamsParser(teams_html_text, session=session).build()
@@ -39,7 +39,7 @@ class TeamsParser:
             url = team_element.get("href")
             games = get_games_numbers(team_element.xpath("../../../td[4]")[0])
             team_id = int(parse_qs(typing.cast(str, urlparse(url).query))["id"][0])
-            team = Team(
+            team = ParsedTeam(
                 name=team_name,
                 id=team_id,
                 url=url,
@@ -48,7 +48,7 @@ class TeamsParser:
             )
             self.teams.append(team)
 
-    async def parse_team_players(self, team_url: str) -> list[Player]:
+    async def parse_team_players(self, team_url: str) -> list[ParsedPlayer]:
         await asyncio.sleep(0.5)
         players = []
         async with self.session.get(team_url) as resp:
@@ -63,12 +63,13 @@ class TeamsParser:
             root = player_element.xpath("../../..")[0]
             role = root.xpath("td[2]")[0].text
             games = get_games_numbers(root.xpath("td[4]")[0])
-            player = Player(
+            player = ParsedPlayer(
                 name=name,
                 role=role,
                 url=url,
                 games=games,
                 registered_at=await self.parse_player_registered_date(url),
+                forum_id=int(parse_qs(typing.cast(str, urlparse(url).query))["id"][0]),
             )
             players.append(player)
         return players
@@ -89,7 +90,7 @@ class TeamsParser:
         )
         return datetime.strptime(date_, "%d. %m. %y")
 
-    async def build(self) -> list[Team]:
+    async def build(self) -> list[ParsedTeam]:
         await self.parse_teams()
         return self.teams
 

@@ -43,7 +43,12 @@ class TeamPlayerDao(BaseDAO[models.TeamPlayer]):
         return await self.get_team(player) is not None
 
     async def join_team(
-        self, player: dto.Player, team: dto.Team, role: str, as_captain: bool = False
+        self,
+        player: dto.Player,
+        team: dto.Team,
+        role: str,
+        as_captain: bool = False,
+        joined_at: datetime | None = None,
     ):
         await self.check_player_free(player)
         if team_player := await self.need_restore(player, team):
@@ -55,6 +60,8 @@ class TeamPlayerDao(BaseDAO[models.TeamPlayer]):
             team_id=team.id,
             role=role,
         )
+        if joined_at:
+            team_player.date_joined = joined_at
         if as_captain:
             team_player.can_remove_players = True
             team_player.can_manage_waivers = True

@@ -20,6 +20,8 @@ def upgrade():
         "forum_teams",
         sa.Column("id", sa.BigInteger(), nullable=False),
         sa.Column("name", sa.Text(), nullable=True),
+        sa.Column("url", sa.Text(), nullable=True),
+        sa.Column("forum_id", sa.Integer(), nullable=False),
         sa.Column("team_id", sa.Integer(), nullable=True),
         sa.ForeignKeyConstraint(["team_id"], ["teams.id"], name=op.f("forum_teams_team_id_fkey")),
         sa.PrimaryKeyConstraint("id", name=op.f("pk__forum_teams")),

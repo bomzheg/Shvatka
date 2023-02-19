@@ -9,7 +9,9 @@ class ForumTeam(Base):
     __tablename__ = "forum_teams"
     __mapper_args__ = {"eager_defaults": True}
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
+    forum_id: Mapped[int] = mapped_column(unique=True, nullable=False)
     name: Mapped[str] = mapped_column(nullable=True)
+    url: Mapped[str]
 
     team_id = mapped_column(ForeignKey("teams.id"), unique=True, nullable=True)
     team = relationship(

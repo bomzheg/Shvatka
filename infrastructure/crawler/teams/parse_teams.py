@@ -44,7 +44,7 @@ class TeamsParser:
                 id=team_id,
                 url=url,
                 games=games,
-                players=await self.parse_team_players(url)
+                players=await self.parse_team_players(url),
             )
             self.teams.append(team)
 
@@ -53,7 +53,10 @@ class TeamsParser:
         players = []
         async with self.session.get(team_url) as resp:
             resp.raise_for_status()
-            players_html = etree.HTML(await resp.text(encoding="cp1251", errors="backslashreplace"), base_url="shvatka.ru")
+            players_html = etree.HTML(
+                await resp.text(encoding="cp1251", errors="backslashreplace"),
+                base_url="shvatka.ru",
+            )
         for player_element in players_html.xpath('//table//td[@class="row1"]/b/a'):
             url = player_element.get("href")
             name = player_element.text
@@ -74,8 +77,16 @@ class TeamsParser:
         await asyncio.sleep(0.5)
         async with self.session.get(url) as resp:
             resp.raise_for_status()
-            player = etree.HTML(await resp.text(encoding="cp1251", errors="backslashreplace"), base_url="shvatka.ru")
-        date_ = player.xpath("//div[@class='postdetails']/br")[0].tail.strip().removeprefix("Регистрация:").strip()
+            player = etree.HTML(
+                await resp.text(encoding="cp1251", errors="backslashreplace"),
+                base_url="shvatka.ru",
+            )
+        date_ = (
+            player.xpath("//div[@class='postdetails']/br")[0]
+            .tail.strip()
+            .removeprefix("Регистрация:")
+            .strip()
+        )
         return datetime.strptime(date_, "%d. %m. %y")
 
     async def build(self) -> list[Team]:
@@ -95,5 +106,5 @@ async def main_team_parser():
         json.dump(dcf.dump(teams), f, ensure_ascii=False, indent=2)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     asyncio.run(main_team_parser())

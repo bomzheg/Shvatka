@@ -9,12 +9,11 @@ from dataclass_factory import Factory
 from sqlalchemy.orm import close_all_sessions
 from typing.io import BinaryIO
 
-from common.config.models.paths import Paths
 from common.config.parser.logging_config import setup_logging
-from common.config.parser.paths import common_get_paths
 from common.factory import create_dataclass_factory
 from infrastructure.clients.factory import create_file_storage
 from infrastructure.clients.file_gateway import BotFileGateway
+from infrastructure.crawler.factory import get_paths
 from infrastructure.crawler.models.stat import GameStat
 from infrastructure.db.dao.holder import HolderDao
 from infrastructure.db.faсtory import create_pool, create_level_test_dao, create_redis
@@ -194,10 +193,6 @@ async def load_scn(
         return
     logger.info("game scenario with id %s saved", game.id)
     return game
-
-
-def get_paths() -> Paths:
-    return common_get_paths("CRAWLER_PATH")
 
 
 if __name__ == "__main__":

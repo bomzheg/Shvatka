@@ -11,3 +11,7 @@ class Player:
     can_be_author: bool
     is_dummy: bool
     user: User
+
+    @property
+    def name_mention(self) -> str:
+        return self.user.name_mention

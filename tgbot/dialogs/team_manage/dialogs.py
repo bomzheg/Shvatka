@@ -23,7 +23,7 @@ captains_bridge = Dialog(
             "📃Девиз: {{team.description}}\n"
             "{% endif %}"
             "{% if team.captain %}"
-            "👑Капитан: {{team.captain.user.name_mention}}\n"
+            "👑Капитан: {{team.captain.name_mention}}\n"
             "{% endif %}"
         ),
         Cancel(Const("⤴Назад")),
@@ -67,7 +67,7 @@ captains_bridge = Dialog(
         SwitchTo(Const("⤴Назад"), id="back", state=states.CaptainsBridgeSG.main),
         ScrollingGroup(
             Select(
-                Jinja("{{item.player.user.name_mention}}"),
+                Jinja("{{item.player.name_mention}}"),
                 id="players",
                 item_id_getter=lambda x: x.player.id,
                 items="players",
@@ -81,7 +81,7 @@ captains_bridge = Dialog(
         state=states.CaptainsBridgeSG.players,
     ),
     Window(
-        Jinja("Меню игрока {{selected_player.user.name_mention}} команды 🚩{{team.name}}"),
+        Jinja("Меню игрока {{selected_player.name_mention}} команды 🚩{{team.name}}"),
         SwitchTo(Const("⤴В меню команды"), id="to_main", state=states.CaptainsBridgeSG.main),
         SwitchTo(Const("⤴Назад"), id="back", state=states.CaptainsBridgeSG.players),
         Button(
@@ -125,7 +125,7 @@ captains_bridge = Dialog(
     ),
     Window(
         Jinja(
-            "Игрок {{selected_player.user.name_mention}} служит в команде {{team.name}} "
+            "Игрок {{selected_player.name_mention}} служит в команде {{team.name}} "
             "c {{selected_team_player.date_joined | user_timezone}}\n"
             "Сейчас занимает должность {{selected_team_player|player_emoji}}{{selected_team_player.role}}\n"
             "\n"

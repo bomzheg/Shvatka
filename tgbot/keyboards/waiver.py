@@ -68,7 +68,7 @@ def get_kb_manage_waivers(
     )
     for player in players:
         builder.button(
-            text=player.user.name_mention,
+            text=player.name_mention,
             callback_data=WaiverManagePlayerCD(
                 game_id=game.id, team_id=team.id, player_id=player.id
             ),
@@ -105,7 +105,7 @@ def get_kb_force_add_waivers(
     )
     for player in players:
         builder.button(
-            text=player.user.name_mention,
+            text=player.name_mention,
             callback_data=WaiverAddPlayerForceCD(
                 game_id=game.id,
                 team_id=team.id,

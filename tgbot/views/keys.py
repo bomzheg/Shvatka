@@ -28,7 +28,7 @@ def render_log_keys(log_keys: dict[dto.Team, list[dto.KeyTime]]) -> str:
             text += (
                 f"<li>{to_emoji(key).value}{hd.quote(key.text)} "
                 f"{key.at.astimezone(tz=tz_game).time()} "
-                f"{key.player.user.name_mention}</li>"
+                f"{key.player.name_mention}</li>"
             )
         text += "</ol>"
     return text

@@ -146,7 +146,7 @@ async def waiver_user_menu(
 
     await c.answer()
     await c.message.edit_text(  # type: ignore[union-attr]
-        text=f"Схватчик {hd.quote(player.user.name_mention)} команды {hd.quote(team.name)} "
+        text=f"Схватчик {hd.quote(player.name_mention)} команды {hd.quote(team.name)} "
         f"заявил что хочет участвовать в игре {hd.quote(game.name)}. Что хотите с ним делать?",
         reply_markup=kb.get_kb_waiver_one_player(team=team, player=player, game=game),
         disable_web_page_preview=True,

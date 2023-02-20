@@ -1,7 +1,7 @@
 from aiogram import Dispatcher
 from dataclass_factory import Factory
 from redis.asyncio.client import Redis
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.ext.asyncio import async_sessionmaker, AsyncSession
 
 from infrastructure.db.dao.memory.level_testing import LevelTestingData
 from shvatka.interfaces.clients.file_storage import FileStorage
@@ -19,7 +19,7 @@ from .load_team_player import TeamPlayerMiddleware  # noqa: F401
 
 def setup_middlewares(
     dp: Dispatcher,
-    pool: sessionmaker,
+    pool: async_sessionmaker[AsyncSession],
     bot_config: BotConfig,
     user_getter: UserGetter,
     dcf: Factory,

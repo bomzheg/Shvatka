@@ -55,7 +55,7 @@ level_manage = Dialog(
         SwitchTo(Const("⤴Назад"), id="back", state=states.LevelManageSG.menu),
         ScrollingGroup(
             Select(
-                Jinja("{{item.player.user.name_mention}}"),
+                Jinja("{{item.player.name_mention}}"),
                 id="game_orgs",
                 item_id_getter=lambda x: x.id,
                 items="orgs",

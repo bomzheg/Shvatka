@@ -26,7 +26,7 @@ game_orgs = Dialog(
             Select(
                 Multi(
                     Const("🗑", when=F["item"].deleted),
-                    Jinja("{{item.player.user.name_mention}}"),
+                    Jinja("{{item.player.name_mention}}"),
                     sep="",
                 ),
                 id="game_orgs",
@@ -45,7 +45,7 @@ game_orgs = Dialog(
         Multi(
             Const("🗑", when=F["org"].deleted),
             Jinja(
-                "Организатор <b>{{org.player.user.name_mention}}</b> на игру <b>{{org.game.name}}</b>"
+                "Организатор <b>{{org.player.name_mention}}</b> на игру <b>{{org.game.name}}</b>"
             ),
             sep="",
         ),

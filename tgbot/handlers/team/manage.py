@@ -125,7 +125,7 @@ async def cmd_add_in_team(
     await message.answer(
         "В команду {team} добавлен игрок "
         "{player} в качестве роли указано: {role}".format(
-            team=hd.bold(team.name), player=hd.bold(target.user.name_mention), role=hd.italic(role)
+            team=hd.bold(team.name), player=hd.bold(target.name_mention), role=hd.italic(role)
         )
     )
     logger.info(

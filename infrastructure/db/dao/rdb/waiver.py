@@ -36,7 +36,6 @@ class WaiverDao(BaseDAO[models.Waiver]):
                 played=waiver.played,
             )
             self._save(waiver_db)
-        await self._flush(waiver_db)
 
     async def delete(self, waiver: dto.Waiver):
         if waiver_db := await self.get_or_none(waiver.game, waiver.player, waiver.team):

@@ -12,7 +12,7 @@ from alembic.config import Config as AlembicConfig
 from dataclass_factory import Factory
 from mockito import mock
 from redis.asyncio.client import Redis
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
 from sqlalchemy.orm import sessionmaker, close_all_sessions
 from testcontainers.postgres import PostgresContainer
 from testcontainers.redis import RedisContainer
@@ -96,7 +96,9 @@ async def session(pool: sessionmaker) -> AsyncGenerator[AsyncSession, None]:
 @pytest.fixture(scope="session")
 def pool(postgres_url: str) -> Generator[sessionmaker, None, None]:
     engine = create_async_engine(url=postgres_url)
-    pool_ = sessionmaker(bind=engine, class_=AsyncSession, expire_on_commit=False, autoflush=False)
+    pool_: async_sessionmaker[AsyncSession] = async_sessionmaker(
+        bind=engine, expire_on_commit=False, autoflush=False
+    )
     yield pool_
     close_all_sessions()
 
@@ -165,7 +167,7 @@ def message_manager():
 
 @pytest.fixture(scope="session")
 def dp(
-    pool: sessionmaker,
+    pool: async_sessionmaker[AsyncSession],
     bot_config: TgBotConfig,
     user_getter: UserGetter,
     dcf: Factory,

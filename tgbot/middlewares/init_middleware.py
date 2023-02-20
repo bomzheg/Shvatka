@@ -4,7 +4,7 @@ from aiogram import BaseMiddleware
 from aiogram.types import TelegramObject
 from dataclass_factory import Factory
 from redis.asyncio.client import Redis
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.ext.asyncio import async_sessionmaker, AsyncSession
 
 from infrastructure.clients.file_gateway import BotFileGateway
 from infrastructure.db.dao.holder import HolderDao
@@ -20,7 +20,7 @@ from tgbot.views.telegraph import Telegraph
 class InitMiddleware(BaseMiddleware):
     def __init__(
         self,
-        pool: sessionmaker,
+        pool: async_sessionmaker[AsyncSession],
         user_getter: UserGetter,
         dcf: Factory,
         redis: Redis,

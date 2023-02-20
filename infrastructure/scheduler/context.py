@@ -2,7 +2,7 @@ from dataclasses import dataclass
 
 from aiogram import Bot
 from redis.asyncio import Redis
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.ext.asyncio import async_sessionmaker, AsyncSession
 
 from infrastructure.db.dao.holder import HolderDao
 from infrastructure.db.dao.memory.level_testing import LevelTestingData
@@ -16,7 +16,7 @@ class ScheduledContextHolder:
     GLOBAL VARIABLE!
     """
 
-    pool: sessionmaker
+    pool: async_sessionmaker[AsyncSession]
     redis: Redis
     bot: Bot
     scheduler: Scheduler

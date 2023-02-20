@@ -10,7 +10,7 @@ from ..team_manage.getters import get_my_team_
 main_menu = Dialog(
     Window(
         Jinja(
-            "Привет, {{player.user.name_mention}}!\n"
+            "Привет, {{player.name_mention}}!\n"
             "Ты находишься в главном меню.\n"
             "{% if team %}"
             "Ты состоишь в команде 🚩{{team.name}} "

@@ -64,15 +64,13 @@ class TeamDao(BaseDAO[models.Team]):
             )
 
     async def get_by_id(self, id_: int) -> dto.Team:
-        result = await self.session.execute(
-            select(models.Team)
-            .where(models.Team.id == id_)
-            .options(
+        team = await self._get_by_id(
+            id_,
+            (
                 joinedload(models.Team.captain).joinedload(models.Player.user),
                 joinedload(models.Team.chat),
-            )
+            ),
         )
-        team: models.Team = result.scalar_one()
         return team.to_dto(team.chat.to_dto())
 
     async def rename_team(self, team: dto.Team, new_name: str) -> None:

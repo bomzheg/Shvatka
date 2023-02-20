@@ -1,5 +1,5 @@
 from redis.asyncio.client import Redis
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.ext.asyncio import async_sessionmaker, AsyncSession
 
 from infrastructure.db.dao.holder import HolderDao
 from infrastructure.db.dao.memory.level_testing import LevelTestingData
@@ -10,7 +10,7 @@ def dao_provider() -> HolderDao:
 
 
 class DbProvider:
-    def __init__(self, pool: sessionmaker, redis: Redis):
+    def __init__(self, pool: async_sessionmaker[AsyncSession], redis: Redis):
         self.pool = pool
         self.redis = redis
         self.level_test = LevelTestingData()

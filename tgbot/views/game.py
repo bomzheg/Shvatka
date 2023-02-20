@@ -131,14 +131,14 @@ class BotOrgNotifier(OrgNotifier):
         await self.bot.send_message(
             chat_id=org.player.user.tg_id,
             text=f"На игру {hd.quote(new_org.game.name)} "
-            f"добавлен новый орг {hd.quote(new_org.org.player.user.name_mention)}",
+            f"добавлен новый орг {hd.quote(new_org.org.player.name_mention)}",
         )
 
     async def level_test_completed(self, event: LevelTestCompleted, org: dto.Organizer):
         await self.bot.send_message(
             chat_id=org.player.user.tg_id,
             text=f"Тестирование уровня {event.suite.level.name_id}.\n"
-            f"Игрок {hd.quote(event.suite.tester.player.user.name_mention)} "
+            f"Игрок {hd.quote(event.suite.tester.player.name_mention)} "
             f"закончил тестирование уровня за {event.result.seconds // 60} минут "
             f"{event.result.seconds % 60} c.",
         )

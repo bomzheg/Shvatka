@@ -140,6 +140,8 @@ def setup() -> Router:
         agree_promotion_handler, kb.AgreePromotionCD.filter(F.is_agreement)
     )
 
-    router.message.register(get_my_team_cmd, Command(TEAM_COMMAND), F.chat.type == ChatType.PRIVATE)
+    router.message.register(
+        get_my_team_cmd, Command(TEAM_COMMAND), F.chat.type == ChatType.PRIVATE
+    )
     router.message.register(leave_handler, Command(LEAVE_COMMAND))
     return router

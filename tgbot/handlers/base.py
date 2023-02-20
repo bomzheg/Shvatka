@@ -74,7 +74,9 @@ def setup() -> Router:
         chat_type_cmd_group, Command(commands=CHAT_TYPE_COMMAND), F.chat.type == ChatType.GROUP
     )
     router.message.register(
-        chat_type_cmd_supergroup, Command(commands=CHAT_TYPE_COMMAND), F.chat.type == ChatType.SUPERGROUP
+        chat_type_cmd_supergroup,
+        Command(commands=CHAT_TYPE_COMMAND),
+        F.chat.type == ChatType.SUPERGROUP,
     )
     router.message.register(cancel_state, Command(commands=CANCEL_COMMAND))
     router.message.register(chat_migrate, F.content_types == ContentType.MIGRATE_TO_CHAT_ID)

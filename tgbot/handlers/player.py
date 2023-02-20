@@ -1,4 +1,5 @@
 from aiogram import Router, Bot, F
+from aiogram.enums import ChatType
 from aiogram.filters import Command, MagicData
 from aiogram.types import (
     Message,
@@ -139,6 +140,6 @@ def setup() -> Router:
         agree_promotion_handler, kb.AgreePromotionCD.filter(F.is_agreement)
     )
 
-    router.message.register(get_my_team_cmd, Command(TEAM_COMMAND), F.chat.type == "private")
+    router.message.register(get_my_team_cmd, Command(TEAM_COMMAND), F.chat.type == ChatType.PRIVATE)
     router.message.register(leave_handler, Command(LEAVE_COMMAND))
     return router

@@ -12,7 +12,7 @@ wheel = "^0.38.4"
 pyyaml = "^6.0"
 python-dateutil = "^2.8.2"
 colorlog = "^6.7.0"
-aiogram = "^3.0.0b5"
+aiogram = "^3.0.0b7"
 aiogram_dialog = "^2.0.0b16"
 sqlalchemy = { version = "^2.0", extras = ["asyncio"] }
 alembic = "^1.8.1"
@@ -22,7 +22,7 @@ redis = "^4.2.0"
 pyrogram = "^2.0.57"
 dataclass_factory = "^2.16"
 apscheduler = "^3.9.1"
-fastapi = "^0.89.0"
+fastapi = "^0.92.0"
 uvicorn = "^0.20.0"
 python-multipart = "^0.0.5"
 python-jose = {extras = ["cryptography"], version = "^3.3.0"}
@@ -56,7 +56,7 @@ mockito = "^1.4.0"
 httpx = "^0.23.0"
 coverage = {extras = ["toml"], version = "^6.5.0"}
 black = {version = "^22.12.0"}
-aiogram-tests = {git = "https://github.com/bomzheg/aiogram_tests.git", branch = "fix/deque-usage"}
+aiogram-tests = {git = "https://github.com/bomzheg/aiogram_tests.git", branch = "master"}
 
 [build-system]
 requires = ["poetry-core"]

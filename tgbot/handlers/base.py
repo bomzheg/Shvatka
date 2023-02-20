@@ -1,6 +1,7 @@
 import logging
 
 from aiogram import F, Router
+from aiogram.enums import ChatType
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, ReplyKeyboardRemove, ContentType
@@ -70,10 +71,10 @@ def setup() -> Router:
     )
     router.message.register(cmd_about, Command(commands=ABOUT_COMMAND))
     router.message.register(
-        chat_type_cmd_group, Command(commands=CHAT_TYPE_COMMAND), F.chat.type == "group"
+        chat_type_cmd_group, Command(commands=CHAT_TYPE_COMMAND), F.chat.type == ChatType.GROUP
     )
     router.message.register(
-        chat_type_cmd_supergroup, Command(commands=CHAT_TYPE_COMMAND), F.chat.type == "supergroup"
+        chat_type_cmd_supergroup, Command(commands=CHAT_TYPE_COMMAND), F.chat.type == ChatType.SUPERGROUP
     )
     router.message.register(cancel_state, Command(commands=CANCEL_COMMAND))
     router.message.register(chat_migrate, F.content_types == ContentType.MIGRATE_TO_CHAT_ID)

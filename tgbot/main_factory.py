@@ -1,6 +1,7 @@
 import logging
 
 from aiogram import Bot, Dispatcher
+from aiogram.enums import ParseMode
 from aiogram.fsm.storage.base import BaseStorage
 from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.fsm.storage.redis import RedisStorage, DefaultKeyBuilder, RedisEventIsolation
@@ -28,7 +29,7 @@ logger = logging.getLogger(__name__)
 def create_bot(config: TgBotConfig) -> Bot:
     return Bot(
         token=config.bot.token,
-        parse_mode="HTML",
+        parse_mode=ParseMode.HTML,
         session=config.bot.create_session(),
     )
 

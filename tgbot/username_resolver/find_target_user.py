@@ -1,5 +1,6 @@
 import logging
 
+from aiogram.enums import MessageEntityType
 from aiogram.types import Message
 
 from infrastructure.db.dao.holder import HolderDao
@@ -78,9 +79,9 @@ def get_mentioned_user(message: Message) -> dto.User | None:
     if not entities:
         return None
     for ent in entities:
-        if ent.type == "text_mention":
+        if ent.type == MessageEntityType.TEXT_MENTION:
             return dto.User.from_aiogram(ent.user)
-        elif ent.type == "mention":
+        elif ent.type == MessageEntityType.MENTION:
             username = ent.extract_from(possible_mentioned_text).lstrip("@")
             return dto.User(username=username, tg_id=None)  # type: ignore
     return None

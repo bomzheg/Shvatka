@@ -1,6 +1,7 @@
 import logging
 
 from aiogram import Bot, F, Router
+from aiogram.enums import ChatType
 from aiogram.exceptions import TelegramBadRequest
 from aiogram.filters import Command, CommandObject, or_f
 from aiogram.types import Message
@@ -165,12 +166,12 @@ def setup_team_manage() -> Router:
         cmd_create_team,
         Command(commands=CREATE_TEAM_COMMAND.command),
         IsTeamFilter(is_team=False),
-        F.chat.type == "supergroup",
+        F.chat.type == ChatType.SUPERGROUP,
     )
     router.message.register(
         cmd_create_team_group,
         Command(commands=CREATE_TEAM_COMMAND.command),
-        F.chat.type == "group",
+        F.chat.type == ChatType.GROUP,
     )
     router.message.register(
         cmd_add_in_team,

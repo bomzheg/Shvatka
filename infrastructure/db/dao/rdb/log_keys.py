@@ -79,7 +79,7 @@ class KeyTimeDao(BaseDAO[models.KeyTime]):
         return [
             key.to_dto(
                 player=key.player.to_dto_user_prefetched(),
-                team=key.team.to_dto(key.team.chat.to_dto()),
+                team=key.team.to_dto_chat_prefetched(),
             )
             for key in keys
         ]

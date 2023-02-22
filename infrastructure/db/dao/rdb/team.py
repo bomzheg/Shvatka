@@ -58,7 +58,7 @@ class TeamDao(BaseDAO[models.Team]):
             ) from e
         return dto.Team(
             id=team.id,
-            chat=None,  # TODO
+            chat=None,
             name=team.name,
             description=team.description,
             captain=captain,
@@ -96,7 +96,7 @@ class TeamDao(BaseDAO[models.Team]):
                 joinedload(models.Team.chat),
             ),
         )
-        return team.to_dto(team.chat.to_dto())
+        return team.to_dto_chat_prefetched()
 
     async def rename_team(self, team: dto.Team, new_name: str) -> None:
         await self.session.execute(
@@ -119,4 +119,4 @@ class TeamDao(BaseDAO[models.Team]):
             .where(models.ForumTeam.name == name)
         )
         team: models.Team = result.one()
-        return team.to_dto(chat=team.chat.to_dto())
+        return team.to_dto_chat_prefetched()

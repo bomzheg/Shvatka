@@ -37,7 +37,7 @@ class TeamPlayerDao(BaseDAO[models.TeamPlayer]):
         except NoResultFound:
             return None
         team: models.Team = team_player.team
-        return team.to_dto(team.chat.to_dto())
+        return team.to_dto_chat_prefetched()
 
     async def have_team(self, player: dto.Player) -> bool:
         return await self.get_team(player) is not None

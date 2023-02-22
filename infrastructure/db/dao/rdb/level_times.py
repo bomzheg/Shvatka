@@ -69,7 +69,7 @@ class LevelTimeDao(BaseDAO[models.LevelTime]):
         return [
             lt.to_dto(
                 game=game,
-                team=lt.team.to_dto(lt.team.chat.to_dto()),
+                team=lt.team.to_dto_chat_prefetched(),
             )
             for lt in result.all()
         ]

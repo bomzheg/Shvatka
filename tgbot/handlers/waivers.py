@@ -71,7 +71,7 @@ async def start_approve_waivers_handler(
     check_allow_approve_waivers(await get_full_team_player(player, team, dao.waiver_approver))
     assert team is not None
     await total_remove_msg(
-        bot=bot, chat_id=team.chat.tg_id, msg_id=await get_saved_message(game, team, dao.poll)
+        bot=bot, chat_id=team.get_chat_id(), msg_id=await get_saved_message(game, team, dao.poll)
     )
     await bot.send_message(
         chat_id=user.tg_id,
@@ -120,7 +120,7 @@ async def confirm_approve_waivers_handler(
         )
     await approve_waivers(game=game, team=team, approver=player, dao=dao.waiver_approver)
     await bot.send_message(
-        chat_id=team.chat.tg_id,
+        chat_id=team.get_chat_id(),
         text=await get_waiver_final_text(team, game, dao),
         disable_web_page_preview=True,
     )

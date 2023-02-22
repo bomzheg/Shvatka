@@ -9,7 +9,7 @@ from .player import Player
 @dataclass
 class Team:
     id: int
-    chat: Chat
+    chat: Chat | None
     name: str
     captain: Player
     is_dummy: bool
@@ -22,3 +22,8 @@ class Team:
 
     def __hash__(self):
         return hash(self.id)
+
+    def get_chat_id(self) -> int | None:
+        if self.is_dummy:
+            return None
+        return self.chat.tg_id

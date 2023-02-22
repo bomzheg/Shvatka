@@ -51,7 +51,7 @@ class Team(Base):
         foreign_keys="TeamPlayer.team_id",
     )
 
-    def to_dto(self, chat: dto.Chat) -> dto.Team:
+    def to_dto(self, chat: dto.Chat | None) -> dto.Team:
         return dto.Team(
             id=self.id,
             chat=chat,
@@ -60,3 +60,6 @@ class Team(Base):
             description=self.description,
             captain=self.captain.to_dto_user_prefetched(),
         )
+
+    def to_dto_chat_prefetched(self) -> dto.Team:
+        return self.to_dto(self.chat.to_dto() if self.chat else None)

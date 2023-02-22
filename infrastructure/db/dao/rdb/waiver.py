@@ -72,7 +72,7 @@ class WaiverDao(BaseDAO[models.Waiver]):
             )
         )
         teams: Iterable[models.Team] = map(lambda w: w.team, result.scalars().all())
-        return [team.to_dto(team.chat.to_dto()) for team in teams]
+        return [team.to_dto_chat_prefetched() for team in teams]
 
     async def get_played(self, game: dto.Game, team: dto.Team) -> Iterable[dto.VotedPlayer]:
         result = await self.session.execute(

@@ -42,7 +42,7 @@ class BotView(GameViewPreparer, GameView):
         for team in teams:
             try:
                 await self.bot.edit_message_reply_markup(
-                    chat_id=team.chat.tg_id,
+                    chat_id=team.get_chat_id(),
                     message_id=await dao.get_poll_msg(team=team, game=game),
                     reply_markup=None,
                 )
@@ -51,7 +51,7 @@ class BotView(GameViewPreparer, GameView):
 
     async def send_puzzle(self, team: dto.Team, level: dto.Level) -> None:
         await self.hint_sender.send_hints(
-            chat_id=team.chat.tg_id,
+            chat_id=team.get_chat_id(),
             hint_containers=level.get_hint(0).hint,
             caption=hd.bold(f"Уровень № {level.number_in_game + 1}"),
         )
@@ -65,26 +65,28 @@ class BotView(GameViewPreparer, GameView):
         else:
             hint_caption = f"Уровень №{level.number_in_game + 1}. Подсказка ({hint.time} мин.):\n"
         await self.hint_sender.send_hints(
-            chat_id=team.chat.tg_id, hint_containers=hint.hint, caption=hint_caption
+            chat_id=team.get_chat_id(), hint_containers=hint.hint, caption=hint_caption
         )
 
     async def duplicate_key(self, key: dto.KeyTime) -> None:
         await self.bot.send_message(
-            chat_id=key.team.chat.tg_id, text=f"Ключ {hd.pre(key.text)} уже был введён ранее."
+            chat_id=key.team.get_chat_id(), text=f"Ключ {hd.pre(key.text)} уже был введён ранее."
         )
 
     async def correct_key(self, key: dto.KeyTime) -> None:
         await self.bot.send_message(
-            chat_id=key.team.chat.tg_id, text=f"Ключ {hd.pre(key.text)} верный! Поздравляю!"
+            chat_id=key.team.get_chat_id(), text=f"Ключ {hd.pre(key.text)} верный! Поздравляю!"
         )
 
     async def wrong_key(self, key: dto.KeyTime) -> None:
         await self.bot.send_message(
-            chat_id=key.team.chat.tg_id, text=f"Ключ {hd.pre(key.text)} неверный."
+            chat_id=key.team.get_chat_id(), text=f"Ключ {hd.pre(key.text)} неверный."
         )
 
     async def game_finished(self, team: dto.Team) -> None:
-        await self.bot.send_message(chat_id=team.chat.tg_id, text=f"Игра завершена! Поздравляю!")
+        await self.bot.send_message(
+            chat_id=team.get_chat_id(), text=f"Игра завершена! Поздравляю!"
+        )
 
     async def game_finished_by_all(self, team: dto.Team) -> None:
         """todo change bot commands"""

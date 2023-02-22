@@ -15,10 +15,13 @@ logger = logging.getLogger(__name__)
 
 
 class BotFileGateway(FileGateway):
-    def __init__(self, file_storage: FileStorage, bot: Bot, hint_parser: HintParser):
+    def __init__(
+        self, file_storage: FileStorage, bot: Bot, hint_parser: HintParser, tech_chat_id: int
+    ):
         self.storage = file_storage
         self.bot = bot
         self.hint_parser = hint_parser
+        self.tech_chat_id = tech_chat_id
 
     async def put(
         self, file_meta: scn.UploadedFileMeta, content: BinaryIO, author: dto.Player
@@ -40,7 +43,7 @@ class BotFileGateway(FileGateway):
         assert file_meta.content_type is not None
         msg = await hint_sender.METHODS[file_meta.content_type](  # type: ignore[operator]
             self.bot,
-            author.user.tg_id,
+            author.get_tech_chat_id(reserve_chat_id=self.tech_chat_id),
             BufferedInputFile(file=content.read(), filename=file_meta.public_filename),
         )
         await msg.delete()

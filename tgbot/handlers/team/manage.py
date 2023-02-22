@@ -44,11 +44,12 @@ async def cmd_create_team(
     message: Message,
     chat: dto.Chat,
     player: dto.Player,
+    user: dto.User,
     dao: HolderDao,
     bot: Bot,
 ):
     logger.info("Player %s try create team in %s", player.id, chat.tg_id)
-    if not await is_admin_filter(bot, chat, player.user):
+    if not await is_admin_filter(bot, chat, user):
         return await message.reply(
             "Создавать команду может только модератор",
         )
@@ -101,7 +102,7 @@ async def cmd_add_in_team(
         team.id,
     )
     try:
-        chat_member = await bot.get_chat_member(team.chat.tg_id, target.user.tg_id)
+        chat_member = await bot.get_chat_member(team.chat.tg_id, target.get_chat_id())
     except TelegramBadRequest:
         return await message.reply("Не могу найти этого пользователя (его нет в чате?)")
     if chat_member.user.is_bot:
@@ -113,7 +114,7 @@ async def cmd_add_in_team(
         await join_team(target, team, player, dao.team_player, role)
     except PlayerAlreadyInTeam as e:
         return await message.reply(
-            f"Игрок {hd.quote(target.user.fullname)} уже находится в команде "
+            f"Игрок {hd.quote(target.name_mention)} уже находится в команде "
             f"({hd.quote(e.team.name)}).\n"  # type: ignore
         )
     except PlayerRestoredInTeam:

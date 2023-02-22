@@ -41,11 +41,28 @@ class PlayerDao(BaseDAO[models.Player]):
 
     async def create_for_forum_user(self, user: dto.ForumUser) -> dto.Player:
         forum_user_db = await self.session.get(models.ForumUser, user.db_id)
-        player = models.Player()
+        player = await self._create_dummy()
         forum_user_db.player = player
+        return player.to_dto_dummy()
+
+    async def link_forum_user(self, player: dto.Player, user: dto.ForumUser) -> None:
+        forum_user_db = await self.session.get(models.ForumUser, user.db_id)
+        player_db = await self.get_by_id(player.id)
+        forum_user_db.player = player_db
+
+    async def link_user(self, player: dto.Player, user: dto.User) -> None:
+        user_db = await self.session.get(models.User, user.db_id)
+        player_db = await self.get_by_id(player.id)
+        user_db.player = player_db
+
+    async def create_dummy(self) -> dto.Player:
+        return (await self._create_dummy()).to_dto_dummy()
+
+    async def _create_dummy(self) -> models.Player:
+        player = models.Player(is_dummy=True)
         self._save(player)
         await self._flush(player)
-        return player.to_dto(None)  # TODO
+        return player
 
     async def promote(self, actor: dto.Player, target: dto.Player):
         target_player = await self._get_by_id(target.id)

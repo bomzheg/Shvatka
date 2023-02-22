@@ -108,20 +108,29 @@ class BotOrgNotifier(OrgNotifier):
         match event:
             case LevelUp():
                 for org in event.orgs_list:
+                    if org.player.get_chat_id() is None:
+                        logger.warning("player %s have no user chat_id", org.player)
+                        continue
                     with suppress(TelegramAPIError):
                         await self.notify_level_up(cast(LevelUp, event), org)
             case NewOrg():
                 for org in event.orgs_list:
+                    if org.player.get_chat_id() is None:
+                        logger.warning("player %s have no user chat_id", org.player)
+                        continue
                     with suppress(TelegramAPIError):
                         await self.notify_new_org(cast(NewOrg, event), org)
             case LevelTestCompleted():
                 for org in event.orgs_list:
+                    if org.player.get_chat_id() is None:
+                        logger.warning("player %s have no user chat_id", org.player)
+                        continue
                     with suppress(TelegramAPIError):
                         await self.level_test_completed(cast(LevelTestCompleted, event), org)
 
     async def notify_level_up(self, level_up: LevelUp, org: dto.Organizer):
         await self.bot.send_message(
-            chat_id=org.player.user.tg_id,
+            chat_id=org.player.get_chat_id(),
             text=f"Команда {hd.quote(level_up.team.name)} перешла "
             f"на уровень {level_up.new_level.number_in_game} "
             f"({level_up.new_level.name_id})",
@@ -129,14 +138,14 @@ class BotOrgNotifier(OrgNotifier):
 
     async def notify_new_org(self, new_org: NewOrg, org: dto.Organizer):
         await self.bot.send_message(
-            chat_id=org.player.user.tg_id,
+            chat_id=org.player.get_chat_id(),
             text=f"На игру {hd.quote(new_org.game.name)} "
             f"добавлен новый орг {hd.quote(new_org.org.player.name_mention)}",
         )
 
     async def level_test_completed(self, event: LevelTestCompleted, org: dto.Organizer):
         await self.bot.send_message(
-            chat_id=org.player.user.tg_id,
+            chat_id=org.player.get_chat_id(),
             text=f"Тестирование уровня {event.suite.level.name_id}.\n"
             f"Игрок {hd.quote(event.suite.tester.player.name_mention)} "
             f"закончил тестирование уровня за {event.result.seconds // 60} минут "

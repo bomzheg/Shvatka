@@ -32,7 +32,7 @@ def render_all_teams_waivers(waivers: dict[dto.Team, Iterable[dto.VotedPlayer]])
 
 def render_players(users: Iterable[dto.VotedPlayer]) -> str:
     return "\n".join(
-        [get_emoji(voted.pit) + get_small_card_no_link(voted.player.user) for voted in users]
+        [get_emoji(voted.pit) + get_small_card_no_link(voted.player) for voted in users]
     )
 
 

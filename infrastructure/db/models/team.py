@@ -58,7 +58,5 @@ class Team(Base):
             name=self.name,
             is_dummy=self.is_dummy,
             description=self.description,
-            captain=self.captain.to_dto(
-                user=self.captain.user.to_dto(),
-            ),
+            captain=self.captain.to_dto_user_prefetched(),
         )

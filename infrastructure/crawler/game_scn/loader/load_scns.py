@@ -54,34 +54,13 @@ async def main(path: Path):
                     file_storage=file_storage,
                     bot=bot,
                 ),
+                tech_chat_id=config.bot.log_chat,
             )
-            tech_player = await dao.player.upsert_player(
-                await dao.user.upsert_user(
-                    dto.User(
-                        tg_id=config.bot.log_chat,
-                        first_name="SYSTEM",
-                        last_name="PARSED UPLOADER",
-                        is_bot=True,
-                    )
-                )
-            )
-            await dao.player.promote(tech_player, tech_player)
-            tech_player.can_be_author = True
-            bot_player = await dao.player.upsert_player(
-                await dao.user.upsert_user(
-                    dto.User(
-                        tg_id=bot.id,
-                        first_name="SYSTEM",
-                        last_name="PARSER",
-                        is_bot=True,
-                    )
-                )
-            )
+            bot_player = await dao.player.create_dummy()
             await dao.player.promote(bot_player, bot_player)
             bot_player.can_be_author = True
             await dao.commit()
             await load_scns(
-                tech_player=tech_player,
                 bot_player=bot_player,
                 dao=dao,
                 file_gateway=file_gateway,
@@ -94,7 +73,6 @@ async def main(path: Path):
 
 
 async def load_scns(
-    tech_player: dto.Player,
     bot_player: dto.Player,
     dao: HolderDao,
     file_gateway: FileGateway,
@@ -106,7 +84,7 @@ async def load_scns(
         try:
             with file.open("rb") as game_zip_scn:
                 game = await load_scn(
-                    player=tech_player,
+                    player=bot_player,
                     dao=dao,
                     file_gateway=file_gateway,
                     dcf=dcf,
@@ -118,7 +96,6 @@ async def load_scns(
             await dao.game.set_completed(game)
             game.status = enums.GameStatus.complete
             await set_results(game, results, dao)
-            await transfer_ownership(game, bot_player, dao)
             await dao.commit()
 
         except exceptions.CantEditGame:

@@ -82,5 +82,13 @@ class Player(Base):
             is_dummy=self.is_dummy,
         )
 
+    def to_dto_dummy(self) -> dto.Player:
+        return dto.Player(
+            id=self.id,
+            user=None,
+            can_be_author=self.can_be_author,
+            is_dummy=self.is_dummy,
+        )
+
     def to_dto_user_prefetched(self) -> dto.Player:
-        return self.to_dto(self.user.to_dto())
+        return self.to_dto(self.user.to_dto() if self.user else None)

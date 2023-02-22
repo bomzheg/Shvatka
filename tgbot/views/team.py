@@ -7,7 +7,7 @@ from tgbot.views.user import get_small_card_no_link, get_small_card
 
 def render_team_card(team: dto.Team) -> str:
     cap = team.captain
-    cap_card = get_small_card_no_link(cap.user) if cap else "отсутствует"
+    cap_card = get_small_card_no_link(cap) if cap else "отсутствует"
     rez = f"🚩Команда: {hd.bold(hd.quote(team.name))}\n"
     rez += f"🔢ID{team.id}\n"
     rez += f"👑Капитан: {cap_card}\n"
@@ -23,7 +23,7 @@ def render_team_players(
     for team_player in players:
         rez += (
             f"{hd.quote(get_emoji(team_player))} "
-            f"{get_small_card(team_player.player.user, notification)}, "
+            f"{get_small_card(team_player.player, notification)}, "
             f"{hd.quote(team_player.role)}\n"
         )
     return rez

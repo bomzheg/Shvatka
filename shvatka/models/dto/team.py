@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field, InitVar
 
 from .chat import Chat
 from .player import Player
@@ -9,11 +9,15 @@ from .player import Player
 @dataclass
 class Team:
     id: int
-    chat: Chat | None
+    _chat: Chat | None = field(init=False)
+    chat: InitVar[Chat | None]
     name: str
     captain: Player
     is_dummy: bool
     description: str | None
+
+    def __post_init__(self, chat: Chat | None):
+        self._chat = chat
 
     def __eq__(self, other) -> bool:
         if not isinstance(other, Team):
@@ -26,4 +30,4 @@ class Team:
     def get_chat_id(self) -> int | None:
         if self.is_dummy:
             return None
-        return self.chat.tg_id
+        return self._chat.tg_id

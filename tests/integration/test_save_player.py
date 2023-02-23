@@ -12,7 +12,7 @@ async def test_save_player(dao: HolderDao):
     actual_player = await save_player(saved_user, dao)
     assert await dao.user.count() == 1
     assert await dao.player.count() == 1
-    assert saved_user.db_id == actual_player.user.db_id
+    assert saved_user.db_id == actual_player._user.db_id
     assert actual_player.id is not None
 
 

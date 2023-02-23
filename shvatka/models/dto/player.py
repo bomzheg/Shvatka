@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field, InitVar
 
+from .forum_user import ForumUser
 from .user import User
 
 
@@ -10,11 +11,14 @@ class Player:
     id: int
     can_be_author: bool
     is_dummy: bool
-    user: InitVar[User | None]
+    user: InitVar[User | None] = field(default=None)
     _user: User | None = field(init=False)
+    forum_user: InitVar[ForumUser | None] = field(default=None)
+    _forum_user: ForumUser | None = field(init=False)
 
-    def __post_init__(self, user: User | None):
+    def __post_init__(self, user: User | None, forum_user: ForumUser | None):
         self._user = user
+        self._forum_user = forum_user
 
     @property
     def name_mention(self) -> str:

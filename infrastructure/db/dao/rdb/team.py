@@ -40,12 +40,13 @@ class TeamDao(BaseDAO[models.Team]):
             is_dummy=team.is_dummy,
         )
 
-    async def create_by_forum(self, forum: dto.ForumTeam, captain: dto.Player) -> dto.Team:
+    async def create_by_forum(self, forum: dto.ForumTeam, captain: dto.Player | None) -> dto.Team:
         forum_team_db = await self.session.get(models.ForumTeam, forum.id)
         team = models.Team(
             captain_id=captain.id if captain else None,
             name=forum.name,
             description=None,
+            is_dummy=True,
         )
         forum_team_db.team = team
         self.session.add(team)

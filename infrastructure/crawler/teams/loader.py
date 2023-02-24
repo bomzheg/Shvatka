@@ -1,5 +1,6 @@
 import asyncio
 import json
+import logging
 from datetime import datetime
 from pathlib import Path
 
@@ -13,6 +14,8 @@ from infrastructure.crawler.models.team import ParsedTeam
 from infrastructure.db.dao.holder import HolderDao
 from infrastructure.db.faсtory import create_pool, create_level_test_dao, create_redis
 from tgbot.config.parser.main import load_config
+
+logger = logging.getLogger(__name__)
 
 
 async def main(path: Path):
@@ -38,7 +41,9 @@ async def load_teams(path: Path, dao: HolderDao, dcf: Factory):
     with path.open(encoding="utf8") as f:
         teams = dcf.load(json.load(f), list[ParsedTeam])
     for team in teams:
+        logger.info("loading team %s", team.name)
         await save_team(team, dao)
+    await dao.commit()
 
 
 async def save_team(parsed_team: ParsedTeam, dao: HolderDao):
@@ -51,16 +56,15 @@ async def save_team(parsed_team: ParsedTeam, dao: HolderDao):
         players[parsed_player] = player
         if parsed_player.role == "Капитан":
             captain = parsed_player
-    team = await dao.team.create_by_forum(saved_team, players[captain])
+    team = await dao.team.create_by_forum(saved_team, players.get(captain, None))
     for parsed_player, saved_player in players.items():
         await dao.team_player.join_team(
             player=saved_player,
             team=team,
             role=parsed_player.role,
-            as_captain=(captain == parsed_player),
+            as_captain=((captain == parsed_player) if captain else False),
             joined_at=datetime.now(),
         )
-    await dao.commit()
 
 
 if __name__ == "__main__":

@@ -74,21 +74,19 @@ class Player(Base):
     def __repr__(self):
         return f"<Player id={self.id} >"
 
-    def to_dto(self, user: dto.User) -> dto.Player:
+    def to_dto(
+        self, user: dto.User | None = None, forum_user: dto.ForumUser | None = None
+    ) -> dto.Player:
         return dto.Player(
             id=self.id,
             user=user,
-            can_be_author=self.can_be_author,
-            is_dummy=self.is_dummy,
-        )
-
-    def to_dto_dummy(self) -> dto.Player:
-        return dto.Player(
-            id=self.id,
-            user=None,
+            forum_user=forum_user,
             can_be_author=self.can_be_author,
             is_dummy=self.is_dummy,
         )
 
     def to_dto_user_prefetched(self) -> dto.Player:
-        return self.to_dto(self.user.to_dto() if self.user else None)
+        return self.to_dto(
+            user=self.user.to_dto() if self.user else None,
+            forum_user=self.forum_user.to_dto() if self.forum_user else None,
+        )

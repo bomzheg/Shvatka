@@ -72,6 +72,7 @@ class TeamDao(BaseDAO[models.Team]):
             .where(models.Chat.id == chat.db_id)
             .options(
                 joinedload(models.Team.captain).joinedload(models.Player.user),
+                joinedload(models.Team.captain).joinedload(models.Player.forum_user),
             )
         )
         try:
@@ -93,8 +94,10 @@ class TeamDao(BaseDAO[models.Team]):
             id_,
             (
                 joinedload(models.Team.captain).joinedload(models.Player.user),
+                joinedload(models.Team.captain).joinedload(models.Player.forum_user),
                 joinedload(models.Team.chat),
             ),
+            populate_existing=True,
         )
         return team.to_dto_chat_prefetched()
 
@@ -114,6 +117,7 @@ class TeamDao(BaseDAO[models.Team]):
             .join(models.Team.forum_team)
             .options(
                 joinedload(models.Team.captain).joinedload(models.Player.user),
+                joinedload(models.Team.captain).joinedload(models.Player.forum_user),
                 joinedload(models.Team.chat),
             )
             .where(models.ForumTeam.name == name)

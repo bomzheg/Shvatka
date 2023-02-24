@@ -21,6 +21,7 @@ def upgrade():
         sa.Column("id", sa.BigInteger(), nullable=False),
         sa.Column("forum_id", sa.BigInteger(), nullable=False),
         sa.Column("name", sa.Text(), nullable=False),
+        sa.Column("url", sa.Text(), nullable=True),
         sa.Column("registered", sa.Date(), nullable=False),
         sa.Column("player_id", sa.BigInteger(), nullable=True),
         sa.ForeignKeyConstraint(

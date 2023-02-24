@@ -19,8 +19,12 @@ class BaseDAO(Generic[Model]):
         result = await self.session.execute(select(self.model))
         return result.scalars().all()
 
-    async def _get_by_id(self, id_: int, options: Sequence[LoaderOption] = None) -> Model:
-        return await self.session.get(self.model, id_, options=options)
+    async def _get_by_id(
+        self, id_: int, options: Sequence[LoaderOption] = None, populate_existing: bool = False
+    ) -> Model:
+        return await self.session.get(
+            self.model, id_, options=options, populate_existing=populate_existing
+        )
 
     def _save(self, obj: Model):
         self.session.add(obj)

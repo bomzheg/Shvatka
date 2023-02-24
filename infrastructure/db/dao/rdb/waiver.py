@@ -65,6 +65,9 @@ class WaiverDao(BaseDAO[models.Waiver]):
                 joinedload(models.Waiver.team)
                 .joinedload(models.Team.captain)
                 .joinedload(models.Player.user),
+                joinedload(models.Waiver.team)
+                .joinedload(models.Team.captain)
+                .joinedload(models.Player.forum_user),
             )
             .where(
                 models.Waiver.game_id == game.id,
@@ -77,7 +80,10 @@ class WaiverDao(BaseDAO[models.Waiver]):
     async def get_played(self, game: dto.Game, team: dto.Team) -> Iterable[dto.VotedPlayer]:
         result = await self.session.execute(
             select(models.Waiver, models.TeamPlayer)
-            .options(joinedload(models.Waiver.player).joinedload(models.Player.user))
+            .options(
+                joinedload(models.Waiver.player).joinedload(models.Player.user),
+                joinedload(models.Waiver.player).joinedload(models.Player.forum_user),
+            )
             .join(models.TeamPlayer, models.Waiver.player_id == models.TeamPlayer.player_id)
             .where(
                 models.Waiver.game_id == game.id,

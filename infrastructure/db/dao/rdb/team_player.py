@@ -25,6 +25,9 @@ class TeamPlayerDao(BaseDAO[models.TeamPlayer]):
                 joinedload(models.TeamPlayer.team)
                 .joinedload(models.Team.captain)
                 .joinedload(models.Player.user),
+                joinedload(models.TeamPlayer.team)
+                .joinedload(models.Team.captain)
+                .joinedload(models.Player.forum_user),
                 joinedload(models.TeamPlayer.team).joinedload(models.Team.chat),
             )
             .where(
@@ -103,7 +106,10 @@ class TeamPlayerDao(BaseDAO[models.TeamPlayer]):
                 models.TeamPlayer.team_id == team.id,
                 not_leaved(),
             )
-            .options(joinedload(models.TeamPlayer.player).joinedload(models.Player.user))
+            .options(
+                joinedload(models.TeamPlayer.player).joinedload(models.Player.user),
+                joinedload(models.TeamPlayer.player).joinedload(models.Player.forum_user),
+            )
         )
         players: Sequence[models.TeamPlayer] = result.all()
         return [

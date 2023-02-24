@@ -58,9 +58,13 @@ class OrganizerDao(BaseDAO[models.Organizer]):
     async def get_by_id(self, id_: int) -> dto.SecondaryOrganizer:
         options = [
             joinedload(models.Organizer.player).joinedload(models.Player.user),
+            joinedload(models.Organizer.player).joinedload(models.Player.forum_user),
             joinedload(models.Organizer.game)
             .joinedload(models.Game.author)
             .joinedload(models.Player.user),
+            joinedload(models.Organizer.game)
+            .joinedload(models.Game.author)
+            .joinedload(models.Player.forum_user),
         ]
         result = await self._get_by_id(id_, options)
         return result.to_dto(
@@ -96,6 +100,9 @@ class OrganizerDao(BaseDAO[models.Organizer]):
                 models.Organizer.game_id == game.id,
                 *deleted_clause,
             )
-            .options(joinedload(models.Organizer.player).joinedload(models.Player.user))
+            .options(
+                joinedload(models.Organizer.player).joinedload(models.Player.user),
+                joinedload(models.Organizer.player).joinedload(models.Player.forum_user),
+            )
         )
         return result.all()

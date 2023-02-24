@@ -72,6 +72,7 @@ class KeyTimeDao(BaseDAO[models.KeyTime]):
             .options(
                 joinedload(models.KeyTime.team).joinedload(models.Team.chat),
                 joinedload(models.KeyTime.player).joinedload(models.Player.user),
+                joinedload(models.KeyTime.player).joinedload(models.Player.forum_user),
             )
             .order_by(models.KeyTime.enter_time)
         )

@@ -71,6 +71,7 @@ class KeyTimeDao(BaseDAO[models.KeyTime]):
             .where(models.KeyTime.game_id == game.id)
             .options(
                 joinedload(models.KeyTime.team).joinedload(models.Team.chat),
+                joinedload(models.KeyTime.team).joinedload(models.Team.forum_team),
                 joinedload(models.KeyTime.player).joinedload(models.Player.user),
                 joinedload(models.KeyTime.player).joinedload(models.Player.forum_user),
             )

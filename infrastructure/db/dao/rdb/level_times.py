@@ -63,6 +63,7 @@ class LevelTimeDao(BaseDAO[models.LevelTime]):
                 .joinedload(models.Team.captain)
                 .joinedload(models.Player.forum_user),
                 joinedload(models.LevelTime.team).joinedload(models.Team.chat),
+                joinedload(models.LevelTime.team).joinedload(models.Team.forum_team),
             )
             .order_by(
                 models.LevelTime.team_id,

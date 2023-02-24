@@ -29,6 +29,7 @@ class TeamPlayerDao(BaseDAO[models.TeamPlayer]):
                 .joinedload(models.Team.captain)
                 .joinedload(models.Player.forum_user),
                 joinedload(models.TeamPlayer.team).joinedload(models.Team.chat),
+                joinedload(models.TeamPlayer.team).joinedload(models.Team.forum_team),
             )
             .where(
                 models.TeamPlayer.player_id == player.id,

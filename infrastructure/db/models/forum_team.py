@@ -27,5 +27,7 @@ class ForumTeam(Base):
     def to_dto(self) -> dto.ForumTeam:
         return dto.ForumTeam(
             id=self.id,
+            forum_id=self.forum_id,
             name=self.name,
+            url=self.url,
         )

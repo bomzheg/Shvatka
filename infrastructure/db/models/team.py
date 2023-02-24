@@ -21,6 +21,7 @@ class Team(Base):
         "ForumTeam",
         foreign_keys="ForumTeam.team_id",
         back_populates="team",
+        uselist=False,
     )
     captain_id: Mapped[int] = mapped_column(ForeignKey("players.id"))
     captain = relationship(
@@ -51,15 +52,24 @@ class Team(Base):
         foreign_keys="TeamPlayer.team_id",
     )
 
-    def to_dto(self, chat: dto.Chat | None) -> dto.Team:
+    def to_dto(
+        self,
+        chat: dto.Chat | None = None,
+        forum_team: dto.ForumTeam | None = None,
+        captain: dto.Player | None = None,
+    ) -> dto.Team:
         return dto.Team(
             id=self.id,
             chat=chat,
+            forum_team=forum_team,
             name=self.name,
             is_dummy=self.is_dummy,
             description=self.description,
-            captain=self.captain.to_dto_user_prefetched(),
+            captain=captain if captain else self.captain.to_dto_user_prefetched(),
         )
 
     def to_dto_chat_prefetched(self) -> dto.Team:
-        return self.to_dto(self.chat.to_dto() if self.chat else None)
+        return self.to_dto(
+            chat=self.chat.to_dto() if self.chat else None,
+            forum_team=self.forum_team.to_dto() if self.forum_team else None,
+        )

@@ -57,11 +57,12 @@ class WaiverDao(BaseDAO[models.Waiver]):
         return result.scalars().one_or_none()
 
     async def get_played_teams(self, game: dto.Game) -> Iterable[dto.Team]:
-        result = await self.session.execute(
+        result = await self.session.scalars(
             select(models.Waiver)
             .distinct(models.Waiver.team_id)  # Postgresql feature
             .options(
                 joinedload(models.Waiver.team).joinedload(models.Team.chat),
+                joinedload(models.Waiver.team).joinedload(models.Team.forum_team),
                 joinedload(models.Waiver.team)
                 .joinedload(models.Team.captain)
                 .joinedload(models.Player.user),
@@ -74,7 +75,7 @@ class WaiverDao(BaseDAO[models.Waiver]):
                 models.Waiver.played == Played.yes,
             )
         )
-        teams: Iterable[models.Team] = map(lambda w: w.team, result.scalars().all())
+        teams: Iterable[models.Team] = map(lambda w: w.team, result.all())
         return [team.to_dto_chat_prefetched() for team in teams]
 
     async def get_played(self, game: dto.Game, team: dto.Team) -> Iterable[dto.VotedPlayer]:

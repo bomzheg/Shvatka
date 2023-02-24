@@ -96,6 +96,7 @@ class TeamDao(BaseDAO[models.Team]):
                 joinedload(models.Team.captain).joinedload(models.Player.user),
                 joinedload(models.Team.captain).joinedload(models.Player.forum_user),
                 joinedload(models.Team.chat),
+                joinedload(models.Team.forum_team),
             ),
             populate_existing=True,
         )
@@ -119,6 +120,7 @@ class TeamDao(BaseDAO[models.Team]):
                 joinedload(models.Team.captain).joinedload(models.Player.user),
                 joinedload(models.Team.captain).joinedload(models.Player.forum_user),
                 joinedload(models.Team.chat),
+                joinedload(models.Team.forum_team),
             )
             .where(models.ForumTeam.name == name)
         )

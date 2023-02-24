@@ -1,5 +1,6 @@
 import asyncio
 import json
+import logging
 import typing
 from datetime import date, datetime
 from pathlib import Path
@@ -9,9 +10,13 @@ from aiohttp import ClientSession
 from dataclass_factory import Factory, Schema, NameStyle
 from lxml import etree
 
+from common.config.parser.logging_config import setup_logging
 from infrastructure.crawler.auth import get_auth_cookie
 from infrastructure.crawler.constants import TEAMS_URL
+from infrastructure.crawler.factory import get_paths
 from infrastructure.crawler.models.team import ParsedPlayer, ParsedTeam
+
+logger = logging.getLogger(__name__)
 
 
 async def get_all_teams() -> list[ParsedTeam]:
@@ -46,6 +51,7 @@ class TeamsParser:
                 games=games,
                 players=await self.parse_team_players(url),
             )
+            logger.info("parsed team: %s", team.name)
             self.teams.append(team)
 
     async def parse_team_players(self, team_url: str) -> list[ParsedPlayer]:
@@ -69,7 +75,7 @@ class TeamsParser:
                 url=url,
                 games=games,
                 registered_at=await self.parse_player_registered_date(url),
-                forum_id=int(parse_qs(typing.cast(str, urlparse(url).query))["id"][0]),
+                forum_id=int(parse_qs(typing.cast(str, urlparse(url).query))["showuser"][0]),
             )
             players.append(player)
         return players
@@ -100,6 +106,8 @@ def get_games_numbers(games_element) -> list[int]:
 
 
 async def main_team_parser():
+    paths = get_paths()
+    setup_logging(paths)
     teams = await get_all_teams()
     dcf = Factory(default_schema=Schema(name_style=NameStyle.kebab))
     path = Path(__file__).parent

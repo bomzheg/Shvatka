@@ -1,5 +1,6 @@
 import asyncio
 import json
+from datetime import datetime
 from pathlib import Path
 
 from dataclass_factory import Factory
@@ -34,7 +35,7 @@ async def main(path: Path):
 
 
 async def load_teams(path: Path, dao: HolderDao, dcf: Factory):
-    with path.open() as f:
+    with path.open(encoding="utf8") as f:
         teams = dcf.load(json.load(f), list[ParsedTeam])
     for team in teams:
         await save_team(team, dao)
@@ -57,8 +58,9 @@ async def save_team(parsed_team: ParsedTeam, dao: HolderDao):
             team=team,
             role=parsed_player.role,
             as_captain=(captain == parsed_player),
-            joined_at=parsed_player.registered_at,
+            joined_at=datetime.now(),
         )
+    await dao.commit()
 
 
 if __name__ == "__main__":

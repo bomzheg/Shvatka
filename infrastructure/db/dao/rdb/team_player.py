@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 from typing import Sequence
 
-from sqlalchemy import select
+from sqlalchemy import select, BinaryExpression, or_
 from sqlalchemy import update, not_
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -18,7 +18,17 @@ class TeamPlayerDao(BaseDAO[models.TeamPlayer]):
     def __init__(self, session: AsyncSession):
         super().__init__(models.TeamPlayer, session)
 
-    async def get_team(self, player: dto.Player) -> dto.Team | None:
+    async def get_team(self, player: dto.Player, for_date: datetime | None = None) -> dto.Team | None:
+        if for_date is None:
+            leaved_condition = (not_leaved(),)
+        else:
+            leaved_condition = (
+                or_(
+                    models.TeamPlayer.date_left > for_date,
+                    not_leaved(),
+                ),
+                models.TeamPlayer.date_joined < for_date,
+            )
         result = await self.session.execute(
             select(models.TeamPlayer)
             .options(
@@ -33,7 +43,7 @@ class TeamPlayerDao(BaseDAO[models.TeamPlayer]):
             )
             .where(
                 models.TeamPlayer.player_id == player.id,
-                not_leaved(),
+                *leaved_condition,
             )
         )
         try:
@@ -149,5 +159,5 @@ class TeamPlayerDao(BaseDAO[models.TeamPlayer]):
             raise PlayerNotInTeam(player=player)
 
 
-def not_leaved():
+def not_leaved() -> BinaryExpression[bool]:
     return models.TeamPlayer.date_left.is_(None)

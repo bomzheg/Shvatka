@@ -161,7 +161,7 @@ async def add_waiver_if_already_not(
 async def join_team_if_already_not(
     player: dto.Player, team: dto.Team, at: datetime, dao: HolderDao
 ):
-    current_team = await dao.team_player.get_team(player)
+    current_team = await dao.team_player.get_team(player, for_date=at)
     if current_team is not None and current_team.id == team.id:
         return
     if current_team is not None:

@@ -11,9 +11,9 @@ class ForumUser(Base):
     __tablename__ = "forum_users"
     __mapper_args__ = {"eager_defaults": True}
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
-    forum_id: Mapped[int] = mapped_column(BigInteger, unique=True, nullable=False)
+    forum_id: Mapped[int] = mapped_column(BigInteger, unique=True)
     name: Mapped[str] = mapped_column(Text, nullable=False)
-    registered: Mapped[date] = mapped_column(Date, nullable=False)
+    registered: Mapped[date] = mapped_column(Date)
     url: Mapped[str]
     player_id: Mapped[int] = mapped_column(ForeignKey("players.id"), unique=True)
 

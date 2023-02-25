@@ -1,7 +1,7 @@
 from sqlalchemy import ForeignKey
 from sqlalchemy.orm import mapped_column, relationship, Mapped
 
-from infrastructure.db.models import Base
+from infrastructure.db.models import Base, Player
 from shvatka.models import dto
 
 
@@ -24,7 +24,7 @@ class Team(Base):
         uselist=False,
     )
     captain_id: Mapped[int] = mapped_column(ForeignKey("players.id"))
-    captain = relationship(
+    captain: Mapped[Player] = relationship(
         "Player",
         foreign_keys=captain_id,
         back_populates="captain_by_team",
@@ -58,6 +58,9 @@ class Team(Base):
         forum_team: dto.ForumTeam | None = None,
         captain: dto.Player | None = None,
     ) -> dto.Team:
+        if not captain and self.captain:
+            captain = self.captain.to_dto_user_prefetched()
+
         return dto.Team(
             id=self.id,
             chat=chat,
@@ -65,7 +68,7 @@ class Team(Base):
             name=self.name,
             is_dummy=self.is_dummy,
             description=self.description,
-            captain=captain if captain else self.captain.to_dto_user_prefetched(),
+            captain=captain,
         )
 
     def to_dto_chat_prefetched(self) -> dto.Team:

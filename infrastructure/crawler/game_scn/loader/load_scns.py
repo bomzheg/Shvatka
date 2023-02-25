@@ -1,16 +1,16 @@
 import asyncio
 import json
 import logging
+from datetime import datetime, timedelta
 from pathlib import Path
+from typing import BinaryIO
 from zipfile import Path as ZipPath
 
 from aiogram import Bot
-from dataclass_factory import Factory
+from dataclass_factory import Factory, Schema, NameStyle
 from sqlalchemy.orm import close_all_sessions
-from typing.io import BinaryIO
 
 from common.config.parser.logging_config import setup_logging
-from common.factory import create_dataclass_factory
 from infrastructure.clients.factory import create_file_storage
 from infrastructure.clients.file_gateway import BotFileGateway
 from infrastructure.crawler.factory import get_paths
@@ -34,7 +34,9 @@ async def main(path: Path):
 
     setup_logging(paths)
     config = load_config(paths)
-    dcf = create_dataclass_factory()
+    dcf = Factory(
+        default_schema=Schema(name_style=NameStyle.kebab)
+    )
     file_storage = create_file_storage(config.file_storage_config)
     bot = create_bot(config)
     Bot.set_current(bot)
@@ -79,7 +81,8 @@ async def load_scns(
     dcf: Factory,
     path: Path,
 ):
-    for file in path.glob("*.zip"):
+    files = sorted((file for file in path.glob("*.zip")), key=lambda p: int(p.stem))
+    for file in files:
         logger.info("loading game from file %s", file.name)
         try:
             with file.open("rb") as game_zip_scn:
@@ -117,8 +120,10 @@ async def set_results(game: dto.FullGame, results: GameStat, dao: HolderDao):
     for forum_team_name, keys in results.keys.items():
         team = await dao.team.get_by_forum_team_name(forum_team_name)
         for i, key in enumerate(keys):
-            player = await dao.player.get_by_forum_player_name(key.player)
-            if i == len(keys):
+            player = await get_or_create_player(dao, key.player)
+            await join_team_if_already_not(player, team, results.start_at, dao)
+            await add_waiver_if_already_not(player, team, game, dao)
+            if i == len(keys) - 1:
                 is_correct = True
             elif key.level != keys[i + 1].level:
                 is_correct = True
@@ -129,10 +134,47 @@ async def set_results(game: dto.FullGame, results: GameStat, dao: HolderDao):
                 team=team,
                 game=game,
                 player=player,
-                level=game.levels[key.level],
+                level=game.levels[key.level - 1],
                 is_correct=is_correct,
                 is_duplicate=False,
             )
+
+
+async def get_or_create_player(dao: HolderDao, forum_player_name: str):
+    player = await dao.player.get_by_forum_player_name(forum_player_name)
+    if not player:
+        player = await dao.player.create_for_forum_user_name(forum_player_name)
+    return player
+
+
+async def add_waiver_if_already_not(
+    player: dto.Player, team: dto.Team, game: dto.Game, dao: HolderDao
+):
+    await dao.waiver.upsert_with_flush(
+        dto.Waiver(
+            player=player,
+            team=team,
+            game=game,
+            played=enums.Played.yes,
+        )
+    )
+
+
+async def join_team_if_already_not(
+    player: dto.Player, team: dto.Team, at: datetime, dao: HolderDao
+):
+    current_team = await dao.team_player.get_team(player)
+    if current_team is not None and current_team.id == team.id:
+        return
+    if current_team is not None:
+        await dao.team_player.leave_team(player, at - timedelta(hours=8))
+    await dao.team_player.join_team(
+        player=player,
+        team=team,
+        role="Полевой",
+        as_captain=False,
+        joined_at=at - timedelta(hours=6),
+    )
 
 
 async def transfer_ownership(game: dto.FullGame, bot_player: dto.Player, dao: HolderDao):

@@ -25,7 +25,14 @@ class WaiverDao(BaseDAO[models.Waiver]):
             return False
         return waiver.played in (Played.revoked, Played.not_allowed)
 
+    async def upsert_with_flush(self, waiver: dto.Waiver):
+        waiver_db = await self._upsert(waiver)
+        await self._flush(waiver_db)
+
     async def upsert(self, waiver: dto.Waiver):
+        await self._upsert(waiver)
+
+    async def _upsert(self, waiver: dto.Waiver) -> models.Waiver:
         if waiver_db := await self.get_or_none(waiver.game, waiver.player, waiver.team):
             waiver_db.played = waiver.played
         else:
@@ -36,6 +43,7 @@ class WaiverDao(BaseDAO[models.Waiver]):
                 played=waiver.played,
             )
             self._save(waiver_db)
+        return waiver_db
 
     async def delete(self, waiver: dto.Waiver):
         if waiver_db := await self.get_or_none(waiver.game, waiver.player, waiver.team):

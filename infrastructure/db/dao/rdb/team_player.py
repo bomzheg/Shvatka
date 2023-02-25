@@ -75,9 +75,11 @@ class TeamPlayerDao(BaseDAO[models.TeamPlayer]):
         self.session.add(team_player)
         await self._flush(team_player)
 
-    async def leave_team(self, player: dto.Player):
+    async def leave_team(self, player: dto.Player, at: datetime | None = None):
+        if at is None:
+            at = datetime.now(tz=tz_utc)
         pit = await self._get_my_team_player(player)
-        pit.date_left = datetime.now(tz=tz_utc)
+        pit.date_left = at
         await self._flush(pit)
 
     async def check_player_free(self, player: dto.Player):

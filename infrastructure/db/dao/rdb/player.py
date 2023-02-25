@@ -46,6 +46,27 @@ class PlayerDao(BaseDAO[models.Player]):
         await self._flush(player)
         return player.to_dto(user=user)
 
+    async def get_by_forum_player_name(self, name: str) -> dto.Player | None:
+        result = await self.session.scalars(
+            select(models.Player)
+            .join(models.Player.forum_user)
+            .options(
+                selectinload(models.Player.forum_user),
+                selectinload(models.Player.user),
+            )
+            .where(models.ForumUser.name == name)
+        )
+        try:
+            return result.one().to_dto_user_prefetched()
+        except NoResultFound:
+            return None
+
+    async def create_for_forum_user_name(self, forum_user_name: str) -> dto.Player:
+        forum_user_db = models.ForumUser(name=forum_user_name)
+        player = await self._create_dummy()
+        forum_user_db.player = player
+        return player.to_dto(forum_user=forum_user_db.to_dto())
+
     async def create_for_forum_user(self, user: dto.ForumUser) -> dto.Player:
         forum_user_db: models.ForumUser = await self.session.get(models.ForumUser, user.db_id)
         player = await self._create_dummy()

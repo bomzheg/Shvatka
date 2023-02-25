@@ -19,10 +19,10 @@ def upgrade():
     op.create_table(
         "forum_users",
         sa.Column("id", sa.BigInteger(), nullable=False),
-        sa.Column("forum_id", sa.BigInteger(), nullable=False),
+        sa.Column("forum_id", sa.BigInteger(), nullable=True),
         sa.Column("name", sa.Text(), nullable=False),
         sa.Column("url", sa.Text(), nullable=True),
-        sa.Column("registered", sa.Date(), nullable=False),
+        sa.Column("registered", sa.Date(), nullable=True),
         sa.Column("player_id", sa.BigInteger(), nullable=True),
         sa.ForeignKeyConstraint(
             ["player_id"], ["players.id"], name=op.f("forum_users_player_id_fkey")

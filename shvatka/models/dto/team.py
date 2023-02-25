@@ -11,7 +11,7 @@ from .player import Player
 class Team:
     id: int
     name: str
-    captain: Player
+    captain: Player | None
     is_dummy: bool
     description: str | None
     _chat: Chat | None = field(init=False)

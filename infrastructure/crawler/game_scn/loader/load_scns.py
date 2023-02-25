@@ -34,9 +34,7 @@ async def main(path: Path):
 
     setup_logging(paths)
     config = load_config(paths)
-    dcf = Factory(
-        default_schema=Schema(name_style=NameStyle.kebab)
-    )
+    dcf = Factory(default_schema=Schema(name_style=NameStyle.kebab))
     file_storage = create_file_storage(config.file_storage_config)
     bot = create_bot(config)
     Bot.set_current(bot)

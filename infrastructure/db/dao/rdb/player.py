@@ -65,6 +65,7 @@ class PlayerDao(BaseDAO[models.Player]):
         forum_user_db = models.ForumUser(name=forum_user_name)
         player = await self._create_dummy()
         forum_user_db.player = player
+        self.session.add(forum_user_db)
         return player.to_dto(forum_user=forum_user_db.to_dto())
 
     async def create_for_forum_user(self, user: dto.ForumUser) -> dto.Player:

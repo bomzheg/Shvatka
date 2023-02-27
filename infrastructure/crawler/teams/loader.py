@@ -58,6 +58,7 @@ async def save_team(parsed_team: ParsedTeam, dao: HolderDao):
             captain = parsed_player
     team = await dao.team.create_by_forum(saved_team, players.get(captain, None))
     for parsed_player, saved_player in players.items():
+        await dao.team_player.check_player_free(saved_player)
         await dao.team_player.join_team(
             player=saved_player,
             team=team,

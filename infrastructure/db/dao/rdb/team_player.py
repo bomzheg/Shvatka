@@ -64,7 +64,6 @@ class TeamPlayerDao(BaseDAO[models.TeamPlayer]):
         as_captain: bool = False,
         joined_at: datetime | None = None,
     ):
-        await self.check_player_free(player)
         if team_player := await self.need_restore(player, team):
             team_player.date_left = None
             await self.session.merge(team_player)

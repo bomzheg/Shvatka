@@ -195,7 +195,11 @@ class GameParser:
                 try:
                     time, key, player = cells
                 except ValueError as e:
-                    logger.error("can't parse key log for cells %s", [cell.text for cell in cells], exc_info=e)
+                    logger.error(
+                        "can't parse key log for cells %s",
+                        [cell.text for cell in cells],
+                        exc_info=e,
+                    )
                     continue
                 local_date = datetime.strptime(time.text, "%Y-%m-%d %H:%M:%S")
                 keys_buffer.append(

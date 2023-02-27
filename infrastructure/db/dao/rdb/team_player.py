@@ -18,7 +18,9 @@ class TeamPlayerDao(BaseDAO[models.TeamPlayer]):
     def __init__(self, session: AsyncSession):
         super().__init__(models.TeamPlayer, session)
 
-    async def get_team(self, player: dto.Player, for_date: datetime | None = None) -> dto.Team | None:
+    async def get_team(
+        self, player: dto.Player, for_date: datetime | None = None
+    ) -> dto.Team | None:
         result = await self.session.execute(
             select(models.TeamPlayer)
             .options(
@@ -135,7 +137,9 @@ class TeamPlayerDao(BaseDAO[models.TeamPlayer]):
             .values(**{permission.name: not_(getattr(models.TeamPlayer, permission.name))})
         )
 
-    async def _get_my_team_player(self, player: dto.Player, at: datetime | None = None) -> models.TeamPlayer:
+    async def _get_my_team_player(
+        self, player: dto.Player, at: datetime | None = None
+    ) -> models.TeamPlayer:
         result = await self.session.execute(
             select(models.TeamPlayer).where(
                 models.TeamPlayer.player_id == player.id,
@@ -161,7 +165,7 @@ def not_leaved_for_date(for_date: datetime) -> Sequence[BinaryExpression[bool]]:
         or_(
             models.TeamPlayer.date_left > for_date,
             not_leaved(),
-            ),
+        ),
         models.TeamPlayer.date_joined < for_date,
     )
 

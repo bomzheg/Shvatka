@@ -68,7 +68,7 @@ class Game(Base):
     number: Mapped[int | None]
     manage_token: Mapped[str | None] = mapped_column(
         Text,
-        default=secrets.token_urlsafe(_TOKEN_LEN * 3 // 4),
+        default=lambda: secrets.token_urlsafe(_TOKEN_LEN * 3 // 4),
     )
 
     __table_args__ = (UniqueConstraint("author_id", "name"),)

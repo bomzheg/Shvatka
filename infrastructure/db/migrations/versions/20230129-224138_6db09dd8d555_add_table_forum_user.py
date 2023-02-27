@@ -20,7 +20,7 @@ def upgrade():
         "forum_users",
         sa.Column("id", sa.BigInteger(), nullable=False),
         sa.Column("forum_id", sa.BigInteger(), nullable=True),
-        sa.Column("name", sa.Text(), nullable=False),
+        sa.Column("name", sa.Text(), nullable=False, unique=True),
         sa.Column("url", sa.Text(), nullable=True),
         sa.Column("registered", sa.Date(), nullable=True),
         sa.Column("player_id", sa.BigInteger(), nullable=True),

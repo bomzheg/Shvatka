@@ -19,7 +19,7 @@ def upgrade():
     op.create_table(
         "forum_teams",
         sa.Column("id", sa.BigInteger(), nullable=False),
-        sa.Column("name", sa.Text(), nullable=True),
+        sa.Column("name", sa.Text(), nullable=False, unique=True),
         sa.Column("url", sa.Text(), nullable=True),
         sa.Column("forum_id", sa.Integer(), nullable=False),
         sa.Column("team_id", sa.Integer(), nullable=True),

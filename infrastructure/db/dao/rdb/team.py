@@ -42,29 +42,25 @@ class TeamDao(BaseDAO[models.Team]):
 
     async def create_by_forum(self, forum: dto.ForumTeam, captain: dto.Player | None) -> dto.Team:
         forum_team_db = await self.session.get(models.ForumTeam, forum.id)
-        team = models.Team(
-            captain_id=captain.id if captain else None,
-            name=forum.name,
-            description=None,
-            is_dummy=True,
-        )
-        forum_team_db.team = team
-        self.session.add(team)
-        try:
-            await self._flush(team)
-        except IntegrityError as e:
-            raise TeamError(
-                player=captain,
-                text="can't create team",
-            ) from e
-        return dto.Team(
-            id=team.id,
-            chat=None,
-            name=team.name,
-            description=team.description,
-            captain=captain,
-            is_dummy=team.is_dummy,
-        )
+        if forum_team_db.team_id:
+            team = await self._get_by_id(forum_team_db.team_id)
+        else:
+            team = models.Team(
+                captain_id=captain.id if captain else None,
+                name=forum.name,
+                description=None,
+                is_dummy=True,
+            )
+            forum_team_db.team = team
+            self.session.add(team)
+            try:
+                await self._flush(team)
+            except IntegrityError as e:
+                raise TeamError(
+                    player=captain,
+                    text="can't create team",
+                ) from e
+        return team.to_dto(forum_team=forum, captain=captain)
 
     async def get_by_chat(self, chat: dto.Chat) -> dto.Team | None:
         result = await self.session.execute(

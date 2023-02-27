@@ -137,6 +137,13 @@ class TeamPlayerDao(BaseDAO[models.TeamPlayer]):
             .values(**{permission.name: not_(getattr(models.TeamPlayer, permission.name))})
         )
 
+    async def change_role(self, team_player: dto.TeamPlayer, role: str) -> None:
+        await self.session.execute(
+            update(models.TeamPlayer)
+            .where(models.TeamPlayer.id == team_player.id)
+            .values(role=role)
+        )
+
     async def _get_my_team_player(
         self, player: dto.Player, at: datetime | None = None
     ) -> models.TeamPlayer:

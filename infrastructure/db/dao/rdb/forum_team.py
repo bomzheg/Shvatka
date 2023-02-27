@@ -1,3 +1,4 @@
+from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from infrastructure.crawler.models.team import ParsedTeam
@@ -10,12 +11,20 @@ class ForumTeamDAO(BaseDAO[models.ForumTeam]):
     def __init__(self, session: AsyncSession):
         super().__init__(models.ForumTeam, session)
 
-    async def save_parsed(self, team: ParsedTeam) -> dto.ForumTeam:
-        db_team = models.ForumTeam(
+    async def upsert(self, team: ParsedTeam) -> dto.ForumTeam:
+        kwargs = dict(
             name=team.name,
             forum_id=team.id,
             url=team.url,
         )
-        self._save(db_team)
-        await self._flush(db_team)
-        return db_team.to_dto()
+        saved_team = await self.session.scalars(
+            insert(models.ForumTeam)
+            .values(**kwargs)
+            .on_conflict_do_update(
+                index_elements=(models.ForumTeam.name,),
+                set_=kwargs,
+                where=models.ForumTeam.name == team.name,
+            )
+            .returning(models.ForumTeam)
+        )
+        return saved_team.one().to_dto()

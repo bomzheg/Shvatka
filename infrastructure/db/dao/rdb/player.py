@@ -71,8 +71,11 @@ class PlayerDao(BaseDAO[models.Player]):
 
     async def create_for_forum_user(self, user: dto.ForumUser) -> dto.Player:
         forum_user_db: models.ForumUser = await self.session.get(models.ForumUser, user.db_id)
-        player = await self._create_dummy()
-        forum_user_db.player = player
+        if forum_user_db.player_id:
+            player = await self._get_by_id(forum_user_db.player_id)
+        else:
+            player = await self._create_dummy()
+            forum_user_db.player = player
         return player.to_dto(forum_user=forum_user_db.to_dto())
 
     async def link_forum_user(self, player: dto.Player, user: dto.ForumUser) -> None:

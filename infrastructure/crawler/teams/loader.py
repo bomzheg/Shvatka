@@ -42,11 +42,11 @@ async def load_teams(path: Path, dao: HolderDao, dcf: Factory):
         teams = dcf.load(json.load(f), list[ParsedTeam])
     for team in teams:
         logger.info("loading team %s", team.name)
-        await save_team(team, dao)
+        await save_team(team, False, dao)
     await dao.commit()
 
 
-async def save_team(parsed_team: ParsedTeam, dao: HolderDao):
+async def save_team(parsed_team: ParsedTeam, with_team_players: bool, dao: HolderDao):
     saved_team = await dao.forum_team.save_parsed(parsed_team)
     players = {}
     captain = None
@@ -57,15 +57,16 @@ async def save_team(parsed_team: ParsedTeam, dao: HolderDao):
         if parsed_player.role == "Капитан":
             captain = parsed_player
     team = await dao.team.create_by_forum(saved_team, players.get(captain, None))
-    for parsed_player, saved_player in players.items():
-        await dao.team_player.check_player_free(saved_player)
-        await dao.team_player.join_team(
-            player=saved_player,
-            team=team,
-            role=parsed_player.role,
-            as_captain=((captain == parsed_player) if captain else False),
-            joined_at=datetime.now(),
-        )
+    if with_team_players:
+        for parsed_player, saved_player in players.items():
+            await dao.team_player.check_player_free(saved_player)
+            await dao.team_player.join_team(
+                player=saved_player,
+                team=team,
+                role=parsed_player.role,
+                as_captain=((captain == parsed_player) if captain else False),
+                joined_at=datetime.now(),
+            )
 
 
 if __name__ == "__main__":

@@ -19,16 +19,6 @@ class TeamPlayerDao(BaseDAO[models.TeamPlayer]):
         super().__init__(models.TeamPlayer, session)
 
     async def get_team(self, player: dto.Player, for_date: datetime | None = None) -> dto.Team | None:
-        if for_date is None:
-            leaved_condition = (not_leaved(),)
-        else:
-            leaved_condition = (
-                or_(
-                    models.TeamPlayer.date_left > for_date,
-                    not_leaved(),
-                ),
-                models.TeamPlayer.date_joined < for_date,
-            )
         result = await self.session.execute(
             select(models.TeamPlayer)
             .options(
@@ -43,7 +33,7 @@ class TeamPlayerDao(BaseDAO[models.TeamPlayer]):
             )
             .where(
                 models.TeamPlayer.player_id == player.id,
-                *leaved_condition,
+                *get_leaved_condition(for_date),
             )
         )
         try:
@@ -87,7 +77,7 @@ class TeamPlayerDao(BaseDAO[models.TeamPlayer]):
     async def leave_team(self, player: dto.Player, at: datetime | None = None):
         if at is None:
             at = datetime.now(tz=tz_utc)
-        pit = await self._get_my_team_player(player)
+        pit = await self._get_my_team_player(player, at)
         pit.date_left = at
         await self._flush(pit)
 
@@ -145,17 +135,35 @@ class TeamPlayerDao(BaseDAO[models.TeamPlayer]):
             .values(**{permission.name: not_(getattr(models.TeamPlayer, permission.name))})
         )
 
-    async def _get_my_team_player(self, player: dto.Player) -> models.TeamPlayer:
+    async def _get_my_team_player(self, player: dto.Player, at: datetime | None = None) -> models.TeamPlayer:
         result = await self.session.execute(
             select(models.TeamPlayer).where(
                 models.TeamPlayer.player_id == player.id,
-                not_leaved(),
+                *get_leaved_condition(at),
             )
         )
         try:
             return result.scalar_one()
         except NoResultFound:
             raise PlayerNotInTeam(player=player)
+
+
+def get_leaved_condition(for_date: datetime | None = None):
+    if for_date is None:
+        leaved_condition = (not_leaved(),)
+    else:
+        leaved_condition = not_leaved_for_date(for_date)
+    return leaved_condition
+
+
+def not_leaved_for_date(for_date: datetime) -> Sequence[BinaryExpression[bool]]:
+    return (
+        or_(
+            models.TeamPlayer.date_left > for_date,
+            not_leaved(),
+            ),
+        models.TeamPlayer.date_joined < for_date,
+    )
 
 
 def not_leaved() -> BinaryExpression[bool]:

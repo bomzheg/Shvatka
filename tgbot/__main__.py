@@ -1,6 +1,7 @@
 import asyncio
 import logging
 
+from aiogram_dialog import DialogRegistry
 from sqlalchemy.orm import close_all_sessions
 
 from common.config.parser.logging_config import setup_logging
@@ -32,6 +33,7 @@ async def main():
     bot = create_bot(config)
     setup_jinja(bot=bot)
     level_test_dao = create_level_test_dao()
+    registry = DialogRegistry()
 
     async with (
         UserGetter(config.tg_client) as user_getter,
@@ -57,6 +59,7 @@ async def main():
             file_storage=file_storage,
             level_test_dao=level_test_dao,
             telegraph=create_telegraph(config.bot),
+            registry=registry,
         )
 
         logger.info("started")

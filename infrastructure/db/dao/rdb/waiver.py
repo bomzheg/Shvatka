@@ -25,7 +25,14 @@ class WaiverDao(BaseDAO[models.Waiver]):
             return False
         return waiver.played in (Played.revoked, Played.not_allowed)
 
+    async def upsert_with_flush(self, waiver: dto.Waiver):
+        waiver_db = await self._upsert(waiver)
+        await self._flush(waiver_db)
+
     async def upsert(self, waiver: dto.Waiver):
+        await self._upsert(waiver)
+
+    async def _upsert(self, waiver: dto.Waiver) -> models.Waiver:
         if waiver_db := await self.get_or_none(waiver.game, waiver.player, waiver.team):
             waiver_db.played = waiver.played
         else:
@@ -36,6 +43,7 @@ class WaiverDao(BaseDAO[models.Waiver]):
                 played=waiver.played,
             )
             self._save(waiver_db)
+        return waiver_db
 
     async def delete(self, waiver: dto.Waiver):
         if waiver_db := await self.get_or_none(waiver.game, waiver.player, waiver.team):
@@ -57,27 +65,34 @@ class WaiverDao(BaseDAO[models.Waiver]):
         return result.scalars().one_or_none()
 
     async def get_played_teams(self, game: dto.Game) -> Iterable[dto.Team]:
-        result = await self.session.execute(
+        result = await self.session.scalars(
             select(models.Waiver)
             .distinct(models.Waiver.team_id)  # Postgresql feature
             .options(
                 joinedload(models.Waiver.team).joinedload(models.Team.chat),
+                joinedload(models.Waiver.team).joinedload(models.Team.forum_team),
                 joinedload(models.Waiver.team)
                 .joinedload(models.Team.captain)
                 .joinedload(models.Player.user),
+                joinedload(models.Waiver.team)
+                .joinedload(models.Team.captain)
+                .joinedload(models.Player.forum_user),
             )
             .where(
                 models.Waiver.game_id == game.id,
                 models.Waiver.played == Played.yes,
             )
         )
-        teams: Iterable[models.Team] = map(lambda w: w.team, result.scalars().all())
-        return [team.to_dto(team.chat.to_dto()) for team in teams]
+        teams: Iterable[models.Team] = map(lambda w: w.team, result.all())
+        return [team.to_dto_chat_prefetched() for team in teams]
 
     async def get_played(self, game: dto.Game, team: dto.Team) -> Iterable[dto.VotedPlayer]:
         result = await self.session.execute(
             select(models.Waiver, models.TeamPlayer)
-            .options(joinedload(models.Waiver.player).joinedload(models.Player.user))
+            .options(
+                joinedload(models.Waiver.player).joinedload(models.Player.user),
+                joinedload(models.Waiver.player).joinedload(models.Player.forum_user),
+            )
             .join(models.TeamPlayer, models.Waiver.player_id == models.TeamPlayer.player_id)
             .where(
                 models.Waiver.game_id == game.id,

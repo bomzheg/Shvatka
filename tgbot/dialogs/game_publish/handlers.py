@@ -87,14 +87,15 @@ async def publish_game(game_publisher: GamePublisher, manager: DialogManager):
         f"Лог ключей: {no_public_message_link(channel_id, keys_msg_id)}"
     )
     await bot.send_message(
-        game_publisher.game.author.user.tg_id, f"Сценарий загружен.\n{text_invite_scn}"
-    )
-    await bot.send_message(
         game_publisher.config.game_log_chat,
         f"Загружен сценарий игры {hd.bold(hd.quote(game_publisher.game.name))}."
         f"\n{text_invite_scn}",
     )
     await manager.update({"text_invite": text_invite_scn, "started": False})
+    await bot.send_message(
+        chat_id=game_publisher.game.author.get_chat_id(),
+        text=f"Сценарий загружен.\n{text_invite_scn}",
+    )
 
 
 async def get_invite(channel_id: int, bot: Bot) -> str:

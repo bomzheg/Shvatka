@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 from typing import Sequence
 
-from sqlalchemy import select
+from sqlalchemy import select, BinaryExpression, or_
 from sqlalchemy import update, not_
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -18,18 +18,24 @@ class TeamPlayerDao(BaseDAO[models.TeamPlayer]):
     def __init__(self, session: AsyncSession):
         super().__init__(models.TeamPlayer, session)
 
-    async def get_team(self, player: dto.Player) -> dto.Team | None:
+    async def get_team(
+        self, player: dto.Player, for_date: datetime | None = None
+    ) -> dto.Team | None:
         result = await self.session.execute(
             select(models.TeamPlayer)
             .options(
                 joinedload(models.TeamPlayer.team)
                 .joinedload(models.Team.captain)
                 .joinedload(models.Player.user),
+                joinedload(models.TeamPlayer.team)
+                .joinedload(models.Team.captain)
+                .joinedload(models.Player.forum_user),
                 joinedload(models.TeamPlayer.team).joinedload(models.Team.chat),
+                joinedload(models.TeamPlayer.team).joinedload(models.Team.forum_team),
             )
             .where(
                 models.TeamPlayer.player_id == player.id,
-                not_leaved(),
+                *get_leaved_condition(for_date),
             )
         )
         try:
@@ -37,15 +43,19 @@ class TeamPlayerDao(BaseDAO[models.TeamPlayer]):
         except NoResultFound:
             return None
         team: models.Team = team_player.team
-        return team.to_dto(team.chat.to_dto())
+        return team.to_dto_chat_prefetched()
 
     async def have_team(self, player: dto.Player) -> bool:
         return await self.get_team(player) is not None
 
     async def join_team(
-        self, player: dto.Player, team: dto.Team, role: str, as_captain: bool = False
+        self,
+        player: dto.Player,
+        team: dto.Team,
+        role: str,
+        as_captain: bool = False,
+        joined_at: datetime | None = None,
     ):
-        await self.check_player_free(player)
         if team_player := await self.need_restore(player, team):
             team_player.date_left = None
             await self.session.merge(team_player)
@@ -55,6 +65,8 @@ class TeamPlayerDao(BaseDAO[models.TeamPlayer]):
             team_id=team.id,
             role=role,
         )
+        if joined_at:
+            team_player.date_joined = joined_at
         if as_captain:
             team_player.can_remove_players = True
             team_player.can_manage_waivers = True
@@ -64,9 +76,11 @@ class TeamPlayerDao(BaseDAO[models.TeamPlayer]):
         self.session.add(team_player)
         await self._flush(team_player)
 
-    async def leave_team(self, player: dto.Player):
-        pit = await self._get_my_team_player(player)
-        pit.date_left = datetime.now(tz=tz_utc)
+    async def leave_team(self, player: dto.Player, at: datetime | None = None):
+        if at is None:
+            at = datetime.now(tz=tz_utc)
+        pit = await self._get_my_team_player(player, at)
+        pit.date_left = at
         await self._flush(pit)
 
     async def check_player_free(self, player: dto.Player):
@@ -96,7 +110,10 @@ class TeamPlayerDao(BaseDAO[models.TeamPlayer]):
                 models.TeamPlayer.team_id == team.id,
                 not_leaved(),
             )
-            .options(joinedload(models.TeamPlayer.player).joinedload(models.Player.user))
+            .options(
+                joinedload(models.TeamPlayer.player).joinedload(models.Player.user),
+                joinedload(models.TeamPlayer.player).joinedload(models.Player.forum_user),
+            )
         )
         players: Sequence[models.TeamPlayer] = result.all()
         return [
@@ -120,11 +137,20 @@ class TeamPlayerDao(BaseDAO[models.TeamPlayer]):
             .values(**{permission.name: not_(getattr(models.TeamPlayer, permission.name))})
         )
 
-    async def _get_my_team_player(self, player: dto.Player) -> models.TeamPlayer:
+    async def change_role(self, team_player: dto.TeamPlayer, role: str) -> None:
+        await self.session.execute(
+            update(models.TeamPlayer)
+            .where(models.TeamPlayer.id == team_player.id)
+            .values(role=role)
+        )
+
+    async def _get_my_team_player(
+        self, player: dto.Player, at: datetime | None = None
+    ) -> models.TeamPlayer:
         result = await self.session.execute(
             select(models.TeamPlayer).where(
                 models.TeamPlayer.player_id == player.id,
-                not_leaved(),
+                *get_leaved_condition(at),
             )
         )
         try:
@@ -133,5 +159,23 @@ class TeamPlayerDao(BaseDAO[models.TeamPlayer]):
             raise PlayerNotInTeam(player=player)
 
 
-def not_leaved():
+def get_leaved_condition(for_date: datetime | None = None):
+    if for_date is None:
+        leaved_condition = (not_leaved(),)
+    else:
+        leaved_condition = not_leaved_for_date(for_date)
+    return leaved_condition
+
+
+def not_leaved_for_date(for_date: datetime) -> Sequence[BinaryExpression[bool]]:
+    return (
+        or_(
+            models.TeamPlayer.date_left > for_date,
+            not_leaved(),
+        ),
+        models.TeamPlayer.date_joined < for_date,
+    )
+
+
+def not_leaved() -> BinaryExpression[bool]:
     return models.TeamPlayer.date_left.is_(None)

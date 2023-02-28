@@ -1,20 +1,19 @@
 import asyncio
 import json
 import logging
+from datetime import datetime, timedelta
 from pathlib import Path
+from typing import BinaryIO
 from zipfile import Path as ZipPath
 
 from aiogram import Bot
-from dataclass_factory import Factory
+from dataclass_factory import Factory, Schema, NameStyle
 from sqlalchemy.orm import close_all_sessions
-from typing.io import BinaryIO
 
-from common.config.models.paths import Paths
 from common.config.parser.logging_config import setup_logging
-from common.config.parser.paths import common_get_paths
-from common.factory import create_dataclass_factory
 from infrastructure.clients.factory import create_file_storage
 from infrastructure.clients.file_gateway import BotFileGateway
+from infrastructure.crawler.factory import get_paths
 from infrastructure.crawler.models.stat import GameStat
 from infrastructure.db.dao.holder import HolderDao
 from infrastructure.db.faсtory import create_pool, create_level_test_dao, create_redis
@@ -35,7 +34,7 @@ async def main(path: Path):
 
     setup_logging(paths)
     config = load_config(paths)
-    dcf = create_dataclass_factory()
+    dcf = Factory(default_schema=Schema(name_style=NameStyle.kebab))
     file_storage = create_file_storage(config.file_storage_config)
     bot = create_bot(config)
     Bot.set_current(bot)
@@ -55,34 +54,13 @@ async def main(path: Path):
                     file_storage=file_storage,
                     bot=bot,
                 ),
+                tech_chat_id=config.bot.log_chat,
             )
-            tech_player = await dao.player.upsert_player(
-                await dao.user.upsert_user(
-                    dto.User(
-                        tg_id=config.bot.log_chat,
-                        first_name="SYSTEM",
-                        last_name="PARSED UPLOADER",
-                        is_bot=True,
-                    )
-                )
-            )
-            await dao.player.promote(tech_player, tech_player)
-            tech_player.can_be_author = True
-            bot_player = await dao.player.upsert_player(
-                await dao.user.upsert_user(
-                    dto.User(
-                        tg_id=bot.id,
-                        first_name="SYSTEM",
-                        last_name="PARSER",
-                        is_bot=True,
-                    )
-                )
-            )
+            bot_player = await dao.player.create_dummy()
             await dao.player.promote(bot_player, bot_player)
             bot_player.can_be_author = True
             await dao.commit()
             await load_scns(
-                tech_player=tech_player,
                 bot_player=bot_player,
                 dao=dao,
                 file_gateway=file_gateway,
@@ -95,19 +73,19 @@ async def main(path: Path):
 
 
 async def load_scns(
-    tech_player: dto.Player,
     bot_player: dto.Player,
     dao: HolderDao,
     file_gateway: FileGateway,
     dcf: Factory,
     path: Path,
 ):
-    for file in path.glob("*.zip"):
+    files = sorted((file for file in path.glob("*.zip")), key=lambda p: int(p.stem))
+    for file in files:
         logger.info("loading game from file %s", file.name)
         try:
             with file.open("rb") as game_zip_scn:
                 game = await load_scn(
-                    player=tech_player,
+                    player=bot_player,
                     dao=dao,
                     file_gateway=file_gateway,
                     dcf=dcf,
@@ -115,20 +93,86 @@ async def load_scns(
                 )
                 if not game:
                     continue
-                await dao.game.set_completed(game)
-                game.status = enums.GameStatus.complete
                 results = load_results(game_zip_scn, dcf)
-            await dao.game.set_start_at(game, results.start_at)
-            game.start_at = results.start_at
-            await dao.game.set_number(game, results.id)
-            game.number = results.id
-            await transfer_ownership(game, bot_player, dao)
+            await dao.game.set_completed(game)
+            game.status = enums.GameStatus.complete
+            await set_results(game, results, dao)
             await dao.commit()
 
         except exceptions.CantEditGame:
             logger.info("game from file %s already loaded", file.name)
         else:
             logger.info("successfully loaded game %s with number %s", game.id, game.number)
+
+
+async def set_results(game: dto.FullGame, results: GameStat, dao: HolderDao):
+    await dao.game.set_start_at(game, results.start_at)
+    game.start_at = results.start_at
+    await dao.game.set_number(game, results.id)
+    game.number = results.id
+    for forum_team_name, levels in results.results.items():
+        team = await dao.team.get_by_forum_team_name(forum_team_name)
+        await dao.level_time.set_to_level(team, game, 0, results.start_at)
+        for level in levels:
+            await dao.level_time.set_to_level(team, game, level.number, level.at)
+    for forum_team_name, keys in results.keys.items():
+        team = await dao.team.get_by_forum_team_name(forum_team_name)
+        for i, key in enumerate(keys):
+            player = await get_or_create_player(dao, key.player)
+            await join_team_if_already_not(player, team, results.start_at, dao)
+            await add_waiver_if_already_not(player, team, game, dao)
+            if i == len(keys) - 1:
+                is_correct = True
+            elif key.level != keys[i + 1].level:
+                is_correct = True
+            else:
+                is_correct = False
+            await dao.key_time.save_key(
+                key=key.value,
+                team=team,
+                game=game,
+                player=player,
+                level=game.levels[key.level - 1],
+                is_correct=is_correct,
+                is_duplicate=False,
+            )
+
+
+async def get_or_create_player(dao: HolderDao, forum_player_name: str):
+    player = await dao.player.get_by_forum_player_name(forum_player_name)
+    if not player:
+        player = await dao.player.create_for_forum_user_name(forum_player_name)
+    return player
+
+
+async def add_waiver_if_already_not(
+    player: dto.Player, team: dto.Team, game: dto.Game, dao: HolderDao
+):
+    await dao.waiver.upsert_with_flush(
+        dto.Waiver(
+            player=player,
+            team=team,
+            game=game,
+            played=enums.Played.yes,
+        )
+    )
+
+
+async def join_team_if_already_not(
+    player: dto.Player, team: dto.Team, at: datetime, dao: HolderDao
+):
+    current_team = await dao.team_player.get_team(player, for_date=at)
+    if current_team is not None and current_team.id == team.id:
+        return
+    if current_team is not None:
+        await dao.team_player.leave_team(player, at - timedelta(hours=8))
+    await dao.team_player.join_team(
+        player=player,
+        team=team,
+        role="Полевой",
+        as_captain=False,
+        joined_at=at - timedelta(hours=6),
+    )
 
 
 async def transfer_ownership(game: dto.FullGame, bot_player: dto.Player, dao: HolderDao):
@@ -166,10 +210,6 @@ async def load_scn(
         return
     logger.info("game scenario with id %s saved", game.id)
     return game
-
-
-def get_paths() -> Paths:
-    return common_get_paths("CRAWLER_PATH")
 
 
 if __name__ == "__main__":

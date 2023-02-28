@@ -12,6 +12,7 @@ from infrastructure.db.dao.memory.level_testing import LevelTestingData
 from shvatka.interfaces.clients.file_storage import FileStorage
 from shvatka.interfaces.scheduler import Scheduler
 from shvatka.utils.key_checker_lock import KeyCheckerFactory
+from tgbot.config.models.bot import BotConfig
 from tgbot.username_resolver.user_getter import UserGetter
 from tgbot.views.hint_factory.hint_parser import HintParser
 from tgbot.views.telegraph import Telegraph
@@ -52,6 +53,7 @@ class InitMiddleware(BaseMiddleware):
         data["locker"] = self.locker
         data["file_storage"] = self.file_storage
         data["telegraph"] = self.telegraph
+        config: BotConfig = data["config"]
         async with self.pool() as session:
             holder_dao = HolderDao(session, self.redis, self.level_test_dao)
             data["dao"] = holder_dao
@@ -61,7 +63,10 @@ class InitMiddleware(BaseMiddleware):
                 bot=data["bot"],
             )
             data["file_gateway"] = BotFileGateway(
-                bot=data["bot"], file_storage=self.file_storage, hint_parser=data["hint_parser"]
+                bot=data["bot"],
+                file_storage=self.file_storage,
+                hint_parser=data["hint_parser"],
+                tech_chat_id=config.log_chat,
             )
             result = await handler(event, data)
             del data["dao"]

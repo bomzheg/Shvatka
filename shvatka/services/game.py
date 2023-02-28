@@ -41,7 +41,9 @@ async def upsert_game(
     game_scn = parse_uploaded_game(raw_scn.scn, dcf)
     if not await dao.is_name_available(name=game_scn.name):
         if not await dao.is_author_game_by_name(name=game_scn.name, author=author):
-            raise CantEditGame(player=author, text=f"cant edit game with name {game_scn.name}")
+            raise CantEditGame(
+                player=author, text=f"cant edit game with name {game_scn.name} (not author)"
+            )
         game = await dao.get_game_by_name(name=game_scn.name, author=author)
         check_game_editable(game)
     guids = await upsert_files(author, raw_scn.files, game_scn.files, dao, file_gateway)

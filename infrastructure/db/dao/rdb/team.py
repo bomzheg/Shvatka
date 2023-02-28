@@ -40,6 +40,28 @@ class TeamDao(BaseDAO[models.Team]):
             is_dummy=team.is_dummy,
         )
 
+    async def create_by_forum(self, forum: dto.ForumTeam, captain: dto.Player | None) -> dto.Team:
+        forum_team_db = await self.session.get(models.ForumTeam, forum.id)
+        if forum_team_db.team_id:
+            team = await self._get_by_id(forum_team_db.team_id)
+        else:
+            team = models.Team(
+                captain_id=captain.id if captain else None,
+                name=forum.name,
+                description=None,
+                is_dummy=True,
+            )
+            forum_team_db.team = team
+            self.session.add(team)
+            try:
+                await self._flush(team)
+            except IntegrityError as e:
+                raise TeamError(
+                    player=captain,
+                    text="can't create team",
+                ) from e
+        return team.to_dto(forum_team=forum, captain=captain)
+
     async def get_by_chat(self, chat: dto.Chat) -> dto.Team | None:
         result = await self.session.execute(
             select(models.Team)
@@ -47,6 +69,7 @@ class TeamDao(BaseDAO[models.Team]):
             .where(models.Chat.id == chat.db_id)
             .options(
                 joinedload(models.Team.captain).joinedload(models.Player.user),
+                joinedload(models.Team.captain).joinedload(models.Player.forum_user),
             )
         )
         try:
@@ -68,10 +91,13 @@ class TeamDao(BaseDAO[models.Team]):
             id_,
             (
                 joinedload(models.Team.captain).joinedload(models.Player.user),
+                joinedload(models.Team.captain).joinedload(models.Player.forum_user),
                 joinedload(models.Team.chat),
+                joinedload(models.Team.forum_team),
             ),
+            populate_existing=True,
         )
-        return team.to_dto(team.chat.to_dto())
+        return team.to_dto_chat_prefetched()
 
     async def rename_team(self, team: dto.Team, new_name: str) -> None:
         await self.session.execute(
@@ -82,3 +108,18 @@ class TeamDao(BaseDAO[models.Team]):
         await self.session.execute(
             update(models.Team).where(models.Team.id == team.id).values(description=new_desc)
         )
+
+    async def get_by_forum_team_name(self, name: str) -> dto.Team:
+        result = await self.session.scalars(
+            select(models.Team)
+            .join(models.Team.forum_team)
+            .options(
+                joinedload(models.Team.captain).joinedload(models.Player.user),
+                joinedload(models.Team.captain).joinedload(models.Player.forum_user),
+                joinedload(models.Team.chat),
+                joinedload(models.Team.forum_team),
+            )
+            .where(models.ForumTeam.name == name)
+        )
+        team: models.Team = result.one()
+        return team.to_dto_chat_prefetched()

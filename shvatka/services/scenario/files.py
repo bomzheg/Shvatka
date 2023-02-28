@@ -1,4 +1,4 @@
-from typing.io import BinaryIO
+from typing import BinaryIO
 
 from shvatka.interfaces.clients.file_storage import FileGateway
 from shvatka.interfaces.dal.game import GameUpserter, GamePackager

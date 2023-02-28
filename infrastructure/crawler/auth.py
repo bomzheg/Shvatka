@@ -50,5 +50,9 @@ async def get_auth_cookie():
             username=os.getenv("SH_USERNAME"),
             password=os.getenv("SH_PASSWORD"),
         )
+        if not creds.username or not creds.password:
+            raise EnvironmentError(
+                "For run forum parsers, you have to specify next env variables: SH_USERNAME, SH_PASSWORD",
+            )
         cookies = await auth(session, creds)
     return cookies

@@ -71,7 +71,9 @@ class KeyTimeDao(BaseDAO[models.KeyTime]):
             .where(models.KeyTime.game_id == game.id)
             .options(
                 joinedload(models.KeyTime.team).joinedload(models.Team.chat),
+                joinedload(models.KeyTime.team).joinedload(models.Team.forum_team),
                 joinedload(models.KeyTime.player).joinedload(models.Player.user),
+                joinedload(models.KeyTime.player).joinedload(models.Player.forum_user),
             )
             .order_by(models.KeyTime.enter_time)
         )
@@ -79,7 +81,7 @@ class KeyTimeDao(BaseDAO[models.KeyTime]):
         return [
             key.to_dto(
                 player=key.player.to_dto_user_prefetched(),
-                team=key.team.to_dto(key.team.chat.to_dto()),
+                team=key.team.to_dto_chat_prefetched(),
             )
             for key in keys
         ]

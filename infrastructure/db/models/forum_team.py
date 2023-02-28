@@ -1,5 +1,5 @@
-from sqlalchemy import Text, BigInteger, ForeignKey
-from sqlalchemy.orm import relationship, mapped_column
+from sqlalchemy import ForeignKey
+from sqlalchemy.orm import relationship, mapped_column, Mapped
 
 from infrastructure.db.models.base import Base
 from shvatka.models import dto
@@ -8,8 +8,10 @@ from shvatka.models import dto
 class ForumTeam(Base):
     __tablename__ = "forum_teams"
     __mapper_args__ = {"eager_defaults": True}
-    id = mapped_column(BigInteger, primary_key=True)
-    name = mapped_column(Text, nullable=True)
+    id: Mapped[int] = mapped_column(primary_key=True)
+    forum_id: Mapped[int] = mapped_column(unique=True, nullable=False)
+    name: Mapped[str] = mapped_column(nullable=False, unique=True)
+    url: Mapped[str]
 
     team_id = mapped_column(ForeignKey("teams.id"), unique=True, nullable=True)
     team = relationship(
@@ -25,5 +27,7 @@ class ForumTeam(Base):
     def to_dto(self) -> dto.ForumTeam:
         return dto.ForumTeam(
             id=self.id,
+            forum_id=self.forum_id,
             name=self.name,
+            url=self.url,
         )

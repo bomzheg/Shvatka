@@ -14,12 +14,16 @@ class LevelTimeDao(BaseDAO[models.LevelTime]):
     def __init__(self, session: AsyncSession):
         super().__init__(models.LevelTime, session)
 
-    async def set_to_level(self, team: dto.Team, game: dto.Game, level_number: int):
+    async def set_to_level(
+        self, team: dto.Team, game: dto.Game, level_number: int, at: datetime = None
+    ):
+        if at is None:
+            at = datetime.now(tz=tz_utc)
         level_time = models.LevelTime(
             game_id=game.id,
             team_id=team.id,
             level_number=level_number,
-            start_at=datetime.now(tz=tz_utc),
+            start_at=at,
         )
         self._save(level_time)
 
@@ -55,7 +59,11 @@ class LevelTimeDao(BaseDAO[models.LevelTime]):
                 joinedload(models.LevelTime.team)
                 .joinedload(models.Team.captain)
                 .joinedload(models.Player.user),
+                joinedload(models.LevelTime.team)
+                .joinedload(models.Team.captain)
+                .joinedload(models.Player.forum_user),
                 joinedload(models.LevelTime.team).joinedload(models.Team.chat),
+                joinedload(models.LevelTime.team).joinedload(models.Team.forum_team),
             )
             .order_by(
                 models.LevelTime.team_id,
@@ -65,7 +73,7 @@ class LevelTimeDao(BaseDAO[models.LevelTime]):
         return [
             lt.to_dto(
                 game=game,
-                team=lt.team.to_dto(lt.team.chat.to_dto()),
+                team=lt.team.to_dto_chat_prefetched(),
             )
             for lt in result.all()
         ]

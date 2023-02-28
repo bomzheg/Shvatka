@@ -45,12 +45,12 @@ async def show_level(c: CallbackQuery, button: Button, manager: DialogManager):
 async def show_all_hints(author: dto.Player, hint_sender: HintSender, level: dto.Level):
     for hint in level.scenario.time_hints:
         await hint_sender.send_hints(
-            chat_id=author.user.tg_id,
+            chat_id=author.get_chat_id(),
             hint_containers=hint.hint,
             caption=f"Подсказка {hint.time} мин.",
         )
     await hint_sender.bot.send_message(
-        chat_id=author.user.tg_id,
+        chat_id=author.get_chat_id(),
         text=f"Это был весь уровень {level.name_id}",
     )
 
@@ -62,8 +62,8 @@ async def send_to_testing(c: CallbackQuery, widget: Any, manager: DialogManager,
     level = await get_by_id(manager.start_data["level_id"], author, dao.level)
     org = await get_org_by_id(id_=int(org_id), dao=dao.organizer)
     await bot.send_message(
-        chat_id=org.player.user.tg_id,
-        text=f"{render_small_card_link(author.user)} "
+        chat_id=org.player.get_chat_id(),
+        text=f"{render_small_card_link(author)} "
         f"предлагает протестировать уровень {level.name_id}. "
         f"Начать прямо сейчас?",
         reply_markup=kb.get_kb_level_test_invite(level, org),

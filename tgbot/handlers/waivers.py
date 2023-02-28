@@ -65,16 +65,16 @@ async def add_vote_handler(
 
 
 async def start_approve_waivers_handler(
-    m: Message, player: dto.Player, game: dto.Game, dao: HolderDao, bot: Bot
+    m: Message, player: dto.Player, user: dto.User, game: dto.Game, dao: HolderDao, bot: Bot
 ):
     team = await get_my_team(player, dao.team_player)
     check_allow_approve_waivers(await get_full_team_player(player, team, dao.waiver_approver))
     assert team is not None
     await total_remove_msg(
-        bot=bot, chat_id=team.chat.tg_id, msg_id=await get_saved_message(game, team, dao.poll)
+        bot=bot, chat_id=team.get_chat_id(), msg_id=await get_saved_message(game, team, dao.poll)
     )
     await bot.send_message(
-        chat_id=player.user.tg_id,
+        chat_id=user.tg_id,
         **await start_approve_waivers(game, team, dao),
     )
 
@@ -120,7 +120,7 @@ async def confirm_approve_waivers_handler(
         )
     await approve_waivers(game=game, team=team, approver=player, dao=dao.waiver_approver)
     await bot.send_message(
-        chat_id=team.chat.tg_id,
+        chat_id=team.get_chat_id(),
         text=await get_waiver_final_text(team, game, dao),
         disable_web_page_preview=True,
     )

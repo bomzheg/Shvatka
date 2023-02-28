@@ -1,5 +1,7 @@
-from sqlalchemy import Text, BigInteger, ForeignKey, Date
-from sqlalchemy.orm import relationship, mapped_column
+from datetime import date
+
+from sqlalchemy import ForeignKey
+from sqlalchemy.orm import relationship, mapped_column, Mapped
 
 from infrastructure.db.models.base import Base
 from shvatka.models import dto
@@ -8,11 +10,12 @@ from shvatka.models import dto
 class ForumUser(Base):
     __tablename__ = "forum_users"
     __mapper_args__ = {"eager_defaults": True}
-    id = mapped_column(BigInteger, primary_key=True)
-    forum_id = mapped_column(BigInteger, unique=True, nullable=False)
-    name = mapped_column(Text, nullable=False)
-    registered = mapped_column(Date, nullable=False)
-    player_id = mapped_column(ForeignKey("players.id"), unique=True)
+    id: Mapped[int] = mapped_column(primary_key=True)
+    forum_id: Mapped[int] = mapped_column(unique=True)
+    name: Mapped[str] = mapped_column(nullable=False, unique=True)
+    registered: Mapped[date]
+    url: Mapped[str]
+    player_id: Mapped[int] = mapped_column(ForeignKey("players.id"), unique=True)
 
     player = relationship(
         "Player",

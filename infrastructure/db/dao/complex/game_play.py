@@ -33,7 +33,7 @@ class GamePreparerImpl(GamePreparer):
         return await self.org.get_orgs(game)
 
     async def get_poll_msg(self, team: dto.Team, game: dto.Game) -> int:
-        return await self.poll.get_pool_msg_id(chat_id=team.chat.tg_id, game_id=game.id)
+        return await self.poll.get_pool_msg_id(chat_id=team.get_chat_id(), game_id=game.id)
 
 
 @dataclass

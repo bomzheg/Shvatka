@@ -177,19 +177,32 @@ class GameParser:
             rows = table.xpath(".//tr")
             team_name = rows[0].xpath("./td")[0].text
             keys = []
+            keys_buffer = []
             level = 1
             for row in rows[2:]:
                 cells = row.xpath("./td")
                 if len(cells) == 1:
-                    level += 1
+                    if get_finished_level_number(cells) == level - 1:
+                        # Sometimes (game 60) it may contain
+                        # two times level x completed ("Уровень 1 завершён")
+                        for key in keys_buffer:
+                            key.level -= 1
+                    else:
+                        level += 1
+                    keys.extend(keys_buffer)
+                    keys_buffer.clear()
                     continue
                 try:
                     time, key, player = cells
                 except ValueError as e:
-                    logger.error("can't parse key log", exc_info=e)
+                    logger.error(
+                        "can't parse key log for cells %s",
+                        [cell.text for cell in cells],
+                        exc_info=e,
+                    )
                     continue
                 local_date = datetime.strptime(time.text, "%Y-%m-%d %H:%M:%S")
-                keys.append(
+                keys_buffer.append(
                     Key(
                         player=player.xpath("./b")[0].text,
                         value=key.text,
@@ -199,6 +212,8 @@ class GameParser:
                         level=level,
                     )
                 )
+            keys.extend(keys_buffer)
+            keys_buffer.clear()
             log_keys[team_name] = keys
         return log_keys
 
@@ -290,7 +305,12 @@ async def save_all_scns_to_files(game_ids: list[int]):
         )
         packed_scenario = pack_scn(scenario)
         with open(path / f"{game.id}.zip", "wb") as f:
+            logger.debug("saved to filename %s", f.name)
             f.write(packed_scenario.read())
+
+
+def get_finished_level_number(cells: list[_Element]):
+    return int(cells[0].text.strip().removeprefix("Уровень").removesuffix("закончен").strip())
 
 
 def get_parseable_games_ids():

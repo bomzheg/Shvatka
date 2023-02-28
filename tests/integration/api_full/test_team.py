@@ -4,6 +4,7 @@ from dataclass_factory import Factory
 from httpx import AsyncClient
 
 from api.dependencies import AuthProvider
+from api.models import responses
 from api.models.auth import Token
 from infrastructure.db.dao.holder import HolderDao
 from shvatka.models import dto
@@ -37,4 +38,4 @@ async def test_get_team(client: AsyncClient, harry: dto.Player, token: Token, da
     assert resp.is_success
     dcf = Factory()
     resp.read()
-    assert team == dcf.load(resp.json(), dto.Team)
+    assert responses.Team.from_core(team) == dcf.load(resp.json(), responses.Team)

@@ -69,7 +69,7 @@ async def remove_player_handler(c: CallbackQuery, button: Button, manager: Dialo
     bot: Bot = manager.middleware_data["bot"]
     team = await get_my_team(captain, dao.team_player)
     await bot.send_message(
-        chat_id=team.chat.tg_id,
+        chat_id=team.get_chat_id(),
         text=f"Игрок {hd.quote(player.name_mention)} был исключён из команды.",
     )
     await manager.switch_to(state=states.CaptainsBridgeSG.players)

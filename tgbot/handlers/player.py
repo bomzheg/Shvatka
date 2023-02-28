@@ -117,7 +117,7 @@ async def leave_handler(message: Message, player: dto.Player, dao: HolderDao, bo
     await leave(player, player, dao.team_leaver)
     await message.answer(f"Ты вышел из команды {hd.quote(team.name)}")
     await bot.send_message(
-        chat_id=team.chat.tg_id,
+        chat_id=team.get_chat_id(),
         text=f"Игрок {hd.quote(player.name_mention)} вышел из команды.",
     )
 

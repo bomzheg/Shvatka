@@ -21,8 +21,8 @@ async def handle_sh_error(error: ErrorEvent, log_chat_id: int, bot: Bot):
         chat_id = exception.chat.tg_id
     if chat_id is None and exception.user:
         chat_id = exception.user.tg_id
-    if chat_id is None and exception.player and exception.player.user:
-        chat_id = exception.player.user.tg_id
+    if chat_id is None and exception.player:
+        chat_id = exception.player.get_chat_id()
     if chat_id:
         try:
             await bot.send_message(chat_id=chat_id, text=f"Произошла ошибка\n{exception}")

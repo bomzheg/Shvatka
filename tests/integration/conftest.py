@@ -239,11 +239,14 @@ def hint_parser(
 
 
 @pytest.fixture
-def file_gateway(file_storage: FileStorage, bot: Bot, hint_parser: HintParser) -> FileGateway:
+def file_gateway(
+    file_storage: FileStorage, bot: Bot, hint_parser: HintParser, bot_config: TgBotConfig
+) -> FileGateway:
     return BotFileGateway(
         bot=bot,
         file_storage=file_storage,
         hint_parser=hint_parser,
+        tech_chat_id=bot_config.bot.log_chat,
     )
 
 

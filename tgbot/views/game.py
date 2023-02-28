@@ -42,7 +42,7 @@ class BotView(GameViewPreparer, GameView):
         for team in teams:
             try:
                 await self.bot.edit_message_reply_markup(
-                    chat_id=team.chat.tg_id,
+                    chat_id=team.get_chat_id(),
                     message_id=await dao.get_poll_msg(team=team, game=game),
                     reply_markup=None,
                 )
@@ -51,7 +51,7 @@ class BotView(GameViewPreparer, GameView):
 
     async def send_puzzle(self, team: dto.Team, level: dto.Level) -> None:
         await self.hint_sender.send_hints(
-            chat_id=team.chat.tg_id,
+            chat_id=team.get_chat_id(),
             hint_containers=level.get_hint(0).hint,
             caption=hd.bold(f"Уровень № {level.number_in_game + 1}"),
         )
@@ -65,26 +65,28 @@ class BotView(GameViewPreparer, GameView):
         else:
             hint_caption = f"Уровень №{level.number_in_game + 1}. Подсказка ({hint.time} мин.):\n"
         await self.hint_sender.send_hints(
-            chat_id=team.chat.tg_id, hint_containers=hint.hint, caption=hint_caption
+            chat_id=team.get_chat_id(), hint_containers=hint.hint, caption=hint_caption
         )
 
     async def duplicate_key(self, key: dto.KeyTime) -> None:
         await self.bot.send_message(
-            chat_id=key.team.chat.tg_id, text=f"Ключ {hd.pre(key.text)} уже был введён ранее."
+            chat_id=key.team.get_chat_id(), text=f"Ключ {hd.pre(key.text)} уже был введён ранее."
         )
 
     async def correct_key(self, key: dto.KeyTime) -> None:
         await self.bot.send_message(
-            chat_id=key.team.chat.tg_id, text=f"Ключ {hd.pre(key.text)} верный! Поздравляю!"
+            chat_id=key.team.get_chat_id(), text=f"Ключ {hd.pre(key.text)} верный! Поздравляю!"
         )
 
     async def wrong_key(self, key: dto.KeyTime) -> None:
         await self.bot.send_message(
-            chat_id=key.team.chat.tg_id, text=f"Ключ {hd.pre(key.text)} неверный."
+            chat_id=key.team.get_chat_id(), text=f"Ключ {hd.pre(key.text)} неверный."
         )
 
     async def game_finished(self, team: dto.Team) -> None:
-        await self.bot.send_message(chat_id=team.chat.tg_id, text=f"Игра завершена! Поздравляю!")
+        await self.bot.send_message(
+            chat_id=team.get_chat_id(), text=f"Игра завершена! Поздравляю!"
+        )
 
     async def game_finished_by_all(self, team: dto.Team) -> None:
         """todo change bot commands"""
@@ -108,20 +110,29 @@ class BotOrgNotifier(OrgNotifier):
         match event:
             case LevelUp():
                 for org in event.orgs_list:
+                    if org.player.get_chat_id() is None:
+                        logger.warning("player %s have no user chat_id", org.player)
+                        continue
                     with suppress(TelegramAPIError):
                         await self.notify_level_up(cast(LevelUp, event), org)
             case NewOrg():
                 for org in event.orgs_list:
+                    if org.player.get_chat_id() is None:
+                        logger.warning("player %s have no user chat_id", org.player)
+                        continue
                     with suppress(TelegramAPIError):
                         await self.notify_new_org(cast(NewOrg, event), org)
             case LevelTestCompleted():
                 for org in event.orgs_list:
+                    if org.player.get_chat_id() is None:
+                        logger.warning("player %s have no user chat_id", org.player)
+                        continue
                     with suppress(TelegramAPIError):
                         await self.level_test_completed(cast(LevelTestCompleted, event), org)
 
     async def notify_level_up(self, level_up: LevelUp, org: dto.Organizer):
         await self.bot.send_message(
-            chat_id=org.player.user.tg_id,
+            chat_id=org.player.get_chat_id(),
             text=f"Команда {hd.quote(level_up.team.name)} перешла "
             f"на уровень {level_up.new_level.number_in_game} "
             f"({level_up.new_level.name_id})",
@@ -129,14 +140,14 @@ class BotOrgNotifier(OrgNotifier):
 
     async def notify_new_org(self, new_org: NewOrg, org: dto.Organizer):
         await self.bot.send_message(
-            chat_id=org.player.user.tg_id,
+            chat_id=org.player.get_chat_id(),
             text=f"На игру {hd.quote(new_org.game.name)} "
             f"добавлен новый орг {hd.quote(new_org.org.player.name_mention)}",
         )
 
     async def level_test_completed(self, event: LevelTestCompleted, org: dto.Organizer):
         await self.bot.send_message(
-            chat_id=org.player.user.tg_id,
+            chat_id=org.player.get_chat_id(),
             text=f"Тестирование уровня {event.suite.level.name_id}.\n"
             f"Игрок {hd.quote(event.suite.tester.player.name_mention)} "
             f"закончил тестирование уровня за {event.result.seconds // 60} минут "

@@ -195,13 +195,9 @@ def setup_team_manage() -> Router:
         Command(commands=MANAGE_TEAM_COMMAND),
         or_f(
             TeamPlayerFilter(is_captain=True),
-            or_f(
-                TeamPlayerFilter(can_manage_players=True),
-                or_f(
-                    TeamPlayerFilter(can_remove_players=True),
-                    TeamPlayerFilter(can_change_team_name=True),
-                ),
-            ),
+            TeamPlayerFilter(can_manage_players=True),
+            TeamPlayerFilter(can_remove_players=True),
+            TeamPlayerFilter(can_change_team_name=True),
         ),
     )
     return router

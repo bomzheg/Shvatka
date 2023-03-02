@@ -76,7 +76,7 @@ captains_bridge = Dialog(
         SwitchTo(Const("⤴Назад"), id="back", state=states.CaptainsBridgeSG.main),
         ScrollingGroup(
             Select(
-                Jinja("{{item.player.name_mention}}"),
+                Jinja("{{item|player_emoji}}{{item.player.name_mention}}"),
                 id="players",
                 item_id_getter=lambda x: x.player.id,
                 items="players",

@@ -74,6 +74,8 @@ class CaptainsBridgeSG(StatesGroup):
     players = State()
     player = State()
     confirm_delete = State()
+    player_role = State()
+    player_emoji = State()
 
 
 class CompletedGamesPanelSG(StatesGroup):

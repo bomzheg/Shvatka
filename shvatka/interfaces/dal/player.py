@@ -75,3 +75,21 @@ class TeamPlayerPermissionFlipper(Committer, Protocol):
         self, player: dto.TeamPlayer, permission: enums.TeamPlayerPermission
     ):
         raise NotImplementedError
+
+
+class TeamPlayerRoleChanger(Protocol):
+    async def change_role(self, team_player: dto.TeamPlayer, role: str) -> None:
+        raise NotImplementedError
+
+
+class TeamPlayerRoleUpdater(TeamPlayerRoleChanger, TeamPlayerGetter, Committer, Protocol):
+    pass
+
+
+class TeamPlayerEmojiChanger(Committer, Protocol):
+    async def change_emoji(self, team_player: dto.TeamPlayer, emoji: str) -> None:
+        raise NotImplementedError
+
+
+class TeamPlayerEmojiUpdater(TeamPlayerEmojiChanger, TeamPlayerGetter, Committer, Protocol):
+    pass

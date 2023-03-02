@@ -12,7 +12,16 @@ from .handlers import (
     select_player,
     change_permission_handler,
     remove_player_handler,
+    change_role_handler,
+    change_emoji_handler,
 )
+
+TEAM_PLAYER_CARD = Jinja(
+    "Игрок {{selected_player.name_mention}} служит в команде 🚩{{team.name}} "
+    "c {{selected_team_player.date_joined | user_timezone}}\n"
+    "Сейчас занимает должность {{selected_team_player|player_emoji}}{{selected_team_player.role}}\n"
+)
+
 
 captains_bridge = Dialog(
     Window(
@@ -81,7 +90,7 @@ captains_bridge = Dialog(
         state=states.CaptainsBridgeSG.players,
     ),
     Window(
-        Jinja("Меню игрока {{selected_player.name_mention}} команды 🚩{{team.name}}"),
+        TEAM_PLAYER_CARD,
         SwitchTo(Const("⤴В меню команды"), id="to_main", state=states.CaptainsBridgeSG.main),
         SwitchTo(Const("⤴Назад"), id="back", state=states.CaptainsBridgeSG.players),
         Button(
@@ -115,6 +124,18 @@ captains_bridge = Dialog(
             when=F["team_player"].can_manage_players & F["team_player"].can_remove_players,
         ),
         SwitchTo(
+            Const("Изменить должность"),
+            id="to_role",
+            state=states.CaptainsBridgeSG.player_role,
+            when=F["team_player"].can_manage_players,
+        ),
+        SwitchTo(
+            Const("Изменить emoji"),
+            id="to_emoji",
+            state=states.CaptainsBridgeSG.player_emoji,
+            when=F["team_player"].can_manage_players,
+        ),
+        SwitchTo(
             Const("Изгнать"),
             id="delete",
             state=states.CaptainsBridgeSG.confirm_delete,
@@ -124,11 +145,8 @@ captains_bridge = Dialog(
         state=states.CaptainsBridgeSG.player,
     ),
     Window(
-        Jinja(
-            "Игрок {{selected_player.name_mention}} служит в команде {{team.name}} "
-            "c {{selected_team_player.date_joined | user_timezone}}\n"
-            "Сейчас занимает должность {{selected_team_player|player_emoji}}{{selected_team_player.role}}\n"
-            "\n"
+        TEAM_PLAYER_CARD,
+        Const(
             "Вы уверены что хотите изгнать его из команды?",
         ),
         SwitchTo(Const("⤴В меню команды"), id="to_main", state=states.CaptainsBridgeSG.main),
@@ -141,5 +159,37 @@ captains_bridge = Dialog(
         Button(Const("Да, удалить"), id="delete", on_click=remove_player_handler),
         getter=get_selected_player,
         state=states.CaptainsBridgeSG.confirm_delete,
+    ),
+    Window(
+        TEAM_PLAYER_CARD,
+        Const("Какую роль ему нужно присвоить?"),
+        TextInput(
+            id="role_changer",
+            on_success=change_role_handler,
+        ),
+        SwitchTo(Const("⤴В меню команды"), id="to_main", state=states.CaptainsBridgeSG.main),
+        SwitchTo(
+            Const("⤴Назад к списку игроков"),
+            id="to_players",
+            state=states.CaptainsBridgeSG.players,
+        ),
+        getter=get_selected_player,
+        state=states.CaptainsBridgeSG.player_role,
+    ),
+    Window(
+        TEAM_PLAYER_CARD,
+        Const("Какой emoji должен отображаться перед его ником?"),
+        TextInput(
+            id="emoji_changer",
+            on_success=change_emoji_handler,
+        ),
+        SwitchTo(Const("⤴В меню команды"), id="to_main", state=states.CaptainsBridgeSG.main),
+        SwitchTo(
+            Const("⤴Назад к списку игроков"),
+            id="to_players",
+            state=states.CaptainsBridgeSG.players,
+        ),
+        getter=get_selected_player,
+        state=states.CaptainsBridgeSG.player_emoji,
     ),
 )

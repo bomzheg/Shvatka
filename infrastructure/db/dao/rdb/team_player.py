@@ -144,6 +144,13 @@ class TeamPlayerDao(BaseDAO[models.TeamPlayer]):
             .values(role=role)
         )
 
+    async def change_emoji(self, team_player: dto.TeamPlayer, emoji: str) -> None:
+        await self.session.execute(
+            update(models.TeamPlayer)
+            .where(models.TeamPlayer.id == team_player.id)
+            .values(emoji=emoji)
+        )
+
     async def _get_my_team_player(
         self, player: dto.Player, at: datetime | None = None
     ) -> models.TeamPlayer:

@@ -8,7 +8,7 @@ from shvatka.interfaces.dal.waiver import (
 )
 from shvatka.models import dto, enums
 from shvatka.models.enums.played import Played
-from shvatka.services.player import check_player_on_team, get_full_team_player
+from shvatka.services.player import get_checked_player_on_team, get_full_team_player
 from shvatka.utils.exceptions import WaiverForbidden, PermissionsError
 
 
@@ -65,7 +65,7 @@ async def force_add_vote(
     vote: Played,
     dao: WaiverVoteAdder,
 ):
-    await check_player_on_team(player, team, dao)
+    await get_checked_player_on_team(player, team, dao)
     await dao.add_player_vote(team.id, player.id, vote.name)
 
 

@@ -15,6 +15,8 @@ from shvatka.services.player import (
     get_team_player_by_player,
     get_player_by_id,
     leave,
+    change_role,
+    change_emoji,
 )
 from shvatka.services.team import rename_team, change_team_desc
 from tgbot import states
@@ -73,3 +75,23 @@ async def remove_player_handler(c: CallbackQuery, button: Button, manager: Dialo
         text=f"Игрок {hd.quote(player.name_mention)} был исключён из команды.",
     )
     await manager.switch_to(state=states.CaptainsBridgeSG.players)
+
+
+async def change_role_handler(m: Message, widget: Any, manager: DialogManager, role: str):
+    dao: HolderDao = manager.middleware_data["dao"]
+    captain: dto.Player = manager.middleware_data["player"]
+    player_id = manager.dialog_data["selected_player_id"]
+    player = await get_player_by_id(player_id, dao.player)
+    team = await get_my_team(captain, dao.team_player)
+    await change_role(player, team, captain, role, dao.team_player)
+    await manager.switch_to(states.CaptainsBridgeSG.player)
+
+
+async def change_emoji_handler(m: Message, widget: Any, manager: DialogManager, emoji: str):
+    dao: HolderDao = manager.middleware_data["dao"]
+    captain: dto.Player = manager.middleware_data["player"]
+    player_id = manager.dialog_data["selected_player_id"]
+    player = await get_player_by_id(player_id, dao.player)
+    team = await get_my_team(captain, dao.team_player)
+    await change_emoji(player, team, captain, emoji, dao.team_player)
+    await manager.switch_to(states.CaptainsBridgeSG.player)

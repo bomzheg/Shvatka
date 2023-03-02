@@ -10,6 +10,8 @@ from shvatka.interfaces.dal.player import (
     TeamPlayerGetter,
     PlayerByIdGetter,
     TeamPlayerPermissionFlipper,
+    TeamPlayerRoleUpdater,
+    TeamPlayerEmojiUpdater,
 )
 from shvatka.interfaces.dal.secure_invite import InviteSaver, InviteRemover, InviterDao
 from shvatka.models import dto, enums
@@ -93,10 +95,41 @@ async def join_team(
     await dao.commit()
 
 
-async def check_player_on_team(player: dto.Player, team: dto.Team, dao: TeamPlayerGetter):
-    pit = await dao.get_team_player(player)
-    if pit.team_id != team.id:
-        raise PlayerNotInTeam(player=player, team=team)
+async def get_checked_player_on_team(
+    player: dto.Player, team: dto.Team, dao: TeamPlayerGetter
+) -> dto.TeamPlayer:
+    tp = await dao.get_team_player(player)
+    check_team_player_on_team(tp, team)
+    return tp
+
+
+def check_team_player_on_team(team_player: dto.TeamPlayer, team: dto.Team):
+    if team is None or team_player.team_id != team.id:
+        raise PlayerNotInTeam(player_id=team_player.player_id, team=team)
+
+
+async def change_role(
+    player: dto.Player, team: dto.Team, manager: dto.Player, role: str, dao: TeamPlayerRoleUpdater
+) -> None:
+    manager_tp = await get_full_team_player(manager, team, dao)
+    check_can_manage_players(manager_tp)
+    tp = await get_checked_player_on_team(player, team, dao)
+    await dao.change_role(tp, role)
+    await dao.commit()
+
+
+async def change_emoji(
+    player: dto.Player,
+    team: dto.Team,
+    manager: dto.Player,
+    emoji: str,
+    dao: TeamPlayerEmojiUpdater,
+) -> None:
+    manager_tp = await get_full_team_player(manager, team, dao)
+    check_can_manage_players(manager_tp)
+    tp = await get_checked_player_on_team(player, team, dao)
+    await dao.change_emoji(tp, emoji)
+    await dao.commit()
 
 
 async def leave(player: dto.Player, remover: dto.Player, dao: TeamLeaver):
@@ -157,12 +190,10 @@ async def get_full_team_player(
     player: dto.Player, team: dto.Team | None, dao: TeamPlayerGetter
 ) -> dto.FullTeamPlayer:
     team_player = dto.FullTeamPlayer.from_simple(
-        team_player=await dao.get_team_player(player),
+        team_player=await get_checked_player_on_team(player, team, dao),
         team=team,
         player=player,
     )
-    if team is None or team_player.team_id != team.id:
-        raise PlayerNotInTeam(player=player, team=team)
     return team_player
 
 

@@ -1,8 +1,8 @@
 from datetime import datetime
 
-from src.shvatka.models import dto
-from src.shvatka.models.enums import GameStatus
-from src.shvatka.utils.datetime_utils import tz_utc
+from src.core.models import dto
+from src.core.models.enums import GameStatus
+from src.core.utils.datetime_utils import tz_utc
 
 PREVIEW_USER = dto.User(
     db_id=5,

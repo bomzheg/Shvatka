@@ -4,8 +4,8 @@ from sqlalchemy.exc import NoResultFound, MultipleResultsFound
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.infrastructure.db.models import User
-from src.shvatka.models import dto
-from src.shvatka.utils.exceptions import MultipleUsernameFound, NoUsernameFound
+from src.core.models import dto
+from src.core.utils.exceptions import MultipleUsernameFound, NoUsernameFound
 from .base import BaseDAO
 
 

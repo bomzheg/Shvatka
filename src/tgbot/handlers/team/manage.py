@@ -9,11 +9,11 @@ from aiogram.utils.text_decorations import html_decoration as hd
 from aiogram_dialog import DialogManager
 
 from src.infrastructure.db.dao.holder import HolderDao
-from src.shvatka.models import dto
-from src.shvatka.services.player import join_team, get_team_players
-from src.shvatka.services.team import create_team
-from src.shvatka.utils.defaults_constants import DEFAULT_ROLE
-from src.shvatka.utils.exceptions import (
+from src.core.models import dto
+from src.core.services.player import join_team, get_team_players
+from src.core.services.team import create_team
+from src.core.utils.defaults_constants import DEFAULT_ROLE
+from src.core.utils.exceptions import (
     TeamError,
     PlayerAlreadyInTeam,
     AnotherTeamInChat,

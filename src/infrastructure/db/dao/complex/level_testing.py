@@ -3,8 +3,8 @@ from datetime import timedelta, datetime
 
 from src.infrastructure.db.dao import GameDao
 from src.infrastructure.db.dao.memory.level_testing import LevelTestingData
-from src.shvatka.interfaces.dal.level_testing import LevelTestingDao
-from src.shvatka.models import dto
+from src.core.interfaces.dal.level_testing import LevelTestingDao
+from src.core.models import dto
 
 
 @dataclass

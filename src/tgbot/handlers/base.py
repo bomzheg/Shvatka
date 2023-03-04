@@ -8,9 +8,9 @@ from aiogram.types import Message, ReplyKeyboardRemove, ContentType
 from aiogram.utils.markdown import html_decoration as hd
 from aiogram_dialog import DialogManager
 
+from src.core.models import dto
+from src.core.services.chat import update_chat_id
 from src.infrastructure.db.dao.holder import HolderDao
-from src.shvatka.models import dto
-from src.shvatka.services.chat import update_chat_id
 from src.tgbot.views.commands import (
     CANCEL_COMMAND,
     CHAT_ID_COMMAND,

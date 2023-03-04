@@ -3,13 +3,13 @@ from typing import Callable, Any, Awaitable
 from aiogram import BaseMiddleware, types
 from aiogram.types import TelegramObject
 
+from src.core.models import dto
+from src.core.services.chat import upsert_chat
+from src.core.services.game import get_active
+from src.core.services.player import upsert_player
+from src.core.services.team import get_by_chat
+from src.core.services.user import upsert_user
 from src.infrastructure.db.dao.holder import HolderDao
-from src.shvatka.models import dto
-from src.shvatka.services.chat import upsert_chat
-from src.shvatka.services.game import get_active
-from src.shvatka.services.player import upsert_player
-from src.shvatka.services.team import get_by_chat
-from src.shvatka.services.user import upsert_user
 
 
 class LoadDataMiddleware(BaseMiddleware):

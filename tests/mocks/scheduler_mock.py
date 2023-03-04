@@ -1,7 +1,7 @@
 from datetime import datetime
 
-from src.shvatka.interfaces.scheduler import LevelTestScheduler, Scheduler
-from src.shvatka.models import dto
+from src.core.interfaces.scheduler import LevelTestScheduler, Scheduler
+from src.core.models import dto
 
 
 class LevelSchedulerMock(LevelTestScheduler):

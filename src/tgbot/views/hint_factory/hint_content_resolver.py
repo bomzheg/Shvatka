@@ -2,9 +2,8 @@ import typing
 from io import BytesIO
 from typing import BinaryIO
 
-from src.infrastructure.db.dao import FileInfoDao
-from src.shvatka.interfaces.clients.file_storage import FileStorage
-from src.shvatka.models.dto.scn.hint_part import (
+from src.core.interfaces.clients.file_storage import FileStorage
+from src.core.models.dto.scn.hint_part import (
     BaseHint,
     TextHint,
     GPSHint,
@@ -19,6 +18,7 @@ from src.shvatka.models.dto.scn.hint_part import (
     VideoNoteHint,
     StickerHint,
 )
+from src.infrastructure.db.dao import FileInfoDao
 from src.tgbot.models.hint import (
     BaseHintLinkView,
     BaseHintContentView,

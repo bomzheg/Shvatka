@@ -2,7 +2,7 @@ from sqlalchemy import ForeignKey
 from sqlalchemy.orm import mapped_column, relationship, Mapped
 
 from src.infrastructure.db.models import Base, Player
-from src.shvatka.models import dto
+from src.core.models import dto
 
 
 class Team(Base):

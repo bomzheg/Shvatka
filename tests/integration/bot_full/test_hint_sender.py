@@ -22,10 +22,10 @@ from aiogram.methods.base import TelegramType
 from aiogram_tests.mocked_bot import MockedBot
 
 from src.infrastructure.db.dao.holder import HolderDao
-from src.shvatka.interfaces.clients.file_storage import FileStorage
-from src.shvatka.models import dto
-from src.shvatka.models.dto.scn import TextHint, GPSHint, PhotoHint, BaseHint
-from src.shvatka.models.dto.scn.hint_part import (
+from src.core.interfaces.clients.file_storage import FileStorage
+from src.core.models import dto
+from src.core.models.dto.scn import TextHint, GPSHint, PhotoHint, BaseHint
+from src.core.models.dto.scn.hint_part import (
     VenueHint,
     AudioHint,
     VideoHint,

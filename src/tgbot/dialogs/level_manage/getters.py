@@ -1,11 +1,11 @@
 from aiogram_dialog import DialogManager
 
+from src.core.models import dto
+from src.core.services import organizers
+from src.core.services.game import get_game
+from src.core.services.level import get_by_id, get_level_by_id_for_org
+from src.core.services.organizers import get_org_by_id, get_by_player
 from src.infrastructure.db.dao.holder import HolderDao
-from src.shvatka.models import dto
-from src.shvatka.services import organizers
-from src.shvatka.services.game import get_game
-from src.shvatka.services.level import get_by_id, get_level_by_id_for_org
-from src.shvatka.services.organizers import get_org_by_id, get_by_player
 from src.tgbot.views.utils import render_time_hints
 
 

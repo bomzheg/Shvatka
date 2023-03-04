@@ -6,10 +6,9 @@ from aiogram.utils.text_decorations import html_decoration as hd
 from aiogram_dialog import DialogManager
 from aiogram_dialog.widgets.kbd import Button
 
-from src.infrastructure.db.dao.holder import HolderDao
-from src.shvatka.models import dto
-from src.shvatka.models import enums
-from src.shvatka.services.player import (
+from src.core.models import dto
+from src.core.models import enums
+from src.core.services.player import (
     get_my_team,
     get_full_team_player,
     flip_permission,
@@ -19,7 +18,8 @@ from src.shvatka.services.player import (
     change_role,
     change_emoji,
 )
-from src.shvatka.services.team import rename_team, change_team_desc
+from src.core.services.team import rename_team, change_team_desc
+from src.infrastructure.db.dao.holder import HolderDao
 from src.tgbot import states
 
 

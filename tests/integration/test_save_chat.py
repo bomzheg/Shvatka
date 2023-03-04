@@ -1,7 +1,7 @@
 import pytest
 
 from src.infrastructure.db.dao.holder import HolderDao
-from src.shvatka.services.chat import update_chat_id, upsert_chat
+from src.core.services.chat import update_chat_id, upsert_chat
 from src.tgbot.middlewares.data_load_middleware import save_chat
 from tests.fixtures.chat_constants import (
     create_tg_chat,

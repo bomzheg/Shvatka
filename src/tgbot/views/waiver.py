@@ -3,10 +3,10 @@ from typing import Iterable
 from aiogram.utils.text_decorations import html_decoration as hd
 
 from src.infrastructure.db.dao.holder import HolderDao
-from src.shvatka.models import dto
-from src.shvatka.models.enums.played import Played
-from src.shvatka.services.waiver import get_vote_to_voted
-from src.shvatka.views.texts import WAIVER_STATUS_MEANING
+from src.core.models import dto
+from src.core.models.enums.played import Played
+from src.core.services.waiver import get_vote_to_voted
+from src.core.views.texts import WAIVER_STATUS_MEANING
 from src.tgbot import keyboards as kb
 from src.tgbot.views.player import get_emoji
 from src.tgbot.views.user import get_small_card_no_link

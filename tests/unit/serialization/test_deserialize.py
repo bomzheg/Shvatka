@@ -3,9 +3,9 @@ from copy import deepcopy
 import pytest
 from dataclass_factory import Factory
 
-from src.shvatka.models.dto.scn import TextHint, GPSHint, PhotoHint, ContactHint
-from src.shvatka.models.dto.scn.game import RawGameScenario
-from src.shvatka.models.dto.scn.hint_part import (
+from src.core.models.dto.scn import TextHint, GPSHint, PhotoHint, ContactHint
+from src.core.models.dto.scn.game import RawGameScenario
+from src.core.models.dto.scn.hint_part import (
     VenueHint,
     AudioHint,
     VideoHint,
@@ -15,10 +15,10 @@ from src.shvatka.models.dto.scn.hint_part import (
     VideoNoteHint,
     StickerHint,
 )
-from src.shvatka.models.enums import HintType
-from src.shvatka.services.level import load_level
-from src.shvatka.services.scenario.game_ops import parse_game
-from src.shvatka.utils.exceptions import ScenarioNotCorrect
+from src.core.models.enums import HintType
+from src.core.services.level import load_level
+from src.core.services.scenario.game_ops import parse_game
+from src.core.utils.exceptions import ScenarioNotCorrect
 from src.tgbot.views.utils import render_hints
 
 

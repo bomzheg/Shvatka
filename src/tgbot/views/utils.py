@@ -4,9 +4,9 @@ from aiogram import Bot
 from aiogram.exceptions import AiogramError
 from aiogram.utils.text_decorations import html_decoration as hd
 
-from src.shvatka.models.dto.scn import TimeHint, BaseHint
-from src.shvatka.models.enums.hint_type import HintType
-from src.shvatka.views.texts import HINTS_EMOJI
+from src.core.models.dto.scn import TimeHint, BaseHint
+from src.core.models.enums.hint_type import HintType
+from src.core.views.texts import HINTS_EMOJI
 
 
 async def total_remove_msg(

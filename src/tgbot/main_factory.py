@@ -15,9 +15,9 @@ from src.common.config.parser.paths import common_get_paths
 from src.infrastructure.db.config.models.storage import StorageConfig, StorageType
 from src.infrastructure.db.dao.memory.level_testing import LevelTestingData
 from src.infrastructure.db.faсtory import create_redis
-from src.shvatka.interfaces.clients.file_storage import FileStorage
-from src.shvatka.interfaces.scheduler import Scheduler
-from src.shvatka.utils.key_checker_lock import KeyCheckerFactory
+from src.core.interfaces.clients.file_storage import FileStorage
+from src.core.interfaces.scheduler import Scheduler
+from src.core.utils.key_checker_lock import KeyCheckerFactory
 from src.tgbot.config.models.main import TgBotConfig
 from src.tgbot.handlers import setup_handlers
 from src.tgbot.middlewares import setup_middlewares

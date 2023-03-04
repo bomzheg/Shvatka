@@ -1,9 +1,9 @@
 from aiogram_dialog import DialogManager
 
+from src.core.models import dto
+from src.core.services.organizers import get_by_player_or_none
+from src.core.services.player import save_promotion_invite
 from src.infrastructure.db.dao.holder import HolderDao
-from src.shvatka.models import dto
-from src.shvatka.services.organizers import get_by_player_or_none
-from src.shvatka.services.player import save_promotion_invite
 from src.tgbot import keyboards as kb
 
 

@@ -7,8 +7,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 
 from src.infrastructure.db import models
-from src.shvatka.models import dto
-from src.shvatka.models.enums.org_permission import OrgPermission
+from src.core.models import dto
+from src.core.models.enums.org_permission import OrgPermission
 from .base import BaseDAO
 
 

@@ -2,7 +2,7 @@ import dataclass_factory
 from dataclass_factory import Schema, NameStyle
 from telegraph.aio import Telegraph
 
-from src.shvatka.models.schems import schemas
+from src.core.models.schems import schemas
 from src.tgbot.config.models.bot import BotConfig
 
 

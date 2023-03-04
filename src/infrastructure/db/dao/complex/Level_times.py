@@ -1,8 +1,8 @@
 from dataclasses import dataclass
 
 from src.infrastructure.db.dao import LevelTimeDao, LevelDao, OrganizerDao
-from src.shvatka.interfaces.dal.level_times import GameStatDao
-from src.shvatka.models import dto
+from src.core.interfaces.dal.level_times import GameStatDao
+from src.core.models import dto
 
 
 @dataclass

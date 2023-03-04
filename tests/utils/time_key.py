@@ -1,4 +1,4 @@
-from src.shvatka.models import dto
+from src.core.models import dto
 
 
 def assert_time_key(expected: dto.KeyTime, actual: dto.KeyTime):

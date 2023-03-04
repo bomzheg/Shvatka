@@ -8,10 +8,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 
 from src.infrastructure.db import models
-from src.shvatka.models import dto
-from src.shvatka.models import enums
-from src.shvatka.utils.datetime_utils import tz_utc
-from src.shvatka.utils.exceptions import PlayerAlreadyInTeam, PlayerRestoredInTeam, PlayerNotInTeam
+from src.core.models import dto
+from src.core.models import enums
+from src.core.utils.datetime_utils import tz_utc
+from src.core.utils.exceptions import PlayerAlreadyInTeam, PlayerRestoredInTeam, PlayerNotInTeam
 from .base import BaseDAO
 
 

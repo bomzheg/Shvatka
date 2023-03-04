@@ -1,9 +1,9 @@
 from aiogram_dialog import DialogManager
 
+from src.core.models import dto
+from src.core.services.game import get_full_game
+from src.core.services.level import get_all_my_free_levels
 from src.infrastructure.db.dao.holder import HolderDao
-from src.shvatka.models import dto
-from src.shvatka.services.game import get_full_game
-from src.shvatka.services.level import get_all_my_free_levels
 
 
 async def get_game_name(dialog_manager: DialogManager, **_):

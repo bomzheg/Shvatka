@@ -1,7 +1,7 @@
 from aiogram.types import Message
 
 from src.infrastructure.db.dao import PollDao
-from src.shvatka.models import dto
+from src.core.models import dto
 
 
 async def swap_saved_message(game: dto.Game, msg: Message, dao: PollDao):

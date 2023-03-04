@@ -4,11 +4,11 @@ from aiogram.types import Message, CallbackQuery
 from aiogram.utils.markdown import html_decoration as hd
 
 from src.infrastructure.db.dao.holder import HolderDao
-from src.shvatka.models import dto
-from src.shvatka.models.enums import GameStatus
-from src.shvatka.models.enums.played import Played
-from src.shvatka.services.player import get_my_team, get_full_team_player
-from src.shvatka.services.waiver import (
+from src.core.models import dto
+from src.core.models.enums import GameStatus
+from src.core.models.enums.played import Played
+from src.core.services.player import get_my_team, get_full_team_player
+from src.core.services.waiver import (
     add_vote,
     approve_waivers,
     check_allow_approve_waivers,
@@ -16,7 +16,7 @@ from src.shvatka.services.waiver import (
     get_not_played_team_players,
     force_add_vote,
 )
-from src.shvatka.utils.exceptions import PlayerNotInTeam, AnotherGameIsActive
+from src.core.utils.exceptions import PlayerNotInTeam, AnotherGameIsActive
 from src.tgbot import keyboards as kb
 from src.tgbot.filters.game_status import GameStatusFilter
 from src.tgbot.filters.is_team import IsTeamFilter

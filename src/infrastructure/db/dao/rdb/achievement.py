@@ -4,10 +4,10 @@ from sqlalchemy import select
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.core.models import dto
+from src.core.models import enums
 from src.infrastructure.db import models
 from src.infrastructure.db.dao import BaseDAO
-from src.shvatka.models import dto
-from src.shvatka.models import enums
 
 
 class AchievementDAO(BaseDAO[models.Achievement]):

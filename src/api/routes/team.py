@@ -2,7 +2,7 @@ from fastapi import Depends, APIRouter
 
 from src.api.dependencies import team_provider
 from src.api.models import responses
-from src.shvatka.models import dto
+from src.core.models import dto
 
 
 async def get_my_team(team: dto.Team = Depends(team_provider)) -> responses.Team:

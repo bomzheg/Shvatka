@@ -9,8 +9,8 @@ from aiogram.types import BufferedInputFile
 from aiogram.utils.text_decorations import html_decoration as hd
 from telegraph.aio import Telegraph
 
-from src.shvatka.models import dto
-from src.shvatka.utils.datetime_utils import DATE_FORMAT
+from src.core.models import dto
+from src.core.utils.datetime_utils import DATE_FORMAT
 from src.tgbot.config.models.bot import BotConfig
 from src.tgbot.views.hint_sender import HintSender
 from src.tgbot.views.keys import render_log_keys

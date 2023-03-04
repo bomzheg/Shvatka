@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from src.shvatka.utils.datetime_utils import tz_game, DATETIME_FORMAT
+from src.core.utils.datetime_utils import tz_game, DATETIME_FORMAT
 
 
 def datetime_filter(value: datetime, format_=DATETIME_FORMAT):

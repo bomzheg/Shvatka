@@ -2,7 +2,7 @@ from copy import copy
 
 from aiogram.types import User
 
-from src.shvatka.models import dto
+from src.core.models import dto
 
 OLD_HARRY_USERNAME = "tom_riddle_friend"
 HARRY_DTO = dto.User(

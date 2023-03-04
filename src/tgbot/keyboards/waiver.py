@@ -4,8 +4,8 @@ from aiogram.filters.callback_data import CallbackData
 from aiogram.types import InlineKeyboardMarkup
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
-from src.shvatka.models import dto
-from src.shvatka.models.enums.played import Played
+from src.core.models import dto
+from src.core.models.enums.played import Played
 
 
 class WaiverVoteCD(CallbackData, prefix="waiver_vote"):

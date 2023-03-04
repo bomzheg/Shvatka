@@ -5,15 +5,15 @@ from aiogram_dialog import Data, DialogManager
 from aiogram_dialog.widgets.kbd import Button
 from dataclass_factory import Factory
 
-from src.infrastructure.db.dao.holder import HolderDao
-from src.shvatka.models import dto
-from src.shvatka.models.dto import scn
-from src.shvatka.services.level import upsert_level
-from src.shvatka.utils.input_validation import (
+from src.core.models import dto
+from src.core.models.dto import scn
+from src.core.services.level import upsert_level
+from src.core.utils.input_validation import (
     is_level_id_correct,
     is_multiple_keys_normal,
     normalize_key,
 )
+from src.infrastructure.db.dao.holder import HolderDao
 from src.tgbot import states
 
 

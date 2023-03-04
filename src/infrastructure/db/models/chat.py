@@ -1,9 +1,9 @@
 from sqlalchemy import Text, BigInteger, Enum, ForeignKey
 from sqlalchemy.orm import relationship, mapped_column
 
+from src.core.models import dto
+from src.core.models.enums.chat_type import ChatType
 from src.infrastructure.db.models.base import Base
-from src.shvatka.models import dto
-from src.shvatka.models.enums.chat_type import ChatType
 
 
 class Chat(Base):

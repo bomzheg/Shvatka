@@ -12,8 +12,8 @@ from src.api.main_factory import (
     create_app,
 )
 from src.common.config.parser.logging_config import setup_logging
+from src.core.models.schems import schemas
 from src.infrastructure.db.faсtory import create_pool, create_redis
-from src.shvatka.models.schems import schemas
 
 logger = logging.getLogger(__name__)
 

@@ -5,9 +5,9 @@ from datetime import datetime
 from openpyxl import Workbook
 from openpyxl.worksheet.worksheet import Worksheet
 
-from src.shvatka.models import dto
-from src.shvatka.utils.datetime_utils import tz_game
-from src.shvatka.utils.exceptions import GameNotFinished
+from src.core.models import dto
+from src.core.utils.datetime_utils import tz_game
+from src.core.utils.exceptions import GameNotFinished
 
 
 @dataclass

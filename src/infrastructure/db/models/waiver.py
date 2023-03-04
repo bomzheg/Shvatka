@@ -2,8 +2,8 @@ from sqlalchemy import ForeignKey, Enum, UniqueConstraint
 from sqlalchemy.orm import relationship, mapped_column, Mapped
 
 from src.infrastructure.db.models import Base
-from src.shvatka.models import dto
-from src.shvatka.models.enums.played import Played
+from src.core.models import dto
+from src.core.models.enums.played import Played
 
 
 class Waiver(Base):

@@ -12,8 +12,8 @@ from aiogram.utils.text_decorations import html_decoration as hd
 from aiogram_dialog import DialogManager
 
 from src.infrastructure.db.dao.holder import HolderDao
-from src.shvatka.models import dto
-from src.shvatka.services.player import (
+from src.core.models import dto
+from src.core.services.player import (
     save_promotion_confirm_invite,
     check_promotion_invite,
     dismiss_promotion,
@@ -21,7 +21,7 @@ from src.shvatka.services.player import (
     get_my_team,
     leave,
 )
-from src.shvatka.utils.exceptions import SaltError
+from src.core.utils.exceptions import SaltError
 from src.tgbot import keyboards as kb
 from src.tgbot import states
 from src.tgbot.utils.router import disable_router_on_game

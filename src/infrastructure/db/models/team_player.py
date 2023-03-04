@@ -4,8 +4,8 @@ from sqlalchemy import Integer, ForeignKey, DateTime, func
 from sqlalchemy.orm import relationship, mapped_column, Mapped
 
 from src.infrastructure.db.models import Base
-from src.shvatka.models import dto
-from src.shvatka.utils.datetime_utils import tz_utc
+from src.core.models import dto
+from src.core.utils.datetime_utils import tz_utc
 
 
 class TeamPlayer(Base):

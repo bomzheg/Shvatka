@@ -4,8 +4,8 @@ from httpx import AsyncClient
 
 from src.api.models import responses
 from src.infrastructure.db.dao.holder import HolderDao
-from src.shvatka.models import dto
-from src.shvatka.models.enums import GameStatus
+from src.core.models import dto
+from src.core.models.enums import GameStatus
 
 
 @pytest.mark.asyncio

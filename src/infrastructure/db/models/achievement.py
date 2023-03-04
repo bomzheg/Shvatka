@@ -4,10 +4,10 @@ from datetime import datetime
 from sqlalchemy import BigInteger, ForeignKey, DateTime, func, Enum
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 
+from src.core.models import dto
+from src.core.models import enums
+from src.core.utils.datetime_utils import tz_utc
 from src.infrastructure.db.models.base import Base
-from src.shvatka.models import dto
-from src.shvatka.models import enums
-from src.shvatka.utils.datetime_utils import tz_utc
 
 if typing.TYPE_CHECKING:
     from .player import Player

@@ -1,10 +1,10 @@
 from typing import TypeVar, Sequence
 
+from src.core.models import dto
+from src.core.models.dto.scn import BaseHint, TextHint, GPSHint
+from src.core.models.dto.scn import TimeHint
+from src.core.models.dto.scn.hint_part import VenueHint
 from src.infrastructure.crawler.models import uploadable_game as data
-from src.shvatka.models import dto
-from src.shvatka.models.dto.scn import BaseHint, TextHint, GPSHint
-from src.shvatka.models.dto.scn import TimeHint
-from src.shvatka.models.dto.scn.hint_part import VenueHint
 
 
 def map_game_for_upload(game: dto.FullGame) -> data.GameForUpload:

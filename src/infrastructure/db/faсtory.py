@@ -4,10 +4,10 @@ from redis.asyncio import Redis
 from sqlalchemy.engine import make_url
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 
+from src.core.utils.key_checker_lock import KeyCheckerFactory
 from src.infrastructure.db.config.models.db import DBConfig, RedisConfig
 from src.infrastructure.db.dao.memory.level_testing import LevelTestingData
 from src.infrastructure.db.dao.memory.locker import MemoryLockFactory
-from src.shvatka.utils.key_checker_lock import KeyCheckerFactory
 
 logger = logging.getLogger(__name__)
 

@@ -1,7 +1,7 @@
 from aiogram_dialog import DialogManager
 from dataclass_factory import Factory
 
-from src.shvatka.models.dto.scn import TimeHint
+from src.core.models.dto.scn import TimeHint
 from src.tgbot.views.utils import render_time_hints
 
 

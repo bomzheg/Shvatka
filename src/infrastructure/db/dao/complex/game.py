@@ -1,9 +1,9 @@
 from dataclasses import dataclass
 
+from src.core.interfaces.dal.game import GameUpserter, GameCreator, GamePackager
+from src.core.models import dto
+from src.core.models.dto import scn
 from src.infrastructure.db.dao import GameDao, LevelDao, FileInfoDao
-from src.shvatka.interfaces.dal.game import GameUpserter, GameCreator, GamePackager
-from src.shvatka.models import dto
-from src.shvatka.models.dto import scn
 
 
 @dataclass

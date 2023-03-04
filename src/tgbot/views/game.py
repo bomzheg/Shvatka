@@ -7,11 +7,10 @@ from aiogram import Bot
 from aiogram.exceptions import TelegramAPIError
 from aiogram.utils.markdown import html_decoration as hd
 
-from src.infrastructure.db.dao.holder import HolderDao
-from src.shvatka.interfaces.clients.file_storage import FileStorage
-from src.shvatka.interfaces.dal.game_play import GamePreparer
-from src.shvatka.models import dto
-from src.shvatka.views.game import (
+from src.core.interfaces.clients.file_storage import FileStorage
+from src.core.interfaces.dal.game_play import GamePreparer
+from src.core.models import dto
+from src.core.views.game import (
     GameViewPreparer,
     GameView,
     GameLogWriter,
@@ -21,6 +20,7 @@ from src.shvatka.views.game import (
     NewOrg,
     LevelTestCompleted,
 )
+from src.infrastructure.db.dao.holder import HolderDao
 from src.tgbot.views.hint_sender import HintSender, create_hint_sender
 
 logger = logging.getLogger(__name__)

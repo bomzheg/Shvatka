@@ -2,7 +2,7 @@ from sqlalchemy import BigInteger, ForeignKey, Boolean
 from sqlalchemy.orm import relationship, mapped_column, Mapped
 
 from src.infrastructure.db.models.base import Base
-from src.shvatka.models import dto
+from src.core.models import dto
 
 
 class Player(Base):

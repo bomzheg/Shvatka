@@ -1,5 +1,5 @@
-from src.shvatka.models import dto
-from src.shvatka.utils.defaults_constants import EMOJI_BY_ROLE, DEFAULT_EMOJI
+from src.core.models import dto
+from src.core.utils.defaults_constants import EMOJI_BY_ROLE, DEFAULT_EMOJI
 
 
 def get_emoji(pit: dto.TeamPlayer) -> str:

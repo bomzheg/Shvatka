@@ -6,20 +6,20 @@ from mockito import mock, when, ANY, unstub
 
 from src.infrastructure.db import models
 from src.infrastructure.db.dao.holder import HolderDao
-from src.shvatka.interfaces.clients.file_storage import FileStorage
-from src.shvatka.interfaces.scheduler import Scheduler
-from src.shvatka.models import dto
-from src.shvatka.models.enums import GameStatus
-from src.shvatka.models.enums.played import Played
-from src.shvatka.services.game import start_waivers
-from src.shvatka.services.game_play import start_game, send_hint, check_key, get_available_hints
-from src.shvatka.services.game_stat import get_typed_keys
-from src.shvatka.services.organizers import get_orgs
-from src.shvatka.services.player import join_team
-from src.shvatka.services.waiver import add_vote, approve_waivers
-from src.shvatka.utils.datetime_utils import tz_utc
-from src.shvatka.utils.key_checker_lock import KeyCheckerFactory
-from src.shvatka.views.game import GameView, GameLogWriter, OrgNotifier, LevelUp
+from src.core.interfaces.clients.file_storage import FileStorage
+from src.core.interfaces.scheduler import Scheduler
+from src.core.models import dto
+from src.core.models.enums import GameStatus
+from src.core.models.enums.played import Played
+from src.core.services.game import start_waivers
+from src.core.services.game_play import start_game, send_hint, check_key, get_available_hints
+from src.core.services.game_stat import get_typed_keys
+from src.core.services.organizers import get_orgs
+from src.core.services.player import join_team
+from src.core.services.waiver import add_vote, approve_waivers
+from src.core.utils.datetime_utils import tz_utc
+from src.core.utils.key_checker_lock import KeyCheckerFactory
+from src.core.views.game import GameView, GameLogWriter, OrgNotifier, LevelUp
 from tests.mocks.aiogram_mocks import mock_coro
 from tests.utils.time_key import assert_time_key
 

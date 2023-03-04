@@ -1,7 +1,7 @@
 from aiogram_dialog import DialogManager
 from dataclass_factory import Factory
 
-from src.shvatka.models.dto.scn.hint_part import AnyHint
+from src.core.models.dto.scn.hint_part import AnyHint
 from src.tgbot.views.utils import render_hints
 
 

@@ -3,8 +3,8 @@ from io import BytesIO
 from typing import BinaryIO
 
 from src.common.config.models.main import FileStorageConfig
-from src.shvatka.interfaces.clients.file_storage import FileStorage
-from src.shvatka.models.dto import scn
+from src.core.interfaces.clients.file_storage import FileStorage
+from src.core.models.dto import scn
 
 logger = logging.getLogger(__name__)
 

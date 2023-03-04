@@ -7,14 +7,14 @@ from aiogram.types import CallbackQuery, Message
 from aiogram_dialog import DialogManager
 from aiogram_dialog.widgets.kbd import Button
 
+from src.core.interfaces.clients.file_storage import FileStorage
+from src.core.interfaces.scheduler import LevelTestScheduler
+from src.core.models import dto
+from src.core.services.level import get_by_id
+from src.core.services.level_testing import start_level_test, check_level_testing_key
+from src.core.services.organizers import get_org_by_id
+from src.core.utils.key_checker_lock import KeyCheckerFactory
 from src.infrastructure.db.dao.holder import HolderDao
-from src.shvatka.interfaces.clients.file_storage import FileStorage
-from src.shvatka.interfaces.scheduler import LevelTestScheduler
-from src.shvatka.models import dto
-from src.shvatka.services.level import get_by_id
-from src.shvatka.services.level_testing import start_level_test, check_level_testing_key
-from src.shvatka.services.organizers import get_org_by_id
-from src.shvatka.utils.key_checker_lock import KeyCheckerFactory
 from src.tgbot import states
 from src.tgbot.views.game import BotOrgNotifier
 from src.tgbot.views.hint_factory.hint_content_resolver import HintContentResolver

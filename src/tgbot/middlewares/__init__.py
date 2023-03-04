@@ -3,10 +3,10 @@ from dataclass_factory import Factory
 from redis.asyncio.client import Redis
 from sqlalchemy.ext.asyncio import async_sessionmaker, AsyncSession
 
+from src.core.interfaces.clients.file_storage import FileStorage
+from src.core.interfaces.scheduler import Scheduler
+from src.core.utils.key_checker_lock import KeyCheckerFactory
 from src.infrastructure.db.dao.memory.level_testing import LevelTestingData
-from src.shvatka.interfaces.clients.file_storage import FileStorage
-from src.shvatka.interfaces.scheduler import Scheduler
-from src.shvatka.utils.key_checker_lock import KeyCheckerFactory
 from src.tgbot.config.models.bot import BotConfig
 from src.tgbot.username_resolver.user_getter import UserGetter
 from src.tgbot.views.telegraph import Telegraph

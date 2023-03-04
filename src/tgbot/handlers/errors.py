@@ -9,7 +9,7 @@ from aiogram.filters import ExceptionTypeFilter
 from aiogram.types.error_event import ErrorEvent
 from aiogram.utils.markdown import html_decoration as hd
 
-from src.shvatka.utils.exceptions import SHError
+from src.core.utils.exceptions import SHError
 
 logger = logging.getLogger(__name__)
 

@@ -1,7 +1,7 @@
 from aiogram import Bot
 
-from src.shvatka.models import dto
-from src.shvatka.models.enums.chat_type import ChatType
+from src.core.models import dto
+from src.core.models.enums.chat_type import ChatType
 
 
 async def is_admin_filter(bot: Bot, chat: dto.Chat, user: dto.User) -> bool:

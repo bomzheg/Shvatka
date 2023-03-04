@@ -1,9 +1,9 @@
 from aiogram_dialog import DialogManager
 
+from src.core.models import dto
+from src.core.services.game_stat import get_game_spy
+from src.core.services.organizers import get_by_player
 from src.infrastructure.db.dao.holder import HolderDao
-from src.shvatka.models import dto
-from src.shvatka.services.game_stat import get_game_spy
-from src.shvatka.services.organizers import get_by_player
 
 
 async def get_org(

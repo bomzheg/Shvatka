@@ -5,8 +5,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 
 from src.infrastructure.db import models
-from src.shvatka.models import dto
-from src.shvatka.utils.exceptions import TeamError, AnotherTeamInChat
+from src.core.models import dto
+from src.core.utils.exceptions import TeamError, AnotherTeamInChat
 from .base import BaseDAO
 
 

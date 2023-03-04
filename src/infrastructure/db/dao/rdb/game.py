@@ -7,13 +7,13 @@ from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 
+from src.core.models import dto
+from src.core.models.dto.scn.game import GameScenario
+from src.core.models.enums import GameStatus
+from src.core.models.enums.game_status import ACTIVE_STATUSES
+from src.core.utils.datetime_utils import tz_utc
+from src.core.utils.exceptions import GameHasAnotherAuthor
 from src.infrastructure.db import models
-from src.shvatka.models import dto
-from src.shvatka.models.dto.scn.game import GameScenario
-from src.shvatka.models.enums import GameStatus
-from src.shvatka.models.enums.game_status import ACTIVE_STATUSES
-from src.shvatka.utils.datetime_utils import tz_utc
-from src.shvatka.utils.exceptions import GameHasAnotherAuthor
 from .base import BaseDAO
 
 

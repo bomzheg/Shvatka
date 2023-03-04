@@ -1,9 +1,9 @@
 import pytest
 
 from src.infrastructure.db.dao.holder import HolderDao
-from src.shvatka.models import dto
-from src.shvatka.models import enums
-from src.shvatka.services.achievement import add_achievement
+from src.core.models import dto
+from src.core.models import enums
+from src.core.services.achievement import add_achievement
 
 
 @pytest.mark.asyncio

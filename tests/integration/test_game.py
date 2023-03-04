@@ -4,20 +4,20 @@ import pytest
 from dataclass_factory import Factory
 
 from src.infrastructure.db.dao.holder import HolderDao
-from src.shvatka.interfaces.clients.file_storage import FileGateway
-from src.shvatka.models import dto
-from src.shvatka.models.dto.scn.game import RawGameScenario
-from src.shvatka.models.enums import GameStatus
-from src.shvatka.services.game import (
+from src.core.interfaces.clients.file_storage import FileGateway
+from src.core.models import dto
+from src.core.models.dto.scn.game import RawGameScenario
+from src.core.models.enums import GameStatus
+from src.core.services.game import (
     upsert_game,
     get_authors_games,
     start_waivers,
     get_active,
     complete_game,
 )
-from src.shvatka.services.level import upsert_level
-from src.shvatka.services.organizers import get_orgs
-from src.shvatka.utils.exceptions import CantEditGame
+from src.core.services.level import upsert_level
+from src.core.services.organizers import get_orgs
+from src.core.utils.exceptions import CantEditGame
 
 
 @pytest.mark.asyncio

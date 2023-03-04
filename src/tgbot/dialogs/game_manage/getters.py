@@ -2,11 +2,11 @@ from datetime import datetime, time, date
 
 from aiogram_dialog import DialogManager
 
+from src.core.models import dto
+from src.core.services import game
+from src.core.services.game import get_authors_games, get_completed_games
+from src.core.utils.datetime_utils import tz_game
 from src.infrastructure.db.dao.holder import HolderDao
-from src.shvatka.models import dto
-from src.shvatka.services import game
-from src.shvatka.services.game import get_authors_games, get_completed_games
-from src.shvatka.utils.datetime_utils import tz_game
 
 
 async def get_my_games(dao: HolderDao, player: dto.Player, **_) -> dict[str, list[dto.Game]]:

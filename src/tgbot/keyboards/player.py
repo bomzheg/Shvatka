@@ -2,7 +2,7 @@ from aiogram.filters.callback_data import CallbackData
 from aiogram.types import InlineKeyboardMarkup
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
-from src.shvatka.models import dto
+from src.core.models import dto
 from src.tgbot.services.inline_data import InlineData
 
 

@@ -1,9 +1,9 @@
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.core.models import dto
 from src.infrastructure.crawler.models.team import ParsedTeam
 from src.infrastructure.db import models
-from src.shvatka.models import dto
 from .base import BaseDAO
 
 

@@ -7,16 +7,16 @@ from aiogram.types import (
     CallbackQuery,
 )
 
-from src.infrastructure.db.dao.holder import HolderDao
-from src.shvatka.models import dto
-from src.shvatka.services.game import get_game
-from src.shvatka.services.organizers import (
+from src.core.models import dto
+from src.core.services.game import get_game
+from src.core.services.organizers import (
     check_allow_manage_orgs,
     save_invite_to_orgs,
     dismiss_to_be_org,
     agree_to_be_org,
     check_game_token,
 )
+from src.infrastructure.db.dao.holder import HolderDao
 from src.tgbot import keyboards as kb
 from src.tgbot.utils.router import disable_router_on_game
 from src.tgbot.views.game import BotOrgNotifier

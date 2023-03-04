@@ -4,10 +4,10 @@ from aiogram.types import CallbackQuery
 from aiogram_dialog import DialogManager
 from aiogram_dialog.widgets.kbd import Button
 
+from src.core.models import dto
+from src.core.models.enums.org_permission import OrgPermission
+from src.core.services.organizers import flip_permission, get_org_by_id, flip_deleted
 from src.infrastructure.db.dao.holder import HolderDao
-from src.shvatka.models import dto
-from src.shvatka.models.enums.org_permission import OrgPermission
-from src.shvatka.services.organizers import flip_permission, get_org_by_id, flip_deleted
 from src.tgbot import states
 
 

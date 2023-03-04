@@ -5,8 +5,8 @@ from fastapi.params import Body, Path
 
 from src.api.dependencies import get_current_user, AuthProvider, dao_provider
 from src.infrastructure.db.dao.holder import HolderDao
-from src.shvatka.models import dto
-from src.shvatka.services.user import set_password, get_user
+from src.core.models import dto
+from src.core.services.user import set_password, get_user
 
 logger = logging.getLogger(__name__)
 

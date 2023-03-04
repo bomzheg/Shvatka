@@ -13,8 +13,8 @@ from src.common.factory import create_dataclass_factory
 from src.infrastructure.crawler.models.team import ParsedTeam
 from src.infrastructure.db.dao.holder import HolderDao
 from src.infrastructure.db.faсtory import create_pool, create_level_test_dao, create_redis
-from src.shvatka.utils import exceptions
-from src.shvatka.utils.datetime_utils import tz_utc
+from src.core.utils import exceptions
+from src.core.utils.datetime_utils import tz_utc
 from src.tgbot.config.parser.main import load_config
 
 logger = logging.getLogger(__name__)

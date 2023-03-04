@@ -3,8 +3,8 @@ from datetime import datetime
 
 from aiogram.utils.text_decorations import html_decoration as hd
 
-from src.shvatka.models import dto
-from src.shvatka.utils.datetime_utils import tz_game, DATETIME_FORMAT
+from src.core.models import dto
+from src.core.utils.datetime_utils import tz_game, DATETIME_FORMAT
 
 
 class KeyEmoji(enum.Enum):

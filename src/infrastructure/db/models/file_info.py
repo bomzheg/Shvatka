@@ -1,11 +1,11 @@
 from sqlalchemy import Integer, Text, ForeignKey
 from sqlalchemy.orm import relationship, mapped_column
 
+from src.core.models import dto
+from src.core.models.dto.scn import SavedFileMeta, TgLink, FileContentLink
+from src.core.models.dto.scn.file_content import VerifiableFileMeta
+from src.core.models.enums.hint_type import HintType
 from src.infrastructure.db.models import Base
-from src.shvatka.models import dto
-from src.shvatka.models.dto.scn import SavedFileMeta, TgLink, FileContentLink
-from src.shvatka.models.dto.scn.file_content import VerifiableFileMeta
-from src.shvatka.models.enums.hint_type import HintType
 
 
 class FileInfo(Base):

@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from src.shvatka.models import dto
+from src.core.models import dto
 
 
 @dataclass

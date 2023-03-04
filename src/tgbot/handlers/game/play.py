@@ -7,12 +7,12 @@ from aiogram.types import Message
 from aiogram_dialog import DialogManager
 
 from src.infrastructure.db.dao.holder import HolderDao
-from src.shvatka.interfaces.clients.file_storage import FileStorage
-from src.shvatka.interfaces.scheduler import Scheduler
-from src.shvatka.models import dto
-from src.shvatka.services.game_play import check_key
-from src.shvatka.utils.exceptions import InvalidKey
-from src.shvatka.utils.key_checker_lock import KeyCheckerFactory
+from src.core.interfaces.clients.file_storage import FileStorage
+from src.core.interfaces.scheduler import Scheduler
+from src.core.models import dto
+from src.core.services.game_play import check_key
+from src.core.utils.exceptions import InvalidKey
+from src.core.utils.key_checker_lock import KeyCheckerFactory
 from src.tgbot import states
 from src.tgbot.config.models.bot import BotConfig
 from src.tgbot.filters import is_key, IsTeamFilter

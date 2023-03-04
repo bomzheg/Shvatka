@@ -1,6 +1,6 @@
 from aiogram.types import Message
 
-from src.shvatka.models import dto
+from src.core.models import dto
 
 
 async def can_be_author(_: Message, player: dto.Player):

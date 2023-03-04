@@ -2,9 +2,9 @@ from datetime import datetime
 
 from aiogram_dialog import DialogManager
 
+from src.core.models import dto
+from src.core.services.game import get_game
 from src.infrastructure.db.dao.holder import HolderDao
-from src.shvatka.models import dto
-from src.shvatka.services.game import get_game
 
 
 async def get_org(dao: HolderDao, player: dto.Player, dialog_manager: DialogManager, **_):

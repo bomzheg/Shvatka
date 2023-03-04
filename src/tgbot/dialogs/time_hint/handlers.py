@@ -5,8 +5,8 @@ from aiogram_dialog import DialogManager
 from aiogram_dialog.widgets.kbd import Button
 from dataclass_factory import Factory
 
-from src.shvatka.models.dto.scn import TimeHint
-from src.shvatka.models.dto.scn.hint_part import AnyHint
+from src.core.models.dto.scn import TimeHint
+from src.core.models.dto.scn.hint_part import AnyHint
 from src.tgbot import states
 from src.tgbot.views.hint_factory.hint_parser import HintParser
 

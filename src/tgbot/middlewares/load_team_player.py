@@ -4,9 +4,9 @@ from aiogram import BaseMiddleware
 from aiogram.types import TelegramObject
 
 from src.infrastructure.db.dao.holder import HolderDao
-from src.shvatka.models import dto
-from src.shvatka.services.player import get_full_team_player, get_my_team
-from src.shvatka.utils.exceptions import PlayerNotInTeam
+from src.core.models import dto
+from src.core.services.player import get_full_team_player, get_my_team
+from src.core.utils.exceptions import PlayerNotInTeam
 
 
 class TeamPlayerMiddleware(BaseMiddleware):

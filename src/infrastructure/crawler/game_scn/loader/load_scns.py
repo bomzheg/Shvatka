@@ -17,12 +17,12 @@ from src.infrastructure.crawler.factory import get_paths
 from src.infrastructure.crawler.models.stat import GameStat
 from src.infrastructure.db.dao.holder import HolderDao
 from src.infrastructure.db.faсtory import create_pool, create_level_test_dao, create_redis
-from src.shvatka.interfaces.clients.file_storage import FileGateway
-from src.shvatka.models import dto
-from src.shvatka.models import enums
-from src.shvatka.services.game import upsert_game
-from src.shvatka.services.scenario.scn_zip import unpack_scn
-from src.shvatka.utils import exceptions
+from src.core.interfaces.clients.file_storage import FileGateway
+from src.core.models import dto
+from src.core.models import enums
+from src.core.services.game import upsert_game
+from src.core.services.scenario.scn_zip import unpack_scn
+from src.core.utils import exceptions
 from src.tgbot.config.parser.main import load_config
 from src.tgbot.main_factory import create_bot
 from src.tgbot.views.hint_factory.hint_parser import HintParser

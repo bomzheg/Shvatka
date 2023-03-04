@@ -22,10 +22,10 @@ from src.infrastructure.crawler.auth import get_auth_cookie
 from src.infrastructure.crawler.constants import GAME_URL_TEMPLATE
 from src.infrastructure.crawler.game_scn.parser.resourses import load_error_img
 from src.infrastructure.crawler.models.stat import LevelTime, Key, GameStat
-from src.shvatka.models import enums
-from src.shvatka.models.dto import scn
-from src.shvatka.services.scenario.scn_zip import pack_scn
-from src.shvatka.utils.datetime_utils import tz_local, tz_utc
+from src.core.models import enums
+from src.core.models.dto import scn
+from src.core.services.scenario.scn_zip import pack_scn
+from src.core.utils.datetime_utils import tz_local, tz_utc
 
 logger = logging.getLogger(__name__)
 EVENING_TIME = datetime.strptime("20:00:00", "%H:%M:%S").time()

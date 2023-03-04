@@ -1,8 +1,8 @@
 from sqlalchemy import ForeignKey
 from sqlalchemy.orm import relationship, mapped_column, Mapped
 
+from src.core.models import dto
 from src.infrastructure.db.models.base import Base
-from src.shvatka.models import dto
 
 
 class ForumTeam(Base):

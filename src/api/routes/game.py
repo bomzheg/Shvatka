@@ -3,9 +3,9 @@ from fastapi.params import Depends
 
 from src.api.dependencies import dao_provider, player_provider, active_game_provider
 from src.api.models import responses
+from src.core.models import dto
+from src.core.services.game import get_authors_games
 from src.infrastructure.db.dao.holder import HolderDao
-from src.shvatka.models import dto
-from src.shvatka.services.game import get_authors_games
 
 
 async def get_my_games_list(

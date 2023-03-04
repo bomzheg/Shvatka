@@ -18,10 +18,10 @@ from src.infrastructure.scheduler.wrappers import (
     send_hint_wrapper,
     send_hint_for_testing_wrapper,
 )
-from src.shvatka.interfaces.clients.file_storage import FileStorage
-from src.shvatka.interfaces.scheduler import Scheduler, LevelTestScheduler
-from src.shvatka.models import dto
-from src.shvatka.utils.datetime_utils import tz_utc
+from src.core.interfaces.clients.file_storage import FileStorage
+from src.core.interfaces.scheduler import Scheduler, LevelTestScheduler
+from src.core.models import dto
+from src.core.utils.datetime_utils import tz_utc
 
 logger = logging.getLogger(__name__)
 

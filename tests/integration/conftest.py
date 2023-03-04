@@ -20,14 +20,14 @@ from testcontainers.redis import RedisContainer
 
 from src.common import Paths
 from src.common import create_telegraph
+from src.core.interfaces.clients.file_storage import FileStorage, FileGateway
+from src.core.interfaces.scheduler import Scheduler
+from src.core.utils.key_checker_lock import KeyCheckerFactory
 from src.infrastructure.clients.file_gateway import BotFileGateway
 from src.infrastructure.db.config.models.db import RedisConfig
 from src.infrastructure.db.dao.holder import HolderDao
 from src.infrastructure.db.dao.memory.level_testing import LevelTestingData
 from src.infrastructure.db.faсtory import create_lock_factory, create_level_test_dao
-from src.shvatka.interfaces.clients.file_storage import FileStorage, FileGateway
-from src.shvatka.interfaces.scheduler import Scheduler
-from src.shvatka.utils.key_checker_lock import KeyCheckerFactory
 from src.tgbot.config.models.main import TgBotConfig
 from src.tgbot.main_factory import Telegraph
 from src.tgbot.main_factory import (

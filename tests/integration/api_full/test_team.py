@@ -7,8 +7,8 @@ from src.api.dependencies import AuthProvider
 from src.api.models import responses
 from src.api.models.auth import Token
 from src.infrastructure.db.dao.holder import HolderDao
-from src.shvatka.models import dto
-from src.shvatka.services.user import upsert_user, set_password
+from src.core.models import dto
+from src.core.services.user import upsert_user, set_password
 from tests.fixtures.chat_constants import create_gryffindor_dto_chat
 from tests.fixtures.team import create_team_
 from tests.fixtures.user_constants import create_dto_harry

@@ -3,8 +3,8 @@ from aiogram.filters import Command
 from aiogram.types import Message
 
 from src.infrastructure.db.dao.holder import HolderDao
-from src.shvatka.models import dto
-from src.shvatka.services.waiver import get_all_played
+from src.core.models import dto
+from src.core.services.waiver import get_all_played
 from src.tgbot.filters import GameStatusFilter
 from src.tgbot.views.commands import GET_WAIVERS_COMMAND
 from src.tgbot.views.waiver import render_all_teams_waivers

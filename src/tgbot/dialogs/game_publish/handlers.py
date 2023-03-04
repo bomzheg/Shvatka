@@ -8,12 +8,12 @@ from aiogram.utils.text_decorations import html_decoration as hd
 from aiogram_dialog import DialogManager
 from telegraph.aio import Telegraph
 
+from src.core.interfaces.clients.file_storage import FileStorage
+from src.core.models import dto
+from src.core.services.game import get_full_game
+from src.core.services.game_stat import get_game_stat, get_typed_keys
+from src.core.utils.datetime_utils import tz_utc
 from src.infrastructure.db.dao.holder import HolderDao
-from src.shvatka.interfaces.clients.file_storage import FileStorage
-from src.shvatka.models import dto
-from src.shvatka.services.game import get_full_game
-from src.shvatka.services.game_stat import get_game_stat, get_typed_keys
-from src.shvatka.utils.datetime_utils import tz_utc
 from src.tgbot.config.models.bot import BotConfig
 from src.tgbot.views.hint_sender import create_hint_sender
 from src.tgbot.views.results.scenario import GamePublisher

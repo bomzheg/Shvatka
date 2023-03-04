@@ -2,8 +2,8 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Self
 
-from src.shvatka.models import dto
-from src.shvatka.models.enums import GameStatus
+from src.core.models import dto
+from src.core.models.enums import GameStatus
 
 
 @dataclass

@@ -3,11 +3,11 @@ from sqlalchemy import update
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.core.models import dto
+from src.core.models.dto.scn import FileMeta, SavedFileMeta
+from src.core.models.dto.scn.file_content import VerifiableFileMeta
+from src.core.utils.exceptions import PermissionsError
 from src.infrastructure.db import models
-from src.shvatka.models import dto
-from src.shvatka.models.dto.scn import FileMeta, SavedFileMeta
-from src.shvatka.models.dto.scn.file_content import VerifiableFileMeta
-from src.shvatka.utils.exceptions import PermissionsError
 from .base import BaseDAO
 
 

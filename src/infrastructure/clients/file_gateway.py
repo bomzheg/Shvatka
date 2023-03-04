@@ -5,9 +5,9 @@ from typing import BinaryIO
 from aiogram import Bot
 from aiogram.types import BufferedInputFile
 
-from src.shvatka.interfaces.clients.file_storage import FileStorage, FileGateway
-from src.shvatka.models import dto
-from src.shvatka.models.dto import scn
+from src.core.interfaces.clients.file_storage import FileStorage, FileGateway
+from src.core.models import dto
+from src.core.models.dto import scn
 from src.tgbot.views import hint_sender
 from src.tgbot.views.hint_factory.hint_parser import HintParser
 

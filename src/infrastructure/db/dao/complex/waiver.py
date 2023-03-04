@@ -2,9 +2,9 @@ from dataclasses import dataclass
 from typing import Iterable
 
 from src.infrastructure.db.dao import PollDao, WaiverDao, PlayerDao, TeamPlayerDao
-from src.shvatka.interfaces.dal.waiver import WaiverVoteAdder, WaiverVoteGetter, WaiverApprover
-from src.shvatka.models import dto
-from src.shvatka.models.enums.played import Played
+from src.core.interfaces.dal.waiver import WaiverVoteAdder, WaiverVoteGetter, WaiverApprover
+from src.core.models import dto
+from src.core.models.enums.played import Played
 
 
 @dataclass

@@ -1,9 +1,9 @@
 from dataclasses import dataclass
 
 from src.infrastructure.db.dao import TeamPlayerDao, TeamDao, GameDao, WaiverDao, PollDao
-from src.shvatka.interfaces.dal.player import TeamLeaver
-from src.shvatka.interfaces.dal.team import TeamCreator
-from src.shvatka.models import dto
+from src.core.interfaces.dal.player import TeamLeaver
+from src.core.interfaces.dal.team import TeamCreator
+from src.core.models import dto
 
 
 @dataclass

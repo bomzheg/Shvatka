@@ -6,8 +6,8 @@ from sqlalchemy.engine import Dialect
 from sqlalchemy.orm import relationship, mapped_column, Mapped
 
 from src.infrastructure.db.models import Base
-from src.shvatka.models import dto
-from src.shvatka.models.dto.scn.level import LevelScenario
+from src.core.models import dto
+from src.core.models.dto.scn.level import LevelScenario
 
 
 class ScenarioField(TypeDecorator):

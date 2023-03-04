@@ -1,10 +1,10 @@
 from aiogram_dialog import DialogManager
 
+from src.core.models import dto
+from src.core.services.player import get_full_team_player, get_my_team, get_team_players
+from src.core.utils.exceptions import PlayerNotInTeam
+from src.core.views.texts import PERMISSION_EMOJI
 from src.infrastructure.db.dao.holder import HolderDao
-from src.shvatka.models import dto
-from src.shvatka.services.player import get_full_team_player, get_my_team, get_team_players
-from src.shvatka.utils.exceptions import PlayerNotInTeam
-from src.shvatka.views.texts import PERMISSION_EMOJI
 
 
 async def get_my_team_(dao: HolderDao, player: dto.Player, **_) -> dict[str, dto.Team]:

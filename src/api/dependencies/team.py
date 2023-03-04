@@ -2,9 +2,9 @@ from fastapi.params import Depends
 
 from src.api.dependencies import dao_provider, player_provider
 from src.infrastructure.db.dao.holder import HolderDao
-from src.shvatka.models import dto
-from src.shvatka.services.player import get_my_team
-from src.shvatka.utils import exceptions
+from src.core.models import dto
+from src.core.services.player import get_my_team
+from src.core.utils import exceptions
 
 
 def team_provider() -> dto.Team:

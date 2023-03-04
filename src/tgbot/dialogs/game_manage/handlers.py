@@ -6,14 +6,14 @@ from aiogram_dialog import DialogManager
 from aiogram_dialog.widgets.kbd import Button
 from dataclass_factory import Factory
 
+from src.core.interfaces.clients.file_storage import FileGateway
+from src.core.interfaces.scheduler import Scheduler
+from src.core.models import dto
+from src.core.services import game
+from src.core.services.game import rename_game, get_game
+from src.core.services.scenario.scn_zip import pack_scn
+from src.core.utils.datetime_utils import TIME_FORMAT, tz_game
 from src.infrastructure.db.dao.holder import HolderDao
-from src.shvatka.interfaces.clients.file_storage import FileGateway
-from src.shvatka.interfaces.scheduler import Scheduler
-from src.shvatka.models import dto
-from src.shvatka.services import game
-from src.shvatka.services.game import rename_game, get_game
-from src.shvatka.services.scenario.scn_zip import pack_scn
-from src.shvatka.utils.datetime_utils import TIME_FORMAT, tz_game
 from src.tgbot import states
 
 

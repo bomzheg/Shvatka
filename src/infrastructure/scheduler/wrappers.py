@@ -4,11 +4,11 @@ from typing import AsyncIterator
 
 from src.infrastructure.db.dao.holder import HolderDao
 from src.infrastructure.scheduler.context import ScheduledContextHolder, ScheduledContext
-from src.shvatka.interfaces.scheduler import LevelTestScheduler
-from src.shvatka.models import dto
-from src.shvatka.services.game_play import prepare_game, start_game, send_hint
-from src.shvatka.services.level_testing import send_testing_level_hint
-from src.shvatka.services.organizers import get_by_player
+from src.core.interfaces.scheduler import LevelTestScheduler
+from src.core.models import dto
+from src.core.services.game_play import prepare_game, start_game, send_hint
+from src.core.services.level_testing import send_testing_level_hint
+from src.core.services.organizers import get_by_player
 from src.tgbot.views.game import GameBotLog, create_bot_game_view
 from src.tgbot.views.level_testing import create_level_test_view
 

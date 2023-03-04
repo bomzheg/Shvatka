@@ -2,7 +2,7 @@ from sqlalchemy import Text, BigInteger, Boolean, ForeignKey
 from sqlalchemy.orm import relationship, mapped_column
 
 from src.infrastructure.db.models.base import Base
-from src.shvatka.models import dto
+from src.core.models import dto
 
 
 class User(Base):

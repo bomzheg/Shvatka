@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload, selectinload
 
 from src.infrastructure.db import models
-from src.shvatka.models import dto
+from src.core.models import dto
 from .base import BaseDAO
 
 

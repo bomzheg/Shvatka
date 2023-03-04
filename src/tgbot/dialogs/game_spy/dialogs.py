@@ -5,7 +5,7 @@ from aiogram_dialog import Dialog, Window
 from aiogram_dialog.widgets.kbd import Button, SwitchTo, Cancel
 from aiogram_dialog.widgets.text import Const, Format, Jinja, Multi
 
-from src.shvatka.utils.datetime_utils import tz_utc
+from src.core.utils.datetime_utils import tz_utc
 from src.tgbot import states
 from .getters import get_org, get_spy, get_keys
 from .handlers import keys_handler

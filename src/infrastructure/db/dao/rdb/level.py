@@ -7,10 +7,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 
 from src.infrastructure.db import models
-from src.shvatka.models import dto
-from src.shvatka.models.dto.scn.level import LevelScenario
-from src.shvatka.services.game import check_game_editable
-from src.shvatka.services.level import check_can_link_to_game
+from src.core.models import dto
+from src.core.models.dto.scn.level import LevelScenario
+from src.core.services.game import check_game_editable
+from src.core.services.level import check_can_link_to_game
 from .base import BaseDAO
 
 

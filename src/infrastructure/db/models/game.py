@@ -13,9 +13,9 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 
+from src.core.models import dto
+from src.core.models.enums.game_status import GameStatus
 from src.infrastructure.db.models import Base
-from src.shvatka.models import dto
-from src.shvatka.models.enums.game_status import GameStatus
 
 if typing.TYPE_CHECKING:
     from .. import models

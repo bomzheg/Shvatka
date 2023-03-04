@@ -7,10 +7,10 @@ from aiogram.types import Update, Message, ChatMemberOwner, ChatMemberMember
 from aiogram_tests.mocked_bot import MockedBot
 
 from src.infrastructure.db.dao.holder import HolderDao
-from src.shvatka.models.enums.chat_type import ChatType
-from src.shvatka.services.player import upsert_player, get_my_role
-from src.shvatka.services.user import upsert_user
-from src.shvatka.utils.datetime_utils import tz_utc
+from src.core.models.enums.chat_type import ChatType
+from src.core.services.player import upsert_player, get_my_role
+from src.core.services.user import upsert_user
+from src.core.utils.datetime_utils import tz_utc
 from src.tgbot.views.commands import CREATE_TEAM_COMMAND, ADD_IN_TEAM_COMMAND
 from tests.fixtures.chat_constants import create_tg_chat
 from tests.fixtures.user_constants import (

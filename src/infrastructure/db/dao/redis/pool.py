@@ -2,7 +2,7 @@ import logging
 
 from redis.asyncio.client import Redis
 
-from src.shvatka.models.enums.played import Played
+from src.core.models.enums.played import Played
 
 logger = logging.getLogger(__name__)
 

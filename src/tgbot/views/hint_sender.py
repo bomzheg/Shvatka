@@ -8,10 +8,10 @@ from aiogram import Bot
 from aiogram.exceptions import TelegramAPIError
 from aiogram.types import Message
 
+from src.core.interfaces.clients.file_storage import FileStorage
+from src.core.models import enums
+from src.core.models.dto import scn
 from src.infrastructure.db.dao.holder import HolderDao
-from src.shvatka.interfaces.clients.file_storage import FileStorage
-from src.shvatka.models import enums
-from src.shvatka.models.dto import scn
 from src.tgbot.views.hint_factory.hint_content_resolver import HintContentResolver
 
 logger = logging.getLogger(__name__)

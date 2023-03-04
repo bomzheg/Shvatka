@@ -1,8 +1,8 @@
 from dataclasses import dataclass
 
+from src.core.interfaces.dal.key_log import TypedKeyGetter
+from src.core.models import dto
 from src.infrastructure.db.dao import KeyTimeDao, OrganizerDao
-from src.shvatka.interfaces.dal.key_log import TypedKeyGetter
-from src.shvatka.models import dto
 
 
 @dataclass

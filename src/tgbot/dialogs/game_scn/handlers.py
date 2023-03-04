@@ -9,21 +9,21 @@ from aiogram_dialog import DialogManager
 from aiogram_dialog.widgets.kbd import Button, ManagedMultiSelectAdapter
 from dataclass_factory import Factory
 
-from src.infrastructure.db.dao.holder import HolderDao
-from src.shvatka.interfaces.clients.file_storage import FileGateway
-from src.shvatka.models import dto
-from src.shvatka.models import enums
-from src.shvatka.services.achievement import add_achievement
-from src.shvatka.services.game import (
+from src.core.interfaces.clients.file_storage import FileGateway
+from src.core.models import dto
+from src.core.models import enums
+from src.core.services.achievement import add_achievement
+from src.core.services.game import (
     check_new_game_name_available,
     create_game,
     get_full_game,
     add_level,
     upsert_game,
 )
-from src.shvatka.services.level import get_all_my_free_levels, get_by_id
-from src.shvatka.services.scenario.scn_zip import unpack_scn
-from src.shvatka.utils.exceptions import ScenarioNotCorrect
+from src.core.services.level import get_all_my_free_levels, get_by_id
+from src.core.services.scenario.scn_zip import unpack_scn
+from src.core.utils.exceptions import ScenarioNotCorrect
+from src.infrastructure.db.dao.holder import HolderDao
 from src.tgbot import states
 
 logger = logging.getLogger(__name__)

@@ -1,6 +1,9 @@
 from dataclasses import dataclass
 from typing import Iterable
 
+from src.core.interfaces.dal.game_play import GamePreparer, GamePlayerDao
+from src.core.interfaces.dal.level_times import GameStarter
+from src.core.models import dto
 from src.infrastructure.db.dao import (
     PollDao,
     WaiverDao,
@@ -10,9 +13,6 @@ from src.infrastructure.db.dao import (
     LevelDao,
     KeyTimeDao,
 )
-from src.shvatka.interfaces.dal.game_play import GamePreparer, GamePlayerDao
-from src.shvatka.interfaces.dal.level_times import GameStarter
-from src.shvatka.models import dto
 
 
 @dataclass

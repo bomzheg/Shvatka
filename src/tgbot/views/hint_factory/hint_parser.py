@@ -5,11 +5,10 @@ from uuid import uuid4
 from aiogram import Bot
 from aiogram.types import Message, ContentType, PhotoSize
 
-from src.infrastructure.db.dao import FileInfoDao
-from src.shvatka.interfaces.clients.file_storage import FileStorage
-from src.shvatka.models import dto
-from src.shvatka.models.dto import scn
-from src.shvatka.models.dto.scn import (
+from src.core.interfaces.clients.file_storage import FileStorage
+from src.core.models import dto
+from src.core.models.dto import scn
+from src.core.models.dto.scn import (
     BaseHint,
     TextHint,
     GPSHint,
@@ -18,7 +17,7 @@ from src.shvatka.models.dto.scn import (
     PhotoHint,
     UploadedFileMeta,
 )
-from src.shvatka.models.dto.scn.hint_part import (
+from src.core.models.dto.scn.hint_part import (
     VenueHint,
     AudioHint,
     VideoHint,
@@ -29,7 +28,8 @@ from src.shvatka.models.dto.scn.hint_part import (
     ContactHint,
     StickerHint,
 )
-from src.shvatka.models.enums.hint_type import HintType
+from src.core.models.enums.hint_type import HintType
+from src.infrastructure.db.dao import FileInfoDao
 
 
 class HintParser:

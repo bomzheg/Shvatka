@@ -13,11 +13,11 @@ from starlette.responses import HTMLResponse
 from src.api.config.models.auth import AuthConfig
 from src.api.dependencies.db import dao_provider
 from src.api.models.auth import UserTgAuth, Token
+from src.core.models import dto
+from src.core.services.user import upsert_user
+from src.core.utils.datetime_utils import tz_utc
+from src.core.utils.exceptions import NoUsernameFound
 from src.infrastructure.db.dao.holder import HolderDao
-from src.shvatka.models import dto
-from src.shvatka.services.user import upsert_user
-from src.shvatka.utils.datetime_utils import tz_utc
-from src.shvatka.utils.exceptions import NoUsernameFound
 
 TG_WIDGET_HTML = """
         <html>

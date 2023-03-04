@@ -2,7 +2,7 @@ from datetime import datetime
 
 from pydantic import BaseModel
 
-from src.shvatka.models import dto
+from src.core.models import dto
 
 
 class UserTgAuth(BaseModel):

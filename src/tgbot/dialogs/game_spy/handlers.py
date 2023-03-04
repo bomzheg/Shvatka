@@ -2,9 +2,9 @@ from aiogram.types import CallbackQuery
 from aiogram_dialog import DialogManager
 from aiogram_dialog.widgets.kbd import Button
 
+from src.core.models import dto
+from src.core.services.game_stat import get_typed_keys
 from src.infrastructure.db.dao.holder import HolderDao
-from src.shvatka.models import dto
-from src.shvatka.services.game_stat import get_typed_keys
 from src.tgbot.views.keys import render_log_keys
 from src.tgbot.views.telegraph import Telegraph
 

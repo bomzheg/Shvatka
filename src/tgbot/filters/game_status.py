@@ -4,8 +4,8 @@ from typing import Any, Union, Dict
 from aiogram.filters import BaseFilter
 from aiogram.types import Message
 
-from src.shvatka.models import dto
-from src.shvatka.models.enums import GameStatus
+from src.core.models import dto
+from src.core.models.enums import GameStatus
 
 
 @dataclass

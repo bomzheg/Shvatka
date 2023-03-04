@@ -1,6 +1,6 @@
 from aiogram.types import Message
 
-from src.shvatka.utils.input_validation import normalize_key
+from src.core.utils.input_validation import normalize_key
 
 
 def is_key(message: Message):

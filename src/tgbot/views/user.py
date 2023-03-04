@@ -1,6 +1,6 @@
 from aiogram.utils.markdown import html_decoration as hd
 
-from src.shvatka.models import dto
+from src.core.models import dto
 
 
 def get_small_card_no_link(player: dto.Player) -> str:

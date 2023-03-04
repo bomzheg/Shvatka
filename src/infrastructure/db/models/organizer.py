@@ -2,7 +2,7 @@ from sqlalchemy import Integer, ForeignKey, Boolean, UniqueConstraint
 from sqlalchemy.orm import relationship, mapped_column
 
 from src.infrastructure.db.models import Base
-from src.shvatka.models import dto
+from src.core.models import dto
 
 
 class Organizer(Base):

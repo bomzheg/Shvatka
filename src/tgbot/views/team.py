@@ -1,6 +1,6 @@
 from aiogram.utils.markdown import html_decoration as hd
 
-from src.shvatka.models import dto
+from src.core.models import dto
 from src.tgbot.views.player import get_emoji
 from src.tgbot.views.user import get_small_card_no_link, get_small_card
 

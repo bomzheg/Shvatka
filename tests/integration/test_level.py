@@ -2,11 +2,11 @@ import pytest
 from dataclass_factory import Factory
 
 from src.infrastructure.db.dao.holder import HolderDao
-from src.shvatka.models.dto.scn.game import RawGameScenario
-from src.shvatka.models.dto.scn.level import LevelScenario
-from src.shvatka.services.level import upsert_raw_level
-from src.shvatka.services.player import upsert_player
-from src.shvatka.services.user import upsert_user
+from src.core.models.dto.scn.game import RawGameScenario
+from src.core.models.dto.scn.level import LevelScenario
+from src.core.services.level import upsert_raw_level
+from src.core.services.player import upsert_player
+from src.core.services.user import upsert_user
 from tests.fixtures.user_constants import create_dto_harry
 
 

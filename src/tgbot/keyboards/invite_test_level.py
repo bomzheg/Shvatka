@@ -2,7 +2,7 @@ from aiogram.filters.callback_data import CallbackData
 from aiogram.types import InlineKeyboardMarkup
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
-from src.shvatka.models import dto
+from src.core.models import dto
 
 
 class LevelTestInviteCD(CallbackData, prefix="level_test_invite"):

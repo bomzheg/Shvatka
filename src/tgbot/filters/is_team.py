@@ -2,7 +2,7 @@ from dataclasses import dataclass
 
 from aiogram.filters import BaseFilter
 
-from src.shvatka.models import dto
+from src.core.models import dto
 
 
 @dataclass

@@ -4,7 +4,7 @@ from pathlib import Path
 import pytest
 import yaml
 
-from shvatka.models.dto.scn.game import RawGameScenario
+from src.shvatka.models.dto.scn.game import RawGameScenario
 
 GUID = "a3bc9b96-3bb8-4dbc-b996-ce1015e66e53"
 GUID_2 = "83e6a132-5c25-4fb1-8683-29ad498e90d8"

@@ -1,16 +1,17 @@
 import pytest
 
-from infrastructure.db.dao.holder import HolderDao
-from shvatka.models import dto, enums
-from shvatka.services.player import (
+from src.infrastructure.db.dao.holder import HolderDao
+from src.shvatka.models import dto
+from src.shvatka.models import enums
+from src.shvatka.services.player import (
     join_team,
     get_my_team,
     get_my_role,
     flip_permission,
     get_full_team_player,
 )
-from shvatka.utils.defaults_constants import DEFAULT_ROLE, CAPTAIN_ROLE
-from shvatka.utils.exceptions import PlayerAlreadyInTeam, PermissionsError
+from src.shvatka.utils.defaults_constants import DEFAULT_ROLE, CAPTAIN_ROLE
+from src.shvatka.utils.exceptions import PlayerAlreadyInTeam, PermissionsError
 from tests.fixtures.team import create_second_team
 
 

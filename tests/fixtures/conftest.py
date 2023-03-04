@@ -1,6 +1,6 @@
 import pytest
 
-from common.config.models.paths import Paths
+from src.common import Paths
 
 
 @pytest.fixture

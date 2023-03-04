@@ -1,14 +1,19 @@
 import pytest
 import pytest_asyncio
 
-from infrastructure.db import models
-from infrastructure.db.dao.holder import HolderDao
-from shvatka.models import dto
-from shvatka.models.enums.played import Played
-from shvatka.services.game import start_waivers
-from shvatka.services.player import join_team, leave
-from shvatka.services.waiver import get_vote_to_voted, add_vote, approve_waivers, get_all_played
-from shvatka.utils.exceptions import PlayerRestoredInTeam, WaiverForbidden
+from src.infrastructure.db import models
+from src.infrastructure.db.dao.holder import HolderDao
+from src.shvatka.models import dto
+from src.shvatka.models.enums.played import Played
+from src.shvatka.services.game import start_waivers
+from src.shvatka.services.player import join_team, leave
+from src.shvatka.services.waiver import (
+    get_vote_to_voted,
+    add_vote,
+    approve_waivers,
+    get_all_played,
+)
+from src.shvatka.utils.exceptions import PlayerRestoredInTeam, WaiverForbidden
 
 
 @pytest.mark.asyncio

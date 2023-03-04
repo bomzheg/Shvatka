@@ -1,9 +1,9 @@
 import pytest_asyncio
 
-from infrastructure.db.dao.holder import HolderDao
-from shvatka.models import dto
-from shvatka.services.player import upsert_player
-from shvatka.services.user import upsert_user
+from src.infrastructure.db.dao.holder import HolderDao
+from src.shvatka.models import dto
+from src.shvatka.services.player import upsert_player
+from src.shvatka.services.user import upsert_user
 from tests.fixtures.user_constants import (
     create_dto_hermione,
     create_dto_harry,

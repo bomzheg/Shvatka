@@ -5,14 +5,14 @@ import pytest_asyncio
 from fastapi import FastAPI
 from httpx import AsyncClient
 from redis.asyncio.client import Redis
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.ext.asyncio import async_sessionmaker, AsyncSession
 
-from api import dependencies, routes
-from api.config.models.main import ApiConfig
-from api.config.parser.main import load_config
-from api.dependencies import AuthProvider
-from api.main_factory import create_app
-from common.config.models.paths import Paths
+from src.api import dependencies, routes
+from src.api.config.models.main import ApiConfig
+from src.api.config.parser.main import load_config
+from src.api.dependencies import AuthProvider
+from src.api.main_factory import create_app
+from src.common import Paths
 from tests.mocks.config import DBConfig
 
 
@@ -30,7 +30,7 @@ def patch_api_config(api_config: ApiConfig, postgres_url: str, redis: Redis):
 
 
 @pytest.fixture(scope="session")
-def app(api_config: ApiConfig, pool: sessionmaker, redis: Redis) -> FastAPI:
+def app(api_config: ApiConfig, pool: async_sessionmaker[AsyncSession], redis: Redis) -> FastAPI:
     app = create_app()
     dependencies.setup(app=app, pool=pool, redis=redis, config=api_config)
     routes.setup(app.router)

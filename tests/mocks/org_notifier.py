@@ -1,4 +1,4 @@
-from shvatka.views.game import OrgNotifier, Event
+from src.shvatka.views.game import OrgNotifier, Event
 
 
 class OrgNotifierMock(OrgNotifier):

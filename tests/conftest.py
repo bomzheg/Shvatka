@@ -3,11 +3,11 @@ from pathlib import Path
 
 import pytest
 
-from common.config.models.paths import Paths
-from common.config.parser.logging_config import setup_logging
-from common.factory import create_dataclass_factory
-from tgbot.config.models.main import TgBotConfig
-from tgbot.config.parser.main import load_config
+from src.common import Paths
+from src.common import create_dataclass_factory
+from src.common import setup_logging
+from src.tgbot.config.models.main import TgBotConfig
+from src.tgbot.config.parser.main import load_config
 
 
 @pytest.fixture(scope="session", autouse=True)

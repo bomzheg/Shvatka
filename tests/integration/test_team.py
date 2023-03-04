@@ -1,9 +1,9 @@
 import pytest
 
-from infrastructure.db.dao.holder import HolderDao
-from shvatka.models import dto
-from shvatka.services.player import get_full_team_player
-from shvatka.services.team import rename_team, change_team_desc
+from src.infrastructure.db.dao.holder import HolderDao
+from src.shvatka.models import dto
+from src.shvatka.services.player import get_full_team_player
+from src.shvatka.services.team import rename_team, change_team_desc
 from tests.fixtures.chat_constants import GRYFFINDOR_CHAT_DTO
 
 

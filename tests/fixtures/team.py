@@ -1,9 +1,9 @@
 import pytest_asyncio
 
-from infrastructure.db.dao.holder import HolderDao
-from shvatka.models import dto
-from shvatka.services.chat import upsert_chat
-from shvatka.services.team import create_team
+from src.infrastructure.db.dao.holder import HolderDao
+from src.shvatka.models import dto
+from src.shvatka.services.chat import upsert_chat
+from src.shvatka.services.team import create_team
 from tests.fixtures.chat_constants import create_gryffindor_dto_chat, create_slytherin_dto_chat
 
 

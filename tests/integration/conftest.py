@@ -18,16 +18,26 @@ from sqlalchemy.orm import sessionmaker, close_all_sessions
 from testcontainers.postgres import PostgresContainer
 from testcontainers.redis import RedisContainer
 
-from common.config.models.paths import Paths
-from common.factory import create_telegraph
-from infrastructure.clients.file_gateway import BotFileGateway
-from infrastructure.db.config.models.db import RedisConfig
-from infrastructure.db.dao.holder import HolderDao
-from infrastructure.db.dao.memory.level_testing import LevelTestingData
-from infrastructure.db.faсtory import create_lock_factory, create_level_test_dao
-from shvatka.interfaces.clients.file_storage import FileStorage, FileGateway
-from shvatka.interfaces.scheduler import Scheduler
-from shvatka.utils.key_checker_lock import KeyCheckerFactory
+from src.common import Paths
+from src.common import create_telegraph
+from src.infrastructure.clients.file_gateway import BotFileGateway
+from src.infrastructure.db.config.models.db import RedisConfig
+from src.infrastructure.db.dao.holder import HolderDao
+from src.infrastructure.db.dao.memory.level_testing import LevelTestingData
+from src.infrastructure.db.faсtory import create_lock_factory, create_level_test_dao
+from src.shvatka.interfaces.clients.file_storage import FileStorage, FileGateway
+from src.shvatka.interfaces.scheduler import Scheduler
+from src.shvatka.utils.key_checker_lock import KeyCheckerFactory
+from src.tgbot.config.models.main import TgBotConfig
+from src.tgbot.main_factory import Telegraph
+from src.tgbot.main_factory import (
+    create_redis,
+    create_only_dispatcher,
+)
+from src.tgbot.main_factory import setup_handlers
+from src.tgbot.middlewares import setup_middlewares
+from src.tgbot.username_resolver.user_getter import UserGetter
+from src.tgbot.views.hint_factory.hint_parser import HintParser
 from tests.fixtures.conftest import fixtures_resource_path  # noqa: F401
 from tests.fixtures.game_fixtures import game, finished_game  # noqa: F401
 from tests.fixtures.player import harry, hermione, ron, author, draco  # noqa: F401
@@ -36,16 +46,6 @@ from tests.fixtures.team import gryffindor, slytherin  # noqa: F401
 from tests.mocks.config import DBConfig
 from tests.mocks.file_storage import MemoryFileStorage
 from tests.mocks.scheduler_mock import SchedulerMock
-from tgbot.config.models.main import TgBotConfig
-from tgbot.handlers import setup_handlers
-from tgbot.main_factory import (
-    create_redis,
-    create_only_dispatcher,
-)
-from tgbot.middlewares import setup_middlewares
-from tgbot.username_resolver.user_getter import UserGetter
-from tgbot.views.hint_factory.hint_parser import HintParser
-from tgbot.views.telegraph import Telegraph
 
 logger = logging.getLogger(__name__)
 
@@ -214,7 +214,8 @@ def bot(bot_config: TgBotConfig):
 def alembic_config(postgres_url: str, paths: Paths) -> AlembicConfig:
     alembic_cfg = AlembicConfig(str(paths.app_dir.parent / "alembic.ini"))
     alembic_cfg.set_main_option(
-        "script_location", str(paths.app_dir.parent / "infrastructure" / "db" / "migrations")
+        "script_location",
+        str(paths.app_dir.parent / "src" / "infrastructure" / "db" / "migrations"),
     )
     alembic_cfg.set_main_option("sqlalchemy.url", postgres_url)
     return alembic_cfg

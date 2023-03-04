@@ -1,5 +1,5 @@
-from shvatka.models import dto
-from shvatka.views.level import LevelView
+from src.shvatka.models import dto
+from src.shvatka.views.level import LevelView
 
 
 class LevelViewMock(LevelView):

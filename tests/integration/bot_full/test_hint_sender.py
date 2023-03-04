@@ -21,11 +21,11 @@ from aiogram.methods import (
 from aiogram.methods.base import TelegramType
 from aiogram_tests.mocked_bot import MockedBot
 
-from infrastructure.db.dao.holder import HolderDao
-from shvatka.interfaces.clients.file_storage import FileStorage
-from shvatka.models import dto
-from shvatka.models.dto.scn import TextHint, GPSHint, PhotoHint, BaseHint
-from shvatka.models.dto.scn.hint_part import (
+from src.infrastructure.db.dao.holder import HolderDao
+from src.shvatka.interfaces.clients.file_storage import FileStorage
+from src.shvatka.models import dto
+from src.shvatka.models.dto.scn import TextHint, GPSHint, PhotoHint, BaseHint
+from src.shvatka.models.dto.scn.hint_part import (
     VenueHint,
     AudioHint,
     VideoHint,
@@ -35,10 +35,10 @@ from shvatka.models.dto.scn.hint_part import (
     VideoNoteHint,
     StickerHint,
 )
+from src.tgbot.views.hint_factory.hint_content_resolver import HintContentResolver
+from src.tgbot.views.hint_sender import HintSender
 from tests.fixtures.file_storage_constants import FILE_ID, CHAT_ID, FILE_META
 from tests.fixtures.scn_fixtures import GUID
-from tgbot.views.hint_factory.hint_content_resolver import HintContentResolver
-from tgbot.views.hint_sender import HintSender
 
 BAD_REQUEST_DESC = (
     "Bad Request: wrong remote file identifier specified: Wrong padding in the string"

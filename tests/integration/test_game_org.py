@@ -1,10 +1,10 @@
 import pytest
 
-from infrastructure.db.dao.holder import HolderDao
-from shvatka.models import dto
-from shvatka.models.enums.invite_type import InviteType
-from shvatka.models.enums.org_permission import OrgPermission
-from shvatka.services.organizers import (
+from src.infrastructure.db.dao.holder import HolderDao
+from src.shvatka.models import dto
+from src.shvatka.models.enums import InviteType
+from src.shvatka.models.enums import OrgPermission
+from src.shvatka.services.organizers import (
     get_orgs,
     get_spying_orgs,
     get_secondary_orgs,
@@ -16,8 +16,8 @@ from shvatka.services.organizers import (
     flip_permission,
     flip_deleted,
 )
-from shvatka.utils.exceptions import SaltNotExist
-from shvatka.views.game import NewOrg
+from src.shvatka.utils.exceptions import SaltNotExist
+from src.shvatka.views.game import NewOrg
 from tests.mocks.org_notifier import OrgNotifierMock
 
 

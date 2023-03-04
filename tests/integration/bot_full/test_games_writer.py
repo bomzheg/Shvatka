@@ -2,7 +2,7 @@ import pytest
 from aiogram_dialog.test_tools import BotClient, MockMessageManager
 from aiogram_dialog.test_tools.keyboard import InlineButtonTextLocator
 
-from tgbot.views.commands import NEW_GAME_COMMAND
+from src.tgbot.views.commands import NEW_GAME_COMMAND
 
 
 @pytest.mark.asyncio

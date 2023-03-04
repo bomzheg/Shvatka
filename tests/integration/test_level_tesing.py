@@ -2,16 +2,16 @@ from datetime import datetime
 
 import pytest
 
-from infrastructure.db.dao.holder import HolderDao
-from shvatka.models import dto
-from shvatka.services.level_testing import (
+from src.infrastructure.db.dao.holder import HolderDao
+from src.shvatka.models import dto
+from src.shvatka.services.level_testing import (
     start_level_test,
     check_level_testing_key,
     send_testing_level_hint,
 )
-from shvatka.utils.datetime_utils import tz_utc
-from shvatka.utils.key_checker_lock import KeyCheckerFactory
-from shvatka.views.game import LevelTestCompleted
+from src.shvatka.utils.datetime_utils import tz_utc
+from src.shvatka.utils.key_checker_lock import KeyCheckerFactory
+from src.shvatka.views.game import LevelTestCompleted
 from tests.mocks.level_view import LevelViewMock
 from tests.mocks.org_notifier import OrgNotifierMock
 from tests.mocks.scheduler_mock import LevelSchedulerMock

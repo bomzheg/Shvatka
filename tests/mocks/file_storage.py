@@ -1,17 +1,16 @@
 from typing import BinaryIO
 
-from shvatka.interfaces.clients.file_storage import FileStorage
-from shvatka.models.dto import scn
-from shvatka.models.dto.scn import FileContentLink
+from src.shvatka.interfaces.clients.file_storage import FileStorage
+from src.shvatka.models.dto import scn
 
 
 class MemoryFileStorage(FileStorage):
     def __init__(self):
         self.storage = {}
 
-    async def put_content(self, local_file_name: str, content: BinaryIO) -> FileContentLink:
+    async def put_content(self, local_file_name: str, content: BinaryIO) -> scn.FileContentLink:
         self.storage[local_file_name] = content
-        return FileContentLink(file_path=local_file_name)
+        return scn.FileContentLink(file_path=local_file_name)
 
     async def put(self, file_meta: scn.UploadedFileMeta, content: BinaryIO) -> scn.FileMeta:
         return scn.FileMeta(
@@ -22,5 +21,5 @@ class MemoryFileStorage(FileStorage):
             tg_link=file_meta.tg_link,
         )
 
-    async def get(self, file_link: FileContentLink) -> BinaryIO:
+    async def get(self, file_link: scn.FileContentLink) -> BinaryIO:
         return self.storage[file_link.file_path]

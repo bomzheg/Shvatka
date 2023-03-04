@@ -4,22 +4,22 @@ import pytest
 from dataclass_factory import Factory
 from mockito import mock, when, ANY, unstub
 
-from src.infrastructure.db import models
-from src.infrastructure.db.dao.holder import HolderDao
-from src.core.interfaces.clients.file_storage import FileStorage
-from src.core.interfaces.scheduler import Scheduler
-from src.core.models import dto
-from src.core.models.enums import GameStatus
-from src.core.models.enums.played import Played
-from src.core.services.game import start_waivers
-from src.core.services.game_play import start_game, send_hint, check_key, get_available_hints
-from src.core.services.game_stat import get_typed_keys
-from src.core.services.organizers import get_orgs
-from src.core.services.player import join_team
-from src.core.services.waiver import add_vote, approve_waivers
-from src.core.utils.datetime_utils import tz_utc
-from src.core.utils.key_checker_lock import KeyCheckerFactory
-from src.core.views.game import GameView, GameLogWriter, OrgNotifier, LevelUp
+from shvatka.core.interfaces.clients.file_storage import FileStorage
+from shvatka.core.interfaces.scheduler import Scheduler
+from shvatka.core.models import dto
+from shvatka.core.models.enums import GameStatus
+from shvatka.core.models.enums.played import Played
+from shvatka.core.services.game import start_waivers
+from shvatka.core.services.game_play import start_game, send_hint, check_key, get_available_hints
+from shvatka.core.services.game_stat import get_typed_keys
+from shvatka.core.services.organizers import get_orgs
+from shvatka.core.services.player import join_team
+from shvatka.core.services.waiver import add_vote, approve_waivers
+from shvatka.core.utils.datetime_utils import tz_utc
+from shvatka.core.utils.key_checker_lock import KeyCheckerFactory
+from shvatka.core.views.game import GameView, GameLogWriter, OrgNotifier, LevelUp
+from shvatka.infrastructure.db import models
+from shvatka.infrastructure.db.dao.holder import HolderDao
 from tests.mocks.aiogram_mocks import mock_coro
 from tests.utils.time_key import assert_time_key
 

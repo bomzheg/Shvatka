@@ -1,4 +1,4 @@
-from src.core.models import dto
+from shvatka.core.models import dto
 from tests.fixtures.chat_constants import create_tg_chat, create_gryffindor_dto_chat
 
 

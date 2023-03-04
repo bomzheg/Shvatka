@@ -2,10 +2,10 @@ import pytest
 from dataclass_factory import Factory
 from httpx import AsyncClient
 
-from src.api.models import responses
-from src.infrastructure.db.dao.holder import HolderDao
-from src.core.models import dto
-from src.core.models.enums import GameStatus
+from shvatka.api.models import responses
+from shvatka.core.models import dto
+from shvatka.core.models.enums import GameStatus
+from shvatka.infrastructure.db.dao.holder import HolderDao
 
 
 @pytest.mark.asyncio

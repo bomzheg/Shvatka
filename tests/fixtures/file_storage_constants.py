@@ -1,5 +1,5 @@
-from src.core.models import enums
-from src.core.models.dto import scn
+from shvatka.core.models import enums
+from shvatka.core.models.dto import scn
 from tests.fixtures.scn_fixtures import GUID
 
 FILE_ID = "98765"

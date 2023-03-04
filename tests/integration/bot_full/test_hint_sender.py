@@ -21,11 +21,10 @@ from aiogram.methods import (
 from aiogram.methods.base import TelegramType
 from aiogram_tests.mocked_bot import MockedBot
 
-from src.infrastructure.db.dao.holder import HolderDao
-from src.core.interfaces.clients.file_storage import FileStorage
-from src.core.models import dto
-from src.core.models.dto.scn import TextHint, GPSHint, PhotoHint, BaseHint
-from src.core.models.dto.scn.hint_part import (
+from shvatka.core.interfaces.clients.file_storage import FileStorage
+from shvatka.core.models import dto
+from shvatka.core.models.dto.scn import TextHint, GPSHint, PhotoHint, BaseHint
+from shvatka.core.models.dto.scn.hint_part import (
     VenueHint,
     AudioHint,
     VideoHint,
@@ -35,8 +34,9 @@ from src.core.models.dto.scn.hint_part import (
     VideoNoteHint,
     StickerHint,
 )
-from src.tgbot.views.hint_factory.hint_content_resolver import HintContentResolver
-from src.tgbot.views.hint_sender import HintSender
+from shvatka.infrastructure.db.dao.holder import HolderDao
+from shvatka.tgbot.views.hint_factory.hint_content_resolver import HintContentResolver
+from shvatka.tgbot.views.hint_sender import HintSender
 from tests.fixtures.file_storage_constants import FILE_ID, CHAT_ID, FILE_META
 from tests.fixtures.scn_fixtures import GUID
 

@@ -2,8 +2,8 @@ import pytest
 from aiogram import Dispatcher, Bot
 from aiogram_dialog.test_tools import BotClient
 
-from src.core.models import dto
-from src.core.models import enums
+from shvatka.core.models import dto
+from shvatka.core.models import enums
 from tests.fixtures.chat_constants import create_tg_chat
 from tests.fixtures.user_constants import create_tg_from_dto
 

@@ -3,12 +3,12 @@ import pytest_asyncio
 from dataclass_factory import Factory
 from httpx import AsyncClient
 
-from src.api.dependencies import AuthProvider
-from src.api.models import responses
-from src.api.models.auth import Token
-from src.infrastructure.db.dao.holder import HolderDao
-from src.core.models import dto
-from src.core.services.user import upsert_user, set_password
+from shvatka.api.dependencies import AuthProvider
+from shvatka.api.models import responses
+from shvatka.api.models.auth import Token
+from shvatka.core.models import dto
+from shvatka.core.services.user import upsert_user, set_password
+from shvatka.infrastructure.db.dao.holder import HolderDao
 from tests.fixtures.chat_constants import create_gryffindor_dto_chat
 from tests.fixtures.team import create_team_
 from tests.fixtures.user_constants import create_dto_harry

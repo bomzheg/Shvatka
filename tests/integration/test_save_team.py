@@ -1,10 +1,10 @@
 import pytest
 
-from src.infrastructure.db.dao.holder import HolderDao
-from src.core.services.chat import upsert_chat
-from src.core.services.player import upsert_player
-from src.core.services.team import create_team, get_by_chat
-from src.core.services.user import upsert_user
+from shvatka.core.services.chat import upsert_chat
+from shvatka.core.services.player import upsert_player
+from shvatka.core.services.team import create_team, get_by_chat
+from shvatka.core.services.user import upsert_user
+from shvatka.infrastructure.db.dao.holder import HolderDao
 from tests.fixtures.chat_constants import create_gryffindor_dto_chat
 from tests.fixtures.user_constants import create_dto_harry
 

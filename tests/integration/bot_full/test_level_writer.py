@@ -3,9 +3,9 @@ from aiogram_dialog.test_tools import BotClient, MockMessageManager
 from aiogram_dialog.test_tools.keyboard import InlineButtonTextLocator
 from aiogram_tests.mocked_bot import MockedBot
 
-from src.infrastructure.db.dao.holder import HolderDao
-from src.core.models import dto
-from src.tgbot.views.commands import NEW_LEVEL_COMMAND
+from shvatka.core.models import dto
+from shvatka.infrastructure.db.dao.holder import HolderDao
+from shvatka.tgbot.views.commands import NEW_LEVEL_COMMAND
 
 
 @pytest.mark.asyncio

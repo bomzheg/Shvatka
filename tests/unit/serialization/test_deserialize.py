@@ -3,9 +3,9 @@ from copy import deepcopy
 import pytest
 from dataclass_factory import Factory
 
-from src.core.models.dto.scn import TextHint, GPSHint, PhotoHint, ContactHint
-from src.core.models.dto.scn.game import RawGameScenario
-from src.core.models.dto.scn.hint_part import (
+from shvatka.core.models.dto.scn import TextHint, GPSHint, PhotoHint, ContactHint
+from shvatka.core.models.dto.scn.game import RawGameScenario
+from shvatka.core.models.dto.scn.hint_part import (
     VenueHint,
     AudioHint,
     VideoHint,
@@ -15,11 +15,11 @@ from src.core.models.dto.scn.hint_part import (
     VideoNoteHint,
     StickerHint,
 )
-from src.core.models.enums import HintType
-from src.core.services.level import load_level
-from src.core.services.scenario.game_ops import parse_game
-from src.core.utils.exceptions import ScenarioNotCorrect
-from src.tgbot.views.utils import render_hints
+from shvatka.core.models.enums import HintType
+from shvatka.core.services.level import load_level
+from shvatka.core.services.scenario.game_ops import parse_game
+from shvatka.core.utils.exceptions import ScenarioNotCorrect
+from shvatka.tgbot.views.utils import render_hints
 
 
 def test_deserialize_game(simple_scn: RawGameScenario, dcf: Factory):

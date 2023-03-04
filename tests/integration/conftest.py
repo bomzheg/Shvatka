@@ -18,26 +18,26 @@ from sqlalchemy.orm import sessionmaker, close_all_sessions
 from testcontainers.postgres import PostgresContainer
 from testcontainers.redis import RedisContainer
 
-from src.common import Paths
-from src.common import create_telegraph
-from src.core.interfaces.clients.file_storage import FileStorage, FileGateway
-from src.core.interfaces.scheduler import Scheduler
-from src.core.utils.key_checker_lock import KeyCheckerFactory
-from src.infrastructure.clients.file_gateway import BotFileGateway
-from src.infrastructure.db.config.models.db import RedisConfig
-from src.infrastructure.db.dao.holder import HolderDao
-from src.infrastructure.db.dao.memory.level_testing import LevelTestingData
-from src.infrastructure.db.faсtory import create_lock_factory, create_level_test_dao
-from src.tgbot.config.models.main import TgBotConfig
-from src.tgbot.main_factory import Telegraph
-from src.tgbot.main_factory import (
+from shvatka.common import Paths
+from shvatka.common import create_telegraph
+from shvatka.core.interfaces.clients.file_storage import FileStorage, FileGateway
+from shvatka.core.interfaces.scheduler import Scheduler
+from shvatka.core.utils.key_checker_lock import KeyCheckerFactory
+from shvatka.infrastructure.clients.file_gateway import BotFileGateway
+from shvatka.infrastructure.db.config.models.db import RedisConfig
+from shvatka.infrastructure.db.dao.holder import HolderDao
+from shvatka.infrastructure.db.dao.memory.level_testing import LevelTestingData
+from shvatka.infrastructure.db.faсtory import create_lock_factory, create_level_test_dao
+from shvatka.tgbot.config.models.main import TgBotConfig
+from shvatka.tgbot.main_factory import Telegraph
+from shvatka.tgbot.main_factory import (
     create_redis,
     create_only_dispatcher,
 )
-from src.tgbot.main_factory import setup_handlers
-from src.tgbot.middlewares import setup_middlewares
-from src.tgbot.username_resolver.user_getter import UserGetter
-from src.tgbot.views.hint_factory.hint_parser import HintParser
+from shvatka.tgbot.main_factory import setup_handlers
+from shvatka.tgbot.middlewares import setup_middlewares
+from shvatka.tgbot.username_resolver.user_getter import UserGetter
+from shvatka.tgbot.views.hint_factory.hint_parser import HintParser
 from tests.fixtures.conftest import fixtures_resource_path  # noqa: F401
 from tests.fixtures.game_fixtures import game, finished_game  # noqa: F401
 from tests.fixtures.player import harry, hermione, ron, author, draco  # noqa: F401
@@ -215,7 +215,7 @@ def alembic_config(postgres_url: str, paths: Paths) -> AlembicConfig:
     alembic_cfg = AlembicConfig(str(paths.app_dir.parent / "alembic.ini"))
     alembic_cfg.set_main_option(
         "script_location",
-        str(paths.app_dir.parent / "src" / "infrastructure" / "db" / "migrations"),
+        str(paths.app_dir.parent / "shvatka" / "infrastructure" / "db" / "migrations"),
     )
     alembic_cfg.set_main_option("sqlalchemy.url", postgres_url)
     return alembic_cfg

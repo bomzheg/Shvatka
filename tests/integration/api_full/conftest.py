@@ -7,12 +7,12 @@ from httpx import AsyncClient
 from redis.asyncio.client import Redis
 from sqlalchemy.ext.asyncio import async_sessionmaker, AsyncSession
 
-from src.api import dependencies, routes
-from src.api.config.models.main import ApiConfig
-from src.api.config.parser.main import load_config
-from src.api.dependencies import AuthProvider
-from src.api.main_factory import create_app
-from src.common import Paths
+from shvatka.api import dependencies, routes
+from shvatka.api.config.models.main import ApiConfig
+from shvatka.api.config.parser.main import load_config
+from shvatka.api.dependencies import AuthProvider
+from shvatka.api.main_factory import create_app
+from shvatka.common import Paths
 from tests.mocks.config import DBConfig
 
 

@@ -1,7 +1,7 @@
 from typing import BinaryIO
 
-from src.core.interfaces.clients.file_storage import FileStorage
-from src.core.models.dto import scn
+from shvatka.core.interfaces.clients.file_storage import FileStorage
+from shvatka.core.models.dto import scn
 
 
 class MemoryFileStorage(FileStorage):

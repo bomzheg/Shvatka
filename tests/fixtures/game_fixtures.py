@@ -3,14 +3,14 @@ import asyncio
 import pytest_asyncio
 from dataclass_factory import Factory
 
-from src.core.interfaces.clients.file_storage import FileGateway
-from src.core.models import dto
-from src.core.models.dto.scn.game import RawGameScenario
-from src.core.models.enums.played import Played
-from src.core.services.game import upsert_game
-from src.core.services.player import join_team
-from src.core.services.waiver import add_vote, approve_waivers
-from src.infrastructure.db.dao.holder import HolderDao
+from shvatka.core.interfaces.clients.file_storage import FileGateway
+from shvatka.core.models import dto
+from shvatka.core.models.dto.scn.game import RawGameScenario
+from shvatka.core.models.enums.played import Played
+from shvatka.core.services.game import upsert_game
+from shvatka.core.services.player import join_team
+from shvatka.core.services.waiver import add_vote, approve_waivers
+from shvatka.infrastructure.db.dao.holder import HolderDao
 
 
 @pytest_asyncio.fixture

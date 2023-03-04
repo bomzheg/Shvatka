@@ -1,5 +1,5 @@
-from src.core.models import dto
-from src.infrastructure.db import models
+from shvatka.core.models import dto
+from shvatka.infrastructure.db import models
 
 
 def assert_dto_chat(expected: dto.Chat, actual: dto.Chat):

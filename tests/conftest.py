@@ -3,11 +3,11 @@ from pathlib import Path
 
 import pytest
 
-from src.common import Paths
-from src.common import create_dataclass_factory
-from src.common import setup_logging
-from src.tgbot.config.models.main import TgBotConfig
-from src.tgbot.config.parser.main import load_config
+from shvatka.common import Paths
+from shvatka.common import create_dataclass_factory
+from shvatka.common import setup_logging
+from shvatka.tgbot.config.models.main import TgBotConfig
+from shvatka.tgbot.config.parser.main import load_config
 
 
 @pytest.fixture(scope="session", autouse=True)

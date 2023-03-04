@@ -2,9 +2,9 @@ from copy import copy
 
 from aiogram import types as tg
 
-from src.core.models import dto
-from src.core.models.enums.chat_type import ChatType
-from src.infrastructure.db import models
+from shvatka.core.models import dto
+from shvatka.core.models.enums.chat_type import ChatType
+from shvatka.infrastructure.db import models
 
 NEW_CHAT_ID = -10048
 GRYFFINDOR_CHAT_DTO = dto.Chat(

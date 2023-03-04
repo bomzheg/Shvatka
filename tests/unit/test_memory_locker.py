@@ -1,7 +1,7 @@
 import pytest
 
-from src.infrastructure.db.dao.memory.locker import MemoryLockFactory
-from src.core.models import dto
+from shvatka.core.models import dto
+from shvatka.infrastructure.db.dao.memory.locker import MemoryLockFactory
 
 
 @pytest.mark.asyncio

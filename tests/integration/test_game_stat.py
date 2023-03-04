@@ -3,9 +3,9 @@ from itertools import starmap, pairwise
 
 import pytest
 
-from src.infrastructure.db.dao.holder import HolderDao
-from src.core.models import dto
-from src.core.services.game_stat import get_game_stat, get_typed_keys
+from shvatka.core.models import dto
+from shvatka.core.services.game_stat import get_game_stat, get_typed_keys
+from shvatka.infrastructure.db.dao.holder import HolderDao
 
 
 @pytest.mark.asyncio

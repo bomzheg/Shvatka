@@ -1,6 +1,6 @@
 import pytest
 
-from src.common import Paths
+from shvatka.common import Paths
 
 
 @pytest.fixture

@@ -4,8 +4,8 @@ from pathlib import Path
 
 import pytest
 
-from src.common.config.models.main import FileStorageConfig
-from src.infrastructure.clients.file_storage import LocalFileStorage
+from shvatka.common.config.models.main import FileStorageConfig
+from shvatka.infrastructure.clients.file_storage import LocalFileStorage
 from tests.fixtures.file_storage_constants import FILE_META
 
 

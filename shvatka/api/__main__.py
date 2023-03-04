@@ -35,5 +35,9 @@ def main() -> FastAPI:
     return app
 
 
-if __name__ == "__main__":
+def run():
     uvicorn.run("shvatka.api:main", factory=True, log_config=None)
+
+
+if __name__ == "__main__":
+    run()

@@ -76,5 +76,9 @@ async def main():
             logger.info("stopped")
 
 
-if __name__ == "__main__":
+def run():
     asyncio.run(main())
+
+
+if __name__ == "__main__":
+    run()

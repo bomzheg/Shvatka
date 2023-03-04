@@ -3,8 +3,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 
-from shvatka.common.config.models.paths import Paths
 from shvatka.infrastructure.db.config.models.db import DBConfig, RedisConfig
+from .paths import Paths
 
 
 @dataclass

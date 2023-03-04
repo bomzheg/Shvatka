@@ -6,6 +6,10 @@ authors = ["Yuriy Chebyshev <bomzheg@gmail.com>"]
 license = "MIT"
 readme = "README.md"
 
+[tool.poetry.scripts]
+shvatka-tgbot = 'shvatka.tgbot.__main__:run'
+shvatka-api = 'shvatka.api.__main__:run'
+
 [tool.poetry.dependencies]
 python = "~3.11"
 wheel = "^0.38.4"

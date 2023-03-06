@@ -12,8 +12,8 @@ from shvatka.core.utils.key_checker_lock import KeyCheckerFactory
 from shvatka.infrastructure.clients.file_gateway import BotFileGateway
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.infrastructure.db.dao.memory.level_testing import LevelTestingData
-from shvatka.tgbot.config.models.bot import BotConfig
 from shvatka.tgbot.username_resolver.user_getter import UserGetter
+from shvatka.tgbot.utils.data import MiddlewareData
 from shvatka.tgbot.views.hint_factory.hint_parser import HintParser
 from shvatka.tgbot.views.telegraph import Telegraph
 
@@ -45,7 +45,7 @@ class InitMiddleware(BaseMiddleware):
         self,
         handler: Callable[[TelegramObject, dict[str, Any]], Awaitable[Any]],
         event: TelegramObject,
-        data: dict[str, Any],
+        data: MiddlewareData,
     ) -> Any:
         data["user_getter"] = self.user_getter
         data["dcf"] = self.dcf
@@ -53,7 +53,6 @@ class InitMiddleware(BaseMiddleware):
         data["locker"] = self.locker
         data["file_storage"] = self.file_storage
         data["telegraph"] = self.telegraph
-        config: BotConfig = data["config"]
         async with self.pool() as session:
             holder_dao = HolderDao(session, self.redis, self.level_test_dao)
             data["dao"] = holder_dao
@@ -66,7 +65,7 @@ class InitMiddleware(BaseMiddleware):
                 bot=data["bot"],
                 file_storage=self.file_storage,
                 hint_parser=data["hint_parser"],
-                tech_chat_id=config.log_chat,
+                tech_chat_id=data["config"].log_chat,
             )
             result = await handler(event, data)
             del data["dao"]

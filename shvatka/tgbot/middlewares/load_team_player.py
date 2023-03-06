@@ -3,10 +3,9 @@ from typing import Callable, Any, Awaitable
 from aiogram import BaseMiddleware
 from aiogram.types import TelegramObject
 
-from shvatka.core.models import dto
 from shvatka.core.services.player import get_full_team_player, get_my_team
 from shvatka.core.utils.exceptions import PlayerNotInTeam
-from shvatka.infrastructure.db.dao.holder import HolderDao
+from shvatka.tgbot.utils.data import MiddlewareData
 
 
 class TeamPlayerMiddleware(BaseMiddleware):
@@ -14,13 +13,11 @@ class TeamPlayerMiddleware(BaseMiddleware):
         self,
         handler: Callable[[TelegramObject, dict[str, Any]], Awaitable[Any]],
         event: TelegramObject,
-        data: dict[str, Any],
+        data: MiddlewareData,
     ) -> Any:
-        dao: HolderDao = data["dao"]
-        player: dto.Player = data["player"]
-        team = await get_my_team(player=player, dao=dao.team_player)
+        team = await get_my_team(player=(data["player"]), dao=data["dao"].team_player)
         try:
-            team_player = await get_full_team_player(player, team, dao.team_player)
+            team_player = await get_full_team_player(data["player"], team, data["dao"].team_player)
         except PlayerNotInTeam:
             team_player = None
         data["team_player"] = team_player

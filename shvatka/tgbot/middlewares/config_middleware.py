@@ -4,6 +4,7 @@ from aiogram import BaseMiddleware
 from aiogram.types import TelegramObject
 
 from shvatka.tgbot.config.models.bot import BotConfig
+from shvatka.tgbot.utils.data import MiddlewareData
 
 
 class ConfigMiddleware(BaseMiddleware):
@@ -14,7 +15,7 @@ class ConfigMiddleware(BaseMiddleware):
         self,
         handler: Callable[[TelegramObject, dict[str, Any]], Awaitable[Any]],
         event: TelegramObject,
-        data: dict[str, Any],
+        data: MiddlewareData,
     ) -> Any:
         data["config"] = self.config
         return await handler(event, data)

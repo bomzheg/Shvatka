@@ -16,4 +16,4 @@ COPY --from=builder $VIRTUAL_ENV $VIRTUAL_ENV
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 COPY . ${CODE_PATH}/shvatka
 WORKDIR $CODE_PATH/shvatka
-ENTRYPOINT ["python3", "-m", "tgbot"]
+ENTRYPOINT ["python3", "-m", "shvatka.tgbot"]

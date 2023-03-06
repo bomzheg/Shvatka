@@ -16,3 +16,12 @@ Core-функционал:
 - информирование организаторов о ходе игры, 
 - формирование результатов игры, 
 - сохранение статистики прошедших игр
+
+
+## Как запустить:
+```shell
+poetry build
+pip install ./dist/shvatka-0.1.0-py3-none-any.whl
+export BOT_PATH=$PWD
+shvatka-tgbot
+```

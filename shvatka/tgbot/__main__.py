@@ -8,9 +8,8 @@ from shvatka.common.config.parser.logging_config import setup_logging
 from shvatka.common.factory import create_telegraph, create_dataclass_factory
 from shvatka.infrastructure.clients.factory import create_file_storage
 from shvatka.infrastructure.db.faсtory import (
-    create_pool,
     create_lock_factory,
-    create_level_test_dao,
+    create_level_test_dao, create_session_maker, create_engine,
 )
 from shvatka.infrastructure.scheduler.factory import create_scheduler
 from shvatka.tgbot.config.parser.main import load_config
@@ -33,7 +32,8 @@ async def main():
     config = load_config(paths)
     dcf = create_dataclass_factory()
     file_storage = create_file_storage(config.file_storage_config)
-    pool = create_pool(config.db)
+    engine = create_engine(config.db)
+    pool = create_session_maker(engine)
     bot = create_bot(config)
     setup_jinja(bot=bot)
     level_test_dao = create_level_test_dao()
@@ -71,6 +71,7 @@ async def main():
             await dp.start_polling(bot)
         finally:
             close_all_sessions()
+            await engine.dispose()
             await bot.session.close()
             await redis.close()
             logger.info("stopped")

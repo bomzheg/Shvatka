@@ -26,3 +26,8 @@ class TeamRenamer(Committer, Protocol):
 class TeamDescChanger(Committer, Protocol):
     async def change_team_desc(self, team: dto.Team, new_desc: str) -> None:
         raise NotImplementedError
+
+
+class TeamsGetter(Protocol):
+    async def get_teams(self) -> list[dto.Team]:
+        raise NotImplementedError

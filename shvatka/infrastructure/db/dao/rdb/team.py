@@ -123,3 +123,14 @@ class TeamDao(BaseDAO[models.Team]):
         )
         team: models.Team = result.one()
         return team.to_dto_chat_prefetched()
+
+    async def get_teams(self) -> list[dto.Team]:
+        teams = await self._get_all(
+            options=(
+                joinedload(models.Team.captain).joinedload(models.Player.user),
+                joinedload(models.Team.captain).joinedload(models.Player.forum_user),
+                joinedload(models.Team.chat),
+                joinedload(models.Team.forum_team),
+            ),
+        )
+        return [team.to_dto_chat_prefetched() for team in teams]

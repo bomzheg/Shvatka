@@ -1,4 +1,10 @@
-from shvatka.core.interfaces.dal.team import TeamCreator, TeamGetter, TeamRenamer, TeamDescChanger, TeamsGetter
+from shvatka.core.interfaces.dal.team import (
+    TeamCreator,
+    TeamGetter,
+    TeamRenamer,
+    TeamDescChanger,
+    TeamsGetter,
+)
 from shvatka.core.models import dto
 from shvatka.core.models import enums
 from shvatka.core.utils.defaults_constants import CAPTAIN_ROLE

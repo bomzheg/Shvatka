@@ -9,7 +9,9 @@ from shvatka.common.factory import create_telegraph, create_dataclass_factory
 from shvatka.infrastructure.clients.factory import create_file_storage
 from shvatka.infrastructure.db.faсtory import (
     create_lock_factory,
-    create_level_test_dao, create_session_maker, create_engine,
+    create_level_test_dao,
+    create_session_maker,
+    create_engine,
 )
 from shvatka.infrastructure.scheduler.factory import create_scheduler
 from shvatka.tgbot.config.parser.main import load_config

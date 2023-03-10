@@ -2,7 +2,12 @@ import logging
 
 from redis.asyncio import Redis
 from sqlalchemy.engine import make_url
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker, AsyncEngine
+from sqlalchemy.ext.asyncio import (
+    create_async_engine,
+    AsyncSession,
+    async_sessionmaker,
+    AsyncEngine,
+)
 
 from shvatka.core.utils.key_checker_lock import KeyCheckerFactory
 from shvatka.infrastructure.db.config.models.db import DBConfig, RedisConfig

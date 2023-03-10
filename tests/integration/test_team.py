@@ -47,4 +47,3 @@ async def test_get_all_teams_two_teams(gryffindor: dto.Team, slytherin: dto.Team
     teams = await get_teams(dao.team)
     assert 2 == len(teams)
     assert {gryffindor.id, slytherin.id} == {teams[0].id, teams[1].id}
-

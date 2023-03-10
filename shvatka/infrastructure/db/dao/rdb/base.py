@@ -16,10 +16,7 @@ class BaseDAO(Generic[Model]):
         self.session = session
 
     async def _get_all(self, options: Sequence[LoaderOption] = tuple()) -> Sequence[Model]:
-        result = await self.session.execute(
-            select(self.model)
-            .options(*options)
-        )
+        result = await self.session.execute(select(self.model).options(*options))
         return result.scalars().all()
 
     async def _get_by_id(

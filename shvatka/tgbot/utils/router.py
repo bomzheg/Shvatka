@@ -20,7 +20,6 @@ def disable_router_on_game(router: Router):
 
 
 def register_start_handler(
-    self,
     *filters: Filter,
     state: State,
     router: Router,

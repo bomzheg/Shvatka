@@ -153,7 +153,7 @@ async def cmd_players(message: Message, team: dto.Team, dao: HolderDao):
     )
 
 
-def setup_team_manage() -> Router:
+def setup() -> Router:
     router = Router(name=__name__)
     router.message.outer_middleware.register(TeamPlayerMiddleware())
     disable_router_on_game(router)

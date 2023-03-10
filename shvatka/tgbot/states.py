@@ -81,3 +81,8 @@ class CaptainsBridgeSG(StatesGroup):
 class CompletedGamesPanelSG(StatesGroup):
     list = State()
     game = State()
+
+
+class TeamsSg(StatesGroup):
+    list = State()
+    one = State()

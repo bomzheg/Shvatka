@@ -40,7 +40,7 @@ APPROVE_WAIVERS_COMMAND = BotCommand(
 
 STATUS_COMMAND = BotCommand(command="status", description="статус схватки")  # TODO
 TEAM_COMMAND = BotCommand(command="team", description="команда")
-TEAMS_COMMAND = BotCommand(command="teams", description="список команд")  # TODO
+TEAMS_COMMAND = BotCommand(command="teams", description="список команд")
 PLAYERS_COMMAND = BotCommand(command="players", description="игроки команды")
 ALL_PLAYERS_COMMAND = BotCommand(command="all_players", description="игроки команды")  # TODO
 ME_COMMAND = BotCommand(command="me", description="мой профиль")  # TODO

@@ -9,7 +9,7 @@ from aiogram.types import (
     CallbackQuery,
 )
 from aiogram.utils.text_decorations import html_decoration as hd
-from aiogram_dialog import DialogManager
+from aiogram_dialog import StartMode
 
 from shvatka.core.models import dto
 from shvatka.core.services.player import (
@@ -24,13 +24,9 @@ from shvatka.core.utils.exceptions import SaltError
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.tgbot import keyboards as kb
 from shvatka.tgbot import states
-from shvatka.tgbot.utils.router import disable_router_on_game
+from shvatka.tgbot.utils.router import disable_router_on_game, register_start_handler
 from shvatka.tgbot.views.commands import START_COMMAND, TEAM_COMMAND, LEAVE_COMMAND
 from shvatka.tgbot.views.team import render_team_card
-
-
-async def main_menu(m: Message, dialog_manager: DialogManager):
-    await dialog_manager.start(states.MainMenuSG.main)
 
 
 async def send_promotion_invite(
@@ -126,7 +122,12 @@ def setup() -> Router:
     router = Router(name=__name__)
     disable_router_on_game(router)
 
-    router.message.register(main_menu, Command(START_COMMAND))
+    register_start_handler(
+        Command(START_COMMAND),
+        state=states.MainMenuSG.main,
+        router=router,
+        mode=StartMode.RESET_STACK,
+    )
     router.inline_query.register(send_promotion_invite, kb.PromotePlayerID.filter())
     router.callback_query.register(
         inviter_click_handler,

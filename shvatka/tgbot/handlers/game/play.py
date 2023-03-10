@@ -4,7 +4,6 @@ from aiogram import Bot, Router
 from aiogram.dispatcher.event.bases import SkipHandler
 from aiogram.filters import Command
 from aiogram.types import Message
-from aiogram_dialog import DialogManager
 
 from shvatka.core.interfaces.clients.file_storage import FileStorage
 from shvatka.core.interfaces.scheduler import Scheduler
@@ -18,6 +17,7 @@ from shvatka.tgbot.config.models.bot import BotConfig
 from shvatka.tgbot.filters import is_key, IsTeamFilter
 from shvatka.tgbot.filters.game_status import GameStatusFilter
 from shvatka.tgbot.filters.team_player import TeamPlayerFilter
+from shvatka.tgbot.utils.router import register_start_handler
 from shvatka.tgbot.views.commands import SPY_COMMAND, SPY_LEVELS_COMMAND, SPY_KEYS_COMMAND
 from shvatka.tgbot.views.game import GameBotLog, create_bot_game_view, BotOrgNotifier
 
@@ -51,18 +51,6 @@ async def check_key_handler(
         raise SkipHandler
 
 
-async def spy_menu(_: Message, dialog_manager: DialogManager):
-    await dialog_manager.start(states.OrgSpySG.main)
-
-
-async def spy_levels(_: Message, dialog_manager: DialogManager):
-    await dialog_manager.start(states.OrgSpySG.spy)
-
-
-async def spy_keys(_: Message, dialog_manager: DialogManager):
-    await dialog_manager.start(states.OrgSpySG.keys)
-
-
 def setup() -> Router:
     router = Router(name=__name__)
     router.message.filter(GameStatusFilter(running=True))
@@ -72,7 +60,17 @@ def setup() -> Router:
         IsTeamFilter(),
         TeamPlayerFilter(),
     )  # TODO is playing in this game
-    router.message.register(spy_menu, Command(commands=SPY_COMMAND))  # is_org
-    router.message.register(spy_levels, Command(commands=SPY_LEVELS_COMMAND))  # is_org
-    router.message.register(spy_keys, Command(commands=SPY_KEYS_COMMAND))  # is_org
+    register_start_handler(
+        Command(commands=SPY_COMMAND), state=states.OrgSpySG.main, router=router  # TODO is_org
+    )
+    register_start_handler(
+        Command(commands=SPY_LEVELS_COMMAND),  # TODO is_org
+        state=states.OrgSpySG.spy,
+        router=router,
+    )
+    register_start_handler(
+        Command(commands=SPY_KEYS_COMMAND),  # TODO is_org
+        state=states.OrgSpySG.keys,
+        router=router,
+    )
     return router

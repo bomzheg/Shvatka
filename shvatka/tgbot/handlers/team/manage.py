@@ -6,7 +6,6 @@ from aiogram.exceptions import TelegramBadRequest
 from aiogram.filters import Command, CommandObject, or_f
 from aiogram.types import Message
 from aiogram.utils.text_decorations import html_decoration as hd
-from aiogram_dialog import DialogManager
 
 from shvatka.core.models import dto
 from shvatka.core.services.player import join_team, get_team_players
@@ -26,7 +25,7 @@ from shvatka.tgbot.filters.is_admin import is_admin_filter
 from shvatka.tgbot.filters.is_team import IsTeamFilter
 from shvatka.tgbot.filters.team_player import TeamPlayerFilter
 from shvatka.tgbot.middlewares import TeamPlayerMiddleware
-from shvatka.tgbot.utils.router import disable_router_on_game
+from shvatka.tgbot.utils.router import disable_router_on_game, register_start_handler
 from shvatka.tgbot.views.commands import (
     CREATE_TEAM_COMMAND,
     ADD_IN_TEAM_COMMAND,
@@ -154,10 +153,6 @@ async def cmd_players(message: Message, team: dto.Team, dao: HolderDao):
     )
 
 
-async def captains_bridge_cmd(message: Message, dialog_manager: DialogManager):
-    await dialog_manager.start(state=states.CaptainsBridgeSG.main)
-
-
 def setup_team_manage() -> Router:
     router = Router(name=__name__)
     router.message.outer_middleware.register(TeamPlayerMiddleware())
@@ -190,8 +185,7 @@ def setup_team_manage() -> Router:
         Command(commands=PLAYERS_COMMAND),
         IsTeamFilter(),
     )
-    router.message.register(
-        captains_bridge_cmd,
+    register_start_handler(
         Command(commands=MANAGE_TEAM_COMMAND),
         or_f(
             TeamPlayerFilter(is_captain=True),
@@ -199,5 +193,7 @@ def setup_team_manage() -> Router:
             TeamPlayerFilter(can_remove_players=True),
             TeamPlayerFilter(can_change_team_name=True),
         ),
+        state=states.CaptainsBridgeSG.main,
+        router=router,
     )
     return router

@@ -93,7 +93,7 @@ async def get_completed_games(dao: CompletedGameFinder) -> list[dto.Game]:
 
 async def add_level(game: dto.Game, level: dto.Level, author: dto.Player, dao: LevelLinker):
     check_allow_be_author(author)
-    check_is_author(game=game, player=author)
+    check_can_read(game=game, player=author)
     check_game_editable(game=game)
     check_is_level_author(level=level, player=author)
     check_can_link_to_game(game=game, level=level, author=author)
@@ -107,7 +107,7 @@ async def get_game(id_: int, *, author: dto.Player = None, dao: GameByIdGetter) 
 
 async def get_full_game(id_: int, author: dto.Player, dao: GameByIdGetter) -> dto.FullGame:
     game = await dao.get_full(id_=id_)
-    check_is_author(game, author)
+    check_can_read(game, author)
     return game
 
 
@@ -119,7 +119,7 @@ async def get_game_package(
     file_gateway: FileGateway,
 ) -> scn.RawGameScenario:
     game = await dao.get_full(id_=id_)
-    check_is_author(game, author)
+    check_can_read(game, author)
     file_metas = await get_file_metas(game, author, dao)
     contents = await get_file_contents(file_metas, file_gateway)
     scenario = scn.FullGameScenario(
@@ -134,7 +134,7 @@ async def get_active(dao: ActiveGameFinder) -> dto.Game | None:
 
 
 async def rename_game(author: dto.Player, game: dto.Game, new_name: str, dao: GameRenamer):
-    check_is_author(game, author)
+    check_can_read(game, author)
     check_game_editable(game)
     await dao.rename_game(game, new_name)
     await dao.commit()
@@ -142,7 +142,7 @@ async def rename_game(author: dto.Player, game: dto.Game, new_name: str, dao: Ga
 
 async def start_waivers(game: dto.Game, author: dto.Player, dao: WaiverStarter):
     check_allow_be_author(author)
-    check_is_author(game, author)
+    check_can_read(game, author)
     check_game_editable(game)
     await check_no_game_active(dao)
     await dao.start_waivers(game)
@@ -157,7 +157,7 @@ async def plain_start(
     scheduler: Scheduler,
 ):
     check_allow_be_author(author)
-    check_is_author(game, author)
+    check_can_read(game, author)
     check_game_editable(game)
     await check_no_other_game_active(dao, game)
     await dao.set_start_at(game, start_at)
@@ -173,7 +173,7 @@ async def plain_start(
 async def cancel_planed_start(
     game: dto.Game, author: dto.Player, scheduler: Scheduler, dao: GameStartPlanner
 ):
-    check_is_author(game, author)
+    check_can_read(game, author)
     check_game_editable(game)
     await dao.cancel_start(game)
     game.start_at = None
@@ -211,7 +211,7 @@ async def check_new_game_name_available(name: str, author: dto.Player, dao: Game
         raise CantEditGame(text="другая игра имеет такое имя", player=author)
 
 
-def check_is_author(game: dto.Game, player: dto.Player):
+def check_can_read(game: dto.Game, player: dto.Player):
     if game.is_complete():
         return  # for completed - available for all
     if not game.is_author_id(player.id):

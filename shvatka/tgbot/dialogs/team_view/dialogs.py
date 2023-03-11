@@ -4,15 +4,15 @@ from aiogram_dialog.widgets.text import Const, Format, Jinja
 
 from shvatka.tgbot import states
 from .getters import teams_getter, team_getter
-from .handlers import select_team
+from .handlers import select_team, select_player
 
 team_view = Dialog(
     Window(
         Const("Список команд"),
-        Cancel(Const("⤴Назад")),
+        Cancel(Const("🔙Назад")),
         ScrollingGroup(
             Select(
-                Format("{item.name}"),
+                Format("🚩{item.name}"),
                 id="teams",
                 item_id_getter=lambda x: x.id,
                 items="teams",
@@ -28,13 +28,14 @@ team_view = Dialog(
     Window(
         Jinja("Команда {{team.name }} \n" "Капитан {{team.captain.name_mention}}"),
         Cancel(Const("⤴Выход")),
-        SwitchTo(Const("⤴Назад"), state=states.TeamsSg.list, id="to_team_list"),
+        SwitchTo(Const("🔙Назад"), state=states.TeamsSg.list, id="to_team_list"),
         ScrollingGroup(
             Select(
-                Format("{item.player.name_mention}"),
+                Jinja("{{item|player_emoji}}{{item.player.name_mention}}"),
                 id="players",
                 item_id_getter=lambda x: x.id,
                 items="players",
+                on_click=select_player,
             ),
             id="players_sg",
             width=1,

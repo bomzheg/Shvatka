@@ -86,3 +86,7 @@ class CompletedGamesPanelSG(StatesGroup):
 class TeamsSg(StatesGroup):
     list = State()
     one = State()
+
+
+class PlayerSg(StatesGroup):
+    main = State()

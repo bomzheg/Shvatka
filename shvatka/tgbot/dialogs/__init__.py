@@ -1,7 +1,7 @@
 from aiogram import Dispatcher, Router
 from aiogram_dialog import DialogRegistry
 
-from shvatka.tgbot.dialogs import game_orgs, game_manage
+from shvatka.tgbot.dialogs import game_orgs, game_manage, player_view
 from shvatka.tgbot.dialogs import (
     level_scn,
     time_hint,
@@ -38,6 +38,7 @@ def setup_dialogs(registry: DialogRegistry):
     game_publish.setup(registry)
     team_manage.setup(registry)
     team_view.setup(registry)
+    player_view.setup(registry)
 
 
 def setup_active_game_dialogs(registry: DialogRegistry) -> Router:

@@ -72,7 +72,7 @@ game_editor = Dialog(
     Window(
         Jinja("Игра <b>{{game.name}}</b>\n\n"),
         Const("<b>Уровни игры</b>"),
-        Cancel(Const("⤴Назад")),
+        Cancel(Const("🔙Назад")),
         SwitchTo(Const("📑Добавить уровень"), id="to_add_level", state=states.GameEditSG.add_level),
         ScrollingGroup(
             Select(
@@ -92,7 +92,7 @@ game_editor = Dialog(
     Window(
         Jinja("Игра <b>{{game.name}}</b>\n\n"),
         Const("<b>Уровни</b>\n\n" "Выбери уровни которые нужно добавить"),
-        SwitchTo(Const("⤴Назад"), id="back", state=states.GameEditSG.current_levels),
+        SwitchTo(Const("🔙Назад"), id="back", state=states.GameEditSG.current_levels),
         ScrollingGroup(
             Select(
                 Format("{item.name_id}"),

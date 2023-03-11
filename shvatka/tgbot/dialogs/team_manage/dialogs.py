@@ -35,7 +35,7 @@ captains_bridge = Dialog(
             "👑Капитан: {{team.captain.name_mention}}\n"
             "{% endif %}"
         ),
-        Cancel(Const("⤴Назад")),
+        Cancel(Const("🔙Назад")),
         SwitchTo(
             Const("✍️Переименовать"),
             id="rename",
@@ -59,21 +59,21 @@ captains_bridge = Dialog(
     ),
     Window(
         Jinja("Переименовать команду 🚩<b>{{team.name}}</b>"),
-        SwitchTo(Const("⤴Назад"), id="back", state=states.CaptainsBridgeSG.main),
+        SwitchTo(Const("🔙Назад"), id="back", state=states.CaptainsBridgeSG.main),
         TextInput(id="rename", on_success=rename_team_handler),
         getter=get_my_team_,
         state=states.CaptainsBridgeSG.name,
     ),
     Window(
         Jinja("Изменить девиз команды 🚩<b>{{team.name}}</b>"),
-        SwitchTo(Const("⤴Назад"), id="back", state=states.CaptainsBridgeSG.main),
+        SwitchTo(Const("🔙Назад"), id="back", state=states.CaptainsBridgeSG.main),
         TextInput(id="change_desc", on_success=change_desc_team_handler),
         getter=get_my_team_,
         state=states.CaptainsBridgeSG.description,
     ),
     Window(
         Jinja("Игроки команды 🚩<b>{{team.name}}</b>"),
-        SwitchTo(Const("⤴Назад"), id="back", state=states.CaptainsBridgeSG.main),
+        SwitchTo(Const("🔙Назад"), id="back", state=states.CaptainsBridgeSG.main),
         ScrollingGroup(
             Select(
                 Jinja("{{item|player_emoji}}{{item.player.name_mention}}"),
@@ -92,7 +92,7 @@ captains_bridge = Dialog(
     Window(
         TEAM_PLAYER_CARD,
         SwitchTo(Const("⤴В меню команды"), id="to_main", state=states.CaptainsBridgeSG.main),
-        SwitchTo(Const("⤴Назад"), id="back", state=states.CaptainsBridgeSG.players),
+        SwitchTo(Const("🔙Назад"), id="back", state=states.CaptainsBridgeSG.players),
         Button(
             Format("{can_manage_waivers}Подавать вейверы"),
             id="can_manage_waivers",

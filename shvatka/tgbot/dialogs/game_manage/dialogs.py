@@ -43,7 +43,7 @@ from ..preview_data import PREVIEW_GAME
 games = Dialog(
     Window(
         Const("Список прошедших"),
-        Cancel(Const("⤴Назад")),
+        Cancel(Const("🔙Назад")),
         ScrollingGroup(
             Select(
                 Format("{item.name}"),
@@ -89,7 +89,7 @@ games = Dialog(
 my_games = Dialog(
     Window(
         Const("Список игр твоего авторства"),
-        Cancel(Const("⤴Назад")),
+        Cancel(Const("🔙Назад")),
         Start(Const("✍Написать игру"), id="write_game", state=states.GameWriteSG.game_name),
         Start(Const("✍Написать уровень"), id="write_level", state=states.LevelSG.level_id),
         ScrollingGroup(

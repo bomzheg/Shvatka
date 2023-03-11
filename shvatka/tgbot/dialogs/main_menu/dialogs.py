@@ -61,7 +61,7 @@ main_menu = Dialog(
             ),
         ),
         Start(
-            Const("Команды"),
+            Const("👥Команды"),
             id="to_teams",
             state=states.TeamsSg.list,
         ),

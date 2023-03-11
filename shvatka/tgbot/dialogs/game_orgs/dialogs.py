@@ -17,7 +17,7 @@ from .handlers import select_org, change_permission_handler, change_deleted_hand
 game_orgs = Dialog(
     Window(
         Jinja("Список организаторов игры {{game.name}}"),
-        Cancel(Const("⤴Назад")),
+        Cancel(Const("🔙Назад")),
         SwitchInlineQuery(
             Const("👋Добавить организатора"),
             Format("{inline_query}"),

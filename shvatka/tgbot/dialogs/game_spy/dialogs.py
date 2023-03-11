@@ -22,7 +22,7 @@ game_spy = Dialog(
             Format("не запланирована", when=~F["game"].start_at),
             sep="",
         ),
-        Cancel(Const("⤴Назад")),
+        Cancel(Const("🔙Назад")),
         SwitchTo(
             Const("📊Текущие уровни"),
             id="spy_levels",
@@ -52,7 +52,7 @@ game_spy = Dialog(
             when=F["org"].can_spy,
         ),
         Button(Const("🔄Обновить"), id="refresh_spy"),
-        SwitchTo(Const("⤴Назад"), id="back", state=states.OrgSpySG.main),
+        SwitchTo(Const("🔙Назад"), id="back", state=states.OrgSpySG.main),
         state=states.OrgSpySG.spy,
         getter=(get_spy, get_org),
     ),
@@ -69,7 +69,7 @@ game_spy = Dialog(
             "{% endif %}"
         ),
         Button(Const("🔄Обновить"), id="refresh_spy", on_click=keys_handler),
-        SwitchTo(Const("⤴Назад"), id="back", state=states.OrgSpySG.main),
+        SwitchTo(Const("🔙Назад"), id="back", state=states.OrgSpySG.main),
         state=states.OrgSpySG.keys,
         getter=(get_org, get_keys, {"now": datetime.now(tz=tz_utc)}),
         disable_web_page_preview=True,

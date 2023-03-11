@@ -31,7 +31,7 @@ game_publish = Dialog(
             "Игра {{game.name}} опубликована.\n{{text_invite}}",
             when=F["text_invite"],
         ),
-        Cancel(Const("⤴Назад")),
+        Cancel(Const("🔙Назад")),
         Button(Const("🔄Обновить"), id="refresh_publish", when=F["started"]),
         MessageInput(func=process_publish_message, filter=Command("publish")),
         state=states.GamePublishSG.prepare,

@@ -20,7 +20,7 @@ from .handlers import (
 level_manage = Dialog(
     Window(
         Jinja("Уровень <b>{{level.name_id}}</b>\n{{rendered}}"),
-        Cancel(Const("⤴Назад")),
+        Cancel(Const("🔙Назад")),
         Button(
             Const("✏Редактирование"),
             id="level_edit",
@@ -52,7 +52,7 @@ level_manage = Dialog(
             "Кому отправить его на тестирование?\n\n"
             "ℹЧтобы добавить кого-то в этот список, нужно добавить организатора из меню игры"
         ),
-        SwitchTo(Const("⤴Назад"), id="back", state=states.LevelManageSG.menu),
+        SwitchTo(Const("🔙Назад"), id="back", state=states.LevelManageSG.menu),
         ScrollingGroup(
             Select(
                 Jinja("{{item.player.name_mention}}"),

@@ -7,9 +7,7 @@ from .getters import player_getter
 
 player_dialog = Dialog(
     Window(
-        Jinja(
-            "Игрок {{player.name_mention}}"
-        ),
+        Jinja("Игрок {{player.name_mention}}"),
         Cancel(Const("⤴Выход")),
         getter=player_getter,
         state=states.PlayerSg.main,

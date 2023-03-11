@@ -5,6 +5,7 @@ from shvatka.core.interfaces.dal.team import (
     TeamDescChanger,
     TeamsGetter,
     TeamByIdGetter,
+    PlayedGamesByTeamGetter,
 )
 from shvatka.core.models import dto
 from shvatka.core.models import enums
@@ -48,6 +49,10 @@ async def get_teams(dao: TeamsGetter) -> list[dto.Team]:
 
 async def get_team_by_id(team_id: int, dao: TeamByIdGetter) -> dto.Team:
     return await dao.get_by_id(team_id)
+
+
+async def get_played_games(team: dto.Team, dao: PlayedGamesByTeamGetter) -> list[dto.Game]:
+    return await dao.get_played_games(team)
 
 
 def check_can_change_name(team: dto.Team, captain: dto.FullTeamPlayer):

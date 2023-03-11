@@ -134,3 +134,21 @@ class TeamDao(BaseDAO[models.Team]):
             ),
         )
         return [team.to_dto_chat_prefetched() for team in teams]
+
+    async def get_played_games(self, team: dto.Team) -> list[dto.Game]:
+        result = await self.session.scalars(
+            select(models.Game)
+            .distinct()
+            .options(
+                joinedload(models.Game.author).joinedload(models.Player.user),
+                joinedload(models.Game.author).joinedload(models.Player.forum_user),
+            )
+            .join(models.Game.waivers)
+            .where(
+                models.Waiver.team_id == team.id,
+                models.Game.number.is_not(None),
+            )
+            .order_by(models.Game.number)
+        )
+        games: list[models.Game] = result.all()
+        return [game.to_dto(game.author.to_dto_user_prefetched()) for game in games]

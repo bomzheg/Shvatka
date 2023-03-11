@@ -36,3 +36,8 @@ class TeamsGetter(Protocol):
 class TeamByIdGetter(Protocol):
     async def get_by_id(self, id_: int) -> dto.Team:
         raise NotImplementedError
+
+
+class PlayedGamesByTeamGetter(Protocol):
+    async def get_played_games(self, team: dto.Team) -> list[dto.Game]:
+        raise NotImplementedError

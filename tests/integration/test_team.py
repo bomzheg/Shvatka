@@ -1,8 +1,9 @@
 import pytest
 
 from shvatka.core.models import dto
+from shvatka.core.services.game import complete_game
 from shvatka.core.services.player import get_full_team_player
-from shvatka.core.services.team import rename_team, change_team_desc, get_teams
+from shvatka.core.services.team import rename_team, change_team_desc, get_teams, get_played_games
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from tests.fixtures.chat_constants import GRYFFINDOR_CHAT_DTO
 
@@ -47,3 +48,11 @@ async def test_get_all_teams_two_teams(gryffindor: dto.Team, slytherin: dto.Team
     teams = await get_teams(dao.team)
     assert 2 == len(teams)
     assert {gryffindor.id, slytherin.id} == {teams[0].id, teams[1].id}
+
+
+@pytest.mark.asyncio
+async def test_get_played(gryffindor: dto.Team, finished_game: dto.Game, dao: HolderDao):
+    await complete_game(finished_game, dao.game)
+    games = await get_played_games(gryffindor, dao.team)
+    assert 1 == len(games)
+    assert finished_game.id == games[0].id

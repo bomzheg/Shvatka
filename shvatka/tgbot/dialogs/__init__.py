@@ -11,6 +11,7 @@ from shvatka.tgbot.dialogs import (
     main_menu,
     game_publish,
     team_manage,
+    team_view,
 )
 from shvatka.tgbot.filters import GameStatusFilter
 
@@ -36,6 +37,7 @@ def setup_dialogs(registry: DialogRegistry):
     game_orgs.setup(registry)
     game_publish.setup(registry)
     team_manage.setup(registry)
+    team_view.setup(registry)
 
 
 def setup_active_game_dialogs(registry: DialogRegistry) -> Router:

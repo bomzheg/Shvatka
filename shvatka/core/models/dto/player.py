@@ -23,6 +23,8 @@ class Player:
     @property
     def name_mention(self) -> str:
         if self.is_dummy:
+            if self._forum_user:
+                return self._forum_user.name_mention
             return f"dummy-{self.id}"
         return self._user.name_mention
 

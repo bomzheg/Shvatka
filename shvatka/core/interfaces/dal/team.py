@@ -31,3 +31,8 @@ class TeamDescChanger(Committer, Protocol):
 class TeamsGetter(Protocol):
     async def get_teams(self) -> list[dto.Team]:
         raise NotImplementedError
+
+
+class TeamByIdGetter(Protocol):
+    async def get_by_id(self, id_: int) -> dto.Team:
+        raise NotImplementedError

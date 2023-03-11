@@ -60,6 +60,11 @@ main_menu = Dialog(
                 | F["team_player"].can_remove_players
             ),
         ),
+        Start(
+            Const("Команды"),
+            id="to_teams",
+            state=states.TeamsSg.list,
+        ),
         # ачивки
         # уровни (не привязанные к играм?)
         state=states.MainMenuSG.main,

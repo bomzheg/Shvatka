@@ -35,3 +35,9 @@ class Team:
         if self.is_dummy:
             return None
         return self._chat.tg_id
+
+    def has_chat(self) -> bool:
+        return self._chat is not None
+
+    def has_forum_team(self) -> bool:
+        raise self._forum_team is not None

@@ -41,3 +41,8 @@ class TeamByIdGetter(Protocol):
 class PlayedGamesByTeamGetter(Protocol):
     async def get_played_games(self, team: dto.Team) -> list[dto.Game]:
         raise NotImplementedError
+
+
+class ForumTeamMerger(Protocol):
+    async def replace_forum_team(self, primary: dto.Team, secondary: dto.Team):
+        raise NotImplementedError

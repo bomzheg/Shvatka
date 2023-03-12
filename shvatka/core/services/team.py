@@ -1,3 +1,4 @@
+from shvatka.core.interfaces.dal.complex import TeamMerger
 from shvatka.core.interfaces.dal.team import (
     TeamCreator,
     TeamGetter,
@@ -53,6 +54,26 @@ async def get_team_by_id(team_id: int, dao: TeamByIdGetter) -> dto.Team:
 
 async def get_played_games(team: dto.Team, dao: PlayedGamesByTeamGetter) -> list[dto.Game]:
     return await dao.get_played_games(team)
+
+
+async def merge_teams(primary: dto.Team, secondary: dto.Team, dao: TeamMerger):
+    if secondary.has_chat():
+        raise SHDataBreach(
+            team=secondary,
+            notify_user="невозможно привязать эту команду к другой команде "
+            "(уже имеет активный чат)",
+        )
+    if primary.has_forum_team():
+        raise SHDataBreach(
+            team=primary,
+            notify_user="невозможно привязать к этой команде другую "
+            "(уже имеет привязанную команду на форуме)",
+        )
+    await dao.replace_team_waiver(primary, secondary)
+    await dao.replace_team_keys(primary, secondary)
+    await dao.replace_team_levels(primary, secondary)
+    await dao.replace_team_players(primary, secondary)
+    await dao.replace_forum_team(primary, secondary)
 
 
 def check_can_change_name(team: dto.Team, captain: dto.FullTeamPlayer):

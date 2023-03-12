@@ -27,3 +27,8 @@ class GameStatDao(OrgByPlayerGetter, Protocol):
 
     async def get_max_level_number(self, game: dto.Game) -> int:
         raise NotImplementedError
+
+
+class TeamLevelsMerger(Protocol):
+    async def replace_team_levels(self, primary: dto.Team, secondary: dto.Team):
+        raise NotImplementedError

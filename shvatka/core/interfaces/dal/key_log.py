@@ -7,3 +7,8 @@ from shvatka.core.models import dto
 class TypedKeyGetter(OrgByPlayerGetter, Protocol):
     async def get_typed_keys(self, game: dto.Game) -> list[dto.KeyTime]:
         raise NotImplementedError
+
+
+class TeamKeysMerger(Protocol):
+    async def replace_team_keys(self, primary: dto.Team, secondary: dto.Team):
+        raise NotImplementedError

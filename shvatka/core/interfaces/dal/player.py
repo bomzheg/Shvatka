@@ -94,3 +94,8 @@ class TeamPlayerEmojiChanger(Committer, Protocol):
 
 class TeamPlayerEmojiUpdater(TeamPlayerEmojiChanger, TeamPlayerGetter, Committer, Protocol):
     pass
+
+
+class TeamPlayerMerger(Protocol):
+    async def replace_team_players(self, primary: dto.Team, secondary: dto.Team):
+        raise NotImplementedError

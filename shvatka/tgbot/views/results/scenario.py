@@ -102,11 +102,15 @@ class LevelPublisher:
                     f"Ключи уровня:\n🔑 " + "\n🔑 ".join(self.level.scenario.keys)
                 )
             elif hint_number == len(self.level.scenario.time_hints) - 1:
-                text = f"🔖 Последняя подсказка уровня №{self.level.number_in_game + 1} " \
-                       f"({hint.time} мин.):\n"
+                text = (
+                    f"🔖 Последняя подсказка уровня №{self.level.number_in_game + 1} "
+                    f"({hint.time} мин.):\n"
+                )
             else:
-                text = f"🔖 Уровень №{self.level.number_in_game + 1}. " \
-                       f"Подсказка №{hint_number} ({hint.time} мин.):\n"
+                text = (
+                    f"🔖 Уровень №{self.level.number_in_game + 1}. "
+                    f"Подсказка №{hint_number} ({hint.time} мин.):\n"
+                )
             await asyncio.sleep(self.SLEEP.seconds)
             await self.hint_sender.send_hints(self.channel_id, hint.hint, text)
 

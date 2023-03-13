@@ -37,8 +37,10 @@ def render_players(users: Iterable[dto.VotedPlayer]) -> str:
 
 
 async def get_waiver_poll_text(team: dto.Team, game: dto.Game, dao: HolderDao):
-    return f"Сбор вейверов на игру:\n" \
-           f"{hd.bold(hd.quote(game.name))}\n\n{await get_list_pool(team, dao)}"
+    return (
+        f"Сбор вейверов на игру:\n"
+        f"{hd.bold(hd.quote(game.name))}\n\n{await get_list_pool(team, dao)}"
+    )
 
 
 async def get_waiver_final_text(team: dto.Team, game: dto.Game, dao: HolderDao):

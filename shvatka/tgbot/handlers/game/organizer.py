@@ -31,7 +31,7 @@ async def start_test_level(
     if org.player.id != player.id:
         raise PermissionsError(
             notify_user="Игрок пытается начать тестирование уровня "
-                        "предназначенное для другого игрока",
+            "предназначенное для другого игрока",
             player=player,
             game=org.game,
             alarm=True,

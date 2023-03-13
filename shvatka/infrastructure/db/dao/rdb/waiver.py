@@ -1,12 +1,12 @@
 from typing import Iterable, Sequence
 
-from sqlalchemy import select, Row
+from sqlalchemy import select, Row, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 
-from shvatka.infrastructure.db import models
 from shvatka.core.models import dto
 from shvatka.core.models.enums.played import Played
+from shvatka.infrastructure.db import models
 from .base import BaseDAO
 
 
@@ -109,3 +109,10 @@ class WaiverDao(BaseDAO[models.Waiver]):
             )
             for waiver, team_player in waivers
         ]
+
+    async def replace_team_waiver(self, primary: dto.Team, secondary: dto.Team):
+        await self.session.execute(
+            update(models.Waiver)
+            .where(models.Waiver.team_id == secondary.id)
+            .values(team_id=primary.id)
+        )

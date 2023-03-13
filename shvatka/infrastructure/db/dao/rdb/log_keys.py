@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Sequence
 
-from sqlalchemy import select
+from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 
@@ -85,3 +85,10 @@ class KeyTimeDao(BaseDAO[models.KeyTime]):
             )
             for key in keys
         ]
+
+    async def replace_team_keys(self, primary: dto.Team, secondary: dto.Team):
+        await self.session.execute(
+            update(models.KeyTime)
+            .where(models.KeyTime.team_id == secondary.id)
+            .values(team_id=primary.id)
+        )

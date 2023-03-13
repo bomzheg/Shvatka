@@ -74,6 +74,8 @@ async def merge_teams(primary: dto.Team, secondary: dto.Team, dao: TeamMerger):
     await dao.replace_team_levels(primary, secondary)
     await dao.replace_team_players(primary, secondary)
     await dao.replace_forum_team(primary, secondary)
+    await dao.delete(secondary)
+    await dao.commit()
 
 
 def check_can_change_name(team: dto.Team, captain: dto.FullTeamPlayer):

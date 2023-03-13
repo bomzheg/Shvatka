@@ -1,3 +1,4 @@
+from sqlalchemy import update
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -28,3 +29,10 @@ class ForumTeamDAO(BaseDAO[models.ForumTeam]):
             .returning(models.ForumTeam)
         )
         return saved_team.one().to_dto()
+
+    async def replace_forum_team(self, primary: dto.Team, secondary: dto.Team):
+        await self.session.execute(
+            update(models.ForumTeam)
+            .where(models.ForumTeam.team_id == secondary.id)
+            .values(team_id=primary.id)
+        )

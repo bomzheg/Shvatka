@@ -46,3 +46,8 @@ class PlayedGamesByTeamGetter(Protocol):
 class ForumTeamMerger(Protocol):
     async def replace_forum_team(self, primary: dto.Team, secondary: dto.Team):
         raise NotImplementedError
+
+
+class TeamRemover(Protocol):
+    async def delete(self, team: dto.Team):
+        raise NotImplementedError

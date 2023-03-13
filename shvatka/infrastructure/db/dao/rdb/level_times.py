@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import select
+from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 
@@ -77,3 +77,10 @@ class LevelTimeDao(BaseDAO[models.LevelTime]):
             )
             for lt in result.all()
         ]
+
+    async def replace_team_levels(self, primary: dto.Team, secondary: dto.Team):
+        await self.session.execute(
+            update(models.LevelTime)
+            .where(models.LevelTime.team_id == secondary.id)
+            .values(team_id=primary.id)
+        )

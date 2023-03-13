@@ -152,3 +152,7 @@ class TeamDao(BaseDAO[models.Team]):
         )
         games: list[models.Game] = result.all()
         return [game.to_dto(game.author.to_dto_user_prefetched()) for game in games]
+
+    async def delete(self, team: dto.Team):
+        team_db = await self._get_by_id(team.id)
+        await self.session.delete(team_db)

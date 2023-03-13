@@ -1,6 +1,7 @@
 from redis.asyncio.client import Redis
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from shvatka.core.interfaces.dal.complex import TeamMerger
 from shvatka.core.interfaces.dal.game import GameUpserter, GameCreator, GamePackager
 from shvatka.core.interfaces.dal.game_play import GamePreparer, GamePlayerDao
 from shvatka.core.interfaces.dal.key_log import TypedKeyGetter
@@ -18,7 +19,7 @@ from .complex.key_log import TypedKeyGetterImpl
 from .complex.level_testing import LevelTestComplex
 from .complex.orgs import OrgAdderImpl
 from .complex.player import PlayerPromoterImpl
-from .complex.team import TeamCreatorImpl, TeamLeaverImpl
+from .complex.team import TeamCreatorImpl, TeamLeaverImpl, TeamMergerImpl
 from .complex.waiver import WaiverApproverImpl
 from .memory.level_testing import LevelTestingData
 from .rdb import (
@@ -96,19 +97,15 @@ class HolderDao:
 
     @property
     def team_creator(self) -> TeamCreator:
-        return TeamCreatorImpl(
-            team=self.team,
-            team_player=self.team_player,
-        )
+        return TeamCreatorImpl(dao=self)
 
     @property
     def team_leaver(self) -> TeamLeaver:
-        return TeamLeaverImpl(
-            game=self.game,
-            team_player=self.team_player,
-            waiver=self.waiver,
-            poll=self.poll,
-        )
+        return TeamLeaverImpl(dao=self)
+
+    @property
+    def team_merger(self) -> TeamMerger:
+        return TeamMergerImpl(dao=self)
 
     @property
     def game_preparer(self) -> GamePreparer:

@@ -156,6 +156,13 @@ class TeamPlayerDao(BaseDAO[models.TeamPlayer]):
             .values(emoji=emoji)
         )
 
+    async def replace_team_players(self, primary: dto.Team, secondary: dto.Team):
+        await self.session.execute(
+            update(models.TeamPlayer)
+            .where(models.TeamPlayer.team_id == secondary.id)
+            .values(team_id=primary.id)
+        )
+
     async def _get_my_team_player(
         self, player: dto.Player, at: datetime | None = None
     ) -> models.TeamPlayer:

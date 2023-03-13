@@ -80,7 +80,7 @@ class GameParser:
         started_at_text = self.html.xpath("//div[@class='maintitle']/b/span[@id='dt']")[0].text
         self.start_at = datetime.strptime(started_at_text, "%d.%m.%y в %H:%M")
 
-    async def parse_scenario(self):
+    async def parse_scenario(self):  # noqa: C901
         (scn_element,) = self.html.xpath(
             "//div[@id='sc']//div[@class='borderwrap']//tr[@class='ipbtable']/td"
         )

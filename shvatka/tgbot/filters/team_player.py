@@ -18,7 +18,7 @@ class TeamPlayerFilter(BaseFilter):
     can_remove_players: bool | None = None
     is_captain: bool | None = None
 
-    async def __call__(
+    async def __call__(  # noqa: C901
         self,
         message: Message,
         team_player: dto.FullTeamPlayer,

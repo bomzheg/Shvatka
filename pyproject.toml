@@ -51,7 +51,7 @@ black = {version = "^22.12.0", extras = ["d"]}
 optional = true
 
 [tool.poetry.group.test.dependencies]
-flake8 = "^5.0.4"
+flake8-pyproject = "1.2.2"
 pytest = "^7.2.0"
 pytest-ordering = "^0.6"
 pytest-asyncio = "^0.18.3"
@@ -108,6 +108,16 @@ force_grid_wrap = 0
 use_parentheses = true
 line_length = 99
 
+[tool.flake8]
+ignore = ['E203', 'E231', 'E241', 'W503']
+per-file-ignores = [
+    '__init__.py:F401',
+]
+max-line-length = 99
+max-complexity = 10
+count = true
+statistics = true
+exit-zero = true
 
 [tool.mypy]
 ignore_missing_imports = true

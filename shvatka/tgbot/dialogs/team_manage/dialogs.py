@@ -19,7 +19,8 @@ from .handlers import (
 TEAM_PLAYER_CARD = Jinja(
     "Игрок {{selected_player.name_mention}} служит в команде 🚩{{team.name}} "
     "c {{selected_team_player.date_joined | user_timezone}}\n"
-    "Сейчас занимает должность {{selected_team_player|player_emoji}}{{selected_team_player.role}}\n"
+    "Сейчас занимает должность "
+    "{{selected_team_player|player_emoji}}{{selected_team_player.role}}\n"
 )
 
 

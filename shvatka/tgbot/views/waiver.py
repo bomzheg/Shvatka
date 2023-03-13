@@ -2,11 +2,11 @@ from typing import Iterable
 
 from aiogram.utils.text_decorations import html_decoration as hd
 
-from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.core.models import dto
 from shvatka.core.models.enums.played import Played
 from shvatka.core.services.waiver import get_vote_to_voted
 from shvatka.core.views.texts import WAIVER_STATUS_MEANING
+from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.tgbot import keyboards as kb
 from shvatka.tgbot.views.player import get_emoji
 from shvatka.tgbot.views.user import get_small_card_no_link
@@ -37,7 +37,10 @@ def render_players(users: Iterable[dto.VotedPlayer]) -> str:
 
 
 async def get_waiver_poll_text(team: dto.Team, game: dto.Game, dao: HolderDao):
-    return f"Сбор вейверов на игру:\n{hd.bold(hd.quote(game.name))}\n\n{await get_list_pool(team, dao)}"
+    return (
+        f"Сбор вейверов на игру:\n"
+        f"{hd.bold(hd.quote(game.name))}\n\n{await get_list_pool(team, dao)}"
+    )
 
 
 async def get_waiver_final_text(team: dto.Team, game: dto.Game, dao: HolderDao):

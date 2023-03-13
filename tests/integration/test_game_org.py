@@ -105,7 +105,7 @@ async def test_flip_permission(
 
 
 @pytest.mark.asyncio
-async def test_flip_permission(
+async def test_flip_deleted(
     game: dto.FullGame,
     author: dto.Player,
     harry: dto.Player,

@@ -84,9 +84,7 @@ class BotView(GameViewPreparer, GameView):
         )
 
     async def game_finished(self, team: dto.Team) -> None:
-        await self.bot.send_message(
-            chat_id=team.get_chat_id(), text=f"Игра завершена! Поздравляю!"
-        )
+        await self.bot.send_message(chat_id=team.get_chat_id(), text="Игра завершена! Поздравляю!")
 
     async def game_finished_by_all(self, team: dto.Team) -> None:
         """todo change bot commands"""

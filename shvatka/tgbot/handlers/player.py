@@ -50,7 +50,7 @@ async def send_promotion_invite(
         InlineQueryResultArticle(
             id="1",
             title="Наделить полномочиями",
-            description=f"Только людям, которых знаете лично!",
+            description="Только людям, которых знаете лично!",
             input_message_content=InputTextMessageContent(
                 message_text=(
                     "Получить полномочия автора? \n" "Они нужны для написания и планирования игр."

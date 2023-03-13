@@ -51,7 +51,7 @@ class LevelBotView(LevelView):
     async def level_finished(self, suite: dto.LevelTestSuite) -> None:
         await self.bot.send_message(
             chat_id=suite.tester.player.get_chat_id(),
-            text=f"Тестирование уровня завершено, поздравляю!",
+            text="Тестирование уровня завершено, поздравляю!",
         )
 
 

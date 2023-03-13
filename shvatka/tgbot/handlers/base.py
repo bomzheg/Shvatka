@@ -50,14 +50,14 @@ async def cmd_about(message: Message):
 
 async def chat_type_cmd_supergroup(message: Message):
     await message.reply(
-        f"Группа имеет тип supergroup, "
+        "Группа имеет тип supergroup, "
         "ты можешь создать команду в этом чате, отправив /create_team",
     )
 
 
 async def chat_type_cmd_group(message: Message):
     await message.reply(
-        f"Группа имеет тип group, "
+        "Группа имеет тип group, "
         "чтобы создать команду в этом чате - преобразуй группу в супергруппу"
         "https://telegra.ph/Preobrazovanie-gruppy-v-supergruppu-08-25",
     )

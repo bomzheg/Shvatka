@@ -73,7 +73,7 @@ async def save_game(c: CallbackQuery, button: Button, manager: DialogManager):
     name: str = manager.dialog_data["game_name"]
     levels = await get_all_my_free_levels(author, dao.level)
     multiselect: ManagedMultiSelectAdapter = manager.find("my_level_ids")
-    levels = list(filter(lambda l: multiselect.is_checked(l.db_id), levels))
+    levels = list(filter(lambda level: multiselect.is_checked(level.db_id), levels))
     game = await create_game(author=author, name=name, dao=dao.game_creator, levels=levels)
     await c.message.edit_text("Игра успешно сохранена")
     await manager.done(result={"game": game})

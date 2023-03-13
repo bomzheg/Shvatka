@@ -63,7 +63,7 @@ class PollDao:
         :param team_id:
         :return: player_id
         """
-        player_id = key[len(f"{self.prefix}:{team_id}:") :]
+        player_id = key[len(f"{self.prefix}:{team_id}:"):]
         return int(player_id)
 
     async def delete_all(self) -> None:

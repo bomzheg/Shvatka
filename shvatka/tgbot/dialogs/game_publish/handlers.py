@@ -63,7 +63,8 @@ async def process_publish_message(message: Message, dialog_: Any, manager: Dialo
         "Начинаю отправку сценария в канал, в связи с ограничениями платформы, "
         f"отправка займёт около {game_publisher.get_approximate_time().seconds // 60 + 1} мин. "
         "После завершения процесса, я сообщу. "
-        "При желании можешь выйти из канала, после завершения я в любом случае пришлю ссылку для входа"
+        "При желании можешь выйти из канала, "
+        "после завершения я в любом случае пришлю ссылку для входа"
     )
     asyncio.create_task(publish_game(game_publisher, manager.bg()))
     await dao.game.set_published_channel_id(game, channel_id)

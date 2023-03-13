@@ -16,13 +16,13 @@ def unpack_scn(zip_file: ZipPath) -> scn.ParsedZip:
             if str(file.name).endswith(".yaml"):
                 if scenario is not None:
                     raise exceptions.ScenarioNotCorrect(
-                        text=f"Zip contains more that one file " f"with name endswith .yaml"
+                        text="Zip contains more that one file with name endswith .yaml"
                     )
                 scenario = file
             else:
                 files[file.name.split(".")[0]] = file
     if scenario is None:
-        raise exceptions.ScenarioNotCorrect(text=f"zip contains no one .yaml file")
+        raise exceptions.ScenarioNotCorrect(text="zip contains no one .yaml file")
     return scn.ParsedZip(scn=scenario, files=files)
 
 

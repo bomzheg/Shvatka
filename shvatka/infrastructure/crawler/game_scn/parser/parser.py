@@ -122,7 +122,8 @@ class GameParser:
                         self.hints.append(
                             scn.PhotoHint(
                                 file_guid=guid,
-                                caption=f"не удалось скачать контент по ссылке {img.get('shvatka')}",
+                                caption=f"не удалось скачать контент "
+                                        f"по ссылке {img.get('shvatka')}",
                             )
                         )
                     self.files_meta.append(

@@ -30,7 +30,8 @@ async def start_test_level(
     org = await get_org_by_id(callback_data.org_id, dao.organizer)
     if org.player.id != player.id:
         raise PermissionsError(
-            notify_user=f"Игрок пытается начать тестирование уровня предназначенное для другого игрока",
+            notify_user="Игрок пытается начать тестирование уровня "
+                        "предназначенное для другого игрока",
             player=player,
             game=org.game,
             alarm=True,

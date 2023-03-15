@@ -17,4 +17,3 @@ class WaiverQuery:
     player: Player
     team: Team
     game: Game
-

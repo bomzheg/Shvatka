@@ -17,13 +17,17 @@ class BaseDAO(Generic[Model]):
         self.session = session
 
     async def _get_all(self, options: Sequence[LoaderOption] = tuple()) -> Sequence[Model]:
-        result: ScalarResult[Model] = await self.session.scalars(select(self.model).options(*options))
+        result: ScalarResult[Model] = await self.session.scalars(
+            select(self.model).options(*options)
+        )
         return result.all()
 
     async def _get_by_id(
         self, id_: int, options: Sequence[LoaderOption] = None, populate_existing: bool = False
     ) -> Model:
-        result = await self.session.get(self.model, id_, options=options, populate_existing=populate_existing)
+        result = await self.session.get(
+            self.model, id_, options=options, populate_existing=populate_existing
+        )
         if result is None:
             raise NoResultFound()
         return result

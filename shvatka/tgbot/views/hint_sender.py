@@ -37,7 +37,9 @@ class HintSender:
     def __init__(self, bot: Bot, resolver: HintContentResolver):
         self.bot = bot
         self.resolver = resolver
-        self.methods: dict[enums.HintType, Callable[..., Awaitable[Message]]] = {t: partial(m, bot) for t, m in METHODS.items()}
+        self.methods: dict[enums.HintType, Callable[..., Awaitable[Message]]] = {
+            t: partial(m, bot) for t, m in METHODS.items()
+        }
 
     def method(self, type_content: enums.HintType) -> Callable[..., Awaitable[Message]]:
         return self.methods[type_content]

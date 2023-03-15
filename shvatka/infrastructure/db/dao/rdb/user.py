@@ -17,7 +17,9 @@ class UserDao(BaseDAO[User]):
         return (await self._get_by_id(id_)).to_dto()
 
     async def _get_by_tg_id(self, tg_id: int) -> User:
-        result: ScalarResult[User] = await self.session.scalars(select(User).where(User.tg_id == tg_id))
+        result: ScalarResult[User] = await self.session.scalars(
+            select(User).where(User.tg_id == tg_id)
+        )
         return result.one()
 
     async def get_by_username(self, username: str) -> dto.User:
@@ -29,7 +31,9 @@ class UserDao(BaseDAO[User]):
         return user.to_dto().add_password(user.hashed_password)
 
     async def _get_by_username(self, username: str) -> User:
-        result: Result[tuple[User]] = await self.session.execute(select(User).where(User.username == username))
+        result: Result[tuple[User]] = await self.session.execute(
+            select(User).where(User.username == username)
+        )
         try:
             user = result.scalar_one()
         except MultipleResultsFound as e:

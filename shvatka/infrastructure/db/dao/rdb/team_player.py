@@ -178,7 +178,7 @@ class TeamPlayerDao(BaseDAO[models.TeamPlayer]):
             raise PlayerNotInTeam(player=player)
 
 
-def get_leaved_condition(for_date: datetime | None = None) -> Sequence[ColumnElement['bool']]:
+def get_leaved_condition(for_date: datetime | None = None) -> Sequence[ColumnElement["bool"]]:
     if for_date is None:
         leaved_condition = not_leaved()
     else:
@@ -186,7 +186,7 @@ def get_leaved_condition(for_date: datetime | None = None) -> Sequence[ColumnEle
     return leaved_condition
 
 
-def not_leaved_for_date(for_date: datetime) -> Sequence[ColumnElement['bool']]:
+def not_leaved_for_date(for_date: datetime) -> Sequence[ColumnElement["bool"]]:
     return (
         or_(
             models.TeamPlayer.date_left > for_date,
@@ -196,5 +196,5 @@ def not_leaved_for_date(for_date: datetime) -> Sequence[ColumnElement['bool']]:
     )
 
 
-def not_leaved() -> Sequence[ColumnElement['bool']]:
-    return models.TeamPlayer.date_left.is_(None),
+def not_leaved() -> Sequence[ColumnElement["bool"]]:
+    return (models.TeamPlayer.date_left.is_(None),)

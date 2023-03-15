@@ -16,7 +16,9 @@ class ChatDao(BaseDAO[Chat]):
         return chat.to_dto()
 
     async def _get_by_tg_id(self, tg_id: int) -> Chat:
-        result: ScalarResult[Chat] = await self.session.scalars(select(Chat).where(Chat.tg_id == tg_id))
+        result: ScalarResult[Chat] = await self.session.scalars(
+            select(Chat).where(Chat.tg_id == tg_id)
+        )
         return result.one()
 
     async def upsert_chat(self, chat: dto.Chat) -> dto.Chat:

@@ -33,3 +33,5 @@ jobs:
         run: poetry run flake8 .
       - name: Test with pytest
         run: poetry run pytest
+      - name: lint with mypy
+        run: poetry run mypy .

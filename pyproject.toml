@@ -40,11 +40,6 @@ optional = true
 
 [tool.poetry.group.dev.dependencies]
 aiogram_dialog = {extras = ["tools"],version = "^2.0.0b12"}
-types-python-dateutil = "^2.8.19"
-types-redis = "^4.3.21"
-types-PyYAML = "^6.0.12"
-lxml-stubs = "^0.4.0"
-mypy = "^1.1.1"
 black = {version = "^22.12.0", extras = ["d"]}
 
 [tool.poetry.group.test]
@@ -60,6 +55,11 @@ mockito = "^1.4.0"
 httpx = "^0.23.0"
 coverage = {extras = ["toml"], version = "^7.2.1"}
 black = {version = "^22.12.0"}
+types-python-dateutil = "^2.8.19"
+types-redis = "^4.3.21"
+types-PyYAML = "^6.0.12"
+lxml-stubs = "^0.4.0"
+mypy = "^1.1.1"
 aiogram-tests = {git = "https://github.com/bomzheg/aiogram_tests.git", branch = "master"}
 
 [build-system]

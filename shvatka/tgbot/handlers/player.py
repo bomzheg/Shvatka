@@ -1,5 +1,5 @@
 from aiogram import Router, Bot, F
-from aiogram.enums import ChatType
+from aiogram.enums import ChatType, InlineQueryResultType
 from aiogram.filters import Command, MagicData
 from aiogram.types import (
     Message,
@@ -48,6 +48,7 @@ async def send_promotion_invite(
     token = await save_promotion_confirm_invite(player, dao.secure_invite)
     result = [
         InlineQueryResultArticle(
+            type=InlineQueryResultType.ARTICLE,
             id="1",
             title="Наделить полномочиями",
             description="Только людям, которых знаете лично!",

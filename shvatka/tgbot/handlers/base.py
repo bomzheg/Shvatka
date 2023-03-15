@@ -40,7 +40,9 @@ async def cancel_state(message: Message, state: FSMContext, dialog_manager: Dial
     # Cancel state and inform user about it
     await state.clear()
     # And remove keyboard (just in case)
-    await message.reply("Диалог прекращён, данные удалены", reply_markup=ReplyKeyboardRemove())
+    await message.reply(
+        "Диалог прекращён, данные удалены", reply_markup=ReplyKeyboardRemove(remove_keyboard=True)
+    )
 
 
 async def cmd_about(message: Message):

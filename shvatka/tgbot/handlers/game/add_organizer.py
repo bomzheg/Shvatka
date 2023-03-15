@@ -1,4 +1,5 @@
 from aiogram import Router, F, Bot
+from aiogram.enums import InlineQueryResultType
 from aiogram.filters import MagicData
 from aiogram.types import (
     InlineQuery,
@@ -34,6 +35,7 @@ async def invite_org_inline_query(
     token = await save_invite_to_orgs(game=game, inviter=player, dao=dao.secure_invite)
     result = [
         InlineQueryResultArticle(
+            type=InlineQueryResultType.ARTICLE,
             id="1",
             title="Добавить в организаторы",
             description=f"Игра {game.name}",

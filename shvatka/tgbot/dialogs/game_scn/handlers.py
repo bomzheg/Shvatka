@@ -13,7 +13,7 @@ from dataclass_factory import Factory
 from shvatka.core.interfaces.clients.file_storage import FileGateway
 from shvatka.core.models import dto
 from shvatka.core.models import enums
-from shvatka.core.models.dto import scn
+from shvatka.core.models.dto import scn  # noqa: F401
 from shvatka.core.services.achievement import add_achievement
 from shvatka.core.services.game import (
     check_new_game_name_available,

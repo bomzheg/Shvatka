@@ -14,7 +14,7 @@ from shvatka.common.config.parser.logging_config import setup_logging
 from shvatka.core.interfaces.clients.file_storage import FileGateway
 from shvatka.core.models import dto
 from shvatka.core.models import enums
-from shvatka.core.models.dto import scn
+from shvatka.core.models.dto import scn  # noqa: F401
 from shvatka.core.services.game import upsert_game
 from shvatka.core.services.scenario.scn_zip import unpack_scn
 from shvatka.core.utils import exceptions

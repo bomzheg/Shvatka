@@ -12,5 +12,5 @@ def active_game_provider() -> dto.Game:
 
 async def db_game_provider(
     dao: HolderDao = Depends(dao_provider),  # type: ignore[assignment]
-) -> dto.Game:
+) -> dto.Game | None:
     return await get_active(dao.game)

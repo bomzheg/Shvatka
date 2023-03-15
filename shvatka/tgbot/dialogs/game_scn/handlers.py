@@ -1,4 +1,5 @@
 import logging
+import typing
 from typing import Any
 from zipfile import Path as ZipPath
 
@@ -12,6 +13,7 @@ from dataclass_factory import Factory
 from shvatka.core.interfaces.clients.file_storage import FileGateway
 from shvatka.core.models import dto
 from shvatka.core.models import enums
+from shvatka.core.models.dto import scn
 from shvatka.core.services.achievement import add_achievement
 from shvatka.core.services.game import (
     check_new_game_name_available,
@@ -56,8 +58,8 @@ async def process_zip_scn(m: Message, dialog_: Any, manager: DialogManager):
     dcf: Factory = manager.middleware_data["dcf"]
     document = await bot.download(m.document.file_id)
     try:
-        with unpack_scn(ZipPath(document)).open() as scn:
-            game = await upsert_game(scn, player, dao.game_upserter, dcf, file_gateway)
+        with unpack_scn(ZipPath(document)).open() as scenario:  # type: scn.RawGameScenario
+            game = await upsert_game(scenario, player, dao.game_upserter, dcf, file_gateway)
     except ScenarioNotCorrect as e:
         await m.reply(f"Ошибка {e}\n попробуйте исправить файл")
         logger.error("game scenario from player %s has problems", player.id, exc_info=e)
@@ -72,7 +74,7 @@ async def save_game(c: CallbackQuery, button: Button, manager: DialogManager):
     author: dto.Player = manager.middleware_data["player"]
     name: str = manager.dialog_data["game_name"]
     levels = await get_all_my_free_levels(author, dao.level)
-    multiselect: ManagedMultiSelectAdapter = manager.find("my_level_ids")
+    multiselect = typing.cast(ManagedMultiSelectAdapter, manager.find("my_level_ids"))
     levels = list(filter(lambda level: multiselect.is_checked(level.db_id), levels))
     game = await create_game(author=author, name=name, dao=dao.game_creator, levels=levels)
     await c.message.edit_text("Игра успешно сохранена")

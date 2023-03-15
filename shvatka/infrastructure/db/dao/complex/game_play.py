@@ -32,8 +32,10 @@ class GamePreparerImpl(GamePreparer):
     ) -> list[dto.SecondaryOrganizer]:
         return await self.org.get_orgs(game)
 
-    async def get_poll_msg(self, team: dto.Team, game: dto.Game) -> int:
-        return await self.poll.get_pool_msg_id(chat_id=team.get_chat_id(), game_id=game.id)
+    async def get_poll_msg(self, team: dto.Team, game: dto.Game) -> int | None:
+        chat_id = team.get_chat_id()
+        assert chat_id is not None
+        return await self.poll.get_pool_msg_id(chat_id=chat_id, game_id=game.id)
 
 
 @dataclass
@@ -116,6 +118,7 @@ class GamePlayerDaoImpl(GamePlayerDao):
         )
 
     async def level_up(self, team: dto.Team, level: dto.Level, game: dto.Game) -> None:
+        assert level.number_in_game is not None
         await self.level_time.set_to_level(
             team=team,
             game=game,

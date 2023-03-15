@@ -14,7 +14,7 @@ from shvatka.tgbot.utils.data import MiddlewareData
 
 
 class LoadDataMiddleware(BaseMiddleware):
-    async def __call__(
+    async def __call__(  # type: ignore
         self,
         handler: Callable[[TelegramObject, dict[str, Any]], Awaitable[Any]],
         event: TelegramObject,

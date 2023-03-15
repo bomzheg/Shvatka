@@ -1,3 +1,6 @@
+import typing
+from typing import Sequence
+
 from sqlalchemy import select
 from sqlalchemy import update
 from sqlalchemy.exc import NoResultFound, IntegrityError
@@ -16,6 +19,7 @@ class TeamDao(BaseDAO[models.Team]):
 
     async def create(self, chat: dto.Chat, captain: dto.Player) -> dto.Team:
         chat_db = await self.session.get(models.Chat, chat.db_id)
+        assert chat_db
         team = models.Team(
             captain_id=captain.id,
             name=chat.title,
@@ -42,8 +46,9 @@ class TeamDao(BaseDAO[models.Team]):
 
     async def create_by_forum(self, forum: dto.ForumTeam, captain: dto.Player | None) -> dto.Team:
         forum_team_db = await self.session.get(models.ForumTeam, forum.id)
+        assert forum_team_db
         if forum_team_db.team_id:
-            team = await self._get_by_id(forum_team_db.team_id)
+            team = await self._get_by_id(typing.cast(int, forum_team_db.team_id))
         else:
             team = models.Team(
                 captain_id=captain.id if captain else None,
@@ -150,7 +155,7 @@ class TeamDao(BaseDAO[models.Team]):
             )
             .order_by(models.Game.number)
         )
-        games: list[models.Game] = result.all()
+        games: Sequence[models.Game] = result.all()
         return [game.to_dto(game.author.to_dto_user_prefetched()) for game in games]
 
     async def delete(self, team: dto.Team):

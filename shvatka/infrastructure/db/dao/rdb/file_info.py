@@ -1,4 +1,4 @@
-from sqlalchemy import select
+from sqlalchemy import select, ScalarResult
 from sqlalchemy import update
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -53,7 +53,7 @@ class FileInfoDao(BaseDAO[models.FileInfo]):
         )
 
     async def _get_by_guid(self, guid: str) -> models.FileInfo:
-        result = await self.session.execute(
+        result: ScalarResult[models.FileInfo] = await self.session.scalars(
             select(models.FileInfo).where(models.FileInfo.guid == guid)
         )
-        return result.scalar_one()
+        return result.one()

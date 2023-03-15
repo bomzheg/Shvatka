@@ -1,6 +1,6 @@
 from typing import Iterable, Sequence
 
-from sqlalchemy import select, Row, update
+from sqlalchemy import select, Row, update, ScalarResult
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 
@@ -45,7 +45,7 @@ class WaiverDao(BaseDAO[models.Waiver]):
             self._save(waiver_db)
         return waiver_db
 
-    async def delete(self, waiver: dto.Waiver):
+    async def delete(self, waiver: dto.WaiverQuery):
         if waiver_db := await self.get_or_none(waiver.game, waiver.player, waiver.team):
             await self._delete(waiver_db)
 
@@ -55,14 +55,14 @@ class WaiverDao(BaseDAO[models.Waiver]):
         player: dto.Player,
         team: dto.Team,
     ) -> models.Waiver | None:
-        result = await self.session.execute(
-            select(self.model).where(
+        result: ScalarResult[models.Waiver] = await self.session.scalars(
+            select(models.Waiver).where(
                 models.Waiver.team_id == team.id,
                 models.Waiver.player_id == player.id,
                 models.Waiver.game_id == game.id,
             )
         )
-        return result.scalars().one_or_none()
+        return result.one_or_none()
 
     async def get_played_teams(self, game: dto.Game) -> Iterable[dto.Team]:
         result = await self.session.scalars(
@@ -101,7 +101,7 @@ class WaiverDao(BaseDAO[models.Waiver]):
                 models.TeamPlayer.date_left.is_(None),
             )
         )
-        waivers: Sequence[Row[models.Waiver, models.TeamPlayer]] = result.all()
+        waivers: Sequence[Row[tuple[models.Waiver, models.TeamPlayer]]] = result.all()
         return [
             dto.VotedPlayer(
                 player=waiver.player.to_dto_user_prefetched(),

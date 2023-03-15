@@ -1,6 +1,7 @@
 import asyncio
 import json
 import logging
+import typing
 import uuid
 from datetime import datetime, timedelta
 from io import BytesIO
@@ -80,7 +81,7 @@ class GameParser:
         started_at_text = self.html.xpath("//div[@class='maintitle']/b/span[@id='dt']")[0].text
         self.start_at = datetime.strptime(started_at_text, "%d.%m.%y в %H:%M")
 
-    async def parse_scenario(self):  # noqa: C901
+    async def parse_scenario(self) -> None:  # noqa: C901
         (scn_element,) = self.html.xpath(
             "//div[@id='sc']//div[@class='borderwrap']//tr[@class='ipbtable']/td"
         )
@@ -142,10 +143,10 @@ class GameParser:
 
     def parse_results(self) -> dict[str, list[LevelTime]]:
         rows = self.html.xpath("//div[@id='tb']//tr[@class='ipbtable']")
-        results = {}
+        results: dict[str, list[LevelTime]] = {}
         for row in rows:
             cells = row.xpath("./td")
-            team_name = cells[0].xpath("./b")[0].text
+            team_name = typing.cast(str, cells[0].xpath("./b")[0].text)
             level_times = []
             for level_number, cell in enumerate(cells[1:], 1):
                 try:
@@ -173,15 +174,16 @@ class GameParser:
 
     def parse_keys(self) -> dict[str, list[Key]]:
         tables = self.html.xpath("//div[@id='logs']//table")
-        log_keys = {}
+        log_keys: dict[str, list[Key]] = {}
         for table in tables:
             rows = table.xpath(".//tr")
             team_name = rows[0].xpath("./td")[0].text
-            keys = []
-            keys_buffer = []
+            keys: list[Key] = []
+            keys_buffer: list[Key] = []
             level = 1
             for row in rows[2:]:
                 cells = row.xpath("./td")
+                assert isinstance(cells, list)
                 if len(cells) == 1:
                     if get_finished_level_number(cells) == level - 1:
                         # Sometimes (game 60) it may contain
@@ -194,7 +196,7 @@ class GameParser:
                     keys_buffer.clear()
                     continue
                 try:
-                    time, key, player = cells
+                    time_element, key_element, player_element = cells  # type: _Element
                 except ValueError as e:
                     logger.error(
                         "can't parse key log for cells %s",
@@ -202,11 +204,11 @@ class GameParser:
                         exc_info=e,
                     )
                     continue
-                local_date = datetime.strptime(time.text, "%Y-%m-%d %H:%M:%S")
+                local_date = datetime.strptime(time_element.text, "%Y-%m-%d %H:%M:%S")
                 keys_buffer.append(
                     Key(
-                        player=player.xpath("./b")[0].text,
-                        value=key.text,
+                        player=player_element.xpath("./b")[0].text,
+                        value=key_element.text,
                         at=datetime.combine(
                             date=local_date.date(), time=local_date.time(), tzinfo=tz_local
                         ).astimezone(tz_utc),

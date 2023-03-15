@@ -1,13 +1,14 @@
 from typing import TypeVar, Type, Generic, Sequence
 
-from sqlalchemy import delete, func
+from sqlalchemy import delete, func, ScalarResult
 from sqlalchemy import select
+from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm.interfaces import LoaderOption
 
 from shvatka.infrastructure.db.models import Base
 
-Model = TypeVar("Model", Base, Base)
+Model = TypeVar("Model", bound=Base, covariant=True, contravariant=False)
 
 
 class BaseDAO(Generic[Model]):
@@ -16,23 +17,24 @@ class BaseDAO(Generic[Model]):
         self.session = session
 
     async def _get_all(self, options: Sequence[LoaderOption] = tuple()) -> Sequence[Model]:
-        result = await self.session.execute(select(self.model).options(*options))
-        return result.scalars().all()
+        result: ScalarResult[Model] = await self.session.scalars(select(self.model).options(*options))
+        return result.all()
 
     async def _get_by_id(
         self, id_: int, options: Sequence[LoaderOption] = None, populate_existing: bool = False
     ) -> Model:
-        return await self.session.get(
-            self.model, id_, options=options, populate_existing=populate_existing
-        )
+        result = await self.session.get(self.model, id_, options=options, populate_existing=populate_existing)
+        if result is None:
+            raise NoResultFound()
+        return result
 
-    def _save(self, obj: Model):
+    def _save(self, obj: Base):
         self.session.add(obj)
 
     async def delete_all(self):
         await self.session.execute(delete(self.model))
 
-    async def _delete(self, obj: Model):
+    async def _delete(self, obj: Base):
         await self.session.delete(obj)
 
     async def count(self):
@@ -42,5 +44,5 @@ class BaseDAO(Generic[Model]):
     async def commit(self):
         await self.session.commit()
 
-    async def _flush(self, *objects):
+    async def _flush(self, *objects: Base):
         await self.session.flush(objects)

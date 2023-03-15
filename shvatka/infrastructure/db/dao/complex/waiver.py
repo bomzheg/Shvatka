@@ -1,10 +1,10 @@
 from dataclasses import dataclass
-from typing import Iterable
+from typing import Iterable, Sequence
 
-from shvatka.infrastructure.db.dao import PollDao, WaiverDao, PlayerDao, TeamPlayerDao
 from shvatka.core.interfaces.dal.waiver import WaiverVoteAdder, WaiverVoteGetter, WaiverApprover
 from shvatka.core.models import dto
 from shvatka.core.models.enums.played import Played
+from shvatka.infrastructure.db.dao import PollDao, WaiverDao, PlayerDao, TeamPlayerDao
 
 
 @dataclass
@@ -54,7 +54,7 @@ class WaiverApproverImpl(WaiverApprover, WaiverVoteGetterImpl):
     async def get_team_player(self, player: dto.Player) -> dto.TeamPlayer:
         return await self.team_player.get_team_player(player)
 
-    async def get_players(self, team: dto.Team) -> list[dto.FullTeamPlayer]:
+    async def get_players(self, team: dto.Team) -> Sequence[dto.FullTeamPlayer]:
         return await self.team_player.get_players(team)
 
     async def del_player_vote(self, team_id: int, player_id: int) -> None:

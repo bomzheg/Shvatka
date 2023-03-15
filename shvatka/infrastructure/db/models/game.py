@@ -66,7 +66,7 @@ class Game(Base):
     start_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     published_channel_id: Mapped[int | None]
     number: Mapped[int | None]
-    manage_token: Mapped[str | None] = mapped_column(
+    manage_token: Mapped[str] = mapped_column(
         Text,
         default=lambda: secrets.token_urlsafe(_TOKEN_LEN * 3 // 4),
     )

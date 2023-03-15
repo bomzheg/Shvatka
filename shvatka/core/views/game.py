@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import timedelta
-from typing import Protocol, Iterable
+from typing import Protocol, Iterable, Sequence
 
 from shvatka.core.interfaces.dal.game_play import GamePreparer
 from shvatka.core.models import dto
@@ -54,7 +54,7 @@ class OrgNotifier(Protocol):
 
 @dataclass
 class Event:
-    orgs_list: list[dto.Organizer]
+    orgs_list: Sequence[dto.Organizer]
 
 
 @dataclass

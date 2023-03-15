@@ -1,4 +1,5 @@
 import logging
+from typing import Sequence
 
 from shvatka.core.interfaces.dal.player import (
     PlayerUpserter,
@@ -144,7 +145,7 @@ async def leave(player: dto.Player, remover: dto.Player, dao: TeamLeaver):
         check_can_remove_player(team_player)  # and remover must have permission for remove
     if game := await dao.get_active_game():
         await dao.delete(
-            dto.Waiver(
+            dto.WaiverQuery(
                 player=player,
                 game=game,
                 team=team,
@@ -188,7 +189,7 @@ def check_can_add_players(team_player: dto.FullTeamPlayer):
 
 
 async def get_full_team_player(
-    player: dto.Player, team: dto.Team | None, dao: TeamPlayerGetter
+    player: dto.Player, team: dto.Team, dao: TeamPlayerGetter
 ) -> dto.FullTeamPlayer:
     team_player = dto.FullTeamPlayer.from_simple(
         team_player=await get_checked_player_on_team(player, team, dao),
@@ -198,7 +199,7 @@ async def get_full_team_player(
     return team_player
 
 
-async def get_team_players(team: dto.Team, dao: TeamPlayersGetter) -> list[dto.FullTeamPlayer]:
+async def get_team_players(team: dto.Team, dao: TeamPlayersGetter) -> Sequence[dto.FullTeamPlayer]:
     return await dao.get_players(team)
 
 

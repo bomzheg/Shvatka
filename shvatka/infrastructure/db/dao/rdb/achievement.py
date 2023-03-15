@@ -1,6 +1,4 @@
-from typing import Sequence
-
-from sqlalchemy import select
+from sqlalchemy import select, Result, ScalarResult
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -15,7 +13,7 @@ class AchievementDAO(BaseDAO[models.Achievement]):
         super().__init__(models.Achievement, session=session)
 
     async def exist_type(self, achievement: enums.Achievement) -> bool:
-        result = await self.session.execute(
+        result: Result[tuple[models.Achievement]] = await self.session.execute(
             select(models.Achievement).where(models.Achievement.name == achievement)
         )
         try:
@@ -32,8 +30,8 @@ class AchievementDAO(BaseDAO[models.Achievement]):
         self._save(db)
 
     async def get_by_player(self, player: dto.Player) -> list[dto.Achievement]:
-        result = await self.session.scalars(
+        result: ScalarResult[models.Achievement] = await self.session.scalars(
             select(models.Achievement).where(models.Achievement.player_id == player.id)
         )
-        achievements: Sequence[models.Achievement] = result.all()
+        achievements = result.all()
         return [achievement.to_dto(player) for achievement in achievements]

@@ -16,9 +16,9 @@ class MemoryLock(KeyCheckerLock):
 
 
 class MemoryLockFactory(KeyCheckerFactory):
-    def __init__(self):
+    def __init__(self) -> None:
         self.team_locks: dict[int, MemoryLock] = {}
-        self.player_locks: dict[int:MemoryLock] = {}
+        self.player_locks: dict[int, MemoryLock] = {}
         self.global_lock = MemoryLock()
 
     def lock_globally(self) -> KeyCheckerLock:

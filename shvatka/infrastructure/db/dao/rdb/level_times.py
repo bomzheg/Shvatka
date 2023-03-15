@@ -28,6 +28,7 @@ class LevelTimeDao(BaseDAO[models.LevelTime]):
         self._save(level_time)
 
     async def is_team_on_level(self, team: dto.Team, level: dto.Level) -> bool:
+        assert level.game_id is not None
         return (
             await self._get_current(team.id, level.game_id)
         ).level_number == level.number_in_game

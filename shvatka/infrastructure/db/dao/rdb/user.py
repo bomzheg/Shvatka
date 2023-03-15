@@ -1,4 +1,4 @@
-from sqlalchemy import select
+from sqlalchemy import select, ScalarResult, Result
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.exc import NoResultFound, MultipleResultsFound
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -17,8 +17,8 @@ class UserDao(BaseDAO[User]):
         return (await self._get_by_id(id_)).to_dto()
 
     async def _get_by_tg_id(self, tg_id: int) -> User:
-        result = await self.session.execute(select(User).where(User.tg_id == tg_id))
-        return result.scalar_one()
+        result: ScalarResult[User] = await self.session.scalars(select(User).where(User.tg_id == tg_id))
+        return result.one()
 
     async def get_by_username(self, username: str) -> dto.User:
         user = await self._get_by_username(username)
@@ -29,7 +29,7 @@ class UserDao(BaseDAO[User]):
         return user.to_dto().add_password(user.hashed_password)
 
     async def _get_by_username(self, username: str) -> User:
-        result = await self.session.execute(select(User).where(User.username == username))
+        result: Result[tuple[User]] = await self.session.execute(select(User).where(User.username == username))
         try:
             user = result.scalar_one()
         except MultipleResultsFound as e:
@@ -39,6 +39,7 @@ class UserDao(BaseDAO[User]):
         return user
 
     async def set_password(self, user: dto.User, hashed_password: str):
+        assert user.db_id
         db_user = await self._get_by_id(user.db_id)
         db_user.hashed_password = hashed_password
         user.hashed_password = hashed_password

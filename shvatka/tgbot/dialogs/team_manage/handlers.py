@@ -58,6 +58,7 @@ async def change_permission_handler(c: CallbackQuery, button: Button, manager: D
     player_id = manager.dialog_data["selected_player_id"]
     player = await get_player_by_id(player_id, dao.player)
     team_player = await get_team_player_by_player(player, dao.team_player)
+    assert button.widget_id
     permission = enums.TeamPlayerPermission[button.widget_id]
     await flip_permission(captain_team_player, team_player, permission, dao.team_player)
 

@@ -12,7 +12,7 @@ class GamePreparer(GameOrgsGetter, Protocol):
     async def get_agree_teams(self, game: dto.Game) -> Iterable[dto.Team]:
         raise NotImplementedError
 
-    async def get_poll_msg(self, team: dto.Team, game: dto.Game) -> int:
+    async def get_poll_msg(self, team: dto.Team, game: dto.Game) -> int | None:
         raise NotImplementedError
 
 

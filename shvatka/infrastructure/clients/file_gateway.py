@@ -35,6 +35,8 @@ class BotFileGateway(FileGateway):
             return await self.storage.get(file.file_content_link)
         except (IOError, OSError):
             content = await self.bot.download(file=file.tg_link.file_id)
+            if not content:
+                raise IOError()
             return content
 
     async def renew_file_id(

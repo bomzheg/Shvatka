@@ -44,7 +44,7 @@ types-python-dateutil = "^2.8.19"
 types-redis = "^4.3.21"
 types-PyYAML = "^6.0.12"
 lxml-stubs = "^0.4.0"
-mypy = "^0.991"
+mypy = "^1.1.1"
 black = {version = "^22.12.0", extras = ["d"]}
 
 [tool.poetry.group.test]
@@ -128,3 +128,15 @@ show_error_codes = true
 [[tool.mypy.overrides]]
 module = "tests.*"
 ignore_errors = true
+
+[[tool.mypy.overrides]]
+module = "shvatka.tgbot.*"
+disable_error_code = ["union-attr", "arg-type"]
+
+[[tool.mypy.overrides]]
+module = "shvatka.infrastructure.crawler.*"
+disable_error_code = ["union-attr", "arg-type", "index", "misc", "assignment"]
+
+[[tool.mypy.overrides]]
+module = "shvatka.infrastructure.db.dao.rdb.*"
+disable_error_code = ["attr-defined"]

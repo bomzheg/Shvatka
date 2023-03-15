@@ -13,4 +13,4 @@ from .team import Team  # noqa: F401
 from .team_player import TeamPlayer, FullTeamPlayer  # noqa: F401
 from .time_key import KeyTime, InsertedKey  # noqa: F401
 from .user import User, UserWithCreds  # noqa: F401
-from .waiver import Waiver  # noqa: F401
+from .waiver import Waiver, WaiverQuery  # noqa: F401

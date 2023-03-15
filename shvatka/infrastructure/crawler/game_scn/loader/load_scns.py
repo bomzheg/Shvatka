@@ -14,6 +14,7 @@ from shvatka.common.config.parser.logging_config import setup_logging
 from shvatka.core.interfaces.clients.file_storage import FileGateway
 from shvatka.core.models import dto
 from shvatka.core.models import enums
+from shvatka.core.models.dto import scn
 from shvatka.core.services.game import upsert_game
 from shvatka.core.services.scenario.scn_zip import unpack_scn
 from shvatka.core.utils import exceptions
@@ -194,6 +195,7 @@ def load_results(game_zip_scn: BinaryIO, dcf: Factory) -> GameStat:
         with unpacked_file.open("r", encoding="utf8") as results_file:
             results = dcf.load(json.load(results_file), GameStat)
         return results
+    raise ValueError("no results found")
 
 
 async def load_scn(
@@ -204,11 +206,11 @@ async def load_scn(
     zip_scn: BinaryIO,
 ) -> dto.FullGame | None:
     try:
-        with unpack_scn(ZipPath(zip_scn)).open() as scn:
-            game = await upsert_game(scn, player, dao.game_upserter, dcf, file_gateway)
+        with unpack_scn(ZipPath(zip_scn)).open() as scenario:  # type: scn.RawGameScenario
+            game = await upsert_game(scenario, player, dao.game_upserter, dcf, file_gateway)
     except exceptions.ScenarioNotCorrect as e:
         logger.error("game scenario from player %s has problems", player.id, exc_info=e)
-        return
+        return None
     logger.info("game scenario with id %s saved", game.id)
     return game
 

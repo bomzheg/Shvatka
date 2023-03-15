@@ -27,7 +27,7 @@ class LevelTestBucket:
 
 
 class LevelTestingData(LevelTestProtocolDao):
-    def __init__(self):
+    def __init__(self) -> None:
         self._buckets: dict[int, dict[int, LevelTestBucket]] = {}
 
     async def save_started_level_test(self, suite: dto.LevelTestSuite, now: datetime):
@@ -59,6 +59,8 @@ class LevelTestingData(LevelTestProtocolDao):
 
     async def get_testing_result(self, suite: dto.LevelTestSuite) -> timedelta:
         bucket = self._get_bucket(suite)
+        assert bucket.protocol.start
+        assert bucket.protocol.stop
         return bucket.protocol.stop - bucket.protocol.start
 
     async def get_all_typed(self, suite: dto.LevelTestSuite) -> list[SimpleKey]:

@@ -83,6 +83,8 @@ def check_can_change_name(team: dto.Team, captain: dto.FullTeamPlayer):
         raise SHDataBreach(
             team=team, player=captain.player, notify_user="Вы не игрок этой команды"
         )
+    assert captain.player is not None
+    assert team.captain is not None
     if team.captain.id == captain.player.id:
         return
     if captain.can_change_team_name:

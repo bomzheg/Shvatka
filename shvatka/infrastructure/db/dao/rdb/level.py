@@ -1,6 +1,4 @@
-from typing import Sequence
-
-from sqlalchemy import select
+from sqlalchemy import select, ScalarResult
 from sqlalchemy import update
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -57,10 +55,10 @@ class LevelDao(BaseDAO[models.Level]):
         return result.scalar_one()
 
     async def get_all_my(self, author: dto.Player) -> list[dto.Level]:
-        result = await self.session.scalars(
+        result: ScalarResult[models.Level] = await self.session.scalars(
             select(models.Level).where(models.Level.author_id == author.id)
         )
-        levels: Sequence[models.Level] = result.all()
+        levels = result.all()
         return [level.to_dto(author) for level in levels]
 
     async def get_by_id(self, id_: int) -> dto.Level:

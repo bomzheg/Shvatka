@@ -1,7 +1,7 @@
 from datetime import datetime
 
 from sqlalchemy import Integer, ForeignKey, DateTime, UniqueConstraint, func
-from sqlalchemy.orm import relationship, mapped_column
+from sqlalchemy.orm import relationship, mapped_column, Mapped
 
 from shvatka.core.models import dto
 from shvatka.core.utils.datetime_utils import tz_utc
@@ -11,21 +11,21 @@ from shvatka.infrastructure.db.models import Base
 class LevelTime(Base):
     __tablename__ = "levels_times"
     __mapper_args__ = {"eager_defaults": True}
-    id = mapped_column(Integer, primary_key=True)
-    game_id = mapped_column(ForeignKey("games.id"), nullable=False)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    game_id: Mapped[int] = mapped_column(ForeignKey("games.id"), nullable=False)
     game = relationship(
         "Game",
         foreign_keys=game_id,
         back_populates="level_times",
     )
-    team_id = mapped_column(ForeignKey("teams.id"), nullable=False)
+    team_id: Mapped[int] = mapped_column(ForeignKey("teams.id"), nullable=False)
     team = relationship(
         "Team",
         foreign_keys=team_id,
         back_populates="completed_levels",
     )
-    level_number = mapped_column(Integer)
-    start_at = mapped_column(
+    level_number: Mapped[int] = mapped_column(Integer)
+    start_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         default=lambda: datetime.now(tz=tz_utc),
         server_default=func.now(),

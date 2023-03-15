@@ -1,4 +1,4 @@
-from typing import TypedDict, Any, NotRequired
+from typing import TypedDict, Any
 
 from aiogram import types, Bot, Router
 from aiogram.dispatcher.event.handler import HandlerObject
@@ -50,9 +50,9 @@ class MiddlewareData(DialogMiddlewareData, total=False):
     telegraph: Telegraph
     hint_parser: HintParser
     file_gateway: FileGateway
-    user: dto.User
-    chat: dto.Chat
-    team: NotRequired[dto.Team]
-    player: dto.Player
+    user: dto.User | None
+    chat: dto.Chat | None
+    team: dto.Team | None
+    player: dto.Player | None
     game: dto.Game | None
     team_player: dto.FullTeamPlayer | None

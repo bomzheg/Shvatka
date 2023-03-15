@@ -1,3 +1,5 @@
+from typing import Any
+
 from aiogram_dialog import DialogManager
 
 from shvatka.core.models import dto
@@ -7,7 +9,7 @@ from shvatka.core.views.texts import PERMISSION_EMOJI
 from shvatka.infrastructure.db.dao.holder import HolderDao
 
 
-async def get_my_team_(dao: HolderDao, player: dto.Player, **_) -> dict[str, dto.Team]:
+async def get_my_team_(dao: HolderDao, player: dto.Player, **_) -> dict[str, Any]:
     try:
         team = await get_my_team(player=player, dao=dao.team_player)
         team_player = await get_full_team_player(player=player, team=team, dao=dao.team_player)
@@ -17,7 +19,7 @@ async def get_my_team_(dao: HolderDao, player: dto.Player, **_) -> dict[str, dto
     return {"team": team, "team_player": team_player}
 
 
-async def get_team_with_players(dao: HolderDao, player: dto.Player, **_) -> dict[str, dto.Team]:
+async def get_team_with_players(dao: HolderDao, player: dto.Player, **_) -> dict[str, Any]:
     team = await get_my_team(player=player, dao=dao.team_player)
     team_player = await get_full_team_player(player=player, team=team, dao=dao.team_player)
     players = await get_team_players(team=team, dao=dao.team_player)

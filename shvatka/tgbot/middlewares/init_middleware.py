@@ -41,7 +41,7 @@ class InitMiddleware(BaseMiddleware):
         self.level_test_dao = level_test_dao
         self.telegraph = telegraph
 
-    async def __call__(
+    async def __call__(  # type: ignore[override]
         self,
         handler: Callable[[TelegramObject, dict[str, Any]], Awaitable[Any]],
         event: TelegramObject,

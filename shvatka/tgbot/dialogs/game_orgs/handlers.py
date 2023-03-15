@@ -26,6 +26,7 @@ async def change_permission_handler(c: CallbackQuery, button: Button, manager: D
     author: dto.Player = manager.middleware_data["player"]
     org_id = manager.dialog_data["org_id"]
     org = await get_org_by_id(org_id, dao.organizer)
+    assert button.widget_id
     permission = OrgPermission[button.widget_id]
     await flip_permission(author, org, permission, dao.organizer)
 

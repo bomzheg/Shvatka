@@ -111,6 +111,7 @@ class HintParser:
     ) -> scn.FileMeta | None:
         match message.content_type:
             case ContentType.PHOTO:
+                assert message.photo is not None
                 return await self.save_content(
                     file_id=message.photo[-1].file_id,
                     content_type=HintType.photo,

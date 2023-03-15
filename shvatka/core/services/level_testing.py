@@ -1,5 +1,6 @@
 import logging
 from datetime import datetime
+from typing import Sequence
 
 from shvatka.core.interfaces.dal.game import GameByIdGetter
 from shvatka.core.interfaces.dal.level_testing import LevelTestingDao
@@ -109,6 +110,9 @@ async def check_level_testing_key(
         await org_notifier.notify(event)
 
 
-async def get_testing_observers(level: dto.Level, dao: GameByIdGetter) -> list[dto.Organizer]:
-    game = await dao.get_by_id(level.game_id)
-    return await get_primary_orgs(game=game)
+async def get_testing_observers(level: dto.Level, dao: GameByIdGetter) -> Sequence[dto.Organizer]:
+    if level.game_id is not None:
+        game = await dao.get_by_id(level.game_id)
+        return await get_primary_orgs(game=game)
+    else:
+        raise NotImplementedError(f"level {level.db_id} without game_id")

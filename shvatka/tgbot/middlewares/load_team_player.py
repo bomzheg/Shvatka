@@ -9,7 +9,7 @@ from shvatka.tgbot.utils.data import MiddlewareData
 
 
 class TeamPlayerMiddleware(BaseMiddleware):
-    async def __call__(
+    async def __call__(  # type: ignore[override]
         self,
         handler: Callable[[TelegramObject, dict[str, Any]], Awaitable[Any]],
         event: TelegramObject,

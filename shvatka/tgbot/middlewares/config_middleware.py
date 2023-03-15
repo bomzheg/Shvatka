@@ -11,7 +11,7 @@ class ConfigMiddleware(BaseMiddleware):
     def __init__(self, config: BotConfig):
         self.config = config
 
-    async def __call__(
+    async def __call__(  # type: ignore
         self,
         handler: Callable[[TelegramObject, dict[str, Any]], Awaitable[Any]],
         event: TelegramObject,

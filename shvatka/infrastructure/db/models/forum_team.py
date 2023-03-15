@@ -13,7 +13,7 @@ class ForumTeam(Base):
     name: Mapped[str] = mapped_column(nullable=False, unique=True)
     url: Mapped[str]
 
-    team_id = mapped_column(ForeignKey("teams.id"), unique=True, nullable=True)
+    team_id: Mapped[int] = mapped_column(ForeignKey("teams.id"), unique=True, nullable=True)
     team = relationship(
         "Team",
         foreign_keys=team_id,

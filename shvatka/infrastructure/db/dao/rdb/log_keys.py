@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Sequence
 
-from sqlalchemy import select, update
+from sqlalchemy import select, update, ScalarResult
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 
@@ -21,7 +21,7 @@ class KeyTimeDao(BaseDAO[models.KeyTime]):
         game: dto.Game,
         team: dto.Team,
     ) -> set[str]:
-        result = await self.session.scalars(
+        result: ScalarResult[models.KeyTime] = await self.session.scalars(
             select(models.KeyTime).where(
                 models.KeyTime.game_id == game.id,
                 models.KeyTime.level_number == level.number_in_game,
@@ -32,7 +32,7 @@ class KeyTimeDao(BaseDAO[models.KeyTime]):
         return {key.key_text for key in result.all()}
 
     async def is_duplicate(self, level: dto.Level, team: dto.Team, key: str) -> bool:
-        result = await self.session.execute(
+        result: ScalarResult[int] = await self.session.scalars(
             select(self.model.id).where(
                 models.KeyTime.game_id == level.game_id,
                 models.KeyTime.level_number == level.number_in_game,
@@ -40,7 +40,7 @@ class KeyTimeDao(BaseDAO[models.KeyTime]):
                 models.KeyTime.key_text == key,
             )
         )
-        return result.scalar() is not None
+        return result.one_or_none() is not None
 
     async def save_key(
         self,

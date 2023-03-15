@@ -42,7 +42,7 @@ class TeamLeaverImpl(TeamLeaver):
     async def del_player_vote(self, team_id: int, player_id: int) -> None:
         return await self.dao.poll.del_player_vote(team_id, player_id)
 
-    async def get_team(self, player: dto.Player) -> dto.Team:
+    async def get_team(self, player: dto.Player) -> dto.Team | None:
         return await self.dao.team_player.get_team(player)
 
     async def leave_team(self, player: dto.Player) -> None:
@@ -51,7 +51,7 @@ class TeamLeaverImpl(TeamLeaver):
     async def get_active_game(self) -> dto.Game | None:
         return await self.dao.game.get_active_game()
 
-    async def delete(self, waiver: dto.Waiver) -> None:
+    async def delete(self, waiver: dto.WaiverQuery) -> None:
         return await self.dao.waiver.delete(waiver)
 
     async def get_team_player(self, player: dto.Player) -> dto.TeamPlayer:

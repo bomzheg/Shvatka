@@ -26,7 +26,7 @@ class TeamPlayer:
 
     def __eq__(self, other) -> bool:
         if not isinstance(other, (TeamPlayer, FullTeamPlayer)):
-            return False
+            return NotImplemented
         return self.id == other.id
 
     def __hash__(self):

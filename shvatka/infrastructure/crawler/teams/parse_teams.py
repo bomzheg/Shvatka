@@ -36,7 +36,7 @@ class TeamsParser:
     def __init__(self, html_str: str, *, session: ClientSession):
         self.html = etree.HTML(html_str, base_url="shvatka.ru")
         self.session = session
-        self.teams = []
+        self.teams: list[ParsedTeam] = []
 
     async def parse_teams(self):
         for team_element in self.html.xpath('//table//td[@class="row2"]/b/a'):

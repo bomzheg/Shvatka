@@ -34,10 +34,11 @@ class Team:
     def get_chat_id(self) -> int | None:
         if self.is_dummy:
             return None
+        assert self._chat
         return self._chat.tg_id
 
     def has_chat(self) -> bool:
         return self._chat is not None
 
     def has_forum_team(self) -> bool:
-        raise self._forum_team is not None
+        return self._forum_team is not None

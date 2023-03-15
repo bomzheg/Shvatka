@@ -9,4 +9,12 @@ class Waiver:
     player: Player
     team: Team
     game: Game
-    played: Played | None = None
+    played: Played
+
+
+@dataclass
+class WaiverQuery:
+    player: Player
+    team: Team
+    game: Game
+

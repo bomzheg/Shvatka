@@ -1,6 +1,6 @@
 from typing import Sequence
 
-from sqlalchemy import select
+from sqlalchemy import select, ScalarResult
 from sqlalchemy import update, not_
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -46,13 +46,13 @@ class OrganizerDao(BaseDAO[models.Organizer]):
             return None
 
     async def get_by_player(self, game: dto.Game, player: dto.Player) -> dto.SecondaryOrganizer:
-        result = await self.session.execute(
+        result: ScalarResult[models.Organizer] = await self.session.scalars(
             select(models.Organizer).where(
                 models.Organizer.game_id == game.id,
                 models.Organizer.player_id == player.id,
             )
         )
-        org: models.Organizer = result.scalar_one()
+        org = result.one()
         return org.to_dto(player=player, game=game)
 
     async def get_by_id(self, id_: int) -> dto.SecondaryOrganizer:

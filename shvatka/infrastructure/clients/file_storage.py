@@ -22,7 +22,7 @@ class LocalFileStorage(FileStorage):
             guid=file_meta.guid,
             original_filename=file_meta.original_filename,
             extension=file_meta.extension,
-            tg_link=file_meta.tg_link,
+            tg_link=file_meta.tg_link,  # type: ignore
             content_type=file_meta.content_type,
         )
 

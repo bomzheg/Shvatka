@@ -15,13 +15,14 @@ def map_game_for_upload(game: dto.FullGame) -> data.GameForUpload:
 
 
 def map_level_for_upload(level: dto.Level) -> data.LevelForUpload:
+    assert level.number_in_game
     scn = level.scenario
-    puzzle = scn.time_hints[0]
+    first_hint = scn.time_hints[0]
     puzzle = data.LevelPuzzle(
         level_number=level.number_in_game + 1,
         hint_number=0,
         next_hint_time=scn.time_hints[1].time,
-        text=hint_parts_to_text(puzzle.hint),
+        text=hint_parts_to_text(first_hint.hint),
         key="".join(scn.keys),
         brain_key="",
     )

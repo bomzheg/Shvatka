@@ -1,4 +1,4 @@
-from typing import Protocol
+from typing import Protocol, Sequence
 
 from shvatka.core.interfaces.dal.base import Committer
 from shvatka.core.interfaces.dal.game import ActiveGameFinder
@@ -46,7 +46,7 @@ class TeamJoiner(Committer, TeamPlayerGetter, Protocol):
 
 
 class WaiverRemover(Protocol):
-    async def delete(self, waiver: dto.Waiver) -> None:
+    async def delete(self, waiver: dto.WaiverQuery) -> None:
         raise NotImplementedError
 
 
@@ -59,7 +59,7 @@ class TeamLeaver(Committer, ActiveGameFinder, WaiverRemover, TeamPlayerGetter, P
     async def del_player_vote(self, team_id: int, player_id: int) -> None:
         raise NotImplementedError
 
-    async def get_team(self, player: dto.Player) -> dto.Team:
+    async def get_team(self, player: dto.Player) -> dto.Team | None:
         raise NotImplementedError
 
     async def leave_team(self, player: dto.Player) -> None:
@@ -67,7 +67,7 @@ class TeamLeaver(Committer, ActiveGameFinder, WaiverRemover, TeamPlayerGetter, P
 
 
 class TeamPlayersGetter(Protocol):
-    async def get_players(self, team: dto.Team) -> list[dto.FullTeamPlayer]:
+    async def get_players(self, team: dto.Team) -> Sequence[dto.FullTeamPlayer]:
         raise NotImplementedError
 
 

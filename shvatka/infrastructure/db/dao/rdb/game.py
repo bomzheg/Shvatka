@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Sequence
 
-from sqlalchemy import select
+from sqlalchemy import select, ScalarResult
 from sqlalchemy import update, func
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -39,7 +39,7 @@ class GameDao(BaseDAO[models.Game]):
         return game.to_dto(author)
 
     async def _get_by_author_and_scn(self, author: dto.Player, scn: GameScenario) -> models.Game:
-        result = await self.session.scalars(
+        result: ScalarResult[models.Game] = await self.session.scalars(
             select(models.Game).where(
                 models.Game.name == scn.name,
                 models.Game.author_id == author.id,
@@ -77,7 +77,7 @@ class GameDao(BaseDAO[models.Game]):
         return game.to_dto(author)
 
     async def get_all_by_author(self, author: dto.Player) -> list[dto.Game]:
-        result = await self.session.scalars(
+        result: ScalarResult[models.Game] = await self.session.scalars(
             select(models.Game).where(
                 models.Game.author_id == author.id,
                 models.Game.status != GameStatus.complete,
@@ -173,6 +173,8 @@ class GameDao(BaseDAO[models.Game]):
 
     async def get_game_by_name(self, name: str, author: dto.Player) -> dto.Game:
         game = await self._get_game_by_name(name)
+        if game is None:
+            raise NoResultFound
         return game.to_dto(author)
 
     async def transfer(self, game: dto.Game, new_author: dto.Player):
@@ -194,10 +196,14 @@ class GameDao(BaseDAO[models.Game]):
 
     async def is_author_game_by_name(self, name: str, author: dto.Player) -> bool:
         result = await self._get_game_by_name(name)
+        if result is None:
+            raise NoResultFound
         if result.author_id != author.id:
             return False
         return True
 
     async def _get_game_by_name(self, name: str) -> models.Game | None:
-        result = await self.session.scalars(select(models.Game).where(models.Game.name == name))
+        result: ScalarResult[models.Game] = await self.session.scalars(
+            select(models.Game).where(models.Game.name == name)
+        )
         return result.one_or_none()

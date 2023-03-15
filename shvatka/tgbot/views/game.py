@@ -50,6 +50,7 @@ class BotView(GameViewPreparer, GameView):
                 logger.error("can't remove waivers keyboard for team %s", team.id, exc_info=e)
 
     async def send_puzzle(self, team: dto.Team, level: dto.Level) -> None:
+        assert level.number_in_game is not None
         await self.hint_sender.send_hints(
             chat_id=team.get_chat_id(),
             hint_containers=level.get_hint(0).hint,
@@ -57,6 +58,7 @@ class BotView(GameViewPreparer, GameView):
         )
 
     async def send_hint(self, team: dto.Team, hint_number: int, level: dto.Level) -> None:
+        assert level.number_in_game is not None
         hint = level.get_hint(hint_number)
         if level.is_last_hint(hint_number):
             hint_caption = (

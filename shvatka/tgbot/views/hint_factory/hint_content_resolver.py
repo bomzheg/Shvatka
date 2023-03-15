@@ -115,6 +115,8 @@ class HintContentResolver:
                 )
             case StickerHint(file_guid=guid):
                 return StickerHintView(file_id=await self._resolve_file_id(guid))
+            case _:
+                raise RuntimeError("unknown hint type")
 
     async def _resolve_file_id(self, guid: str | None) -> str | None:
         if guid is None:
@@ -188,6 +190,8 @@ class HintContentResolver:
                 )
             case StickerHint(file_guid=guid):
                 return StickerHintView(file_id=await self._resolve_file_id(guid))
+            case _:
+                raise RuntimeError("unknown hint type")
 
     async def _resolve_bytes(self, guid: str | None) -> BinaryIO | None:
         if guid is None:

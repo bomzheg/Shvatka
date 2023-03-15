@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from datetime import datetime
-from typing import BinaryIO
+from typing import BinaryIO, Sequence
 
 from shvatka.core.models import enums
 from shvatka.infrastructure.crawler.models.stat import GameStat
@@ -17,7 +17,7 @@ class GameScenario:
 
 @dataclass
 class FullGameScenario(GameScenario):
-    files: list[FileMeta]
+    files: Sequence[FileMeta]
 
 
 @dataclass

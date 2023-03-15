@@ -1,3 +1,4 @@
+import typing
 from typing import Iterable
 
 from sqlalchemy import select
@@ -40,6 +41,7 @@ class PlayerDao(BaseDAO[models.Player]):
 
     async def create_for_user(self, user: dto.User) -> dto.Player:
         user_db = await self.session.get(models.User, user.db_id)
+        assert user_db
         player = models.Player()
         user_db.player = player
         self._save(player)
@@ -70,9 +72,10 @@ class PlayerDao(BaseDAO[models.Player]):
         return player.to_dto(forum_user=forum_user_db.to_dto())
 
     async def create_for_forum_user(self, user: dto.ForumUser) -> dto.Player:
-        forum_user_db: models.ForumUser = await self.session.get(models.ForumUser, user.db_id)
+        forum_user_db = await self.session.get(models.ForumUser, user.db_id)
+        assert forum_user_db and isinstance(forum_user_db, models.ForumUser)
         if forum_user_db.player_id:
-            player = await self._get_by_id(forum_user_db.player_id)
+            player = await self._get_by_id(typing.cast(int, forum_user_db.player_id))
         else:
             player = await self._create_dummy()
             forum_user_db.player = player
@@ -81,11 +84,13 @@ class PlayerDao(BaseDAO[models.Player]):
     async def link_forum_user(self, player: dto.Player, user: dto.ForumUser) -> None:
         forum_user_db = await self.session.get(models.ForumUser, user.db_id)
         player_db = await self.get_by_id(player.id)
+        assert forum_user_db is not None
         forum_user_db.player = player_db
 
     async def link_user(self, player: dto.Player, user: dto.User) -> None:
         user_db = await self.session.get(models.User, user.db_id)
         player_db = await self.get_by_id(player.id)
+        assert user_db is not None
         user_db.player = player_db
 
     async def create_dummy(self) -> dto.Player:

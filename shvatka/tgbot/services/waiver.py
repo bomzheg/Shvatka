@@ -1,7 +1,7 @@
 from aiogram.types import Message
 
-from shvatka.infrastructure.db.dao import PollDao
 from shvatka.core.models import dto
+from shvatka.infrastructure.db.dao import PollDao
 
 
 async def swap_saved_message(game: dto.Game, msg: Message, dao: PollDao):
@@ -10,5 +10,7 @@ async def swap_saved_message(game: dto.Game, msg: Message, dao: PollDao):
     return old_msg_id
 
 
-async def get_saved_message(game: dto.Game, team: dto.Team, dao: PollDao) -> int:
-    return await dao.get_pool_msg_id(chat_id=team.get_chat_id(), game_id=game.id)
+async def get_saved_message(game: dto.Game, team: dto.Team, dao: PollDao) -> int | None:
+    chat_id = team.get_chat_id()
+    assert chat_id is not None
+    return await dao.get_pool_msg_id(chat_id=chat_id, game_id=game.id)

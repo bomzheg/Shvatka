@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 from typing import Sequence
 
-from sqlalchemy import select, BinaryExpression, or_
+from sqlalchemy import select, or_, ScalarResult, Result, ColumnElement
 from sqlalchemy import update, not_
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -26,7 +26,7 @@ class TeamPlayerDao(BaseDAO[models.TeamPlayer]):
     async def get_team(
         self, player: dto.Player, for_date: datetime | None = None
     ) -> dto.Team | None:
-        result = await self.session.execute(
+        result: Result[tuple[models.TeamPlayer]] = await self.session.execute(
             select(models.TeamPlayer)
             .options(
                 joinedload(models.TeamPlayer.team)
@@ -96,9 +96,9 @@ class TeamPlayerDao(BaseDAO[models.TeamPlayer]):
                 text=f"user {player.id} already in team {players_team.id}",
             )
 
-    async def need_restore(self, player: dto.Player, team: dto.Team) -> models.TeamPlayer:
+    async def need_restore(self, player: dto.Player, team: dto.Team) -> models.TeamPlayer | None:
         today = datetime.now(tz=tz_utc).date()
-        result = await self.session.execute(
+        result: ScalarResult[models.TeamPlayer] = await self.session.scalars(
             select(models.TeamPlayer).where(
                 models.TeamPlayer.player_id == player.id,
                 models.TeamPlayer.date_left >= today,
@@ -106,14 +106,14 @@ class TeamPlayerDao(BaseDAO[models.TeamPlayer]):
                 models.TeamPlayer.team_id == team.id,
             )
         )
-        return result.scalars().one_or_none()
+        return result.one_or_none()
 
-    async def get_players(self, team: dto.Team) -> list[dto.FullTeamPlayer]:
+    async def get_players(self, team: dto.Team) -> Sequence[dto.FullTeamPlayer]:
         result = await self.session.scalars(
             select(models.TeamPlayer)
             .where(
                 models.TeamPlayer.team_id == team.id,
-                not_leaved(),
+                *not_leaved(),
             )
             .options(
                 joinedload(models.TeamPlayer.player).joinedload(models.Player.user),
@@ -166,7 +166,7 @@ class TeamPlayerDao(BaseDAO[models.TeamPlayer]):
     async def _get_my_team_player(
         self, player: dto.Player, at: datetime | None = None
     ) -> models.TeamPlayer:
-        result = await self.session.execute(
+        result: Result[tuple[models.TeamPlayer]] = await self.session.execute(
             select(models.TeamPlayer).where(
                 models.TeamPlayer.player_id == player.id,
                 *get_leaved_condition(at),
@@ -178,23 +178,23 @@ class TeamPlayerDao(BaseDAO[models.TeamPlayer]):
             raise PlayerNotInTeam(player=player)
 
 
-def get_leaved_condition(for_date: datetime | None = None):
+def get_leaved_condition(for_date: datetime | None = None) -> Sequence[ColumnElement['bool']]:
     if for_date is None:
-        leaved_condition = (not_leaved(),)
+        leaved_condition = not_leaved()
     else:
         leaved_condition = not_leaved_for_date(for_date)
     return leaved_condition
 
 
-def not_leaved_for_date(for_date: datetime) -> Sequence[BinaryExpression[bool]]:
+def not_leaved_for_date(for_date: datetime) -> Sequence[ColumnElement['bool']]:
     return (
         or_(
             models.TeamPlayer.date_left > for_date,
-            not_leaved(),
+            *not_leaved(),
         ),
         models.TeamPlayer.date_joined < for_date,
     )
 
 
-def not_leaved() -> BinaryExpression[bool]:
-    return models.TeamPlayer.date_left.is_(None)
+def not_leaved() -> Sequence[ColumnElement['bool']]:
+    return models.TeamPlayer.date_left.is_(None),

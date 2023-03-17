@@ -11,10 +11,8 @@ on:
 env:
   POETRY_HOME: /opt/poetry
 jobs:
-  test:
-
+  build:
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v2
       - name: Install poetry
@@ -27,11 +25,19 @@ jobs:
           cache-dependency-path: poetry.lock
       - name: Install dependencies
         run: poetry install --with test
+  lint:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
       - name: Lint with black
         run: poetry run black --check --verbose .
       - name: Lint with flake8
         run: poetry run flake8 .
-      - name: Test with pytest
-        run: poetry run pytest
       - name: lint with mypy
         run: poetry run mypy .
+  test:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Test with pytest
+        run: poetry run pytest

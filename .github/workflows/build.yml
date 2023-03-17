@@ -11,6 +11,7 @@ jobs:
   call-test-workflow:
     uses: ./.github/workflows/test.yml
   build:
+    needs: call-test-workflow
     runs-on: ubuntu-latest
 
     steps:

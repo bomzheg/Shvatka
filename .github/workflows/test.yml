@@ -27,7 +27,6 @@ jobs:
         run: poetry install --with test
   lint:
     needs: build
-    runs-on: ubuntu-latest
     steps:
       - name: Lint with black
         run: poetry run black --check --verbose .
@@ -37,7 +36,7 @@ jobs:
         run: poetry run mypy .
   test:
     needs: build
-    runs-on: ubuntu-latest
+    runs-on: .
     steps:
       - name: Test with pytest
         run: poetry run pytest

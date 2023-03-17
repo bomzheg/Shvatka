@@ -27,6 +27,7 @@ jobs:
         run: poetry install --with test
   lint:
     needs: build
+    runs-on: .
     steps:
       - name: Lint with black
         run: poetry run black --check --verbose .

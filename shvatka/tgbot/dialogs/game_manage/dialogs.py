@@ -20,6 +20,7 @@ from .getters import (
     get_game_datetime,
     get_games,
     get_completed_game,
+    get_game_waivers,
 )
 from .handlers import (
     select_my_game,
@@ -62,12 +63,12 @@ games = Dialog(
     ),
     Window(
         Jinja(
-            "Выбрана игра: <b>{{game.name}}</b> с ID {{game.id}}\n"
+            "Выбрана игра: <b>{{game.name}}</b> под номером {{game.number}}\n"
             "которая началась: {{ game.start_at|user_timezone }} "
         ),
         SwitchTo(
             Const("⤴Назад к списку игр"),
-            id="to_my_games",
+            id="to_games",
             state=states.CompletedGamesPanelSG.list,
         ),
         Button(
@@ -75,6 +76,11 @@ games = Dialog(
             id="game_orgs",
             on_click=show_game_orgs,
             when=lambda x, y, z: False,
+        ),
+        SwitchTo(
+            Const("📝Вейверы"),
+            id="to_waivers",
+            state=states.CompletedGamesPanelSG.waivers,
         ),
         Button(
             Const("📦zip-сценарий"),
@@ -84,6 +90,38 @@ games = Dialog(
         state=states.CompletedGamesPanelSG.game,
         preview_data={"game": PREVIEW_GAME},
         getter=get_completed_game,
+    ),
+    Window(
+        Jinja(
+            "Выбрана игра: <b>{{game.name}}</b> с ID {{game.id}}\n"
+            "которая началась: {{ game.start_at|user_timezone }} \n\n"
+            "{% for team, user_waivers in waivers.items() %}"
+            "<b>{{team.name}}</b>:\n"
+            "{% for voted in user_waivers %}"
+            "{{voted.pit | player_emoji}}"
+            "{% if voted.player.get_chat_id() %}"
+            '<a href="tg://user?id={{voted.player.get_chat_id()}}">'
+            "{{voted.player.name_mention}}"
+            "</a>\n"
+            "{% else %}"
+            "{{voted.player.name_mention}}\n"
+            "{% endif %}"
+            "{% endfor %}"
+            "\n\n"
+            "{% endfor %}"
+        ),
+        SwitchTo(
+            Const("⤴Назад к списку игр"),
+            id="to_games",
+            state=states.CompletedGamesPanelSG.list,
+        ),
+        SwitchTo(
+            Const("⤴Назад"),
+            id="to_game",
+            state=states.CompletedGamesPanelSG.game,
+        ),
+        getter=get_game_waivers,
+        state=states.CompletedGamesPanelSG.waivers,
     ),
 )
 

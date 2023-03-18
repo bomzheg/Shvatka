@@ -5,6 +5,7 @@ from aiogram_dialog import DialogManager
 from shvatka.core.models import dto
 from shvatka.core.services import game
 from shvatka.core.services.game import get_authors_games, get_completed_games
+from shvatka.core.services.waiver import get_all_played
 from shvatka.core.utils.datetime_utils import tz_game
 from shvatka.infrastructure.db.dao.holder import HolderDao
 
@@ -26,6 +27,20 @@ async def get_completed_game(dao: HolderDao, dialog_manager: DialogManager, **_)
             id_=game_id,
             dao=dao.game,
         )
+    }
+
+
+async def get_game_waivers(dao: HolderDao, dialog_manager: DialogManager, **_):
+    game_id = (
+        dialog_manager.dialog_data.get("game_id", None) or dialog_manager.start_data["game_id"]
+    )
+    current_game = await game.get_game(
+        id_=game_id,
+        dao=dao.game,
+    )
+    return {
+        "game": current_game,
+        "waivers": await get_all_played(current_game, dao.waiver),
     }
 
 

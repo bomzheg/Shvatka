@@ -27,7 +27,7 @@ jobs:
         run: poetry install --with test
   lint:
     needs: build
-    runs-on: .
+    runs-on: ubuntu-latest
     steps:
       - name: Install poetry
         run: pipx install poetry
@@ -39,7 +39,7 @@ jobs:
         run: poetry run mypy .
   test:
     needs: build
-    runs-on: .
+    runs-on: ubuntu-latest
     steps:
       - name: Install poetry
         run: pipx install poetry

@@ -8,15 +8,13 @@ on:
 
   pull_request:
     branches: [ master ]
-env:
-  POETRY_HOME: /opt/poetry
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
       - name: Install poetry
-        run: pipx install poetry==1.2.0
+        run: pipx install poetry
       - name: Set up Python 3.11
         uses: actions/setup-python@v4
         with:
@@ -27,17 +25,35 @@ jobs:
         run: poetry install --with test
   lint:
     needs: build
-    runs-on: .
+    runs-on: ubuntu-latest
     steps:
-      - name: Lint with black
+      - uses: actions/checkout@v2
+      - name: Install poetry
+        run: pipx install poetry
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+          cache: "poetry"
+          cache-dependency-path: poetry.lock
+      - name: black
         run: poetry run black --check --verbose .
-      - name: Lint with flake8
+      - name: flake8
         run: poetry run flake8 .
-      - name: lint with mypy
+      - name: mypy
         run: poetry run mypy .
   test:
     needs: build
-    runs-on: .
+    runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v2
+      - name: Install poetry
+        run: pipx install poetry
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+          cache: "poetry"
+          cache-dependency-path: poetry.lock
       - name: Test with pytest
         run: poetry run pytest

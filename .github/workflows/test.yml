@@ -8,8 +8,6 @@ on:
 
   pull_request:
     branches: [ master ]
-env:
-  POETRY_HOME: /opt/poetry
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -32,6 +30,12 @@ jobs:
       - uses: actions/checkout@v2
       - name: Install poetry
         run: pipx install poetry
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+          cache: "poetry"
+          cache-dependency-path: poetry.lock
       - name: Lint with black
         run: poetry run black --check --verbose .
       - name: Lint with flake8
@@ -45,5 +49,11 @@ jobs:
       - uses: actions/checkout@v2
       - name: Install poetry
         run: pipx install poetry
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+          cache: "poetry"
+          cache-dependency-path: poetry.lock
       - name: Test with pytest
         run: poetry run pytest

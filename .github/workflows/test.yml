@@ -29,6 +29,8 @@ jobs:
     needs: build
     runs-on: .
     steps:
+      - name: Install poetry
+        run: pipx install poetry
       - name: Lint with black
         run: poetry run black --check --verbose .
       - name: Lint with flake8
@@ -39,5 +41,7 @@ jobs:
     needs: build
     runs-on: .
     steps:
+      - name: Install poetry
+        run: pipx install poetry
       - name: Test with pytest
         run: poetry run pytest

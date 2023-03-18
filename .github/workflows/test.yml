@@ -36,11 +36,11 @@ jobs:
           python-version: '3.11'
           cache: "poetry"
           cache-dependency-path: poetry.lock
-      - name: Lint with black
+      - name: black
         run: poetry run black --check --verbose .
-      - name: Lint with flake8
+      - name: flake8
         run: poetry run flake8 .
-      - name: lint with mypy
+      - name: mypy
         run: poetry run mypy .
   test:
     needs: build

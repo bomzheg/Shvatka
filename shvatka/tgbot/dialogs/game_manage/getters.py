@@ -61,7 +61,7 @@ async def get_game_results(
         id_=game_id,
         dao=dao.game,
     )
-    file_id = await results_painter.get_game_results(game_id, player)
+    file_id = await results_painter.get_game_results(current_game, player)
     return {
         "game": current_game,
         "results.png": MediaAttachment(file_id=MediaId(file_id=file_id), type=ContentType.PHOTO),

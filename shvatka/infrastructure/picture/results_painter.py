@@ -14,10 +14,10 @@ class ResultsPainter:
         self.dao = dao
         self.chat_id = chat_id
 
-    async def get_game_results(self, game_id: int, player: dto.Player) -> str:
+    async def get_game_results(self, game: dto.Game, player: dto.Player) -> str:
         # TODO check it already uploaded
         current_game = await get_full_game(
-            id_=game_id,
+            id_=game.id,
             author=player,
             dao=self.dao.game,
         )

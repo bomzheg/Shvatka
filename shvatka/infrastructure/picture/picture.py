@@ -1,3 +1,4 @@
+import json
 import logging
 from datetime import datetime, timedelta
 from io import BytesIO
@@ -24,7 +25,9 @@ class PlotData(NamedTuple):
 
 def paint_it(stat: dto.GameStat, game: dto.FullGame) -> BinaryIO:
     converted = convert(stat, game)
-    logger.debug("converted \n%s\nto\n%s\n", dcf.dump(stat), dcf.dump(converted))
+    logger.debug(
+        "converted \n%s\nto\n%s\n", json.dumps(dcf.dump(stat)), json.dumps(dcf.dump(converted))
+    )
     plot_it(converted, game)
     result = BytesIO()
     plt.savefig(result, format="png")

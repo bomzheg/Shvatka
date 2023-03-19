@@ -19,6 +19,9 @@ def paint_it(stat: dto.GameStat, game: dto.FullGame):
     for team, data in converted.items():
         plt.plot(*data, label=team)
     ax.legend()
+    plt.grid()
+    plt.ylim([0, len(game.levels)])
+    plt.xlim(game.start_at, max([x for plotdata in converted.values() for x in plotdata.abscissa]) + timedelta(minutes=10))
     plt.show()
 
 

@@ -85,7 +85,7 @@ games = Dialog(
             state=states.CompletedGamesPanelSG.waivers,
         ),
         SwitchTo(
-            Const("Результаты"),
+            Const("📈Результаты"),
             id="to_results",
             state=states.CompletedGamesPanelSG.results,
         ),

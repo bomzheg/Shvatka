@@ -21,7 +21,7 @@ def paint_it(stat: dto.GameStat, game: dto.FullGame):
         plt.plot(*data, label=team)
     ax.legend()
     plt.grid()
-    plt.ylim([0, len(game.levels)])
+    plt.ylim([1, len(game.levels) + 1])
     plt.xlim(game.start_at, max([x for plotdata in converted.values() for x in plotdata.abscissa]) + timedelta(minutes=5))
     plt.xticks(rotation='vertical')
     ax.yaxis.set_major_locator(MultipleLocator(1))
@@ -36,11 +36,11 @@ def convert(stat: dto.GameStat, game: dto.FullGame) -> dict[str, PlotData]:
     for team, level_times in stat.level_times.items():
         abscissa: list[datetime] = []
         ordinate: list[float] = []
-        current_ordinate = 0.0
+        current_ordinate = 1.0
         for level_time_prev, level_time_now in pairwise([None, *level_times]):  # type: dto.LevelTimeOnGame | None, dto.LevelTimeOnGame
             if level_time_prev is None:
                 abscissa.append(game.start_at)
-                current_ordinate = level_time_now.level_number
+                current_ordinate = level_time_now.level_number + 1
                 ordinate.append(current_ordinate)
                 continue
             minutes_to_level = (level_time_now.start_at - level_time_prev.start_at).seconds / 60
@@ -52,8 +52,8 @@ def convert(stat: dto.GameStat, game: dto.FullGame) -> dict[str, PlotData]:
                 add_next(abscissa, ordinate, current_ordinate, level_time_prev.start_at + timedelta(minutes=hint.time), current_ordinate + step_per_hint)
                 current_ordinate += step_per_hint
 
-            add_next(abscissa, ordinate, current_ordinate, level_time_now.start_at, level_time_now.level_number + 1)
-            current_ordinate = level_time_now.level_number + 1
+            add_next(abscissa, ordinate, current_ordinate, level_time_now.start_at, level_time_now.level_number + 1 + 1)
+            current_ordinate = level_time_now.level_number + 1 + 1
         result[team.name] = PlotData(abscissa, ordinate)
     return result
 
@@ -84,7 +84,7 @@ if __name__ == '__main__':
     test_game = dto.FullGame(
         id=10,
         author=author,
-        name="happy game",
+        name="Funny game",
         status=enums.GameStatus.complete,
         manage_token="",
         start_at=datetime.fromisoformat("2023-03-18 23:00:00Z"),

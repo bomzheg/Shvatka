@@ -7,7 +7,6 @@ from aiogram_dialog.api.entities import MediaAttachment, MediaId
 from shvatka.core.models import dto
 from shvatka.core.services import game
 from shvatka.core.services.game import get_authors_games, get_completed_games
-from shvatka.core.services.game_stat import get_game_stat
 from shvatka.core.services.waiver import get_all_played
 from shvatka.core.utils.datetime_utils import tz_game
 from shvatka.infrastructure.db.dao.holder import HolderDao
@@ -58,16 +57,14 @@ async def get_game_results(
     game_id = (
         dialog_manager.dialog_data.get("game_id", None) or dialog_manager.start_data["game_id"]
     )
-    current_game = await game.get_full_game(
+    current_game = await game.get_game(
         id_=game_id,
-        author=player,
         dao=dao.game,
     )
-    game_stat = await get_game_stat(current_game, player, dao.game_stat)
-    data = await results_painter.get_game_results(game_stat, current_game)
+    file_id = await results_painter.get_game_results(game_id, player)
     return {
         "game": current_game,
-        "results.png": MediaAttachment(file_id=MediaId(file_id=data), type=ContentType.PHOTO),
+        "results.png": MediaAttachment(file_id=MediaId(file_id=file_id), type=ContentType.PHOTO),
     }
 
 

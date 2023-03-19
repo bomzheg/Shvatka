@@ -43,7 +43,7 @@ def plot_it(converted: dict[str, PlotData], game: dto.FullGame):
     ax.yaxis.set_major_locator(MultipleLocator(1))
     ax.set_ylabel("Уровень")
     ax.set_xlabel("Время")
-    ax.xaxis.set_major_formatter(mdates.DateFormatter('%H:%M', tz=tz_game))
+    ax.xaxis.set_major_formatter(mdates.DateFormatter("%H:%M", tz=tz_game))
     ax.set_title(game.name)
 
 

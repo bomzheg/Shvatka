@@ -1,8 +1,14 @@
 from datetime import datetime, timedelta
+from typing import NamedTuple
 
 import matplotlib.pyplot as plt
 
 from shvatka.core.models import dto, enums
+
+
+class PlotData(NamedTuple):
+    abscissa: list[datetime]
+    ordinate: list[float]
 
 
 def paint_it(stat: dto.GameStat):
@@ -13,16 +19,16 @@ def paint_it(stat: dto.GameStat):
     plt.show()
 
 
-def convert(stat: dto.GameStat) -> dict[str, tuple[list[datetime], list[float]]]:
+def convert(stat: dto.GameStat) -> dict[str, PlotData]:
     result = {}
     for team, level_times in stat.level_times.items():
-        team_result = ([], [])
+        abscissa, ordinate = [], []
         for level_time in level_times:
-            team_result[0].append(level_time.start_at - timedelta(seconds=1))
-            team_result[1].append(level_time.level_number - 1)
-            team_result[0].append(level_time.start_at)
-            team_result[1].append(level_time.level_number)
-        result[team.name] = (team_result[0][1:], team_result[1][1:])
+            abscissa.append(level_time.start_at - timedelta(seconds=1))
+            ordinate.append(level_time.level_number - 1)
+            abscissa.append(level_time.start_at)
+            ordinate.append(level_time.level_number)
+        result[team.name] = PlotData(abscissa[1:], ordinate[1:])
     return result
 
 

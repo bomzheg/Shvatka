@@ -18,13 +18,14 @@ slytherin = dto.Team(
     is_dummy=False,
 )
 author = dto.Player(id=100, can_be_author=True, is_dummy=False)
+GAME_START_EXAMPLE = datetime.fromisoformat("2023-03-18 23:00:00Z")
 game_example = dto.FullGame(
     id=10,
     author=author,
     name="Funny game",
     status=enums.GameStatus.complete,
     manage_token="",
-    start_at=datetime.fromisoformat("2023-03-18 23:00:00Z"),
+    start_at=GAME_START_EXAMPLE,
     number=20,
     published_channel_id=None,
     levels=[
@@ -282,7 +283,7 @@ game_stat_example = dto.GameStat(
                 game=game_example,
                 team=gryffindor,
                 level_number=0,
-                start_at=game_example.start_at,
+                start_at=GAME_START_EXAMPLE,
                 is_finished=False,
             ),
             dto.LevelTimeOnGame(
@@ -290,7 +291,7 @@ game_stat_example = dto.GameStat(
                 game=game_example,
                 team=gryffindor,
                 level_number=0,
-                start_at=game_example.start_at + timedelta(minutes=40),
+                start_at=GAME_START_EXAMPLE + timedelta(minutes=40),
                 is_finished=False,
             ),
             dto.LevelTimeOnGame(
@@ -298,7 +299,7 @@ game_stat_example = dto.GameStat(
                 game=game_example,
                 team=gryffindor,
                 level_number=1,
-                start_at=game_example.start_at + timedelta(minutes=60),
+                start_at=GAME_START_EXAMPLE + timedelta(minutes=60),
                 is_finished=False,
             ),
             dto.LevelTimeOnGame(
@@ -306,7 +307,7 @@ game_stat_example = dto.GameStat(
                 game=game_example,
                 team=gryffindor,
                 level_number=2,
-                start_at=game_example.start_at + timedelta(minutes=90),
+                start_at=GAME_START_EXAMPLE + timedelta(minutes=90),
                 is_finished=False,
             ),
             dto.LevelTimeOnGame(
@@ -314,7 +315,7 @@ game_stat_example = dto.GameStat(
                 game=game_example,
                 team=gryffindor,
                 level_number=3,
-                start_at=game_example.start_at + timedelta(minutes=120),
+                start_at=GAME_START_EXAMPLE + timedelta(minutes=120),
                 is_finished=True,
             ),
         ],
@@ -324,7 +325,7 @@ game_stat_example = dto.GameStat(
                 game=game_example,
                 team=slytherin,
                 level_number=0,
-                start_at=game_example.start_at,
+                start_at=GAME_START_EXAMPLE,
                 is_finished=False,
             ),
             dto.LevelTimeOnGame(
@@ -332,7 +333,7 @@ game_stat_example = dto.GameStat(
                 game=game_example,
                 team=slytherin,
                 level_number=0,
-                start_at=game_example.start_at + timedelta(minutes=35),
+                start_at=GAME_START_EXAMPLE + timedelta(minutes=35),
                 is_finished=False,
             ),
             dto.LevelTimeOnGame(
@@ -340,7 +341,7 @@ game_stat_example = dto.GameStat(
                 game=game_example,
                 team=slytherin,
                 level_number=1,
-                start_at=game_example.start_at + timedelta(minutes=53),
+                start_at=GAME_START_EXAMPLE + timedelta(minutes=53),
                 is_finished=False,
             ),
             dto.LevelTimeOnGame(
@@ -348,7 +349,7 @@ game_stat_example = dto.GameStat(
                 game=game_example,
                 team=slytherin,
                 level_number=2,
-                start_at=game_example.start_at + timedelta(minutes=88),
+                start_at=GAME_START_EXAMPLE + timedelta(minutes=88),
                 is_finished=False,
             ),
             dto.LevelTimeOnGame(
@@ -356,7 +357,7 @@ game_stat_example = dto.GameStat(
                 game=game_example,
                 team=slytherin,
                 level_number=3,
-                start_at=game_example.start_at + timedelta(minutes=140),
+                start_at=GAME_START_EXAMPLE + timedelta(minutes=140),
                 is_finished=True,
             ),
         ],

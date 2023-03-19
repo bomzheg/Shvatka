@@ -1,13 +1,17 @@
 from datetime import datetime, time, date
 
+from aiogram.enums import ContentType
 from aiogram_dialog import DialogManager
+from aiogram_dialog.api.entities import MediaAttachment, MediaId
 
 from shvatka.core.models import dto
 from shvatka.core.services import game
 from shvatka.core.services.game import get_authors_games, get_completed_games
+from shvatka.core.services.game_stat import get_game_stat
 from shvatka.core.services.waiver import get_all_played
 from shvatka.core.utils.datetime_utils import tz_game
 from shvatka.infrastructure.db.dao.holder import HolderDao
+from shvatka.infrastructure.picture import ResultsPainter
 
 
 async def get_my_games(dao: HolderDao, player: dto.Player, **_) -> dict[str, list[dto.Game]]:
@@ -41,6 +45,29 @@ async def get_game_waivers(dao: HolderDao, dialog_manager: DialogManager, **_):
     return {
         "game": current_game,
         "waivers": await get_all_played(current_game, dao.waiver),
+    }
+
+
+async def get_game_results(
+    dao: HolderDao,
+    dialog_manager: DialogManager,
+    player: dto.Player,
+    results_painter: ResultsPainter,
+    **_,
+):
+    game_id = (
+        dialog_manager.dialog_data.get("game_id", None) or dialog_manager.start_data["game_id"]
+    )
+    current_game = await game.get_full_game(
+        id_=game_id,
+        author=player,
+        dao=dao.game,
+    )
+    game_stat = await get_game_stat(current_game, player, dao.game_stat)
+    data = await results_painter.get_game_results(game_stat, current_game)
+    return {
+        "game": current_game,
+        "results.png": MediaAttachment(file_id=MediaId(file_id=data), type=ContentType.PHOTO),
     }
 
 

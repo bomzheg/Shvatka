@@ -82,6 +82,7 @@ class CompletedGamesPanelSG(StatesGroup):
     list = State()
     game = State()
     waivers = State()
+    results = State()
 
 
 class TeamsSg(StatesGroup):

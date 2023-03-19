@@ -1,15 +1,20 @@
+import logging
 from datetime import datetime, timedelta
 from io import BytesIO
 from itertools import pairwise
 from typing import NamedTuple, BinaryIO
 
 import matplotlib.dates as mdates
+from dataclass_factory import Factory
 from matplotlib import pyplot as plt
 from matplotlib.ticker import MultipleLocator
 
 from shvatka.common.data_examples import game_stat_example, game_example
 from shvatka.core.models import dto
 from shvatka.core.utils.datetime_utils import tz_game
+
+logger = logging.getLogger(__name__)
+dcf = Factory()
 
 
 class PlotData(NamedTuple):
@@ -19,6 +24,7 @@ class PlotData(NamedTuple):
 
 def paint_it(stat: dto.GameStat, game: dto.FullGame) -> BinaryIO:
     converted = convert(stat, game)
+    logger.debug("converted \n%s\nto\n%s\n", dcf.dump(stat), dcf.dump(converted))
     plot_it(converted, game)
     result = BytesIO()
     plt.savefig(result, format="png")

@@ -21,7 +21,8 @@ def paint_it(stat: dto.GameStat, game: dto.FullGame):
     ax.legend()
     plt.grid()
     plt.ylim([0, len(game.levels)])
-    plt.xlim(game.start_at, max([x for plotdata in converted.values() for x in plotdata.abscissa]) + timedelta(minutes=10))
+    plt.xlim(game.start_at, max([x for plotdata in converted.values() for x in plotdata.abscissa]) + timedelta(minutes=5))
+    plt.xticks(rotation='vertical')
     plt.show()
 
 

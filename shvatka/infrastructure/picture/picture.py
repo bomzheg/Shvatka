@@ -3,11 +3,13 @@ from io import BytesIO
 from itertools import pairwise
 from typing import NamedTuple, BinaryIO
 
+import matplotlib.dates as mdates
 from matplotlib import pyplot as plt
 from matplotlib.ticker import MultipleLocator
 
 from shvatka.common.data_examples import game_stat_example, game_example
 from shvatka.core.models import dto
+from shvatka.core.utils.datetime_utils import tz_game
 
 
 class PlotData(NamedTuple):
@@ -41,6 +43,7 @@ def plot_it(converted: dict[str, PlotData], game: dto.FullGame):
     ax.yaxis.set_major_locator(MultipleLocator(1))
     ax.set_ylabel("Уровень")
     ax.set_xlabel("Время")
+    ax.xaxis.set_major_formatter(mdates.DateFormatter('%H:%M', tz=tz_game))
     ax.set_title(game.name)
 
 

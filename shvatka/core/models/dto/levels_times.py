@@ -24,10 +24,19 @@ class LevelTime:
             is_finished=is_finished,
         )
 
+    def __repr__(self) -> str:
+        return (
+            f"<LevelTime team={self.team} level_number={self.level_number} "
+            f"at={self.start_at.isoformat()}>"
+        )
+
 
 @dataclass
 class LevelTimeOnGame(LevelTime):
     is_finished: bool
+
+    def __repr__(self):
+        return super().__repr__()
 
 
 @dataclass

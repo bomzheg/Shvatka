@@ -31,6 +31,9 @@ class Team:
     def __hash__(self):
         return hash(self.id)
 
+    def __repr__(self) -> str:
+        return f"<Team id={self.id} name={self.name}>"
+
     def get_chat_id(self) -> int | None:
         if self.is_dummy:
             return None

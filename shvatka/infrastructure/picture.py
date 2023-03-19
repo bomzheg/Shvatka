@@ -1,12 +1,13 @@
 from datetime import datetime, timedelta
+from io import BytesIO
 from itertools import pairwise
-from typing import NamedTuple
+from typing import NamedTuple, BinaryIO
 
-import matplotlib.pyplot as plt
+from matplotlib import pyplot as plt
 from matplotlib.ticker import MultipleLocator
 
-from shvatka.core.models import dto, enums
-from shvatka.core.models.dto import scn
+from shvatka.common.data_examples import game_stat_example, game_example
+from shvatka.core.models import dto
 
 
 class PlotData(NamedTuple):
@@ -14,21 +15,32 @@ class PlotData(NamedTuple):
     ordinate: list[float]
 
 
-def paint_it(stat: dto.GameStat, game: dto.FullGame):
+def paint_it(stat: dto.GameStat, game: dto.FullGame) -> BinaryIO:
     converted = convert(stat, game)
+    plot_it(converted, game)
+    result = BytesIO()
+    plt.savefig(result, format="png")
+    plt.close()
+    result.seek(0)
+    return result
+
+
+def plot_it(converted: dict[str, PlotData], game: dto.FullGame):
     fig, ax = plt.subplots()
     for team, data in converted.items():
         plt.plot(*data, label=team)
     ax.legend()
     plt.grid()
     plt.ylim([1, len(game.levels) + 1])
-    plt.xlim(game.start_at, max([x for plotdata in converted.values() for x in plotdata.abscissa]) + timedelta(minutes=5))
+    plt.xlim(
+        game.start_at,
+        max([x for plotdata in converted.values() for x in plotdata.abscissa]) + timedelta(minutes=5),
+    )
     plt.xticks(rotation='vertical')
     ax.yaxis.set_major_locator(MultipleLocator(1))
     ax.set_ylabel("Уровень")
     ax.set_xlabel("Время")
     ax.set_title(game.name)
-    plt.show()
 
 
 def convert(stat: dto.GameStat, game: dto.FullGame) -> dict[str, PlotData]:
@@ -66,293 +78,5 @@ def add_next(abscissa: list[datetime], ordinate: list[float], before: float, at:
 
 
 if __name__ == '__main__':
-    gryffindor = dto.Team(
-        id=1,
-        name="Gryffindor",
-        captain=None,
-        description=None,
-        is_dummy=False,
-    )
-    slytherin = dto.Team(
-        id=2,
-        name="Slytherin",
-        captain=None,
-        description=None,
-        is_dummy=False,
-    )
-    author = dto.Player(id=100, can_be_author=True, is_dummy=False)
-    test_game = dto.FullGame(
-        id=10,
-        author=author,
-        name="Funny game",
-        status=enums.GameStatus.complete,
-        manage_token="",
-        start_at=datetime.fromisoformat("2023-03-18 23:00:00Z"),
-        number=20,
-        published_channel_id=None,
-        levels=[
-            dto.Level(
-                db_id=100,
-                author=author,
-                name_id="level_100",
-                game_id=10,
-                number_in_game=0,
-                scenario=scn.LevelScenario(
-                    id="level_100",
-                    keys={"SH1"},
-                    time_hints=[
-                        scn.TimeHint(
-                            time=0,
-                            hint=[
-                                scn.TextHint(
-                                    text="level_100_0",
-                                ),
-                            ],
-                        ),
-                        scn.TimeHint(
-                            time=10,
-                            hint=[
-                                scn.TextHint(
-                                    text="level_100_10",
-                                ),
-                            ],
-                        ),
-                        scn.TimeHint(
-                            time=20,
-                            hint=[
-                                scn.TextHint(
-                                    text="level_100_20",
-                                ),
-                            ],
-                        ),
-                        scn.TimeHint(
-                            time=30,
-                            hint=[
-                                scn.TextHint(
-                                    text="level_100_20",
-                                ),
-                            ],
-                        ),
-                        scn.TimeHint(
-                            time=40,
-                            hint=[
-                                scn.TextHint(
-                                    text="level_100_20",
-                                ),
-                            ],
-                        ),
-                        scn.TimeHint(
-                            time=60,
-                            hint=[
-                                scn.TextHint(
-                                    text="level_100_20",
-                                ),
-                            ],
-                        ),
-                    ],
-                ),
-            ),
-            dto.Level(
-                db_id=101,
-                author=author,
-                name_id="level_101",
-                game_id=10,
-                number_in_game=1,
-                scenario=scn.LevelScenario(
-                    id="level_101",
-                    keys={"SH2"},
-                    time_hints=[
-                        scn.TimeHint(
-                            time=0,
-                            hint=[
-                                scn.TextHint(
-                                    text="level_101_0",
-                                ),
-                            ],
-                        ),
-                        scn.TimeHint(
-                            time=10,
-                            hint=[
-                                scn.TextHint(
-                                    text="level_101_10",
-                                ),
-                            ],
-                        ),
-                        scn.TimeHint(
-                            time=20,
-                            hint=[
-                                scn.TextHint(
-                                    text="level_101_20",
-                                ),
-                            ],
-                        ),
-                        scn.TimeHint(
-                            time=30,
-                            hint=[
-                                scn.TextHint(
-                                    text="level_101_20",
-                                ),
-                            ],
-                        ),
-                        scn.TimeHint(
-                            time=40,
-                            hint=[
-                                scn.TextHint(
-                                    text="level_101_20",
-                                ),
-                            ],
-                        ),
-                        scn.TimeHint(
-                            time=60,
-                            hint=[
-                                scn.TextHint(
-                                    text="level_101_20",
-                                ),
-                            ],
-                        ),
-                    ],
-                ),
-            ),
-            dto.Level(
-                db_id=102,
-                author=author,
-                name_id="level_102",
-                game_id=10,
-                number_in_game=0,
-                scenario=scn.LevelScenario(
-                    id="level_102",
-                    keys={"SH3"},
-                    time_hints=[
-                        scn.TimeHint(
-                            time=0,
-                            hint=[
-                                scn.TextHint(
-                                    text="level_102_0",
-                                ),
-                            ],
-                        ),
-                        scn.TimeHint(
-                            time=10,
-                            hint=[
-                                scn.TextHint(
-                                    text="level_102_10",
-                                ),
-                            ],
-                        ),
-                        scn.TimeHint(
-                            time=20,
-                            hint=[
-                                scn.TextHint(
-                                    text="level_102_20",
-                                ),
-                            ],
-                        ),
-                        scn.TimeHint(
-                            time=30,
-                            hint=[
-                                scn.TextHint(
-                                    text="level_102_20",
-                                ),
-                            ],
-                        ),
-                        scn.TimeHint(
-                            time=40,
-                            hint=[
-                                scn.TextHint(
-                                    text="level_102_20",
-                                ),
-                            ],
-                        ),
-                        scn.TimeHint(
-                            time=60,
-                            hint=[
-                                scn.TextHint(
-                                    text="level_102_20",
-                                ),
-                            ],
-                        ),
-                    ],
-                ),
-            ),
-            dto.Level(
-                db_id=103,
-                author=author,
-                name_id="level_103",
-                game_id=10,
-                number_in_game=0,
-                scenario=scn.LevelScenario(
-                    id="level_103",
-                    keys={"SH4"},
-                    time_hints=[
-                        scn.TimeHint(
-                            time=0,
-                            hint=[
-                                scn.TextHint(
-                                    text="level_103_0",
-                                ),
-                            ],
-                        ),
-                        scn.TimeHint(
-                            time=10,
-                            hint=[
-                                scn.TextHint(
-                                    text="level_103_10",
-                                ),
-                            ],
-                        ),
-                        scn.TimeHint(
-                            time=20,
-                            hint=[
-                                scn.TextHint(
-                                    text="level_103_20",
-                                ),
-                            ],
-                        ),
-                        scn.TimeHint(
-                            time=30,
-                            hint=[
-                                scn.TextHint(
-                                    text="level_103_20",
-                                ),
-                            ],
-                        ),
-                        scn.TimeHint(
-                            time=40,
-                            hint=[
-                                scn.TextHint(
-                                    text="level_103_20",
-                                ),
-                            ],
-                        ),
-                        scn.TimeHint(
-                            time=60,
-                            hint=[
-                                scn.TextHint(
-                                    text="level_103_20",
-                                ),
-                            ],
-                        ),
-                    ],
-                ),
-            ),
-        ],
-    )
-    test_data = dto.GameStat(
-        level_times={
-            gryffindor: [
-                dto.LevelTimeOnGame(id=1, game=test_game, team=gryffindor, level_number=0, start_at=test_game.start_at, is_finished=False,),
-                dto.LevelTimeOnGame(id=2, game=test_game, team=gryffindor, level_number=0, start_at=test_game.start_at + timedelta(minutes=40), is_finished=False,),
-                dto.LevelTimeOnGame(id=3, game=test_game, team=gryffindor, level_number=1, start_at=test_game.start_at + timedelta(minutes=60), is_finished=False,),
-                dto.LevelTimeOnGame(id=4, game=test_game, team=gryffindor, level_number=2, start_at=test_game.start_at + timedelta(minutes=90), is_finished=False,),
-                dto.LevelTimeOnGame(id=5, game=test_game, team=gryffindor, level_number=3, start_at=test_game.start_at + timedelta(minutes=120), is_finished=True,),
-            ],
-            slytherin: [
-                dto.LevelTimeOnGame(id=5, game=test_game, team=slytherin, level_number=0, start_at=test_game.start_at, is_finished=False,),
-                dto.LevelTimeOnGame(id=6, game=test_game, team=slytherin, level_number=0, start_at=test_game.start_at + timedelta(minutes=35), is_finished=False,),
-                dto.LevelTimeOnGame(id=7, game=test_game, team=slytherin, level_number=1, start_at=test_game.start_at + timedelta(minutes=53), is_finished=False,),
-                dto.LevelTimeOnGame(id=8, game=test_game, team=slytherin, level_number=2, start_at=test_game.start_at + timedelta(minutes=88), is_finished=False,),
-                dto.LevelTimeOnGame(id=9, game=test_game, team=slytherin, level_number=3, start_at=test_game.start_at + timedelta(minutes=140), is_finished=True,),
-            ],
-        }
-    )
-    paint_it(test_data, test_game)
+    plot_it(convert(game_stat_example, game_example), game_example)
+    plt.show()

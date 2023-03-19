@@ -3,6 +3,7 @@ from itertools import pairwise
 from typing import NamedTuple
 
 import matplotlib.pyplot as plt
+from matplotlib.ticker import MultipleLocator
 
 from shvatka.core.models import dto, enums
 from shvatka.core.models.dto import scn
@@ -23,6 +24,10 @@ def paint_it(stat: dto.GameStat, game: dto.FullGame):
     plt.ylim([0, len(game.levels)])
     plt.xlim(game.start_at, max([x for plotdata in converted.values() for x in plotdata.abscissa]) + timedelta(minutes=5))
     plt.xticks(rotation='vertical')
+    ax.yaxis.set_major_locator(MultipleLocator(1))
+    ax.set_ylabel("Уровень")
+    ax.set_xlabel("Время")
+    ax.set_title(game.name)
     plt.show()
 
 

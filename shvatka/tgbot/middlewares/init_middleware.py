@@ -12,6 +12,7 @@ from shvatka.core.utils.key_checker_lock import KeyCheckerFactory
 from shvatka.infrastructure.clients.file_gateway import BotFileGateway
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.infrastructure.db.dao.memory.level_testing import LevelTestingData
+from shvatka.infrastructure.picture.results_painter import ResultsPainter
 from shvatka.tgbot.username_resolver.user_getter import UserGetter
 from shvatka.tgbot.utils.data import MiddlewareData
 from shvatka.tgbot.views.hint_factory.hint_parser import HintParser
@@ -66,6 +67,11 @@ class InitMiddleware(BaseMiddleware):
                 file_storage=self.file_storage,
                 hint_parser=data["hint_parser"],
                 tech_chat_id=data["config"].log_chat,
+            )
+            data["results_painter"] = ResultsPainter(
+                data["bot"],
+                holder_dao,
+                data["config"].log_chat,
             )
             result = await handler(event, data)
             del data["dao"]

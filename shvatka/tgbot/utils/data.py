@@ -15,6 +15,7 @@ from shvatka.core.interfaces.scheduler import Scheduler
 from shvatka.core.models import dto
 from shvatka.core.utils.key_checker_lock import KeyCheckerFactory
 from shvatka.infrastructure.db.dao.holder import HolderDao
+from shvatka.infrastructure.picture.results_painter import ResultsPainter
 from shvatka.tgbot.config.models.bot import BotConfig
 from shvatka.tgbot.username_resolver.user_getter import UserGetter
 from shvatka.tgbot.views.hint_factory.hint_parser import HintParser
@@ -56,3 +57,4 @@ class MiddlewareData(DialogMiddlewareData, total=False):
     player: dto.Player | None
     game: dto.Game | None
     team_player: dto.FullTeamPlayer | None
+    results_painter: ResultsPainter

@@ -20,8 +20,9 @@ async def get_typed_keys(
 
 async def get_game_stat(game: dto.Game, player: dto.Player, dao: GameStatDao) -> dto.GameStat:
     """return sorted by level number grouped by teams stat"""
-    org = await get_by_player(game=game, player=player, dao=dao)
-    check_can_spy(org)
+    if not game.is_complete():
+        org = await get_by_player(game=game, player=player, dao=dao)
+        check_can_spy(org)
     level_times = await dao.get_game_level_times(game)
     levels_count = await dao.get_max_level_number(game)
     result: dict[dto.Team, list[dto.LevelTimeOnGame]] = {}

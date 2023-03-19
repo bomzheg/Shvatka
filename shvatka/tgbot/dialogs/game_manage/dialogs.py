@@ -10,6 +10,7 @@ from aiogram_dialog.widgets.kbd import (
     Cancel,
     Start,
 )
+from aiogram_dialog.widgets.media import DynamicMedia
 from aiogram_dialog.widgets.text import Const, Format, Case, Jinja
 
 from shvatka.tgbot import states
@@ -21,6 +22,7 @@ from .getters import (
     get_games,
     get_completed_game,
     get_game_waivers,
+    get_game_results,
 )
 from .handlers import (
     select_my_game,
@@ -82,6 +84,11 @@ games = Dialog(
             id="to_waivers",
             state=states.CompletedGamesPanelSG.waivers,
         ),
+        SwitchTo(
+            Const("Результаты"),
+            id="to_results",
+            state=states.CompletedGamesPanelSG.results,
+        ),
         Button(
             Const("📦zip-сценарий"),
             id="game_zip_scn",
@@ -122,6 +129,21 @@ games = Dialog(
         ),
         getter=get_game_waivers,
         state=states.CompletedGamesPanelSG.waivers,
+    ),
+    Window(
+        SwitchTo(
+            Const("⤴Назад к списку игр"),
+            id="to_games",
+            state=states.CompletedGamesPanelSG.list,
+        ),
+        SwitchTo(
+            Const("⤴Назад"),
+            id="to_game",
+            state=states.CompletedGamesPanelSG.game,
+        ),
+        DynamicMedia(selector="results.png"),
+        getter=get_game_results,
+        state=states.CompletedGamesPanelSG.results,
     ),
 )
 

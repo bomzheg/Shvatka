@@ -77,7 +77,7 @@ games = Dialog(
             Const("👥Организаторы"),
             id="game_orgs",
             on_click=show_game_orgs,
-            when=lambda x, y, z: False,
+            when=~F["game"].author.is_dummy,
         ),
         SwitchTo(
             Const("📝Вейверы"),

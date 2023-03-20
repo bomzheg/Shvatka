@@ -23,7 +23,7 @@ services:
   migrations:
     profiles:
       - "migrate"
-    restart: no
+    restart: "no"
     image: bomzheg/shvatka:latest
     volumes:
       - type: "bind"

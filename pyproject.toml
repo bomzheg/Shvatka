@@ -42,7 +42,6 @@ optional = true
 [tool.poetry.group.dev.dependencies]
 aiogram_dialog = {extras = ["tools"],version = "^2.0.0b12"}
 black = {version = "^22.12.0", extras = ["d"]}
-matplotlib = "^3.7"
 
 [tool.poetry.group.test]
 optional = true

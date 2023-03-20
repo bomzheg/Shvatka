@@ -30,6 +30,10 @@ services:
         source: "./config/"
         target: "/code/shvatka/config/"
         read_only: true
+      - type: "bind"
+        source: "./alembic.ini"
+        target: "/code/shvatka/alembic.ini"
+        read_only: true
     extra_hosts:
       - "host.docker.internal:host-gateway"
     entrypoint: ["alembic", "upgrade", "head"]

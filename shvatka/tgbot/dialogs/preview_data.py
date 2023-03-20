@@ -25,7 +25,11 @@ PREVIEW_GAME = dto.Game(
     start_at=datetime.now(tz=tz_utc),
     status=GameStatus.getting_waivers,
     manage_token="1",
-    published_channel_id=-100123435,
+    results=dto.GameResults(
+        published_chanel_id=-100123435,
+        results_picture_file_id=None,
+        keys_url=None,
+    ),
     number=1,
 )
 TIMES_PRESET = [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60]

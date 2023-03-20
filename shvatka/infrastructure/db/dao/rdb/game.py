@@ -194,6 +194,11 @@ class GameDao(BaseDAO[models.Game]):
         result = await self.session.scalar(select(func.max(models.Game.number)))
         return result or 0
 
+    async def set_keys_url(self, game: dto.Game, url: str):
+        await self.session.execute(
+            update(models.Game).where(models.Game.id == game.id).values(keys_url=url)
+        )
+
     async def is_author_game_by_name(self, name: str, author: dto.Player) -> bool:
         result = await self._get_game_by_name(name)
         if result is None:

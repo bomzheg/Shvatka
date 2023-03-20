@@ -27,7 +27,11 @@ game_example = dto.FullGame(
     manage_token="",
     start_at=GAME_START_EXAMPLE,
     number=20,
-    published_channel_id=None,
+    results=dto.GameResults(
+        published_chanel_id=None,
+        results_picture_file_id=None,
+        keys_url=None,
+    ),
     levels=[
         dto.Level(
             db_id=100,

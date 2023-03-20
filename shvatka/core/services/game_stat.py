@@ -9,8 +9,9 @@ async def get_typed_keys(
     player: dto.Player,
     dao: TypedKeyGetter,
 ) -> dict[dto.Team, list[dto.KeyTime]]:
-    org = await get_by_player(game=game, player=player, dao=dao)
-    check_can_see_log_keys(org)
+    if not game.is_complete():
+        org = await get_by_player(game=game, player=player, dao=dao)
+        check_can_see_log_keys(org)
     keys = await dao.get_typed_keys(game)
     grouped: dict[dto.Team, list[dto.KeyTime]] = {}
     for key in keys:

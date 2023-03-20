@@ -64,12 +64,14 @@ class Game(Base):
         foreign_keys="Waiver.game_id",
     )
     start_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
-    published_channel_id: Mapped[int | None]
-    number: Mapped[int | None]
     manage_token: Mapped[str] = mapped_column(
         Text,
         default=lambda: secrets.token_urlsafe(_TOKEN_LEN * 3 // 4),
     )
+    number: Mapped[int | None]
+    published_channel_id: Mapped[int | None] = mapped_column(nullable=True)
+    results_picture_file_id: Mapped[str | None] = mapped_column(nullable=True)
+    keys_url: Mapped[str | None] = mapped_column(nullable=True)
 
     __table_args__ = (UniqueConstraint("author_id", "name"),)
 
@@ -80,9 +82,13 @@ class Game(Base):
             name=self.name,
             status=self.status,
             start_at=self.start_at,
-            published_channel_id=self.published_channel_id,
             manage_token=self.manage_token,
             number=self.number,
+            results=dto.GameResults(
+                published_chanel_id=self.published_channel_id,
+                results_picture_file_id=self.results_picture_file_id,
+                keys_url=self.keys_url,
+            ),
         )
 
     def to_full_dto(self, author: dto.Player, levels: list[dto.Level]) -> dto.FullGame:

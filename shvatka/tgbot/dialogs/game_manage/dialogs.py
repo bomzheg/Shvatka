@@ -23,6 +23,7 @@ from .getters import (
     get_completed_game,
     get_game_waivers,
     get_game_results,
+    get_game_keys,
 )
 from .handlers import (
     select_my_game,
@@ -89,6 +90,11 @@ games = Dialog(
             id="to_results",
             state=states.CompletedGamesPanelSG.results,
         ),
+        SwitchTo(
+            Const("🔑Лог ключей"),
+            id="to_keys",
+            state=states.CompletedGamesPanelSG.keys,
+        ),
         Button(
             Const("📦zip-сценарий"),
             id="game_zip_scn",
@@ -100,8 +106,8 @@ games = Dialog(
     ),
     Window(
         Jinja(
-            "Выбрана игра: <b>{{game.name}}</b> с ID {{game.id}}\n"
-            "которая началась: {{ game.start_at|user_timezone }} \n\n"
+            "Выбрана игра №{{game.number}} <b>{{game.name}}</b>\n"
+            "которая началась: {{ game.start_at|user_timezone }} "
             "{% for team, user_waivers in waivers.items() %}"
             "<b>{{team.name}}</b>:\n"
             "{% for voted in user_waivers %}"
@@ -131,6 +137,11 @@ games = Dialog(
         state=states.CompletedGamesPanelSG.waivers,
     ),
     Window(
+        DynamicMedia(selector="results.png"),
+        Jinja(
+            "Выбрана игра №{{game.number}} <b>{{game.name}}</b>\n"
+            "которая началась: {{ game.start_at|user_timezone }} "
+        ),
         SwitchTo(
             Const("⤴Назад к списку игр"),
             id="to_games",
@@ -141,9 +152,32 @@ games = Dialog(
             id="to_game",
             state=states.CompletedGamesPanelSG.game,
         ),
-        DynamicMedia(selector="results.png"),
         getter=get_game_results,
         state=states.CompletedGamesPanelSG.results,
+    ),
+    Window(
+        Jinja(
+            "Лог ключей \n"
+            "для игры #{{game.number}} <b>{{game.name}}</b> "
+            "(началась в {{game.start_at|user_timezone}}) \n"
+            "{% if key_link %}"
+            'доступен <a href="{{key_link}}">по ссылке</a>'
+            "{% else %}"
+            "почему-то недоступен"
+            "{% endif %}"
+        ),
+        SwitchTo(
+            Const("⤴Назад к списку игр"),
+            id="to_games",
+            state=states.CompletedGamesPanelSG.list,
+        ),
+        SwitchTo(
+            Const("🔙Назад"),
+            id="to_game",
+            state=states.CompletedGamesPanelSG.game,
+        ),
+        getter=get_game_keys,
+        state=states.CompletedGamesPanelSG.keys,
     ),
 )
 

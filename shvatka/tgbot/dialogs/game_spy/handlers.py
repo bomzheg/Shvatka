@@ -3,9 +3,8 @@ from aiogram_dialog import DialogManager
 from aiogram_dialog.widgets.kbd import Button
 
 from shvatka.core.models import dto
-from shvatka.core.services.game_stat import get_typed_keys
 from shvatka.infrastructure.db.dao.holder import HolderDao
-from shvatka.tgbot.views.keys import render_log_keys
+from shvatka.tgbot.views.keys import create_keys_page
 from shvatka.tgbot.views.telegraph import Telegraph
 
 
@@ -15,10 +14,5 @@ async def keys_handler(c: CallbackQuery, widget: Button, manager: DialogManager)
     game: dto.Game = manager.middleware_data["game"]
     dao: HolderDao = manager.middleware_data["dao"]
     player: dto.Player = manager.middleware_data["player"]
-    keys = await get_typed_keys(game=game, player=player, dao=dao.key_time)
-    text = render_log_keys(keys)
-    page = await telegraph.create_page(
-        title=f"Лог ключей игры {game.name}",
-        html_content=text,
-    )
+    page = await create_keys_page(game, player, telegraph, dao)
     manager.dialog_data["key_link"] = page["url"]

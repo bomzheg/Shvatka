@@ -21,7 +21,7 @@ class Game:
     manage_token: str
     start_at: datetime | None
     number: int | None
-    published_channel_id: int | None
+    results: GameResults
 
     def is_active(self):
         return self.status in ACTIVE_STATUSES
@@ -64,7 +64,7 @@ class Game:
     def can_be_publish(self) -> bool:
         return (
             self.status in (GameStatus.finished, GameStatus.complete)
-        ) and self.published_channel_id is None
+        ) and self.results.published_chanel_id is None
 
     @property
     def can_change_name(self) -> bool:
@@ -84,7 +84,7 @@ class Game:
             name=self.name,
             status=self.status,
             start_at=self.start_at,
-            published_channel_id=self.published_channel_id,
+            results=self.results,
             manage_token=self.manage_token,
             levels=levels,
             number=self.number,
@@ -107,3 +107,10 @@ class FullGame(Game):
     @property
     def hints_count(self) -> int:
         return sum((level.hints_count for level in self.levels))
+
+
+@dataclass
+class GameResults:
+    published_chanel_id: int | None
+    results_picture_file_id: str | None
+    keys_url: str | None

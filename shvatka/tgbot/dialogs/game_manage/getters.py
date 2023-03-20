@@ -3,6 +3,7 @@ from datetime import datetime, time, date
 from aiogram.enums import ContentType
 from aiogram_dialog import DialogManager
 from aiogram_dialog.api.entities import MediaAttachment, MediaId
+from telegraph import Telegraph
 
 from shvatka.core.models import dto
 from shvatka.core.services import game
@@ -11,6 +12,7 @@ from shvatka.core.services.waiver import get_all_played
 from shvatka.core.utils.datetime_utils import tz_game
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.infrastructure.picture import ResultsPainter
+from shvatka.tgbot.views.keys import get_or_create_keys_page
 
 
 async def get_my_games(dao: HolderDao, player: dto.Player, **_) -> dict[str, list[dto.Game]]:
@@ -44,6 +46,26 @@ async def get_game_waivers(dao: HolderDao, dialog_manager: DialogManager, **_):
     return {
         "game": current_game,
         "waivers": await get_all_played(current_game, dao.waiver),
+    }
+
+
+async def get_game_keys(
+    dao: HolderDao,
+    dialog_manager: DialogManager,
+    player: dto.Player,
+    telegraph: Telegraph,
+    **_,
+):
+    game_id = (
+        dialog_manager.dialog_data.get("game_id", None) or dialog_manager.start_data["game_id"]
+    )
+    current_game = await game.get_game(
+        id_=game_id,
+        dao=dao.game,
+    )
+    return {
+        "game": current_game,
+        "key_link": await get_or_create_keys_page(current_game, player, telegraph, dao),
     }
 
 

@@ -15,7 +15,8 @@ class ResultsPainter:
         self.chat_id = chat_id
 
     async def get_game_results(self, game: dto.Game, player: dto.Player) -> str:
-        # TODO check it already uploaded
+        if game.results.results_picture_file_id:
+            return game.results.results_picture_file_id
         current_game = await get_full_game(
             id_=game.id,
             author=player,
@@ -26,7 +27,9 @@ class ResultsPainter:
         msg = await self.bot.send_photo(
             self.chat_id, BufferedInputFile(picture.read(), "results.png")
         )
-        # TODO save file_id
         await msg.delete()
         assert msg.photo
-        return msg.photo[-1].file_id
+        photo_file_id = msg.photo[-1].file_id
+        await self.dao.game.set_results_photo(game, photo_file_id)
+        await self.dao.commit()
+        return photo_file_id

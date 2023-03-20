@@ -65,6 +65,7 @@ async def get_or_create_keys_page(
         return game.results.keys_url
     page = await create_keys_page(game, player, telegraph, dao)
     await dao.game.set_keys_url(game, page["url"])
+    await dao.game.commit()
     game.results.keys_url = page["url"]
     assert game.results.keys_url is not None
     return game.results.keys_url

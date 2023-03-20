@@ -194,6 +194,13 @@ class GameDao(BaseDAO[models.Game]):
         result = await self.session.scalar(select(func.max(models.Game.number)))
         return result or 0
 
+    async def set_results_photo(self, game: dto.Game, results_picture_file_id: str):
+        await self.session.execute(
+            update(models.Game)
+            .where(models.Game.id == game.id)
+            .values(results_picture_file_id=results_picture_file_id)
+        )
+
     async def set_keys_url(self, game: dto.Game, url: str):
         await self.session.execute(
             update(models.Game).where(models.Game.id == game.id).values(keys_url=url)

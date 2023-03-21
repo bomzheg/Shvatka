@@ -1,3 +1,5 @@
+from typing import Sequence
+
 from shvatka.core.interfaces.dal.complex import TeamMerger
 from shvatka.core.interfaces.dal.team import (
     TeamCreator,
@@ -7,6 +9,8 @@ from shvatka.core.interfaces.dal.team import (
     TeamsGetter,
     TeamByIdGetter,
     PlayedGamesByTeamGetter,
+    FreeForumTeamGetter,
+    ByForumTeamIdGetter,
 )
 from shvatka.core.models import dto
 from shvatka.core.models import enums
@@ -56,7 +60,17 @@ async def get_played_games(team: dto.Team, dao: PlayedGamesByTeamGetter) -> list
     return await dao.get_played_games(team)
 
 
-async def merge_teams(primary: dto.Team, secondary: dto.Team, dao: TeamMerger):
+async def get_free_forum_teams(dao: FreeForumTeamGetter) -> Sequence[dto.ForumTeam]:
+    return await dao.get_free_forum_teams()
+
+
+async def get_team_by_forum_team_id(forum_team_id: int, dao: ByForumTeamIdGetter) -> dto.Team:
+    return await dao.get_by_forum_team_id(forum_team_id)
+
+
+async def merge_teams(
+    manager: dto.Player, primary: dto.Team, secondary: dto.Team, dao: TeamMerger
+):
     if secondary.has_chat():
         raise SHDataBreach(
             team=secondary,

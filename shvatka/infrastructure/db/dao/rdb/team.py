@@ -1,11 +1,12 @@
 import typing
 from typing import Sequence
 
-from sqlalchemy import select
+from sqlalchemy import select, ScalarResult
 from sqlalchemy import update
 from sqlalchemy.exc import NoResultFound, IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
+from sqlalchemy.orm.interfaces import ORMOption
 
 from shvatka.core.models import dto
 from shvatka.core.utils.exceptions import TeamError, AnotherTeamInChat
@@ -73,8 +74,10 @@ class TeamDao(BaseDAO[models.Team]):
             .join(models.Team.chat)
             .where(models.Chat.id == chat.db_id)
             .options(
-                joinedload(models.Team.captain).joinedload(models.Player.user),
-                joinedload(models.Team.captain).joinedload(models.Player.forum_user),
+                joinedload(models.Team.captain).options(
+                    joinedload(models.Player.user),
+                    joinedload(models.Player.forum_user),
+                ),
             )
         )
         try:
@@ -94,12 +97,7 @@ class TeamDao(BaseDAO[models.Team]):
     async def get_by_id(self, id_: int) -> dto.Team:
         team = await self._get_by_id(
             id_,
-            (
-                joinedload(models.Team.captain).joinedload(models.Player.user),
-                joinedload(models.Team.captain).joinedload(models.Player.forum_user),
-                joinedload(models.Team.chat),
-                joinedload(models.Team.forum_team),
-            ),
+            get_team_options(),
             populate_existing=True,
         )
         return team.to_dto_chat_prefetched()
@@ -115,29 +113,26 @@ class TeamDao(BaseDAO[models.Team]):
         )
 
     async def get_by_forum_team_name(self, name: str) -> dto.Team:
-        result = await self.session.scalars(
+        result: ScalarResult[models.Team] = await self.session.scalars(
             select(models.Team)
             .join(models.Team.forum_team)
-            .options(
-                joinedload(models.Team.captain).joinedload(models.Player.user),
-                joinedload(models.Team.captain).joinedload(models.Player.forum_user),
-                joinedload(models.Team.chat),
-                joinedload(models.Team.forum_team),
-            )
+            .options(*get_team_options())
             .where(models.ForumTeam.name == name)
         )
-        team: models.Team = result.one()
+        team = result.one()
         return team.to_dto_chat_prefetched()
 
-    async def get_teams(self) -> list[dto.Team]:
-        teams = await self._get_all(
-            options=(
-                joinedload(models.Team.captain).joinedload(models.Player.user),
-                joinedload(models.Team.captain).joinedload(models.Player.forum_user),
-                joinedload(models.Team.chat),
-                joinedload(models.Team.forum_team),
-            ),
+    async def get_by_forum_team_id(self, forum_team_id: int) -> dto.Team:
+        result: ScalarResult[models.Team] = await self.session.scalars(
+            select(models.Team)
+            .join(models.Team.forum_team)
+            .options(*get_team_options())
+            .where(models.ForumTeam.id == forum_team_id)
         )
+        return result.one().to_dto_chat_prefetched()
+
+    async def get_teams(self) -> list[dto.Team]:
+        teams = await self._get_all(options=get_team_options())
         return [team.to_dto_chat_prefetched() for team in teams]
 
     async def get_played_games(self, team: dto.Team) -> list[dto.Game]:
@@ -145,8 +140,10 @@ class TeamDao(BaseDAO[models.Team]):
             select(models.Game)
             .distinct()
             .options(
-                joinedload(models.Game.author).joinedload(models.Player.user),
-                joinedload(models.Game.author).joinedload(models.Player.forum_user),
+                joinedload(models.Game.author).options(
+                    joinedload(models.Player.user),
+                    joinedload(models.Player.forum_user),
+                ),
             )
             .join(models.Game.waivers)
             .where(
@@ -161,3 +158,14 @@ class TeamDao(BaseDAO[models.Team]):
     async def delete(self, team: dto.Team):
         team_db = await self._get_by_id(team.id)
         await self.session.delete(team_db)
+
+
+def get_team_options() -> Sequence[ORMOption]:
+    return (
+        joinedload(models.Team.captain).options(
+            joinedload(models.Player.user),
+            joinedload(models.Player.forum_user),
+        ),
+        joinedload(models.Team.chat),
+        joinedload(models.Team.forum_team),
+    )

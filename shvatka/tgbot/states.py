@@ -78,6 +78,12 @@ class CaptainsBridgeSG(StatesGroup):
     player_emoji = State()
 
 
+class MergeTeams(StatesGroup):
+    main = State()
+    list_forum = State()
+    confirm = State()
+
+
 class CompletedGamesPanelSG(StatesGroup):
     list = State()
     game = State()

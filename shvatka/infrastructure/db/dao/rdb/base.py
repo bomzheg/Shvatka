@@ -4,7 +4,7 @@ from sqlalchemy import delete, func, ScalarResult
 from sqlalchemy import select
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm.interfaces import LoaderOption
+from sqlalchemy.orm.interfaces import ORMOption
 
 from shvatka.infrastructure.db.models import Base
 
@@ -16,14 +16,14 @@ class BaseDAO(Generic[Model]):
         self.model = model
         self.session = session
 
-    async def _get_all(self, options: Sequence[LoaderOption] = tuple()) -> Sequence[Model]:
+    async def _get_all(self, options: Sequence[ORMOption] = tuple()) -> Sequence[Model]:
         result: ScalarResult[Model] = await self.session.scalars(
             select(self.model).options(*options)
         )
         return result.all()
 
     async def _get_by_id(
-        self, id_: int, options: Sequence[LoaderOption] = None, populate_existing: bool = False
+        self, id_: int, options: Sequence[ORMOption] = None, populate_existing: bool = False
     ) -> Model:
         result = await self.session.get(
             self.model, id_, options=options, populate_existing=populate_existing

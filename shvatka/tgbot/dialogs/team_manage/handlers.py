@@ -1,3 +1,4 @@
+import typing
 from typing import Any
 
 from aiogram import Bot
@@ -18,9 +19,16 @@ from shvatka.core.services.player import (
     change_role,
     change_emoji,
 )
-from shvatka.core.services.team import rename_team, change_team_desc
+from shvatka.core.services.team import (
+    rename_team,
+    change_team_desc,
+    merge_teams,
+    get_team_by_id,
+    get_team_by_forum_team_id,
+)
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.tgbot import states
+from shvatka.tgbot.utils.data import MiddlewareData
 
 
 async def rename_team_handler(
@@ -61,6 +69,32 @@ async def change_permission_handler(c: CallbackQuery, button: Button, manager: D
     assert button.widget_id
     permission = enums.TeamPlayerPermission[button.widget_id]
     await flip_permission(captain_team_player, team_player, permission, dao.team_player)
+
+
+async def start_merge(c: CallbackQuery, button: Button, manager: DialogManager):
+    data = typing.cast(MiddlewareData, manager.middleware_data)
+    dao = data["dao"]
+    captain = data["player"]
+    team = await get_my_team(captain, dao.team_player)
+    await manager.start(states.MergeTeams.main, data={"team_id": team.id})
+
+
+async def select_forum_team(
+    c: CallbackQuery, widget: Any, manager: DialogManager, forum_team_id: str
+):
+    manager.dialog_data["forum_team_id"] = int(forum_team_id)
+    await manager.switch_to(states.MergeTeams.confirm)
+
+
+async def confirm_merge(c: CallbackQuery, button: Any, manager: DialogManager):
+    data = typing.cast(MiddlewareData, manager.middleware_data)
+    dao = data["dao"]
+    captain = data["player"]
+    primary = await get_team_by_id(manager.start_data["team_id"], dao.team)
+    secondary = await get_team_by_forum_team_id(manager.dialog_data["forum_team_id"], dao.team)
+    await merge_teams(captain, primary, secondary, dao.team_merger)
+    await c.answer("Успешно объединены", show_alert=True)
+    await manager.done()
 
 
 async def remove_player_handler(c: CallbackQuery, button: Button, manager: DialogManager):

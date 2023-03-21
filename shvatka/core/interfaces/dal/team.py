@@ -1,4 +1,4 @@
-from typing import Protocol
+from typing import Protocol, Sequence
 
 from shvatka.core.interfaces.dal.base import Committer
 from shvatka.core.interfaces.dal.player import TeamJoiner
@@ -45,6 +45,16 @@ class PlayedGamesByTeamGetter(Protocol):
 
 class ForumTeamMerger(Protocol):
     async def replace_forum_team(self, primary: dto.Team, secondary: dto.Team):
+        raise NotImplementedError
+
+
+class FreeForumTeamGetter(Protocol):
+    async def get_free_forum_teams(self) -> Sequence[dto.ForumTeam]:
+        raise NotImplementedError
+
+
+class ByForumTeamIdGetter(Protocol):
+    async def get_by_forum_team_id(self, forum_team_id: int) -> dto.Team:
         raise NotImplementedError
 
 

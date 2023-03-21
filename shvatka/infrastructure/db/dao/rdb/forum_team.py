@@ -1,4 +1,6 @@
-from sqlalchemy import update
+from typing import Sequence
+
+from sqlalchemy import update, select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -36,3 +38,11 @@ class ForumTeamDAO(BaseDAO[models.ForumTeam]):
             .where(models.ForumTeam.team_id == secondary.id)
             .values(team_id=primary.id)
         )
+
+    async def get_free_forum_teams(self) -> Sequence[dto.ForumTeam]:
+        result = await self.session.scalars(
+            select(models.ForumTeam)
+            .where(models.ForumTeam.team_id.is_(None))
+            .order_by(models.ForumTeam.id)
+        )
+        return result.all()

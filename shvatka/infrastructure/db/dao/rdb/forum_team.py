@@ -45,4 +45,4 @@ class ForumTeamDAO(BaseDAO[models.ForumTeam]):
             .where(models.ForumTeam.team_id.is_(None))
             .order_by(models.ForumTeam.id)
         )
-        return result.all()
+        return list(map(models.ForumTeam.to_dto, result.all()))

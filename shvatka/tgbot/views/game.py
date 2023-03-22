@@ -113,7 +113,8 @@ class GameBotLog(GameLogWriter):
                 )
             case _:
                 raise ValueError
-        await self.bot.send_message(chat_id=self.log_chat_id, text=text.format_map(event_log.data))
+        data = {k: hd.quote(v) for k, v in event_log.data.items()}
+        await self.bot.send_message(chat_id=self.log_chat_id, text=text.format_map(data))
 
 
 @dataclass

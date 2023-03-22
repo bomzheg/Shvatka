@@ -14,6 +14,7 @@ from shvatka.core.interfaces.clients.file_storage import FileStorage, FileGatewa
 from shvatka.core.interfaces.scheduler import Scheduler
 from shvatka.core.models import dto
 from shvatka.core.utils.key_checker_lock import KeyCheckerFactory
+from shvatka.core.views.game import GameLogWriter
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.infrastructure.picture.results_painter import ResultsPainter
 from shvatka.tgbot.config.models.bot import BotConfig
@@ -58,3 +59,4 @@ class MiddlewareData(DialogMiddlewareData, total=False):
     game: dto.Game | None
     team_player: dto.FullTeamPlayer | None
     results_painter: ResultsPainter
+    game_log: GameLogWriter

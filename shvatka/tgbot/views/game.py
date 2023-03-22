@@ -19,6 +19,8 @@ from shvatka.core.views.game import (
     LevelUp,
     NewOrg,
     LevelTestCompleted,
+    GameLogEvent,
+    GameLogType,
 )
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.tgbot.views.hint_sender import HintSender, create_hint_sender
@@ -98,8 +100,20 @@ class GameBotLog(GameLogWriter):
     bot: Bot
     log_chat_id: int
 
-    async def log(self, message: str) -> None:
-        await self.bot.send_message(chat_id=self.log_chat_id, text=message)
+    async def log(self, event_log: GameLogEvent) -> None:
+        match event_log:
+            case GameLogEvent(GameLogType.GAME_STARTED):
+                text = "Игра {game} началась"
+            case GameLogEvent(GameLogType.GAME_FINISHED):
+                text = "Игра {game} завершена"
+            case GameLogEvent(GameLogType.TEAMS_MERGED):
+                text = (
+                    "Капитан {captain} объединил "
+                    "свою команду {primary_team} с форумной {secondary_team}"
+                )
+            case _:
+                raise ValueError
+        await self.bot.send_message(chat_id=self.log_chat_id, text=text.format_map(event_log.data))
 
 
 @dataclass

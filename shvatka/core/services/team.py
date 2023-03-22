@@ -16,6 +16,7 @@ from shvatka.core.models import dto
 from shvatka.core.models import enums
 from shvatka.core.utils.defaults_constants import CAPTAIN_ROLE
 from shvatka.core.utils.exceptions import SHDataBreach, PermissionsError
+from shvatka.core.views.game import GameLogWriter, GameLogEvent, GameLogType
 
 
 async def create_team(chat: dto.Chat, captain: dto.Player, dao: TeamCreator) -> dto.Team:
@@ -69,7 +70,11 @@ async def get_team_by_forum_team_id(forum_team_id: int, dao: ByForumTeamIdGetter
 
 
 async def merge_teams(
-    manager: dto.Player, primary: dto.Team, secondary: dto.Team, dao: TeamMerger
+    manager: dto.Player,
+    primary: dto.Team,
+    secondary: dto.Team,
+    game_log: GameLogWriter,
+    dao: TeamMerger,
 ):
     if secondary.has_chat():
         raise SHDataBreach(
@@ -90,6 +95,12 @@ async def merge_teams(
     await dao.replace_forum_team(primary, secondary)
     await dao.delete(secondary)
     await dao.commit()
+    await game_log.log(
+        GameLogEvent(
+            GameLogType.TEAMS_MERGED,
+            {"captain": manager, "primary_team": primary, "secondary_team": secondary},
+        )
+    )
 
 
 def check_can_change_name(team: dto.Team, captain: dto.FullTeamPlayer):

@@ -17,7 +17,14 @@ from shvatka.core.services.player import join_team
 from shvatka.core.services.waiver import add_vote, approve_waivers
 from shvatka.core.utils.datetime_utils import tz_utc
 from shvatka.core.utils.key_checker_lock import KeyCheckerFactory
-from shvatka.core.views.game import GameView, GameLogWriter, OrgNotifier, LevelUp
+from shvatka.core.views.game import (
+    GameView,
+    GameLogWriter,
+    OrgNotifier,
+    LevelUp,
+    GameLogEvent,
+    GameLogType,
+)
 from shvatka.infrastructure.db import models
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from tests.mocks.aiogram_mocks import mock_coro
@@ -46,7 +53,9 @@ async def test_game_play(
     dummy_view = mock(GameView)
     when(dummy_view).send_puzzle(gryffindor, game.levels[0]).thenReturn(mock_coro(None))
     dummy_log = mock(GameLogWriter)
-    when(dummy_log).log("Game started").thenReturn(mock_coro(None))
+    when(dummy_log).log(GameLogEvent(GameLogType.GAME_STARTED, {"game": game.name})).thenReturn(
+        mock_coro(None)
+    )
     dummy_sched = mock(Scheduler)
     when(dummy_sched).plain_hint(
         level=game.levels[0], team=gryffindor, hint_number=1, run_at=ANY
@@ -114,7 +123,9 @@ async def test_game_play(
 
     unstub(dummy_view)
     dummy_view = mock(GameView)
-    when(dummy_log).log("Game finished").thenReturn(mock_coro(None))
+    when(dummy_log).log(GameLogEvent(GameLogType.GAME_FINISHED, {"game": game.name})).thenReturn(
+        mock_coro(None)
+    )
     when(dummy_org_notifier).notify(
         LevelUp(team=gryffindor, new_level=game.levels[1], orgs_list=orgs)
     ).thenReturn(mock_coro(None))

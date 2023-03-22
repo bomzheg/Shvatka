@@ -1,8 +1,9 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+import enum
+from dataclasses import dataclass, field
 from datetime import timedelta
-from typing import Protocol, Iterable, Sequence
+from typing import Protocol, Iterable, Sequence, Any
 
 from shvatka.core.interfaces.dal.game_play import GamePreparer
 from shvatka.core.models import dto
@@ -43,8 +44,20 @@ class GameView(Protocol):
 
 
 class GameLogWriter(Protocol):
-    async def log(self, message: str) -> None:
+    async def log(self, log_event: GameLogEvent) -> None:
         raise NotImplementedError
+
+
+class GameLogType(enum.Enum):
+    GAME_STARTED = enum.auto()
+    GAME_FINISHED = enum.auto()
+    TEAMS_MERGED = enum.auto()
+
+
+@dataclass
+class GameLogEvent:
+    type: GameLogType
+    data: dict[str, Any] = field(default_factory=dict)
 
 
 class OrgNotifier(Protocol):

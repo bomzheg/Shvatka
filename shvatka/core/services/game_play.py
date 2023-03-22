@@ -12,7 +12,15 @@ from shvatka.core.utils.datetime_utils import tz_utc
 from shvatka.core.utils.exceptions import InvalidKey
 from shvatka.core.utils.input_validation import is_key_valid
 from shvatka.core.utils.key_checker_lock import KeyCheckerFactory
-from shvatka.core.views.game import GameViewPreparer, GameLogWriter, GameView, OrgNotifier, LevelUp
+from shvatka.core.views.game import (
+    GameViewPreparer,
+    GameLogWriter,
+    GameView,
+    OrgNotifier,
+    LevelUp,
+    GameLogEvent,
+    GameLogType,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -70,7 +78,7 @@ async def start_game(
         *[schedule_first_hint(scheduler, team, game.levels[0], now) for team in teams]
     )
 
-    await game_log.log("Game started")
+    await game_log.log(GameLogEvent(GameLogType.GAME_STARTED, {"game": game.name}))
 
 
 async def check_key(
@@ -190,7 +198,7 @@ async def finish_team(
     if await dao.is_all_team_finished(game):
         await dao.finish(game)
         await dao.commit()
-        await game_log.log("Game finished")
+        await game_log.log(GameLogEvent(GameLogType.GAME_FINISHED, {"game": game.name}))
         locker.clear()
         for team in await dao.get_played_teams(game):
             await view.game_finished_by_all(team)

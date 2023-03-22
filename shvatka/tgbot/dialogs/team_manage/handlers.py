@@ -92,7 +92,7 @@ async def confirm_merge(c: CallbackQuery, button: Any, manager: DialogManager):
     captain = data["player"]
     primary = await get_team_by_id(manager.start_data["team_id"], dao.team)
     secondary = await get_team_by_forum_team_id(manager.dialog_data["forum_team_id"], dao.team)
-    await merge_teams(captain, primary, secondary, dao.team_merger)
+    await merge_teams(captain, primary, secondary, data["game_log"], dao.team_merger)
     await c.answer("Успешно объединены", show_alert=True)
     await manager.done()
 

@@ -15,6 +15,7 @@ from shvatka.infrastructure.db.dao.memory.level_testing import LevelTestingData
 from shvatka.infrastructure.picture.results_painter import ResultsPainter
 from shvatka.tgbot.username_resolver.user_getter import UserGetter
 from shvatka.tgbot.utils.data import MiddlewareData
+from shvatka.tgbot.views.game import GameBotLog
 from shvatka.tgbot.views.hint_factory.hint_parser import HintParser
 from shvatka.tgbot.views.telegraph import Telegraph
 
@@ -54,6 +55,7 @@ class InitMiddleware(BaseMiddleware):
         data["locker"] = self.locker
         data["file_storage"] = self.file_storage
         data["telegraph"] = self.telegraph
+        data["game_log"] = GameBotLog(bot=data["bot"], log_chat_id=data["config"].log_chat)
         async with self.pool() as session:
             holder_dao = HolderDao(session, self.redis, self.level_test_dao)
             data["dao"] = holder_dao

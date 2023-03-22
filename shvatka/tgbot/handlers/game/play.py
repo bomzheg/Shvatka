@@ -11,15 +11,15 @@ from shvatka.core.models import dto
 from shvatka.core.services.game_play import check_key
 from shvatka.core.utils.exceptions import InvalidKey
 from shvatka.core.utils.key_checker_lock import KeyCheckerFactory
+from shvatka.core.views.game import GameLogWriter
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.tgbot import states
-from shvatka.tgbot.config.models.bot import BotConfig
 from shvatka.tgbot.filters import is_key, IsTeamFilter
 from shvatka.tgbot.filters.game_status import GameStatusFilter
 from shvatka.tgbot.filters.team_player import TeamPlayerFilter
 from shvatka.tgbot.utils.router import register_start_handler
 from shvatka.tgbot.views.commands import SPY_COMMAND, SPY_LEVELS_COMMAND, SPY_KEYS_COMMAND
-from shvatka.tgbot.views.game import GameBotLog, create_bot_game_view, BotOrgNotifier
+from shvatka.tgbot.views.game import create_bot_game_view, BotOrgNotifier
 
 
 async def check_key_handler(
@@ -31,8 +31,8 @@ async def check_key_handler(
     scheduler: Scheduler,
     locker: KeyCheckerFactory,
     bot: Bot,
-    config: BotConfig,
     file_storage: FileStorage,
+    game_log: GameLogWriter,
 ):
     try:
         await check_key(
@@ -42,7 +42,7 @@ async def check_key_handler(
             game=await dao.game.get_full(game.id),
             dao=dao.game_player,
             view=create_bot_game_view(bot=bot, dao=dao, storage=file_storage),
-            game_log=GameBotLog(bot=bot, log_chat_id=config.log_chat),
+            game_log=game_log,
             org_notifier=BotOrgNotifier(bot=bot),
             locker=locker,
             scheduler=scheduler,

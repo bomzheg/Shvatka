@@ -12,13 +12,10 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - &checkout
-        uses: actions/checkout@v2
-      - &install-poetry
-        name: Install poetry
+      - uses: actions/checkout@v2
+      - name: Install poetry
         run: pipx install poetry
-      - &setup-python
-        name: Set up Python 3.11
+      - name: Set up Python 3.11
         uses: actions/setup-python@v4
         with:
           python-version: '3.11'
@@ -30,31 +27,33 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
-      - *checkout
-      - *install-poetry
-      - *setup-python
-
+      - uses: actions/checkout@v2
+      - name: Install poetry
+        run: pipx install poetry
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+          cache: "poetry"
+          cache-dependency-path: poetry.lock
       - name: black
         run: poetry run black --check --verbose .
       - name: flake8
         run: poetry run flake8 .
-  type-checker:
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-      - *checkout
-      - *install-poetry
-      - *setup-python
-
       - name: mypy
         run: poetry run mypy .
   test:
     needs: build
     runs-on: ubuntu-latest
     steps:
-      - *checkout
-      - *install-poetry
-      - *setup-python
-
+      - uses: actions/checkout@v2
+      - name: Install poetry
+        run: pipx install poetry
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+          cache: "poetry"
+          cache-dependency-path: poetry.lock
       - name: Test with pytest
         run: poetry run pytest

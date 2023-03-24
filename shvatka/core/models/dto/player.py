@@ -26,6 +26,8 @@ class Player:
             if self._forum_user:
                 return self._forum_user.name_mention
             return f"dummy-{self.id}"
+        if not self._user:
+            pass
         assert self._user
         return self._user.name_mention
 
@@ -47,3 +49,24 @@ class Player:
             return None
         assert self._user
         return self._user.username
+
+    def with_stat(
+        self, played_games: list[int], typed_keys_count: int, typed_correct_keys_count: int
+    ) -> PlayerWithStat:
+        return PlayerWithStat(
+            id=self.id,
+            can_be_author=self.can_be_author,
+            is_dummy=self.is_dummy,
+            user=self._user,
+            forum_user=self._forum_user,
+            played_games=played_games,
+            typed_keys_count=typed_keys_count,
+            typed_correct_keys_count=typed_correct_keys_count,
+        )
+
+
+@dataclass
+class PlayerWithStat(Player):
+    played_games: list[int] = field(default_factory=list)
+    typed_keys_count: int = 0
+    typed_correct_keys_count: int = 0

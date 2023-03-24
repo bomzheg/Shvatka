@@ -50,6 +50,10 @@ async def get_player_by_id(id_: int, dao: PlayerByIdGetter) -> dto.Player:
     return await dao.get_by_id(id_)
 
 
+async def get_player_with_stat(id_: int, dao) -> dto.PlayerWithStat:
+    return await dao.get_player_with_stat(id_)
+
+
 async def get_team_player_by_player(player: dto.Player, dao: PlayerTeamChecker) -> dto.TeamPlayer:
     return await dao.get_team_player(player)
 

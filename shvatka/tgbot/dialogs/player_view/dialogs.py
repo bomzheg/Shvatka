@@ -7,7 +7,13 @@ from .getters import player_getter
 
 player_dialog = Dialog(
     Window(
-        Jinja("Игрок {{player.name_mention}}"),
+        Jinja(
+            "Игрок {{player.name_mention}}\n"
+            "Сыгранные игры: {{', '.join(game_numbers)}}\n"
+            "Введено корректных ключей / введено всего ключей (%) \n"
+            "{{player.typed_correct_keys_count}} / {{player.typed_keys_count}} "
+            "({{'%.2f'| format(correct_keys*100|float)}})"
+        ),
         Cancel(Const("⤴Выход")),
         getter=player_getter,
         state=states.PlayerSg.main,

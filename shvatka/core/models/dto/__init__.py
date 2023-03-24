@@ -7,7 +7,7 @@ from .level import Level  # noqa: F401
 from .level_testing import LevelTestSuite  # noqa: F401
 from .levels_times import LevelTime, GameStat, LevelTimeOnGame  # noqa: F401
 from .organizer import Organizer, PrimaryOrganizer, SecondaryOrganizer  # noqa: F401
-from .player import Player  # noqa: F401
+from .player import Player, PlayerWithStat  # noqa: F401
 from .pool import VotedPlayer, Vote  # noqa: F401
 from .team import Team  # noqa: F401
 from .team_player import TeamPlayer, FullTeamPlayer  # noqa: F401

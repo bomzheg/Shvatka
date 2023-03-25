@@ -51,7 +51,10 @@ class KeyTimeDao(BaseDAO[models.KeyTime]):
         player: dto.Player,
         is_correct: bool,
         is_duplicate: bool,
+        at: datetime | None = None,
     ) -> dto.KeyTime:
+        if at is None:
+            at = datetime.now(tz=tz_utc)
         key_time = models.KeyTime(
             key_text=key,
             team_id=team.id,
@@ -60,7 +63,7 @@ class KeyTimeDao(BaseDAO[models.KeyTime]):
             player_id=player.id,
             is_correct=is_correct,
             is_duplicate=is_duplicate,
-            enter_time=datetime.now(tz=tz_utc),
+            enter_time=at,
         )
         self._save(key_time)
         return key_time.to_dto(player, team)

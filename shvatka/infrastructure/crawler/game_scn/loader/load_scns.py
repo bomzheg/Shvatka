@@ -18,6 +18,7 @@ from shvatka.core.models.dto import scn  # noqa: F401
 from shvatka.core.services.game import upsert_game
 from shvatka.core.services.scenario.scn_zip import unpack_scn
 from shvatka.core.utils import exceptions
+from shvatka.core.utils.datetime_utils import tz_game
 from shvatka.infrastructure.clients.factory import create_file_storage
 from shvatka.infrastructure.clients.file_gateway import BotFileGateway
 from shvatka.infrastructure.crawler.factory import get_paths
@@ -83,7 +84,7 @@ async def load_scns(
 ):
     files = sorted((file for file in path.glob("*.zip")), key=lambda p: int(p.stem))
     for file in files:
-        logger.info("loading game from file %s", file.name)
+        logger.info("loading game from file %s...", file.name)
         try:
             with file.open("rb") as game_zip_scn:
                 game = await load_scn(
@@ -97,7 +98,6 @@ async def load_scns(
                     continue
                 results = load_results(game_zip_scn, dcf)
             await dao.game.set_completed(game)
-            game.status = enums.GameStatus.complete
             await set_results(game, results, dao)
             await dao.commit()
 
@@ -108,20 +108,19 @@ async def load_scns(
 
 
 async def set_results(game: dto.FullGame, results: GameStat, dao: HolderDao):
-    await dao.game.set_start_at(game, results.start_at)
-    game.start_at = results.start_at
+    game_start_at = add_timezone(results.start_at)
+    await dao.game.set_start_at(game, game_start_at)
     await dao.game.set_number(game, results.id)
-    game.number = results.id
     for forum_team_name, levels in results.results.items():
         team = await dao.team.get_by_forum_team_name(forum_team_name)
-        await dao.level_time.set_to_level(team, game, 0, results.start_at)
+        await dao.level_time.set_to_level(team, game, 0, game_start_at)
         for level in levels:
-            await dao.level_time.set_to_level(team, game, level.number, level.at)
+            await dao.level_time.set_to_level(team, game, level.number, add_timezone(level.at))
     for forum_team_name, keys in results.keys.items():
         team = await dao.team.get_by_forum_team_name(forum_team_name)
         for i, key in enumerate(keys):
             player = await get_or_create_player(dao, key.player)
-            await join_team_if_already_not(player, team, results.start_at, dao)
+            await join_team_if_already_not(player, team, game_start_at, dao)
             await add_waiver_if_already_not(player, team, game, dao)
             if i == len(keys) - 1:
                 is_correct = True
@@ -137,7 +136,12 @@ async def set_results(game: dto.FullGame, results: GameStat, dao: HolderDao):
                 level=game.levels[key.level - 1],
                 is_correct=is_correct,
                 is_duplicate=False,
+                at=add_timezone(key.at),
             )
+
+
+def add_timezone(dt: datetime) -> datetime:
+    return datetime.combine(dt.date(), dt.time(), tz_game)
 
 
 async def get_or_create_player(dao: HolderDao, forum_player_name: str):

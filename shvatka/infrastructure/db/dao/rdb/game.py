@@ -144,6 +144,7 @@ class GameDao(BaseDAO[models.Game]):
             .where(models.Game.id == game.id)
             .values(start_at=start_at.astimezone(tz_utc))
         )
+        game.start_at = start_at
 
     async def cancel_start(self, game: dto.Game):
         await self.session.execute(
@@ -189,6 +190,7 @@ class GameDao(BaseDAO[models.Game]):
         await self.session.execute(
             update(models.Game).where(models.Game.id == game.id).values(number=number)
         )
+        game.number = number
 
     async def get_max_number(self) -> int:
         result = await self.session.scalar(select(func.max(models.Game.number)))

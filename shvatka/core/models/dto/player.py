@@ -50,9 +50,7 @@ class Player:
         assert self._user
         return self._user.username
 
-    def with_stat(
-        self, typed_keys_count: int, typed_correct_keys_count: int
-    ) -> PlayerWithStat:
+    def with_stat(self, typed_keys_count: int, typed_correct_keys_count: int) -> PlayerWithStat:
         return PlayerWithStat(
             id=self.id,
             can_be_author=self.can_be_author,

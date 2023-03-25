@@ -37,7 +37,7 @@ class PlayerDao(BaseDAO[models.Player]):
             select(
                 models.Player,
                 func.count(models.Player.typed_keys),
-                func.count(case((models.KeyTime.is_correct, 1)))
+                func.count(case((models.KeyTime.is_correct, 1))),
             )
             .join(models.Player.typed_keys)
             .options(
@@ -47,7 +47,11 @@ class PlayerDao(BaseDAO[models.Player]):
             .where(models.Player.id == id_)
             .group_by(models.Player.id)
         )
-        player, keys_total_count, keys_correct_count = result.unique().one()  # type: models.Player, int, int
+        (
+            player,
+            keys_total_count,
+            keys_correct_count,
+        ) = result.unique().one()  # type: models.Player, int, int
         return player.to_dto_user_prefetched().with_stat(
             typed_keys_count=keys_total_count,
             typed_correct_keys_count=keys_correct_count,

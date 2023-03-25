@@ -51,7 +51,7 @@ class Player:
         return self._user.username
 
     def with_stat(
-        self, played_games: list[int], typed_keys_count: int, typed_correct_keys_count: int
+        self, typed_keys_count: int, typed_correct_keys_count: int
     ) -> PlayerWithStat:
         return PlayerWithStat(
             id=self.id,
@@ -59,7 +59,6 @@ class Player:
             is_dummy=self.is_dummy,
             user=self._user,
             forum_user=self._forum_user,
-            played_games=played_games,
             typed_keys_count=typed_keys_count,
             typed_correct_keys_count=typed_correct_keys_count,
         )
@@ -67,6 +66,5 @@ class Player:
 
 @dataclass
 class PlayerWithStat(Player):
-    played_games: list[int] = field(default_factory=list)
     typed_keys_count: int = 0
     typed_correct_keys_count: int = 0

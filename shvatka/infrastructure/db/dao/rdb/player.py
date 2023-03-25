@@ -1,7 +1,7 @@
 import typing
 from typing import Iterable
 
-from sqlalchemy import select, func, Result
+from sqlalchemy import select, func, Result, case
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload, selectinload
@@ -33,32 +33,24 @@ class PlayerDao(BaseDAO[models.Player]):
         return player.to_dto_user_prefetched()
 
     async def get_player_with_stat(self, id_: int) -> dto.PlayerWithStat:
-        result: Result[tuple[models.Player, models.Waiver, int]] = await self.session.execute(
+        result: Result[tuple[models.Player, int, int]] = await self.session.execute(
             select(
                 models.Player,
                 func.count(models.Player.typed_keys),
+                func.count(case((models.KeyTime.is_correct, 1)))
             )
-            .join(models.Player.played_games)
             .join(models.Player.typed_keys)
             .options(
                 selectinload(models.Player.forum_user),
                 selectinload(models.Player.user),
-                joinedload(models.Player.played_games).joinedload(models.Waiver.game),
             )
             .where(models.Player.id == id_)
             .group_by(models.Player.id)
         )
-        player, keys_count = result.unique().one()  # type: models.Player, int
-        correct_keys = await self.session.scalars(
-            select(func.count(models.KeyTime.id)).where(
-                models.KeyTime.player_id == id_,
-                models.KeyTime.is_correct.is_(True),
-            )
-        )
+        player, keys_total_count, keys_correct_count = result.unique().one()  # type: models.Player, int, int
         return player.to_dto_user_prefetched().with_stat(
-            played_games=[w.game.number for w in player.played_games],
-            typed_keys_count=keys_count,
-            typed_correct_keys_count=correct_keys.one(),
+            typed_keys_count=keys_total_count,
+            typed_correct_keys_count=keys_correct_count,
         )
 
     async def get_by_user(self, user: dto.User) -> dto.Player:

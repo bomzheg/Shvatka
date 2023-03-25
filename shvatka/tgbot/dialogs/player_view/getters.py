@@ -11,6 +11,5 @@ async def player_getter(dao: HolderDao, dialog_manager: DialogManager, **_) -> d
     player = await get_player_with_stat(player_id, dao.player)
     return {
         "player": player,
-        "game_numbers": list(map(str, player.played_games)),
         "correct_keys": player.typed_correct_keys_count / player.typed_keys_count,
     }

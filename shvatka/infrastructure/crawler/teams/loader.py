@@ -20,11 +20,12 @@ from shvatka.tgbot.config.parser.main import load_config
 logger = logging.getLogger(__name__)
 
 
-async def main(path: Path):
+async def main():
     paths = get_paths()
 
     setup_logging(paths)
     config = load_config(paths)
+    path = config.file_storage_config.path / "teams.json"
     dcf = create_dataclass_factory()
     pool = create_pool(config.db)
     level_test_dao = create_level_test_dao()
@@ -84,4 +85,4 @@ async def save_team(parsed_team: ParsedTeam, with_team_players: bool, dao: Holde
 
 
 if __name__ == "__main__":
-    asyncio.run(main(Path(__file__).parent / "teams.json"))
+    asyncio.run(main())

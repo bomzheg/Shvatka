@@ -32,7 +32,7 @@ from shvatka.tgbot.views.hint_factory.hint_parser import HintParser
 logger = logging.getLogger(__name__)
 
 
-async def main(path: Path):
+async def main():
     paths = get_paths()
 
     setup_logging(paths)
@@ -68,7 +68,7 @@ async def main(path: Path):
                 dao=dao,
                 file_gateway=file_gateway,
                 dcf=dcf,
-                path=path,
+                path=config.file_storage_config.path / "scn",
             )
     finally:
         await bot.session.close()
@@ -220,4 +220,4 @@ async def load_scn(
 
 
 if __name__ == "__main__":
-    asyncio.run(main(Path(__name__).parent / "scn"))
+    asyncio.run(main())

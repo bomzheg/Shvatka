@@ -711,7 +711,7 @@ python-versions = ">=3.7"
 name = "mypy"
 version = "1.1.1"
 description = "Optional static typing for Python"
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3.7"
 
@@ -729,7 +729,7 @@ reports = ["lxml"]
 name = "mypy-extensions"
 version = "1.0.0"
 description = "Type system extensions for programs checked with the mypy type checker."
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3.5"
 
@@ -1393,7 +1393,7 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "1.1"
 python-versions = "~3.11"
-content-hash = "6663fb4279e17d78d447fc4dfaab3e94c10d7acfbcee2c58447eceedce3a027d"
+content-hash = "809a807e9a63abeab453813e1f1af62f718d10b098437b51055571fc66e14464"
 
 [metadata.files]
 aiofiles = [

@@ -113,7 +113,8 @@ async def set_results(game: dto.FullGame, results: GameStat, dao: HolderDao):
         team = await dao.team.get_by_forum_team_name(forum_team_name)
         await dao.level_time.set_to_level(team, game, 0, game_start_at)
         for level in levels:
-            await dao.level_time.set_to_level(team, game, level.number, add_timezone(level.at))
+            if level.at is not None:
+                await dao.level_time.set_to_level(team, game, level.number, add_timezone(level.at))
     for forum_team_name, keys in results.keys.items():
         team = await dao.team.get_by_forum_team_name(forum_team_name)
         for i, key in enumerate(keys):

@@ -25,7 +25,7 @@ async def main():
 
     setup_logging(paths)
     config = load_config(paths)
-    path = config.file_storage_config.path / "teams.json"
+    path = config.file_storage_config.path.parent / "teams.json"
     dcf = create_dataclass_factory()
     pool = create_pool(config.db)
     level_test_dao = create_level_test_dao()

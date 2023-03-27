@@ -66,7 +66,7 @@ async def main():
                 dao=dao,
                 file_gateway=file_gateway,
                 dcf=dcf,
-                path=config.file_storage_config.path / "scn",
+                path=config.file_storage_config.path.parent / "scn",
             )
     finally:
         await bot.session.close()

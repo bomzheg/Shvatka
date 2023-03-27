@@ -59,9 +59,7 @@ async def main():
                 ),
                 tech_chat_id=config.bot.log_chat,
             )
-            bot_player = await dao.player.create_dummy()
-            await dao.player.promote(bot_player, bot_player)
-            bot_player.can_be_author = True
+            bot_player = await dao.player.upsert_author_dummy()
             await dao.commit()
             await load_scns(
                 bot_player=bot_player,

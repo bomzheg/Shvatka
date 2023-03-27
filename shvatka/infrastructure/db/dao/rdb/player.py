@@ -118,8 +118,19 @@ class PlayerDao(BaseDAO[models.Player]):
         assert user_db is not None
         user_db.player = player_db
 
-    async def create_dummy(self) -> dto.Player:
-        return (await self._create_dummy()).to_dto()
+    async def upsert_author_dummy(self) -> dto.Player:
+        result = await self.session.scalars(
+            select(models.Player).where(
+                models.Player.is_dummy,
+                models.Player.can_be_author,
+            )
+        )
+        try:
+            dummy = result.one()
+        except NoResultFound:
+            dummy = await self._create_dummy()
+            dummy.can_be_author = True
+        return dummy.to_dto()
 
     async def _create_dummy(self) -> models.Player:
         player = models.Player(is_dummy=True)

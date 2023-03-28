@@ -112,13 +112,13 @@ class GameParser:
                         continue
             if iframe_tags := element.xpath("descendant-or-self::iframe"):
                 for iframe in iframe_tags:
-                    self.current_hint_parts.append(iframe.get("shvatka"))
+                    self.current_hint_parts.append(iframe.get("src"))
             if img_tags := element.xpath("descendant-or-self::img"):
                 for img in img_tags:
                     self.build_current_hint()
                     guid = str(uuid.uuid4())
                     try:
-                        self.files[guid] = await self.download_content(img.get("shvatka"))
+                        self.files[guid] = await self.download_content(img.get("src"))
                         self.hints.append(scn.PhotoHint(file_guid=guid))
                     except ContentDownloadError:
                         self.files[guid] = BytesIO(PARSER_ERROR_IMG)
@@ -126,7 +126,7 @@ class GameParser:
                             scn.PhotoHint(
                                 file_guid=guid,
                                 caption=f"не удалось скачать контент "
-                                f"по ссылке {img.get('shvatka')}",
+                                f"по ссылке {img.get('src')}",
                             )
                         )
                     self.files_meta.append(

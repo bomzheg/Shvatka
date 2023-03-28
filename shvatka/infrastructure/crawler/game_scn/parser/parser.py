@@ -22,7 +22,7 @@ from lxml.etree import _Element
 from shvatka.core.models import enums
 from shvatka.core.models.dto import scn
 from shvatka.core.services.scenario.scn_zip import pack_scn
-from shvatka.core.utils.datetime_utils import tz_local, tz_utc
+from shvatka.core.utils.datetime_utils import tz_utc, tz_game, add_timezone
 from shvatka.infrastructure.crawler.auth import get_auth_cookie
 from shvatka.infrastructure.crawler.constants import GAME_URL_TEMPLATE
 from shvatka.infrastructure.crawler.game_scn.parser.resourses import load_error_img
@@ -79,7 +79,9 @@ class GameParser:
         logger.info("parsing game %s ...", self.id)
         self.name = self.html.xpath("//div[@class='maintitle']/b/a")[0].text
         started_at_text = self.html.xpath("//div[@class='maintitle']/b/span[@id='dt']")[0].text
-        self.start_at = datetime.strptime(started_at_text, "%d.%m.%y в %H:%M")
+        self.start_at = add_timezone(
+            datetime.strptime(started_at_text, "%d.%m.%y в %H:%M")
+        ).astimezone(tz=tz_utc)
 
     async def parse_scenario(self) -> None:  # noqa: C901
         (scn_element,) = self.html.xpath(
@@ -169,7 +171,7 @@ class GameParser:
             td = timedelta(days=1)
         else:
             td = timedelta(seconds=0)
-        at = datetime.combine(date=self.start_at.date() + td, time=time, tzinfo=tz_local)
+        at = datetime.combine(date=self.start_at.date() + td, time=time, tzinfo=tz_game)
         return at
 
     def parse_keys(self) -> dict[str, list[Key]]:
@@ -209,9 +211,7 @@ class GameParser:
                     Key(
                         player=player_element.xpath("./b")[0].text,
                         value=key_element.text,
-                        at=datetime.combine(
-                            date=local_date.date(), time=local_date.time(), tzinfo=tz_local
-                        ).astimezone(tz_utc),
+                        at=add_timezone(local_date).astimezone(tz_utc),
                         level=level,
                     )
                 )

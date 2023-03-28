@@ -18,7 +18,7 @@ from shvatka.core.models.dto import scn  # noqa: F401
 from shvatka.core.services.game import upsert_game
 from shvatka.core.services.scenario.scn_zip import unpack_scn
 from shvatka.core.utils import exceptions
-from shvatka.core.utils.datetime_utils import tz_game
+from shvatka.core.utils.datetime_utils import add_timezone
 from shvatka.infrastructure.clients.factory import create_file_storage
 from shvatka.infrastructure.clients.file_gateway import BotFileGateway
 from shvatka.infrastructure.crawler.factory import get_paths
@@ -137,10 +137,6 @@ async def set_results(game: dto.FullGame, results: GameStat, dao: HolderDao):
                 is_duplicate=False,
                 at=add_timezone(key.at),
             )
-
-
-def add_timezone(dt: datetime) -> datetime:
-    return datetime.combine(dt.date(), dt.time(), tz_game)
 
 
 async def get_or_create_player(dao: HolderDao, forum_player_name: str):

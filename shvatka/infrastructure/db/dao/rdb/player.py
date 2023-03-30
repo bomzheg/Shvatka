@@ -39,7 +39,7 @@ class PlayerDao(BaseDAO[models.Player]):
                 func.count(models.Player.typed_keys),
                 func.count(case((models.KeyTime.is_correct, 1))),
             )
-            .join(models.Player.typed_keys)
+            .outerjoin(models.Player.typed_keys)
             .options(
                 selectinload(models.Player.forum_user),
                 selectinload(models.Player.user),

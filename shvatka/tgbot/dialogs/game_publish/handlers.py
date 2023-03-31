@@ -5,7 +5,7 @@ from typing import Any
 from aiogram import Bot
 from aiogram.types import Message
 from aiogram.utils.text_decorations import html_decoration as hd
-from aiogram_dialog import DialogManager
+from aiogram_dialog import DialogManager, BaseDialogManager
 from telegraph.aio import Telegraph
 
 from shvatka.core.interfaces.clients.file_storage import FileStorage
@@ -73,7 +73,7 @@ async def process_publish_message(message: Message, dialog_: Any, manager: Dialo
     manager.dialog_data["started_at"] = datetime.now(tz=tz_utc).isoformat()
 
 
-async def publish_game(game_publisher: GamePublisher, manager: DialogManager):
+async def publish_game(game_publisher: GamePublisher, manager: BaseDialogManager):
     started_msg_id = await game_publisher.publish_scn()
     results_msg_id = await game_publisher.publish_results()
     keys_msg_id = await game_publisher.publish_keys()

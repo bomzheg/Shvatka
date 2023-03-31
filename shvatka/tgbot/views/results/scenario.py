@@ -39,6 +39,7 @@ class GamePublisher:
         self.keys = keys
 
     async def publish_scn(self) -> int:
+        assert self.game.start_at is not None
         msg = await self.bot.send_message(
             chat_id=self.channel_id,
             text=f"Сценарий игры {hd.quote(self.game.name)} "

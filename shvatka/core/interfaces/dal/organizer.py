@@ -42,3 +42,8 @@ class OrgPermissionFlipper(Committer, OrgByIdGetter, Protocol):
 class OrgDeletedFlipper(Committer, OrgByIdGetter, Protocol):
     async def flip_deleted(self, org: dto.SecondaryOrganizer):
         raise NotImplementedError
+
+
+class PlayerOrgMerger(Protocol):
+    async def replace_player_org(self, primary: dto.Player, secondary: dto.Player):
+        raise NotImplementedError

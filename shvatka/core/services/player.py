@@ -13,6 +13,7 @@ from shvatka.core.interfaces.dal.player import (
     TeamPlayerPermissionFlipper,
     TeamPlayerRoleUpdater,
     TeamPlayerEmojiUpdater,
+    PlayerMerger,
     TeamPlayerHistoryGetter,
 )
 from shvatka.core.interfaces.dal.secure_invite import InviteSaver, InviteRemover, InviterDao
@@ -237,6 +238,32 @@ async def save_promotion_confirm_invite(inviter: dto.Player, dao: InviteSaver) -
 
 async def dismiss_promotion(token: str, dao: InviteRemover):
     await dao.remove_invite(token)
+
+
+async def merge_players(
+    primary: dto.Player,
+    secondary: dto.Player,
+    dao: PlayerMerger,
+):
+    if primary.has_forum_user():
+        raise exceptions.SHDataBreach(
+            player=primary,
+            notify_user="Невозможно привязать к тебе ещё один форумный аккаунт "
+            "(ведь у тебя уже есть форумный аккаунт)",
+        )
+    if secondary.has_user():
+        raise exceptions.SHDataBreach(
+            player=secondary,
+            notify_user="Невозможно привязать к тебе этот форумный аккаунт "
+            "(этот аккаунт уже привязан к другому пользователю)",
+        )
+    await dao.replace_player_keys(primary, secondary)
+    await dao.replace_player_org(primary, secondary)
+    await dao.replace_games_author(primary, secondary)
+    await dao.replace_levels_author(primary, secondary)
+    await dao.replace_player_waiver(primary, secondary)
+    await dao.replace_team_player(primary, secondary)
+    await dao.commit()
 
 
 async def agree_promotion(

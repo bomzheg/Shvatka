@@ -1,8 +1,12 @@
 from typing import Protocol, Sequence
 
 from shvatka.core.interfaces.dal.base import Committer
-from shvatka.core.interfaces.dal.game import ActiveGameFinder
+from shvatka.core.interfaces.dal.game import ActiveGameFinder, GameAuthorMerger
+from shvatka.core.interfaces.dal.key_log import PlayerKeysMerger
+from shvatka.core.interfaces.dal.level import LevelAuthorMerger
+from shvatka.core.interfaces.dal.organizer import PlayerOrgMerger
 from shvatka.core.interfaces.dal.secure_invite import InviteRemover, InviteReader
+from shvatka.core.interfaces.dal.waiver import WaiverPlayerMerger
 from shvatka.core.models import dto
 from shvatka.core.models import enums
 
@@ -101,6 +105,24 @@ class TeamPlayerHistoryGetter(Protocol):
         raise NotImplementedError
 
 
-class TeamPlayerMerger(Protocol):
+class TeamPlayersMerger(Protocol):
     async def replace_team_players(self, primary: dto.Team, secondary: dto.Team):
         raise NotImplementedError
+
+
+class TeamPlayerMerger(Protocol):
+    async def replace_team_player(self, primary: dto.Player, secondary: dto.Player) -> None:
+        raise NotImplementedError
+
+
+class PlayerMerger(
+    GameAuthorMerger,
+    LevelAuthorMerger,
+    PlayerKeysMerger,
+    PlayerOrgMerger,
+    TeamPlayerMerger,
+    WaiverPlayerMerger,
+    Committer,
+    Protocol,
+):
+    pass

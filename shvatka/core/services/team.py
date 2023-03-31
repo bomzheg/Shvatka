@@ -95,14 +95,13 @@ async def merge_teams(
     if secondary.has_chat():
         raise SHDataBreach(
             team=secondary,
-            notify_user="невозможно привязать эту команду к другой команде "
-            "(уже имеет активный чат)",
+            notify_user="невозможно привязать такую команду к этой (та уже имеет активный чат)",
         )
     if primary.has_forum_team():
         raise SHDataBreach(
             team=primary,
-            notify_user="невозможно привязать к этой команде другую "
-            "(уже имеет привязанную команду на форуме)",
+            notify_user="невозможно привязать к этой команде ещё одну "
+            "(эта уже имеет привязанную команду на форуме)",
         )
     await dao.replace_team_waiver(primary, secondary)
     await dao.replace_team_keys(primary, secondary)

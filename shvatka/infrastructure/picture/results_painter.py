@@ -31,5 +31,5 @@ class ResultsPainter:
         assert msg.photo
         photo_file_id = msg.photo[-1].file_id
         await self.dao.game.set_results_photo(game, photo_file_id)
-        # await self.dao.commit() #  TODO uncomment me after debug staging
+        await self.dao.commit()
         return photo_file_id

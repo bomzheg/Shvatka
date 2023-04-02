@@ -54,6 +54,13 @@ class FileInfoDao(BaseDAO[models.FileInfo]):
             .values(author_id=new_author.id)
         )
 
+    async def transfer_all(self, primary: dto.Player, secondary: dto.Player) -> None:
+        await self.session.execute(
+            update(models.FileInfo)
+            .where(models.FileInfo.author_id == secondary.id)
+            .values(author_id=primary.id)
+        )
+
     async def _get_by_guid(self, guid: str) -> models.FileInfo:
         result: ScalarResult[models.FileInfo] = await self.session.scalars(
             select(models.FileInfo).where(models.FileInfo.guid == guid)

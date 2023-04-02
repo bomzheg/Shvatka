@@ -72,6 +72,13 @@ class OrganizerDao(BaseDAO[models.Organizer]):
             game=result.game.to_dto(author=result.game.author.to_dto_user_prefetched()),
         )
 
+    async def replace_player(self, primary: dto.Player, secondary: dto.Player):
+        await self.session.execute(
+            update(models.KeyTime)
+            .where(models.KeyTime.player_id == secondary.id)
+            .values(player_id=primary.id)
+        )
+
     async def flip_permission(self, org: dto.SecondaryOrganizer, permission: OrgPermission):
         await self.session.execute(
             update(models.Organizer)

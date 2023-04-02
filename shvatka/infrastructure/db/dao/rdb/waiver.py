@@ -134,3 +134,10 @@ class WaiverDao(BaseDAO[models.Waiver]):
             .where(models.Waiver.player_id == player.id, models.Game.number == game_number)
         )
         return result.one_or_none() is not None
+
+    async def replace_all_waivers(self, primary: dto.Player, secondary: dto.Player):
+        await self.session.execute(
+            update(models.Waiver)
+            .where(models.Waiver.player_id == secondary.id)
+            .values(player_id=primary.id)
+        )

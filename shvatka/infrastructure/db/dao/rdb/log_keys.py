@@ -101,3 +101,10 @@ class KeyTimeDao(BaseDAO[models.KeyTime]):
             .where(models.KeyTime.team_id == secondary.id)
             .values(team_id=primary.id)
         )
+
+    async def replace_player_keys(self, primary: dto.Player, secondary: dto.Player):
+        await self.session.execute(
+            update(models.KeyTime)
+            .where(models.KeyTime.player_id == secondary.id)
+            .values(player_id=primary.id)
+        )

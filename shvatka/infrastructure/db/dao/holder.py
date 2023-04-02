@@ -8,7 +8,7 @@ from shvatka.core.interfaces.dal.key_log import TypedKeyGetter
 from shvatka.core.interfaces.dal.level_testing import LevelTestingDao
 from shvatka.core.interfaces.dal.level_times import GameStarter, GameStatDao
 from shvatka.core.interfaces.dal.organizer import OrgAdder
-from shvatka.core.interfaces.dal.player import TeamLeaver, PlayerPromoter, PlayerMerger
+from shvatka.core.interfaces.dal.player import TeamLeaver, PlayerPromoter, PlayerMergerGetter
 from shvatka.core.interfaces.dal.team import TeamCreator
 from shvatka.core.interfaces.dal.waiver import WaiverVoteAdder, WaiverVoteGetter, WaiverApprover
 from .complex import WaiverVoteAdderImpl, WaiverVoteGetterImpl
@@ -142,7 +142,7 @@ class HolderDao:
         return PlayerPromoterImpl(dao=self)
 
     @property
-    def player_merger(self) -> PlayerMerger:
+    def player_merger(self) -> PlayerMergerGetter:
         return PlayerMergerImpl(dao=self)
 
     @property

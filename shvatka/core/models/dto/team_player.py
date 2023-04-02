@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime
 
+from .common import DateRange
 from .player import Player
 from .team import Team
 from .. import enums
@@ -100,3 +101,13 @@ class FullTeamPlayer(TeamPlayer):
 
     def __hash__(self):
         return hash(self.id)
+
+
+@dataclass
+class TeamDataRange:
+    range: DateRange
+    team_id: int
+
+    @classmethod
+    def from_team_player(cls, tp: TeamPlayer):
+        return cls(range=DateRange(tp.date_joined, tp.date_left), team_id=tp.team_id)

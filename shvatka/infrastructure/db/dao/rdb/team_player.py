@@ -215,6 +215,13 @@ class TeamPlayerDao(BaseDAO[models.TeamPlayer]):
         except NoResultFound:
             raise PlayerNotInTeam(player=player)
 
+    async def get_history(self, player: dto.Player) -> list[dto.TeamPlayer]:
+        result: ScalarResult[models.TeamPlayer] = await self.session.scalars(
+            select(models.TeamPlayer).where(models.TeamPlayer.player_id == player.id)
+        )
+        history = result.all()
+        return [tp.to_dto() for tp in history]
+
 
 def get_leaved_condition(for_date: datetime | None = None) -> Sequence[ColumnElement["bool"]]:
     if for_date is None:

@@ -13,8 +13,8 @@ from shvatka.core.interfaces.dal.player import (
     TeamPlayerPermissionFlipper,
     TeamPlayerRoleUpdater,
     TeamPlayerEmojiUpdater,
-    PlayerMerger,
     TeamPlayerHistoryGetter,
+    PlayerMergerGetter,
 )
 from shvatka.core.interfaces.dal.secure_invite import InviteSaver, InviteRemover, InviterDao
 from shvatka.core.models import dto
@@ -243,7 +243,7 @@ async def dismiss_promotion(token: str, dao: InviteRemover):
 async def merge_players(
     primary: dto.Player,
     secondary: dto.Player,
-    dao: PlayerMerger,
+    dao: PlayerMergerGetter,
 ):
     if primary.has_forum_user():
         raise exceptions.SHDataBreach(
@@ -261,9 +261,59 @@ async def merge_players(
     await dao.replace_player_org(primary, secondary)
     await dao.replace_games_author(primary, secondary)
     await dao.replace_levels_author(primary, secondary)
+    await dao.replace_file_info(primary, secondary)
+    await merge_team_history(primary, secondary, dao)
     await dao.replace_player_waiver(primary, secondary)
-    await dao.replace_team_player(primary, secondary)
+
     await dao.commit()
+
+
+async def merge_team_history(primary: dto.Player, secondary: dto.Player, dao: PlayerMergerGetter):
+    raise NotImplementedError()
+
+
+async def merge_team_history_2(
+    primary: dto.Player, secondary: dto.Player, dao: PlayerMergerGetter
+):
+    primary_history = await dao.get_player_teams_history(primary)
+    secondary_history = await dao.get_player_teams_history(secondary)
+    merged = list(sorted(primary_history + secondary_history, key=lambda tp: tp.date_joined))
+    latest = merged[0]
+    result = [latest]
+    for tp in merged[1:]:
+        assert latest.date_left is not None, "TODO"
+        if tp.date_joined > latest.date_left:
+            latest = tp
+            result.append(latest)
+            continue
+
+
+async def merge_team_history_1(
+    primary: dto.Player, secondary: dto.Player, dao: PlayerMergerGetter
+):
+    primary_history = await dao.get_player_teams_history(primary)
+    secondary_history = await dao.get_player_teams_history(secondary)
+    primary_iter = iter(primary_history)
+    secondary_iter = iter(secondary_history)
+    result: list[dto.TeamDataRange] = []
+    current_primary = next(primary_iter)  # TODO catch StopIteration
+    assert current_primary.date_left is not None, "TODO"
+    current_secondary = next(secondary_iter)  # TODO catch StopIteration
+    assert current_secondary.date_left is not None, "TODO"
+    while True:
+        if current_primary.date_left < current_secondary.date_joined:
+            result.append(dto.TeamDataRange.from_team_player(current_primary))
+            current_primary = next(primary_iter)
+            assert current_primary.date_left is not None, "TODO"
+        if current_secondary.date_left < current_primary.date_joined:
+            result.append(dto.TeamDataRange.from_team_player(current_secondary))
+            current_secondary = next(secondary_iter)
+            assert current_secondary.date_left is not None, "TODO"
+        if current_primary.date_joined < current_secondary.date_joined:
+            assert current_primary.date_left is not None, "TODO"
+            assert current_secondary.date_left is not None, "TODO"
+            if current_primary.date_left < current_secondary.date_left:
+                pass
 
 
 async def agree_promotion(

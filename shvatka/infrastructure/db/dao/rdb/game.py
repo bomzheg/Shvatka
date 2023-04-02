@@ -206,6 +206,13 @@ class GameDao(BaseDAO[models.Game]):
         game_db = result.one()
         return game_db.to_dto(game_db.author.to_dto_user_prefetched())
 
+    async def transfer_all(self, primary: dto.Player, secondary: dto.Player):
+        await self.session.execute(
+            update(models.Game)
+            .where(models.Game.author_id == secondary.id)
+            .values(author_id=primary.id)
+        )
+
     async def is_name_available(self, name: str) -> bool:
         return not bool(await self._get_game_by_name(name))
 

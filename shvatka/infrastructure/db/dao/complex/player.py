@@ -1,7 +1,7 @@
 import typing
 from dataclasses import dataclass
 
-from shvatka.core.interfaces.dal.player import PlayerPromoter, PlayerMerger
+from shvatka.core.interfaces.dal.player import PlayerPromoter, PlayerMergerGetter
 from shvatka.core.models import dto
 
 if typing.TYPE_CHECKING:
@@ -29,5 +29,29 @@ class PlayerPromoterImpl(PlayerPromoter):
 
 
 @dataclass
-class PlayerMergerImpl(PlayerMerger):
+class PlayerMergerImpl(PlayerMergerGetter):
     dao: "HolderDao"
+
+    async def replace_games_author(self, primary: dto.Player, secondary: dto.Player) -> None:
+        return await self.dao.game.transfer_all(primary, secondary)
+
+    async def replace_levels_author(self, primary: dto.Player, secondary: dto.Player) -> None:
+        return await self.dao.level.transfer_all(primary, secondary)
+
+    async def replace_file_info(self, primary: dto.Player, secondary: dto.Player) -> None:
+        return await self.dao.file_info.transfer_all(primary, secondary)
+
+    async def replace_player_keys(self, primary: dto.Player, secondary: dto.Player) -> None:
+        return await self.dao.key_time.replace_player_keys(primary, secondary)
+
+    async def replace_player_org(self, primary: dto.Player, secondary: dto.Player) -> None:
+        return await self.dao.key_time.replace_player_keys(primary, secondary)
+
+    async def replace_player_waiver(self, primary: dto.Player, secondary: dto.Player) -> None:
+        return await self.dao.waiver.replace_all_waivers(primary, secondary)
+
+    async def get_player_teams_history(self, player: dto.Player) -> list[dto.TeamPlayer]:
+        return await self.dao.team_player.get_history(player)
+
+    async def commit(self) -> None:
+        return await self.dao.commit()

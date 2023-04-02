@@ -1,6 +1,7 @@
 from typing import Protocol, Sequence
 
 from shvatka.core.interfaces.dal.base import Committer
+from shvatka.core.interfaces.dal.file_info import FileInfoMerger
 from shvatka.core.interfaces.dal.game import ActiveGameFinder, GameAuthorMerger
 from shvatka.core.interfaces.dal.key_log import PlayerKeysMerger
 from shvatka.core.interfaces.dal.level import LevelAuthorMerger
@@ -110,18 +111,19 @@ class TeamPlayersMerger(Protocol):
         raise NotImplementedError
 
 
-class TeamPlayerMerger(Protocol):
-    async def replace_team_player(self, primary: dto.Player, secondary: dto.Player) -> None:
+class TeamPlayerHistoryGetter(Protocol):
+    async def get_player_teams_history(self, player: dto.Player) -> list[dto.TeamPlayer]:
         raise NotImplementedError
 
 
-class PlayerMerger(
+class PlayerMergerGetter(
     GameAuthorMerger,
     LevelAuthorMerger,
     PlayerKeysMerger,
     PlayerOrgMerger,
-    TeamPlayerMerger,
+    TeamPlayerHistoryGetter,
     WaiverPlayerMerger,
+    FileInfoMerger,
     Committer,
     Protocol,
 ):

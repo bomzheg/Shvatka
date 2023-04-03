@@ -7,6 +7,7 @@ from aiogram_dialog.widgets.kbd import Button
 from shvatka.core.models import dto
 from shvatka.core.models.enums.org_permission import OrgPermission
 from shvatka.core.services.organizers import flip_permission, get_org_by_id, flip_deleted
+from shvatka.core.utils import exceptions
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.tgbot import states
 
@@ -21,14 +22,16 @@ async def select_org(c: CallbackQuery, widget: Any, manager: DialogManager, item
 
 
 async def change_permission_handler(c: CallbackQuery, button: Button, manager: DialogManager):
-    await c.answer()
     dao: HolderDao = manager.middleware_data["dao"]
     author: dto.Player = manager.middleware_data["player"]
     org_id = manager.dialog_data["org_id"]
     org = await get_org_by_id(org_id, dao.organizer)
     assert button.widget_id
     permission = OrgPermission[button.widget_id]
-    await flip_permission(author, org, permission, dao.organizer)
+    try:
+        await flip_permission(author, org, permission, dao.organizer)
+    except exceptions.GameHasAnotherAuthor:
+        await c.answer("разрешён только просмотр")
 
 
 async def change_deleted_handler(c: CallbackQuery, button: Button, manager: DialogManager):
@@ -37,4 +40,7 @@ async def change_deleted_handler(c: CallbackQuery, button: Button, manager: Dial
     author: dto.Player = manager.middleware_data["player"]
     org_id = manager.dialog_data["org_id"]
     org = await get_org_by_id(org_id, dao.organizer)
-    await flip_deleted(author, org, dao.organizer)
+    try:
+        await flip_deleted(author, org, dao.organizer)
+    except exceptions.GameHasAnotherAuthor:
+        await c.answer("разрешён только просмотр")

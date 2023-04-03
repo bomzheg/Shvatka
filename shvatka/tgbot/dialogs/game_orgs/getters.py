@@ -11,11 +11,12 @@ from shvatka.tgbot import keyboards as kb
 
 async def get_orgs(dialog_manager: DialogManager, **_):
     game_id = dialog_manager.start_data["game_id"]
+    completed = dialog_manager.start_data.get("completed", False)
     dao: HolderDao = dialog_manager.middleware_data["dao"]
     author: dto.Player = dialog_manager.middleware_data["player"]
     game = await get_game(
         id_=game_id,
-        author=author,
+        author=author if not completed else None,
         dao=dao.game,
     )
     orgs = await organizers.get_secondary_orgs(game, dao.organizer, with_deleted=True)

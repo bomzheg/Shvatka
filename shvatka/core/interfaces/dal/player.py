@@ -96,6 +96,11 @@ class TeamPlayerEmojiUpdater(TeamPlayerEmojiChanger, TeamPlayerGetter, Committer
     pass
 
 
+class TeamPlayerHistoryGetter(Protocol):
+    async def get_full_history(self, player: dto.Player) -> list[dto.TeamPlayer]:
+        raise NotImplementedError
+
+
 class TeamPlayerMerger(Protocol):
     async def replace_team_players(self, primary: dto.Team, secondary: dto.Team):
         raise NotImplementedError

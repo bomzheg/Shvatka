@@ -2,7 +2,7 @@ from typing import Any
 
 from aiogram_dialog import DialogManager
 
-from shvatka.core.services.player import get_player_with_stat
+from shvatka.core.services.player import get_player_with_stat, get_teams_history
 from shvatka.infrastructure.db.dao.holder import HolderDao
 
 
@@ -15,4 +15,5 @@ async def player_getter(dao: HolderDao, dialog_manager: DialogManager, **_) -> d
     return {
         "player": player,
         "correct_keys": correct_keys_percent,
+        "history": await get_teams_history(player, dao.team_player),
     }

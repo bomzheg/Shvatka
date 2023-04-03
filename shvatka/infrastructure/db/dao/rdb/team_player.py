@@ -6,6 +6,7 @@ from sqlalchemy import update, not_
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
+from sqlalchemy.orm.interfaces import ORMOption
 
 from shvatka.core.models import dto
 from shvatka.core.models import enums
@@ -28,16 +29,7 @@ class TeamPlayerDao(BaseDAO[models.TeamPlayer]):
     ) -> dto.Team | None:
         result: Result[tuple[models.TeamPlayer]] = await self.session.execute(
             select(models.TeamPlayer)
-            .options(
-                joinedload(models.TeamPlayer.team)
-                .joinedload(models.Team.captain)
-                .joinedload(models.Player.user),
-                joinedload(models.TeamPlayer.team)
-                .joinedload(models.Team.captain)
-                .joinedload(models.Player.forum_user),
-                joinedload(models.TeamPlayer.team).joinedload(models.Team.chat),
-                joinedload(models.TeamPlayer.team).joinedload(models.Team.forum_team),
-            )
+            .options(get_team_load_options())
             .where(
                 models.TeamPlayer.player_id == player.id,
                 *get_leaved_condition(for_date),
@@ -115,15 +107,11 @@ class TeamPlayerDao(BaseDAO[models.TeamPlayer]):
                 models.TeamPlayer.team_id == team.id,
                 *not_leaved(),
             )
-            .options(
-                joinedload(models.TeamPlayer.player).joinedload(models.Player.user),
-                joinedload(models.TeamPlayer.player).joinedload(models.Player.forum_user),
-            )
+            .options(get_player_full_load_options())
         )
         players: Sequence[models.TeamPlayer] = result.all()
         return [
-            dto.FullTeamPlayer.from_simple(
-                team_player=team_player.to_dto(),
+            team_player.to_full_dto(
                 player=team_player.player.to_dto_user_prefetched(),
                 team=team,
             )
@@ -163,6 +151,22 @@ class TeamPlayerDao(BaseDAO[models.TeamPlayer]):
             .values(team_id=primary.id)
         )
 
+    async def get_full_history(self, player: dto.Player) -> list[dto.TeamPlayer]:
+        result: ScalarResult[models.TeamPlayer] = await self.session.scalars(
+            select(models.TeamPlayer)
+            .where(models.TeamPlayer.player_id == player.id)
+            .order_by(models.TeamPlayer.date_joined)
+            .options(
+                get_player_full_load_options(),
+                get_team_load_options(),
+            )
+        )
+        history = result.all()
+        return [
+            tp.to_full_dto(tp.player.to_dto_user_prefetched(), tp.team.to_dto_chat_prefetched())
+            for tp in history
+        ]
+
     async def _get_my_team_player(
         self, player: dto.Player, at: datetime | None = None
     ) -> models.TeamPlayer:
@@ -198,3 +202,21 @@ def not_leaved_for_date(for_date: datetime) -> Sequence[ColumnElement["bool"]]:
 
 def not_leaved() -> Sequence[ColumnElement["bool"]]:
     return (models.TeamPlayer.date_left.is_(None),)
+
+
+def get_player_full_load_options() -> ORMOption:
+    return joinedload(models.TeamPlayer.player).options(
+        joinedload(models.Player.user),
+        joinedload(models.Player.forum_user),
+    )
+
+
+def get_team_load_options() -> ORMOption:
+    return joinedload(models.TeamPlayer.team).options(
+        joinedload(models.Team.chat),
+        joinedload(models.Team.forum_team),
+        joinedload(models.Team.captain).options(
+            joinedload(models.Player.user),
+            joinedload(models.Player.forum_user),
+        ),
+    )

@@ -55,3 +55,6 @@ class TeamPlayer(Base):
             _can_add_players=self.can_add_players,
             _can_remove_players=self.can_remove_players,
         )
+
+    def to_full_dto(self, player: dto.Player, team: dto.Team) -> dto.FullTeamPlayer:
+        return dto.FullTeamPlayer.from_simple(self.to_dto(), player, team)

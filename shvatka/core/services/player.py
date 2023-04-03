@@ -13,6 +13,7 @@ from shvatka.core.interfaces.dal.player import (
     TeamPlayerPermissionFlipper,
     TeamPlayerRoleUpdater,
     TeamPlayerEmojiUpdater,
+    TeamPlayerHistoryGetter,
 )
 from shvatka.core.interfaces.dal.secure_invite import InviteSaver, InviteRemover, InviterDao
 from shvatka.core.models import dto
@@ -257,6 +258,12 @@ async def agree_promotion(
         )
     inviter = await dao.get_by_id(inviter_id)
     await promote(inviter, target, dao)
+
+
+async def get_teams_history(
+    player: dto.Player, dao: TeamPlayerHistoryGetter
+) -> list[dto.TeamPlayer]:
+    return await dao.get_full_history(player)
 
 
 async def flip_permission(

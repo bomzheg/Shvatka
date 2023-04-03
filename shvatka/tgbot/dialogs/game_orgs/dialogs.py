@@ -21,7 +21,7 @@ game_orgs = Dialog(
         SwitchInlineQuery(
             Const("👋Добавить организатора"),
             Format("{inline_query}"),
-            when=~F["game"].is_completed(),
+            when=~F["game"].is_complete(),
         ),
         ScrollingGroup(
             Select(

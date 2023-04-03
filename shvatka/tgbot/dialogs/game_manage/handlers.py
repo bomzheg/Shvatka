@@ -142,7 +142,7 @@ async def schedule_game(c: CallbackQuery, widget: Button, manager: DialogManager
 async def show_game_orgs(c: CallbackQuery, widget: Button, manager: DialogManager):
     await c.answer()
     game_id = manager.dialog_data["game_id"]
-    await manager.start(states.GameOrgsSG.orgs_list, data={"game_id": game_id})
+    await manager.start(states.GameOrgsSG.orgs_list, data={"game_id": game_id, "completed": True})
 
 
 async def show_my_game_orgs(c: CallbackQuery, widget: Button, manager: DialogManager):

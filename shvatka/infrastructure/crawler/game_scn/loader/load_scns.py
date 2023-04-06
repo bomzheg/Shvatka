@@ -18,7 +18,7 @@ from shvatka.core.models.dto import scn  # noqa: F401
 from shvatka.core.services.game import upsert_game
 from shvatka.core.services.scenario.scn_zip import unpack_scn
 from shvatka.core.utils import exceptions
-from shvatka.core.utils.datetime_utils import add_timezone
+from shvatka.core.utils.datetime_utils import add_timezone, tz_utc
 from shvatka.infrastructure.clients.factory import create_file_storage
 from shvatka.infrastructure.clients.file_gateway import BotFileGateway
 from shvatka.infrastructure.crawler.factory import get_paths
@@ -106,7 +106,7 @@ async def load_scns(
 
 
 async def set_results(game: dto.FullGame, results: GameStat, dao: HolderDao):
-    game_start_at = add_timezone(results.start_at)
+    game_start_at = add_timezone(results.start_at, timezone=tz_utc)
     await dao.game.set_start_at(game, game_start_at)
     await dao.game.set_number(game, results.id)
     for forum_team_name, levels in results.results.items():
@@ -114,7 +114,9 @@ async def set_results(game: dto.FullGame, results: GameStat, dao: HolderDao):
         await dao.level_time.set_to_level(team, game, 0, game_start_at)
         for level in levels:
             if level.at is not None:
-                await dao.level_time.set_to_level(team, game, level.number, add_timezone(level.at))
+                await dao.level_time.set_to_level(
+                    team, game, level.number, add_timezone(level.at, timezone=tz_utc)
+                )
     for forum_team_name, keys in results.keys.items():
         team = await dao.team.get_by_forum_team_name(forum_team_name)
         for i, key in enumerate(keys):
@@ -135,7 +137,7 @@ async def set_results(game: dto.FullGame, results: GameStat, dao: HolderDao):
                 level=game.levels[key.level - 1],
                 is_correct=is_correct,
                 is_duplicate=False,
-                at=add_timezone(key.at),
+                at=add_timezone(key.at, timezone=tz_utc),
             )
 
 

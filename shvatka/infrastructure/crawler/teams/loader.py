@@ -13,7 +13,8 @@ from shvatka.common.factory import create_dataclass_factory
 from shvatka.core.models import dto, enums
 from shvatka.core.utils import exceptions
 from shvatka.core.utils.datetime_utils import tz_utc
-from shvatka.infrastructure.crawler.models.team import ParsedTeam
+from shvatka.infrastructure.crawler.game_scn.common import UNPARSEABLE_GAMES
+from shvatka.infrastructure.crawler.models.team import ParsedTeam, ParsedPlayer
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.infrastructure.db.faсtory import create_pool, create_level_test_dao, create_redis
 from shvatka.tgbot.config.parser.main import load_config
@@ -64,6 +65,7 @@ async def save_team(parsed_team: ParsedTeam, with_team_players: bool, dao: Holde
     team = await dao.team.create_by_forum(saved_team, players.get(captain, None))
     if with_team_players:
         for parsed_player, saved_player in players.items():
+            await add_waivers(parsed_player, saved_player, dao)
             try:
                 team_player = await dao.team_player.get_team_player(saved_player)
             except exceptions.PlayerNotInTeam:
@@ -84,18 +86,35 @@ async def save_team(parsed_team: ParsedTeam, with_team_players: bool, dao: Holde
                 as_captain=((captain == parsed_player) if captain else False),
                 joined_at=datetime.now(tz=tz_utc),
             )
-            for game_number in parsed_player.games:
-                if await dao.waiver.is_player_played(saved_player, game_number):
-                    continue
-                game = await dao.game.get_game_by_number(game_number)
-                team = await dao.team_player.get_team(saved_player, game.start_at)
-                if not team or not await dao.waiver.is_team_played(team, game_number):
-                    raise RuntimeError(
-                        f"don't know how to chose team for game number {game_number}. "
-                        f"current team is {team}"
-                    )
-                waiver = dto.Waiver(player=saved_player, team=team, game=game, played=enums.Played.yes)
-                await dao.waiver.upsert(waiver)
+
+
+async def add_waivers(
+    parsed_player: ParsedPlayer, saved_player: dto.Player, dao: HolderDao
+) -> None:
+    for game_number in parsed_player.games:
+        if game_number in UNPARSEABLE_GAMES:
+            continue
+        if await dao.waiver.is_player_played(saved_player, game_number):
+            continue
+        logger.debug(f"adding {game_number} for player {saved_player.name_mention}")
+        game = await dao.game.get_game_by_number(game_number)
+        team_for_game = await dao.team_player.get_team(saved_player, game.start_at)
+        if not team_for_game or not await dao.waiver.is_team_played(team_for_game, game_number):
+            logger.warning(
+                f"don't know how to chose team for player {saved_player.name_mention} "
+                f"for game number {game_number}. "
+                f"current team is {team_for_game}"
+            )
+            continue
+        waiver = dto.Waiver(
+            player=saved_player, team=team_for_game, game=game, played=enums.Played.yes
+        )
+        await dao.waiver.upsert(waiver)
+        logger.info(
+            f"added waiver for player {saved_player.name_mention} "
+            f"for game number {game_number} "
+            f"team is {team_for_game}"
+        )
 
 
 if __name__ == "__main__":

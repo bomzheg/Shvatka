@@ -118,7 +118,9 @@ class TeamPlayerDao(BaseDAO[models.TeamPlayer]):
             for team_player in players
         ]
 
-    async def get_team_player(self, player: dto.Player, at: datetime | None = None) -> dto.TeamPlayer:
+    async def get_team_player(
+        self, player: dto.Player, at: datetime | None = None
+    ) -> dto.TeamPlayer:
         return (await self._get_my_team_player(player, at)).to_dto()
 
     async def flip_permission(

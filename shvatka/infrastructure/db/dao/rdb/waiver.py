@@ -119,7 +119,8 @@ class WaiverDao(BaseDAO[models.Waiver]):
 
     async def is_team_played(self, team: dto.Team, game_number: int) -> bool:
         result = await self.session.scalars(
-            select(models.Waiver.id)
+            select(models.Waiver.game_id)
+            .distinct()
             .join(models.Waiver.game)
             .where(models.Waiver.team_id == team.id, models.Game.number == game_number)
         )
@@ -127,7 +128,8 @@ class WaiverDao(BaseDAO[models.Waiver]):
 
     async def is_player_played(self, player: dto.Player, game_number: int) -> bool:
         result = await self.session.scalars(
-            select(models.Waiver.id)
+            select(models.Waiver.game_id)
+            .distinct()
             .join(models.Waiver.game)
             .where(models.Waiver.player_id == player.id, models.Game.number == game_number)
         )

@@ -25,6 +25,7 @@ from shvatka.core.services.scenario.scn_zip import pack_scn
 from shvatka.core.utils.datetime_utils import tz_utc, tz_game, add_timezone
 from shvatka.infrastructure.crawler.auth import get_auth_cookie
 from shvatka.infrastructure.crawler.constants import GAME_URL_TEMPLATE
+from shvatka.infrastructure.crawler.game_scn.common import UNPARSEABLE_GAMES
 from shvatka.infrastructure.crawler.game_scn.parser.resourses import load_error_img
 from shvatka.infrastructure.crawler.models.stat import LevelTime, Key, GameStat
 
@@ -317,15 +318,8 @@ def get_finished_level_number(cells: list[_Element]):
 
 
 def get_parseable_games_ids():
-    unparseable_games_ids = {*range(19), 31, 51, 52, 84}
-    """
-    до 19 - игры публиковались, просто выкладывались на форуме
-    31 - Ночной детектив (не стандарт)
-    51 - не была проведена до конца
-    52, 84 - Тачки и Гарри Поттер - нестандартный движок
-    """
     all_games_ids = set(range(132))
-    return list(sorted(all_games_ids - unparseable_games_ids))
+    return list(sorted(all_games_ids - UNPARSEABLE_GAMES))
 
 
 if __name__ == "__main__":

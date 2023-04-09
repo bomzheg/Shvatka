@@ -18,9 +18,10 @@ from shvatka.infrastructure.db.faсtory import create_pool, create_level_test_da
 from shvatka.tgbot.config.parser.main import load_config
 
 logger = logging.getLogger(__name__)
+WITH_TEAM_PLAYERS = False
 
 
-async def main():
+async def main(with_team_players: bool):
     paths = get_paths()
 
     setup_logging(paths)
@@ -35,17 +36,17 @@ async def main():
             create_redis(config.redis) as redis,
         ):
             dao = HolderDao(session, redis, level_test_dao)
-            await load_teams(path, dao, dcf)
+            await load_teams(path, with_team_players, dao, dcf)
     finally:
         close_all_sessions()
 
 
-async def load_teams(path: Path, dao: HolderDao, dcf: Factory):
+async def load_teams(path: Path, with_team_players: bool, dao: HolderDao, dcf: Factory):
     with path.open(encoding="utf8") as f:
         teams = dcf.load(json.load(f), list[ParsedTeam])
     for team in teams:
         logger.info("loading team %s", team.name)
-        await save_team(team, False, dao)
+        await save_team(team, with_team_players, dao)
     await dao.commit()
 
 
@@ -85,4 +86,4 @@ async def save_team(parsed_team: ParsedTeam, with_team_players: bool, dao: Holde
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    asyncio.run(main(WITH_TEAM_PLAYERS))

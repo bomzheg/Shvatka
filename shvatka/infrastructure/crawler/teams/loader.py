@@ -10,6 +10,7 @@ from sqlalchemy.orm import close_all_sessions
 from shvatka.api.main_factory import get_paths
 from shvatka.common.config.parser.logging_config import setup_logging
 from shvatka.common.factory import create_dataclass_factory
+from shvatka.core.models import dto, enums
 from shvatka.core.utils import exceptions
 from shvatka.core.utils.datetime_utils import tz_utc
 from shvatka.infrastructure.crawler.models.team import ParsedTeam
@@ -83,6 +84,18 @@ async def save_team(parsed_team: ParsedTeam, with_team_players: bool, dao: Holde
                 as_captain=((captain == parsed_player) if captain else False),
                 joined_at=datetime.now(tz=tz_utc),
             )
+            for game_number in parsed_player.games:
+                if await dao.waiver.is_player_played(saved_player, game_number):
+                    continue
+                game = await dao.game.get_game_by_number(game_number)
+                team = await dao.team_player.get_team(saved_player, game.start_at)
+                if not team or not await dao.waiver.is_team_played(team, game_number):
+                    raise RuntimeError(
+                        f"don't know how to chose team for game number {game_number}. "
+                        f"current team is {team}"
+                    )
+                waiver = dto.Waiver(player=saved_player, team=team, game=game, played=enums.Played.yes)
+                await dao.waiver.upsert(waiver)
 
 
 if __name__ == "__main__":

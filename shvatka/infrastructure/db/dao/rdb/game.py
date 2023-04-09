@@ -52,8 +52,10 @@ class GameDao(BaseDAO[models.Game]):
             id_,
             (
                 joinedload(models.Game.levels),
-                joinedload(models.Game.author).joinedload(models.Player.user),
-                joinedload(models.Game.author).joinedload(models.Player.forum_user),
+                joinedload(models.Game.author).options(
+                    joinedload(models.Player.user),
+                    joinedload(models.Player.forum_user),
+                ),
             ),
         )
         author = game_db.author.to_dto_user_prefetched()
@@ -65,8 +67,10 @@ class GameDao(BaseDAO[models.Game]):
     async def get_by_id(self, id_: int, author: dto.Player | None = None) -> dto.Game:
         if not author:
             options = (
-                joinedload(models.Game.author).joinedload(models.Player.user),
-                joinedload(models.Game.author).joinedload(models.Player.forum_user),
+                joinedload(models.Game.author).options(
+                    joinedload(models.Player.user),
+                    joinedload(models.Player.forum_user),
+                ),
             )
             game = await self._get_by_id(id_, options)
             author = game.author.to_dto_user_prefetched()
@@ -90,8 +94,10 @@ class GameDao(BaseDAO[models.Game]):
         result = await self.session.scalars(
             select(models.Game)
             .options(
-                joinedload(models.Game.author).joinedload(models.Player.user),
-                joinedload(models.Game.author).joinedload(models.Player.forum_user),
+                joinedload(models.Game.author).options(
+                    joinedload(models.Player.user),
+                    joinedload(models.Player.forum_user),
+                )
             )
             .where(
                 models.Game.status == GameStatus.complete,
@@ -118,8 +124,10 @@ class GameDao(BaseDAO[models.Game]):
             select(models.Game)
             .where(models.Game.status.in_(ACTIVE_STATUSES))
             .options(
-                joinedload(models.Game.author).joinedload(models.Player.user),
-                joinedload(models.Game.author).joinedload(models.Player.forum_user),
+                joinedload(models.Game.author).options(
+                    joinedload(models.Player.user),
+                    joinedload(models.Player.forum_user),
+                )
             )
         )
         try:
@@ -182,6 +190,20 @@ class GameDao(BaseDAO[models.Game]):
         await self.session.execute(
             update(models.Game).where(models.Game.id == game.id).values(author_id=new_author.id)
         )
+
+    async def get_game_by_number(self, number: int) -> dto.Game:
+        result: ScalarResult[models.Game] = await self.session.scalars(
+            select(models.Game)
+            .where(models.Game.number == number)
+            .options(
+                joinedload(models.Game.author).options(
+                    joinedload(models.Player.user),
+                    joinedload(models.Player.forum_user),
+                )
+            )
+        )
+        game_db = result.one()
+        return game_db.to_dto(game_db.author.to_dto_user_prefetched())
 
     async def is_name_available(self, name: str) -> bool:
         return not bool(await self._get_game_by_name(name))

@@ -153,7 +153,7 @@ class TeamPlayerDao(BaseDAO[models.TeamPlayer]):
             .values(team_id=primary.id)
         )
 
-    async def get_full_history(self, player: dto.Player) -> list[dto.TeamPlayer]:
+    async def get_full_history(self, player: dto.Player) -> list[dto.FullTeamPlayer]:
         result: ScalarResult[models.TeamPlayer] = await self.session.scalars(
             select(models.TeamPlayer)
             .where(models.TeamPlayer.player_id == player.id)

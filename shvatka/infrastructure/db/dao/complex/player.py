@@ -1,7 +1,7 @@
 import typing
 from dataclasses import dataclass
 
-from shvatka.core.interfaces.dal.player import PlayerPromoter, PlayerMergerGetter
+from shvatka.core.interfaces.dal.player import PlayerPromoter, PlayerMerger
 from shvatka.core.models import dto
 
 if typing.TYPE_CHECKING:
@@ -29,7 +29,7 @@ class PlayerPromoterImpl(PlayerPromoter):
 
 
 @dataclass
-class PlayerMergerImpl(PlayerMergerGetter):
+class PlayerMergerImpl(PlayerMerger):
     dao: "HolderDao"
 
     async def replace_games_author(self, primary: dto.Player, secondary: dto.Player) -> None:

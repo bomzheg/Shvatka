@@ -13,8 +13,8 @@ from shvatka.core.interfaces.dal.player import (
     TeamPlayerPermissionFlipper,
     TeamPlayerRoleUpdater,
     TeamPlayerEmojiUpdater,
-    TeamPlayerHistoryGetter,
-    PlayerMergerGetter,
+    PlayerMerger,
+    TeamPlayerFullHistoryGetter,
 )
 from shvatka.core.interfaces.dal.secure_invite import InviteSaver, InviteRemover, InviterDao
 from shvatka.core.models import dto
@@ -243,7 +243,7 @@ async def dismiss_promotion(token: str, dao: InviteRemover):
 async def merge_players(
     primary: dto.Player,
     secondary: dto.Player,
-    dao: PlayerMergerGetter,
+    dao: PlayerMerger,
 ):
     if primary.has_forum_user():
         raise exceptions.SHDataBreach(
@@ -268,13 +268,11 @@ async def merge_players(
     await dao.commit()
 
 
-async def merge_team_history(primary: dto.Player, secondary: dto.Player, dao: PlayerMergerGetter):
+async def merge_team_history(primary: dto.Player, secondary: dto.Player, dao: PlayerMerger):
     raise NotImplementedError()
 
 
-async def merge_team_history_2(
-    primary: dto.Player, secondary: dto.Player, dao: PlayerMergerGetter
-):
+async def merge_team_history_2(primary: dto.Player, secondary: dto.Player, dao: PlayerMerger):
     primary_history = await dao.get_player_teams_history(primary)
     secondary_history = await dao.get_player_teams_history(secondary)
     merged = list(sorted(primary_history + secondary_history, key=lambda tp: tp.date_joined))
@@ -288,9 +286,7 @@ async def merge_team_history_2(
             continue
 
 
-async def merge_team_history_1(
-    primary: dto.Player, secondary: dto.Player, dao: PlayerMergerGetter
-):
+async def merge_team_history_1(primary: dto.Player, secondary: dto.Player, dao: PlayerMerger):
     primary_history = await dao.get_player_teams_history(primary)
     secondary_history = await dao.get_player_teams_history(secondary)
     primary_iter = iter(primary_history)
@@ -338,8 +334,8 @@ async def agree_promotion(
 
 
 async def get_teams_history(
-    player: dto.Player, dao: TeamPlayerHistoryGetter
-) -> list[dto.TeamPlayer]:
+    player: dto.Player, dao: TeamPlayerFullHistoryGetter
+) -> list[dto.FullTeamPlayer]:
     return await dao.get_full_history(player)
 
 

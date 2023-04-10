@@ -96,16 +96,40 @@ async def add_waivers(
             continue
         if await dao.waiver.is_player_played(saved_player, game_number):
             continue
-        logger.debug(f"adding {game_number} for player {saved_player.name_mention}")
+        logger.debug(
+            f"adding {game_number} for player {saved_player.name_mention} ({saved_player.id})"
+        )
         game = await dao.game.get_game_by_number(game_number)
+        assert game.start_at is not None
         team_for_game = await dao.team_player.get_team(saved_player, game.start_at)
         if not team_for_game or not await dao.waiver.is_team_played(team_for_game, game_number):
-            logger.warning(
-                f"don't know how to chose team for player {saved_player.name_mention} "
-                f"for game number {game_number}. "
-                f"current team is {team_for_game}"
+            next_tp = await dao.team_player.get_next_team_player(
+                player=saved_player, at=game.start_at
             )
-            continue
+            if not next_tp:
+                logger.warning(
+                    f"don't know how to chose team for player {saved_player.name_mention} "
+                    f"for game number {game_number}. next team is None"
+                )
+                continue
+            if not await dao.waiver.is_team_played(next_tp.team, game_number):
+                logger.warning(
+                    f"don't know how to chose team for player {saved_player.name_mention} "
+                    f"for game number {game_number}. "
+                    f"next team (from {next_tp.date_joined}) is {next_tp.team}, "
+                    f"but this team not played too"
+                )
+                continue
+            if not team_for_game:
+                await dao.team_player.change_date_joined(
+                    next_tp, game.start_at - timedelta(hours=5)
+                )
+                team_for_game = next_tp.team
+            else:
+                logger.warning(
+                    f"how to change {team_for_game} to {next_tp.team} for {game.start_at}"
+                )
+                continue
         waiver = dto.Waiver(
             player=saved_player, team=team_for_game, game=game, played=enums.Played.yes
         )

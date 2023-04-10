@@ -169,6 +169,38 @@ class TeamPlayerDao(BaseDAO[models.TeamPlayer]):
             for tp in history
         ]
 
+    async def get_next_team_player(
+        self, player: dto.Player, at: datetime
+    ) -> dto.FullTeamPlayer | None:
+        try:
+            current_tp = await self._get_my_team_player(player, at)
+            if not current_tp.date_left:
+                return None
+            at = current_tp.date_left + timedelta(seconds=1)
+        except PlayerNotInTeam:
+            pass
+        result: ScalarResult[models.TeamPlayer] = await self.session.scalars(
+            select(models.TeamPlayer)
+            .where(
+                models.TeamPlayer.date_joined > at,
+                models.TeamPlayer.player_id == player.id,
+            )
+            .options(get_team_load_options())
+            .order_by(models.TeamPlayer.date_joined)
+            .limit(1)
+        )
+        tp = result.one_or_none()
+        if not tp:
+            return None
+        return tp.to_full_dto(player, tp.team.to_dto_chat_prefetched())
+
+    async def change_date_joined(self, tp: dto.TeamPlayer, new_joined: datetime):
+        await self.session.execute(
+            update(models.TeamPlayer)
+            .values(date_joined=new_joined)
+            .where(models.TeamPlayer.id == tp.id)
+        )
+
     async def _get_my_team_player(
         self, player: dto.Player, at: datetime | None = None
     ) -> models.TeamPlayer:

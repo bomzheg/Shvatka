@@ -17,7 +17,7 @@ from shvatka.core.interfaces.scheduler import Scheduler
 from shvatka.core.utils.key_checker_lock import KeyCheckerFactory
 from shvatka.infrastructure.db.config.models.storage import StorageConfig, StorageType
 from shvatka.infrastructure.db.dao.memory.level_testing import LevelTestingData
-from shvatka.infrastructure.db.faсtory import create_redis
+from shvatka.infrastructure.db.factory import create_redis
 from shvatka.tgbot.config.models.main import TgBotConfig
 from shvatka.tgbot.handlers import setup_handlers
 from shvatka.tgbot.middlewares import setup_middlewares

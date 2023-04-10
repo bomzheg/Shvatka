@@ -24,7 +24,7 @@ from shvatka.infrastructure.clients.file_gateway import BotFileGateway
 from shvatka.infrastructure.crawler.factory import get_paths
 from shvatka.infrastructure.crawler.models.stat import GameStat
 from shvatka.infrastructure.db.dao.holder import HolderDao
-from shvatka.infrastructure.db.faсtory import create_pool, create_level_test_dao, create_redis
+from shvatka.infrastructure.db.factory import create_pool, create_level_test_dao, create_redis
 from shvatka.tgbot.config.parser.main import load_config
 from shvatka.tgbot.main_factory import create_bot
 from shvatka.tgbot.views.hint_factory.hint_parser import HintParser

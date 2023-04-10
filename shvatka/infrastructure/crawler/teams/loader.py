@@ -16,7 +16,7 @@ from shvatka.core.utils.datetime_utils import tz_utc
 from shvatka.infrastructure.crawler.game_scn.common import UNPARSEABLE_GAMES
 from shvatka.infrastructure.crawler.models.team import ParsedTeam, ParsedPlayer
 from shvatka.infrastructure.db.dao.holder import HolderDao
-from shvatka.infrastructure.db.faсtory import create_pool, create_level_test_dao, create_redis
+from shvatka.infrastructure.db.factory import create_pool, create_level_test_dao, create_redis
 from shvatka.tgbot.config.parser.main import load_config
 
 logger = logging.getLogger(__name__)

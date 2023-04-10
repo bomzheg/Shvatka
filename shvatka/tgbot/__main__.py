@@ -7,7 +7,7 @@ from sqlalchemy.orm import close_all_sessions
 from shvatka.common.config.parser.logging_config import setup_logging
 from shvatka.common.factory import create_telegraph, create_dataclass_factory
 from shvatka.infrastructure.clients.factory import create_file_storage
-from shvatka.infrastructure.db.faсtory import (
+from shvatka.infrastructure.db.factory import (
     create_lock_factory,
     create_level_test_dao,
     create_session_maker,

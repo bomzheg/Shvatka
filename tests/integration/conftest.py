@@ -27,7 +27,7 @@ from shvatka.infrastructure.clients.file_gateway import BotFileGateway
 from shvatka.infrastructure.db.config.models.db import RedisConfig
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.infrastructure.db.dao.memory.level_testing import LevelTestingData
-from shvatka.infrastructure.db.faсtory import create_lock_factory, create_level_test_dao
+from shvatka.infrastructure.db.factory import create_lock_factory, create_level_test_dao
 from shvatka.tgbot.config.models.main import TgBotConfig
 from shvatka.tgbot.main_factory import Telegraph
 from shvatka.tgbot.main_factory import (

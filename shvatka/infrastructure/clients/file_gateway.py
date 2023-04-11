@@ -52,3 +52,6 @@ class BotFileGateway(FileGateway):
         # TODO parser must only parse!
         saved_file = await self.hint_parser.save_file(msg, author, file_meta.guid)
         return typing.cast(scn.FileMeta, saved_file)
+
+    async def upload_file(self, file_info: scn.StoredFileMeta):
+        pass

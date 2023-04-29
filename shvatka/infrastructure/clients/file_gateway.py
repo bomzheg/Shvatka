@@ -1,5 +1,5 @@
 import logging
-import typing
+from io import BytesIO
 from typing import BinaryIO
 
 from aiogram import Bot
@@ -8,40 +8,48 @@ from aiogram.types import BufferedInputFile
 from shvatka.core.interfaces.clients.file_storage import FileStorage, FileGateway
 from shvatka.core.models import dto
 from shvatka.core.models.dto import scn
+from shvatka.infrastructure.db.dao import FileInfoDao
 from shvatka.tgbot.views import hint_sender
-from shvatka.tgbot.views.hint_factory.hint_parser import HintParser
+from shvatka.tgbot.views.hint_factory.hint_parser import parse_message
 
 logger = logging.getLogger(__name__)
 
 
 class BotFileGateway(FileGateway):
     def __init__(
-        self, file_storage: FileStorage, bot: Bot, hint_parser: HintParser, tech_chat_id: int
+        self,
+        file_storage: FileStorage,
+        dao: FileInfoDao,
+        bot: Bot,
+        tech_chat_id: int,
     ):
         self.storage = file_storage
+        self.dao = dao
         self.bot = bot
-        self.hint_parser = hint_parser
         self.tech_chat_id = tech_chat_id
 
-    async def put(
-        self, file_meta: scn.UploadedFileMeta, content: BinaryIO, author: dto.Player
-    ) -> scn.FileMeta:
+    async def put(self, file_meta: scn.UploadedFileMeta, content: BinaryIO, author: dto.Player):
         if not file_meta.tg_link:
-            return await self.renew_file_id(author, content, file_meta)
-        return await self.storage.put(file_meta, content)
+            await self.upload_to_tg(author, content, file_meta)
+        saved_file = await self.storage.put(file_meta, content)
+        await self.dao.upsert(saved_file, author)
 
     async def get(self, file: scn.FileMeta) -> BinaryIO:
         try:
             return await self.storage.get(file.file_content_link)
         except (IOError, OSError):
-            content = await self.bot.download(file=file.tg_link.file_id)
-            if not content:
-                raise IOError()
-            return content
+            return await self.download_from_tg(tg_link=file.tg_link)
 
-    async def renew_file_id(
-        self, author: dto.Player, content: BinaryIO, file_meta: scn.UploadedFileMeta
-    ) -> scn.FileMeta:
+    async def renew_file_id(self, author: dto.Player, file_meta: scn.SavedFileMeta):
+        return await self.upload_to_tg(
+            author=author,
+            content=await self.storage.get(file_meta.file_content_link),
+            file_meta=file_meta,
+        )
+
+    async def upload_to_tg(
+        self, author: dto.Player, content: BinaryIO, file_meta: scn.FileMetaLightweight
+    ):
         assert file_meta.content_type is not None
         msg = await hint_sender.METHODS[file_meta.content_type](
             self.bot,
@@ -49,9 +57,12 @@ class BotFileGateway(FileGateway):
             BufferedInputFile(file=content.read(), filename=file_meta.public_filename),
         )
         await msg.delete()
-        # TODO parser must only parse!
-        saved_file = await self.hint_parser.save_file(msg, author, file_meta.guid)
-        return typing.cast(scn.FileMeta, saved_file)
+        tg_link = parse_message(msg)
+        assert tg_link
+        await self.dao.update_file_id(file_meta.guid, tg_link.file_id)
 
-    async def upload_file(self, file_info: scn.StoredFileMeta):
-        pass
+    async def download_from_tg(self, tg_link: scn.TgLink) -> BinaryIO:
+        result = await self.bot.download(tg_link.file_id, BytesIO())
+        if not result:
+            raise IOError
+        return result

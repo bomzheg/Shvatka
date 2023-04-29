@@ -67,7 +67,7 @@ class InitMiddleware(BaseMiddleware):
             data["file_gateway"] = BotFileGateway(
                 bot=data["bot"],
                 file_storage=self.file_storage,
-                hint_parser=data["hint_parser"],
+                dao=data["dao"].file_info,
                 tech_chat_id=data["config"].log_chat,
             )
             data["results_painter"] = ResultsPainter(

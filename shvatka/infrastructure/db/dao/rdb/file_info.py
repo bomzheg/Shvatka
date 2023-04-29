@@ -4,6 +4,7 @@ from sqlalchemy import select, ScalarResult
 from sqlalchemy import update
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import joinedload
 
 from shvatka.core.models import dto
 from shvatka.core.models.dto import scn
@@ -59,8 +60,20 @@ class FileInfoDao(BaseDAO[models.FileInfo]):
         )
         return result.one()
 
-    async def get_without_file_id(self, limit: int) -> Sequence[scn.StoredFileMeta]:
-        result: ScalarResult[models.FileInfo] = await self.session.scalars(
-            select(models.FileInfo).where(models.FileInfo.file_id.is_(None)).limit(limit)
+    async def update_file_id(self, guid: str, file_id: str):
+        await self.session.execute(
+            update(models.FileInfo).where(models.FileInfo.guid == guid).values(file_id=file_id)
         )
-        return [f.to_short_dto() for f in result.all()]
+
+    async def get_without_file_id(self, limit: int) -> Sequence[scn.SavedFileMeta]:
+        result: ScalarResult[models.FileInfo] = await self.session.scalars(
+            select(models.FileInfo)
+            .where(models.FileInfo.file_id.is_(None))
+            .options(
+                joinedload(models.FileInfo.author).options(
+                    joinedload(models.Player.user), joinedload(models.Player.forum_user)
+                )
+            )
+            .limit(limit)
+        )
+        return [f.to_dto(f.author.to_dto_user_prefetched()) for f in result.all()]

@@ -5,9 +5,7 @@ from shvatka.core.models.dto import scn
 
 
 class FileGateway(Protocol):
-    async def put(
-        self, file_meta: scn.UploadedFileMeta, content: BinaryIO, author: dto.Player
-    ) -> scn.FileMeta:
+    async def put(self, file_meta: scn.UploadedFileMeta, content: BinaryIO, author: dto.Player):
         raise NotImplementedError
 
     async def get(self, file_link: scn.FileMeta) -> BinaryIO:

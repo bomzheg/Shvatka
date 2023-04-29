@@ -43,7 +43,7 @@ class BotFileGateway(FileGateway):
         self, author: dto.Player, content: BinaryIO, file_meta: scn.UploadedFileMeta
     ) -> scn.FileMeta:
         assert file_meta.content_type is not None
-        msg = await hint_sender.METHODS[file_meta.content_type](  # type: ignore[operator]
+        msg = await hint_sender.METHODS[file_meta.content_type](
             self.bot,
             author.get_tech_chat_id(reserve_chat_id=self.tech_chat_id),
             BufferedInputFile(file=content.read(), filename=file_meta.public_filename),

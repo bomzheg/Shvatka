@@ -82,7 +82,7 @@ class AudioLinkView(BaseHintLinkView):
     thumb: str | None
 
     def kwargs(self) -> dict:
-        return dict(audio=self.file_id, caption=self.caption, thumb=self.thumb)
+        return dict(audio=self.file_id, caption=self.caption)
 
 
 @dataclass
@@ -106,7 +106,7 @@ class VideoLinkView(BaseHintLinkView):
     thumb: str | None
 
     def kwargs(self) -> dict:
-        return dict(video=self.file_id, caption=self.caption, thumb=self.thumb)
+        return dict(video=self.file_id, caption=self.caption)
 
 
 @dataclass
@@ -130,7 +130,7 @@ class DocumentLinkView(BaseHintLinkView):
     thumb: str | None
 
     def kwargs(self) -> dict:
-        return dict(document=self.file_id, caption=self.caption, thumb=self.thumb)
+        return dict(document=self.file_id, caption=self.caption)
 
 
 @dataclass
@@ -154,7 +154,7 @@ class AnimationLinkView(BaseHintLinkView):
     thumb: str | None
 
     def kwargs(self) -> dict:
-        return dict(animation=self.file_id, caption=self.caption, thumb=self.thumb)
+        return dict(animation=self.file_id, caption=self.caption)
 
 
 @dataclass

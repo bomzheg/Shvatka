@@ -2,7 +2,6 @@ import asyncio
 import logging
 
 from aiogram_dialog import DialogRegistry
-from sqlalchemy.orm import close_all_sessions
 
 from shvatka.common.config.parser.logging_config import setup_logging
 from shvatka.common.factory import create_telegraph, create_dataclass_factory
@@ -53,6 +52,7 @@ async def main():
             file_storage=file_storage,
             level_test_dao=level_test_dao,
         ) as scheduler,
+        bot,
     ):
         dp = create_dispatcher(
             config=config,
@@ -72,10 +72,7 @@ async def main():
         try:
             await dp.start_polling(bot)
         finally:
-            close_all_sessions()
             await engine.dispose()
-            await bot.session.close()
-            await redis.close()
             logger.info("stopped")
 
 

@@ -1,3 +1,5 @@
+from typing import Sequence
+
 from aiogram.utils.markdown import html_decoration as hd
 
 from shvatka.core.models import dto
@@ -17,7 +19,7 @@ def render_team_card(team: dto.Team) -> str:
 
 
 def render_team_players(
-    team: dto.Team, players: list[dto.FullTeamPlayer], notification=False
+    team: dto.Team, players: Sequence[dto.FullTeamPlayer], notification=False
 ) -> str:
     rez = f"Список игроков команды {hd.bold(hd.quote(team.name))}:\n"
     for team_player in players:

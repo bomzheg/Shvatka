@@ -113,9 +113,9 @@ line_length = 99
 
 [tool.ruff]
 line-length = 99
-exclude = [
-    "__init__.py",
-]
+
+[tool.ruff.per-file-ignores]
+"__init__.py" = ["F401"]
 
 [tool.flake8]
 ignore = ['E203', 'E231', 'E241', 'W503']

@@ -52,7 +52,7 @@ async def main():
             file_storage=file_storage,
             level_test_dao=level_test_dao,
         ) as scheduler,
-        bot,
+        bot.context(),
     ):
         dp = create_dispatcher(
             config=config,

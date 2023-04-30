@@ -3,7 +3,7 @@ from typing import Sequence
 from sqlalchemy import update, select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import joinedload
+from sqlalchemy.orm import contains_eager
 
 from shvatka.core.models import dto
 from shvatka.infrastructure.crawler.models.team import ParsedTeam
@@ -43,7 +43,8 @@ class ForumTeamDAO(BaseDAO[models.ForumTeam]):
     async def get_free_forum_teams(self) -> Sequence[dto.ForumTeam]:
         result = await self.session.scalars(
             select(models.ForumTeam)
-            .options(joinedload(models.ForumTeam.team, innerjoin=True))
+            .join(models.ForumTeam.team)
+            .options(contains_eager(models.ForumTeam.team))
             .where(models.Team.is_dummy.is_(True))
             .order_by(models.ForumTeam.id)
             .distinct(models.ForumTeam.id)

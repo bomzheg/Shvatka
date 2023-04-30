@@ -12,6 +12,10 @@ from .player import (
     get_kb_agree_promotion,
     AgreePromotionCD,
 )
+from .team_merge import (
+    TeamMergeCD,
+    get_team_merge_confirm_kb,
+)
 from .waiver import (
     get_kb_waivers,
     get_kb_manage_waivers,

@@ -22,11 +22,11 @@ from shvatka.core.services.player import (
 from shvatka.core.services.team import (
     rename_team,
     change_team_desc,
-    merge_teams,
     get_team_by_id,
     get_team_by_forum_team_id,
 )
 from shvatka.infrastructure.db.dao.holder import HolderDao
+from shvatka.tgbot import keyboards as kb
 from shvatka.tgbot import states
 from shvatka.tgbot.utils.data import MiddlewareData
 
@@ -92,8 +92,14 @@ async def confirm_merge(c: CallbackQuery, button: Any, manager: DialogManager):
     captain = data["player"]
     primary = await get_team_by_id(manager.start_data["team_id"], dao.team)
     secondary = await get_team_by_forum_team_id(manager.dialog_data["forum_team_id"], dao.team)
-    await merge_teams(captain, primary, secondary, data["game_log"], dao.team_merger)
-    await c.answer("Успешно объединены", show_alert=True)
+    await data["bot"].send_message(
+        chat_id=data["config"].game_log_chat,
+        text=f"Капитан {hd.quote(captain.name_mention)} предлагает объединить "
+        f"свою команду {hd.quote(primary.name)} "
+        f"с форумной версией {hd.quote(secondary.name)}",
+        reply_markup=kb.get_team_merge_confirm_kb(primary, secondary),
+    )
+    await c.answer("Заявка на объединение отправлена", show_alert=True)
     await manager.done()
 
 

@@ -114,11 +114,11 @@ async def merge_teams(
     await game_log.log(
         GameLogEvent(
             GameLogType.TEAMS_MERGED,
-            {
-                "captain": manager.name_mention,
-                "primary_team": primary.name,
-                "secondary_team": secondary.name,
-            },
+            dict(
+                captain=manager.name_mention,
+                primary_team=primary.name,
+                secondary_team=secondary.name,
+            ),
         )
     )
 

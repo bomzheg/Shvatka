@@ -23,6 +23,7 @@ from shvatka.common import create_telegraph
 from shvatka.core.interfaces.clients.file_storage import FileStorage, FileGateway
 from shvatka.core.interfaces.scheduler import Scheduler
 from shvatka.core.utils.key_checker_lock import KeyCheckerFactory
+from shvatka.core.views.game import GameLogWriter
 from shvatka.infrastructure.clients.file_gateway import BotFileGateway
 from shvatka.infrastructure.db.config.models.db import RedisConfig
 from shvatka.infrastructure.db.dao.holder import HolderDao
@@ -45,6 +46,7 @@ from tests.fixtures.scn_fixtures import simple_scn, complex_scn, three_lvl_scn  
 from tests.fixtures.team import gryffindor, slytherin  # noqa: F401
 from tests.mocks.config import DBConfig
 from tests.mocks.file_storage import MemoryFileStorage
+from tests.mocks.game_log import GameLogWriterMock
 from tests.mocks.scheduler_mock import SchedulerMock
 
 logger = logging.getLogger(__name__)
@@ -250,6 +252,11 @@ def file_gateway(
         dao=dao.file_info,
         tech_chat_id=bot_config.bot.log_chat,
     )
+
+
+@pytest.fixture
+def game_log() -> GameLogWriter:
+    return GameLogWriterMock()
 
 
 @pytest.fixture(autouse=True)

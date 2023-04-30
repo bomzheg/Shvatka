@@ -20,12 +20,16 @@ async def hermione(dao: HolderDao):
 
 @pytest_asyncio.fixture
 async def harry(dao: HolderDao):
-    return await create_player(create_dto_harry(), dao)
+    player = await create_player(create_dto_harry(), dao)
+    await promote(player, dao)
+    return player
 
 
 @pytest_asyncio.fixture
 async def author(dao: HolderDao) -> dto.Player:
-    return await create_author(dao)
+    author_ = await create_player(create_dto_rowling(), dao)
+    await promote(author_, dao)
+    return author_
 
 
 @pytest_asyncio.fixture
@@ -35,16 +39,16 @@ async def ron(dao: HolderDao):
 
 @pytest_asyncio.fixture
 async def draco(dao: HolderDao):
-    return await create_player(create_dto_draco(), dao)
+    player = await create_player(create_dto_draco(), dao)
+    await promote(player, dao)
+    return player
 
 
 async def create_player(user: dto.User, dao: HolderDao) -> dto.Player:
     return await upsert_player(await upsert_user(user, dao.user), dao.player)
 
 
-async def create_author(dao: HolderDao) -> dto.Player:
-    author_ = await create_player(create_dto_rowling(), dao)
-    await dao.player.promote(author_, author_)
+async def promote(player: dto.Player, dao: HolderDao):
+    await dao.player.promote(player, player)
     await dao.commit()
-    author_.can_be_author = True
-    return author_
+    player.can_be_author = True

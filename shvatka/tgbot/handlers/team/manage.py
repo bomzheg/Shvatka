@@ -18,6 +18,7 @@ from shvatka.core.utils.exceptions import (
     PlayerRestoredInTeam,
     PermissionsError,
 )
+from shvatka.core.views.game import GameLogWriter
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.tgbot import states
 from shvatka.tgbot.filters.has_target import HasTargetFilter
@@ -46,6 +47,7 @@ async def cmd_create_team(
     user: dto.User,
     dao: HolderDao,
     bot: Bot,
+    game_log: GameLogWriter,
 ):
     logger.info("Player %s try create team in %s", player.id, chat.tg_id)
     if not await is_admin_filter(bot, chat, user):
@@ -55,7 +57,7 @@ async def cmd_create_team(
 
     chat.description = (await bot.get_chat(chat.tg_id)).description
     try:
-        await create_team(chat, player, dao.team_creator)
+        await create_team(chat, player, dao.team_creator, game_log)
     except PlayerAlreadyInTeam as e:
         return await message.reply(
             f"Вы уже находитесь в другой команде ({hd.quote(e.team.name)}).\n"  # type: ignore

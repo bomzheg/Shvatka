@@ -6,6 +6,7 @@ from shvatka.core.models import dto
 from shvatka.core.models import enums
 from tests.fixtures.chat_constants import create_tg_chat
 from tests.fixtures.user_constants import create_tg_from_dto
+from tests.integration.conftest import game_log  # noqa: F401
 
 
 @pytest.fixture

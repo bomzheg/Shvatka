@@ -13,6 +13,7 @@ from shvatka.api.config.parser.main import load_config
 from shvatka.api.dependencies import AuthProvider
 from shvatka.api.main_factory import create_app
 from shvatka.common import Paths
+from tests.integration.conftest import game_log  # noqa: F401
 from tests.mocks.config import DBConfig
 
 

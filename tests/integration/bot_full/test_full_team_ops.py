@@ -6,6 +6,7 @@ from aiogram.methods import SendMessage, GetChatAdministrators, GetChat, GetChat
 from aiogram.types import Update, Message, ChatMemberOwner, ChatMemberMember
 from aiogram_tests.mocked_bot import MockedBot
 
+from shvatka.core.models import dto
 from shvatka.core.models.enums.chat_type import ChatType
 from shvatka.core.services.player import upsert_player, get_my_role
 from shvatka.core.services.user import upsert_user
@@ -13,6 +14,7 @@ from shvatka.core.utils.datetime_utils import tz_utc
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.tgbot.views.commands import CREATE_TEAM_COMMAND, ADD_IN_TEAM_COMMAND
 from tests.fixtures.chat_constants import create_tg_chat
+from tests.fixtures.player import promote
 from tests.fixtures.user_constants import (
     create_tg_user,
     create_dto_hermione,
@@ -21,19 +23,21 @@ from tests.fixtures.user_constants import (
 
 
 @pytest.mark.asyncio
-async def test_create_team(dp: Dispatcher, bot: MockedBot, dao: HolderDao):
+async def test_create_team(harry: dto.Player, dp: Dispatcher, bot: MockedBot, dao: HolderDao):
+    await promote(harry, dao)
     chat = create_tg_chat(type_=ChatType.supergroup)
-    harry = create_tg_user()
+    harry_tg = create_tg_user()
     bot.add_result_for(
-        GetChatAdministrators, ok=True, result=[ChatMemberOwner(user=harry, is_anonymous=False)]
+        GetChatAdministrators, ok=True, result=[ChatMemberOwner(user=harry_tg, is_anonymous=False)]
     )
     bot.add_result_for(GetChat, ok=True, result=chat)
-    bot.add_result_for(SendMessage, ok=True)
+    bot.add_result_for(SendMessage, ok=True)  # one for captain
+    bot.add_result_for(SendMessage, ok=True)  # one for log
     update = Update(
         update_id=1,
         message=Message(
             message_id=2,
-            from_user=harry,
+            from_user=harry_tg,
             chat=chat,
             text="/" + CREATE_TEAM_COMMAND.command,
             date=datetime.now(tz=tz_utc),
@@ -68,7 +72,7 @@ async def test_create_team(dp: Dispatcher, bot: MockedBot, dao: HolderDao):
         update_id=3,
         message=Message(
             message_id=4,
-            from_user=harry,
+            from_user=harry_tg,
             chat=chat,
             text=f"/{ADD_IN_TEAM_COMMAND.command} brain",
             reply_to_message=hermi_message,

@@ -111,6 +111,8 @@ class GameBotLog(GameLogWriter):
                     "Капитан {captain} объединил "
                     "свою команду {primary_team} с форумной {secondary_team}"
                 )
+            case GameLogEvent(GameLogType.TEAM_CREATED):
+                text = "Создана команда {team}. Капитан: {captain}"
             case _:
                 raise ValueError
         data = {k: hd.quote(v) for k, v in event_log.data.items()}

@@ -28,8 +28,10 @@ def token(user: dto.User, auth: AuthProvider) -> Token:
 
 
 @pytest.mark.asyncio
-async def test_get_team(client: AsyncClient, harry: dto.Player, token: Token, dao: HolderDao):
-    team = await create_team_(harry, create_gryffindor_dto_chat(), dao)
+async def test_get_team(
+    client: AsyncClient, harry: dto.Player, token: Token, dao: HolderDao, game_log
+):
+    team = await create_team_(harry, create_gryffindor_dto_chat(), dao, game_log)
     resp = await client.get(
         "/teams/my",
         headers={"Authorization": "Bearer " + token.access_token},

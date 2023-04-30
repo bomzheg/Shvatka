@@ -14,18 +14,34 @@ from shvatka.core.interfaces.dal.team import (
 )
 from shvatka.core.models import dto
 from shvatka.core.models import enums
+from shvatka.core.services.player import check_allow_be_author
 from shvatka.core.utils.defaults_constants import CAPTAIN_ROLE
 from shvatka.core.utils.exceptions import SHDataBreach, PermissionsError
 from shvatka.core.views.game import GameLogWriter, GameLogEvent, GameLogType
 
 
-async def create_team(chat: dto.Chat, captain: dto.Player, dao: TeamCreator) -> dto.Team:
+async def create_team(
+    chat: dto.Chat,
+    captain: dto.Player,
+    dao: TeamCreator,
+    game_log: GameLogWriter,
+) -> dto.Team:
+    check_allow_be_author(captain)
     await dao.check_player_free(captain)
     await dao.check_no_team_in_chat(chat)
 
     team = await dao.create(chat, captain)
     await dao.join_team(captain, team, CAPTAIN_ROLE, as_captain=True)
     await dao.commit()
+    await game_log.log(
+        GameLogEvent(
+            GameLogType.TEAM_CREATED,
+            data=dict(
+                team=team.name,
+                captain=captain.name_mention,
+            ),
+        )
+    )
     return team
 
 

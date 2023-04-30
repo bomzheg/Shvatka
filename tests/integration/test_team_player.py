@@ -10,8 +10,10 @@ from shvatka.core.services.player import (
     get_full_team_player,
 )
 from shvatka.core.utils.defaults_constants import DEFAULT_ROLE, CAPTAIN_ROLE
-from shvatka.core.utils.exceptions import PlayerAlreadyInTeam, PermissionsError
+from shvatka.core.utils.exceptions import PlayerAlreadyInTeam, PermissionsError, CantBeAuthor
+from shvatka.core.views.game import GameLogWriter
 from shvatka.infrastructure.db.dao.holder import HolderDao
+from tests.fixtures.player import promote
 from tests.fixtures.team import create_second_team
 
 
@@ -22,6 +24,7 @@ async def test_add_player_to_team(
     draco: dto.Player,
     gryffindor: dto.Team,
     dao: HolderDao,
+    game_log: GameLogWriter,
 ):
     assert 1 == await dao.team_player.count()
     assert gryffindor == await get_my_team(harry, dao.team_player)
@@ -41,12 +44,16 @@ async def test_add_player_to_team(
     with pytest.raises(PlayerAlreadyInTeam):
         await join_team(hermione, gryffindor, harry, dao.team_player)
 
+    with pytest.raises(CantBeAuthor):
+        await create_second_team(hermione, dao, game_log)
+
+    await promote(hermione, dao)
     with pytest.raises(PlayerAlreadyInTeam):
-        await create_second_team(hermione, dao)
+        await create_second_team(hermione, dao, game_log)
 
     assert 2 == await dao.team_player.count()
 
-    slytherin = await create_second_team(draco, dao)
+    slytherin = await create_second_team(draco, dao, game_log)
 
     assert 3 == await dao.team_player.count()
     assert CAPTAIN_ROLE == await get_my_role(draco, dao.team_player)

@@ -101,6 +101,7 @@ class GameDao(BaseDAO[models.Game]):
             )
             .where(
                 models.Game.status == GameStatus.complete,
+                models.Game.number.is_not(None),
             )
             .order_by(models.Game.number.desc(), models.Game.start_at.desc())  # noqa
         )

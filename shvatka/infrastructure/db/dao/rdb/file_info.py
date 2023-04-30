@@ -1,11 +1,13 @@
+from typing import Sequence
+
 from sqlalchemy import select, ScalarResult
 from sqlalchemy import update
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import joinedload
 
 from shvatka.core.models import dto
-from shvatka.core.models.dto.scn import FileMeta, SavedFileMeta
-from shvatka.core.models.dto.scn.file_content import VerifiableFileMeta
+from shvatka.core.models.dto import scn
 from shvatka.core.utils.exceptions import PermissionsError
 from shvatka.infrastructure.db import models
 from .base import BaseDAO
@@ -15,7 +17,7 @@ class FileInfoDao(BaseDAO[models.FileInfo]):
     def __init__(self, session: AsyncSession):
         super().__init__(models.FileInfo, session)
 
-    async def upsert(self, file: FileMeta, author: dto.Player) -> SavedFileMeta:
+    async def upsert(self, file: scn.FileMeta, author: dto.Player) -> scn.SavedFileMeta:
         try:
             db_file = await self._get_by_guid(file.guid)
         except NoResultFound:
@@ -41,7 +43,7 @@ class FileInfoDao(BaseDAO[models.FileInfo]):
         except NoResultFound:
             return
 
-    async def get_by_guid(self, guid: str) -> VerifiableFileMeta:
+    async def get_by_guid(self, guid: str) -> scn.VerifiableFileMeta:
         db_file = await self._get_by_guid(guid)
         return db_file.to_short_dto()
 
@@ -57,3 +59,21 @@ class FileInfoDao(BaseDAO[models.FileInfo]):
             select(models.FileInfo).where(models.FileInfo.guid == guid)
         )
         return result.one()
+
+    async def update_file_id(self, guid: str, file_id: str):
+        await self.session.execute(
+            update(models.FileInfo).where(models.FileInfo.guid == guid).values(file_id=file_id)
+        )
+
+    async def get_without_file_id(self, limit: int) -> Sequence[scn.SavedFileMeta]:
+        result: ScalarResult[models.FileInfo] = await self.session.scalars(
+            select(models.FileInfo)
+            .where(models.FileInfo.file_id.is_(None))
+            .options(
+                joinedload(models.FileInfo.author).options(
+                    joinedload(models.Player.user), joinedload(models.Player.forum_user)
+                )
+            )
+            .limit(limit)
+        )
+        return [f.to_dto(f.author.to_dto_user_prefetched()) for f in result.all()]

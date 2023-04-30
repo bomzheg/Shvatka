@@ -15,7 +15,7 @@ from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.tgbot.views.hint_factory.hint_content_resolver import HintContentResolver
 
 logger = logging.getLogger(__name__)
-METHODS = {
+METHODS: dict[enums.HintType, Callable[..., Awaitable[Message]]] = {
     enums.HintType.text: Bot.send_message,
     enums.HintType.gps: Bot.send_location,
     enums.HintType.venue: Bot.send_venue,

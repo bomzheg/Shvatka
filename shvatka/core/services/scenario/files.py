@@ -17,8 +17,7 @@ async def upsert_files(
     guids = set()
     for file in files:
         await dao.check_author_can_own_guid(author, file.guid)
-        stored_file = await file_gateway.put(file, contents[file.guid], author)
-        await dao.upsert_file(stored_file, author)
+        await file_gateway.put(file, contents[file.guid], author)
         guids.add(file.guid)
     return guids
 

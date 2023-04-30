@@ -27,7 +27,6 @@ from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.infrastructure.db.factory import create_pool, create_level_test_dao, create_redis
 from shvatka.tgbot.config.parser.main import load_config
 from shvatka.tgbot.main_factory import create_bot
-from shvatka.tgbot.views.hint_factory.hint_parser import HintParser
 
 logger = logging.getLogger(__name__)
 
@@ -52,11 +51,7 @@ async def main():
             file_gateway = BotFileGateway(
                 bot=bot,
                 file_storage=file_storage,
-                hint_parser=HintParser(
-                    dao=dao.file_info,
-                    file_storage=file_storage,
-                    bot=bot,
-                ),
+                dao=dao.file_info,
                 tech_chat_id=config.bot.log_chat,
             )
             bot_player = await dao.player.upsert_author_dummy()

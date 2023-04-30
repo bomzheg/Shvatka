@@ -65,3 +65,8 @@ class VerifiableFileMeta(FileMeta):  # noqa
 class SavedFileMeta(VerifiableFileMeta):  # noqa
     id: int
     author: dto.Player
+
+
+@dataclass
+class ParsedTgLink(TgLink):
+    filename: str | None = None

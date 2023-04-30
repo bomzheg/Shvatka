@@ -2,6 +2,7 @@ from .file_content import (
     FileMeta,
     FileContentLink,
     TgLink,
+    ParsedTgLink,
     SavedFileMeta,
     StoredFileMeta,
     FileMetaLightweight,

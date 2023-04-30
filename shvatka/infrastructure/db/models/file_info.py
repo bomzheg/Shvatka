@@ -26,6 +26,7 @@ class FileInfo(Base):
     )
 
     def to_dto(self, author: dto.Player) -> SavedFileMeta:
+        content_type = HintType[self.content_type]
         return SavedFileMeta(
             id=self.id,
             guid=self.guid,
@@ -33,16 +34,19 @@ class FileInfo(Base):
             extension=self.extension,
             author=author,
             author_id=self.author_id,
-            tg_link=TgLink(file_id=self.file_id, content_type=HintType[self.content_type]),
+            tg_link=TgLink(file_id=self.file_id, content_type=content_type),
+            content_type=content_type,
             file_content_link=FileContentLink(file_path=self.file_path),
         )
 
     def to_short_dto(self) -> VerifiableFileMeta:
+        content_type = HintType[self.content_type]
         return VerifiableFileMeta(
             guid=self.guid,
             original_filename=self.original_filename,
             author_id=self.author_id,
             extension=self.extension,
-            tg_link=TgLink(file_id=self.file_id, content_type=HintType[self.content_type]),
+            tg_link=TgLink(file_id=self.file_id, content_type=content_type),
+            content_type=content_type,
             file_content_link=FileContentLink(file_path=self.file_path),
         )

@@ -8,6 +8,8 @@ from aiogram.exceptions import AiogramError
 from aiogram.filters import ExceptionTypeFilter
 from aiogram.types.error_event import ErrorEvent
 from aiogram.utils.markdown import html_decoration as hd
+from aiogram_dialog import DialogManager
+from aiogram_dialog.api.exceptions import UnknownIntent
 
 from shvatka.core.utils.exceptions import SHError
 
@@ -32,6 +34,15 @@ async def handle_sh_error(error: ErrorEvent, log_chat_id: int, bot: Bot):
     await handle(error=error, log_chat_id=log_chat_id, bot=bot)
 
 
+async def clear_unknown_intent(error: ErrorEvent, dialog_manager: DialogManager, bot: Bot):
+    await dialog_manager.reset_stack(True)
+    await bot.edit_message_reply_markup(
+        chat_id=error.update.callback_query.message.chat.id,
+        message_id=error.update.callback_query.message.message_id,
+        reply_markup=None,
+    )
+
+
 async def handle(error: ErrorEvent, log_chat_id: int, bot: Bot):
     logger.exception(
         "Cause unexpected exception %s, by processing %s",
@@ -53,4 +64,5 @@ def setup(dp: Dispatcher, log_chat_id: int):
     dp.errors.register(
         partial(handle_sh_error, log_chat_id=log_chat_id), ExceptionTypeFilter(SHError)
     )
+    dp.errors.register(clear_unknown_intent, ExceptionTypeFilter(UnknownIntent))
     dp.errors.register(partial(handle, log_chat_id=log_chat_id))

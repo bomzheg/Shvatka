@@ -37,7 +37,9 @@ jobs:
           cache: "poetry"
           cache-dependency-path: poetry.lock
       - name: black
-        run: poetry run black --check --verbose .
+        run: poetry run black --check .
+      - name: ruff
+        run: poetry run ruff .
       - name: flake8
         run: poetry run flake8 .
       - name: mypy

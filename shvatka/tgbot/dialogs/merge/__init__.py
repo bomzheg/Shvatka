@@ -1,7 +1,7 @@
 from aiogram_dialog import DialogRegistry
 
-from .dialogs import captains_bridge
+from .dialogs import merge_teams_dialog
 
 
 def setup(registry: DialogRegistry):
-    registry.register(captains_bridge)
+    registry.register(merge_teams_dialog)

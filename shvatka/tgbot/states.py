@@ -93,6 +93,7 @@ class CompletedGamesPanelSG(StatesGroup):
 
 
 class TeamsSg(StatesGroup):
+    filter = State()
     list = State()
     one = State()
 

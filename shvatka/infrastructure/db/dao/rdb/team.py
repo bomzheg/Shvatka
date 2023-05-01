@@ -1,7 +1,7 @@
 import typing
 from typing import Sequence
 
-from sqlalchemy import select, ScalarResult
+from sqlalchemy import select, ScalarResult, false
 from sqlalchemy import update
 from sqlalchemy.exc import NoResultFound, IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -131,8 +131,15 @@ class TeamDao(BaseDAO[models.Team]):
         )
         return result.one().to_dto_chat_prefetched()
 
-    async def get_teams(self) -> list[dto.Team]:
-        teams = await self._get_all(options=get_team_options())
+    async def get_teams(self, active: bool = True, archive: bool = False) -> list[dto.Team]:
+        query = select(models.Team).options(*get_team_options())
+        if not active and not archive:
+            query = query.where(false())
+        elif active:
+            query = query.where(models.Team.is_dummy.is_(False))
+        elif archive:
+            query = query.where(models.Team.is_dummy.is_(True))
+        teams: ScalarResult[models.Team] = await self.session.scalars(query)
         return [team.to_dto_chat_prefetched() for team in teams]
 
     async def get_played_games(self, team: dto.Team) -> list[dto.Game]:

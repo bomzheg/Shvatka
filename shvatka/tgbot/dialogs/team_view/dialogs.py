@@ -1,15 +1,21 @@
 from aiogram_dialog import Dialog, Window
-from aiogram_dialog.widgets.kbd import ScrollingGroup, Select, Cancel, SwitchTo
-from aiogram_dialog.widgets.text import Const, Format, Jinja
+from aiogram_dialog.widgets.kbd import ScrollingGroup, Select, Cancel, SwitchTo, Button
+from aiogram_dialog.widgets.text import Const, Format, Jinja, Case
 
 from shvatka.tgbot import states
-from .getters import teams_getter, team_getter
-from .handlers import select_team, select_player
+from .getters import teams_getter, team_getter, filter_getter
+from .handlers import select_team, select_player, change_active_filter, change_archive_filter
+from ..common import BOOL_VIEW
 
 team_view = Dialog(
     Window(
-        Const("Список команд"),
+        Jinja(
+            "Отфильтрованный список команд\n\n"
+            "{{active|bool_emoji}} Активные\n"
+            "{{archive|bool_emoji}} Архивные"
+        ),
         Cancel(Const("🔙Назад")),
+        SwitchTo(Const("🔣Фильтр"), state=states.TeamsSg.filter, id="to_filter"),
         ScrollingGroup(
             Select(
                 Format("🚩{item.name}"),
@@ -32,7 +38,7 @@ team_view = Dialog(
             "Сыгранные игры: {{' '.join(game_numbers)}}"
         ),
         Cancel(Const("⤴Выход")),
-        SwitchTo(Const("🔙Назад"), state=states.TeamsSg.list, id="to_team_list"),
+        SwitchTo(Const("🔙Назад"), state=states.TeamsSg.list, id="to_list"),
         ScrollingGroup(
             Select(
                 Jinja("{{item|player_emoji}}{{item.player.name_mention}}"),
@@ -47,5 +53,21 @@ team_view = Dialog(
         ),
         getter=team_getter,
         state=states.TeamsSg.one,
+    ),
+    Window(
+        Const("Отметь типы команд для отображения"),
+        SwitchTo(Const("🔙Назад"), state=states.TeamsSg.list, id="to_list"),
+        Button(
+            Case(BOOL_VIEW, selector="active") + Const("Активные"),
+            id="active",
+            on_click=change_active_filter,
+        ),
+        Button(
+            Case(BOOL_VIEW, selector="archive") + Const("Архивные"),
+            id="archive",
+            on_click=change_archive_filter,
+        ),
+        getter=filter_getter,
+        state=states.TeamsSg.filter,
     ),
 )

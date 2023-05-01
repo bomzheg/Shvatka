@@ -84,7 +84,7 @@ class MergePlayersSG(StatesGroup):
     confirm = State()
 
 
-class MergeTeams(StatesGroup):
+class MergeTeamsSG(StatesGroup):
     main = State()
     list_forum = State()
     confirm = State()

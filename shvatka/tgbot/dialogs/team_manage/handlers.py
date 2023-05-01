@@ -73,7 +73,7 @@ async def start_merge(c: CallbackQuery, button: Button, manager: DialogManager):
     dao = data["dao"]
     captain = data["player"]
     team = await get_my_team(captain, dao.team_player)
-    await manager.start(states.MergeTeams.main, data={"team_id": team.id})
+    await manager.start(states.MergeTeamsSG.main, data={"team_id": team.id})
 
 
 async def remove_player_handler(c: CallbackQuery, button: Button, manager: DialogManager):

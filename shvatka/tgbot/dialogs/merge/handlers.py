@@ -14,7 +14,7 @@ async def select_forum_team(
     c: CallbackQuery, widget: Any, manager: DialogManager, forum_team_id: str
 ):
     manager.dialog_data["forum_team_id"] = int(forum_team_id)
-    await manager.switch_to(states.MergeTeams.confirm)
+    await manager.switch_to(states.MergeTeamsSG.confirm)
 
 
 async def confirm_merge(c: CallbackQuery, button: Any, manager: DialogManager):

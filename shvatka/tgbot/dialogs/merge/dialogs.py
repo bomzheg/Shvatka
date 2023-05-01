@@ -18,10 +18,10 @@ merge_teams_dialog = Dialog(
         SwitchTo(
             Const("Да, время выбирать"),
             id="to_forum_list",
-            state=states.MergeTeams.list_forum,
+            state=states.MergeTeamsSG.list_forum,
         ),
         getter=get_team,
-        state=states.MergeTeams.main,
+        state=states.MergeTeamsSG.main,
     ),
     Window(
         Jinja("Итак мы ищем форумную версию для команды {{team.name}}"),
@@ -39,7 +39,7 @@ merge_teams_dialog = Dialog(
             height=10,
         ),
         getter=(get_team, get_forum_teams),
-        state=states.MergeTeams.list_forum,
+        state=states.MergeTeamsSG.list_forum,
     ),
     Window(
         Jinja(
@@ -54,6 +54,6 @@ merge_teams_dialog = Dialog(
         ),
         Cancel(Const("🔙Нет!!")),
         getter=(get_team, get_forum_team),
-        state=states.MergeTeams.confirm,
+        state=states.MergeTeamsSG.confirm,
     ),
 )

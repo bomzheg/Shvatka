@@ -95,8 +95,7 @@ async def merge_teams(
     if secondary.has_chat():
         raise SHDataBreach(
             team=secondary,
-            notify_user="невозможно привязать такую команду к этой "
-                        "(та уже имеет активный чат)",
+            notify_user="невозможно привязать такую команду к этой (та уже имеет активный чат)",
         )
     if primary.has_forum_team():
         raise SHDataBreach(

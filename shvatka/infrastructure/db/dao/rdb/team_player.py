@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 from typing import Sequence
 
-from sqlalchemy import select, or_, ScalarResult, Result, ColumnElement
+from sqlalchemy import select, or_, ScalarResult, Result, ColumnElement, delete
 from sqlalchemy import update, not_
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -221,6 +221,24 @@ class TeamPlayerDao(BaseDAO[models.TeamPlayer]):
         )
         history = result.all()
         return [tp.to_dto() for tp in history]
+
+    async def clean_history(self, player: dto.Player) -> None:
+        await self.session.execute(
+            delete(models.TeamPlayer).where(models.TeamPlayer.player_id == player.id)
+        )
+
+    async def set_history(self, history: list[dto.TeamPlayer]) -> None:
+        for tp in history:
+            db_tp = models.TeamPlayer(
+                team_id=tp.team_id,
+                player_id=tp.player_id,
+                date_joined=tp.date_joined,
+                date_left=tp.date_left,
+                emoji=tp.emoji,
+                role=tp.role,
+                **tp.get_permissions(),
+            )
+            self._save(db_tp)
 
 
 def get_leaved_condition(for_date: datetime | None = None) -> Sequence[ColumnElement["bool"]]:

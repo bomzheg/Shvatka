@@ -53,5 +53,11 @@ class PlayerMergerImpl(PlayerMerger):
     async def get_player_teams_history(self, player: dto.Player) -> list[dto.TeamPlayer]:
         return await self.dao.team_player.get_history(player)
 
+    async def clean_history(self, player: dto.Player) -> None:
+        return await self.dao.team_player.clean_history(player)
+
+    async def set_history(self, history: list[dto.TeamPlayer]) -> None:
+        return await self.dao.team_player.set_history(history)
+
     async def commit(self) -> None:
         return await self.dao.commit()

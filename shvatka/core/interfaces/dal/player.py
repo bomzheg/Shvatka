@@ -116,12 +116,24 @@ class TeamPlayerHistoryGetter(Protocol):
         raise NotImplementedError
 
 
+class TeamPlayerHistoryCleaner(Protocol):
+    async def clean_history(self, player: dto.Player) -> None:
+        raise NotImplementedError
+
+
+class TeamPlayerHistorySetter(Protocol):
+    async def set_history(self, history: list[dto.TeamPlayer]) -> None:
+        raise NotImplementedError
+
+
 class PlayerMerger(
     GameAuthorMerger,
     LevelAuthorMerger,
     PlayerKeysMerger,
     PlayerOrgMerger,
     TeamPlayerHistoryGetter,
+    TeamPlayerHistoryCleaner,
+    TeamPlayerHistorySetter,
     WaiverPlayerMerger,
     FileInfoMerger,
     Committer,

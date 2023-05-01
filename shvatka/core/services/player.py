@@ -269,47 +269,17 @@ async def merge_players(
 
 
 async def merge_team_history(primary: dto.Player, secondary: dto.Player, dao: PlayerMerger):
-    raise NotImplementedError()
-
-
-async def merge_team_history_2(primary: dto.Player, secondary: dto.Player, dao: PlayerMerger):
     primary_history = await dao.get_player_teams_history(primary)
     secondary_history = await dao.get_player_teams_history(secondary)
     merged = list(sorted(primary_history + secondary_history, key=lambda tp: tp.date_joined))
-    latest = merged[0]
-    result = [latest]
-    for tp in merged[1:]:
-        assert latest.date_left is not None, "TODO"
-        if tp.date_joined > latest.date_left:
-            latest = tp
-            result.append(latest)
-            continue
-
-
-async def merge_team_history_1(primary: dto.Player, secondary: dto.Player, dao: PlayerMerger):
-    primary_history = await dao.get_player_teams_history(primary)
-    secondary_history = await dao.get_player_teams_history(secondary)
-    primary_iter = iter(primary_history)
-    secondary_iter = iter(secondary_history)
-    result: list[dto.TeamDataRange] = []
-    current_primary = next(primary_iter)  # TODO catch StopIteration
-    assert current_primary.date_left is not None, "TODO"
-    current_secondary = next(secondary_iter)  # TODO catch StopIteration
-    assert current_secondary.date_left is not None, "TODO"
-    while True:
-        if current_primary.date_left < current_secondary.date_joined:
-            result.append(dto.TeamDataRange.from_team_player(current_primary))
-            current_primary = next(primary_iter)
-            assert current_primary.date_left is not None, "TODO"
-        if current_secondary.date_left < current_primary.date_joined:
-            result.append(dto.TeamDataRange.from_team_player(current_secondary))
-            current_secondary = next(secondary_iter)
-            assert current_secondary.date_left is not None, "TODO"
-        if current_primary.date_joined < current_secondary.date_joined:
-            assert current_primary.date_left is not None, "TODO"
-            assert current_secondary.date_left is not None, "TODO"
-            if current_primary.date_left < current_secondary.date_left:
-                pass
+    for tp1, tp2 in zip(merged[:-1:], merged[1::]):
+        if tp1.date_left is None or (tp1.date_left > tp2.date_joined):
+            raise ValueError("can't join automatically")
+    for tp in merged:
+        tp.player_id = primary.id
+    await dao.clean_history(primary)
+    await dao.clean_history(secondary)
+    await dao.set_history(merged)
 
 
 async def agree_promotion(

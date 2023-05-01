@@ -7,7 +7,6 @@ from shvatka.core.interfaces.dal.key_log import PlayerKeysMerger
 from shvatka.core.interfaces.dal.level import LevelAuthorMerger
 from shvatka.core.interfaces.dal.organizer import PlayerOrgMerger
 from shvatka.core.interfaces.dal.secure_invite import InviteRemover, InviteReader
-from shvatka.core.interfaces.dal.waiver import WaiverPlayerMerger
 from shvatka.core.models import dto
 from shvatka.core.models import enums
 
@@ -123,6 +122,11 @@ class TeamPlayerHistoryCleaner(Protocol):
 
 class TeamPlayerHistorySetter(Protocol):
     async def set_history(self, history: list[dto.TeamPlayer]) -> None:
+        raise NotImplementedError
+
+
+class WaiverPlayerMerger(Protocol):
+    async def replace_player_waiver(self, primary: dto.Player, secondary: dto.Player):
         raise NotImplementedError
 
 

@@ -51,8 +51,3 @@ class GameWaiversGetter(Protocol):
 class WaiverMerger(Protocol):
     async def replace_team_waiver(self, primary: dto.Team, secondary: dto.Team):
         raise NotImplementedError
-
-
-class WaiverPlayerMerger(Protocol):
-    async def replace_player_waiver(self, primary: dto.Player, secondary: dto.Player):
-        raise NotImplementedError

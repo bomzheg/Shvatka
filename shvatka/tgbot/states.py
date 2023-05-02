@@ -80,7 +80,7 @@ class CaptainsBridgeSG(StatesGroup):
 
 class MergePlayersSG(StatesGroup):
     main = State()
-    list_forum = State()
+    input = State()
     confirm = State()
 
 

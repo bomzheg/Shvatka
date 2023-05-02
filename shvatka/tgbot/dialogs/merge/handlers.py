@@ -1,11 +1,13 @@
 import typing
+import urllib.parse
 from typing import Any
 
-from aiogram.types import CallbackQuery
+from aiogram.types import CallbackQuery, Message
 from aiogram.utils.text_decorations import html_decoration as hd
 from aiogram_dialog import DialogManager
 
 from shvatka.core.services.team import get_team_by_id, get_team_by_forum_team_id
+from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.tgbot import states, keyboards as kb
 from shvatka.tgbot.utils.data import MiddlewareData
 
@@ -32,3 +34,13 @@ async def confirm_merge(c: CallbackQuery, button: Any, manager: DialogManager):
     )
     await c.answer("Заявка на объединение отправлена", show_alert=True)
     await manager.done()
+
+
+async def player_link_handler(m: Message, widget: Any, manager: DialogManager):
+    url = urllib.parse.urlparse(m.text)
+    assert isinstance(url.query, str)
+    forum_id = int(urllib.parse.parse_qs(url.query)["showuser"][0])
+    dao: HolderDao = manager.middleware_data["dao"]
+    forum_user = await dao.forum_user.get_by_forum_id(forum_id)
+    manager.dialog_data["forum_player_id"] = forum_user.db_id
+    await manager.switch_to(states.MergePlayersSG.confirm)

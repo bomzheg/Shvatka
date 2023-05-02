@@ -47,5 +47,3 @@ async def get_selected_player(
             for key, value in selected_team_player.permissions.items()
         },
     }
-
-

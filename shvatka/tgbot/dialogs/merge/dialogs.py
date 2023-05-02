@@ -1,10 +1,12 @@
+from aiogram.enums import ContentType
 from aiogram_dialog import Dialog, Window
+from aiogram_dialog.widgets.input import MessageInput
 from aiogram_dialog.widgets.kbd import Cancel, SwitchTo, ScrollingGroup, Select, Button
 from aiogram_dialog.widgets.text import Jinja, Const
 
 from shvatka.tgbot import states
-from .getters import get_team, get_forum_team, get_forum_teams
-from .handlers import select_forum_team, confirm_merge
+from .getters import get_team, get_forum_team, get_forum_teams, get_forum_user
+from .handlers import select_forum_team, confirm_merge, player_link_handler
 
 merge_teams_dialog = Dialog(
     Window(
@@ -55,5 +57,46 @@ merge_teams_dialog = Dialog(
         Cancel(Const("🔙Нет!!")),
         getter=(get_team, get_forum_team),
         state=states.MergeTeamsSG.confirm,
+    ),
+)
+
+
+merge_player_dialog = Dialog(
+    Window(
+        Jinja(
+            "🔮 Былые свершения.\n"
+            "\n"
+            "Чтобы вспомнить былые свершения нужно найти своего персонажа, "
+            "как он выглядел на форуме.\n"
+            "Хочешь объединить свои достижения тут со своей форумной копией?"
+        ),
+        Cancel(Const("🔙Ой нет, это я случайно")),
+        SwitchTo(
+            Const("Да, время выбирать"),
+            id="to_forum_list",
+            state=states.MergePlayersSG.input,
+        ),
+        state=states.MergePlayersSG.main,
+    ),
+    Window(
+        Const(
+            "Отлично. Чтобы соединить свои достижения тут и на форуме, "
+            "нужно прислать мне ссылку на своего персонажа на форуме, например \n"
+            "<code>http://www.shvatka.ru/index.php?showuser=6767</code>"
+        ),
+        Cancel(Const("🔙Я передумал, не надо")),
+        MessageInput(func=player_link_handler, content_types=ContentType.TEXT),
+        state=states.MergePlayersSG.input,
+    ),
+    Window(
+        Jinja("Объединить свои достижения с {{forum_user.name}}?"),
+        Cancel(Const("🔙Я передумал, не надо")),
+        SwitchTo(
+            Const("Нет, это не я. Назад"),
+            id="to_forum_list",
+            state=states.MergePlayersSG.input,
+        ),
+        getter=get_forum_user,
+        state=states.MergePlayersSG.confirm,
     ),
 )

@@ -5,7 +5,7 @@ from redis.asyncio.client import Redis
 
 from shvatka.core.utils.exceptions import SaltNotExist
 
-TOKEN_LEN = 32
+TOKEN_LEN = 24
 EXPIRE_TIME = 12 * 60
 
 

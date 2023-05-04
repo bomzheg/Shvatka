@@ -34,13 +34,14 @@ logger = logging.getLogger(__name__)
 async def process_name(m: Message, dialog_: Any, manager: DialogManager):
     author: dto.Player = manager.middleware_data["player"]
     dao: HolderDao = manager.middleware_data["dao"]
-    if m.text.lower().strip() == "мудро":
+    game_name: str = m.text
+    if game_name.lower().strip() == "мудро":
         await add_achievement(
             player=author, name=enums.Achievement.game_name_joke, dao=dao.achievement
         )
         return await m.answer(
             "Лол, я ждал эту шутку. "
-            "Но нет, игра не может называться {name}".format(name=hd.bold(m.text))
+            "Но нет, игра не может называться {name}".format(name=hd.bold(hd.quote(game_name)))
         )
     await check_new_game_name_available(name=m.text.strip(), author=author, dao=dao.game)
     data = manager.dialog_data
@@ -74,7 +75,7 @@ async def save_game(c: CallbackQuery, button: Button, manager: DialogManager):
     author: dto.Player = manager.middleware_data["player"]
     name: str = manager.dialog_data["game_name"]
     levels = await get_all_my_free_levels(author, dao.level)
-    multiselect = typing.cast(ManagedMultiSelectAdapter, manager.find("my_level_ids"))
+    multiselect = typing.cast(ManagedMultiSelectAdapter, manager.find("my_free_level_ids"))
     levels = list(filter(lambda level: multiselect.is_checked(level.db_id), levels))
     game = await create_game(author=author, name=name, dao=dao.game_creator, levels=levels)
     await c.message.edit_text("Игра успешно сохранена")

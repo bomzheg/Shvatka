@@ -34,7 +34,7 @@ logger = logging.getLogger(__name__)
 async def process_name(m: Message, dialog_: Any, manager: DialogManager):
     author: dto.Player = manager.middleware_data["player"]
     dao: HolderDao = manager.middleware_data["dao"]
-    game_name: str = m.text
+    game_name: str = typing.cast(str, m.text)
     if game_name.lower().strip() == "мудро":
         await add_achievement(
             player=author, name=enums.Achievement.game_name_joke, dao=dao.achievement

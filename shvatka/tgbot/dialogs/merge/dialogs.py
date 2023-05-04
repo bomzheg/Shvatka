@@ -6,7 +6,7 @@ from aiogram_dialog.widgets.text import Jinja, Const
 
 from shvatka.tgbot import states
 from .getters import get_team, get_forum_team, get_forum_teams, get_forum_user
-from .handlers import select_forum_team, confirm_merge, player_link_handler
+from .handlers import select_forum_team, confirm_merge, player_link_handler, confirm_merge_player
 
 merge_teams_dialog = Dialog(
     Window(
@@ -95,6 +95,11 @@ merge_player_dialog = Dialog(
             Const("Нет, это не я. Назад"),
             id="to_forum_list",
             state=states.MergePlayersSG.input,
+        ),
+        Button(
+            Const("Ага, это я"),
+            id="confirm",
+            on_click=confirm_merge_player,
         ),
         getter=get_forum_user,
         state=states.MergePlayersSG.confirm,

@@ -44,3 +44,20 @@ async def player_link_handler(m: Message, widget: Any, manager: DialogManager):
     forum_user = await dao.forum_user.get_by_forum_id(forum_id)
     manager.dialog_data["forum_player_id"] = forum_user.db_id
     await manager.switch_to(states.MergePlayersSG.confirm)
+
+
+async def confirm_merge_player(c: CallbackQuery, button: Any, manager: DialogManager):
+    data = typing.cast(MiddlewareData, manager.middleware_data)
+    dao = data["dao"]
+    primary = data["player"]
+    secondary_forum = await dao.forum_user.get_by_id(manager.dialog_data["forum_player_id"])
+    secondary = await dao.player.get_by_id(secondary_forum.player_id)
+    await data["bot"].send_message(
+        chat_id=data["config"].game_log_chat,
+        text=f"Игрок {hd.quote(primary.name_mention)} предлагает объединить "
+             f"свои достижения "
+             f"с форумной версией {hd.quote(secondary.name_mention)}",
+        reply_markup=kb.get_player_merge_confirm_kb(primary, secondary),
+    )
+    await c.answer("Заявка на объединение отправлена", show_alert=True)
+    await manager.done()

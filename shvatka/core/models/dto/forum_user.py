@@ -8,6 +8,7 @@ class ForumUser:
     forum_id: int
     name: str
     registered: date
+    player_id: int
 
     @property
     def name_mention(self) -> str:

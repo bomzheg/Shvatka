@@ -282,7 +282,12 @@ async def merge_players(
 async def merge_team_history(primary: dto.Player, secondary: dto.Player, dao: PlayerMerger):
     primary_history = await dao.get_player_teams_history(primary)
     secondary_history = await dao.get_player_teams_history(secondary)
-    merged = list(sorted(primary_history + secondary_history, key=lambda tp: tp.date_joined))
+    merged = []
+    if len(primary_history) == 1 and secondary_history[-1].team_id == primary_history[0].team_id:
+        if primary_history[0].date_joined > secondary_history[0].date_joined:
+            merged = secondary_history
+    if not merged:
+        merged = list(sorted(primary_history + secondary_history, key=lambda tp: tp.date_joined))
     for tp1, tp2 in zip(merged[:-1:], merged[1::]):
         if tp1.date_left is None or (tp1.date_left > tp2.date_joined):
             raise ValueError("can't join automatically")

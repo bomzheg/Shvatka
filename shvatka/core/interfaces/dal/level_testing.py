@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import Protocol
 
 from shvatka.core.interfaces.dal.base import Committer
@@ -22,7 +22,7 @@ class LevelTestProtocolDao(Committer, Protocol):
     async def complete_test(self, suite: dto.LevelTestSuite):
         raise NotImplementedError
 
-    async def get_testing_result(self, suite: dto.LevelTestSuite) -> timedelta:
+    async def get_testing_result(self, suite: dto.LevelTestSuite) -> dto.LevelTestingResult:
         raise NotImplementedError
 
 

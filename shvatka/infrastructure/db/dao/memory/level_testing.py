@@ -1,34 +1,13 @@
-from dataclasses import dataclass, field
-from datetime import timedelta, datetime
+from datetime import datetime
 
 from shvatka.core.interfaces.dal.level_testing import LevelTestProtocolDao
 from shvatka.core.models import dto
 from shvatka.core.utils.datetime_utils import tz_utc
 
 
-@dataclass
-class SimpleKey:
-    text: str
-    at: datetime
-    is_correct: bool
-
-
-@dataclass
-class LevelTestProtocol:
-    start: datetime | None = None
-    stop: datetime | None = None
-
-
-@dataclass
-class LevelTestBucket:
-    protocol: LevelTestProtocol = field(default_factory=LevelTestProtocol)
-    correct_typed: set[str] = field(default_factory=set)
-    all_typed: list[SimpleKey] = field(default_factory=list)
-
-
 class LevelTestingData(LevelTestProtocolDao):
     def __init__(self) -> None:
-        self._buckets: dict[int, dict[int, LevelTestBucket]] = {}
+        self._buckets: dict[int, dict[int, dto.LevelTestBucket]] = {}
 
     async def save_started_level_test(self, suite: dto.LevelTestSuite, now: datetime):
         bucket = self._get_bucket(suite)
@@ -44,7 +23,7 @@ class LevelTestingData(LevelTestProtocolDao):
     async def save_key(self, key: str, suite: dto.LevelTestSuite, is_correct: bool):
         bucket = self._get_bucket(suite)
         bucket.all_typed.append(
-            SimpleKey(text=key, is_correct=is_correct, at=datetime.now(tz=tz_utc))
+            dto.SimpleKey(text=key, is_correct=is_correct, at=datetime.now(tz=tz_utc))
         )
         if is_correct:
             bucket.correct_typed.add(key)
@@ -57,22 +36,22 @@ class LevelTestingData(LevelTestProtocolDao):
         bucket = self._get_bucket(suite)
         bucket.protocol.stop = datetime.now(tz=tz_utc)
 
-    async def get_testing_result(self, suite: dto.LevelTestSuite) -> timedelta:
+    async def get_testing_result(self, suite: dto.LevelTestSuite) -> dto.LevelTestingResult:
         bucket = self._get_bucket(suite)
         assert bucket.protocol.start
         assert bucket.protocol.stop
-        return bucket.protocol.stop - bucket.protocol.start
+        return dto.LevelTestingResult(bucket, bucket.protocol.stop - bucket.protocol.start)
 
-    async def get_all_typed(self, suite: dto.LevelTestSuite) -> list[SimpleKey]:
+    async def get_all_typed(self, suite: dto.LevelTestSuite) -> list[dto.SimpleKey]:
         bucket = self._get_bucket(suite)
         return bucket.all_typed
 
     async def cancel_test(self, suite: dto.LevelTestSuite):
         self._del_bucket(suite)
 
-    def _get_bucket(self, suite: dto.LevelTestSuite) -> LevelTestBucket:
+    def _get_bucket(self, suite: dto.LevelTestSuite) -> dto.LevelTestBucket:
         return self._buckets.setdefault(suite.level.db_id, {}).setdefault(
-            suite.tester.player.id, LevelTestBucket()
+            suite.tester.player.id, dto.LevelTestBucket()
         )
 
     def _del_bucket(self, suite: dto.LevelTestSuite):

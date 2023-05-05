@@ -1,3 +1,4 @@
+import json
 import logging
 from contextlib import suppress
 from dataclasses import dataclass
@@ -6,6 +7,7 @@ from typing import Iterable, cast
 from aiogram import Bot
 from aiogram.exceptions import TelegramAPIError
 from aiogram.utils.markdown import html_decoration as hd
+from dataclass_factory import Factory
 
 from shvatka.core.interfaces.clients.file_storage import FileStorage
 from shvatka.core.interfaces.dal.game_play import GamePreparer
@@ -122,6 +124,7 @@ class GameBotLog(GameLogWriter):
 @dataclass
 class BotOrgNotifier(OrgNotifier):
     bot: Bot
+    dcf = Factory()
 
     async def notify(self, event: Event) -> None:
         match event:
@@ -163,12 +166,14 @@ class BotOrgNotifier(OrgNotifier):
         )
 
     async def level_test_completed(self, event: LevelTestCompleted, org: dto.Organizer):
+        results = json.dumps(self.dcf.dump(event.result.full_data))[:3000]
         await self.bot.send_message(
             chat_id=org.player.get_chat_id(),
             text=f"Тестирование уровня {event.suite.level.name_id}.\n"
             f"Игрок {hd.quote(event.suite.tester.player.name_mention)} "
-            f"закончил тестирование уровня за {event.result.seconds // 60} минут "
-            f"{event.result.seconds % 60} c.",
+            f"закончил тестирование уровня за {event.result.td.seconds // 60} минут "
+            f"{event.result.td.seconds % 60} c.\n"
+            f"{hd.pre(hd.quote(results))}",
         )
 
 

@@ -86,7 +86,7 @@ async def test_level_testing(
     assert suite == actual_suite
     assert "SH321" == actual_key
     result = await dao.level_test.get_testing_result(suite)
-    assert result <= datetime.now(tz=tz_utc) - start_at
+    assert result.td <= datetime.now(tz=tz_utc) - start_at
     actual_suite = level_view.calls["level_finished"].pop()
     assert suite == actual_suite
     event = org_notifier.calls.pop()

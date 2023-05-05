@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from datetime import timedelta, datetime
+from datetime import datetime
 
 from shvatka.core.interfaces.dal.level_testing import LevelTestingDao
 from shvatka.core.models import dto
@@ -27,7 +27,7 @@ class LevelTestComplex(LevelTestingDao):
     async def complete_test(self, suite: dto.LevelTestSuite):
         return await self.level_testing.complete_test(suite)
 
-    async def get_testing_result(self, suite: dto.LevelTestSuite) -> timedelta:
+    async def get_testing_result(self, suite: dto.LevelTestSuite) -> dto.LevelTestingResult:
         return await self.level_testing.get_testing_result(suite)
 
     async def get_by_id(self, id_: int, author: dto.Player | None = None) -> dto.Game:

@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import enum
 from dataclasses import dataclass, field
-from datetime import timedelta
 from typing import Protocol, Iterable, Sequence, Any
 
 from shvatka.core.interfaces.dal.game_play import GamePreparer
@@ -86,4 +85,4 @@ class NewOrg(Event):
 @dataclass
 class LevelTestCompleted(Event):
     suite: dto.LevelTestSuite
-    result: timedelta
+    result: dto.LevelTestingResult

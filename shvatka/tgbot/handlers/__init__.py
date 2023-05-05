@@ -5,7 +5,7 @@ from aiogram_dialog import DialogRegistry
 
 from shvatka.tgbot import dialogs
 from shvatka.tgbot.config.models.bot import BotConfig
-from shvatka.tgbot.handlers import errors
+from shvatka.tgbot.handlers import errors, merge
 from shvatka.tgbot.handlers import game, waivers, player
 from shvatka.tgbot.handlers import last
 from shvatka.tgbot.handlers import superuser, base
@@ -19,7 +19,8 @@ def setup_handlers(dp: Dispatcher, bot_config: BotConfig, registry: DialogRegist
     dp.include_router(base.setup())
     dp.include_router(superuser.setup(bot_config))
     dp.include_router(player.setup())
-    dp.include_router(team.setup(bot_config))
+    dp.include_router(team.setup())
+    dp.include_router(merge.setup(bot_config))
     dp.include_router(game.setup())
     dp.include_router(waivers.setup())
 

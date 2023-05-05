@@ -12,3 +12,8 @@ class TypedKeyGetter(OrgByPlayerGetter, Protocol):
 class TeamKeysMerger(Protocol):
     async def replace_team_keys(self, primary: dto.Team, secondary: dto.Team):
         raise NotImplementedError
+
+
+class PlayerKeysMerger(Protocol):
+    async def replace_player_keys(self, primary: dto.Player, secondary: dto.Player):
+        raise NotImplementedError

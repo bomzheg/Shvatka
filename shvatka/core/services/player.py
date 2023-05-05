@@ -13,7 +13,8 @@ from shvatka.core.interfaces.dal.player import (
     TeamPlayerPermissionFlipper,
     TeamPlayerRoleUpdater,
     TeamPlayerEmojiUpdater,
-    TeamPlayerHistoryGetter,
+    PlayerMerger,
+    TeamPlayerFullHistoryGetter,
 )
 from shvatka.core.interfaces.dal.secure_invite import InviteSaver, InviteRemover, InviterDao
 from shvatka.core.models import dto
@@ -29,6 +30,7 @@ from shvatka.core.utils.exceptions import (
     PermissionsError,
     SaltError,
 )
+from shvatka.core.views.game import GameLogWriter, GameLogEvent, GameLogType
 
 logger = logging.getLogger(__name__)
 
@@ -239,6 +241,63 @@ async def dismiss_promotion(token: str, dao: InviteRemover):
     await dao.remove_invite(token)
 
 
+async def merge_players(
+    primary: dto.Player,
+    secondary: dto.Player,
+    game_log: GameLogWriter,
+    dao: PlayerMerger,
+):
+    if primary.has_forum_user():
+        raise exceptions.SHDataBreach(
+            player=primary,
+            notify_user="Невозможно привязать к тебе ещё один форумный аккаунт "
+            "(ведь у тебя уже есть форумный аккаунт)",
+        )
+    if secondary.has_user():
+        raise exceptions.SHDataBreach(
+            player=secondary,
+            notify_user="Невозможно привязать к тебе этот форумный аккаунт "
+            "(этот аккаунт уже привязан к другому пользователю)",
+        )
+    await dao.replace_player_keys(primary, secondary)
+    await dao.replace_player_org(primary, secondary)
+    await dao.replace_games_author(primary, secondary)
+    await dao.replace_levels_author(primary, secondary)
+    await dao.replace_file_info(primary, secondary)
+    await merge_team_history(primary, secondary, dao)
+    await dao.replace_player_waiver(primary, secondary)
+
+    await dao.commit()
+    await game_log.log(
+        GameLogEvent(
+            GameLogType.PLAYERS_MERGED,
+            dict(
+                primary=primary.name_mention,
+                secondary=secondary.name_mention,
+            ),
+        )
+    )
+
+
+async def merge_team_history(primary: dto.Player, secondary: dto.Player, dao: PlayerMerger):
+    primary_history = await dao.get_player_teams_history(primary)
+    secondary_history = await dao.get_player_teams_history(secondary)
+    merged = []
+    if len(primary_history) == 1 and secondary_history[-1].team_id == primary_history[0].team_id:
+        if primary_history[0].date_joined > secondary_history[0].date_joined:
+            merged = secondary_history
+    if not merged:
+        merged = list(sorted(primary_history + secondary_history, key=lambda tp: tp.date_joined))
+    for tp1, tp2 in zip(merged[:-1:], merged[1::]):
+        if tp1.date_left is None or (tp1.date_left > tp2.date_joined):
+            raise ValueError("can't join automatically")
+    for tp in merged:
+        tp.player_id = primary.id
+    await dao.clean_history(primary)
+    await dao.clean_history(secondary)
+    await dao.set_history(merged)
+
+
 async def agree_promotion(
     token: str,
     inviter_id: int,
@@ -261,8 +320,8 @@ async def agree_promotion(
 
 
 async def get_teams_history(
-    player: dto.Player, dao: TeamPlayerHistoryGetter
-) -> list[dto.TeamPlayer]:
+    player: dto.Player, dao: TeamPlayerFullHistoryGetter
+) -> list[dto.FullTeamPlayer]:
     return await dao.get_full_history(player)
 
 

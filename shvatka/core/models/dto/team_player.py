@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime
 
+from .common import DateRange
 from .player import Player
 from .team import Team
 from .. import enums
@@ -31,6 +32,15 @@ class TeamPlayer:
 
     def __hash__(self):
         return hash(self.id)
+
+    def get_permissions(self) -> dict[str, bool]:
+        return dict(
+            can_manage_waivers=self._can_manage_waivers,
+            can_manage_players=self._can_remove_players,
+            can_change_team_name=self._can_change_team_name,
+            can_add_players=self._can_add_players,
+            can_remove_players=self._can_remove_players,
+        )
 
 
 @dataclass
@@ -100,3 +110,13 @@ class FullTeamPlayer(TeamPlayer):
 
     def __hash__(self):
         return hash(self.id)
+
+
+@dataclass
+class TeamDataRange:
+    range: DateRange
+    team_id: int
+
+    @classmethod
+    def from_team_player(cls, tp: TeamPlayer):
+        return cls(range=DateRange(tp.date_joined, tp.date_left), team_id=tp.team_id)

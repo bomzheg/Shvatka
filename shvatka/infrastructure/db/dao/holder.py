@@ -8,17 +8,17 @@ from shvatka.core.interfaces.dal.key_log import TypedKeyGetter
 from shvatka.core.interfaces.dal.level_testing import LevelTestingDao
 from shvatka.core.interfaces.dal.level_times import GameStarter, GameStatDao
 from shvatka.core.interfaces.dal.organizer import OrgAdder
-from shvatka.core.interfaces.dal.player import TeamLeaver, PlayerPromoter
+from shvatka.core.interfaces.dal.player import TeamLeaver, PlayerPromoter, PlayerMerger
 from shvatka.core.interfaces.dal.team import TeamCreator
 from shvatka.core.interfaces.dal.waiver import WaiverVoteAdder, WaiverVoteGetter, WaiverApprover
 from .complex import WaiverVoteAdderImpl, WaiverVoteGetterImpl
-from .complex.Level_times import GameStatImpl
 from .complex.game import GameUpserterImpl, GameCreatorImpl, GamePackagerImpl
 from .complex.game_play import GamePreparerImpl, GameStarterImpl, GamePlayerDaoImpl
 from .complex.key_log import TypedKeyGetterImpl
 from .complex.level_testing import LevelTestComplex
+from .complex.level_times import GameStatImpl
 from .complex.orgs import OrgAdderImpl
-from .complex.player import PlayerPromoterImpl
+from .complex.player import PlayerPromoterImpl, PlayerMergerImpl
 from .complex.team import TeamCreatorImpl, TeamLeaverImpl, TeamMergerImpl
 from .complex.waiver import WaiverApproverImpl
 from .memory.level_testing import LevelTestingData
@@ -139,7 +139,11 @@ class HolderDao:
 
     @property
     def player_promoter(self) -> PlayerPromoter:
-        return PlayerPromoterImpl(player=self.player, secure_invite=self.secure_invite)
+        return PlayerPromoterImpl(dao=self)
+
+    @property
+    def player_merger(self) -> PlayerMerger:
+        return PlayerMergerImpl(dao=self)
 
     @property
     def level_testing_complex(self) -> LevelTestingDao:
@@ -147,9 +151,7 @@ class HolderDao:
 
     @property
     def game_stat(self) -> GameStatDao:
-        return GameStatImpl(
-            level_times=self.level_time, level=self.level, organizer=self.organizer
-        )
+        return GameStatImpl(dao=self)
 
     @property
     def typed_keys(self) -> TypedKeyGetter:

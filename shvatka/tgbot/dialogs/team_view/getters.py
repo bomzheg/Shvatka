@@ -4,10 +4,21 @@ from shvatka.core.models import dto
 from shvatka.core.services.player import get_team_players
 from shvatka.core.services.team import get_teams, get_team_by_id, get_played_games
 from shvatka.infrastructure.db.dao.holder import HolderDao
+from .common import get_active_filter, get_archive_filter
 
 
-async def teams_getter(dao: HolderDao, **_) -> dict[str, list[dto.Team]]:
-    return {"teams": await get_teams(dao.team)}
+async def teams_getter(
+    dao: HolderDao, dialog_manager: DialogManager, **_
+) -> dict[str, list[dto.Team]]:
+    return {
+        "teams": await get_teams(
+            dao.team,
+            active=get_active_filter(dialog_manager),
+            archive=get_archive_filter(dialog_manager),
+        ),
+        "active": get_active_filter(dialog_manager),
+        "archive": get_archive_filter(dialog_manager),
+    }
 
 
 async def team_getter(dao: HolderDao, dialog_manager: DialogManager, **_):
@@ -22,3 +33,9 @@ async def team_getter(dao: HolderDao, dialog_manager: DialogManager, **_):
         "games": games,
         "game_numbers": games_numbers,
     }
+
+
+async def filter_getter(dialog_manager: DialogManager, **_):
+    return dict(
+        active=get_active_filter(dialog_manager), archive=get_archive_filter(dialog_manager)
+    )

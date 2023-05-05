@@ -105,3 +105,8 @@ class GamePackager(Protocol):
 class CompletedGameFinder(Protocol):
     async def get_completed_games(self) -> list[dto.Game]:
         raise NotImplementedError
+
+
+class GameAuthorMerger(Protocol):
+    async def replace_games_author(self, primary: dto.Player, secondary: dto.Player) -> None:
+        raise NotImplementedError

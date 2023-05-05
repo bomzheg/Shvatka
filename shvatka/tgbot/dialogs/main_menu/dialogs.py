@@ -65,6 +65,11 @@ main_menu = Dialog(
             id="to_teams",
             state=states.TeamsSg.list,
         ),
+        Start(
+            Const("🔮Былые свершения"),
+            id="to_merge_player",
+            state=states.MergePlayersSG.main,
+        ),
         # ачивки
         # уровни (не привязанные к играм?)
         state=states.MainMenuSG.main,

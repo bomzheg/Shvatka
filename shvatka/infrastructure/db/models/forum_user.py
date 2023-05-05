@@ -35,4 +35,5 @@ class ForumUser(Base):
             forum_id=self.forum_id,
             name=self.name,
             registered=self.registered,
+            player_id=self.player_id,
         )

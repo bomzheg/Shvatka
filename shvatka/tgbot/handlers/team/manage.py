@@ -1,16 +1,15 @@
 import logging
-from functools import partial
 
 from aiogram import Bot, F, Router
 from aiogram.enums import ChatType
 from aiogram.exceptions import TelegramBadRequest
 from aiogram.filters import Command, CommandObject, or_f
-from aiogram.types import Message, CallbackQuery
+from aiogram.types import Message
 from aiogram.utils.text_decorations import html_decoration as hd
 
 from shvatka.core.models import dto
 from shvatka.core.services.player import join_team, get_team_players
-from shvatka.core.services.team import create_team, get_team_by_id, merge_teams
+from shvatka.core.services.team import create_team
 from shvatka.core.utils.defaults_constants import DEFAULT_ROLE
 from shvatka.core.utils.exceptions import (
     TeamError,
@@ -21,10 +20,7 @@ from shvatka.core.utils.exceptions import (
 )
 from shvatka.core.views.game import GameLogWriter
 from shvatka.infrastructure.db.dao.holder import HolderDao
-from shvatka.tgbot import keyboards as kb
 from shvatka.tgbot import states
-from shvatka.tgbot.config.models.bot import BotConfig
-from shvatka.tgbot.filters import is_superuser
 from shvatka.tgbot.filters.has_target import HasTargetFilter
 from shvatka.tgbot.filters.is_admin import is_admin_filter
 from shvatka.tgbot.filters.is_team import IsTeamFilter
@@ -159,23 +155,7 @@ async def cmd_players(message: Message, team: dto.Team, dao: HolderDao):
     )
 
 
-async def confirm_merge_not_superuser(callback_query: CallbackQuery):
-    await callback_query.answer("Недостаточно прав, сорян", cache_time=3600)
-
-
-async def confirm_merge(
-    callback_query: CallbackQuery,
-    callback_data: kb.TeamMergeCD,
-    dao: HolderDao,
-    game_log: GameLogWriter,
-):
-    primary = await get_team_by_id(callback_data.primary_team_id, dao.team)
-    secondary = await get_team_by_id(callback_data.secondary_team_id, dao.team)
-    await merge_teams(primary.captain, primary, secondary, game_log, dao.team_merger)
-    await callback_query.answer("Успешно объединено")
-
-
-def setup(bot_config: BotConfig) -> Router:
+def setup() -> Router:
     router = Router(name=__name__)
     router.message.outer_middleware.register(TeamPlayerMiddleware())
     disable_router_on_game(router)
@@ -218,7 +198,4 @@ def setup(bot_config: BotConfig) -> Router:
         state=states.CaptainsBridgeSG.main,
         router=router,
     )
-    is_superuser_ = partial(is_superuser, superusers=bot_config.superusers)
-    router.callback_query.register(confirm_merge, kb.TeamMergeCD.filter(), is_superuser_)
-    router.callback_query.register(confirm_merge_not_superuser, kb.TeamMergeCD.filter())
     return router

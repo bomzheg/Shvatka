@@ -1,7 +1,11 @@
 from typing import Protocol, Sequence
 
 from shvatka.core.interfaces.dal.base import Committer
-from shvatka.core.interfaces.dal.game import ActiveGameFinder
+from shvatka.core.interfaces.dal.file_info import FileInfoMerger
+from shvatka.core.interfaces.dal.game import ActiveGameFinder, GameAuthorMerger
+from shvatka.core.interfaces.dal.key_log import PlayerKeysMerger
+from shvatka.core.interfaces.dal.level import LevelAuthorMerger
+from shvatka.core.interfaces.dal.organizer import PlayerOrgMerger
 from shvatka.core.interfaces.dal.secure_invite import InviteRemover, InviteReader
 from shvatka.core.models import dto
 from shvatka.core.models import enums
@@ -96,11 +100,47 @@ class TeamPlayerEmojiUpdater(TeamPlayerEmojiChanger, TeamPlayerGetter, Committer
     pass
 
 
-class TeamPlayerHistoryGetter(Protocol):
-    async def get_full_history(self, player: dto.Player) -> list[dto.TeamPlayer]:
+class TeamPlayerFullHistoryGetter(Protocol):
+    async def get_full_history(self, player: dto.Player) -> list[dto.FullTeamPlayer]:
         raise NotImplementedError
 
 
-class TeamPlayerMerger(Protocol):
+class TeamPlayersMerger(Protocol):
     async def replace_team_players(self, primary: dto.Team, secondary: dto.Team):
         raise NotImplementedError
+
+
+class TeamPlayerHistoryGetter(Protocol):
+    async def get_player_teams_history(self, player: dto.Player) -> list[dto.TeamPlayer]:
+        raise NotImplementedError
+
+
+class TeamPlayerHistoryCleaner(Protocol):
+    async def clean_history(self, player: dto.Player) -> None:
+        raise NotImplementedError
+
+
+class TeamPlayerHistorySetter(Protocol):
+    async def set_history(self, history: list[dto.TeamPlayer]) -> None:
+        raise NotImplementedError
+
+
+class WaiverPlayerMerger(Protocol):
+    async def replace_player_waiver(self, primary: dto.Player, secondary: dto.Player):
+        raise NotImplementedError
+
+
+class PlayerMerger(
+    GameAuthorMerger,
+    LevelAuthorMerger,
+    PlayerKeysMerger,
+    PlayerOrgMerger,
+    TeamPlayerHistoryGetter,
+    TeamPlayerHistoryCleaner,
+    TeamPlayerHistorySetter,
+    WaiverPlayerMerger,
+    FileInfoMerger,
+    Committer,
+    Protocol,
+):
+    pass

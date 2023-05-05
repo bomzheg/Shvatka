@@ -113,6 +113,8 @@ class GameBotLog(GameLogWriter):
                     "Капитан {captain} объединил "
                     "свою команду {primary_team} с форумной {secondary_team}"
                 )
+            case GameLogEvent(GameLogType.PLAYERS_MERGED):
+                text = "Игрок в боте {primary} объединён с форумным {secondary}"
             case GameLogEvent(GameLogType.TEAM_CREATED):
                 text = "Создана команда {team}. Капитан: {captain}"
             case _:

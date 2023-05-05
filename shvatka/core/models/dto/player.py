@@ -26,10 +26,16 @@ class Player:
             if self._forum_user:
                 return self._forum_user.name_mention
             return f"dummy-{self.id}"
-        if not self._user:
+        if not self.has_user():
             pass
         assert self._user
         return self._user.name_mention
+
+    def has_user(self) -> bool:
+        return self._user is not None
+
+    def has_forum_user(self) -> bool:
+        return self._forum_user is not None
 
     def get_tech_chat_id(self, reserve_chat_id: int) -> int:
         if self.is_dummy:

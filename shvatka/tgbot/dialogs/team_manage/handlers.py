@@ -22,11 +22,8 @@ from shvatka.core.services.player import (
 from shvatka.core.services.team import (
     rename_team,
     change_team_desc,
-    get_team_by_id,
-    get_team_by_forum_team_id,
 )
 from shvatka.infrastructure.db.dao.holder import HolderDao
-from shvatka.tgbot import keyboards as kb
 from shvatka.tgbot import states
 from shvatka.tgbot.utils.data import MiddlewareData
 
@@ -76,31 +73,7 @@ async def start_merge(c: CallbackQuery, button: Button, manager: DialogManager):
     dao = data["dao"]
     captain = data["player"]
     team = await get_my_team(captain, dao.team_player)
-    await manager.start(states.MergeTeams.main, data={"team_id": team.id})
-
-
-async def select_forum_team(
-    c: CallbackQuery, widget: Any, manager: DialogManager, forum_team_id: str
-):
-    manager.dialog_data["forum_team_id"] = int(forum_team_id)
-    await manager.switch_to(states.MergeTeams.confirm)
-
-
-async def confirm_merge(c: CallbackQuery, button: Any, manager: DialogManager):
-    data = typing.cast(MiddlewareData, manager.middleware_data)
-    dao = data["dao"]
-    captain = data["player"]
-    primary = await get_team_by_id(manager.start_data["team_id"], dao.team)
-    secondary = await get_team_by_forum_team_id(manager.dialog_data["forum_team_id"], dao.team)
-    await data["bot"].send_message(
-        chat_id=data["config"].game_log_chat,
-        text=f"Капитан {hd.quote(captain.name_mention)} предлагает объединить "
-        f"свою команду {hd.quote(primary.name)} "
-        f"с форумной версией {hd.quote(secondary.name)}",
-        reply_markup=kb.get_team_merge_confirm_kb(primary, secondary),
-    )
-    await c.answer("Заявка на объединение отправлена", show_alert=True)
-    await manager.done()
+    await manager.start(states.MergeTeamsSG.main, data={"team_id": team.id})
 
 
 async def remove_player_handler(c: CallbackQuery, button: Button, manager: DialogManager):

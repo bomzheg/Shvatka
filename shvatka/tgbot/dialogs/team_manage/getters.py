@@ -4,11 +4,6 @@ from aiogram_dialog import DialogManager
 
 from shvatka.core.models import dto
 from shvatka.core.services.player import get_full_team_player, get_my_team, get_team_players
-from shvatka.core.services.team import (
-    get_team_by_id,
-    get_free_forum_teams,
-    get_team_by_forum_team_id,
-)
 from shvatka.core.utils.exceptions import PlayerNotInTeam
 from shvatka.core.views.texts import PERMISSION_EMOJI
 from shvatka.infrastructure.db.dao.holder import HolderDao
@@ -52,23 +47,3 @@ async def get_selected_player(
             for key, value in selected_team_player.permissions.items()
         },
     }
-
-
-async def get_team(dao: HolderDao, dialog_manager: DialogManager, **_):
-    team_id = dialog_manager.start_data["team_id"]
-    team = await get_team_by_id(team_id, dao.team)
-    return {
-        "team": team,
-    }
-
-
-async def get_forum_team(dao: HolderDao, dialog_manager: DialogManager, **_):
-    forum_team_id = dialog_manager.dialog_data["forum_team_id"]
-    forum_team = await get_team_by_forum_team_id(forum_team_id, dao.team)
-    return {
-        "forum_team": forum_team,
-    }
-
-
-async def get_forum_teams(dao: HolderDao, **_):
-    return {"forum_teams": await get_free_forum_teams(dao.forum_team)}

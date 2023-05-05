@@ -1,3 +1,4 @@
+from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -29,3 +30,13 @@ class ForumUserDAO(BaseDAO[models.ForumUser]):
             .returning(models.ForumUser)
         )
         return saved_team.one().to_dto()
+
+    async def get_by_id(self, id_: int) -> dto.ForumUser:
+        result = await self._get_by_id(id_)
+        return result.to_dto()
+
+    async def get_by_forum_id(self, forum_id: int) -> dto.ForumUser:
+        result = await self.session.scalars(
+            select(models.ForumUser).where(models.ForumUser.forum_id == forum_id)
+        )
+        return result.one().to_dto()

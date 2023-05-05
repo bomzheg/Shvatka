@@ -32,3 +32,8 @@ class LevelByIdGetter(Protocol):
 class LevelLinker(Committer, Protocol):
     async def link_to_game(self, level: dto.Level, game: dto.Game) -> dto.Level:
         raise NotImplementedError
+
+
+class LevelAuthorMerger(Protocol):
+    async def replace_levels_author(self, primary: dto.Player, secondary: dto.Player) -> None:
+        raise NotImplementedError

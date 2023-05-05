@@ -2,6 +2,12 @@ from .invite_test_level import (
     LevelTestInviteCD,
     get_kb_level_test_invite,
 )
+from .merge import (
+    TeamMergeCD,
+    PlayerMergeCD,
+    get_team_merge_confirm_kb,
+    get_player_merge_confirm_kb,
+)
 from .organizer import (
     AddGameOrgID,
     AgreeBeOrgCD,
@@ -11,10 +17,6 @@ from .player import (
     PromotePlayerID,
     get_kb_agree_promotion,
     AgreePromotionCD,
-)
-from .team_merge import (
-    TeamMergeCD,
-    get_team_merge_confirm_kb,
 )
 from .waiver import (
     get_kb_waivers,

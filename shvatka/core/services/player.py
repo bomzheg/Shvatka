@@ -30,6 +30,7 @@ from shvatka.core.utils.exceptions import (
     PermissionsError,
     SaltError,
 )
+from shvatka.core.views.game import GameLogWriter, GameLogEvent, GameLogType
 
 logger = logging.getLogger(__name__)
 
@@ -243,6 +244,7 @@ async def dismiss_promotion(token: str, dao: InviteRemover):
 async def merge_players(
     primary: dto.Player,
     secondary: dto.Player,
+    game_log: GameLogWriter,
     dao: PlayerMerger,
 ):
     if primary.has_forum_user():
@@ -266,6 +268,15 @@ async def merge_players(
     await dao.replace_player_waiver(primary, secondary)
 
     await dao.commit()
+    await game_log.log(
+        GameLogEvent(
+            GameLogType.PLAYERS_MERGED,
+            dict(
+                primary=primary.name_mention,
+                secondary=secondary.name_mention,
+            ),
+        )
+    )
 
 
 async def merge_team_history(primary: dto.Player, secondary: dto.Player, dao: PlayerMerger):

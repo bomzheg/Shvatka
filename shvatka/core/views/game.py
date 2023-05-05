@@ -52,6 +52,7 @@ class GameLogType(enum.Enum):
     GAME_STARTED = enum.auto()
     GAME_FINISHED = enum.auto()
     TEAMS_MERGED = enum.auto()
+    PLAYERS_MERGED = enum.auto()
     TEAM_CREATED = enum.auto()
 
 

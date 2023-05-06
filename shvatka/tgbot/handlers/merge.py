@@ -2,6 +2,7 @@ from functools import partial
 
 from aiogram import Router
 from aiogram.types import CallbackQuery
+from aiogram_dialog import DialogManager
 
 from shvatka.core.services.player import get_player_by_id, merge_players
 from shvatka.core.services.team import get_team_by_id, merge_teams
@@ -17,16 +18,21 @@ async def confirm_merge_not_superuser(callback_query: CallbackQuery):
     await callback_query.answer("Недостаточно прав, сорян", cache_time=3600)
 
 
-async def confirm_merge(
+async def confirm_merge_team(
     callback_query: CallbackQuery,
     callback_data: kb.TeamMergeCD,
     dao: HolderDao,
     game_log: GameLogWriter,
+    dialog_manager: DialogManager,
 ):
     primary = await get_team_by_id(callback_data.primary_team_id, dao.team)
     secondary = await get_team_by_id(callback_data.secondary_team_id, dao.team)
     await merge_teams(primary.captain, primary, secondary, game_log, dao.team_merger)
     await callback_query.answer("Успешно объединено")
+    await callback_query.message.edit_reply_markup(reply_markup=None)
+    captain_chat_id = primary.captain.get_chat_id()
+    bg = dialog_manager.bg(user_id=captain_chat_id, chat_id=captain_chat_id)
+    await bg.update({})
 
 
 async def confirm_merge_players(
@@ -34,18 +40,23 @@ async def confirm_merge_players(
     callback_data: kb.PlayerMergeCD,
     dao: HolderDao,
     game_log: GameLogWriter,
+    dialog_manager: DialogManager,
 ):
     primary = await get_player_by_id(callback_data.primary_player_id, dao.player)
     secondary = await get_player_by_id(callback_data.secondary_player_id, dao.player)
     await merge_players(primary, secondary, game_log, dao.player_merger)
     await callback_query.answer("Успешно объединено")
+    await callback_query.message.edit_reply_markup(reply_markup=None)
+    primary_chat_id = primary.get_chat_id()
+    bg = dialog_manager.bg(user_id=primary_chat_id, chat_id=primary_chat_id)
+    await bg.update({})
 
 
 def setup(bot_config: BotConfig) -> Router:
     router = Router(name=__name__)
     disable_router_on_game(router)
     is_superuser_ = partial(is_superuser, superusers=bot_config.superusers)
-    router.callback_query.register(confirm_merge, kb.TeamMergeCD.filter(), is_superuser_)
+    router.callback_query.register(confirm_merge_team, kb.TeamMergeCD.filter(), is_superuser_)
     router.callback_query.register(confirm_merge_not_superuser, kb.TeamMergeCD.filter())
     router.callback_query.register(confirm_merge_players, kb.PlayerMergeCD.filter(), is_superuser_)
     router.callback_query.register(confirm_merge_not_superuser, kb.PlayerMergeCD.filter())

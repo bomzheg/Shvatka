@@ -2,6 +2,7 @@ from typing import Callable, Any, Awaitable
 
 from aiogram import BaseMiddleware
 from aiogram.types import TelegramObject
+from aiogram_dialog.api.entities import DialogUpdate
 
 from shvatka.core.models import dto
 from shvatka.core.services.chat import upsert_chat
@@ -24,9 +25,10 @@ class LoadDataMiddleware(BaseMiddleware):
         user = await save_user(data, holder_dao)
         data["user"] = user
         data["player"] = await save_player(user, holder_dao)
-        chat = await save_chat(data, holder_dao)
-        data["chat"] = chat
-        data["team"] = await load_team(chat, holder_dao)
+        if not isinstance(event, DialogUpdate):
+            chat = await save_chat(data, holder_dao)
+            data["chat"] = chat
+            data["team"] = await load_team(chat, holder_dao)
         data["game"] = await get_active(holder_dao.game)
         result = await handler(event, data)
         return result

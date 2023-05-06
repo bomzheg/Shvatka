@@ -187,6 +187,7 @@ my_games = Dialog(
         Cancel(Const("🔙Назад")),
         Start(Const("✍Написать игру"), id="write_game", state=states.GameWriteSG.game_name),
         Start(Const("✍Написать уровень"), id="write_level", state=states.LevelSG.level_id),
+        # уровни (не привязанные к играм?)
         ScrollingGroup(
             Select(
                 Format("{item.name}"),

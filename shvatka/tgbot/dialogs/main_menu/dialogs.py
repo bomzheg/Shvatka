@@ -72,7 +72,6 @@ main_menu = Dialog(
             when=~F["player"].has_forum_user(),
         ),
         # ачивки
-        # уровни (не привязанные к играм?)
         state=states.MainMenuSG.main,
         getter=(get_main, get_my_team_),
     ),

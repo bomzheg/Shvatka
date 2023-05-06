@@ -1,3 +1,5 @@
+from contextlib import suppress
+
 from aiogram import Router, Bot, F
 from aiogram.enums import ChatType, InlineQueryResultType
 from aiogram.filters import Command, MagicData
@@ -20,7 +22,7 @@ from shvatka.core.services.player import (
     get_my_team,
     leave,
 )
-from shvatka.core.utils.exceptions import SaltError
+from shvatka.core.utils.exceptions import SaltError, SaltNotExist
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.tgbot import keyboards as kb
 from shvatka.tgbot import states
@@ -53,9 +55,7 @@ async def send_promotion_invite(
             title="Наделить полномочиями",
             description="Только людям, которых знаете лично!",
             input_message_content=InputTextMessageContent(
-                message_text=(
-                    "Получить полномочия автора? \n" "Они нужны для написания и планирования игр."
-                )
+                message_text=("Получить аппрув?\nОн нужен для написания игр и создания команды")
             ),
             reply_markup=kb.get_kb_agree_promotion(token=token, inviter=player),
         )
@@ -70,10 +70,11 @@ async def dismiss_promotion_handler(
     dao: HolderDao,
     bot: Bot,
 ):
-    await dismiss_promotion(callback_data.token, dao.secure_invite)
+    with suppress(SaltNotExist):
+        await dismiss_promotion(callback_data.token, dao.secure_invite)
     await c.answer("правильно, большая сила - большая ответственность!", show_alert=True)
     await bot.edit_message_text(
-        text=f"<i>(Игрок {hd.quote(player.name_mention)} отказался от прав автора)</i>",
+        text=f"<i>(Игрок {hd.quote(player.name_mention)} отказался от аппрува)</i>",
         inline_message_id=c.inline_message_id,
     )
 
@@ -87,22 +88,29 @@ async def agree_promotion_handler(
     dialog_manager: DialogManager,
 ):
     await c.answer()
-    await agree_promotion(
-        token=callback_data.token,
-        inviter_id=callback_data.inviter_id,
-        target=player,
-        dao=dao.player_promoter,
-    )
-    await bot.edit_message_text(
-        text=(
-            f"Успешно. Теперь игрок {hd.quote(player.name_mention)} "
-            f"может самостоятельно писать игры"
-        ),
-        inline_message_id=c.inline_message_id,
-    )
-    primary_chat_id = player.get_chat_id()
-    bg = dialog_manager.bg(user_id=primary_chat_id, chat_id=primary_chat_id)
-    await bg.update({})
+    try:
+        await agree_promotion(
+            token=callback_data.token,
+            inviter_id=callback_data.inviter_id,
+            target=player,
+            dao=dao.player_promoter,
+        )
+    except SaltNotExist:
+        await bot.edit_message_text(
+            text="Приглашение устарело, отправьте его заново",
+            inline_message_id=c.inline_message_id,
+        )
+    else:
+        await bot.edit_message_text(
+            text=(
+                f"Успешно. Теперь игрок {hd.quote(player.name_mention)} "
+                f"может самостоятельно писать игры и создавать команды"
+            ),
+            inline_message_id=c.inline_message_id,
+        )
+        primary_chat_id = player.get_chat_id()
+        bg = dialog_manager.bg(user_id=primary_chat_id, chat_id=primary_chat_id)
+        await bg.update({})
 
 
 async def inviter_click_handler(c: CallbackQuery):

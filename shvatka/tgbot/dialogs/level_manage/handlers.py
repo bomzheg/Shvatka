@@ -116,3 +116,9 @@ async def process_key_message(m: Message, dialog_: Any, manager: DialogManager) 
         locker=locker,
         dao=dao.level_testing_complex,
     )
+
+
+async def select_level_handler(
+    c: CallbackQuery, widget: Any, manager: DialogManager, item_id: int
+):
+    await manager.start(state=states.LevelManageSG.menu, data={"level_id": int(item_id)})

@@ -3,11 +3,11 @@ from aiogram.types import ContentType
 from aiogram_dialog import Dialog, Window
 from aiogram_dialog.widgets.input import MessageInput
 from aiogram_dialog.widgets.kbd import Button, Cancel, SwitchTo, Select, ScrollingGroup
-from aiogram_dialog.widgets.text import Const, Jinja
+from aiogram_dialog.widgets.text import Const, Jinja, Format
 
 from shvatka.tgbot import states
 from shvatka.tgbot.filters import is_key
-from .getters import get_level_id, get_orgs
+from .getters import get_level_id, get_orgs, get_levels
 from .handlers import (
     edit_level,
     show_level,
@@ -15,7 +15,30 @@ from .handlers import (
     cancel_level_test,
     process_key_message,
     send_to_testing,
+    select_level_handler,
 )
+
+levels_list = Dialog(
+    Window(
+        Const("Уровни"),
+        Cancel(Const("🔙Назад")),
+        ScrollingGroup(
+            Select(
+                Format("{item.name_id}"),
+                id="levels_select",
+                items="levels",
+                item_id_getter=lambda x: x.db_id,
+                on_click=select_level_handler,
+            ),
+            id="levels_sg",
+            width=1,
+            height=10,
+        ),
+        state=states.LevelListSG.levels,
+        getter=get_levels,
+    ),
+)
+
 
 level_manage = Dialog(
     Window(
@@ -36,6 +59,7 @@ level_manage = Dialog(
             Const("🧩Тестировать"),
             id="level_test",
             on_click=level_testing,
+            when=F["level"].game_id,
         ),
         SwitchTo(
             Const("🧩Отправить на тестирование"),

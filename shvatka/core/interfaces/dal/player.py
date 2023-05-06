@@ -130,6 +130,16 @@ class WaiverPlayerMerger(Protocol):
         raise NotImplementedError
 
 
+class ForumPlayerMerger(Protocol):
+    async def replace_forum_player(self, primary: dto.Player, secondary: dto.Player):
+        raise NotImplementedError
+
+
+class PlayerDeleter(Protocol):
+    async def delete_player(self, player: dto.Player):
+        raise NotImplementedError
+
+
 class PlayerMerger(
     GameAuthorMerger,
     LevelAuthorMerger,
@@ -138,6 +148,8 @@ class PlayerMerger(
     TeamPlayerHistoryGetter,
     TeamPlayerHistoryCleaner,
     TeamPlayerHistorySetter,
+    ForumPlayerMerger,
+    PlayerDeleter,
     WaiverPlayerMerger,
     FileInfoMerger,
     Committer,

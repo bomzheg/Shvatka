@@ -69,6 +69,7 @@ main_menu = Dialog(
             Const("🔮Былые свершения"),
             id="to_merge_player",
             state=states.MergePlayersSG.main,
+            when=~F["player"].has_forum_user(),
         ),
         # ачивки
         # уровни (не привязанные к играм?)

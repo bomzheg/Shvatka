@@ -1,10 +1,10 @@
 import typing
 from typing import Iterable
 
-from sqlalchemy import select, func, Result, case
+from sqlalchemy import select, func, Result, case, delete, ScalarResult
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import joinedload, selectinload
+from sqlalchemy.orm import joinedload, selectinload, contains_eager
 
 from shvatka.core.models import dto
 from shvatka.infrastructure.db import models
@@ -58,11 +58,21 @@ class PlayerDao(BaseDAO[models.Player]):
         )
 
     async def get_by_user(self, user: dto.User) -> dto.Player:
-        result = await self.session.execute(
-            select(models.Player).join(models.Player.user).where(models.User.id == user.db_id)
+        result: ScalarResult[models.Player] = await self.session.scalars(
+            select(models.Player)
+            .join(models.Player.user)
+            .options(
+                joinedload(models.Player.forum_user),
+                contains_eager(models.Player.user),
+            )
+            .where(models.User.id == user.db_id)
         )
-        player = result.scalar_one()
-        return player.to_dto(user=user)
+        player = result.one()
+        if forum_user_db := player.forum_user:
+            forum_user = forum_user_db.to_dto()
+        else:
+            forum_user = None
+        return player.to_dto(user=user, forum_user=forum_user)
 
     async def create_for_user(self, user: dto.User) -> dto.Player:
         user_db = await self.session.get(models.User, user.db_id)
@@ -164,3 +174,6 @@ class PlayerDao(BaseDAO[models.Player]):
             )
             for player, pit in players
         ]
+
+    async def delete(self, player: dto.Player) -> None:
+        await self.session.execute(delete(models.Player).where(models.Player.id == player.id))

@@ -1,4 +1,4 @@
-from sqlalchemy import select
+from sqlalchemy import select, update
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -40,3 +40,10 @@ class ForumUserDAO(BaseDAO[models.ForumUser]):
             select(models.ForumUser).where(models.ForumUser.forum_id == forum_id)
         )
         return result.one().to_dto()
+
+    async def replace_player(self, primary: dto.Player, secondary: dto.Player) -> None:
+        await self.session.execute(
+            update(models.ForumUser)
+            .where(models.ForumUser.player_id == secondary.id)
+            .values(player_id=primary.id)
+        )

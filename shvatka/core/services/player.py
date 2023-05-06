@@ -266,6 +266,8 @@ async def merge_players(
     await dao.replace_file_info(primary, secondary)
     await merge_team_history(primary, secondary, dao)
     await dao.replace_player_waiver(primary, secondary)
+    await dao.replace_forum_player(primary, secondary)
+    await dao.delete_player(secondary)
 
     await dao.commit()
     await game_log.log(

@@ -7,6 +7,8 @@ from aiogram.types import (
     InputTextMessageContent,
     CallbackQuery,
 )
+from aiogram.utils.text_decorations import html_decoration as hd
+from aiogram_dialog import DialogManager
 
 from shvatka.core.models import dto
 from shvatka.core.services.game import get_game
@@ -54,13 +56,14 @@ async def invite_org_inline_query(
 async def dismiss_to_be_org_handler(
     c: CallbackQuery,
     callback_data: kb.AgreeBeOrgCD,
+    player: dto.Player,
     dao: HolderDao,
     bot: Bot,
 ):
     await dismiss_to_be_org(callback_data.token, dao.secure_invite)
     await c.answer("правильно, лучше поиграть!", show_alert=True)
     await bot.edit_message_text(
-        text="<i>(Игрок отказался от приглашения)</i>",
+        text=f"<i>(Игрок {hd.quote(player.name_mention)}  отказался от приглашения)</i>",
         inline_message_id=c.inline_message_id,
     )
 
@@ -71,6 +74,7 @@ async def agree_to_be_org_handler(
     player: dto.Player,
     dao: HolderDao,
     bot: Bot,
+    dialog_manager: DialogManager,
 ):
     await c.answer()
     await agree_to_be_org(
@@ -81,9 +85,12 @@ async def agree_to_be_org_handler(
         dao=dao.org_adder,
     )
     await bot.edit_message_text(
-        text="<i>(Игрок принял приглашение)</i>",
+        text=f"<i>(Игрок {hd.quote(player.name_mention)} принял приглашение)</i>",
         inline_message_id=c.inline_message_id,
     )
+    primary_chat_id = player.get_chat_id()
+    bg = dialog_manager.bg(user_id=primary_chat_id, chat_id=primary_chat_id)
+    await bg.update({})
 
 
 async def inviter_click_handler(c: CallbackQuery):

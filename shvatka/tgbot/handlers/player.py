@@ -9,7 +9,7 @@ from aiogram.types import (
     CallbackQuery,
 )
 from aiogram.utils.text_decorations import html_decoration as hd
-from aiogram_dialog import StartMode
+from aiogram_dialog import StartMode, DialogManager
 
 from shvatka.core.models import dto
 from shvatka.core.services.player import (
@@ -64,12 +64,17 @@ async def send_promotion_invite(
 
 
 async def dismiss_promotion_handler(
-    c: CallbackQuery, callback_data: kb.AgreePromotionCD, dao: HolderDao, bot: Bot
+    c: CallbackQuery,
+    callback_data: kb.AgreePromotionCD,
+    player: dto.Player,
+    dao: HolderDao,
+    bot: Bot,
 ):
     await dismiss_promotion(callback_data.token, dao.secure_invite)
     await c.answer("правильно, большая сила - большая ответственность!", show_alert=True)
     await bot.edit_message_text(
-        text="<i>(Игрок отказался от прав автора)</i>", inline_message_id=c.inline_message_id
+        text=f"<i>(Игрок {hd.quote(player.name_mention)} отказался от прав автора)</i>",
+        inline_message_id=c.inline_message_id,
     )
 
 
@@ -79,6 +84,7 @@ async def agree_promotion_handler(
     player: dto.Player,
     dao: HolderDao,
     bot: Bot,
+    dialog_manager: DialogManager,
 ):
     await c.answer()
     await agree_promotion(
@@ -88,9 +94,15 @@ async def agree_promotion_handler(
         dao=dao.player_promoter,
     )
     await bot.edit_message_text(
-        text="Успешно. Теперь игрок может самостоятельно писать игры",
+        text=(
+            f"Успешно. Теперь игрок {hd.quote(player.name_mention)} "
+            f"может самостоятельно писать игры"
+        ),
         inline_message_id=c.inline_message_id,
     )
+    primary_chat_id = player.get_chat_id()
+    bg = dialog_manager.bg(user_id=primary_chat_id, chat_id=primary_chat_id)
+    await bg.update({})
 
 
 async def inviter_click_handler(c: CallbackQuery):

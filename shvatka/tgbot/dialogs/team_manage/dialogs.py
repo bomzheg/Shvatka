@@ -61,7 +61,7 @@ captains_bridge = Dialog(
             when=F["team_player"].can_manage_players | F["team_player"].can_remove_players,
         ),
         Button(
-            Const("🔮Былые свершения"),
+            Const("🔮Былые свершения команды"),
             id="merge_teams",
             on_click=start_merge,
             when=~F["team"].has_forum_team(),

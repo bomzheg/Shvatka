@@ -103,7 +103,7 @@ captains_bridge = Dialog(
     ),
     Window(
         TEAM_PLAYER_CARD,
-        SwitchTo(Const("⤴В меню команды"), id="to_main", state=states.CaptainsBridgeSG.main),
+        SwitchTo(Const("🔙В меню команды"), id="to_main", state=states.CaptainsBridgeSG.main),
         SwitchTo(Const("🔙Назад"), id="back", state=states.CaptainsBridgeSG.players),
         Button(
             Format("{can_manage_waivers}Подавать вейверы"),
@@ -161,9 +161,9 @@ captains_bridge = Dialog(
         Const(
             "Вы уверены что хотите изгнать его из команды?",
         ),
-        SwitchTo(Const("⤴В меню команды"), id="to_main", state=states.CaptainsBridgeSG.main),
+        SwitchTo(Const("🔙В меню команды"), id="to_main", state=states.CaptainsBridgeSG.main),
         SwitchTo(
-            Const("⤴Назад к списку игроков"),
+            Const("🔙Назад к списку игроков"),
             id="to_players",
             state=states.CaptainsBridgeSG.players,
         ),
@@ -179,9 +179,9 @@ captains_bridge = Dialog(
             id="role_changer",
             on_success=change_role_handler,
         ),
-        SwitchTo(Const("⤴В меню команды"), id="to_main", state=states.CaptainsBridgeSG.main),
+        SwitchTo(Const("🔙В меню команды"), id="to_main", state=states.CaptainsBridgeSG.main),
         SwitchTo(
-            Const("⤴Назад к списку игроков"),
+            Const("🔙Назад к списку игроков"),
             id="to_players",
             state=states.CaptainsBridgeSG.players,
         ),
@@ -195,9 +195,9 @@ captains_bridge = Dialog(
             id="emoji_changer",
             on_success=change_emoji_handler,
         ),
-        SwitchTo(Const("⤴В меню команды"), id="to_main", state=states.CaptainsBridgeSG.main),
+        SwitchTo(Const("🔙В меню команды"), id="to_main", state=states.CaptainsBridgeSG.main),
         SwitchTo(
-            Const("⤴Назад к списку игроков"),
+            Const("🔙Назад к списку игроков"),
             id="to_players",
             state=states.CaptainsBridgeSG.players,
         ),

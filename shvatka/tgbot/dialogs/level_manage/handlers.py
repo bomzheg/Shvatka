@@ -10,7 +10,7 @@ from aiogram_dialog.widgets.kbd import Button
 from shvatka.core.interfaces.clients.file_storage import FileStorage
 from shvatka.core.interfaces.scheduler import LevelTestScheduler
 from shvatka.core.models import dto
-from shvatka.core.services.level import get_by_id
+from shvatka.core.services.level import get_by_id, unlink_level
 from shvatka.core.services.level_testing import start_level_test, check_level_testing_key
 from shvatka.core.services.organizers import get_org_by_id
 from shvatka.core.utils.key_checker_lock import KeyCheckerFactory
@@ -89,6 +89,15 @@ async def level_testing(c: CallbackQuery, button: Button, manager: DialogManager
     )
 
 
+async def unlink_level_handler(c: CallbackQuery, button: Button, manager: DialogManager):
+    dao: HolderDao = manager.middleware_data["dao"]
+    level_id = manager.start_data["level_id"]
+    author: dto.Player = manager.middleware_data["player"]
+    level = await get_by_id(level_id, author, dao.level)
+    await unlink_level(level, dao.level)
+    await manager.done()
+
+
 async def cancel_level_test(c: CallbackQuery, button: Button, manager: DialogManager):
     await c.answer()
     dao: HolderDao = manager.middleware_data["dao"]
@@ -116,3 +125,9 @@ async def process_key_message(m: Message, dialog_: Any, manager: DialogManager) 
         locker=locker,
         dao=dao.level_testing_complex,
     )
+
+
+async def select_level_handler(
+    c: CallbackQuery, widget: Any, manager: DialogManager, item_id: int
+):
+    await manager.start(state=states.LevelManageSG.menu, data={"level_id": int(item_id)})

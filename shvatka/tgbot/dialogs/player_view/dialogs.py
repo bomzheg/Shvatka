@@ -20,7 +20,7 @@ player_dialog = Dialog(
             "{% endfor %}"
             "{% endif %}"
         ),
-        Cancel(Const("⤴Выход")),
+        Cancel(Const("🔙Выход")),
         getter=player_getter,
         state=states.PlayerSg.main,
     ),

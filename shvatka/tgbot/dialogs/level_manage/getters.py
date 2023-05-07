@@ -3,14 +3,13 @@ from aiogram_dialog import DialogManager
 from shvatka.core.models import dto
 from shvatka.core.services import organizers
 from shvatka.core.services.game import get_game
-from shvatka.core.services.level import get_by_id, get_level_by_id_for_org
+from shvatka.core.services.level import get_by_id, get_level_by_id_for_org, get_all_my_free_levels
 from shvatka.core.services.organizers import get_org_by_id, get_by_player
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.tgbot.views.utils import render_time_hints
 
 
-async def get_level_id(dialog_manager: DialogManager, **_):
-    dao: HolderDao = dialog_manager.middleware_data["dao"]
+async def get_level_id(dao: HolderDao, dialog_manager: DialogManager, **_):
     author: dto.Player = dialog_manager.middleware_data["player"]
     level, org = await get_level_and_org(author, dao, dialog_manager)
     hints = level.scenario.time_hints
@@ -21,9 +20,8 @@ async def get_level_id(dialog_manager: DialogManager, **_):
     }
 
 
-async def get_orgs(dialog_manager: DialogManager, **_):
+async def get_orgs(dao: HolderDao, dialog_manager: DialogManager, **_):
     level_id = dialog_manager.start_data["level_id"]
-    dao: HolderDao = dialog_manager.middleware_data["dao"]
     author: dto.Player = dialog_manager.middleware_data["player"]
     level = await get_by_id(level_id, author, dao.level)
     game = await get_game(id_=level.game_id, author=author, dao=dao.game)
@@ -39,7 +37,7 @@ async def get_level_and_org(
     author: dto.Player,
     dao: HolderDao,
     manager: DialogManager,
-) -> tuple[dto.Level, dto.Organizer]:
+) -> tuple[dto.Level, dto.Organizer | None]:
     try:
         org_id = manager.start_data["org_id"]
     except KeyError:
@@ -51,6 +49,18 @@ async def get_level_and_org(
     return level, org
 
 
-async def get_org(author: dto.Player, level: dto.Level, dao: HolderDao) -> dto.Organizer:
-    game = await get_game(level.game_id, author=author, dao=dao.game)
-    return await get_by_player(author, game, dao.organizer)
+async def get_levels(
+    player: dto.Player,
+    dao: HolderDao,
+    **_,
+):
+    levels = await get_all_my_free_levels(player, dao.level)
+    return {"levels": levels}
+
+
+async def get_org(author: dto.Player, level: dto.Level, dao: HolderDao) -> dto.Organizer | None:
+    if level.game_id:
+        game = await get_game(level.game_id, author=author, dao=dao.game)
+        return await get_by_player(author, game, dao.organizer)
+    else:
+        return None

@@ -37,7 +37,7 @@ team_view = Dialog(
             "Капитан: {{team.captain.name_mention}}\n"
             "Сыгранные игры: {{' '.join(game_numbers)}}"
         ),
-        Cancel(Const("⤴Выход")),
+        Cancel(Const("🔙Выход")),
         SwitchTo(Const("🔙Назад"), state=states.TeamsSg.list, id="to_list"),
         ScrollingGroup(
             Select(

@@ -37,3 +37,8 @@ class LevelLinker(Committer, Protocol):
 class LevelAuthorMerger(Protocol):
     async def replace_levels_author(self, primary: dto.Player, secondary: dto.Player) -> None:
         raise NotImplementedError
+
+
+class LevelUnlinker(Committer, Protocol):
+    async def unlink(self, level: dto.Level) -> None:
+        raise NotImplementedError

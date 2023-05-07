@@ -18,6 +18,10 @@ class TimeHintSG(StatesGroup):
     hint = State()
 
 
+class LevelListSG(StatesGroup):
+    levels = State()
+
+
 class LevelSG(StatesGroup):
     level_id = State()
     keys = State()

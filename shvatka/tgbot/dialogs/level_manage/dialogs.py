@@ -16,6 +16,7 @@ from .handlers import (
     process_key_message,
     send_to_testing,
     select_level_handler,
+    unlink_level_handler,
 )
 
 levels_list = Dialog(
@@ -65,6 +66,12 @@ level_manage = Dialog(
             Const("🧩Отправить на тестирование"),
             id="send_to_test",
             state=states.LevelManageSG.send_to_test,
+            when=F["level"].game_id,
+        ),
+        Button(
+            Const("🗑Убрать из игры"),
+            id="unlink",
+            on_click=unlink_level_handler,
             when=F["level"].game_id,
         ),
         state=states.LevelManageSG.menu,

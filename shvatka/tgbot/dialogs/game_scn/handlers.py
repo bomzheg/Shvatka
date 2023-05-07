@@ -95,4 +95,4 @@ async def add_level_handler(c: CallbackQuery, button: Any, manager: DialogManage
     game = await get_full_game(game_id, author=author, dao=dao.game)
     level = await get_by_id(int(item_id), author=author, dao=dao.level)
     await add_level(game=game, level=level, author=author, dao=dao.level)
-    await manager.done()
+    await manager.switch_to(state=states.GameEditSG.current_levels)

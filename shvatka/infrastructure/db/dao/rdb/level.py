@@ -71,6 +71,11 @@ class LevelDao(BaseDAO[models.Level]):
         )
         return level.to_dto(level.author.to_dto_user_prefetched())
 
+    async def unlink(self, level: dto.Level):
+        await self.session.execute(
+            update(models.Level).where(models.Level.id == level.db_id).values(game_id=None)
+        )
+
     async def unlink_all(self, game: dto.Game):
         await self.session.execute(
             update(models.Level)

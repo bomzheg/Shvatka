@@ -1,6 +1,11 @@
 from dataclass_factory import Factory
 
-from shvatka.core.interfaces.dal.level import LevelUpserter, MyLevelsGetter, LevelByIdGetter
+from shvatka.core.interfaces.dal.level import (
+    LevelUpserter,
+    MyLevelsGetter,
+    LevelByIdGetter,
+    LevelUnlinker,
+)
 from shvatka.core.models import dto
 from shvatka.core.models.dto import scn
 from shvatka.core.services.player import check_allow_be_author
@@ -21,6 +26,11 @@ async def upsert_level(author: dto.Player, scenario: scn.LevelScenario, dao: Lev
     result = await dao.upsert(author, scenario)
     await dao.commit()
     return result
+
+
+async def unlink_level(level: dto.Level, dao: LevelUnlinker):
+    await dao.unlink(level)
+    await dao.commit()
 
 
 async def get_all_my_free_levels(author: dto.Player, dao: MyLevelsGetter) -> list[dto.Level]:

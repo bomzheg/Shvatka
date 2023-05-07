@@ -22,7 +22,7 @@ async def test_exit_write_game(author_client: BotClient, message_manager: MockMe
     message_manager.reset_history()
     callback_id = await author_client.click(
         new_message,
-        InlineButtonTextLocator("⤴Не создавать игру"),
+        InlineButtonTextLocator("🔙Не создавать игру"),
     )
     message_manager.assert_answered(callback_id)
     assert not message_manager.sent_messages

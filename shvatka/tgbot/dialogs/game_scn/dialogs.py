@@ -30,7 +30,7 @@ game_writer = Dialog(
             "поскольку ID и название файла попадают в лог-файлы, предназначенные "
             "для чтения системным администратором"
         ),
-        Cancel(Const("⤴Отменить")),
+        Cancel(Const("🔙Отменить")),
         MessageInput(func=process_name),
         SwitchTo(Const("Загрузить из zip"), id="game_from_zip", state=states.GameWriteSG.from_zip),
         state=states.GameWriteSG.game_name,
@@ -38,7 +38,7 @@ game_writer = Dialog(
     Window(
         Jinja("Игра <b>{{game_name}}</b>\n\n"),
         Const("<b>Уровни</b>\n\n" "Выбери уровни которые нужно добавить"),
-        Cancel(Const("⤴Не создавать игру")),
+        Cancel(Const("🔙Не создавать игру")),
         ScrollingGroup(
             Multiselect(
                 Format("✓ {item.name_id}"),
@@ -61,7 +61,7 @@ game_writer = Dialog(
     ),
     Window(
         Const("Жду zip-файл с готовой игрой"),
-        Cancel(Const("⤴Отменить")),
+        Cancel(Const("🔙Отменить")),
         MessageInput(func=process_zip_scn, filter=F.content_type == ContentType.DOCUMENT),
         state=states.GameWriteSG.from_zip,
     ),

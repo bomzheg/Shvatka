@@ -70,7 +70,7 @@ games = Dialog(
             "которая началась: {{ game.start_at|user_timezone }} "
         ),
         SwitchTo(
-            Const("⤴Назад к списку игр"),
+            Const("🔙Назад к списку игр"),
             id="to_games",
             state=states.CompletedGamesPanelSG.list,
         ),
@@ -124,7 +124,7 @@ games = Dialog(
             "{% endfor %}"
         ),
         SwitchTo(
-            Const("⤴Назад к списку игр"),
+            Const("🔙Назад к списку игр"),
             id="to_games",
             state=states.CompletedGamesPanelSG.list,
         ),
@@ -143,7 +143,7 @@ games = Dialog(
             "которая началась: {{ game.start_at|user_timezone }} "
         ),
         SwitchTo(
-            Const("⤴Назад к списку игр"),
+            Const("🔙Назад к списку игр"),
             id="to_games",
             state=states.CompletedGamesPanelSG.list,
         ),
@@ -167,7 +167,7 @@ games = Dialog(
             "{% endif %}"
         ),
         SwitchTo(
-            Const("⤴Назад к списку игр"),
+            Const("🔙Назад к списку игр"),
             id="to_games",
             state=states.CompletedGamesPanelSG.list,
         ),
@@ -215,7 +215,7 @@ my_games = Dialog(
             "{% endif %}"
         ),
         SwitchTo(
-            Const("⤴Назад к списку игр"),
+            Const("🔙Назад к списку игр"),
             id="to_my_games",
             state=states.MyGamesPanelSG.choose_game,
         ),
@@ -273,7 +273,7 @@ my_games = Dialog(
     Window(
         Jinja("Чтобы переименовать игру {{game.name}} пришли новое имя"),
         MessageInput(func=rename_game_handler),
-        SwitchTo(Const("⤴Назад"), id="back", state=states.MyGamesPanelSG.game_menu),
+        SwitchTo(Const("🔙Назад"), id="back", state=states.MyGamesPanelSG.game_menu),
         state=states.MyGamesPanelSG.rename,
         getter=get_game,
     ),

@@ -96,7 +96,7 @@ promote_dialog = Dialog(
             Const("✍Аппрувнуть"),
             Format("{inline_query}"),
         ),
-        Cancel(Const("⤴Назад")),
+        Cancel(Const("🔙Назад")),
         state=states.PromotionSG.disclaimer,
         getter=get_promotion_token,
     )

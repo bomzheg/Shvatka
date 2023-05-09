@@ -28,3 +28,8 @@ tz_local = typing.cast(tzinfo, tz.gettz())
 
 def add_timezone(dt: datetime, timezone: tzinfo = tz_game) -> datetime:
     return datetime.combine(dt.date(), dt.time(), timezone)
+
+
+def trim_tz(dt: datetime) -> datetime:
+    internal = dt.astimezone(tz=tz_game)
+    return datetime.combine(date=internal.date(), time=internal.time())

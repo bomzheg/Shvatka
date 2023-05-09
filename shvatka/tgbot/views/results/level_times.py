@@ -1,12 +1,13 @@
 import typing
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, time
 
+from asyncpg.pgproto.pgproto import timedelta
 from openpyxl import Workbook
 from openpyxl.worksheet.worksheet import Worksheet
 
 from shvatka.core.models import dto
-from shvatka.core.utils.datetime_utils import tz_game
+from shvatka.core.utils.datetime_utils import trim_tz
 from shvatka.core.utils.exceptions import GameNotFinished
 
 
@@ -28,33 +29,51 @@ class LevelTime(typing.NamedTuple):
     time: datetime
 
 
-class TeamLevelsTimes(typing.NamedTuple):
+class LevelTimedelta(typing.NamedTuple):
+    level: int
+    td: timedelta
+
+
+class TeamLevels(typing.NamedTuple):
     team: dto.Team
     levels_times: list[LevelTime]
+    levels_timedelta: list[LevelTimedelta]
+
+
+@dataclass
+class Results:
+    data: list[TeamLevels]
 
 
 DATETIME_EXCEL_FORMAT = "HH:MM:SS"
 
 
 def export_results(game: dto.FullGame, game_stat: dto.GameStat, file: typing.Any):
-    return export_results_internal(game, to_array_results(game_stat), file)
+    return export_results_internal(game, to_results(game_stat), file)
 
 
-def to_array_results(game_stat: dto.GameStat) -> list[TeamLevelsTimes]:
+def to_results(game_stat: dto.GameStat) -> Results:
     result = []
     for team, lts in game_stat.level_times.items():
         levels_times = [LevelTime(lt.level_number, trim_tz(lt.start_at)) for lt in lts]
-        result.append(TeamLevelsTimes(team, levels_times))
-    return result
+        levels_timedelta = []
+        for previous, current in zip(
+            levels_times[:-1], levels_times[1:]
+        ):  # type: LevelTime, LevelTime
+            td = current.time - previous.time
+            levels_timedelta.append(LevelTimedelta(current.level, td))
+        result.append(TeamLevels(team, levels_times, levels_timedelta))
+    return Results(result)
 
 
-def export_results_internal(game: dto.FullGame, data: list[TeamLevelsTimes], file: typing.Any):
+def export_results_internal(game: dto.FullGame, results: Results, file: typing.Any):
     if not (game.is_complete() or game.is_finished()):
         raise GameNotFinished
     wb = Workbook()
     ws = wb.active
     ws.cell(**GAME_NAME.shift()).value = game.name
-    for i, team_level_times in enumerate(data):
+    i = 0
+    for i, team_level_times in enumerate(results.data):
         cell = ws.cell(**FIRST_TEAM_NAME.shift(i, 0))
         cell.value = team_level_times.team.name
 
@@ -64,6 +83,19 @@ def export_results_internal(game: dto.FullGame, data: list[TeamLevelsTimes], fil
 
             cell = ws.cell(**FIRST_TEAM_NAME.shift(i, j))
             cell.value = level_time.time
+            cell.number_format = DATETIME_EXCEL_FORMAT
+    second_part_start = i + 3
+
+    for i, team_level_times in enumerate(results.data, second_part_start):
+        cell = ws.cell(**FIRST_TEAM_NAME.shift(i, 0))
+        cell.value = team_level_times.team.name
+
+        for j, level_td in enumerate(team_level_times.levels_timedelta, 1):
+            if i == second_part_start:
+                ws.cell(**FIRST_TEAM_NAME.shift(second_part_start - 1, j)).value = level_td.level
+
+            cell = ws.cell(**FIRST_TEAM_NAME.shift(i, j))
+            cell.value = as_time(level_td.td)
             cell.number_format = DATETIME_EXCEL_FORMAT
 
     resize_columns(ws)
@@ -76,6 +108,8 @@ def resize_columns(worksheet: Worksheet):
         worksheet.column_dimensions[col[0].column_letter].width = new_len
 
 
-def trim_tz(dt: datetime) -> datetime:
-    internal = dt.astimezone(tz=tz_game)
-    return datetime.combine(date=internal.date(), time=internal.time())
+def as_time(td: timedelta) -> time:
+    hours = td.seconds // 3600
+    minutes = (td.seconds - hours * 3600) // 60
+    seconds = td.seconds - hours * 3600 - minutes * 60
+    return time(hours, minutes, seconds, td.microseconds)

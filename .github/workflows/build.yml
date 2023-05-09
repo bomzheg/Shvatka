@@ -8,10 +8,10 @@ on:
     branches: [ master ]
 
 jobs:
-  call-test-workflow:
+  lint-and-test:
     uses: ./.github/workflows/test.yml
   build:
-    needs: call-test-workflow
+    needs: lint-and-test
     runs-on: ubuntu-latest
 
     steps:

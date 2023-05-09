@@ -117,7 +117,7 @@ async def process_key_message(m: Message, dialog_: Any, manager: DialogManager) 
     level, org = await get_level_and_org(author, dao, manager)
     suite = dto.LevelTestSuite(tester=org, level=level)
     view = create_level_test_view(bot=bot, dao=dao, storage=storage)
-    await check_level_testing_key(
+    insert_result = await check_level_testing_key(
         key=typing.cast(str, m.text),
         suite=suite,
         view=view,
@@ -125,6 +125,8 @@ async def process_key_message(m: Message, dialog_: Any, manager: DialogManager) 
         locker=locker,
         dao=dao.level_testing_complex,
     )
+    if insert_result.level_completed:
+        await manager.done()
 
 
 async def select_level_handler(

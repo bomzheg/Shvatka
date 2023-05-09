@@ -31,3 +31,38 @@ class InsertedKey(KeyTime):
             is_level_up=is_level_up,
             team=key_time.team,
         )
+
+
+@dataclass
+class KeyInsertResult:
+    is_correct: bool
+    is_duplicate: bool
+    level_completed: bool
+    game_finished: bool
+
+    @classmethod
+    def wrong(cls):
+        return cls(
+            is_correct=False,
+            is_duplicate=False,
+            level_completed=False,
+            game_finished=False,
+        )
+
+    @classmethod
+    def correct(cls):
+        return cls(
+            is_correct=True,
+            is_duplicate=False,
+            level_completed=False,
+            game_finished=False,
+        )
+
+    @classmethod
+    def completed(cls):
+        return cls(
+            is_correct=True,
+            is_duplicate=False,
+            level_completed=True,
+            game_finished=False,
+        )

@@ -79,7 +79,7 @@ async def check_level_testing_key(
     org_notifier: OrgNotifier,
     locker: KeyCheckerFactory,
     dao: LevelTestingDao,
-):
+) -> dto.KeyInsertResult:
     if not is_key_valid(key):
         raise InvalidKey(key=key, player=suite.tester.player)
     async with locker.lock_player(suite.tester.player):
@@ -98,7 +98,7 @@ async def check_level_testing_key(
         await dao.commit()
     if not is_correct_key:
         await view.wrong_key(suite=suite, key=key)
-        return
+        return dto.KeyInsertResult.wrong()
     await view.correct_key(suite=suite, key=key)
     if is_completed:
         await view.level_finished(suite=suite)
@@ -108,6 +108,8 @@ async def check_level_testing_key(
             result=await dao.get_testing_result(suite=suite),
         )
         await org_notifier.notify(event)
+        return dto.KeyInsertResult.completed()
+    return dto.KeyInsertResult.correct()
 
 
 async def get_testing_observers(level: dto.Level, dao: GameByIdGetter) -> Sequence[dto.Organizer]:

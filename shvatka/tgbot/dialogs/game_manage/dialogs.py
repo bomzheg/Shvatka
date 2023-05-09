@@ -41,6 +41,7 @@ from .handlers import (
     select_game,
     show_my_game_orgs,
     show_my_zip_scn,
+    get_excel_results_handler,
 )
 from ..preview_data import PREVIEW_GAME
 
@@ -151,6 +152,11 @@ games = Dialog(
             Const("⤴Назад"),
             id="to_game",
             state=states.CompletedGamesPanelSG.game,
+        ),
+        Button(
+            Const("📶Таблицей"),
+            id="as_excel",
+            on_click=get_excel_results_handler,
         ),
         getter=get_game_results,
         state=states.CompletedGamesPanelSG.results,

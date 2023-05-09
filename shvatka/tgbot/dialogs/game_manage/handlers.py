@@ -1,4 +1,5 @@
 from datetime import date, datetime, time
+from io import BytesIO
 from typing import Any
 
 from aiogram.types import CallbackQuery, Message, BufferedInputFile
@@ -10,11 +11,13 @@ from shvatka.core.interfaces.clients.file_storage import FileGateway
 from shvatka.core.interfaces.scheduler import Scheduler
 from shvatka.core.models import dto
 from shvatka.core.services import game
-from shvatka.core.services.game import rename_game, get_game
+from shvatka.core.services.game import rename_game, get_game, get_full_game
+from shvatka.core.services.game_stat import get_game_stat
 from shvatka.core.services.scenario.scn_zip import pack_scn
 from shvatka.core.utils.datetime_utils import TIME_FORMAT, tz_game
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.tgbot import states
+from shvatka.tgbot.views.results.level_times import export_results
 
 
 async def select_my_game(c: CallbackQuery, widget: Any, manager: DialogManager, item_id: str):
@@ -155,3 +158,18 @@ async def publish_game(c: CallbackQuery, widget: Button, manager: DialogManager)
     await c.answer()
     game_id = manager.dialog_data["my_game_id"]
     await manager.start(states.GamePublishSG.prepare, data={"game_id": game_id})
+
+
+async def get_excel_results_handler(c: CallbackQuery, widget: Button, manager: DialogManager):
+    game_id = manager.dialog_data["game_id"]
+    dao: HolderDao = manager.middleware_data["dao"]
+    author: dto.Player = manager.middleware_data["player"]
+    full_game = await get_full_game(id_=game_id, author=author, dao=dao.game)
+    game_stat = await get_game_stat(game=full_game, player=author, dao=dao.game_stat)
+    file = BytesIO()
+    export_results(game=full_game, game_stat=game_stat, file=file)
+    file.seek(0)
+    await c.message.answer_document(
+        document=BufferedInputFile(file=file.read(), filename=f"{full_game.name}.xlsx"),
+    )
+    file.close()

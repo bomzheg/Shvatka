@@ -1,3 +1,5 @@
+from typing import Sequence
+
 from sqlalchemy import select, ScalarResult, Result
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.exc import NoResultFound, MultipleResultsFound
@@ -65,3 +67,9 @@ class UserDao(BaseDAO[User]):
             .returning(User)
         )
         return saved_user.scalar_one().to_dto()
+
+    async def get_page(self, offset: int, limit: int) -> Sequence[dto.User]:
+        result: ScalarResult[User] = await self.session.scalars(
+            select(User).offset(offset).limit(limit)
+        )
+        return [user.to_dto() for user in result.all()]

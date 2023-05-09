@@ -67,9 +67,7 @@ HELP_BASE = CommandsGroup(
         CHAT_TYPE_COMMAND,
     ],
 )
-UPDATE_COMMANDS = BotCommand(
-    command="update_commands", description="обновить команды бота"
-)  # TODO
+UPDATE_COMMANDS = BotCommand(command="update_commands", description="обновить команды бота")
 EXCEPTION_COMMAND = BotCommand(command="exception", description="сгенерировать исключение")
 GET_OUT = BotCommand(command="get_out", description="бот, уходи из чата!")
 JOBS_COMMAND = BotCommand(command="jobs", description="запланированные функции")

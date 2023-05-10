@@ -55,7 +55,7 @@ class InitMiddleware(BaseMiddleware):
         data["locker"] = self.locker
         data["file_storage"] = self.file_storage
         data["telegraph"] = self.telegraph
-        data["game_log"] = GameBotLog(bot=data["bot"], log_chat_id=data["config"].log_chat)
+        data["game_log"] = GameBotLog(bot=data["bot"], log_chat_id=data["config"].game_log_chat)
         async with self.pool() as session:
             holder_dao = HolderDao(session, self.redis, self.level_test_dao)
             data["dao"] = holder_dao

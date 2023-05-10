@@ -12,8 +12,8 @@ LABEL maintainer="bomzheg <bomzheg@gmail.com>" \
       description="Shvatka Telegram Bot"
 ENV VIRTUAL_ENV=/opt/venv
 ENV CODE_PATH=/code
-COPY --from=builder $VIRTUAL_ENV $VIRTUAL_ENV
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
+COPY --from=builder $VIRTUAL_ENV $VIRTUAL_ENV
 COPY . ${CODE_PATH}/shvatka
 WORKDIR $CODE_PATH/shvatka
 ENTRYPOINT ["python3", "-m", "shvatka.tgbot"]

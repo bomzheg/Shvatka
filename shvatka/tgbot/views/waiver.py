@@ -61,7 +61,7 @@ async def start_approve_waivers(game: dto.Game, team: dto.Team, dao: HolderDao):
     return dict(
         text=f"Играющие в {hd.quote(game.name)} схватчики команды {hd.bold(hd.quote(team.name))}:",
         reply_markup=kb.get_kb_manage_waivers(
-            team, map(lambda v: v.player, votes[Played.yes]), game
+            team, map(lambda v: v.player, votes.get(Played.yes, [])), game
         ),
         disable_web_page_preview=True,
     )

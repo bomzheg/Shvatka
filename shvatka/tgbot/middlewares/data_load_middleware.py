@@ -22,13 +22,22 @@ class LoadDataMiddleware(BaseMiddleware):
         data: MiddlewareData,
     ) -> Any:
         holder_dao = data["dao"]
-        user = await save_user(data, holder_dao)
-        data["user"] = user
-        data["player"] = await save_player(user, holder_dao)
-        if not isinstance(event, DialogUpdate):
+        if isinstance(event, DialogUpdate):
+            if user_tg := data.get("event_from_user", None):
+                user = await holder_dao.user.get_by_tg_id(user_tg.id)
+            else:
+                user = None
+            if chat_tg := data.get("event_chat", None):
+                chat = await holder_dao.chat.get_by_tg_id(chat_tg.id)
+            else:
+                chat = None
+        else:
+            user = await save_user(data, holder_dao)
             chat = await save_chat(data, holder_dao)
-            data["chat"] = chat
-            data["team"] = await load_team(chat, holder_dao)
+        data["user"] = user
+        data["chat"] = chat
+        data["player"] = await save_player(user, holder_dao)
+        data["team"] = await load_team(chat, holder_dao)
         data["game"] = await get_active(holder_dao.game)
         result = await handler(event, data)
         return result

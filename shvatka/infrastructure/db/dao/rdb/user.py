@@ -18,6 +18,9 @@ class UserDao(BaseDAO[User]):
     async def get_by_id(self, id_: int) -> dto.User:
         return (await self._get_by_id(id_)).to_dto()
 
+    async def get_by_tg_id(self, tg_id: int) -> dto.User:
+        return (await self._get_by_tg_id(tg_id)).to_dto()
+
     async def _get_by_tg_id(self, tg_id: int) -> User:
         result: ScalarResult[User] = await self.session.scalars(
             select(User).where(User.tg_id == tg_id)

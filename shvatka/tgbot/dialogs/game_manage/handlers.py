@@ -130,7 +130,7 @@ async def schedule_game(c: CallbackQuery, widget: Button, manager: DialogManager
     game_id = int(manager.start_data["my_game_id"])
     player: dto.Player = manager.middleware_data["player"]
     dao: HolderDao = manager.middleware_data["dao"]
-    scheduler: Scheduler = manager.middleware_data["infrastructure.scheduler"]
+    scheduler: Scheduler = manager.middleware_data["scheduler"]
     await game.plain_start(
         game=await dao.game.get_by_id(game_id, player),
         author=player,

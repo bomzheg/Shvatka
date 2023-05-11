@@ -127,6 +127,15 @@ class LevelDao(BaseDAO[models.Level]):
         level: models.Level = result.scalar_one()
         return level.to_dto(level.author.to_dto_user_prefetched())
 
+    async def update_number_in_game(self, game_id: int) -> None:
+        lvls: ScalarResult[models.Level] = await self.session.scalars(
+            select(models.Level)
+            .where(models.Level.game_id == game_id)
+            .order_by(models.Level.number_in_game)
+        )
+        for i, lvl in enumerate(lvls.all()):
+            lvl.number_in_game = i
+
     async def transfer(self, level: dto.Level, new_author: dto.Player):
         await self.session.execute(
             update(models.Level)

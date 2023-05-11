@@ -4,7 +4,7 @@ from shvatka.core.interfaces.dal.level import (
     LevelUpserter,
     MyLevelsGetter,
     LevelByIdGetter,
-    LevelUnlinker,
+    LevelCorrectUnlinker,
 )
 from shvatka.core.models import dto
 from shvatka.core.models.dto import scn
@@ -28,8 +28,11 @@ async def upsert_level(author: dto.Player, scenario: scn.LevelScenario, dao: Lev
     return result
 
 
-async def unlink_level(level: dto.Level, dao: LevelUnlinker):
+async def unlink_level(level: dto.Level, dao: LevelCorrectUnlinker):
+    game_id = level.game_id
     await dao.unlink(level)
+    if game_id:
+        await dao.update_number_in_game(game_id)
     await dao.commit()
 
 

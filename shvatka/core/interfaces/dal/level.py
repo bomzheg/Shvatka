@@ -39,6 +39,15 @@ class LevelAuthorMerger(Protocol):
         raise NotImplementedError
 
 
-class LevelUnlinker(Committer, Protocol):
+class LevelUnlinker(Protocol):
     async def unlink(self, level: dto.Level) -> None:
         raise NotImplementedError
+
+
+class LevelReorder(Protocol):
+    async def update_number_in_game(self, game_id: int) -> None:
+        raise NotImplementedError
+
+
+class LevelCorrectUnlinker(Committer, LevelUnlinker, LevelReorder, Protocol):
+    pass

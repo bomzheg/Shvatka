@@ -17,6 +17,7 @@ from shvatka.tgbot import states
 from shvatka.tgbot.filters import is_key, IsTeamFilter
 from shvatka.tgbot.filters.game_status import GameStatusFilter
 from shvatka.tgbot.filters.team_player import TeamPlayerFilter
+from shvatka.tgbot.middlewares import TeamPlayerMiddleware
 from shvatka.tgbot.utils.router import register_start_handler
 from shvatka.tgbot.views.commands import SPY_COMMAND, SPY_LEVELS_COMMAND, SPY_KEYS_COMMAND
 from shvatka.tgbot.views.game import create_bot_game_view, BotOrgNotifier
@@ -53,6 +54,7 @@ async def check_key_handler(
 
 def setup() -> Router:
     router = Router(name=__name__)
+    router.message.middleware(TeamPlayerMiddleware())
     router.message.filter(GameStatusFilter(running=True))
     router.message.register(
         check_key_handler,

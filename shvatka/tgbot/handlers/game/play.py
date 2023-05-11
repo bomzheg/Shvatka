@@ -54,7 +54,7 @@ async def check_key_handler(
 
 def setup() -> Router:
     router = Router(name=__name__)
-    router.message.middleware(TeamPlayerMiddleware())
+    router.message.outer_middleware(TeamPlayerMiddleware())
     router.message.filter(GameStatusFilter(running=True))
     router.message.register(
         check_key_handler,

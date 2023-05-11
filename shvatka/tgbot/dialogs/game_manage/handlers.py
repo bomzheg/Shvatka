@@ -146,7 +146,9 @@ async def schedule_game(c: CallbackQuery, widget: Button, manager: DialogManager
     )
     await c.answer("Запланировано успешно")
     await game_log.log(
-        GameLogEvent(GameLogType.GAME_PLANED, {"game": current_game.name, "at": datetime_filter(at)})
+        GameLogEvent(
+            GameLogType.GAME_PLANED, {"game": current_game.name, "at": datetime_filter(at)}
+        )
     )
     await manager.done()
 

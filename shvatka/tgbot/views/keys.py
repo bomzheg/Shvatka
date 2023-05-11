@@ -49,7 +49,7 @@ def to_emoji(key: dto.KeyTime) -> KeyEmoji:
 async def create_keys_page(
     game: dto.Game, player: dto.Player, telegraph: Telegraph, dao: HolderDao
 ) -> dict[str, Any]:
-    keys = await get_typed_keys(game=game, player=player, dao=dao.key_time)
+    keys = await get_typed_keys(game=game, player=player, dao=dao.typed_keys)
     text = render_log_keys(keys)
     page = await telegraph.create_page(
         title=f"Лог ключей игры {game.name}",

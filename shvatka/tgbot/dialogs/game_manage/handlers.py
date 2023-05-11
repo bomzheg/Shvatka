@@ -102,7 +102,7 @@ async def start_waivers(c: CallbackQuery, widget: Button, manager: DialogManager
         dao=dao.game,
     )
     await game.start_waivers(game_, player, dao.game)
-    await game_log.log(GameLogEvent(GameLogType.GAME_PLANED, {"game": game_}))
+    await game_log.log(GameLogEvent(GameLogType.GAME_PLANED, {"game": game_.name}))
 
 
 async def select_date(c: CallbackQuery, widget, manager: DialogManager, selected_date: date):
@@ -146,7 +146,7 @@ async def schedule_game(c: CallbackQuery, widget: Button, manager: DialogManager
     )
     await c.answer("Запланировано успешно")
     await game_log.log(
-        GameLogEvent(GameLogType.GAME_PLANED, {"game": current_game, "at": datetime_filter(at)})
+        GameLogEvent(GameLogType.GAME_PLANED, {"game": current_game.name, "at": datetime_filter(at)})
     )
     await manager.done()
 

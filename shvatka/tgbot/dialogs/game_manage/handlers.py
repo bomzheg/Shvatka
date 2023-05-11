@@ -15,8 +15,10 @@ from shvatka.core.services.game import rename_game, get_game, get_full_game
 from shvatka.core.services.game_stat import get_game_stat
 from shvatka.core.services.scenario.scn_zip import pack_scn
 from shvatka.core.utils.datetime_utils import TIME_FORMAT, tz_game
+from shvatka.core.views.game import GameLogWriter, GameLogEvent, GameLogType
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.tgbot import states
+from shvatka.tgbot.views.jinja_filters import datetime_filter
 from shvatka.tgbot.views.results.level_times import export_results
 
 
@@ -93,12 +95,14 @@ async def start_waivers(c: CallbackQuery, widget: Button, manager: DialogManager
     await c.answer()
     player: dto.Player = manager.middleware_data["player"]
     dao: HolderDao = manager.middleware_data["dao"]
+    game_log: GameLogWriter = manager.middleware_data["game_log"]
     game_ = await game.get_game(
         id_=int(manager.dialog_data["my_game_id"]),
         author=player,
         dao=dao.game,
     )
     await game.start_waivers(game_, player, dao.game)
+    await game_log.log(GameLogEvent(GameLogType.GAME_PLANED, {"game": game_}))
 
 
 async def select_date(c: CallbackQuery, widget, manager: DialogManager, selected_date: date):
@@ -131,14 +135,19 @@ async def schedule_game(c: CallbackQuery, widget: Button, manager: DialogManager
     player: dto.Player = manager.middleware_data["player"]
     dao: HolderDao = manager.middleware_data["dao"]
     scheduler: Scheduler = manager.middleware_data["scheduler"]
+    game_log: GameLogWriter = manager.middleware_data["game_log"]
+    current_game = await dao.game.get_by_id(game_id, player)
     await game.plain_start(
-        game=await dao.game.get_by_id(game_id, player),
+        game=current_game,
         author=player,
         start_at=at,
         dao=dao.game,
         scheduler=scheduler,
     )
     await c.answer("Запланировано успешно")
+    await game_log.log(
+        GameLogEvent(GameLogType.GAME_PLANED, {"game": current_game, "at": datetime_filter(at)})
+    )
     await manager.done()
 
 

@@ -104,6 +104,10 @@ class GameBotLog(GameLogWriter):
 
     async def log(self, event_log: GameLogEvent) -> None:
         match event_log:
+            case GameLogEvent(GameLogType.GAME_WAIVERS_STARTED):
+                text = "Начался сбор вейверов на игру {game}"
+            case GameLogEvent(GameLogType.GAME_PLANED):
+                text = "Начало игры {game} запланировано на {at}"
             case GameLogEvent(GameLogType.GAME_STARTED):
                 text = "Игра {game} началась"
             case GameLogEvent(GameLogType.GAME_FINISHED):

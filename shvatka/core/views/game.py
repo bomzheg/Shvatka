@@ -48,6 +48,8 @@ class GameLogWriter(Protocol):
 
 
 class GameLogType(enum.Enum):
+    GAME_WAIVERS_STARTED = enum.auto()
+    GAME_PLANED = enum.auto()
     GAME_STARTED = enum.auto()
     GAME_FINISHED = enum.auto()
     TEAMS_MERGED = enum.auto()

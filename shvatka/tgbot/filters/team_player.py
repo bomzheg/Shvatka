@@ -21,8 +21,10 @@ class TeamPlayerFilter(BaseFilter):
     async def __call__(  # noqa: C901
         self,
         message: Message,
-        team_player: dto.FullTeamPlayer,
+        team_player: dto.FullTeamPlayer | None,
     ) -> Union[bool, dict[str, Any]]:
+        if not team_player:
+            return False
         if self.is_captain is not None:
             return team_player.team.captain.id == team_player.player.id
         if self.can_manage_waivers is not None:

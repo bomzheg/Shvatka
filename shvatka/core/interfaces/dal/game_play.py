@@ -17,6 +17,9 @@ class GamePreparer(GameOrgsGetter, Protocol):
 
 
 class GamePlayerDao(Committer, GameOrgsGetter, Protocol):
+    async def check_waiver(self, player: dto.Player, team: dto.Team, game: dto.Game) -> bool:
+        raise NotImplementedError
+
     async def is_key_duplicate(self, level: dto.Level, team: dto.Team, key: str) -> bool:
         raise NotImplementedError
 

@@ -68,6 +68,9 @@ class GamePlayerDaoImpl(GamePlayerDao):
     game: GameDao
     organizer: OrganizerDao
 
+    async def check_waiver(self, player: dto.Player, team: dto.Team, game: dto.Game) -> bool:
+        return await self.waiver.check_waiver(player, team, game)
+
     async def is_team_finished(self, team: dto.Team, game: dto.FullGame) -> bool:
         level_number = await self.level_time.get_current_level(team, game)
         return level_number == len(game.levels)

@@ -141,3 +141,13 @@ class WaiverDao(BaseDAO[models.Waiver]):
             .where(models.Waiver.player_id == secondary.id)
             .values(player_id=primary.id)
         )
+
+    async def check_waiver(self, player: dto.Player, team: dto.Team, game: dto.Game) -> bool:
+        result: ScalarResult[models.Waiver] = await self.session.scalars(
+            select(models.Waiver.id).where(
+                models.Waiver.game_id == game.id,
+                models.Waiver.team_id == team.id,
+                models.Waiver.player_id == player.id,
+            )
+        )
+        return bool(result.one_or_none())

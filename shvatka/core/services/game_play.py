@@ -8,6 +8,7 @@ from shvatka.core.interfaces.scheduler import Scheduler
 from shvatka.core.models import dto
 from shvatka.core.models.dto import scn
 from shvatka.core.services.organizers import get_orgs, get_spying_orgs
+from shvatka.core.utils import exceptions
 from shvatka.core.utils.datetime_utils import tz_utc
 from shvatka.core.utils.exceptions import InvalidKey
 from shvatka.core.utils.input_validation import is_key_valid
@@ -116,6 +117,8 @@ async def check_key(
     :param locker: Локи для обеспечения последовательного исполнения определённых операций.
     :param scheduler: Планировщик подсказок.
     """
+    if not dao.check_waiver(player, team, game):
+        raise exceptions.WaiverError(team=team, game=game, player=player)
     if not is_key_valid(key):
         raise InvalidKey(key=key, team=team, player=player, game=game)
     new_key = await submit_key(

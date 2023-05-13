@@ -69,22 +69,17 @@ class TeamDao(BaseDAO[models.Team]):
         return team.to_dto(forum_team=forum, captain=captain)
 
     async def get_by_chat(self, chat: dto.Chat) -> dto.Team | None:
-        result = await self.session.execute(
+        result: ScalarResult[models.Team] = await self.session.scalars(
             select(models.Team)
             .join(models.Team.chat)
             .where(models.Chat.id == chat.db_id)
-            .options(
-                joinedload(models.Team.captain).options(
-                    joinedload(models.Player.user),
-                    joinedload(models.Player.forum_user),
-                ),
-            )
+            .options(*get_team_options())
         )
         try:
-            team = result.scalar_one()
+            team = result.one()
         except NoResultFound:
             return None
-        return team.to_dto(chat)
+        return team.to_dto_chat_prefetched()
 
     async def check_no_team_in_chat(self, chat: dto.Chat) -> None:
         if team := await self.get_by_chat(chat):

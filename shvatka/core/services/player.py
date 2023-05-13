@@ -207,7 +207,10 @@ async def get_full_team_player(
 
 
 async def get_team_players(team: dto.Team, dao: TeamPlayersGetter) -> Sequence[dto.FullTeamPlayer]:
-    return await dao.get_players(team)
+    players = await dao.get_players(team)
+    if team.has_forum_team() and team.has_chat():
+        players = [p for p in players if p.player.has_user()]
+    return players
 
 
 async def save_promotion_invite(inviter: dto.Player, dao: InviteSaver) -> str:

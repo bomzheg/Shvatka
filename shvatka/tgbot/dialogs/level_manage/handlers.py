@@ -39,10 +39,13 @@ async def show_level(c: CallbackQuery, button: Button, manager: DialogManager):
     storage: FileStorage = manager.middleware_data["file_storage"]
     hint_resolver = HintContentResolver(dao=dao.file_info, file_storage=storage)
     hint_sender = HintSender(bot=bot, resolver=hint_resolver)
-    asyncio.create_task(show_all_hints(author, hint_sender, level))
+    asyncio.create_task(show_all_hints(author, hint_sender, bot, level))
 
 
-async def show_all_hints(author: dto.Player, hint_sender: HintSender, level: dto.Level):
+async def show_all_hints(author: dto.Player, hint_sender: HintSender, bot: Bot, level: dto.Level):
+    await bot.send_message(
+        author.get_chat_id(), "Ключи уровня:\n🔑{}".format("\n🔑".join(level.scenario.keys))
+    )
     for hint in level.scenario.time_hints:
         await hint_sender.send_hints(
             chat_id=author.get_chat_id(),

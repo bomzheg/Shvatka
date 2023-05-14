@@ -100,6 +100,7 @@ class CompletedGamesPanelSG(StatesGroup):
     game = State()
     waivers = State()
     results = State()
+    scenario_channel = State()
     keys = State()
 
 

@@ -1,5 +1,6 @@
 from datetime import datetime, time, date
 
+from aiogram import Bot
 from aiogram.enums import ContentType
 from aiogram_dialog import DialogManager
 from aiogram_dialog.api.entities import MediaAttachment, MediaId
@@ -101,6 +102,16 @@ async def get_game(dao: HolderDao, player: dto.Player, dialog_manager: DialogMan
             author=player,
             dao=dao.game,
         )
+    }
+
+
+async def get_game_with_channel(dao: HolderDao, dialog_manager: DialogManager, bot: Bot, **_):
+    game_id = dialog_manager.dialog_data.get("game_id", None)
+    game_ = await game.get_game(id_=game_id, dao=dao.game)
+    chat = await bot.get_chat(game_.results.published_chanel_id)
+    return {
+        "game": game_,
+        "invite": chat.invite_link,
     }
 
 

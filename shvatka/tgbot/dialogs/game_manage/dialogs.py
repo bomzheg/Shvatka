@@ -24,6 +24,7 @@ from .getters import (
     get_game_waivers,
     get_game_results,
     get_game_keys,
+    get_game_with_channel,
 )
 from .handlers import (
     select_my_game,
@@ -103,6 +104,12 @@ games = Dialog(
             id="game_zip_scn",
             on_click=show_zip_scn,
         ),
+        SwitchTo(
+            Const("Сценарий игры"),
+            id="game_scn_channel",
+            state=states.CompletedGamesPanelSG.scenario_channel,
+            when=F["game"].results.published_chanel_id,
+        ),
         state=states.CompletedGamesPanelSG.game,
         preview_data={"game": PREVIEW_GAME},
         getter=get_completed_game,
@@ -162,6 +169,21 @@ games = Dialog(
         ),
         getter=get_game_results,
         state=states.CompletedGamesPanelSG.results,
+    ),
+    Window(
+        Jinja("Сценарий игры тут: {{invite}}\n"),
+        SwitchTo(
+            Const("🔙Назад к списку игр"),
+            id="to_games",
+            state=states.CompletedGamesPanelSG.list,
+        ),
+        SwitchTo(
+            Const("⤴Назад"),
+            id="to_game",
+            state=states.CompletedGamesPanelSG.game,
+        ),
+        getter=get_game_with_channel,
+        state=states.CompletedGamesPanelSG.scenario_channel,
     ),
     Window(
         Jinja(

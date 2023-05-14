@@ -5,6 +5,9 @@ from aiohttp import ClientSession
 from shvatka.infrastructure.crawler.constants import COOKIE_NAME, BASE_URL
 from shvatka.infrastructure.crawler.models import Credentials
 
+ENV_USERNAME = os.getenv("SH_USERNAME")
+ENV_PASSWORD = os.getenv("SH_PASSWORD")
+
 
 async def auth(session: ClientSession, creds: Credentials):
     php_session = await get_login_page(session)
@@ -44,11 +47,11 @@ async def authorize(session: ClientSession, php_session: str, creds: Credentials
         }
 
 
-async def get_auth_cookie():
+async def get_auth_cookie(username: str = ENV_USERNAME, password: str = ENV_PASSWORD):
     async with ClientSession() as session:
         creds = Credentials(
-            username=os.getenv("SH_USERNAME"),
-            password=os.getenv("SH_PASSWORD"),
+            username=username,
+            password=password,
         )
         if not creds.username or not creds.password:
             raise EnvironmentError(

@@ -42,6 +42,7 @@ from .handlers import (
     show_my_game_orgs,
     show_my_zip_scn,
     get_excel_results_handler,
+    to_publish_game_forum,
 )
 from ..preview_data import PREVIEW_GAME
 
@@ -258,6 +259,12 @@ my_games = Dialog(
             Const("📨Опубликовать"),
             id="game_publish",
             on_click=publish_game,
+            when=F["game"].can_be_publish,
+        ),
+        Button(
+            Const("📨Опубликовать на форуме"),
+            id="game_forum_publish",
+            on_click=to_publish_game_forum,
             when=F["game"].can_be_publish,
         ),
         Button(

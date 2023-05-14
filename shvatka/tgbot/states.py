@@ -69,6 +69,7 @@ class OrgSpySG(StatesGroup):
 
 class GamePublishSG(StatesGroup):
     prepare = State()
+    forum = State()
 
 
 class CaptainsBridgeSG(StatesGroup):

@@ -1,3 +1,4 @@
+import asyncio
 from datetime import date, datetime, time
 from io import BytesIO
 from typing import Any
@@ -16,6 +17,8 @@ from shvatka.core.services.game_stat import get_game_stat
 from shvatka.core.services.scenario.scn_zip import pack_scn
 from shvatka.core.utils.datetime_utils import TIME_FORMAT, tz_game
 from shvatka.core.views.game import GameLogWriter, GameLogEvent, GameLogType
+from shvatka.infrastructure.crawler.game_scn.uploader.forum_scenario_uploader import upload
+from shvatka.infrastructure.crawler.game_scn.uploader.game_mapper import map_game_for_upload
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.tgbot import states
 from shvatka.tgbot.views.jinja_filters import datetime_filter
@@ -169,6 +172,26 @@ async def publish_game(c: CallbackQuery, widget: Button, manager: DialogManager)
     await c.answer()
     game_id = manager.dialog_data["my_game_id"]
     await manager.start(states.GamePublishSG.prepare, data={"game_id": game_id})
+
+
+async def to_publish_game_forum(c: CallbackQuery, widget: Button, manager: DialogManager):
+    await c.answer()
+    game_id = manager.dialog_data["my_game_id"]
+    await manager.start(states.GamePublishSG.forum, data={"game_id": game_id})
+
+
+async def publish_game_forum(m: Message, widget: Any, manager: DialogManager):
+    username, password = map(str.strip, m.text.split("\n", maxsplit=1))
+    game_id = manager.dialog_data["my_game_id"]
+    author: dto.Player = manager.middleware_data["player"]
+    dao: HolderDao = manager.middleware_data["dao"]
+    game = await get_full_game(game_id, author, dao.game)
+    asyncio.create_task(upload_wrapper(game, username, password, m))
+
+
+async def upload_wrapper(game: dto.FullGame, username: str, password: str, m: Message):
+    await upload(map_game_for_upload(game), username, password)
+    await m.answer("Сценарий успешно загружен на форум")
 
 
 async def get_excel_results_handler(c: CallbackQuery, widget: Button, manager: DialogManager):

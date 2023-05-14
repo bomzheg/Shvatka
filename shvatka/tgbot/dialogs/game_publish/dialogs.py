@@ -8,6 +8,7 @@ from aiogram_dialog.widgets.text import Const, Jinja
 from shvatka.tgbot import states
 from .getters import get_org
 from .handlers import process_publish_message
+from ..game_manage.handlers import publish_game_forum
 
 game_publish = Dialog(
     Window(
@@ -36,5 +37,16 @@ game_publish = Dialog(
         MessageInput(func=process_publish_message, filter=Command("publish")),
         state=states.GamePublishSG.prepare,
         getter=get_org,
+    ),
+    Window(
+        Jinja(
+            "Пришли логин и пароль от форума схватки.\n"
+            "В первой строке логин, во второй пароль.\n"
+            "Например:\n\n"
+            "cool player name\n"
+            "mY secure pas$w0rd"
+        ),
+        MessageInput(func=publish_game_forum, filter=F.text),
+        state=states.GamePublishSG.forum,
     ),
 )

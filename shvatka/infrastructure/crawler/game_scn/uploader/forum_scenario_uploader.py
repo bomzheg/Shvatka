@@ -11,8 +11,8 @@ from shvatka.infrastructure.crawler.models import (
 )
 
 
-async def upload(game: GameForUpload):
-    async with ClientSession(cookies=await get_auth_cookie()) as session:
+async def upload(game: GameForUpload, username: str, password: str):
+    async with ClientSession(cookies=await get_auth_cookie(username, password)) as session:
         await remove_all_scn(session)
         for level in game:
             await asyncio.sleep(1)

@@ -10,6 +10,7 @@ from sqlalchemy import (
     Enum,
     DateTime,
     UniqueConstraint,
+    BigInteger,
 )
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 
@@ -69,7 +70,7 @@ class Game(Base):
         default=lambda: secrets.token_urlsafe(_TOKEN_LEN * 3 // 4),
     )
     number: Mapped[int | None]
-    published_channel_id: Mapped[int | None] = mapped_column(nullable=True)
+    published_channel_id: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
     results_picture_file_id: Mapped[str | None] = mapped_column(nullable=True)
     keys_url: Mapped[str | None] = mapped_column(nullable=True)
 

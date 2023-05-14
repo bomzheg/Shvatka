@@ -43,6 +43,7 @@ from .handlers import (
     show_my_zip_scn,
     get_excel_results_handler,
     to_publish_game_forum,
+    complete_game_handler,
 )
 from ..preview_data import PREVIEW_GAME
 
@@ -266,6 +267,12 @@ my_games = Dialog(
             id="game_forum_publish",
             on_click=to_publish_game_forum,
             when=F["game"].can_be_publish,
+        ),
+        Button(
+            Const("✅Завершить (в прошедшие игры)"),
+            id="complete_game",
+            on_click=complete_game_handler,
+            when=F["game"].results.published_chanel_id,
         ),
         Button(
             Const("📆Запланировать игру"),

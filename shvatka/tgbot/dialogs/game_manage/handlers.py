@@ -12,7 +12,7 @@ from shvatka.core.interfaces.clients.file_storage import FileGateway
 from shvatka.core.interfaces.scheduler import Scheduler
 from shvatka.core.models import dto
 from shvatka.core.services import game
-from shvatka.core.services.game import rename_game, get_game, get_full_game
+from shvatka.core.services.game import rename_game, get_game, get_full_game, complete_game
 from shvatka.core.services.game_stat import get_game_stat
 from shvatka.core.services.scenario.scn_zip import pack_scn
 from shvatka.core.utils.datetime_utils import TIME_FORMAT, tz_game
@@ -207,3 +207,13 @@ async def get_excel_results_handler(c: CallbackQuery, widget: Button, manager: D
         document=BufferedInputFile(file=file.read(), filename=f"{full_game.name}.xlsx"),
     )
     file.close()
+
+
+async def complete_game_handler(c: CallbackQuery, widget: Button, manager: DialogManager):
+    await c.answer()
+    game_id = manager.dialog_data["my_game_id"]
+    dao: HolderDao = manager.middleware_data["dao"]
+    author: dto.Player = manager.middleware_data["player"]
+    game_ = await get_game(game_id, author=author, dao=dao.game)
+    await complete_game(game_, dao.game)
+    await manager.done()

@@ -26,6 +26,7 @@ from shvatka.core.views.game import (
 )
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.tgbot.views.hint_sender import HintSender, create_hint_sender
+from shvatka.tgbot.views.keys import KeyEmoji
 
 logger = logging.getLogger(__name__)
 
@@ -76,17 +77,20 @@ class BotView(GameViewPreparer, GameView):
 
     async def duplicate_key(self, key: dto.KeyTime) -> None:
         await self.bot.send_message(
-            chat_id=key.team.get_chat_id(), text=f"Ключ {hd.pre(key.text)} уже был введён ранее."
+            chat_id=key.team.get_chat_id(),
+            text=f"{KeyEmoji.duplicate.value}Ключ {hd.pre(key.text)} уже был введён ранее.",
         )
 
     async def correct_key(self, key: dto.KeyTime) -> None:
         await self.bot.send_message(
-            chat_id=key.team.get_chat_id(), text=f"Ключ {hd.pre(key.text)} верный! Поздравляю!"
+            chat_id=key.team.get_chat_id(),
+            text=f"{KeyEmoji.correct.value}Ключ {hd.pre(key.text)} верный! Поздравляю!",
         )
 
     async def wrong_key(self, key: dto.KeyTime) -> None:
         await self.bot.send_message(
-            chat_id=key.team.get_chat_id(), text=f"Ключ {hd.pre(key.text)} неверный."
+            chat_id=key.team.get_chat_id(),
+            text=f"{KeyEmoji.incorrect.value}Ключ {hd.pre(key.text)} неверный.",
         )
 
     async def game_finished(self, team: dto.Team) -> None:

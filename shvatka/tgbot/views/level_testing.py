@@ -8,6 +8,7 @@ from shvatka.core.models import dto
 from shvatka.core.views.level import LevelView
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.tgbot.views.hint_sender import HintSender, create_hint_sender
+from shvatka.tgbot.views.keys import KeyEmoji
 
 
 @dataclass
@@ -39,13 +40,13 @@ class LevelBotView(LevelView):
     async def correct_key(self, suite: dto.LevelTestSuite, key: str) -> None:
         await self.bot.send_message(
             chat_id=suite.tester.player.get_chat_id(),
-            text=f"Ключ {hd.pre(key)} верный! Поздравляю!",
+            text=f"{KeyEmoji.correct.value}Ключ {hd.pre(key)} верный! Поздравляю!",
         )
 
     async def wrong_key(self, suite: dto.LevelTestSuite, key: str) -> None:
         await self.bot.send_message(
             chat_id=suite.tester.player.get_chat_id(),
-            text=f"Ключ {hd.pre(key)} неверный.",
+            text=f"{KeyEmoji.incorrect.value}Ключ {hd.pre(key)} неверный.",
         )
 
     async def level_finished(self, suite: dto.LevelTestSuite) -> None:

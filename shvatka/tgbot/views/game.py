@@ -164,7 +164,7 @@ class BotOrgNotifier(OrgNotifier):
         await self.bot.send_message(
             chat_id=org.player.get_chat_id(),
             text=f"Команда {hd.quote(level_up.team.name)} перешла "
-            f"на уровень {level_up.new_level.number_in_game} "
+            f"на уровень {level_up.new_level.number_in_game + 1} "
             f"({level_up.new_level.name_id})",
         )
 

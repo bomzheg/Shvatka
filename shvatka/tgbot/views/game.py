@@ -161,6 +161,7 @@ class BotOrgNotifier(OrgNotifier):
                         await self.level_test_completed(cast(LevelTestCompleted, event), org)
 
     async def notify_level_up(self, level_up: LevelUp, org: dto.Organizer):
+        assert level_up.new_level.number_in_game is not None
         await self.bot.send_message(
             chat_id=org.player.get_chat_id(),
             text=f"Команда {hd.quote(level_up.team.name)} перешла "

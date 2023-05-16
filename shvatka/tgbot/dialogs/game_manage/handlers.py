@@ -185,8 +185,8 @@ async def publish_game_forum(m: Message, widget: Any, manager: DialogManager):
     game_id = manager.dialog_data["my_game_id"]
     author: dto.Player = manager.middleware_data["player"]
     dao: HolderDao = manager.middleware_data["dao"]
-    game = await get_full_game(game_id, author, dao.game)
-    asyncio.create_task(upload_wrapper(game, username, password, m))
+    game_ = await get_full_game(game_id, author, dao.game)
+    asyncio.create_task(upload_wrapper(game_, username, password, m))
 
 
 async def upload_wrapper(game: dto.FullGame, username: str, password: str, m: Message):

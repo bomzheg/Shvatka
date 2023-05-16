@@ -55,6 +55,7 @@ SPY_LEVELS_COMMAND = BotCommand(
 SPY_KEYS_COMMAND = BotCommand(
     command="spy_keys", description="получить введённые ключи (только во время игры)"
 )
+PUBLISH_COMMAND = BotCommand(command="publish_forum", description="опубликовать на форуме")
 
 HELP_BASE = CommandsGroup(
     "Базовые команды:",

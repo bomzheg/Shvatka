@@ -15,7 +15,7 @@ def map_game_for_upload(game: dto.FullGame) -> data.GameForUpload:
 
 
 def map_level_for_upload(level: dto.Level) -> data.LevelForUpload:
-    assert level.number_in_game
+    assert level.number_in_game is not None
     scn = level.scenario
     first_hint = scn.time_hints[0]
     puzzle = data.LevelPuzzle(

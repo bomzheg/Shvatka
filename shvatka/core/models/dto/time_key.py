@@ -2,11 +2,12 @@ from dataclasses import dataclass
 from datetime import datetime
 
 from shvatka.core.models import dto
+from . import scn
 
 
 @dataclass(frozen=True)
 class KeyTime:
-    text: str
+    text: scn.SHKey
     is_correct: bool
     is_duplicate: bool
     at: datetime

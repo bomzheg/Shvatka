@@ -7,11 +7,10 @@ from shvatka.core.interfaces.dal.level_times import GameStarter, LevelTimeChecke
 from shvatka.core.interfaces.scheduler import Scheduler
 from shvatka.core.models import dto
 from shvatka.core.models.dto import scn
+from shvatka.core.services.key import KeyProcessor
 from shvatka.core.services.organizers import get_orgs, get_spying_orgs
 from shvatka.core.utils import exceptions
 from shvatka.core.utils.datetime_utils import tz_utc
-from shvatka.core.utils.exceptions import InvalidKey
-from shvatka.core.utils.input_validation import is_key_valid
 from shvatka.core.utils.key_checker_lock import KeyCheckerFactory
 from shvatka.core.views.game import (
     GameViewPreparer,
@@ -92,6 +91,7 @@ async def check_key(
     game_log: GameLogWriter,
     org_notifier: OrgNotifier,
     locker: KeyCheckerFactory,
+    key_processor: KeyProcessor,
     scheduler: Scheduler,
 ):
     """
@@ -119,11 +119,8 @@ async def check_key(
     """
     if not dao.check_waiver(player, team, game):
         raise exceptions.WaiverError(team=team, game=game, player=player)
-    if not is_key_valid(key):
-        raise InvalidKey(key=key, team=team, player=player, game=game)
-    new_key = await submit_key(
-        key=key, player=player, team=team, game=game, dao=dao, locker=locker
-    )
+
+    new_key = await key_processor.submit_key(key=key, player=player, team=team)
     if new_key.is_duplicate:
         await view.duplicate_key(key=new_key)
         return
@@ -144,37 +141,6 @@ async def check_key(
             await org_notifier.notify(level_up_event)
     else:
         await view.wrong_key(key=new_key)
-
-
-async def submit_key(
-    key: str,
-    player: dto.Player,
-    team: dto.Team,
-    game: dto.Game,
-    dao: GamePlayerDao,
-    locker: KeyCheckerFactory,
-) -> dto.InsertedKey:
-    async with locker(team):  # несколько конкурентных ключей от одной команды - последовательно
-        level = await dao.get_current_level(team, game)
-        keys = level.get_keys()
-        new_key = await dao.save_key(
-            key=key,
-            team=team,
-            level=level,
-            game=game,
-            player=player,
-            is_correct=key in keys,
-            is_duplicate=await dao.is_key_duplicate(level, team, key),
-        )
-        typed_keys = await dao.get_correct_typed_keys(level=level, game=game, team=team)
-        if new_key.is_correct:  # add just now added key to typed, because no flush in dao
-            typed_keys.add(new_key.text)
-        is_level_up = False
-        if typed_keys == keys:
-            await dao.level_up(team=team, level=level, game=game)
-            is_level_up = True
-        await dao.commit()
-    return dto.InsertedKey.from_key_time(new_key, is_level_up)
 
 
 async def finish_team(

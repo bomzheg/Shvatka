@@ -12,6 +12,7 @@ from shvatka.core.models.enums.played import Played
 from shvatka.core.services.game import start_waivers
 from shvatka.core.services.game_play import start_game, send_hint, check_key, get_available_hints
 from shvatka.core.services.game_stat import get_typed_keys
+from shvatka.core.services.key import KeyProcessor
 from shvatka.core.services.organizers import get_orgs
 from shvatka.core.services.player import join_team
 from shvatka.core.services.waiver import add_vote, approve_waivers
@@ -77,6 +78,7 @@ async def test_game_play(
 
     dummy_org_notifier = mock(OrgNotifier)
     orgs = await get_orgs(game, dao.organizer)
+    key_processor = KeyProcessor(dao.game_player, game, locker)
     key_kwargs = dict(
         player=harry,
         team=gryffindor,
@@ -85,6 +87,7 @@ async def test_game_play(
         view=dummy_view,
         game_log=dummy_log,
         org_notifier=dummy_org_notifier,
+        key_processor=key_processor,
         locker=locker,
         scheduler=scheduler,
     )

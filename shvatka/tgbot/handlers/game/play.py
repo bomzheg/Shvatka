@@ -1,7 +1,4 @@
-import typing
-
 from aiogram import Bot, Router
-from aiogram.dispatcher.event.bases import SkipHandler
 from aiogram.filters import Command
 from aiogram.types import Message
 
@@ -9,7 +6,7 @@ from shvatka.core.interfaces.clients.file_storage import FileStorage
 from shvatka.core.interfaces.scheduler import Scheduler
 from shvatka.core.models import dto
 from shvatka.core.services.game_play import check_key
-from shvatka.core.utils.exceptions import InvalidKey
+from shvatka.core.services.key import KeyProcessor
 from shvatka.core.utils.key_checker_lock import KeyCheckerFactory
 from shvatka.core.views.game import GameLogWriter
 from shvatka.infrastructure.db.dao.holder import HolderDao
@@ -24,7 +21,8 @@ from shvatka.tgbot.views.game import create_bot_game_view, BotOrgNotifier
 
 
 async def check_key_handler(
-    m: Message,
+    _: Message,
+    key: str,
     team: dto.Team,
     player: dto.Player,
     game: dto.Game,
@@ -35,21 +33,21 @@ async def check_key_handler(
     file_storage: FileStorage,
     game_log: GameLogWriter,
 ):
-    try:
-        await check_key(
-            key=typing.cast(str, m.text),
-            player=player,
-            team=team,
-            game=await dao.game.get_full(game.id),
-            dao=dao.game_player,
-            view=create_bot_game_view(bot=bot, dao=dao, storage=file_storage),
-            game_log=game_log,
-            org_notifier=BotOrgNotifier(bot=bot),
-            locker=locker,
-            scheduler=scheduler,
-        )
-    except InvalidKey:
-        raise SkipHandler
+    full_game = await dao.game.get_full(game.id)
+    key_processor = KeyProcessor(dao=dao.game_player, game=full_game, locker=locker)
+    await check_key(
+        key=key,
+        player=player,
+        team=team,
+        game=full_game,
+        dao=dao.game_player,
+        view=create_bot_game_view(bot=bot, dao=dao, storage=file_storage),
+        game_log=game_log,
+        org_notifier=BotOrgNotifier(bot=bot),
+        locker=locker,
+        scheduler=scheduler,
+        key_processor=key_processor,
+    )
 
 
 def setup() -> Router:

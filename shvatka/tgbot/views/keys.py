@@ -5,7 +5,7 @@ from typing import Any
 from aiogram.utils.text_decorations import html_decoration as hd
 from telegraph.aio import Telegraph
 
-from shvatka.core.models import dto
+from shvatka.core.models import dto, enums
 from shvatka.core.services.game_stat import get_typed_keys
 from shvatka.core.utils.datetime_utils import tz_game, DATETIME_FORMAT
 from shvatka.infrastructure.db.dao.holder import HolderDao
@@ -15,6 +15,8 @@ class KeyEmoji(enum.Enum):
     correct = "✅"
     incorrect = "❌"
     duplicate = "💤"
+    bonus = "💰"
+    unknown = "❔"
 
 
 def render_log_keys(log_keys: dict[dto.Team, list[dto.KeyTime]]) -> str:
@@ -41,9 +43,11 @@ def render_log_keys(log_keys: dict[dto.Team, list[dto.KeyTime]]) -> str:
 def to_emoji(key: dto.KeyTime) -> KeyEmoji:
     if key.is_duplicate:
         return KeyEmoji.duplicate
-    if key.is_correct:
+    if key.type_ == enums.KeyType.simple:
         return KeyEmoji.correct
-    return KeyEmoji.incorrect
+    if key.type_ == enums.KeyType.wrong:
+        return KeyEmoji.incorrect
+    return KeyEmoji.unknown
 
 
 async def create_keys_page(

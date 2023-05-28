@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
 from shvatka.core.interfaces.dal.game_play import GamePlayerDao
-from shvatka.core.models import dto
+from shvatka.core.models import dto, enums
 from shvatka.core.models.dto import scn
 from shvatka.core.utils import exceptions
 from shvatka.core.utils.input_validation import is_key_valid
@@ -33,13 +33,14 @@ class KeyProcessor:
                 level=level,
                 game=self.game,
                 player=player,
-                is_correct=await self.is_correct(key, level),
+                type_=await self.check_type(key, level),
                 is_duplicate=await self.is_duplicate(level=level, team=team, key=key),
             )
             typed_keys = await self.dao.get_correct_typed_keys(
                 level=level, game=self.game, team=team
             )
-            if new_key.is_correct:  # add just now added key to typed, because no flush in dao
+            if new_key.type_ == enums.KeyType.simple:
+                # add just now added key to typed, because no flush in dao
                 typed_keys.add(new_key.text)
             is_level_up = await self.is_level_up(typed_keys, level)
             if is_level_up:
@@ -47,8 +48,8 @@ class KeyProcessor:
             await self.dao.commit()
         return dto.InsertedKey.from_key_time(new_key, is_level_up)
 
-    async def is_correct(self, key: scn.SHKey, level: dto.Level) -> bool:
-        return key in level.get_keys()
+    async def check_type(self, key: scn.SHKey, level: dto.Level) -> enums.KeyType:
+        return enums.KeyType.simple if key in level.get_keys() else enums.KeyType.wrong
 
     async def is_duplicate(self, key: scn.SHKey, level: dto.Level, team: dto.Team) -> bool:
         return await self.dao.is_key_duplicate(level, team, key)

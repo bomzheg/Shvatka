@@ -4,7 +4,7 @@ import pytest_asyncio
 from dataclass_factory import Factory
 
 from shvatka.core.interfaces.clients.file_storage import FileGateway
-from shvatka.core.models import dto
+from shvatka.core.models import dto, enums
 from shvatka.core.models.dto.scn.game import RawGameScenario
 from shvatka.core.models.enums.played import Played
 from shvatka.core.services.game import upsert_game
@@ -58,7 +58,7 @@ async def finished_game(
         level=game.levels[0],
         game=game,
         player=ron,
-        is_correct=False,
+        type_=enums.KeyType.wrong,
         is_duplicate=False,
     )
     await dao.key_time.save_key(
@@ -67,7 +67,7 @@ async def finished_game(
         level=game.levels[0],
         game=game,
         player=harry,
-        is_correct=True,
+        type_=enums.KeyType.simple,
         is_duplicate=False,
     )
     await dao.key_time.save_key(
@@ -76,7 +76,7 @@ async def finished_game(
         level=game.levels[0],
         game=game,
         player=draco,
-        is_correct=True,
+        type_=enums.KeyType.simple,
         is_duplicate=False,
     )
     await dao.key_time.save_key(
@@ -85,7 +85,7 @@ async def finished_game(
         level=game.levels[0],
         game=game,
         player=hermione,
-        is_correct=True,
+        type_=enums.KeyType.simple,
         is_duplicate=True,
     )
     await dao.key_time.save_key(
@@ -94,7 +94,7 @@ async def finished_game(
         level=game.levels[0],
         game=game,
         player=draco,
-        is_correct=True,
+        type_=enums.KeyType.simple,
         is_duplicate=False,
     )
     await dao.game_player.level_up(slytherin, game.levels[0], game)
@@ -105,7 +105,7 @@ async def finished_game(
         level=game.levels[0],
         game=game,
         player=ron,
-        is_correct=True,
+        type_=enums.KeyType.simple,
         is_duplicate=False,
     )
     await dao.game_player.level_up(gryffindor, game.levels[0], game)
@@ -116,7 +116,7 @@ async def finished_game(
         level=game.levels[1],
         game=game,
         player=hermione,
-        is_correct=True,
+        type_=enums.KeyType.simple,
         is_duplicate=False,
     )
     await dao.game_player.level_up(gryffindor, game.levels[1], game)
@@ -127,7 +127,7 @@ async def finished_game(
         level=game.levels[1],
         game=game,
         player=draco,
-        is_correct=True,
+        type_=enums.KeyType.simple,
         is_duplicate=False,
     )
     await dao.game_player.level_up(slytherin, game.levels[1], game)

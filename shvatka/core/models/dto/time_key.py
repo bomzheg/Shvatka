@@ -1,14 +1,14 @@
 from dataclasses import dataclass
 from datetime import datetime
 
-from shvatka.core.models import dto
+from shvatka.core.models import dto, enums
 from . import scn
 
 
 @dataclass(frozen=True)
 class KeyTime:
     text: scn.SHKey
-    is_correct: bool
+    type_: enums.KeyType
     is_duplicate: bool
     at: datetime
     level_number: int
@@ -24,7 +24,7 @@ class InsertedKey(KeyTime):
     def from_key_time(cls, key_time: KeyTime, is_level_up: bool):
         return cls(
             text=key_time.text,
-            is_correct=key_time.is_correct,
+            type_=key_time.type_,
             is_duplicate=key_time.is_duplicate,
             at=key_time.at,
             level_number=key_time.level_number,
@@ -36,7 +36,7 @@ class InsertedKey(KeyTime):
 
 @dataclass
 class KeyInsertResult:
-    is_correct: bool
+    type_: enums.KeyType
     is_duplicate: bool
     level_completed: bool
     game_finished: bool
@@ -44,7 +44,7 @@ class KeyInsertResult:
     @classmethod
     def wrong(cls):
         return cls(
-            is_correct=False,
+            type_=enums.KeyType.wrong,
             is_duplicate=False,
             level_completed=False,
             game_finished=False,
@@ -53,7 +53,7 @@ class KeyInsertResult:
     @classmethod
     def correct(cls):
         return cls(
-            is_correct=True,
+            type_=enums.KeyType.simple,
             is_duplicate=False,
             level_completed=False,
             game_finished=False,
@@ -62,7 +62,7 @@ class KeyInsertResult:
     @classmethod
     def completed(cls):
         return cls(
-            is_correct=True,
+            type_=enums.KeyType.simple,
             is_duplicate=False,
             level_completed=True,
             game_finished=False,

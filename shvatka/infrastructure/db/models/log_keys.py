@@ -3,7 +3,7 @@ from datetime import datetime
 from sqlalchemy import Integer, ForeignKey, Text, Boolean, DateTime, func
 from sqlalchemy.orm import relationship, mapped_column, Mapped
 
-from shvatka.core.models import dto
+from shvatka.core.models import dto, enums
 from shvatka.core.utils.datetime_utils import tz_utc
 from shvatka.infrastructure.db.models import Base
 
@@ -38,13 +38,13 @@ class KeyTime(Base):
         nullable=False,
     )
     key_text = mapped_column(Text, nullable=False)
-    is_correct: Mapped[bool] = mapped_column(Boolean, nullable=False)
+    type_: Mapped[enums.KeyType] = mapped_column("type", Text, nullable=False)
     is_duplicate: Mapped[bool] = mapped_column(Boolean, nullable=False)
 
     def to_dto(self, player: dto.Player, team: dto.Team) -> dto.KeyTime:
         return dto.KeyTime(
             text=self.key_text,
-            is_correct=self.is_correct,
+            type_=self.type_,
             is_duplicate=self.is_duplicate,
             at=self.enter_time,
             level_number=self.level_number,

@@ -6,7 +6,7 @@ from mockito import mock, when, ANY, unstub
 
 from shvatka.core.interfaces.clients.file_storage import FileStorage
 from shvatka.core.interfaces.scheduler import Scheduler
-from shvatka.core.models import dto
+from shvatka.core.models import dto, enums
 from shvatka.core.models.enums import GameStatus
 from shvatka.core.models.enums.played import Played
 from shvatka.core.services.game import start_waivers
@@ -100,7 +100,7 @@ async def test_game_play(
     assert_time_key(
         dto.KeyTime(
             text="SHWRONG",
-            is_correct=False,
+            type_=enums.KeyType.wrong,
             is_duplicate=False,
             at=datetime.now(tz=tz_utc),
             level_number=0,
@@ -145,7 +145,7 @@ async def test_game_play(
     assert_time_key(
         dto.KeyTime(
             text="SHWRONG",
-            is_correct=False,
+            type_=enums.KeyType.wrong,
             is_duplicate=False,
             at=datetime.now(tz=tz_utc),
             level_number=0,
@@ -157,7 +157,7 @@ async def test_game_play(
     assert_time_key(
         dto.KeyTime(
             text="SH123",
-            is_correct=True,
+            type_=enums.KeyType.simple,
             is_duplicate=False,
             at=datetime.now(tz=tz_utc),
             level_number=0,
@@ -169,7 +169,7 @@ async def test_game_play(
     assert_time_key(
         dto.KeyTime(
             text="SH123",
-            is_correct=True,
+            type_=enums.KeyType.simple,
             is_duplicate=True,
             at=datetime.now(tz=tz_utc),
             level_number=0,
@@ -181,7 +181,7 @@ async def test_game_play(
     assert_time_key(
         dto.KeyTime(
             text="SH321",
-            is_correct=True,
+            type_=enums.KeyType.simple,
             is_duplicate=False,
             at=datetime.now(tz=tz_utc),
             level_number=0,
@@ -193,7 +193,7 @@ async def test_game_play(
     assert_time_key(
         dto.KeyTime(
             text="SHOOT",
-            is_correct=True,
+            type_=enums.KeyType.simple,
             is_duplicate=False,
             at=datetime.now(tz=tz_utc),
             level_number=0,

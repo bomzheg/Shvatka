@@ -2,7 +2,7 @@ from typing import Iterable, Protocol
 
 from shvatka.core.interfaces.dal.base import Committer
 from shvatka.core.interfaces.dal.organizer import GameOrgsGetter
-from shvatka.core.models import dto
+from shvatka.core.models import dto, enums
 
 
 class GamePreparer(GameOrgsGetter, Protocol):
@@ -50,7 +50,7 @@ class GamePlayerDao(Committer, GameOrgsGetter, Protocol):
         level: dto.Level,
         game: dto.Game,
         player: dto.Player,
-        is_correct: bool,
+        type_: enums.KeyType,
         is_duplicate: bool,
     ) -> dto.KeyTime:
         raise NotImplementedError

@@ -5,7 +5,7 @@ from datetime import timedelta, datetime
 from shvatka.core.interfaces.dal.game_play import GamePreparer, GamePlayerDao
 from shvatka.core.interfaces.dal.level_times import GameStarter, LevelTimeChecker
 from shvatka.core.interfaces.scheduler import Scheduler
-from shvatka.core.models import dto
+from shvatka.core.models import dto, enums
 from shvatka.core.models.dto import scn
 from shvatka.core.services.key import KeyProcessor
 from shvatka.core.services.organizers import get_orgs, get_spying_orgs
@@ -124,7 +124,7 @@ async def check_key(
     if new_key.is_duplicate:
         await view.duplicate_key(key=new_key)
         return
-    elif new_key.is_correct:
+    elif new_key.type_ == enums.KeyType.simple:
         await view.correct_key(key=new_key)
         if new_key.is_level_up:
             async with locker.lock_globally():
@@ -139,8 +139,10 @@ async def check_key(
                 team=team, new_level=next_level, orgs_list=await get_spying_orgs(game, dao)
             )
             await org_notifier.notify(level_up_event)
-    else:
+    elif new_key.type_ == enums.KeyType.wrong:
         await view.wrong_key(key=new_key)
+    else:
+        raise RuntimeError(f"new key must be simple or wrong now, got {new_key.type_}")
 
 
 async def finish_team(

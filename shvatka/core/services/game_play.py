@@ -135,20 +135,33 @@ async def check_key(
         case enums.KeyType.simple:
             await view.correct_key(key=new_key)
             if new_key.is_level_up:
-                async with locker.lock_globally():
-                    if await dao.is_team_finished(team, game):
-                        await finish_team(team, game, view, game_log, dao, locker)
-                        return
-                next_level = await dao.get_current_level(team, game)
-
-                await view.send_puzzle(team=team, level=next_level)
-                await schedule_first_hint(scheduler, team, next_level)
-                level_up_event = LevelUp(
-                    team=team, new_level=next_level, orgs_list=await get_spying_orgs(game, dao)
-                )
-                await org_notifier.notify(level_up_event)
+                await process_level_up(team, game, dao, view, game_log, org_notifier, locker, scheduler)
         case _:
             typing.assert_never(new_key.type_)
+
+
+async def process_level_up(
+        team: dto.Team,
+        game: dto.FullGame,
+        dao: GamePlayerDao,
+        view: GameView,
+        game_log: GameLogWriter,
+        org_notifier: OrgNotifier,
+        locker: KeyCheckerFactory,
+        scheduler: Scheduler,
+):
+    async with locker.lock_globally():
+        if await dao.is_team_finished(team, game):
+            await finish_team(team, game, view, game_log, dao, locker)
+            return
+    next_level = await dao.get_current_level(team, game)
+
+    await view.send_puzzle(team=team, level=next_level)
+    await schedule_first_hint(scheduler, team, next_level)
+    level_up_event = LevelUp(
+        team=team, new_level=next_level, orgs_list=await get_spying_orgs(game, dao)
+    )
+    await org_notifier.notify(level_up_event)
 
 
 async def finish_team(

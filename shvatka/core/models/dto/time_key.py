@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from dataclasses import dataclass
 from datetime import datetime
 
@@ -19,9 +21,10 @@ class KeyTime:
 @dataclass(frozen=True)
 class InsertedKey(KeyTime):
     is_level_up: bool
+    parsed_key: ParsedKey | None = None
 
     @classmethod
-    def from_key_time(cls, key_time: KeyTime, is_level_up: bool):
+    def from_key_time(cls, key_time: KeyTime, is_level_up: bool, parsed_key: ParsedKey | None = None):
         return cls(
             text=key_time.text,
             type_=key_time.type_,
@@ -31,6 +34,7 @@ class InsertedKey(KeyTime):
             player=key_time.player,
             is_level_up=is_level_up,
             team=key_time.team,
+            parsed_key=parsed_key,
         )
 
 
@@ -67,3 +71,15 @@ class KeyInsertResult:
             level_completed=True,
             game_finished=False,
         )
+
+
+@dataclass
+class ParsedKey:
+    text: str
+    type_: enums.KeyType
+
+
+@dataclass
+class ParsedBonusKey(ParsedKey):
+    bonus_minutes: float = 0.0
+    type_: enums.KeyType = enums.KeyType.bonus

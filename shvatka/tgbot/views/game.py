@@ -93,6 +93,22 @@ class BotView(GameViewPreparer, GameView):
             text=f"{KeyEmoji.incorrect.value}Ключ {hd.pre(key.text)} неверный.",
         )
 
+    async def bonus_key(self, key: dto.KeyTime, bonus: float) -> None:
+        if bonus >= 0:
+            text = (
+                f"{KeyEmoji.bonus.value}Бонусный ключ {hd.pre(key.text)}. "
+                f"Бонус: {bonus:.2f} мин."
+            )
+        else:
+            text = (
+                f"{KeyEmoji.bonus.value}Штрафной ключ {hd.pre(key.text)}. "
+                f"Штраф: {bonus:.2f} мин."
+            )
+        await self.bot.send_message(
+            chat_id=key.team.get_chat_id(),
+            text=text,
+        )
+
     async def game_finished(self, team: dto.Team) -> None:
         await self.bot.send_message(chat_id=team.get_chat_id(), text="Игра завершена! Поздравляю!")
 

@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from shvatka.core.models.dto.scn.level import LevelScenario
 from .player import Player
+from .scn.level import LevelScenario, BonusKey
 from .scn.time_hint import TimeHint
 
 
@@ -22,8 +22,14 @@ class Level:
     def is_last_hint(self, hint_number: int) -> bool:
         return self.scenario.is_last_hint(hint_number)
 
-    def get_keys(self):
+    def get_keys(self) -> set[str]:
         return self.scenario.get_keys()
+
+    def get_bonus_keys(self) -> set[BonusKey]:
+        return self.scenario.get_bonus_keys()
+
+    def get_bonus_keys_texts(self) -> set[str]:
+        return {key.text for key in self.scenario.get_bonus_keys()}
 
     def get_guids(self) -> list[str]:
         return self.scenario.get_guids()

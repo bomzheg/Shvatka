@@ -35,6 +35,9 @@ class GameView(Protocol):
     async def wrong_key(self, key: dto.KeyTime) -> None:
         raise NotImplementedError
 
+    async def bonus_key(self, key: dto.KeyTime, bonus: float) -> None:
+        raise NotImplementedError
+
     async def game_finished(self, team: dto.Team) -> None:
         raise NotImplementedError
 

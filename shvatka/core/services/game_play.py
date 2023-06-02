@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import typing
 from datetime import timedelta, datetime
 
 from shvatka.core.interfaces.dal.game_play import GamePreparer, GamePlayerDao
@@ -115,34 +116,39 @@ async def check_key(
     :param game_log: Логгер игры (публичные уведомления о статусе игры).
     :param org_notifier: Для уведомления оргов о важных событиях.
     :param locker: Локи для обеспечения последовательного исполнения определённых операций.
+    :param key_processor: Логика работы с ключами
     :param scheduler: Планировщик подсказок.
     """
     if not dao.check_waiver(player, team, game):
         raise exceptions.WaiverError(team=team, game=game, player=player)
 
-    new_key = await key_processor.submit_key(key=key, player=player, team=team)
+    new_key = await key_processor.check_key(key=key, player=player, team=team)
     if new_key.is_duplicate:
         await view.duplicate_key(key=new_key)
         return
-    elif new_key.type_ == enums.KeyType.simple:
-        await view.correct_key(key=new_key)
-        if new_key.is_level_up:
-            async with locker.lock_globally():
-                if await dao.is_team_finished(team, game):
-                    await finish_team(team, game, view, game_log, dao, locker)
-                    return
-            next_level = await dao.get_current_level(team, game)
+    match new_key.type_:
+        case enums.KeyType.wrong:
+            await view.wrong_key(key=new_key)
+        case enums.KeyType.bonus:
+            assert isinstance(new_key.parsed_key, dto.ParsedBonusKey)
+            await view.bonus_key(new_key, new_key.parsed_key.bonus_minutes)
+        case enums.KeyType.simple:
+            await view.correct_key(key=new_key)
+            if new_key.is_level_up:
+                async with locker.lock_globally():
+                    if await dao.is_team_finished(team, game):
+                        await finish_team(team, game, view, game_log, dao, locker)
+                        return
+                next_level = await dao.get_current_level(team, game)
 
-            await view.send_puzzle(team=team, level=next_level)
-            await schedule_first_hint(scheduler, team, next_level)
-            level_up_event = LevelUp(
-                team=team, new_level=next_level, orgs_list=await get_spying_orgs(game, dao)
-            )
-            await org_notifier.notify(level_up_event)
-    elif new_key.type_ == enums.KeyType.wrong:
-        await view.wrong_key(key=new_key)
-    else:
-        raise RuntimeError(f"new key must be simple or wrong now, got {new_key.type_}")
+                await view.send_puzzle(team=team, level=next_level)
+                await schedule_first_hint(scheduler, team, next_level)
+                level_up_event = LevelUp(
+                    team=team, new_level=next_level, orgs_list=await get_spying_orgs(game, dao)
+                )
+                await org_notifier.notify(level_up_event)
+        case _:
+            typing.assert_never(new_key.type_)
 
 
 async def finish_team(

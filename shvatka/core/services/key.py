@@ -25,31 +25,48 @@ class KeyProcessor:
         player: dto.Player,
         team: dto.Team,
     ) -> dto.InsertedKey:
+        is_level_up = False
         async with self.locker(team):
             level = await self.dao.get_current_level(team, self.game)
-            new_key = await self.dao.save_key(
-                key=key,
+            parsed_key = await self.parse_key(key, level)
+            saved_key = await self.dao.save_key(
+                key=parsed_key.text,
                 team=team,
                 level=level,
                 game=self.game,
                 player=player,
-                type_=await self.check_type(key, level),
+                type_=parsed_key.type_,
                 is_duplicate=await self.is_duplicate(level=level, team=team, key=key),
             )
             typed_keys = await self.dao.get_correct_typed_keys(
                 level=level, game=self.game, team=team
             )
-            if new_key.type_ == enums.KeyType.simple:
+            if parsed_key.type_ == enums.KeyType.simple:
                 # add just now added key to typed, because no flush in dao
-                typed_keys.add(new_key.text)
-            is_level_up = await self.is_level_up(typed_keys, level)
-            if is_level_up:
-                await self.dao.level_up(team=team, level=level, game=self.game)
+                typed_keys.add(parsed_key.text)
+                if is_level_up := await self.is_level_up(typed_keys, level):
+                    await self.dao.level_up(team=team, level=level, game=self.game)
             await self.dao.commit()
-        return dto.InsertedKey.from_key_time(new_key, is_level_up)
+        return dto.InsertedKey.from_key_time(
+            saved_key, is_level_up, parsed_key=parsed_key
+        )
 
-    async def check_type(self, key: scn.SHKey, level: dto.Level) -> enums.KeyType:
-        return enums.KeyType.simple if key in level.get_keys() else enums.KeyType.wrong
+    async def get_bonus_value(self, key: str, level: dto.Level) -> float:
+        for bonus_key in level.get_bonus_keys():
+            if bonus_key.text == key:
+                return bonus_key.bonus_minutes
+        assert False
+
+    async def parse_key(self, key: str, level: dto.Level) -> dto.ParsedKey:
+        if key in level.get_bonus_keys_texts():
+            return dto.ParsedBonusKey(
+                type_=enums.KeyType.bonus,
+                text=key,
+                bonus_minutes=await self.get_bonus_value(key, level),
+            )
+        if key in level.get_keys():
+            return dto.ParsedKey(type_=enums.KeyType.simple, text=key)
+        return dto.ParsedKey(type_=enums.KeyType.wrong, text=key)
 
     async def is_duplicate(self, key: scn.SHKey, level: dto.Level, team: dto.Team) -> bool:
         return await self.dao.is_key_duplicate(level, team, key)

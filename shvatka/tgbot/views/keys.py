@@ -18,6 +18,19 @@ class KeyEmoji(enum.Enum):
     bonus = "💰"
     unknown = "❔"
 
+    @classmethod
+    def from_key(cls, key: dto.KeyTime) -> "KeyEmoji":
+        if key.is_duplicate:
+            return KeyEmoji.duplicate
+        match key.type_:
+            case enums.KeyType.simple:
+                return KeyEmoji.correct
+            case enums.KeyType.wrong:
+                return KeyEmoji.incorrect
+            case enums.KeyType.bonus:
+                return KeyEmoji.bonus
+        return KeyEmoji.unknown
+
 
 def render_log_keys(log_keys: dict[dto.Team, list[dto.KeyTime]]) -> str:
     text = f"Лог ключей на {datetime.now(tz=tz_game).strftime(DATETIME_FORMAT)}:<br/>"
@@ -32,22 +45,12 @@ def render_log_keys(log_keys: dict[dto.Team, list[dto.KeyTime]]) -> str:
                     text += "</ol><br/>"
                 text += f"Уровень №{n_level + 1}<br/><ol>"
             text += (
-                f"<li>{to_emoji(key).value}{hd.quote(key.text)} "
+                f"<li>{KeyEmoji.from_key(key).value}{hd.quote(key.text)} "
                 f"{key.at.astimezone(tz=tz_game).time()} "
                 f"{key.player.name_mention}</li>"
             )
         text += "</ol>"
     return text
-
-
-def to_emoji(key: dto.KeyTime) -> KeyEmoji:
-    if key.is_duplicate:
-        return KeyEmoji.duplicate
-    if key.type_ == enums.KeyType.simple:
-        return KeyEmoji.correct
-    if key.type_ == enums.KeyType.wrong:
-        return KeyEmoji.incorrect
-    return KeyEmoji.unknown
 
 
 async def create_keys_page(

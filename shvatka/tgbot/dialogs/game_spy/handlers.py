@@ -14,5 +14,5 @@ async def keys_handler(c: CallbackQuery, widget: Button, manager: DialogManager)
     game: dto.Game = manager.middleware_data["game"]
     dao: HolderDao = manager.middleware_data["dao"]
     player: dto.Player = manager.middleware_data["player"]
-    page = await create_keys_page(game, player, telegraph, dao)
+    page = await create_keys_page(game, player, telegraph, dao, salt=game.manage_token[:8])
     manager.dialog_data["key_link"] = page["url"]

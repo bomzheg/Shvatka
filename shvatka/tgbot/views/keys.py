@@ -54,11 +54,16 @@ def render_log_keys(log_keys: dict[dto.Team, list[dto.KeyTime]]) -> str:
 
 
 async def create_keys_page(
-    game: dto.Game, player: dto.Player, telegraph: Telegraph, dao: HolderDao
+    game: dto.Game, player: dto.Player, telegraph: Telegraph, dao: HolderDao, salt: str = ""
 ) -> dict[str, Any]:
     keys = await get_typed_keys(game=game, player=player, dao=dao.typed_keys)
     text = render_log_keys(keys)
     page = await telegraph.create_page(
+        title=f"{salt} Лог ключей игры {game.name}",
+        html_content="boilerplate",
+    )
+    await telegraph.edit_page(
+        path=page["path"],
         title=f"Лог ключей игры {game.name}",
         html_content=text,
     )

@@ -135,20 +135,29 @@ async def check_key(
         case enums.KeyType.simple:
             await view.correct_key(key=new_key)
             if new_key.is_level_up:
-                await process_level_up(team, game, dao, view, game_log, org_notifier, locker, scheduler)
+                await process_level_up(
+                    team=team,
+                    game=game,
+                    dao=dao,
+                    view=view,
+                    game_log=game_log,
+                    org_notifier=org_notifier,
+                    locker=locker,
+                    scheduler=scheduler,
+                )
         case _:
             typing.assert_never(new_key.type_)
 
 
 async def process_level_up(
-        team: dto.Team,
-        game: dto.FullGame,
-        dao: GamePlayerDao,
-        view: GameView,
-        game_log: GameLogWriter,
-        org_notifier: OrgNotifier,
-        locker: KeyCheckerFactory,
-        scheduler: Scheduler,
+    team: dto.Team,
+    game: dto.FullGame,
+    dao: GamePlayerDao,
+    view: GameView,
+    game_log: GameLogWriter,
+    org_notifier: OrgNotifier,
+    locker: KeyCheckerFactory,
+    scheduler: Scheduler,
 ):
     async with locker.lock_globally():
         if await dao.is_team_finished(team, game):

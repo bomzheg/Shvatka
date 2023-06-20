@@ -24,7 +24,9 @@ class InsertedKey(KeyTime):
     parsed_key: ParsedKey | None = None
 
     @classmethod
-    def from_key_time(cls, key_time: KeyTime, is_level_up: bool, parsed_key: ParsedKey | None = None):
+    def from_key_time(
+        cls, key_time: KeyTime, is_level_up: bool, parsed_key: ParsedKey | None = None
+    ):
         return cls(
             text=key_time.text,
             type_=key_time.type_,

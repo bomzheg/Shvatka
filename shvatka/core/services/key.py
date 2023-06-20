@@ -47,9 +47,7 @@ class KeyProcessor:
                 if is_level_up := await self.is_level_up(typed_keys, level):
                     await self.dao.level_up(team=team, level=level, game=self.game)
             await self.dao.commit()
-        return dto.InsertedKey.from_key_time(
-            saved_key, is_level_up, parsed_key=parsed_key
-        )
+        return dto.InsertedKey.from_key_time(saved_key, is_level_up, parsed_key=parsed_key)
 
     async def get_bonus_value(self, key: str, level: dto.Level) -> float:
         for bonus_key in level.get_bonus_keys():

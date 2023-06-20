@@ -130,7 +130,7 @@ async def set_results(game: dto.FullGame, results: GameStat, dao: HolderDao):
                 game=game,
                 player=player,
                 level=game.levels[key.level - 1],
-                is_correct=is_correct,
+                type_=enums.KeyType.simple if is_correct else enums.KeyType.wrong,
                 is_duplicate=False,
                 at=add_timezone(key.at, timezone=tz_utc),
             )

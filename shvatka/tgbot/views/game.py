@@ -78,19 +78,35 @@ class BotView(GameViewPreparer, GameView):
     async def duplicate_key(self, key: dto.KeyTime) -> None:
         await self.bot.send_message(
             chat_id=key.team.get_chat_id(),
-            text=f"{KeyEmoji.duplicate.value}Ключ {hd.pre(key.text)} уже был введён ранее.",
+            text=f"{KeyEmoji.duplicate.value}Ключ {hd.code(key.text)} уже был введён ранее.",
         )
 
     async def correct_key(self, key: dto.KeyTime) -> None:
         await self.bot.send_message(
             chat_id=key.team.get_chat_id(),
-            text=f"{KeyEmoji.correct.value}Ключ {hd.pre(key.text)} верный! Поздравляю!",
+            text=f"{KeyEmoji.correct.value}Ключ {hd.code(key.text)} верный! Поздравляю!",
         )
 
     async def wrong_key(self, key: dto.KeyTime) -> None:
         await self.bot.send_message(
             chat_id=key.team.get_chat_id(),
-            text=f"{KeyEmoji.incorrect.value}Ключ {hd.pre(key.text)} неверный.",
+            text=f"{KeyEmoji.incorrect.value}Ключ {hd.code(key.text)} неверный.",
+        )
+
+    async def bonus_key(self, key: dto.KeyTime, bonus: float) -> None:
+        if bonus >= 0:
+            text = (
+                f"{KeyEmoji.bonus.value}Бонусный ключ {hd.code(key.text)}.\n"
+                f"Бонус: {bonus:.2f} мин."
+            )
+        else:
+            text = (
+                f"{KeyEmoji.bonus.value}Штрафной ключ {hd.code(key.text)}.\n"
+                f"Штраф: {bonus:.2f} мин."
+            )
+        await self.bot.send_message(
+            chat_id=key.team.get_chat_id(),
+            text=text,
         )
 
     async def game_finished(self, team: dto.Team) -> None:

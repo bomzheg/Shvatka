@@ -25,6 +25,6 @@ from .hint_part import (
     PhotoHint,
     ContactHint,
 )
-from .level import LevelScenario
+from .level import LevelScenario, SHKey
 from .parsed_zip import ParsedZip
 from .time_hint import TimeHint

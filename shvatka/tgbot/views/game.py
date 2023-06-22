@@ -193,7 +193,7 @@ class BotOrgNotifier(OrgNotifier):
         )
 
     async def level_test_completed(self, event: LevelTestCompleted, org: dto.Organizer):
-        results = json.dumps(self.dcf.dump(event.result.full_data))[:3000]
+        results = json.dumps(self.dcf.dump(event.result.full_data), ensure_ascii=False)[:3000]
         await self.bot.send_message(
             chat_id=org.player.get_chat_id(),
             text=f"Тестирование уровня {event.suite.level.name_id}.\n"

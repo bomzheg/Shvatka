@@ -79,20 +79,24 @@ async def publish_game(game_publisher: GamePublisher, manager: BaseDialogManager
     keys_msg_id = await game_publisher.publish_keys()
     channel_id = game_publisher.channel_id
     bot = game_publisher.bot
-    invite = await get_invite(channel_id=channel_id, bot=bot)
-
-    text_invite_scn = (
-        f"Вход: {invite}\n"
-        f"Начало сценария: {no_public_message_link(channel_id, started_msg_id)}\n"
-        f"Результаты игры: {no_public_message_link(channel_id, results_msg_id)}\n"
+    table_of_content = (
+        f"Начало сценария: {no_public_message_link(channel_id, started_msg_id)}\n" 
+        f"Результаты игры: {no_public_message_link(channel_id, results_msg_id)}\n" 
         f"Лог ключей: {no_public_message_link(channel_id, keys_msg_id)}"
     )
+    await bot.send_message(
+        chat_id=channel_id,
+        text=table_of_content
+    )
+    invite = await get_invite(channel_id=channel_id, bot=bot)
+
+    text_invite_scn = f"Чтобы его увидеть, нужно войти в канал: {invite}"
     await bot.send_message(
         game_publisher.config.game_log_chat,
         f"Загружен сценарий игры {hd.bold(hd.quote(game_publisher.game.name))}."
         f"\n{text_invite_scn}",
     )
-    await manager.update({"text_invite": text_invite_scn, "started": False})
+    await manager.update({"text_invite": text_invite_scn + "\n" + table_of_content, "started": False})
     await bot.send_message(
         chat_id=game_publisher.game.author.get_chat_id(),
         text=f"Сценарий загружен.\n{text_invite_scn}",

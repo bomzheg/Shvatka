@@ -119,7 +119,7 @@ async def check_key(
     :param key_processor: Логика работы с ключами
     :param scheduler: Планировщик подсказок.
     """
-    if not dao.check_waiver(player, team, game):
+    if not await dao.check_waiver(player, team, game):
         raise exceptions.WaiverError(team=team, game=game, player=player)
 
     new_key = await key_processor.check_key(key=key, player=player, team=team)

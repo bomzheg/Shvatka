@@ -120,7 +120,9 @@ async def check_key(
     :param scheduler: Планировщик подсказок.
     """
     if not await dao.check_waiver(player, team, game):
-        raise exceptions.WaiverError(team=team, game=game, player=player)
+        raise exceptions.WaiverError(
+            team=team, game=game, player=player, text="игрок не заявлен на игру, но ввёл ключ"
+        )
 
     new_key = await key_processor.check_key(key=key, player=player, team=team)
     if new_key.is_duplicate:

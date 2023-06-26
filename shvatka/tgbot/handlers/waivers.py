@@ -1,5 +1,6 @@
-from aiogram import Router, Bot
-from aiogram.filters import Command
+from aiogram import Router, Bot, F
+from aiogram.enums import ChatType
+from aiogram.filters import Command, or_f
 from aiogram.types import Message, CallbackQuery
 from aiogram.utils.markdown import html_decoration as hd
 
@@ -33,14 +34,15 @@ from shvatka.tgbot.views.waiver import (
 )
 
 
-async def start_waivers(m: Message, team: dto.Team, game: dto.Game, dao: HolderDao, bot: Bot):
-    msg = await m.answer(
+async def start_waivers(_: Message, team: dto.Team, game: dto.Game, dao: HolderDao, bot: Bot):
+    msg = await bot.send_message(
+        chat_id=team.get_chat_id(),
         text=await get_waiver_poll_text(team, game, dao),
         reply_markup=kb.get_kb_waivers(team),
         disable_web_page_preview=True,
     )
     old_msg_id = await swap_saved_message(game, msg, dao.poll)
-    await total_remove_msg(bot, m.chat.id, old_msg_id)
+    await total_remove_msg(bot, team.get_chat_id(), old_msg_id)
 
 
 async def add_vote_handler(
@@ -69,7 +71,7 @@ async def add_vote_handler(
 
 
 async def start_approve_waivers_handler(
-    m: Message, player: dto.Player, user: dto.User, game: dto.Game, dao: HolderDao, bot: Bot
+    _: Message, player: dto.Player, user: dto.User, game: dto.Game, dao: HolderDao, bot: Bot
 ):
     team = await get_my_team(player, dao.team_player)
     check_allow_approve_waivers(await get_full_team_player(player, team, dao.waiver_approver))
@@ -253,13 +255,14 @@ def setup() -> Router:
     captain_router.callback_query.filter(TeamPlayerFilter(can_manage_waivers=True))
     # middlewares
     player_router.callback_query.outer_middleware.register(TeamPlayerMiddleware())
+    captain_router.message.outer_middleware.register(TeamPlayerMiddleware())
     captain_router.callback_query.outer_middleware.register(TeamPlayerMiddleware())
 
     # handlers
     captain_router.message.register(
         start_waivers,
         Command(START_WAIVERS_COMMAND),
-        IsTeamFilter(),
+        or_f(IsTeamFilter(), F.chat.type == ChatType.PRIVATE),
     )
     player_router.callback_query.register(
         add_vote_handler,

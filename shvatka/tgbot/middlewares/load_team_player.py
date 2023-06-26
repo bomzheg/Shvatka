@@ -16,6 +16,8 @@ class TeamPlayerMiddleware(BaseMiddleware):
         data: MiddlewareData,
     ) -> Any:
         team = await get_my_team(player=(data["player"]), dao=data["dao"].team_player)
+        if team:
+            data["team"] = data.get("team", team) or team  # if team already setted as None
         try:
             team_player = await get_full_team_player(data["player"], team, data["dao"].team_player)
         except PlayerNotInTeam:

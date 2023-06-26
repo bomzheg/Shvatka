@@ -6,7 +6,7 @@ from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload, selectinload, contains_eager
 
-from shvatka.core.models import dto
+from shvatka.core.models import dto, enums
 from shvatka.infrastructure.db import models
 from .base import BaseDAO
 
@@ -37,7 +37,11 @@ class PlayerDao(BaseDAO[models.Player]):
             select(
                 models.Player,
                 func.count(models.Player.typed_keys),
-                func.count(case((models.KeyTime.is_correct, 1))),
+                func.count(
+                    case(
+                        (models.KeyTime.type_.in_([enums.KeyType.simple, enums.KeyType.bonus]), 1)
+                    )
+                ),
             )
             .outerjoin(models.Player.typed_keys)
             .options(

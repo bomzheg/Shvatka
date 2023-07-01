@@ -101,6 +101,7 @@ exclude = '''
   | dist
   | venv
   | docs
+  | .idea
 )
 '''
 

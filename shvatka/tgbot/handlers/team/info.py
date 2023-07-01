@@ -1,4 +1,5 @@
-from aiogram import Router
+from aiogram import Router, F
+from aiogram.enums import ChatType
 from aiogram.filters import Command
 
 from shvatka.tgbot import states
@@ -10,6 +11,9 @@ def setup() -> Router:
     router = Router(name=__name__)
     disable_router_on_game(router)
     register_start_handler(
-        Command(commands=TEAMS_COMMAND), state=states.TeamsSg.list, router=router
+        F.chat.type == ChatType.PRIVATE,
+        Command(commands=TEAMS_COMMAND),
+        state=states.TeamsSg.list,
+        router=router,
     )
     return router

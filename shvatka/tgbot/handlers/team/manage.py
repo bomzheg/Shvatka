@@ -189,6 +189,7 @@ def setup() -> Router:
     )
     register_start_handler(
         Command(commands=MANAGE_TEAM_COMMAND),
+        F.chat.type == ChatType.PRIVATE,
         or_f(
             TeamPlayerFilter(is_captain=True),
             TeamPlayerFilter(can_manage_players=True),

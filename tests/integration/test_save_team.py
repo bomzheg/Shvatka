@@ -28,8 +28,8 @@ async def test_get_team(dao: HolderDao, game_log: GameLogWriter):
     assert await get_by_chat(chat, dao.team) is None
 
     await test_save_team(dao, game_log)
-    chat = (await dao.chat._get_all())[0]
 
-    team = await get_by_chat(chat.to_dto(), dao.team)
+    team = await get_by_chat(chat, dao.team)
+    assert team is not None
     assert team.id is not None
     assert team.name == chat.title

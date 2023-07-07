@@ -2,7 +2,7 @@ from shvatka.core.views.game import OrgNotifier, Event
 
 
 class OrgNotifierMock(OrgNotifier):
-    def __init__(self):
+    def __init__(self) -> None:
         self.calls: list[Event] = []
 
     async def notify(self, event: Event) -> None:

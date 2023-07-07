@@ -21,12 +21,14 @@ async def test_exit_write_game(
 
     await author_client.send("/" + NEW_LEVEL_COMMAND.command)
     first_message = message_manager.one_message()
+    assert first_message.text
     assert "Для начала дай уровню короткое описание (ID)" in first_message.text
     assert not first_message.reply_markup.inline_keyboard
 
     message_manager.reset_history()
     await author_client.send("test_level")
     new_message = message_manager.one_message()
+    assert new_message.text
     assert "test_level" in new_message.text
     assert "Отлично, перейдём к ключам" in new_message.text
     assert not new_message.reply_markup.inline_keyboard
@@ -34,6 +36,7 @@ async def test_exit_write_game(
     message_manager.reset_history()
     await author_client.send("SHTESTKEY")
     new_message = message_manager.one_message()
+    assert new_message.text
     assert "test_level" in new_message.text
     assert "Подсказки уровня" in new_message.text
     assert new_message.reply_markup.inline_keyboard
@@ -45,6 +48,7 @@ async def test_exit_write_game(
     )
     message_manager.assert_answered(callback_id)
     new_message = message_manager.one_message()
+    assert new_message.text
     assert "Время выхода подсказки" in new_message.text
     assert "0" == new_message.reply_markup.inline_keyboard[1][0].text
 
@@ -55,6 +59,7 @@ async def test_exit_write_game(
     )
     message_manager.assert_answered(callback_id)
     new_message = message_manager.one_message()
+    assert new_message.text
     assert "Подсказка выходящая в 0 мин." in new_message.text
     assert "Присылай сообщения" in new_message.text
     assert new_message.reply_markup.inline_keyboard
@@ -62,6 +67,7 @@ async def test_exit_write_game(
     message_manager.reset_history()
     await author_client.send("some hint text")
     new_message = message_manager.one_message()
+    assert new_message.text
     assert "Подсказка выходящая в 0 мин." in new_message.text
     assert "Можно прислать ещё сообщения" in new_message.text
     assert new_message.reply_markup.inline_keyboard
@@ -73,6 +79,7 @@ async def test_exit_write_game(
     )
     message_manager.assert_answered(callback_id)
     new_message = message_manager.one_message()
+    assert new_message.text
     assert "test_level" in new_message.text
     assert "Подсказки уровня" in new_message.text
     assert "\n0: " in new_message.text
@@ -84,6 +91,7 @@ async def test_exit_write_game(
     )
     message_manager.assert_answered(callback_id)
     new_message = message_manager.one_message()
+    assert new_message.text
     assert "Время выхода подсказки" in new_message.text
     assert "5" == new_message.reply_markup.inline_keyboard[1][0].text
 
@@ -97,6 +105,7 @@ async def test_exit_write_game(
     message_manager.reset_history()
     await author_client.send("SHTESTKEY")
     new_message = message_manager.one_message()
+    assert new_message.text
     assert "Подсказка выходящая в 5 мин." in new_message.text
 
     message_manager.reset_history()
@@ -106,6 +115,7 @@ async def test_exit_write_game(
     )
     message_manager.assert_answered(callback_id)
     new_message = message_manager.one_message()
+    assert new_message.text
     assert "test_level" in new_message.text
     assert "Подсказки уровня" in new_message.text
     assert "\n0: " in new_message.text
@@ -122,7 +132,6 @@ async def test_exit_write_game(
 
     assert 1 == await dao.level.count()
     level, *_ = await dao.level.get_all_my(author)
-    level: dto.Level
     assert author.id == level.author.id
     assert {"SHTESTKEY"} == level.scenario.keys
     assert 2 == level.hints_count

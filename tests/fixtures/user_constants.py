@@ -4,12 +4,17 @@ from aiogram.types import User
 
 from shvatka.core.models import dto
 
-OLD_HARRY_USERNAME = "tom_riddle_friend"
+HARRI_TG_ID = 666
+
+HARRY_FIRST_NAME = "Harry"
+HARRY_LAST_NAME = "Potter"
+HARRY_NEW_USERNAME = "voldemort_killer"
+HARRY_OLD_USERNAME = "tom_riddle_friend"
 HARRY_DTO = dto.User(
-    tg_id=666,
-    first_name="Harry",
-    last_name="Potter",
-    username="voldemort_killer",
+    tg_id=HARRI_TG_ID,
+    first_name=HARRY_FIRST_NAME,
+    last_name=HARRY_LAST_NAME,
+    username=HARRY_NEW_USERNAME,
     is_bot=False,
 )
 
@@ -47,10 +52,10 @@ DRACO_DTO = dto.User(
 
 
 def create_tg_user(
-    id_: int = HARRY_DTO.tg_id,
-    username: str = HARRY_DTO.username,  # noqa (optional str)
-    first_name: str = HARRY_DTO.first_name,
-    last_name: str = HARRY_DTO.last_name,  # noqa (optional str)
+    id_: int = HARRI_TG_ID,
+    username: str = HARRY_NEW_USERNAME,
+    first_name: str = HARRY_FIRST_NAME,
+    last_name: str = HARRY_LAST_NAME,
 ) -> User:
     return User(
         id=id_,

@@ -43,7 +43,7 @@ async def process_name(m: Message, dialog_: Any, manager: DialogManager):
             "Лол, я ждал эту шутку. "
             "Но нет, игра не может называться {name}".format(name=hd.bold(hd.quote(game_name)))
         )
-    await check_new_game_name_available(name=m.text.strip(), author=author, dao=dao.game)
+    await check_new_game_name_available(name=game_name.strip(), author=author, dao=dao.game)
     data = manager.dialog_data
     if not isinstance(data, dict):
         data = {}
@@ -57,6 +57,7 @@ async def process_zip_scn(m: Message, dialog_: Any, manager: DialogManager):
     bot: Bot = manager.middleware_data["bot"]
     file_gateway: FileGateway = manager.middleware_data["file_gateway"]
     dcf: Factory = manager.middleware_data["dcf"]
+    assert m.document
     document = await bot.download(m.document.file_id)
     try:
         with unpack_scn(ZipPath(document)).open() as scenario:  # type: scn.RawGameScenario
@@ -78,6 +79,7 @@ async def save_game(c: CallbackQuery, button: Button, manager: DialogManager):
     multiselect = typing.cast(ManagedMultiSelectAdapter, manager.find("my_free_level_ids"))
     levels = list(filter(lambda level: multiselect.is_checked(level.db_id), levels))
     game = await create_game(author=author, name=name, dao=dao.game_creator, levels=levels)
+    assert c.message
     await c.message.edit_text("Игра успешно сохранена")
     await manager.done(result={"game": game})
 

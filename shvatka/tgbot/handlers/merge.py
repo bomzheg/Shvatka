@@ -26,9 +26,11 @@ async def confirm_merge_team(
     dialog_manager: DialogManager,
 ):
     primary = await get_team_by_id(callback_data.primary_team_id, dao.team)
+    assert primary.captain
     secondary = await get_team_by_id(callback_data.secondary_team_id, dao.team)
     await merge_teams(primary.captain, primary, secondary, game_log, dao.team_merger)
     await callback_query.answer("Успешно объединено")
+    assert callback_query.message
     await callback_query.message.edit_reply_markup(reply_markup=None)
     captain_chat_id = primary.captain.get_chat_id()
     bg = dialog_manager.bg(user_id=captain_chat_id, chat_id=captain_chat_id)
@@ -46,6 +48,7 @@ async def confirm_merge_players(
     secondary = await get_player_by_id(callback_data.secondary_player_id, dao.player)
     await merge_players(primary, secondary, game_log, dao.player_merger)
     await callback_query.answer("Успешно объединено")
+    assert callback_query.message
     await callback_query.message.edit_reply_markup(reply_markup=None)
     primary_chat_id = primary.get_chat_id()
     bg = dialog_manager.bg(user_id=primary_chat_id, chat_id=primary_chat_id)

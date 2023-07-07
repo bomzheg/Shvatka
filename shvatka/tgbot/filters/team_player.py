@@ -26,6 +26,7 @@ class TeamPlayerFilter(BaseFilter):
         if not team_player:
             return False
         if self.is_captain is not None:
+            assert team_player.team.captain is not None
             return team_player.team.captain.id == team_player.player.id
         if self.can_manage_waivers is not None:
             if self.can_manage_waivers != team_player.can_manage_waivers:

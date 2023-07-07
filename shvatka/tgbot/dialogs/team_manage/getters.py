@@ -21,12 +21,16 @@ async def get_my_team_(dao: HolderDao, player: dto.Player, **_) -> dict[str, Any
 
 async def get_team_with_players(dao: HolderDao, player: dto.Player, **_) -> dict[str, Any]:
     team = await get_my_team(player=player, dao=dao.team_player)
+    assert team
     team_player = await get_full_team_player(player=player, team=team, dao=dao.team_player)
     players = await get_team_players(team=team, dao=dao.team_player)
+    excluded = [player.id]
+    if team.captain:
+        excluded.append(team.captain.id)
     return {
         "team": team,
         "team_player": team_player,
-        "players": [tp for tp in players if tp.player.id not in (team.captain.id, player.id)],
+        "players": [tp for tp in players if tp.player.id not in excluded],
     }
 
 

@@ -1,4 +1,5 @@
-from aiogram import Router
+from aiogram import Router, F
+from aiogram.enums import ChatType
 from aiogram.filters import Command
 
 from shvatka.tgbot import states
@@ -11,6 +12,7 @@ def setup() -> Router:
     disable_router_on_game(router)
     register_start_handler(
         Command(GAMES_COMMAND),
+        F.chat.type == ChatType.PRIVATE,
         state=states.CompletedGamesPanelSG.list,
         router=router,
     )

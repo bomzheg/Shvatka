@@ -145,6 +145,7 @@ def setup() -> Router:
 
     register_start_handler(
         Command(START_COMMAND),
+        F.chat.type == ChatType.PRIVATE,
         state=states.MainMenuSG.main,
         router=router,
         mode=StartMode.RESET_STACK,

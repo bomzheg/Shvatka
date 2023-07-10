@@ -1,6 +1,7 @@
 import logging
 
-from aiogram import Router
+from aiogram import Router, F
+from aiogram.enums import ChatType
 from aiogram.filters import Command
 
 from shvatka.tgbot import states
@@ -19,16 +20,19 @@ def setup() -> Router:
     )
     register_start_handler(
         Command(commands=MY_GAMES_COMMAND),
+        F.chat.type == ChatType.PRIVATE,
         state=states.MyGamesPanelSG.choose_game,
         router=router,
     )
     register_start_handler(
         Command(commands=NEW_LEVEL_COMMAND),
+        F.chat.type == ChatType.PRIVATE,
         state=states.LevelSG.level_id,
         router=router,
     )
     register_start_handler(
         Command(commands=NEW_GAME_COMMAND),
+        F.chat.type == ChatType.PRIVATE,
         state=states.GameWriteSG.game_name,
         router=router,
     )

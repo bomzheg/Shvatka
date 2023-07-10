@@ -1,4 +1,5 @@
-from aiogram import Bot, Router
+from aiogram import Bot, Router, F
+from aiogram.enums import ChatType
 from aiogram.filters import Command
 from aiogram.types import Message
 
@@ -61,15 +62,20 @@ def setup() -> Router:
         TeamPlayerFilter(),
     )  # TODO is playing in this game
     register_start_handler(
-        Command(commands=SPY_COMMAND), state=states.OrgSpySG.main, router=router  # TODO is_org
+        F.chat.type == ChatType.PRIVATE,
+        Command(commands=SPY_COMMAND),
+        state=states.OrgSpySG.main,
+        router=router,  # TODO is_org
     )
     register_start_handler(
         Command(commands=SPY_LEVELS_COMMAND),  # TODO is_org
+        F.chat.type == ChatType.PRIVATE,
         state=states.OrgSpySG.spy,
         router=router,
     )
     register_start_handler(
         Command(commands=SPY_KEYS_COMMAND),  # TODO is_org
+        F.chat.type == ChatType.PRIVATE,
         state=states.OrgSpySG.keys,
         router=router,
     )

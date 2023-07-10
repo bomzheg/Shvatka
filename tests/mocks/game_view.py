@@ -12,6 +12,7 @@ class GameViewMock(GameView):
     duplicate_key_calls: list[dto.KeyTime] = field(default_factory=list)
     correct_key_calls: list[dto.KeyTime] = field(default_factory=list)
     wrong_key_calls: list[dto.KeyTime] = field(default_factory=list)
+    bonus_key_calls: list[tuple[dto.KeyTime, float]] = field(default_factory=list)
     game_finished_calls: list[dto.Team] = field(default_factory=list)
     game_finished_by_all_calls: set[dto.Team] = field(default_factory=set)
 
@@ -29,6 +30,9 @@ class GameViewMock(GameView):
 
     async def wrong_key(self, key: dto.KeyTime) -> None:
         self.wrong_key_calls.append(key)
+
+    async def bonus_key(self, key: dto.KeyTime, bonus: float) -> None:
+        self.bonus_key_calls.append((key, bonus))
 
     async def game_finished(self, team: dto.Team) -> None:
         self.game_finished_calls.append(team)

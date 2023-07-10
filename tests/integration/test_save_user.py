@@ -2,7 +2,7 @@ import pytest
 
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.tgbot.middlewares.data_load_middleware import save_user
-from tests.fixtures.user_constants import create_tg_user, create_dto_harry, OLD_HARRY_USERNAME
+from tests.fixtures.user_constants import create_tg_user, create_dto_harry, HARRY_OLD_USERNAME
 from tests.utils.user import assert_user
 
 
@@ -18,11 +18,11 @@ async def test_save_user(dao: HolderDao):
 
 @pytest.mark.asyncio
 async def test_upsert_user(dao: HolderDao):
-    old_tg_user = create_tg_user(username=OLD_HARRY_USERNAME)
+    old_tg_user = create_tg_user(username=HARRY_OLD_USERNAME)
     data = dict(event_from_user=old_tg_user)
     old = await save_user(data, dao)
     expected_old = create_dto_harry()
-    expected_old.username = OLD_HARRY_USERNAME
+    expected_old.username = HARRY_OLD_USERNAME
     assert_user(expected_old, old)
 
     data = dict(event_from_user=create_tg_user())

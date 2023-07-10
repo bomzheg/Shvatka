@@ -33,12 +33,14 @@ class KeyTimeDao(BaseDAO[models.KeyTime]):
 
     async def is_duplicate(self, level: dto.Level, team: dto.Team, key: str) -> bool:
         result: ScalarResult[int] = await self.session.scalars(
-            select(self.model.id).where(
+            select(self.model.id)
+            .where(
                 models.KeyTime.game_id == level.game_id,
                 models.KeyTime.level_number == level.number_in_game,
                 models.KeyTime.team_id == team.id,
                 models.KeyTime.key_text == key,
             )
+            .limit(1)
         )
         return result.one_or_none() is not None
 

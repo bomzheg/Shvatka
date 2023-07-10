@@ -72,7 +72,9 @@ async def start_merge(c: CallbackQuery, button: Button, manager: DialogManager):
     data = typing.cast(MiddlewareData, manager.middleware_data)
     dao = data["dao"]
     captain = data["player"]
+    assert captain
     team = await get_my_team(captain, dao.team_player)
+    assert team
     await manager.start(states.MergeTeamsSG.main, data={"team_id": team.id})
 
 
@@ -85,6 +87,7 @@ async def remove_player_handler(c: CallbackQuery, button: Button, manager: Dialo
     await leave(player=player, remover=captain, dao=dao.team_leaver)
     bot: Bot = manager.middleware_data["bot"]
     team = await get_my_team(captain, dao.team_player)
+    assert team
     await bot.send_message(
         chat_id=team.get_chat_id(),
         text=f"Игрок {hd.quote(player.name_mention)} был исключён из команды.",

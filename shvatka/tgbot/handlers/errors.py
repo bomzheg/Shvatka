@@ -36,6 +36,8 @@ async def handle_sh_error(error: ErrorEvent, log_chat_id: int, bot: Bot):
 
 async def clear_unknown_intent(error: ErrorEvent, dialog_manager: DialogManager, bot: Bot):
     await dialog_manager.reset_stack(True)
+    assert error.update.callback_query
+    assert error.update.callback_query.message
     await bot.edit_message_reply_markup(
         chat_id=error.update.callback_query.message.chat.id,
         message_id=error.update.callback_query.message.message_id,

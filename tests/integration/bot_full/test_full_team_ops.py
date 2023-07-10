@@ -2,6 +2,7 @@ from datetime import datetime
 
 import pytest
 from aiogram import Dispatcher
+from aiogram.enums import ChatMemberStatus
 from aiogram.methods import SendMessage, GetChatAdministrators, GetChat, GetChatMember
 from aiogram.types import Update, Message, ChatMemberOwner, ChatMemberMember
 from aiogram_tests.mocked_bot import MockedBot
@@ -28,7 +29,11 @@ async def test_create_team(harry: dto.Player, dp: Dispatcher, bot: MockedBot, da
     chat = create_tg_chat(type_=ChatType.supergroup)
     harry_tg = create_tg_user()
     bot.add_result_for(
-        GetChatAdministrators, ok=True, result=[ChatMemberOwner(user=harry_tg, is_anonymous=False)]
+        GetChatAdministrators,
+        ok=True,
+        result=[
+            ChatMemberOwner(user=harry_tg, is_anonymous=False, status=ChatMemberStatus.CREATOR)
+        ],
     )
     bot.add_result_for(GetChat, ok=True, result=chat)
     bot.add_result_for(SendMessage, ok=True)  # one for captain
@@ -37,7 +42,7 @@ async def test_create_team(harry: dto.Player, dp: Dispatcher, bot: MockedBot, da
         update_id=1,
         message=Message(
             message_id=2,
-            from_user=harry_tg,
+            from_user=harry_tg,  # type: ignore[call-arg]
             chat=chat,
             text="/" + CREATE_TEAM_COMMAND.command,
             date=datetime.now(tz=tz_utc),
@@ -53,7 +58,7 @@ async def test_create_team(harry: dto.Player, dp: Dispatcher, bot: MockedBot, da
     hermi = create_dto_hermione()
     hermi_message = Message(
         message_id=3,
-        from_user=create_tg_from_dto(hermi),
+        from_user=create_tg_from_dto(hermi),  # type: ignore[call-arg]
         chat=chat,
         text="hi everyone",
         date=datetime.now(tz=tz_utc),
@@ -65,14 +70,16 @@ async def test_create_team(harry: dto.Player, dp: Dispatcher, bot: MockedBot, da
     await dp.feed_update(bot, update)
 
     bot.add_result_for(
-        method=GetChatMember, ok=True, result=ChatMemberMember(user=create_tg_from_dto(hermi))
+        method=GetChatMember,
+        ok=True,
+        result=ChatMemberMember(user=create_tg_from_dto(hermi), status=ChatMemberStatus.MEMBER),
     )
     bot.add_result_for(SendMessage, ok=True)
     update = Update(
         update_id=3,
         message=Message(
             message_id=4,
-            from_user=harry_tg,
+            from_user=harry_tg,  # type: ignore[call-arg]
             chat=chat,
             text=f"/{ADD_IN_TEAM_COMMAND.command} brain",
             reply_to_message=hermi_message,

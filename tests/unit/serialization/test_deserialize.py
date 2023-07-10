@@ -76,7 +76,7 @@ def test_deserialize_all_types(all_types_scn: RawGameScenario, dcf: Factory):
         ]
     ):
         assert isinstance(hints[i].hint[0], type_)
-        assert hints[i].hint[0].type == type_.type
+        assert hints[i].hint[0].type == type_.type  # type: ignore[attr-defined]
 
 
 def test_render_all_types(all_types_scn: RawGameScenario, dcf: Factory):

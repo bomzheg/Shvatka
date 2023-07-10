@@ -51,7 +51,6 @@ class UserDao(BaseDAO[User]):
         assert user.db_id
         db_user = await self._get_by_id(user.db_id)
         db_user.hashed_password = hashed_password
-        user.hashed_password = hashed_password
 
     async def upsert_user(self, user: dto.User) -> dto.User:
         kwargs = dict(

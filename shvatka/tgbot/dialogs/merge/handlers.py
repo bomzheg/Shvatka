@@ -23,6 +23,7 @@ async def confirm_merge(c: CallbackQuery, button: Any, manager: DialogManager):
     data = typing.cast(MiddlewareData, manager.middleware_data)
     dao = data["dao"]
     captain = data["player"]
+    assert captain
     primary = await get_team_by_id(manager.start_data["team_id"], dao.team)
     secondary = await get_team_by_forum_team_id(manager.dialog_data["forum_team_id"], dao.team)
     await data["bot"].send_message(
@@ -50,6 +51,7 @@ async def confirm_merge_player(c: CallbackQuery, button: Any, manager: DialogMan
     data = typing.cast(MiddlewareData, manager.middleware_data)
     dao = data["dao"]
     primary = data["player"]
+    assert primary
     secondary_forum = await dao.forum_user.get_by_id(manager.dialog_data["forum_player_id"])
     secondary = await dao.player.get_by_id(secondary_forum.player_id)
     await data["bot"].send_message(

@@ -29,6 +29,7 @@ async def process_id(m: Message, dialog_: Any, manager: DialogManager):
 
 
 async def process_keys(m: Message, dialog_: Any, manager: DialogManager):
+    assert m.text
     keys = m.text.splitlines()
     if not is_multiple_keys_normal(keys):
         await m.answer(

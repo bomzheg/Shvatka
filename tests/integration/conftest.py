@@ -102,7 +102,7 @@ def pool(postgres_url: str) -> Generator[sessionmaker, None, None]:
     pool_: async_sessionmaker[AsyncSession] = async_sessionmaker(
         bind=engine, expire_on_commit=False, autoflush=False
     )
-    yield pool_
+    yield pool_  # type: ignore[misc]
     close_all_sessions()
 
 

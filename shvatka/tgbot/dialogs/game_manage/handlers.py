@@ -84,6 +84,7 @@ async def common_show_zip(c: CallbackQuery, game_id: int, manager: DialogManager
     file_gateway: FileGateway = manager.middleware_data["file_gateway"]
     game_ = await game.get_game_package(game_id, player, dao.game_packager, dcf, file_gateway)
     zip_ = pack_scn(game_)
+    assert c.message
     await c.message.answer_document(BufferedInputFile(file=zip_.read(), filename="scenario.zip"))
 
 
@@ -91,6 +92,7 @@ async def rename_game_handler(m: Message, dialog: Any, dialog_manager: DialogMan
     dao: HolderDao = dialog_manager.middleware_data["dao"]
     player: dto.Player = dialog_manager.middleware_data["player"]
     game_ = await get_game(dialog_manager.dialog_data["my_game_id"], dao=dao.game)
+    assert m.text
     await rename_game(player, game_, m.text.strip(), dao.game)
 
 
@@ -181,6 +183,7 @@ async def to_publish_game_forum(c: CallbackQuery, widget: Button, manager: Dialo
 
 
 async def publish_game_forum(m: Message, widget: Any, manager: DialogManager):
+    assert m.text
     username, password = map(str.strip, m.text.split("\n", maxsplit=1))
     game_id = manager.dialog_data["my_game_id"]
     author: dto.Player = manager.middleware_data["player"]
@@ -203,6 +206,7 @@ async def get_excel_results_handler(c: CallbackQuery, widget: Button, manager: D
     file = BytesIO()
     export_results(game=full_game, game_stat=game_stat, file=file)
     file.seek(0)
+    assert c.message
     await c.message.answer_document(
         document=BufferedInputFile(file=file.read(), filename=f"{full_game.name}.xlsx"),
     )

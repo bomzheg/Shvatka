@@ -47,13 +47,13 @@ async def test_level_testing(
     await check_level_testing_key(
         "SH123", suite, level_view, org_notifier, locker, dao.level_testing_complex
     )
-    keys = await dao.level_test.get_correct_tested_keys(suite)
-    assert {"SH123"} == keys
-    keys = await dao.level_test.get_all_typed(suite)
-    assert 1 == len(keys)
-    assert "SH123" == keys[0].text
-    assert keys[0].is_correct
-    assert keys[0].at > start_at
+    correct_keys = await dao.level_test.get_correct_tested_keys(suite)
+    assert {"SH123"} == correct_keys
+    all_keys = await dao.level_test.get_all_typed(suite)
+    assert 1 == len(all_keys)
+    assert "SH123" == all_keys[0].text
+    assert all_keys[0].is_correct
+    assert all_keys[0].at > start_at
     actual_suite, actual_key = level_view.calls["correct_key"].pop()
     assert suite == actual_suite
     assert "SH123" == actual_key
@@ -61,12 +61,12 @@ async def test_level_testing(
     await check_level_testing_key(
         "SHWRONG", suite, level_view, org_notifier, locker, dao.level_testing_complex
     )
-    keys = await dao.level_test.get_correct_tested_keys(suite)
-    assert {"SH123"} == keys
-    keys = await dao.level_test.get_all_typed(suite)
-    assert 2 == len(keys)
-    assert "SHWRONG" == keys[1].text
-    assert not keys[1].is_correct
+    correct_keys = await dao.level_test.get_correct_tested_keys(suite)
+    assert {"SH123"} == correct_keys
+    all_keys = await dao.level_test.get_all_typed(suite)
+    assert 2 == len(all_keys)
+    assert "SHWRONG" == all_keys[1].text
+    assert not all_keys[1].is_correct
     actual_suite, actual_key = level_view.calls["wrong_key"].pop()
     assert suite == actual_suite
     assert "SHWRONG" == actual_key
@@ -75,13 +75,13 @@ async def test_level_testing(
         "SH321", suite, level_view, org_notifier, locker, dao.level_testing_complex
     )
     assert not await dao.level_test.is_still_testing(suite)
-    keys = await dao.level_test.get_correct_tested_keys(suite)
-    assert {"SH123", "SH321"} == keys
-    keys = await dao.level_test.get_all_typed(suite)
-    assert 3 == len(keys)
-    assert "SH321" == keys[2].text
-    assert keys[2].is_correct
-    assert keys[2].at > start_at
+    correct_keys = await dao.level_test.get_correct_tested_keys(suite)
+    assert {"SH123", "SH321"} == correct_keys
+    all_keys = await dao.level_test.get_all_typed(suite)
+    assert 3 == len(all_keys)
+    assert "SH321" == all_keys[2].text
+    assert all_keys[2].is_correct
+    assert all_keys[2].at > start_at
     actual_suite, actual_key = level_view.calls["correct_key"].pop()
     assert suite == actual_suite
     assert "SH321" == actual_key

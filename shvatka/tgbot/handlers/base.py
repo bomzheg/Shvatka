@@ -21,9 +21,9 @@ from shvatka.tgbot.views.commands import (
 logger = logging.getLogger(__name__)
 
 
-async def chat_id(message: Message):
-    text = f"id этого чата: {hd.pre(message.chat.id)}\n" f"Ваш id: {hd.pre(message.from_user.id)}"
-    if message.reply_to_message:
+async def chat_id(message: Message, chat: dto.Chat, user: dto.User):
+    text = f"id этого чата: {hd.pre(str(chat.tg_id))}\n" f"Ваш id: {hd.pre(user.tg_id)}"
+    if message.reply_to_message and message.reply_to_message.from_user:
         text += (
             f"\nid {hd.bold(message.reply_to_message.from_user.full_name)}: "
             f"{hd.pre(message.reply_to_message.from_user.id)}"
@@ -45,8 +45,8 @@ async def cancel_state(message: Message, state: FSMContext, dialog_manager: Dial
     )
 
 
-async def cmd_about(message: Message):
-    logger.info("User %s read about in %s", message.from_user.id, message.chat.id)
+async def cmd_about(message: Message, user: dto.User, chat: dto.Chat):
+    logger.info("User %s read about in %s", user.tg_id, chat.tg_id)
     await message.reply("Разработчик бота - @bomzheg\n")
 
 

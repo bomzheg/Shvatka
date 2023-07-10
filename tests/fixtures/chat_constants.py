@@ -6,12 +6,16 @@ from shvatka.core.models import dto
 from shvatka.core.models.enums.chat_type import ChatType
 from shvatka.infrastructure.db import models
 
+GRYFFINDOR_USERNAME = "gryffindor_rules"
+
+GRYFFINDOR_TITLE = "Gryffindor living room"
+
 NEW_CHAT_ID = -10048
 GRYFFINDOR_CHAT_DTO = dto.Chat(
     tg_id=42,
     type=ChatType.group,
-    username="gryffindor_rules",
-    title="Gryffindor living room",
+    username=GRYFFINDOR_USERNAME,
+    title=GRYFFINDOR_TITLE,
 )
 SLYTHERIN_CHAT_DTO = dto.Chat(
     tg_id=9,
@@ -31,9 +35,9 @@ def create_slytherin_dto_chat():
 
 def create_tg_chat(
     id_: int = GRYFFINDOR_CHAT_DTO.tg_id,
-    title: str = GRYFFINDOR_CHAT_DTO.title,
+    title: str = GRYFFINDOR_TITLE,
     type_: ChatType = GRYFFINDOR_CHAT_DTO.type,
-    username: str = GRYFFINDOR_CHAT_DTO.username,
+    username: str = GRYFFINDOR_USERNAME,
     first_name: str | None = None,
     last_name: str | None = None,
 ):

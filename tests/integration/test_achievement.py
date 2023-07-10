@@ -15,7 +15,7 @@ async def test_create_achievement(
     assert 0 == await check_dao.achievement.count()
     await add_achievement(hermione, enums.Achievement.game_name_joke, dao.achievement)
     assert 1 == await check_dao.achievement.count()
-    (actual,) = await check_dao.achievement.get_by_player(hermione)  # type: dto.Achievement
+    actual, *_ = await check_dao.achievement.get_by_player(hermione)
     assert actual.player.id == hermione.id
     assert actual.name == enums.Achievement.game_name_joke
     assert actual.first
@@ -32,11 +32,9 @@ async def test_create_second_achievement(
     await add_achievement(hermione, enums.Achievement.game_name_joke, dao.achievement)
     await add_achievement(ron, enums.Achievement.game_name_joke, dao.achievement)
     assert 2 == await check_dao.achievement.count()
-    (hermi_achievement,) = await check_dao.achievement.get_by_player(
-        hermione
-    )  # type: dto.Achievement
+    hermi_achievement, *_ = await check_dao.achievement.get_by_player(hermione)
     assert hermi_achievement.player.id == hermione.id
     assert hermi_achievement.first
-    (ron_achievement,) = await check_dao.achievement.get_by_player(ron)  # type: dto.Achievement
+    ron_achievement, *_ = await check_dao.achievement.get_by_player(ron)
     assert ron_achievement.player.id == ron.id
     assert not ron_achievement.first

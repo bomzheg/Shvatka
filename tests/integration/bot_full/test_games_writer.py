@@ -9,12 +9,14 @@ from shvatka.tgbot.views.commands import NEW_GAME_COMMAND
 async def test_exit_write_game(author_client: BotClient, message_manager: MockMessageManager):
     await author_client.send("/" + NEW_GAME_COMMAND.command)
     first_message = message_manager.one_message()
+    assert first_message.text is not None
     assert "Выбираем название игры" in first_message.text
     assert first_message.reply_markup
 
     message_manager.reset_history()
     await author_client.send("test_game")
     new_message = message_manager.one_message()
+    assert new_message.text is not None
     assert "test_game" in new_message.text
     assert "Выбери уровни которые нужно добавить" in new_message.text
     assert new_message.reply_markup

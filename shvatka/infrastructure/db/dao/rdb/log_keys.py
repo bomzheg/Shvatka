@@ -5,7 +5,7 @@ from sqlalchemy import select, update, ScalarResult
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 
-from shvatka.core.models import dto
+from shvatka.core.models import dto, enums
 from shvatka.core.utils.datetime_utils import tz_utc
 from shvatka.infrastructure.db import models
 from .base import BaseDAO
@@ -26,7 +26,7 @@ class KeyTimeDao(BaseDAO[models.KeyTime]):
                 models.KeyTime.game_id == game.id,
                 models.KeyTime.level_number == level.number_in_game,
                 models.KeyTime.team_id == team.id,
-                models.KeyTime.is_correct.is_(True),  # noqa
+                models.KeyTime.type_ == enums.KeyType.simple,
             )
         )
         return {key.key_text for key in result.all()}
@@ -51,7 +51,7 @@ class KeyTimeDao(BaseDAO[models.KeyTime]):
         level: dto.Level,
         game: dto.Game,
         player: dto.Player,
-        is_correct: bool,
+        type_: enums.KeyType,
         is_duplicate: bool,
         at: datetime | None = None,
     ) -> dto.KeyTime:
@@ -63,7 +63,7 @@ class KeyTimeDao(BaseDAO[models.KeyTime]):
             level_number=level.number_in_game,
             game_id=game.id,
             player_id=player.id,
-            is_correct=is_correct,
+            type_=type_,
             is_duplicate=is_duplicate,
             enter_time=at,
         )

@@ -5,7 +5,7 @@ from typing import Any
 from aiogram.utils.text_decorations import html_decoration as hd
 from telegraph.aio import Telegraph
 
-from shvatka.core.models import dto
+from shvatka.core.models import dto, enums
 from shvatka.core.services.game_stat import get_typed_keys
 from shvatka.core.utils.datetime_utils import tz_game, DATETIME_FORMAT
 from shvatka.infrastructure.db.dao.holder import HolderDao
@@ -15,6 +15,21 @@ class KeyEmoji(enum.Enum):
     correct = "✅"
     incorrect = "❌"
     duplicate = "💤"
+    bonus = "💰"
+    unknown = "❔"
+
+    @classmethod
+    def from_key(cls, key: dto.KeyTime) -> "KeyEmoji":
+        if key.is_duplicate:
+            return KeyEmoji.duplicate
+        match key.type_:
+            case enums.KeyType.simple:
+                return KeyEmoji.correct
+            case enums.KeyType.wrong:
+                return KeyEmoji.incorrect
+            case enums.KeyType.bonus:
+                return KeyEmoji.bonus
+        return KeyEmoji.unknown
 
 
 def render_log_keys(log_keys: dict[dto.Team, list[dto.KeyTime]]) -> str:
@@ -30,7 +45,7 @@ def render_log_keys(log_keys: dict[dto.Team, list[dto.KeyTime]]) -> str:
                     text += "</ol><br/>"
                 text += f"Уровень №{n_level + 1}<br/><ol>"
             text += (
-                f"<li>{to_emoji(key).value}{hd.quote(key.text)} "
+                f"<li>{KeyEmoji.from_key(key).value}{hd.quote(key.text)} "
                 f"{key.at.astimezone(tz=tz_game).time()} "
                 f"{key.player.name_mention}</li>"
             )
@@ -38,20 +53,17 @@ def render_log_keys(log_keys: dict[dto.Team, list[dto.KeyTime]]) -> str:
     return text
 
 
-def to_emoji(key: dto.KeyTime) -> KeyEmoji:
-    if key.is_duplicate:
-        return KeyEmoji.duplicate
-    if key.is_correct:
-        return KeyEmoji.correct
-    return KeyEmoji.incorrect
-
-
 async def create_keys_page(
-    game: dto.Game, player: dto.Player, telegraph: Telegraph, dao: HolderDao
+    game: dto.Game, player: dto.Player, telegraph: Telegraph, dao: HolderDao, salt: str = ""
 ) -> dict[str, Any]:
     keys = await get_typed_keys(game=game, player=player, dao=dao.typed_keys)
     text = render_log_keys(keys)
     page = await telegraph.create_page(
+        title=f"{salt} Лог ключей игры {game.name}",
+        html_content="boilerplate",
+    )
+    await telegraph.edit_page(
+        path=page["path"],
         title=f"Лог ключей игры {game.name}",
         html_content=text,
     )

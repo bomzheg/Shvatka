@@ -6,12 +6,13 @@ from mockito import mock, when, ANY
 
 from shvatka.core.interfaces.clients.file_storage import FileStorage
 from shvatka.core.interfaces.scheduler import Scheduler
-from shvatka.core.models import dto
+from shvatka.core.models import dto, enums
 from shvatka.core.models.enums import GameStatus
 from shvatka.core.models.enums.played import Played
 from shvatka.core.services.game import start_waivers
 from shvatka.core.services.game_play import start_game, send_hint, check_key, get_available_hints
 from shvatka.core.services.game_stat import get_typed_keys
+from shvatka.core.services.key import KeyProcessor
 from shvatka.core.services.organizers import get_orgs
 from shvatka.core.services.player import join_team
 from shvatka.core.services.waiver import add_vote, approve_waivers
@@ -77,6 +78,7 @@ async def test_game_play(
 
     dummy_org_notifier = mock(OrgNotifier)
     orgs = await get_orgs(game, dao.organizer)
+    key_processor = KeyProcessor(dao.game_player, game, locker)
     key_kwargs = dict(
         player=harry,
         team=gryffindor,
@@ -85,6 +87,7 @@ async def test_game_play(
         view=dummy_view,
         game_log=dummy_log,
         org_notifier=dummy_org_notifier,
+        key_processor=key_processor,
         locker=locker,
         scheduler=scheduler,
     )
@@ -95,7 +98,7 @@ async def test_game_play(
     assert 1 == len(keys[gryffindor])
     expected_first_key = dto.KeyTime(
         text="SHWRONG",
-        is_correct=False,
+        type_=enums.KeyType.wrong,
         is_duplicate=False,
         at=datetime.now(tz=tz_utc),
         level_number=0,
@@ -108,7 +111,7 @@ async def test_game_play(
     await check_key(key="SH123", **key_kwargs)
     expected_second_key = dto.KeyTime(
         text="SH123",
-        is_correct=True,
+        type_=enums.KeyType.simple,
         is_duplicate=False,
         at=datetime.now(tz=tz_utc),
         level_number=0,
@@ -120,7 +123,7 @@ async def test_game_play(
     await check_key(key="SH123", **key_kwargs)
     expected_third_key = dto.KeyTime(
         text="SH123",
-        is_correct=True,
+        type_=enums.KeyType.simple,
         is_duplicate=True,
         at=datetime.now(tz=tz_utc),
         level_number=0,
@@ -135,7 +138,7 @@ async def test_game_play(
     await check_key(key="SH321", **key_kwargs)
     expected_fourth_key = dto.KeyTime(
         text="SH321",
-        is_correct=True,
+        type_=enums.KeyType.simple,
         is_duplicate=False,
         at=datetime.now(tz=tz_utc),
         level_number=0,
@@ -154,7 +157,7 @@ async def test_game_play(
     await check_key(key="SHOOT", **key_kwargs)
     expected_fifth_key = dto.KeyTime(
         text="SHOOT",
-        is_correct=True,
+        type_=enums.KeyType.simple,
         is_duplicate=False,
         at=datetime.now(tz=tz_utc),
         level_number=1,

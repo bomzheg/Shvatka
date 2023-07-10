@@ -2,6 +2,7 @@ from datetime import datetime
 
 from shvatka.core.interfaces.dal.level_testing import LevelTestProtocolDao
 from shvatka.core.models import dto
+from shvatka.core.utils import exceptions
 from shvatka.core.utils.datetime_utils import tz_utc
 
 
@@ -11,7 +12,12 @@ class LevelTestingData(LevelTestProtocolDao):
 
     async def save_started_level_test(self, suite: dto.LevelTestSuite, now: datetime):
         bucket = self._get_bucket(suite)
-        assert bucket.protocol.start is None
+        if bucket.protocol.start is not None:
+            raise exceptions.ActionCantBeNow(
+                text="тестирование другого уровня уже начато",
+                player=suite.tester.player,
+                game=suite.tester.game,
+            )
         bucket.protocol.start = now
 
     async def is_still_testing(self, suite: dto.LevelTestSuite) -> bool:

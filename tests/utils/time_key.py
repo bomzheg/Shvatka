@@ -6,5 +6,5 @@ def assert_time_key(expected: dto.KeyTime, actual: dto.KeyTime):
     assert expected.player == actual.player
     assert expected.team == actual.team
     assert expected.level_number == actual.level_number
-    assert expected.is_correct == actual.is_correct
+    assert expected.type_ == actual.type_
     assert expected.is_duplicate == actual.is_duplicate

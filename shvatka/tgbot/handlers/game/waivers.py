@@ -13,7 +13,7 @@ from shvatka.tgbot.views.waiver import render_all_teams_waivers
 async def get_waivers_cmd(m: Message, game: dto.Game, dao: HolderDao):
     votes = await get_all_played(game=game, dao=dao.waiver)
     await m.answer(
-        text=render_all_teams_waivers(votes),
+        text=render_all_teams_waivers(votes) or "Пока ещё никто не сдал вейверы",
         disable_web_page_preview=True,
     )
 

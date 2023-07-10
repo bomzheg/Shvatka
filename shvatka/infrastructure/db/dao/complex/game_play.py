@@ -3,7 +3,7 @@ from typing import Iterable
 
 from shvatka.core.interfaces.dal.game_play import GamePreparer, GamePlayerDao
 from shvatka.core.interfaces.dal.level_times import GameStarter
-from shvatka.core.models import dto
+from shvatka.core.models import dto, enums
 from shvatka.infrastructure.db.dao import (
     PollDao,
     WaiverDao,
@@ -107,7 +107,7 @@ class GamePlayerDaoImpl(GamePlayerDao):
         level: dto.Level,
         game: dto.Game,
         player: dto.Player,
-        is_correct: bool,
+        type_: enums.KeyType,
         is_duplicate: bool,
     ) -> dto.KeyTime:
         return await self.key_time.save_key(
@@ -116,7 +116,7 @@ class GamePlayerDaoImpl(GamePlayerDao):
             level=level,
             game=game,
             player=player,
-            is_correct=is_correct,
+            type_=type_,
             is_duplicate=is_duplicate,
         )
 

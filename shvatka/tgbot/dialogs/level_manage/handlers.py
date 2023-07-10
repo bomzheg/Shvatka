@@ -16,13 +16,13 @@ from shvatka.core.services.organizers import get_org_by_id
 from shvatka.core.utils.key_checker_lock import KeyCheckerFactory
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.tgbot import states
+from shvatka.tgbot import keyboards as kb
 from shvatka.tgbot.views.game import BotOrgNotifier
 from shvatka.tgbot.views.hint_factory.hint_content_resolver import HintContentResolver
 from shvatka.tgbot.views.hint_sender import HintSender
 from shvatka.tgbot.views.level_testing import create_level_test_view
 from shvatka.tgbot.views.user import render_small_card_link
 from .getters import get_level_and_org, get_org
-from ... import keyboards as kb
 
 
 async def edit_level(c: CallbackQuery, button: Button, manager: DialogManager):
@@ -43,9 +43,14 @@ async def show_level(c: CallbackQuery, button: Button, manager: DialogManager):
 
 
 async def show_all_hints(author: dto.Player, hint_sender: HintSender, bot: Bot, level: dto.Level):
-    await bot.send_message(
-        author.get_chat_id(), "Ключи уровня:\n🔑{}".format("\n🔑".join(level.scenario.keys))
-    )
+    keys_text = "Ключи уровня:\n🔑{keys}".format(keys="\n🔑".join(level.get_keys()))
+    if level.get_bonus_keys():
+        keys_text += "\n\nБонусные ключи:\n💰{bonus_keys}".format(
+            bonus_keys="\n💰".join(
+                [f"{key.text} ({key.bonus_minutes:+.2f}) мин." for key in level.get_bonus_keys()]
+            )
+        )
+    await bot.send_message(author.get_chat_id(), keys_text)
     for hint in level.scenario.time_hints:
         await hint_sender.send_hints(
             chat_id=author.get_chat_id(),

@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "shvatka"
-version = "0.1.0"
+version = "1.0.0"
 description = "Bot and Api for popular night puzzle hunt"
 authors = ["Yuriy Chebyshev <bomzheg@gmail.com>"]
 license = "MIT"

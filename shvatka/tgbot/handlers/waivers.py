@@ -99,7 +99,7 @@ async def start_approve_waivers_cb_handler(
     check_same_team(callback_data, player, team)
     assert team
     check_allow_approve_waivers(await get_full_team_player(player, team, dao.waiver_approver))
-    await c.answer()
+    await c.answer("Бот написал в ЛС")
     await total_remove_msg(
         bot=bot, chat_id=team.get_chat_id(), msg_id=await get_saved_message(game, team, dao.poll)
     )
@@ -144,6 +144,8 @@ async def confirm_approve_waivers_handler(
         disable_web_page_preview=True,
     )
     await c.answer("Вейверы успешно опубликованы!")
+    assert c.message
+    await total_remove_msg(bot, chat_id=c.message.chat.id, msg_id=c.message.message_id)
 
 
 async def waiver_user_menu(
@@ -301,6 +303,14 @@ def setup() -> Router:
     )
     captain_router.callback_query.register(
         confirm_approve_waivers_handler,
+        kb.WaiverConfirmCD.filter(),
+    )
+    player_router.callback_query.register(
+        player_is_not_captain,
+        kb.WaiverConfirmCD.filter(),
+    )
+    fallback_router.callback_query.register(
+        player_is_not_captain,
         kb.WaiverConfirmCD.filter(),
     )
 

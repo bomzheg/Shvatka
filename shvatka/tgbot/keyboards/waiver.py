@@ -62,10 +62,14 @@ def get_kb_waivers(team: dto.Team, game: dto.Game) -> InlineKeyboardMarkup:
     builder.button(text="Не могу", callback_data=WaiverVoteCD(vote=Played.no, team_id=team.id))
     builder.button(text="Думаю", callback_data=WaiverVoteCD(vote=Played.think, team_id=team.id))
     builder.button(
-        text="Подтвердить от команды",
+        text="Отредактировать список",
         callback_data=WaiverToApproveCD(game_id=game.id, team_id=team.id),
     )
-    builder.adjust(3)
+    builder.button(
+        text="Подтвердить",
+        callback_data=WaiverConfirmCD(game_id=game.id, team_id=team.id),
+    )
+    builder.adjust(3, 1, 1)
     return builder.as_markup()
 
 

@@ -158,11 +158,12 @@ async def waiver_user_menu(
     check_same_team(callback_data, player, team)
     assert team
 
+    subject_player = await dao.player.get_by_id(callback_data.player_id)
     await c.answer()
     await c.message.edit_text(  # type: ignore[union-attr]
-        text=f"Схватчик {hd.quote(player.name_mention)} команды {hd.quote(team.name)} "
+        text=f"Схватчик {hd.quote(subject_player.name_mention)} команды {hd.quote(team.name)} "
         f"заявил что хочет участвовать в игре {hd.quote(game.name)}. Что хотите с ним делать?",
-        reply_markup=kb.get_kb_waiver_one_player(team=team, player=player, game=game),
+        reply_markup=kb.get_kb_waiver_one_player(team=team, player=subject_player, game=game),
         disable_web_page_preview=True,
     )
 

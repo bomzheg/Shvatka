@@ -35,7 +35,7 @@ class GamePreparerImpl(GamePreparer):
     async def get_poll_msg(self, team: dto.Team, game: dto.Game) -> int | None:
         chat_id = team.get_chat_id()
         assert chat_id is not None
-        return await self.poll.get_pool_msg_id(chat_id=chat_id, game_id=game.id)
+        return await self.poll.get_poll_msg_id(chat_id=chat_id, game_id=game.id)
 
 
 @dataclass

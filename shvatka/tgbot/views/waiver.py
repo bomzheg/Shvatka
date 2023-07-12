@@ -39,7 +39,7 @@ def render_players(users: Iterable[dto.VotedPlayer]) -> str:
 async def get_waiver_poll_text(team: dto.Team, game: dto.Game, dao: HolderDao):
     return (
         f"Сбор вейверов на игру:\n"
-        f"{hd.bold(hd.quote(game.name))}\n\n{await get_list_pool(team, dao)}"
+        f"{hd.bold(hd.quote(game.name))}\n\n{await get_list_poll(team, dao)}"
     )
 
 
@@ -47,11 +47,11 @@ async def get_waiver_final_text(team: dto.Team, game: dto.Game, dao: HolderDao):
     return (
         f"Сбор вейверов на игру {hd.bold(hd.quote(game.name))} окончен. \n"
         f"Итоговый список:\n\n"
-        f"{await get_list_pool(team, dao)}"
+        f"{await get_list_poll(team, dao)}"
     )
 
 
-async def get_list_pool(team: dto.Team, dao: HolderDao) -> str:
+async def get_list_poll(team: dto.Team, dao: HolderDao) -> str:
     votes = await get_vote_to_voted(team, dao.waiver_vote_getter)
     return render_votes(votes)
 

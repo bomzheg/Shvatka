@@ -15,7 +15,7 @@ from .level_testing import (
 from .levels_times import LevelTime, GameStat, LevelTimeOnGame  # noqa: F401
 from .organizer import Organizer, PrimaryOrganizer, SecondaryOrganizer  # noqa: F401
 from .player import Player, PlayerWithStat  # noqa: F401
-from .pool import VotedPlayer, Vote  # noqa: F401
+from .poll import VotedPlayer, Vote  # noqa: F401
 from .team import Team  # noqa: F401
 from .team_player import TeamPlayer, FullTeamPlayer, TeamDataRange  # noqa: F401
 from .time_key import (

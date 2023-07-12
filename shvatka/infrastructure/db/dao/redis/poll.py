@@ -29,14 +29,14 @@ class PollDao:
         """
         return {
             self.parse_player_id(key=key, team_id=team_id): Played[await self._get(key)]
-            for key in await self.get_list_of_keys_pool(team_id=team_id)
+            for key in await self.get_list_of_keys_poll(team_id=team_id)
         }
 
-    async def save_pool_msg_id(self, chat_id: int, game_id: int, msg_id: int) -> None:
+    async def save_poll_msg_id(self, chat_id: int, game_id: int, msg_id: int) -> None:
         key = self._create_msg_prefix(chat_id, game_id)
         await self.redis.set(key, msg_id)
 
-    async def get_pool_msg_id(self, chat_id: int, game_id: int) -> int | None:
+    async def get_poll_msg_id(self, chat_id: int, game_id: int) -> int | None:
         key = self._create_msg_prefix(chat_id, game_id)
         msg_id = await self._get(key)
         return None if msg_id is None else int(msg_id)
@@ -47,7 +47,7 @@ class PollDao:
     def _create_msg_prefix(self, chat_id: int, game_id: int) -> str:
         return f"{self.msg_prefix}:{chat_id}:{game_id}"
 
-    async def get_list_of_keys_pool(self, team_id: int) -> list[str]:
+    async def get_list_of_keys_poll(self, team_id: int) -> list[str]:
         """
 
         :param team_id:

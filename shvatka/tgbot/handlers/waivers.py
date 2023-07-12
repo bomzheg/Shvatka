@@ -70,6 +70,10 @@ async def add_vote_handler(
     )
 
 
+async def player_not_in_team_handler(c: CallbackQuery):
+    await c.answer("Вы не состоите в этой команде", show_alert=True)
+
+
 async def start_approve_waivers_handler(
     _: Message, player: dto.Player, user: dto.User, game: dto.Game, dao: HolderDao, bot: Bot
 ):
@@ -243,6 +247,7 @@ def setup() -> Router:
 
     player_router = router.include_router(Router(name=__name__ + ".player"))
     captain_router = router.include_router(Router(name=__name__ + ".captain"))
+    fallback_router = router.include_router(Router(name=__name__ + ".fallback"))
 
     # filters
     router.message.filter(
@@ -297,6 +302,10 @@ def setup() -> Router:
     captain_router.callback_query.register(
         add_force_player,
         kb.WaiverAddPlayerForceCD.filter(),
+    )
+    fallback_router.callback_query.register(
+        player_not_in_team_handler,
+        kb.WaiverVoteCD.filter(),
     )
     # TODO добавить обработку событий ниже, сработавших не в тот статус
     return router

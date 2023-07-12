@@ -38,7 +38,7 @@ async def start_waivers(_: Message, team: dto.Team, game: dto.Game, dao: HolderD
     msg = await bot.send_message(
         chat_id=team.get_chat_id(),
         text=await get_waiver_poll_text(team, game, dao),
-        reply_markup=kb.get_kb_waivers(team),
+        reply_markup=kb.get_kb_waivers(team, game),
         disable_web_page_preview=True,
     )
     old_msg_id = await swap_saved_message(game, msg, dao.poll)
@@ -65,21 +65,41 @@ async def add_vote_handler(
     await c.answer()
     await c.message.edit_text(  # type: ignore[union-attr]
         text=await get_waiver_poll_text(team, game, dao),
-        reply_markup=kb.get_kb_waivers(team),
+        reply_markup=kb.get_kb_waivers(team, game),
         disable_web_page_preview=True,
     )
 
 
-async def player_not_in_team_handler(c: CallbackQuery):
-    await c.answer("Вы не состоите в этой команде", show_alert=True)
-
-
-async def start_approve_waivers_handler(
+async def start_approve_waivers_cmd_handler(
     _: Message, player: dto.Player, user: dto.User, game: dto.Game, dao: HolderDao, bot: Bot
 ):
     team = await get_my_team(player, dao.team_player)
     check_allow_approve_waivers(await get_full_team_player(player, team, dao.waiver_approver))
     assert team is not None
+    await total_remove_msg(
+        bot=bot, chat_id=team.get_chat_id(), msg_id=await get_saved_message(game, team, dao.poll)
+    )
+    await bot.send_message(
+        chat_id=user.tg_id,
+        **await start_approve_waivers(game, team, dao),
+    )
+
+
+async def start_approve_waivers_cb_handler(
+    c: CallbackQuery,
+    callback_data: kb.WaiverToApproveCD,
+    player: dto.Player,
+    user: dto.User,
+    game: dto.Game,
+    dao: HolderDao,
+    bot: Bot,
+):
+    check_same_game(callback_data, game, player)
+    team = await get_my_team(player, dao.team_player)
+    check_same_team(callback_data, player, team)
+    assert team
+    check_allow_approve_waivers(await get_full_team_player(player, team, dao.waiver_approver))
+    await c.answer()
     await total_remove_msg(
         bot=bot, chat_id=team.get_chat_id(), msg_id=await get_saved_message(game, team, dao.poll)
     )
@@ -96,15 +116,9 @@ async def waiver_main_menu(
     game: dto.Game,
     dao: HolderDao,
 ):
-    if game.id != callback_data.game_id:
-        raise AnotherGameIsActive(game=game, player=player)
+    check_same_game(callback_data, game, player)
     team = await get_my_team(player, dao.team_player)
-    if not team or team.id != callback_data.team_id:
-        raise PlayerNotInTeam(
-            player=player,
-            team=team,
-            notify_user="Ты не состоишь в команде, за которую подаёшь вейверы!",
-        )
+    check_same_team(callback_data, player, team)
     check_allow_approve_waivers(await get_full_team_player(player, team, dao.waiver_approver))
     await c.message.edit_text(  # type: ignore[union-attr]
         **await start_approve_waivers(game, team, dao)
@@ -119,15 +133,10 @@ async def confirm_approve_waivers_handler(
     dao: HolderDao,
     bot: Bot,
 ):
-    if game.id != callback_data.game_id:
-        raise AnotherGameIsActive(game=game, player=player)
+    check_same_game(callback_data, game, player)
     team = await get_my_team(player, dao.team_player)
-    if not team or team.id != callback_data.team_id:
-        raise PlayerNotInTeam(
-            player=player,
-            team=team,
-            notify_user="Ты не состоишь в команде, за которую подаёшь вейверы!",
-        )
+    check_same_team(callback_data, player, team)
+    assert team
     await approve_waivers(game=game, team=team, approver=player, dao=dao.waiver_approver)
     await bot.send_message(
         chat_id=team.get_chat_id(),
@@ -144,15 +153,10 @@ async def waiver_user_menu(
     player: dto.Player,
     dao: HolderDao,
 ):
-    if game.id != callback_data.game_id:
-        raise AnotherGameIsActive(game=game, player=player)
+    check_same_game(callback_data, game, player)
     team = await get_my_team(player, dao.team_player)
-    if not team or team.id != callback_data.team_id:
-        raise PlayerNotInTeam(
-            player=player,
-            team=team,
-            notify_user="Ты не состоишь в команде, за которую подаёшь вейверы!",
-        )
+    check_same_team(callback_data, player, team)
+    assert team
 
     await c.answer()
     await c.message.edit_text(  # type: ignore[union-attr]
@@ -170,15 +174,9 @@ async def waiver_remove_user_vote(
     game: dto.Game,
     dao: HolderDao,
 ):
-    if game.id != callback_data.game_id:
-        raise AnotherGameIsActive(game=game, player=player)
+    check_same_game(callback_data, game, player)
     team = await get_my_team(player, dao.team_player)
-    if not team or team.id != callback_data.team_id:
-        raise PlayerNotInTeam(
-            player=player,
-            team=team,
-            notify_user="Ты не состоишь в команде, за которую подаёшь вейверы!",
-        )
+    check_same_team(callback_data, player, team)
     target = await dao.player.get_by_id(callback_data.player_id)
     await revoke_vote_by_captain(game, team, player, target, dao.waiver_approver)
     await c.answer()
@@ -194,15 +192,9 @@ async def waiver_add_force_menu(
     game: dto.Game,
     dao: HolderDao,
 ):
-    if game.id != callback_data.game_id:
-        raise AnotherGameIsActive(game=game, player=player)
+    check_same_game(callback_data, game, player)
     team = await get_my_team(player, dao.team_player)
-    if not team or team.id != callback_data.team_id:
-        raise PlayerNotInTeam(
-            player=player,
-            team=team,
-            notify_user="Ты не состоишь в команде, за которую подаёшь вейверы!",
-        )
+    check_same_team(callback_data, player, team)
     check_allow_approve_waivers(await get_full_team_player(player, team, dao.waiver_approver))
     players = await get_not_played_team_players(team=team, dao=dao.waiver_approver)
     await c.answer()
@@ -220,15 +212,9 @@ async def add_force_player(
     game: dto.Game,
     dao: HolderDao,
 ):
-    if game.id != callback_data.game_id:
-        raise AnotherGameIsActive(game=game, player=player)
+    check_same_game(callback_data, game, player)
     team = await get_my_team(player, dao.team_player)
-    if not team or team.id != callback_data.team_id:
-        raise PlayerNotInTeam(
-            player=player,
-            team=team,
-            notify_user="Ты не состоишь в команде, за которую подаёшь вейверы!",
-        )
+    check_same_team(callback_data, player, team)
     check_allow_approve_waivers(await get_full_team_player(player, team, dao.waiver_approver))
     target = await dao.player.get_by_id(callback_data.player_id)
     await force_add_vote(game, team, target, Played.yes, dao.waiver_vote_adder)
@@ -241,12 +227,34 @@ async def add_force_player(
     )
 
 
+async def player_is_not_captain(c: CallbackQuery):
+    await c.answer("Недостаточно прав", show_alert=True, cache_time=10)
+
+
+async def player_not_in_team_handler(c: CallbackQuery):
+    await c.answer("Вы не состоите в этой команде", show_alert=True, cache_time=10)
+
+
+def check_same_team(callback_data: kb.IWaiverCD, player: dto.Player, team: dto.Team) -> None:
+    if not team or team.id != callback_data.team_id:
+        raise PlayerNotInTeam(
+            player=player,
+            team=team,
+            notify_user="Ты не состоишь в команде, за которую подаёшь вейверы!",
+        )
+
+
+def check_same_game(callback_data: kb.IWaiverCD, game: dto.Game, player: dto.Player) -> None:
+    if game.id != callback_data.game_id:
+        raise AnotherGameIsActive(game=game, player=player)
+
+
 def setup() -> Router:
     router = Router(name=__name__)
     disable_router_on_game(router)
 
-    player_router = router.include_router(Router(name=__name__ + ".player"))
     captain_router = router.include_router(Router(name=__name__ + ".captain"))
+    player_router = router.include_router(Router(name=__name__ + ".player"))
     fallback_router = router.include_router(Router(name=__name__ + ".fallback"))
 
     # filters
@@ -275,8 +283,20 @@ def setup() -> Router:
         IsTeamFilter(),
     )
     captain_router.message.register(
-        start_approve_waivers_handler,
+        start_approve_waivers_cmd_handler,
         Command(APPROVE_WAIVERS_COMMAND),
+    )
+    captain_router.callback_query.register(
+        start_approve_waivers_cb_handler,
+        kb.WaiverToApproveCD.filter(),
+    )
+    player_router.callback_query.register(
+        player_is_not_captain,
+        kb.WaiverToApproveCD.filter(),
+    )
+    fallback_router.callback_query.register(
+        player_is_not_captain,
+        kb.WaiverToApproveCD.filter(),
     )
     captain_router.callback_query.register(
         confirm_approve_waivers_handler,

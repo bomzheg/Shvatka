@@ -1,4 +1,4 @@
-from typing import Iterable
+from typing import Iterable, Protocol
 
 from aiogram.filters.callback_data import CallbackData
 from aiogram.types import InlineKeyboardMarkup
@@ -6,6 +6,11 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 from shvatka.core.models import dto
 from shvatka.core.models.enums.played import Played
+
+
+class IWaiverCD(Protocol):
+    team_id: int
+    game_id: int
 
 
 class WaiverVoteCD(CallbackData, prefix="waiver_vote"):
@@ -29,6 +34,11 @@ class WaiverMainCD(CallbackData, prefix="waiver_main"):
     team_id: int
 
 
+class WaiverToApproveCD(CallbackData, prefix="waiver_to_approve"):
+    game_id: int
+    team_id: int
+
+
 class WaiverRemovePlayerCD(CallbackData, prefix="waiver_remove_player"):
     game_id: int
     team_id: int
@@ -46,11 +56,15 @@ class WaiverAddPlayerForceCD(CallbackData, prefix="waiver_add_force"):
     player_id: int
 
 
-def get_kb_waivers(team: dto.Team) -> InlineKeyboardMarkup:
+def get_kb_waivers(team: dto.Team, game: dto.Game) -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
     builder.button(text="Играю", callback_data=WaiverVoteCD(vote=Played.yes, team_id=team.id))
     builder.button(text="Не могу", callback_data=WaiverVoteCD(vote=Played.no, team_id=team.id))
     builder.button(text="Думаю", callback_data=WaiverVoteCD(vote=Played.think, team_id=team.id))
+    builder.button(
+        text="Подтвердить от команды",
+        callback_data=WaiverToApproveCD(game_id=game.id, team_id=team.id),
+    )
     builder.adjust(3)
     return builder.as_markup()
 

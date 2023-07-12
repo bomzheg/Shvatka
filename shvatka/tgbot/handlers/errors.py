@@ -18,18 +18,21 @@ logger = logging.getLogger(__name__)
 
 async def handle_sh_error(error: ErrorEvent, log_chat_id: int, bot: Bot):
     exception: SHError = typing.cast(SHError, error.exception)
-    chat_id = exception.chat_id or exception.user_id
-    if chat_id is None and exception.chat:
-        chat_id = exception.chat.tg_id
-    if chat_id is None and exception.user:
-        chat_id = exception.user.tg_id
-    if chat_id is None and exception.player:
-        chat_id = exception.player.get_chat_id()
-    if chat_id:
-        try:
-            await bot.send_message(chat_id=chat_id, text=f"Произошла ошибка\n{exception}")
-        except AiogramError as e:
-            logger.exception("can't send error message to user", exc_info=e)
+    if c := error.update.callback_query:
+        await c.answer(exception.notify_user, show_alert=True)
+    else:
+        chat_id = exception.chat_id or exception.user_id
+        if chat_id is None and exception.chat:
+            chat_id = exception.chat.tg_id
+        if chat_id is None and exception.user:
+            chat_id = exception.user.tg_id
+        if chat_id is None and exception.player:
+            chat_id = exception.player.get_chat_id()
+        if chat_id:
+            try:
+                await bot.send_message(chat_id=chat_id, text=f"Произошла ошибка\n{exception}")
+            except AiogramError as e:
+                logger.exception("can't send error message to user", exc_info=e)
 
     await handle(error=error, log_chat_id=log_chat_id, bot=bot)
 

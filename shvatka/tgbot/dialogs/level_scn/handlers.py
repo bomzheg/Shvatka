@@ -37,16 +37,23 @@ async def process_keys(m: Message, dialog_: Any, manager: DialogManager):
             "только цифры и заглавные буквы кириллицы и латиницы"
         )
         return
-    data = manager.dialog_data
-    data["keys"] = keys
-    await manager.next()
+    await manager.done({"keys": keys})
 
 
-async def process_result(start_data: Data, result: Any, manager: DialogManager):
+async def process_time_hint_result(start_data: Data, result: Any, manager: DialogManager):
     if not result:
         return
     if new_hint := result["time_hint"]:
         manager.dialog_data.setdefault("time_hints", []).append(new_hint)
+
+
+async def process_level_result(start_data: Data, result: Any, manager: DialogManager):
+    if not result:
+        return
+    if hints := result.get("time_hints", None):
+        manager.dialog_data["time_hints"] = hints
+    if keys := result.get("keys", None):
+        manager.dialog_data["keys"] = keys
 
 
 async def start_add_time_hint(c: CallbackQuery, button: Button, manager: DialogManager):
@@ -54,6 +61,22 @@ async def start_add_time_hint(c: CallbackQuery, button: Button, manager: DialogM
     hints = dcf.load(manager.dialog_data.get("time_hints", []), list[scn.TimeHint])
     previous_time = hints[-1].time if hints else -1
     await manager.start(state=states.TimeHintSG.time, data={"previous_time": previous_time})
+
+
+async def start_hints(c: CallbackQuery, button: Button, manager: DialogManager):
+    await manager.start(
+        state=states.LevelHintsSG.time_hints, data={"level_id": manager.dialog_data["level_id"]}
+    )
+
+
+async def start_keys(c: CallbackQuery, button: Button, manager: DialogManager):
+    await manager.start(
+        state=states.LevelKeysSG.keys, data={"level_id": manager.dialog_data["level_id"]}
+    )
+
+
+async def save_hints(c: CallbackQuery, button: Button, manager: DialogManager):
+    await manager.done({"time_hints": manager.dialog_data["time_hints"]})
 
 
 async def save_level(c: CallbackQuery, button: Button, manager: DialogManager):

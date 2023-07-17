@@ -7,7 +7,7 @@ from dataclass_factory import Factory
 
 from shvatka.core.models import dto
 from shvatka.core.models.dto import scn
-from shvatka.core.services.level import upsert_level
+from shvatka.core.services.level import upsert_level, get_by_id
 from shvatka.core.utils.input_validation import (
     is_multiple_keys_normal,
     normalize_key,
@@ -76,6 +76,16 @@ async def process_level_result(start_data: Data, result: Any, manager: DialogMan
         manager.dialog_data["keys"] = keys
 
 
+async def on_start_level_edit(start_data: dict[str, Any], manager: DialogManager):
+    dao: HolderDao = manager.middleware_data["dao"]
+    dcf: Factory = manager.middleware_data["dcf"]
+    author: dto.Player = manager.middleware_data["player"]
+    level = await get_by_id(start_data["level_id"], author, dao.level)
+    manager.dialog_data["level_id"] = level.name_id
+    manager.dialog_data["keys"] = level.get_keys()
+    manager.dialog_data["time_hints"] = dcf.dump(level.scenario.time_hints)
+
+
 async def start_add_time_hint(c: CallbackQuery, button: Button, manager: DialogManager):
     dcf: Factory = manager.middleware_data["dcf"]
     hints = dcf.load(manager.dialog_data.get("time_hints", []), list[scn.TimeHint])
@@ -106,7 +116,7 @@ async def save_level(c: CallbackQuery, button: Button, manager: DialogManager):
     data = manager.dialog_data
     id_ = data["level_id"]
     keys = set(map(normalize_key, data["keys"]))
-    time_hints = dcf.load(manager.dialog_data["time_hints"], list[scn.TimeHint])
+    time_hints = dcf.load(data["time_hints"], list[scn.TimeHint])
 
     level_scn = scn.LevelScenario(id=id_, keys=keys, time_hints=time_hints)
     level = await upsert_level(author=author, scenario=level_scn, dao=dao.level)

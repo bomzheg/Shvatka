@@ -18,6 +18,7 @@ from .handlers import (
     start_hints,
     not_correct_id,
     check_level_id,
+    on_start_level_edit,
 )
 from ..preview_data import RENDERED_HINTS_PREVIEW
 
@@ -69,6 +70,36 @@ level = Dialog(
         },
     ),
     on_process_result=process_level_result,
+)
+
+level_edit_dialog = Dialog(
+    Window(
+        Jinja(
+            "Редактирование уровня {{level_id}}:\n"
+            "{% if keys %}"
+            "🔑Ключей: {{ keys | length }}\n"
+            "{% else %}"
+            "🔑Ключи не введены\n"
+            "{% endif %}"
+            "\n💡Подсказки:\n"
+            "{{rendered}}"
+        ),
+        Button(Const("🔑Ключи"), id="keys", on_click=start_keys),
+        Button(Const("💡Подсказки"), id="hints", on_click=start_hints),
+        Button(
+            Const("✅Готово, сохранить"),
+            id="save",
+            on_click=save_level,
+            when=F["dialog_data"]["keys"] & F["dialog_data"]["time_hints"],
+        ),
+        state=states.LevelEditSg.menu,
+        getter=get_level_data,
+        preview_data={
+            "level_id": "Pinky Pie",
+        },
+    ),
+    on_process_result=process_level_result,
+    on_start=on_start_level_edit,
 )
 
 keys_dialog = Dialog(

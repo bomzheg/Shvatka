@@ -26,7 +26,9 @@ from .getters import get_level_and_org, get_org
 
 
 async def edit_level(c: CallbackQuery, button: Button, manager: DialogManager):
-    await c.answer("TODO реализовать редактирование уровня")  # TODO
+    await manager.start(
+        state=states.LevelEditSg.menu, data={"level_id": manager.start_data["level_id"]}
+    )
 
 
 async def show_level(c: CallbackQuery, button: Button, manager: DialogManager):

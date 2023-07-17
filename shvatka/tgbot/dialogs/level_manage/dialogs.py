@@ -49,7 +49,6 @@ level_manage = Dialog(
             Const("✏Редактирование"),
             id="level_edit",
             on_click=edit_level,
-            when="False",
         ),
         Button(
             Const("📂Показать"),

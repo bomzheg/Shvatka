@@ -27,6 +27,10 @@ class LevelSG(StatesGroup):
     menu = State()
 
 
+class LevelEditSg(StatesGroup):
+    menu = State()
+
+
 class LevelKeysSG(StatesGroup):
     keys = State()
 

@@ -5,7 +5,7 @@ from aiogram_dialog.widgets.kbd import Button
 from aiogram_dialog.widgets.text import Const, Jinja
 
 from shvatka.tgbot import states
-from .getters import get_time_hints, get_level_id
+from .getters import get_time_hints, get_level_id, get_level_data
 from .handlers import (
     process_time_hint_result,
     start_add_time_hint,
@@ -37,17 +37,26 @@ level = Dialog(
         state=states.LevelSG.level_id,
     ),
     Window(
-        Jinja("Сохранение уровня {{level_id}}:\n"),
-        Button(Const("Ключи"), id="keys", on_click=start_keys),
-        Button(Const("Подсказки"), id="hints", on_click=start_hints),
+        Jinja(
+            "Написание уровня {{level_id}}:\n"
+            "{% if keys %}"
+            "🔑Ключей: {{ keys | length }}\n"
+            "{% else %}"
+            "🔑Ключи не введены\n"
+            "{% endif %}"
+            "\n💡Подсказки:\n"
+            "{{rendered}}"
+        ),
+        Button(Const("🔑Ключи"), id="keys", on_click=start_keys),
+        Button(Const("💡Подсказки"), id="hints", on_click=start_hints),
         Button(
-            Const("Готово, сохранить"),
+            Const("✅Готово, сохранить"),
             id="save",
             on_click=save_level,
             when=F["dialog_data"]["keys"] & F["dialog_data"]["time_hints"],
         ),
         state=states.LevelSG.menu,
-        getter=get_level_id,
+        getter=get_level_data,
         preview_data={
             "level_id": "Pinky Pie",
         },
@@ -60,7 +69,7 @@ keys_dialog = Dialog(
     Window(
         Jinja("Уровень <b>{{level_id}}</b>\n\n"),
         Const(
-            "<b>Ключи уровня</b>\n\n"
+            "🔑<b>Ключи уровня</b>\n\n"
             "Отлично, перейдём к ключам. Ключи принимаются в следующих форматах: "
             "<code>SHENGLISHLETTERSANDDIDGITS СХРУССКИЕБУКВЫИЦИФРЫ</code>.\n"
             "Если требуется указать несколько ключей напишите каждый с новой строки."
@@ -74,11 +83,11 @@ keys_dialog = Dialog(
 
 hints_dialog = Dialog(
     Window(
-        Jinja("Подсказки уровня {{level_id}}:\n"),
+        Jinja("💡Подсказки уровня {{level_id}}:\n"),
         Jinja("{{rendered}}"),
-        Button(Const("Добавить подсказку"), id="add_time_hint", on_click=start_add_time_hint),
+        Button(Const("➕Добавить подсказку"), id="add_time_hint", on_click=start_add_time_hint),
         Button(
-            Const("Достаточно подсказок"),
+            Const("👌Достаточно подсказок"),
             id="save",
             on_click=save_hints,
             when=F["dialog_data"]["time_hints"].len() > 1,

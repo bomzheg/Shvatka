@@ -9,29 +9,42 @@ from shvatka.core.models import dto
 from shvatka.core.models.dto import scn
 from shvatka.core.services.level import upsert_level
 from shvatka.core.utils.input_validation import (
-    is_level_id_correct,
     is_multiple_keys_normal,
     normalize_key,
+    validate_level_id,
 )
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.tgbot import states
 
 
-async def process_id(m: Message, dialog_: Any, manager: DialogManager):
-    if not is_level_id_correct(m.text):
-        await m.answer("Не стоит использовать ничего, кроме латинских букв, цифр, -, _")
-        return
+def check_level_id(name_id: str) -> str:
+    if value := validate_level_id(name_id):
+        return value
+    raise ValueError()
+
+
+async def not_correct_id(m: Message, dialog_: Any, manager: DialogManager):
+    await m.answer("Не стоит использовать ничего, кроме латинских букв, цифр, -, _")
+
+
+async def process_id(m: Message, dialog_: Any, manager: DialogManager, name_id: str):
     dao: HolderDao = manager.middleware_data["dao"]
     author: dto.Player = manager.middleware_data["player"]
-    if await dao.level.is_name_id_exist(m.text, author):
+    if await dao.level.is_name_id_exist(name_id, author):
+        lvl = await dao.level.get_by_author_and_name_id(author, name_id)
+        game_error_msg = ""
+        if lvl.game_id:
+            game = await dao.game.get_by_id(lvl.game_id, author)
+            game_error_msg = f" и используется в {game.name}"
         await m.answer(
-            "этот id уровня уже занят тобой. для редактирования воспользуйся меню редактирования"
+            f"Этот id уровня уже занят тобой{game_error_msg}. "
+            f"Для редактирования воспользуйся меню редактирования"
         )
         return
     data = manager.dialog_data
     if not isinstance(data, dict):
         data = {}
-    data["level_id"] = m.text
+    data["level_id"] = name_id
     await manager.next()
 
 

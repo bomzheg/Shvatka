@@ -44,15 +44,21 @@ class LevelDao(BaseDAO[models.Level]):
         return level.to_dto(author)
 
     async def _get_by_author_and_scn(self, author: dto.Player, scn: LevelScenario) -> models.Level:
-        result = await self.session.execute(
+        return await self._get_by_author_and_name_id(author, scn.id)
+
+    async def _get_by_author_and_name_id(self, author: dto.Player, name_id: str) -> models.Level:
+        result: ScalarResult[models.Level] = await self.session.scalars(
             select(models.Level)
             .options(joinedload(models.Level.game))
             .where(
-                models.Level.name_id == scn.id,
+                models.Level.name_id == name_id,
                 models.Level.author_id == author.id,
             )
         )
-        return result.scalar_one()
+        return result.one()
+
+    async def get_by_author_and_name_id(self, author: dto.Player, name_id: str) -> dto.Level:
+        return (await self._get_by_author_and_name_id(author, name_id)).to_dto(author)
 
     async def get_all_my(self, author: dto.Player) -> list[dto.Level]:
         result: ScalarResult[models.Level] = await self.session.scalars(

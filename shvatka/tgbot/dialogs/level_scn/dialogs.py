@@ -1,6 +1,6 @@
 from aiogram import F
 from aiogram_dialog import Dialog, Window
-from aiogram_dialog.widgets.input import MessageInput
+from aiogram_dialog.widgets.input import MessageInput, TextInput
 from aiogram_dialog.widgets.kbd import Button
 from aiogram_dialog.widgets.text import Const, Jinja
 
@@ -16,6 +16,8 @@ from .handlers import (
     process_level_result,
     start_keys,
     start_hints,
+    not_correct_id,
+    check_level_id,
 )
 from ..preview_data import RENDERED_HINTS_PREVIEW
 
@@ -33,7 +35,12 @@ level = Dialog(
             "поскольку ID и название файла попадают в лог-файлы, предназначенные "
             "для чтения системным администратором"
         ),
-        MessageInput(func=process_id),
+        TextInput(
+            type_factory=check_level_id,
+            on_error=not_correct_id,
+            on_success=process_id,
+            id="level_id",
+        ),
         state=states.LevelSG.level_id,
     ),
     Window(
@@ -64,7 +71,6 @@ level = Dialog(
     on_process_result=process_level_result,
 )
 
-
 keys_dialog = Dialog(
     Window(
         Jinja("Уровень <b>{{level_id}}</b>\n\n"),
@@ -79,7 +85,6 @@ keys_dialog = Dialog(
         getter=get_level_id,
     ),
 )
-
 
 hints_dialog = Dialog(
     Window(

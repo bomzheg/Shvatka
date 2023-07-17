@@ -76,6 +76,14 @@ class LevelDao(BaseDAO[models.Level]):
             update(models.Level).where(models.Level.id == level.db_id).values(game_id=None)
         )
 
+    async def is_name_id_exist(self, name_id: str, author: dto.Player) -> bool:
+        result = await self.session.scalars(
+            select(models.Level.id).where(
+                models.Level.name_id == name_id, models.Level.author_id == author.id
+            )
+        )
+        return result.one_or_none() is None
+
     async def unlink_all(self, game: dto.Game):
         await self.session.execute(
             update(models.Level)

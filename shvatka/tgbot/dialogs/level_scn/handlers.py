@@ -21,6 +21,13 @@ async def process_id(m: Message, dialog_: Any, manager: DialogManager):
     if not is_level_id_correct(m.text):
         await m.answer("Не стоит использовать ничего, кроме латинских букв, цифр, -, _")
         return
+    dao: HolderDao = manager.middleware_data["dao"]
+    author: dto.Player = manager.middleware_data["player"]
+    if await dao.level.is_name_id_exist(m.text, author):
+        await m.answer(
+            "этот id уровня уже занят тобой. для редактирования воспользуйся меню редактирования"
+        )
+        return
     data = manager.dialog_data
     if not isinstance(data, dict):
         data = {}

@@ -5,7 +5,7 @@ from aiogram_dialog.widgets.kbd import Button
 from aiogram_dialog.widgets.text import Const, Jinja
 
 from shvatka.tgbot import states
-from .getters import get_time_hints, get_level_id, get_level_data
+from .getters import get_time_hints, get_level_id, get_level_data, get_keys
 from .handlers import (
     process_time_hint_result,
     start_add_time_hint,
@@ -19,6 +19,7 @@ from .handlers import (
     not_correct_id,
     check_level_id,
     on_start_level_edit,
+    on_start_hints_edit,
 )
 from ..preview_data import RENDERED_HINTS_PREVIEW
 
@@ -105,15 +106,25 @@ level_edit_dialog = Dialog(
 keys_dialog = Dialog(
     Window(
         Jinja("Уровень <b>{{level_id}}</b>\n\n"),
+        Const("🔑<b>Ключи уровня</b>\n"),
+        Jinja(
+            "Сейчас сохранены ключи:\n"
+            "{% for key in keys %}"
+            "🔑<code>{{key}}</code>\n"
+            "{% endfor %}"
+            "\n Для изменения пришли сообщение с новыми ключами в формате: ",
+            when=F["keys"],
+        ),
         Const(
-            "🔑<b>Ключи уровня</b>\n\n"
-            "Отлично, перейдём к ключам. Ключи принимаются в следующих форматах: "
+            "Отлично, перейдём к ключам. Ключи принимаются в следующих форматах: ", when=~F["keys"]
+        ),
+        Const(
             "<code>SHENGLISHLETTERSANDDIDGITS СХРУССКИЕБУКВЫИЦИФРЫ</code>.\n"
             "Если требуется указать несколько ключей напишите каждый с новой строки."
         ),
         MessageInput(func=process_keys),
         state=states.LevelKeysSG.keys,
-        getter=get_level_id,
+        getter=(get_level_id, get_keys),
     ),
 )
 
@@ -137,4 +148,5 @@ hints_dialog = Dialog(
         },
     ),
     on_process_result=process_time_hint_result,
+    on_start=on_start_hints_edit,
 )

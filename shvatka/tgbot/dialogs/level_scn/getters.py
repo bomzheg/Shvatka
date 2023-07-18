@@ -12,6 +12,12 @@ async def get_level_id(dialog_manager: DialogManager, **_):
     }
 
 
+async def get_keys(dialog_manager: DialogManager, **_):
+    return {
+        "keys": dialog_manager.dialog_data.get("keys", dialog_manager.start_data.get("keys", [])),
+    }
+
+
 async def get_level_data(dialog_manager: DialogManager, **_):
     dialog_data = dialog_manager.dialog_data
     dcf: Factory = dialog_manager.middleware_data["dcf"]

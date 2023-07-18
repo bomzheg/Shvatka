@@ -86,6 +86,10 @@ async def on_start_level_edit(start_data: dict[str, Any], manager: DialogManager
     manager.dialog_data["time_hints"] = dcf.dump(level.scenario.time_hints)
 
 
+async def on_start_hints_edit(start_data: dict[str, Any], manager: DialogManager):
+    manager.dialog_data["time_hints"] = start_data["time_hints"]
+
+
 async def start_add_time_hint(c: CallbackQuery, button: Button, manager: DialogManager):
     dcf: Factory = manager.middleware_data["dcf"]
     hints = dcf.load(manager.dialog_data.get("time_hints", []), list[scn.TimeHint])
@@ -95,13 +99,21 @@ async def start_add_time_hint(c: CallbackQuery, button: Button, manager: DialogM
 
 async def start_hints(c: CallbackQuery, button: Button, manager: DialogManager):
     await manager.start(
-        state=states.LevelHintsSG.time_hints, data={"level_id": manager.dialog_data["level_id"]}
+        state=states.LevelHintsSG.time_hints,
+        data={
+            "level_id": manager.dialog_data["level_id"],
+            "time_hints": manager.dialog_data["time_hints"],
+        },
     )
 
 
 async def start_keys(c: CallbackQuery, button: Button, manager: DialogManager):
     await manager.start(
-        state=states.LevelKeysSG.keys, data={"level_id": manager.dialog_data["level_id"]}
+        state=states.LevelKeysSG.keys,
+        data={
+            "level_id": manager.dialog_data["level_id"],
+            "keys": manager.dialog_data["keys"],
+        },
     )
 
 

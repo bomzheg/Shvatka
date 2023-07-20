@@ -1,7 +1,8 @@
-from locust import HttpUser, task
+from locust import HttpUser, task, between
 
 
 class PlayerUser(HttpUser):
+    wait_time = between(1, 5)
     token: str = ""
 
     @task
@@ -10,6 +11,10 @@ class PlayerUser(HttpUser):
             "/users/me",
             headers={"Authorization": "Bearer " + self.token},
         )
+
+    @task
+    def active_game(self) -> None:
+        self.client.get("/games/active")
 
     def on_start(self) -> None:
         with self.client.post(

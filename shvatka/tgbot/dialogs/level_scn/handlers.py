@@ -48,15 +48,21 @@ async def process_id(m: Message, dialog_: Any, manager: DialogManager, name_id: 
     await manager.next()
 
 
-async def process_keys(m: Message, dialog_: Any, manager: DialogManager):
-    assert m.text
-    keys = m.text.splitlines()
-    if not is_multiple_keys_normal(keys):
-        await m.answer(
-            "Ключ должен начинаться на SH или СХ и содержать "
-            "только цифры и заглавные буквы кириллицы и латиницы"
-        )
-        return
+def convert_keys(text: str) -> list[str]:
+    keys = text.splitlines()
+    if is_multiple_keys_normal(keys):
+        return keys
+    raise ValueError
+
+
+async def not_correct_keys(m: Message, dialog_: Any, manager: DialogManager):
+    await m.answer(
+        "Ключ должен начинаться на SH или СХ и содержать "
+        "только цифры и заглавные буквы кириллицы и латиницы"
+    )
+
+
+async def on_correct_keys(m: Message, dialog_: Any, manager: DialogManager, keys: list[str]):
     await manager.done({"keys": keys})
 
 

@@ -1,6 +1,6 @@
 from aiogram import F
 from aiogram_dialog import Dialog, Window
-from aiogram_dialog.widgets.input import MessageInput, TextInput
+from aiogram_dialog.widgets.input import TextInput
 from aiogram_dialog.widgets.kbd import Button
 from aiogram_dialog.widgets.text import Const, Jinja
 
@@ -10,7 +10,6 @@ from .handlers import (
     process_time_hint_result,
     start_add_time_hint,
     process_id,
-    process_keys,
     save_level,
     save_hints,
     process_level_result,
@@ -20,6 +19,9 @@ from .handlers import (
     check_level_id,
     on_start_level_edit,
     on_start_hints_edit,
+    convert_keys,
+    on_correct_keys,
+    not_correct_keys,
 )
 from ..preview_data import RENDERED_HINTS_PREVIEW
 
@@ -122,7 +124,12 @@ keys_dialog = Dialog(
             "<code>SHENGLISHLETTERSANDDIDGITS СХРУССКИЕБУКВЫИЦИФРЫ</code>.\n"
             "Если требуется указать несколько ключей напишите каждый с новой строки."
         ),
-        MessageInput(func=process_keys),
+        TextInput(
+            type_factory=convert_keys,
+            on_success=on_correct_keys,
+            on_error=not_correct_keys,
+            id="keys_input",
+        ),
         state=states.LevelKeysSG.keys,
         getter=(get_level_id, get_keys),
     ),

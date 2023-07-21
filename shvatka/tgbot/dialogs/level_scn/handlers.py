@@ -31,13 +31,15 @@ async def process_id(m: Message, dialog_: Any, manager: DialogManager, name_id: 
     dao: HolderDao = manager.middleware_data["dao"]
     author: dto.Player = manager.middleware_data["player"]
     if await dao.level.is_name_id_exist(name_id, author):
-        if lvl := await dao.level.get_by_author_and_name_id(author, name_id):
-            return await raise_restrict_rewrite_level(m, author, lvl, dao)
+        lvl = await dao.level.get_by_author_and_name_id(author, name_id)
+        return await raise_restrict_rewrite_level(m, author, lvl, dao)
     manager.dialog_data["level_id"] = name_id
     await manager.next()
 
 
-async def raise_restrict_rewrite_level(m: Message, author: dto.Player, lvl: dto.Level, dao: HolderDao) -> None:
+async def raise_restrict_rewrite_level(
+    m: Message, author: dto.Player, lvl: dto.Level, dao: HolderDao
+) -> None:
     game_error_msg = ""
     if lvl.game_id:
         game = await dao.game.get_by_id(lvl.game_id, author)

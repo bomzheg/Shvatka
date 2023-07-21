@@ -93,7 +93,7 @@ class LevelDao(BaseDAO[models.Level]):
                 models.Level.name_id == name_id, models.Level.author_id == author.id
             )
         )
-        return result.one_or_none() is None
+        return result.one_or_none() is not None
 
     async def unlink_all(self, game: dto.Game):
         await self.session.execute(

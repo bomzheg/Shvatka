@@ -31,21 +31,21 @@ async def process_id(m: Message, dialog_: Any, manager: DialogManager, name_id: 
     dao: HolderDao = manager.middleware_data["dao"]
     author: dto.Player = manager.middleware_data["player"]
     if await dao.level.is_name_id_exist(name_id, author):
-        lvl = await dao.level.get_by_author_and_name_id(author, name_id)
-        game_error_msg = ""
-        if lvl.game_id:
-            game = await dao.game.get_by_id(lvl.game_id, author)
-            game_error_msg = f" и используется в {game.name}"
-        await m.answer(
-            f"Этот id уровня уже занят тобой{game_error_msg}. "
-            f"Для редактирования воспользуйся меню редактирования"
-        )
-        return
-    data = manager.dialog_data
-    if not isinstance(data, dict):
-        data = {}
-    data["level_id"] = name_id
+        if lvl := await dao.level.get_by_author_and_name_id(author, name_id):
+            return await raise_restrict_rewrite_level(m, author, lvl, dao)
+    manager.dialog_data["level_id"] = name_id
     await manager.next()
+
+
+async def raise_restrict_rewrite_level(m: Message, author: dto.Player, lvl: dto.Level, dao: HolderDao) -> None:
+    game_error_msg = ""
+    if lvl.game_id:
+        game = await dao.game.get_by_id(lvl.game_id, author)
+        game_error_msg = f" и используется в {game.name}"
+    await m.answer(
+        f"Этот id уровня уже занят тобой{game_error_msg}. "
+        f"Для редактирования воспользуйся меню редактирования"
+    )
 
 
 def convert_keys(text: str) -> list[str]:
@@ -108,7 +108,7 @@ async def start_hints(c: CallbackQuery, button: Button, manager: DialogManager):
         state=states.LevelHintsSG.time_hints,
         data={
             "level_id": manager.dialog_data["level_id"],
-            "time_hints": manager.dialog_data["time_hints"],
+            "time_hints": manager.dialog_data.get("time_hints", []),
         },
     )
 
@@ -118,7 +118,7 @@ async def start_keys(c: CallbackQuery, button: Button, manager: DialogManager):
         state=states.LevelKeysSG.keys,
         data={
             "level_id": manager.dialog_data["level_id"],
-            "keys": manager.dialog_data["keys"],
+            "keys": manager.dialog_data.get("keys", []),
         },
     )
 

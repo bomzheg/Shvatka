@@ -5,6 +5,7 @@ from shvatka.core.interfaces.dal.level import (
     MyLevelsGetter,
     LevelByIdGetter,
     LevelCorrectUnlinker,
+    LevelDeleter,
 )
 from shvatka.core.models import dto
 from shvatka.core.models.dto import scn
@@ -44,6 +45,11 @@ async def get_by_id(id_: int, author: dto.Player, dao: LevelByIdGetter) -> dto.L
     level = await dao.get_by_id(id_)
     check_is_author(level, author)
     return level
+
+
+async def delete_level(level: dto.Level, dao: LevelDeleter) -> None:
+    await dao.delete(level.db_id)
+    await dao.commit()
 
 
 async def get_level_by_id_for_org(

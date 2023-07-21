@@ -155,6 +155,10 @@ class LevelDao(BaseDAO[models.Level]):
         for i, lvl in enumerate(lvls.all()):
             lvl.number_in_game = i
 
+    async def delete(self, level_id: int) -> None:
+        _level = await self._get_by_id(level_id)
+        await self.session.delete(_level)
+
     async def transfer(self, level: dto.Level, new_author: dto.Player):
         await self.session.execute(
             update(models.Level)

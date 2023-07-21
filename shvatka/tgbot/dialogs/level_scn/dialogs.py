@@ -1,7 +1,7 @@
 from aiogram import F
 from aiogram_dialog import Dialog, Window
 from aiogram_dialog.widgets.input import TextInput
-from aiogram_dialog.widgets.kbd import Button
+from aiogram_dialog.widgets.kbd import Button, Cancel
 from aiogram_dialog.widgets.text import Const, Jinja
 
 from shvatka.tgbot import states
@@ -95,6 +95,7 @@ level_edit_dialog = Dialog(
             on_click=save_level,
             when=F["dialog_data"]["keys"] & F["dialog_data"]["time_hints"],
         ),
+        Cancel(Const("🔙Назад")),
         state=states.LevelEditSg.menu,
         getter=get_level_data,
         preview_data={

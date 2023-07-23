@@ -126,6 +126,7 @@ keys_dialog = Dialog(
             "<code>SHENGLISHLETTERSANDDIDGITS СХРУССКИЕБУКВЫИЦИФРЫ</code>.\n"
             "Если требуется указать несколько ключей напишите каждый с новой строки."
         ),
+        Cancel(Const("🔙Назад")),
         TextInput(
             type_factory=convert_keys,
             on_success=on_correct_keys,
@@ -154,6 +155,7 @@ hints_dialog = Dialog(
             on_click=clear_hints,
             when=F["dialog_data"]["time_hints"].len() > 0,
         ),
+        Cancel(Const("🔙Назад")),
         state=states.LevelHintsSG.time_hints,
         getter=get_time_hints,
         preview_data={

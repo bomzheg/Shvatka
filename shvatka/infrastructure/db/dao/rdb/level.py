@@ -6,8 +6,8 @@ from sqlalchemy.orm import joinedload
 
 from shvatka.core.models import dto
 from shvatka.core.models.dto.scn.level import LevelScenario
-from shvatka.core.services.game import check_game_editable
-from shvatka.core.services.level import check_can_link_to_game
+from shvatka.core.rules.game import check_game_editable
+from shvatka.core.rules.level import check_can_link_to_game
 from shvatka.infrastructure.db import models
 from .base import BaseDAO
 

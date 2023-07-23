@@ -9,10 +9,9 @@ from shvatka.core.interfaces.dal.level import (
 )
 from shvatka.core.models import dto
 from shvatka.core.models.dto import scn
-from shvatka.core.services.game import check_game_editable
+from shvatka.core.rules.level import check_is_author, check_is_org, check_can_edit
 from shvatka.core.services.player import check_allow_be_author
 from shvatka.core.services.scenario.level_ops import load_level
-from shvatka.core.utils.exceptions import NotAuthorizedForEdit, SHDataBreach
 
 
 async def upsert_raw_level(
@@ -61,35 +60,3 @@ async def get_level_by_id_for_org(
     level = await dao.get_by_id(id_=id_)
     check_is_org(level, org)
     return level
-
-
-def check_is_author(level: dto.Level, player: dto.Player):
-    if level.author.id != player.id:
-        raise NotAuthorizedForEdit(
-            permission_name="game_edit",
-            player=player,
-            level=level,
-        )
-
-
-def check_is_org(level: dto.Level, org: dto.SecondaryOrganizer):
-    if level.game_id != org.game.id or org.deleted:
-        raise NotAuthorizedForEdit(
-            permission_name="game_edit",
-            player=org.player,
-            level=level,
-        )
-
-
-def check_can_edit(level: dto.Level, author: dto.Player, game: dto.Game | None = None) -> None:
-    check_is_author(level, author)
-    # TODO check game status
-
-
-def check_can_link_to_game(game: dto.Game, level: dto.Level, author: dto.Player = None):
-    if level.game_id is not None and level.game_id != game.id:
-        raise SHDataBreach(
-            player=author,
-            notify_user=f"уровень {level.name_id} привязан к другой игре",
-        )
-    check_game_editable(game)

@@ -21,7 +21,6 @@ from shvatka.core.interfaces.dal.level import LevelLinker
 from shvatka.core.interfaces.scheduler import Scheduler
 from shvatka.core.models import dto
 from shvatka.core.models.dto import scn
-from shvatka.core.models.enums.game_status import EDITABLE_STATUSES
 from shvatka.core.services.level import (
     check_is_author as check_is_level_author,
     check_can_link_to_game,
@@ -223,7 +222,7 @@ def check_can_read(game: dto.Game, player: dto.Player):
 
 
 def check_game_editable(game: dto.Game):
-    if game.status not in EDITABLE_STATUSES:
+    if game.can_be_edited:
         raise CantEditGame(
             game=game, player=game.author, notify_user="Невозможно изменить игру после начала"
         )

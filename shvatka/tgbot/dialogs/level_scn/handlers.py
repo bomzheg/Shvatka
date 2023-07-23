@@ -129,6 +129,10 @@ async def save_hints(c: CallbackQuery, button: Button, manager: DialogManager):
     await manager.done({"time_hints": manager.dialog_data["time_hints"]})
 
 
+async def clear_hints(c: CallbackQuery, button: Button, manager: DialogManager):
+    manager.dialog_data.setdefault("time_hints", []).clear()
+
+
 async def save_level(c: CallbackQuery, button: Button, manager: DialogManager):
     dcf: Factory = manager.middleware_data["dcf"]
     author: dto.Player = manager.middleware_data["player"]

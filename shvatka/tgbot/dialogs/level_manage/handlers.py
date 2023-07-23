@@ -104,7 +104,7 @@ async def unlink_level_handler(c: CallbackQuery, button: Button, manager: Dialog
     level_id = manager.start_data["level_id"]
     author: dto.Player = manager.middleware_data["player"]
     level = await get_by_id(level_id, author, dao.level)
-    await unlink_level(level, dao.level)
+    await unlink_level(level, author, dao.level)
     await manager.done()
 
 
@@ -113,7 +113,7 @@ async def delete_level_handler(c: CallbackQuery, button: Button, manager: Dialog
     level_id = manager.start_data["level_id"]
     author: dto.Player = manager.middleware_data["player"]
     level = await get_by_id(level_id, author, dao.level)
-    await delete_level(level, dao.level)
+    await delete_level(level, author, dao.level)
     await manager.done()
 
 

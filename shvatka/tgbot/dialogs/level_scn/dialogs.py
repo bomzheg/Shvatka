@@ -22,6 +22,7 @@ from .handlers import (
     convert_keys,
     on_correct_keys,
     not_correct_keys,
+    clear_hints,
 )
 from ..preview_data import RENDERED_HINTS_PREVIEW
 
@@ -146,6 +147,12 @@ hints_dialog = Dialog(
             id="save",
             on_click=save_hints,
             when=F["dialog_data"]["time_hints"].len() > 1,
+        ),
+        Button(
+            Const("🗑Очистить подсказки"),
+            id="clear",
+            on_click=clear_hints,
+            when=F["dialog_data"]["time_hints"].len() > 0,
         ),
         state=states.LevelHintsSG.time_hints,
         getter=get_time_hints,

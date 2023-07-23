@@ -7,7 +7,7 @@ from shvatka.core.views.texts import KEY_PREFIXES
 
 KEY_PREFIXES_REGEXP = "|".join(KEY_PREFIXES)
 KEY_REGEXP = re.compile(rf"^(?:{KEY_PREFIXES_REGEXP})[A-Z\dА-ЯЁ]+$")
-LEVEL_ID_REGEXP = re.compile(r"[^a-zA-Z\d_-]")
+LEVEL_ID_REGEXP = re.compile(r"^[a-zA-Z\d_-]+$")
 
 
 def is_key_valid(key_expectant: str) -> bool:
@@ -27,8 +27,9 @@ def is_multiple_keys_normal(keys: Iterable[str]) -> bool:
     return all(map(is_key_valid, keys))
 
 
-def is_level_id_correct(id_expectant: str) -> bool:
-    return re.search(LEVEL_ID_REGEXP, id_expectant) is None
+def validate_level_id(id_expectant: str) -> str | None:
+    result = re.search(LEVEL_ID_REGEXP, id_expectant)
+    return result.group() if result is not None else None
 
 
 def date_from_text(text):

@@ -29,33 +29,53 @@ async def test_exit_write_game(
     await author_client.send("test_level")
     new_message = message_manager.one_message()
     assert new_message.text
+    assert "Написание уровня test_level" in new_message.text
+    assert "Ключи не введены" in new_message.text
+    assert "Подсказки:\nпока нет ни одной" in new_message.text
+    actual_kb = new_message.reply_markup.inline_keyboard
+    assert "Ключи" in actual_kb[0][0].text
+    assert "Подсказки" in actual_kb[1][0].text
+
+    message_manager.reset_history()
+    callback_id = await author_client.click(
+        new_message,
+        InlineButtonTextLocator(".*Ключи"),
+    )
+    message_manager.assert_answered(callback_id)
+    new_message = message_manager.one_message()
+    assert new_message.text
     assert "test_level" in new_message.text
     assert "Отлично, перейдём к ключам" in new_message.text
-    assert not new_message.reply_markup.inline_keyboard
+    assert "Назад" in new_message.reply_markup.inline_keyboard[0][0].text
 
     message_manager.reset_history()
     await author_client.send("SHTESTKEY")
     new_message = message_manager.one_message()
     assert new_message.text
-    assert "test_level" in new_message.text
-    assert "Подсказки уровня" in new_message.text
-    assert new_message.reply_markup.inline_keyboard
+    assert "Написание уровня test_level" in new_message.text
+    assert "Ключей: 1" in new_message.text
+    assert "Подсказки:\nпока нет ни одной" in new_message.text
+    actual_kb = new_message.reply_markup.inline_keyboard
+    assert "Ключи" in actual_kb[0][0].text
+    assert "Подсказки" in actual_kb[1][0].text
 
     message_manager.reset_history()
     callback_id = await author_client.click(
         new_message,
-        InlineButtonTextLocator("Добавить подсказку"),
+        InlineButtonTextLocator(".*Подсказки"),
     )
     message_manager.assert_answered(callback_id)
     new_message = message_manager.one_message()
     assert new_message.text
-    assert "Время выхода подсказки" in new_message.text
-    assert "0" == new_message.reply_markup.inline_keyboard[1][0].text
+    assert "Подсказки уровня test_level" in new_message.text
+    assert "пока нет ни одной" in new_message.text
+    assert "Добавить подсказку" in new_message.reply_markup.inline_keyboard[0][0].text
+    assert "Назад" in new_message.reply_markup.inline_keyboard[1][0].text
 
     message_manager.reset_history()
     callback_id = await author_client.click(
         new_message,
-        InlineButtonTextLocator("0"),
+        InlineButtonTextLocator(".*Добавить подсказку"),
     )
     message_manager.assert_answered(callback_id)
     new_message = message_manager.one_message()
@@ -75,7 +95,7 @@ async def test_exit_write_game(
     message_manager.reset_history()
     callback_id = await author_client.click(
         new_message,
-        InlineButtonTextLocator("К следующей подсказке"),
+        InlineButtonTextLocator(".*К следующей подсказке"),
     )
     message_manager.assert_answered(callback_id)
     new_message = message_manager.one_message()
@@ -87,7 +107,7 @@ async def test_exit_write_game(
     message_manager.reset_history()
     callback_id = await author_client.click(
         new_message,
-        InlineButtonTextLocator("Добавить подсказку"),
+        InlineButtonTextLocator(".*Добавить подсказку"),
     )
     message_manager.assert_answered(callback_id)
     new_message = message_manager.one_message()
@@ -111,7 +131,7 @@ async def test_exit_write_game(
     message_manager.reset_history()
     callback_id = await author_client.click(
         new_message,
-        InlineButtonTextLocator("К следующей подсказке"),
+        InlineButtonTextLocator(".*К следующей подсказке"),
     )
     message_manager.assert_answered(callback_id)
     new_message = message_manager.one_message()
@@ -124,12 +144,20 @@ async def test_exit_write_game(
     message_manager.reset_history()
     callback_id = await author_client.click(
         new_message,
-        InlineButtonTextLocator("Готово, сохранить"),
+        InlineButtonTextLocator(".*Достаточно подсказок"),
+    )
+    message_manager.assert_answered(callback_id)
+    msg = message_manager.one_message()
+    assert "Готово, сохранить" in msg.reply_markup.inline_keyboard[2][0].text
+
+    message_manager.reset_history()
+    callback_id = await author_client.click(
+        msg,
+        InlineButtonTextLocator(".*Готово, сохранить"),
     )
     message_manager.assert_answered(callback_id)
     request = bot.session.get_request()
     assert "Уровень успешно сохранён" == request.data["text"]
-
     assert 1 == await dao.level.count()
     level, *_ = await dao.level.get_all_my(author)
     assert author.id == level.author.id

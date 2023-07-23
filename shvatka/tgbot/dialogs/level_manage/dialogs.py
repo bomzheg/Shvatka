@@ -17,6 +17,7 @@ from .handlers import (
     send_to_testing,
     select_level_handler,
     unlink_level_handler,
+    delete_level_handler,
 )
 
 levels_list = Dialog(
@@ -49,7 +50,6 @@ level_manage = Dialog(
             Const("✏Редактирование"),
             id="level_edit",
             on_click=edit_level,
-            when="False",
         ),
         Button(
             Const("📂Показать"),
@@ -73,6 +73,12 @@ level_manage = Dialog(
             id="unlink",
             on_click=unlink_level_handler,
             when=F["level"].game_id,
+        ),
+        Button(
+            Const("🗑Удалить"),
+            id="delete",
+            on_click=delete_level_handler,
+            when=~F["level"].game_id,
         ),
         state=states.LevelManageSG.menu,
         getter=get_level_id,

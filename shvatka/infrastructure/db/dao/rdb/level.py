@@ -6,8 +6,8 @@ from sqlalchemy.orm import joinedload
 
 from shvatka.core.models import dto
 from shvatka.core.models.dto.scn.level import LevelScenario
-from shvatka.core.services.game import check_game_editable
-from shvatka.core.services.level import check_can_link_to_game
+from shvatka.core.rules.game import check_game_editable
+from shvatka.core.rules.level import check_can_link_to_game
 from shvatka.infrastructure.db import models
 from .base import BaseDAO
 
@@ -44,15 +44,26 @@ class LevelDao(BaseDAO[models.Level]):
         return level.to_dto(author)
 
     async def _get_by_author_and_scn(self, author: dto.Player, scn: LevelScenario) -> models.Level:
-        result = await self.session.execute(
+        return await self._get_by_author_and_name_id(author, scn.id)
+
+    async def _get_by_author_and_name_id(self, author: dto.Player, name_id: str) -> models.Level:
+        result: ScalarResult[models.Level] = await self.session.scalars(
             select(models.Level)
             .options(joinedload(models.Level.game))
             .where(
-                models.Level.name_id == scn.id,
+                models.Level.name_id == name_id,
                 models.Level.author_id == author.id,
             )
         )
-        return result.scalar_one()
+        return result.one()
+
+    async def get_by_author_and_name_id(
+        self, author: dto.Player, name_id: str
+    ) -> dto.Level | None:
+        try:
+            return (await self._get_by_author_and_name_id(author, name_id)).to_dto(author)
+        except NoResultFound:
+            return None
 
     async def get_all_my(self, author: dto.Player) -> list[dto.Level]:
         result: ScalarResult[models.Level] = await self.session.scalars(
@@ -75,6 +86,14 @@ class LevelDao(BaseDAO[models.Level]):
         await self.session.execute(
             update(models.Level).where(models.Level.id == level.db_id).values(game_id=None)
         )
+
+    async def is_name_id_exist(self, name_id: str, author: dto.Player) -> bool:
+        result = await self.session.scalars(
+            select(models.Level.id).where(
+                models.Level.name_id == name_id, models.Level.author_id == author.id
+            )
+        )
+        return result.one_or_none() is not None
 
     async def unlink_all(self, game: dto.Game):
         await self.session.execute(
@@ -135,6 +154,10 @@ class LevelDao(BaseDAO[models.Level]):
         )
         for i, lvl in enumerate(lvls.all()):
             lvl.number_in_game = i
+
+    async def delete(self, level_id: int) -> None:
+        _level = await self._get_by_id(level_id)
+        await self.session.delete(_level)
 
     async def transfer(self, level: dto.Level, new_author: dto.Player):
         await self.session.execute(

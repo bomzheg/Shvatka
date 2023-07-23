@@ -24,7 +24,18 @@ class LevelListSG(StatesGroup):
 
 class LevelSG(StatesGroup):
     level_id = State()
+    menu = State()
+
+
+class LevelEditSg(StatesGroup):
+    menu = State()
+
+
+class LevelKeysSG(StatesGroup):
     keys = State()
+
+
+class LevelHintsSG(StatesGroup):
     time_hints = State()
 
 

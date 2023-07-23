@@ -21,8 +21,8 @@ from shvatka.core.interfaces.dal.level import LevelLinker
 from shvatka.core.interfaces.scheduler import Scheduler
 from shvatka.core.models import dto
 from shvatka.core.models.dto import scn
-from shvatka.core.models.enums.game_status import EDITABLE_STATUSES
-from shvatka.core.services.level import (
+from shvatka.core.rules.game import check_can_read, check_game_editable
+from shvatka.core.rules.level import (
     check_is_author as check_is_level_author,
     check_can_link_to_game,
 )
@@ -30,7 +30,7 @@ from shvatka.core.services.player import check_allow_be_author
 from shvatka.core.services.scenario.files import upsert_files, get_file_metas, get_file_contents
 from shvatka.core.services.scenario.game_ops import parse_uploaded_game, check_all_files_saved
 from shvatka.core.utils import exceptions
-from shvatka.core.utils.exceptions import NotAuthorizedForEdit, AnotherGameIsActive, CantEditGame
+from shvatka.core.utils.exceptions import AnotherGameIsActive, CantEditGame
 
 
 async def upsert_game(
@@ -209,21 +209,3 @@ async def check_no_game_active(dao: ActiveGameFinder):
 async def check_new_game_name_available(name: str, author: dto.Player, dao: GameNameChecker):
     if not await dao.is_name_available(name):
         raise CantEditGame(text="другая игра имеет такое имя", player=author)
-
-
-def check_can_read(game: dto.Game, player: dto.Player):
-    if game.is_complete():
-        return  # for completed - available for all
-    if not game.is_author_id(player.id):
-        raise NotAuthorizedForEdit(
-            permission_name="game_edit",
-            player=player,
-            game=game,
-        )
-
-
-def check_game_editable(game: dto.Game):
-    if game.status not in EDITABLE_STATUSES:
-        raise CantEditGame(
-            game=game, player=game.author, notify_user="Невозможно изменить игру после начала"
-        )

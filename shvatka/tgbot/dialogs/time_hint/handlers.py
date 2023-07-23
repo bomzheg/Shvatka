@@ -34,7 +34,6 @@ async def set_time(time_minutes: int, manager: DialogManager):
     if not isinstance(data, dict):
         data = {}
     data["time"] = int(time_minutes)
-    data.setdefault("hints", [])
     await manager.switch_to(states.TimeHintSG.hint)
 
 
@@ -51,3 +50,11 @@ async def on_finish(c: CallbackQuery, button: Button, manager: DialogManager):
     time_ = manager.dialog_data["time"]
     time_hint = TimeHint(time=time_, hint=hints)
     await manager.done({"time_hint": dcf.dump(time_hint)})
+
+
+async def hint_on_start(start_data: dict, manager: DialogManager):
+    prev_time = int(manager.start_data.get("previous_time", 0))
+    if prev_time == -1:
+        manager.dialog_data["time"] = 0
+        await manager.switch_to(states.TimeHintSG.hint)
+    manager.dialog_data.setdefault("hints", [])

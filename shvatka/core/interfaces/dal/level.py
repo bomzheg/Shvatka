@@ -49,5 +49,10 @@ class LevelReorder(Protocol):
         raise NotImplementedError
 
 
+class LevelDeleter(Committer, Protocol):
+    async def delete(self, level_id: int) -> None:
+        raise NotImplementedError
+
+
 class LevelCorrectUnlinker(Committer, LevelUnlinker, LevelReorder, Protocol):
     pass

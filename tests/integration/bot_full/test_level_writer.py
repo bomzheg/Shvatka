@@ -1,4 +1,5 @@
 import pytest
+from aiogram.enums import ContentType
 from aiogram_dialog.test_tools import BotClient, MockMessageManager
 from aiogram_dialog.test_tools.keyboard import InlineButtonTextLocator
 from aiogram_tests.mocked_bot import MockedBot
@@ -20,10 +21,12 @@ async def test_exit_write_game(
     assert 0 == await dao.level.count()
 
     await author_client.send("/" + NEW_LEVEL_COMMAND.command)
-    first_message = message_manager.one_message()
+    first_message = message_manager.last_message()
     assert first_message.text
     assert "Для начала дай уровню короткое описание (ID)" in first_message.text
     assert not first_message.reply_markup.inline_keyboard
+    stub_msg = message_manager.first_message()
+    assert stub_msg.content_type == ContentType.UNKNOWN
 
     message_manager.reset_history()
     await author_client.send("test_level")

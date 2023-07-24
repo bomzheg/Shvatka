@@ -27,6 +27,7 @@ from shvatka.core.views.game import (
 from shvatka.infrastructure.db import models
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from tests.mocks.aiogram_mocks import mock_coro
+from tests.mocks.game_log import GameLogWriterMock
 from tests.mocks.game_view import GameViewMock
 from tests.mocks.scheduler_mock import SchedulerMock
 from tests.utils.time_key import assert_time_key
@@ -52,12 +53,10 @@ async def test_game_play(
     await approve_waivers(game, gryffindor, harry, dao.waiver_approver)
 
     dummy_view = GameViewMock()
-    dummy_log = mock(GameLogWriter)
-    when(dummy_log).log(GameLogEvent(GameLogType.GAME_STARTED, {"game": game.name})).thenReturn(
-        mock_coro(None)
-    )
+    dummy_log = GameLogWriterMock()
     game.start_at = datetime.now(tz=tz_utc)
     await start_game(game, dao.game_starter, dummy_log, dummy_view, scheduler)
+    dummy_log.assert_one_event(GameLogEvent(GameLogType.GAME_STARTED, {"game": game.name}))
     scheduler.assert_one_planned_hint(game.levels[0], gryffindor, 1)
     dummy_view.assert_send_only_puzzle(gryffindor, game.levels[0])
     assert 1 == await check_dao.level_time.count()
@@ -145,13 +144,11 @@ async def test_game_play(
     dummy_view.assert_correct_key_only(expected_fourth_key)
     dummy_view.assert_send_only_puzzle(gryffindor, game.levels[1])
 
-    when(dummy_log).log(GameLogEvent(GameLogType.GAME_FINISHED, {"game": game.name})).thenReturn(
-        mock_coro(None)
-    )
     when(dummy_org_notifier).notify(
         LevelUp(team=gryffindor, new_level=game.levels[1], orgs_list=orgs)
     ).thenReturn(mock_coro(None))
     await check_key(key="SHOOT", **key_kwargs)
+    dummy_log.assert_one_event(GameLogEvent(GameLogType.GAME_FINISHED, {"game": game.name}))
     expected_fifth_key = dto.KeyTime(
         text="SHOOT",
         type_=enums.KeyType.simple,

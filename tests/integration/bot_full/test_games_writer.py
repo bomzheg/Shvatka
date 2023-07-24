@@ -1,4 +1,5 @@
 import pytest
+from aiogram.enums import ContentType
 from aiogram_dialog.test_tools import BotClient, MockMessageManager
 from aiogram_dialog.test_tools.keyboard import InlineButtonTextLocator
 
@@ -27,4 +28,5 @@ async def test_exit_write_game(author_client: BotClient, message_manager: MockMe
         InlineButtonTextLocator("🔙Не создавать игру"),
     )
     message_manager.assert_answered(callback_id)
-    assert not message_manager.sent_messages
+    msg = message_manager.one_message()
+    assert msg.content_type == ContentType.UNKNOWN

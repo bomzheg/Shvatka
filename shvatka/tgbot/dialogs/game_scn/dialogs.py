@@ -1,4 +1,3 @@
-from aiogram import F
 from aiogram.types import ContentType
 from aiogram_dialog import Dialog, Window
 from aiogram_dialog.widgets.input import MessageInput
@@ -62,7 +61,7 @@ game_writer = Dialog(
     Window(
         Const("Жду zip-файл с готовой игрой"),
         Cancel(Const("🔙Отменить")),
-        MessageInput(func=process_zip_scn, filter=F.content_type == ContentType.DOCUMENT),
+        MessageInput(func=process_zip_scn, content_types=ContentType.DOCUMENT),
         state=states.GameWriteSG.from_zip,
     ),
 )

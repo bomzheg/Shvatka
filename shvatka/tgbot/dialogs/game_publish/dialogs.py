@@ -1,4 +1,5 @@
 from aiogram import F
+from aiogram.enums import ContentType
 from aiogram.filters import Command
 from aiogram_dialog import Dialog, Window
 from aiogram_dialog.widgets.input import MessageInput
@@ -46,7 +47,7 @@ game_publish = Dialog(
             "cool player name\n"
             "mY secure pas$w0rd"
         ),
-        MessageInput(func=publish_game_forum, filter=F.text),
+        MessageInput(func=publish_game_forum, content_types=ContentType.TEXT),
         state=states.GamePublishSG.forum,
     ),
 )

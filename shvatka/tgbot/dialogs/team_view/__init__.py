@@ -1,7 +1,7 @@
-from aiogram_dialog import DialogRegistry
+from aiogram import Router
 
 from .dialogs import team_view
 
 
-def setup(registry: DialogRegistry):
-    registry.register(team_view)
+def setup(router: Router):
+    router.include_router(team_view)

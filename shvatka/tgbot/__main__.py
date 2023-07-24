@@ -1,7 +1,7 @@
 import asyncio
 import logging
 
-from aiogram_dialog import DialogRegistry
+from aiogram_dialog.manager.message_manager import MessageManager
 
 from shvatka.common.config.parser.logging_config import setup_logging
 from shvatka.common.factory import create_telegraph, create_dataclass_factory
@@ -38,7 +38,6 @@ async def main():
     bot = create_bot(config)
     setup_jinja(bot=bot)
     level_test_dao = create_level_test_dao()
-    registry = DialogRegistry()
 
     async with (
         UserGetter(config.tg_client) as user_getter,
@@ -65,7 +64,7 @@ async def main():
             file_storage=file_storage,
             level_test_dao=level_test_dao,
             telegraph=create_telegraph(config.bot),
-            registry=registry,
+            message_manager=MessageManager(),
         )
 
         logger.info("started")

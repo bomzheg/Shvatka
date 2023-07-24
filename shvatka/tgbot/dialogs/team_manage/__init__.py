@@ -1,7 +1,7 @@
-from aiogram_dialog import DialogRegistry
+from aiogram import Router
 
 from .dialogs import captains_bridge
 
 
-def setup(registry: DialogRegistry):
-    registry.register(captains_bridge)
+def setup(router: Router):
+    router.include_router(captains_bridge)

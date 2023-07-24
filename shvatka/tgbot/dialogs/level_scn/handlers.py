@@ -90,7 +90,7 @@ async def on_start_level_edit(start_data: dict[str, Any], manager: DialogManager
     author: dto.Player = manager.middleware_data["player"]
     level = await get_by_id(start_data["level_id"], author, dao.level)
     manager.dialog_data["level_id"] = level.name_id
-    manager.dialog_data["keys"] = level.get_keys()
+    manager.dialog_data["keys"] = list(level.get_keys())
     manager.dialog_data["time_hints"] = dcf.dump(level.scenario.time_hints)
 
 

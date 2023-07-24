@@ -5,7 +5,7 @@ from aiogram.enums import ParseMode
 from aiogram.fsm.storage.base import BaseStorage
 from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.fsm.storage.redis import RedisStorage, DefaultKeyBuilder, RedisEventIsolation
-from aiogram_dialog import DialogRegistry
+from aiogram_dialog.manager.message_manager import MessageManager
 from dataclass_factory import Factory
 from redis.asyncio.client import Redis
 from sqlalchemy.ext.asyncio import async_sessionmaker, AsyncSession
@@ -46,7 +46,7 @@ def create_dispatcher(
     file_storage: FileStorage,
     level_test_dao: LevelTestingData,
     telegraph: Telegraph,
-    registry: DialogRegistry,
+    message_manager: MessageManager,
 ) -> Dispatcher:
     dp = create_only_dispatcher(config, redis)
     setup_middlewares(
@@ -62,7 +62,7 @@ def create_dispatcher(
         level_test_dao=level_test_dao,
         telegraph=telegraph,
     )
-    setup_handlers(dp, config.bot, registry)
+    setup_handlers(dp, config.bot, message_manager)
     return dp
 
 

@@ -1,8 +1,7 @@
 from aiogram import Router
-from aiogram_dialog import DialogRegistry
 
 from .dialogs import game_spy
 
 
-def setup(registry: DialogRegistry, router: Router):
-    registry.register(game_spy, router=router)
+def setup(router: Router):
+    router.include_router(game_spy)

@@ -5,7 +5,6 @@ from typing import Generator, AsyncGenerator
 import pytest
 import pytest_asyncio
 from aiogram import Dispatcher, Bot
-from aiogram_dialog import DialogRegistry
 from aiogram_dialog.test_tools import MockMessageManager
 from aiogram_tests.mocked_bot import MockedBot
 from alembic.command import upgrade
@@ -196,7 +195,7 @@ def dp(
         level_test_dao=level_test_dao,
         telegraph=telegraph,
     )
-    setup_handlers(dp, bot_config.bot, DialogRegistry(message_manager=message_manager))
+    setup_handlers(dp, bot_config.bot, message_manager=message_manager)
     return dp
 
 

@@ -1,9 +1,9 @@
-from aiogram_dialog import DialogRegistry
+from aiogram import Router
 
 from .dialogs import my_games, schedule_game_dialog, games
 
 
-def setup(registry: DialogRegistry):
-    registry.register(games)
-    registry.register(my_games)
-    registry.register(schedule_game_dialog)
+def setup(router: Router):
+    router.include_router(games)
+    router.include_router(my_games)
+    router.include_router(schedule_game_dialog)

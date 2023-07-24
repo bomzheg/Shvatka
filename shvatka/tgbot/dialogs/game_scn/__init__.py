@@ -1,8 +1,8 @@
-from aiogram_dialog import DialogRegistry
+from aiogram import Router
 
 from .dialogs import game_writer, game_editor
 
 
-def setup(registry: DialogRegistry):
-    registry.register(game_writer)
-    registry.register(game_editor)
+def setup(router: Router):
+    router.include_router(game_writer)
+    router.include_router(game_editor)

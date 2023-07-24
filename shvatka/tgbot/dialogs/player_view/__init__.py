@@ -1,7 +1,7 @@
-from aiogram_dialog import DialogRegistry
+from aiogram import Router
 
 from .dialogs import player_dialog
 
 
-def setup(registry: DialogRegistry):
-    registry.register(player_dialog)
+def setup(router: Router):
+    router.include_router(player_dialog)

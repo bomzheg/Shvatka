@@ -10,7 +10,6 @@ from aiogram_tests.mocked_bot import MockedBot
 from alembic.command import upgrade
 from alembic.config import Config as AlembicConfig
 from dataclass_factory import Factory
-from mockito import mock
 from redis.asyncio.client import Redis
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
 from sqlalchemy.orm import sessionmaker, close_all_sessions
@@ -47,6 +46,7 @@ from tests.mocks.config import DBConfig
 from tests.mocks.file_storage import MemoryFileStorage
 from tests.mocks.game_log import GameLogWriterMock
 from tests.mocks.scheduler_mock import SchedulerMock
+from tests.mocks.user_getter import UserGetterMock
 
 logger = logging.getLogger(__name__)
 
@@ -147,8 +147,8 @@ def patch_api_config(bot_config: TgBotConfig, postgres_url: str, redis: Redis):
     bot_config.redis.db = redis.connection_pool.connection_kwargs["db"]
 
 
-@pytest_asyncio.fixture(scope="session")
-async def scheduler():
+@pytest.fixture(scope="session")
+def scheduler():
     return SchedulerMock()
 
 
@@ -201,8 +201,7 @@ def dp(
 
 @pytest.fixture(scope="session")
 def user_getter() -> UserGetter:
-    dummy = mock(UserGetter)
-    return dummy
+    return UserGetterMock()
 
 
 @pytest.fixture

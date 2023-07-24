@@ -2,10 +2,9 @@ from datetime import datetime, timedelta
 
 import pytest
 from dataclass_factory import Factory
-from mockito import mock, when, ANY
+from mockito import mock, when
 
 from shvatka.core.interfaces.clients.file_storage import FileStorage
-from shvatka.core.interfaces.scheduler import Scheduler
 from shvatka.core.models import dto, enums
 from shvatka.core.models.enums import GameStatus
 from shvatka.core.models.enums.played import Played
@@ -29,6 +28,7 @@ from shvatka.infrastructure.db import models
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from tests.mocks.aiogram_mocks import mock_coro
 from tests.mocks.game_view import GameViewMock
+from tests.mocks.scheduler_mock import SchedulerMock
 from tests.utils.time_key import assert_time_key
 
 
@@ -37,7 +37,7 @@ async def test_game_play(
     dao: HolderDao,
     locker: KeyCheckerFactory,
     check_dao: HolderDao,
-    scheduler: Scheduler,
+    scheduler: SchedulerMock,
     author: dto.Player,
     harry: dto.Player,
     hermione: dto.Player,
@@ -56,24 +56,21 @@ async def test_game_play(
     when(dummy_log).log(GameLogEvent(GameLogType.GAME_STARTED, {"game": game.name})).thenReturn(
         mock_coro(None)
     )
-    dummy_sched = mock(Scheduler)
-    when(dummy_sched).plain_hint(
-        level=game.levels[0], team=gryffindor, hint_number=1, run_at=ANY
-    ).thenReturn(mock_coro(None))
     game.start_at = datetime.now(tz=tz_utc)
-    await start_game(game, dao.game_starter, dummy_log, dummy_view, dummy_sched)
+    await start_game(game, dao.game_starter, dummy_log, dummy_view, scheduler)
+    scheduler.assert_one_planned_hint(game.levels[0], gryffindor, 1)
     dummy_view.assert_send_only_puzzle(gryffindor, game.levels[0])
     assert 1 == await check_dao.level_time.count()
 
-    when(dummy_sched).plain_hint(game.levels[0], gryffindor, 2, ANY).thenReturn(mock_coro(None))
     await send_hint(
         level=game.levels[0],
         hint_number=1,
         team=gryffindor,
         dao=dao.level_time,
         view=dummy_view,
-        scheduler=dummy_sched,
+        scheduler=scheduler,
     )
+    scheduler.assert_one_planned_hint(game.levels[0], gryffindor, 2)
     dummy_view.assert_send_only_hint(gryffindor, 1, game.levels[0])
 
     dummy_org_notifier = mock(OrgNotifier)

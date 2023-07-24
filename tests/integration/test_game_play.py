@@ -2,7 +2,6 @@ from datetime import datetime, timedelta
 
 import pytest
 from dataclass_factory import Factory
-from mockito import mock, when
 
 from shvatka.core.interfaces.clients.file_storage import FileStorage
 from shvatka.core.models import dto, enums
@@ -18,17 +17,15 @@ from shvatka.core.services.waiver import add_vote, approve_waivers
 from shvatka.core.utils.datetime_utils import tz_utc
 from shvatka.core.utils.key_checker_lock import KeyCheckerFactory
 from shvatka.core.views.game import (
-    GameLogWriter,
-    OrgNotifier,
     LevelUp,
     GameLogEvent,
     GameLogType,
 )
 from shvatka.infrastructure.db import models
 from shvatka.infrastructure.db.dao.holder import HolderDao
-from tests.mocks.aiogram_mocks import mock_coro
 from tests.mocks.game_log import GameLogWriterMock
 from tests.mocks.game_view import GameViewMock
+from tests.mocks.org_notifier import OrgNotifierMock
 from tests.mocks.scheduler_mock import SchedulerMock
 from tests.utils.time_key import assert_time_key
 
@@ -72,7 +69,7 @@ async def test_game_play(
     scheduler.assert_one_planned_hint(game.levels[0], gryffindor, 2)
     dummy_view.assert_send_only_hint(gryffindor, 1, game.levels[0])
 
-    dummy_org_notifier = mock(OrgNotifier)
+    dummy_org_notifier = OrgNotifierMock()
     orgs = await get_orgs(game, dao.organizer)
     key_processor = KeyProcessor(dao.game_player, game, locker)
     key_kwargs = dict(
@@ -128,9 +125,6 @@ async def test_game_play(
     )
     dummy_view.assert_duplicate_key_only(expected_third_key)
 
-    when(dummy_org_notifier).notify(
-        LevelUp(team=gryffindor, new_level=game.levels[1], orgs_list=orgs)
-    ).thenReturn(mock_coro(None))
     await check_key(key="SH321", **key_kwargs)
     expected_fourth_key = dto.KeyTime(
         text="SH321",
@@ -141,12 +135,12 @@ async def test_game_play(
         player=harry,
         team=gryffindor,
     )
+    dummy_org_notifier.assert_one_event(
+        LevelUp(team=gryffindor, new_level=game.levels[1], orgs_list=orgs)
+    )
     dummy_view.assert_correct_key_only(expected_fourth_key)
     dummy_view.assert_send_only_puzzle(gryffindor, game.levels[1])
 
-    when(dummy_org_notifier).notify(
-        LevelUp(team=gryffindor, new_level=game.levels[1], orgs_list=orgs)
-    ).thenReturn(mock_coro(None))
     await check_key(key="SHOOT", **key_kwargs)
     dummy_log.assert_one_event(GameLogEvent(GameLogType.GAME_FINISHED, {"game": game.name}))
     expected_fifth_key = dto.KeyTime(
@@ -174,6 +168,7 @@ async def test_game_play(
     assert await dao.game_player.is_all_team_finished(game)
     assert GameStatus.finished == (await dao.game.get_by_id(game.id, author)).status
     dummy_view.assert_no_unchecked()
+    dummy_org_notifier.assert_no_calls()
 
 
 @pytest.mark.asyncio

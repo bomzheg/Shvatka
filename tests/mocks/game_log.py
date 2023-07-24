@@ -5,7 +5,7 @@ class GameLogWriterMock(GameLogWriter):
     def __init__(self) -> None:
         self.requests: list[GameLogEvent] = []
 
-    def assert_one_event(self, event: GameLogEvent):
+    def assert_one_event(self, event: GameLogEvent) -> None:
         assert len(self.requests) == 1
         assert self.requests.pop() == event
 

@@ -116,7 +116,7 @@ async def test_exit_write_game(
     new_message = message_manager.one_message()
     assert new_message.text
     assert "Время выхода подсказки" in new_message.text
-    assert "5" == new_message.reply_markup.inline_keyboard[1][0].text
+    assert "5" == new_message.reply_markup.inline_keyboard[0][0].text
 
     message_manager.reset_history()
     callback_id = await author_client.click(

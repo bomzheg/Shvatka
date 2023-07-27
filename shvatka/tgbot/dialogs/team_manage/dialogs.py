@@ -41,7 +41,6 @@ captains_bridge = Dialog(
             "👑Капитан: {{team.captain.name_mention}}\n"
             "{% endif %}"
         ),
-        Cancel(Const("🔙Назад")),
         SwitchTo(
             Const("✍️Переименовать"),
             id="rename",
@@ -66,6 +65,7 @@ captains_bridge = Dialog(
             on_click=start_merge,
             when=~F["team"].has_forum_team(),
         ),
+        Cancel(Const("🔙Назад")),
         state=states.CaptainsBridgeSG.main,
         getter=get_my_team_,
     ),
@@ -85,7 +85,6 @@ captains_bridge = Dialog(
     ),
     Window(
         Jinja("Игроки команды 🚩<b>{{team.name}}</b>"),
-        SwitchTo(Const("🔙Назад"), id="back", state=states.CaptainsBridgeSG.main),
         ScrollingGroup(
             Select(
                 Jinja("{{item|player_emoji}}{{item.player.name_mention}}"),
@@ -98,13 +97,12 @@ captains_bridge = Dialog(
             width=1,
             height=10,
         ),
+        SwitchTo(Const("🔙Назад"), id="back", state=states.CaptainsBridgeSG.main),
         getter=get_team_with_players,
         state=states.CaptainsBridgeSG.players,
     ),
     Window(
         TEAM_PLAYER_CARD,
-        SwitchTo(Const("🔙В меню команды"), id="to_main", state=states.CaptainsBridgeSG.main),
-        SwitchTo(Const("🔙Назад"), id="back", state=states.CaptainsBridgeSG.players),
         Button(
             Format("{can_manage_waivers}Подавать вейверы"),
             id="can_manage_waivers",
@@ -153,6 +151,8 @@ captains_bridge = Dialog(
             state=states.CaptainsBridgeSG.confirm_delete,
             when=F["team_player"].can_remove_players,
         ),
+        SwitchTo(Const("🔙В меню команды"), id="to_main", state=states.CaptainsBridgeSG.main),
+        SwitchTo(Const("🔙Назад"), id="back", state=states.CaptainsBridgeSG.players),
         getter=get_selected_player,
         state=states.CaptainsBridgeSG.player,
     ),
@@ -161,14 +161,14 @@ captains_bridge = Dialog(
         Const(
             "Вы уверены что хотите изгнать его из команды?",
         ),
+        SwitchTo(Const("Нет!"), id="back", state=states.CaptainsBridgeSG.player),
+        Button(Const("Да, удалить"), id="delete", on_click=remove_player_handler),
         SwitchTo(Const("🔙В меню команды"), id="to_main", state=states.CaptainsBridgeSG.main),
         SwitchTo(
             Const("🔙Назад к списку игроков"),
             id="to_players",
             state=states.CaptainsBridgeSG.players,
         ),
-        SwitchTo(Const("Нет!"), id="back", state=states.CaptainsBridgeSG.player),
-        Button(Const("Да, удалить"), id="delete", on_click=remove_player_handler),
         getter=get_selected_player,
         state=states.CaptainsBridgeSG.confirm_delete,
     ),

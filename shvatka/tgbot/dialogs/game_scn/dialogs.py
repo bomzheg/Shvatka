@@ -29,15 +29,14 @@ game_writer = Dialog(
             "поскольку ID и название файла попадают в лог-файлы, предназначенные "
             "для чтения системным администратором"
         ),
-        Cancel(Const("🔙Отменить")),
         MessageInput(func=process_name),
         SwitchTo(Const("Загрузить из zip"), id="game_from_zip", state=states.GameWriteSG.from_zip),
+        Cancel(Const("🔙Отменить")),
         state=states.GameWriteSG.game_name,
     ),
     Window(
         Jinja("Игра <b>{{game_name}}</b>\n\n"),
         Const("<b>Уровни</b>\n\n" "Выбери уровни которые нужно добавить"),
-        Cancel(Const("🔙Не создавать игру")),
         ScrollingGroup(
             Multiselect(
                 Format("✓ {item.name_id}"),
@@ -55,6 +54,7 @@ game_writer = Dialog(
             id="save_levels",
             on_click=save_game,
         ),
+        Cancel(Const("🔙Не создавать игру")),
         state=states.GameWriteSG.levels,
         getter=[get_game_name, select_my_levels],
     ),
@@ -71,7 +71,6 @@ game_editor = Dialog(
     Window(
         Jinja("Игра <b>{{game.name}}</b>\n\n"),
         Const("<b>Уровни игры</b>"),
-        Cancel(Const("🔙Назад")),
         SwitchTo(
             Const("📑Добавить уровень"),
             id="to_add_level",
@@ -89,13 +88,13 @@ game_editor = Dialog(
             width=1,
             height=10,
         ),
+        Cancel(Const("🔙Назад")),
         state=states.GameEditSG.current_levels,
         getter=select_full_game,
     ),
     Window(
         Jinja("Игра <b>{{game.name}}</b>\n\n"),
         Const("<b>Уровни</b>\n\n" "Выбери уровни которые нужно добавить"),
-        SwitchTo(Const("🔙Назад"), id="back", state=states.GameEditSG.current_levels),
         ScrollingGroup(
             Select(
                 Format("{item.name_id}"),
@@ -108,6 +107,7 @@ game_editor = Dialog(
             width=1,
             height=10,
         ),
+        SwitchTo(Const("🔙Назад"), id="back", state=states.GameEditSG.current_levels),
         state=states.GameEditSG.add_level,
         getter=(select_full_game, select_my_levels),
     ),

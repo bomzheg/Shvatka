@@ -23,7 +23,6 @@ from .handlers import (
 levels_list = Dialog(
     Window(
         Const("Уровни"),
-        Cancel(Const("🔙Назад")),
         ScrollingGroup(
             Select(
                 Format("{item.name_id}"),
@@ -36,6 +35,7 @@ levels_list = Dialog(
             width=1,
             height=10,
         ),
+        Cancel(Const("🔙Назад")),
         state=states.LevelListSG.levels,
         getter=get_levels,
     ),
@@ -45,7 +45,6 @@ levels_list = Dialog(
 level_manage = Dialog(
     Window(
         Jinja("Уровень <b>{{level.name_id}}</b>\n{{rendered}}"),
-        Cancel(Const("🔙Назад")),
         Button(
             Const("✏Редактирование"),
             id="level_edit",
@@ -80,6 +79,7 @@ level_manage = Dialog(
             on_click=delete_level_handler,
             when=~F["level"].game_id,
         ),
+        Cancel(Const("🔙Назад")),
         state=states.LevelManageSG.menu,
         getter=get_level_id,
     ),
@@ -89,7 +89,6 @@ level_manage = Dialog(
             "Кому отправить его на тестирование?\n\n"
             "ℹЧтобы добавить кого-то в этот список, нужно добавить организатора из меню игры"
         ),
-        SwitchTo(Const("🔙Назад"), id="back", state=states.LevelManageSG.menu),
         ScrollingGroup(
             Select(
                 Jinja("{{item.player.name_mention}}"),
@@ -102,6 +101,7 @@ level_manage = Dialog(
             width=1,
             height=10,
         ),
+        SwitchTo(Const("🔙Назад"), id="back", state=states.LevelManageSG.menu),
         state=states.LevelManageSG.send_to_test,
         getter=get_orgs,
     ),
@@ -111,12 +111,12 @@ level_manage = Dialog(
 level_test_dialog = Dialog(
     Window(
         Jinja("Идёт тестирование уровня <b>{{level.name_id}}</b>"),
+        MessageInput(func=process_key_message, content_types=ContentType.TEXT, filter=is_key),
         Button(
             Const("🔙Прервать"),
             id="level_test_cancel",
             on_click=cancel_level_test,
         ),
-        MessageInput(func=process_key_message, content_types=ContentType.TEXT, filter=is_key),
         getter=get_level_id,
         state=states.LevelTestSG.wait_key,
     ),

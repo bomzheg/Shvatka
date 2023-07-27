@@ -17,7 +17,6 @@ from .handlers import select_org, change_permission_handler, change_deleted_hand
 game_orgs = Dialog(
     Window(
         Jinja("Список организаторов игры {{game.name}}"),
-        Cancel(Const("🔙Назад")),
         SwitchInlineQuery(
             Const("👋Добавить организатора"),
             Format("{inline_query}"),
@@ -39,6 +38,7 @@ game_orgs = Dialog(
             width=1,
             height=10,
         ),
+        Cancel(Const("🔙Назад")),
         getter=get_orgs,
         state=states.GameOrgsSG.orgs_list,
     ),
@@ -50,7 +50,6 @@ game_orgs = Dialog(
             ),
             sep="",
         ),
-        Back(text=Const("К списку организаторов")),
         Button(
             Format("{can_spy}Шпионить"),
             id="can_spy",
@@ -76,6 +75,7 @@ game_orgs = Dialog(
             id="flip_deleted",
             on_click=change_deleted_handler,
         ),
+        Back(text=Const("К списку организаторов")),
         getter=get_org,
         state=states.GameOrgsSG.org_menu,
     ),

@@ -3,7 +3,7 @@ from datetime import datetime
 from aiogram import F
 from aiogram_dialog import Dialog, Window
 from aiogram_dialog.widgets.kbd import Button, SwitchTo, Cancel
-from aiogram_dialog.widgets.text import Const, Format, Jinja, Multi
+from aiogram_dialog.widgets.text import Const, Jinja, Multi
 
 from shvatka.core.utils.datetime_utils import tz_utc
 from shvatka.tgbot import states
@@ -19,10 +19,9 @@ game_spy = Dialog(
                 "Дата и время начала: "
             ),
             Jinja("{{ game.start_at|user_timezone }}", when=F["game"].start_at),
-            Format("не запланирована", when=~F["game"].start_at),
+            Const("не запланирована", when=~F["game"].start_at),
             sep="",
         ),
-        Cancel(Const("🔙Назад")),
         SwitchTo(
             Const("📊Текущие уровни"),
             id="spy_levels",
@@ -35,6 +34,7 @@ game_spy = Dialog(
             state=states.OrgSpySG.keys,
             when=F["game"].is_started & F["org"].can_see_log_keys,
         ),
+        Cancel(Const("🔙Назад")),
         state=states.OrgSpySG.main,
         getter=get_org,
     ),

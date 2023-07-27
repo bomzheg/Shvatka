@@ -16,18 +16,17 @@ merge_teams_dialog = Dialog(
             "Чтобы вспомнить былые свершения нужно найти команду, как она выглядела на форуме.\n"
             "Хочешь объединить команду {{team.name}} со своей форумной копией?"
         ),
-        Cancel(Const("🔙Ой нет, это я случайно")),
         SwitchTo(
             Const("Да, время выбирать"),
             id="to_forum_list",
             state=states.MergeTeamsSG.list_forum,
         ),
+        Cancel(Const("🔙Ой нет, это я случайно")),
         getter=get_team,
         state=states.MergeTeamsSG.main,
     ),
     Window(
         Jinja("Итак мы ищем форумную версию для команды {{team.name}}"),
-        Cancel(Const("🔙Не надо ничего объединять")),
         ScrollingGroup(
             Select(
                 Jinja("🚩{{item.name}}"),
@@ -40,6 +39,7 @@ merge_teams_dialog = Dialog(
             width=1,
             height=10,
         ),
+        Cancel(Const("🔙Не надо ничего объединять")),
         getter=(get_team, get_forum_teams),
         state=states.MergeTeamsSG.list_forum,
     ),
@@ -70,12 +70,12 @@ merge_player_dialog = Dialog(
             "как он выглядел на форуме.\n"
             "Хочешь объединить свои достижения тут со своей форумной копией?"
         ),
-        Cancel(Const("🔙Ой нет, это я случайно")),
         SwitchTo(
             Const("Да, время выбирать"),
             id="to_forum_list",
             state=states.MergePlayersSG.input,
         ),
+        Cancel(Const("🔙Ой нет, это я случайно")),
         state=states.MergePlayersSG.main,
     ),
     Window(
@@ -90,7 +90,6 @@ merge_player_dialog = Dialog(
     ),
     Window(
         Jinja("Объединить свои достижения с {{forum_user.name}}?"),
-        Cancel(Const("🔙Я передумал, не надо")),
         SwitchTo(
             Const("Нет, это не я. Назад"),
             id="to_forum_list",
@@ -101,6 +100,7 @@ merge_player_dialog = Dialog(
             id="confirm",
             on_click=confirm_merge_player,
         ),
+        Cancel(Const("🔙Я передумал, не надо")),
         getter=get_forum_user,
         state=states.MergePlayersSG.confirm,
     ),

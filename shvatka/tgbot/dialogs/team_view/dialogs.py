@@ -14,7 +14,6 @@ team_view = Dialog(
             "{{active|bool_emoji}} Активные\n"
             "{{archive|bool_emoji}} Архивные"
         ),
-        Cancel(Const("🔙Назад")),
         SwitchTo(Const("🔣Фильтр"), state=states.TeamsSg.filter, id="to_filter"),
         ScrollingGroup(
             Select(
@@ -28,6 +27,7 @@ team_view = Dialog(
             width=1,
             height=10,
         ),
+        Cancel(Const("🔙Назад")),
         getter=teams_getter,
         state=states.TeamsSg.list,
     ),
@@ -37,8 +37,6 @@ team_view = Dialog(
             "Капитан: {{team.captain.name_mention}}\n"
             "Сыгранные игры: {{' '.join(game_numbers)}}"
         ),
-        Cancel(Const("🔙Выход")),
-        SwitchTo(Const("🔙Назад"), state=states.TeamsSg.list, id="to_list"),
         ScrollingGroup(
             Select(
                 Jinja("{{item|player_emoji}}{{item.player.name_mention}}"),
@@ -51,12 +49,13 @@ team_view = Dialog(
             width=1,
             height=10,
         ),
+        SwitchTo(Const("🔙Назад"), state=states.TeamsSg.list, id="to_list"),
+        Cancel(Const("🔙Выход")),
         getter=team_getter,
         state=states.TeamsSg.one,
     ),
     Window(
         Const("Отметь типы команд для отображения"),
-        SwitchTo(Const("🔙Назад"), state=states.TeamsSg.list, id="to_list"),
         Button(
             Case(BOOL_VIEW, selector="active") + Const("Активные"),
             id="active",
@@ -67,6 +66,7 @@ team_view = Dialog(
             id="archive",
             on_click=change_archive_filter,
         ),
+        SwitchTo(Const("🔙Назад"), state=states.TeamsSg.list, id="to_list"),
         getter=filter_getter,
         state=states.TeamsSg.filter,
     ),

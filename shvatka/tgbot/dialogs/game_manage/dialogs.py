@@ -48,10 +48,10 @@ from .handlers import (
 )
 from ..preview_data import PREVIEW_GAME
 
+
 games = Dialog(
     Window(
         Const("Список прошедших"),
-        Cancel(Const("🔙Назад")),
         ScrollingGroup(
             Select(
                 Format("{item.name}"),
@@ -64,6 +64,7 @@ games = Dialog(
             width=1,
             height=10,
         ),
+        Cancel(Const("🔙Назад")),
         state=states.CompletedGamesPanelSG.list,
         preview_data={"games": [PREVIEW_GAME]},
         getter=get_games,
@@ -72,11 +73,6 @@ games = Dialog(
         Jinja(
             "Выбрана игра: <b>{{game.name}}</b> под номером {{game.number}}\n"
             "которая началась: {{ game.start_at|user_timezone }} "
-        ),
-        SwitchTo(
-            Const("🔙Назад к списку игр"),
-            id="to_games",
-            state=states.CompletedGamesPanelSG.list,
         ),
         Button(
             Const("👥Организаторы"),
@@ -110,6 +106,11 @@ games = Dialog(
             state=states.CompletedGamesPanelSG.scenario_channel,
             when=F["game"].results.published_chanel_id,
         ),
+        SwitchTo(
+            Const("🔙Назад к списку игр"),
+            id="to_games",
+            state=states.CompletedGamesPanelSG.list,
+        ),
         state=states.CompletedGamesPanelSG.game,
         preview_data={"game": PREVIEW_GAME},
         getter=get_completed_game,
@@ -134,14 +135,14 @@ games = Dialog(
             "{% endfor %}"
         ),
         SwitchTo(
-            Const("🔙Назад к списку игр"),
-            id="to_games",
-            state=states.CompletedGamesPanelSG.list,
-        ),
-        SwitchTo(
             Const("⤴Назад"),
             id="to_game",
             state=states.CompletedGamesPanelSG.game,
+        ),
+        SwitchTo(
+            Const("🔙Назад к списку игр"),
+            id="to_games",
+            state=states.CompletedGamesPanelSG.list,
         ),
         getter=get_game_waivers,
         state=states.CompletedGamesPanelSG.waivers,
@@ -152,6 +153,11 @@ games = Dialog(
             "Выбрана игра №{{game.number}} <b>{{game.name}}</b>\n"
             "которая началась: {{ game.start_at|user_timezone }} "
         ),
+        Button(
+            Const("📶Таблицей"),
+            id="as_excel",
+            on_click=get_excel_results_handler,
+        ),
         SwitchTo(
             Const("🔙Назад к списку игр"),
             id="to_games",
@@ -161,11 +167,6 @@ games = Dialog(
             Const("⤴Назад"),
             id="to_game",
             state=states.CompletedGamesPanelSG.game,
-        ),
-        Button(
-            Const("📶Таблицей"),
-            id="as_excel",
-            on_click=get_excel_results_handler,
         ),
         getter=get_game_results,
         state=states.CompletedGamesPanelSG.results,
@@ -214,7 +215,6 @@ games = Dialog(
 my_games = Dialog(
     Window(
         Const("Список игр твоего авторства"),
-        Cancel(Const("🔙Назад")),
         Start(Const("✍Написать игру"), id="write_game", state=states.GameWriteSG.game_name),
         Start(Const("✍Написать уровень"), id="write_level", state=states.LevelSG.level_id),
         Start(Const("🗂Уровни"), id="levels", state=states.LevelListSG.levels),
@@ -230,6 +230,7 @@ my_games = Dialog(
             width=1,
             height=10,
         ),
+        Cancel(Const("🔙Назад")),
         state=states.MyGamesPanelSG.choose_game,
         preview_data={"games": [PREVIEW_GAME]},
         getter=get_my_games,
@@ -243,11 +244,6 @@ my_games = Dialog(
             "{% else %} "
             "не запланирована"
             "{% endif %}"
-        ),
-        SwitchTo(
-            Const("🔙Назад к списку игр"),
-            id="to_my_games",
-            state=states.MyGamesPanelSG.choose_game,
         ),
         Button(
             Const("📜Сценарий"),
@@ -308,6 +304,11 @@ my_games = Dialog(
             on_click=cancel_scheduled_game,
             when=F["game"].start_at & F["game"].can_set_start_datetime,
         ),
+        SwitchTo(
+            Const("🔙Назад к списку игр"),
+            id="to_my_games",
+            state=states.MyGamesPanelSG.choose_game,
+        ),
         state=states.MyGamesPanelSG.game_menu,
         preview_data={"game": PREVIEW_GAME},
         getter=get_game,
@@ -326,6 +327,7 @@ schedule_game_dialog = Dialog(
     Window(
         Jinja("Выбор даты начала игры <b>{{game.name}}</b>"),
         Calendar(id="select_game_play_date", on_click=select_date),
+        Cancel(Const("🔙Назад")),
         state=states.GameScheduleSG.date,
         preview_data={"game": PREVIEW_GAME},
         getter=get_game,
@@ -349,6 +351,7 @@ schedule_game_dialog = Dialog(
             state=states.GameScheduleSG.confirm,
             when=lambda data, *args: data["has_time"],
         ),
+        Cancel(Const("🔙Назад")),
         getter=get_game_time,
         preview_data={"game": PREVIEW_GAME, "has_time": True},
         state=states.GameScheduleSG.time,

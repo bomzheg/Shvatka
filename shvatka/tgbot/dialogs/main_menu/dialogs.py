@@ -25,7 +25,6 @@ main_menu = Dialog(
             "Игра запланирована на {{ game.start_at|user_timezone }}"
             "{% endif %}"
         ),
-        Cancel(Const("❌Закрыть")),
         Start(
             Const("🗄Прошедшие игры"),
             id="completed_games",
@@ -70,6 +69,7 @@ main_menu = Dialog(
             state=states.MergePlayersSG.main,
             when=~F["player"].has_forum_user(),
         ),
+        Cancel(Const("❌Закрыть")),
         # ачивки
         state=states.MainMenuSG.main,
         getter=(get_main, get_my_team_),

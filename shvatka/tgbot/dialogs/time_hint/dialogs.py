@@ -12,7 +12,6 @@ time_hint = Dialog(
     Window(
         Const("Время выхода подсказки (можно выбрать или ввести)"),
         MessageInput(func=process_time_message),
-        Cancel(text=Const("Вернуться, не нужна подсказка")),
         Group(
             Select(
                 Format("{item}"),
@@ -24,6 +23,7 @@ time_hint = Dialog(
             id="times_group",
             width=3,
         ),
+        Cancel(text=Const("Вернуться, не нужна подсказка")),
         state=states.TimeHintSG.time,
         getter=get_available_times,
         preview_data={"times": TIMES_PRESET},
@@ -41,13 +41,13 @@ time_hint = Dialog(
             selector="has_hints",
         ),
         MessageInput(func=process_hint),
-        Back(text=Const("Изменить время")),
         Button(
             Const("К следующей подсказке"),
             id="to_next_hint",
             when=lambda data, *args: data["has_hints"],
             on_click=on_finish,
         ),
+        Back(text=Const("Изменить время")),
         getter=get_hints,
         state=states.TimeHintSG.hint,
         preview_data={"has_hints": True, "rendered": "📃🪪"},

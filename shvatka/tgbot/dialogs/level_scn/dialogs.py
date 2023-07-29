@@ -5,7 +5,7 @@ from aiogram_dialog.widgets.kbd import Button, Cancel
 from aiogram_dialog.widgets.text import Const, Jinja
 
 from shvatka.tgbot import states
-from .getters import get_time_hints, get_level_id, get_level_data, get_keys
+from .getters import get_time_hints, get_level_id, get_level_data, get_keys, get_bonus_keys
 from .handlers import (
     process_time_hint_result,
     start_add_time_hint,
@@ -23,6 +23,10 @@ from .handlers import (
     on_correct_keys,
     not_correct_keys,
     clear_hints,
+    convert_bonus_keys,
+    on_correct_bonus_keys,
+    not_correct_bonus_keys,
+    start_bonus_keys,
 )
 from ..preview_data import RENDERED_HINTS_PREVIEW
 
@@ -56,10 +60,14 @@ level = Dialog(
             "{% else %}"
             "🔑Ключи не введены\n"
             "{% endif %}"
+            "{% if bonus_keys %}"
+            "💰Бонусных ключей: {{bonus_keys | length}}\n"
+            "{% endif %}"
             "\n💡Подсказки:\n"
             "{{rendered}}"
         ),
         Button(Const("🔑Ключи"), id="keys", on_click=start_keys),
+        Button(Const("💰Бонусные ключи"), id="bonus_keys", on_click=start_bonus_keys),
         Button(Const("💡Подсказки"), id="hints", on_click=start_hints),
         Button(
             Const("✅Готово, сохранить"),
@@ -85,10 +93,14 @@ level_edit_dialog = Dialog(
             "{% else %}"
             "🔑Ключи не введены\n"
             "{% endif %}"
+            "{% if bonus_keys %}"
+            "💰Бонусных ключей: {{bonus_keys | length}}\n"
+            "{% endif %}"
             "\n💡Подсказки:\n"
             "{{rendered}}"
         ),
         Button(Const("🔑Ключи"), id="keys", on_click=start_keys),
+        Button(Const("💰Бонусные ключи"), id="bonus_keys", on_click=start_bonus_keys),
         Button(Const("💡Подсказки"), id="hints", on_click=start_hints),
         Button(
             Const("✅Готово, сохранить"),
@@ -166,4 +178,37 @@ hints_dialog = Dialog(
     ),
     on_process_result=process_time_hint_result,
     on_start=on_start_hints_edit,
+)
+
+bonus_keys_dialog = Dialog(
+    Window(
+        Jinja("Уровень <b>{{level_id}}</b>\n\n"),
+        Const("💰<b>Бонусные ключи уровня</b>\n"),
+        Jinja(
+            "Сейчас сохранены бонусные ключи:\n"
+            "{% for key in bonus_keys %}"
+            "💰<code>{{key.text}}</code>: {{key.bonus_minutes}} мин.\n"
+            "{% endfor %}"
+            "\n Для изменения пришли сообщение с новыми бонусными ключами в формате: ",
+            when=F["bonus_keys"],
+        ),
+        Const(
+            "У данного уровня нет бонусных ключей. Ключи принимаются в следующих форматах: ",
+            when=~F["bonus_keys"],
+        ),
+        Const(
+            "<code>СХБОНУСНЫЙ</code> 2\n"
+            "<code>СХШТРАФНОЙ</code> -3\n"
+            "<code>СХДРУГОЙБОНУСНЫЙ</code> 5\n"
+        ),
+        Cancel(Const("🔙Назад")),
+        TextInput(
+            type_factory=convert_bonus_keys,
+            on_success=on_correct_bonus_keys,
+            on_error=not_correct_bonus_keys,
+            id="keys_input",
+        ),
+        state=states.LevelBonusKeysSG.bonus_keys,
+        getter=(get_level_id, get_bonus_keys),
+    ),
 )

@@ -10,7 +10,7 @@ from shvatka.tgbot.views.commands import NEW_LEVEL_COMMAND
 
 
 @pytest.mark.asyncio
-async def test_exit_write_game(
+async def test_write_level(
     author: dto.Player,
     author_client: BotClient,
     message_manager: MockMessageManager,
@@ -37,7 +37,8 @@ async def test_exit_write_game(
     assert "Подсказки:\nпока нет ни одной" in new_message.text
     actual_kb = new_message.reply_markup.inline_keyboard
     assert "Ключи" in actual_kb[0][0].text
-    assert "Подсказки" in actual_kb[1][0].text
+    assert "Бонусные ключи" in actual_kb[1][0].text
+    assert "Подсказки" in actual_kb[2][0].text
 
     message_manager.reset_history()
     callback_id = await author_client.click(
@@ -60,7 +61,8 @@ async def test_exit_write_game(
     assert "Подсказки:\nпока нет ни одной" in new_message.text
     actual_kb = new_message.reply_markup.inline_keyboard
     assert "Ключи" in actual_kb[0][0].text
-    assert "Подсказки" in actual_kb[1][0].text
+    assert "Бонусные ключи" in actual_kb[1][0].text
+    assert "Подсказки" in actual_kb[2][0].text
 
     message_manager.reset_history()
     callback_id = await author_client.click(
@@ -151,12 +153,12 @@ async def test_exit_write_game(
     )
     message_manager.assert_answered(callback_id)
     msg = message_manager.one_message()
-    assert "Готово, сохранить" in msg.reply_markup.inline_keyboard[2][0].text
+    assert "Готово, сохранить" in msg.reply_markup.inline_keyboard[3][0].text
 
     message_manager.reset_history()
     callback_id = await author_client.click(
         msg,
-        InlineButtonTextLocator(".*Готово, сохранить"),
+        InlineButtonTextLocator(".*сохранить"),
     )
     message_manager.assert_answered(callback_id)
     request = bot.session.get_request()

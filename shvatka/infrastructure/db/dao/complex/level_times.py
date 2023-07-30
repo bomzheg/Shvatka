@@ -10,6 +10,7 @@ if typing.TYPE_CHECKING:
 
 @dataclass
 class GameStatImpl(GameStatDao):
+
     dao: "HolderDao"
 
     async def get_game_level_times(self, game: dto.Game) -> list[dto.LevelTime]:
@@ -25,3 +26,8 @@ class GameStatImpl(GameStatDao):
         self, game: dto.Game, player: dto.Player
     ) -> dto.SecondaryOrganizer | None:
         return await self.dao.organizer.get_by_player_or_none(game=game, player=player)
+
+    async def get_game_level_times_by_teams(
+        self, game: dto.Game, levels_count: int
+    ) -> dict[dto.Team, list[dto.LevelTimeOnGame]]:
+        return await self.dao.level_time.get_game_level_times_by_teams(game, levels_count)

@@ -17,6 +17,7 @@ from lxml.etree import _Element
 
 from shvatka.core.models import enums
 from shvatka.core.models.dto import scn
+from shvatka.core.models.dto.export_stat import LevelTime, Key, GameStat
 from shvatka.core.utils.datetime_utils import tz_utc, tz_game, add_timezone
 from shvatka.infrastructure.crawler.constants import GAME_URL_TEMPLATE
 from shvatka.infrastructure.crawler.game_scn.parser.parser import (
@@ -24,7 +25,6 @@ from shvatka.infrastructure.crawler.game_scn.parser.parser import (
     PARSER_ERROR_IMG,
     EVENING_TIME,
 )
-from shvatka.infrastructure.crawler.models.stat import LevelTime, Key, GameStat
 
 logger = logging.getLogger(__name__)
 

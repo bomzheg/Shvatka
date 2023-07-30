@@ -93,7 +93,7 @@ class HolderDao:
 
     @property
     def game_packager(self) -> GamePackager:
-        return GamePackagerImpl(game=self.game, file_info=self.file_info)
+        return GamePackagerImpl(dao=self)
 
     @property
     def team_creator(self) -> TeamCreator:

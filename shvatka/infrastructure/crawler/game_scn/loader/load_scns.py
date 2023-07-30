@@ -15,6 +15,7 @@ from shvatka.core.interfaces.clients.file_storage import FileGateway
 from shvatka.core.models import dto
 from shvatka.core.models import enums
 from shvatka.core.models.dto import scn  # noqa: F401
+from shvatka.core.models.dto.export_stat import GameStat
 from shvatka.core.services.game import upsert_game
 from shvatka.core.services.scenario.scn_zip import unpack_scn
 from shvatka.core.utils import exceptions
@@ -22,7 +23,6 @@ from shvatka.core.utils.datetime_utils import add_timezone, tz_utc
 from shvatka.infrastructure.clients.factory import create_file_storage
 from shvatka.infrastructure.clients.file_gateway import BotFileGateway
 from shvatka.infrastructure.crawler.factory import get_paths
-from shvatka.infrastructure.crawler.models.stat import GameStat
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.infrastructure.db.factory import create_pool, create_level_test_dao, create_redis
 from shvatka.tgbot.config.parser.main import load_config

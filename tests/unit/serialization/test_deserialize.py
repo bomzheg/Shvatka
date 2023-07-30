@@ -23,7 +23,7 @@ from shvatka.tgbot.views.utils import render_hints
 
 
 def test_deserialize_game(simple_scn: RawGameScenario, dcf: Factory):
-    game = parse_game(simple_scn.scn, dcf)
+    game = parse_game(simple_scn, dcf)
     assert "My new game" == game.name
     assert HintType.text.name == game.levels[0].time_hints[0].hint[0].type
     assert "загадка" == game.levels[0].time_hints[0].hint[0].text
@@ -56,7 +56,7 @@ def test_deserialize_invalid_level(simple_scn: RawGameScenario, dcf: Factory):
 
 
 def test_deserialize_all_types(all_types_scn: RawGameScenario, dcf: Factory):
-    game_scn = parse_game(all_types_scn.scn, dcf)
+    game_scn = parse_game(all_types_scn, dcf)
     hints = game_scn.levels[0].time_hints
     assert 12 == len(hints)
     for i, type_ in enumerate(
@@ -80,7 +80,7 @@ def test_deserialize_all_types(all_types_scn: RawGameScenario, dcf: Factory):
 
 
 def test_render_all_types(all_types_scn: RawGameScenario, dcf: Factory):
-    game_scn = parse_game(all_types_scn.scn, dcf)
+    game_scn = parse_game(all_types_scn, dcf)
     hints = [time_hint.hint[0] for time_hint in game_scn.levels[0].time_hints]
     assert 12 == len(hints)
     assert "📃📡🧭📷🎼🎬📎🌀🎤🤳🪪🏷" == render_hints(hints)

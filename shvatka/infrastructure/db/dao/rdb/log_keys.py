@@ -97,6 +97,13 @@ class KeyTimeDao(BaseDAO[models.KeyTime]):
             for key in keys
         ]
 
+    async def get_typed_key_grouped(self, game: dto.Game) -> dict[dto.Team, list[dto.KeyTime]]:
+        keys = await self.get_typed_keys(game)
+        grouped: dict[dto.Team, list[dto.KeyTime]] = {}
+        for key in keys:
+            grouped.setdefault(key.team, []).append(key)
+        return grouped
+
     async def replace_team_keys(self, primary: dto.Team, secondary: dto.Team):
         await self.session.execute(
             update(models.KeyTime)

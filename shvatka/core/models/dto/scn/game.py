@@ -3,7 +3,7 @@ from datetime import datetime
 from typing import BinaryIO, Sequence
 
 from shvatka.core.models import enums
-from shvatka.infrastructure.crawler.models.stat import GameStat
+from shvatka.core.models.dto.export_stat import GameStat
 from . import UploadedFileMeta, FileMetaLightweight
 from .file_content import FileMeta
 from .level import LevelScenario
@@ -43,3 +43,4 @@ class ParsedCompletedGameScenario(ParsedGameScenario):
 class RawGameScenario:
     scn: dict
     files: dict[str, BinaryIO]
+    stat: dict | None = None

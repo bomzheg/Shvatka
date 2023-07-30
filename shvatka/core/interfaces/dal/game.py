@@ -2,7 +2,9 @@ from datetime import datetime
 from typing import Protocol
 
 from shvatka.core.interfaces.dal.base import Committer
+from shvatka.core.interfaces.dal.key_log import GameKeyGetter
 from shvatka.core.interfaces.dal.level import LevelUpserter
+from shvatka.core.interfaces.dal.level_times import LevelTimesGetter
 from shvatka.core.models import dto
 from shvatka.core.models.dto import scn
 
@@ -94,7 +96,7 @@ class GameStartPlanner(Committer, ActiveGameFinder, Protocol):
         raise NotImplementedError
 
 
-class GamePackager(Protocol):
+class GamePackager(GameKeyGetter, LevelTimesGetter, Protocol):
     async def get_full(self, id_: int) -> dto.FullGame:
         raise NotImplementedError
 

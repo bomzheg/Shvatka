@@ -18,6 +18,10 @@ from .player import (
     get_kb_agree_promotion,
     AgreePromotionCD,
 )
+from .team import (
+    JoinToTeamRequestCD,
+    get_join_team_kb,
+)
 from .waiver import (
     get_kb_waivers,
     get_kb_manage_waivers,

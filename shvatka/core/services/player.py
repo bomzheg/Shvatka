@@ -102,6 +102,12 @@ async def join_team(
         await dao.commit()
         raise
     await dao.commit()
+    logger.info(
+        "Captain %s added to team %s player %s",
+        manager.id,
+        team.id,
+        player.id,
+    )
 
 
 async def get_checked_player_on_team(

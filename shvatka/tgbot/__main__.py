@@ -69,7 +69,9 @@ async def main():
 
         logger.info("started")
         try:
-            await dp.start_polling(bot)
+            await dp.start_polling(
+                bot, allowed_updates=dp.resolve_used_update_types(skip_events={"aiogd_update"})
+            )
         finally:
             await engine.dispose()
             logger.info("stopped")

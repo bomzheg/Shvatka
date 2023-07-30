@@ -35,6 +35,10 @@ class LevelKeysSG(StatesGroup):
     keys = State()
 
 
+class LevelBonusKeysSG(StatesGroup):
+    bonus_keys = State()
+
+
 class LevelHintsSG(StatesGroup):
     time_hints = State()
 

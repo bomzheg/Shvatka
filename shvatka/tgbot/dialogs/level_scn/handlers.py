@@ -12,6 +12,7 @@ from shvatka.core.utils.input_validation import (
     is_multiple_keys_normal,
     normalize_key,
     validate_level_id,
+    is_key_valid,
 )
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.tgbot import states
@@ -68,6 +69,35 @@ async def on_correct_keys(m: Message, dialog_: Any, manager: DialogManager, keys
     await manager.done({"keys": keys})
 
 
+def convert_bonus_keys(text: str) -> list[scn.BonusKey]:
+    result = []
+    for key_str in text.splitlines():
+        key, bonus = key_str.split(maxsplit=1)
+        if not is_key_valid(key):
+            raise ValueError
+        parsed_bonus = float(bonus)
+        if not (-600 < parsed_bonus < 60):
+            raise ValueError("bonus out of available range")
+        parsed_key = scn.BonusKey(text=key, bonus_minutes=parsed_bonus)
+        result.append(parsed_key)
+    return result
+
+
+async def not_correct_bonus_keys(m: Message, dialog_: Any, manager: DialogManager):
+    await m.answer(
+        "Ключ должен начинаться на SH или СХ и содержать "
+        "только цифры и заглавные буквы кириллицы и латиницы. "
+        "Значение бонуса - целое или дробное число с разумным значением"
+    )
+
+
+async def on_correct_bonus_keys(
+    m: Message, dialog_: Any, manager: DialogManager, keys: list[scn.BonusKey]
+):
+    dcf: Factory = manager.middleware_data["dcf"]
+    await manager.done({"bonus_keys": dcf.dump(keys)})
+
+
 async def process_time_hint_result(start_data: Data, result: Any, manager: DialogManager):
     if not result:
         return
@@ -82,6 +112,8 @@ async def process_level_result(start_data: Data, result: Any, manager: DialogMan
         manager.dialog_data["time_hints"] = hints
     if keys := result.get("keys", None):
         manager.dialog_data["keys"] = keys
+    if bonus_keys := result.get("bonus_keys", None):
+        manager.dialog_data["bonus_keys"] = bonus_keys
 
 
 async def on_start_level_edit(start_data: dict[str, Any], manager: DialogManager):
@@ -92,6 +124,7 @@ async def on_start_level_edit(start_data: dict[str, Any], manager: DialogManager
     manager.dialog_data["level_id"] = level.name_id
     manager.dialog_data["keys"] = list(level.get_keys())
     manager.dialog_data["time_hints"] = dcf.dump(level.scenario.time_hints)
+    manager.dialog_data["bonus_keys"] = dcf.dump(level.get_bonus_keys())
 
 
 async def on_start_hints_edit(start_data: dict[str, Any], manager: DialogManager):
@@ -125,6 +158,16 @@ async def start_keys(c: CallbackQuery, button: Button, manager: DialogManager):
     )
 
 
+async def start_bonus_keys(c: CallbackQuery, button: Button, manager: DialogManager):
+    await manager.start(
+        state=states.LevelBonusKeysSG.bonus_keys,
+        data={
+            "level_id": manager.dialog_data["level_id"],
+            "bonus_keys": manager.dialog_data.get("bonus_keys", []),
+        },
+    )
+
+
 async def save_hints(c: CallbackQuery, button: Button, manager: DialogManager):
     await manager.done({"time_hints": manager.dialog_data["time_hints"]})
 
@@ -141,8 +184,9 @@ async def save_level(c: CallbackQuery, button: Button, manager: DialogManager):
     id_ = data["level_id"]
     keys = set(map(normalize_key, data["keys"]))
     time_hints = dcf.load(data["time_hints"], list[scn.TimeHint])
+    bonus_keys = dcf.load(data.get("bonus_keys", []), set[scn.BonusKey])
 
-    level_scn = scn.LevelScenario(id=id_, keys=keys, time_hints=time_hints)
+    level_scn = scn.LevelScenario(id=id_, keys=keys, time_hints=time_hints, bonus_keys=bonus_keys)
     level = await upsert_level(author=author, scenario=level_scn, dao=dao.level)
     await manager.done(result={"level": dcf.dump(level)})
     await c.answer(text="Уровень успешно сохранён")

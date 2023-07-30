@@ -1,6 +1,6 @@
 from aiogram import F
 from aiogram_dialog import Dialog, Window
-from aiogram_dialog.widgets.input import TextInput
+from aiogram_dialog.widgets.input import TextInput, MessageInput
 from aiogram_dialog.widgets.kbd import SwitchTo, Cancel, ScrollingGroup, Select, Button
 from aiogram_dialog.widgets.text import Const, Jinja, Format
 
@@ -19,6 +19,9 @@ from .handlers import (
     change_role_handler,
     change_emoji_handler,
     start_merge,
+    send_user_request,
+    gotten_user_request,
+    remove_user_request,
 )
 
 TEAM_PLAYER_CARD = Jinja(
@@ -97,9 +100,27 @@ captains_bridge = Dialog(
             width=1,
             height=10,
         ),
+        SwitchTo(
+            Const("Добавить"),
+            id="to_add",
+            state=states.CaptainsBridgeSG.add_player,
+            on_click=send_user_request,
+        ),
         SwitchTo(Const("🔙Назад"), id="back", state=states.CaptainsBridgeSG.main),
         getter=get_team_with_players,
         state=states.CaptainsBridgeSG.players,
+    ),
+    Window(
+        Jinja("Чтобы добавить игрока нажми на кнопку в самом внизу, затем выбери пользователя"),
+        MessageInput(func=gotten_user_request),
+        SwitchTo(
+            Const("🔙Назад"),
+            id="back",
+            state=states.CaptainsBridgeSG.players,
+            on_click=remove_user_request,
+        ),
+        getter=get_my_team_,
+        state=states.CaptainsBridgeSG.add_player,
     ),
     Window(
         TEAM_PLAYER_CARD,

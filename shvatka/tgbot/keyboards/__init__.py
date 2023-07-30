@@ -21,6 +21,7 @@ from .player import (
 from .team import (
     JoinToTeamRequestCD,
     get_join_team_kb,
+    get_user_request_kb,
 )
 from .waiver import (
     get_kb_waivers,

@@ -15,6 +15,7 @@ from shvatka.core.interfaces.dal.player import (
     TeamPlayerEmojiUpdater,
     PlayerMerger,
     TeamPlayerFullHistoryGetter,
+    PlayerByUserIdGetter,
 )
 from shvatka.core.interfaces.dal.secure_invite import InviteSaver, InviteRemover, InviterDao
 from shvatka.core.models import dto
@@ -51,6 +52,10 @@ async def get_my_team(player: dto.Player, dao: PlayerTeamChecker) -> dto.Team | 
 
 async def get_player_by_id(id_: int, dao: PlayerByIdGetter) -> dto.Player:
     return await dao.get_by_id(id_)
+
+
+async def get_player_by_user_id(user_id: int, dao: PlayerByUserIdGetter) -> dto.Player:
+    return await dao.get_by_user_id(user_id)
 
 
 async def get_player_with_stat(id_: int, dao) -> dto.PlayerWithStat:

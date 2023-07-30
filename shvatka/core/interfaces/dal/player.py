@@ -21,6 +21,11 @@ class PlayerByIdGetter(Protocol):
         raise NotImplementedError
 
 
+class PlayerByUserIdGetter(Protocol):
+    async def get_by_user_id(self, user_id: int) -> dto.Player:
+        raise NotImplementedError
+
+
 class TeamPlayerGetter(Protocol):
     async def get_team_player(self, player: dto.Player) -> dto.TeamPlayer:
         raise NotImplementedError

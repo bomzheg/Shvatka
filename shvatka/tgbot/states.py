@@ -92,6 +92,7 @@ class CaptainsBridgeSG(StatesGroup):
     name = State()
     description = State()
     players = State()
+    add_player = State()
     player = State()
     confirm_delete = State()
     player_role = State()

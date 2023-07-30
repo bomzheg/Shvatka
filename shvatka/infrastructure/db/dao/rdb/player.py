@@ -62,6 +62,9 @@ class PlayerDao(BaseDAO[models.Player]):
         )
 
     async def get_by_user(self, user: dto.User) -> dto.Player:
+        return await self.get_by_user_id(user.tg_id)
+
+    async def get_by_user_id(self, user_id: int) -> dto.Player:
         result: ScalarResult[models.Player] = await self.session.scalars(
             select(models.Player)
             .join(models.Player.user)
@@ -69,14 +72,14 @@ class PlayerDao(BaseDAO[models.Player]):
                 joinedload(models.Player.forum_user),
                 contains_eager(models.Player.user),
             )
-            .where(models.User.id == user.db_id)
+            .where(models.User.tg_id == user_id)
         )
         player = result.one()
         if forum_user_db := player.forum_user:
             forum_user = forum_user_db.to_dto()
         else:
             forum_user = None
-        return player.to_dto(user=user, forum_user=forum_user)
+        return player.to_dto(user=player.user.to_dto(), forum_user=forum_user)
 
     async def create_for_user(self, user: dto.User) -> dto.Player:
         user_db = await self.session.get(models.User, user.db_id)

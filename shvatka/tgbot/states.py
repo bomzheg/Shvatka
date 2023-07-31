@@ -126,5 +126,9 @@ class TeamsSg(StatesGroup):
     one = State()
 
 
+class MyTeamSg(StatesGroup):
+    team = State()
+
+
 class PlayerSg(StatesGroup):
     main = State()

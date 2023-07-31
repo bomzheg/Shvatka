@@ -4,7 +4,13 @@ from aiogram_dialog.widgets.text import Const, Format, Jinja, Case
 
 from shvatka.tgbot import states
 from .getters import teams_getter, team_getter, filter_getter
-from .handlers import select_team, select_player, change_active_filter, change_archive_filter
+from .handlers import (
+    select_team,
+    select_player,
+    change_active_filter,
+    change_archive_filter,
+    on_start_my_team,
+)
 from ..common import BOOL_VIEW
 
 team_view = Dialog(
@@ -70,4 +76,19 @@ team_view = Dialog(
         getter=filter_getter,
         state=states.TeamsSg.filter,
     ),
+)
+
+
+my_team_view = Dialog(
+    Window(
+        Jinja(
+            "Моя команда: {{team.name }} \n"
+            "Наш капитан: {{team.captain.name_mention}}\n"
+            "Сыгранные игры: {{' '.join(game_numbers)}}"
+        ),
+        Cancel(Const("🔙Выход")),
+        getter=team_getter,
+        state=states.MyTeamSg.team,
+    ),
+    on_start=on_start_my_team,
 )

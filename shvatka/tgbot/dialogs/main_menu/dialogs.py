@@ -49,6 +49,12 @@ main_menu = Dialog(
             when=F["player"].can_be_author,
         ),
         Start(
+            Const("🚩Моя команда"),
+            id="my_team",
+            state=states.MyTeamSg.team,
+            when=F["team"],
+        ),
+        Start(
             Const("🚩Управление командой"),
             id="to_team_manage",
             state=states.CaptainsBridgeSG.main,

@@ -15,13 +15,18 @@ class TeamPlayerMiddleware(BaseMiddleware):
         event: TelegramObject,
         data: MiddlewareData,
     ) -> Any:
-        team = await get_my_team(player=(data["player"]), dao=data["dao"].team_player)
-        if team:
-            data["team"] = data.get("team", team) or team  # if team already setted as None
-        try:
-            team_player = await get_full_team_player(data["player"], team, data["dao"].team_player)
-        except PlayerNotInTeam:
-            team_player = None
-        data["team_player"] = team_player
+        if "team_player" not in data:
+            if "team" not in data or data["team"] is None:
+                team = await get_my_team(player=(data["player"]), dao=data["dao"].team_player)
+                data["team"] = team
+            else:
+                team = data["team"]
+            try:
+                team_player = await get_full_team_player(
+                    data["player"], team, data["dao"].team_player
+                )
+            except PlayerNotInTeam:
+                team_player = None
+            data["team_player"] = team_player
         result = await handler(event, data)
         return result

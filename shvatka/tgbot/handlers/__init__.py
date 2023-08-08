@@ -1,7 +1,6 @@
 import logging
 
 from aiogram import Dispatcher
-from aiogram_dialog import setup_dialogs
 from aiogram_dialog.api.protocols import MessageManagerProtocol
 
 from shvatka.tgbot import dialogs
@@ -25,8 +24,7 @@ def setup_handlers(dp: Dispatcher, bot_config: BotConfig, message_manager: Messa
     dp.include_router(game.setup())
     dp.include_router(waivers.setup())
 
-    dp.include_router(dialogs.setup())
-    setup_dialogs(dp, message_manager=message_manager)  # TODO register on router only
+    dp.include_router(dialogs.setup(message_manager))
 
     # always must be last registered
     dp.include_router(last.setup())

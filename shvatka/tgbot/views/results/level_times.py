@@ -1,8 +1,8 @@
 import typing
 from dataclasses import dataclass
-from datetime import datetime, time
+from datetime import datetime, time, timedelta
+from typing import Any  # noqa: F401
 
-from asyncpg.pgproto.pgproto import timedelta
 from openpyxl import Workbook
 from openpyxl.worksheet.worksheet import Worksheet
 
@@ -70,7 +70,7 @@ def export_results_internal(game: dto.FullGame, results: Results, file: typing.A
     if not (game.is_complete() or game.is_finished()):
         raise GameNotFinished
     wb = Workbook()
-    ws = wb.active
+    ws = typing.cast(Worksheet, wb.active)
     ws.cell(**GAME_NAME.shift()).value = game.name
     i = 0
     for i, team_level_times in enumerate(results.data):
@@ -103,7 +103,7 @@ def export_results_internal(game: dto.FullGame, results: Results, file: typing.A
 
 
 def resize_columns(worksheet: Worksheet):
-    for col in worksheet.columns:
+    for col in worksheet.columns:  # type: Any  # =(
         new_len = max([2, *[len(str(cell.value or "")) for cell in col]])
         worksheet.column_dimensions[col[0].column_letter].width = new_len
 

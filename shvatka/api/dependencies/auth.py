@@ -1,6 +1,7 @@
 import hashlib
 import hmac
 import logging
+import typing
 from datetime import timedelta, datetime
 
 from fastapi import Depends, HTTPException, APIRouter
@@ -99,7 +100,7 @@ class AuthProvider:
         )
         try:
             payload = jwt.decode(token, self.secret_key, algorithms=[self.algorythm])
-            username: str = payload.get("sub")
+            username = typing.cast(str, payload.get("sub"))
             if username is None:
                 raise credentials_exception
         except JWTError:

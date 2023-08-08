@@ -1,7 +1,5 @@
 from dataclasses import dataclass, field
-from datetime import datetime
-
-from asyncpg.pgproto.pgproto import timedelta
+from datetime import datetime, timedelta
 
 from .level import Level
 from .organizer import Organizer

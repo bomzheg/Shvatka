@@ -20,8 +20,8 @@ class LevelDao(BaseDAO[models.Level]):
         self,
         author: dto.Player,
         scn: LevelScenario,
-        game: dto.Game = None,
-        no_in_game: int = None,
+        game: dto.Game | None = None,
+        no_in_game: int | None = None,
     ) -> dto.Level:
         assert (game is None) == (no_in_game is None)
         try:

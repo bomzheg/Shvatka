@@ -18,7 +18,7 @@ class SHError(Exception):
         player: dto.Player | None = None,
         chat: dto.Chat | None = None,
         team: dto.Team | None = None,
-        game: Any = None,
+        game: Any | None = None,
         alarm: bool | None = False,
         notify_user: str | None = None,
         *args,

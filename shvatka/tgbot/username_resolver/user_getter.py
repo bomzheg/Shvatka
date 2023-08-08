@@ -25,7 +25,7 @@ class UserGetter:
             no_updates=True,
         )
 
-    async def get_user(self, username: str = None) -> User | None:
+    async def get_user(self, username: str | None = None) -> User | None:
         try:
             return await self.get_user_by_username(username)
         except RPCError:

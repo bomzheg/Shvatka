@@ -65,7 +65,7 @@ async def create_game(
     author: dto.Player,
     name: str,
     dao: GameCreator,
-    levels: list[dto.Level] = None,
+    levels: list[dto.Level] | None = None,
 ) -> dto.Game:
     if levels is None:
         levels = []
@@ -101,7 +101,7 @@ async def add_level(game: dto.Game, level: dto.Level, author: dto.Player, dao: L
     await dao.commit()
 
 
-async def get_game(id_: int, *, author: dto.Player = None, dao: GameByIdGetter) -> dto.Game:
+async def get_game(id_: int, *, author: dto.Player | None = None, dao: GameByIdGetter) -> dto.Game:
     return await dao.get_by_id(id_=id_, author=author)
 
 

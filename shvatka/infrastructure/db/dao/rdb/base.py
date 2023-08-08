@@ -23,7 +23,7 @@ class BaseDAO(Generic[Model]):
         return result.all()
 
     async def _get_by_id(
-        self, id_: int, options: Sequence[ORMOption] = None, populate_existing: bool = False
+        self, id_: int, options: Sequence[ORMOption] | None = None, populate_existing: bool = False
     ) -> Model:
         result = await self.session.get(
             self.model, id_, options=options, populate_existing=populate_existing

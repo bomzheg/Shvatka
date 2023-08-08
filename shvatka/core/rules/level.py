@@ -26,7 +26,7 @@ def check_can_edit(level: dto.Level, author: dto.Player, game: dto.Game | None =
     # TODO check game status
 
 
-def check_can_link_to_game(game: dto.Game, level: dto.Level, author: dto.Player = None):
+def check_can_link_to_game(game: dto.Game, level: dto.Level, author: dto.Player | None = None):
     if level.game_id is not None and level.game_id != game.id:
         raise SHDataBreach(
             player=author,

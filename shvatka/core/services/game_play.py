@@ -262,7 +262,7 @@ async def schedule_first_hint(
     scheduler: Scheduler,
     team: dto.Team,
     next_level: dto.Level,
-    now: datetime = None,
+    now: datetime | None = None,
 ):
     await scheduler.plain_hint(
         level=next_level,
@@ -272,12 +272,12 @@ async def schedule_first_hint(
     )
 
 
-def calculate_first_hint_time(next_level: dto.Level, now: datetime = None) -> datetime:
+def calculate_first_hint_time(next_level: dto.Level, now: datetime | None = None) -> datetime:
     return calculate_next_hint_time(next_level.get_hint(0), next_level.get_hint(1), now)
 
 
 def calculate_next_hint_time(
-    current: scn.TimeHint, next_: scn.TimeHint, now: datetime = None
+    current: scn.TimeHint, next_: scn.TimeHint, now: datetime | None = None
 ) -> datetime:
     if now is None:
         now = datetime.now(tz=tz_utc)

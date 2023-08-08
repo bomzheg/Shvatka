@@ -19,8 +19,8 @@ class GameUpserterImpl(GameUpserter):
         self,
         author: dto.Player,
         scenario: scn.LevelScenario,
-        game: dto.Game = None,
-        no_in_game: int = None,
+        game: dto.Game | None = None,
+        no_in_game: int | None = None,
     ) -> dto.Level:
         return await self.level.upsert(author, scenario, game, no_in_game)
 

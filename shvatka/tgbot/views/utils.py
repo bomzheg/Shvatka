@@ -10,7 +10,10 @@ from shvatka.core.views.texts import HINTS_EMOJI
 
 
 async def total_remove_msg(
-    bot: Bot, chat_id: int = None, msg_id: int = None, inline_msg_id: int = None
+    bot: Bot,
+    chat_id: int | None = None,
+    msg_id: int | None = None,
+    inline_msg_id: int | None = None,
 ):
     if inline_msg_id:
         return await edit_message_as_removed(bot, inline_message_id=inline_msg_id)

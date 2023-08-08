@@ -133,7 +133,7 @@ statistics = true
 exit-zero = true
 
 [tool.mypy]
-no_implicit_optional = false
+no_implicit_optional = true
 warn_unused_ignores = true
 show_error_codes = true
 

@@ -15,7 +15,7 @@ class LevelTimeDao(BaseDAO[models.LevelTime]):
         super().__init__(models.LevelTime, session)
 
     async def set_to_level(
-        self, team: dto.Team, game: dto.Game, level_number: int, at: datetime = None
+        self, team: dto.Team, game: dto.Game, level_number: int, at: datetime | None = None
     ):
         if at is None:
             at = datetime.now(tz=tz_utc)

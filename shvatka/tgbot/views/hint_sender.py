@@ -59,7 +59,7 @@ class HintSender:
         chat_id: int,
         hint_containers: Iterable[scn.BaseHint],
         caption: str | None = None,
-        sleep: int = None,
+        sleep: int | None = None,
     ):
         """
         sending caption if exist and all hint parts in chat with chat_id

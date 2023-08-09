@@ -16,7 +16,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
-      - uses: mr-smithers-excellent/docker-build-push@v5.6
+      - uses: mr-smithers-excellent/docker-build-push@v6.2
         with:
           image: bomzheg/shvatka
           addLatest: true

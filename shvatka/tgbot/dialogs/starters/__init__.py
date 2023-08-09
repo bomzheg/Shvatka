@@ -1,7 +1,7 @@
 from aiogram import Router, F
 from aiogram.enums import ChatType
 
-from . import editor, game_spy, info, manage_team, player, stat
+from . import editor, game_spy, info, manage_team, player, stat, base
 from shvatka.tgbot.filters import GameStatusFilter
 from shvatka.tgbot.utils.router import disable_router_on_game
 
@@ -9,6 +9,7 @@ from shvatka.tgbot.utils.router import disable_router_on_game
 def setup() -> Router:
     router = Router(name=__name__)
     router.message.filter(F.chat.type == ChatType.PRIVATE)
+    router.include_router(base.setup())
 
     common_router = router.include_router(Router(name=__name__ + ".common"))
     disable_router_on_game(common_router)

@@ -26,9 +26,9 @@ def setup(message_manager: MessageManagerProtocol) -> Router:
     dialogs_router = Router(name=__name__)
     dialogs_router.message.filter(F.chat.type == ChatType.PRIVATE)
 
+    dialogs_router.include_router(starters.setup())
     dialogs_router.include_router(setup_all_dialogs())
     dialogs_router.include_router(setup_active_game_dialogs())
-    dialogs_router.include_router(starters.setup())
 
     setup_dialogs(dialogs_router, message_manager=message_manager)
     return dialogs_router

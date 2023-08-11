@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from shvatka.core.interfaces.dal.key_log import TypedKeyGetter
+from shvatka.core.interfaces.dal.complex import TypedKeyGetter
 from shvatka.core.models import dto
 from shvatka.core.models.dto import Team, KeyTime
 from shvatka.infrastructure.db.dao import KeyTimeDao, OrganizerDao

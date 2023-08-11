@@ -1,16 +1,11 @@
 from typing import Protocol
 
-from shvatka.core.interfaces.dal.organizer import OrgByPlayerGetter
 from shvatka.core.models import dto
 
 
 class GameKeyGetter(Protocol):
     async def get_typed_keys_grouped(self, game: dto.Game) -> dict[dto.Team, list[dto.KeyTime]]:
         raise NotImplementedError
-
-
-class TypedKeyGetter(GameKeyGetter, OrgByPlayerGetter, Protocol):
-    pass
 
 
 class TeamKeysMerger(Protocol):

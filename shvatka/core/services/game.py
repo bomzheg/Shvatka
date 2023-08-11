@@ -3,6 +3,7 @@ from datetime import datetime
 from dataclass_factory import Factory
 
 from shvatka.core.interfaces.clients.file_storage import FileGateway
+from shvatka.core.interfaces.dal.complex import GameCompleter
 from shvatka.core.interfaces.dal.game import (
     GameUpserter,
     GameCreator,
@@ -15,7 +16,6 @@ from shvatka.core.interfaces.dal.game import (
     GamePackager,
     GameRenamer,
     CompletedGameFinder,
-    GameCompleter,
 )
 from shvatka.core.interfaces.dal.level import LevelLinker
 from shvatka.core.interfaces.scheduler import Scheduler

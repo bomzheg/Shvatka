@@ -1,5 +1,4 @@
-from shvatka.core.interfaces.dal.key_log import TypedKeyGetter
-from shvatka.core.interfaces.dal.level_times import GameStatDao
+from shvatka.core.interfaces.dal.complex import TypedKeyGetter, GameStatDao
 from shvatka.core.models import dto
 from shvatka.core.services.organizers import get_by_player, check_can_see_log_keys, check_can_spy
 

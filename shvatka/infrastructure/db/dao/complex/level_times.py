@@ -1,7 +1,7 @@
 import typing
 from dataclasses import dataclass
 
-from shvatka.core.interfaces.dal.level_times import GameStatDao
+from shvatka.core.interfaces.dal.complex import GameStatDao
 from shvatka.core.models import dto
 
 if typing.TYPE_CHECKING:

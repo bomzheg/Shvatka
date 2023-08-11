@@ -7,6 +7,7 @@ from datetime import datetime
 from shvatka.core.models import enums
 
 if typing.TYPE_CHECKING:
+    from shvatka.core.models import dto
     from shvatka.core.models.dto.levels_times import LevelTime
     from shvatka.core.models.dto.time_key import KeyTime
 
@@ -61,7 +62,19 @@ class Waiver:
     player_identity: PlayerIdentity
     team: str
     team_identity: TeamIdentity
-    vote: enums.Played = enums.Played.yes
+    played: enums.Played = enums.Played.yes
+
+    @classmethod
+    def from_dto(cls, waiver: "dto.Waiver"):
+        player_tg_id = waiver.player.get_chat_id()
+        assert player_tg_id is not None
+        return cls(
+            player=player_tg_id,
+            player_identity=PlayerIdentity.tg_user_id,
+            team=waiver.team.name,
+            team_identity=TeamIdentity.bomzheg_engine_name,
+            played=waiver.played,
+        )
 
 
 @dataclass

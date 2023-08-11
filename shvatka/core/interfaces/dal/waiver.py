@@ -47,6 +47,9 @@ class GameWaiversGetter(Protocol):
     async def get_played(self, game: dto.Game, team: dto.Team) -> Iterable[dto.VotedPlayer]:
         raise NotImplementedError
 
+    async def get_all_by_game(self, game: dto.Game) -> list[dto.Waiver]:
+        raise NotImplementedError
+
 
 class WaiverMerger(Protocol):
     async def replace_team_waiver(self, primary: dto.Team, secondary: dto.Team):

@@ -3,7 +3,7 @@ from datetime import datetime
 from dataclass_factory import Factory
 
 from shvatka.core.interfaces.clients.file_storage import FileGateway
-from shvatka.core.interfaces.dal.complex import GameCompleter
+from shvatka.core.interfaces.dal.complex import GameCompleter, GamePackager
 from shvatka.core.interfaces.dal.game import (
     GameUpserter,
     GameCreator,
@@ -13,7 +13,6 @@ from shvatka.core.interfaces.dal.game import (
     WaiverStarter,
     GameStartPlanner,
     GameNameChecker,
-    GamePackager,
     GameRenamer,
     CompletedGameFinder,
 )
@@ -140,7 +139,7 @@ async def get_game_package(
                 key.name: [export_stat.Key.from_dto(k) for k in value]
                 for key, value in (await dao.get_typed_keys_grouped(game)).items()
             },
-            # waivers=,
+            waivers=[export_stat.Waiver.from_dto(w) for w in await dao.get_all_by_game(game)],
             team_identity=export_stat.TeamIdentity.bomzheg_engine_name,
         )
     else:

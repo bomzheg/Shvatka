@@ -1,7 +1,8 @@
 from typing import BinaryIO, Sequence
 
 from shvatka.core.interfaces.clients.file_storage import FileGateway
-from shvatka.core.interfaces.dal.game import GameUpserter, GamePackager
+from shvatka.core.interfaces.dal.complex import GamePackager
+from shvatka.core.interfaces.dal.game import GameUpserter
 from shvatka.core.models import dto
 from shvatka.core.models.dto import scn
 from shvatka.core.utils.exceptions import NotAuthorizedForEdit

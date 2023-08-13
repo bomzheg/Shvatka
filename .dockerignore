@@ -2,7 +2,6 @@
 .github/
 .*ignore
 README.md
-*.pyс
 __pycache__
 .env*
 docker-compose*.yml

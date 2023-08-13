@@ -8,8 +8,6 @@ from shvatka.core.models import enums
 
 if typing.TYPE_CHECKING:
     from shvatka.core.models import dto
-    from shvatka.core.models.dto.levels_times import LevelTime
-    from shvatka.core.models.dto.time_key import KeyTime
 
 
 class PlayerIdentity(enum.StrEnum):
@@ -28,7 +26,7 @@ class LevelTime:
     at: datetime | None
 
     @classmethod
-    def from_dto(cls, lt: "LevelTime"):
+    def from_dto(cls, lt: "dto.LevelTime"):
         return cls(
             number=lt.level_number,
             at=lt.start_at,
@@ -44,7 +42,7 @@ class Key:
     player_identity: PlayerIdentity = PlayerIdentity.forum_name
 
     @classmethod
-    def from_dto(cls, key_time: "KeyTime"):
+    def from_dto(cls, key_time: "dto.KeyTime"):
         player_tg_id = key_time.player.get_chat_id()
         assert player_tg_id is not None
         return cls(

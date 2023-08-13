@@ -1,7 +1,11 @@
 from typing import Protocol
 
 from shvatka.core.interfaces.dal.base import Committer
-from shvatka.core.interfaces.dal.game import MaxGameNumberGetter, GameNumberUpdater, GameStatusCompleter
+from shvatka.core.interfaces.dal.game import (
+    MaxGameNumberGetter,
+    GameNumberUpdater,
+    GameStatusCompleter,
+)
 from shvatka.core.interfaces.dal.key_log import TeamKeysMerger, GameKeyGetter
 from shvatka.core.interfaces.dal.level_times import TeamLevelsMerger, LevelTimesGetter
 from shvatka.core.interfaces.dal.organizer import OrgByPlayerGetter

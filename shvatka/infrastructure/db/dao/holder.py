@@ -1,7 +1,12 @@
 from redis.asyncio.client import Redis
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from shvatka.core.interfaces.dal.complex import TeamMerger, TypedKeyGetter, GameStatDao, GamePackager
+from shvatka.core.interfaces.dal.complex import (
+    TeamMerger,
+    TypedKeyGetter,
+    GameStatDao,
+    GamePackager,
+)
 from shvatka.core.interfaces.dal.game import GameUpserter, GameCreator
 from shvatka.core.interfaces.dal.game_play import GamePreparer, GamePlayerDao
 from shvatka.core.interfaces.dal.level_testing import LevelTestingDao

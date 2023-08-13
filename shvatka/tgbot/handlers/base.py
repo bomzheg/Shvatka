@@ -6,7 +6,6 @@ from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, ReplyKeyboardRemove, ContentType
 from aiogram.utils.markdown import html_decoration as hd
-from aiogram_dialog import DialogManager
 
 from shvatka.core.models import dto
 from shvatka.core.services.chat import update_chat_id
@@ -31,8 +30,7 @@ async def chat_id(message: Message, chat: dto.Chat, user: dto.User):
     await message.reply(text, disable_notification=True)
 
 
-async def cancel_state(message: Message, state: FSMContext, dialog_manager: DialogManager):
-    await dialog_manager.reset_stack(remove_keyboard=True)
+async def cancel_state(message: Message, state: FSMContext):
     current_state = await state.get_state()
     if current_state is None:
         return
@@ -85,6 +83,8 @@ def setup() -> Router:
         Command(commands=CHAT_TYPE_COMMAND),
         F.chat.type == ChatType.SUPERGROUP,
     )
-    router.message.register(cancel_state, Command(commands=CANCEL_COMMAND))
+    router.message.register(
+        cancel_state, Command(commands=CANCEL_COMMAND), F.chat.type != ChatType.PRIVATE
+    )
     router.message.register(chat_migrate, F.content_types == ContentType.MIGRATE_TO_CHAT_ID)
     return router

@@ -1,4 +1,7 @@
-from aiogram import Router
+from aiogram import Router, F
+from aiogram.enums import ChatType
+from aiogram_dialog import setup_dialogs
+from aiogram_dialog.api.protocols import MessageManagerProtocol
 
 from shvatka.tgbot.dialogs import (
     game_orgs,
@@ -14,20 +17,25 @@ from shvatka.tgbot.dialogs import (
     game_publish,
     team_manage,
     team_view,
+    starters,
 )
 from shvatka.tgbot.filters import GameStatusFilter
 
 
-def setup() -> Router:
-    dialogs_router = Router(name="tgbot.dialogs")
+def setup(message_manager: MessageManagerProtocol) -> Router:
+    dialogs_router = Router(name=__name__)
+    dialogs_router.message.filter(F.chat.type == ChatType.PRIVATE)
+
+    dialogs_router.include_router(starters.setup())
     dialogs_router.include_router(setup_all_dialogs())
     dialogs_router.include_router(setup_active_game_dialogs())
 
+    setup_dialogs(dialogs_router, message_manager=message_manager)
     return dialogs_router
 
 
 def setup_all_dialogs() -> Router:
-    router = Router(name="tgbot.dialogs.common")
+    router = Router(name=__name__ + ".common")
     router.callback_query.filter(GameStatusFilter(running=False))
     router.message.filter(GameStatusFilter(running=False))
 
@@ -48,6 +56,6 @@ def setup_all_dialogs() -> Router:
 
 
 def setup_active_game_dialogs() -> Router:
-    router = Router(name="tgbot.dialogs.game.running")
+    router = Router(name=__name__ + ".game.running")
     game_spy.setup(router)
     return router

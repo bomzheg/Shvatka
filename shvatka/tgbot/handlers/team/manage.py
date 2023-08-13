@@ -27,19 +27,17 @@ from shvatka.core.utils.exceptions import (
 from shvatka.core.views.game import GameLogWriter
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.tgbot import keyboards as kb
-from shvatka.tgbot import states
 from shvatka.tgbot.filters.has_target import HasTargetFilter
 from shvatka.tgbot.filters.is_admin import is_admin_filter
 from shvatka.tgbot.filters.is_team import IsTeamFilter
 from shvatka.tgbot.filters.team_player import TeamPlayerFilter
 from shvatka.tgbot.middlewares import TeamPlayerMiddleware
-from shvatka.tgbot.utils.router import disable_router_on_game, register_start_handler
+from shvatka.tgbot.utils.router import disable_router_on_game
 from shvatka.tgbot.views.commands import (
     CREATE_TEAM_COMMAND,
     ADD_IN_TEAM_COMMAND,
     TEAM_COMMAND,
     PLAYERS_COMMAND,
-    MANAGE_TEAM_COMMAND,
 )
 from shvatka.tgbot.views.team import render_team_card, render_team_players
 from shvatka.tgbot.views.texts import NOT_SUPERGROUP_ERROR
@@ -316,17 +314,5 @@ def setup() -> Router:
     router.callback_query.register(
         answer_not_enough_rights,
         kb.JoinToTeamRequestCD.filter(),
-    )
-    register_start_handler(
-        Command(commands=MANAGE_TEAM_COMMAND),
-        F.chat.type == ChatType.PRIVATE,
-        or_f(
-            TeamPlayerFilter(is_captain=True),
-            TeamPlayerFilter(can_manage_players=True),
-            TeamPlayerFilter(can_remove_players=True),
-            TeamPlayerFilter(can_change_team_name=True),
-        ),
-        state=states.CaptainsBridgeSG.main,
-        router=router,
     )
     return router

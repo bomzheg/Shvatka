@@ -1,6 +1,4 @@
-from aiogram import Bot, Router, F
-from aiogram.enums import ChatType
-from aiogram.filters import Command
+from aiogram import Bot, Router
 from aiogram.types import Message
 
 from shvatka.core.interfaces.clients.file_storage import FileStorage
@@ -11,13 +9,10 @@ from shvatka.core.services.key import KeyProcessor
 from shvatka.core.utils.key_checker_lock import KeyCheckerFactory
 from shvatka.core.views.game import GameLogWriter
 from shvatka.infrastructure.db.dao.holder import HolderDao
-from shvatka.tgbot import states
 from shvatka.tgbot.filters import is_key, IsTeamFilter
 from shvatka.tgbot.filters.game_status import GameStatusFilter
 from shvatka.tgbot.filters.team_player import TeamPlayerFilter
 from shvatka.tgbot.middlewares import TeamPlayerMiddleware
-from shvatka.tgbot.utils.router import register_start_handler
-from shvatka.tgbot.views.commands import SPY_COMMAND, SPY_LEVELS_COMMAND, SPY_KEYS_COMMAND
 from shvatka.tgbot.views.game import create_bot_game_view, BotOrgNotifier
 
 
@@ -61,22 +56,4 @@ def setup() -> Router:
         IsTeamFilter(),
         TeamPlayerFilter(),
     )  # TODO is playing in this game
-    register_start_handler(
-        F.chat.type == ChatType.PRIVATE,
-        Command(commands=SPY_COMMAND),
-        state=states.OrgSpySG.main,
-        router=router,  # TODO is_org
-    )
-    register_start_handler(
-        Command(commands=SPY_LEVELS_COMMAND),  # TODO is_org
-        F.chat.type == ChatType.PRIVATE,
-        state=states.OrgSpySG.spy,
-        router=router,
-    )
-    register_start_handler(
-        Command(commands=SPY_KEYS_COMMAND),  # TODO is_org
-        F.chat.type == ChatType.PRIVATE,
-        state=states.OrgSpySG.keys,
-        router=router,
-    )
     return router

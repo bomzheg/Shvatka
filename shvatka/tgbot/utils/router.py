@@ -1,4 +1,4 @@
-from aiogram import Router
+from aiogram import Router, Dispatcher
 from aiogram.filters import Filter
 from aiogram.fsm.state import State
 from aiogram.types import Message
@@ -35,3 +35,13 @@ def register_start_handler(
         start_dialog,
         *filters,
     )
+
+
+def print_router_tree(router: Router, indent: int = 0) -> str:
+    if isinstance(router, Dispatcher):
+        result = " " * indent + "dispatcher"
+    else:
+        result = " " * indent + router.name
+    for in_router in router.sub_routers:
+        result += "\n" + print_router_tree(in_router, indent + 2)
+    return result

@@ -21,6 +21,7 @@ from shvatka.tgbot.main_factory import (
     create_redis,
 )
 from shvatka.tgbot.username_resolver.user_getter import UserGetter
+from shvatka.tgbot.utils.router import print_router_tree
 from shvatka.tgbot.views.jinja_filters import setup_jinja
 
 logger = logging.getLogger(__name__)
@@ -67,7 +68,7 @@ async def main():
             message_manager=MessageManager(),
         )
 
-        logger.info("started")
+        logger.info("started with configured routers \n%s", print_router_tree(dp))
         try:
             await dp.start_polling(
                 bot, allowed_updates=dp.resolve_used_update_types(skip_events={"aiogd_update"})

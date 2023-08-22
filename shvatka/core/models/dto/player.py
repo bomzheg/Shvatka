@@ -56,6 +56,12 @@ class Player:
         assert self._user
         return self._user.username
 
+    def get_forum_name(self) -> str | None:
+        if self._forum_user is None:
+            return None
+        assert self._forum_user
+        return self._forum_user.name
+
     def with_stat(self, typed_keys_count: int, typed_correct_keys_count: int) -> PlayerWithStat:
         return PlayerWithStat(
             id=self.id,

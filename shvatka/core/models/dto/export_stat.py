@@ -21,6 +21,32 @@ class TeamIdentity(enum.StrEnum):
 
 
 @dataclass
+class Player:
+    identity: PlayerIdentity
+    forum_name: str | None = None
+    tg_user_id: int | None = None
+
+    def __post_init__(self) -> None:
+        if self.forum_name is None and self.tg_user_id is None:
+            raise RuntimeError("forum name and tg_user_id are None both")
+
+    @classmethod
+    def from_dto(cls, player: "dto.Player"):
+        if player.has_user():
+            player_tg_id = player.get_chat_id()
+            assert player_tg_id is not None
+            player_identity = PlayerIdentity.tg_user_id
+            return Player(tg_user_id=player_tg_id, identity=player_identity)
+        elif player.has_forum_user():
+            player_name = player.get_forum_name()
+            assert player_name is not None
+            player_identity = PlayerIdentity.forum_name
+            return Player(forum_name=player_name, identity=player_identity)
+        else:
+            raise RuntimeError("player without user and forum_user")
+
+
+@dataclass
 class LevelTime:
     number: int
     at: datetime | None
@@ -36,39 +62,31 @@ class LevelTime:
 @dataclass
 class Key:
     level: int
-    player: str | int
+    player: Player
     at: datetime
     value: str
-    player_identity: PlayerIdentity = PlayerIdentity.forum_name
 
     @classmethod
     def from_dto(cls, key_time: "dto.KeyTime"):
-        player_tg_id = key_time.player.get_chat_id()
-        assert player_tg_id is not None
         return cls(
             level=key_time.level_number,
-            player=player_tg_id,
             at=key_time.at,
             value=key_time.text,
-            player_identity=PlayerIdentity.tg_user_id,
+            player=Player.from_dto(key_time.player),
         )
 
 
 @dataclass
 class Waiver:
-    player: str | int
-    player_identity: PlayerIdentity
+    player: Player
     team: str
     team_identity: TeamIdentity
     played: enums.Played = enums.Played.yes
 
     @classmethod
     def from_dto(cls, waiver: "dto.Waiver"):
-        player_tg_id = waiver.player.get_chat_id()
-        assert player_tg_id is not None
         return cls(
-            player=player_tg_id,
-            player_identity=PlayerIdentity.tg_user_id,
+            player=Player.from_dto(waiver.player),
             team=waiver.team.name,
             team_identity=TeamIdentity.bomzheg_engine_name,
             played=waiver.played,

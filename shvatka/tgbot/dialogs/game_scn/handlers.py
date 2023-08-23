@@ -7,7 +7,7 @@ from aiogram import Bot
 from aiogram.types import Message, CallbackQuery
 from aiogram.utils.text_decorations import html_decoration as hd
 from aiogram_dialog import DialogManager
-from aiogram_dialog.widgets.kbd import Button, ManagedMultiSelectAdapter
+from aiogram_dialog.widgets.kbd import Button, ManagedMultiselect
 from dataclass_factory import Factory
 
 from shvatka.core.interfaces.clients.file_storage import FileGateway
@@ -76,7 +76,7 @@ async def save_game(c: CallbackQuery, button: Button, manager: DialogManager):
     author: dto.Player = manager.middleware_data["player"]
     name: str = manager.dialog_data["game_name"]
     levels = await get_all_my_free_levels(author, dao.level)
-    multiselect = typing.cast(ManagedMultiSelectAdapter, manager.find("my_free_level_ids"))
+    multiselect = typing.cast(ManagedMultiselect, manager.find("my_free_level_ids"))
     levels = list(filter(lambda level: multiselect.is_checked(level.db_id), levels))
     game = await create_game(author=author, name=name, dao=dao.game_creator, levels=levels)
     assert c.message

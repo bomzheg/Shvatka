@@ -162,7 +162,7 @@ async def test_write_level(
     )
     message_manager.assert_answered(callback_id)
     request = bot.session.get_request()
-    assert "Уровень успешно сохранён" == request.data["text"]
+    assert "Уровень успешно сохранён" == request.text
     assert 1 == await dao.level.count()
     level, *_ = await dao.level.get_all_my(author)
     assert author.id == level.author.id

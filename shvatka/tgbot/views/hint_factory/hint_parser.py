@@ -67,7 +67,7 @@ class HintParser:
                 return PhotoHint(caption=message.html_text, file_guid=guid)
             case ContentType.AUDIO:
                 assert message.audio
-                thumb = await self.save_thumb(author, message.audio.thumb)
+                thumb = await self.save_thumb(author, message.audio.thumbnail)
                 return AudioHint(
                     caption=message.html_text,
                     file_guid=guid,
@@ -75,7 +75,7 @@ class HintParser:
                 )
             case ContentType.VIDEO:
                 assert message.video
-                thumb = await self.save_thumb(author, message.video.thumb)
+                thumb = await self.save_thumb(author, message.video.thumbnail)
                 return VideoHint(
                     caption=message.html_text,
                     file_guid=guid,
@@ -83,7 +83,7 @@ class HintParser:
                 )
             case ContentType.DOCUMENT:
                 assert message.document
-                thumb = await self.save_thumb(author, message.document.thumb)
+                thumb = await self.save_thumb(author, message.document.thumbnail)
                 return DocumentHint(
                     caption=message.html_text,
                     file_guid=guid,
@@ -91,7 +91,7 @@ class HintParser:
                 )
             case ContentType.ANIMATION:
                 assert message.animation
-                thumb = await self.save_thumb(author, message.animation.thumb)
+                thumb = await self.save_thumb(author, message.animation.thumbnail)
                 return AnimationHint(
                     caption=message.html_text,
                     file_guid=guid,

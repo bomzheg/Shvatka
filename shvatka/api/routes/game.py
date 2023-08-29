@@ -11,7 +11,7 @@ from shvatka.infrastructure.db.dao.holder import HolderDao
 async def get_my_games_list(
     player: dto.Player = Depends(player_provider),  # type: ignore[assignment]
     dao: HolderDao = Depends(dao_provider),  # type: ignore[assignment]
-) -> list[dto.Game]:
+):
     return await get_authors_games(player, dao.game)
 
 

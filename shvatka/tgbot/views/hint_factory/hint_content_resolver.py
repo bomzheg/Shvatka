@@ -150,14 +150,12 @@ class HintContentResolver:
                 return AudioContentView(
                     content=await self._resolve_bytes(hint.file_guid),
                     caption=hint.caption,
-                    thumb=await self._resolve_bytes(hint.thumb_guid),
                 )
             case VideoHint():
                 hint = typing.cast(VideoHint, hint)
                 return VideoContentView(
                     content=await self._resolve_bytes(hint.file_guid),
                     caption=hint.caption,
-                    thumb=await self._resolve_bytes(hint.thumb_guid),
                 )
             case DocumentHint():
                 hint = typing.cast(DocumentHint, hint)

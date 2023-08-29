@@ -42,7 +42,7 @@ async def test_create_team(harry: dto.Player, dp: Dispatcher, bot: MockedBot, da
         update_id=1,
         message=Message(
             message_id=2,
-            from_user=harry_tg,  # type: ignore[call-arg]
+            from_user=harry_tg,
             chat=chat,
             text="/" + CREATE_TEAM_COMMAND.command,
             date=datetime.now(tz=tz_utc),
@@ -58,7 +58,7 @@ async def test_create_team(harry: dto.Player, dp: Dispatcher, bot: MockedBot, da
     hermi = create_dto_hermione()
     hermi_message = Message(
         message_id=3,
-        from_user=create_tg_from_dto(hermi),  # type: ignore[call-arg]
+        from_user=create_tg_from_dto(hermi),
         chat=chat,
         text="hi everyone",
         date=datetime.now(tz=tz_utc),
@@ -79,7 +79,7 @@ async def test_create_team(harry: dto.Player, dp: Dispatcher, bot: MockedBot, da
         update_id=3,
         message=Message(
             message_id=4,
-            from_user=harry_tg,  # type: ignore[call-arg]
+            from_user=harry_tg,
             chat=chat,
             text=f"/{ADD_IN_TEAM_COMMAND.command} brain",
             reply_to_message=hermi_message,

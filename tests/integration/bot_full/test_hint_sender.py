@@ -72,8 +72,8 @@ async def test_send_text(hint_sender: HintSender):
     await hint_sender.send_hint(hint, CHAT_ID)
 
     request = bot.session.requests.pop()
-    assert request.method == "sendMessage"
-    assert request.data["text"] == hint.text
+    assert request.__api_method__ == "sendMessage"
+    assert request.text == hint.text
     assert 0 == len(bot.session.requests)
 
 
@@ -86,9 +86,9 @@ async def test_send_location(hint_sender: HintSender):
     await hint_sender.send_hint(hint, CHAT_ID)
 
     request = bot.session.requests.pop()
-    assert request.method == "sendLocation"
-    assert request.data["longitude"] == hint.longitude
-    assert request.data["latitude"] == hint.latitude
+    assert request.__api_method__ == "sendLocation"
+    assert request.longitude == hint.longitude
+    assert request.latitude == hint.latitude
     assert 0 == len(bot.session.requests)
 
 
@@ -101,13 +101,13 @@ async def test_send_venue(hint_sender: HintSender):
     await hint_sender.send_hint(hint, CHAT_ID)
 
     request = bot.session.requests.pop()
-    assert request.method == "sendVenue"
-    assert request.data["longitude"] == hint.longitude
-    assert request.data["latitude"] == hint.latitude
-    assert request.data["title"] == hint.title
-    assert request.data["address"] == hint.address
-    assert request.data["foursquare_id"] == hint.foursquare_id
-    assert request.data["foursquare_type"] == hint.foursquare_type
+    assert request.__api_method__ == "sendVenue"
+    assert request.longitude == hint.longitude
+    assert request.latitude == hint.latitude
+    assert request.title == hint.title
+    assert request.address == hint.address
+    assert request.foursquare_id == hint.foursquare_id
+    assert request.foursquare_type == hint.foursquare_type
     assert 0 == len(bot.session.requests)
 
 
@@ -129,8 +129,8 @@ async def test_send_photo_by_id(
     await hint_sender.send_hint(hint, CHAT_ID)
 
     request = bot.session.requests.pop()
-    assert request.method == method_name
-    assert request.data[content_type] == FILE_ID
+    assert request.__api_method__ == method_name
+    assert getattr(request, content_type) == FILE_ID
     assert 0 == len(bot.session.requests)
 
 
@@ -158,10 +158,10 @@ async def test_send_photo_by_content(
 
     assert 2 == len(bot.session.requests)
     request = bot.session.requests.popleft()
-    assert request.method == method_name
-    assert request.data[content_type] == FILE_ID
+    assert request.__api_method__ == method_name
+    assert getattr(request, content_type) == FILE_ID
 
     request = bot.session.requests.popleft()
-    assert request.method == method_name
-    assert request.files[content_type] is not None
+    assert request.__api_method__ == method_name
+    assert getattr(request, content_type) is not None
     assert 0 == len(bot.session.requests)

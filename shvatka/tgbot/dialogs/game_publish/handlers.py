@@ -3,7 +3,7 @@ from datetime import datetime
 from typing import Any
 
 from aiogram import Bot
-from aiogram.types import Message
+from aiogram.types import Message, ChatMemberAdministrator
 from aiogram.utils.text_decorations import html_decoration as hd
 from aiogram_dialog import DialogManager, BaseDialogManager
 from telegraph.aio import Telegraph
@@ -30,7 +30,7 @@ async def process_publish_message(message: Message, dialog_: Any, manager: Dialo
         if admin.user.id == bot.id:
             bot_admin = admin
             break
-    if bot_admin is None or bot_admin.status != "administrator":
+    if bot_admin is None or not isinstance(bot_admin, ChatMemberAdministrator):
         return await message.answer("Я не админ в том канале.")
     if not bot_admin.can_post_messages:
         return await message.answer("У меня нет прав на отправку сообщений в том канале")

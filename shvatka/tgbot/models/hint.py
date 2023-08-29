@@ -79,7 +79,7 @@ class PhotoContentView(BaseHintContentView):
 class AudioLinkView(BaseHintLinkView):
     file_id: str
     caption: str
-    thumb: str | None
+    thumb: str | None = None
 
     def kwargs(self) -> dict:
         return dict(audio=self.file_id, caption=self.caption)
@@ -89,13 +89,13 @@ class AudioLinkView(BaseHintLinkView):
 class AudioContentView(BaseHintContentView):
     content: BinaryIO
     caption: str
-    thumb: BinaryIO | None
+    thumb: BinaryIO | None = None
 
     def kwargs(self) -> dict:
         return dict(
             audio=_get_input_file(self.content),
             caption=self.caption,
-            thumb=_get_input_file(self.thumb),
+            thumbnail=_get_input_file(self.thumb),
         )
 
 
@@ -103,7 +103,7 @@ class AudioContentView(BaseHintContentView):
 class VideoLinkView(BaseHintLinkView):
     file_id: str
     caption: str
-    thumb: str | None
+    thumb: str | None = None
 
     def kwargs(self) -> dict:
         return dict(video=self.file_id, caption=self.caption)
@@ -113,13 +113,13 @@ class VideoLinkView(BaseHintLinkView):
 class VideoContentView(BaseHintContentView):
     content: BinaryIO
     caption: str
-    thumb: BinaryIO | None
+    thumb: BinaryIO | None = None
 
     def kwargs(self) -> dict:
         return dict(
             video=_get_input_file(self.content),
             caption=self.caption,
-            thumb=_get_input_file(self.thumb),
+            thumbnail=_get_input_file(self.thumb),
         )
 
 
@@ -127,7 +127,7 @@ class VideoContentView(BaseHintContentView):
 class DocumentLinkView(BaseHintLinkView):
     file_id: str
     caption: str
-    thumb: str | None
+    thumb: str | None = None
 
     def kwargs(self) -> dict:
         return dict(document=self.file_id, caption=self.caption)
@@ -137,13 +137,13 @@ class DocumentLinkView(BaseHintLinkView):
 class DocumentContentView(BaseHintContentView):
     content: BinaryIO
     caption: str
-    thumb: BinaryIO | None
+    thumb: BinaryIO | None = None
 
     def kwargs(self) -> dict:
         return dict(
             document=_get_input_file(self.content),
             caption=self.caption,
-            thumb=_get_input_file(self.thumb),
+            thumbnail=_get_input_file(self.thumb),
         )
 
 
@@ -151,7 +151,7 @@ class DocumentContentView(BaseHintContentView):
 class AnimationLinkView(BaseHintLinkView):
     file_id: str
     caption: str
-    thumb: str | None
+    thumb: str | None = None
 
     def kwargs(self) -> dict:
         return dict(animation=self.file_id, caption=self.caption)
@@ -161,13 +161,13 @@ class AnimationLinkView(BaseHintLinkView):
 class AnimationContentView(BaseHintContentView):
     content: BinaryIO
     caption: str
-    thumb: BinaryIO | None
+    thumb: BinaryIO | None = None
 
     def kwargs(self) -> dict:
         return dict(
             animation=_get_input_file(self.content),
             caption=self.caption,
-            thumb=_get_input_file(self.thumb),
+            thumbnail=_get_input_file(self.thumb),
         )
 
 

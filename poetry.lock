@@ -43,14 +43,14 @@ test = ["aresponses (>=2.1.6,<2.2.0)", "pytest (>=7.4.0,<7.5.0)", "pytest-aiohtt
 
 [[package]]
 name = "aiogram-dialog"
-version = "2.0.0b22"
+version = "2.0.0rc2"
 description = "Telegram bot UI framework on top of aiogram"
 category = "main"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "aiogram_dialog-2.0.0b22-py3-none-any.whl", hash = "sha256:3ca83e2434aefd8a040d409d75f7ae9ee2bd0f4e0c5c7f30d7163a1dc5931582"},
-    {file = "aiogram_dialog-2.0.0b22.tar.gz", hash = "sha256:4fc5d2ab2d67830acc52079d4007add6a941397fa1dafeb5522775eea8f809bc"},
+    {file = "aiogram_dialog-2.0.0rc2-py3-none-any.whl", hash = "sha256:2efb715fc8ef33f5b5cd5e887417ae5bb4cd224a01be8d135d38c797408ab534"},
+    {file = "aiogram_dialog-2.0.0rc2.tar.gz", hash = "sha256:6eda39191559e995a2467ce3478a9bc2e000a2da3969fa6448f1af2bbce6f344"},
 ]
 
 [package.dependencies]
@@ -4067,4 +4067,4 @@ testing = ["coverage (>=5.0.3)", "zope.event", "zope.testing"]
 [metadata]
 lock-version = "2.0"
 python-versions = "~3.11"
-content-hash = "f64386644e474aae5c2aa74cfe42f025b08b0a71599979755376187b15794181"
+content-hash = "ac465d32e3d0dc988aada8bea4e7c584a3102f8977cdfc1744980988ad8a5067"

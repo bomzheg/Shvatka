@@ -1,7 +1,6 @@
 from typing import Iterable, Protocol
 
 from shvatka.core.interfaces.dal.base import Committer
-from shvatka.core.interfaces.dal.organizer import OrgByPlayerGetter
 from shvatka.core.models import dto
 
 
@@ -21,11 +20,13 @@ class LevelTimeChecker(Protocol):
         raise NotImplementedError
 
 
-class GameStatDao(OrgByPlayerGetter, Protocol):
+class LevelTimesGetter(Protocol):
     async def get_game_level_times(self, game: dto.Game) -> list[dto.LevelTime]:
         raise NotImplementedError
 
-    async def get_max_level_number(self, game: dto.Game) -> int:
+    async def get_game_level_times_by_teams(
+        self, game: dto.Game, levels_count: int
+    ) -> dict[dto.Team, list[dto.LevelTimeOnGame]]:
         raise NotImplementedError
 
 

@@ -1,12 +1,16 @@
 from redis.asyncio.client import Redis
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from shvatka.core.interfaces.dal.complex import TeamMerger
-from shvatka.core.interfaces.dal.game import GameUpserter, GameCreator, GamePackager
+from shvatka.core.interfaces.dal.complex import (
+    TeamMerger,
+    TypedKeyGetter,
+    GameStatDao,
+    GamePackager,
+)
+from shvatka.core.interfaces.dal.game import GameUpserter, GameCreator
 from shvatka.core.interfaces.dal.game_play import GamePreparer, GamePlayerDao
-from shvatka.core.interfaces.dal.key_log import TypedKeyGetter
 from shvatka.core.interfaces.dal.level_testing import LevelTestingDao
-from shvatka.core.interfaces.dal.level_times import GameStarter, GameStatDao
+from shvatka.core.interfaces.dal.level_times import GameStarter
 from shvatka.core.interfaces.dal.organizer import OrgAdder
 from shvatka.core.interfaces.dal.player import TeamLeaver, PlayerPromoter, PlayerMerger
 from shvatka.core.interfaces.dal.team import TeamCreator
@@ -93,7 +97,7 @@ class HolderDao:
 
     @property
     def game_packager(self) -> GamePackager:
-        return GamePackagerImpl(game=self.game, file_info=self.file_info)
+        return GamePackagerImpl(dao=self)
 
     @property
     def team_creator(self) -> TeamCreator:

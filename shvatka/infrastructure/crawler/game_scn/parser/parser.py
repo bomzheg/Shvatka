@@ -1,5 +1,4 @@
 import asyncio
-import json
 import logging
 import typing
 import uuid
@@ -17,17 +16,17 @@ from aiohttp import (
 )
 from dataclass_factory import Factory, Schema, NameStyle
 from lxml import etree
-from lxml.etree import _Element
+from lxml.etree import ElementBase
 
 from shvatka.core.models import enums
 from shvatka.core.models.dto import scn
+from shvatka.core.models.dto.export_stat import LevelTime, Key, GameStat
 from shvatka.core.services.scenario.scn_zip import pack_scn
 from shvatka.core.utils.datetime_utils import tz_utc, tz_game, add_timezone
 from shvatka.infrastructure.crawler.auth import get_auth_cookie
 from shvatka.infrastructure.crawler.constants import GAME_URL_TEMPLATE
 from shvatka.infrastructure.crawler.game_scn.common import UNPARSEABLE_GAMES
 from shvatka.infrastructure.crawler.game_scn.parser.resourses import load_error_img
-from shvatka.infrastructure.crawler.models.stat import LevelTime, Key, GameStat
 
 logger = logging.getLogger(__name__)
 EVENING_TIME = datetime.strptime("20:00:00", "%H:%M:%S").time()
@@ -163,7 +162,7 @@ class GameParser:
             results[team_name] = level_times
         return results
 
-    def get_result_datetime(self, cell: _Element) -> datetime | None:
+    def get_result_datetime(self, cell: ElementBase) -> datetime | None:
         try:
             time = datetime.strptime(cell.text or cell.xpath("./font")[0].text, "%H:%M:%S").time()
         except ValueError:
@@ -199,7 +198,7 @@ class GameParser:
                     keys_buffer.clear()
                     continue
                 try:
-                    time_element, key_element, player_element = cells  # type: _Element
+                    time_element, key_element, player_element = cells  # type: ElementBase
                 except ValueError as e:
                     logger.error(
                         "can't parse key log for cells %s",
@@ -300,12 +299,10 @@ async def save_all_scns_to_files(game_ids: list[int]):
     path.mkdir(exist_ok=True)
     for game in games:
         dct = dcf.dump(game, scn.ParsedGameScenario)
-        stat = BytesIO(
-            json.dumps(dcf.dump(game.stat), ensure_ascii=False, indent=2).encode("utf-8")
-        )
-        stat.seek(0)
         scenario = scn.RawGameScenario(
-            scn=dct, files={**game.files_contents, "results.json": stat}
+            scn=dct,
+            files=game.files_contents,
+            stat=dcf.dump(game.stat),
         )
         packed_scenario = pack_scn(scenario)
         with open(path / f"{game.id}.zip", "wb") as f:
@@ -313,7 +310,7 @@ async def save_all_scns_to_files(game_ids: list[int]):
             f.write(packed_scenario.read())
 
 
-def get_finished_level_number(cells: list[_Element]):
+def get_finished_level_number(cells: list[ElementBase]):
     return int(cells[0].text.strip().removeprefix("Уровень").removesuffix("закончен").strip())
 
 

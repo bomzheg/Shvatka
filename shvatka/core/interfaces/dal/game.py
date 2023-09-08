@@ -27,12 +27,6 @@ class GameStatusCompleter(Protocol):
         raise NotImplementedError
 
 
-class GameCompleter(
-    MaxGameNumberGetter, GameNumberUpdater, GameStatusCompleter, Committer, Protocol
-):
-    pass
-
-
 class GameUpserter(LevelUpserter, GameNameChecker, Protocol):
     async def upsert_game(self, author: dto.Player, scenario: scn.GameScenario) -> dto.Game:
         raise NotImplementedError
@@ -91,14 +85,6 @@ class GameStartPlanner(Committer, ActiveGameFinder, Protocol):
         raise NotImplementedError
 
     async def cancel_start(self, game: dto.Game):
-        raise NotImplementedError
-
-
-class GamePackager(Protocol):
-    async def get_full(self, id_: int) -> dto.FullGame:
-        raise NotImplementedError
-
-    async def get_by_guid(self, guid: str) -> scn.VerifiableFileMeta:
         raise NotImplementedError
 
 

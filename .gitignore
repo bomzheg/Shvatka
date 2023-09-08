@@ -148,6 +148,7 @@ dmypy.json
 
 /temp/
 /config/
+/files/
 /local-storage/
 
 #pyro stuff

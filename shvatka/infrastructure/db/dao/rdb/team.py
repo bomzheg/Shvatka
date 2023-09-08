@@ -107,6 +107,13 @@ class TeamDao(BaseDAO[models.Team]):
             update(models.Team).where(models.Team.id == team.id).values(description=new_desc)
         )
 
+    async def get_by_name(self, name: str) -> dto.Team:
+        result: ScalarResult[models.Team] = await self.session.scalars(
+            select(models.Team).options(*get_team_options()).where(models.Team.name == name)
+        )
+        team = result.one()
+        return team.to_dto_chat_prefetched()
+
     async def get_by_forum_team_name(self, name: str) -> dto.Team:
         result: ScalarResult[models.Team] = await self.session.scalars(
             select(models.Team)

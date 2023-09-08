@@ -3,6 +3,7 @@ from datetime import datetime
 from dataclass_factory import Factory
 
 from shvatka.core.interfaces.clients.file_storage import FileGateway
+from shvatka.core.interfaces.dal.complex import GameCompleter, GamePackager
 from shvatka.core.interfaces.dal.game import (
     GameUpserter,
     GameCreator,
@@ -12,15 +13,13 @@ from shvatka.core.interfaces.dal.game import (
     WaiverStarter,
     GameStartPlanner,
     GameNameChecker,
-    GamePackager,
     GameRenamer,
     CompletedGameFinder,
-    GameCompleter,
 )
 from shvatka.core.interfaces.dal.level import LevelLinker
 from shvatka.core.interfaces.scheduler import Scheduler
 from shvatka.core.models import dto
-from shvatka.core.models.dto import scn
+from shvatka.core.models.dto import scn, export_stat
 from shvatka.core.rules.game import check_can_read, check_game_editable
 from shvatka.core.rules.level import (
     check_is_author as check_is_level_author,
@@ -41,7 +40,7 @@ async def upsert_game(
     file_gateway: FileGateway,
 ) -> dto.FullGame:
     check_allow_be_author(author)
-    game_scn = parse_uploaded_game(raw_scn.scn, dcf)
+    game_scn = parse_uploaded_game(raw_scn, dcf)
     if not await dao.is_name_available(name=game_scn.name):
         if not await dao.is_author_game_by_name(name=game_scn.name, author=author):
             raise CantEditGame(
@@ -125,8 +124,27 @@ async def get_game_package(
     scenario = scn.FullGameScenario(
         name=game.name, levels=[level.scenario for level in game.levels], files=file_metas
     )
-    serialized = dcf.dump(scenario)
-    return scn.RawGameScenario(scn=serialized, files=contents)
+    if game.is_complete():
+        assert game.start_at
+        game_stat = export_stat.GameStat(
+            id=id_,
+            start_at=game.start_at,
+            results={
+                key.name: [export_stat.LevelTime.from_dto(lt) for lt in value]
+                for key, value in (
+                    await dao.get_game_level_times_by_teams(game, len(game.levels))
+                ).items()
+            },
+            keys={
+                key.name: [export_stat.Key.from_dto(k) for k in value]
+                for key, value in (await dao.get_typed_keys_grouped(game)).items()
+            },
+            waivers=[export_stat.Waiver.from_dto(w) for w in await dao.get_all_by_game(game)],
+            team_identity=export_stat.TeamIdentity.bomzheg_engine_name,
+        )
+    else:
+        game_stat = None
+    return scn.RawGameScenario(scn=dcf.dump(scenario), files=contents, stat=dcf.dump(game_stat))
 
 
 async def get_active(dao: ActiveGameFinder) -> dto.Game | None:

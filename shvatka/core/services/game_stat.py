@@ -1,5 +1,4 @@
-from shvatka.core.interfaces.dal.key_log import TypedKeyGetter
-from shvatka.core.interfaces.dal.level_times import GameStatDao
+from shvatka.core.interfaces.dal.complex import TypedKeyGetter, GameStatDao
 from shvatka.core.models import dto
 from shvatka.core.services.organizers import get_by_player, check_can_see_log_keys, check_can_spy
 
@@ -12,11 +11,7 @@ async def get_typed_keys(
     if not game.is_complete():
         org = await get_by_player(game=game, player=player, dao=dao)
         check_can_see_log_keys(org)
-    keys = await dao.get_typed_keys(game)
-    grouped: dict[dto.Team, list[dto.KeyTime]] = {}
-    for key in keys:
-        grouped.setdefault(key.team, []).append(key)
-    return grouped
+    return await dao.get_typed_keys_grouped(game)
 
 
 async def get_game_stat(game: dto.Game, player: dto.Player, dao: GameStatDao) -> dto.GameStat:
@@ -24,11 +19,8 @@ async def get_game_stat(game: dto.Game, player: dto.Player, dao: GameStatDao) ->
     if not game.is_complete():
         org = await get_by_player(game=game, player=player, dao=dao)
         check_can_spy(org)
-    level_times = await dao.get_game_level_times(game)
     levels_count = await dao.get_max_level_number(game)
-    result: dict[dto.Team, list[dto.LevelTimeOnGame]] = {}
-    for lt in level_times:
-        result.setdefault(lt.team, []).append(lt.to_on_game(levels_count))
+    result = await dao.get_game_level_times_by_teams(game, levels_count)
     return dto.GameStat(level_times=result)
 
 

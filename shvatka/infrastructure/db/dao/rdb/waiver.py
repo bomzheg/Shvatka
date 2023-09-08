@@ -64,6 +64,28 @@ class WaiverDao(BaseDAO[models.Waiver]):
         )
         return result.one_or_none()
 
+    async def get_all_by_game(self, game: dto.Game) -> list[dto.Waiver]:
+        result: ScalarResult[models.Waiver] = await self.session.scalars(
+            select(models.Waiver)
+            .options(
+                joinedload(models.Waiver.team).options(
+                    joinedload(models.Team.chat),
+                    joinedload(models.Team.forum_team),
+                    joinedload(models.Team.captain).options(
+                        joinedload(models.Player.user), joinedload(models.Player.forum_user)
+                    ),
+                ),
+                joinedload(models.Waiver.player).options(
+                    joinedload(models.Player.user), joinedload(models.Player.forum_user)
+                ),
+            )
+            .where(models.Waiver.game_id == game.id)
+        )
+        return [
+            w.to_dto(w.player.to_dto_user_prefetched(), w.team.to_dto_chat_prefetched(), game)
+            for w in result.all()
+        ]
+
     async def get_played_teams(self, game: dto.Game) -> Iterable[dto.Team]:
         result = await self.session.scalars(
             select(models.Waiver)

@@ -79,6 +79,15 @@ class LevelTimeDao(BaseDAO[models.LevelTime]):
             for lt in result.all()
         ]
 
+    async def get_game_level_times_by_teams(
+        self, game: dto.Game, levels_count: int
+    ) -> dict[dto.Team, list[dto.LevelTimeOnGame]]:
+        level_times = await self.get_game_level_times(game)
+        result: dict[dto.Team, list[dto.LevelTimeOnGame]] = {}
+        for lt in level_times:
+            result.setdefault(lt.team, []).append(lt.to_on_game(levels_count))
+        return result
+
     async def replace_team_levels(self, primary: dto.Team, secondary: dto.Team):
         await self.session.execute(
             update(models.LevelTime)

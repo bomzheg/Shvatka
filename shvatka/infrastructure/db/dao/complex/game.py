@@ -1,9 +1,15 @@
+import typing
 from dataclasses import dataclass
+from typing import Iterable
 
-from shvatka.core.interfaces.dal.game import GameUpserter, GameCreator, GamePackager
+from shvatka.core.interfaces.dal.complex import GamePackager
+from shvatka.core.interfaces.dal.game import GameUpserter, GameCreator
 from shvatka.core.models import dto
 from shvatka.core.models.dto import scn
 from shvatka.infrastructure.db.dao import GameDao, LevelDao, FileInfoDao
+
+if typing.TYPE_CHECKING:
+    from shvatka.infrastructure.db.dao.holder import HolderDao
 
 
 @dataclass
@@ -66,11 +72,30 @@ class GameCreatorImpl(GameCreator):
 
 @dataclass
 class GamePackagerImpl(GamePackager):
-    game: GameDao
-    file_info: FileInfoDao
+    dao: "HolderDao"
+
+    async def get_played_teams(self, game: dto.Game) -> Iterable[dto.Team]:
+        return await self.dao.waiver.get_played_teams(game)
+
+    async def get_played(self, game: dto.Game, team: dto.Team) -> Iterable[dto.VotedPlayer]:
+        return await self.dao.waiver.get_played(game, team)
+
+    async def get_all_by_game(self, game: dto.Game) -> list[dto.Waiver]:
+        return await self.dao.waiver.get_all_by_game(game)
+
+    async def get_typed_keys_grouped(self, game: dto.Game) -> dict[dto.Team, list[dto.KeyTime]]:
+        return await self.dao.key_time.get_typed_key_grouped(game)
+
+    async def get_game_level_times(self, game: dto.Game) -> list[dto.LevelTime]:
+        return await self.dao.level_time.get_game_level_times(game)
+
+    async def get_game_level_times_by_teams(
+        self, game: dto.Game, levels_count: int
+    ) -> dict[dto.Team, list[dto.LevelTimeOnGame]]:
+        return await self.dao.level_time.get_game_level_times_by_teams(game, levels_count)
 
     async def get_full(self, id_: int) -> dto.FullGame:
-        return await self.game.get_full(id_)
+        return await self.dao.game.get_full(id_)
 
     async def get_by_guid(self, guid: str) -> scn.VerifiableFileMeta:
-        return await self.file_info.get_by_guid(guid)
+        return await self.dao.file_info.get_by_guid(guid)

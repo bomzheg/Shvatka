@@ -3,7 +3,7 @@ import json
 import logging
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import BinaryIO
+from typing import BinaryIO, Any, Callable, Coroutine
 from zipfile import Path as ZipPath
 
 from dataclass_factory import Factory, Schema, NameStyle
@@ -14,7 +14,7 @@ from shvatka.core.interfaces.clients.file_storage import FileGateway
 from shvatka.core.models import dto
 from shvatka.core.models import enums
 from shvatka.core.models.dto import scn  # noqa: F401
-from shvatka.core.models.dto.export_stat import GameStat
+from shvatka.core.models.dto.export_stat import GameStat, TeamIdentity, Player, PlayerIdentity
 from shvatka.core.services.game import upsert_game
 from shvatka.core.services.scenario.scn_zip import unpack_scn
 from shvatka.core.utils import exceptions
@@ -22,6 +22,7 @@ from shvatka.core.utils.datetime_utils import add_timezone, tz_utc
 from shvatka.infrastructure.clients.factory import create_file_storage
 from shvatka.infrastructure.clients.file_gateway import BotFileGateway
 from shvatka.infrastructure.crawler.factory import get_paths
+from shvatka.infrastructure.db.dao import TeamDao
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.infrastructure.db.factory import create_pool, create_level_test_dao, create_redis
 from shvatka.tgbot.config.parser.main import load_config
@@ -102,17 +103,18 @@ async def set_results(game: dto.FullGame, results: GameStat, dao: HolderDao):
     game_start_at = add_timezone(results.start_at, timezone=tz_utc)
     await dao.game.set_start_at(game, game_start_at)
     await dao.game.set_number(game, results.id)
-    for forum_team_name, levels in results.results.items():
-        team = await dao.team.get_by_forum_team_name(forum_team_name)
+    team_getter = get_team_getter(dao.team, results.team_identity)
+    for team_name, levels in results.results.items():
+        team = await team_getter(team_name)
         await dao.level_time.set_to_level(team, game, 0, game_start_at)
         for level in levels:
             if level.at is not None:
                 await dao.level_time.set_to_level(
                     team, game, level.number, add_timezone(level.at, timezone=tz_utc)
                 )
-    for forum_team_name, keys in results.keys.items():
-        team = await dao.team.get_by_forum_team_name(forum_team_name)
-        for i, key in enumerate(keys):
+    for team_name, keys in results.keys.items():
+        team = await team_getter(team_name)
+        for i, key in enumerate(keys):  # type: int, Key
             player = await get_or_create_player(dao, key.player)
             await join_team_if_already_not(player, team, game_start_at, dao)
             await add_waiver_if_already_not(player, team, game, dao)
@@ -134,11 +136,33 @@ async def set_results(game: dto.FullGame, results: GameStat, dao: HolderDao):
             )
 
 
-async def get_or_create_player(dao: HolderDao, forum_player_name: str):
-    player = await dao.player.get_by_forum_player_name(forum_player_name)
-    if not player:
-        player = await dao.player.create_for_forum_user_name(forum_player_name)
-    return player
+def get_team_getter(
+    dao: TeamDao, team_identity: TeamIdentity
+) -> Callable[[str], Coroutine[Any, Any, dto.Team]]:
+    match team_identity:
+        case TeamIdentity.bomzheg_engine_name:
+            team_getter = dao.get_by_name
+        case TeamIdentity.forum_name:
+            team_getter = dao.get_by_forum_team_name
+        case _:
+            team_getter = dao.get_by_forum_team_name
+    return team_getter
+
+
+async def get_or_create_player(dao: HolderDao, player: Player):
+    match player.identity:
+        case PlayerIdentity.forum_name:
+            result = await dao.player.get_by_forum_player_name(player.forum_name)
+            if not result:
+                result = await dao.player.create_for_forum_user_name(player.forum_name)
+            return result
+        case PlayerIdentity.tg_user_id:
+            try:
+                return await dao.player.get_by_user_id(player.tg_user_id)
+            except exceptions.PlayerNotFoundError:
+                return await dao.player.create_for_user(
+                    await dao.user.upsert_user(dto.User(tg_id=player.tg_user_id))
+                )
 
 
 async def add_waiver_if_already_not(

@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload, selectinload, contains_eager
 
 from shvatka.core.models import dto, enums
+from shvatka.core.utils import exceptions
 from shvatka.infrastructure.db import models
 from .base import BaseDAO
 
@@ -74,7 +75,10 @@ class PlayerDao(BaseDAO[models.Player]):
             )
             .where(models.User.tg_id == user_id)
         )
-        player = result.one()
+        try:
+            player = result.one()
+        except NoResultFound as e:
+            raise exceptions.PlayerNotFoundError from e
         if forum_user_db := player.forum_user:
             forum_user = forum_user_db.to_dto()
         else:

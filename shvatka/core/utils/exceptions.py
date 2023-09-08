@@ -198,6 +198,10 @@ class TeamError(SHError):
     notify_user = "Проблема связанные с командой"
 
 
+class PlayerNotFoundError(SHError):
+    notify_user = "Игрок не найден"
+
+
 class PlayerTeamError(SHError):
     notify_user = "Проблема связанные с членством игрока в команде"
 

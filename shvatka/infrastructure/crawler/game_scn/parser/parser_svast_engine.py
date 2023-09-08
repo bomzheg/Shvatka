@@ -13,7 +13,7 @@ from aiohttp import (
     ClientOSError,
 )
 from lxml import etree
-from lxml.etree import _Element
+from lxml.etree import ElementBase
 
 from shvatka.core.models import enums
 from shvatka.core.models.dto import scn
@@ -141,7 +141,7 @@ class SvastEngineGameParser:
             results[team_name] = level_times
         return results
 
-    def get_result_datetime(self, cell: _Element) -> datetime | None:
+    def get_result_datetime(self, cell: ElementBase) -> datetime | None:
         try:
             time = datetime.strptime(cell.text, "%H:%M:%S").time()
         except ValueError:
@@ -169,7 +169,7 @@ class SvastEngineGameParser:
                 cells = row.xpath("./td")
                 assert isinstance(cells, list)
                 try:
-                    time_element, key_element = cells  # type: _Element
+                    time_element, key_element = cells  # type: ElementBase
                 except ValueError as e:
                     logger.error(
                         "can't parse key log for cells %s",
@@ -263,7 +263,7 @@ class SvastEngineGameParser:
         return game
 
 
-def get_finished_level_number(cells: list[_Element]):
+def get_finished_level_number(cells: list[ElementBase]):
     return int(cells[0].text.strip().removeprefix("Уровень").removesuffix("закончен").strip())
 
 

@@ -16,7 +16,7 @@ from aiohttp import (
 )
 from dataclass_factory import Factory, Schema, NameStyle
 from lxml import etree
-from lxml.etree import _Element
+from lxml.etree import ElementBase
 
 from shvatka.core.models import enums
 from shvatka.core.models.dto import scn
@@ -162,7 +162,7 @@ class GameParser:
             results[team_name] = level_times
         return results
 
-    def get_result_datetime(self, cell: _Element) -> datetime | None:
+    def get_result_datetime(self, cell: ElementBase) -> datetime | None:
         try:
             time = datetime.strptime(cell.text or cell.xpath("./font")[0].text, "%H:%M:%S").time()
         except ValueError:
@@ -198,7 +198,7 @@ class GameParser:
                     keys_buffer.clear()
                     continue
                 try:
-                    time_element, key_element, player_element = cells  # type: _Element
+                    time_element, key_element, player_element = cells  # type: ElementBase
                 except ValueError as e:
                     logger.error(
                         "can't parse key log for cells %s",
@@ -310,7 +310,7 @@ async def save_all_scns_to_files(game_ids: list[int]):
             f.write(packed_scenario.read())
 
 
-def get_finished_level_number(cells: list[_Element]):
+def get_finished_level_number(cells: list[ElementBase]):
     return int(cells[0].text.strip().removeprefix("Уровень").removesuffix("закончен").strip())
 
 

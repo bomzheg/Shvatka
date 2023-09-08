@@ -37,6 +37,6 @@ class ParsedZip:
 
     def open_results_if_present(self) -> TextIO | None:
         if self.results:
-            return typing.cast(TextIO, self.results.open("r", encoding="uft8"))
+            return typing.cast(TextIO, self.results.open("r", encoding="utf8"))
         else:
             return None

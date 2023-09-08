@@ -39,7 +39,6 @@ async def main():
     dcf = Factory(default_schema=Schema(name_style=NameStyle.kebab))
     file_storage = create_file_storage(config.file_storage_config)
     bot = create_bot(config)
-    Bot.set_current(bot)
     pool = create_pool(config.db)
     level_test_dao = create_level_test_dao()
     try:
@@ -75,7 +74,7 @@ async def load_scns(
     dcf: Factory,
     path: Path,
 ):
-    files = sorted((file for file in path.glob("*.zip")), key=lambda p: int(p.stem))
+    files = sorted(path.glob("*.zip"), key=lambda p: int(p.stem))
     for file in files:
         logger.info("loading game from file %s...", file.name)
         try:

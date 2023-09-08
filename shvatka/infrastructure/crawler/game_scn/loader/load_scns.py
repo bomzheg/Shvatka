@@ -19,8 +19,7 @@ from shvatka.core.models.dto.export_stat import (
     TeamIdentity,
     Player,
     PlayerIdentity,
-    Key,  # noqa: F401
-)  # noqa: F401
+)
 from shvatka.core.services.game import upsert_game
 from shvatka.core.services.scenario.scn_zip import unpack_scn
 from shvatka.core.utils import exceptions
@@ -119,7 +118,7 @@ async def set_results(game: dto.FullGame, results: GameStat, dao: HolderDao):
                 )
     for team_name, keys in results.keys.items():
         team = await team_getter(team_name)
-        for i, key in enumerate(keys):  # type: int, Key
+        for i, key in enumerate(keys):  # type: int, dto.export_stat.Key
             player = await get_or_create_player(dao, key.player)
             await join_team_if_already_not(player, team, game_start_at, dao)
             await add_waiver_if_already_not(player, team, game, dao)

@@ -14,7 +14,13 @@ from shvatka.core.interfaces.clients.file_storage import FileGateway
 from shvatka.core.models import dto
 from shvatka.core.models import enums
 from shvatka.core.models.dto import scn  # noqa: F401
-from shvatka.core.models.dto.export_stat import GameStat, TeamIdentity, Player, PlayerIdentity
+from shvatka.core.models.dto.export_stat import (
+    GameStat,
+    TeamIdentity,
+    Player,
+    PlayerIdentity,
+    Key,  # noqa: F401
+)  # noqa: F401
 from shvatka.core.services.game import upsert_game
 from shvatka.core.services.scenario.scn_zip import unpack_scn
 from shvatka.core.utils import exceptions
@@ -106,7 +112,6 @@ async def set_results(game: dto.FullGame, results: GameStat, dao: HolderDao):
     team_getter = get_team_getter(dao.team, results.team_identity)
     for team_name, levels in results.results.items():
         team = await team_getter(team_name)
-        await dao.level_time.set_to_level(team, game, 0, game_start_at)
         for level in levels:
             if level.at is not None:
                 await dao.level_time.set_to_level(

@@ -6,7 +6,6 @@ from pathlib import Path
 from typing import BinaryIO
 from zipfile import Path as ZipPath
 
-from aiogram import Bot
 from dataclass_factory import Factory, Schema, NameStyle
 from sqlalchemy.orm import close_all_sessions
 

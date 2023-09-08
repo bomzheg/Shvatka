@@ -1,6 +1,5 @@
 import asyncio
 
-from aiogram import Bot
 from sqlalchemy.orm import close_all_sessions
 
 from shvatka.common import setup_logging

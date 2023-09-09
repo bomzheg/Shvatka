@@ -47,7 +47,7 @@ def hint_parts_to_text(hints: list[BaseHint]) -> str:
                 assert isinstance(hint, TextHint)
                 transformed = hint.text
             case BaseHint(type="gps" | "venue"):
-                assert isinstance(hint, (GPSHint, VenueHint))
+                assert isinstance(hint, GPSHint | VenueHint)
                 transformed = f"{hint.latitude},{hint.longitude}"
             case _:
                 # TODO other cases

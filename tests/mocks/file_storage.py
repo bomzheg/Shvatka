@@ -5,8 +5,8 @@ from shvatka.core.models.dto import scn
 
 
 class MemoryFileStorage(FileStorage):
-    def __init__(self):
-        self.storage = {}
+    def __init__(self) -> None:
+        self.storage: dict[str, BinaryIO] = {}
 
     async def put_content(self, local_file_name: str, content: BinaryIO) -> scn.FileContentLink:
         self.storage[local_file_name] = content

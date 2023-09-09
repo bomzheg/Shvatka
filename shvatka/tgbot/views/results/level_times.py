@@ -17,7 +17,7 @@ class CellAddress:
     row: int
 
     def shift(self, plus_rows=0, plus_columns=0):
-        return dict(row=self.row + plus_rows, column=self.column + plus_columns)
+        return {"row": self.row + plus_rows, "column": self.column + plus_columns}
 
 
 FIRST_TEAM_NAME = CellAddress(1, 3)

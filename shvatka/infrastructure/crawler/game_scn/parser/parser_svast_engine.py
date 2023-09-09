@@ -39,7 +39,7 @@ async def download(game_id: int, session: ClientSession) -> str:
 class SvastEngineGameParser:
     def __init__(
         self, html_str: str, id_: int, name: str, start_at: datetime, *, session: ClientSession
-    ):
+    ) -> None:
         self.html = etree.HTML(html_str, base_url="shvatka.ru")
         self.session = session
         self.id: int = id_
@@ -64,10 +64,9 @@ class SvastEngineGameParser:
             "/div[@class='spoiler-content']"
         )
         for element in scn_element.xpath("./*"):
-            if element.tag == "center":
-                if element.xpath("./center/h2"):
-                    #  main caption "Сценарий"
-                    continue
+            if element.tag == "center" and element.xpath("./center/h2"):
+                #  main caption "Сценарий"
+                continue
             if element.tag == "strong":
                 caption = element.xpath("./center/font")
                 if caption and caption[0].text:
@@ -75,20 +74,19 @@ class SvastEngineGameParser:
                     if prompt[0] == "Уровень: " and prompt[1].isnumeric():
                         self.level_number = int(prompt[1].strip("."))
                         continue
-            if element.tag == "p":
-                if hint_caption_container := element.xpath("./strong"):
-                    if (
-                        hint_caption_container.text
-                        and len(hint_caption_container.text.split()) == 2
-                    ):
-                        hint_caption, number = hint_caption_container.text.split()  # type: str
-                        if hint_caption == "Подсказка":
-                            time, minutes_caption = element.text.split()  # type: str
-                            if minutes_caption == "мин.)":
-                                self.build_time_hint()
-                                time = time.removeprefix("(")
-                                self.time = int(time or -1)
-                                continue
+            if (
+                element.tag == "p"
+                and (hint_caption_container := element.xpath("./strong"))
+                and (hint_caption_container.text and len(hint_caption_container.text.split()) == 2)
+            ):
+                hint_caption, number = hint_caption_container.text.split()  # type: str
+                if hint_caption == "Подсказка":
+                    time, minutes_caption = element.text.split()  # type: str
+                    if minutes_caption == "мин.)":
+                        self.build_time_hint()
+                        time = time.removeprefix("(")
+                        self.time = int(time or -1)
+                        continue
             if iframe_tags := element.xpath("descendant-or-self::iframe"):
                 for iframe in iframe_tags:
                     self.current_hint_parts.append(iframe.get("src"))
@@ -207,11 +205,11 @@ class SvastEngineGameParser:
             ClientOSError,
             ValueError,
         ) as e:
-            logger.error("couldnt load content for url %s", url, exc_info=e)
-            raise ContentDownloadError()
+            logger.error("couldn't load content for url %s", url, exc_info=e)
+            raise ContentDownloadError from e
 
     def build_current_hint(self):
-        parts = list(filter(lambda p: p, map(lambda p: p.strip(), self.current_hint_parts)))
+        parts = list(filter(lambda p: p, (p.strip() for p in self.current_hint_parts)))
         self.current_hint_parts = []
         if not parts:
             return

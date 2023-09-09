@@ -34,7 +34,7 @@ METHODS: dict[enums.HintType, Callable[..., Awaitable[Message]]] = {
 class HintSender:
     SLEEP: timedelta = timedelta(seconds=1)
 
-    def __init__(self, bot: Bot, resolver: HintContentResolver):
+    def __init__(self, bot: Bot, resolver: HintContentResolver) -> None:
         self.bot = bot
         self.resolver = resolver
         self.methods: dict[enums.HintType, Callable[..., Awaitable[Message]]] = {

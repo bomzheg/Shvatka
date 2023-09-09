@@ -67,8 +67,7 @@ async def dao(session: AsyncSession, redis: Redis, level_test_dao: LevelTestingD
 async def check_dao(
     session: AsyncSession, redis: Redis, level_test_dao: LevelTestingData
 ) -> HolderDao:
-    dao_ = HolderDao(session=session, redis=redis, level_test=level_test_dao)
-    return dao_
+    return HolderDao(session=session, redis=redis, level_test=level_test_dao)
 
 
 async def clear_data(dao: HolderDao):
@@ -141,7 +140,7 @@ def redis() -> Generator[Redis, None, None]:
 
 @pytest.fixture(autouse=True)
 def patch_api_config(bot_config: TgBotConfig, postgres_url: str, redis: Redis):
-    bot_config.db = DBConfig(postgres_url)  # type: ignore
+    bot_config.db = DBConfig(postgres_url)  # type: ignore[assignment]
     bot_config.redis.url = redis.connection_pool.connection_kwargs["host"]
     bot_config.redis.port = redis.connection_pool.connection_kwargs["port"]
     bot_config.redis.db = redis.connection_pool.connection_kwargs["db"]
@@ -206,8 +205,7 @@ def user_getter() -> UserGetter:
 
 @pytest.fixture
 def bot(bot_config: TgBotConfig):
-    bot = MockedBot(token=bot_config.bot.token)
-    return bot
+    return MockedBot(token=bot_config.bot.token)
 
 
 @pytest.fixture(scope="session")

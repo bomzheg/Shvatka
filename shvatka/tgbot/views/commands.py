@@ -8,9 +8,9 @@ class CommandsGroup:
     group_name: str
     commands: list[BotCommand]
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self.group_name}\n" + "\n".join(
-            map(lambda x: f"/{x.command} - {x.description}", self.commands)
+            f"/{x.command} - {x.description}" for x in self.commands
         )
 
 

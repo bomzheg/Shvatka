@@ -1,10 +1,12 @@
+from typing import Any
+
 from shvatka.core.models import dto
 from shvatka.core.views.level import LevelView
 
 
 class LevelViewMock(LevelView):
-    def __init__(self):
-        self.calls = {}
+    def __init__(self) -> None:
+        self.calls: dict[str, list[Any]] = {}
 
     async def send_puzzle(self, suite: dto.LevelTestSuite) -> None:
         self.calls.setdefault("send_puzzle", []).append(suite)

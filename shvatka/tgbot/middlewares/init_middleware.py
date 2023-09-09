@@ -32,7 +32,7 @@ class InitMiddleware(BaseMiddleware):
         file_storage: FileStorage,
         level_test_dao: LevelTestingData,
         telegraph: Telegraph,
-    ):
+    ) -> None:
         self.pool = pool
         self.user_getter = user_getter
         self.dcf = dcf

@@ -28,7 +28,7 @@ from .handlers import (
     not_correct_bonus_keys,
     start_bonus_keys,
 )
-from ..preview_data import RENDERED_HINTS_PREVIEW
+from shvatka.tgbot.dialogs.preview_data import RENDERED_HINTS_PREVIEW
 
 level = Dialog(
     Window(

@@ -16,7 +16,7 @@ SLEEP_TIME = 50
 
 
 class UserGetter:
-    def __init__(self, client_config: TgClientConfig):
+    def __init__(self, client_config: TgClientConfig) -> None:
         self._client_api_bot = Client(
             "shvatka_bot",
             bot_token=client_config.bot_token,
@@ -36,7 +36,7 @@ class UserGetter:
         try:
             user = await self._client_api_bot.get_users(username)
         except UsernameNotOccupied as e:
-            logger.info("Username not found %S", username)
+            logger.info("Username not found %s", username)
             raise NoUsernameFound(username=username) from e
         except FloodWait as e:
             logger.error("Flood Wait %s", e, exc_info=e)

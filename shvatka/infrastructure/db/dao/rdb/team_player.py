@@ -21,7 +21,7 @@ from .base import BaseDAO
 
 
 class TeamPlayerDao(BaseDAO[models.TeamPlayer]):
-    def __init__(self, session: AsyncSession):
+    def __init__(self, session: AsyncSession) -> None:
         super().__init__(models.TeamPlayer, session)
 
     async def get_team(
@@ -212,8 +212,8 @@ class TeamPlayerDao(BaseDAO[models.TeamPlayer]):
         )
         try:
             return result.scalar_one()
-        except NoResultFound:
-            raise PlayerNotInTeam(player=player)
+        except NoResultFound as e:
+            raise PlayerNotInTeam(player=player) from e
 
     async def get_history(self, player: dto.Player) -> list[dto.TeamPlayer]:
         result: ScalarResult[models.TeamPlayer] = await self.session.scalars(

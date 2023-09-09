@@ -45,7 +45,7 @@ def get_current_user() -> dto.User:
 
 
 class AuthProvider:
-    def __init__(self, config: AuthConfig):
+    def __init__(self, config: AuthConfig) -> None:
         self.config = config
         self.pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
         # to get a string like this run:

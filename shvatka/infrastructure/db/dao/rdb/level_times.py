@@ -11,7 +11,7 @@ from .base import BaseDAO
 
 
 class LevelTimeDao(BaseDAO[models.LevelTime]):
-    def __init__(self, session: AsyncSession):
+    def __init__(self, session: AsyncSession) -> None:
         super().__init__(models.LevelTime, session)
 
     async def set_to_level(
@@ -47,7 +47,7 @@ class LevelTimeDao(BaseDAO[models.LevelTime]):
                 models.LevelTime.team_id == team_id,
                 models.LevelTime.game_id == game_id,
             )
-            .order_by(models.LevelTime.level_number.desc())  # noqa
+            .order_by(models.LevelTime.level_number.desc())
             .limit(1)
         )
         return result.scalar_one()

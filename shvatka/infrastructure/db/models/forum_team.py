@@ -21,7 +21,7 @@ class ForumTeam(Base):
         uselist=False,
     )
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"<ForumName ID={self.id} name={self.name} >"
 
     def to_dto(self) -> dto.ForumTeam:

@@ -19,13 +19,13 @@ def render_team_card(team: dto.Team) -> str:
 
 
 def render_team_players(
-    team: dto.Team, players: Sequence[dto.FullTeamPlayer], notification=False
+    team: dto.Team, players: Sequence[dto.FullTeamPlayer], *, notification: bool = False
 ) -> str:
     rez = f"Список игроков команды {hd.bold(hd.quote(team.name))}:\n"
     for team_player in players:
         rez += (
             f"{hd.quote(get_emoji(team_player))} "
-            f"{get_small_card(team_player.player, notification)}, "
+            f"{get_small_card(team_player.player, notification=notification)}, "
             f"{hd.quote(team_player.role)}\n"
         )
     return rez

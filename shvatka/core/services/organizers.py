@@ -48,11 +48,11 @@ def check_game_token(game: dto.Game, manage_token: str):
 
 async def save_invite_to_orgs(game: dto.Game, inviter: dto.Player, dao: InviteSaver) -> str:
     return await dao.save_new_invite(
-        dct=dict(
-            game_id=game.id,
-            inviter_id=inviter.id,
-            type_=InviteType.add_org.name,
-        )
+        dct={
+            "game_id": game.id,
+            "inviter_id": inviter.id,
+            "type_": InviteType.add_org.name,
+        }
     )
 
 

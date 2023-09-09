@@ -1,6 +1,5 @@
 import typing
 from io import BytesIO
-from typing import Type
 
 import pytest
 import pytest_asyncio
@@ -112,12 +111,12 @@ async def test_send_venue(hint_sender: HintSender):
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("tg_method,hint,method_name,content_type", PARAMETERS)
+@pytest.mark.parametrize(("tg_method", "hint", "method_name", "content_type"), PARAMETERS)
 async def test_send_photo_by_id(
     hint_sender: HintSender,
     harry: dto.Player,
     hint: BaseHint,
-    tg_method: Type[TelegramMethod[TelegramType]],
+    tg_method: type[TelegramMethod[TelegramType]],
     method_name: str,
     content_type: str,
 ):
@@ -136,13 +135,13 @@ async def test_send_photo_by_id(
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
-    "tg_method,hint,method_name,content_type", PARAMETERS[:-1]
+    ("tg_method", "hint", "method_name", "content_type"), tuple(PARAMETERS[:-1])
 )  # we don't send sticker by content
 async def test_send_photo_by_content(
     hint_sender: HintSender,
     harry: dto.Player,
     hint: BaseHint,
-    tg_method: Type[TelegramMethod[TelegramType]],
+    tg_method: type[TelegramMethod[TelegramType]],
     method_name: str,
     content_type: str,
 ):

@@ -74,7 +74,7 @@ async def save_team(parsed_team: ParsedTeam, with_team_players: bool, dao: Holde
                 if team_player.team_id == team.id:
                     await dao.team_player.change_role(team_player, parsed_player.role)
                     continue
-                else:
+                else:  # noqa: RET507
                     await dao.team_player.leave_team(
                         saved_player, datetime.now(tz=tz_utc) - timedelta(hours=2)
                     )
@@ -97,7 +97,10 @@ async def add_waivers(
         if await dao.waiver.is_player_played(saved_player, game_number):
             continue
         logger.debug(
-            f"adding {game_number} for player {saved_player.name_mention} ({saved_player.id})"
+            "adding %s for player %s (%s)",
+            game_number,
+            saved_player.name_mention,
+            saved_player.id,
         )
         game = await dao.game.get_game_by_number(game_number)
         assert game.start_at is not None
@@ -108,16 +111,22 @@ async def add_waivers(
             )
             if not next_tp:
                 logger.warning(
-                    f"don't know how to chose team for player {saved_player.name_mention} "
-                    f"for game number {game_number}. next team is None"
+                    "don't know how to chose team for player %s "
+                    "for game number %s. next team is None",
+                    saved_player.name_mention,
+                    game_number,
                 )
                 continue
             if not await dao.waiver.is_team_played(next_tp.team, game_number):
                 logger.warning(
-                    f"don't know how to chose team for player {saved_player.name_mention} "
-                    f"for game number {game_number}. "
-                    f"next team (from {next_tp.date_joined}) is {next_tp.team}, "
-                    f"but this team not played too"
+                    "don't know how to chose team for player %s "
+                    "for game number %s. "
+                    "next team (from %s) is %s, "
+                    "but this team not played too",
+                    saved_player.name_mention,
+                    game_number,
+                    next_tp.date_joined,
+                    next_tp.team,
                 )
                 continue
             if not team_for_game:
@@ -127,7 +136,7 @@ async def add_waivers(
                 team_for_game = next_tp.team
             else:
                 logger.warning(
-                    f"how to change {team_for_game} to {next_tp.team} for {game.start_at}"
+                    "how to change %s to %s for %s", team_for_game, next_tp.team, game.start_at
                 )
                 continue
         waiver = dto.Waiver(
@@ -135,9 +144,10 @@ async def add_waivers(
         )
         await dao.waiver.upsert(waiver)
         logger.info(
-            f"added waiver for player {saved_player.name_mention} "
-            f"for game number {game_number} "
-            f"team is {team_for_game}"
+            "added waiver for player %s for game number %s team is %s",
+            saved_player.name_mention,
+            game_number,
+            team_for_game,
         )
 
 

@@ -36,10 +36,10 @@ async def create_team(
     await game_log.log(
         GameLogEvent(
             GameLogType.TEAM_CREATED,
-            data=dict(
-                team=team.name,
-                captain=captain.name_mention,
-            ),
+            data={
+                "team": team.name,
+                "captain": captain.name_mention,
+            },
         )
     )
     return team
@@ -115,11 +115,11 @@ async def merge_teams(
     await game_log.log(
         GameLogEvent(
             GameLogType.TEAMS_MERGED,
-            dict(
-                captain=manager.name_mention,
-                primary_team=primary.name,
-                secondary_team=secondary.name,
-            ),
+            {
+                "captain": manager.name_mention,
+                "primary_team": primary.name,
+                "secondary_team": secondary.name,
+            },
         )
     )
 

@@ -28,7 +28,7 @@ class GamePublisher:
         game_stat: dto.GameStat,
         telegraph: Telegraph,
         keys: dict[dto.Team, list[dto.KeyTime]],
-    ):
+    ) -> None:
         self.hint_sender = hint_sender
         self.game = game
         self.channel_id = channel_id
@@ -90,7 +90,7 @@ class GamePublisher:
 class LevelPublisher:
     SLEEP: timedelta = timedelta(seconds=10)
 
-    def __init__(self, hint_sender: HintSender, level: dto.Level, channel_id: int):
+    def __init__(self, hint_sender: HintSender, level: dto.Level, channel_id: int) -> None:
         self.hint_sender = hint_sender
         self.level = level
         self.channel_id = channel_id

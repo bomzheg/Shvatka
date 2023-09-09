@@ -13,7 +13,7 @@ from .base import BaseDAO
 
 
 class LevelDao(BaseDAO[models.Level]):
-    def __init__(self, session: AsyncSession):
+    def __init__(self, session: AsyncSession) -> None:
         super().__init__(models.Level, session)
 
     async def upsert(
@@ -123,7 +123,7 @@ class LevelDao(BaseDAO[models.Level]):
         result = await self.session.execute(
             select(models.Level)
             .where(models.Level.game_id == game.id)
-            .order_by(models.Level.number_in_game.desc())  # noqa
+            .order_by(models.Level.number_in_game.desc())
             .limit(1)
         )
         max_level: models.Level | None = result.scalar_one_or_none()

@@ -57,7 +57,7 @@ async def download(game_id: int, session: ClientSession) -> str:
 
 
 class GameParser:
-    def __init__(self, html_str: str, *, session: ClientSession):
+    def __init__(self, html_str: str, *, session: ClientSession) -> None:
         self.html = etree.HTML(html_str, base_url="shvatka.ru")
         self.session = session
         self.id: int = 0
@@ -101,14 +101,13 @@ class GameParser:
                         self.keys = {b.tail for b in element.xpath("./b")}
                         self.level_number = int(prompt[1].strip("."))
                         continue
-            if element.tag == "b":
-                if element.text and len(element.text.split()) == 4:
-                    hint_caption, number, time, minutes_caption = element.text.split()  # type: str
-                    if hint_caption == "Подсказка" and minutes_caption == "мин.)":
-                        self.build_time_hint()
-                        time = time.removeprefix("(")
-                        self.time = int(time or -1)
-                        continue
+            if element.tag == "b" and element.text and len(element.text.split()) == 4:
+                hint_caption, number, time, minutes_caption = element.text.split()  # type: str
+                if hint_caption == "Подсказка" and minutes_caption == "мин.)":
+                    self.build_time_hint()
+                    time = time.removeprefix("(")
+                    self.time = int(time or -1)
+                    continue
             if iframe_tags := element.xpath("descendant-or-self::iframe"):
                 for iframe in iframe_tags:
                     self.current_hint_parts.append(iframe.get("src"))
@@ -241,10 +240,10 @@ class GameParser:
             ValueError,
         ) as e:
             logger.error("couldn't load content for url %s", url, exc_info=e)
-            raise ContentDownloadError()
+            raise ContentDownloadError from e
 
     def build_current_hint(self):
-        parts = list(filter(lambda p: p, map(lambda p: p.strip(), self.current_hint_parts)))
+        parts = list(filter(lambda p: p, (p.strip() for p in self.current_hint_parts)))
         self.current_hint_parts = []
         if not parts:
             return
@@ -310,7 +309,7 @@ async def save_all_scns_to_files(game_ids: list[int]):
             stat=dcf.dump(game.stat),
         )
         packed_scenario = pack_scn(scenario)
-        with open(path / f"{game.id}.zip", "wb") as f:
+        with (path / f"{game.id}.zip").open("wb") as f:
             logger.debug("saved to filename %s", f.name)
             f.write(packed_scenario.read())
 
@@ -321,7 +320,7 @@ def get_finished_level_number(cells: list[ElementBase]):
 
 def get_parseable_games_ids():
     all_games_ids = set(range(132))
-    return list(sorted(all_games_ids - UNPARSEABLE_GAMES))
+    return sorted(all_games_ids - UNPARSEABLE_GAMES)
 
 
 if __name__ == "__main__":

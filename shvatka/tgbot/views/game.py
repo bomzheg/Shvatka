@@ -52,7 +52,7 @@ class BotView(GameViewPreparer, GameView):
                     reply_markup=None,
                 )
             except TelegramAPIError as e:
-                logger.error("can't remove waivers keyboard for team %s", team.id, exc_info=e)
+                logger.exception("can't remove waivers keyboard for team %s", team.id, exc_info=e)
 
     async def send_puzzle(self, team: dto.Team, level: dto.Level) -> None:
         assert level.number_in_game is not None

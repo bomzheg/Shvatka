@@ -106,7 +106,7 @@ class FullGame(Game):
 
     @property
     def hints_count(self) -> int:
-        return sum((level.hints_count for level in self.levels))
+        return sum(level.hints_count for level in self.levels)
 
 
 @dataclass

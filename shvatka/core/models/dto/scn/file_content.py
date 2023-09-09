@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Optional
 
 from shvatka.core.models import dto
 from shvatka.core.models.enums.hint_type import HintType
@@ -42,27 +41,27 @@ class FileMetaLightweight:
 
 
 @dataclass
-class StoredFileMeta(FileMetaLightweight):  # noqa  FUCK YOU PYCHARM!
+class StoredFileMeta(FileMetaLightweight):
     file_content_link: FileContentLink
 
 
 @dataclass
 class UploadedFileMeta(FileMetaLightweight):
-    tg_link: Optional[TgLink] = None
+    tg_link: TgLink | None = None
 
 
 @dataclass
-class FileMeta(StoredFileMeta):  # noqa
+class FileMeta(StoredFileMeta):
     tg_link: TgLink
 
 
 @dataclass
-class VerifiableFileMeta(FileMeta):  # noqa
+class VerifiableFileMeta(FileMeta):
     author_id: int
 
 
 @dataclass
-class SavedFileMeta(VerifiableFileMeta):  # noqa
+class SavedFileMeta(VerifiableFileMeta):
     id: int
     author: dto.Player
 

@@ -18,7 +18,7 @@ async def total_remove_msg(
     if inline_msg_id:
         return await edit_message_as_removed(bot, inline_message_id=inline_msg_id)
     if msg_id is None:
-        return
+        return None
     try:
         await bot.delete_message(chat_id, msg_id)
     except AiogramError:
@@ -26,7 +26,11 @@ async def total_remove_msg(
 
 
 async def edit_message_as_removed(
-    bot, inline_message_id=None, chat_id=None, message_id=None, text="(удалено)"
+    bot: Bot,
+    inline_message_id: int | None = None,
+    chat_id: int | None = None,
+    message_id: int | None = None,
+    text: str = "(удалено)",
 ):
     with suppress(AiogramError):
         return await bot.edit_message_text(

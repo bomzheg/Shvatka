@@ -22,7 +22,7 @@ class BotFileGateway(FileGateway):
         dao: FileInfoDao,
         bot: Bot,
         tech_chat_id: int,
-    ):
+    ) -> None:
         self.storage = file_storage
         self.dao = dao
         self.bot = bot

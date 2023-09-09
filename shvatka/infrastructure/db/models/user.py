@@ -24,7 +24,7 @@ class User(Base):
         uselist=False,
     )
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         rez = (
             f"<User "
             f"id={self.id} "

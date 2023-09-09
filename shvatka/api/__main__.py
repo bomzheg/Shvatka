@@ -1,6 +1,6 @@
 import logging
 
-import uvicorn as uvicorn
+import uvicorn
 from fastapi import FastAPI
 
 from shvatka.api import dependencies, routes

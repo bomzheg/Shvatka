@@ -1,5 +1,6 @@
 import logging
 from io import BytesIO
+from pathlib import Path
 from typing import BinaryIO
 
 from shvatka.common.config.models.main import FileStorageConfig
@@ -10,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 
 class LocalFileStorage(FileStorage):
-    def __init__(self, config: FileStorageConfig):
+    def __init__(self, config: FileStorageConfig) -> None:
         self.path = config.path
         logger.info("as local file storage use '%s'", self.path)
         if config.mkdir:
@@ -33,6 +34,6 @@ class LocalFileStorage(FileStorage):
         return scn.FileContentLink(file_path=str(result_path))
 
     async def get(self, file_link: scn.FileContentLink) -> BinaryIO:
-        with open(file_link.file_path, "rb") as f:
+        with Path(file_link.file_path).open("rb") as f:
             result = BytesIO(f.read())
         return result

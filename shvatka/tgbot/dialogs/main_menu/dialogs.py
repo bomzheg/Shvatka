@@ -5,7 +5,7 @@ from aiogram_dialog.widgets.text import Const, Format, Jinja
 
 from shvatka.tgbot import states
 from .getters import get_promotion_token, get_main
-from ..team_manage.getters import get_my_team_
+from shvatka.tgbot.dialogs.team_manage.getters import get_my_team_
 
 main_menu = Dialog(
     Window(

@@ -17,5 +17,5 @@ async def db_team_provider(
 ) -> dto.Team:
     team = await get_my_team(player, dao.team_player)
     if team is None:
-        raise exceptions.PlayerNotInTeam()
+        raise exceptions.PlayerNotInTeam(player=player)
     return team

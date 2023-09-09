@@ -19,7 +19,7 @@ from shvatka.core.models.enums.game_status import GameStatus
 from shvatka.infrastructure.db.models import Base
 
 if typing.TYPE_CHECKING:
-    from .. import models
+    from shvatka.infrastructure.db import models
 
 _TOKEN_LEN = 32  # обязательно кратно 4
 

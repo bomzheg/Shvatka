@@ -10,7 +10,7 @@ def dao_provider() -> HolderDao:
 
 
 class DbProvider:
-    def __init__(self, pool: async_sessionmaker[AsyncSession], redis: Redis):
+    def __init__(self, pool: async_sessionmaker[AsyncSession], redis: Redis) -> None:
         self.pool = pool
         self.redis = redis
         self.level_test = LevelTestingData()

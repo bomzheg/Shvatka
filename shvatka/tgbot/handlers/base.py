@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 
 
 async def chat_id(message: Message, chat: dto.Chat, user: dto.User):
-    text = f"id этого чата: {hd.pre(str(chat.tg_id))}\n" f"Ваш id: {hd.pre(user.tg_id)}"
+    text = f"id этого чата: {hd.pre(str(chat.tg_id))}\nВаш id: {hd.pre(user.tg_id)}"
     if message.reply_to_message and message.reply_to_message.from_user:
         text += (
             f"\nid {hd.bold(message.reply_to_message.from_user.full_name)}: "

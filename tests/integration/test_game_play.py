@@ -72,18 +72,18 @@ async def test_game_play(
     dummy_org_notifier = OrgNotifierMock()
     orgs = await get_orgs(game, dao.organizer)
     key_processor = KeyProcessor(dao.game_player, game, locker)
-    key_kwargs = dict(
-        player=harry,
-        team=gryffindor,
-        game=game,
-        dao=dao.game_player,
-        view=dummy_view,
-        game_log=dummy_log,
-        org_notifier=dummy_org_notifier,
-        key_processor=key_processor,
-        locker=locker,
-        scheduler=scheduler,
-    )
+    key_kwargs = {
+        "player": harry,
+        "team": gryffindor,
+        "game": game,
+        "dao": dao.game_player,
+        "view": dummy_view,
+        "game_log": dummy_log,
+        "org_notifier": dummy_org_notifier,
+        "key_processor": key_processor,
+        "locker": locker,
+        "scheduler": scheduler,
+    }
     await check_key(key="SHWRONG", **key_kwargs)
     keys = await get_typed_keys(game=game, player=author, dao=check_dao.typed_keys)
 

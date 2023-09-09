@@ -3,7 +3,7 @@ from __future__ import annotations
 from decimal import Decimal
 from enum import Enum
 from fractions import Fraction
-from typing import TYPE_CHECKING, Any, ClassVar, Dict, Literal, Optional, Type, TypeVar, Union
+from typing import TYPE_CHECKING, Any, ClassVar, Literal, TypeVar
 from uuid import UUID
 
 from aiogram.filters.base import Filter
@@ -56,7 +56,7 @@ class InlineData(BaseModel):
             return ""
         if isinstance(value, Enum):
             return str(value.value)
-        if isinstance(value, (int, str, float, Decimal, Fraction, UUID)):
+        if isinstance(value, int | str | float | Decimal | Fraction | UUID):
             return str(value)
         raise ValueError(
             f"Attribute {key}={value!r} of type {type(value).__name__!r}"
@@ -87,7 +87,7 @@ class InlineData(BaseModel):
         return inline_data
 
     @classmethod
-    def unpack(cls: Type[T], value: str) -> T:
+    def unpack(cls: type[T], value: str) -> T:
         """
         Parse inline data string
 
@@ -104,15 +104,14 @@ class InlineData(BaseModel):
         if prefix != cls.__prefix__:
             raise ValueError(f"Bad prefix ({prefix!r} != {cls.__prefix__!r})")
         payload = {}
-        for k, v in zip(names, parts):  # type: str, Optional[str]
-            if field := cls.model_fields.get(k):
-                if v == "" and not field.is_required():
-                    v = None
+        for k, v in zip(names, parts):  # type: str, str | None
+            if (field := cls.model_fields.get(k)) and v == "" and not field.is_required():
+                v = None
             payload[k] = v
         return cls(**payload)
 
     @classmethod
-    def filter(cls, rule: Optional[MagicFilter] = None) -> InlineQueryFilter:
+    def filter(cls, rule: MagicFilter | None = None) -> InlineQueryFilter:
         """
         Generates a filter for inline query with rule
 
@@ -133,9 +132,9 @@ class InlineQueryFilter(Filter):
     def __init__(
         self,
         *,
-        inline_data: Type[InlineData],
-        rule: Optional[MagicFilter] = None,
-    ):
+        inline_data: type[InlineData],
+        rule: MagicFilter | None = None,
+    ) -> None:
         """
         :param inline_data: Expected type of inline data
         :param rule: Magic rule
@@ -149,7 +148,7 @@ class InlineQueryFilter(Filter):
             rule=self.rule,
         )
 
-    async def __call__(self, query: InlineQuery) -> Union[Literal[False], Dict[str, Any]]:
+    async def __call__(self, query: InlineQuery) -> Literal[False] | dict[str, Any]:
         if not isinstance(query, InlineQuery) or not query.query:
             return False
         try:

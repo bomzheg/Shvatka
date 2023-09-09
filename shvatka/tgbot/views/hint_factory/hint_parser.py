@@ -33,7 +33,7 @@ from shvatka.infrastructure.db.dao import FileInfoDao
 
 
 class HintParser:
-    def __init__(self, dao: FileInfoDao, file_storage: FileStorage, bot: Bot):
+    def __init__(self, dao: FileInfoDao, file_storage: FileStorage, bot: Bot) -> None:
         self.bot = bot
         self.dao = dao
         self.storage = file_storage
@@ -112,7 +112,7 @@ class HintParser:
             case ContentType.STICKER:
                 return StickerHint(file_guid=guid)
             case _:
-                raise ValueError()
+                raise ValueError
 
     async def save_file(
         self, message: Message, author: dto.Player, guid: str

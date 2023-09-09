@@ -33,7 +33,7 @@ async def download_teams(session: ClientSession) -> str:
 
 
 class TeamsParser:
-    def __init__(self, html_str: str, *, session: ClientSession):
+    def __init__(self, html_str: str, *, session: ClientSession) -> None:
         self.html = etree.HTML(html_str, base_url="shvatka.ru")
         self.session = session
         self.teams: list[ParsedTeam] = []
@@ -111,7 +111,7 @@ async def main_team_parser():
     teams = await get_all_teams()
     dcf = Factory(default_schema=Schema(name_style=NameStyle.kebab))
     path = Path(__file__).parent
-    with open(path / "teams.json", "w", encoding="utf8") as f:
+    with (path / "teams.json").open("w", encoding="utf8") as f:
         json.dump(dcf.dump(teams), f, ensure_ascii=False, indent=2)
 
 

@@ -24,7 +24,7 @@ def api_config(paths: Paths) -> ApiConfig:
 
 @pytest.fixture(autouse=True)
 def patch_api_config(api_config: ApiConfig, postgres_url: str, redis: Redis):
-    api_config.db = DBConfig(postgres_url)  # type: ignore
+    api_config.db = DBConfig(postgres_url)  # type: ignore[assignment]
     api_config.redis.url = redis.connection_pool.connection_kwargs["host"]
     api_config.redis.port = redis.connection_pool.connection_kwargs["port"]
     api_config.redis.db = redis.connection_pool.connection_kwargs["db"]

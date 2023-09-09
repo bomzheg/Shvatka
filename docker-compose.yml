@@ -52,7 +52,6 @@ services:
       - type: "bind"
         source: "./files/"
         target: "/files/"
-        read_only: true
     extra_hosts:
       - "host.docker.internal:host-gateway"
     entrypoint: ["bash"]

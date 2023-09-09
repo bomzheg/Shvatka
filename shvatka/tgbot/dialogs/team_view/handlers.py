@@ -5,7 +5,7 @@ from aiogram_dialog import DialogManager
 from aiogram_dialog.widgets.kbd import Button
 
 from shvatka.core.models import dto
-from shvatka.core.services.player import get_my_team
+from shvatka.core.services.player import get_my_team, leave
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.tgbot import states
 from shvatka.tgbot.dialogs.team_view.common import get_active_filter, get_archive_filter
@@ -26,6 +26,13 @@ async def change_active_filter(c: CallbackQuery, button: Button, manager: Dialog
 
 async def change_archive_filter(c: CallbackQuery, button: Button, manager: DialogManager):
     manager.dialog_data[button.widget_id] = not get_archive_filter(manager)
+
+
+async def on_leave_team(c: CallbackQuery, button: Button, dialog_manager: DialogManager):
+    dao: HolderDao = dialog_manager.middleware_data["dao"]
+    player: dto.Player = dialog_manager.middleware_data["player"]
+    await leave(player, player, dao.team_leaver)
+    await dialog_manager.done()
 
 
 async def on_start_my_team(start_data: dict, manager: DialogManager) -> None:

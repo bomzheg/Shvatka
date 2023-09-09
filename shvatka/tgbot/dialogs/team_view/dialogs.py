@@ -10,8 +10,9 @@ from .handlers import (
     change_active_filter,
     change_archive_filter,
     on_start_my_team,
+    on_leave_team,
 )
-from ..common import BOOL_VIEW
+from shvatka.tgbot.dialogs.common import BOOL_VIEW
 
 team_view = Dialog(
     Window(
@@ -86,6 +87,7 @@ my_team_view = Dialog(
             "Наш капитан: {{team.captain.name_mention}}\n"
             "Сыгранные игры: {{' '.join(game_numbers)}}"
         ),
+        Button(Const("☄️Выйти из команды"), id="leave_team", on_click=on_leave_team),
         Cancel(Const("🔙Выход")),
         getter=team_getter,
         state=states.MyTeamSg.team,

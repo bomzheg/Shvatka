@@ -9,7 +9,7 @@ from shvatka.infrastructure.db.dao import BaseDAO
 
 
 class AchievementDAO(BaseDAO[models.Achievement]):
-    def __init__(self, session: AsyncSession):
+    def __init__(self, session: AsyncSession) -> None:
         super().__init__(models.Achievement, session=session)
 
     async def exist_type(self, achievement: enums.Achievement) -> bool:

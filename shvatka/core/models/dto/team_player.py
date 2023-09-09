@@ -6,7 +6,7 @@ from datetime import datetime
 from .common import DateRange
 from .player import Player
 from .team import Team
-from .. import enums
+from shvatka.core.models import enums
 
 
 @dataclass
@@ -26,7 +26,7 @@ class TeamPlayer:
     _can_remove_players: bool
 
     def __eq__(self, other) -> bool:
-        if not isinstance(other, (TeamPlayer, FullTeamPlayer)):
+        if not isinstance(other, TeamPlayer | FullTeamPlayer):
             return NotImplemented
         return self.id == other.id
 
@@ -34,13 +34,13 @@ class TeamPlayer:
         return hash(self.id)
 
     def get_permissions(self) -> dict[str, bool]:
-        return dict(
-            can_manage_waivers=self._can_manage_waivers,
-            can_manage_players=self._can_remove_players,
-            can_change_team_name=self._can_change_team_name,
-            can_add_players=self._can_add_players,
-            can_remove_players=self._can_remove_players,
-        )
+        return {
+            "can_manage_waivers": self._can_manage_waivers,
+            "can_manage_players": self._can_remove_players,
+            "can_change_team_name": self._can_change_team_name,
+            "can_add_players": self._can_add_players,
+            "can_remove_players": self._can_remove_players,
+        }
 
 
 @dataclass
@@ -94,17 +94,17 @@ class FullTeamPlayer(TeamPlayer):
             date_left=team_player.date_left,
             role=team_player.role,
             emoji=team_player.emoji,
-            _can_manage_waivers=team_player._can_manage_waivers,
-            _can_manage_players=team_player._can_manage_players,
-            _can_change_team_name=team_player._can_change_team_name,
-            _can_add_players=team_player._can_add_players,
-            _can_remove_players=team_player._can_remove_players,
+            _can_manage_waivers=team_player._can_manage_waivers,  # noqa: SLF001
+            _can_manage_players=team_player._can_manage_players,  # noqa: SLF001
+            _can_change_team_name=team_player._can_change_team_name,  # noqa: SLF001
+            _can_add_players=team_player._can_add_players,  # noqa: SLF001
+            _can_remove_players=team_player._can_remove_players,  # noqa: SLF001
             team=team,
             player=player,
         )
 
     def __eq__(self, other) -> bool:
-        if not isinstance(other, (TeamPlayer, FullTeamPlayer)):
+        if not isinstance(other, TeamPlayer | FullTeamPlayer):
             return False
         return self.id == other.id
 

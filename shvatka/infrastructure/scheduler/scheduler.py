@@ -36,7 +36,7 @@ class ApScheduler(Scheduler, LevelTestScheduler):
         level_test_dao: LevelTestingData,
         bot: Bot,
         game_log_chat: int,
-    ):
+    ) -> None:
         ScheduledContextHolder.pool = pool
         ScheduledContextHolder.redis = redis
         ScheduledContextHolder.bot = bot

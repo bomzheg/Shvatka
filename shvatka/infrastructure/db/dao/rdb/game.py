@@ -18,7 +18,7 @@ from .base import BaseDAO
 
 
 class GameDao(BaseDAO[models.Game]):
-    def __init__(self, session: AsyncSession):
+    def __init__(self, session: AsyncSession) -> None:
         super().__init__(models.Game, session)
 
     async def upsert_game(
@@ -103,7 +103,7 @@ class GameDao(BaseDAO[models.Game]):
                 models.Game.status == GameStatus.complete,
                 models.Game.number.is_not(None),
             )
-            .order_by(models.Game.number.desc(), models.Game.start_at.desc())  # noqa
+            .order_by(models.Game.number.desc(), models.Game.start_at.desc())
         )
         games: Sequence[models.Game] = result.all()
         return [game.to_dto(game.author.to_dto_user_prefetched()) for game in games]

@@ -8,7 +8,7 @@ logger = logging.getLogger(__name__)
 
 
 class PollDao:
-    def __init__(self, redis: Redis):
+    def __init__(self, redis: Redis) -> None:
         self.prefix = "poll"
         self.msg_prefix = "msg_poll"
         self.redis = redis
@@ -28,9 +28,14 @@ class PollDao:
         :return: словарь в формате player_id:vote
         """
         return {
-            self.parse_player_id(key=key, team_id=team_id): Played[await self._get(key)]
+            self.parse_player_id(key=key, team_id=team_id): await self._get_played(key)
             for key in await self.get_list_of_keys_poll(team_id=team_id)
         }
+
+    async def _get_played(self, key: str) -> Played:
+        value = await self._get(key)
+        assert value is not None
+        return Played[value]
 
     async def save_poll_msg_id(self, chat_id: int, game_id: int, msg_id: int) -> None:
         key = self._create_msg_prefix(chat_id, game_id)
@@ -74,7 +79,7 @@ class PollDao:
         logger.warning("Next keys was deleted %s", ", ".join([key.decode() for key in keys]))
         await self.redis.delete(*keys)
 
-    async def _get(self, key: str, encoding: str = "utf-8"):
+    async def _get(self, key: str, encoding: str = "utf-8") -> str | None:
         value = await self.redis.get(key)
         if value is None:
             return None

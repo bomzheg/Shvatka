@@ -8,7 +8,7 @@ from shvatka.tgbot.utils.data import MiddlewareData
 
 
 class ConfigMiddleware(BaseMiddleware):
-    def __init__(self, config: BotConfig):
+    def __init__(self, config: BotConfig) -> None:
         self.config = config
 
     async def __call__(  # type: ignore

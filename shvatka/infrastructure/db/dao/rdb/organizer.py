@@ -13,7 +13,7 @@ from .base import BaseDAO
 
 
 class OrganizerDao(BaseDAO[models.Organizer]):
-    def __init__(self, session: AsyncSession):
+    def __init__(self, session: AsyncSession) -> None:
         super().__init__(models.Organizer, session)
 
     async def get_orgs(

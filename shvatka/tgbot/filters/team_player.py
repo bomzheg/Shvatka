@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Union, Any
+from typing import Any
 
 from aiogram.filters import BaseFilter
 from aiogram.types import Message
@@ -22,7 +22,7 @@ class TeamPlayerFilter(BaseFilter):
         self,
         message: Message,
         team_player: dto.FullTeamPlayer | None,
-    ) -> Union[bool, dict[str, Any]]:
+    ) -> bool | dict[str, Any]:
         if not team_player:
             return False
         if self.is_captain is not None:

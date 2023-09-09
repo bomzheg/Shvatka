@@ -6,7 +6,7 @@ from aiogram.types import Message
 from shvatka.core.utils.exceptions import MultipleUsernameFound, NoUsernameFound
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from .user_getter import UserGetter
-from ...core.models import dto
+from shvatka.core.models import dto
 
 logger = logging.getLogger(__name__)
 

@@ -29,13 +29,14 @@ async def team_getter(dao: HolderDao, dialog_manager: DialogManager, **_):
     games_numbers = [str(game.number) for game in games]
     return {
         "team": team,
-        "players": [tp for tp in players],
+        "players": players,
         "games": games,
         "game_numbers": games_numbers,
     }
 
 
 async def filter_getter(dialog_manager: DialogManager, **_):
-    return dict(
-        active=get_active_filter(dialog_manager), archive=get_archive_filter(dialog_manager)
-    )
+    return {
+        "active": get_active_filter(dialog_manager),
+        "archive": get_archive_filter(dialog_manager),
+    }

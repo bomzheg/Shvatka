@@ -23,7 +23,7 @@ class Chat(Base):
         uselist=False,
     )
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         rez = f"<Chat ID={self.tg_id} title={self.title} "
         if self.username:
             rez += f"username=@{self.username}"

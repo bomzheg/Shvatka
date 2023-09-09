@@ -5,7 +5,7 @@ from shvatka.core.utils.key_checker_lock import KeyCheckerLock, KeyCheckerFactor
 
 
 class MemoryLock(KeyCheckerLock):
-    def __init__(self):
+    def __init__(self) -> None:
         self.lock = asyncio.Lock()
 
     async def acquire(self):

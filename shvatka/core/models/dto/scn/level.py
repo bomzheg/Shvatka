@@ -48,4 +48,4 @@ class LevelScenario:
 
     @property
     def hints_count(self) -> int:
-        return sum((time_hint.hints_count for time_hint in self.time_hints))
+        return sum(time_hint.hints_count for time_hint in self.time_hints)

@@ -12,7 +12,7 @@ from .base import BaseDAO
 
 
 class ForumTeamDAO(BaseDAO[models.ForumTeam]):
-    def __init__(self, session: AsyncSession):
+    def __init__(self, session: AsyncSession) -> None:
         super().__init__(models.ForumTeam, session)
 
     async def upsert(self, team: ParsedTeam) -> dto.ForumTeam:

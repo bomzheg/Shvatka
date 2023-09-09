@@ -71,7 +71,7 @@ class Player(Base):
         back_populates="player",
     )
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"<Player id={self.id} >"
 
     def to_dto(

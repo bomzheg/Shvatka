@@ -11,7 +11,7 @@ from .base import BaseDAO
 
 
 class WaiverDao(BaseDAO[models.Waiver]):
-    def __init__(self, session: AsyncSession):
+    def __init__(self, session: AsyncSession) -> None:
         super().__init__(models.Waiver, session)
 
     async def is_excluded(
@@ -105,7 +105,7 @@ class WaiverDao(BaseDAO[models.Waiver]):
                 models.Waiver.played == Played.yes,
             )
         )
-        teams: Iterable[models.Team] = map(lambda w: w.team, result.all())
+        teams: Iterable[models.Team] = (w.team for w in result.all())
         return [team.to_dto_chat_prefetched() for team in teams]
 
     async def get_played(self, game: dto.Game, team: dto.Team) -> Iterable[dto.VotedPlayer]:

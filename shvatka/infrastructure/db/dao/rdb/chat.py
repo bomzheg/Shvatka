@@ -8,7 +8,7 @@ from .base import BaseDAO
 
 
 class ChatDao(BaseDAO[Chat]):
-    def __init__(self, session: AsyncSession):
+    def __init__(self, session: AsyncSession) -> None:
         super().__init__(Chat, session)
 
     async def get_by_tg_id(self, tg_id: int) -> dto.Chat:

@@ -6,7 +6,7 @@ from aiogram_dialog.widgets.text import Const, Format, Case, Jinja
 from shvatka.tgbot import states
 from .getters import get_available_times, get_hints
 from .handlers import process_time_message, select_time, process_hint, on_finish, hint_on_start
-from ..preview_data import TIMES_PRESET
+from shvatka.tgbot.dialogs.preview_data import TIMES_PRESET
 
 time_hint = Dialog(
     Window(

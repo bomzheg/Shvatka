@@ -43,8 +43,8 @@ class GPSHint(BaseHint, LocationMixin):
 class VenueHint(BaseHint, LocationMixin):
     title: str
     address: str
-    foursquare_id: typing.Optional[str] = None
-    foursquare_type: typing.Optional[str] = None
+    foursquare_id: str | None = None
+    foursquare_type: str | None = None
     type: Literal["venue"] = HintType.venue.name
 
     def get_guids(self) -> list[str]:

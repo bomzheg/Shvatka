@@ -8,7 +8,7 @@ from tests.utils.user import assert_user
 
 @pytest.mark.asyncio
 async def test_save_user(dao: HolderDao):
-    data = dict(event_from_user=create_tg_user())
+    data = {"event_from_user": create_tg_user()}
     actual = await save_user(data, dao)
     expected = create_dto_harry()
     assert_user(expected, actual)
@@ -19,13 +19,13 @@ async def test_save_user(dao: HolderDao):
 @pytest.mark.asyncio
 async def test_upsert_user(dao: HolderDao):
     old_tg_user = create_tg_user(username=HARRY_OLD_USERNAME)
-    data = dict(event_from_user=old_tg_user)
+    data = {"event_from_user": old_tg_user}
     old = await save_user(data, dao)
     expected_old = create_dto_harry()
     expected_old.username = HARRY_OLD_USERNAME
     assert_user(expected_old, old)
 
-    data = dict(event_from_user=create_tg_user())
+    data = {"event_from_user": create_tg_user()}
     actual = await save_user(data, dao)
 
     expected = create_dto_harry()

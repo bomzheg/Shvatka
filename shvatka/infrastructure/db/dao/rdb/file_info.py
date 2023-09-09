@@ -14,7 +14,7 @@ from .base import BaseDAO
 
 
 class FileInfoDao(BaseDAO[models.FileInfo]):
-    def __init__(self, session: AsyncSession):
+    def __init__(self, session: AsyncSession) -> None:
         super().__init__(models.FileInfo, session)
 
     async def upsert(self, file: scn.FileMeta, author: dto.Player) -> scn.SavedFileMeta:

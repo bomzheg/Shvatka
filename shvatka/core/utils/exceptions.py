@@ -23,8 +23,8 @@ class SHError(Exception):
         notify_user: str | None = None,
         *args,
         **kwargs,
-    ):
-        super(SHError, self).__init__(args, kwargs)
+    ) -> None:
+        super().__init__(args, kwargs)
         self.text = text
         self.user_id = user_id
         self.player_id = player_id
@@ -39,7 +39,7 @@ class SHError(Exception):
         self.alarm = alarm
         self.notify_user = notify_user or self.notify_user
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         result_msg = f"Error: {self.text}"
         if self.user_id:
             result_msg += f", by user {self.user_id}"
@@ -51,7 +51,7 @@ class SHError(Exception):
             result_msg += f". Information for user: {self.notify_user}"
         return result_msg
 
-    def __str__(self):
+    def __str__(self) -> str:
         return (
             f"Error.\ntype: {self.__class__.__name__}\n"
             f"text: {self.text}\n"
@@ -62,12 +62,14 @@ class SHError(Exception):
 class ScenarioNotCorrect(SHError):
     notify_user = "JSON-файл некорректен"
 
-    def __init__(self, *args, level_id: int | None = None, name_id: str | None = None, **kwargs):
-        super(ScenarioNotCorrect, self).__init__(*args, **kwargs)
+    def __init__(
+        self, *args, level_id: int | None = None, name_id: str | None = None, **kwargs
+    ) -> None:
+        super().__init__(*args, **kwargs)
         self.level_id = level_id
         self.name_id = name_id
 
-    def __str__(self):
+    def __str__(self) -> str:
         result = super().__str__()
         if self.level_id:
             result += f"\nProblem level_id: {self.level_id}"
@@ -87,8 +89,8 @@ class SHDataBreach(SHError):
 
 
 class SaltError(SHError):
-    def __init__(self, token: str | None = None, *args, **kwargs):
-        super(SaltError, self).__init__(*args, **kwargs)
+    def __init__(self, token: str | None = None, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
         self.token = token
 
 
@@ -105,8 +107,8 @@ class GameHasAnotherAuthor(GameError):
 
 
 class GameStatusError(GameError):
-    def __init__(self, game_status: str | None = None, *args, **kwargs):
-        super(GameStatusError, self).__init__(*args, **kwargs)
+    def __init__(self, game_status: str | None = None, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
         self.game_status = game_status
 
     notify_user = "Статус игры не соответствует запрошенному действию"
@@ -157,8 +159,8 @@ class GameNotFound(GameError, AttributeError):
 class LevelError(SHError):
     notify_user = "Ошибка связанная с уровнем"
 
-    def __init__(self, level_id: int, *args, **kwargs):
-        super(LevelError, self).__init__(*args, **kwargs)
+    def __init__(self, level_id: int, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
         self.level_id = level_id
 
 
@@ -169,8 +171,8 @@ class LevelNotLinked(LevelError):
 class PermissionsError(SHError):
     notify_user = "Ошибка связанная с полномочиями"
 
-    def __init__(self, permission_name: str | None = None, *args, **kwargs):
-        super(PermissionsError, self).__init__(*args, **kwargs)
+    def __init__(self, permission_name: str | None = None, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
         self.permission_name = permission_name
 
 
@@ -225,7 +227,7 @@ class AnotherTeamInChat(PlayerTeamError):
 class UsernameResolverError(SHError):
     notify_user = "Не удалось найти пользователя по username"
 
-    def __init__(self, username: str | None = None, **kwargs):
+    def __init__(self, username: str | None = None, **kwargs) -> None:
         super().__init__(**kwargs)
         self.username = username
 
@@ -251,6 +253,6 @@ class InvalidKey(SHError):
         "Это не ключ. Например начинается не с SH/СХ, используется что-то кроме букв и цифр"
     )
 
-    def __init__(self, key: str | None = None, *args, **kwargs):
-        super(InvalidKey, self).__init__(*args, **kwargs)
+    def __init__(self, key: str | None = None, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
         self.key = key

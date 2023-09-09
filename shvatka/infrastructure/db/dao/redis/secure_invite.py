@@ -10,7 +10,7 @@ EXPIRE_TIME = 12 * 60
 
 
 class SecureInvite:
-    def __init__(self, *, prefix="invite", redis: Redis):
+    def __init__(self, *, prefix="invite", redis: Redis) -> None:
         self.prefix = prefix
         self.redis = redis
 
@@ -34,7 +34,7 @@ class SecureInvite:
     async def remove_invite(self, token: str):
         await self.redis.delete(self._create_key(token))
 
-    async def _get(self, key: str, encoding: str = "utf-8"):
+    async def _get(self, key: str, encoding: str = "utf-8") -> str | None:
         value = await self.redis.get(key)
         if value is None:
             return None

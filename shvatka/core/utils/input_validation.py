@@ -1,6 +1,6 @@
 import re
 from datetime import datetime
-from typing import Optional, Iterable
+from typing import Iterable
 
 from shvatka.core.utils import datetime_utils
 from shvatka.core.views.texts import KEY_PREFIXES
@@ -14,7 +14,7 @@ def is_key_valid(key_expectant: str) -> bool:
     return normalize_key(key_expectant) is not None
 
 
-def normalize_key(key_expectant: str) -> Optional[str]:
+def normalize_key(key_expectant: str) -> str | None:
     rez = re.search(KEY_REGEXP, key_expectant.strip())
     return None if rez is None else rez.group(0)
 
@@ -35,18 +35,18 @@ def validate_level_id(id_expectant: str) -> str | None:
 def date_from_text(text):
     try:
         return datetime.strptime(text, datetime_utils.DATE_FORMAT).date()
-    except ValueError:
+    except ValueError as e:
         raise ValueError(
             f"Строка <b>{text}</b> "
             f"не соответствует формату {datetime_utils.DATE_FORMAT_USER}, попробуй ещё раз."
-        )
+        ) from e
 
 
 def time_from_text(text):
     try:
         return datetime.strptime(text, datetime_utils.TIME_FORMAT).time()
-    except ValueError:
+    except ValueError as e:
         raise ValueError(
             f"Строка <b>{text}</b> "
             f"не соответствует формату {datetime_utils.TIME_FORMAT_USER}, попробуй ещё раз."
-        )
+        ) from e

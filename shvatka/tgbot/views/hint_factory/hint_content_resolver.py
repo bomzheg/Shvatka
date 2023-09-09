@@ -45,7 +45,7 @@ from shvatka.tgbot.models.hint import (
 
 
 class HintContentResolver:
-    def __init__(self, dao: FileInfoDao, file_storage: FileStorage):
+    def __init__(self, dao: FileInfoDao, file_storage: FileStorage) -> None:
         self.dao = dao
         self.storage = file_storage
 
@@ -201,7 +201,7 @@ class HintContentResolver:
 
 
 class BytesWithName(BytesIO):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         self._name = kwargs.pop("original_filename", "")
         super().__init__(*args, **kwargs)
 

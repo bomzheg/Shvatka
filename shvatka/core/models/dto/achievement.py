@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from datetime import datetime
 
 from .player import Player
-from .. import enums
+from shvatka.core.models import enums
 
 
 @dataclass

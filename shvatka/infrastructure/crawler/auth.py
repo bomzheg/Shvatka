@@ -17,7 +17,7 @@ async def auth(session: ClientSession, creds: Credentials):
 
 
 async def get_login_page(session: ClientSession):
-    async with session.get(BASE_URL, params=dict(act="Login", CODE="00")) as resp:
+    async with session.get(BASE_URL, params={"act": "Login", "CODE": "00"}) as resp:
         resp.raise_for_status()
         assert resp.ok
         return resp.cookies[COOKIE_NAME].value
@@ -36,7 +36,7 @@ async def authorize(session: ClientSession, php_session: str, creds: Credentials
             "PassWord": creds.password,
             "submit": "%C2%F5%EE%E4",
         },
-        params=dict(s=php_session, act="Login", CODE="01"),
+        params={"s": php_session, "act": "Login", "CODE": "01"},
     ) as resp:
         resp.raise_for_status()
         assert resp.ok

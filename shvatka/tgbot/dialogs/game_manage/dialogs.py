@@ -46,7 +46,7 @@ from .handlers import (
     to_publish_game_forum,
     complete_game_handler,
 )
-from ..preview_data import PREVIEW_GAME
+from shvatka.tgbot.dialogs.preview_data import PREVIEW_GAME
 
 
 games = Dialog(

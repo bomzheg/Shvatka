@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Any, Union, Dict
+from typing import Any
 
 from aiogram.filters import BaseFilter
 from aiogram.types import Message
@@ -14,7 +14,7 @@ class GameStatusFilter(BaseFilter):
     running: bool | None = None
     status: GameStatus | None = None
 
-    async def __call__(self, message: Message, game: dto.Game) -> Union[bool, Dict[str, Any]]:
+    async def __call__(self, message: Message, game: dto.Game) -> bool | dict[str, Any]:
         if self.active is not None:
             return self.check_active(game)
         if self.running is not None:

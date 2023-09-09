@@ -9,7 +9,7 @@ from shvatka.infrastructure.picture import paint_it
 
 
 class ResultsPainter:
-    def __init__(self, bot: Bot, dao: HolderDao, chat_id: int):
+    def __init__(self, bot: Bot, dao: HolderDao, chat_id: int) -> None:
         self.bot = bot
         self.dao = dao
         self.chat_id = chat_id

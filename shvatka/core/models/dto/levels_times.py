@@ -35,7 +35,7 @@ class LevelTime:
 class LevelTimeOnGame(LevelTime):
     is_finished: bool
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return super().__repr__()
 
 

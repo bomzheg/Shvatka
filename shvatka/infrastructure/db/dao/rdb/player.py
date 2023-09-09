@@ -13,7 +13,7 @@ from .base import BaseDAO
 
 
 class PlayerDao(BaseDAO[models.Player]):
-    def __init__(self, session: AsyncSession):
+    def __init__(self, session: AsyncSession) -> None:
         super().__init__(models.Player, session)
 
     async def upsert_player(self, user: dto.User) -> dto.Player:
@@ -119,7 +119,8 @@ class PlayerDao(BaseDAO[models.Player]):
 
     async def create_for_forum_user(self, user: dto.ForumUser) -> dto.Player:
         forum_user_db = await self.session.get(models.ForumUser, user.db_id)
-        assert forum_user_db and isinstance(forum_user_db, models.ForumUser)
+        assert forum_user_db
+        assert isinstance(forum_user_db, models.ForumUser)
         if forum_user_db.player_id:
             player = await self._get_by_id(typing.cast(int, forum_user_db.player_id))
         else:

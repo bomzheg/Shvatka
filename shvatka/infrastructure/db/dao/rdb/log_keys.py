@@ -12,7 +12,7 @@ from .base import BaseDAO
 
 
 class KeyTimeDao(BaseDAO[models.KeyTime]):
-    def __init__(self, session: AsyncSession):
+    def __init__(self, session: AsyncSession) -> None:
         super().__init__(models.KeyTime, session)
 
     async def get_correct_typed_keys(

@@ -9,7 +9,7 @@ from aiogram_dialog.widgets.text import Const, Jinja
 from shvatka.tgbot import states
 from .getters import get_org
 from .handlers import process_publish_message
-from ..game_manage.handlers import publish_game_forum
+from shvatka.tgbot.dialogs.game_manage.handlers import publish_game_forum
 
 game_publish = Dialog(
     Window(

@@ -9,7 +9,7 @@ from .base import BaseDAO
 
 
 class ForumUserDAO(BaseDAO[models.ForumUser]):
-    def __init__(self, session: AsyncSession):
+    def __init__(self, session: AsyncSession) -> None:
         super().__init__(models.ForumUser, session)
 
     async def upsert(self, parsed: ParsedPlayer) -> dto.ForumUser:

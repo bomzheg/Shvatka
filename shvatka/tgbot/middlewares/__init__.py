@@ -14,7 +14,7 @@ from .config_middleware import ConfigMiddleware
 from .data_load_middleware import LoadDataMiddleware
 from .fix_target_middleware import FixTargetMiddleware
 from .init_middleware import InitMiddleware
-from .load_team_player import TeamPlayerMiddleware  # noqa: F401
+from .load_team_player import TeamPlayerMiddleware
 
 
 def setup_middlewares(

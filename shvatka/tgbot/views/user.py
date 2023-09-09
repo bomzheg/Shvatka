@@ -11,7 +11,7 @@ def get_small_card_no_link(player: dto.Player) -> str:
     return rez
 
 
-def get_small_card(player: dto.Player, notification: bool) -> str:
+def get_small_card(player: dto.Player, *, notification: bool) -> str:
     if notification:
         return render_small_card_link(player)
     return get_small_card_no_link(player)

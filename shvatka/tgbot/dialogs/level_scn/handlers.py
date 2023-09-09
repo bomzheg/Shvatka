@@ -21,7 +21,7 @@ from shvatka.tgbot import states
 def check_level_id(name_id: str) -> str:
     if value := validate_level_id(name_id):
         return value
-    raise ValueError()
+    raise ValueError
 
 
 async def not_correct_id(m: Message, dialog_: Any, manager: DialogManager):

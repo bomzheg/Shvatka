@@ -12,7 +12,7 @@ from .base import BaseDAO
 
 
 class UserDao(BaseDAO[User]):
-    def __init__(self, session: AsyncSession):
+    def __init__(self, session: AsyncSession) -> None:
         super().__init__(User, session)
 
     async def get_by_id(self, id_: int) -> dto.User:
@@ -53,13 +53,13 @@ class UserDao(BaseDAO[User]):
         db_user.hashed_password = hashed_password
 
     async def upsert_user(self, user: dto.User) -> dto.User:
-        kwargs = dict(
-            tg_id=user.tg_id,
-            first_name=user.first_name,
-            last_name=user.last_name,
-            username=user.username,
-            is_bot=user.is_bot,
-        )
+        kwargs = {
+            "tg_id": user.tg_id,
+            "first_name": user.first_name,
+            "last_name": user.last_name,
+            "username": user.username,
+            "is_bot": user.is_bot,
+        }
         saved_user = await self.session.execute(
             insert(User)
             .values(**kwargs)

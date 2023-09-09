@@ -53,7 +53,7 @@ class KeyProcessor:
         for bonus_key in level.get_bonus_keys():
             if bonus_key.text == key:
                 return bonus_key.bonus_minutes
-        assert False
+        raise AssertionError
 
     async def parse_key(self, key: str, level: dto.Level) -> dto.ParsedKey:
         if key in level.get_bonus_keys_texts():

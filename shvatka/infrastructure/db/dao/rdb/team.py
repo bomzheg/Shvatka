@@ -15,7 +15,7 @@ from .base import BaseDAO
 
 
 class TeamDao(BaseDAO[models.Team]):
-    def __init__(self, session: AsyncSession):
+    def __init__(self, session: AsyncSession) -> None:
         super().__init__(models.Team, session)
 
     async def create(self, chat: dto.Chat, captain: dto.Player) -> dto.Team:

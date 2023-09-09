@@ -47,7 +47,7 @@ from .redis import PollDao, SecureInvite
 
 
 class HolderDao:
-    def __init__(self, session: AsyncSession, redis: Redis, level_test: LevelTestingData):
+    def __init__(self, session: AsyncSession, redis: Redis, level_test: LevelTestingData) -> None:
         self.session = session
         self.user = UserDao(self.session)
         self.chat = ChatDao(self.session)

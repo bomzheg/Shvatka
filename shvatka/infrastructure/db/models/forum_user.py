@@ -24,10 +24,8 @@ class ForumUser(Base):
         uselist=False,
     )
 
-    def __repr__(self):
-        return (
-            f"<ForumUser " f"id={self.id} " f"forum_id={self.forum_id} " f"name={self.name} " f">"
-        )
+    def __repr__(self) -> str:
+        return f"<ForumUser id={self.id} forum_id={self.forum_id} name={self.name} >"
 
     def to_dto(self) -> dto.ForumUser:
         return dto.ForumUser(

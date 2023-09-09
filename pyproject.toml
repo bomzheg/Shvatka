@@ -117,9 +117,31 @@ line_length = 99
 
 [tool.ruff]
 line-length = 99
+select = ["ALL"]
+ignore = [
+    "RUF001", "S101", "D", "ANN101", "S311", "PD008", "UP035", "C408", "C417",
+    "ANN102", "EM101", "TRY003", "PIE790", "RET505", "A003",  "EM102", "RUF003",
+    "RET503", "RET502", "ARG005", "TCH003", "RUF002", "SIM108", "UP024",
+
+
+    # fixme
+    "ANN201", "SIM300", "COM812", "I001", "PLR0913", "UP015", "UP015", "B905",
+    "RUF007", "ANN401", "ANN001", "PLR0911", "FBT001", "ANN002", "ANN003",
+    "ARG002", "ARG001", "ANN204", "BLE001", "TRY400", "TCH001", "TCH002",
+    "PGH003", "FBT002", "N818", "PLW2901", "RET504", "PLC1901", "RUF006",
+    "FBT003", "SIM102", "S106", "PLR2004", "DTZ007", "ANN206", "PGH004",
+    "TRY301", "ANN202", "SIM114",
+]
 
 [tool.ruff.per-file-ignores]
 "__init__.py" = ["F401"]
+"tests/*" = [
+    "SLF001", "PLR2004", "PLR0913", "PT004", "PT023", "PT001",
+    "PLR0915", "ARG001", "PTH123"  # fixme
+]
+"shvatka/api/*" = ["B008"]
+"**/migrations/versions/*" = ["N999"]
+"**/crawler/**parser/*" = ["PLR0912", "B904"]
 
 [tool.flake8]
 ignore = ['E203', 'E231', 'E241', 'W503']

@@ -104,10 +104,8 @@ async def get_voted_yes(team: dto.Team, dao: WaiverApprover) -> list[dto.Vote]:
 async def get_not_played_team_players(team: dto.Team, dao: WaiverApprover) -> Sequence[dto.Player]:
     votes_yes = await get_voted_yes(team, dao)
     players = await dao.get_players(team)
-    not_played = set(players) - typing.cast(
-        set[dto.FullTeamPlayer], set(map(lambda v: v.pit, votes_yes))
-    )
-    return tuple(sorted(map(lambda tp: tp.player, not_played), key=lambda p: p.id))
+    not_played = set(players) - typing.cast(set[dto.FullTeamPlayer], {v.pit for v in votes_yes})
+    return tuple(sorted((tp.player for tp in not_played), key=lambda p: p.id))
 
 
 async def revoke_vote_by_captain(

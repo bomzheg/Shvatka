@@ -208,12 +208,11 @@ async def complete_game(game: dto.Game, dao: GameCompleter):
 
 
 async def check_no_other_game_active(dao: ActiveGameFinder, game: dto.Game):
-    if other_game := await dao.get_active_game():
-        if game.id != other_game.id:
-            raise AnotherGameIsActive(
-                game=game,
-                game_status=game.status,
-            )
+    if (other_game := await dao.get_active_game()) and game.id != other_game.id:
+        raise AnotherGameIsActive(
+            game=game,
+            game_status=game.status,
+        )
 
 
 async def check_no_game_active(dao: ActiveGameFinder):

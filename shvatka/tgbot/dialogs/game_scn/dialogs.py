@@ -36,7 +36,7 @@ game_writer = Dialog(
     ),
     Window(
         Jinja("Игра <b>{{game_name}}</b>\n\n"),
-        Const("<b>Уровни</b>\n\n" "Выбери уровни которые нужно добавить"),
+        Const("<b>Уровни</b>\n\nВыбери уровни которые нужно добавить"),
         ScrollingGroup(
             Multiselect(
                 Format("✓ {item.name_id}"),
@@ -94,7 +94,7 @@ game_editor = Dialog(
     ),
     Window(
         Jinja("Игра <b>{{game.name}}</b>\n\n"),
-        Const("<b>Уровни</b>\n\n" "Выбери уровни которые нужно добавить"),
+        Const("<b>Уровни</b>\n\nВыбери уровни которые нужно добавить"),
         ScrollingGroup(
             Select(
                 Format("{item.name_id}"),

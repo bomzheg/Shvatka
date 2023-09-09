@@ -226,7 +226,7 @@ async def get_team_players(team: dto.Team, dao: TeamPlayersGetter) -> Sequence[d
 
 async def save_promotion_invite(inviter: dto.Player, dao: InviteSaver) -> str:
     return await dao.save_new_invite(
-        dct=dict(inviter_id=inviter.id, type_=InviteType.promote_author.name)
+        dct={"inviter_id": inviter.id, "type_": InviteType.promote_author.name}
     )
 
 
@@ -246,7 +246,7 @@ async def check_promotion_invite(inviter: dto.Player, token: str, dao: InviterDa
 
 async def save_promotion_confirm_invite(inviter: dto.Player, dao: InviteSaver) -> str:
     return await dao.save_new_invite(
-        dct=dict(inviter_id=inviter.id, type_=InviteType.promotion_confirm.name),
+        dct={"inviter_id": inviter.id, "type_": InviteType.promotion_confirm.name},
         token_len=16,
     )
 
@@ -287,10 +287,10 @@ async def merge_players(
     await game_log.log(
         GameLogEvent(
             GameLogType.PLAYERS_MERGED,
-            dict(
-                primary=primary.name_mention,
-                secondary=secondary.name_mention,
-            ),
+            {
+                "primary": primary.name_mention,
+                "secondary": secondary.name_mention,
+            },
         )
     )
 
@@ -303,7 +303,7 @@ async def merge_team_history(primary: dto.Player, secondary: dto.Player, dao: Pl
         if primary_history[0].date_joined > secondary_history[0].date_joined:
             merged = secondary_history
     if not merged:
-        merged = list(sorted(primary_history + secondary_history, key=lambda tp: tp.date_joined))
+        merged = sorted(primary_history + secondary_history, key=lambda tp: tp.date_joined)
     for tp1, tp2 in zip(merged[:-1:], merged[1::]):
         if tp1.date_left is None or (tp1.date_left > tp2.date_joined):
             raise ValueError("can't join automatically")

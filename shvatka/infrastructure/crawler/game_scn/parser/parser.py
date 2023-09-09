@@ -19,8 +19,7 @@ from lxml import etree
 from lxml.etree import ElementBase
 
 from shvatka.core.models import enums
-from shvatka.core.models.dto import scn
-from shvatka.core.models.dto.export_stat import LevelTime, Key, GameStat
+from shvatka.core.models.dto import scn, export_stat
 from shvatka.core.services.scenario.scn_zip import pack_scn
 from shvatka.core.utils.datetime_utils import tz_utc, tz_game, add_timezone
 from shvatka.infrastructure.crawler.auth import get_auth_cookie
@@ -143,9 +142,9 @@ class GameParser:
                 self.current_hint_parts.append(element.tail)
         self.build_level()
 
-    def parse_results(self) -> dict[str, list[LevelTime]]:
+    def parse_results(self) -> dict[str, list[export_stat.LevelTime]]:
         rows = self.html.xpath("//div[@id='tb']//tr[@class='ipbtable']")
-        results: dict[str, list[LevelTime]] = {}
+        results: dict[str, list[export_stat.LevelTime]] = {}
         for row in rows:
             cells = row.xpath("./td")
             team_name = typing.cast(str, cells[0].xpath("./b")[0].text)
@@ -157,7 +156,9 @@ class GameParser:
                     logger.error("can't parse results", exc_info=e)
                     break
                 level_times.append(
-                    LevelTime(number=level_number, at=at.astimezone(tz_utc) if at else None)
+                    export_stat.LevelTime(
+                        number=level_number, at=at.astimezone(tz_utc) if at else None
+                    )
                 )
             results[team_name] = level_times
         return results
@@ -174,14 +175,14 @@ class GameParser:
         at = datetime.combine(date=self.start_at.date() + td, time=time, tzinfo=tz_game)
         return at
 
-    def parse_keys(self) -> dict[str, list[Key]]:
+    def parse_keys(self) -> dict[str, list[export_stat.Key]]:
         tables = self.html.xpath("//div[@id='logs']//table")
-        log_keys: dict[str, list[Key]] = {}
+        log_keys: dict[str, list[export_stat.Key]] = {}
         for table in tables:
             rows = table.xpath(".//tr")
             team_name = rows[0].xpath("./td")[0].text
-            keys: list[Key] = []
-            keys_buffer: list[Key] = []
+            keys: list[export_stat.Key] = []
+            keys_buffer: list[export_stat.Key] = []
             level = 1
             for row in rows[2:]:
                 cells = row.xpath("./td")
@@ -208,8 +209,11 @@ class GameParser:
                     continue
                 local_date = datetime.strptime(time_element.text, "%Y-%m-%d %H:%M:%S")
                 keys_buffer.append(
-                    Key(
-                        player=player_element.xpath("./b")[0].text,
+                    export_stat.Key(
+                        player=export_stat.Player(
+                            forum_name=player_element.xpath("./b")[0].text,
+                            identity=export_stat.PlayerIdentity.forum_name,
+                        ),
                         value=key_element.text,
                         at=add_timezone(local_date).astimezone(tz_utc),
                         level=level,
@@ -236,7 +240,7 @@ class GameParser:
             ClientOSError,
             ValueError,
         ) as e:
-            logger.error("couldnt load content for url %s", url, exc_info=e)
+            logger.error("couldn't load content for url %s", url, exc_info=e)
             raise ContentDownloadError()
 
     def build_current_hint(self):
@@ -282,11 +286,12 @@ class GameParser:
             levels=self.levels,
             files_contents=self.files,
             files=self.files_meta,
-            stat=GameStat(
+            stat=export_stat.GameStat(
                 results=self.parse_results(),
                 keys=self.parse_keys(),
                 id=self.id,
                 start_at=self.start_at,
+                team_identity=export_stat.TeamIdentity.forum_name,
             ),
         )
         return game

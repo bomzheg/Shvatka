@@ -8,7 +8,6 @@ from aiogram.exceptions import AiogramError
 from aiogram.filters import ExceptionTypeFilter
 from aiogram.types.error_event import ErrorEvent
 from aiogram.utils.markdown import html_decoration as hd
-from aiogram_dialog import DialogManager
 from aiogram_dialog.api.exceptions import UnknownIntent
 
 from shvatka.core.utils.exceptions import SHError
@@ -37,8 +36,7 @@ async def handle_sh_error(error: ErrorEvent, log_chat_id: int, bot: Bot):
     await handle(error=error, log_chat_id=log_chat_id, bot=bot)
 
 
-async def clear_unknown_intent(error: ErrorEvent, dialog_manager: DialogManager, bot: Bot):
-    await dialog_manager.reset_stack(True)
+async def clear_unknown_intent(error: ErrorEvent, bot: Bot):
     assert error.update.callback_query
     assert error.update.callback_query.message
     await bot.edit_message_reply_markup(

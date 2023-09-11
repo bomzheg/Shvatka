@@ -4,7 +4,7 @@ services:
 
   shvatka_bot:
     restart: always
-    image: bomzheg/shvatka:latest
+    image: "bomzheg/shvatka:${SHVATKA_VERSION:-latest}"
     volumes:
       - type: "bind"
         source: "./config/"
@@ -24,7 +24,7 @@ services:
     profiles:
       - "migrate"
     restart: "no"
-    image: bomzheg/shvatka:latest
+    image: "bomzheg/shvatka:${SHVATKA_VERSION:-latest}"
     volumes:
       - type: "bind"
         source: "./config/"
@@ -43,7 +43,7 @@ services:
     profiles:
       - "cli"
     restart: "no"
-    image: bomzheg/shvatka:latest
+    image: "bomzheg/shvatka:${SHVATKA_VERSION:-latest}"
     volumes:
       - type: "bind"
         source: "./config/"
@@ -58,7 +58,7 @@ services:
 
   telegram-bot-api:
     profiles: [ "botapi" ]
-    image: aiogram/telegram-bot-api:latest
+    image: "aiogram/telegram-bot-api:${BOTAPI_VERSION:-latest}"
     environment:
       TELEGRAM_API_ID: "6"
       TELEGRAM_API_HASH: "eb06d4abfb49dc3eeb1aeb98ae0f581e"
@@ -70,7 +70,7 @@ services:
 
   nginx:
     profiles: [ "botapi" ]
-    image: nginx:latest
+    image: "nginx:${NGINX:-latest}"
     volumes:
       - telegram-bot-api-data:/usr/share/nginx/html/var/lib/telegram-bot-api:ro
     environment:
@@ -80,7 +80,7 @@ services:
 
   redis-dev:
     profiles: [ "dev" ]
-    image: "redis:6-alpine"
+    image: "redis:${REDIS_VERSION:-6.2.13-alpine}"
     entrypoint: redis-server --appendonly yes
     volumes:
       - redis_data:/data
@@ -90,7 +90,7 @@ services:
       - "6379:6379"
 
   redis:
-    image: "redis:6-alpine"
+    image: "redis:${REDIS_VERSION:-6.2.13-alpine}"
     entrypoint: redis-server --appendonly yes
     volumes:
       - redis_data:/data

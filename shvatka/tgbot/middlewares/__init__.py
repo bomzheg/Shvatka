@@ -1,4 +1,5 @@
 from aiogram import Dispatcher
+from aiogram_dialog.api.protocols import BgManagerFactory
 from dataclass_factory import Factory
 from redis.asyncio.client import Redis
 from sqlalchemy.ext.asyncio import async_sessionmaker, AsyncSession
@@ -29,6 +30,7 @@ def setup_middlewares(
     file_storage: FileStorage,
     level_test_dao: LevelTestingData,
     telegraph: Telegraph,
+    bg_manager_factory: BgManagerFactory,
 ):
     dp.update.middleware(ConfigMiddleware(bot_config))
     dp.update.middleware(
@@ -42,6 +44,7 @@ def setup_middlewares(
             file_storage=file_storage,
             level_test_dao=level_test_dao,
             telegraph=telegraph,
+            bg_manager_factory=bg_manager_factory,
         )
     )
     dp.update.middleware(LoadDataMiddleware())

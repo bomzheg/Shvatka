@@ -49,6 +49,7 @@ def create_dispatcher(
     message_manager: MessageManager,
 ) -> Dispatcher:
     dp = create_only_dispatcher(config, redis)
+    bg_manager_factory = setup_handlers(dp, config.bot, message_manager)
     setup_middlewares(
         dp=dp,
         pool=pool,
@@ -61,8 +62,8 @@ def create_dispatcher(
         file_storage=file_storage,
         level_test_dao=level_test_dao,
         telegraph=telegraph,
+        bg_manager_factory=bg_manager_factory,
     )
-    setup_handlers(dp, config.bot, message_manager)
     return dp
 
 

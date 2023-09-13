@@ -1,7 +1,7 @@
 from aiogram import Router, F
 from aiogram.enums import ChatType
 from aiogram_dialog import setup_dialogs
-from aiogram_dialog.api.protocols import MessageManagerProtocol
+from aiogram_dialog.api.protocols import MessageManagerProtocol, BgManagerFactory
 
 from shvatka.tgbot.dialogs import (
     game_orgs,
@@ -22,7 +22,7 @@ from shvatka.tgbot.dialogs import (
 from shvatka.tgbot.filters import GameStatusFilter
 
 
-def setup(message_manager: MessageManagerProtocol) -> Router:
+def setup(router: Router, message_manager: MessageManagerProtocol) -> BgManagerFactory:
     dialogs_router = Router(name=__name__)
     dialogs_router.message.filter(F.chat.type == ChatType.PRIVATE)
 
@@ -30,8 +30,9 @@ def setup(message_manager: MessageManagerProtocol) -> Router:
     dialogs_router.include_router(setup_all_dialogs())
     dialogs_router.include_router(setup_active_game_dialogs())
 
-    setup_dialogs(dialogs_router, message_manager=message_manager)
-    return dialogs_router
+    bg_manager = setup_dialogs(dialogs_router, message_manager=message_manager)
+    router.include_router(dialogs_router)
+    return bg_manager
 
 
 def setup_all_dialogs() -> Router:

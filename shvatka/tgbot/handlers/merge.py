@@ -1,8 +1,8 @@
 from functools import partial
 
-from aiogram import Router
+from aiogram import Router, Bot
 from aiogram.types import CallbackQuery
-from aiogram_dialog import DialogManager
+from aiogram_dialog.api.protocols import BgManagerFactory
 
 from shvatka.core.services.player import get_player_by_id, merge_players
 from shvatka.core.services.team import get_team_by_id, merge_teams
@@ -23,7 +23,8 @@ async def confirm_merge_team(
     callback_data: kb.TeamMergeCD,
     dao: HolderDao,
     game_log: GameLogWriter,
-    dialog_manager: DialogManager,
+    bg_manager_factory: BgManagerFactory,
+    bot: Bot,
 ):
     primary = await get_team_by_id(callback_data.primary_team_id, dao.team)
     assert primary.captain
@@ -33,7 +34,7 @@ async def confirm_merge_team(
     assert callback_query.message
     await callback_query.message.edit_reply_markup(reply_markup=None)
     captain_chat_id = primary.captain.get_chat_id()
-    bg = dialog_manager.bg(user_id=captain_chat_id, chat_id=captain_chat_id)
+    bg = bg_manager_factory.bg(bot=bot, user_id=captain_chat_id, chat_id=captain_chat_id)
     await bg.update({})
 
 
@@ -42,7 +43,8 @@ async def confirm_merge_players(
     callback_data: kb.PlayerMergeCD,
     dao: HolderDao,
     game_log: GameLogWriter,
-    dialog_manager: DialogManager,
+    bg_manager_factory: BgManagerFactory,
+    bot: Bot,
 ):
     primary = await get_player_by_id(callback_data.primary_player_id, dao.player)
     secondary = await get_player_by_id(callback_data.secondary_player_id, dao.player)
@@ -51,7 +53,7 @@ async def confirm_merge_players(
     assert callback_query.message
     await callback_query.message.edit_reply_markup(reply_markup=None)
     primary_chat_id = primary.get_chat_id()
-    bg = dialog_manager.bg(user_id=primary_chat_id, chat_id=primary_chat_id)
+    bg = bg_manager_factory.bg(bot=bot, user_id=primary_chat_id, chat_id=primary_chat_id)
     await bg.update({})
 
 

@@ -8,7 +8,7 @@ from aiogram.types import (
     CallbackQuery,
 )
 from aiogram.utils.text_decorations import html_decoration as hd
-from aiogram_dialog import DialogManager
+from aiogram_dialog.api.protocols import BgManagerFactory
 
 from shvatka.core.models import dto
 from shvatka.core.services.game import get_game
@@ -74,7 +74,7 @@ async def agree_to_be_org_handler(
     player: dto.Player,
     dao: HolderDao,
     bot: Bot,
-    dialog_manager: DialogManager,
+    bg_manager_factory: BgManagerFactory,
 ):
     await c.answer()
     await agree_to_be_org(
@@ -89,7 +89,7 @@ async def agree_to_be_org_handler(
         inline_message_id=c.inline_message_id,
     )
     primary_chat_id = player.get_chat_id()
-    bg = dialog_manager.bg(user_id=primary_chat_id, chat_id=primary_chat_id)
+    bg = bg_manager_factory.bg(bot=bot, user_id=primary_chat_id, chat_id=primary_chat_id)
     await bg.update({})
 
 

@@ -6,6 +6,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.fsm.storage.base import BaseStorage
 from aiogram_dialog import DialogManager
 from aiogram_dialog.api.entities import Stack, Context
+from aiogram_dialog.api.protocols import BgManagerFactory
 from aiogram_dialog.context.storage import StorageProxy
 from dataclass_factory import Factory
 from telegraph.aio import Telegraph
@@ -60,3 +61,4 @@ class MiddlewareData(DialogMiddlewareData, total=False):
     team_player: dto.FullTeamPlayer | None
     results_painter: ResultsPainter
     game_log: GameLogWriter
+    bg_manager_factory: BgManagerFactory

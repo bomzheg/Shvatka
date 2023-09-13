@@ -181,6 +181,7 @@ def dp(
     message_manager: MockMessageManager,
 ) -> Dispatcher:
     dp = create_only_dispatcher(bot_config, redis)
+    bg_factory = setup_handlers(dp, bot_config.bot, message_manager=message_manager)
     setup_middlewares(
         dp=dp,
         pool=pool,
@@ -193,8 +194,8 @@ def dp(
         file_storage=file_storage,
         level_test_dao=level_test_dao,
         telegraph=telegraph,
+        bg_manager_factory=bg_factory,
     )
-    setup_handlers(dp, bot_config.bot, message_manager=message_manager)
     return dp
 
 

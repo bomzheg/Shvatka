@@ -2,6 +2,7 @@ from typing import Callable, Any, Awaitable
 
 from aiogram import BaseMiddleware
 from aiogram.types import TelegramObject
+from aiogram_dialog.api.protocols import BgManagerFactory
 from dataclass_factory import Factory
 from redis.asyncio.client import Redis
 from sqlalchemy.ext.asyncio import async_sessionmaker, AsyncSession
@@ -32,6 +33,7 @@ class InitMiddleware(BaseMiddleware):
         file_storage: FileStorage,
         level_test_dao: LevelTestingData,
         telegraph: Telegraph,
+        bg_manager_factory: BgManagerFactory,
     ) -> None:
         self.pool = pool
         self.user_getter = user_getter
@@ -42,6 +44,7 @@ class InitMiddleware(BaseMiddleware):
         self.file_storage = file_storage
         self.level_test_dao = level_test_dao
         self.telegraph = telegraph
+        self.bg_manager_factory = bg_manager_factory
 
     async def __call__(  # type: ignore[override]
         self,
@@ -55,6 +58,7 @@ class InitMiddleware(BaseMiddleware):
         data["locker"] = self.locker
         data["file_storage"] = self.file_storage
         data["telegraph"] = self.telegraph
+        data["bg_manager_factory"] = self.bg_manager_factory
         data["game_log"] = GameBotLog(bot=data["bot"], log_chat_id=data["config"].game_log_chat)
         async with self.pool() as session:
             holder_dao = HolderDao(session, self.redis, self.level_test_dao)

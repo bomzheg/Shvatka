@@ -4,8 +4,7 @@ from sqlalchemy import select, Row, update, ScalarResult
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 
-from shvatka.core.models import dto
-from shvatka.core.models.enums.played import Played
+from shvatka.core.models import dto, enums
 from shvatka.infrastructure.db import models
 from .base import BaseDAO
 
@@ -23,7 +22,7 @@ class WaiverDao(BaseDAO[models.Waiver]):
         waiver = await self.get_or_none(game, player, team)
         if waiver is None:
             return False
-        return waiver.played in (Played.revoked, Played.not_allowed)
+        return waiver.played in (enums.Played.revoked, enums.Played.not_allowed)
 
     async def upsert_with_flush(self, waiver: dto.Waiver):
         waiver_db = await self._upsert(waiver)
@@ -102,7 +101,7 @@ class WaiverDao(BaseDAO[models.Waiver]):
             )
             .where(
                 models.Waiver.game_id == game.id,
-                models.Waiver.played == Played.yes,
+                models.Waiver.played == enums.Played.yes,
             )
         )
         teams: Iterable[models.Team] = (w.team for w in result.all())
@@ -118,7 +117,7 @@ class WaiverDao(BaseDAO[models.Waiver]):
             .join(models.TeamPlayer, models.Waiver.player_id == models.TeamPlayer.player_id)
             .where(
                 models.Waiver.game_id == game.id,
-                models.Waiver.played == Played.yes,
+                models.Waiver.played == enums.Played.yes,
                 models.Waiver.team_id == team.id,
                 models.TeamPlayer.date_left.is_(None),
             )
@@ -170,6 +169,7 @@ class WaiverDao(BaseDAO[models.Waiver]):
                 models.Waiver.game_id == game.id,
                 models.Waiver.team_id == team.id,
                 models.Waiver.player_id == player.id,
+                models.Waiver.played == enums.Played.yes,
             )
         )
         return bool(result.one_or_none())

@@ -19,9 +19,21 @@ Core-функционал:
 
 
 ## Как запустить:
+1. `cp config_dist config`
+2. Заполнить конфиги в config
+3. Заполнить урл бд в alembic.ini
+4. Запустить и применить миграции `python -m alembic upgrade head`
+5. 
 ```shell
 poetry build
 pip install ./dist/shvatka-0.1.0-py3-none-any.whl
 export BOT_PATH=$PWD
 shvatka-tgbot
 ```
+
+## С помощью Docker
+1. `cp config_dist config`
+2. Заполнить конфиги в config
+3. Заполнить урл бд в alembic.ini
+4. Запустить и применить миграции `docker-compose run cli -c "python -m alembic upgrade head"`
+5. `docker-compose up -d`

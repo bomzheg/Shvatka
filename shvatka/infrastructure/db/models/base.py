@@ -10,7 +10,7 @@ convention: Mapping[str, str] = {
     "fk": "%(table_name)s_%(column_0_name)s_fkey",
     "pk": "pk__%(table_name)s",
 }
-meta = MetaData(naming_convention=convention)  # type: ignore[arg-type]
+meta = MetaData(naming_convention=convention)
 
 
 class Base(DeclarativeBase):

@@ -35,7 +35,7 @@ def paint_it(stat: dto.GameStat, game: dto.FullGame) -> BinaryIO:
 def plot_it(converted: dict[str, PlotData], game: dto.FullGame):
     fig, ax = plt.subplots()
     for team, data in converted.items():
-        plt.plot(*data, label=team)
+        plt.plot(*data, label=team)  # type: ignore[arg-type]
     ax.legend()
     plt.grid()
     plt.ylim([1, len(game.levels) + 1])

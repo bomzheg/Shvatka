@@ -1,4 +1,5 @@
 import logging
+from contextlib import asynccontextmanager
 
 from aiogram import Bot, Dispatcher
 from aiogram.enums import ParseMode
@@ -10,6 +11,7 @@ from dataclass_factory import Factory
 from redis.asyncio.client import Redis
 from sqlalchemy.ext.asyncio import async_sessionmaker, AsyncSession
 
+from shvatka.common import create_dataclass_factory, create_telegraph
 from shvatka.common.config.models.paths import Paths
 from shvatka.common.config.parser.paths import common_get_paths
 from shvatka.core.interfaces.clients.file_storage import FileStorage
@@ -17,14 +19,58 @@ from shvatka.core.interfaces.scheduler import Scheduler
 from shvatka.core.utils.key_checker_lock import KeyCheckerFactory
 from shvatka.infrastructure.db.config.models.storage import StorageConfig, StorageType
 from shvatka.infrastructure.db.dao.memory.level_testing import LevelTestingData
-from shvatka.infrastructure.db.factory import create_redis
+from shvatka.infrastructure.db.factory import (
+    create_redis,
+    create_level_test_dao,
+    create_lock_factory,
+)
+from shvatka.infrastructure.scheduler.factory import create_scheduler
 from shvatka.tgbot.config.models.main import TgBotConfig
 from shvatka.tgbot.handlers import setup_handlers
 from shvatka.tgbot.middlewares import setup_middlewares
 from shvatka.tgbot.username_resolver.user_getter import UserGetter
+from shvatka.tgbot.views.jinja_filters import setup_jinja
 from shvatka.tgbot.views.telegraph import Telegraph
 
 logger = logging.getLogger(__name__)
+
+
+@asynccontextmanager
+async def prepare_dp_full(
+    config: TgBotConfig, pool: async_sessionmaker[AsyncSession], file_storage: FileStorage
+):
+    dcf = create_dataclass_factory()
+    bot = create_bot(config)
+    setup_jinja(bot=bot)
+    level_test_dao = create_level_test_dao()
+
+    async with (
+        UserGetter(config.tg_client) as user_getter,
+        create_redis(config.redis) as redis,
+        create_scheduler(
+            pool=pool,
+            redis=redis,
+            bot=bot,
+            redis_config=config.redis,
+            game_log_chat=config.bot.log_chat,
+            file_storage=file_storage,
+            level_test_dao=level_test_dao,
+        ) as scheduler,
+        bot.context(),
+    ):
+        yield bot, create_dispatcher(
+            config=config,
+            user_getter=user_getter,
+            dcf=dcf,
+            pool=pool,
+            redis=redis,
+            scheduler=scheduler,
+            locker=create_lock_factory(),
+            file_storage=file_storage,
+            level_test_dao=level_test_dao,
+            telegraph=create_telegraph(config.bot),
+            message_manager=MessageManager(),
+        )
 
 
 def create_bot(config: TgBotConfig) -> Bot:

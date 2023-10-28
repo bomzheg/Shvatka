@@ -3,7 +3,6 @@ import logging
 import uvicorn
 from fastapi import FastAPI
 
-from shvatka.api import dependencies, routes
 from shvatka.api.config.parser.main import load_config
 from shvatka.api.main_factory import (
     get_paths,
@@ -20,10 +19,8 @@ def main() -> FastAPI:
 
     setup_logging(paths)
     config = load_config(paths)
-    app = create_app()
     pool = create_pool(config.db)
-    dependencies.setup(app=app, pool=pool, redis=create_redis(config.redis), config=config)
-    routes.setup(app.router)
+    app = create_app(pool=pool, redis=create_redis(config.redis), config=config)
 
     logger.info("app prepared")
     return app

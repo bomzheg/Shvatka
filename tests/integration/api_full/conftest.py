@@ -7,7 +7,6 @@ from httpx import AsyncClient
 from redis.asyncio.client import Redis
 from sqlalchemy.ext.asyncio import async_sessionmaker, AsyncSession
 
-from shvatka.api import dependencies, routes
 from shvatka.api.config.models.main import ApiConfig
 from shvatka.api.config.parser.main import load_config
 from shvatka.api.dependencies import AuthProvider
@@ -32,9 +31,7 @@ def patch_api_config(api_config: ApiConfig, postgres_url: str, redis: Redis):
 
 @pytest.fixture(scope="session")
 def app(api_config: ApiConfig, pool: async_sessionmaker[AsyncSession], redis: Redis) -> FastAPI:
-    app = create_app()
-    dependencies.setup(app=app, pool=pool, redis=redis, config=api_config)
-    routes.setup(app.router)
+    app = create_app(pool=pool, redis=redis, config=api_config)
     return app
 
 

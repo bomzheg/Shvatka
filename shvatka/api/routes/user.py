@@ -32,7 +32,9 @@ async def set_password_route(
     raise HTTPException(status_code=200)
 
 
-def setup(router: APIRouter):
-    router.add_api_route("/users/me", read_users_me, methods=["GET"], response_model=dto.User)
-    router.add_api_route("/users/me/password", set_password_route, methods=["PUT"])
-    router.add_api_route("/users/{id}", read_user, methods=["GET"])
+def setup() -> APIRouter:
+    router = APIRouter(prefix="/users")
+    router.add_api_route("/me", read_users_me, methods=["GET"], response_model=dto.User)
+    router.add_api_route("/me/password", set_password_route, methods=["PUT"])
+    router.add_api_route("/{id}", read_user, methods=["GET"])
+    return router

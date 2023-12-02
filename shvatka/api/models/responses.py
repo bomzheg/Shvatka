@@ -44,7 +44,9 @@ class Game:
     start_at: datetime | None
 
     @classmethod
-    def from_core(cls, core: dto.Game):
+    def from_core(cls, core: dto.Game | None):
+        if core is None:
+            return None
         return cls(
             id=core.id,
             author=Player.from_core(core.author),

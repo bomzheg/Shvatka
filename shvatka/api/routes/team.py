@@ -9,5 +9,7 @@ async def get_my_team(team: dto.Team = Depends(team_provider)) -> responses.Team
     return responses.Team.from_core(team)
 
 
-def setup(router: APIRouter):
-    router.add_api_route("/teams/my", get_my_team, methods=["GET"])
+def setup() -> APIRouter:
+    router = APIRouter(prefix="/teams")
+    router.add_api_route("/my", get_my_team, methods=["GET"])
+    return router

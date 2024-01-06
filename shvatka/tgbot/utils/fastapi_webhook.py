@@ -7,7 +7,6 @@ from typing import Any, Dict, Optional, Set, Tuple
 from aiogram import Bot, Dispatcher, loggers
 from aiogram.methods import TelegramMethod
 from aiogram.methods.base import TelegramType
-from aiogram.types import InputFile
 from aiogram.webhook.security import IPFilter
 from fastapi import FastAPI, Request, Response, HTTPException, APIRouter
 
@@ -125,44 +124,20 @@ class BaseRequestHandler(ABC):
         feed_update_task.add_done_callback(self._background_feed_update_tasks.discard)
         return Response(content={})
 
-    def _build_response_writer(
+    async def _build_response_writer(
         self, bot: Bot, result: Optional[TelegramMethod[TelegramType]]
-    ) -> MultipartWriter:
-        writer = MultipartWriter(
-            "form-data",
-            boundary=f"webhookBoundary{secrets.token_urlsafe(16)}",
-        )
-        if not result:
-            return writer
-
-        payload = writer.append(result.__api_method__)
-        payload.set_content_disposition("form-data", name="method")
-
-        files: Dict[str, InputFile] = {}
-        for key, value in result.model_dump(warnings=False).items():
-            value = bot.session.prepare_value(value, bot=bot, files=files)
-            if not value:
-                continue
-            payload = writer.append(value)
-            payload.set_content_disposition("form-data", name=key)
-
-        for key, value in files.items():
-            payload = writer.append(value.read(bot))
-            payload.set_content_disposition(
-                "form-data",
-                name=key,
-                filename=value.filename or key,
-            )
-
-        return writer
+    ) -> Any:
+        if result:
+            # TODO response to webhook
+            await self.dispatcher.silent_call_request(bot, result)
 
     async def _handle_request(self, bot: Bot, request: Request) -> Response:
         result: Optional[TelegramMethod[Any]] = await self.dispatcher.feed_webhook_update(
             bot,
-            await request.json(loads=bot.session.json_loads),
+            await request.json(),
             **self.data,
         )
-        return Response(body=self._build_response_writer(bot=bot, result=result))
+        return Response(content=await self._build_response_writer(bot=bot, result=result))
 
     async def handle(self, request: Request) -> Response:
         bot = await self.resolve_bot(request)
@@ -207,65 +182,5 @@ class SimpleRequestHandler(BaseRequestHandler):
         """
         await self.bot.session.close()
 
-    async def resolve_bot(self, request: web.Request) -> Bot:
+    async def resolve_bot(self, request: Request) -> Bot:
         return self.bot
-
-
-class TokenBasedRequestHandler(BaseRequestHandler):
-    def __init__(
-        self,
-        dispatcher: Dispatcher,
-        handle_in_background: bool = True,
-        bot_settings: Optional[Dict[str, Any]] = None,
-        **data: Any,
-    ) -> None:
-        """
-        Handler that supports multiple bots the context will be resolved
-        from path variable 'bot_token'
-
-        .. note::
-
-            This handler is not recommended in due to token is available in URL
-            and can be logged by reverse proxy server or other middleware.
-
-        :param dispatcher: instance of :class:`aiogram.dispatcher.dispatcher.Dispatcher`
-        :param handle_in_background: immediately responds to the Telegram instead of
-            a waiting end of handler process
-        :param bot_settings: kwargs that will be passed to new Bot instance
-        """
-        super().__init__(dispatcher=dispatcher, handle_in_background=handle_in_background, **data)
-        if bot_settings is None:
-            bot_settings = {}
-        self.bot_settings = bot_settings
-        self.bots: Dict[str, Bot] = {}
-
-    def verify_secret(self, telegram_secret_token: str, bot: Bot) -> bool:
-        return True
-
-    async def close(self) -> None:
-        for bot in self.bots.values():
-            await bot.session.close()
-
-    def register(self, app: Application, /, path: str, **kwargs: Any) -> None:
-        """
-        Validate path, register route and shutdown callback
-
-        :param app: instance of aiohttp Application
-        :param path: route path
-        :param kwargs:
-        """
-        if "{bot_token}" not in path:
-            raise ValueError("Path should contains '{bot_token}' substring")
-        super().register(app, path=path, **kwargs)
-
-    async def resolve_bot(self, request: web.Request) -> Bot:
-        """
-        Get bot token from a path and create or get from cache Bot instance
-
-        :param request:
-        :return:
-        """
-        token = request.match_info["bot_token"]
-        if token not in self.bots:
-            self.bots[token] = Bot(token=token, **self.bot_settings)
-        return self.bots[token]

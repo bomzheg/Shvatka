@@ -1,12 +1,17 @@
 bot:
   token: "123:ABC"
-  telegraph_token: "42"
-  log_chat: -1001234567890
-  game_log_chat: -1009876543210
+  telegraph-token: "42"
+  log-chat: -1001234567890
+  game-log-chat: -1009876543210
   superusers:
     - 46866565
   botapi:
     type: official
+  webhook:
+    web-url: https://example.org/context/path
+    local-url: 127.0.0.1:8080/
+    path: secret/path
+    secret: my-$ecr3t
 redis:
   url: localhost
   port: 6379

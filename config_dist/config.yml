@@ -1,14 +1,19 @@
 bot:
   token: ""
-  telegraph_token: ""
-  log_chat: -1001234567890
-  game_log_chat: -1009876543210
+  telegraph-token: ""
+  log-chat: -1001234567890
+  game-log-chat: -1009876543210
   superusers:
     - 666
   botapi:
     type: local
-    botapi_url: "http://telegram-bot-api:8081"
-    file_url: "http://nginx:80"
+    botapi-url: "http://telegram-bot-api:8081"
+    file-url: "http://nginx:80"
+  webhook:
+    web-url: https://example.org/context/path
+    local-url: 127.0.0.1:8080/
+    path: secret/path
+    secret: my-$ecr3t
 db:
   type: postgresql
   connector: asyncpg

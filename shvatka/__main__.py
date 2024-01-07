@@ -24,6 +24,9 @@ async def main() -> FastAPI:
     setup_logging(paths)
     api_config = load_api_config(paths)
     bot_config = load_bot_config(paths)
+    webhook_config = bot_config.bot.webhook
+    if not webhook_config:
+        raise EnvironmentError("No webhook configuration provided")
     engine = create_engine(api_config.db)
     pool = create_session_maker(engine)
     file_storage = create_file_storage(api_config.file_storage_config)
@@ -34,12 +37,12 @@ async def main() -> FastAPI:
         dispatcher=dp,
         bot=bot,
         handle_in_background=False,
-        secret_token=bot_config.bot.webhook.path,
+        secret_token=webhook_config.path,
     )
-    webhook_handler.register(app, bot_config.bot.webhook.path)
+    webhook_handler.register(app, webhook_config.path)
     await bot.set_webhook(
-        url=bot_config.bot.webhook.web_url + bot_config.bot.webhook.path,
-        secret_token=bot_config.bot.webhook.secret,
+        url=webhook_config.web_url + webhook_config.path,
+        secret_token=webhook_config.secret,
         allowed_updates=resolve_update_types(dp),
     )
     logger.info("app prepared")

@@ -12,7 +12,6 @@ from shvatka.tgbot.main_factory import (
     get_paths,
     prepare_dp_full,
 )
-from shvatka.tgbot.utils.router import print_router_tree
 
 logger = logging.getLogger(__name__)
 
@@ -27,7 +26,6 @@ async def main():
     file_storage = create_file_storage(config.file_storage_config)
 
     async with prepare_dp_full(config, pool, file_storage) as (bot, dp):
-        logger.info("started with configured routers \n%s", print_router_tree(dp))
         try:
             await dp.start_polling(
                 bot, allowed_updates=dp.resolve_used_update_types(skip_events={"aiogd_update"})

@@ -29,6 +29,7 @@ from shvatka.tgbot.config.models.main import TgBotConfig
 from shvatka.tgbot.handlers import setup_handlers
 from shvatka.tgbot.middlewares import setup_middlewares
 from shvatka.tgbot.username_resolver.user_getter import UserGetter
+from shvatka.tgbot.utils.router import print_router_tree
 from shvatka.tgbot.views.jinja_filters import setup_jinja
 from shvatka.tgbot.views.telegraph import Telegraph
 
@@ -56,7 +57,7 @@ async def prepare_dp_full(
             file_storage=file_storage,
             level_test_dao=level_test_dao,
         ) as scheduler,
-        bot.context(),
+        bot.context(True),
     ):
         yield bot, create_dispatcher(
             config=config,
@@ -110,6 +111,7 @@ def create_dispatcher(
         telegraph=telegraph,
         bg_manager_factory=bg_manager_factory,
     )
+    logger.info("Configured bot routers \n%s", print_router_tree(dp))
     return dp
 
 

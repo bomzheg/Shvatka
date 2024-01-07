@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import secrets
 from dataclasses import dataclass
 from enum import Enum
 
@@ -17,6 +18,7 @@ class BotConfig:
     superusers: list[int]
     bot_api: BotApiConfig
     telegraph_token: str
+    webhook: WebhookConfig
 
     def create_session(self) -> AiohttpSession | None:
         if self.bot_api.is_local:
@@ -53,3 +55,11 @@ class BotApiConfig:
 class BotApiType(Enum):
     official = "official"
     local = "local"
+
+
+@dataclass
+class WebhookConfig:
+    web_url: str
+    local_url: str
+    path: str
+    secret: str = secrets.token_urlsafe(32)

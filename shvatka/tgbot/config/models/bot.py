@@ -17,7 +17,7 @@ class BotConfig:
     superusers: list[int]
     bot_api: BotApiConfig
     telegraph_token: str
-    webhook: WebhookConfig
+    webhook: WebhookConfig | None = None
 
     def create_session(self) -> AiohttpSession | None:
         if self.bot_api.is_local:

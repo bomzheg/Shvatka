@@ -10,7 +10,7 @@ from shvatka.infrastructure.db.factory import (
 from shvatka.tgbot.config.parser.main import load_config
 from shvatka.tgbot.main_factory import (
     get_paths,
-    prepare_dp_full,
+    prepare_dp_full, resolve_update_types,
 )
 
 logger = logging.getLogger(__name__)
@@ -28,7 +28,7 @@ async def main():
     async with prepare_dp_full(config, pool, file_storage) as (bot, dp):
         try:
             await dp.start_polling(
-                bot, allowed_updates=dp.resolve_used_update_types(skip_events={"aiogd_update"})
+                bot, allowed_updates=resolve_update_types(dp)
             )
         finally:
             await engine.dispose()

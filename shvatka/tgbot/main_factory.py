@@ -140,3 +140,7 @@ def create_storage(config: StorageConfig) -> BaseStorage:
 
 def get_paths() -> Paths:
     return common_get_paths("BOT_PATH")
+
+
+def resolve_update_types(dp: Dispatcher) -> list[str]:
+    return dp.resolve_used_update_types(skip_events={"aiogd_update"})

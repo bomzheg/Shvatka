@@ -11,10 +11,9 @@ from shvatka.api.main_factory import (
     create_app,
 )
 from shvatka.common.config.parser.logging_config import setup_logging
-from shvatka.infrastructure.db.factory import create_pool, create_redis, create_engine, create_session_maker
-from shvatka.tgbot.main_factory import prepare_dp_full
+from shvatka.infrastructure.db.factory import create_redis, create_engine, create_session_maker
+from shvatka.tgbot.main_factory import prepare_dp_full, resolve_update_types
 from shvatka.tgbot.utils.fastapi_webhook import setup_application, SimpleRequestHandler
-from shvatka.tgbot.utils.router import print_router_tree
 
 logger = logging.getLogger(__name__)
 
@@ -39,6 +38,11 @@ async def main() -> FastAPI:
         secret_token=bot_config.bot.webhook.path,
     )
     webhook_handler.register(app, bot_config.bot.webhook.path)
+    await bot.set_webhook(
+        url=bot_config.bot.webhook.web_url + bot_config.bot.webhook.path,
+        secret_token=bot_config.bot.webhook.secret,
+        allowed_updates=resolve_update_types(dp),
+    )
     logger.info("app prepared")
     return app
 

@@ -5,10 +5,10 @@ bot:
   game-log-chat: -1009876543210
   superusers:
     - 666
-  botapi:
+  bot-api:
     type: local
     botapi-url: "http://telegram-bot-api:8081"
-    file-url: "http://nginx:80"
+    botapi-file-url: "http://nginx:80"
   webhook:
     web-url: https://example.org/context/path
     local-url: 127.0.0.1:8080/

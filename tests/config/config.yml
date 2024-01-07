@@ -5,7 +5,7 @@ bot:
   game-log-chat: -1009876543210
   superusers:
     - 46866565
-  botapi:
+  bot-api:
     type: official
   webhook:
     web-url: https://example.org/context/path

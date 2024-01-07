@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import Enum
 
 from aiogram.client.session.aiohttp import AiohttpSession
@@ -35,8 +35,8 @@ class TgClientConfig:
 @dataclass
 class BotApiConfig:
     type: BotApiType
-    botapi_url: str | None
-    botapi_file_url: str | None
+    botapi_url: str | None = None
+    botapi_file_url: str | None = None
 
     @property
     def is_local(self) -> bool:

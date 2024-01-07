@@ -106,7 +106,7 @@ def pool(postgres_url: str) -> Generator[sessionmaker, None, None]:
 
 @pytest.fixture(scope="session")
 def postgres_url() -> Generator[str, None, None]:
-    postgres = PostgresContainer("postgres:11")
+    postgres = PostgresContainer("postgres:16.1")
     if os.name == "nt":  # TODO workaround from testcontainers/testcontainers-python#108
         postgres.get_container_host_ip = lambda: "localhost"
     try:

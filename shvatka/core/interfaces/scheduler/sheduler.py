@@ -23,11 +23,18 @@ class Scheduler(Protocol):
     async def cancel_scheduled_game(self, game: dto.Game):
         raise NotImplementedError
 
-    async def __aenter__(self):
+    async def start(self):
         raise NotImplementedError
 
-    async def __aexit__(self, exc_type, exc_val, exc_tb):
+    async def close(self):
         raise NotImplementedError
+
+    async def __aenter__(self):
+        await self.start()
+        return self
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        await self.close()
 
 
 class LevelTestScheduler(Protocol):

@@ -17,10 +17,12 @@ async def get_my_games_list(
 
 async def get_active_game(
     game: dto.Game = Depends(active_game_provider),  # type: ignore[assignment]
-) -> responses.Game:
+) -> responses.Game | None:
     return responses.Game.from_core(game)
 
 
-def setup(router: APIRouter):
-    router.add_api_route("/games/my", get_my_games_list, methods=["GET"])
-    router.add_api_route("/games/active", get_active_game, methods=["GET"])
+def setup() -> APIRouter:
+    router = APIRouter(prefix="/games")
+    router.add_api_route("/my", get_my_games_list, methods=["GET"])
+    router.add_api_route("/active", get_active_game, methods=["GET"])
+    return router

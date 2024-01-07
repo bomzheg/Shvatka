@@ -17,6 +17,7 @@ class BotConfig:
     superusers: list[int]
     bot_api: BotApiConfig
     telegraph_token: str
+    webhook: WebhookConfig
 
     def create_session(self) -> AiohttpSession | None:
         if self.bot_api.is_local:
@@ -34,8 +35,8 @@ class TgClientConfig:
 @dataclass
 class BotApiConfig:
     type: BotApiType
-    botapi_url: str | None
-    botapi_file_url: str | None
+    botapi_url: str | None = None
+    botapi_file_url: str | None = None
 
     @property
     def is_local(self) -> bool:
@@ -53,3 +54,11 @@ class BotApiConfig:
 class BotApiType(Enum):
     official = "official"
     local = "local"
+
+
+@dataclass
+class WebhookConfig:
+    web_url: str
+    local_url: str
+    path: str
+    secret: str

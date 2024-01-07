@@ -144,13 +144,6 @@ class ApScheduler(Scheduler, LevelTestScheduler):
         self.executor.shutdown()
         self.job_store.shutdown()
 
-    async def __aenter__(self):
-        await self.start()
-        return self
-
-    async def __aexit__(self, exc_type, exc_val, exc_tb):
-        await self.close()
-
 
 def _prepare_game_key(game: dto.Game) -> str:
     return f"game-{game.id}-prepare"

@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 def create_app(pool: async_sessionmaker[AsyncSession], redis: Redis, config: ApiConfig) -> FastAPI:
     app = FastAPI()
     dependencies.setup(app=app, pool=pool, redis=redis, config=config)
-    routes.setup(app.router)
+    app.include_router(routes.setup())
     return app
 
 

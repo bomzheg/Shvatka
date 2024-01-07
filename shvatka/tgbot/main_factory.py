@@ -1,5 +1,4 @@
 import logging
-from contextlib import asynccontextmanager
 
 from aiogram import Bot, Dispatcher
 from aiogram.enums import ParseMode
@@ -36,42 +35,60 @@ from shvatka.tgbot.views.telegraph import Telegraph
 logger = logging.getLogger(__name__)
 
 
-@asynccontextmanager
-async def prepare_dp_full(
-    config: TgBotConfig, pool: async_sessionmaker[AsyncSession], file_storage: FileStorage
-):
-    dcf = create_dataclass_factory()
-    bot = create_bot(config)
-    setup_jinja(bot=bot)
-    level_test_dao = create_level_test_dao()
-
-    async with (
-        UserGetter(config.tg_client) as user_getter,
-        create_redis(config.redis) as redis,
-        create_scheduler(
-            pool=pool,
-            redis=redis,
-            bot=bot,
-            redis_config=config.redis,
-            game_log_chat=config.bot.log_chat,
-            file_storage=file_storage,
-            level_test_dao=level_test_dao,
-        ) as scheduler,
-        bot.context(True),
+class DpBuilder:
+    def __init__(
+        self,
+        config: TgBotConfig,
+        pool: async_sessionmaker[AsyncSession],
+        file_storage: FileStorage,
     ):
-        yield bot, create_dispatcher(
-            config=config,
-            user_getter=user_getter,
-            dcf=dcf,
-            pool=pool,
-            redis=redis,
-            scheduler=scheduler,
+        self.config = config
+        self.pool = pool
+        self.file_storage = file_storage
+        self.dcf = create_dataclass_factory()
+        self.bot = create_bot(config)
+        self.level_test_dao = create_level_test_dao()
+        self.user_getter = UserGetter(self.config.tg_client)
+        self.redis = create_redis(self.config.redis)
+        self.scheduler = create_scheduler(
+            pool=self.pool,
+            redis=self.redis,
+            bot=self.bot,
+            redis_config=self.config.redis,
+            game_log_chat=self.config.bot.log_chat,
+            file_storage=self.file_storage,
+            level_test_dao=self.level_test_dao,
+        )
+
+    async def build(self) -> tuple[Bot, Dispatcher]:
+        setup_jinja(bot=self.bot)
+        await self.user_getter.start()
+        await self.redis.initialize()
+        await self.scheduler.start()
+        return self.bot, create_dispatcher(
+            config=self.config,
+            user_getter=self.user_getter,
+            dcf=self.dcf,
+            pool=self.pool,
+            redis=self.redis,
+            scheduler=self.scheduler,
             locker=create_lock_factory(),
-            file_storage=file_storage,
-            level_test_dao=level_test_dao,
-            telegraph=create_telegraph(config.bot),
+            file_storage=self.file_storage,
+            level_test_dao=self.level_test_dao,
+            telegraph=create_telegraph(self.config.bot),
             message_manager=MessageManager(),
         )
+
+    async def close(self) -> None:
+        await self.scheduler.close()
+        await self.redis.close()
+        await self.user_getter.stop()
+
+    async def __aenter__(self):
+        return await self.build()
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        return await self.close()
 
 
 def create_bot(config: TgBotConfig) -> Bot:

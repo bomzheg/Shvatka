@@ -2,7 +2,7 @@ import asyncio
 import secrets
 from abc import ABC, abstractmethod
 from contextlib import asynccontextmanager
-from typing import Any, Dict, Optional, Set, Tuple
+from typing import Any
 
 from aiogram import Bot, Dispatcher, loggers
 from aiogram.methods import TelegramMethod
@@ -28,7 +28,7 @@ def setup_application(app: FastAPI, dispatcher: Dispatcher, /, **kwargs: Any) ->
     }
 
     @asynccontextmanager
-    async def lifespan(*a: Any, **kw: Any) -> None:  # pragma: no cover
+    async def lifespan(*a: Any, **kw: Any):
         await dispatcher.emit_startup(**workflow_data)
         yield
         await dispatcher.emit_shutdown(**workflow_data)
@@ -36,7 +36,7 @@ def setup_application(app: FastAPI, dispatcher: Dispatcher, /, **kwargs: Any) ->
     app.include_router(APIRouter(lifespan=lifespan))
 
 
-def check_ip(ip_filter: IPFilter, request: Request) -> Tuple[str, bool]:
+def check_ip(ip_filter: IPFilter, request: Request) -> tuple[str, bool]:
     # Try to resolve client IP over reverse proxy
     if forwarded_for := request.headers.get("X-Forwarded-For", ""):
         forwarded_for, *_ = forwarded_for.split(",", maxsplit=1)
@@ -76,7 +76,7 @@ class BaseRequestHandler(ABC):
         self.dispatcher = dispatcher
         self.handle_in_background = handle_in_background
         self.data = data
-        self._background_feed_update_tasks: Set[asyncio.Task[Any]] = set()
+        self._background_feed_update_tasks: set[asyncio.Task[Any]] = set()
 
     def register(self, app: FastAPI, /, path: str, **kwargs: Any) -> None:
 
@@ -85,7 +85,7 @@ class BaseRequestHandler(ABC):
         app.include_router(router)
 
     @asynccontextmanager
-    async def _handle_close(self, app: FastAPI) -> None:
+    async def _handle_close(self, app: FastAPI):
         yield
         await self.close()
 
@@ -109,30 +109,28 @@ class BaseRequestHandler(ABC):
     def verify_secret(self, telegram_secret_token: str, bot: Bot) -> bool:
         pass
 
-    async def _background_feed_update(self, bot: Bot, update: Dict[str, Any]) -> None:
+    async def _background_feed_update(self, bot: Bot, update: dict[str, Any]) -> None:
         result = await self.dispatcher.feed_raw_update(bot=bot, update=update, **self.data)
         if isinstance(result, TelegramMethod):
             await self.dispatcher.silent_call_request(bot=bot, result=result)
 
     async def _handle_request_background(self, bot: Bot, request: Request) -> Response:
         feed_update_task = asyncio.create_task(
-            self._background_feed_update(
-                bot=bot, update=bot.session.json_loads(request.body)
-            )
+            self._background_feed_update(bot=bot, update=bot.session.json_loads(request.body))
         )
         self._background_feed_update_tasks.add(feed_update_task)
         feed_update_task.add_done_callback(self._background_feed_update_tasks.discard)
         return Response(content={})
 
     async def _build_response_writer(
-        self, bot: Bot, result: Optional[TelegramMethod[TelegramType]]
+        self, bot: Bot, result: TelegramMethod[TelegramType] | None
     ) -> Any:
         if result:
             # TODO response to webhook
             await self.dispatcher.silent_call_request(bot, result)
 
     async def _handle_request(self, bot: Bot, request: Request) -> Response:
-        result: Optional[TelegramMethod[Any]] = await self.dispatcher.feed_webhook_update(
+        result: TelegramMethod[Any] | None = await self.dispatcher.feed_webhook_update(
             bot,
             await request.json(),
             **self.data,
@@ -156,7 +154,7 @@ class SimpleRequestHandler(BaseRequestHandler):
         dispatcher: Dispatcher,
         bot: Bot,
         handle_in_background: bool = True,
-        secret_token: Optional[str] = None,
+        secret_token: str | None = None,
         **data: Any,
     ) -> None:
         """

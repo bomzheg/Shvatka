@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import secrets
 from dataclasses import dataclass
 from enum import Enum
 
@@ -62,4 +61,4 @@ class WebhookConfig:
     web_url: str
     local_url: str
     path: str
-    secret: str = secrets.token_urlsafe(32)
+    secret: str

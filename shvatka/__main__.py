@@ -37,7 +37,7 @@ async def main() -> FastAPI:
         dispatcher=dp,
         bot=bot,
         handle_in_background=False,
-        secret_token=webhook_config.path,
+        secret_token=webhook_config.secret,
     )
     webhook_handler.register(app, webhook_config.path)
     await bot.set_webhook(

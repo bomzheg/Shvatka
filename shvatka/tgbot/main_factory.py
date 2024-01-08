@@ -59,25 +59,28 @@ class DpBuilder:
             file_storage=self.file_storage,
             level_test_dao=self.level_test_dao,
         )
-
-    async def build(self) -> tuple[Bot, Dispatcher]:
-        setup_jinja(bot=self.bot)
-        await self.user_getter.start()
-        await self.redis.initialize()
-        await self.scheduler.start()
-        return self.bot, create_dispatcher(
-            config=self.config,
-            user_getter=self.user_getter,
-            dcf=self.dcf,
-            pool=self.pool,
-            redis=self.redis,
-            scheduler=self.scheduler,
-            locker=create_lock_factory(),
-            file_storage=self.file_storage,
-            level_test_dao=self.level_test_dao,
-            telegraph=create_telegraph(self.config.bot),
-            message_manager=MessageManager(),
+        self.dp = create_dispatcher(
+                config=self.config,
+                user_getter=self.user_getter,
+                dcf=self.dcf,
+                pool=self.pool,
+                redis=self.redis,
+                scheduler=self.scheduler,
+                locker=create_lock_factory(),
+                file_storage=self.file_storage,
+                level_test_dao=self.level_test_dao,
+                telegraph=create_telegraph(self.config.bot),
+                message_manager=MessageManager(),
         )
+        self.initialized = False
+
+    async def start(self) -> tuple[Bot, Dispatcher]:
+        if not self.initialized:
+            setup_jinja(bot=self.bot)
+            await self.user_getter.start()
+            await self.redis.initialize()
+            await self.scheduler.start()
+        return self.bot, self.dp
 
     async def close(self) -> None:
         await self.scheduler.close()
@@ -85,7 +88,7 @@ class DpBuilder:
         await self.user_getter.stop()
 
     async def __aenter__(self):
-        return await self.build()
+        return await self.start()
 
     async def __aexit__(self, exc_type, exc_val, exc_tb):
         return await self.close()

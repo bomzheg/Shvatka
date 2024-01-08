@@ -1,9 +1,12 @@
 import logging
+from functools import partial
 
 import uvicorn
+from aiogram import Bot, Dispatcher
 from fastapi import FastAPI
 
 from shvatka.infrastructure.clients.factory import create_file_storage
+from shvatka.tgbot.config.models.bot import WebhookConfig
 from shvatka.tgbot.config.parser.main import load_config as load_bot_config
 from shvatka.api.config.parser.main import load_config as load_api_config
 from shvatka.api.main_factory import (
@@ -18,7 +21,7 @@ from shvatka.tgbot.utils.fastapi_webhook import setup_application, SimpleRequest
 logger = logging.getLogger(__name__)
 
 
-async def main() -> FastAPI:
+def main() -> FastAPI:
     paths = get_paths()
 
     setup_logging(paths)
@@ -31,27 +34,36 @@ async def main() -> FastAPI:
     pool = create_session_maker(engine)
     file_storage = create_file_storage(api_config.file_storage_config)
     app = create_app(pool=pool, redis=create_redis(api_config.redis), config=api_config)
-    bot, dp = await DpBuilder(bot_config, pool, file_storage).build()
-    setup_application(app, dp)
+    builder = DpBuilder(bot_config, pool, file_storage)
+    setup_application(app, builder.dp)
     webhook_handler = SimpleRequestHandler(
-        dispatcher=dp,
-        bot=bot,
+        dispatcher=builder.dp,
+        bot=builder.bot,
         handle_in_background=False,
         secret_token=webhook_config.secret,
     )
     webhook_handler.register(app, webhook_config.path)
-    await bot.set_webhook(
-        url=webhook_config.web_url + webhook_config.path,
-        secret_token=webhook_config.secret,
-        allowed_updates=resolve_update_types(dp),
-    )
+    logger.info(webhook_config.web_url)
+    logger.info(webhook_config.path)
+
+    setup = partial(on_startup, builder, webhook_config)
+    app.router.add_event_handler("startup", setup)
     logger.info("app prepared")
     return app
 
 
+async def on_startup(dp_builder: DpBuilder, webhook_config: WebhookConfig):
+    await dp_builder.start()
+    await dp_builder.bot.set_webhook(
+        url=webhook_config.web_url + webhook_config.path,
+        secret_token=webhook_config.secret,
+        allowed_updates=resolve_update_types(dp_builder.dp),
+    )
+
+
 def run():
     uvicorn.run(
-        "shvatka.api:main",
+        "shvatka.__main__:main",
         host="0.0.0.0",  # noqa: S104
         port=8000,
         factory=True,

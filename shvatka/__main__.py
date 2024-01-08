@@ -50,7 +50,13 @@ async def main() -> FastAPI:
 
 
 def run():
-    uvicorn.run("shvatka.api:main", factory=True, log_config=None)
+    uvicorn.run(
+        "shvatka.api:main",
+        host="0.0.0.0",
+        port=8000,
+        factory=True,
+        log_config=None,
+    )
 
 
 if __name__ == "__main__":

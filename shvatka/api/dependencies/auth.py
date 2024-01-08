@@ -53,7 +53,7 @@ class AuthProvider:
         self.secret_key = config.secret_key
         self.algorythm = "HS256"
         self.access_token_expire = config.token_expire
-        self.router = APIRouter()
+        self.router = APIRouter(prefix="/auth")
         self.setup_auth_routes()
 
     def verify_password(self, plain_password: str, hashed_password: str) -> bool:
@@ -135,11 +135,11 @@ class AuthProvider:
         return self.create_user_token(user.to_dto())
 
     def setup_auth_routes(self):
-        self.router.add_api_route("/auth/token", self.login, methods=["POST"])
+        self.router.add_api_route("/token", self.login, methods=["POST"])
         self.router.add_api_route(
-            "/auth/login", self.tg_login_page, response_class=HTMLResponse, methods=["GET"]
+            "/login", self.tg_login_page, response_class=HTMLResponse, methods=["GET"]
         )
-        self.router.add_api_route("/auth/login/data", self.tg_login_result, methods=["GET"])
+        self.router.add_api_route("/login/data", self.tg_login_result, methods=["GET"])
 
 
 def check_tg_hash(user: UserTgAuth, bot_token: str):

@@ -2,7 +2,6 @@ import logging
 from functools import partial
 
 import uvicorn
-from aiogram import Bot, Dispatcher
 from fastapi import FastAPI
 
 from shvatka.infrastructure.clients.factory import create_file_storage

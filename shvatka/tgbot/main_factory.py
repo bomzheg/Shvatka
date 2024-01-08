@@ -60,17 +60,17 @@ class DpBuilder:
             level_test_dao=self.level_test_dao,
         )
         self.dp = create_dispatcher(
-                config=self.config,
-                user_getter=self.user_getter,
-                dcf=self.dcf,
-                pool=self.pool,
-                redis=self.redis,
-                scheduler=self.scheduler,
-                locker=create_lock_factory(),
-                file_storage=self.file_storage,
-                level_test_dao=self.level_test_dao,
-                telegraph=create_telegraph(self.config.bot),
-                message_manager=MessageManager(),
+            config=self.config,
+            user_getter=self.user_getter,
+            dcf=self.dcf,
+            pool=self.pool,
+            redis=self.redis,
+            scheduler=self.scheduler,
+            locker=create_lock_factory(),
+            file_storage=self.file_storage,
+            level_test_dao=self.level_test_dao,
+            telegraph=create_telegraph(self.config.bot),
+            message_manager=MessageManager(),
         )
         self.initialized = False
 

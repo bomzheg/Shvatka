@@ -31,7 +31,8 @@ fastapi = "~0.100"
 uvicorn = "^0.20.0"
 python-multipart = "^0.0.5"
 python-jose = {extras = ["cryptography"], version = "^3.3.0"}
-passlib = {extras = ["bcrypt"], version = "^1.7.4"}
+passlib = "^1.7.4"
+bcrypt = "4.0.1"
 telegraph = {extras = ["aio"], version = "^2.2.0"}
 openpyxl = "^3.0.10"
 lxml = "^4.9.2"

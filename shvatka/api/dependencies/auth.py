@@ -102,12 +102,15 @@ class AuthProvider:
             payload = jwt.decode(token, self.secret_key, algorithms=[self.algorythm])
             username = typing.cast(str, payload.get("sub"))
             if username is None:
+                logger.warning("valid jwt contains no username")
                 raise credentials_exception
-        except JWTError:
+        except JWTError as e:
+            logger.info("invalid jwt", exc_info=e)
             raise credentials_exception
         try:
             user = await dao.user.get_by_username(username=username)
         except NoUsernameFound:
+            logger.info("user by username %s not found", username)
             raise credentials_exception
         return user
 

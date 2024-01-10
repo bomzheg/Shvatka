@@ -14,21 +14,21 @@ jobs:
   build:
     needs: lint-and-test
     runs-on: ubuntu-latest
+    env:
+      VERSION_YAML: "vcs_hash: ${GITHUB_SHA}"
 
     steps:
       - uses: actions/checkout@v4
-      - name: get build info
-        run: |
-          echo "vcs_hash: ${GITHUB_SHA}" > version.yaml &&
-          echo "build_at: $(date +"%Y-%m-%dT%H:%M:%S%z")" >> version.yaml &&
-          export VERSION_YAML=`cat version.yaml`
-        env:
-          VERSION_YAML: $VERSION_YAML
+      - name: Get current date
+        id: date
+        run: echo "::set-output name=date::$(date +'%Y-%m-%dT%H:%M:%S%z')"
       - name: debug
+        env:
+          VERSION_YAML: '{"vcs_hash": ${GITHUB_ACTIONS}, "build_at": ${{ steps.date.outputs.date }} }'
         run: echo $VERSION_YAML
       - uses: mr-smithers-excellent/docker-build-push@v6.2
         env:
-          VERSION_YAML: $VERSION_YAML
+          VERSION_YAML:  '{"vcs_hash": ${GITHUB_ACTIONS}, "build_at": ${{ steps.date.outputs.date }} }'
         with:
           image: bomzheg/shvatka
           addLatest: true

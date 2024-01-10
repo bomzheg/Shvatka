@@ -14,8 +14,6 @@ jobs:
   build:
 #    needs: lint-and-test
     runs-on: ubuntu-latest
-    env:
-      VERSION_YAML: "vcs_hash: ${GITHUB_SHA}"
 
     steps:
       - uses: actions/checkout@v4
@@ -23,7 +21,7 @@ jobs:
         id: date
         run: |
           echo "BUILD_AT=$(date +'%Y-%m-%dT%H:%M:%S%z')" >> $GITHUB_STATE &&
-          echo 'VERSION_YAML=\'{"vcs_hash": "${{ GITHUB_SHA }}", "build_at": "${{ BUILD_AT }}" }\'' >> $GITHUB_STATE
+          echo 'VERSION_YAML=\'{"vcs_hash": "${{ env.GITHUB_SHA }}", "build_at": "${{ BUILD_AT }}" }\'' >> $GITHUB_STATE
       - name: debug
         run: |
           echo $VERSION_YAML

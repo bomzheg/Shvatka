@@ -29,6 +29,8 @@ jobs:
           echo $VERSION_YAML
           echo $BUILD_AT
       - uses: mr-smithers-excellent/docker-build-push@v6.2
+        env:
+          VERSION_YAML: ${VERSION_YAML}
         with:
           image: bomzheg/shvatka
           addLatest: true

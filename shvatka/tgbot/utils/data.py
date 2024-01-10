@@ -19,6 +19,7 @@ from shvatka.core.views.game import GameLogWriter
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.infrastructure.picture.results_painter import ResultsPainter
 from shvatka.tgbot.config.models.bot import BotConfig
+from shvatka.tgbot.config.models.main import TgBotConfig
 from shvatka.tgbot.username_resolver.user_getter import UserGetter
 from shvatka.tgbot.views.hint_factory.hint_parser import HintParser
 
@@ -44,6 +45,7 @@ class DialogMiddlewareData(AiogramMiddlewareData, total=False):
 
 class MiddlewareData(DialogMiddlewareData, total=False):
     config: BotConfig
+    main_config: TgBotConfig
     user_getter: UserGetter
     dcf: Factory
     dao: HolderDao

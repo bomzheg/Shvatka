@@ -120,7 +120,7 @@ def create_dispatcher(
     setup_middlewares(
         dp=dp,
         pool=pool,
-        bot_config=config.bot,
+        config=config,
         user_getter=user_getter,
         dcf=dcf,
         redis=redis,

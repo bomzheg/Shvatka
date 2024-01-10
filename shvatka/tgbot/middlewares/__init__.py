@@ -16,12 +16,13 @@ from .data_load_middleware import LoadDataMiddleware
 from .fix_target_middleware import FixTargetMiddleware
 from .init_middleware import InitMiddleware
 from .load_team_player import TeamPlayerMiddleware
+from ..config.models.main import TgBotConfig
 
 
 def setup_middlewares(
     dp: Dispatcher,
     pool: async_sessionmaker[AsyncSession],
-    bot_config: BotConfig,
+    config: TgBotConfig,
     user_getter: UserGetter,
     dcf: Factory,
     redis: Redis,
@@ -32,7 +33,7 @@ def setup_middlewares(
     telegraph: Telegraph,
     bg_manager_factory: BgManagerFactory,
 ):
-    dp.update.middleware(ConfigMiddleware(bot_config))
+    dp.update.middleware(ConfigMiddleware(config.bot, config))
     dp.update.middleware(
         InitMiddleware(
             pool=pool,

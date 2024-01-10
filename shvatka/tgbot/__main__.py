@@ -1,6 +1,8 @@
 import asyncio
 import logging
 
+from aiogram import Bot
+
 from shvatka.common.config.parser.logging_config import setup_logging
 from shvatka.infrastructure.clients.factory import create_file_storage
 from shvatka.infrastructure.db.factory import (
@@ -28,6 +30,7 @@ async def main():
 
     async with DpBuilder(config, pool, file_storage) as (bot, dp):
         try:
+            await bot.delete_webhook()
             await dp.start_polling(bot, allowed_updates=resolve_update_types(dp))
         finally:
             await engine.dispose()

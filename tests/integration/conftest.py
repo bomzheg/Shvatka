@@ -185,7 +185,7 @@ def dp(
     setup_middlewares(
         dp=dp,
         pool=pool,
-        bot_config=bot_config.bot,
+        config=bot_config,
         user_getter=user_getter,
         dcf=dcf,
         redis=redis,

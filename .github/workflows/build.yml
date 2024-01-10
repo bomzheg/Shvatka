@@ -16,7 +16,12 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
+      - name: get build info
+        run: |
+          echo "vcs_hash: ${GITHUB_SHA}" > version.yaml &&
+          echo "build_at: $(date +"%Y-%m-%dT%H:%M:%S%z")" >> version.yaml &&
+          export VERSION_YAML=`cat version.yaml`
       - uses: mr-smithers-excellent/docker-build-push@v6.2
         with:
           image: bomzheg/shvatka

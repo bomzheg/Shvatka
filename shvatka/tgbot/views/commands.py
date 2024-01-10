@@ -69,6 +69,7 @@ HELP_BASE = CommandsGroup(
     ],
 )
 UPDATE_COMMANDS = BotCommand(command="update_commands", description="обновить команды бота")
+VERSION_COMMAND = BotCommand(command="version", description="получить версию приложения")
 EXCEPTION_COMMAND = BotCommand(command="exception", description="сгенерировать исключение")
 GET_OUT = BotCommand(command="get_out", description="бот, уходи из чата!")
 JOBS_COMMAND = BotCommand(command="jobs", description="запланированные функции")
@@ -82,6 +83,7 @@ HELP_ADMIN = CommandsGroup(
         CANCEL_JOBS_COMMAND,
         EXCEPTION_COMMAND,
         UPDATE_COMMANDS,
+        VERSION_COMMAND,
         GET_OUT,
     ],
 )

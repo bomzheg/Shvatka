@@ -9,9 +9,11 @@ from aiogram.filters import Command
 from aiogram.types import Message, BotCommandScopeChat
 
 from shvatka.infrastructure.db.dao.holder import HolderDao
+from shvatka.infrastructure.version import get_version
 from shvatka.tgbot.config.models.bot import BotConfig
+from shvatka.tgbot.config.models.main import TgBotConfig
 from shvatka.tgbot.filters.superusers import is_superuser
-from shvatka.tgbot.views.commands import GET_OUT, EXCEPTION_COMMAND, UPDATE_COMMANDS
+from shvatka.tgbot.views.commands import GET_OUT, EXCEPTION_COMMAND, UPDATE_COMMANDS, VERSION_COMMAND
 
 logger = logging.getLogger(__name__)
 
@@ -45,6 +47,11 @@ async def clean_commands_menu_handler(message: Message, bot: Bot, dao: HolderDao
     await message.answer("обновлено!")
 
 
+async def version_handler(message: Message, main_config: TgBotConfig):
+    version = get_version(main_config.paths)
+    await message.answer(f"Дата билда: {version.build_at}\nВерсия: {version.vcs_hash}")
+
+
 def setup(bot_config: BotConfig) -> Router:
     router = Router(name=__name__)
     is_superuser_ = partial(is_superuser, superusers=bot_config.superusers)
@@ -53,4 +60,5 @@ def setup(bot_config: BotConfig) -> Router:
     router.message.register(exception, Command(commands=EXCEPTION_COMMAND))
     router.message.register(leave_chat, Command(commands=GET_OUT))
     router.message.register(clean_commands_menu_handler, Command(commands=UPDATE_COMMANDS))
+    router.message.register(version_handler, Command(commands=VERSION_COMMAND))
     return router

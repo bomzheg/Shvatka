@@ -93,6 +93,7 @@ class AuthProvider:
         token: str = Depends(oauth2_scheme),
         dao: HolderDao = Depends(dao_provider),
     ) -> dto.User:
+        logger.debug("try to check token %s", token)
         credentials_exception = HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Could not validate credentials",
@@ -107,6 +108,9 @@ class AuthProvider:
         except JWTError as e:
             logger.info("invalid jwt", exc_info=e)
             raise credentials_exception
+        except Exception as e:
+            logger.warning("some jwt error", exc_info=e)
+            raise
         try:
             user = await dao.user.get_by_username(username=username)
         except NoUsernameFound:

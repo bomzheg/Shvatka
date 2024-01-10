@@ -16,8 +16,5 @@ ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 COPY --from=builder $VIRTUAL_ENV $VIRTUAL_ENV
 COPY . ${CODE_PATH}/shvatka
 WORKDIR $CODE_PATH/shvatka
-RUN echo ${{INPUT_VERSION_YAML}}
-RUN echo ${{steps.yaml.outputs.INPUT_VERSION_YAML}}
-RUN echo ${{steps.yaml.outputs.VERSION_YAML}}
 RUN echo $INPUT_VERSION_YAML > version.yaml
 ENTRYPOINT ["python3", "-m", "shvatka.tgbot"]

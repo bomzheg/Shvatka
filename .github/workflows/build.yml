@@ -38,3 +38,4 @@ jobs:
           registry: docker.io
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
+          buildArgs: "VERSION_YAML=${{steps.yaml.outputs.VERSION_YAML}}"

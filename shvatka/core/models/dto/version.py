@@ -4,5 +4,5 @@ from datetime import datetime
 
 @dataclass
 class VersionInfo:
-    build_at: datetime
+    build_at: str
     vcs_hash: str

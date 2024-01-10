@@ -10,6 +10,8 @@ RUN python3 -m poetry export -f requirements.txt | $VIRTUAL_ENV/bin/pip install 
 FROM python:3.11-slim-buster
 LABEL maintainer="bomzheg <bomzheg@gmail.com>" \
       description="Shvatka Telegram Bot"
+ARG VCS_SHA
+ARG BUILD_AT
 ENV VIRTUAL_ENV=/opt/venv
 ENV CODE_PATH=/code
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"

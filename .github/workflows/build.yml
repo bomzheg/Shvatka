@@ -21,6 +21,7 @@ jobs:
         id: date
         run: |
           echo "BUILD_AT=$(date +'%Y-%m-%dT%H:%M:%S%z')" >> "$GITHUB_OUTPUT"
+          echo "VCS_SHA=${GITHUB_SHA}" >> "$GITHUB_OUTPUT"
       - name: create yaml
         id: yaml
         run: |
@@ -36,4 +37,4 @@ jobs:
           registry: docker.io
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-          buildArgs: "BUILD_AT=${{steps.date.outputs.BUILD_AT}},VCS_SHA=${GITHUB_SHA}"
+          buildArgs: "BUILD_AT=${{steps.date.outputs.BUILD_AT}},VCS_SHA=${steps.date.outputs.VCS_SHA}"

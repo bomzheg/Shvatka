@@ -37,4 +37,4 @@ jobs:
           registry: docker.io
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-          buildArgs: "BUILD_AT=${{steps.date.outputs.BUILD_AT}},VCS_SHA=${steps.date.outputs.VCS_SHA}"
+          buildArgs: "BUILD_AT=${{steps.date.outputs.BUILD_AT}},VCS_SHA=${{steps.date.outputs.VCS_SHA}}"

@@ -20,17 +20,18 @@ jobs:
       - name: Get current date
         id: date
         run: |
-          echo "BUILD_AT=$(date +'%Y-%m-%dT%H:%M:%S%z')" >> "$GITHUB_ENV"
+          echo "BUILD_AT=$(date +'%Y-%m-%dT%H:%M:%S%z')" >> "$GITHUB_OUTPUT"
       - name: create yaml
+        id: yaml
         run: |
-          echo "VERSION_YAML={\"vcs_hash\": \"${GITHUB_SHA}\", \"build_at\": \"${BUILD_AT}\" }" >> "$GITHUB_ENV"
+          echo "VERSION_YAML={\"vcs_hash\": \"${GITHUB_SHA}\", \"build_at\": \"${{steps.date.outputs.BUILD_AT}}\" }" >> "$GITHUB_OUTPUT"
       - name: debug
         run: |
-          echo $VERSION_YAML
-          echo $BUILD_AT
+          echo ${{VERSION_YAML}}
+          echo ${{BUILD_AT}}
       - uses: mr-smithers-excellent/docker-build-push@v6.2
         env:
-          VERSION_YAML: ${VERSION_YAML}
+          VERSION_YAML: ${{steps.yaml.outputs.VERSION_YAML}}
         with:
           image: bomzheg/shvatka
           addLatest: true

@@ -27,8 +27,8 @@ jobs:
           echo "VERSION_YAML={\"vcs_hash\": \"${GITHUB_SHA}\", \"build_at\": \"${{steps.date.outputs.BUILD_AT}}\" }" >> "$GITHUB_OUTPUT"
       - name: debug
         run: |
-          echo ${{VERSION_YAML}}
-          echo ${{BUILD_AT}}
+          echo ${{steps.yaml.outputs.VERSION_YAML}}
+          echo ${{steps.date.outputs.BUILD_AT}}
       - uses: mr-smithers-excellent/docker-build-push@v6.2
         env:
           VERSION_YAML: ${{steps.yaml.outputs.VERSION_YAML}}

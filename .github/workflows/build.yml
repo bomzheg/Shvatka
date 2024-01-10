@@ -30,12 +30,10 @@ jobs:
           echo ${{steps.yaml.outputs.VERSION_YAML}}
           echo ${{steps.date.outputs.BUILD_AT}}
       - uses: mr-smithers-excellent/docker-build-push@v6.2
-        env:
-          VERSION_YAML: ${{steps.yaml.outputs.VERSION_YAML}}
         with:
           image: bomzheg/shvatka
           addLatest: true
           registry: docker.io
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-          buildArgs: "VERSION_YAML=${{steps.yaml.outputs.VERSION_YAML}}"
+          buildArgs: "BUILD_AT=${{steps.date.outputs.BUILD_AT}},VCS_SHA=${GITHUB_SHA}"

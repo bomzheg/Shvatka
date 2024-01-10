@@ -24,11 +24,11 @@ jobs:
         run: echo "::set-output name=date::$(date +'%Y-%m-%dT%H:%M:%S%z')"
       - name: debug
         env:
-          VERSION_YAML: '{"vcs_hash": ${{GITHUB_SHA}}, "build_at": ${{ steps.date.outputs.date }} }'
+          VERSION_YAML: '{"vcs_hash": ${GITHUB_SHA}, "build_at": ${{ steps.date.outputs.date }} }'
         run: echo $VERSION_YAML
       - uses: mr-smithers-excellent/docker-build-push@v6.2
         env:
-          VERSION_YAML:  '{"vcs_hash": ${{GITHUB_SHA}}, "build_at": ${{ steps.date.outputs.date }} }'
+          VERSION_YAML:  '{"vcs_hash": ${GITHUB_SHA}, "build_at": ${{ steps.date.outputs.date }} }'
         with:
           image: bomzheg/shvatka
           addLatest: true

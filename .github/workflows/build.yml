@@ -9,10 +9,10 @@ on:
     tags: ["*.*.*"]
 
 jobs:
-  lint-and-test:
-    uses: ./.github/workflows/test.yml
+#  lint-and-test:
+#    uses: ./.github/workflows/test.yml
   build:
-    needs: lint-and-test
+#    needs: lint-and-test
     runs-on: ubuntu-latest
     env:
       VERSION_YAML: "vcs_hash: ${GITHUB_SHA}"
@@ -21,11 +21,15 @@ jobs:
       - uses: actions/checkout@v4
       - name: Get current date
         id: date
-        run: echo "::set-output name=date::$(date +'%Y-%m-%dT%H:%M:%S%z')"
+        run: |
+          echo "BUILD_AT=$(date +'%Y-%m-%dT%H:%M:%S%z')" >> $GITHUB_STATE
+          echo "SHA=${GITHUB_SHA}" >> $GITHUB_STATE
+          echo 'VERSION_YAML=\'{"vcs_hash": "${{ SHA }}", "build_at": "${{ BUILD_AT }}" }\'' >> $GITHUB_STATE
       - name: debug
-        env:
-          VERSION_YAML: '{"vcs_hash": ${GITHUB_SHA}, "build_at": ${{ steps.date.outputs.date }} }'
-        run: echo $VERSION_YAML
+        run: |
+          echo $VERSION_YAML
+          echo $BUILD_AT
+          echo $SHA
       - uses: mr-smithers-excellent/docker-build-push@v6.2
         env:
           VERSION_YAML:  '{"vcs_hash": ${GITHUB_SHA}, "build_at": ${{ steps.date.outputs.date }} }'

@@ -1,8 +1,6 @@
 import asyncio
 import logging
 
-from aiogram import Bot
-
 from shvatka.common.config.parser.logging_config import setup_logging
 from shvatka.infrastructure.clients.factory import create_file_storage
 from shvatka.infrastructure.db.factory import (

@@ -13,7 +13,12 @@ from shvatka.infrastructure.version import get_version
 from shvatka.tgbot.config.models.bot import BotConfig
 from shvatka.tgbot.config.models.main import TgBotConfig
 from shvatka.tgbot.filters.superusers import is_superuser
-from shvatka.tgbot.views.commands import GET_OUT, EXCEPTION_COMMAND, UPDATE_COMMANDS, VERSION_COMMAND
+from shvatka.tgbot.views.commands import (
+    GET_OUT,
+    EXCEPTION_COMMAND,
+    UPDATE_COMMANDS,
+    VERSION_COMMAND,
+)
 
 logger = logging.getLogger(__name__)
 

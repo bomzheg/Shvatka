@@ -37,7 +37,7 @@ TG_WIDGET_HTML = """
         </html>
         """
 logger = logging.getLogger(__name__)
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/token")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/token", auto_error=False)
 
 
 def get_current_user() -> dto.User:

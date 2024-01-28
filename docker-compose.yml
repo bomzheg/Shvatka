@@ -2,7 +2,7 @@ version: '3.2'
 
 services:
 
-  shvatka_bot:
+  shvatka:
     restart: always
     image: "bomzheg/shvatka:${SHVATKA_VERSION:-latest}"
     volumes:
@@ -19,6 +19,12 @@ services:
       - redis
     extra_hosts:
       - "host.docker.internal:host-gateway"
+
+  shvatka-ui:
+    restart: always
+    image: bomzheg/shvatka-ui:${SHVATKA_UI_VERSION:-latest}
+    networks:
+      - reverse-proxy
 
   migrations:
     profiles:

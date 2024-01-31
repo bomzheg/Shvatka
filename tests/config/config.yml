@@ -26,12 +26,14 @@ db:
   name: test
 storage:
   type: memory
-auth:
-  secret-key: 09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7
-  token-expire-minutes: 30
-  bot-token: "123:ABC"
-  bot-username: "shvatkatestbot"
-  auth-url: "https://example.org/sh/login/data"
+api:
+  context-path: ""
+  auth:
+    secret-key: 09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7
+    token-expire-minutes: 30
+    bot-token: "123:ABC"
+    bot-username: "shvatkatestbot"
+    auth-url: "https://example.org/sh/login/data"
 file-storage-config:
   path: ./local-storage/files
   mkdir: true

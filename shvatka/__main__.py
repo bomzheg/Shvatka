@@ -69,7 +69,6 @@ def run():
         host="0.0.0.0",  # noqa: S104
         port=8000,
         factory=True,
-        root_path="/api",
         log_config=None,
     )
 

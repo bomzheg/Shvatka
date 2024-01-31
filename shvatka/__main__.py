@@ -48,7 +48,10 @@ def main() -> FastAPI:
     setup = partial(on_startup, builder, webhook_config)
     app.router.add_event_handler("startup", setup)
     logger.info("app prepared")
-    return app
+
+    root_app = FastAPI()
+    root_app.mount(api_config.context_path, app)
+    return root_app
 
 
 async def on_startup(dp_builder: DpBuilder, webhook_config: WebhookConfig):
@@ -66,6 +69,7 @@ def run():
         host="0.0.0.0",  # noqa: S104
         port=8000,
         factory=True,
+        root_path="/api",
         log_config=None,
     )
 

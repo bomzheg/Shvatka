@@ -12,5 +12,6 @@ def load_config(paths: Paths) -> ApiConfig:
     config_dct = read_config(paths)
     return ApiConfig.from_base(
         base=load_common_config(config_dct, paths, dcf),
-        auth=load_auth(config_dct["auth"]),
+        auth=load_auth(config_dct["api"]["auth"]),
+        context_path=config_dct["api"].get("context-path", ""),
     )

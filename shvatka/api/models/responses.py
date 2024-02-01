@@ -1,9 +1,18 @@
+import typing
 from dataclasses import dataclass, field
 from datetime import datetime
+from typing import Sequence, Generic
 
 from shvatka.core.models import dto
 from shvatka.core.models.dto import scn
 from shvatka.core.models.enums import GameStatus
+
+T = typing.TypeVar("T")
+
+
+@dataclass
+class Page(Generic[T]):
+    content: Sequence[T]
 
 
 @dataclass

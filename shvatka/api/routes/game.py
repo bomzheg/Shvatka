@@ -1,5 +1,3 @@
-from typing import Sequence
-
 from fastapi import APIRouter
 from fastapi.params import Depends, Path
 
@@ -14,7 +12,7 @@ async def get_my_games_list(
     player: dto.Player = Depends(player_provider),  # type: ignore[assignment]
     dao: HolderDao = Depends(dao_provider),  # type: ignore[assignment]
 ):
-    return await get_authors_games(player, dao.game)
+    return responses.Page(await get_authors_games(player, dao.game))
 
 
 async def get_active_game(
@@ -25,9 +23,9 @@ async def get_active_game(
 
 async def get_all_games(
     dao: HolderDao = Depends(dao_provider),  # type: ignore[assignment]
-) -> Sequence[responses.Game]:
+) -> responses.Page[responses.Game]:
     games = await get_completed_games(dao.game)
-    return [responses.Game.from_core(game) for game in games]
+    return responses.Page([responses.Game.from_core(game) for game in games])
 
 
 async def get_game_card(

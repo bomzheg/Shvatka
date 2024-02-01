@@ -33,9 +33,9 @@ async def test_games_list(finished_game: dto.FullGame, dao: HolderDao, client: A
     resp.read()
 
     dcf = Factory()
-    actual = dcf.load(resp.json(), list[responses.Game])
-    assert len(actual) == 1
-    game = actual[0]
+    actual: responses.Page[responses.Game] = dcf.load(resp.json(), responses.Page[responses.Game])
+    assert len(actual.content) == 1
+    game = actual.content[0]
     assert game.id == finished_game.id
     assert game.status == GameStatus.complete
 

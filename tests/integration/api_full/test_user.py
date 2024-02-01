@@ -1,20 +1,8 @@
 import pytest
-import pytest_asyncio
 from httpx import AsyncClient
 
 from shvatka.api.dependencies import AuthProvider
 from shvatka.core.models import dto
-from shvatka.core.services.user import set_password, upsert_user
-from shvatka.infrastructure.db.dao.holder import HolderDao
-from tests.fixtures.user_constants import create_dto_harry
-
-
-@pytest_asyncio.fixture
-async def user(dao: HolderDao, auth: AuthProvider) -> dto.User:
-    user_ = await upsert_user(create_dto_harry(), dao.user)
-    password = auth.get_password_hash("12345")
-    await set_password(user_, password, dao.user)
-    return user_
 
 
 @pytest.mark.asyncio

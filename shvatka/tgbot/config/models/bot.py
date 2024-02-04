@@ -59,6 +59,5 @@ class BotApiType(Enum):
 @dataclass
 class WebhookConfig:
     web_url: str
-    local_url: str
     path: str
     secret: str

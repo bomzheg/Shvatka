@@ -42,20 +42,18 @@ def main() -> FastAPI:
         secret_token=webhook_config.secret,
     )
     webhook_handler.register(app, webhook_config.path)
-    logger.info(webhook_config.web_url)
-    logger.info(webhook_config.path)
-
-    setup = partial(on_startup, builder, webhook_config)
-    app.router.add_event_handler("startup", setup)
-    logger.info("app prepared")
 
     root_app = FastAPI()
     root_app.mount(api_config.context_path, app)
+    setup = partial(on_startup, builder, webhook_config)
+    root_app.router.add_event_handler("startup", setup)
+    logger.info("app prepared")
     return root_app
 
 
 async def on_startup(dp_builder: DpBuilder, webhook_config: WebhookConfig):
     await dp_builder.start()
+    logger.info(webhook_config.web_url + webhook_config.path)
     await dp_builder.bot.set_webhook(
         url=webhook_config.web_url + webhook_config.path,
         secret_token=webhook_config.secret,

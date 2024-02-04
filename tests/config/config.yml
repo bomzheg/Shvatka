@@ -9,7 +9,6 @@ bot:
     type: official
   webhook:
     web-url: https://example.org/context/path
-    local-url: 127.0.0.1:8080/
     path: secret/path
     secret: my-$ecr3t
 redis:

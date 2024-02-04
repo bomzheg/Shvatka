@@ -19,12 +19,14 @@ class Page(Generic[T]):
 class Player:
     id: int
     can_be_author: bool
+    name_mention: str
 
     @classmethod
     def from_core(cls, core: dto.Player):
         return cls(
             id=core.id,
             can_be_author=core.can_be_author,
+            name_mention=core.name_mention,
         )
 
 
@@ -51,7 +53,8 @@ class Game:
     author: Player
     name: str
     status: GameStatus
-    start_at: datetime | None
+    start_at: datetime | None = None
+    number: int | None = None
 
     @classmethod
     def from_core(cls, core: dto.Game | None):
@@ -63,6 +66,7 @@ class Game:
             name=core.name,
             status=core.status,
             start_at=core.start_at,
+            number=core.number,
         )
 
 

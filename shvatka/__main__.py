@@ -53,9 +53,10 @@ def main() -> FastAPI:
 
 async def on_startup(dp_builder: DpBuilder, webhook_config: WebhookConfig):
     await dp_builder.start()
-    logger.info(webhook_config.web_url + webhook_config.path)
+    webhook_url = webhook_config.web_url + webhook_config.path
+    logger.info("as webhook url used %s", webhook_url)
     await dp_builder.bot.set_webhook(
-        url=webhook_config.web_url + webhook_config.path,
+        url=webhook_url,
         secret_token=webhook_config.secret,
         allowed_updates=resolve_update_types(dp_builder.dp),
     )

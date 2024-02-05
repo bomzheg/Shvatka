@@ -22,7 +22,7 @@ jobs:
         run: |
           echo "BUILD_AT=$(date +'%Y-%m-%dT%H:%M:%S%z')" >> "$GITHUB_OUTPUT"
           echo "VCS_SHA=${GITHUB_SHA}" >> "$GITHUB_OUTPUT"
-      - uses: mr-smithers-excellent/docker-build-push@v6.2
+      - uses: mr-smithers-excellent/docker-build-push@v6.3
         with:
           image: bomzheg/shvatka
           addLatest: true

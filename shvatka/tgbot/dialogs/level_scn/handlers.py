@@ -24,7 +24,7 @@ def check_level_id(name_id: str) -> str:
     raise ValueError
 
 
-async def not_correct_id(m: Message, dialog_: Any, manager: DialogManager):
+async def not_correct_id(m: Message, dialog_: Any, manager: DialogManager, error: ValueError):
     await m.answer("Не стоит использовать ничего, кроме латинских букв, цифр, -, _")
 
 
@@ -58,7 +58,7 @@ def convert_keys(text: str) -> list[str]:
     raise ValueError
 
 
-async def not_correct_keys(m: Message, dialog_: Any, manager: DialogManager):
+async def not_correct_keys(m: Message, dialog_: Any, manager: DialogManager, error: ValueError):
     await m.answer(
         "Ключ должен начинаться на SH или СХ и содержать "
         "только цифры и заглавные буквы кириллицы и латиницы"
@@ -83,7 +83,7 @@ def convert_bonus_keys(text: str) -> list[scn.BonusKey]:
     return result
 
 
-async def not_correct_bonus_keys(m: Message, dialog_: Any, manager: DialogManager):
+async def not_correct_bonus_keys(m: Message, dialog_: Any, manager: DialogManager, error: ValueError):
     await m.answer(
         "Ключ должен начинаться на SH или СХ и содержать "
         "только цифры и заглавные буквы кириллицы и латиницы. "

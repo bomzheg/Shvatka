@@ -83,7 +83,9 @@ def convert_bonus_keys(text: str) -> list[scn.BonusKey]:
     return result
 
 
-async def not_correct_bonus_keys(m: Message, dialog_: Any, manager: DialogManager, error: ValueError):
+async def not_correct_bonus_keys(
+    m: Message, dialog_: Any, manager: DialogManager, error: ValueError
+):
     await m.answer(
         "Ключ должен начинаться на SH или СХ и содержать "
         "только цифры и заглавные буквы кириллицы и латиницы. "

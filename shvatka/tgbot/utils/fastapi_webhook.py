@@ -79,7 +79,6 @@ class BaseRequestHandler(ABC):
         self._background_feed_update_tasks: set[asyncio.Task[Any]] = set()
 
     def register(self, app: FastAPI, /, path: str, **kwargs: Any) -> None:
-
         router = APIRouter(prefix="/webhook", lifespan=self._handle_close)
         router.add_api_route(methods=["POST"], path=path, endpoint=self.handle, **kwargs)
         app.include_router(router)

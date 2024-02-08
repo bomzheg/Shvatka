@@ -36,12 +36,10 @@ jobs:
           python-version: '3.11'
           cache: "poetry"
           cache-dependency-path: poetry.lock
-      - name: black
-        run: poetry run black --check .
+      - name: black (ruff format)
+        run: poetry run ruff format --check .
       - name: ruff
         run: poetry run ruff .
-      - name: flake8
-        run: poetry run flake8 .
       - name: mypy
         run: poetry run mypy .
   test:

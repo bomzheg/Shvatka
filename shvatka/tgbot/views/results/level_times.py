@@ -57,9 +57,7 @@ def to_results(game_stat: dto.GameStat) -> Results:
     for team, lts in game_stat.level_times.items():
         levels_times = [LevelTime(lt.level_number, trim_tz(lt.start_at)) for lt in lts]
         levels_timedelta = []
-        for previous, current in zip(
-            levels_times[:-1], levels_times[1:]
-        ):  # type: LevelTime, LevelTime
+        for previous, current in zip(levels_times[:-1], levels_times[1:]):  # type: LevelTime, LevelTime
             td = current.time - previous.time
             levels_timedelta.append(LevelTimedelta(current.level, td))
         result.append(TeamLevels(team, levels_times, levels_timedelta))

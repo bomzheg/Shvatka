@@ -40,8 +40,9 @@ async def process_name(m: Message, dialog_: Any, manager: DialogManager):
             player=author, name=enums.Achievement.game_name_joke, dao=dao.achievement
         )
         return await m.answer(
-            "Лол, я ждал эту шутку. "
-            "Но нет, игра не может называться {name}".format(name=hd.bold(hd.quote(game_name)))
+            "Лол, я ждал эту шутку. " "Но нет, игра не может называться {name}".format(
+                name=hd.bold(hd.quote(game_name))
+            )
         )
     await check_new_game_name_available(name=game_name.strip(), author=author, dao=dao.game)
     data = manager.dialog_data

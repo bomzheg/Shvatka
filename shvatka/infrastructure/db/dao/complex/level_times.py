@@ -10,7 +10,6 @@ if typing.TYPE_CHECKING:
 
 @dataclass
 class GameStatImpl(GameStatDao):
-
     dao: "HolderDao"
 
     async def get_game_level_times(self, game: dto.Game) -> list[dto.LevelTime]:

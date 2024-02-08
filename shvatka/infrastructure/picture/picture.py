@@ -58,9 +58,7 @@ def convert(stat: dto.GameStat, game: dto.FullGame) -> dict[str, PlotData]:
         abscissa: list[datetime] = []
         ordinate: list[float] = []
         current_ordinate = 1.0
-        for level_time_prev, level_time_now in pairwise(
-            [None, *level_times]
-        ):  # type: dto.LevelTimeOnGame | None, dto.LevelTimeOnGame | None
+        for level_time_prev, level_time_now in pairwise([None, *level_times]):  # type: dto.LevelTimeOnGame | None, dto.LevelTimeOnGame | None
             assert level_time_now is not None
             if level_time_prev is None:
                 assert game.start_at

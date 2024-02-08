@@ -26,7 +26,4 @@ async def get_game_stat(game: dto.Game, player: dto.Player, dao: GameStatDao) ->
 
 async def get_game_spy(game: dto.Game, player: dto.Player, dao: GameStatDao):
     stat = await get_game_stat(game, player, dao)
-    result = []
-    for lts in stat.level_times.values():
-        result.append(lts[-1])
-    return result
+    return [lts[-1] for lts in stat.level_times.values()]

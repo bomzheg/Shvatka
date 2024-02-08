@@ -34,6 +34,6 @@ class LocalFileStorage(FileStorage):
         return scn.FileContentLink(file_path=str(result_path))
 
     async def get(self, file_link: scn.FileContentLink) -> BinaryIO:
-        with Path(file_link.file_path).open("rb") as f:
+        with Path(file_link.file_path).open("rb") as f:  # noqa: ASYNC101
             result = BytesIO(f.read())
         return result

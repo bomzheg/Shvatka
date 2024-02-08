@@ -117,6 +117,7 @@ ignore = [
     "RUF001", "S101", "D", "ANN101", "S311", "PD008", "UP035", "C408", "C417",
     "ANN102", "EM101", "TRY003", "PIE790", "RET505", "A003",  "EM102", "RUF003",
     "RET503", "RET502", "ARG005", "TCH003", "RUF002", "SIM108", "UP024", "ISC001",
+    "FA102", "RUF015", "FIX002", "TD002", "TD003", "TD004", "TD005",
 
 
     # fixme
@@ -137,6 +138,7 @@ ignore = [
 "shvatka/api/*" = ["B008"]
 "**/migrations/versions/*" = ["N999"]
 "**/crawler/**parser/*" = ["PLR0912", "B904"]
+"shvatka/infrastructure/db/models/*" = ["RUF012"]
 
 [tool.mypy]
 no_implicit_optional = true

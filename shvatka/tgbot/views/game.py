@@ -51,7 +51,7 @@ class BotView(GameViewPreparer, GameView):
                     message_id=await dao.get_poll_msg(team=team, game=game),
                     reply_markup=None,
                 )
-            except TelegramAPIError as e:
+            except TelegramAPIError as e:  # noqa: PERF203
                 logger.exception("can't remove waivers keyboard for team %s", team.id, exc_info=e)
 
     async def send_puzzle(self, team: dto.Team, level: dto.Level) -> None:

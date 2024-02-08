@@ -15,7 +15,7 @@ class FixTargetMiddleware(BaseMiddleware):
         event: TelegramObject,
         data: dict[str, Any],
     ) -> Any:
-        if target := data.get("target", None):
+        if target := data.get("target"):
             dao: HolderDao = data["dao"]
             target = await get_db_user_by_tg_user(target, data["user_getter"], dao)
             data["target"] = await upsert_player(target, dao.player)

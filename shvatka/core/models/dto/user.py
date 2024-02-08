@@ -19,7 +19,7 @@ class User:
         if self.first_name is None:
             return ""
         if self.last_name is not None:
-            return " ".join((self.first_name, self.last_name))
+            return f"{self.first_name} {self.last_name}"
         return self.first_name
 
     @property

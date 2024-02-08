@@ -1,6 +1,5 @@
 import typing
 from dataclasses import dataclass, field
-from typing import Any
 
 from .time_hint import TimeHint
 
@@ -12,7 +11,7 @@ class BonusKey:
     text: str
     bonus_minutes: float
 
-    def __eq__(self, other: Any) -> bool:
+    def __eq__(self, other: object) -> bool:
         if not isinstance(other, BonusKey):
             return NotImplemented
         return self.text == other.text

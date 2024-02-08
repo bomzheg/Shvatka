@@ -213,9 +213,7 @@ async def button_join(
     await bot.edit_message_text(
         chat_id=team.get_chat_id(),
         message_id=callback_query.message.message_id,
-        text="В команду {team} добавлен игрок {player}".format(
-            team=hd.bold(team.name), player=hd.bold(target.name_mention)
-        ),
+        text=f"В команду {hd.bold(team.name)} добавлен игрок {hd.bold(target.name_mention)}",
     )
 
 

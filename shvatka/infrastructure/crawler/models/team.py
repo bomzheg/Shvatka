@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import date
-from typing import Any
 
 
 @dataclass
@@ -26,7 +25,7 @@ class ParsedPlayer:
     def __hash__(self):
         return hash(self.forum_id)
 
-    def __eq__(self, other: Any):
+    def __eq__(self, other: object):
         if not isinstance(other, ParsedPlayer):
             return NotImplemented
         return self.forum_id == other.forum_id

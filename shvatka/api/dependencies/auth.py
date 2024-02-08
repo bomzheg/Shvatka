@@ -70,8 +70,8 @@ class AuthProvider:
         )
         try:
             user = await dao.user.get_by_username_with_password(username)
-        except NoUsernameFound:
-            raise http_status_401
+        except NoUsernameFound as e:
+            raise http_status_401 from e
         if not self.verify_password(password, user.hashed_password or ""):
             raise http_status_401
         return user.without_password()
@@ -107,15 +107,15 @@ class AuthProvider:
                 raise credentials_exception
         except JWTError as e:
             logger.info("invalid jwt", exc_info=e)
-            raise credentials_exception
+            raise credentials_exception from e
         except Exception as e:
             logger.warning("some jwt error", exc_info=e)
             raise
         try:
             user = await dao.user.get_by_username(username=username)
-        except NoUsernameFound:
+        except NoUsernameFound as e:
             logger.info("user by username %s not found", username)
-            raise credentials_exception
+            raise credentials_exception from e
         return user
 
     async def login(

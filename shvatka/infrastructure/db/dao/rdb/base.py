@@ -9,23 +9,23 @@ from sqlalchemy.orm.interfaces import ORMOption
 
 from shvatka.infrastructure.db.models import Base
 
-Model = TypeVar("Model", bound=Base, covariant=True, contravariant=False)
+Model_co = TypeVar("Model_co", bound=Base, covariant=True, contravariant=False)
 
 
-class BaseDAO(Generic[Model]):
-    def __init__(self, model: type[Model], session: AsyncSession) -> None:
+class BaseDAO(Generic[Model_co]):
+    def __init__(self, model: type[Model_co], session: AsyncSession) -> None:
         self.model = model
         self.session = session
 
-    async def _get_all(self, options: Sequence[ORMOption] = ()) -> Sequence[Model]:
-        result: ScalarResult[Model] = await self.session.scalars(
+    async def _get_all(self, options: Sequence[ORMOption] = ()) -> Sequence[Model_co]:
+        result: ScalarResult[Model_co] = await self.session.scalars(
             select(self.model).options(*options)
         )
         return result.all()
 
     async def _get_by_id(
         self, id_: int, options: Sequence[ORMOption] | None = None, populate_existing: bool = False
-    ) -> Model:
+    ) -> Model_co:
         result = await self.session.get(
             self.model, id_, options=options, populate_existing=populate_existing
         )

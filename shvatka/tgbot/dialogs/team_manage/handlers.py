@@ -155,9 +155,7 @@ async def gotten_user_request(m: Message, widget: Any, manager: DialogManager):
     else:
         await bot.send_message(
             chat_id=captain.get_chat_id(),
-            text="В команду {team} добавлен игрок {player}".format(
-                team=hd.bold(team.name), player=hd.bold(player.name_mention)
-            ),
+            text=f"В команду {hd.bold(team.name)} добавлен игрок {hd.bold(player.name_mention)}",
         )
     await total_remove_msg(
         bot, chat_id=chat.tg_id, msg_id=manager.dialog_data.pop("user_request_message")

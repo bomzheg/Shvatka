@@ -62,7 +62,7 @@ async def save_team(parsed_team: ParsedTeam, with_team_players: bool, dao: Holde
         players[parsed_player] = player
         if parsed_player.role == "Капитан":
             captain = parsed_player
-    team = await dao.team.create_by_forum(saved_team, players.get(captain, None))
+    team = await dao.team.create_by_forum(saved_team, players.get(captain))
     if with_team_players:
         for parsed_player, saved_player in players.items():
             await add_waivers(parsed_player, saved_player, dao)

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+from typing import Self
 
 import pyrogram
 from aiogram.types import User
@@ -56,7 +57,7 @@ class UserGetter:
         if self._client_api_bot.is_connected:
             await self._client_api_bot.stop()
 
-    async def __aenter__(self) -> UserGetter:
+    async def __aenter__(self) -> Self:
         await self.start()
         return self
 

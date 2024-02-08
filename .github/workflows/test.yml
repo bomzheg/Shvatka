@@ -39,7 +39,7 @@ jobs:
       - name: black (ruff format)
         run: poetry run ruff format --check .
       - name: ruff
-        run: poetry run ruff .
+        run: poetry run ruff check .
       - name: mypy
         run: poetry run mypy .
   test:

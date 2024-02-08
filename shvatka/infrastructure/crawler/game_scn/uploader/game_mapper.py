@@ -8,10 +8,7 @@ from shvatka.infrastructure.crawler.models import uploadable_game as data
 
 
 def map_game_for_upload(game: dto.FullGame) -> data.GameForUpload:
-    levels = []
-    for level in game.levels:
-        levels.append(map_level_for_upload(level))
-    return levels
+    return [map_level_for_upload(level) for level in game.levels]
 
 
 def map_level_for_upload(level: dto.Level) -> data.LevelForUpload:

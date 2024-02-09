@@ -10,4 +10,5 @@ def load_auth(dct: dict) -> AuthConfig:
         bot_token=dct["bot-token"],
         bot_username=dct["bot-username"],
         auth_url=dct["auth-url"],
+        domain=dct["domain"],
     )

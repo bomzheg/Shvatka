@@ -40,6 +40,7 @@ api:
     bot-token: ""
     bot-username: ""
     auth-url: "https://example.org/sh/login/data"
+    domain: "example.org"
 file-storage-config:
   path: ./local-storage/files
   mkdir: true

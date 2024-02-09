@@ -9,11 +9,12 @@ from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from jose import jwt, JWTError
 from passlib.context import CryptContext
 from starlette import status
-from starlette.responses import HTMLResponse
+from starlette.responses import HTMLResponse, Response
 
 from shvatka.api.config.models.auth import AuthConfig
 from shvatka.api.dependencies.db import dao_provider
 from shvatka.api.models.auth import UserTgAuth, Token
+from shvatka.api.utils.cookie_auth import OAuth2PasswordBearerWithCookie
 from shvatka.core.models import dto
 from shvatka.core.services.user import upsert_user
 from shvatka.core.utils.datetime_utils import tz_utc
@@ -37,7 +38,7 @@ TG_WIDGET_HTML = """
         </html>
         """
 logger = logging.getLogger(__name__)
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/token")
+oauth2_scheme = OAuth2PasswordBearerWithCookie(token_url="auth/token")
 
 
 def get_current_user() -> dto.User:
@@ -120,11 +121,23 @@ class AuthProvider:
 
     async def login(
         self,
+        response: Response,
         form_data: OAuth2PasswordRequestForm = Depends(),
         dao: HolderDao = Depends(dao_provider),
-    ) -> Token:
+    ):
         user = await self.authenticate_user(form_data.username, form_data.password, dao)
-        return self.create_user_token(user)
+        token = self.create_user_token(user)
+        response.set_cookie(
+            "Authorization",
+            value=f"{token.token_type} {token.access_token}",
+            httponly=True,
+            samesite="none",
+            domain=self.config.domain,
+            secure=True,
+            max_age=self.config.token_expire.seconds,
+            expires=self.config.token_expire.seconds,
+        )
+        return {"ok": True}
 
     async def tg_login_page(self):
         return TG_WIDGET_HTML.format(

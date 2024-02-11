@@ -54,7 +54,7 @@ async def test_game_card(
     await dao.commit()
     resp = await client.get(
         f"/games/{finished_game.id}",
-        headers={"Authorization": "Bearer " + token.access_token},
+        cookies={"Authorization": "Bearer " + token.access_token},
     )
     assert resp.is_success
     resp.read()

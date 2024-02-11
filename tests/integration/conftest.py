@@ -37,6 +37,7 @@ from shvatka.tgbot.main_factory import setup_handlers
 from shvatka.tgbot.middlewares import setup_middlewares
 from shvatka.tgbot.username_resolver.user_getter import UserGetter
 from shvatka.tgbot.views.hint_factory.hint_parser import HintParser
+from tests.conftest import paths, event_loop, dcf, bot_config  # noqa: F401
 from tests.fixtures.conftest import fixtures_resource_path  # noqa: F401
 from tests.fixtures.game_fixtures import game, finished_game  # noqa: F401
 from tests.fixtures.player import harry, hermione, ron, author, draco  # noqa: F401

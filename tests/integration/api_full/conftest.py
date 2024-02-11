@@ -16,7 +16,35 @@ from shvatka.core.models import dto
 from shvatka.core.services.user import upsert_user, set_password
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from tests.fixtures.user_constants import create_dto_harry
-from tests.integration.conftest import game_log  # noqa: F401
+from tests.integration.conftest import (
+    event_loop,  # noqa: F401
+    paths,  # noqa: F401
+    pool,  # noqa: F401
+    dao,  # noqa: F401
+    postgres_url,  # noqa: F401
+    redis,  # noqa: F401
+    bot,  # noqa: F401
+    bot_config,  # noqa: F401
+    harry,  # noqa: F401
+    hermione,  # noqa: F401
+    ron,  # noqa: F401
+    draco,  # noqa: F401
+    gryffindor,  # noqa: F401
+    slytherin,  # noqa: F401
+    level_test_dao,  # noqa: F401
+    file_storage,  # noqa: F401
+    finished_game,  # noqa: F401
+    game,  # noqa: F401
+    complex_scn,  # noqa: F401
+    file_gateway,  # noqa: F401
+    fixtures_resource_path,  # noqa: F401
+    author,  # noqa: F401
+    session,  # noqa: F401
+    alembic_config,  # noqa: F401
+    upgrade_schema_db,  # noqa: F401
+    dcf,  # noqa: F401
+    game_log,  # noqa: F401
+)
 from tests.mocks.config import DBConfig
 
 

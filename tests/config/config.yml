@@ -33,7 +33,7 @@ api:
     bot-token: "123:ABC"
     bot-username: "shvatkatestbot"
     auth-url: "https://example.org/sh/login/data"
-    domain: "example.org"
+    domain: "test"
 file-storage-config:
   path: ./local-storage/files
   mkdir: true

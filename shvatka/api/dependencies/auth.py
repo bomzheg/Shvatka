@@ -131,7 +131,6 @@ class AuthProvider:
             "Authorization",
             value=f"{token.token_type} {token.access_token}",
             httponly=True,
-            samesite="none",
             domain=self.config.domain,
             secure=True,
             max_age=self.config.token_expire.seconds,

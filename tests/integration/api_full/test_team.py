@@ -39,7 +39,7 @@ async def test_get_team(
     team = await create_team_(harry, create_gryffindor_dto_chat(), dao, game_log)
     resp = await client.get(
         "/teams/my",
-        headers={"Authorization": "Bearer " + token.access_token},
+        cookies={"Authorization": "Bearer " + token.access_token},
         follow_redirects=True,
     )
     assert resp.is_success

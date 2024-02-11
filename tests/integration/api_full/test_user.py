@@ -22,11 +22,11 @@ async def test_auth(client: AsyncClient, user: dto.User):
     )
     assert resp.is_success
     resp.read()
-    access_token = resp.json()["access_token"]
+    access_token = resp.cookies.get("Authorization")
 
     resp = await client.get(
         "/users/me/",
-        headers={"Authorization": "Bearer " + access_token},
+        cookies={"Authorization": access_token},
         follow_redirects=True,
     )
     assert resp.is_success
@@ -40,7 +40,7 @@ async def test_change_password(client: AsyncClient, user: dto.User, auth: AuthPr
     token = auth.create_user_token(user)
     resp = await client.put(
         "/users/me/password/",
-        headers={"Authorization": "Bearer " + token.access_token},
+        cookies={"Authorization": "Bearer " + token.access_token},
         json={"password": "09876"},
         follow_redirects=True,
     )

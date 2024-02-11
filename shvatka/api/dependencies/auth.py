@@ -5,7 +5,7 @@ import typing
 from datetime import timedelta, datetime
 
 from fastapi import Depends, HTTPException, APIRouter
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from fastapi.security import OAuth2PasswordRequestForm
 from jose import jwt, JWTError
 from passlib.context import CryptContext
 from starlette import status

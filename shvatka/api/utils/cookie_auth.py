@@ -1,11 +1,12 @@
-from fastapi.security import OAuth2
-from fastapi.openapi.models import OAuthFlows as OAuthFlowsModel
-from fastapi import Request
-from fastapi.security.utils import get_authorization_scheme_param
-from fastapi import HTTPException
-from fastapi import status
-from typing import Optional
 from typing import Dict
+from typing import Optional
+
+from fastapi import HTTPException
+from fastapi import Request
+from fastapi import status
+from fastapi.openapi.models import OAuthFlows as OAuthFlowsModel, OAuthFlowPassword
+from fastapi.security import OAuth2
+from fastapi.security.utils import get_authorization_scheme_param
 
 
 class OAuth2PasswordBearerWithCookie(OAuth2):
@@ -18,11 +19,11 @@ class OAuth2PasswordBearerWithCookie(OAuth2):
     ):
         if not scopes:
             scopes = {}
-        flows = OAuthFlowsModel(password={"tokenUrl": token_url, "scopes": scopes})
+        flows = OAuthFlowsModel(password=OAuthFlowPassword(tokenUrl=token_url))
         super().__init__(flows=flows, scheme_name=scheme_name, auto_error=auto_error)
 
     async def __call__(self, request: Request) -> Optional[str]:
-        authorization: str = request.cookies.get("Authorization")
+        authorization = request.cookies.get("Authorization", "")
 
         scheme, param = get_authorization_scheme_param(authorization)
         if not authorization or scheme.lower() != "bearer":
@@ -32,6 +33,5 @@ class OAuth2PasswordBearerWithCookie(OAuth2):
                     detail="Not authenticated",
                     headers={"WWW-Authenticate": "Bearer"},
                 )
-            else:
-                return None
+            return None
         return param

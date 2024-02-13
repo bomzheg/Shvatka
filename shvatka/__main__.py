@@ -3,6 +3,7 @@ from functools import partial
 
 import uvicorn
 from fastapi import FastAPI
+from prometheus_client import make_asgi_app
 
 from shvatka.infrastructure.clients.factory import create_file_storage
 from shvatka.tgbot.config.models.bot import WebhookConfig
@@ -43,6 +44,8 @@ def main() -> FastAPI:
     )
     webhook_handler.register(app, webhook_config.path)
 
+    metrics_app = make_asgi_app()
+    app.mount("/metrics", metrics_app)
     root_app = FastAPI()
     root_app.mount(api_config.context_path, app)
     setup = partial(on_startup, builder, webhook_config)

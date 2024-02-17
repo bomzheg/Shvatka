@@ -130,10 +130,6 @@ class AuthProvider:
         response.set_cookie(
             "Authorization",
             value=f"{token.token_type} {token.access_token}",
-            domain=self.config.domain,
-            secure=True,
-            max_age=self.config.token_expire.seconds,
-            expires=self.config.token_expire.seconds,
         )
         return {"ok": True}
 

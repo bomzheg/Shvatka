@@ -41,6 +41,9 @@ api:
     bot-username: ""
     auth-url: "https://example.org/sh/login/data"
     domain: "example.org"
+    samesite: "none"
+    secure: false
+    httponly: false
 file-storage-config:
   path: ./local-storage/files
   mkdir: true

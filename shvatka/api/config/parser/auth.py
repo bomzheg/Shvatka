@@ -11,4 +11,7 @@ def load_auth(dct: dict) -> AuthConfig:
         bot_username=dct["bot-username"],
         auth_url=dct["auth-url"],
         domain=dct["domain"],
+        samesite=dct["samesite"],
+        secure=bool(dct["secure"]),
+        httponly=bool(dct["httponly"]),
     )

@@ -1,6 +1,7 @@
 from typing import Protocol
 
 from shvatka.core.interfaces.dal.base import Committer
+from shvatka.core.interfaces.dal.file_info import FileInfoGetter
 from shvatka.core.interfaces.dal.game import (
     MaxGameNumberGetter,
     GameNumberUpdater,
@@ -44,9 +45,6 @@ class GameCompleter(
     pass
 
 
-class GamePackager(GameKeyGetter, LevelTimesGetter, GameWaiversGetter, Protocol):
+class GamePackager(GameKeyGetter, LevelTimesGetter, GameWaiversGetter, FileInfoGetter, Protocol):
     async def get_full(self, id_: int) -> dto.FullGame:
-        raise NotImplementedError
-
-    async def get_by_guid(self, guid: str) -> scn.VerifiableFileMeta:
         raise NotImplementedError

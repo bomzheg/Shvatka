@@ -1,7 +1,7 @@
 from typing import BinaryIO, Sequence
 
 from shvatka.core.interfaces.clients.file_storage import FileGateway
-from shvatka.core.interfaces.dal.complex import GamePackager
+from shvatka.core.interfaces.dal.file_info import FileInfoGetter
 from shvatka.core.interfaces.dal.game import GameUpserter
 from shvatka.core.models import dto
 from shvatka.core.models.dto import scn
@@ -24,7 +24,7 @@ async def upsert_files(
 
 
 async def get_file_metas(
-    game: dto.FullGame, author: dto.Player, dao: GamePackager
+    game: dto.FullGame, author: dto.Player, dao: FileInfoGetter
 ) -> Sequence[scn.FileMeta]:
     file_metas: list[scn.FileMeta] = []
     for guid in game.get_guids():
@@ -42,6 +42,14 @@ async def get_file_contents(
         content = await file_gateway.get(file_meta)
         contents[file_meta.guid] = content
     return contents
+
+
+async def get_file_content(
+        guid: str, file_gateway: FileGateway, author: dto.Player, game: dto.Game, dao: FileInfoGetter
+) -> BinaryIO:
+    meta = await dao.get_by_guid(guid)
+    check_file_meta_can_read(author, meta, game)
+    return await file_gateway.get(meta)
 
 
 def check_file_meta_can_read(

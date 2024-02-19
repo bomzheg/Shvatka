@@ -1,12 +1,16 @@
-from fastapi import Depends, APIRouter
+from typing import Annotated
 
-from shvatka.api.config.models.main import ApiConfig
-from shvatka.api.dependencies import get_config
+from dishka.integrations.base import Depends
+from dishka.integrations.fastapi import inject
+from fastapi import APIRouter
+
+from shvatka.common import Paths
 from shvatka.infrastructure.version import get_version
 
 
-def get_version_route(config: ApiConfig = Depends(get_config)):
-    return get_version(config.paths)
+@inject
+def get_version_route(paths: Annotated[Paths, Depends()]):
+    return get_version(paths)
 
 
 def setup() -> APIRouter:

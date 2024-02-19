@@ -2,6 +2,7 @@ from typing import AsyncGenerator
 
 import pytest
 import pytest_asyncio
+from dishka.integrations.fastapi import DishkaApp
 from fastapi import FastAPI
 from httpx import AsyncClient
 from redis.asyncio.client import Redis
@@ -9,12 +10,13 @@ from sqlalchemy.ext.asyncio import async_sessionmaker, AsyncSession
 
 from shvatka.api.config.models.main import ApiConfig
 from shvatka.api.config.parser.main import load_config
-from shvatka.api.dependencies import AuthProvider
+from shvatka.api.dependencies import setup_dishka
 from shvatka.api.main_factory import create_app
 from shvatka.common import Paths
 from shvatka.core.models import dto
 from shvatka.core.services.user import upsert_user, set_password
 from shvatka.infrastructure.db.dao.holder import HolderDao
+from shvatka.infrastructure.di.auth import AuthProperties
 from tests.fixtures.user_constants import create_dto_harry
 from tests.integration.conftest import (
     event_loop,  # noqa: F401
@@ -62,14 +64,14 @@ def patch_api_config(api_config: ApiConfig, postgres_url: str, redis: Redis):
 
 
 @pytest.fixture(scope="session")
-def app(api_config: ApiConfig, pool: async_sessionmaker[AsyncSession], redis: Redis) -> FastAPI:
-    app = create_app(pool=pool, redis=redis, config=api_config)
+def app(api_config: ApiConfig, pool: async_sessionmaker[AsyncSession], redis: Redis) -> DishkaApp:
+    app = setup_dishka(create_app(), "SHVATKA_TEST_PATH")
     return app
 
 
 @pytest.fixture(scope="session")
 def auth(api_config: ApiConfig):
-    return AuthProvider(api_config.auth)
+    return AuthProperties(api_config.auth)
 
 
 @pytest.mark.anyio
@@ -80,7 +82,7 @@ async def client(app: FastAPI) -> AsyncGenerator[AsyncClient, None]:
 
 
 @pytest_asyncio.fixture
-async def user(dao: HolderDao, auth: AuthProvider) -> dto.User:
+async def user(dao: HolderDao, auth: AuthProperties) -> dto.User:
     user_ = await upsert_user(create_dto_harry(), dao.user)
     password = auth.get_password_hash("12345")
     await set_password(user_, password, dao.user)

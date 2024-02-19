@@ -24,6 +24,7 @@ from shvatka.infrastructure.db.factory import (
     create_lock_factory,
 )
 from shvatka.infrastructure.scheduler.factory import create_scheduler
+from shvatka.tgbot.config.models.bot import BotConfig
 from shvatka.tgbot.config.models.main import TgBotConfig
 from shvatka.tgbot.handlers import setup_handlers
 from shvatka.tgbot.middlewares import setup_middlewares
@@ -46,7 +47,7 @@ class DpBuilder:
         self.pool = pool
         self.file_storage = file_storage
         self.dcf = create_dataclass_factory()
-        self.bot = create_bot(config)
+        self.bot = create_bot(config.bot)
         self.level_test_dao = create_level_test_dao()
         self.user_getter = UserGetter(self.config.tg_client)
         self.redis = create_redis(self.config.redis)
@@ -94,11 +95,11 @@ class DpBuilder:
         return await self.close()
 
 
-def create_bot(config: TgBotConfig) -> Bot:
+def create_bot(config: BotConfig) -> Bot:
     return Bot(
-        token=config.bot.token,
+        token=config.token,
         parse_mode=ParseMode.HTML,
-        session=config.bot.create_session(),
+        session=config.create_session(),
     )
 
 

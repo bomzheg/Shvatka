@@ -38,6 +38,8 @@ openpyxl = "^3.0.10"
 lxml = "^4.9.2"
 matplotlib = "^3.7.1"
 greenlet = "<3.0.0"
+prometheus-client = "^0.19.0"
+dishka = "^0.3.0"
 
 [tool.poetry.group.dev]
 optional = true
@@ -149,6 +151,10 @@ show_error_codes = true
 [[tool.mypy.overrides]]
 module = "tests.*"
 disable_error_code = ["union-attr", "arg-type"]
+
+[[tool.mypy.overrides]]
+module = "shvatka.infrastructure.di.*"
+disable_error_code = ["call-overload"]
 
 [[tool.mypy.overrides]]
 module = "shvatka.tgbot.*"

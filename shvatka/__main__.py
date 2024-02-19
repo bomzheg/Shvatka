@@ -2,8 +2,10 @@ import logging
 from functools import partial
 
 import uvicorn
+from dishka.integrations.fastapi import DishkaApp
 from fastapi import FastAPI
 
+from shvatka.api.dependencies import setup_dishka
 from shvatka.infrastructure.clients.factory import create_file_storage
 from shvatka.tgbot.config.models.bot import WebhookConfig
 from shvatka.tgbot.config.parser.main import load_config as load_bot_config
@@ -13,14 +15,14 @@ from shvatka.api.main_factory import (
     create_app,
 )
 from shvatka.common.config.parser.logging_config import setup_logging
-from shvatka.infrastructure.db.factory import create_redis, create_engine, create_session_maker
+from shvatka.infrastructure.db.factory import create_engine, create_session_maker
 from shvatka.tgbot.main_factory import resolve_update_types, DpBuilder
 from shvatka.tgbot.utils.fastapi_webhook import setup_application, SimpleRequestHandler
 
 logger = logging.getLogger(__name__)
 
 
-def main() -> FastAPI:
+def main() -> DishkaApp:
     paths = get_paths()
 
     setup_logging(paths)
@@ -32,7 +34,7 @@ def main() -> FastAPI:
     engine = create_engine(api_config.db)
     pool = create_session_maker(engine)
     file_storage = create_file_storage(api_config.file_storage_config)
-    app = create_app(pool=pool, redis=create_redis(api_config.redis), config=api_config)
+    app = create_app()
     builder = DpBuilder(bot_config, pool, file_storage)
     setup_application(app, builder.dp)
     webhook_handler = SimpleRequestHandler(
@@ -48,7 +50,7 @@ def main() -> FastAPI:
     setup = partial(on_startup, builder, webhook_config)
     root_app.router.add_event_handler("startup", setup)
     logger.info("app prepared")
-    return root_app
+    return setup_dishka(root_app, "SHVATKA_PATH")
 
 
 async def on_startup(dp_builder: DpBuilder, webhook_config: WebhookConfig):

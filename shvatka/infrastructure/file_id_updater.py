@@ -18,7 +18,7 @@ async def main():
     setup_logging(paths)
     config = load_config(paths)
     file_storage = create_file_storage(config.file_storage_config)
-    bot = create_bot(config)
+    bot = create_bot(config.bot)
     pool = create_pool(config.db)
     level_test_dao = create_level_test_dao()
     try:

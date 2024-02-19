@@ -2,11 +2,11 @@ import pytest
 from dataclass_factory import Factory
 from httpx import AsyncClient
 
-from shvatka.api.dependencies import AuthProvider
 from shvatka.api.models import responses
 from shvatka.core.models import dto
 from shvatka.core.models.enums import GameStatus
 from shvatka.infrastructure.db.dao.holder import HolderDao
+from shvatka.infrastructure.di.auth import AuthProperties
 
 
 @pytest.mark.asyncio
@@ -45,7 +45,7 @@ async def test_game_card(
     finished_game: dto.FullGame,
     dao: HolderDao,
     client: AsyncClient,
-    auth: AuthProvider,
+    auth: AuthProperties,
     user: dto.User,
 ):
     token = auth.create_user_token(user)

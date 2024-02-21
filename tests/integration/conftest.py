@@ -1,6 +1,4 @@
 import logging
-import os
-from typing import Iterable
 
 import pytest
 import pytest_asyncio
@@ -12,10 +10,7 @@ from alembic.config import Config as AlembicConfig
 from dataclass_factory import Factory
 from dishka import make_async_container, AsyncContainer
 from redis.asyncio.client import Redis
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
-from sqlalchemy.orm import sessionmaker, close_all_sessions
-from testcontainers.postgres import PostgresContainer
-from testcontainers.redis import RedisContainer
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from shvatka.api.dependencies import AuthProvider, ApiConfigProvider
 from shvatka.common import Paths
@@ -25,16 +20,21 @@ from shvatka.core.interfaces.scheduler import Scheduler
 from shvatka.core.utils.key_checker_lock import KeyCheckerFactory
 from shvatka.core.views.game import GameLogWriter
 from shvatka.infrastructure.clients.file_gateway import BotFileGateway
-from shvatka.infrastructure.db.config.models.db import RedisConfig, DBConfig
+from shvatka.infrastructure.db.config.models.db import DBConfig
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.infrastructure.db.dao.memory.level_testing import LevelTestingData
-from shvatka.infrastructure.db.factory import create_lock_factory, create_level_test_dao
-from shvatka.infrastructure.di import ConfigProvider, DbProviderD, RedisProvider, \
-    GameProvider, PlayerProvider, TeamProvider
+from shvatka.infrastructure.db.factory import create_lock_factory
+from shvatka.infrastructure.di import (
+    ConfigProvider,
+    DbProviderD,
+    RedisProvider,
+    GameProvider,
+    PlayerProvider,
+    TeamProvider,
+)
 from shvatka.tgbot.config.models.main import TgBotConfig
 from shvatka.tgbot.main_factory import Telegraph
 from shvatka.tgbot.main_factory import (
-    create_redis,
     create_only_dispatcher,
 )
 from shvatka.tgbot.main_factory import setup_handlers
@@ -58,7 +58,7 @@ logger = logging.getLogger(__name__)
 
 
 @pytest_asyncio.fixture(scope="session")
-async def dishka() -> Iterable[AsyncContainer]:
+async def dishka():
     container = make_async_container(
         ConfigProvider("SHVATKA_TEST_PATH"),
         TestDbProvider(),
@@ -81,7 +81,7 @@ async def level_test_dao(dishka: AsyncContainer) -> LevelTestingData:
 
 
 @pytest_asyncio.fixture
-async def dishka_request(dishka: AsyncContainer) -> Iterable[AsyncContainer]:
+async def dishka_request(dishka: AsyncContainer):
     async with dishka() as request_container:
         yield request_container
 
@@ -94,7 +94,7 @@ async def dao(dishka_request: AsyncContainer) -> HolderDao:
 
 
 @pytest_asyncio.fixture
-async def check_dao(dishka: AsyncContainer) -> Iterable[HolderDao]:
+async def check_dao(dishka: AsyncContainer):
     async with dishka() as request_container:
         yield await request_container.get(HolderDao)
 

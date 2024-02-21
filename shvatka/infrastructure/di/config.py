@@ -1,8 +1,5 @@
 from dishka import Provider, provide, Scope
 
-from shvatka.api.config.models.auth import AuthConfig
-from shvatka.api.config.models.main import ApiConfig
-from shvatka.api.config.parser.main import load_config as load_api_config
 from shvatka.common import FileStorageConfig, Paths, Config
 from shvatka.common.config.parser.paths import common_get_paths
 from shvatka.infrastructure.db.config.models.db import RedisConfig, DBConfig

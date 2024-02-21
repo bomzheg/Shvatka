@@ -4,7 +4,7 @@ import uvicorn
 from fastapi import FastAPI
 
 from shvatka.api.main_factory import (
-   create_app_with_dishka,
+    create_app_with_dishka,
 )
 from shvatka.common.config.parser.logging_config import setup_logging
 from shvatka.common.config.parser.paths import common_get_paths

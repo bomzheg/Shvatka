@@ -8,9 +8,13 @@ from fastapi.params import Path
 from shvatka.api.models import responses
 from shvatka.core.interfaces.clients.file_storage import FileGateway
 from shvatka.core.models import dto
-from shvatka.core.services.game import get_authors_games, get_completed_games, get_full_game, get_game
+from shvatka.core.services.game import (
+    get_authors_games,
+    get_completed_games,
+    get_full_game,
+    get_game,
+)
 from shvatka.core.services.scenario.files import get_file_content
-from shvatka.core.utils.exceptions import GameNotFound
 from shvatka.infrastructure.db.dao.holder import HolderDao
 
 

@@ -2,7 +2,7 @@ import pytest
 import pytest_asyncio
 from httpx import AsyncClient
 
-from shvatka.api.dependencies.auth import AuthProperties, AuthProvider
+from shvatka.api.dependencies.auth import AuthProperties
 from shvatka.api.models.auth import Token
 from shvatka.core.models import dto
 from shvatka.core.services.user import upsert_user, set_password

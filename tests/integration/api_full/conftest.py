@@ -63,9 +63,11 @@ async def auth(dishka: AsyncContainer) -> AuthProperties:
 @pytest.mark.anyio
 @pytest_asyncio.fixture(scope="session")
 async def client(app: FastAPI):
-    async with LifespanManager(app):
-        async with AsyncClient(app=app, base_url="http://test") as ac:
-            yield ac
+    async with (
+        LifespanManager(app),
+        AsyncClient(app=app, base_url="http://test") as ac,
+    ):
+        yield ac
 
 
 @pytest_asyncio.fixture

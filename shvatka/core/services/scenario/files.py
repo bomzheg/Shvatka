@@ -45,7 +45,7 @@ async def get_file_contents(
 
 
 async def get_file_content(
-        guid: str, file_gateway: FileGateway, author: dto.Player, game: dto.Game, dao: FileInfoGetter
+    guid: str, file_gateway: FileGateway, author: dto.Player, game: dto.Game, dao: FileInfoGetter
 ) -> BinaryIO:
     meta = await dao.get_by_guid(guid)
     check_file_meta_can_read(author, meta, game)

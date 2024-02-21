@@ -7,7 +7,12 @@ from shvatka.api.dependencies import dao_provider, player_provider, active_game_
 from shvatka.api.models import responses
 from shvatka.core.interfaces.clients.file_storage import FileGateway
 from shvatka.core.models import dto
-from shvatka.core.services.game import get_authors_games, get_completed_games, get_full_game, get_game
+from shvatka.core.services.game import (
+    get_authors_games,
+    get_completed_games,
+    get_full_game,
+    get_game,
+)
 from shvatka.core.services.scenario.files import get_file_content
 from shvatka.infrastructure.db.dao.holder import HolderDao
 
@@ -42,11 +47,11 @@ async def get_game_card(
 
 
 async def get_game_file(
-        dao: HolderDao = Depends(dao_provider),  # type: ignore[assignment]
-        player: dto.Player = Depends(player_provider),  # type: ignore[assignment]
-        id_: int = Path(alias="id"),  # type: ignore[assignment]
-        guid: str = Path(alias="guid"),  # type: ignore[assignment]
-        file_gateway: FileGateway = Depends(),
+    dao: HolderDao = Depends(dao_provider),  # type: ignore[assignment]
+    player: dto.Player = Depends(player_provider),  # type: ignore[assignment]
+    id_: int = Path(alias="id"),  # type: ignore[assignment]
+    guid: str = Path(alias="guid"),  # type: ignore[assignment]
+    file_gateway: FileGateway = Depends(),
 ) -> BinaryIO:
     game = await get_game(id_, dao=dao.game)
     return await get_file_content(guid, file_gateway, player, game, dao.file_info)

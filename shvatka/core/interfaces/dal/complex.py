@@ -14,7 +14,6 @@ from shvatka.core.interfaces.dal.player import TeamPlayersMerger
 from shvatka.core.interfaces.dal.team import ForumTeamMerger, TeamRemover
 from shvatka.core.interfaces.dal.waiver import WaiverMerger, GameWaiversGetter
 from shvatka.core.models import dto
-from shvatka.core.models.dto import scn
 
 
 class TeamMerger(

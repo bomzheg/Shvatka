@@ -159,7 +159,7 @@ async def dp(
         redis=await dishka.get(Redis),
         scheduler=scheduler,
         locker=locker,
-        file_storage=await dishka.get(FileStorage),
+        file_storage=await dishka.get(FileStorage),  # type: ignore[type-abstract]
         level_test_dao=await dishka.get(LevelTestingData),
         telegraph=telegraph,
         bg_manager_factory=bg_factory,
@@ -184,7 +184,8 @@ async def alembic_config(dishka: AsyncContainer, paths: Paths) -> AlembicConfig:
         "script_location",
         str(paths.app_dir.parent / "shvatka" / "infrastructure" / "db" / "migrations"),
     )
-    alembic_cfg.set_main_option("sqlalchemy.url", (await dishka.get(DBConfig)).uri)
+    db_config = await dishka.get(DBConfig)  # type: ignore[type-abstract]
+    alembic_cfg.set_main_option("sqlalchemy.url", db_config.uri)
     return alembic_cfg
 
 
@@ -195,7 +196,7 @@ def upgrade_schema_db(alembic_config: AlembicConfig):
 
 @pytest_asyncio.fixture(scope="session")
 async def file_storage(dishka: AsyncContainer) -> FileStorage:
-    return await dishka.get(FileStorage)
+    return await dishka.get(FileStorage)  # type: ignore[type-abstract]
 
 
 @pytest.fixture

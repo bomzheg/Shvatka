@@ -2,7 +2,7 @@ import pytest
 import pytest_asyncio
 from httpx import AsyncClient
 
-from shvatka.infrastructure.di.auth import AuthProperties, AuthProvider
+from shvatka.api.dependencies.auth import AuthProperties, AuthProvider
 from shvatka.api.models.auth import Token
 from shvatka.core.models import dto
 from shvatka.core.services.user import upsert_user, set_password
@@ -33,7 +33,7 @@ async def test_get_user(client: AsyncClient, user: dto.User):
 
 
 @pytest.mark.asyncio
-async def test_auth(client: AsyncClient, user: dto.User, auth: AuthProvider, dao: HolderDao):
+async def test_auth(client: AsyncClient, user: dto.User, auth: AuthProperties, dao: HolderDao):
     resp = await client.post(
         "/auth/token",
         data={"username": user.username, "password": "12345"},
@@ -41,7 +41,10 @@ async def test_auth(client: AsyncClient, user: dto.User, auth: AuthProvider, dao
     assert resp.is_success
     resp.read()
     access_token = resp.cookies.get("Authorization").removeprefix('"').removesuffix('"')
-    actual_user = await auth.get_current_user(access_token.removeprefix("bearer "), dao)
+    actual_user = await auth.get_current_user(
+        Token(access_token=access_token.removeprefix("bearer "), token_type="bearer"),
+        dao,
+    )
     assert user == actual_user
 
 

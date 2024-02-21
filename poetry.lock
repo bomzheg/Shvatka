@@ -265,6 +265,20 @@ twisted = ["twisted"]
 zookeeper = ["kazoo"]
 
 [[package]]
+name = "asgi-lifespan"
+version = "2.1.0"
+description = "Programmatic startup/shutdown of ASGI apps."
+optional = false
+python-versions = ">=3.7"
+files = [
+    {file = "asgi-lifespan-2.1.0.tar.gz", hash = "sha256:5e2effaf0bfe39829cf2d64e7ecc47c7d86d676a6599f7afba378c31f5e3a308"},
+    {file = "asgi_lifespan-2.1.0-py3-none-any.whl", hash = "sha256:ed840706680e28428c01e14afb3875d7d76d3206f3d5b2f2294e059b5c23804f"},
+]
+
+[package.dependencies]
+sniffio = "*"
+
+[[package]]
 name = "async-timeout"
 version = "4.0.3"
 description = "Timeout context manager for asyncio programs"
@@ -994,13 +1008,13 @@ typed-ast = ">=1.5.4,<2.0.0"
 
 [[package]]
 name = "dishka"
-version = "0.3.0"
+version = "0.4.0"
 description = "Minimal DI framework"
 optional = false
 python-versions = ">=3.10"
 files = [
-    {file = "dishka-0.3.0-py3-none-any.whl", hash = "sha256:5cc88bb30239d7ff5fa88112c331cb693e7df77dae00d289f4e271b8c5e66acb"},
-    {file = "dishka-0.3.0.tar.gz", hash = "sha256:e2e99efeff417382cd3ce65457a195e3d6796ff4c753cd7557c00313a2bb46c1"},
+    {file = "dishka-0.4.0-py3-none-any.whl", hash = "sha256:7745fe70e904794f211d2da401ee0065f1c19e8ffad78cb22d4fe8fefd33ce6d"},
+    {file = "dishka-0.4.0.tar.gz", hash = "sha256:b145b34fe11df9cac261d03afb4558507fde3e31fb7ad48f309e8ee7bdd7eea2"},
 ]
 
 [[package]]
@@ -4013,4 +4027,4 @@ testing = ["coverage (>=5.0.3)", "zope.event", "zope.testing"]
 [metadata]
 lock-version = "2.0"
 python-versions = "~3.11"
-content-hash = "1904ceca9a3af36d738f1ab0ff82fcbbdfdf1c3e3c3edc37c4fe37c1be60b6a3"
+content-hash = "450ddbc4f74c685e6685c2976aca5705d86b0f93af570d0427bdaaa6dab5ba1f"

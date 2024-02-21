@@ -1,4 +1,5 @@
 import asyncio
+import os
 from pathlib import Path
 
 import pytest
@@ -18,6 +19,7 @@ def bot_config(paths: Paths) -> TgBotConfig:
 @pytest.fixture(scope="session")
 def paths():
     paths = Paths(Path(__file__).parent)
+    os.environ["SHVATKA_TEST_PATH"] = str(paths.app_dir)
     setup_logging(paths)
     return paths
 

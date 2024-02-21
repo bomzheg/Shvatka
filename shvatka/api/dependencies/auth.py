@@ -65,6 +65,43 @@ class AuthProperties:
             data={"sub": user.username}, expires_delta=self.access_token_expire
         )
 
+    async def get_current_user(
+        self,
+        token: Token | None,
+        dao: HolderDao,
+    ) -> dto.User:
+        logger.debug("try to check token %s", token)
+        credentials_exception = HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Could not validate credentials",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+        if token is None:
+            logger.warning("no token are present")
+            raise credentials_exception
+        try:
+            payload = jwt.decode(
+                token.access_token,
+                self.secret_key,
+                algorithms=[self.algorythm],
+            )
+            username = typing.cast(str, payload.get("sub"))
+            if username is None:
+                logger.warning("valid jwt contains no username")
+                raise credentials_exception
+        except JWTError as e:
+            logger.info("invalid jwt", exc_info=e)
+            raise credentials_exception from e
+        except Exception as e:
+            logger.warning("some jwt error", exc_info=e)
+            raise
+        try:
+            user = await dao.user.get_by_username(username=username)
+        except NoUsernameFound as e:
+            logger.info("user by username %s not found", username)
+            raise credentials_exception from e
+        return user
+
 
 class AuthProvider(Provider):
     scope = Scope.APP
@@ -86,38 +123,11 @@ class AuthProvider(Provider):
     @provide(scope=Scope.REQUEST)
     async def get_current_user(
         self,
-        token: Token,
+        token: Token | None,
         auth_properties: AuthProperties,
         dao: HolderDao,
     ) -> dto.User:
-        logger.debug("try to check token %s", token)
-        credentials_exception = HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Could not validate credentials",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-        try:
-            payload = jwt.decode(
-                token.access_token,
-                auth_properties.secret_key,
-                algorithms=[auth_properties.algorythm],
-            )
-            username = typing.cast(str, payload.get("sub"))
-            if username is None:
-                logger.warning("valid jwt contains no username")
-                raise credentials_exception
-        except JWTError as e:
-            logger.info("invalid jwt", exc_info=e)
-            raise credentials_exception from e
-        except Exception as e:
-            logger.warning("some jwt error", exc_info=e)
-            raise
-        try:
-            user = await dao.user.get_by_username(username=username)
-        except NoUsernameFound as e:
-            logger.info("user by username %s not found", username)
-            raise credentials_exception from e
-        return user
+        return await auth_properties.get_current_user(token, dao)
 
 
 def check_tg_hash(user: UserTgAuth, bot_token: str):

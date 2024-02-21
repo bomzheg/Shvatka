@@ -10,6 +10,7 @@ from shvatka.core.interfaces.clients.file_storage import FileGateway
 from shvatka.core.models import dto
 from shvatka.core.services.game import get_authors_games, get_completed_games, get_full_game, get_game
 from shvatka.core.services.scenario.files import get_file_content
+from shvatka.core.utils.exceptions import GameNotFound
 from shvatka.infrastructure.db.dao.holder import HolderDao
 
 
@@ -23,7 +24,7 @@ async def get_my_games_list(
 
 @inject
 async def get_active_game(
-    game: Annotated[dto.Game, Depends()],
+    game: Annotated[dto.Game | None, Depends()],
 ) -> responses.Game | None:
     return responses.Game.from_core(game)
 

@@ -6,7 +6,7 @@ from shvatka.api.models import responses
 from shvatka.api.models.auth import Token
 from shvatka.core.models import dto
 from shvatka.infrastructure.db.dao.holder import HolderDao
-from shvatka.infrastructure.di.auth import AuthProperties
+from shvatka.api.dependencies.auth import AuthProperties
 from tests.fixtures.chat_constants import create_gryffindor_dto_chat
 from tests.fixtures.team import create_team_
 from tests.mocks.game_log import GameLogWriterMock

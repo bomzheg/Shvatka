@@ -9,7 +9,7 @@ from fastapi.params import Body, Path
 from shvatka.core.models import dto
 from shvatka.core.services.user import set_password, get_user
 from shvatka.infrastructure.db.dao.holder import HolderDao
-from shvatka.infrastructure.di.auth import AuthProperties
+from shvatka.api.dependencies.auth import AuthProperties
 
 logger = logging.getLogger(__name__)
 

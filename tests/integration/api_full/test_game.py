@@ -6,7 +6,7 @@ from shvatka.api.models import responses
 from shvatka.core.models import dto
 from shvatka.core.models.enums import GameStatus
 from shvatka.infrastructure.db.dao.holder import HolderDao
-from shvatka.infrastructure.di.auth import AuthProperties
+from shvatka.api.dependencies.auth import AuthProperties
 
 
 @pytest.mark.asyncio

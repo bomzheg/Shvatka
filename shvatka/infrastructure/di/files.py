@@ -10,7 +10,9 @@ from shvatka.tgbot.config.models.bot import BotConfig
 
 
 class FileClientProvider(Provider):
-    @provide(scope=Scope.APP)
+    scope = Scope.APP
+
+    @provide
     def get_file_client(self, config: FileStorageConfig) -> FileStorage:
         return create_file_storage(config)
 

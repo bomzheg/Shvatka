@@ -1,4 +1,4 @@
-from typing import Iterable
+from typing import AsyncIterable
 
 from dishka import Provider, Scope, provide
 from redis.asyncio.client import Redis
@@ -18,7 +18,7 @@ class DbProviderD(Provider):
         self.level_test = LevelTestingData()
 
     @provide
-    async def get_engine(self, db_config: DBConfig) -> Iterable[AsyncEngine]:  # type: ignore[misc]
+    async def get_engine(self, db_config: DBConfig) -> AsyncIterable[AsyncEngine]:
         engine = create_engine(db_config)
         yield engine
         await engine.dispose(True)
@@ -28,7 +28,9 @@ class DbProviderD(Provider):
         return create_session_maker(engine)
 
     @provide(scope=Scope.REQUEST)
-    async def get_session(self, pool: async_sessionmaker[AsyncSession]) -> Iterable[AsyncSession]:  # type: ignore[misc]
+    async def get_session(
+        self, pool: async_sessionmaker[AsyncSession]
+    ) -> AsyncIterable[AsyncSession]:
         async with pool() as session:
             yield session
 
@@ -47,7 +49,7 @@ class RedisProvider(Provider):
     scope = Scope.APP
 
     @provide
-    async def get_redis(self, config: RedisConfig) -> Iterable[Redis]:  # type: ignore[misc]
+    async def get_redis(self, config: RedisConfig) -> AsyncIterable[Redis]:
         redis = create_redis(config)
         yield redis
         await redis.close(True)

@@ -6,7 +6,7 @@ from shvatka.api.main_factory import (
     get_paths,
 )
 from shvatka.common.config.parser.logging_config import setup_logging
-from shvatka.infrastructure.di.auth import AuthProperties
+from shvatka.api.dependencies.auth import AuthProperties
 
 logger = logging.getLogger(__name__)
 

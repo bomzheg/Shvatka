@@ -2,6 +2,7 @@ from typing import Annotated
 
 from dishka.integrations.base import Depends
 from dishka.integrations.fastapi import inject
+from fastapi import Depends as fDepends
 from fastapi import APIRouter
 from fastapi.security import OAuth2PasswordRequestForm
 from starlette.responses import HTMLResponse, Response
@@ -10,7 +11,7 @@ from shvatka.api.config.models.auth import AuthConfig
 from shvatka.api.models.auth import UserTgAuth, Token
 from shvatka.core.services.user import upsert_user
 from shvatka.infrastructure.db.dao.holder import HolderDao
-from shvatka.infrastructure.di.auth import AuthProperties, check_tg_hash
+from shvatka.api.dependencies.auth import AuthProperties, check_tg_hash
 
 TG_WIDGET_HTML = """
         <html>
@@ -35,8 +36,8 @@ async def login(
     response: Response,
     auth_properties: Annotated[AuthProperties, Depends()],
     config: Annotated[AuthConfig, Depends()],
-    form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
     dao: Annotated[HolderDao, Depends()],
+    form_data: OAuth2PasswordRequestForm = fDepends(),
 ):
     user = await auth_properties.authenticate_user(form_data.username, form_data.password, dao)
     token = auth_properties.create_user_token(user)

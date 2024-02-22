@@ -16,7 +16,7 @@ class FileClientProvider(Provider):
     def get_file_client(self, config: FileStorageConfig) -> FileStorage:
         return create_file_storage(config)
 
-    @provide
+    @provide(scope=Scope.REQUEST)
     def get_file_gateway(
         self, storage: FileStorage, bot: Bot, dao: HolderDao, bot_config: BotConfig
     ) -> FileGateway:

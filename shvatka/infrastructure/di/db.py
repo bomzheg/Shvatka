@@ -10,7 +10,7 @@ from shvatka.infrastructure.db.dao.memory.level_testing import LevelTestingData
 from shvatka.infrastructure.db.factory import create_engine, create_session_maker, create_redis
 
 
-class DbProviderD(Provider):
+class DbProvider(Provider):
     scope = Scope.APP
 
     def __init__(self):
@@ -50,6 +50,5 @@ class RedisProvider(Provider):
 
     @provide
     async def get_redis(self, config: RedisConfig) -> AsyncIterable[Redis]:
-        redis = create_redis(config)
-        yield redis
-        await redis.close(True)
+        async with create_redis(config) as redis:
+            yield redis

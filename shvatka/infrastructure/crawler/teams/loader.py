@@ -9,7 +9,6 @@ from sqlalchemy.orm import close_all_sessions
 
 from shvatka.api.main_factory import get_paths
 from shvatka.common.config.parser.logging_config import setup_logging
-from shvatka.common.factory import create_dataclass_factory
 from shvatka.core.models import dto, enums
 from shvatka.core.utils import exceptions
 from shvatka.core.utils.datetime_utils import tz_utc

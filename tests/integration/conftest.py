@@ -26,7 +26,7 @@ from shvatka.infrastructure.db.dao.memory.level_testing import LevelTestingData
 from shvatka.infrastructure.db.factory import create_lock_factory
 from shvatka.infrastructure.di import (
     ConfigProvider,
-    DbProviderD,
+    DbProvider,
     RedisProvider,
     GameProvider,
     PlayerProvider,
@@ -34,11 +34,6 @@ from shvatka.infrastructure.di import (
 )
 from shvatka.tgbot.config.models.main import TgBotConfig
 from shvatka.tgbot.main_factory import Telegraph
-from shvatka.tgbot.main_factory import (
-    create_only_dispatcher,
-)
-from shvatka.tgbot.main_factory import setup_handlers
-from shvatka.tgbot.middlewares import setup_middlewares
 from shvatka.tgbot.username_resolver.user_getter import UserGetter
 from shvatka.tgbot.views.hint_factory.hint_parser import HintParser
 from tests.conftest import paths, event_loop, dcf, bot_config  # noqa: F401
@@ -63,7 +58,7 @@ async def dishka():
         ConfigProvider("SHVATKA_TEST_PATH"),
         TestDbProvider(),
         ApiConfigProvider(),
-        DbProviderD(),
+        DbProvider(),
         RedisProvider(),
         AuthProvider(),
         GameProvider(),
@@ -138,33 +133,8 @@ def message_manager():
 
 
 @pytest_asyncio.fixture(scope="session")
-async def dp(
-    user_getter: UserGetter,
-    dcf: Factory,
-    scheduler: Scheduler,
-    locker: KeyCheckerFactory,
-    telegraph: Telegraph,
-    message_manager: MockMessageManager,
-    dishka: AsyncContainer,
-) -> Dispatcher:
-    bot_config = await dishka.get(TgBotConfig)
-    dp = create_only_dispatcher(bot_config, await dishka.get(Redis))
-    bg_factory = setup_handlers(dp, bot_config.bot, message_manager=message_manager)
-    setup_middlewares(
-        dp=dp,
-        pool=await dishka.get(async_sessionmaker[AsyncSession]),
-        config=bot_config,
-        user_getter=user_getter,
-        dcf=dcf,
-        redis=await dishka.get(Redis),
-        scheduler=scheduler,
-        locker=locker,
-        file_storage=await dishka.get(FileStorage),  # type: ignore[type-abstract]
-        level_test_dao=await dishka.get(LevelTestingData),
-        telegraph=telegraph,
-        bg_manager_factory=bg_factory,
-    )
-    return dp
+async def dp(dishka: AsyncContainer) -> Dispatcher:
+    return await dishka.get(Dispatcher)
 
 
 @pytest.fixture(scope="session")

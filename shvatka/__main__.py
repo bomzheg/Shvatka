@@ -15,7 +15,7 @@ from shvatka.api.main_factory import (
 )
 from shvatka.common.config.parser.logging_config import setup_logging
 from shvatka.infrastructure.db.factory import create_engine, create_session_maker
-from shvatka.tgbot.main_factory import resolve_update_types, DpBuilder
+from shvatka.tgbot.main_factory import resolve_update_types
 from shvatka.tgbot.utils.fastapi_webhook import setup_application, SimpleRequestHandler
 
 logger = logging.getLogger(__name__)

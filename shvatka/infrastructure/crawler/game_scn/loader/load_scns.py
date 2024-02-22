@@ -31,7 +31,6 @@ from shvatka.infrastructure.db.dao import TeamDao
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.infrastructure.db.factory import create_pool, create_level_test_dao, create_redis
 from shvatka.tgbot.config.parser.main import load_config
-from shvatka.tgbot.main_factory import create_bot
 
 logger = logging.getLogger(__name__)
 

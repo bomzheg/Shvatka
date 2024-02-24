@@ -26,6 +26,7 @@ async def main():
         await dp.start_polling(bot, allowed_updates=resolve_update_types(dp))
     finally:
         logger.info("stopped")
+        await dishka.close()
 
 
 def run():

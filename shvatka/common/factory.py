@@ -22,6 +22,7 @@ class DCFProvider(Provider):
     @provide
     def create_dataclass_factory(self) -> dataclass_factory.Factory:
         dcf = dataclass_factory.Factory(
-            schemas=schemas, default_schema=Schema(name_style=NameStyle.kebab)
+            schemas=schemas,  # type:ignore[arg-type]
+            default_schema=Schema(name_style=NameStyle.kebab),
         )
         return dcf

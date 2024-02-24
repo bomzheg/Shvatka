@@ -14,8 +14,6 @@ def setup_middlewares(
     bg_manager_factory: BgManagerFactory,
     dishka: AsyncContainer,
 ):
-    dp.update.middleware(
-        InitMiddleware(dishka=dishka, bg_manager_factory=bg_manager_factory)
-    )
+    dp.update.middleware(InitMiddleware(dishka=dishka, bg_manager_factory=bg_manager_factory))
     dp.update.middleware(LoadDataMiddleware())
     dp.message.middleware(FixTargetMiddleware())

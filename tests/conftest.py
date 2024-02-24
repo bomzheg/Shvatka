@@ -3,10 +3,13 @@ import os
 from pathlib import Path
 
 import pytest
+import pytest_asyncio
+from dataclass_factory import Factory
+from dishka import make_async_container
 
 from shvatka.common import Paths
-from shvatka.common import create_dataclass_factory
 from shvatka.common import setup_logging
+from shvatka.common.factory import DCFProvider
 from shvatka.tgbot.config.models.main import TgBotConfig
 from shvatka.tgbot.config.parser.main import load_config
 
@@ -34,6 +37,7 @@ def event_loop():
         return loop
 
 
-@pytest.fixture(scope="session")
-def dcf():
-    return create_dataclass_factory()
+@pytest_asyncio.fixture(scope="session")
+async def dcf():
+    dishka = make_async_container(DCFProvider())
+    return await dishka.get(Factory)

@@ -20,6 +20,12 @@ def create_dishka(paths_env: str) -> AsyncContainer:
 def get_api_providers(paths_env: str) -> list[Provider]:
     return [
         *get_providers(paths_env),
+        *get_api_specific_providers(),
+    ]
+
+
+def get_api_specific_providers() -> list[Provider]:
+    return [
         AuthProvider(),
         ApiConfigProvider(),
     ]

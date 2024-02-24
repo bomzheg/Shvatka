@@ -1,41 +1,30 @@
 import asyncio
+import typing
 
-from sqlalchemy.orm import close_all_sessions
+from dishka import make_async_container
 
 from shvatka.common import setup_logging
-from shvatka.infrastructure.clients.factory import create_file_storage
+from shvatka.common.config.parser.paths import common_get_paths
+from shvatka.core.interfaces.clients.file_storage import FileGateway
 from shvatka.infrastructure.clients.file_gateway import BotFileGateway
 from shvatka.infrastructure.db.dao import FileInfoDao
 from shvatka.infrastructure.db.dao.holder import HolderDao
-from shvatka.infrastructure.db.factory import create_pool, create_level_test_dao, create_redis
-from shvatka.tgbot.config.parser.main import load_config
+from shvatka.infrastructure.di import get_providers
 
 
 async def main():
-    paths = get_paths()
+    paths = common_get_paths("CRAWLER_PATH")
 
     setup_logging(paths)
-    config = load_config(paths)
-    file_storage = create_file_storage(config.file_storage_config)
-    bot = create_bot(config.bot)
-    pool = create_pool(config.db)
-    level_test_dao = create_level_test_dao()
+    dishka = make_async_container(
+        *get_providers("CRAWLER_PATH"),
+    )
     try:
-        async with (
-            pool() as session,
-            create_redis(config.redis) as redis,
-        ):
-            dao = HolderDao(session, redis, level_test_dao)
-            file_gateway = BotFileGateway(
-                bot=bot,
-                file_storage=file_storage,
-                dao=dao.file_info,
-                tech_chat_id=config.bot.log_chat,
-            )
-            await fill_all_file_id(dao.file_info, file_gateway)
+        dao = await dishka.get(HolderDao)
+        file_gateway = await dishka.get(FileGateway)
+        await fill_all_file_id(dao.file_info, typing.cast(BotFileGateway, file_gateway))
     finally:
-        await bot.session.close()
-        close_all_sessions()
+        await dishka.close()
 
 
 async def fill_all_file_id(dao: FileInfoDao, file_gateway: BotFileGateway):

@@ -40,8 +40,8 @@ class InitMiddleware(BaseMiddleware):
         data["main_config"] = await self.dishka.get(TgBotConfig)
         data["user_getter"] = await self.dishka.get(UserGetter)
         data["dcf"] = await self.dishka.get(Factory)
-        data["scheduler"] = await self.dishka.get(Scheduler)
-        data["locker"] = await self.dishka.get(KeyCheckerFactory)
+        data["scheduler"] = await self.dishka.get(Scheduler)  # type: ignore[type-abstract]
+        data["locker"] = await self.dishka.get(KeyCheckerFactory)  # type: ignore[type-abstract]
         data["file_storage"] = file_storage
         data["telegraph"] = await self.dishka.get(Telegraph)
         data["bg_manager_factory"] = self.bg_manager_factory

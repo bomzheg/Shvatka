@@ -72,14 +72,20 @@ class BaseRequestHandler(ABC):
     def verify_secret(self, telegram_secret_token: str, bot: Bot) -> bool:
         pass
 
-    async def _background_feed_update(self, bot: Bot, dispatcher: Dispatcher, update: dict[str, Any]) -> None:
+    async def _background_feed_update(
+        self, bot: Bot, dispatcher: Dispatcher, update: dict[str, Any]
+    ) -> None:
         result = await dispatcher.feed_raw_update(bot=bot, update=update, **self.data)
         if isinstance(result, TelegramMethod):
             await dispatcher.silent_call_request(bot=bot, result=result)
 
-    async def _handle_request_background(self, bot: Bot, dispatcher: Dispatcher, request: Request) -> Response:
+    async def _handle_request_background(
+        self, bot: Bot, dispatcher: Dispatcher, request: Request
+    ) -> Response:
         feed_update_task = asyncio.create_task(
-            self._background_feed_update(bot=bot, dispatcher=dispatcher, update=bot.session.json_loads(request.body))
+            self._background_feed_update(
+                bot=bot, dispatcher=dispatcher, update=bot.session.json_loads(request.body)
+            )
         )
         self._background_feed_update_tasks.add(feed_update_task)
         feed_update_task.add_done_callback(self._background_feed_update_tasks.discard)
@@ -92,20 +98,33 @@ class BaseRequestHandler(ABC):
             # TODO response to webhook
             await dispatcher.silent_call_request(bot, result)
 
-    async def _handle_request(self, bot: Bot, dispatcher: Dispatcher, request: Request) -> Response:
+    async def _handle_request(
+        self, bot: Bot, dispatcher: Dispatcher, request: Request
+    ) -> Response:
         result: TelegramMethod[Any] | None = await dispatcher.feed_webhook_update(
             bot,
             await request.json(),
             **self.data,
         )
-        return Response(content=await self._build_response_writer(bot=bot, dispatcher=dispatcher, result=result))
+        return Response(
+            content=await self._build_response_writer(
+                bot=bot, dispatcher=dispatcher, result=result
+            )
+        )
 
     @inject
-    async def handle(self, request: Request, bot: Annotated[Bot, Depends()], dispatcher: Annotated[Dispatcher, Depends()]) -> Response:
+    async def handle(
+        self,
+        request: Request,
+        bot: Annotated[Bot, Depends()],
+        dispatcher: Annotated[Dispatcher, Depends()],
+    ) -> Response:
         if not self.verify_secret(request.headers.get("X-Telegram-Bot-Api-Secret-Token", ""), bot):
             return Response(content="Unauthorized", status_code=401)
         if self.handle_in_background:
-            return await self._handle_request_background(bot=bot, dispatcher=dispatcher, request=request)
+            return await self._handle_request_background(
+                bot=bot, dispatcher=dispatcher, request=request
+            )
         return await self._handle_request(bot=bot, dispatcher=dispatcher, request=request)
 
     __call__ = handle

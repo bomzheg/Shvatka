@@ -3,10 +3,12 @@ from functools import partial
 
 import uvicorn
 from aiogram import Bot, Dispatcher
-from dishka import AsyncContainer
+from dishka import AsyncContainer, make_async_container
+from dishka.integrations.fastapi import setup_dishka
 from fastapi import FastAPI
 
-from shvatka.api.dependencies import setup_di
+from shvatka.api.dependencies import get_api_specific_providers
+from shvatka.infrastructure.di import get_providers
 from shvatka.tgbot.config.models.bot import WebhookConfig
 from shvatka.tgbot.config.parser.main import load_config as load_bot_config
 from shvatka.api.config.parser.main import load_config as load_api_config
@@ -15,7 +17,10 @@ from shvatka.api.main_factory import (
     create_app,
 )
 from shvatka.common.config.parser.logging_config import setup_logging
-from shvatka.tgbot.main_factory import resolve_update_types, create_dishka
+from shvatka.tgbot.main_factory import (
+    resolve_update_types,
+    get_bot_specific_providers,
+)
 from shvatka.tgbot.utils.fastapi_webhook import setup_application, SimpleRequestHandler
 
 logger = logging.getLogger(__name__)
@@ -32,7 +37,11 @@ def main() -> FastAPI:
         raise EnvironmentError("No webhook configuration provided")
 
     app = create_app()
-    dishka = create_dishka("BOT_PATH")
+    dishka = make_async_container(
+        *get_providers("SHVATKA_PATH"),
+        *get_bot_specific_providers(),
+        *get_api_specific_providers(),
+    )
     setup_application(app, dishka)
     webhook_handler = SimpleRequestHandler(
         handle_in_background=False,
@@ -45,7 +54,7 @@ def main() -> FastAPI:
     setup = partial(on_startup, dishka, webhook_config)
     root_app.router.add_event_handler("startup", setup)
     logger.info("app prepared")
-    setup_di(root_app, "SHVATKA_PATH")
+    setup_dishka(dishka, root_app)
     return root_app
 
 

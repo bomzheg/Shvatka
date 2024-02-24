@@ -7,16 +7,12 @@ from aiogram_dialog.test_tools import MockMessageManager
 from aiogram_tests.mocked_bot import MockedBot
 from alembic.command import upgrade
 from alembic.config import Config as AlembicConfig
-from dataclass_factory import Factory
 from dishka import make_async_container, AsyncContainer
-from redis.asyncio.client import Redis
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
+from telegraph.aio import Telegraph
 
 from shvatka.api.dependencies import AuthProvider, ApiConfigProvider
 from shvatka.common import Paths
-from shvatka.common import create_telegraph
 from shvatka.core.interfaces.clients.file_storage import FileStorage, FileGateway
-from shvatka.core.interfaces.scheduler import Scheduler
 from shvatka.core.utils.key_checker_lock import KeyCheckerFactory
 from shvatka.core.views.game import GameLogWriter
 from shvatka.infrastructure.clients.file_gateway import BotFileGateway
@@ -33,7 +29,6 @@ from shvatka.infrastructure.di import (
     TeamProvider,
 )
 from shvatka.tgbot.config.models.main import TgBotConfig
-from shvatka.tgbot.main_factory import Telegraph
 from shvatka.tgbot.username_resolver.user_getter import UserGetter
 from shvatka.tgbot.views.hint_factory.hint_parser import HintParser
 from tests.conftest import paths, event_loop, dcf, bot_config  # noqa: F401
@@ -122,9 +117,9 @@ def locker() -> KeyCheckerFactory:
     return create_lock_factory()
 
 
-@pytest.fixture(scope="session")
-def telegraph(bot_config: TgBotConfig) -> Telegraph:
-    return create_telegraph(bot_config=bot_config.bot)
+@pytest_asyncio.fixture(scope="session")
+async def telegraph(dishka: AsyncContainer) -> Telegraph:
+    return await dishka.get(Telegraph)
 
 
 @pytest.fixture(scope="session")

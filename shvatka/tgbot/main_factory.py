@@ -6,7 +6,6 @@ from aiogram.fsm.storage.base import BaseStorage, BaseEventIsolation
 from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.fsm.storage.redis import RedisStorage, DefaultKeyBuilder, RedisEventIsolation
 from aiogram_dialog.manager.message_manager import MessageManager
-from dataclass_factory import Factory
 from dishka import AsyncContainer, make_async_container, Provider, Scope, provide
 from redis.asyncio import Redis
 
@@ -36,6 +35,12 @@ def create_dishka(paths_env: str) -> AsyncContainer:
 def get_bot_providers(paths_env: str) -> list[Provider]:
     return [
         *get_providers(paths_env),
+        *get_bot_specific_providers(),
+    ]
+
+
+def get_bot_specific_providers() -> list[Provider]:
+    return [
         DpProvider(),
         DialogManagerProvider(),
         SchedulerProvider(),

@@ -45,7 +45,7 @@ class InitMiddleware(BaseMiddleware):
         data["file_storage"] = file_storage
         data["telegraph"] = await self.dishka.get(Telegraph)
         data["bg_manager_factory"] = self.bg_manager_factory
-        data["game_log"] = await self.dishka.get(GameLogWriter)
+        data["game_log"] = await self.dishka.get(GameLogWriter)  # type: ignore[type-abstract]
         async with self.dishka() as request_dishka:
             data["file_gateway"] = await request_dishka.get(FileGateway)  # type: ignore[type-abstract]
             holder_dao = await request_dishka.get(HolderDao)

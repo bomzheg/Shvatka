@@ -4,8 +4,6 @@ import pytest
 import pytest_asyncio
 from aiogram import Dispatcher, Bot
 from aiogram_dialog.api.protocols import MessageManagerProtocol
-from aiogram_dialog.test_tools import MockMessageManager
-from aiogram_tests.mocked_bot import MockedBot
 from alembic.command import upgrade
 from alembic.config import Config as AlembicConfig
 from dataclass_factory import Factory
@@ -19,20 +17,18 @@ from shvatka.core.interfaces.clients.file_storage import FileStorage, FileGatewa
 from shvatka.core.interfaces.scheduler import Scheduler
 from shvatka.core.utils.key_checker_lock import KeyCheckerFactory
 from shvatka.core.views.game import GameLogWriter
-from shvatka.infrastructure.clients.file_gateway import BotFileGateway
 from shvatka.infrastructure.db.config.models.db import DBConfig
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.infrastructure.db.dao.memory.level_testing import LevelTestingData
-from shvatka.infrastructure.db.factory import create_lock_factory
 from shvatka.infrastructure.di import (
     ConfigProvider,
     DbProvider,
     RedisProvider,
     GameProvider,
     PlayerProvider,
-    TeamProvider, FileClientProvider,
+    TeamProvider,
+    FileClientProvider,
 )
-from shvatka.tgbot.config.models.main import TgBotConfig
 from shvatka.tgbot.main_factory import DpProvider, LockProvider
 from shvatka.tgbot.username_resolver.user_getter import UserGetter
 from shvatka.tgbot.views.hint_factory.hint_parser import HintParser
@@ -132,12 +128,12 @@ async def clear_data(dao: HolderDao):
 
 @pytest_asyncio.fixture(scope="session")
 async def scheduler(dishka: AsyncContainer) -> Scheduler:
-    return await dishka.get(Scheduler)
+    return await dishka.get(Scheduler)  # type: ignore[type-abstract]
 
 
 @pytest_asyncio.fixture(scope="session")
 async def locker(dishka: AsyncContainer) -> KeyCheckerFactory:
-    return await dishka.get(KeyCheckerFactory)
+    return await dishka.get(KeyCheckerFactory)  # type: ignore[type-abstract]
 
 
 @pytest_asyncio.fixture(scope="session")
@@ -147,7 +143,7 @@ async def telegraph(dishka: AsyncContainer) -> Telegraph:
 
 @pytest_asyncio.fixture(scope="session")
 async def message_manager(dishka: AsyncContainer) -> MessageManagerProtocol:
-    return await dishka.get(MessageManagerProtocol)
+    return await dishka.get(MessageManagerProtocol)  # type: ignore[type-abstract]
 
 
 @pytest_asyncio.fixture(scope="session")
@@ -198,12 +194,12 @@ def hint_parser(
 
 @pytest_asyncio.fixture
 async def file_gateway(dishka_request: AsyncContainer) -> FileGateway:
-    return await dishka_request.get(FileGateway)
+    return await dishka_request.get(FileGateway)  # type: ignore[type-abstract]
 
 
 @pytest_asyncio.fixture
 async def game_log(dishka: AsyncContainer) -> GameLogWriter:
-    return await dishka.get(GameLogWriter)
+    return await dishka.get(GameLogWriter)  # type: ignore[type-abstract]
 
 
 @pytest.fixture(autouse=True)

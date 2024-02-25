@@ -60,7 +60,7 @@ class DialogManagerProvider(Provider):
 
     @provide
     def get_manager(self) -> MessageManagerProtocol:
-        return MessageManagerProtocol()
+        return MessageManager()
 
 
 class LockProvider(Provider):

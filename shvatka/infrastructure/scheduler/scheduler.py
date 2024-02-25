@@ -1,20 +1,16 @@
 import logging
 from datetime import datetime
 
-from aiogram import Bot
 from apscheduler.executors.asyncio import AsyncIOExecutor
 from apscheduler.jobstores.base import JobLookupError
 from apscheduler.jobstores.redis import RedisJobStore
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from redis.asyncio import Redis
-from sqlalchemy.ext.asyncio import async_sessionmaker, AsyncSession
+from dishka import AsyncContainer
 
-from shvatka.core.interfaces.clients.file_storage import FileStorage
 from shvatka.core.interfaces.scheduler import Scheduler, LevelTestScheduler
 from shvatka.core.models import dto
 from shvatka.core.utils.datetime_utils import tz_utc
 from shvatka.infrastructure.db.config.models.db import RedisConfig
-from shvatka.infrastructure.db.dao.memory.level_testing import LevelTestingData
 from shvatka.infrastructure.scheduler.context import ScheduledContextHolder
 from shvatka.infrastructure.scheduler.wrappers import (
     prepare_game_wrapper,
@@ -27,23 +23,8 @@ logger = logging.getLogger(__name__)
 
 
 class ApScheduler(Scheduler, LevelTestScheduler):
-    def __init__(
-        self,
-        redis_config: RedisConfig,
-        pool: async_sessionmaker[AsyncSession],
-        redis: Redis,
-        file_storage: FileStorage,
-        level_test_dao: LevelTestingData,
-        bot: Bot,
-        game_log_chat: int,
-    ) -> None:
-        ScheduledContextHolder.pool = pool
-        ScheduledContextHolder.redis = redis
-        ScheduledContextHolder.bot = bot
-        ScheduledContextHolder.scheduler = self
-        ScheduledContextHolder.game_log_chat = game_log_chat
-        ScheduledContextHolder.file_storage = file_storage
-        ScheduledContextHolder.level_test_dao = level_test_dao
+    def __init__(self, dishka: AsyncContainer, redis_config: RedisConfig) -> None:
+        ScheduledContextHolder.dishka = dishka
         self.job_store = RedisJobStore(
             jobs_key="SH.jobs",
             run_times_key="SH.run_times",

@@ -1,16 +1,18 @@
 import logging
 from typing import AsyncIterable
 
-from aiogram import Dispatcher
+from aiogram import Dispatcher, Bot
 from aiogram.fsm.storage.base import BaseStorage, BaseEventIsolation
 from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.fsm.storage.redis import RedisStorage, DefaultKeyBuilder, RedisEventIsolation
+from aiogram_dialog.api.protocols import MessageManagerProtocol
 from aiogram_dialog.manager.message_manager import MessageManager
 from dishka import AsyncContainer, make_async_container, Provider, Scope, provide
 from redis.asyncio import Redis
 
 from shvatka.common.factory import TelegraphProvider, DCFProvider
 from shvatka.core.utils.key_checker_lock import KeyCheckerFactory
+from shvatka.core.views.game import GameLogWriter
 from shvatka.infrastructure.db.config.models.storage import StorageConfig, StorageType
 from shvatka.infrastructure.db.factory import (
     create_redis,
@@ -23,6 +25,7 @@ from shvatka.tgbot.handlers import setup_handlers
 from shvatka.tgbot.middlewares import setup_middlewares
 from shvatka.tgbot.username_resolver.user_getter import UserGetter
 from shvatka.tgbot.utils.router import print_router_tree
+from shvatka.tgbot.views.game import GameBotLog
 
 logger = logging.getLogger(__name__)
 
@@ -46,6 +49,9 @@ def get_bot_specific_providers() -> list[Provider]:
         SchedulerProvider(),
         TelegraphProvider(),
         DCFProvider(),
+        GameLogProvider(),
+        UserGetterProvider(),
+        LockProvider(),
     ]
 
 
@@ -53,21 +59,20 @@ class DialogManagerProvider(Provider):
     scope = Scope.APP
 
     @provide
-    def get_manager(self) -> MessageManager:
-        return MessageManager()
+    def get_manager(self) -> MessageManagerProtocol:
+        return MessageManagerProtocol()
 
 
-class DpProvider(Provider):
+class LockProvider(Provider):
     scope = Scope.APP
 
     @provide
     def get_lock_factory(self) -> KeyCheckerFactory:
         return create_lock_factory()
 
-    @provide
-    async def get_user_getter(self, tg_client_config: TgClientConfig) -> AsyncIterable[UserGetter]:
-        async with UserGetter(tg_client_config) as user_getter:
-            yield user_getter
+
+class DpProvider(Provider):
+    scope = Scope.APP
 
     @provide
     def create_dispatcher(
@@ -76,7 +81,7 @@ class DpProvider(Provider):
         event_isolation: BaseEventIsolation,
         bot_config: BotConfig,
         storage: BaseStorage,
-        message_manager: MessageManager,
+        message_manager: MessageManagerProtocol,
     ) -> Dispatcher:
         dp = Dispatcher(
             storage=storage,
@@ -109,6 +114,23 @@ class DpProvider(Provider):
     @provide
     def get_event_isolation(self, redis: Redis) -> BaseEventIsolation:
         return RedisEventIsolation(redis)
+
+
+class UserGetterProvider(Provider):
+    scope = Scope.APP
+
+    @provide
+    async def get_user_getter(self, tg_client_config: TgClientConfig) -> AsyncIterable[UserGetter]:
+        async with UserGetter(tg_client_config) as user_getter:
+            yield user_getter
+
+
+class GameLogProvider(Provider):
+    scope = Scope.APP
+
+    @provide
+    def get_game_log(self, bot: Bot, config: BotConfig) -> GameLogWriter:
+        return GameBotLog(bot=bot, log_chat_id=config.game_log_chat)
 
 
 def resolve_update_types(dp: Dispatcher) -> list[str]:

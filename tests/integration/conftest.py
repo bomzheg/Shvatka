@@ -3,16 +3,20 @@ import logging
 import pytest
 import pytest_asyncio
 from aiogram import Dispatcher, Bot
+from aiogram_dialog.api.protocols import MessageManagerProtocol
 from aiogram_dialog.test_tools import MockMessageManager
 from aiogram_tests.mocked_bot import MockedBot
 from alembic.command import upgrade
 from alembic.config import Config as AlembicConfig
-from dishka import make_async_container, AsyncContainer
+from dataclass_factory import Factory
+from dishka import make_async_container, AsyncContainer, Provider, Scope
 from telegraph.aio import Telegraph
 
 from shvatka.api.dependencies import AuthProvider, ApiConfigProvider
 from shvatka.common import Paths
+from shvatka.common.factory import DCFProvider, TelegraphProvider
 from shvatka.core.interfaces.clients.file_storage import FileStorage, FileGateway
+from shvatka.core.interfaces.scheduler import Scheduler
 from shvatka.core.utils.key_checker_lock import KeyCheckerFactory
 from shvatka.core.views.game import GameLogWriter
 from shvatka.infrastructure.clients.file_gateway import BotFileGateway
@@ -26,12 +30,13 @@ from shvatka.infrastructure.di import (
     RedisProvider,
     GameProvider,
     PlayerProvider,
-    TeamProvider,
+    TeamProvider, FileClientProvider,
 )
 from shvatka.tgbot.config.models.main import TgBotConfig
+from shvatka.tgbot.main_factory import DpProvider, LockProvider
 from shvatka.tgbot.username_resolver.user_getter import UserGetter
 from shvatka.tgbot.views.hint_factory.hint_parser import HintParser
-from tests.conftest import paths, event_loop, dcf, bot_config  # noqa: F401
+from tests.conftest import paths, event_loop, bot_config  # noqa: F401
 from tests.fixtures.conftest import fixtures_resource_path  # noqa: F401
 from tests.fixtures.db_provider import TestDbProvider
 from tests.fixtures.file_storage import MemoryFileStorageProvider
@@ -39,6 +44,7 @@ from tests.fixtures.game_fixtures import game, finished_game  # noqa: F401
 from tests.fixtures.player import harry, hermione, ron, author, draco  # noqa: F401
 from tests.fixtures.scn_fixtures import simple_scn, complex_scn, three_lvl_scn  # noqa: F401
 from tests.fixtures.team import gryffindor, slytherin  # noqa: F401
+from tests.mocks.bot import MockMessageManagerProvider, MockBotProvider
 from tests.mocks.file_storage import MemoryFileStorage
 from tests.mocks.game_log import GameLogWriterMock
 from tests.mocks.scheduler_mock import SchedulerMock
@@ -49,20 +55,37 @@ logger = logging.getLogger(__name__)
 
 @pytest_asyncio.fixture(scope="session")
 async def dishka():
+    mock_provider = Provider(scope=Scope.APP)
+    mock_provider.provide(GameLogWriterMock, provides=GameLogWriter)
+    mock_provider.provide(UserGetterMock, provides=UserGetter)
+    mock_provider.provide(SchedulerMock, provides=Scheduler)
     container = make_async_container(
         ConfigProvider("SHVATKA_TEST_PATH"),
         TestDbProvider(),
         ApiConfigProvider(),
         DbProvider(),
         RedisProvider(),
+        FileClientProvider(),
         AuthProvider(),
         GameProvider(),
         PlayerProvider(),
         MemoryFileStorageProvider(),
         TeamProvider(),
+        DpProvider(),
+        MockBotProvider(),
+        MockMessageManagerProvider(),
+        LockProvider(),
+        DCFProvider(),
+        TelegraphProvider(),
+        mock_provider,
     )
     yield container
     await container.close()
+
+
+@pytest_asyncio.fixture(scope="session")
+async def dcf(dishka: AsyncContainer) -> Factory:
+    return await dishka.get(Factory)
 
 
 @pytest_asyncio.fixture(scope="session")
@@ -107,14 +130,14 @@ async def clear_data(dao: HolderDao):
     await dao.commit()
 
 
-@pytest.fixture(scope="session")
-def scheduler():
-    return SchedulerMock()
+@pytest_asyncio.fixture(scope="session")
+async def scheduler(dishka: AsyncContainer) -> Scheduler:
+    return await dishka.get(Scheduler)
 
 
-@pytest.fixture(scope="session")
-def locker() -> KeyCheckerFactory:
-    return create_lock_factory()
+@pytest_asyncio.fixture(scope="session")
+async def locker(dishka: AsyncContainer) -> KeyCheckerFactory:
+    return await dishka.get(KeyCheckerFactory)
 
 
 @pytest_asyncio.fixture(scope="session")
@@ -122,9 +145,9 @@ async def telegraph(dishka: AsyncContainer) -> Telegraph:
     return await dishka.get(Telegraph)
 
 
-@pytest.fixture(scope="session")
-def message_manager():
-    return MockMessageManager()
+@pytest_asyncio.fixture(scope="session")
+async def message_manager(dishka: AsyncContainer) -> MessageManagerProtocol:
+    return await dishka.get(MessageManagerProtocol)
 
 
 @pytest_asyncio.fixture(scope="session")
@@ -132,14 +155,14 @@ async def dp(dishka: AsyncContainer) -> Dispatcher:
     return await dishka.get(Dispatcher)
 
 
-@pytest.fixture(scope="session")
-def user_getter() -> UserGetter:
-    return UserGetterMock()
+@pytest_asyncio.fixture(scope="session")
+async def user_getter(dishka: AsyncContainer) -> UserGetter:
+    return await dishka.get(UserGetter)
 
 
 @pytest_asyncio.fixture
 async def bot(dishka: AsyncContainer) -> Bot:
-    return MockedBot(token=(await dishka.get(TgBotConfig)).bot.token)
+    return await dishka.get(Bot)
 
 
 @pytest_asyncio.fixture(scope="session")
@@ -173,21 +196,14 @@ def hint_parser(
     return HintParser(dao=dao.file_info, file_storage=file_storage, bot=bot)
 
 
-@pytest.fixture
-def file_gateway(
-    file_storage: FileStorage, bot: Bot, dao: HolderDao, bot_config: TgBotConfig
-) -> FileGateway:
-    return BotFileGateway(
-        bot=bot,
-        file_storage=file_storage,
-        dao=dao.file_info,
-        tech_chat_id=bot_config.bot.log_chat,
-    )
+@pytest_asyncio.fixture
+async def file_gateway(dishka_request: AsyncContainer) -> FileGateway:
+    return await dishka_request.get(FileGateway)
 
 
-@pytest.fixture
-def game_log() -> GameLogWriter:
-    return GameLogWriterMock()
+@pytest_asyncio.fixture
+async def game_log(dishka: AsyncContainer) -> GameLogWriter:
+    return await dishka.get(GameLogWriter)
 
 
 @pytest.fixture(autouse=True)

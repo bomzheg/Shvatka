@@ -9,13 +9,13 @@ from dishka import AsyncContainer
 from shvatka.core.interfaces.clients.file_storage import FileStorage, FileGateway
 from shvatka.core.interfaces.scheduler import Scheduler
 from shvatka.core.utils.key_checker_lock import KeyCheckerFactory
+from shvatka.core.views.game import GameLogWriter
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.infrastructure.picture.results_painter import ResultsPainter
 from shvatka.tgbot.config.models.bot import BotConfig
 from shvatka.tgbot.config.models.main import TgBotConfig
 from shvatka.tgbot.username_resolver.user_getter import UserGetter
 from shvatka.tgbot.utils.data import MiddlewareData
-from shvatka.tgbot.views.game import GameBotLog
 from shvatka.tgbot.views.hint_factory.hint_parser import HintParser
 from shvatka.tgbot.views.telegraph import Telegraph
 
@@ -45,7 +45,7 @@ class InitMiddleware(BaseMiddleware):
         data["file_storage"] = file_storage
         data["telegraph"] = await self.dishka.get(Telegraph)
         data["bg_manager_factory"] = self.bg_manager_factory
-        data["game_log"] = GameBotLog(bot=data["bot"], log_chat_id=data["config"].game_log_chat)
+        data["game_log"] = await self.dishka.get(GameLogWriter)
         async with self.dishka() as request_dishka:
             data["file_gateway"] = await request_dishka.get(FileGateway)  # type: ignore[type-abstract]
             holder_dao = await request_dishka.get(HolderDao)

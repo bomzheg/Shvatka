@@ -50,7 +50,7 @@ async def handle(error: ErrorEvent, log_chat_id: int, bot: Bot):
     logger.exception(
         "Cause unexpected exception %s, by processing %s",
         error.exception.__class__.__name__,
-        error.update.dict(exclude_none=True),
+        error.update.model_dump(exclude_none=True),
         exc_info=error.exception,
     )
     if not log_chat_id:

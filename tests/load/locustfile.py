@@ -9,7 +9,7 @@ class PlayerUser(HttpUser):
     def me(self) -> None:
         self.client.get(
             "/users/me",
-            headers={"Authorization": "Bearer " + self.token},
+            cookies={"Authorization": self.token},
         )
 
     @task
@@ -18,7 +18,7 @@ class PlayerUser(HttpUser):
 
     def on_start(self) -> None:
         with self.client.post(
-            "/auth/token", data={"username": "bomzheg", "password": "12345"}
+            "/auth/token", data={"username": "bomzheg", "password": "1234"}
         ) as resp:
             assert resp.ok
-            self.token = resp.json()["access_token"]
+            self.token = resp.cookies["Authorization"]

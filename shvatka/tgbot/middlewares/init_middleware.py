@@ -4,19 +4,18 @@ from aiogram import BaseMiddleware
 from aiogram.types import TelegramObject
 from aiogram_dialog.api.protocols import BgManagerFactory
 from dataclass_factory import Factory
-from redis.asyncio.client import Redis
-from sqlalchemy.ext.asyncio import async_sessionmaker, AsyncSession
+from dishka import AsyncContainer
 
-from shvatka.core.interfaces.clients.file_storage import FileStorage
+from shvatka.core.interfaces.clients.file_storage import FileStorage, FileGateway
 from shvatka.core.interfaces.scheduler import Scheduler
 from shvatka.core.utils.key_checker_lock import KeyCheckerFactory
-from shvatka.infrastructure.clients.file_gateway import BotFileGateway
+from shvatka.core.views.game import GameLogWriter
 from shvatka.infrastructure.db.dao.holder import HolderDao
-from shvatka.infrastructure.db.dao.memory.level_testing import LevelTestingData
 from shvatka.infrastructure.picture.results_painter import ResultsPainter
+from shvatka.tgbot.config.models.bot import BotConfig
+from shvatka.tgbot.config.models.main import TgBotConfig
 from shvatka.tgbot.username_resolver.user_getter import UserGetter
 from shvatka.tgbot.utils.data import MiddlewareData
-from shvatka.tgbot.views.game import GameBotLog
 from shvatka.tgbot.views.hint_factory.hint_parser import HintParser
 from shvatka.tgbot.views.telegraph import Telegraph
 
@@ -24,26 +23,10 @@ from shvatka.tgbot.views.telegraph import Telegraph
 class InitMiddleware(BaseMiddleware):
     def __init__(
         self,
-        pool: async_sessionmaker[AsyncSession],
-        user_getter: UserGetter,
-        dcf: Factory,
-        redis: Redis,
-        scheduler: Scheduler,
-        locker: KeyCheckerFactory,
-        file_storage: FileStorage,
-        level_test_dao: LevelTestingData,
-        telegraph: Telegraph,
+        dishka: AsyncContainer,
         bg_manager_factory: BgManagerFactory,
     ) -> None:
-        self.pool = pool
-        self.user_getter = user_getter
-        self.dcf = dcf
-        self.redis = redis
-        self.scheduler = scheduler
-        self.locker = locker
-        self.file_storage = file_storage
-        self.level_test_dao = level_test_dao
-        self.telegraph = telegraph
+        self.dishka = dishka
         self.bg_manager_factory = bg_manager_factory
 
     async def __call__(  # type: ignore[override]
@@ -52,27 +35,25 @@ class InitMiddleware(BaseMiddleware):
         event: TelegramObject,
         data: MiddlewareData,
     ) -> Any:
-        data["user_getter"] = self.user_getter
-        data["dcf"] = self.dcf
-        data["scheduler"] = self.scheduler
-        data["locker"] = self.locker
-        data["file_storage"] = self.file_storage
-        data["telegraph"] = self.telegraph
+        file_storage = await self.dishka.get(FileStorage)  # type: ignore[type-abstract]
+        data["config"] = await self.dishka.get(BotConfig)
+        data["main_config"] = await self.dishka.get(TgBotConfig)
+        data["user_getter"] = await self.dishka.get(UserGetter)
+        data["dcf"] = await self.dishka.get(Factory)
+        data["scheduler"] = await self.dishka.get(Scheduler)  # type: ignore[type-abstract]
+        data["locker"] = await self.dishka.get(KeyCheckerFactory)  # type: ignore[type-abstract]
+        data["file_storage"] = file_storage
+        data["telegraph"] = await self.dishka.get(Telegraph)
         data["bg_manager_factory"] = self.bg_manager_factory
-        data["game_log"] = GameBotLog(bot=data["bot"], log_chat_id=data["config"].game_log_chat)
-        async with self.pool() as session:
-            holder_dao = HolderDao(session, self.redis, self.level_test_dao)
+        data["game_log"] = await self.dishka.get(GameLogWriter)  # type: ignore[type-abstract]
+        async with self.dishka() as request_dishka:
+            data["file_gateway"] = await request_dishka.get(FileGateway)  # type: ignore[type-abstract]
+            holder_dao = await request_dishka.get(HolderDao)
             data["dao"] = holder_dao
             data["hint_parser"] = HintParser(
                 dao=holder_dao.file_info,
-                file_storage=self.file_storage,
+                file_storage=file_storage,
                 bot=data["bot"],
-            )
-            data["file_gateway"] = BotFileGateway(
-                bot=data["bot"],
-                file_storage=self.file_storage,
-                dao=data["dao"].file_info,
-                tech_chat_id=data["config"].log_chat,
             )
             data["results_painter"] = ResultsPainter(
                 data["bot"],
@@ -80,5 +61,4 @@ class InitMiddleware(BaseMiddleware):
                 data["config"].log_chat,
             )
             result = await handler(event, data)
-            del data["dao"]
         return result

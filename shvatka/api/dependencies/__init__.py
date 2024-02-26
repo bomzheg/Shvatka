@@ -1,26 +1,31 @@
+from dishka import Provider, make_async_container, AsyncContainer
+from dishka.integrations.fastapi import setup_dishka
 from fastapi import FastAPI
-from redis.asyncio.client import Redis
-from sqlalchemy.ext.asyncio import async_sessionmaker, AsyncSession
 
-from shvatka.api.config.models.main import ApiConfig
-from shvatka.api.dependencies.auth import get_current_user, AuthProvider
-from shvatka.api.dependencies.db import DbProvider, dao_provider
-from shvatka.api.dependencies.game import active_game_provider, db_game_provider
-from shvatka.api.dependencies.markers import get_config
-from shvatka.api.dependencies.player import player_provider, db_player_provider
-from shvatka.api.dependencies.team import team_provider, db_team_provider
+from shvatka.api.dependencies.auth import AuthProvider
+from shvatka.api.dependencies.config import ApiConfigProvider
+from shvatka.infrastructure.di import get_providers
 
 
-def setup(app: FastAPI, pool: async_sessionmaker[AsyncSession], redis: Redis, config: ApiConfig):
-    db_provider = DbProvider(pool=pool, redis=redis)
+def setup_di(app: FastAPI, paths_env: str):
+    container = create_dishka(paths_env)
+    setup_dishka(container, app)
 
-    auth_provider = AuthProvider(config.auth)
-    app.include_router(auth_provider.router)
 
-    app.dependency_overrides[get_current_user] = auth_provider.get_current_user
-    app.dependency_overrides[dao_provider] = db_provider.dao
-    app.dependency_overrides[AuthProvider] = lambda: auth_provider
-    app.dependency_overrides[player_provider] = db_player_provider
-    app.dependency_overrides[team_provider] = db_team_provider
-    app.dependency_overrides[active_game_provider] = db_game_provider
-    app.dependency_overrides[get_config] = lambda: config
+def create_dishka(paths_env: str) -> AsyncContainer:
+    container = make_async_container(*get_api_providers(paths_env))
+    return container
+
+
+def get_api_providers(paths_env: str) -> list[Provider]:
+    return [
+        *get_providers(paths_env),
+        *get_api_specific_providers(),
+    ]
+
+
+def get_api_specific_providers() -> list[Provider]:
+    return [
+        AuthProvider(),
+        ApiConfigProvider(),
+    ]

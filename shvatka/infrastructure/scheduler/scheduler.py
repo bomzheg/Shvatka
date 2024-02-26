@@ -1,49 +1,24 @@
 import logging
 from datetime import datetime
 
-from aiogram import Bot
 from apscheduler.executors.asyncio import AsyncIOExecutor
 from apscheduler.jobstores.base import JobLookupError
 from apscheduler.jobstores.redis import RedisJobStore
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from redis.asyncio import Redis
-from sqlalchemy.ext.asyncio import async_sessionmaker, AsyncSession
+from dishka import AsyncContainer
 
-from shvatka.core.interfaces.clients.file_storage import FileStorage
 from shvatka.core.interfaces.scheduler import Scheduler, LevelTestScheduler
 from shvatka.core.models import dto
 from shvatka.core.utils.datetime_utils import tz_utc
 from shvatka.infrastructure.db.config.models.db import RedisConfig
-from shvatka.infrastructure.db.dao.memory.level_testing import LevelTestingData
 from shvatka.infrastructure.scheduler.context import ScheduledContextHolder
-from shvatka.infrastructure.scheduler.wrappers import (
-    prepare_game_wrapper,
-    start_game_wrapper,
-    send_hint_wrapper,
-    send_hint_for_testing_wrapper,
-)
 
 logger = logging.getLogger(__name__)
 
 
 class ApScheduler(Scheduler, LevelTestScheduler):
-    def __init__(
-        self,
-        redis_config: RedisConfig,
-        pool: async_sessionmaker[AsyncSession],
-        redis: Redis,
-        file_storage: FileStorage,
-        level_test_dao: LevelTestingData,
-        bot: Bot,
-        game_log_chat: int,
-    ) -> None:
-        ScheduledContextHolder.pool = pool
-        ScheduledContextHolder.redis = redis
-        ScheduledContextHolder.bot = bot
-        ScheduledContextHolder.scheduler = self
-        ScheduledContextHolder.game_log_chat = game_log_chat
-        ScheduledContextHolder.file_storage = file_storage
-        ScheduledContextHolder.level_test_dao = level_test_dao
+    def __init__(self, dishka: AsyncContainer, redis_config: RedisConfig) -> None:
+        ScheduledContextHolder.dishka = dishka
         self.job_store = RedisJobStore(
             jobs_key="SH.jobs",
             run_times_key="SH.run_times",
@@ -66,7 +41,7 @@ class ApScheduler(Scheduler, LevelTestScheduler):
 
     async def plain_prepare(self, game: dto.Game):
         self.scheduler.add_job(
-            func=prepare_game_wrapper,
+            func="shvatka.infrastructure.scheduler.wrappers:prepare_game_wrapper",
             kwargs={"game_id": game.id, "author_id": game.author.id},
             trigger="date",
             run_date=game.prepared_at.astimezone(tz=tz_utc),
@@ -77,7 +52,7 @@ class ApScheduler(Scheduler, LevelTestScheduler):
     async def plain_start(self, game: dto.Game):
         assert game.start_at
         self.scheduler.add_job(
-            func=start_game_wrapper,
+            func="shvatka.infrastructure.scheduler.wrappers:start_game_wrapper",
             kwargs={"game_id": game.id, "author_id": game.author.id},
             trigger="date",
             run_date=game.start_at.astimezone(tz=tz_utc),
@@ -110,7 +85,7 @@ class ApScheduler(Scheduler, LevelTestScheduler):
         run_at: datetime,
     ):
         self.scheduler.add_job(
-            func=send_hint_wrapper,
+            func="shvatka.infrastructure.scheduler.wrappers:send_hint_wrapper",
             kwargs={"level_id": level.db_id, "team_id": team.id, "hint_number": hint_number},
             trigger="date",
             run_date=run_at,
@@ -124,7 +99,7 @@ class ApScheduler(Scheduler, LevelTestScheduler):
         run_at: datetime,
     ):
         self.scheduler.add_job(
-            func=send_hint_for_testing_wrapper,
+            func="shvatka.infrastructure.scheduler.wrappers:send_hint_for_testing_wrapper",
             kwargs={
                 "level_id": suite.level.db_id,
                 "game_id": suite.level.game_id,

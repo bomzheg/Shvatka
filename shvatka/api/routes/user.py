@@ -1,32 +1,38 @@
 import logging
+from typing import Annotated
 
-from fastapi import Depends, APIRouter, HTTPException
+from dishka.integrations.base import Depends
+from dishka.integrations.fastapi import inject
+from fastapi import APIRouter, HTTPException
 from fastapi.params import Body, Path
 
-from shvatka.api.dependencies import get_current_user, AuthProvider, dao_provider
 from shvatka.core.models import dto
 from shvatka.core.services.user import set_password, get_user
 from shvatka.infrastructure.db.dao.holder import HolderDao
+from shvatka.api.dependencies.auth import AuthProperties
 
 logger = logging.getLogger(__name__)
 
 
-async def read_users_me(current_user: dto.User = Depends(get_current_user)) -> dto.User:
+@inject
+async def read_users_me(current_user: Annotated[dto.User, Depends()]) -> dto.User:
     return current_user
 
 
+@inject
 async def read_user(
+    dao: Annotated[HolderDao, Depends()],
     id_: int = Path(alias="id"),  # type: ignore[assignment]
-    dao: HolderDao = Depends(dao_provider),
 ) -> dto.User:
     return await get_user(id_, dao.user)
 
 
+@inject
 async def set_password_route(
+    auth: Annotated[AuthProperties, Depends()],
+    user: Annotated[dto.User, Depends()],
+    dao: Annotated[HolderDao, Depends()],
     password: str = Body(),  # type: ignore[assignment]
-    auth: AuthProvider = Depends(),
-    user: dto.User = Depends(get_current_user),
-    dao: HolderDao = Depends(dao_provider),
 ):
     hashed_password = auth.get_password_hash(password)
     await set_password(user, hashed_password, dao.user)

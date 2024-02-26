@@ -6,10 +6,11 @@ from pathlib import Path
 from typing import BinaryIO, Any, Callable, Coroutine
 from zipfile import Path as ZipPath
 
-from dataclass_factory import Factory, Schema, NameStyle
-from sqlalchemy.orm import close_all_sessions
+from dataclass_factory import Factory
+from dishka import make_async_container
 
 from shvatka.common.config.parser.logging_config import setup_logging
+from shvatka.common.config.parser.paths import common_get_paths
 from shvatka.core.interfaces.clients.file_storage import FileGateway
 from shvatka.core.models import dto
 from shvatka.core.models import enums
@@ -24,52 +25,36 @@ from shvatka.core.services.game import upsert_game
 from shvatka.core.services.scenario.scn_zip import unpack_scn
 from shvatka.core.utils import exceptions
 from shvatka.core.utils.datetime_utils import add_timezone, tz_utc
-from shvatka.infrastructure.clients.factory import create_file_storage
-from shvatka.infrastructure.clients.file_gateway import BotFileGateway
-from shvatka.infrastructure.crawler.factory import get_paths
 from shvatka.infrastructure.db.dao import TeamDao
 from shvatka.infrastructure.db.dao.holder import HolderDao
-from shvatka.infrastructure.db.factory import create_pool, create_level_test_dao, create_redis
-from shvatka.tgbot.config.parser.main import load_config
-from shvatka.tgbot.main_factory import create_bot
+from shvatka.infrastructure.di import get_providers
+from shvatka.tgbot.config.models.main import TgBotConfig
 
 logger = logging.getLogger(__name__)
 
 
 async def main():
-    paths = get_paths()
+    paths = common_get_paths("CRAWLER_PATH")
 
     setup_logging(paths)
-    config = load_config(paths)
-    dcf = Factory(default_schema=Schema(name_style=NameStyle.kebab))
-    file_storage = create_file_storage(config.file_storage_config)
-    bot = create_bot(config)
-    pool = create_pool(config.db)
-    level_test_dao = create_level_test_dao()
+    dishka = make_async_container(
+        *get_providers("CRAWLER_PATH"),
+    )
     try:
-        async with (
-            pool() as session,
-            create_redis(config.redis) as redis,
-        ):
-            dao = HolderDao(session, redis, level_test_dao)
-            file_gateway = BotFileGateway(
-                bot=bot,
-                file_storage=file_storage,
-                dao=dao.file_info,
-                tech_chat_id=config.bot.log_chat,
-            )
-            bot_player = await dao.player.upsert_author_dummy()
-            await dao.commit()
-            await load_scns(
-                bot_player=bot_player,
-                dao=dao,
-                file_gateway=file_gateway,
-                dcf=dcf,
-                path=config.file_storage_config.path.parent / "scn",
-            )
+        config = await dishka.get(TgBotConfig)
+        dao = await dishka.get(HolderDao)
+        file_gateway = await dishka.get(FileGateway)
+        bot_player = await dao.player.upsert_author_dummy()
+        await dao.commit()
+        await load_scns(
+            bot_player=bot_player,
+            dao=dao,
+            file_gateway=file_gateway,
+            dcf=await dishka.get(Factory),
+            path=config.file_storage_config.path.parent / "scn",
+        )
     finally:
-        await bot.session.close()
-        close_all_sessions()
+        await dishka.close()
 
 
 async def load_scns(

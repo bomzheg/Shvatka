@@ -8,6 +8,8 @@ from fastapi.openapi.models import OAuthFlows as OAuthFlowsModel, OAuthFlowPassw
 from fastapi.security import OAuth2
 from fastapi.security.utils import get_authorization_scheme_param
 
+from shvatka.api.models.auth import Token
+
 
 class OAuth2PasswordBearerWithCookie(OAuth2):
     def __init__(
@@ -22,7 +24,7 @@ class OAuth2PasswordBearerWithCookie(OAuth2):
         flows = OAuthFlowsModel(password=OAuthFlowPassword(tokenUrl=token_url))
         super().__init__(flows=flows, scheme_name=scheme_name, auto_error=auto_error)
 
-    async def __call__(self, request: Request) -> Optional[str]:
+    def get_token(self, request: Request) -> Optional[Token]:
         authorization = request.cookies.get("Authorization", "")
 
         scheme, param = get_authorization_scheme_param(authorization)
@@ -34,4 +36,4 @@ class OAuth2PasswordBearerWithCookie(OAuth2):
                     headers={"WWW-Authenticate": "Bearer"},
                 )
             return None
-        return param
+        return Token(access_token=param, token_type="bearer")

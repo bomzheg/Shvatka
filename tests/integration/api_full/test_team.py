@@ -2,18 +2,18 @@ import pytest
 from dataclass_factory import Factory
 from httpx import AsyncClient
 
-from shvatka.api.dependencies import AuthProvider
 from shvatka.api.models import responses
 from shvatka.api.models.auth import Token
 from shvatka.core.models import dto
 from shvatka.infrastructure.db.dao.holder import HolderDao
+from shvatka.api.dependencies.auth import AuthProperties
 from tests.fixtures.chat_constants import create_gryffindor_dto_chat
 from tests.fixtures.team import create_team_
 from tests.mocks.game_log import GameLogWriterMock
 
 
 @pytest.fixture
-def token(user: dto.User, auth: AuthProvider) -> Token:
+def token(user: dto.User, auth: AuthProperties) -> Token:
     return auth.create_user_token(user)
 
 

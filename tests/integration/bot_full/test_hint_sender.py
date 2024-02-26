@@ -36,7 +36,7 @@ from shvatka.core.models.dto.scn.hint_part import (
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.tgbot.views.hint_factory.hint_content_resolver import HintContentResolver
 from shvatka.tgbot.views.hint_sender import HintSender
-from tests.fixtures.file_storage_constants import FILE_ID, CHAT_ID, FILE_META
+from tests.fixtures.file_storage import FILE_ID, CHAT_ID, FILE_META
 from tests.fixtures.scn_fixtures import GUID
 
 BAD_REQUEST_DESC = (

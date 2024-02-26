@@ -2,36 +2,31 @@ import asyncio
 import secrets
 from abc import ABC, abstractmethod
 from contextlib import asynccontextmanager
-from typing import Any
+from typing import Any, Annotated
 
 from aiogram import Bot, Dispatcher, loggers
 from aiogram.methods import TelegramMethod
 from aiogram.methods.base import TelegramType
 from aiogram.webhook.security import IPFilter
+from dishka import AsyncContainer
+from dishka.integrations.base import Depends
+from dishka.integrations.fastapi import inject
 from fastapi import FastAPI, Request, Response, HTTPException, APIRouter
 
 
-def setup_application(app: FastAPI, dispatcher: Dispatcher, /, **kwargs: Any) -> None:
-    """
-    This function helps to configure a startup-shutdown process
-
-    :param app: FastAPI application
-    :param dispatcher: aiogram dispatcher
-    :param kwargs: additional data
-    :return:
-    """
+def setup_application(app: FastAPI, dishka: AsyncContainer, /, **kwargs: Any) -> None:
     workflow_data = {
         "app": app,
-        "dispatcher": dispatcher,
-        **dispatcher.workflow_data,
+        "dishka": dishka,
         **kwargs,
     }
 
     @asynccontextmanager
     async def lifespan(*a: Any, **kw: Any):
-        await dispatcher.emit_startup(**workflow_data)
+        dispatcher = await dishka.get(Dispatcher)
+        await dispatcher.emit_startup(**workflow_data, **dispatcher.workflow_data)
         yield
-        await dispatcher.emit_shutdown(**workflow_data)
+        await dispatcher.emit_shutdown(**workflow_data, **dispatcher.workflow_data)
 
     app.include_router(APIRouter(lifespan=lifespan))
 
@@ -61,88 +56,76 @@ class IpFilterMiddleware:
 class BaseRequestHandler(ABC):
     def __init__(
         self,
-        dispatcher: Dispatcher,
         handle_in_background: bool = False,
         **data: Any,
     ) -> None:
-        """
-        Base handler that helps to handle incoming request from aiohttp
-        and propagate it to the Dispatcher
-
-        :param dispatcher: instance of :class:`aiogram.dispatcher.dispatcher.Dispatcher`
-        :param handle_in_background: immediately responds to the Telegram instead of
-            a waiting end of a handler process
-        """
-        self.dispatcher = dispatcher
         self.handle_in_background = handle_in_background
         self.data = data
         self._background_feed_update_tasks: set[asyncio.Task[Any]] = set()
 
     def register(self, app: FastAPI, /, path: str, **kwargs: Any) -> None:
-        router = APIRouter(prefix="/webhook", lifespan=self._handle_close)
+        router = APIRouter(prefix="/webhook")
         router.add_api_route(methods=["POST"], path=path, endpoint=self.handle, **kwargs)
         app.include_router(router)
-
-    @asynccontextmanager
-    async def _handle_close(self, app: FastAPI):
-        yield
-        await self.close()
-
-    @abstractmethod
-    async def close(self) -> None:
-        pass
-
-    @abstractmethod
-    async def resolve_bot(self, request: Request) -> Bot:
-        """
-        This method should be implemented in subclasses of this class.
-
-        Resolve Bot instance from request.
-
-        :param request:
-        :return: Bot instance
-        """
-        pass
 
     @abstractmethod
     def verify_secret(self, telegram_secret_token: str, bot: Bot) -> bool:
         pass
 
-    async def _background_feed_update(self, bot: Bot, update: dict[str, Any]) -> None:
-        result = await self.dispatcher.feed_raw_update(bot=bot, update=update, **self.data)
+    async def _background_feed_update(
+        self, bot: Bot, dispatcher: Dispatcher, update: dict[str, Any]
+    ) -> None:
+        result = await dispatcher.feed_raw_update(bot=bot, update=update, **self.data)
         if isinstance(result, TelegramMethod):
-            await self.dispatcher.silent_call_request(bot=bot, result=result)
+            await dispatcher.silent_call_request(bot=bot, result=result)
 
-    async def _handle_request_background(self, bot: Bot, request: Request) -> Response:
+    async def _handle_request_background(
+        self, bot: Bot, dispatcher: Dispatcher, request: Request
+    ) -> Response:
         feed_update_task = asyncio.create_task(
-            self._background_feed_update(bot=bot, update=bot.session.json_loads(request.body))
+            self._background_feed_update(
+                bot=bot, dispatcher=dispatcher, update=bot.session.json_loads(request.body)
+            )
         )
         self._background_feed_update_tasks.add(feed_update_task)
         feed_update_task.add_done_callback(self._background_feed_update_tasks.discard)
         return Response(content={})
 
     async def _build_response_writer(
-        self, bot: Bot, result: TelegramMethod[TelegramType] | None
+        self, bot: Bot, dispatcher: Dispatcher, result: TelegramMethod[TelegramType] | None
     ) -> Any:
         if result:
             # TODO response to webhook
-            await self.dispatcher.silent_call_request(bot, result)
+            await dispatcher.silent_call_request(bot, result)
 
-    async def _handle_request(self, bot: Bot, request: Request) -> Response:
-        result: TelegramMethod[Any] | None = await self.dispatcher.feed_webhook_update(
+    async def _handle_request(
+        self, bot: Bot, dispatcher: Dispatcher, request: Request
+    ) -> Response:
+        result: TelegramMethod[Any] | None = await dispatcher.feed_webhook_update(
             bot,
             await request.json(),
             **self.data,
         )
-        return Response(content=await self._build_response_writer(bot=bot, result=result))
+        return Response(
+            content=await self._build_response_writer(
+                bot=bot, dispatcher=dispatcher, result=result
+            )
+        )
 
-    async def handle(self, request: Request) -> Response:
-        bot = await self.resolve_bot(request)
+    @inject
+    async def handle(
+        self,
+        request: Request,
+        bot: Annotated[Bot, Depends()],
+        dispatcher: Annotated[Dispatcher, Depends()],
+    ) -> Response:
         if not self.verify_secret(request.headers.get("X-Telegram-Bot-Api-Secret-Token", ""), bot):
             return Response(content="Unauthorized", status_code=401)
         if self.handle_in_background:
-            return await self._handle_request_background(bot=bot, request=request)
-        return await self._handle_request(bot=bot, request=request)
+            return await self._handle_request_background(
+                bot=bot, dispatcher=dispatcher, request=request
+            )
+        return await self._handle_request(bot=bot, dispatcher=dispatcher, request=request)
 
     __call__ = handle
 
@@ -150,8 +133,6 @@ class BaseRequestHandler(ABC):
 class SimpleRequestHandler(BaseRequestHandler):
     def __init__(
         self,
-        dispatcher: Dispatcher,
-        bot: Bot,
         handle_in_background: bool = True,
         secret_token: str | None = None,
         **data: Any,
@@ -164,20 +145,10 @@ class SimpleRequestHandler(BaseRequestHandler):
             a waiting end of handler process
         :param bot: instance of :class:`aiogram.client.bot.Bot`
         """
-        super().__init__(dispatcher=dispatcher, handle_in_background=handle_in_background, **data)
-        self.bot = bot
+        super().__init__(handle_in_background=handle_in_background, **data)
         self.secret_token = secret_token
 
     def verify_secret(self, telegram_secret_token: str, bot: Bot) -> bool:
         if self.secret_token:
             return secrets.compare_digest(telegram_secret_token, self.secret_token)
         return True
-
-    async def close(self) -> None:
-        """
-        Close bot session
-        """
-        await self.bot.session.close()
-
-    async def resolve_bot(self, request: Request) -> Bot:
-        return self.bot

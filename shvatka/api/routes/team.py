@@ -1,11 +1,15 @@
-from fastapi import Depends, APIRouter
+from typing import Annotated
 
-from shvatka.api.dependencies import team_provider
+from dishka.integrations.base import Depends
+from dishka.integrations.fastapi import inject
+from fastapi import APIRouter
+
 from shvatka.api.models import responses
 from shvatka.core.models import dto
 
 
-async def get_my_team(team: dto.Team = Depends(team_provider)) -> responses.Team:
+@inject
+async def get_my_team(team: Annotated[dto.Team, Depends()]) -> responses.Team:
     return responses.Team.from_core(team)
 
 

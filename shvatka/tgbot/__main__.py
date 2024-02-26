@@ -1,38 +1,32 @@
 import asyncio
 import logging
 
+from aiogram import Dispatcher, Bot
+
 from shvatka.common.config.parser.logging_config import setup_logging
-from shvatka.infrastructure.clients.factory import create_file_storage
-from shvatka.infrastructure.db.factory import (
-    create_session_maker,
-    create_engine,
-)
-from shvatka.tgbot.config.parser.main import load_config
+from shvatka.common.config.parser.paths import common_get_paths
+
 from shvatka.tgbot.main_factory import (
-    get_paths,
     resolve_update_types,
-    DpBuilder,
+    create_dishka,
 )
 
 logger = logging.getLogger(__name__)
 
 
 async def main():
-    paths = get_paths()
-
+    paths = common_get_paths("BOT_PATH")
     setup_logging(paths)
-    config = load_config(paths)
-    engine = create_engine(config.db)
-    pool = create_session_maker(engine)
-    file_storage = create_file_storage(config.file_storage_config)
+    dishka = create_dishka("BOT_PATH")
+    dp = await dishka.get(Dispatcher)
+    bot = await dishka.get(Bot)
 
-    async with DpBuilder(config, pool, file_storage) as (bot, dp):
-        try:
-            await bot.delete_webhook()
-            await dp.start_polling(bot, allowed_updates=resolve_update_types(dp))
-        finally:
-            await engine.dispose()
-            logger.info("stopped")
+    try:
+        await bot.delete_webhook()
+        await dp.start_polling(bot, allowed_updates=resolve_update_types(dp))
+    finally:
+        logger.info("stopped")
+        await dishka.close()
 
 
 def run():

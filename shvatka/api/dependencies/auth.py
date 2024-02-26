@@ -4,49 +4,27 @@ import logging
 import typing
 from datetime import timedelta, datetime
 
-from fastapi import Depends, HTTPException, APIRouter
-from fastapi.security import OAuth2PasswordRequestForm
+from dishka import Provider, provide, Scope
+from fastapi import HTTPException, Request
 from jose import jwt, JWTError
 from passlib.context import CryptContext
 from starlette import status
-from starlette.responses import HTMLResponse, Response
 
 from shvatka.api.config.models.auth import AuthConfig
-from shvatka.api.dependencies.db import dao_provider
 from shvatka.api.models.auth import UserTgAuth, Token
 from shvatka.api.utils.cookie_auth import OAuth2PasswordBearerWithCookie
 from shvatka.core.models import dto
-from shvatka.core.services.user import upsert_user
 from shvatka.core.utils.datetime_utils import tz_utc
 from shvatka.core.utils.exceptions import NoUsernameFound
 from shvatka.infrastructure.db.dao.holder import HolderDao
 
-TG_WIDGET_HTML = """
-        <html>
-            <head>
-                <title>Authenticate by TG</title>
-            </head>
-            <body>
-                <script
-                    async src="https://telegram.org/js/telegram-widget.js?21"
-                    data-telegram-login="{bot_username}"
-                    data-size="large"
-                    data-auth-url="{auth_url}"
-                    data-request-access="write"
-                ></script>
-            </body>
-        </html>
-        """
+
 logger = logging.getLogger(__name__)
-oauth2_scheme = OAuth2PasswordBearerWithCookie(token_url="auth/token")
 
 
-def get_current_user() -> dto.User:
-    raise NotImplementedError
-
-
-class AuthProvider:
+class AuthProperties:
     def __init__(self, config: AuthConfig) -> None:
+        super().__init__()
         self.config = config
         self.pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
         # to get a string like this run:
@@ -54,8 +32,6 @@ class AuthProvider:
         self.secret_key = config.secret_key
         self.algorythm = "HS256"
         self.access_token_expire = config.token_expire
-        self.router = APIRouter(prefix="/auth")
-        self.setup_auth_routes()
 
     def verify_password(self, plain_password: str, hashed_password: str) -> bool:
         return self.pwd_context.verify(plain_password, hashed_password)
@@ -91,8 +67,8 @@ class AuthProvider:
 
     async def get_current_user(
         self,
-        token: str = Depends(oauth2_scheme),
-        dao: HolderDao = Depends(dao_provider),
+        token: Token | None,
+        dao: HolderDao,
     ) -> dto.User:
         logger.debug("try to check token %s", token)
         credentials_exception = HTTPException(
@@ -100,8 +76,15 @@ class AuthProvider:
             detail="Could not validate credentials",
             headers={"WWW-Authenticate": "Bearer"},
         )
+        if token is None:
+            logger.warning("no token are present")
+            raise credentials_exception
         try:
-            payload = jwt.decode(token, self.secret_key, algorithms=[self.algorythm])
+            payload = jwt.decode(
+                token.access_token,
+                self.secret_key,
+                algorithms=[self.algorythm],
+            )
             username = typing.cast(str, payload.get("sub"))
             if username is None:
                 logger.warning("valid jwt contains no username")
@@ -119,45 +102,32 @@ class AuthProvider:
             raise credentials_exception from e
         return user
 
-    async def login(
+
+class AuthProvider(Provider):
+    scope = Scope.APP
+
+    @provide
+    def get_auth_properties(self, config: AuthConfig) -> AuthProperties:
+        return AuthProperties(config)
+
+    @provide
+    def get_cookie_auth(self) -> OAuth2PasswordBearerWithCookie:
+        return OAuth2PasswordBearerWithCookie(token_url="auth/token")
+
+    @provide(scope=Scope.REQUEST)
+    async def get_token(
+        self, request: Request, cookie_auth: OAuth2PasswordBearerWithCookie
+    ) -> Token | None:
+        return cookie_auth.get_token(request)
+
+    @provide(scope=Scope.REQUEST)
+    async def get_current_user(
         self,
-        response: Response,
-        form_data: OAuth2PasswordRequestForm = Depends(),
-        dao: HolderDao = Depends(dao_provider),
-    ):
-        user = await self.authenticate_user(form_data.username, form_data.password, dao)
-        token = self.create_user_token(user)
-        response.set_cookie(
-            "Authorization",
-            value=f"{token.token_type} {token.access_token}",
-            samesite=self.config.samesite,
-            domain=self.config.domain,
-            httponly=self.config.httponly,
-            secure=self.config.secure,
-        )
-        return {"ok": True}
-
-    async def tg_login_page(self):
-        return TG_WIDGET_HTML.format(
-            bot_username=self.config.bot_username,
-            auth_url=self.config.auth_url,
-        )
-
-    async def tg_login_result(
-        self,
-        user: UserTgAuth = Depends(),
-        dao: HolderDao = Depends(dao_provider),
-    ) -> Token:
-        check_tg_hash(user, self.config.bot_token)
-        await upsert_user(user.to_dto(), dao.user)
-        return self.create_user_token(user.to_dto())
-
-    def setup_auth_routes(self):
-        self.router.add_api_route("/token", self.login, methods=["POST"])
-        self.router.add_api_route(
-            "/login", self.tg_login_page, response_class=HTMLResponse, methods=["GET"]
-        )
-        self.router.add_api_route("/login/data", self.tg_login_result, methods=["GET"])
+        token: Token | None,
+        auth_properties: AuthProperties,
+        dao: HolderDao,
+    ) -> dto.User:
+        return await auth_properties.get_current_user(token, dao)
 
 
 def check_tg_hash(user: UserTgAuth, bot_token: str):

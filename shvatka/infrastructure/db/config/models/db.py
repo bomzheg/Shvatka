@@ -2,12 +2,21 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
+from typing import Protocol
 
 logger = logging.getLogger(__name__)
 
 
+class DBConfig(Protocol):
+    echo: bool
+
+    @property
+    def uri(self):
+        raise NotImplementedError
+
+
 @dataclass
-class DBConfig:
+class DBConfigProperties(DBConfig):
     type: str | None = None
     connector: str | None = None
     host: str | None = None

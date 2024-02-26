@@ -1,13 +1,12 @@
 from dataclasses import dataclass
 
 from aiogram import Bot
-from redis.asyncio import Redis
-from sqlalchemy.ext.asyncio import async_sessionmaker, AsyncSession
+from dishka import AsyncContainer
+from dishka.integrations.base import wrap_injection
 
 from shvatka.core.interfaces.clients.file_storage import FileStorage
 from shvatka.core.interfaces.scheduler import Scheduler
 from shvatka.infrastructure.db.dao.holder import HolderDao
-from shvatka.infrastructure.db.dao.memory.level_testing import LevelTestingData
 
 
 class ScheduledContextHolder:
@@ -16,13 +15,7 @@ class ScheduledContextHolder:
     GLOBAL VARIABLE!
     """
 
-    pool: async_sessionmaker[AsyncSession]
-    redis: Redis
-    bot: Bot
-    scheduler: Scheduler
-    file_storage: FileStorage
-    game_log_chat: int
-    level_test_dao: LevelTestingData
+    dishka: AsyncContainer
 
 
 @dataclass
@@ -32,3 +25,17 @@ class ScheduledContext:
     file_storage: FileStorage
     scheduler: Scheduler
     game_log_chat: int
+
+
+def inject(func):
+    async def wrapper(*args, **kwargs):
+        async with ScheduledContextHolder.dishka() as request_dishka:
+            wrapped = wrap_injection(
+                func=func,
+                remove_depends=True,
+                container_getter=lambda _, __: request_dishka,
+                is_async=True,
+            )
+            return await wrapped(*args, **kwargs)
+
+    return wrapper

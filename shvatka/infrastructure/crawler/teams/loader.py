@@ -5,42 +5,38 @@ from datetime import datetime, timedelta
 from pathlib import Path
 
 from dataclass_factory import Factory
-from sqlalchemy.orm import close_all_sessions
+from dishka import make_async_container
 
-from shvatka.api.main_factory import get_paths
 from shvatka.common.config.parser.logging_config import setup_logging
-from shvatka.common.factory import create_dataclass_factory
+from shvatka.common.config.parser.paths import common_get_paths
 from shvatka.core.models import dto, enums
 from shvatka.core.utils import exceptions
 from shvatka.core.utils.datetime_utils import tz_utc
 from shvatka.infrastructure.crawler.game_scn.common import UNPARSEABLE_GAMES
 from shvatka.infrastructure.crawler.models.team import ParsedTeam, ParsedPlayer
 from shvatka.infrastructure.db.dao.holder import HolderDao
-from shvatka.infrastructure.db.factory import create_pool, create_level_test_dao, create_redis
-from shvatka.tgbot.config.parser.main import load_config
+from shvatka.infrastructure.di import get_providers
+from shvatka.tgbot.config.models.main import TgBotConfig
 
 logger = logging.getLogger(__name__)
 WITH_TEAM_PLAYERS = False
 
 
 async def main(with_team_players: bool):
-    paths = get_paths()
+    paths = common_get_paths("CRAWLER_PATH")
 
     setup_logging(paths)
-    config = load_config(paths)
-    path = config.file_storage_config.path.parent / "teams.json"
-    dcf = create_dataclass_factory()
-    pool = create_pool(config.db)
-    level_test_dao = create_level_test_dao()
+    dishka = make_async_container(
+        *get_providers("CRAWLER_PATH"),
+    )
     try:
-        async with (
-            pool() as session,
-            create_redis(config.redis) as redis,
-        ):
-            dao = HolderDao(session, redis, level_test_dao)
-            await load_teams(path, with_team_players, dao, dcf)
+        config = await dishka.get(TgBotConfig)
+        dao = await dishka.get(HolderDao)
+        dcf = await dishka.get(Factory)
+        path = config.file_storage_config.path.parent / "teams.json"
+        await load_teams(path, with_team_players, dao, dcf)
     finally:
-        close_all_sessions()
+        await dishka.close()
 
 
 async def load_teams(path: Path, with_team_players: bool, dao: HolderDao, dcf: Factory):

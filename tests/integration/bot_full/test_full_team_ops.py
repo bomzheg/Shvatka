@@ -69,6 +69,8 @@ async def test_create_team(harry: dto.Player, dp: Dispatcher, bot: MockedBot, da
     )
     await dp.feed_update(bot, update)
 
+    bot.session.responses.clear()
+    bot.session.requests.clear()
     bot.add_result_for(
         method=GetChatMember,
         ok=True,

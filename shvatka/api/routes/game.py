@@ -1,4 +1,4 @@
-from typing import BinaryIO, Annotated
+from typing import Annotated
 
 from dishka.integrations.base import Depends
 from dishka.integrations.fastapi import Depends as DiDepends, inject
@@ -61,7 +61,9 @@ async def get_game_file(
     guid: str = Path(alias="guid"),  # type: ignore[assignment]
 ) -> StreamingResponse:
     game = await get_game(id_, dao=dao.game)
-    return StreamingResponse(b for b in await get_file_content(guid, file_gateway, player, game, dao.file_info))
+    return StreamingResponse(
+        b for b in await get_file_content(guid, file_gateway, player, game, dao.file_info)
+    )
 
 
 def setup() -> APIRouter:

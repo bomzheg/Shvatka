@@ -4,6 +4,7 @@ from dishka.integrations.base import Depends
 from dishka.integrations.fastapi import Depends as DiDepends, inject
 from fastapi import APIRouter
 from fastapi.params import Path
+from starlette.responses import StreamingResponse
 
 from shvatka.api.models import responses
 from shvatka.core.interfaces.clients.file_storage import FileGateway
@@ -58,9 +59,9 @@ async def get_game_file(
     file_gateway: Annotated[FileGateway, DiDepends()],
     id_: int = Path(alias="id"),  # type: ignore[assignment]
     guid: str = Path(alias="guid"),  # type: ignore[assignment]
-) -> BinaryIO:
+) -> StreamingResponse:
     game = await get_game(id_, dao=dao.game)
-    return await get_file_content(guid, file_gateway, player, game, dao.file_info)
+    return StreamingResponse(b for b in await get_file_content(guid, file_gateway, player, game, dao.file_info))
 
 
 def setup() -> APIRouter:
@@ -69,5 +70,5 @@ def setup() -> APIRouter:
     router.add_api_route("/my", get_my_games_list, methods=["GET"])
     router.add_api_route("/active", get_active_game, methods=["GET"])
     router.add_api_route("/{id}", get_game_card, methods=["GET"])
-    router.add_api_route("/{id}/files/{guid}", get_file_content, methods=["GET"])
+    router.add_api_route("/{id}/files/{guid}", get_game_file, methods=["GET"])
     return router

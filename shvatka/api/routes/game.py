@@ -69,5 +69,5 @@ def setup() -> APIRouter:
     router.add_api_route("/my", get_my_games_list, methods=["GET"])
     router.add_api_route("/active", get_active_game, methods=["GET"])
     router.add_api_route("/{id}", get_game_card, methods=["GET"])
-    router.add_api_route("/{id}/files/{guid}", get_game_card, methods=["GET"])
+    router.add_api_route("/{id}/files/{guid}", get_file_content, methods=["GET"])
     return router

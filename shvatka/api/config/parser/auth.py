@@ -14,5 +14,5 @@ def load_auth(dct: dict) -> AuthConfig:
         samesite=dct["samesite"],
         secure=bool(dct["secure"]),
         httponly=bool(dct["httponly"]),
-        disable_cors=bool(dct["disable-cors"]),
+        disable_cors=bool(dct.get("disable-cors", False)),
     )

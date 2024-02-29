@@ -14,3 +14,4 @@ class AuthConfig:
     secure: bool
     auth_url: str
     bot_token: str
+    disable_cors: bool = False

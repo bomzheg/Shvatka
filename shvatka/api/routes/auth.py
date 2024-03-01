@@ -54,7 +54,7 @@ async def login(
 
 @inject
 async def tg_login_result(
-    user: Annotated[UserTgAuth, Depends()],
+    user: Annotated[UserTgAuth, fDepends()],
     dao: Annotated[HolderDao, Depends()],
     auth_properties: Annotated[AuthProperties, Depends()],
     config: Annotated[AuthConfig, Depends()],

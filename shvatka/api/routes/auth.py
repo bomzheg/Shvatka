@@ -8,7 +8,8 @@ from fastapi.security import OAuth2PasswordRequestForm
 from starlette.responses import HTMLResponse, Response
 
 from shvatka.api.config.models.auth import AuthConfig
-from shvatka.api.models.auth import UserTgAuth, Token
+from shvatka.api.models.auth import UserTgAuth
+from shvatka.api.utils.cookie_auth import set_auth_response
 from shvatka.core.services.user import upsert_user
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.api.dependencies.auth import AuthProperties, check_tg_hash
@@ -41,27 +42,23 @@ async def login(
 ):
     user = await auth_properties.authenticate_user(form_data.username, form_data.password, dao)
     token = auth_properties.create_user_token(user)
-    response.set_cookie(
-        "Authorization",
-        value=f"{token.token_type} {token.access_token}",
-        samesite=config.samesite,
-        domain=config.domain,
-        httponly=config.httponly,
-        secure=config.secure,
-    )
+    set_auth_response(config, response, token)
     return {"ok": True}
 
 
 @inject
 async def tg_login_result(
+    response: Response,
     user: Annotated[UserTgAuth, fDepends()],
     dao: Annotated[HolderDao, Depends()],
     auth_properties: Annotated[AuthProperties, Depends()],
     config: Annotated[AuthConfig, Depends()],
-) -> Token:
+):
     check_tg_hash(user, config.bot_token)
     await upsert_user(user.to_dto(), dao.user)
-    return auth_properties.create_user_token(user.to_dto())
+    token = auth_properties.create_user_token(user.to_dto())
+    set_auth_response(config, response, token)
+    return {"ok": True}
 
 
 @inject

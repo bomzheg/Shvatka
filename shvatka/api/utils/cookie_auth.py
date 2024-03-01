@@ -7,7 +7,9 @@ from fastapi import status
 from fastapi.openapi.models import OAuthFlows as OAuthFlowsModel, OAuthFlowPassword
 from fastapi.security import OAuth2
 from fastapi.security.utils import get_authorization_scheme_param
+from starlette.responses import Response
 
+from shvatka.api.config.models.auth import AuthConfig
 from shvatka.api.models.auth import Token
 
 
@@ -37,3 +39,14 @@ class OAuth2PasswordBearerWithCookie(OAuth2):
                 )
             return None
         return Token(access_token=param, token_type="bearer")
+
+
+def set_auth_response(config: AuthConfig, response: Response, token: Token) -> None:
+    response.set_cookie(
+        "Authorization",
+        value=f"{token.token_type} {token.access_token}",
+        samesite=config.samesite,
+        domain=config.domain,
+        httponly=config.httponly,
+        secure=config.secure,
+    )

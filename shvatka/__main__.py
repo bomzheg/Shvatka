@@ -9,6 +9,7 @@ from fastapi import FastAPI
 
 from shvatka.api.dependencies import get_api_specific_providers
 from shvatka.infrastructure.di import get_providers
+from shvatka.infrastructure.di.visualizalization import render
 from shvatka.tgbot.config.models.bot import WebhookConfig
 from shvatka.tgbot.config.parser.main import load_config as load_bot_config
 from shvatka.api.config.parser.main import load_config as load_api_config
@@ -53,8 +54,11 @@ def main() -> FastAPI:
     root_app.mount(api_config.context_path, app)
     setup = partial(on_startup, dishka, webhook_config)
     root_app.router.add_event_handler("startup", setup)
-    logger.info("app prepared")
     setup_dishka(dishka, root_app)
+    logger.info(
+        "app prepared with dishka:\n%s",
+        render([dishka.registry, *dishka.child_registries], dishka),
+    )
     return root_app
 
 

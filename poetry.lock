@@ -1008,13 +1008,13 @@ typed-ast = ">=1.5.4,<2.0.0"
 
 [[package]]
 name = "dishka"
-version = "0.4.0"
+version = "0.6.0"
 description = "Minimal DI framework"
 optional = false
 python-versions = ">=3.10"
 files = [
-    {file = "dishka-0.4.0-py3-none-any.whl", hash = "sha256:7745fe70e904794f211d2da401ee0065f1c19e8ffad78cb22d4fe8fefd33ce6d"},
-    {file = "dishka-0.4.0.tar.gz", hash = "sha256:b145b34fe11df9cac261d03afb4558507fde3e31fb7ad48f309e8ee7bdd7eea2"},
+    {file = "dishka-0.6.0-py3-none-any.whl", hash = "sha256:35ea6de1b4730c41859546cf24591733b8e172b10beccd50cd9d192e5981b972"},
+    {file = "dishka-0.6.0.tar.gz", hash = "sha256:4d9b48f20c1f5f0dec4dc19b2b089eb5506422ff8e33da7b41fb2e5ebeb20507"},
 ]
 
 [[package]]
@@ -4027,4 +4027,4 @@ testing = ["coverage (>=5.0.3)", "zope.event", "zope.testing"]
 [metadata]
 lock-version = "2.0"
 python-versions = "~3.11"
-content-hash = "450ddbc4f74c685e6685c2976aca5705d86b0f93af570d0427bdaaa6dab5ba1f"
+content-hash = "dc7a01eb5e4c2a5f150c8c4d22cb86960c931ad77bef4aafce8aaaad9aed0fd7"

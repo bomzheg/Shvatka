@@ -4,7 +4,7 @@ import logging
 import typing
 from datetime import timedelta, datetime
 
-from dishka import Provider, provide, Scope
+from dishka import Provider, provide, Scope, from_context
 from fastapi import HTTPException, Request
 from jose import jwt, JWTError
 from passlib.context import CryptContext
@@ -105,6 +105,7 @@ class AuthProperties:
 
 class AuthProvider(Provider):
     scope = Scope.APP
+    request = from_context(provides=Request)
 
     @provide
     def get_auth_properties(self, config: AuthConfig) -> AuthProperties:

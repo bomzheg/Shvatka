@@ -1,7 +1,6 @@
 from typing import Annotated
 
-from dishka.integrations.base import Depends
-from dishka.integrations.fastapi import inject
+from dishka.integrations.fastapi import inject, FromDishka as Depends
 from fastapi import Depends as fDepends
 from fastapi import APIRouter
 from fastapi.security import OAuth2PasswordRequestForm

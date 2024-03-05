@@ -1,7 +1,7 @@
 import logging
 from typing import Annotated
 
-from dishka.integrations.base import Depends
+from dishka.integrations.fastapi import FromDishka as Depends
 from dishka.integrations.fastapi import inject
 from fastapi import APIRouter, HTTPException
 from fastapi.params import Body, Path

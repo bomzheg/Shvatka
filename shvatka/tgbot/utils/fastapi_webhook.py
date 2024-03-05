@@ -9,7 +9,7 @@ from aiogram.methods import TelegramMethod
 from aiogram.methods.base import TelegramType
 from aiogram.webhook.security import IPFilter
 from dishka import AsyncContainer
-from dishka.integrations.base import Depends
+from dishka.integrations.fastapi import FromDishka as Depends
 from dishka.integrations.fastapi import inject
 from fastapi import FastAPI, Request, Response, HTTPException, APIRouter
 

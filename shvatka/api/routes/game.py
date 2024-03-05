@@ -1,7 +1,7 @@
 from typing import Annotated
 
-from dishka.integrations.base import Depends
-from dishka.integrations.fastapi import Depends as DiDepends, inject
+from dishka.integrations.fastapi import FromDishka as Depends
+from dishka.integrations.fastapi import FromDishka as DiDepends, inject
 from fastapi import APIRouter
 from fastapi.params import Path
 from starlette.responses import StreamingResponse

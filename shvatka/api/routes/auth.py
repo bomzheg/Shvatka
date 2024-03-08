@@ -46,6 +46,21 @@ async def login(
 
 
 @inject
+async def logout(
+    response: Response,
+    config: Annotated[AuthConfig, Depends()],
+):
+    response.delete_cookie(
+        "Authorization",
+        samesite=config.samesite,
+        domain=config.domain,
+        httponly=config.httponly,
+        secure=config.secure,
+    )
+    return {"ok": True}
+
+
+@inject
 async def tg_login_result(
     response: Response,
     user: Annotated[UserTgAuth, fDepends()],
@@ -72,5 +87,6 @@ def setup() -> APIRouter:
     router = APIRouter(prefix="/auth")
     router.add_api_route("/token", login, methods=["POST"])
     router.add_api_route("/login", tg_login_page, response_class=HTMLResponse, methods=["GET"])
+    router.add_api_route("/logout", logout, methods=["POST"])
     router.add_api_route("/login/data", tg_login_result, methods=["GET"])
     return router

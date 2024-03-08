@@ -62,6 +62,19 @@ async def test_user_get(client: AsyncClient, user: dto.User, token: Token):
 
 
 @pytest.mark.asyncio
+async def test_logout(client: AsyncClient, token: Token):
+    resp = await client.post(
+        "/auth/logout",
+        cookies={"Authorization": f"{token.token_type} {token.access_token}"},
+        follow_redirects=True,
+    )
+
+    assert resp.is_success
+    assert not resp.cookies
+    assert 'Authorization=""' in resp.headers["set-cookie"]
+
+
+@pytest.mark.asyncio
 @pytest.mark.skip(reason="doesnt work. TODO")
 async def test_change_password(client: AsyncClient, user: dto.User, token: Token):
     resp = await client.put(

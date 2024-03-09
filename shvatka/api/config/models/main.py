@@ -10,9 +10,16 @@ from shvatka.common.config.models.main import Config
 class ApiConfig(Config):
     auth: AuthConfig
     context_path: str = ""
+    enable_logging: bool = False
 
     @classmethod
-    def from_base(cls, base: Config, auth: AuthConfig, context_path: str = ""):
+    def from_base(
+        cls,
+        base: Config,
+        auth: AuthConfig,
+        context_path: str = "",
+        enable_logging: bool = False,
+    ):
         return cls(
             paths=base.paths,
             db=base.db,
@@ -21,4 +28,5 @@ class ApiConfig(Config):
             file_storage_config=base.file_storage_config,
             context_path=context_path,
             app=base.app,
+            enable_logging=enable_logging,
         )

@@ -3,8 +3,6 @@ from shvatka.infrastructure.di.config import ConfigProvider, DbConfigProvider
 from shvatka.infrastructure.di.db import DbProvider, RedisProvider
 from shvatka.infrastructure.di.files import FileClientProvider
 from shvatka.infrastructure.di.game import GameProvider
-from shvatka.infrastructure.di.player import PlayerProvider
-from shvatka.infrastructure.di.team import TeamProvider
 
 
 def get_providers(paths_env):
@@ -14,8 +12,6 @@ def get_providers(paths_env):
         DbProvider(),
         RedisProvider(),
         GameProvider(),
-        PlayerProvider(),
         FileClientProvider(),
         BotProvider(),
-        TeamProvider(),
     ]

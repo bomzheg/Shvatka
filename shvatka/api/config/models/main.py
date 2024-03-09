@@ -20,4 +20,5 @@ class ApiConfig(Config):
             auth=auth,
             file_storage_config=base.file_storage_config,
             context_path=context_path,
+            app=base.app,
         )

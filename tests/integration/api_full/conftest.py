@@ -49,8 +49,8 @@ async def api_config(dishka: AsyncContainer) -> ApiConfig:
 
 
 @pytest.fixture(scope="session")
-def app(dishka: AsyncContainer):
-    app = create_app()
+def app(dishka: AsyncContainer, api_config: ApiConfig):
+    app = create_app(api_config)
     setup_dishka(dishka, app)
     return app
 

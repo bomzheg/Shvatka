@@ -37,7 +37,7 @@ def main() -> FastAPI:
     if not webhook_config:
         raise EnvironmentError("No webhook configuration provided")
 
-    app = create_app()
+    app = create_app(api_config)
     dishka = make_async_container(
         *get_providers("SHVATKA_PATH"),
         *get_bot_specific_providers(),

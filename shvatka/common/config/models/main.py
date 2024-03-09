@@ -9,6 +9,7 @@ from .paths import Paths
 
 @dataclass
 class Config:
+    app: AppConfig
     paths: Paths
     db: DBConfig
     redis: RedisConfig
@@ -25,6 +26,11 @@ class Config:
     @property
     def log_path(self) -> Path:
         return self.paths.log_path
+
+
+@dataclass
+class AppConfig:
+    name: str
 
 
 @dataclass

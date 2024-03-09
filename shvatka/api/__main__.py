@@ -19,7 +19,7 @@ def main() -> FastAPI:
     setup_logging(paths)
     api_config = load_config(paths)
 
-    app = create_app(api_config.auth.disable_cors)
+    app = create_app(api_config)
     root_app = FastAPI()
     root_app.mount(api_config.context_path, app)
     setup_di(root_app, "SHVATKA_API_PATH")

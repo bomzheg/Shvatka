@@ -38,8 +38,8 @@ openpyxl = "^3.0.10"
 lxml = "^4.9.2"
 matplotlib = "^3.7.1"
 greenlet = "<3.0.0"
-prometheus-client = "^0.19.0"
 dishka = "0.6.0"
+asgi-monitor = "^0.1.0"
 
 [tool.poetry.group.dev]
 optional = true

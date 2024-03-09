@@ -1,3 +1,5 @@
+app:
+  name: shvatka-pytest
 bot:
   token: "123:ABC"
   telegraph-token: "42"

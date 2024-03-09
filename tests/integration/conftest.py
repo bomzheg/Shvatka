@@ -10,7 +10,7 @@ from dataclass_factory import Factory
 from dishka import make_async_container, AsyncContainer, Provider, Scope
 from telegraph.aio import Telegraph
 
-from shvatka.api.dependencies import AuthProvider, ApiConfigProvider
+from shvatka.api.dependencies import AuthProvider, ApiConfigProvider, PlayerProvider, TeamProvider
 from shvatka.common import Paths
 from shvatka.common.factory import DCFProvider, TelegraphProvider
 from shvatka.core.interfaces.clients.file_storage import FileStorage, FileGateway
@@ -25,8 +25,6 @@ from shvatka.infrastructure.di import (
     DbProvider,
     RedisProvider,
     GameProvider,
-    PlayerProvider,
-    TeamProvider,
     FileClientProvider,
 )
 from shvatka.tgbot.main_factory import DpProvider, LockProvider

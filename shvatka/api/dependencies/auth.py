@@ -67,7 +67,7 @@ class AuthProperties:
 
     async def get_current_user(
         self,
-        token: Token | None,
+        token: Token,
         dao: HolderDao,
     ) -> dto.User:
         logger.debug("try to check token %s", token)
@@ -76,9 +76,6 @@ class AuthProperties:
             detail="Could not validate credentials",
             headers={"WWW-Authenticate": "Bearer"},
         )
-        if token is None:
-            logger.warning("no token are present")
-            raise credentials_exception
         try:
             payload = jwt.decode(
                 token.access_token,
@@ -118,13 +115,13 @@ class AuthProvider(Provider):
     @provide(scope=Scope.REQUEST)
     async def get_token(
         self, request: Request, cookie_auth: OAuth2PasswordBearerWithCookie
-    ) -> Token | None:
+    ) -> Token:
         return cookie_auth.get_token(request)
 
     @provide(scope=Scope.REQUEST)
     async def get_current_user(
         self,
-        token: Token | None,
+        token: Token,
         auth_properties: AuthProperties,
         dao: HolderDao,
     ) -> dto.User:

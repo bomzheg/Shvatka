@@ -26,6 +26,8 @@ from shvatka.infrastructure.di import (
     RedisProvider,
     GameProvider,
     FileClientProvider,
+    InteractorProvider,
+    DAOProvider,
 )
 from shvatka.tgbot.main_factory import DpProvider, LockProvider
 from shvatka.tgbot.username_resolver.user_getter import UserGetter
@@ -71,6 +73,8 @@ async def dishka():
         LockProvider(),
         DCFProvider(),
         TelegraphProvider(),
+        InteractorProvider(),
+        DAOProvider(),
         mock_provider,
     )
     yield container

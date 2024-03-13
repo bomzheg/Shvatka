@@ -1,4 +1,3 @@
-from typing import Dict
 from typing import Optional
 
 from fastapi import HTTPException
@@ -18,26 +17,21 @@ class OAuth2PasswordBearerWithCookie(OAuth2):
         self,
         token_url: str,
         scheme_name: Optional[str] = None,
-        scopes: Optional[Dict[str, str]] = None,
         auto_error: bool = True,
     ):
-        if not scopes:
-            scopes = {}
         flows = OAuthFlowsModel(password=OAuthFlowPassword(tokenUrl=token_url))
         super().__init__(flows=flows, scheme_name=scheme_name, auto_error=auto_error)
 
-    def get_token(self, request: Request) -> Optional[Token]:
+    def get_token(self, request: Request) -> Token:
         authorization = request.cookies.get("Authorization", "")
 
         scheme, param = get_authorization_scheme_param(authorization)
         if not authorization or scheme.lower() != "bearer":
-            if self.auto_error:
-                raise HTTPException(
-                    status_code=status.HTTP_401_UNAUTHORIZED,
-                    detail="Not authenticated",
-                    headers={"WWW-Authenticate": "Bearer"},
-                )
-            return None
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Not authenticated",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
         return Token(access_token=param, token_type="bearer")
 
 

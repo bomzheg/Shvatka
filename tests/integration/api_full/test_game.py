@@ -5,8 +5,10 @@ from httpx import AsyncClient
 from shvatka.api.models import responses
 from shvatka.core.models import dto
 from shvatka.core.models.enums import GameStatus
+from shvatka.core.services.player import upsert_player
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.api.dependencies.auth import AuthProperties
+from tests.fixtures.scn_fixtures import GUID, GUID_2
 
 
 @pytest.mark.asyncio
@@ -67,3 +69,59 @@ async def test_game_card(
     assert [lvl.scenario for lvl in actual.levels] == [
         lvl.scenario for lvl in finished_game.levels
     ]
+
+
+@pytest.mark.asyncio
+async def test_game_file(
+    finished_game: dto.FullGame,
+    dao: HolderDao,
+    client: AsyncClient,
+    auth: AuthProperties,
+    user: dto.User,
+):
+    token = auth.create_user_token(user)
+    await dao.game.set_completed(finished_game)
+    await dao.game.set_number(finished_game, 1)
+    await dao.commit()
+    resp = await client.get(
+        f"/games/{finished_game.id}/files/{GUID}",
+        cookies={"Authorization": "Bearer " + token.access_token},
+    )
+    assert resp.is_success
+    assert resp.read() == b"123"
+
+
+@pytest.mark.asyncio
+async def test_game_file_not_accessible(
+    finished_game: dto.FullGame,
+    dao: HolderDao,
+    client: AsyncClient,
+    auth: AuthProperties,
+    user: dto.User,
+):
+    token = auth.create_user_token(user)
+    await dao.game.set_completed(finished_game)
+    await dao.game.set_number(finished_game, 1)
+    await dao.commit()
+    resp = await client.get(
+        f"/games/{finished_game.id}/files/{GUID_2}",
+        cookies={"Authorization": "Bearer " + token.access_token},
+    )
+    assert resp.status_code == 404
+
+
+@pytest.mark.asyncio
+async def test_game_file_game_not_completed(
+    game: dto.FullGame,
+    dao: HolderDao,
+    client: AsyncClient,
+    auth: AuthProperties,
+    user: dto.User,
+):
+    await upsert_player(user, dao.player)
+    token = auth.create_user_token(user)
+    resp = await client.get(
+        f"/games/{game.id}/files/{GUID}",
+        cookies={"Authorization": "Bearer " + token.access_token},
+    )
+    assert resp.status_code == 403

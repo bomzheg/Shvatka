@@ -1,7 +1,7 @@
 from typing import Annotated
 
 from dishka.integrations.fastapi import inject, FromDishka as Depends
-from fastapi import Depends as fDepends
+from fastapi import Depends as fDepends, Body
 from fastapi import APIRouter
 from fastapi.security import OAuth2PasswordRequestForm
 from starlette.responses import HTMLResponse, Response
@@ -76,6 +76,21 @@ async def tg_login_result(
 
 
 @inject
+async def tg_login_result_post(
+    response: Response,
+    user: Annotated[UserTgAuth, Body()],
+    dao: Annotated[HolderDao, Depends()],
+    auth_properties: Annotated[AuthProperties, Depends()],
+    config: Annotated[AuthConfig, Depends()],
+):
+    check_tg_hash(user, config.bot_token)
+    await upsert_user(user.to_dto(), dao.user)
+    token = auth_properties.create_user_token(user.to_dto())
+    set_auth_response(config, response, token)
+    return {"ok": True}
+
+
+@inject
 async def tg_login_page(config: Annotated[AuthConfig, Depends()]):
     return TG_WIDGET_HTML.format(
         bot_username=config.bot_username,
@@ -89,4 +104,5 @@ def setup() -> APIRouter:
     router.add_api_route("/login", tg_login_page, response_class=HTMLResponse, methods=["GET"])
     router.add_api_route("/logout", logout, methods=["POST"])
     router.add_api_route("/login/data", tg_login_result, methods=["GET"])
+    router.add_api_route("/login/data", tg_login_result_post, methods=["POST"])
     return router

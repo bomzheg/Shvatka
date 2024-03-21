@@ -69,8 +69,8 @@ async def tg_login_result(
     config: Annotated[AuthConfig, Depends()],
 ):
     check_tg_hash(user, config.bot_token)
-    await upsert_user(user.to_dto(), dao.user)
-    token = auth_properties.create_user_token(user.to_dto())
+    saved = await upsert_user(user.to_dto(), dao.user)
+    token = auth_properties.create_user_token(saved)
     set_auth_response(config, response, token)
     return {"ok": True}
 
@@ -84,8 +84,8 @@ async def tg_login_result_post(
     config: Annotated[AuthConfig, Depends()],
 ):
     check_tg_hash(user, config.bot_token)
-    await upsert_user(user.to_dto(), dao.user)
-    token = auth_properties.create_user_token(user.to_dto())
+    saved = await upsert_user(user.to_dto(), dao.user)
+    token = auth_properties.create_user_token(saved)
     set_auth_response(config, response, token)
     return {"ok": True}
 

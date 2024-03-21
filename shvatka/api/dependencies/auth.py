@@ -62,7 +62,7 @@ class AuthProperties:
 
     def create_user_token(self, user: dto.User) -> Token:
         return self.create_access_token(
-            data={"sub": user.username}, expires_delta=self.access_token_expire
+            data={"sub": str(user.db_id)}, expires_delta=self.access_token_expire
         )
 
     async def get_current_user(
@@ -82,10 +82,10 @@ class AuthProperties:
                 self.secret_key,
                 algorithms=[self.algorythm],
             )
-            username = typing.cast(str, payload.get("sub"))
-            if username is None:
-                logger.warning("valid jwt contains no username")
+            if payload.get("sub") is None:
+                logger.warning("valid jwt contains no user id")
                 raise credentials_exception
+            user_db_id = int(typing.cast(str, payload.get("sub")))
         except JWTError as e:
             logger.info("invalid jwt", exc_info=e)
             raise credentials_exception from e
@@ -93,9 +93,9 @@ class AuthProperties:
             logger.warning("some jwt error", exc_info=e)
             raise
         try:
-            user = await dao.user.get_by_username(username=username)
-        except NoUsernameFound as e:
-            logger.info("user by username %s not found", username)
+            user = await dao.user.get_by_id(user_db_id)
+        except Exception as e:
+            logger.info("user by id %s not found", user_db_id)
             raise credentials_exception from e
         return user
 

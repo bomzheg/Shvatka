@@ -4,7 +4,7 @@ from dishka.integrations.fastapi import FromDishka
 from dishka.integrations.fastapi import inject
 from fastapi import APIRouter
 from fastapi.params import Path
-from starlette.responses import StreamingResponse
+from fastapi.responses import StreamingResponse, Response
 from starlette.status import HTTP_404_NOT_FOUND, HTTP_403_FORBIDDEN
 
 from shvatka.api.models import responses
@@ -15,6 +15,7 @@ from shvatka.core.services.game import (
     get_authors_games,
     get_completed_games,
     get_full_game,
+    get_active,
 )
 from shvatka.core.utils import exceptions
 from shvatka.infrastructure.db.dao.holder import HolderDao
@@ -30,8 +31,12 @@ async def get_my_games_list(
 
 @inject
 async def get_active_game(
-    game: Annotated[dto.Game | None, FromDishka()],
+    dao: Annotated[HolderDao, FromDishka()],
+    response: Response,
 ) -> responses.Game | None:
+    game = await get_active(dao.game)
+    if game is None:
+        response.status_code = HTTP_404_NOT_FOUND
     return responses.Game.from_core(game)
 
 
@@ -47,7 +52,7 @@ async def get_all_games(
 async def get_game_card(
     dao: Annotated[HolderDao, FromDishka()],
     player: Annotated[dto.Player, FromDishka()],
-    id_: int = Path(alias="id"),  # type: ignore[assignment]
+    id_: Annotated[int, Path(alias="id")],
 ):
     game = await get_full_game(id_, player, dao.game)
     return responses.FullGame.from_core(game)
@@ -57,8 +62,8 @@ async def get_game_card(
 async def get_game_file(
     user: Annotated[dto.User, FromDishka()],
     file_reader: Annotated[FileReader, FromDishka()],
-    id_: int = Path(alias="id"),  # type: ignore[assignment]
-    guid: str = Path(alias="guid"),  # type: ignore[assignment]
+    id_: Annotated[int, Path(alias="id")],
+    guid: Annotated[str, Path(alias="guid")],
 ) -> StreamingResponse:
     try:
         return StreamingResponse(b for b in await file_reader(guid=guid, user=user, game_id=id_))

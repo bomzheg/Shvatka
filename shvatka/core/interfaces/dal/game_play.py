@@ -2,6 +2,7 @@ from typing import Iterable, Protocol
 
 from shvatka.core.interfaces.dal.base import Committer
 from shvatka.core.interfaces.dal.organizer import GameOrgsGetter
+from shvatka.core.interfaces.dal.waiver import WaiverChecker
 from shvatka.core.models import dto, enums
 
 
@@ -16,10 +17,7 @@ class GamePreparer(GameOrgsGetter, Protocol):
         raise NotImplementedError
 
 
-class GamePlayerDao(Committer, GameOrgsGetter, Protocol):
-    async def check_waiver(self, player: dto.Player, team: dto.Team, game: dto.Game) -> bool:
-        raise NotImplementedError
-
+class GamePlayerDao(Committer, WaiverChecker, GameOrgsGetter, Protocol):
     async def is_key_duplicate(self, level: dto.Level, team: dto.Team, key: str) -> bool:
         raise NotImplementedError
 

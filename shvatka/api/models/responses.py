@@ -3,8 +3,10 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Sequence, Generic
 
-from shvatka.core.models import dto
+from shvatka.core.games.dto import CurrentHints
+from shvatka.core.models import dto, enums
 from shvatka.core.models.dto import scn
+from shvatka.core.models.dto.scn import TimeHint
 from shvatka.core.models.enums import GameStatus
 
 T = typing.TypeVar("T")
@@ -113,4 +115,48 @@ class FullGame:
             status=core.status,
             start_at=core.start_at,
             levels=[Level.from_core(level) for level in core.levels],
+        )
+
+
+@dataclass(frozen=True)
+class KeyTime:
+    text: str
+    type_: enums.KeyType
+    is_duplicate: bool
+    at: datetime
+    level_number: int
+    player: dto.Player
+    team: dto.Team
+
+    @classmethod
+    def from_core(cls, core: dto.KeyTime | None):
+        if core is None:
+            return None
+        return cls(
+            text=core.text,
+            type_=core.type_,
+            is_duplicate=core.is_duplicate,
+            at=core.at,
+            level_number=core.level_number,
+            player=Player.from_core(core.player),
+            team=Team.from_core(core.team),
+        )
+
+
+@dataclass
+class CurrentHintResponse:
+    hints: list[scn.TimeHint]
+    typed_keys: list[KeyTime]
+    level_number: int
+    started_at: datetime
+
+    @classmethod
+    def from_core(cls, core: CurrentHints):
+        if core is None:
+            return None
+        return cls(
+            hints=core.hints,
+            typed_keys=[KeyTime.from_core(kt) for kt in core.typed_keys],
+            level_number=core.level_number,
+            started_at=core.started_at,
         )

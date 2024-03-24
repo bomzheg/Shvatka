@@ -19,6 +19,11 @@ class LevelUpserter(Committer, Protocol):
         raise NotImplementedError
 
 
+class LevelByGameAndNumberGetter(Protocol):
+    async def get_level_by_game_and_number(self, game: dto.Game, number: int) -> dto.Level:
+        raise NotImplementedError
+
+
 class MyLevelsGetter(Protocol):
     async def get_all_my(self, author: dto.Player) -> list[dto.Level]:
         raise NotImplementedError

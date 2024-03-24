@@ -30,6 +30,11 @@ class LevelTimesGetter(Protocol):
         raise NotImplementedError
 
 
+class LevelByTeamGetter(Protocol):
+    async def get_level_by_team(self, team: dto.Team) -> dto.LevelTime:
+        raise NotImplementedError
+
+
 class TeamLevelsMerger(Protocol):
     async def replace_team_levels(self, primary: dto.Team, secondary: dto.Team):
         raise NotImplementedError

@@ -1,6 +1,6 @@
 import logging
 
-from asgi_monitor.integrations.fastapi import setup_metrics  # type: ignore[import-untyped]
+from asgi_monitor.integrations.fastapi import setup_metrics, MetricsConfig
 from fastapi import FastAPI
 
 from shvatka.api import routes, middlewares
@@ -16,7 +16,12 @@ def create_app(config: ApiConfig) -> FastAPI:
     app.include_router(routes.setup())
     middlewares.setup(app, config)
     setup_metrics(
-        app, app_name=config.app.name, include_metrics_endpoint=True, include_trace_exemplar=True
+        app,
+        MetricsConfig(
+            app_name=config.app.name,
+            include_metrics_endpoint=True,
+            include_trace_exemplar=True,
+        ),
     )
 
     return app

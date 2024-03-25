@@ -9,7 +9,6 @@ from starlette.status import HTTP_404_NOT_FOUND, HTTP_403_FORBIDDEN
 
 from shvatka.api.models import responses
 from shvatka.api.utils.error_converter import to_http_error
-from shvatka.core.games.dto import CurrentHints
 from shvatka.core.games.interactors import GameFileReaderInteractor, GamePlayReaderInteractor
 from shvatka.core.models import dto
 from shvatka.core.services.game import (

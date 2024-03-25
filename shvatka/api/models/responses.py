@@ -6,7 +6,6 @@ from typing import Sequence, Generic
 from shvatka.core.games.dto import CurrentHints
 from shvatka.core.models import dto, enums
 from shvatka.core.models.dto import scn
-from shvatka.core.models.dto.scn import TimeHint
 from shvatka.core.models.enums import GameStatus
 
 T = typing.TypeVar("T")
@@ -125,8 +124,8 @@ class KeyTime:
     is_duplicate: bool
     at: datetime
     level_number: int
-    player: dto.Player
-    team: dto.Team
+    player: Player
+    team: Team
 
     @classmethod
     def from_core(cls, core: dto.KeyTime | None):

@@ -53,10 +53,10 @@ class GamePlayReaderInteractor:
             raise exceptions.WaiverError(
                 team=team, game=game, player=player, text="игрок не заявлен на игру, но ввёл ключ"
             )
-        level_time = await self.dao.get_level_by_team(team)
+        level_time = await self.dao.get_current_level_time(team, game)
         level = await self.dao.get_level_by_game_and_number(game, level_time.level_number)
         hints = level.get_hints_for_timedelta(datetime.now(tz=timezone.utc) - level_time.start_at)
-        keys = await self.dao.get_team_typed_keys(game, team)
+        keys = await self.dao.get_team_typed_keys(game, team, level_time.level_number)
         return CurrentHints(
             hints=hints,
             typed_keys=keys,

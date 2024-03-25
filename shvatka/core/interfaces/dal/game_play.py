@@ -1,6 +1,7 @@
 from typing import Iterable, Protocol
 
 from shvatka.core.interfaces.dal.base import Committer
+from shvatka.core.interfaces.dal.level_times import LevelByTeamGetter
 from shvatka.core.interfaces.dal.organizer import GameOrgsGetter
 from shvatka.core.interfaces.dal.waiver import WaiverChecker
 from shvatka.core.models import dto, enums
@@ -17,7 +18,7 @@ class GamePreparer(GameOrgsGetter, Protocol):
         raise NotImplementedError
 
 
-class GamePlayerDao(Committer, WaiverChecker, GameOrgsGetter, Protocol):
+class GamePlayerDao(Committer, WaiverChecker, GameOrgsGetter, LevelByTeamGetter, Protocol):
     async def is_key_duplicate(self, level: dto.Level, team: dto.Team, key: str) -> bool:
         raise NotImplementedError
 
@@ -57,7 +58,4 @@ class GamePlayerDao(Committer, WaiverChecker, GameOrgsGetter, Protocol):
         raise NotImplementedError
 
     async def finish(self, game: dto.Game) -> None:
-        raise NotImplementedError
-
-    async def get_current_level_time(self, team: dto.Team, game: dto.Game) -> dto.LevelTime:
         raise NotImplementedError

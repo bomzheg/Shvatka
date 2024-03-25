@@ -31,7 +31,7 @@ class LevelTimesGetter(Protocol):
 
 
 class LevelByTeamGetter(Protocol):
-    async def get_level_by_team(self, team: dto.Team) -> dto.LevelTime:
+    async def get_current_level_time(self, team: dto.Team, game: dto.Game) -> dto.LevelTime:
         raise NotImplementedError
 
 

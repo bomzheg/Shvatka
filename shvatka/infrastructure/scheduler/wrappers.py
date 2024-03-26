@@ -1,8 +1,7 @@
 import typing
-from typing import Annotated
 
 from aiogram import Bot
-from dishka.integrations.base import Depends
+from dishka.integrations.base import FromDishka
 
 from shvatka.core.interfaces.clients.file_storage import FileStorage
 from shvatka.infrastructure.db.dao.holder import HolderDao
@@ -21,9 +20,9 @@ from shvatka.tgbot.views.level_testing import create_level_test_view
 async def prepare_game_wrapper(
     game_id: int,
     author_id: int,
-    dao: Annotated[HolderDao, Depends()],
-    bot: Annotated[Bot, Depends()],
-    file_storage: Annotated[FileStorage, Depends()],
+    dao: FromDishka[HolderDao],
+    bot: FromDishka[Bot],
+    file_storage: FromDishka[FileStorage],
 ) -> None:
     author = await dao.player.get_by_id(author_id)
     game = await dao.game.get_by_id(game_id, author)
@@ -38,11 +37,11 @@ async def prepare_game_wrapper(
 async def start_game_wrapper(
     game_id: int,
     author_id: int,
-    dao: Annotated[HolderDao, Depends()],
-    bot: Annotated[Bot, Depends()],
-    file_storage: Annotated[FileStorage, Depends()],
-    scheduler: Annotated[Scheduler, Depends()],
-    config: Annotated[BotConfig, Depends()],
+    dao: FromDishka[HolderDao],
+    bot: FromDishka[Bot],
+    file_storage: FromDishka[FileStorage],
+    scheduler: FromDishka[Scheduler],
+    config: FromDishka[BotConfig],
 ):
     game = await dao.game.get_full(game_id)
     assert author_id == game.author.id
@@ -60,10 +59,10 @@ async def send_hint_wrapper(
     level_id: int,
     team_id: int,
     hint_number: int,
-    dao: Annotated[HolderDao, Depends()],
-    bot: Annotated[Bot, Depends()],
-    file_storage: Annotated[FileStorage, Depends()],
-    scheduler: Annotated[Scheduler, Depends()],
+    dao: FromDishka[HolderDao],
+    bot: FromDishka[Bot],
+    file_storage: FromDishka[FileStorage],
+    scheduler: FromDishka[Scheduler],
 ):
     level = await dao.level.get_by_id(level_id)
     team = await dao.team.get_by_id(team_id)
@@ -84,10 +83,10 @@ async def send_hint_for_testing_wrapper(
     game_id: int,
     player_id: int,
     hint_number: int,
-    dao: Annotated[HolderDao, Depends()],
-    bot: Annotated[Bot, Depends()],
-    file_storage: Annotated[FileStorage, Depends()],
-    scheduler: Annotated[Scheduler, Depends()],
+    dao: FromDishka[HolderDao],
+    bot: FromDishka[Bot],
+    file_storage: FromDishka[FileStorage],
+    scheduler: FromDishka[Scheduler],
 ):
     level = await dao.level.get_by_id(level_id)
     game = await dao.game.get_by_id(game_id)

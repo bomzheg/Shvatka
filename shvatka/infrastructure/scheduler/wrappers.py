@@ -86,7 +86,7 @@ async def send_hint_for_testing_wrapper(
     dao: FromDishka[HolderDao],
     bot: FromDishka[Bot],
     file_storage: FromDishka[FileStorage],
-    scheduler: FromDishka[Scheduler],
+    scheduler: FromDishka[LevelTestScheduler],
 ):
     level = await dao.level.get_by_id(level_id)
     game = await dao.game.get_by_id(game_id)
@@ -97,8 +97,6 @@ async def send_hint_for_testing_wrapper(
         suite=dto.LevelTestSuite(level=level, tester=org),
         hint_number=hint_number,
         view=create_level_test_view(bot, dao, file_storage),
-        scheduler=typing.cast(
-            LevelTestScheduler, scheduler
-        ),  # TODO typing.cast replace with better hint
+        scheduler=scheduler,
         dao=dao.level_testing_complex,
     )

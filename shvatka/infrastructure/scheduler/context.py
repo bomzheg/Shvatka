@@ -7,6 +7,7 @@ class ScheduledContextHolder:
     ATTENTION!
     GLOBAL VARIABLE!
     """
+
     dishka: AsyncContainer
 
 

@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import datetime
 from typing import BinaryIO
 
 from shvatka.core.games.dto import CurrentHints
@@ -8,6 +8,7 @@ from shvatka.core.models import dto
 from shvatka.core.rules.game import check_can_read
 from shvatka.core.services.scenario.files import check_file_meta_can_read
 from shvatka.core.utils import exceptions
+from shvatka.core.utils.datetime_utils import tz_utc
 
 
 class GameFileReaderInteractor:
@@ -49,13 +50,13 @@ class GamePlayReaderInteractor:
         game = await self.dao.get_active_game()
         if game is None:
             raise exceptions.HaveNotActiveGame(game=game, user=user)
-        if await self.dao.check_waiver(player, team, game):
+        if not await self.dao.check_waiver(player, team, game):
             raise exceptions.WaiverError(
                 team=team, game=game, player=player, text="игрок не заявлен на игру, но ввёл ключ"
             )
         level_time = await self.dao.get_current_level_time(team, game)
         level = await self.dao.get_level_by_game_and_number(game, level_time.level_number)
-        hints = level.get_hints_for_timedelta(datetime.now(tz=timezone.utc) - level_time.start_at)
+        hints = level.get_hints_for_timedelta(datetime.now(tz=tz_utc) - level_time.start_at)
         keys = await self.dao.get_team_typed_keys(game, team, level_time.level_number)
         return CurrentHints(
             hints=hints,

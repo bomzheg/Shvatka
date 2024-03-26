@@ -52,4 +52,4 @@ class LevelScenario:
 
     def get_hints_for_timedelta(self, delta: timedelta) -> list[TimeHint]:
         minutes = delta.total_seconds() // 60
-        return [th for th in self.time_hints if th.time < minutes]
+        return [th for th in self.time_hints if th.time <= minutes]

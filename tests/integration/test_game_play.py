@@ -1,19 +1,20 @@
 from datetime import datetime, timedelta
 
 import pytest
-from dataclass_factory import Factory
+from dishka import AsyncContainer
 
-from shvatka.core.interfaces.clients.file_storage import FileStorage
+from shvatka.core.games.interactors import GamePlayReaderInteractor
 from shvatka.core.models import dto, enums
 from shvatka.core.models.enums import GameStatus
 from shvatka.core.models.enums.played import Played
 from shvatka.core.services.game import start_waivers
-from shvatka.core.services.game_play import start_game, send_hint, check_key, get_available_hints
+from shvatka.core.services.game_play import start_game, send_hint, check_key
 from shvatka.core.services.game_stat import get_typed_keys
 from shvatka.core.services.key import KeyProcessor
 from shvatka.core.services.organizers import get_orgs
 from shvatka.core.services.player import join_team
 from shvatka.core.services.waiver import add_vote, approve_waivers
+from shvatka.core.utils import exceptions
 from shvatka.core.utils.datetime_utils import tz_utc
 from shvatka.core.utils.key_checker_lock import KeyCheckerFactory
 from shvatka.core.views.game import (
@@ -174,12 +175,11 @@ async def test_game_play(
 @pytest.mark.asyncio
 async def test_get_current_hints(
     game: dto.FullGame,
+    dishka_request: AsyncContainer,
     dao: HolderDao,
-    dcf: Factory,
-    locker: KeyCheckerFactory,
-    file_storage: FileStorage,
     author: dto.Player,
     harry: dto.Player,
+    ron: dto.Player,
     hermione: dto.Player,
     gryffindor: dto.Team,
 ):
@@ -197,5 +197,14 @@ async def test_get_current_hints(
     )
     dao.level_time._save(level_time)
     await dao.commit()
-    actual_hints = await get_available_hints(game, gryffindor, dao.game_player)
-    assert len(actual_hints) == 2
+    interactor = await dishka_request.get(GamePlayReaderInteractor)
+    hints = await interactor(hermione._user)
+    hints_harry = await interactor(harry._user)
+    assert len(hints.hints) == 2
+    assert len(hints_harry.hints) == 2
+    assert hints_harry.hints == hints.hints
+    with pytest.raises(exceptions.PlayerNotInTeam):
+        await interactor(ron._user)
+    await join_team(ron, gryffindor, harry, dao.team_player)
+    with pytest.raises(exceptions.WaiverError):
+        await interactor(ron._user)

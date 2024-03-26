@@ -2,7 +2,8 @@ import typing
 from dataclasses import dataclass
 from typing import Iterable
 
-from shvatka.core.interfaces.dal.complex import GamePackager, GameFileLoader
+from shvatka.core.interfaces.dal.complex import GamePackager
+from shvatka.core.games.adapters import GameFileReader, GamePlayReader
 from shvatka.core.interfaces.dal.game import GameUpserter, GameCreator
 from shvatka.core.models import dto
 from shvatka.core.models.dto import scn
@@ -101,7 +102,7 @@ class GamePackagerImpl(GamePackager):
         return await self.dao.file_info.get_by_guid(guid)
 
 
-class GameFilesGetterImpl(GameFileLoader):
+class GameFilesGetterImpl(GameFileReader):
     def __init__(self, dao: "HolderDao"):
         self.dao = dao
 
@@ -116,3 +117,31 @@ class GameFilesGetterImpl(GameFileLoader):
 
     async def get_by_user(self, user: dto.User) -> dto.Player:
         return await self.dao.player.get_by_user(user)
+
+
+class GamePlayReaderImpl(GamePlayReader):
+    def __init__(self, dao: "HolderDao"):
+        self.dao = dao
+
+    async def get_active_game(self) -> dto.Game | None:
+        return await self.dao.game.get_active_game()
+
+    async def get_by_user(self, user: dto.User) -> dto.Player:
+        return await self.dao.player.get_by_user(user)
+
+    async def get_team(self, player: dto.Player) -> dto.Team | None:
+        return await self.dao.team_player.get_team(player)
+
+    async def check_waiver(self, player: dto.Player, team: dto.Team, game: dto.Game) -> bool:
+        return await self.dao.waiver.check_waiver(player, team, game)
+
+    async def get_current_level_time(self, team: dto.Team, game: dto.Game) -> dto.LevelTime:
+        return await self.dao.level_time.get_current_level_time(team, game)
+
+    async def get_level_by_game_and_number(self, game: dto.Game, number: int) -> dto.Level:
+        return await self.dao.level.get_by_number(game, number)
+
+    async def get_team_typed_keys(
+        self, game: dto.Game, team: dto.Team, level_number: int
+    ) -> list[dto.KeyTime]:
+        return await self.dao.key_time.get_team_typed_keys(game, team, level_number)

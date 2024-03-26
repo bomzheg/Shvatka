@@ -249,15 +249,6 @@ async def send_hint(
     await scheduler.plain_hint(level, team, next_hint_number, next_hint_time)
 
 
-async def get_available_hints(
-    game: dto.Game, team: dto.Team, dao: GamePlayerDao
-) -> list[scn.TimeHint]:
-    level_time = await dao.get_current_level_time(team=team, game=game)
-    level = await dao.get_current_level(team=team, game=game)
-    from_start_level_minutes = (datetime.now(tz=tz_utc) - level_time.start_at).seconds // 60
-    return list(filter(lambda th: th.time <= from_start_level_minutes, level.scenario.time_hints))
-
-
 async def schedule_first_hint(
     scheduler: Scheduler,
     team: dto.Team,

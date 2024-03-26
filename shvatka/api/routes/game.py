@@ -9,7 +9,7 @@ from starlette.status import HTTP_404_NOT_FOUND, HTTP_403_FORBIDDEN
 
 from shvatka.api.models import responses
 from shvatka.api.utils.error_converter import to_http_error
-from shvatka.core.games.interactors import FileReader
+from shvatka.core.games.interactors import GameFileReaderInteractor, GamePlayReaderInteractor
 from shvatka.core.models import dto
 from shvatka.core.services.game import (
     get_authors_games,
@@ -61,7 +61,7 @@ async def get_game_card(
 @inject
 async def get_game_file(
     user: Annotated[dto.User, FromDishka()],
-    file_reader: Annotated[FileReader, FromDishka()],
+    file_reader: Annotated[GameFileReaderInteractor, FromDishka()],
     id_: Annotated[int, Path(alias="id")],
     guid: Annotated[str, Path(alias="guid")],
 ) -> StreamingResponse:
@@ -73,11 +73,20 @@ async def get_game_file(
         raise to_http_error(e, HTTP_403_FORBIDDEN) from e
 
 
+@inject
+async def get_running_game_hints(
+    user: Annotated[dto.User, FromDishka()],
+    interactor: Annotated[GamePlayReaderInteractor, FromDishka()],
+) -> responses.CurrentHintResponse:
+    return responses.CurrentHintResponse.from_core(await interactor(user))
+
+
 def setup() -> APIRouter:
     router = APIRouter(prefix="/games")
     router.add_api_route("", get_all_games, methods=["GET"])
     router.add_api_route("/my", get_my_games_list, methods=["GET"])
     router.add_api_route("/active", get_active_game, methods=["GET"])
+    router.add_api_route("/running/hints", get_running_game_hints, methods=["GET"])
     router.add_api_route("/{id}", get_game_card, methods=["GET"])
     router.add_api_route("/{id}/files/{guid}", get_game_file, methods=["GET"])
     return router

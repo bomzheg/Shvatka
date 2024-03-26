@@ -36,11 +36,13 @@ class TeamPlayerGetter(Protocol):
         raise NotImplementedError
 
 
-class PlayerTeamChecker(TeamPlayerGetter, Protocol):
-    async def have_team(self, player: dto.Player) -> bool:
+class TeamByPlayerGetter(Protocol):
+    async def get_team(self, player: dto.Player) -> dto.Team | None:
         raise NotImplementedError
 
-    async def get_team(self, player: dto.Player) -> dto.Team | None:
+
+class PlayerTeamChecker(TeamPlayerGetter, TeamByPlayerGetter, Protocol):
+    async def have_team(self, player: dto.Player) -> bool:
         raise NotImplementedError
 
 

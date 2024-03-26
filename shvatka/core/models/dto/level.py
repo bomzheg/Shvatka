@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import timedelta
 
 from .player import Player
 from .scn.level import LevelScenario, BonusKey
@@ -37,3 +38,6 @@ class Level:
     @property
     def hints_count(self) -> int:
         return self.scenario.hints_count
+
+    def get_hints_for_timedelta(self, delta: timedelta) -> list[TimeHint]:
+        return self.scenario.get_hints_for_timedelta(delta)

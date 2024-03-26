@@ -1,5 +1,6 @@
 import typing
 from dataclasses import dataclass, field
+from datetime import timedelta
 
 from .time_hint import TimeHint
 
@@ -48,3 +49,7 @@ class LevelScenario:
     @property
     def hints_count(self) -> int:
         return sum(time_hint.hints_count for time_hint in self.time_hints)
+
+    def get_hints_for_timedelta(self, delta: timedelta) -> list[TimeHint]:
+        minutes = delta.total_seconds() // 60
+        return [th for th in self.time_hints if th.time <= minutes]

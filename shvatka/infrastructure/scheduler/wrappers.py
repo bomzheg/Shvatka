@@ -1,4 +1,3 @@
-
 from aiogram import Bot
 from dishka.integrations.base import FromDishka
 

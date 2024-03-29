@@ -75,7 +75,7 @@ async def test_logout(client: AsyncClient, token: Token):
 
 
 @pytest.mark.asyncio
-@pytest.mark.skip(reason="doesnt work. TODO")
+@pytest.mark.skip(reason="doesn't work. TODO")
 async def test_change_password(client: AsyncClient, user: dto.User, token: Token):
     resp = await client.put(
         "/users/me/password/",

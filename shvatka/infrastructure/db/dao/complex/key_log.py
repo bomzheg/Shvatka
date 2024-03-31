@@ -7,7 +7,7 @@ from shvatka.core.models import dto
 from shvatka.core.models.dto import Team, KeyTime
 
 if typing.TYPE_CHECKING:
-    from ..holder import HolderDao
+    from shvatka.infrastructure.db.dao.holder import HolderDao
 
 
 @dataclass
@@ -37,7 +37,7 @@ class GameKeysReaderImpl(GameKeysReader):
         return await self.dao.organizer.get_by_player(game=game, player=player)
 
     async def get_by_player_or_none(
-            self, game: dto.Game, player: dto.Player
+        self, game: dto.Game, player: dto.Player
     ) -> dto.SecondaryOrganizer | None:
         return await self.dao.organizer.get_by_player_or_none(game=game, player=player)
 

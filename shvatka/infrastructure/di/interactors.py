@@ -1,6 +1,10 @@
 from dishka import Provider, Scope, provide
 
-from shvatka.core.games.interactors import GameFileReaderInteractor, GamePlayReaderInteractor, GameKeysReaderInteractor
+from shvatka.core.games.interactors import (
+    GameFileReaderInteractor,
+    GamePlayReaderInteractor,
+    GameKeysReaderInteractor,
+)
 from shvatka.core.games.adapters import GameFileReader, GamePlayReader, GameKeysReader
 from shvatka.infrastructure.db.dao.complex.game import GameFilesGetterImpl, GamePlayReaderImpl
 from shvatka.infrastructure.db.dao.complex.key_log import GameKeysReaderImpl

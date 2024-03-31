@@ -13,6 +13,7 @@ from shvatka.core.games.interactors import (
     GameFileReaderInteractor,
     GamePlayReaderInteractor,
     GameKeysReaderInteractor,
+    GameStatReaderInteractor,
 )
 from shvatka.core.models import dto
 from shvatka.core.services.game import (
@@ -72,6 +73,15 @@ async def get_game_keys(
 
 
 @inject
+async def get_game_stat(
+    interactor: FromDishka[GameStatReaderInteractor],
+    user: FromDishka[dto.User],
+    id_: Annotated[int, Path(alias="id")],
+):
+    return await interactor(user=user, game_id=id_)
+
+
+@inject
 async def get_game_file(
     user: Annotated[dto.User, FromDishka()],
     file_reader: Annotated[GameFileReaderInteractor, FromDishka()],
@@ -101,5 +111,7 @@ def setup() -> APIRouter:
     router.add_api_route("/active", get_active_game, methods=["GET"])
     router.add_api_route("/running/hints", get_running_game_hints, methods=["GET"])
     router.add_api_route("/{id}", get_game_card, methods=["GET"])
+    router.add_api_route("/{id}/keys", get_game_keys, methods=["GET"])
+    router.add_api_route("/{id}/stat", get_game_stat, methods=["GET"])
     router.add_api_route("/{id}/files/{guid}", get_game_file, methods=["GET"])
     return router

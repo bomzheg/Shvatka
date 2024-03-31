@@ -61,3 +61,8 @@ class LevelDeleter(Committer, Protocol):
 
 class LevelCorrectUnlinker(Committer, LevelUnlinker, LevelReorder, Protocol):
     pass
+
+
+class MaxLevelNumberGetter(Protocol):
+    async def get_max_level_number(self, game: dto.Game) -> int:
+        raise NotImplementedError

@@ -1,6 +1,6 @@
 from typing import Protocol
 
-from shvatka.core.interfaces.dal.complex import TypedKeyGetter
+from shvatka.core.interfaces.dal.complex import TypedKeyGetter, GameStatDao
 from shvatka.core.interfaces.dal.file_info import FileInfoGetter
 from shvatka.core.interfaces.dal.game import GameByIdGetter, ActiveGameFinder
 from shvatka.core.interfaces.dal.key_log import GameTeamKeyGetter
@@ -11,6 +11,10 @@ from shvatka.core.interfaces.dal.waiver import WaiverChecker
 
 
 class GameKeysReader(TypedKeyGetter, GameByIdGetter, PlayerByUserGetter, Protocol):
+    pass
+
+
+class GameStatReader(GameStatDao, GameByIdGetter, PlayerByUserGetter, Protocol):
     pass
 
 

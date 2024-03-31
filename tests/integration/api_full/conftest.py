@@ -1,4 +1,3 @@
-from asgi_lifespan import LifespanManager
 import pytest
 import pytest_asyncio
 from dishka import AsyncContainer
@@ -64,7 +63,6 @@ async def auth(dishka: AsyncContainer) -> AuthProperties:
 @pytest_asyncio.fixture(scope="session")
 async def client(app: FastAPI):
     async with (
-        LifespanManager(app),
         AsyncClient(app=app, base_url="http://test") as ac,
     ):
         yield ac

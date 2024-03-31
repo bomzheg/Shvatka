@@ -3,12 +3,24 @@ from typing import BinaryIO
 
 from shvatka.core.games.dto import CurrentHints
 from shvatka.core.interfaces.clients.file_storage import FileGateway
-from shvatka.core.games.adapters import GameFileReader, GamePlayReader
+from shvatka.core.games.adapters import GameFileReader, GamePlayReader, GameKeysReader
 from shvatka.core.models import dto
 from shvatka.core.rules.game import check_can_read
+from shvatka.core.services.game_stat import get_typed_keys
 from shvatka.core.services.scenario.files import check_file_meta_can_read
 from shvatka.core.utils import exceptions
 from shvatka.core.utils.datetime_utils import tz_utc
+
+
+class GameKeysReaderInteractor:
+    def __init__(self, dao: GameKeysReader):
+        self.dao = dao
+
+    async def __call__(self, game_id: int, user: dto.User) -> dict[int, list[dto.KeyTime]]:
+        player = await self.dao.get_by_user(user)
+        game = await self.dao.get_by_id(game_id)
+        keys = await get_typed_keys(game, player, self.dao)
+        return {t.id: k for t, k in keys.items()}
 
 
 class GameFileReaderInteractor:

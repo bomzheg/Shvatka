@@ -159,4 +159,4 @@ class HolderDao:
 
     @property
     def typed_keys(self) -> TypedKeyGetter:
-        return TypedKeyGetterImpl(key_time=self.key_time, organizer=self.organizer)
+        return TypedKeyGetterImpl(dao=self)

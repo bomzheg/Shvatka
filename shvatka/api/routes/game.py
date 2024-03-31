@@ -9,7 +9,7 @@ from starlette.status import HTTP_404_NOT_FOUND, HTTP_403_FORBIDDEN
 
 from shvatka.api.models import responses
 from shvatka.api.utils.error_converter import to_http_error
-from shvatka.core.games.interactors import GameFileReaderInteractor, GamePlayReaderInteractor
+from shvatka.core.games.interactors import GameFileReaderInteractor, GamePlayReaderInteractor, GameKeysReaderInteractor
 from shvatka.core.models import dto
 from shvatka.core.services.game import (
     get_authors_games,
@@ -57,6 +57,14 @@ async def get_game_card(
     game = await get_full_game(id_, player, dao.game)
     return responses.FullGame.from_core(game)
 
+
+@inject
+async def get_game_keys(
+        interactor: FromDishka[GameKeysReaderInteractor],
+        user: FromDishka[dto.User],
+        id_: Annotated[int, Path(alias="id")],
+):
+    return await interactor(user, id_)
 
 @inject
 async def get_game_file(

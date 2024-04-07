@@ -11,41 +11,41 @@ from shvatka.core.utils.key_checker_lock import KeyCheckerFactory
 @dataclass
 class KeyProcessor:
     dao: GamePlayerDao
-    game: dto.FullGame
     locker: KeyCheckerFactory
 
-    async def check_key(self, key: str, team: dto.Team, player: dto.Player) -> dto.InsertedKey:
+    async def check_key(self, key: str, team: dto.Team, player: dto.Player, game: dto.Game) -> dto.InsertedKey:
         if not is_key_valid(key):
-            raise exceptions.InvalidKey(key=key, team=team, player=player, game=self.game)
-        return await self.submit_key(key=key, player=player, team=team)
+            raise exceptions.InvalidKey(key=key, team=team, player=player, game=game)
+        return await self.submit_key(key=key, player=player, team=team, game=game)
 
     async def submit_key(
         self,
         key: str,
         player: dto.Player,
         team: dto.Team,
+        game: dto.Game,
     ) -> dto.InsertedKey:
         is_level_up = False
         async with self.locker(team):
-            level = await self.dao.get_current_level(team, self.game)
+            level = await self.dao.get_current_level(team, game)
             parsed_key = await self.parse_key(key, level)
             saved_key = await self.dao.save_key(
                 key=parsed_key.text,
                 team=team,
                 level=level,
-                game=self.game,
+                game=game,
                 player=player,
                 type_=parsed_key.type_,
                 is_duplicate=await self.is_duplicate(level=level, team=team, key=key),
             )
             typed_keys = await self.dao.get_correct_typed_keys(
-                level=level, game=self.game, team=team
+                level=level, game=game, team=team
             )
             if parsed_key.type_ == enums.KeyType.simple:
                 # add just now added key to typed, because no flush in dao
                 typed_keys.add(parsed_key.text)
                 if is_level_up := await self.is_level_up(typed_keys, level):
-                    await self.dao.level_up(team=team, level=level, game=self.game)
+                    await self.dao.level_up(team=team, level=level, game=game)
             await self.dao.commit()
         return dto.InsertedKey.from_key_time(saved_key, is_level_up, parsed_key=parsed_key)
 

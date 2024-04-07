@@ -10,8 +10,10 @@ from shvatka.core.games.adapters import (
     GameFileReader,
     GamePlayReader,
     GameKeysReader,
-    GameStatReader,
+    GameStatReader, GamePlayKeyRepo,
 )
+from shvatka.core.services.key import KeyProcessor
+from shvatka.core.utils.key_checker_lock import KeyCheckerFactory
 from shvatka.infrastructure.db.dao.complex.game import GameFilesGetterImpl, GamePlayReaderImpl
 from shvatka.infrastructure.db.dao.complex.key_log import GameKeysReaderImpl
 from shvatka.infrastructure.db.dao.complex.level_times import GameStatReaderImpl
@@ -44,3 +46,7 @@ class GamePlayProvider(Provider):
         return GamePlayReaderImpl(dao)
 
     game_play_reader_interactor = provide(GamePlayReaderInteractor)
+
+    @provide
+    def get_key_processor(self, dao: GamePlayKeyRepo, locker: KeyCheckerFactory) -> KeyProcessor:
+        return KeyProcessor(dao=dao, locker=locker)

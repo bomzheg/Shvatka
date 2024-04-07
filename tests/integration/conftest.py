@@ -27,7 +27,8 @@ from shvatka.infrastructure.di import (
     FileClientProvider,
     GamePlayProvider,
 )
-from shvatka.tgbot.main_factory import DpProvider, LockProvider, GameToolsProvider
+from shvatka.tgbot.main_factory import DpProvider, GameToolsProvider
+from shvatka.infrastructure.di.db import LockProvider
 from shvatka.tgbot.username_resolver.user_getter import UserGetter
 from shvatka.tgbot.views.hint_factory.hint_parser import HintParser
 from tests.conftest import paths, event_loop, bot_config  # noqa: F401

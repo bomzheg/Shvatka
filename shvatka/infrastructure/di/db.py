@@ -4,10 +4,11 @@ from dishka import Provider, Scope, provide
 from redis.asyncio.client import Redis
 from sqlalchemy.ext.asyncio import async_sessionmaker, AsyncSession, AsyncEngine
 
+from shvatka.core.utils.key_checker_lock import KeyCheckerFactory
 from shvatka.infrastructure.db.config.models.db import DBConfig, RedisConfig
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.infrastructure.db.dao.memory.level_testing import LevelTestingData
-from shvatka.infrastructure.db.factory import create_engine, create_session_maker, create_redis
+from shvatka.infrastructure.db.factory import create_engine, create_session_maker, create_redis, create_lock_factory
 
 
 class DbProvider(Provider):
@@ -54,3 +55,11 @@ class RedisProvider(Provider):
     async def get_redis(self, config: RedisConfig) -> AsyncIterable[Redis]:
         async with create_redis(config) as redis:
             yield redis
+
+
+class LockProvider(Provider):
+    scope = Scope.APP
+
+    @provide
+    def get_lock_factory(self) -> KeyCheckerFactory:
+        return create_lock_factory()

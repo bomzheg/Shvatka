@@ -72,7 +72,7 @@ async def test_game_play(
 
     dummy_org_notifier = OrgNotifierMock()
     orgs = await get_orgs(game, dao.organizer)
-    key_processor = KeyProcessor(dao.game_player, game, locker)
+    key_processor = KeyProcessor(dao.game_player, locker)
     key_kwargs = {
         "player": harry,
         "team": gryffindor,

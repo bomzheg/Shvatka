@@ -7,25 +7,27 @@ from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.fsm.storage.redis import RedisStorage, DefaultKeyBuilder, RedisEventIsolation
 from aiogram_dialog.api.protocols import MessageManagerProtocol
 from aiogram_dialog.manager.message_manager import MessageManager
-from dishka import AsyncContainer, make_async_container, Provider, Scope, provide
+from dishka import AsyncContainer, make_async_container, Provider, Scope, provide, AnyOf
 from redis.asyncio import Redis
 
-from shvatka.common.factory import TelegraphProvider, DCFProvider
-from shvatka.core.utils.key_checker_lock import KeyCheckerFactory
-from shvatka.core.views.game import GameLogWriter
+from shvatka.core.interfaces.clients.file_storage import FileStorage
+from shvatka.core.views.game import GameViewPreparer, GameView, OrgNotifier, GameLogWriter
+from shvatka.core.views.level import LevelView
 from shvatka.infrastructure.db.config.models.storage import StorageConfig, StorageType
+from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.infrastructure.db.factory import (
     create_redis,
-    create_lock_factory,
 )
 from shvatka.infrastructure.di import get_providers
-from shvatka.infrastructure.scheduler.factory import SchedulerProvider
 from shvatka.tgbot.config.models.bot import BotConfig, TgClientConfig
 from shvatka.tgbot.handlers import setup_handlers
 from shvatka.tgbot.middlewares import setup_middlewares
 from shvatka.tgbot.username_resolver.user_getter import UserGetter
 from shvatka.tgbot.utils.router import print_router_tree
-from shvatka.tgbot.views.game import GameBotLog
+from shvatka.tgbot.views.game import BotView, BotOrgNotifier, GameBotLog
+from shvatka.tgbot.views.hint_factory.hint_content_resolver import HintContentResolver
+from shvatka.tgbot.views.hint_sender import HintSender
+from shvatka.tgbot.views.level_testing import LevelBotView
 
 logger = logging.getLogger(__name__)
 
@@ -46,12 +48,8 @@ def get_bot_specific_providers() -> list[Provider]:
     return [
         DpProvider(),
         DialogManagerProvider(),
-        SchedulerProvider(),
-        TelegraphProvider(),
-        DCFProvider(),
-        GameLogProvider(),
         UserGetterProvider(),
-        LockProvider(),
+        ViewProvider(),
     ]
 
 
@@ -61,14 +59,6 @@ class DialogManagerProvider(Provider):
     @provide
     def get_manager(self) -> MessageManagerProtocol:
         return MessageManager()
-
-
-class LockProvider(Provider):
-    scope = Scope.APP
-
-    @provide
-    def get_lock_factory(self) -> KeyCheckerFactory:
-        return create_lock_factory()
 
 
 class DpProvider(Provider):
@@ -125,12 +115,21 @@ class UserGetterProvider(Provider):
             yield user_getter
 
 
-class GameLogProvider(Provider):
-    scope = Scope.APP
+class ViewProvider(Provider):
+    scope = Scope.REQUEST
 
     @provide
-    def get_game_log(self, bot: Bot, config: BotConfig) -> GameLogWriter:
-        return GameBotLog(bot=bot, log_chat_id=config.game_log_chat)
+    def get_hint_content_resolver(self, dao: HolderDao, file_storage: FileStorage) -> HintContentResolver:
+        return HintContentResolver(dao.file_info, file_storage)
+
+    get_hint_sender = provide(HintSender)
+    get_bot_view = provide(BotView, provides=AnyOf[GameViewPreparer, GameView])
+    get_bot_org_notifier = provide(BotOrgNotifier, provides=OrgNotifier)
+    get_level_bot_view = provide(LevelBotView, provides=LevelView)
+
+    @provide
+    def get_game_logger(self, bot: Bot, config: BotConfig) -> GameLogWriter:
+        return GameBotLog(bot, log_chat_id=config.game_log_chat)
 
 
 def resolve_update_types(dp: Dispatcher) -> list[str]:

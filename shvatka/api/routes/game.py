@@ -101,7 +101,7 @@ async def get_game_file(
 @inject
 async def get_running_game_hints(
     user: Annotated[dto.User, FromDishka()],
-    interactor: Annotated[GamePlayReaderInteractor, FromDishka()],
+    interactor: FromDishka[GamePlayReaderInteractor],
 ) -> responses.CurrentHintResponse:
     return responses.CurrentHintResponse.from_core(await interactor(user))
 

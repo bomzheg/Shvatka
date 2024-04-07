@@ -3,6 +3,7 @@ import logging
 import typing
 from datetime import timedelta, datetime
 
+from shvatka.core.games.adapters import GamePlayKeyRepo
 from shvatka.core.interfaces.dal.game_play import GamePreparer, GamePlayerDao
 from shvatka.core.interfaces.dal.level_times import GameStarter, LevelTimeChecker
 from shvatka.core.interfaces.scheduler import Scheduler
@@ -86,8 +87,8 @@ async def check_key(
     key: str,
     player: dto.Player,
     team: dto.Team,
-    game: dto.FullGame,
-    dao: GamePlayerDao,
+    game: dto.Game,
+    dao: GamePlayKeyRepo,
     view: GameView,
     game_log: GameLogWriter,
     org_notifier: OrgNotifier,
@@ -124,7 +125,7 @@ async def check_key(
             team=team, game=game, player=player, text="игрок не заявлен на игру, но ввёл ключ"
         )
 
-    new_key = await key_processor.check_key(key=key, player=player, team=team)
+    new_key = await key_processor.check_key(key=key, player=player, team=team, game=game)
     if new_key.is_duplicate:
         await view.duplicate_key(key=new_key)
         return
@@ -153,17 +154,18 @@ async def check_key(
 
 async def process_level_up(
     team: dto.Team,
-    game: dto.FullGame,
-    dao: GamePlayerDao,
+    game: dto.Game,
+    dao: GamePlayKeyRepo,
     view: GameView,
     game_log: GameLogWriter,
     org_notifier: OrgNotifier,
     locker: KeyCheckerFactory,
     scheduler: Scheduler,
 ):
+    full_game = await dao.get_full(game.id)
     async with locker.lock_globally():
-        if await dao.is_team_finished(team, game):
-            await finish_team(team, game, view, game_log, dao, locker)
+        if await dao.is_team_finished(team, full_game):
+            await finish_team(team, full_game, view, game_log, dao, locker)
             return
     next_level = await dao.get_current_level(team, game)
 

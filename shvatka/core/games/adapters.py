@@ -3,6 +3,7 @@ from typing import Protocol
 from shvatka.core.interfaces.dal.complex import TypedKeyGetter, GameStatDao
 from shvatka.core.interfaces.dal.file_info import FileInfoGetter
 from shvatka.core.interfaces.dal.game import GameByIdGetter, ActiveGameFinder
+from shvatka.core.interfaces.dal.game_play import GamePlayerDao
 from shvatka.core.interfaces.dal.key_log import GameTeamKeyGetter
 from shvatka.core.interfaces.dal.level import LevelByGameAndNumberGetter
 from shvatka.core.interfaces.dal.level_times import LevelByTeamGetter
@@ -24,6 +25,21 @@ class GameFileReader(FileInfoGetter, GameByIdGetter, PlayerByUserGetter, Protoco
 
 class GamePlayReader(
     ActiveGameFinder,
+    PlayerByUserGetter,
+    TeamByPlayerGetter,
+    WaiverChecker,
+    LevelByTeamGetter,
+    LevelByGameAndNumberGetter,
+    GameTeamKeyGetter,
+    Protocol,
+):
+    pass
+
+
+class GamePlayKeyRepo(
+    GamePlayerDao,
+    ActiveGameFinder,
+    GameByIdGetter,
     PlayerByUserGetter,
     TeamByPlayerGetter,
     WaiverChecker,

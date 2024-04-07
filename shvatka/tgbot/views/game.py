@@ -202,10 +202,3 @@ class BotOrgNotifier(OrgNotifier):
             f"{event.result.td.seconds % 60} c.\n"
             f"{hd.pre(hd.quote(results))}",
         )
-
-
-def create_bot_game_view(bot: Bot, dao: HolderDao, storage: FileStorage) -> BotView:
-    return BotView(
-        bot=bot,
-        hint_sender=create_hint_sender(bot=bot, dao=dao, storage=storage),
-    )

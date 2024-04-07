@@ -1,19 +1,20 @@
 from aiogram import Bot, Router
 from aiogram.types import Message
+from dishka import AsyncContainer
 
+from shvatka.core.games.adapters import GamePlayKeyRepo
 from shvatka.core.interfaces.clients.file_storage import FileStorage
 from shvatka.core.interfaces.scheduler import Scheduler
 from shvatka.core.models import dto
 from shvatka.core.services.game_play import check_key
 from shvatka.core.services.key import KeyProcessor
 from shvatka.core.utils.key_checker_lock import KeyCheckerFactory
-from shvatka.core.views.game import GameLogWriter
+from shvatka.core.views.game import GameLogWriter, GameView, OrgNotifier
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.tgbot.filters import is_key, IsTeamFilter
 from shvatka.tgbot.filters.game_status import GameStatusFilter
 from shvatka.tgbot.filters.team_player import TeamPlayerFilter
 from shvatka.tgbot.middlewares import TeamPlayerMiddleware
-from shvatka.tgbot.views.game import create_bot_game_view, BotOrgNotifier
 
 
 async def check_key_handler(
@@ -22,24 +23,24 @@ async def check_key_handler(
     team: dto.Team,
     player: dto.Player,
     game: dto.Game,
-    dao: HolderDao,
     scheduler: Scheduler,
     locker: KeyCheckerFactory,
-    bot: Bot,
-    file_storage: FileStorage,
     game_log: GameLogWriter,
+    dishka: AsyncContainer,
 ):
-    full_game = await dao.game.get_full(game.id)
-    key_processor = KeyProcessor(dao=dao.game_player, game=full_game, locker=locker)
+    repo_ = await dishka.get(GamePlayKeyRepo)
+    key_processor = await dishka.get(KeyProcessor)
+    view = await dishka.get(GameView)
+    org_notifier = await dishka.get(OrgNotifier)
     await check_key(
         key=key,
         player=player,
         team=team,
-        game=full_game,
-        dao=dao.game_player,
-        view=create_bot_game_view(bot=bot, dao=dao, storage=file_storage),
+        game=game,
+        dao=repo_,
+        view=view,
         game_log=game_log,
-        org_notifier=BotOrgNotifier(bot=bot),
+        org_notifier=org_notifier,
         locker=locker,
         scheduler=scheduler,
         key_processor=key_processor,

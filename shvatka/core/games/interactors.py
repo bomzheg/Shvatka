@@ -7,14 +7,19 @@ from shvatka.core.games.adapters import (
     GameFileReader,
     GamePlayReader,
     GameKeysReader,
-    GameStatReader,
+    GameStatReader, GamePlayKeyRepo,
 )
+from shvatka.core.interfaces.scheduler import Scheduler
 from shvatka.core.models import dto
 from shvatka.core.rules.game import check_can_read
 from shvatka.core.services.game_stat import get_typed_keys, get_game_stat
+from shvatka.core.services.game_play import check_key
+from shvatka.core.services.key import KeyProcessor
 from shvatka.core.services.scenario.files import check_file_meta_can_read
 from shvatka.core.utils import exceptions
 from shvatka.core.utils.datetime_utils import tz_utc
+from shvatka.core.utils.key_checker_lock import KeyCheckerFactory
+from shvatka.core.views.game import GameView, OrgNotifier, GameLogWriter
 
 
 class GameKeysReaderInteractor:
@@ -90,4 +95,53 @@ class GamePlayReaderInteractor:
             typed_keys=keys,
             level_number=level_time.level_number,
             started_at=level_time.start_at,
+        )
+
+
+class GamePlayKeyInteractor:
+    def __init__(
+            self,
+            dao: GamePlayKeyRepo,
+            view: GameView,
+            game_log: GameLogWriter,
+            org_notifier: OrgNotifier,
+            locker: KeyCheckerFactory,
+            key_processor: KeyProcessor,
+            scheduler: Scheduler,
+    ):
+        self.dao = dao
+        self.view = view
+        self.game_log = game_log
+        self.org_notifier = org_notifier
+        self.locker = locker
+        self.key_processor = key_processor
+        self.scheduler = scheduler
+
+    async def __call__(self, user: dto.User, key: str) -> dto.InsertedKey:
+        player = await self.dao.get_by_user(user)
+        team = await self.dao.get_team(player)
+        if not team:
+            raise exceptions.PlayerNotInTeam(
+                player=player,
+                user=user,
+            )
+        game = await self.dao.get_active_game()
+        if game is None:
+            raise exceptions.HaveNotActiveGame(game=game, user=user)
+        if not await self.dao.check_waiver(player, team, game):
+            raise exceptions.WaiverError(
+                team=team, game=game, player=player, text="игрок не заявлен на игру, но ввёл ключ"
+            )
+        return await check_key(
+            key=key,
+            player=player,
+            team=team,
+            game=game,
+            dao=self.dao,
+            view=self.view,
+            game_log=self.game_log,
+            org_notifier=self.org_notifier,
+            locker=self.locker,
+            key_processor=self.key_processor,
+            scheduler=self.scheduler,
         )

@@ -1,3 +1,4 @@
+import base64
 import hashlib
 import hmac
 import logging
@@ -99,6 +100,16 @@ class AuthProperties:
             raise credentials_exception from e
         return user
 
+    async def get_user_basic(self, request: Request, dao: HolderDao) -> dto.User | None:
+        if (header := request.headers.get("Authorization")) is None:
+            return None
+        schema, token = header.split(" ", maxsplit=1)
+        if schema.lower() != "basic":
+            return None
+        decoded = base64.urlsafe_b64decode(token).decode("utf-8")
+        username, password = decoded.split(":", maxsplit=1)
+        return await self.authenticate_user(username, password, dao)
+
 
 class AuthProvider(Provider):
     scope = Scope.APP
@@ -113,19 +124,21 @@ class AuthProvider(Provider):
         return OAuth2PasswordBearerWithCookie(token_url="auth/token")
 
     @provide(scope=Scope.REQUEST)
-    async def get_token(
-        self, request: Request, cookie_auth: OAuth2PasswordBearerWithCookie
-    ) -> Token:
-        return cookie_auth.get_token(request)
-
-    @provide(scope=Scope.REQUEST)
     async def get_current_user(
         self,
-        token: Token,
+        request: Request,
+        cookie_auth: OAuth2PasswordBearerWithCookie,
         auth_properties: AuthProperties,
         dao: HolderDao,
     ) -> dto.User:
-        return await auth_properties.get_current_user(token, dao)
+        try:
+            token = cookie_auth.get_token(request)
+            return await auth_properties.get_current_user(token, dao)
+        except (JWTError, HTTPException):
+            user = await auth_properties.get_user_basic(request, dao)
+            if user is None:
+                raise
+            return user
 
 
 def check_tg_hash(user: UserTgAuth, bot_token: str):

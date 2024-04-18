@@ -143,6 +143,43 @@ class KeyTime:
 
 
 @dataclass
+class LevelTime:
+    id: int
+    team: Team
+    level_number: int
+    start_at: datetime
+    is_finished: bool
+
+    @classmethod
+    def from_core(cls, core: dto.LevelTimeOnGame | None):
+        if core is None:
+            return None
+        return cls(
+            id=core.id,
+            team=Team.from_core(core.team),
+            level_number=core.level_number,
+            start_at=core.start_at,
+            is_finished=core.is_finished,
+        )
+
+
+@dataclass
+class GameStat:
+    level_times: dict[int, list[LevelTime]]
+
+    @classmethod
+    def from_core(cls, core: dto.GameStat | None):
+        if core is None:
+            return None
+        return cls(
+            level_times={
+                team.id: [LevelTime.from_core(lt) for lt in lts]
+                for team, lts in core.level_times.items()
+            },
+        )
+
+
+@dataclass
 class CurrentHintResponse:
     hints: list[scn.TimeHint]
     typed_keys: list[KeyTime]

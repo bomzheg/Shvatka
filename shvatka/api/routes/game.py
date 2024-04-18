@@ -68,8 +68,9 @@ async def get_game_keys(
     interactor: FromDishka[GameKeysReaderInteractor],
     user: FromDishka[dto.User],
     id_: Annotated[int, Path(alias="id")],
-):
-    return await interactor(user=user, game_id=id_)
+) -> dict[int, list[responses.KeyTime | None]]:
+    keys = await interactor(user=user, game_id=id_)
+    return {k: [responses.KeyTime.from_core(key_time) for key_time in v] for k, v in keys.items()}
 
 
 @inject
@@ -77,8 +78,9 @@ async def get_game_stat(
     interactor: FromDishka[GameStatReaderInteractor],
     user: FromDishka[dto.User],
     id_: Annotated[int, Path(alias="id")],
-):
-    return await interactor(user=user, game_id=id_)
+) -> responses.GameStat:
+    stat = await interactor(user=user, game_id=id_)
+    return responses.GameStat.from_core(stat)
 
 
 @inject

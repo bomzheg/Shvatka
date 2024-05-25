@@ -9,6 +9,7 @@ from aiogram_dialog.api.entities import Stack, Context
 from aiogram_dialog.api.protocols import BgManagerFactory
 from aiogram_dialog.context.storage import StorageProxy
 from dataclass_factory import Factory
+from dishka import AsyncContainer
 from telegraph.aio import Telegraph
 
 from shvatka.core.interfaces.clients.file_storage import FileStorage, FileGateway
@@ -46,6 +47,7 @@ class DialogMiddlewareData(AiogramMiddlewareData, total=False):
 class MiddlewareData(DialogMiddlewareData, total=False):
     config: BotConfig
     main_config: TgBotConfig
+    dishka: AsyncContainer
     user_getter: UserGetter
     dcf: Factory
     dao: HolderDao

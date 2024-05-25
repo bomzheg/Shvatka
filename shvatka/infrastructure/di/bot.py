@@ -1,3 +1,5 @@
+from typing import AsyncIterable
+
 from aiogram import Bot
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
@@ -11,14 +13,14 @@ class BotProvider(Provider):
     scope = Scope.APP
 
     @provide
-    def get_bot(self, config: BotConfig) -> Bot:
-        bot = Bot(
+    async def get_bot(self, config: BotConfig) -> AsyncIterable[Bot]:
+        async with Bot(
             token=config.token,
             session=config.create_session(),
             default=DefaultBotProperties(
                 parse_mode=ParseMode.HTML,
                 allow_sending_without_reply=True,
             ),
-        )
-        setup_jinja(bot)
-        return bot
+        ) as bot:
+            setup_jinja(bot)
+            yield bot

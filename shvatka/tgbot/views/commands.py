@@ -87,6 +87,17 @@ HELP_ADMIN = CommandsGroup(
         GET_OUT,
     ],
 )
+
+
+MERGE_TEAMS = BotCommand(command="merge_teams", description="объединить достижения команды в разных источниках")
+HELP_GAME_ADMIN = CommandsGroup(
+    "Команды администратора игры",
+    [
+        MERGE_TEAMS,
+    ]
+)
+
+
 MY_GAMES_COMMAND = BotCommand(command="my_games", description="мои игры (включая черновики)")
 NEW_LEVEL_COMMAND = BotCommand(command="new_level", description="новый уровень")
 NEW_GAME_COMMAND = BotCommand(

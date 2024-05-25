@@ -5,7 +5,7 @@ from aiogram_dialog.api.protocols import MessageManagerProtocol, BgManagerFactor
 
 from shvatka.tgbot import dialogs
 from shvatka.tgbot.config.models.bot import BotConfig
-from shvatka.tgbot.handlers import errors, merge
+from shvatka.tgbot.handlers import errors, merge, admin
 from shvatka.tgbot.handlers import game, waivers, player
 from shvatka.tgbot.handlers import last
 from shvatka.tgbot.handlers import superuser, base
@@ -25,6 +25,7 @@ def setup_handlers(
     dp.include_router(merge.setup(bot_config))
     dp.include_router(game.setup())
     dp.include_router(waivers.setup())
+    dp.include_router(admin.setup(bot_config))
 
     bg_manager_factory = dialogs.setup(dp, message_manager)
 

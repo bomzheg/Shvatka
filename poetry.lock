@@ -8,7 +8,7 @@ python-versions = ">=3.7"
 
 [[package]]
 name = "aiogram"
-version = "3.3.0"
+version = "3.4.1"
 description = "Modern and fully asynchronous framework for Telegram Bot API"
 category = "main"
 optional = false
@@ -1746,7 +1746,7 @@ testing = ["coverage (>=5.0.3)", "zope.event", "zope.testing"]
 [metadata]
 lock-version = "1.1"
 python-versions = "~3.11"
-content-hash = "da3ffbd563ae95d771f748d698ddac176698b8de1007e6739ef955ca71a3a23e"
+content-hash = "1098e2f78bd5b9104e8133a495b34f7f7e688aa8378e80ec715729046a40acf1"
 
 [metadata.files]
 aiofiles = [
@@ -1754,8 +1754,8 @@ aiofiles = [
     {file = "aiofiles-23.2.1.tar.gz", hash = "sha256:84ec2218d8419404abcb9f0c02df3f34c6e0a68ed41072acfb1cef5cbc29051a"},
 ]
 aiogram = [
-    {file = "aiogram-3.3.0-py3-none-any.whl", hash = "sha256:85137a0c0f81b4fb422f06db5be9c7dfeca3b964920fd4b2f68a655b762880e9"},
-    {file = "aiogram-3.3.0.tar.gz", hash = "sha256:ca21b4b527e8252fd5c14c1617cab795c2d10c66ca5b6048156c160bf70a095f"},
+    {file = "aiogram-3.4.1-py3-none-any.whl", hash = "sha256:5e403945d41001a1810aa8f470ed31fb24a8cb2cde7b16363d1fcd20a757ff68"},
+    {file = "aiogram-3.4.1.tar.gz", hash = "sha256:32ba2f6b0ca5488eae03e794a24c779234e909e882445394ef691b357d809aa8"},
 ]
 aiogram-dialog = [
     {file = "aiogram_dialog-2.0.0-py3-none-any.whl", hash = "sha256:bd91a59b2353b623b53f53570144b4204f52600fc47faf8e7fca9b08ec3b9459"},

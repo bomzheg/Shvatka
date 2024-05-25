@@ -12,11 +12,17 @@ from shvatka.tgbot.views.commands import MERGE_TEAMS
 
 
 async def merge_teams_command(
-        message: types.Message,
-        command: CommandObject,
-        game_log: GameLogWriter,
-        dao: HolderDao,
+    message: types.Message,
+    command: CommandObject,
+    game_log: GameLogWriter,
+    dao: HolderDao,
 ):
+    if not command.args:
+        await message.reply(
+            "После команды следует указать аргументы. "
+            "Сначала id команды в новом движке, а потом id команды с форума."
+        )
+        return
     old_id, new_id = map(int, command.args.split())
     primary = await get_team_by_id(new_id, dao.team)
     assert primary.captain

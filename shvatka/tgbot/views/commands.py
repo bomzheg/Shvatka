@@ -89,12 +89,14 @@ HELP_ADMIN = CommandsGroup(
 )
 
 
-MERGE_TEAMS = BotCommand(command="merge_teams", description="объединить достижения команды в разных источниках")
+MERGE_TEAMS = BotCommand(
+    command="merge_teams", description="объединить достижения команды в разных источниках"
+)
 HELP_GAME_ADMIN = CommandsGroup(
     "Команды администратора игры",
     [
         MERGE_TEAMS,
-    ]
+    ],
 )
 
 

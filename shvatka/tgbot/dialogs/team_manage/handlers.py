@@ -121,7 +121,7 @@ async def change_emoji_handler(m: Message, widget: Any, manager: DialogManager, 
 
 
 async def send_user_request(c: CallbackQuery, widget: Any, manager: DialogManager):
-    assert c.message
+    assert isinstance(c.message, Message)
     msg = await c.message.answer(
         "Чтобы добавить игрока <b><u>нажми кнопку в самом низу</u></b>",
         reply_markup=kb.get_user_request_kb(),

@@ -1,5 +1,6 @@
 from typing import Iterable
 
+from aiogram.types import LinkPreviewOptions
 from aiogram.utils.text_decorations import html_decoration as hd
 
 from shvatka.core.models import dto
@@ -63,5 +64,5 @@ async def start_approve_waivers(game: dto.Game, team: dto.Team, dao: HolderDao):
         reply_markup=kb.get_kb_manage_waivers(
             team, map(lambda v: v.player, votes.get(Played.yes, [])), game
         ),
-        disable_web_page_preview=True,
+        link_preview_options=LinkPreviewOptions(is_disabled=True),
     )

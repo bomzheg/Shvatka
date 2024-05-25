@@ -1,7 +1,7 @@
 from functools import partial
 
 from aiogram import Router, Bot
-from aiogram.types import CallbackQuery
+from aiogram.types import CallbackQuery, Message
 from aiogram_dialog.api.protocols import BgManagerFactory
 
 from shvatka.core.services.player import get_player_by_id, merge_players
@@ -31,7 +31,7 @@ async def confirm_merge_team(
     secondary = await get_team_by_id(callback_data.secondary_team_id, dao.team)
     await merge_teams(primary.captain, primary, secondary, game_log, dao.team_merger)
     await callback_query.answer("Успешно объединено")
-    assert callback_query.message
+    assert isinstance(callback_query.message, Message)
     await callback_query.message.edit_reply_markup(reply_markup=None)
     captain_chat_id = primary.captain.get_chat_id()
     bg = bg_manager_factory.bg(bot=bot, user_id=captain_chat_id, chat_id=captain_chat_id)
@@ -50,7 +50,7 @@ async def confirm_merge_players(
     secondary = await get_player_by_id(callback_data.secondary_player_id, dao.player)
     await merge_players(primary, secondary, game_log, dao.player_merger)
     await callback_query.answer("Успешно объединено")
-    assert callback_query.message
+    assert isinstance(callback_query.message, Message)
     await callback_query.message.edit_reply_markup(reply_markup=None)
     primary_chat_id = primary.get_chat_id()
     bg = bg_manager_factory.bg(bot=bot, user_id=primary_chat_id, chat_id=primary_chat_id)

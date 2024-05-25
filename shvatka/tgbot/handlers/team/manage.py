@@ -11,7 +11,7 @@ from aiogram.filters import (
     IS_NOT_MEMBER,
     IS_MEMBER,
 )
-from aiogram.types import Message, ChatMemberUpdated, CallbackQuery
+from aiogram.types import Message, ChatMemberUpdated, CallbackQuery, LinkPreviewOptions
 from aiogram.utils.text_decorations import html_decoration as hd
 
 from shvatka.core.models import dto
@@ -233,7 +233,7 @@ async def button_join_no(
         return await callback_query.answer("Ты состоишь в другой команде!", show_alert=True)
     await callback_query.answer()
     target = await get_player_by_id(callback_data.player_id, dao.player)
-    assert callback_query.message
+    assert isinstance(callback_query.message, Message)
     await callback_query.message.edit_text(
         f"{hd.quote(player.name_mention)} не стал принимать "
         f"игрока {hd.quote(target.name_mention)} в команду"
@@ -247,7 +247,7 @@ async def answer_not_enough_rights(callback_query: CallbackQuery):
 async def cmd_team(message: Message, team: dto.Team):
     await message.answer(
         text=render_team_card(team),
-        disable_web_page_preview=True,
+        link_preview_options=LinkPreviewOptions(is_disabled=True),
     )
 
 
@@ -255,7 +255,7 @@ async def cmd_players(message: Message, team: dto.Team, dao: HolderDao):
     players = await get_team_players(team, dao.team_player)
     await message.answer(
         text=render_team_players(team=team, players=players, notification=False),
-        disable_web_page_preview=True,
+        link_preview_options=LinkPreviewOptions(is_disabled=True),
     )
 
 

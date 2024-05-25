@@ -84,7 +84,7 @@ async def common_show_zip(c: CallbackQuery, game_id: int, manager: DialogManager
     file_gateway: FileGateway = manager.middleware_data["file_gateway"]
     game_ = await game.get_game_package(game_id, player, dao.game_packager, dcf, file_gateway)
     zip_ = pack_scn(game_)
-    assert c.message
+    assert isinstance(c.message, Message)
     await c.message.answer_document(BufferedInputFile(file=zip_.read(), filename="scenario.zip"))
 
 
@@ -206,7 +206,7 @@ async def get_excel_results_handler(c: CallbackQuery, widget: Button, manager: D
     file = BytesIO()
     export_results(game=full_game, game_stat=game_stat, file=file)
     file.seek(0)
-    assert c.message
+    assert isinstance(c.message, Message)
     await c.message.answer_document(
         document=BufferedInputFile(file=file.read(), filename=f"{full_game.name}.xlsx"),
     )

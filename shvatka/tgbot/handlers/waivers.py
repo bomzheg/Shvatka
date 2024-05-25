@@ -1,7 +1,7 @@
 from aiogram import Router, Bot, F
 from aiogram.enums import ChatType
 from aiogram.filters import Command, or_f
-from aiogram.types import Message, CallbackQuery
+from aiogram.types import Message, CallbackQuery, LinkPreviewOptions
 from aiogram.utils.markdown import html_decoration as hd
 
 from shvatka.infrastructure.db.dao.holder import HolderDao
@@ -39,7 +39,7 @@ async def start_waivers(_: Message, team: dto.Team, game: dto.Game, dao: HolderD
         chat_id=team.get_chat_id(),
         text=await get_waiver_poll_text(team, game, dao),
         reply_markup=kb.get_kb_waivers(team, game),
-        disable_web_page_preview=True,
+        link_preview_options=LinkPreviewOptions(is_disabled=True),
     )
     old_msg_id = await swap_saved_message(game, msg, dao.poll)
     await total_remove_msg(bot, team.get_chat_id(), old_msg_id)
@@ -66,7 +66,7 @@ async def add_vote_handler(
     await c.message.edit_text(  # type: ignore[union-attr]
         text=await get_waiver_poll_text(team, game, dao),
         reply_markup=kb.get_kb_waivers(team, game),
-        disable_web_page_preview=True,
+        link_preview_options=LinkPreviewOptions(is_disabled=True),
     )
 
 
@@ -141,7 +141,7 @@ async def confirm_approve_waivers_handler(
     await bot.send_message(
         chat_id=team.get_chat_id(),
         text=await get_waiver_final_text(team, game, dao),
-        disable_web_page_preview=True,
+        link_preview_options=LinkPreviewOptions(is_disabled=True),
     )
     await c.answer("Вейверы успешно опубликованы!")
     assert c.message
@@ -166,7 +166,7 @@ async def waiver_user_menu(
         text=f"Схватчик {hd.quote(subject_player.name_mention)} команды {hd.quote(team.name)} "
         f"заявил что хочет участвовать в игре {hd.quote(game.name)}. Что хотите с ним делать?",
         reply_markup=kb.get_kb_waiver_one_player(team=team, player=subject_player, game=game),
-        disable_web_page_preview=True,
+        link_preview_options=LinkPreviewOptions(is_disabled=True),
     )
 
 
@@ -204,7 +204,7 @@ async def waiver_add_force_menu(
     await c.message.edit_text(  # type: ignore[union-attr]
         text="Кого из игроков добавить в список вейверов принудительно?",
         reply_markup=kb.get_kb_force_add_waivers(team, players, game),
-        disable_web_page_preview=True,
+        link_preview_options=LinkPreviewOptions(is_disabled=True),
     )
 
 
@@ -226,7 +226,7 @@ async def add_force_player(
     await c.message.edit_text(  # type: ignore[union-attr]
         text="Кого из игроков добавить в список вейверов принудительно?",
         reply_markup=kb.get_kb_force_add_waivers(team, players, game),
-        disable_web_page_preview=True,
+        link_preview_options=LinkPreviewOptions(is_disabled=True),
     )
 
 

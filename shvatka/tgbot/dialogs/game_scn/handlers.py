@@ -80,7 +80,7 @@ async def save_game(c: CallbackQuery, button: Button, manager: DialogManager):
     multiselect = typing.cast(ManagedMultiselect, manager.find("my_free_level_ids"))
     levels = list(filter(lambda level: multiselect.is_checked(level.db_id), levels))
     game = await create_game(author=author, name=name, dao=dao.game_creator, levels=levels)
-    assert c.message
+    assert isinstance(c.message, Message)
     await c.message.edit_text("Игра успешно сохранена")
     await manager.done(result={"game": game})
 

@@ -9,6 +9,7 @@ from aiogram.types import (
     InlineQueryResultArticle,
     InputTextMessageContent,
     CallbackQuery,
+    LinkPreviewOptions,
 )
 from aiogram.utils.text_decorations import html_decoration as hd
 from aiogram_dialog.api.protocols import BgManagerFactory
@@ -121,7 +122,7 @@ async def get_my_team_cmd(message: Message, player: dto.Player, dao: HolderDao):
     if team:
         return await message.answer(
             text=render_team_card(team),
-            disable_web_page_preview=True,
+            link_preview_options=LinkPreviewOptions(is_disabled=True),
         )
     await message.answer("Ты не состоишь в команде")
 

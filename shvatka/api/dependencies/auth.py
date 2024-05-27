@@ -147,3 +147,14 @@ def check_tg_hash(user: UserTgAuth, bot_token: str):
     hmac_string = hmac.new(secret_key, data_check, hashlib.sha256).hexdigest()
     if hmac_string != user.hash:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="something wrong")
+
+
+def check_webapp_hash(data: str, hash_: str, bot_token: str):
+    secret_key = hmac.new(
+        "WebAppData".encode("utf8"),
+        bot_token.encode("utf8"),
+        hashlib.sha256,
+    )
+    hmac_string = hmac.new(secret_key.__str__().encode("utf8"), data.encode("utf-8"), hashlib.sha256).hexdigest()
+    if hmac_string != hash_:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="something wrong")

@@ -7,11 +7,11 @@ from fastapi.security import OAuth2PasswordRequestForm
 from starlette.responses import HTMLResponse, Response
 
 from shvatka.api.config.models.auth import AuthConfig
-from shvatka.api.models.auth import UserTgAuth
+from shvatka.api.models.auth import UserTgAuth, WebAppAuth
 from shvatka.api.utils.cookie_auth import set_auth_response
 from shvatka.core.services.user import upsert_user
 from shvatka.infrastructure.db.dao.holder import HolderDao
-from shvatka.api.dependencies.auth import AuthProperties, check_tg_hash
+from shvatka.api.dependencies.auth import AuthProperties, check_tg_hash, check_webapp_hash
 
 TG_WIDGET_HTML = """
         <html>
@@ -90,6 +90,21 @@ async def tg_login_result_post(
     return {"ok": True}
 
 
+
+@inject
+async def webapp_login_result_post(
+        response: Response,
+        web_auth: Annotated[WebAppAuth, Body()],
+        dao: Annotated[HolderDao, Depends()],
+        auth_properties: Annotated[AuthProperties, Depends()],
+        config: Annotated[AuthConfig, Depends()],
+):
+    check_webapp_hash(web_auth.init_data, web_auth.init_data_unsafe.hash, config.bot_token)
+    saved = await upsert_user(user.to_dto(), dao.user)
+    token = auth_properties.create_user_token(saved)
+    set_auth_response(config, response, token)
+    return {"ok": True}
+
 @inject
 async def tg_login_page(config: Annotated[AuthConfig, Depends()]):
     return TG_WIDGET_HTML.format(
@@ -105,4 +120,5 @@ def setup() -> APIRouter:
     router.add_api_route("/logout", logout, methods=["POST"])
     router.add_api_route("/login/data", tg_login_result, methods=["GET"])
     router.add_api_route("/login/data", tg_login_result_post, methods=["POST"])
+    router.add_api_route("/login/webapp", webapp_login_result_post, methods=["POST"])
     return router

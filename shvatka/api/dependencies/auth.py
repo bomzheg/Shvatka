@@ -5,6 +5,7 @@ import logging
 import typing
 from datetime import timedelta, datetime
 
+from aiogram.utils.web_app import check_webapp_signature
 from dishka import Provider, provide, Scope, from_context
 from fastapi import HTTPException, Request
 from jose import jwt, JWTError
@@ -149,12 +150,6 @@ def check_tg_hash(user: UserTgAuth, bot_token: str):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="something wrong")
 
 
-def check_webapp_hash(data: str, hash_: str, bot_token: str):
-    secret_key = hmac.new(
-        "WebAppData".encode("utf8"),
-        bot_token.encode("utf8"),
-        hashlib.sha256,
-    )
-    hmac_string = hmac.new(secret_key.__str__().encode("utf8"), data.encode("utf-8"), hashlib.sha256).hexdigest()
-    if hmac_string != hash_:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="something wrong")
+def check_webapp_hash(data: str, bot_token: str):
+    if not check_webapp_signature(bot_token, data):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="tg hash mismatch")

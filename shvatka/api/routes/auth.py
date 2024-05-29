@@ -1,5 +1,7 @@
+import typing
 from typing import Annotated
 
+from aiogram.types import User
 from dishka.integrations.fastapi import inject, FromDishka as Depends
 from fastapi import Depends as fDepends, Body
 from fastapi import APIRouter
@@ -9,6 +11,7 @@ from starlette.responses import HTMLResponse, Response
 from shvatka.api.config.models.auth import AuthConfig
 from shvatka.api.models.auth import UserTgAuth, WebAppAuth
 from shvatka.api.utils.cookie_auth import set_auth_response
+from shvatka.core.models import dto
 from shvatka.core.services.user import upsert_user
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.api.dependencies.auth import AuthProperties, check_tg_hash, check_webapp_hash
@@ -90,20 +93,21 @@ async def tg_login_result_post(
     return {"ok": True}
 
 
-
 @inject
 async def webapp_login_result_post(
-        response: Response,
-        web_auth: Annotated[WebAppAuth, Body()],
-        dao: Annotated[HolderDao, Depends()],
-        auth_properties: Annotated[AuthProperties, Depends()],
-        config: Annotated[AuthConfig, Depends()],
+    response: Response,
+    web_auth: Annotated[WebAppAuth, Body()],
+    dao: Annotated[HolderDao, Depends()],
+    auth_properties: Annotated[AuthProperties, Depends()],
+    config: Annotated[AuthConfig, Depends()],
 ):
-    check_webapp_hash(web_auth.init_data, web_auth.init_data_unsafe.hash, config.bot_token)
-    saved = await upsert_user(user.to_dto(), dao.user)
+    parsed = check_webapp_hash(web_auth.init_data, config.bot_token)
+    user = dto.User.from_aiogram(typing.cast(User, parsed.user))
+    saved = await upsert_user(user, dao.user)
     token = auth_properties.create_user_token(saved)
     set_auth_response(config, response, token)
     return {"ok": True}
+
 
 @inject
 async def tg_login_page(config: Annotated[AuthConfig, Depends()]):

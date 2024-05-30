@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, AliasPath
 
 from shvatka.core.models import dto
 
@@ -27,8 +27,8 @@ class WebAppInitData(BaseModel):
 
 
 class WebAppAuth(BaseModel):
-    init_data: str
-    init_data_unsafe: WebAppInitData
+    init_data: str = Field(alias="initData")
+    init_data_unsafe: WebAppInitData = Field(alias="initDataUnsafe")
 
 
 class UserTgAuth(BaseModel):

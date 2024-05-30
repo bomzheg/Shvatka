@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from pydantic import BaseModel, Field, AliasPath
+from pydantic import BaseModel, Field
 
 from shvatka.core.models import dto
 

@@ -107,6 +107,23 @@ async def test_game_get_full(
 
 
 @pytest.mark.asyncio
+async def test_game_get_preview(
+        author: dto.Player,
+        simple_scn: RawGameScenario,
+        dao: HolderDao,
+        dcf: Factory,
+        file_gateway: FileGateway,
+):
+    game_expected = await upsert_game(simple_scn, author, dao.game_upserter, dcf, file_gateway)
+    game_actual = await dao.game.get_preview(game_expected.id)
+    assert len(game_expected.levels) == game_actual.levels_count
+    assert game_expected.id == game_actual.id
+    assert game_expected.name == game_actual.name
+    assert game_expected.status == game_actual.status
+    assert game_expected.author == game_actual.author
+
+
+@pytest.mark.asyncio
 async def test_cant_change_finished(finished_game: dto.FullGame, dao: HolderDao):
     level = finished_game.levels[0]
     with pytest.raises(CantEditGame):

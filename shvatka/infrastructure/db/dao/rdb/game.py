@@ -80,6 +80,13 @@ class GameDao(BaseDAO[models.Game]):
                 raise GameHasAnotherAuthor(game_id=game.id, player=author)
         return game.to_dto(author)
 
+    async def get_preview(self, id_: int, author: dto.Player | None = None) -> dto.PreviewGame:
+        game = await self.get_by_id(id_, author)
+        levels: ScalarResult[int] = await self.session.scalars(
+            select(models.Level.id).where(models.Level.game_id == id_)
+        )
+        return dto.PreviewGame.from_game(game, levels_count=len(levels.all()))
+
     async def get_all_by_author(self, author: dto.Player) -> list[dto.Game]:
         result: ScalarResult[models.Game] = await self.session.scalars(
             select(models.Game).where(

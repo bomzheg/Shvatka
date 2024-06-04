@@ -62,6 +62,11 @@ class GameAuthorsFinder(Committer, Protocol):
         raise NotImplementedError
 
 
+class PreviewGameByIdGetter(Protocol):
+    async def get_preview(self, id_: int, author: dto.Player | None = None) -> dto.PreviewGame:
+        raise NotImplementedError
+
+
 class GameByIdGetter(Protocol):
     async def get_by_id(self, id_: int, author: dto.Player | None = None) -> dto.Game:
         raise NotImplementedError

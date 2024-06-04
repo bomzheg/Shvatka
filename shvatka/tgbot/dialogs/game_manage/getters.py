@@ -97,7 +97,7 @@ async def get_game(dao: HolderDao, player: dto.Player, dialog_manager: DialogMan
         or dialog_manager.start_data["my_game_id"]
     )
     return {
-        "game": await game.get_game(
+        "game": await game.get_preview_game(
             id_=game_id,
             author=player,
             dao=dao.game,

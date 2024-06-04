@@ -108,11 +108,11 @@ async def test_game_get_full(
 
 @pytest.mark.asyncio
 async def test_game_get_preview(
-        author: dto.Player,
-        simple_scn: RawGameScenario,
-        dao: HolderDao,
-        dcf: Factory,
-        file_gateway: FileGateway,
+    author: dto.Player,
+    simple_scn: RawGameScenario,
+    dao: HolderDao,
+    dcf: Factory,
+    file_gateway: FileGateway,
 ):
     game_expected = await upsert_game(simple_scn, author, dao.game_upserter, dcf, file_gateway)
     game_actual = await dao.game.get_preview(game_expected.id)

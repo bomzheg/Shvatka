@@ -238,7 +238,7 @@ my_games = Dialog(
     Window(
         Jinja(
             "Выбрана игра: <b>{{game.name}}</b> с ID {{game.id}}\n"
-            "Текущий статус: <b>{{game.status}}</b>\n"
+            "Текущий статус: <b>{{game.status | game_status}}</b>\n"
             "{% if game.levels_count %}"
             "Количество уровней: <b>{{game.levels_count}}</b>\n"
             "{% else %}"

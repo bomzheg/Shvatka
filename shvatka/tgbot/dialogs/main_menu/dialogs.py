@@ -24,6 +24,23 @@ main_menu = Dialog(
             "{% if game.start_at %}"
             "Игра запланирована на {{ game.start_at|user_timezone }}"
             "{% endif %}"
+            "{% if org and org.game.id == game.id %}"
+            "{% if not org.deleted %}"
+            "Ты организатор.\n"
+            "{% if org.have_permissions %}"
+            "Вот что ты сможешь делать во время игры:\n"
+            "{% if org.can_spy %}{{org.can_spy | bool_emoji}} шпионить\n{% endif %}"
+            "{% if org.can_see_log_keys %}{{org.can_see_log_keys | bool_emoji}} смотреть лог ключей\n{% endif %}"
+            "{% endif %}"
+            "{% if org.have_disabled_permissions %}"
+            "Вот что ты НЕ сможешь делать во время игры:\n"
+            "{% if not org.can_spy %}{{org.can_spy | bool_emoji}} шпионить\n{% endif %}"
+            "{% if not org.can_see_log_keys %}{{org.can_see_log_keys | bool_emoji}} смотреть лог ключей\n{% endif %}"
+            "{% endif %}"
+            "{% else %}"
+            "Тебя удалили из организаторов. К сожалению, ты не сможешь ни играть ни участвовать в организации."
+            "{% endif %}"
+            "{% endif %}"
         ),
         Start(
             Const("🗄Прошедшие игры"),

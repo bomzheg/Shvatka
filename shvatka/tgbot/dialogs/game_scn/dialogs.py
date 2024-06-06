@@ -69,7 +69,7 @@ game_writer = Dialog(
 
 game_editor = Dialog(
     Window(
-        Jinja("Игра <b>{{game.name}}</b>\n\n"),
+        Jinja("Игра <b>{{game.name}}</b> содержит {{ levels | length }} уровней.\n\n"),
         Const("<b>Уровни игры</b>"),
         SwitchTo(
             Const("📑Добавить уровень"),

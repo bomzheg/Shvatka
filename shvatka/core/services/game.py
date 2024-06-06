@@ -15,6 +15,7 @@ from shvatka.core.interfaces.dal.game import (
     GameNameChecker,
     GameRenamer,
     CompletedGameFinder,
+    PreviewGameByIdGetter,
 )
 from shvatka.core.interfaces.dal.level import LevelLinker
 from shvatka.core.interfaces.scheduler import Scheduler
@@ -102,6 +103,12 @@ async def add_level(game: dto.Game, level: dto.Level, author: dto.Player, dao: L
 
 async def get_game(id_: int, *, author: dto.Player | None = None, dao: GameByIdGetter) -> dto.Game:
     return await dao.get_by_id(id_=id_, author=author)
+
+
+async def get_preview_game(
+    id_: int, *, author: dto.Player | None = None, dao: PreviewGameByIdGetter
+) -> dto.PreviewGame:
+    return await dao.get_preview(id_=id_, author=author)
 
 
 async def get_full_game(id_: int, author: dto.Player, dao: GameByIdGetter) -> dto.FullGame:

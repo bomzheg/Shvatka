@@ -18,7 +18,7 @@ PREVIEW_AUTHOR = dto.Player(
     is_dummy=False,
 )
 
-PREVIEW_GAME = dto.Game(
+PREVIEW_GAME = dto.PreviewGame(
     id=1,
     author=PREVIEW_AUTHOR,
     name="Схватка это чудо",
@@ -31,6 +31,7 @@ PREVIEW_GAME = dto.Game(
         keys_url=None,
     ),
     number=1,
+    levels_count=13,
 )
 TIMES_PRESET = [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60]
 RENDERED_HINTS_PREVIEW = "0: 📃🪪\n10: 📃\n10: 📃\n15: 📃\n20: 📃\n25: 🪪\n30: 📡\n45: 📃"

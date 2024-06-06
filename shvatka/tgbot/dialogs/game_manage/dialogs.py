@@ -239,6 +239,11 @@ my_games = Dialog(
         Jinja(
             "Выбрана игра: <b>{{game.name}}</b> с ID {{game.id}}\n"
             "Текущий статус: <b>{{game.status}}</b>\n"
+            "{% if game.levels_count %}"
+            "Количество уровней: <b>{{game.levels_count}}</b>\n"
+            "{% else %}"
+            "\n\n❗️<b><u>В игре ещё нет ни одного уровня!</u></b>❗️\n\n"
+            "{% endif %}"
             "Дата и время начала: {% if game.start_at %} "
             "{{ game.start_at|user_timezone }} "
             "{% else %} "

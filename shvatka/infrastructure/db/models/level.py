@@ -1,3 +1,4 @@
+import typing
 from typing import Any
 
 from dataclass_factory import Factory
@@ -8,6 +9,10 @@ from sqlalchemy.orm import relationship, mapped_column, Mapped
 from shvatka.core.models import dto
 from shvatka.core.models.dto.scn.level import LevelScenario
 from shvatka.infrastructure.db.models import Base
+
+if typing.TYPE_CHECKING:
+    from .game import Game
+    from .player import Player
 
 
 class ScenarioField(TypeDecorator):
@@ -33,15 +38,15 @@ class Level(Base):
     __tablename__ = "levels"
     __mapper_args__ = {"eager_defaults": True}
     id = mapped_column(Integer, primary_key=True)
-    name_id = mapped_column(Text, nullable=False)
-    game_id = mapped_column(ForeignKey("games.id"), nullable=True)
-    game = relationship(
+    name_id: Mapped[str] = mapped_column(Text, nullable=False)
+    game_id: Mapped[int] = mapped_column(ForeignKey("games.id"), nullable=True)
+    game: Mapped["Game"] = relationship(
         "Game",
         foreign_keys=game_id,
         back_populates="levels",
     )
-    author_id = mapped_column(ForeignKey("players.id"), nullable=False)
-    author = relationship(
+    author_id: Mapped[int] = mapped_column(ForeignKey("players.id"), nullable=False)
+    author: Mapped["Player"] = relationship(
         "Player",
         foreign_keys=author_id,
         back_populates="my_levels",

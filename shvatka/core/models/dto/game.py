@@ -92,6 +92,25 @@ class Game:
 
 
 @dataclass
+class PreviewGame(Game):
+    levels_count: int
+
+    @classmethod
+    def from_game(cls, self: Game, levels_count: int) -> PreviewGame:
+        return cls(
+            id=self.id,
+            author=self.author,
+            name=self.name,
+            status=self.status,
+            start_at=self.start_at,
+            results=self.results,
+            manage_token=self.manage_token,
+            number=self.number,
+            levels_count=levels_count,
+        )
+
+
+@dataclass
 class FullGame(Game):
     levels: list[Level] = field(default_factory=list)
 

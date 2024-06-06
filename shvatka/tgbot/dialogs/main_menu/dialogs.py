@@ -24,7 +24,8 @@ main_menu = Dialog(
             "{% if game.start_at %}"
             "Игра запланирована на {{ game.start_at|user_timezone }}"
             "{% endif %}"
-            "{% if org and org.game.id == game.id %}"
+            ""
+            "{% if org %}"
             "{% if not org.deleted %}"
             "Ты организатор. Вот твои полномочия на игру:\n"
             "{{org.can_spy | bool_emoji}} шпионить\n"
@@ -32,6 +33,8 @@ main_menu = Dialog(
             "{% else %}"
             "Тебя удалили из организаторов. К сожалению, ты не сможешь ни играть ни участвовать в организации."
             "{% endif %}"
+            "{% elif not team %}"
+            "Чтобы поиграть в игру - найди себе команду, сейчас ты не состоишь ни в одной"
             "{% endif %}"
         ),
         Start(

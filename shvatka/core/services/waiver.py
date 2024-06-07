@@ -6,6 +6,7 @@ from shvatka.core.interfaces.dal.waiver import (
     WaiverVoteGetter,
     WaiverApprover,
     GameWaiversGetter,
+    WaiverGetter,
 )
 from shvatka.core.models import dto
 from shvatka.core.models import enums
@@ -126,6 +127,15 @@ async def revoke_vote_by_captain(
     await dao.upsert(waiver)
     await dao.del_player_vote(team.id, target.id)
     await dao.commit()
+
+
+async def get_my_waiver(
+    player: dto.Player,
+    team: dto.Team,
+    game: dto.Game,
+    dao: WaiverGetter,
+) -> dto.Waiver | None:
+    return await dao.get_player_waiver(player=player, team=team, game=game)
 
 
 def check_allow_approve_waivers(team_player: dto.FullTeamPlayer):

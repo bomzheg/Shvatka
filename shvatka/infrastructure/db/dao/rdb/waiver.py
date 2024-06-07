@@ -48,6 +48,17 @@ class WaiverDao(BaseDAO[models.Waiver]):
         if waiver_db := await self.get_or_none(waiver.game, waiver.player, waiver.team):
             await self._delete(waiver_db)
 
+    async def get_player_waiver(
+        self,
+        game: dto.Game,
+        player: dto.Player,
+        team: dto.Team,
+    ) -> dto.Waiver | None:
+        waiver_db = await self.get_or_none(game, player, team)
+        if not waiver_db:
+            return None
+        return waiver_db.to_dto(player=player, team=team, game=game)
+
     async def get_or_none(
         self,
         game: dto.Game,

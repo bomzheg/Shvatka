@@ -17,11 +17,12 @@ async def get_main(dao: HolderDao, player: dto.Player, game: dto.Game, **_):
     try:
         team = await get_my_team(player=player, dao=dao.team_player)
         team_player = await get_full_team_player(player=player, team=team, dao=dao.team_player)
+        waiver = await get_my_waiver(player=player, team=team, game=game, dao=dao.waiver)
     except PlayerNotInTeam:
         team = None
         team_player = None
+        waiver = None
 
-    waiver = await get_my_waiver(player=player, team=team, game=game, dao=dao.waiver)
     return {
         "player": player,
         "game": game,

@@ -5,7 +5,6 @@ from aiogram_dialog.widgets.text import Const, Format, Jinja
 
 from shvatka.tgbot import states
 from .getters import get_promotion_token, get_main
-from shvatka.tgbot.dialogs.team_manage.getters import get_my_team_
 
 main_menu = Dialog(
     Window(
@@ -23,6 +22,31 @@ main_menu = Dialog(
             "{% endif %}"
             "{% if game.start_at %}"
             "Игра запланирована на {{ game.start_at|user_timezone }}"
+            "{% endif %}"
+            "\n\n"
+            "{% if org %}"
+            "{% if not org.deleted %}"
+            "Ты организатор. Вот твои полномочия на игру:\n"
+            "{{org.can_spy | bool_emoji}} шпионить\n"
+            "{{org.can_see_log_keys | bool_emoji}} смотреть лог ключей\n"
+            "{% else %}"
+            "Тебя удалили из организаторов. К сожалению, "
+            "ты не сможешь ни играть ни участвовать в организации."
+            "{% endif %}"
+            "{% elif not team %}"
+            "Чтобы поиграть в игру - найди себе команду, сейчас ты не состоишь ни в одной"
+            "{% elif waiver %}"
+            "{% if waiver.played.can_play %}"
+            "Ты <b>будешь играть</b> в эту игру"
+            "{% elif waiver.played.is_deny %}"
+            "Получен твой <b>отказ</b> играть в эту игру"
+            "{% elif waiver.played.cant_decide %}"
+            "От тебя <b>не поступило</b> итогового решения по игре"
+            "{% elif waiver.played.is_revoked %}"
+            "Твой капитан <b>исключил тебя</b> из списков на игру"
+            "{% elif waiver.played.is_not_allowed %}"
+            "Орги <b>не приняли</b> твою заявку на игру"
+            "{% endif %}"
             "{% endif %}"
         ),
         Start(
@@ -78,7 +102,7 @@ main_menu = Dialog(
         Cancel(Const("❌Закрыть")),
         # ачивки
         state=states.MainMenuSG.main,
-        getter=(get_main, get_my_team_),
+        getter=get_main,
     ),
 )
 

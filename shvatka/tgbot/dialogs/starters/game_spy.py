@@ -4,7 +4,12 @@ from aiogram.filters import Command
 from shvatka.tgbot import states
 from shvatka.tgbot.filters.is_org import is_org_on_running_game, is_org
 from shvatka.tgbot.utils.router import register_start_handler
-from shvatka.tgbot.views.commands import SPY_COMMAND, SPY_LEVELS_COMMAND, SPY_KEYS_COMMAND, START_COMMAND
+from shvatka.tgbot.views.commands import (
+    SPY_COMMAND,
+    SPY_LEVELS_COMMAND,
+    SPY_KEYS_COMMAND,
+    START_COMMAND,
+)
 
 
 def setup() -> Router:

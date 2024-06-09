@@ -1,8 +1,6 @@
-from typing import Callable
 
 from aiogram import Router, Dispatcher
 from aiogram.dispatcher.event.handler import CallbackType
-from aiogram.filters import Filter
 from aiogram.fsm.state import State
 from aiogram.types import Message
 from aiogram_dialog import StartMode, DialogManager

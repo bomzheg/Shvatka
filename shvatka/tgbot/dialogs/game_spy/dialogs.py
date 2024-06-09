@@ -1,11 +1,8 @@
-from datetime import datetime
-
 from aiogram import F
 from aiogram_dialog import Dialog, Window
 from aiogram_dialog.widgets.kbd import Button, SwitchTo, Cancel
 from aiogram_dialog.widgets.text import Const, Jinja, Multi
 
-from shvatka.core.utils.datetime_utils import tz_utc
 from shvatka.tgbot import states
 from .getters import get_org, get_spy, get_keys
 from .handlers import keys_handler
@@ -61,9 +58,9 @@ game_spy = Dialog(
             "Промежуточный лог ключей \n"
             "для игры <b>{{game.name}}</b> "
             "(началась в {{game.start_at|user_timezone}}) \n"
-            "по состоянию на {{ now | user_timezone }}\n"
             "{% if key_link %}"
-            'доступен <a href="{{key_link}}">по ссылке</a>'
+            'доступен <a href="{{key_link}}">по ссылке</a>\n'
+            "по состоянию на {{ updated | user_timezone }}"
             "{% else %}"
             "пока недоступен (попробуй обновить)"
             "{% endif %}"
@@ -71,7 +68,7 @@ game_spy = Dialog(
         Button(Const("🔄Обновить"), id="refresh_spy", on_click=keys_handler),
         SwitchTo(Const("🔙Назад"), id="back", state=states.OrgSpySG.main),
         state=states.OrgSpySG.keys,
-        getter=(get_org, get_keys, {"now": datetime.now(tz=tz_utc)}),
+        getter=(get_org, get_keys),
         disable_web_page_preview=True,
     ),
 )

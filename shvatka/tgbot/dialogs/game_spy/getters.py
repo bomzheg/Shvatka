@@ -9,7 +9,10 @@ from shvatka.infrastructure.db.dao.holder import HolderDao
 async def get_org(
     dao: HolderDao, player: dto.Player, game: dto.Game, dialog_manager: DialogManager, **_
 ):
-    org = await get_by_player(player=player, game=game, dao=dao.organizer)
+    if dialog_manager.middleware_data.get("org", None) is not None:
+        org = dialog_manager.middleware_data["org"]
+    else:
+        org = await get_by_player(player=player, game=game, dao=dao.organizer)
     return {
         "game": game,
         "player": player,
@@ -27,4 +30,7 @@ async def get_spy(
 
 
 async def get_keys(dialog_manager: DialogManager, **_):
-    return {"key_link": dialog_manager.dialog_data.get("key_link", None)}
+    return {
+        "key_link": dialog_manager.dialog_data.get("key_link", None),
+        "updated": dialog_manager.dialog_data.get("updated", None),
+    }

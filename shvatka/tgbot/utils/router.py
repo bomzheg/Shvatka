@@ -1,5 +1,5 @@
 from aiogram import Router, Dispatcher
-from aiogram.filters import Filter
+from aiogram.dispatcher.event.handler import CallbackType
 from aiogram.fsm.state import State
 from aiogram.types import Message
 from aiogram_dialog import StartMode, DialogManager
@@ -20,7 +20,7 @@ def disable_router_on_game(router: Router):
 
 
 def register_start_handler(
-    *filters: Filter,
+    *filters: CallbackType,
     state: State,
     router: Router,
     mode: StartMode = StartMode.NORMAL,

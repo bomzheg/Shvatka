@@ -48,4 +48,4 @@ class OrgFilter(BaseFilter):
         if self.can_validate_waivers is not None:
             if self.can_validate_waivers != org.can_validate_waivers:
                 return False
-        return True
+        return {"org": org}

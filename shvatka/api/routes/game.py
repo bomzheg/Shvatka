@@ -28,15 +28,15 @@ from shvatka.infrastructure.db.dao.holder import HolderDao
 
 @inject
 async def get_my_games_list(
-    player: Annotated[dto.Player, FromDishka()],
-    dao: Annotated[HolderDao, FromDishka()],
+    player: FromDishka[dto.Player],
+    dao: FromDishka[HolderDao],
 ):
     return responses.Page(await get_authors_games(player, dao.game))
 
 
 @inject
 async def get_active_game(
-    dao: Annotated[HolderDao, FromDishka()],
+    dao: FromDishka[HolderDao],
     response: Response,
 ) -> responses.Game | None:
     game = await get_active(dao.game)
@@ -47,7 +47,7 @@ async def get_active_game(
 
 @inject
 async def get_all_games(
-    dao: Annotated[HolderDao, FromDishka()],
+    dao: FromDishka[HolderDao],
 ) -> responses.Page[responses.Game]:
     games = await get_completed_games(dao.game)
     return responses.Page([responses.Game.from_core(game) for game in games])
@@ -55,8 +55,8 @@ async def get_all_games(
 
 @inject
 async def get_game_card(
-    dao: Annotated[HolderDao, FromDishka()],
-    player: Annotated[dto.Player, FromDishka()],
+    dao: FromDishka[HolderDao],
+    player: FromDishka[dto.Player],
     id_: Annotated[int, Path(alias="id")],
 ):
     game = await get_full_game(id_, player, dao.game)
@@ -85,8 +85,8 @@ async def get_game_stat(
 
 @inject
 async def get_game_file(
-    user: Annotated[dto.User, FromDishka()],
-    file_reader: Annotated[GameFileReaderInteractor, FromDishka()],
+    user: FromDishka[dto.User],
+    file_reader: FromDishka[GameFileReaderInteractor],
     id_: Annotated[int, Path(alias="id")],
     guid: Annotated[str, Path(alias="guid")],
 ) -> StreamingResponse:
@@ -100,8 +100,8 @@ async def get_game_file(
 
 @inject
 async def get_running_game_hints(
-    user: Annotated[dto.User, FromDishka()],
-    interactor: Annotated[GamePlayReaderInteractor, FromDishka()],
+    user: FromDishka[dto.User],
+    interactor: FromDishka[GamePlayReaderInteractor],
 ) -> responses.CurrentHintResponse:
     return responses.CurrentHintResponse.from_core(await interactor(user))
 

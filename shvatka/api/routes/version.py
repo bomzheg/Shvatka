@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from dishka.integrations.fastapi import FromDishka as Depends
+from dishka.integrations.fastapi import FromDishka
 from dishka.integrations.fastapi import inject
 from fastapi import APIRouter
 
@@ -9,7 +9,7 @@ from shvatka.infrastructure.version import get_version
 
 
 @inject
-def get_version_route(paths: Annotated[Paths, Depends()]):
+def get_version_route(paths: FromDishka[Paths]):
     return get_version(paths)
 
 

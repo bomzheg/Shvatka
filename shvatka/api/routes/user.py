@@ -1,7 +1,7 @@
 import logging
 from typing import Annotated
 
-from dishka.integrations.fastapi import FromDishka as Depends
+from dishka.integrations.fastapi import FromDishka
 from dishka.integrations.fastapi import inject
 from fastapi import APIRouter, HTTPException
 from fastapi.params import Body, Path
@@ -15,13 +15,13 @@ logger = logging.getLogger(__name__)
 
 
 @inject
-async def read_users_me(current_user: Annotated[dto.User, Depends()]) -> dto.User:
+async def read_users_me(current_user: FromDishka[dto.User]) -> dto.User:
     return current_user
 
 
 @inject
 async def read_user(
-    dao: Annotated[HolderDao, Depends()],
+    dao: FromDishka[HolderDao],
     id_: int = Path(alias="id"),  # type: ignore[assignment]
 ) -> dto.User:
     return await get_user(id_, dao.user)
@@ -29,9 +29,9 @@ async def read_user(
 
 @inject
 async def set_password_route(
-    auth: Annotated[AuthProperties, Depends()],
-    user: Annotated[dto.User, Depends()],
-    dao: Annotated[HolderDao, Depends()],
+    auth: FromDishka[AuthProperties],
+    user: FromDishka[dto.User],
+    dao: FromDishka[HolderDao],
     password: str = Body(),  # type: ignore[assignment]
 ):
     hashed_password = auth.get_password_hash(password)

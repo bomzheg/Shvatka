@@ -7,6 +7,7 @@ from aiogram.types import CallbackQuery, Message
 from aiogram_dialog import DialogManager
 from aiogram_dialog.widgets.kbd import Button
 from dishka import AsyncContainer
+from dishka.integrations.aiogram import CONTAINER_NAME
 
 from shvatka.core.interfaces.scheduler import LevelTestScheduler
 from shvatka.core.models import dto
@@ -123,7 +124,7 @@ async def cancel_level_test(c: CallbackQuery, button: Button, manager: DialogMan
 
 
 async def process_key_message(m: Message, dialog_: Any, manager: DialogManager) -> None:
-    dishka: AsyncContainer = manager.middleware_data["dishka"]
+    dishka: AsyncContainer = manager.middleware_data[CONTAINER_NAME]
     author: dto.Player = manager.middleware_data["player"]
     dao = await dishka.get(HolderDao)
     locker = await dishka.get(KeyCheckerFactory)  # type: ignore[type-abstract]

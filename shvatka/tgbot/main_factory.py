@@ -8,6 +8,7 @@ from aiogram.fsm.storage.redis import RedisStorage, DefaultKeyBuilder, RedisEven
 from aiogram_dialog.api.protocols import MessageManagerProtocol
 from aiogram_dialog.manager.message_manager import MessageManager
 from dishka import AsyncContainer, make_async_container, Provider, Scope, provide, AnyOf
+from dishka.integrations.aiogram import setup_dishka
 from redis.asyncio import Redis
 
 from shvatka.common.factory import TelegraphProvider, DCFProvider
@@ -93,9 +94,9 @@ class DpProvider(Provider):
             storage=storage,
             events_isolation=event_isolation,
         )
+        setup_dishka(container=dishka, router=dp)
         bg_manager_factory = setup_handlers(dp, bot_config, message_manager)
         setup_middlewares(
-            dishka=dishka,
             dp=dp,
             bg_manager_factory=bg_manager_factory,
         )

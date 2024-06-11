@@ -4,7 +4,6 @@ from aiogram import BaseMiddleware
 from aiogram.types import TelegramObject
 from aiogram_dialog.api.protocols import BgManagerFactory
 from dataclass_factory import Factory
-from dishka import AsyncContainer
 
 from shvatka.core.interfaces.clients.file_storage import FileStorage, FileGateway
 from shvatka.core.interfaces.scheduler import Scheduler
@@ -25,10 +24,8 @@ from shvatka.tgbot.views.telegraph import Telegraph
 class InitMiddleware(BaseMiddleware):
     def __init__(
         self,
-        dishka: AsyncContainer,
         bg_manager_factory: BgManagerFactory,
     ) -> None:
-        self.dishka = dishka
         self.bg_manager_factory = bg_manager_factory
 
     async def __call__(  # type: ignore[override]
@@ -37,33 +34,32 @@ class InitMiddleware(BaseMiddleware):
         event: TelegramObject,
         data: MiddlewareData,
     ) -> Any:
-        file_storage = await self.dishka.get(FileStorage)  # type: ignore[type-abstract]
-        data["config"] = await self.dishka.get(BotConfig)
-        data["main_config"] = await self.dishka.get(TgBotConfig)
-        data["user_getter"] = await self.dishka.get(UserGetter)
-        data["dcf"] = await self.dishka.get(Factory)
-        data["scheduler"] = await self.dishka.get(Scheduler)  # type: ignore[type-abstract]
-        data["locker"] = await self.dishka.get(KeyCheckerFactory)  # type: ignore[type-abstract]
+        dishka = data["dishka_container"]
+        file_storage = await dishka.get(FileStorage)  # type: ignore[type-abstract]
+        data["config"] = await dishka.get(BotConfig)
+        data["main_config"] = await dishka.get(TgBotConfig)
+        data["user_getter"] = await dishka.get(UserGetter)
+        data["dcf"] = await dishka.get(Factory)
+        data["scheduler"] = await dishka.get(Scheduler)  # type: ignore[type-abstract]
+        data["locker"] = await dishka.get(KeyCheckerFactory)  # type: ignore[type-abstract]
         data["file_storage"] = file_storage
-        data["telegraph"] = await self.dishka.get(Telegraph)
+        data["telegraph"] = await dishka.get(Telegraph)
         data["bg_manager_factory"] = self.bg_manager_factory
-        data["game_log"] = await self.dishka.get(GameLogWriter)  # type: ignore[type-abstract]
-        async with self.dishka() as request_dishka:
-            data["dishka"] = request_dishka
-            data["file_gateway"] = await request_dishka.get(FileGateway)  # type: ignore[type-abstract]
-            data["hint_sender"] = await request_dishka.get(HintSender)
-            data["level_view"] = await request_dishka.get(LevelView)  # type: ignore[type-abstract]
-            holder_dao = await request_dishka.get(HolderDao)
-            data["dao"] = holder_dao
-            data["hint_parser"] = HintParser(
-                dao=holder_dao.file_info,
-                file_storage=file_storage,
-                bot=data["bot"],
-            )
-            data["results_painter"] = ResultsPainter(
-                data["bot"],
-                holder_dao,
-                data["config"].log_chat,
-            )
-            result = await handler(event, data)
+        data["game_log"] = await dishka.get(GameLogWriter)  # type: ignore[type-abstract]
+        data["file_gateway"] = await dishka.get(FileGateway)  # type: ignore[type-abstract]
+        data["hint_sender"] = await dishka.get(HintSender)
+        data["level_view"] = await dishka.get(LevelView)  # type: ignore[type-abstract]
+        holder_dao = await dishka.get(HolderDao)
+        data["dao"] = holder_dao
+        data["hint_parser"] = HintParser(
+            dao=holder_dao.file_info,
+            file_storage=file_storage,
+            bot=data["bot"],
+        )
+        data["results_painter"] = ResultsPainter(
+            data["bot"],
+            holder_dao,
+            data["config"].log_chat,
+        )
+        result = await handler(event, data)
         return result

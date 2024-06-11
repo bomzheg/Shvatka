@@ -49,7 +49,7 @@ class DialogMiddlewareData(AiogramMiddlewareData, total=False):
 class MiddlewareData(DialogMiddlewareData, total=False):
     config: BotConfig
     main_config: TgBotConfig
-    dishka: AsyncContainer
+    dishka_container: AsyncContainer
     user_getter: UserGetter
     dcf: Factory
     dao: HolderDao

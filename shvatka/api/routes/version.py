@@ -1,4 +1,3 @@
-from typing import Annotated
 
 from dishka.integrations.fastapi import FromDishka
 from dishka.integrations.fastapi import inject

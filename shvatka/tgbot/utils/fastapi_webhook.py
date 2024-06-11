@@ -2,7 +2,7 @@ import asyncio
 import secrets
 from abc import ABC, abstractmethod
 from contextlib import asynccontextmanager
-from typing import Any, Annotated
+from typing import Any
 
 from aiogram import Bot, Dispatcher, loggers
 from aiogram.methods import TelegramMethod

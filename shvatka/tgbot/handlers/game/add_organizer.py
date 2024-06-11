@@ -9,6 +9,8 @@ from aiogram.types import (
 )
 from aiogram.utils.text_decorations import html_decoration as hd
 from aiogram_dialog.api.protocols import BgManagerFactory
+from dishka import FromDishka
+from dishka.integrations.aiogram import inject
 
 from shvatka.core.models import dto
 from shvatka.core.services.game import get_game
@@ -19,10 +21,10 @@ from shvatka.core.services.organizers import (
     agree_to_be_org,
     check_game_token,
 )
+from shvatka.core.views.game import OrgNotifier
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.tgbot import keyboards as kb
 from shvatka.tgbot.utils.router import disable_router_on_game
-from shvatka.tgbot.views.game import BotOrgNotifier
 
 
 async def invite_org_inline_query(
@@ -68,12 +70,14 @@ async def dismiss_to_be_org_handler(
     )
 
 
+@inject
 async def agree_to_be_org_handler(
     c: CallbackQuery,
     callback_data: kb.AgreeBeOrgCD,
     player: dto.Player,
-    dao: HolderDao,
-    bot: Bot,
+    dao: FromDishka[HolderDao],
+    bot: FromDishka[Bot],
+    org_notifier: FromDishka[OrgNotifier],
     bg_manager_factory: BgManagerFactory,
 ):
     await c.answer()
@@ -81,7 +85,7 @@ async def agree_to_be_org_handler(
         token=callback_data.token,
         inviter_id=callback_data.inviter_id,
         player=player,
-        org_notifier=BotOrgNotifier(bot=bot),
+        org_notifier=org_notifier,
         dao=dao.org_adder,
     )
     await bot.edit_message_text(

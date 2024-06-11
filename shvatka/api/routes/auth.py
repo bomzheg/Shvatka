@@ -2,7 +2,7 @@ import typing
 from typing import Annotated
 
 from aiogram.types import User
-from dishka.integrations.fastapi import inject, FromDishka as Depends
+from dishka.integrations.fastapi import inject, FromDishka
 from fastapi import Depends as fDepends, Body
 from fastapi import APIRouter
 from fastapi.security import OAuth2PasswordRequestForm
@@ -37,9 +37,9 @@ TG_WIDGET_HTML = """
 @inject
 async def login(
     response: Response,
-    auth_properties: Annotated[AuthProperties, Depends()],
-    config: Annotated[AuthConfig, Depends()],
-    dao: Annotated[HolderDao, Depends()],
+    auth_properties: FromDishka[AuthProperties],
+    config: FromDishka[AuthConfig],
+    dao: FromDishka[HolderDao],
     form_data: OAuth2PasswordRequestForm = fDepends(),
 ):
     user = await auth_properties.authenticate_user(form_data.username, form_data.password, dao)
@@ -51,7 +51,7 @@ async def login(
 @inject
 async def logout(
     response: Response,
-    config: Annotated[AuthConfig, Depends()],
+    config: FromDishka[AuthConfig],
 ):
     response.delete_cookie(
         "Authorization",
@@ -67,9 +67,9 @@ async def logout(
 async def tg_login_result(
     response: Response,
     user: Annotated[UserTgAuth, fDepends()],
-    dao: Annotated[HolderDao, Depends()],
-    auth_properties: Annotated[AuthProperties, Depends()],
-    config: Annotated[AuthConfig, Depends()],
+    dao: FromDishka[HolderDao],
+    auth_properties: FromDishka[AuthProperties],
+    config: FromDishka[AuthConfig],
 ):
     check_tg_hash(user, config.bot_token)
     saved = await upsert_user(user.to_dto(), dao.user)
@@ -82,9 +82,9 @@ async def tg_login_result(
 async def tg_login_result_post(
     response: Response,
     user: Annotated[UserTgAuth, Body()],
-    dao: Annotated[HolderDao, Depends()],
-    auth_properties: Annotated[AuthProperties, Depends()],
-    config: Annotated[AuthConfig, Depends()],
+    dao: FromDishka[HolderDao],
+    auth_properties: FromDishka[AuthProperties],
+    config: FromDishka[AuthConfig],
 ):
     check_tg_hash(user, config.bot_token)
     saved = await upsert_user(user.to_dto(), dao.user)
@@ -97,9 +97,9 @@ async def tg_login_result_post(
 async def webapp_login_result_post(
     response: Response,
     web_auth: Annotated[WebAppAuth, Body()],
-    dao: Annotated[HolderDao, Depends()],
-    auth_properties: Annotated[AuthProperties, Depends()],
-    config: Annotated[AuthConfig, Depends()],
+    dao: FromDishka[HolderDao],
+    auth_properties: FromDishka[AuthProperties],
+    config: FromDishka[AuthConfig],
 ):
     parsed = check_webapp_hash(web_auth.init_data, config.bot_token)
     user = dto.User.from_aiogram(typing.cast(User, parsed.user))
@@ -110,7 +110,7 @@ async def webapp_login_result_post(
 
 
 @inject
-async def tg_login_page(config: Annotated[AuthConfig, Depends()]):
+async def tg_login_page(config: FromDishka[AuthConfig]):
     return TG_WIDGET_HTML.format(
         bot_username=config.bot_username,
         auth_url=config.auth_url,

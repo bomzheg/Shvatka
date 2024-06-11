@@ -8,14 +8,13 @@ from aiogram.utils.text_decorations import html_decoration as hd
 from aiogram_dialog import DialogManager, BaseDialogManager
 from telegraph.aio import Telegraph
 
-from shvatka.core.interfaces.clients.file_storage import FileStorage
 from shvatka.core.models import dto
 from shvatka.core.services.game import get_full_game
 from shvatka.core.services.game_stat import get_game_stat, get_typed_keys
 from shvatka.core.utils.datetime_utils import tz_utc
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.tgbot.config.models.bot import BotConfig
-from shvatka.tgbot.views.hint_sender import create_hint_sender
+from shvatka.tgbot.views.hint_sender import HintSender
 from shvatka.tgbot.views.results.scenario import GamePublisher
 
 
@@ -41,11 +40,10 @@ async def process_publish_message(message: Message, dialog_: Any, manager: Dialo
 
     game_id = manager.start_data["game_id"]
     dao: HolderDao = manager.middleware_data["dao"]
-    storage: FileStorage = manager.middleware_data["file_storage"]
     telegraph: Telegraph = manager.middleware_data["telegraph"]
     author: dto.Player = manager.middleware_data["player"]
     config: BotConfig = manager.middleware_data["config"]
-    hint_sender = create_hint_sender(bot=bot, dao=dao, storage=storage)
+    hint_sender: HintSender = manager.middleware_data["hint_sender"]
     game = await get_full_game(id_=game_id, author=author, dao=dao.game)
     game_stat = await get_game_stat(game=game, player=author, dao=dao.game_stat)
     keys = await get_typed_keys(game=game, player=author, dao=dao.typed_keys)

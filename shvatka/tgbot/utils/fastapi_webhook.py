@@ -2,14 +2,14 @@ import asyncio
 import secrets
 from abc import ABC, abstractmethod
 from contextlib import asynccontextmanager
-from typing import Any, Annotated
+from typing import Any
 
 from aiogram import Bot, Dispatcher, loggers
 from aiogram.methods import TelegramMethod
 from aiogram.methods.base import TelegramType
 from aiogram.webhook.security import IPFilter
 from dishka import AsyncContainer
-from dishka.integrations.fastapi import FromDishka as Depends
+from dishka.integrations.fastapi import FromDishka
 from dishka.integrations.fastapi import inject
 from fastapi import FastAPI, Request, Response, HTTPException, APIRouter
 
@@ -116,8 +116,8 @@ class BaseRequestHandler(ABC):
     async def handle(
         self,
         request: Request,
-        bot: Annotated[Bot, Depends()],
-        dispatcher: Annotated[Dispatcher, Depends()],
+        bot: FromDishka[Bot],
+        dispatcher: FromDishka[Dispatcher],
     ) -> Response:
         if not self.verify_secret(request.headers.get("X-Telegram-Bot-Api-Secret-Token", ""), bot):
             return Response(content="Unauthorized", status_code=401)

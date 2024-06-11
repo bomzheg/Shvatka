@@ -8,10 +8,8 @@ from aiogram import Bot
 from aiogram.exceptions import TelegramAPIError
 from aiogram.types import Message
 
-from shvatka.core.interfaces.clients.file_storage import FileStorage
 from shvatka.core.models import enums
 from shvatka.core.models.dto import scn
-from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.tgbot.views.hint_factory.hint_content_resolver import HintContentResolver
 
 logger = logging.getLogger(__name__)
@@ -82,10 +80,3 @@ class HintSender:
     def get_approximate_time(cls, hints: Collection[scn.BaseHint]) -> timedelta:
         approximate_io_time = timedelta(milliseconds=100)
         return len(hints) * cls.SLEEP + len(hints) * approximate_io_time
-
-
-def create_hint_sender(bot: Bot, dao: HolderDao, storage: FileStorage) -> HintSender:
-    return HintSender(
-        bot=bot,
-        resolver=HintContentResolver(dao=dao.file_info, file_storage=storage),
-    )

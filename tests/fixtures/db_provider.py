@@ -40,7 +40,7 @@ class TestDbProvider(Provider):
         try:
             redis_container.start()
             url = redis_container.get_container_host_ip()
-            port = redis_container.get_exposed_port(redis_container.port_to_expose)
+            port = redis_container.get_exposed_port(redis_container.port)
             r = RedisConfig(url=url, port=int(port))
             yield r
         finally:

@@ -6,6 +6,7 @@ from aiogram.enums import ParseMode
 from dishka import Provider, Scope, provide
 
 from shvatka.tgbot.config.models.bot import BotConfig
+from shvatka.tgbot.views.bot_alert import BotAlert
 from shvatka.tgbot.views.jinja_filters import setup_jinja
 
 
@@ -24,3 +25,7 @@ class BotProvider(Provider):
         ) as bot:
             setup_jinja(bot)
             yield bot
+
+    @provide
+    async def bot_alert(self, bot: Bot, config: BotConfig) -> BotAlert:
+        return BotAlert(bot, config.log_chat)

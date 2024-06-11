@@ -17,12 +17,14 @@ from shvatka.core.interfaces.scheduler import Scheduler
 from shvatka.core.models import dto
 from shvatka.core.utils.key_checker_lock import KeyCheckerFactory
 from shvatka.core.views.game import GameLogWriter
+from shvatka.core.views.level import LevelView
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.infrastructure.picture.results_painter import ResultsPainter
 from shvatka.tgbot.config.models.bot import BotConfig
 from shvatka.tgbot.config.models.main import TgBotConfig
 from shvatka.tgbot.username_resolver.user_getter import UserGetter
 from shvatka.tgbot.views.hint_factory.hint_parser import HintParser
+from shvatka.tgbot.views.hint_sender import HintSender
 
 
 class AiogramMiddlewareData(TypedDict, total=False):
@@ -57,6 +59,8 @@ class MiddlewareData(DialogMiddlewareData, total=False):
     telegraph: Telegraph
     hint_parser: HintParser
     file_gateway: FileGateway
+    hint_sender: HintSender
+    level_view: LevelView
     user: dto.User | None
     chat: dto.Chat | None
     team: dto.Team | None

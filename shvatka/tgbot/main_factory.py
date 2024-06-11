@@ -7,13 +7,16 @@ from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.fsm.storage.redis import RedisStorage, DefaultKeyBuilder, RedisEventIsolation
 from aiogram_dialog.api.protocols import MessageManagerProtocol
 from aiogram_dialog.manager.message_manager import MessageManager
-from dishka import AsyncContainer, make_async_container, Provider, Scope, provide
+from dishka import AsyncContainer, make_async_container, Provider, Scope, provide, AnyOf
 from redis.asyncio import Redis
 
 from shvatka.common.factory import TelegraphProvider, DCFProvider
+from shvatka.core.interfaces.clients.file_storage import FileStorage
 from shvatka.core.utils.key_checker_lock import KeyCheckerFactory
-from shvatka.core.views.game import GameLogWriter
+from shvatka.core.views.game import GameLogWriter, GameView, GameViewPreparer, OrgNotifier
+from shvatka.core.views.level import LevelView
 from shvatka.infrastructure.db.config.models.storage import StorageConfig, StorageType
+from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.infrastructure.db.factory import (
     create_redis,
     create_lock_factory,
@@ -25,7 +28,10 @@ from shvatka.tgbot.handlers import setup_handlers
 from shvatka.tgbot.middlewares import setup_middlewares
 from shvatka.tgbot.username_resolver.user_getter import UserGetter
 from shvatka.tgbot.utils.router import print_router_tree
-from shvatka.tgbot.views.game import GameBotLog
+from shvatka.tgbot.views.game import GameBotLog, BotView, BotOrgNotifier
+from shvatka.tgbot.views.hint_factory.hint_content_resolver import HintContentResolver
+from shvatka.tgbot.views.hint_sender import HintSender
+from shvatka.tgbot.views.level_testing import LevelBotView
 
 logger = logging.getLogger(__name__)
 
@@ -49,7 +55,7 @@ def get_bot_specific_providers() -> list[Provider]:
         SchedulerProvider(),
         TelegraphProvider(),
         DCFProvider(),
-        GameLogProvider(),
+        GameToolsProvider(),
         UserGetterProvider(),
         LockProvider(),
     ]
@@ -125,12 +131,26 @@ class UserGetterProvider(Provider):
             yield user_getter
 
 
-class GameLogProvider(Provider):
-    scope = Scope.APP
-
-    @provide
+class GameToolsProvider(Provider):
+    @provide(scope=Scope.APP)
     def get_game_log(self, bot: Bot, config: BotConfig) -> GameLogWriter:
         return GameBotLog(bot=bot, log_chat_id=config.game_log_chat)
+
+    @provide(scope=Scope.REQUEST)
+    def get_hint_content_resolver(
+        self, dao: HolderDao, file_storage: FileStorage
+    ) -> HintContentResolver:
+        return HintContentResolver(dao=dao.file_info, file_storage=file_storage)
+
+    @provide(scope=Scope.APP)
+    def get_org_notifier(self, bot: Bot) -> OrgNotifier:
+        return BotOrgNotifier(bot=bot)
+
+    get_hint_sender = provide(HintSender, scope=Scope.REQUEST)
+    get_bot_game_view = provide(
+        BotView, scope=Scope.REQUEST, provides=AnyOf[GameView, GameViewPreparer]
+    )
+    level_bot_view = provide(LevelBotView, scope=Scope.REQUEST, provides=LevelView)
 
 
 def resolve_update_types(dp: Dispatcher) -> list[str]:

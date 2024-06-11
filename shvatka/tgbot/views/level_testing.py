@@ -3,11 +3,9 @@ from dataclasses import dataclass
 from aiogram import Bot
 from aiogram.utils.markdown import html_decoration as hd
 
-from shvatka.core.interfaces.clients.file_storage import FileStorage
 from shvatka.core.models import dto
 from shvatka.core.views.level import LevelView
-from shvatka.infrastructure.db.dao.holder import HolderDao
-from shvatka.tgbot.views.hint_sender import HintSender, create_hint_sender
+from shvatka.tgbot.views.hint_sender import HintSender
 from shvatka.tgbot.views.keys import KeyEmoji
 
 
@@ -54,10 +52,3 @@ class LevelBotView(LevelView):
             chat_id=suite.tester.player.get_chat_id(),
             text="Тестирование уровня завершено, поздравляю!",
         )
-
-
-def create_level_test_view(bot: Bot, dao: HolderDao, storage: FileStorage) -> LevelView:
-    return LevelBotView(
-        bot=bot,
-        hint_sender=create_hint_sender(bot=bot, dao=dao, storage=storage),
-    )

@@ -1,3 +1,4 @@
+from datetime import datetime
 import json
 import logging
 from contextlib import suppress
@@ -9,9 +10,9 @@ from aiogram.exceptions import TelegramAPIError
 from aiogram.utils.markdown import html_decoration as hd
 from dataclass_factory import Factory
 
-from shvatka.core.interfaces.clients.file_storage import FileStorage
 from shvatka.core.interfaces.dal.game_play import GamePreparer
 from shvatka.core.models import dto
+from shvatka.core.utils.datetime_utils import tz_utc
 from shvatka.core.views.game import (
     GameViewPreparer,
     GameView,
@@ -24,9 +25,16 @@ from shvatka.core.views.game import (
     GameLogEvent,
     GameLogType,
 )
-from shvatka.infrastructure.db.dao.holder import HolderDao
-from shvatka.tgbot.views.hint_sender import HintSender, create_hint_sender
+from shvatka.tgbot.views.bot_alert import BotAlert
+from shvatka.tgbot.views.hint_sender import HintSender
 from shvatka.tgbot.views.keys import KeyEmoji
+
+PREPARE_GAME_TEMPLATE = (
+    "Игра {game_name} начнётся через {second_left} сек. "
+    "Ваша команда {team_name} будет получать уровни и подсказки прямо тут."
+    "Ключи так же вводите прямо сюда. "
+    "Формат ключа SHСЛОВО или СХСЛОВО. Все буквы обязательно большими. Удачи!"
+)
 
 logger = logging.getLogger(__name__)
 
@@ -35,6 +43,7 @@ logger = logging.getLogger(__name__)
 class BotView(GameViewPreparer, GameView):
     bot: Bot
     hint_sender: HintSender
+    bot_alert: BotAlert
 
     async def prepare_game_view(
         self,
@@ -51,8 +60,30 @@ class BotView(GameViewPreparer, GameView):
                     message_id=await dao.get_poll_msg(team=team, game=game),
                     reply_markup=None,
                 )
-            except TelegramAPIError as e:  # noqa: PERF203
-                logger.exception("can't remove waivers keyboard for team %s", team.id, exc_info=e)
+            except TelegramAPIError as e:
+                logger.warning("can't remove waivers keyboard for team %s", team.id, exc_info=e)
+            try:
+                if not game.start_at:
+                    await self.bot_alert.alert(f"Not set up game.start_at for game_id={game.id}")
+                    logger.error("not set up game.start_at", extra=dict(game_id=game.id))
+                    raise RuntimeError("not set up game.start_at")
+                await self.bot.send_message(
+                    chat_id=team.get_chat_id(),
+                    text=PREPARE_GAME_TEMPLATE.format(
+                        game_name=hd.quote(game.name),
+                        second_left=(game.start_at - datetime.now(tz_utc)).seconds,
+                        team_name=hd.quote(team.name),
+                    ),
+                )
+            except TelegramAPIError as e:
+                logger.exception(
+                    "can't send prepare message to team",
+                    exc_info=e,
+                    extra=dict(team_id=team.id, chat_id=team.get_chat_id()),
+                )
+                await self.bot_alert.alert(
+                    f"can't send prepare message to team {team.id} [{e.__class__.__name__}]"
+                )
 
     async def send_puzzle(self, team: dto.Team, level: dto.Level) -> None:
         assert level.number_in_game is not None
@@ -202,10 +233,3 @@ class BotOrgNotifier(OrgNotifier):
             f"{event.result.td.seconds % 60} c.\n"
             f"{hd.pre(hd.quote(results))}",
         )
-
-
-def create_bot_game_view(bot: Bot, dao: HolderDao, storage: FileStorage) -> BotView:
-    return BotView(
-        bot=bot,
-        hint_sender=create_hint_sender(bot=bot, dao=dao, storage=storage),
-    )

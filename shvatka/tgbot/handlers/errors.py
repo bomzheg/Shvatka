@@ -55,11 +55,14 @@ async def handle(error: ErrorEvent, log_chat_id: int, bot: Bot):
     )
     if not log_chat_id:
         return
+    error_text = hd.quote(
+        json.dumps(error.update.model_dump(exclude_none=True), default=str)[:3500]
+    )
     await bot.send_message(
         log_chat_id,
         f"Получено исключение {hd.quote(str(error.exception))}\n"
         f"во время обработки апдейта "
-        f"{hd.quote(json.dumps(error.update.dict(exclude_none=True), default=str)[:3500])}\n",
+        f"{error_text}\n",
     )
 
 

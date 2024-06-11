@@ -1,7 +1,7 @@
-from aiogram import Bot
 from dishka.integrations.base import FromDishka
 
-from shvatka.core.interfaces.clients.file_storage import FileStorage
+from shvatka.core.views.game import GameViewPreparer, GameView, GameLogWriter
+from shvatka.core.views.level import LevelView
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.infrastructure.scheduler.context import inject
 from shvatka.core.interfaces.scheduler import LevelTestScheduler, Scheduler
@@ -9,9 +9,6 @@ from shvatka.core.models import dto
 from shvatka.core.services.game_play import prepare_game, start_game, send_hint
 from shvatka.core.services.level_testing import send_testing_level_hint
 from shvatka.core.services.organizers import get_by_player
-from shvatka.tgbot.config.models.bot import BotConfig
-from shvatka.tgbot.views.game import GameBotLog, create_bot_game_view
-from shvatka.tgbot.views.level_testing import create_level_test_view
 
 
 @inject
@@ -19,15 +16,14 @@ async def prepare_game_wrapper(
     game_id: int,
     author_id: int,
     dao: FromDishka[HolderDao],
-    bot: FromDishka[Bot],
-    file_storage: FromDishka[FileStorage],
+    view_preparer: FromDishka[GameViewPreparer],
 ) -> None:
     author = await dao.player.get_by_id(author_id)
     game = await dao.game.get_by_id(game_id, author)
     await prepare_game(
         game=game,
         game_preparer=dao.game_preparer,
-        view_preparer=create_bot_game_view(bot, dao, file_storage),
+        view_preparer=view_preparer,
     )
 
 
@@ -36,18 +32,17 @@ async def start_game_wrapper(
     game_id: int,
     author_id: int,
     dao: FromDishka[HolderDao],
-    bot: FromDishka[Bot],
-    file_storage: FromDishka[FileStorage],
     scheduler: FromDishka[Scheduler],
-    config: FromDishka[BotConfig],
+    game_view: FromDishka[GameView],
+    game_log_writer: FromDishka[GameLogWriter],
 ):
     game = await dao.game.get_full(game_id)
     assert author_id == game.author.id
     await start_game(
         game=game,
         dao=dao.game_starter,
-        game_log=GameBotLog(bot=bot, log_chat_id=config.game_log_chat),
-        view=create_bot_game_view(bot, dao, file_storage),
+        game_log=game_log_writer,
+        view=game_view,
         scheduler=scheduler,
     )
 
@@ -58,8 +53,7 @@ async def send_hint_wrapper(
     team_id: int,
     hint_number: int,
     dao: FromDishka[HolderDao],
-    bot: FromDishka[Bot],
-    file_storage: FromDishka[FileStorage],
+    game_view: FromDishka[GameView],
     scheduler: FromDishka[Scheduler],
 ):
     level = await dao.level.get_by_id(level_id)
@@ -70,7 +64,7 @@ async def send_hint_wrapper(
         hint_number=hint_number,
         team=team,
         dao=dao.level_time,
-        view=create_bot_game_view(bot, dao, file_storage),
+        view=game_view,
         scheduler=scheduler,
     )
 
@@ -82,8 +76,7 @@ async def send_hint_for_testing_wrapper(
     player_id: int,
     hint_number: int,
     dao: FromDishka[HolderDao],
-    bot: FromDishka[Bot],
-    file_storage: FromDishka[FileStorage],
+    level_view: FromDishka[LevelView],
     scheduler: FromDishka[LevelTestScheduler],
 ):
     level = await dao.level.get_by_id(level_id)
@@ -94,7 +87,7 @@ async def send_hint_for_testing_wrapper(
     await send_testing_level_hint(
         suite=dto.LevelTestSuite(level=level, tester=org),
         hint_number=hint_number,
-        view=create_level_test_view(bot, dao, file_storage),
+        view=level_view,
         scheduler=scheduler,
         dao=dao.level_testing_complex,
     )

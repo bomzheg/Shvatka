@@ -3,6 +3,7 @@ from aiogram_dialog import Dialog, Window
 from aiogram_dialog.widgets.kbd import Cancel, Start, SwitchInlineQuery
 from aiogram_dialog.widgets.text import Const, Format, Jinja
 
+from shvatka.core.models import enums
 from shvatka.tgbot import states
 from .getters import get_promotion_token, get_main
 
@@ -64,7 +65,7 @@ main_menu = Dialog(
             Const("👀Шпион"),
             id="game_spy",
             state=states.OrgSpySG.main,
-            when=F["org"],
+            when=F["org"] & F["game"].status == enums.GameStatus.finished,
         ),
         Start(
             Const("✍Аппрувнуть друга"),

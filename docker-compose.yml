@@ -3,6 +3,7 @@ version: '3.2'
 services:
 
   shvatka:
+    container_name: "shvatka-${ENV_NAME}"
     restart: always
     image: "bomzheg/shvatka:${SHVATKA_VERSION:-latest}"
     volumes:
@@ -25,6 +26,7 @@ services:
       ["python", "-m", "shvatka"]
 
   shvatka-ui:
+    container_name: "shvatka_ui-${ENV_NAME}"
     restart: always
     image: bomzheg/shvatka-ui:${SHVATKA_UI_VERSION:-latest}
     networks:

@@ -5,7 +5,7 @@ from aiogram.filters import BaseFilter
 from aiogram.types import Message
 
 from shvatka.core.models import dto
-from shvatka.core.services.organizers import get_by_player, get_by_player_or_none
+from shvatka.core.services.organizers import get_by_player_or_none
 from shvatka.infrastructure.db.dao.holder import HolderDao
 
 

@@ -64,7 +64,7 @@ game_orgs = Dialog(
             Format("{can_validate_waivers}Принимать вейверы"),
             id="can_validate_waivers",
             on_click=change_permission_handler,
-            when="🤡"
+            when="🤡",
         ),
         Button(
             Multi(

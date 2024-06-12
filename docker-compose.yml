@@ -25,6 +25,8 @@ services:
     image: bomzheg/shvatka-ui:${SHVATKA_UI_VERSION:-latest}
     networks:
       - reverse-proxy
+    env_file:
+      - "config/ui.env"
 
   migrations:
     profiles:

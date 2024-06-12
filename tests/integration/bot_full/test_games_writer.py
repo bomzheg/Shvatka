@@ -7,7 +7,6 @@ from shvatka.tgbot.views.commands import NEW_GAME_COMMAND
 
 
 @pytest.mark.asyncio
-@pytest.mark.skip(reason="doesnt work. TODO")
 async def test_exit_write_game(author_client: BotClient, message_manager: MockMessageManager):
     await author_client.send("/" + NEW_GAME_COMMAND.command)
     first_message = message_manager.one_message()

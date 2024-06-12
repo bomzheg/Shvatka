@@ -10,7 +10,6 @@ from shvatka.tgbot.views.commands import NEW_LEVEL_COMMAND
 
 
 @pytest.mark.asyncio
-@pytest.mark.skip(reason="doesnt work. TODO")
 async def test_write_level(
     author: dto.Player,
     author_client: BotClient,

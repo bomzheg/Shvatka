@@ -80,7 +80,7 @@ async def test_change_password(client: AsyncClient, user: dto.User, token: Token
     resp = await client.put(
         "/users/me/password/",
         cookies={"Authorization": f"{token.token_type} {token.access_token}"},
-        json={"password": "09876"},
+        json="09876",
         follow_redirects=True,
     )
     assert resp.is_success

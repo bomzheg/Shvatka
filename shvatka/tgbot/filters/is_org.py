@@ -5,7 +5,7 @@ from aiogram.filters import BaseFilter
 from aiogram.types import Message
 
 from shvatka.core.models import dto
-from shvatka.core.services.organizers import get_by_player
+from shvatka.core.services.organizers import get_by_player, get_by_player_or_none
 from shvatka.infrastructure.db.dao.holder import HolderDao
 
 
@@ -34,7 +34,7 @@ class OrgFilter(BaseFilter):
             return False
         if self.only_for_running_game and not game.is_started():
             return False
-        org = await get_by_player(player=player, game=game, dao=dao.organizer)
+        org = await get_by_player_or_none(player=player, game=game, dao=dao.organizer)
         if org is None or org.deleted:
             return False
         if self.is_primary is not None:

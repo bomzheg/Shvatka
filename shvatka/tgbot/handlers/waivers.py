@@ -34,7 +34,10 @@ from shvatka.tgbot.views.waiver import (
 )
 
 
-async def start_waivers(_: Message, team: dto.Team, game: dto.Game, dao: HolderDao, bot: Bot):
+async def start_waivers(message: Message, team: dto.Team | None, game: dto.Game, dao: HolderDao, bot: Bot):
+    if not team:
+        await message.answer("Ты не в команде или не капитан")
+        return
     msg = await bot.send_message(
         chat_id=team.get_chat_id(),
         text=await get_waiver_poll_text(team, game, dao),

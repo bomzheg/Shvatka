@@ -19,6 +19,10 @@ services:
       - redis
     extra_hosts:
       - "host.docker.internal:host-gateway"
+    ports:
+     - "127.0.0.1:${EXPOSED_PORT:-8001}:8000"
+    entrypoint:
+      ["python", "-m", "shvatka"]
 
   shvatka-ui:
     restart: always

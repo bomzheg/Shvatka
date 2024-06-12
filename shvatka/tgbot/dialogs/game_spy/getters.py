@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from aiogram_dialog import DialogManager
 
 from shvatka.core.models import dto
@@ -30,7 +32,12 @@ async def get_spy(
 
 
 async def get_keys(dialog_manager: DialogManager, **_):
+    date_iso = dialog_manager.dialog_data.get("updated", None)
+    if date_iso is not None:
+        updated = datetime.fromisoformat(date_iso)
+    else:
+        updated = None
     return {
         "key_link": dialog_manager.dialog_data.get("key_link", None),
-        "updated": dialog_manager.dialog_data.get("updated", None),
+        "updated": updated,
     }

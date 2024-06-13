@@ -30,10 +30,10 @@ from shvatka.tgbot.views.hint_sender import HintSender
 from shvatka.tgbot.views.keys import KeyEmoji
 
 PREPARE_GAME_TEMPLATE = (
-    "Игра {game_name} начнётся через {second_left} сек. "
-    "Ваша команда {team_name} будет получать уровни и подсказки прямо тут."
-    "Ключи так же вводите прямо сюда. "
-    "Формат ключа SHСЛОВО или СХСЛОВО. Все буквы обязательно большими. Удачи!"
+    "Игра {game_name} начнётся через {second_left} сек. \n"
+    "Ваша команда {team_name} будет получать уровни и подсказки прямо тут.\n"
+    "Ключи так же вводите прямо сюда. Один ключ - одно сообщение. "
+    "Формат ключей SHСЛОВО или СХСЛОВО. Все буквы обязательно большими. Удачи!"
 )
 
 logger = logging.getLogger(__name__)

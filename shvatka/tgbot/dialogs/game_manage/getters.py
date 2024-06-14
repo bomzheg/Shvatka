@@ -4,6 +4,7 @@ from aiogram import Bot
 from aiogram.enums import ContentType
 from aiogram_dialog import DialogManager
 from aiogram_dialog.api.entities import MediaAttachment, MediaId
+from dishka import AsyncContainer
 from telegraph import Telegraph
 
 from shvatka.core.models import dto
@@ -28,11 +29,15 @@ async def get_completed_game(dao: HolderDao, dialog_manager: DialogManager, **_)
     game_id = (
         dialog_manager.dialog_data.get("game_id", None) or dialog_manager.start_data["game_id"]
     )
+    dishka: AsyncContainer = dialog_manager.middleware_data["dishka_container"]
+    bot = await dishka.get(Bot)
+    username = (await bot.get_me()).username
     return {
         "game": await game.get_game(
             id_=game_id,
             dao=dao.game,
-        )
+        ),
+        "webapp_url": f"https://t.me/{username}/games?startapp={game_id}",
     }
 
 

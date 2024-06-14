@@ -9,6 +9,7 @@ from aiogram_dialog.widgets.kbd import (
     Calendar,
     Cancel,
     Start,
+    WebApp,
 )
 from aiogram_dialog.widgets.media import DynamicMedia
 from aiogram_dialog.widgets.text import Const, Format, Case, Jinja
@@ -101,10 +102,14 @@ games = Dialog(
             on_click=show_zip_scn,
         ),
         SwitchTo(
-            Const("Сценарий игры"),
+            Const("Сценарий игры в tg"),
             id="game_scn_channel",
             state=states.CompletedGamesPanelSG.scenario_channel,
             when=F["game"].results.published_chanel_id,
+        ),
+        WebApp(
+            url=Format("{webapp_url}"),
+            text=Const("Сценарий игры на сайте"),
         ),
         SwitchTo(
             Const("🔙Назад к списку игр"),

@@ -51,3 +51,5 @@ file-storage-config:
   mkdir: true
   exist-ok: true
   parents: true
+web:
+  base-url: https://exmple.org

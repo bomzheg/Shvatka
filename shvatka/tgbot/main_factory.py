@@ -11,7 +11,7 @@ from dishka import AsyncContainer, make_async_container, Provider, Scope, provid
 from dishka.integrations.aiogram import setup_dishka
 from redis.asyncio import Redis
 
-from shvatka.common.factory import TelegraphProvider, DCFProvider
+from shvatka.common.factory import TelegraphProvider, DCFProvider, UrlProvider
 from shvatka.core.interfaces.clients.file_storage import FileStorage
 from shvatka.core.utils.key_checker_lock import KeyCheckerFactory
 from shvatka.core.views.game import GameLogWriter, GameView, GameViewPreparer, OrgNotifier
@@ -59,6 +59,7 @@ def get_bot_specific_providers() -> list[Provider]:
         GameToolsProvider(),
         UserGetterProvider(),
         LockProvider(),
+        UrlProvider(),
     ]
 
 

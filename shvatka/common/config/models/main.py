@@ -14,6 +14,7 @@ class Config:
     db: DBConfig
     redis: RedisConfig
     file_storage_config: FileStorageConfig
+    web: WebConfig
 
     @property
     def app_dir(self) -> Path:
@@ -39,3 +40,8 @@ class FileStorageConfig:
     mkdir: bool
     parents: bool
     exist_ok: bool
+
+
+@dataclass
+class WebConfig:
+    base_url: str

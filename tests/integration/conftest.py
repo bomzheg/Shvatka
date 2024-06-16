@@ -12,7 +12,7 @@ from telegraph.aio import Telegraph
 
 from shvatka.api.dependencies import AuthProvider, ApiConfigProvider, PlayerProvider, TeamProvider
 from shvatka.common import Paths
-from shvatka.common.factory import DCFProvider, TelegraphProvider
+from shvatka.common.factory import DCFProvider, TelegraphProvider, UrlProvider
 from shvatka.core.interfaces.clients.file_storage import FileStorage, FileGateway
 from shvatka.core.interfaces.scheduler import Scheduler
 from shvatka.core.utils.key_checker_lock import KeyCheckerFactory
@@ -69,6 +69,7 @@ async def dishka():
         MockMessageManagerProvider(),
         LockProvider(),
         DCFProvider(),
+        UrlProvider(),
         TelegraphProvider(),
         GamePlayProvider(),
         GameToolsProvider(),

@@ -3,6 +3,7 @@ from dataclass_factory import Schema, NameStyle
 from dishka import Provider, Scope, provide
 from telegraph.aio import Telegraph
 
+from shvatka.common.url_factory import UrlFactory
 from shvatka.core.models.schems import schemas
 from shvatka.tgbot.config.models.bot import BotConfig
 
@@ -26,3 +27,9 @@ class DCFProvider(Provider):
             default_schema=Schema(name_style=NameStyle.kebab),
         )
         return dcf
+
+
+class UrlProvider(Provider):
+    scope = Scope.APP
+
+    url_factory = provide(UrlFactory)

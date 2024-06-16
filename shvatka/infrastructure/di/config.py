@@ -1,6 +1,7 @@
 from dishka import Provider, provide, Scope
 
 from shvatka.common import FileStorageConfig, Paths, Config
+from shvatka.common.config.models.main import WebConfig
 from shvatka.common.config.parser.paths import common_get_paths
 from shvatka.infrastructure.db.config.models.db import RedisConfig, DBConfig
 from shvatka.infrastructure.db.config.models.storage import StorageConfig
@@ -43,6 +44,10 @@ class ConfigProvider(Provider):
     @provide
     def get_tg_client_config(self, config: TgBotConfig) -> TgClientConfig:
         return config.tg_client
+
+    @provide
+    def get_web_app_config(self, config: TgBotConfig) -> WebConfig:
+        return config.web
 
 
 class DbConfigProvider(Provider):

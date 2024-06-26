@@ -24,6 +24,14 @@ services:
      - "127.0.0.1:${EXPOSED_PORT:-8001}:8000"
     entrypoint:
       ["python", "-m", "shvatka"]
+    deploy:
+      resources:
+        reservations:
+          memory: 250M
+          cpus: "0.008"
+        limits:
+          memory: 800M
+          cpus: "0.15"
 
   shvatka-ui:
     container_name: "shvatka_ui-${ENV_NAME}"
@@ -33,6 +41,13 @@ services:
       - reverse-proxy
     env_file:
       - "config/ui.env"
+    deploy:
+      resources:
+        reservations:
+          memory: 5M
+        limits:
+          memory: 80M
+          cpus: "0.01"
 
   migrations:
     profiles:

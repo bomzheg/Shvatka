@@ -1,5 +1,6 @@
 import json
 import secrets
+from datetime import timedelta
 
 from redis.asyncio.client import Redis
 
@@ -20,8 +21,15 @@ class SecureInvite:
     async def save_new_invite(
         self, token_len: int = TOKEN_LEN, expire=EXPIRE_TIME, **dct: dict
     ) -> str:
+        """
+
+        :param token_len: len of new token
+        :param expire: minutes
+        :param dct: secure data
+        :return: secure token
+        """
         token = secrets.token_urlsafe(token_len)
-        await self.redis.set(self._create_key(token), json.dumps(dct), ex=expire)
+        await self.redis.set(self._create_key(token), json.dumps(dct), ex=timedelta(minutes=expire))
         return token
 
     async def get_invite(self, token: str) -> dict:

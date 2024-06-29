@@ -29,7 +29,9 @@ class SecureInvite:
         :return: secure token
         """
         token = secrets.token_urlsafe(token_len)
-        await self.redis.set(self._create_key(token), json.dumps(dct), ex=timedelta(minutes=expire))
+        await self.redis.set(
+            self._create_key(token), json.dumps(dct), ex=timedelta(minutes=expire)
+        )
         return token
 
     async def get_invite(self, token: str) -> dict:

@@ -47,5 +47,8 @@ class GameKeysReaderImpl(GameKeysReader):
     async def get_full(self, id_: int) -> dto.FullGame:
         return await self.dao.game.get_full(id_)
 
+    async def add_levels(self, game: dto.Game) -> dto.FullGame:
+        return await self.dao.game.add_levels(game)
+
     async def get_by_user(self, user: dto.User) -> dto.Player:
         return await self.dao.player.get_by_user(user)

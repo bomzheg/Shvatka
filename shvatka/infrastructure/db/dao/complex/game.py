@@ -92,8 +92,13 @@ class GamePackagerImpl(GamePackager):
 
     async def get_game_level_times_by_teams(
         self, game: dto.Game, levels_count: int
-    ) -> dict[dto.Team, list[dto.LevelTimeOnGame]]:
+    ) -> dict[dto.Team, list[dto.LevelTime]]:
         return await self.dao.level_time.get_game_level_times_by_teams(game, levels_count)
+
+    async def get_game_level_times_with_hints(
+        self, game: dto.FullGame
+    ) -> dict[dto.Team, list[dto.LevelTimeOnGame]]:
+        return await self.dao.level_time.get_game_level_times_with_hints(game)
 
     async def get_full(self, id_: int) -> dto.FullGame:
         return await self.dao.game.get_full(id_)
@@ -114,6 +119,9 @@ class GameFilesGetterImpl(GameFileReader):
 
     async def get_full(self, id_: int) -> dto.FullGame:
         return await self.dao.game.get_full(id_)
+
+    async def add_levels(self, game: dto.Game) -> dto.FullGame:
+        return await self.dao.game.add_levels(game)
 
     async def get_by_user(self, user: dto.User) -> dto.Player:
         return await self.dao.player.get_by_user(user)

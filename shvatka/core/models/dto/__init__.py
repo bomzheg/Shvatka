@@ -12,7 +12,7 @@ from .level_testing import (
     SimpleKey,
     LevelTestingResult,
 )
-from .levels_times import LevelTime, GameStat, LevelTimeOnGame
+from .levels_times import LevelTime, GameStat, LevelTimeOnGame, SpyHintInfo
 from .organizer import Organizer, PrimaryOrganizer, SecondaryOrganizer
 from .player import Player, PlayerWithStat
 from .poll import VotedPlayer, Vote

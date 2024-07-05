@@ -36,5 +36,8 @@ class LevelTestComplex(LevelTestingDao):
     async def get_full(self, id_: int) -> dto.FullGame:
         return await self.game.get_full(id_=id_)
 
+    async def add_levels(self, game: dto.Game) -> dto.FullGame:
+        return await self.game.add_levels(game)
+
     async def commit(self) -> None:
         return await self.level_testing.commit()

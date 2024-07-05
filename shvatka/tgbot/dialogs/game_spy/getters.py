@@ -5,6 +5,7 @@ from aiogram_dialog import DialogManager
 from shvatka.core.models import dto
 from shvatka.core.services.game_stat import get_game_spy
 from shvatka.core.services.organizers import get_by_player
+from shvatka.core.utils.datetime_utils import tz_utc
 from shvatka.infrastructure.db.dao.holder import HolderDao
 
 
@@ -28,6 +29,7 @@ async def get_spy(
     stat = await get_game_spy(game, player, dao.game_stat)
     return {
         "stat": stat,
+        "now": datetime.now(tz=tz_utc),
     }
 
 

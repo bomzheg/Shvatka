@@ -64,6 +64,13 @@ class GameDao(BaseDAO[models.Game]):
             levels=[level.to_dto(author) for level in game_db.levels],
         )
 
+    async def add_levels(self, game: dto.Game) -> dto.FullGame:
+        levels_db: ScalarResult[models.Level] = await self.session.scalars(
+            select(models.Level).where(models.Level.game_id == game.id)
+        )
+        levels = [lvl.to_dto(game.author) for lvl in levels_db]
+        return game.to_full_game(levels=levels)
+
     async def get_by_id(self, id_: int, author: dto.Player | None = None) -> dto.Game:
         if not author:
             options = (

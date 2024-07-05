@@ -81,12 +81,29 @@ class LevelTimeDao(BaseDAO[models.LevelTime]):
 
     async def get_game_level_times_by_teams(
         self, game: dto.Game, levels_count: int
+    ) -> dict[dto.Team, list[dto.LevelTime]]:
+        level_times = await self.get_game_level_times(game)
+        result: dict[dto.Team, list[dto.LevelTime]] = {}
+        for lt in level_times:
+            result.setdefault(lt.team, []).append(lt)
+        return result
+
+    async def get_game_level_times_with_hints(
+        self, game: dto.FullGame
     ) -> dict[dto.Team, list[dto.LevelTimeOnGame]]:
         level_times = await self.get_game_level_times(game)
         result: dict[dto.Team, list[dto.LevelTimeOnGame]] = {}
         for lt in level_times:
-            result.setdefault(lt.team, []).append(lt.to_on_game(levels_count))
+            result.setdefault(lt.team, []).append(
+                lt.to_on_game(levels_count=len(game.levels), hint=self._get_hint(game, lt))
+            )
         return result
+
+    def _get_hint(self, game: dto.FullGame, level_times: dto.LevelTime) -> dto.SpyHintInfo:
+        hint = game.levels[level_times.level_number].get_hint_by_time(
+            datetime.now(tz_utc) - level_times.start_at
+        )
+        return dto.SpyHintInfo(time=hint.time, number=hint.number)
 
     async def replace_team_levels(self, primary: dto.Team, secondary: dto.Team):
         await self.session.execute(

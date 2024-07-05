@@ -17,3 +17,8 @@ class TimeHint:
     @property
     def hints_count(self) -> int:
         return len(self.hint)
+
+
+@dataclass
+class EnumeratedTimeHint(TimeHint):
+    number: int

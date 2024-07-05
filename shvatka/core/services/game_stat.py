@@ -19,8 +19,9 @@ async def get_game_stat(game: dto.Game, player: dto.Player, dao: GameStatDao) ->
     if not game.is_complete():
         org = await get_by_player(game=game, player=player, dao=dao)
         check_can_spy(org)
-    levels_count = await dao.get_max_level_number(game)
-    result = await dao.get_game_level_times_by_teams(game, levels_count)
+    full_game = await dao.add_levels(game)
+    result = await dao.get_game_level_times_with_hints(full_game)
+
     return dto.GameStat(level_times=result)
 
 

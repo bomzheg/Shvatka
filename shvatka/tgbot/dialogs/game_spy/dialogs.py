@@ -44,7 +44,8 @@ game_spy = Dialog(
             "{% else %}"
             "🚩<b>{{ lt.team.name }}</b> - уровень {{ lt.level_number + 1 }} начат "
             "{% endif %}"
-            "{{ lt.start_at|user_timezone }}\n"
+            "{{ lt.start_at|user_timezone }} ({{lt.start_at - now | timedelta}} назад) "
+            "подсказка №{{lt.hint.number}} ({{lt.hint.time}} мин.)\n"
             "{% endfor %}",
             when=F["org"].can_spy,
         ),

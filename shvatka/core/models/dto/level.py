@@ -5,7 +5,7 @@ from datetime import timedelta
 
 from .player import Player
 from .scn.level import LevelScenario, BonusKey
-from .scn.time_hint import TimeHint
+from .scn.time_hint import TimeHint, EnumeratedTimeHint
 
 
 @dataclass
@@ -19,6 +19,9 @@ class Level:
 
     def get_hint(self, hint_number: int) -> TimeHint:
         return self.scenario.get_hint(hint_number)
+
+    def get_hint_by_time(self, time: timedelta) -> EnumeratedTimeHint:
+        return self.scenario.get_hint_by_time(time)
 
     def is_last_hint(self, hint_number: int) -> bool:
         return self.scenario.is_last_hint(hint_number)

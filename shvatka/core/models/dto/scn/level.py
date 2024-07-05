@@ -2,7 +2,7 @@ import typing
 from dataclasses import dataclass, field
 from datetime import timedelta
 
-from .time_hint import TimeHint
+from .time_hint import TimeHint, EnumeratedTimeHint
 
 SHKey: typing.TypeAlias = str
 
@@ -30,6 +30,16 @@ class LevelScenario:
 
     def get_hint(self, hint_number: int) -> TimeHint:
         return self.time_hints[hint_number]
+
+    def get_hint_by_time(self, time: timedelta) -> EnumeratedTimeHint:
+        hint = self.time_hints[0]
+        i = 0
+        for i, h in enumerate(self.time_hints):  # noqa: B007
+            if timedelta(minutes=h.time) < time:
+                hint = h
+            else:
+                break
+        return EnumeratedTimeHint(time=hint.time, hint=hint.hint, number=i)
 
     def is_last_hint(self, hint_number: int) -> bool:
         return len(self.time_hints) == hint_number + 1

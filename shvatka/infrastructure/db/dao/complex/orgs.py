@@ -10,7 +10,6 @@ class OrgAdderImpl(OrgAdder):
     game: GameDao
     organizer: OrganizerDao
     secure_invite: SecureInvite
-
     async def add_new_org(self, game: dto.Game, player: dto.Player) -> dto.SecondaryOrganizer:
         return await self.organizer.add_new(game, player)
 
@@ -33,3 +32,8 @@ class OrgAdderImpl(OrgAdder):
         self, game: dto.Game, with_deleted: bool = False
     ) -> list[dto.SecondaryOrganizer]:
         return await self.organizer.get_orgs(game)
+
+    async def add_levels(self, game: dto.Game) -> dto.FullGame:
+        return await self.game.add_levels(game)
+
+

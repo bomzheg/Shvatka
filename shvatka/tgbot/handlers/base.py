@@ -8,6 +8,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, ReplyKeyboardRemove, ContentType
 from aiogram.utils.markdown import html_decoration as hd
 from opentelemetry import metrics
+from prometheus_client import Counter, REGISTRY
 
 from shvatka.core.models import dto
 from shvatka.core.services.chat import update_chat_id
@@ -20,11 +21,10 @@ from shvatka.tgbot.views.commands import (
 )
 
 logger = logging.getLogger(__name__)
-privacy_meter = metrics.get_meter("privacy.meter")
-privacy_counter = privacy_meter.create_counter(
-    name="privacy.got",
-    description="how many times asked for privacy command",
-    unit="count",
+privacy_counter = Counter(
+    name="privacy_got",
+    documentation="how many times asked for privacy command",
+    registry=REGISTRY,
 )
 
 
@@ -83,7 +83,7 @@ async def privacy(message: Message, user: dto.User):
         path.open("r") as f,
     ):
         await message.reply(f.read())
-    privacy_counter.add(1, {"user": user.tg_id})
+    privacy_counter.inc(1, {"user": str(user.tg_id)})
 
 
 def setup() -> Router:

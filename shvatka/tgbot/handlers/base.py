@@ -1,3 +1,4 @@
+import importlib
 import logging
 
 from aiogram import F, Router
@@ -6,6 +7,7 @@ from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, ReplyKeyboardRemove, ContentType
 from aiogram.utils.markdown import html_decoration as hd
+from opentelemetry import metrics
 
 from shvatka.core.models import dto
 from shvatka.core.services.chat import update_chat_id
@@ -18,6 +20,12 @@ from shvatka.tgbot.views.commands import (
 )
 
 logger = logging.getLogger(__name__)
+privacy_meter = metrics.get_meter("privacy.meter")
+privacy_counter = privacy_meter.create_counter(
+    name="privacy.got",
+    description="how many times asked for privacy command",
+    unit="count",
+)
 
 
 async def chat_id(message: Message, chat: dto.Chat, user: dto.User):
@@ -69,6 +77,15 @@ async def chat_migrate(message: Message, chat: dto.Chat, dao: HolderDao):
     logger.info("Migrate chat from %s to %s", message.chat.id, new_id)
 
 
+async def privacy(message: Message, user: dto.User):
+    with (
+        importlib.resources.path("shvatka.infrastructure.assets", "privacy.txt") as path,
+        path.open("r") as f,
+    ):
+        await message.reply(f.read())
+    privacy_counter.add(1, {"user": user.tg_id})
+
+
 def setup() -> Router:
     router = Router(name=__name__)
     router.message.register(
@@ -78,6 +95,7 @@ def setup() -> Router:
     router.message.register(
         chat_type_cmd_group, Command(commands=CHAT_TYPE_COMMAND), F.chat.type == ChatType.GROUP
     )
+    router.message.register(privacy, Command(commands=["privacy"]))
     router.message.register(
         chat_type_cmd_supergroup,
         Command(commands=CHAT_TYPE_COMMAND),

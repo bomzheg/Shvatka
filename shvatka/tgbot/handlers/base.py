@@ -7,7 +7,6 @@ from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, ReplyKeyboardRemove, ContentType
 from aiogram.utils.markdown import html_decoration as hd
-from opentelemetry import metrics
 from prometheus_client import Counter, REGISTRY
 
 from shvatka.core.models import dto

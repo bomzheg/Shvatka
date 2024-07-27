@@ -39,6 +39,7 @@ from tests.fixtures.player import harry, hermione, ron, author, draco  # noqa: F
 from tests.fixtures.scn_fixtures import simple_scn, complex_scn, three_lvl_scn  # noqa: F401
 from tests.fixtures.team import gryffindor, slytherin  # noqa: F401
 from tests.mocks.bot import MockMessageManagerProvider, MockBotProvider
+from tests.mocks.datetime_mock import ClockMock
 from tests.mocks.file_storage import MemoryFileStorage
 from tests.mocks.game_log import GameLogWriterMock
 from tests.mocks.scheduler_mock import SchedulerMock
@@ -53,6 +54,7 @@ async def dishka():
     mock_provider.provide(GameLogWriterMock, provides=GameLogWriter)
     mock_provider.provide(UserGetterMock, provides=UserGetter)
     mock_provider.provide(SchedulerMock, provides=Scheduler)
+    mock_provider.provide(ClockMock)
     container = make_async_container(
         ConfigProvider("SHVATKA_TEST_PATH"),
         TestDbProvider(),

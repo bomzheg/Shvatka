@@ -16,6 +16,7 @@ from shvatka.core.interfaces.dal.team import (
 from shvatka.core.models import dto
 from shvatka.core.models import enums
 from shvatka.core.services.player import check_allow_be_author
+from shvatka.core.utils import exceptions
 from shvatka.core.utils.defaults_constants import CAPTAIN_ROLE
 from shvatka.core.utils.exceptions import SHDataBreach, PermissionsError
 from shvatka.core.views.game import GameLogWriter, GameLogEvent, GameLogType
@@ -92,6 +93,8 @@ async def change_chat(
     team: dto.Team, captain: dto.FullTeamPlayer, chat: dto.Chat, dao: TeamChatChanger
 ) -> None:
     check_can_change_chat(team, captain)
+    if await dao.is_team_in_chat(chat):
+        raise exceptions.AnotherTeamInChat(chat_id=chat.tg_id, chat=chat)
     await dao.change_team_chat(team=team, chat=chat)
     await dao.commit()
 

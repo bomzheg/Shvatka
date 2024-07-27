@@ -146,6 +146,8 @@ async def gotten_chat_request(m: Message, widget: Any, manager: DialogManager):
     captain: dto.Player = manager.middleware_data["player"]
     team = await get_my_team(captain, dao.team_player)
     assert team
+    old_chat_id = team.get_chat_id()
+    assert team
     try:
         chat = await dao.chat.get_by_tg_id(tg_id=target_id)
     except exceptions.ChatNotFound:
@@ -173,10 +175,13 @@ async def gotten_chat_request(m: Message, widget: Any, manager: DialogManager):
         return
     await bot.send_message(
         chat_id=captain.get_chat_id(),
-        text=f"Команда {hd.bold(team.name)} перенесена в чат {hd.bold(chat.name)}",
+        text=(
+            f"Команда {hd.bold(team.name)} перенесена в чат {hd.bold(chat.name)}\n"
+            f"{old_chat_id}➡️{chat.tg_id}"
+        ),
     )
     await total_remove_msg(
-        bot, chat_id=chat.tg_id, msg_id=manager.dialog_data.pop("chat_request_message")
+        bot, chat_id=m.chat.id, msg_id=manager.dialog_data.pop("chat_request_message")
     )
 
 

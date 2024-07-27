@@ -38,6 +38,10 @@ class ChatDao(BaseDAO[models.Chat]):
             update(models.Chat).where(models.Chat.tg_id == chat.tg_id).values(team_id=team.id)
         )
 
+    async def is_team_in_chat(self, chat: dto.Chat) -> bool:
+        chat_db = await self._get_by_tg_id(chat.tg_id)
+        return chat_db.team_id is not None
+
     async def upsert_chat(self, chat: dto.Chat) -> dto.Chat:
         kwargs = dict(tg_id=chat.tg_id, title=chat.title, username=chat.username, type=chat.type)
         saved_chat = await self.session.execute(

@@ -1,5 +1,7 @@
 import logging
 
+from datetime import datetime, tzinfo
+import typing
 from redis.asyncio.client import Redis
 
 from shvatka.core.models.enums.played import Played
@@ -8,10 +10,13 @@ logger = logging.getLogger(__name__)
 
 
 class PollDao:
-    def __init__(self, redis: Redis) -> None:
+    def __init__(
+        self, redis: Redis, clock: typing.Callable[[tzinfo], datetime] = datetime.now
+    ) -> None:
         self.prefix = "poll"
         self.msg_prefix = "msg_poll"
         self.redis = redis
+        self.clock = clock
 
     async def add_player_vote(self, team_id: int, player_id: int, vote_var: str) -> None:
         key = self._create_key(team_id=team_id, player_id=player_id)

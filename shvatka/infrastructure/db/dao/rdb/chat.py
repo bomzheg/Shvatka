@@ -1,3 +1,5 @@
+from datetime import datetime, tzinfo
+import typing
 from sqlalchemy import select, ScalarResult
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -8,8 +10,10 @@ from .base import BaseDAO
 
 
 class ChatDao(BaseDAO[Chat]):
-    def __init__(self, session: AsyncSession) -> None:
-        super().__init__(Chat, session)
+    def __init__(
+        self, session: AsyncSession, clock: typing.Callable[[tzinfo], datetime] = datetime.now
+    ) -> None:
+        super().__init__(Chat, session, clock=clock)
 
     async def get_by_tg_id(self, tg_id: int) -> dto.Chat:
         chat = await self._get_by_tg_id(tg_id)

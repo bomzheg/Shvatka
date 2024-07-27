@@ -1,3 +1,6 @@
+from datetime import datetime, tzinfo
+import typing
+
 from sqlalchemy import select, Result, ScalarResult
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -9,8 +12,10 @@ from shvatka.infrastructure.db.dao import BaseDAO
 
 
 class AchievementDAO(BaseDAO[models.Achievement]):
-    def __init__(self, session: AsyncSession) -> None:
-        super().__init__(models.Achievement, session=session)
+    def __init__(
+        self, session: AsyncSession, clock: typing.Callable[[tzinfo], datetime] = datetime.now
+    ) -> None:
+        super().__init__(models.Achievement, session=session, clock=clock)
 
     async def exist_type(self, achievement: enums.Achievement) -> bool:
         result: Result[tuple[models.Achievement]] = await self.session.execute(

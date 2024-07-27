@@ -1,4 +1,5 @@
-from datetime import datetime
+from datetime import datetime, tzinfo
+import typing
 from typing import Sequence
 
 from sqlalchemy import select, update, ScalarResult
@@ -12,8 +13,10 @@ from .base import BaseDAO
 
 
 class KeyTimeDao(BaseDAO[models.KeyTime]):
-    def __init__(self, session: AsyncSession) -> None:
-        super().__init__(models.KeyTime, session)
+    def __init__(
+        self, session: AsyncSession, clock: typing.Callable[[tzinfo], datetime] = datetime.now
+    ) -> None:
+        super().__init__(models.KeyTime, session, clock=clock)
 
     async def get_correct_typed_keys(
         self,

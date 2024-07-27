@@ -1,4 +1,5 @@
-from datetime import datetime
+from datetime import datetime, tzinfo
+import typing
 from typing import Sequence
 
 from sqlalchemy import select, ScalarResult
@@ -18,8 +19,10 @@ from .base import BaseDAO
 
 
 class GameDao(BaseDAO[models.Game]):
-    def __init__(self, session: AsyncSession) -> None:
-        super().__init__(models.Game, session)
+    def __init__(
+        self, session: AsyncSession, clock: typing.Callable[[tzinfo], datetime] = datetime.now
+    ) -> None:
+        super().__init__(models.Game, session, clock=clock)
 
     async def upsert_game(
         self,

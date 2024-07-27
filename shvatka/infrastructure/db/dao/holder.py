@@ -1,3 +1,6 @@
+import typing
+from datetime import datetime, tzinfo
+
 from redis.asyncio.client import Redis
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -47,25 +50,32 @@ from .redis import PollDao, SecureInvite
 
 
 class HolderDao:
-    def __init__(self, session: AsyncSession, redis: Redis, level_test: LevelTestingData) -> None:
+    def __init__(
+        self,
+        session: AsyncSession,
+        redis: Redis,
+        level_test: LevelTestingData,
+        clock: typing.Callable[[tzinfo], datetime] = datetime.now,
+    ) -> None:
         self.session = session
-        self.user = UserDao(self.session)
-        self.chat = ChatDao(self.session)
-        self.file_info = FileInfoDao(self.session)
-        self.game = GameDao(self.session)
-        self.level = LevelDao(self.session)
-        self.level_time = LevelTimeDao(self.session)
-        self.key_time = KeyTimeDao(self.session)
-        self.organizer = OrganizerDao(self.session)
-        self.player = PlayerDao(self.session)
-        self.team_player = TeamPlayerDao(self.session)
-        self.team = TeamDao(self.session)
-        self.waiver = WaiverDao(self.session)
-        self.achievement = AchievementDAO(self.session)
-        self.forum_user = ForumUserDAO(self.session)
-        self.forum_team = ForumTeamDAO(self.session)
-        self.poll = PollDao(redis=redis)
-        self.secure_invite = SecureInvite(redis=redis)
+        self.clock = clock
+        self.user = UserDao(self.session, clock=clock)
+        self.chat = ChatDao(self.session, clock=clock)
+        self.file_info = FileInfoDao(self.session, clock=clock)
+        self.game = GameDao(self.session, clock=clock)
+        self.level = LevelDao(self.session, clock=clock)
+        self.level_time = LevelTimeDao(self.session, clock=clock)
+        self.key_time = KeyTimeDao(self.session, clock=clock)
+        self.organizer = OrganizerDao(self.session, clock=clock)
+        self.player = PlayerDao(self.session, clock=clock)
+        self.team_player = TeamPlayerDao(self.session, clock=clock)
+        self.team = TeamDao(self.session, clock=clock)
+        self.waiver = WaiverDao(self.session, clock=clock)
+        self.achievement = AchievementDAO(self.session, clock=clock)
+        self.forum_user = ForumUserDAO(self.session, clock=clock)
+        self.forum_team = ForumTeamDAO(self.session, clock=clock)
+        self.poll = PollDao(redis=redis, clock=clock)
+        self.secure_invite = SecureInvite(redis=redis, clock=clock)
         self.level_test = level_test
 
     async def commit(self):

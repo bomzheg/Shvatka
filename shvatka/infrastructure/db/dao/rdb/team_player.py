@@ -1,4 +1,6 @@
-from datetime import datetime, timedelta
+from datetime import datetime, tzinfo
+import typing
+from datetime import timedelta
 from typing import Sequence
 
 from sqlalchemy import select, or_, ScalarResult, Result, ColumnElement, delete
@@ -21,8 +23,10 @@ from .base import BaseDAO
 
 
 class TeamPlayerDao(BaseDAO[models.TeamPlayer]):
-    def __init__(self, session: AsyncSession) -> None:
-        super().__init__(models.TeamPlayer, session)
+    def __init__(
+        self, session: AsyncSession, clock: typing.Callable[[tzinfo], datetime] = datetime.now
+    ) -> None:
+        super().__init__(models.TeamPlayer, session, clock=clock)
 
     async def get_team(
         self, player: dto.Player, for_date: datetime | None = None

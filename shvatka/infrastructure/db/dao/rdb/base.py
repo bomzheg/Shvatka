@@ -1,3 +1,5 @@
+from datetime import datetime, tzinfo
+import typing
 from typing import TypeVar, Generic
 from collections.abc import Sequence
 
@@ -13,9 +15,15 @@ Model_co = TypeVar("Model_co", bound=Base, covariant=True, contravariant=False)
 
 
 class BaseDAO(Generic[Model_co]):
-    def __init__(self, model: type[Model_co], session: AsyncSession) -> None:
+    def __init__(
+        self,
+        model: type[Model_co],
+        session: AsyncSession,
+        clock: typing.Callable[[tzinfo], datetime] = datetime.now,
+    ) -> None:
         self.model = model
         self.session = session
+        self.clock = clock
 
     async def _get_all(self, options: Sequence[ORMOption] = ()) -> Sequence[Model_co]:
         result: ScalarResult[Model_co] = await self.session.scalars(

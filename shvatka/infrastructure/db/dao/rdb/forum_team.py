@@ -1,3 +1,5 @@
+from datetime import datetime, tzinfo
+import typing
 from typing import Sequence
 
 from sqlalchemy import update, select
@@ -12,8 +14,10 @@ from .base import BaseDAO
 
 
 class ForumTeamDAO(BaseDAO[models.ForumTeam]):
-    def __init__(self, session: AsyncSession) -> None:
-        super().__init__(models.ForumTeam, session)
+    def __init__(
+        self, session: AsyncSession, clock: typing.Callable[[tzinfo], datetime] = datetime.now
+    ) -> None:
+        super().__init__(models.ForumTeam, session, clock=clock)
 
     async def upsert(self, team: ParsedTeam) -> dto.ForumTeam:
         kwargs = dict(

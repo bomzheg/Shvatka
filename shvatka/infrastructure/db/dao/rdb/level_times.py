@@ -1,4 +1,5 @@
-from datetime import datetime
+from datetime import datetime, tzinfo
+import typing
 
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -11,8 +12,10 @@ from .base import BaseDAO
 
 
 class LevelTimeDao(BaseDAO[models.LevelTime]):
-    def __init__(self, session: AsyncSession) -> None:
-        super().__init__(models.LevelTime, session)
+    def __init__(
+        self, session: AsyncSession, clock: typing.Callable[[tzinfo], datetime] = datetime.now
+    ) -> None:
+        super().__init__(models.LevelTime, session, clock=clock)
 
     async def set_to_level(
         self, team: dto.Team, game: dto.Game, level_number: int, at: datetime | None = None

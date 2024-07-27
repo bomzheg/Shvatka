@@ -1,3 +1,4 @@
+from datetime import datetime, tzinfo
 import typing
 from typing import Sequence
 
@@ -15,8 +16,10 @@ from .base import BaseDAO
 
 
 class TeamDao(BaseDAO[models.Team]):
-    def __init__(self, session: AsyncSession) -> None:
-        super().__init__(models.Team, session)
+    def __init__(
+        self, session: AsyncSession, clock: typing.Callable[[tzinfo], datetime] = datetime.now
+    ) -> None:
+        super().__init__(models.Team, session, clock=clock)
 
     async def create(self, chat: dto.Chat, captain: dto.Player) -> dto.Team:
         chat_db = await self.session.get(models.Chat, chat.db_id)

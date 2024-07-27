@@ -1,3 +1,5 @@
+from datetime import datetime, tzinfo
+import typing
 from typing import Iterable, Sequence
 
 from sqlalchemy import select, Row, update, ScalarResult
@@ -10,8 +12,10 @@ from .base import BaseDAO
 
 
 class WaiverDao(BaseDAO[models.Waiver]):
-    def __init__(self, session: AsyncSession) -> None:
-        super().__init__(models.Waiver, session)
+    def __init__(
+        self, session: AsyncSession, clock: typing.Callable[[tzinfo], datetime] = datetime.now
+    ) -> None:
+        super().__init__(models.Waiver, session, clock=clock)
 
     async def is_excluded(
         self,

@@ -1,3 +1,5 @@
+from datetime import datetime, tzinfo
+import typing
 from sqlalchemy import select, update
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -9,8 +11,10 @@ from .base import BaseDAO
 
 
 class ForumUserDAO(BaseDAO[models.ForumUser]):
-    def __init__(self, session: AsyncSession) -> None:
-        super().__init__(models.ForumUser, session)
+    def __init__(
+        self, session: AsyncSession, clock: typing.Callable[[tzinfo], datetime] = datetime.now
+    ) -> None:
+        super().__init__(models.ForumUser, session, clock=clock)
 
     async def upsert(self, parsed: ParsedPlayer) -> dto.ForumUser:
         kwargs = dict(

@@ -1,3 +1,5 @@
+from datetime import datetime, tzinfo
+import typing
 from sqlalchemy import select, ScalarResult
 from sqlalchemy import update
 from sqlalchemy.exc import NoResultFound
@@ -13,8 +15,10 @@ from .base import BaseDAO
 
 
 class LevelDao(BaseDAO[models.Level]):
-    def __init__(self, session: AsyncSession) -> None:
-        super().__init__(models.Level, session)
+    def __init__(
+        self, session: AsyncSession, clock: typing.Callable[[tzinfo], datetime] = datetime.now
+    ) -> None:
+        super().__init__(models.Level, session, clock=clock)
 
     async def upsert(
         self,

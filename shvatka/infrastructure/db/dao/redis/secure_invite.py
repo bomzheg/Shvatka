@@ -1,5 +1,7 @@
 import json
 import secrets
+from datetime import datetime, tzinfo
+import typing
 from datetime import timedelta
 
 from redis.asyncio.client import Redis
@@ -11,9 +13,16 @@ EXPIRE_TIME = 12 * 60
 
 
 class SecureInvite:
-    def __init__(self, *, prefix="invite", redis: Redis) -> None:
+    def __init__(
+        self,
+        *,
+        prefix="invite",
+        redis: Redis,
+        clock: typing.Callable[[tzinfo], datetime] = datetime.now,
+    ) -> None:
         self.prefix = prefix
         self.redis = redis
+        self.clock = clock
 
     def _create_key(self, token: str) -> str:
         return f"{self.prefix}:{token}"

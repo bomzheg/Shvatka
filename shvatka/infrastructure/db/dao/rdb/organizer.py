@@ -1,3 +1,5 @@
+from datetime import datetime, tzinfo
+import typing
 from typing import Sequence
 
 from sqlalchemy import select, ScalarResult
@@ -13,8 +15,10 @@ from .base import BaseDAO
 
 
 class OrganizerDao(BaseDAO[models.Organizer]):
-    def __init__(self, session: AsyncSession) -> None:
-        super().__init__(models.Organizer, session)
+    def __init__(
+        self, session: AsyncSession, clock: typing.Callable[[tzinfo], datetime] = datetime.now
+    ) -> None:
+        super().__init__(models.Organizer, session, clock=clock)
 
     async def get_orgs(
         self, game: dto.Game, with_deleted: bool = False

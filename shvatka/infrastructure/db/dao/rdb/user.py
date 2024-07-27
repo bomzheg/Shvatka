@@ -1,3 +1,5 @@
+from datetime import datetime, tzinfo
+import typing
 from typing import Sequence
 
 from sqlalchemy import select, ScalarResult, Result
@@ -12,8 +14,10 @@ from .base import BaseDAO
 
 
 class UserDao(BaseDAO[User]):
-    def __init__(self, session: AsyncSession) -> None:
-        super().__init__(User, session)
+    def __init__(
+        self, session: AsyncSession, clock: typing.Callable[[tzinfo], datetime] = datetime.now
+    ) -> None:
+        super().__init__(User, session, clock=clock)
 
     async def get_by_id(self, id_: int) -> dto.User:
         return (await self._get_by_id(id_)).to_dto()

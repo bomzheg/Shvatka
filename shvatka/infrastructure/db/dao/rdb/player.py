@@ -1,3 +1,4 @@
+from datetime import datetime, tzinfo
 import typing
 from typing import Iterable
 
@@ -13,8 +14,10 @@ from .base import BaseDAO
 
 
 class PlayerDao(BaseDAO[models.Player]):
-    def __init__(self, session: AsyncSession) -> None:
-        super().__init__(models.Player, session)
+    def __init__(
+        self, session: AsyncSession, clock: typing.Callable[[tzinfo], datetime] = datetime.now
+    ) -> None:
+        super().__init__(models.Player, session, clock=clock)
 
     async def upsert_player(self, user: dto.User) -> dto.Player:
         try:

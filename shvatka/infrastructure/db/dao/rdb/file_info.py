@@ -1,3 +1,5 @@
+from datetime import datetime, tzinfo
+import typing
 from typing import Sequence
 
 from sqlalchemy import select, ScalarResult
@@ -14,8 +16,10 @@ from .base import BaseDAO
 
 
 class FileInfoDao(BaseDAO[models.FileInfo]):
-    def __init__(self, session: AsyncSession) -> None:
-        super().__init__(models.FileInfo, session)
+    def __init__(
+        self, session: AsyncSession, clock: typing.Callable[[tzinfo], datetime] = datetime.now
+    ) -> None:
+        super().__init__(models.FileInfo, session, clock=clock)
 
     async def upsert(self, file: scn.FileMeta, author: dto.Player) -> scn.SavedFileMeta:
         try:

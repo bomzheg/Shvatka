@@ -1,3 +1,4 @@
+import contextlib
 from typing import Sequence
 
 from shvatka.core.interfaces.dal.chat import TeamChatChanger
@@ -30,20 +31,32 @@ async def create_team(
 ) -> dto.Team:
     check_allow_be_author(captain)
     await dao.check_player_free(captain)
-    await dao.check_no_team_in_chat(chat)
-
-    team = await dao.create(chat, captain)
-    await dao.join_team(captain, team, CAPTAIN_ROLE, as_captain=True)
+    try:
+        await dao.check_no_team_in_chat(chat)
+    except exceptions.AnotherTeamInChat as e:
+        if not e.team or not e.team.captain:
+            raise
+        if e.team.captain.id == captain.id:
+            team = e.team
+            created = False
+        else:
+            raise
+    else:
+        team = await dao.create(chat, captain)
+        created = True
+    with contextlib.suppress(exceptions.PlayerRestoredInTeam):
+        await dao.join_team(captain, team, CAPTAIN_ROLE, as_captain=True)
     await dao.commit()
-    await game_log.log(
-        GameLogEvent(
-            GameLogType.TEAM_CREATED,
-            data={
-                "team": team.name,
-                "captain": captain.name_mention,
-            },
+    if created:
+        await game_log.log(
+            GameLogEvent(
+                GameLogType.TEAM_CREATED,
+                data={
+                    "team": team.name,
+                    "captain": captain.name_mention,
+                },
+            )
         )
-    )
     return team
 
 

@@ -268,7 +268,6 @@ def setup() -> Router:
     router.message.register(
         cmd_create_team,
         Command(commands=CREATE_TEAM_COMMAND.command),
-        IsTeamFilter(is_team=False),
         F.chat.type == ChatType.SUPERGROUP,
     )
     router.message.register(

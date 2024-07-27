@@ -39,7 +39,7 @@ class LevelScenario:
                 hint = h
             else:
                 break
-        return EnumeratedTimeHint(time=hint.time, hint=hint.hint, number=i)
+        return EnumeratedTimeHint(time=hint.time, hint=hint.hint, number=i - 1)
 
     def is_last_hint(self, hint_number: int) -> bool:
         return len(self.time_hints) == hint_number + 1

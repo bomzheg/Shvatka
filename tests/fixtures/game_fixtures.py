@@ -1,4 +1,5 @@
 import asyncio
+from datetime import datetime
 
 import pytest_asyncio
 from dataclass_factory import Factory
@@ -10,6 +11,7 @@ from shvatka.core.models.enums.played import Played
 from shvatka.core.services.game import upsert_game
 from shvatka.core.services.player import join_team
 from shvatka.core.services.waiver import add_vote, approve_waivers
+from shvatka.core.utils.datetime_utils import tz_utc
 from shvatka.infrastructure.db.dao.holder import HolderDao
 
 
@@ -31,7 +33,7 @@ async def game(
 
 
 @pytest_asyncio.fixture
-async def finished_game(
+async def started_game(
     game: dto.FullGame,
     gryffindor: dto.Team,
     slytherin: dto.Team,
@@ -40,7 +42,7 @@ async def finished_game(
     hermione: dto.Player,
     draco: dto.Player,
     dao: HolderDao,
-):
+) -> dto.FullGame:
     await join_team(ron, gryffindor, harry, dao.team_player)
     await join_team(hermione, gryffindor, harry, dao.team_player)
     await dao.game.start_waivers(game)
@@ -51,7 +53,25 @@ async def finished_game(
     await add_vote(game, slytherin, draco, Played.yes, dao.waiver_vote_adder)
     await approve_waivers(game, gryffindor, harry, dao.waiver_approver)
     await dao.game.set_started(game)
+    await dao.game.set_start_at(game, datetime.now(tz=tz_utc))
+    await dao.level_time.set_to_level(team=gryffindor, game=game, level_number=0)
+    await dao.level_time.set_to_level(team=slytherin, game=game, level_number=0)
+    await dao.commit()
+    return game
 
+
+@pytest_asyncio.fixture
+async def finished_game(
+    started_game: dto.FullGame,
+    gryffindor: dto.Team,
+    slytherin: dto.Team,
+    harry: dto.Player,
+    ron: dto.Player,
+    hermione: dto.Player,
+    draco: dto.Player,
+    dao: HolderDao,
+) -> dto.FullGame:
+    game = started_game
     await dao.key_time.save_key(
         key="SHWRONG",
         team=gryffindor,

@@ -108,7 +108,7 @@ class LevelTimeDao(BaseDAO[models.LevelTime]):
 
     def _get_hint(self, game: dto.FullGame, level_times: dto.LevelTime) -> dto.SpyHintInfo:
         hint = game.levels[level_times.level_number].get_hint_by_time(
-            datetime.now(tz_utc) - level_times.start_at
+            self.clock(tz_utc) - level_times.start_at
         )
         return dto.SpyHintInfo(time=hint.time, number=hint.number)
 

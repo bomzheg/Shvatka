@@ -11,7 +11,7 @@ from aiogram.utils.markdown import html_decoration as hd
 from dataclass_factory import Factory
 
 from shvatka.core.interfaces.dal.game_play import GamePreparer
-from shvatka.core.models import dto
+from shvatka.core.models import dto, enums
 from shvatka.core.utils.datetime_utils import tz_utc
 from shvatka.core.views.game import (
     GameViewPreparer,
@@ -109,7 +109,10 @@ class BotView(GameViewPreparer, GameView):
     async def duplicate_key(self, key: dto.KeyTime) -> None:
         await self.bot.send_message(
             chat_id=key.team.get_chat_id(),
-            text=f"{KeyEmoji.duplicate.value}Ключ {hd.code(key.text)} уже был введён ранее.",
+            text=(
+                f"{KeyEmoji.duplicate.value}Ключ {hd.code(key.text)} "
+                f"({'не' if key.type_ == enums.KeyType.wrong else ''}верный) уже был введён ранее."
+            ),
         )
 
     async def correct_key(self, key: dto.KeyTime) -> None:

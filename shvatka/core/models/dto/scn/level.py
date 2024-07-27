@@ -33,13 +33,14 @@ class LevelScenario:
 
     def get_hint_by_time(self, time: timedelta) -> EnumeratedTimeHint:
         hint = self.time_hints[0]
-        i = 0
-        for i, h in enumerate(self.time_hints):  # noqa: B007
+        number = 0
+        for i, h in enumerate(self.time_hints):
             if timedelta(minutes=h.time) < time:
                 hint = h
+                number = i
             else:
                 break
-        return EnumeratedTimeHint(time=hint.time, hint=hint.hint, number=i - 1)
+        return EnumeratedTimeHint(time=hint.time, hint=hint.hint, number=number)
 
     def is_last_hint(self, hint_number: int) -> bool:
         return len(self.time_hints) == hint_number + 1

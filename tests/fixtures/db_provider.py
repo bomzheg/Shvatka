@@ -32,6 +32,7 @@ class TestDbProvider(Provider):
             postgres_url_ = postgres.get_connection_url().replace("psycopg2", "asyncpg")
             logger.info("postgres url %s", postgres_url_)
             db_config = DBConfig(postgres_url_)
+            db_config.echo = config.db.echo
             config.db = db_config
             yield db_config
         finally:

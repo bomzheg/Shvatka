@@ -25,6 +25,7 @@ db:
   login: test
   password: test
   name: test
+  echo: false
 storage:
   type: memory
 api:

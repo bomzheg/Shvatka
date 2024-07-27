@@ -31,13 +31,38 @@ async def test_game_log_keys(
 
 
 @pytest.mark.asyncio
-async def test_game_spy(started_game: dto.FullGame, dao: HolderDao, clock: ClockMock):
+async def test_game_spy_started(started_game: dto.FullGame, dao: HolderDao, clock: ClockMock):
     assert started_game.start_at is not None
+    clock.clear()
+    clock.add_mock(tz=tz_utc, result=started_game.start_at + timedelta(seconds=10))
     clock.add_mock(tz=tz_utc, result=started_game.start_at + timedelta(seconds=10))
     game_stat = await get_game_spy(started_game, started_game.author, dao.game_stat)
+    assert len(clock.calls) == 2
     assert len(game_stat) == 2
     for level_time in game_stat:
         assert level_time.hint.number == 0
         assert level_time.hint.time == 0
         assert level_time.is_finished is False
         assert level_time.level_number == 0
+
+
+@pytest.mark.asyncio
+async def test_game_spy_with_first_and_last_hint(
+    started_game: dto.FullGame, dao: HolderDao, clock: ClockMock
+):
+    assert started_game.start_at is not None
+    clock.clear()
+    clock.add_mock(tz=tz_utc, result=started_game.start_at + timedelta(seconds=10))
+    clock.add_mock(tz=tz_utc, result=started_game.start_at + timedelta(hours=10))
+    game_stat = await get_game_spy(started_game, started_game.author, dao.game_stat)
+    assert len(clock.calls) == 2
+    assert len(game_stat) == 2
+    assert game_stat[1].hint.number == 3
+    assert game_stat[1].hint.time == 5
+    assert game_stat[1].is_finished is False
+    assert game_stat[1].level_number == 0
+
+    assert game_stat[0].hint.number == 0
+    assert game_stat[0].hint.time == 0
+    assert game_stat[0].is_finished is False
+    assert game_stat[0].level_number == 0

@@ -34,15 +34,17 @@ class DbProvider(Provider):
         async with pool() as session:
             yield session
 
+    @provide
+    def get_level_test_data(self) -> LevelTestingData:
+        return self.level_test
+
+
+class DAOProvider(Provider):
     @provide(scope=Scope.REQUEST)
     async def get_dao(
         self, session: AsyncSession, redis: Redis, level_test: LevelTestingData
     ) -> HolderDao:
         return HolderDao(session=session, redis=redis, level_test=level_test)
-
-    @provide
-    def get_level_test_data(self) -> LevelTestingData:
-        return self.level_test
 
 
 class RedisProvider(Provider):

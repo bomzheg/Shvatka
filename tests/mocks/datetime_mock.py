@@ -18,3 +18,7 @@ class ClockMock:
 
     def add_mock(self, tz: tzinfo | None, result: datetime) -> None:
         self.mocks.append((tz, result))
+
+    def clear(self) -> None:
+        self.mocks.clear()
+        self.calls.clear()

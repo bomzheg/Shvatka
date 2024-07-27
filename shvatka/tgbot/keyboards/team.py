@@ -6,6 +6,7 @@ from aiogram.types import (
     InlineKeyboardMarkup,
     KeyboardButton,
     KeyboardButtonRequestUser,
+    KeyboardButtonRequestChat,
 )
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
@@ -39,7 +40,28 @@ def get_user_request_kb() -> ReplyKeyboardMarkup:
                 KeyboardButton(
                     text="ВЫБРАТЬ ИГРОКА В КОМАНДУ\n\n⏩НАЖАТЬ ПРЯМО СЮДА⏪",
                     request_user=KeyboardButtonRequestUser(
-                        user_is_bot=False, request_id=random.randint(0, 1000)
+                        user_is_bot=False,
+                        request_name=True,
+                        request_username=True,
+                        request_id=random.randint(0, 1000),
+                    ),
+                )
+            ]
+        ]
+    )
+
+
+def get_chat_request_kb() -> ReplyKeyboardMarkup:
+    return ReplyKeyboardMarkup(
+        keyboard=[
+            [
+                KeyboardButton(
+                    text="ВЫБРАТЬ ЧАТ В КОМАНДУ\n\n⏩НАЖАТЬ ПРЯМО СЮДА⏪",
+                    request_chat=KeyboardButtonRequestChat(
+                        request_id=random.randint(0, 1000),
+                        bot_is_member=True,
+                        chat_is_channel=False,
+                        chat_has_username=False,
                     ),
                 )
             ]

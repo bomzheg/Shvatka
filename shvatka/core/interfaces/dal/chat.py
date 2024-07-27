@@ -12,3 +12,8 @@ class ChatUpserter(Committer, Protocol):
 class ChatIdUpdater(Committer, Protocol):
     async def update_chat_id(self, chat: dto.Chat, new_id: int) -> None:
         raise NotImplementedError
+
+
+class TeamChatChanger(Committer, Protocol):
+    async def change_team_chat(self, chat: dto.Chat, team: dto.Team) -> None:
+        raise NotImplementedError

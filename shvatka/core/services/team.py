@@ -1,5 +1,6 @@
 from typing import Sequence
 
+from shvatka.core.interfaces.dal.chat import TeamChatChanger
 from shvatka.core.interfaces.dal.complex import TeamMerger
 from shvatka.core.interfaces.dal.team import (
     TeamCreator,
@@ -87,6 +88,14 @@ async def get_team_by_forum_team_id(forum_team_id: int, dao: ByForumTeamIdGetter
     return await dao.get_by_forum_team_id(forum_team_id)
 
 
+async def change_chat(
+    team: dto.Team, captain: dto.FullTeamPlayer, chat: dto.Chat, dao: TeamChatChanger
+) -> None:
+    check_can_change_chat(team, captain)
+    await dao.change_team_chat(team=team, chat=chat)
+    await dao.commit()
+
+
 async def merge_teams(
     manager: dto.Player,
     primary: dto.Team,
@@ -121,6 +130,22 @@ async def merge_teams(
                 "secondary_team": secondary.name,
             },
         )
+    )
+
+
+def check_can_change_chat(team: dto.Team, captain: dto.FullTeamPlayer):
+    if team.id != captain.team_id or captain.team_id != captain.team.id:
+        raise SHDataBreach(
+            team=team, player=captain.player, notify_user="Вы не игрок этой команды"
+        )
+    assert captain.player is not None
+    assert team.captain is not None
+    if team.captain.id == captain.player.id:
+        return
+    raise PermissionsError(
+        permission_name="change_chat",  # TODO
+        team=team,
+        player=captain.player,
     )
 
 

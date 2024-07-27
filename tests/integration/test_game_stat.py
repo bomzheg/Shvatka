@@ -53,7 +53,7 @@ async def test_game_spy_with_first_and_last_hint(
     assert started_game.start_at is not None
     clock.clear()
     clock.add_mock(tz=tz_utc, result=started_game.start_at + timedelta(seconds=10))
-    clock.add_mock(tz=tz_utc, result=started_game.start_at + timedelta(hours=10))
+    clock.add_mock(tz=tz_utc, result=started_game.start_at + timedelta(minutes=6, seconds=1))
     game_stat = await get_game_spy(started_game, started_game.author, dao.game_stat)
     assert len(clock.calls) == 2
     assert len(game_stat) == 2
@@ -82,9 +82,9 @@ async def test_game_spy_with_second_level_first_and_last_hint(
     await dao.commit()
     clock.clear()
     clock.add_mock(tz=tz_utc, result=datetime.now(tz_utc) + timedelta(seconds=10))
+    clock.add_mock(tz=tz_utc, result=datetime.now(tz_utc) + timedelta(minutes=1))
     clock.add_mock(tz=tz_utc, result=datetime.now(tz_utc) + timedelta(seconds=10))
-    clock.add_mock(tz=tz_utc, result=datetime.now(tz_utc) + timedelta(seconds=10))
-    clock.add_mock(tz=tz_utc, result=datetime.now(tz_utc) + timedelta(hours=10))
+    clock.add_mock(tz=tz_utc, result=datetime.now(tz_utc) + timedelta(minutes=5))
     game_stat = await get_game_spy(started_game, started_game.author, dao.game_stat)
     assert len(clock.calls) == 4
     assert len(game_stat) == 2
@@ -93,7 +93,7 @@ async def test_game_spy_with_second_level_first_and_last_hint(
     assert game_stat[1].is_finished is False
     assert game_stat[1].level_number == 1
 
-    assert game_stat[0].hint.number == 0
-    assert game_stat[0].hint.time == 0
+    assert game_stat[0].hint.number == 1
+    assert game_stat[0].hint.time == 1
     assert game_stat[0].is_finished is False
     assert game_stat[0].level_number == 1

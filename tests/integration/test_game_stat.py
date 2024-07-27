@@ -1,5 +1,5 @@
 import operator
-from datetime import timedelta
+from datetime import timedelta, datetime
 from itertools import starmap, pairwise
 
 import pytest
@@ -58,7 +58,7 @@ async def test_game_spy_with_first_and_last_hint(
     assert len(clock.calls) == 2
     assert len(game_stat) == 2
     assert game_stat[1].hint.number == 3
-    assert game_stat[1].hint.time == 5
+    assert game_stat[1].hint.time == 6
     assert game_stat[1].is_finished is False
     assert game_stat[1].level_number == 0
 
@@ -66,3 +66,34 @@ async def test_game_spy_with_first_and_last_hint(
     assert game_stat[0].hint.time == 0
     assert game_stat[0].is_finished is False
     assert game_stat[0].level_number == 0
+
+
+@pytest.mark.asyncio
+async def test_game_spy_with_second_level_first_and_last_hint(
+    started_game: dto.FullGame,
+    gryffindor: dto.Team,
+    slytherin: dto.Team,
+    dao: HolderDao,
+    clock: ClockMock,
+):
+    assert started_game.start_at is not None
+    await dao.level_time.set_to_level(team=gryffindor, game=started_game, level_number=1)
+    await dao.level_time.set_to_level(team=slytherin, game=started_game, level_number=1)
+    await dao.commit()
+    clock.clear()
+    clock.add_mock(tz=tz_utc, result=datetime.now(tz_utc) + timedelta(seconds=10))
+    clock.add_mock(tz=tz_utc, result=datetime.now(tz_utc) + timedelta(seconds=10))
+    clock.add_mock(tz=tz_utc, result=datetime.now(tz_utc) + timedelta(seconds=10))
+    clock.add_mock(tz=tz_utc, result=datetime.now(tz_utc) + timedelta(hours=10))
+    game_stat = await get_game_spy(started_game, started_game.author, dao.game_stat)
+    assert len(clock.calls) == 4
+    assert len(game_stat) == 2
+    assert game_stat[1].hint.number == 3
+    assert game_stat[1].hint.time == 5
+    assert game_stat[1].is_finished is False
+    assert game_stat[1].level_number == 1
+
+    assert game_stat[0].hint.number == 0
+    assert game_stat[0].hint.time == 0
+    assert game_stat[0].is_finished is False
+    assert game_stat[0].level_number == 1

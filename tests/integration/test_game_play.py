@@ -193,7 +193,7 @@ async def test_get_current_hints(
         game_id=game.id,
         team_id=gryffindor.id,
         level_number=0,
-        start_at=datetime.now(tz=tz_utc) - timedelta(minutes=1),
+        start_at=datetime.now(tz=tz_utc) - timedelta(minutes=2),
     )
     dao.level_time._save(level_time)
     await dao.commit()

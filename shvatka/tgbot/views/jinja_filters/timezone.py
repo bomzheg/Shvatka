@@ -10,5 +10,4 @@ def datetime_filter(value: datetime, format_: str = DATETIME_FORMAT) -> str:
 
 def timedelta_filter(value: timedelta) -> str:
     mins = value.seconds // 60
-    secs = value.seconds % 60
-    return f"{mins} мин. {secs} сек."
+    return f"{mins} мин."

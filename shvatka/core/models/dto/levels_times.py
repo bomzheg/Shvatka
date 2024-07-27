@@ -15,8 +15,8 @@ class LevelTime:
     level_number: int
     start_at: datetime
 
-    def to_on_game(self, levels_count: int, hint: SpyHintInfo) -> LevelTimeOnGame:
-        is_finished = self.level_number > levels_count
+    def to_on_game(self, levels_count: int, hint: SpyHintInfo | None) -> LevelTimeOnGame:
+        is_finished = self.level_number >= levels_count
         return LevelTimeOnGame(
             id=self.id,
             game=self.game,
@@ -44,7 +44,7 @@ class SpyHintInfo:
 @dataclass
 class LevelTimeOnGame(LevelTime):
     is_finished: bool
-    hint: SpyHintInfo
+    hint: SpyHintInfo | None
 
     def __repr__(self) -> str:
         return super().__repr__()

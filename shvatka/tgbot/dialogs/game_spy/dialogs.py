@@ -41,11 +41,12 @@ game_spy = Dialog(
             "{% for lt in stat %}"
             "{% if lt.is_finished %}"
             "🏁<b>{{ lt.team.name }}</b> - финишировала в "
+            "{{ lt.start_at|time_user_timezone }} ({{(now - lt.start_at) | timedelta}} назад)\n"
             "{% else %}"
-            "🚩<b>{{ lt.team.name }}</b> - уровень {{ lt.level_number + 1 }} начат "
+            "🚩<b>{{ lt.team.name }}</b> - ур {{ lt.level_number + 1 }} начат в "
+            "{{ lt.start_at|time_user_timezone }} ({{(now - lt.start_at) | timedelta}} назад)\n"
+            "Подсказка №{{lt.hint.number}} — {{lt.hint.time}} мин.\n"
             "{% endif %}"
-            "{{ lt.start_at|user_timezone }} ({{(now - lt.start_at) | timedelta}} назад) "
-            "подсказка №{{lt.hint.number}} ({{lt.hint.time}} мин.)\n"
             "{% endfor %}",
             when=F["org"].can_spy,
         ),

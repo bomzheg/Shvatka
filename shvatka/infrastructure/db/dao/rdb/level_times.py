@@ -94,8 +94,12 @@ class LevelTimeDao(BaseDAO[models.LevelTime]):
         level_times = await self.get_game_level_times(game)
         result: dict[dto.Team, list[dto.LevelTimeOnGame]] = {}
         for lt in level_times:
+            if lt.level_number < len(game.levels):
+                hint = self._get_hint(game, lt)
+            else:
+                hint = None
             result.setdefault(lt.team, []).append(
-                lt.to_on_game(levels_count=len(game.levels), hint=self._get_hint(game, lt))
+                lt.to_on_game(levels_count=len(game.levels), hint=hint)
             )
         return result
 

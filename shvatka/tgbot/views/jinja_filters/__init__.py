@@ -1,6 +1,7 @@
 from aiogram import Bot
 from aiogram_dialog.widgets.text import setup_jinja as setup_jinja_internal
 
+from shvatka.core.utils.datetime_utils import TIME_FORMAT
 from shvatka.tgbot.views.player import get_emoji
 from .boolean_emoji import bool_render
 from .game_status import to_readable_name
@@ -12,6 +13,7 @@ def setup_jinja(bot: Bot):
         bot,
         filters={
             "user_timezone": datetime_filter,
+            "time_user_timezone": lambda x: datetime_filter(x, TIME_FORMAT),
             "player_emoji": get_emoji,
             "bool_emoji": bool_render,
             "game_status": to_readable_name,

@@ -26,6 +26,11 @@ class LevelTimesGetter(Protocol):
 
     async def get_game_level_times_by_teams(
         self, game: dto.Game, levels_count: int
+    ) -> dict[dto.Team, list[dto.LevelTime]]:
+        raise NotImplementedError
+
+    async def get_game_level_times_with_hints(
+        self, game: dto.FullGame
     ) -> dict[dto.Team, list[dto.LevelTimeOnGame]]:
         raise NotImplementedError
 

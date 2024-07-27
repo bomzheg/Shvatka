@@ -289,6 +289,7 @@ game_stat_example = dto.GameStat(
                 level_number=0,
                 start_at=GAME_START_EXAMPLE,
                 is_finished=False,
+                hint=dto.SpyHintInfo(number=0, time=0),
             ),
             dto.LevelTimeOnGame(
                 id=2,
@@ -297,6 +298,7 @@ game_stat_example = dto.GameStat(
                 level_number=0,
                 start_at=GAME_START_EXAMPLE + timedelta(minutes=40),
                 is_finished=False,
+                hint=dto.SpyHintInfo(number=2, time=40),
             ),
             dto.LevelTimeOnGame(
                 id=3,
@@ -305,6 +307,7 @@ game_stat_example = dto.GameStat(
                 level_number=1,
                 start_at=GAME_START_EXAMPLE + timedelta(minutes=60),
                 is_finished=False,
+                hint=dto.SpyHintInfo(number=1, time=20),
             ),
             dto.LevelTimeOnGame(
                 id=4,
@@ -313,6 +316,7 @@ game_stat_example = dto.GameStat(
                 level_number=2,
                 start_at=GAME_START_EXAMPLE + timedelta(minutes=90),
                 is_finished=False,
+                hint=dto.SpyHintInfo(number=2, time=30),
             ),
             dto.LevelTimeOnGame(
                 id=5,
@@ -321,6 +325,7 @@ game_stat_example = dto.GameStat(
                 level_number=3,
                 start_at=GAME_START_EXAMPLE + timedelta(minutes=120),
                 is_finished=True,
+                hint=dto.SpyHintInfo(number=2, time=30),
             ),
         ],
         slytherin: [
@@ -331,6 +336,7 @@ game_stat_example = dto.GameStat(
                 level_number=0,
                 start_at=GAME_START_EXAMPLE,
                 is_finished=False,
+                hint=dto.SpyHintInfo(number=0, time=0),
             ),
             dto.LevelTimeOnGame(
                 id=6,
@@ -339,6 +345,7 @@ game_stat_example = dto.GameStat(
                 level_number=0,
                 start_at=GAME_START_EXAMPLE + timedelta(minutes=35),
                 is_finished=False,
+                hint=dto.SpyHintInfo(number=1, time=35),
             ),
             dto.LevelTimeOnGame(
                 id=7,
@@ -347,6 +354,7 @@ game_stat_example = dto.GameStat(
                 level_number=1,
                 start_at=GAME_START_EXAMPLE + timedelta(minutes=53),
                 is_finished=False,
+                hint=dto.SpyHintInfo(number=1, time=17),
             ),
             dto.LevelTimeOnGame(
                 id=8,
@@ -355,6 +363,7 @@ game_stat_example = dto.GameStat(
                 level_number=2,
                 start_at=GAME_START_EXAMPLE + timedelta(minutes=88),
                 is_finished=False,
+                hint=dto.SpyHintInfo(number=2, time=35),
             ),
             dto.LevelTimeOnGame(
                 id=9,
@@ -363,6 +372,7 @@ game_stat_example = dto.GameStat(
                 level_number=3,
                 start_at=GAME_START_EXAMPLE + timedelta(minutes=140),
                 is_finished=True,
+                hint=dto.SpyHintInfo(number=4, time=52),
             ),
         ],
     }

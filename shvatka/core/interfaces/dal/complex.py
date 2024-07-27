@@ -6,6 +6,7 @@ from shvatka.core.interfaces.dal.game import (
     MaxGameNumberGetter,
     GameNumberUpdater,
     GameStatusCompleter,
+    GameByIdGetter,
 )
 from shvatka.core.interfaces.dal.key_log import TeamKeysMerger, GameKeyGetter
 from shvatka.core.interfaces.dal.level import MaxLevelNumberGetter
@@ -34,7 +35,9 @@ class TypedKeyGetter(GameKeyGetter, OrgByPlayerGetter, Protocol):
     pass
 
 
-class GameStatDao(OrgByPlayerGetter, LevelTimesGetter, MaxLevelNumberGetter, Protocol):
+class GameStatDao(
+    OrgByPlayerGetter, LevelTimesGetter, MaxLevelNumberGetter, GameByIdGetter, Protocol
+):
     pass
 
 

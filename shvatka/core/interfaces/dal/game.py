@@ -74,6 +74,9 @@ class GameByIdGetter(Protocol):
     async def get_full(self, id_: int) -> dto.FullGame:
         raise NotImplementedError
 
+    async def add_levels(self, game: dto.Game) -> dto.FullGame:
+        raise NotImplementedError
+
 
 class ActiveGameFinder(Protocol):
     async def get_active_game(self) -> dto.Game | None:

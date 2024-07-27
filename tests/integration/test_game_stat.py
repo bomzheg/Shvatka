@@ -32,11 +32,12 @@ async def test_game_log_keys(
 
 @pytest.mark.asyncio
 async def test_game_spy(started_game: dto.FullGame, dao: HolderDao, clock: ClockMock):
+    assert started_game.start_at is not None
     clock.add_mock(tz=tz_utc, result=started_game.start_at + timedelta(seconds=10))
     game_stat = await get_game_spy(started_game, started_game.author, dao.game_stat)
     assert len(game_stat) == 2
     for level_time in game_stat:
         assert level_time.hint.number == 0
         assert level_time.hint.time == 0
-        assert level_time.is_finished == False
+        assert level_time.is_finished is False
         assert level_time.level_number == 0

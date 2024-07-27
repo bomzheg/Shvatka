@@ -153,6 +153,23 @@ async def confirm_approve_waivers_handler(
     await total_remove_msg(bot, chat_id=c.message.chat.id, msg_id=c.message.message_id)
 
 
+async def cancel_waivers_handler(
+    c: CallbackQuery,
+    callback_data: kb.WaiverConfirmCD,
+    player: dto.Player,
+    game: dto.Game,
+    dao: HolderDao,
+    bot: Bot,
+):
+    check_same_game(callback_data, game, player)
+    team = await get_my_team(player, dao.team_player)
+    check_same_team(callback_data, player, team)
+    assert team
+    await c.answer("Сбор вейверов в вашей команде отменён!", show_alert=True)
+    assert c.message
+    await total_remove_msg(bot, chat_id=c.message.chat.id, msg_id=c.message.message_id)
+
+
 async def waiver_user_menu(
     c: CallbackQuery,
     callback_data: kb.WaiverManagePlayerCD,
@@ -317,6 +334,19 @@ def setup() -> Router:
     fallback_router.callback_query.register(
         player_is_not_captain,
         kb.WaiverConfirmCD.filter(),
+    )
+
+    captain_router.callback_query.register(
+        cancel_waivers_handler,
+        kb.WaiverCancelCD.filter(),
+    )
+    player_router.callback_query.register(
+        player_is_not_captain,
+        kb.WaiverCancelCD.filter(),
+    )
+    fallback_router.callback_query.register(
+        player_is_not_captain,
+        kb.WaiverCancelCD.filter(),
     )
 
     captain_router.callback_query.register(

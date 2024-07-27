@@ -31,6 +31,7 @@ from .waiver import (
     IWaiverCD,
     WaiverVoteCD,
     WaiverConfirmCD,
+    WaiverCancelCD,
     WaiverAddForceMenuCD,
     WaiverManagePlayerCD,
     WaiverMainCD,

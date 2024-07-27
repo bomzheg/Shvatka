@@ -23,6 +23,11 @@ class WaiverConfirmCD(CallbackData, prefix="confirm_waivers"):
     team_id: int
 
 
+class WaiverCancelCD(CallbackData, prefix="cancel_waivers"):
+    game_id: int
+    team_id: int
+
+
 class WaiverManagePlayerCD(CallbackData, prefix="waiver_player"):
     game_id: int
     team_id: int
@@ -58,18 +63,22 @@ class WaiverAddPlayerForceCD(CallbackData, prefix="waiver_add_force"):
 
 def get_kb_waivers(team: dto.Team, game: dto.Game) -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
-    builder.button(text="Играю", callback_data=WaiverVoteCD(vote=Played.yes, team_id=team.id))
-    builder.button(text="Не могу", callback_data=WaiverVoteCD(vote=Played.no, team_id=team.id))
-    builder.button(text="Думаю", callback_data=WaiverVoteCD(vote=Played.think, team_id=team.id))
+    builder.button(text="🙋Играю", callback_data=WaiverVoteCD(vote=Played.yes, team_id=team.id))
+    builder.button(text="🙅Не могу", callback_data=WaiverVoteCD(vote=Played.no, team_id=team.id))
+    builder.button(text="🤔Думаю", callback_data=WaiverVoteCD(vote=Played.think, team_id=team.id))
     builder.button(
-        text="Отредактировать список",
+        text="📝Отредактировать список",
         callback_data=WaiverToApproveCD(game_id=game.id, team_id=team.id),
     )
     builder.button(
-        text="Подтвердить",
+        text="✅Подтвердить",
         callback_data=WaiverConfirmCD(game_id=game.id, team_id=team.id),
     )
-    builder.adjust(3, 1, 1)
+    builder.button(
+        text="❌Отменить",
+        callback_data=WaiverCancelCD(game_id=game.id, team_id=team.id),
+    )
+    builder.adjust(3, 1, 1, 1)
     return builder.as_markup()
 
 

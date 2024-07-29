@@ -34,5 +34,9 @@ async def fill_all_file_id(dao: FileInfoDao, file_gateway: BotFileGateway):
         await dao.commit()
 
 
-if __name__ == "__main__":
+def run():
     asyncio.run(main())
+
+
+if __name__ == "__main__":
+    run()

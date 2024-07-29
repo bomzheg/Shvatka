@@ -24,7 +24,7 @@ jobs:
       - name: Install dependencies
         run: uv venv && uv pip install .[test]
   lint:
-    needs: build
+    needs: [build]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -36,6 +36,8 @@ jobs:
           python-version: '3.11'
           cache: "pip"
           cache-dependency-path: pyproject.toml
+      - name: Install dependencies
+        run: uv venv && uv pip install .[test]
       - name: black (ruff format)
         run: source .venv/bin/activate && ruff format --check .
       - name: ruff
@@ -43,7 +45,7 @@ jobs:
       - name: mypy
         run: source .venv/bin/activate && mypy .
   test:
-    needs: build
+    needs: [build]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -55,5 +57,7 @@ jobs:
           python-version: '3.11'
           cache: "pip"
           cache-dependency-path: pyproject.toml
+      - name: Install dependencies
+        run: uv venv && uv pip install .[test]
       - name: Test with pytest
         run: source .venv/bin/activate && pytest

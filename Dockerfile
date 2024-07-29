@@ -1,10 +1,10 @@
-FROM python:3.11-buster as builder
+FROM python:3.11-buster AS builder
 ENV VIRTUAL_ENV=/opt/venv
 ENV CODE_PATH=/code
 RUN python3 -m venv $VIRTUAL_ENV
 WORKDIR $CODE_PATH
-COPY pyproject.toml ${CODE_PATH}/
-RUN $VIRTUAL_ENV/bin/pip install .
+COPY lock.txt ${CODE_PATH}/
+RUN $VIRTUAL_ENV/bin/pip install -r lock.txt
 
 FROM python:3.11-slim-buster
 LABEL maintainer="bomzheg <bomzheg@gmail.com>" \

@@ -37,11 +37,11 @@ jobs:
           cache: "pip"
           cache-dependency-path: pyproject.toml
       - name: black (ruff format)
-        run: ruff format --check .
+        run: uv venv && ruff format --check .
       - name: ruff
-        run: ruff check .
+        run: uv venv && ruff check .
       - name: mypy
-        run: mypy .
+        run: uv venv && mypy .
   test:
     needs: build
     runs-on: ubuntu-latest
@@ -56,4 +56,4 @@ jobs:
           cache: "pip"
           cache-dependency-path: pyproject.toml
       - name: Test with pytest
-        run: pytest
+        run: uv venv && pytest

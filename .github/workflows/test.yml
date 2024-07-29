@@ -22,7 +22,7 @@ jobs:
           cache: "pip"
           cache-dependency-path: pyproject.toml
       - name: Install dependencies
-        run: uv pip install .[test]
+        run: uv venv && uv pip install .[test]
   lint:
     needs: build
     runs-on: ubuntu-latest

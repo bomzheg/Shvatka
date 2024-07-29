@@ -13,47 +13,51 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Install poetry
-        run: pipx install poetry
+      - name: Install uv
+        run: pipx install uv
       - name: Set up Python 3.11
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-          cache: "poetry"
-          cache-dependency-path: poetry.lock
+          cache: "pip"
+          cache-dependency-path: pyproject.toml
       - name: Install dependencies
-        run: poetry install --with test
+        run: uv venv && uv pip install -e .[test]
   lint:
-    needs: build
+    needs: [build]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Install poetry
-        run: pipx install poetry
+      - name: Install uv
+        run: pipx install uv
       - name: Set up Python 3.11
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-          cache: "poetry"
-          cache-dependency-path: poetry.lock
+          cache: "pip"
+          cache-dependency-path: pyproject.toml
+      - name: Install dependencies
+        run: uv venv && uv pip install -e .[test]
       - name: black (ruff format)
-        run: poetry run ruff format --check .
+        run: source .venv/bin/activate && ruff format --check .
       - name: ruff
-        run: poetry run ruff check .
+        run: source .venv/bin/activate && ruff check .
       - name: mypy
-        run: poetry run mypy .
+        run: source .venv/bin/activate && mypy .
   test:
-    needs: build
+    needs: [build]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Install poetry
-        run: pipx install poetry
+      - name: Install uv
+        run: pipx install uv
       - name: Set up Python 3.11
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-          cache: "poetry"
-          cache-dependency-path: poetry.lock
+          cache: "pip"
+          cache-dependency-path: pyproject.toml
+      - name: Install dependencies
+        run: uv venv && uv pip install .[test]
       - name: Test with pytest
-        run: poetry run pytest
+        run: source .venv/bin/activate && pytest

@@ -1,78 +1,80 @@
-[tool.poetry]
+[project]
 name = "shvatka"
 version = "1.0.0"
 description = "Bot and Api for popular night puzzle hunt"
-authors = ["Yuriy Chebyshev <bomzheg@gmail.com>"]
-license = "MIT"
+authors = [
+    {name = "Yuriy Chebyshev", email = "bomzheg@gmail.com"},
+]
+license = {file = "LICENSE"}
 readme = "README.md"
+requires-python = ">=3.11,<3.12"
+dependencies = [
+    "pyyaml>=6.0,<7.0",
+    "python-dateutil>=2.8.2,<3.0",
+    "colorlog>=6.7.0,<7.0",
+    "aiogram>=3.5.0,<3.6.0",
+    "pydantic>=2.5,<3.0",
+    "aiogram_dialog>=2.0,<2.1",
+    "sqlalchemy[asyncio]>=2.0,<3.0",
+    "alembic>=1.10.0,<2.0",
+    "asyncpg>=0.27.0,<1.0",
+    "ujson>=5.5.0,<6.0",
+    "redis>=5.0.1,<6.0",
+    "pyrogram>=2.0.57,<3.0",
+    "dataclass_factory>=2.16,<3.0",
+    "apscheduler>=3.9.1,<4.0",
+    "fastapi>=0.100,<0.101",
+    "uvicorn>=0.20.0,<0.21.0",
+    "python-multipart>=0.0.5,<0.1.0",
+    "python-jose[cryptography]>=3.3.0,<4.0",
+    "passlib>=1.7.4,<2.0",
+    "bcrypt==4.0.1",
+    "telegraph[aio]>=2.2.0,<3.0",
+    "openpyxl>=3.0.10,<4.0",
+    "lxml>=4.9.2,<5.0",
+    "matplotlib>=3.7.1,<4.0",
+    "greenlet<3.0.0",
+    "dishka==1.0.0",
+    "asgi-monitor>=0.3.0,<0.4.0",
+]
 
-[tool.poetry.scripts]
-shvatka-tgbot = 'shvatka.tgbot.__main__:run'
-shvatka-api = 'shvatka.api.__main__:run'
+[project.optional-dependencies]
+dev = [
+    "aiogram_dialog[tools]>=2.0,<2.1",
+    "locust>=2.15.1,<3",
+]
+test = [
+    "pytest>=7.2.0,<8.0",
+    "pytest-ordering>=0.6,<0.7",
+    "pytest-asyncio>=0.18.3,<0.19",
+    "testcontainers[postgresql]>=4.5.1,<5.0",
+    "httpx>=0.23.0,<0.24.0",
+    "coverage[toml]",
+    "ruff>=0.2.1,<0.3",
+    "types-python-dateutil>=2.8.19,<3.0",
+    "types-redis>=4.3.21,<5.0",
+    "types-PyYAML>=6.0.12,<7.0",
+    "lxml-stubs>=0.4.0,<0.5",
+    "types-openpyxl",
+    "types-python-jose",
+    "types-passlib",
+    "mypy>=1.1.1,<2.0",
+    "aiogram-tests @ git+https://github.com/bomzheg/aiogram_tests.git@fix/aiogram3rc",
+    "asgi-lifespan>=2.1.0,<3.0",
+]
 
-[tool.poetry.dependencies]
-python = "~3.11"
-wheel = "^0.38.4"
-pyyaml = "^6.0"
-python-dateutil = "^2.8.2"
-colorlog = "^6.7.0"
-aiogram = "3.5.*"
-pydantic = "~2.5"
-aiogram_dialog = "2.0.*"
-sqlalchemy = { version = "^2.0", extras = ["asyncio"] }
-alembic = "^1.10.0"
-asyncpg = "^0.27.0"
-ujson = "^5.5.0"
-redis = "^5.0.1"
-pyrogram = "^2.0.57"
-dataclass_factory = "^2.16"
-apscheduler = "^3.9.1"
-fastapi = "~0.100"
-uvicorn = "^0.20.0"
-python-multipart = "^0.0.5"
-python-jose = {extras = ["cryptography"], version = "^3.3.0"}
-passlib = "^1.7.4"
-bcrypt = "4.0.1"
-telegraph = {extras = ["aio"], version = "^2.2.0"}
-openpyxl = "^3.0.10"
-lxml = "^4.9.2"
-matplotlib = "^3.7.1"
-greenlet = "<3.0.0"
-dishka = "1.0.0"
-asgi-monitor = "^0.3.0"
-
-[tool.poetry.group.dev]
-optional = true
-
-[tool.poetry.group.dev.dependencies]
-aiogram_dialog = {extras = ["tools"], version = "^2.0.0b12"}
-locust = "^2.15.1"
-
-[tool.poetry.group.test]
-optional = true
-
-[tool.poetry.group.test.dependencies]
-pytest = "^7.2.0"
-pytest-ordering = "^0.6"
-pytest-asyncio = "^0.18.3"
-testcontainers = {extras = ["postgresql"], version = "^4.5.1"}
-httpx = "^0.23.0"
-coverage = {extras = ["toml"], version = "*"}
-ruff = "^0.2.1"
-types-python-dateutil = "^2.8.19"
-types-redis = "^4.3.21"
-types-PyYAML = "^6.0.12"
-lxml-stubs = "^0.4.0"
-types-openpyxl = "*"
-types-python-jose = "*"
-types-passlib = "*"
-mypy = "^1.1.1"
-aiogram-tests = {git = "https://github.com/bomzheg/aiogram_tests.git", branch = "fix/aiogram3rc"}
-asgi-lifespan = "^2.1.0"
+[project.scripts]
+shvatka-tgbot = "shvatka.tgbot.__main__:run"
+shvatka-api = "shvbatka.api.__main__:run"
+shvatka-file-id-updater = "shvatka.infrastructure.file_id_updater:run"
+shvatka-password = "shvatka.api.password_hash:generate"
 
 [build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["shvatka"]
 
 [tool.coverage.run]
 omit = [

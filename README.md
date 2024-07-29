@@ -25,8 +25,7 @@ Core-функционал:
 4. Запустить и применить миграции `python -m alembic upgrade head`
 5. 
 ```shell
-poetry build
-pip install ./dist/shvatka-0.1.0-py3-none-any.whl
+uv pip install .
 export BOT_PATH=$PWD
 shvatka-tgbot
 ```

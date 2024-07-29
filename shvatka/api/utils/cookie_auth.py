@@ -1,5 +1,3 @@
-from typing import Optional
-
 from fastapi import HTTPException
 from fastapi import Request
 from fastapi import status
@@ -16,7 +14,7 @@ class OAuth2PasswordBearerWithCookie(OAuth2):
     def __init__(
         self,
         token_url: str,
-        scheme_name: Optional[str] = None,
+        scheme_name: str | None = None,
         auto_error: bool = True,
     ):
         flows = OAuthFlowsModel(password=OAuthFlowPassword(tokenUrl=token_url))

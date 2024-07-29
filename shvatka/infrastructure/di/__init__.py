@@ -1,5 +1,5 @@
 from shvatka.common.factory import TelegraphProvider, DCFProvider
-from shvatka.infrastructure.di.bot import BotProvider, GameLogProvider
+from shvatka.infrastructure.di.bot import BotProvider
 from shvatka.infrastructure.di.config import ConfigProvider, DbConfigProvider
 from shvatka.infrastructure.di.db import DbProvider, RedisProvider, LockProvider, DAOProvider
 from shvatka.infrastructure.di.files import FileClientProvider
@@ -20,6 +20,5 @@ def get_providers(paths_env):
         BotProvider(),
         GamePlayProvider(),
         SchedulerProvider(),
-        GameLogProvider(),
         LockProvider(),
     ]

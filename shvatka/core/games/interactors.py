@@ -7,7 +7,8 @@ from shvatka.core.games.adapters import (
     GameFileReader,
     GamePlayReader,
     GameKeysReader,
-    GameStatReader, GamePlayKeyRepo,
+    GameStatReader,
+    GamePlayKeyRepo,
 )
 from shvatka.core.interfaces.scheduler import Scheduler
 from shvatka.core.models import dto
@@ -100,14 +101,14 @@ class GamePlayReaderInteractor:
 
 class GamePlayKeyInteractor:
     def __init__(
-            self,
-            dao: GamePlayKeyRepo,
-            view: GameView,
-            game_log: GameLogWriter,
-            org_notifier: OrgNotifier,
-            locker: KeyCheckerFactory,
-            key_processor: KeyProcessor,
-            scheduler: Scheduler,
+        self,
+        dao: GamePlayKeyRepo,
+        view: GameView,
+        game_log: GameLogWriter,
+        org_notifier: OrgNotifier,
+        locker: KeyCheckerFactory,
+        key_processor: KeyProcessor,
+        scheduler: Scheduler,
     ):
         self.dao = dao
         self.view = view

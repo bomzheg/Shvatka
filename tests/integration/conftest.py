@@ -27,7 +27,7 @@ from shvatka.infrastructure.di import (
     FileClientProvider,
     GamePlayProvider,
 )
-from shvatka.tgbot.main_factory import DpProvider, GameToolsProvider
+from shvatka.tgbot.main_factory import DpProvider
 from shvatka.infrastructure.di.db import LockProvider
 from shvatka.tgbot.username_resolver.user_getter import UserGetter
 from shvatka.tgbot.views.hint_factory.hint_parser import HintParser
@@ -75,7 +75,6 @@ async def dishka():
         UrlProvider(),
         TelegraphProvider(),
         GamePlayProvider(),
-        GameToolsProvider(),
         mock_provider,
     )
     yield container

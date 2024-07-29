@@ -10,7 +10,8 @@ from shvatka.core.games.adapters import (
     GameFileReader,
     GamePlayReader,
     GameKeysReader,
-    GameStatReader, GamePlayKeyRepo,
+    GameStatReader,
+    GamePlayKeyRepo,
 )
 from shvatka.core.services.key import KeyProcessor
 from shvatka.core.utils.key_checker_lock import KeyCheckerFactory

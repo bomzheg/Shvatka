@@ -8,7 +8,12 @@ from shvatka.core.utils.key_checker_lock import KeyCheckerFactory
 from shvatka.infrastructure.db.config.models.db import DBConfig, RedisConfig
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.infrastructure.db.dao.memory.level_testing import LevelTestingData
-from shvatka.infrastructure.db.factory import create_engine, create_session_maker, create_redis, create_lock_factory
+from shvatka.infrastructure.db.factory import (
+    create_engine,
+    create_session_maker,
+    create_redis,
+    create_lock_factory,
+)
 
 
 class DbProvider(Provider):

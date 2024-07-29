@@ -13,7 +13,9 @@ class KeyProcessor:
     dao: GamePlayerDao
     locker: KeyCheckerFactory
 
-    async def check_key(self, key: str, team: dto.Team, player: dto.Player, game: dto.Game) -> dto.InsertedKey:
+    async def check_key(
+        self, key: str, team: dto.Team, player: dto.Player, game: dto.Game
+    ) -> dto.InsertedKey:
         if not is_key_valid(key):
             raise exceptions.InvalidKey(key=key, team=team, player=player, game=game)
         return await self.submit_key(key=key, player=player, team=team, game=game)
@@ -38,9 +40,7 @@ class KeyProcessor:
                 type_=parsed_key.type_,
                 is_duplicate=await self.is_duplicate(level=level, team=team, key=key),
             )
-            typed_keys = await self.dao.get_correct_typed_keys(
-                level=level, game=game, team=team
-            )
+            typed_keys = await self.dao.get_correct_typed_keys(level=level, game=game, team=team)
             if parsed_key.type_ == enums.KeyType.simple:
                 # add just now added key to typed, because no flush in dao
                 typed_keys.add(parsed_key.text)

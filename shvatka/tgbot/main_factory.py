@@ -51,7 +51,6 @@ def get_bot_specific_providers() -> list[Provider]:
         DpProvider(),
         DialogManagerProvider(),
         UserGetterProvider(),
-        LockProvider(),
         ViewProvider(),
         UrlProvider(),
     ]
@@ -123,7 +122,9 @@ class ViewProvider(Provider):
     scope = Scope.REQUEST
 
     @provide
-    def get_hint_content_resolver(self, dao: HolderDao, file_storage: FileStorage) -> HintContentResolver:
+    def get_hint_content_resolver(
+        self, dao: HolderDao, file_storage: FileStorage
+    ) -> HintContentResolver:
         return HintContentResolver(dao.file_info, file_storage)
 
     get_hint_sender = provide(HintSender)
@@ -135,21 +136,9 @@ class ViewProvider(Provider):
     def get_game_log(self, bot: Bot, config: BotConfig) -> GameLogWriter:
         return GameBotLog(bot, log_chat_id=config.game_log_chat)
 
-    @provide(scope=Scope.REQUEST)
-    def get_hint_content_resolver(
-        self, dao: HolderDao, file_storage: FileStorage
-    ) -> HintContentResolver:
-        return HintContentResolver(dao=dao.file_info, file_storage=file_storage)
-
     @provide(scope=Scope.APP)
     def get_org_notifier(self, bot: Bot) -> OrgNotifier:
         return BotOrgNotifier(bot=bot)
-
-    get_hint_sender = provide(HintSender, scope=Scope.REQUEST)
-    get_bot_game_view = provide(
-        BotView, scope=Scope.REQUEST, provides=AnyOf[GameView, GameViewPreparer]
-    )
-    level_bot_view = provide(LevelBotView, scope=Scope.REQUEST, provides=LevelView)
 
 
 def resolve_update_types(dp: Dispatcher) -> list[str]:

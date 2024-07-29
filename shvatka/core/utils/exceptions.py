@@ -76,6 +76,10 @@ class ScenarioNotCorrect(SHError):
         return result
 
 
+class ChatNotFound(SHError):
+    notify_user = "Такой чат не найден"
+
+
 class FileNotFound(SHError, AttributeError):
     notify_user = "Файл не найден"
 

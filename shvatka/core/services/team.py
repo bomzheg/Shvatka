@@ -1,5 +1,7 @@
+import contextlib
 from typing import Sequence
 
+from shvatka.core.interfaces.dal.chat import TeamChatChanger
 from shvatka.core.interfaces.dal.complex import TeamMerger
 from shvatka.core.interfaces.dal.team import (
     TeamCreator,
@@ -15,6 +17,7 @@ from shvatka.core.interfaces.dal.team import (
 from shvatka.core.models import dto
 from shvatka.core.models import enums
 from shvatka.core.services.player import check_allow_be_author
+from shvatka.core.utils import exceptions
 from shvatka.core.utils.defaults_constants import CAPTAIN_ROLE
 from shvatka.core.utils.exceptions import SHDataBreach, PermissionsError
 from shvatka.core.views.game import GameLogWriter, GameLogEvent, GameLogType
@@ -28,20 +31,32 @@ async def create_team(
 ) -> dto.Team:
     check_allow_be_author(captain)
     await dao.check_player_free(captain)
-    await dao.check_no_team_in_chat(chat)
-
-    team = await dao.create(chat, captain)
-    await dao.join_team(captain, team, CAPTAIN_ROLE, as_captain=True)
+    try:
+        await dao.check_no_team_in_chat(chat)
+    except exceptions.AnotherTeamInChat as e:
+        if not e.team or not e.team.captain:
+            raise
+        if e.team.captain.id == captain.id:
+            team = e.team
+            created = False
+        else:
+            raise
+    else:
+        team = await dao.create(chat, captain)
+        created = True
+    with contextlib.suppress(exceptions.PlayerRestoredInTeam):
+        await dao.join_team(captain, team, CAPTAIN_ROLE, as_captain=True)
     await dao.commit()
-    await game_log.log(
-        GameLogEvent(
-            GameLogType.TEAM_CREATED,
-            data={
-                "team": team.name,
-                "captain": captain.name_mention,
-            },
+    if created:
+        await game_log.log(
+            GameLogEvent(
+                GameLogType.TEAM_CREATED,
+                data={
+                    "team": team.name,
+                    "captain": captain.name_mention,
+                },
+            )
         )
-    )
     return team
 
 
@@ -87,6 +102,16 @@ async def get_team_by_forum_team_id(forum_team_id: int, dao: ByForumTeamIdGetter
     return await dao.get_by_forum_team_id(forum_team_id)
 
 
+async def change_chat(
+    team: dto.Team, captain: dto.FullTeamPlayer, chat: dto.Chat, dao: TeamChatChanger
+) -> None:
+    check_can_change_chat(team, captain)
+    if await dao.is_team_in_chat(chat):
+        raise exceptions.AnotherTeamInChat(chat_id=chat.tg_id, chat=chat)
+    await dao.change_team_chat(team=team, chat=chat)
+    await dao.commit()
+
+
 async def merge_teams(
     manager: dto.Player,
     primary: dto.Team,
@@ -121,6 +146,22 @@ async def merge_teams(
                 "secondary_team": secondary.name,
             },
         )
+    )
+
+
+def check_can_change_chat(team: dto.Team, captain: dto.FullTeamPlayer):
+    if team.id != captain.team_id or captain.team_id != captain.team.id:
+        raise SHDataBreach(
+            team=team, player=captain.player, notify_user="Вы не игрок этой команды"
+        )
+    assert captain.player is not None
+    assert team.captain is not None
+    if team.captain.id == captain.player.id:
+        return
+    raise PermissionsError(
+        permission_name="change_chat",  # TODO
+        team=team,
+        player=captain.player,
     )
 
 

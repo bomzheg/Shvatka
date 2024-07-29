@@ -22,6 +22,8 @@ from .handlers import (
     send_user_request,
     gotten_user_request,
     remove_user_request,
+    send_chat_request,
+    gotten_chat_request,
 )
 
 TEAM_PLAYER_CARD = Jinja(
@@ -62,6 +64,12 @@ captains_bridge = Dialog(
             state=states.CaptainsBridgeSG.players,
             when=F["team_player"].can_manage_players | F["team_player"].can_remove_players,
         ),
+        Button(
+            Const("🔀Перенести в другой чат"),
+            id="change_chat",
+            on_click=send_chat_request,
+        ),
+        MessageInput(func=gotten_chat_request, filter=F.chat_shared),
         Button(
             Const("🔮Былые свершения команды"),
             id="merge_teams",

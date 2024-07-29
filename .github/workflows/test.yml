@@ -13,47 +13,47 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Install poetry
-        run: pipx install poetry
+      - name: Install uv
+        run: pipx install uv
       - name: Set up Python 3.11
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-          cache: "poetry"
-          cache-dependency-path: poetry.lock
+          cache: "pip"
+          cache-dependency-path: pyproject.toml
       - name: Install dependencies
-        run: poetry install --with test
+        run: uv pip install .[test]
   lint:
     needs: build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Install poetry
-        run: pipx install poetry
+      - name: Install uv
+        run: pipx install uv
       - name: Set up Python 3.11
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-          cache: "poetry"
-          cache-dependency-path: poetry.lock
+          cache: "pip"
+          cache-dependency-path: pyproject.toml
       - name: black (ruff format)
-        run: poetry run ruff format --check .
+        run: ruff format --check .
       - name: ruff
-        run: poetry run ruff check .
+        run: ruff check .
       - name: mypy
-        run: poetry run mypy .
+        run: mypy .
   test:
     needs: build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Install poetry
-        run: pipx install poetry
+      - name: Install uv
+        run: pipx install uv
       - name: Set up Python 3.11
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-          cache: "poetry"
-          cache-dependency-path: poetry.lock
+          cache: "pip"
+          cache-dependency-path: pyproject.toml
       - name: Test with pytest
-        run: poetry run pytest
+        run: pytest

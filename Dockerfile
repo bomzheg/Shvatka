@@ -1,11 +1,10 @@
 FROM python:3.11-buster as builder
 ENV VIRTUAL_ENV=/opt/venv
 ENV CODE_PATH=/code
-RUN pip3 install --no-cache-dir poetry==1.4.2
 RUN python3 -m venv $VIRTUAL_ENV
 WORKDIR $CODE_PATH
-COPY poetry.lock pyproject.toml ${CODE_PATH}/
-RUN python3 -m poetry export -f requirements.txt | $VIRTUAL_ENV/bin/pip install -r /dev/stdin
+COPY pyproject.toml ${CODE_PATH}/
+RUN $VIRTUAL_ENV/bin/pip install .
 
 FROM python:3.11-slim-buster
 LABEL maintainer="bomzheg <bomzheg@gmail.com>" \
@@ -19,4 +18,4 @@ COPY --from=builder $VIRTUAL_ENV $VIRTUAL_ENV
 COPY . ${CODE_PATH}/shvatka
 WORKDIR $CODE_PATH/shvatka
 RUN echo "{\"vcs_hash\": \"${VCS_SHA}\", \"build_at\": \"${BUILD_AT}\" }" > version.yaml
-ENTRYPOINT ["python3", "-m", "shvatka.tgbot"]
+ENTRYPOINT ["python3", "-m", "shvatka"]

@@ -18,6 +18,10 @@ class TimeHintSG(StatesGroup):
     hint = State()
 
 
+class TimeHintEditSG(StatesGroup):
+    details = State()
+
+
 class LevelListSG(StatesGroup):
     levels = State()
 

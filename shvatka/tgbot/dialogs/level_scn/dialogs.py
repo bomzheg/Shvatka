@@ -1,8 +1,8 @@
 from aiogram import F
 from aiogram_dialog import Dialog, Window
 from aiogram_dialog.widgets.input import TextInput
-from aiogram_dialog.widgets.kbd import Button, Cancel
-from aiogram_dialog.widgets.text import Const, Jinja
+from aiogram_dialog.widgets.kbd import Button, Cancel, ScrollingGroup, Select
+from aiogram_dialog.widgets.text import Const, Jinja, Format
 
 from shvatka.tgbot import states
 from .getters import get_time_hints, get_level_id, get_level_data, get_keys, get_bonus_keys
@@ -26,9 +26,8 @@ from .handlers import (
     convert_bonus_keys,
     on_correct_bonus_keys,
     not_correct_bonus_keys,
-    start_bonus_keys,
+    start_bonus_keys, start_edit_time_hint,
 )
-from shvatka.tgbot.dialogs.preview_data import RENDERED_HINTS_PREVIEW
 
 level = Dialog(
     Window(
@@ -172,6 +171,18 @@ hints_dialog = Dialog(
             "{% else %}"
             "пока нет ни одной"
             "{% endif %}"
+        ),
+        ScrollingGroup(
+            Select(
+                Jinja("{{item | time_hint}}"),
+                id="level_hints",
+                item_id_getter=lambda x: x.time,
+                items="time_hints",
+                on_click=start_edit_time_hint,
+            ),
+            id="level_hints_sg",
+            width=1,
+            height=10,
         ),
         Button(Const("➕Добавить подсказку"), id="add_time_hint", on_click=start_add_time_hint),
         Button(

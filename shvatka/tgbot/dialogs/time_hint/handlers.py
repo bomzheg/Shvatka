@@ -5,6 +5,7 @@ from aiogram_dialog import DialogManager
 from aiogram_dialog.widgets.kbd import Button
 from dataclass_factory import Factory
 
+from shvatka.core.models.dto import scn
 from shvatka.core.models.dto.scn import TimeHint
 from shvatka.core.models.dto.scn.hint_part import AnyHint
 from shvatka.tgbot import states
@@ -58,3 +59,10 @@ async def hint_on_start(start_data: dict, manager: DialogManager):
         manager.dialog_data["time"] = 0
         await manager.switch_to(states.TimeHintSG.hint)
     manager.dialog_data.setdefault("hints", [])
+
+
+async def hint_edit_on_start(start_data: dict, manager: DialogManager):
+    dcf: Factory = manager.middleware_data["dcf"]
+    hint = dcf.load(manager.start_data["time_hint"], scn.TimeHint)
+    manager.dialog_data["hints"] = dcf.dump(hint.hint, list[AnyHint])
+    manager.dialog_data["time"] = hint.time

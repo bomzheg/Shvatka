@@ -51,6 +51,19 @@ def create_tg_chat(
     )
 
 
+def chat_to_full_chat(chat: tg.Chat) -> tg.ChatFullInfo:
+    return tg.ChatFullInfo(
+        id=chat.id,
+        title=chat.title,
+        type=chat.type,
+        username=chat.username,
+        first_name=chat.first_name,
+        last_name=chat.last_name,
+        accent_color_id=0,
+        max_reaction_count=3,
+    )
+
+
 def create_db_chat():
     return models.Chat(
         tg_id=GRYFFINDOR_CHAT_DTO.tg_id,

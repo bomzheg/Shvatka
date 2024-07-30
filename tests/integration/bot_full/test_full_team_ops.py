@@ -14,7 +14,7 @@ from shvatka.core.services.user import upsert_user
 from shvatka.core.utils.datetime_utils import tz_utc
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.tgbot.views.commands import CREATE_TEAM_COMMAND, ADD_IN_TEAM_COMMAND
-from tests.fixtures.chat_constants import create_tg_chat
+from tests.fixtures.chat_constants import create_tg_chat, chat_to_full_chat
 from tests.fixtures.player import promote
 from tests.fixtures.user_constants import (
     create_tg_user,
@@ -35,7 +35,7 @@ async def test_create_team(harry: dto.Player, dp: Dispatcher, bot: MockedBot, da
             ChatMemberOwner(user=harry_tg, is_anonymous=False, status=ChatMemberStatus.CREATOR)
         ],
     )
-    bot.add_result_for(GetChat, ok=True, result=chat)
+    bot.add_result_for(GetChat, ok=True, result=chat_to_full_chat(chat))
     bot.add_result_for(SendMessage, ok=True)  # one for captain
     bot.add_result_for(SendMessage, ok=True)  # one for log
     update = Update(

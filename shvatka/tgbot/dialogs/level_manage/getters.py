@@ -15,8 +15,8 @@ async def get_level_id(dao: HolderDao, dialog_manager: DialogManager, **_):
     hints = level.scenario.time_hints
     return {
         "level": level,
+        "time_hints": hints,
         "org": org,
-        "rendered": render_time_hints(hints) if hints else "пока нет ни одной подсказки",
     }
 
 

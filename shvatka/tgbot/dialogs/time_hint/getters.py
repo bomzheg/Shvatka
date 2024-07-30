@@ -26,5 +26,4 @@ async def get_hints(dialog_manager: DialogManager, **_):
         "hints": hints,
         "time": time_,
         "has_hints": len(hints) > 0,
-        "rendered": render_hints(hints),
     }

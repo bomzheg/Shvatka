@@ -38,7 +38,6 @@ async def get_level_data(dialog_manager: DialogManager, **_):
         "keys": dialog_data.get("keys", []),
         "bonus_keys": dialog_data.get("bonus_keys", []),
         "time_hints": hints,
-        "rendered": render_time_hints(hints) if hints else "пока нет ни одной",
     }
 
 
@@ -49,5 +48,4 @@ async def get_time_hints(dialog_manager: DialogManager, **_):
     return {
         "level_id": dialog_manager.start_data["level_id"],
         "time_hints": hints,
-        "rendered": render_time_hints(hints) if hints else "пока нет ни одной",
     }

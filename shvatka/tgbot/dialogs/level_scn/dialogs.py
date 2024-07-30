@@ -64,7 +64,11 @@ level = Dialog(
             "💰Бонусных ключей: {{bonus_keys | length}}\n"
             "{% endif %}"
             "\n💡Подсказки:\n"
-            "{{rendered}}"
+            "{% if time_hints %}"
+            "{{time_hints | time_hints}}"
+            "{% else %}"
+            "пока нет ни одной"
+            "{% endif %}"
         ),
         Button(Const("🔑Ключи"), id="keys", on_click=start_keys),
         Button(Const("💰Бонусные ключи"), id="bonus_keys", on_click=start_bonus_keys),
@@ -97,7 +101,11 @@ level_edit_dialog = Dialog(
             "💰Бонусных ключей: {{bonus_keys | length}}\n"
             "{% endif %}"
             "\n💡Подсказки:\n"
-            "{{rendered}}"
+            "{% if time_hints %}"
+            "{{time_hints | time_hints}}"
+            "{% else %}"
+            "пока нет ни одной"
+            "{% endif %}"
         ),
         Button(Const("🔑Ключи"), id="keys", on_click=start_keys),
         Button(Const("💰Бонусные ключи"), id="bonus_keys", on_click=start_bonus_keys),
@@ -158,7 +166,13 @@ keys_dialog = Dialog(
 hints_dialog = Dialog(
     Window(
         Jinja("💡Подсказки уровня {{level_id}}:\n"),
-        Jinja("{{rendered}}"),
+        Jinja(
+            "{% if time_hints %}"
+            "{{time_hints | time_hints}}"
+            "{% else %}"
+            "пока нет ни одной"
+            "{% endif %}"
+        ),
         Button(Const("➕Добавить подсказку"), id="add_time_hint", on_click=start_add_time_hint),
         Button(
             Const("👌Достаточно подсказок"),
@@ -177,7 +191,6 @@ hints_dialog = Dialog(
         getter=get_time_hints,
         preview_data={
             "time_hints": [],
-            "rendered": RENDERED_HINTS_PREVIEW,
             "level_id": "Pinky Pie",
         },
     ),

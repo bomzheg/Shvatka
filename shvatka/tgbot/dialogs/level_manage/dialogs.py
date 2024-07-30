@@ -44,7 +44,14 @@ levels_list = Dialog(
 
 level_manage = Dialog(
     Window(
-        Jinja("Уровень <b>{{level.name_id}}</b>\n{{rendered}}"),
+        Jinja(
+            "Уровень <b>{{level.name_id}}</b>\n"
+            "{% if time_hints %}"
+            "{{time_hints | time_hints}}"
+            "{% else %}"
+            "пока нет ни одной подсказки"
+            "{% endif %}"
+        ),
         Button(
             Const("✏Редактирование"),
             id="level_edit",

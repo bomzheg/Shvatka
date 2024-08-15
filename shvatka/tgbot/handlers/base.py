@@ -81,7 +81,12 @@ async def privacy(message: Message, user: dto.User):
         importlib.resources.path("shvatka.infrastructure.assets", "privacy.txt") as path,
         path.open("r") as f,
     ):
-        await message.reply(f.read())
+        await message.reply(
+            f"our privacy is something like https://telegram.org/privacy-tpa\n"
+            f"But this bot is only for Russian-speaking people, "
+            f"so detailed privacy is in Russian:\n"
+            f"{f.read()}"
+        )
     privacy_counter.inc(1, {"user": str(user.tg_id)})
 
 
@@ -91,6 +96,7 @@ def setup() -> Router:
         chat_id, Command(commands=["idchat", CHAT_ID_COMMAND.command], prefix="/!")
     )
     router.message.register(cmd_about, Command(commands=ABOUT_COMMAND))
+    router.message.register(cmd_about, Command(commands="developer_info"))
     router.message.register(
         chat_type_cmd_group, Command(commands=CHAT_TYPE_COMMAND), F.chat.type == ChatType.GROUP
     )

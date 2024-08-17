@@ -17,6 +17,8 @@ from shvatka.tgbot.views.commands import (
     CHAT_ID_COMMAND,
     ABOUT_COMMAND,
     CHAT_TYPE_COMMAND,
+    HELP_USER,
+    HELP_COMMAND,
 )
 
 logger = logging.getLogger(__name__)
@@ -53,6 +55,10 @@ async def cancel_state(message: Message, state: FSMContext):
 async def cmd_about(message: Message, user: dto.User, chat: dto.Chat):
     logger.info("User %s read about in %s", user.tg_id, chat.tg_id)
     await message.reply("Разработчик бота - @bomzheg\n")
+
+
+async def cmd_help(message: Message):
+    await message.reply(HELP_USER)
 
 
 async def chat_type_cmd_supergroup(message: Message):
@@ -95,6 +101,7 @@ def setup() -> Router:
     router.message.register(
         chat_id, Command(commands=["idchat", CHAT_ID_COMMAND.command], prefix="/!")
     )
+    router.message.register(cmd_help, Command(HELP_COMMAND))
     router.message.register(cmd_about, Command(commands=ABOUT_COMMAND))
     router.message.register(cmd_about, Command(commands="developer_info"))
     router.message.register(

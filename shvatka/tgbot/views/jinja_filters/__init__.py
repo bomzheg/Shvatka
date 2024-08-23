@@ -6,7 +6,12 @@ from shvatka.tgbot.views.player import get_emoji
 from .boolean_emoji import bool_render
 from .game_status import to_readable_name
 from .timezone import datetime_filter, timedelta_filter
-from ..utils import render_single_hint, render_hints, render_time_hint, render_time_hints
+from shvatka.tgbot.views.utils import (
+    render_single_hint,
+    render_hints,
+    render_time_hint,
+    render_time_hints,
+)
 
 
 def setup_jinja(bot: Bot):

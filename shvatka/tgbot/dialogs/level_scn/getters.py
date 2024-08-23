@@ -3,7 +3,6 @@ from dataclass_factory import Factory
 
 from shvatka.core.models.dto import scn
 from shvatka.core.models.dto.scn import TimeHint
-from shvatka.tgbot.views.utils import render_time_hints
 
 
 async def get_level_id(dialog_manager: DialogManager, **_):

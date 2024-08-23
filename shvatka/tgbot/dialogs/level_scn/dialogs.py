@@ -2,7 +2,7 @@ from aiogram import F
 from aiogram_dialog import Dialog, Window
 from aiogram_dialog.widgets.input import TextInput
 from aiogram_dialog.widgets.kbd import Button, Cancel, ScrollingGroup, Select
-from aiogram_dialog.widgets.text import Const, Jinja, Format
+from aiogram_dialog.widgets.text import Const, Jinja
 
 from shvatka.tgbot import states
 from .getters import get_time_hints, get_level_id, get_level_data, get_keys, get_bonus_keys
@@ -26,7 +26,8 @@ from .handlers import (
     convert_bonus_keys,
     on_correct_bonus_keys,
     not_correct_bonus_keys,
-    start_bonus_keys, start_edit_time_hint,
+    start_bonus_keys,
+    start_edit_time_hint,
 )
 
 level = Dialog(

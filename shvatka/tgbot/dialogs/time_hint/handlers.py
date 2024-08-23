@@ -1,15 +1,19 @@
 from typing import Any
 
+from aiogram import types
 from aiogram.types import CallbackQuery, Message
 from aiogram_dialog import DialogManager
 from aiogram_dialog.widgets.kbd import Button
 from dataclass_factory import Factory
+from dishka import AsyncContainer
+from dishka.integrations.aiogram import CONTAINER_NAME
 
 from shvatka.core.models.dto import scn
 from shvatka.core.models.dto.scn import TimeHint
 from shvatka.core.models.dto.scn.hint_part import AnyHint
 from shvatka.tgbot import states
 from shvatka.tgbot.views.hint_factory.hint_parser import HintParser
+from shvatka.tgbot.views.hint_sender import HintSender
 
 
 async def select_time(c: CallbackQuery, widget: Any, manager: DialogManager, item_id: str):
@@ -36,6 +40,15 @@ async def process_time_message(m: Message, dialog_: Any, manager: DialogManager)
         await set_time(time_, manager)
     except ValueError:
         await m.answer("Время выхода данной подсказки должно быть больше, чем предыдущей")
+
+
+async def edit_single_hint(c: CallbackQuery, widget: Any, manager: DialogManager, hint_index: str):
+    dishka: AsyncContainer = manager.middleware_data[CONTAINER_NAME]
+    dcf = await dishka.get(Factory)
+    hint = dcf.load(manager.start_data.get("time_hint"), scn.TimeHint)
+    hint_sender = await dishka.get(HintSender)
+    chat: types.Chat = manager.middleware_data["event_from_chat"]
+    await hint_sender.send_hint(hint.hint[int(hint_index)], chat.id)
 
 
 async def set_time(time_minutes: int, manager: DialogManager):

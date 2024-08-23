@@ -2,7 +2,6 @@ from aiogram_dialog import DialogManager
 from dataclass_factory import Factory
 
 from shvatka.core.models.dto.scn.hint_part import AnyHint
-from shvatka.tgbot.views.utils import render_hints
 
 
 async def get_available_times(dialog_manager: DialogManager, **_):

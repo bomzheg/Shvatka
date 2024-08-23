@@ -6,7 +6,6 @@ from shvatka.core.services.game import get_game
 from shvatka.core.services.level import get_by_id, get_level_by_id_for_org, get_all_my_free_levels
 from shvatka.core.services.organizers import get_org_by_id, get_by_player
 from shvatka.infrastructure.db.dao.holder import HolderDao
-from shvatka.tgbot.views.utils import render_time_hints
 
 
 async def get_level_id(dao: HolderDao, dialog_manager: DialogManager, **_):

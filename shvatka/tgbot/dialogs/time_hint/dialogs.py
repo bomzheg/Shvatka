@@ -1,14 +1,29 @@
 from aiogram_dialog import Dialog, Window
 from aiogram_dialog.widgets.input import MessageInput
-from aiogram_dialog.widgets.kbd import Select, Button, Group, Back, Cancel, SwitchTo, ScrollingGroup
+from aiogram_dialog.widgets.kbd import (
+    Select,
+    Button,
+    Group,
+    Back,
+    Cancel,
+    SwitchTo,
+    ScrollingGroup,
+)
 from aiogram_dialog.widgets.text import Const, Format, Case, Jinja
 
 from shvatka.tgbot import states
 from .getters import get_available_times, get_hints
-from .handlers import process_time_message, select_time, process_hint, on_finish, hint_on_start, hint_edit_on_start, \
-    process_edit_time_message
+from .handlers import (
+    process_time_message,
+    select_time,
+    process_hint,
+    on_finish,
+    hint_on_start,
+    hint_edit_on_start,
+    process_edit_time_message,
+    edit_single_hint,
+)
 from shvatka.tgbot.dialogs.preview_data import TIMES_PRESET
-from ..level_scn.handlers import start_edit_time_hint, edit_single_hint
 
 time_hint = Dialog(
     Window(
@@ -60,10 +75,7 @@ time_hint = Dialog(
 
 time_hint_edit = Dialog(
     Window(
-        Jinja(
-            "Подсказка выходящая в {{time}}:"
-            "{{hints | hints}}"
-        ),
+        Jinja("Подсказка выходящая в {{time}}:" "{{hints | hints}}"),
         SwitchTo(
             Const("Изменить время"),
             id="change_time",
@@ -86,9 +98,7 @@ time_hint_edit = Dialog(
         state=states.TimeHintEditSG.details,
     ),
     Window(
-        Jinja(
-            "Введи новое время выхода подсказки"
-        ),
+        Jinja("Введи новое время выхода подсказки"),
         MessageInput(func=process_edit_time_message),
         getter=get_hints,
         state=states.TimeHintEditSG.time,

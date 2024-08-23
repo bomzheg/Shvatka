@@ -15,7 +15,7 @@ class CommandsGroup:
 
 
 START_COMMAND = BotCommand(command="start", description="начало работы с ботом")
-HELP_COMMAND = BotCommand(command="help", description="помощь")  # TODO
+HELP_COMMAND = BotCommand(command="help", description="помощь")
 ABOUT_COMMAND = BotCommand(command="about", description="о боте")
 CANCEL_COMMAND = BotCommand(command="cancel", description="отмена начатого диалога")
 CHAT_ID_COMMAND = BotCommand(command="chat_id", description="узнать chat_id данного чата")
@@ -43,9 +43,6 @@ ADD_IN_TEAM_COMMAND = BotCommand(
 MANAGE_TEAM_COMMAND = BotCommand(
     command="manage_team", description="открыть меню управления командой"
 )
-REMOVE_FROM_TEAM_COMMAND = BotCommand(
-    command="remove_from_team", description="удалить игрока из команды (реплаем по игроку)"
-)  # TODO
 START_WAIVERS_COMMAND = BotCommand(command="waivers", description="начать сборку вейверов")
 APPROVE_WAIVERS_COMMAND = BotCommand(
     command="approve_waivers", description="закрыть сборку вейверов"
@@ -57,7 +54,6 @@ HELP_TEAM = CommandsGroup(
         CREATE_TEAM_COMMAND,
         ADD_IN_TEAM_COMMAND,
         MANAGE_TEAM_COMMAND,
-        REMOVE_FROM_TEAM_COMMAND,
         START_WAIVERS_COMMAND,
         APPROVE_WAIVERS_COMMAND,
     ],
@@ -69,7 +65,7 @@ NEW_LEVEL_COMMAND = BotCommand(command="new_level", description="новый ур
 NEW_GAME_COMMAND = BotCommand(
     command="new_game", description="начать сборку новой игры из ранее написанных уровней"
 )
-LEVELS_COMMAND = BotCommand(command="levels", description="показать список уровней")  # TODO
+LEVELS_COMMAND = BotCommand(command="levels", description="показать список уровней")
 GET_WAIVERS_COMMAND = BotCommand(command="get_waivers", description="показать текущие вейверы")
 SPY_COMMAND = BotCommand(command="spy", description="Меню шпиона - организатора")
 SPY_LEVELS_COMMAND = BotCommand(
@@ -96,7 +92,6 @@ HELP_ORG = CommandsGroup(
 )
 
 
-STATUS_COMMAND = BotCommand(command="status", description="статус схватки")  # TODO
 TEAM_COMMAND = BotCommand(command="team", description="команда")
 TEAMS_COMMAND = BotCommand(command="teams", description="список команд")
 PLAYERS_COMMAND = BotCommand(command="players", description="игроки команды")
@@ -107,7 +102,6 @@ LEAVE_COMMAND = BotCommand(command="leave", description="выйти из ком�
 HELP_INFO = CommandsGroup(
     "Другие команды:",
     [
-        STATUS_COMMAND,
         TEAM_COMMAND,
         TEAMS_COMMAND,
         PLAYERS_COMMAND,

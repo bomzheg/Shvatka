@@ -24,6 +24,7 @@ async def get_hints(dialog_manager: DialogManager, **_):
     time_ = dialog_data["time"]
     return {
         "hints": hints,
+        "numerated_hints": list(enumerate(hints)),
         "time": time_,
         "has_hints": len(hints) > 0,
     }

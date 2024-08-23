@@ -4,6 +4,7 @@ from aiogram.types import CallbackQuery, Message
 from aiogram_dialog import Data, DialogManager
 from aiogram_dialog.widgets.kbd import Button
 from dataclass_factory import Factory
+from dishka import AsyncContainer
 
 from shvatka.core.models import dto
 from shvatka.core.models.dto import scn
@@ -16,6 +17,7 @@ from shvatka.core.utils.input_validation import (
 )
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.tgbot import states
+from shvatka.tgbot.views.hint_sender import HintSender
 
 
 def check_level_id(name_id: str) -> str:
@@ -140,6 +142,15 @@ async def start_edit_time_hint(c: CallbackQuery, widget: Any, manager: DialogMan
         state=states.TimeHintEditSG.details,
         data={"time_hint": dcf.dump(next(filter(lambda x: x.time == int(hint_time), hints)))}
     )
+
+
+async def edit_single_hint(c: CallbackQuery, widget: Any, manager: DialogManager, hint_index: str):
+    dcf: Factory = manager.middleware_data["dcf"]
+    dishka: AsyncContainer = manager.middleware_data["dishka_container"]
+    hint = dcf.load(manager.start_data.get("time_hint"), scn.TimeHint)
+    hint_sender = await dishka.get(HintSender)
+    await hint_sender.send_hint(hint.hint[int(hint_index)], c.message.chat.id)
+
 
 
 async def start_add_time_hint(c: CallbackQuery, button: Button, manager: DialogManager):

@@ -16,6 +16,16 @@ async def select_time(c: CallbackQuery, widget: Any, manager: DialogManager, ite
     await set_time(int(item_id), manager)
 
 
+async def process_edit_time_message(m: Message, dialog_: Any, manager: DialogManager) -> None:
+    try:
+        time_ = int(m.text)
+    except ValueError:
+        await m.answer("Некорректный формат времени. Пожалуйста введите время в формате ЧЧ:ММ")
+        return
+    manager.dialog_data["time"] = time_
+    await manager.switch_to(states.TimeHintEditSG.details)
+
+
 async def process_time_message(m: Message, dialog_: Any, manager: DialogManager) -> None:
     try:
         time_ = int(m.text)

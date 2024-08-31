@@ -1,6 +1,8 @@
+import typing
 from typing import Any
 
-from shvatka.core.models import dto
+if typing.TYPE_CHECKING:
+    from shvatka.core.models import dto
 
 
 class SHError(Exception):
@@ -14,10 +16,10 @@ class SHError(Exception):
         chat_id: int | None = None,
         team_id: int | None = None,
         game_id: int | None = None,
-        user: dto.User | None = None,
-        player: dto.Player | None = None,
-        chat: dto.Chat | None = None,
-        team: dto.Team | None = None,
+        user: "dto.User | None" = None,
+        player: "dto.Player | None" = None,
+        chat: "dto.Chat | None" = None,
+        team: "dto.Team | None" = None,
         game: Any | None = None,
         alarm: bool | None = False,
         notify_user: str | None = None,
@@ -163,7 +165,7 @@ class GameNotFound(GameError, AttributeError):
 class LevelError(SHError):
     notify_user = "Ошибка связанная с уровнем"
 
-    def __init__(self, level_id: int, *args, **kwargs) -> None:
+    def __init__(self, level_id: int | None = None, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self.level_id = level_id
 

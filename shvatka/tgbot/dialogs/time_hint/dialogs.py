@@ -22,6 +22,7 @@ from .handlers import (
     hint_edit_on_start,
     process_edit_time_message,
     edit_single_hint,
+    save_edited_time_hint,
 )
 from shvatka.tgbot.dialogs.preview_data import TIMES_PRESET
 
@@ -92,6 +93,11 @@ time_hint_edit = Dialog(
             id="hints_sg",
             width=1,
             height=10,
+        ),
+        Button(
+            text=Const("Сохранить изменения"),
+            id="save_time_hint",
+            on_click=save_edited_time_hint,
         ),
         Cancel(text=Const("Вернуться, ничего не менять")),
         getter=get_hints,

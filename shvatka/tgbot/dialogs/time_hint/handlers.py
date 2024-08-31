@@ -11,6 +11,7 @@ from dishka.integrations.aiogram import CONTAINER_NAME
 from shvatka.core.models.dto import scn
 from shvatka.core.models.dto.scn import TimeHint
 from shvatka.core.models.dto.scn.hint_part import AnyHint
+from shvatka.core.utils import exceptions
 from shvatka.tgbot import states
 from shvatka.tgbot.views.hint_factory.hint_parser import HintParser
 from shvatka.tgbot.views.hint_sender import HintSender
@@ -25,6 +26,15 @@ async def process_edit_time_message(m: Message, dialog_: Any, manager: DialogMan
         time_ = int(m.text)
     except ValueError:
         await m.answer("Некорректный формат времени. Пожалуйста введите время в формате ЧЧ:ММ")
+        return
+    dcf: Factory = manager.middleware_data["dcf"]
+    hint = dcf.load(manager.start_data["time_hint"], scn.TimeHint)
+    if not hint.can_update_time():
+        await m.reply(
+            "Увы, отредактировать время данной подсказки не получится. "
+            "Скорее всего это загадка уровня (Подсказка 0 мин.). "
+            "Придётся переделать прямо тут текст (или медиа, или что там)"
+        )
         return
     manager.dialog_data["time"] = time_
     await manager.switch_to(states.TimeHintEditSG.details)
@@ -50,6 +60,20 @@ async def edit_single_hint(c: CallbackQuery, widget: Any, manager: DialogManager
     # TODO now it only show. but we want to show, to edit and to delete
     chat: types.Chat = manager.middleware_data["event_from_chat"]
     await hint_sender.send_hint(hint.hint[int(hint_index)], chat.id)
+
+
+async def save_edited_time_hint(c: CallbackQuery, widget: Any, manager: DialogManager):
+    dishka: AsyncContainer = manager.middleware_data[CONTAINER_NAME]
+    dcf = await dishka.get(Factory)
+    time_hint = dcf.load(manager.start_data["time_hint"], scn.TimeHint)
+    try:
+        time_hint.update_time(manager.dialog_data["time"])
+        time_hint.update_hint(dcf.load(manager.dialog_data["hints"], list[AnyHint]))
+    except exceptions.LevelError as e:
+        assert isinstance(c.message, Message)
+        await c.message.reply(e.text)
+        return
+    await manager.done({"edited_time_hint": dcf.dump(time_hint)})
 
 
 async def set_time(time_minutes: int, manager: DialogManager):

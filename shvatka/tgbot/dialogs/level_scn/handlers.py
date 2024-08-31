@@ -103,8 +103,12 @@ async def on_correct_bonus_keys(
 async def process_time_hint_result(start_data: Data, result: Any, manager: DialogManager):
     if not result:
         return
-    if new_hint := result["time_hint"]:
+    if new_hint := result.get("time_hint", None):
         manager.dialog_data.setdefault("time_hints", []).append(new_hint)
+    elif (edited_hint := result.get("edited_time_hint")) and isinstance(start_data, dict):
+        old_hint = start_data["time_hint"]
+        assert edited_hint != old_hint
+        # TODO save me
 
 
 async def process_level_result(start_data: Data, result: Any, manager: DialogManager):

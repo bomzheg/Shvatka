@@ -4,6 +4,8 @@ from dataclasses import dataclass, field
 from datetime import timedelta
 from typing import overload
 
+from mypy.server.objgraph import Iterable
+
 from shvatka.core.utils import exceptions
 from .hint_part import AnyHint
 from .time_hint import TimeHint, EnumeratedTimeHint
@@ -26,9 +28,9 @@ class BonusKey:
 
 
 class HintsList(Sequence[TimeHint]):
-    def __init__(self, hints: list[TimeHint]):
+    def __init__(self, hints: Iterable[TimeHint]):
         self.verify(hints)
-        self.hints = hints
+        self.hints: list[TimeHint] = list(hints)
 
     @classmethod
     def parse(cls, hints: list[TimeHint]):
@@ -44,7 +46,7 @@ class HintsList(Sequence[TimeHint]):
         return [TimeHint(k, v) for k, v in sorted(hint_map.items(), key=lambda x: x[0])]
 
     @staticmethod
-    def verify(hints: Sequence[TimeHint]) -> None:
+    def verify(hints: Iterable[TimeHint]) -> None:
         times: set[int] = set()
         for hint in hints:
             if hint.time in times:

@@ -48,9 +48,7 @@ class DCFProvider(Provider):
                 name_mapping(
                     name_style=adaptix.NameStyle.LOWER_KEBAB,
                 ),
-                loader(
-                    HintsList, lambda x: HintsList(internal_retort.load(x, list[TimeHint])),
-                ),
+
                 validator(
                     pred=P[scn.LevelScenario].id,
                     func=lambda x: validate_level_id(x) is not None,

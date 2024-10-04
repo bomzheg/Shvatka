@@ -4,6 +4,7 @@ from pathlib import Path
 
 import pytest
 import pytest_asyncio
+from adaptix import Retort
 from dataclass_factory import Factory
 from dishka import make_async_container
 
@@ -41,3 +42,9 @@ def event_loop():
 async def dcf():
     dishka = make_async_container(DCFProvider())
     return await dishka.get(Factory)
+
+
+@pytest_asyncio.fixture(scope="session")
+async def retort() -> Retort:
+    dishka = make_async_container(DCFProvider())
+    return await dishka.get(Retort)

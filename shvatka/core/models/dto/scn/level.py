@@ -28,9 +28,9 @@ class BonusKey:
 
 
 class HintsList(Sequence[TimeHint]):
-    def __init__(self, hints: Iterable[TimeHint]):
+    def __init__(self, hints: list[TimeHint]):
         self.verify(hints)
-        self.hints: list[TimeHint] = list(hints)
+        self.hints = hints
 
     @classmethod
     def parse(cls, hints: list[TimeHint]):

@@ -1,6 +1,7 @@
 import adaptix
 import dataclass_factory
 from adaptix import Retort, validator, P, name_mapping, loader, Chain, as_is_loader, constructor, bound
+from adaptix._internal.morphing.provider_template import ABCProxy
 from dataclass_factory import Schema, NameStyle
 from dishka import Provider, Scope, provide
 from pyrogram.errors.exceptions.all import exceptions
@@ -38,17 +39,13 @@ class DCFProvider(Provider):
 
     @provide
     def create_retort(self) -> Retort:
-        internal_retort = Retort(
-            recipe=[
-                name_mapping(name_style=adaptix.NameStyle.LOWER_KEBAB),
-            ]
-        )
         retort = Retort(
             recipe=[
                 name_mapping(
                     name_style=adaptix.NameStyle.LOWER_KEBAB,
                 ),
-
+                loader(HintsList, lambda x: HintsList(x), Chain.LAST),
+                ABCProxy(HintsList, list[TimeHint]), # internal class, can be broken in next version adaptix
                 validator(
                     pred=P[scn.LevelScenario].id,
                     func=lambda x: validate_level_id(x) is not None,

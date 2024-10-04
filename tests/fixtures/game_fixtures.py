@@ -2,7 +2,7 @@ import asyncio
 from datetime import datetime
 
 import pytest_asyncio
-from dataclass_factory import Factory
+from adaptix import Retort
 
 from shvatka.core.interfaces.clients.file_storage import FileGateway
 from shvatka.core.models import dto, enums
@@ -20,14 +20,14 @@ async def game(
     complex_scn: RawGameScenario,
     author: dto.Player,
     dao: HolderDao,
-    dcf: Factory,
+    retort: Retort,
     file_gateway: FileGateway,
 ) -> dto.FullGame:
     return await upsert_game(
         complex_scn,
         author,
         dao.game_upserter,
-        dcf,
+        retort,
         file_gateway,
     )
 

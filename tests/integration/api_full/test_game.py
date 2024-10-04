@@ -1,9 +1,12 @@
 import pytest
+from adaptix import Retort
 from dataclass_factory import Factory
 from httpx import AsyncClient
 
 from shvatka.api.models import responses
+from shvatka.common.factory import REQUIRED_GAME_RECIPES
 from shvatka.core.models import dto
+from shvatka.core.models.dto import scn
 from shvatka.core.models.enums import GameStatus
 from shvatka.core.services.player import upsert_player
 from shvatka.infrastructure.db.dao.holder import HolderDao
@@ -61,12 +64,16 @@ async def test_game_card(
     assert resp.is_success
     resp.read()
 
-    dcf = Factory()
-    actual = dcf.load(resp.json(), responses.FullGame)
+    retort = Retort(
+        recipe=[
+            *REQUIRED_GAME_RECIPES,
+        ]
+    )
+    actual = retort.load(resp.json(), responses.FullGame)
     assert actual.id == finished_game.id
     assert actual.status == GameStatus.complete
     assert len(actual.levels) == len(finished_game.levels)
-    assert [lvl.scenario for lvl in actual.levels] == [
+    assert [retort.load(lvl.scenario, scn.LevelScenario) for lvl in actual.levels] == [
         lvl.scenario for lvl in finished_game.levels
     ]
 

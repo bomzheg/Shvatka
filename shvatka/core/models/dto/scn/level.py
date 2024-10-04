@@ -104,6 +104,16 @@ class HintsList(Sequence[TimeHint]):
     def __len__(self):
         return len(self.hints)
 
+    def __eq__(self, other):
+        if isinstance(other, HintsList):
+            return self.hints == other.hints
+        if isinstance(other, list):
+            return self.hints == other
+        return NotImplemented
+
+    def __repr__(self):
+        return repr(self.hints)
+
 
 @dataclass
 class LevelScenario:

@@ -1,9 +1,9 @@
 from typing import Any
 
+from adaptix import Retort
 from aiogram.types import CallbackQuery, Message
 from aiogram_dialog import Data, DialogManager
 from aiogram_dialog.widgets.kbd import Button
-from dataclass_factory import Factory
 
 from shvatka.core.models import dto
 from shvatka.core.models.dto import scn
@@ -96,8 +96,8 @@ async def not_correct_bonus_keys(
 async def on_correct_bonus_keys(
     m: Message, dialog_: Any, manager: DialogManager, keys: list[scn.BonusKey]
 ):
-    dcf: Factory = manager.middleware_data["dcf"]
-    await manager.done({"bonus_keys": dcf.dump(keys)})
+    retort: Retort = manager.middleware_data["retort"]
+    await manager.done({"bonus_keys": retort.dump(keys)})
 
 
 async def process_time_hint_result(start_data: Data, result: Any, manager: DialogManager):
@@ -124,13 +124,13 @@ async def process_level_result(start_data: Data, result: Any, manager: DialogMan
 
 async def on_start_level_edit(start_data: dict[str, Any], manager: DialogManager):
     dao: HolderDao = manager.middleware_data["dao"]
-    dcf: Factory = manager.middleware_data["dcf"]
+    retort: Retort = manager.middleware_data["retort"]
     author: dto.Player = manager.middleware_data["player"]
     level = await get_by_id(start_data["level_id"], author, dao.level)
     manager.dialog_data["level_id"] = level.name_id
     manager.dialog_data["keys"] = list(level.get_keys())
-    manager.dialog_data["time_hints"] = dcf.dump(level.scenario.time_hints)
-    manager.dialog_data["bonus_keys"] = dcf.dump(level.get_bonus_keys())
+    manager.dialog_data["time_hints"] = retort.dump(level.scenario.time_hints)
+    manager.dialog_data["bonus_keys"] = retort.dump(level.get_bonus_keys())
 
 
 async def on_start_hints_edit(start_data: dict[str, Any], manager: DialogManager):
@@ -140,17 +140,17 @@ async def on_start_hints_edit(start_data: dict[str, Any], manager: DialogManager
 async def start_edit_time_hint(
     c: CallbackQuery, widget: Any, manager: DialogManager, hint_time: str
 ):
-    dcf: Factory = manager.middleware_data["dcf"]
-    hints = dcf.load(manager.dialog_data.get("time_hints", []), list[scn.TimeHint])
+    retort: Retort = manager.middleware_data["retort"]
+    hints = retort.load(manager.dialog_data.get("time_hints", []), list[scn.TimeHint])
     await manager.start(
         state=states.TimeHintEditSG.details,
-        data={"time_hint": dcf.dump(next(filter(lambda x: x.time == int(hint_time), hints)))},
+        data={"time_hint": retort.dump(next(filter(lambda x: x.time == int(hint_time), hints)))},
     )
 
 
 async def start_add_time_hint(c: CallbackQuery, button: Button, manager: DialogManager):
-    dcf: Factory = manager.middleware_data["dcf"]
-    hints = dcf.load(manager.dialog_data.get("time_hints", []), list[scn.TimeHint])
+    retort: Retort = manager.middleware_data["retort"]
+    hints = retort.load(manager.dialog_data.get("time_hints", []), list[scn.TimeHint])
     previous_time = hints[-1].time if hints else -1
     await manager.start(state=states.TimeHintSG.time, data={"previous_time": previous_time})
 
@@ -194,16 +194,16 @@ async def clear_hints(c: CallbackQuery, button: Button, manager: DialogManager):
 
 
 async def save_level(c: CallbackQuery, button: Button, manager: DialogManager):
-    dcf: Factory = manager.middleware_data["dcf"]
+    retort: Retort = manager.middleware_data["retort"]
     author: dto.Player = manager.middleware_data["player"]
     dao: HolderDao = manager.middleware_data["dao"]
     data = manager.dialog_data
     id_ = data["level_id"]
     keys = set(map(normalize_key, data["keys"]))
-    time_hints = dcf.load(data["time_hints"], list[scn.TimeHint])
-    bonus_keys = dcf.load(data.get("bonus_keys", []), set[scn.BonusKey])
+    time_hints = retort.load(data["time_hints"], list[scn.TimeHint])
+    bonus_keys = retort.load(data.get("bonus_keys", []), set[scn.BonusKey])
 
     level_scn = scn.LevelScenario(id=id_, keys=keys, time_hints=time_hints, bonus_keys=bonus_keys)
     level = await upsert_level(author=author, scenario=level_scn, dao=dao.level)
-    await manager.done(result={"level": dcf.dump(level)})
+    await manager.done(result={"level": retort.dump(level)})
     await c.answer(text="Уровень успешно сохранён")

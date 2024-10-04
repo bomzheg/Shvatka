@@ -1,10 +1,10 @@
 from typing import Any
 
+from adaptix import Retort
 from aiogram import types
 from aiogram.types import CallbackQuery, Message
 from aiogram_dialog import DialogManager
 from aiogram_dialog.widgets.kbd import Button
-from dataclass_factory import Factory
 from dishka import AsyncContainer
 from dishka.integrations.aiogram import CONTAINER_NAME
 
@@ -27,8 +27,8 @@ async def process_edit_time_message(m: Message, dialog_: Any, manager: DialogMan
     except ValueError:
         await m.answer("Некорректный формат времени. Пожалуйста введите время в формате ЧЧ:ММ")
         return
-    dcf: Factory = manager.middleware_data["dcf"]
-    hint = dcf.load(manager.start_data["time_hint"], scn.TimeHint)
+    retort: Retort = manager.middleware_data["retort"]
+    hint = retort.load(manager.start_data["time_hint"], scn.TimeHint)
     if not hint.can_update_time():
         await m.reply(
             "Увы, отредактировать время данной подсказки не получится. "
@@ -54,8 +54,8 @@ async def process_time_message(m: Message, dialog_: Any, manager: DialogManager)
 
 async def edit_single_hint(c: CallbackQuery, widget: Any, manager: DialogManager, hint_index: str):
     dishka: AsyncContainer = manager.middleware_data[CONTAINER_NAME]
-    dcf = await dishka.get(Factory)
-    hint = dcf.load(manager.start_data.get("time_hint"), scn.TimeHint)
+    retort = await dishka.get(Retort)
+    hint = retort.load(manager.start_data.get("time_hint"), scn.TimeHint)
     hint_sender = await dishka.get(HintSender)
     # TODO now it only show. but we want to show, to edit and to delete
     chat: types.Chat = manager.middleware_data["event_from_chat"]
@@ -64,16 +64,16 @@ async def edit_single_hint(c: CallbackQuery, widget: Any, manager: DialogManager
 
 async def save_edited_time_hint(c: CallbackQuery, widget: Any, manager: DialogManager):
     dishka: AsyncContainer = manager.middleware_data[CONTAINER_NAME]
-    dcf = await dishka.get(Factory)
-    time_hint = dcf.load(manager.start_data["time_hint"], scn.TimeHint)
+    retort = await dishka.get(Retort)
+    time_hint = retort.load(manager.start_data["time_hint"], scn.TimeHint)
     try:
         time_hint.update_time(manager.dialog_data["time"])
-        time_hint.update_hint(dcf.load(manager.dialog_data["hints"], list[AnyHint]))
+        time_hint.update_hint(retort.load(manager.dialog_data["hints"], list[AnyHint]))
     except exceptions.LevelError as e:
         assert isinstance(c.message, Message)
         await c.message.reply(e.text)
         return
-    await manager.done({"edited_time_hint": dcf.dump(time_hint)})
+    await manager.done({"edited_time_hint": retort.dump(time_hint)})
 
 
 async def set_time(time_minutes: int, manager: DialogManager):
@@ -87,18 +87,18 @@ async def set_time(time_minutes: int, manager: DialogManager):
 
 
 async def process_hint(m: Message, dialog_: Any, manager: DialogManager) -> None:
-    dcf: Factory = manager.middleware_data["dcf"]
+    retort: Retort = manager.middleware_data["retort"]
     parser: HintParser = manager.middleware_data["hint_parser"]
     hint = await parser.parse(m, manager.middleware_data["player"])
-    manager.dialog_data["hints"].append(dcf.dump(hint))
+    manager.dialog_data["hints"].append(retort.dump(hint))
 
 
 async def on_finish(c: CallbackQuery, button: Button, manager: DialogManager):
-    dcf: Factory = manager.middleware_data["dcf"]
-    hints = dcf.load(manager.dialog_data["hints"], list[AnyHint])
+    retort: Retort = manager.middleware_data["retort"]
+    hints = retort.load(manager.dialog_data["hints"], list[AnyHint])
     time_ = manager.dialog_data["time"]
     time_hint = TimeHint(time=time_, hint=hints)
-    await manager.done({"time_hint": dcf.dump(time_hint)})
+    await manager.done({"time_hint": retort.dump(time_hint)})
 
 
 async def hint_on_start(start_data: dict, manager: DialogManager):
@@ -110,7 +110,7 @@ async def hint_on_start(start_data: dict, manager: DialogManager):
 
 
 async def hint_edit_on_start(start_data: dict, manager: DialogManager):
-    dcf: Factory = manager.middleware_data["dcf"]
-    hint = dcf.load(manager.start_data["time_hint"], scn.TimeHint)
-    manager.dialog_data["hints"] = dcf.dump(hint.hint, list[AnyHint])
+    retort: Retort = manager.middleware_data["retort"]
+    hint = retort.load(manager.start_data["time_hint"], scn.TimeHint)
+    manager.dialog_data["hints"] = retort.dump(hint.hint, list[AnyHint])
     manager.dialog_data["time"] = hint.time

@@ -1,3 +1,4 @@
+from adaptix import Retort
 from aiogram_dialog import DialogManager
 from dataclass_factory import Factory
 
@@ -17,9 +18,9 @@ async def get_available_times(dialog_manager: DialogManager, **_):
 
 async def get_hints(dialog_manager: DialogManager, **_):
     dialog_data = dialog_manager.dialog_data
-    dcf: Factory = dialog_manager.middleware_data["dcf"]
+    retort: Retort = dialog_manager.middleware_data["retort"]
 
-    hints = dcf.load(dialog_data["hints"], list[AnyHint])
+    hints = retort.load(dialog_data["hints"], list[AnyHint])
     time_ = dialog_data["time"]
     return {
         "hints": hints,

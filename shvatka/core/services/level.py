@@ -1,4 +1,4 @@
-from dataclass_factory import Factory
+from adaptix import Retort
 
 from shvatka.core.interfaces.dal.level import (
     LevelUpserter,
@@ -15,10 +15,10 @@ from shvatka.core.services.scenario.level_ops import load_level
 
 
 async def upsert_raw_level(
-    level_data: dict, author: dto.Player, dcf: Factory, dao: LevelUpserter
+    level_data: dict, author: dto.Player, retort: Retort, dao: LevelUpserter
 ) -> dto.Level:
     check_allow_be_author(author)
-    scenario = load_level(level_data, dcf)
+    scenario = load_level(level_data, retort)
     return await upsert_level(author, scenario, dao)
 
 

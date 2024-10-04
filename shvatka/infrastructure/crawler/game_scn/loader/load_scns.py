@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import BinaryIO, Any, Callable, Coroutine
 from zipfile import Path as ZipPath
 
-from dataclass_factory import Factory
+from adaptix import Retort
 from dishka import make_async_container
 
 from shvatka.common.config.parser.logging_config import setup_logging
@@ -50,7 +50,7 @@ async def main():
             bot_player=bot_player,
             dao=dao,
             file_gateway=file_gateway,
-            dcf=await dishka.get(Factory),
+            dcf=await dishka.get(Retort),
             path=config.file_storage_config.path.parent / "scn",
         )
     finally:
@@ -61,7 +61,7 @@ async def load_scns(
     bot_player: dto.Player,
     dao: HolderDao,
     file_gateway: FileGateway,
-    dcf: Factory,
+    dcf: Retort,
     path: Path,
 ):
     files = sorted(path.glob("*.zip"), key=lambda p: int(p.stem))
@@ -192,7 +192,7 @@ async def transfer_ownership(game: dto.FullGame, bot_player: dto.Player, dao: Ho
     await dao.game.transfer(game, bot_player)
 
 
-def load_results(game_zip_scn: BinaryIO, dcf: Factory) -> GameStat:
+def load_results(game_zip_scn: BinaryIO, dcf: Retort) -> GameStat:
     zip_path = ZipPath(game_zip_scn)
     for unpacked_file in zip_path.iterdir():
         if not unpacked_file.is_file():
@@ -209,7 +209,7 @@ async def load_scn(
     player: dto.Player,
     dao: HolderDao,
     file_gateway: FileGateway,
-    dcf: Factory,
+    dcf: Retort,
     zip_scn: BinaryIO,
 ) -> dto.FullGame | None:
     try:

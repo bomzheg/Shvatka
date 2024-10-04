@@ -3,12 +3,12 @@ import typing
 from typing import Any
 from zipfile import Path as ZipPath
 
+from adaptix import Retort
 from aiogram import Bot
 from aiogram.types import Message, CallbackQuery
 from aiogram.utils.text_decorations import html_decoration as hd
 from aiogram_dialog import DialogManager
 from aiogram_dialog.widgets.kbd import Button, ManagedMultiselect
-from dataclass_factory import Factory
 
 from shvatka.core.interfaces.clients.file_storage import FileGateway
 from shvatka.core.models import dto
@@ -57,12 +57,12 @@ async def process_zip_scn(m: Message, dialog_: Any, manager: DialogManager):
     dao: HolderDao = manager.middleware_data["dao"]
     bot: Bot = manager.middleware_data["bot"]
     file_gateway: FileGateway = manager.middleware_data["file_gateway"]
-    dcf: Factory = manager.middleware_data["dcf"]
+    retort: Retort = manager.middleware_data["retort"]
     assert m.document
     document = await bot.download(m.document.file_id)
     try:
         with unpack_scn(ZipPath(document)).open() as scenario:  # type: scn.RawGameScenario
-            game = await upsert_game(scenario, player, dao.game_upserter, dcf, file_gateway)
+            game = await upsert_game(scenario, player, dao.game_upserter, retort, file_gateway)
     except ScenarioNotCorrect as e:
         await m.reply(f"Ошибка {e}\n попробуйте исправить файл")
         logger.error("game scenario from player %s has problems", player.id, exc_info=e)

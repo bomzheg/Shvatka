@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from dataclass_factory import Factory
+from adaptix import Retort
 
 from shvatka.core.interfaces.clients.file_storage import FileGateway
 from shvatka.core.interfaces.dal.complex import GameCompleter, GamePackager
@@ -37,7 +37,7 @@ async def upsert_game(
     raw_scn: scn.RawGameScenario,
     author: dto.Player,
     dao: GameUpserter,
-    dcf: Factory,
+    dcf: Retort,
     file_gateway: FileGateway,
 ) -> dto.FullGame:
     check_allow_be_author(author)
@@ -121,7 +121,7 @@ async def get_game_package(
     id_: int,
     author: dto.Player,
     dao: GamePackager,
-    dcf: Factory,
+    dcf: Retort,
     file_gateway: FileGateway,
 ) -> scn.RawGameScenario:
     game = await dao.get_full(id_=id_)

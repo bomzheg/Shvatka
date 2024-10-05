@@ -1,6 +1,5 @@
 from adaptix import Retort
 from aiogram_dialog import DialogManager
-from dataclass_factory import Factory
 
 from shvatka.core.models.dto import scn
 from shvatka.core.models.dto.scn import TimeHint

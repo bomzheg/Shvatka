@@ -8,7 +8,8 @@ from adaptix import (
     P,
     name_mapping,
     loader,
-    Chain, dumper,
+    Chain,
+    dumper,
 )
 from adaptix.load_error import LoadError
 from adaptix._internal.morphing.provider_template import ABCProxy
@@ -38,7 +39,7 @@ class TelegraphProvider(Provider):
 REQUIRED_GAME_RECIPES = [
     loader(HintsList, lambda x: HintsList(x), Chain.LAST),
     ABCProxy(HintsList, list[TimeHint]),  # internal class, can be broken in next version adaptix
-    dumper(set, lambda x: tuple(x))
+    dumper(set, lambda x: tuple(x)),
 ]
 
 

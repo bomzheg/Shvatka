@@ -130,7 +130,7 @@ async def on_start_level_edit(start_data: dict[str, Any], manager: DialogManager
     manager.dialog_data["level_id"] = level.name_id
     manager.dialog_data["keys"] = list(level.get_keys())
     manager.dialog_data["time_hints"] = retort.dump(level.scenario.time_hints)
-    manager.dialog_data["bonus_keys"] = retort.dump(level.get_bonus_keys())
+    manager.dialog_data["bonus_keys"] = retort.dump(level.get_bonus_keys(), set[scn.BonusKey])
 
 
 async def on_start_hints_edit(start_data: dict[str, Any], manager: DialogManager):

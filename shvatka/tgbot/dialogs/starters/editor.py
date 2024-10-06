@@ -6,7 +6,12 @@ from aiogram.filters import Command
 from shvatka.tgbot import states
 from shvatka.tgbot.filters.can_be_author import can_be_author
 from shvatka.tgbot.utils.router import register_start_handler
-from shvatka.tgbot.views.commands import MY_GAMES_COMMAND, NEW_LEVEL_COMMAND, NEW_GAME_COMMAND, LEVELS_COMMAND
+from shvatka.tgbot.views.commands import (
+    MY_GAMES_COMMAND,
+    NEW_LEVEL_COMMAND,
+    NEW_GAME_COMMAND,
+    LEVELS_COMMAND,
+)
 
 logger = logging.getLogger(__name__)
 

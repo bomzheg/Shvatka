@@ -37,14 +37,12 @@ async def get_level_and_org(
     dao: HolderDao,
     manager: DialogManager,
 ) -> tuple[dto.Level, dto.Organizer | None]:
-    try:
-        org_id = manager.start_data["org_id"]
-    except KeyError:
+    if "org_id" in manager.start_data:
+        org = await get_org_by_id(manager.start_data["org_id"], dao.organizer)
+        level = await get_level_by_id_for_org(manager.start_data["level_id"], org, dao.level)
+    else:
         level = await get_by_id(manager.start_data["level_id"], author, dao.level)
         org = await get_org(author, level, dao)
-    else:
-        org = await get_org_by_id(org_id, dao.organizer)
-        level = await get_level_by_id_for_org(manager.start_data["level_id"], org, dao.level)
     return level, org
 
 

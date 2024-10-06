@@ -70,7 +70,7 @@ jobs:
       - name: Install uv
         run: pipx install uv
       - name: Install graphviz
-        run: apt install graphviz
+        run: sudo apt install -y graphviz
       - name: Set up Python 3.11
         uses: actions/setup-python@v5
         with:

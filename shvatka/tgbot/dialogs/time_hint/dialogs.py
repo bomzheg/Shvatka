@@ -105,6 +105,11 @@ time_hint_edit = Dialog(
             width=2,
             height=10,
         ),
+        SwitchTo(
+            Const("Добавить"),
+            state=states.TimeHintEditSG.add_part,
+            id="to_add_part"
+        ),
         Button(
             text=Const("Сохранить изменения"),
             id="save_time_hint",
@@ -119,6 +124,27 @@ time_hint_edit = Dialog(
         MessageInput(func=process_edit_time_message),
         getter=get_hints,
         state=states.TimeHintEditSG.time,
+    ),
+    Window(
+        Jinja("Подсказка выходящая в {{time}} мин."),
+        Case(
+            {
+                False: Const("Присылай сообщения с подсказками (текст, фото, видео итд)"),
+                True: Jinja(
+                    "{{hints | hints}}\n"
+                    "Можно прислать ещё сообщения или вернуться"
+                ),
+            },
+            selector="has_hints",
+        ),
+        MessageInput(func=process_hint),
+        SwitchTo(
+            text=Const("Вернуться"),
+            state=states.TimeHintEditSG.details,
+            id="to_details",
+        ),
+        getter=get_hints,
+        state=states.TimeHintEditSG.add_part,
     ),
     on_start=hint_edit_on_start,
 )

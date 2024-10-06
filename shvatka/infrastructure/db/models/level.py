@@ -1,13 +1,14 @@
 import typing
 from typing import Any
 
-from dataclass_factory import Factory
+from adaptix import Retort, dumper
 from sqlalchemy import Integer, Text, ForeignKey, JSON, TypeDecorator, UniqueConstraint
 from sqlalchemy.engine import Dialect
 from sqlalchemy.orm import relationship, mapped_column, Mapped
 
+from shvatka.common.factory import REQUIRED_GAME_RECIPES
 from shvatka.core.models import dto
-from shvatka.core.models.dto.scn.level import LevelScenario
+from shvatka.core.models.dto import scn
 from shvatka.infrastructure.db.models import Base
 
 if typing.TYPE_CHECKING:
@@ -18,20 +19,22 @@ if typing.TYPE_CHECKING:
 class ScenarioField(TypeDecorator):
     impl = JSON
     cache_ok = True
-    dcf = Factory()
+    retort = Retort(
+        recipe=[*REQUIRED_GAME_RECIPES, dumper(set, lambda x: list(x))],
+    )
 
     def coerce_compared_value(self, op: Any, value: Any):
-        if isinstance(value, LevelScenario):
+        if isinstance(value, scn.LevelScenario):
             return self
         return self.impl().coerce_compared_value(op=op, value=value)
 
-    def process_bind_param(self, value: LevelScenario | None, dialect: Dialect):
-        return self.dcf.dump(value, LevelScenario)
+    def process_bind_param(self, value: scn.LevelScenario | None, dialect: Dialect):
+        return self.retort.dump(value, scn.LevelScenario)
 
-    def process_result_value(self, value: Any, dialect: Dialect) -> LevelScenario | None:
+    def process_result_value(self, value: Any, dialect: Dialect) -> scn.LevelScenario | None:
         if value is None:
             return None
-        return self.dcf.load(value, LevelScenario)
+        return self.retort.load(value, scn.LevelScenario)
 
 
 class Level(Base):
@@ -52,7 +55,7 @@ class Level(Base):
         back_populates="my_levels",
     )
     number_in_game = mapped_column(Integer, nullable=True)
-    scenario: Mapped[LevelScenario] = mapped_column(ScenarioField)
+    scenario: Mapped[scn.LevelScenario] = mapped_column(ScenarioField)
 
     __table_args__ = (UniqueConstraint("author_id", "name_id"),)
 

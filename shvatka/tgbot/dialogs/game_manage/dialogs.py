@@ -47,8 +47,7 @@ from .handlers import (
     to_publish_game_forum,
     complete_game_handler,
 )
-from shvatka.tgbot.dialogs.preview_data import PREVIEW_GAME
-
+from shvatka.tgbot.dialogs.preview_data import PREVIEW_GAME, PreviewSwitchTo, PreviewStart
 
 games = Dialog(
     Window(
@@ -67,8 +66,9 @@ games = Dialog(
         ),
         Cancel(Const("🔙Назад")),
         state=states.CompletedGamesPanelSG.list,
-        preview_data={"games": [PREVIEW_GAME]},
         getter=get_games,
+        preview_data={"games": [PREVIEW_GAME]},
+        preview_add_transitions=[PreviewSwitchTo(states.CompletedGamesPanelSG.game)],
     ),
     Window(
         Jinja(
@@ -117,8 +117,11 @@ games = Dialog(
             state=states.CompletedGamesPanelSG.list,
         ),
         state=states.CompletedGamesPanelSG.game,
-        preview_data={"game": PREVIEW_GAME},
         getter=get_completed_game,
+        preview_data={"game": PREVIEW_GAME},
+        preview_add_transitions=[
+            PreviewStart(states.GameOrgsSG.orgs_list),
+        ],
     ),
     Window(
         Jinja(
@@ -237,8 +240,9 @@ my_games = Dialog(
         ),
         Cancel(Const("🔙Назад")),
         state=states.MyGamesPanelSG.choose_game,
-        preview_data={"games": [PREVIEW_GAME]},
         getter=get_my_games,
+        preview_data={"games": [PREVIEW_GAME]},
+        preview_add_transitions=[PreviewSwitchTo(states.MyGamesPanelSG.game_menu)],
     ),
     Window(
         Jinja(
@@ -320,8 +324,16 @@ my_games = Dialog(
             state=states.MyGamesPanelSG.choose_game,
         ),
         state=states.MyGamesPanelSG.game_menu,
-        preview_data={"game": PREVIEW_GAME},
         getter=get_game,
+        preview_data={"game": PREVIEW_GAME},
+        preview_add_transitions=[
+            PreviewStart(states.GameEditSG.current_levels),
+            PreviewStart(states.GameOrgsSG.orgs_list),
+            PreviewStart(states.GamePublishSG.prepare),
+            PreviewStart(states.GamePublishSG.forum),
+            Cancel(),
+            PreviewStart(states.GameScheduleSG.date),
+        ],
     ),
     Window(
         Jinja("Чтобы переименовать игру {{game.name}} пришли новое имя"),
@@ -339,8 +351,9 @@ schedule_game_dialog = Dialog(
         Calendar(id="select_game_play_date", on_click=select_date),
         Cancel(Const("🔙Назад")),
         state=states.GameScheduleSG.date,
-        preview_data={"game": PREVIEW_GAME},
         getter=get_game,
+        preview_data={"game": PREVIEW_GAME},
+        preview_add_transitions=[PreviewSwitchTo(states.GameScheduleSG.time)],
     ),
     Window(
         Case(

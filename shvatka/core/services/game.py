@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from dataclass_factory import Factory
+from adaptix import Retort
 
 from shvatka.core.interfaces.clients.file_storage import FileGateway
 from shvatka.core.interfaces.dal.complex import GameCompleter, GamePackager
@@ -37,11 +37,11 @@ async def upsert_game(
     raw_scn: scn.RawGameScenario,
     author: dto.Player,
     dao: GameUpserter,
-    dcf: Factory,
+    retort: Retort,
     file_gateway: FileGateway,
 ) -> dto.FullGame:
     check_allow_be_author(author)
-    game_scn = parse_uploaded_game(raw_scn, dcf)
+    game_scn = parse_uploaded_game(raw_scn, retort)
     if not await dao.is_name_available(name=game_scn.name):
         if not await dao.is_author_game_by_name(name=game_scn.name, author=author):
             raise CantEditGame(
@@ -121,7 +121,7 @@ async def get_game_package(
     id_: int,
     author: dto.Player,
     dao: GamePackager,
-    dcf: Factory,
+    retort: Retort,
     file_gateway: FileGateway,
 ) -> scn.RawGameScenario:
     game = await dao.get_full(id_=id_)
@@ -151,7 +151,9 @@ async def get_game_package(
         )
     else:
         game_stat = None
-    return scn.RawGameScenario(scn=dcf.dump(scenario), files=contents, stat=dcf.dump(game_stat))
+    return scn.RawGameScenario(
+        scn=retort.dump(scenario), files=contents, stat=retort.dump(game_stat)
+    )
 
 
 async def get_active(dao: ActiveGameFinder) -> dto.Game | None:

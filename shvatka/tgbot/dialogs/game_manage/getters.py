@@ -5,6 +5,7 @@ from aiogram.enums import ContentType
 from aiogram_dialog import DialogManager
 from aiogram_dialog.api.entities import MediaAttachment, MediaId
 from dishka import AsyncContainer
+from dishka.integrations.aiogram import CONTAINER_NAME
 from telegraph import Telegraph
 
 from shvatka.common.url_factory import UrlFactory
@@ -30,7 +31,7 @@ async def get_completed_game(dao: HolderDao, dialog_manager: DialogManager, **_)
     game_id = (
         dialog_manager.dialog_data.get("game_id", None) or dialog_manager.start_data["game_id"]
     )
-    dishka: AsyncContainer = dialog_manager.middleware_data["dishka_container"]
+    dishka: AsyncContainer = dialog_manager.middleware_data[CONTAINER_NAME]
     url_factory = await dishka.get(UrlFactory)
     return {
         "game": await game.get_game(

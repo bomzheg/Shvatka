@@ -6,7 +6,6 @@ from shvatka.core.services.game import get_game
 from shvatka.core.services.level import get_by_id, get_level_by_id_for_org, get_all_my_free_levels
 from shvatka.core.services.organizers import get_org_by_id, get_by_player
 from shvatka.infrastructure.db.dao.holder import HolderDao
-from shvatka.tgbot.views.utils import render_time_hints
 
 
 async def get_level_id(dao: HolderDao, dialog_manager: DialogManager, **_):
@@ -15,8 +14,8 @@ async def get_level_id(dao: HolderDao, dialog_manager: DialogManager, **_):
     hints = level.scenario.time_hints
     return {
         "level": level,
+        "time_hints": hints,
         "org": org,
-        "rendered": render_time_hints(hints) if hints else "пока нет ни одной подсказки",
     }
 
 
@@ -38,15 +37,14 @@ async def get_level_and_org(
     dao: HolderDao,
     manager: DialogManager,
 ) -> tuple[dto.Level, dto.Organizer | None]:
-    try:
-        org_id = manager.start_data["org_id"]
-    except KeyError:
-        level = await get_by_id(manager.start_data["level_id"], author, dao.level)
-        org = await get_org(author, level, dao)
-    else:
-        org = await get_org_by_id(org_id, dao.organizer)
+    if "org_id" in manager.start_data:
+        org = await get_org_by_id(manager.start_data["org_id"], dao.organizer)
         level = await get_level_by_id_for_org(manager.start_data["level_id"], org, dao.level)
-    return level, org
+        return level, org
+    else:
+        level = await get_by_id(manager.start_data["level_id"], author, dao.level)
+        org_ = await get_org(author, level, dao)
+        return level, org_
 
 
 async def get_levels(

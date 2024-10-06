@@ -76,6 +76,7 @@ SPY_KEYS_COMMAND = BotCommand(
 )
 PUBLISH_COMMAND = BotCommand(command="publish_forum", description="опубликовать на форуме")
 
+
 HELP_ORG = CommandsGroup(
     "Команды для организаторов:",
     [

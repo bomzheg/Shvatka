@@ -1,7 +1,7 @@
 from copy import deepcopy
 
 import pytest
-from dataclass_factory import Factory
+from adaptix import Retort
 
 from shvatka.core.interfaces.clients.file_storage import FileGateway
 from shvatka.core.models import dto
@@ -25,10 +25,10 @@ async def test_game_simple(
     author: dto.Player,
     three_lvl_scn: RawGameScenario,
     dao: HolderDao,
-    dcf: Factory,
+    retort: Retort,
     file_gateway: FileGateway,
 ):
-    game = await upsert_game(three_lvl_scn, author, dao.game_upserter, dcf, file_gateway)
+    game = await upsert_game(three_lvl_scn, author, dao.game_upserter, retort, file_gateway)
 
     assert await dao.game.count() == 1
     assert await dao.level.count() == 3
@@ -48,7 +48,7 @@ async def test_game_simple(
     another_scn["levels"].append(another_scn["levels"].pop(0))
 
     game = await upsert_game(
-        RawGameScenario(scn=another_scn, files={}), author, dao.game_upserter, dcf, file_gateway
+        RawGameScenario(scn=another_scn, files={}), author, dao.game_upserter, retort, file_gateway
     )
 
     assert await dao.game.count() == 1
@@ -68,7 +68,7 @@ async def test_game_simple(
     another_scn["levels"].pop()
 
     game = await upsert_game(
-        RawGameScenario(scn=another_scn, files={}), author, dao.game_upserter, dcf, file_gateway
+        RawGameScenario(scn=another_scn, files={}), author, dao.game_upserter, retort, file_gateway
     )
 
     assert await dao.game.count() == 1
@@ -98,10 +98,10 @@ async def test_game_get_full(
     author: dto.Player,
     simple_scn: RawGameScenario,
     dao: HolderDao,
-    dcf: Factory,
+    retort: Retort,
     file_gateway: FileGateway,
 ):
-    game_expected = await upsert_game(simple_scn, author, dao.game_upserter, dcf, file_gateway)
+    game_expected = await upsert_game(simple_scn, author, dao.game_upserter, retort, file_gateway)
     game_actual = await dao.game.get_full(game_expected.id)
     assert game_expected == game_actual
 
@@ -111,10 +111,10 @@ async def test_game_get_preview(
     author: dto.Player,
     simple_scn: RawGameScenario,
     dao: HolderDao,
-    dcf: Factory,
+    retort: Retort,
     file_gateway: FileGateway,
 ):
-    game_expected = await upsert_game(simple_scn, author, dao.game_upserter, dcf, file_gateway)
+    game_expected = await upsert_game(simple_scn, author, dao.game_upserter, retort, file_gateway)
     game_actual = await dao.game.get_preview(game_expected.id)
     assert len(game_expected.levels) == game_actual.levels_count
     assert game_expected.id == game_actual.id

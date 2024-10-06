@@ -51,4 +51,8 @@ def render_time_hint(time_hint: TimeHint) -> str:
 
 
 def render_hints(hints: list[BaseHint]) -> str:
-    return "".join([HINTS_EMOJI[HintType[hint.type]] for hint in hints])
+    return "".join([render_single_hint(hint) for hint in hints])
+
+
+def render_single_hint(hint: BaseHint) -> str:
+    return HINTS_EMOJI[HintType[hint.type]]

@@ -1,5 +1,6 @@
 from typing import Callable, Any, Awaitable
 
+from adaptix import Retort
 from aiogram import BaseMiddleware
 from aiogram.types import TelegramObject
 from aiogram_dialog.api.protocols import BgManagerFactory
@@ -40,6 +41,7 @@ class InitMiddleware(BaseMiddleware):
         data["main_config"] = await dishka.get(TgBotConfig)
         data["user_getter"] = await dishka.get(UserGetter)
         data["dcf"] = await dishka.get(Factory)
+        data["retort"] = await dishka.get(Retort)
         data["scheduler"] = await dishka.get(Scheduler)  # type: ignore[type-abstract]
         data["locker"] = await dishka.get(KeyCheckerFactory)  # type: ignore[type-abstract]
         data["file_storage"] = file_storage

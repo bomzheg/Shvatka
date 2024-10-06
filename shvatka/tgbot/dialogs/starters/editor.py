@@ -41,4 +41,9 @@ def setup() -> Router:
         state=states.GameWriteSG.game_name,
         router=router,
     )
+    register_start_handler(
+        Command(commands=LEVELS_COMMAND),
+        state=states.LevelListSG.levels,
+        router=router,
+    )
     return router

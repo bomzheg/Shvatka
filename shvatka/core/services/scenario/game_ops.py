@@ -1,4 +1,4 @@
-from dataclass_factory import Factory
+from adaptix import Retort
 
 from shvatka.core.models.dto import scn
 from shvatka.core.services.scenario.level_ops import (
@@ -6,16 +6,16 @@ from shvatka.core.services.scenario.level_ops import (
 )
 
 
-def parse_game(game: scn.RawGameScenario, dcf: Factory) -> scn.GameScenario:
-    return dcf.load(game.scn, scn.GameScenario)
+def parse_game(game: scn.RawGameScenario, retort: Retort) -> scn.GameScenario:
+    return retort.load(game.scn, scn.GameScenario)
 
 
-def parse_uploaded_game(game: scn.RawGameScenario, dcf: Factory) -> scn.UploadedGameScenario:
-    return dcf.load(game.scn, scn.UploadedGameScenario)
+def parse_uploaded_game(game: scn.RawGameScenario, retort: Retort) -> scn.UploadedGameScenario:
+    return retort.load(game.scn, scn.UploadedGameScenario)
 
 
-def serialize(game: scn.FullGameScenario, dcf: Factory) -> dict:
-    return dcf.dump(game)
+def serialize(game: scn.FullGameScenario, retort: Retort) -> dict:
+    return retort.dump(game)
 
 
 def check_all_files_saved(game: scn.GameScenario, guids: set[str]):

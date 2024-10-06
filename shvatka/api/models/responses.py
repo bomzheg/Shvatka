@@ -3,12 +3,15 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Sequence, Generic
 
+from adaptix import Retort, dumper
+
 from shvatka.core.games.dto import CurrentHints
 from shvatka.core.models import dto, enums
 from shvatka.core.models.dto import scn
 from shvatka.core.models.enums import GameStatus
 
 T = typing.TypeVar("T")
+retort = Retort(recipe=[dumper(scn.HintsList, lambda x: x.hints)])
 
 
 @dataclass
@@ -76,7 +79,7 @@ class Level:
     db_id: int
     name_id: str
     author: Player
-    scenario: scn.LevelScenario
+    scenario: dict[str, typing.Any]
     game_id: int | None = None
     number_in_game: int | None = None
 
@@ -88,7 +91,7 @@ class Level:
             db_id=core.db_id,
             name_id=core.name_id,
             author=Player.from_core(core.author),
-            scenario=core.scenario,
+            scenario=retort.dump(core.scenario),
             game_id=core.game_id,
             number_in_game=core.number_in_game,
         )

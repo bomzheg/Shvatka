@@ -1,5 +1,6 @@
 from typing import TypedDict, Any
 
+from adaptix import Retort
 from aiogram import types, Bot, Router
 from aiogram.dispatcher.event.handler import HandlerObject
 from aiogram.fsm.context import FSMContext
@@ -52,6 +53,7 @@ class MiddlewareData(DialogMiddlewareData, total=False):
     dishka_container: AsyncContainer
     user_getter: UserGetter
     dcf: Factory
+    retort: Retort
     dao: HolderDao
     scheduler: Scheduler
     locker: KeyCheckerFactory

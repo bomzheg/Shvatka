@@ -3,10 +3,10 @@ from datetime import date, datetime, time
 from io import BytesIO
 from typing import Any
 
+from adaptix import Retort
 from aiogram.types import CallbackQuery, Message, BufferedInputFile
 from aiogram_dialog import DialogManager
 from aiogram_dialog.widgets.kbd import Button
-from dataclass_factory import Factory
 
 from shvatka.core.interfaces.clients.file_storage import FileGateway
 from shvatka.core.interfaces.scheduler import Scheduler
@@ -80,9 +80,9 @@ async def show_my_zip_scn(c: CallbackQuery, widget: Button, manager: DialogManag
 async def common_show_zip(c: CallbackQuery, game_id: int, manager: DialogManager):
     player: dto.Player = manager.middleware_data["player"]
     dao: HolderDao = manager.middleware_data["dao"]
-    dcf: Factory = manager.middleware_data["dcf"]
+    retort: Retort = manager.middleware_data["retort"]
     file_gateway: FileGateway = manager.middleware_data["file_gateway"]
-    game_ = await game.get_game_package(game_id, player, dao.game_packager, dcf, file_gateway)
+    game_ = await game.get_game_package(game_id, player, dao.game_packager, retort, file_gateway)
     zip_ = pack_scn(game_)
     assert isinstance(c.message, Message)
     await c.message.answer_document(BufferedInputFile(file=zip_.read(), filename="scenario.zip"))

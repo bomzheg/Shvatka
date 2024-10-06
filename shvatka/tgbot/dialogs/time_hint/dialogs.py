@@ -24,7 +24,7 @@ from .handlers import (
     edit_single_hint,
     save_edited_time_hint,
 )
-from shvatka.tgbot.dialogs.preview_data import TIMES_PRESET
+from shvatka.tgbot.dialogs.preview_data import TIMES_PRESET, PreviewSwitchTo
 
 time_hint = Dialog(
     Window(
@@ -45,6 +45,7 @@ time_hint = Dialog(
         state=states.TimeHintSG.time,
         getter=get_available_times,
         preview_data={"times": TIMES_PRESET},
+        preview_add_transitions=[PreviewSwitchTo(state=states.TimeHintSG.hint)],
     ),
     Window(
         Jinja("Подсказка выходящая в {{time}} мин."),

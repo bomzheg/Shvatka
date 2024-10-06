@@ -1,5 +1,9 @@
 from datetime import datetime
 
+from aiogram.fsm.state import State
+from aiogram_dialog.widgets.kbd import Start, Cancel, SwitchTo
+from aiogram_dialog.widgets.text import Const
+
 from shvatka.core.models import dto
 from shvatka.core.models.enums import GameStatus
 from shvatka.core.utils.datetime_utils import tz_utc
@@ -34,3 +38,13 @@ PREVIEW_GAME = dto.PreviewGame(
     levels_count=13,
 )
 TIMES_PRESET = [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60]
+
+
+class PreviewStart(Start):
+    def __init__(self, state: State):
+        super().__init__(Const(""), "", state)
+
+
+class PreviewSwitchTo(SwitchTo):
+    def __init__(self, state: State):
+        super().__init__(Const(""), "", state)

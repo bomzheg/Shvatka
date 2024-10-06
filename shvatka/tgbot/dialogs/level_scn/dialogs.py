@@ -1,7 +1,7 @@
 from aiogram import F
 from aiogram_dialog import Dialog, Window
 from aiogram_dialog.widgets.input import TextInput
-from aiogram_dialog.widgets.kbd import Button, Cancel, ScrollingGroup, Select
+from aiogram_dialog.widgets.kbd import Button, Cancel, ScrollingGroup, Select, Start, Next
 from aiogram_dialog.widgets.text import Const, Jinja
 
 from shvatka.tgbot import states
@@ -29,6 +29,7 @@ from .handlers import (
     start_bonus_keys,
     start_edit_time_hint,
 )
+from ..preview_data import PreviewStart
 
 level = Dialog(
     Window(
@@ -51,6 +52,7 @@ level = Dialog(
             id="level_id",
         ),
         state=states.LevelSG.level_id,
+        preview_add_transitions=[Next()],
     ),
     Window(
         Jinja(
@@ -84,6 +86,12 @@ level = Dialog(
         preview_data={
             "level_id": "Pinky Pie",
         },
+        preview_add_transitions=[
+            PreviewStart(state=states.LevelKeysSG.keys),
+            PreviewStart(state=states.LevelBonusKeysSG.bonus_keys),
+            PreviewStart(state=states.LevelHintsSG.time_hints),
+            Cancel(),
+        ],
     ),
     on_process_result=process_level_result,
 )
@@ -122,6 +130,11 @@ level_edit_dialog = Dialog(
         preview_data={
             "level_id": "Pinky Pie",
         },
+        preview_add_transitions=[
+            PreviewStart(state=states.LevelKeysSG.keys),
+            PreviewStart(state=states.LevelBonusKeysSG.bonus_keys),
+            PreviewStart(state=states.LevelHintsSG.time_hints),
+        ],
     ),
     on_process_result=process_level_result,
     on_start=on_start_level_edit,
@@ -205,6 +218,10 @@ hints_dialog = Dialog(
             "time_hints": [],
             "level_id": "Pinky Pie",
         },
+        preview_add_transitions=[
+            PreviewStart(state=states.TimeHintSG.time),
+            PreviewStart(state=states.TimeHintEditSG.details),
+        ],
     ),
     on_process_result=process_time_hint_result,
     on_start=on_start_hints_edit,

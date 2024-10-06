@@ -61,3 +61,27 @@ jobs:
         run: uv venv && uv pip install .[test]
       - name: Test with pytest
         run: source .venv/bin/activate && pytest
+  docs:
+    needs: [build]
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install uv
+        run: pipx install uv
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: "pip"
+          cache-dependency-path: pyproject.toml
+      - name: Install dependencies
+        run: uv venv && uv pip install .[test]
+      - name: Render Aiogram-dialogs transitions
+        run: source .venv/bin/activate && python -m shvatka.tgbot.dialogs.__init__
+      - name: Upload artifacts
+        uses: actions/upload-artifact@4
+        with:
+          name: transitions
+          path: out/shvatka-dialogs.png
+

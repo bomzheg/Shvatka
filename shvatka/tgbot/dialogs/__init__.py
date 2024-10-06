@@ -67,7 +67,7 @@ def setup_active_game_dialogs() -> Router:
 def render_all():
     router = Router(name="main")
     setup(router, MessageManager())
-    render_transitions(router, title="Shvatka", filename="shvatka-dialogs")
+    render_transitions(router, title="Shvatka", filename="out/shvatka-dialogs")
 
 
 if __name__ == "__main__":

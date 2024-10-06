@@ -2,6 +2,8 @@ from aiogram import Router, F
 from aiogram.enums import ChatType
 from aiogram_dialog import setup_dialogs
 from aiogram_dialog.api.protocols import MessageManagerProtocol, BgManagerFactory
+from aiogram_dialog.manager.message_manager import MessageManager
+from aiogram_dialog.tools import render_transitions
 
 from shvatka.tgbot.dialogs import (
     game_orgs,
@@ -60,3 +62,13 @@ def setup_active_game_dialogs() -> Router:
     router = Router(name=__name__ + ".game.running")
     game_spy.setup(router)
     return router
+
+
+def render_all():
+    router = Router(name="main")
+    setup(router, MessageManager())
+    render_transitions(router, title="Shvatka", filename="shvatka-dialogs")
+
+
+if __name__ == "__main__":
+    render_all()

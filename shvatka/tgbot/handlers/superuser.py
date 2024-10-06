@@ -18,6 +18,8 @@ from shvatka.tgbot.views.commands import (
     EXCEPTION_COMMAND,
     UPDATE_COMMANDS,
     VERSION_COMMAND,
+    HELP_USER_ADMIN,
+    HELP_COMMAND,
 )
 
 logger = logging.getLogger(__name__)
@@ -57,6 +59,10 @@ async def version_handler(message: Message, main_config: TgBotConfig):
     await message.answer(f"Дата билда: {version.build_at}\nВерсия: {version.vcs_hash}")
 
 
+async def cmd_help_admin(message: Message):
+    await message.reply(HELP_USER_ADMIN)
+
+
 def setup(bot_config: BotConfig) -> Router:
     router = Router(name=__name__)
     is_superuser_ = partial(is_superuser, superusers=bot_config.superusers)
@@ -66,4 +72,5 @@ def setup(bot_config: BotConfig) -> Router:
     router.message.register(leave_chat, Command(commands=GET_OUT))
     router.message.register(clean_commands_menu_handler, Command(commands=UPDATE_COMMANDS))
     router.message.register(version_handler, Command(commands=VERSION_COMMAND))
+    router.message.register(cmd_help_admin, Command(commands=HELP_COMMAND))
     return router

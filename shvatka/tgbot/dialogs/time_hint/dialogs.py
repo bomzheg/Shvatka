@@ -23,7 +23,8 @@ from .handlers import (
     hint_edit_on_start,
     process_edit_time_message,
     edit_single_hint,
-    save_edited_time_hint, delete_single_hint,
+    save_edited_time_hint,
+    delete_single_hint,
 )
 from shvatka.tgbot.dialogs.preview_data import TIMES_PRESET, PreviewSwitchTo
 

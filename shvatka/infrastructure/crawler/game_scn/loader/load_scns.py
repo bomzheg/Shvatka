@@ -50,7 +50,7 @@ async def main():
             bot_player=bot_player,
             dao=dao,
             file_gateway=file_gateway,
-            dcf=await dishka.get(Retort),
+            retort=await dishka.get(Retort),
             path=config.file_storage_config.path.parent / "scn",
         )
     finally:
@@ -61,7 +61,7 @@ async def load_scns(
     bot_player: dto.Player,
     dao: HolderDao,
     file_gateway: FileGateway,
-    dcf: Retort,
+    retort: Retort,
     path: Path,
 ):
     files = sorted(path.glob("*.zip"), key=lambda p: int(p.stem))
@@ -73,12 +73,12 @@ async def load_scns(
                     player=bot_player,
                     dao=dao,
                     file_gateway=file_gateway,
-                    dcf=dcf,
+                    retort=retort,
                     zip_scn=game_zip_scn,
                 )
                 if not game:
                     continue
-                results = load_results(game_zip_scn, dcf)
+                results = load_results(game_zip_scn, retort)
             await dao.game.set_completed(game)
             await set_results(game, results, dao)
             await dao.commit()
@@ -192,7 +192,7 @@ async def transfer_ownership(game: dto.FullGame, bot_player: dto.Player, dao: Ho
     await dao.game.transfer(game, bot_player)
 
 
-def load_results(game_zip_scn: BinaryIO, dcf: Retort) -> GameStat:
+def load_results(game_zip_scn: BinaryIO, retort: Retort) -> GameStat:
     zip_path = ZipPath(game_zip_scn)
     for unpacked_file in zip_path.iterdir():
         if not unpacked_file.is_file():
@@ -200,7 +200,7 @@ def load_results(game_zip_scn: BinaryIO, dcf: Retort) -> GameStat:
         if unpacked_file.name != "results.json":
             continue
         with unpacked_file.open("r", encoding="utf8") as results_file:
-            results = dcf.load(json.load(results_file), GameStat)
+            results = retort.load(json.load(results_file), GameStat)
         return results
     raise ValueError("no results found")
 
@@ -209,12 +209,12 @@ async def load_scn(
     player: dto.Player,
     dao: HolderDao,
     file_gateway: FileGateway,
-    dcf: Retort,
+    retort: Retort,
     zip_scn: BinaryIO,
 ) -> dto.FullGame | None:
     try:
         with unpack_scn(ZipPath(zip_scn)).open() as scenario:  # type: scn.RawGameScenario
-            game = await upsert_game(scenario, player, dao.game_upserter, dcf, file_gateway)
+            game = await upsert_game(scenario, player, dao.game_upserter, retort, file_gateway)
     except exceptions.ScenarioNotCorrect as e:
         logger.error("game scenario from player %s has problems", player.id, exc_info=e)
         return None

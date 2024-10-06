@@ -105,7 +105,7 @@ NEW_LEVEL_COMMAND = BotCommand(command="new_level", description="новый ур
 NEW_GAME_COMMAND = BotCommand(
     command="new_game", description="начать сборку новой игры из ранее написанных уровней"
 )
-LEVELS_COMMAND = BotCommand(command="levels", description="показать список уровней")  # TODO
+LEVELS_COMMAND = BotCommand(command="levels", description="показать список уровней")
 HELP_ORG = CommandsGroup(
     "Команды для организаторов:",
     [

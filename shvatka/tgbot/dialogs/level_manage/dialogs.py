@@ -19,6 +19,7 @@ from .handlers import (
     unlink_level_handler,
     delete_level_handler,
 )
+from shvatka.tgbot.dialogs.preview_data import PreviewStart
 
 levels_list = Dialog(
     Window(
@@ -38,6 +39,7 @@ levels_list = Dialog(
         Cancel(Const("🔙Назад")),
         state=states.LevelListSG.levels,
         getter=get_levels,
+        preview_add_transitions=[PreviewStart(states.LevelManageSG.menu)],
     ),
 )
 
@@ -89,6 +91,10 @@ level_manage = Dialog(
         Cancel(Const("🔙Назад")),
         state=states.LevelManageSG.menu,
         getter=get_level_id,
+        preview_add_transitions=[
+            PreviewStart(states.LevelEditSg.menu),
+            PreviewStart(states.LevelTestSG.wait_key),
+        ],
     ),
     Window(
         Jinja(
@@ -126,5 +132,6 @@ level_test_dialog = Dialog(
         ),
         getter=get_level_id,
         state=states.LevelTestSG.wait_key,
+        preview_add_transitions=[Cancel()],
     ),
 )

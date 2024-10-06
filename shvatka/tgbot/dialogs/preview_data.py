@@ -1,7 +1,7 @@
 from datetime import datetime
 
 from aiogram.fsm.state import State
-from aiogram_dialog.widgets.kbd import Start, Cancel, SwitchTo
+from aiogram_dialog.widgets.kbd import Start, SwitchTo
 from aiogram_dialog.widgets.text import Const
 
 from shvatka.core.models import dto

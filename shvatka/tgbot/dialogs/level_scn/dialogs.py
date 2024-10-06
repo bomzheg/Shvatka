@@ -1,7 +1,7 @@
 from aiogram import F
 from aiogram_dialog import Dialog, Window
 from aiogram_dialog.widgets.input import TextInput
-from aiogram_dialog.widgets.kbd import Button, Cancel, ScrollingGroup, Select, Start, Next
+from aiogram_dialog.widgets.kbd import Button, Cancel, ScrollingGroup, Select, Next
 from aiogram_dialog.widgets.text import Const, Jinja
 
 from shvatka.tgbot import states
@@ -29,7 +29,7 @@ from .handlers import (
     start_bonus_keys,
     start_edit_time_hint,
 )
-from ..preview_data import PreviewStart
+from shvatka.tgbot.dialogs.preview_data import PreviewStart
 
 level = Dialog(
     Window(

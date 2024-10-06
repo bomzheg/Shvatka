@@ -8,12 +8,14 @@ from aiogram_dialog.widgets.kbd import (
     Select,
     Cancel,
     SwitchTo,
+    Next,
 )
 from aiogram_dialog.widgets.text import Const, Format, Jinja
 
 from shvatka.tgbot import states
 from .getters import get_game_name, select_my_levels, select_full_game
 from .handlers import process_name, save_game, edit_level, add_level_handler, process_zip_scn
+from shvatka.tgbot.dialogs.preview_data import PreviewStart
 
 game_writer = Dialog(
     Window(
@@ -33,6 +35,7 @@ game_writer = Dialog(
         SwitchTo(Const("Загрузить из zip"), id="game_from_zip", state=states.GameWriteSG.from_zip),
         Cancel(Const("🔙Отменить")),
         state=states.GameWriteSG.game_name,
+        preview_add_transitions=[Next()],
     ),
     Window(
         Jinja("Игра <b>{{game_name}}</b>\n\n"),
@@ -91,6 +94,9 @@ game_editor = Dialog(
         Cancel(Const("🔙Назад")),
         state=states.GameEditSG.current_levels,
         getter=select_full_game,
+        preview_add_transitions=[
+            PreviewStart(states.LevelTestSG.wait_key),
+        ],
     ),
     Window(
         Jinja("Игра <b>{{game.name}}</b>\n\n"),

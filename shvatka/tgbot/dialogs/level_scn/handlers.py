@@ -107,8 +107,12 @@ async def process_time_hint_result(start_data: Data, result: Any, manager: Dialo
         manager.dialog_data.setdefault("time_hints", []).append(new_hint)
     elif (edited_hint := result.get("edited_time_hint")) and isinstance(start_data, dict):
         old_hint = start_data["time_hint"]
-        assert edited_hint != old_hint
-        # TODO save me
+        if edited_hint == old_hint:
+            return
+        retort: Retort = manager.middleware_data["retort"]
+        hints_list = retort.load(manager.dialog_data.get("time_hints", []), scn.HintsList)
+        edited_list = hints_list.replace(retort.load(old_hint, scn.TimeHint), retort.load(edited_hint, scn.TimeHint))
+        manager.dialog_data["time_hints"] = retort.dump(edited_list)
 
 
 async def process_level_result(start_data: Data, result: Any, manager: DialogManager):

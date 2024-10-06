@@ -23,7 +23,7 @@ from .handlers import (
     hint_edit_on_start,
     process_edit_time_message,
     edit_single_hint,
-    save_edited_time_hint,
+    save_edited_time_hint, delete_single_hint,
 )
 from shvatka.tgbot.dialogs.preview_data import TIMES_PRESET, PreviewSwitchTo
 
@@ -91,12 +91,17 @@ time_hint_edit = Dialog(
                     on_click=edit_single_hint,
                     id="show",
                 ),
+                Button(
+                    Const("🗑"),
+                    on_click=delete_single_hint,
+                    id="delete",
+                ),
                 id="hints",
                 item_id_getter=lambda x: x[0],
                 items="numerated_hints",
             ),
             id="hints_sg",
-            width=1,
+            width=2,
             height=10,
         ),
         Button(

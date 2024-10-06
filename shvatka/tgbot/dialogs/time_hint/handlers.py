@@ -56,12 +56,21 @@ async def edit_single_hint(c: CallbackQuery, widget: Any, manager: DialogManager
     assert isinstance(manager, SubManager)
     dishka: AsyncContainer = manager.middleware_data[CONTAINER_NAME]
     retort = await dishka.get(Retort)
-    hint = retort.load(manager.start_data.get("time_hint"), scn.TimeHint)
+    hint = retort.load(manager.dialog_data["hints"], list[AnyHint])
     hint_sender = await dishka.get(HintSender)
-    # TODO now it only show. but we want to show, to edit and to delete
     chat: types.Chat = manager.middleware_data["event_chat"]
     hint_index = manager.item_id
-    await hint_sender.send_hint(hint.hint[int(hint_index)], chat.id)
+    await hint_sender.send_hint(hint[int(hint_index)], chat.id)
+
+
+async def delete_single_hint(c: CallbackQuery, widget: Any, manager: DialogManager):
+    assert isinstance(manager, SubManager)
+    dishka: AsyncContainer = manager.middleware_data[CONTAINER_NAME]
+    retort = await dishka.get(Retort)
+    hints = retort.load(manager.dialog_data.get("hints"), list[AnyHint])
+    hint_index = manager.item_id
+    hints.pop(int(hint_index))
+    manager.dialog_data["hints"] = retort.dump(hints, list[AnyHint])
 
 
 async def save_edited_time_hint(c: CallbackQuery, widget: Any, manager: DialogManager):

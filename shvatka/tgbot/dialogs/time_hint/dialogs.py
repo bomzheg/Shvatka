@@ -105,11 +105,7 @@ time_hint_edit = Dialog(
             width=2,
             height=10,
         ),
-        SwitchTo(
-            Const("Добавить"),
-            state=states.TimeHintEditSG.add_part,
-            id="to_add_part"
-        ),
+        SwitchTo(Const("Добавить"), state=states.TimeHintEditSG.add_part, id="to_add_part"),
         Button(
             text=Const("Сохранить изменения"),
             id="save_time_hint",
@@ -130,10 +126,7 @@ time_hint_edit = Dialog(
         Case(
             {
                 False: Const("Присылай сообщения с подсказками (текст, фото, видео итд)"),
-                True: Jinja(
-                    "{{hints | hints}}\n"
-                    "Можно прислать ещё сообщения или вернуться"
-                ),
+                True: Jinja("{{hints | hints}}\n" "Можно прислать ещё сообщения или вернуться"),
             },
             selector="has_hints",
         ),

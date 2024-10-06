@@ -3,7 +3,7 @@ from typing import Any
 from adaptix import Retort
 from aiogram import types
 from aiogram.types import CallbackQuery, Message
-from aiogram_dialog import DialogManager
+from aiogram_dialog import DialogManager, SubManager
 from aiogram_dialog.widgets.kbd import Button
 from dishka import AsyncContainer
 from dishka.integrations.aiogram import CONTAINER_NAME
@@ -52,13 +52,15 @@ async def process_time_message(m: Message, dialog_: Any, manager: DialogManager)
         await m.answer("Время выхода данной подсказки должно быть больше, чем предыдущей")
 
 
-async def edit_single_hint(c: CallbackQuery, widget: Any, manager: DialogManager, hint_index: str):
+async def edit_single_hint(c: CallbackQuery, widget: Any, manager: DialogManager):
+    assert isinstance(manager, SubManager)
     dishka: AsyncContainer = manager.middleware_data[CONTAINER_NAME]
     retort = await dishka.get(Retort)
     hint = retort.load(manager.start_data.get("time_hint"), scn.TimeHint)
     hint_sender = await dishka.get(HintSender)
     # TODO now it only show. but we want to show, to edit and to delete
     chat: types.Chat = manager.middleware_data["event_chat"]
+    hint_index = manager.item_id
     await hint_sender.send_hint(hint.hint[int(hint_index)], chat.id)
 
 

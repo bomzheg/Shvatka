@@ -8,6 +8,7 @@ from aiogram_dialog.widgets.kbd import (
     Cancel,
     SwitchTo,
     ScrollingGroup,
+    ListGroup,
 )
 from aiogram_dialog.widgets.text import Const, Format, Case, Jinja
 
@@ -84,12 +85,15 @@ time_hint_edit = Dialog(
             state=states.TimeHintEditSG.time,
         ),
         ScrollingGroup(
-            Select(
-                Jinja("{{item[1] | single_hint}}"),
+            ListGroup(
+                Button(
+                    Jinja("{{item[1] | single_hint}}"),
+                    on_click=edit_single_hint,
+                    id="show",
+                ),
                 id="hints",
                 item_id_getter=lambda x: x[0],
                 items="numerated_hints",
-                on_click=edit_single_hint,
             ),
             id="hints_sg",
             width=1,

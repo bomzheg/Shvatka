@@ -36,3 +36,9 @@ shvatka-tgbot
 3. Заполнить урл бд в alembic.ini
 4. Запустить и применить миграции `docker-compose run cli -c "python -m alembic upgrade head"`
 5. `docker-compose up -d`
+
+
+## How to fix deps
+```shell
+uv pip compile pyproject.toml > lock.txt
+```

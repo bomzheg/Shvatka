@@ -1,10 +1,9 @@
 import typing
-from collections.abc import Sequence
+from collections.abc import Sequence, Iterable
 from dataclasses import dataclass, field
 from datetime import timedelta
 from typing import overload
 
-from mypy.server.objgraph import Iterable
 
 from shvatka.core.utils import exceptions
 from .hint_part import AnyHint

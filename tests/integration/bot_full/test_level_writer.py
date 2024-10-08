@@ -149,7 +149,7 @@ async def test_write_level(
     message_manager.reset_history()
     callback_id = await author_client.click(
         new_message,
-        InlineButtonTextLocator(".*Достаточно подсказок"),
+        InlineButtonTextLocator(".*Готово"),
     )
     message_manager.assert_answered(callback_id)
     msg = message_manager.one_message()

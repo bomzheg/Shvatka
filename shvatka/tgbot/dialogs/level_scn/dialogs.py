@@ -119,7 +119,7 @@ level_edit_dialog = Dialog(
         Button(Const("💰Бонусные ключи"), id="bonus_keys", on_click=start_bonus_keys),
         Button(Const("💡Подсказки"), id="hints", on_click=start_hints),
         Button(
-            Const("✅Готово, сохранить"),
+            Const("💾Готово, сохранить"),
             id="save",
             on_click=save_level,
             when=F["dialog_data"]["keys"] & F["dialog_data"]["time_hints"],
@@ -200,7 +200,7 @@ hints_dialog = Dialog(
         ),
         Button(Const("➕Добавить подсказку"), id="add_time_hint", on_click=start_add_time_hint),
         Button(
-            Const("👌Достаточно подсказок"),
+            Const("✅Готово"),
             id="save",
             on_click=save_hints,
             when=F["dialog_data"]["time_hints"].len() > 1,

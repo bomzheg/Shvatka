@@ -67,7 +67,7 @@ time_hint = Dialog(
         Button(
             Const("✅К следующей подсказке"),
             id="to_next_hint",
-            when=lambda data, *args: data["has_hints"],
+            when=F["has_hints"],
             on_click=on_finish,
         ),
         Back(text=Const("⏱️Изменить время")),

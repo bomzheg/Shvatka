@@ -46,12 +46,16 @@ class HintsList(Sequence[TimeHint]):
 
     @staticmethod
     def verify(hints: Iterable[TimeHint]) -> None:
+        current_time = -1
         times: set[int] = set()
         for hint in hints:
             if hint.time in times:
                 raise exceptions.LevelError(
                     text=f"Contains multiple times hints for time {hint.time}"
                 )
+            if hint.time <= current_time:
+                raise exceptions.LevelError(text="hints are not sorted")
+            current_time = hint.time
             times.add(hint.time)
             if not hint.hint:
                 raise exceptions.LevelError(text=f"There is no hint for time {hint.time}")

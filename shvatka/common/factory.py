@@ -37,7 +37,7 @@ class TelegraphProvider(Provider):
 
 
 REQUIRED_GAME_RECIPES = [
-    loader(HintsList, lambda x: HintsList(x), Chain.LAST),
+    loader(HintsList, lambda x: HintsList.parse(x), Chain.LAST),
     ABCProxy(HintsList, list[TimeHint]),  # internal class, can be broken in next version adaptix
     dumper(set, lambda x: tuple(x)),
 ]

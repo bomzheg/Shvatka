@@ -73,6 +73,10 @@ async def delete_single_hint(c: CallbackQuery, widget: Any, manager: DialogManag
     manager.dialog_data["hints"] = retort.dump(hints, list[AnyHint])
 
 
+async def delete_whole_time_hint(c: CallbackQuery, widget: Any, manager: DialogManager):
+    await manager.done({"edited_time_hint": {"__deleted__": "__deleted_true__"}})
+
+
 async def save_edited_time_hint(c: CallbackQuery, widget: Any, manager: DialogManager):
     dishka: AsyncContainer = manager.middleware_data[CONTAINER_NAME]
     retort = await dishka.get(Retort)

@@ -1,3 +1,4 @@
+from aiogram import F
 from aiogram_dialog import Dialog, Window
 from aiogram_dialog.widgets.input import MessageInput
 from aiogram_dialog.widgets.kbd import (
@@ -25,6 +26,7 @@ from .handlers import (
     edit_single_hint,
     save_edited_time_hint,
     delete_single_hint,
+    delete_whole_time_hint,
 )
 from shvatka.tgbot.dialogs.preview_data import TIMES_PRESET, PreviewSwitchTo
 
@@ -106,6 +108,12 @@ time_hint_edit = Dialog(
             height=10,
         ),
         SwitchTo(Const("📝Добавить"), state=states.TimeHintEditSG.add_part, id="to_add_part"),
+        Button(
+            text=Const("🗑Удалить подсказку целиком"),
+            id="delete_time_hint",
+            on_click=delete_whole_time_hint,
+            when=~F["time"].is_(0),
+        ),
         Button(
             text=Const("✅Сохранить"),
             id="save_time_hint",

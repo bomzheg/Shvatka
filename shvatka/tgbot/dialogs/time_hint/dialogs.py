@@ -1,3 +1,4 @@
+from aiogram import F
 from aiogram_dialog import Dialog, Window
 from aiogram_dialog.widgets.input import MessageInput
 from aiogram_dialog.widgets.kbd import (
@@ -25,6 +26,7 @@ from .handlers import (
     edit_single_hint,
     save_edited_time_hint,
     delete_single_hint,
+    delete_whole_time_hint,
 )
 from shvatka.tgbot.dialogs.preview_data import TIMES_PRESET, PreviewSwitchTo
 
@@ -63,12 +65,12 @@ time_hint = Dialog(
         ),
         MessageInput(func=process_hint),
         Button(
-            Const("К следующей подсказке"),
+            Const("✅К следующей подсказке"),
             id="to_next_hint",
-            when=lambda data, *args: data["has_hints"],
+            when=F["has_hints"],
             on_click=on_finish,
         ),
-        Back(text=Const("Изменить время")),
+        Back(text=Const("⏱️Изменить время")),
         getter=get_hints,
         state=states.TimeHintSG.hint,
         preview_data={"has_hints": True},
@@ -81,7 +83,7 @@ time_hint_edit = Dialog(
     Window(
         Jinja("Подсказка выходящая в {{time}}:" "{{hints | hints}}"),
         SwitchTo(
-            Const("Изменить время"),
+            Const("⏱️Изменить время"),
             id="change_time",
             state=states.TimeHintEditSG.time,
         ),
@@ -105,13 +107,19 @@ time_hint_edit = Dialog(
             width=2,
             height=10,
         ),
-        SwitchTo(Const("Добавить"), state=states.TimeHintEditSG.add_part, id="to_add_part"),
+        SwitchTo(Const("📝Добавить"), state=states.TimeHintEditSG.add_part, id="to_add_part"),
         Button(
-            text=Const("Сохранить изменения"),
+            text=Const("🗑Удалить подсказку целиком"),
+            id="delete_time_hint",
+            on_click=delete_whole_time_hint,
+            when=~F["time"].is_(0),
+        ),
+        Button(
+            text=Const("✅Сохранить"),
             id="save_time_hint",
             on_click=save_edited_time_hint,
         ),
-        Cancel(text=Const("Вернуться, ничего не менять")),
+        Cancel(text=Const("🔙Вернуться, ничего не менять")),
         getter=get_hints,
         state=states.TimeHintEditSG.details,
     ),

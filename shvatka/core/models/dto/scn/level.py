@@ -46,15 +46,21 @@ class HintsList(Sequence[TimeHint]):
 
     @staticmethod
     def verify(hints: Iterable[TimeHint]) -> None:
+        current_time = -1
         times: set[int] = set()
         for hint in hints:
             if hint.time in times:
                 raise exceptions.LevelError(
                     text=f"Contains multiple times hints for time {hint.time}"
                 )
+            if hint.time <= current_time:
+                raise exceptions.LevelError(text="hints are not sorted")
+            current_time = hint.time
             times.add(hint.time)
             if not hint.hint:
                 raise exceptions.LevelError(text=f"There is no hint for time {hint.time}")
+        if 0 not in times:
+            raise exceptions.LevelError(text="There is no hint for 0 min")
 
     def get_hint_by_time(self, time: timedelta) -> EnumeratedTimeHint:
         hint = self.hints[0]
@@ -72,6 +78,20 @@ class HintsList(Sequence[TimeHint]):
         return [th for th in self.hints if th.time <= minutes]
 
     def replace(self, old: TimeHint, new: TimeHint) -> "HintsList":
+        old_index = self._index(old)
+        result = self.hints[0:old_index] + self.hints[old_index + 1 :] + [new]
+        return self.__class__(self.normalize(result))
+
+    def delete(self, old: TimeHint) -> "HintsList":
+        old_index = self._index(old)
+        result = self.hints[0:old_index] + self.hints[old_index + 1 :]
+        return self.__class__(self.normalize(result))
+
+    @property
+    def hints_count(self) -> int:
+        return sum(time_hint.hints_count for time_hint in self.hints)
+
+    def _index(self, old: TimeHint) -> int:
         for i, hint in enumerate(self.hints):
             if hint.time == old.time:
                 old_index = i
@@ -82,12 +102,7 @@ class HintsList(Sequence[TimeHint]):
             raise exceptions.LevelError(
                 text=f"can't replace, there is no hints for time {old.time}"
             )
-        result = self.hints[0:old_index] + self.hints[old_index + 1 :] + [new]
-        return self.__class__(self.normalize(result))
-
-    @property
-    def hints_count(self) -> int:
-        return sum(time_hint.hints_count for time_hint in self.hints)
+        return old_index
 
     @overload
     def __getitem__(self, index: int) -> TimeHint:

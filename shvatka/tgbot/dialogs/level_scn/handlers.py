@@ -111,9 +111,12 @@ async def process_time_hint_result(start_data: Data, result: Any, manager: Dialo
             return
         retort: Retort = manager.middleware_data["retort"]
         hints_list = retort.load(manager.dialog_data.get("time_hints", []), scn.HintsList)
-        edited_list = hints_list.replace(
-            retort.load(old_hint, scn.TimeHint), retort.load(edited_hint, scn.TimeHint)
-        )
+        if edited_hint.get("__deleted__") == "__deleted_true__":
+            edited_list = hints_list.delete(retort.load(old_hint, scn.TimeHint))
+        else:
+            edited_list = hints_list.replace(
+                retort.load(old_hint, scn.TimeHint), retort.load(edited_hint, scn.TimeHint)
+            )
         manager.dialog_data["time_hints"] = retort.dump(edited_list)
 
 

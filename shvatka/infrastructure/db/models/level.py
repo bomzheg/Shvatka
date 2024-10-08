@@ -1,7 +1,7 @@
 import typing
 from typing import Any
 
-from adaptix import Retort, dumper
+from adaptix import Retort
 from sqlalchemy import Integer, Text, ForeignKey, JSON, TypeDecorator, UniqueConstraint
 from sqlalchemy.engine import Dialect
 from sqlalchemy.orm import relationship, mapped_column, Mapped
@@ -20,7 +20,7 @@ class ScenarioField(TypeDecorator):
     impl = JSON
     cache_ok = True
     retort = Retort(
-        recipe=[*REQUIRED_GAME_RECIPES, dumper(set, lambda x: list(x))],
+        recipe=REQUIRED_GAME_RECIPES,
     )
 
     def coerce_compared_value(self, op: Any, value: Any):

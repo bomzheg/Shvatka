@@ -23,8 +23,12 @@ class TimeHint:
         return len(self.hint)
 
     def update_time(self, new_time: int) -> None:
+        if self.time == new_time:
+            return
         if not self.can_update_time():
-            raise exceptions.LevelError(text="Невозможно отредактировать загадку уровня")
+            raise exceptions.LevelError(
+                text="Невозможно отредактировать время выхода загадку уровня"
+            )
         if new_time == 0:
             raise exceptions.LevelError(text="Нельзя заменить таким способом загадку уровня")
         self.time = new_time

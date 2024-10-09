@@ -27,7 +27,7 @@ class TimeHint:
             return
         if not self.can_update_time():
             raise exceptions.LevelError(
-                text="Невозможно отредактировать время выхода загадку уровня"
+                text="Невозможно отредактировать время выхода загадки уровня"
             )
         if new_time == 0:
             raise exceptions.LevelError(text="Нельзя заменить таким способом загадку уровня")

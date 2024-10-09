@@ -114,7 +114,7 @@ class AuthProperties:
 
 class AuthProvider(Provider):
     scope = Scope.APP
-    request = from_context(provides=Request)
+    request = from_context(provides=Request, scope=Scope.REQUEST)
 
     @provide
     def get_auth_properties(self, config: AuthConfig) -> AuthProperties:

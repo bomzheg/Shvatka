@@ -18,7 +18,7 @@ Core-функционал:
 - сохранение статистики прошедших игр
 
 
-## Как запустить:
+## How to run without docker:
 1. `cp config_dist config`
 2. Заполнить конфиги в config
 3. Заполнить урл бд в alembic.ini
@@ -30,7 +30,7 @@ export BOT_PATH=$PWD
 shvatka-tgbot
 ```
 
-## С помощью Docker
+## How to run with Docker
 1. `cp config_dist config`
 2. Заполнить конфиги в config
 3. Заполнить урл бд в alembic.ini
@@ -41,4 +41,25 @@ shvatka-tgbot
 ## How to fix deps
 ```shell
 uv pip compile pyproject.toml > lock.txt
+```
+
+## How to test
+```shell
+pytest tests
+```
+or only unittests (faster):
+```shell
+pytest tests/unit
+```
+
+## Linters
+
+Linux:
+```shell
+ruff format . && ruff --fix . && mypy .
+```
+
+Windows:
+```shell
+ruff format . ; ruff --fix . ; mypy .
 ```

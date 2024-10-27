@@ -1,7 +1,7 @@
 from adaptix import Retort
 from aiogram_dialog import DialogManager
 
-from shvatka.core.models.dto import scn
+import shvatka.core.models.dto.action.keys
 from shvatka.core.models.dto.scn import TimeHint
 
 
@@ -24,7 +24,7 @@ async def get_bonus_keys(dialog_manager: DialogManager, **_):
         "bonus_keys", dialog_manager.start_data.get("bonus_keys", [])
     )
     return {
-        "bonus_keys": retort.load(keys_raw, list[scn.BonusKey]),
+        "bonus_keys": retort.load(keys_raw, list[shvatka.core.models.dto.action.keys.BonusKey]),
     }
 
 

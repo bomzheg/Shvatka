@@ -4,12 +4,12 @@ from dataclasses import dataclass
 from datetime import datetime
 
 from shvatka.core.models import dto, enums
-from . import scn
+from . import action
 
 
 @dataclass(frozen=True)
 class KeyTime:
-    text: scn.SHKey
+    text: action.SHKey
     type_: enums.KeyType
     is_duplicate: bool
     at: datetime

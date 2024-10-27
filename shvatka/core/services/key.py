@@ -4,7 +4,7 @@ from dataclasses import dataclass
 
 from shvatka.core.interfaces.dal.game_play import GamePlayerDao
 from shvatka.core.models import dto
-from shvatka.core.models.dto.scn import action
+from shvatka.core.models.dto import action
 from shvatka.core.utils import exceptions
 from shvatka.core.utils.input_validation import is_key_valid
 from shvatka.core.utils.key_checker_lock import KeyCheckerFactory

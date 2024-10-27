@@ -4,7 +4,8 @@ from dataclasses import dataclass
 from datetime import timedelta
 
 from .player import Player
-from .scn.level import LevelScenario, BonusKey
+from .scn.level import LevelScenario
+from .action.keys import BonusKey
 from .scn.time_hint import TimeHint, EnumeratedTimeHint
 
 

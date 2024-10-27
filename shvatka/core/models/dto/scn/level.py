@@ -9,7 +9,7 @@ from shvatka.common.log_utils import obfuscate_sensitive
 from shvatka.core.utils import exceptions
 from .hint_part import AnyHint
 from .time_hint import TimeHint, EnumeratedTimeHint
-from .action import (
+from shvatka.core.models.dto.action import (
     WinCondition,
     Action,
     Decision,
@@ -20,23 +20,15 @@ from .action import (
     KeyBonusCondition,
     NotImplementedActionDecision,
 )
-from .action.keys import SHKey, KeyWinCondition, TypedKeyAction, WrongKeyDecision
+from shvatka.core.models.dto.action.keys import (
+    SHKey,
+    KeyWinCondition,
+    TypedKeyAction,
+    WrongKeyDecision,
+    BonusKey,
+)
 
 logger = logging.getLogger(__name__)
-
-
-@dataclass(frozen=True)
-class BonusKey:
-    text: str
-    bonus_minutes: float
-
-    def __eq__(self, other: object) -> bool:
-        if not isinstance(other, BonusKey):
-            return NotImplemented
-        return self.text == other.text
-
-    def __hash__(self) -> int:
-        return hash(self.text)
 
 
 class HintsList(Sequence[TimeHint]):

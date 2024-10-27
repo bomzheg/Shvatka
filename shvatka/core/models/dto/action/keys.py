@@ -2,7 +2,7 @@ import typing
 from dataclasses import dataclass
 from typing import Literal
 
-from shvatka.core.models import enums, dto
+from shvatka.core.models import enums
 from . import StateHolder
 from .decisions import NotImplementedActionDecision
 from .interface import Action, State, Decision, WinCondition, DecisionType
@@ -45,12 +45,6 @@ class WrongKeyDecision(Decision):
     type: Literal[DecisionType.NO_ACTION] = DecisionType.NO_ACTION
     key_type: typing.Literal[enums.KeyType.wrong] = enums.KeyType.wrong
 
-    def to_parsed_key(self) -> dto.ParsedKey:
-        return dto.ParsedKey(
-            type_=self.key_type,
-            text=self.key,
-        )
-
     @property
     def key_text(self) -> str:
         return self.key
@@ -65,12 +59,6 @@ class KeyDecision(Decision):
 
     def is_level_up(self) -> bool:
         return self.type == DecisionType.LEVEL_UP
-
-    def to_parsed_key(self) -> dto.ParsedKey:
-        return dto.ParsedKey(
-            type_=self.key_type,
-            text=self.key,
-        )
 
     @property
     def key_text(self) -> str:
@@ -115,19 +103,6 @@ class BonusKeyDecision(Decision):
     key_type: enums.KeyType
     duplicate: bool
     key: BonusKey
-
-    def to_parsed_key(self) -> dto.ParsedKey:
-        if self.type == DecisionType.BONUS_TIME:
-            return dto.ParsedBonusKey(
-                type_=enums.KeyType.bonus,
-                text=self.key_text,
-                bonus_minutes=self.key.bonus_minutes,
-            )
-        else:
-            return dto.ParsedKey(
-                type_=enums.KeyType.wrong,
-                text=self.key.text,
-            )
 
     @property
     def key_text(self) -> str:

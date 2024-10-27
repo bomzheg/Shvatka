@@ -166,6 +166,6 @@ async def test_write_level(
     assert 1 == await dao.level.count()
     level, *_ = await dao.level.get_all_my(author)
     assert author.id == level.author.id
-    assert {"SHTESTKEY"} == level.scenario.keys
+    assert {"SHTESTKEY"} == level.scenario.get_keys()
     assert 2 == level.hints_count
     bot.auto_mock_success = False

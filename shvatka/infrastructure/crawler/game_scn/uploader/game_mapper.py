@@ -20,7 +20,7 @@ def map_level_for_upload(level: dto.Level) -> data.LevelForUpload:
         hint_number=0,
         next_hint_time=scn.time_hints[1].time,
         text=hint_parts_to_text(first_hint.hint),
-        key="".join(scn.keys),
+        key="".join(scn.get_keys()),
         brain_key="",
     )
     hints = []

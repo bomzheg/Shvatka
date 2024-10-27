@@ -19,7 +19,9 @@ class KeyProcessor:
     game: dto.FullGame
     locker: KeyCheckerFactory
 
-    async def check_key(self, key: str, team: dto.Team, player: dto.Player) -> dto.InsertedKey:
+    async def check_key(
+        self, key: str, team: dto.Team, player: dto.Player
+    ) -> dto.InsertedKey | None:
         if not is_key_valid(key):
             raise exceptions.InvalidKey(key=key, team=team, player=player, game=self.game)
         return await self.submit_key(key=key, player=player, team=team)
@@ -29,9 +31,10 @@ class KeyProcessor:
         key: str,
         player: dto.Player,
         team: dto.Team,
-    ) -> dto.InsertedKey:
+    ) -> dto.InsertedKey | None:
         async with self.locker(team):
             level = await self.dao.get_current_level(team, self.game)
+            assert level.number_in_game is not None
             correct_keys = await self.dao.get_correct_typed_keys(
                 level=level, game=self.game, team=team
             )
@@ -46,7 +49,9 @@ class KeyProcessor:
                 action=action.TypedKeyAction(key=key),
                 state=state,
             )
-            if isinstance(decision, action.KeyDecision | action.BonusKeyDecision):
+            if isinstance(
+                decision, action.KeyDecision | action.BonusKeyDecision | action.WrongKeyDecision
+            ):
                 saved_key = await self.dao.save_key(
                     key=decision.key_text,
                     team=team,
@@ -62,3 +67,9 @@ class KeyProcessor:
                 return dto.InsertedKey.from_key_time(
                     saved_key, is_level_up, parsed_key=decision.to_parsed_key()
                 )
+            elif isinstance(decision, action.NotImplementedActionDecision):
+                logger.warning("impossible decision here cant be not implemented")
+                return None
+            else:
+                logger.warning("impossible decision here is %s", type(decision))
+                return None

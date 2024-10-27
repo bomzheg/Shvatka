@@ -7,5 +7,6 @@ from .keys import (
     TypedKeysState,
     BonusKeyDecision,
     KeyBonusCondition,
+    WrongKeyDecision,
 )
 from .state_holder import InMemoryStateHolder

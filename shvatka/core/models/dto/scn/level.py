@@ -1,15 +1,28 @@
-import typing
+import logging
+from abc import abstractmethod
 from collections.abc import Sequence, Iterable
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import timedelta
 from typing import overload
 
-
+from shvatka.common.log_utils import obfuscate_sensitive
 from shvatka.core.utils import exceptions
 from .hint_part import AnyHint
 from .time_hint import TimeHint, EnumeratedTimeHint
+from .action import (
+    WinCondition,
+    Action,
+    Decision,
+    StateHolder,
+    DecisionType,
+    Decisions,
+    KeyDecision,
+    KeyBonusCondition,
+    NotImplementedActionDecision,
+)
+from .action.keys import SHKey, KeyWinCondition, TypedKeyAction, WrongKeyDecision
 
-SHKey: typing.TypeAlias = str
+logger = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)
@@ -129,12 +142,75 @@ class HintsList(Sequence[TimeHint]):
         return repr(self.hints)
 
 
+class Conditions(Sequence[WinCondition]):
+    def __init__(self, conditions: Sequence[WinCondition]):
+        self.validate(conditions)
+        self.conditions = conditions
+
+    @staticmethod
+    def validate(conditions: Sequence[WinCondition]) -> None:
+        keys = set()
+        win_conditions = []
+        for c in conditions:
+            if isinstance(c, KeyWinCondition):
+                win_conditions.append(c)
+                if keys.intersection(c.keys):
+                    raise exceptions.LevelError(
+                        text=f"keys already exists {keys.intersection(c.keys)}"
+                    )
+                keys.union(c.keys)
+            if isinstance(c, KeyBonusCondition):
+                if keys.intersection({k.text for k in c.keys}):
+                    raise exceptions.LevelError(
+                        text=f"keys already exists {keys.intersection(c.keys)}"
+                    )
+                keys.union({k.text for k in c.keys})
+        if not win_conditions:
+            raise exceptions.LevelError(text="There is no win condition")
+
+    def get_keys(self) -> set[str]:
+        result: set[SHKey] = set()
+        for condition in self.conditions:
+            if isinstance(condition, KeyWinCondition):
+                result.union(condition.keys)
+        return result
+
+    def get_bonus_keys(self) -> set[BonusKey]:
+        result: set[BonusKey] = set()
+        for condition in self.conditions:
+            if isinstance(condition, KeyBonusCondition):
+                result.union(condition.keys)
+        return result
+
+    @overload
+    @abstractmethod
+    def __getitem__(self, index: int) -> WinCondition:
+        return self.conditions[index]
+
+    @overload
+    @abstractmethod
+    def __getitem__(self, index: slice) -> Sequence[WinCondition]:
+        return self.conditions[index]
+
+    def __getitem__(self, index):
+        return self.conditions[index]
+
+    def __len__(self):
+        return len(self.conditions)
+
+    def __repr__(self):
+        return repr(self.conditions)
+
+
 @dataclass
 class LevelScenario:
     id: str
     time_hints: HintsList
-    keys: set[SHKey] = field(default_factory=set)
-    bonus_keys: set[BonusKey] = field(default_factory=set)
+    conditions: Conditions
+
+    def __post_init__(self):
+        if not self.conditions:
+            raise exceptions.LevelError(text="no win conditions are present")
 
     def get_hint(self, hint_number: int) -> TimeHint:
         return self.time_hints[hint_number]
@@ -145,11 +221,42 @@ class LevelScenario:
     def is_last_hint(self, hint_number: int) -> bool:
         return len(self.time_hints) == hint_number + 1
 
-    def get_keys(self) -> set[str]:
-        return self.keys
+    def check(self, action: Action, state: StateHolder) -> Decision:
+        decisions = Decisions([cond.check(action, state) for cond in self.conditions])
+        implemented = decisions.get_implemented()
+        if not implemented:
+            return NotImplementedActionDecision()
+        if isinstance(action, TypedKeyAction):
+            key_decisions = implemented.get_all(KeyDecision, WrongKeyDecision)
+            if not key_decisions:
+                return NotImplementedActionDecision()
+            if not key_decisions.get_significant():
+                assert all(d.type == DecisionType.NO_ACTION for d in key_decisions)
+                if duplicate_correct := key_decisions.get_all(KeyDecision):
+                    if len(duplicate_correct) != 1:
+                        logger.warning(
+                            "more than one duplicate correct key decision %s",
+                            obfuscate_sensitive(duplicate_correct),
+                        )
+                    return duplicate_correct[0]
+                return key_decisions[0]
+            significant_key_decisions = key_decisions.get_significant()
+            if len(significant_key_decisions) != 1:
+                logger.warning(
+                    "More than one significant key decision. "
+                    "Will used first but it's not clear %s",
+                    obfuscate_sensitive(significant_key_decisions),
+                )
+            else:
+                return significant_key_decisions[0]
+        else:
+            return NotImplementedActionDecision()
+
+    def get_keys(self) -> set[SHKey]:
+        return self.conditions.get_keys()
 
     def get_bonus_keys(self) -> set[BonusKey]:
-        return self.bonus_keys
+        return self.conditions.get_bonus_keys()
 
     def get_guids(self) -> list[str]:
         guids = []

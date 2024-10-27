@@ -120,6 +120,11 @@ class GamePlayerDaoImpl(GamePlayerDao):
             is_duplicate=is_duplicate,
         )
 
+    async def get_team_typed_keys(
+        self, game: dto.Game, team: dto.Team, level_number: int
+    ) -> list[dto.KeyTime]:
+        return await self.key_time.get_team_typed_keys(game, team, level_number)
+
     async def level_up(self, team: dto.Team, level: dto.Level, game: dto.Game) -> None:
         assert level.number_in_game is not None
         await self.level_time.set_to_level(

@@ -1,4 +1,3 @@
-from abc import abstractmethod
 from dataclasses import dataclass
 from typing import Literal, Sequence, overload
 
@@ -7,7 +6,7 @@ from shvatka.core.models.dto.scn.action.interface import DecisionType, Decision
 
 @dataclass
 class NotImplementedActionDecision(Decision):
-    type: Literal[DecisionType.NO_ACTION] = DecisionType.NOT_IMPLEMENTED
+    type: Literal[DecisionType.NOT_IMPLEMENTED] = DecisionType.NOT_IMPLEMENTED
 
 
 class Decisions(Sequence[Decision]):
@@ -15,12 +14,10 @@ class Decisions(Sequence[Decision]):
         self.decisions = decisions
 
     @overload
-    @abstractmethod
     def __getitem__(self, index: int) -> Decision:
         return self.decisions[index]
 
     @overload
-    @abstractmethod
     def __getitem__(self, index: slice) -> Sequence[Decision]:
         return self.decisions[index]
 
@@ -40,10 +37,10 @@ class Decisions(Sequence[Decision]):
         return self.get_all_except(DecisionType.NOT_IMPLEMENTED)
 
     def get_all(self, *type_: type) -> "Decisions":
-        return Decisions([d for d in self if isinstance(d, type_)])
+        return Decisions([d for d in self.decisions if isinstance(d, type_)])
 
     def get_all_except(self, *type_: DecisionType) -> "Decisions":
-        return Decisions([d for d in self if d.type not in type_])
+        return Decisions([d for d in self.decisions if d.type not in type_])
 
     def get_all_only(self, *type_: DecisionType) -> "Decisions":
-        return Decisions([d for d in self if d.type in type_])
+        return Decisions([d for d in self.decisions if d.type in type_])

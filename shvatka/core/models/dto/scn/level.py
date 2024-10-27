@@ -149,7 +149,7 @@ class Conditions(Sequence[WinCondition]):
 
     @staticmethod
     def validate(conditions: Sequence[WinCondition]) -> None:
-        keys = set()
+        keys: set[str] = set()
         win_conditions = []
         for c in conditions:
             if isinstance(c, KeyWinCondition):
@@ -159,7 +159,7 @@ class Conditions(Sequence[WinCondition]):
                         text=f"keys already exists {keys.intersection(c.keys)}"
                     )
                 keys.union(c.keys)
-            if isinstance(c, KeyBonusCondition):
+            elif isinstance(c, KeyBonusCondition):
                 if keys.intersection({k.text for k in c.keys}):
                     raise exceptions.LevelError(
                         text=f"keys already exists {keys.intersection(c.keys)}"
@@ -247,8 +247,7 @@ class LevelScenario:
                     "Will used first but it's not clear %s",
                     obfuscate_sensitive(significant_key_decisions),
                 )
-            else:
-                return significant_key_decisions[0]
+            return significant_key_decisions[0]
         else:
             return NotImplementedActionDecision()
 

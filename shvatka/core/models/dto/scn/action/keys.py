@@ -32,6 +32,16 @@ class WrongKeyDecision(Decision):
     type: Literal[DecisionType.NO_ACTION] = DecisionType.NO_ACTION
     key_type: typing.Literal[enums.KeyType.wrong] = enums.KeyType.wrong
 
+    def to_parsed_key(self) -> dto.ParsedKey:
+        return dto.ParsedKey(
+            type_=self.key_type,
+            text=self.key,
+        )
+
+    @property
+    def key_text(self) -> str:
+        return self.key
+
 
 @dataclass
 class KeyDecision(Decision):
@@ -91,13 +101,13 @@ class BonusKeyDecision(Decision):
     type: DecisionType
     key_type: enums.KeyType
     duplicate: bool
-    key: BonusKey | None
+    key: BonusKey
 
     def to_parsed_key(self) -> dto.ParsedKey:
         if self.type == DecisionType.BONUS_TIME:
             return dto.ParsedBonusKey(
                 type_=enums.KeyType.bonus,
-                text=self.key.text,
+                text=self.key_text,
                 bonus_minutes=self.key.bonus_minutes,
             )
         else:

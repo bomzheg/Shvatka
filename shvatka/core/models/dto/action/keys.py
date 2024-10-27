@@ -6,9 +6,22 @@ from shvatka.core.models import enums, dto
 from . import StateHolder
 from .decisions import NotImplementedActionDecision
 from .interface import Action, State, Decision, WinCondition, DecisionType
-from shvatka.core.models.dto.scn import BonusKey
 
 SHKey: typing.TypeAlias = str
+
+
+@dataclass(frozen=True)
+class BonusKey:
+    text: str
+    bonus_minutes: float
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, BonusKey):
+            return NotImplemented
+        return self.text == other.text
+
+    def __hash__(self) -> int:
+        return hash(self.text)
 
 
 @dataclass

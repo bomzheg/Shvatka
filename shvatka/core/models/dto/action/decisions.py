@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import Literal, Sequence, overload
 
-from shvatka.core.models.dto.scn.action.interface import DecisionType, Decision
+from shvatka.core.models.dto.action.interface import DecisionType, Decision
 
 
 @dataclass

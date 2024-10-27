@@ -1,14 +1,13 @@
 from dataclasses import dataclass
 
-from . import TypedKeysState
+from . import TypedKeysState, SHKey
 from .interface import StateHolder, T
-from shvatka.core.models.dto import scn
 
 
 @dataclass
 class InMemoryStateHolder(StateHolder):
-    typed_correct: set[scn.SHKey]
-    all_typed: set[scn.SHKey]
+    typed_correct: set[SHKey]
+    all_typed: set[SHKey]
 
     def get(self, state_class: type[T]) -> T:
         if isinstance(state_class, TypedKeysState):

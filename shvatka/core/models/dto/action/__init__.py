@@ -1,6 +1,8 @@
 from .interface import WinCondition, Action, State, Decision, DecisionType, StateHolder
 from .decisions import NotImplementedActionDecision, Decisions
 from .keys import (
+    SHKey,
+    BonusKey,
     KeyDecision,
     KeyWinCondition,
     TypedKeyAction,

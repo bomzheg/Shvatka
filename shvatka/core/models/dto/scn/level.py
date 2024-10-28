@@ -164,14 +164,14 @@ class Conditions(Sequence[WinCondition]):
         result: set[SHKey] = set()
         for condition in self.conditions:
             if isinstance(condition, KeyWinCondition):
-                result.union(condition.keys)
+                result = result.union(condition.keys)
         return result
 
     def get_bonus_keys(self) -> set[BonusKey]:
         result: set[BonusKey] = set()
         for condition in self.conditions:
             if isinstance(condition, KeyBonusCondition):
-                result.union(condition.keys)
+                result = result.union(condition.keys)
         return result
 
     @overload

@@ -12,7 +12,7 @@ SHKey: typing.TypeAlias = str
 
 @dataclass(frozen=True)
 class BonusKey:
-    text: str
+    text: SHKey
     bonus_minutes: float
 
     def __eq__(self, other: object) -> bool:

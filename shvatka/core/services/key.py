@@ -1,12 +1,10 @@
 import logging
-import typing
 from dataclasses import dataclass
 
 
 from shvatka.core.interfaces.dal.game_play import GamePlayerDao
 from shvatka.core.models import dto, enums
 from shvatka.core.models.dto import action
-from shvatka.core.models.dto.action import DecisionType
 from shvatka.core.utils import exceptions
 from shvatka.core.utils.input_validation import is_key_valid
 from shvatka.core.utils.key_checker_lock import KeyCheckerFactory
@@ -76,7 +74,10 @@ class KeyProcessor:
                 logger.warning("impossible decision here is %s", type(decision))
                 return None
 
-def decision_to_parsed_key(decision: action.KeyDecision | action.BonusKeyDecision | action.WrongKeyDecision) -> dto.ParsedKey:
+
+def decision_to_parsed_key(
+    decision: action.KeyDecision | action.BonusKeyDecision | action.WrongKeyDecision,
+) -> dto.ParsedKey:
     match decision:
         case action.KeyDecision:
             return dto.ParsedKey(
@@ -84,21 +85,15 @@ def decision_to_parsed_key(decision: action.KeyDecision | action.BonusKeyDecisio
                 text=decision.key_text,
             )
         case action.BonusKeyDecision:
-            if decision.type == DecisionType.BONUS_TIME:
-                return dto.ParsedBonusKey(
-                    type_=enums.KeyType.bonus,
-                    text=decision.key_text,
-                    bonus_minutes=decision.key.bonus_minutes,
-                )
-            else:
-                return dto.ParsedKey(
-                    type_=enums.KeyType.wrong,
-                    text=decision.key_text,
-                )
+            return dto.ParsedBonusKey(
+                type_=enums.KeyType.bonus,
+                text=decision.key_text,
+                bonus_minutes=decision.key.bonus_minutes,
+            )
         case action.WrongKeyDecision:
             return dto.ParsedKey(
                 type_=decision.key_type,
                 text=decision.key,
             )
         case _:
-            typing.assert_never(decision)
+            raise NotImplementedError(f"unknown decision type {type(decision)}")

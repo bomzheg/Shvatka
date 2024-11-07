@@ -5,7 +5,7 @@ from typing import Literal
 from shvatka.core.models import enums
 from . import StateHolder
 from .decisions import NotImplementedActionDecision
-from .interface import Action, State, Decision, WinCondition, DecisionType
+from .interface import Action, State, Decision, Condition, DecisionType
 
 SHKey: typing.TypeAlias = str
 
@@ -66,7 +66,7 @@ class KeyDecision(Decision):
 
 
 @dataclass
-class KeyWinCondition(WinCondition):
+class KeyWinCondition(Condition):
     keys: set[SHKey]
 
     def check(self, action: Action, state_holder: StateHolder) -> Decision:
@@ -110,7 +110,7 @@ class BonusKeyDecision(Decision):
 
 
 @dataclass
-class KeyBonusCondition(WinCondition):
+class KeyBonusCondition(Condition):
     keys: set[BonusKey]
 
     def check(self, action: Action, state_holder: StateHolder) -> Decision:

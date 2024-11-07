@@ -222,7 +222,9 @@ async def save_level(c: CallbackQuery, button: Button, manager: DialogManager):
         data.get("bonus_keys", []), set[shvatka.core.models.dto.action.keys.BonusKey]
     )
 
-    level_scn = scn.LevelScenario(id=id_, keys=keys, time_hints=time_hints, bonus_keys=bonus_keys)
+    level_scn = scn.LevelScenario.legacy_factory(
+        id=id_, keys=keys, time_hints=time_hints, bonus_keys=bonus_keys
+    )
     level = await upsert_level(author=author, scenario=level_scn, dao=dao.level)
     await manager.done(result={"level": retort.dump(level)})
     await c.answer(text="Уровень успешно сохранён")

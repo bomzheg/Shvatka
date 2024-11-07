@@ -5,7 +5,7 @@ import typing
 from typing import Protocol
 
 
-class WinCondition(Protocol):
+class Condition(Protocol):
     def check(self, action: Action, state_holder: StateHolder) -> Decision:
         raise NotImplementedError
 

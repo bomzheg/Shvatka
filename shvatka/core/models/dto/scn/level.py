@@ -9,7 +9,7 @@ from shvatka.core.utils import exceptions
 from .hint_part import AnyHint
 from .time_hint import TimeHint, EnumeratedTimeHint
 from shvatka.core.models.dto.action import (
-    WinCondition,
+    Condition,
     Action,
     Decision,
     StateHolder,
@@ -133,13 +133,13 @@ class HintsList(Sequence[TimeHint]):
         return repr(self.hints)
 
 
-class Conditions(Sequence[WinCondition]):
-    def __init__(self, conditions: Sequence[WinCondition]):
+class Conditions(Sequence[Condition]):
+    def __init__(self, conditions: Sequence[Condition]):
         self.validate(conditions)
         self.conditions = conditions
 
     @staticmethod
-    def validate(conditions: Sequence[WinCondition]) -> None:
+    def validate(conditions: Sequence[Condition]) -> None:
         keys: set[str] = set()
         win_conditions = []
         for c in conditions:
@@ -174,11 +174,11 @@ class Conditions(Sequence[WinCondition]):
         return result
 
     @overload
-    def __getitem__(self, index: int) -> WinCondition:
+    def __getitem__(self, index: int) -> Condition:
         return self.conditions[index]
 
     @overload
-    def __getitem__(self, index: slice) -> Sequence[WinCondition]:
+    def __getitem__(self, index: slice) -> Sequence[Condition]:
         return self.conditions[index]
 
     def __getitem__(self, index):
@@ -258,3 +258,20 @@ class LevelScenario:
 
     def get_hints_for_timedelta(self, delta: timedelta) -> list[TimeHint]:
         return self.time_hints.get_hints_for_timedelta(delta)
+
+    @classmethod
+    def legacy_factory(
+        cls,
+        id: str,  # noqa: A002
+        time_hints: HintsList,
+        keys: set[SHKey],
+        bonus_keys: set[BonusKey] | None = None,
+    ) -> "LevelScenario":
+        conditions: list[Condition] = [KeyWinCondition(keys)]
+        if bonus_keys:
+            conditions.append(KeyBonusCondition(bonus_keys))
+        return cls(
+            id=id,
+            time_hints=time_hints,
+            conditions=Conditions(conditions),
+        )

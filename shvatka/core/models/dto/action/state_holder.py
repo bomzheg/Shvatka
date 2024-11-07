@@ -10,8 +10,8 @@ class InMemoryStateHolder(StateHolder):
     all_typed: set[SHKey]
 
     def get(self, state_class: type[T]) -> T:
-        if isinstance(state_class, TypedKeysState):
-            return TypedKeysState(
+        if state_class == TypedKeysState:
+            return TypedKeysState(  # type: ignore[return-value]
                 typed_correct=self.typed_correct,
                 all_typed=self.all_typed,
             )

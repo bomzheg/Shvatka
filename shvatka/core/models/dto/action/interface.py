@@ -25,7 +25,7 @@ class State(Protocol):
     pass
 
 
-T = typing.TypeVar("T")
+T = typing.TypeVar("T", bound=State)
 
 
 class StateHolder(Protocol):

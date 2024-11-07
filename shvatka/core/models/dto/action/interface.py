@@ -5,7 +5,14 @@ import typing
 from typing import Protocol
 
 
+class ConditionType(enum.StrEnum):
+    WIN_KEY = enum.auto()
+    BONUS_KEY = enum.auto()
+
+
 class Condition(Protocol):
+    type: ConditionType
+
     def check(self, action: Action, state_holder: StateHolder) -> Decision:
         raise NotImplementedError
 

@@ -1,5 +1,4 @@
 import logging
-from abc import abstractmethod
 from collections.abc import Sequence, Iterable
 from dataclasses import dataclass
 from datetime import timedelta
@@ -150,13 +149,13 @@ class Conditions(Sequence[WinCondition]):
                     raise exceptions.LevelError(
                         text=f"keys already exists {keys.intersection(c.keys)}"
                     )
-                keys.union(c.keys)
+                keys = keys.union(c.keys)
             elif isinstance(c, KeyBonusCondition):
                 if keys.intersection({k.text for k in c.keys}):
                     raise exceptions.LevelError(
                         text=f"keys already exists {keys.intersection(c.keys)}"
                     )
-                keys.union({k.text for k in c.keys})
+                keys = keys.union({k.text for k in c.keys})
         if not win_conditions:
             raise exceptions.LevelError(text="There is no win condition")
 
@@ -175,12 +174,10 @@ class Conditions(Sequence[WinCondition]):
         return result
 
     @overload
-    @abstractmethod
     def __getitem__(self, index: int) -> WinCondition:
         return self.conditions[index]
 
     @overload
-    @abstractmethod
     def __getitem__(self, index: slice) -> Sequence[WinCondition]:
         return self.conditions[index]
 

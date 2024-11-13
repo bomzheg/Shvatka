@@ -1,7 +1,11 @@
+import logging
 from dataclasses import dataclass
 from typing import Literal, Sequence, overload
 
+from shvatka.common.log_utils import obfuscate_sensitive
 from shvatka.core.models.dto.action.interface import DecisionType, Decision
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -35,6 +39,15 @@ class Decisions(Sequence[Decision]):
 
     def get_implemented(self) -> "Decisions":
         return self.get_all_except(DecisionType.NOT_IMPLEMENTED)
+
+    def get_exactly_one(self, level_id: str = "unknown") -> Decision:
+        if len(self.decisions) != 1:
+            logger.warning(
+                "in level %s there is more than one duplicate correct key decision %s",
+                level_id,
+                obfuscate_sensitive(self.decisions),
+            )
+        return self.decisions[0]
 
     def get_all(self, *type_: type) -> "Decisions":
         return Decisions([d for d in self.decisions if isinstance(d, type_)])

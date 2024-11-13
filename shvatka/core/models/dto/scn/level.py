@@ -4,7 +4,6 @@ from dataclasses import dataclass
 from datetime import timedelta
 from typing import overload
 
-from shvatka.common.log_utils import obfuscate_sensitive
 from shvatka.core.utils import exceptions
 from .hint_part import AnyHint
 from .time_hint import TimeHint, EnumeratedTimeHint
@@ -18,6 +17,7 @@ from shvatka.core.models.dto.action import (
     KeyDecision,
     KeyBonusCondition,
     NotImplementedActionDecision,
+    BonusKeyDecision,
 )
 from shvatka.core.models.dto.action.keys import (
     SHKey,
@@ -216,27 +216,18 @@ class LevelScenario:
         if not implemented:
             return NotImplementedActionDecision()
         if isinstance(action, TypedKeyAction):
+            if bonuses := implemented.get_all(BonusKeyDecision):
+                return bonuses.get_exactly_one(self.id)
             key_decisions = implemented.get_all(KeyDecision, WrongKeyDecision)
             if not key_decisions:
                 return NotImplementedActionDecision()
             if not key_decisions.get_significant():
                 assert all(d.type == DecisionType.NO_ACTION for d in key_decisions)
                 if duplicate_correct := key_decisions.get_all(KeyDecision):
-                    if len(duplicate_correct) != 1:
-                        logger.warning(
-                            "more than one duplicate correct key decision %s",
-                            obfuscate_sensitive(duplicate_correct),
-                        )
-                    return duplicate_correct[0]
+                    return duplicate_correct.get_exactly_one(self.id)
                 return key_decisions[0]
             significant_key_decisions = key_decisions.get_significant()
-            if len(significant_key_decisions) != 1:
-                logger.warning(
-                    "More than one significant key decision. "
-                    "Will used first but it's not clear %s",
-                    obfuscate_sensitive(significant_key_decisions),
-                )
-            return significant_key_decisions[0]
+            return significant_key_decisions.get_exactly_one(self.id)
         else:
             return NotImplementedActionDecision()
 

@@ -2,6 +2,7 @@ import pytest
 
 from shvatka.core.models import enums
 from shvatka.core.models.dto import scn, action
+from shvatka.core.utils import exceptions
 
 
 @pytest.fixture
@@ -40,6 +41,14 @@ def level_three_keys(hints: scn.HintsList) -> scn.LevelScenario:
             ]
         ),
     )
+
+def test_create_level_without_conditions(hints: scn.HintsList):
+    with pytest.raises(exceptions.LevelError):
+        scn.LevelScenario(
+            id="test",
+            time_hints=hints,
+            conditions=[],  # type: ignore
+        )
 
 
 def test_win_level_single_key(level_one_key: scn.LevelScenario):

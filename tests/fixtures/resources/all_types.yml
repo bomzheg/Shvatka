@@ -1,8 +1,12 @@
+__model_version__: 1
 name: "All types"
 levels:
   - id: first
-    keys:
-      - "SH123"
+    __model_version__: 1
+    conditions:
+      - type: WIN_KEY
+        keys:
+          - "SH123"
     time-hints:
       - time: 0
         hint:

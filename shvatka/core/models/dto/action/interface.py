@@ -11,7 +11,7 @@ class ConditionType(enum.StrEnum):
 
 
 class Condition(Protocol):
-    type: ConditionType
+    type: str
 
     def check(self, action: Action, state_holder: StateHolder) -> Decision:
         raise NotImplementedError

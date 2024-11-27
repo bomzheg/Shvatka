@@ -17,7 +17,7 @@ from shvatka.core.models.dto.action import (
     KeyDecision,
     KeyBonusCondition,
     NotImplementedActionDecision,
-    BonusKeyDecision,
+    BonusKeyDecision, AnyCondition,
 )
 from shvatka.core.models.dto.action.keys import (
     SHKey,
@@ -133,13 +133,13 @@ class HintsList(Sequence[TimeHint]):
         return repr(self.hints)
 
 
-class Conditions(Sequence[Condition]):
-    def __init__(self, conditions: Sequence[Condition]):
+class Conditions(Sequence[AnyCondition]):
+    def __init__(self, conditions: Sequence[AnyCondition]):
         self.validate(conditions)
-        self.conditions = conditions
+        self.conditions: Sequence[AnyCondition] = conditions
 
     @staticmethod
-    def validate(conditions: Sequence[Condition]) -> None:
+    def validate(conditions: Sequence[AnyCondition]) -> None:
         keys: set[str] = set()
         win_conditions = []
         for c in conditions:
@@ -174,11 +174,11 @@ class Conditions(Sequence[Condition]):
         return result
 
     @overload
-    def __getitem__(self, index: int) -> Condition:
+    def __getitem__(self, index: int) -> AnyCondition:
         return self.conditions[index]
 
     @overload
-    def __getitem__(self, index: slice) -> Sequence[Condition]:
+    def __getitem__(self, index: slice) -> Sequence[AnyCondition]:
         return self.conditions[index]
 
     def __getitem__(self, index):

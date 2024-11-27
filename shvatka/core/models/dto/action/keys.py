@@ -1,4 +1,5 @@
 import typing
+from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import Literal
 
@@ -68,7 +69,7 @@ class KeyDecision(Decision):
 @dataclass
 class KeyWinCondition(Condition):
     keys: set[SHKey]
-    type: Literal[ConditionType.WIN_KEY] = ConditionType.WIN_KEY
+    type: Literal["WIN_KEY"] = ConditionType.WIN_KEY.name
 
     def check(self, action: Action, state_holder: StateHolder) -> Decision:
         if not isinstance(action, TypedKeyAction):
@@ -113,7 +114,7 @@ class BonusKeyDecision(Decision):
 @dataclass
 class KeyBonusCondition(Condition):
     keys: set[BonusKey]
-    type: Literal[ConditionType.BONUS_KEY] = ConditionType.BONUS_KEY
+    type: Literal["BONUS_KEY"] = ConditionType.BONUS_KEY.name
 
     def check(self, action: Action, state_holder: StateHolder) -> Decision:
         if not isinstance(action, TypedKeyAction):

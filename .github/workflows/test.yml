@@ -74,6 +74,11 @@ jobs:
           hide-comment: false
           report-only-changed-files: false
           remove-link-from-badge: false
+  coverage-badge:
+    needs: [test]
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
       - name: Create the Badge
         uses: schneegans/dynamic-badges-action@v1.7.0
         with:

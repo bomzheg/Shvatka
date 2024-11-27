@@ -263,9 +263,9 @@ class GameParser:
 
     def build_level(self):
         self.build_time_hint()
-        level = scn.LevelScenario(
+        level = scn.LevelScenario.legacy_factory(
             id=f"game_{self.id}-lvl_{self.level_number}",
-            time_hints=self.time_hints,
+            time_hints=scn.HintsList(self.time_hints),
             keys=self.keys,
         )
         self.levels.append(level)
@@ -292,6 +292,7 @@ class GameParser:
                 start_at=self.start_at,
                 team_identity=export_stat.TeamIdentity.forum_name,
             ),
+            __model_version__=1,
         )
         return game
 

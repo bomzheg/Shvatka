@@ -26,6 +26,7 @@ def level_one_key(hints: scn.HintsList) -> scn.LevelScenario:
                 action.KeyBonusCondition({action.BonusKey(text="SHB1", bonus_minutes=1)}),
             ]
         ),
+        __model_version__=1,
     )
 
 
@@ -40,7 +41,9 @@ def level_three_keys(hints: scn.HintsList) -> scn.LevelScenario:
                 action.KeyBonusCondition({action.BonusKey(text="SHB1", bonus_minutes=1)}),
             ]
         ),
+        __model_version__=1,
     )
+
 
 def test_create_level_without_conditions(hints: scn.HintsList):
     with pytest.raises(exceptions.LevelError):
@@ -48,6 +51,7 @@ def test_create_level_without_conditions(hints: scn.HintsList):
             id="test",
             time_hints=hints,
             conditions=[],  # type: ignore
+            __model_version__=1,
         )
 
 

@@ -13,7 +13,7 @@ from .level import LevelScenario
 class GameScenario:
     name: str
     levels: list[LevelScenario]
-    __model_version__: Literal[1]
+    __model_version__: Literal[0]
 
 
 @dataclass

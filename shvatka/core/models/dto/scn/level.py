@@ -2,7 +2,7 @@ import logging
 from collections.abc import Sequence, Iterable
 from dataclasses import dataclass
 from datetime import timedelta
-from typing import overload
+from typing import overload, Literal
 
 from shvatka.core.utils import exceptions
 from .hint_part import AnyHint
@@ -196,6 +196,7 @@ class LevelScenario:
     id: str
     time_hints: HintsList
     conditions: Conditions
+    __model_version__: Literal[1]
 
     def __post_init__(self):
         if not self.conditions:
@@ -265,4 +266,5 @@ class LevelScenario:
             id=id,
             time_hints=time_hints,
             conditions=Conditions(conditions),
+            __model_version__=1,
         )

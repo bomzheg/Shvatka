@@ -129,7 +129,10 @@ async def get_game_package(
     file_metas = await get_file_metas(game, author, dao)
     contents = await get_file_contents(file_metas, file_gateway)
     scenario = scn.FullGameScenario(
-        name=game.name, levels=[level.scenario for level in game.levels], files=file_metas
+        name=game.name,
+        levels=[level.scenario for level in game.levels],
+        files=file_metas,
+        __model_version__=1,
     )
     if game.is_complete():
         assert game.start_at

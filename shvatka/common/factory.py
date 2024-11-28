@@ -38,8 +38,7 @@ class TelegraphProvider(Provider):
 
 
 REQUIRED_GAME_RECIPES = [
-    name_mapping(scn.LevelScenario, map={"__model_version__": "__model_version__"}),
-    name_mapping(scn.GameScenario, map={"__model_version__": "__model_version__"}),
+    name_mapping(map={"__model_version__": "__model_version__"}),
     loader(HintsList, lambda x: HintsList.parse(x), Chain.LAST),
     ABCProxy(HintsList, list[TimeHint]),  # internal class, can be broken in next version adaptix
     loader(Conditions, lambda x: Conditions(x), Chain.LAST),

@@ -56,26 +56,24 @@ def downgrade():
                    jsonb_insert(
                        l.scenario::JSONB,
                        '{keys}',
-                       (SELECT jsonb_agg(k) AS flattened_keys
+                       (SELECT COALESCE(jsonb_agg(k), '[]') AS flattened_keys
                        FROM (
                            SELECT jsonb_array_elements(elem->'keys') AS k
                            FROM (
                                 SELECT jsonb_array_elements(
                                        jsonb_path_query_array(l.scenario::JSONB, '$.conditions[*] ? (@.type == "WIN_KEY")')
                                 ) AS elem
-                                FROM levels AS l
                            ) sub_query
                        ) keys)
                    ),
                    '{bonus_keys}',
-                   (SELECT jsonb_agg(k) AS flattened_keys
+                   (SELECT COALESCE(jsonb_agg(k), '[]') AS flattened_keys
                    FROM (
                        SELECT jsonb_array_elements(elem->'keys') AS k
                        FROM (
                             SELECT jsonb_array_elements(
                                    jsonb_path_query_array(l.scenario::JSONB, '$.conditions[*] ? (@.type == "BONUS_KEY")')
                             ) AS elem
-                            FROM levels AS l
                        ) sub_query
                    ) keys)
                ) - 'conditions' AS scenario,

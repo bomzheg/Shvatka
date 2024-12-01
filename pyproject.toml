@@ -98,7 +98,7 @@ exclude_lines = [
     "if __name__ == .__main__.:",
     "class .*\bProtocol\\):",
     "@(abc\\.)?abstractmethod",
-    "typing.assert_never(",
+    "(typing\\.)?assert_never",
 ]
 
 [tool.black]

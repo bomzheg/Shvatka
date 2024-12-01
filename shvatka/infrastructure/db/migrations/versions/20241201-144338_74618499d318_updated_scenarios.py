@@ -15,31 +15,28 @@ down_revision = "84b3c1dab323"
 branch_labels = None
 depends_on = None
 
-levels = sa.table(
-    "levels",
-    sa.Column("id", sa.Integer, primary_key=True),
-    sa.Column("scenario", postgresql.JSONB, nullable=False),
-)
-
 
 def upgrade():
     op.execute("""
         WITH scn AS (
         SELECT jsonb_insert(
-                       l.scenario::JSONB,
-                       '{conditions}',
-                       jsonb_build_array(
-                               jsonb_build_object(
-                                       'type', 'WIN_KEY',
-                                       'keys', l.scenario::JSONB->'keys'
-                               ),
-                               jsonb_build_object(
-                                       'type', 'BONUS_KEY',
-                                       'keys', jsonb_extract_path(l.scenario::JSONB, 'bonus_keys')
-                               )
-                       )
-               ) - 'keys' - 'bonus_keys' AS scenario,
-               l.id
+           l.scenario::JSONB,
+           '{conditions}',
+           jsonb_path_query_array(
+               jsonb_build_array(
+                   jsonb_build_object(
+                       'type', 'WIN_KEY',
+                       'keys', l.scenario::JSONB->'keys'
+                   ),
+                   jsonb_build_object(
+                       'type', 'BONUS_KEY',
+                       'keys', jsonb_extract_path(l.scenario::JSONB, 'bonus_keys')
+                   )
+               ),
+               '$[*] ? (@.keys != null && @.keys.size() > 0)'
+           )
+        ) - 'keys' - 'bonus_keys' AS scenario,
+        l.id
         FROM levels AS l
     )
     UPDATE levels lvl

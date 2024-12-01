@@ -1,4 +1,3 @@
-import enum
 import typing
 
 from .interface import Condition, Action, State, Decision, DecisionType, StateHolder

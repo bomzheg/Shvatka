@@ -79,18 +79,18 @@ def decision_to_parsed_key(
     decision: action.KeyDecision | action.BonusKeyDecision | action.WrongKeyDecision,
 ) -> dto.ParsedKey:
     match decision:
-        case action.KeyDecision:
+        case action.KeyDecision():
             return dto.ParsedKey(
                 type_=decision.key_type,
                 text=decision.key_text,
             )
-        case action.BonusKeyDecision:
+        case action.BonusKeyDecision():
             return dto.ParsedBonusKey(
                 type_=enums.KeyType.bonus,
                 text=decision.key_text,
                 bonus_minutes=decision.key.bonus_minutes,
             )
-        case action.WrongKeyDecision:
+        case action.WrongKeyDecision():
             return dto.ParsedKey(
                 type_=decision.key_type,
                 text=decision.key,

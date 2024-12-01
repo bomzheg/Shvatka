@@ -12,10 +12,7 @@ from shvatka.core.models.dto import scn
 from shvatka.core.models.enums import GameStatus
 
 T = typing.TypeVar("T")
-retort = Retort(recipe=[
-    *REQUIRED_GAME_RECIPES,
-    dumper(scn.HintsList, lambda x: x.hints)
-])
+retort = Retort(recipe=[*REQUIRED_GAME_RECIPES, dumper(scn.HintsList, lambda x: x.hints)])
 
 
 @dataclass

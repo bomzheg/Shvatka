@@ -8,7 +8,6 @@ from shvatka.core.utils import exceptions
 from .hint_part import AnyHint
 from .time_hint import TimeHint, EnumeratedTimeHint
 from shvatka.core.models.dto.action import (
-    Condition,
     Action,
     Decision,
     StateHolder,
@@ -17,7 +16,8 @@ from shvatka.core.models.dto.action import (
     KeyDecision,
     KeyBonusCondition,
     NotImplementedActionDecision,
-    BonusKeyDecision, AnyCondition,
+    BonusKeyDecision,
+    AnyCondition,
 )
 from shvatka.core.models.dto.action.keys import (
     SHKey,
@@ -264,7 +264,7 @@ class LevelScenario:
         keys: set[SHKey],
         bonus_keys: set[BonusKey] | None = None,
     ) -> "LevelScenario":
-        conditions: list[Condition] = [KeyWinCondition(keys)]
+        conditions: list[AnyCondition] = [KeyWinCondition(keys)]
         if bonus_keys:
             conditions.append(KeyBonusCondition(bonus_keys))
         return cls(

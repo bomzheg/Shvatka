@@ -9,7 +9,7 @@ from adaptix import (
     name_mapping,
     loader,
     Chain,
-    dumper, as_is_loader,
+    dumper,
 )
 from adaptix.load_error import LoadError
 from adaptix._internal.morphing.provider_template import ABCProxy

@@ -24,48 +24,66 @@ levels = sa.table(
 
 def upgrade():
     op.execute("""
-        with scn as (
-        select jsonb_insert(
-                       l.scenario::jsonb,
+        WITH scn AS (
+        SELECT jsonb_insert(
+                       l.scenario::JSONB,
                        '{conditions}',
                        jsonb_build_array(
                                jsonb_build_object(
                                        'type', 'WIN_KEY',
-                                       'keys', l.scenario::jsonb->'keys'
+                                       'keys', l.scenario::JSONB->'keys'
                                ),
                                jsonb_build_object(
                                        'type', 'BONUS_KEY',
-                                       'keys', jsonb_extract_path(l.scenario::jsonb, 'bonus_keys')
+                                       'keys', jsonb_extract_path(l.scenario::JSONB, 'bonus_keys')
                                )
                        )
-               ) - 'keys' - 'bonus_keys' as scenario,
+               ) - 'keys' - 'bonus_keys' AS scenario,
                l.id
-        from levels as l
+        FROM levels AS l
     )
-    update levels lvl
-    set scenario = scn.scenario
-    from scn
-    where scn.id = lvl.id
+    UPDATE levels lvl
+    SET scenario = scn.scenario
+    FROM scn
+    WHERE scn.id = lvl.id
     """)
 
 
 def downgrade():
     op.execute("""
-        with scn as (
-            select jsonb_insert(
-                           jsonb_insert(
-                                   l.scenario::jsonb,
-                                   '{keys}',
-                                   l.scenario::jsonb -> 'conditions' -> 0 -> 'keys'
-                           ),
-                           '{bonus_keys}',
-                           l.scenario::jsonb -> 'conditions' -> 1 -> 'keys'
-                   ) - 'conditions' as scenario,
-                   l.id
-            from levels as l
+        WITH scn AS (
+            SELECT jsonb_insert(
+                   jsonb_insert(
+                       l.scenario::JSONB,
+                       '{keys}',
+                       (SELECT jsonb_agg(k) AS flattened_keys
+                       FROM (
+                           SELECT jsonb_array_elements(elem->'keys') AS k
+                           FROM (
+                                SELECT jsonb_array_elements(
+                                       jsonb_path_query_array(l.scenario::JSONB, '$.conditions[*] ? (@.type == "WIN_KEY")')
+                                ) AS elem
+                                FROM levels AS l
+                           ) sub_query
+                       ) keys)
+                   ),
+                   '{bonus_keys}',
+                   (SELECT jsonb_agg(k) AS flattened_keys
+                   FROM (
+                       SELECT jsonb_array_elements(elem->'keys') AS k
+                       FROM (
+                            SELECT jsonb_array_elements(
+                                   jsonb_path_query_array(l.scenario::JSONB, '$.conditions[*] ? (@.type == "BONUS_KEY")')
+                            ) AS elem
+                            FROM levels AS l
+                       ) sub_query
+                   ) keys)
+               ) - 'conditions' AS scenario,
+               l.id
+            FROM levels AS l
         )
-        update levels lvl
-        set scenario = scn.scenario
-        from scn
-        where scn.id = lvl.id
+        UPDATE levels lvl
+        SET scenario = scn.scenario
+        FROM scn
+        WHERE scn.id = lvl.id
     """)

@@ -190,6 +190,11 @@ class Conditions(Sequence[AnyCondition]):
     def __repr__(self):
         return repr(self.conditions)
 
+    def __eq__(self, other):
+        if not isinstance(other, Conditions):
+            return NotImplemented
+        return self.conditions == other.conditions
+
 
 @dataclass
 class LevelScenario:

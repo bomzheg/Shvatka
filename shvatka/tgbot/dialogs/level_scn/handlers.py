@@ -7,7 +7,7 @@ from aiogram_dialog.widgets.kbd import Button
 
 import shvatka.core.models.dto.action.keys
 from shvatka.core.models import dto
-from shvatka.core.models.dto import scn
+from shvatka.core.models.dto import scn, action
 from shvatka.core.services.level import upsert_level, get_by_id
 from shvatka.core.utils.input_validation import (
     is_multiple_keys_normal,
@@ -100,10 +100,10 @@ async def on_correct_bonus_keys(
     m: Message,
     dialog_: Any,
     manager: DialogManager,
-    keys: list[shvatka.core.models.dto.action.keys.BonusKey],
+    keys: list[action.BonusKey],
 ):
     retort: Retort = manager.middleware_data["retort"]
-    await manager.done({"bonus_keys": retort.dump(keys)})
+    await manager.done({"bonus_keys": retort.dump(keys, list[action.BonusKey])})
 
 
 async def process_time_hint_result(start_data: Data, result: Any, manager: DialogManager):
@@ -146,7 +146,7 @@ async def on_start_level_edit(start_data: dict[str, Any], manager: DialogManager
     manager.dialog_data["keys"] = list(level.get_keys())
     manager.dialog_data["time_hints"] = retort.dump(level.scenario.time_hints)
     manager.dialog_data["bonus_keys"] = retort.dump(
-        level.get_bonus_keys(), set[shvatka.core.models.dto.action.keys.BonusKey]
+        list(level.get_bonus_keys()), list[action.BonusKey]
     )
 
 

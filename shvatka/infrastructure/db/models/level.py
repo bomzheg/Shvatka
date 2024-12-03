@@ -1,26 +1,32 @@
+import logging
 import typing
 from typing import Any
 
-from adaptix import Retort
+from adaptix import Retort, dumper, P
 from sqlalchemy import Integer, Text, ForeignKey, JSON, TypeDecorator, UniqueConstraint
 from sqlalchemy.engine import Dialect
 from sqlalchemy.orm import relationship, mapped_column, Mapped
 
 from shvatka.common.factory import REQUIRED_GAME_RECIPES
 from shvatka.core.models import dto
-from shvatka.core.models.dto import scn
+from shvatka.core.models.dto import scn, action
 from shvatka.infrastructure.db.models import Base
 
 if typing.TYPE_CHECKING:
     from .game import Game
     from .player import Player
 
+logger = logging.getLogger(__name__)
+
 
 class ScenarioField(TypeDecorator):
     impl = JSON
     cache_ok = True
     retort = Retort(
-        recipe=REQUIRED_GAME_RECIPES,
+        recipe=[
+            dumper(P[action.KeyBonusCondition].keys, lambda keys: [{"text": x.text, "bonus_minutes": x.bonus_minutes} for x in keys]),
+            *REQUIRED_GAME_RECIPES
+        ],
     )
 
     def coerce_compared_value(self, op: Any, value: Any):
@@ -29,7 +35,12 @@ class ScenarioField(TypeDecorator):
         return self.impl().coerce_compared_value(op=op, value=value)
 
     def process_bind_param(self, value: scn.LevelScenario | None, dialect: Dialect):
-        return self.retort.dump(value, scn.LevelScenario)
+        try:
+            dumped = self.retort.dump(value, scn.LevelScenario)
+        except Exception as e:
+            logger.exception("can't dump level scenario", exc_info=e)
+            raise
+        return dumped
 
     def process_result_value(self, value: Any, dialect: Dialect) -> scn.LevelScenario | None:
         if value is None:

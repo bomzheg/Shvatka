@@ -8,6 +8,10 @@ levels:
         keys:
           - "SH123"
           - "SH321"
+      - type: BONUS_KEY
+        keys:
+          - text: "SHBONUS"
+            bonus-minutes: 10
     time-hints:
       - time: 0
         hint:

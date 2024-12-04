@@ -5,9 +5,7 @@ Revises: 84b3c1dab323
 Create Date: 2024-12-01 14:43:38.379748
 
 """
-import sqlalchemy as sa
 from alembic import op
-from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
 revision = "74618499d318"
@@ -17,7 +15,8 @@ depends_on = None
 
 
 def upgrade():
-    op.execute("""
+    op.execute(
+        """
         WITH scn AS (
         SELECT jsonb_insert(
            l.scenario::JSONB,
@@ -43,11 +42,13 @@ def upgrade():
     SET scenario = scn.scenario
     FROM scn
     WHERE scn.id = lvl.id
-    """)
+    """
+    )
 
 
 def downgrade():
-    op.execute("""
+    op.execute(
+        """
         WITH scn AS (
             SELECT jsonb_insert(
                    jsonb_insert(
@@ -58,7 +59,10 @@ def downgrade():
                            SELECT jsonb_array_elements(elem->'keys') AS k
                            FROM (
                                 SELECT jsonb_array_elements(
-                                       jsonb_path_query_array(l.scenario::JSONB, '$.conditions[*] ? (@.type == "WIN_KEY")')
+                                   jsonb_path_query_array(
+                                    l.scenario::JSONB,
+                                    '$.conditions[*] ? (@.type == "WIN_KEY")'
+                                   )
                                 ) AS elem
                            ) sub_query
                        ) keys)
@@ -69,7 +73,10 @@ def downgrade():
                        SELECT jsonb_array_elements(elem->'keys') AS k
                        FROM (
                             SELECT jsonb_array_elements(
-                                   jsonb_path_query_array(l.scenario::JSONB, '$.conditions[*] ? (@.type == "BONUS_KEY")')
+                               jsonb_path_query_array(
+                                   l.scenario::JSONB,
+                                   '$.conditions[*] ? (@.type == "BONUS_KEY")'
+                               )
                             ) AS elem
                        ) sub_query
                    ) keys)
@@ -81,4 +88,5 @@ def downgrade():
         SET scenario = scn.scenario
         FROM scn
         WHERE scn.id = lvl.id
-    """)
+    """
+    )

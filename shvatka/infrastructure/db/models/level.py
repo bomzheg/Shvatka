@@ -24,8 +24,12 @@ class ScenarioField(TypeDecorator):
     cache_ok = True
     retort = Retort(
         recipe=[
-            dumper(P[action.KeyBonusCondition].keys, lambda keys: [{"text": x.text, "bonus_minutes": x.bonus_minutes} for x in keys]),
-            *REQUIRED_GAME_RECIPES
+            # TODO https://github.com/reagento/adaptix/issues/348
+            dumper(
+                P[action.KeyBonusCondition].keys,
+                lambda keys: [{"text": x.text, "bonus_minutes": x.bonus_minutes} for x in keys],
+            ),
+            *REQUIRED_GAME_RECIPES,
         ],
     )
 

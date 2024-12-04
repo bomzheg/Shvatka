@@ -63,6 +63,7 @@ jobs:
         run: source .venv/bin/activate && pytest --cov-report "xml:coverage.xml" --cov=shvatka tests/
       - name: Coverage comment
         id: coverageComment
+        continue-on-error: true
         uses: MishaKav/pytest-coverage-comment@main
         with:
           pytest-xml-coverage-path: ./coverage.xml
@@ -76,6 +77,7 @@ jobs:
           remove-link-from-badge: false
       - name: Create the Badge
         uses: schneegans/dynamic-badges-action@v1.7.0
+        continue-on-error: true
         with:
           auth: ${{ secrets.BAGE_GIST }}
           gistID: 99469cb5f8a18784c1f03d229a799427

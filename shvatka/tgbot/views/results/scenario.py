@@ -100,8 +100,12 @@ class LevelPublisher:
             if hint.time == 0:
                 text = (
                     f"🔒 <b>Уровень № {self.level.number_in_game + 1}</b>\n"
-                    f"Ключи уровня:\n🔑 " + "\n🔑 ".join(self.level.scenario.keys)
+                    f"Ключи уровня:\n🔑 " + "\n🔑 ".join(self.level.scenario.get_keys())
                 )
+                if self.level.scenario.get_bonus_keys():
+                    text += f"\nБонусные ключи:\n💰 " + "\n💰 ".join(
+                        [f"{b.text} ({b.bonus_minutes} мин.)" for b in self.level.scenario.get_bonus_keys()]
+                    )
             elif hint_number == len(self.level.scenario.time_hints) - 1:
                 text = (
                     f"🔖 Последняя подсказка уровня №{self.level.number_in_game + 1} "

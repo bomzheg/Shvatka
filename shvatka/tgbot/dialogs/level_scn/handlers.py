@@ -5,8 +5,9 @@ from aiogram.types import CallbackQuery, Message
 from aiogram_dialog import Data, DialogManager
 from aiogram_dialog.widgets.kbd import Button
 
+import shvatka.core.models.dto.action.keys
 from shvatka.core.models import dto
-from shvatka.core.models.dto import scn
+from shvatka.core.models.dto import scn, action
 from shvatka.core.services.level import upsert_level, get_by_id
 from shvatka.core.utils.input_validation import (
     is_multiple_keys_normal,
@@ -69,7 +70,7 @@ async def on_correct_keys(m: Message, dialog_: Any, manager: DialogManager, keys
     await manager.done({"keys": keys})
 
 
-def convert_bonus_keys(text: str) -> list[scn.BonusKey]:
+def convert_bonus_keys(text: str) -> list[shvatka.core.models.dto.action.keys.BonusKey]:
     result = []
     for key_str in text.splitlines():
         key, bonus = key_str.split(maxsplit=1)
@@ -78,7 +79,9 @@ def convert_bonus_keys(text: str) -> list[scn.BonusKey]:
         parsed_bonus = float(bonus)
         if not (-600 < parsed_bonus < 60):
             raise ValueError("bonus out of available range")
-        parsed_key = scn.BonusKey(text=key, bonus_minutes=parsed_bonus)
+        parsed_key = shvatka.core.models.dto.action.keys.BonusKey(
+            text=key, bonus_minutes=parsed_bonus
+        )
         result.append(parsed_key)
     return result
 
@@ -94,10 +97,13 @@ async def not_correct_bonus_keys(
 
 
 async def on_correct_bonus_keys(
-    m: Message, dialog_: Any, manager: DialogManager, keys: list[scn.BonusKey]
+    m: Message,
+    dialog_: Any,
+    manager: DialogManager,
+    keys: list[action.BonusKey],
 ):
     retort: Retort = manager.middleware_data["retort"]
-    await manager.done({"bonus_keys": retort.dump(keys)})
+    await manager.done({"bonus_keys": retort.dump(keys, list[action.BonusKey])})
 
 
 async def process_time_hint_result(start_data: Data, result: Any, manager: DialogManager):
@@ -139,7 +145,9 @@ async def on_start_level_edit(start_data: dict[str, Any], manager: DialogManager
     manager.dialog_data["level_id"] = level.name_id
     manager.dialog_data["keys"] = list(level.get_keys())
     manager.dialog_data["time_hints"] = retort.dump(level.scenario.time_hints)
-    manager.dialog_data["bonus_keys"] = retort.dump(level.get_bonus_keys(), set[scn.BonusKey])
+    manager.dialog_data["bonus_keys"] = retort.dump(
+        list(level.get_bonus_keys()), list[action.BonusKey]
+    )
 
 
 async def on_start_hints_edit(start_data: dict[str, Any], manager: DialogManager):
@@ -210,9 +218,13 @@ async def save_level(c: CallbackQuery, button: Button, manager: DialogManager):
     id_ = data["level_id"]
     keys = set(map(normalize_key, data["keys"]))
     time_hints = retort.load(data["time_hints"], list[scn.TimeHint])
-    bonus_keys = retort.load(data.get("bonus_keys", []), set[scn.BonusKey])
+    bonus_keys = retort.load(
+        data.get("bonus_keys", []), set[shvatka.core.models.dto.action.keys.BonusKey]
+    )
 
-    level_scn = scn.LevelScenario(id=id_, keys=keys, time_hints=time_hints, bonus_keys=bonus_keys)
+    level_scn = scn.LevelScenario.legacy_factory(
+        id=id_, keys=keys, time_hints=time_hints, bonus_keys=bonus_keys
+    )
     level = await upsert_level(author=author, scenario=level_scn, dao=dao.level)
     await manager.done(result={"level": retort.dump(level)})
     await c.answer(text="Уровень успешно сохранён")

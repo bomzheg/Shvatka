@@ -27,4 +27,4 @@ async def test_simple_level(simple_scn: RawGameScenario, dao: HolderDao, retort:
     assert lvl.game_id is None
     assert lvl.number_in_game is None
 
-    assert lvl.scenario.keys == {"SH123", "SH321"}
+    assert lvl.scenario.get_keys() == {"SH123", "SH321"}

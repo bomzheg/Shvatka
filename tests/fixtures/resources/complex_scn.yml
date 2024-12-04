@@ -1,9 +1,17 @@
 name: "My new game"
+__model_version__: 1
 levels:
   - id: first
-    keys:
-      - "SH123"
-      - "SH321"
+    __model_version__: 1
+    conditions:
+      - type: WIN_KEY
+        keys:
+          - "SH123"
+          - "SH321"
+      - type: BONUS_KEY
+        keys:
+          - text: "SHBONUS"
+            bonus-minutes: 10
     time-hints:
       - time: 0
         hint:
@@ -26,7 +34,10 @@ levels:
           - time: text
             text: "SH123\nSH321"
   - id: second
-    keys: [ "SHOOT" ]
+    __model_version__: 1
+    conditions:
+      - type: WIN_KEY
+        keys: [ "SHOOT" ]
     time-hints:
       - time: 0
         hint:

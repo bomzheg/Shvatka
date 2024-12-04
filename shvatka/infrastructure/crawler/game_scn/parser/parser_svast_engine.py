@@ -229,9 +229,9 @@ class SvastEngineGameParser:
 
     def build_level(self):
         self.build_time_hint()
-        level = scn.LevelScenario(
+        level = scn.LevelScenario.legacy_factory(
             id=f"game_{self.id}-lvl_{self.level_number}",
-            time_hints=self.time_hints,
+            time_hints=scn.HintsList(self.time_hints),
             keys={typing.cast(scn.TextHint, self.time_hints[-1].hint).text},
         )
         self.levels.append(level)
@@ -257,6 +257,7 @@ class SvastEngineGameParser:
                 id=self.id,
                 start_at=self.start_at,
             ),
+            __model_version__=1,
         )
         return game
 

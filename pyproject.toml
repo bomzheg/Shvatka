@@ -85,6 +85,7 @@ omit = [
     ".*",
     "*/site-packages/*",
     "shvatka/tgbot/*",
+    "shvatka/infrastructure/db/migrations/*",
     "*/__main__.py",
 ]
 
@@ -97,6 +98,7 @@ exclude_lines = [
     "if __name__ == .__main__.:",
     "class .*\bProtocol\\):",
     "@(abc\\.)?abstractmethod",
+    "(typing\\.)?assert_never",
 ]
 
 [tool.black]

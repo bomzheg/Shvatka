@@ -1,29 +1,33 @@
-import typing
+import logging
 from collections.abc import Sequence, Iterable
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import timedelta
-from typing import overload
-
+from typing import overload, Literal
 
 from shvatka.core.utils import exceptions
 from .hint_part import AnyHint
 from .time_hint import TimeHint, EnumeratedTimeHint
+from shvatka.core.models.dto.action import (
+    Action,
+    Decision,
+    StateHolder,
+    DecisionType,
+    Decisions,
+    KeyDecision,
+    KeyBonusCondition,
+    NotImplementedActionDecision,
+    BonusKeyDecision,
+    AnyCondition,
+)
+from shvatka.core.models.dto.action.keys import (
+    SHKey,
+    KeyWinCondition,
+    TypedKeyAction,
+    WrongKeyDecision,
+    BonusKey,
+)
 
-SHKey: typing.TypeAlias = str
-
-
-@dataclass(frozen=True)
-class BonusKey:
-    text: str
-    bonus_minutes: float
-
-    def __eq__(self, other: object) -> bool:
-        if not isinstance(other, BonusKey):
-            return NotImplemented
-        return self.text == other.text
-
-    def __hash__(self) -> int:
-        return hash(self.text)
+logger = logging.getLogger(__name__)
 
 
 class HintsList(Sequence[TimeHint]):
@@ -129,12 +133,79 @@ class HintsList(Sequence[TimeHint]):
         return repr(self.hints)
 
 
+class Conditions(Sequence[AnyCondition]):
+    def __init__(self, conditions: Sequence[AnyCondition]):
+        self.validate(conditions)
+        self.conditions: Sequence[AnyCondition] = conditions
+
+    @staticmethod
+    def validate(conditions: Sequence[AnyCondition]) -> None:
+        keys: set[str] = set()
+        win_conditions = []
+        for c in conditions:
+            if isinstance(c, KeyWinCondition):
+                win_conditions.append(c)
+                if keys.intersection(c.keys):
+                    raise exceptions.LevelError(
+                        text=f"keys already exists {keys.intersection(c.keys)}"
+                    )
+                keys = keys.union(c.keys)
+            elif isinstance(c, KeyBonusCondition):
+                if keys.intersection({k.text for k in c.keys}):
+                    raise exceptions.LevelError(
+                        text=f"keys already exists {keys.intersection(c.keys)}"
+                    )
+                keys = keys.union({k.text for k in c.keys})
+        if not win_conditions:
+            raise exceptions.LevelError(text="There is no win condition")
+
+    def get_keys(self) -> set[str]:
+        result: set[SHKey] = set()
+        for condition in self.conditions:
+            if isinstance(condition, KeyWinCondition):
+                result = result.union(condition.keys)
+        return result
+
+    def get_bonus_keys(self) -> set[BonusKey]:
+        result: set[BonusKey] = set()
+        for condition in self.conditions:
+            if isinstance(condition, KeyBonusCondition):
+                result = result.union(condition.keys)
+        return result
+
+    @overload
+    def __getitem__(self, index: int) -> AnyCondition:
+        return self.conditions[index]
+
+    @overload
+    def __getitem__(self, index: slice) -> Sequence[AnyCondition]:
+        return self.conditions[index]
+
+    def __getitem__(self, index):
+        return self.conditions[index]
+
+    def __len__(self):
+        return len(self.conditions)
+
+    def __repr__(self):
+        return repr(self.conditions)
+
+    def __eq__(self, other):
+        if not isinstance(other, Conditions):
+            return NotImplemented
+        return self.conditions == other.conditions
+
+
 @dataclass
 class LevelScenario:
     id: str
     time_hints: HintsList
-    keys: set[SHKey] = field(default_factory=set)
-    bonus_keys: set[BonusKey] = field(default_factory=set)
+    conditions: Conditions
+    __model_version__: Literal[1]
+
+    def __post_init__(self):
+        if not self.conditions:
+            raise exceptions.LevelError(text="no win conditions are present")
 
     def get_hint(self, hint_number: int) -> TimeHint:
         return self.time_hints[hint_number]
@@ -145,11 +216,32 @@ class LevelScenario:
     def is_last_hint(self, hint_number: int) -> bool:
         return len(self.time_hints) == hint_number + 1
 
-    def get_keys(self) -> set[str]:
-        return self.keys
+    def check(self, action: Action, state: StateHolder) -> Decision:
+        decisions = Decisions([cond.check(action, state) for cond in self.conditions])
+        implemented = decisions.get_implemented()
+        if not implemented:
+            return NotImplementedActionDecision()
+        if isinstance(action, TypedKeyAction):
+            if bonuses := implemented.get_all(BonusKeyDecision):
+                return bonuses.get_exactly_one(self.id)
+            key_decisions = implemented.get_all(KeyDecision, WrongKeyDecision)
+            if not key_decisions:
+                return NotImplementedActionDecision()
+            if not key_decisions.get_significant():
+                assert all(d.type == DecisionType.NO_ACTION for d in key_decisions)
+                if duplicate_correct := key_decisions.get_all(KeyDecision):
+                    return duplicate_correct.get_exactly_one(self.id)
+                return key_decisions[0]
+            significant_key_decisions = key_decisions.get_significant()
+            return significant_key_decisions.get_exactly_one(self.id)
+        else:
+            return NotImplementedActionDecision()
+
+    def get_keys(self) -> set[SHKey]:
+        return self.conditions.get_keys()
 
     def get_bonus_keys(self) -> set[BonusKey]:
-        return self.bonus_keys
+        return self.conditions.get_bonus_keys()
 
     def get_guids(self) -> list[str]:
         guids = []
@@ -163,3 +255,21 @@ class LevelScenario:
 
     def get_hints_for_timedelta(self, delta: timedelta) -> list[TimeHint]:
         return self.time_hints.get_hints_for_timedelta(delta)
+
+    @classmethod
+    def legacy_factory(
+        cls,
+        id: str,  # noqa: A002
+        time_hints: HintsList,
+        keys: set[SHKey],
+        bonus_keys: set[BonusKey] | None = None,
+    ) -> "LevelScenario":
+        conditions: list[AnyCondition] = [KeyWinCondition(keys)]
+        if bonus_keys:
+            conditions.append(KeyBonusCondition(bonus_keys))
+        return cls(
+            id=id,
+            time_hints=time_hints,
+            conditions=Conditions(conditions),
+            __model_version__=1,
+        )

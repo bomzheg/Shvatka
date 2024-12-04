@@ -125,6 +125,8 @@ async def check_key(
         )
 
     new_key = await key_processor.check_key(key=key, player=player, team=team)
+    if new_key is None:
+        return
     if new_key.is_duplicate:
         await view.duplicate_key(key=new_key)
         return

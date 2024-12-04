@@ -34,6 +34,6 @@ from .hint_part import (
     PhotoHint,
     ContactHint,
 )
-from .level import LevelScenario, HintsList, Conditions
+from .level import LevelScenario, SHKey, BonusKey, HintsList
 from .parsed_zip import ParsedZip
 from .time_hint import TimeHint

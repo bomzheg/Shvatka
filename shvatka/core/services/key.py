@@ -1,11 +1,16 @@
+import logging
 from dataclasses import dataclass
+
 
 from shvatka.core.interfaces.dal.game_play import GamePlayerDao
 from shvatka.core.models import dto, enums
-from shvatka.core.models.dto import scn
+from shvatka.core.models.dto import action
 from shvatka.core.utils import exceptions
 from shvatka.core.utils.input_validation import is_key_valid
 from shvatka.core.utils.key_checker_lock import KeyCheckerFactory
+
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -14,7 +19,9 @@ class KeyProcessor:
     game: dto.FullGame
     locker: KeyCheckerFactory
 
-    async def check_key(self, key: str, team: dto.Team, player: dto.Player) -> dto.InsertedKey:
+    async def check_key(
+        self, key: str, team: dto.Team, player: dto.Player
+    ) -> dto.InsertedKey | None:
         if not is_key_valid(key):
             raise exceptions.InvalidKey(key=key, team=team, player=player, game=self.game)
         return await self.submit_key(key=key, player=player, team=team)
@@ -24,50 +31,69 @@ class KeyProcessor:
         key: str,
         player: dto.Player,
         team: dto.Team,
-    ) -> dto.InsertedKey:
-        is_level_up = False
+    ) -> dto.InsertedKey | None:
         async with self.locker(team):
             level = await self.dao.get_current_level(team, self.game)
-            parsed_key = await self.parse_key(key, level)
-            saved_key = await self.dao.save_key(
-                key=parsed_key.text,
-                team=team,
-                level=level,
-                game=self.game,
-                player=player,
-                type_=parsed_key.type_,
-                is_duplicate=await self.is_duplicate(level=level, team=team, key=key),
-            )
-            typed_keys = await self.dao.get_correct_typed_keys(
+            assert level.number_in_game is not None
+            correct_keys = await self.dao.get_correct_typed_keys(
                 level=level, game=self.game, team=team
             )
-            if parsed_key.type_ == enums.KeyType.simple:
-                # add just now added key to typed, because no flush in dao
-                typed_keys.add(parsed_key.text)
-                if is_level_up := await self.is_level_up(typed_keys, level):
+            all_typed = await self.dao.get_team_typed_keys(
+                self.game, team, level_number=level.number_in_game
+            )
+            state = action.InMemoryStateHolder(
+                typed_correct=correct_keys,
+                all_typed={k.text for k in all_typed},
+            )
+            decision = level.scenario.check(
+                action=action.TypedKeyAction(key=key),
+                state=state,
+            )
+            if isinstance(
+                decision, action.KeyDecision | action.BonusKeyDecision | action.WrongKeyDecision
+            ):
+                saved_key = await self.dao.save_key(
+                    key=decision.key_text,
+                    team=team,
+                    level=level,
+                    game=self.game,
+                    player=player,
+                    type_=decision.key_type,
+                    is_duplicate=decision.duplicate,
+                )
+                if is_level_up := decision.type == action.DecisionType.LEVEL_UP:
                     await self.dao.level_up(team=team, level=level, game=self.game)
-            await self.dao.commit()
-        return dto.InsertedKey.from_key_time(saved_key, is_level_up, parsed_key=parsed_key)
+                await self.dao.commit()
+                return dto.InsertedKey.from_key_time(
+                    saved_key, is_level_up, parsed_key=decision_to_parsed_key(decision)
+                )
+            elif isinstance(decision, action.NotImplementedActionDecision):
+                logger.warning("impossible decision here cant be not implemented")
+                return None
+            else:
+                logger.warning("impossible decision here is %s", type(decision))
+                return None
 
-    async def get_bonus_value(self, key: str, level: dto.Level) -> float:
-        for bonus_key in level.get_bonus_keys():
-            if bonus_key.text == key:
-                return bonus_key.bonus_minutes
-        raise AssertionError
 
-    async def parse_key(self, key: str, level: dto.Level) -> dto.ParsedKey:
-        if key in level.get_bonus_keys_texts():
+def decision_to_parsed_key(
+    decision: action.KeyDecision | action.BonusKeyDecision | action.WrongKeyDecision,
+) -> dto.ParsedKey:
+    match decision:
+        case action.KeyDecision():
+            return dto.ParsedKey(
+                type_=decision.key_type,
+                text=decision.key_text,
+            )
+        case action.BonusKeyDecision():
             return dto.ParsedBonusKey(
                 type_=enums.KeyType.bonus,
-                text=key,
-                bonus_minutes=await self.get_bonus_value(key, level),
+                text=decision.key_text,
+                bonus_minutes=decision.key.bonus_minutes,
             )
-        if key in level.get_keys():
-            return dto.ParsedKey(type_=enums.KeyType.simple, text=key)
-        return dto.ParsedKey(type_=enums.KeyType.wrong, text=key)
-
-    async def is_duplicate(self, key: scn.SHKey, level: dto.Level, team: dto.Team) -> bool:
-        return await self.dao.is_key_duplicate(level, team, key)
-
-    async def is_level_up(self, typed_keys: set[scn.SHKey], level: dto.Level) -> bool:
-        return typed_keys == level.get_keys()
+        case action.WrongKeyDecision():
+            return dto.ParsedKey(
+                type_=decision.key_type,
+                text=decision.key,
+            )
+        case _:
+            raise NotImplementedError(f"unknown decision type {type(decision)}")

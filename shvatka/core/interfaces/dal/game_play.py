@@ -54,6 +54,11 @@ class GamePlayerDao(Committer, WaiverChecker, GameOrgsGetter, LevelByTeamGetter,
     ) -> dto.KeyTime:
         raise NotImplementedError
 
+    async def get_team_typed_keys(
+        self, game: dto.Game, team: dto.Team, level_number: int
+    ) -> list[dto.KeyTime]:
+        raise NotImplementedError
+
     async def level_up(self, team: dto.Team, level: dto.Level, game: dto.Game) -> None:
         raise NotImplementedError
 

@@ -11,6 +11,7 @@ on:
 jobs:
   lint-and-test:
     uses: ./.github/workflows/test.yml
+    secrets: inherit
   build:
     needs: lint-and-test
     runs-on: ubuntu-latest

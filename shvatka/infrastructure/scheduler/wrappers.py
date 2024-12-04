@@ -9,6 +9,7 @@ from shvatka.core.models import dto
 from shvatka.core.services.game_play import prepare_game, start_game, send_hint
 from shvatka.core.services.level_testing import send_testing_level_hint
 from shvatka.core.services.organizers import get_by_player
+from shvatka.tgbot.views.bot_alert import BotAlert
 
 
 @inject
@@ -35,16 +36,21 @@ async def start_game_wrapper(
     scheduler: FromDishka[Scheduler],
     game_view: FromDishka[GameView],
     game_log_writer: FromDishka[GameLogWriter],
+    alerter: FromDishka[BotAlert],
 ):
-    game = await dao.game.get_full(game_id)
-    assert author_id == game.author.id
-    await start_game(
-        game=game,
-        dao=dao.game_starter,
-        game_log=game_log_writer,
-        view=game_view,
-        scheduler=scheduler,
-    )
+    try:
+        game = await dao.game.get_full(game_id)
+        assert author_id == game.author.id
+        await start_game(
+            game=game,
+            dao=dao.game_starter,
+            game_log=game_log_writer,
+            view=game_view,
+            scheduler=scheduler,
+        )
+    except Exception as e:
+        await alerter.alert(f"game not started because of {e!s}")
+        raise
 
 
 @inject
@@ -55,18 +61,23 @@ async def send_hint_wrapper(
     dao: FromDishka[HolderDao],
     game_view: FromDishka[GameView],
     scheduler: FromDishka[Scheduler],
+    alerter: FromDishka[BotAlert],
 ):
-    level = await dao.level.get_by_id(level_id)
-    team = await dao.team.get_by_id(team_id)
+    try:
+        level = await dao.level.get_by_id(level_id)
+        team = await dao.team.get_by_id(team_id)
 
-    await send_hint(
-        level=level,
-        hint_number=hint_number,
-        team=team,
-        dao=dao.level_time,
-        view=game_view,
-        scheduler=scheduler,
-    )
+        await send_hint(
+            level=level,
+            hint_number=hint_number,
+            team=team,
+            dao=dao.level_time,
+            view=game_view,
+            scheduler=scheduler,
+        )
+    except Exception as e:
+        await alerter.alert(f"hint for team {team_id} not sent because of {e!s}")
+        raise
 
 
 @inject

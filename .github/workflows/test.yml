@@ -77,12 +77,12 @@ jobs:
       - name: Create the Badge
         uses: schneegans/dynamic-badges-action@v1.7.0
         with:
-          auth: ${{ secrets.BAGE_GIST }} // don't passed from direct push
+          auth: ${{ secrets.BAGE_GIST }}
           gistID: 99469cb5f8a18784c1f03d229a799427
           filename: bage.json
           label: Coverage Report
-          message: ${{ steps.coverageComment.outputs.coverage }} // can't access from another job
-          color: ${{ steps.coverageComment.outputs.color }} // can't access from another job
+          message: ${{ steps.coverageComment.outputs.coverage }}
+          color: ${{ steps.coverageComment.outputs.color }}
           namedLogo: python
   docs:
     needs: [build]

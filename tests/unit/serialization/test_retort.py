@@ -3,6 +3,7 @@ from dataclasses import dataclass
 import pytest
 from adaptix import Retort, Mediator, Dumper
 from adaptix._internal.morphing.iterable_provider import IterableProvider
+from adaptix._internal.morphing.provider_template import ABCProxy
 from adaptix._internal.morphing.request_cls import DumperRequest
 from adaptix._internal.provider.location import GenericParamLoc
 from adaptix._internal.provider.request_cls import DebugTrailRequest
@@ -33,15 +34,12 @@ class FixedIterableProvider(IterableProvider):
             debug_trail=debug_trail,
         )
 
-@pytest.fixture
-def retort() -> Retort:
-    return Retort(
+def test_retort():
+    retort = Retort(
         recipe=[
             FixedIterableProvider(),
         ]
     )
-
-def test_retort(retort: Retort):
     assert retort.dump(set(), set) == []
     assert retort.load([], set) == set()
     assert retort.dump({1, 2}, set) == [1, 2]

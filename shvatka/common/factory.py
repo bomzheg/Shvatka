@@ -13,6 +13,10 @@ from adaptix import (
 )
 from adaptix.load_error import LoadError
 from adaptix._internal.morphing.provider_template import ABCProxy
+from adaptix import Retort, Mediator, Dumper
+from adaptix._internal.morphing.iterable_provider import IterableProvider
+from adaptix._internal.morphing.request_cls import DumperRequest, DebugTrailRequest
+from adaptix._internal.provider.location import GenericParamLoc
 from dataclass_factory import Schema, NameStyle
 from dishka import Provider, Scope, provide
 from telegraph.aio import Telegraph
@@ -36,6 +40,22 @@ class TelegraphProvider(Provider):
         telegraph = Telegraph(access_token=bot_config.telegraph_token)
         return telegraph
 
+class FixedIterableProvider(IterableProvider):
+    def provide_dumper(self, mediator: Mediator, request: DumperRequest) -> Dumper:
+        norm, arg = self._fetch_norm_and_arg(request)
+
+        arg_dumper = mediator.mandatory_provide(
+            request.append_loc(GenericParamLoc(type=arg, generic_pos=0)),
+            lambda x: "Cannot create dumper for iterable. Dumper for element cannot be created",
+        )
+        debug_trail = mediator.mandatory_provide(DebugTrailRequest(loc_stack=request.loc_stack))
+        return mediator.cached_call(
+            self._make_dumper,
+            origin=norm.origin,
+            iter_factory=list,
+            arg_dumper=arg_dumper,
+            debug_trail=debug_trail,
+        )
 
 REQUIRED_GAME_RECIPES = [
     name_mapping(map={"__model_version__": "__model_version__"}),
@@ -45,7 +65,7 @@ REQUIRED_GAME_RECIPES = [
     ABCProxy(
         Conditions, list[AnyCondition]
     ),  # internal class, can be broken in next adaptix version
-    dumper(P[action.KeyWinCondition].keys, list),
+    FixedIterableProvider(),
 ]
 
 
@@ -68,13 +88,6 @@ class DCFProvider(Provider):
                     name_style=adaptix.NameStyle.LOWER_KEBAB,
                 ),
                 *REQUIRED_GAME_RECIPES,
-                # TODO https://github.com/reagento/adaptix/issues/348
-                dumper(
-                    P[action.KeyBonusCondition].keys,
-                    lambda keys: [
-                        {"text": x.text, "bonus-minutes": x.bonus_minutes} for x in keys
-                    ],
-                ),
                 validator(
                     pred=P[scn.LevelScenario].id,
                     func=lambda x: validate_level_id(x) is not None,

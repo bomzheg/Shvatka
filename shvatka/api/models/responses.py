@@ -16,11 +16,6 @@ retort = Retort(
     recipe=[
         *REQUIRED_GAME_RECIPES,
         dumper(scn.HintsList, lambda x: x.hints),
-        # TODO https://github.com/reagento/adaptix/issues/348
-        dumper(
-            P[action.KeyBonusCondition].keys,
-            lambda keys: [{"text": x.text, "bonus_minutes": x.bonus_minutes} for x in keys],
-        ),
     ]
 )
 

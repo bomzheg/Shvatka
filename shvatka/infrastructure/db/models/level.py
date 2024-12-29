@@ -2,14 +2,14 @@ import logging
 import typing
 from typing import Any
 
-from adaptix import Retort, dumper, P
+from adaptix import Retort
 from sqlalchemy import Integer, Text, ForeignKey, JSON, TypeDecorator, UniqueConstraint
 from sqlalchemy.engine import Dialect
 from sqlalchemy.orm import relationship, mapped_column, Mapped
 
 from shvatka.common.factory import REQUIRED_GAME_RECIPES
 from shvatka.core.models import dto
-from shvatka.core.models.dto import scn, action
+from shvatka.core.models.dto import scn
 from shvatka.infrastructure.db.models import Base
 
 if typing.TYPE_CHECKING:
@@ -24,11 +24,6 @@ class ScenarioField(TypeDecorator):
     cache_ok = True
     retort = Retort(
         recipe=[
-            # TODO https://github.com/reagento/adaptix/issues/348
-            dumper(
-                P[action.KeyBonusCondition].keys,
-                lambda keys: [{"text": x.text, "bonus_minutes": x.bonus_minutes} for x in keys],
-            ),
             *REQUIRED_GAME_RECIPES,
         ],
     )

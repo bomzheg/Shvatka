@@ -9,7 +9,6 @@ from adaptix import (
     name_mapping,
     loader,
     Chain,
-    dumper,
 )
 from adaptix.load_error import LoadError
 from adaptix._internal.morphing.provider_template import ABCProxy
@@ -18,7 +17,7 @@ from dishka import Provider, Scope, provide
 from telegraph.aio import Telegraph
 
 from shvatka.common.url_factory import UrlFactory
-from shvatka.core.models.dto import scn, action
+from shvatka.core.models.dto import scn
 from shvatka.core.models.dto.action import AnyCondition
 from shvatka.core.models.dto.scn import HintsList, TimeHint, Conditions
 from shvatka.core.models.schems import schemas
@@ -45,7 +44,6 @@ REQUIRED_GAME_RECIPES = [
     ABCProxy(
         Conditions, list[AnyCondition]
     ),  # internal class, can be broken in next adaptix version
-    dumper(P[action.KeyWinCondition].keys, list),
 ]
 
 
@@ -68,13 +66,6 @@ class DCFProvider(Provider):
                     name_style=adaptix.NameStyle.LOWER_KEBAB,
                 ),
                 *REQUIRED_GAME_RECIPES,
-                # TODO https://github.com/reagento/adaptix/issues/348
-                dumper(
-                    P[action.KeyBonusCondition].keys,
-                    lambda keys: [
-                        {"text": x.text, "bonus-minutes": x.bonus_minutes} for x in keys
-                    ],
-                ),
                 validator(
                     pred=P[scn.LevelScenario].id,
                     func=lambda x: validate_level_id(x) is not None,

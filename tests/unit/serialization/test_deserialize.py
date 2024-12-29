@@ -3,6 +3,7 @@ from copy import deepcopy
 import pytest
 from adaptix import Retort
 
+from shvatka.common.data_examples import game_example, GAME_START_EXAMPLE
 from shvatka.core.models.dto.scn import TextHint, GPSHint, PhotoHint, ContactHint
 from shvatka.core.models.dto.scn.game import RawGameScenario
 from shvatka.core.models.dto.scn.hint_part import (
@@ -84,3 +85,315 @@ def test_render_all_types(all_types_scn: RawGameScenario, retort: Retort):
     hints = [time_hint.hint[0] for time_hint in game_scn.levels[0].time_hints]
     assert 12 == len(hints)
     assert "📃📡🧭📷🎼🎬📎🌀🎤🤳🪪🏷" == render_hints(hints)
+
+
+def test_serialize_simple(retort: Retort):
+    serialized = retort.dump(game_example)
+    assert serialized == {
+        "name": "Funny game",
+        "author": {"can-be-author": True, "id": 100, "is-dummy": False},
+        "id": 10,
+        "number": 20,
+        "manage-token": "",
+        "start-at": GAME_START_EXAMPLE.isoformat(),
+        "status": "complete",
+        "results": {
+            "published-chanel-id": None,
+            "results-picture-file-id": None,
+            "keys-url": None,
+        },
+        "levels": [
+            {
+                "db-id": 100,
+                "author": {"can-be-author": True, "id": 100, "is-dummy": False},
+                "name-id": "level_100",
+                "game-id": 10,
+                "number-in-game": 0,
+                "scenario": {
+                    "id": "level_100",
+                    "__model_version__": 1,
+                    "conditions": [
+                        {
+                            "type": "WIN_KEY",
+                            "keys": ("SH1",),
+                        }
+                    ],
+                    "time-hints": [
+                        {
+                            "time": 0,
+                            "hint": [
+                                {
+                                    "type": "text",
+                                    "text": "level_100_0",
+                                }
+                            ],
+                        },
+                        {
+                            "time": 10,
+                            "hint": [
+                                {
+                                    "type": "text",
+                                    "text": "level_100_10",
+                                }
+                            ],
+                        },
+                        {
+                            "time": 20,
+                            "hint": [
+                                {
+                                    "type": "text",
+                                    "text": "level_100_20",
+                                }
+                            ],
+                        },
+                        {
+                            "time": 30,
+                            "hint": [
+                                {
+                                    "type": "text",
+                                    "text": "level_100_20",
+                                }
+                            ],
+                        },
+                        {
+                            "time": 40,
+                            "hint": [
+                                {
+                                    "type": "text",
+                                    "text": "level_100_20",
+                                }
+                            ],
+                        },
+                        {
+                            "time": 60,
+                            "hint": [
+                                {
+                                    "type": "text",
+                                    "text": "level_100_20",
+                                }
+                            ],
+                        },
+                    ],
+                },
+            },
+            {
+                "db-id": 101,
+                "author": {"can-be-author": True, "id": 100, "is-dummy": False},
+                "name-id": "level_101",
+                "game-id": 10,
+                "number-in-game": 1,
+                "scenario": {
+                    "id": "level_101",
+                    "__model_version__": 1,
+                    "conditions": [
+                        {
+                            "type": "WIN_KEY",
+                            "keys": ("SH2",),
+                        }
+                    ],
+                    "time-hints": [
+                        {
+                            "time": 0,
+                            "hint": [
+                                {
+                                    "type": "text",
+                                    "text": "level_101_0",
+                                }
+                            ],
+                        },
+                        {
+                            "time": 10,
+                            "hint": [
+                                {
+                                    "type": "text",
+                                    "text": "level_101_10",
+                                }
+                            ],
+                        },
+                        {
+                            "time": 20,
+                            "hint": [
+                                {
+                                    "type": "text",
+                                    "text": "level_101_20",
+                                }
+                            ],
+                        },
+                        {
+                            "time": 30,
+                            "hint": [
+                                {
+                                    "type": "text",
+                                    "text": "level_101_20",
+                                }
+                            ],
+                        },
+                        {
+                            "time": 40,
+                            "hint": [
+                                {
+                                    "type": "text",
+                                    "text": "level_101_20",
+                                }
+                            ],
+                        },
+                        {
+                            "time": 60,
+                            "hint": [
+                                {
+                                    "type": "text",
+                                    "text": "level_101_20",
+                                }
+                            ],
+                        },
+                    ],
+                },
+            },
+            {
+                "db-id": 102,
+                "author": {"can-be-author": True, "id": 100, "is-dummy": False},
+                "name-id": "level_102",
+                "game-id": 10,
+                "number-in-game": 0,
+                "scenario": {
+                    "id": "level_102",
+                    "__model_version__": 1,
+                    "conditions": [
+                        {
+                            "type": "WIN_KEY",
+                            "keys": ("SH3",),
+                        }
+                    ],
+                    "time-hints": [
+                        {
+                            "time": 0,
+                            "hint": [
+                                {
+                                    "type": "text",
+                                    "text": "level_102_0",
+                                }
+                            ],
+                        },
+                        {
+                            "time": 10,
+                            "hint": [
+                                {
+                                    "type": "text",
+                                    "text": "level_102_10",
+                                }
+                            ],
+                        },
+                        {
+                            "time": 20,
+                            "hint": [
+                                {
+                                    "type": "text",
+                                    "text": "level_102_20",
+                                }
+                            ],
+                        },
+                        {
+                            "time": 30,
+                            "hint": [
+                                {
+                                    "type": "text",
+                                    "text": "level_102_20",
+                                }
+                            ],
+                        },
+                        {
+                            "time": 40,
+                            "hint": [
+                                {
+                                    "type": "text",
+                                    "text": "level_102_20",
+                                }
+                            ],
+                        },
+                        {
+                            "time": 60,
+                            "hint": [
+                                {
+                                    "type": "text",
+                                    "text": "level_102_20",
+                                }
+                            ],
+                        },
+                    ],
+                },
+            },
+            {
+                "db-id": 103,
+                "author": {"can-be-author": True, "id": 100, "is-dummy": False},
+                "name-id": "level_103",
+                "game-id": 10,
+                "number-in-game": 0,
+                "scenario": {
+                    "id": "level_103",
+                    "__model_version__": 1,
+                    "conditions": [
+                        {
+                            "type": "WIN_KEY",
+                            "keys": ("SH4",),
+                        }
+                    ],
+                    "time-hints": [
+                        {
+                            "time": 0,
+                            "hint": [
+                                {
+                                    "type": "text",
+                                    "text": "level_103_0",
+                                }
+                            ],
+                        },
+                        {
+                            "time": 10,
+                            "hint": [
+                                {
+                                    "type": "text",
+                                    "text": "level_103_10",
+                                }
+                            ],
+                        },
+                        {
+                            "time": 20,
+                            "hint": [
+                                {
+                                    "type": "text",
+                                    "text": "level_103_20",
+                                }
+                            ],
+                        },
+                        {
+                            "time": 30,
+                            "hint": [
+                                {
+                                    "type": "text",
+                                    "text": "level_103_20",
+                                }
+                            ],
+                        },
+                        {
+                            "time": 40,
+                            "hint": [
+                                {
+                                    "type": "text",
+                                    "text": "level_103_20",
+                                }
+                            ],
+                        },
+                        {
+                            "time": 60,
+                            "hint": [
+                                {
+                                    "type": "text",
+                                    "text": "level_103_20",
+                                }
+                            ],
+                        },
+                    ],
+                },
+            },
+        ],
+    }

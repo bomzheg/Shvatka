@@ -22,7 +22,7 @@ dependencies = [
     "redis>=5.0.1,<6.0",
     "pyrogram>=2.0.57,<3.0",
     "dataclass_factory>=2.16,<3.0",
-    "adaptix==3.0.0b7",
+    "adaptix==3.0.0b9",
     "apscheduler>=3.9.1,<4.0",
     "fastapi==0.111.1",
     "uvicorn>=0.30.0,<0.31.0",

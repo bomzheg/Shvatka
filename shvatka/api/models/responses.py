@@ -3,12 +3,12 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Sequence, Generic
 
-from adaptix import Retort, dumper, P
+from adaptix import Retort, dumper
 
 from shvatka.common.factory import REQUIRED_GAME_RECIPES
 from shvatka.core.games.dto import CurrentHints
 from shvatka.core.models import dto, enums
-from shvatka.core.models.dto import scn, action
+from shvatka.core.models.dto import scn
 from shvatka.core.models.enums import GameStatus
 
 T = typing.TypeVar("T")
@@ -16,11 +16,6 @@ retort = Retort(
     recipe=[
         *REQUIRED_GAME_RECIPES,
         dumper(scn.HintsList, lambda x: x.hints),
-        # TODO https://github.com/reagento/adaptix/issues/348
-        dumper(
-            P[action.KeyBonusCondition].keys,
-            lambda keys: [{"text": x.text, "bonus_minutes": x.bonus_minutes} for x in keys],
-        ),
     ]
 )
 

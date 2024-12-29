@@ -8,17 +8,16 @@ from adaptix import Retort
 class B:
     b: str
 
+
 @dataclass
 class A:
     a: set[B]
 
 
-
 @pytest.fixture
 def retort():
-    return Retort(
-        recipe=[]
-    )
+    return Retort(recipe=[])
+
 
 def test_retort(retort: Retort):
     assert retort.dump(set(), set) == ()

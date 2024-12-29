@@ -9,20 +9,15 @@ from adaptix import (
     name_mapping,
     loader,
     Chain,
-    dumper,
 )
 from adaptix.load_error import LoadError
 from adaptix._internal.morphing.provider_template import ABCProxy
-from adaptix import Retort, Mediator, Dumper
-from adaptix._internal.morphing.iterable_provider import IterableProvider
-from adaptix._internal.morphing.request_cls import DumperRequest, DebugTrailRequest
-from adaptix._internal.provider.location import GenericParamLoc
 from dataclass_factory import Schema, NameStyle
 from dishka import Provider, Scope, provide
 from telegraph.aio import Telegraph
 
 from shvatka.common.url_factory import UrlFactory
-from shvatka.core.models.dto import scn, action
+from shvatka.core.models.dto import scn
 from shvatka.core.models.dto.action import AnyCondition
 from shvatka.core.models.dto.scn import HintsList, TimeHint, Conditions
 from shvatka.core.models.schems import schemas

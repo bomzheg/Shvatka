@@ -5,7 +5,15 @@ from typing import Literal
 from shvatka.core.models import enums
 from . import StateHolder
 from .decisions import NotImplementedActionDecision
-from .interface import Action, State, Decision, Condition, DecisionType, ConditionType
+from .interface import (
+    Action,
+    State,
+    Decision,
+    Condition,
+    DecisionType,
+    ConditionType,
+    LevelUpDecision,
+)
 
 SHKey: typing.TypeAlias = str
 
@@ -50,25 +58,29 @@ class WrongKeyDecision(Decision):
         return self.key
 
 
-@dataclass
+@dataclass(kw_only=True)
 class KeyDecision(Decision):
     type: DecisionType
     key_type: enums.KeyType
     duplicate: bool
     key: SHKey
 
-    def is_level_up(self) -> bool:
-        return self.type == DecisionType.LEVEL_UP
-
     @property
     def key_text(self) -> str:
         return self.key
+
+
+@dataclass(kw_only=True)
+class LevelUpKeyDecision(KeyDecision, LevelUpDecision):
+    type: typing.Literal[DecisionType.LEVEL_UP] = DecisionType.LEVEL_UP
+    next_level: str | None = None
 
 
 @dataclass
 class KeyWinCondition(Condition):
     keys: set[SHKey]
     type: Literal["WIN_KEY"] = ConditionType.WIN_KEY.name
+    next_level: str | None = None
 
     def check(self, action: Action, state_holder: StateHolder) -> Decision:
         if not isinstance(action, TypedKeyAction):
@@ -79,7 +91,15 @@ class KeyWinCondition(Condition):
             return WrongKeyDecision(duplicate=state.is_duplicate(action), key=action.key)
         if not state.is_duplicate(action):
             if self._is_all_typed(action, state):
-                type_ = DecisionType.LEVEL_UP
+                return LevelUpKeyDecision(
+                    type=DecisionType.LEVEL_UP,
+                    key_type=enums.KeyType.simple
+                    if self._is_correct(action)
+                    else enums.KeyType.wrong,
+                    duplicate=state.is_duplicate(action),
+                    key=action.key,
+                    next_level=self.next_level,
+                )
             else:
                 type_ = DecisionType.SIGNIFICANT_ACTION
         else:

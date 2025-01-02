@@ -125,12 +125,14 @@ class GamePlayerDaoImpl(GamePlayerDao):
     ) -> list[dto.KeyTime]:
         return await self.key_time.get_team_typed_keys(game, team, level_number)
 
-    async def level_up(self, team: dto.Team, level: dto.Level, game: dto.Game) -> None:
-        assert level.number_in_game is not None
+    async def level_up(
+        self, team: dto.Team, level: dto.Level, game: dto.Game, next_level: dto.Level
+    ) -> None:
+        assert next_level.number_in_game is not None
         await self.level_time.set_to_level(
             team=team,
             game=game,
-            level_number=level.number_in_game + 1,
+            level_number=next_level.number_in_game,
         )
 
     async def finish(self, game: dto.Game) -> None:
@@ -143,6 +145,13 @@ class GamePlayerDaoImpl(GamePlayerDao):
         self, game: dto.Game, with_deleted: bool = False
     ) -> list[dto.SecondaryOrganizer]:
         return await self.organizer.get_orgs(game)
+
+    async def get_next_level(self, level: dto.Level, game: dto.Game) -> dto.Level:
+        assert level.number_in_game is not None
+        return await self.level.get_by_number(game=game, level_number=level.number_in_game + 1)
+
+    async def get_level_by_name(self, level_name: str, game: dto.Game) -> dto.Level | None:
+        return await self.level.get_by_author_and_name_id(game.author, level_name)
 
     async def commit(self) -> None:
         await self.key_time.commit()

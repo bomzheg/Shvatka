@@ -61,8 +61,15 @@ class KeyProcessor:
                     type_=decision.key_type,
                     is_duplicate=decision.duplicate,
                 )
-                if is_level_up := decision.type == action.DecisionType.LEVEL_UP:
-                    await self.dao.level_up(team=team, level=level, game=self.game)
+                if is_level_up := isinstance(decision, action.LevelUpDecision):
+                    await self.dao.level_up(
+                        team=team,
+                        level=level,
+                        game=self.game,
+                        next_level=await self.define_next_level(
+                            level, self.game, decision.next_level
+                        ),
+                    )
                 await self.dao.commit()
                 return dto.InsertedKey.from_key_time(
                     saved_key, is_level_up, parsed_key=decision_to_parsed_key(decision)
@@ -73,6 +80,19 @@ class KeyProcessor:
             else:
                 logger.warning("impossible decision here is %s", type(decision))
                 return None
+
+    async def define_next_level(
+        self, level: dto.Level, game: dto.Game, level_name: str | None = None
+    ) -> dto.Level:
+        if level_name is None:
+            return await self.dao.get_next_level(level, game)
+        else:
+            next_level = await self.dao.get_level_by_name(level_name, game)
+            if next_level is None:
+                raise exceptions.ScenarioNotCorrect(
+                    text="Level name not found", name_id=level_name
+                )
+            return next_level
 
 
 def decision_to_parsed_key(

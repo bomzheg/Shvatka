@@ -92,7 +92,7 @@ class KeyWinCondition(Condition):
         if not state.is_duplicate(action):
             if self._is_all_typed(action, state):
                 return LevelUpKeyDecision(
-                    key_type=self._get_key_type(action), # TODO always simple
+                    key_type=self._get_key_type(action),  # TODO always simple
                     duplicate=state.is_duplicate(action),
                     key=action.key,
                     next_level=self.next_level,

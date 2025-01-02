@@ -92,10 +92,7 @@ class KeyWinCondition(Condition):
         if not state.is_duplicate(action):
             if self._is_all_typed(action, state):
                 return LevelUpKeyDecision(
-                    type=DecisionType.LEVEL_UP,
-                    key_type=enums.KeyType.simple
-                    if self._is_correct(action)
-                    else enums.KeyType.wrong,
+                    key_type=self._get_key_type(action), # TODO always simple
                     duplicate=state.is_duplicate(action),
                     key=action.key,
                     next_level=self.next_level,
@@ -106,10 +103,13 @@ class KeyWinCondition(Condition):
             type_ = DecisionType.NO_ACTION
         return KeyDecision(
             type=type_,
-            key_type=enums.KeyType.simple if self._is_correct(action) else enums.KeyType.wrong,
+            key_type=self._get_key_type(action),  # TODO always simple
             duplicate=state.is_duplicate(action),
             key=action.key,
         )
+
+    def _get_key_type(self, action: TypedKeyAction):
+        return enums.KeyType.simple if self._is_correct(action) else enums.KeyType.wrong
 
     def _is_correct(self, action: TypedKeyAction) -> bool:
         return action.key in self.keys

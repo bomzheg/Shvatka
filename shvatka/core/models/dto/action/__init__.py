@@ -12,6 +12,7 @@ from .keys import (
     BonusKeyDecision,
     KeyBonusCondition,
     WrongKeyDecision,
+    LevelUpDecision,
 )
 from .state_holder import InMemoryStateHolder
 

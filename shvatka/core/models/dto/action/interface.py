@@ -33,13 +33,21 @@ class StateHolder(Protocol):
         raise NotImplementedError
 
 
-class Decision(Protocol):
-    type: DecisionType
-
-
 class DecisionType(enum.StrEnum):
     NOT_IMPLEMENTED = enum.auto()
     LEVEL_UP = enum.auto()
     SIGNIFICANT_ACTION = enum.auto()
     NO_ACTION = enum.auto()
     BONUS_TIME = enum.auto()
+
+
+class Decision(Protocol):
+    type: DecisionType
+
+    def is_level_up(self) -> bool:
+        return self.type == DecisionType.LEVEL_UP
+
+
+class LevelUpDecision(Decision):
+    type: typing.Literal[DecisionType.LEVEL_UP] = DecisionType.LEVEL_UP
+    next_level: str | None = None

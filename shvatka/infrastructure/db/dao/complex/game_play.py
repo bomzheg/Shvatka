@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from typing import Iterable
 
+
 from shvatka.core.interfaces.dal.game_play import GamePreparer, GamePlayerDao
 from shvatka.core.interfaces.dal.level_times import GameStarter
 from shvatka.core.models import dto, enums
@@ -126,13 +127,12 @@ class GamePlayerDaoImpl(GamePlayerDao):
         return await self.key_time.get_team_typed_keys(game, team, level_number)
 
     async def level_up(
-        self, team: dto.Team, level: dto.Level, game: dto.Game, next_level: dto.Level
+        self, team: dto.Team, level: dto.Level, game: dto.Game, next_level_number: int
     ) -> None:
-        assert next_level.number_in_game is not None
         await self.level_time.set_to_level(
             team=team,
             game=game,
-            level_number=next_level.number_in_game,
+            level_number=next_level_number,
         )
 
     async def finish(self, game: dto.Game) -> None:

@@ -3,7 +3,7 @@ from .chat import Chat
 from .common import DateRange
 from .forum_team import ForumTeam
 from .forum_user import ForumUser
-from .game import Game, PreviewGame, FullGame, GameResults
+from .game import Game, PreviewGame, FullGame, GameResults, GameFinished
 from .level import Level
 from .level_testing import (
     LevelTestSuite,

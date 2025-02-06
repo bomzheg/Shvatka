@@ -66,9 +66,7 @@ class KeyProcessor:
                         team=team,
                         level=level,
                         game=self.game,
-                        next_level=await self.define_next_level(
-                            level, self.game, decision.next_level
-                        ),
+                        next_level_number=await self.define_next_level(level, decision.next_level),
                     )
                 await self.dao.commit()
                 return dto.InsertedKey.from_key_time(
@@ -81,18 +79,22 @@ class KeyProcessor:
                 logger.warning("impossible decision here is %s", type(decision))
                 return None
 
-    async def define_next_level(
-        self, level: dto.Level, game: dto.Game, level_name: str | None = None
-    ) -> dto.Level:
+    async def define_next_level(self, level: dto.Level, level_name: str | None = None) -> int:
         if level_name is None:
-            return await self.dao.get_next_level(level, game)
+            assert level.number_in_game is not None
+            if len(self.game.levels) == level.number_in_game + 1:
+                return level.number_in_game + 1
+            next_level_ = await self.dao.get_next_level(level, self.game)
+            assert next_level_.number_in_game is not None
+            return next_level_.number_in_game
         else:
-            next_level = await self.dao.get_level_by_name(level_name, game)
+            next_level = await self.dao.get_level_by_name(level_name, self.game)
             if next_level is None:
                 raise exceptions.ScenarioNotCorrect(
                     text="Level name not found", name_id=level_name
                 )
-            return next_level
+            assert next_level.number_in_game is not None
+            return next_level.number_in_game
 
 
 def decision_to_parsed_key(

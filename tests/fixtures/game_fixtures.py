@@ -117,7 +117,7 @@ async def finished_game(
         type_=enums.KeyType.simple,
         is_duplicate=False,
     )
-    await dao.game_player.level_up(slytherin, game.levels[0], game, game.levels[1])
+    await dao.game_player.level_up(slytherin, game.levels[0], game, 1)
     await asyncio.sleep(0.1)
     await dao.key_time.save_key(
         key="SH123",
@@ -128,7 +128,7 @@ async def finished_game(
         type_=enums.KeyType.simple,
         is_duplicate=False,
     )
-    await dao.game_player.level_up(gryffindor, game.levels[0], game, game.levels[1])
+    await dao.game_player.level_up(gryffindor, game.levels[0], game, 1)
     await asyncio.sleep(0.2)
     await dao.key_time.save_key(
         key="SHOOT",
@@ -139,7 +139,7 @@ async def finished_game(
         type_=enums.KeyType.simple,
         is_duplicate=False,
     )
-    await dao.game_player.level_up(gryffindor, game.levels[1], game, game.levels[2])
+    await dao.game_player.level_up(gryffindor, game.levels[1], game, 2)
     await asyncio.sleep(0.1)
     await dao.key_time.save_key(
         key="SHOOT",
@@ -150,7 +150,7 @@ async def finished_game(
         type_=enums.KeyType.simple,
         is_duplicate=False,
     )
-    await dao.game_player.level_up(slytherin, game.levels[1], game, game.levels[2])
+    await dao.game_player.level_up(slytherin, game.levels[1], game, 2)
     await dao.game.set_finished(game)
     await dao.commit()
 

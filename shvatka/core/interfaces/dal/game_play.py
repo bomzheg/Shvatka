@@ -60,7 +60,7 @@ class GamePlayerDao(Committer, WaiverChecker, GameOrgsGetter, LevelByTeamGetter,
         raise NotImplementedError
 
     async def level_up(
-        self, team: dto.Team, level: dto.Level, game: dto.Game, next_level: dto.Level
+        self, team: dto.Team, level: dto.Level, game: dto.Game, next_level_number: int
     ) -> None:
         raise NotImplementedError
 

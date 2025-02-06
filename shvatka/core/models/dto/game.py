@@ -133,3 +133,8 @@ class GameResults:
     published_chanel_id: int | None
     results_picture_file_id: str | None
     keys_url: str | None
+
+
+@dataclass
+class GameFinished:
+    game: Game

@@ -121,6 +121,7 @@ services:
   redis:
     image: "redis:${REDIS_VERSION:-6.2.13-alpine}"
     entrypoint: redis-server --appendonly yes
+    restart: always
     volumes:
       - redis_data:/data
     networks:

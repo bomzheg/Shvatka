@@ -46,7 +46,6 @@ async def game_with_waivers(
 ):
     await join_team(hermione, gryffindor, harry, dao.team_player)
     await join_team(ron, gryffindor, harry, dao.team_player)
-    await join_team(draco, slytherin, harry, dao.team_player)
 
     await start_waivers(game, author, dao.game)
     await add_vote(game, gryffindor, harry, Played.yes, dao.waiver_vote_adder)
@@ -56,6 +55,7 @@ async def game_with_waivers(
 
     await approve_waivers(game, gryffindor, harry, dao.waiver_approver)
     await approve_waivers(game, slytherin, draco, dao.waiver_approver)
+    return game
 
 
 @pytest_asyncio.fixture

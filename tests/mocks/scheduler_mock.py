@@ -27,6 +27,25 @@ class SchedulerMock(Scheduler):
         assert (level, team, hint_number) == actual[:-1]
         assert isinstance(actual[-1], datetime)
 
+    def assert_only_one_hint_for_team(
+        self, level: dto.Level, team: dto.Team, hint_number: int
+    ) -> None:
+        assert len(self.plain_hint_calls) >= 1
+        for i, (_, t, *_) in enumerate(self.plain_hint_calls):
+            if t == team:
+                actual = self.plain_hint_calls.pop(i)
+                break
+        else:
+            raise AssertionError(f"No hint for team {team}")
+        assert (level, team, hint_number) == actual[:-1]
+        assert isinstance(actual[-1], datetime)
+
+    def assert_no_unchecked(self):
+        assert len(self.plain_hint_calls) == 0
+        assert len(self.plain_start_calls) == 0
+        assert len(self.plain_prepare_calls) == 0
+        assert len(self.cancel_scheduled_game_calls) == 0
+
     async def plain_prepare(self, game: dto.Game) -> None:
         self.plain_prepare_calls.append(game)
 

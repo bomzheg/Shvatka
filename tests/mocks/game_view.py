@@ -46,6 +46,16 @@ class GameViewMock(GameView):
         assert sent[0] == team
         assert sent[1] == level
 
+    def assert_send_only_puzzle_for_team(self, team: dto.Team, level: dto.Level) -> None:
+        for i, (t, _) in enumerate(self.send_puzzle_calls):
+            if t == team:
+                sent = self.send_puzzle_calls.pop(i)
+                break
+        else:
+            raise AssertionError(f"No puzzle for team {team}")
+        assert sent[0] == team
+        assert sent[1] == level
+
     def assert_send_only_hint(self, team: dto.Team, hint_number: int, level: dto.Level) -> None:
         sent = self.send_hint_calls.pop()
         assert len(self.send_hint_calls) == 0

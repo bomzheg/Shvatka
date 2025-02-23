@@ -1,3 +1,4 @@
+from contextlib import suppress
 from datetime import datetime, timedelta
 
 import pytest
@@ -6,14 +7,11 @@ from dishka import AsyncContainer
 from shvatka.core.games.interactors import GamePlayReaderInteractor
 from shvatka.core.models import dto, enums
 from shvatka.core.models.enums import GameStatus
-from shvatka.core.models.enums.played import Played
-from shvatka.core.services.game import start_waivers
 from shvatka.core.services.game_play import start_game, send_hint, check_key
 from shvatka.core.services.game_stat import get_typed_keys
 from shvatka.core.services.key import KeyProcessor
 from shvatka.core.services.organizers import get_orgs
-from shvatka.core.services.player import join_team
-from shvatka.core.services.waiver import add_vote, approve_waivers
+from shvatka.core.services.player import join_team, leave
 from shvatka.core.utils import exceptions
 from shvatka.core.utils.datetime_utils import tz_utc
 from shvatka.core.utils.key_checker_lock import KeyCheckerFactory
@@ -31,6 +29,37 @@ from tests.mocks.scheduler_mock import SchedulerMock
 from tests.utils.time_key import assert_time_key
 
 
+@pytest.mark.asyncio
+async def test_start_game(
+    game_with_waivers: dto.FullGame,
+    gryffindor: dto.Team,
+    slytherin: dto.Team,
+    author: dto.Player,
+    harry: dto.Player,
+    ron: dto.Player,
+    hermione: dto.Player,
+    draco: dto.Player,
+    dao: HolderDao,
+    check_dao: HolderDao,
+    scheduler: SchedulerMock,
+):
+    dummy_view = GameViewMock()
+    dummy_log = GameLogWriterMock()
+    game_with_waivers.start_at = datetime.now(tz=tz_utc)
+
+    await start_game(game_with_waivers, dao.game_starter, dummy_log, dummy_view, scheduler)
+
+    dummy_log.assert_one_event(
+        GameLogEvent(GameLogType.GAME_STARTED, {"game": game_with_waivers.name})
+    )
+    scheduler.assert_only_one_hint_for_team(game_with_waivers.levels[0], gryffindor, 1)
+    scheduler.assert_only_one_hint_for_team(game_with_waivers.levels[0], slytherin, 1)
+    scheduler.assert_no_unchecked()
+    dummy_view.assert_send_only_puzzle_for_team(gryffindor, game_with_waivers.levels[0])
+    dummy_view.assert_send_only_puzzle_for_team(slytherin, game_with_waivers.levels[0])
+    dummy_view.assert_no_unchecked()
+    assert 2 == await check_dao.level_time.count()
+
 
 @pytest.mark.asyncio
 async def test_game_play(
@@ -40,20 +69,17 @@ async def test_game_play(
     scheduler: SchedulerMock,
     author: dto.Player,
     harry: dto.Player,
+    draco: dto.Player,
     hermione: dto.Player,
     gryffindor: dto.Team,
-    game_with_waivers: dto.FullGame,
+    started_game: dto.FullGame,
 ):
-    game = game_with_waivers
+    game = started_game
+    # delete slytherin from game
+    await leave(draco, draco, dao.team_leaver)
 
     dummy_view = GameViewMock()
     dummy_log = GameLogWriterMock()
-    game.start_at = datetime.now(tz=tz_utc)
-    await start_game(game, dao.game_starter, dummy_log, dummy_view, scheduler)
-    dummy_log.assert_one_event(GameLogEvent(GameLogType.GAME_STARTED, {"game": game.name}))
-    scheduler.assert_one_planned_hint(game.levels[0], gryffindor, 1)
-    dummy_view.assert_send_only_puzzle(gryffindor, game.levels[0])
-    assert 1 == await check_dao.level_time.count()
 
     await send_hint(
         level=game.levels[0],
@@ -179,6 +205,7 @@ async def test_get_current_hints(
     hermione: dto.Player,
     gryffindor: dto.Team,
 ):
+    await leave(ron, ron, dao.team_leaver)
     level_time = models.LevelTime(
         game_id=game_with_waivers.id,
         team_id=gryffindor.id,
@@ -195,6 +222,7 @@ async def test_get_current_hints(
     assert hints_harry.hints == hints.hints
     with pytest.raises(exceptions.PlayerNotInTeam):
         await interactor(ron._user)
-    await join_team(ron, gryffindor, harry, dao.team_player)
+    with suppress(exceptions.PlayerRestoredInTeam):
+        await join_team(ron, gryffindor, harry, dao.team_player)
     with pytest.raises(exceptions.WaiverError):
         await interactor(ron._user)

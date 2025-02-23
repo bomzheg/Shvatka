@@ -34,7 +34,7 @@ from tests.conftest import paths, event_loop, bot_config  # noqa: F401
 from tests.fixtures.conftest import fixtures_resource_path  # noqa: F401
 from tests.fixtures.db_provider import TestDbProvider
 from tests.fixtures.file_storage import MemoryFileStorageProvider
-from tests.fixtures.game_fixtures import game, finished_game, started_game  # noqa: F401
+from tests.fixtures.game_fixtures import game, finished_game, started_game, game_with_waivers  # noqa: F401
 from tests.fixtures.player import harry, hermione, ron, author, draco  # noqa: F401
 from tests.fixtures.scn_fixtures import simple_scn, complex_scn, three_lvl_scn  # noqa: F401
 from tests.fixtures.team import gryffindor, slytherin  # noqa: F401

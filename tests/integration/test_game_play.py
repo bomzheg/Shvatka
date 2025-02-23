@@ -62,6 +62,53 @@ async def test_start_game(
 
 
 @pytest.mark.asyncio
+async def test_wrong_key(
+    author: dto.Player,
+    harry: dto.Player,
+    gryffindor: dto.Team,
+    started_game: dto.FullGame,
+    dao: HolderDao,
+    check_dao: HolderDao,
+    locker: KeyCheckerFactory,
+    scheduler: SchedulerMock,
+):
+    game = started_game
+    dummy_view = GameViewMock()
+    dummy_log = GameLogWriterMock()
+
+    dummy_org_notifier = OrgNotifierMock()
+    key_processor = KeyProcessor(dao.game_player, game, locker)
+    await check_key(
+        key="SHWRONG",
+        player=harry,
+        team=gryffindor,
+        game=game,
+        dao=dao.game_player,
+        view=dummy_view,
+        game_log=dummy_log,
+        org_notifier=dummy_org_notifier,
+        key_processor=key_processor,
+        locker=locker,
+        scheduler=scheduler,
+    )
+
+    keys = await get_typed_keys(game=game, player=author, dao=check_dao.typed_keys)
+    assert [gryffindor] == list(keys.keys())
+    assert 1 == len(keys[gryffindor])
+    expected_first_key = dto.KeyTime(
+        text="SHWRONG",
+        type_=enums.KeyType.wrong,
+        is_duplicate=False,
+        at=datetime.now(tz=tz_utc),
+        level_number=0,
+        player=harry,
+        team=gryffindor,
+    )
+    assert_time_key(expected_first_key, list(keys[gryffindor])[0])
+    dummy_view.assert_wrong_key_only(expected_first_key)
+
+
+@pytest.mark.asyncio
 async def test_game_play(
     dao: HolderDao,
     locker: KeyCheckerFactory,
@@ -107,25 +154,9 @@ async def test_game_play(
         "locker": locker,
         "scheduler": scheduler,
     }
-    await check_key(key="SHWRONG", **key_kwargs)
-    keys = await get_typed_keys(game=game, player=author, dao=check_dao.typed_keys)
-
-    assert [gryffindor] == list(keys.keys())
-    assert 1 == len(keys[gryffindor])
-    expected_first_key = dto.KeyTime(
-        text="SHWRONG",
-        type_=enums.KeyType.wrong,
-        is_duplicate=False,
-        at=datetime.now(tz=tz_utc),
-        level_number=0,
-        player=harry,
-        team=gryffindor,
-    )
-    assert_time_key(expected_first_key, list(keys[gryffindor])[0])
-    dummy_view.assert_wrong_key_only(expected_first_key)
 
     await check_key(key="SH123", **key_kwargs)
-    expected_second_key = dto.KeyTime(
+    expected_first_key = dto.KeyTime(
         text="SH123",
         type_=enums.KeyType.simple,
         is_duplicate=False,
@@ -134,10 +165,10 @@ async def test_game_play(
         player=harry,
         team=gryffindor,
     )
-    dummy_view.assert_correct_key_only(expected_second_key)
+    dummy_view.assert_correct_key_only(expected_first_key)
 
     await check_key(key="SH123", **key_kwargs)
-    expected_third_key = dto.KeyTime(
+    expected_second_key = dto.KeyTime(
         text="SH123",
         type_=enums.KeyType.simple,
         is_duplicate=True,
@@ -146,10 +177,10 @@ async def test_game_play(
         player=harry,
         team=gryffindor,
     )
-    dummy_view.assert_duplicate_key_only(expected_third_key)
+    dummy_view.assert_duplicate_key_only(expected_second_key)
 
     await check_key(key="SH321", **key_kwargs)
-    expected_fourth_key = dto.KeyTime(
+    expected_third_key = dto.KeyTime(
         text="SH321",
         type_=enums.KeyType.simple,
         is_duplicate=False,
@@ -161,12 +192,12 @@ async def test_game_play(
     dummy_org_notifier.assert_one_event(
         LevelUp(team=gryffindor, new_level=game.levels[1], orgs_list=orgs)
     )
-    dummy_view.assert_correct_key_only(expected_fourth_key)
+    dummy_view.assert_correct_key_only(expected_third_key)
     dummy_view.assert_send_only_puzzle(gryffindor, game.levels[1])
 
     await check_key(key="SHOOT", **key_kwargs)
     dummy_log.assert_one_event(GameLogEvent(GameLogType.GAME_FINISHED, {"game": game.name}))
-    expected_fifth_key = dto.KeyTime(
+    expected_fourth_key = dto.KeyTime(
         text="SHOOT",
         type_=enums.KeyType.simple,
         is_duplicate=False,
@@ -175,19 +206,18 @@ async def test_game_play(
         player=harry,
         team=gryffindor,
     )
-    dummy_view.assert_correct_key_only(expected_fifth_key)
+    dummy_view.assert_correct_key_only(expected_fourth_key)
     dummy_view.assert_game_finished_only(gryffindor)
     dummy_view.assert_game_finished_all({gryffindor})
 
     keys = await get_typed_keys(game=game, player=author, dao=check_dao.typed_keys)
 
     assert [gryffindor] == list(keys.keys())
-    assert 5 == len(keys[gryffindor])
+    assert 4 == len(keys[gryffindor])
     assert_time_key(expected_first_key, list(keys[gryffindor])[0])
     assert_time_key(expected_second_key, list(keys[gryffindor])[1])
     assert_time_key(expected_third_key, list(keys[gryffindor])[2])
     assert_time_key(expected_fourth_key, list(keys[gryffindor])[3])
-    assert_time_key(expected_fifth_key, list(keys[gryffindor])[4])
     assert await dao.game_player.is_all_team_finished(game)
     assert GameStatus.finished == (await dao.game.get_by_id(game.id, author)).status
     dummy_view.assert_no_unchecked()

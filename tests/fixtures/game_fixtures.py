@@ -8,7 +8,7 @@ from shvatka.core.interfaces.clients.file_storage import FileGateway
 from shvatka.core.models import dto, enums
 from shvatka.core.models.dto.scn.game import RawGameScenario
 from shvatka.core.models.enums.played import Played
-from shvatka.core.services.game import upsert_game
+from shvatka.core.services.game import upsert_game, start_waivers
 from shvatka.core.services.player import join_team
 from shvatka.core.services.waiver import add_vote, approve_waivers
 from shvatka.core.utils.datetime_utils import tz_utc
@@ -33,25 +33,40 @@ async def game(
 
 
 @pytest_asyncio.fixture
-async def started_game(
+async def game_with_waivers(
     game: dto.FullGame,
     gryffindor: dto.Team,
     slytherin: dto.Team,
+    author: dto.Player,
     harry: dto.Player,
     ron: dto.Player,
     hermione: dto.Player,
     draco: dto.Player,
     dao: HolderDao,
-) -> dto.FullGame:
-    await join_team(ron, gryffindor, harry, dao.team_player)
+):
     await join_team(hermione, gryffindor, harry, dao.team_player)
-    await dao.game.start_waivers(game)
+    await join_team(ron, gryffindor, harry, dao.team_player)
+    await join_team(draco, slytherin, harry, dao.team_player)
 
+    await start_waivers(game, author, dao.game)
     await add_vote(game, gryffindor, harry, Played.yes, dao.waiver_vote_adder)
     await add_vote(game, gryffindor, hermione, Played.yes, dao.waiver_vote_adder)
     await add_vote(game, gryffindor, ron, Played.no, dao.waiver_vote_adder)
     await add_vote(game, slytherin, draco, Played.yes, dao.waiver_vote_adder)
+
     await approve_waivers(game, gryffindor, harry, dao.waiver_approver)
+    await approve_waivers(game, slytherin, draco, dao.waiver_approver)
+
+
+@pytest_asyncio.fixture
+async def started_game(
+    game_with_waivers: dto.FullGame,
+    gryffindor: dto.Team,
+    slytherin: dto.Team,
+    dao: HolderDao,
+) -> dto.FullGame:
+    game = game_with_waivers
+
     await dao.game.set_started(game)
     await dao.game.set_start_at(game, datetime.now(tz=tz_utc))
     await dao.level_time.set_to_level(team=gryffindor, game=game, level_number=0)

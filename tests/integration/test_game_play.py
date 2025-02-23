@@ -31,6 +31,7 @@ from tests.mocks.scheduler_mock import SchedulerMock
 from tests.utils.time_key import assert_time_key
 
 
+
 @pytest.mark.asyncio
 async def test_game_play(
     dao: HolderDao,
@@ -41,14 +42,9 @@ async def test_game_play(
     harry: dto.Player,
     hermione: dto.Player,
     gryffindor: dto.Team,
-    game: dto.FullGame,
+    game_with_waivers: dto.FullGame,
 ):
-    await start_waivers(game, author, dao.game)
-
-    await join_team(hermione, gryffindor, harry, dao.team_player)
-    await add_vote(game, gryffindor, harry, Played.yes, dao.waiver_vote_adder)
-    await add_vote(game, gryffindor, hermione, Played.yes, dao.waiver_vote_adder)
-    await approve_waivers(game, gryffindor, harry, dao.waiver_approver)
+    game = game_with_waivers
 
     dummy_view = GameViewMock()
     dummy_log = GameLogWriterMock()
@@ -174,7 +170,7 @@ async def test_game_play(
 
 @pytest.mark.asyncio
 async def test_get_current_hints(
-    game: dto.FullGame,
+    game_with_waivers: dto.FullGame,
     dishka_request: AsyncContainer,
     dao: HolderDao,
     author: dto.Player,
@@ -183,14 +179,8 @@ async def test_get_current_hints(
     hermione: dto.Player,
     gryffindor: dto.Team,
 ):
-    await start_waivers(game, author, dao.game)
-
-    await join_team(hermione, gryffindor, harry, dao.team_player)
-    await add_vote(game, gryffindor, harry, Played.yes, dao.waiver_vote_adder)
-    await add_vote(game, gryffindor, hermione, Played.yes, dao.waiver_vote_adder)
-    await approve_waivers(game, gryffindor, harry, dao.waiver_approver)
     level_time = models.LevelTime(
-        game_id=game.id,
+        game_id=game_with_waivers.id,
         team_id=gryffindor.id,
         level_number=0,
         start_at=datetime.now(tz=tz_utc) - timedelta(minutes=2),

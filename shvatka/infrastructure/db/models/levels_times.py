@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import Integer, ForeignKey, DateTime, UniqueConstraint, func
+from sqlalchemy import Integer, ForeignKey, DateTime, func
 from sqlalchemy.orm import relationship, mapped_column, Mapped
 
 from shvatka.core.models import dto
@@ -31,8 +31,6 @@ class LevelTime(Base):
         server_default=func.now(),
         nullable=False,
     )
-
-    __table_args__ = (UniqueConstraint("game_id", "team_id", "level_number"),)
 
     def to_dto(self, game: dto.Game, team: dto.Team) -> dto.LevelTime:
         return dto.LevelTime(

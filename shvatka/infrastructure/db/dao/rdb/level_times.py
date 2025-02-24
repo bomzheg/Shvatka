@@ -63,7 +63,7 @@ class LevelTimeDao(BaseDAO[models.LevelTime]):
                 models.LevelTime.team_id == team_id,
                 models.LevelTime.game_id == game_id,
             )
-            .order_by(models.LevelTime.level_number.desc())
+            .order_by(models.LevelTime.start_at.desc())
             .limit(1)
         )
         return result.scalar_one()

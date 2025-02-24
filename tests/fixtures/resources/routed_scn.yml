@@ -1,5 +1,5 @@
 __model_version__: 1
-name: "My new game"
+name: "Routed game"
 levels:
   - id: first
     __model_version__: 1

@@ -202,12 +202,12 @@ async def routed_game_with_waivers(
 
 @pytest_asyncio.fixture
 async def started_routed_game(
-    game_with_waivers: dto.FullGame,
+    routed_game_with_waivers: dto.FullGame,
     gryffindor: dto.Team,
     slytherin: dto.Team,
     dao: HolderDao,
 ) -> dto.FullGame:
-    return await set_game_started(game_with_waivers, [gryffindor, slytherin], dao)
+    return await set_game_started(routed_game_with_waivers, [gryffindor, slytherin], dao)
 
 
 async def add_waivers(

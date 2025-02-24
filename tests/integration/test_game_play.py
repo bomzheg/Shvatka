@@ -280,7 +280,7 @@ async def test_fast_play_routed_game(
         type_=enums.KeyType.simple,
         is_duplicate=False,
         at=datetime.now(tz=tz_utc),
-        level_number=0,
+        level_number=2,
         player=harry,
         team=gryffindor,
     )

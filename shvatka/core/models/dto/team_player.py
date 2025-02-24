@@ -17,7 +17,7 @@ class TeamPlayer:
     date_joined: datetime
     date_left: datetime | None
     role: str
-    emoji: str
+    emoji: str | None
 
     _can_manage_waivers: bool
     _can_manage_players: bool

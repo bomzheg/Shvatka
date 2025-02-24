@@ -23,13 +23,13 @@ class Team(Base):
         back_populates="team",
         uselist=False,
     )
-    captain_id: Mapped[int] = mapped_column(ForeignKey("players.id"))
-    captain: Mapped[Player] = relationship(
+    captain_id: Mapped[int | None] = mapped_column(ForeignKey("players.id"))
+    captain: Mapped[Player | None] = relationship(
         "Player",
         foreign_keys=captain_id,
         back_populates="captain_by_team",
     )
-    description: Mapped[str]
+    description: Mapped[str | None]
 
     completed_levels = relationship(
         "LevelTime",

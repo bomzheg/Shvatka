@@ -29,7 +29,7 @@ class Waiver(Base):
         foreign_keys=game_id,
         back_populates="waivers",
     )
-    role: Mapped[str]
+    role: Mapped[str | None]
     played: Mapped[Played] = mapped_column(Enum(Played), nullable=False)
 
     def to_dto(self, player: dto.Player, team: dto.Team, game: dto.Game) -> dto.Waiver:

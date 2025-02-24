@@ -44,3 +44,12 @@ def all_types_scn(fixtures_resource_path: Path) -> RawGameScenario:
             scn=yaml.safe_load(f),
             files={GUID: BytesIO(b"123"), GUID_2: BytesIO(b"890")},
         )
+
+
+@pytest.fixture
+def routed_scn(fixtures_resource_path: Path) -> RawGameScenario:
+    with open(fixtures_resource_path / "routed_scn.yml", encoding="utf-8") as f:
+        return RawGameScenario(
+            scn=yaml.safe_load(f),
+            files={},
+        )

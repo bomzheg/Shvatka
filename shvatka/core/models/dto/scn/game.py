@@ -15,6 +15,10 @@ class GameScenario:
     levels: list[LevelScenario]
     __model_version__: Literal[1]
 
+    def __post_init__(self):
+        """TODO проверить граф сценария на отсутствие циклов и достижимости финала"""
+        assert False
+
 
 @dataclass
 class FullGameScenario(GameScenario):

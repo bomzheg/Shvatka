@@ -301,6 +301,116 @@ async def test_fast_play_routed_game(
 
 
 @pytest.mark.asyncio
+async def test_cycle_play_routed_game(
+    dao: HolderDao,
+    locker: KeyCheckerFactory,
+    check_dao: HolderDao,
+    scheduler: SchedulerMock,
+    author: dto.Player,
+    harry: dto.Player,
+    draco: dto.Player,
+    hermione: dto.Player,
+    gryffindor: dto.Team,
+    started_routed_game: dto.FullGame,
+):
+    game = started_routed_game
+    # delete slytherin from game
+    await leave(draco, draco, dao.team_leaver)
+    dummy_view = GameViewMock()
+    dummy_log = GameLogWriterMock()
+
+    dummy_org_notifier = OrgNotifierMock()
+    orgs = await get_orgs(game, dao.organizer)
+    key_processor = KeyProcessor(dao.game_player, game, locker)
+    key_kwargs = {
+        "player": harry,
+        "team": gryffindor,
+        "game": game,
+        "dao": dao.game_player,
+        "view": dummy_view,
+        "game_log": dummy_log,
+        "org_notifier": dummy_org_notifier,
+        "key_processor": key_processor,
+        "locker": locker,
+        "scheduler": scheduler,
+    }
+    await check_key(key="SHTO3", **key_kwargs)
+    expected_first_key = dto.KeyTime(
+        text="SHTO3",
+        type_=enums.KeyType.simple,
+        is_duplicate=False,
+        at=datetime.now(tz=tz_utc),
+        level_number=0,
+        player=harry,
+        team=gryffindor,
+    )
+    dummy_view.assert_correct_key_only(expected_first_key)
+    dummy_org_notifier.assert_one_event(
+        LevelUp(team=gryffindor, new_level=game.levels[2], orgs_list=orgs)
+    )
+    dummy_view.assert_send_only_puzzle(gryffindor, game.levels[2])
+
+    await check_key(key="SHTO1", **key_kwargs)
+    expected_second_key = dto.KeyTime(
+        text="SHTO1",
+        type_=enums.KeyType.simple,
+        is_duplicate=False,
+        at=datetime.now(tz=tz_utc),
+        level_number=2,
+        player=harry,
+        team=gryffindor,
+    )
+    dummy_view.assert_correct_key_only(expected_second_key)
+    dummy_org_notifier.assert_one_event(
+        LevelUp(team=gryffindor, new_level=game.levels[0], orgs_list=orgs)
+    )
+    dummy_view.assert_send_only_puzzle(gryffindor, game.levels[0])
+
+    await check_key(key="SHTO3", **key_kwargs)
+    expected_third_key = dto.KeyTime(
+        text="SHTO3",
+        type_=enums.KeyType.simple,
+        is_duplicate=False,
+        at=datetime.now(tz=tz_utc),
+        level_number=0,
+        player=harry,
+        team=gryffindor,
+    )
+    dummy_view.assert_correct_key_only(expected_third_key)
+    dummy_org_notifier.assert_one_event(
+        LevelUp(team=gryffindor, new_level=game.levels[2], orgs_list=orgs)
+    )
+    dummy_view.assert_send_only_puzzle(gryffindor, game.levels[2])
+
+    await check_key(key="SH456", **key_kwargs)
+    expected_last_key = dto.KeyTime(
+        text="SH456",
+        type_=enums.KeyType.simple,
+        is_duplicate=False,
+        at=datetime.now(tz=tz_utc),
+        level_number=2,
+        player=harry,
+        team=gryffindor,
+    )
+    dummy_view.assert_correct_key_only(expected_last_key)
+    dummy_view.assert_game_finished_only(gryffindor)
+    dummy_view.assert_game_finished_all({gryffindor})
+
+    keys = await get_typed_keys(game=game, player=author, dao=check_dao.typed_keys)
+
+    assert list(keys.keys()) == [gryffindor]
+    assert len(keys[gryffindor]) == 4
+    assert_time_key(expected_first_key, list(keys[gryffindor])[0])
+    assert_time_key(expected_second_key, list(keys[gryffindor])[1])
+    assert_time_key(expected_third_key, list(keys[gryffindor])[2])
+    assert_time_key(expected_last_key, list(keys[gryffindor])[3])
+    assert await dao.game_player.is_all_team_finished(game)
+    assert GameStatus.finished == (await dao.game.get_by_id(game.id, author)).status
+    dummy_view.assert_no_unchecked()
+    dummy_org_notifier.assert_no_calls()
+
+
+@pytest.mark.asyncio
 async def test_get_current_hints(
     game_with_waivers: dto.FullGame,
     dishka_request: AsyncContainer,

@@ -63,8 +63,8 @@ levels:
       - type: WIN_KEY
         keys: [ "SH456" ]
       - type: WIN_KEY
-        keys: [ "SHTO2" ]
-        next-level: second
+        keys: [ "SHTO1" ]
+        next-level: first
     time-hints:
       - time: 0
         hint:

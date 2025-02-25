@@ -115,6 +115,9 @@ HELP_INFO = CommandsGroup(
 MERGE_TEAMS = BotCommand(
     command="merge_teams", description="объединить достижения команды в разных источниках"
 )
+MERGE_PLAYERS = BotCommand(
+    command="merge_players", description="объединить достижения игроков в разных источниках"
+)
 HELP_GAME_ADMIN = CommandsGroup(
     "Команды администратора игры",
     [

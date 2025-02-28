@@ -33,19 +33,19 @@ class KeyProcessor:
         team: dto.Team,
     ) -> dto.InsertedKey | None:
         async with self.locker(team):
-            level = await self.dao.get_current_level(team, self.game)
-            assert level.number_in_game is not None
+            level_time = await self.dao.get_current_level_time(team, self.game)
+            lvl = await self.dao.get_current_level(team, self.game)
             correct_keys = await self.dao.get_correct_typed_keys(
-                level=level, game=self.game, team=team
+                level_time=level_time, game=self.game, team=team
             )
             all_typed = await self.dao.get_team_typed_keys(
-                self.game, team, level_number=level.number_in_game
+                self.game, team, level_time=level_time
             )
             state = action.InMemoryStateHolder(
                 typed_correct=correct_keys,
                 all_typed={k.text for k in all_typed},
             )
-            decision = level.scenario.check(
+            decision = lvl.scenario.check(
                 action=action.TypedKeyAction(key=key),
                 state=state,
             )
@@ -55,7 +55,7 @@ class KeyProcessor:
                 saved_key = await self.dao.save_key(
                     key=decision.key_text,
                     team=team,
-                    level=level,
+                    level_time=level_time,
                     game=self.game,
                     player=player,
                     type_=decision.key_type,
@@ -64,9 +64,9 @@ class KeyProcessor:
                 if is_level_up := isinstance(decision, action.LevelUpDecision):
                     await self.dao.level_up(
                         team=team,
-                        level=level,
+                        level=lvl,
                         game=self.game,
-                        next_level_number=await self.define_next_level(level, decision.next_level),
+                        next_level_number=await self.define_next_level(lvl, decision.next_level),
                     )
                 await self.dao.commit()
                 return dto.InsertedKey.from_key_time(

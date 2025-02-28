@@ -150,6 +150,6 @@ class GamePlayReaderImpl(GamePlayReader):
         return await self.dao.level.get_by_number(game, number)
 
     async def get_team_typed_keys(
-        self, game: dto.Game, team: dto.Team, level_number: int
+        self, game: dto.Game, team: dto.Team, level_time: dto.LevelTime
     ) -> list[dto.KeyTime]:
-        return await self.dao.key_time.get_team_typed_keys(game, team, level_number)
+        return await self.dao.key_time.get_team_typed_keys(game, team, level_time)

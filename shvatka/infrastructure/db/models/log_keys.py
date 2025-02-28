@@ -31,6 +31,7 @@ class KeyTime(Base):
         back_populates="log_keys",
     )
     level_number = mapped_column(Integer, nullable=False)
+    level_time_id = mapped_column(ForeignKey("levels_times.id"), nullable=False)
     enter_time = mapped_column(
         DateTime(timezone=True),
         default=lambda: datetime.now(tz=tz_utc),

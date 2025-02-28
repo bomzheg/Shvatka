@@ -22,26 +22,18 @@ class LevelTimeDao(BaseDAO[models.LevelTime]):
         team: dto.Team,
         game: dto.Game,
         level_number: int,
-        level_name: str | None = None,
         at: datetime | None = None,
-    ):
+    ) -> dto.LevelTime:
         if at is None:
-            at = datetime.now(tz=tz_utc)
-        if level_name is None:
-            level_time = models.LevelTime(
-                game_id=game.id,
-                team_id=team.id,
-                level_number=level_number,
-                start_at=at,
-            )
-        else:
-            level_time = models.LevelTime(
-                game_id=game.id,
-                team_id=team.id,
-                level_name=level_name,
-                start_at=at,
-            )
+            at = self.clock(tz_utc)
+        level_time = models.LevelTime(
+            game_id=game.id,
+            team_id=team.id,
+            level_number=level_number,
+            start_at=at,
+        )
         self._save(level_time)
+        return level_time.to_dto(team=team, game=game)
 
     async def is_team_on_level(self, team: dto.Team, level: dto.Level) -> bool:
         assert level.game_id is not None

@@ -19,7 +19,7 @@ class GamePreparer(GameOrgsGetter, Protocol):
 
 
 class GamePlayerDao(Committer, WaiverChecker, GameOrgsGetter, LevelByTeamGetter, Protocol):
-    async def is_key_duplicate(self, level: dto.Level, team: dto.Team, key: str) -> bool:
+    async def is_key_duplicate(self, level: dto.LevelTime, team: dto.Team, key: str) -> bool:
         raise NotImplementedError
 
     async def get_played_teams(self, game: dto.Game) -> Iterable[dto.Team]:
@@ -36,7 +36,7 @@ class GamePlayerDao(Committer, WaiverChecker, GameOrgsGetter, LevelByTeamGetter,
 
     async def get_correct_typed_keys(
         self,
-        level: dto.Level,
+        level_time: dto.LevelTime,
         game: dto.Game,
         team: dto.Team,
     ) -> set[str]:
@@ -46,7 +46,7 @@ class GamePlayerDao(Committer, WaiverChecker, GameOrgsGetter, LevelByTeamGetter,
         self,
         key: str,
         team: dto.Team,
-        level: dto.Level,
+        level_time: dto.LevelTime,
         game: dto.Game,
         player: dto.Player,
         type_: enums.KeyType,
@@ -55,7 +55,7 @@ class GamePlayerDao(Committer, WaiverChecker, GameOrgsGetter, LevelByTeamGetter,
         raise NotImplementedError
 
     async def get_team_typed_keys(
-        self, game: dto.Game, team: dto.Team, level_number: int
+        self, game: dto.Game, team: dto.Team, level_time: dto.LevelTime
     ) -> list[dto.KeyTime]:
         raise NotImplementedError
 

@@ -9,9 +9,11 @@ from shvatka.core.models import dto, enums
 from shvatka.core.models.dto.scn.game import RawGameScenario
 from shvatka.core.models.enums.played import Played
 from shvatka.core.services.game import upsert_game, start_waivers
+from shvatka.core.services.key import KeyProcessor
 from shvatka.core.services.player import join_team
 from shvatka.core.services.waiver import add_vote, approve_waivers
 from shvatka.core.utils.datetime_utils import tz_utc
+from shvatka.core.utils.key_checker_lock import KeyCheckerFactory
 from shvatka.infrastructure.db.dao.holder import HolderDao
 
 
@@ -77,85 +79,55 @@ async def finished_game(
     hermione: dto.Player,
     draco: dto.Player,
     dao: HolderDao,
+    locker: KeyCheckerFactory,
 ) -> dto.FullGame:
     game = started_game
-    await dao.key_time.save_key(
+    key_processor = KeyProcessor(dao=dao.game_player, game=game, locker=locker)
+    await key_processor.submit_key(
         key="SHWRONG",
-        team=gryffindor,
-        level=game.levels[0],
-        game=game,
         player=ron,
-        type_=enums.KeyType.wrong,
-        is_duplicate=False,
+        team=gryffindor,
     )
-    await dao.key_time.save_key(
+    await key_processor.submit_key(
         key="SH123",
         team=gryffindor,
-        level=game.levels[0],
-        game=game,
         player=harry,
-        type_=enums.KeyType.simple,
-        is_duplicate=False,
     )
-    await dao.key_time.save_key(
+    await key_processor.submit_key(
         key="SH123",
         team=slytherin,
-        level=game.levels[0],
-        game=game,
         player=draco,
-        type_=enums.KeyType.simple,
-        is_duplicate=False,
     )
-    await dao.key_time.save_key(
+    await key_processor.submit_key(
         key="SH123",
         team=gryffindor,
-        level=game.levels[0],
-        game=game,
         player=hermione,
-        type_=enums.KeyType.simple,
-        is_duplicate=True,
     )
-    await dao.key_time.save_key(
+    await key_processor.submit_key(
         key="SH321",
         team=slytherin,
-        level=game.levels[0],
-        game=game,
         player=draco,
-        type_=enums.KeyType.simple,
-        is_duplicate=False,
     )
     await dao.game_player.level_up(slytherin, game.levels[0], game, 1)
     await asyncio.sleep(0.1)
-    await dao.key_time.save_key(
+    await key_processor.submit_key(
         key="SH123",
         team=gryffindor,
-        level=game.levels[0],
-        game=game,
         player=ron,
-        type_=enums.KeyType.simple,
-        is_duplicate=False,
     )
     await dao.game_player.level_up(gryffindor, game.levels[0], game, 1)
     await asyncio.sleep(0.2)
-    await dao.key_time.save_key(
+    await key_processor.submit_key(
         key="SHOOT",
         team=gryffindor,
-        level=game.levels[1],
-        game=game,
         player=hermione,
-        type_=enums.KeyType.simple,
-        is_duplicate=False,
     )
     await dao.game_player.level_up(gryffindor, game.levels[1], game, 2)
     await asyncio.sleep(0.1)
-    await dao.key_time.save_key(
+    await key_processor.submit_key(
         key="SHOOT",
         team=slytherin,
-        level=game.levels[1],
-        game=game,
         player=draco,
-        type_=enums.KeyType.simple,
-        is_duplicate=False,
     )
     await dao.game_player.level_up(slytherin, game.levels[1], game, 2)
     await dao.game.set_finished(game)

@@ -85,7 +85,7 @@ class GamePlayerDaoImpl(GamePlayerDao):
                 return False
         return True
 
-    async def is_key_duplicate(self, level: dto.Level, team: dto.Team, key: str) -> bool:
+    async def is_key_duplicate(self, level: dto.LevelTime, team: dto.Team, key: str) -> bool:
         return await self.key_time.is_duplicate(level, team, key)
 
     async def get_current_level(self, team: dto.Team, game: dto.Game) -> dto.Level:
@@ -95,17 +95,17 @@ class GamePlayerDaoImpl(GamePlayerDao):
 
     async def get_correct_typed_keys(
         self,
-        level: dto.Level,
+        level_time: dto.LevelTime,
         game: dto.Game,
         team: dto.Team,
     ) -> set[str]:
-        return await self.key_time.get_correct_typed_keys(level, game, team)
+        return await self.key_time.get_correct_typed_keys(level_time, game, team)
 
     async def save_key(
         self,
         key: str,
         team: dto.Team,
-        level: dto.Level,
+        level_time: dto.LevelTime,
         game: dto.Game,
         player: dto.Player,
         type_: enums.KeyType,
@@ -114,7 +114,7 @@ class GamePlayerDaoImpl(GamePlayerDao):
         return await self.key_time.save_key(
             key=key,
             team=team,
-            level=level,
+            level_time=level_time,
             game=game,
             player=player,
             type_=type_,
@@ -122,9 +122,9 @@ class GamePlayerDaoImpl(GamePlayerDao):
         )
 
     async def get_team_typed_keys(
-        self, game: dto.Game, team: dto.Team, level_number: int
+        self, game: dto.Game, team: dto.Team, level_time: dto.LevelTime
     ) -> list[dto.KeyTime]:
-        return await self.key_time.get_team_typed_keys(game, team, level_number)
+        return await self.key_time.get_team_typed_keys(game, team, level_time)
 
     async def level_up(
         self, team: dto.Team, level: dto.Level, game: dto.Game, next_level_number: int

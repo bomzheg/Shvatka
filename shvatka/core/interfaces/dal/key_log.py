@@ -10,7 +10,7 @@ class GameKeyGetter(Protocol):
 
 class GameTeamKeyGetter(Protocol):
     async def get_team_typed_keys(
-        self, game: dto.Game, team: dto.Team, level_number: int
+        self, game: dto.Game, team: dto.Team, level_time: dto.LevelTime
     ) -> list[dto.KeyTime]:
         raise NotImplementedError
 

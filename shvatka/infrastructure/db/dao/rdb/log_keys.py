@@ -20,14 +20,15 @@ class KeyTimeDao(BaseDAO[models.KeyTime]):
 
     async def get_correct_typed_keys(
         self,
-        level: dto.Level,
+        level_time: dto.LevelTime,
         game: dto.Game,
         team: dto.Team,
     ) -> set[str]:
         result: ScalarResult[models.KeyTime] = await self.session.scalars(
             select(models.KeyTime).where(
                 models.KeyTime.game_id == game.id,
-                models.KeyTime.level_number == level.number_in_game,
+                models.KeyTime.level_number == level_time.level_number,
+                models.KeyTime.level_time_id == level_time.id,
                 models.KeyTime.team_id == team.id,
                 models.KeyTime.type_ == enums.KeyType.simple,
             )
@@ -38,7 +39,7 @@ class KeyTimeDao(BaseDAO[models.KeyTime]):
         self,
         game: dto.Game,
         team: dto.Team,
-        level_number: int,
+        level_time: dto.LevelTime,
     ) -> list[dto.KeyTime]:
         result: ScalarResult[models.KeyTime] = await self.session.scalars(
             select(models.KeyTime)
@@ -49,7 +50,8 @@ class KeyTimeDao(BaseDAO[models.KeyTime]):
             )
             .where(
                 models.KeyTime.game_id == game.id,
-                models.KeyTime.level_number == level_number,
+                models.KeyTime.level_number == level_time.level_number,
+                models.KeyTime.level_time_id == level_time.id,
                 models.KeyTime.team_id == team.id,
             )
         )
@@ -58,12 +60,13 @@ class KeyTimeDao(BaseDAO[models.KeyTime]):
             for key in result.all()
         ]
 
-    async def is_duplicate(self, level: dto.Level, team: dto.Team, key: str) -> bool:
+    async def is_duplicate(self, level_time: dto.LevelTime, team: dto.Team, key: str) -> bool:
         result: ScalarResult[int] = await self.session.scalars(
             select(self.model.id)
             .where(
-                models.KeyTime.game_id == level.game_id,
-                models.KeyTime.level_number == level.number_in_game,
+                models.KeyTime.game_id == level_time.game.id,
+                models.KeyTime.level_number == level_time.level_number,
+                models.KeyTime.level_time_id == level_time.id,
                 models.KeyTime.team_id == team.id,
                 models.KeyTime.key_text == key,
             )
@@ -75,7 +78,7 @@ class KeyTimeDao(BaseDAO[models.KeyTime]):
         self,
         key: str,
         team: dto.Team,
-        level: dto.Level,
+        level_time: dto.LevelTime,
         game: dto.Game,
         player: dto.Player,
         type_: enums.KeyType,
@@ -87,7 +90,8 @@ class KeyTimeDao(BaseDAO[models.KeyTime]):
         key_time = models.KeyTime(
             key_text=key,
             team_id=team.id,
-            level_number=level.number_in_game,
+            level_number=level_time.level_number,
+            level_time_id=level_time.id,
             game_id=game.id,
             player_id=player.id,
             type_=type_,

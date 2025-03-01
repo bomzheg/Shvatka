@@ -1,6 +1,5 @@
-import operator
 from datetime import timedelta, datetime
-from itertools import starmap, pairwise
+from itertools import pairwise
 
 import pytest
 

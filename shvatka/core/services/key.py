@@ -38,9 +38,7 @@ class KeyProcessor:
             correct_keys = await self.dao.get_correct_typed_keys(
                 level_time=level_time, game=self.game, team=team
             )
-            all_typed = await self.dao.get_team_typed_keys(
-                self.game, team, level_time=level_time
-            )
+            all_typed = await self.dao.get_team_typed_keys(self.game, team, level_time=level_time)
             state = action.InMemoryStateHolder(
                 typed_correct=correct_keys,
                 all_typed={k.text for k in all_typed},

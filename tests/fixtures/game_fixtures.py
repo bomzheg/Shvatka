@@ -5,7 +5,7 @@ import pytest_asyncio
 from adaptix import Retort
 
 from shvatka.core.interfaces.clients.file_storage import FileGateway
-from shvatka.core.models import dto, enums
+from shvatka.core.models import dto
 from shvatka.core.models.dto.scn.game import RawGameScenario
 from shvatka.core.models.enums.played import Played
 from shvatka.core.services.game import upsert_game, start_waivers

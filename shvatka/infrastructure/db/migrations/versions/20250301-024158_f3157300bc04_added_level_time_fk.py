@@ -10,15 +10,16 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = 'f3157300bc04'
-down_revision = '149de95bb84e'
+revision = "f3157300bc04"
+down_revision = "149de95bb84e"
 branch_labels = None
 depends_on = None
 
 
 def upgrade():
-    op.add_column('log_keys', sa.Column('level_time_id', sa.Integer(), nullable=True))
-    # next line update existing log_keys with level_time_id by same game_id, team_id and level_number
+    op.add_column("log_keys", sa.Column("level_time_id", sa.Integer(), nullable=True))
+    # next line update existing log_keys with level_time_id
+    # by same game_id, team_id and level_number
     op.execute(
         sa.text(
             """
@@ -37,9 +38,11 @@ def upgrade():
             """
         )
     )
-    op.create_foreign_key(op.f('log_keys_level_time_id_fkey'), 'log_keys', 'levels_times', ['level_time_id'], ['id'])
+    op.create_foreign_key(
+        op.f("log_keys_level_time_id_fkey"), "log_keys", "levels_times", ["level_time_id"], ["id"]
+    )
 
 
 def downgrade():
-    op.drop_constraint(op.f('log_keys_level_time_id_fkey'), 'log_keys', type_='foreignkey')
-    op.drop_column('log_keys', 'level_time_id')
+    op.drop_constraint(op.f("log_keys_level_time_id_fkey"), "log_keys", type_="foreignkey")
+    op.drop_column("log_keys", "level_time_id")

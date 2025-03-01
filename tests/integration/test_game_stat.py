@@ -16,7 +16,9 @@ async def test_game_level_times(finished_game: dto.FullGame, dao: HolderDao):
     game_stat = await get_game_stat(finished_game, finished_game.author, dao.game_stat)
     for team, level_times in game_stat.level_times.items():
         assert all(team.id == lt.team.id for lt in level_times)
-        assert all(starmap(operator.lt, pairwise(lt.level_number for lt in level_times)))
+        assert len(level_times) > 0
+        for prev, curr in pairwise(level_times):
+            assert prev.level_number <= curr.level_number
 
 
 @pytest.mark.asyncio

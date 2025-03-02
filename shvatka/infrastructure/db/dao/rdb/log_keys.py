@@ -27,7 +27,6 @@ class KeyTimeDao(BaseDAO[models.KeyTime]):
         result: ScalarResult[models.KeyTime] = await self.session.scalars(
             select(models.KeyTime).where(
                 models.KeyTime.game_id == game.id,
-                models.KeyTime.level_number == level_time.level_number,
                 models.KeyTime.level_time_id == level_time.id,
                 models.KeyTime.team_id == team.id,
                 models.KeyTime.type_ == enums.KeyType.simple,
@@ -50,7 +49,6 @@ class KeyTimeDao(BaseDAO[models.KeyTime]):
             )
             .where(
                 models.KeyTime.game_id == game.id,
-                models.KeyTime.level_number == level_time.level_number,
                 models.KeyTime.level_time_id == level_time.id,
                 models.KeyTime.team_id == team.id,
             )
@@ -65,7 +63,6 @@ class KeyTimeDao(BaseDAO[models.KeyTime]):
             select(self.model.id)
             .where(
                 models.KeyTime.game_id == level_time.game.id,
-                models.KeyTime.level_number == level_time.level_number,
                 models.KeyTime.level_time_id == level_time.id,
                 models.KeyTime.team_id == team.id,
                 models.KeyTime.key_text == key,

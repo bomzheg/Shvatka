@@ -83,27 +83,23 @@ class HolderDao:
 
     @property
     def waiver_vote_adder(self) -> WaiverVoteAdder:
-        return WaiverVoteAdderImpl(
-            poll=self.poll, waiver=self.waiver, team_player=self.team_player
-        )
+        return WaiverVoteAdderImpl(dao=self)
 
     @property
     def waiver_vote_getter(self) -> WaiverVoteGetter:
-        return WaiverVoteGetterImpl(poll=self.poll, player=self.player)
+        return WaiverVoteGetterImpl(dao=self)
 
     @property
     def waiver_approver(self) -> WaiverApprover:
-        return WaiverApproverImpl(
-            poll=self.poll, player=self.player, waiver=self.waiver, team_player=self.team_player
-        )
+        return WaiverApproverImpl(dao=self)
 
     @property
     def game_upserter(self) -> GameUpserter:
-        return GameUpserterImpl(game=self.game, level=self.level, file_info=self.file_info)
+        return GameUpserterImpl(dao=self)
 
     @property
     def game_creator(self) -> GameCreator:
-        return GameCreatorImpl(game=self.game, level=self.level)
+        return GameCreatorImpl(dao=self)
 
     @property
     def game_packager(self) -> GamePackager:
@@ -123,7 +119,7 @@ class HolderDao:
 
     @property
     def game_preparer(self) -> GamePreparer:
-        return GamePreparerImpl(poll=self.poll, waiver=self.waiver, org=self.organizer)
+        return GamePreparerImpl(dao=self)
 
     @property
     def game_starter(self) -> GameStarter:
@@ -131,20 +127,11 @@ class HolderDao:
 
     @property
     def game_player(self) -> GamePlayerDao:
-        return GamePlayerDaoImpl(
-            level_time=self.level_time,
-            level=self.level,
-            key_time=self.key_time,
-            waiver=self.waiver,
-            game=self.game,
-            organizer=self.organizer,
-        )
+        return GamePlayerDaoImpl(dao=self)
 
     @property
     def org_adder(self) -> OrgAdder:
-        return OrgAdderImpl(
-            game=self.game, organizer=self.organizer, secure_invite=self.secure_invite
-        )
+        return OrgAdderImpl(dao=self)
 
     @property
     def player_promoter(self) -> PlayerPromoter:
@@ -156,7 +143,7 @@ class HolderDao:
 
     @property
     def level_testing_complex(self) -> LevelTestingDao:
-        return LevelTestComplex(level_testing=self.level_test, game=self.game)
+        return LevelTestComplex(dao=self)
 
     @property
     def game_stat(self) -> GameStatDao:

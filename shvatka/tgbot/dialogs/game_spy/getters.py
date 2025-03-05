@@ -28,7 +28,7 @@ async def get_spy(
 ):
     stat = await get_game_spy(game, player, dao.game_stat)
     return {
-        "stat": stat,
+        "stat": sorted(stat, key=lambda x: (x.level_number, x.start_at)),
         "now": datetime.now(tz=tz_utc),
     }
 

@@ -59,7 +59,6 @@ async def send_hint_wrapper(
     team_id: int,
     hint_number: int,
     lt_id: int,
-    game: FromDishka[dto.Game],
     dao: FromDishka[HolderDao],
     game_view: FromDishka[GameView],
     scheduler: FromDishka[Scheduler],
@@ -68,6 +67,8 @@ async def send_hint_wrapper(
     try:
         level = await dao.level.get_by_id(level_id)
         team = await dao.team.get_by_id(team_id)
+        game = await dao.game.get_active_game()
+        assert game is not None
 
         await send_hint(
             level=level,

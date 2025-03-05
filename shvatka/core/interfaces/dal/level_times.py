@@ -11,12 +11,12 @@ class GameStarter(Committer, Protocol):
     async def get_played_teams(self, game: dto.Game) -> Iterable[dto.Team]:
         raise NotImplementedError
 
-    async def set_teams_to_first_level(self, game: dto.Game, teams: Iterable[dto.Team]) -> None:
-        raise NotImplementedError
-
-
-class LevelTimeChecker(Protocol):
-    async def is_team_on_level(self, team: dto.Team, level: dto.Level) -> bool:
+    async def set_to_level(
+        self,
+        team: dto.Team,
+        game: dto.Game,
+        level_number: int,
+    ) -> dto.LevelTime:
         raise NotImplementedError
 
 

@@ -1,3 +1,4 @@
+import typing
 from dataclasses import dataclass
 from typing import Iterable
 
@@ -14,6 +15,9 @@ from shvatka.infrastructure.db.dao import (
     LevelDao,
     KeyTimeDao,
 )
+
+if typing.TYPE_CHECKING:
+    from shvatka.infrastructure.db.dao.holder import HolderDao
 
 
 @dataclass
@@ -41,23 +45,26 @@ class GamePreparerImpl(GamePreparer):
 
 @dataclass
 class GameStarterImpl(GameStarter):
-    game: GameDao
-    waiver: WaiverDao
-    level_times: LevelTimeDao
-    level: LevelDao
+    dao: "HolderDao"
 
     async def set_game_started(self, game: dto.Game) -> None:
-        return await self.game.set_started(game)
+        return await self.dao.game.set_started(game)
 
     async def get_played_teams(self, game: dto.Game) -> Iterable[dto.Team]:
-        return await self.waiver.get_played_teams(game)
+        return await self.dao.waiver.get_played_teams(game)
 
-    async def set_teams_to_first_level(self, game: dto.Game, teams: Iterable[dto.Team]) -> None:
-        for team in teams:
-            await self.level_times.set_to_level(team=team, game=game, level_number=0)
+    async def set_to_level(
+        self,
+        team: dto.Team,
+        game: dto.Game,
+        level_number: int,
+    ) -> dto.LevelTime:
+        return await self.dao.level_time.set_to_level(
+            team=team, game=game, level_number=level_number
+        )
 
     async def commit(self) -> None:
-        await self.game.commit()
+        await self.dao.commit()
 
 
 @dataclass

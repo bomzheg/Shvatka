@@ -58,6 +58,8 @@ async def send_hint_wrapper(
     level_id: int,
     team_id: int,
     hint_number: int,
+    lt_id: int,
+    game: FromDishka[dto.Game],
     dao: FromDishka[HolderDao],
     game_view: FromDishka[GameView],
     scheduler: FromDishka[Scheduler],
@@ -70,7 +72,9 @@ async def send_hint_wrapper(
         await send_hint(
             level=level,
             hint_number=hint_number,
+            lt_id=lt_id,
             team=team,
+            game=game,
             dao=dao.level_time,
             view=game_view,
             scheduler=scheduler,

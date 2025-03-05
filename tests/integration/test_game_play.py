@@ -131,7 +131,9 @@ async def test_game_play(
     await send_hint(
         level=game.levels[0],
         hint_number=1,
+        lt_id=(await dao.level_time.get_current_level_time(gryffindor, game)).id,
         team=gryffindor,
+        game=game,
         dao=dao.level_time,
         view=dummy_view,
         scheduler=scheduler,

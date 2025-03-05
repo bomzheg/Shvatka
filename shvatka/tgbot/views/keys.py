@@ -33,12 +33,12 @@ class KeyEmoji(enum.Enum):
 
 
 def render_log_keys(log_keys: dict[dto.Team, list[dto.KeyTime]]) -> str:
-    text = f"Лог ключей на {datetime.now(tz=tz_game).strftime(DATETIME_FORMAT)}:<br/>"
+    text = f"<h3>Лог ключей на {datetime.now(tz=tz_game).strftime(DATETIME_FORMAT)}:</h3><br/>"
     for team, keys in log_keys.items():
-        text += f"<hr/>{hd.quote(team.name)}:"
+        text += f"<h4>🚩{hd.quote(team.name)}:</h4>"
         n_level = keys[0].level_number - 1
         for i, key in enumerate(keys):
-            if n_level < key.level_number:
+            if n_level != key.level_number:
                 # keys are sorted, so is previous and next level not equals - add caption
                 n_level = key.level_number
                 if i > 0:
@@ -46,10 +46,10 @@ def render_log_keys(log_keys: dict[dto.Team, list[dto.KeyTime]]) -> str:
                 text += f"Уровень №{n_level + 1}<br/><ol>"
             text += (
                 f"<li>{KeyEmoji.from_key(key).value}{hd.quote(key.text)} "
-                f"{key.at.astimezone(tz=tz_game).time()} "
+                f"{key.at.astimezone(tz=tz_game).time().isoformat()} "
                 f"{key.player.name_mention}</li>"
             )
-        text += "</ol>"
+        text += "</ol><hr/><hr/><hr/>"
     return text
 
 

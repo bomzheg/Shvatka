@@ -33,6 +33,7 @@ class LevelTimeDao(BaseDAO[models.LevelTime]):
             start_at=at,
         )
         self._save(level_time)
+        await self._flush(level_time)
         return level_time.to_dto(team=team, game=game)
 
     async def get_current_level(self, team: dto.Team, game: dto.Game) -> int:

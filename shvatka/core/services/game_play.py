@@ -245,8 +245,10 @@ async def send_hint(
     lt = await dao.get_current_level_time(team, game)
     if lt.id != lt_id:
         logger.debug(
-            "team %s is not on level %s, skip sending hint #%s",
+            "team %s is not on level %s (should %s, actually %s), skip sending hint #%s",
             team.id,
+            level.number_in_game,
+            lt_id,
             lt.id,
             hint_number,
         )

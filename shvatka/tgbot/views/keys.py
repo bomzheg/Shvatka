@@ -92,6 +92,7 @@ def render_level_keys(level: scn.LevelScenario) -> str:
         text += f"🗝🗝🗝{' -> ' + c.next_level if c.next_level else ''}\n"
         for k in c.keys:
             text += f"🔑 {k}\n"
+        text += "\n"
     if level.get_bonus_keys():
         text += "\nБонусные ключи:\n💰 " + "\n💰 ".join(
             [f"{b.text} ({b.bonus_minutes} мин.)" for b in level.get_bonus_keys()]

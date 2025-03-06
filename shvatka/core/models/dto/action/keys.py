@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from typing import Literal
 
 from shvatka.core.models import enums
+from shvatka.core.utils.input_validation import is_key_valid
 from . import StateHolder
 from .decisions import NotImplementedActionDecision
 from .interface import (
@@ -22,6 +23,12 @@ SHKey: typing.TypeAlias = str
 class BonusKey:
     text: SHKey
     bonus_minutes: float
+
+    def __post_init__(self):
+        if not is_key_valid(self.text):
+            raise ValueError
+        if not (-600 < self.bonus_minutes < 60):
+            raise ValueError("bonus out of available range")
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, BonusKey):

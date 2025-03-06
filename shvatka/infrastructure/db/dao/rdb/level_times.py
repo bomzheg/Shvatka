@@ -71,7 +71,7 @@ class LevelTimeDao(BaseDAO[models.LevelTime]):
             )
             .order_by(
                 models.LevelTime.team_id,
-                models.LevelTime.level_number,
+                models.LevelTime.start_at,
             )
         )
         return [

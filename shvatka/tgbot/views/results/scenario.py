@@ -99,7 +99,8 @@ class LevelPublisher:
         for hint_number, hint in enumerate(self.level.scenario.time_hints):
             if hint.time == 0:
                 text = (
-                    f"🔒 <b>Уровень № {self.level.number_in_game + 1}</b>\n"
+                    f"🔒 <b>Уровень № {self.level.number_in_game + 1}</b> "
+                    f"({hd.quote(self.level.name_id)})\n"
                     f"Ключи уровня:\n{render_level_keys(self.level.scenario)}"
                 )
             elif hint_number == len(self.level.scenario.time_hints) - 1:

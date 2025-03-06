@@ -23,7 +23,7 @@ from shvatka.tgbot import keyboards as kb
 from shvatka.tgbot.views.hint_sender import HintSender
 from shvatka.tgbot.views.user import render_small_card_link
 from .getters import get_level_and_org, get_org
-from ...views.keys import render_level_keys
+from shvatka.tgbot.views.keys import render_level_keys
 
 
 async def edit_level(c: CallbackQuery, button: Button, manager: DialogManager):

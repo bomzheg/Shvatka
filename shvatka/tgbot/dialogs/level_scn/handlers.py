@@ -73,9 +73,7 @@ def convert_bonus_keys(text: str) -> list[action.BonusKey]:
     result = []
     for key_str in text.splitlines():
         key, bonus = key_str.split(maxsplit=1)
-        parsed_key = action.BonusKey(
-            text=key, bonus_minutes=float(bonus)
-        )
+        parsed_key = action.BonusKey(text=key, bonus_minutes=float(bonus))
         result.append(parsed_key)
     return result
 

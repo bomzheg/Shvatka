@@ -6,7 +6,7 @@ from aiogram.utils.text_decorations import html_decoration as hd
 from telegraph.aio import Telegraph
 
 from shvatka.core.models import dto, enums
-from shvatka.core.models.dto import scn
+from shvatka.core.models.dto import scn, action
 from shvatka.core.services.game_stat import get_typed_keys
 from shvatka.core.utils.datetime_utils import tz_game, DATETIME_FORMAT
 from shvatka.infrastructure.db.dao.holder import HolderDao
@@ -87,14 +87,13 @@ async def get_or_create_keys_page(
 def render_level_keys(level: scn.LevelScenario) -> str:
     text = ""
     for c in level.conditions:
+        if not isinstance(c, action.KeyWinCondition):
+            continue
         text += f"🗝🗝🗝{' -> ' + c.next_level if c.next_level else ''}\n"
         for k in c.keys:
             text += f"🔑 {k}\n"
     if level.get_bonus_keys():
         text += "\nБонусные ключи:\n💰 " + "\n💰 ".join(
-            [
-                f"{b.text} ({b.bonus_minutes} мин.)"
-                for b in level.get_bonus_keys()
-            ]
+            [f"{b.text} ({b.bonus_minutes} мин.)" for b in level.get_bonus_keys()]
         )
     return text

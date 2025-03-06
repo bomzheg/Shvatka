@@ -13,7 +13,7 @@ from shvatka.core.models import dto
 from shvatka.core.utils.datetime_utils import DATE_FORMAT
 from shvatka.tgbot.config.models.bot import BotConfig
 from shvatka.tgbot.views.hint_sender import HintSender
-from shvatka.tgbot.views.keys import render_log_keys
+from shvatka.tgbot.views.keys import render_log_keys, render_level_keys
 from shvatka.tgbot.views.results.level_times import export_results
 
 
@@ -100,15 +100,8 @@ class LevelPublisher:
             if hint.time == 0:
                 text = (
                     f"🔒 <b>Уровень № {self.level.number_in_game + 1}</b>\n"
-                    f"Ключи уровня:\n🔑 " + "\n🔑 ".join(self.level.scenario.get_keys())
+                    f"Ключи уровня:\n{render_level_keys(self.level.scenario)}"
                 )
-                if self.level.scenario.get_bonus_keys():
-                    text += "\nБонусные ключи:\n💰 " + "\n💰 ".join(
-                        [
-                            f"{b.text} ({b.bonus_minutes} мин.)"
-                            for b in self.level.scenario.get_bonus_keys()
-                        ]
-                    )
             elif hint_number == len(self.level.scenario.time_hints) - 1:
                 text = (
                     f"🔖 Последняя подсказка уровня №{self.level.number_in_game + 1} "

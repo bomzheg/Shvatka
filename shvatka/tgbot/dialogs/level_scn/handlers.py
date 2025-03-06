@@ -13,7 +13,6 @@ from shvatka.core.utils.input_validation import (
     is_multiple_keys_normal,
     normalize_key,
     validate_level_id,
-    is_key_valid,
 )
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.tgbot import states
@@ -70,18 +69,11 @@ async def on_correct_keys(m: Message, dialog_: Any, manager: DialogManager, keys
     await manager.done({"keys": keys})
 
 
-def convert_bonus_keys(text: str) -> list[shvatka.core.models.dto.action.keys.BonusKey]:
+def convert_bonus_keys(text: str) -> list[action.BonusKey]:
     result = []
     for key_str in text.splitlines():
         key, bonus = key_str.split(maxsplit=1)
-        if not is_key_valid(key):
-            raise ValueError
-        parsed_bonus = float(bonus)
-        if not (-600 < parsed_bonus < 60):
-            raise ValueError("bonus out of available range")
-        parsed_key = shvatka.core.models.dto.action.keys.BonusKey(
-            text=key, bonus_minutes=parsed_bonus
-        )
+        parsed_key = action.BonusKey(text=key, bonus_minutes=float(bonus))
         result.append(parsed_key)
     return result
 

@@ -10,7 +10,7 @@ class Player(Base):
     __mapper_args__ = {"eager_defaults": True}
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
     can_be_author: Mapped[bool] = mapped_column(Boolean, server_default="f", nullable=False)
-    promoted_by_id: Mapped[int] = mapped_column(ForeignKey("players.id"))
+    promoted_by_id: Mapped[int | None] = mapped_column(ForeignKey("players.id"))
     is_dummy: Mapped[bool] = mapped_column(nullable=False, default=False, server_default="f")
     user = relationship(
         "User",

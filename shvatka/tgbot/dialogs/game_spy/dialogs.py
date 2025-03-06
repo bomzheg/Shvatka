@@ -38,15 +38,17 @@ game_spy = Dialog(
     Window(
         Const("Актуальные сведения с полей схватки:"),
         Jinja(
-            "{% for lt in stat %}"
-            "{% if lt.is_finished %}"
+            "{% for lt in finished %}"
             "🏁<b>{{ lt.team.name }}</b> - финишировала в "
             "{{ lt.start_at|time_user_timezone }} ({{(now - lt.start_at) | timedelta}} назад)\n"
-            "{% else %}"
-            "🚩<b>{{ lt.team.name }}</b> - ур {{ lt.level_number + 1 }} начат в "
+            "{% endfor %}"
+            "{% for i, lts in stat.items() %}"
+            "<b><u>Уровень {{ i + 1 }}</u></b>\n"
+            "{% for lt in lts %}"
+            "🚩<b>{{ lt.team.name }}</b> - начат в "
             "{{ lt.start_at|time_user_timezone }} ({{(now - lt.start_at) | timedelta}} назад)\n"
             "Подсказка №{{lt.hint.number}} — {{lt.hint.time}} мин.\n"
-            "{% endif %}"
+            "{% endfor %}"
             "{% endfor %}",
             when=F["org"].can_spy,
         ),

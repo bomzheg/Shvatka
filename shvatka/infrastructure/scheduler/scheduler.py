@@ -84,11 +84,17 @@ class ApScheduler(Scheduler, LevelTestScheduler):
         level: dto.Level,
         team: dto.Team,
         hint_number: int,
+        lt_id: int,
         run_at: datetime,
     ):
         self.scheduler.add_job(
             func="shvatka.infrastructure.scheduler.wrappers:send_hint_wrapper",
-            kwargs={"level_id": level.db_id, "team_id": team.id, "hint_number": hint_number},
+            kwargs={
+                "level_id": level.db_id,
+                "team_id": team.id,
+                "hint_number": hint_number,
+                "lt_id": lt_id,
+            },
             trigger="date",
             run_date=run_at,
             timezone=tz_utc,

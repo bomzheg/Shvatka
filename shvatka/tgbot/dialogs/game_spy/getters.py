@@ -1,3 +1,4 @@
+from collections import defaultdict
 from datetime import datetime
 
 from aiogram_dialog import DialogManager
@@ -26,9 +27,20 @@ async def get_org(
 async def get_spy(
     dao: HolderDao, player: dto.Player, game: dto.Game, dialog_manager: DialogManager, **_
 ):
-    stat = await get_game_spy(game, player, dao.game_stat)
+    stat = sorted(
+        await get_game_spy(game, player, dao.game_stat),
+        key=lambda x: (-x.level_number, x.start_at),
+    )
+    result = defaultdict(list)
+    finished = []
+    for s in stat:
+        if s.is_finished:
+            finished.append(s)
+        else:
+            result[s.level_number].append(s)
     return {
-        "stat": stat,
+        "stat": result,
+        "finished": finished,
         "now": datetime.now(tz=tz_utc),
     }
 

@@ -31,7 +31,7 @@ class TeamPlayer(Base):
         nullable=False,
     )
     role: Mapped[str]
-    emoji: Mapped[str]
+    emoji: Mapped[str | None]
     date_left: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
     can_manage_waivers: Mapped[bool] = mapped_column(default=False, nullable=False)

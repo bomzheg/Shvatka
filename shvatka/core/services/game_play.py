@@ -4,7 +4,7 @@ import typing
 from datetime import timedelta, datetime
 
 from shvatka.core.interfaces.dal.game_play import GamePreparer, GamePlayerDao
-from shvatka.core.interfaces.dal.level_times import GameStarter, LevelTimeChecker
+from shvatka.core.interfaces.dal.level_times import GameStarter, LevelByTeamGetter
 from shvatka.core.interfaces.scheduler import Scheduler
 from shvatka.core.models import dto, enums
 from shvatka.core.models.dto import scn
@@ -70,13 +70,18 @@ async def start_game(
     logger.info("game %s started", game.id)
     teams = await dao.get_played_teams(game)
 
-    await dao.set_teams_to_first_level(game, teams)
+    level_times = {}
+    for team in teams:
+        level_times[team.id] = await dao.set_to_level(team=team, game=game, level_number=0)
     await dao.commit()
 
     await asyncio.gather(*[view.send_puzzle(team, game.levels[0]) for team in teams])
 
     await asyncio.gather(
-        *[schedule_first_hint(scheduler, team, game.levels[0], now) for team in teams]
+        *[
+            schedule_first_hint(scheduler, team, game.levels[0], level_times[team.id].id, now)
+            for team in teams
+        ]
     )
 
     await game_log.log(GameLogEvent(GameLogType.GAME_STARTED, {"game": game.name}))
@@ -168,9 +173,16 @@ async def process_level_up(
             await finish_team(team, game, view, game_log, dao, locker)
             return
     next_level = await dao.get_current_level(team, game)
+    lt = await dao.get_current_level_time(team, game)
 
     await view.send_puzzle(team=team, level=next_level)
-    await schedule_first_hint(scheduler, team, next_level)
+    await schedule_first_hint(
+        scheduler=scheduler,
+        team=team,
+        next_level=next_level,
+        lt_id=lt.id,
+        now=datetime.now(tz=tz_utc),
+    )
     level_up_event = LevelUp(
         team=team, new_level=next_level, orgs_list=await get_spying_orgs(game, dao)
     )
@@ -209,9 +221,11 @@ async def finish_team(
 
 async def send_hint(
     level: dto.Level,
+    lt_id: int,
     hint_number: int,
     team: dto.Team,
-    dao: LevelTimeChecker,
+    game: dto.Game,
+    dao: LevelByTeamGetter,
     view: GameView,
     scheduler: Scheduler,
 ):
@@ -220,17 +234,22 @@ async def send_hint(
     Если команда уже на следующем уровне - отправлять не надо.
 
     :param level: Подсказка относится к уровню.
+    :param lt_id: Идентификатор соответствия уровня и команды.
     :param hint_number: Номер подсказки, которую надо отправить.
     :param team: Какой команде надо отправить подсказку.
+    :param game: Текущая игра.
     :param dao: Слой доступа к данным.
     :param view: Слой отображения.
     :param scheduler: Планировщик.
     """
-    if not await dao.is_team_on_level(team, level):
+    lt = await dao.get_current_level_time(team, game)
+    if lt.id != lt_id:
         logger.debug(
-            "team %s is not on level %s, skip sending hint #%s",
+            "team %s is not on level %s (should %s, actually %s), skip sending hint #%s",
             team.id,
-            level.db_id,
+            level.number_in_game,
+            lt_id,
+            lt.id,
             hint_number,
         )
         return
@@ -248,24 +267,26 @@ async def send_hint(
         level.get_hint(hint_number),
         level.get_hint(next_hint_number),
     )
-    await scheduler.plain_hint(level, team, next_hint_number, next_hint_time)
+    await scheduler.plain_hint(level, team, next_hint_number, lt_id, next_hint_time)
 
 
 async def schedule_first_hint(
     scheduler: Scheduler,
     team: dto.Team,
     next_level: dto.Level,
-    now: datetime | None = None,
+    lt_id: int,
+    now: datetime,
 ):
     await scheduler.plain_hint(
         level=next_level,
         team=team,
         hint_number=1,
+        lt_id=lt_id,
         run_at=calculate_first_hint_time(next_level, now),
     )
 
 
-def calculate_first_hint_time(next_level: dto.Level, now: datetime | None = None) -> datetime:
+def calculate_first_hint_time(next_level: dto.Level, now: datetime) -> datetime:
     return calculate_next_hint_time(next_level.get_hint(0), next_level.get_hint(1), now)
 
 

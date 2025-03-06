@@ -6,6 +6,7 @@ from aiogram.utils.text_decorations import html_decoration as hd
 from telegraph.aio import Telegraph
 
 from shvatka.core.models import dto, enums
+from shvatka.core.models.dto import scn, action
 from shvatka.core.services.game_stat import get_typed_keys
 from shvatka.core.utils.datetime_utils import tz_game, DATETIME_FORMAT
 from shvatka.infrastructure.db.dao.holder import HolderDao
@@ -33,12 +34,12 @@ class KeyEmoji(enum.Enum):
 
 
 def render_log_keys(log_keys: dict[dto.Team, list[dto.KeyTime]]) -> str:
-    text = f"Лог ключей на {datetime.now(tz=tz_game).strftime(DATETIME_FORMAT)}:<br/>"
+    text = f"<h3>Лог ключей на {datetime.now(tz=tz_game).strftime(DATETIME_FORMAT)}:</h3><br/>"
     for team, keys in log_keys.items():
-        text += f"<hr/>{hd.quote(team.name)}:"
+        text += f"<h4>🚩{hd.quote(team.name)}:</h4>"
         n_level = keys[0].level_number - 1
         for i, key in enumerate(keys):
-            if n_level < key.level_number:
+            if n_level != key.level_number:
                 # keys are sorted, so is previous and next level not equals - add caption
                 n_level = key.level_number
                 if i > 0:
@@ -46,10 +47,10 @@ def render_log_keys(log_keys: dict[dto.Team, list[dto.KeyTime]]) -> str:
                 text += f"Уровень №{n_level + 1}<br/><ol>"
             text += (
                 f"<li>{KeyEmoji.from_key(key).value}{hd.quote(key.text)} "
-                f"{key.at.astimezone(tz=tz_game).time()} "
+                f"{key.at.astimezone(tz=tz_game).time().isoformat()} "
                 f"{key.player.name_mention}</li>"
             )
-        text += "</ol>"
+        text += "</ol><hr/><hr/><hr/>"
     return text
 
 
@@ -81,3 +82,19 @@ async def get_or_create_keys_page(
     game.results.keys_url = page["url"]
     assert game.results.keys_url is not None
     return game.results.keys_url
+
+
+def render_level_keys(level: scn.LevelScenario) -> str:
+    text = ""
+    for c in level.conditions:
+        if not isinstance(c, action.KeyWinCondition):
+            continue
+        text += f"🗝🗝🗝{' -> ' + c.next_level if c.next_level else ''}\n"
+        for k in c.keys:
+            text += f"🔑 {k}\n"
+        text += "\n"
+    if level.get_bonus_keys():
+        text += "\nБонусные ключи:\n💰 " + "\n💰 ".join(
+            [f"{b.text} ({b.bonus_minutes} мин.)" for b in level.get_bonus_keys()]
+        )
+    return text

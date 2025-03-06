@@ -7,7 +7,6 @@ from shvatka.core.games.adapters import GameFileReader, GamePlayReader
 from shvatka.core.interfaces.dal.game import GameUpserter, GameCreator
 from shvatka.core.models import dto
 from shvatka.core.models.dto import scn
-from shvatka.infrastructure.db.dao import GameDao, LevelDao, FileInfoDao
 
 if typing.TYPE_CHECKING:
     from shvatka.infrastructure.db.dao.holder import HolderDao
@@ -15,12 +14,10 @@ if typing.TYPE_CHECKING:
 
 @dataclass
 class GameUpserterImpl(GameUpserter):
-    game: GameDao
-    level: LevelDao
-    file_info: FileInfoDao
+    dao: "HolderDao"
 
     async def upsert_game(self, author: dto.Player, scenario: scn.GameScenario) -> dto.Game:
-        return await self.game.upsert_game(author, scenario)
+        return await self.dao.game.upsert_game(author, scenario)
 
     async def upsert(
         self,
@@ -29,46 +26,45 @@ class GameUpserterImpl(GameUpserter):
         game: dto.Game | None = None,
         no_in_game: int | None = None,
     ) -> dto.Level:
-        return await self.level.upsert(author, scenario, game, no_in_game)
+        return await self.dao.level.upsert(author, scenario, game, no_in_game)
 
     async def unlink_all(self, game: dto.Game) -> None:
-        return await self.level.unlink_all(game)
+        return await self.dao.level.unlink_all(game)
 
     async def upsert_file(self, file: scn.FileMeta, author: dto.Player) -> scn.SavedFileMeta:
-        return await self.file_info.upsert(file, author)
+        return await self.dao.file_info.upsert(file, author)
 
     async def check_author_can_own_guid(self, author: dto.Player, guid: str) -> None:
-        return await self.file_info.check_author_can_own_guid(author, guid)
+        return await self.dao.file_info.check_author_can_own_guid(author, guid)
 
     async def is_name_available(self, name: str) -> bool:
-        return await self.game.is_name_available(name)
+        return await self.dao.game.is_name_available(name)
 
     async def is_author_game_by_name(self, name: str, author: dto.Player) -> bool:
-        return await self.game.is_author_game_by_name(name, author)
+        return await self.dao.game.is_author_game_by_name(name, author)
 
     async def get_game_by_name(self, name: str, author: dto.Player) -> dto.Game:
-        return await self.game.get_game_by_name(name=name, author=author)
+        return await self.dao.game.get_game_by_name(name=name, author=author)
 
     async def commit(self) -> None:
-        await self.level.commit()
+        await self.dao.commit()
 
 
 @dataclass
 class GameCreatorImpl(GameCreator):
-    game: GameDao
-    level: LevelDao
+    dao: "HolderDao"
 
     async def create_game(self, author: dto.Player, name: str) -> dto.Game:
-        return await self.game.create_game(author, name)
+        return await self.dao.game.create_game(author, name)
 
     async def link_to_game(self, level: dto.Level, game: dto.Game) -> dto.Level:
-        return await self.level.link_to_game(level, game)
+        return await self.dao.level.link_to_game(level, game)
 
     async def commit(self) -> None:
-        return await self.game.commit()
+        return await self.dao.commit()
 
     async def is_name_available(self, name: str) -> bool:
-        return await self.game.is_name_available(name)
+        return await self.dao.game.is_name_available(name)
 
 
 @dataclass
@@ -150,6 +146,6 @@ class GamePlayReaderImpl(GamePlayReader):
         return await self.dao.level.get_by_number(game, number)
 
     async def get_team_typed_keys(
-        self, game: dto.Game, team: dto.Team, level_number: int
+        self, game: dto.Game, team: dto.Team, level_time: dto.LevelTime
     ) -> list[dto.KeyTime]:
-        return await self.dao.key_time.get_team_typed_keys(game, team, level_number)
+        return await self.dao.key_time.get_team_typed_keys(game, team, level_time)

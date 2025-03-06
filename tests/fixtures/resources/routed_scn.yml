@@ -1,0 +1,88 @@
+__model_version__: 1
+name: "Routed game"
+levels:
+  - id: first
+    __model_version__: 1
+    conditions:
+      - type: WIN_KEY
+        keys:
+          - "SH123"
+          - "SH321"
+      - type: WIN_KEY
+        keys: [ "SHTO3" ]
+        next-level: third
+    time-hints:
+      - time: 0
+        hint:
+          - type: text
+            text: "загадка"
+          - type: text
+            text: "(сложная)"
+      - time: 1
+        hint:
+          - type: text
+            text: "подсказка"
+      - time: 2
+        hint:
+          - type: gps
+            latitude: 55.579282598950165
+            longitude: 37.910306366539395
+      - time: 5
+        hint:
+          - time: text
+            text: "SH123\nSH321"
+  - id: second
+    __model_version__: 1
+    conditions:
+      - type: WIN_KEY
+        keys: [ "SHOOT" ]
+    time-hints:
+      - time: 0
+        hint:
+          - type: text
+            text: "загадка"
+          - type: text
+            text: "(ну не очень сложная)"
+      - time: 1
+        hint:
+          - type: text
+            text: "подсказонька"
+      - time: 2
+        hint:
+          - type: text
+            text: "подсказка"
+          - type: text
+            text: "(простая)"
+      - time: 5
+        hint:
+          - time: text
+            text: "SHOOT"
+  - id: third
+    __model_version__: 1
+    conditions:
+      - type: WIN_KEY
+        keys: [ "SH456" ]
+      - type: WIN_KEY
+        keys: [ "SHTO1" ]
+        next-level: first
+    time-hints:
+      - time: 0
+        hint:
+          - type: text
+            text: "загадка"
+          - type: text
+            text: "(сложная)"
+      - time: 1
+        hint:
+          - type: text
+            text: "подсказка"
+      - time: 2
+        hint:
+          - type: gps
+            latitude: 55.579282598950165
+            longitude: 37.910306366539395
+      - time: 5
+        hint:
+          - time: text
+            text: "SH456"
+files: []

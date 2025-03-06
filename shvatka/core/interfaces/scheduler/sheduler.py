@@ -16,6 +16,7 @@ class Scheduler(Protocol):
         level: dto.Level,
         team: dto.Team,
         hint_number: int,
+        lt_id: int,
         run_at: datetime,
     ):
         raise NotImplementedError

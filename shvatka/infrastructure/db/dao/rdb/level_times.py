@@ -18,10 +18,14 @@ class LevelTimeDao(BaseDAO[models.LevelTime]):
         super().__init__(models.LevelTime, session, clock=clock)
 
     async def set_to_level(
-        self, team: dto.Team, game: dto.Game, level_number: int, at: datetime | None = None
-    ):
+        self,
+        team: dto.Team,
+        game: dto.Game,
+        level_number: int,
+        at: datetime | None = None,
+    ) -> dto.LevelTime:
         if at is None:
-            at = datetime.now(tz=tz_utc)
+            at = self.clock(tz_utc)
         level_time = models.LevelTime(
             game_id=game.id,
             team_id=team.id,
@@ -29,12 +33,8 @@ class LevelTimeDao(BaseDAO[models.LevelTime]):
             start_at=at,
         )
         self._save(level_time)
-
-    async def is_team_on_level(self, team: dto.Team, level: dto.Level) -> bool:
-        assert level.game_id is not None
-        return (
-            await self._get_current(team.id, level.game_id)
-        ).level_number == level.number_in_game
+        await self._flush(level_time)
+        return level_time.to_dto(team=team, game=game)
 
     async def get_current_level(self, team: dto.Team, game: dto.Game) -> int:
         return (await self.get_current_level_time(team=team, game=game)).level_number
@@ -50,7 +50,7 @@ class LevelTimeDao(BaseDAO[models.LevelTime]):
                 models.LevelTime.team_id == team_id,
                 models.LevelTime.game_id == game_id,
             )
-            .order_by(models.LevelTime.level_number.desc())
+            .order_by(models.LevelTime.start_at.desc())
             .limit(1)
         )
         return result.scalar_one()
@@ -71,7 +71,7 @@ class LevelTimeDao(BaseDAO[models.LevelTime]):
             )
             .order_by(
                 models.LevelTime.team_id,
-                models.LevelTime.level_number,
+                models.LevelTime.start_at,
             )
         )
         return [

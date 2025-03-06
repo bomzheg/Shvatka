@@ -3,8 +3,9 @@ import typing
 from typing import Any
 
 from adaptix import Retort
-from sqlalchemy import Integer, Text, ForeignKey, JSON, TypeDecorator, UniqueConstraint
+from sqlalchemy import Integer, Text, ForeignKey, TypeDecorator, UniqueConstraint
 from sqlalchemy.engine import Dialect
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import relationship, mapped_column, Mapped
 
 from shvatka.common.factory import REQUIRED_GAME_RECIPES
@@ -20,7 +21,7 @@ logger = logging.getLogger(__name__)
 
 
 class ScenarioField(TypeDecorator):
-    impl = JSON
+    impl = JSONB
     cache_ok = True
     retort = Retort(
         recipe=[

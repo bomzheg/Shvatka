@@ -5,9 +5,9 @@ from datetime import date
 @dataclass
 class ForumUser:
     db_id: int
-    forum_id: int
+    forum_id: int | None
     name: str
-    registered: date
+    registered: date | None
     player_id: int
 
     @property

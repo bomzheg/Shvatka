@@ -34,9 +34,17 @@ from tests.conftest import paths, event_loop, bot_config  # noqa: F401
 from tests.fixtures.conftest import fixtures_resource_path  # noqa: F401
 from tests.fixtures.db_provider import TestDbProvider
 from tests.fixtures.file_storage import MemoryFileStorageProvider
-from tests.fixtures.game_fixtures import game, finished_game, started_game  # noqa: F401
+from tests.fixtures.game_fixtures import (  # noqa: F401
+    game,
+    finished_game,
+    started_game,
+    game_with_waivers,
+    routed_game,
+    routed_game_with_waivers,
+    started_routed_game,
+)
 from tests.fixtures.player import harry, hermione, ron, author, draco  # noqa: F401
-from tests.fixtures.scn_fixtures import simple_scn, complex_scn, three_lvl_scn  # noqa: F401
+from tests.fixtures.scn_fixtures import simple_scn, complex_scn, three_lvl_scn, routed_scn  # noqa: F401
 from tests.fixtures.team import gryffindor, slytherin  # noqa: F401
 from tests.mocks.bot import MockMessageManagerProvider, MockBotProvider
 from tests.mocks.datetime_mock import ClockMock
@@ -117,8 +125,8 @@ async def clear_data(dao: HolderDao):
     await dao.organizer.delete_all()
     await dao.waiver.delete_all()
     await dao.level.delete_all()
-    await dao.level_time.delete_all()
     await dao.key_time.delete_all()
+    await dao.level_time.delete_all()
     await dao.game.delete_all()
     await dao.team_player.delete_all()
     await dao.chat.delete_all()

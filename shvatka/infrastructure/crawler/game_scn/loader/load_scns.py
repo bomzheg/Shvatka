@@ -94,13 +94,18 @@ async def set_results(game: dto.FullGame, results: GameStat, dao: HolderDao):
     await dao.game.set_start_at(game, game_start_at)
     await dao.game.set_number(game, results.id)
     team_getter = get_team_getter(dao.team, results.team_identity)
+    level_times = []
     for team_name, levels in results.results.items():
         team = await team_getter(team_name)
         for level in levels:
             if level.at is not None:
-                await dao.level_time.set_to_level(
-                    team, game, level.number, add_timezone(level.at, timezone=tz_utc)
+                lvl = await dao.level_time.set_to_level(
+                    team,
+                    game,
+                    level.number,
+                    add_timezone(level.at, timezone=tz_utc),
                 )
+                level_times.append(lvl)
     for team_name, keys in results.keys.items():
         team = await team_getter(team_name)
         for i, key in enumerate(keys):  # type: int, dto.export_stat.Key
@@ -118,7 +123,7 @@ async def set_results(game: dto.FullGame, results: GameStat, dao: HolderDao):
                 team=team,
                 game=game,
                 player=player,
-                level=game.levels[key.level - 1],
+                level_time=level_times[key.level - 1],
                 type_=enums.KeyType.simple if is_correct else enums.KeyType.wrong,
                 is_duplicate=False,
                 at=add_timezone(key.at, timezone=tz_utc),

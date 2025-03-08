@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from datetime import datetime
 
 from shvatka.core.models import dto, enums
-from . import action, scn
+from . import action, hints
 
 
 @dataclass(frozen=True)
@@ -89,5 +89,5 @@ class ParsedBonusKey(ParsedKey):
 
 @dataclass(kw_only=True)
 class ParsedBonusHintKey(ParsedKey):
-    bonus_hint: list[scn.AnyHint]
+    bonus_hint: list[hints.AnyHint]
     type_: enums.KeyType = enums.KeyType.bonus_hint

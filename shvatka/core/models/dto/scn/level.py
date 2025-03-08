@@ -4,9 +4,9 @@ from dataclasses import dataclass
 from datetime import timedelta
 from typing import overload, Literal
 
+from shvatka.core.models.dto.hints import TimeHint, AnyHint
+from shvatka.core.models.dto.hints.time_hint import EnumeratedTimeHint
 from shvatka.core.utils import exceptions
-from .hint_part import AnyHint
-from .time_hint import TimeHint, EnumeratedTimeHint
 from shvatka.core.models.dto.action import (
     Action,
     Decision,

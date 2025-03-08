@@ -7,7 +7,7 @@ from shvatka.core.interfaces.dal.game_play import GamePreparer, GamePlayerDao
 from shvatka.core.interfaces.dal.level_times import GameStarter, LevelByTeamGetter
 from shvatka.core.interfaces.scheduler import Scheduler
 from shvatka.core.models import dto, enums
-from shvatka.core.models.dto import scn
+from shvatka.core.models.dto import hints
 from shvatka.core.services.key import KeyProcessor
 from shvatka.core.services.organizers import get_orgs, get_spying_orgs
 from shvatka.core.utils import exceptions
@@ -294,7 +294,7 @@ def calculate_first_hint_time(next_level: dto.Level, now: datetime) -> datetime:
 
 
 def calculate_next_hint_time(
-    current: scn.TimeHint, next_: scn.TimeHint, now: datetime | None = None
+    current: hints.TimeHint, next_: hints.TimeHint, now: datetime | None = None
 ) -> datetime:
     if now is None:
         now = datetime.now(tz=tz_utc)
@@ -302,8 +302,8 @@ def calculate_next_hint_time(
 
 
 def calculate_next_hint_timedelta(
-    current_hint: scn.TimeHint,
-    next_hint: scn.TimeHint,
+    current_hint: hints.TimeHint,
+    next_hint: hints.TimeHint,
 ) -> timedelta:
     return timedelta(minutes=(next_hint.time - current_hint.time))
 

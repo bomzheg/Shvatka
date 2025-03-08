@@ -2,8 +2,7 @@ from sqlalchemy import Integer, Text, ForeignKey
 from sqlalchemy.orm import relationship, mapped_column
 
 from shvatka.core.models import dto
-from shvatka.core.models.dto.scn import SavedFileMeta, TgLink, FileContentLink
-from shvatka.core.models.dto.scn.file_content import VerifiableFileMeta
+from shvatka.core.models.dto import hints
 from shvatka.core.models.enums.hint_type import HintType
 from shvatka.infrastructure.db.models import Base
 
@@ -25,28 +24,28 @@ class FileInfo(Base):
         back_populates="my_files",
     )
 
-    def to_dto(self, author: dto.Player) -> SavedFileMeta:
+    def to_dto(self, author: dto.Player) -> hints.SavedFileMeta:
         content_type = HintType[self.content_type]
-        return SavedFileMeta(
+        return hints.SavedFileMeta(
             id=self.id,
             guid=self.guid,
             original_filename=self.original_filename,
             extension=self.extension,
             author=author,
             author_id=self.author_id,
-            tg_link=TgLink(file_id=self.file_id, content_type=content_type),
+            tg_link=hints.TgLink(file_id=self.file_id, content_type=content_type),
             content_type=content_type,
-            file_content_link=FileContentLink(file_path=self.file_path),
+            file_content_link=hints.FileContentLink(file_path=self.file_path),
         )
 
-    def to_short_dto(self) -> VerifiableFileMeta:
+    def to_short_dto(self) -> hints.VerifiableFileMeta:
         content_type = HintType[self.content_type]
-        return VerifiableFileMeta(
+        return hints.VerifiableFileMeta(
             guid=self.guid,
             original_filename=self.original_filename,
             author_id=self.author_id,
             extension=self.extension,
-            tg_link=TgLink(file_id=self.file_id, content_type=content_type),
+            tg_link=hints.TgLink(file_id=self.file_id, content_type=content_type),
             content_type=content_type,
-            file_content_link=FileContentLink(file_path=self.file_path),
+            file_content_link=hints.FileContentLink(file_path=self.file_path),
         )

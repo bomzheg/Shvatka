@@ -1,7 +1,7 @@
 from dataclasses import dataclass, field
 
 from shvatka.core.models import dto
-from shvatka.core.models.dto import scn
+from shvatka.core.models.dto import hints
 from shvatka.core.views.game import GameView
 from tests.utils.time_key import assert_time_key
 
@@ -14,7 +14,9 @@ class GameViewMock(GameView):
     correct_key_calls: list[dto.KeyTime] = field(default_factory=list)
     wrong_key_calls: list[dto.KeyTime] = field(default_factory=list)
     bonus_key_calls: list[tuple[dto.KeyTime, float]] = field(default_factory=list)
-    bonus_hint_key_calls: list[tuple[dto.KeyTime, list[scn.AnyHint]]] = field(default_factory=list)
+    bonus_hint_key_calls: list[tuple[dto.KeyTime, list[hints.AnyHint]]] = field(
+        default_factory=list
+    )
     game_finished_calls: list[dto.Team] = field(default_factory=list)
     game_finished_by_all_calls: set[dto.Team] = field(default_factory=set)
 
@@ -36,7 +38,7 @@ class GameViewMock(GameView):
     async def bonus_key(self, key: dto.KeyTime, bonus: float) -> None:
         self.bonus_key_calls.append((key, bonus))
 
-    async def bonus_hint_key(self, key: dto.KeyTime, bonus_hint: list[scn.AnyHint]):
+    async def bonus_hint_key(self, key: dto.KeyTime, bonus_hint: list[hints.AnyHint]):
         self.bonus_hint_key_calls.append((key, bonus_hint))
 
     async def game_finished(self, team: dto.Team) -> None:
@@ -101,3 +103,11 @@ class GameViewMock(GameView):
         assert len(self.wrong_key_calls) == 0
         assert len(self.game_finished_calls) == 0
         assert len(self.game_finished_by_all_calls) == 0
+
+    def asser_bonus_hint_key_only(
+        self, expected_key: dto.KeyTime, expected_hint: list[hints.AnyHint]
+    ) -> None:
+        actual_key, actual_hint = self.bonus_hint_key_calls.pop()
+        assert len(self.bonus_hint_key_calls) == 0
+        assert_time_key(expected_key, actual_key)
+        assert actual_hint == expected_hint

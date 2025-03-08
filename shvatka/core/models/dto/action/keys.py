@@ -17,8 +17,7 @@ from .interface import (
     LevelUpDecision,
 )
 
-if typing.TYPE_CHECKING:
-    from shvatka.core.models.dto.scn import AnyHint
+from shvatka.core.models.dto import hints
 
 SHKey: typing.TypeAlias = str
 
@@ -189,14 +188,14 @@ class KeyBonusCondition(KeyCondition):
 
 @dataclass(kw_only=True)
 class BonusHintKeyDecision(TypedKeyDecision):
-    bonus_hint: list["AnyHint"]
+    bonus_hint: list[hints.AnyHint]
     type: typing.Literal[DecisionType.BONUS_HINT] = DecisionType.BONUS_HINT
 
 
 @dataclass
 class KeyBonusHintCondition(KeyCondition):
     keys: set[SHKey]  # all keys are required
-    bonus_hint: list["AnyHint"]
+    bonus_hint: list[hints.AnyHint]
     type: Literal["BONUS_HINT_KEY"] = ConditionType.BONUS_HINT_KEY.name
 
     def check(self, action: Action, state_holder: StateHolder) -> Decision:

@@ -4,9 +4,8 @@ from typing import BinaryIO, Sequence, Literal
 
 from shvatka.core.models import enums
 from shvatka.core.models.dto.export_stat import GameStat
-from . import UploadedFileMeta, FileMetaLightweight
-from .file_content import FileMeta
 from .level import LevelScenario
+from shvatka.core.models.dto import hints
 
 
 @dataclass
@@ -18,17 +17,17 @@ class GameScenario:
 
 @dataclass
 class FullGameScenario(GameScenario):
-    files: Sequence[FileMeta]
+    files: Sequence[hints.FileMeta]
 
 
 @dataclass
 class UploadedGameScenario(GameScenario):
-    files: list[UploadedFileMeta]
+    files: list[hints.UploadedFileMeta]
 
 
 @dataclass
 class ParsedGameScenario(GameScenario):
-    files: list[FileMetaLightweight]
+    files: list[hints.FileMetaLightweight]
 
 
 @dataclass

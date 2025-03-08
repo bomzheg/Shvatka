@@ -9,7 +9,7 @@ from aiogram.exceptions import TelegramAPIError
 from aiogram.types import Message
 
 from shvatka.core.models import enums
-from shvatka.core.models.dto import scn
+from shvatka.core.models.dto import hints
 from shvatka.tgbot.views.hint_factory.hint_content_resolver import HintContentResolver
 
 logger = logging.getLogger(__name__)
@@ -42,7 +42,7 @@ class HintSender:
     def method(self, type_content: enums.HintType) -> Callable[..., Awaitable[Message]]:
         return self.methods[type_content]
 
-    async def send_hint(self, hint_container: scn.BaseHint, chat_id: int) -> Message:
+    async def send_hint(self, hint_container: hints.BaseHint, chat_id: int) -> Message:
         method = self.method(enums.HintType[hint_container.type])
         hint_link = await self.resolver.resolve_link(hint_container)
         try:
@@ -55,7 +55,7 @@ class HintSender:
     async def send_hints(
         self,
         chat_id: int,
-        hint_containers: Iterable[scn.BaseHint],
+        hint_containers: Iterable[hints.BaseHint],
         caption: str | None = None,
         sleep: int | None = None,
     ):
@@ -77,6 +77,6 @@ class HintSender:
             await asyncio.sleep(sleep)
 
     @classmethod
-    def get_approximate_time(cls, hints: Collection[scn.BaseHint]) -> timedelta:
+    def get_approximate_time(cls, hints: Collection[hints.BaseHint]) -> timedelta:
         approximate_io_time = timedelta(milliseconds=100)
         return len(hints) * cls.SLEEP + len(hints) * approximate_io_time

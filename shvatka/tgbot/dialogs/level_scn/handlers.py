@@ -8,6 +8,7 @@ from aiogram_dialog.widgets.kbd import Button
 import shvatka.core.models.dto.action.keys
 from shvatka.core.models import dto
 from shvatka.core.models.dto import scn, action
+from shvatka.core.models.dto import hints
 from shvatka.core.services.level import upsert_level, get_by_id
 from shvatka.core.utils.input_validation import (
     is_multiple_keys_normal,
@@ -110,10 +111,10 @@ async def process_time_hint_result(start_data: Data, result: Any, manager: Dialo
         retort: Retort = manager.middleware_data["retort"]
         hints_list = retort.load(manager.dialog_data.get("time_hints", []), scn.HintsList)
         if edited_hint.get("__deleted__") == "__deleted_true__":
-            edited_list = hints_list.delete(retort.load(old_hint, scn.TimeHint))
+            edited_list = hints_list.delete(retort.load(old_hint, hints.TimeHint))
         else:
             edited_list = hints_list.replace(
-                retort.load(old_hint, scn.TimeHint), retort.load(edited_hint, scn.TimeHint)
+                retort.load(old_hint, hints.TimeHint), retort.load(edited_hint, hints.TimeHint)
             )
         manager.dialog_data["time_hints"] = retort.dump(edited_list)
 
@@ -150,17 +151,17 @@ async def start_edit_time_hint(
     c: CallbackQuery, widget: Any, manager: DialogManager, hint_time: str
 ):
     retort: Retort = manager.middleware_data["retort"]
-    hints = retort.load(manager.dialog_data.get("time_hints", []), list[scn.TimeHint])
+    hints_ = retort.load(manager.dialog_data.get("time_hints", []), list[hints.TimeHint])
     await manager.start(
         state=states.TimeHintEditSG.details,
-        data={"time_hint": retort.dump(next(filter(lambda x: x.time == int(hint_time), hints)))},
+        data={"time_hint": retort.dump(next(filter(lambda x: x.time == int(hint_time), hints_)))},
     )
 
 
 async def start_add_time_hint(c: CallbackQuery, button: Button, manager: DialogManager):
     retort: Retort = manager.middleware_data["retort"]
-    hints = retort.load(manager.dialog_data.get("time_hints", []), list[scn.TimeHint])
-    previous_time = hints[-1].time if hints else -1
+    hints_ = retort.load(manager.dialog_data.get("time_hints", []), list[hints.TimeHint])
+    previous_time = hints_[-1].time if hints else -1
     await manager.start(state=states.TimeHintSG.time, data={"previous_time": previous_time})
 
 
@@ -209,7 +210,7 @@ async def save_level(c: CallbackQuery, button: Button, manager: DialogManager):
     data = manager.dialog_data
     id_ = data["level_id"]
     keys = set(map(normalize_key, data["keys"]))
-    time_hints = retort.load(data["time_hints"], list[scn.TimeHint])
+    time_hints = retort.load(data["time_hints"], list[hints.TimeHint])
     bonus_keys = retort.load(
         data.get("bonus_keys", []), set[shvatka.core.models.dto.action.keys.BonusKey]
     )

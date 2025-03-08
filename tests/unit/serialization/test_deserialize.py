@@ -4,9 +4,9 @@ import pytest
 from adaptix import Retort
 
 from shvatka.common.data_examples import game_example, GAME_START_EXAMPLE
-from shvatka.core.models.dto.scn import TextHint, GPSHint, PhotoHint, ContactHint
-from shvatka.core.models.dto.scn.game import RawGameScenario
-from shvatka.core.models.dto.scn.hint_part import (
+from shvatka.core.models.dto.hints import TextHint, GPSHint, PhotoHint, ContactHint
+from shvatka.core.models.dto.scn import RawGameScenario
+from shvatka.core.models.dto.hints import (
     VenueHint,
     AudioHint,
     VideoHint,

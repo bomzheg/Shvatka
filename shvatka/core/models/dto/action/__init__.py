@@ -19,4 +19,4 @@ from .keys import (
 )
 from .state_holder import InMemoryStateHolder
 
-AnyCondition: typing.TypeAlias = KeyWinCondition | KeyBonusCondition
+AnyCondition: typing.TypeAlias = KeyWinCondition | KeyBonusCondition | KeyBonusHintCondition

@@ -7,6 +7,7 @@ from shvatka.core.games.adapters import GameFileReader, GamePlayReader
 from shvatka.core.interfaces.dal.game import GameUpserter, GameCreator
 from shvatka.core.models import dto
 from shvatka.core.models.dto import scn
+from shvatka.core.models.dto import hints
 
 if typing.TYPE_CHECKING:
     from shvatka.infrastructure.db.dao.holder import HolderDao
@@ -31,7 +32,7 @@ class GameUpserterImpl(GameUpserter):
     async def unlink_all(self, game: dto.Game) -> None:
         return await self.dao.level.unlink_all(game)
 
-    async def upsert_file(self, file: scn.FileMeta, author: dto.Player) -> scn.SavedFileMeta:
+    async def upsert_file(self, file: hints.FileMeta, author: dto.Player) -> hints.SavedFileMeta:
         return await self.dao.file_info.upsert(file, author)
 
     async def check_author_can_own_guid(self, author: dto.Player, guid: str) -> None:
@@ -99,7 +100,7 @@ class GamePackagerImpl(GamePackager):
     async def get_full(self, id_: int) -> dto.FullGame:
         return await self.dao.game.get_full(id_)
 
-    async def get_by_guid(self, guid: str) -> scn.VerifiableFileMeta:
+    async def get_by_guid(self, guid: str) -> hints.VerifiableFileMeta:
         return await self.dao.file_info.get_by_guid(guid)
 
 
@@ -107,7 +108,7 @@ class GameFilesGetterImpl(GameFileReader):
     def __init__(self, dao: "HolderDao"):
         self.dao = dao
 
-    async def get_by_guid(self, guid: str) -> scn.VerifiableFileMeta:
+    async def get_by_guid(self, guid: str) -> hints.VerifiableFileMeta:
         return await self.dao.file_info.get_by_guid(guid)
 
     async def get_by_id(self, id_: int, author: dto.Player | None = None) -> dto.Game:

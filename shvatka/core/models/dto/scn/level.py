@@ -25,6 +25,7 @@ from shvatka.core.models.dto.action.keys import (
     TypedKeyAction,
     WrongKeyDecision,
     BonusKey,
+    KeyCondition,
 )
 
 logger = logging.getLogger(__name__)
@@ -143,21 +144,20 @@ class Conditions(Sequence[AnyCondition]):
         keys: set[str] = set()
         win_conditions = []
         for c in conditions:
-            if isinstance(c, KeyWinCondition):
-                win_conditions.append(c)
-                if keys.intersection(c.keys):
+            if isinstance(c, KeyCondition):
+                if isinstance(c, KeyWinCondition):
+                    win_conditions.append(c)
+                if keys.intersection(c.get_keys()):
                     raise exceptions.LevelError(
                         text=f"keys already exists {keys.intersection(c.keys)}"
                     )
-                keys = keys.union(c.keys)
-            elif isinstance(c, KeyBonusCondition):
-                if keys.intersection({k.text for k in c.keys}):
-                    raise exceptions.LevelError(
-                        text=f"keys already exists {keys.intersection(c.keys)}"
-                    )
-                keys = keys.union({k.text for k in c.keys})
+                keys = keys.union(c.get_keys())
         if not win_conditions:
             raise exceptions.LevelError(text="There is no win condition")
+        if all(c.next_level is not None for c in win_conditions):
+            raise exceptions.LevelError(
+                text="At eat one win condition should be simple (without routing (next_level))"
+            )
 
     def get_keys(self) -> set[str]:
         result: set[SHKey] = set()

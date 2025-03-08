@@ -83,8 +83,13 @@ class LevelUpKeyDecision(KeyDecision, LevelUpDecision):
     next_level: str | None = None
 
 
+class KeyCondition(Condition):
+    def get_keys(self) -> set[SHKey]:
+        raise NotImplementedError
+
+
 @dataclass
-class KeyWinCondition(Condition):
+class KeyWinCondition(KeyCondition):
     keys: set[SHKey]
     type: Literal["WIN_KEY"] = ConditionType.WIN_KEY.name
     next_level: str | None = None
@@ -115,6 +120,9 @@ class KeyWinCondition(Condition):
             key=action.key,
         )
 
+    def get_keys(self) -> set[SHKey]:
+        return self.keys
+
     def _get_key_type(self, action: TypedKeyAction):
         return enums.KeyType.simple if self._is_correct(action) else enums.KeyType.wrong
 
@@ -138,7 +146,7 @@ class BonusKeyDecision(Decision):
 
 
 @dataclass
-class KeyBonusCondition(Condition):
+class KeyBonusCondition(KeyCondition):
     keys: set[BonusKey]
     type: Literal["BONUS_KEY"] = ConditionType.BONUS_KEY.name
 
@@ -155,6 +163,9 @@ class KeyBonusCondition(Condition):
             duplicate=state.is_duplicate(action),
             key=bonus,
         )
+
+    def get_keys(self) -> set[SHKey]:
+        return {key.text for key in self.keys}
 
     def _get_bonus(self, action: TypedKeyAction) -> BonusKey | None:
         for bonus_key in self.keys:

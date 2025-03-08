@@ -1,7 +1,6 @@
 import logging
 from dataclasses import dataclass
 
-
 from shvatka.core.interfaces.dal.game_play import GamePlayerDao
 from shvatka.core.models import dto, enums
 from shvatka.core.models.dto import action
@@ -47,9 +46,7 @@ class KeyProcessor:
                 action=action.TypedKeyAction(key=key),
                 state=state,
             )
-            if isinstance(
-                decision, action.KeyDecision | action.BonusKeyDecision | action.WrongKeyDecision
-            ):
+            if isinstance(decision, action.KeyDecision):
                 saved_key = await self.dao.save_key(
                     key=decision.key_text,
                     team=team,
@@ -96,24 +93,30 @@ class KeyProcessor:
 
 
 def decision_to_parsed_key(
-    decision: action.KeyDecision | action.BonusKeyDecision | action.WrongKeyDecision,
+    decision: action.KeyDecision,
 ) -> dto.ParsedKey:
     match decision:
-        case action.KeyDecision():
+        case action.TypedKeyDecision():
             return dto.ParsedKey(
                 type_=decision.key_type,
                 text=decision.key_text,
             )
-        case action.BonusKeyDecision():
+        case action.BonusKeyDecision(key=key):
             return dto.ParsedBonusKey(
                 type_=enums.KeyType.bonus,
                 text=decision.key_text,
-                bonus_minutes=decision.key.bonus_minutes,
+                bonus_minutes=key.bonus_minutes,
             )
         case action.WrongKeyDecision():
             return dto.ParsedKey(
                 type_=decision.key_type,
-                text=decision.key,
+                text=decision.key_text,
+            )
+        case action.BonusHintKeyDecision(bonus_hint=bonus_hint):
+            return dto.ParsedBonusHintKey(
+                type_=enums.KeyType.bonus_hint,
+                text=decision.key_text,
+                bonus_hint=bonus_hint,
             )
         case _:
             raise NotImplementedError(f"unknown decision type {type(decision)}")

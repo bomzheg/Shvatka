@@ -6,6 +6,7 @@ from .keys import (
     SHKey,
     BonusKey,
     KeyDecision,
+    TypedKeyDecision,
     KeyWinCondition,
     TypedKeyAction,
     TypedKeysState,
@@ -13,6 +14,8 @@ from .keys import (
     KeyBonusCondition,
     WrongKeyDecision,
     LevelUpDecision,
+    BonusHintKeyDecision,
+    KeyBonusHintCondition,
 )
 from .state_holder import InMemoryStateHolder
 

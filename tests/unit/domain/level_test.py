@@ -60,7 +60,7 @@ def test_win_level_single_key(level_one_key: scn.LevelScenario):
         action.TypedKeyAction("SH123"), action.InMemoryStateHolder(set(), set())
     )
 
-    assert isinstance(decision, action.KeyDecision)
+    assert isinstance(decision, action.TypedKeyDecision)
     assert decision.key == "SH123"
     assert decision.key_text == "SH123"
     assert decision.key_type == enums.KeyType.simple
@@ -128,7 +128,7 @@ def test_second_key_of_three(level_three_keys: scn.LevelScenario):
         action.TypedKeyAction("SH123"), action.InMemoryStateHolder({"SH321"}, {"SH321"})
     )
 
-    assert isinstance(decision, action.KeyDecision)
+    assert isinstance(decision, action.TypedKeyDecision)
     assert decision.key == "SH123"
     assert decision.key_text == "SH123"
     assert decision.key_type == enums.KeyType.simple
@@ -143,7 +143,7 @@ def test_duplicate_second_key_of_three(level_three_keys: scn.LevelScenario):
         action.InMemoryStateHolder({"SH321", "SH123"}, {"SH321", "SH123"}),
     )
 
-    assert isinstance(decision, action.KeyDecision)
+    assert isinstance(decision, action.TypedKeyDecision)
     assert decision.key == "SH123"
     assert decision.key_text == "SH123"
     assert decision.key_type == enums.KeyType.simple
@@ -158,7 +158,7 @@ def test_third_key_of_three(level_three_keys: scn.LevelScenario):
         action.InMemoryStateHolder({"SH321", "СХ123"}, {"SH321", "СХ123"}),
     )
 
-    assert isinstance(decision, action.KeyDecision)
+    assert isinstance(decision, action.TypedKeyDecision)
     assert decision.key == "SH123"
     assert decision.key_text == "SH123"
     assert decision.key_type == enums.KeyType.simple

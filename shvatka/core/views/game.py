@@ -6,6 +6,7 @@ from typing import Protocol, Iterable, Sequence, Any
 
 from shvatka.core.interfaces.dal.game_play import GamePreparer
 from shvatka.core.models import dto
+from shvatka.core.models.dto import scn
 
 
 class GameViewPreparer(Protocol):
@@ -42,6 +43,9 @@ class GameView(Protocol):
         raise NotImplementedError
 
     async def game_finished_by_all(self, team: dto.Team) -> None:
+        raise NotImplementedError
+
+    async def bonus_hint_key(self, key: dto.KeyTime, bonus_hint: list[scn.AnyHint]):
         raise NotImplementedError
 
 

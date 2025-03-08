@@ -12,6 +12,7 @@ from dataclass_factory import Factory
 
 from shvatka.core.interfaces.dal.game_play import GamePreparer
 from shvatka.core.models import dto, enums
+from shvatka.core.models.dto import scn
 from shvatka.core.utils.datetime_utils import tz_utc
 from shvatka.core.views.game import (
     GameViewPreparer,
@@ -141,6 +142,13 @@ class BotView(GameViewPreparer, GameView):
         await self.bot.send_message(
             chat_id=key.team.get_chat_id(),
             text=text,
+        )
+
+    async def bonus_hint_key(self, key: dto.KeyTime, bonus_hint: list[scn.AnyHint]):
+        await self.hint_sender.send_hints(
+            chat_id=key.team.get_chat_id(),
+            hint_containers=bonus_hint,
+            caption="Бонусная подсказка:",
         )
 
     async def game_finished(self, team: dto.Team) -> None:

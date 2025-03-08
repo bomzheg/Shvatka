@@ -141,6 +141,9 @@ async def check_key(
         case enums.KeyType.bonus:
             assert isinstance(new_key.parsed_key, dto.ParsedBonusKey)
             await view.bonus_key(new_key, new_key.parsed_key.bonus_minutes)
+        case enums.KeyType.bonus_hint:
+            assert isinstance(new_key.parsed_key, dto.ParsedBonusHintKey)
+            await view.bonus_hint_key(new_key, new_key.parsed_key.bonus_hint)
         case enums.KeyType.simple:
             await view.correct_key(key=new_key)
             if new_key.is_level_up:

@@ -1,8 +1,7 @@
 from adaptix import Retort
 from adaptix.load_error import LoadError
 
-from shvatka.core.models.dto import scn
-from shvatka.core.models.dto import hints
+from shvatka.core.models.dto import scn, action, hints
 from shvatka.core.utils import exceptions
 
 
@@ -15,10 +14,13 @@ def load_level(dct: dict, retort: Retort) -> scn.LevelScenario:
 
 def check_all_files_saved(level: scn.LevelScenario, guids: set[str]):
     for hints_ in level.time_hints:
-        check_all_files_in_time_hint_saved(hints_, guids)
+        check_all_files_in_hints_saved(hints_.hint, guids)
+    for condition in level.conditions:
+        if isinstance(condition, action.KeyBonusHintCondition):
+            check_all_files_in_hints_saved(condition.bonus_hint, guids)
 
 
-def check_all_files_in_time_hint_saved(hints_: hints.TimeHint, guids: set[str]):
-    for hint in hints_.hint:
+def check_all_files_in_hints_saved(hints_: list[hints.AnyHint], guids: set[str]):
+    for hint in hints_:
         if isinstance(hint, hints.FileMixin) and hint.file_guid not in guids:
             raise exceptions.FileNotFound(text=f"not found {hint.file_guid} in files")

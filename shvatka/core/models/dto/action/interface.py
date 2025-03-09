@@ -8,6 +8,7 @@ from typing import Protocol
 class ConditionType(enum.StrEnum):
     WIN_KEY = enum.auto()
     BONUS_KEY = enum.auto()
+    BONUS_HINT_KEY = enum.auto()
 
 
 class Condition(Protocol):
@@ -39,6 +40,7 @@ class DecisionType(enum.StrEnum):
     SIGNIFICANT_ACTION = enum.auto()
     NO_ACTION = enum.auto()
     BONUS_TIME = enum.auto()
+    BONUS_HINT = enum.auto()
 
 
 class Decision(Protocol):

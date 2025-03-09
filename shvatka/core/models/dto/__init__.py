@@ -24,6 +24,7 @@ from .time_key import (
     KeyInsertResult,
     ParsedKey,
     ParsedBonusKey,
+    ParsedBonusHintKey,
 )
 from .user import User, UserWithCreds
 from .waiver import Waiver, WaiverQuery

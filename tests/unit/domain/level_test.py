@@ -2,24 +2,25 @@ import pytest
 
 from shvatka.core.models import enums
 from shvatka.core.models.dto import scn, action
+from shvatka.core.models.dto import hints
 from shvatka.core.utils import exceptions
 
 
 @pytest.fixture
-def hints() -> scn.HintsList:
+def hints_() -> scn.HintsList:
     return scn.HintsList(
         [
-            scn.TimeHint(time=0, hint=[scn.TextHint("hint")]),
-            scn.TimeHint(time=5, hint=[scn.TextHint("other hint")]),
+            hints.TimeHint(time=0, hint=[hints.TextHint("hint")]),
+            hints.TimeHint(time=5, hint=[hints.TextHint("other hint")]),
         ]
     )
 
 
 @pytest.fixture
-def level_one_key(hints: scn.HintsList) -> scn.LevelScenario:
+def level_one_key(hints_: scn.HintsList) -> scn.LevelScenario:
     return scn.LevelScenario(
         id="test1",
-        time_hints=hints,
+        time_hints=hints_,
         conditions=scn.Conditions(
             [
                 action.KeyWinCondition({"SH123"}),
@@ -31,10 +32,10 @@ def level_one_key(hints: scn.HintsList) -> scn.LevelScenario:
 
 
 @pytest.fixture
-def level_three_keys(hints: scn.HintsList) -> scn.LevelScenario:
+def level_three_keys(hints_: scn.HintsList) -> scn.LevelScenario:
     return scn.LevelScenario(
         id="test2",
-        time_hints=hints,
+        time_hints=hints_,
         conditions=scn.Conditions(
             [
                 action.KeyWinCondition({"SH123", "SH321", "СХ123"}),
@@ -45,11 +46,11 @@ def level_three_keys(hints: scn.HintsList) -> scn.LevelScenario:
     )
 
 
-def test_create_level_without_conditions(hints: scn.HintsList):
+def test_create_level_without_conditions(hints_: scn.HintsList):
     with pytest.raises(exceptions.LevelError):
         scn.LevelScenario(
             id="test",
-            time_hints=hints,
+            time_hints=hints_,
             conditions=[],  # type: ignore
             __model_version__=1,
         )
@@ -60,7 +61,7 @@ def test_win_level_single_key(level_one_key: scn.LevelScenario):
         action.TypedKeyAction("SH123"), action.InMemoryStateHolder(set(), set())
     )
 
-    assert isinstance(decision, action.KeyDecision)
+    assert isinstance(decision, action.TypedKeyDecision)
     assert decision.key == "SH123"
     assert decision.key_text == "SH123"
     assert decision.key_type == enums.KeyType.simple
@@ -128,7 +129,7 @@ def test_second_key_of_three(level_three_keys: scn.LevelScenario):
         action.TypedKeyAction("SH123"), action.InMemoryStateHolder({"SH321"}, {"SH321"})
     )
 
-    assert isinstance(decision, action.KeyDecision)
+    assert isinstance(decision, action.TypedKeyDecision)
     assert decision.key == "SH123"
     assert decision.key_text == "SH123"
     assert decision.key_type == enums.KeyType.simple
@@ -143,7 +144,7 @@ def test_duplicate_second_key_of_three(level_three_keys: scn.LevelScenario):
         action.InMemoryStateHolder({"SH321", "SH123"}, {"SH321", "SH123"}),
     )
 
-    assert isinstance(decision, action.KeyDecision)
+    assert isinstance(decision, action.TypedKeyDecision)
     assert decision.key == "SH123"
     assert decision.key_text == "SH123"
     assert decision.key_type == enums.KeyType.simple
@@ -158,7 +159,7 @@ def test_third_key_of_three(level_three_keys: scn.LevelScenario):
         action.InMemoryStateHolder({"SH321", "СХ123"}, {"SH321", "СХ123"}),
     )
 
-    assert isinstance(decision, action.KeyDecision)
+    assert isinstance(decision, action.TypedKeyDecision)
     assert decision.key == "SH123"
     assert decision.key_text == "SH123"
     assert decision.key_type == enums.KeyType.simple

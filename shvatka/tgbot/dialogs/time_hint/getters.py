@@ -1,7 +1,7 @@
 from adaptix import Retort
 from aiogram_dialog import DialogManager
 
-from shvatka.core.models.dto.scn.hint_part import AnyHint
+from shvatka.core.models.dto import hints
 
 
 async def get_available_times(dialog_manager: DialogManager, **_):
@@ -19,11 +19,11 @@ async def get_hints(dialog_manager: DialogManager, **_):
     dialog_data = dialog_manager.dialog_data
     retort: Retort = dialog_manager.middleware_data["retort"]
 
-    hints = retort.load(dialog_data["hints"], list[AnyHint])
+    hints_ = retort.load(dialog_data["hints"], list[hints.AnyHint])
     time_ = dialog_data["time"]
     return {
-        "hints": hints,
-        "numerated_hints": list(enumerate(hints)),
+        "hints": hints_,
+        "numerated_hints": list(enumerate(hints_)),
         "time": time_,
-        "has_hints": len(hints) > 0,
+        "has_hints": len(hints_) > 0,
     }

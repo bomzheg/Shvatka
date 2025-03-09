@@ -5,7 +5,7 @@ from shvatka.core.models import enums, dto
 
 def test_decision_to_simple_parsed_key():
     assert decision_to_parsed_key(
-        action.KeyDecision(
+        action.TypedKeyDecision(
             type=action.DecisionType.NO_ACTION,
             key_type=enums.KeyType.simple,
             duplicate=False,

@@ -4,7 +4,7 @@ from aiogram import Bot
 from aiogram.exceptions import AiogramError
 from aiogram.utils.text_decorations import html_decoration as hd
 
-from shvatka.core.models.dto.scn import TimeHint, BaseHint
+from shvatka.core.models.dto import hints
 from shvatka.core.models.enums.hint_type import HintType
 from shvatka.core.views.texts import HINTS_EMOJI
 
@@ -42,17 +42,17 @@ async def edit_message_as_removed(
         )
 
 
-def render_time_hints(time_hints: list[TimeHint]) -> str:
+def render_time_hints(time_hints: list[hints.TimeHint]) -> str:
     return "\n".join([render_time_hint(time_hint) for time_hint in time_hints])
 
 
-def render_time_hint(time_hint: TimeHint) -> str:
+def render_time_hint(time_hint: hints.TimeHint) -> str:
     return f"{time_hint.time}: {render_hints(time_hint.hint)}"
 
 
-def render_hints(hints: list[BaseHint]) -> str:
+def render_hints(hints: list[hints.BaseHint]) -> str:
     return "".join([render_single_hint(hint) for hint in hints])
 
 
-def render_single_hint(hint: BaseHint) -> str:
+def render_single_hint(hint: hints.BaseHint) -> str:
     return HINTS_EMOJI[HintType[hint.type]]

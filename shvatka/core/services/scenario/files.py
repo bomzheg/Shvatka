@@ -4,14 +4,14 @@ from shvatka.core.interfaces.clients.file_storage import FileGateway
 from shvatka.core.interfaces.dal.file_info import FileInfoGetter
 from shvatka.core.interfaces.dal.game import GameUpserter
 from shvatka.core.models import dto
-from shvatka.core.models.dto import scn
+from shvatka.core.models.dto import hints
 from shvatka.core.utils.exceptions import NotAuthorizedForEdit
 
 
 async def upsert_files(
     author: dto.Player,
     contents: dict[str, BinaryIO],
-    files: list[scn.UploadedFileMeta],
+    files: list[hints.UploadedFileMeta],
     dao: GameUpserter,
     file_gateway: FileGateway,
 ) -> set[str]:
@@ -25,8 +25,8 @@ async def upsert_files(
 
 async def get_file_metas(
     game: dto.FullGame, author: dto.Player, dao: FileInfoGetter
-) -> Sequence[scn.FileMeta]:
-    file_metas: list[scn.FileMeta] = []
+) -> Sequence[hints.FileMeta]:
+    file_metas: list[hints.FileMeta] = []
     for guid in game.get_guids():
         file_meta = await dao.get_by_guid(guid)
         check_file_meta_can_read(author, file_meta, game)
@@ -35,7 +35,7 @@ async def get_file_metas(
 
 
 async def get_file_contents(
-    file_metas: Sequence[scn.FileMeta], file_gateway: FileGateway
+    file_metas: Sequence[hints.FileMeta], file_gateway: FileGateway
 ) -> dict[str, BinaryIO]:
     contents = {}
     for file_meta in file_metas:
@@ -53,7 +53,7 @@ async def get_file_content(
 
 
 def check_file_meta_can_read(
-    author: dto.Player, file_meta: scn.VerifiableFileMeta, game: dto.Game
+    author: dto.Player, file_meta: hints.VerifiableFileMeta, game: dto.Game
 ):
     if game.is_complete():
         return

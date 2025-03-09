@@ -17,6 +17,7 @@ from lxml.etree import ElementBase
 
 from shvatka.core.models import enums
 from shvatka.core.models.dto import scn
+from shvatka.core.models.dto import hints
 from shvatka.core.models.dto.export_stat import LevelTime, Key, GameStat
 from shvatka.core.utils.datetime_utils import tz_utc, tz_game, add_timezone
 from shvatka.infrastructure.crawler.constants import GAME_URL_TEMPLATE
@@ -47,13 +48,13 @@ class SvastEngineGameParser:
         self.start_at: datetime = start_at
         self.current_hint_parts: list[str] = []
         self.levels: list[scn.LevelScenario] = []
-        self.hints: list[scn.BaseHint] = []
-        self.time_hints: list[scn.TimeHint] = []
+        self.hints: list[hints.BaseHint] = []
+        self.time_hints: list[hints.TimeHint] = []
         self.level_number = 0
         self.keys: set[str] = set()
         self.time: int = 0
         self.files: dict[str, BinaryIO] = {}
-        self.files_meta: list[scn.FileMetaLightweight] = []
+        self.files_meta: list[hints.FileMetaLightweight] = []
 
     def parse_game_head(self):
         logger.info("parsing game %s ...", self.id)
@@ -96,18 +97,18 @@ class SvastEngineGameParser:
                     guid = str(uuid.uuid4())
                     try:
                         self.files[guid] = await self.download_content(img.get("src"))
-                        self.hints.append(scn.PhotoHint(file_guid=guid))
+                        self.hints.append(hints.PhotoHint(file_guid=guid))
                     except ContentDownloadError:
                         self.files[guid] = BytesIO(PARSER_ERROR_IMG)
                         self.hints.append(
-                            scn.PhotoHint(
+                            hints.PhotoHint(
                                 file_guid=guid,
                                 caption=f"не удалось скачать контент "
                                 f"по ссылке {img.get('src')}",
                             )
                         )
                     self.files_meta.append(
-                        scn.FileMetaLightweight(
+                        hints.FileMetaLightweight(
                             guid=guid,
                             original_filename=guid,
                             extension=".jpg",
@@ -213,12 +214,12 @@ class SvastEngineGameParser:
         self.current_hint_parts = []
         if not parts:
             return
-        self.hints.append(scn.TextHint(text="\n".join(parts)))
+        self.hints.append(hints.TextHint(text="\n".join(parts)))
 
     def build_time_hint(self):
         self.build_current_hint()
         self.time_hints.append(
-            scn.TimeHint(
+            hints.TimeHint(
                 time=self.time,
                 hint=[
                     *self.hints,
@@ -232,7 +233,7 @@ class SvastEngineGameParser:
         level = scn.LevelScenario.legacy_factory(
             id=f"game_{self.id}-lvl_{self.level_number}",
             time_hints=scn.HintsList(self.time_hints),
-            keys={typing.cast(scn.TextHint, self.time_hints[-1].hint).text},
+            keys={typing.cast(hints.TextHint, self.time_hints[-1].hint).text},
         )
         self.levels.append(level)
         logger.debug("for game %s parsed level %s", self.id, self.level_number)

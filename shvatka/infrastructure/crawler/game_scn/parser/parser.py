@@ -20,6 +20,7 @@ from lxml.etree import ElementBase
 
 from shvatka.core.models import enums
 from shvatka.core.models.dto import scn, export_stat
+from shvatka.core.models.dto import hints
 from shvatka.core.services.scenario.scn_zip import pack_scn
 from shvatka.core.utils.datetime_utils import tz_utc, tz_game, add_timezone
 from shvatka.infrastructure.crawler.auth import get_auth_cookie
@@ -65,13 +66,13 @@ class GameParser:
         self.start_at: datetime | None = None
         self.current_hint_parts: list[str] = []
         self.levels: list[scn.LevelScenario] = []
-        self.hints: list[scn.BaseHint] = []
-        self.time_hints: list[scn.TimeHint] = []
+        self.hints: list[hints.BaseHint] = []
+        self.time_hints: list[hints.TimeHint] = []
         self.level_number = 0
         self.keys: set[str] = set()
         self.time: int = 0
         self.files: dict[str, BinaryIO] = {}
-        self.files_meta: list[scn.FileMetaLightweight] = []
+        self.files_meta: list[hints.FileMetaLightweight] = []
 
     def parse_game_head(self):
         self.id = int(self.html.xpath("//div[@class='maintitle']/b")[0].text)
@@ -117,18 +118,18 @@ class GameParser:
                     guid = str(uuid.uuid4())
                     try:
                         self.files[guid] = await self.download_content(img.get("src"))
-                        self.hints.append(scn.PhotoHint(file_guid=guid))
+                        self.hints.append(hints.PhotoHint(file_guid=guid))
                     except ContentDownloadError:
                         self.files[guid] = BytesIO(PARSER_ERROR_IMG)
                         self.hints.append(
-                            scn.PhotoHint(
+                            hints.PhotoHint(
                                 file_guid=guid,
                                 caption=f"не удалось скачать контент "
                                 f"по ссылке {img.get('src')}",
                             )
                         )
                     self.files_meta.append(
-                        scn.FileMetaLightweight(
+                        hints.FileMetaLightweight(
                             guid=guid,
                             original_filename=guid,
                             extension=".jpg",
@@ -247,12 +248,12 @@ class GameParser:
         self.current_hint_parts = []
         if not parts:
             return
-        self.hints.append(scn.TextHint(text="\n".join(parts)))
+        self.hints.append(hints.TextHint(text="\n".join(parts)))
 
     def build_time_hint(self):
         self.build_current_hint()
         self.time_hints.append(
-            scn.TimeHint(
+            hints.TimeHint(
                 time=self.time,
                 hint=[
                     *self.hints,

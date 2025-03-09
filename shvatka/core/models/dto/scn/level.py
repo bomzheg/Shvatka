@@ -4,16 +4,16 @@ from dataclasses import dataclass
 from datetime import timedelta
 from typing import overload, Literal
 
+from shvatka.core.models.dto.hints import TimeHint, AnyHint
+from shvatka.core.models.dto.hints.time_hint import EnumeratedTimeHint
 from shvatka.core.utils import exceptions
-from .hint_part import AnyHint
-from .time_hint import TimeHint, EnumeratedTimeHint
 from shvatka.core.models.dto.action import (
     Action,
     Decision,
     StateHolder,
     DecisionType,
     Decisions,
-    KeyDecision,
+    TypedKeyDecision,
     KeyBonusCondition,
     NotImplementedActionDecision,
     BonusKeyDecision,
@@ -224,12 +224,12 @@ class LevelScenario:
         if isinstance(action, TypedKeyAction):
             if bonuses := implemented.get_all(BonusKeyDecision):
                 return bonuses.get_exactly_one(self.id)
-            key_decisions = implemented.get_all(KeyDecision, WrongKeyDecision)
+            key_decisions = implemented.get_all(TypedKeyDecision, WrongKeyDecision)
             if not key_decisions:
                 return NotImplementedActionDecision()
             if not key_decisions.get_significant():
                 assert all(d.type == DecisionType.NO_ACTION for d in key_decisions)
-                if duplicate_correct := key_decisions.get_all(KeyDecision):
+                if duplicate_correct := key_decisions.get_all(TypedKeyDecision):
                     return duplicate_correct.get_exactly_one(self.id)
                 return key_decisions[0]
             significant_key_decisions = key_decisions.get_significant()

@@ -161,7 +161,7 @@ async def start_edit_time_hint(
 async def start_add_time_hint(c: CallbackQuery, button: Button, manager: DialogManager):
     retort: Retort = manager.middleware_data["retort"]
     hints_ = retort.load(manager.dialog_data.get("time_hints", []), list[hints.TimeHint])
-    previous_time = hints_[-1].time if hints else -1
+    previous_time = hints_[-1].time if hints_ else -1
     await manager.start(state=states.TimeHintSG.time, data={"previous_time": previous_time})
 
 

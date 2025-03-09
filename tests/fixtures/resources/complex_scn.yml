@@ -13,14 +13,14 @@ levels:
           - text: "SHBONUS"
             bonus-minutes: 10
       - type: BONUS_HINT_KEY
+        keys:
+         - "SHBONUSHINT"
         bonus-hint:
-          - text: "SHBONUSHINT"
-            bonus-hint:
-              - type: gps
-                latitude: 55.579282598950165
-                longitude: 37.910306366539395
-              - type: text
-                text: "this is bonus hint"
+          - type: gps
+            latitude: 55.579282598950165
+            longitude: 37.910306366539395
+          - type: text
+            text: "this is bonus hint"
     time-hints:
       - time: 0
         hint:

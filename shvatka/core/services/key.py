@@ -96,11 +96,6 @@ def decision_to_parsed_key(
     decision: action.KeyDecision,
 ) -> dto.ParsedKey:
     match decision:
-        case action.TypedKeyDecision():
-            return dto.ParsedKey(
-                type_=decision.key_type,
-                text=decision.key_text,
-            )
         case action.BonusKeyDecision(key=key):
             return dto.ParsedBonusKey(
                 type_=enums.KeyType.bonus,
@@ -117,6 +112,11 @@ def decision_to_parsed_key(
                 type_=enums.KeyType.bonus_hint,
                 text=decision.key_text,
                 bonus_hint=bonus_hint,
+            )
+        case action.TypedKeyDecision():
+            return dto.ParsedKey(
+                type_=decision.key_type,
+                text=decision.key_text,
             )
         case _:
             raise NotImplementedError(f"unknown decision type {type(decision)}")

@@ -1,6 +1,6 @@
 import enum
 from datetime import datetime
-from typing import Any
+from typing import Any, Sequence, Iterable
 
 from aiogram.utils.text_decorations import html_decoration as hd
 from telegraph.aio import Telegraph
@@ -90,11 +90,17 @@ def render_level_keys(level: scn.LevelScenario) -> str:
         if not isinstance(c, action.KeyWinCondition):
             continue
         text += f"🗝🗝🗝{' -> ' + c.next_level if c.next_level else ''}\n"
-        for k in c.keys:
-            text += f"🔑 {k}\n"
+        text += render_keys(c.keys)
         text += "\n"
     if level.get_bonus_keys():
         text += "\nБонусные ключи:\n💰 " + "\n💰 ".join(
             [f"{b.text} ({b.bonus_minutes} мин.)" for b in level.get_bonus_keys()]
         )
+    return text
+
+
+def render_keys(keys: Iterable[action.SHKey]) -> str:
+    text = ""
+    for k in keys:
+        text += f"🔑 {k}\n"
     return text

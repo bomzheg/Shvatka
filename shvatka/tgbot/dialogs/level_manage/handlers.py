@@ -23,7 +23,8 @@ from shvatka.tgbot import keyboards as kb
 from shvatka.tgbot.views.hint_sender import HintSender
 from shvatka.tgbot.views.user import render_small_card_link
 from .getters import get_level_and_org, get_org
-from shvatka.tgbot.views.keys import render_level_keys
+from shvatka.tgbot.views.keys import render_level_keys, render_keys
+from ...views.level import render_bonus_hints
 
 
 async def edit_level(c: CallbackQuery, button: Button, manager: DialogManager):
@@ -51,6 +52,12 @@ async def show_all_hints(author: dto.Player, hint_sender: HintSender, bot: Bot, 
             chat_id=author.get_chat_id(),
             hint_containers=hint.hint,
             caption=f"Подсказка {hint.time} мин.",
+        )
+    for keys, hints in render_bonus_hints(level.scenario).items():
+        await hint_sender.send_hints(
+            chat_id=author.get_chat_id(),
+            hint_containers=hints,
+            caption=f"Бонусная подсказка за ключи:\n{render_keys(keys)}",
         )
     await hint_sender.bot.send_message(
         chat_id=author.get_chat_id(),

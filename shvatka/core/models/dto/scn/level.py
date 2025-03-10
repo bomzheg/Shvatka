@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from datetime import timedelta
 from typing import overload, Literal
 
+from shvatka.core.models.dto import action, hints
 from shvatka.core.models.dto.hints import TimeHint, AnyHint
 from shvatka.core.models.dto.hints.time_hint import EnumeratedTimeHint
 from shvatka.core.utils import exceptions
@@ -173,6 +174,18 @@ class Conditions(Sequence[AnyCondition]):
                 result = result.union(condition.keys)
         return result
 
+    @property
+    def hints_count(self) -> int:
+        return len(self.get_hints())
+
+    def get_hints(self) -> list[hints.AnyHint]:
+        acc = []
+        for c in self.conditions:
+            if not isinstance(c, action.KeyBonusHintCondition):
+                continue
+            acc.extend(c.bonus_hint)
+        return acc
+
     @overload
     def __getitem__(self, index: int) -> AnyCondition:
         return self.conditions[index]
@@ -251,7 +264,7 @@ class LevelScenario:
 
     @property
     def hints_count(self) -> int:
-        return self.time_hints.hints_count
+        return self.time_hints.hints_count + self.conditions.hints_count
 
     def get_hints_for_timedelta(self, delta: timedelta) -> list[TimeHint]:
         return self.time_hints.get_hints_for_timedelta(delta)

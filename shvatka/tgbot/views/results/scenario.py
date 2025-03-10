@@ -13,7 +13,8 @@ from shvatka.core.models import dto
 from shvatka.core.utils.datetime_utils import DATE_FORMAT
 from shvatka.tgbot.config.models.bot import BotConfig
 from shvatka.tgbot.views.hint_sender import HintSender
-from shvatka.tgbot.views.keys import render_log_keys, render_level_keys
+from shvatka.tgbot.views.keys import render_log_keys, render_level_keys, render_keys
+from shvatka.tgbot.views.level import render_bonus_hints
 from shvatka.tgbot.views.results.level_times import export_results
 
 
@@ -115,10 +116,19 @@ class LevelPublisher:
                 )
             await asyncio.sleep(self.SLEEP.seconds)
             await self.hint_sender.send_hints(self.channel_id, hint.hint, text)
+        for keys, hints in render_bonus_hints(self.level.scenario).items():
+            await self.hint_sender.send_hints(
+                chat_id=self.channel_id,
+                hint_containers=hints,
+                caption=f"Бонусная подсказка за ключи:\n{render_keys(keys)}",
+            )
 
     @classmethod
     def get_approximate_time(cls, level: dto.Level) -> timedelta:
-        return len(level.scenario.time_hints) * cls.SLEEP + reduce(
+        return level.hints_count * cls.SLEEP + reduce(
             add,
-            (HintSender.get_approximate_time(hints.hint) for hints in level.scenario.time_hints),
+            (
+                HintSender.get_approximate_time(hints.hint)
+                for hints in [*level.scenario.time_hints, *level.scenario.conditions.get_hints()]
+            ),
         )

@@ -24,7 +24,7 @@ from shvatka.tgbot.views.hint_sender import HintSender
 from shvatka.tgbot.views.user import render_small_card_link
 from .getters import get_level_and_org, get_org
 from shvatka.tgbot.views.keys import render_level_keys, render_keys
-from ...views.level import render_bonus_hints
+from shvatka.tgbot.views.level import render_bonus_hints
 
 
 async def edit_level(c: CallbackQuery, button: Button, manager: DialogManager):

@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 
 from shvatka.core.models import dto
-from shvatka.core.models.dto import scn
+from shvatka.core.models.dto import hints
 from shvatka.core.utils.exceptions import PermissionsError
 from shvatka.infrastructure.db import models
 from .base import BaseDAO
@@ -21,7 +21,7 @@ class FileInfoDao(BaseDAO[models.FileInfo]):
     ) -> None:
         super().__init__(models.FileInfo, session, clock=clock)
 
-    async def upsert(self, file: scn.FileMeta, author: dto.Player) -> scn.SavedFileMeta:
+    async def upsert(self, file: hints.FileMeta, author: dto.Player) -> hints.SavedFileMeta:
         try:
             db_file = await self._get_by_guid(file.guid)
         except NoResultFound:
@@ -47,7 +47,7 @@ class FileInfoDao(BaseDAO[models.FileInfo]):
         except NoResultFound:
             return
 
-    async def get_by_guid(self, guid: str) -> scn.VerifiableFileMeta:
+    async def get_by_guid(self, guid: str) -> hints.VerifiableFileMeta:
         db_file = await self._get_by_guid(guid)
         return db_file.to_short_dto()
 
@@ -76,7 +76,7 @@ class FileInfoDao(BaseDAO[models.FileInfo]):
             update(models.FileInfo).where(models.FileInfo.guid == guid).values(file_id=file_id)
         )
 
-    async def get_without_file_id(self, limit: int) -> Sequence[scn.SavedFileMeta]:
+    async def get_without_file_id(self, limit: int) -> Sequence[hints.SavedFileMeta]:
         result: ScalarResult[models.FileInfo] = await self.session.scalars(
             select(models.FileInfo)
             .where(models.FileInfo.file_id.is_(None))

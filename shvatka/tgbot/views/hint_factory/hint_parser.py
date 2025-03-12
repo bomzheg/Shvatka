@@ -7,8 +7,8 @@ from aiogram.types import Message, ContentType, PhotoSize
 
 from shvatka.core.interfaces.clients.file_storage import FileStorage
 from shvatka.core.models import dto
-from shvatka.core.models.dto import scn
-from shvatka.core.models.dto.scn import (
+from shvatka.core.models.dto import hints
+from shvatka.core.models.dto.hints import (
     BaseHint,
     TextHint,
     GPSHint,
@@ -17,7 +17,7 @@ from shvatka.core.models.dto.scn import (
     PhotoHint,
     UploadedFileMeta,
 )
-from shvatka.core.models.dto.scn.hint_part import (
+from shvatka.core.models.dto.hints import (
     VenueHint,
     AudioHint,
     VideoHint,
@@ -116,7 +116,7 @@ class HintParser:
 
     async def save_file(
         self, message: Message, author: dto.Player, guid: str
-    ) -> scn.FileMeta | None:
+    ) -> hints.FileMeta | None:
         tg_link = parse_message(message)
         if not tg_link:
             return None
@@ -129,7 +129,7 @@ class HintParser:
     async def save_thumb(self, author: dto.Player, thumb: PhotoSize | None):
         if thumb:
             return await self.save_content(
-                tg_link=scn.ParsedTgLink(file_id=thumb.file_id, content_type=HintType.photo),
+                tg_link=hints.ParsedTgLink(file_id=thumb.file_id, content_type=HintType.photo),
                 author=author,
                 guid=str(uuid4()),
             )
@@ -137,7 +137,7 @@ class HintParser:
 
     async def save_content(
         self,
-        tg_link: scn.ParsedTgLink,
+        tg_link: hints.ParsedTgLink,
         author: dto.Player,
         guid: str,
     ) -> FileMeta:
@@ -157,57 +157,57 @@ class HintParser:
         return stored_file
 
 
-def parse_message(message: Message) -> scn.ParsedTgLink | None:
+def parse_message(message: Message) -> hints.ParsedTgLink | None:
     match message.content_type:
         case ContentType.PHOTO:
             assert message.photo is not None
-            return scn.ParsedTgLink(
+            return hints.ParsedTgLink(
                 file_id=message.photo[-1].file_id,
                 content_type=HintType.photo,
             )
         case ContentType.AUDIO:
             assert message.audio
-            return scn.ParsedTgLink(
+            return hints.ParsedTgLink(
                 file_id=message.audio.file_id,
                 content_type=HintType.audio,
                 filename=message.audio.file_name,
             )
         case ContentType.VIDEO:
             assert message.video
-            return scn.ParsedTgLink(
+            return hints.ParsedTgLink(
                 file_id=message.video.file_id,
                 content_type=HintType.video,
                 filename=message.video.file_name,
             )
         case ContentType.DOCUMENT:
             assert message.document
-            return scn.ParsedTgLink(
+            return hints.ParsedTgLink(
                 file_id=message.document.file_id,
                 content_type=HintType.document,
                 filename=message.document.file_name,
             )
         case ContentType.ANIMATION:
             assert message.animation
-            return scn.ParsedTgLink(
+            return hints.ParsedTgLink(
                 file_id=message.animation.file_id,
                 content_type=HintType.animation,
                 filename=message.animation.file_name,
             )
         case ContentType.VOICE:
             assert message.voice
-            return scn.ParsedTgLink(
+            return hints.ParsedTgLink(
                 file_id=message.voice.file_id,
                 content_type=HintType.voice,
             )
         case ContentType.VIDEO_NOTE:
             assert message.video_note
-            return scn.ParsedTgLink(
+            return hints.ParsedTgLink(
                 file_id=message.video_note.file_id,
                 content_type=HintType.video_note,
             )
         case ContentType.STICKER:
             assert message.sticker
-            return scn.ParsedTgLink(
+            return hints.ParsedTgLink(
                 file_id=message.sticker.file_id,
                 content_type=HintType.sticker,
             )

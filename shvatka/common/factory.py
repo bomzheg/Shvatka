@@ -17,9 +17,8 @@ from dishka import Provider, Scope, provide
 from telegraph.aio import Telegraph
 
 from shvatka.common.url_factory import UrlFactory
-from shvatka.core.models.dto import scn
-from shvatka.core.models.dto.action import AnyCondition
-from shvatka.core.models.dto.scn import HintsList, TimeHint, Conditions
+from shvatka.core.models.dto import scn, action
+from shvatka.core.models.dto import hints
 from shvatka.core.models.schems import schemas
 from shvatka.core.utils import exceptions
 from shvatka.core.utils.input_validation import validate_level_id, is_multiple_keys_normal
@@ -38,11 +37,13 @@ class TelegraphProvider(Provider):
 
 REQUIRED_GAME_RECIPES = [
     name_mapping(map={"__model_version__": "__model_version__"}),
-    loader(HintsList, lambda x: HintsList.parse(x), Chain.LAST),
-    ABCProxy(HintsList, list[TimeHint]),  # internal class, can be broken in next adaptix version
-    loader(Conditions, lambda x: Conditions(x), Chain.LAST),
+    loader(scn.HintsList, lambda x: scn.HintsList.parse(x), Chain.LAST),
     ABCProxy(
-        Conditions, list[AnyCondition]
+        scn.HintsList, list[hints.TimeHint]
+    ),  # internal class, can be broken in next adaptix version
+    loader(scn.Conditions, lambda x: scn.Conditions(x), Chain.LAST),
+    ABCProxy(
+        scn.Conditions, list[action.AnyCondition]
     ),  # internal class, can be broken in next adaptix version
 ]
 

@@ -8,9 +8,7 @@ from aiogram_dialog.widgets.kbd import Button
 from dishka import AsyncContainer
 from dishka.integrations.aiogram import CONTAINER_NAME
 
-from shvatka.core.models.dto import scn
-from shvatka.core.models.dto.scn import TimeHint
-from shvatka.core.models.dto.scn.hint_part import AnyHint
+from shvatka.core.models.dto import hints
 from shvatka.core.utils import exceptions
 from shvatka.tgbot import states
 from shvatka.tgbot.views.hint_factory.hint_parser import HintParser
@@ -28,7 +26,7 @@ async def process_edit_time_message(m: Message, dialog_: Any, manager: DialogMan
         await m.answer("Некорректный формат времени. Пожалуйста введите время в формате ЧЧ:ММ")
         return
     retort: Retort = manager.middleware_data["retort"]
-    hint = retort.load(manager.start_data["time_hint"], scn.TimeHint)
+    hint = retort.load(manager.start_data["time_hint"], hints.TimeHint)
     if not hint.can_update_time():
         await m.reply(
             "Увы, отредактировать время данной подсказки не получится. "
@@ -53,7 +51,7 @@ async def edit_single_hint(c: CallbackQuery, widget: Any, manager: DialogManager
     assert isinstance(manager, SubManager)
     dishka: AsyncContainer = manager.middleware_data[CONTAINER_NAME]
     retort = await dishka.get(Retort)
-    hint = retort.load(manager.dialog_data["hints"], list[AnyHint])
+    hint = retort.load(manager.dialog_data["hints"], list[hints.AnyHint])
     hint_sender = await dishka.get(HintSender)
     chat: types.Chat = manager.middleware_data["event_chat"]
     hint_index = manager.item_id
@@ -64,10 +62,10 @@ async def delete_single_hint(c: CallbackQuery, widget: Any, manager: DialogManag
     assert isinstance(manager, SubManager)
     dishka: AsyncContainer = manager.middleware_data[CONTAINER_NAME]
     retort = await dishka.get(Retort)
-    hints = retort.load(manager.dialog_data.get("hints"), list[AnyHint])
+    hints_ = retort.load(manager.dialog_data.get("hints"), list[hints.AnyHint])
     hint_index = manager.item_id
-    hints.pop(int(hint_index))
-    manager.dialog_data["hints"] = retort.dump(hints, list[AnyHint])
+    hints_.pop(int(hint_index))
+    manager.dialog_data["hints"] = retort.dump(hints, list[hints.AnyHint])
 
 
 async def delete_whole_time_hint(c: CallbackQuery, widget: Any, manager: DialogManager):
@@ -77,10 +75,10 @@ async def delete_whole_time_hint(c: CallbackQuery, widget: Any, manager: DialogM
 async def save_edited_time_hint(c: CallbackQuery, widget: Any, manager: DialogManager):
     dishka: AsyncContainer = manager.middleware_data[CONTAINER_NAME]
     retort = await dishka.get(Retort)
-    time_hint = retort.load(manager.start_data["time_hint"], scn.TimeHint)
+    time_hint = retort.load(manager.start_data["time_hint"], hints.TimeHint)
     try:
         time_hint.update_time(manager.dialog_data["time"])
-        time_hint.update_hint(retort.load(manager.dialog_data["hints"], list[AnyHint]))
+        time_hint.update_hint(retort.load(manager.dialog_data["hints"], list[hints.AnyHint]))
     except exceptions.LevelError as e:
         assert isinstance(c.message, Message)
         await c.message.reply(e.text)
@@ -105,9 +103,9 @@ async def process_hint(m: Message, dialog_: Any, manager: DialogManager) -> None
 
 async def on_finish(c: CallbackQuery, button: Button, manager: DialogManager):
     retort: Retort = manager.middleware_data["retort"]
-    hints = retort.load(manager.dialog_data["hints"], list[AnyHint])
+    hints_ = retort.load(manager.dialog_data["hints"], list[hints.AnyHint])
     time_ = manager.dialog_data["time"]
-    time_hint = TimeHint(time=time_, hint=hints)
+    time_hint = hints.TimeHint(time=time_, hint=hints_)
     await manager.done({"time_hint": retort.dump(time_hint)})
 
 
@@ -121,6 +119,6 @@ async def hint_on_start(start_data: dict, manager: DialogManager):
 
 async def hint_edit_on_start(start_data: dict, manager: DialogManager):
     retort: Retort = manager.middleware_data["retort"]
-    hint = retort.load(manager.start_data["time_hint"], scn.TimeHint)
-    manager.dialog_data["hints"] = retort.dump(hint.hint, list[AnyHint])
+    hint = retort.load(manager.start_data["time_hint"], hints.TimeHint)
+    manager.dialog_data["hints"] = retort.dump(hint.hint, list[hints.AnyHint])
     manager.dialog_data["time"] = hint.time

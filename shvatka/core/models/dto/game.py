@@ -7,9 +7,9 @@ from shvatka.core.config.constants import TIME_TO_PREPARING_GAME
 from shvatka.core.models.enums import GameStatus
 from shvatka.core.models.enums.game_status import ACTIVE_STATUSES, EDITABLE_STATUSES
 from shvatka.core.utils.datetime_utils import tz_game, tz_utc
+from . import hints
 from .level import Level
 from .player import Player
-from .scn.time_hint import TimeHint
 
 
 @dataclass
@@ -120,7 +120,7 @@ class FullGame(Game):
             guids.extend(hint.get_guids())
         return guids
 
-    def get_hint(self, level_number: int, hint_number: int) -> TimeHint:
+    def get_hint(self, level_number: int, hint_number: int) -> hints.TimeHint:
         return self.levels[level_number].get_hint(hint_number)
 
     @property

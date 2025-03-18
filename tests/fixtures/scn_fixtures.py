@@ -12,44 +12,32 @@ GUID_2 = "83e6a132-5c25-4fb1-8683-29ad498e90d8"
 
 @pytest.fixture
 def complex_scn(fixtures_resource_path: Path) -> RawGameScenario:
-    with (fixtures_resource_path / "complex_scn.yml").open(encoding="utf-8") as f:
-        return RawGameScenario(
-            scn=yaml.safe_load(f.read()),
-            files={GUID: BytesIO(b"123")},
-        )
+    return _load_game_scn(fixtures_resource_path / "complex_scn.yml", {GUID: BytesIO(b"123")})
 
 
 @pytest.fixture
 def simple_scn(fixtures_resource_path: Path) -> RawGameScenario:
-    with (fixtures_resource_path / "simple_scn.yml").open(encoding="utf-8") as f:
-        return RawGameScenario(
-            scn=yaml.safe_load(f.read()),
-            files={},
-        )
+    return _load_game_scn(fixtures_resource_path / "simple_scn.yml", {})
 
 
 @pytest.fixture
 def three_lvl_scn(fixtures_resource_path: Path) -> RawGameScenario:
-    with (fixtures_resource_path / "three_lvl_scn.yml").open(encoding="utf-8") as f:
-        return RawGameScenario(
-            scn=yaml.safe_load(f.read()),
-            files={},
-        )
+    return _load_game_scn(fixtures_resource_path / "three_lvl_scn.yml", {})
 
 
 @pytest.fixture
 def all_types_scn(fixtures_resource_path: Path) -> RawGameScenario:
-    with open(fixtures_resource_path / "all_types.yml", encoding="utf-8") as f:
-        return RawGameScenario(
-            scn=yaml.safe_load(f),
-            files={GUID: BytesIO(b"123"), GUID_2: BytesIO(b"890")},
-        )
+    return _load_game_scn(fixtures_resource_path / "all_types.yml", {GUID: BytesIO(b"123"), GUID_2: BytesIO(b"890")})
 
 
 @pytest.fixture
 def routed_scn(fixtures_resource_path: Path) -> RawGameScenario:
-    with open(fixtures_resource_path / "routed_scn.yml", encoding="utf-8") as f:
+    return _load_game_scn(fixtures_resource_path / "routed_scn.yml", {})
+
+
+def _load_game_scn(path: Path, files: dict[str, BytesIO]):
+    with path.open("r", encoding="utf8") as f:
         return RawGameScenario(
             scn=yaml.safe_load(f),
-            files={},
+            files=files,
         )

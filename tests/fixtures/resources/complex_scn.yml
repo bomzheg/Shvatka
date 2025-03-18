@@ -21,6 +21,13 @@ levels:
             longitude: 37.910306366539395
           - type: text
             text: "this is bonus hint"
+      - type: BONUS_HINT_KEY
+        keys:
+          - SHBONUS2
+        bonus-hint:
+          - type: photo
+            file-guid: a3bc9b96-3bb8-4dbc-b996-ce1015e66e53
+            caption: hello
     time-hints:
       - time: 0
         hint:

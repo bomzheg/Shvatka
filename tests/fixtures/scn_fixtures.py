@@ -27,12 +27,19 @@ def three_lvl_scn(fixtures_resource_path: Path) -> RawGameScenario:
 
 @pytest.fixture
 def all_types_scn(fixtures_resource_path: Path) -> RawGameScenario:
-    return _load_game_scn(fixtures_resource_path / "all_types.yml", {GUID: BytesIO(b"123"), GUID_2: BytesIO(b"890")})
+    return _load_game_scn(
+        fixtures_resource_path / "all_types.yml", {GUID: BytesIO(b"123"), GUID_2: BytesIO(b"890")}
+    )
 
 
 @pytest.fixture
 def routed_scn(fixtures_resource_path: Path) -> RawGameScenario:
     return _load_game_scn(fixtures_resource_path / "routed_scn.yml", {})
+
+
+@pytest.fixture
+def no_file_guid_scn(fixtures_resource_path: Path) -> RawGameScenario:
+    return _load_game_scn(fixtures_resource_path / "scn_no_file_guid.yml", {GUID: BytesIO(b"123")})
 
 
 def _load_game_scn(path: Path, files: dict[str, BytesIO]):

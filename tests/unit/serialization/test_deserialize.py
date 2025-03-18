@@ -18,7 +18,8 @@ from shvatka.core.models.dto.hints import (
 )
 from shvatka.core.models.enums import HintType
 from shvatka.core.services.level import load_level
-from shvatka.core.services.scenario.game_ops import parse_game
+from shvatka.core.services.scenario.game_ops import parse_game, parse_uploaded_game
+from shvatka.core.utils import exceptions
 from shvatka.core.utils.exceptions import ScenarioNotCorrect
 from shvatka.tgbot.views.utils import render_hints
 
@@ -54,6 +55,13 @@ def test_deserialize_invalid_level(simple_scn: RawGameScenario, retort: Retort):
     level["time_hints"] = level.pop("time-hints")
     with pytest.raises(ScenarioNotCorrect):
         load_level(level, retort)
+
+
+def test_deserialize_bonus_hint_without_correct_guid(
+    no_file_guid_scn: RawGameScenario, retort: Retort
+):
+    with pytest.raises(exceptions.FileNotFound):
+        parse_uploaded_game(no_file_guid_scn, retort)
 
 
 def test_deserialize_all_types(all_types_scn: RawGameScenario, retort: Retort):

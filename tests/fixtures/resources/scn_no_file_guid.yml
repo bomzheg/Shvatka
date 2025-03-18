@@ -1,0 +1,33 @@
+name: "My new game"
+__model_version__: 1
+levels:
+  - id: first
+    __model_version__: 1
+    conditions:
+      - type: WIN_KEY
+        keys:
+          - "SH123"
+    time-hints:
+      - time: 0
+        hint:
+          - type: text
+            text: "загадка"
+      - time: 2
+        hint:
+          - type: photo
+            # next is guid with 54 at the end. in files there is guid with 53
+            file-guid: a3bc9b96-3bb8-4dbc-b996-ce1015e66e54
+            caption: "привет"
+      - time: 6
+        hint:
+          - time: text
+            text: "SH123\nSH321"
+files:
+  - guid: "a3bc9b96-3bb8-4dbc-b996-ce1015e66e53"
+    original-filename: "hint2"
+    extension: ".jpg"
+    tg-link:
+      file-id: "98765"
+      content-type: "photo"
+    file-content-link:
+      file-path: "tests/fixtures/resources/a3bc9b96-3bb8-4dbc-b996-ce1015e66e53.jpg"

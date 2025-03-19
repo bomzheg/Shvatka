@@ -155,6 +155,7 @@ ignore = [
 no_implicit_optional = true
 warn_unused_ignores = true
 show_error_codes = true
+exclude = ['venv', '.venv']
 
 [[tool.mypy.overrides]]
 module = "tests.*"

@@ -160,6 +160,20 @@ class Conditions(Sequence[AnyCondition]):
                 text="At eat one win condition should be simple (without routing (next_level))"
             )
 
+    def replace_bonus_keys(self, bonus_keys: set[action.BonusKey]) -> "Conditions":
+        other_conditions = [
+            c for c in self.conditions if not isinstance(c, action.KeyBonusCondition)
+        ]
+        return Conditions([*other_conditions, action.KeyBonusCondition(bonus_keys)])
+
+    def replace_default_keys(self, keys: set[action.SHKey]) -> "Conditions":
+        other_conditions = [
+            c
+            for c in self.conditions
+            if not isinstance(c, action.KeyWinCondition) or c.next_level is not None
+        ]
+        return Conditions([*other_conditions, action.KeyWinCondition(keys)])
+
     def get_keys(self) -> set[str]:
         result: set[SHKey] = set()
         for condition in self.conditions:

@@ -5,7 +5,6 @@ from aiogram.types import CallbackQuery, Message
 from aiogram_dialog import Data, DialogManager
 from aiogram_dialog.widgets.kbd import Button
 
-import shvatka.core.models.dto.action.keys
 from shvatka.core.models import dto
 from shvatka.core.models.dto import scn, action
 from shvatka.core.models.dto import hints
@@ -122,8 +121,8 @@ async def process_time_hint_result(start_data: Data, result: Any, manager: Dialo
 async def process_level_result(start_data: Data, result: Any, manager: DialogManager):
     if not result:
         return
-    if hints := result.get("time_hints", None):
-        manager.dialog_data["time_hints"] = hints
+    if hints_ := result.get("time_hints", None):
+        manager.dialog_data["time_hints"] = hints_
     if keys := result.get("keys", None):
         manager.dialog_data["keys"] = keys
     if bonus_keys := result.get("bonus_keys", None):
@@ -138,6 +137,7 @@ async def on_start_level_edit(start_data: dict[str, Any], manager: DialogManager
     manager.dialog_data["level_id"] = level.name_id
     manager.dialog_data["keys"] = list(level.get_keys())
     manager.dialog_data["time_hints"] = retort.dump(level.scenario.time_hints)
+    manager.dialog_data["conditions"] = retort.dump(level.scenario.conditions)
     manager.dialog_data["bonus_keys"] = retort.dump(
         list(level.get_bonus_keys()), list[action.BonusKey]
     )
@@ -212,11 +212,25 @@ async def save_level(c: CallbackQuery, button: Button, manager: DialogManager):
     keys = set(map(normalize_key, data["keys"]))
     time_hints = retort.load(data["time_hints"], list[hints.TimeHint])
     bonus_keys = retort.load(
-        data.get("bonus_keys", []), set[shvatka.core.models.dto.action.keys.BonusKey]
+        data.get("bonus_keys", []), set[action.BonusKey]
     )
+    if dumped_condition := data.get("conditions", None):
+        conditions = retort.load(dumped_condition, scn.Conditions)
+        conditions.replace_default_keys(keys)
+        conditions.replace_bonus_keys(bonus_keys)
+    else:
+        conditions = scn.Conditions(
+            [
+                action.KeyWinCondition(keys),
+                action.KeyBonusCondition(bonus_keys),
+            ]
+        )
 
-    level_scn = scn.LevelScenario.legacy_factory(
-        id=id_, keys=keys, time_hints=time_hints, bonus_keys=bonus_keys
+    level_scn = scn.LevelScenario(
+        id=id_,
+        time_hints=time_hints,
+        conditions=conditions,
+        __model_version__=1,
     )
     level = await upsert_level(author=author, scenario=level_scn, dao=dao.level)
     await manager.done(result={"level": retort.dump(level)})

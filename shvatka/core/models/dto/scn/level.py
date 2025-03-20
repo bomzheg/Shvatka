@@ -4,16 +4,17 @@ from dataclasses import dataclass
 from datetime import timedelta
 from typing import overload, Literal
 
+from shvatka.core.models.dto import action, hints
+from shvatka.core.models.dto.hints import TimeHint, AnyHint
+from shvatka.core.models.dto.hints.time_hint import EnumeratedTimeHint
 from shvatka.core.utils import exceptions
-from .hint_part import AnyHint
-from .time_hint import TimeHint, EnumeratedTimeHint
 from shvatka.core.models.dto.action import (
     Action,
     Decision,
     StateHolder,
     DecisionType,
     Decisions,
-    KeyDecision,
+    TypedKeyDecision,
     KeyBonusCondition,
     NotImplementedActionDecision,
     BonusKeyDecision,
@@ -159,6 +160,22 @@ class Conditions(Sequence[AnyCondition]):
                 text="At eat one win condition should be simple (without routing (next_level))"
             )
 
+    def replace_bonus_keys(self, bonus_keys: set[action.BonusKey]) -> "Conditions":
+        other_conditions = [
+            c for c in self.conditions if not isinstance(c, action.KeyBonusCondition)
+        ]
+        if not bonus_keys:
+            return Conditions(other_conditions)
+        return Conditions([*other_conditions, action.KeyBonusCondition(bonus_keys)])
+
+    def replace_default_keys(self, keys: set[action.SHKey]) -> "Conditions":
+        other_conditions = [
+            c
+            for c in self.conditions
+            if not isinstance(c, action.KeyWinCondition) or c.next_level is not None
+        ]
+        return Conditions([*other_conditions, action.KeyWinCondition(keys)])
+
     def get_keys(self) -> set[str]:
         result: set[SHKey] = set()
         for condition in self.conditions:
@@ -172,6 +189,18 @@ class Conditions(Sequence[AnyCondition]):
             if isinstance(condition, KeyBonusCondition):
                 result = result.union(condition.keys)
         return result
+
+    @property
+    def hints_count(self) -> int:
+        return len(self.get_hints())
+
+    def get_hints(self) -> list[hints.AnyHint]:
+        acc = []
+        for c in self.conditions:
+            if not isinstance(c, action.KeyBonusHintCondition):
+                continue
+            acc.extend(c.bonus_hint)
+        return acc
 
     @overload
     def __getitem__(self, index: int) -> AnyCondition:
@@ -224,12 +253,12 @@ class LevelScenario:
         if isinstance(action, TypedKeyAction):
             if bonuses := implemented.get_all(BonusKeyDecision):
                 return bonuses.get_exactly_one(self.id)
-            key_decisions = implemented.get_all(KeyDecision, WrongKeyDecision)
+            key_decisions = implemented.get_all(TypedKeyDecision, WrongKeyDecision)
             if not key_decisions:
                 return NotImplementedActionDecision()
             if not key_decisions.get_significant():
                 assert all(d.type == DecisionType.NO_ACTION for d in key_decisions)
-                if duplicate_correct := key_decisions.get_all(KeyDecision):
+                if duplicate_correct := key_decisions.get_all(TypedKeyDecision):
                     return duplicate_correct.get_exactly_one(self.id)
                 return key_decisions[0]
             significant_key_decisions = key_decisions.get_significant()
@@ -251,7 +280,7 @@ class LevelScenario:
 
     @property
     def hints_count(self) -> int:
-        return self.time_hints.hints_count
+        return self.time_hints.hints_count + self.conditions.hints_count
 
     def get_hints_for_timedelta(self, delta: timedelta) -> list[TimeHint]:
         return self.time_hints.get_hints_for_timedelta(delta)
@@ -273,3 +302,17 @@ class LevelScenario:
             conditions=Conditions(conditions),
             __model_version__=1,
         )
+
+
+def check_all_files_saved(level: LevelScenario, guids: set[str]):
+    for hints_ in level.time_hints:
+        check_all_files_in_hints_saved(hints_.hint, guids)
+    for condition in level.conditions:
+        if isinstance(condition, action.KeyBonusHintCondition):
+            check_all_files_in_hints_saved(condition.bonus_hint, guids)
+
+
+def check_all_files_in_hints_saved(hints_: list[hints.AnyHint], guids: set[str]):
+    for hint in hints_:
+        if isinstance(hint, hints.FileMixin) and hint.file_guid not in guids:
+            raise exceptions.FileNotFound(text=f"not found {hint.file_guid} in files")

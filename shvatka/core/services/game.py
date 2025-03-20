@@ -28,7 +28,8 @@ from shvatka.core.rules.level import (
 )
 from shvatka.core.services.player import check_allow_be_author
 from shvatka.core.services.scenario.files import upsert_files, get_file_metas, get_file_contents
-from shvatka.core.services.scenario.game_ops import parse_uploaded_game, check_all_files_saved
+from shvatka.core.services.scenario.game_ops import parse_uploaded_game
+from shvatka.core.models.dto.scn.game import check_all_files_saved
 from shvatka.core.utils import exceptions
 from shvatka.core.utils.exceptions import AnotherGameIsActive, CantEditGame
 

@@ -3,7 +3,7 @@ from io import BytesIO
 from typing import BinaryIO
 
 from shvatka.core.interfaces.clients.file_storage import FileStorage
-from shvatka.core.models.dto.scn.hint_part import (
+from shvatka.core.models.dto.hints import (
     BaseHint,
     TextHint,
     GPSHint,

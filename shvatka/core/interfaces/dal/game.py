@@ -5,6 +5,7 @@ from shvatka.core.interfaces.dal.base import Committer
 from shvatka.core.interfaces.dal.level import LevelUpserter
 from shvatka.core.models import dto
 from shvatka.core.models.dto import scn
+from shvatka.core.models.dto import hints
 
 
 class GameNameChecker(Protocol):
@@ -31,7 +32,7 @@ class GameUpserter(LevelUpserter, GameNameChecker, Protocol):
     async def upsert_game(self, author: dto.Player, scenario: scn.GameScenario) -> dto.Game:
         raise NotImplementedError
 
-    async def upsert_file(self, file: scn.FileMeta, author: dto.Player) -> scn.SavedFileMeta:
+    async def upsert_file(self, file: hints.FileMeta, author: dto.Player) -> hints.SavedFileMeta:
         raise NotImplementedError
 
     async def check_author_can_own_guid(self, author: dto.Player, guid: str) -> None:

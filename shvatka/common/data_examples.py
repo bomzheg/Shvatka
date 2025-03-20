@@ -2,6 +2,7 @@ from datetime import datetime, timedelta
 
 from shvatka.core.models import dto, enums
 from shvatka.core.models.dto import scn
+from shvatka.core.models.dto import hints
 
 gryffindor = dto.Team(
     id=1,
@@ -44,50 +45,50 @@ game_example = dto.FullGame(
                 keys={"SH1"},
                 time_hints=scn.HintsList(
                     [
-                        scn.TimeHint(
+                        hints.TimeHint(
                             time=0,
                             hint=[
-                                scn.TextHint(
+                                hints.TextHint(
                                     text="level_100_0",
                                 ),
                             ],
                         ),
-                        scn.TimeHint(
+                        hints.TimeHint(
                             time=10,
                             hint=[
-                                scn.TextHint(
+                                hints.TextHint(
                                     text="level_100_10",
                                 ),
                             ],
                         ),
-                        scn.TimeHint(
+                        hints.TimeHint(
                             time=20,
                             hint=[
-                                scn.TextHint(
+                                hints.TextHint(
                                     text="level_100_20",
                                 ),
                             ],
                         ),
-                        scn.TimeHint(
+                        hints.TimeHint(
                             time=30,
                             hint=[
-                                scn.TextHint(
+                                hints.TextHint(
                                     text="level_100_20",
                                 ),
                             ],
                         ),
-                        scn.TimeHint(
+                        hints.TimeHint(
                             time=40,
                             hint=[
-                                scn.TextHint(
+                                hints.TextHint(
                                     text="level_100_20",
                                 ),
                             ],
                         ),
-                        scn.TimeHint(
+                        hints.TimeHint(
                             time=60,
                             hint=[
-                                scn.TextHint(
+                                hints.TextHint(
                                     text="level_100_20",
                                 ),
                             ],
@@ -107,50 +108,50 @@ game_example = dto.FullGame(
                 keys={"SH2"},
                 time_hints=scn.HintsList(
                     [
-                        scn.TimeHint(
+                        hints.TimeHint(
                             time=0,
                             hint=[
-                                scn.TextHint(
+                                hints.TextHint(
                                     text="level_101_0",
                                 ),
                             ],
                         ),
-                        scn.TimeHint(
+                        hints.TimeHint(
                             time=10,
                             hint=[
-                                scn.TextHint(
+                                hints.TextHint(
                                     text="level_101_10",
                                 ),
                             ],
                         ),
-                        scn.TimeHint(
+                        hints.TimeHint(
                             time=20,
                             hint=[
-                                scn.TextHint(
+                                hints.TextHint(
                                     text="level_101_20",
                                 ),
                             ],
                         ),
-                        scn.TimeHint(
+                        hints.TimeHint(
                             time=30,
                             hint=[
-                                scn.TextHint(
+                                hints.TextHint(
                                     text="level_101_20",
                                 ),
                             ],
                         ),
-                        scn.TimeHint(
+                        hints.TimeHint(
                             time=40,
                             hint=[
-                                scn.TextHint(
+                                hints.TextHint(
                                     text="level_101_20",
                                 ),
                             ],
                         ),
-                        scn.TimeHint(
+                        hints.TimeHint(
                             time=60,
                             hint=[
-                                scn.TextHint(
+                                hints.TextHint(
                                     text="level_101_20",
                                 ),
                             ],
@@ -170,50 +171,50 @@ game_example = dto.FullGame(
                 keys={"SH3"},
                 time_hints=scn.HintsList(
                     [
-                        scn.TimeHint(
+                        hints.TimeHint(
                             time=0,
                             hint=[
-                                scn.TextHint(
+                                hints.TextHint(
                                     text="level_102_0",
                                 ),
                             ],
                         ),
-                        scn.TimeHint(
+                        hints.TimeHint(
                             time=10,
                             hint=[
-                                scn.TextHint(
+                                hints.TextHint(
                                     text="level_102_10",
                                 ),
                             ],
                         ),
-                        scn.TimeHint(
+                        hints.TimeHint(
                             time=20,
                             hint=[
-                                scn.TextHint(
+                                hints.TextHint(
                                     text="level_102_20",
                                 ),
                             ],
                         ),
-                        scn.TimeHint(
+                        hints.TimeHint(
                             time=30,
                             hint=[
-                                scn.TextHint(
+                                hints.TextHint(
                                     text="level_102_20",
                                 ),
                             ],
                         ),
-                        scn.TimeHint(
+                        hints.TimeHint(
                             time=40,
                             hint=[
-                                scn.TextHint(
+                                hints.TextHint(
                                     text="level_102_20",
                                 ),
                             ],
                         ),
-                        scn.TimeHint(
+                        hints.TimeHint(
                             time=60,
                             hint=[
-                                scn.TextHint(
+                                hints.TextHint(
                                     text="level_102_20",
                                 ),
                             ],
@@ -233,50 +234,50 @@ game_example = dto.FullGame(
                 keys={"SH4"},
                 time_hints=scn.HintsList(
                     [
-                        scn.TimeHint(
+                        hints.TimeHint(
                             time=0,
                             hint=[
-                                scn.TextHint(
+                                hints.TextHint(
                                     text="level_103_0",
                                 ),
                             ],
                         ),
-                        scn.TimeHint(
+                        hints.TimeHint(
                             time=10,
                             hint=[
-                                scn.TextHint(
+                                hints.TextHint(
                                     text="level_103_10",
                                 ),
                             ],
                         ),
-                        scn.TimeHint(
+                        hints.TimeHint(
                             time=20,
                             hint=[
-                                scn.TextHint(
+                                hints.TextHint(
                                     text="level_103_20",
                                 ),
                             ],
                         ),
-                        scn.TimeHint(
+                        hints.TimeHint(
                             time=30,
                             hint=[
-                                scn.TextHint(
+                                hints.TextHint(
                                     text="level_103_20",
                                 ),
                             ],
                         ),
-                        scn.TimeHint(
+                        hints.TimeHint(
                             time=40,
                             hint=[
-                                scn.TextHint(
+                                hints.TextHint(
                                     text="level_103_20",
                                 ),
                             ],
                         ),
-                        scn.TimeHint(
+                        hints.TimeHint(
                             time=60,
                             hint=[
-                                scn.TextHint(
+                                hints.TextHint(
                                     text="level_103_20",
                                 ),
                             ],

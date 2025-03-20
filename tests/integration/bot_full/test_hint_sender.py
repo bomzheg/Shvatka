@@ -22,8 +22,8 @@ from aiogram_tests.mocked_bot import MockedBot
 
 from shvatka.core.interfaces.clients.file_storage import FileStorage
 from shvatka.core.models import dto
-from shvatka.core.models.dto.scn import TextHint, GPSHint, PhotoHint, BaseHint
-from shvatka.core.models.dto.scn.hint_part import (
+from shvatka.core.models.dto.hints import TextHint, GPSHint, PhotoHint, BaseHint
+from shvatka.core.models.dto.hints import (
     VenueHint,
     AudioHint,
     VideoHint,

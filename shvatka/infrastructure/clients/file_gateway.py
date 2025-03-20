@@ -7,7 +7,7 @@ from aiogram.types import BufferedInputFile
 
 from shvatka.core.interfaces.clients.file_storage import FileStorage, FileGateway
 from shvatka.core.models import dto
-from shvatka.core.models.dto import scn
+from shvatka.core.models.dto import hints
 from shvatka.infrastructure.db.dao import FileInfoDao
 from shvatka.tgbot.views import hint_sender
 from shvatka.tgbot.views.hint_factory.hint_parser import parse_message
@@ -28,19 +28,19 @@ class BotFileGateway(FileGateway):
         self.bot = bot
         self.tech_chat_id = tech_chat_id
 
-    async def put(self, file_meta: scn.UploadedFileMeta, content: BinaryIO, author: dto.Player):
+    async def put(self, file_meta: hints.UploadedFileMeta, content: BinaryIO, author: dto.Player):
         if not file_meta.tg_link:
             await self.upload_to_tg(author, content, file_meta)
         saved_file = await self.storage.put(file_meta, content)
         await self.dao.upsert(saved_file, author)
 
-    async def get(self, file: scn.FileMeta) -> BinaryIO:
+    async def get(self, file: hints.FileMeta) -> BinaryIO:
         try:
             return await self.storage.get(file.file_content_link)
         except (IOError, OSError):
             return await self.download_from_tg(tg_link=file.tg_link)
 
-    async def renew_file_id(self, author: dto.Player, file_meta: scn.SavedFileMeta):
+    async def renew_file_id(self, author: dto.Player, file_meta: hints.SavedFileMeta):
         return await self.upload_to_tg(
             author=author,
             content=await self.storage.get(file_meta.file_content_link),
@@ -48,7 +48,7 @@ class BotFileGateway(FileGateway):
         )
 
     async def upload_to_tg(
-        self, author: dto.Player, content: BinaryIO, file_meta: scn.FileMetaLightweight
+        self, author: dto.Player, content: BinaryIO, file_meta: hints.FileMetaLightweight
     ):
         assert file_meta.content_type is not None
         msg = await hint_sender.METHODS[file_meta.content_type](
@@ -61,7 +61,7 @@ class BotFileGateway(FileGateway):
         assert tg_link
         await self.dao.update_file_id(file_meta.guid, tg_link.file_id)
 
-    async def download_from_tg(self, tg_link: scn.TgLink) -> BinaryIO:
+    async def download_from_tg(self, tg_link: hints.TgLink) -> BinaryIO:
         result = await self.bot.download(tg_link.file_id, BytesIO())
         if not result:
             raise IOError

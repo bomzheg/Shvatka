@@ -9,6 +9,7 @@ from shvatka.common.factory import REQUIRED_GAME_RECIPES
 from shvatka.core.games.dto import CurrentHints
 from shvatka.core.models import dto, enums
 from shvatka.core.models.dto import scn
+from shvatka.core.models.dto import hints
 from shvatka.core.models.enums import GameStatus
 
 T = typing.TypeVar("T")
@@ -190,7 +191,7 @@ class GameStat:
 
 @dataclass
 class CurrentHintResponse:
-    hints: list[scn.TimeHint]
+    hints: list[hints.TimeHint]
     typed_keys: list[KeyTime]
     level_number: int
     started_at: datetime

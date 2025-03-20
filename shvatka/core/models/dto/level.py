@@ -3,10 +3,10 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import timedelta
 
+from . import hints
 from .player import Player
 from .scn.level import LevelScenario
 from .action.keys import BonusKey
-from .scn.time_hint import TimeHint, EnumeratedTimeHint
 
 
 @dataclass
@@ -18,10 +18,10 @@ class Level:
     game_id: int | None = None
     number_in_game: int | None = None
 
-    def get_hint(self, hint_number: int) -> TimeHint:
+    def get_hint(self, hint_number: int) -> hints.TimeHint:
         return self.scenario.get_hint(hint_number)
 
-    def get_hint_by_time(self, time: timedelta) -> EnumeratedTimeHint:
+    def get_hint_by_time(self, time: timedelta) -> hints.EnumeratedTimeHint:
         return self.scenario.get_hint_by_time(time)
 
     def is_last_hint(self, hint_number: int) -> bool:
@@ -43,5 +43,5 @@ class Level:
     def hints_count(self) -> int:
         return self.scenario.hints_count
 
-    def get_hints_for_timedelta(self, delta: timedelta) -> list[TimeHint]:
+    def get_hints_for_timedelta(self, delta: timedelta) -> list[hints.TimeHint]:
         return self.scenario.get_hints_for_timedelta(delta)

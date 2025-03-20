@@ -6,6 +6,7 @@ from dishka import AsyncContainer
 
 from shvatka.core.games.interactors import GamePlayReaderInteractor
 from shvatka.core.models import dto, enums
+from shvatka.core.models.dto import hints
 from shvatka.core.models.enums import GameStatus
 from shvatka.core.services.game_play import start_game, send_hint, check_key
 from shvatka.core.services.game_stat import get_typed_keys
@@ -106,6 +107,59 @@ async def test_wrong_key(
     )
     assert_time_key(expected_first_key, list(keys[gryffindor])[0])
     dummy_view.assert_wrong_key_only(expected_first_key)
+
+
+@pytest.mark.asyncio
+async def test_bonus_hint_key(
+    author: dto.Player,
+    harry: dto.Player,
+    gryffindor: dto.Team,
+    started_game: dto.FullGame,
+    dao: HolderDao,
+    check_dao: HolderDao,
+    locker: KeyCheckerFactory,
+    scheduler: SchedulerMock,
+):
+    game = started_game
+    dummy_view = GameViewMock()
+    dummy_log = GameLogWriterMock()
+
+    dummy_org_notifier = OrgNotifierMock()
+    key_processor = KeyProcessor(dao.game_player, game, locker)
+    await check_key(
+        key="SHBONUSHINT",
+        player=harry,
+        team=gryffindor,
+        game=game,
+        dao=dao.game_player,
+        view=dummy_view,
+        game_log=dummy_log,
+        org_notifier=dummy_org_notifier,
+        key_processor=key_processor,
+        locker=locker,
+        scheduler=scheduler,
+    )
+
+    keys = await get_typed_keys(game=game, player=author, dao=check_dao.typed_keys)
+    assert [gryffindor] == list(keys.keys())
+    assert 1 == len(keys[gryffindor])
+    expected_first_key = dto.KeyTime(
+        text="SHBONUSHINT",
+        type_=enums.KeyType.bonus_hint,
+        is_duplicate=False,
+        at=datetime.now(tz=tz_utc),
+        level_number=0,
+        player=harry,
+        team=gryffindor,
+    )
+    assert_time_key(expected_first_key, list(keys[gryffindor])[0])
+    dummy_view.asser_bonus_hint_key_only(
+        expected_first_key,
+        [
+            hints.GPSHint(type="gps", latitude=55.579282598950165, longitude=37.910306366539395),
+            hints.TextHint(type="text", text="this is bonus hint"),
+        ],
+    )
 
 
 @pytest.mark.asyncio

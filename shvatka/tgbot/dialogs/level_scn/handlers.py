@@ -5,12 +5,14 @@ from aiogram.types import CallbackQuery, Message
 from aiogram_dialog import Data, DialogManager
 from aiogram_dialog.widgets.kbd import Button
 
+import shvatka.core.models.dto.action.keys
 from shvatka.core.models import dto
 from shvatka.core.models.dto import scn, action
 from shvatka.core.models.dto import hints
 from shvatka.core.services.level import upsert_level, get_by_id
 from shvatka.core.utils.input_validation import (
     is_multiple_keys_normal,
+    normalize_key,
     validate_level_id,
 )
 from shvatka.infrastructure.db.dao.holder import HolderDao
@@ -65,10 +67,7 @@ async def not_correct_keys(m: Message, dialog_: Any, manager: DialogManager, err
 
 
 async def on_correct_keys(m: Message, dialog_: Any, manager: DialogManager, keys: list[str]):
-    retort: Retort = manager.middleware_data["retort"]
-    conditions = retort.load(manager.dialog_data["conditions"], scn.Conditions)
-    conditions = conditions.replace_default_keys(set(keys))
-    await manager.done({"conditions": retort.dump(conditions)})
+    await manager.done({"keys": keys})
 
 
 def convert_bonus_keys(text: str) -> list[action.BonusKey]:
@@ -97,9 +96,7 @@ async def on_correct_bonus_keys(
     keys: list[action.BonusKey],
 ):
     retort: Retort = manager.middleware_data["retort"]
-    conditions = retort.load(manager.dialog_data["conditions"], scn.Conditions)
-    conditions = conditions.replace_bonus_keys(set(keys))
-    await manager.done({"conditions": retort.dump(conditions)})
+    await manager.done({"bonus_keys": retort.dump(keys, list[action.BonusKey])})
 
 
 async def process_time_hint_result(start_data: Data, result: Any, manager: DialogManager):
@@ -125,10 +122,12 @@ async def process_time_hint_result(start_data: Data, result: Any, manager: Dialo
 async def process_level_result(start_data: Data, result: Any, manager: DialogManager):
     if not result:
         return
-    if hints_ := result.get("time_hints", None):
-        manager.dialog_data["time_hints"] = hints_
-    if conditions := result.get("conditions", None):
-        manager.dialog_data["conditions"] = conditions
+    if hints := result.get("time_hints", None):
+        manager.dialog_data["time_hints"] = hints
+    if keys := result.get("keys", None):
+        manager.dialog_data["keys"] = keys
+    if bonus_keys := result.get("bonus_keys", None):
+        manager.dialog_data["bonus_keys"] = bonus_keys
 
 
 async def on_start_level_edit(start_data: dict[str, Any], manager: DialogManager):
@@ -137,8 +136,11 @@ async def on_start_level_edit(start_data: dict[str, Any], manager: DialogManager
     author: dto.Player = manager.middleware_data["player"]
     level = await get_by_id(start_data["level_id"], author, dao.level)
     manager.dialog_data["level_id"] = level.name_id
-    manager.dialog_data["conditions"] = retort.dump(level.scenario.conditions)
+    manager.dialog_data["keys"] = list(level.get_keys())
     manager.dialog_data["time_hints"] = retort.dump(level.scenario.time_hints)
+    manager.dialog_data["bonus_keys"] = retort.dump(
+        list(level.get_bonus_keys()), list[action.BonusKey]
+    )
 
 
 async def on_start_hints_edit(start_data: dict[str, Any], manager: DialogManager):
@@ -178,7 +180,7 @@ async def start_keys(c: CallbackQuery, button: Button, manager: DialogManager):
         state=states.LevelKeysSG.keys,
         data={
             "level_id": manager.dialog_data["level_id"],
-            "conditions": manager.dialog_data.get("conditions", []),
+            "keys": manager.dialog_data.get("keys", []),
         },
     )
 
@@ -188,7 +190,7 @@ async def start_bonus_keys(c: CallbackQuery, button: Button, manager: DialogMana
         state=states.LevelBonusKeysSG.bonus_keys,
         data={
             "level_id": manager.dialog_data["level_id"],
-            "conditions": manager.dialog_data.get("conditions", []),
+            "bonus_keys": manager.dialog_data.get("bonus_keys", []),
         },
     )
 
@@ -207,14 +209,14 @@ async def save_level(c: CallbackQuery, button: Button, manager: DialogManager):
     dao: HolderDao = manager.middleware_data["dao"]
     data = manager.dialog_data
     id_ = data["level_id"]
+    keys = set(map(normalize_key, data["keys"]))
     time_hints = retort.load(data["time_hints"], list[hints.TimeHint])
-    conditions = retort.load(data.get("conditions"), scn.Conditions)
+    bonus_keys = retort.load(
+        data.get("bonus_keys", []), set[shvatka.core.models.dto.action.keys.BonusKey]
+    )
 
-    level_scn = scn.LevelScenario(
-        id=id_,
-        time_hints=time_hints,
-        conditions=conditions,
-        __model_version__=1,
+    level_scn = scn.LevelScenario.legacy_factory(
+        id=id_, keys=keys, time_hints=time_hints, bonus_keys=bonus_keys
     )
     level = await upsert_level(author=author, scenario=level_scn, dao=dao.level)
     await manager.done(result={"level": retort.dump(level)})

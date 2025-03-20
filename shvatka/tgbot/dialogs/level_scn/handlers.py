@@ -211,13 +211,10 @@ async def save_level(c: CallbackQuery, button: Button, manager: DialogManager):
     id_ = data["level_id"]
     keys = set(map(normalize_key, data["keys"]))
     time_hints = retort.load(data["time_hints"], list[hints.TimeHint])
-    bonus_keys = retort.load(
-        data.get("bonus_keys", []), set[action.BonusKey]
-    )
+    bonus_keys = retort.load(data.get("bonus_keys", []), set[action.BonusKey])
     if dumped_condition := data.get("conditions", None):
         conditions = retort.load(dumped_condition, scn.Conditions)
-        conditions.replace_default_keys(keys)
-        conditions.replace_bonus_keys(bonus_keys)
+        conditions = conditions.replace_default_keys(keys).replace_bonus_keys(bonus_keys)
     else:
         conditions = scn.Conditions(
             [

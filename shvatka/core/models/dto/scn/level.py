@@ -164,6 +164,8 @@ class Conditions(Sequence[AnyCondition]):
         other_conditions = [
             c for c in self.conditions if not isinstance(c, action.KeyBonusCondition)
         ]
+        if not bonus_keys:
+            return Conditions(other_conditions)
         return Conditions([*other_conditions, action.KeyBonusCondition(bonus_keys)])
 
     def replace_default_keys(self, keys: set[action.SHKey]) -> "Conditions":

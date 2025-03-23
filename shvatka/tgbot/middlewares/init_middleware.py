@@ -36,21 +36,21 @@ class InitMiddleware(BaseMiddleware):
         data: MiddlewareData,
     ) -> Any:
         dishka = data["dishka_container"]
-        file_storage = await dishka.get(FileStorage)  # type: ignore[type-abstract]
+        file_storage = await dishka.get(FileStorage)
         data["config"] = await dishka.get(BotConfig)
         data["main_config"] = await dishka.get(TgBotConfig)
         data["user_getter"] = await dishka.get(UserGetter)
         data["dcf"] = await dishka.get(Factory)
         data["retort"] = await dishka.get(Retort)
-        data["scheduler"] = await dishka.get(Scheduler)  # type: ignore[type-abstract]
-        data["locker"] = await dishka.get(KeyCheckerFactory)  # type: ignore[type-abstract]
+        data["scheduler"] = await dishka.get(Scheduler)
+        data["locker"] = await dishka.get(KeyCheckerFactory)
         data["file_storage"] = file_storage
         data["telegraph"] = await dishka.get(Telegraph)
         data["bg_manager_factory"] = self.bg_manager_factory
-        data["game_log"] = await dishka.get(GameLogWriter)  # type: ignore[type-abstract]
-        data["file_gateway"] = await dishka.get(FileGateway)  # type: ignore[type-abstract]
+        data["game_log"] = await dishka.get(GameLogWriter)
+        data["file_gateway"] = await dishka.get(FileGateway)
         data["hint_sender"] = await dishka.get(HintSender)
-        data["level_view"] = await dishka.get(LevelView)  # type: ignore[type-abstract]
+        data["level_view"] = await dishka.get(LevelView)
         holder_dao = await dishka.get(HolderDao)
         data["dao"] = holder_dao
         data["hint_parser"] = HintParser(

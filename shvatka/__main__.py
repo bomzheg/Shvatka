@@ -3,13 +3,12 @@ from functools import partial
 
 import uvicorn
 from aiogram import Bot, Dispatcher
-from dishka import AsyncContainer, make_async_container
+from dishka import AsyncContainer, make_async_container, plotter
 from dishka.integrations.fastapi import setup_dishka
 from fastapi import FastAPI
 
 from shvatka.api.dependencies import get_api_specific_providers
 from shvatka.infrastructure.di import get_providers
-from shvatka.infrastructure.di.visualizalization import render
 from shvatka.tgbot.config.models.bot import WebhookConfig
 from shvatka.tgbot.config.parser.main import load_config as load_bot_config
 from shvatka.api.config.parser.main import load_config as load_api_config
@@ -57,7 +56,7 @@ def main() -> FastAPI:
     setup_dishka(dishka, root_app)
     logger.info(
         "app prepared with dishka:\n%s",
-        render([dishka.registry, *dishka.child_registries], dishka),
+        plotter.render_d2(dishka),
     )
     return root_app
 

@@ -129,11 +129,11 @@ async def process_key_message(m: Message, dialog_: Any, manager: DialogManager) 
     dishka: AsyncContainer = manager.middleware_data[CONTAINER_NAME]
     author: dto.Player = manager.middleware_data["player"]
     dao = await dishka.get(HolderDao)
-    locker = await dishka.get(KeyCheckerFactory)  # type: ignore[type-abstract]
+    locker = await dishka.get(KeyCheckerFactory)
     level, org = await get_level_and_org(author, dao, manager)
     suite = dto.LevelTestSuite(tester=org, level=level)
-    view = await dishka.get(LevelView)  # type: ignore[type-abstract]
-    org_notifier = await dishka.get(OrgNotifier)  # type: ignore[type-abstract]
+    view = await dishka.get(LevelView)
+    org_notifier = await dishka.get(OrgNotifier)
     insert_result = await check_level_testing_key(
         key=typing.cast(str, m.text),
         suite=suite,

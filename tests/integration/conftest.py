@@ -138,12 +138,12 @@ async def clear_data(dao: HolderDao):
 
 @pytest_asyncio.fixture(scope="session")
 async def scheduler(dishka: AsyncContainer) -> Scheduler:
-    return await dishka.get(Scheduler)  # type: ignore[type-abstract]
+    return await dishka.get(Scheduler)
 
 
 @pytest_asyncio.fixture(scope="session")
 async def locker(dishka: AsyncContainer) -> KeyCheckerFactory:
-    return await dishka.get(KeyCheckerFactory)  # type: ignore[type-abstract]
+    return await dishka.get(KeyCheckerFactory)
 
 
 @pytest_asyncio.fixture(scope="session")
@@ -153,7 +153,7 @@ async def telegraph(dishka: AsyncContainer) -> Telegraph:
 
 @pytest_asyncio.fixture(scope="session")
 async def message_manager(dishka: AsyncContainer) -> MessageManagerProtocol:
-    return await dishka.get(MessageManagerProtocol)  # type: ignore[type-abstract]
+    return await dishka.get(MessageManagerProtocol)
 
 
 @pytest_asyncio.fixture(scope="session")
@@ -178,7 +178,7 @@ async def alembic_config(dishka: AsyncContainer, paths: Paths) -> AlembicConfig:
         "script_location",
         str(paths.app_dir.parent / "shvatka" / "infrastructure" / "db" / "migrations"),
     )
-    db_config = await dishka.get(DBConfig)  # type: ignore[type-abstract]
+    db_config = await dishka.get(DBConfig)
     alembic_cfg.set_main_option("sqlalchemy.url", db_config.uri)
     return alembic_cfg
 
@@ -190,7 +190,7 @@ def upgrade_schema_db(alembic_config: AlembicConfig):
 
 @pytest_asyncio.fixture(scope="session")
 async def file_storage(dishka: AsyncContainer) -> FileStorage:
-    return await dishka.get(FileStorage)  # type: ignore[type-abstract]
+    return await dishka.get(FileStorage)
 
 
 @pytest.fixture
@@ -204,12 +204,12 @@ def hint_parser(
 
 @pytest_asyncio.fixture
 async def file_gateway(dishka_request: AsyncContainer) -> FileGateway:
-    return await dishka_request.get(FileGateway)  # type: ignore[type-abstract]
+    return await dishka_request.get(FileGateway)
 
 
 @pytest_asyncio.fixture
 async def game_log(dishka: AsyncContainer) -> GameLogWriter:
-    return await dishka.get(GameLogWriter)  # type: ignore[type-abstract]
+    return await dishka.get(GameLogWriter)
 
 
 @pytest.fixture(autouse=True)

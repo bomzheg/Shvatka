@@ -139,7 +139,9 @@ async def on_start_level_edit(start_data: dict[str, Any], manager: DialogManager
     level = await get_by_id(start_data["level_id"], author, dao.level)
     manager.dialog_data["level_id"] = level.name_id
     manager.dialog_data["game_id"] = level.game_id
-    manager.dialog_data["keys"] = level.scenario.conditions.get_default_key_condition().get_keys()
+    manager.dialog_data["keys"] = list(
+        level.scenario.conditions.get_default_key_condition().get_keys()
+    )
     manager.dialog_data["time_hints"] = retort.dump(level.scenario.time_hints)
     manager.dialog_data["conditions"] = retort.dump(level.scenario.conditions)
     manager.dialog_data["bonus_keys"] = retort.dump(
@@ -218,6 +220,17 @@ async def on_start_sly_keys(
     manager.dialog_data["game_id"] = start_data["game_id"]
     manager.dialog_data["bonus_hint_conditions"] = conditions.get_bonus_hints_conditions()
     manager.dialog_data["routed_conditions"] = conditions.get_routed_conditions()
+
+
+@inject
+async def save_sly_keys(c: CallbackQuery, button: Button, manager: DialogManager):
+    await manager.done(
+        {
+            "bonus_keys": manager.dialog_data["bonus_keys"],
+            "routed_conditions": manager.dialog_data["routed_conditions"],
+            "bonus_hint_conditions": manager.dialog_data["bonus_hint_conditions"],
+        }
+    )
 
 
 async def save_hints(c: CallbackQuery, button: Button, manager: DialogManager):

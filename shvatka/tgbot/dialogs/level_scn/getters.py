@@ -1,7 +1,5 @@
 from adaptix import Retort
 from aiogram_dialog import DialogManager
-from dishka import FromDishka
-from dishka.integrations.aiogram_dialog import inject
 
 from shvatka.core.models.dto import hints, action, scn
 
@@ -19,19 +17,17 @@ async def get_keys(dialog_manager: DialogManager, **_):
     }
 
 
-@inject
-async def get_bonus_keys(dialog_manager: DialogManager, retort: FromDishka[Retort], **_):
+async def get_bonus_keys(dialog_manager: DialogManager, retort: Retort, **_):
     keys_raw = dialog_manager.dialog_data.get("bonus_keys", [])
     return {
         "bonus_keys": retort.load(keys_raw, list[action.BonusKey]),
     }
 
 
-@inject
-async def get_level_data(dialog_manager: DialogManager, retort: FromDishka[Retort], **_):
+async def get_level_data(dialog_manager: DialogManager, retort: Retort, **_):
     dialog_data = dialog_manager.dialog_data
     hints_ = retort.load(dialog_data.get("time_hints", []), list[hints.TimeHint])
-    if dumped_conditions := dialog_data["conditions"]:
+    if dumped_conditions := dialog_data.get("conditions", []):
         conditions = retort.load(dumped_conditions, scn.Conditions)
         sly_types_count = conditions.get_types_count()
     else:
@@ -44,8 +40,7 @@ async def get_level_data(dialog_manager: DialogManager, retort: FromDishka[Retor
     }
 
 
-@inject
-async def get_time_hints(dialog_manager: DialogManager, retort: FromDishka[Retort], **_):
+async def get_time_hints(dialog_manager: DialogManager, retort: Retort, **_):
     dialog_data = dialog_manager.dialog_data
     hints_ = retort.load(dialog_data.get("time_hints", []), list[hints.TimeHint])
     return {
@@ -54,12 +49,11 @@ async def get_time_hints(dialog_manager: DialogManager, retort: FromDishka[Retor
     }
 
 
-@inject
-async def get_sly_keys(dialog_manager: DialogManager, retort: FromDishka[Retort], **_):
+async def get_sly_keys(dialog_manager: DialogManager, retort: Retort, **_):
     data = dialog_manager.dialog_data
     return {
         "level_id": data["level_id"],
-        "bonus_keys": retort.load(data["bonus_keys"], action.BonusKey),
+        "bonus_keys": retort.load(data["bonus_keys"], list[action.BonusKey]),
         "bonus_hint_conditions": retort.load(
             data["bonus_hint_conditions"], list[action.KeyBonusHintCondition]
         ),

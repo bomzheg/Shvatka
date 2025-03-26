@@ -36,6 +36,7 @@ from .handlers import (
     start_sly_keys,
     start_edit_time_hint,
     on_start_sly_keys,
+    save_sly_keys,
 )
 from shvatka.tgbot.dialogs.preview_data import PreviewStart
 
@@ -259,6 +260,12 @@ sly_keys_dialog = Dialog(
             state=states.LevelSlyKeysSg.routed_keys,
             when=F["game_id"],
         ),
+        Button(
+            Const("✅Готово"),
+            id="save",
+            on_click=save_sly_keys,
+        ),
+        Cancel(Const("🔙Назад")),
         state=states.LevelSlyKeysSg.menu,
         getter=get_sly_keys,
     ),
@@ -282,7 +289,7 @@ sly_keys_dialog = Dialog(
             "<code>СХШТРАФНОЙ</code> -3\n"
             "<code>СХДРУГОЙБОНУСНЫЙ</code> 5\n"
         ),
-        Cancel(Const("🔙Назад")),
+        SwitchTo(Const("🔙Назад"), id="to_menu", state=states.LevelSlyKeysSg.menu),
         TextInput(
             type_factory=convert_bonus_keys,
             on_success=on_correct_bonus_keys,

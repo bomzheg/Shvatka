@@ -4,6 +4,8 @@ from adaptix import Retort
 from aiogram.types import CallbackQuery, Message
 from aiogram_dialog import Data, DialogManager
 from aiogram_dialog.widgets.kbd import Button
+from dishka import FromDishka
+from dishka.integrations.aiogram_dialog import inject
 
 from shvatka.core.models import dto
 from shvatka.core.models.dto import scn, action
@@ -88,14 +90,15 @@ async def not_correct_bonus_keys(
     )
 
 
+@inject
 async def on_correct_bonus_keys(
     m: Message,
     dialog_: Any,
     manager: DialogManager,
     keys: list[action.BonusKey],
+    retort: FromDishka[Retort],
 ):
-    retort: Retort = manager.middleware_data["retort"]
-    await manager.done({"bonus_keys": retort.dump(keys, list[action.BonusKey])})
+    manager.dialog_data["bonus_keys"] = retort.dump(keys, list[action.BonusKey])
 
 
 async def process_time_hint_result(start_data: Data, result: Any, manager: DialogManager):
@@ -135,7 +138,8 @@ async def on_start_level_edit(start_data: dict[str, Any], manager: DialogManager
     author: dto.Player = manager.middleware_data["player"]
     level = await get_by_id(start_data["level_id"], author, dao.level)
     manager.dialog_data["level_id"] = level.name_id
-    manager.dialog_data["keys"] = list(level.get_keys())
+    manager.dialog_data["game_id"] = level.game_id
+    manager.dialog_data["keys"] = level.scenario.conditions.get_default_key_condition().get_keys()
     manager.dialog_data["time_hints"] = retort.dump(level.scenario.time_hints)
     manager.dialog_data["conditions"] = retort.dump(level.scenario.conditions)
     manager.dialog_data["bonus_keys"] = retort.dump(
@@ -185,14 +189,35 @@ async def start_keys(c: CallbackQuery, button: Button, manager: DialogManager):
     )
 
 
-async def start_bonus_keys(c: CallbackQuery, button: Button, manager: DialogManager):
+@inject
+async def start_sly_keys(c: CallbackQuery, button: Button, manager: DialogManager):
     await manager.start(
-        state=states.LevelBonusKeysSG.bonus_keys,
+        state=states.LevelSlyKeysSg.menu,
         data={
             "level_id": manager.dialog_data["level_id"],
             "bonus_keys": manager.dialog_data.get("bonus_keys", []),
+            "conditions": manager.dialog_data.get("conditions", []),
+            "keys": manager.dialog_data["keys"],
+            "game_id": manager.dialog_data.get("game_id", None),
         },
     )
+
+
+@inject
+async def on_start_sly_keys(
+    start_data: dict[str, Any], manager: DialogManager, retort: FromDishka[Retort]
+):
+    if dumped_conditions := start_data["conditions"]:
+        conditions = retort.load(dumped_conditions, scn.Conditions)
+    else:
+        conditions = scn.Conditions([action.KeyWinCondition(start_data["keys"])])
+    manager.dialog_data["level_id"] = start_data["level_id"]
+    manager.dialog_data["keys"] = start_data["keys"]
+    manager.dialog_data["bonus_keys"] = start_data["bonus_keys"]
+    manager.dialog_data["conditions"] = retort.dump(conditions)
+    manager.dialog_data["game_id"] = start_data["game_id"]
+    manager.dialog_data["bonus_hint_conditions"] = conditions.get_bonus_hints_conditions()
+    manager.dialog_data["routed_conditions"] = conditions.get_routed_conditions()
 
 
 async def save_hints(c: CallbackQuery, button: Button, manager: DialogManager):

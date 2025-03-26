@@ -1,11 +1,18 @@
 from aiogram import F
 from aiogram_dialog import Dialog, Window
 from aiogram_dialog.widgets.input import TextInput
-from aiogram_dialog.widgets.kbd import Button, Cancel, ScrollingGroup, Select, Next
+from aiogram_dialog.widgets.kbd import Button, Cancel, ScrollingGroup, Select, Next, SwitchTo
 from aiogram_dialog.widgets.text import Const, Jinja
 
 from shvatka.tgbot import states
-from .getters import get_time_hints, get_level_id, get_level_data, get_keys, get_bonus_keys
+from .getters import (
+    get_time_hints,
+    get_level_id,
+    get_level_data,
+    get_keys,
+    get_bonus_keys,
+    get_sly_keys,
+)
 from .handlers import (
     process_time_hint_result,
     start_add_time_hint,
@@ -26,8 +33,9 @@ from .handlers import (
     convert_bonus_keys,
     on_correct_bonus_keys,
     not_correct_bonus_keys,
-    start_bonus_keys,
+    start_sly_keys,
     start_edit_time_hint,
+    on_start_sly_keys,
 )
 from shvatka.tgbot.dialogs.preview_data import PreviewStart
 
@@ -62,8 +70,8 @@ level = Dialog(
             "{% else %}"
             "🔑Ключи не введены\n"
             "{% endif %}"
-            "{% if bonus_keys %}"
-            "💰Бонусных ключей: {{bonus_keys | length}}\n"
+            "{% if sly_types %}"
+            "🗝Разновидностей хитрых ключей: {{sly_types}}\n"
             "{% endif %}"
             "\n💡Подсказки:\n"
             "{% if time_hints %}"
@@ -73,7 +81,7 @@ level = Dialog(
             "{% endif %}"
         ),
         Button(Const("🔑Ключи"), id="keys", on_click=start_keys),
-        Button(Const("💰Бонусные ключи"), id="bonus_keys", on_click=start_bonus_keys),
+        Button(Const("🗝Хитрые ключи"), id="sly_keys", on_click=start_sly_keys, when=F["keys"]),
         Button(Const("💡Подсказки"), id="hints", on_click=start_hints),
         Button(
             Const("✅Готово, сохранить"),
@@ -88,7 +96,7 @@ level = Dialog(
         },
         preview_add_transitions=[
             PreviewStart(state=states.LevelKeysSG.keys),
-            PreviewStart(state=states.LevelBonusKeysSG.bonus_keys),
+            PreviewStart(state=states.LevelSlyKeysSg.menu),
             PreviewStart(state=states.LevelHintsSG.time_hints),
             Cancel(),
         ],
@@ -105,8 +113,8 @@ level_edit_dialog = Dialog(
             "{% else %}"
             "🔑Ключи не введены\n"
             "{% endif %}"
-            "{% if bonus_keys %}"
-            "💰Бонусных ключей: {{bonus_keys | length}}\n"
+            "{% if sly_types %}"
+            "🗝Разновидностей хитрых ключей: {{sly_types}}\n"
             "{% endif %}"
             "\n💡Подсказки:\n"
             "{% if time_hints %}"
@@ -116,7 +124,7 @@ level_edit_dialog = Dialog(
             "{% endif %}"
         ),
         Button(Const("🔑Ключи"), id="keys", on_click=start_keys),
-        Button(Const("💰Бонусные ключи"), id="bonus_keys", on_click=start_bonus_keys),
+        Button(Const("🗝Хитрые ключи"), id="sly_keys", on_click=start_sly_keys, when=F["keys"]),
         Button(Const("💡Подсказки"), id="hints", on_click=start_hints),
         Button(
             Const("💾Готово, сохранить"),
@@ -132,7 +140,7 @@ level_edit_dialog = Dialog(
         },
         preview_add_transitions=[
             PreviewStart(state=states.LevelKeysSG.keys),
-            PreviewStart(state=states.LevelBonusKeysSG.bonus_keys),
+            PreviewStart(state=states.LevelSlyKeysSg.menu),
             PreviewStart(state=states.LevelHintsSG.time_hints),
         ],
     ),
@@ -227,7 +235,33 @@ hints_dialog = Dialog(
     on_start=on_start_hints_edit,
 )
 
-bonus_keys_dialog = Dialog(
+sly_keys_dialog = Dialog(
+    Window(
+        Jinja(
+            "Уровень <b>{{level_id}}</b>\n\n"
+            "Бонусных ключей: {{bonus_keys | length}}\n"
+            "Ключей с бонусными подсказками: {{bonus_hint_conditions | length}}\n"
+            "Нелинейных ключей: {{routed_conditions | length}}\n"
+        ),
+        SwitchTo(
+            Const("Бонусные ключи"),
+            id="to_bonus_keys",
+            state=states.LevelSlyKeysSg.bonus_keys,
+        ),
+        SwitchTo(
+            Const("Ключи с бонусными подсказками"),
+            id="to_bonus_hunt_keys",
+            state=states.LevelSlyKeysSg.bonus_hint_keys,
+        ),
+        SwitchTo(
+            Const("Нелинейные ключи"),
+            id="to_routed_keys",
+            state=states.LevelSlyKeysSg.routed_keys,
+            when=F["game_id"],
+        ),
+        state=states.LevelSlyKeysSg.menu,
+        getter=get_sly_keys,
+    ),
     Window(
         Jinja("Уровень <b>{{level_id}}</b>\n\n"),
         Const("💰<b>Бонусные ключи уровня</b>\n"),
@@ -255,7 +289,8 @@ bonus_keys_dialog = Dialog(
             on_error=not_correct_bonus_keys,
             id="keys_input",
         ),
-        state=states.LevelBonusKeysSG.bonus_keys,
+        state=states.LevelSlyKeysSg.bonus_keys,
         getter=(get_level_id, get_bonus_keys),
     ),
+    on_start=on_start_sly_keys,
 )

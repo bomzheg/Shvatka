@@ -194,7 +194,31 @@ class Conditions(Sequence[AnyCondition]):
         return [c for c in self.conditions if isinstance(c, action.KeyBonusHintCondition)]
 
     def get_routed_conditions(self) -> list[action.KeyWinCondition]:
-        return [c for c in self.conditions if isinstance(c, action.KeyWinCondition) and c.next_level is not None]
+        return [
+            c
+            for c in self.conditions
+            if isinstance(c, action.KeyWinCondition) and c.next_level is not None
+        ]
+
+    def get_default_key_conditions(self) -> list[action.KeyWinCondition]:
+        return [
+            c
+            for c in self.conditions
+            if isinstance(c, action.KeyWinCondition) and c.next_level is None
+        ]
+
+    def get_default_key_condition(self) -> action.KeyWinCondition:
+        return self.get_default_key_conditions()[0]
+
+    def get_types_count(self) -> int:
+        result = 0
+        if self.get_bonus_keys():
+            result += 1
+        if self.get_bonus_hints_conditions():
+            result += 1
+        if self.get_routed_conditions():
+            result += 1
+        return result
 
     @property
     def hints_count(self) -> int:

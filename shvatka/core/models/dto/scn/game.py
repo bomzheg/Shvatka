@@ -22,8 +22,10 @@ class GameScenario:
                 assert routed_condition.next_level is not None
                 if routed_condition.next_level not in levels_ids:
                     raise exceptions.GameError(
-                        f"Level {level.id} contains condition with next level {routed_condition.next_level}, "
-                        f"but there is not any level with such id. Existed levels is {levels_ids}"
+                        f"Level {level.id} contains condition "
+                        f"with next level {routed_condition.next_level}, "
+                        f"but there is not any level with such id. "
+                        f"Existed levels is {levels_ids}"
                     )
 
 

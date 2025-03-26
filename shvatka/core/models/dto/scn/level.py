@@ -150,7 +150,7 @@ class Conditions(Sequence[AnyCondition]):
                     win_conditions.append(c)
                 if keys.intersection(c.get_keys()):
                     raise exceptions.LevelError(
-                        text=f"keys already exists {keys.intersection(c.keys)}"
+                        text=f"keys exists multiple times {keys.intersection(c.keys)}"
                     )
                 keys = keys.union(c.get_keys())
         if not win_conditions:
@@ -189,6 +189,12 @@ class Conditions(Sequence[AnyCondition]):
             if isinstance(condition, KeyBonusCondition):
                 result = result.union(condition.keys)
         return result
+
+    def get_bonus_hints_conditions(self) -> list[action.KeyBonusHintCondition]:
+        return [c for c in self.conditions if isinstance(c, action.KeyBonusHintCondition)]
+
+    def get_routed_conditions(self) -> list[action.KeyWinCondition]:
+        return [c for c in self.conditions if isinstance(c, action.KeyWinCondition) and c.next_level is not None]
 
     @property
     def hints_count(self) -> int:

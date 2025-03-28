@@ -157,7 +157,12 @@ class Conditions(Sequence[AnyCondition]):
             raise exceptions.LevelError(text="There is no win condition")
         if all(c.next_level is not None for c in win_conditions):
             raise exceptions.LevelError(
-                text="At eat one win condition should be simple (without routing (next_level))"
+                text="At least one win condition should be simple (without routing (next_level))"
+            )
+        # TODO #128 next is temporary restriction. we should allow multiple times
+        if (count := len([c for c in win_conditions if c.next_level is None])) != 1:
+            raise exceptions.LevelError(
+                text=f"Default win condition must be exactly once, got {count}"
             )
 
     def replace_bonus_keys(self, bonus_keys: set[action.BonusKey]) -> "Conditions":

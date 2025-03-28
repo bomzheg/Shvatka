@@ -266,8 +266,8 @@ sly_keys_dialog = Dialog(
             on_click=save_sly_keys,
         ),
         Cancel(Const("🔙Назад")),
-        state=states.LevelSlyKeysSg.menu,
         getter=get_sly_keys,
+        state=states.LevelSlyKeysSg.menu,
     ),
     Window(
         Jinja("Уровень <b>{{level_id}}</b>\n\n"),
@@ -296,8 +296,20 @@ sly_keys_dialog = Dialog(
             on_error=not_correct_bonus_keys,
             id="keys_input",
         ),
-        state=states.LevelSlyKeysSg.bonus_keys,
         getter=(get_level_id, get_bonus_keys),
+        state=states.LevelSlyKeysSg.bonus_keys,
+    ),
+    Window(
+        Jinja("Уровень <b>{{level_id}}</b>\n\n"),
+        SwitchTo(Const("🔙Назад"), id="to_menu", state=states.LevelSlyKeysSg.menu),
+        getter=(get_level_id,),
+        state=states.LevelSlyKeysSg.bonus_hint_keys
+    ),
+    Window(
+        Jinja("Уровень <b>{{level_id}}</b>\n\n"),
+        SwitchTo(Const("🔙Назад"), id="to_menu", state=states.LevelSlyKeysSg.menu),
+        getter=(get_level_id,),
+        state=states.LevelSlyKeysSg.routed_keys
     ),
     on_start=on_start_sly_keys,
 )

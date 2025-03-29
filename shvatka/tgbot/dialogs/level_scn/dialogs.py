@@ -301,15 +301,35 @@ sly_keys_dialog = Dialog(
     ),
     Window(
         Jinja("Уровень <b>{{level_id}}</b>\n\n"),
+        Jinja(
+            "Текущие ключи бонусных подсказок:\n"
+            "{% for c in bonus_hint_conditions %}"
+            "{{c.bonus_hint | hints}}"
+            "{% for key in c.keys %}"
+            "🔑<code>{{key}}</code>\n"
+            "{% endfor %}"
+            "{% endfor %}",
+            when=F["bonus_hint_conditions"],
+        ),
         SwitchTo(Const("🔙Назад"), id="to_menu", state=states.LevelSlyKeysSg.menu),
-        getter=(get_level_id,),
-        state=states.LevelSlyKeysSg.bonus_hint_keys
+        getter=(get_level_id, get_bonus_keys),
+        state=states.LevelSlyKeysSg.bonus_hint_keys,
     ),
     Window(
         Jinja("Уровень <b>{{level_id}}</b>\n\n"),
+        Jinja(
+            "Текущие нелинейные ключи:\n"
+            "{% for c in routed_conditions %}"
+            "🗝🗝🗝 -> {{c.next_level}}:"
+            "{% for key in c.keys: %}"
+            "🔑<code>{{key}}</code>\n"
+            "{% endfor %}"
+            "{% endfor %}",
+            when=F["routed_conditions"],
+        ),
         SwitchTo(Const("🔙Назад"), id="to_menu", state=states.LevelSlyKeysSg.menu),
-        getter=(get_level_id,),
-        state=states.LevelSlyKeysSg.routed_keys
+        getter=(get_level_id, get_sly_keys),
+        state=states.LevelSlyKeysSg.routed_keys,
     ),
     on_start=on_start_sly_keys,
 )

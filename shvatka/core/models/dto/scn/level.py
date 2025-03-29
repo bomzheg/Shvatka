@@ -213,6 +213,7 @@ class Conditions(Sequence[AnyCondition]):
         ]
 
     def get_default_key_condition(self) -> action.KeyWinCondition:
+        """TODO #128"""
         return self.get_default_key_conditions()[0]
 
     def get_types_count(self) -> int:

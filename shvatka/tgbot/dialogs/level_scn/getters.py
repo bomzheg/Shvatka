@@ -60,3 +60,12 @@ async def get_sly_keys(dialog_manager: DialogManager, retort: Retort, **_):
         "routed_conditions": retort.load(data["routed_conditions"], list[action.KeyWinCondition]),
         "game_id": data["game_id"],
     }
+
+
+async def get_bonus_hint_conditions(dialog_manager: DialogManager, retort: Retort, **_):
+    data = dialog_manager.dialog_data
+    conditions = retort.load(data["bonus_hint_conditions"], list[action.KeyBonusHintCondition])
+    return {
+        "bonus_hint_conditions": dict(enumerate(conditions)),
+        "game_id": data["game_id"],
+    }

@@ -12,6 +12,7 @@ from .getters import (
     get_keys,
     get_bonus_keys,
     get_sly_keys,
+    get_bonus_hint_conditions,
 )
 from .handlers import (
     process_time_hint_result,
@@ -303,16 +304,23 @@ sly_keys_dialog = Dialog(
         Jinja("Уровень <b>{{level_id}}</b>\n\n"),
         Jinja(
             "Текущие ключи бонусных подсказок:\n"
-            "{% for c in bonus_hint_conditions %}"
-            "{{c.bonus_hint | hints}}"
+            "{% for index, c in bonus_hint_conditions.items() %}"
+            "{{index + 1}}{{c.bonus_hint | hints}}"
             "{% for key in c.keys %}"
             "🔑<code>{{key}}</code>\n"
             "{% endfor %}"
             "{% endfor %}",
             when=F["bonus_hint_conditions"],
         ),
+        Select(
+            Jinja("{{item}} - {{bonus_hint_conditions[item].bonus_hint | hints}}"),
+            id="bonus_hint_conditions",
+            item_id_getter=lambda x: x,
+            items="bonus_hint_conditions",
+            # on_click=,  ## TODO
+        ),
         SwitchTo(Const("🔙Назад"), id="to_menu", state=states.LevelSlyKeysSg.menu),
-        getter=(get_level_id, get_bonus_keys),
+        getter=(get_level_id, get_bonus_hint_conditions),
         state=states.LevelSlyKeysSg.bonus_hint_keys,
     ),
     Window(

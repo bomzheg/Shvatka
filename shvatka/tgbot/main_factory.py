@@ -23,6 +23,7 @@ from shvatka.infrastructure.db.factory import (
     create_lock_factory,
 )
 from shvatka.infrastructure.di import get_providers
+from shvatka.infrastructure.picture import ResultsPainter
 from shvatka.infrastructure.scheduler.factory import SchedulerProvider
 from shvatka.tgbot.config.models.bot import BotConfig, TgClientConfig
 from shvatka.tgbot.handlers import setup_handlers
@@ -31,6 +32,7 @@ from shvatka.tgbot.username_resolver.user_getter import UserGetter
 from shvatka.tgbot.utils.router import print_router_tree
 from shvatka.tgbot.views.game import GameBotLog, BotView, BotOrgNotifier
 from shvatka.tgbot.views.hint_factory.hint_content_resolver import HintContentResolver
+from shvatka.tgbot.views.hint_factory.hint_parser import HintParser
 from shvatka.tgbot.views.hint_sender import HintSender
 from shvatka.tgbot.views.level_testing import LevelBotView
 
@@ -153,6 +155,8 @@ class GameToolsProvider(Provider):
         BotView, scope=Scope.REQUEST, provides=AnyOf[GameView, GameViewPreparer]
     )
     level_bot_view = provide(LevelBotView, scope=Scope.REQUEST, provides=LevelView)
+    hint_parser = provide(HintParser, scope=Scope.REQUEST)
+    results_painter = provide(ResultsPainter, scope=Scope.REQUEST)
 
 
 def resolve_update_types(dp: Dispatcher) -> list[str]:

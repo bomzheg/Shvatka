@@ -6,13 +6,14 @@ from shvatka.core.services.game import get_full_game
 from shvatka.core.services.game_stat import get_game_stat
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.infrastructure.picture import paint_it
+from shvatka.tgbot.config.models.bot import BotConfig
 
 
 class ResultsPainter:
-    def __init__(self, bot: Bot, dao: HolderDao, chat_id: int) -> None:
+    def __init__(self, bot: Bot, dao: HolderDao, config: BotConfig) -> None:
         self.bot = bot
         self.dao = dao
-        self.chat_id = chat_id
+        self.chat_id = config.log_chat
 
     async def get_game_results(self, game: dto.Game, player: dto.Player) -> str:
         if game.results.results_picture_file_id:

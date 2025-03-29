@@ -1,7 +1,15 @@
 from aiogram import F
 from aiogram_dialog import Dialog, Window
-from aiogram_dialog.widgets.input import TextInput
-from aiogram_dialog.widgets.kbd import Button, Cancel, ScrollingGroup, Select, Next, SwitchTo
+from aiogram_dialog.widgets.input import TextInput, MessageInput
+from aiogram_dialog.widgets.kbd import (
+    Button,
+    Cancel,
+    ScrollingGroup,
+    Select,
+    Next,
+    SwitchTo,
+    Start,
+)
 from aiogram_dialog.widgets.text import Const, Jinja
 
 from shvatka.tgbot import states
@@ -13,6 +21,7 @@ from .getters import (
     get_bonus_keys,
     get_sly_keys,
     get_bonus_hint_conditions,
+    get_bonus_hints,
 )
 from .handlers import (
     process_time_hint_result,
@@ -21,7 +30,7 @@ from .handlers import (
     save_level,
     save_hints,
     process_level_result,
-    start_keys,
+    start_level_keys,
     start_hints,
     not_correct_id,
     check_level_id,
@@ -38,6 +47,9 @@ from .handlers import (
     start_edit_time_hint,
     on_start_sly_keys,
     save_sly_keys,
+    process_hint,
+    on_start_bonus_hints_edit,
+    start_bonus_hint_keys,
 )
 from shvatka.tgbot.dialogs.preview_data import PreviewStart
 
@@ -82,7 +94,7 @@ level = Dialog(
             "пока нет ни одной"
             "{% endif %}"
         ),
-        Button(Const("🔑Ключи"), id="keys", on_click=start_keys),
+        Button(Const("🔑Ключи"), id="keys", on_click=start_level_keys),
         Button(Const("🗝Хитрые ключи"), id="sly_keys", on_click=start_sly_keys, when=F["keys"]),
         Button(Const("💡Подсказки"), id="hints", on_click=start_hints),
         Button(
@@ -125,7 +137,7 @@ level_edit_dialog = Dialog(
             "пока нет ни одной"
             "{% endif %}"
         ),
-        Button(Const("🔑Ключи"), id="keys", on_click=start_keys),
+        Button(Const("🔑Ключи"), id="keys", on_click=start_level_keys),
         Button(Const("🗝Хитрые ключи"), id="sly_keys", on_click=start_sly_keys, when=F["keys"]),
         Button(Const("💡Подсказки"), id="hints", on_click=start_hints),
         Button(
@@ -152,8 +164,7 @@ level_edit_dialog = Dialog(
 
 keys_dialog = Dialog(
     Window(
-        Jinja("Уровень <b>{{level_id}}</b>\n\n"),
-        Const("🔑<b>Ключи уровня</b>\n"),
+        Jinja("🔑Ключи{% if level_id %} уровня <b>{{level_id}}</b>{% endif %}:\n\n"),
         Jinja(
             "Сейчас сохранены ключи:\n"
             "{% for key in keys %}"
@@ -319,6 +330,7 @@ sly_keys_dialog = Dialog(
             items="bonus_hint_conditions",
             # on_click=,  ## TODO
         ),
+        Start(Const("Добавить"), id="add_bonus_hint", state=states.BonusHintSg.menu),
         SwitchTo(Const("🔙Назад"), id="to_menu", state=states.LevelSlyKeysSg.menu),
         getter=(get_level_id, get_bonus_hint_conditions),
         state=states.LevelSlyKeysSg.bonus_hint_keys,
@@ -340,4 +352,30 @@ sly_keys_dialog = Dialog(
         state=states.LevelSlyKeysSg.routed_keys,
     ),
     on_start=on_start_sly_keys,
+)
+
+
+bonus_hint_dialog = Dialog(
+    Window(
+        Jinja("Бонусная подсказка:"),
+        Button(Const("Ключи"), on_click=start_bonus_hint_keys, id="to_keys"),
+        SwitchTo(Const("Подсказки"), state=states.BonusHintSg.hints, id="to_hints"),
+        state=states.BonusHintSg.menu,
+        preview_add_transitions=[
+            PreviewStart(state=states.LevelKeysSG.keys),
+        ],
+    ),
+    Window(
+        Jinja("Подсказки:"),
+        Const("Присылай сообщения с подсказками (текст, фото, видео итд)", when=~F["hints"]),
+        Jinja(
+            "{{hints | hints}}\nМожно прислать ещё сообщения или закончить с этим",
+            when=F["hints"],
+        ),
+        SwitchTo(Const("Назад"), state=states.BonusHintSg.menu, id="to_menu"),
+        MessageInput(func=process_hint),
+        getter=get_bonus_hints,
+        state=states.BonusHintSg.hints,
+    ),
+    on_start=on_start_bonus_hints_edit,
 )

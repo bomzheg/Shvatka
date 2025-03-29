@@ -18,6 +18,7 @@ from shvatka.core.utils.input_validation import (
 )
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.tgbot import states
+from shvatka.tgbot.views.hint_factory.hint_parser import HintParser
 
 
 def check_level_id(name_id: str) -> str:
@@ -181,7 +182,7 @@ async def start_hints(c: CallbackQuery, button: Button, manager: DialogManager):
     )
 
 
-async def start_keys(c: CallbackQuery, button: Button, manager: DialogManager):
+async def start_level_keys(c: CallbackQuery, button: Button, manager: DialogManager):
     await manager.start(
         state=states.LevelKeysSG.keys,
         data={
@@ -270,3 +271,31 @@ async def save_level(c: CallbackQuery, button: Button, manager: DialogManager):
     level = await upsert_level(author=author, scenario=level_scn, dao=dao.level)
     await manager.done(result={"level": retort.dump(level)})
     await c.answer(text="Уровень успешно сохранён")
+
+
+async def start_bonus_hint_keys(c: CallbackQuery, button: Button, manager: DialogManager):
+    await manager.start(
+        state=states.LevelKeysSG.keys,
+        data={
+            "keys": manager.dialog_data.get("keys", []),
+        },
+    )
+
+
+@inject
+async def process_hint(
+    m: Message,
+    dialog_: Any,
+    manager: DialogManager,
+    retort: FromDishka[Retort],
+    parser: FromDishka[HintParser],
+) -> None:
+    hint = await parser.parse(m, manager.middleware_data["player"])
+    manager.dialog_data["hints"].append(retort.dump(hint))
+
+
+async def on_start_bonus_hints_edit(start_data: dict[str, Any], manager: DialogManager):
+    if start_data is None:
+        start_data = {}
+    manager.dialog_data["hints"] = start_data.get("hints", [])
+    manager.dialog_data["keys"] = start_data.get("keys", [])

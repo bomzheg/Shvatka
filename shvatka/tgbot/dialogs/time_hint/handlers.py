@@ -24,7 +24,7 @@ async def process_edit_time_message(
     m: Message,
     dialog_: Any,
     manager: DialogManager,
-    retort: FromDishka[Retort]
+    retort: FromDishka[Retort],
 ) -> None:
     try:
         time_ = int(m.text)
@@ -90,7 +90,7 @@ async def save_edited_time_hint(
     c: CallbackQuery,
     widget: Any,
     manager: DialogManager,
-    retort: FromDishka[Retort]
+    retort: FromDishka[Retort],
 ):
     time_hint = retort.load(manager.start_data["time_hint"], hints.TimeHint)
     try:

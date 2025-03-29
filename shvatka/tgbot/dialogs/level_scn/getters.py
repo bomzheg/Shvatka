@@ -7,7 +7,7 @@ from shvatka.core.models.dto import hints, action, scn
 async def get_level_id(dialog_manager: DialogManager, **_):
     return {
         "level_id": dialog_manager.dialog_data.get("level_id", None)
-        or dialog_manager.start_data["level_id"]
+        or dialog_manager.start_data.get("level_id", None)
     }
 
 
@@ -68,4 +68,10 @@ async def get_bonus_hint_conditions(dialog_manager: DialogManager, retort: Retor
     return {
         "bonus_hint_conditions": dict(enumerate(conditions)),
         "game_id": data["game_id"],
+    }
+
+
+async def get_bonus_hints(dialog_manager: DialogManager, retort: Retort, **_):
+    return {
+        "hints": retort.load(dialog_manager.dialog_data["hints"], list[hints.AnyHint]),
     }

@@ -13,7 +13,9 @@ async def get_level_id(dialog_manager: DialogManager, **_):
 
 async def get_keys(dialog_manager: DialogManager, **_):
     return {
-        "keys": dialog_manager.dialog_data.get("keys", dialog_manager.start_data.get("keys", [])),
+        "keys": dialog_manager.dialog_data.get(
+            "keys", dialog_manager.start_data.get("keys", []) if dialog_manager.start_data else []
+        ),
     }
 
 

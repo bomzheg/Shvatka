@@ -181,6 +181,22 @@ class Conditions(Sequence[AnyCondition]):
         ]
         return Conditions([*other_conditions, action.KeyWinCondition(keys)])
 
+    def replace_bonus_hints_conditions(
+        self, conditions: list[action.KeyBonusHintCondition]
+    ) -> "Conditions":
+        other_conditions = [
+            c for c in self.conditions if not isinstance(c, action.KeyBonusHintCondition)
+        ]
+        return Conditions([*other_conditions, *conditions])
+
+    def replace_routed_conditions(self, conditions: list[action.KeyWinCondition]) -> "Conditions":
+        other_conditions = [
+            c
+            for c in self.conditions
+            if not isinstance(c, action.KeyWinCondition) or c.next_level is None
+        ]
+        return Conditions([*other_conditions, *conditions])
+
     def get_keys(self) -> set[str]:
         result: set[SHKey] = set()
         for condition in self.conditions:

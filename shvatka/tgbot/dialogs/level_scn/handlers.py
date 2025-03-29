@@ -131,6 +131,10 @@ async def process_level_result(start_data: Data, result: Any, manager: DialogMan
         manager.dialog_data["keys"] = keys
     if bonus_keys := result.get("bonus_keys", None):
         manager.dialog_data["bonus_keys"] = bonus_keys
+    if bonus_hint_conditions := result.get("bonus_hint_conditions", None):
+        manager.dialog_data["bonus_hint_conditions"] = bonus_hint_conditions
+    if routed_conditions := result.get("routed_conditions", None):
+        manager.dialog_data["routed_conditions"] = routed_conditions
 
 
 async def on_start_level_edit(start_data: dict[str, Any], manager: DialogManager):
@@ -219,8 +223,12 @@ async def on_start_sly_keys(
     manager.dialog_data["bonus_keys"] = start_data["bonus_keys"]
     manager.dialog_data["conditions"] = retort.dump(conditions)
     manager.dialog_data["game_id"] = start_data["game_id"]
-    manager.dialog_data["bonus_hint_conditions"] = conditions.get_bonus_hints_conditions()
-    manager.dialog_data["routed_conditions"] = conditions.get_routed_conditions()
+    manager.dialog_data["bonus_hint_conditions"] = retort.dump(
+        conditions.get_bonus_hints_conditions(), list[action.KeyBonusHintCondition]
+    )
+    manager.dialog_data["routed_conditions"] = retort.dump(
+        conditions.get_routed_conditions(), list[action.KeyWinCondition]
+    )
 
 
 @inject
@@ -251,14 +259,27 @@ async def save_level(c: CallbackQuery, button: Button, manager: DialogManager):
     keys = set(map(normalize_key, data["keys"]))
     time_hints = retort.load(data["time_hints"], list[hints.TimeHint])
     bonus_keys = retort.load(data.get("bonus_keys", []), set[action.BonusKey])
+    routed_conditions = retort.load(
+        data.get("routed_conditions", []), list[action.KeyWinCondition]
+    )
+    bonus_hint_conditions = retort.load(
+        data.get("bonus_hint_conditions", []), list[action.KeyBonusHintCondition]
+    )
     if dumped_condition := data.get("conditions", None):
         conditions = retort.load(dumped_condition, scn.Conditions)
-        conditions = conditions.replace_default_keys(keys).replace_bonus_keys(bonus_keys)
+        conditions = (
+            conditions.replace_default_keys(keys)
+            .replace_bonus_keys(bonus_keys)
+            .replace_bonus_hints_conditions(bonus_hint_conditions)
+            .replace_routed_conditions(routed_conditions)
+        )
     else:
         conditions = scn.Conditions(
             [
                 action.KeyWinCondition(keys),
                 action.KeyBonusCondition(bonus_keys),
+                *routed_conditions,
+                *bonus_hint_conditions,
             ]
         )
 
@@ -299,3 +320,40 @@ async def on_start_bonus_hints_edit(start_data: dict[str, Any], manager: DialogM
         start_data = {}
     manager.dialog_data["hints"] = start_data.get("hints", [])
     manager.dialog_data["keys"] = start_data.get("keys", [])
+
+
+@inject
+async def save_bonus_hint(
+    c: CallbackQuery,
+    button: Button,
+    manager: DialogManager,
+    retort: FromDishka[Retort],
+):
+    conditions = action.KeyBonusHintCondition(
+        keys=manager.dialog_data["keys"],
+        bonus_hint=retort.load(manager.dialog_data["hints"], list[hints.AnyHint]),
+    )
+    await manager.done({"bonus_hint_condition": conditions})
+
+
+@inject
+async def process_sly_keys_result(
+    start_data: Data, result: Any, manager: DialogManager, retort: FromDishka[Retort]
+):
+    if not result:
+        return
+    if bonus_hint_condition := result.get("bonus_hint_condition", None):
+        c = retort.load(
+            manager.dialog_data["bonus_hint_conditions"], list[action.KeyBonusHintCondition]
+        )
+        c.append(bonus_hint_condition)
+        manager.dialog_data["bonus_hint_conditions"] = retort.dump(
+            c, list[action.KeyBonusHintCondition]
+        )
+
+
+async def process_bonus_hint_result(start_data: Data, result: Any, manager: DialogManager):
+    if not result:
+        return
+    if keys := result.get("keys", None):
+        manager.dialog_data["keys"] = keys

@@ -50,6 +50,9 @@ from .handlers import (
     process_hint,
     on_start_bonus_hints_edit,
     start_bonus_hint_keys,
+    save_bonus_hint,
+    process_bonus_hint_result,
+    process_sly_keys_result,
 )
 from shvatka.tgbot.dialogs.preview_data import PreviewStart
 
@@ -318,13 +321,13 @@ sly_keys_dialog = Dialog(
             "{% for index, c in bonus_hint_conditions.items() %}"
             "{{index + 1}}{{c.bonus_hint | hints}}"
             "{% for key in c.keys %}"
-            "🔑<code>{{key}}</code>\n"
-            "{% endfor %}"
+            "🔑<code>{{key}}</code>"
+            "{% endfor %}\n\n"
             "{% endfor %}",
             when=F["bonus_hint_conditions"],
         ),
         Select(
-            Jinja("{{item}} - {{bonus_hint_conditions[item].bonus_hint | hints}}"),
+            Jinja("{{item+1}}"),  # - {{bonus_hint_conditions[item].bonus_hint | hints}}"),
             id="bonus_hint_conditions",
             item_id_getter=lambda x: x,
             items="bonus_hint_conditions",
@@ -351,19 +354,22 @@ sly_keys_dialog = Dialog(
         getter=(get_level_id, get_sly_keys),
         state=states.LevelSlyKeysSg.routed_keys,
     ),
+    on_process_result=process_sly_keys_result,
     on_start=on_start_sly_keys,
 )
 
 
 bonus_hint_dialog = Dialog(
     Window(
-        Jinja("Бонусная подсказка:"),
+        Jinja("Бонусная подсказка:\nключей: {{keys | length}}\nПодсказки: {{hints | hints}}"),
         Button(Const("Ключи"), on_click=start_bonus_hint_keys, id="to_keys"),
         SwitchTo(Const("Подсказки"), state=states.BonusHintSg.hints, id="to_hints"),
-        state=states.BonusHintSg.menu,
+        Button(Const("Готово"), id="done", on_click=save_bonus_hint),
         preview_add_transitions=[
             PreviewStart(state=states.LevelKeysSG.keys),
         ],
+        getter=(get_bonus_hints, get_keys),
+        state=states.BonusHintSg.menu,
     ),
     Window(
         Jinja("Подсказки:"),
@@ -377,5 +383,6 @@ bonus_hint_dialog = Dialog(
         getter=get_bonus_hints,
         state=states.BonusHintSg.hints,
     ),
+    on_process_result=process_bonus_hint_result,
     on_start=on_start_bonus_hints_edit,
 )

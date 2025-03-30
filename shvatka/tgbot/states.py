@@ -53,6 +53,11 @@ class BonusHintSG(StatesGroup):
     hints = State()
 
 
+class RoutedKeysSG(StatesGroup):
+    menu = State()
+    rout = State()
+
+
 class LevelHintsSG(StatesGroup):
     time_hints = State()
 

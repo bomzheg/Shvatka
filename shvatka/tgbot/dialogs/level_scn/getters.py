@@ -77,3 +77,7 @@ async def get_bonus_hints(dialog_manager: DialogManager, retort: Retort, **_):
     return {
         "hints": retort.load(dialog_manager.dialog_data["hints"], list[hints.AnyHint]),
     }
+
+
+async def get_route(dialog_manager: DialogManager, **_):
+    return {"next_level": dialog_manager.dialog_data["next_level"]}

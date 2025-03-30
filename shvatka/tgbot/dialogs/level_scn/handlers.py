@@ -32,9 +32,15 @@ async def not_correct_id(m: Message, dialog_: Any, manager: DialogManager, error
     await m.answer("Не стоит использовать ничего, кроме латинских букв, цифр, -, _")
 
 
-async def process_id(m: Message, dialog_: Any, manager: DialogManager, name_id: str):
-    dao: HolderDao = manager.middleware_data["dao"]
-    author: dto.Player = manager.middleware_data["player"]
+@inject
+async def process_id(
+    m: Message,
+    dialog_: Any,
+    manager: DialogManager,
+    name_id: str,
+    dao: FromDishka[HolderDao],
+    author: FromDishka[dto.Player],
+):
     if await dao.level.is_name_id_exist(name_id, author):
         lvl = await dao.level.get_by_author_and_name_id(author, name_id)
         return await raise_restrict_rewrite_level(m, author, lvl, dao)
@@ -295,7 +301,7 @@ async def save_level(c: CallbackQuery, button: Button, manager: DialogManager):
     await c.answer(text="Уровень успешно сохранён")
 
 
-async def start_bonus_hint_keys(c: CallbackQuery, button: Button, manager: DialogManager):
+async def start_keys(c: CallbackQuery, button: Button, manager: DialogManager):
     await manager.start(
         state=states.LevelKeysSG.keys,
         data={
@@ -367,13 +373,24 @@ async def process_sly_keys_result(
             manager.dialog_data["bonus_hint_conditions"], list[action.KeyBonusHintCondition]
         )
         start_data = typing.cast(dict[str, Any], start_data)
-        if (number := start_data.get("edited_bonus_hint_condition", None)) is not None:
+        if (
+            start_data
+            and (number := start_data.get("edited_bonus_hint_condition", None)) is not None
+        ):
             c[int(number)] = bonus_hint_condition
         else:
             c.append(bonus_hint_condition)
         manager.dialog_data["bonus_hint_conditions"] = retort.dump(
             c, list[action.KeyBonusHintCondition]
         )
+    if routed_condition := result.get("routed_condition", None):
+        c = retort.load(manager.dialog_data["routed_conditions"], list[action.KeyWinCondition])
+        start_data = typing.cast(dict[str, Any], start_data)
+        if start_data and (number := start_data.get("edited_routed_condition", None)) is not None:
+            c[int(number)] = routed_condition
+        else:
+            c.append(routed_condition)
+        manager.dialog_data["routed_conditions"] = retort.dump(c, list[action.KeyWinCondition])
 
 
 async def process_bonus_hint_result(start_data: Data, result: Any, manager: DialogManager):
@@ -381,3 +398,41 @@ async def process_bonus_hint_result(start_data: Data, result: Any, manager: Dial
         return
     if keys := result.get("keys", None):
         manager.dialog_data["keys"] = keys
+
+
+@inject
+async def process_routed_level_id(
+    m: Message,
+    dialog_: Any,
+    manager: DialogManager,
+    name_id: str,
+):
+    manager.dialog_data["next_level"] = name_id
+    await manager.switch_to(state=states.RoutedKeysSG.menu)
+
+
+async def process_routed_conditions_result(start_data: Data, result: Any, manager: DialogManager):
+    if not result:
+        return
+    if keys := result.get("keys", None):
+        manager.dialog_data["keys"] = keys
+
+
+async def on_start_routed_condition_edit(start_data: dict[str, Any], manager: DialogManager):
+    if start_data is None:
+        start_data = {}
+    manager.dialog_data["next_level"] = start_data.get("next_level", None)
+    manager.dialog_data["keys"] = start_data.get("keys", [])
+
+
+@inject
+async def save_routed_condition(
+    c: CallbackQuery,
+    button: Button,
+    manager: DialogManager,
+    retort: FromDishka[Retort],
+):
+    condition = action.KeyWinCondition(
+        keys=manager.dialog_data["keys"], next_level=manager.dialog_data["next_level"]
+    )
+    await manager.done({"routed_condition": condition})

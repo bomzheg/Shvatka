@@ -22,7 +22,8 @@ from .getters import (
     get_sly_keys,
     get_bonus_hint_conditions,
     get_bonus_hints,
-    get_route, get_routed_conditions,
+    get_route,
+    get_routed_conditions,
 )
 from .handlers import (
     process_time_hint_result,
@@ -58,7 +59,9 @@ from .handlers import (
     process_routed_level_id,
     process_routed_conditions_result,
     on_start_routed_condition_edit,
-    save_routed_condition, edit_routed,
+    save_routed_condition,
+    edit_routed,
+    delete_condition,
 )
 from shvatka.tgbot.dialogs.preview_data import PreviewStart
 
@@ -261,22 +264,22 @@ sly_keys_dialog = Dialog(
     Window(
         Jinja(
             "Уровень <b>{{level_id}}</b>\n\n"
-            "Бонусных ключей: {{bonus_keys | length}}\n"
-            "Ключей с бонусными подсказками: {{bonus_hint_conditions | length}}\n"
-            "Нелинейных ключей: {{routed_conditions | length}}\n"
+            "💰Бонусных ключей: {{bonus_keys | length}}\n"
+            "🔎Ключей с бонусными подсказками: {{bonus_hint_conditions | length}}\n"
+            "🔀Нелинейных ключей: {{routed_conditions | length}}\n"
         ),
         SwitchTo(
-            Const("Бонусные ключи"),
+            Const("💰Бонусные ключи"),
             id="to_bonus_keys",
             state=states.LevelSlyKeysSG.bonus_keys,
         ),
         SwitchTo(
-            Const("Ключи с бонусными подсказками"),
+            Const("🔎Ключи с бонусными подсказками"),
             id="to_bonus_hunt_keys",
             state=states.LevelSlyKeysSG.bonus_hint_keys,
         ),
         SwitchTo(
-            Const("Нелинейные ключи"),
+            Const("🔀Нелинейные ключи"),
             id="to_routed_keys",
             state=states.LevelSlyKeysSG.routed_keys,
             when=F["game_id"],
@@ -323,7 +326,7 @@ sly_keys_dialog = Dialog(
     Window(
         Jinja("Уровень <b>{{level_id}}</b>\n\n"),
         Jinja(
-            "Текущие ключи бонусных подсказок:\n"
+            "🔎Текущие ключи бонусных подсказок:\n"
             "{% for index, c in bonus_hint_conditions.items() %}"
             "{{index + 1}} - {{c.bonus_hint | hints}}: "
             "{% for key in c.keys %}"
@@ -344,7 +347,7 @@ sly_keys_dialog = Dialog(
             width=1,
             height=10,
         ),
-        Start(Const("Добавить"), id="add_bonus_hint", state=states.BonusHintSG.menu),
+        Start(Const("➕Добавить"), id="add_bonus_hint", state=states.BonusHintSG.menu),
         SwitchTo(Const("🔙Назад"), id="to_menu", state=states.LevelSlyKeysSG.menu),
         getter=(get_level_id, get_bonus_hint_conditions),
         state=states.LevelSlyKeysSG.bonus_hint_keys,
@@ -352,7 +355,7 @@ sly_keys_dialog = Dialog(
     Window(
         Jinja("Уровень <b>{{level_id}}</b>\n\n"),
         Jinja(
-            "Текущие нелинейные ключи:\n"
+            "🔀Текущие нелинейные ключи:\n"
             "{% for index, c in routed_conditions.items() %}"
             "{{index + 1}}🗝🗝🗝 -> {{c.next_level}}:\n"
             "{% for key in c.keys: %}"
@@ -373,7 +376,7 @@ sly_keys_dialog = Dialog(
             width=1,
             height=10,
         ),
-        Start(Const("Добавить"), id="add_routed_key", state=states.RoutedKeysSG.menu),
+        Start(Const("➕Добавить"), id="add_routed_key", state=states.RoutedKeysSG.menu),
         SwitchTo(Const("🔙Назад"), id="to_menu", state=states.LevelSlyKeysSG.menu),
         getter=(get_level_id, get_routed_conditions),
         state=states.LevelSlyKeysSG.routed_keys,
@@ -386,16 +389,18 @@ sly_keys_dialog = Dialog(
 bonus_hint_dialog = Dialog(
     Window(
         Jinja(
-            "Бонусная подсказка:\n"
+            "🔎Бонусная подсказка:\n"
             "ключей: {{keys | length}}\n"
             "{% for key in keys %}"
             "🔑<code>{{key}}</code>\n"
             "{% endfor %}"
-            "Подсказки: {{hints | hints}}"
+            "💡Подсказки: {{hints | hints}}"
         ),
-        Button(Const("Ключи"), on_click=start_keys, id="to_keys"),
-        SwitchTo(Const("Подсказки"), state=states.BonusHintSG.hints, id="to_hints"),
-        Button(Const("Готово"), id="done", on_click=save_bonus_hint),
+        Button(Const("🔑Ключи"), on_click=start_keys, id="to_keys"),
+        SwitchTo(Const("💡Подсказки"), state=states.BonusHintSG.hints, id="to_hints"),
+        Button(Const("✅Готово"), id="done", on_click=save_bonus_hint),
+        Button(Const("🗑Удалить"), id="delete", on_click=delete_condition),
+        Cancel(Const("🔙Назад")),
         preview_add_transitions=[
             PreviewStart(state=states.LevelKeysSG.keys),
         ],
@@ -403,13 +408,13 @@ bonus_hint_dialog = Dialog(
         state=states.BonusHintSG.menu,
     ),
     Window(
-        Jinja("Подсказки:"),
+        Jinja("💡Подсказки:"),
         Const("Присылай сообщения с подсказками (текст, фото, видео итд)", when=~F["hints"]),
         Jinja(
             "{{hints | hints}}\nМожно прислать ещё сообщения или закончить с этим",
             when=F["hints"],
         ),
-        SwitchTo(Const("Назад"), state=states.BonusHintSG.menu, id="to_menu"),
+        SwitchTo(Const("🔙Назад"), state=states.BonusHintSG.menu, id="to_menu"),
         MessageInput(func=process_hint),
         getter=get_bonus_hints,
         state=states.BonusHintSG.hints,
@@ -420,7 +425,7 @@ bonus_hint_dialog = Dialog(
 
 routed_conditions_dialog = Dialog(
     Window(
-        Jinja("Ключи нелинейности"),
+        Jinja("🔀Ключи нелинейности"),
         Jinja(
             "Текущие нелинейные ключи:\n"
             "🗝🗝🗝 -> {{next_level}}:\n"
@@ -428,9 +433,11 @@ routed_conditions_dialog = Dialog(
             "  🔑<code>{{key}}</code>\n"
             "{% endfor %}",
         ),
-        Button(Const("Ключи"), on_click=start_keys, id="to_keys"),
-        SwitchTo(Const("Переход на ..."), state=states.RoutedKeysSG.rout, id="to_rout"),
-        Button(Const("Готово"), id="done", on_click=save_routed_condition),
+        Button(Const("🔑Ключи"), on_click=start_keys, id="to_keys"),
+        SwitchTo(Const("🔀Переход на ..."), state=states.RoutedKeysSG.rout, id="to_rout"),
+        Button(Const("✅Готово"), id="done", on_click=save_routed_condition),
+        Button(Const("🗑Удалить"), id="delete", on_click=delete_condition),
+        Cancel(Const("🔙Назад")),
         getter=(get_keys, get_route),
         preview_add_transitions=[
             PreviewStart(state=states.LevelKeysSG.keys),
@@ -438,14 +445,14 @@ routed_conditions_dialog = Dialog(
         state=states.RoutedKeysSG.menu,
     ),
     Window(
-        Jinja("Переход на уровень:\n{{next_level}}"),
+        Jinja("🔀Переход на уровень:\n{{next_level}}"),
         TextInput(
             type_factory=check_level_id,
             on_error=not_correct_id,
             on_success=process_routed_level_id,
             id="level_id",
         ),
-        SwitchTo(Const("Назад"), id="to_menu", state=states.RoutedKeysSG.menu),
+        SwitchTo(Const("🔙Назад"), id="to_menu", state=states.RoutedKeysSG.menu),
         getter=get_route,
         state=states.RoutedKeysSG.rout,
     ),

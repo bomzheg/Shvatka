@@ -363,34 +363,57 @@ async def save_bonus_hint(
 
 
 @inject
+async def delete_condition(
+    c: CallbackQuery,
+    button: Button,
+    manager: DialogManager,
+):
+    await manager.done({"__deleted__": True})
+
+
+@inject
 async def process_sly_keys_result(
     start_data: Data, result: Any, manager: DialogManager, retort: FromDishka[Retort]
 ):
     if not result:
         return
+    start_data = typing.cast(dict[str, Any], start_data)
+    routed_conditions = retort.load(
+        manager.dialog_data["routed_conditions"], list[action.KeyWinCondition]
+    )
+    bonus_hint_conditions = retort.load(
+        manager.dialog_data["bonus_hint_conditions"], list[action.KeyBonusHintCondition]
+    )
+    if result.get("__deleted__", False) and start_data:
+        if number := start_data.get("edited_bonus_hint_condition", None):
+            bonus_hint_conditions.pop(int(number))
+            manager.dialog_data["bonus_hint_conditions"] = retort.dump(
+                bonus_hint_conditions, list[action.KeyBonusHintCondition]
+            )
+        if number := start_data.get("edited_routed_condition", None):
+            routed_conditions.pop(int(number))
+            manager.dialog_data["routed_conditions"] = retort.dump(
+                routed_conditions, list[action.KeyWinCondition]
+            )
     if bonus_hint_condition := result.get("bonus_hint_condition", None):
-        c = retort.load(
-            manager.dialog_data["bonus_hint_conditions"], list[action.KeyBonusHintCondition]
-        )
-        start_data = typing.cast(dict[str, Any], start_data)
         if (
             start_data
             and (number := start_data.get("edited_bonus_hint_condition", None)) is not None
         ):
-            c[int(number)] = bonus_hint_condition
+            bonus_hint_conditions[int(number)] = bonus_hint_condition
         else:
-            c.append(bonus_hint_condition)
+            bonus_hint_conditions.append(bonus_hint_condition)
         manager.dialog_data["bonus_hint_conditions"] = retort.dump(
-            c, list[action.KeyBonusHintCondition]
+            bonus_hint_conditions, list[action.KeyBonusHintCondition]
         )
     if routed_condition := result.get("routed_condition", None):
-        c = retort.load(manager.dialog_data["routed_conditions"], list[action.KeyWinCondition])
-        start_data = typing.cast(dict[str, Any], start_data)
         if start_data and (number := start_data.get("edited_routed_condition", None)) is not None:
-            c[int(number)] = routed_condition
+            routed_conditions[int(number)] = routed_condition
         else:
-            c.append(routed_condition)
-        manager.dialog_data["routed_conditions"] = retort.dump(c, list[action.KeyWinCondition])
+            routed_conditions.append(routed_condition)
+        manager.dialog_data["routed_conditions"] = retort.dump(
+            routed_conditions, list[action.KeyWinCondition]
+        )
 
 
 async def process_bonus_hint_result(start_data: Data, result: Any, manager: DialogManager):

@@ -39,8 +39,8 @@ async def process_id(
     manager: DialogManager,
     name_id: str,
     dao: FromDishka[HolderDao],
-    author: FromDishka[dto.Player],
 ):
+    author: dto.Player = manager.middleware_data["player"]
     if await dao.level.is_name_id_exist(name_id, author):
         lvl = await dao.level.get_by_author_and_name_id(author, name_id)
         return await raise_restrict_rewrite_level(m, author, lvl, dao)

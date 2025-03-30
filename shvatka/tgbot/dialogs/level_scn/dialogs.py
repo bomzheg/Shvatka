@@ -22,7 +22,7 @@ from .getters import (
     get_sly_keys,
     get_bonus_hint_conditions,
     get_bonus_hints,
-    get_route,
+    get_route, get_routed_conditions,
 )
 from .handlers import (
     process_time_hint_result,
@@ -58,7 +58,7 @@ from .handlers import (
     process_routed_level_id,
     process_routed_conditions_result,
     on_start_routed_condition_edit,
-    save_routed_condition,
+    save_routed_condition, edit_routed,
 )
 from shvatka.tgbot.dialogs.preview_data import PreviewStart
 
@@ -332,12 +332,17 @@ sly_keys_dialog = Dialog(
             "{% endfor %}",
             when=F["bonus_hint_conditions"],
         ),
-        Select(
-            Jinja("{{item + 1}} - {{data['bonus_hint_conditions'][item].bonus_hint | hints}}"),
-            id="bonus_hint_conditions",
-            item_id_getter=lambda x: x,
-            items="bonus_hint_conditions",
-            on_click=edit_bonus_hint,
+        ScrollingGroup(
+            Select(
+                Jinja("{{item + 1}} - {{data['bonus_hint_conditions'][item].bonus_hint | hints}}"),
+                id="bonus_hint_conditions",
+                item_id_getter=lambda x: x,
+                items="bonus_hint_conditions",
+                on_click=edit_bonus_hint,
+            ),
+            id="bonus_hint_conditions_sg",
+            width=1,
+            height=10,
         ),
         Start(Const("Добавить"), id="add_bonus_hint", state=states.BonusHintSG.menu),
         SwitchTo(Const("🔙Назад"), id="to_menu", state=states.LevelSlyKeysSG.menu),
@@ -348,17 +353,29 @@ sly_keys_dialog = Dialog(
         Jinja("Уровень <b>{{level_id}}</b>\n\n"),
         Jinja(
             "Текущие нелинейные ключи:\n"
-            "{% for c in routed_conditions %}"
-            "🗝🗝🗝 -> {{c.next_level}}:\n"
+            "{% for index, c in routed_conditions.items() %}"
+            "{{index + 1}}🗝🗝🗝 -> {{c.next_level}}:\n"
             "{% for key in c.keys: %}"
             "  🔑<code>{{key}}</code>\n"
             "{% endfor %}"
             "{% endfor %}",
             when=F["routed_conditions"],
         ),
+        ScrollingGroup(
+            Select(
+                Jinja("{{item + 1}} - {{data['routed_conditions'][item].next_level}}"),
+                id="routed_conditions",
+                item_id_getter=lambda x: x,
+                items="routed_conditions",
+                on_click=edit_routed,
+            ),
+            id="routed_conditions_sg",
+            width=1,
+            height=10,
+        ),
         Start(Const("Добавить"), id="add_routed_key", state=states.RoutedKeysSG.menu),
         SwitchTo(Const("🔙Назад"), id="to_menu", state=states.LevelSlyKeysSG.menu),
-        getter=(get_level_id, get_sly_keys),
+        getter=(get_level_id, get_routed_conditions),
         state=states.LevelSlyKeysSG.routed_keys,
     ),
     on_process_result=process_sly_keys_result,
@@ -414,7 +431,6 @@ routed_conditions_dialog = Dialog(
         Button(Const("Ключи"), on_click=start_keys, id="to_keys"),
         SwitchTo(Const("Переход на ..."), state=states.RoutedKeysSG.rout, id="to_rout"),
         Button(Const("Готово"), id="done", on_click=save_routed_condition),
-        Cancel(),
         getter=(get_keys, get_route),
         preview_add_transitions=[
             PreviewStart(state=states.LevelKeysSG.keys),

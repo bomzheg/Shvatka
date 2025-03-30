@@ -436,3 +436,22 @@ async def save_routed_condition(
         keys=manager.dialog_data["keys"], next_level=manager.dialog_data["next_level"]
     )
     await manager.done({"routed_condition": condition})
+
+
+@inject
+async def edit_routed(
+    c: CallbackQuery, widget: Any, manager: DialogManager, number: str, retort: FromDishka[Retort]
+):
+    data = manager.dialog_data
+    conditions = dict(
+        enumerate(retort.load(data["routed_conditions"], list[action.KeyWinCondition]))
+    )
+    to_edit: action.KeyWinCondition = conditions[int(number)]
+    await manager.start(
+        state=states.RoutedKeysSG.menu,
+        data={
+            "edited_routed_condition": int(number),
+            "keys": retort.dump(to_edit.keys, list[str]),
+            "next_level": to_edit.next_level,
+        },
+    )

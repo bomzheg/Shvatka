@@ -73,6 +73,15 @@ async def get_bonus_hint_conditions(dialog_manager: DialogManager, retort: Retor
     }
 
 
+async def get_routed_conditions(dialog_manager: DialogManager, retort: Retort, **_):
+    data = dialog_manager.dialog_data
+    conditions = retort.load(data["routed_conditions"], list[action.KeyWinCondition])
+    return {
+        "routed_conditions": dict(enumerate(conditions)),
+        "game_id": data["game_id"],
+    }
+
+
 async def get_bonus_hints(dialog_manager: DialogManager, retort: Retort, **_):
     return {
         "hints": retort.load(dialog_manager.dialog_data["hints"], list[hints.AnyHint]),

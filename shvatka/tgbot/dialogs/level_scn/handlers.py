@@ -1,3 +1,4 @@
+import typing
 from typing import Any
 
 from adaptix import Retort
@@ -315,6 +316,25 @@ async def process_hint(
     manager.dialog_data["hints"].append(retort.dump(hint))
 
 
+@inject
+async def edit_bonus_hint(
+    c: CallbackQuery, widget: Any, manager: DialogManager, number: str, retort: FromDishka[Retort]
+):
+    data = manager.dialog_data
+    conditions = dict(
+        enumerate(retort.load(data["bonus_hint_conditions"], list[action.KeyBonusHintCondition]))
+    )
+    to_edit: action.KeyBonusHintCondition = conditions[int(number)]
+    await manager.start(
+        state=states.BonusHintSg.menu,
+        data={
+            "edited_bonus_hint_condition": int(number),
+            "keys": retort.dump(to_edit.keys, list[str]),
+            "hints": retort.dump(to_edit.bonus_hint, list[hints.AnyHint]),
+        },
+    )
+
+
 async def on_start_bonus_hints_edit(start_data: dict[str, Any], manager: DialogManager):
     if start_data is None:
         start_data = {}
@@ -346,7 +366,11 @@ async def process_sly_keys_result(
         c = retort.load(
             manager.dialog_data["bonus_hint_conditions"], list[action.KeyBonusHintCondition]
         )
-        c.append(bonus_hint_condition)
+        start_data = typing.cast(dict[str, Any], start_data)
+        if (number := start_data.get("edited_bonus_hint_condition", None)) is not None:
+            c[int(number)] = bonus_hint_condition
+        else:
+            c.append(bonus_hint_condition)
         manager.dialog_data["bonus_hint_conditions"] = retort.dump(
             c, list[action.KeyBonusHintCondition]
         )

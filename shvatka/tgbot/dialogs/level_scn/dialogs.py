@@ -53,6 +53,7 @@ from .handlers import (
     save_bonus_hint,
     process_bonus_hint_result,
     process_sly_keys_result,
+    edit_bonus_hint,
 )
 from shvatka.tgbot.dialogs.preview_data import PreviewStart
 
@@ -331,7 +332,7 @@ sly_keys_dialog = Dialog(
             id="bonus_hint_conditions",
             item_id_getter=lambda x: x,
             items="bonus_hint_conditions",
-            # on_click=,  ## TODO
+            on_click=edit_bonus_hint,
         ),
         Start(Const("Добавить"), id="add_bonus_hint", state=states.BonusHintSg.menu),
         SwitchTo(Const("🔙Назад"), id="to_menu", state=states.LevelSlyKeysSg.menu),

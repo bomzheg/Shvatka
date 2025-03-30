@@ -200,7 +200,7 @@ async def start_level_keys(c: CallbackQuery, button: Button, manager: DialogMana
 @inject
 async def start_sly_keys(c: CallbackQuery, button: Button, manager: DialogManager):
     await manager.start(
-        state=states.LevelSlyKeysSg.menu,
+        state=states.LevelSlyKeysSG.menu,
         data={
             "level_id": manager.dialog_data["level_id"],
             "bonus_keys": manager.dialog_data.get("bonus_keys", []),
@@ -326,7 +326,7 @@ async def edit_bonus_hint(
     )
     to_edit: action.KeyBonusHintCondition = conditions[int(number)]
     await manager.start(
-        state=states.BonusHintSg.menu,
+        state=states.BonusHintSG.menu,
         data={
             "edited_bonus_hint_condition": int(number),
             "keys": retort.dump(to_edit.keys, list[str]),

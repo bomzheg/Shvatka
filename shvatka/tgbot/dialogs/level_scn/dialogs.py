@@ -114,7 +114,7 @@ level = Dialog(
         },
         preview_add_transitions=[
             PreviewStart(state=states.LevelKeysSG.keys),
-            PreviewStart(state=states.LevelSlyKeysSg.menu),
+            PreviewStart(state=states.LevelSlyKeysSG.menu),
             PreviewStart(state=states.LevelHintsSG.time_hints),
             Cancel(),
         ],
@@ -158,7 +158,7 @@ level_edit_dialog = Dialog(
         },
         preview_add_transitions=[
             PreviewStart(state=states.LevelKeysSG.keys),
-            PreviewStart(state=states.LevelSlyKeysSg.menu),
+            PreviewStart(state=states.LevelSlyKeysSG.menu),
             PreviewStart(state=states.LevelHintsSG.time_hints),
         ],
     ),
@@ -263,17 +263,17 @@ sly_keys_dialog = Dialog(
         SwitchTo(
             Const("Бонусные ключи"),
             id="to_bonus_keys",
-            state=states.LevelSlyKeysSg.bonus_keys,
+            state=states.LevelSlyKeysSG.bonus_keys,
         ),
         SwitchTo(
             Const("Ключи с бонусными подсказками"),
             id="to_bonus_hunt_keys",
-            state=states.LevelSlyKeysSg.bonus_hint_keys,
+            state=states.LevelSlyKeysSG.bonus_hint_keys,
         ),
         SwitchTo(
             Const("Нелинейные ключи"),
             id="to_routed_keys",
-            state=states.LevelSlyKeysSg.routed_keys,
+            state=states.LevelSlyKeysSG.routed_keys,
             when=F["game_id"],
         ),
         Button(
@@ -283,7 +283,7 @@ sly_keys_dialog = Dialog(
         ),
         Cancel(Const("🔙Назад")),
         getter=get_sly_keys,
-        state=states.LevelSlyKeysSg.menu,
+        state=states.LevelSlyKeysSG.menu,
     ),
     Window(
         Jinja("Уровень <b>{{level_id}}</b>\n\n"),
@@ -305,7 +305,7 @@ sly_keys_dialog = Dialog(
             "<code>СХШТРАФНОЙ</code> -3\n"
             "<code>СХДРУГОЙБОНУСНЫЙ</code> 5\n"
         ),
-        SwitchTo(Const("🔙Назад"), id="to_menu", state=states.LevelSlyKeysSg.menu),
+        SwitchTo(Const("🔙Назад"), id="to_menu", state=states.LevelSlyKeysSG.menu),
         TextInput(
             type_factory=convert_bonus_keys,
             on_success=on_correct_bonus_keys,
@@ -313,7 +313,7 @@ sly_keys_dialog = Dialog(
             id="keys_input",
         ),
         getter=(get_level_id, get_bonus_keys),
-        state=states.LevelSlyKeysSg.bonus_keys,
+        state=states.LevelSlyKeysSG.bonus_keys,
     ),
     Window(
         Jinja("Уровень <b>{{level_id}}</b>\n\n"),
@@ -334,10 +334,10 @@ sly_keys_dialog = Dialog(
             items="bonus_hint_conditions",
             on_click=edit_bonus_hint,
         ),
-        Start(Const("Добавить"), id="add_bonus_hint", state=states.BonusHintSg.menu),
-        SwitchTo(Const("🔙Назад"), id="to_menu", state=states.LevelSlyKeysSg.menu),
+        Start(Const("Добавить"), id="add_bonus_hint", state=states.BonusHintSG.menu),
+        SwitchTo(Const("🔙Назад"), id="to_menu", state=states.LevelSlyKeysSG.menu),
         getter=(get_level_id, get_bonus_hint_conditions),
-        state=states.LevelSlyKeysSg.bonus_hint_keys,
+        state=states.LevelSlyKeysSG.bonus_hint_keys,
     ),
     Window(
         Jinja("Уровень <b>{{level_id}}</b>\n\n"),
@@ -351,9 +351,9 @@ sly_keys_dialog = Dialog(
             "{% endfor %}",
             when=F["routed_conditions"],
         ),
-        SwitchTo(Const("🔙Назад"), id="to_menu", state=states.LevelSlyKeysSg.menu),
+        SwitchTo(Const("🔙Назад"), id="to_menu", state=states.LevelSlyKeysSG.menu),
         getter=(get_level_id, get_sly_keys),
-        state=states.LevelSlyKeysSg.routed_keys,
+        state=states.LevelSlyKeysSG.routed_keys,
     ),
     on_process_result=process_sly_keys_result,
     on_start=on_start_sly_keys,
@@ -364,13 +364,13 @@ bonus_hint_dialog = Dialog(
     Window(
         Jinja("Бонусная подсказка:\nключей: {{keys | length}}\nПодсказки: {{hints | hints}}"),
         Button(Const("Ключи"), on_click=start_bonus_hint_keys, id="to_keys"),
-        SwitchTo(Const("Подсказки"), state=states.BonusHintSg.hints, id="to_hints"),
+        SwitchTo(Const("Подсказки"), state=states.BonusHintSG.hints, id="to_hints"),
         Button(Const("Готово"), id="done", on_click=save_bonus_hint),
         preview_add_transitions=[
             PreviewStart(state=states.LevelKeysSG.keys),
         ],
         getter=(get_bonus_hints, get_keys),
-        state=states.BonusHintSg.menu,
+        state=states.BonusHintSG.menu,
     ),
     Window(
         Jinja("Подсказки:"),
@@ -379,10 +379,10 @@ bonus_hint_dialog = Dialog(
             "{{hints | hints}}\nМожно прислать ещё сообщения или закончить с этим",
             when=F["hints"],
         ),
-        SwitchTo(Const("Назад"), state=states.BonusHintSg.menu, id="to_menu"),
+        SwitchTo(Const("Назад"), state=states.BonusHintSG.menu, id="to_menu"),
         MessageInput(func=process_hint),
         getter=get_bonus_hints,
-        state=states.BonusHintSg.hints,
+        state=states.BonusHintSG.hints,
     ),
     on_process_result=process_bonus_hint_result,
     on_start=on_start_bonus_hints_edit,

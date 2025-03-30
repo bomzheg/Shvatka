@@ -320,7 +320,7 @@ sly_keys_dialog = Dialog(
         Jinja(
             "Текущие ключи бонусных подсказок:\n"
             "{% for index, c in bonus_hint_conditions.items() %}"
-            "{{index + 1}}{{c.bonus_hint | hints}}"
+            "{{index + 1}} - {{c.bonus_hint | hints}}: "
             "{% for key in c.keys %}"
             "🔑<code>{{key}}</code>"
             "{% endfor %}\n\n"
@@ -328,7 +328,7 @@ sly_keys_dialog = Dialog(
             when=F["bonus_hint_conditions"],
         ),
         Select(
-            Jinja("{{item+1}}"),  # - {{bonus_hint_conditions[item].bonus_hint | hints}}"),
+            Jinja("{{item + 1}} - {{data['bonus_hint_conditions'][item].bonus_hint | hints}}"),
             id="bonus_hint_conditions",
             item_id_getter=lambda x: x,
             items="bonus_hint_conditions",

@@ -48,8 +48,11 @@ class Results:
 DATETIME_EXCEL_FORMAT = "HH:MM:SS"
 
 
-def export_results(game: dto.FullGame, game_stat: dto.GameStat, file: typing.Any):
-    return export_results_internal(game, to_results(game_stat), file)
+def export_results(game: dto.FullGame, game_stat: dto.GameStat, file: typing.Any) -> None:
+    if game.is_routed():
+        return
+    else:
+        return export_results_linear(game, to_results(game_stat), file)
 
 
 def to_results(game_stat: dto.GameStat) -> Results:
@@ -64,7 +67,7 @@ def to_results(game_stat: dto.GameStat) -> Results:
     return Results(result)
 
 
-def export_results_internal(game: dto.FullGame, results: Results, file: typing.Any):
+def export_results_linear(game: dto.FullGame, results: Results, file: typing.Any) -> None:
     if not (game.is_complete() or game.is_finished()):
         raise GameNotFinished
     wb = Workbook()

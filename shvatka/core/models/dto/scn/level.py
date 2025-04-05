@@ -355,6 +355,9 @@ class LevelScenario:
             __model_version__=1,
         )
 
+    def is_routed(self) -> bool:
+        return bool(self.conditions.get_routed_conditions())
+
 
 def check_all_files_saved(level: LevelScenario, guids: set[str]):
     for hints_ in level.time_hints:

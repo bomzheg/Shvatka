@@ -37,8 +37,7 @@ async def test_write_level(
     assert "Подсказки:\nпока нет ни одной" in new_message.text
     actual_kb = new_message.reply_markup.inline_keyboard
     assert "Ключи" in actual_kb[0][0].text
-    assert "Бонусные ключи" in actual_kb[1][0].text
-    assert "Подсказки" in actual_kb[2][0].text
+    assert "Подсказки" in actual_kb[1][0].text
 
     message_manager.reset_history()
     callback_id = await author_client.click(
@@ -61,7 +60,7 @@ async def test_write_level(
     assert "Подсказки:\nпока нет ни одной" in new_message.text
     actual_kb = new_message.reply_markup.inline_keyboard
     assert "Ключи" in actual_kb[0][0].text
-    assert "Бонусные ключи" in actual_kb[1][0].text
+    assert "Хитрые ключи" in actual_kb[1][0].text
     assert "Подсказки" in actual_kb[2][0].text
 
     message_manager.reset_history()

@@ -150,14 +150,19 @@ class Conditions(Sequence[AnyCondition]):
                     win_conditions.append(c)
                 if keys.intersection(c.get_keys()):
                     raise exceptions.LevelError(
-                        text=f"keys already exists {keys.intersection(c.keys)}"
+                        text=f"keys exists multiple times {keys.intersection(c.keys)}"
                     )
                 keys = keys.union(c.get_keys())
         if not win_conditions:
             raise exceptions.LevelError(text="There is no win condition")
         if all(c.next_level is not None for c in win_conditions):
             raise exceptions.LevelError(
-                text="At eat one win condition should be simple (without routing (next_level))"
+                text="At least one win condition should be simple (without routing (next_level))"
+            )
+        # TODO #128 next is temporary restriction. we should allow multiple times
+        if (count := len([c for c in win_conditions if c.next_level is None])) != 1:
+            raise exceptions.LevelError(
+                text=f"Default win condition must be exactly once, got {count}"
             )
 
     def replace_bonus_keys(self, bonus_keys: set[action.BonusKey]) -> "Conditions":
@@ -176,6 +181,22 @@ class Conditions(Sequence[AnyCondition]):
         ]
         return Conditions([*other_conditions, action.KeyWinCondition(keys)])
 
+    def replace_bonus_hints_conditions(
+        self, conditions: list[action.KeyBonusHintCondition]
+    ) -> "Conditions":
+        other_conditions = [
+            c for c in self.conditions if not isinstance(c, action.KeyBonusHintCondition)
+        ]
+        return Conditions([*other_conditions, *conditions])
+
+    def replace_routed_conditions(self, conditions: list[action.KeyWinCondition]) -> "Conditions":
+        other_conditions = [
+            c
+            for c in self.conditions
+            if not isinstance(c, action.KeyWinCondition) or c.next_level is None
+        ]
+        return Conditions([*other_conditions, *conditions])
+
     def get_keys(self) -> set[str]:
         result: set[SHKey] = set()
         for condition in self.conditions:
@@ -188,6 +209,37 @@ class Conditions(Sequence[AnyCondition]):
         for condition in self.conditions:
             if isinstance(condition, KeyBonusCondition):
                 result = result.union(condition.keys)
+        return result
+
+    def get_bonus_hints_conditions(self) -> list[action.KeyBonusHintCondition]:
+        return [c for c in self.conditions if isinstance(c, action.KeyBonusHintCondition)]
+
+    def get_routed_conditions(self) -> list[action.KeyWinCondition]:
+        return [
+            c
+            for c in self.conditions
+            if isinstance(c, action.KeyWinCondition) and c.next_level is not None
+        ]
+
+    def get_default_key_conditions(self) -> list[action.KeyWinCondition]:
+        return [
+            c
+            for c in self.conditions
+            if isinstance(c, action.KeyWinCondition) and c.next_level is None
+        ]
+
+    def get_default_key_condition(self) -> action.KeyWinCondition:
+        """TODO #128"""
+        return self.get_default_key_conditions()[0]
+
+    def get_types_count(self) -> int:
+        result = 0
+        if self.get_bonus_keys():
+            result += 1
+        if self.get_bonus_hints_conditions():
+            result += 1
+        if self.get_routed_conditions():
+            result += 1
         return result
 
     @property

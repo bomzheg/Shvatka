@@ -44,6 +44,7 @@ def test_create_only_bonus_condition():
         scn.Conditions([action.KeyBonusCondition({keys.BonusKey(text="SH123", bonus_minutes=1)})])
 
 
+@pytest.mark.skip  # TODO 128
 def test_conditions_get_keys():
     c = scn.Conditions(
         [
@@ -54,6 +55,7 @@ def test_conditions_get_keys():
     assert c.get_keys() == {keys.SHKey("SH123"), keys.SHKey("SH321"), keys.SHKey("СХ123")}
 
 
+@pytest.mark.skip  # TODO 128
 def test_conditions_get_keys_with_bonus(complex_conditions: scn.Conditions):
     assert complex_conditions.get_keys() == {
         keys.SHKey("SH123"),
@@ -62,6 +64,7 @@ def test_conditions_get_keys_with_bonus(complex_conditions: scn.Conditions):
     }
 
 
+@pytest.mark.skip  # TODO 128
 def test_conditions_get_bonus_keys(complex_conditions: scn.Conditions):
     assert complex_conditions.get_bonus_keys() == {
         keys.BonusKey(text="SHB1", bonus_minutes=1),

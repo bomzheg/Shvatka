@@ -86,16 +86,21 @@ async def get_or_create_keys_page(
 
 def render_level_keys(level: scn.LevelScenario) -> str:
     text = ""
-    for c in level.conditions:
-        if not isinstance(c, action.KeyWinCondition):
-            continue
-        text += f"🗝🗝🗝{' -> ' + c.next_level if c.next_level else ''}\n"
-        text += render_keys(c.keys)
-        text += "\n"
+    for c in level.conditions.get_default_key_conditions():
+        text += render_win_key_condition(c)
+    for c in level.conditions.get_routed_conditions():
+        text += render_win_key_condition(c)
     if level.get_bonus_keys():
         text += "\nБонусные ключи:\n💰 " + "\n💰 ".join(
             [f"{b.text} ({b.bonus_minutes} мин.)" for b in level.get_bonus_keys()]
         )
+    return text
+
+
+def render_win_key_condition(condition: action.KeyWinCondition) -> str:
+    text = f"🗝🗝🗝{' -> ' + condition.next_level if condition.next_level else ''}\n"
+    text += render_keys(condition.keys)
+    text += "\n"
     return text
 
 

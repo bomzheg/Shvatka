@@ -51,17 +51,8 @@ class InitMiddleware(BaseMiddleware):
         data["file_gateway"] = await dishka.get(FileGateway)
         data["hint_sender"] = await dishka.get(HintSender)
         data["level_view"] = await dishka.get(LevelView)
-        holder_dao = await dishka.get(HolderDao)
-        data["dao"] = holder_dao
-        data["hint_parser"] = HintParser(
-            dao=holder_dao.file_info,
-            file_storage=file_storage,
-            bot=data["bot"],
-        )
-        data["results_painter"] = ResultsPainter(
-            data["bot"],
-            holder_dao,
-            data["config"].log_chat,
-        )
+        data["dao"] = await dishka.get(HolderDao)
+        data["hint_parser"] = await dishka.get(HintParser)
+        data["results_painter"] = await dishka.get(ResultsPainter)
         result = await handler(event, data)
         return result

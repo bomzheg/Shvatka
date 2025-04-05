@@ -5,6 +5,7 @@ from redis.asyncio.client import Redis
 from sqlalchemy.ext.asyncio import async_sessionmaker, AsyncSession, AsyncEngine
 
 from shvatka.infrastructure.db.config.models.db import DBConfig, RedisConfig
+from shvatka.infrastructure.db.dao import FileInfoDao
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.infrastructure.db.dao.memory.level_testing import LevelTestingData
 from shvatka.infrastructure.db.factory import create_engine, create_session_maker, create_redis
@@ -40,11 +41,17 @@ class DbProvider(Provider):
 
 
 class DAOProvider(Provider):
-    @provide(scope=Scope.REQUEST)
+    scope = Scope.REQUEST
+
+    @provide
     async def get_dao(
         self, session: AsyncSession, redis: Redis, level_test: LevelTestingData
     ) -> HolderDao:
         return HolderDao(session=session, redis=redis, level_test=level_test)
+
+    @provide
+    def get_file_info_dao(self, dao: HolderDao) -> FileInfoDao:
+        return dao.file_info
 
 
 class RedisProvider(Provider):

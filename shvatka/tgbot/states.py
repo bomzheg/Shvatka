@@ -41,8 +41,21 @@ class LevelKeysSG(StatesGroup):
     keys = State()
 
 
-class LevelBonusKeysSG(StatesGroup):
+class LevelSlyKeysSG(StatesGroup):
+    menu = State()
     bonus_keys = State()
+    bonus_hint_keys = State()
+    routed_keys = State()
+
+
+class BonusHintSG(StatesGroup):
+    menu = State()
+    hints = State()
+
+
+class RoutedKeysSG(StatesGroup):
+    menu = State()
+    rout = State()
 
 
 class LevelHintsSG(StatesGroup):

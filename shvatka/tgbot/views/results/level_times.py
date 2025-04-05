@@ -36,8 +36,28 @@ class LevelTimedelta(typing.NamedTuple):
 
 class TeamLevels(typing.NamedTuple):
     team: dto.Team
-    levels_times: list[LevelTime]
-    levels_timedelta: list[LevelTimedelta]
+    levels_times: dict[int, list[LevelTime]]
+    levels_timedelta: dict[int, list[LevelTimedelta]]
+
+    def get_level_time(self, level_id: int) -> LevelTime | None:
+        min_time = datetime.max
+        requested = self.levels_times.get(level_id, [])
+        result = None
+        for lt in requested:
+            if lt.time < min_time:
+                min_time = lt.time
+                result = lt
+        return result
+
+    def get_level_timedelta(self, level_id: int) -> LevelTimedelta | None:
+        max_timedelta = timedelta(seconds=0)
+        requested = self.levels_timedelta.get(level_id, [])
+        result = None
+        for ltd in requested:
+            if ltd.td > max_timedelta:
+                max_timedelta = ltd.td
+                result = ltd
+        return result
 
 
 @dataclass
@@ -50,7 +70,7 @@ DATETIME_EXCEL_FORMAT = "HH:MM:SS"
 
 def export_results(game: dto.FullGame, game_stat: dto.GameStat, file: typing.Any) -> None:
     if game.is_routed():
-        return
+        return export_results_linear(game, to_results(game_stat), file)
     else:
         return export_results_linear(game, to_results(game_stat), file)
 
@@ -59,11 +79,14 @@ def to_results(game_stat: dto.GameStat) -> Results:
     result = []
     for team, lts in game_stat.level_times.items():
         levels_times = [LevelTime(lt.level_number, trim_tz(lt.start_at)) for lt in lts]
-        levels_timedelta = []
+        routed_lt: dict[int, list[LevelTime]] = {}
+        for lt in levels_times:
+            routed_lt.setdefault(lt.level, []).append(lt)
+        routed_ltd: dict[int, list[LevelTimedelta]] = {}
         for previous, current in zip(levels_times[:-1], levels_times[1:]):  # type: LevelTime, LevelTime
             td = current.time - previous.time
-            levels_timedelta.append(LevelTimedelta(current.level, td))
-        result.append(TeamLevels(team, levels_times, levels_timedelta))
+            routed_ltd.setdefault(current.level, []).append(LevelTimedelta(current.level, td))
+        result.append(TeamLevels(team, routed_lt, routed_ltd))
     return Results(result)
 
 
@@ -78,7 +101,10 @@ def export_results_linear(game: dto.FullGame, results: Results, file: typing.Any
         cell = ws.cell(**FIRST_TEAM_NAME.shift(i, 0))
         cell.value = team_level_times.team.name
 
-        for j, level_time in enumerate(team_level_times.levels_times, 1):
+        for j, level_id in enumerate(team_level_times.levels_times, 1):
+            level_time = team_level_times.get_level_time(level_id)
+            if level_time is None:
+                continue
             if i == 0:
                 ws.cell(**FIRST_TEAM_NAME.shift(-1, j)).value = level_time.level
 
@@ -91,7 +117,10 @@ def export_results_linear(game: dto.FullGame, results: Results, file: typing.Any
         cell = ws.cell(**FIRST_TEAM_NAME.shift(i, 0))
         cell.value = team_level_times.team.name
 
-        for j, level_td in enumerate(team_level_times.levels_timedelta, 1):
+        for j, level_id in enumerate(team_level_times.levels_timedelta, 1):
+            level_td = team_level_times.get_level_timedelta(level_id)
+            if level_td is None:
+                continue
             if i == second_part_start:
                 ws.cell(**FIRST_TEAM_NAME.shift(second_part_start - 1, j)).value = level_td.level
 

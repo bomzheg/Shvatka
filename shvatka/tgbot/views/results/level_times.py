@@ -26,11 +26,13 @@ GAME_NAME = CellAddress(1, 1)
 
 class LevelTime(typing.NamedTuple):
     level: int
+    """level number"""
     time: datetime
 
 
 class LevelTimedelta(typing.NamedTuple):
     level: int
+    """level number"""
     td: timedelta
 
 
@@ -39,9 +41,9 @@ class TeamLevels(typing.NamedTuple):
     levels_times: dict[int, list[LevelTime]]
     levels_timedelta: dict[int, list[LevelTimedelta]]
 
-    def get_level_time(self, level_id: int) -> LevelTime | None:
+    def get_level_time(self, level_number: int) -> LevelTime | None:
         min_time = datetime.max
-        requested = self.levels_times.get(level_id, [])
+        requested = self.levels_times.get(level_number, [])
         result = None
         for lt in requested:
             if lt.time < min_time:
@@ -49,15 +51,12 @@ class TeamLevels(typing.NamedTuple):
                 result = lt
         return result
 
-    def get_level_timedelta(self, level_id: int) -> LevelTimedelta | None:
-        max_timedelta = timedelta(seconds=0)
-        requested = self.levels_timedelta.get(level_id, [])
-        result = None
-        for ltd in requested:
-            if ltd.td > max_timedelta:
-                max_timedelta = ltd.td
-                result = ltd
-        return result
+    def get_level_timedelta(self, level_number: int) -> LevelTimedelta | None:
+        result: timedelta = sum(
+            (ltd.td for ltd in self.levels_timedelta.get(level_number, [])),
+            start=timedelta(seconds=0)
+        )
+        return LevelTimedelta(level=level_number, td=result)
 
 
 @dataclass

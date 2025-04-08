@@ -102,8 +102,7 @@ def results_to_table_linear(game: dto.FullGame, results: Results) -> Table:
             if level_time is None:
                 continue
             if i == 0:
-                rows = -1
-                table[FIRST_TEAM_NAME.shift(plus_rows=rows, plus_columns=j)] = Cell(
+                table[FIRST_TEAM_NAME.shift(plus_rows=-1, plus_columns=j)] = Cell(
                     value=level_time.level
                 )
 

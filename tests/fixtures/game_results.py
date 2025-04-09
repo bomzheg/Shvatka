@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 import pytest
 
@@ -6,8 +6,11 @@ from shvatka.core.models import dto
 
 
 @pytest.fixture
-def game_stat(finished_game: dto.FullGame, gryffindor: dto.Team, slytherin: dto.Team) -> dto.GameStat:
+def game_stat(
+    finished_game: dto.FullGame, gryffindor: dto.Team, slytherin: dto.Team
+) -> dto.GameStat:
     base_time = finished_game.start_at
+    assert base_time
     return dto.GameStat(
         level_times={
             gryffindor: [

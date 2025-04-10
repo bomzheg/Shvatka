@@ -15,7 +15,7 @@ from shvatka.tgbot.config.models.main import TgBotConfig
 from shvatka.tgbot.config.parser.main import load_config
 from tests.fixtures.conftest import fixtures_resource_path  # noqa: F401
 from tests.fixtures.player import harry, hermione, ron, author, draco  # noqa: F401
-from tests.fixtures.scn_fixtures import simple_scn, complex_scn, three_lvl_scn, routed_scn  # noqa: F401
+from tests.fixtures.scn_fixtures import simple_scn, complex_scn, three_lvl_scn, routed_scn
 from tests.fixtures.team import gryffindor, slytherin  # noqa: F401
 from tests.fixtures.game_fixtures import (  # noqa: F401
     game,

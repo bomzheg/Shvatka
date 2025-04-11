@@ -16,15 +16,15 @@ class CellAddress:
     column: int
     row: int
 
-    def shift(self, plus_rows: int = 0, plus_columns: int = 0) -> "CellAddress":
-        return CellAddress(column=self.column + plus_columns, row=self.row + plus_rows)
+    def shift(self, rows: int = 0, columns: int = 0) -> "CellAddress":
+        return CellAddress(column=self.column + columns, row=self.row + rows)
 
     def to_dict(self) -> dict[str, int]:
         return {"row": self.row, "column": self.column}
 
 
-FIRST_TEAM_NAME = CellAddress(column=1, row=3)
-GAME_NAME = CellAddress(column=1, row=1)
+FIRST_TEAM_NAME = CellAddress(row=3, column=1)
+GAME_NAME = CellAddress(row=1, column=1)
 
 
 class LevelTime(typing.NamedTuple):
@@ -90,10 +90,19 @@ def export_results(game: dto.FullGame, game_stat: dto.GameStat, file: typing.Any
         return print_table(results_to_table_linear(game, to_results(game_stat)), file)
 
 
+def results_to_table_routed(game: dto.FullGame, results: Results) -> Table:
+    table = {GAME_NAME: Cell(value=game.name)}
+    for i, team_level_times in enumerate(results.data):
+        table[FIRST_TEAM_NAME.shift(rows=i, columns=0)] = Cell(
+            value=team_level_times.team.name
+        )
+    return Table(fields=table)
+
+
 def results_to_table_linear(game: dto.FullGame, results: Results) -> Table:
     table = {GAME_NAME: Cell(value=game.name)}
     for i, team_level_times in enumerate(results.data):
-        table[FIRST_TEAM_NAME.shift(plus_rows=i, plus_columns=0)] = Cell(
+        table[FIRST_TEAM_NAME.shift(rows=i, columns=0)] = Cell(
             value=team_level_times.team.name
         )
 
@@ -102,31 +111,33 @@ def results_to_table_linear(game: dto.FullGame, results: Results) -> Table:
             if level_time is None:
                 continue
             if i == 0:
-                table[FIRST_TEAM_NAME.shift(plus_rows=-1, plus_columns=j)] = Cell(
+                table[FIRST_TEAM_NAME.shift(rows=-1, columns=j)] = Cell(
                     value=level_time.level
                 )
 
-            table[FIRST_TEAM_NAME.shift(plus_rows=i, plus_columns=j)] = Cell(
+            table[FIRST_TEAM_NAME.shift(rows=i, columns=j)] = Cell(
                 value=level_time.time,
                 format=DATETIME_EXCEL_FORMAT,
             )
     second_part_start = i + 3
 
     for i, team_level_times in enumerate(results.data, second_part_start):
-        table[FIRST_TEAM_NAME.shift(plus_rows=i, plus_columns=0)] = Cell(
+        table[FIRST_TEAM_NAME.shift(rows=i, columns=0)] = Cell(
             value=team_level_times.team.name
         )
 
         for j, level_id in enumerate(team_level_times.levels_timedelta, 1):
+            if i == second_part_start:
+                table[FIRST_TEAM_NAME.shift(rows=i-1, columns=j)] = Cell(value=level_id)
             level_td = team_level_times.get_level_timedelta(level_id)
             if level_td is None:
                 continue
             if i == second_part_start:
-                plus_rows = second_part_start - 1
-                table[FIRST_TEAM_NAME.shift(plus_rows=plus_rows, plus_columns=j)] = Cell(
+                plus_rows = second_part_start
+                table[FIRST_TEAM_NAME.shift(rows=plus_rows, columns=j)] = Cell(
                     value=level_td.level
                 )
-            table[FIRST_TEAM_NAME.shift(plus_rows=i, plus_columns=j)] = Cell(
+            table[FIRST_TEAM_NAME.shift(rows=i, columns=j)] = Cell(
                 value=as_time(level_td.td), format=DATETIME_EXCEL_FORMAT
             )
     return Table(fields=table)

@@ -330,9 +330,9 @@ async def test_fast_play_routed_game(
     )
     dummy_view.assert_send_only_puzzle(gryffindor, game.levels[2])
 
-    await check_key(key="SH456", **key_kwargs)
+    await check_key(key="SH3", **key_kwargs)
     expected_second_key = dto.KeyTime(
-        text="SH456",
+        text="SH3",
         type_=enums.KeyType.simple,
         is_duplicate=False,
         at=datetime.now(tz=tz_utc),
@@ -438,9 +438,9 @@ async def test_cycle_play_routed_game(
     )
     dummy_view.assert_send_only_puzzle(gryffindor, game.levels[2])
 
-    await check_key(key="SH456", **key_kwargs)
+    await check_key(key="SH3", **key_kwargs)
     expected_last_key = dto.KeyTime(
-        text="SH456",
+        text="SH3",
         type_=enums.KeyType.simple,
         is_duplicate=False,
         at=datetime.now(tz=tz_utc),

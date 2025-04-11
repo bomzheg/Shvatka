@@ -7,7 +7,8 @@ from shvatka.tgbot.views.results.level_times import (
     results_to_table_linear,
     to_results,
     GAME_NAME,
-    FIRST_TEAM_NAME, results_to_table_routed, print_table, Table,
+    FIRST_TEAM_NAME,
+    results_to_table_routed,
 )
 
 
@@ -27,8 +28,12 @@ def test_to_results(
     assert table[FIRST_TEAM_NAME.shift(columns=3)].value == base_time + timedelta(minutes=30)
     assert table[FIRST_TEAM_NAME.shift(rows=1)].value == slytherin.name
     assert table[FIRST_TEAM_NAME.shift(rows=1, columns=1)].value == base_time
-    assert table[FIRST_TEAM_NAME.shift(rows=1, columns=2)].value == base_time + timedelta(minutes=10)
-    assert table[FIRST_TEAM_NAME.shift(rows=1, columns=3)].value == base_time + timedelta(minutes=40)
+    assert table[FIRST_TEAM_NAME.shift(rows=1, columns=2)].value == base_time + timedelta(
+        minutes=10
+    )
+    assert table[FIRST_TEAM_NAME.shift(rows=1, columns=3)].value == base_time + timedelta(
+        minutes=40
+    )
     assert table[FIRST_TEAM_NAME.shift(rows=3, columns=1)].value == 1
     assert table[FIRST_TEAM_NAME.shift(rows=3, columns=2)].value == 2
     assert table[FIRST_TEAM_NAME.shift(rows=4)].value == gryffindor.name
@@ -40,7 +45,10 @@ def test_to_results(
 
 
 def test_routed_game_to_table(
-    routed_game: dto.FullGame, routed_game_stat: dto.GameStat, gryffindor: dto.Team, slytherin: dto.Team
+    routed_game: dto.FullGame,
+    routed_game_stat: dto.GameStat,
+    gryffindor: dto.Team,
+    slytherin: dto.Team,
 ):
     game = routed_game
     table = results_to_table_routed(game, to_results(routed_game_stat)).fields
@@ -51,5 +59,18 @@ def test_routed_game_to_table(
     assert table[FIRST_TEAM_NAME.shift(rows=-1, columns=3)].value == 2
     assert table[FIRST_TEAM_NAME.shift(rows=-1, columns=4)].value == 3
     assert table[FIRST_TEAM_NAME].value == gryffindor.name
-    assert table[FIRST_TEAM_NAME.shift(columns=1)]
+    assert table[FIRST_TEAM_NAME.shift(columns=1)].value == base_time
+    assert table[FIRST_TEAM_NAME.shift(rows=1, columns=3)].value == base_time + timedelta(
+        minutes=10
+    )
+    assert table[FIRST_TEAM_NAME.shift(rows=1, columns=4)].value == base_time + timedelta(
+        minutes=35
+    )
     assert table[FIRST_TEAM_NAME.shift(rows=1)].value == slytherin.name
+    assert table[FIRST_TEAM_NAME.shift(rows=1, columns=1)].value == base_time
+    assert table[FIRST_TEAM_NAME.shift(rows=1, columns=3)].value == base_time + timedelta(
+        minutes=20
+    )
+    assert table[FIRST_TEAM_NAME.shift(rows=1, columns=4)].value == base_time + timedelta(
+        minutes=40
+    )

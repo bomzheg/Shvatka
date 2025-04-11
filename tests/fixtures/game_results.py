@@ -64,9 +64,12 @@ def game_stat(
 
 
 @pytest.fixture
-def routed_game_stat(routed_game: dto.FullGame, gryffindor: dto.Team, slytherin: dto.Team) -> dto.GameStat:
+def routed_game_stat(
+    routed_game: dto.FullGame, gryffindor: dto.Team, slytherin: dto.Team
+) -> dto.GameStat:
     game = routed_game
-    assert (base_time := game.start_at) is not None
+    base_time = game.start_at
+    assert base_time is not None
     return dto.GameStat(
         level_times={
             gryffindor: [

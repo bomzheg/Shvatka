@@ -91,29 +91,38 @@ def export_results(game: dto.FullGame, game_stat: dto.GameStat, file: typing.Any
 
 
 def results_to_table_routed(game: dto.FullGame, results: Results) -> Table:
-    table = {GAME_NAME: Cell(value=game.name)}
-    for i, team_level_times in enumerate(results.data):
-        table[FIRST_TEAM_NAME.shift(rows=i, columns=0)] = Cell(
-            value=team_level_times.team.name
+    table = {
+        GAME_NAME: Cell(value=game.name),
+        FIRST_TEAM_NAME.shift(rows=-1, columns=1): Cell(value=0),
+    }
+    for level in game.levels:
+        assert level.number_in_game is not None
+        table[FIRST_TEAM_NAME.shift(rows=-1, columns=level.number_in_game + 1)] = Cell(
+            value=level.number_in_game
         )
+    for i, team_level_times in enumerate(results.data):
+        table[FIRST_TEAM_NAME.shift(rows=i, columns=0)] = Cell(value=team_level_times.team.name)
+        for level_number in team_level_times.levels_times:
+            level_time = team_level_times.get_level_time(level_number)
+            if level_time is None:
+                continue
+            table[FIRST_TEAM_NAME.shift(rows=i, columns=level_number)] = Cell(
+                value=level_time.time
+            )
     return Table(fields=table)
 
 
 def results_to_table_linear(game: dto.FullGame, results: Results) -> Table:
     table = {GAME_NAME: Cell(value=game.name)}
     for i, team_level_times in enumerate(results.data):
-        table[FIRST_TEAM_NAME.shift(rows=i, columns=0)] = Cell(
-            value=team_level_times.team.name
-        )
+        table[FIRST_TEAM_NAME.shift(rows=i, columns=0)] = Cell(value=team_level_times.team.name)
 
         for j, level_id in enumerate(team_level_times.levels_times, 1):
             level_time = team_level_times.get_level_time(level_id)
             if level_time is None:
                 continue
             if i == 0:
-                table[FIRST_TEAM_NAME.shift(rows=-1, columns=j)] = Cell(
-                    value=level_time.level
-                )
+                table[FIRST_TEAM_NAME.shift(rows=-1, columns=j)] = Cell(value=level_time.level)
 
             table[FIRST_TEAM_NAME.shift(rows=i, columns=j)] = Cell(
                 value=level_time.time,
@@ -122,13 +131,11 @@ def results_to_table_linear(game: dto.FullGame, results: Results) -> Table:
     second_part_start = i + 3
 
     for i, team_level_times in enumerate(results.data, second_part_start):
-        table[FIRST_TEAM_NAME.shift(rows=i, columns=0)] = Cell(
-            value=team_level_times.team.name
-        )
+        table[FIRST_TEAM_NAME.shift(rows=i, columns=0)] = Cell(value=team_level_times.team.name)
 
         for j, level_id in enumerate(team_level_times.levels_timedelta, 1):
             if i == second_part_start:
-                table[FIRST_TEAM_NAME.shift(rows=i-1, columns=j)] = Cell(value=level_id)
+                table[FIRST_TEAM_NAME.shift(rows=i - 1, columns=j)] = Cell(value=level_id)
             level_td = team_level_times.get_level_timedelta(level_id)
             if level_td is None:
                 continue

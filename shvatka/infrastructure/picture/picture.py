@@ -3,7 +3,7 @@ import pprint
 from datetime import datetime, timedelta
 from io import BytesIO
 from itertools import pairwise
-from typing import NamedTuple, BinaryIO
+from typing import NamedTuple, BinaryIO, cast
 
 import matplotlib.dates as mdates
 from matplotlib import pyplot as plt
@@ -58,7 +58,7 @@ def convert(stat: dto.GameStat, game: dto.FullGame) -> dict[str, PlotData]:
         abscissa: list[datetime] = []
         ordinate: list[float] = []
         current_ordinate = 1.0
-        for level_time_prev, level_time_now in pairwise([None, *level_times]):  # type: dto.LevelTimeOnGame | None, dto.LevelTimeOnGame | None
+        for level_time_prev, level_time_now in pairwise([None, *level_times]):  # type: dto.LevelTime | None, dto.LevelTime | None
             assert level_time_now is not None
             if level_time_prev is None:
                 assert game.start_at
@@ -103,5 +103,5 @@ def add_next(
 
 
 if __name__ == "__main__":
-    plot_it(convert(game_stat_example, game_example), game_example)
+    plot_it(convert(cast(dto.GameStat, game_stat_example), game_example), game_example)
     plt.show()

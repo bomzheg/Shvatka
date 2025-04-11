@@ -178,7 +178,7 @@ class GameStat:
     level_times: dict[int, list[LevelTime]]
 
     @classmethod
-    def from_core(cls, core: dto.GameStat | None):
+    def from_core(cls, core: dto.GameStatWithHints | None):
         if core is None:
             return None
         return cls(

@@ -10,7 +10,7 @@ from telegraph.aio import Telegraph
 
 from shvatka.core.models import dto
 from shvatka.core.services.game import get_full_game
-from shvatka.core.services.game_stat import get_game_stat, get_typed_keys
+from shvatka.core.services.game_stat import get_typed_keys, get_game_stat
 from shvatka.core.utils.datetime_utils import tz_utc
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.tgbot.config.models.bot import BotConfig

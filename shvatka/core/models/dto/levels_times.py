@@ -52,4 +52,9 @@ class LevelTimeOnGame(LevelTime):
 
 @dataclass
 class GameStat:
+    level_times: dict[Team, list[LevelTime]]
+
+
+@dataclass
+class GameStatWithHints:
     level_times: dict[Team, list[LevelTimeOnGame]]

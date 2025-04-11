@@ -4,7 +4,11 @@ from itertools import pairwise
 import pytest
 
 from shvatka.core.models import dto
-from shvatka.core.services.game_stat import get_game_stat, get_typed_keys, get_game_spy
+from shvatka.core.services.game_stat import (
+    get_typed_keys,
+    get_game_spy,
+    get_game_stat,
+)
 from shvatka.core.utils.datetime_utils import tz_utc
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from tests.mocks.datetime_mock import ClockMock

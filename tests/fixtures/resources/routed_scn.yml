@@ -6,8 +6,13 @@ levels:
     conditions:
       - type: WIN_KEY
         keys:
-          - "SH123"
-          - "SH321"
+          - "SH1"
+      - type: WIN_KEY
+        keys: [ "SHTO1" ]
+        next-level: first
+      - type: WIN_KEY
+        keys: [ "SHTO2" ]
+        next-level: second
       - type: WIN_KEY
         keys: [ "SHTO3" ]
         next-level: third
@@ -30,12 +35,21 @@ levels:
       - time: 5
         hint:
           - time: text
-            text: "SH123\nSH321"
+            text: "SH1"
   - id: second
     __model_version__: 1
     conditions:
       - type: WIN_KEY
-        keys: [ "SHOOT" ]
+        keys: [ "SH2" ]
+      - type: WIN_KEY
+        keys: [ "SHTO1" ]
+        next-level: first
+      - type: WIN_KEY
+        keys: [ "SHTO2" ]
+        next-level: second
+      - type: WIN_KEY
+        keys: [ "SHTO3" ]
+        next-level: third
     time-hints:
       - time: 0
         hint:
@@ -56,15 +70,21 @@ levels:
       - time: 5
         hint:
           - time: text
-            text: "SHOOT"
+            text: "SH2"
   - id: third
     __model_version__: 1
     conditions:
       - type: WIN_KEY
-        keys: [ "SH456" ]
+        keys: [ "SH3" ]
       - type: WIN_KEY
         keys: [ "SHTO1" ]
         next-level: first
+      - type: WIN_KEY
+        keys: [ "SHTO2" ]
+        next-level: second
+      - type: WIN_KEY
+        keys: [ "SHTO3" ]
+        next-level: third
     time-hints:
       - time: 0
         hint:
@@ -84,5 +104,5 @@ levels:
       - time: 5
         hint:
           - time: text
-            text: "SH456"
+            text: "SH3"
 files: []

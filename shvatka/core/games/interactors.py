@@ -11,7 +11,7 @@ from shvatka.core.games.adapters import (
 )
 from shvatka.core.models import dto
 from shvatka.core.rules.game import check_can_read
-from shvatka.core.services.game_stat import get_typed_keys, get_game_stat
+from shvatka.core.services.game_stat import get_typed_keys, get_game_stat_with_hints
 from shvatka.core.services.scenario.files import check_file_meta_can_read
 from shvatka.core.utils import exceptions
 from shvatka.core.utils.datetime_utils import tz_utc
@@ -32,10 +32,10 @@ class GameStatReaderInteractor:
     def __init__(self, dao: GameStatReader):
         self.dao = dao
 
-    async def __call__(self, game_id: int, user: dto.User) -> dto.GameStat:
+    async def __call__(self, game_id: int, user: dto.User) -> dto.GameStatWithHints:
         player = await self.dao.get_by_user(user)
         game = await self.dao.get_by_id(game_id)
-        return await get_game_stat(game, player, self.dao)
+        return await get_game_stat_with_hints(game, player, self.dao)
 
 
 class GameFileReaderInteractor:

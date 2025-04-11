@@ -28,9 +28,9 @@ class GameStatImpl(GameStatDao):
         return await self.dao.organizer.get_by_player_or_none(game=game, player=player)
 
     async def get_game_level_times_by_teams(
-        self, game: dto.Game, levels_count: int
+        self, game: dto.Game
     ) -> dict[dto.Team, list[dto.LevelTime]]:
-        return await self.dao.level_time.get_game_level_times_by_teams(game, levels_count)
+        return await self.dao.level_time.get_game_level_times_by_teams(game)
 
     async def get_game_level_times_with_hints(
         self, game: dto.FullGame
@@ -66,9 +66,9 @@ class GameStatReaderImpl(GameStatReader):
         return await self.dao.organizer.get_by_player_or_none(game=game, player=player)
 
     async def get_game_level_times_by_teams(
-        self, game: dto.Game, levels_count: int
+        self, game: dto.Game
     ) -> dict[dto.Team, list[dto.LevelTime]]:
-        return await self.dao.level_time.get_game_level_times_by_teams(game, levels_count)
+        return await self.dao.level_time.get_game_level_times_by_teams(game)
 
     async def get_game_level_times_with_hints(
         self, game: dto.FullGame

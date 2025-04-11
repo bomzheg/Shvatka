@@ -83,7 +83,7 @@ class LevelTimeDao(BaseDAO[models.LevelTime]):
         ]
 
     async def get_game_level_times_by_teams(
-        self, game: dto.Game, levels_count: int
+        self, game: dto.Game
     ) -> dict[dto.Team, list[dto.LevelTime]]:
         level_times = await self.get_game_level_times(game)
         result: dict[dto.Team, list[dto.LevelTime]] = {}

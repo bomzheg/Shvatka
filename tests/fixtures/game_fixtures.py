@@ -144,7 +144,10 @@ async def routed_game(
     file_gateway: FileGateway,
     retort: Retort,
 ):
-    return await upsert_game(routed_scn, author, dao.game_upserter, retort, file_gateway)
+    game = await upsert_game(routed_scn, author, dao.game_upserter, retort, file_gateway)
+    await dao.game.set_start_at(game, datetime.now(tz=tz_utc))
+    await dao.commit()
+    return game
 
 
 @pytest_asyncio.fixture

@@ -40,9 +40,9 @@ def test_to_results(
 
 
 def test_routed_game_to_table(
-    finished_routed_game: dto.FullGame, routed_game_stat: dto.GameStat, gryffindor: dto.Team, slytherin: dto.Team
+    routed_game: dto.FullGame, routed_game_stat: dto.GameStat, gryffindor: dto.Team, slytherin: dto.Team
 ):
-    game = finished_routed_game
+    game = routed_game
     table = results_to_table_routed(game, to_results(routed_game_stat)).fields
     base_time = trim_tz(game.start_at)
     assert table[GAME_NAME].value == game.name

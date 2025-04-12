@@ -151,16 +151,16 @@ def results_to_table_linear(game: dto.FullGame, results: Results) -> Table:
 
         for j, level_id in enumerate(team_level_times.levels_timedelta, 1):
             if i == second_part_start:
-                table[FIRST_TEAM_NAME.shift(rows=i - 1, columns=j)] = Cell(value=level_id)
+                table[FIRST_TEAM_NAME.shift(rows=i - 1, columns=level_id+1)] = Cell(value=level_id+1)
             level_td = team_level_times.get_level_timedelta(level_id)
             if level_td is None:
                 continue
             if i == second_part_start:
                 plus_rows = second_part_start
-                table[FIRST_TEAM_NAME.shift(rows=plus_rows, columns=j)] = Cell(
+                table[FIRST_TEAM_NAME.shift(rows=plus_rows, columns=level_id+1)] = Cell(
                     value=level_td.level
                 )
-            table[FIRST_TEAM_NAME.shift(rows=i, columns=j)] = Cell(
+            table[FIRST_TEAM_NAME.shift(rows=i, columns=level_id+1)] = Cell(
                 value=as_time(level_td.td), format=DATETIME_EXCEL_FORMAT
             )
     return Table(fields=table)

@@ -4,7 +4,6 @@ from datetime import timedelta, time
 from shvatka.core.models import dto
 from shvatka.core.utils.datetime_utils import trim_tz
 from shvatka.tgbot.views.results.level_times import (
-    results_to_table_linear,
     to_results,
     GAME_NAME,
     FIRST_TEAM_NAME,
@@ -16,7 +15,7 @@ def test_to_results(
     finished_game: dto.FullGame, game_stat: dto.GameStat, gryffindor: dto.Team, slytherin: dto.Team
 ):
     game = finished_game
-    table = results_to_table_linear(game, to_results(game_stat)).fields
+    table = results_to_table_routed(game, to_results(game_stat)).fields
     assert table[GAME_NAME].value == game.name
     assert table[FIRST_TEAM_NAME.shift(rows=-1, columns=1)].value == 0
     assert table[FIRST_TEAM_NAME.shift(rows=-1, columns=2)].value == 1

@@ -128,7 +128,7 @@ def results_to_table_routed(game: dto.FullGame, results: Results) -> Table:
         table[FIRST_TEAM_NAME.shift(rows=i*2 + third_part_start)] = Cell(value=team.name)
         for j, lt in enumerate(lts, 1):
             table[FIRST_TEAM_NAME.shift(rows=i*2 + third_part_start -1, columns=j)] = Cell(value=trim_tz(lt.start_at), format=DATETIME_EXCEL_FORMAT)
-            table[FIRST_TEAM_NAME.shift(rows=i*2 + third_part_start, columns=j)] = Cell(value=lt.level_number)
+            table[FIRST_TEAM_NAME.shift(rows=i*2 + third_part_start, columns=j)] = Cell(value=lt.level_number + 1)
     return Table(fields=table)
 
 

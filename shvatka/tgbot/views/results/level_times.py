@@ -88,7 +88,7 @@ def export_results(game: dto.FullGame, game_stat: dto.GameStat, file: typing.Any
     return print_table(results_to_table_routed(game, to_results(game_stat)), file)
 
 
-def results_to_table_routed(game: dto.FullGame, results: Results) -> Table:
+def results_to_table_routed(game: dto.FullGame, results: Results) -> Table:  # noqa: C901
     table = {
         GAME_NAME: Cell(value=game.name),
         FIRST_TEAM_NAME.shift(rows=-1, columns=1): Cell(value=0),
@@ -111,9 +111,9 @@ def results_to_table_routed(game: dto.FullGame, results: Results) -> Table:
     second_part_start = i + 3
     for level in game.levels:
         assert level.number_in_game is not None
-        table[FIRST_TEAM_NAME.shift(rows=second_part_start-1, columns=level.number_in_game + 1)] = Cell(
-            value=level.number_in_game + 1
-        )
+        table[
+            FIRST_TEAM_NAME.shift(rows=second_part_start - 1, columns=level.number_in_game + 1)
+        ] = Cell(value=level.number_in_game + 1)
     for i, team_level_times in enumerate(results.data, second_part_start):
         table[FIRST_TEAM_NAME.shift(rows=i, columns=0)] = Cell(value=team_level_times.team.name)
 
@@ -121,14 +121,20 @@ def results_to_table_routed(game: dto.FullGame, results: Results) -> Table:
             ltd = team_level_times.get_level_timedelta(level_id)
             if ltd is None:
                 continue
-            table[FIRST_TEAM_NAME.shift(rows=i, columns=level_id+1)] = Cell(value=as_time(ltd.td), format=DATETIME_EXCEL_FORMAT)
+            table[FIRST_TEAM_NAME.shift(rows=i, columns=level_id + 1)] = Cell(
+                value=as_time(ltd.td), format=DATETIME_EXCEL_FORMAT
+            )
 
     third_part_start = i + 3
     for i, (team, lts) in enumerate(results.game_stat.level_times.items()):
-        table[FIRST_TEAM_NAME.shift(rows=i*2 + third_part_start)] = Cell(value=team.name)
+        table[FIRST_TEAM_NAME.shift(rows=i * 2 + third_part_start)] = Cell(value=team.name)
         for j, lt in enumerate(lts, 1):
-            table[FIRST_TEAM_NAME.shift(rows=i*2 + third_part_start -1, columns=j)] = Cell(value=trim_tz(lt.start_at), format=DATETIME_EXCEL_FORMAT)
-            table[FIRST_TEAM_NAME.shift(rows=i*2 + third_part_start, columns=j)] = Cell(value=lt.level_number + 1)
+            table[FIRST_TEAM_NAME.shift(rows=i * 2 + third_part_start - 1, columns=j)] = Cell(
+                value=trim_tz(lt.start_at), format=DATETIME_EXCEL_FORMAT
+            )
+            table[FIRST_TEAM_NAME.shift(rows=i * 2 + third_part_start, columns=j)] = Cell(
+                value=lt.level_number + 1
+            )
     return Table(fields=table)
 
 

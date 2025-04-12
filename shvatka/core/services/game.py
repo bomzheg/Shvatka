@@ -142,9 +142,7 @@ async def get_game_package(
             start_at=game.start_at,
             results={
                 key.name: [export_stat.LevelTime.from_dto(lt) for lt in value]
-                for key, value in (
-                    await dao.get_game_level_times_by_teams(game, len(game.levels))
-                ).items()
+                for key, value in (await dao.get_game_level_times_by_teams(game)).items()
             },
             keys={
                 key.name: [export_stat.Key.from_dto(k) for k in value]

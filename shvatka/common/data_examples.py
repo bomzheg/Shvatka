@@ -288,7 +288,7 @@ game_example = dto.FullGame(
         ),
     ],
 )
-game_stat_example = dto.GameStat(
+game_stat_example = dto.GameStatWithHints(
     level_times={
         gryffindor: [
             dto.LevelTimeOnGame(

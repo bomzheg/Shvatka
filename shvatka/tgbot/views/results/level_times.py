@@ -11,91 +11,156 @@ from shvatka.core.utils.datetime_utils import trim_tz
 from shvatka.core.utils.exceptions import GameNotFinished
 
 
-@dataclass
+@dataclass(kw_only=True, frozen=True)
 class CellAddress:
     column: int
     row: int
 
-    def shift(self, plus_rows=0, plus_columns=0):
-        return {"row": self.row + plus_rows, "column": self.column + plus_columns}
+    def shift(self, rows: int = 0, columns: int = 0) -> "CellAddress":
+        return CellAddress(column=self.column + columns, row=self.row + rows)
+
+    def to_dict(self) -> dict[str, int]:
+        return {"row": self.row, "column": self.column}
 
 
-FIRST_TEAM_NAME = CellAddress(1, 3)
-GAME_NAME = CellAddress(1, 1)
+FIRST_TEAM_NAME = CellAddress(row=3, column=1)
+GAME_NAME = CellAddress(row=1, column=1)
 
 
 class LevelTime(typing.NamedTuple):
     level: int
+    """level number"""
     time: datetime
 
 
 class LevelTimedelta(typing.NamedTuple):
     level: int
+    """level number"""
     td: timedelta
 
 
 class TeamLevels(typing.NamedTuple):
     team: dto.Team
-    levels_times: list[LevelTime]
-    levels_timedelta: list[LevelTimedelta]
+    levels_times: dict[int, list[LevelTime]]
+    levels_timedelta: dict[int, list[LevelTimedelta]]
+
+    def get_level_time(self, level_number: int) -> LevelTime | None:
+        min_time = datetime.max
+        requested = self.levels_times.get(level_number, [])
+        result = None
+        for lt in requested:
+            if lt.time < min_time:
+                min_time = lt.time
+                result = lt
+        return result
+
+    def get_level_timedelta(self, level_number: int) -> LevelTimedelta | None:
+        result: timedelta = sum(
+            (ltd.td for ltd in self.levels_timedelta.get(level_number, [])),
+            start=timedelta(seconds=0),
+        )
+        return LevelTimedelta(level=level_number, td=result)
 
 
 @dataclass
 class Results:
     data: list[TeamLevels]
+    game_stat: dto.GameStat
+
+
+@dataclass(kw_only=True)
+class Cell:
+    value: str | datetime | int | time
+    format: str | None = None
+
+
+@dataclass(kw_only=True)
+class Table:
+    fields: dict[CellAddress, Cell]
 
 
 DATETIME_EXCEL_FORMAT = "HH:MM:SS"
 
 
-def export_results(game: dto.FullGame, game_stat: dto.GameStat, file: typing.Any):
-    return export_results_internal(game, to_results(game_stat), file)
+def export_results(game: dto.FullGame, game_stat: dto.GameStat, file: typing.Any) -> None:
+    if not (game.is_complete() or game.is_finished()):
+        raise GameNotFinished
+    return print_table(results_to_table_routed(game, to_results(game_stat)), file)
+
+
+def results_to_table_routed(game: dto.FullGame, results: Results) -> Table:  # noqa: C901
+    table = {
+        GAME_NAME: Cell(value=game.name),
+        FIRST_TEAM_NAME.shift(rows=-1, columns=1): Cell(value=0),
+    }
+    for level in game.levels:
+        assert level.number_in_game is not None
+        table[FIRST_TEAM_NAME.shift(rows=-1, columns=level.number_in_game + 2)] = Cell(
+            value=level.number_in_game + 1
+        )
+    i = 0
+    for i, team_level_times in enumerate(results.data):
+        table[FIRST_TEAM_NAME.shift(rows=i, columns=0)] = Cell(value=team_level_times.team.name)
+        for level_number in team_level_times.levels_times:
+            level_time = team_level_times.get_level_time(level_number)
+            if level_time is None:
+                continue
+            table[FIRST_TEAM_NAME.shift(rows=i, columns=level_number + 1)] = Cell(
+                value=level_time.time
+            )
+    second_part_start = i + 3
+    for level in game.levels:
+        assert level.number_in_game is not None
+        table[
+            FIRST_TEAM_NAME.shift(rows=second_part_start - 1, columns=level.number_in_game + 1)
+        ] = Cell(value=level.number_in_game + 1)
+    for i, team_level_times in enumerate(results.data, second_part_start):
+        table[FIRST_TEAM_NAME.shift(rows=i, columns=0)] = Cell(value=team_level_times.team.name)
+
+        for level_id in team_level_times.levels_timedelta:
+            ltd = team_level_times.get_level_timedelta(level_id)
+            if ltd is None:
+                continue
+            table[FIRST_TEAM_NAME.shift(rows=i, columns=level_id + 1)] = Cell(
+                value=as_time(ltd.td), format=DATETIME_EXCEL_FORMAT
+            )
+
+    third_part_start = i + 3
+    for i, (team, lts) in enumerate(results.game_stat.level_times.items()):
+        table[FIRST_TEAM_NAME.shift(rows=i * 2 + third_part_start)] = Cell(value=team.name)
+        for j, lt in enumerate(lts, 1):
+            table[FIRST_TEAM_NAME.shift(rows=i * 2 + third_part_start - 1, columns=j)] = Cell(
+                value=trim_tz(lt.start_at), format=DATETIME_EXCEL_FORMAT
+            )
+            table[FIRST_TEAM_NAME.shift(rows=i * 2 + third_part_start, columns=j)] = Cell(
+                value=lt.level_number + 1
+            )
+    return Table(fields=table)
 
 
 def to_results(game_stat: dto.GameStat) -> Results:
     result = []
     for team, lts in game_stat.level_times.items():
         levels_times = [LevelTime(lt.level_number, trim_tz(lt.start_at)) for lt in lts]
-        levels_timedelta = []
+        routed_lt: dict[int, list[LevelTime]] = {}
+        for lt in levels_times:
+            routed_lt.setdefault(lt.level, []).append(lt)
+        routed_ltd: dict[int, list[LevelTimedelta]] = {}
         for previous, current in zip(levels_times[:-1], levels_times[1:]):  # type: LevelTime, LevelTime
             td = current.time - previous.time
-            levels_timedelta.append(LevelTimedelta(current.level, td))
-        result.append(TeamLevels(team, levels_times, levels_timedelta))
-    return Results(result)
+            routed_ltd.setdefault(previous.level, []).append(LevelTimedelta(previous.level, td))
+        result.append(TeamLevels(team, routed_lt, routed_ltd))
+    return Results(data=result, game_stat=game_stat)
 
 
-def export_results_internal(game: dto.FullGame, results: Results, file: typing.Any):
-    if not (game.is_complete() or game.is_finished()):
-        raise GameNotFinished
+def print_table(table: Table, file: typing.Any) -> None:
     wb = Workbook()
     ws = typing.cast(Worksheet, wb.active)
-    ws.cell(**GAME_NAME.shift()).value = game.name
-    i = 0
-    for i, team_level_times in enumerate(results.data):
-        cell = ws.cell(**FIRST_TEAM_NAME.shift(i, 0))
-        cell.value = team_level_times.team.name
-
-        for j, level_time in enumerate(team_level_times.levels_times, 1):
-            if i == 0:
-                ws.cell(**FIRST_TEAM_NAME.shift(-1, j)).value = level_time.level
-
-            cell = ws.cell(**FIRST_TEAM_NAME.shift(i, j))
-            cell.value = level_time.time
-            cell.number_format = DATETIME_EXCEL_FORMAT
-    second_part_start = i + 3
-
-    for i, team_level_times in enumerate(results.data, second_part_start):
-        cell = ws.cell(**FIRST_TEAM_NAME.shift(i, 0))
-        cell.value = team_level_times.team.name
-
-        for j, level_td in enumerate(team_level_times.levels_timedelta, 1):
-            if i == second_part_start:
-                ws.cell(**FIRST_TEAM_NAME.shift(second_part_start - 1, j)).value = level_td.level
-
-            cell = ws.cell(**FIRST_TEAM_NAME.shift(i, j))
-            cell.value = as_time(level_td.td)
-            cell.number_format = DATETIME_EXCEL_FORMAT
-
+    for address, cell_ in table.fields.items():
+        cell = ws.cell(**address.to_dict())
+        cell.value = cell_.value
+        if cell_.format is not None:
+            cell.number_format = cell_.format
     resize_columns(ws)
     wb.save(file)
 

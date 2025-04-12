@@ -144,7 +144,10 @@ async def routed_game(
     file_gateway: FileGateway,
     retort: Retort,
 ):
-    return await upsert_game(routed_scn, author, dao.game_upserter, retort, file_gateway)
+    game = await upsert_game(routed_scn, author, dao.game_upserter, retort, file_gateway)
+    await dao.game.set_start_at(game, datetime.fromisoformat("2025-04-12T16:00:00Z"))
+    await dao.commit()
+    return game
 
 
 @pytest_asyncio.fixture
@@ -180,6 +183,66 @@ async def started_routed_game(
     dao: HolderDao,
 ) -> dto.FullGame:
     return await set_game_started(routed_game_with_waivers, [gryffindor, slytherin], dao)
+
+
+@pytest_asyncio.fixture
+async def finished_routed_game(
+    started_routed_game: dto.FullGame,
+    gryffindor: dto.Team,
+    slytherin: dto.Team,
+    harry: dto.Player,
+    ron: dto.Player,
+    hermione: dto.Player,
+    draco: dto.Player,
+    dao: HolderDao,
+    locker: KeyCheckerFactory,
+) -> dto.FullGame:
+    game = started_routed_game
+    key_processor = KeyProcessor(dao=dao.game_player, game=game, locker=locker)
+    await key_processor.submit_key(
+        key="SHWRONG",
+        player=ron,
+        team=gryffindor,
+    )
+    await key_processor.submit_key(
+        key="SHTO3",
+        player=hermione,
+        team=gryffindor,
+    )
+    await dao.game_player.level_up(gryffindor, game.levels[0], game, 2)
+    await key_processor.submit_key(
+        key="SHTO3",
+        player=draco,
+        team=slytherin,
+    )
+    await dao.game_player.level_up(slytherin, game.levels[0], game, 2)
+    await key_processor.submit_key(
+        key="SHTO1",
+        player=ron,
+        team=gryffindor,
+    )
+    await dao.game_player.level_up(gryffindor, game.levels[0], game, 0)
+    await key_processor.submit_key(
+        key="SHTO3",
+        player=harry,
+        team=gryffindor,
+    )
+    await key_processor.submit_key(
+        key="SH3",
+        player=hermione,
+        team=gryffindor,
+    )
+    await dao.game_player.level_up(slytherin, game.levels[0], game, 3)
+    await key_processor.submit_key(
+        key="SHT3",
+        player=draco,
+        team=slytherin,
+    )
+    await dao.game_player.level_up(slytherin, game.levels[0], game, 3)
+    await dao.game.set_finished(game)
+    await dao.commit()
+
+    return game
 
 
 async def add_waivers(

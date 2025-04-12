@@ -19,14 +19,24 @@ async def get_game_stat(game: dto.Game, player: dto.Player, dao: GameStatDao) ->
     if not game.is_complete():
         org = await get_by_player(game=game, player=player, dao=dao)
         check_can_spy(org)
+    result = await dao.get_game_level_times_by_teams(game)
+    return dto.GameStat(level_times=result)
+
+
+async def get_game_stat_with_hints(
+    game: dto.Game, player: dto.Player, dao: GameStatDao
+) -> dto.GameStatWithHints:
+    """return sorted by level number grouped by teams stat"""
+    if not game.is_complete():
+        org = await get_by_player(game=game, player=player, dao=dao)
+        check_can_spy(org)
     full_game = await dao.add_levels(game)
     result = await dao.get_game_level_times_with_hints(full_game)
-
-    return dto.GameStat(level_times=result)
+    return dto.GameStatWithHints(level_times=result)
 
 
 async def get_game_spy(
     game: dto.Game, player: dto.Player, dao: GameStatDao
 ) -> list[dto.LevelTimeOnGame]:
-    stat = await get_game_stat(game, player, dao)
+    stat = await get_game_stat_with_hints(game, player, dao)
     return [lts[-1] for lts in stat.level_times.values()]

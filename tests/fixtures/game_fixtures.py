@@ -145,7 +145,7 @@ async def routed_game(
     retort: Retort,
 ):
     game = await upsert_game(routed_scn, author, dao.game_upserter, retort, file_gateway)
-    await dao.game.set_start_at(game, datetime.now(tz=tz_utc))
+    await dao.game.set_start_at(game, datetime.fromisoformat("2025-04-12T16:00:00Z"))
     await dao.commit()
     return game
 

@@ -97,23 +97,39 @@ def results_to_table_routed(game: dto.FullGame, results: Results) -> Table:
     }
     for level in game.levels:
         assert level.number_in_game is not None
-        table[FIRST_TEAM_NAME.shift(rows=-1, columns=level.number_in_game + 1)] = Cell(
-            value=level.number_in_game
+        table[FIRST_TEAM_NAME.shift(rows=-1, columns=level.number_in_game + 2)] = Cell(
+            value=level.number_in_game + 1
         )
+    i = 0
     for i, team_level_times in enumerate(results.data):
         table[FIRST_TEAM_NAME.shift(rows=i, columns=0)] = Cell(value=team_level_times.team.name)
         for level_number in team_level_times.levels_times:
             level_time = team_level_times.get_level_time(level_number)
             if level_time is None:
                 continue
-            table[FIRST_TEAM_NAME.shift(rows=i, columns=level_number)] = Cell(
+            table[FIRST_TEAM_NAME.shift(rows=i, columns=level_number + 1)] = Cell(
                 value=level_time.time
             )
+    second_part_start = i + 3
+    for level in game.levels:
+        assert level.number_in_game is not None
+        table[FIRST_TEAM_NAME.shift(rows=second_part_start-1, columns=level.number_in_game + 1)] = Cell(
+            value=level.number_in_game + 1
+        )
+    for i, team_level_times in enumerate(results.data, second_part_start):
+        table[FIRST_TEAM_NAME.shift(rows=i, columns=0)] = Cell(value=team_level_times.team.name)
+
+        for level_id in team_level_times.levels_timedelta:
+            ltd = team_level_times.get_level_timedelta(level_id)
+            if ltd is None:
+                continue
+            table[FIRST_TEAM_NAME.shift(rows=i, columns=level_id+1)] = Cell(value=as_time(ltd.td), format=DATETIME_EXCEL_FORMAT)
     return Table(fields=table)
 
 
 def results_to_table_linear(game: dto.FullGame, results: Results) -> Table:
     table = {GAME_NAME: Cell(value=game.name)}
+    i = 0
     for i, team_level_times in enumerate(results.data):
         table[FIRST_TEAM_NAME.shift(rows=i, columns=0)] = Cell(value=team_level_times.team.name)
 
@@ -160,7 +176,7 @@ def to_results(game_stat: dto.GameStat) -> Results:
         routed_ltd: dict[int, list[LevelTimedelta]] = {}
         for previous, current in zip(levels_times[:-1], levels_times[1:]):  # type: LevelTime, LevelTime
             td = current.time - previous.time
-            routed_ltd.setdefault(current.level, []).append(LevelTimedelta(current.level, td))
+            routed_ltd.setdefault(previous.level, []).append(LevelTimedelta(previous.level, td))
         result.append(TeamLevels(team, routed_lt, routed_ltd))
     return Results(result)
 

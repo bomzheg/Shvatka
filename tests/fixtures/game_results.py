@@ -128,7 +128,7 @@ def routed_game_stat(
                     id=8,
                     game=game,
                     team=slytherin,
-                    level_number=2,
+                    level_number=3,
                     start_at=base_time + timedelta(minutes=40),
                 ),
             ],

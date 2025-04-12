@@ -84,5 +84,22 @@ def test_routed_game_to_table(
     assert table[FIRST_TEAM_NAME.shift(rows=5, columns=1)].value == time(minute=20)
     assert table[FIRST_TEAM_NAME.shift(rows=5, columns=3)].value == time(minute=20)
 
+    assert table[FIRST_TEAM_NAME.shift(rows=8)].value == gryffindor.name
+    assert table[FIRST_TEAM_NAME.shift(rows=7, columns=1)].value == base_time
+    assert table[FIRST_TEAM_NAME.shift(rows=8, columns=1)].value == 0
+    assert table[FIRST_TEAM_NAME.shift(rows=7, columns=2)].value == base_time + timedelta(minutes=10)
+    assert table[FIRST_TEAM_NAME.shift(rows=8, columns=2)].value == 2
+    assert table[FIRST_TEAM_NAME.shift(rows=7, columns=3)].value == base_time + timedelta(minutes=25)
+    assert table[FIRST_TEAM_NAME.shift(rows=8, columns=3)].value == 0
+    assert table[FIRST_TEAM_NAME.shift(rows=7, columns=4)].value == base_time + timedelta(minutes=30)
+    assert table[FIRST_TEAM_NAME.shift(rows=8, columns=4)].value == 2
+    assert table[FIRST_TEAM_NAME.shift(rows=7, columns=5)].value == base_time + timedelta(minutes=35)
+    assert table[FIRST_TEAM_NAME.shift(rows=8, columns=5)].value == 3
 
-    assert False, "TODO add move graph"
+    assert table[FIRST_TEAM_NAME.shift(rows=10)].value == slytherin.name
+    assert table[FIRST_TEAM_NAME.shift(rows=9, columns=1)].value == base_time
+    assert table[FIRST_TEAM_NAME.shift(rows=10, columns=1)].value == 0
+    assert table[FIRST_TEAM_NAME.shift(rows=9, columns=2)].value == base_time + timedelta(minutes=20)
+    assert table[FIRST_TEAM_NAME.shift(rows=10, columns=2)].value == 2
+    assert table[FIRST_TEAM_NAME.shift(rows=9, columns=3)].value == base_time + timedelta(minutes=40)
+    assert table[FIRST_TEAM_NAME.shift(rows=10, columns=3)].value == 3

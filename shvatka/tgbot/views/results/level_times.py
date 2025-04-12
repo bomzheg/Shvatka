@@ -65,6 +65,7 @@ class TeamLevels(typing.NamedTuple):
 @dataclass
 class Results:
     data: list[TeamLevels]
+    game_stat: dto.GameStat
 
 
 @dataclass(kw_only=True)
@@ -124,6 +125,13 @@ def results_to_table_routed(game: dto.FullGame, results: Results) -> Table:
             if ltd is None:
                 continue
             table[FIRST_TEAM_NAME.shift(rows=i, columns=level_id+1)] = Cell(value=as_time(ltd.td), format=DATETIME_EXCEL_FORMAT)
+
+    third_part_start = i + 3
+    for i, (team, lts) in enumerate(results.game_stat.level_times.items()):
+        table[FIRST_TEAM_NAME.shift(rows=i*2 + third_part_start)] = Cell(value=team.name)
+        for j, lt in enumerate(lts, 1):
+            table[FIRST_TEAM_NAME.shift(rows=i*2 + third_part_start -1, columns=j)] = Cell(value=trim_tz(lt.start_at), format=DATETIME_EXCEL_FORMAT)
+            table[FIRST_TEAM_NAME.shift(rows=i*2 + third_part_start, columns=j)] = Cell(value=lt.level_number)
     return Table(fields=table)
 
 
@@ -178,7 +186,7 @@ def to_results(game_stat: dto.GameStat) -> Results:
             td = current.time - previous.time
             routed_ltd.setdefault(previous.level, []).append(LevelTimedelta(previous.level, td))
         result.append(TeamLevels(team, routed_lt, routed_ltd))
-    return Results(result)
+    return Results(data=result, game_stat=game_stat)
 
 
 def print_table(table: Table, file: typing.Any) -> None:

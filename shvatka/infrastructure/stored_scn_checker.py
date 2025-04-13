@@ -8,6 +8,7 @@ from shvatka.common import setup_logging
 from shvatka.common.config.parser.paths import common_get_paths
 from shvatka.core.interfaces.clients.file_storage import FileGateway
 from shvatka.core.models import dto
+from shvatka.core.utils import exceptions
 from shvatka.infrastructure.clients.file_gateway import BotFileGateway
 from shvatka.infrastructure.db.dao import FileInfoDao
 from shvatka.infrastructure.db.dao.holder import HolderDao
@@ -20,6 +21,7 @@ async def main():
     paths = common_get_paths("CRAWLER_PATH")
 
     setup_logging(paths)
+    logger.setLevel(logging.WARNING)
     dishka = make_async_container(
         *get_providers("CRAWLER_PATH"),
     )
@@ -32,12 +34,11 @@ async def main():
                 logger.info("checking game #%s %s (%s)", game.id, game.name, game.number)
                 try:
                     full = await dao.game.get_full(game.id)
-                except Exception as e:
-                    logger.exception("got error %s", game.id)
+                except* exceptions.SHError as e:
+                    logger.error("got error %s %s", game.id, repr(e))
                     failed.append(game)
-                    continue
                 logger.debug("game %s, levels %s", full, full.levels)
-            logger.info("errors %s", [(g.id, g.name) for g in failed])
+            logger.error("errors %s", [(g.id, g.name) for g in failed])
     finally:
         await dishka.close()
 

@@ -45,7 +45,11 @@ class ScenarioField(TypeDecorator):
     def process_result_value(self, value: Any, dialect: Dialect) -> scn.LevelScenario | None:
         if value is None:
             return None
-        return self.retort.load(value, scn.LevelScenario)
+        try:
+            return self.retort.load(value, scn.LevelScenario)
+        except Exception:
+            logger.error("can't load level scenario from %s", value)
+            raise
 
 
 class Level(Base):

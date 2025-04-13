@@ -106,7 +106,7 @@ def results_to_table_routed(game: dto.FullGame, results: Results) -> Table:  # n
             if level_time is None:
                 continue
             table[FIRST_TEAM_NAME.shift(rows=i, columns=level_number + 1)] = Cell(
-                value=level_time.time
+                value=level_time.time, format=DATETIME_EXCEL_FORMAT
             )
     second_part_start = i + 3
     for level in game.levels:

@@ -35,7 +35,7 @@ dependencies = [
     "lxml>=4.9.2,<5.0",
     "matplotlib>=3.7.1,<4.0",
     "greenlet<3.0.0",
-    "dishka==1.4.2",
+    "dishka==1.5.2",
     "asgi-monitor>=0.4.0,<0.5.0",
 ]
 

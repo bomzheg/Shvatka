@@ -12,8 +12,8 @@ dependencies = [
     "pyyaml>=6.0,<7.0",
     "python-dateutil>=2.8.2,<3.0",
     "colorlog>=6.7.0,<7.0",
-    "aiogram>=3.10.0,<3.11.0",
-    "pydantic>=2.5,<3.0",
+    "aiogram>=3.20.0,<3.21.0",
+    "pydantic>=2.11,<3.0",
     "aiogram_dialog[tools]>=2.1,<2.2",
     "sqlalchemy[asyncio]>=2.0,<3.0",
     "alembic>=1.10.0,<2.0",
@@ -35,7 +35,7 @@ dependencies = [
     "lxml>=4.9.2,<5.0",
     "matplotlib>=3.7.1,<4.0",
     "greenlet<3.0.0",
-    "dishka==1.4.2",
+    "dishka==1.5.2",
     "asgi-monitor>=0.4.0,<0.5.0",
 ]
 

@@ -61,6 +61,12 @@ def chat_to_full_chat(chat: tg.Chat) -> tg.ChatFullInfo:
         last_name=chat.last_name,
         accent_color_id=0,
         max_reaction_count=3,
+        accepted_gift_types=tg.AcceptedGiftTypes(
+            unlimited_gifts=True,
+            limited_gifts=True,
+            unique_gifts=True,
+            premium_subscription=False,
+        ),
     )
 
 

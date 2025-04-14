@@ -12,7 +12,7 @@ from shvatka.infrastructure.di import get_providers
 logger = logging.getLogger(__name__)
 
 
-async def main():
+async def main() -> None:
     paths = common_get_paths("CRAWLER_PATH")
 
     setup_logging(paths)

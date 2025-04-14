@@ -1,16 +1,11 @@
 import asyncio
 import logging
-import typing
 
 from dishka import make_async_container
 
 from shvatka.common import setup_logging
 from shvatka.common.config.parser.paths import common_get_paths
-from shvatka.core.interfaces.clients.file_storage import FileGateway
-from shvatka.core.models import dto
 from shvatka.core.utils import exceptions
-from shvatka.infrastructure.clients.file_gateway import BotFileGateway
-from shvatka.infrastructure.db.dao import FileInfoDao
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.infrastructure.di import get_providers
 

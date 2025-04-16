@@ -3,12 +3,13 @@ from functools import partial
 
 import uvicorn
 from aiogram import Bot, Dispatcher
-from dishka import AsyncContainer, make_async_container, plotter
+from dishka import AsyncContainer, make_async_container, plotter, STRICT_VALIDATION
 from dishka.integrations.fastapi import setup_dishka
 from fastapi import FastAPI
 
 from shvatka.api.dependencies import get_api_specific_providers
 from shvatka.infrastructure.di import get_providers
+from shvatka.infrastructure.di.utils import warm_up
 from shvatka.tgbot.config.models.bot import WebhookConfig
 from shvatka.tgbot.config.parser.main import load_config as load_bot_config
 from shvatka.api.config.parser.main import load_config as load_api_config
@@ -41,6 +42,7 @@ def main() -> FastAPI:
         *get_providers("SHVATKA_PATH"),
         *get_bot_specific_providers(),
         *get_api_specific_providers(),
+        validation_settings=STRICT_VALIDATION,
     )
     setup_application(app, dishka)
     webhook_handler = SimpleRequestHandler(
@@ -71,6 +73,7 @@ async def on_startup(dishka: AsyncContainer, webhook_config: WebhookConfig):
         secret_token=webhook_config.secret,
         allowed_updates=resolve_update_types(dp),
     )
+    await warm_up(dishka)
 
 
 def run():

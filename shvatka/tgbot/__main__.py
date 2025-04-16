@@ -5,6 +5,7 @@ from aiogram import Dispatcher, Bot
 
 from shvatka.common.config.parser.logging_config import setup_logging
 from shvatka.common.config.parser.paths import common_get_paths
+from shvatka.infrastructure.di.utils import warm_up
 
 from shvatka.tgbot.main_factory import (
     resolve_update_types,
@@ -22,6 +23,7 @@ async def main():
     bot = await dishka.get(Bot)
 
     try:
+        await warm_up(dishka)
         await bot.delete_webhook()
         await dp.start_polling(bot, allowed_updates=resolve_update_types(dp))
     finally:

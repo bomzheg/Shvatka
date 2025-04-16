@@ -7,7 +7,15 @@ from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.fsm.storage.redis import RedisStorage, DefaultKeyBuilder, RedisEventIsolation
 from aiogram_dialog.api.protocols import MessageManagerProtocol
 from aiogram_dialog.manager.message_manager import MessageManager
-from dishka import AsyncContainer, make_async_container, Provider, Scope, provide, AnyOf
+from dishka import (
+    AsyncContainer,
+    make_async_container,
+    Provider,
+    Scope,
+    provide,
+    AnyOf,
+    STRICT_VALIDATION,
+)
 from dishka.integrations.aiogram import setup_dishka
 from redis.asyncio import Redis
 
@@ -40,7 +48,9 @@ logger = logging.getLogger(__name__)
 
 
 def create_dishka(paths_env: str) -> AsyncContainer:
-    container = make_async_container(*get_bot_providers(paths_env))
+    container = make_async_container(
+        *get_bot_providers(paths_env), validation_settings=STRICT_VALIDATION
+    )
     return container
 
 

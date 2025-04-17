@@ -12,7 +12,10 @@ from shvatka.core.games.adapters import (
     GameKeysReader,
     GameStatReader,
 )
+from shvatka.core.interfaces.dal.game_play import GamePlayerDao
+from shvatka.core.services.game_play import CheckKeyInteractor
 from shvatka.infrastructure.db.dao.complex.game import GameFilesGetterImpl, GamePlayReaderImpl
+from shvatka.infrastructure.db.dao.complex.game_play import GamePlayerDaoImpl
 from shvatka.infrastructure.db.dao.complex.key_log import GameKeysReaderImpl
 from shvatka.infrastructure.db.dao.complex.level_times import GameStatReaderImpl
 from shvatka.infrastructure.db.dao.holder import HolderDao
@@ -44,3 +47,6 @@ class GamePlayProvider(Provider):
         return GamePlayReaderImpl(dao)
 
     game_play_reader_interactor = provide(GamePlayReaderInteractor)
+
+    game_player_dao = provide(GamePlayerDaoImpl, provides=GamePlayerDao)
+    check_key_interactor = provide(CheckKeyInteractor)

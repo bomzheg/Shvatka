@@ -97,17 +97,14 @@ class CheckKeyInteractor:
     :param game_log: Логгер игры (публичные уведомления о статусе игры).
     :param org_notifier: Для уведомления оргов о важных событиях.
     :param locker: Локи для обеспечения последовательного исполнения определённых операций.
-    :param key_processor: Логика работы с ключами
     :param scheduler: Планировщик подсказок.
     """
 
-    game: dto.FullGame
     dao: GamePlayerDao
     view: GameView
     game_log: GameLogWriter
     org_notifier: OrgNotifier
     locker: KeyCheckerFactory
-    key_processor: KeyProcessor
     scheduler: Scheduler
 
     async def __call__(
@@ -140,7 +137,8 @@ class CheckKeyInteractor:
                 team=team, game=game, player=player, text="игрок не заявлен на игру, но ввёл ключ"
             )
 
-        new_key = await self.key_processor.check_key(key=key, player=player, team=team)
+        key_processor = KeyProcessor(game=game, dao=self.dao, locker=self.locker)
+        new_key = await key_processor.check_key(key=key, player=player, team=team)
         if new_key is None:
             return
         if new_key.is_duplicate:

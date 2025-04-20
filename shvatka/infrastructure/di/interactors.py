@@ -48,5 +48,7 @@ class GamePlayProvider(Provider):
 
     game_play_reader_interactor = provide(GamePlayReaderInteractor)
 
-    game_player_dao = provide(GamePlayerDaoImpl, provides=GamePlayerDao)
+    @provide
+    def game_player_dao(self, dao: HolderDao) -> GamePlayerDao:
+        return GamePlayerDaoImpl(dao)
     check_key_interactor = provide(CheckKeyInteractor)

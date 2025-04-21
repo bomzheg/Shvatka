@@ -1,4 +1,5 @@
 import asyncio
+import logging
 import typing
 from typing import Any
 
@@ -26,6 +27,8 @@ from .getters import get_level_and_org, get_org
 from shvatka.tgbot.views.keys import render_level_keys, render_keys
 from shvatka.tgbot.views.level import render_bonus_hints
 
+logger = logging.getLogger(__name__)
+
 
 async def edit_level(c: CallbackQuery, button: Button, manager: DialogManager):
     await manager.start(
@@ -46,21 +49,22 @@ async def show_level(c: CallbackQuery, button: Button, manager: DialogManager):
 
 async def show_all_hints(author: dto.Player, hint_sender: HintSender, bot: Bot, level: dto.Level):
     keys_text = f"Ключи уровня:\n{render_level_keys(level.scenario)}"
-    await bot.send_message(author.get_chat_id(), keys_text)
+    chat_id: int = author.get_chat_id()  # type: ignore[assignment]
+    await bot.send_message(chat_id, keys_text)
     for hint in level.scenario.time_hints:
         await hint_sender.send_hints(
-            chat_id=author.get_chat_id(),
+            chat_id=chat_id,
             hint_containers=hint.hint,
             caption=f"Подсказка {hint.time} мин.",
         )
     for keys, hints in render_bonus_hints(level.scenario).items():
         await hint_sender.send_hints(
-            chat_id=author.get_chat_id(),
+            chat_id=chat_id,
             hint_containers=hints,
             caption=f"Бонусная подсказка за ключи:\n{render_keys(keys)}",
         )
     await hint_sender.bot.send_message(
-        chat_id=author.get_chat_id(),
+        chat_id=chat_id,
         text=f"Это был весь уровень {level.name_id}",
     )
 
@@ -72,7 +76,7 @@ async def send_to_testing(c: CallbackQuery, widget: Any, manager: DialogManager,
     level = await get_by_id(manager.start_data["level_id"], author, dao.level)
     org = await get_org_by_id(id_=int(org_id), dao=dao.organizer)
     await bot.send_message(
-        chat_id=org.player.get_chat_id(),
+        chat_id=org.player.get_chat_id(),  # type: ignore[arg-type]
         text=f"{render_small_card_link(author)} "
         f"предлагает протестировать уровень {level.name_id}. "
         f"Начать прямо сейчас?",
@@ -89,6 +93,10 @@ async def level_testing(c: CallbackQuery, button: Button, manager: DialogManager
     author: dto.Player = manager.middleware_data["player"]
     level = await get_by_id(level_id, author, dao.level)
     org = await get_org(author, level, dao)
+    if org is None:
+        logger.warning("org is none?!")
+        await manager.done()
+        return
     suite = dto.LevelTestSuite(tester=org, level=level)
     view: LevelView = manager.middleware_data["level_view"]
     await manager.start(state=states.LevelTestSG.wait_key, data={"level_id": level_id})
@@ -120,6 +128,10 @@ async def cancel_level_test(c: CallbackQuery, button: Button, manager: DialogMan
     dao: HolderDao = manager.middleware_data["dao"]
     author: dto.Player = manager.middleware_data["player"]
     level, org = await get_level_and_org(author, dao, manager)
+    if org is None:
+        logger.warning("org is none?!")
+        await manager.done()
+        return
     suite = dto.LevelTestSuite(tester=org, level=level)
     await dao.level_test.cancel_test(suite=suite)
     await manager.done()
@@ -131,6 +143,10 @@ async def process_key_message(m: Message, dialog_: Any, manager: DialogManager) 
     dao = await dishka.get(HolderDao)
     locker = await dishka.get(KeyCheckerFactory)
     level, org = await get_level_and_org(author, dao, manager)
+    if org is None:
+        logger.warning("org is none?!")
+        await manager.done()
+        return
     suite = dto.LevelTestSuite(tester=org, level=level)
     view = await dishka.get(LevelView)
     org_notifier = await dishka.get(OrgNotifier)

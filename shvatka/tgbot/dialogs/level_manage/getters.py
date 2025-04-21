@@ -23,8 +23,12 @@ async def get_orgs(dao: HolderDao, dialog_manager: DialogManager, **_):
     level_id = dialog_manager.start_data["level_id"]
     author: dto.Player = dialog_manager.middleware_data["player"]
     level = await get_by_id(level_id, author, dao.level)
-    game = await get_game(id_=level.game_id, author=author, dao=dao.game)
-    orgs = await organizers.get_secondary_orgs(game, dao.organizer)
+    if level.game_id is not None:
+        game = await get_game(id_=level.game_id, author=author, dao=dao.game)
+        orgs = await organizers.get_secondary_orgs(game, dao.organizer)
+    else:
+        game = None
+        orgs = []
     return {
         "game": game,
         "orgs": orgs,

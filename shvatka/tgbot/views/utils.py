@@ -1,4 +1,5 @@
 from contextlib import suppress
+from typing import Sequence
 
 from aiogram import Bot
 from aiogram.exceptions import AiogramError
@@ -13,12 +14,13 @@ async def total_remove_msg(
     bot: Bot,
     chat_id: int | None = None,
     msg_id: int | None = None,
-    inline_msg_id: int | None = None,
-):
+    inline_msg_id: str | None = None,
+) -> None:
     if inline_msg_id:
-        return await edit_message_as_removed(bot, inline_message_id=inline_msg_id)
-    if msg_id is None:
-        return None
+        await edit_message_as_removed(bot, inline_message_id=inline_msg_id)
+        return
+    if msg_id is None or chat_id is None:
+        return
     try:
         await bot.delete_message(chat_id, msg_id)
     except AiogramError:
@@ -27,7 +29,7 @@ async def total_remove_msg(
 
 async def edit_message_as_removed(
     bot: Bot,
-    inline_message_id: int | None = None,
+    inline_message_id: str | None = None,
     chat_id: int | None = None,
     message_id: int | None = None,
     text: str = "(удалено)",
@@ -50,9 +52,9 @@ def render_time_hint(time_hint: hints.TimeHint) -> str:
     return f"{time_hint.time}: {render_hints(time_hint.hint)}"
 
 
-def render_hints(hints: list[hints.BaseHint]) -> str:
-    return "".join([render_single_hint(hint) for hint in hints])
+def render_hints(hints_: Sequence[hints.AnyHint]) -> str:
+    return "".join([render_single_hint(hint) for hint in hints_])
 
 
-def render_single_hint(hint: hints.BaseHint) -> str:
+def render_single_hint(hint: hints.AnyHint) -> str:
     return HINTS_EMOJI[HintType[hint.type]]

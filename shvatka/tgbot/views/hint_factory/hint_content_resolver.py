@@ -75,28 +75,28 @@ class HintContentResolver:
                 return AudioLinkView(
                     file_id=await self._resolve_file_id(hint.file_guid),
                     caption=hint.caption,
-                    thumb=await self._resolve_file_id(hint.thumb_guid),
+                    thumb=await self._resolve_thumb_file_id(hint.thumb_guid),
                 )
             case VideoHint():
                 hint = typing.cast(VideoHint, hint)
                 return VideoLinkView(
                     file_id=await self._resolve_file_id(hint.file_guid),
                     caption=hint.caption,
-                    thumb=await self._resolve_file_id(hint.thumb_guid),
+                    thumb=await self._resolve_thumb_file_id(hint.thumb_guid),
                 )
             case DocumentHint():
                 hint = typing.cast(DocumentHint, hint)
                 return DocumentLinkView(
                     file_id=await self._resolve_file_id(hint.file_guid),
                     caption=hint.caption,
-                    thumb=await self._resolve_file_id(hint.thumb_guid),
+                    thumb=await self._resolve_thumb_file_id(hint.thumb_guid),
                 )
             case AnimationHint():
                 hint = typing.cast(AnimationHint, hint)
                 return AnimationLinkView(
                     file_id=await self._resolve_file_id(hint.file_guid),
                     caption=hint.caption,
-                    thumb=await self._resolve_file_id(hint.thumb_guid),
+                    thumb=await self._resolve_thumb_file_id(hint.thumb_guid),
                 )
             case VoiceHint():
                 hint = typing.cast(VoiceHint, hint)
@@ -118,11 +118,14 @@ class HintContentResolver:
             case _:
                 raise RuntimeError("unknown hint type")
 
-    async def _resolve_file_id(self, guid: str | None) -> str | None:
-        if guid is None:
-            return None
+    async def _resolve_file_id(self, guid: str) -> str:
         tg_link = (await self.dao.get_by_guid(guid)).tg_link
         return tg_link.file_id
+
+    async def _resolve_thumb_file_id(self, guid: str | None) -> str | None:
+        if guid is None:
+            return None
+        return await self._resolve_file_id(guid)
 
     async def resolve_content(self, hint: BaseHint) -> BaseHintContentView:
         match hint:
@@ -162,14 +165,14 @@ class HintContentResolver:
                 return DocumentContentView(
                     content=await self._resolve_bytes(hint.file_guid),
                     caption=hint.caption,
-                    thumb=await self._resolve_bytes(hint.thumb_guid),
+                    thumb=await self._resolve_thumb_bytes(hint.thumb_guid),
                 )
             case AnimationHint():
                 hint = typing.cast(AnimationHint, hint)
                 return AnimationContentView(
                     content=await self._resolve_bytes(hint.file_guid),
                     caption=hint.caption,
-                    thumb=await self._resolve_bytes(hint.thumb_guid),
+                    thumb=await self._resolve_thumb_bytes(hint.thumb_guid),
                 )
             case VoiceHint():
                 hint = typing.cast(VoiceHint, hint)
@@ -191,13 +194,16 @@ class HintContentResolver:
             case _:
                 raise RuntimeError("unknown hint type")
 
-    async def _resolve_bytes(self, guid: str | None) -> BinaryIO | None:
-        if guid is None:
-            return None
+    async def _resolve_bytes(self, guid: str) -> BinaryIO:
         file_info = await self.dao.get_by_guid(guid)
         content = await self.storage.get(file_info.file_content_link)
         content = BytesWithName(content.read(), original_filename=file_info.public_filename)
         return content
+
+    async def _resolve_thumb_bytes(self, guid: str | None) -> BinaryIO | None:
+        if guid is None:
+            return None
+        return await self._resolve_bytes(guid)
 
 
 class BytesWithName(BytesIO):

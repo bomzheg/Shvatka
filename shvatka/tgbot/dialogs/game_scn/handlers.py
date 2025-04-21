@@ -1,6 +1,6 @@
 import logging
 import typing
-from typing import Any
+from typing import Any, IO
 from zipfile import Path as ZipPath
 
 from adaptix import Retort
@@ -59,7 +59,7 @@ async def process_zip_scn(m: Message, dialog_: Any, manager: DialogManager):
     file_gateway: FileGateway = manager.middleware_data["file_gateway"]
     retort: Retort = manager.middleware_data["retort"]
     assert m.document
-    document = await bot.download(m.document.file_id)
+    document: IO[bytes] = await bot.download(m.document.file_id)  # type: ignore[assignment]
     try:
         with unpack_scn(ZipPath(document)).open() as scenario:  # type: scn.RawGameScenario
             game = await upsert_game(scenario, player, dao.game_upserter, retort, file_gateway)

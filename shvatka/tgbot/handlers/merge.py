@@ -33,7 +33,7 @@ async def confirm_merge_team(
     await callback_query.answer("Успешно объединено")
     assert isinstance(callback_query.message, Message)
     await callback_query.message.edit_reply_markup(reply_markup=None)
-    captain_chat_id = primary.captain.get_chat_id()
+    captain_chat_id: int = primary.captain.get_chat_id()  # type: ignore[assignment]
     bg = bg_manager_factory.bg(bot=bot, user_id=captain_chat_id, chat_id=captain_chat_id)
     await bg.update({})
 
@@ -52,7 +52,7 @@ async def confirm_merge_players(
     await callback_query.answer("Успешно объединено")
     assert isinstance(callback_query.message, Message)
     await callback_query.message.edit_reply_markup(reply_markup=None)
-    primary_chat_id = primary.get_chat_id()
+    primary_chat_id: int = primary.get_chat_id()  # type: ignore[assignment]
     bg = bg_manager_factory.bg(bot=bot, user_id=primary_chat_id, chat_id=primary_chat_id)
     await bg.update({})
 

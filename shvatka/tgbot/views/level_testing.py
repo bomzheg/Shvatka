@@ -16,7 +16,7 @@ class LevelBotView(LevelView):
 
     async def send_puzzle(self, suite: dto.LevelTestSuite) -> None:
         await self.hint_sender.send_hints(
-            chat_id=suite.tester.player.get_chat_id(),
+            chat_id=suite.tester.player.get_chat_id(),  # type: ignore[arg-type]
             hint_containers=suite.level.get_hint(0).hint,
             caption=hd.bold(f"Тестирование уровня {suite.level.name_id}"),
         )
@@ -30,25 +30,25 @@ class LevelBotView(LevelView):
         else:
             hint_caption = f"Уровень {suite.level.name_id}. Подсказка ({hint.time} мин.):\n"
         await self.hint_sender.send_hints(
-            chat_id=suite.tester.player.get_chat_id(),
+            chat_id=suite.tester.player.get_chat_id(),  # type: ignore[arg-type]
             hint_containers=hint.hint,
             caption=hint_caption,
         )
 
     async def correct_key(self, suite: dto.LevelTestSuite, key: str) -> None:
         await self.bot.send_message(
-            chat_id=suite.tester.player.get_chat_id(),
+            chat_id=suite.tester.player.get_chat_id(),  # type: ignore[arg-type]
             text=f"{KeyEmoji.correct.value}Ключ {hd.pre(key)} верный! Поздравляю!",
         )
 
     async def wrong_key(self, suite: dto.LevelTestSuite, key: str) -> None:
         await self.bot.send_message(
-            chat_id=suite.tester.player.get_chat_id(),
+            chat_id=suite.tester.player.get_chat_id(),  # type: ignore[arg-type]
             text=f"{KeyEmoji.incorrect.value}Ключ {hd.pre(key)} неверный.",
         )
 
     async def level_finished(self, suite: dto.LevelTestSuite) -> None:
         await self.bot.send_message(
-            chat_id=suite.tester.player.get_chat_id(),
+            chat_id=suite.tester.player.get_chat_id(),  # type: ignore[arg-type]
             text="Тестирование уровня завершено, поздравляю!",
         )

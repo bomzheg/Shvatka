@@ -42,11 +42,12 @@ async def send_promotion_invite(
             inviter=player, token=inline_data.token, dao=dao.secure_invite
         )
     except SaltError:
-        return await inline_query.answer(
+        await inline_query.answer(
             results=[],
             switch_pm_text="Невозможно отправить, нажми сюда для подробностей.",
             switch_pm_parameter="wrong_invite",
         )
+        return
     token = await save_promotion_confirm_invite(player, dao.secure_invite)
     result = [
         InlineQueryResultArticle(
@@ -55,12 +56,16 @@ async def send_promotion_invite(
             title="Наделить полномочиями",
             description="Только людям, которых знаете лично!",
             input_message_content=InputTextMessageContent(
-                message_text=("Получить аппрув?\nОн нужен для написания игр и создания команды")
+                message_text="Получить аппрув?\nОн нужен для написания игр и создания команды"
             ),
             reply_markup=kb.get_kb_agree_promotion(token=token, inviter=player),
         )
     ]
-    await inline_query.answer(results=result, is_personal=True, cache_time=1)
+    await inline_query.answer(
+        results=result,  # type: ignore[arg-type]
+        is_personal=True,
+        cache_time=1,
+    )
 
 
 async def dismiss_promotion_handler(
@@ -108,7 +113,7 @@ async def agree_promotion_handler(
             ),
             inline_message_id=c.inline_message_id,
         )
-        primary_chat_id = player.get_chat_id()
+        primary_chat_id: int = player.get_chat_id()  # type: ignore[assignment]
         bg = bg_manager_factory.bg(bot=bot, user_id=primary_chat_id, chat_id=primary_chat_id)
         await bg.update({})
 
@@ -120,21 +125,23 @@ async def inviter_click_handler(c: CallbackQuery):
 async def get_my_team_cmd(message: Message, player: dto.Player, dao: HolderDao):
     team = await get_my_team(player, dao.team_player)
     if team:
-        return await message.answer(
+        await message.answer(
             text=render_team_card(team),
             link_preview_options=LinkPreviewOptions(is_disabled=True),
         )
+        return
     await message.answer("Ты не состоишь в команде")
 
 
 async def leave_handler(message: Message, player: dto.Player, dao: HolderDao, bot: Bot):
     team = await get_my_team(player, dao.team_player)
     if team is None:
-        return await message.answer("Ты не состоишь в команде")
+        await message.answer("Ты не состоишь в команде")
+        return
     await leave(player, player, dao.team_leaver)
     await message.answer(f"Ты вышел из команды {hd.quote(team.name)}")
     await bot.send_message(
-        chat_id=team.get_chat_id(),
+        chat_id=team.get_chat_id(),  # type: ignore[arg-type]
         text=f"Игрок {hd.quote(player.name_mention)} вышел из команды.",
     )
 

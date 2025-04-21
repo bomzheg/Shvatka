@@ -95,7 +95,7 @@ async def publish_game(game_publisher: GamePublisher, manager: BaseDialogManager
         {"text_invite": text_invite_scn + "\n" + table_of_content, "started": False}
     )
     await bot.send_message(
-        chat_id=game_publisher.game.author.get_chat_id(),
+        chat_id=game_publisher.game.author.get_chat_id(),  # type: ignore[arg-type]
         text=f"Сценарий загружен.\n{text_invite_scn}",
     )
 

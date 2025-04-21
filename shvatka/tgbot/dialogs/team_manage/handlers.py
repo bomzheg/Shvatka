@@ -1,3 +1,4 @@
+import logging
 import typing
 from typing import Any
 
@@ -30,8 +31,10 @@ from shvatka.core.utils import exceptions
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.tgbot import keyboards as kb
 from shvatka.tgbot import states
-from shvatka.tgbot.utils.data import MiddlewareData
+from shvatka.tgbot.utils.data import SHMiddlewareData
 from shvatka.tgbot.views.utils import total_remove_msg
+
+logger = logging.getLogger(__name__)
 
 
 async def rename_team_handler(
@@ -40,6 +43,10 @@ async def rename_team_handler(
     dao: HolderDao = dialog_manager.middleware_data["dao"]
     player: dto.Player = dialog_manager.middleware_data["player"]
     team = await get_my_team(player=player, dao=dao.team_player)
+    if not team:
+        logger.warning("player %s has no team", player.id)
+        await dialog_manager.done()
+        return
     team_player = await get_full_team_player(player=player, team=team, dao=dao.team_player)
     await rename_team(team=team, captain=team_player, new_name=new_name, dao=dao.team)
 
@@ -50,6 +57,10 @@ async def change_desc_team_handler(
     dao: HolderDao = dialog_manager.middleware_data["dao"]
     player: dto.Player = dialog_manager.middleware_data["player"]
     team = await get_my_team(player=player, dao=dao.team_player)
+    if team is None:
+        logger.warning("player %s has no team", player.id)
+        await dialog_manager.done()
+        return
     team_player = await get_full_team_player(player=player, team=team, dao=dao.team_player)
     await change_team_desc(team=team, captain=team_player, new_desc=new_desc, dao=dao.team)
 
@@ -75,7 +86,7 @@ async def change_permission_handler(c: CallbackQuery, button: Button, manager: D
 
 
 async def start_merge(c: CallbackQuery, button: Button, manager: DialogManager):
-    data = typing.cast(MiddlewareData, manager.middleware_data)
+    data = typing.cast(SHMiddlewareData, manager.middleware_data)
     dao = data["dao"]
     captain = data["player"]
     assert captain
@@ -95,7 +106,7 @@ async def remove_player_handler(c: CallbackQuery, button: Button, manager: Dialo
     team = await get_my_team(captain, dao.team_player)
     assert team
     await bot.send_message(
-        chat_id=team.get_chat_id(),
+        chat_id=team.get_chat_id(),  # type: ignore[arg-type]
         text=f"Игрок {hd.quote(player.name_mention)} был исключён из команды.",
     )
     await manager.switch_to(state=states.CaptainsBridgeSG.players)
@@ -107,6 +118,10 @@ async def change_role_handler(m: Message, widget: Any, manager: DialogManager, r
     player_id = manager.dialog_data["selected_player_id"]
     player = await get_player_by_id(player_id, dao.player)
     team = await get_my_team(captain, dao.team_player)
+    if team is None:
+        logger.warning("player %s has no team", captain.id)
+        await manager.done()
+        return
     await change_role(player, team, captain, role, dao.team_player)
     await manager.switch_to(states.CaptainsBridgeSG.player)
 
@@ -117,6 +132,10 @@ async def change_emoji_handler(m: Message, widget: Any, manager: DialogManager, 
     player_id = manager.dialog_data["selected_player_id"]
     player = await get_player_by_id(player_id, dao.player)
     team = await get_my_team(captain, dao.team_player)
+    if team is None:
+        logger.warning("player %s has no team", captain.id)
+        await manager.done()
+        return
     await change_emoji(player, team, captain, emoji, dao.team_player)
     await manager.switch_to(states.CaptainsBridgeSG.player)
 
@@ -169,12 +188,12 @@ async def gotten_chat_request(m: Message, widget: Any, manager: DialogManager):
         await change_chat(team, team_player, chat, dao.chat)
     except exceptions.AnotherTeamInChat:
         await bot.send_message(
-            chat_id=captain.get_chat_id(),
+            chat_id=captain.get_chat_id(),  # type: ignore[arg-type]
             text=f"‼️Другая команда уже находится в чате " f"({hd.quote(chat.name)}).\n",
         )
         return
     await bot.send_message(
-        chat_id=captain.get_chat_id(),
+        chat_id=captain.get_chat_id(),  # type: ignore[arg-type]
         text=(
             f"Команда {hd.bold(team.name)} перенесена в чат {hd.bold(chat.name)}\n"
             f"{old_chat_id}➡️{chat.tg_id}"
@@ -199,18 +218,18 @@ async def gotten_user_request(m: Message, widget: Any, manager: DialogManager):
         await join_team(player, team, captain, dao.team_player)
     except exceptions.PlayerAlreadyInTeam as e:
         return await bot.send_message(
-            chat_id=captain.get_chat_id(),
+            chat_id=captain.get_chat_id(),  # type: ignore[arg-type]
             text=f"‼️Игрок {hd.quote(player.name_mention)} уже находится в команде "
             f"({hd.quote(e.team.name)}).\n",  # type: ignore
         )
     except exceptions.PlayerRestoredInTeam:
         await bot.send_message(
-            chat_id=captain.get_chat_id(),
+            chat_id=captain.get_chat_id(),  # type: ignore[arg-type]
             text="Игрок возвращён в команду, я сделаю вид что и не покидал",
         )
     else:
         await bot.send_message(
-            chat_id=captain.get_chat_id(),
+            chat_id=captain.get_chat_id(),  # type: ignore[arg-type]
             text=f"В команду {hd.bold(team.name)} добавлен игрок {hd.bold(player.name_mention)}",
         )
     await total_remove_msg(

@@ -41,9 +41,9 @@ async def process_id(
     dao: FromDishka[HolderDao],
 ):
     author: dto.Player = manager.middleware_data["player"]
-    if await dao.level.is_name_id_exist(name_id, author):
-        lvl = await dao.level.get_by_author_and_name_id(author, name_id)
-        return await raise_restrict_rewrite_level(m, author, lvl, dao)
+    if lvl := await dao.level.get_by_author_and_name_id(author, name_id):
+        await raise_restrict_rewrite_level(m, author, lvl, dao)
+        return
     manager.dialog_data["level_id"] = name_id
     await manager.next()
 
@@ -263,7 +263,7 @@ async def save_level(c: CallbackQuery, button: Button, manager: DialogManager):
     dao: HolderDao = manager.middleware_data["dao"]
     data = manager.dialog_data
     id_ = data["level_id"]
-    keys = set(map(normalize_key, data["keys"]))
+    keys = {k for k in map(normalize_key, data["keys"]) if k is not None}
     time_hints = retort.load(data["time_hints"], list[hints.TimeHint])
     bonus_keys = retort.load(data.get("bonus_keys", []), set[action.BonusKey])
     routed_conditions = retort.load(
@@ -292,7 +292,7 @@ async def save_level(c: CallbackQuery, button: Button, manager: DialogManager):
 
     level_scn = scn.LevelScenario(
         id=id_,
-        time_hints=time_hints,
+        time_hints=scn.HintsList(time_hints),
         conditions=conditions,
         __model_version__=1,
     )

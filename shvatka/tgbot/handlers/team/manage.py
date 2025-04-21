@@ -119,39 +119,45 @@ async def cmd_add_in_team(
         team.id,
     )
     try:
-        chat_member = await bot.get_chat_member(team.get_chat_id(), target.get_chat_id())
+        chat_member = await bot.get_chat_member(team.get_chat_id(), target.get_chat_id())  # type: ignore[arg-type]
     except TelegramBadRequest:
-        return await bot.send_message(
-            chat_id=team.get_chat_id(), text="Не могу найти этого пользователя (его нет в чате?)"
+        await bot.send_message(
+            chat_id=team.get_chat_id(),  # type: ignore[arg-type]
+            text="Не могу найти этого пользователя (его нет в чате?)",
         )
+        return
     if chat_member.user.is_bot:
         return
     if chat_member.status == "left":
-        return await bot.send_message(
-            chat_id=team.get_chat_id(),
+        await bot.send_message(
+            chat_id=team.get_chat_id(),  # type: ignore[arg-type]
             text="Не могу добавить этого пользователя. Вероятно его нет в чате",
         )
+        return
     try:
         await join_team(target, team, player, dao.team_player, role)
     except PlayerAlreadyInTeam as e:
-        return await bot.send_message(
-            chat_id=team.get_chat_id(),
+        await bot.send_message(
+            chat_id=team.get_chat_id(),  # type: ignore[arg-type]
             text=f"Игрок {hd.quote(target.name_mention)} уже находится в команде "
             f"({hd.quote(e.team.name)}).\n",  # type: ignore
         )
+        return
     except exceptions.PlayerRestoredInTeam:
-        return await bot.send_message(
-            chat_id=team.get_chat_id(),
+        await bot.send_message(
+            chat_id=team.get_chat_id(),  # type: ignore[arg-type]
             text="Игрок возвращён в команду, я сделаю вид что и не покидал",
         )
+        return
     except exceptions.PermissionsError:
-        return await bot.send_message(
-            chat_id=team.get_chat_id(),
+        await bot.send_message(
+            chat_id=team.get_chat_id(),  # type: ignore[arg-type]
             text="У тебя нет прав добавлять игроков в команду. Обратись к капитану",
         )
+        return
 
     await bot.send_message(
-        chat_id=team.get_chat_id(),
+        chat_id=team.get_chat_id(),  # type: ignore[arg-type]
         text="В команду {team} добавлен игрок {player} в качестве роли указано: {role}".format(
             team=hd.bold(team.name), player=hd.bold(target.name_mention), role=hd.italic(role)
         ),
@@ -172,7 +178,8 @@ async def button_join(
             f"asked about team_id {callback_data.team_id} but in team {team.id}"
         )
     if team_player.team_id != team.id:
-        return await callback_query.answer("Ты состоишь в другой команде!", show_alert=True)
+        await callback_query.answer("Ты состоишь в другой команде!", show_alert=True)
+        return
     await callback_query.answer()
     target = await get_player_by_id(callback_data.player_id, dao.player)
     logger.info(
@@ -181,35 +188,39 @@ async def button_join(
         target.id,
         team.id,
     )
-    chat_member = await bot.get_chat_member(team.get_chat_id(), target.get_chat_id())
+    chat_member = await bot.get_chat_member(team.get_chat_id(), target.get_chat_id())  # type: ignore[arg-type]
     if chat_member.user.is_bot:
         return
     if chat_member.status == "left":
-        return await bot.send_message(
-            chat_id=team.get_chat_id(),
+        await bot.send_message(
+            chat_id=team.get_chat_id(),  # type: ignore[arg-type]
             text="Не могу добавить этого пользователя. Вероятно его уже нет в чате",
         )
+        return
     assert callback_query.message
     try:
         await join_team(target, team, player, dao.team_player)
     except PlayerAlreadyInTeam as e:
-        return await bot.edit_message_text(
+        await bot.edit_message_text(
             chat_id=team.get_chat_id(),
             message_id=callback_query.message.message_id,
             text=f"Игрок {hd.quote(target.name_mention)} уже находится в команде "
             f"({hd.quote(e.team.name)}).\n",  # type: ignore
         )
+        return
     except exceptions.PlayerRestoredInTeam:
-        return await bot.edit_message_text(
+        await bot.edit_message_text(
             chat_id=team.get_chat_id(),
             message_id=callback_query.message.message_id,
             text="Игрок возвращён в команду, я сделаю вид что и не покидал",
         )
+        return
     except exceptions.PermissionsError:
-        return await callback_query.answer(
+        await callback_query.answer(
             text="У тебя нет прав добавлять игроков в команду. Обратись к капитану",
             show_alert=True,
         )
+        return
     await bot.edit_message_text(
         chat_id=team.get_chat_id(),
         message_id=callback_query.message.message_id,

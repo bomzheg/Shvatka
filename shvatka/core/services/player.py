@@ -116,14 +116,14 @@ async def join_team(
 
 
 async def get_checked_player_on_team(
-    player: dto.Player, team: dto.Team, dao: TeamPlayerGetter
+    player: dto.Player, team: dto.Team | None, dao: TeamPlayerGetter
 ) -> dto.TeamPlayer:
     tp = await dao.get_team_player(player)
     check_team_player_on_team(tp, team)
     return tp
 
 
-def check_team_player_on_team(team_player: dto.TeamPlayer, team: dto.Team):
+def check_team_player_on_team(team_player: dto.TeamPlayer, team: dto.Team | None) -> None:
     if team is None or team_player.team_id != team.id:
         raise PlayerNotInTeam(player_id=team_player.player_id, team=team)
 
@@ -207,8 +207,10 @@ def check_can_add_players(team_player: dto.FullTeamPlayer):
 
 
 async def get_full_team_player(
-    player: dto.Player, team: dto.Team, dao: TeamPlayerGetter
+    player: dto.Player, team: dto.Team | None, dao: TeamPlayerGetter
 ) -> dto.FullTeamPlayer:
+    if team is None:
+        raise exceptions.PlayerNotInTeam(player_id=player.id)
     team_player = dto.FullTeamPlayer.from_simple(
         team_player=await get_checked_player_on_team(player, team, dao),
         team=team,

@@ -9,7 +9,7 @@ from aiogram_dialog import DialogManager
 from shvatka.core.services.team import get_team_by_id, get_team_by_forum_team_id
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.tgbot import states, keyboards as kb
-from shvatka.tgbot.utils.data import MiddlewareData
+from shvatka.tgbot.utils.data import SHMiddlewareData
 
 
 async def select_forum_team(
@@ -20,7 +20,7 @@ async def select_forum_team(
 
 
 async def confirm_merge(c: CallbackQuery, button: Any, manager: DialogManager):
-    data = typing.cast(MiddlewareData, manager.middleware_data)
+    data = typing.cast(SHMiddlewareData, manager.middleware_data)
     dao = data["dao"]
     captain = data["player"]
     assert captain
@@ -48,7 +48,7 @@ async def player_link_handler(m: Message, widget: Any, manager: DialogManager):
 
 
 async def confirm_merge_player(c: CallbackQuery, button: Any, manager: DialogManager):
-    data = typing.cast(MiddlewareData, manager.middleware_data)
+    data = typing.cast(SHMiddlewareData, manager.middleware_data)
     dao = data["dao"]
     primary = data["player"]
     assert primary

@@ -166,10 +166,6 @@ module = "shvatka.infrastructure.di.*"
 disable_error_code = ["call-overload"]
 
 [[tool.mypy.overrides]]
-module = "shvatka.tgbot.*"
-disable_error_code = ["arg-type"]
-
-[[tool.mypy.overrides]]
 module = "shvatka.infrastructure.crawler.*"
 disable_error_code = ["union-attr", "arg-type", "index", "misc", "assignment"]
 

@@ -120,6 +120,7 @@ async def select_date(c: CallbackQuery, widget, manager: DialogManager, selected
 
 
 async def process_time_message(m: Message, dialog_: Any, manager: DialogManager) -> None:
+    assert m.text
     try:
         time_ = datetime.strptime(m.text, TIME_FORMAT).time()
     except ValueError:

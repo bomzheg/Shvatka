@@ -18,5 +18,5 @@ class TeamChatChanger(Committer, Protocol):
     async def is_team_in_chat(self, chat: dto.Chat) -> bool:
         raise NotImplementedError
 
-    async def change_team_chat(self, chat: dto.Chat, team: dto.Team) -> None:
+    async def change_team_chat(self, team: dto.Team, chat: dto.Chat) -> None:
         raise NotImplementedError

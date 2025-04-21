@@ -26,6 +26,7 @@ async def process_edit_time_message(
     manager: DialogManager,
     retort: FromDishka[Retort],
 ) -> None:
+    assert m.text
     try:
         time_ = int(m.text)
     except ValueError:
@@ -44,6 +45,7 @@ async def process_edit_time_message(
 
 
 async def process_time_message(m: Message, dialog_: Any, manager: DialogManager) -> None:
+    assert m.text
     try:
         time_ = int(m.text)
     except ValueError:

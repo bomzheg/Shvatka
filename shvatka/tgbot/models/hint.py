@@ -57,7 +57,7 @@ class VenueHintView(BaseHintLinkView, BaseHintContentView):
 @dataclass
 class PhotoLinkView(BaseHintLinkView):
     file_id: str
-    caption: str
+    caption: str | None = None
 
     def kwargs(self) -> dict:
         return {"photo": self.file_id, "caption": self.caption}
@@ -66,7 +66,7 @@ class PhotoLinkView(BaseHintLinkView):
 @dataclass
 class PhotoContentView(BaseHintContentView):
     content: BinaryIO
-    caption: str
+    caption: str | None = None
 
     def kwargs(self) -> dict:
         return {
@@ -78,7 +78,7 @@ class PhotoContentView(BaseHintContentView):
 @dataclass
 class AudioLinkView(BaseHintLinkView):
     file_id: str
-    caption: str
+    caption: str | None = None
     thumb: str | None = None
 
     def kwargs(self) -> dict:
@@ -88,7 +88,7 @@ class AudioLinkView(BaseHintLinkView):
 @dataclass
 class AudioContentView(BaseHintContentView):
     content: BinaryIO
-    caption: str
+    caption: str | None = None
     thumb: BinaryIO | None = None
 
     def kwargs(self) -> dict:
@@ -102,7 +102,7 @@ class AudioContentView(BaseHintContentView):
 @dataclass
 class VideoLinkView(BaseHintLinkView):
     file_id: str
-    caption: str
+    caption: str | None = None
     thumb: str | None = None
 
     def kwargs(self) -> dict:
@@ -112,7 +112,7 @@ class VideoLinkView(BaseHintLinkView):
 @dataclass
 class VideoContentView(BaseHintContentView):
     content: BinaryIO
-    caption: str
+    caption: str | None = None
     thumb: BinaryIO | None = None
 
     def kwargs(self) -> dict:
@@ -126,7 +126,7 @@ class VideoContentView(BaseHintContentView):
 @dataclass
 class DocumentLinkView(BaseHintLinkView):
     file_id: str
-    caption: str
+    caption: str | None = None
     thumb: str | None = None
 
     def kwargs(self) -> dict:
@@ -136,7 +136,7 @@ class DocumentLinkView(BaseHintLinkView):
 @dataclass
 class DocumentContentView(BaseHintContentView):
     content: BinaryIO
-    caption: str
+    caption: str | None = None
     thumb: BinaryIO | None = None
 
     def kwargs(self) -> dict:
@@ -150,7 +150,7 @@ class DocumentContentView(BaseHintContentView):
 @dataclass
 class AnimationLinkView(BaseHintLinkView):
     file_id: str
-    caption: str
+    caption: str | None = None
     thumb: str | None = None
 
     def kwargs(self) -> dict:
@@ -160,7 +160,7 @@ class AnimationLinkView(BaseHintLinkView):
 @dataclass
 class AnimationContentView(BaseHintContentView):
     content: BinaryIO
-    caption: str
+    caption: str | None = None
     thumb: BinaryIO | None = None
 
     def kwargs(self) -> dict:
@@ -174,7 +174,7 @@ class AnimationContentView(BaseHintContentView):
 @dataclass
 class VoiceLinkView(BaseHintLinkView):
     file_id: str
-    caption: str
+    caption: str | None = None
 
     def kwargs(self) -> dict:
         return {"voice": self.file_id, "caption": self.caption}
@@ -183,7 +183,7 @@ class VoiceLinkView(BaseHintLinkView):
 @dataclass
 class VoiceContentView(BaseHintContentView):
     content: BinaryIO
-    caption: str
+    caption: str | None = None
 
     def kwargs(self) -> dict:
         return {

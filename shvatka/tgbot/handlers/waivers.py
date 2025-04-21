@@ -41,7 +41,7 @@ async def start_waivers(
         await message.answer("Ты не в команде или не капитан")
         return
     msg = await bot.send_message(
-        chat_id=team.get_chat_id(),
+        chat_id=team.get_chat_id(),  # type: ignore[arg-type]
         text=await get_waiver_poll_text(team, game, dao),
         reply_markup=kb.get_kb_waivers(team, game),
         link_preview_options=LinkPreviewOptions(is_disabled=True),
@@ -123,6 +123,8 @@ async def waiver_main_menu(
 ):
     check_same_game(callback_data, game, player)
     team = await get_my_team(player, dao.team_player)
+    if team is None:
+        raise PlayerNotInTeam(player=player, team=team)
     check_same_team(callback_data, player, team)
     check_allow_approve_waivers(await get_full_team_player(player, team, dao.waiver_approver))
     await c.message.edit_text(  # type: ignore[union-attr]
@@ -144,7 +146,7 @@ async def confirm_approve_waivers_handler(
     assert team
     await approve_waivers(game=game, team=team, approver=player, dao=dao.waiver_approver)
     await bot.send_message(
-        chat_id=team.get_chat_id(),
+        chat_id=team.get_chat_id(),  # type: ignore[arg-type]
         text=await get_waiver_final_text(team, game, dao),
         link_preview_options=LinkPreviewOptions(is_disabled=True),
     )
@@ -201,6 +203,8 @@ async def waiver_remove_user_vote(
 ):
     check_same_game(callback_data, game, player)
     team = await get_my_team(player, dao.team_player)
+    if team is None:
+        raise PlayerNotInTeam(player=player, team=team)
     check_same_team(callback_data, player, team)
     target = await dao.player.get_by_id(callback_data.player_id)
     await revoke_vote_by_captain(game, team, player, target, dao.waiver_approver)
@@ -219,6 +223,8 @@ async def waiver_add_force_menu(
 ):
     check_same_game(callback_data, game, player)
     team = await get_my_team(player, dao.team_player)
+    if team is None:
+        raise PlayerNotInTeam(player=player, team=team)
     check_same_team(callback_data, player, team)
     check_allow_approve_waivers(await get_full_team_player(player, team, dao.waiver_approver))
     players = await get_not_played_team_players(team=team, dao=dao.waiver_approver)
@@ -239,6 +245,8 @@ async def add_force_player(
 ):
     check_same_game(callback_data, game, player)
     team = await get_my_team(player, dao.team_player)
+    if team is None:
+        raise PlayerNotInTeam(player=player, team=team)
     check_same_team(callback_data, player, team)
     check_allow_approve_waivers(await get_full_team_player(player, team, dao.waiver_approver))
     target = await dao.player.get_by_id(callback_data.player_id)
@@ -260,8 +268,10 @@ async def player_not_in_team_handler(c: CallbackQuery):
     await c.answer("Вы не состоите в этой команде", show_alert=True, cache_time=10)
 
 
-def check_same_team(callback_data: kb.IWaiverCD, player: dto.Player, team: dto.Team) -> None:
-    if not team or team.id != callback_data.team_id:
+def check_same_team(
+    callback_data: kb.IWaiverCD, player: dto.Player, team: dto.Team | None
+) -> None:
+    if team is None or team.id != callback_data.team_id:
         raise PlayerNotInTeam(
             player=player,
             team=team,

@@ -9,7 +9,7 @@ from aiogram.types import User
 from pyrogram import Client
 from pyrogram.errors import RPCError, UsernameNotOccupied, FloodWait
 
-from shvatka.core.utils.exceptions import UsernameResolverError, NoUsernameFound
+from shvatka.core.utils import exceptions
 from shvatka.tgbot.config.models.bot import TgClientConfig
 
 logger = logging.getLogger(__name__)
@@ -26,7 +26,7 @@ class UserGetter:
             no_updates=True,
         )
 
-    async def get_user(self, username: str | None = None) -> User | None:
+    async def get_user(self, username: str) -> User | None:
         try:
             return await self.get_user_by_username(username)
         except RPCError:
@@ -38,13 +38,17 @@ class UserGetter:
             user = await self._client_api_bot.get_users(username)
         except UsernameNotOccupied as e:
             logger.info("Username not found %s", username)
-            raise NoUsernameFound(username=username) from e
+            raise exceptions.NoUsernameFound(username=username) from e
         except FloodWait as e:
             logger.error("Flood Wait %s", e, exc_info=e)
             await asyncio.sleep(e.value)
-            raise UsernameResolverError(username=username) from e
+            raise exceptions.UsernameResolverError(username=username) from e
         except Exception as e:
-            raise UsernameResolverError(username=username) from e
+            raise exceptions.UsernameResolverError(username=username) from e
+        if isinstance(user, list):
+            raise exceptions.MultipleUsernameFound(
+                username=username, text="got multiple users by this username!"
+            )
         as_aio = map_pyrogram_user_to_aiogram(user)
         logger.info("found user %s", as_aio.json())
         return as_aio

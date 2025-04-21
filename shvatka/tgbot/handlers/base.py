@@ -1,4 +1,4 @@
-import importlib
+import importlib.resources
 import logging
 
 from aiogram import F, Router
@@ -30,11 +30,11 @@ privacy_counter = Counter(
 
 
 async def chat_id(message: Message, chat: dto.Chat, user: dto.User):
-    text = f"id этого чата: {hd.pre(str(chat.tg_id))}\nВаш id: {hd.pre(user.tg_id)}"
+    text = f"id этого чата: {hd.pre(str(chat.tg_id))}\nВаш id: {hd.pre(str(user.tg_id))}"
     if message.reply_to_message and message.reply_to_message.from_user:
         text += (
             f"\nid {hd.bold(message.reply_to_message.from_user.full_name)}: "
-            f"{hd.pre(message.reply_to_message.from_user.id)}"
+            f"{hd.pre(str(message.reply_to_message.from_user.id))}"
         )
     await message.reply(text, disable_notification=True)
 
@@ -78,6 +78,7 @@ async def chat_type_cmd_group(message: Message):
 
 async def chat_migrate(message: Message, chat: dto.Chat, dao: HolderDao):
     new_id = message.migrate_to_chat_id
+    assert new_id is not None
     await update_chat_id(chat, new_id, dao.chat)
     logger.info("Migrate chat from %s to %s", message.chat.id, new_id)
 

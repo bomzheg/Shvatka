@@ -53,7 +53,11 @@ async def invite_org_inline_query(
             reply_markup=kb.get_kb_agree_be_org(token=token, inviter=player),
         )
     ]
-    await q.answer(results=result, is_personal=True, cache_time=1)
+    await q.answer(
+        results=result,  # type: ignore[arg-type]
+        is_personal=True,
+        cache_time=1,
+    )
 
 
 async def dismiss_to_be_org_handler(
@@ -100,7 +104,7 @@ async def agree_to_be_org_handler(
         text=f"<i>(Игрок {hd.quote(player.name_mention)} принял приглашение)</i>",
         inline_message_id=c.inline_message_id,
     )
-    primary_chat_id = player.get_chat_id()
+    primary_chat_id: int = player.get_chat_id()  # type: ignore[assignment]
     bg = bg_manager_factory.bg(bot=bot, user_id=primary_chat_id, chat_id=primary_chat_id)
     await bg.update({})
 

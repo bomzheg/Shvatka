@@ -3,10 +3,10 @@ import logging
 from aiogram.enums import MessageEntityType
 from aiogram.types import Message
 
-from shvatka.core.utils.exceptions import MultipleUsernameFound, NoUsernameFound
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from .user_getter import UserGetter
 from shvatka.core.models import dto
+from shvatka.core.utils import exceptions
 
 logger = logging.getLogger(__name__)
 
@@ -19,6 +19,8 @@ def get_target_user(message: Message, can_be_same=False, can_be_bot=False) -> dt
     :param can_be_bot:
     :return:
     """
+    if message.from_user is None:
+        return None
 
     author_user = dto.User.from_aiogram(message.from_user)
 
@@ -33,7 +35,7 @@ def get_target_user(message: Message, can_be_same=False, can_be_bot=False) -> dt
 
 
 def has_target_user(
-    target_user: dto.User, author_user: dto.User, can_be_same: bool, can_be_bot: bool
+    target_user: dto.User | None, author_user: dto.User, can_be_same: bool, can_be_bot: bool
 ) -> bool:
     """
     :return: True if target_user exist, not is author and not bot
@@ -80,6 +82,7 @@ def get_mentioned_user(message: Message) -> dto.User | None:
         return None
     for ent in entities:
         if ent.type == MessageEntityType.TEXT_MENTION:
+            assert ent.user is not None
             return dto.User.from_aiogram(ent.user)
         elif ent.type == MessageEntityType.MENTION:
             username = ent.extract_from(possible_mentioned_text).lstrip("@")
@@ -88,7 +91,7 @@ def get_mentioned_user(message: Message) -> dto.User | None:
 
 
 def get_replied_user(message: Message) -> dto.User | None:
-    if message.reply_to_message:
+    if message.reply_to_message and message.reply_to_message.from_user is not None:
         return dto.User.from_aiogram(message.reply_to_message.from_user)
     return None
 
@@ -100,11 +103,13 @@ async def get_db_user_by_tg_user(
 ) -> dto.User:
     if target.tg_id:
         return await dao.user.upsert_user(target)
+    if target.username is None:
+        raise exceptions.NoUsernameFound("No username and tg_id in target user")
     try:
         return await dao.user.get_by_username(target.username)
-    except MultipleUsernameFound:
+    except exceptions.MultipleUsernameFound:
         logger.warning("Strange, multiple username? username=%s", target.username)
-    except NoUsernameFound:
+    except exceptions.NoUsernameFound:
         logger.info("username not found in db %s", target.username)
 
     tg_user = await user_getter.get_user_by_username(target.username)

@@ -1,3 +1,4 @@
+import logging
 from datetime import datetime, time, date
 
 from aiogram import Bot
@@ -17,6 +18,8 @@ from shvatka.core.utils.datetime_utils import tz_game
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.infrastructure.picture import ResultsPainter
 from shvatka.tgbot.views.keys import get_or_create_keys_page
+
+logger = logging.getLogger(__name__)
 
 
 async def get_my_games(dao: HolderDao, player: dto.Player, **_) -> dict[str, list[dto.Game]]:
@@ -113,7 +116,13 @@ async def get_game(dao: HolderDao, player: dto.Player, dialog_manager: DialogMan
 
 async def get_game_with_channel(dao: HolderDao, dialog_manager: DialogManager, bot: Bot, **_):
     game_id = dialog_manager.dialog_data.get("game_id", None)
+    if game_id is None:
+        logger.warning("game_id is None")
+        return {"invite": "sorry something happened", "game": None}
     game_ = await game.get_game(id_=game_id, dao=dao.game)
+    if game_.results.published_chanel_id is None:
+        logger.warning("published chanel id is None")
+        return {"invite": "sorry something happened", "game": game_}
     chat = await bot.get_chat(game_.results.published_chanel_id)
     return {
         "game": game_,

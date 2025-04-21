@@ -348,7 +348,7 @@ my_games = Dialog(
 schedule_game_dialog = Dialog(
     Window(
         Jinja("Выбор даты начала игры <b>{{game.name}}</b>"),
-        Calendar(id="select_game_play_date", on_click=select_date),
+        Calendar(id="select_game_play_date", on_click=select_date),  # type: ignore[arg-type]
         Cancel(Const("🔙Назад")),
         state=states.GameScheduleSG.date,
         getter=get_game,

@@ -1,10 +1,5 @@
-from typing import TypedDict, Any
-
 from adaptix import Retort
-from aiogram import types, Bot, Router
-from aiogram.dispatcher.event.handler import HandlerObject
-from aiogram.fsm.context import FSMContext
-from aiogram.fsm.storage.base import BaseStorage
+from aiogram.dispatcher.middlewares.data import MiddlewareData
 from aiogram_dialog import DialogManager
 from aiogram_dialog.api.entities import Stack, Context
 from aiogram_dialog.api.protocols import BgManagerFactory
@@ -28,26 +23,14 @@ from shvatka.tgbot.views.hint_factory.hint_parser import HintParser
 from shvatka.tgbot.views.hint_sender import HintSender
 
 
-class AiogramMiddlewareData(TypedDict, total=False):
-    event_from_user: types.User
-    event_chat: types.Chat
-    bot: Bot
-    fsm_storage: BaseStorage
-    state: FSMContext
-    raw_state: Any
-    handler: HandlerObject
-    event_update: types.Update
-    event_router: Router
-
-
-class DialogMiddlewareData(AiogramMiddlewareData, total=False):
+class DialogMiddlewareData(MiddlewareData, total=False):
     dialog_manager: DialogManager
     aiogd_storage_proxy: StorageProxy
     aiogd_stack: Stack
     aiogd_context: Context
 
 
-class MiddlewareData(DialogMiddlewareData, total=False):
+class SHMiddlewareData(DialogMiddlewareData, total=False):
     config: BotConfig
     main_config: TgBotConfig
     dishka_container: AsyncContainer

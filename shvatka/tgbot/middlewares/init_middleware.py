@@ -16,7 +16,7 @@ from shvatka.infrastructure.picture.results_painter import ResultsPainter
 from shvatka.tgbot.config.models.bot import BotConfig
 from shvatka.tgbot.config.models.main import TgBotConfig
 from shvatka.tgbot.username_resolver.user_getter import UserGetter
-from shvatka.tgbot.utils.data import MiddlewareData
+from shvatka.tgbot.utils.data import SHMiddlewareData
 from shvatka.tgbot.views.hint_factory.hint_parser import HintParser
 from shvatka.tgbot.views.hint_sender import HintSender
 from shvatka.tgbot.views.telegraph import Telegraph
@@ -33,7 +33,7 @@ class InitMiddleware(BaseMiddleware):
         self,
         handler: Callable[[TelegramObject, dict[str, Any]], Awaitable[Any]],
         event: TelegramObject,
-        data: MiddlewareData,
+        data: SHMiddlewareData,
     ) -> Any:
         dishka = data["dishka_container"]
         file_storage = await dishka.get(FileStorage)
@@ -54,5 +54,5 @@ class InitMiddleware(BaseMiddleware):
         data["dao"] = await dishka.get(HolderDao)
         data["hint_parser"] = await dishka.get(HintParser)
         data["results_painter"] = await dishka.get(ResultsPainter)
-        result = await handler(event, data)
+        result = await handler(event, data)  # type: ignore[arg-type]
         return result

@@ -80,7 +80,7 @@ async def delete_single_hint(
     hints_ = retort.load(manager.dialog_data.get("hints"), list[hints.AnyHint])
     hint_index = manager.item_id
     hints_.pop(int(hint_index))
-    manager.dialog_data["hints"] = retort.dump(hints, list[hints.AnyHint])
+    manager.dialog_data["hints"] = retort.dump(hints_, list[hints.AnyHint])
 
 
 async def delete_whole_time_hint(c: CallbackQuery, widget: Any, manager: DialogManager):

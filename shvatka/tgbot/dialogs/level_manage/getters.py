@@ -11,10 +11,10 @@ from shvatka.infrastructure.db.dao.holder import HolderDao
 async def get_level_id(dao: HolderDao, dialog_manager: DialogManager, **_):
     author: dto.Player = dialog_manager.middleware_data["player"]
     level, org = await get_level_and_org(author, dao, dialog_manager)
-    hints = level.scenario.time_hints
+    hints_ = level.scenario.time_hints
     return {
         "level": level,
-        "time_hints": hints,
+        "time_hints": hints_,
         "org": org,
     }
 

@@ -57,10 +57,10 @@ async def show_all_hints(author: dto.Player, hint_sender: HintSender, bot: Bot, 
             hint_containers=hint.hint,
             caption=f"Подсказка {hint.time} мин.",
         )
-    for keys, hints in render_bonus_hints(level.scenario).items():
+    for keys, hints_ in render_bonus_hints(level.scenario).items():
         await hint_sender.send_hints(
             chat_id=chat_id,
-            hint_containers=hints,
+            hint_containers=hints_,
             caption=f"Бонусная подсказка за ключи:\n{render_keys(keys)}",
         )
     await hint_sender.bot.send_message(

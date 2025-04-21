@@ -25,28 +25,28 @@ class BonusKey:
 
 
 class HintsList(Sequence[TimeHint]):
-    def __init__(self, hints: list[TimeHint]):
-        self.verify(hints)
-        self.hints = hints
+    def __init__(self, hints_: list[TimeHint]):
+        self.verify(hints_)
+        self.hints = hints_
 
     @classmethod
-    def parse(cls, hints: list[TimeHint]):
-        return cls(cls.normalize(hints))
+    def parse(cls, hints_: list[TimeHint]):
+        return cls(cls.normalize(hints_))
 
     @staticmethod
-    def normalize(hints: list[TimeHint]) -> list[TimeHint]:
+    def normalize(hints_: list[TimeHint]) -> list[TimeHint]:
         hint_map: dict[int, list[AnyHint]] = {}
-        for hint in hints:
+        for hint in hints_:
             if not hint.hint:
                 continue
             hint_map.setdefault(hint.time, []).extend(hint.hint)
         return [TimeHint(k, v) for k, v in sorted(hint_map.items(), key=lambda x: x[0])]
 
     @staticmethod
-    def verify(hints: Iterable[TimeHint]) -> None:
+    def verify(hints_: Iterable[TimeHint]) -> None:
         current_time = -1
         times: set[int] = set()
-        for hint in hints:
+        for hint in hints_:
             if hint.time in times:
                 raise exceptions.LevelError(
                     text=f"Contains multiple times hints for time {hint.time}"

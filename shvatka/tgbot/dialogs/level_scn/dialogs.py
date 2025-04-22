@@ -62,6 +62,7 @@ from .handlers import (
     save_routed_condition,
     edit_routed,
     delete_condition,
+    start_routed,
 )
 from shvatka.tgbot.dialogs.preview_data import PreviewStart
 
@@ -376,8 +377,11 @@ sly_keys_dialog = Dialog(
             width=1,
             height=10,
         ),
-        Start(Const("➕Добавить"), id="add_routed_key", state=states.RoutedKeysSG.menu),
+        Button(Const("➕Добавить"), id="add_routed_key", on_click=start_routed),
         SwitchTo(Const("🔙Назад"), id="to_menu", state=states.LevelSlyKeysSG.menu),
+        preview_add_transitions=[
+            PreviewStart(state=states.RoutedKeysSG.menu),
+        ],
         getter=(get_level_id, get_routed_conditions),
         state=states.LevelSlyKeysSG.routed_keys,
     ),

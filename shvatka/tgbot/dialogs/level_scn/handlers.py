@@ -429,7 +429,21 @@ async def process_routed_level_id(
     dialog_: Any,
     manager: DialogManager,
     name_id: str,
+    dao: FromDishka[HolderDao],
 ):
+    level_id: str = manager.dialog_data["level_id"]
+    player: dto.Player = manager.middleware_data["player"]
+    level = await dao.level.get_by_author_and_name_id(player, level_id)
+    assert level
+    assert level.game_id
+    game = await dao.game.get_full(level.game_id)
+    ids = {lvl.name_id for lvl in game.levels}
+    if name_id not in ids:
+        await m.reply(
+            "Введённый id не соответствует ни одному из уровней в игре. "
+            "В игре сейчас следующие уровни: " + ", ".join(ids)
+        )
+        return
     manager.dialog_data["next_level"] = name_id
     await manager.switch_to(state=states.RoutedKeysSG.menu)
 
@@ -446,6 +460,7 @@ async def on_start_routed_condition_edit(start_data: dict[str, Any], manager: Di
         start_data = {}
     manager.dialog_data["next_level"] = start_data.get("next_level", None)
     manager.dialog_data["keys"] = start_data.get("keys", [])
+    manager.dialog_data["level_id"] = start_data["level_id"]
 
 
 @inject
@@ -476,5 +491,19 @@ async def edit_routed(
             "edited_routed_condition": int(number),
             "keys": retort.dump(to_edit.keys, list[str]),
             "next_level": to_edit.next_level,
+            "level_id": data["level_id"],
+        },
+    )
+
+
+async def start_routed(
+    c: CallbackQuery,
+    widget: Any,
+    manager: DialogManager,
+):
+    await manager.start(
+        state=states.RoutedKeysSG.menu,
+        data={
+            "level_id": manager.dialog_data["level_id"],
         },
     )

@@ -150,7 +150,8 @@ class Conditions(Sequence[AnyCondition]):
                     win_conditions.append(c)
                 if keys.intersection(c.get_keys()):
                     raise exceptions.LevelError(
-                        text=f"keys exists multiple times {keys.intersection(c.keys)}"
+                        text="keys exists multiple times",
+                        confidential=f"{keys.intersection(c.keys)}",
                     )
                 keys = keys.union(c.get_keys())
         if not win_conditions:

@@ -23,6 +23,7 @@ class SHError(Exception):
         game: Any | None = None,
         alarm: bool | None = False,
         notify_user: str | None = None,
+        confidential: str | None = None,
         *args,
         **kwargs,
     ) -> None:
@@ -40,6 +41,7 @@ class SHError(Exception):
         self.game = game
         self.alarm = alarm
         self.notify_user = notify_user or self.notify_user
+        self.confidential = confidential
 
     def __repr__(self) -> str:
         result_msg = f"Error: {self.text}"

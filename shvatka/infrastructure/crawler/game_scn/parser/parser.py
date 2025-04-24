@@ -266,7 +266,7 @@ class GameParser:
         self.build_time_hint()
         level = scn.LevelScenario.legacy_factory(
             id=f"game_{self.id}-lvl_{self.level_number}",
-            time_hints=scn.HintsList(self.time_hints),
+            time_hints=scn.HintsList.parse(self.time_hints),
             keys=self.keys,
         )
         self.levels.append(level)

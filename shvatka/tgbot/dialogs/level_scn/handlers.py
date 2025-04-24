@@ -292,7 +292,7 @@ async def save_level(c: CallbackQuery, button: Button, manager: DialogManager):
 
     level_scn = scn.LevelScenario(
         id=id_,
-        time_hints=scn.HintsList(time_hints),
+        time_hints=scn.HintsList.parse(time_hints),
         conditions=conditions,
         __model_version__=1,
     )

@@ -57,7 +57,7 @@ def time_hint_0_to_1(time_hint: models_0.TimeHint) -> hints.TimeHint:
 
 
 def hints_0_to_1(hints_: models_0.HintsList) -> scn.HintsList:
-    return scn.HintsList([time_hint_0_to_1(hint) for hint in hints_])
+    return scn.HintsList.parse([time_hint_0_to_1(hint) for hint in hints_])
 
 
 def level_0_to_1(level: models_0.LevelScenario) -> scn.LevelScenario:

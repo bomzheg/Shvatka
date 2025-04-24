@@ -232,7 +232,7 @@ class SvastEngineGameParser:
         self.build_time_hint()
         level = scn.LevelScenario.legacy_factory(
             id=f"game_{self.id}-lvl_{self.level_number}",
-            time_hints=scn.HintsList(self.time_hints),
+            time_hints=scn.HintsList.parse(self.time_hints),
             keys={typing.cast(hints.TextHint, self.time_hints[-1].hint).text},
         )
         self.levels.append(level)

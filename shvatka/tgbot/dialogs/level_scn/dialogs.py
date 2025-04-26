@@ -237,7 +237,7 @@ hints_dialog = Dialog(
             Const("✅Готово"),
             id="save",
             on_click=save_hints,
-            when=F["dialog_data"]["time_hints"].len() > 1,
+            when=F["dialog_data"]["time_hints"].len() > 0,
         ),
         Button(
             Const("🗑Очистить подсказки"),

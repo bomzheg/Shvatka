@@ -182,7 +182,7 @@ class Conditions(Sequence[AnyCondition]):
         ]
         return Conditions([*other_conditions, action.KeyWinCondition(keys)])
 
-    def replace_bonus_hints_conditions(
+    def replace_bonus_hint_conditions(
         self, conditions: list[action.KeyBonusHintCondition]
     ) -> "Conditions":
         other_conditions = [

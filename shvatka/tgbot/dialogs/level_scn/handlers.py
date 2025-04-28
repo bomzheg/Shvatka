@@ -394,12 +394,12 @@ async def process_sly_keys_result(
         manager.dialog_data["bonus_hint_conditions"], list[action.KeyBonusHintCondition]
     )
     if result.get("__deleted__", False) and start_data:
-        if number := start_data.get("edited_bonus_hint_condition", None):
+        if (number := start_data.get("edited_bonus_hint_condition", None)) is not None:
             bonus_hint_conditions.pop(int(number))
             manager.dialog_data["bonus_hint_conditions"] = retort.dump(
                 bonus_hint_conditions, list[action.KeyBonusHintCondition]
             )
-        if number := start_data.get("edited_routed_condition", None):
+        if (number := start_data.get("edited_routed_condition", None)) is not None:
             routed_conditions.pop(int(number))
             manager.dialog_data["routed_conditions"] = retort.dump(
                 routed_conditions, list[action.KeyWinCondition]

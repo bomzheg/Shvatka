@@ -1,0 +1,5 @@
+name: shvatka
+title: Shvatka
+version: true
+nav:
+  - modules/ROOT/nav.adoc

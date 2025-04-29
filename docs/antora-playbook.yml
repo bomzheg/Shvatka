@@ -1,0 +1,14 @@
+site:
+  title: Shvatka Documentation
+  url: https://bomzheg.github.io/Shvatka
+  start_page: shvatka::index.adoc
+ui:
+  bundle:
+    url: https://gitlab.com/antora/antora-ui-default/-/jobs/artifacts/HEAD/raw/build/ui-bundle.zip?job=bundle-stable
+  supplemental_files: ./ui
+content:
+  sources:
+    - url: ../
+      start_path: docs
+      tags: '*'
+      branches: '*'

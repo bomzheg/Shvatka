@@ -1,0 +1,2 @@
+* xref:technical-task.adoc[Техническое задание]
+* xref:author-check-list.adoc[Чек-лист для автора перед игрой]

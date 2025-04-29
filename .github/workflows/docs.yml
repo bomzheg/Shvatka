@@ -1,0 +1,41 @@
+name: Build & Deploy Docs
+on:
+  push:
+    tags: ['*']
+    branches: ['*']
+  delete:
+    branches: ['*']
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install Antora
+        run: npm install antora@latest
+
+      - name: Build Site
+        working-directory: docs
+        run: npx antora antora-playbook.yml
+
+      - name: Upload Artifacts
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs/build/site
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

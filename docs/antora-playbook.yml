@@ -1,0 +1,17 @@
+site:
+  title: Shvatka Documentation
+  url: https://bomzheg.github.io/Shvatka
+ui:
+  bundle:
+    url: https://registry.npmjs.org/@antora/antora-ui-default/-/antora-ui-default-3.0.0.zip
+  supplemental_files:
+    - path: .nojekyll
+content:
+  sources:
+    - url: .
+      start_path: docs
+      tags: '*'
+      branches: '*'
+asciidoc:
+  extensions:
+    - asciidoctor-diagram

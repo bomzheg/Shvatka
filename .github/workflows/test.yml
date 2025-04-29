@@ -86,7 +86,7 @@ jobs:
           message: ${{ steps.coverageComment.outputs.coverage }}
           color: ${{ steps.coverageComment.outputs.color }}
           namedLogo: python
-  docs:
+  diagrams:
     needs: [build]
     runs-on: ubuntu-latest
     continue-on-error: true

@@ -11,4 +11,4 @@ content:
     - url: ../
       start_path: docs
       tags: ['*']
-      branches: ['*']
+      branches: ['master', '*']

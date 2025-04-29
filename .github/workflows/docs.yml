@@ -28,7 +28,8 @@ jobs:
         run: npm install antora@latest
 
       - name: Build Site
-        run: npx antora docs/antora-playbook.yml
+        working-directory: docs
+        run: npx antora antora-playbook.yml
 
       - name: Upload Artifacts
         uses: actions/upload-pages-artifact@v3

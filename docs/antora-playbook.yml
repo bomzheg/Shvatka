@@ -12,6 +12,3 @@ content:
       start_path: docs
       tags: '*'
       branches: '*'
-asciidoc:
-  extensions:
-    - asciidoctor-diagram

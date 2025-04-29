@@ -15,14 +15,15 @@ jobs:
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-      - name: Configure GitHub Pages
-        uses: actions/configure-pages@v5
+
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '20'
 
       - name: Install Antora
         run: npm install antora@latest

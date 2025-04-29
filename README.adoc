@@ -1,0 +1,78 @@
+= Движок схватки
+
+image:https://wakatime.com/badge/github/bomzheg/Shvatka.svg[wakatime,link=https://wakatime.com/badge/github/bomzheg/Shvatka]
+image:https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/bomzheg/99469cb5f8a18784c1f03d229a799427/raw/bage.json[coverage]
+
+Движок для ночной поисковой игры https://ru.wikipedia.org/wiki/%D0%A1%D1%85%D0%B2%D0%B0%D1%82%D0%BA%D0%B0_(%D0%B8%D0%B3%D1%80%D0%B0)[Схватка] (похожа на Дозоры, Энкаунтер)
+
+Позволяет планировать и проводить игры. Состоит из REST-интерфейса и telegram бота
+
+.Core-функционал:
+- Редактор сценария игры,
+- Управление подготовкой к игре,
+- Формирование команды капитаном,
+- Назначение заместителей капитана с разными полномочиями,
+- Сборка заявок на игру,
+- Проведение игры,
+- Информирование организаторов о ходе игры,
+- Формирование результатов игры,
+- Сохранение статистики прошедших игр
+
+== How to run without docker:
+
+. `cp config_dist config`
+. Заполнить конфиги в config
+. Заполнить url бд в alembic.ini
+. Запустить и применить миграции `python -m alembic upgrade head`
+. 
+[source,shell]
+----
+uv pip install .
+export BOT_PATH=$PWD
+shvatka-tgbot
+----
+
+== How to run with Docker
+
+. `cp config_dist config`
+. Заполнить конфиги в config
+. Заполнить url бд в alembic.ini
+. Запустить и применить миграции `docker-compose run cli -c "python -m alembic upgrade head"`
+. `docker-compose up -d`
+
+== How to fix deps
+
+[source,shell]
+----
+uv pip compile pyproject.toml > lock.txt
+----
+
+== How to test
+
+[source,shell]
+----
+pytest tests
+----
+
+or only unittests (faster):
+
+[source,shell]
+----
+pytest tests/unit
+----
+
+== Linters
+
+Linux:
+
+[source,shell]
+----
+ruff format . && ruff --fix . && mypy .
+----
+
+Windows:
+
+[source,shell]
+----
+ruff format . ; ruff --fix . ; mypy .
+----

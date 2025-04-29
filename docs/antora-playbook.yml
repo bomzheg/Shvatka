@@ -3,7 +3,7 @@ site:
   url: https://bomzheg.github.io/Shvatka
 ui:
   bundle:
-    url: https://registry.npmjs.org/@antora/antora-ui-default/-/antora-ui-default-3.0.0.zip
+    url: https://gitlab.com/antora/antora-ui-default/-/jobs/artifacts/HEAD/raw/build/ui-bundle.zip?job=bundle-stable
   supplemental_files:
     - path: .nojekyll
 content:

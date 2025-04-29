@@ -1,1 +1,2 @@
-* xref:technical_task.adoc[]
+* xref:technical-task.adoc[]
+* xref:author-check-list.adoc[]

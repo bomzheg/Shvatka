@@ -17,43 +17,26 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Check if docs directory exists
-        id: check_docs
-        run: |
-          if [ ! -d "docs" ]; then
-            echo "Docs folder not found. Skipping build."
-            echo "skip_build=true" >> $GITHUB_OUTPUT
-          else
-            echo "Docs folder found."
-            echo "skip_build=false" >> $GITHUB_OUTPUT
-          fi
 
-      - name: Stop early if no docs
-        if: steps.check_docs.outputs.skip_build == 'true'
-        run: exit 0
+
 
       - name: Setup Node.js
-        if: steps.check_docs.outputs.skip_build == 'false'
         uses: actions/setup-node@v4
         with:
           node-version: '20'
 
       - name: Install Antora
-        if: steps.check_docs.outputs.skip_build == 'false'
         run: npm install antora@latest
 
       - name: Build Site
-        if: steps.check_docs.outputs.skip_build == 'false'
         working-directory: docs
         run: npx antora antora-playbook.yml
 
       - name: Upload Artifacts
-        if: steps.check_docs.outputs.skip_build == 'false'
         uses: actions/upload-pages-artifact@v3
         with:
           path: docs/build/site
 
       - name: Deploy to GitHub Pages
-        if: steps.check_docs.outputs.skip_build == 'false'
         id: deployment
         uses: actions/deploy-pages@v4

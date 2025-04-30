@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from typing import Iterable, cast
 
 from aiogram import Bot
+from aiogram.types import Message
 from aiogram.exceptions import TelegramAPIError
 from aiogram.utils.markdown import html_decoration as hd
 from dataclass_factory import Factory
@@ -25,6 +26,7 @@ from shvatka.core.views.game import (
     LevelTestCompleted,
     GameLogEvent,
     GameLogType,
+    InputContainer,
 )
 from shvatka.tgbot.views.bot_alert import BotAlert
 from shvatka.tgbot.views.hint_sender import HintSender
@@ -38,6 +40,14 @@ PREPARE_GAME_TEMPLATE = (
 )
 
 logger = logging.getLogger(__name__)
+
+
+@dataclass
+class BotInputContainer(InputContainer):
+    message: Message
+
+    def get_message_id(self) -> int | None:
+        return self.message.message_id if self.message else None
 
 
 @dataclass
@@ -109,8 +119,13 @@ class BotView(GameViewPreparer, GameView):
             caption=hint_caption,
         )
 
-    async def duplicate_key(self, key: dto.KeyTime) -> None:
+    async def duplicate_key(self, key: dto.KeyTime, input_container: InputContainer) -> None:
+        if isinstance(input_container, BotInputContainer):
+            reply_to = input_container.get_message_id()
+        else:
+            reply_to = None
         await self.bot.send_message(
+            reply_to_message_id=reply_to,
             chat_id=key.team.get_chat_id(),  # type: ignore[arg-type]
             text=(
                 f"{KeyEmoji.duplicate.value}Ключ {hd.code(key.text)} "
@@ -118,19 +133,35 @@ class BotView(GameViewPreparer, GameView):
             ),
         )
 
-    async def correct_key(self, key: dto.KeyTime) -> None:
+    async def correct_key(self, key: dto.KeyTime, input_container: InputContainer) -> None:
+        if isinstance(input_container, BotInputContainer):
+            reply_to = input_container.get_message_id()
+        else:
+            reply_to = None
         await self.bot.send_message(
+            reply_to_message_id=reply_to,
             chat_id=key.team.get_chat_id(),  # type: ignore[arg-type]
             text=f"{KeyEmoji.correct.value}Ключ {hd.code(key.text)} верный! Поздравляю!",
         )
 
-    async def wrong_key(self, key: dto.KeyTime) -> None:
+    async def wrong_key(self, key: dto.KeyTime, input_container: InputContainer) -> None:
+        if isinstance(input_container, BotInputContainer):
+            reply_to = input_container.get_message_id()
+        else:
+            reply_to = None
         await self.bot.send_message(
+            reply_to_message_id=reply_to,
             chat_id=key.team.get_chat_id(),  # type: ignore[arg-type]
             text=f"{KeyEmoji.incorrect.value}Ключ {hd.code(key.text)} неверный.",
         )
 
-    async def bonus_key(self, key: dto.KeyTime, bonus: float) -> None:
+    async def bonus_key(
+        self, key: dto.KeyTime, bonus: float, input_container: InputContainer
+    ) -> None:
+        if isinstance(input_container, BotInputContainer):
+            reply_to = input_container.get_message_id()
+        else:
+            reply_to = None
         if bonus >= 0:
             text = (
                 f"{KeyEmoji.bonus.value}Бонусный ключ {hd.code(key.text)}.\n"
@@ -142,18 +173,29 @@ class BotView(GameViewPreparer, GameView):
                 f"Штраф: {bonus:.2f} мин."
             )
         await self.bot.send_message(
+            reply_to_message_id=reply_to,
             chat_id=key.team.get_chat_id(),  # type: ignore[arg-type]
             text=text,
         )
 
-    async def bonus_hint_key(self, key: dto.KeyTime, bonus_hint: list[hints.AnyHint]):
+    async def bonus_hint_key(
+        self, key: dto.KeyTime, bonus_hint: list[hints.AnyHint], input_container: InputContainer
+    ):
+        if isinstance(input_container, BotInputContainer):
+            reply_to = input_container.get_message_id()
+        else:
+            reply_to = None
+        await self.bot.send_message(
+            chat_id=key.team.get_chat_id(),  # type: ignore[arg-type]
+            reply_to_message_id=reply_to,
+            text="Бонусная подсказка",
+        )
         await self.hint_sender.send_hints(
             chat_id=key.team.get_chat_id(),  # type: ignore[arg-type]
             hint_containers=bonus_hint,
-            caption="Бонусная подсказка:",
         )
 
-    async def game_finished(self, team: dto.Team) -> None:
+    async def game_finished(self, team: dto.Team, input_container: InputContainer) -> None:
         await self.bot.send_message(
             chat_id=team.get_chat_id(),  # type: ignore[arg-type]
             text="Игра завершена! Поздравляю!",

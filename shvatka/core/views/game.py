@@ -20,6 +20,10 @@ class GameViewPreparer(Protocol):
         raise NotImplementedError
 
 
+class InputContainer(Protocol):
+    pass
+
+
 class GameView(Protocol):
     async def send_puzzle(self, team: dto.Team, level: dto.Level) -> None:
         raise NotImplementedError
@@ -27,25 +31,29 @@ class GameView(Protocol):
     async def send_hint(self, team: dto.Team, hint_number: int, level: dto.Level) -> None:
         raise NotImplementedError
 
-    async def duplicate_key(self, key: dto.KeyTime) -> None:
+    async def duplicate_key(self, key: dto.KeyTime, input_container: InputContainer) -> None:
         raise NotImplementedError
 
-    async def correct_key(self, key: dto.KeyTime) -> None:
+    async def correct_key(self, key: dto.KeyTime, input_container: InputContainer) -> None:
         raise NotImplementedError
 
-    async def wrong_key(self, key: dto.KeyTime) -> None:
+    async def wrong_key(self, key: dto.KeyTime, input_container: InputContainer) -> None:
         raise NotImplementedError
 
-    async def bonus_key(self, key: dto.KeyTime, bonus: float) -> None:
+    async def bonus_key(
+        self, key: dto.KeyTime, bonus: float, input_container: InputContainer
+    ) -> None:
         raise NotImplementedError
 
-    async def game_finished(self, team: dto.Team) -> None:
+    async def game_finished(self, team: dto.Team, input_container: InputContainer) -> None:
         raise NotImplementedError
 
     async def game_finished_by_all(self, team: dto.Team) -> None:
         raise NotImplementedError
 
-    async def bonus_hint_key(self, key: dto.KeyTime, bonus_hint: list[hints.AnyHint]):
+    async def bonus_hint_key(
+        self, key: dto.KeyTime, bonus_hint: list[hints.AnyHint], input_container: InputContainer
+    ):
         raise NotImplementedError
 
 

@@ -1,6 +1,7 @@
 import asyncio
 import logging
 import typing
+from dataclasses import dataclass
 from datetime import timedelta, datetime
 
 from shvatka.core.interfaces.dal.game_play import GamePreparer, GamePlayerDao
@@ -21,6 +22,7 @@ from shvatka.core.views.game import (
     LevelUp,
     GameLogEvent,
     GameLogType,
+    InputContainer,
 )
 
 logger = logging.getLogger(__name__)
@@ -87,139 +89,131 @@ async def start_game(
     await game_log.log(GameLogEvent(GameLogType.GAME_STARTED, {"game": game.name}))
 
 
-async def check_key(
-    key: str,
-    player: dto.Player,
-    team: dto.Team,
-    game: dto.FullGame,
-    dao: GamePlayerDao,
-    view: GameView,
-    game_log: GameLogWriter,
-    org_notifier: OrgNotifier,
-    locker: KeyCheckerFactory,
-    key_processor: KeyProcessor,
-    scheduler: Scheduler,
-):
+@dataclass
+class CheckKeyInteractor:
     """
-    Проверяет введённый игроком ключ. Может случиться несколько исходов:
-    - ключ неверный - просто записываем его в лог и уведомляем команду
-    - ключ верный, но уже был введён ранее - записываем в лог и уведомляем команду
-    - ключ верный, но ещё не все ключи найдены - записываем в лог, уведомляем команду
-    - ключ верный и больше на уровне не осталось ненайденных ключей:
-      * уровень не последний - переводим команду на следующий уровень, уведомляем оргов,
-        присылаем команде новую загадку, планируем отправку подсказки
-      * уровень последний - поздравляем команду с завершением игры
-      * уровень последний и все команды финишировали - помечаем игру законченной,
-        пишем в лог игры уведомление о финале, уведомляем команды
-
-    :param key: Введённый ключ.
-    :param player: Игрок, который ввёл ключ.
-    :param team: Команда, в которой ввели ключ.
-    :param game: Текущая игра.
     :param dao: Слой доступа к бд.
     :param view: Слой отображения данных.
     :param game_log: Логгер игры (публичные уведомления о статусе игры).
     :param org_notifier: Для уведомления оргов о важных событиях.
     :param locker: Локи для обеспечения последовательного исполнения определённых операций.
-    :param key_processor: Логика работы с ключами
     :param scheduler: Планировщик подсказок.
     """
-    if not await dao.check_waiver(player, team, game):
-        raise exceptions.WaiverError(
-            team=team, game=game, player=player, text="игрок не заявлен на игру, но ввёл ключ"
-        )
 
-    new_key = await key_processor.check_key(key=key, player=player, team=team)
-    if new_key is None:
-        return
-    if new_key.is_duplicate:
-        await view.duplicate_key(key=new_key)
-        return
-    match new_key.type_:
-        case enums.KeyType.wrong:
-            await view.wrong_key(key=new_key)
-        case enums.KeyType.bonus:
-            assert isinstance(new_key.parsed_key, dto.ParsedBonusKey)
-            await view.bonus_key(new_key, new_key.parsed_key.bonus_minutes)
-        case enums.KeyType.bonus_hint:
-            assert isinstance(new_key.parsed_key, dto.ParsedBonusHintKey)
-            await view.bonus_hint_key(new_key, new_key.parsed_key.bonus_hint)
-        case enums.KeyType.simple:
-            await view.correct_key(key=new_key)
-            if new_key.is_level_up:
-                await process_level_up(
-                    team=team,
-                    game=game,
-                    dao=dao,
-                    view=view,
-                    game_log=game_log,
-                    org_notifier=org_notifier,
-                    locker=locker,
-                    scheduler=scheduler,
-                )
-        case _:
-            typing.assert_never(new_key.type_)
+    dao: GamePlayerDao
+    view: GameView
+    game_log: GameLogWriter
+    org_notifier: OrgNotifier
+    locker: KeyCheckerFactory
+    scheduler: Scheduler
 
+    async def __call__(
+        self,
+        key: str,
+        input_container: InputContainer,
+        player: dto.Player,
+        team: dto.Team,
+        game: dto.FullGame,
+    ):
+        """
+        Проверяет введённый игроком ключ. Может случиться несколько исходов:
+        - ключ неверный - просто записываем его в лог и уведомляем команду
+        - ключ верный, но уже был введён ранее - записываем в лог и уведомляем команду
+        - ключ верный, но ещё не все ключи найдены - записываем в лог, уведомляем команду
+        - ключ верный и больше на уровне не осталось ненайденных ключей:
+          * уровень не последний - переводим команду на следующий уровень, уведомляем оргов,
+            присылаем команде новую загадку, планируем отправку подсказки
+          * уровень последний - поздравляем команду с завершением игры
+          * уровень последний и все команды финишировали - помечаем игру законченной,
+            пишем в лог игры уведомление о финале, уведомляем команды
 
-async def process_level_up(
-    team: dto.Team,
-    game: dto.FullGame,
-    dao: GamePlayerDao,
-    view: GameView,
-    game_log: GameLogWriter,
-    org_notifier: OrgNotifier,
-    locker: KeyCheckerFactory,
-    scheduler: Scheduler,
-):
-    async with locker.lock_globally():
-        if await dao.is_team_finished(team, game):
-            await finish_team(team, game, view, game_log, dao, locker)
+        :param key: Введённый ключ.
+        :param player: Игрок, который ввёл ключ.
+        :param team: Команда, в которой ввели ключ.
+        :param game: Текущая игра.
+        """
+        if not await self.dao.check_waiver(player, team, game):
+            raise exceptions.WaiverError(
+                team=team, game=game, player=player, text="игрок не заявлен на игру, но ввёл ключ"
+            )
+
+        key_processor = KeyProcessor(game=game, dao=self.dao, locker=self.locker)
+        new_key = await key_processor.check_key(key=key, player=player, team=team)
+        if new_key is None:
             return
-    next_level = await dao.get_current_level(team, game)
-    lt = await dao.get_current_level_time(team, game)
+        if new_key.is_duplicate:
+            await self.view.duplicate_key(key=new_key, input_container=input_container)
+            return
+        match new_key.type_:
+            case enums.KeyType.wrong:
+                await self.view.wrong_key(key=new_key, input_container=input_container)
+            case enums.KeyType.bonus:
+                assert isinstance(new_key.parsed_key, dto.ParsedBonusKey)
+                await self.view.bonus_key(
+                    new_key, new_key.parsed_key.bonus_minutes, input_container=input_container
+                )
+            case enums.KeyType.bonus_hint:
+                assert isinstance(new_key.parsed_key, dto.ParsedBonusHintKey)
+                await self.view.bonus_hint_key(
+                    new_key, new_key.parsed_key.bonus_hint, input_container=input_container
+                )
+            case enums.KeyType.simple:
+                await self.view.correct_key(key=new_key, input_container=input_container)
+                if new_key.is_level_up:
+                    await self.process_level_up(
+                        input_container=input_container,
+                        team=team,
+                        game=game,
+                    )
+            case _:
+                typing.assert_never(new_key.type_)
 
-    await view.send_puzzle(team=team, level=next_level)
-    await schedule_first_hint(
-        scheduler=scheduler,
-        team=team,
-        next_level=next_level,
-        lt_id=lt.id,
-        now=datetime.now(tz=tz_utc),
-    )
-    level_up_event = LevelUp(
-        team=team, new_level=next_level, orgs_list=await get_spying_orgs(game, dao)
-    )
-    await org_notifier.notify(level_up_event)
+    async def process_level_up(
+        self,
+        input_container: InputContainer,
+        team: dto.Team,
+        game: dto.FullGame,
+    ):
+        async with self.locker.lock_globally():
+            if await self.dao.is_team_finished(team, game):
+                await self.finish_team(input_container, team, game)
+                return
+        next_level = await self.dao.get_current_level(team, game)
+        lt = await self.dao.get_current_level_time(team, game)
 
+        await self.view.send_puzzle(team=team, level=next_level)
+        await schedule_first_hint(
+            scheduler=self.scheduler,
+            team=team,
+            next_level=next_level,
+            lt_id=lt.id,
+            now=datetime.now(tz=tz_utc),
+        )
+        level_up_event = LevelUp(
+            team=team, new_level=next_level, orgs_list=await get_spying_orgs(game, self.dao)
+        )
+        await self.org_notifier.notify(level_up_event)
 
-async def finish_team(
-    team: dto.Team,
-    game: dto.FullGame,
-    view: GameView,
-    game_log: GameLogWriter,
-    dao: GamePlayerDao,
-    locker: KeyCheckerFactory,
-):
-    """
-    Два варианта:
-    * уровень последний - поздравляем команду с завершением игры
-    * уровень последний и все команды финишировали - помечаем игру законченной,
-      пишем в лог игры уведомление о финале, уведомляем команды.
-    :param team: Команда закончившая игру.
-    :param game: Текущая игра.
-    :param dao: Слой доступа к бд.
-    :param view: Слой отображения данных.
-    :param game_log: Логгер игры (публичные уведомления о статусе игры).
-    :param locker: Эту штуку мы просто очистим, если игра кончилась.
-    """
-    await view.game_finished(team)
-    if await dao.is_all_team_finished(game):
-        await dao.finish(game)
-        await dao.commit()
-        await game_log.log(GameLogEvent(GameLogType.GAME_FINISHED, {"game": game.name}))
-        locker.clear()
-        for team in await dao.get_played_teams(game):
-            await view.game_finished_by_all(team)
+    async def finish_team(
+        self,
+        input_container: InputContainer,
+        team: dto.Team,
+        game: dto.FullGame,
+    ):
+        """
+        Два варианта:
+        * уровень последний - поздравляем команду с завершением игры
+        * уровень последний и все команды финишировали - помечаем игру законченной,
+          пишем в лог игры уведомление о финале, уведомляем команды.
+        """
+        await self.view.game_finished(team, input_container)
+        if await self.dao.is_all_team_finished(game):
+            await self.dao.finish(game)
+            await self.dao.commit()
+            await self.game_log.log(GameLogEvent(GameLogType.GAME_FINISHED, {"game": game.name}))
+            self.locker.clear()
+            for team in await self.dao.get_played_teams(game):
+                await self.view.game_finished_by_all(team)
 
 
 async def send_hint(

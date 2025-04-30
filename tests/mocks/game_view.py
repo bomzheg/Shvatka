@@ -2,7 +2,7 @@ from dataclasses import dataclass, field
 
 from shvatka.core.models import dto
 from shvatka.core.models.dto import hints
-from shvatka.core.views.game import GameView
+from shvatka.core.views.game import GameView, InputContainer
 from tests.utils.time_key import assert_time_key
 
 
@@ -26,22 +26,26 @@ class GameViewMock(GameView):
     async def send_hint(self, team: dto.Team, hint_number: int, level: dto.Level) -> None:
         self.send_hint_calls.append((team, hint_number, level))
 
-    async def duplicate_key(self, key: dto.KeyTime) -> None:
+    async def duplicate_key(self, key: dto.KeyTime, input_container: InputContainer) -> None:
         self.duplicate_key_calls.append(key)
 
-    async def correct_key(self, key: dto.KeyTime) -> None:
+    async def correct_key(self, key: dto.KeyTime, input_container: InputContainer) -> None:
         self.correct_key_calls.append(key)
 
-    async def wrong_key(self, key: dto.KeyTime) -> None:
+    async def wrong_key(self, key: dto.KeyTime, input_container: InputContainer) -> None:
         self.wrong_key_calls.append(key)
 
-    async def bonus_key(self, key: dto.KeyTime, bonus: float) -> None:
+    async def bonus_key(
+        self, key: dto.KeyTime, bonus: float, input_container: InputContainer
+    ) -> None:
         self.bonus_key_calls.append((key, bonus))
 
-    async def bonus_hint_key(self, key: dto.KeyTime, bonus_hint: list[hints.AnyHint]):
+    async def bonus_hint_key(
+        self, key: dto.KeyTime, bonus_hint: list[hints.AnyHint], input_container: InputContainer
+    ):
         self.bonus_hint_key_calls.append((key, bonus_hint))
 
-    async def game_finished(self, team: dto.Team) -> None:
+    async def game_finished(self, team: dto.Team, input_container: InputContainer) -> None:
         self.game_finished_calls.append(team)
 
     async def game_finished_by_all(self, team: dto.Team) -> None:

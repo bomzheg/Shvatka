@@ -18,11 +18,11 @@ from shvatka.core.utils.key_checker_lock import KeyCheckerFactory
 from shvatka.core.views.game import (
     LevelUp,
     GameLogEvent,
-    GameLogType, InputContainer,
+    GameLogType,
+    InputContainer,
 )
 from shvatka.infrastructure.db import models
 from shvatka.infrastructure.db.dao.holder import HolderDao
-from tests.integration.conftest import dishka_request
 from tests.mocks.game_log import GameLogWriterMock
 from tests.mocks.game_view import GameViewMock
 from tests.mocks.org_notifier import OrgNotifierMock
@@ -32,6 +32,7 @@ from tests.utils.time_key import assert_time_key
 
 class MockInputContainer(InputContainer):
     pass
+
 
 @pytest.mark.asyncio
 async def test_start_game(

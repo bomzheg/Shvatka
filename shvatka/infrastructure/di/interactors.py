@@ -51,4 +51,5 @@ class GamePlayProvider(Provider):
     @provide
     def game_player_dao(self, dao: HolderDao) -> GamePlayerDao:
         return GamePlayerDaoImpl(dao)
+
     check_key_interactor = provide(CheckKeyInteractor)

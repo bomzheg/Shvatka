@@ -35,10 +35,14 @@ class GameViewMock(GameView):
     async def wrong_key(self, key: dto.KeyTime, input_container: InputContainer) -> None:
         self.wrong_key_calls.append(key)
 
-    async def bonus_key(self, key: dto.KeyTime, bonus: float, input_container: InputContainer) -> None:
+    async def bonus_key(
+        self, key: dto.KeyTime, bonus: float, input_container: InputContainer
+    ) -> None:
         self.bonus_key_calls.append((key, bonus))
 
-    async def bonus_hint_key(self, key: dto.KeyTime, bonus_hint: list[hints.AnyHint], input_container: InputContainer):
+    async def bonus_hint_key(
+        self, key: dto.KeyTime, bonus_hint: list[hints.AnyHint], input_container: InputContainer
+    ):
         self.bonus_hint_key_calls.append((key, bonus_hint))
 
     async def game_finished(self, team: dto.Team, input_container: InputContainer) -> None:

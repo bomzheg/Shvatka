@@ -8,9 +8,8 @@ from shvatka.core.games.interactors import GamePlayReaderInteractor
 from shvatka.core.models import dto, enums
 from shvatka.core.models.dto import hints
 from shvatka.core.models.enums import GameStatus
-from shvatka.core.services.game_play import start_game, send_hint, check_key
+from shvatka.core.services.game_play import start_game, send_hint, CheckKeyInteractor
 from shvatka.core.services.game_stat import get_typed_keys
-from shvatka.core.services.key import KeyProcessor
 from shvatka.core.services.organizers import get_orgs
 from shvatka.core.services.player import join_team, leave
 from shvatka.core.utils import exceptions
@@ -19,16 +18,20 @@ from shvatka.core.utils.key_checker_lock import KeyCheckerFactory
 from shvatka.core.views.game import (
     LevelUp,
     GameLogEvent,
-    GameLogType,
+    GameLogType, InputContainer,
 )
 from shvatka.infrastructure.db import models
 from shvatka.infrastructure.db.dao.holder import HolderDao
+from tests.integration.conftest import dishka_request
 from tests.mocks.game_log import GameLogWriterMock
 from tests.mocks.game_view import GameViewMock
 from tests.mocks.org_notifier import OrgNotifierMock
 from tests.mocks.scheduler_mock import SchedulerMock
 from tests.utils.time_key import assert_time_key
 
+
+class MockInputContainer(InputContainer):
+    pass
 
 @pytest.mark.asyncio
 async def test_start_game(
@@ -72,25 +75,27 @@ async def test_wrong_key(
     check_dao: HolderDao,
     locker: KeyCheckerFactory,
     scheduler: SchedulerMock,
+    dishka_request: AsyncContainer,
 ):
     game = started_game
     dummy_view = GameViewMock()
     dummy_log = GameLogWriterMock()
 
     dummy_org_notifier = OrgNotifierMock()
-    key_processor = KeyProcessor(dao.game_player, game, locker)
-    await check_key(
-        key="SHWRONG",
-        player=harry,
-        team=gryffindor,
-        game=game,
+    key_checker = CheckKeyInteractor(
         dao=dao.game_player,
         view=dummy_view,
         game_log=dummy_log,
         org_notifier=dummy_org_notifier,
-        key_processor=key_processor,
         locker=locker,
         scheduler=scheduler,
+    )
+    await key_checker(
+        key="SHWRONG",
+        input_container=MockInputContainer(),
+        player=harry,
+        team=gryffindor,
+        game=game,
     )
 
     keys = await get_typed_keys(game=game, player=author, dao=check_dao.typed_keys)
@@ -125,19 +130,20 @@ async def test_bonus_hint_key(
     dummy_log = GameLogWriterMock()
 
     dummy_org_notifier = OrgNotifierMock()
-    key_processor = KeyProcessor(dao.game_player, game, locker)
-    await check_key(
-        key="SHBONUSHINT",
-        player=harry,
-        team=gryffindor,
-        game=game,
+    check_key = CheckKeyInteractor(
         dao=dao.game_player,
         view=dummy_view,
         game_log=dummy_log,
         org_notifier=dummy_org_notifier,
-        key_processor=key_processor,
         locker=locker,
         scheduler=scheduler,
+    )
+    await check_key(
+        key="SHBONUSHINT",
+        input_container=MockInputContainer(),
+        player=harry,
+        team=gryffindor,
+        game=game,
     )
 
     keys = await get_typed_keys(game=game, player=author, dao=check_dao.typed_keys)
@@ -197,20 +203,21 @@ async def test_game_play(
 
     dummy_org_notifier = OrgNotifierMock()
     orgs = await get_orgs(game, dao.organizer)
-    key_processor = KeyProcessor(dao.game_player, game, locker)
     key_kwargs = {
         "player": harry,
         "team": gryffindor,
+        "input_container": MockInputContainer(),
         "game": game,
-        "dao": dao.game_player,
-        "view": dummy_view,
-        "game_log": dummy_log,
-        "org_notifier": dummy_org_notifier,
-        "key_processor": key_processor,
-        "locker": locker,
-        "scheduler": scheduler,
     }
 
+    check_key = CheckKeyInteractor(
+        dao=dao.game_player,
+        view=dummy_view,
+        game_log=dummy_log,
+        org_notifier=dummy_org_notifier,
+        locker=locker,
+        scheduler=scheduler,
+    )
     await check_key(key="SH123", **key_kwargs)
     expected_first_key = dto.KeyTime(
         text="SH123",
@@ -301,19 +308,22 @@ async def test_fast_play_routed_game(
 
     dummy_org_notifier = OrgNotifierMock()
     orgs = await get_orgs(game, dao.organizer)
-    key_processor = KeyProcessor(dao.game_player, game, locker)
     key_kwargs = {
         "player": harry,
         "team": gryffindor,
+        "input_container": MockInputContainer(),
         "game": game,
-        "dao": dao.game_player,
-        "view": dummy_view,
-        "game_log": dummy_log,
-        "org_notifier": dummy_org_notifier,
-        "key_processor": key_processor,
-        "locker": locker,
-        "scheduler": scheduler,
     }
+
+    check_key = CheckKeyInteractor(
+        dao=dao.game_player,
+        view=dummy_view,
+        game_log=dummy_log,
+        org_notifier=dummy_org_notifier,
+        locker=locker,
+        scheduler=scheduler,
+    )
+
     await check_key(key="SHTO3", **key_kwargs)
     expected_first_key = dto.KeyTime(
         text="SHTO3",
@@ -377,19 +387,22 @@ async def test_cycle_play_routed_game(
 
     dummy_org_notifier = OrgNotifierMock()
     orgs = await get_orgs(game, dao.organizer)
-    key_processor = KeyProcessor(dao.game_player, game, locker)
     key_kwargs = {
         "player": harry,
         "team": gryffindor,
+        "input_container": MockInputContainer(),
         "game": game,
-        "dao": dao.game_player,
-        "view": dummy_view,
-        "game_log": dummy_log,
-        "org_notifier": dummy_org_notifier,
-        "key_processor": key_processor,
-        "locker": locker,
-        "scheduler": scheduler,
     }
+
+    check_key = CheckKeyInteractor(
+        dao=dao.game_player,
+        view=dummy_view,
+        game_log=dummy_log,
+        org_notifier=dummy_org_notifier,
+        locker=locker,
+        scheduler=scheduler,
+    )
+
     await check_key(key="SHTO3", **key_kwargs)
     expected_first_key = dto.KeyTime(
         text="SHTO3",

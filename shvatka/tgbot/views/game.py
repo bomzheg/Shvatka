@@ -46,6 +46,9 @@ logger = logging.getLogger(__name__)
 class BotInputContainer(InputContainer):
     message: Message
 
+    def get_message_id(self) -> int | None:
+        return self.message.message_id if self.message else None
+
 
 @dataclass
 class BotView(GameViewPreparer, GameView):
@@ -117,7 +120,12 @@ class BotView(GameViewPreparer, GameView):
         )
 
     async def duplicate_key(self, key: dto.KeyTime, input_container: InputContainer) -> None:
+        if isinstance(input_container, BotInputContainer):
+            reply_to = input_container.get_message_id()
+        else:
+            reply_to = None
         await self.bot.send_message(
+            reply_to_message_id=reply_to,
             chat_id=key.team.get_chat_id(),  # type: ignore[arg-type]
             text=(
                 f"{KeyEmoji.duplicate.value}Ключ {hd.code(key.text)} "
@@ -126,13 +134,23 @@ class BotView(GameViewPreparer, GameView):
         )
 
     async def correct_key(self, key: dto.KeyTime, input_container: InputContainer) -> None:
+        if isinstance(input_container, BotInputContainer):
+            reply_to = input_container.get_message_id()
+        else:
+            reply_to = None
         await self.bot.send_message(
+            reply_to_message_id=reply_to,
             chat_id=key.team.get_chat_id(),  # type: ignore[arg-type]
             text=f"{KeyEmoji.correct.value}Ключ {hd.code(key.text)} верный! Поздравляю!",
         )
 
     async def wrong_key(self, key: dto.KeyTime, input_container: InputContainer) -> None:
+        if isinstance(input_container, BotInputContainer):
+            reply_to = input_container.get_message_id()
+        else:
+            reply_to = None
         await self.bot.send_message(
+            reply_to_message_id=reply_to,
             chat_id=key.team.get_chat_id(),  # type: ignore[arg-type]
             text=f"{KeyEmoji.incorrect.value}Ключ {hd.code(key.text)} неверный.",
         )
@@ -140,6 +158,10 @@ class BotView(GameViewPreparer, GameView):
     async def bonus_key(
         self, key: dto.KeyTime, bonus: float, input_container: InputContainer
     ) -> None:
+        if isinstance(input_container, BotInputContainer):
+            reply_to = input_container.get_message_id()
+        else:
+            reply_to = None
         if bonus >= 0:
             text = (
                 f"{KeyEmoji.bonus.value}Бонусный ключ {hd.code(key.text)}.\n"
@@ -151,6 +173,7 @@ class BotView(GameViewPreparer, GameView):
                 f"Штраф: {bonus:.2f} мин."
             )
         await self.bot.send_message(
+            reply_to_message_id=reply_to,
             chat_id=key.team.get_chat_id(),  # type: ignore[arg-type]
             text=text,
         )
@@ -158,10 +181,18 @@ class BotView(GameViewPreparer, GameView):
     async def bonus_hint_key(
         self, key: dto.KeyTime, bonus_hint: list[hints.AnyHint], input_container: InputContainer
     ):
+        if isinstance(input_container, BotInputContainer):
+            reply_to = input_container.get_message_id()
+        else:
+            reply_to = None
+        await self.bot.send_message(
+            chat_id=key.team.get_chat_id(),  # type: ignore[arg-type]
+            reply_to_message_id=reply_to,
+            text="Бонусная подсказка",
+        )
         await self.hint_sender.send_hints(
             chat_id=key.team.get_chat_id(),  # type: ignore[arg-type]
             hint_containers=bonus_hint,
-            caption="Бонусная подсказка:",
         )
 
     async def game_finished(self, team: dto.Team, input_container: InputContainer) -> None:

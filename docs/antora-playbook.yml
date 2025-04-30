@@ -10,5 +10,5 @@ content:
   sources:
     - url: ../
       start_path: docs
-      tags: '*'
-      branches: '*'
+      tags: ['2.*.*']
+      branches: ['master', '*']

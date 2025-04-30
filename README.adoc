@@ -18,6 +18,8 @@ image:https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/bom
 * Формирование результатов игры,
 * Сохранение статистики прошедших игр
 
+https://bomzheg.github.io/Shvatka[Документация]
+
 == How to run without docker:
 
 . `cp config_dist config`

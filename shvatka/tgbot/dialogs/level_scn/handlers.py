@@ -159,7 +159,7 @@ async def process_level_result(
             retort.load(bonus_hint_conditions, list[action.KeyBonusHintCondition])
         )
     if routed_conditions := result.get("routed_conditions", None):
-        conditions = conditions.replace_routed_conditions(retort.load(routed_conditions, list))
+        conditions = conditions.replace_routed_conditions(retort.load(routed_conditions, list[action.KeyWinCondition]))
     manager.dialog_data["conditions"] = retort.dump(conditions)
 
 

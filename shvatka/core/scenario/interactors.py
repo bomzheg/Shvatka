@@ -28,12 +28,14 @@ class AllGameKeysReaderInteractor:
 
     def to_table(self, game: core.FullGame, keys: list[dto.LevelKeys]) -> Table:
         fields: dict[CellAddress, Cell] = {GAME_NAME: Cell(value=game.name)}
+        i = 0
         for lk in keys:
             for key in lk.keys:
-                fields[FIRST_LEVEL_NUMBER] = Cell(value=lk.level_number)
-                fields[FIRST_LEVEL_NAME] = Cell(value=lk.level_name_id)
-                fields[FIRST_LEVEL_KEYS] = Cell(value="\n".join(key.keys))
-                fields[FIRST_LEVEL_KEYS_DESCRIPTION] = Cell(value=key.description)
+                fields[FIRST_LEVEL_NUMBER.shift(rows=i)] = Cell(value=lk.level_number)
+                fields[FIRST_LEVEL_NAME.shift(rows=i)] = Cell(value=lk.level_name_id)
+                fields[FIRST_LEVEL_KEYS.shift(rows=i)] = Cell(value="\n".join(key.keys))
+                fields[FIRST_LEVEL_KEYS_DESCRIPTION.shift(rows=i)] = Cell(value=key.description)
+                i += 1
         return Table(fields=fields)
 
     def presenter(self, game: core.FullGame) -> list[dto.LevelKeys]:

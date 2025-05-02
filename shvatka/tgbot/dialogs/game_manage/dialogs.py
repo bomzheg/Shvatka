@@ -290,7 +290,7 @@ my_games = Dialog(
             when=F["game"].can_start_waivers,
         ),
         Button(
-            Const("Все ключи"),
+            Const("🔑🧾Все ключи в xlsx"),
             id="game_keys",
             on_click=show_all_keys,
         ),

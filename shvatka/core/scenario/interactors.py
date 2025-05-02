@@ -1,12 +1,17 @@
 from typing import BinaryIO
 
 from shvatka.core.interfaces.dal.game import GameByIdGetter
-from shvatka.core.interfaces.printer import TablePrinter, Table
+from shvatka.core.interfaces.printer import TablePrinter, Table, CellAddress, Cell
 from shvatka.core.models import dto as core
 from shvatka.core.models.dto import action
 from shvatka.core.scenario import dto
 from shvatka.tgbot.views.utils import render_hints
 
+GAME_NAME = CellAddress(row=1, column=1)
+FIRST_LEVEL_NUMBER = CellAddress(row=2, column=1)
+FIRST_LEVEL_NAME = CellAddress(row=2, column=2)
+FIRST_LEVEL_KEYS = CellAddress(row=2, column=3)
+FIRST_LEVEL_KEYS_DESCRIPTION = CellAddress(row=2, column=4)
 
 class AllGameKeysReaderInteractor:
     def __init__(self, dao: GameByIdGetter, printer: TablePrinter):
@@ -21,7 +26,14 @@ class AllGameKeysReaderInteractor:
         return self.printer.print_table(self.to_table(game, keys))
 
     def to_table(self, game: core.FullGame, keys: list[dto.LevelKeys]) -> Table:
-        pass
+        fields: dict[CellAddress, Cell] = {GAME_NAME: Cell(value=game.name)}
+        for lk in keys:
+            for key in lk.keys:
+                fields[FIRST_LEVEL_NUMBER] = Cell(value=lk.level_number)
+                fields[FIRST_LEVEL_NAME] = Cell(value=lk.level_name_id)
+                fields[FIRST_LEVEL_KEYS] = Cell(value="\n".join(key.keys))
+                fields[FIRST_LEVEL_KEYS_DESCRIPTION] = Cell(value=key.description)
+        return Table(fields=fields)
 
     def presenter(self, game: core.FullGame) -> list[dto.LevelKeys]:
         result = []

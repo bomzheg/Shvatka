@@ -1,6 +1,5 @@
 import typing
 from io import BytesIO
-from typing import Any
 
 from openpyxl import Workbook
 from openpyxl.worksheet.worksheet import Worksheet
@@ -9,7 +8,6 @@ from shvatka.core.interfaces.printer import Table, TablePrinter
 
 
 class ExcellPrinter(TablePrinter):
-
     def print_table(self, table: Table) -> BytesIO:
         result = BytesIO()
         print_table(table, result)
@@ -30,6 +28,6 @@ def print_table(table: Table, file: typing.Any) -> None:
 
 
 def resize_columns(worksheet: Worksheet):
-    for col in worksheet.columns:  # type: Any  # =(
+    for col in worksheet.columns:  # type: typing.Any  # =(
         new_len = max([2, *[len(str(cell.value or "")) for cell in col]])
         worksheet.column_dimensions[col[0].column_letter].width = new_len

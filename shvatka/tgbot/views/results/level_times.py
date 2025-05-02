@@ -9,7 +9,13 @@ from shvatka.core.utils.exceptions import GameNotFinished
 from shvatka.infrastructure.printer.table import (
     print_table,
 )
-from shvatka.core.interfaces.printer import DATETIME_EXCEL_FORMAT, CellAddress, Cell, Table, as_time
+from shvatka.core.interfaces.printer import (
+    DATETIME_EXCEL_FORMAT,
+    CellAddress,
+    Cell,
+    Table,
+    as_time,
+)
 
 FIRST_TEAM_NAME = CellAddress(row=3, column=1)
 GAME_NAME = CellAddress(row=1, column=1)

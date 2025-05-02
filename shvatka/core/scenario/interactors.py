@@ -13,6 +13,7 @@ FIRST_LEVEL_NAME = CellAddress(row=2, column=2)
 FIRST_LEVEL_KEYS = CellAddress(row=2, column=3)
 FIRST_LEVEL_KEYS_DESCRIPTION = CellAddress(row=2, column=4)
 
+
 class AllGameKeysReaderInteractor:
     def __init__(self, dao: GameByIdGetter, printer: TablePrinter):
         self.dao = dao

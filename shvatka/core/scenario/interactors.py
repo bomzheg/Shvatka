@@ -1,6 +1,7 @@
 from typing import BinaryIO
 
 from shvatka.core.interfaces.dal.game import GameByIdGetter
+from shvatka.core.interfaces.printer import TablePrinter, Table
 from shvatka.core.models import dto as core
 from shvatka.core.models.dto import action
 from shvatka.core.scenario import dto
@@ -8,14 +9,18 @@ from shvatka.tgbot.views.utils import render_hints
 
 
 class AllGameKeysReaderInteractor:
-    def __init__(self, dao: GameByIdGetter):
+    def __init__(self, dao: GameByIdGetter, printer: TablePrinter):
         self.dao = dao
+        self.printer = printer
 
     async def __call__(self, game_id: int) -> BinaryIO:
         game = await self.dao.get_full(game_id)
         return self.view(game, self.presenter(game))
 
     def view(self, game: core.FullGame, keys: list[dto.LevelKeys]) -> BinaryIO:
+        return self.printer.print_table(self.to_table(game, keys))
+
+    def to_table(self, game: core.FullGame, keys: list[dto.LevelKeys]) -> Table:
         pass
 
     def presenter(self, game: core.FullGame) -> list[dto.LevelKeys]:

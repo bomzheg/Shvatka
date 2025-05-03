@@ -46,7 +46,7 @@ from .handlers import (
     get_excel_results_handler,
     to_publish_game_forum,
     complete_game_handler,
-    show_all_keys,
+    show_all_keys, show_transitions,
 )
 from shvatka.tgbot.dialogs.preview_data import PREVIEW_GAME, PreviewSwitchTo, PreviewStart
 
@@ -293,6 +293,11 @@ my_games = Dialog(
             Const("🔑🧾Все ключи в xlsx"),
             id="game_keys",
             on_click=show_all_keys,
+        ),
+        Button(
+            Const("Переходы"),
+            id="transitions",
+            on_click=show_transitions,
         ),
         Button(
             Const("📨Опубликовать"),

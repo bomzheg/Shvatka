@@ -20,14 +20,15 @@ class DiagramPrinter(TransitionsPrinter):
 class DiagramBuilder:
     def __init__(self, transitions: dto.Transitions) -> None:
         self.transitions = transitions
-        self.file = NamedTemporaryFile("rwb", suffix=".png")
+        self.file = NamedTemporaryFile("wb", suffix=".png")
+        self.file.close()
 
     def build(self) -> BytesIO:
+        self._build_diagram()
         result = BytesIO()
-        self.file.seek(0)
-        result.write(self.file.read())
+        with open(self.file.name, "rb") as f:
+            result.write(self.file.read())
         result.seek(0)
-        self.file.close()
         return result
 
     def _build_diagram(self) -> None:

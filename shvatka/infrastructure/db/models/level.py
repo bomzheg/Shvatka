@@ -83,3 +83,8 @@ class Level(Base):
             game_id=self.game_id,
             number_in_game=self.number_in_game,
         )
+
+    def to_gamed_dto(self, author: dto.Player) -> dto.GamedLevel:
+        assert self.game_id is not None
+        assert self.number_in_game is not None
+        return typing.cast(dto.GamedLevel, self.to_dto(author))

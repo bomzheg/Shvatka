@@ -20,6 +20,11 @@ class GameUpserterImpl(GameUpserter):
     async def upsert_game(self, author: dto.Player, scenario: scn.GameScenario) -> dto.Game:
         return await self.dao.game.upsert_game(author, scenario)
 
+    async def upsert_gamed(
+        self, author: dto.Player, scenario: scn.LevelScenario, game: dto.Game, no_in_game: int
+    ) -> dto.GamedLevel:
+        return await self.dao.level.upsert_gamed(author, scenario, game, no_in_game)
+
     async def upsert(
         self,
         author: dto.Player,

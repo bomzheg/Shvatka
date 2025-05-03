@@ -64,7 +64,7 @@ class GameDao(BaseDAO[models.Game]):
         author = game_db.author.to_dto_user_prefetched()
         return game_db.to_full_dto(
             author=author,
-            levels=[level.to_dto(author) for level in game_db.levels],
+            levels=[level.to_gamed_dto(author) for level in game_db.levels],
         )
 
     async def add_levels(self, game: dto.Game) -> dto.FullGame:
@@ -73,7 +73,7 @@ class GameDao(BaseDAO[models.Game]):
             .where(models.Level.game_id == game.id)
             .order_by(models.Level.number_in_game)
         )
-        levels = [lvl.to_dto(game.author) for lvl in levels_db]
+        levels = [lvl.to_gamed_dto(game.author) for lvl in levels_db]
         return game.to_full_game(levels=levels)
 
     async def get_by_id(self, id_: int, author: dto.Player | None = None) -> dto.Game:

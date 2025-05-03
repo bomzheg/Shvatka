@@ -56,7 +56,7 @@ async def upsert_game(
     await dao.unlink_all(game)
     levels = []
     for number, level in enumerate(game_scn.levels):
-        saved_level = await dao.upsert(author, level, game, number)
+        saved_level = await dao.upsert_gamed(author, level, game, number)
         levels.append(saved_level)
     await dao.commit()
     return game.to_full_game(levels)

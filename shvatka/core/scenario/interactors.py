@@ -1,4 +1,4 @@
-from typing import BinaryIO
+from typing import BinaryIO, Sequence
 
 from shvatka.core.interfaces.dal.game import GameByIdGetter
 from shvatka.core.interfaces.printer import TablePrinter, Table, CellAddress, Cell
@@ -42,7 +42,6 @@ class AllGameKeysReaderInteractor:
     def presenter(self, game: core.FullGame) -> list[dto.LevelKeys]:
         result = []
         for level in game.levels:
-            assert level.number_in_game is not None
             keys = []
             for win_condition in level.scenario.conditions.get_default_key_conditions():
                 keys.extend(self.presenter_win_condition(win_condition, game.levels))
@@ -61,7 +60,7 @@ class AllGameKeysReaderInteractor:
         return result
 
     def presenter_win_condition(
-        self, condition: action.KeyWinCondition, levels: list[core.Level]
+        self, condition: action.KeyWinCondition, levels: Sequence[core.GamedLevel]
     ) -> list[dto.Key]:
         if condition.next_level:
             next_level = next(level for level in levels if level.name_id == condition.next_level)

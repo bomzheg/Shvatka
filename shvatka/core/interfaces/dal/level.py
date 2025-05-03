@@ -6,6 +6,15 @@ from shvatka.core.models.dto import scn
 
 
 class LevelUpserter(Committer, Protocol):
+    async def upsert_gamed(
+        self,
+        author: dto.Player,
+        scenario: scn.LevelScenario,
+        game: dto.Game,
+        no_in_game: int,
+    ) -> dto.GamedLevel:
+        raise NotImplementedError
+
     async def upsert(
         self,
         author: dto.Player,

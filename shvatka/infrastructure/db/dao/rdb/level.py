@@ -20,6 +20,16 @@ class LevelDao(BaseDAO[models.Level]):
     ) -> None:
         super().__init__(models.Level, session, clock=clock)
 
+    async def upsert_gamed(
+        self,
+        author: dto.Player,
+        scn: LevelScenario,
+        game: dto.Game,
+        no_in_game: int,
+    ) -> dto.GamedLevel:
+        level = await self.upsert(author, scn, game, no_in_game)
+        return typing.cast(dto.GamedLevel, level)
+
     async def upsert(
         self,
         author: dto.Player,

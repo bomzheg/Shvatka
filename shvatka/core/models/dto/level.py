@@ -48,3 +48,8 @@ class Level:
 
     def is_routed(self) -> bool:
         return self.scenario.is_routed()
+
+
+class GamedLevel(Level):
+    game_id: int
+    number_in_game: int

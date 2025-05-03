@@ -17,5 +17,6 @@ ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 COPY --from=builder $VIRTUAL_ENV $VIRTUAL_ENV
 COPY . ${CODE_PATH}/shvatka
 WORKDIR $CODE_PATH/shvatka
+RUN apt update && apt install -y texlive-latex-base texlive-latex-extra texlive-fonts-recomended texlive-fonts-extra texlive-lang-all latexmk && apt clean && rm -rf /var/lib/apt/lists
 RUN echo "{\"vcs_hash\": \"${VCS_SHA}\", \"build_at\": \"${BUILD_AT}\" }" > version.yaml
 ENTRYPOINT ["python3", "-m", "shvatka"]

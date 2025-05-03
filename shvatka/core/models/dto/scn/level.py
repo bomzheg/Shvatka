@@ -207,9 +207,8 @@ class Conditions(Sequence[AnyCondition]):
 
     def get_bonus_keys(self) -> set[BonusKey]:
         result: set[BonusKey] = set()
-        for condition in self.conditions:
-            if isinstance(condition, KeyBonusCondition):
-                result = result.union(condition.keys)
+        for condition in self.get_bonus_conditions():
+            result = result.union(condition.keys)
         return result
 
     def get_bonus_hints_conditions(self) -> list[action.KeyBonusHintCondition]:
@@ -221,6 +220,9 @@ class Conditions(Sequence[AnyCondition]):
             for c in self.conditions
             if isinstance(c, action.KeyWinCondition) and c.next_level is not None
         ]
+
+    def get_bonus_conditions(self) -> list[action.KeyBonusCondition]:
+        return [c for c in self.conditions if isinstance(c, action.KeyBonusCondition)]
 
     def get_default_key_conditions(self) -> list[action.KeyWinCondition]:
         return [

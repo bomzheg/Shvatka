@@ -7,10 +7,13 @@ from adaptix import Retort
 from aiogram.types import CallbackQuery, Message, BufferedInputFile
 from aiogram_dialog import DialogManager
 from aiogram_dialog.widgets.kbd import Button
+from dishka import FromDishka
+from dishka.integrations.aiogram_dialog import inject
 
 from shvatka.core.interfaces.clients.file_storage import FileGateway
 from shvatka.core.interfaces.scheduler import Scheduler
 from shvatka.core.models import dto
+from shvatka.core.scenario.interactors import AllGameKeysReaderInteractor
 from shvatka.core.services import game
 from shvatka.core.services.game import rename_game, get_game, get_full_game, complete_game
 from shvatka.core.services.game_stat import get_game_stat
@@ -75,6 +78,22 @@ async def show_my_zip_scn(c: CallbackQuery, widget: Button, manager: DialogManag
     await c.answer()
     game_id = manager.dialog_data["my_game_id"]
     await common_show_zip(c, game_id, manager)
+
+
+@inject
+async def show_all_keys(
+    c: CallbackQuery,
+    widget: Button,
+    manager: DialogManager,
+    interactor: FromDishka[AllGameKeysReaderInteractor],
+):
+    assert isinstance(c.message, Message)
+    await c.message.answer_document(
+        document=BufferedInputFile(
+            file=(await interactor(manager.dialog_data["my_game_id"])).read(),
+            filename="all_keys.xlsx",
+        )
+    )
 
 
 async def common_show_zip(c: CallbackQuery, game_id: int, manager: DialogManager):

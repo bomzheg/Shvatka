@@ -1,6 +1,6 @@
 import typing
 
-from .interface import Condition, Action, State, Decision, DecisionType, StateHolder
+from .interface import Condition, ConditionType, Action, State, Decision, DecisionType, StateHolder
 from .decisions import NotImplementedActionDecision, Decisions
 from .keys import (
     SHKey,

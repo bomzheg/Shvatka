@@ -46,7 +46,8 @@ from .handlers import (
     get_excel_results_handler,
     to_publish_game_forum,
     complete_game_handler,
-    show_all_keys, show_transitions,
+    show_all_keys,
+    show_transitions,
 )
 from shvatka.tgbot.dialogs.preview_data import PREVIEW_GAME, PreviewSwitchTo, PreviewStart
 

@@ -26,8 +26,8 @@ class DiagramBuilder:
     def build(self) -> BytesIO:
         self._build_diagram()
         result = BytesIO()
-        with open(self.file.name, "rb") as f:
-            result.write(self.file.read())
+        with open(self.file.name, "rb") as f:  # noqa: PTH123
+            result.write(f.read())
         result.seek(0)
         return result
 
@@ -43,16 +43,7 @@ class DiagramBuilder:
                             node = EC2ElasticIpAddress(label=condition)
                             nodes.setdefault(name_id, {})[DEFAULT_NODE_NAME] = node
                         nodes.setdefault(name_id, {})[condition] = node
-            for transition in self.transitions.forward_transitions:
-                (
-                    nodes[transition.from_][transition.condition]
-                    >> Edge()
-                    >> nodes[transition.to][DEFAULT_NODE_NAME]
-                )
-            for transition in self.transitions.routed_transitions:
-                (
-                    nodes[transition.from_][transition.condition]
-                    >> Edge()
-                    >> nodes[transition.to][DEFAULT_NODE_NAME]
-                )
-
+            for tr in self.transitions.forward_transitions:
+                nodes[tr.from_][tr.condition] >> Edge() >> nodes[tr.to][DEFAULT_NODE_NAME]
+            for tr in self.transitions.routed_transitions:
+                nodes[tr.from_][tr.condition] >> Edge() >> nodes[tr.to][DEFAULT_NODE_NAME]

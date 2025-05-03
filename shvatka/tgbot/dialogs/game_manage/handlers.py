@@ -13,7 +13,10 @@ from dishka.integrations.aiogram_dialog import inject
 from shvatka.core.interfaces.clients.file_storage import FileGateway
 from shvatka.core.interfaces.scheduler import Scheduler
 from shvatka.core.models import dto
-from shvatka.core.scenario.interactors import AllGameKeysReaderInteractor, GameScenarioTransitionsInteractor
+from shvatka.core.scenario.interactors import (
+    AllGameKeysReaderInteractor,
+    GameScenarioTransitionsInteractor,
+)
 from shvatka.core.services import game
 from shvatka.core.services.game import rename_game, get_game, get_full_game, complete_game
 from shvatka.core.services.game_stat import get_game_stat

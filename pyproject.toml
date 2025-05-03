@@ -170,5 +170,12 @@ module = "shvatka.infrastructure.crawler.*"
 disable_error_code = ["union-attr", "arg-type", "index", "misc", "assignment"]
 
 [[tool.mypy.overrides]]
-module = ["telegraph.*", "matplotlib.*", "aiogram_tests.*", "apscheduler.*", "testcontainers.*"]
+module = [
+    "telegraph.*",
+    "matplotlib.*",
+    "aiogram_tests.*",
+    "apscheduler.*",
+    "testcontainers.*",
+    "diagrams.*",
+]
 ignore_missing_imports = true

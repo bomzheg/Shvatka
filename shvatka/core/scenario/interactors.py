@@ -107,16 +107,35 @@ class GameScenarioTransitionsInteractor:
     def convert(self, game: core.FullGame) -> dto.Transitions:
         forward_transitions = []
         routed_transitions = []
+        levels_conditions: dict[str, list[tuple[str, bool]]] = {}
         prev_level: core.Level | None = None
         for level in game.levels:
+            levels_conditions[level.name_id] = []
             if prev_level is not None:
-                forward_transitions.append((prev_level.name_id, level.name_id))
+                for condition in level.scenario.conditions.get_default_key_conditions():
+                    forward_transitions.append(
+                        dto.Transition(
+                            prev_level.name_id, level.name_id, self.print_condition(condition)
+                        )
+                    )
+                    levels_conditions[prev_level.name_id].append(
+                        (self.print_condition(condition), False)
+                    )
             for condition in level.scenario.conditions.get_routed_conditions():
                 assert condition.next_level is not None
-                routed_transitions.append((level.name_id, condition.next_level))
+                routed_transitions.append(
+                    dto.Transition(
+                        level.name_id, condition.next_level, self.print_condition(condition)
+                    )
+                )
+                levels_conditions[level.name_id].append((self.print_condition(condition), True))
         return dto.Transitions(
             game_name=game.name,
-            levels=[(level.number_in_game, level.name_id) for level in game.levels],
+            levels=[dto.ShortLevel(level.number_in_game, level.name_id) for level in game.levels],
             forward_transitions=forward_transitions,
             routed_transitions=routed_transitions,
+            levels_conditions=levels_conditions,
         )
+
+    def print_condition(self, condition: action.KeyWinCondition) -> str:
+        return "\n".join(condition.keys)

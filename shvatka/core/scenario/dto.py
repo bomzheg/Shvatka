@@ -14,3 +14,10 @@ class LevelKeys:
     level_number: int
     level_name_id: str
     keys: list[Key]
+
+
+@dataclass
+class Transitions:
+    game_name: str
+    levels: list[tuple[int, str]]
+    transitions: list[tuple[str, str]]

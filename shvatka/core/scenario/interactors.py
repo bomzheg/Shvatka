@@ -5,6 +5,7 @@ from shvatka.core.interfaces.printer import TablePrinter, Table, CellAddress, Ce
 from shvatka.core.models import dto as core
 from shvatka.core.models.dto import action
 from shvatka.core.scenario import dto
+from shvatka.core.scenario.adapters import TransitionsPrinter
 from shvatka.tgbot.views.utils import render_hints
 
 GAME_NAME = CellAddress(row=1, column=1)
@@ -93,3 +94,28 @@ class AllGameKeysReaderInteractor:
             dto.Key(keys={bk.text}, description=f"{bk.bonus_minutes} мин.")
             for bk in condition.keys
         ]
+
+
+class GameScenarioTransitionsInteractor:
+    def __init__(self, dao: GameByIdGetter, printer: TransitionsPrinter):
+        self.dao = dao
+        self.printer = printer
+
+    async def __call__(self, game_id: int) -> BinaryIO:
+        game = await self.dao.get_full(game_id)
+        return self.printer.print(self.convert(game))
+
+    def convert(self, game: core.FullGame) -> dto.Transitions:
+        transactions = []
+        prev_level: core.Level | None = None
+        for level in game.levels:
+            if prev_level is not None:
+                transactions.append((prev_level.name_id, level.name_id))
+            for condition in level.scenario.conditions.get_routed_conditions():
+                assert condition.next_level is not None
+                transactions.append((level.name_id, condition.next_level))
+        return dto.Transitions(
+            game_name=game.name,
+            levels=[(level.number_in_game, level.name_id) for level in game.levels],
+            transitions=transactions,
+        )

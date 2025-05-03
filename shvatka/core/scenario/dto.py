@@ -20,4 +20,5 @@ class LevelKeys:
 class Transitions:
     game_name: str
     levels: list[tuple[int, str]]
-    transitions: list[tuple[str, str]]
+    forward_transitions: list[tuple[str, str]]
+    routed_transitions: list[tuple[str, str]]

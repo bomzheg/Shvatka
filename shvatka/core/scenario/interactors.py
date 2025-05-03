@@ -105,16 +105,18 @@ class GameScenarioTransitionsInteractor:
         return self.printer.print(self.convert(game))
 
     def convert(self, game: core.FullGame) -> dto.Transitions:
-        transactions = []
+        forward_transitions = []
+        routed_transitions = []
         prev_level: core.Level | None = None
         for level in game.levels:
             if prev_level is not None:
-                transactions.append((prev_level.name_id, level.name_id))
+                forward_transitions.append((prev_level.name_id, level.name_id))
             for condition in level.scenario.conditions.get_routed_conditions():
                 assert condition.next_level is not None
-                transactions.append((level.name_id, condition.next_level))
+                routed_transitions.append((level.name_id, condition.next_level))
         return dto.Transitions(
             game_name=game.name,
             levels=[(level.number_in_game, level.name_id) for level in game.levels],
-            transitions=transactions,
+            forward_transitions=forward_transitions,
+            routed_transitions=routed_transitions,
         )

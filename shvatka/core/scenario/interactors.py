@@ -129,6 +129,7 @@ class GameScenarioTransitionsInteractor:
                     )
                 )
                 levels_conditions[level.name_id].append((self.print_condition(condition), True))
+            prev_level = level
         return dto.Transitions(
             game_name=game.name,
             levels=[dto.ShortLevel(level.number_in_game, level.name_id) for level in game.levels],

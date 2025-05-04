@@ -2,11 +2,6 @@ from io import BytesIO
 from pathlib import Path
 from tempfile import mktemp
 
-from diagrams import Diagram, Cluster, Node, Edge
-from diagrams.aws.business import Chime
-from diagrams.aws.compute import EC2ElasticIpAddress
-from diagrams.aws.management import OpsworksDeployments
-
 from shvatka.core.scenario import dto
 from shvatka.core.scenario.adapters import TransitionsPrinter
 
@@ -27,7 +22,7 @@ class DiagramBuilder:
     def build(self) -> BytesIO:
         self._build_diagram()
         result = BytesIO()
-        file = Path(self.file + ".png")
+        file = Path(self.file + ".puml")
         with file.open("rb") as f:
             result.write(f.read())
         file.unlink(missing_ok=True)
@@ -56,39 +51,11 @@ class DiagramBuilder:
         for tr in self.transitions.forward_transitions:
             result += f"{tr.from_}.cond_{conditions_registry[(tr.from_, tr.condition)]} --> {tr.to}\n"
         for tr in self.transitions.routed_transitions:
-            result += f"{tr.from_}.cond_{conditions_registry[(tr.from_, tr.condition)]} --> {tr.to}\n"
+            result += f"{tr.from_}.cond_{conditions_registry[(tr.from_, tr.condition)]} ..> {tr.to}\n"
         result += "\n\n@enduml"
-        print(result)
+        with open(self.file + ".puml", "w") as f:
+            f.write(result)
 
-        with Diagram(
-            name=self.transitions.game_name,
-            show=False,
-            filename=self.file,
-            outformat="png",
-            direction="TB",
-            curvestyle="ortho",
-            graph_attr={"splines": "ortho", "rankdir": "TB"},
-            node_attr={"shape": "box"},
-            edge_attr={"arrowsize": "0.5"},
-        ):
-            nodes: dict[str, dict[str, Node]] = {}
-            for number, name_id in self.transitions.levels:
-                with Cluster(label=self.level_label(number, name_id), direction="LR"):
-                    for condition, is_routed in self.transitions.levels_conditions[name_id]:
-                        if is_routed:
-                            node = OpsworksDeployments(label=condition)
-                        else:
-                            node = EC2ElasticIpAddress(label=condition)
-                            nodes.setdefault(name_id, {})[DEFAULT_NODE_NAME] = node
-                        nodes.setdefault(name_id, {})[condition] = node
-            with Cluster("Finish"):
-                nodes.setdefault(TransitionsPrinter.FINISH_NAME, {})[DEFAULT_NODE_NAME] = Chime(
-                    label="Finish"
-                )
-            for tr in self.transitions.forward_transitions:
-                nodes[tr.from_][tr.condition] >> Edge() >> nodes[tr.to][DEFAULT_NODE_NAME]
-            for tr in self.transitions.routed_transitions:
-                nodes[tr.from_][tr.condition] >> Edge() >> nodes[tr.to][DEFAULT_NODE_NAME]
 
     def level_label(self, number: int, name_id: str) -> str:
         return f"№{number+1} ({name_id})"

@@ -112,7 +112,7 @@ async def show_transitions(
     await c.message.answer_document(
         document=BufferedInputFile(
             file=(await interactor(game_id)).read(),
-            filename="transitions.png",
+            filename="transitions.puml",
         )
     )
 

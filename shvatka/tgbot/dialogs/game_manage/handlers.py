@@ -107,12 +107,14 @@ async def show_transitions(
     interactor: FromDishka[GameScenarioTransitionsInteractor],
 ):
     assert isinstance(c.message, Message)
-    game_id = manager.dialog_data.get("game_id", manager.dialog_data.get("my_game_id", None))
+    game_id: int | None = manager.dialog_data.get(
+        "game_id", manager.dialog_data.get("my_game_id", None)
+    )
     assert game_id is not None
     await c.message.answer_document(
         document=BufferedInputFile(
             file=(await interactor(game_id)).read(),
-            filename="transitions.puml",
+            filename="transitions.svg",
         )
     )
 

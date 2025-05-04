@@ -102,7 +102,7 @@ class GameScenarioTransitionsInteractor:
 
     async def __call__(self, game_id: int) -> BinaryIO:
         game = await self.dao.get_full(game_id)
-        return self.printer.print(self.convert(game))
+        return await self.printer.render(self.printer.print(self.convert(game)))
 
     def convert(self, game: core.FullGame) -> dto.Transitions:
         forward_transitions: list[dto.Transition] = []

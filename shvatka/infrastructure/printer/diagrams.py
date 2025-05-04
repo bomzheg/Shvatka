@@ -56,9 +56,11 @@ class DiagramBuilder:
                             node = EC2ElasticIpAddress(label=condition)
                             nodes.setdefault(name_id, {})[DEFAULT_NODE_NAME] = node
                         nodes.setdefault(name_id, {})[condition] = node
+            with Cluster("Finish"):
+                nodes.setdefault(TransitionsPrinter.FINISH_NAME, {})[DEFAULT_NODE_NAME] = Chime(
+                    label="Finish"
+                )
             for tr in self.transitions.forward_transitions:
-                if tr.to == TransitionsPrinter.FINISH_NAME:
-                    nodes.setdefault(tr.to, {})[DEFAULT_NODE_NAME] = Chime(label="Finish")
                 nodes[tr.from_][tr.condition] >> Edge() >> nodes[tr.to][DEFAULT_NODE_NAME]
             for tr in self.transitions.routed_transitions:
                 nodes[tr.from_][tr.condition] >> Edge() >> nodes[tr.to][DEFAULT_NODE_NAME]

@@ -41,11 +41,16 @@ class DiagramBuilder:
             for condition, is_routed in conditions:
                 conditions_registry[(level, condition)] = i
                 i += 1
-        result = "@startuml\n\n"
+        result = "@startuml\n\nleft to right direction\n\n"
         for number, name_id in self.transitions.levels:
             result += f"package \"{self.level_label(number, name_id)}\" as {name_id} {{\n"
             for condition, is_routed in self.transitions.levels_conditions[name_id]:
                 result += f" object \"{condition}\" as cond_{conditions_registry[(name_id, condition)]}\n"
+            prev: str | None = None
+            for condition, is_routed in self.transitions.levels_conditions[name_id]:
+                if prev is not None:
+                    result += f" cond_{conditions_registry[(name_id, prev)]} -[hidden]down-> cond_{conditions_registry[(name_id, condition)]}\n"
+                prev = condition
             result += "\n}\n"
         result += f"package \"Finish\" as {TransitionsPrinter.FINISH_NAME} {{\n object Finish\n}}\n"
         for tr in self.transitions.forward_transitions:

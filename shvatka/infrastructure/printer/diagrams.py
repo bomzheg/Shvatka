@@ -2,6 +2,7 @@ from io import BytesIO
 from tempfile import NamedTemporaryFile
 
 from diagrams import Diagram, Cluster, Node, Edge
+from diagrams.aws.business import Chime
 from diagrams.aws.compute import EC2ElasticIpAddress
 from diagrams.aws.management import OpsworksDeployments
 
@@ -44,6 +45,8 @@ class DiagramBuilder:
                             nodes.setdefault(name_id, {})[DEFAULT_NODE_NAME] = node
                         nodes.setdefault(name_id, {})[condition] = node
             for tr in self.transitions.forward_transitions:
+                if tr.to == TransitionsPrinter.FINISH_NAME:
+                    nodes.setdefault(tr.to, {})[DEFAULT_NODE_NAME] = Chime(label="Finish")
                 nodes[tr.from_][tr.condition] >> Edge() >> nodes[tr.to][DEFAULT_NODE_NAME]
             for tr in self.transitions.routed_transitions:
                 nodes[tr.from_][tr.condition] >> Edge() >> nodes[tr.to][DEFAULT_NODE_NAME]

@@ -1,5 +1,6 @@
 from io import BytesIO
-from tempfile import NamedTemporaryFile
+from pathlib import Path
+from tempfile import NamedTemporaryFile, mktemp
 
 from diagrams import Diagram, Cluster, Node, Edge
 from diagrams.aws.business import Chime
@@ -21,19 +22,20 @@ class DiagramPrinter(TransitionsPrinter):
 class DiagramBuilder:
     def __init__(self, transitions: dto.Transitions) -> None:
         self.transitions = transitions
-        self.file = NamedTemporaryFile("wb", suffix=".png")
-        self.file.close()
+        self.file = mktemp(suffix="_diagram", prefix="shvatka_")
 
     def build(self) -> BytesIO:
         self._build_diagram()
         result = BytesIO()
-        with open(self.file.name, "rb") as f:  # noqa: PTH123
+        file = Path(self.file + '.png')
+        with file.open("rb") as f:
             result.write(f.read())
+        file.unlink(missing_ok=True)
         result.seek(0)
         return result
 
     def _build_diagram(self) -> None:
-        with Diagram(name=self.transitions.game_name, show=False, filename=self.file.name):
+        with Diagram(name=self.transitions.game_name, show=False, filename=self.file, outformat="png"):
             nodes: dict[str, dict[str, Node]] = {}
             for number, name_id in self.transitions.levels:
                 with Cluster(label=f"№{number} ({name_id})"):

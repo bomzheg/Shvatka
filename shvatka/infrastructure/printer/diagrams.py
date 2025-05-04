@@ -40,11 +40,15 @@ class DiagramBuilder:
             show=False,
             filename=self.file,
             outformat="png",
-            direction="tb"
+            direction="TB",
+            curvestyle="ortho",
+            graph_attr={"splines": "ortho", "rankdir": "TB"},
+            node_attr={"shape": "box"},
+            edge_attr={"arrowsize": "0.5"},
         ):
             nodes: dict[str, dict[str, Node]] = {}
             for number, name_id in self.transitions.levels:
-                with Cluster(label=f"№{number+1} ({name_id})"):
+                with Cluster(label=f"№{number+1} ({name_id})", direction="LR"):
                     for condition, is_routed in self.transitions.levels_conditions[name_id]:
                         if is_routed:
                             node = OpsworksDeployments(label=condition)

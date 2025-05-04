@@ -35,6 +35,26 @@ class DiagramBuilder:
         return result
 
     def _build_diagram(self) -> None:
+        conditions_registry: dict[tuple[str, str], int] = {}
+        i = 0
+        for level, conditions in self.transitions.levels_conditions.items():
+            for condition, is_routed in conditions:
+                conditions_registry[(level, condition)] = i
+                i += 1
+        result = "@startuml\n\n"
+        for number, name_id in self.transitions.levels:
+            result += f"package \"{self.level_label(number, name_id)}\" as {name_id} {{\n"
+            for condition, is_routed in self.transitions.levels_conditions[name_id]:
+                result += f" object \"{condition}\" as cond_{conditions_registry[(name_id, condition)]}\n"
+            result += "\n}\n"
+        result += f"package \"Finish\" as {TransitionsPrinter.FINISH_NAME} {{\n object Finish\n}}\n"
+        for tr in self.transitions.forward_transitions:
+            result += f"{tr.from_}.cond_{conditions_registry[(tr.from_, tr.condition)]} --> {tr.to}\n"
+        for tr in self.transitions.routed_transitions:
+            result += f"{tr.from_}.cond_{conditions_registry[(tr.from_, tr.condition)]} --> {tr.to}\n"
+        result += "\n\n@enduml"
+        print(result)
+
         with Diagram(
             name=self.transitions.game_name,
             show=False,
@@ -48,7 +68,7 @@ class DiagramBuilder:
         ):
             nodes: dict[str, dict[str, Node]] = {}
             for number, name_id in self.transitions.levels:
-                with Cluster(label=f"№{number+1} ({name_id})", direction="LR"):
+                with Cluster(label=self.level_label(number, name_id), direction="LR"):
                     for condition, is_routed in self.transitions.levels_conditions[name_id]:
                         if is_routed:
                             node = OpsworksDeployments(label=condition)
@@ -64,3 +84,6 @@ class DiagramBuilder:
                 nodes[tr.from_][tr.condition] >> Edge() >> nodes[tr.to][DEFAULT_NODE_NAME]
             for tr in self.transitions.routed_transitions:
                 nodes[tr.from_][tr.condition] >> Edge() >> nodes[tr.to][DEFAULT_NODE_NAME]
+
+    def level_label(self, number: int, name_id: str) -> str:
+        return f"№{number+1} ({name_id})"

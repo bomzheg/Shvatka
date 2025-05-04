@@ -44,7 +44,7 @@ class DiagramBuilder:
         ):
             nodes: dict[str, dict[str, Node]] = {}
             for number, name_id in self.transitions.levels:
-                with Cluster(label=f"№{number} ({name_id})"):
+                with Cluster(label=f"№{number+1} ({name_id})"):
                     for condition, is_routed in self.transitions.levels_conditions[name_id]:
                         if is_routed:
                             node = OpsworksDeployments(label=condition)

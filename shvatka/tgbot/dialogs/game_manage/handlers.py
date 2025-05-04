@@ -107,9 +107,10 @@ async def show_transitions(
     interactor: FromDishka[GameScenarioTransitionsInteractor],
 ):
     assert isinstance(c.message, Message)
+    game_id = manager.dialog_data.get("game_id", manager.dialog_data["my_game_id"])
     await c.message.answer_document(
         document=BufferedInputFile(
-            file=(await interactor(manager.dialog_data["my_game_id"])).read(),
+            file=(await interactor(game_id)).read(),
             filename="transitions.png",
         )
     )

@@ -103,6 +103,11 @@ games = Dialog(
             id="game_zip_scn",
             on_click=show_zip_scn,
         ),
+        Button(
+            Const("Переходы"),
+            id="transitions",
+            on_click=show_transitions,
+        ),
         SwitchTo(
             Const("Сценарий игры в tg"),
             id="game_scn_channel",

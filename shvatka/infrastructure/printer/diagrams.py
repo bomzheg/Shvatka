@@ -8,7 +8,7 @@ import aiohttp.client
 from shvatka.core.scenario import dto
 from shvatka.core.scenario.adapters import TransitionsPrinter
 
-PLANTUML_URL = "https://www.plantuml.com/plantuml/svg/{encoded}"
+PLANTUML_URL = "https://www.plantuml.com/plantuml/png/{encoded}"
 
 DEFAULT_NODE_NAME = "__default__"
 

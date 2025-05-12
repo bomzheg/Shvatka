@@ -13,6 +13,7 @@ from passlib.context import CryptContext
 from starlette import status
 
 from shvatka.api.config.models.auth import AuthConfig
+from shvatka.api.dependencies.identity import ApiIdentityProvider
 from shvatka.api.models.auth import UserTgAuth, Token
 from shvatka.api.utils.cookie_auth import OAuth2PasswordBearerWithCookie
 from shvatka.core.models import dto
@@ -125,21 +126,19 @@ class AuthProvider(Provider):
         return OAuth2PasswordBearerWithCookie(token_url="auth/token")
 
     @provide(scope=Scope.REQUEST)
-    async def get_current_user(
+    def get_identity(
         self,
         request: Request,
         cookie_auth: OAuth2PasswordBearerWithCookie,
         auth_properties: AuthProperties,
         dao: HolderDao,
-    ) -> dto.User:
-        try:
-            token = cookie_auth.get_token(request)
-            return await auth_properties.get_current_user(token, dao)
-        except (JWTError, HTTPException):
-            user = await auth_properties.get_user_basic(request, dao)
-            if user is None:
-                raise
-            return user
+    ) -> ApiIdentityProvider:
+        return ApiIdentityProvider(
+            request=request,
+            cookie_auth=cookie_auth,
+            auth_properties=auth_properties,
+            dao=dao,
+        )
 
 
 def check_tg_hash(user: UserTgAuth, bot_token: str):

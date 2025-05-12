@@ -9,6 +9,7 @@ from shvatka.core.games.adapters import (
     GameKeysReader,
     GameStatReader,
 )
+from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.models import dto
 from shvatka.core.rules.game import check_can_read
 from shvatka.core.services.game_stat import get_typed_keys, get_game_stat_with_hints
@@ -21,8 +22,8 @@ class GameKeysReaderInteractor:
     def __init__(self, dao: GameKeysReader):
         self.dao = dao
 
-    async def __call__(self, game_id: int, user: dto.User) -> dict[int, list[dto.KeyTime]]:
-        player = await self.dao.get_by_user(user)
+    async def __call__(self, game_id: int, identity: IdentityProvider) -> dict[int, list[dto.KeyTime]]:
+        player = await identity.get_player()
         game = await self.dao.get_by_id(game_id)
         keys = await get_typed_keys(game, player, self.dao)
         return {t.id: k for t, k in keys.items()}
@@ -32,8 +33,8 @@ class GameStatReaderInteractor:
     def __init__(self, dao: GameStatReader):
         self.dao = dao
 
-    async def __call__(self, game_id: int, user: dto.User) -> dto.GameStatWithHints:
-        player = await self.dao.get_by_user(user)
+    async def __call__(self, game_id: int, identity: IdentityProvider) -> dto.GameStatWithHints:
+        player = await identity.get_player()
         game = await self.dao.get_by_id(game_id)
         return await get_game_stat_with_hints(game, player, self.dao)
 
@@ -43,8 +44,9 @@ class GameFileReaderInteractor:
         self.file_gateway = file_gateway
         self.dao = dao
 
-    async def __call__(self, guid: str, game_id: int, user: dto.User) -> BinaryIO:
-        player = await self.dao.get_by_user(user)
+    async def __call__(self, guid: str, game_id: int, identity: IdentityProvider) -> BinaryIO:
+        user = await identity.get_user()
+        player = await identity.get_player()
         game = await self.dao.get_full(game_id)
         check_can_read(game, player)
         if guid not in game.get_guids():
@@ -66,8 +68,9 @@ class GamePlayReaderInteractor:
     def __init__(self, dao: GamePlayReader):
         self.dao = dao
 
-    async def __call__(self, user: dto.User) -> CurrentHints:
-        player = await self.dao.get_by_user(user)
+    async def __call__(self, identity: IdentityProvider) -> CurrentHints:
+        user = await identity.get_user()
+        player = await identity.get_player()
         team = await self.dao.get_team(player)
         if not team:
             raise exceptions.PlayerNotInTeam(

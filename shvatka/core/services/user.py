@@ -10,7 +10,7 @@ async def upsert_user(user: dto.User, user_dao: UserUpserter) -> dto.User:
 
 
 async def set_password(identity: IdentityProvider, hashed_password: str, dao: UserPasswordSetter):
-    await dao.set_password(await identity.get_user(), hashed_password)
+    await dao.set_password(await identity.get_required_user(), hashed_password)
     await dao.commit()
 
 

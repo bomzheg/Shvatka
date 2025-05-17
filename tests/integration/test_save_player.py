@@ -1,13 +1,16 @@
+from typing import cast
+
 import pytest
 
 from shvatka.infrastructure.db.dao.holder import HolderDao
-from shvatka.tgbot.middlewares.data_load_middleware import save_user, save_player
+from shvatka.tgbot.services.identity import save_user, save_player
+from shvatka.tgbot.utils.data import SHMiddlewareData
 from tests.fixtures.user_constants import create_tg_user
 
 
 @pytest.mark.asyncio
 async def test_save_player(dao: HolderDao):
-    data = {"event_from_user": create_tg_user()}
+    data = cast(SHMiddlewareData, {"event_from_user": create_tg_user()})
     saved_user = await save_user(data, dao)
     actual_player = await save_player(saved_user, dao)
     assert await dao.user.count() == 1
@@ -20,7 +23,7 @@ async def test_save_player(dao: HolderDao):
 async def test_upsert_player(dao: HolderDao):
     await test_save_player(dao)
 
-    data = {"event_from_user": create_tg_user()}
+    data = cast(SHMiddlewareData, {"event_from_user": create_tg_user()})
     saved_user = await save_user(data, dao)
 
     saved_player_id = (await dao.player._get_all())[0].id

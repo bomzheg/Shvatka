@@ -1,4 +1,5 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from typing import cast, TypedDict
 
 from fastapi import HTTPException
 from jose import JWTError
@@ -15,59 +16,67 @@ from shvatka.infrastructure.db.dao.holder import HolderDao
 sentinel = object()
 
 
+class LoadedData(TypedDict, total=False):
+    user: dto.User | None
+    chat: dto.Chat | None
+    player: dto.Player | None
+    team: dto.Team | None
+
+
 @dataclass(kw_only=True)
 class ApiIdentityProvider(IdentityProvider):
     request: Request
     cookie_auth: OAuth2PasswordBearerWithCookie
     auth_properties: AuthProperties
     dao: HolderDao
-    user: dto.User | None | type[sentinel] = sentinel
-    player: dto.Player | None | type[sentinel] = sentinel
-    team: dto.Team | None | type[sentinel] = sentinel
-    chat: dto.Chat | None | type[sentinel] = sentinel
+    cache: LoadedData = field(default_factory=LoadedData)  # type: ignore[arg-type]
 
-    async def get_user(self) -> dto.User:
-        if self.user is None:
-            raise HTTPException(status_code=401)
-        if self.user is not sentinel:
-            return self.user
+    async def get_user(self) -> dto.User | None:
+        if "user" in self.cache:
+            if self.cache["user"] is None:
+                raise HTTPException(status_code=401)
+            return self.cache["user"]
+        user: dto.User | None
         try:
             token = self.cookie_auth.get_token(self.request)
-            self.user = await self.auth_properties.get_current_user(token, self.dao)
+            user = await self.auth_properties.get_current_user(token, self.dao)
         except (JWTError, HTTPException):
             user = await self.auth_properties.get_user_basic(self.request, self.dao)
-            self.user = user
-            if user is None:
-                raise
-        return self.user
+        self.cache["user"] = user
+        if user is None:
+            raise
+        return user
 
     async def get_player(self) -> dto.Player:
-        if self.player is None:
-            raise HTTPException(status_code=401)
-        if self.player is not sentinel:
-            return self.player
-        self.player = await upsert_player(await self.get_user(), self.dao.player)
-        return self.player
+        if "player" in self.cache:
+            if self.cache["player"] is None:
+                raise HTTPException(status_code=401)
+            return self.cache["player"]
+        player = await upsert_player(await self.get_required_user(), self.dao.player)
+        self.cache["player"] = player
+        return player
 
     async def get_team(self) -> dto.Team:
         player = await self.get_player()
-        if self.team is None:
-            raise exceptions.PlayerNotInTeam(player=player)
-        if self.team is not sentinel:
-            return self.team
+        if "team" in self.cache:
+            if self.cache["team"] is None:
+                raise exceptions.PlayerNotInTeam(player=player)
+            return self.cache["team"]
         team = await get_my_team(player, self.dao.team_player)
-        self.team = team
+        self.cache["team"] = team
         if team is None:
             raise exceptions.PlayerNotInTeam(player=player)
         return team
 
     async def get_chat(self) -> dto.Chat:
-        if self.chat is None:
-            raise HTTPException(status_code=401)
-        if self.chat is not sentinel:
-            return self.chat
+        if "chat" in self.cache:
+            if self.cache["chat"] is None:
+                raise HTTPException(status_code=401)
+            return self.cache["chat"]
         team = await self.get_team()
         if team.has_chat():
-            return await self.dao.chat.get_by_tg_id(team.get_chat_id())
+            chat = await self.dao.chat.get_by_tg_id(cast(int, team.get_chat_id()))
+            self.cache["chat"] = chat
+            return chat
         else:
             raise exceptions.ChatNotFound(team=team)

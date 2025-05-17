@@ -25,9 +25,8 @@ class GameKeysReaderInteractor:
     async def __call__(
         self, game_id: int, identity: IdentityProvider
     ) -> dict[int, list[dto.KeyTime]]:
-        player = await identity.get_player()
         game = await self.dao.get_by_id(game_id)
-        keys = await get_typed_keys(game, player, self.dao)
+        keys = await get_typed_keys(game, identity, self.dao)
         return {t.id: k for t, k in keys.items()}
 
 
@@ -36,7 +35,7 @@ class GameStatReaderInteractor:
         self.dao = dao
 
     async def __call__(self, game_id: int, identity: IdentityProvider) -> dto.GameStatWithHints:
-        player = await identity.get_player()
+        player = await identity.get_required_player()
         game = await self.dao.get_by_id(game_id)
         return await get_game_stat_with_hints(game, player, self.dao)
 
@@ -47,8 +46,8 @@ class GameFileReaderInteractor:
         self.dao = dao
 
     async def __call__(self, guid: str, game_id: int, identity: IdentityProvider) -> BinaryIO:
-        user = await identity.get_user()
-        player = await identity.get_player()
+        user = await identity.get_required_user()
+        player = await identity.get_required_player()
         game = await self.dao.get_full(game_id)
         check_can_read(game, player)
         if guid not in game.get_guids():
@@ -72,7 +71,7 @@ class GamePlayReaderInteractor:
 
     async def __call__(self, identity: IdentityProvider) -> CurrentHints:
         user = await identity.get_user()
-        player = await identity.get_player()
+        player = await identity.get_required_player()
         team = await self.dao.get_team(player)
         if not team:
             raise exceptions.PlayerNotInTeam(

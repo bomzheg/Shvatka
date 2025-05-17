@@ -7,7 +7,7 @@ from shvatka.core.interfaces.identity import IdentityProvider
 
 
 @inject
-async def get_my_team(identity: FromDishka[IdentityProvider]) -> responses.Team:
+async def get_my_team(identity: FromDishka[IdentityProvider]) -> responses.Team | None:
     return responses.Team.from_core(await identity.get_team())
 
 

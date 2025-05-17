@@ -17,9 +17,9 @@ from shvatka.tgbot.utils.data import SHMiddlewareData
 
 
 class LoadedData(TypedDict, total=False):
-    user: dto.User
-    chat: dto.Chat
-    player: dto.Player
+    user: dto.User | None
+    chat: dto.Chat | None
+    player: dto.Player | None
     team: dto.Team | None
 
 
@@ -28,7 +28,7 @@ class TgBotIdentityProvider(IdentityProvider):
     dao: HolderDao
     aiogram_data: AiogramMiddlewareData
     event: TelegramObject
-    cache: LoadedData = field(default_factory=LoadedData)
+    cache: LoadedData = field(default_factory=LoadedData)  # type: ignore[arg-type]
 
     async def get_user(self) -> dto.User | None:
         data = cast(SHMiddlewareData, self.aiogram_data)

@@ -85,7 +85,7 @@ async def get_authors_games(
     identity: IdentityProvider,
     dao: GameAuthorsFinder,
 ) -> list[dto.Game]:
-    author = await identity.get_player()
+    author = await identity.get_required_player()
     check_allow_be_author(author)
     return await dao.get_all_by_author(author)
 
@@ -115,7 +115,7 @@ async def get_preview_game(
 
 
 async def get_full_game(id_: int, identity: IdentityProvider, dao: GameByIdGetter) -> dto.FullGame:
-    author = await identity.get_player()
+    author = await identity.get_required_player()
     game = await dao.get_full(id_=id_)
     check_can_read(game, author)
     return game

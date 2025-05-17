@@ -23,6 +23,7 @@ from shvatka.core.views.game import (
 )
 from shvatka.infrastructure.db import models
 from shvatka.infrastructure.db.dao.holder import HolderDao
+from tests.fixtures.identity import MockIdentityProvider
 from tests.mocks.game_log import GameLogWriterMock
 from tests.mocks.game_view import GameViewMock
 from tests.mocks.org_notifier import OrgNotifierMock
@@ -99,7 +100,8 @@ async def test_wrong_key(
         game=game,
     )
 
-    keys = await get_typed_keys(game=game, player=author, dao=check_dao.typed_keys)
+    identity = MockIdentityProvider(player=author)
+    keys = await get_typed_keys(game=game, identity=identity, dao=check_dao.typed_keys)
     assert [gryffindor] == list(keys.keys())
     assert 1 == len(keys[gryffindor])
     expected_first_key = dto.KeyTime(
@@ -147,7 +149,8 @@ async def test_bonus_hint_key(
         game=game,
     )
 
-    keys = await get_typed_keys(game=game, player=author, dao=check_dao.typed_keys)
+    identity = MockIdentityProvider(player=author)
+    keys = await get_typed_keys(game=game, identity=identity, dao=check_dao.typed_keys)
     assert [gryffindor] == list(keys.keys())
     assert 1 == len(keys[gryffindor])
     expected_first_key = dto.KeyTime(
@@ -274,7 +277,8 @@ async def test_game_play(
     dummy_view.assert_game_finished_only(gryffindor)
     dummy_view.assert_game_finished_all({gryffindor})
 
-    keys = await get_typed_keys(game=game, player=author, dao=check_dao.typed_keys)
+    identity = MockIdentityProvider(player=author)
+    keys = await get_typed_keys(game=game, identity=identity, dao=check_dao.typed_keys)
 
     assert [gryffindor] == list(keys.keys())
     assert 4 == len(keys[gryffindor])
@@ -355,7 +359,8 @@ async def test_fast_play_routed_game(
     dummy_view.assert_game_finished_only(gryffindor)
     dummy_view.assert_game_finished_all({gryffindor})
 
-    keys = await get_typed_keys(game=game, player=author, dao=check_dao.typed_keys)
+    identity = MockIdentityProvider(player=author)
+    keys = await get_typed_keys(game=game, identity=identity, dao=check_dao.typed_keys)
 
     assert list(keys.keys()) == [gryffindor]
     assert len(keys[gryffindor]) == 2
@@ -466,7 +471,8 @@ async def test_cycle_play_routed_game(
     dummy_view.assert_game_finished_only(gryffindor)
     dummy_view.assert_game_finished_all({gryffindor})
 
-    keys = await get_typed_keys(game=game, player=author, dao=check_dao.typed_keys)
+    identity = MockIdentityProvider(player=author)
+    keys = await get_typed_keys(game=game, identity=identity, dao=check_dao.typed_keys)
 
     assert list(keys.keys()) == [gryffindor]
     assert len(keys[gryffindor]) == 4

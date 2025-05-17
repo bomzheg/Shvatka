@@ -9,8 +9,11 @@ from aiogram.types import Message, CallbackQuery
 from aiogram.utils.text_decorations import html_decoration as hd
 from aiogram_dialog import DialogManager
 from aiogram_dialog.widgets.kbd import Button, ManagedMultiselect
+from dishka import FromDishka
+from dishka.integrations.aiogram_dialog import inject
 
 from shvatka.core.interfaces.clients.file_storage import FileGateway
+from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.models import dto
 from shvatka.core.models import enums
 from shvatka.core.models.dto import scn  # noqa: F401
@@ -90,12 +93,19 @@ async def edit_level(c: CallbackQuery, widget: Any, manager: DialogManager, item
     await manager.start(states.LevelManageSG.menu, data={"level_id": int(item_id)})
 
 
-async def add_level_handler(c: CallbackQuery, button: Any, manager: DialogManager, item_id: str):
+@inject
+async def add_level_handler(
+    c: CallbackQuery,
+    button: Any,
+    manager: DialogManager,
+    item_id: str,
+    idp: FromDishka[IdentityProvider],
+    dao: FromDishka[HolderDao],
+):
     await c.answer()
     game_id = manager.start_data["game_id"]
-    dao: HolderDao = manager.middleware_data["dao"]
-    author: dto.Player = manager.middleware_data["player"]
-    game = await get_full_game(game_id, author=author, dao=dao.game)
+    author = await idp.get_required_player()
+    game = await get_full_game(game_id, identity=idp, dao=dao.game)
     level = await get_by_id(int(item_id), author=author, dao=dao.level)
     await add_level(game=game, level=level, author=author, dao=dao.level)
     await manager.switch_to(state=states.GameEditSG.current_levels)

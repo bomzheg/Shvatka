@@ -49,7 +49,9 @@ class Team:
     description: str | None
 
     @classmethod
-    def from_core(cls, core: dto.Team):
+    def from_core(cls, core: dto.Team | None):
+        if core is None:
+            return None
         return cls(
             id=core.id,
             name=core.name,

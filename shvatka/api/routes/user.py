@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 
 @inject
-async def read_users_me(identity: FromDishka[IdentityProvider]) -> dto.User:
+async def read_users_me(identity: FromDishka[IdentityProvider]) -> dto.User | None:
     return await identity.get_user()
 
 

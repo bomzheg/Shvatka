@@ -6,9 +6,11 @@ from aiogram import Bot
 from aiogram.types import Message, ChatMemberAdministrator
 from aiogram.utils.text_decorations import html_decoration as hd
 from aiogram_dialog import DialogManager, BaseDialogManager
+from dishka import FromDishka
+from dishka.integrations.aiogram_dialog import inject
 from telegraph.aio import Telegraph
 
-from shvatka.core.models import dto
+from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.services.game import get_full_game
 from shvatka.core.services.game_stat import get_typed_keys, get_game_stat
 from shvatka.core.utils.datetime_utils import tz_utc
@@ -18,7 +20,16 @@ from shvatka.tgbot.views.hint_sender import HintSender
 from shvatka.tgbot.views.results.scenario import GamePublisher
 
 
-async def process_publish_message(message: Message, dialog_: Any, manager: DialogManager):
+@inject
+async def process_publish_message(
+    message: Message,
+    dialog_: Any,
+    manager: DialogManager,
+    dao: FromDishka[HolderDao],
+    telegraph: FromDishka[Telegraph],
+    idp: FromDishka[IdentityProvider],
+    hint_sender: FromDishka[HintSender],
+):
     if not message.forward_from_chat or message.forward_from_chat.type != "channel":
         return await message.reply("Это не пересланное из канала сообщение.")
     channel_id = message.forward_from_chat.id
@@ -39,14 +50,10 @@ async def process_publish_message(message: Message, dialog_: Any, manager: Dialo
         )
 
     game_id = manager.start_data["game_id"]
-    dao: HolderDao = manager.middleware_data["dao"]
-    telegraph: Telegraph = manager.middleware_data["telegraph"]
-    author: dto.Player = manager.middleware_data["player"]
     config: BotConfig = manager.middleware_data["config"]
-    hint_sender: HintSender = manager.middleware_data["hint_sender"]
-    game = await get_full_game(id_=game_id, author=author, dao=dao.game)
-    game_stat = await get_game_stat(game=game, player=author, dao=dao.game_stat)
-    keys = await get_typed_keys(game=game, player=author, dao=dao.typed_keys)
+    game = await get_full_game(id_=game_id, identity=idp, dao=dao.game)
+    game_stat = await get_game_stat(game=game, identity=idp, dao=dao.game_stat)
+    keys = await get_typed_keys(game=game, identity=idp, dao=dao.typed_keys)
     game_publisher = GamePublisher(
         hint_sender=hint_sender,
         game=game,

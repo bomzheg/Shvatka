@@ -1,5 +1,8 @@
 from aiogram_dialog import DialogManager
+from dishka import FromDishka
+from dishka.integrations.aiogram_dialog import inject
 
+from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.models import dto
 from shvatka.core.services.game import get_full_game
 from shvatka.core.services.level import get_all_my_free_levels
@@ -22,11 +25,15 @@ async def select_my_levels(dialog_manager: DialogManager, **_):
     }
 
 
-async def select_full_game(dialog_manager: DialogManager, **_):
+@inject
+async def select_full_game(
+    dialog_manager: DialogManager,
+    dao: FromDishka[HolderDao],
+    identity: FromDishka[IdentityProvider],
+    **_,
+):
     id_: int = dialog_manager.start_data["game_id"]
-    dao: HolderDao = dialog_manager.middleware_data["dao"]
-    author: dto.Player = dialog_manager.middleware_data["player"]
-    game = await get_full_game(id_, author, dao.game)
+    game = await get_full_game(id_, identity, dao.game)
     return {
         "levels": game.levels,
         "game": game,

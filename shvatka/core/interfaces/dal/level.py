@@ -27,7 +27,7 @@ class LevelUpserter(Committer, Protocol):
 
 
 class LevelByGameAndNumberGetter(Protocol):
-    async def get_level_by_game_and_number(self, game: dto.Game, number: int) -> dto.Level:
+    async def get_level_by_game_and_number(self, game: dto.Game, number: int) -> dto.GamedLevel:
         raise NotImplementedError
 
 
@@ -42,7 +42,7 @@ class LevelByIdGetter(Protocol):
 
 
 class LevelLinker(Committer, Protocol):
-    async def link_to_game(self, level: dto.Level, game: dto.Game) -> dto.Level:
+    async def link_to_game(self, level: dto.Level, game: dto.Game) -> dto.GamedLevel:
         raise NotImplementedError
 
 

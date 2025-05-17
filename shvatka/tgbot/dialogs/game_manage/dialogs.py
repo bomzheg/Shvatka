@@ -104,7 +104,7 @@ games = Dialog(
             on_click=show_zip_scn,
         ),
         Button(
-            Const("Переходы"),
+            Const("🔀Переходы"),
             id="transitions",
             on_click=show_transitions,
         ),
@@ -301,7 +301,7 @@ my_games = Dialog(
             on_click=show_all_keys,
         ),
         Button(
-            Const("Переходы"),
+            Const("🔀Переходы"),
             id="transitions",
             on_click=show_transitions,
         ),
@@ -389,7 +389,7 @@ schedule_game_dialog = Dialog(
             Const("📆Сохранить"),
             id="save_game_schedule",
             state=states.GameScheduleSG.confirm,
-            when=lambda data, *args: data["has_time"],
+            when=F["has_time"],
         ),
         Cancel(Const("🔙Назад")),
         getter=get_game_time,

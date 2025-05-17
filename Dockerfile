@@ -4,7 +4,7 @@ ENV CODE_PATH=/code
 RUN python3 -m venv $VIRTUAL_ENV
 WORKDIR $CODE_PATH
 COPY lock.txt ${CODE_PATH}/
-RUN $VIRTUAL_ENV/bin/pip install -r lock.txt
+RUN $VIRTUAL_ENV/bin/pip install uv && $VIRTUAL_ENV/bin/uv pip install -r lock.txt
 
 FROM python:3.11-slim-buster
 LABEL maintainer="bomzheg <bomzheg@gmail.com>" \

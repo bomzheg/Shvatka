@@ -1,9 +1,11 @@
 from typing import BinaryIO, Sequence
 
 from shvatka.core.interfaces.dal.game import GameByIdGetter
+from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.interfaces.printer import TablePrinter, Table, CellAddress, Cell
 from shvatka.core.models import dto as core
 from shvatka.core.models.dto import action
+from shvatka.core.rules.game import check_can_read
 from shvatka.core.scenario import dto
 from shvatka.core.scenario.adapters import TransitionsPrinter
 from shvatka.tgbot.views.utils import render_hints
@@ -20,8 +22,10 @@ class AllGameKeysReaderInteractor:
         self.dao = dao
         self.printer = printer
 
-    async def __call__(self, game_id: int) -> BinaryIO:
+    async def __call__(self, game_id: int, identity: IdentityProvider) -> BinaryIO:
+        player = await identity.get_required_player()
         game = await self.dao.get_full(game_id)
+        check_can_read(game, player)
         return self.view(game, self.presenter(game))
 
     def view(self, game: core.FullGame, keys: list[dto.LevelKeys]) -> BinaryIO:
@@ -100,8 +104,9 @@ class GameScenarioTransitionsInteractor:
         self.dao = dao
         self.printer = printer
 
-    async def __call__(self, game_id: int) -> BinaryIO:
+    async def __call__(self, game_id: int, identity: IdentityProvider) -> BinaryIO:
         game = await self.dao.get_full(game_id)
+        check_can_read(game, await identity.get_required_player())
         return await self.printer.render(self.printer.print(self.convert(game)))
 
     def convert(self, game: core.FullGame) -> dto.Transitions:

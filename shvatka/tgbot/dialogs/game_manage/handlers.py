@@ -90,11 +90,12 @@ async def show_all_keys(
     widget: Button,
     manager: DialogManager,
     interactor: FromDishka[AllGameKeysReaderInteractor],
+    identity: FromDishka[IdentityProvider],
 ):
     assert isinstance(c.message, Message)
     await c.message.answer_document(
         document=BufferedInputFile(
-            file=(await interactor(manager.dialog_data["my_game_id"])).read(),
+            file=(await interactor(manager.dialog_data["my_game_id"], identity)).read(),
             filename="all_keys.xlsx",
         )
     )
@@ -106,6 +107,7 @@ async def show_transitions(
     widget: Button,
     manager: DialogManager,
     interactor: FromDishka[GameScenarioTransitionsInteractor],
+    identity: FromDishka[IdentityProvider],
 ):
     assert isinstance(c.message, Message)
     game_id: int | None = manager.dialog_data.get(
@@ -114,7 +116,7 @@ async def show_transitions(
     assert game_id is not None
     await c.message.answer_document(
         document=BufferedInputFile(
-            file=(await interactor(game_id)).read(),
+            file=(await interactor(game_id, identity)).read(),
             filename="transitions.png",
         )
     )

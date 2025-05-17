@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from typing import Iterable, cast
 
 from aiogram import Bot
-from aiogram.types import Message
+from aiogram.types import Message, ReactionTypeEmoji
 from aiogram.exceptions import TelegramAPIError
 from aiogram.utils.markdown import html_decoration as hd
 from dataclass_factory import Factory
@@ -48,6 +48,16 @@ class BotInputContainer(InputContainer):
 
     def get_message_id(self) -> int | None:
         return self.message.message_id if self.message else None
+
+
+async def get_message_id(input_container: InputContainer) -> int | None:
+    if isinstance(input_container, BotInputContainer):
+        reply_to = input_container.get_message_id()
+    else:
+        raise TypeError(
+            f"input_container must be of type BotInputContainer, got {type(input_container)}"
+        )
+    return reply_to
 
 
 @dataclass
@@ -120,48 +130,62 @@ class BotView(GameViewPreparer, GameView):
         )
 
     async def duplicate_key(self, key: dto.KeyTime, input_container: InputContainer) -> None:
-        if isinstance(input_container, BotInputContainer):
-            reply_to = input_container.get_message_id()
-        else:
-            reply_to = None
-        await self.bot.send_message(
-            reply_to_message_id=reply_to,
-            chat_id=key.team.get_chat_id(),  # type: ignore[arg-type]
-            text=(
-                f"{KeyEmoji.duplicate.value}Ключ {hd.code(key.text)} "
-                f"({'не' if key.type_ == enums.KeyType.wrong else ''}верный) уже был введён ранее."
-            ),
-        )
+        chat_id: int = key.team.get_chat_id()  # type: ignore[assignment]
+        reply_to = await get_message_id(input_container)
+        try:
+            await self.bot.send_message(
+                reply_to_message_id=reply_to,
+                chat_id=chat_id,
+                text=(
+                    f"{KeyEmoji.duplicate.value}Ключ {hd.code(key.text)} "
+                    f"({'не' if key.type_ == enums.KeyType.wrong else ''}верный) "
+                    f"уже был введён ранее."
+                ),
+            )
+        except TelegramAPIError as e:
+            logger.exception("can't send view about duplicate key", exc_info=e)
+        if reply_to is not None:
+            await self.bot.set_message_reaction(
+                chat_id=chat_id, message_id=reply_to, reaction=[ReactionTypeEmoji(emoji="😴")]
+            )
 
     async def correct_key(self, key: dto.KeyTime, input_container: InputContainer) -> None:
-        if isinstance(input_container, BotInputContainer):
-            reply_to = input_container.get_message_id()
-        else:
-            reply_to = None
-        await self.bot.send_message(
-            reply_to_message_id=reply_to,
-            chat_id=key.team.get_chat_id(),  # type: ignore[arg-type]
-            text=f"{KeyEmoji.correct.value}Ключ {hd.code(key.text)} верный! Поздравляю!",
-        )
+        chat_id: int = key.team.get_chat_id()  # type: ignore[assignment]
+        reply_to = await get_message_id(input_container)
+        try:
+            await self.bot.send_message(
+                reply_to_message_id=reply_to,
+                chat_id=chat_id,
+                text=f"{KeyEmoji.correct.value}Ключ {hd.code(key.text)} верный! Поздравляю!",
+            )
+        except TelegramAPIError as e:
+            logger.exception("can't send view about correct key", exc_info=e)
+        if reply_to is not None:
+            await self.bot.set_message_reaction(
+                chat_id=chat_id, message_id=reply_to, reaction=[ReactionTypeEmoji(emoji="👍")]
+            )
 
     async def wrong_key(self, key: dto.KeyTime, input_container: InputContainer) -> None:
-        if isinstance(input_container, BotInputContainer):
-            reply_to = input_container.get_message_id()
-        else:
-            reply_to = None
-        await self.bot.send_message(
-            reply_to_message_id=reply_to,
-            chat_id=key.team.get_chat_id(),  # type: ignore[arg-type]
-            text=f"{KeyEmoji.incorrect.value}Ключ {hd.code(key.text)} неверный.",
-        )
+        chat_id: int = key.team.get_chat_id()  # type: ignore[assignment]
+        reply_to = await get_message_id(input_container)
+        try:
+            await self.bot.send_message(
+                reply_to_message_id=reply_to,
+                chat_id=chat_id,
+                text=f"{KeyEmoji.incorrect.value}Ключ {hd.code(key.text)} неверный.",
+            )
+        except TelegramAPIError as e:
+            logger.exception("can't send view about wrong key", exc_info=e)
+        if reply_to is not None:
+            await self.bot.set_message_reaction(
+                chat_id=chat_id, message_id=reply_to, reaction=[ReactionTypeEmoji(emoji="👎")]
+            )
 
     async def bonus_key(
         self, key: dto.KeyTime, bonus: float, input_container: InputContainer
     ) -> None:
-        if isinstance(input_container, BotInputContainer):
-            reply_to = input_container.get_message_id()
-        else:
-            reply_to = None
+        chat_id: int = key.team.get_chat_id()  # type: ignore[assignment]
+        reply_to = await get_message_id(input_container)
         if bonus >= 0:
             text = (
                 f"{KeyEmoji.bonus.value}Бонусный ключ {hd.code(key.text)}.\n"
@@ -172,32 +196,45 @@ class BotView(GameViewPreparer, GameView):
                 f"{KeyEmoji.bonus.value}Штрафной ключ {hd.code(key.text)}.\n"
                 f"Штраф: {bonus:.2f} мин."
             )
-        await self.bot.send_message(
-            reply_to_message_id=reply_to,
-            chat_id=key.team.get_chat_id(),  # type: ignore[arg-type]
-            text=text,
-        )
+        try:
+            await self.bot.send_message(
+                reply_to_message_id=reply_to,
+                chat_id=chat_id,
+                text=text,
+            )
+        except TelegramAPIError as e:
+            logger.exception("can't send view bonus key", exc_info=e)
+        if reply_to is not None:
+            await self.bot.set_message_reaction(
+                chat_id=chat_id, message_id=reply_to, reaction=[ReactionTypeEmoji(emoji="🤩")]
+            )
 
     async def bonus_hint_key(
         self, key: dto.KeyTime, bonus_hint: list[hints.AnyHint], input_container: InputContainer
     ):
-        if isinstance(input_container, BotInputContainer):
-            reply_to = input_container.get_message_id()
-        else:
-            reply_to = None
-        await self.bot.send_message(
-            chat_id=key.team.get_chat_id(),  # type: ignore[arg-type]
-            reply_to_message_id=reply_to,
-            text="Бонусная подсказка",
-        )
+        chat_id: int = key.team.get_chat_id()  # type: ignore[assignment]
+        reply_to = await get_message_id(input_container)
+        try:
+            await self.bot.send_message(
+                chat_id=chat_id,
+                reply_to_message_id=reply_to,
+                text="Бонусная подсказка",
+            )
+        except TelegramAPIError as e:
+            logger.exception("can't send bonus hint key caption", exc_info=e)
         await self.hint_sender.send_hints(
-            chat_id=key.team.get_chat_id(),  # type: ignore[arg-type]
+            chat_id=chat_id,
             hint_containers=bonus_hint,
         )
+        if reply_to is not None:
+            await self.bot.set_message_reaction(
+                chat_id=chat_id, message_id=reply_to, reaction=[ReactionTypeEmoji(emoji="🤓")]
+            )
 
     async def game_finished(self, team: dto.Team, input_container: InputContainer) -> None:
+        chat_id: int = team.get_chat_id()  # type: ignore[assignment]
         await self.bot.send_message(
-            chat_id=team.get_chat_id(),  # type: ignore[arg-type]
+            chat_id=chat_id,
             text="Игра завершена! Поздравляю!",
         )
 

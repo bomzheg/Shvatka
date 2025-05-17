@@ -16,6 +16,7 @@ from shvatka.api.config.models.auth import AuthConfig
 from shvatka.api.dependencies.identity import ApiIdentityProvider
 from shvatka.api.models.auth import UserTgAuth, Token
 from shvatka.api.utils.cookie_auth import OAuth2PasswordBearerWithCookie
+from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.models import dto
 from shvatka.core.utils.datetime_utils import tz_utc
 from shvatka.core.utils.exceptions import NoUsernameFound
@@ -125,20 +126,15 @@ class AuthProvider(Provider):
     def get_cookie_auth(self) -> OAuth2PasswordBearerWithCookie:
         return OAuth2PasswordBearerWithCookie(token_url="auth/token")
 
-    @provide(scope=Scope.REQUEST)
-    def get_identity(
-        self,
-        request: Request,
-        cookie_auth: OAuth2PasswordBearerWithCookie,
-        auth_properties: AuthProperties,
-        dao: HolderDao,
-    ) -> ApiIdentityProvider:
-        return ApiIdentityProvider(
-            request=request,
-            cookie_auth=cookie_auth,
-            auth_properties=auth_properties,
-            dao=dao,
-        )
+    idp = provide(ApiIdentityProvider, scope=Scope.REQUEST)
+
+
+class ApiIdpProvider(Provider):
+    scope = Scope.REQUEST
+
+    @provide
+    def get_idp(self, idp: ApiIdentityProvider) -> IdentityProvider:
+        return idp
 
 
 def check_tg_hash(user: UserTgAuth, bot_token: str):

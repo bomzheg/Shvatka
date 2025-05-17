@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-from typing import Type
 
 from fastapi import HTTPException
 from jose import JWTError
@@ -10,11 +9,11 @@ from shvatka.api.utils.cookie_auth import OAuth2PasswordBearerWithCookie
 from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.models import dto
 from shvatka.core.services.player import upsert_player, get_my_team
-from shvatka.core.services.team import get_by_chat
 from shvatka.core.utils import exceptions
 from shvatka.infrastructure.db.dao.holder import HolderDao
 
 sentinel = object()
+
 
 @dataclass(kw_only=True)
 class ApiIdentityProvider(IdentityProvider):
@@ -22,10 +21,10 @@ class ApiIdentityProvider(IdentityProvider):
     cookie_auth: OAuth2PasswordBearerWithCookie
     auth_properties: AuthProperties
     dao: HolderDao
-    user: dto.User | None | Type[sentinel] = sentinel
-    player: dto.Player | None | Type[sentinel] = sentinel
-    team: dto.Team | None | Type[sentinel] = sentinel
-    chat: dto.Chat | None | Type[sentinel] = sentinel
+    user: dto.User | None | type[sentinel] = sentinel
+    player: dto.Player | None | type[sentinel] = sentinel
+    team: dto.Team | None | type[sentinel] = sentinel
+    chat: dto.Chat | None | type[sentinel] = sentinel
 
     async def get_user(self) -> dto.User:
         if self.user is None:
@@ -72,5 +71,3 @@ class ApiIdentityProvider(IdentityProvider):
             return await self.dao.chat.get_by_tg_id(team.get_chat_id())
         else:
             raise exceptions.ChatNotFound(team=team)
-
-

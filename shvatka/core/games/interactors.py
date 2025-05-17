@@ -22,7 +22,9 @@ class GameKeysReaderInteractor:
     def __init__(self, dao: GameKeysReader):
         self.dao = dao
 
-    async def __call__(self, game_id: int, identity: IdentityProvider) -> dict[int, list[dto.KeyTime]]:
+    async def __call__(
+        self, game_id: int, identity: IdentityProvider
+    ) -> dict[int, list[dto.KeyTime]]:
         player = await identity.get_player()
         game = await self.dao.get_by_id(game_id)
         keys = await get_typed_keys(game, player, self.dao)

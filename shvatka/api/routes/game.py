@@ -16,7 +16,6 @@ from shvatka.core.games.interactors import (
     GameKeysReaderInteractor,
     GameStatReaderInteractor,
 )
-from shvatka.core.models import dto
 from shvatka.core.services.game import (
     get_authors_games,
     get_completed_games,
@@ -92,7 +91,9 @@ async def get_game_file(
     guid: Annotated[str, Path(alias="guid")],
 ) -> StreamingResponse:
     try:
-        return StreamingResponse(b for b in await file_reader(guid=guid, identity=identity, game_id=id_))
+        return StreamingResponse(
+            b for b in await file_reader(guid=guid, identity=identity, game_id=id_)
+        )
     except exceptions.FileNotFound as e:
         raise to_http_error(e, HTTP_404_NOT_FOUND) from e
     except exceptions.NotAuthorizedForEdit as e:

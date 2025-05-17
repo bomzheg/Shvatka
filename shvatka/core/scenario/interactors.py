@@ -157,4 +157,4 @@ class GameScenarioTransitionsInteractor:
             levels_conditions[prev_level.name_id].append((self.print_condition(condition), False))
 
     def print_condition(self, condition: action.KeyWinCondition) -> str:
-        return "\n".join(condition.keys)
+        return "\\n".join(condition.keys)

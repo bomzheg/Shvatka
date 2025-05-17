@@ -67,9 +67,9 @@ async def get_game_waivers(dao: HolderDao, dialog_manager: DialogManager, **_):
 
 @inject
 async def get_game_keys(
-    dao: FromDishka[HolderDao],
-    dialog_manager: FromDishka[DialogManager],
-    telegraph: FromDishka[Telegraph],
+    dao: HolderDao,
+    dialog_manager: DialogManager,
+    telegraph: Telegraph,
     identity: FromDishka[IdentityProvider],
     **_,
 ):
@@ -91,9 +91,9 @@ async def get_game_keys(
 @inject
 async def get_game_results(
     dialog_manager: DialogManager,
-    dao: FromDishka[HolderDao],
+    dao: HolderDao,
     identity: FromDishka[IdentityProvider],
-    results_painter: FromDishka[ResultsPainter],
+    results_painter: ResultsPainter,
     **_,
 ):
     game_id = (

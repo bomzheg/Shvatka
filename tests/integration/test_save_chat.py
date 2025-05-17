@@ -45,12 +45,12 @@ async def test_migrate_to_supergroup(dao: HolderDao):
 
 @pytest.mark.asyncio
 async def test_upsert_chat(dao: HolderDao):
-    data = {"event_chat": create_tg_chat(username="extra_chat")}
+    data = cast(SHMiddlewareData, {"event_chat": create_tg_chat(username="extra_chat")})
     old_chat = await save_chat(data, dao)
     old_count = await dao.chat.count()
     assert old_chat.username == "extra_chat"
 
-    data = {"event_chat": create_tg_chat()}
+    data = cast(SHMiddlewareData, {"event_chat": create_tg_chat()})
     actual = await save_chat(data, dao)
     expected = create_gryffindor_dto_chat()
     assert_dto_chat(expected, actual)

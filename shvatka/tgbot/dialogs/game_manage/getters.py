@@ -1,5 +1,6 @@
 import logging
 from datetime import datetime, time, date
+from typing import Any
 
 from aiogram import Bot
 from aiogram.enums import ContentType
@@ -109,7 +110,9 @@ async def get_game_results(
     }
 
 
-async def get_game(dao: HolderDao, player: dto.Player, dialog_manager: DialogManager, **_):
+async def get_game(
+    dao: HolderDao, player: dto.Player, dialog_manager: DialogManager, **_
+) -> dict[str, Any]:
     game_id = (
         dialog_manager.dialog_data.get("my_game_id", None)
         or dialog_manager.start_data["my_game_id"]
@@ -124,7 +127,7 @@ async def get_game(dao: HolderDao, player: dto.Player, dialog_manager: DialogMan
 
 
 async def get_game_with_channel(dao: HolderDao, dialog_manager: DialogManager, bot: Bot, **_):
-    game_id = dialog_manager.dialog_data.get("game_id", None)
+    game_id: int | None = dialog_manager.dialog_data.get("game_id", None)
     if game_id is None:
         logger.warning("game_id is None")
         return {"invite": "sorry something happened", "game": None}
@@ -143,7 +146,7 @@ async def get_game_time(
     dao: HolderDao, player: dto.Player, dialog_manager: DialogManager, **kwargs
 ):
     result = await get_game(dao, player, dialog_manager, **kwargs)
-    time_ = dialog_manager.dialog_data.get("scheduled_time", None)
+    time_: str | None = dialog_manager.dialog_data.get("scheduled_time", None)
     result.update(scheduled_time=time_, has_time=time_ is not None)
     return result
 
@@ -152,8 +155,8 @@ async def get_game_datetime(
     dao: HolderDao, player: dto.Player, dialog_manager: DialogManager, **kwargs
 ):
     result = await get_game(dao, player, dialog_manager, **kwargs)
-    date_ = dialog_manager.dialog_data.get("scheduled_date", None)
-    time_ = dialog_manager.dialog_data.get("scheduled_time", None)
+    date_: str = dialog_manager.dialog_data["scheduled_date"]
+    time_: str = dialog_manager.dialog_data["scheduled_time"]
     result["scheduled_datetime"] = datetime.combine(
         date=date.fromisoformat(date_),
         time=time.fromisoformat(time_),

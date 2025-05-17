@@ -1,7 +1,7 @@
 from dishka import Provider, Scope, AsyncContainer, provide
 from dishka.exceptions import NoContextValueError
 
-from shvatka.api.dependencies.identity import ApiIdentityProvider
+from shvatka.api.dependencies.auth import ApiIdentityProvider
 from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.tgbot.services.identity import TgBotIdentityProvider
 

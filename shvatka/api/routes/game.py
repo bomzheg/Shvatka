@@ -7,7 +7,7 @@ from fastapi.params import Path
 from fastapi.responses import StreamingResponse, Response
 from starlette.status import HTTP_404_NOT_FOUND, HTTP_403_FORBIDDEN
 
-from shvatka.api.dependencies.identity import ApiIdentityProvider
+from shvatka.api.dependencies.auth import ApiIdentityProvider
 from shvatka.api.models import responses
 from shvatka.api.utils.error_converter import to_http_error
 from shvatka.core.games.interactors import (

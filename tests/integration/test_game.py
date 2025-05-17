@@ -18,6 +18,7 @@ from shvatka.core.services.level import upsert_level
 from shvatka.core.services.organizers import get_orgs
 from shvatka.core.utils.exceptions import CantEditGame
 from shvatka.infrastructure.db.dao.holder import HolderDao
+from tests.fixtures.identity import MockIdentityProvider
 
 
 @pytest.mark.asyncio
@@ -83,7 +84,8 @@ async def test_game_simple(
     assert 1 == game.levels[1].number_in_game
     assert "second" == game.levels[1].name_id
 
-    gotten_games = await get_authors_games(author, dao.game)
+
+    gotten_games = await get_authors_games(MockIdentityProvider(player=author), dao.game)
     assert 1 == len(gotten_games)
     assert game.id == gotten_games[0].id
 

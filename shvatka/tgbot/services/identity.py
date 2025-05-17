@@ -1,4 +1,3 @@
-from dataclasses import dataclass, field
 from typing import TypedDict, cast
 
 from aiogram import types
@@ -23,12 +22,18 @@ class LoadedData(TypedDict, total=False):
     team: dto.Team | None
 
 
-@dataclass(kw_only=True)
 class TgBotIdentityProvider(IdentityProvider):
-    dao: HolderDao
-    aiogram_data: AiogramMiddlewareData
-    event: TelegramObject
-    cache: LoadedData = field(default_factory=LoadedData)  # type: ignore[arg-type]
+    def __init__(
+        self,
+        *,
+        dao: HolderDao,
+        event: TelegramObject,
+        aiogram_data: AiogramMiddlewareData,
+    ) -> None:
+        self.dao = dao
+        self.event = event
+        self.aiogram_data = aiogram_data
+        self.cache = LoadedData()
 
     async def get_user(self) -> dto.User | None:
         data = cast(SHMiddlewareData, self.aiogram_data)

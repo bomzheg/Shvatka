@@ -5,6 +5,7 @@ from aiogram import Dispatcher, Bot
 from aiogram.fsm.storage.base import BaseStorage, BaseEventIsolation
 from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.fsm.storage.redis import RedisStorage, DefaultKeyBuilder, RedisEventIsolation
+from aiogram.types import TelegramObject
 from aiogram_dialog.api.protocols import MessageManagerProtocol
 from aiogram_dialog.manager.message_manager import MessageManager
 from dishka import (
@@ -14,9 +15,9 @@ from dishka import (
     Scope,
     provide,
     AnyOf,
-    STRICT_VALIDATION,
+    STRICT_VALIDATION, from_context,
 )
-from dishka.integrations.aiogram import setup_dishka
+from dishka.integrations.aiogram import setup_dishka, AiogramMiddlewareData
 from redis.asyncio import Redis
 
 from shvatka.common.factory import TelegraphProvider, DCFProvider, UrlProvider
@@ -157,6 +158,8 @@ class UserGetterProvider(Provider):
 
 class BotIdpProvider(Provider):
     scope = Scope.REQUEST
+    event = from_context(TelegramObject)
+    aiogram_data = from_context(AiogramMiddlewareData)
     bot_idp = provide(TgBotIdentityProvider)
 
 

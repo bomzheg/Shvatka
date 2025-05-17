@@ -1,6 +1,7 @@
 from aiogram import Bot
 from aiogram.types import BufferedInputFile
 
+from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.models import dto
 from shvatka.core.services.game import get_full_game
 from shvatka.core.services.game_stat import get_game_stat
@@ -15,15 +16,15 @@ class ResultsPainter:
         self.dao = dao
         self.chat_id = config.log_chat
 
-    async def get_game_results(self, game: dto.Game, player: dto.Player) -> str:
+    async def get_game_results(self, game: dto.Game, identity: IdentityProvider) -> str:
         if game.results.results_picture_file_id:
             return game.results.results_picture_file_id
         current_game = await get_full_game(
             id_=game.id,
-            author=player,
+            identity=identity,
             dao=self.dao.game,
         )
-        game_stat = await get_game_stat(current_game, player, self.dao.game_stat)
+        game_stat = await get_game_stat(current_game, identity, self.dao.game_stat)
         picture = paint_it(game_stat, current_game)
         msg = await self.bot.send_photo(
             self.chat_id, BufferedInputFile(picture.read(), "results.png")

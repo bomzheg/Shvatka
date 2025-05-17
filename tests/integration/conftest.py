@@ -10,7 +10,7 @@ from dataclass_factory import Factory
 from dishka import make_async_container, AsyncContainer, Provider, Scope
 from telegraph.aio import Telegraph
 
-from shvatka.api.dependencies import AuthProvider, ApiConfigProvider, PlayerProvider, TeamProvider
+from shvatka.api.dependencies import AuthProvider, ApiConfigProvider, ApiIdpProvider
 from shvatka.common import Paths
 from shvatka.common.factory import DCFProvider, TelegraphProvider, UrlProvider
 from shvatka.core.interfaces.clients.file_storage import FileStorage, FileGateway
@@ -28,7 +28,8 @@ from shvatka.infrastructure.di import (
     GamePlayProvider,
     PrinterProvider,
 )
-from shvatka.tgbot.main_factory import DpProvider, LockProvider, GameToolsProvider
+from shvatka.main_factory import IdpProvider
+from shvatka.tgbot.main_factory import DpProvider, LockProvider, GameToolsProvider, BotIdpProvider
 from shvatka.tgbot.username_resolver.user_getter import UserGetter
 from shvatka.tgbot.views.hint_factory.hint_parser import HintParser
 from tests.fixtures.db_provider import TestDbProvider
@@ -58,9 +59,7 @@ async def dishka():
         RedisProvider(),
         FileClientProvider(),
         AuthProvider(),
-        PlayerProvider(),
         MemoryFileStorageProvider(),
-        TeamProvider(),
         DpProvider(),
         MockBotProvider(),
         MockMessageManagerProvider(),
@@ -71,6 +70,9 @@ async def dishka():
         GamePlayProvider(),
         PrinterProvider(),
         GameToolsProvider(),
+        ApiIdpProvider(),
+        BotIdpProvider(),
+        IdpProvider(),
         mock_provider,
     )
     yield container

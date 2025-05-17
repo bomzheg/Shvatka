@@ -20,14 +20,17 @@ class GameUpserterImpl(GameUpserter):
     async def upsert_game(self, author: dto.Player, scenario: scn.GameScenario) -> dto.Game:
         return await self.dao.game.upsert_game(author, scenario)
 
+    async def upsert_gamed(
+        self, author: dto.Player, scenario: scn.LevelScenario, game: dto.Game, no_in_game: int
+    ) -> dto.GamedLevel:
+        return await self.dao.level.upsert_gamed(author, scenario, game, no_in_game)
+
     async def upsert(
         self,
         author: dto.Player,
         scenario: scn.LevelScenario,
-        game: dto.Game | None = None,
-        no_in_game: int | None = None,
     ) -> dto.Level:
-        return await self.dao.level.upsert(author, scenario, game, no_in_game)
+        return await self.dao.level.upsert(author, scenario)
 
     async def unlink_all(self, game: dto.Game) -> None:
         return await self.dao.level.unlink_all(game)
@@ -58,7 +61,7 @@ class GameCreatorImpl(GameCreator):
     async def create_game(self, author: dto.Player, name: str) -> dto.Game:
         return await self.dao.game.create_game(author, name)
 
-    async def link_to_game(self, level: dto.Level, game: dto.Game) -> dto.Level:
+    async def link_to_game(self, level: dto.Level, game: dto.Game) -> dto.GamedLevel:
         return await self.dao.level.link_to_game(level, game)
 
     async def commit(self) -> None:
@@ -143,7 +146,7 @@ class GamePlayReaderImpl(GamePlayReader):
     async def get_current_level_time(self, team: dto.Team, game: dto.Game) -> dto.LevelTime:
         return await self.dao.level_time.get_current_level_time(team, game)
 
-    async def get_level_by_game_and_number(self, game: dto.Game, number: int) -> dto.Level:
+    async def get_level_by_game_and_number(self, game: dto.Game, number: int) -> dto.GamedLevel:
         return await self.dao.level.get_by_number(game, number)
 
     async def get_team_typed_keys(

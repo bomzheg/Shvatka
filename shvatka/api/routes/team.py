@@ -3,12 +3,12 @@ from dishka.integrations.fastapi import inject
 from fastapi import APIRouter
 
 from shvatka.api.models import responses
-from shvatka.core.models import dto
+from shvatka.core.interfaces.identity import IdentityProvider
 
 
 @inject
-async def get_my_team(team: FromDishka[dto.Team]) -> responses.Team:
-    return responses.Team.from_core(team)
+async def get_my_team(identity: FromDishka[IdentityProvider]) -> responses.Team | None:
+    return responses.Team.from_core(await identity.get_team())
 
 
 def setup() -> APIRouter:

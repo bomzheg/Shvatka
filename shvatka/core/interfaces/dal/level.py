@@ -6,12 +6,19 @@ from shvatka.core.models.dto import scn
 
 
 class LevelUpserter(Committer, Protocol):
+    async def upsert_gamed(
+        self,
+        author: dto.Player,
+        scenario: scn.LevelScenario,
+        game: dto.Game,
+        no_in_game: int,
+    ) -> dto.GamedLevel:
+        raise NotImplementedError
+
     async def upsert(
         self,
         author: dto.Player,
         scenario: scn.LevelScenario,
-        game: dto.Game | None = None,
-        no_in_game: int | None = None,
     ) -> dto.Level:
         raise NotImplementedError
 
@@ -20,7 +27,7 @@ class LevelUpserter(Committer, Protocol):
 
 
 class LevelByGameAndNumberGetter(Protocol):
-    async def get_level_by_game_and_number(self, game: dto.Game, number: int) -> dto.Level:
+    async def get_level_by_game_and_number(self, game: dto.Game, number: int) -> dto.GamedLevel:
         raise NotImplementedError
 
 
@@ -35,7 +42,7 @@ class LevelByIdGetter(Protocol):
 
 
 class LevelLinker(Committer, Protocol):
-    async def link_to_game(self, level: dto.Level, game: dto.Game) -> dto.Level:
+    async def link_to_game(self, level: dto.Level, game: dto.Game) -> dto.GamedLevel:
         raise NotImplementedError
 
 

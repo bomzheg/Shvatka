@@ -5,6 +5,7 @@ from dishka.integrations.fastapi import inject
 from fastapi import APIRouter, HTTPException
 from fastapi.params import Body, Path
 
+from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.models import dto
 from shvatka.core.services.user import set_password, get_user
 from shvatka.infrastructure.db.dao.holder import HolderDao
@@ -14,8 +15,8 @@ logger = logging.getLogger(__name__)
 
 
 @inject
-async def read_users_me(current_user: FromDishka[dto.User]) -> dto.User:
-    return current_user
+async def read_users_me(identity: FromDishka[IdentityProvider]) -> dto.User | None:
+    return await identity.get_user()
 
 
 @inject
@@ -29,12 +30,12 @@ async def read_user(
 @inject
 async def set_password_route(
     auth: FromDishka[AuthProperties],
-    user: FromDishka[dto.User],
+    identity: FromDishka[IdentityProvider],
     dao: FromDishka[HolderDao],
     password: str = Body(),  # type: ignore[assignment]
 ):
     hashed_password = auth.get_password_hash(password)
-    await set_password(user, hashed_password, dao.user)
+    await set_password(identity, hashed_password, dao.user)
     raise HTTPException(status_code=200)
 
 

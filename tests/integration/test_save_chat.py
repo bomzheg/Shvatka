@@ -1,8 +1,11 @@
+from typing import cast
+
 import pytest
 
 from shvatka.core.services.chat import update_chat_id, upsert_chat
 from shvatka.infrastructure.db.dao.holder import HolderDao
-from shvatka.tgbot.middlewares.data_load_middleware import save_chat
+from shvatka.tgbot.services.identity import save_chat
+from shvatka.tgbot.utils.data import SHMiddlewareData
 from tests.fixtures.chat_constants import (
     create_tg_chat,
     create_db_chat,
@@ -14,7 +17,7 @@ from tests.utils.chat import assert_dto_chat, assert_db_chat
 
 @pytest.mark.asyncio
 async def test_save_chat(dao: HolderDao):
-    data = {"event_chat": create_tg_chat()}
+    data = cast(SHMiddlewareData, {"event_chat": create_tg_chat()})
     actual = await save_chat(data, dao)
     expected = create_gryffindor_dto_chat()
     assert_dto_chat(expected, actual)
@@ -42,12 +45,12 @@ async def test_migrate_to_supergroup(dao: HolderDao):
 
 @pytest.mark.asyncio
 async def test_upsert_chat(dao: HolderDao):
-    data = {"event_chat": create_tg_chat(username="extra_chat")}
+    data = cast(SHMiddlewareData, {"event_chat": create_tg_chat(username="extra_chat")})
     old_chat = await save_chat(data, dao)
     old_count = await dao.chat.count()
     assert old_chat.username == "extra_chat"
 
-    data = {"event_chat": create_tg_chat()}
+    data = cast(SHMiddlewareData, {"event_chat": create_tg_chat()})
     actual = await save_chat(data, dao)
     expected = create_gryffindor_dto_chat()
     assert_dto_chat(expected, actual)

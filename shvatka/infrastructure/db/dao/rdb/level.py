@@ -20,6 +20,16 @@ class LevelDao(BaseDAO[models.Level]):
     ) -> None:
         super().__init__(models.Level, session, clock=clock)
 
+    async def upsert_gamed(
+        self,
+        author: dto.Player,
+        scn: LevelScenario,
+        game: dto.Game,
+        no_in_game: int,
+    ) -> dto.GamedLevel:
+        level = await self.upsert(author, scn, game, no_in_game)
+        return typing.cast(dto.GamedLevel, level)
+
     async def upsert(
         self,
         author: dto.Player,
@@ -112,7 +122,7 @@ class LevelDao(BaseDAO[models.Level]):
             )
         )
 
-    async def link_to_game(self, level: dto.Level, game: dto.Game) -> dto.Level:
+    async def link_to_game(self, level: dto.Level, game: dto.Game) -> dto.GamedLevel:
         max_level = await self.get_max_level_number(game)
         await self.session.execute(
             update(models.Level)
@@ -121,7 +131,7 @@ class LevelDao(BaseDAO[models.Level]):
         )
         level.game_id = game.id
         level.number_in_game = max_level + 1
-        return level
+        return typing.cast(dto.GamedLevel, level)
 
     async def get_max_level_number(self, game: dto.Game) -> int:
         result = await self.session.execute(
@@ -135,7 +145,7 @@ class LevelDao(BaseDAO[models.Level]):
             return max_level.number_in_game
         return -1
 
-    async def get_by_number(self, game: dto.Game, level_number: int) -> dto.Level:
+    async def get_by_number(self, game: dto.Game, level_number: int) -> dto.GamedLevel:
         result = await self.session.execute(
             select(models.Level)
             .where(
@@ -148,7 +158,7 @@ class LevelDao(BaseDAO[models.Level]):
             )
         )
         level: models.Level = result.scalar_one()
-        return level.to_dto(level.author.to_dto_user_prefetched())
+        return level.to_gamed_dto(level.author.to_dto_user_prefetched())
 
     async def update_number_in_game(self, game_id: int) -> None:
         lvls: ScalarResult[models.Level] = await self.session.scalars(

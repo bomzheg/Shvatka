@@ -92,5 +92,5 @@ class Game(Base):
             ),
         )
 
-    def to_full_dto(self, author: dto.Player, levels: list[dto.Level]) -> dto.FullGame:
+    def to_full_dto(self, author: dto.Player, levels: list[dto.GamedLevel]) -> dto.FullGame:
         return self.to_dto(author).to_full_game(levels)

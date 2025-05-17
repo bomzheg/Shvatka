@@ -34,7 +34,7 @@ game_example = dto.FullGame(
         keys_url=None,
     ),
     levels=[
-        dto.Level(
+        dto.GamedLevel(
             db_id=100,
             author=author,
             name_id="level_100",
@@ -97,7 +97,7 @@ game_example = dto.FullGame(
                 ),
             ),
         ),
-        dto.Level(
+        dto.GamedLevel(
             db_id=101,
             author=author,
             name_id="level_101",
@@ -160,7 +160,7 @@ game_example = dto.FullGame(
                 ),
             ),
         ),
-        dto.Level(
+        dto.GamedLevel(
             db_id=102,
             author=author,
             name_id="level_102",
@@ -223,7 +223,7 @@ game_example = dto.FullGame(
                 ),
             ),
         ),
-        dto.Level(
+        dto.GamedLevel(
             db_id=103,
             author=author,
             name_id="level_103",

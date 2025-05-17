@@ -74,7 +74,6 @@ def results_to_table_routed(game: dto.FullGame, results: Results) -> Table:  # n
         FIRST_TEAM_NAME.shift(rows=-1, columns=1): Cell(value=0),
     }
     for level in game.levels:
-        assert level.number_in_game is not None
         table[FIRST_TEAM_NAME.shift(rows=-1, columns=level.number_in_game + 2)] = Cell(
             value=level.number_in_game + 1
         )
@@ -90,7 +89,6 @@ def results_to_table_routed(game: dto.FullGame, results: Results) -> Table:  # n
             )
     second_part_start = i + 3
     for level in game.levels:
-        assert level.number_in_game is not None
         table[
             FIRST_TEAM_NAME.shift(rows=second_part_start - 1, columns=level.number_in_game + 1)
         ] = Cell(value=level.number_in_game + 1)

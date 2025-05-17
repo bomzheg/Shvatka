@@ -1,15 +1,18 @@
 import logging
 from datetime import datetime, time, date
+from typing import Any
 
 from aiogram import Bot
 from aiogram.enums import ContentType
 from aiogram_dialog import DialogManager
 from aiogram_dialog.api.entities import MediaAttachment, MediaId
-from dishka import AsyncContainer
+from dishka import AsyncContainer, FromDishka
 from dishka.integrations.aiogram import CONTAINER_NAME
+from dishka.integrations.aiogram_dialog import inject
 from telegraph import Telegraph
 
 from shvatka.common.url_factory import UrlFactory
+from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.models import dto
 from shvatka.core.services import game
 from shvatka.core.services.game import get_authors_games, get_completed_games
@@ -22,8 +25,11 @@ from shvatka.tgbot.views.keys import get_or_create_keys_page
 logger = logging.getLogger(__name__)
 
 
-async def get_my_games(dao: HolderDao, player: dto.Player, **_) -> dict[str, list[dto.Game]]:
-    return {"games": await get_authors_games(player, dao.game)}
+@inject
+async def get_my_games(
+    dao: HolderDao, identity: FromDishka[IdentityProvider], **_
+) -> dict[str, list[dto.Game]]:
+    return {"games": await get_authors_games(identity, dao.game)}
 
 
 async def get_games(dao: HolderDao, **_) -> dict[str, list[dto.Game]]:
@@ -59,11 +65,12 @@ async def get_game_waivers(dao: HolderDao, dialog_manager: DialogManager, **_):
     }
 
 
+@inject
 async def get_game_keys(
-    dao: HolderDao,
-    dialog_manager: DialogManager,
-    player: dto.Player,
-    telegraph: Telegraph,
+    dao: FromDishka[HolderDao],
+    dialog_manager: FromDishka[DialogManager],
+    telegraph: FromDishka[Telegraph],
+    identity: FromDishka[IdentityProvider],
     **_,
 ):
     game_id = (
@@ -75,15 +82,18 @@ async def get_game_keys(
     )
     return {
         "game": current_game,
-        "key_link": await get_or_create_keys_page(current_game, player, telegraph, dao),
+        "key_link": await get_or_create_keys_page(
+            game=current_game, telegraph=telegraph, dao=dao, identity=identity
+        ),
     }
 
 
+@inject
 async def get_game_results(
-    dao: HolderDao,
     dialog_manager: DialogManager,
-    player: dto.Player,
-    results_painter: ResultsPainter,
+    dao: FromDishka[HolderDao],
+    identity: FromDishka[IdentityProvider],
+    results_painter: FromDishka[ResultsPainter],
     **_,
 ):
     game_id = (
@@ -93,14 +103,16 @@ async def get_game_results(
         id_=game_id,
         dao=dao.game,
     )
-    file_id = await results_painter.get_game_results(current_game, player)
+    file_id = await results_painter.get_game_results(current_game, identity=identity)
     return {
         "game": current_game,
         "results.png": MediaAttachment(file_id=MediaId(file_id=file_id), type=ContentType.PHOTO),
     }
 
 
-async def get_game(dao: HolderDao, player: dto.Player, dialog_manager: DialogManager, **_):
+async def get_game(
+    dao: HolderDao, player: dto.Player, dialog_manager: DialogManager, **_
+) -> dict[str, Any]:
     game_id = (
         dialog_manager.dialog_data.get("my_game_id", None)
         or dialog_manager.start_data["my_game_id"]
@@ -115,7 +127,7 @@ async def get_game(dao: HolderDao, player: dto.Player, dialog_manager: DialogMan
 
 
 async def get_game_with_channel(dao: HolderDao, dialog_manager: DialogManager, bot: Bot, **_):
-    game_id = dialog_manager.dialog_data.get("game_id", None)
+    game_id: int | None = dialog_manager.dialog_data.get("game_id", None)
     if game_id is None:
         logger.warning("game_id is None")
         return {"invite": "sorry something happened", "game": None}
@@ -134,7 +146,7 @@ async def get_game_time(
     dao: HolderDao, player: dto.Player, dialog_manager: DialogManager, **kwargs
 ):
     result = await get_game(dao, player, dialog_manager, **kwargs)
-    time_ = dialog_manager.dialog_data.get("scheduled_time", None)
+    time_: str | None = dialog_manager.dialog_data.get("scheduled_time", None)
     result.update(scheduled_time=time_, has_time=time_ is not None)
     return result
 
@@ -143,8 +155,8 @@ async def get_game_datetime(
     dao: HolderDao, player: dto.Player, dialog_manager: DialogManager, **kwargs
 ):
     result = await get_game(dao, player, dialog_manager, **kwargs)
-    date_ = dialog_manager.dialog_data.get("scheduled_date", None)
-    time_ = dialog_manager.dialog_data.get("scheduled_time", None)
+    date_: str = dialog_manager.dialog_data["scheduled_date"]
+    time_: str = dialog_manager.dialog_data["scheduled_time"]
     result["scheduled_datetime"] = datetime.combine(
         date=date.fromisoformat(date_),
         time=time.fromisoformat(time_),

@@ -8,7 +8,7 @@ from shvatka.core.models.enums import GameStatus
 from shvatka.core.models.enums.game_status import ACTIVE_STATUSES, EDITABLE_STATUSES
 from shvatka.core.utils.datetime_utils import tz_game, tz_utc
 from . import hints
-from .level import Level
+from .level import GamedLevel
 from .player import Player
 
 
@@ -77,7 +77,7 @@ class Game:
     def is_author_id(self, player_id: int) -> bool:
         return self.author.id == player_id
 
-    def to_full_game(self, levels: list[Level]) -> FullGame:
+    def to_full_game(self, levels: list[GamedLevel]) -> FullGame:
         return FullGame(
             id=self.id,
             author=self.author,
@@ -112,7 +112,7 @@ class PreviewGame(Game):
 
 @dataclass
 class FullGame(Game):
-    levels: list[Level] = field(default_factory=list)
+    levels: list[GamedLevel] = field(default_factory=list)
 
     def is_routed(self) -> bool:
         return any(lvl.is_routed() for lvl in self.levels)

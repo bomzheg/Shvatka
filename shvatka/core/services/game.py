@@ -18,6 +18,7 @@ from shvatka.core.interfaces.dal.game import (
     PreviewGameByIdGetter,
 )
 from shvatka.core.interfaces.dal.level import LevelLinker
+from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.interfaces.scheduler import Scheduler
 from shvatka.core.models import dto
 from shvatka.core.models.dto import scn, export_stat
@@ -56,7 +57,7 @@ async def upsert_game(
     await dao.unlink_all(game)
     levels = []
     for number, level in enumerate(game_scn.levels):
-        saved_level = await dao.upsert(author, level, game, number)
+        saved_level = await dao.upsert_gamed(author, level, game, number)
         levels.append(saved_level)
     await dao.commit()
     return game.to_full_game(levels)
@@ -81,9 +82,10 @@ async def create_game(
 
 
 async def get_authors_games(
-    author: dto.Player,
+    identity: IdentityProvider,
     dao: GameAuthorsFinder,
 ) -> list[dto.Game]:
+    author = await identity.get_required_player()
     check_allow_be_author(author)
     return await dao.get_all_by_author(author)
 
@@ -112,7 +114,8 @@ async def get_preview_game(
     return await dao.get_preview(id_=id_, author=author)
 
 
-async def get_full_game(id_: int, author: dto.Player, dao: GameByIdGetter) -> dto.FullGame:
+async def get_full_game(id_: int, identity: IdentityProvider, dao: GameByIdGetter) -> dto.FullGame:
+    author = await identity.get_required_player()
     game = await dao.get_full(id_=id_)
     check_can_read(game, author)
     return game

@@ -10,6 +10,7 @@ from fastapi import FastAPI
 from shvatka.api.dependencies import get_api_specific_providers
 from shvatka.infrastructure.di import get_providers
 from shvatka.infrastructure.di.utils import warm_up
+from shvatka.main_factory import get_complex_only_providers
 from shvatka.tgbot.config.models.bot import WebhookConfig
 from shvatka.tgbot.config.parser.main import load_config as load_bot_config
 from shvatka.api.config.parser.main import load_config as load_api_config
@@ -42,6 +43,7 @@ def main() -> FastAPI:
         *get_providers("SHVATKA_PATH"),
         *get_bot_specific_providers(),
         *get_api_specific_providers(),
+        *get_complex_only_providers(),
         validation_settings=STRICT_VALIDATION,
     )
     setup_application(app, dishka)

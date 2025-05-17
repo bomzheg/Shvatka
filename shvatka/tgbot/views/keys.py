@@ -5,6 +5,7 @@ from typing import Any, Iterable
 from aiogram.utils.text_decorations import html_decoration as hd
 from telegraph.aio import Telegraph
 
+from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.models import dto, enums
 from shvatka.core.models.dto import scn, action
 from shvatka.core.services.game_stat import get_typed_keys
@@ -55,9 +56,13 @@ def render_log_keys(log_keys: dict[dto.Team, list[dto.KeyTime]]) -> str:
 
 
 async def create_keys_page(
-    game: dto.Game, player: dto.Player, telegraph: Telegraph, dao: HolderDao, salt: str = ""
+    game: dto.Game,
+    telegraph: Telegraph,
+    dao: HolderDao,
+    identity: IdentityProvider,
+    salt: str = "",
 ) -> dict[str, Any]:
-    keys = await get_typed_keys(game=game, player=player, dao=dao.typed_keys)
+    keys = await get_typed_keys(game=game, identity=identity, dao=dao.typed_keys)
     text = render_log_keys(keys)
     page = await telegraph.create_page(
         title=f"{salt} Лог ключей игры {game.name}",
@@ -72,11 +77,11 @@ async def create_keys_page(
 
 
 async def get_or_create_keys_page(
-    game: dto.Game, player: dto.Player, telegraph: Telegraph, dao: HolderDao
+    game: dto.Game, identity: IdentityProvider, telegraph: Telegraph, dao: HolderDao
 ) -> str:
     if game.results.keys_url:
         return game.results.keys_url
-    page = await create_keys_page(game, player, telegraph, dao)
+    page = await create_keys_page(game, telegraph, dao, identity=identity)
     await dao.game.set_keys_url(game, page["url"])
     await dao.game.commit()
     game.results.keys_url = page["url"]

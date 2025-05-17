@@ -5,6 +5,7 @@ from aiogram import Dispatcher, Bot
 from aiogram.fsm.storage.base import BaseStorage, BaseEventIsolation
 from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.fsm.storage.redis import RedisStorage, DefaultKeyBuilder, RedisEventIsolation
+from aiogram.types import TelegramObject
 from aiogram_dialog.api.protocols import MessageManagerProtocol
 from aiogram_dialog.manager.message_manager import MessageManager
 from dishka import (
@@ -15,12 +16,14 @@ from dishka import (
     provide,
     AnyOf,
     STRICT_VALIDATION,
+    from_context,
 )
-from dishka.integrations.aiogram import setup_dishka
+from dishka.integrations.aiogram import setup_dishka, AiogramMiddlewareData
 from redis.asyncio import Redis
 
 from shvatka.common.factory import TelegraphProvider, DCFProvider, UrlProvider
 from shvatka.core.interfaces.clients.file_storage import FileStorage
+from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.utils.key_checker_lock import KeyCheckerFactory
 from shvatka.core.views.game import GameLogWriter, GameView, GameViewPreparer, OrgNotifier
 from shvatka.core.views.level import LevelView
@@ -36,6 +39,7 @@ from shvatka.infrastructure.scheduler.factory import SchedulerProvider
 from shvatka.tgbot.config.models.bot import BotConfig, TgClientConfig
 from shvatka.tgbot.handlers import setup_handlers
 from shvatka.tgbot.middlewares import setup_middlewares
+from shvatka.tgbot.services.identity import TgBotIdentityProvider
 from shvatka.tgbot.username_resolver.user_getter import UserGetter
 from shvatka.tgbot.utils.router import print_router_tree
 from shvatka.tgbot.views.game import GameBotLog, BotView, BotOrgNotifier
@@ -58,6 +62,7 @@ def get_bot_providers(paths_env: str) -> list[Provider]:
     return [
         *get_providers(paths_env),
         *get_bot_specific_providers(),
+        *get_bot_only_providers(),
     ]
 
 
@@ -72,6 +77,13 @@ def get_bot_specific_providers() -> list[Provider]:
         UserGetterProvider(),
         LockProvider(),
         UrlProvider(),
+        BotIdpProvider(),
+    ]
+
+
+def get_bot_only_providers() -> list[Provider]:
+    return [
+        BotOnlyIdpProvider(),
     ]
 
 
@@ -143,6 +155,21 @@ class UserGetterProvider(Provider):
     async def get_user_getter(self, tg_client_config: TgClientConfig) -> AsyncIterable[UserGetter]:
         async with UserGetter(tg_client_config) as user_getter:
             yield user_getter
+
+
+class BotIdpProvider(Provider):
+    scope = Scope.REQUEST
+    event = from_context(TelegramObject)
+    aiogram_data = from_context(AiogramMiddlewareData)
+    bot_idp = provide(TgBotIdentityProvider)
+
+
+class BotOnlyIdpProvider(Provider):
+    scope = Scope.REQUEST
+
+    @provide
+    def get_idp(self, idp: TgBotIdentityProvider) -> IdentityProvider:
+        return idp
 
 
 class GameToolsProvider(Provider):

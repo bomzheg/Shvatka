@@ -47,6 +47,7 @@ from .handlers import (
     to_publish_game_forum,
     complete_game_handler,
     show_all_keys,
+    show_transitions,
 )
 from shvatka.tgbot.dialogs.preview_data import PREVIEW_GAME, PreviewSwitchTo, PreviewStart
 
@@ -101,6 +102,11 @@ games = Dialog(
             Const("📦zip-сценарий"),
             id="game_zip_scn",
             on_click=show_zip_scn,
+        ),
+        Button(
+            Const("🔀Переходы"),
+            id="transitions",
+            on_click=show_transitions,
         ),
         SwitchTo(
             Const("Сценарий игры в tg"),
@@ -295,6 +301,11 @@ my_games = Dialog(
             on_click=show_all_keys,
         ),
         Button(
+            Const("🔀Переходы"),
+            id="transitions",
+            on_click=show_transitions,
+        ),
+        Button(
             Const("📨Опубликовать"),
             id="game_publish",
             on_click=publish_game,
@@ -378,7 +389,7 @@ schedule_game_dialog = Dialog(
             Const("📆Сохранить"),
             id="save_game_schedule",
             state=states.GameScheduleSG.confirm,
-            when=lambda data, *args: data["has_time"],
+            when=F["has_time"],
         ),
         Cancel(Const("🔙Назад")),
         getter=get_game_time,

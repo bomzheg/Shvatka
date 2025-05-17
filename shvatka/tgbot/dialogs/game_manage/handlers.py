@@ -11,9 +11,13 @@ from dishka import FromDishka
 from dishka.integrations.aiogram_dialog import inject
 
 from shvatka.core.interfaces.clients.file_storage import FileGateway
+from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.interfaces.scheduler import Scheduler
 from shvatka.core.models import dto
-from shvatka.core.scenario.interactors import AllGameKeysReaderInteractor
+from shvatka.core.scenario.interactors import (
+    AllGameKeysReaderInteractor,
+    GameScenarioTransitionsInteractor,
+)
 from shvatka.core.services import game
 from shvatka.core.services.game import rename_game, get_game, get_full_game, complete_game
 from shvatka.core.services.game_stat import get_game_stat
@@ -86,12 +90,34 @@ async def show_all_keys(
     widget: Button,
     manager: DialogManager,
     interactor: FromDishka[AllGameKeysReaderInteractor],
+    identity: FromDishka[IdentityProvider],
 ):
     assert isinstance(c.message, Message)
     await c.message.answer_document(
         document=BufferedInputFile(
-            file=(await interactor(manager.dialog_data["my_game_id"])).read(),
+            file=(await interactor(manager.dialog_data["my_game_id"], identity)).read(),
             filename="all_keys.xlsx",
+        )
+    )
+
+
+@inject
+async def show_transitions(
+    c: CallbackQuery,
+    widget: Button,
+    manager: DialogManager,
+    interactor: FromDishka[GameScenarioTransitionsInteractor],
+    identity: FromDishka[IdentityProvider],
+):
+    assert isinstance(c.message, Message)
+    game_id: int | None = manager.dialog_data.get(
+        "game_id", manager.dialog_data.get("my_game_id", None)
+    )
+    assert game_id is not None
+    await c.message.answer_document(
+        document=BufferedInputFile(
+            file=(await interactor(game_id, identity)).read(),
+            filename="transitions.png",
         )
     )
 
@@ -202,13 +228,18 @@ async def to_publish_game_forum(c: CallbackQuery, widget: Button, manager: Dialo
     await manager.start(states.GamePublishSG.forum, data={"game_id": game_id})
 
 
-async def publish_game_forum(m: Message, widget: Any, manager: DialogManager):
+@inject
+async def publish_game_forum(
+    m: Message,
+    widget: Any,
+    manager: DialogManager,
+    identity: FromDishka[IdentityProvider],
+    dao: FromDishka[HolderDao],
+):
     assert m.text
     username, password = map(str.strip, m.text.split("\n", maxsplit=1))
     game_id = manager.dialog_data["my_game_id"]
-    author: dto.Player = manager.middleware_data["player"]
-    dao: HolderDao = manager.middleware_data["dao"]
-    game_ = await get_full_game(game_id, author, dao.game)
+    game_ = await get_full_game(game_id, identity, dao.game)
     asyncio.create_task(upload_wrapper(game_, username, password, m))
 
 
@@ -217,12 +248,17 @@ async def upload_wrapper(game: dto.FullGame, username: str, password: str, m: Me
     await m.answer("Сценарий успешно загружен на форум")
 
 
-async def get_excel_results_handler(c: CallbackQuery, widget: Button, manager: DialogManager):
+@inject
+async def get_excel_results_handler(
+    c: CallbackQuery,
+    widget: Button,
+    manager: DialogManager,
+    identity: FromDishka[IdentityProvider],
+    dao: FromDishka[HolderDao],
+):
     game_id = manager.dialog_data["game_id"]
-    dao: HolderDao = manager.middleware_data["dao"]
-    author: dto.Player = manager.middleware_data["player"]
-    full_game = await get_full_game(id_=game_id, author=author, dao=dao.game)
-    game_stat = await get_game_stat(game=full_game, player=author, dao=dao.game_stat)
+    full_game = await get_full_game(id_=game_id, identity=identity, dao=dao.game)
+    game_stat = await get_game_stat(game=full_game, identity=identity, dao=dao.game_stat)
     file = BytesIO()
     export_results(game=full_game, game_stat=game_stat, file=file)
     file.seek(0)

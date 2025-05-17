@@ -30,7 +30,6 @@ from shvatka.infrastructure.di import (
 )
 from shvatka.main_factory import IdpProvider
 from shvatka.tgbot.main_factory import DpProvider, LockProvider, GameToolsProvider, BotIdpProvider
-from shvatka.tgbot.services.identity import TgBotIdentityProvider
 from shvatka.tgbot.username_resolver.user_getter import UserGetter
 from shvatka.tgbot.views.hint_factory.hint_parser import HintParser
 from tests.fixtures.db_provider import TestDbProvider

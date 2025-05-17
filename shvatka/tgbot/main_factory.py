@@ -15,7 +15,8 @@ from dishka import (
     Scope,
     provide,
     AnyOf,
-    STRICT_VALIDATION, from_context,
+    STRICT_VALIDATION,
+    from_context,
 )
 from dishka.integrations.aiogram import setup_dishka, AiogramMiddlewareData
 from redis.asyncio import Redis

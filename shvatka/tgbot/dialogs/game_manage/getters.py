@@ -69,7 +69,7 @@ async def get_game_waivers(dao: HolderDao, dialog_manager: DialogManager, **_):
 async def get_game_keys(
     dao: HolderDao,
     dialog_manager: DialogManager,
-    telegraph: Telegraph,
+    telegraph: FromDishka[Telegraph],
     identity: FromDishka[IdentityProvider],
     **_,
 ):

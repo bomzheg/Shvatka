@@ -29,10 +29,8 @@ class GameUpserterImpl(GameUpserter):
         self,
         author: dto.Player,
         scenario: scn.LevelScenario,
-        game: dto.Game | None = None,
-        no_in_game: int | None = None,
     ) -> dto.Level:
-        return await self.dao.level.upsert(author, scenario, game, no_in_game)
+        return await self.dao.level.upsert(author, scenario)
 
     async def unlink_all(self, game: dto.Game) -> None:
         return await self.dao.level.unlink_all(game)

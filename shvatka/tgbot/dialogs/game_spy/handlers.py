@@ -21,7 +21,7 @@ async def keys_handler(
     manager: DialogManager,
     identity: FromDishka[IdentityProvider],
     dao: FromDishka[HolderDao],
-    telegraph: Telegraph,
+    telegraph: FromDishka[Telegraph],
 ):
     await c.answer()
     game: dto.Game = manager.middleware_data["game"]

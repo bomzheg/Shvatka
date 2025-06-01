@@ -25,5 +25,6 @@ from .hint_part import (
     StickerHint,
     PhotoHint,
     ContactHint,
+    LinkPreview,
 )
 from .time_hint import TimeHint, EnumeratedTimeHint

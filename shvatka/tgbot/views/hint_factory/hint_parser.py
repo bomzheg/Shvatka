@@ -3,6 +3,7 @@ from pathlib import Path
 from uuid import uuid4
 
 from aiogram import Bot
+from aiogram.client.default import Default
 from aiogram.types import Message, ContentType, PhotoSize
 
 from shvatka.core.interfaces.clients.file_storage import FileStorage
@@ -45,13 +46,16 @@ class HintParser:
             author=author,
             guid=guid,
         )
+        link_preview = message_to_link_preview(message)
         match message.content_type:
             case ContentType.TEXT:
-                return TextHint(text=message.html_text)
+                return TextHint(text=message.html_text, link_preview=link_preview)
             case ContentType.LOCATION:
                 assert message.location
                 return GPSHint(
-                    longitude=message.location.longitude, latitude=message.location.latitude
+                    longitude=message.location.longitude,
+                    latitude=message.location.latitude,
+                    link_preview=link_preview,
                 )
             case ContentType.VENUE:
                 assert message.venue
@@ -62,9 +66,12 @@ class HintParser:
                     address=message.venue.address,
                     foursquare_id=message.venue.foursquare_id,
                     foursquare_type=message.venue.foursquare_type,
+                    link_preview=link_preview,
                 )
             case ContentType.PHOTO:
-                return PhotoHint(caption=message.html_text, file_guid=guid)
+                return PhotoHint(
+                    caption=message.html_text, file_guid=guid, link_preview=link_preview
+                )
             case ContentType.AUDIO:
                 assert message.audio
                 thumb = await self.save_thumb(author, message.audio.thumbnail)
@@ -72,6 +79,7 @@ class HintParser:
                     caption=message.html_text,
                     file_guid=guid,
                     thumb_guid=thumb.guid if thumb else None,
+                    link_preview=link_preview,
                 )
             case ContentType.VIDEO:
                 assert message.video
@@ -80,6 +88,7 @@ class HintParser:
                     caption=message.html_text,
                     file_guid=guid,
                     thumb_guid=thumb.guid if thumb else None,
+                    link_preview=link_preview,
                 )
             case ContentType.DOCUMENT:
                 assert message.document
@@ -88,6 +97,7 @@ class HintParser:
                     caption=message.html_text,
                     file_guid=guid,
                     thumb_guid=thumb.guid if thumb else None,
+                    link_preview=link_preview,
                 )
             case ContentType.ANIMATION:
                 assert message.animation
@@ -96,11 +106,14 @@ class HintParser:
                     caption=message.html_text,
                     file_guid=guid,
                     thumb_guid=thumb.guid if thumb else None,
+                    link_preview=link_preview,
                 )
             case ContentType.VOICE:
-                return VoiceHint(caption=message.html_text, file_guid=guid)
+                return VoiceHint(
+                    caption=message.html_text, file_guid=guid, link_preview=link_preview
+                )
             case ContentType.VIDEO_NOTE:
-                return VideoNoteHint(file_guid=guid)
+                return VideoNoteHint(file_guid=guid, link_preview=link_preview)
             case ContentType.CONTACT:
                 assert message.contact
                 return ContactHint(
@@ -108,9 +121,10 @@ class HintParser:
                     first_name=message.contact.first_name,
                     last_name=message.contact.last_name,
                     vcard=message.contact.vcard,
+                    link_preview=link_preview,
                 )
             case ContentType.STICKER:
-                return StickerHint(file_guid=guid)
+                return StickerHint(file_guid=guid, link_preview=link_preview)
             case _:
                 raise ValueError
 
@@ -215,7 +229,26 @@ def parse_message(message: Message) -> hints.ParsedTgLink | None:
             return None
 
 
+def message_to_link_preview(m: Message) -> hints.LinkPreview | None:
+    link_preview = m.link_preview_options
+    if link_preview is None:
+        return None
+    return hints.LinkPreview(
+        is_disabled=parse_bool_default(link_preview.is_disabled),
+        url=link_preview.url,
+        prefer_small_media=parse_bool_default(link_preview.prefer_small_media),
+        prefer_large_media=parse_bool_default(link_preview.prefer_large_media),
+        show_above_text=parse_bool_default(link_preview.show_above_text),
+    )
+
+
 def get_name_without_extension(name: str, extension: str) -> str:
     if not extension:
         return name
     return name[: -len(extension)]
+
+
+def parse_bool_default(value: bool | Default | None) -> bool | None:
+    if isinstance(value, Default):
+        return None
+    return value

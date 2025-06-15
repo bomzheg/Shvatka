@@ -68,7 +68,11 @@ class HintParser:
                     foursquare_type=message.venue.foursquare_type,
                 )
             case ContentType.PHOTO:
-                return PhotoHint(caption=message.html_text, file_guid=guid)
+                return PhotoHint(
+                    caption=message.html_text,
+                    file_guid=guid,
+                    show_caption_above_media=parse_bool_default(message.show_caption_above_media),
+                )
             case ContentType.AUDIO:
                 assert message.audio
                 thumb = await self.save_thumb(author, message.audio.thumbnail)
@@ -84,6 +88,7 @@ class HintParser:
                     caption=message.html_text,
                     file_guid=guid,
                     thumb_guid=thumb.guid if thumb else None,
+                    show_caption_above_media=parse_bool_default(message.show_caption_above_media),
                 )
             case ContentType.DOCUMENT:
                 assert message.document
@@ -100,6 +105,7 @@ class HintParser:
                     caption=message.html_text,
                     file_guid=guid,
                     thumb_guid=thumb.guid if thumb else None,
+                    show_caption_above_media=parse_bool_default(message.show_caption_above_media),
                 )
             case ContentType.VOICE:
                 return VoiceHint(caption=message.html_text, file_guid=guid)

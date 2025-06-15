@@ -247,7 +247,9 @@ def _get_input_file(content: BinaryIO | None) -> InputFile | None:
     return BufferedInputFile(file=content.read(), filename=content.name)
 
 
-def _link_preview_to_tg(link_preview: hints.LinkPreview) -> types.LinkPreviewOptions:
+def _link_preview_to_tg(link_preview: hints.LinkPreview) -> types.LinkPreviewOptions | None:
+    if link_preview is None:
+        return None
     return types.LinkPreviewOptions(
         is_disabled=link_preview.is_disabled,
         url=link_preview.url,

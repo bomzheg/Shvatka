@@ -35,7 +35,6 @@ class CaptionViewMixin(CaptionMixin, metaclass=ABCMeta):
     def caption_kwargs(self) -> dict[str, Any]:
         return {
             "caption": self.caption,
-            "link_preview_options": _link_preview_to_tg(self.link_preview),
         }
 
 

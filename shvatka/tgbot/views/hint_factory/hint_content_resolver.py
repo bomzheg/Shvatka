@@ -76,7 +76,6 @@ class HintContentResolver:
                 return PhotoLinkView(
                     file_id=await self._resolve_file_id(hint_.file_guid),
                     caption=hint_.caption,
-                    link_preview=hint_.link_preview,
                 )
             case AudioHint():
                 hint_ = typing.cast(AudioHint, hint_)
@@ -84,7 +83,6 @@ class HintContentResolver:
                     file_id=await self._resolve_file_id(hint_.file_guid),
                     caption=hint_.caption,
                     thumb=await self._resolve_thumb_file_id(hint_.thumb_guid),
-                    link_preview=hint_.link_preview,
                 )
             case VideoHint():
                 hint_ = typing.cast(VideoHint, hint_)
@@ -92,7 +90,6 @@ class HintContentResolver:
                     file_id=await self._resolve_file_id(hint_.file_guid),
                     caption=hint_.caption,
                     thumb=await self._resolve_thumb_file_id(hint_.thumb_guid),
-                    link_preview=hint_.link_preview,
                 )
             case DocumentHint():
                 hint_ = typing.cast(DocumentHint, hint_)
@@ -100,7 +97,6 @@ class HintContentResolver:
                     file_id=await self._resolve_file_id(hint_.file_guid),
                     caption=hint_.caption,
                     thumb=await self._resolve_thumb_file_id(hint_.thumb_guid),
-                    link_preview=hint_.link_preview,
                 )
             case AnimationHint():
                 hint_ = typing.cast(AnimationHint, hint_)
@@ -108,14 +104,12 @@ class HintContentResolver:
                     file_id=await self._resolve_file_id(hint_.file_guid),
                     caption=hint_.caption,
                     thumb=await self._resolve_thumb_file_id(hint_.thumb_guid),
-                    link_preview=hint_.link_preview,
                 )
             case VoiceHint():
                 hint_ = typing.cast(VoiceHint, hint_)
                 return VoiceLinkView(
                     file_id=await self._resolve_file_id(hint_.file_guid),
                     caption=hint_.caption,
-                    link_preview=hint_.link_preview,
                 )
             case VideoNoteHint(file_guid=guid):
                 return VideoNoteLinkView(
@@ -172,21 +166,18 @@ class HintContentResolver:
                 return PhotoContentView(
                     content=await self._resolve_bytes(hint_.file_guid),
                     caption=hint_.caption,
-                    link_preview=hint_.link_preview,
                 )
             case AudioHint():
                 hint_ = typing.cast(AudioHint, hint_)
                 return AudioContentView(
                     content=await self._resolve_bytes(hint_.file_guid),
                     caption=hint_.caption,
-                    link_preview=hint_.link_preview,
                 )
             case VideoHint():
                 hint_ = typing.cast(VideoHint, hint_)
                 return VideoContentView(
                     content=await self._resolve_bytes(hint_.file_guid),
                     caption=hint_.caption,
-                    link_preview=hint_.link_preview,
                 )
             case DocumentHint():
                 hint_ = typing.cast(DocumentHint, hint_)
@@ -194,7 +185,6 @@ class HintContentResolver:
                     content=await self._resolve_bytes(hint_.file_guid),
                     caption=hint_.caption,
                     thumb=await self._resolve_thumb_bytes(hint_.thumb_guid),
-                    link_preview=hint_.link_preview,
                 )
             case AnimationHint():
                 hint_ = typing.cast(AnimationHint, hint_)
@@ -202,14 +192,12 @@ class HintContentResolver:
                     content=await self._resolve_bytes(hint_.file_guid),
                     caption=hint_.caption,
                     thumb=await self._resolve_thumb_bytes(hint_.thumb_guid),
-                    link_preview=hint_.link_preview,
                 )
             case VoiceHint():
                 hint_ = typing.cast(VoiceHint, hint_)
                 return VoiceContentView(
                     content=await self._resolve_bytes(hint_.file_guid),
                     caption=hint_.caption,
-                    link_preview=hint_.link_preview,
                 )
             case VideoNoteHint(file_guid=guid):
                 return VideoNoteContentView(

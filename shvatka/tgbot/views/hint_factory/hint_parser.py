@@ -46,10 +46,11 @@ class HintParser:
             author=author,
             guid=guid,
         )
-        link_preview = message_to_link_preview(message)
         match message.content_type:
             case ContentType.TEXT:
-                return TextHint(text=message.html_text, link_preview=link_preview)
+                return TextHint(
+                    text=message.html_text, link_preview=message_to_link_preview(message)
+                )
             case ContentType.LOCATION:
                 assert message.location
                 return GPSHint(
@@ -67,9 +68,7 @@ class HintParser:
                     foursquare_type=message.venue.foursquare_type,
                 )
             case ContentType.PHOTO:
-                return PhotoHint(
-                    caption=message.html_text, file_guid=guid, link_preview=link_preview
-                )
+                return PhotoHint(caption=message.html_text, file_guid=guid)
             case ContentType.AUDIO:
                 assert message.audio
                 thumb = await self.save_thumb(author, message.audio.thumbnail)
@@ -77,7 +76,6 @@ class HintParser:
                     caption=message.html_text,
                     file_guid=guid,
                     thumb_guid=thumb.guid if thumb else None,
-                    link_preview=link_preview,
                 )
             case ContentType.VIDEO:
                 assert message.video
@@ -86,7 +84,6 @@ class HintParser:
                     caption=message.html_text,
                     file_guid=guid,
                     thumb_guid=thumb.guid if thumb else None,
-                    link_preview=link_preview,
                 )
             case ContentType.DOCUMENT:
                 assert message.document
@@ -95,7 +92,6 @@ class HintParser:
                     caption=message.html_text,
                     file_guid=guid,
                     thumb_guid=thumb.guid if thumb else None,
-                    link_preview=link_preview,
                 )
             case ContentType.ANIMATION:
                 assert message.animation
@@ -104,12 +100,9 @@ class HintParser:
                     caption=message.html_text,
                     file_guid=guid,
                     thumb_guid=thumb.guid if thumb else None,
-                    link_preview=link_preview,
                 )
             case ContentType.VOICE:
-                return VoiceHint(
-                    caption=message.html_text, file_guid=guid, link_preview=link_preview
-                )
+                return VoiceHint(caption=message.html_text, file_guid=guid)
             case ContentType.VIDEO_NOTE:
                 return VideoNoteHint(file_guid=guid)
             case ContentType.CONTACT:

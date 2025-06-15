@@ -65,7 +65,6 @@ class VenueHint(BaseHint, LocationMixin):
 @dataclass(kw_only=True)
 class CaptionMixin:
     caption: str | None = None
-    link_preview: LinkPreview | None = None
 
 
 @dataclass(kw_only=True)

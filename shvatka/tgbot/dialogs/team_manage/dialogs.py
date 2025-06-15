@@ -120,7 +120,7 @@ captains_bridge = Dialog(
     ),
     Window(
         Jinja("Чтобы добавить игрока нажми на кнопку в самом внизу, затем выбери пользователя"),
-        MessageInput(func=gotten_user_request),
+        MessageInput(func=gotten_user_request, filter=F.user_shared|F.contact),
         SwitchTo(
             Const("🔙Назад"),
             id="back",

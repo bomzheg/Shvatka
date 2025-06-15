@@ -206,8 +206,12 @@ async def gotten_chat_request(m: Message, widget: Any, manager: DialogManager):
 
 
 async def gotten_user_request(m: Message, widget: Any, manager: DialogManager):
-    assert m.user_shared
-    target_id = m.user_shared.user_id
+    if m.user_shared:
+        target_id = m.user_shared.user_id
+    elif m.contact:
+        target_id = m.contact.user_id
+    else:
+        raise RuntimeError("only user shared and contact are allowed")
     dao: HolderDao = manager.middleware_data["dao"]
     captain: dto.Player = manager.middleware_data["player"]
     team = await get_my_team(captain, dao.team_player)
@@ -232,7 +236,8 @@ async def gotten_user_request(m: Message, widget: Any, manager: DialogManager):
     else:
         await bot.send_message(
             chat_id=captain.get_chat_id(),  # type: ignore[arg-type]
-            text=f"В команду {hd.bold(team.name)} добавлен игрок {hd.bold(player.name_mention)}",
+            text=f"В команду {hd.bold(hd.quote(team.name))} "
+                 f"добавлен игрок {hd.bold(hd.quote(player.name_mention))}",
         )
     await total_remove_msg(
         bot, chat_id=chat.tg_id, msg_id=manager.dialog_data.pop("user_request_message")

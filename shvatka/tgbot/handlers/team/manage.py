@@ -160,7 +160,7 @@ async def cmd_add_in_team(
     await bot.send_message(
         chat_id=team.get_chat_id(),  # type: ignore[arg-type]
         text="В команду {team} добавлен игрок {player} в качестве роли указано: {role}".format(
-            team=hd.bold(team.name), player=hd.bold(target.name_mention), role=hd.italic(role)
+            team=hd.bold(hd.quote(team.name)), player=hd.bold(hd.quote(target.name_mention)), role=hd.italic(role)
         ),
     )
 
@@ -224,7 +224,8 @@ async def button_join(
     await bot.edit_message_text(
         chat_id=team.get_chat_id(),
         message_id=callback_query.message.message_id,
-        text=f"В команду {hd.bold(team.name)} добавлен игрок {hd.bold(target.name_mention)}",
+        text=f"В команду {hd.bold(hd.quote(team.name))} "
+             f"добавлен игрок {hd.bold(hd.quote(target.name_mention))}",
     )
 
 

@@ -11,7 +11,6 @@ from shvatka.core.models.dto.hints.hint_part import CaptionMixin
 
 @dataclass(kw_only=True)
 class BaseHintView(ABC):
-
     def kwargs(self) -> dict[str, Any]:
         kwargs: dict[str, Any] = self.specific_kwargs()
         return kwargs
@@ -34,7 +33,10 @@ class BaseHintContentView(BaseHintView, metaclass=ABCMeta):
 @dataclass(kw_only=True)
 class CaptionViewMixin(CaptionMixin, metaclass=ABCMeta):
     def caption_kwargs(self) -> dict[str, Any]:
-        return {"caption": self.caption, "link_preview_options": _link_preview_to_tg(self.link_preview)}
+        return {
+            "caption": self.caption,
+            "link_preview_options": _link_preview_to_tg(self.link_preview),
+        }
 
 
 @dataclass(kw_only=True)
@@ -80,7 +82,10 @@ class PhotoLinkView(BaseHintLinkView, CaptionViewMixin):
     file_id: str
 
     def specific_kwargs(self) -> dict[str, Any]:
-        return {"photo": self.file_id, **self.caption_kwargs(),}
+        return {
+            "photo": self.file_id,
+            **self.caption_kwargs(),
+        }
 
 
 @dataclass(kw_only=True)
@@ -100,7 +105,10 @@ class AudioLinkView(BaseHintLinkView, CaptionViewMixin):
     thumb: str | None = None
 
     def specific_kwargs(self) -> dict[str, Any]:
-        return {"audio": self.file_id, **self.caption_kwargs(),}
+        return {
+            "audio": self.file_id,
+            **self.caption_kwargs(),
+        }
 
 
 @dataclass(kw_only=True)
@@ -122,7 +130,10 @@ class VideoLinkView(BaseHintLinkView, CaptionViewMixin):
     thumb: str | None = None
 
     def specific_kwargs(self) -> dict[str, Any]:
-        return {"video": self.file_id, **self.caption_kwargs(),}
+        return {
+            "video": self.file_id,
+            **self.caption_kwargs(),
+        }
 
 
 @dataclass(kw_only=True)
@@ -144,7 +155,10 @@ class DocumentLinkView(BaseHintLinkView, CaptionViewMixin):
     thumb: str | None = None
 
     def specific_kwargs(self) -> dict[str, Any]:
-        return {"document": self.file_id, **self.caption_kwargs(),}
+        return {
+            "document": self.file_id,
+            **self.caption_kwargs(),
+        }
 
 
 @dataclass(kw_only=True)
@@ -166,7 +180,10 @@ class AnimationLinkView(BaseHintLinkView, CaptionViewMixin):
     thumb: str | None = None
 
     def specific_kwargs(self) -> dict[str, Any]:
-        return {"animation": self.file_id, **self.caption_kwargs(),}
+        return {
+            "animation": self.file_id,
+            **self.caption_kwargs(),
+        }
 
 
 @dataclass(kw_only=True)
@@ -187,7 +204,10 @@ class VoiceLinkView(BaseHintLinkView, CaptionViewMixin):
     file_id: str
 
     def specific_kwargs(self) -> dict[str, Any]:
-        return {"voice": self.file_id, **self.caption_kwargs(),}
+        return {
+            "voice": self.file_id,
+            **self.caption_kwargs(),
+        }
 
 
 @dataclass(kw_only=True)
@@ -247,7 +267,7 @@ def _get_input_file(content: BinaryIO | None) -> InputFile | None:
     return BufferedInputFile(file=content.read(), filename=content.name)
 
 
-def _link_preview_to_tg(link_preview: hints.LinkPreview) -> types.LinkPreviewOptions | None:
+def _link_preview_to_tg(link_preview: hints.LinkPreview | None) -> types.LinkPreviewOptions | None:
     if link_preview is None:
         return None
     return types.LinkPreviewOptions(

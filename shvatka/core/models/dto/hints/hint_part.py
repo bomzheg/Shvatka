@@ -20,7 +20,6 @@ class LinkPreview:
 @dataclass(kw_only=True)
 class BaseHint(ABC):
     type: str
-    link_preview: LinkPreview | None = None
 
     @abstractmethod
     def get_guids(self) -> list[str]:
@@ -31,6 +30,7 @@ class BaseHint(ABC):
 class TextHint(BaseHint):
     text: str
     type: Literal["text"] = HintType.text.name
+    link_preview: LinkPreview | None = None
 
     def get_guids(self) -> list[str]:
         return []
@@ -65,6 +65,7 @@ class VenueHint(BaseHint, LocationMixin):
 @dataclass(kw_only=True)
 class CaptionMixin:
     caption: str | None = None
+    link_preview: LinkPreview | None = None
 
 
 @dataclass(kw_only=True)

@@ -70,7 +70,6 @@ class HintContentResolver:
                     address=hint_.address,
                     foursquare_id=hint_.foursquare_id,
                     foursquare_type=hint_.foursquare_type,
-                    link_preview=hint_.link_preview,
                 )
             case PhotoHint():
                 hint_ = typing.cast(PhotoHint, hint_)
@@ -121,7 +120,6 @@ class HintContentResolver:
             case VideoNoteHint(file_guid=guid):
                 return VideoNoteLinkView(
                     file_id=await self._resolve_file_id(guid),
-                    link_preview=hint_.link_preview,
                 )
             case ContactHint():
                 hint_ = typing.cast(ContactHint, hint_)
@@ -130,12 +128,10 @@ class HintContentResolver:
                     first_name=hint_.first_name,
                     last_name=hint_.last_name,
                     vcard=hint_.vcard,
-                    link_preview=hint_.link_preview,
                 )
             case StickerHint(file_guid=guid):
                 return StickerHintView(
                     file_id=await self._resolve_file_id(guid),
-                    link_preview=hint_.link_preview,
                 )
             case _:
                 raise RuntimeError("unknown hint type")
@@ -160,7 +156,6 @@ class HintContentResolver:
                 return GPSHintView(
                     latitude=latitude,
                     longitude=longitude,
-                    link_preview=hint_.link_preview,
                 )
             case VenueHint():
                 hint_ = typing.cast(VenueHint, hint_)
@@ -171,7 +166,6 @@ class HintContentResolver:
                     address=hint_.address,
                     foursquare_id=hint_.foursquare_id,
                     foursquare_type=hint_.foursquare_type,
-                    link_preview=hint_.link_preview,
                 )
             case PhotoHint():
                 hint_ = typing.cast(PhotoHint, hint_)
@@ -220,7 +214,6 @@ class HintContentResolver:
             case VideoNoteHint(file_guid=guid):
                 return VideoNoteContentView(
                     content=await self._resolve_bytes(guid),
-                    link_preview=hint_.link_preview,
                 )
             case ContactHint():
                 hint_ = typing.cast(ContactHint, hint_)
@@ -229,12 +222,10 @@ class HintContentResolver:
                     first_name=hint_.first_name,
                     last_name=hint_.last_name,
                     vcard=hint_.vcard,
-                    link_preview=hint_.link_preview,
                 )
             case StickerHint(file_guid=guid):
                 return StickerHintView(
                     file_id=await self._resolve_file_id(guid),
-                    link_preview=hint_.link_preview,
                 )
             case _:
                 raise RuntimeError("unknown hint type")

@@ -6,16 +6,14 @@ from aiogram import types
 from aiogram.types import BufferedInputFile, InputFile
 
 from shvatka.core.models.dto import hints
+from shvatka.core.models.dto.hints.hint_part import CaptionMixin
 
 
 @dataclass(kw_only=True)
 class BaseHintView(ABC):
-    link_preview: hints.LinkPreview | None = None
 
     def kwargs(self) -> dict[str, Any]:
         kwargs: dict[str, Any] = self.specific_kwargs()
-        if self.link_preview:
-            kwargs["link_preview_options"] = _link_preview_to_tg(self.link_preview)
         return kwargs
 
     @abstractmethod
@@ -34,11 +32,18 @@ class BaseHintContentView(BaseHintView, metaclass=ABCMeta):
 
 
 @dataclass(kw_only=True)
+class CaptionViewMixin(CaptionMixin, metaclass=ABCMeta):
+    def caption_kwargs(self) -> dict[str, Any]:
+        return {"caption": self.caption, "link_preview_options": _link_preview_to_tg(self.link_preview)}
+
+
+@dataclass(kw_only=True)
 class TextHintView(BaseHintLinkView, BaseHintContentView):
     text: str
+    link_preview: hints.LinkPreview | None = None
 
     def specific_kwargs(self) -> dict[str, Any]:
-        return {"text": self.text}
+        return {"text": self.text, "link_preview_options": _link_preview_to_tg(self.link_preview)}
 
 
 @dataclass(kw_only=True)
@@ -71,140 +76,128 @@ class VenueHintView(BaseHintLinkView, BaseHintContentView):
 
 
 @dataclass(kw_only=True)
-class PhotoLinkView(BaseHintLinkView):
+class PhotoLinkView(BaseHintLinkView, CaptionViewMixin):
     file_id: str
-    caption: str | None = None
 
     def specific_kwargs(self) -> dict[str, Any]:
-        return {"photo": self.file_id, "caption": self.caption}
+        return {"photo": self.file_id, **self.caption_kwargs(),}
 
 
 @dataclass(kw_only=True)
-class PhotoContentView(BaseHintContentView):
+class PhotoContentView(BaseHintContentView, CaptionViewMixin):
     content: BinaryIO
-    caption: str | None = None
 
     def specific_kwargs(self) -> dict[str, Any]:
         return {
             "photo": _get_input_file(self.content),
-            "caption": self.caption,
+            **self.caption_kwargs(),
         }
 
 
 @dataclass(kw_only=True)
-class AudioLinkView(BaseHintLinkView):
+class AudioLinkView(BaseHintLinkView, CaptionViewMixin):
     file_id: str
-    caption: str | None = None
     thumb: str | None = None
 
     def specific_kwargs(self) -> dict[str, Any]:
-        return {"audio": self.file_id, "caption": self.caption}
+        return {"audio": self.file_id, **self.caption_kwargs(),}
 
 
 @dataclass(kw_only=True)
-class AudioContentView(BaseHintContentView):
+class AudioContentView(BaseHintContentView, CaptionViewMixin):
     content: BinaryIO
-    caption: str | None = None
     thumb: BinaryIO | None = None
 
     def specific_kwargs(self) -> dict[str, Any]:
         return {
             "audio": _get_input_file(self.content),
-            "caption": self.caption,
             "thumbnail": _get_input_file(self.thumb),
+            **self.caption_kwargs(),
         }
 
 
 @dataclass(kw_only=True)
-class VideoLinkView(BaseHintLinkView):
+class VideoLinkView(BaseHintLinkView, CaptionViewMixin):
     file_id: str
-    caption: str | None = None
     thumb: str | None = None
 
     def specific_kwargs(self) -> dict[str, Any]:
-        return {"video": self.file_id, "caption": self.caption}
+        return {"video": self.file_id, **self.caption_kwargs(),}
 
 
 @dataclass(kw_only=True)
-class VideoContentView(BaseHintContentView):
+class VideoContentView(BaseHintContentView, CaptionViewMixin):
     content: BinaryIO
-    caption: str | None = None
     thumb: BinaryIO | None = None
 
     def specific_kwargs(self) -> dict[str, Any]:
         return {
             "video": _get_input_file(self.content),
-            "caption": self.caption,
             "thumbnail": _get_input_file(self.thumb),
+            **self.caption_kwargs(),
         }
 
 
 @dataclass(kw_only=True)
-class DocumentLinkView(BaseHintLinkView):
+class DocumentLinkView(BaseHintLinkView, CaptionViewMixin):
     file_id: str
-    caption: str | None = None
     thumb: str | None = None
 
     def specific_kwargs(self) -> dict[str, Any]:
-        return {"document": self.file_id, "caption": self.caption}
+        return {"document": self.file_id, **self.caption_kwargs(),}
 
 
 @dataclass(kw_only=True)
-class DocumentContentView(BaseHintContentView):
+class DocumentContentView(BaseHintContentView, CaptionViewMixin):
     content: BinaryIO
-    caption: str | None = None
     thumb: BinaryIO | None = None
 
     def specific_kwargs(self) -> dict[str, Any]:
         return {
             "document": _get_input_file(self.content),
-            "caption": self.caption,
             "thumbnail": _get_input_file(self.thumb),
+            **self.caption_kwargs(),
         }
 
 
 @dataclass(kw_only=True)
-class AnimationLinkView(BaseHintLinkView):
+class AnimationLinkView(BaseHintLinkView, CaptionViewMixin):
     file_id: str
-    caption: str | None = None
     thumb: str | None = None
 
     def specific_kwargs(self) -> dict[str, Any]:
-        return {"animation": self.file_id, "caption": self.caption}
+        return {"animation": self.file_id, **self.caption_kwargs(),}
 
 
 @dataclass(kw_only=True)
-class AnimationContentView(BaseHintContentView):
+class AnimationContentView(BaseHintContentView, CaptionViewMixin):
     content: BinaryIO
-    caption: str | None = None
     thumb: BinaryIO | None = None
 
     def specific_kwargs(self) -> dict[str, Any]:
         return {
             "animation": _get_input_file(self.content),
-            "caption": self.caption,
             "thumbnail": _get_input_file(self.thumb),
+            **self.caption_kwargs(),
         }
 
 
 @dataclass(kw_only=True)
-class VoiceLinkView(BaseHintLinkView):
+class VoiceLinkView(BaseHintLinkView, CaptionViewMixin):
     file_id: str
-    caption: str | None = None
 
     def specific_kwargs(self) -> dict[str, Any]:
-        return {"voice": self.file_id, "caption": self.caption}
+        return {"voice": self.file_id, **self.caption_kwargs(),}
 
 
 @dataclass(kw_only=True)
-class VoiceContentView(BaseHintContentView):
+class VoiceContentView(BaseHintContentView, CaptionViewMixin):
     content: BinaryIO
-    caption: str | None = None
 
     def specific_kwargs(self) -> dict[str, Any]:
         return {
             "voice": _get_input_file(self.content),
-            "caption": self.caption,
+            **self.caption_kwargs(),
         }
 
 

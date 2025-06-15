@@ -55,7 +55,6 @@ class HintParser:
                 return GPSHint(
                     longitude=message.location.longitude,
                     latitude=message.location.latitude,
-                    link_preview=link_preview,
                 )
             case ContentType.VENUE:
                 assert message.venue
@@ -66,7 +65,6 @@ class HintParser:
                     address=message.venue.address,
                     foursquare_id=message.venue.foursquare_id,
                     foursquare_type=message.venue.foursquare_type,
-                    link_preview=link_preview,
                 )
             case ContentType.PHOTO:
                 return PhotoHint(
@@ -113,7 +111,7 @@ class HintParser:
                     caption=message.html_text, file_guid=guid, link_preview=link_preview
                 )
             case ContentType.VIDEO_NOTE:
-                return VideoNoteHint(file_guid=guid, link_preview=link_preview)
+                return VideoNoteHint(file_guid=guid)
             case ContentType.CONTACT:
                 assert message.contact
                 return ContactHint(
@@ -121,10 +119,9 @@ class HintParser:
                     first_name=message.contact.first_name,
                     last_name=message.contact.last_name,
                     vcard=message.contact.vcard,
-                    link_preview=link_preview,
                 )
             case ContentType.STICKER:
-                return StickerHint(file_guid=guid, link_preview=link_preview)
+                return StickerHint(file_guid=guid)
             case _:
                 raise ValueError
 

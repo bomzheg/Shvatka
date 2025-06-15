@@ -75,6 +75,7 @@ class HintContentResolver:
                 hint_ = typing.cast(PhotoHint, hint_)
                 return PhotoLinkView(
                     file_id=await self._resolve_file_id(hint_.file_guid),
+                    show_caption_above_media=hint_.show_caption_above_media,
                     caption=hint_.caption,
                 )
             case AudioHint():
@@ -89,6 +90,7 @@ class HintContentResolver:
                 return VideoLinkView(
                     file_id=await self._resolve_file_id(hint_.file_guid),
                     caption=hint_.caption,
+                    show_caption_above_media=hint_.show_caption_above_media,
                     thumb=await self._resolve_thumb_file_id(hint_.thumb_guid),
                 )
             case DocumentHint():
@@ -103,6 +105,7 @@ class HintContentResolver:
                 return AnimationLinkView(
                     file_id=await self._resolve_file_id(hint_.file_guid),
                     caption=hint_.caption,
+                    show_caption_above_media=hint_.show_caption_above_media,
                     thumb=await self._resolve_thumb_file_id(hint_.thumb_guid),
                 )
             case VoiceHint():
@@ -165,6 +168,7 @@ class HintContentResolver:
                 hint_ = typing.cast(PhotoHint, hint_)
                 return PhotoContentView(
                     content=await self._resolve_bytes(hint_.file_guid),
+                    show_caption_above_media=hint_.show_caption_above_media,
                     caption=hint_.caption,
                 )
             case AudioHint():
@@ -177,6 +181,7 @@ class HintContentResolver:
                 hint_ = typing.cast(VideoHint, hint_)
                 return VideoContentView(
                     content=await self._resolve_bytes(hint_.file_guid),
+                    show_caption_above_media=hint_.show_caption_above_media,
                     caption=hint_.caption,
                 )
             case DocumentHint():
@@ -191,6 +196,7 @@ class HintContentResolver:
                 return AnimationContentView(
                     content=await self._resolve_bytes(hint_.file_guid),
                     caption=hint_.caption,
+                    show_caption_above_media=hint_.show_caption_above_media,
                     thumb=await self._resolve_thumb_bytes(hint_.thumb_guid),
                 )
             case VoiceHint():

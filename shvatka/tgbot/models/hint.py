@@ -1,40 +1,62 @@
-from abc import ABC, abstractmethod
+from abc import ABC, abstractmethod, ABCMeta
 from dataclasses import dataclass
-from typing import BinaryIO
+from typing import BinaryIO, Any
 
+from aiogram import types
 from aiogram.types import BufferedInputFile, InputFile
 
+from shvatka.core.models.dto import hints
+from shvatka.core.models.dto.hints.hint_part import CaptionMixin
 
-class BaseHintLinkView(ABC):
+
+@dataclass(kw_only=True)
+class BaseHintView(ABC):
+    def kwargs(self) -> dict[str, Any]:
+        kwargs: dict[str, Any] = self.specific_kwargs()
+        return kwargs
+
     @abstractmethod
-    def kwargs(self) -> dict:
+    def specific_kwargs(self) -> dict[str, Any]:
         raise NotImplementedError
 
 
-class BaseHintContentView(ABC):
-    @abstractmethod
-    def kwargs(self) -> dict:
-        raise NotImplementedError
+@dataclass(kw_only=True)
+class BaseHintLinkView(BaseHintView, metaclass=ABCMeta):
+    pass
 
 
-@dataclass
+@dataclass(kw_only=True)
+class BaseHintContentView(BaseHintView, metaclass=ABCMeta):
+    pass
+
+
+@dataclass(kw_only=True)
+class CaptionViewMixin(CaptionMixin, metaclass=ABCMeta):
+    def caption_kwargs(self) -> dict[str, Any]:
+        return {
+            "caption": self.caption,
+        }
+
+
+@dataclass(kw_only=True)
 class TextHintView(BaseHintLinkView, BaseHintContentView):
     text: str
+    link_preview: hints.LinkPreview | None = None
 
-    def kwargs(self) -> dict:
-        return {"text": self.text}
+    def specific_kwargs(self) -> dict[str, Any]:
+        return {"text": self.text, "link_preview_options": _link_preview_to_tg(self.link_preview)}
 
 
-@dataclass
+@dataclass(kw_only=True)
 class GPSHintView(BaseHintLinkView, BaseHintContentView):
     latitude: float
     longitude: float
 
-    def kwargs(self) -> dict:
+    def specific_kwargs(self) -> dict[str, Any]:
         return {"latitude": self.latitude, "longitude": self.longitude}
 
 
-@dataclass
+@dataclass(kw_only=True)
 class VenueHintView(BaseHintLinkView, BaseHintContentView):
     latitude: float
     longitude: float
@@ -43,7 +65,7 @@ class VenueHintView(BaseHintLinkView, BaseHintContentView):
     foursquare_id: str | None = None
     foursquare_type: str | None = None
 
-    def kwargs(self) -> dict:
+    def specific_kwargs(self) -> dict[str, Any]:
         return {
             "latitude": self.latitude,
             "longitude": self.longitude,
@@ -54,168 +76,174 @@ class VenueHintView(BaseHintLinkView, BaseHintContentView):
         }
 
 
-@dataclass
-class PhotoLinkView(BaseHintLinkView):
+@dataclass(kw_only=True)
+class PhotoLinkView(BaseHintLinkView, CaptionViewMixin):
     file_id: str
-    caption: str | None = None
 
-    def kwargs(self) -> dict:
-        return {"photo": self.file_id, "caption": self.caption}
+    def specific_kwargs(self) -> dict[str, Any]:
+        return {
+            "photo": self.file_id,
+            **self.caption_kwargs(),
+        }
 
 
-@dataclass
-class PhotoContentView(BaseHintContentView):
+@dataclass(kw_only=True)
+class PhotoContentView(BaseHintContentView, CaptionViewMixin):
     content: BinaryIO
-    caption: str | None = None
 
-    def kwargs(self) -> dict:
+    def specific_kwargs(self) -> dict[str, Any]:
         return {
             "photo": _get_input_file(self.content),
-            "caption": self.caption,
+            **self.caption_kwargs(),
         }
 
 
-@dataclass
-class AudioLinkView(BaseHintLinkView):
+@dataclass(kw_only=True)
+class AudioLinkView(BaseHintLinkView, CaptionViewMixin):
     file_id: str
-    caption: str | None = None
     thumb: str | None = None
 
-    def kwargs(self) -> dict:
-        return {"audio": self.file_id, "caption": self.caption}
+    def specific_kwargs(self) -> dict[str, Any]:
+        return {
+            "audio": self.file_id,
+            **self.caption_kwargs(),
+        }
 
 
-@dataclass
-class AudioContentView(BaseHintContentView):
+@dataclass(kw_only=True)
+class AudioContentView(BaseHintContentView, CaptionViewMixin):
     content: BinaryIO
-    caption: str | None = None
     thumb: BinaryIO | None = None
 
-    def kwargs(self) -> dict:
+    def specific_kwargs(self) -> dict[str, Any]:
         return {
             "audio": _get_input_file(self.content),
-            "caption": self.caption,
             "thumbnail": _get_input_file(self.thumb),
+            **self.caption_kwargs(),
         }
 
 
-@dataclass
-class VideoLinkView(BaseHintLinkView):
+@dataclass(kw_only=True)
+class VideoLinkView(BaseHintLinkView, CaptionViewMixin):
     file_id: str
-    caption: str | None = None
     thumb: str | None = None
 
-    def kwargs(self) -> dict:
-        return {"video": self.file_id, "caption": self.caption}
+    def specific_kwargs(self) -> dict[str, Any]:
+        return {
+            "video": self.file_id,
+            **self.caption_kwargs(),
+        }
 
 
-@dataclass
-class VideoContentView(BaseHintContentView):
+@dataclass(kw_only=True)
+class VideoContentView(BaseHintContentView, CaptionViewMixin):
     content: BinaryIO
-    caption: str | None = None
     thumb: BinaryIO | None = None
 
-    def kwargs(self) -> dict:
+    def specific_kwargs(self) -> dict[str, Any]:
         return {
             "video": _get_input_file(self.content),
-            "caption": self.caption,
             "thumbnail": _get_input_file(self.thumb),
+            **self.caption_kwargs(),
         }
 
 
-@dataclass
-class DocumentLinkView(BaseHintLinkView):
+@dataclass(kw_only=True)
+class DocumentLinkView(BaseHintLinkView, CaptionViewMixin):
     file_id: str
-    caption: str | None = None
     thumb: str | None = None
 
-    def kwargs(self) -> dict:
-        return {"document": self.file_id, "caption": self.caption}
+    def specific_kwargs(self) -> dict[str, Any]:
+        return {
+            "document": self.file_id,
+            **self.caption_kwargs(),
+        }
 
 
-@dataclass
-class DocumentContentView(BaseHintContentView):
+@dataclass(kw_only=True)
+class DocumentContentView(BaseHintContentView, CaptionViewMixin):
     content: BinaryIO
-    caption: str | None = None
     thumb: BinaryIO | None = None
 
-    def kwargs(self) -> dict:
+    def specific_kwargs(self) -> dict[str, Any]:
         return {
             "document": _get_input_file(self.content),
-            "caption": self.caption,
             "thumbnail": _get_input_file(self.thumb),
+            **self.caption_kwargs(),
         }
 
 
-@dataclass
-class AnimationLinkView(BaseHintLinkView):
+@dataclass(kw_only=True)
+class AnimationLinkView(BaseHintLinkView, CaptionViewMixin):
     file_id: str
-    caption: str | None = None
     thumb: str | None = None
 
-    def kwargs(self) -> dict:
-        return {"animation": self.file_id, "caption": self.caption}
+    def specific_kwargs(self) -> dict[str, Any]:
+        return {
+            "animation": self.file_id,
+            **self.caption_kwargs(),
+        }
 
 
-@dataclass
-class AnimationContentView(BaseHintContentView):
+@dataclass(kw_only=True)
+class AnimationContentView(BaseHintContentView, CaptionViewMixin):
     content: BinaryIO
-    caption: str | None = None
     thumb: BinaryIO | None = None
 
-    def kwargs(self) -> dict:
+    def specific_kwargs(self) -> dict[str, Any]:
         return {
             "animation": _get_input_file(self.content),
-            "caption": self.caption,
             "thumbnail": _get_input_file(self.thumb),
+            **self.caption_kwargs(),
         }
 
 
-@dataclass
-class VoiceLinkView(BaseHintLinkView):
+@dataclass(kw_only=True)
+class VoiceLinkView(BaseHintLinkView, CaptionViewMixin):
     file_id: str
-    caption: str | None = None
 
-    def kwargs(self) -> dict:
-        return {"voice": self.file_id, "caption": self.caption}
+    def specific_kwargs(self) -> dict[str, Any]:
+        return {
+            "voice": self.file_id,
+            **self.caption_kwargs(),
+        }
 
 
-@dataclass
-class VoiceContentView(BaseHintContentView):
+@dataclass(kw_only=True)
+class VoiceContentView(BaseHintContentView, CaptionViewMixin):
     content: BinaryIO
-    caption: str | None = None
 
-    def kwargs(self) -> dict:
+    def specific_kwargs(self) -> dict[str, Any]:
         return {
             "voice": _get_input_file(self.content),
-            "caption": self.caption,
+            **self.caption_kwargs(),
         }
 
 
-@dataclass
+@dataclass(kw_only=True)
 class VideoNoteLinkView(BaseHintLinkView):
     file_id: str
 
-    def kwargs(self) -> dict:
+    def specific_kwargs(self) -> dict[str, Any]:
         return {"video_note": self.file_id}
 
 
-@dataclass
+@dataclass(kw_only=True)
 class VideoNoteContentView(BaseHintContentView):
     content: BinaryIO
 
-    def kwargs(self) -> dict:
+    def specific_kwargs(self) -> dict[str, Any]:
         return {"video_note": _get_input_file(self.content)}
 
 
-@dataclass
+@dataclass(kw_only=True)
 class ContactHintView(BaseHintLinkView, BaseHintContentView):
     phone_number: str
     first_name: str
     last_name: str | None = None
     vcard: str | None = None
 
-    def kwargs(self) -> dict:
+    def specific_kwargs(self) -> dict[str, Any]:
         return {
             "phone_number": self.phone_number,
             "first_name": self.first_name,
@@ -224,11 +252,11 @@ class ContactHintView(BaseHintLinkView, BaseHintContentView):
         }
 
 
-@dataclass
+@dataclass(kw_only=True)
 class StickerHintView(BaseHintLinkView, BaseHintContentView):
     file_id: str
 
-    def kwargs(self) -> dict:
+    def specific_kwargs(self) -> dict[str, Any]:
         return {"sticker": self.file_id}
 
 
@@ -236,3 +264,15 @@ def _get_input_file(content: BinaryIO | None) -> InputFile | None:
     if content is None:
         return None
     return BufferedInputFile(file=content.read(), filename=content.name)
+
+
+def _link_preview_to_tg(link_preview: hints.LinkPreview | None) -> types.LinkPreviewOptions | None:
+    if link_preview is None:
+        return None
+    return types.LinkPreviewOptions(
+        is_disabled=link_preview.is_disabled,
+        url=link_preview.url,
+        prefer_small_media=link_preview.prefer_small_media,
+        prefer_large_media=link_preview.prefer_large_media,
+        show_above_text=link_preview.show_above_text,
+    )

@@ -3,6 +3,7 @@ from pathlib import Path
 from uuid import uuid4
 
 from aiogram import Bot
+from aiogram.client.default import Default
 from aiogram.types import Message, ContentType, PhotoSize
 
 from shvatka.core.interfaces.clients.file_storage import FileStorage
@@ -47,11 +48,14 @@ class HintParser:
         )
         match message.content_type:
             case ContentType.TEXT:
-                return TextHint(text=message.html_text)
+                return TextHint(
+                    text=message.html_text, link_preview=message_to_link_preview(message)
+                )
             case ContentType.LOCATION:
                 assert message.location
                 return GPSHint(
-                    longitude=message.location.longitude, latitude=message.location.latitude
+                    longitude=message.location.longitude,
+                    latitude=message.location.latitude,
                 )
             case ContentType.VENUE:
                 assert message.venue
@@ -215,7 +219,26 @@ def parse_message(message: Message) -> hints.ParsedTgLink | None:
             return None
 
 
+def message_to_link_preview(m: Message) -> hints.LinkPreview | None:
+    link_preview = m.link_preview_options
+    if link_preview is None:
+        return None
+    return hints.LinkPreview(
+        is_disabled=parse_bool_default(link_preview.is_disabled),
+        url=link_preview.url,
+        prefer_small_media=parse_bool_default(link_preview.prefer_small_media),
+        prefer_large_media=parse_bool_default(link_preview.prefer_large_media),
+        show_above_text=parse_bool_default(link_preview.show_above_text),
+    )
+
+
 def get_name_without_extension(name: str, extension: str) -> str:
     if not extension:
         return name
     return name[: -len(extension)]
+
+
+def parse_bool_default(value: bool | Default | None) -> bool | None:
+    if isinstance(value, Default):
+        return None
+    return value

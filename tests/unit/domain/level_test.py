@@ -10,8 +10,8 @@ from shvatka.core.utils import exceptions
 def hints_() -> scn.HintsList:
     return scn.HintsList(
         [
-            hints.TimeHint(time=0, hint=[hints.TextHint("hint")]),
-            hints.TimeHint(time=5, hint=[hints.TextHint("other hint")]),
+            hints.TimeHint(time=0, hint=[hints.TextHint(text="hint")]),
+            hints.TimeHint(time=5, hint=[hints.TextHint(text="other hint")]),
         ]
     )
 

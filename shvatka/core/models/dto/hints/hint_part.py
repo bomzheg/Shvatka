@@ -8,6 +8,16 @@ from typing import Literal
 from shvatka.core.models.enums.hint_type import HintType
 
 
+@dataclass(kw_only=True)
+class LinkPreview:
+    is_disabled: bool | None = None
+    url: str | None = None
+    prefer_small_media: bool | None = None
+    prefer_large_media: bool | None = None
+    show_above_text: bool | None = None
+
+
+@dataclass(kw_only=True)
 class BaseHint(ABC):
     type: str
 
@@ -16,22 +26,23 @@ class BaseHint(ABC):
         raise NotImplementedError
 
 
-@dataclass
+@dataclass(kw_only=True)
 class TextHint(BaseHint):
     text: str
     type: Literal["text"] = HintType.text.name
+    link_preview: LinkPreview | None = None
 
     def get_guids(self) -> list[str]:
         return []
 
 
-@dataclass
+@dataclass(kw_only=True)
 class LocationMixin:
     latitude: float
     longitude: float
 
 
-@dataclass
+@dataclass(kw_only=True)
 class GPSHint(BaseHint, LocationMixin):
     type: Literal["gps"] = HintType.gps.name
 
@@ -39,7 +50,7 @@ class GPSHint(BaseHint, LocationMixin):
         return []
 
 
-@dataclass
+@dataclass(kw_only=True)
 class VenueHint(BaseHint, LocationMixin):
     title: str
     address: str
@@ -51,17 +62,17 @@ class VenueHint(BaseHint, LocationMixin):
         return []
 
 
-@dataclass
+@dataclass(kw_only=True)
 class CaptionMixin:
     caption: str | None = None
 
 
-@dataclass
+@dataclass(kw_only=True)
 class FileMixin:
     file_guid: str
 
 
-@dataclass
+@dataclass(kw_only=True)
 class PhotoHint(BaseHint, CaptionMixin, FileMixin):
     type: Literal["photo"] = HintType.photo.name
 
@@ -69,7 +80,7 @@ class PhotoHint(BaseHint, CaptionMixin, FileMixin):
         return [self.file_guid]
 
 
-@dataclass
+@dataclass(kw_only=True)
 class ThumbMixin:
     thumb_guid: str | None = None
 
@@ -77,7 +88,7 @@ class ThumbMixin:
         return [self.thumb_guid] if self.thumb_guid else []
 
 
-@dataclass
+@dataclass(kw_only=True)
 class AudioHint(BaseHint, CaptionMixin, ThumbMixin, FileMixin):
     type: Literal["audio"] = HintType.audio.name
 
@@ -87,7 +98,7 @@ class AudioHint(BaseHint, CaptionMixin, ThumbMixin, FileMixin):
         return result
 
 
-@dataclass
+@dataclass(kw_only=True)
 class VideoHint(BaseHint, CaptionMixin, ThumbMixin, FileMixin):
     type: Literal["video"] = HintType.video.name
 
@@ -97,7 +108,7 @@ class VideoHint(BaseHint, CaptionMixin, ThumbMixin, FileMixin):
         return result
 
 
-@dataclass
+@dataclass(kw_only=True)
 class DocumentHint(BaseHint, CaptionMixin, ThumbMixin, FileMixin):
     type: Literal["document"] = HintType.document.name
 
@@ -107,7 +118,7 @@ class DocumentHint(BaseHint, CaptionMixin, ThumbMixin, FileMixin):
         return result
 
 
-@dataclass
+@dataclass(kw_only=True)
 class AnimationHint(BaseHint, CaptionMixin, ThumbMixin, FileMixin):
     type: Literal["animation"] = HintType.animation.name
 
@@ -117,7 +128,7 @@ class AnimationHint(BaseHint, CaptionMixin, ThumbMixin, FileMixin):
         return result
 
 
-@dataclass
+@dataclass(kw_only=True)
 class VoiceHint(BaseHint, CaptionMixin, FileMixin):
     type: Literal["voice"] = HintType.voice.name
 
@@ -125,7 +136,7 @@ class VoiceHint(BaseHint, CaptionMixin, FileMixin):
         return [self.file_guid]
 
 
-@dataclass
+@dataclass(kw_only=True)
 class VideoNoteHint(BaseHint, FileMixin):
     type: Literal["video_note"] = HintType.video_note.name
 
@@ -133,7 +144,7 @@ class VideoNoteHint(BaseHint, FileMixin):
         return [self.file_guid]
 
 
-@dataclass
+@dataclass(kw_only=True)
 class ContactHint(BaseHint):
     phone_number: str
     first_name: str
@@ -145,7 +156,7 @@ class ContactHint(BaseHint):
         return []
 
 
-@dataclass
+@dataclass(kw_only=True)
 class StickerHint(BaseHint, FileMixin):
     type: Literal["sticker"] = HintType.sticker.name
 

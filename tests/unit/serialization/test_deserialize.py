@@ -134,6 +134,7 @@ def test_serialize_simple(retort: Retort):
                                 {
                                     "type": "text",
                                     "text": "level_100_0",
+                                    "link-preview": None,
                                 }
                             ],
                         },
@@ -143,6 +144,7 @@ def test_serialize_simple(retort: Retort):
                                 {
                                     "type": "text",
                                     "text": "level_100_10",
+                                    "link-preview": None,
                                 }
                             ],
                         },
@@ -152,6 +154,7 @@ def test_serialize_simple(retort: Retort):
                                 {
                                     "type": "text",
                                     "text": "level_100_20",
+                                    "link-preview": None,
                                 }
                             ],
                         },
@@ -161,6 +164,7 @@ def test_serialize_simple(retort: Retort):
                                 {
                                     "type": "text",
                                     "text": "level_100_20",
+                                    "link-preview": None,
                                 }
                             ],
                         },
@@ -170,6 +174,7 @@ def test_serialize_simple(retort: Retort):
                                 {
                                     "type": "text",
                                     "text": "level_100_20",
+                                    "link-preview": None,
                                 }
                             ],
                         },
@@ -179,6 +184,7 @@ def test_serialize_simple(retort: Retort):
                                 {
                                     "type": "text",
                                     "text": "level_100_20",
+                                    "link-preview": None,
                                 }
                             ],
                         },
@@ -208,6 +214,7 @@ def test_serialize_simple(retort: Retort):
                                 {
                                     "type": "text",
                                     "text": "level_101_0",
+                                    "link-preview": None,
                                 }
                             ],
                         },
@@ -217,6 +224,7 @@ def test_serialize_simple(retort: Retort):
                                 {
                                     "type": "text",
                                     "text": "level_101_10",
+                                    "link-preview": None,
                                 }
                             ],
                         },
@@ -226,6 +234,7 @@ def test_serialize_simple(retort: Retort):
                                 {
                                     "type": "text",
                                     "text": "level_101_20",
+                                    "link-preview": None,
                                 }
                             ],
                         },
@@ -235,6 +244,7 @@ def test_serialize_simple(retort: Retort):
                                 {
                                     "type": "text",
                                     "text": "level_101_20",
+                                    "link-preview": None,
                                 }
                             ],
                         },
@@ -244,6 +254,7 @@ def test_serialize_simple(retort: Retort):
                                 {
                                     "type": "text",
                                     "text": "level_101_20",
+                                    "link-preview": None,
                                 }
                             ],
                         },
@@ -253,6 +264,7 @@ def test_serialize_simple(retort: Retort):
                                 {
                                     "type": "text",
                                     "text": "level_101_20",
+                                    "link-preview": None,
                                 }
                             ],
                         },
@@ -282,6 +294,7 @@ def test_serialize_simple(retort: Retort):
                                 {
                                     "type": "text",
                                     "text": "level_102_0",
+                                    "link-preview": None,
                                 }
                             ],
                         },
@@ -291,6 +304,7 @@ def test_serialize_simple(retort: Retort):
                                 {
                                     "type": "text",
                                     "text": "level_102_10",
+                                    "link-preview": None,
                                 }
                             ],
                         },
@@ -300,6 +314,7 @@ def test_serialize_simple(retort: Retort):
                                 {
                                     "type": "text",
                                     "text": "level_102_20",
+                                    "link-preview": None,
                                 }
                             ],
                         },
@@ -309,6 +324,7 @@ def test_serialize_simple(retort: Retort):
                                 {
                                     "type": "text",
                                     "text": "level_102_20",
+                                    "link-preview": None,
                                 }
                             ],
                         },
@@ -318,6 +334,7 @@ def test_serialize_simple(retort: Retort):
                                 {
                                     "type": "text",
                                     "text": "level_102_20",
+                                    "link-preview": None,
                                 }
                             ],
                         },
@@ -327,6 +344,7 @@ def test_serialize_simple(retort: Retort):
                                 {
                                     "type": "text",
                                     "text": "level_102_20",
+                                    "link-preview": None,
                                 }
                             ],
                         },
@@ -356,6 +374,7 @@ def test_serialize_simple(retort: Retort):
                                 {
                                     "type": "text",
                                     "text": "level_103_0",
+                                    "link-preview": None,
                                 }
                             ],
                         },
@@ -365,6 +384,7 @@ def test_serialize_simple(retort: Retort):
                                 {
                                     "type": "text",
                                     "text": "level_103_10",
+                                    "link-preview": None,
                                 }
                             ],
                         },
@@ -374,6 +394,7 @@ def test_serialize_simple(retort: Retort):
                                 {
                                     "type": "text",
                                     "text": "level_103_20",
+                                    "link-preview": None,
                                 }
                             ],
                         },
@@ -383,6 +404,7 @@ def test_serialize_simple(retort: Retort):
                                 {
                                     "type": "text",
                                     "text": "level_103_20",
+                                    "link-preview": None,
                                 }
                             ],
                         },
@@ -392,6 +414,7 @@ def test_serialize_simple(retort: Retort):
                                 {
                                     "type": "text",
                                     "text": "level_103_20",
+                                    "link-preview": None,
                                 }
                             ],
                         },
@@ -401,6 +424,7 @@ def test_serialize_simple(retort: Retort):
                                 {
                                     "type": "text",
                                     "text": "level_103_20",
+                                    "link-preview": None,
                                 }
                             ],
                         },

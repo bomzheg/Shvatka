@@ -10,7 +10,7 @@ def test_add_hint():
     hints_old = scn.HintsList([hint])
 
     hints_new = hints_old.replace(
-        hint, hints.TimeHint(0, [hints.TextHint(text="foo"), hints.TextHint("bar")])
+        hint, hints.TimeHint(0, [hints.TextHint(text="foo"), hints.TextHint(text="bar")])
     )
 
     assert len(hints_new) == 1

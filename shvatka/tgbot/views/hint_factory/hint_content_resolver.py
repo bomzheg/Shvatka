@@ -49,72 +49,84 @@ class HintContentResolver:
         self.dao = dao
         self.storage = file_storage
 
-    async def resolve_link(self, hint: BaseHint) -> BaseHintLinkView:
-        match hint:
+    async def resolve_link(self, hint_: BaseHint) -> BaseHintLinkView:
+        match hint_:
             case TextHint(text=text):
-                return TextHintView(text=text)
+                return TextHintView(
+                    text=text,
+                    link_preview=hint_.link_preview,
+                )
             case GPSHint(latitude=latitude, longitude=longitude):
-                return GPSHintView(latitude=latitude, longitude=longitude)
+                return GPSHintView(
+                    latitude=latitude,
+                    longitude=longitude,
+                )
             case VenueHint():
-                hint = typing.cast(VenueHint, hint)
+                hint_ = typing.cast(VenueHint, hint_)
                 return VenueHintView(
-                    latitude=hint.latitude,
-                    longitude=hint.longitude,
-                    title=hint.title,
-                    address=hint.address,
-                    foursquare_id=hint.foursquare_id,
-                    foursquare_type=hint.foursquare_type,
+                    latitude=hint_.latitude,
+                    longitude=hint_.longitude,
+                    title=hint_.title,
+                    address=hint_.address,
+                    foursquare_id=hint_.foursquare_id,
+                    foursquare_type=hint_.foursquare_type,
                 )
             case PhotoHint():
-                hint = typing.cast(PhotoHint, hint)
+                hint_ = typing.cast(PhotoHint, hint_)
                 return PhotoLinkView(
-                    file_id=await self._resolve_file_id(hint.file_guid), caption=hint.caption
+                    file_id=await self._resolve_file_id(hint_.file_guid),
+                    caption=hint_.caption,
                 )
             case AudioHint():
-                hint = typing.cast(AudioHint, hint)
+                hint_ = typing.cast(AudioHint, hint_)
                 return AudioLinkView(
-                    file_id=await self._resolve_file_id(hint.file_guid),
-                    caption=hint.caption,
-                    thumb=await self._resolve_thumb_file_id(hint.thumb_guid),
+                    file_id=await self._resolve_file_id(hint_.file_guid),
+                    caption=hint_.caption,
+                    thumb=await self._resolve_thumb_file_id(hint_.thumb_guid),
                 )
             case VideoHint():
-                hint = typing.cast(VideoHint, hint)
+                hint_ = typing.cast(VideoHint, hint_)
                 return VideoLinkView(
-                    file_id=await self._resolve_file_id(hint.file_guid),
-                    caption=hint.caption,
-                    thumb=await self._resolve_thumb_file_id(hint.thumb_guid),
+                    file_id=await self._resolve_file_id(hint_.file_guid),
+                    caption=hint_.caption,
+                    thumb=await self._resolve_thumb_file_id(hint_.thumb_guid),
                 )
             case DocumentHint():
-                hint = typing.cast(DocumentHint, hint)
+                hint_ = typing.cast(DocumentHint, hint_)
                 return DocumentLinkView(
-                    file_id=await self._resolve_file_id(hint.file_guid),
-                    caption=hint.caption,
-                    thumb=await self._resolve_thumb_file_id(hint.thumb_guid),
+                    file_id=await self._resolve_file_id(hint_.file_guid),
+                    caption=hint_.caption,
+                    thumb=await self._resolve_thumb_file_id(hint_.thumb_guid),
                 )
             case AnimationHint():
-                hint = typing.cast(AnimationHint, hint)
+                hint_ = typing.cast(AnimationHint, hint_)
                 return AnimationLinkView(
-                    file_id=await self._resolve_file_id(hint.file_guid),
-                    caption=hint.caption,
-                    thumb=await self._resolve_thumb_file_id(hint.thumb_guid),
+                    file_id=await self._resolve_file_id(hint_.file_guid),
+                    caption=hint_.caption,
+                    thumb=await self._resolve_thumb_file_id(hint_.thumb_guid),
                 )
             case VoiceHint():
-                hint = typing.cast(VoiceHint, hint)
+                hint_ = typing.cast(VoiceHint, hint_)
                 return VoiceLinkView(
-                    file_id=await self._resolve_file_id(hint.file_guid), caption=hint.caption
+                    file_id=await self._resolve_file_id(hint_.file_guid),
+                    caption=hint_.caption,
                 )
             case VideoNoteHint(file_guid=guid):
-                return VideoNoteLinkView(file_id=await self._resolve_file_id(guid))
+                return VideoNoteLinkView(
+                    file_id=await self._resolve_file_id(guid),
+                )
             case ContactHint():
-                hint = typing.cast(ContactHint, hint)
+                hint_ = typing.cast(ContactHint, hint_)
                 return ContactHintView(
-                    phone_number=hint.phone_number,
-                    first_name=hint.first_name,
-                    last_name=hint.last_name,
-                    vcard=hint.vcard,
+                    phone_number=hint_.phone_number,
+                    first_name=hint_.first_name,
+                    last_name=hint_.last_name,
+                    vcard=hint_.vcard,
                 )
             case StickerHint(file_guid=guid):
-                return StickerHintView(file_id=await self._resolve_file_id(guid))
+                return StickerHintView(
+                    file_id=await self._resolve_file_id(guid),
+                )
             case _:
                 raise RuntimeError("unknown hint type")
 
@@ -127,70 +139,82 @@ class HintContentResolver:
             return None
         return await self._resolve_file_id(guid)
 
-    async def resolve_content(self, hint: BaseHint) -> BaseHintContentView:
-        match hint:
+    async def resolve_content(self, hint_: BaseHint) -> BaseHintContentView:
+        match hint_:
             case TextHint(text=text):
-                return TextHintView(text=text)
+                return TextHintView(
+                    text=text,
+                    link_preview=hint_.link_preview,
+                )
             case GPSHint(latitude=latitude, longitude=longitude):
-                return GPSHintView(latitude=latitude, longitude=longitude)
+                return GPSHintView(
+                    latitude=latitude,
+                    longitude=longitude,
+                )
             case VenueHint():
-                hint = typing.cast(VenueHint, hint)
+                hint_ = typing.cast(VenueHint, hint_)
                 return VenueHintView(
-                    latitude=hint.latitude,
-                    longitude=hint.longitude,
-                    title=hint.title,
-                    address=hint.address,
-                    foursquare_id=hint.foursquare_id,
-                    foursquare_type=hint.foursquare_type,
+                    latitude=hint_.latitude,
+                    longitude=hint_.longitude,
+                    title=hint_.title,
+                    address=hint_.address,
+                    foursquare_id=hint_.foursquare_id,
+                    foursquare_type=hint_.foursquare_type,
                 )
             case PhotoHint():
-                hint = typing.cast(PhotoHint, hint)
+                hint_ = typing.cast(PhotoHint, hint_)
                 return PhotoContentView(
-                    content=await self._resolve_bytes(hint.file_guid), caption=hint.caption
+                    content=await self._resolve_bytes(hint_.file_guid),
+                    caption=hint_.caption,
                 )
             case AudioHint():
-                hint = typing.cast(AudioHint, hint)
+                hint_ = typing.cast(AudioHint, hint_)
                 return AudioContentView(
-                    content=await self._resolve_bytes(hint.file_guid),
-                    caption=hint.caption,
+                    content=await self._resolve_bytes(hint_.file_guid),
+                    caption=hint_.caption,
                 )
             case VideoHint():
-                hint = typing.cast(VideoHint, hint)
+                hint_ = typing.cast(VideoHint, hint_)
                 return VideoContentView(
-                    content=await self._resolve_bytes(hint.file_guid),
-                    caption=hint.caption,
+                    content=await self._resolve_bytes(hint_.file_guid),
+                    caption=hint_.caption,
                 )
             case DocumentHint():
-                hint = typing.cast(DocumentHint, hint)
+                hint_ = typing.cast(DocumentHint, hint_)
                 return DocumentContentView(
-                    content=await self._resolve_bytes(hint.file_guid),
-                    caption=hint.caption,
-                    thumb=await self._resolve_thumb_bytes(hint.thumb_guid),
+                    content=await self._resolve_bytes(hint_.file_guid),
+                    caption=hint_.caption,
+                    thumb=await self._resolve_thumb_bytes(hint_.thumb_guid),
                 )
             case AnimationHint():
-                hint = typing.cast(AnimationHint, hint)
+                hint_ = typing.cast(AnimationHint, hint_)
                 return AnimationContentView(
-                    content=await self._resolve_bytes(hint.file_guid),
-                    caption=hint.caption,
-                    thumb=await self._resolve_thumb_bytes(hint.thumb_guid),
+                    content=await self._resolve_bytes(hint_.file_guid),
+                    caption=hint_.caption,
+                    thumb=await self._resolve_thumb_bytes(hint_.thumb_guid),
                 )
             case VoiceHint():
-                hint = typing.cast(VoiceHint, hint)
+                hint_ = typing.cast(VoiceHint, hint_)
                 return VoiceContentView(
-                    content=await self._resolve_bytes(hint.file_guid), caption=hint.caption
+                    content=await self._resolve_bytes(hint_.file_guid),
+                    caption=hint_.caption,
                 )
             case VideoNoteHint(file_guid=guid):
-                return VideoNoteContentView(content=await self._resolve_bytes(guid))
+                return VideoNoteContentView(
+                    content=await self._resolve_bytes(guid),
+                )
             case ContactHint():
-                hint = typing.cast(ContactHint, hint)
+                hint_ = typing.cast(ContactHint, hint_)
                 return ContactHintView(
-                    phone_number=hint.phone_number,
-                    first_name=hint.first_name,
-                    last_name=hint.last_name,
-                    vcard=hint.vcard,
+                    phone_number=hint_.phone_number,
+                    first_name=hint_.first_name,
+                    last_name=hint_.last_name,
+                    vcard=hint_.vcard,
                 )
             case StickerHint(file_guid=guid):
-                return StickerHintView(file_id=await self._resolve_file_id(guid))
+                return StickerHintView(
+                    file_id=await self._resolve_file_id(guid),
+                )
             case _:
                 raise RuntimeError("unknown hint type")
 

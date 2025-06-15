@@ -48,10 +48,11 @@ def level_three_keys(hints_: scn.HintsList) -> scn.LevelScenario:
 
 def test_create_level_without_conditions(hints_: scn.HintsList):
     with pytest.raises(exceptions.LevelError):
+        # noinspection PyTypeChecker
         scn.LevelScenario(
             id="test",
             time_hints=hints_,
-            conditions=[],  # type: ignore
+            conditions=[],
             __model_version__=1,
         )
 

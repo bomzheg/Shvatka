@@ -32,6 +32,7 @@ from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.tgbot import keyboards as kb
 from shvatka.tgbot import states
 from shvatka.tgbot.utils.data import SHMiddlewareData
+from shvatka.tgbot.views.errors import player_already_in_team
 from shvatka.tgbot.views.utils import total_remove_msg
 
 logger = logging.getLogger(__name__)
@@ -217,11 +218,12 @@ async def gotten_user_request(m: Message, widget: Any, manager: DialogManager):
     try:
         await join_team(player, team, captain, dao.team_player)
     except exceptions.PlayerAlreadyInTeam as e:
-        return await bot.send_message(
+        await player_already_in_team(
+            e=e,
+            bot=bot,
             chat_id=captain.get_chat_id(),  # type: ignore[arg-type]
-            text=f"‼️Игрок {hd.quote(player.name_mention)} уже находится в команде "
-            f"({hd.quote(e.team.name)}).\n",  # type: ignore
         )
+        return
     except exceptions.PlayerRestoredInTeam:
         await bot.send_message(
             chat_id=captain.get_chat_id(),  # type: ignore[arg-type]

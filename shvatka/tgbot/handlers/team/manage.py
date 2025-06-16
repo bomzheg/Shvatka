@@ -39,6 +39,7 @@ from shvatka.tgbot.views.commands import (
     TEAM_COMMAND,
     PLAYERS_COMMAND,
 )
+from shvatka.tgbot.views.errors import player_already_in_team
 from shvatka.tgbot.views.team import render_team_card, render_team_players
 from shvatka.tgbot.views.texts import NOT_SUPERGROUP_ERROR
 
@@ -136,11 +137,11 @@ async def cmd_add_in_team(
         return
     try:
         await join_team(target, team, player, dao.team_player, role)
-    except PlayerAlreadyInTeam as e:
-        await bot.send_message(
+    except exceptions.PlayerAlreadyInTeam as e:
+        await player_already_in_team(
+            e=e,
+            bot=bot,
             chat_id=team.get_chat_id(),  # type: ignore[arg-type]
-            text=f"Игрок {hd.quote(target.name_mention)} уже находится в команде "
-            f"({hd.quote(e.team.name)}).\n",  # type: ignore
         )
         return
     except exceptions.PlayerRestoredInTeam:
@@ -159,7 +160,9 @@ async def cmd_add_in_team(
     await bot.send_message(
         chat_id=team.get_chat_id(),  # type: ignore[arg-type]
         text="В команду {team} добавлен игрок {player} в качестве роли указано: {role}".format(
-            team=hd.bold(team.name), player=hd.bold(target.name_mention), role=hd.italic(role)
+            team=hd.bold(hd.quote(team.name)),
+            player=hd.bold(hd.quote(target.name_mention)),
+            role=hd.italic(role),
         ),
     )
 
@@ -200,12 +203,11 @@ async def button_join(
     assert callback_query.message
     try:
         await join_team(target, team, player, dao.team_player)
-    except PlayerAlreadyInTeam as e:
-        await bot.edit_message_text(
-            chat_id=team.get_chat_id(),
-            message_id=callback_query.message.message_id,
-            text=f"Игрок {hd.quote(target.name_mention)} уже находится в команде "
-            f"({hd.quote(e.team.name)}).\n",  # type: ignore
+    except exceptions.PlayerAlreadyInTeam as e:
+        await player_already_in_team(
+            e=e,
+            bot=bot,
+            chat_id=team.get_chat_id(),  # type: ignore[arg-type]
         )
         return
     except exceptions.PlayerRestoredInTeam:
@@ -224,7 +226,10 @@ async def button_join(
     await bot.edit_message_text(
         chat_id=team.get_chat_id(),
         message_id=callback_query.message.message_id,
-        text=f"В команду {hd.bold(team.name)} добавлен игрок {hd.bold(target.name_mention)}",
+        text=(
+            f"В команду {hd.bold(hd.quote(team.name))} "
+            f"добавлен игрок {hd.bold(hd.quote(target.name_mention))}"
+        ),
     )
 
 

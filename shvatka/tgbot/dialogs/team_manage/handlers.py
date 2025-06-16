@@ -32,6 +32,7 @@ from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.tgbot import keyboards as kb
 from shvatka.tgbot import states
 from shvatka.tgbot.utils.data import SHMiddlewareData
+from shvatka.tgbot.views.errors import player_already_in_team
 from shvatka.tgbot.views.utils import total_remove_msg
 
 logger = logging.getLogger(__name__)
@@ -205,8 +206,15 @@ async def gotten_chat_request(m: Message, widget: Any, manager: DialogManager):
 
 
 async def gotten_user_request(m: Message, widget: Any, manager: DialogManager):
-    assert m.user_shared
-    target_id = m.user_shared.user_id
+    if m.user_shared:
+        target_id = m.user_shared.user_id
+    elif m.contact:
+        if m.contact.user_id is None:
+            await m.reply("В этом контакте пользовать без телеграм (или его тг скрыт)")
+            return
+        target_id = m.contact.user_id
+    else:
+        raise RuntimeError("only user shared and contact are allowed")
     dao: HolderDao = manager.middleware_data["dao"]
     captain: dto.Player = manager.middleware_data["player"]
     team = await get_my_team(captain, dao.team_player)
@@ -217,11 +225,12 @@ async def gotten_user_request(m: Message, widget: Any, manager: DialogManager):
     try:
         await join_team(player, team, captain, dao.team_player)
     except exceptions.PlayerAlreadyInTeam as e:
-        return await bot.send_message(
+        await player_already_in_team(
+            e=e,
+            bot=bot,
             chat_id=captain.get_chat_id(),  # type: ignore[arg-type]
-            text=f"‼️Игрок {hd.quote(player.name_mention)} уже находится в команде "
-            f"({hd.quote(e.team.name)}).\n",  # type: ignore
         )
+        return
     except exceptions.PlayerRestoredInTeam:
         await bot.send_message(
             chat_id=captain.get_chat_id(),  # type: ignore[arg-type]
@@ -230,7 +239,10 @@ async def gotten_user_request(m: Message, widget: Any, manager: DialogManager):
     else:
         await bot.send_message(
             chat_id=captain.get_chat_id(),  # type: ignore[arg-type]
-            text=f"В команду {hd.bold(team.name)} добавлен игрок {hd.bold(player.name_mention)}",
+            text=(
+                f"В команду {hd.bold(hd.quote(team.name))} "
+                f"добавлен игрок {hd.bold(hd.quote(player.name_mention))}"
+            ),
         )
     await total_remove_msg(
         bot, chat_id=chat.tg_id, msg_id=manager.dialog_data.pop("user_request_message")

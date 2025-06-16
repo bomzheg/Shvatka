@@ -209,6 +209,9 @@ async def gotten_user_request(m: Message, widget: Any, manager: DialogManager):
     if m.user_shared:
         target_id = m.user_shared.user_id
     elif m.contact:
+        if m.contact.user_id is None:
+            await m.reply("В этом контакте пользовать без телеграм (или его тг скрыт)")
+            return
         target_id = m.contact.user_id
     else:
         raise RuntimeError("only user shared and contact are allowed")
@@ -236,8 +239,10 @@ async def gotten_user_request(m: Message, widget: Any, manager: DialogManager):
     else:
         await bot.send_message(
             chat_id=captain.get_chat_id(),  # type: ignore[arg-type]
-            text=f"В команду {hd.bold(hd.quote(team.name))} "
-                 f"добавлен игрок {hd.bold(hd.quote(player.name_mention))}",
+            text=(
+                f"В команду {hd.bold(hd.quote(team.name))} "
+                f"добавлен игрок {hd.bold(hd.quote(player.name_mention))}"
+            ),
         )
     await total_remove_msg(
         bot, chat_id=chat.tg_id, msg_id=manager.dialog_data.pop("user_request_message")

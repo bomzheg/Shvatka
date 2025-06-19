@@ -164,7 +164,7 @@ class StickerHint(BaseHint, FileMixin):
     type: Literal["sticker"] = HintType.sticker.name
 
     def get_guids(self) -> list[str]:
-        return []
+        return [self.file_guid]
 
 
 AnyHint: typing.TypeAlias = (

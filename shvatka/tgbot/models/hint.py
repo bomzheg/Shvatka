@@ -265,11 +265,21 @@ class ContactHintView(BaseHintLinkView, BaseHintContentView):
 
 
 @dataclass(kw_only=True)
-class StickerHintView(BaseHintLinkView, BaseHintContentView):
+class StickerHintLinkView(BaseHintLinkView):
     file_id: str
 
     def specific_kwargs(self) -> dict[str, Any]:
         return {"sticker": self.file_id}
+
+
+@dataclass(kw_only=True)
+class StickerHintContentView(BaseHintContentView):
+    content: BinaryIO
+
+    def specific_kwargs(self) -> dict[str, Any]:
+        return {
+            "sticker": _get_input_file(self.content),
+        }
 
 
 def _get_input_file(content: BinaryIO | None) -> InputFile | None:

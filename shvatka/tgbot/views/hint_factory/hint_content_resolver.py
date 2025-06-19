@@ -40,7 +40,8 @@ from shvatka.tgbot.models.hint import (
     VoiceContentView,
     VideoNoteContentView,
     VideoNoteLinkView,
-    StickerHintView,
+    StickerHintLinkView,
+    StickerHintContentView,
 )
 
 
@@ -127,7 +128,7 @@ class HintContentResolver:
                     vcard=hint_.vcard,
                 )
             case StickerHint(file_guid=guid):
-                return StickerHintView(
+                return StickerHintLinkView(
                     file_id=await self._resolve_file_id(guid),
                 )
             case _:
@@ -218,8 +219,8 @@ class HintContentResolver:
                     vcard=hint_.vcard,
                 )
             case StickerHint(file_guid=guid):
-                return StickerHintView(
-                    file_id=await self._resolve_file_id(guid),
+                return StickerHintContentView(
+                    content=await self._resolve_bytes(guid),
                 )
             case _:
                 raise RuntimeError("unknown hint type")

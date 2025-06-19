@@ -7,29 +7,8 @@ from aiogram.client.default import Default
 from aiogram.types import Message, ContentType, PhotoSize
 
 from shvatka.core.interfaces.clients.file_storage import FileStorage
-from shvatka.core.models import dto
+from shvatka.core.models import dto, enums
 from shvatka.core.models.dto import hints
-from shvatka.core.models.dto.hints import (
-    BaseHint,
-    TextHint,
-    GPSHint,
-    FileMeta,
-    TgLink,
-    PhotoHint,
-    UploadedFileMeta,
-)
-from shvatka.core.models.dto.hints import (
-    VenueHint,
-    AudioHint,
-    VideoHint,
-    DocumentHint,
-    AnimationHint,
-    VoiceHint,
-    VideoNoteHint,
-    ContactHint,
-    StickerHint,
-)
-from shvatka.core.models.enums.hint_type import HintType
 from shvatka.infrastructure.db.dao import FileInfoDao
 
 
@@ -39,7 +18,7 @@ class HintParser:
         self.dao = dao
         self.storage = file_storage
 
-    async def parse(self, message: Message, author: dto.Player) -> BaseHint:
+    async def parse(self, message: Message, author: dto.Player) -> hints.BaseHint:
         guid = str(uuid4())
         await self.save_file(
             message=message,
@@ -48,18 +27,18 @@ class HintParser:
         )
         match message.content_type:
             case ContentType.TEXT:
-                return TextHint(
+                return hints.TextHint(
                     text=message.html_text, link_preview=message_to_link_preview(message)
                 )
             case ContentType.LOCATION:
                 assert message.location
-                return GPSHint(
+                return hints.GPSHint(
                     longitude=message.location.longitude,
                     latitude=message.location.latitude,
                 )
             case ContentType.VENUE:
                 assert message.venue
-                return VenueHint(
+                return hints.VenueHint(
                     latitude=message.venue.location.latitude,
                     longitude=message.venue.location.longitude,
                     title=message.venue.title,
@@ -68,7 +47,7 @@ class HintParser:
                     foursquare_type=message.venue.foursquare_type,
                 )
             case ContentType.PHOTO:
-                return PhotoHint(
+                return hints.PhotoHint(
                     caption=message.html_text,
                     file_guid=guid,
                     show_caption_above_media=parse_bool_default(message.show_caption_above_media),
@@ -76,7 +55,7 @@ class HintParser:
             case ContentType.AUDIO:
                 assert message.audio
                 thumb = await self.save_thumb(author, message.audio.thumbnail)
-                return AudioHint(
+                return hints.AudioHint(
                     caption=message.html_text,
                     file_guid=guid,
                     thumb_guid=thumb.guid if thumb else None,
@@ -84,7 +63,7 @@ class HintParser:
             case ContentType.VIDEO:
                 assert message.video
                 thumb = await self.save_thumb(author, message.video.thumbnail)
-                return VideoHint(
+                return hints.VideoHint(
                     caption=message.html_text,
                     file_guid=guid,
                     thumb_guid=thumb.guid if thumb else None,
@@ -93,7 +72,7 @@ class HintParser:
             case ContentType.DOCUMENT:
                 assert message.document
                 thumb = await self.save_thumb(author, message.document.thumbnail)
-                return DocumentHint(
+                return hints.DocumentHint(
                     caption=message.html_text,
                     file_guid=guid,
                     thumb_guid=thumb.guid if thumb else None,
@@ -101,26 +80,26 @@ class HintParser:
             case ContentType.ANIMATION:
                 assert message.animation
                 thumb = await self.save_thumb(author, message.animation.thumbnail)
-                return AnimationHint(
+                return hints.AnimationHint(
                     caption=message.html_text,
                     file_guid=guid,
                     thumb_guid=thumb.guid if thumb else None,
                     show_caption_above_media=parse_bool_default(message.show_caption_above_media),
                 )
             case ContentType.VOICE:
-                return VoiceHint(caption=message.html_text, file_guid=guid)
+                return hints.VoiceHint(caption=message.html_text, file_guid=guid)
             case ContentType.VIDEO_NOTE:
-                return VideoNoteHint(file_guid=guid)
+                return hints.VideoNoteHint(file_guid=guid)
             case ContentType.CONTACT:
                 assert message.contact
-                return ContactHint(
+                return hints.ContactHint(
                     phone_number=message.contact.phone_number,
                     first_name=message.contact.first_name,
                     last_name=message.contact.last_name,
                     vcard=message.contact.vcard,
                 )
             case ContentType.STICKER:
-                return StickerHint(file_guid=guid)
+                return hints.StickerHint(file_guid=guid)
             case _:
                 raise ValueError
 
@@ -139,7 +118,9 @@ class HintParser:
     async def save_thumb(self, author: dto.Player, thumb: PhotoSize | None):
         if thumb:
             return await self.save_content(
-                tg_link=hints.ParsedTgLink(file_id=thumb.file_id, content_type=HintType.photo),
+                tg_link=hints.ParsedTgLink(
+                    file_id=thumb.file_id, content_type=enums.HintType.photo
+                ),
                 author=author,
                 guid=str(uuid4()),
             )
@@ -150,16 +131,17 @@ class HintParser:
         tg_link: hints.ParsedTgLink,
         author: dto.Player,
         guid: str,
-    ) -> FileMeta:
+    ) -> hints.FileMeta:
         filename = tg_link.filename or "unknown"
         content = await self.bot.download(tg_link.file_id, BytesIO())
         assert content is not None
         extension = "".join(Path(filename).suffixes)
-        file_meta = UploadedFileMeta(
+        file_meta = hints.UploadedFileMeta(
+            content_type=tg_link.content_type,
             guid=guid,
             original_filename=get_name_without_extension(filename, extension),
             extension=extension,
-            tg_link=TgLink(file_id=tg_link.file_id, content_type=tg_link.content_type),
+            tg_link=hints.TgLink(file_id=tg_link.file_id, content_type=tg_link.content_type),
         )
         stored_file = await self.storage.put(file_meta, content)
         await self.dao.upsert(stored_file, author)
@@ -173,53 +155,54 @@ def parse_message(message: Message) -> hints.ParsedTgLink | None:
             assert message.photo is not None
             return hints.ParsedTgLink(
                 file_id=message.photo[-1].file_id,
-                content_type=HintType.photo,
+                content_type=enums.HintType.photo,
             )
         case ContentType.AUDIO:
             assert message.audio
             return hints.ParsedTgLink(
                 file_id=message.audio.file_id,
-                content_type=HintType.audio,
+                content_type=enums.HintType.audio,
                 filename=message.audio.file_name,
             )
         case ContentType.VIDEO:
             assert message.video
             return hints.ParsedTgLink(
                 file_id=message.video.file_id,
-                content_type=HintType.video,
+                content_type=enums.HintType.video,
                 filename=message.video.file_name,
             )
         case ContentType.DOCUMENT:
             assert message.document
             return hints.ParsedTgLink(
                 file_id=message.document.file_id,
-                content_type=HintType.document,
+                content_type=enums.HintType.document,
                 filename=message.document.file_name,
             )
         case ContentType.ANIMATION:
             assert message.animation
             return hints.ParsedTgLink(
                 file_id=message.animation.file_id,
-                content_type=HintType.animation,
+                content_type=enums.HintType.animation,
                 filename=message.animation.file_name,
             )
         case ContentType.VOICE:
             assert message.voice
             return hints.ParsedTgLink(
                 file_id=message.voice.file_id,
-                content_type=HintType.voice,
+                content_type=enums.HintType.voice,
             )
         case ContentType.VIDEO_NOTE:
             assert message.video_note
             return hints.ParsedTgLink(
                 file_id=message.video_note.file_id,
-                content_type=HintType.video_note,
+                content_type=enums.HintType.video_note,
             )
         case ContentType.STICKER:
             assert message.sticker
             return hints.ParsedTgLink(
                 file_id=message.sticker.file_id,
-                content_type=HintType.sticker,
+                content_type=enums.HintType.sticker,
+                filename=message.sticker.file_id + ".webp",
             )
         case _:
             return None

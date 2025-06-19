@@ -19,7 +19,7 @@ from shvatka.api.models.auth import UserTgAuth, Token
 from shvatka.api.utils.cookie_auth import OAuth2PasswordBearerWithCookie
 from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.models import dto
-from shvatka.core.services.player import upsert_player, get_my_team
+from shvatka.core.services.player import upsert_player, get_my_team, get_full_team_player
 from shvatka.core.utils import exceptions
 from shvatka.core.utils.datetime_utils import tz_utc
 from shvatka.core.utils.exceptions import NoUsernameFound
@@ -136,6 +136,7 @@ class LoadedData(TypedDict, total=False):
     chat: dto.Chat | None
     player: dto.Player | None
     team: dto.Team | None
+    full_team_player: dto.FullTeamPlayer | None
 
 
 class ApiIdentityProvider(IdentityProvider):
@@ -202,6 +203,15 @@ class ApiIdentityProvider(IdentityProvider):
             return chat
         else:
             raise exceptions.ChatNotFound(team=team)
+
+    async def get_full_team_player(self) -> dto.FullTeamPlayer | None:
+        if "full_team_player" in self.cache:
+            return self.cache["full_team_player"]
+        team_player = await get_full_team_player(
+            await self.get_player(), await self.get_team(), dao=self.dao.team_player
+        )
+        self.cache["full_team_player"] = team_player
+        return team_player
 
 
 class AuthProvider(Provider):

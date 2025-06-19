@@ -1,9 +1,16 @@
+from contextlib import suppress
+
 from aiogram import Router, Bot, F
 from aiogram.enums import ChatType
+from aiogram.exceptions import TelegramAPIError
 from aiogram.filters import Command, or_f
 from aiogram.types import Message, CallbackQuery, LinkPreviewOptions
 from aiogram.utils.markdown import html_decoration as hd
+from dishka import FromDishka
+from dishka.integrations.aiogram import inject
 
+from shvatka.core.interfaces.identity import IdentityProvider
+from shvatka.core.utils import exceptions
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.core.models import dto
 from shvatka.core.models.enums import GameStatus
@@ -23,6 +30,7 @@ from shvatka.tgbot.filters.game_status import GameStatusFilter
 from shvatka.tgbot.filters.is_team import IsTeamFilter
 from shvatka.tgbot.filters.team_player import TeamPlayerFilter
 from shvatka.tgbot.middlewares import TeamPlayerMiddleware
+from shvatka.tgbot.services.identity import TgBotIdentityProvider
 from shvatka.tgbot.services.waiver import swap_saved_message, get_saved_message
 from shvatka.tgbot.utils.router import disable_router_on_game
 from shvatka.tgbot.views.commands import START_WAIVERS_COMMAND, APPROVE_WAIVERS_COMMAND
@@ -34,12 +42,26 @@ from shvatka.tgbot.views.waiver import (
 )
 
 
+@inject
 async def start_waivers(
-    message: Message, team: dto.Team | None, game: dto.Game, dao: HolderDao, bot: Bot
+    message: Message,
+    game: dto.Game,
+    dao: HolderDao,
+    bot: Bot,
+    identity_provider: FromDishka[TgBotIdentityProvider],
 ):
-    if not team:
-        await message.answer("Ты не в команде или не капитан")
+    try:
+        team_player = await identity_provider.get_full_team_player()
+        if team_player is None:
+            raise exceptions.PlayerNotInTeam
+        check_allow_approve_waivers(team_player)
+    except (exceptions.PermissionsError, exceptions.PlayerNotInTeam):
+        with suppress(TelegramAPIError):
+            await message.delete()
+            return
+        await message.reply("Управлять вейверами может только капитан!")
         return
+    team = team_player.team
     msg = await bot.send_message(
         chat_id=team.get_chat_id(),  # type: ignore[arg-type]
         text=await get_waiver_poll_text(team, game, dao),

@@ -8,7 +8,7 @@ from dishka.integrations.aiogram import AiogramMiddlewareData
 from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.models import dto
 from shvatka.core.services.chat import upsert_chat
-from shvatka.core.services.player import upsert_player
+from shvatka.core.services.player import upsert_player, get_full_team_player
 from shvatka.core.services.team import get_by_chat
 from shvatka.core.services.user import upsert_user
 from shvatka.infrastructure.db.dao.holder import HolderDao
@@ -20,6 +20,7 @@ class LoadedData(TypedDict, total=False):
     chat: dto.Chat | None
     player: dto.Player | None
     team: dto.Team | None
+    full_team_player: dto.FullTeamPlayer | None
 
 
 class TgBotIdentityProvider(IdentityProvider):
@@ -78,6 +79,19 @@ class TgBotIdentityProvider(IdentityProvider):
         team = await load_team(await self.get_chat(), self.dao)
         self.cache["team"] = team
         return team
+
+    async def get_full_team_player(self) -> dto.FullTeamPlayer | None:
+        if "full_team_player" in self.cache:
+            return self.cache["full_team_player"]
+        player = await self.get_player()
+        if player is None:
+            self.cache["full_team_player"] = None
+            return None
+        team_player = await get_full_team_player(
+            player, await self.get_team(), dao=self.dao.team_player
+        )
+        self.cache["full_team_player"] = team_player
+        return team_player
 
 
 async def save_user(data: SHMiddlewareData, holder_dao: HolderDao) -> dto.User | None:

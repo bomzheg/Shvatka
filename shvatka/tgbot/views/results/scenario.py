@@ -125,10 +125,10 @@ class LevelPublisher:
 
     @classmethod
     def get_approximate_time(cls, level: dto.Level) -> timedelta:
-        return level.hints_count * cls.SLEEP + reduce(
+        captions_time = level.hints_count * cls.SLEEP
+        time_tints_time = reduce(
             add,
-            (
-                HintSender.get_approximate_time(hints.hint)
-                for hints in [*level.scenario.time_hints, *level.scenario.conditions.get_hints()]
-            ),
+            (HintSender.get_approximate_time(hints.hint) for hints in level.scenario.time_hints),
         )
+        bonus_hints_time = HintSender.get_approximate_time(level.scenario.conditions.get_hints())
+        return captions_time + time_tints_time + bonus_hints_time

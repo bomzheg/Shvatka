@@ -1,0 +1,20 @@
+Создание группового чата в telegram
+На примере клиента telegram для android
+
+.В боковом меню выбрать пункт "создать группу"
+image::{attachmentsdir}/tg-create_group-sidebar.jpg[]
+
+.На следующем экране будет предложено выбрать людей, которых сразу нужно добавить в группу. Telegram требует как минимум одно человека кроме создателя
+image::{attachmentsdir}/tg-create_group-people.jpg[]
+
+.С помощью поиска (или прокрутки списка контактов) находим кого-нибудь и добавляем в чат
+image::{attachmentsdir}/tg-create_group-members.jpg[]
+
+.После этого возможно создать группу
+image::{attachmentsdir}/tg-create_group-submit.jpg[]
+
+.На этом этапе можно ввести имя чата. Рекомендуется название команды, но в дальнейшем можно изменить
+image::{attachmentsdir}/tg-create_group-name.jpg[]
+
+.Группа создана
+image::{attachmentsdir}/tg-create_group-finish.png[]

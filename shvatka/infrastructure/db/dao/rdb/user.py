@@ -8,6 +8,7 @@ from sqlalchemy.exc import NoResultFound, MultipleResultsFound
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from shvatka.core.models import dto
+from shvatka.core.utils import exceptions
 from shvatka.core.utils.exceptions import MultipleUsernameFound, NoUsernameFound
 from shvatka.infrastructure.db.models import User
 from .base import BaseDAO
@@ -29,7 +30,10 @@ class UserDao(BaseDAO[User]):
         result: ScalarResult[User] = await self.session.scalars(
             select(User).where(User.tg_id == tg_id)
         )
-        return result.one()
+        try:
+            return result.one()
+        except NoResultFound as e:
+            raise exceptions.UserNotFoundError(user_id=tg_id) from e
 
     async def get_by_username(self, username: str) -> dto.User:
         user = await self._get_by_username(username)

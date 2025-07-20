@@ -7,13 +7,16 @@ from aiogram.client.session.aiohttp import AiohttpSession
 from aiogram.client.telegram import TelegramAPIServer
 
 
-@dataclass
+@dataclass(kw_only=True, frozen=True, slots=True)
 class BotConfig:
     token: str
     log_chat: int
     """tech chat for tech logs"""
     game_log_chat: int
     """game log for major game events notifications"""
+    public_chats: list[int]
+    """chats with public moderation"""
+    enabled_capcha: bool = False
     superusers: list[int]
     bot_api: BotApiConfig
     telegraph_token: str

@@ -167,7 +167,7 @@ class ApiIdentityProvider(IdentityProvider):
             user = await self.auth_properties.get_user_basic(self.request, self.dao)
         self.cache["user"] = user
         if user is None:
-            raise
+            raise HTTPException(status_code=401)
         return user
 
     async def get_player(self) -> dto.Player:

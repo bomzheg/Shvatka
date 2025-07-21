@@ -1,2 +1,9 @@
 * xref:technical-task.adoc[Техническое задание]
 * xref:author-check-list.adoc[Чек-лист для автора перед игрой]
+
+* xref:setup_team/create_chat.adoc[Создать чат]
+* xref:setup_team/group2sg.adoc[Преобразовать чат в супергруппу]
+* xref:setup_team/check_is_sg.adoc[Проверить чат]
+* xref:setup_team/create_team.adoc[Создание команды]
+* xref:setup_team/manage_team.adoc[Управление командой]
+* xref:setup_team/waivers.adoc[Вейверы]

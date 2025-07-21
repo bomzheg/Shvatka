@@ -1,10 +1,5 @@
 name: Build & Deploy Docs
-on:
-  push:
-    tags: ['*']
-    branches: ['*']
-  delete:
-    branches: ['*']
+on: push
 jobs:
   build:
     runs-on: ubuntu-latest

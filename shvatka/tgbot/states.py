@@ -151,3 +151,7 @@ class MyTeamSg(StatesGroup):
 
 class PlayerSg(StatesGroup):
     main = State()
+
+
+class CapchaSG(StatesGroup):
+    waiting_answer = State()

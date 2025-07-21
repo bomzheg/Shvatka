@@ -232,7 +232,11 @@ class AnotherTeamInChat(PlayerTeamError):
     notify_user = "В чате уже есть другая команда"
 
 
-class UsernameResolverError(SHError):
+class UserNotFoundError(SHError):
+    notify_user = "Не удалось найти пользователя"
+
+
+class UsernameResolverError(UserNotFoundError):
     notify_user = "Не удалось найти пользователя по username"
 
     def __init__(self, username: str | None = None, **kwargs) -> None:

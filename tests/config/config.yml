@@ -7,6 +7,8 @@ bot:
   game-log-chat: -1009876543210
   superusers:
     - 46866565
+  public-chats:
+    - "1001232232152"
   bot-api:
     type: official
   webhook:

@@ -2,6 +2,7 @@ from aiogram import Bot, Router, F
 from aiogram.enums import ChatType
 from aiogram.fsm.context import FSMContext
 from aiogram.types import ChatJoinRequest, Message
+from aiogram.utils.text_decorations import html_decoration as hd
 from dishka import FromDishka
 from dishka.integrations.aiogram import inject
 
@@ -29,7 +30,13 @@ async def chat_join_handler(
     except (exceptions.UserNotFoundError, exceptions.PlayerNotFoundError):
         pass
     if instant_approve:
-        await bot.send_message(chat_id=chat_join_request.from_user.id, text="Я впустил тебя в чат")
+        await bot.send_message(
+            chat_id=chat_join_request.from_user.id,
+            text=(
+                f"Я впустил тебя в чат "
+                f"{hd.quote(chat_join_request.chat.username or chat_join_request.chat.title)}"  # type: ignore[arg-type]
+            ),
+        )
         await bot.approve_chat_join_request(
             chat_id=chat_join_request.chat.id, user_id=chat_join_request.from_user.id
         )
@@ -37,7 +44,8 @@ async def chat_join_handler(
         await state.set_state(states.CapchaSG.waiting_answer)
         await state.set_data({"requested_chat": chat_join_request.chat.id})
         await bot.send_message(
-            chat_id=chat_join_request.from_user.id, text="В каком городе проходит Схватка?"
+            chat_id=chat_join_request.from_user.id,
+            text="В каком городе проходит Схватка? (не склоняется)",
         )
 
 
@@ -58,8 +66,8 @@ async def correct_answer(
 
 def setup(config: BotConfig) -> Router:
     router = Router(name=__name__)
-    router.chat_join_request(chat_join_handler, F.chat.id.in_(config.public_chats))
-    router.message(
+    router.chat_join_request.register(chat_join_handler, F.chat.id.in_(config.public_chats))
+    router.message.register(
         correct_answer, F.chat.type == ChatType.PRIVATE, F.text, states.CapchaSG.waiting_answer
     )
     return router

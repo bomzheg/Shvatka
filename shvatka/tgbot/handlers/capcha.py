@@ -1,6 +1,7 @@
 from aiogram import Bot, Router, F
 from aiogram.enums import ChatType
 from aiogram.fsm.context import FSMContext
+from aiogram.fsm.storage.base import BaseStorage, StorageKey
 from aiogram.types import ChatJoinRequest, Message
 from aiogram.utils.text_decorations import html_decoration as hd
 from dishka import FromDishka
@@ -19,7 +20,7 @@ async def chat_join_handler(
     bot: Bot,
     config: FromDishka[BotConfig],
     holder_dao: FromDishka[HolderDao],
-    state: FSMContext,
+    storage: FromDishka[BaseStorage],
 ):
     instant_approve: bool = False
     try:
@@ -41,6 +42,14 @@ async def chat_join_handler(
             chat_id=chat_join_request.chat.id, user_id=chat_join_request.from_user.id
         )
     elif config.enabled_capcha:
+        state = FSMContext(
+            storage,
+            StorageKey(
+                chat_id=chat_join_request.from_user.id,
+                user_id=chat_join_request.from_user.id,
+                bot_id=bot.id,
+            ),
+        )
         await state.set_state(states.CapchaSG.waiting_answer)
         await state.set_data({"requested_chat": chat_join_request.chat.id})
         await bot.send_message(

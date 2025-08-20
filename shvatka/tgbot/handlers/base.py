@@ -114,8 +114,6 @@ def setup() -> Router:
         Command(commands=CHAT_TYPE_COMMAND),
         F.chat.type == ChatType.SUPERGROUP,
     )
-    router.message.register(
-        cancel_state, Command(commands=CANCEL_COMMAND), F.chat.type != ChatType.PRIVATE
-    )
+    router.message.register(cancel_state, Command(commands=CANCEL_COMMAND))
     router.message.register(chat_migrate, F.content_types == ContentType.MIGRATE_TO_CHAT_ID)
     return router

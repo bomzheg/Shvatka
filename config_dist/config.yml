@@ -5,6 +5,9 @@ bot:
   telegraph-token: ""
   log-chat: -1001234567890
   game-log-chat: -1009876543210
+  public-chats:
+    - "1001232232152"
+  enabled-capcha: false
   superusers:
     - 666
   bot-api:

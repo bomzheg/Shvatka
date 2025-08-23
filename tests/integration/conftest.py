@@ -65,7 +65,6 @@ async def dishka():
     container = make_async_container(
         ConfigProvider("SHVATKA_TEST_PATH"),
         DAOProvider(),
-        TestDbProvider(),
         OtherApiProvider(),
         ApiConfigProvider(),
         DbProvider(),
@@ -81,12 +80,15 @@ async def dishka():
         UrlProvider(),
         TelegraphProvider(),
         ContextProvider(),
+        DAOProvider(),
         GamePlayProvider(),
         WaiverProvider(),
         PrinterProvider(),
         GameToolsProvider(),
         BotIdpProvider(),
+        IdpProvider(),
         ComplexOnlyProvider(),
+        TestDbProvider(),
         mock_provider,
     )
     yield container

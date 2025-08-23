@@ -7,7 +7,7 @@ from shvatka.core.models import dto
 from shvatka.core.models.enums.played import Played
 from shvatka.core.services.waiver import get_vote_to_voted
 from shvatka.core.views.texts import WAIVER_STATUS_MEANING
-from shvatka.infrastructure.db.dao.complex import WaiverVoteGetterImpl
+from shvatka.infrastructure.db.dao.complex2.waiver import WaiverVoteGetterImpl
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.tgbot import keyboards as kb
 from shvatka.tgbot.views.player import get_emoji

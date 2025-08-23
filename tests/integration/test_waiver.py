@@ -26,16 +26,16 @@ async def test_get_voted_list(
     gryffindor: dto.Team,
     game: dto.FullGame,
     dao: HolderDao,
-    request_dishka: AsyncContainer,
+    dishka_request: AsyncContainer,
 ):
     await start_waivers(game, author, dao.game)
 
     await join_team(hermione, gryffindor, harry, dao.team_player)
-    waiver_vote_adder = await request_dishka.get(WaiverVoteAdder)
+    waiver_vote_adder = await dishka_request.get(WaiverVoteAdder)
     await add_vote(game, gryffindor, harry, Played.yes, waiver_vote_adder)
     await add_vote(game, gryffindor, hermione, Played.yes, waiver_vote_adder)
 
-    waiver_vote_getter = await request_dishka.get(WaiverVoteGetter)
+    waiver_vote_getter = await dishka_request.get(WaiverVoteGetter)
     actual = await get_vote_to_voted(gryffindor, waiver_vote_getter)
     assert len(actual) == 1
     actual_voted = actual[Played.yes]

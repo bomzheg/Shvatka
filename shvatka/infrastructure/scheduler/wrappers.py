@@ -1,5 +1,6 @@
 from dishka.integrations.base import FromDishka
 
+from shvatka.core.interfaces.current_game import CurrentGameProvider
 from shvatka.core.views.game import GameViewPreparer, GameView, GameLogWriter
 from shvatka.core.views.level import LevelView
 from shvatka.infrastructure.db.dao.holder import HolderDao
@@ -63,12 +64,12 @@ async def send_hint_wrapper(
     game_view: FromDishka[GameView],
     scheduler: FromDishka[Scheduler],
     alerter: FromDishka[BotAlert],
+    current_game: FromDishka[CurrentGameProvider],
 ):
     try:
         level = await dao.level.get_by_id(level_id)
         team = await dao.team.get_by_id(team_id)
-        game = await dao.game.get_active_game()
-        assert game is not None
+        game = await current_game.get_required_game()
 
         await send_hint(
             level=level,

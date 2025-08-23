@@ -9,6 +9,7 @@ from aiogram.utils.markdown import html_decoration as hd
 from dishka import FromDishka
 from dishka.integrations.aiogram import inject
 
+from shvatka.core.interfaces.current_game import CurrentGameProvider
 from shvatka.core.utils import exceptions
 from shvatka.core.waiver.adapters import WaiverVoteAdder
 from shvatka.core.waiver.interactors import WaiversReaderInteractor, AddWaiverVoteInteractor
@@ -77,7 +78,7 @@ async def start_waivers(
 async def add_vote_handler(
     c: CallbackQuery,
     callback_data: kb.WaiverVoteCD,
-    game: dto.Game,
+    current_game: FromDishka[CurrentGameProvider],
     add_interactor: FromDishka[AddWaiverVoteInteractor],
     identity_provider: FromDishka[TgBotIdentityProvider],
     read_interactor: FromDishka[WaiversReaderInteractor],
@@ -85,8 +86,8 @@ async def add_vote_handler(
     team = await identity_provider.get_team()
     if not team or team.id != callback_data.team_id:
         raise PlayerNotInTeam(team=team)
+    game = await current_game.get_required_game()
     await add_interactor(
-        game=game,
         identity=identity_provider,
         vote=callback_data.vote,
     )

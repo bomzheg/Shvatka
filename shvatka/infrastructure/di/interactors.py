@@ -12,8 +12,10 @@ from shvatka.core.games.adapters import (
     GameKeysReader,
     GameStatReader,
 )
+from shvatka.core.interfaces.current_game import CurrentGameProvider
 from shvatka.core.interfaces.dal.game import GameByIdGetter
 from shvatka.core.interfaces.dal.game_play import GamePlayerDao
+from shvatka.core.services.current_game import CurrentGameProviderImpl
 from shvatka.core.waiver.adapters import WaiverVoteAdder, WaiverVoteGetter
 from shvatka.core.scenario.interactors import (
     AllGameKeysReaderInteractor,
@@ -27,6 +29,11 @@ from shvatka.infrastructure.db.dao.complex.game_play import GamePlayerDaoImpl
 from shvatka.infrastructure.db.dao.complex.key_log import GameKeysReaderImpl
 from shvatka.infrastructure.db.dao.complex.level_times import GameStatReaderImpl
 from shvatka.infrastructure.db.dao.holder import HolderDao
+
+
+class ContextProvider(Provider):
+    scope = Scope.REQUEST
+    current_game = provide(CurrentGameProviderImpl, provides=CurrentGameProvider)
 
 
 class GamePlayProvider(Provider):

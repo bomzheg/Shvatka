@@ -7,11 +7,11 @@ from shvatka.core.interfaces.clients.file_storage import FileGateway
 from shvatka.core.models import dto
 from shvatka.core.models.dto.scn.game import RawGameScenario
 from shvatka.core.models.enums import GameStatus
+from shvatka.core.services.current_game import CurrentGameProviderImpl
 from shvatka.core.services.game import (
     upsert_game,
     get_authors_games,
     start_waivers,
-    get_active,
     complete_game,
 )
 from shvatka.core.services.level import upsert_level
@@ -89,7 +89,7 @@ async def test_game_simple(
     assert game.id == gotten_games[0].id
 
     await start_waivers(game, author, dao.game)
-    active_game = await get_active(dao.game)
+    active_game = await CurrentGameProviderImpl(dao=dao.game).get_game()
     assert GameStatus.getting_waivers == active_game.status
     assert active_game.id == game.id
 

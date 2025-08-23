@@ -12,7 +12,7 @@ from shvatka.core.models.enums.played import Played
 from shvatka.core.services.game import upsert_game, start_waivers
 from shvatka.core.services.key import KeyProcessor
 from shvatka.core.services.player import join_team
-from shvatka.core.services.waiver import add_vote, approve_waivers
+from shvatka.core.waiver.services import add_vote, approve_waivers
 from shvatka.core.utils.datetime_utils import tz_utc
 from shvatka.core.utils.key_checker_lock import KeyCheckerFactory
 from shvatka.core.waiver.adapters import WaiverVoteAdder

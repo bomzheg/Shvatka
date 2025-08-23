@@ -17,7 +17,7 @@ from shvatka.core.models import dto
 from shvatka.core.models.enums import GameStatus
 from shvatka.core.models.enums.played import Played
 from shvatka.core.services.player import get_my_team, get_full_team_player
-from shvatka.core.services.waiver import (
+from shvatka.core.waiver.services import (
     approve_waivers,
     check_allow_approve_waivers,
     revoke_vote_by_captain,

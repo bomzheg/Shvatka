@@ -13,6 +13,7 @@ from shvatka.core.games.adapters import (
     GamePlayDao,
 )
 from shvatka.core.interfaces.current_game import CurrentGameProvider
+from shvatka.core.interfaces.current_game import CurrentGameProvider
 from shvatka.core.interfaces.dal.game_play import GamePlayerDao
 from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.interfaces.scheduler import Scheduler

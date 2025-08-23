@@ -4,6 +4,7 @@ from shvatka.infrastructure.di.db import DbProvider, RedisProvider, DAOProvider
 from shvatka.infrastructure.di.files import FileClientProvider
 from shvatka.infrastructure.di.interactors import GamePlayProvider, ContextProvider
 from shvatka.infrastructure.di.interactors import GamePlayProvider, WaiverProvider
+from shvatka.infrastructure.di.interactors import GamePlayProvider, WaiverProvider, ContextProvider
 from shvatka.infrastructure.di.printer import PrinterProvider
 from shvatka.infrastructure.db.factory import LockProvider
 from shvatka.infrastructure.scheduler.factory import SchedulerProvider

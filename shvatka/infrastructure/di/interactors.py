@@ -17,6 +17,7 @@ from shvatka.core.games.adapters import (
 from shvatka.core.interfaces.current_game import CurrentGameProvider
 from shvatka.core.interfaces.dal.game import GameByIdGetter
 from shvatka.core.interfaces.dal.game_play import GamePlayerDao
+from shvatka.core.services.current_game import CurrentGameProviderImpl
 from shvatka.core.waiver.adapters import WaiverVoteAdder, WaiverVoteGetter
 from shvatka.core.scenario.interactors import (
     AllGameKeysReaderInteractor,

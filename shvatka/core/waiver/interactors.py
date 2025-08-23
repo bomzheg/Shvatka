@@ -1,8 +1,17 @@
+from typing import Iterable
+
+from shvatka.core.interfaces.current_game import CurrentGameProvider
+from shvatka.core.interfaces.dal.waiver import GameWaiversGetter
 from shvatka.core.waiver.adapters import WaiverVoteAdder, WaiverVoteGetter
 from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.models import dto
 from shvatka.core.models.enums import Played
-from shvatka.core.waiver.services import check_allow_approve_waivers, get_vote_to_voted, add_vote
+from shvatka.core.waiver.services import (
+    check_allow_approve_waivers,
+    get_vote_to_voted,
+    add_vote,
+    get_all_played,
+)
 from shvatka.core.utils import exceptions
 
 
@@ -23,15 +32,25 @@ class WaiversReaderInteractor:
         return await get_vote_to_voted(team, self.dao)
 
 
-class AddWaiverVoteInteractor:
-    def __init__(self, dao: WaiverVoteAdder) -> None:
+class WaiverCompleteReaderInteractor:
+    def __init__(self, dao: GameWaiversGetter) -> None:
         self.dao = dao
 
-    async def __call__(self, game: dto.Game, identity: IdentityProvider, vote: Played) -> None:
+    async def __call__(self, game: dto.Game) -> dict[dto.Team, Iterable[dto.VotedPlayer]]:
+        return await get_all_played(game, self.dao)
+
+
+class AddWaiverVoteInteractor:
+    def __init__(self, dao: WaiverVoteAdder, current_game: CurrentGameProvider) -> None:
+        self.dao = dao
+        self.current_game = current_game
+
+    async def __call__(self, identity: IdentityProvider, vote: Played) -> None:
+        player = await identity.get_required_player()
         team = await identity.get_team()
-        player = await identity.get_player()
-        if team is None or player is None:
+        if team is None:
             raise exceptions.PlayerNotInTeam(player=player, team=team)
+        game = await self.current_game.get_required_game()
         await add_vote(
             game=game,
             team=team,

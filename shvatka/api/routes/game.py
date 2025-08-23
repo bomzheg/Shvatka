@@ -18,6 +18,7 @@ from shvatka.core.games.interactors import (
     CheckKeyInteractor,
 )
 from shvatka.core.interfaces.current_game import CurrentGameProvider
+from shvatka.core.interfaces.current_game import CurrentGameProvider
 from shvatka.core.models import enums
 from shvatka.core.services.game import (
     get_authors_games,

@@ -10,14 +10,13 @@ from dishka import FromDishka
 from dishka.integrations.aiogram import inject
 
 from shvatka.core.utils import exceptions
-from shvatka.core.waiver.interactors import WaiversReaderInteractor
+from shvatka.core.waiver.interactors import WaiversReaderInteractor, AddWaiverVoteInteractor
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.core.models import dto
 from shvatka.core.models.enums import GameStatus
 from shvatka.core.models.enums.played import Played
 from shvatka.core.services.player import get_my_team, get_full_team_player
 from shvatka.core.services.waiver import (
-    add_vote,
     approve_waivers,
     check_allow_approve_waivers,
     revoke_vote_by_captain,
@@ -77,24 +76,21 @@ async def start_waivers(
 async def add_vote_handler(
     c: CallbackQuery,
     callback_data: kb.WaiverVoteCD,
-    player: dto.Player,
-    team: dto.Team,
     game: dto.Game,
-    dao: HolderDao,
+    add_interactor: FromDishka[AddWaiverVoteInteractor],
     identity_provider: FromDishka[TgBotIdentityProvider],
-    interactor: FromDishka[WaiversReaderInteractor],
+    read_interactor: FromDishka[WaiversReaderInteractor],
 ):
-    if team.id != callback_data.team_id:
-        raise PlayerNotInTeam(player=player, team=team)
-    await add_vote(
+    team = await identity_provider.get_team()
+    if not team or team.id != callback_data.team_id:
+        raise PlayerNotInTeam(team=team)
+    await add_interactor(
         game=game,
-        team=team,
-        player=player,
+        identity=identity_provider,
         vote=callback_data.vote,
-        dao=dao.waiver_vote_adder,
     )
     await c.answer()
-    waiver_results = await interactor(game_id=game.id, identity=identity_provider)
+    waiver_results = await read_interactor(game_id=game.id, identity=identity_provider)
     await c.message.edit_text(  # type: ignore[union-attr]
         text=get_waiver_poll_text(waiver_results, game),
         reply_markup=kb.get_kb_waivers(team, game),

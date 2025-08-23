@@ -10,6 +10,7 @@ from dishka import FromDishka
 from dishka.integrations.aiogram import inject
 
 from shvatka.core.utils import exceptions
+from shvatka.core.waiver.adapters import WaiverVoteAdder
 from shvatka.core.waiver.interactors import WaiversReaderInteractor, AddWaiverVoteInteractor
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.core.models import dto
@@ -262,12 +263,14 @@ async def waiver_add_force_menu(
     )
 
 
+@inject
 async def add_force_player(
     c: CallbackQuery,
     callback_data: kb.WaiverAddPlayerForceCD,
     player: dto.Player,
     game: dto.Game,
     dao: HolderDao,
+    waiver_vote_adder_dao: FromDishka[WaiverVoteAdder],
 ):
     check_same_game(callback_data, game, player)
     team = await get_my_team(player, dao.team_player)
@@ -276,7 +279,7 @@ async def add_force_player(
     check_same_team(callback_data, player, team)
     check_allow_approve_waivers(await get_full_team_player(player, team, dao.waiver_approver))
     target = await dao.player.get_by_id(callback_data.player_id)
-    await force_add_vote(game, team, target, Played.yes, dao.waiver_vote_adder)
+    await force_add_vote(game, team, target, Played.yes, dao=waiver_vote_adder_dao)
     players = await get_not_played_team_players(team=team, dao=dao.waiver_approver)
     await c.answer()
     await c.message.edit_text(  # type: ignore[union-attr]

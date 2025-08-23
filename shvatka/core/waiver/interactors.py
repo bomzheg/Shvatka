@@ -1,4 +1,4 @@
-from shvatka.core.interfaces.dal.waiver import WaiverVoteGetter, WaiverVoteAdder
+from shvatka.core.waiver.adapters import WaiverVoteAdder, WaiverVoteGetter
 from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.models import dto
 from shvatka.core.models.enums import Played

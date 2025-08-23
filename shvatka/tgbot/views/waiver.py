@@ -7,6 +7,7 @@ from shvatka.core.models import dto
 from shvatka.core.models.enums.played import Played
 from shvatka.core.services.waiver import get_vote_to_voted
 from shvatka.core.views.texts import WAIVER_STATUS_MEANING
+from shvatka.infrastructure.db.dao.complex import WaiverVoteGetterImpl
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.tgbot import keyboards as kb
 from shvatka.tgbot.views.player import get_emoji
@@ -50,7 +51,7 @@ def get_waiver_final_text(vote: dict[Played, list[dto.VotedPlayer]], game: dto.G
 
 
 async def start_approve_waivers(game: dto.Game, team: dto.Team, dao: HolderDao):
-    votes = await get_vote_to_voted(team=team, dao=dao.waiver_vote_getter)
+    votes = await get_vote_to_voted(team=team, dao=WaiverVoteGetterImpl(dao))
     return dict(
         text=f"Играющие в {hd.quote(game.name)} схватчики команды {hd.bold(hd.quote(team.name))}:",
         reply_markup=kb.get_kb_manage_waivers(

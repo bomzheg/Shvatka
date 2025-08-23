@@ -2,12 +2,11 @@ import typing
 from typing import Iterable, Sequence
 
 from shvatka.core.interfaces.dal.waiver import (
-    WaiverVoteAdder,
-    WaiverVoteGetter,
     WaiverApprover,
     GameWaiversGetter,
     WaiverGetter,
 )
+from shvatka.core.waiver.adapters import WaiverVoteAdder, WaiverVoteGetter
 from shvatka.core.models import dto
 from shvatka.core.models import enums
 from shvatka.core.models.enums.played import Played

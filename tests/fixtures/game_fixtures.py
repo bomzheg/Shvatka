@@ -3,6 +3,7 @@ from datetime import datetime
 
 import pytest_asyncio
 from adaptix import Retort
+from dishka import AsyncContainer
 
 from shvatka.core.interfaces.clients.file_storage import FileGateway
 from shvatka.core.models import dto
@@ -14,6 +15,7 @@ from shvatka.core.services.player import join_team
 from shvatka.core.services.waiver import add_vote, approve_waivers
 from shvatka.core.utils.datetime_utils import tz_utc
 from shvatka.core.utils.key_checker_lock import KeyCheckerFactory
+from shvatka.core.waiver.adapters import WaiverVoteAdder
 from shvatka.infrastructure.db.dao.holder import HolderDao
 
 
@@ -45,6 +47,7 @@ async def game_with_waivers(
     hermione: dto.Player,
     draco: dto.Player,
     dao: HolderDao,
+    dishka_request: AsyncContainer,
 ):
     return await add_waivers(
         game=game,
@@ -56,6 +59,7 @@ async def game_with_waivers(
         hermione=hermione,
         draco=draco,
         dao=dao,
+        request_dishka=dishka_request,
     )
 
 
@@ -161,6 +165,7 @@ async def routed_game_with_waivers(
     hermione: dto.Player,
     draco: dto.Player,
     dao: HolderDao,
+    dishka_request: AsyncContainer,
 ):
     return await add_waivers(
         game=routed_game,
@@ -172,6 +177,7 @@ async def routed_game_with_waivers(
         hermione=hermione,
         draco=draco,
         dao=dao,
+        request_dishka=dishka_request,
     )
 
 
@@ -255,15 +261,17 @@ async def add_waivers(
     hermione: dto.Player,
     draco: dto.Player,
     dao: HolderDao,
+    request_dishka: AsyncContainer,
 ) -> dto.FullGame:
     await join_team(hermione, gryffindor, harry, dao.team_player)
     await join_team(ron, gryffindor, harry, dao.team_player)
 
     await start_waivers(game, author, dao.game)
-    await add_vote(game, gryffindor, harry, Played.yes, dao.waiver_vote_adder)
-    await add_vote(game, gryffindor, hermione, Played.yes, dao.waiver_vote_adder)
-    await add_vote(game, gryffindor, ron, Played.no, dao.waiver_vote_adder)
-    await add_vote(game, slytherin, draco, Played.yes, dao.waiver_vote_adder)
+    waiver_vote_adder = await request_dishka.get(WaiverVoteAdder)
+    await add_vote(game, gryffindor, harry, Played.yes, waiver_vote_adder)
+    await add_vote(game, gryffindor, hermione, Played.yes, waiver_vote_adder)
+    await add_vote(game, gryffindor, ron, Played.no, waiver_vote_adder)
+    await add_vote(game, slytherin, draco, Played.yes, waiver_vote_adder)
 
     await approve_waivers(game, gryffindor, harry, dao.waiver_approver)
     await approve_waivers(game, slytherin, draco, dao.waiver_approver)

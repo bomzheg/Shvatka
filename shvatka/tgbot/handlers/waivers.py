@@ -36,9 +36,9 @@ from shvatka.tgbot.utils.router import disable_router_on_game
 from shvatka.tgbot.views.commands import START_WAIVERS_COMMAND, APPROVE_WAIVERS_COMMAND
 from shvatka.tgbot.views.utils import total_remove_msg
 from shvatka.tgbot.views.waiver import (
-    start_approve_waivers,
     get_waiver_final_text,
     get_waiver_poll_text,
+    start_approve_waivers,
 )
 
 
@@ -99,8 +99,16 @@ async def add_vote_handler(
     )
 
 
+@inject
 async def start_approve_waivers_cmd_handler(
-    _: Message, player: dto.Player, user: dto.User, game: dto.Game, dao: HolderDao, bot: Bot
+    _: Message,
+    player: dto.Player,
+    user: dto.User,
+    game: dto.Game,
+    dao: HolderDao,
+    bot: Bot,
+    identity_provider: FromDishka[TgBotIdentityProvider],
+    read_interactor: FromDishka[WaiversReaderInteractor],
 ):
     team = await get_my_team(player, dao.team_player)
     check_allow_approve_waivers(await get_full_team_player(player, team, dao.waiver_approver))
@@ -108,12 +116,14 @@ async def start_approve_waivers_cmd_handler(
     await total_remove_msg(
         bot=bot, chat_id=team.get_chat_id(), msg_id=await get_saved_message(game, team, dao.poll)
     )
+    waiver_results = await read_interactor(game_id=game.id, identity=identity_provider)
     await bot.send_message(
         chat_id=user.tg_id,
-        **await start_approve_waivers(game, team, dao),
+        **start_approve_waivers(game, team, waiver_results),
     )
 
 
+@inject
 async def start_approve_waivers_cb_handler(
     c: CallbackQuery,
     callback_data: kb.WaiverToApproveCD,
@@ -122,6 +132,8 @@ async def start_approve_waivers_cb_handler(
     game: dto.Game,
     dao: HolderDao,
     bot: Bot,
+    identity_provider: FromDishka[TgBotIdentityProvider],
+    read_interactor: FromDishka[WaiversReaderInteractor],
 ):
     check_same_game(callback_data, game, player)
     team = await get_my_team(player, dao.team_player)
@@ -132,18 +144,22 @@ async def start_approve_waivers_cb_handler(
     await total_remove_msg(
         bot=bot, chat_id=team.get_chat_id(), msg_id=await get_saved_message(game, team, dao.poll)
     )
+    waiver_results = await read_interactor(game_id=game.id, identity=identity_provider)
     await bot.send_message(
         chat_id=user.tg_id,
-        **await start_approve_waivers(game, team, dao),
+        **await start_approve_waivers(game, team, waiver_results),
     )
 
 
+@inject
 async def waiver_main_menu(
     c: CallbackQuery,
     callback_data: kb.WaiverMainCD,
     player: dto.Player,
     game: dto.Game,
     dao: HolderDao,
+    identity_provider: FromDishka[TgBotIdentityProvider],
+    read_interactor: FromDishka[WaiversReaderInteractor],
 ):
     check_same_game(callback_data, game, player)
     team = await get_my_team(player, dao.team_player)
@@ -151,8 +167,9 @@ async def waiver_main_menu(
         raise PlayerNotInTeam(player=player, team=team)
     check_same_team(callback_data, player, team)
     check_allow_approve_waivers(await get_full_team_player(player, team, dao.waiver_approver))
+    waiver_results = await read_interactor(game_id=game.id, identity=identity_provider)
     await c.message.edit_text(  # type: ignore[union-attr]
-        **await start_approve_waivers(game, team, dao)
+        **start_approve_waivers(game, team, waiver_results)
     )
 
 
@@ -221,12 +238,15 @@ async def waiver_user_menu(
     )
 
 
+@inject
 async def waiver_remove_user_vote(
     c: CallbackQuery,
     callback_data: kb.WaiverRemovePlayerCD,
     player: dto.Player,
     game: dto.Game,
     dao: HolderDao,
+    identity_provider: FromDishka[TgBotIdentityProvider],
+    read_interactor: FromDishka[WaiversReaderInteractor],
 ):
     check_same_game(callback_data, game, player)
     team = await get_my_team(player, dao.team_player)
@@ -236,8 +256,9 @@ async def waiver_remove_user_vote(
     target = await dao.player.get_by_id(callback_data.player_id)
     await revoke_vote_by_captain(game, team, player, target, dao.waiver_approver)
     await c.answer()
+    waiver_results = await read_interactor(game_id=game.id, identity=identity_provider)
     await c.message.edit_text(  # type: ignore[union-attr]
-        **await start_approve_waivers(game, team, dao)
+        **start_approve_waivers(game, team, waiver_results)
     )
 
 

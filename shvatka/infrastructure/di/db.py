@@ -1,9 +1,10 @@
 from typing import AsyncIterable
 
-from dishka import Provider, Scope, provide
+from dishka import Provider, Scope, provide, AnyOf
 from redis.asyncio.client import Redis
 from sqlalchemy.ext.asyncio import async_sessionmaker, AsyncSession, AsyncEngine
 
+from shvatka.core.interfaces.dal.waiver import GameWaiversGetter
 from shvatka.infrastructure.db import dao
 from shvatka.infrastructure.db.config.models.db import DBConfig, RedisConfig
 from shvatka.infrastructure.db.dao import (
@@ -120,7 +121,7 @@ class DAOProvider(Provider):
     def team_dao(self, dao: HolderDao) -> TeamDao:
         return dao.team
 
-    @provide
+    @provide(provides=AnyOf[WaiverDao, GameWaiversGetter])
     def waiver_dao(self, dao: HolderDao) -> WaiverDao:
         return dao.waiver
 

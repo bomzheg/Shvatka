@@ -21,7 +21,7 @@ from shvatka.core.scenario.interactors import (
 )
 from shvatka.core.services.game_play import CheckKeyInteractor
 from shvatka.core.waiver.interactors import WaiversReaderInteractor, AddWaiverVoteInteractor
-from shvatka.infrastructure.db.dao.complex import WaiverVoteAdderImpl, WaiverVoteGetterImpl
+from shvatka.infrastructure.db.dao.complex2.waiver import WaiverVoteAdderImpl, WaiverVoteGetterImpl
 from shvatka.infrastructure.db.dao.complex.game import GameFilesGetterImpl, GamePlayReaderImpl
 from shvatka.infrastructure.db.dao.complex.game_play import GamePlayerDaoImpl
 from shvatka.infrastructure.db.dao.complex.key_log import GameKeysReaderImpl

@@ -34,6 +34,7 @@ from shvatka.infrastructure.di import (
     FileClientProvider,
     GamePlayProvider,
     PrinterProvider,
+    WaiverProvider,
     ContextProvider,
     DAOProvider,
 )
@@ -81,6 +82,7 @@ async def dishka():
         TelegraphProvider(),
         ContextProvider(),
         GamePlayProvider(),
+        WaiverProvider(),
         PrinterProvider(),
         GameToolsProvider(),
         BotIdpProvider(),

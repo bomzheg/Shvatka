@@ -19,7 +19,7 @@ from shvatka.core.scenario.interactors import (
     GameScenarioTransitionsInteractor,
 )
 from shvatka.core.services.game_play import CheckKeyInteractor
-from shvatka.core.waiver.interactors import WaiversReaderInteractor
+from shvatka.core.waiver.interactors import WaiversReaderInteractor, AddWaiverVoteInteractor
 from shvatka.infrastructure.db.dao.complex.game import GameFilesGetterImpl, GamePlayReaderImpl
 from shvatka.infrastructure.db.dao.complex.game_play import GamePlayerDaoImpl
 from shvatka.infrastructure.db.dao.complex.key_log import GameKeysReaderImpl
@@ -72,3 +72,4 @@ class WaiverProvider(Provider):
     scope = Scope.REQUEST
 
     waivers_reader_interactor = provide(WaiversReaderInteractor)
+    add_waiver_vote = provide(AddWaiverVoteInteractor)

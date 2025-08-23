@@ -5,10 +5,7 @@ from aiogram.utils.text_decorations import html_decoration as hd
 
 from shvatka.core.models import dto
 from shvatka.core.models.enums.played import Played
-from shvatka.core.waiver.services import get_vote_to_voted
 from shvatka.core.views.texts import WAIVER_STATUS_MEANING
-from shvatka.infrastructure.db.dao.complex2.waiver import WaiverVoteGetterImpl
-from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.tgbot import keyboards as kb
 from shvatka.tgbot.views.player import get_emoji
 from shvatka.tgbot.views.user import get_small_card_no_link
@@ -50,8 +47,9 @@ def get_waiver_final_text(vote: dict[Played, list[dto.VotedPlayer]], game: dto.G
     )
 
 
-async def start_approve_waivers(game: dto.Game, team: dto.Team, dao: HolderDao):
-    votes = await get_vote_to_voted(team=team, dao=WaiverVoteGetterImpl(dao))
+def start_approve_waivers(
+    game: dto.Game, team: dto.Team, votes: dict[Played, list[dto.VotedPlayer]]
+):
     return dict(
         text=f"Играющие в {hd.quote(game.name)} схватчики команды {hd.bold(hd.quote(team.name))}:",
         reply_markup=kb.get_kb_manage_waivers(

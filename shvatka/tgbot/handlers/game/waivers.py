@@ -4,7 +4,7 @@ from aiogram.types import Message, LinkPreviewOptions
 
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.core.models import dto
-from shvatka.core.services.waiver import get_all_played
+from shvatka.core.waiver.services import get_all_played
 from shvatka.tgbot.filters import GameStatusFilter
 from shvatka.tgbot.views.commands import GET_WAIVERS_COMMAND
 from shvatka.tgbot.views.waiver import render_all_teams_waivers

@@ -6,7 +6,7 @@ from shvatka.core.models import dto
 from shvatka.core.models.enums.played import Played
 from shvatka.core.services.game import start_waivers
 from shvatka.core.services.player import join_team, leave
-from shvatka.core.services.waiver import (
+from shvatka.core.waiver.services import (
     get_vote_to_voted,
     add_vote,
     approve_waivers,

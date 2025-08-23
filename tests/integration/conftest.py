@@ -27,6 +27,7 @@ from shvatka.infrastructure.di import (
     FileClientProvider,
     GamePlayProvider,
     PrinterProvider,
+    WaiverProvider,
 )
 from shvatka.main_factory import IdpProvider
 from shvatka.tgbot.main_factory import DpProvider, LockProvider, GameToolsProvider, BotIdpProvider
@@ -68,6 +69,7 @@ async def dishka():
         UrlProvider(),
         TelegraphProvider(),
         GamePlayProvider(),
+        WaiverProvider(),
         PrinterProvider(),
         GameToolsProvider(),
         ApiIdpProvider(),

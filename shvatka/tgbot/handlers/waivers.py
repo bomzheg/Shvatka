@@ -10,6 +10,7 @@ from dishka import FromDishka
 from dishka.integrations.aiogram import inject
 
 from shvatka.core.utils import exceptions
+from shvatka.core.waiver.interactors import WaiversReaderInteractor
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.core.models import dto
 from shvatka.core.models.enums import GameStatus
@@ -35,9 +36,9 @@ from shvatka.tgbot.utils.router import disable_router_on_game
 from shvatka.tgbot.views.commands import START_WAIVERS_COMMAND, APPROVE_WAIVERS_COMMAND
 from shvatka.tgbot.views.utils import total_remove_msg
 from shvatka.tgbot.views.waiver import (
-    get_waiver_poll_text,
     start_approve_waivers,
     get_waiver_final_text,
+    get_waiver_poll_text,
 )
 
 
@@ -48,29 +49,31 @@ async def start_waivers(
     dao: HolderDao,
     bot: Bot,
     identity_provider: FromDishka[TgBotIdentityProvider],
+    interactor: FromDishka[WaiversReaderInteractor],
 ):
     try:
-        team_player = await identity_provider.get_full_team_player()
-        if team_player is None:
-            raise exceptions.PlayerNotInTeam
-        check_allow_approve_waivers(team_player)
+        waiver_results = await interactor(game_id=game.id, identity=identity_provider)
     except (exceptions.PermissionsError, exceptions.PlayerNotInTeam):
         with suppress(TelegramAPIError):
             await message.delete()
             return
         await message.reply("Управлять вейверами может только капитан!")
         return
-    team = team_player.team
+    team = await identity_provider.get_team()
+    assert team is not None
+    chat_id = team.get_chat_id()
+    assert chat_id is not None
     msg = await bot.send_message(
-        chat_id=team.get_chat_id(),  # type: ignore[arg-type]
-        text=await get_waiver_poll_text(team, game, dao),
+        chat_id=chat_id,
+        text=get_waiver_poll_text(waiver_results, game),
         reply_markup=kb.get_kb_waivers(team, game),
         link_preview_options=LinkPreviewOptions(is_disabled=True),
     )
     old_msg_id = await swap_saved_message(game, msg, dao.poll)
-    await total_remove_msg(bot, team.get_chat_id(), old_msg_id)
+    await total_remove_msg(bot, chat_id, old_msg_id)
 
 
+@inject
 async def add_vote_handler(
     c: CallbackQuery,
     callback_data: kb.WaiverVoteCD,
@@ -78,6 +81,8 @@ async def add_vote_handler(
     team: dto.Team,
     game: dto.Game,
     dao: HolderDao,
+    identity_provider: FromDishka[TgBotIdentityProvider],
+    interactor: FromDishka[WaiversReaderInteractor],
 ):
     if team.id != callback_data.team_id:
         raise PlayerNotInTeam(player=player, team=team)
@@ -89,8 +94,9 @@ async def add_vote_handler(
         dao=dao.waiver_vote_adder,
     )
     await c.answer()
+    waiver_results = await interactor(game_id=game.id, identity=identity_provider)
     await c.message.edit_text(  # type: ignore[union-attr]
-        text=await get_waiver_poll_text(team, game, dao),
+        text=get_waiver_poll_text(waiver_results, game),
         reply_markup=kb.get_kb_waivers(team, game),
         link_preview_options=LinkPreviewOptions(is_disabled=True),
     )
@@ -160,15 +166,18 @@ async def confirm_approve_waivers_handler(
     game: dto.Game,
     dao: HolderDao,
     bot: Bot,
+    identity_provider: FromDishka[TgBotIdentityProvider],
+    interactor: FromDishka[WaiversReaderInteractor],
 ):
     check_same_game(callback_data, game, player)
     team = await get_my_team(player, dao.team_player)
     check_same_team(callback_data, player, team)
     assert team
     await approve_waivers(game=game, team=team, approver=player, dao=dao.waiver_approver)
+    waiver_results = await interactor(game_id=game.id, identity=identity_provider)
     await bot.send_message(
         chat_id=team.get_chat_id(),  # type: ignore[arg-type]
-        text=await get_waiver_final_text(team, game, dao),
+        text=get_waiver_final_text(waiver_results, game),
         link_preview_options=LinkPreviewOptions(is_disabled=True),
     )
     await c.answer("Вейверы успешно опубликованы!")

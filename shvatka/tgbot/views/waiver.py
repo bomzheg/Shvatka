@@ -29,6 +29,24 @@ def render_all_teams_waivers(waivers: dict[dto.Team, Iterable[dto.VotedPlayer]])
     return result
 
 
+def render_all_teams_poll_stat(waivers: dict[dto.Team, dict[Played, int]]) -> str:
+    result = ""
+    for team, poll_stat in waivers.items():
+        result += hd.bold(hd.quote(team.name)) + ":\n"
+        if Played.yes in poll_stat:
+            result += f"Да: {poll_stat[Played.yes]}\n"
+        if Played.no in poll_stat:
+            result += f"Нет: {poll_stat[Played.no]}\n"
+        if Played.think in poll_stat:
+            result += f"Думает: {poll_stat[Played.think]}\n"
+        if Played.revoked in poll_stat:
+            result += f"Отозван кэпом: {poll_stat[Played.revoked]}\n"
+        if Played.not_allowed in poll_stat:
+            result += f"Не допущен оргом: {poll_stat[Played.not_allowed]}\n"
+        result += "\n\n"
+    return result
+
+
 def render_players(users: Iterable[dto.VotedPlayer]) -> str:
     return "\n".join(
         [get_emoji(voted.pit) + get_small_card_no_link(voted.player) for voted in users]

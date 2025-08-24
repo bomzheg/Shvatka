@@ -12,6 +12,7 @@ from shvatka.core.models import enums
 from shvatka.core.models.enums.invite_type import InviteType
 from shvatka.core.models.enums.org_permission import OrgPermission
 from shvatka.core.services.game import get_game
+from shvatka.core.utils import exceptions
 from shvatka.core.utils.exceptions import PermissionsError, GameHasAnotherAuthor, SaltError
 from shvatka.core.views.game import OrgNotifier, NewOrg
 
@@ -137,6 +138,15 @@ def check_can_spy(org: dto.Organizer):
     if not org.can_spy:
         raise PermissionsError(
             permission_name=enums.OrgPermission.can_spy.name,
+            player=org.player,
+            game=org.game,
+        )
+
+
+def check_can_check_waivers(org: dto.Organizer):
+    if not org:
+        raise exceptions.PermissionsError(
+            permission_name="can_check_waivers",
             player=org.player,
             game=org.game,
         )

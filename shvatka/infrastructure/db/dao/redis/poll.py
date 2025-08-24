@@ -66,6 +66,13 @@ class PollDao:
         rez = await self.redis.keys(f"{self.prefix}:{team_id}:*", encoding="utf-8")
         return rez
 
+    async def get_polled_teams(self) -> list[int]:
+        """
+        :return: список team_id которые начали голосование
+        """
+        rez = await self.redis.keys(f"{self.prefix}:*", encoding="utf-8")
+        return list({int(t.removeprefix(f"{self.prefix}:").split(":")[0]) for t in rez})
+
     def parse_player_id(self, key: str, team_id: int) -> int:
         """
 

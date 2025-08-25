@@ -31,15 +31,15 @@ async def chat_join_handler(
     except (exceptions.UserNotFoundError, exceptions.PlayerNotFoundError):
         pass
     if instant_approve:
+        await bot.approve_chat_join_request(
+            chat_id=chat_join_request.chat.id, user_id=chat_join_request.from_user.id
+        )
         await bot.send_message(
             chat_id=chat_join_request.from_user.id,
             text=(
                 f"Я впустил тебя в чат "
                 f"{hd.quote(chat_join_request.chat.username or chat_join_request.chat.title)}"  # type: ignore[arg-type]
             ),
-        )
-        await bot.approve_chat_join_request(
-            chat_id=chat_join_request.chat.id, user_id=chat_join_request.from_user.id
         )
     elif config.enabled_capcha:
         state = FSMContext(

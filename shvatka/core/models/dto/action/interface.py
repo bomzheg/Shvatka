@@ -9,6 +9,7 @@ class ConditionType(enum.StrEnum):
     WIN_KEY = enum.auto()
     BONUS_KEY = enum.auto()
     BONUS_HINT_KEY = enum.auto()
+    WIN_TIMER = enum.auto()
 
 
 class Condition(Protocol):

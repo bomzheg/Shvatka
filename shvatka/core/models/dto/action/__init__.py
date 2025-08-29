@@ -18,5 +18,14 @@ from .keys import (
     KeyBonusHintCondition,
 )
 from .state_holder import InMemoryStateHolder
+from .timer import (
+    LevelTimerAction,
+    LevelTimerState,
+    LevelTimerDecision,
+    LevelTimerCondition,
+    LevelTimerWinCondition,
+)
 
-AnyCondition: typing.TypeAlias = KeyWinCondition | KeyBonusCondition | KeyBonusHintCondition
+AnyCondition: typing.TypeAlias = (
+    KeyWinCondition | KeyBonusCondition | KeyBonusHintCondition | LevelTimerWinCondition
+)

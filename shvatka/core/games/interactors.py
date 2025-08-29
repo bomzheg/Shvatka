@@ -9,6 +9,7 @@ from shvatka.core.games.adapters import (
     GameKeysReader,
     GameStatReader,
 )
+from shvatka.core.interfaces.current_game import CurrentGameProvider
 from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.models import dto
 from shvatka.core.rules.game import check_can_read
@@ -66,8 +67,9 @@ class GameFileReaderInteractor:
 
 
 class GamePlayReaderInteractor:
-    def __init__(self, dao: GamePlayReader):
+    def __init__(self, dao: GamePlayReader, current_game: CurrentGameProvider):
         self.dao = dao
+        self.current_game = current_game
 
     async def __call__(self, identity: IdentityProvider) -> CurrentHints:
         user = await identity.get_user()
@@ -78,9 +80,7 @@ class GamePlayReaderInteractor:
                 player=player,
                 user=user,
             )
-        game = await self.dao.get_active_game()
-        if game is None:
-            raise exceptions.HaveNotActiveGame(game=game, user=user)
+        game = await self.current_game.get_required_game()
         if not await self.dao.check_waiver(player, team, game):
             raise exceptions.WaiverError(
                 team=team, game=game, player=player, text="игрок не заявлен на игру, но ввёл ключ"

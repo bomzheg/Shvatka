@@ -16,11 +16,11 @@ from shvatka.core.games.interactors import (
     GameKeysReaderInteractor,
     GameStatReaderInteractor,
 )
+from shvatka.core.interfaces.current_game import CurrentGameProvider
 from shvatka.core.services.game import (
     get_authors_games,
     get_completed_games,
     get_full_game,
-    get_active,
 )
 from shvatka.core.utils import exceptions
 from shvatka.infrastructure.db.dao.holder import HolderDao
@@ -36,10 +36,10 @@ async def get_my_games_list(
 
 @inject
 async def get_active_game(
-    dao: FromDishka[HolderDao],
+    current_game: FromDishka[CurrentGameProvider],
     response: Response,
 ) -> responses.Game | None:
-    game = await get_active(dao.game)
+    game = await current_game.get_game()
     if game is None:
         response.status_code = HTTP_404_NOT_FOUND
     return responses.Game.from_core(game)

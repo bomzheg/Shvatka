@@ -3,7 +3,7 @@ from aiogram_dialog import DialogManager
 from shvatka.core.models import dto
 from shvatka.core.services.organizers import get_by_player_or_none
 from shvatka.core.services.player import save_promotion_invite, get_my_team, get_full_team_player
-from shvatka.core.services.waiver import get_my_waiver
+from shvatka.core.waiver.services import get_my_waiver
 from shvatka.core.utils.exceptions import PlayerNotInTeam
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.tgbot import keyboards as kb

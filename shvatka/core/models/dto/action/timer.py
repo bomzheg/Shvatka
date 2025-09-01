@@ -1,6 +1,7 @@
+import abc
 from dataclasses import dataclass
 from datetime import timedelta, datetime
-from typing import Protocol, Literal
+from typing import Literal
 
 from shvatka.core.models.dto.action import (
     Condition,
@@ -31,7 +32,7 @@ class LevelTimerDecision(Decision):
     type: DecisionType
 
 
-class LevelTimerCondition(Condition, Protocol):
+class LevelTimerCondition(Condition, metaclass=abc.ABCMeta):
     def get_action_time(self) -> timedelta:
         raise NotImplementedError
 

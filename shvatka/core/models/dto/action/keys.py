@@ -1,3 +1,4 @@
+import abc
 import typing
 from abc import abstractmethod
 from dataclasses import dataclass
@@ -96,7 +97,7 @@ class LevelUpKeyDecision(TypedKeyDecision, LevelUpDecision):
     next_level: str | None = None
 
 
-class KeyCondition(Condition):
+class KeyCondition(Condition, metaclass=abc.ABCMeta):
     def get_keys(self) -> set[SHKey]:
         raise NotImplementedError
 

@@ -43,7 +43,7 @@ class KeyProcessor:
                 all_typed={k.text for k in all_typed},
             )
             decision = lvl.scenario.check(
-                action=action.TypedKeyAction(key=key),
+                action_=action.TypedKeyAction(key=key),
                 state=state,
             )
             if isinstance(decision, action.KeyDecision):

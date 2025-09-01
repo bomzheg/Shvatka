@@ -9,22 +9,13 @@ from shvatka.core.models.dto.hints import TimeHint, AnyHint
 from shvatka.core.models.dto.hints.time_hint import EnumeratedTimeHint
 from shvatka.core.utils import exceptions
 from shvatka.core.models.dto.action import (
-    Action,
-    Decision,
-    StateHolder,
-    DecisionType,
-    Decisions,
-    TypedKeyDecision,
     KeyBonusCondition,
-    NotImplementedActionDecision,
     BonusKeyDecision,
     AnyCondition,
 )
 from shvatka.core.models.dto.action.keys import (
     SHKey,
     KeyWinCondition,
-    TypedKeyAction,
-    WrongKeyDecision,
     BonusKey,
     KeyCondition,
 )
@@ -318,26 +309,32 @@ class LevelScenario:
     def is_last_hint(self, hint_number: int) -> bool:
         return len(self.time_hints) == hint_number + 1
 
-    def check(self, action: Action, state: StateHolder) -> Decision:
-        decisions = Decisions([cond.check(action, state) for cond in self.conditions])
+    def check(self, action_: action.Action, state: action.StateHolder) -> action.Decision:
+        decisions = action.Decisions([cond.check(action_, state) for cond in self.conditions])
         implemented = decisions.get_implemented()
         if not implemented:
-            return NotImplementedActionDecision()
-        if isinstance(action, TypedKeyAction):
+            return action.NotImplementedActionDecision()
+        if isinstance(action_, action.TypedKeyAction):
             if bonuses := implemented.get_all(BonusKeyDecision):
                 return bonuses.get_exactly_one(self.id)
-            key_decisions = implemented.get_all(TypedKeyDecision, WrongKeyDecision)
+            key_decisions = implemented.get_all(action.TypedKeyDecision, action.WrongKeyDecision)
             if not key_decisions:
-                return NotImplementedActionDecision()
+                return action.NotImplementedActionDecision()
             if not key_decisions.get_significant():
-                assert all(d.type == DecisionType.NO_ACTION for d in key_decisions)
-                if duplicate_correct := key_decisions.get_all(TypedKeyDecision):
+                assert all(d.type == action.DecisionType.NO_ACTION for d in key_decisions)
+                if duplicate_correct := key_decisions.get_all(action.TypedKeyDecision):
                     return duplicate_correct.get_exactly_one(self.id)
                 return key_decisions[0]
             significant_key_decisions = key_decisions.get_significant()
             return significant_key_decisions.get_exactly_one(self.id)
+        if isinstance(action_, action.LevelTimerAction):
+            win_timer = implemented.get_all(action.LevelTimerDecision)
+            significant_win_timer = win_timer.get_significant()
+            if not significant_win_timer:
+                return action.NotImplementedActionDecision()
+            return significant_win_timer.get_exactly_one(self.id)
         else:
-            return NotImplementedActionDecision()
+            return action.NotImplementedActionDecision()
 
     def get_keys(self) -> set[SHKey]:
         return self.conditions.get_keys()

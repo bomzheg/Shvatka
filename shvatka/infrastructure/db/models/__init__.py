@@ -5,6 +5,7 @@ from .file_info import FileInfo
 from .forum_team import ForumTeam
 from .forum_user import ForumUser
 from .game import Game
+from .event_log import GameEvent
 from .level import Level
 from .levels_times import LevelTime
 from .log_keys import KeyTime

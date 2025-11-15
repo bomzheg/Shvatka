@@ -29,3 +29,4 @@ from .time_key import (
 from .user import User, UserWithCreds
 from .waiver import Waiver, WaiverQuery
 from .version import VersionInfo
+from .event_log import GameEvent

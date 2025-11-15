@@ -11,3 +11,5 @@ class CurrentHints:
     typed_keys: list[dto.KeyTime]
     level_number: int
     started_at: datetime
+
+

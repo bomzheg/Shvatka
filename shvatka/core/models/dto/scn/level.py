@@ -319,6 +319,11 @@ class LevelScenario:
                 return bonuses.get_exactly_one(self.id)
             key_decisions = implemented.get_all(action.TypedKeyDecision, action.WrongKeyDecision)
             if not key_decisions:
+                #  not implemented because all known in moment of writing this code are:
+                #  - BonusKey
+                #  - TypedKey (and inheritance)
+                #  - WrongKey
+                #  - if we are here - some implementation are not supported now
                 return action.NotImplementedActionDecision()
             if not key_decisions.get_significant():
                 assert all(d.type == action.DecisionType.NO_ACTION for d in key_decisions)

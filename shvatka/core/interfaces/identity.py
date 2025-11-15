@@ -32,3 +32,9 @@ class IdentityProvider(Protocol):
         if player is None:
             raise exceptions.PlayerNotFoundError
         return player
+
+    async def get_required_team(self) -> dto.Team:
+        team = await self.get_team()
+        if team is None:
+            raise exceptions.TeamError
+        return team

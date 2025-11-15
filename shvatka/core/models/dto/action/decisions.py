@@ -8,7 +8,7 @@ from shvatka.core.models.dto.action.interface import DecisionType, Decision
 logger = logging.getLogger(__name__)
 
 
-@dataclass
+@dataclass(kw_only=True)
 class NotImplementedActionDecision(Decision):
     type: Literal[DecisionType.NOT_IMPLEMENTED] = DecisionType.NOT_IMPLEMENTED
 

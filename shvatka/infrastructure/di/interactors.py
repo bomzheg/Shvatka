@@ -4,7 +4,7 @@ from shvatka.core.games.interactors import (
     GameFileReaderInteractor,
     GamePlayReaderInteractor,
     GameKeysReaderInteractor,
-    GameStatReaderInteractor,
+    GameStatReaderInteractor, GamePlayTimerInteractor,
 )
 from shvatka.core.games.adapters import (
     GameFileReader,
@@ -15,12 +15,14 @@ from shvatka.core.games.adapters import (
 from shvatka.core.interfaces.current_game import CurrentGameProvider
 from shvatka.core.interfaces.dal.game import GameByIdGetter
 from shvatka.core.interfaces.dal.game_play import GamePlayerDao
+from shvatka.core.models.dto.action import LevelTimerDecision
 from shvatka.core.scenario.interactors import (
     AllGameKeysReaderInteractor,
     GameScenarioTransitionsInteractor,
 )
 from shvatka.core.services.current_game import CurrentGameProviderImpl
 from shvatka.core.services.game_play import CheckKeyInteractor
+from shvatka.core.services.key import KeyProcessor, TimerProcessor
 from shvatka.infrastructure.db.dao.complex.game import GameFilesGetterImpl, GamePlayReaderImpl
 from shvatka.infrastructure.db.dao.complex.game_play import GamePlayerDaoImpl
 from shvatka.infrastructure.db.dao.complex.key_log import GameKeysReaderImpl
@@ -65,6 +67,9 @@ class GamePlayProvider(Provider):
         return GamePlayerDaoImpl(dao)
 
     check_key_interactor = provide(CheckKeyInteractor)
+    key_processor = provide(KeyProcessor)
+    timer_event_interactor = provide(GamePlayTimerInteractor)
+    timer_processor = provide(TimerProcessor)
 
     @provide
     def game_by_id_getter(self, dao: HolderDao) -> GameByIdGetter:

@@ -52,12 +52,9 @@ class BotInputContainer(InputContainer):
 
 async def get_message_id(input_container: InputContainer) -> int | None:
     if isinstance(input_container, BotInputContainer):
-        reply_to = input_container.get_message_id()
+        return input_container.get_message_id()
     else:
-        raise TypeError(
-            f"input_container must be of type BotInputContainer, got {type(input_container)}"
-        )
-    return reply_to
+        return None
 
 
 @dataclass

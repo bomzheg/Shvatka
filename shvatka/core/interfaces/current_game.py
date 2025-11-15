@@ -13,3 +13,12 @@ class CurrentGameProvider(Protocol):
         if game is None:
             raise exceptions.HaveNotActiveGame
         return game
+
+    async def get_full_game(self) -> dto.FullGame | None:
+        raise NotImplementedError
+
+    async def get_required_full_game(self) -> dto.FullGame:
+        full_game = await self.get_full_game()
+        if full_game is None:
+            raise exceptions.HaveNotActiveGame
+        return full_game

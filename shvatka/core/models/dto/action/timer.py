@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from datetime import timedelta, datetime
 from typing import Literal
 
+from shvatka.core.models.dto import action
 from shvatka.core.models.dto.action import (
     Condition,
     Action,
@@ -24,6 +25,7 @@ class LevelTimerAction(Action):
 class LevelTimerState(State):
     started_level_time_id: int
     current_level_time_id: int
+    applied_effects: list[action.Effects]
     started_at: datetime
 
 

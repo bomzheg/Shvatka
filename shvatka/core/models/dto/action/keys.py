@@ -6,7 +6,7 @@ from typing import Literal
 
 from shvatka.core.models import enums
 from shvatka.core.utils.input_validation import is_key_valid
-from . import StateHolder
+from . import StateHolder, EffectType
 from .decisions import NotImplementedActionDecision
 from .interface import (
     Action,
@@ -146,12 +146,13 @@ class KeyWinCondition(KeyCondition):
         return enums.KeyType.simple if self._is_correct(action) else enums.KeyType.wrong
 
 
-@dataclass
+@dataclass(kw_only=True)
 class BonusKeyDecision(KeyDecision):
     type: DecisionType
     key_type: enums.KeyType
     duplicate: bool
     key: BonusKey
+    effect: EffectType = EffectType.bonus_minutes
 
     @property
     def key_text(self) -> str:

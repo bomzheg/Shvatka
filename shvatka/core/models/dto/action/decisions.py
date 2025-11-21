@@ -3,12 +3,17 @@ from dataclasses import dataclass
 from typing import Literal, Sequence, overload
 
 from shvatka.common.log_utils import obfuscate_sensitive
-from shvatka.core.models.dto.action.interface import DecisionType, Decision
+from shvatka.core.models.dto.action.interface import (
+    DecisionType,
+    Decision,
+    MultipleEffectsDecision,
+)
+from shvatka.core.models.dto.action.interface import EffectsDecision
 
 logger = logging.getLogger(__name__)
 
 
-@dataclass
+@dataclass(kw_only=True)
 class NotImplementedActionDecision(Decision):
     type: Literal[DecisionType.NOT_IMPLEMENTED] = DecisionType.NOT_IMPLEMENTED
 
@@ -57,3 +62,7 @@ class Decisions(Sequence[Decision]):
 
     def get_all_only(self, *type_: DecisionType) -> "Decisions":
         return Decisions([d for d in self.decisions if d.type in type_])
+
+    def get_significant_effects(self) -> MultipleEffectsDecision:
+        effects_decisions = [d for d in self.decisions if isinstance(d, EffectsDecision)]
+        return MultipleEffectsDecision(effects=[d.effects for d in effects_decisions])

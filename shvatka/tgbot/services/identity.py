@@ -8,7 +8,10 @@ from dishka.integrations.aiogram import AiogramMiddlewareData
 from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.models import dto
 from shvatka.core.services.chat import upsert_chat
-from shvatka.core.services.player import upsert_player, get_full_team_player
+from shvatka.core.services.player import (
+    upsert_player,
+    get_full_team_player_or_none,
+)
 from shvatka.core.services.team import get_by_chat
 from shvatka.core.services.user import upsert_user
 from shvatka.infrastructure.db.dao.holder import HolderDao
@@ -87,7 +90,7 @@ class TgBotIdentityProvider(IdentityProvider):
         if player is None:
             self.cache["full_team_player"] = None
             return None
-        team_player = await get_full_team_player(
+        team_player = await get_full_team_player_or_none(
             player, await self.get_team(), dao=self.dao.team_player
         )
         self.cache["full_team_player"] = team_player

@@ -161,10 +161,6 @@ async def get_game_package(
     )
 
 
-async def get_active(dao: ActiveGameFinder) -> dto.Game | None:
-    return await dao.get_active_game()
-
-
 async def rename_game(author: dto.Player, game: dto.Game, new_name: str, dao: GameRenamer):
     check_can_read(game, author)
     check_game_editable(game)

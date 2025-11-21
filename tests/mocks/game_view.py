@@ -1,4 +1,5 @@
 from dataclasses import dataclass, field
+from typing import Sequence
 
 from shvatka.core.models import dto
 from shvatka.core.models.dto import hints
@@ -14,7 +15,7 @@ class GameViewMock(GameView):
     correct_key_calls: list[dto.KeyTime] = field(default_factory=list)
     wrong_key_calls: list[dto.KeyTime] = field(default_factory=list)
     bonus_key_calls: list[tuple[dto.KeyTime, float]] = field(default_factory=list)
-    bonus_hint_key_calls: list[tuple[dto.KeyTime, list[hints.AnyHint]]] = field(
+    bonus_hint_key_calls: list[tuple[dto.KeyTime, Sequence[hints.AnyHint]]] = field(
         default_factory=list
     )
     game_finished_calls: list[dto.Team] = field(default_factory=list)
@@ -41,7 +42,10 @@ class GameViewMock(GameView):
         self.bonus_key_calls.append((key, bonus))
 
     async def bonus_hint_key(
-        self, key: dto.KeyTime, bonus_hint: list[hints.AnyHint], input_container: InputContainer
+        self,
+        key: dto.KeyTime,
+        bonus_hint: Sequence[hints.AnyHint],
+        input_container: InputContainer,
     ):
         self.bonus_hint_key_calls.append((key, bonus_hint))
 
@@ -50,6 +54,12 @@ class GameViewMock(GameView):
 
     async def game_finished_by_all(self, team: dto.Team) -> None:
         self.game_finished_by_all_calls.add(team)
+
+    async def bonus(self, bonus: float, input_container: InputContainer) -> None:
+        pass
+
+    async def hint(self, hint: Sequence[hints.AnyHint], input_container: InputContainer):
+        pass
 
     def assert_send_only_puzzle(self, team: dto.Team, level: dto.Level) -> None:
         sent = self.send_puzzle_calls.pop()

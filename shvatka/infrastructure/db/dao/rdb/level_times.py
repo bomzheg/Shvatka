@@ -17,6 +17,10 @@ class LevelTimeDao(BaseDAO[models.LevelTime]):
     ) -> None:
         super().__init__(models.LevelTime, session, clock=clock)
 
+    async def get_by_id(self, id_: int, team: dto.Team, game: dto.Game) -> dto.LevelTime:
+        model = await self._get_by_id(id_)
+        return model.to_dto(game=game, team=team)
+
     async def set_to_level(
         self,
         team: dto.Team,

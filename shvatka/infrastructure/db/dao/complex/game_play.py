@@ -6,6 +6,7 @@ from typing import Iterable
 from shvatka.core.interfaces.dal.game_play import GamePreparer, GamePlayerDao
 from shvatka.core.interfaces.dal.level_times import GameStarter
 from shvatka.core.models import dto, enums
+from shvatka.core.models.dto import action
 
 if typing.TYPE_CHECKING:
     from shvatka.infrastructure.db.dao.holder import HolderDao
@@ -147,3 +148,21 @@ class GamePlayerDaoImpl(GamePlayerDao):
 
     async def commit(self) -> None:
         await self.dao.commit()
+
+    async def get_by_id(self, id_: int) -> dto.Team:
+        return await self.dao.team.get_by_id(id_)
+
+    async def get_level_time_by_id(
+        self, id_: int, team: dto.Team, game: dto.Game
+    ) -> dto.LevelTime:
+        return await self.dao.level_time.get_by_id(id_, team, game)
+
+    async def get_team_events(
+        self, team: dto.Team, level_time: dto.LevelTime
+    ) -> list[dto.GameEvent]:
+        return await self.dao.events.get_team_events(team=team, level_time=level_time)
+
+    async def save_event(
+        self, team: dto.Team, level_time: dto.LevelTime, game: dto.Game, effects: action.Effects
+    ):
+        return await self.dao.events.save_event(team, level_time, game, effects)

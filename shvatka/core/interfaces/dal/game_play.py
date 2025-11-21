@@ -3,8 +3,10 @@ from typing import Iterable, Protocol
 from shvatka.core.interfaces.dal.base import Committer
 from shvatka.core.interfaces.dal.level_times import LevelByTeamGetter
 from shvatka.core.interfaces.dal.organizer import GameOrgsGetter
+from shvatka.core.interfaces.dal.team import TeamByIdGetter
 from shvatka.core.interfaces.dal.waiver import WaiverChecker
 from shvatka.core.models import dto, enums
+from shvatka.core.models.dto import action
 
 
 class GamePreparer(GameOrgsGetter, Protocol):
@@ -18,7 +20,9 @@ class GamePreparer(GameOrgsGetter, Protocol):
         raise NotImplementedError
 
 
-class GamePlayerDao(Committer, WaiverChecker, GameOrgsGetter, LevelByTeamGetter, Protocol):
+class GamePlayerDao(
+    Committer, WaiverChecker, GameOrgsGetter, LevelByTeamGetter, TeamByIdGetter, Protocol
+):
     async def is_key_duplicate(self, level: dto.LevelTime, team: dto.Team, key: str) -> bool:
         raise NotImplementedError
 
@@ -71,4 +75,23 @@ class GamePlayerDao(Committer, WaiverChecker, GameOrgsGetter, LevelByTeamGetter,
         raise NotImplementedError
 
     async def get_level_by_name(self, level_name: str, game: dto.Game) -> dto.Level | None:
+        raise NotImplementedError
+
+    async def get_level_time_by_id(
+        self, id_: int, team: dto.Team, game: dto.Game
+    ) -> dto.LevelTime:
+        raise NotImplementedError
+
+    async def save_event(
+        self,
+        team: dto.Team,
+        level_time: dto.LevelTime,
+        game: dto.Game,
+        effects: action.Effects,
+    ):
+        raise NotImplementedError
+
+    async def get_team_events(
+        self, team: dto.Team, level_time: dto.LevelTime
+    ) -> list[dto.GameEvent]:
         raise NotImplementedError

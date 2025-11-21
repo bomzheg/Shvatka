@@ -2,13 +2,18 @@ from __future__ import annotations
 
 import enum
 import typing
-from typing import Protocol
+from dataclasses import dataclass
+from typing import Protocol, Literal
+
+from .effects import Effects
 
 
 class ConditionType(enum.StrEnum):
     WIN_KEY = enum.auto()
     BONUS_KEY = enum.auto()
     BONUS_HINT_KEY = enum.auto()
+    WIN_TIMER = enum.auto()
+    EFFECTS = enum.auto()
 
 
 class Condition(Protocol):
@@ -38,6 +43,7 @@ class DecisionType(enum.StrEnum):
     NOT_IMPLEMENTED = enum.auto()
     LEVEL_UP = enum.auto()
     SIGNIFICANT_ACTION = enum.auto()
+    EFFECTS = enum.auto()
     NO_ACTION = enum.auto()
     BONUS_TIME = enum.auto()
     BONUS_HINT = enum.auto()
@@ -50,6 +56,28 @@ class Decision(Protocol):
         return self.type == DecisionType.LEVEL_UP
 
 
+class NoActionDecision(Decision):
+    type: Literal[DecisionType.NO_ACTION] = DecisionType.NO_ACTION
+
+
 class LevelUpDecision(Decision):
     type: typing.Literal[DecisionType.LEVEL_UP] = DecisionType.LEVEL_UP
     next_level: str | None = None
+
+
+@dataclass(kw_only=True, frozen=True)
+class EffectsDecision(Decision):
+    type: typing.Literal[DecisionType.EFFECTS] = DecisionType.EFFECTS
+    effects: Effects
+
+    def is_level_up(self) -> bool:
+        return self.effects.level_up
+
+
+@dataclass(kw_only=True, frozen=True)
+class MultipleEffectsDecision(Decision):
+    type: typing.Literal[DecisionType.EFFECTS] = DecisionType.EFFECTS
+    effects: list[Effects]
+
+    def is_level_up(self) -> bool:
+        return any(map(lambda e: e.level_up, self.effects))

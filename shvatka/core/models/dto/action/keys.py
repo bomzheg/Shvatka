@@ -1,3 +1,4 @@
+import abc
 import typing
 from abc import abstractmethod
 from dataclasses import dataclass
@@ -5,7 +6,7 @@ from typing import Literal
 
 from shvatka.core.models import enums
 from shvatka.core.utils.input_validation import is_key_valid
-from . import StateHolder
+from .effects import EffectType
 from .decisions import NotImplementedActionDecision
 from .interface import (
     Action,
@@ -18,6 +19,9 @@ from .interface import (
 )
 
 from shvatka.core.models.dto import hints
+
+if typing.TYPE_CHECKING:
+    from .state_holder import StateHolder
 
 SHKey: typing.TypeAlias = str
 
@@ -96,7 +100,7 @@ class LevelUpKeyDecision(TypedKeyDecision, LevelUpDecision):
     next_level: str | None = None
 
 
-class KeyCondition(Condition):
+class KeyCondition(Condition, metaclass=abc.ABCMeta):
     def get_keys(self) -> set[SHKey]:
         raise NotImplementedError
 
@@ -113,7 +117,7 @@ class KeyWinCondition(KeyCondition):
     type: Literal["WIN_KEY"] = ConditionType.WIN_KEY.name
     next_level: str | None = None
 
-    def check(self, action: Action, state_holder: StateHolder) -> Decision:
+    def check(self, action: Action, state_holder: "StateHolder") -> Decision:
         if not isinstance(action, TypedKeyAction):
             return NotImplementedActionDecision()
         state = state_holder.get(TypedKeysState)
@@ -145,12 +149,13 @@ class KeyWinCondition(KeyCondition):
         return enums.KeyType.simple if self._is_correct(action) else enums.KeyType.wrong
 
 
-@dataclass
+@dataclass(kw_only=True)
 class BonusKeyDecision(KeyDecision):
     type: DecisionType
     key_type: enums.KeyType
     duplicate: bool
     key: BonusKey
+    effect: EffectType = EffectType.bonus_minutes
 
     @property
     def key_text(self) -> str:
@@ -162,7 +167,7 @@ class KeyBonusCondition(KeyCondition):
     keys: set[BonusKey]  # any key is required
     type: Literal["BONUS_KEY"] = ConditionType.BONUS_KEY.name
 
-    def check(self, action: Action, state_holder: StateHolder) -> Decision:
+    def check(self, action: Action, state_holder: "StateHolder") -> Decision:
         if not isinstance(action, TypedKeyAction):
             return NotImplementedActionDecision()
         state = state_holder.get(TypedKeysState)
@@ -198,7 +203,7 @@ class KeyBonusHintCondition(KeyCondition):
     bonus_hint: list[hints.AnyHint]
     type: Literal["BONUS_HINT_KEY"] = ConditionType.BONUS_HINT_KEY.name
 
-    def check(self, action: Action, state_holder: StateHolder) -> Decision:
+    def check(self, action: Action, state_holder: "StateHolder") -> Decision:
         if not isinstance(action, TypedKeyAction):
             return NotImplementedActionDecision()
         state = state_holder.get(TypedKeysState)

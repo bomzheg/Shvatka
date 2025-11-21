@@ -3,28 +3,20 @@ from collections.abc import Sequence, Iterable
 from dataclasses import dataclass
 from datetime import timedelta
 from typing import overload, Literal
+from uuid import UUID
 
 from shvatka.core.models.dto import action, hints
 from shvatka.core.models.dto.hints import TimeHint, AnyHint
 from shvatka.core.models.dto.hints.time_hint import EnumeratedTimeHint
 from shvatka.core.utils import exceptions
 from shvatka.core.models.dto.action import (
-    Action,
-    Decision,
-    StateHolder,
-    DecisionType,
-    Decisions,
-    TypedKeyDecision,
     KeyBonusCondition,
-    NotImplementedActionDecision,
     BonusKeyDecision,
     AnyCondition,
 )
 from shvatka.core.models.dto.action.keys import (
     SHKey,
     KeyWinCondition,
-    TypedKeyAction,
-    WrongKeyDecision,
     BonusKey,
     KeyCondition,
 )
@@ -141,9 +133,12 @@ class Conditions(Sequence[AnyCondition]):
         self.conditions: Sequence[AnyCondition] = conditions
 
     @staticmethod
-    def validate(conditions: Sequence[AnyCondition]) -> None:
+    def validate(conditions: Sequence[AnyCondition]) -> None:  # noqa: C901,PLR0912
         keys: set[str] = set()
         win_conditions = []
+        effects_ids: set[UUID] = set()
+        most_time: timedelta | None = None
+        timers: list[action.LevelTimerEffectsCondition] = []
         for c in conditions:
             if isinstance(c, KeyCondition):
                 if isinstance(c, KeyWinCondition):
@@ -154,6 +149,19 @@ class Conditions(Sequence[AnyCondition]):
                         confidential=f"{keys.intersection(c.keys)}",
                     )
                 keys = keys.union(c.get_keys())
+            if isinstance(c, action.LevelTimerEffectsCondition):
+                if c.effects.id in effects_ids:
+                    raise exceptions.LevelError(
+                        text=f"there are duplicate effects with id {c.effects.id}"
+                    )
+                if c.effects.level_up:
+                    if most_time is not None:
+                        raise exceptions.LevelError(
+                            text="winning timer condition exists multiple times",
+                        )
+                    most_time = c.action_time
+                    continue
+                timers.append(c)
         if not win_conditions:
             raise exceptions.LevelError(text="There is no win condition")
         if all(c.next_level is not None for c in win_conditions):
@@ -165,6 +173,13 @@ class Conditions(Sequence[AnyCondition]):
             raise exceptions.LevelError(
                 text=f"Default win condition must be exactly once, got {count}"
             )
+        if most_time is not None:
+            for timer in timers:
+                if timer.get_action_time() > most_time:
+                    raise exceptions.LevelError(
+                        text="all timers should be less or equal than level win time",
+                        confidential=f"win time={most_time}, timer={timer.get_action_time()}",
+                    )
 
     def replace_bonus_keys(self, bonus_keys: set[action.BonusKey]) -> "Conditions":
         other_conditions = [
@@ -300,26 +315,33 @@ class LevelScenario:
     def is_last_hint(self, hint_number: int) -> bool:
         return len(self.time_hints) == hint_number + 1
 
-    def check(self, action: Action, state: StateHolder) -> Decision:
-        decisions = Decisions([cond.check(action, state) for cond in self.conditions])
+    def check(self, action_: action.Action, state: action.StateHolder) -> action.Decision:
+        decisions = action.Decisions([cond.check(action_, state) for cond in self.conditions])
         implemented = decisions.get_implemented()
         if not implemented:
-            return NotImplementedActionDecision()
-        if isinstance(action, TypedKeyAction):
+            return action.NotImplementedActionDecision()
+        if isinstance(action_, action.TypedKeyAction):
             if bonuses := implemented.get_all(BonusKeyDecision):
                 return bonuses.get_exactly_one(self.id)
-            key_decisions = implemented.get_all(TypedKeyDecision, WrongKeyDecision)
+            key_decisions = implemented.get_all(action.TypedKeyDecision, action.WrongKeyDecision)
             if not key_decisions:
-                return NotImplementedActionDecision()
+                #  not implemented because all known in moment of writing this code are:
+                #  - BonusKey
+                #  - TypedKey (and inheritance)
+                #  - WrongKey
+                #  - if we are here - some implementation are not supported now
+                return action.NotImplementedActionDecision()
             if not key_decisions.get_significant():
-                assert all(d.type == DecisionType.NO_ACTION for d in key_decisions)
-                if duplicate_correct := key_decisions.get_all(TypedKeyDecision):
+                assert all(d.type == action.DecisionType.NO_ACTION for d in key_decisions)
+                if duplicate_correct := key_decisions.get_all(action.TypedKeyDecision):
                     return duplicate_correct.get_exactly_one(self.id)
                 return key_decisions[0]
             significant_key_decisions = key_decisions.get_significant()
             return significant_key_decisions.get_exactly_one(self.id)
+        if isinstance(action_, action.LevelTimerAction):
+            return implemented.get_significant_effects()
         else:
-            return NotImplementedActionDecision()
+            return action.NotImplementedActionDecision()
 
     def get_keys(self) -> set[SHKey]:
         return self.conditions.get_keys()

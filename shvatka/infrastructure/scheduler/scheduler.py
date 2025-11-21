@@ -9,6 +9,7 @@ from dishka import AsyncContainer
 
 from shvatka.core.interfaces.scheduler import Scheduler, LevelTestScheduler
 from shvatka.core.models import dto
+from shvatka.core.models.dto import action
 from shvatka.core.utils.datetime_utils import tz_utc
 from shvatka.infrastructure.db.config.models.db import RedisConfig
 from shvatka.infrastructure.scheduler.context import ScheduledContextHolder
@@ -19,6 +20,7 @@ logger = logging.getLogger(__name__)
 class ApScheduler(Scheduler, LevelTestScheduler):
     def __init__(self, dishka: AsyncContainer, redis_config: RedisConfig) -> None:
         ScheduledContextHolder.dishka = dishka
+        self.dishka = dishka
         self.job_store = RedisJobStore(
             jobs_key="SH.jobs",
             run_times_key="SH.run_times",
@@ -99,6 +101,25 @@ class ApScheduler(Scheduler, LevelTestScheduler):
             run_date=run_at,
             timezone=tz_utc,
             name="plain_hint",
+        )
+
+    async def plain_level_event(
+        self,
+        team: dto.Team,
+        lt_id: int,
+        effects: action.Effects,
+        run_at: datetime,
+    ):
+        self.scheduler.add_job(
+            func="shvatka.infrastructure.scheduler.wrappers:event_wrapper",
+            kwargs={
+                "team_id": team.id,
+                "started_level_time_id": lt_id,
+            },
+            trigger="date",
+            run_date=run_at,
+            timezone=tz_utc,
+            name=f"effects_{team.id}_{effects.id}",
         )
 
     async def plain_test_hint(

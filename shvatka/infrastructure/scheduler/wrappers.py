@@ -1,12 +1,18 @@
+from datetime import datetime
+
 from dishka.integrations.base import FromDishka
 
+from shvatka.core.games.game_play import send_hint, start_game, prepare_game
+from shvatka.core.games.interactors import GamePlayTimerInteractor
+from shvatka.core.interfaces.current_game import CurrentGameProvider
+from shvatka.core.utils.datetime_utils import tz_utc
 from shvatka.core.views.game import GameViewPreparer, GameView, GameLogWriter
 from shvatka.core.views.level import LevelView
 from shvatka.infrastructure.db.dao.holder import HolderDao
+from shvatka.infrastructure.scheduler import SchedulerContainer
 from shvatka.infrastructure.scheduler.context import inject
 from shvatka.core.interfaces.scheduler import LevelTestScheduler, Scheduler
 from shvatka.core.models import dto
-from shvatka.core.services.game_play import prepare_game, start_game, send_hint
 from shvatka.core.services.level_testing import send_testing_level_hint
 from shvatka.core.services.organizers import get_by_player
 from shvatka.tgbot.views.bot_alert import BotAlert
@@ -63,12 +69,12 @@ async def send_hint_wrapper(
     game_view: FromDishka[GameView],
     scheduler: FromDishka[Scheduler],
     alerter: FromDishka[BotAlert],
+    current_game: FromDishka[CurrentGameProvider],
 ):
     try:
         level = await dao.level.get_by_id(level_id)
         team = await dao.team.get_by_id(team_id)
-        game = await dao.game.get_active_game()
-        assert game is not None
+        game = await current_game.get_required_game()
 
         await send_hint(
             level=level,
@@ -106,4 +112,18 @@ async def send_hint_for_testing_wrapper(
         view=level_view,
         scheduler=scheduler,
         dao=dao.level_testing_complex,
+    )
+
+
+@inject
+async def event_wrapper(
+    team_id: int,
+    started_level_time_id: int,
+    interactor: FromDishka[GamePlayTimerInteractor],
+):
+    await interactor(
+        team_id=team_id,
+        started_level_time_id=started_level_time_id,
+        now=datetime.now(tz=tz_utc),
+        input_container=SchedulerContainer(),
     )

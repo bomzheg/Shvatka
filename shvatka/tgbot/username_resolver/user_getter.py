@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+
 # in gh actions there is no event loop by default, and tests and diagrams failed without it
 try:
     asyncio.get_event_loop()

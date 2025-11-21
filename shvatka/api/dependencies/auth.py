@@ -19,7 +19,11 @@ from shvatka.api.models.auth import UserTgAuth, Token
 from shvatka.api.utils.cookie_auth import OAuth2PasswordBearerWithCookie
 from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.models import dto
-from shvatka.core.services.player import upsert_player, get_my_team, get_full_team_player, get_full_team_player_or_none
+from shvatka.core.services.player import (
+    upsert_player,
+    get_my_team,
+    get_full_team_player_or_none,
+)
 from shvatka.core.utils import exceptions
 from shvatka.core.utils.datetime_utils import tz_utc
 from shvatka.core.utils.exceptions import NoUsernameFound

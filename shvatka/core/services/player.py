@@ -230,6 +230,7 @@ async def get_full_team_player_or_none(
         return None
     return team_player
 
+
 async def get_team_players(team: dto.Team, dao: TeamPlayersGetter) -> Sequence[dto.FullTeamPlayer]:
     players = await dao.get_players(team)
     if team.has_forum_team() and team.has_chat():

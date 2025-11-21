@@ -1,6 +1,13 @@
 from __future__ import annotations
 
 import asyncio
+# in gh actions there is no event loop by default, and tests and diagrams failed without it
+try:
+    asyncio.get_event_loop()
+except RuntimeError:
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+
 import logging
 from typing import Self
 
@@ -50,7 +57,7 @@ class UserGetter:
                 username=username, text="got multiple users by this username!"
             )
         as_aio = map_pyrogram_user_to_aiogram(user)
-        logger.info("found user %s", as_aio.json())
+        logger.info("found user %s", as_aio.model_dump_json())
         return as_aio
 
     async def start(self):

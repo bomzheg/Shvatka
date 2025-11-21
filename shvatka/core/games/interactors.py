@@ -26,8 +26,15 @@ from shvatka.core.services.scenario.files import check_file_meta_can_read
 from shvatka.core.utils import exceptions
 from shvatka.core.utils.datetime_utils import tz_utc
 from shvatka.core.utils.key_checker_lock import KeyCheckerFactory
-from shvatka.core.views.game import GameView, GameLogWriter, OrgNotifier, InputContainer, LevelUp, GameLogEvent, \
-    GameLogType
+from shvatka.core.views.game import (
+    GameView,
+    GameLogWriter,
+    OrgNotifier,
+    InputContainer,
+    LevelUp,
+    GameLogEvent,
+    GameLogType,
+)
 from shvatka.infrastructure.scheduler import SchedulerContainer
 
 
@@ -119,6 +126,7 @@ class GamePlayBaseInteractor:
     :param locker: Локи для обеспечения последовательного исполнения определённых операций.
     :param scheduler: Планировщик подсказок.
     """
+
     dao: GamePlayerDao
     view: GameView
     game_log: GameLogWriter
@@ -255,7 +263,9 @@ class GamePlayTimerInteractor(GamePlayBaseInteractor):
     ) -> None:
         team = await self.dao.get_by_id(team_id)
         effects = await self.processor.process(
-            team=team, now=now, started_level_time_id=started_level_time_id,
+            team=team,
+            now=now,
+            started_level_time_id=started_level_time_id,
         )
 
         if effects is None:
@@ -263,10 +273,8 @@ class GamePlayTimerInteractor(GamePlayBaseInteractor):
         game = await self.current_game.get_required_full_game()
         level_time = await self.dao.get_current_level_time(team, game)
         await self.dao.save_event(team=team, level_time=level_time, game=game, effects=effects)
-        if effects.hints:
-            await self.view.hint(
-                hint=effects.hints, input_container=input_container
-            )
+        if effects.hints_:
+            await self.view.hint(hint=effects.hints_, input_container=input_container)
         if effects.bonus_minutes:
             await self.view.bonus(bonus=effects.bonus_minutes, input_container=input_container)
         if effects.level_up:

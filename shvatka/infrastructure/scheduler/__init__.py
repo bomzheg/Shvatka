@@ -1,7 +1,4 @@
 from .dto import SchedulerContainer
 from .scheduler import ApScheduler
 
-__all__ = [
-    "ApScheduler",
-    "SchedulerContainer"
-]
+__all__ = ["ApScheduler", "SchedulerContainer"]

@@ -3,6 +3,7 @@ from datetime import datetime
 from adaptix import Retort
 from dishka.integrations.base import FromDishka
 
+from shvatka.core.games.game_play import send_hint, start_game, prepare_game
 from shvatka.core.games.interactors import GamePlayTimerInteractor
 from shvatka.core.interfaces.current_game import CurrentGameProvider
 from shvatka.core.models.dto import action
@@ -14,7 +15,6 @@ from shvatka.infrastructure.scheduler import SchedulerContainer
 from shvatka.infrastructure.scheduler.context import inject
 from shvatka.core.interfaces.scheduler import LevelTestScheduler, Scheduler
 from shvatka.core.models import dto
-from shvatka.core.services.game_play import prepare_game, start_game, send_hint
 from shvatka.core.services.level_testing import send_testing_level_hint
 from shvatka.core.services.organizers import get_by_player
 from shvatka.tgbot.views.bot_alert import BotAlert
@@ -116,6 +116,7 @@ async def send_hint_for_testing_wrapper(
         dao=dao.level_testing_complex,
     )
 
+
 @inject
 async def event_wrapper(
     team_id: int,
@@ -130,5 +131,5 @@ async def event_wrapper(
         started_level_time_id=started_level_time_id,
         effects=effects,
         now=datetime.now(tz=tz_utc),
-        input_container=SchedulerContainer()
+        input_container=SchedulerContainer(),
     )

@@ -4,7 +4,9 @@ from shvatka.core.games.interactors import (
     GameFileReaderInteractor,
     GamePlayReaderInteractor,
     GameKeysReaderInteractor,
-    GameStatReaderInteractor, GamePlayTimerInteractor,
+    GameStatReaderInteractor,
+    GamePlayTimerInteractor,
+    CheckKeyInteractor,
 )
 from shvatka.core.games.adapters import (
     GameFileReader,
@@ -15,13 +17,11 @@ from shvatka.core.games.adapters import (
 from shvatka.core.interfaces.current_game import CurrentGameProvider
 from shvatka.core.interfaces.dal.game import GameByIdGetter
 from shvatka.core.interfaces.dal.game_play import GamePlayerDao
-from shvatka.core.models.dto.action import LevelTimerDecision
 from shvatka.core.scenario.interactors import (
     AllGameKeysReaderInteractor,
     GameScenarioTransitionsInteractor,
 )
 from shvatka.core.services.current_game import CurrentGameProviderImpl
-from shvatka.core.services.game_play import CheckKeyInteractor
 from shvatka.core.services.key import KeyProcessor, TimerProcessor
 from shvatka.infrastructure.db.dao.complex.game import GameFilesGetterImpl, GamePlayReaderImpl
 from shvatka.infrastructure.db.dao.complex.game_play import GamePlayerDaoImpl

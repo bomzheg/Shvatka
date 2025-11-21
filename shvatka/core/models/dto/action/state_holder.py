@@ -1,9 +1,10 @@
 from dataclasses import dataclass
 from datetime import datetime
 
-from . import TypedKeysState, SHKey, LevelTimerState
+from .effects import Effects
+from .keys import TypedKeysState, SHKey
+from .timer import LevelTimerState
 from .interface import StateHolder, T
-from .. import action
 
 
 @dataclass
@@ -25,7 +26,7 @@ class InMemoryKeyStateHolder(StateHolder):
 class InMemoryTimerStateHolder(StateHolder):
     started_level_time_id: int
     current_level_time_id: int
-    applied_effects: list[action.Effects]
+    applied_effects: list[Effects]
     started_at: datetime
 
     def get(self, state_class: type[T]) -> T:
@@ -33,7 +34,7 @@ class InMemoryTimerStateHolder(StateHolder):
             return LevelTimerState(  # type: ignore[return-value]
                 started_level_time_id=self.started_level_time_id,
                 current_level_time_id=self.current_level_time_id,
-                aplied_effects=self.applied_effects,
+                applied_effects=self.applied_effects,
                 started_at=self.started_at,
             )
         else:

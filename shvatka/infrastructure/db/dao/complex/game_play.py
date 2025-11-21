@@ -152,14 +152,17 @@ class GamePlayerDaoImpl(GamePlayerDao):
     async def get_by_id(self, id_: int) -> dto.Team:
         return await self.dao.team.get_by_id(id_)
 
-    async def get_level_time_by_id(self, id_: int) -> dto.LevelTime:
-        return await self.dao.level_time.get_by_id(id_)
+    async def get_level_time_by_id(
+        self, id_: int, team: dto.Team, game: dto.Game
+    ) -> dto.LevelTime:
+        return await self.dao.level_time.get_by_id(id_, team, game)
 
-    async def get_team_events(self, team: dto.Team, level_time: dto.LevelTime) -> list[dto.GameEvent]:
+    async def get_team_events(
+        self, team: dto.Team, level_time: dto.LevelTime
+    ) -> list[dto.GameEvent]:
         return await self.dao.events.get_team_events(team=team, level_time=level_time)
 
-    async def save_event(self, team: dto.Team, level_time: dto.LevelTime, game: dto.Game, effects: action.Effects):
-        return await self.dao.events.save_event(
-            team, level_time, game, effects
-        )
-
+    async def save_event(
+        self, team: dto.Team, level_time: dto.LevelTime, game: dto.Game, effects: action.Effects
+    ):
+        return await self.dao.events.save_event(team, level_time, game, effects)

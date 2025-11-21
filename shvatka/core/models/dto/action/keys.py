@@ -6,7 +6,7 @@ from typing import Literal
 
 from shvatka.core.models import enums
 from shvatka.core.utils.input_validation import is_key_valid
-from . import StateHolder, EffectType
+from .effects import EffectType
 from .decisions import NotImplementedActionDecision
 from .interface import (
     Action,
@@ -19,6 +19,9 @@ from .interface import (
 )
 
 from shvatka.core.models.dto import hints
+
+if typing.TYPE_CHECKING:
+    from .state_holder import StateHolder
 
 SHKey: typing.TypeAlias = str
 
@@ -114,7 +117,7 @@ class KeyWinCondition(KeyCondition):
     type: Literal["WIN_KEY"] = ConditionType.WIN_KEY.name
     next_level: str | None = None
 
-    def check(self, action: Action, state_holder: StateHolder) -> Decision:
+    def check(self, action: Action, state_holder: "StateHolder") -> Decision:
         if not isinstance(action, TypedKeyAction):
             return NotImplementedActionDecision()
         state = state_holder.get(TypedKeysState)
@@ -164,7 +167,7 @@ class KeyBonusCondition(KeyCondition):
     keys: set[BonusKey]  # any key is required
     type: Literal["BONUS_KEY"] = ConditionType.BONUS_KEY.name
 
-    def check(self, action: Action, state_holder: StateHolder) -> Decision:
+    def check(self, action: Action, state_holder: "StateHolder") -> Decision:
         if not isinstance(action, TypedKeyAction):
             return NotImplementedActionDecision()
         state = state_holder.get(TypedKeysState)
@@ -200,7 +203,7 @@ class KeyBonusHintCondition(KeyCondition):
     bonus_hint: list[hints.AnyHint]
     type: Literal["BONUS_HINT_KEY"] = ConditionType.BONUS_HINT_KEY.name
 
-    def check(self, action: Action, state_holder: StateHolder) -> Decision:
+    def check(self, action: Action, state_holder: "StateHolder") -> Decision:
         if not isinstance(action, TypedKeyAction):
             return NotImplementedActionDecision()
         state = state_holder.get(TypedKeysState)

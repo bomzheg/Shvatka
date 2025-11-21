@@ -3,7 +3,7 @@ import json
 import logging
 from contextlib import suppress
 from dataclasses import dataclass
-from typing import Iterable, cast
+from typing import Iterable, cast, Sequence
 
 from aiogram import Bot
 from aiogram.types import Message, ReactionTypeEmoji
@@ -207,7 +207,10 @@ class BotView(GameViewPreparer, GameView):
             )
 
     async def bonus_hint_key(
-        self, key: dto.KeyTime, bonus_hint: list[hints.AnyHint], input_container: InputContainer
+        self,
+        key: dto.KeyTime,
+        bonus_hint: Sequence[hints.AnyHint],
+        input_container: InputContainer,
     ):
         chat_id: int = key.team.get_chat_id()  # type: ignore[assignment]
         reply_to = await get_message_id(input_container)

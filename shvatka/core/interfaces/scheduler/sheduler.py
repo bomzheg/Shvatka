@@ -24,12 +24,8 @@ class Scheduler(Protocol, metaclass=ABCMeta):
         raise NotImplementedError
 
     @abstractmethod
-    def plain_level_event(
-        self,
-        team: dto.Team,
-        lt_id: int,
-        effects: action.Effects,
-        run_at: datetime
+    async def plain_level_event(
+        self, team: dto.Team, lt_id: int, effects: action.Effects, run_at: datetime
     ):
         raise NotImplementedError
 

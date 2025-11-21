@@ -2,11 +2,11 @@ import logging
 from datetime import datetime
 from typing import Sequence
 
+from shvatka.core.games.game_play import calculate_first_hint_time, calculate_next_hint_time
 from shvatka.core.interfaces.dal.game import GameByIdGetter
 from shvatka.core.interfaces.dal.level_testing import LevelTestingDao
 from shvatka.core.interfaces.scheduler import LevelTestScheduler
 from shvatka.core.models import dto
-from shvatka.core.services.game_play import calculate_first_hint_time, calculate_next_hint_time
 from shvatka.core.services.organizers import get_primary_orgs
 from shvatka.core.utils.datetime_utils import tz_utc
 from shvatka.core.utils.exceptions import InvalidKey

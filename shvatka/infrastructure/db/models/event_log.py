@@ -3,12 +3,12 @@ from datetime import datetime
 from typing import Any
 
 from adaptix import Retort
-from sqlalchemy import Integer, ForeignKey, Text, Boolean, DateTime, func, TypeDecorator, Dialect
+from sqlalchemy import Integer, ForeignKey, DateTime, func, TypeDecorator, Dialect
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import relationship, mapped_column, Mapped
 
 from shvatka.common.factory import REQUIRED_GAME_RECIPES
-from shvatka.core.models import dto, enums
+from shvatka.core.models import dto
 from shvatka.core.models.dto import action
 from shvatka.core.utils.datetime_utils import tz_utc
 from shvatka.infrastructure.db.models import Base
@@ -71,7 +71,7 @@ class GameEvent(Base):
         server_default=func.now(),
         nullable=False,
     )
-    effects: action.Effects = mapped_column(EffectsField, nullable=False)
+    effects: Mapped[action.Effects] = mapped_column(EffectsField, nullable=False)
 
     def to_dto(self, team: dto.Team) -> dto.GameEvent:
         return dto.GameEvent(

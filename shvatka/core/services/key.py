@@ -87,7 +87,9 @@ class KeyProcessor:
 
 async def define_next_level(
     dao: GamePlayerDao,
-    game: dto.FullGame, level: dto.Level, level_name: str | None = None,
+    game: dto.FullGame,
+    level: dto.Level,
+    level_name: str | None = None,
 ) -> int:
     if level_name is None:
         assert level.number_in_game is not None
@@ -99,9 +101,7 @@ async def define_next_level(
     else:
         next_level = await dao.get_level_by_name(level_name, game)
         if next_level is None:
-            raise exceptions.ScenarioNotCorrect(
-                text="Level name not found", name_id=level_name
-            )
+            raise exceptions.ScenarioNotCorrect(text="Level name not found", name_id=level_name)
         assert next_level.number_in_game is not None
         return next_level.number_in_game
 
@@ -153,7 +153,9 @@ class TimerProcessor:
             current_level_time = await self.dao.get_current_level_time(team, game)
             lvl = await self.dao.get_current_level(team=team, game=game)
             started_level_time: dto.LevelTime = await self.dao.get_level_time_by_id(
-                id_=started_level_time_id
+                id_=started_level_time_id,
+                team=team,
+                game=game,
             )
             decision = lvl.scenario.check(
                 action_=action.LevelTimerAction(now=now),
@@ -162,8 +164,9 @@ class TimerProcessor:
                     current_level_time_id=current_level_time.id,
                     applied_effects=[
                         e.effects
-                        for e
-                        in await self.dao.get_team_events(team=team, level_time=started_level_time)
+                        for e in await self.dao.get_team_events(
+                            team=team, level_time=started_level_time
+                        )
                     ],
                     started_at=started_level_time.start_at,
                 ),

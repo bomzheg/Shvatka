@@ -52,18 +52,17 @@ class GameView(Protocol):
         raise NotImplementedError
 
     async def bonus_hint_key(
-        self, key: dto.KeyTime, bonus_hint: Sequence[hints.AnyHint], input_container: InputContainer
+        self,
+        key: dto.KeyTime,
+        bonus_hint: Sequence[hints.AnyHint],
+        input_container: InputContainer,
     ):
         raise NotImplementedError
 
-    async def hint(
-        self, hint: Sequence[hints.AnyHint], input_container: InputContainer
-    ):
+    async def hint(self, hint: Sequence[hints.AnyHint], input_container: InputContainer):
         raise NotImplementedError
 
-    async def bonus(
-        self, bonus: float, input_container: InputContainer
-    ) -> None:
+    async def bonus(self, bonus: float, input_container: InputContainer) -> None:
         raise NotImplementedError
 
 

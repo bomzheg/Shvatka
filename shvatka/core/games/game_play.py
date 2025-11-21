@@ -147,7 +147,10 @@ async def schedule_first_hint(
         run_at=calculate_first_hint_time(next_level, now),
     )
     await scheduler.plain_level_event(
-        
+        team=team,
+        lt_id=lt_id,
+        run_at=,
+        effects=,
     )
 
 

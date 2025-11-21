@@ -25,7 +25,7 @@ from .timer import (
     LevelTimerCondition,
     LevelTimerWinCondition,
 )
-from effects import EffectType, Effects
+from .effects import EffectType, Effects
 
 AnyCondition: typing.TypeAlias = (
     KeyWinCondition | KeyBonusCondition | KeyBonusHintCondition | LevelTimerWinCondition

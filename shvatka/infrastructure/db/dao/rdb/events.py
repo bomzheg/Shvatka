@@ -1,12 +1,10 @@
 from datetime import datetime, tzinfo
 import typing
-from typing import Sequence
 
-from sqlalchemy import select, update, ScalarResult
+from sqlalchemy import select, ScalarResult
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import joinedload
 
-from shvatka.core.models import dto, enums
+from shvatka.core.models import dto
 from shvatka.core.models.dto import action
 from shvatka.core.utils.datetime_utils import tz_utc
 from shvatka.infrastructure.db import models
@@ -25,16 +23,12 @@ class GameEventDao(BaseDAO[models.GameEvent]):
         level_time: dto.LevelTime,
     ) -> list[dto.GameEvent]:
         result: ScalarResult[models.GameEvent] = await self.session.scalars(
-            select(models.GameEvent)
-            .where(
+            select(models.GameEvent).where(
                 models.GameEvent.level_time_id == level_time.id,
                 models.GameEvent.team_id == team.id,
             )
         )
-        return [
-            event.to_dto(team=team)
-            for event in result.all()
-        ]
+        return [event.to_dto(team=team) for event in result.all()]
 
     async def save_event(
         self,

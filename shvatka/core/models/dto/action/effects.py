@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import Enum, auto
 from typing import Sequence
 
@@ -13,7 +13,7 @@ class EffectType(Enum):
 
 @dataclass(kw_only=True)
 class Effects:
-    hints: Sequence[hints.AnyHint] = tuple()
+    hints_: Sequence[hints.AnyHint] = field(default_factory=tuple)
     bonus_minutes: float = 0.0
     level_up: bool = False
     next_level: str | None = None

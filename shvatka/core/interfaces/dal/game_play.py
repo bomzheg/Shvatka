@@ -77,7 +77,9 @@ class GamePlayerDao(
     async def get_level_by_name(self, level_name: str, game: dto.Game) -> dto.Level | None:
         raise NotImplementedError
 
-    async def get_level_time_by_id(self, id_: int) -> dto.LevelTime:
+    async def get_level_time_by_id(
+        self, id_: int, team: dto.Team, game: dto.Game
+    ) -> dto.LevelTime:
         raise NotImplementedError
 
     async def save_event(
@@ -89,5 +91,7 @@ class GamePlayerDao(
     ):
         raise NotImplementedError
 
-    async def get_team_events(self, team: dto.Team, level_time: dto.LevelTime) -> list[dto.GameEvent]:
+    async def get_team_events(
+        self, team: dto.Team, level_time: dto.LevelTime
+    ) -> list[dto.GameEvent]:
         raise NotImplementedError

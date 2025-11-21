@@ -60,7 +60,6 @@ test = [
     "types-python-jose",
     "types-passlib",
     "mypy>=1.1.1,<2.0",
-    "aiogram-tests @ git+https://github.com/bomzheg/aiogram_tests.git@fix/aiogram3rc",
     "asgi-lifespan>=2.1.0,<3.0",
 ]
 

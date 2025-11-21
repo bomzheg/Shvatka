@@ -1,8 +1,11 @@
 import logging
+import typing
+from unittest.mock import MagicMock
 
 import pytest
 import pytest_asyncio
 from aiogram import Dispatcher, Bot
+from aiogram.client.session.base import BaseSession
 from aiogram_dialog.api.protocols import MessageManagerProtocol
 from alembic.command import upgrade
 from alembic.config import Config as AlembicConfig
@@ -210,3 +213,14 @@ def clean_up_memory(file_storage: MemoryFileStorage):
 @pytest_asyncio.fixture
 async def clock(dishka: AsyncContainer) -> ClockMock:
     return await dishka.get(ClockMock)
+
+
+@pytest_asyncio.fixture(scope="session")
+async def bot_session(dishka: AsyncContainer) -> BaseSession:
+    return await dishka.get(BaseSession)
+
+
+@pytest.fixture(autouse=True)
+def clean_up_bot_session(bot_session: BaseSession):
+    session = typing.cast(MagicMock, bot_session)
+    session.reset_mock(return_value=True, side_effect=True)

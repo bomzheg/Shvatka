@@ -1,13 +1,14 @@
 import typing
 from io import BytesIO
+from unittest.mock import MagicMock
 
 import pytest
 import pytest_asyncio
+from aiogram import Bot
+from aiogram.client.session.base import BaseSession
+from aiogram.exceptions import TelegramAPIError
 from aiogram.methods import (
-    SendMessage,
-    SendLocation,
     SendPhoto,
-    SendVenue,
     TelegramMethod,
     SendAudio,
     SendVideo,
@@ -18,7 +19,6 @@ from aiogram.methods import (
     SendSticker,
 )
 from aiogram.methods.base import TelegramType
-from aiogram_tests.mocked_bot import MockedBot
 
 from shvatka.core.interfaces.clients.file_storage import FileStorage
 from shvatka.core.models import dto
@@ -34,6 +34,7 @@ from shvatka.core.models.dto.hints import (
     StickerHint,
 )
 from shvatka.infrastructure.db.dao.holder import HolderDao
+from shvatka.tgbot.config.models.main import TgBotConfig
 from shvatka.tgbot.views.hint_factory.hint_content_resolver import HintContentResolver
 from shvatka.tgbot.views.hint_sender import HintSender
 from tests.fixtures.file_storage import FILE_ID, CHAT_ID, FILE_META
@@ -55,51 +56,55 @@ PARAMETERS = [
 
 
 @pytest_asyncio.fixture
-async def hint_sender(dao: HolderDao, file_storage: FileStorage):
-    bot = MockedBot()
+async def hint_sender(
+    dao: HolderDao, file_storage: FileStorage, bot_session: BaseSession, bot_config: TgBotConfig
+):
+    bot = Bot(token=bot_config.bot.token, session=bot_session)
     return HintSender(
         bot=bot, resolver=HintContentResolver(dao=dao.file_info, file_storage=file_storage)
     )
 
 
 @pytest.mark.asyncio
-async def test_send_text(hint_sender: HintSender):
+async def test_send_text(hint_sender: HintSender, bot_session: BaseSession):
     hint = TextHint(text="Привет")
 
-    bot = typing.cast(MockedBot, hint_sender.bot)
-    bot.add_result_for(method=SendMessage, ok=True)
     await hint_sender.send_hint(hint, CHAT_ID)
 
-    request = bot.session.requests.pop()
+    session = typing.cast(MagicMock, bot_session)
+    assert 1 == session.call_count
+    call = session.mock_calls.pop()
+    request = call.args[1]
     assert request.__api_method__ == "sendMessage"
     assert request.text == hint.text
-    assert 0 == len(bot.session.requests)
 
 
 @pytest.mark.asyncio
-async def test_send_location(hint_sender: HintSender):
+async def test_send_location(hint_sender: HintSender, bot_session: BaseSession):
     hint = GPSHint(longitude=55.59, latitude=37.88)
 
-    bot = typing.cast(MockedBot, hint_sender.bot)
-    bot.add_result_for(method=SendLocation, ok=True)
     await hint_sender.send_hint(hint, CHAT_ID)
 
-    request = bot.session.requests.pop()
+    session = typing.cast(MagicMock, bot_session)
+    assert 1 == session.call_count
+    call = session.mock_calls.pop()
+    request = call.args[1]
+
     assert request.__api_method__ == "sendLocation"
     assert request.longitude == hint.longitude
     assert request.latitude == hint.latitude
-    assert 0 == len(bot.session.requests)
 
 
 @pytest.mark.asyncio
-async def test_send_venue(hint_sender: HintSender):
+async def test_send_venue(hint_sender: HintSender, bot_session: BaseSession):
     hint = VenueHint(longitude=55.59, latitude=37.88, title="awesome cafe", address="Ленина, 1")
-    bot = typing.cast(MockedBot, hint_sender.bot)
 
-    bot.add_result_for(method=SendVenue, ok=True)
     await hint_sender.send_hint(hint, CHAT_ID)
 
-    request = bot.session.requests.pop()
+    session = typing.cast(MagicMock, bot_session)
+    assert 1 == session.call_count
+    call = session.mock_calls.pop()
+    request = call.args[1]
     assert request.__api_method__ == "sendVenue"
     assert request.longitude == hint.longitude
     assert request.latitude == hint.latitude
@@ -107,7 +112,6 @@ async def test_send_venue(hint_sender: HintSender):
     assert request.address == hint.address
     assert request.foursquare_id == hint.foursquare_id
     assert request.foursquare_type == hint.foursquare_type
-    assert 0 == len(bot.session.requests)
 
 
 @pytest.mark.asyncio
@@ -119,18 +123,19 @@ async def test_send_photo_by_id(
     tg_method: type[TelegramMethod[TelegramType]],
     method_name: str,
     content_type: str,
+    bot_session: BaseSession,
 ):
     await hint_sender.resolver.dao.upsert(file=FILE_META, author=harry)
     await hint_sender.resolver.dao.commit()
 
-    bot = typing.cast(MockedBot, hint_sender.bot)
-    bot.add_result_for(method=tg_method, ok=True)
     await hint_sender.send_hint(hint, CHAT_ID)
 
-    request = bot.session.requests.pop()
+    session = typing.cast(MagicMock, bot_session)
+    assert 1 == session.call_count
+    call = session.mock_calls.pop()
+    request = call.args[1]
     assert request.__api_method__ == method_name
     assert getattr(request, content_type) == FILE_ID
-    assert 0 == len(bot.session.requests)
 
 
 @pytest.mark.asyncio
@@ -141,26 +146,30 @@ async def test_send_photo_by_content(
     hint_sender: HintSender,
     harry: dto.Player,
     hint: BaseHint,
-    tg_method: type[TelegramMethod[TelegramType]],
+    tg_method: TelegramMethod[TelegramType],
     method_name: str,
     content_type: str,
+    bot_session: BaseSession,
 ):
     await hint_sender.resolver.storage.put_content(FILE_META.local_file_name, BytesIO(b"12345"))
     await hint_sender.resolver.dao.upsert(file=FILE_META, author=harry)
     await hint_sender.resolver.dao.commit()
-
-    bot = typing.cast(MockedBot, hint_sender.bot)
-    bot.add_result_for(method=tg_method, ok=False, error_code=400, description=BAD_REQUEST_DESC)
-    bot.add_result_for(method=tg_method, ok=True)
+    session = typing.cast(MagicMock, bot_session)
+    session.side_effect = [
+        TelegramAPIError(message="", method=tg_method),
+        {},
+    ]
 
     await hint_sender.send_hint(hint, CHAT_ID)
 
-    assert 2 == len(bot.session.requests)
-    request = bot.session.requests.popleft()
-    assert request.__api_method__ == method_name
-    assert getattr(request, content_type) == FILE_ID
+    assert 2 == session.call_count
 
-    request = bot.session.requests.popleft()
+    call = session.mock_calls.pop()
+    request = call.args[1]
     assert request.__api_method__ == method_name
     assert getattr(request, content_type) is not None
-    assert 0 == len(bot.session.requests)
+
+    call = session.mock_calls.pop()
+    request = call.args[1]
+    assert request.__api_method__ == method_name
+    assert getattr(request, content_type) == FILE_ID

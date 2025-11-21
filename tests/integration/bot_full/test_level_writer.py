@@ -1,8 +1,12 @@
+import typing
+from unittest.mock import MagicMock
+
 import pytest
+from aiogram import Bot
+from aiogram.client.session.base import BaseSession
 from aiogram.enums import ContentType
 from aiogram_dialog.test_tools import BotClient, MockMessageManager
 from aiogram_dialog.test_tools.keyboard import InlineButtonTextLocator
-from aiogram_tests.mocked_bot import MockedBot
 
 from shvatka.core.models import dto
 from shvatka.infrastructure.db.dao.holder import HolderDao
@@ -15,9 +19,9 @@ async def test_write_level(
     author_client: BotClient,
     message_manager: MockMessageManager,
     dao: HolderDao,
-    bot: MockedBot,
+    bot: Bot,
+    bot_session: BaseSession,
 ):
-    bot.auto_mock_success = True
     assert 0 == await dao.level.count()
 
     await author_client.send("/" + NEW_LEVEL_COMMAND.command)
@@ -160,11 +164,11 @@ async def test_write_level(
         InlineButtonTextLocator(".*сохранить"),
     )
     message_manager.assert_answered(callback_id)
-    request = bot.session.get_request()
+    session = typing.cast(MagicMock, bot_session)
+    request = session.mock_calls.pop().args[1]
     assert "Уровень успешно сохранён" == request.text
     assert 1 == await dao.level.count()
     level, *_ = await dao.level.get_all_my(author)
     assert author.id == level.author.id
     assert {"SHTESTKEY"} == level.scenario.get_keys()
     assert 2 == level.hints_count
-    bot.auto_mock_success = False

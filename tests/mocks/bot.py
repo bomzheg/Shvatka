@@ -1,7 +1,9 @@
+from unittest import mock
+
 from aiogram import Bot
+from aiogram.client.session.base import BaseSession
 from aiogram_dialog.api.protocols import MessageManagerProtocol
 from aiogram_dialog.test_tools import MockMessageManager
-from aiogram_tests.mocked_bot import MockedBot
 from dishka import Provider, provide, Scope
 
 from shvatka.tgbot.config.models.bot import BotConfig
@@ -22,8 +24,13 @@ class MockBotProvider(Provider):
     scope = Scope.APP
 
     @provide
-    async def get_bot(self, config: TgBotConfig) -> Bot:
-        bot = MockedBot(token=config.bot.token)
+    async def get_bot_session(self) -> BaseSession:
+        session = mock.AsyncMock(BaseSession)
+        return session
+
+    @provide
+    async def get_bot(self, config: TgBotConfig, session: BaseSession) -> Bot:
+        bot = Bot(token=config.bot.token, session=session)
         setup_jinja(bot)
         return bot
 

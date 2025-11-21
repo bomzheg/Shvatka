@@ -22,7 +22,6 @@ from .timer import (
     LevelTimerAction,
     LevelTimerState,
     LevelTimerDecision,
-    LevelTimerCondition,
     LevelTimerEffectsCondition,
     LevelTimerEffectsDecision,
 )

@@ -6,7 +6,7 @@ from shvatka.core.interfaces.dal.game_play import GamePreparer
 from shvatka.core.interfaces.dal.level_times import GameStarter, LevelByTeamGetter
 from shvatka.core.interfaces.scheduler import Scheduler
 from shvatka.core.models import dto
-from shvatka.core.models.dto import hints
+from shvatka.core.models.dto import hints, action
 from shvatka.core.services.organizers import get_orgs
 from shvatka.core.utils.datetime_utils import tz_utc
 from shvatka.core.views.game import (
@@ -146,12 +146,14 @@ async def schedule_first_hint(
         lt_id=lt_id,
         run_at=calculate_first_hint_time(next_level, now),
     )
-    await scheduler.plain_level_event(
-        team=team,
-        lt_id=lt_id,
-        run_at=,
-        effects=,
-    )
+    for condition in next_level.scenario.conditions:
+        if isinstance(condition, action.LevelTimerEffectsCondition):
+            await scheduler.plain_level_event(
+                team=team,
+                lt_id=lt_id,
+                run_at=condition.action_time + now,
+                effects=condition.effects,
+            )
 
 
 def calculate_first_hint_time(next_level: dto.Level, now: datetime) -> datetime:

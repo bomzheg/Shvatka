@@ -137,7 +137,7 @@ class Conditions(Sequence[AnyCondition]):
         win_conditions = []
         effects_ids = set()
         most_time: timedelta | None = None
-        timers: list[action.LevelTimerCondition] = []
+        timers: list[action.LevelTimerEffectsCondition] = []
         for c in conditions:
             if isinstance(c, KeyCondition):
                 if isinstance(c, KeyWinCondition):
@@ -148,19 +148,18 @@ class Conditions(Sequence[AnyCondition]):
                         confidential=f"{keys.intersection(c.keys)}",
                     )
                 keys = keys.union(c.get_keys())
-            if isinstance(c, action.LevelTimerCondition):
-                if isinstance(c, action.LevelTimerEffectsCondition):
-                    if c.effects.id in effects_ids:
+            if isinstance(c, action.LevelTimerEffectsCondition):
+                if c.effects.id in effects_ids:
+                    raise exceptions.LevelError(
+                        text=f"there are duplicate effects with id {c.effects.id}"
+                    )
+                if c.effects.level_up:
+                    if most_time is not None:
                         raise exceptions.LevelError(
-                            text=f"there are duplicate effects with id {c.effects.id}"
+                            text="winning timer condition exists multiple times",
                         )
-                    if c.effects.level_up:
-                        if most_time is not None:
-                            raise exceptions.LevelError(
-                                text="winning timer condition exists multiple times",
-                            )
-                        most_time = c.action_time
-                        continue
+                    most_time = c.action_time
+                    continue
                 timers.append(c)
         if not win_conditions:
             raise exceptions.LevelError(text="There is no win condition")

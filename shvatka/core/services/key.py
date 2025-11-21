@@ -6,7 +6,7 @@ from shvatka.core.interfaces.current_game import CurrentGameProvider
 from shvatka.core.interfaces.dal.game_play import GamePlayerDao
 from shvatka.core.models import dto, enums
 from shvatka.core.models.dto import action
-from shvatka.core.models.dto.action import DecisionType
+from shvatka.core.models.dto.action import Effects
 from shvatka.core.utils import exceptions
 from shvatka.core.utils.input_validation import is_key_valid
 from shvatka.core.utils.key_checker_lock import KeyCheckerFactory
@@ -147,7 +147,7 @@ class TimerProcessor:
         team: dto.Team,
         now: datetime,
         started_level_time_id: int,
-    ) -> action.Effects | None:
+    ) -> list[action.Effects]:
         game = await self.current_game.get_required_game()
         async with self.locker(team):
             current_level_time = await self.dao.get_current_level_time(team, game)
@@ -172,8 +172,15 @@ class TimerProcessor:
                 ),
             )
             if isinstance(decision, action.LevelTimerDecision):
-                if isinstance(decision, action.LevelTimerEffectsDecision):
-                    if decision.effects.level_up:
+                if isinstance(decision, action.MultipleEffectsDecision):
+                    level_up_effect: Effects | None = None
+                    for effects in decision.effects:
+                        if effects.level_up:
+                            assert level_up_effect is None
+                            level_up_effect = effects
+                        else:
+                            logger.warning("unprocessable effects %s", effects)
+                    if level_up_effect:
                         await self.dao.level_up(
                             team=team,
                             level=lvl,
@@ -182,20 +189,18 @@ class TimerProcessor:
                                 dao=self.dao,
                                 game=await self.current_game.get_required_full_game(),
                                 level=lvl,
-                                level_name=decision.effects.next_level,
+                                level_name=effects.next_level,
                             ),
                         )
-                        await self.dao.commit()
-                        return decision.effects
-                    else:
-                        logger.warning("unprocessable effects %s", decision.effects)
-                        return None
+                    return decision.effects
                 else:
-                    logger.warning("impossible decision type here is %s %s", type(decision), decision.type)
-                    return None
+                    logger.warning(
+                        "impossible decision type here is %s %s", type(decision), decision.type
+                    )
+                    return []
             elif isinstance(decision, action.NotImplementedActionDecision):
                 logger.warning("impossible decision here cant be not implemented")
-                return None
+                return []
             else:
                 logger.warning("impossible decision here is %s", type(decision))
-                return None
+                return []

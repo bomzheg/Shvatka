@@ -14,6 +14,7 @@ from shvatka.core.models.dto.action import (
     ConditionType,
 )
 from .effects import Effects
+from .interface import EffectsDecision, NoActionDecision
 
 
 @dataclass
@@ -36,10 +37,11 @@ class LevelTimerState(State):
 class LevelTimerDecision(Decision):
     type: DecisionType
 
+
 @dataclass(kw_only=True, frozen=True)
-class LevelTimerEffectsDecision(LevelTimerDecision):
-    type: DecisionType = DecisionType.EFFECTS
-    effects: Effects
+class LevelTimerEffectsDecision(LevelTimerDecision, EffectsDecision):
+    pass
+
 
 class LevelTimerCondition(Condition, metaclass=abc.ABCMeta):
     def get_action_time(self) -> timedelta:
@@ -63,12 +65,15 @@ class LevelTimerCondition(Condition, metaclass=abc.ABCMeta):
             if decision.type == DecisionType.EFFECTS:
                 if isinstance(decision, LevelTimerEffectsDecision):
                     if state.contains_effects(decision.effects):
-                        return LevelTimerDecision(type=DecisionType.NO_ACTION)
+                        return NoActionDecision()
                 else:
-                    raise NotImplementedError(f"decision should contains effects but class is unknown here: {type(decision)}")
+                    raise NotImplementedError(
+                        f"decision should contains effects "
+                        f"but class is unknown here: {type(decision)}"
+                    )
             return decision
         else:
-            return LevelTimerDecision(type=DecisionType.NO_ACTION)
+            return NoActionDecision()
 
 
 @dataclass

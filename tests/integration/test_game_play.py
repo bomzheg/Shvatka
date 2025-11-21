@@ -98,7 +98,7 @@ async def test_wrong_key(
         current_game=current_game,
         key_processor=key_processor,
     )
-    identity = MockIdentityProvider( player=harry, team=gryffindor )
+    identity = MockIdentityProvider(player=harry, team=gryffindor)
     await key_checker(
         key="SHWRONG",
         input_container=MockInputContainer(),
@@ -220,7 +220,7 @@ async def test_game_play(
 
     dummy_org_notifier = OrgNotifierMock()
     orgs = await get_orgs(game, dao.organizer)
-    identity = MockIdentityProvider( player=harry, team=gryffindor )
+    identity = MockIdentityProvider(player=harry, team=gryffindor)
     key_kwargs = {
         "identity": identity,
         "input_container": MockInputContainer(),
@@ -329,7 +329,7 @@ async def test_fast_play_routed_game(
 
     dummy_org_notifier = OrgNotifierMock()
     orgs = await get_orgs(game, dao.organizer)
-    identity = MockIdentityProvider( player=harry, team=gryffindor )
+    identity = MockIdentityProvider(player=harry, team=gryffindor)
     key_kwargs = {
         "identity": identity,
         "input_container": MockInputContainer(),
@@ -412,7 +412,7 @@ async def test_cycle_play_routed_game(
 
     dummy_org_notifier = OrgNotifierMock()
     orgs = await get_orgs(game, dao.organizer)
-    identity = MockIdentityProvider( player=harry, team=gryffindor )
+    identity = MockIdentityProvider(player=harry, team=gryffindor)
     key_kwargs = {
         "identity": identity,
         "input_container": MockInputContainer(),

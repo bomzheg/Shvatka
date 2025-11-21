@@ -1,12 +1,10 @@
 from datetime import datetime
 
-from adaptix import Retort
 from dishka.integrations.base import FromDishka
 
 from shvatka.core.games.game_play import send_hint, start_game, prepare_game
 from shvatka.core.games.interactors import GamePlayTimerInteractor
 from shvatka.core.interfaces.current_game import CurrentGameProvider
-from shvatka.core.models.dto import action
 from shvatka.core.utils.datetime_utils import tz_utc
 from shvatka.core.views.game import GameViewPreparer, GameView, GameLogWriter
 from shvatka.core.views.level import LevelView
@@ -121,15 +119,11 @@ async def send_hint_for_testing_wrapper(
 async def event_wrapper(
     team_id: int,
     started_level_time_id: int,
-    dumped_effects: str,
-    retort: FromDishka[Retort],
     interactor: FromDishka[GamePlayTimerInteractor],
 ):
-    effects = retort.load(dumped_effects, action.Effects)
     await interactor(
         team_id=team_id,
         started_level_time_id=started_level_time_id,
-        effects=effects,
         now=datetime.now(tz=tz_utc),
         input_container=SchedulerContainer(),
     )

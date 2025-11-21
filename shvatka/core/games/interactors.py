@@ -17,7 +17,6 @@ from shvatka.core.interfaces.dal.game_play import GamePlayerDao
 from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.interfaces.scheduler import Scheduler
 from shvatka.core.models import dto, enums
-from shvatka.core.models.dto import action
 from shvatka.core.rules.game import check_can_read
 from shvatka.core.services.game_stat import get_typed_keys, get_game_stat_with_hints
 from shvatka.core.services.key import TimerProcessor, KeyProcessor
@@ -258,30 +257,30 @@ class GamePlayTimerInteractor(GamePlayBaseInteractor):
         team_id: int,
         now: datetime,
         started_level_time_id: int,
-        effects: action.Effects,
         input_container: SchedulerContainer,
     ) -> None:
         team = await self.dao.get_by_id(team_id)
-        effects = await self.processor.process(
+        effects_list = await self.processor.process(
             team=team,
             now=now,
             started_level_time_id=started_level_time_id,
         )
 
-        if effects is None:
+        if not effects_list:
             return
         game = await self.current_game.get_required_full_game()
         level_time = await self.dao.get_current_level_time(team, game)
-        await self.dao.save_event(team=team, level_time=level_time, game=game, effects=effects)
-        if effects.hints_:
-            await self.view.hint(hint=effects.hints_, input_container=input_container)
-        if effects.bonus_minutes:
-            await self.view.bonus(bonus=effects.bonus_minutes, input_container=input_container)
-        if effects.level_up:
-            team = await self.dao.get_by_id(team_id)
-            await self.process_level_up(
-                input_container=input_container,
-                team=team,
-                game=await self.current_game.get_required_full_game(),
-            )
+        for effects in effects_list:
+            await self.dao.save_event(team=team, level_time=level_time, game=game, effects=effects)
+            if effects.hints_:
+                await self.view.hint(hint=effects.hints_, input_container=input_container)
+            if effects.bonus_minutes:
+                await self.view.bonus(bonus=effects.bonus_minutes, input_container=input_container)
+            if effects.level_up:
+                team = await self.dao.get_by_id(team_id)
+                await self.process_level_up(
+                    input_container=input_container,
+                    team=team,
+                    game=await self.current_game.get_required_full_game(),
+                )
         await self.dao.commit()

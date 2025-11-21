@@ -1,7 +1,6 @@
 import logging
 from datetime import datetime
 
-from adaptix import Retort
 from apscheduler.executors.asyncio import AsyncIOExecutor
 from apscheduler.jobstores.base import JobLookupError
 from apscheduler.jobstores.redis import RedisJobStore
@@ -111,18 +110,16 @@ class ApScheduler(Scheduler, LevelTestScheduler):
         effects: action.Effects,
         run_at: datetime,
     ):
-        dumped_effects = (await self.dishka.get(Retort)).dump(effects)
         self.scheduler.add_job(
             func="shvatka.infrastructure.scheduler.wrappers:event_wrapper",
             kwargs={
                 "team_id": team.id,
                 "started_level_time_id": lt_id,
-                "dumped_effects": dumped_effects,
             },
             trigger="date",
             run_date=run_at,
             timezone=tz_utc,
-            # TODO name?
+            name=f"effects_{team.id}_{effects.id}",
         )
 
     async def plain_test_hint(

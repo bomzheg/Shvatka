@@ -1,6 +1,17 @@
 import typing
 
-from .interface import Condition, ConditionType, Action, State, Decision, DecisionType, StateHolder
+from .interface import (
+    Condition,
+    ConditionType,
+    Action,
+    State,
+    Decision,
+    DecisionType,
+    StateHolder,
+    LevelUpDecision,
+    MultipleEffectsDecision,
+    NoActionDecision,
+)
 from .decisions import NotImplementedActionDecision, Decisions
 from .keys import (
     SHKey,
@@ -13,7 +24,6 @@ from .keys import (
     BonusKeyDecision,
     KeyBonusCondition,
     WrongKeyDecision,
-    LevelUpDecision,
     BonusHintKeyDecision,
     KeyBonusHintCondition,
 )

@@ -61,5 +61,7 @@ class SchedulerMock(Scheduler):
     async def cancel_scheduled_game(self, game: dto.Game) -> None:
         self.cancel_scheduled_game_calls.append(game)
 
-    async def plain_level_event(self, team: dto.Team, lt_id: int, effects: action.Effects, run_at: datetime):
+    async def plain_level_event(
+        self, team: dto.Team, lt_id: int, effects: action.Effects, run_at: datetime
+    ):
         pass

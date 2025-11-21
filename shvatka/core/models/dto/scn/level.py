@@ -3,6 +3,7 @@ from collections.abc import Sequence, Iterable
 from dataclasses import dataclass
 from datetime import timedelta
 from typing import overload, Literal
+from uuid import UUID
 
 from shvatka.core.models.dto import action, hints
 from shvatka.core.models.dto.hints import TimeHint, AnyHint
@@ -135,7 +136,7 @@ class Conditions(Sequence[AnyCondition]):
     def validate(conditions: Sequence[AnyCondition]) -> None:  # noqa: C901,PLR0912
         keys: set[str] = set()
         win_conditions = []
-        effects_ids = set()
+        effects_ids: set[UUID] = set()
         most_time: timedelta | None = None
         timers: list[action.LevelTimerEffectsCondition] = []
         for c in conditions:
@@ -338,11 +339,7 @@ class LevelScenario:
             significant_key_decisions = key_decisions.get_significant()
             return significant_key_decisions.get_exactly_one(self.id)
         if isinstance(action_, action.LevelTimerAction):
-            timer = implemented.get_all(action.LevelTimerDecision)
-            significant_timer = timer.get_significant()
-            if not significant_timer:
-                return action.NotImplementedActionDecision()
-            return significant_timer.get_exactly_one(self.id)
+            return implemented.get_significant_effects()
         else:
             return action.NotImplementedActionDecision()
 

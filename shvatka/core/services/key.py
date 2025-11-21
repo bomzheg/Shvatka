@@ -147,7 +147,7 @@ class TimerProcessor:
         team: dto.Team,
         now: datetime,
         started_level_time_id: int,
-    ) -> action.Effects:
+    ) -> action.Effects | None:
         game = await self.current_game.get_required_game()
         async with self.locker(team):
             current_level_time = await self.dao.get_current_level_time(team, game)
@@ -172,26 +172,30 @@ class TimerProcessor:
                 ),
             )
             if isinstance(decision, action.LevelTimerDecision):
-                if decision.type == DecisionType.LEVEL_UP:
-                    await self.dao.level_up(
-                        team=team,
-                        level=lvl,
-                        game=game,
-                        next_level_number=await define_next_level(
-                            dao=self.dao,
-                            game=await self.current_game.get_required_full_game(),
+                if isinstance(decision, action.LevelTimerEffectsDecision):
+                    if decision.effects.level_up:
+                        await self.dao.level_up(
+                            team=team,
                             level=lvl,
-                            level_name=None,
-                        ),
-                    )
-                    await self.dao.commit()
-                    return action.Effects(level_up=True)
+                            game=game,
+                            next_level_number=await define_next_level(
+                                dao=self.dao,
+                                game=await self.current_game.get_required_full_game(),
+                                level=lvl,
+                                level_name=decision.effects.next_level,
+                            ),
+                        )
+                        await self.dao.commit()
+                        return decision.effects
+                    else:
+                        logger.warning("unprocessable effects %s", decision.effects)
+                        return None
                 else:
-                    logger.warning("impossible decision type here is %s", decision.type)
-                    return action.Effects()
+                    logger.warning("impossible decision type here is %s %s", type(decision), decision.type)
+                    return None
             elif isinstance(decision, action.NotImplementedActionDecision):
                 logger.warning("impossible decision here cant be not implemented")
-                return action.Effects()
+                return None
             else:
                 logger.warning("impossible decision here is %s", type(decision))
-                return action.Effects()
+                return None

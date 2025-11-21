@@ -28,11 +28,18 @@ class LevelTimerState(State):
     applied_effects: list[Effects]
     started_at: datetime
 
+    def contains_effects(self, effects: Effects) -> bool:
+        return any(map(lambda e: e.id == effects.id, self.applied_effects))
+
 
 @dataclass(kw_only=True, frozen=True)
 class LevelTimerDecision(Decision):
     type: DecisionType
 
+@dataclass(kw_only=True, frozen=True)
+class LevelTimerEffectsDecision(LevelTimerDecision):
+    type: DecisionType = DecisionType.EFFECTS
+    effects: Effects
 
 class LevelTimerCondition(Condition, metaclass=abc.ABCMeta):
     def get_action_time(self) -> timedelta:
@@ -52,18 +59,26 @@ class LevelTimerCondition(Condition, metaclass=abc.ABCMeta):
             self.should_execute(action.now - state.started_at)
             and state.current_level_time_id == state.started_level_time_id
         ):
-            return self.get_decision()
+            decision = self.get_decision()
+            if decision.type == DecisionType.EFFECTS:
+                if isinstance(decision, LevelTimerEffectsDecision):
+                    if state.contains_effects(decision.effects):
+                        return LevelTimerDecision(type=DecisionType.NO_ACTION)
+                else:
+                    raise NotImplementedError(f"decision should contains effects but class is unknown here: {type(decision)}")
+            return decision
         else:
             return LevelTimerDecision(type=DecisionType.NO_ACTION)
 
 
 @dataclass
-class LevelTimerWinCondition(LevelTimerCondition):
+class LevelTimerEffectsCondition(LevelTimerCondition):
     action_time: timedelta
-    type: Literal["WIN_TIMER"] = ConditionType.WIN_TIMER.name
+    effects: Effects
+    type: Literal["EFFECTS"] = ConditionType.EFFECTS.name
 
     def get_action_time(self) -> timedelta:
         return self.action_time
 
     def get_decision(self) -> Decision:
-        return LevelTimerDecision(type=DecisionType.LEVEL_UP)
+        return LevelTimerEffectsDecision(type=DecisionType.EFFECTS, effects=self.effects)

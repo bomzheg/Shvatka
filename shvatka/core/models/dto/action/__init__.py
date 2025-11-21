@@ -23,10 +23,11 @@ from .timer import (
     LevelTimerState,
     LevelTimerDecision,
     LevelTimerCondition,
-    LevelTimerWinCondition,
+    LevelTimerEffectsCondition,
+    LevelTimerEffectsDecision,
 )
 from .effects import EffectType, Effects
 
 AnyCondition: typing.TypeAlias = (
-    KeyWinCondition | KeyBonusCondition | KeyBonusHintCondition | LevelTimerWinCondition
+    KeyWinCondition | KeyBonusCondition | KeyBonusHintCondition | LevelTimerEffectsCondition
 )

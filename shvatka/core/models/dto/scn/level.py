@@ -135,6 +135,7 @@ class Conditions(Sequence[AnyCondition]):
     def validate(conditions: Sequence[AnyCondition]) -> None:  # noqa: C901,PLR0912
         keys: set[str] = set()
         win_conditions = []
+        effects_ids = set()
         most_time: timedelta | None = None
         timers: list[action.LevelTimerCondition] = []
         for c in conditions:
@@ -148,13 +149,18 @@ class Conditions(Sequence[AnyCondition]):
                     )
                 keys = keys.union(c.get_keys())
             if isinstance(c, action.LevelTimerCondition):
-                if isinstance(c, action.LevelTimerWinCondition):
-                    if most_time is not None:
+                if isinstance(c, action.LevelTimerEffectsCondition):
+                    if c.effects.id in effects_ids:
                         raise exceptions.LevelError(
-                            text="winning timer condition exists multiple times",
+                            text=f"there are duplicate effects with id {c.effects.id}"
                         )
-                    most_time = c.action_time
-                    continue
+                    if c.effects.level_up:
+                        if most_time is not None:
+                            raise exceptions.LevelError(
+                                text="winning timer condition exists multiple times",
+                            )
+                        most_time = c.action_time
+                        continue
                 timers.append(c)
         if not win_conditions:
             raise exceptions.LevelError(text="There is no win condition")
@@ -333,11 +339,11 @@ class LevelScenario:
             significant_key_decisions = key_decisions.get_significant()
             return significant_key_decisions.get_exactly_one(self.id)
         if isinstance(action_, action.LevelTimerAction):
-            win_timer = implemented.get_all(action.LevelTimerDecision)
-            significant_win_timer = win_timer.get_significant()
-            if not significant_win_timer:
+            timer = implemented.get_all(action.LevelTimerDecision)
+            significant_timer = timer.get_significant()
+            if not significant_timer:
                 return action.NotImplementedActionDecision()
-            return significant_win_timer.get_exactly_one(self.id)
+            return significant_timer.get_exactly_one(self.id)
         else:
             return action.NotImplementedActionDecision()
 

@@ -1,11 +1,12 @@
+import typing
 from datetime import datetime
+from unittest.mock import MagicMock
 
 import pytest
-from aiogram import Dispatcher
+from aiogram import Dispatcher, Bot
+from aiogram.client.session.base import BaseSession
 from aiogram.enums import ChatMemberStatus
-from aiogram.methods import SendMessage, GetChatAdministrators, GetChat, GetChatMember
 from aiogram.types import Update, Message, ChatMemberOwner, ChatMemberMember
-from aiogram_tests.mocked_bot import MockedBot
 
 from shvatka.core.models import dto
 from shvatka.core.models.enums.chat_type import ChatType
@@ -24,20 +25,19 @@ from tests.fixtures.user_constants import (
 
 
 @pytest.mark.asyncio
-async def test_create_team(harry: dto.Player, dp: Dispatcher, bot: MockedBot, dao: HolderDao):
+async def test_create_team(
+    harry: dto.Player, dp: Dispatcher, bot: Bot, dao: HolderDao, bot_session: BaseSession
+):
     await promote(harry, dao)
     chat = create_tg_chat(type_=ChatType.supergroup)
     harry_tg = create_tg_user()
-    bot.add_result_for(
-        GetChatAdministrators,
-        ok=True,
-        result=[
-            ChatMemberOwner(user=harry_tg, is_anonymous=False, status=ChatMemberStatus.CREATOR)
-        ],
-    )
-    bot.add_result_for(GetChat, ok=True, result=chat_to_full_chat(chat))
-    bot.add_result_for(SendMessage, ok=True)  # one for captain
-    bot.add_result_for(SendMessage, ok=True)  # one for log
+    session = typing.cast(MagicMock, bot_session)
+    session.side_effect = [
+        [ChatMemberOwner(user=harry_tg, is_anonymous=False, status=ChatMemberStatus.CREATOR)],
+        chat_to_full_chat(chat),
+        {},
+        {},
+    ]
     update = Update(
         update_id=1,
         message=Message(
@@ -69,14 +69,11 @@ async def test_create_team(harry: dto.Player, dp: Dispatcher, bot: MockedBot, da
     )
     await dp.feed_update(bot, update)
 
-    bot.session.responses.clear()
-    bot.session.requests.clear()
-    bot.add_result_for(
-        method=GetChatMember,
-        ok=True,
-        result=ChatMemberMember(user=create_tg_from_dto(hermi), status=ChatMemberStatus.MEMBER),
-    )
-    bot.add_result_for(SendMessage, ok=True)
+    session.reset_mock(return_value=True, side_effect=True)
+    session.side_effect = [
+        ChatMemberMember(user=create_tg_from_dto(hermi), status=ChatMemberStatus.MEMBER),
+        {},
+    ]
     update = Update(
         update_id=3,
         message=Message(

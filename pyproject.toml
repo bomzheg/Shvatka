@@ -7,7 +7,7 @@ authors = [
 ]
 license = {file = "LICENSE"}
 readme = "README.md"
-requires-python = ">=3.11,<3.12"
+requires-python = ">=3.13,<3.15"
 dependencies = [
     "pyyaml>=6.0,<7.0",
     "python-dateutil>=2.8.2,<3.0",
@@ -32,9 +32,9 @@ dependencies = [
     "bcrypt==4.0.1",
     "telegraph[aio]>=2.2.0,<3.0",
     "openpyxl>=3.0.10,<4.0",
-    "lxml>=4.9.2,<5.0",
+    "lxml>=5.0.0,<6.0",
     "matplotlib>=3.7.1,<4.0",
-    "greenlet<3.0.0",
+    "greenlet<4.0.0",
     "dishka==1.5.2",
     "asgi-monitor>=0.4.0,<0.5.0",
 ]
@@ -60,7 +60,6 @@ test = [
     "types-python-jose",
     "types-passlib",
     "mypy>=1.1.1,<2.0",
-    "aiogram-tests @ git+https://github.com/bomzheg/aiogram_tests.git@fix/aiogram3rc",
     "asgi-lifespan>=2.1.0,<3.0",
 ]
 

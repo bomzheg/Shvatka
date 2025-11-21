@@ -4,6 +4,7 @@ from dishka import Provider, Scope, provide
 from redis.asyncio.client import Redis
 from sqlalchemy.ext.asyncio import async_sessionmaker, AsyncSession, AsyncEngine
 
+from shvatka.infrastructure.db import dao
 from shvatka.infrastructure.db.config.models.db import DBConfig, RedisConfig
 from shvatka.infrastructure.db.dao import FileInfoDao
 from shvatka.infrastructure.db.dao.holder import HolderDao
@@ -48,6 +49,10 @@ class DAOProvider(Provider):
         self, session: AsyncSession, redis: Redis, level_test: LevelTestingData
     ) -> HolderDao:
         return HolderDao(session=session, redis=redis, level_test=level_test)
+
+    @provide
+    async def get_game_dao(self, holder: HolderDao) -> dao.GameDao:
+        return holder.game
 
     @provide
     def get_file_info_dao(self, dao: HolderDao) -> FileInfoDao:

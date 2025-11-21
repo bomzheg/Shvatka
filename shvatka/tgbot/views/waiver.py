@@ -5,9 +5,7 @@ from aiogram.utils.text_decorations import html_decoration as hd
 
 from shvatka.core.models import dto
 from shvatka.core.models.enums.played import Played
-from shvatka.core.services.waiver import get_vote_to_voted
 from shvatka.core.views.texts import WAIVER_STATUS_MEANING
-from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.tgbot import keyboards as kb
 from shvatka.tgbot.views.player import get_emoji
 from shvatka.tgbot.views.user import get_small_card_no_link
@@ -31,34 +29,45 @@ def render_all_teams_waivers(waivers: dict[dto.Team, Iterable[dto.VotedPlayer]])
     return result
 
 
+def render_all_teams_poll_stat(waivers: dict[dto.Team, dict[Played, int]]) -> str:
+    result = ""
+    for team, poll_stat in waivers.items():
+        result += hd.bold(hd.quote(team.name)) + ":\n"
+        if Played.yes in poll_stat:
+            result += f"Да: {poll_stat[Played.yes]}\n"
+        if Played.no in poll_stat:
+            result += f"Нет: {poll_stat[Played.no]}\n"
+        if Played.think in poll_stat:
+            result += f"Думает: {poll_stat[Played.think]}\n"
+        if Played.revoked in poll_stat:
+            result += f"Отозван кэпом: {poll_stat[Played.revoked]}\n"
+        if Played.not_allowed in poll_stat:
+            result += f"Не допущен оргом: {poll_stat[Played.not_allowed]}\n"
+        result += "\n\n"
+    return result
+
+
 def render_players(users: Iterable[dto.VotedPlayer]) -> str:
     return "\n".join(
         [get_emoji(voted.pit) + get_small_card_no_link(voted.player) for voted in users]
     )
 
 
-async def get_waiver_poll_text(team: dto.Team, game: dto.Game, dao: HolderDao):
-    return (
-        f"Сбор вейверов на игру:\n"
-        f"{hd.bold(hd.quote(game.name))}\n\n{await get_list_poll(team, dao)}"
-    )
+def get_waiver_poll_text(vote: dict[Played, list[dto.VotedPlayer]], game: dto.Game) -> str:
+    return f"Сбор вейверов на игру {hd.bold(hd.quote(game.name))}:\n\n{render_votes(vote)}"
 
 
-async def get_waiver_final_text(team: dto.Team, game: dto.Game, dao: HolderDao):
+def get_waiver_final_text(vote: dict[Played, list[dto.VotedPlayer]], game: dto.Game) -> str:
     return (
         f"Сбор вейверов на игру {hd.bold(hd.quote(game.name))} окончен. \n"
         f"Итоговый список:\n\n"
-        f"{await get_list_poll(team, dao)}"
+        f"{render_votes(vote)}"
     )
 
 
-async def get_list_poll(team: dto.Team, dao: HolderDao) -> str:
-    votes = await get_vote_to_voted(team, dao.waiver_vote_getter)
-    return render_votes(votes)
-
-
-async def start_approve_waivers(game: dto.Game, team: dto.Team, dao: HolderDao):
-    votes = await get_vote_to_voted(team=team, dao=dao.waiver_vote_getter)
+def start_approve_waivers(
+    game: dto.Game, team: dto.Team, votes: dict[Played, list[dto.VotedPlayer]]
+):
     return dict(
         text=f"Играющие в {hd.quote(game.name)} схватчики команды {hd.bold(hd.quote(team.name))}:",
         reply_markup=kb.get_kb_manage_waivers(

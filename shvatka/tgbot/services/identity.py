@@ -11,6 +11,7 @@ from shvatka.core.services.chat import upsert_chat
 from shvatka.core.services.player import upsert_player, get_full_team_player
 from shvatka.core.services.team import get_by_chat
 from shvatka.core.services.user import upsert_user
+from shvatka.core.utils import exceptions
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.tgbot.utils.data import SHMiddlewareData
 
@@ -87,9 +88,13 @@ class TgBotIdentityProvider(IdentityProvider):
         if player is None:
             self.cache["full_team_player"] = None
             return None
-        team_player = await get_full_team_player(
-            player, await self.get_team(), dao=self.dao.team_player
-        )
+        try:
+            team_player = await get_full_team_player(
+                player, await self.get_team(), dao=self.dao.team_player
+            )
+        except exceptions.PlayerNotInTeam:
+            self.cache["full_team_player"] = None
+            return None
         self.cache["full_team_player"] = team_player
         return team_player
 

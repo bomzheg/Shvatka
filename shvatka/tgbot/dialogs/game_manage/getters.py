@@ -16,7 +16,7 @@ from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.models import dto
 from shvatka.core.services import game
 from shvatka.core.services.game import get_authors_games, get_completed_games
-from shvatka.core.services.waiver import get_all_played
+from shvatka.core.waiver.services import get_all_played
 from shvatka.core.utils.datetime_utils import tz_game
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.infrastructure.picture import ResultsPainter

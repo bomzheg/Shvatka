@@ -17,8 +17,7 @@ from shvatka.core.interfaces.dal.level_times import GameStarter
 from shvatka.core.interfaces.dal.organizer import OrgAdder
 from shvatka.core.interfaces.dal.player import TeamLeaver, PlayerPromoter, PlayerMerger
 from shvatka.core.interfaces.dal.team import TeamCreator
-from shvatka.core.interfaces.dal.waiver import WaiverVoteAdder, WaiverVoteGetter, WaiverApprover
-from .complex import WaiverVoteAdderImpl, WaiverVoteGetterImpl
+from shvatka.core.interfaces.dal.waiver import WaiverApprover
 from .complex.game import GameUpserterImpl, GameCreatorImpl, GamePackagerImpl
 from .complex.game_play import GamePreparerImpl, GameStarterImpl, GamePlayerDaoImpl
 from .complex.key_log import TypedKeyGetterImpl
@@ -80,14 +79,6 @@ class HolderDao:
 
     async def commit(self):
         await self.session.commit()
-
-    @property
-    def waiver_vote_adder(self) -> WaiverVoteAdder:
-        return WaiverVoteAdderImpl(dao=self)
-
-    @property
-    def waiver_vote_getter(self) -> WaiverVoteGetter:
-        return WaiverVoteGetterImpl(dao=self)
 
     @property
     def waiver_approver(self) -> WaiverApprover:

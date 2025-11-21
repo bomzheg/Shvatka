@@ -1,13 +1,32 @@
 from typing import AsyncIterable
 
-from dishka import Provider, Scope, provide
+from dishka import Provider, Scope, provide, AnyOf
 from redis.asyncio.client import Redis
 from sqlalchemy.ext.asyncio import async_sessionmaker, AsyncSession, AsyncEngine
 
+from shvatka.core.interfaces.dal.waiver import GameWaiversGetter
 from shvatka.infrastructure.db.config.models.db import DBConfig, RedisConfig
-from shvatka.infrastructure.db.dao import FileInfoDao
+from shvatka.infrastructure.db.dao import (
+    FileInfoDao,
+    GameDao,
+    UserDao,
+    ChatDao,
+    LevelDao,
+    LevelTimeDao,
+    KeyTimeDao,
+    OrganizerDao,
+    PlayerDao,
+    TeamPlayerDao,
+    TeamDao,
+    WaiverDao,
+    PollDao,
+    SecureInvite,
+)
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.infrastructure.db.dao.memory.level_testing import LevelTestingData
+from shvatka.infrastructure.db.dao.rdb import ForumUserDAO
+from shvatka.infrastructure.db.dao.rdb.achievement import AchievementDAO
+from shvatka.infrastructure.db.dao.rdb.forum_team import ForumTeamDAO
 from shvatka.infrastructure.db.factory import create_engine, create_session_maker, create_redis
 
 
@@ -50,8 +69,72 @@ class DAOProvider(Provider):
         return HolderDao(session=session, redis=redis, level_test=level_test)
 
     @provide
-    def get_file_info_dao(self, dao: HolderDao) -> FileInfoDao:
+    def file_info_dao(self, dao: HolderDao) -> FileInfoDao:
         return dao.file_info
+
+    @provide
+    def user_dao(self, dao: HolderDao) -> UserDao:
+        return dao.user
+
+    @provide
+    def chat_dao(self, dao: HolderDao) -> ChatDao:
+        return dao.chat
+
+    @provide
+    def game_dao(self, dao: HolderDao) -> GameDao:
+        return dao.game
+
+    @provide
+    def level_dao(self, dao: HolderDao) -> LevelDao:
+        return dao.level
+
+    @provide
+    def level_time_dao(self, dao: HolderDao) -> LevelTimeDao:
+        return dao.level_time
+
+    @provide
+    def key_time_dao(self, dao: HolderDao) -> KeyTimeDao:
+        return dao.key_time
+
+    @provide
+    def organizer_dao(self, dao: HolderDao) -> OrganizerDao:
+        return dao.organizer
+
+    @provide
+    def player_dao(self, dao: HolderDao) -> PlayerDao:
+        return dao.player
+
+    @provide
+    def team_player_dao(self, dao: HolderDao) -> TeamPlayerDao:
+        return dao.team_player
+
+    @provide
+    def team_dao(self, dao: HolderDao) -> TeamDao:
+        return dao.team
+
+    @provide(provides=AnyOf[WaiverDao, GameWaiversGetter])
+    def waiver_dao(self, dao: HolderDao) -> WaiverDao:
+        return dao.waiver
+
+    @provide
+    def achievement_dao(self, dao: HolderDao) -> AchievementDAO:
+        return dao.achievement
+
+    @provide
+    def forum_user_dao(self, dao: HolderDao) -> ForumUserDAO:
+        return dao.forum_user
+
+    @provide
+    def forum_team_dao(self, dao: HolderDao) -> ForumTeamDAO:
+        return dao.forum_team
+
+    @provide
+    def poll_dao(self, dao: HolderDao) -> PollDao:
+        return dao.poll
+
+    @provide
+    def secure_invite_dao(self, dao: HolderDao) -> SecureInvite:
+        return dao.secure_invite
 
 
 class RedisProvider(Provider):

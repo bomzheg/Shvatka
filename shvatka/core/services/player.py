@@ -209,15 +209,26 @@ def check_can_add_players(team_player: dto.FullTeamPlayer):
 async def get_full_team_player(
     player: dto.Player, team: dto.Team | None, dao: TeamPlayerGetter
 ) -> dto.FullTeamPlayer:
-    if team is None:
+    team_player = await get_full_team_player_or_none(player=player, team=team, dao=dao)
+    if team_player is None:
         raise exceptions.PlayerNotInTeam(player_id=player.id)
-    team_player = dto.FullTeamPlayer.from_simple(
-        team_player=await get_checked_player_on_team(player, team, dao),
-        team=team,
-        player=player,
-    )
     return team_player
 
+
+async def get_full_team_player_or_none(
+    player: dto.Player, team: dto.Team | None, dao: TeamPlayerGetter
+) -> dto.FullTeamPlayer | None:
+    if team is None:
+        return None
+    try:
+        team_player = dto.FullTeamPlayer.from_simple(
+            team_player=await get_checked_player_on_team(player, team, dao),
+            team=team,
+            player=player,
+        )
+    except exceptions.PlayerNotInTeam:
+        return None
+    return team_player
 
 async def get_team_players(team: dto.Team, dao: TeamPlayersGetter) -> Sequence[dto.FullTeamPlayer]:
     players = await dao.get_players(team)

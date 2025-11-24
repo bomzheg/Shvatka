@@ -162,6 +162,7 @@ class Conditions(Sequence[AnyCondition]):
                     most_time = c.action_time
                     continue
                 timers.append(c)
+                effects_ids.add(c.effects.id)
         if not win_conditions:
             raise exceptions.LevelError(text="There is no win condition")
         if all(c.next_level is not None for c in win_conditions):

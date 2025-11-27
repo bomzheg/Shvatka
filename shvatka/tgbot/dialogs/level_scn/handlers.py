@@ -259,6 +259,23 @@ async def start_sly_keys(
 
 
 @inject
+async def start_level_timers(
+    c: CallbackQuery,
+    button: Button,
+    manager: DialogManager,
+):
+    raw_conditions = manager.dialog_data.get("conditions", [])
+    await manager.start(
+        state=states.LevelTimersSG.menu,
+        data={
+            "level_id": manager.dialog_data["level_id"],
+            "conditions": raw_conditions,
+            "game_id": manager.dialog_data.get("game_id", None),
+        },
+    )
+
+
+@inject
 async def on_start_sly_keys(
     start_data: dict[str, Any], manager: DialogManager, retort: FromDishka[Retort]
 ):

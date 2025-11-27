@@ -63,6 +63,7 @@ from .handlers import (
     edit_routed,
     delete_condition,
     start_routed,
+    start_level_timers,
 )
 from shvatka.tgbot.dialogs.preview_data import PreviewStart
 
@@ -121,6 +122,7 @@ level = Dialog(
         ),
         Button(Const("🔑Ключи"), id="keys", on_click=start_level_keys),
         Button(Const("🗝Хитрые ключи"), id="sly_keys", on_click=start_sly_keys, when=F["keys"]),
+        Button(Const("🕑Таймеры"), id="timers", on_click=start_level_timers),
         Button(Const("💡Подсказки"), id="hints", on_click=start_hints),
         Button(
             Const("✅Готово, сохранить"),
@@ -137,6 +139,7 @@ level = Dialog(
             PreviewStart(state=states.LevelKeysSG.keys),
             PreviewStart(state=states.LevelSlyKeysSG.menu),
             PreviewStart(state=states.LevelHintsSG.time_hints),
+            PreviewStart(state=states.LevelTimersSG.menu),
             Cancel(),
         ],
     ),
@@ -164,6 +167,7 @@ level_edit_dialog = Dialog(
         ),
         Button(Const("🔑Ключи"), id="keys", on_click=start_level_keys),
         Button(Const("🗝Хитрые ключи"), id="sly_keys", on_click=start_sly_keys, when=F["keys"]),
+        Button(Const("🕑Таймеры"), id="timers", on_click=start_level_timers),
         Button(Const("💡Подсказки"), id="hints", on_click=start_hints),
         Button(
             Const("💾Готово, сохранить"),
@@ -181,6 +185,7 @@ level_edit_dialog = Dialog(
             PreviewStart(state=states.LevelKeysSG.keys),
             PreviewStart(state=states.LevelSlyKeysSG.menu),
             PreviewStart(state=states.LevelHintsSG.time_hints),
+            PreviewStart(state=states.LevelTimersSG.menu),
         ],
     ),
     on_process_result=process_level_result,

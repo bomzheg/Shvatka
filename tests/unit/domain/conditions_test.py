@@ -3,7 +3,7 @@ from datetime import timedelta
 
 import pytest
 
-from shvatka.core.models.dto.action import keys, Effects, ConditionType
+from shvatka.core.models.dto.action import keys, Effects
 from shvatka.core.models.dto import scn
 from shvatka.core.models.dto import action
 from shvatka.core.utils import exceptions
@@ -31,9 +31,8 @@ def timer_condition() -> scn.Conditions:
     return scn.Conditions(
         [
             action.LevelTimerEffectsCondition(
-                timedelta(minutes=30),
-                Effects(id=uuid.uuid4(), level_up=True),
-                ConditionType.EFFECTS,
+                action_time=30,
+                effects=Effects(id=uuid.uuid4(), level_up=True),
             )
         ]
     )

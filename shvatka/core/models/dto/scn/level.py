@@ -179,7 +179,8 @@ class Conditions(Sequence[AnyCondition]):
                 if timer.get_action_time() > force_level_up_time:
                     raise exceptions.LevelError(
                         text="all timers should be less or equal than level win time",
-                        confidential=f"win time={force_level_up_time}, timer={timer.get_action_time()}",
+                        confidential=f"win time={force_level_up_time}, "
+                        f"timer={timer.get_action_time()}",
                     )
 
     def replace_bonus_keys(self, bonus_keys: set[action.BonusKey]) -> "Conditions":

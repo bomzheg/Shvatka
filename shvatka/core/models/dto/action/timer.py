@@ -76,14 +76,18 @@ class LevelTimerCondition(Condition, metaclass=abc.ABCMeta):
             return NoActionDecision()
 
 
-@dataclass
+@dataclass(kw_only=True, frozen=True)
 class LevelTimerEffectsCondition(LevelTimerCondition):
-    action_time: timedelta
+    """
+    action_time - minutes
+    """
+
+    action_time: int
     effects: Effects
     type: Literal["EFFECTS"] = ConditionType.EFFECTS.name
 
     def get_action_time(self) -> timedelta:
-        return self.action_time
+        return timedelta(minutes=self.action_time)
 
     def get_decision(self) -> Decision:
         return LevelTimerEffectsDecision(type=DecisionType.EFFECTS, effects=self.effects)

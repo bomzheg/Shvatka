@@ -135,9 +135,9 @@ class Conditions(Sequence[AnyCondition]):
     @staticmethod
     def validate(conditions: Sequence[AnyCondition]) -> None:  # noqa: C901,PLR0912
         keys: set[str] = set()
-        win_conditions = []
+        win_conditions: list[KeyWinCondition] = []
         effects_ids: set[UUID] = set()
-        most_time: timedelta | None = None
+        force_level_up_time: timedelta | None = None
         timers: list[action.LevelTimerEffectsCondition] = []
         for c in conditions:
             if isinstance(c, KeyCondition):
@@ -154,32 +154,32 @@ class Conditions(Sequence[AnyCondition]):
                     raise exceptions.LevelError(
                         text=f"there are duplicate effects with id {c.effects.id}"
                     )
+                effects_ids.add(c.effects.id)
                 if c.effects.level_up:
-                    if most_time is not None:
+                    if force_level_up_time is not None:
                         raise exceptions.LevelError(
                             text="winning timer condition exists multiple times",
                         )
-                    most_time = c.action_time
+                    force_level_up_time = c.get_action_time()
                     continue
                 timers.append(c)
-                effects_ids.add(c.effects.id)
-        if not win_conditions:
+        if not win_conditions and not force_level_up_time:
             raise exceptions.LevelError(text="There is no win condition")
-        if all(c.next_level is not None for c in win_conditions):
+        if all(c.next_level is not None for c in win_conditions) and force_level_up_time is None:
             raise exceptions.LevelError(
                 text="At least one win condition should be simple (without routing (next_level))"
             )
         # TODO #128 next is temporary restriction. we should allow multiple times
-        if (count := len([c for c in win_conditions if c.next_level is None])) != 1:
+        if (count := len([c for c in win_conditions if c.next_level is None])) > 1:
             raise exceptions.LevelError(
                 text=f"Default win condition must be exactly once, got {count}"
             )
-        if most_time is not None:
+        if force_level_up_time is not None:
             for timer in timers:
-                if timer.get_action_time() > most_time:
+                if timer.get_action_time() > force_level_up_time:
                     raise exceptions.LevelError(
                         text="all timers should be less or equal than level win time",
-                        confidential=f"win time={most_time}, timer={timer.get_action_time()}",
+                        confidential=f"win time={force_level_up_time}, timer={timer.get_action_time()}",
                     )
 
     def replace_bonus_keys(self, bonus_keys: set[action.BonusKey]) -> "Conditions":
@@ -251,6 +251,13 @@ class Conditions(Sequence[AnyCondition]):
         """TODO #128"""
         return self.get_default_key_conditions()[0]
 
+    def get_force_level_up_time(self) -> timedelta | None:
+        for condition in self.conditions:
+            if isinstance(condition, action.LevelTimerEffectsCondition):
+                if condition.effects.level_up:
+                    return condition.get_action_time()
+        return None
+
     def get_types_count(self) -> int:
         result = 0
         if self.get_bonus_keys():
@@ -306,6 +313,14 @@ class LevelScenario:
     def __post_init__(self):
         if not self.conditions:
             raise exceptions.LevelError(text="no win conditions are present")
+        force_level_up_time = self.conditions.get_force_level_up_time()
+        if force_level_up_time is not None:
+            for time_hint in self.time_hints:
+                if time_hint.time >= force_level_up_time.seconds // 60:
+                    raise exceptions.LevelError(
+                        text=f"time hint {time_hint.time} "
+                        f"is more than force level up {force_level_up_time}",
+                    )
 
     def get_hint(self, hint_number: int) -> TimeHint:
         return self.time_hints[hint_number]

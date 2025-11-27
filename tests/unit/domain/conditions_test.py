@@ -133,19 +133,30 @@ def test_conditions_duplicate_both_keys():
         )
 
 
+def test_conditions_just_level_up():
+    conditions = scn.Conditions(
+        [
+            action.LevelTimerEffectsCondition(
+                action_time=30,
+                effects=Effects(id=uuid.uuid4(), level_up=True),
+            ),
+        ]
+    )
+    assert conditions.get_keys() == set()
+    assert conditions.get_force_level_up_time() == timedelta(minutes=30)
+
+
 def test_conditions_two_level_up_timer():
     with pytest.raises(exceptions.LevelError):
         scn.Conditions(
             [
                 action.LevelTimerEffectsCondition(
-                    timedelta(minutes=30),
-                    Effects(id=uuid.uuid4(), level_up=True),
-                    ConditionType.EFFECTS,
+                    action_time=30,
+                    effects=Effects(id=uuid.uuid4(), level_up=True),
                 ),
                 action.LevelTimerEffectsCondition(
-                    timedelta(minutes=40),
-                    Effects(id=uuid.uuid4(), level_up=True),
-                    ConditionType.EFFECTS,
+                    action_time=40,
+                    effects=Effects(id=uuid.uuid4(), level_up=True),
                 ),
             ]
         )
@@ -157,14 +168,12 @@ def test_conditions_two_same_effects_id_timer():
         scn.Conditions(
             [
                 action.LevelTimerEffectsCondition(
-                    timedelta(minutes=30),
-                    Effects(id=effect_id, level_up=True),
-                    ConditionType.EFFECTS,
+                    action_time=30,
+                    effects=Effects(id=effect_id, level_up=True),
                 ),
                 action.LevelTimerEffectsCondition(
-                    timedelta(minutes=20),
-                    Effects(id=effect_id, bonus_minutes=1),
-                    ConditionType.EFFECTS,
+                    action_time=20,
+                    effects=Effects(id=effect_id, bonus_minutes=1),
                 ),
             ]
         )
@@ -175,14 +184,12 @@ def test_conditions_effect_after_level_up_timer():
         scn.Conditions(
             [
                 action.LevelTimerEffectsCondition(
-                    timedelta(minutes=30),
-                    Effects(id=uuid.uuid4(), level_up=True),
-                    ConditionType.EFFECTS,
+                    action_time=30,
+                    effects=Effects(id=uuid.uuid4(), level_up=True),
                 ),
                 action.LevelTimerEffectsCondition(
-                    timedelta(minutes=40),
-                    Effects(id=uuid.uuid4(), bonus_minutes=1),
-                    ConditionType.EFFECTS,
+                    action_time=40,
+                    effects=Effects(id=uuid.uuid4(), bonus_minutes=1),
                 ),
             ]
         )

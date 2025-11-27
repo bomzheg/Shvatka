@@ -6,6 +6,11 @@ from .hint_part import AnyHint
 
 @dataclass
 class TimeHint:
+    """
+    time: minutes
+    hint: list of hints
+    """
+
     time: int
     hint: list[AnyHint]
 

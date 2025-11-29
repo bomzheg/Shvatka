@@ -18,7 +18,13 @@ from .handlers import (
 
 timers_dialog = Dialog(
     Window(
-        Jinja("Уровень <b>{{level_id}}</b>\n\n" "🕑Таймеры: {{timers | length}}\n"),
+        Jinja(
+            "Уровень <b>{{level_id}}</b>\n\n"
+            "🕑Таймеры: {{timers | length}}\n"
+            "{% for timer in timers %}"
+            "{{timer.action_time}}: {{timer.effects | effects}}"
+            "{% endfor %}"
+        ),
         Button(
             Const("✅Готово"),
             id="save",

@@ -8,7 +8,6 @@ from dishka import FromDishka
 from dishka.integrations.aiogram_dialog import inject
 
 
-
 @inject
 async def on_start_timers(
     start_data: dict[str, Any], manager: DialogManager, retort: FromDishka[Retort]

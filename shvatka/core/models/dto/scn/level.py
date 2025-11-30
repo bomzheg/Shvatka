@@ -139,6 +139,7 @@ class Conditions(Sequence[AnyCondition]):
         effects_ids: set[UUID] = set()
         force_level_up_time: timedelta | None = None
         timers: list[action.LevelTimerEffectsCondition] = []
+        timers_times: set[timedelta] = set()
         for c in conditions:
             if isinstance(c, KeyCondition):
                 if isinstance(c, KeyWinCondition):
@@ -155,6 +156,11 @@ class Conditions(Sequence[AnyCondition]):
                         text=f"there are duplicate effects with id {c.effects.id}"
                     )
                 effects_ids.add(c.effects.id)
+                if c.get_action_time() in timers_times:
+                    raise exceptions.LevelError(
+                        text=f"there are duplicate actions with time {c.get_action_time()}"
+                    )
+                timers_times.add(c.get_action_time())
                 if c.effects.level_up:
                     if force_level_up_time is not None:
                         raise exceptions.LevelError(

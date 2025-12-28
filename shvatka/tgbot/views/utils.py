@@ -60,7 +60,9 @@ def render_single_hint(hint: hints.AnyHint) -> str:
     return HINTS_EMOJI[HintType[hint.type]]
 
 
-def render_effects(effects: action.Effects) -> str:
+def render_effects(effects: action.Effects | None) -> str:
+    if effects is None:
+        return ""
     result = ""
     if effects.next_level:
         result += "🔀"

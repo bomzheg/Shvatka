@@ -1,13 +1,14 @@
 from aiogram_dialog import Dialog, Window
+from aiogram_dialog.widgets.input import MessageInput, TextInput
 from aiogram_dialog.widgets.kbd import (
     Button,
     Cancel,
     ScrollingGroup,
     Select,
     Start,
-    SwitchTo,
+    SwitchTo, Group,
 )
-from aiogram_dialog.widgets.text import Const, Jinja
+from aiogram_dialog.widgets.text import Const, Jinja, Format
 
 from shvatka.tgbot import states
 from .getters import (
@@ -19,9 +20,9 @@ from .handlers import (
     save_timers,
     process_timers_result,
     start_edit_timer,
-    on_start_timer, start_new_timer,
+    on_start_timer, start_new_timer, process_incorrect_time_message, process_correct_time_message, select_time,
 )
-
+from ..time_hint.getters import get_available_times
 
 timers_dialog = Dialog(
     Window(
@@ -70,12 +71,37 @@ timer_dialog = Dialog(
             id="to_timer",
             state=states.LevelTimerSG.timer,
         ),
+        Cancel(),
         state=states.LevelTimerSG.menu,
         getter=get_timer,
     ),
     Window(
-        Jinja("таймер"),
+        Const("Время выхода подсказки (можно выбрать или ввести)"),
+        TextInput(
+            id="time",
+            type_factory=int,
+            on_success=process_correct_time_message,
+            on_error=process_incorrect_time_message,
+        ),
+        Group(
+            Select(
+                Format("{item}"),
+                id="hint_times",
+                item_id_getter=lambda x: x,
+                items="times",
+                on_click=select_time,
+            ),
+            id="times_group",
+            width=3,
+        ),
+        Cancel(text=Const("Вернуться, не сохранять")),
+        SwitchTo(
+            id="back",
+            state=states.LevelTimerSG.menu,
+            text=Jinja("Назад"),
+        ),
         state=states.LevelTimerSG.timer,
+        getter=get_available_times,
     ),
     on_start=on_start_timer,
 )

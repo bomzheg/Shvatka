@@ -1,7 +1,7 @@
 from typing import Any
 
 from adaptix import Retort
-from aiogram.types import CallbackQuery
+from aiogram.types import CallbackQuery, Message
 from aiogram_dialog import Data, DialogManager
 from aiogram_dialog.widgets.kbd import Button
 from dishka import FromDishka
@@ -92,3 +92,20 @@ async def start_new_timer(
             "game_id": manager.dialog_data["game_id"],
         },
     )
+
+
+async def process_incorrect_time_message(m: Message, widget: Any, manager: DialogManager, exception: ValueError):
+    await m.answer(
+        "Некорректный формат времени. "
+        "Пожалуйста введите время в формате целого числа - "
+        "время с начала уровня в минутах (ММ), например 10"
+    )
+async def process_correct_time_message(m: Message, widget: Any, manager: DialogManager, data: int):
+    await set_time(data, manager)
+
+async def select_time(c: CallbackQuery, widget: Any, manager: DialogManager, item_id: str):
+    await set_time(int(item_id), manager)
+
+async def set_time(time_minutes: int, manager: DialogManager):
+    manager.dialog_data["time"] = int(time_minutes)
+

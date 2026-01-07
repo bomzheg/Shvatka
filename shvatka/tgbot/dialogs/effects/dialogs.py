@@ -18,6 +18,7 @@ from .handlers import (
 effects = Dialog(
     Window(
         Jinja(
+            "{{dialog_data['effect_id']}}\n"
             "Редактирование эффектов:\n"
             "{% if hints %}"
             "Подсказки: {{hints | hints}}\n"
@@ -30,8 +31,8 @@ effects = Dialog(
             "{% endif %}: {{bonus_minutes}} минут\n"
             "{% endif %}"
             "{% if level_up %}"
-            "{% if routed_level_up %}"
-            "Переход на уровень {{routed_level_up}}"
+            "{% if next_level %}"
+            "Переход на уровень {{next_level}}"
             "{% else %}"
             "Переход на следующий уровень"
             "{% endif %}"

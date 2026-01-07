@@ -21,6 +21,7 @@ from .handlers import (
     process_timers_result,
     start_edit_timer,
     on_start_timer, start_new_timer, process_incorrect_time_message, process_correct_time_message, select_time,
+    start_effects, on_process_timer_result,
 )
 from ..time_hint.getters import get_available_times
 
@@ -71,7 +72,12 @@ timer_dialog = Dialog(
             id="to_timer",
             state=states.LevelTimerSG.timer,
         ),
-        Cancel(),
+        Button(
+            id="to_effects",
+            text=Jinja("Эффекты"),
+            on_click=start_effects,
+        ),
+        Cancel(text=Const("Вернуться, не сохранять")),
         state=states.LevelTimerSG.menu,
         getter=get_timer,
     ),
@@ -94,14 +100,15 @@ timer_dialog = Dialog(
             id="times_group",
             width=3,
         ),
-        Cancel(text=Const("Вернуться, не сохранять")),
         SwitchTo(
             id="back",
             state=states.LevelTimerSG.menu,
             text=Jinja("Назад"),
         ),
+        Cancel(text=Const("Вернуться, не сохранять")),
         state=states.LevelTimerSG.timer,
         getter=get_available_times,
     ),
+    on_process_result=on_process_timer_result,
     on_start=on_start_timer,
 )

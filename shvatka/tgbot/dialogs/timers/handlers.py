@@ -1,3 +1,4 @@
+import uuid
 from typing import Any
 
 from adaptix import Retort
@@ -7,7 +8,7 @@ from aiogram_dialog.widgets.kbd import Button
 from dishka import FromDishka
 from dishka.integrations.aiogram_dialog import inject
 
-from shvatka.core.models.dto import action
+from shvatka.core.models.dto import action, hints
 from shvatka.tgbot import states
 
 
@@ -81,7 +82,6 @@ async def start_new_timer(
     c: CallbackQuery,
     button: Button,
     manager: DialogManager,
-    retort: FromDishka[Retort],
 ):
 
     await manager.start(
@@ -93,6 +93,29 @@ async def start_new_timer(
         },
     )
 
+@inject
+async def start_effects(
+    c: CallbackQuery,
+    button: Button,
+    manager: DialogManager,
+    retort: FromDishka[Retort],
+):
+    raw_effects = manager.dialog_data.get("effects", None)
+    if raw_effects:
+        effects: action.Effects = retort.load(raw_effects, action.Effects)
+        data = {
+            "effect_id": str(effects.id),
+            "hints": retort.dump(effects.hints_, list[hints.AnyHint]),
+            "bonus_minutes": effects.bonus_minutes,
+            "level_up": effects.level_up,
+            "next_level": effects.next_level,
+        }
+    else:
+        data = {}
+    await manager.start(
+        state=states.EffectsSG.menu,
+        data=data,
+    )
 
 async def process_incorrect_time_message(m: Message, widget: Any, manager: DialogManager, exception: ValueError):
     await m.answer(
@@ -108,4 +131,27 @@ async def select_time(c: CallbackQuery, widget: Any, manager: DialogManager, ite
 
 async def set_time(time_minutes: int, manager: DialogManager):
     manager.dialog_data["time"] = int(time_minutes)
+    await manager.switch_to(state=states.LevelTimerSG.menu)
 
+@inject
+async def on_process_timer_result(
+    start_data: Data,
+    result: dict[str, Any],
+    manager: DialogManager,
+    retort: FromDishka[Retort],
+):
+    if not result:
+        return
+    effect_id = result.get("effect_id", None)
+    if effect_id:
+        next_level: str | None = result.get("next_level")
+        bonus_minutes: float = result.get("bonus_minutes")
+        level_up: bool = result.get("level_up")
+        hints_: list[hints.AnyHint] = result.get("hints")
+        manager.dialog_data["effects"] = retort.dump(action.Effects(
+            id=effect_id,
+            next_level=next_level,
+            bonus_minutes=bonus_minutes,
+            level_up=level_up,
+            hints_=hints_,
+        ))

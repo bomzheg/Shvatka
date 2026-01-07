@@ -21,7 +21,7 @@ async def get_timer(dialog_manager: DialogManager, retort: Retort, **_):
     time: int | None = dialog_manager.dialog_data.get("time", None)
     effects_raw = dialog_manager.dialog_data.get("effects", None)
     if effects_raw:
-        effects = retort.load(effects_raw, action.LevelTimerEffectsCondition)
+        effects = retort.load(effects_raw, action.Effects)
         return {
             "time": time,
             "effects": effects,

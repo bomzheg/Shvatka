@@ -18,44 +18,44 @@ from .handlers import (
 effects = Dialog(
     Window(
         Jinja(
-            "{{dialog_data['effect_id']}}\n"
-            "Редактирование эффектов:\n"
+            "<pre>{{dialog_data['effect_id']}}</pre>\n"
+            "Эффекты:\n"
             "{% if hints %}"
-            "Подсказки: {{hints | hints}}\n"
+            "💡Подсказки: {{hints | hints}}\n"
             "{% endif %}"
             "{% if bonus_minutes %}"
             "{% if bonus_minutes > 0 %}"
-            "Бонус"
+            "💰Бонус"
             "{% elif bonus_minutes < 0 %}"
-            "Штраф"
+            "💸Штраф"
             "{% endif %}: {{bonus_minutes}} минут\n"
             "{% endif %}"
             "{% if level_up %}"
             "{% if next_level %}"
-            "Переход на уровень {{next_level}}"
+            "🔀Переход на уровень {{next_level}}"
             "{% else %}"
-            "Переход на следующий уровень"
+            "🚩Переход на следующий уровень"
             "{% endif %}"
             "{% endif %}"
         ),
         SwitchTo(
-            Jinja("Подсказки"),
+            Jinja("💡Подсказки"),
             id="to_hints",
             state=states.EffectsSG.hints,
         ),
         SwitchTo(
-            Jinja("Бонус"),
+            Jinja("💰Бонус"),
             id="to_bonus",
             state=states.EffectsSG.bonus,
         ),
         SwitchTo(
-            Jinja("Переход на уровень"),
+            Jinja("🔀Переход на уровень"),
             id="to_routed",
             state=states.EffectsSG.routed_level_up,
         ),
-        Button(Jinja("Завершение уровня"), id="level_up", on_click=process_level_up_change),
+        Button(Jinja("🚩Завершение уровня"), id="level_up", on_click=process_level_up_change),
         Button(
-            Jinja("Сохранить"),
+            Jinja("✅Сохранить"),
             id="done",
             on_click=save_effects,
         ),

@@ -67,7 +67,7 @@ def render_effects(effects: action.Effects | None) -> str:
     if effects.next_level:
         result += "🔀"
     elif effects.level_up:
-        result += "✅"
+        result += "🚩"
     if effects.bonus_minutes:
         result += "💰"
     if effects.hints_:

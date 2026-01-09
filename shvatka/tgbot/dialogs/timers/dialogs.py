@@ -21,7 +21,7 @@ from .handlers import (
     process_timers_result,
     start_edit_timer,
     on_start_timer, start_new_timer, process_incorrect_time_message, process_correct_time_message, select_time,
-    start_effects, on_process_timer_result,
+    start_effects, on_process_timer_result, save_timer,
 )
 from ..time_hint.getters import get_available_times
 
@@ -31,12 +31,12 @@ timers_dialog = Dialog(
             "Уровень <b>{{level_id}}</b>\n\n"
             "🕑Таймеры: {{timers | length}}\n"
             "{% for timer in timers %}"
-            "{{timer.action_time}}: {{timer.effects | effects}}"
+            "{{ timer.action_time }}: {{ timer.effects | effects }}"
             "{% endfor %}"
         ),
         ScrollingGroup(
             Select(
-                Jinja("{{timer.action_time}}: {{timer.effects | effects}}"),
+                Jinja("{{item.action_time}}: {{item.effects | effects}}"),
                 id="timer_conditions",
                 item_id_getter=lambda x: x.action_time,
                 items="timers",
@@ -76,6 +76,11 @@ timer_dialog = Dialog(
             id="to_effects",
             text=Jinja("Эффекты"),
             on_click=start_effects,
+        ),
+        Button(
+            id="save_timer",
+            text=Jinja("Готово"),
+            on_click=save_timer,
         ),
         Cancel(text=Const("Вернуться, не сохранять")),
         state=states.LevelTimerSG.menu,

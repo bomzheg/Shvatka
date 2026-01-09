@@ -47,9 +47,23 @@ async def save_timers(c: CallbackQuery, button: Button, manager: DialogManager):
     )
 
 
-async def process_timers_result(start_data: Data, result: Any, manager: DialogManager):
+@inject
+async def process_timers_result(start_data: Data, result: dict[str, Any], manager: DialogManager, retort: FromDishka[Retort]):
     if not result:
         return
+    assert isinstance(start_data, dict)
+    if "condition" in start_data:
+        condition = start_data["condition"]
+        if condition is not None:
+            for i, c in enumerate(retort.load(manager.dialog_data["conditions"], list[action.AnyCondition])):
+                if c.action_time == condition.action_time:
+                    break
+            else:
+                raise RuntimeError("impossible! one of condition should be same")
+            manager.dialog_data["conditions"][i] = retort.dump(result["condition"])
+        else:
+            manager.dialog_data["conditions"].append(retort.dump(result["condition"]))
+
 
 
 @inject
@@ -155,3 +169,14 @@ async def on_process_timer_result(
             level_up=level_up,
             hints_=hints_,
         ))
+
+@inject
+async def save_timer(c: CallbackQuery, button: Button, manager: DialogManager, retort: FromDishka[Retort]):
+    await manager.done(
+        {
+            "condition": action.LevelTimerEffectsCondition(
+                action_time=int(manager.dialog_data["time"]),
+                effects=retort.load(manager.dialog_data["effects"], action.Effects),
+            ),
+        }
+    )

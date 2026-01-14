@@ -53,10 +53,11 @@ async def process_timers_result(start_data: Data, result: dict[str, Any], manage
         return
     assert isinstance(start_data, dict)
     if "condition" in start_data:
-        condition = start_data["condition"]
-        if condition is not None:
+        raw_condition = start_data["condition"]
+        if raw_condition is not None:
+            condition = retort.load(raw_condition, action.LevelTimerEffectsCondition)
             for i, c in enumerate(retort.load(manager.dialog_data["conditions"], list[action.AnyCondition])):
-                if c.action_time == condition.action_time:
+                if isinstance(c, action.LevelTimerEffectsCondition) and c.action_time == condition.action_time:
                     break
             else:
                 raise RuntimeError("impossible! one of condition should be same")
@@ -71,12 +72,12 @@ async def start_edit_timer(
     c: CallbackQuery,
     button: Button,
     manager: DialogManager,
-    time: int,
+    time: str,
     retort: FromDishka[Retort],
 ):
     condition: action.LevelTimerEffectsCondition = next(  # type: ignore[assignment]
         filter(
-            lambda x: hasattr(x, "action_time") and x.action_time == time,
+            lambda x: hasattr(x, "action_time") and x.action_time == int(time),
             retort.load(manager.dialog_data["conditions"], list[action.AnyCondition]),
         )
     )

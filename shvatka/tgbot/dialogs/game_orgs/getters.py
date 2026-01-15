@@ -1,3 +1,4 @@
+from typing import Any
 from aiogram_dialog import DialogManager
 
 from shvatka.core.models import dto
@@ -10,8 +11,9 @@ from shvatka.tgbot import keyboards as kb
 
 
 async def get_orgs(dialog_manager: DialogManager, **_):
-    game_id = dialog_manager.start_data["game_id"]
-    completed = dialog_manager.start_data.get("completed", False)
+    data: dict[str, Any] = dialog_manager.start_data  # type: ignore[assignment]
+    game_id = data["game_id"]
+    completed = data.get("completed", False)
     dao: HolderDao = dialog_manager.middleware_data["dao"]
     author: dto.Player = dialog_manager.middleware_data["player"]
     game = await get_game(

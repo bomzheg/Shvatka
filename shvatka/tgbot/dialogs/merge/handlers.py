@@ -24,7 +24,8 @@ async def confirm_merge(c: CallbackQuery, button: Any, manager: DialogManager):
     dao = data["dao"]
     captain = data["player"]
     assert captain
-    primary = await get_team_by_id(manager.start_data["team_id"], dao.team)
+    start_data: dict[str, Any] = manager.start_data  # type: ignore[assignment]
+    primary = await get_team_by_id(start_data["team_id"], dao.team)
     secondary = await get_team_by_forum_team_id(manager.dialog_data["forum_team_id"], dao.team)
     await data["bot"].send_message(
         chat_id=data["config"].game_log_chat,

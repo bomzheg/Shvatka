@@ -129,7 +129,7 @@ async def process_time_hint_result(start_data: Data, result: Any, manager: Dialo
 
 
 @inject
-async def process_level_result(
+async def process_level_result(  # noqa: C901
     start_data: Data,
     result: Any,
     manager: DialogManager,
@@ -165,6 +165,7 @@ async def process_level_result(
     manager.dialog_data["conditions"] = retort.dump(conditions)
     if raw_conditions := result.get("conditions", None):
         manager.dialog_data["conditions"] = raw_conditions
+
 
 async def on_start_level_edit(start_data: dict[str, Any], manager: DialogManager):
     dao: HolderDao = manager.middleware_data["dao"]

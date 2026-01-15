@@ -1,4 +1,3 @@
-import uuid
 from typing import Any
 
 from adaptix import Retort
@@ -27,7 +26,7 @@ async def on_start_timer(
 ):
     manager.dialog_data["level_id"] = start_data["level_id"]
     manager.dialog_data["game_id"] = start_data["game_id"]
-    raw_condition = start_data.get("condition", None)
+    raw_condition = start_data.get("condition")
     if raw_condition:
         condition = retort.load(raw_condition, action.AnyCondition)
         assert isinstance(condition, action.LevelTimerEffectsCondition)
@@ -48,7 +47,9 @@ async def save_timers(c: CallbackQuery, button: Button, manager: DialogManager):
 
 
 @inject
-async def process_timers_result(start_data: Data, result: dict[str, Any], manager: DialogManager, retort: FromDishka[Retort]):
+async def process_timers_result(
+    start_data: Data, result: dict[str, Any], manager: DialogManager, retort: FromDishka[Retort]
+):
     if not result:
         return
     assert isinstance(start_data, dict)
@@ -56,15 +57,19 @@ async def process_timers_result(start_data: Data, result: dict[str, Any], manage
         raw_condition = start_data["condition"]
         if raw_condition is not None:
             condition = retort.load(raw_condition, action.LevelTimerEffectsCondition)
-            for i, c in enumerate(retort.load(manager.dialog_data["conditions"], list[action.AnyCondition])):
-                if isinstance(c, action.LevelTimerEffectsCondition) and c.action_time == condition.action_time:
+            for i, c in enumerate(  # noqa: B007
+                retort.load(manager.dialog_data["conditions"], list[action.AnyCondition])
+            ):
+                if (
+                    isinstance(c, action.LevelTimerEffectsCondition)
+                    and c.action_time == condition.action_time
+                ):
                     break
             else:
                 raise RuntimeError("impossible! one of condition should be same")
             manager.dialog_data["conditions"][i] = retort.dump(result["condition"])
         else:
             manager.dialog_data["conditions"].append(retort.dump(result["condition"]))
-
 
 
 @inject
@@ -91,14 +96,12 @@ async def start_edit_timer(
     )
 
 
-
 @inject
 async def start_new_timer(
     c: CallbackQuery,
     button: Button,
     manager: DialogManager,
 ):
-
     await manager.start(
         state=states.LevelTimerSG.menu,
         data={
@@ -107,6 +110,7 @@ async def start_new_timer(
             "game_id": manager.dialog_data["game_id"],
         },
     )
+
 
 @inject
 async def start_effects(
@@ -132,21 +136,29 @@ async def start_effects(
         data=data,
     )
 
-async def process_incorrect_time_message(m: Message, widget: Any, manager: DialogManager, exception: ValueError):
+
+async def process_incorrect_time_message(
+    m: Message, widget: Any, manager: DialogManager, exception: ValueError
+):
     await m.answer(
         "Некорректный формат времени. "
         "Пожалуйста введите время в формате целого числа - "
         "время с начала уровня в минутах (ММ), например 10"
     )
+
+
 async def process_correct_time_message(m: Message, widget: Any, manager: DialogManager, data: int):
     await set_time(data, manager)
+
 
 async def select_time(c: CallbackQuery, widget: Any, manager: DialogManager, item_id: str):
     await set_time(int(item_id), manager)
 
+
 async def set_time(time_minutes: int, manager: DialogManager):
     manager.dialog_data["time"] = int(time_minutes)
     await manager.switch_to(state=states.LevelTimerSG.menu)
+
 
 @inject
 async def on_process_timer_result(
@@ -157,22 +169,27 @@ async def on_process_timer_result(
 ):
     if not result:
         return
-    effect_id = result.get("effect_id", None)
+    effect_id = result.get("effect_id")
     if effect_id:
         next_level: str | None = result.get("next_level")
-        bonus_minutes: float = result.get("bonus_minutes")
-        level_up: bool = result.get("level_up")
-        hints_: list[hints.AnyHint] = result.get("hints")
-        manager.dialog_data["effects"] = retort.dump(action.Effects(
-            id=effect_id,
-            next_level=next_level,
-            bonus_minutes=bonus_minutes,
-            level_up=level_up,
-            hints_=hints_,
-        ))
+        bonus_minutes: float = result.get("bonus_minutes", 0.0)
+        level_up: bool = result.get("level_up", False)
+        hints_: list[hints.AnyHint] = result.get("hints", [])
+        manager.dialog_data["effects"] = retort.dump(
+            action.Effects(
+                id=effect_id,
+                next_level=next_level,
+                bonus_minutes=bonus_minutes,
+                level_up=level_up,
+                hints_=hints_,
+            )
+        )
+
 
 @inject
-async def save_timer(c: CallbackQuery, button: Button, manager: DialogManager, retort: FromDishka[Retort]):
+async def save_timer(
+    c: CallbackQuery, button: Button, manager: DialogManager, retort: FromDishka[Retort]
+):
     await manager.done(
         {
             "condition": action.LevelTimerEffectsCondition(

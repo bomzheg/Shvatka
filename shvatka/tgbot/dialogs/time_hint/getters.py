@@ -1,11 +1,14 @@
+from typing import Any
+
 from adaptix import Retort
 from aiogram_dialog import DialogManager
 
 from shvatka.core.models.dto import hints
 
 
-async def get_available_times(dialog_manager: DialogManager, **_):
-    prev_time = int(dialog_manager.start_data.get("previous_time", 0))
+async def get_available_times(dialog_manager: DialogManager, **_) -> dict[str, list[int]]:
+    data: dict[str, Any] = dialog_manager.start_data  # type: ignore[assignment]
+    prev_time = int(data.get("previous_time", 0))
     if prev_time == -1:
         # in case of no hints first value in most case must be 0 (puzzle)
         times = [0]

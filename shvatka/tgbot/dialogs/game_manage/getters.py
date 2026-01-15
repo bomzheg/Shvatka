@@ -37,9 +37,8 @@ async def get_games(dao: HolderDao, **_) -> dict[str, list[dto.Game]]:
 
 
 async def get_completed_game(dao: HolderDao, dialog_manager: DialogManager, **_):
-    game_id = (
-        dialog_manager.dialog_data.get("game_id", None) or dialog_manager.start_data["game_id"]
-    )
+    data: dict[str, Any] = dialog_manager.start_data  # type: ignore[assignment]
+    game_id = dialog_manager.dialog_data.get("game_id", None) or data["game_id"]
     dishka: AsyncContainer = dialog_manager.middleware_data[CONTAINER_NAME]
     url_factory = await dishka.get(UrlFactory)
     return {
@@ -52,9 +51,8 @@ async def get_completed_game(dao: HolderDao, dialog_manager: DialogManager, **_)
 
 
 async def get_game_waivers(dao: HolderDao, dialog_manager: DialogManager, **_):
-    game_id = (
-        dialog_manager.dialog_data.get("game_id", None) or dialog_manager.start_data["game_id"]
-    )
+    data: dict[str, Any] = dialog_manager.start_data  # type: ignore[assignment]
+    game_id = dialog_manager.dialog_data.get("game_id", None) or data["game_id"]
     current_game = await game.get_game(
         id_=game_id,
         dao=dao.game,
@@ -73,9 +71,8 @@ async def get_game_keys(
     identity: FromDishka[IdentityProvider],
     **_,
 ):
-    game_id = (
-        dialog_manager.dialog_data.get("game_id", None) or dialog_manager.start_data["game_id"]
-    )
+    data: dict[str, Any] = dialog_manager.start_data  # type: ignore[assignment]
+    game_id = dialog_manager.dialog_data.get("game_id", None) or data["game_id"]
     current_game = await game.get_game(
         id_=game_id,
         dao=dao.game,
@@ -96,9 +93,8 @@ async def get_game_results(
     results_painter: ResultsPainter,
     **_,
 ):
-    game_id = (
-        dialog_manager.dialog_data.get("game_id", None) or dialog_manager.start_data["game_id"]
-    )
+    data: dict[str, Any] = dialog_manager.start_data  # type: ignore[assignment]
+    game_id = dialog_manager.dialog_data.get("game_id", None) or data["game_id"]
     current_game = await game.get_game(
         id_=game_id,
         dao=dao.game,
@@ -113,10 +109,8 @@ async def get_game_results(
 async def get_game(
     dao: HolderDao, player: dto.Player, dialog_manager: DialogManager, **_
 ) -> dict[str, Any]:
-    game_id = (
-        dialog_manager.dialog_data.get("my_game_id", None)
-        or dialog_manager.start_data["my_game_id"]
-    )
+    data: dict[str, Any] = dialog_manager.start_data  # type: ignore[assignment]
+    game_id = dialog_manager.dialog_data.get("my_game_id", None) or data["my_game_id"]
     return {
         "game": await game.get_preview_game(
             id_=game_id,

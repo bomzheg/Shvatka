@@ -1,3 +1,5 @@
+from typing import Any
+
 from aiogram_dialog import DialogManager
 
 from shvatka.core.models import dto
@@ -20,7 +22,8 @@ async def get_level_id(dao: HolderDao, dialog_manager: DialogManager, **_):
 
 
 async def get_orgs(dao: HolderDao, dialog_manager: DialogManager, **_):
-    level_id = dialog_manager.start_data["level_id"]
+    data: dict[str, Any] = dialog_manager.start_data  # type: ignore[assignment]
+    level_id = data["level_id"]
     author: dto.Player = dialog_manager.middleware_data["player"]
     level = await get_by_id(level_id, author, dao.level)
     if level.game_id is not None:
@@ -41,12 +44,13 @@ async def get_level_and_org(
     dao: HolderDao,
     manager: DialogManager,
 ) -> tuple[dto.Level, dto.Organizer | None]:
-    if "org_id" in manager.start_data:
-        org = await get_org_by_id(manager.start_data["org_id"], dao.organizer)
-        level = await get_level_by_id_for_org(manager.start_data["level_id"], org, dao.level)
+    data: dict[str, Any] = manager.start_data  # type: ignore[assignment]
+    if "org_id" in data:
+        org = await get_org_by_id(data["org_id"], dao.organizer)
+        level = await get_level_by_id_for_org(data["level_id"], org, dao.level)
         return level, org
     else:
-        level = await get_by_id(manager.start_data["level_id"], author, dao.level)
+        level = await get_by_id(data["level_id"], author, dao.level)
         org_ = await get_org(author, level, dao)
         return level, org_
 

@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Any
 
 from aiogram_dialog import DialogManager
 
@@ -8,7 +9,8 @@ from shvatka.infrastructure.db.dao.holder import HolderDao
 
 
 async def get_org(dao: HolderDao, player: dto.Player, dialog_manager: DialogManager, **_):
-    game_id = dialog_manager.start_data["game_id"]
+    data: dict[str, Any] = dialog_manager.start_data  # type: ignore[assignment]
+    game_id = data["game_id"]
     game = await get_game(id_=game_id, author=player, dao=dao.game)
     started = dialog_manager.dialog_data.get("started", None)
     started_at = dialog_manager.dialog_data.get("started_at", None)

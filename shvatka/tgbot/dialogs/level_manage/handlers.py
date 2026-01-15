@@ -31,14 +31,14 @@ logger = logging.getLogger(__name__)
 
 
 async def edit_level(c: CallbackQuery, button: Button, manager: DialogManager):
-    await manager.start(
-        state=states.LevelEditSg.menu, data={"level_id": manager.start_data["level_id"]}
-    )
+    data: dict[str, Any] = manager.start_data  # type: ignore[assignment]
+    await manager.start(state=states.LevelEditSg.menu, data={"level_id": data["level_id"]})
 
 
 async def show_level(c: CallbackQuery, button: Button, manager: DialogManager):
     await c.answer()
-    level_id = manager.start_data["level_id"]
+    data: dict[str, Any] = manager.start_data  # type: ignore[assignment]
+    level_id = data["level_id"]
     author: dto.Player = manager.middleware_data["player"]
     dao: HolderDao = manager.middleware_data["dao"]
     level = await get_by_id(level_id, author, dao.level)
@@ -73,7 +73,8 @@ async def send_to_testing(c: CallbackQuery, widget: Any, manager: DialogManager,
     dao: HolderDao = manager.middleware_data["dao"]
     bot: Bot = manager.middleware_data["bot"]
     author: dto.Player = manager.middleware_data["player"]
-    level = await get_by_id(manager.start_data["level_id"], author, dao.level)
+    data: dict[str, Any] = manager.start_data  # type: ignore[assignment]
+    level = await get_by_id(data["level_id"], author, dao.level)
     org = await get_org_by_id(id_=int(org_id), dao=dao.organizer)
     await bot.send_message(
         chat_id=org.player.get_chat_id(),  # type: ignore[arg-type]
@@ -89,7 +90,8 @@ async def level_testing(c: CallbackQuery, button: Button, manager: DialogManager
     await c.answer()
     scheduler: LevelTestScheduler = manager.middleware_data["scheduler"]
     dao: HolderDao = manager.middleware_data["dao"]
-    level_id = manager.start_data["level_id"]
+    data: dict[str, Any] = manager.start_data  # type: ignore[assignment]
+    level_id = data["level_id"]
     author: dto.Player = manager.middleware_data["player"]
     level = await get_by_id(level_id, author, dao.level)
     org = await get_org(author, level, dao)
@@ -107,7 +109,8 @@ async def level_testing(c: CallbackQuery, button: Button, manager: DialogManager
 
 async def unlink_level_handler(c: CallbackQuery, button: Button, manager: DialogManager):
     dao: HolderDao = manager.middleware_data["dao"]
-    level_id = manager.start_data["level_id"]
+    data: dict[str, Any] = manager.start_data  # type: ignore[assignment]
+    level_id = data["level_id"]
     author: dto.Player = manager.middleware_data["player"]
     level = await get_by_id(level_id, author, dao.level)
     await unlink_level(level, author, dao.level)
@@ -116,7 +119,8 @@ async def unlink_level_handler(c: CallbackQuery, button: Button, manager: Dialog
 
 async def delete_level_handler(c: CallbackQuery, button: Button, manager: DialogManager) -> None:
     dao: HolderDao = manager.middleware_data["dao"]
-    level_id = manager.start_data["level_id"]
+    data: dict[str, Any] = manager.start_data  # type: ignore[assignment]
+    level_id = data["level_id"]
     author: dto.Player = manager.middleware_data["player"]
     level = await get_by_id(level_id, author, dao.level)
     await delete_level(level, author, dao.level)

@@ -1,3 +1,4 @@
+from typing import Any
 from aiogram_dialog import DialogManager
 from dishka import FromDishka
 from dishka.integrations.aiogram_dialog import inject
@@ -31,7 +32,8 @@ async def select_full_game(
     identity: FromDishka[IdentityProvider],
     **_,
 ):
-    id_: int = dialog_manager.start_data["game_id"]
+    data: dict[str, Any] = dialog_manager.start_data  # type: ignore[assignment]
+    id_: int = data["game_id"]
     game = await get_full_game(id_, identity, dao.game)
     return {
         "levels": game.levels,

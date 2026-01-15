@@ -5,7 +5,7 @@ from aiogram_dialog.widgets.kbd import (
     Cancel,
     SwitchTo,
 )
-from aiogram_dialog.widgets.text import Jinja
+from aiogram_dialog.widgets.text import Jinja, Const
 
 from shvatka.tgbot import states
 from .getters import get_effects
@@ -61,32 +61,32 @@ effects = Dialog(
             id="done",
             on_click=save_effects,
         ),
-        Cancel(),
+        Cancel(Const("🔙Назад")),
         state=states.EffectsSG.menu,
         getter=get_effects,
     ),
     Window(
-        Jinja("подсказки"),
+        Jinja("💡Подсказки"),
         SwitchTo(
-            Jinja("К меню эффектов"),
+            Jinja("🔙К меню эффектов"),
             id="to_menu",
             state=states.EffectsSG.menu,
         ),
         state=states.EffectsSG.hints,
     ),
     Window(
-        Jinja("Бонус"),
+        Jinja("💰Бонус"),
         SwitchTo(
-            Jinja("К меню эффектов"),
+            Jinja("🔙К меню эффектов"),
             id="to_menu",
             state=states.EffectsSG.menu,
         ),
         state=states.EffectsSG.bonus,
     ),
     Window(
-        Jinja("роутед"),
+        Jinja("🔀Переход на уровень"),
         SwitchTo(
-            Jinja("К меню эффектов"),
+            Jinja("🔙К меню эффектов"),
             id="to_menu",
             state=states.EffectsSG.menu,
         ),

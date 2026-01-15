@@ -163,7 +163,8 @@ async def process_level_result(
             retort.load(routed_conditions, list[action.KeyWinCondition])
         )
     manager.dialog_data["conditions"] = retort.dump(conditions)
-
+    if raw_conditions := result.get("conditions", None):
+        manager.dialog_data["conditions"] = raw_conditions
 
 async def on_start_level_edit(start_data: dict[str, Any], manager: DialogManager):
     dao: HolderDao = manager.middleware_data["dao"]

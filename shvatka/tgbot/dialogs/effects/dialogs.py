@@ -1,3 +1,4 @@
+from aiogram import F
 from aiogram_dialog import Dialog, Window
 from aiogram_dialog.widgets.kbd import (
     Button,
@@ -48,12 +49,13 @@ effects = Dialog(
             id="to_bonus",
             state=states.EffectsSG.bonus,
         ),
+        Button(Jinja("🚩Завершение уровня"), id="level_up", on_click=process_level_up_change),
         SwitchTo(
             Jinja("🔀Переход на уровень"),
             id="to_routed",
             state=states.EffectsSG.routed_level_up,
+            when=F["level_up"],
         ),
-        Button(Jinja("🚩Завершение уровня"), id="level_up", on_click=process_level_up_change),
         Button(
             Jinja("✅Сохранить"),
             id="done",

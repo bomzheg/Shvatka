@@ -1,17 +1,12 @@
 from adaptix import Retort
 from aiogram_dialog import DialogManager
-from dishka import FromDishka
 from dishka.integrations.aiogram_dialog import inject
 
 from shvatka.core.models.dto import hints
 
 
 @inject
-async def get_effects(
-    dialog_manager: DialogManager,
-    retort: Retort,
-    **kwargs
-):
+async def get_effects(dialog_manager: DialogManager, retort: Retort, **kwargs):
     hints_: list[hints.AnyHint] = retort.load(
         dialog_manager.dialog_data["hints"], list[hints.AnyHint]
     )
@@ -25,6 +20,7 @@ async def get_effects(
         "hints": hints_,
         "level_id": dialog_manager.dialog_data.get("level_id", None),
     }
+
 
 async def get_hints(dialog_manager: DialogManager, retort: Retort, **_):
     dialog_data = dialog_manager.dialog_data

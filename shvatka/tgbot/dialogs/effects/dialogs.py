@@ -1,11 +1,12 @@
-from PIL.ImageShow import show
 from aiogram import F
 from aiogram_dialog import Dialog, Window
 from aiogram_dialog.widgets.input import MessageInput, TextInput
 from aiogram_dialog.widgets.kbd import (
     Button,
     Cancel,
-    SwitchTo, ScrollingGroup, ListGroup,
+    SwitchTo,
+    ScrollingGroup,
+    ListGroup,
 )
 from aiogram_dialog.widgets.text import Jinja, Const, Case
 
@@ -14,8 +15,15 @@ from .getters import get_effects, get_hints
 from .handlers import (
     process_level_up_change,
     effects_on_start,
-    save_effects, show_single_hint, delete_single_hint, process_hint, save_new_bonus, wrong_bonus_value, check_level_id,
-    not_correct_id, process_routed_level_id,
+    save_effects,
+    show_single_hint,
+    delete_single_hint,
+    process_hint,
+    save_new_bonus,
+    wrong_bonus_value,
+    check_level_id,
+    not_correct_id,
+    process_routed_level_id,
 )
 
 
@@ -106,10 +114,7 @@ effects = Dialog(
         getter=get_effects,
     ),
     Window(
-        Jinja(
-            "💡Подсказки\n\n"
-            "{{hints | hints}}"
-        ),
+        Jinja("💡Подсказки\n\n{{hints | hints}}"),
         ScrollingGroup(
             ListGroup(
                 Button(

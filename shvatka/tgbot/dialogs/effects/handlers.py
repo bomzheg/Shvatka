@@ -89,6 +89,7 @@ async def delete_single_hint(
     hints_.pop(int(hint_index))
     manager.dialog_data["hints"] = retort.dump(hints_, list[hints.AnyHint])
 
+
 @inject
 async def process_hint(
     m: Message,
@@ -100,14 +101,15 @@ async def process_hint(
     hint = await parser.parse(m, manager.middleware_data["player"])
     manager.dialog_data["hints"].append(retort.dump(hint))
 
+
 @inject
-async def save_new_bonus(
-    m: Message,
-    dialog_: Any,
-    manager: DialogManager,
-    data: float
-) -> None:
-    if math.isnan(data) or math.isinf(data) or math.fabs(data) > 10000 or (math.fabs(data) < 0.01 and data != 0):
+async def save_new_bonus(m: Message, dialog_: Any, manager: DialogManager, data: float) -> None:
+    if (
+        math.isnan(data)
+        or math.isinf(data)
+        or math.fabs(data) > 10000
+        or (math.fabs(data) < 0.01 and data != 0)
+    ):
         await m.reply(
             "Нужно ввести любое число, "
             "принимаются целые и дробные числа с разделителем '.': "
@@ -116,6 +118,7 @@ async def save_new_bonus(
         )
         return
     manager.dialog_data["bonus_minutes"] = data
+
 
 @inject
 async def wrong_bonus_value(
@@ -129,6 +132,7 @@ async def wrong_bonus_value(
         "принимаются целые и дробные числа с разделителем '.': "
         "например '5', '-3', '0.2'"
     )
+
 
 @inject
 async def process_routed_level_id(
@@ -154,11 +158,12 @@ async def process_routed_level_id(
     manager.dialog_data["next_level"] = name_id
     await manager.switch_to(state=states.EffectsSG.menu)
 
+
 async def not_correct_id(m: Message, dialog_: Any, manager: DialogManager, error: ValueError):
     await m.answer("Не стоит использовать ничего, кроме латинских букв, цифр, -, _")
+
 
 def check_level_id(name_id: str) -> str:
     if value := validate_level_id(name_id):
         return value
     raise ValueError
-

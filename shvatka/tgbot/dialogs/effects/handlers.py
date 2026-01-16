@@ -1,3 +1,4 @@
+import math
 import uuid
 from typing import Any
 
@@ -33,7 +34,7 @@ async def effects_on_start(start_data: dict, manager: DialogManager, retort: Fro
     manager.dialog_data["next_level"] = routed_level_up
     manager.dialog_data["bonus_minutes"] = bonus
     manager.dialog_data["level_up"] = level_up
-    manager.dialog_data["hints"] = retort.dump(hints_, list[hints.AnyHint])
+    manager.dialog_data["hints"] = hints_
 
 
 @inject
@@ -93,3 +94,32 @@ async def process_hint(
     hint = await parser.parse(m, manager.middleware_data["player"])
     manager.dialog_data["hints"].append(retort.dump(hint))
 
+@inject
+async def save_new_bonus(
+    m: Message,
+    dialog_: Any,
+    manager: DialogManager,
+    data: float
+) -> None:
+    if math.isnan(data) or math.isinf(data) or math.fabs(data) > 10000 or (math.fabs(data) < 0.01 and data != 0):
+        await m.reply(
+            "Нужно ввести любое число, "
+            "принимаются целые и дробные числа с разделителем '.': "
+            "например '5', '-3', '0.2'.\n"
+            "ℹ️Похоже ты ввёл слишком большое или слишком маленькое число (или вовсе не число)"
+        )
+        return
+    manager.dialog_data["bonus_minutes"] = data
+
+@inject
+async def wrong_bonus_value(
+    m: Message,
+    dialog_: Any,
+    manager: DialogManager,
+    error: ValueError,
+) -> None:
+    await m.reply(
+        "Нужно ввести любое число, "
+        "принимаются целые и дробные числа с разделителем '.': "
+        "например '5', '-3', '0.2'"
+    )

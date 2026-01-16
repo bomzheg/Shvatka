@@ -1,7 +1,7 @@
 from PIL.ImageShow import show
 from aiogram import F
 from aiogram_dialog import Dialog, Window
-from aiogram_dialog.widgets.input import MessageInput
+from aiogram_dialog.widgets.input import MessageInput, TextInput
 from aiogram_dialog.widgets.kbd import (
     Button,
     Cancel,
@@ -14,7 +14,7 @@ from .getters import get_effects, get_hints
 from .handlers import (
     process_level_up_change,
     effects_on_start,
-    save_effects, show_single_hint, delete_single_hint, process_hint,
+    save_effects, show_single_hint, delete_single_hint, process_hint, save_new_bonus, wrong_bonus_value,
 )
 
 
@@ -68,13 +68,25 @@ effects = Dialog(
         getter=get_effects,
     ),
     Window(
-        Jinja("💰Бонус"),
+        Jinja(
+            "💰Бонус\n"
+            "Текущий размер бонуса этого эффекта: {{bonus_minutes}} мин.\n"
+            "Если нужно изменить - пришли новое значение бонуса (+бонус, -штраф)\n"
+            "Введи 0, если хочешь чтобы бонуса не было"
+        ),
+        TextInput(
+            id="bonus_input",
+            type_factory=float,
+            on_success=save_new_bonus,
+            on_error=wrong_bonus_value,
+        ),
         SwitchTo(
             Jinja("🔙К меню эффектов"),
             id="to_menu",
             state=states.EffectsSG.menu,
         ),
         state=states.EffectsSG.bonus,
+        getter=get_effects,
     ),
     Window(
         Jinja("🔀Переход на уровень"),

@@ -66,6 +66,7 @@ class BonusHintSG(StatesGroup):
 class EffectsSG(StatesGroup):
     menu = State()
     hints = State()
+    add_hints = State()
     bonus = State()
     routed_level_up = State()
 

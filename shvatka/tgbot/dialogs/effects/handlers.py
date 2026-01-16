@@ -1,13 +1,17 @@
 import uuid
+from typing import Any
 
 from adaptix import Retort
-from aiogram.types import CallbackQuery
-from aiogram_dialog import DialogManager
+from aiogram import types
+from aiogram.types import CallbackQuery, Message
+from aiogram_dialog import DialogManager, SubManager
 from aiogram_dialog.widgets.kbd import Button
 from dishka import FromDishka
 from dishka.integrations.aiogram_dialog import inject
 
 from shvatka.core.models.dto import hints
+from shvatka.tgbot.views.hint_factory.hint_parser import HintParser
+from shvatka.tgbot.views.hint_sender import HintSender
 
 
 async def process_level_up_change(
@@ -48,3 +52,44 @@ async def save_effects(
             "hints": retort.load(manager.dialog_data["hints"], list[hints.AnyHint]),
         }
     )
+
+
+@inject
+async def show_single_hint(
+    c: CallbackQuery,
+    widget: Any,
+    manager: DialogManager,
+    retort: FromDishka[Retort],
+    hint_sender: FromDishka[HintSender],
+):
+    assert isinstance(manager, SubManager)
+    hint = retort.load(manager.dialog_data["hints"], list[hints.AnyHint])
+    chat: types.Chat = manager.middleware_data["event_chat"]
+    hint_index = manager.item_id
+    await hint_sender.send_hint(hint[int(hint_index)], chat.id)
+
+
+@inject
+async def delete_single_hint(
+    c: CallbackQuery,
+    widget: Any,
+    manager: DialogManager,
+    retort: FromDishka[Retort],
+):
+    assert isinstance(manager, SubManager)
+    hints_ = retort.load(manager.dialog_data.get("hints"), list[hints.AnyHint])
+    hint_index = manager.item_id
+    hints_.pop(int(hint_index))
+    manager.dialog_data["hints"] = retort.dump(hints_, list[hints.AnyHint])
+
+@inject
+async def process_hint(
+    m: Message,
+    dialog_: Any,
+    manager: DialogManager,
+    retort: FromDishka[Retort],
+    parser: FromDishka[HintParser],
+) -> None:
+    hint = await parser.parse(m, manager.middleware_data["player"])
+    manager.dialog_data["hints"].append(retort.dump(hint))
+

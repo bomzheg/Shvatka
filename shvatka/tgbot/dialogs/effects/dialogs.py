@@ -14,7 +14,8 @@ from .getters import get_effects, get_hints
 from .handlers import (
     process_level_up_change,
     effects_on_start,
-    save_effects, show_single_hint, delete_single_hint, process_hint, save_new_bonus, wrong_bonus_value,
+    save_effects, show_single_hint, delete_single_hint, process_hint, save_new_bonus, wrong_bonus_value, check_level_id,
+    not_correct_id, process_routed_level_id,
 )
 
 
@@ -56,7 +57,7 @@ effects = Dialog(
             Jinja("🔀Переход на уровень"),
             id="to_routed",
             state=states.EffectsSG.routed_level_up,
-            when=F["level_up"],
+            when=F["level_up"] and F["level_id"],
         ),
         Button(
             Jinja("✅Сохранить"),
@@ -89,13 +90,20 @@ effects = Dialog(
         getter=get_effects,
     ),
     Window(
-        Jinja("🔀Переход на уровень"),
+        Jinja("🔀Переход на уровень:\n{{next_level}}"),
+        TextInput(
+            type_factory=check_level_id,
+            on_error=not_correct_id,
+            on_success=process_routed_level_id,
+            id="level_id",
+        ),
         SwitchTo(
             Jinja("🔙К меню эффектов"),
             id="to_menu",
             state=states.EffectsSG.menu,
         ),
         state=states.EffectsSG.routed_level_up,
+        getter=get_effects,
     ),
     Window(
         Jinja(

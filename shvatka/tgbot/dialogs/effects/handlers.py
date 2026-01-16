@@ -10,7 +10,11 @@ from aiogram_dialog.widgets.kbd import Button
 from dishka import FromDishka
 from dishka.integrations.aiogram_dialog import inject
 
+from shvatka.core.models import dto
 from shvatka.core.models.dto import hints
+from shvatka.core.utils.input_validation import validate_level_id
+from shvatka.infrastructure.db.dao.holder import HolderDao
+from shvatka.tgbot import states
 from shvatka.tgbot.views.hint_factory.hint_parser import HintParser
 from shvatka.tgbot.views.hint_sender import HintSender
 
@@ -24,17 +28,19 @@ async def process_level_up_change(
 
 
 @inject
-async def effects_on_start(start_data: dict, manager: DialogManager, retort: FromDishka[Retort]):
+async def effects_on_start(start_data: dict, manager: DialogManager):
     effect_id: str = start_data.get("effect_id", str(uuid.uuid4()))
     hints_: list[hints.AnyHint] = start_data.get("hints", [])
     bonus: float = start_data.get("bonus_minutes", 0)
     level_up: bool = start_data.get("level_up", False)
     routed_level_up: str | None = start_data.get("next_level")
+    level_id: str | None = start_data.get("level_id")
     manager.dialog_data["effect_id"] = effect_id
     manager.dialog_data["next_level"] = routed_level_up
     manager.dialog_data["bonus_minutes"] = bonus
     manager.dialog_data["level_up"] = level_up
     manager.dialog_data["hints"] = hints_
+    manager.dialog_data["level_id"] = level_id
 
 
 @inject
@@ -123,3 +129,36 @@ async def wrong_bonus_value(
         "принимаются целые и дробные числа с разделителем '.': "
         "например '5', '-3', '0.2'"
     )
+
+@inject
+async def process_routed_level_id(
+    m: Message,
+    dialog_: Any,
+    manager: DialogManager,
+    name_id: str,
+    dao: FromDishka[HolderDao],
+):
+    level_id: str = manager.dialog_data["level_id"]
+    player: dto.Player = manager.middleware_data["player"]
+    level = await dao.level.get_by_author_and_name_id(player, level_id)
+    assert level
+    assert level.game_id
+    game = await dao.game.get_full(level.game_id)
+    ids = {lvl.name_id for lvl in game.levels}
+    if name_id not in ids:
+        await m.reply(
+            "Введённый id не соответствует ни одному из уровней в игре. "
+            "В игре сейчас следующие уровни: " + ", ".join(ids)
+        )
+        return
+    manager.dialog_data["next_level"] = name_id
+    await manager.switch_to(state=states.EffectsSG.menu)
+
+async def not_correct_id(m: Message, dialog_: Any, manager: DialogManager, error: ValueError):
+    await m.answer("Не стоит использовать ничего, кроме латинских букв, цифр, -, _")
+
+def check_level_id(name_id: str) -> str:
+    if value := validate_level_id(name_id):
+        return value
+    raise ValueError
+

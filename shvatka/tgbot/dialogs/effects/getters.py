@@ -23,6 +23,7 @@ async def get_effects(
         "level_up": level_up,
         "next_level": routed_level_up,
         "hints": hints_,
+        "level_id": dialog_manager.dialog_data.get("level_id", None),
     }
 
 async def get_hints(dialog_manager: DialogManager, retort: Retort, **_):

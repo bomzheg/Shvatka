@@ -37,7 +37,7 @@ jobs:
           cache: "pip"
           cache-dependency-path: pyproject.toml
       - name: Install dependencies
-        run: uv venv && uv pip install -e .[test]
+        run: uv venv && uv sync --extra test
       - name: black (ruff format)
         run: source .venv/bin/activate && ruff format --check .
       - name: ruff
@@ -58,7 +58,7 @@ jobs:
           cache: "pip"
           cache-dependency-path: pyproject.toml
       - name: Install dependencies
-        run: uv venv && uv pip install .[test]
+        run: uv venv && uv sync --extra test
       - name: Test with pytest
         run: source .venv/bin/activate && pytest --cov-report "xml:coverage.xml" --cov=shvatka tests/
       - name: Coverage comment
@@ -103,7 +103,7 @@ jobs:
           cache: "pip"
           cache-dependency-path: pyproject.toml
       - name: Install dependencies
-        run: uv venv && uv pip install .[test]
+        run: uv venv && uv sync --extra test
       - name: Render Aiogram-dialogs transitions
         run: source .venv/bin/activate && python -m shvatka.tgbot.dialogs.__init__
       - name: Upload artifacts

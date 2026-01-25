@@ -28,7 +28,7 @@ class Player:
             return f"dummy-{self.id}"
         if not self.has_user():
             pass
-        assert self._user
+        assert self._user, f"only tg users supported, got forum user, {self!r}"
         return self._user.name_mention
 
     def has_user(self) -> bool:
@@ -41,25 +41,25 @@ class Player:
         if self.is_dummy:
             return reserve_chat_id
         chat_id = self.get_chat_id()
-        assert chat_id
+        assert chat_id, f"chat_id required, got, {self!r}"
         return chat_id
 
     def get_chat_id(self) -> int | None:
         if self.is_dummy:
             return None
-        assert self._user
+        assert self._user, f"only tg users supported, got forum user, {self!r}"
         return self._user.tg_id
 
     def get_tg_username(self) -> str | None:
         if self.is_dummy:
             return None
-        assert self._user
+        assert self._user, f"only tg users supported, got forum user, {self!r}"
         return self._user.username
 
     def get_forum_name(self) -> str | None:
         if self._forum_user is None:
             return None
-        assert self._forum_user
+        assert self._forum_user, f"only forum users supported, got tg user, {self!r}"
         return self._forum_user.name
 
     def with_stat(self, typed_keys_count: int, typed_correct_keys_count: int) -> PlayerWithStat:

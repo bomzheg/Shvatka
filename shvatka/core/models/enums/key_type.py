@@ -6,3 +6,4 @@ class KeyType(StrEnum):
     simple = auto()
     bonus = auto()
     bonus_hint = auto()
+    effects = auto()

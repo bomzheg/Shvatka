@@ -31,7 +31,8 @@ async def get_level_data(dialog_manager: DialogManager, retort: Retort, **_):
     if dumped_conditions := dialog_data.get("conditions", []):
         conditions = retort.load(dumped_conditions, scn.Conditions)
         sly_types_count = conditions.get_types_count()
-        keys: set[action.SHKey] = conditions.get_default_key_condition().get_keys()
+        key_condition = conditions.get_default_key_condition()
+        keys: set[action.SHKey] = key_condition.get_keys() if key_condition else set()
         timers: Sequence[action.LevelTimerEffectsCondition] = [
             condition
             for condition in conditions

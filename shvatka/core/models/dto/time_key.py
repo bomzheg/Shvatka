@@ -79,15 +79,4 @@ class KeyInsertResult:
 class ParsedKey:
     text: str
     type_: enums.KeyType
-
-
-@dataclass(kw_only=True)
-class ParsedBonusKey(ParsedKey):
-    bonus_minutes: float
-    type_: enums.KeyType = enums.KeyType.bonus
-
-
-@dataclass(kw_only=True)
-class ParsedBonusHintKey(ParsedKey):
-    bonus_hint: list[hints.AnyHint]
-    type_: enums.KeyType = enums.KeyType.bonus_hint
+    effect: action.Effects

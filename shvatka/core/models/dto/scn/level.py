@@ -258,9 +258,16 @@ class Conditions(Sequence[AnyCondition]):
             if isinstance(c, action.KeyWinCondition) and c.next_level is None
         ]
 
-    def get_default_key_condition(self) -> action.KeyWinCondition:
+    def get_effects_key_conditions(self) -> list[action.KeyEffectsCondition]:
+        return [
+            c for c in self.conditions
+            if isinstance(c, action.KeyEffectsCondition)
+        ]
+
+    def get_default_key_condition(self) -> action.KeyWinCondition | None:
         """TODO #128"""
-        return self.get_default_key_conditions()[0]
+        conditions = self.get_default_key_conditions()
+        return conditions[0] if conditions else None
 
     def get_force_level_up_time(self) -> timedelta | None:
         for condition in self.conditions:
@@ -276,6 +283,8 @@ class Conditions(Sequence[AnyCondition]):
         if self.get_bonus_hints_conditions():
             result += 1
         if self.get_routed_conditions():
+            result += 1
+        if self.get_effects_key_conditions():
             result += 1
         return result
 

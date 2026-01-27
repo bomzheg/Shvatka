@@ -226,18 +226,14 @@ class CheckKeyInteractor(GamePlayBaseInteractor):
         match new_key.type_:
             case enums.KeyType.wrong:
                 await self.view.wrong_key(key=new_key, input_container=input_container)
+            case enums.KeyType.effects:
+                await self.view.effects_key(key=new_key, effects=new_key.parsed_key.effect, input_container=input_container)
             case enums.KeyType.bonus:
-                assert isinstance(new_key.parsed_key, dto.ParsedBonusKey)
-                await self.view.bonus_key(
-                    new_key, new_key.parsed_key.bonus_minutes, input_container=input_container
-                )
+                await self.view.effects_key(key=new_key, effects=new_key.parsed_key.effect, input_container=input_container)
             case enums.KeyType.bonus_hint:
-                assert isinstance(new_key.parsed_key, dto.ParsedBonusHintKey)
-                await self.view.bonus_hint_key(
-                    new_key, new_key.parsed_key.bonus_hint, input_container=input_container
-                )
+                await self.view.effects_key(key=new_key, effects=new_key.parsed_key.effect, input_container=input_container)
             case enums.KeyType.simple:
-                await self.view.correct_key(key=new_key, input_container=input_container)
+                await self.view.effects_key(key=new_key, effects=new_key.parsed_key.effect, input_container=input_container)
                 if new_key.is_level_up:
                     await self.process_level_up(
                         input_container=input_container,

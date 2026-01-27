@@ -1,4 +1,5 @@
 import logging
+import uuid
 from dataclasses import dataclass
 from datetime import datetime
 
@@ -59,6 +60,7 @@ class KeyProcessor:
                     game=game,
                     player=player,
                     type_=decision.key_type,
+                    # TODO save effects
                     is_duplicate=decision.duplicate,
                 )
                 if is_level_up := isinstance(decision, action.LevelUpDecision):
@@ -73,6 +75,20 @@ class KeyProcessor:
                             level_name=decision.next_level,
                         ),
                     )
+                elif isinstance(decision, action.KeyEffectsDecision):
+                    if decision.effects.level_up:
+                        await self.dao.level_up(
+                            team=team,
+                            level=lvl,
+                            game=game,
+                            next_level_number=await define_next_level(
+                                dao=self.dao,
+                                game=await self.current_game.get_required_full_game(),
+                                level=lvl,
+                                level_name=decision.effects.next_level,
+                            ),
+                        )
+
                 await self.dao.commit()
                 return dto.InsertedKey.from_key_time(
                     saved_key, is_level_up, parsed_key=decision_to_parsed_key(decision)
@@ -110,27 +126,46 @@ def decision_to_parsed_key(
     decision: action.KeyDecision,
 ) -> dto.ParsedKey:
     match decision:
+        case action.KeyEffectsDecision(key_type=key_type, key=key, effects=effects):
+            return dto.ParsedKey(
+                type_=key_type,
+                text=key,
+                effect=effects
+            )
         case action.BonusKeyDecision(key=key):
-            return dto.ParsedBonusKey(
+            return dto.ParsedKey(
                 type_=enums.KeyType.bonus,
                 text=decision.key_text,
-                bonus_minutes=key.bonus_minutes,
+                effect=action.Effects(
+                    id=uuid.uuid4(),
+                    bonus_minutes=key.bonus_minutes,
+                )
             )
         case action.WrongKeyDecision():
             return dto.ParsedKey(
                 type_=decision.key_type,
                 text=decision.key_text,
+                effect=action.Effects(
+                    id=uuid.uuid4(),
+                ),
             )
         case action.BonusHintKeyDecision(bonus_hint=bonus_hint):
-            return dto.ParsedBonusHintKey(
+            return dto.ParsedKey(
                 type_=enums.KeyType.bonus_hint,
                 text=decision.key_text,
-                bonus_hint=bonus_hint,
+                effect=action.Effects(
+                    id=uuid.uuid4(),
+                hints_=bonus_hint,
+                ),
             )
         case action.TypedKeyDecision():
             return dto.ParsedKey(
                 type_=decision.key_type,
                 text=decision.key_text,
+                effect=action.Effects(
+                    id=uuid.uuid4(),
+                    level_up=True,
+                )
             )
         case _:
             raise NotImplementedError(f"unknown decision type {type(decision)}")

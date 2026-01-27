@@ -276,4 +276,4 @@ class KeyEffectsCondition(KeyCondition):
         return self.keys
 
     def _get_key_type(self, action: TypedKeyAction):
-        return enums.KeyType.bonus_hint if self._is_correct(action) else enums.KeyType.wrong
+        return enums.KeyType.effects if self._is_correct(action) else enums.KeyType.wrong

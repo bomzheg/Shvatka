@@ -6,7 +6,7 @@ from typing import Protocol, Iterable, Sequence, Any
 
 from shvatka.core.interfaces.dal.game_play import GamePreparer
 from shvatka.core.models import dto
-from shvatka.core.models.dto import hints
+from shvatka.core.models.dto import hints, action
 
 
 class GameViewPreparer(Protocol):
@@ -38,6 +38,9 @@ class GameView(Protocol):
         raise NotImplementedError
 
     async def wrong_key(self, key: dto.KeyTime, input_container: InputContainer) -> None:
+        raise NotImplementedError
+
+    async def effects_key(self, key: dto.KeyTime, effects: action.Effects, input_container: InputContainer) -> None:
         raise NotImplementedError
 
     async def bonus_key(

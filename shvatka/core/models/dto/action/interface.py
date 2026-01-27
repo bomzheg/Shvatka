@@ -50,7 +50,9 @@ class DecisionType(enum.StrEnum):
 
 
 class Decision(Protocol):
-    type: DecisionType
+    @property
+    def type(self) -> DecisionType:
+        return DecisionType.NOT_IMPLEMENTED
 
     def is_level_up(self) -> bool:
         return self.type == DecisionType.LEVEL_UP

@@ -26,6 +26,8 @@ from .keys import (
     WrongKeyDecision,
     BonusHintKeyDecision,
     KeyBonusHintCondition,
+    KeyEffectsDecision,
+    KeyEffectsCondition,
 )
 from .state_holder import InMemoryKeyStateHolder, InMemoryTimerStateHolder
 from .timer import (

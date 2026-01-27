@@ -6,6 +6,7 @@ from typing import Literal
 
 from shvatka.core.models import enums
 from shvatka.core.utils.input_validation import is_key_valid
+from .effects import Effects
 from .effects import EffectType
 from .decisions import NotImplementedActionDecision
 from .interface import (
@@ -16,6 +17,7 @@ from .interface import (
     DecisionType,
     ConditionType,
     LevelUpDecision,
+    EffectsDecision,
 )
 
 from shvatka.core.models.dto import hints
@@ -82,7 +84,7 @@ class WrongKeyDecision(KeyDecision):
         return self.key
 
 
-@dataclass(kw_only=True)
+@dataclass(kw_only=True, frozen=True)
 class TypedKeyDecision(KeyDecision):
     type: DecisionType
     key_type: enums.KeyType
@@ -94,7 +96,7 @@ class TypedKeyDecision(KeyDecision):
         return self.key
 
 
-@dataclass(kw_only=True)
+@dataclass(kw_only=True, frozen=True)
 class LevelUpKeyDecision(TypedKeyDecision, LevelUpDecision):
     type: typing.Literal[DecisionType.LEVEL_UP] = DecisionType.LEVEL_UP
     next_level: str | None = None
@@ -191,7 +193,7 @@ class KeyBonusCondition(KeyCondition):
         return None
 
 
-@dataclass(kw_only=True)
+@dataclass(kw_only=True, frozen=True)
 class BonusHintKeyDecision(TypedKeyDecision):
     bonus_hint: list[hints.AnyHint]
     type: typing.Literal[DecisionType.BONUS_HINT] = DecisionType.BONUS_HINT
@@ -217,6 +219,49 @@ class KeyBonusHintCondition(KeyCondition):
                 duplicate=state.is_duplicate(action),
                 key=action.key,
                 bonus_hint=self.bonus_hint,
+            )
+        else:
+            type_ = DecisionType.SIGNIFICANT_ACTION
+        return TypedKeyDecision(
+            type=type_,
+            key_type=self._get_key_type(action),
+            duplicate=state.is_duplicate(action),
+            key=action.key,
+        )
+
+    def get_keys(self) -> set[SHKey]:
+        return self.keys
+
+    def _get_key_type(self, action: TypedKeyAction):
+        return enums.KeyType.bonus_hint if self._is_correct(action) else enums.KeyType.wrong
+
+
+@dataclass(kw_only=True, frozen=True)
+class KeyEffectsDecision(TypedKeyDecision, EffectsDecision):
+    pass
+
+
+@dataclass
+class KeyEffectsCondition(KeyCondition):
+    keys: set[SHKey]  # all keys are required
+    effect: Effects
+    type: Literal["EFFECTS"] = ConditionType.EFFECTS.name
+
+    def check(self, action: Action, state_holder: "StateHolder") -> Decision:
+        if not isinstance(action, TypedKeyAction):
+            return NotImplementedActionDecision()
+        state = state_holder.get(TypedKeysState)
+        if not self._is_correct(action):
+            return WrongKeyDecision(duplicate=state.is_duplicate(action), key=action.key)
+        if state.is_duplicate(action):
+            type_ = DecisionType.NO_ACTION
+        elif self._is_all_typed(action, state):
+            return KeyEffectsDecision(
+                key_type=self._get_key_type(action),
+                duplicate=state.is_duplicate(action),
+                key=action.key,
+                effects=self.effect,
+                type=DecisionType.EFFECTS,
             )
         else:
             type_ = DecisionType.SIGNIFICANT_ACTION

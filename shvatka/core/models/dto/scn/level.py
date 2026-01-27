@@ -136,12 +136,16 @@ class Conditions(Sequence[AnyCondition]):
     def validate(conditions: Sequence[AnyCondition]) -> None:  # noqa: C901,PLR0912
         keys: set[str] = set()
         win_conditions: list[KeyWinCondition] = []
+        win_effects_conditions: list[action.KeyEffectsCondition] = []
         effects_ids: set[UUID] = set()
         force_level_up_time: timedelta | None = None
         timers: list[action.LevelTimerEffectsCondition] = []
         timers_times: set[timedelta] = set()
         for c in conditions:
             if isinstance(c, KeyCondition):
+                if isinstance(c, action.KeyEffectsCondition):
+                    if c.effect.level_up:
+                        win_effects_conditions.append(c)
                 if isinstance(c, KeyWinCondition):
                     win_conditions.append(c)
                 if keys.intersection(c.get_keys()):
@@ -169,9 +173,9 @@ class Conditions(Sequence[AnyCondition]):
                     force_level_up_time = c.get_action_time()
                     continue
                 timers.append(c)
-        if not win_conditions and not force_level_up_time:
+        if not win_conditions and not force_level_up_time and not win_effects_conditions:
             raise exceptions.LevelError(text="There is no win condition")
-        if all(c.next_level is not None for c in win_conditions) and force_level_up_time is None:
+        if all(c.next_level is not None for c in win_conditions) and force_level_up_time is None and all(c.effect.next_level is not None for c in win_effects_conditions):
             raise exceptions.LevelError(
                 text="At least one win condition should be simple (without routing (next_level))"
             )

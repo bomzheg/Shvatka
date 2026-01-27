@@ -37,7 +37,7 @@ timers_dialog = Dialog(
             "Уровень <b>{{level_id}}</b>\n\n"
             "🕑Таймеры: {{timers | length}}\n"
             "{% for timer in timers %}"
-            "{{ timer.action_time }}: {{ timer.effects | effects }}"
+            "{{ timer.action_time }}: {{ timer.effects | effects }}\n"
             "{% endfor %}"
         ),
         ScrollingGroup(
@@ -70,21 +70,21 @@ timer_dialog = Dialog(
     Window(
         Jinja("{{time}}: {{effects | effects}}"),
         SwitchTo(
-            Jinja("Время"),
+            Jinja("🕑Время"),
             id="to_timer",
             state=states.LevelTimerSG.timer,
         ),
         Button(
             id="to_effects",
-            text=Jinja("Эффекты"),
+            text=Jinja("✨Эффекты"),
             on_click=start_effects,
         ),
         Button(
             id="save_timer",
-            text=Jinja("Готово"),
+            text=Jinja("✅Готово"),
             on_click=save_timer,
         ),
-        Cancel(text=Const("Вернуться, не сохранять")),
+        Cancel(text=Const("🔙Вернуться, не сохранять")),
         state=states.LevelTimerSG.menu,
         getter=get_timer,
     ),
@@ -110,9 +110,9 @@ timer_dialog = Dialog(
         SwitchTo(
             id="back",
             state=states.LevelTimerSG.menu,
-            text=Jinja("Назад"),
+            text=Jinja("🔙Готово"),
         ),
-        Cancel(text=Const("Вернуться, не сохранять")),
+        Cancel(text=Const("🔙Вернуться, не сохранять")),
         state=states.LevelTimerSG.timer,
         getter=get_available_times,
     ),

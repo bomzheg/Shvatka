@@ -2,7 +2,7 @@ from dataclasses import dataclass, field
 from typing import Sequence
 
 from shvatka.core.models import dto
-from shvatka.core.models.dto import hints
+from shvatka.core.models.dto import hints, action
 from shvatka.core.views.game import GameView, InputContainer
 from tests.utils.time_key import assert_time_key
 
@@ -18,6 +18,7 @@ class GameViewMock(GameView):
     bonus_hint_key_calls: list[tuple[dto.KeyTime, Sequence[hints.AnyHint]]] = field(
         default_factory=list
     )
+    effects_key_calls: list[tuple[dto.KeyTime, action.Effects]] = field(default_factory=list)
     game_finished_calls: list[dto.Team] = field(default_factory=list)
     game_finished_by_all_calls: set[dto.Team] = field(default_factory=set)
 
@@ -35,6 +36,11 @@ class GameViewMock(GameView):
 
     async def wrong_key(self, key: dto.KeyTime, input_container: InputContainer) -> None:
         self.wrong_key_calls.append(key)
+
+    async def effects_key(
+        self, key: dto.KeyTime, effects: action.Effects, input_container: InputContainer
+    ) -> None:
+        self.effects_key_calls.append((key, effects))
 
     async def bonus_key(
         self, key: dto.KeyTime, bonus: float, input_container: InputContainer

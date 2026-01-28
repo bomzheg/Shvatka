@@ -175,7 +175,11 @@ class Conditions(Sequence[AnyCondition]):
                 timers.append(c)
         if not win_conditions and not force_level_up_time and not win_effects_conditions:
             raise exceptions.LevelError(text="There is no win condition")
-        if all(c.next_level is not None for c in win_conditions) and force_level_up_time is None and all(c.effect.next_level is not None for c in win_effects_conditions):
+        if (
+            all(c.next_level is not None for c in win_conditions)
+            and force_level_up_time is None
+            and all(c.effect.next_level is not None for c in win_effects_conditions)
+        ):
             raise exceptions.LevelError(
                 text="At least one win condition should be simple (without routing (next_level))"
             )
@@ -259,10 +263,7 @@ class Conditions(Sequence[AnyCondition]):
         ]
 
     def get_effects_key_conditions(self) -> list[action.KeyEffectsCondition]:
-        return [
-            c for c in self.conditions
-            if isinstance(c, action.KeyEffectsCondition)
-        ]
+        return [c for c in self.conditions if isinstance(c, action.KeyEffectsCondition)]
 
     def get_default_key_condition(self) -> action.KeyWinCondition | None:
         """TODO #128"""

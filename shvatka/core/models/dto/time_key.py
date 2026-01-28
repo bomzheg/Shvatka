@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from datetime import datetime
 
 from shvatka.core.models import dto, enums
-from . import action, hints
+from . import action
 
 
 @dataclass(frozen=True)
@@ -21,12 +21,10 @@ class KeyTime:
 @dataclass(frozen=True)
 class InsertedKey(KeyTime):
     is_level_up: bool
-    parsed_key: ParsedKey | None = None
+    parsed_key: ParsedKey
 
     @classmethod
-    def from_key_time(
-        cls, key_time: KeyTime, is_level_up: bool, parsed_key: ParsedKey | None = None
-    ):
+    def from_key_time(cls, key_time: KeyTime, is_level_up: bool, parsed_key: ParsedKey):
         return cls(
             text=key_time.text,
             type_=key_time.type_,

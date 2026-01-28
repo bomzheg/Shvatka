@@ -40,5 +40,9 @@ from .timer import (
 from .effects import EffectType, Effects
 
 AnyCondition: typing.TypeAlias = (
-    KeyWinCondition | KeyBonusCondition | KeyBonusHintCondition | LevelTimerEffectsCondition
+    KeyWinCondition
+    | KeyBonusCondition
+    | KeyBonusHintCondition
+    | KeyEffectsCondition
+    | LevelTimerEffectsCondition
 )

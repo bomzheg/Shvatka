@@ -40,7 +40,9 @@ class GameView(Protocol):
     async def wrong_key(self, key: dto.KeyTime, input_container: InputContainer) -> None:
         raise NotImplementedError
 
-    async def effects_key(self, key: dto.KeyTime, effects: action.Effects, input_container: InputContainer) -> None:
+    async def effects_key(
+        self, key: dto.KeyTime, effects: action.Effects, input_container: InputContainer
+    ) -> None:
         raise NotImplementedError
 
     async def bonus_key(

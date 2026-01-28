@@ -227,21 +227,30 @@ class CheckKeyInteractor(GamePlayBaseInteractor):
             case enums.KeyType.wrong:
                 await self.view.wrong_key(key=new_key, input_container=input_container)
             case enums.KeyType.effects:
-                await self.view.effects_key(key=new_key, effects=new_key.parsed_key.effect, input_container=input_container)
+                await self.view.effects_key(
+                    key=new_key, effects=new_key.parsed_key.effect, input_container=input_container
+                )
             case enums.KeyType.bonus:
-                await self.view.effects_key(key=new_key, effects=new_key.parsed_key.effect, input_container=input_container)
+                await self.view.effects_key(
+                    key=new_key, effects=new_key.parsed_key.effect, input_container=input_container
+                )
             case enums.KeyType.bonus_hint:
-                await self.view.effects_key(key=new_key, effects=new_key.parsed_key.effect, input_container=input_container)
+                await self.view.effects_key(
+                    key=new_key, effects=new_key.parsed_key.effect, input_container=input_container
+                )
             case enums.KeyType.simple:
-                await self.view.effects_key(key=new_key, effects=new_key.parsed_key.effect, input_container=input_container)
-                if new_key.is_level_up:
-                    await self.process_level_up(
-                        input_container=input_container,
-                        team=team,
-                        game=game,
-                    )
+                await self.view.effects_key(
+                    key=new_key, effects=new_key.parsed_key.effect, input_container=input_container
+                )
+
             case _:
                 typing.assert_never(new_key.type_)
+        if new_key.is_level_up or new_key.parsed_key.effect.level_up:
+            await self.process_level_up(
+                input_container=input_container,
+                team=team,
+                game=game,
+            )
 
 
 @dataclass(kw_only=True)

@@ -13,7 +13,7 @@ from dataclass_factory import Factory
 
 from shvatka.core.interfaces.dal.game_play import GamePreparer
 from shvatka.core.models import dto, enums
-from shvatka.core.models.dto import hints
+from shvatka.core.models.dto import hints, action, KeyTime
 from shvatka.core.utils.datetime_utils import tz_utc
 from shvatka.core.views.game import (
     GameViewPreparer,
@@ -55,6 +55,20 @@ async def get_message_id(input_container: InputContainer) -> int | None:
         return input_container.get_message_id()
     else:
         return None
+
+
+async def format_bonus_key(bonus: float, key: KeyTime) -> str:
+    if bonus >= 0:
+        text = (
+            f"{KeyEmoji.bonus.value}Бонусный ключ {hd.code(key.text)}.\n"
+            f"Бонус: {bonus:.2f} мин."
+        )
+    else:
+        text = (
+            f"{KeyEmoji.bonus.value}Штрафной ключ {hd.code(key.text)}.\n"
+            f"Штраф: {bonus:.2f} мин."
+        )
+    return text
 
 
 @dataclass
@@ -178,21 +192,21 @@ class BotView(GameViewPreparer, GameView):
                 chat_id=chat_id, message_id=reply_to, reaction=[ReactionTypeEmoji(emoji="👎")]
             )
 
+    async def effects_key(
+        self, key: dto.KeyTime, effects: action.Effects, input_container: InputContainer
+    ) -> None:
+        await self.correct_key(key, input_container)
+        if effects.bonus_minutes:
+            await self.bonus_key(key, effects.bonus_minutes, input_container)
+        if effects.hints_:
+            await self.bonus_hint_key(key, effects.hints_, input_container)
+
     async def bonus_key(
         self, key: dto.KeyTime, bonus: float, input_container: InputContainer
     ) -> None:
         chat_id: int = key.team.get_chat_id()  # type: ignore[assignment]
         reply_to = await get_message_id(input_container)
-        if bonus >= 0:
-            text = (
-                f"{KeyEmoji.bonus.value}Бонусный ключ {hd.code(key.text)}.\n"
-                f"Бонус: {bonus:.2f} мин."
-            )
-        else:
-            text = (
-                f"{KeyEmoji.bonus.value}Штрафной ключ {hd.code(key.text)}.\n"
-                f"Штраф: {bonus:.2f} мин."
-            )
+        text = await format_bonus_key(bonus, key)
         try:
             await self.bot.send_message(
                 reply_to_message_id=reply_to,

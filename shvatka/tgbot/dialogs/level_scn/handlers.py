@@ -255,7 +255,8 @@ async def start_sly_keys(
             "routed_conditions": routed_conditions,
             "bonus_hint_conditions": bonus_hint_conditions,
             "keys": retort.dump(
-                default_key_condition.get_keys() if default_key_condition else set(), set[action.SHKey]
+                default_key_condition.get_keys() if default_key_condition else set(),
+                set[action.SHKey],
             ),
             "game_id": manager.dialog_data.get("game_id", None),
         },

@@ -76,7 +76,7 @@ class KeyProcessor:
                         ),
                     )
                 elif isinstance(decision, action.KeyEffectsDecision):
-                    if decision.effects.level_up:
+                    if is_level_up := decision.effects.level_up:
                         await self.dao.level_up(
                             team=team,
                             level=lvl,
@@ -127,11 +127,7 @@ def decision_to_parsed_key(
 ) -> dto.ParsedKey:
     match decision:
         case action.KeyEffectsDecision(key_type=key_type, key=key, effects=effects):
-            return dto.ParsedKey(
-                type_=key_type,
-                text=key,
-                effect=effects
-            )
+            return dto.ParsedKey(type_=key_type, text=key, effect=effects)
         case action.BonusKeyDecision(key=key):
             return dto.ParsedKey(
                 type_=enums.KeyType.bonus,
@@ -139,7 +135,7 @@ def decision_to_parsed_key(
                 effect=action.Effects(
                     id=uuid.uuid4(),
                     bonus_minutes=key.bonus_minutes,
-                )
+                ),
             )
         case action.WrongKeyDecision():
             return dto.ParsedKey(
@@ -155,7 +151,7 @@ def decision_to_parsed_key(
                 text=decision.key_text,
                 effect=action.Effects(
                     id=uuid.uuid4(),
-                hints_=bonus_hint,
+                    hints_=bonus_hint,
                 ),
             )
         case action.TypedKeyDecision():
@@ -165,7 +161,7 @@ def decision_to_parsed_key(
                 effect=action.Effects(
                     id=uuid.uuid4(),
                     level_up=True,
-                )
+                ),
             )
         case _:
             raise NotImplementedError(f"unknown decision type {type(decision)}")

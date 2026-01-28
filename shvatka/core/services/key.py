@@ -224,7 +224,7 @@ class TimerProcessor:
                                 dao=self.dao,
                                 game=await self.current_game.get_required_full_game(),
                                 level=lvl,
-                                level_name=effects.next_level,
+                                level_name=level_up_effect.next_level,
                             ),
                         )
                     return decision.effects

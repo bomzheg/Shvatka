@@ -1,5 +1,4 @@
 from dataclasses import dataclass, field
-from typing import Sequence
 
 from shvatka.core.models import dto
 from shvatka.core.models.dto import hints, action
@@ -12,13 +11,9 @@ class GameViewMock(GameView):
     send_puzzle_calls: list[tuple[dto.Team, dto.Level]] = field(default_factory=list)
     send_hint_calls: list[tuple[dto.Team, int, dto.Level]] = field(default_factory=list)
     duplicate_key_calls: list[dto.KeyTime] = field(default_factory=list)
-    correct_key_calls: list[dto.KeyTime] = field(default_factory=list)
     wrong_key_calls: list[dto.KeyTime] = field(default_factory=list)
-    bonus_key_calls: list[tuple[dto.KeyTime, float]] = field(default_factory=list)
-    bonus_hint_key_calls: list[tuple[dto.KeyTime, Sequence[hints.AnyHint]]] = field(
-        default_factory=list
-    )
     effects_key_calls: list[tuple[dto.KeyTime, action.Effects]] = field(default_factory=list)
+    effects_calls: list[tuple[dto.Team, action.Effects]] = field(default_factory=list)
     game_finished_calls: list[dto.Team] = field(default_factory=list)
     game_finished_by_all_calls: set[dto.Team] = field(default_factory=set)
 
@@ -31,9 +26,6 @@ class GameViewMock(GameView):
     async def duplicate_key(self, key: dto.KeyTime, input_container: InputContainer) -> None:
         self.duplicate_key_calls.append(key)
 
-    async def correct_key(self, key: dto.KeyTime, input_container: InputContainer) -> None:
-        self.correct_key_calls.append(key)
-
     async def wrong_key(self, key: dto.KeyTime, input_container: InputContainer) -> None:
         self.wrong_key_calls.append(key)
 
@@ -42,30 +34,16 @@ class GameViewMock(GameView):
     ) -> None:
         self.effects_key_calls.append((key, effects))
 
-    async def bonus_key(
-        self, key: dto.KeyTime, bonus: float, input_container: InputContainer
-    ) -> None:
-        self.bonus_key_calls.append((key, bonus))
-
-    async def bonus_hint_key(
-        self,
-        key: dto.KeyTime,
-        bonus_hint: Sequence[hints.AnyHint],
-        input_container: InputContainer,
-    ):
-        self.bonus_hint_key_calls.append((key, bonus_hint))
-
     async def game_finished(self, team: dto.Team, input_container: InputContainer) -> None:
         self.game_finished_calls.append(team)
 
     async def game_finished_by_all(self, team: dto.Team) -> None:
         self.game_finished_by_all_calls.add(team)
 
-    async def bonus(self, bonus: float, input_container: InputContainer) -> None:
-        pass
-
-    async def hint(self, hint: Sequence[hints.AnyHint], input_container: InputContainer):
-        pass
+    async def effects(
+        self, team: dto.Team, effects: action.Effects, input_container: InputContainer
+    ) -> None:
+        self.effects_calls.append((team, effects))
 
     def assert_send_only_puzzle(self, team: dto.Team, level: dto.Level) -> None:
         sent = self.send_puzzle_calls.pop()
@@ -96,9 +74,10 @@ class GameViewMock(GameView):
         assert_time_key(expected, actual)
 
     def assert_correct_key_only(self, expected: dto.KeyTime) -> None:
-        actual = self.correct_key_calls.pop()
-        assert len(self.correct_key_calls) == 0
+        actual, effects = self.effects_key_calls.pop()
+        assert len(self.effects_calls) == 0
         assert_time_key(expected, actual)
+        assert effects.is_no_effects()
 
     def assert_duplicate_key_only(self, expected: dto.KeyTime) -> None:
         actual = self.duplicate_key_calls.pop()
@@ -119,7 +98,8 @@ class GameViewMock(GameView):
         assert len(self.send_puzzle_calls) == 0
         assert len(self.send_hint_calls) == 0
         assert len(self.duplicate_key_calls) == 0
-        assert len(self.correct_key_calls) == 0
+        assert len(self.effects_key_calls) == 0
+        assert len(self.effects_calls) == 0
         assert len(self.wrong_key_calls) == 0
         assert len(self.game_finished_calls) == 0
         assert len(self.game_finished_by_all_calls) == 0
@@ -127,7 +107,7 @@ class GameViewMock(GameView):
     def asser_bonus_hint_key_only(
         self, expected_key: dto.KeyTime, expected_hint: list[hints.AnyHint]
     ) -> None:
-        actual_key, actual_hint = self.bonus_hint_key_calls.pop()
-        assert len(self.bonus_hint_key_calls) == 0
+        actual_key, actual_effects = self.effects_key_calls.pop()
+        assert len(self.effects_key_calls) == 0
         assert_time_key(expected_key, actual_key)
-        assert actual_hint == expected_hint
+        assert actual_effects.hints_ == expected_hint

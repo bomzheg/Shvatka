@@ -62,6 +62,7 @@ class TypedKeysState(State):
         return action.key in self.all_typed
 
 
+@dataclass(kw_only=True, frozen=True)
 class KeyDecision(Decision):
     duplicate: bool
     key_type: enums.KeyType
@@ -72,7 +73,7 @@ class KeyDecision(Decision):
         raise NotImplementedError
 
 
-@dataclass
+@dataclass(kw_only=True, frozen=True)
 class WrongKeyDecision(KeyDecision):
     duplicate: bool
     key: str
@@ -151,7 +152,7 @@ class KeyWinCondition(KeyCondition):
         return enums.KeyType.simple if self._is_correct(action) else enums.KeyType.wrong
 
 
-@dataclass(kw_only=True)
+@dataclass(kw_only=True, frozen=True)
 class BonusKeyDecision(KeyDecision):
     type: DecisionType
     key_type: enums.KeyType

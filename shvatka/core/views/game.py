@@ -6,7 +6,7 @@ from typing import Protocol, Iterable, Sequence, Any
 
 from shvatka.core.interfaces.dal.game_play import GamePreparer
 from shvatka.core.models import dto
-from shvatka.core.models.dto import hints, action
+from shvatka.core.models.dto import action
 
 
 class GameViewPreparer(Protocol):
@@ -34,19 +34,11 @@ class GameView(Protocol):
     async def duplicate_key(self, key: dto.KeyTime, input_container: InputContainer) -> None:
         raise NotImplementedError
 
-    async def correct_key(self, key: dto.KeyTime, input_container: InputContainer) -> None:
-        raise NotImplementedError
-
     async def wrong_key(self, key: dto.KeyTime, input_container: InputContainer) -> None:
         raise NotImplementedError
 
     async def effects_key(
         self, key: dto.KeyTime, effects: action.Effects, input_container: InputContainer
-    ) -> None:
-        raise NotImplementedError
-
-    async def bonus_key(
-        self, key: dto.KeyTime, bonus: float, input_container: InputContainer
     ) -> None:
         raise NotImplementedError
 
@@ -56,18 +48,9 @@ class GameView(Protocol):
     async def game_finished_by_all(self, team: dto.Team) -> None:
         raise NotImplementedError
 
-    async def bonus_hint_key(
-        self,
-        key: dto.KeyTime,
-        bonus_hint: Sequence[hints.AnyHint],
-        input_container: InputContainer,
-    ):
-        raise NotImplementedError
-
-    async def hint(self, hint: Sequence[hints.AnyHint], input_container: InputContainer):
-        raise NotImplementedError
-
-    async def bonus(self, bonus: float, input_container: InputContainer) -> None:
+    async def effects(
+        self, team: dto.Team, effects: action.Effects, input_container: InputContainer
+    ) -> None:
         raise NotImplementedError
 
 

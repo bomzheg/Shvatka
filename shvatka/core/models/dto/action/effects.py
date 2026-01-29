@@ -19,3 +19,6 @@ class Effects:
     bonus_minutes: float = 0.0
     level_up: bool = False
     next_level: str | None = None
+
+    def is_no_effects(self) -> bool:
+        return not any((self.next_level, self.level_up, self.bonus_minutes, self.hints_))

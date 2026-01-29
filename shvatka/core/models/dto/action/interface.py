@@ -49,19 +49,20 @@ class DecisionType(enum.StrEnum):
     BONUS_HINT = enum.auto()
 
 
+@dataclass(kw_only=True, frozen=True)
 class Decision(Protocol):
-    @property
-    def type(self) -> DecisionType:
-        return DecisionType.NOT_IMPLEMENTED
+    type: DecisionType
 
     def is_level_up(self) -> bool:
         return self.type == DecisionType.LEVEL_UP
 
 
+@dataclass(kw_only=True, frozen=True)
 class NoActionDecision(Decision):
     type: Literal[DecisionType.NO_ACTION] = DecisionType.NO_ACTION
 
 
+@dataclass(kw_only=True, frozen=True)
 class LevelUpDecision(Decision):
     type: typing.Literal[DecisionType.LEVEL_UP] = DecisionType.LEVEL_UP
     next_level: str | None = None

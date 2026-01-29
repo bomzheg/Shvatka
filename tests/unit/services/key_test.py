@@ -13,7 +13,9 @@ def test_decision_to_simple_parsed_key():
             duplicate=False,
             key="SH123",
         )
-    ) == dto.ParsedKey(type_=enums.KeyType.simple, text="SH123", effect=action.Effects(id=uuid.uuid4()))
+    ) == dto.ParsedKey(
+        type_=enums.KeyType.simple, text="SH123", effect=action.Effects(id=uuid.uuid4())
+    )
 
 
 def test_decision_to_bonus_parsed_key():
@@ -25,7 +27,9 @@ def test_decision_to_bonus_parsed_key():
             key=action.BonusKey(text="SH123", bonus_minutes=10),
         )
     ) == dto.ParsedKey(
-        type_=enums.KeyType.bonus, text="SH123", effect=action.Effects(id=uuid.uuid4(), bonus_minutes=10)
+        type_=enums.KeyType.bonus,
+        text="SH123",
+        effect=action.Effects(id=uuid.uuid4(), bonus_minutes=10),
     )
 
 
@@ -37,4 +41,6 @@ def test_decision_to_wrong_parsed_key():
             duplicate=False,
             key="SH123",
         )
-    ) == dto.ParsedKey(type_=enums.KeyType.wrong, text="SH123", effect=action.Effects(id=uuid.uuid4()))
+    ) == dto.ParsedKey(
+        type_=enums.KeyType.wrong, text="SH123", effect=action.Effects(id=uuid.uuid4())
+    )

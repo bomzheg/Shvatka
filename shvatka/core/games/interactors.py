@@ -277,10 +277,7 @@ class GamePlayTimerInteractor(GamePlayBaseInteractor):
         level_time = await self.dao.get_current_level_time(team, game)
         for effects in effects_list:
             await self.dao.save_event(team=team, level_time=level_time, game=game, effects=effects)
-            if effects.hints_:
-                await self.view.hint(hint=effects.hints_, input_container=input_container)
-            if effects.bonus_minutes:
-                await self.view.bonus(bonus=effects.bonus_minutes, input_container=input_container)
+            await self.view.effects(team=team, effects=effects, input_container=input_container)
             if effects.level_up:
                 team = await self.dao.get_by_id(team_id)
                 await self.process_level_up(

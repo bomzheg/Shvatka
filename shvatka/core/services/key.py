@@ -160,7 +160,7 @@ def decision_to_parsed_key(
                 text=decision.key_text,
                 effect=action.Effects(
                     id=uuid.uuid4(),
-                    level_up=True,
+                    level_up=decision.is_level_up(),
                 ),
             )
         case _:

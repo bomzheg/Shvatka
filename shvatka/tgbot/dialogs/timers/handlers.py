@@ -1,4 +1,5 @@
 from typing import Any
+from uuid import UUID
 
 from adaptix import Retort
 from aiogram.types import CallbackQuery, Message
@@ -178,7 +179,7 @@ async def on_process_timer_result(
         hints_: list[hints.AnyHint] = result.get("hints", [])
         manager.dialog_data["effects"] = retort.dump(
             action.Effects(
-                id=effect_id,
+                id=UUID(effect_id),
                 next_level=next_level,
                 bonus_minutes=bonus_minutes,
                 level_up=level_up,

@@ -1,3 +1,5 @@
+import uuid
+
 from shvatka.core.models.dto import action
 from shvatka.core.services.key import decision_to_parsed_key
 from shvatka.core.models import enums, dto
@@ -11,7 +13,7 @@ def test_decision_to_simple_parsed_key():
             duplicate=False,
             key="SH123",
         )
-    ) == dto.ParsedKey(type_=enums.KeyType.simple, text="SH123", effect=action.Effects())
+    ) == dto.ParsedKey(type_=enums.KeyType.simple, text="SH123", effect=action.Effects(id=uuid.uuid4()))
 
 
 def test_decision_to_bonus_parsed_key():
@@ -23,7 +25,7 @@ def test_decision_to_bonus_parsed_key():
             key=action.BonusKey(text="SH123", bonus_minutes=10),
         )
     ) == dto.ParsedKey(
-        type_=enums.KeyType.bonus, text="SH123", effect=action.Effects(bonus_minutes=10)
+        type_=enums.KeyType.bonus, text="SH123", effect=action.Effects(id=uuid.uuid4(), bonus_minutes=10)
     )
 
 
@@ -35,4 +37,4 @@ def test_decision_to_wrong_parsed_key():
             duplicate=False,
             key="SH123",
         )
-    ) == dto.ParsedKey(type_=enums.KeyType.wrong, text="SH123", effect=action.Effects())
+    ) == dto.ParsedKey(type_=enums.KeyType.wrong, text="SH123", effect=action.Effects(id=uuid.uuid4()))

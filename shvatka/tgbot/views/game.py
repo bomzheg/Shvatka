@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from typing import Iterable, cast, Sequence
 
 from aiogram import Bot
-from aiogram.types import Message, ReactionTypeEmoji
+from aiogram.types import Message, ReactionTypeEmoji, ReactionTypeCustomEmoji, ReactionTypePaid
 from aiogram.exceptions import TelegramAPIError
 from aiogram.utils.markdown import html_decoration as hd
 from dataclass_factory import Factory
@@ -75,6 +75,21 @@ def format_bonus_key(bonus: float, key: KeyTime) -> str:
             f"{KeyEmoji.bonus.value}Штрафной ключ {hd.code(key.text)}.\n"
             f"Штраф: {bonus:.2f} мин."
         )
+
+
+def map_effect_to_reaction(
+    effect: action.Effects,
+) -> list[ReactionTypeEmoji | ReactionTypeCustomEmoji | ReactionTypePaid]:
+    if effect.level_up:
+        return [ReactionTypeEmoji(emoji="👍")]
+    elif effect.hints_:
+        return [ReactionTypeEmoji(emoji="🤓")]
+    elif effect.bonus_minutes:
+        return [ReactionTypeEmoji(emoji="🤩")]
+    elif effect.is_no_effects():
+        return [ReactionTypeEmoji(emoji="👍")]
+    else:
+        return []
 
 
 @dataclass
@@ -177,10 +192,6 @@ class BotView(GameViewPreparer, GameView):
             )
         except TelegramAPIError as e:
             logger.exception("can't send view about correct key", exc_info=e)
-        if reply_to is not None:
-            await self.bot.set_message_reaction(
-                chat_id=chat_id, message_id=reply_to, reaction=[ReactionTypeEmoji(emoji="👍")]
-            )
 
     async def wrong_key(self, key: dto.KeyTime, input_container: InputContainer) -> None:
         chat_id: int = key.team.get_chat_id()  # type: ignore[assignment]
@@ -207,6 +218,13 @@ class BotView(GameViewPreparer, GameView):
         if effects.hints_:
             await self.bonus_hint_key(key, effects.hints_, input_container)
 
+        if (reply_to := await get_message_id(input_container)) is not None:
+            chat_id: int = key.team.get_chat_id()  # type: ignore[assignment]
+            if reaction := map_effect_to_reaction(effects):
+                await self.bot.set_message_reaction(
+                    chat_id=chat_id, message_id=reply_to, reaction=reaction
+                )
+
     async def bonus_key(
         self, key: dto.KeyTime, bonus: float, input_container: InputContainer
     ) -> None:
@@ -220,10 +238,6 @@ class BotView(GameViewPreparer, GameView):
             )
         except TelegramAPIError as e:
             logger.exception("can't send view bonus key", exc_info=e)
-        if reply_to is not None:
-            await self.bot.set_message_reaction(
-                chat_id=chat_id, message_id=reply_to, reaction=[ReactionTypeEmoji(emoji="🤩")]
-            )
 
     async def bonus_hint_key(
         self,
@@ -245,10 +259,6 @@ class BotView(GameViewPreparer, GameView):
             chat_id=chat_id,
             hint_containers=bonus_hint,
         )
-        if reply_to is not None:
-            await self.bot.set_message_reaction(
-                chat_id=chat_id, message_id=reply_to, reaction=[ReactionTypeEmoji(emoji="🤓")]
-            )
 
     async def game_finished(self, team: dto.Team, input_container: InputContainer) -> None:
         chat_id: int = team.get_chat_id()  # type: ignore[assignment]

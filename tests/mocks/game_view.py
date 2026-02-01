@@ -1,8 +1,10 @@
+import uuid
 from dataclasses import dataclass, field
 
 from shvatka.core.models import dto
 from shvatka.core.models.dto import hints, action
 from shvatka.core.views.game import GameView, InputContainer
+from tests.utils.effects import assert_effects_equal
 from tests.utils.time_key import assert_time_key
 
 
@@ -73,7 +75,23 @@ class GameViewMock(GameView):
         assert len(self.wrong_key_calls) == 0
         assert_time_key(expected, actual)
 
-    def assert_correct_key_only(self, expected: dto.KeyTime) -> None:
+    def assert_correct_key_routed_level_up_only(
+        self, expected: dto.KeyTime, next_level: str
+    ) -> None:
+        actual, effects = self.effects_key_calls.pop()
+        assert len(self.effects_calls) == 0
+        assert_time_key(expected, actual)
+        assert_effects_equal(
+            effects, action.Effects(level_up=True, id=uuid.uuid4(), next_level=next_level)
+        )
+
+    def assert_correct_key_level_up_only(self, expected: dto.KeyTime) -> None:
+        actual, effects = self.effects_key_calls.pop()
+        assert len(self.effects_calls) == 0
+        assert_time_key(expected, actual)
+        assert_effects_equal(effects, action.Effects(level_up=True, id=uuid.uuid4()))
+
+    def assert_correct_key_no_effects_only(self, expected: dto.KeyTime) -> None:
         actual, effects = self.effects_key_calls.pop()
         assert len(self.effects_calls) == 0
         assert_time_key(expected, actual)

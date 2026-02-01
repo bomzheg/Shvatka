@@ -28,6 +28,7 @@ from .keys import (
     KeyBonusHintCondition,
     KeyEffectsDecision,
     KeyEffectsCondition,
+    LevelUpKeyDecision,
 )
 from .state_holder import InMemoryKeyStateHolder, InMemoryTimerStateHolder
 from .timer import (

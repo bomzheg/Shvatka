@@ -154,6 +154,16 @@ def decision_to_parsed_key(
                     hints_=bonus_hint,
                 ),
             )
+        case action.LevelUpKeyDecision():
+            return dto.ParsedKey(
+                type_=enums.KeyType.simple,
+                text=decision.key_text,
+                effect=action.Effects(
+                    id=uuid.uuid4(),
+                    level_up=decision.is_level_up(),
+                    next_level=decision.next_level,
+                ),
+            )
         case action.TypedKeyDecision():
             return dto.ParsedKey(
                 type_=decision.key_type,

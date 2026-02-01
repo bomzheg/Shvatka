@@ -221,11 +221,6 @@ async def test_game_play(
     dummy_org_notifier = OrgNotifierMock()
     orgs = await get_orgs(game, dao.organizer)
     identity = MockIdentityProvider(player=harry, team=gryffindor)
-    key_kwargs = {
-        "identity": identity,
-        "input_container": MockInputContainer(),
-    }
-
     check_key = CheckKeyInteractor(
         dao=dao.game_player,
         view=dummy_view,
@@ -236,7 +231,7 @@ async def test_game_play(
         current_game=current_game,
         key_processor=key_processor,
     )
-    await check_key(key="SH123", **key_kwargs)
+    await check_key(key="SH123", identity=identity, input_container=MockInputContainer())
     expected_first_key = dto.KeyTime(
         text="SH123",
         type_=enums.KeyType.simple,
@@ -246,9 +241,9 @@ async def test_game_play(
         player=harry,
         team=gryffindor,
     )
-    dummy_view.assert_correct_key_only(expected_first_key)
+    dummy_view.assert_correct_key_no_effects_only(expected_first_key)
 
-    await check_key(key="SH123", **key_kwargs)
+    await check_key(key="SH123", identity=identity, input_container=MockInputContainer())
     expected_second_key = dto.KeyTime(
         text="SH123",
         type_=enums.KeyType.simple,
@@ -260,7 +255,7 @@ async def test_game_play(
     )
     dummy_view.assert_duplicate_key_only(expected_second_key)
 
-    await check_key(key="SH321", **key_kwargs)
+    await check_key(key="SH321", identity=identity, input_container=MockInputContainer())
     expected_third_key = dto.KeyTime(
         text="SH321",
         type_=enums.KeyType.simple,
@@ -273,10 +268,10 @@ async def test_game_play(
     dummy_org_notifier.assert_one_event(
         LevelUp(team=gryffindor, new_level=game.levels[1], orgs_list=orgs)
     )
-    dummy_view.assert_correct_key_only(expected_third_key)
+    dummy_view.assert_correct_key_level_up_only(expected_third_key)
     dummy_view.assert_send_only_puzzle(gryffindor, game.levels[1])
 
-    await check_key(key="SHOOT", **key_kwargs)
+    await check_key(key="SHOOT", identity=identity, input_container=MockInputContainer())
     dummy_log.assert_one_event(GameLogEvent(GameLogType.GAME_FINISHED, {"game": game.name}))
     expected_fourth_key = dto.KeyTime(
         text="SHOOT",
@@ -287,7 +282,7 @@ async def test_game_play(
         player=harry,
         team=gryffindor,
     )
-    dummy_view.assert_correct_key_only(expected_fourth_key)
+    dummy_view.assert_correct_key_level_up_only(expected_fourth_key)
     dummy_view.assert_game_finished_only(gryffindor)
     dummy_view.assert_game_finished_all({gryffindor})
 
@@ -330,11 +325,6 @@ async def test_fast_play_routed_game(
     dummy_org_notifier = OrgNotifierMock()
     orgs = await get_orgs(game, dao.organizer)
     identity = MockIdentityProvider(player=harry, team=gryffindor)
-    key_kwargs = {
-        "identity": identity,
-        "input_container": MockInputContainer(),
-    }
-
     check_key = CheckKeyInteractor(
         dao=dao.game_player,
         view=dummy_view,
@@ -346,7 +336,7 @@ async def test_fast_play_routed_game(
         key_processor=key_processor,
     )
 
-    await check_key(key="SHTO3", **key_kwargs)
+    await check_key(key="SHTO3", identity=identity, input_container=MockInputContainer())
     expected_first_key = dto.KeyTime(
         text="SHTO3",
         type_=enums.KeyType.simple,
@@ -356,13 +346,13 @@ async def test_fast_play_routed_game(
         player=harry,
         team=gryffindor,
     )
-    dummy_view.assert_correct_key_only(expected_first_key)
+    dummy_view.assert_correct_key_routed_level_up_only(expected_first_key, next_level="third")
     dummy_org_notifier.assert_one_event(
         LevelUp(team=gryffindor, new_level=game.levels[2], orgs_list=orgs)
     )
     dummy_view.assert_send_only_puzzle(gryffindor, game.levels[2])
 
-    await check_key(key="SH3", **key_kwargs)
+    await check_key(key="SH3", identity=identity, input_container=MockInputContainer())
     expected_second_key = dto.KeyTime(
         text="SH3",
         type_=enums.KeyType.simple,
@@ -372,7 +362,7 @@ async def test_fast_play_routed_game(
         player=harry,
         team=gryffindor,
     )
-    dummy_view.assert_correct_key_only(expected_second_key)
+    dummy_view.assert_correct_key_level_up_only(expected_second_key)
     dummy_view.assert_game_finished_only(gryffindor)
     dummy_view.assert_game_finished_all({gryffindor})
 
@@ -413,11 +403,6 @@ async def test_cycle_play_routed_game(
     dummy_org_notifier = OrgNotifierMock()
     orgs = await get_orgs(game, dao.organizer)
     identity = MockIdentityProvider(player=harry, team=gryffindor)
-    key_kwargs = {
-        "identity": identity,
-        "input_container": MockInputContainer(),
-    }
-
     check_key = CheckKeyInteractor(
         dao=dao.game_player,
         view=dummy_view,
@@ -429,7 +414,7 @@ async def test_cycle_play_routed_game(
         key_processor=key_processor,
     )
 
-    await check_key(key="SHTO3", **key_kwargs)
+    await check_key(key="SHTO3", identity=identity, input_container=MockInputContainer())
     expected_first_key = dto.KeyTime(
         text="SHTO3",
         type_=enums.KeyType.simple,
@@ -439,13 +424,13 @@ async def test_cycle_play_routed_game(
         player=harry,
         team=gryffindor,
     )
-    dummy_view.assert_correct_key_only(expected_first_key)
+    dummy_view.assert_correct_key_routed_level_up_only(expected_first_key, next_level="third")
     dummy_org_notifier.assert_one_event(
         LevelUp(team=gryffindor, new_level=game.levels[2], orgs_list=orgs)
     )
     dummy_view.assert_send_only_puzzle(gryffindor, game.levels[2])
 
-    await check_key(key="SHTO1", **key_kwargs)
+    await check_key(key="SHTO1", identity=identity, input_container=MockInputContainer())
     expected_second_key = dto.KeyTime(
         text="SHTO1",
         type_=enums.KeyType.simple,
@@ -455,13 +440,13 @@ async def test_cycle_play_routed_game(
         player=harry,
         team=gryffindor,
     )
-    dummy_view.assert_correct_key_only(expected_second_key)
+    dummy_view.assert_correct_key_routed_level_up_only(expected_second_key, next_level="first")
     dummy_org_notifier.assert_one_event(
         LevelUp(team=gryffindor, new_level=game.levels[0], orgs_list=orgs)
     )
     dummy_view.assert_send_only_puzzle(gryffindor, game.levels[0])
 
-    await check_key(key="SHTO3", **key_kwargs)
+    await check_key(key="SHTO3", identity=identity, input_container=MockInputContainer())
     expected_third_key = dto.KeyTime(
         text="SHTO3",
         type_=enums.KeyType.simple,
@@ -471,13 +456,13 @@ async def test_cycle_play_routed_game(
         player=harry,
         team=gryffindor,
     )
-    dummy_view.assert_correct_key_only(expected_third_key)
+    dummy_view.assert_correct_key_routed_level_up_only(expected_third_key, next_level="third")
     dummy_org_notifier.assert_one_event(
         LevelUp(team=gryffindor, new_level=game.levels[2], orgs_list=orgs)
     )
     dummy_view.assert_send_only_puzzle(gryffindor, game.levels[2])
 
-    await check_key(key="SH3", **key_kwargs)
+    await check_key(key="SH3", identity=identity, input_container=MockInputContainer())
     expected_last_key = dto.KeyTime(
         text="SH3",
         type_=enums.KeyType.simple,
@@ -487,7 +472,7 @@ async def test_cycle_play_routed_game(
         player=harry,
         team=gryffindor,
     )
-    dummy_view.assert_correct_key_only(expected_last_key)
+    dummy_view.assert_correct_key_level_up_only(expected_last_key)
     dummy_view.assert_game_finished_only(gryffindor)
     dummy_view.assert_game_finished_all({gryffindor})
 
@@ -527,11 +512,11 @@ async def test_get_current_hints(
     dao.level_time._save(level_time)
     await dao.commit()
     interactor = await dishka_request.get(GamePlayReaderInteractor)
-    hints = await interactor(MockIdentityProvider(user=hermione._user, player=hermione))
+    hints_ = await interactor(MockIdentityProvider(user=hermione._user, player=hermione))
     hints_harry = await interactor(MockIdentityProvider(user=harry._user, player=harry))
-    assert len(hints.hints) == 2
+    assert len(hints_.hints) == 2
     assert len(hints_harry.hints) == 2
-    assert hints_harry.hints == hints.hints
+    assert hints_harry.hints == hints_.hints
     with pytest.raises(exceptions.PlayerNotInTeam):
         await interactor(MockIdentityProvider(user=ron._user, player=ron))
     with suppress(exceptions.PlayerRestoredInTeam):

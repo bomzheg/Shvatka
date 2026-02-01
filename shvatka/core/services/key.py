@@ -212,33 +212,41 @@ class TimerProcessor:
                     started_at=started_level_time.start_at,
                 ),
             )
-            if isinstance(decision, action.LevelTimerDecision):
-                if isinstance(decision, action.MultipleEffectsDecision):
-                    level_up_effect: Effects | None = None
-                    for effects in decision.effects:
-                        if effects.level_up:
-                            assert level_up_effect is None
-                            level_up_effect = effects
-                        else:
-                            logger.warning("unprocessable effects %s", effects)
-                    if level_up_effect:
-                        await self.dao.level_up(
-                            team=team,
+            if isinstance(decision, action.LevelTimerEffectsDecision):
+                if decision.is_level_up():
+                    await self.dao.level_up(
+                        team=team,
+                        level=lvl,
+                        game=game,
+                        next_level_number=await define_next_level(
+                            dao=self.dao,
+                            game=await self.current_game.get_required_full_game(),
                             level=lvl,
-                            game=game,
-                            next_level_number=await define_next_level(
-                                dao=self.dao,
-                                game=await self.current_game.get_required_full_game(),
-                                level=lvl,
-                                level_name=level_up_effect.next_level,
-                            ),
-                        )
-                    return decision.effects
-                else:
-                    logger.warning(
-                        "impossible decision type here is %s %s", type(decision), decision.type
+                            level_name=decision.effects.next_level,
+                        ),
                     )
-                    return []
+                return [decision.effects]
+            elif isinstance(decision, action.MultipleEffectsDecision):
+                level_up_effect: Effects | None = None
+                for effects in decision.effects:
+                    if effects.level_up:
+                        assert level_up_effect is None
+                        level_up_effect = effects
+                    else:
+                        logger.warning("unprocessable effects %s", effects)
+                if level_up_effect:
+                    await self.dao.level_up(
+                        team=team,
+                        level=lvl,
+                        game=game,
+                        next_level_number=await define_next_level(
+                            dao=self.dao,
+                            game=await self.current_game.get_required_full_game(),
+                            level=lvl,
+                            level_name=level_up_effect.next_level,
+                        ),
+                    )
+                return decision.effects
             elif isinstance(decision, action.NotImplementedActionDecision):
                 logger.warning("impossible decision here cant be not implemented")
                 return []

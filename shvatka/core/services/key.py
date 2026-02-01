@@ -190,7 +190,7 @@ class TimerProcessor:
         started_level_time_id: int,
     ) -> list[action.Effects]:
         game = await self.current_game.get_required_game()
-        async with self.locker(team):
+        async with self.locker.lock_team(team):
             current_level_time = await self.dao.get_current_level_time(team, game)
             lvl = await self.dao.get_current_level(team=team, game=game)
             started_level_time: dto.LevelTime = await self.dao.get_level_time_by_id(

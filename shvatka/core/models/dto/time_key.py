@@ -20,8 +20,11 @@ class KeyTime:
 
 @dataclass(frozen=True)
 class InsertedKey(KeyTime):
-    is_level_up: bool
+    level_up: bool
     parsed_key: ParsedKey
+
+    def is_level_up(self) -> bool:
+        return self.level_up or self.parsed_key.effect.level_up
 
     @classmethod
     def from_key_time(cls, key_time: KeyTime, is_level_up: bool, parsed_key: ParsedKey):
@@ -32,7 +35,7 @@ class InsertedKey(KeyTime):
             at=key_time.at,
             level_number=key_time.level_number,
             player=key_time.player,
-            is_level_up=is_level_up,
+            level_up=is_level_up,
             team=key_time.team,
             parsed_key=parsed_key,
         )

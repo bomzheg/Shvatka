@@ -17,6 +17,7 @@ from shvatka.core.interfaces.dal.game_play import GamePlayerDao
 from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.interfaces.scheduler import Scheduler
 from shvatka.core.models import dto, enums
+from shvatka.core.models.dto import action
 from shvatka.core.rules.game import check_can_read
 from shvatka.core.services.game_stat import get_typed_keys, get_game_stat_with_hints
 from shvatka.core.services.key import TimerProcessor, KeyProcessor
@@ -134,37 +135,33 @@ class GamePlayBaseInteractor:
     scheduler: Scheduler
     current_game: CurrentGameProvider
 
-    async def finish_team(
-        self,
-        input_container: InputContainer,
-        team: dto.Team,
-        game: dto.FullGame,
-    ):
-        """
-        Два варианта:
-        * уровень последний - поздравляем команду с завершением игры
-        * уровень последний и все команды финишировали - помечаем игру законченной,
-          пишем в лог игры уведомление о финале, уведомляем команды.
-        """
-        await self.view.game_finished(team, input_container)
-        if await self.dao.is_all_team_finished(game):
-            await self.dao.finish(game)
-            await self.dao.commit()
-            await self.game_log.log(GameLogEvent(GameLogType.GAME_FINISHED, {"game": game.name}))
-            self.locker.clear()
-            for team in await self.dao.get_played_teams(game):
-                await self.view.game_finished_by_all(team)
+    async def all_teams_finished(self, game: dto.FullGame) -> None:
+        await self.dao.finish(game)
+        await self.dao.commit()
+        await self.game_log.log(GameLogEvent(GameLogType.GAME_FINISHED, {"game": game.name}))
+        self.locker.clear()
+        for team in await self.dao.get_played_teams(game):
+            await self.view.game_finished_by_all(team)
 
     async def process_level_up(
         self,
         input_container: InputContainer,
         team: dto.Team,
         game: dto.FullGame,
-    ):
+    ) -> None:
         async with self.locker.lock_globally():
             if await self.dao.is_team_finished(team, game):
-                await self.finish_team(input_container, team, game)
+                await self.view.game_finished(team, input_container)
+                if await self.dao.is_all_team_finished(game):
+                    await self.all_teams_finished(game)
                 return
+        await self.process_plain_level_up(team, game)
+
+    async def process_plain_level_up(
+        self,
+        team: dto.Team,
+        game: dto.FullGame,
+    ) -> None:
         next_level = await self.dao.get_current_level(team, game)
         lt = await self.dao.get_current_level_time(team, game)
 
@@ -220,8 +217,18 @@ class CheckKeyInteractor(GamePlayBaseInteractor):
         new_key = await self.key_processor.check_key(key=key, player=player, team=team)
         if new_key is None:
             return
+        await self.view_(new_key, input_container)
+        if not new_key.is_duplicate and new_key.is_level_up():
+            await self.process_level_up(
+                input_container=input_container,
+                team=team,
+                game=game,
+            )
+
+    async def view_(self, new_key: dto.InsertedKey, input_container: InputContainer) -> None:
         if new_key.is_duplicate:
             await self.view.duplicate_key(key=new_key, input_container=input_container)
+            # if duplicate - only show info about doubles, do not repeat bonuses or other effects
             return
         match new_key.type_:
             case enums.KeyType.wrong:
@@ -245,12 +252,6 @@ class CheckKeyInteractor(GamePlayBaseInteractor):
 
             case _:
                 typing.assert_never(new_key.type_)
-        if new_key.is_level_up or new_key.parsed_key.effect.level_up:
-            await self.process_level_up(
-                input_container=input_container,
-                team=team,
-                game=game,
-            )
 
 
 @dataclass(kw_only=True)
@@ -275,14 +276,17 @@ class GamePlayTimerInteractor(GamePlayBaseInteractor):
             return
         game = await self.current_game.get_required_full_game()
         level_time = await self.dao.get_current_level_time(team, game)
+        level_up_effect: action.Effects | None = None
         for effects in effects_list:
             await self.dao.save_event(team=team, level_time=level_time, game=game, effects=effects)
             await self.view.effects(team=team, effects=effects, input_container=input_container)
             if effects.level_up:
-                team = await self.dao.get_by_id(team_id)
-                await self.process_level_up(
-                    input_container=input_container,
-                    team=team,
-                    game=await self.current_game.get_required_full_game(),
-                )
+                level_up_effect = effects
+        if level_up_effect is not None:
+            team = await self.dao.get_by_id(team_id)
+            await self.process_level_up(
+                input_container=input_container,
+                team=team,
+                game=await self.current_game.get_required_full_game(),
+            )
         await self.dao.commit()

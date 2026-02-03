@@ -1,8 +1,8 @@
-from dataclass_factory import Factory, Schema, NameStyle
+from adaptix import Retort, NameStyle, name_mapping
 
 from shvatka.infrastructure.db.config.models.db import DBConfig, RedisConfig, DBConfigProperties
 
-dcf = Factory(default_schema=Schema(name_style=NameStyle.kebab))
+dcf = Retort(recipe=[name_mapping(name_style=NameStyle.LOWER_KEBAB)])
 
 
 def load_db_config(db_dict: dict) -> DBConfig:

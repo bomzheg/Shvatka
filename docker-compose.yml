@@ -107,17 +107,6 @@ services:
     networks:
       - botapi
 
-  redis-dev:
-    profiles: [ "dev" ]
-    image: "redis:${REDIS_VERSION:-6.2.13-alpine}"
-    entrypoint: redis-server --appendonly yes
-    volumes:
-      - redis_data:/data
-    networks:
-      - redis
-    ports:
-      - "6379:6379"
-
   redis:
     image: "redis:${REDIS_VERSION:-6.2.13-alpine}"
     entrypoint: redis-server --appendonly yes

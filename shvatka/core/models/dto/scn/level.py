@@ -151,7 +151,7 @@ class Conditions(Sequence[AnyCondition]):
                 if keys.intersection(c.get_keys()):
                     raise exceptions.LevelError(
                         text="keys exists multiple times",
-                        confidential=f"{keys.intersection(c.keys)}",
+                        confidential=f"{keys.intersection(c.get_keys())}",
                     )
                 keys = keys.union(c.get_keys())
             if isinstance(c, action.LevelTimerEffectsCondition):

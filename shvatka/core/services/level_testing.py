@@ -27,11 +27,12 @@ async def start_level_test(
     now = datetime.now(tz=tz_utc)
     await dao.save_started_level_test(suite=suite, now=now)
     await view.send_puzzle(suite=suite)
-    await scheduler.plain_test_hint(
-        suite=suite,
-        hint_number=1,
-        run_at=calculate_first_hint_time(suite.level, now),
-    )
+    if (next_hint_at := calculate_first_hint_time(suite.level, now)) is not None:
+        await scheduler.plain_test_hint(
+            suite=suite,
+            hint_number=1,
+            run_at=next_hint_at,
+        )
     await dao.commit()
 
 

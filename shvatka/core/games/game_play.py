@@ -139,13 +139,14 @@ async def schedule_first_hint(
     lt_id: int,
     now: datetime,
 ):
-    await scheduler.plain_hint(
-        level=next_level,
-        team=team,
-        hint_number=1,
-        lt_id=lt_id,
-        run_at=calculate_first_hint_time(next_level, now),
-    )
+    if (next_hint_at := calculate_first_hint_time(next_level, now)) is not None:
+        await scheduler.plain_hint(
+            level=next_level,
+            team=team,
+            hint_number=1,
+            lt_id=lt_id,
+            run_at=next_hint_at,
+        )
     for condition in next_level.scenario.conditions:
         if isinstance(condition, action.LevelTimerEffectsCondition):
             await scheduler.plain_level_event(
@@ -156,7 +157,9 @@ async def schedule_first_hint(
             )
 
 
-def calculate_first_hint_time(next_level: dto.Level, now: datetime) -> datetime:
+def calculate_first_hint_time(next_level: dto.Level, now: datetime) -> datetime | None:
+    if next_level.is_last_hint(0):
+        return None
     return calculate_next_hint_time(next_level.get_hint(0), next_level.get_hint(1), now)
 
 

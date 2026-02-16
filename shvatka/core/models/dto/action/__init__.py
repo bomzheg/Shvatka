@@ -8,7 +8,6 @@ from .interface import (
     Decision,
     DecisionType,
     StateHolder,
-    LevelUpDecision,
     MultipleEffectsDecision,
     NoActionDecision,
 )
@@ -21,14 +20,11 @@ from .keys import (
     KeyWinCondition,
     TypedKeyAction,
     TypedKeysState,
-    BonusKeyDecision,
     KeyBonusCondition,
     WrongKeyDecision,
-    BonusHintKeyDecision,
     KeyBonusHintCondition,
     KeyEffectsDecision,
     KeyEffectsCondition,
-    LevelUpKeyDecision,
 )
 from .state_holder import InMemoryKeyStateHolder, InMemoryTimerStateHolder
 from .timer import (

@@ -24,11 +24,11 @@ class GameEventDao(BaseDAO[models.GameEvent]):
     ) -> list[dto.GameEvent]:
         result: ScalarResult[models.GameEvent] = await self.session.scalars(
             select(models.GameEvent).where(
-                models.GameEvent.level_time_id == level_time.id,
+                models.GameEvent.game_id == level_time.game.id,
                 models.GameEvent.team_id == team.id,
             )
         )
-        return [event.to_dto(team=team) for event in result.all()]
+        return [event.to_dto() for event in result.all()]
 
     async def save_event(
         self,
@@ -49,4 +49,4 @@ class GameEventDao(BaseDAO[models.GameEvent]):
             effects=effects,
         )
         self._save(event)
-        return event.to_dto(team)
+        return event.to_dto()

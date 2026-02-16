@@ -5,7 +5,7 @@ from typing import Any
 from adaptix import Retort
 from sqlalchemy import Integer, ForeignKey, DateTime, func, TypeDecorator, Dialect
 from sqlalchemy.dialects.postgresql import JSONB
-from sqlalchemy.orm import relationship, mapped_column, Mapped
+from sqlalchemy.orm import mapped_column, Mapped, relationship
 
 from shvatka.common.factory import REQUIRED_GAME_RECIPES
 from shvatka.core.models import dto
@@ -63,8 +63,6 @@ class GameEvent(Base):
         "Game",
         foreign_keys=game_id,
     )
-    level_number = mapped_column(Integer, nullable=False)
-    level_time_id = mapped_column(ForeignKey("levels_times.id"), nullable=False)
     at = mapped_column(
         DateTime(timezone=True),
         default=lambda: datetime.now(tz=tz_utc),
@@ -73,11 +71,10 @@ class GameEvent(Base):
     )
     effects: Mapped[action.Effects] = mapped_column(EffectsField, nullable=False)
 
-    def to_dto(self, team: dto.Team) -> dto.GameEvent:
+    def to_dto(self) -> dto.GameEvent:
         return dto.GameEvent(
+            id=self.id,
             at=self.at,
-            level_number=self.level_number,
-            level_team_id=self.level_time_id,
-            team=team,
+            team_id=self.team_id,
             effects=self.effects,
         )

@@ -5,7 +5,7 @@ from datetime import datetime
 
 from shvatka.core.interfaces.current_game import CurrentGameProvider
 from shvatka.core.interfaces.dal.game_play import GamePlayerDao
-from shvatka.core.models import dto, enums
+from shvatka.core.models import dto
 from shvatka.core.models.dto import action
 from shvatka.core.models.dto.action import Effects
 from shvatka.core.utils import exceptions
@@ -63,19 +63,8 @@ class KeyProcessor:
                     # TODO save effects
                     is_duplicate=decision.duplicate,
                 )
-                if is_level_up := isinstance(decision, action.LevelUpDecision):
-                    await self.dao.level_up(
-                        team=team,
-                        level=lvl,
-                        game=game,
-                        next_level_number=await define_next_level(
-                            dao=self.dao,
-                            game=await self.current_game.get_required_full_game(),
-                            level=lvl,
-                            level_name=decision.next_level,
-                        ),
-                    )
-                elif isinstance(decision, action.KeyEffectsDecision):
+                is_level_up = False
+                if isinstance(decision, action.KeyEffectsDecision):
                     if is_level_up := decision.effects.level_up:
                         await self.dao.level_up(
                             team=team,
@@ -128,40 +117,12 @@ def decision_to_parsed_key(
     match decision:
         case action.KeyEffectsDecision(key_type=key_type, key=key, effects=effects):
             return dto.ParsedKey(type_=key_type, text=key, effect=effects)
-        case action.BonusKeyDecision(key=key):
-            return dto.ParsedKey(
-                type_=enums.KeyType.bonus,
-                text=decision.key_text,
-                effect=action.Effects(
-                    id=uuid.uuid4(),
-                    bonus_minutes=key.bonus_minutes,
-                ),
-            )
         case action.WrongKeyDecision():
             return dto.ParsedKey(
                 type_=decision.key_type,
                 text=decision.key_text,
                 effect=action.Effects(
                     id=uuid.uuid4(),
-                ),
-            )
-        case action.BonusHintKeyDecision(bonus_hint=bonus_hint):
-            return dto.ParsedKey(
-                type_=enums.KeyType.bonus_hint,
-                text=decision.key_text,
-                effect=action.Effects(
-                    id=uuid.uuid4(),
-                    hints_=bonus_hint,
-                ),
-            )
-        case action.LevelUpKeyDecision():
-            return dto.ParsedKey(
-                type_=enums.KeyType.simple,
-                text=decision.key_text,
-                effect=action.Effects(
-                    id=uuid.uuid4(),
-                    level_up=decision.is_level_up(),
-                    next_level=decision.next_level,
                 ),
             )
         case action.TypedKeyDecision():

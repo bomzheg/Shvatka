@@ -31,12 +31,17 @@ class KeyTime(Base):
         back_populates="log_keys",
     )
     level_number = mapped_column(Integer, nullable=False)
-    level_time_id = mapped_column(ForeignKey("levels_times.id"), nullable=False)
+    level_time_id = mapped_column(ForeignKey("levels_times.id"), nullable=True)
     enter_time = mapped_column(
         DateTime(timezone=True),
         default=lambda: datetime.now(tz=tz_utc),
         server_default=func.now(),
         nullable=False,
+    )
+    event_id = mapped_column(ForeignKey("event_log.id"), nullable=True)
+    event = relationship(
+        "GameEvent",
+        foreign_keys=event_id,
     )
     key_text = mapped_column(Text, nullable=False)
     type_: Mapped[enums.KeyType] = mapped_column("type", Text, nullable=False)

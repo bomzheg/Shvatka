@@ -11,7 +11,6 @@ from shvatka.core.models.dto.hints.time_hint import EnumeratedTimeHint
 from shvatka.core.utils import exceptions
 from shvatka.core.models.dto.action import (
     KeyBonusCondition,
-    BonusKeyDecision,
     AnyCondition,
 )
 from shvatka.core.models.dto.action.keys import (
@@ -358,13 +357,10 @@ class LevelScenario:
         if not implemented:
             return action.NotImplementedActionDecision()
         if isinstance(action_, action.TypedKeyAction):
-            if bonuses := implemented.get_all(BonusKeyDecision):
-                return bonuses.get_exactly_one(self.id)
             key_decisions = implemented.get_all(action.TypedKeyDecision, action.WrongKeyDecision)
             if not key_decisions:
                 #  not implemented because all known in moment of writing this code are:
-                #  - BonusKey
-                #  - TypedKey (and inheritance)
+                #  - TypedKey (and inheritance (effects))
                 #  - WrongKey
                 #  - if we are here - some implementation are not supported now
                 return action.NotImplementedActionDecision()

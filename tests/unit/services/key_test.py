@@ -22,11 +22,12 @@ def test_decision_to_simple_parsed_key():
 
 def test_decision_to_bonus_parsed_key():
     actual = decision_to_parsed_key(
-        action.BonusKeyDecision(
-            type=action.DecisionType.BONUS_TIME,
+        action.KeyEffectsDecision(
+            type=action.DecisionType.EFFECTS,
             key_type=enums.KeyType.bonus,
             duplicate=False,
-            key=action.BonusKey(text="SH123", bonus_minutes=10),
+            key="SH123",
+            effects=action.Effects(id=uuid.uuid4(), bonus_minutes=10),
         )
     )
     assert actual.type_ == enums.KeyType.bonus

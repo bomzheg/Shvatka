@@ -104,7 +104,7 @@ def test_win_level_single_key(level_one_key: scn.LevelScenario):
     assert decision.key == "SH123"
     assert decision.key_text == "SH123"
     assert decision.key_type == enums.KeyType.simple
-    assert decision.type == action.DecisionType.LEVEL_UP
+    assert decision.type == action.DecisionType.EFFECTS
     assert decision.is_level_up()
     assert not decision.duplicate
 
@@ -140,12 +140,12 @@ def test_bonus_level_single_key(level_one_key: scn.LevelScenario):
         action.TypedKeyAction("SHB1"), action.InMemoryKeyStateHolder(set(), {"SHWRONG"})
     )
 
-    assert isinstance(decision, action.BonusKeyDecision)
-    assert decision.key.text == "SHB1"
-    assert decision.key.bonus_minutes == 1
+    assert isinstance(decision, action.KeyEffectsDecision)
+    assert decision.key == "SHB1"
+    assert decision.effects.bonus_minutes == 1
     assert decision.key_text == "SHB1"
     assert decision.key_type == enums.KeyType.bonus
-    assert decision.type == action.DecisionType.BONUS_TIME
+    assert decision.type == action.DecisionType.EFFECTS
     assert not decision.duplicate
 
 
@@ -154,12 +154,12 @@ def test_duplicate_bonus_level_single_key(level_one_key: scn.LevelScenario):
         action.TypedKeyAction("SHB1"), action.InMemoryKeyStateHolder(set(), {"SHWRONG", "SHB1"})
     )
 
-    assert isinstance(decision, action.BonusKeyDecision)
-    assert decision.key.text == "SHB1"
-    assert decision.key.bonus_minutes == 1
+    assert isinstance(decision, action.KeyEffectsDecision)
+    assert decision.key == "SHB1"
+    assert decision.effects.bonus_minutes == 1
     assert decision.key_text == "SHB1"
     assert decision.key_type == enums.KeyType.bonus
-    assert decision.type == action.DecisionType.BONUS_TIME
+    assert decision.type == action.DecisionType.EFFECTS
     assert decision.duplicate
 
 
@@ -202,6 +202,6 @@ def test_third_key_of_three(level_three_keys: scn.LevelScenario):
     assert decision.key == "SH123"
     assert decision.key_text == "SH123"
     assert decision.key_type == enums.KeyType.simple
-    assert decision.type == action.DecisionType.LEVEL_UP
+    assert decision.type == action.DecisionType.EFFECTS
     assert decision.is_level_up()
     assert not decision.duplicate

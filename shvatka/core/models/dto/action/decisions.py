@@ -65,4 +65,6 @@ class Decisions(Sequence[Decision]):
 
     def get_significant_effects(self) -> MultipleEffectsDecision:
         effects_decisions = [d for d in self.decisions if isinstance(d, EffectsDecision)]
+        if all(hasattr(e, "action_time") for e in effects_decisions):
+            effects_decisions.sort(key=lambda e: e.action_time)  # type: ignore[attr-defined]
         return MultipleEffectsDecision(effects=[d.effects for d in effects_decisions])

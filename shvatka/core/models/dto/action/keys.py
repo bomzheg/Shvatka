@@ -3,11 +3,11 @@ import typing
 from abc import abstractmethod
 from dataclasses import dataclass
 from typing import Literal
+from uuid import uuid4
 
 from shvatka.core.models import enums
 from shvatka.core.utils.input_validation import is_key_valid
 from .effects import Effects
-from .effects import EffectType
 from .decisions import NotImplementedActionDecision
 from .interface import (
     Action,
@@ -16,7 +16,6 @@ from .interface import (
     Condition,
     DecisionType,
     ConditionType,
-    LevelUpDecision,
     EffectsDecision,
 )
 
@@ -97,12 +96,6 @@ class TypedKeyDecision(KeyDecision):
         return self.key
 
 
-@dataclass(kw_only=True, frozen=True)
-class LevelUpKeyDecision(TypedKeyDecision, LevelUpDecision):
-    type: typing.Literal[DecisionType.LEVEL_UP] = DecisionType.LEVEL_UP
-    next_level: str | None = None
-
-
 class KeyCondition(Condition, metaclass=abc.ABCMeta):
     def get_keys(self) -> set[SHKey]:
         raise NotImplementedError
@@ -130,11 +123,16 @@ class KeyWinCondition(KeyCondition):
         if state.is_duplicate(action):
             type_ = DecisionType.NO_ACTION
         elif self._is_all_typed(action, state):
-            return LevelUpKeyDecision(
+            return KeyEffectsDecision(
+                type=DecisionType.EFFECTS,
                 key_type=self._get_key_type(action),  # TODO always simple
                 duplicate=state.is_duplicate(action),
                 key=action.key,
-                next_level=self.next_level,
+                effects=Effects(
+                    id=uuid4(),
+                    level_up=True,
+                    next_level=self.next_level,
+                ),
             )
         else:
             type_ = DecisionType.SIGNIFICANT_ACTION
@@ -152,19 +150,6 @@ class KeyWinCondition(KeyCondition):
         return enums.KeyType.simple if self._is_correct(action) else enums.KeyType.wrong
 
 
-@dataclass(kw_only=True, frozen=True)
-class BonusKeyDecision(KeyDecision):
-    type: DecisionType
-    key_type: enums.KeyType
-    duplicate: bool
-    key: BonusKey
-    effect: EffectType = EffectType.bonus_minutes
-
-    @property
-    def key_text(self) -> str:
-        return self.key.text
-
-
 @dataclass
 class KeyBonusCondition(KeyCondition):
     keys: set[BonusKey]  # any key is required
@@ -177,11 +162,15 @@ class KeyBonusCondition(KeyCondition):
         bonus = self._get_bonus(action)
         if bonus is None:
             return WrongKeyDecision(duplicate=state.is_duplicate(action), key=action.key)
-        return BonusKeyDecision(
-            type=DecisionType.BONUS_TIME,
+        return KeyEffectsDecision(
+            type=DecisionType.EFFECTS,
             key_type=enums.KeyType.bonus,
             duplicate=state.is_duplicate(action),
-            key=bonus,
+            key=bonus.text,
+            effects=Effects(
+                id=uuid4(),
+                bonus_minutes=bonus.bonus_minutes,
+            ),
         )
 
     def get_keys(self) -> set[SHKey]:
@@ -192,12 +181,6 @@ class KeyBonusCondition(KeyCondition):
             if action.key == bonus_key.text:
                 return bonus_key
         return None
-
-
-@dataclass(kw_only=True, frozen=True)
-class BonusHintKeyDecision(TypedKeyDecision):
-    bonus_hint: list[hints.AnyHint]
-    type: typing.Literal[DecisionType.BONUS_HINT] = DecisionType.BONUS_HINT
 
 
 @dataclass
@@ -215,11 +198,15 @@ class KeyBonusHintCondition(KeyCondition):
         if state.is_duplicate(action):
             type_ = DecisionType.NO_ACTION
         elif self._is_all_typed(action, state):
-            return BonusHintKeyDecision(
+            return KeyEffectsDecision(
+                type=DecisionType.EFFECTS,
                 key_type=self._get_key_type(action),
                 duplicate=state.is_duplicate(action),
                 key=action.key,
-                bonus_hint=self.bonus_hint,
+                effects=Effects(
+                    id=uuid4(),
+                    hints_=self.bonus_hint,
+                ),
             )
         else:
             type_ = DecisionType.SIGNIFICANT_ACTION

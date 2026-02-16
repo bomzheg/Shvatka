@@ -274,14 +274,20 @@ class GamePlayTimerInteractor(GamePlayBaseInteractor):
 
         if not effects_list:
             return
+
         game = await self.current_game.get_required_full_game()
         level_time = await self.dao.get_current_level_time(team, game)
         level_up_effect: action.Effects | None = None
+        last_event: dto.GameEvent | None = None
         for effects in effects_list:
-            await self.dao.save_event(team=team, level_time=level_time, game=game, effects=effects)
+            last_event = await self.dao.save_event(
+                team=team, level_time=level_time, game=game, effects=effects
+            )
             await self.view.effects(team=team, effects=effects, input_container=input_container)
             if effects.level_up:
                 level_up_effect = effects
+        if last_event is not None:
+            await self.dao.save_timer(level_time, last_event)
         if level_up_effect is not None:
             team = await self.dao.get_by_id(team_id)
             await self.process_level_up(

@@ -164,5 +164,8 @@ class GamePlayerDaoImpl(GamePlayerDao):
 
     async def save_event(
         self, team: dto.Team, level_time: dto.LevelTime, game: dto.Game, effects: action.Effects
-    ):
+    ) -> dto.GameEvent:
         return await self.dao.events.save_event(team, level_time, game, effects)
+
+    async def save_timer(self, level_time: dto.LevelTime, event: dto.GameEvent) -> dto.Timer:
+        return await self.dao.timers.save_timer(level_time, event)

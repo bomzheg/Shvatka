@@ -152,7 +152,7 @@ async def schedule_first_hint(
             await scheduler.plain_level_event(
                 team=team,
                 lt_id=lt_id,
-                run_at=condition.get_action_time() + now,
+                run_at=now + condition.get_action_time(),
                 effects=condition.effects,
             )
 

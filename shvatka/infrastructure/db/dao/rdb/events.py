@@ -33,7 +33,6 @@ class GameEventDao(BaseDAO[models.GameEvent]):
     async def save_event(
         self,
         team: dto.Team,
-        level_time: dto.LevelTime,
         game: dto.Game,
         effects: action.Effects,
         at: datetime | None = None,
@@ -43,8 +42,6 @@ class GameEventDao(BaseDAO[models.GameEvent]):
         event = models.GameEvent(
             team_id=team.id,
             game_id=game.id,
-            level_number=level_time.level_number,
-            level_time_id=level_time.id,
             at=at,
             effects=effects,
         )

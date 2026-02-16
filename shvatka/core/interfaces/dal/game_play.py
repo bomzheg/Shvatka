@@ -85,7 +85,6 @@ class GamePlayerDao(
     async def save_event(
         self,
         team: dto.Team,
-        level_time: dto.LevelTime,
         game: dto.Game,
         effects: action.Effects,
     ) -> dto.GameEvent:

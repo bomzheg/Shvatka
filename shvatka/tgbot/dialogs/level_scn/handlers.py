@@ -129,7 +129,7 @@ async def process_time_hint_result(start_data: Data, result: Any, manager: Dialo
 
 
 @inject
-async def process_level_result(
+async def process_level_result(  # noqa: C901
     start_data: Data,
     result: Any,
     manager: DialogManager,
@@ -163,6 +163,8 @@ async def process_level_result(
             retort.load(routed_conditions, list[action.KeyWinCondition])
         )
     manager.dialog_data["conditions"] = retort.dump(conditions)
+    if raw_conditions := result.get("conditions", None):
+        manager.dialog_data["conditions"] = raw_conditions
 
 
 async def on_start_level_edit(start_data: dict[str, Any], manager: DialogManager):
@@ -217,7 +219,8 @@ async def start_level_keys(
 ):
     raw_conditions = manager.dialog_data.get("conditions", [])
     if raw_conditions:
-        keys = retort.load(raw_conditions, scn.Conditions).get_default_key_condition().get_keys()
+        condition = retort.load(raw_conditions, scn.Conditions).get_default_key_condition()
+        keys = condition.get_keys() if condition else set()
     else:
         keys = set()
 
@@ -243,6 +246,7 @@ async def start_sly_keys(
         conditions.get_bonus_hints_conditions(), list[action.AnyCondition]
     )
     routed_conditions = retort.dump(conditions.get_routed_conditions(), list[action.AnyCondition])
+    default_key_condition = conditions.get_default_key_condition()
     await manager.start(
         state=states.LevelSlyKeysSG.menu,
         data={
@@ -251,8 +255,26 @@ async def start_sly_keys(
             "routed_conditions": routed_conditions,
             "bonus_hint_conditions": bonus_hint_conditions,
             "keys": retort.dump(
-                conditions.get_default_key_condition().get_keys(), set[action.SHKey]
+                default_key_condition.get_keys() if default_key_condition else set(),
+                set[action.SHKey],
             ),
+            "game_id": manager.dialog_data.get("game_id", None),
+        },
+    )
+
+
+@inject
+async def start_level_timers(
+    c: CallbackQuery,
+    button: Button,
+    manager: DialogManager,
+):
+    raw_conditions = manager.dialog_data.get("conditions", [])
+    await manager.start(
+        state=states.LevelTimersSG.menu,
+        data={
+            "level_id": manager.dialog_data["level_id"],
+            "conditions": raw_conditions,
             "game_id": manager.dialog_data.get("game_id", None),
         },
     )

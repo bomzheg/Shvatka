@@ -1,6 +1,9 @@
+import uuid
+from datetime import timedelta
+
 import pytest
 
-from shvatka.core.models.dto.action import keys
+from shvatka.core.models.dto.action import keys, Effects
 from shvatka.core.models.dto import scn
 from shvatka.core.models.dto import action
 from shvatka.core.utils import exceptions
@@ -19,6 +22,18 @@ def complex_conditions() -> scn.Conditions:
             ),
             action.KeyBonusCondition({keys.BonusKey(text="SHB3", bonus_minutes=0)}),
             action.KeyWinCondition({keys.SHKey("СХ123")}),
+        ]
+    )
+
+
+@pytest.fixture
+def timer_condition() -> scn.Conditions:
+    return scn.Conditions(
+        [
+            action.LevelTimerEffectsCondition(
+                action_time=30,
+                effects=Effects(id=uuid.uuid4(), level_up=True),
+            )
         ]
     )
 
@@ -113,5 +128,67 @@ def test_conditions_duplicate_both_keys():
                     }
                 ),
                 action.KeyBonusCondition({keys.BonusKey(text="SHB3", bonus_minutes=0)}),
+            ]
+        )
+
+
+def test_conditions_just_level_up():
+    conditions = scn.Conditions(
+        [
+            action.LevelTimerEffectsCondition(
+                action_time=30,
+                effects=Effects(id=uuid.uuid4(), level_up=True),
+            ),
+        ]
+    )
+    assert conditions.get_keys() == set()
+    assert conditions.get_force_level_up_time() == timedelta(minutes=30)
+
+
+def test_conditions_two_level_up_timer():
+    with pytest.raises(exceptions.LevelError):
+        scn.Conditions(
+            [
+                action.LevelTimerEffectsCondition(
+                    action_time=30,
+                    effects=Effects(id=uuid.uuid4(), level_up=True),
+                ),
+                action.LevelTimerEffectsCondition(
+                    action_time=40,
+                    effects=Effects(id=uuid.uuid4(), level_up=True),
+                ),
+            ]
+        )
+
+
+def test_conditions_two_same_effects_id_timer():
+    effect_id = uuid.uuid4()
+    with pytest.raises(exceptions.LevelError):
+        scn.Conditions(
+            [
+                action.LevelTimerEffectsCondition(
+                    action_time=30,
+                    effects=Effects(id=effect_id, level_up=True),
+                ),
+                action.LevelTimerEffectsCondition(
+                    action_time=20,
+                    effects=Effects(id=effect_id, bonus_minutes=1),
+                ),
+            ]
+        )
+
+
+def test_conditions_effect_after_level_up_timer():
+    with pytest.raises(exceptions.LevelError):
+        scn.Conditions(
+            [
+                action.LevelTimerEffectsCondition(
+                    action_time=30,
+                    effects=Effects(id=uuid.uuid4(), level_up=True),
+                ),
+                action.LevelTimerEffectsCondition(
+                    action_time=40,
+                    effects=Effects(id=uuid.uuid4(), bonus_minutes=1),
+                ),
             ]
         )

@@ -1,0 +1,57 @@
+name: shvatka-dev
+
+services:
+  shvatka-ui:
+    profiles: ["ui"]
+    container_name: "shvatka_ui-${ENV_NAME}"
+    restart: always
+    image: bomzheg/shvatka-ui:${SHVATKA_UI_VERSION:-latest}
+    env_file:
+      - "../config/ui.env"
+    deploy:
+      resources:
+        reservations:
+          memory: 6M
+        limits:
+          memory: 80M
+          cpus: "0.01"
+
+  telegram-bot-api:
+    profiles: [ "botapi" ]
+    image: "aiogram/telegram-bot-api:${BOTAPI_VERSION:-latest}"
+    environment:
+      TELEGRAM_API_ID: "6"
+      TELEGRAM_API_HASH: "eb06d4abfb49dc3eeb1aeb98ae0f581e"
+      TELEGRAM_LOCAL: 1
+    volumes:
+      - telegram-bot-api-data:/var/lib/telegram-bot-api
+
+  nginx:
+    profiles: [ "botapi" ]
+    image: "nginx:${NGINX:-latest}"
+    volumes:
+      - telegram-bot-api-data:/usr/share/nginx/html/var/lib/telegram-bot-api:ro
+    environment:
+      - NGINX_PORT=80
+
+  redis-dev:
+    image: "redis:${REDIS_VERSION:-6.2.13-alpine}"
+    entrypoint: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+
+  postgres-dev:
+    image: "postgres:16.5"
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_PASSWORD=123456
+
+volumes:
+  telegram-bot-api-data:
+  redis_data:
+  postgres_data:

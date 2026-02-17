@@ -12,3 +12,5 @@ from .team import TeamDao
 from .team_player import TeamPlayerDao
 from .user import UserDao
 from .waiver import WaiverDao
+from .events import GameEventDao
+from .timers import TimersDAO

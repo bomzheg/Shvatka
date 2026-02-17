@@ -5,7 +5,7 @@ from aiogram import Bot
 from aiogram.exceptions import AiogramError
 from aiogram.utils.text_decorations import html_decoration as hd
 
-from shvatka.core.models.dto import hints
+from shvatka.core.models.dto import hints, action
 from shvatka.core.models.enums.hint_type import HintType
 from shvatka.core.views.texts import HINTS_EMOJI
 
@@ -58,3 +58,18 @@ def render_hints(hints_: Sequence[hints.AnyHint]) -> str:
 
 def render_single_hint(hint: hints.AnyHint) -> str:
     return HINTS_EMOJI[HintType[hint.type]]
+
+
+def render_effects(effects: action.Effects | None) -> str:
+    if effects is None:
+        return ""
+    result = ""
+    if effects.next_level:
+        result += "🔀"
+    elif effects.level_up:
+        result += "🚩"
+    if effects.bonus_minutes:
+        result += "💰"
+    if effects.hints_:
+        result += f"[{render_hints(effects.hints_)}]"
+    return result

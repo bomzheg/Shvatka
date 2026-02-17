@@ -1,3 +1,6 @@
+from datetime import timedelta
+from uuid import uuid4
+
 import pytest
 
 from shvatka.core.models import enums
@@ -57,23 +60,58 @@ def test_create_level_without_conditions(hints_: scn.HintsList):
         )
 
 
+def test_create_level_timer_level_up(hints_: scn.HintsList):
+    level = scn.LevelScenario(
+        id="test",
+        time_hints=hints_,
+        conditions=scn.Conditions(
+            [
+                action.LevelTimerEffectsCondition(
+                    action_time=10,
+                    effects=action.Effects(id=uuid4(), level_up=True),
+                )
+            ]
+        ),
+        __model_version__=1,
+    )
+    assert level.hints_count == 2
+    assert level.conditions.get_force_level_up_time() == timedelta(minutes=10)
+
+
+def test_create_level_with_unreachable_hints(hints_: scn.HintsList):
+    with pytest.raises(exceptions.LevelError):
+        scn.LevelScenario(
+            id="test",
+            time_hints=hints_,
+            conditions=scn.Conditions(
+                [
+                    action.LevelTimerEffectsCondition(
+                        action_time=3,
+                        effects=action.Effects(id=uuid4(), level_up=True),
+                    )
+                ]
+            ),
+            __model_version__=1,
+        )
+
+
 def test_win_level_single_key(level_one_key: scn.LevelScenario):
     decision = level_one_key.check(
-        action.TypedKeyAction("SH123"), action.InMemoryStateHolder(set(), set())
+        action.TypedKeyAction("SH123"), action.InMemoryKeyStateHolder(set(), set())
     )
 
     assert isinstance(decision, action.TypedKeyDecision)
     assert decision.key == "SH123"
     assert decision.key_text == "SH123"
     assert decision.key_type == enums.KeyType.simple
-    assert decision.type == action.DecisionType.LEVEL_UP
+    assert decision.type == action.DecisionType.EFFECTS
     assert decision.is_level_up()
     assert not decision.duplicate
 
 
 def test_wrong_level_single_key(level_one_key: scn.LevelScenario):
     decision = level_one_key.check(
-        action.TypedKeyAction("SHWRONG"), action.InMemoryStateHolder(set(), set())
+        action.TypedKeyAction("SHWRONG"), action.InMemoryKeyStateHolder(set(), set())
     )
 
     assert isinstance(decision, action.WrongKeyDecision)
@@ -86,7 +124,7 @@ def test_wrong_level_single_key(level_one_key: scn.LevelScenario):
 
 def test_duplicate_wrong_level_single_key(level_one_key: scn.LevelScenario):
     decision = level_one_key.check(
-        action.TypedKeyAction("SHWRONG"), action.InMemoryStateHolder(set(), {"SHWRONG"})
+        action.TypedKeyAction("SHWRONG"), action.InMemoryKeyStateHolder(set(), {"SHWRONG"})
     )
 
     assert isinstance(decision, action.WrongKeyDecision)
@@ -99,35 +137,35 @@ def test_duplicate_wrong_level_single_key(level_one_key: scn.LevelScenario):
 
 def test_bonus_level_single_key(level_one_key: scn.LevelScenario):
     decision = level_one_key.check(
-        action.TypedKeyAction("SHB1"), action.InMemoryStateHolder(set(), {"SHWRONG"})
+        action.TypedKeyAction("SHB1"), action.InMemoryKeyStateHolder(set(), {"SHWRONG"})
     )
 
-    assert isinstance(decision, action.BonusKeyDecision)
-    assert decision.key.text == "SHB1"
-    assert decision.key.bonus_minutes == 1
+    assert isinstance(decision, action.KeyEffectsDecision)
+    assert decision.key == "SHB1"
+    assert decision.effects.bonus_minutes == 1
     assert decision.key_text == "SHB1"
     assert decision.key_type == enums.KeyType.bonus
-    assert decision.type == action.DecisionType.BONUS_TIME
+    assert decision.type == action.DecisionType.EFFECTS
     assert not decision.duplicate
 
 
 def test_duplicate_bonus_level_single_key(level_one_key: scn.LevelScenario):
     decision = level_one_key.check(
-        action.TypedKeyAction("SHB1"), action.InMemoryStateHolder(set(), {"SHWRONG", "SHB1"})
+        action.TypedKeyAction("SHB1"), action.InMemoryKeyStateHolder(set(), {"SHWRONG", "SHB1"})
     )
 
-    assert isinstance(decision, action.BonusKeyDecision)
-    assert decision.key.text == "SHB1"
-    assert decision.key.bonus_minutes == 1
+    assert isinstance(decision, action.KeyEffectsDecision)
+    assert decision.key == "SHB1"
+    assert decision.effects.bonus_minutes == 1
     assert decision.key_text == "SHB1"
     assert decision.key_type == enums.KeyType.bonus
-    assert decision.type == action.DecisionType.BONUS_TIME
+    assert decision.type == action.DecisionType.EFFECTS
     assert decision.duplicate
 
 
 def test_second_key_of_three(level_three_keys: scn.LevelScenario):
     decision = level_three_keys.check(
-        action.TypedKeyAction("SH123"), action.InMemoryStateHolder({"SH321"}, {"SH321"})
+        action.TypedKeyAction("SH123"), action.InMemoryKeyStateHolder({"SH321"}, {"SH321"})
     )
 
     assert isinstance(decision, action.TypedKeyDecision)
@@ -142,7 +180,7 @@ def test_second_key_of_three(level_three_keys: scn.LevelScenario):
 def test_duplicate_second_key_of_three(level_three_keys: scn.LevelScenario):
     decision = level_three_keys.check(
         action.TypedKeyAction("SH123"),
-        action.InMemoryStateHolder({"SH321", "SH123"}, {"SH321", "SH123"}),
+        action.InMemoryKeyStateHolder({"SH321", "SH123"}, {"SH321", "SH123"}),
     )
 
     assert isinstance(decision, action.TypedKeyDecision)
@@ -157,13 +195,13 @@ def test_duplicate_second_key_of_three(level_three_keys: scn.LevelScenario):
 def test_third_key_of_three(level_three_keys: scn.LevelScenario):
     decision = level_three_keys.check(
         action.TypedKeyAction("SH123"),
-        action.InMemoryStateHolder({"SH321", "СХ123"}, {"SH321", "СХ123"}),
+        action.InMemoryKeyStateHolder({"SH321", "СХ123"}, {"SH321", "СХ123"}),
     )
 
     assert isinstance(decision, action.TypedKeyDecision)
     assert decision.key == "SH123"
     assert decision.key_text == "SH123"
     assert decision.key_type == enums.KeyType.simple
-    assert decision.type == action.DecisionType.LEVEL_UP
+    assert decision.type == action.DecisionType.EFFECTS
     assert decision.is_level_up()
     assert not decision.duplicate

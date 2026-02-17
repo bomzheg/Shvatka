@@ -1,10 +1,12 @@
 import asyncio
+from dataclasses import dataclass
 from datetime import datetime
 
 import pytest_asyncio
 from adaptix import Retort
 
 from shvatka.core.interfaces.clients.file_storage import FileGateway
+from shvatka.core.interfaces.current_game import CurrentGameProvider
 from shvatka.core.models import dto
 from shvatka.core.models.dto.scn.game import RawGameScenario
 from shvatka.core.models.enums.played import Played
@@ -82,7 +84,8 @@ async def finished_game(
     locker: KeyCheckerFactory,
 ) -> dto.FullGame:
     game = started_game
-    key_processor = KeyProcessor(dao=dao.game_player, game=game, locker=locker)
+    current_game = CurrentGameProviderMock(game)
+    key_processor = KeyProcessor(dao=dao.game_player, current_game=current_game, locker=locker)
     await key_processor.submit_key(
         key="SHWRONG",
         player=ron,
@@ -198,7 +201,8 @@ async def finished_routed_game(
     locker: KeyCheckerFactory,
 ) -> dto.FullGame:
     game = started_routed_game
-    key_processor = KeyProcessor(dao=dao.game_player, game=game, locker=locker)
+    current_game = CurrentGameProviderMock(game)
+    key_processor = KeyProcessor(dao=dao.game_player, current_game=current_game, locker=locker)
     await key_processor.submit_key(
         key="SHWRONG",
         player=ron,
@@ -279,3 +283,14 @@ async def set_game_started(
         await dao.level_time.set_to_level(team=team, game=game, level_number=0)
     await dao.commit()
     return game
+
+
+@dataclass
+class CurrentGameProviderMock(CurrentGameProvider):
+    game: dto.FullGame
+
+    async def get_full_game(self) -> dto.FullGame | None:
+        return self.game
+
+    async def get_game(self) -> dto.Game | None:
+        return self.game

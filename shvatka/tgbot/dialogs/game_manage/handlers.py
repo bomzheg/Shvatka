@@ -182,7 +182,8 @@ async def schedule_game(c: CallbackQuery, widget: Button, manager: DialogManager
         time=time.fromisoformat(manager.dialog_data["scheduled_time"]),
         tzinfo=tz_game,
     )
-    game_id = int(manager.start_data["my_game_id"])
+    data: dict[str, Any] = manager.start_data  # type: ignore[assignment]
+    game_id = int(data["my_game_id"])
     player: dto.Player = manager.middleware_data["player"]
     dao: HolderDao = manager.middleware_data["dao"]
     scheduler: Scheduler = manager.middleware_data["scheduler"]

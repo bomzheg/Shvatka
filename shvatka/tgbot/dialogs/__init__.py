@@ -20,6 +20,8 @@ from shvatka.tgbot.dialogs import (
     team_manage,
     team_view,
     starters,
+    timers,
+    effects,
 )
 from shvatka.tgbot.filters import GameStatusFilter
 
@@ -54,6 +56,8 @@ def setup_all_dialogs() -> Router:
     merge.setup(router)
     team_view.setup(router)
     player_view.setup(router)
+    timers.setup(router)
+    effects.setup(router)
 
     return router
 

@@ -4,12 +4,13 @@ from datetime import datetime, timedelta
 import pytest
 from dishka import AsyncContainer
 
-from shvatka.core.games.interactors import GamePlayReaderInteractor
+from shvatka.core.games.interactors import GamePlayReaderInteractor, CheckKeyInteractor
 from shvatka.core.models import dto, enums
 from shvatka.core.models.dto import hints
 from shvatka.core.models.enums import GameStatus
-from shvatka.core.services.game_play import start_game, send_hint, CheckKeyInteractor
+from shvatka.core.games.game_play import start_game, send_hint
 from shvatka.core.services.game_stat import get_typed_keys
+from shvatka.core.services.key import KeyProcessor
 from shvatka.core.services.organizers import get_orgs
 from shvatka.core.services.player import join_team, leave
 from shvatka.core.utils import exceptions
@@ -23,6 +24,7 @@ from shvatka.core.views.game import (
 )
 from shvatka.infrastructure.db import models
 from shvatka.infrastructure.db.dao.holder import HolderDao
+from tests.fixtures.game_fixtures import CurrentGameProviderMock
 from tests.fixtures.identity import MockIdentityProvider
 from tests.mocks.game_log import GameLogWriterMock
 from tests.mocks.game_view import GameViewMock
@@ -80,6 +82,8 @@ async def test_wrong_key(
     dishka_request: AsyncContainer,
 ):
     game = started_game
+    current_game = CurrentGameProviderMock(game)
+    key_processor = KeyProcessor(dao=dao.game_player, current_game=current_game, locker=locker)
     dummy_view = GameViewMock()
     dummy_log = GameLogWriterMock()
 
@@ -91,13 +95,14 @@ async def test_wrong_key(
         org_notifier=dummy_org_notifier,
         locker=locker,
         scheduler=scheduler,
+        current_game=current_game,
+        key_processor=key_processor,
     )
+    identity = MockIdentityProvider(player=harry, team=gryffindor)
     await key_checker(
         key="SHWRONG",
         input_container=MockInputContainer(),
-        player=harry,
-        team=gryffindor,
-        game=game,
+        identity=identity,
     )
 
     identity = MockIdentityProvider(player=author)
@@ -129,6 +134,8 @@ async def test_bonus_hint_key(
     scheduler: SchedulerMock,
 ):
     game = started_game
+    current_game = CurrentGameProviderMock(game)
+    key_processor = KeyProcessor(dao=dao.game_player, current_game=current_game, locker=locker)
     dummy_view = GameViewMock()
     dummy_log = GameLogWriterMock()
 
@@ -140,13 +147,17 @@ async def test_bonus_hint_key(
         org_notifier=dummy_org_notifier,
         locker=locker,
         scheduler=scheduler,
+        current_game=current_game,
+        key_processor=key_processor,
+    )
+    identity = MockIdentityProvider(
+        player=harry,
+        team=gryffindor,
     )
     await check_key(
         key="SHBONUSHINT",
         input_container=MockInputContainer(),
-        player=harry,
-        team=gryffindor,
-        game=game,
+        identity=identity,
     )
 
     identity = MockIdentityProvider(player=author)
@@ -186,6 +197,8 @@ async def test_game_play(
     started_game: dto.FullGame,
 ):
     game = started_game
+    current_game = CurrentGameProviderMock(game)
+    key_processor = KeyProcessor(dao=dao.game_player, current_game=current_game, locker=locker)
     # delete slytherin from game
     await leave(draco, draco, dao.team_leaver)
 
@@ -207,13 +220,7 @@ async def test_game_play(
 
     dummy_org_notifier = OrgNotifierMock()
     orgs = await get_orgs(game, dao.organizer)
-    key_kwargs = {
-        "player": harry,
-        "team": gryffindor,
-        "input_container": MockInputContainer(),
-        "game": game,
-    }
-
+    identity = MockIdentityProvider(player=harry, team=gryffindor)
     check_key = CheckKeyInteractor(
         dao=dao.game_player,
         view=dummy_view,
@@ -221,8 +228,10 @@ async def test_game_play(
         org_notifier=dummy_org_notifier,
         locker=locker,
         scheduler=scheduler,
+        current_game=current_game,
+        key_processor=key_processor,
     )
-    await check_key(key="SH123", **key_kwargs)
+    await check_key(key="SH123", identity=identity, input_container=MockInputContainer())
     expected_first_key = dto.KeyTime(
         text="SH123",
         type_=enums.KeyType.simple,
@@ -232,9 +241,9 @@ async def test_game_play(
         player=harry,
         team=gryffindor,
     )
-    dummy_view.assert_correct_key_only(expected_first_key)
+    dummy_view.assert_correct_key_no_effects_only(expected_first_key)
 
-    await check_key(key="SH123", **key_kwargs)
+    await check_key(key="SH123", identity=identity, input_container=MockInputContainer())
     expected_second_key = dto.KeyTime(
         text="SH123",
         type_=enums.KeyType.simple,
@@ -246,7 +255,7 @@ async def test_game_play(
     )
     dummy_view.assert_duplicate_key_only(expected_second_key)
 
-    await check_key(key="SH321", **key_kwargs)
+    await check_key(key="SH321", identity=identity, input_container=MockInputContainer())
     expected_third_key = dto.KeyTime(
         text="SH321",
         type_=enums.KeyType.simple,
@@ -259,10 +268,10 @@ async def test_game_play(
     dummy_org_notifier.assert_one_event(
         LevelUp(team=gryffindor, new_level=game.levels[1], orgs_list=orgs)
     )
-    dummy_view.assert_correct_key_only(expected_third_key)
+    dummy_view.assert_correct_key_level_up_only(expected_third_key)
     dummy_view.assert_send_only_puzzle(gryffindor, game.levels[1])
 
-    await check_key(key="SHOOT", **key_kwargs)
+    await check_key(key="SHOOT", identity=identity, input_container=MockInputContainer())
     dummy_log.assert_one_event(GameLogEvent(GameLogType.GAME_FINISHED, {"game": game.name}))
     expected_fourth_key = dto.KeyTime(
         text="SHOOT",
@@ -273,7 +282,7 @@ async def test_game_play(
         player=harry,
         team=gryffindor,
     )
-    dummy_view.assert_correct_key_only(expected_fourth_key)
+    dummy_view.assert_correct_key_level_up_only(expected_fourth_key)
     dummy_view.assert_game_finished_only(gryffindor)
     dummy_view.assert_game_finished_all({gryffindor})
 
@@ -306,6 +315,8 @@ async def test_fast_play_routed_game(
     started_routed_game: dto.FullGame,
 ):
     game = started_routed_game
+    current_game = CurrentGameProviderMock(game)
+    key_processor = KeyProcessor(dao=dao.game_player, current_game=current_game, locker=locker)
     # delete slytherin from game
     await leave(draco, draco, dao.team_leaver)
     dummy_view = GameViewMock()
@@ -313,13 +324,7 @@ async def test_fast_play_routed_game(
 
     dummy_org_notifier = OrgNotifierMock()
     orgs = await get_orgs(game, dao.organizer)
-    key_kwargs = {
-        "player": harry,
-        "team": gryffindor,
-        "input_container": MockInputContainer(),
-        "game": game,
-    }
-
+    identity = MockIdentityProvider(player=harry, team=gryffindor)
     check_key = CheckKeyInteractor(
         dao=dao.game_player,
         view=dummy_view,
@@ -327,9 +332,11 @@ async def test_fast_play_routed_game(
         org_notifier=dummy_org_notifier,
         locker=locker,
         scheduler=scheduler,
+        current_game=current_game,
+        key_processor=key_processor,
     )
 
-    await check_key(key="SHTO3", **key_kwargs)
+    await check_key(key="SHTO3", identity=identity, input_container=MockInputContainer())
     expected_first_key = dto.KeyTime(
         text="SHTO3",
         type_=enums.KeyType.simple,
@@ -339,13 +346,13 @@ async def test_fast_play_routed_game(
         player=harry,
         team=gryffindor,
     )
-    dummy_view.assert_correct_key_only(expected_first_key)
+    dummy_view.assert_correct_key_routed_level_up_only(expected_first_key, next_level="third")
     dummy_org_notifier.assert_one_event(
         LevelUp(team=gryffindor, new_level=game.levels[2], orgs_list=orgs)
     )
     dummy_view.assert_send_only_puzzle(gryffindor, game.levels[2])
 
-    await check_key(key="SH3", **key_kwargs)
+    await check_key(key="SH3", identity=identity, input_container=MockInputContainer())
     expected_second_key = dto.KeyTime(
         text="SH3",
         type_=enums.KeyType.simple,
@@ -355,7 +362,7 @@ async def test_fast_play_routed_game(
         player=harry,
         team=gryffindor,
     )
-    dummy_view.assert_correct_key_only(expected_second_key)
+    dummy_view.assert_correct_key_level_up_only(expected_second_key)
     dummy_view.assert_game_finished_only(gryffindor)
     dummy_view.assert_game_finished_all({gryffindor})
 
@@ -386,6 +393,8 @@ async def test_cycle_play_routed_game(
     started_routed_game: dto.FullGame,
 ):
     game = started_routed_game
+    current_game = CurrentGameProviderMock(game)
+    key_processor = KeyProcessor(dao=dao.game_player, current_game=current_game, locker=locker)
     # delete slytherin from game
     await leave(draco, draco, dao.team_leaver)
     dummy_view = GameViewMock()
@@ -393,13 +402,7 @@ async def test_cycle_play_routed_game(
 
     dummy_org_notifier = OrgNotifierMock()
     orgs = await get_orgs(game, dao.organizer)
-    key_kwargs = {
-        "player": harry,
-        "team": gryffindor,
-        "input_container": MockInputContainer(),
-        "game": game,
-    }
-
+    identity = MockIdentityProvider(player=harry, team=gryffindor)
     check_key = CheckKeyInteractor(
         dao=dao.game_player,
         view=dummy_view,
@@ -407,9 +410,11 @@ async def test_cycle_play_routed_game(
         org_notifier=dummy_org_notifier,
         locker=locker,
         scheduler=scheduler,
+        current_game=current_game,
+        key_processor=key_processor,
     )
 
-    await check_key(key="SHTO3", **key_kwargs)
+    await check_key(key="SHTO3", identity=identity, input_container=MockInputContainer())
     expected_first_key = dto.KeyTime(
         text="SHTO3",
         type_=enums.KeyType.simple,
@@ -419,13 +424,13 @@ async def test_cycle_play_routed_game(
         player=harry,
         team=gryffindor,
     )
-    dummy_view.assert_correct_key_only(expected_first_key)
+    dummy_view.assert_correct_key_routed_level_up_only(expected_first_key, next_level="third")
     dummy_org_notifier.assert_one_event(
         LevelUp(team=gryffindor, new_level=game.levels[2], orgs_list=orgs)
     )
     dummy_view.assert_send_only_puzzle(gryffindor, game.levels[2])
 
-    await check_key(key="SHTO1", **key_kwargs)
+    await check_key(key="SHTO1", identity=identity, input_container=MockInputContainer())
     expected_second_key = dto.KeyTime(
         text="SHTO1",
         type_=enums.KeyType.simple,
@@ -435,13 +440,13 @@ async def test_cycle_play_routed_game(
         player=harry,
         team=gryffindor,
     )
-    dummy_view.assert_correct_key_only(expected_second_key)
+    dummy_view.assert_correct_key_routed_level_up_only(expected_second_key, next_level="first")
     dummy_org_notifier.assert_one_event(
         LevelUp(team=gryffindor, new_level=game.levels[0], orgs_list=orgs)
     )
     dummy_view.assert_send_only_puzzle(gryffindor, game.levels[0])
 
-    await check_key(key="SHTO3", **key_kwargs)
+    await check_key(key="SHTO3", identity=identity, input_container=MockInputContainer())
     expected_third_key = dto.KeyTime(
         text="SHTO3",
         type_=enums.KeyType.simple,
@@ -451,13 +456,13 @@ async def test_cycle_play_routed_game(
         player=harry,
         team=gryffindor,
     )
-    dummy_view.assert_correct_key_only(expected_third_key)
+    dummy_view.assert_correct_key_routed_level_up_only(expected_third_key, next_level="third")
     dummy_org_notifier.assert_one_event(
         LevelUp(team=gryffindor, new_level=game.levels[2], orgs_list=orgs)
     )
     dummy_view.assert_send_only_puzzle(gryffindor, game.levels[2])
 
-    await check_key(key="SH3", **key_kwargs)
+    await check_key(key="SH3", identity=identity, input_container=MockInputContainer())
     expected_last_key = dto.KeyTime(
         text="SH3",
         type_=enums.KeyType.simple,
@@ -467,7 +472,7 @@ async def test_cycle_play_routed_game(
         player=harry,
         team=gryffindor,
     )
-    dummy_view.assert_correct_key_only(expected_last_key)
+    dummy_view.assert_correct_key_level_up_only(expected_last_key)
     dummy_view.assert_game_finished_only(gryffindor)
     dummy_view.assert_game_finished_all({gryffindor})
 
@@ -507,11 +512,11 @@ async def test_get_current_hints(
     dao.level_time._save(level_time)
     await dao.commit()
     interactor = await dishka_request.get(GamePlayReaderInteractor)
-    hints = await interactor(MockIdentityProvider(user=hermione._user, player=hermione))
+    hints_ = await interactor(MockIdentityProvider(user=hermione._user, player=hermione))
     hints_harry = await interactor(MockIdentityProvider(user=harry._user, player=harry))
-    assert len(hints.hints) == 2
+    assert len(hints_.hints) == 2
     assert len(hints_harry.hints) == 2
-    assert hints_harry.hints == hints.hints
+    assert hints_harry.hints == hints_.hints
     with pytest.raises(exceptions.PlayerNotInTeam):
         await interactor(MockIdentityProvider(user=ron._user, player=ron))
     with suppress(exceptions.PlayerRestoredInTeam):

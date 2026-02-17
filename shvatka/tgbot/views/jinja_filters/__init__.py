@@ -12,6 +12,7 @@ from shvatka.tgbot.views.utils import (
     render_hints,
     render_time_hint,
     render_time_hints,
+    render_effects,
 )
 
 
@@ -27,6 +28,7 @@ def setup_jinja(bot: Bot):
         "hints": render_hints,
         "time_hint": render_time_hint,
         "time_hints": render_time_hints,
+        "effects": render_effects,
     }
     setup_jinja_internal(
         bot,

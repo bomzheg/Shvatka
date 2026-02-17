@@ -45,7 +45,9 @@ from .rdb import (
     ForumUserDAO,
 )
 from .rdb.achievement import AchievementDAO
+from .rdb.events import GameEventDao
 from .rdb.forum_team import ForumTeamDAO
+from .rdb.timers import TimersDAO
 from .redis import PollDao, SecureInvite
 
 
@@ -74,6 +76,8 @@ class HolderDao:
         self.achievement = AchievementDAO(self.session, clock=clock)
         self.forum_user = ForumUserDAO(self.session, clock=clock)
         self.forum_team = ForumTeamDAO(self.session, clock=clock)
+        self.events = GameEventDao(self.session, clock=clock)
+        self.timers = TimersDAO(self.session, clock=clock)
         self.poll = PollDao(redis=redis, clock=clock)
         self.secure_invite = SecureInvite(redis=redis, clock=clock)
         self.level_test = level_test

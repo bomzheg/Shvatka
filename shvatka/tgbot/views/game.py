@@ -3,17 +3,17 @@ import json
 import logging
 from contextlib import suppress
 from dataclasses import dataclass
-from typing import Iterable, cast
+from typing import Iterable, cast, Sequence
 
 from aiogram import Bot
-from aiogram.types import Message, ReactionTypeEmoji
+from aiogram.types import Message, ReactionTypeEmoji, ReactionTypeCustomEmoji, ReactionTypePaid
 from aiogram.exceptions import TelegramAPIError
 from aiogram.utils.markdown import html_decoration as hd
 from dataclass_factory import Factory
 
 from shvatka.core.interfaces.dal.game_play import GamePreparer
 from shvatka.core.models import dto, enums
-from shvatka.core.models.dto import hints
+from shvatka.core.models.dto import hints, action, KeyTime
 from shvatka.core.utils.datetime_utils import tz_utc
 from shvatka.core.views.game import (
     GameViewPreparer,
@@ -52,12 +52,44 @@ class BotInputContainer(InputContainer):
 
 async def get_message_id(input_container: InputContainer) -> int | None:
     if isinstance(input_container, BotInputContainer):
-        reply_to = input_container.get_message_id()
+        return input_container.get_message_id()
     else:
-        raise TypeError(
-            f"input_container must be of type BotInputContainer, got {type(input_container)}"
+        return None
+
+
+def format_bonus(bonus: float) -> str:
+    if bonus >= 0:
+        return f"Бонус: {bonus:.2f} мин."
+    else:
+        return f"Штраф: {bonus:.2f} мин."
+
+
+def format_bonus_key(bonus: float, key: KeyTime) -> str:
+    if bonus >= 0:
+        return (
+            f"{KeyEmoji.bonus.value}Бонусный ключ {hd.code(key.text)}.\n"
+            f"Бонус: {bonus:.2f} мин."
         )
-    return reply_to
+    else:
+        return (
+            f"{KeyEmoji.bonus.value}Штрафной ключ {hd.code(key.text)}.\n"
+            f"Штраф: {bonus:.2f} мин."
+        )
+
+
+def map_effect_to_reaction(
+    effect: action.Effects,
+) -> list[ReactionTypeEmoji | ReactionTypeCustomEmoji | ReactionTypePaid]:
+    if effect.level_up:
+        return [ReactionTypeEmoji(emoji="👍")]
+    elif effect.hints_:
+        return [ReactionTypeEmoji(emoji="🤓")]
+    elif effect.bonus_minutes:
+        return [ReactionTypeEmoji(emoji="🤩")]
+    elif effect.is_no_effects():
+        return [ReactionTypeEmoji(emoji="👍")]
+    else:
+        return []
 
 
 @dataclass
@@ -160,10 +192,6 @@ class BotView(GameViewPreparer, GameView):
             )
         except TelegramAPIError as e:
             logger.exception("can't send view about correct key", exc_info=e)
-        if reply_to is not None:
-            await self.bot.set_message_reaction(
-                chat_id=chat_id, message_id=reply_to, reaction=[ReactionTypeEmoji(emoji="👍")]
-            )
 
     async def wrong_key(self, key: dto.KeyTime, input_container: InputContainer) -> None:
         chat_id: int = key.team.get_chat_id()  # type: ignore[assignment]
@@ -181,36 +209,41 @@ class BotView(GameViewPreparer, GameView):
                 chat_id=chat_id, message_id=reply_to, reaction=[ReactionTypeEmoji(emoji="👎")]
             )
 
+    async def effects_key(
+        self, key: dto.KeyTime, effects: action.Effects, input_container: InputContainer
+    ) -> None:
+        await self.correct_key(key, input_container)
+        if effects.bonus_minutes:
+            await self.bonus_key(key, effects.bonus_minutes, input_container)
+        if effects.hints_:
+            await self.bonus_hint_key(key, effects.hints_, input_container)
+
+        if (reply_to := await get_message_id(input_container)) is not None:
+            chat_id: int = key.team.get_chat_id()  # type: ignore[assignment]
+            if reaction := map_effect_to_reaction(effects):
+                await self.bot.set_message_reaction(
+                    chat_id=chat_id, message_id=reply_to, reaction=reaction
+                )
+
     async def bonus_key(
         self, key: dto.KeyTime, bonus: float, input_container: InputContainer
     ) -> None:
         chat_id: int = key.team.get_chat_id()  # type: ignore[assignment]
         reply_to = await get_message_id(input_container)
-        if bonus >= 0:
-            text = (
-                f"{KeyEmoji.bonus.value}Бонусный ключ {hd.code(key.text)}.\n"
-                f"Бонус: {bonus:.2f} мин."
-            )
-        else:
-            text = (
-                f"{KeyEmoji.bonus.value}Штрафной ключ {hd.code(key.text)}.\n"
-                f"Штраф: {bonus:.2f} мин."
-            )
         try:
             await self.bot.send_message(
                 reply_to_message_id=reply_to,
                 chat_id=chat_id,
-                text=text,
+                text=format_bonus_key(bonus, key),
             )
         except TelegramAPIError as e:
             logger.exception("can't send view bonus key", exc_info=e)
-        if reply_to is not None:
-            await self.bot.set_message_reaction(
-                chat_id=chat_id, message_id=reply_to, reaction=[ReactionTypeEmoji(emoji="🤩")]
-            )
 
     async def bonus_hint_key(
-        self, key: dto.KeyTime, bonus_hint: list[hints.AnyHint], input_container: InputContainer
+        self,
+        key: dto.KeyTime,
+        bonus_hint: Sequence[hints.AnyHint],
+        input_container: InputContainer,
     ):
         chat_id: int = key.team.get_chat_id()  # type: ignore[assignment]
         reply_to = await get_message_id(input_container)
@@ -226,10 +259,6 @@ class BotView(GameViewPreparer, GameView):
             chat_id=chat_id,
             hint_containers=bonus_hint,
         )
-        if reply_to is not None:
-            await self.bot.set_message_reaction(
-                chat_id=chat_id, message_id=reply_to, reaction=[ReactionTypeEmoji(emoji="🤓")]
-            )
 
     async def game_finished(self, team: dto.Team, input_container: InputContainer) -> None:
         chat_id: int = team.get_chat_id()  # type: ignore[assignment]
@@ -241,6 +270,42 @@ class BotView(GameViewPreparer, GameView):
     async def game_finished_by_all(self, team: dto.Team) -> None:
         """todo change bot commands"""
         pass
+
+    async def hint(
+        self, team: dto.Team, hint: Sequence[hints.AnyHint], input_container: InputContainer
+    ):
+        chat_id: int = team.get_chat_id()  # type: ignore[assignment]
+        try:
+            await self.bot.send_message(
+                chat_id=chat_id,
+                reply_to_message_id=await get_message_id(input_container),
+                text="Бонусная подсказка",
+            )
+        except TelegramAPIError as e:
+            logger.exception("can't send bonus hint caption", exc_info=e)
+        await self.hint_sender.send_hints(
+            chat_id=chat_id,
+            hint_containers=hint,
+        )
+
+    async def bonus(self, team: dto.Team, bonus: float, input_container: InputContainer) -> None:
+        chat_id: int = team.get_chat_id()  # type: ignore[assignment]
+        try:
+            await self.bot.send_message(
+                reply_to_message_id=await get_message_id(input_container),
+                chat_id=chat_id,
+                text=format_bonus(bonus),
+            )
+        except TelegramAPIError as e:
+            logger.exception("can't send view bonus key", exc_info=e)
+
+    async def effects(
+        self, team: dto.Team, effects: action.Effects, input_container: InputContainer
+    ) -> None:
+        if effects.bonus_minutes:
+            await self.bonus(team, effects.bonus_minutes, input_container)
+        if effects.hints_:
+            await self.hint(team, effects.hints_, input_container)
 
 
 @dataclass

@@ -103,7 +103,8 @@ async def add_level_handler(
     dao: FromDishka[HolderDao],
 ):
     await c.answer()
-    game_id = manager.start_data["game_id"]
+    data: dict[str, Any] = manager.start_data  # type: ignore[assignment]
+    game_id = data["game_id"]
     author = await idp.get_required_player()
     game = await get_full_game(game_id, identity=idp, dao=dao.game)
     level = await get_by_id(int(item_id), author=author, dao=dao.level)

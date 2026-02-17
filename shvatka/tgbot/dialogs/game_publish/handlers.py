@@ -49,7 +49,8 @@ async def process_publish_message(
             "У меня нет права управлять пригласительными ссылками в том канале"
         )
 
-    game_id = manager.start_data["game_id"]
+    data: dict[str, Any] = manager.start_data  # type: ignore[assignment]
+    game_id: int = data["game_id"]
     config: BotConfig = manager.middleware_data["config"]
     game = await get_full_game(id_=game_id, identity=idp, dao=dao.game)
     game_stat = await get_game_stat(game=game, identity=idp, dao=dao.game_stat)

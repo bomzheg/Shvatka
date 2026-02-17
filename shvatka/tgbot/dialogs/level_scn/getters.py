@@ -1,3 +1,5 @@
+from typing import Any, Sequence
+
 from adaptix import Retort
 from aiogram_dialog import DialogManager
 
@@ -5,17 +7,14 @@ from shvatka.core.models.dto import hints, action, scn
 
 
 async def get_level_id(dialog_manager: DialogManager, **_):
-    return {
-        "level_id": dialog_manager.dialog_data.get("level_id", None)
-        or dialog_manager.start_data.get("level_id", None)
-    }
+    data: dict[str, Any] = dialog_manager.start_data  # type: ignore[assignment]
+    return {"level_id": dialog_manager.dialog_data.get("level_id", None) or data.get("level_id")}
 
 
 async def get_keys(dialog_manager: DialogManager, **_):
+    data: dict[str, Any] = dialog_manager.start_data  # type: ignore[assignment]
     return {
-        "keys": dialog_manager.dialog_data.get(
-            "keys", dialog_manager.start_data.get("keys", []) if dialog_manager.start_data else []
-        ),
+        "keys": dialog_manager.dialog_data.get("keys", data.get("keys", []) if data else []),
     }
 
 
@@ -32,13 +31,21 @@ async def get_level_data(dialog_manager: DialogManager, retort: Retort, **_):
     if dumped_conditions := dialog_data.get("conditions", []):
         conditions = retort.load(dumped_conditions, scn.Conditions)
         sly_types_count = conditions.get_types_count()
-        keys = conditions.get_default_key_condition().get_keys()
+        key_condition = conditions.get_default_key_condition()
+        keys: set[action.SHKey] = key_condition.get_keys() if key_condition else set()
+        timers: Sequence[action.LevelTimerEffectsCondition] = [
+            condition
+            for condition in conditions
+            if isinstance(condition, action.LevelTimerEffectsCondition)
+        ]
     else:
         sly_types_count = 0
-        keys = set()
+        keys: set[action.SHKey] = set()  # type: ignore[no-redef]
+        timers: Sequence[action.LevelTimerEffectsCondition] = tuple()  # type: ignore[no-redef]
     return {
         "level_id": dialog_data["level_id"],
         "keys": keys,
+        "timers": timers,
         "sly_types": sly_types_count,
         "time_hints": hints_,
     }
@@ -46,9 +53,10 @@ async def get_level_data(dialog_manager: DialogManager, retort: Retort, **_):
 
 async def get_time_hints(dialog_manager: DialogManager, retort: Retort, **_):
     dialog_data = dialog_manager.dialog_data
+    data: dict[str, Any] = dialog_manager.start_data  # type: ignore[assignment]
     hints_ = retort.load(dialog_data.get("time_hints", []), list[hints.TimeHint])
     return {
-        "level_id": dialog_manager.start_data["level_id"],
+        "level_id": data["level_id"],
         "time_hints": hints_,
     }
 

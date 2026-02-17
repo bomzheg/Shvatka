@@ -32,7 +32,8 @@ async def process_edit_time_message(
     except ValueError:
         await m.answer("Некорректный формат времени. Пожалуйста введите время в формате ЧЧ:ММ")
         return
-    hint = retort.load(manager.start_data["time_hint"], hints.TimeHint)
+    data: dict[str, Any] = manager.start_data  # type: ignore[assignment]
+    hint = retort.load(data["time_hint"], hints.TimeHint)
     if not hint.can_update_time():
         await m.reply(
             "Увы, отредактировать время данной подсказки не получится. "
@@ -94,7 +95,8 @@ async def save_edited_time_hint(
     manager: DialogManager,
     retort: FromDishka[Retort],
 ):
-    time_hint = retort.load(manager.start_data["time_hint"], hints.TimeHint)
+    data: dict[str, Any] = manager.start_data  # type: ignore[assignment]
+    time_hint = retort.load(data["time_hint"], hints.TimeHint)
     try:
         time_hint.update_time(manager.dialog_data["time"])
         time_hint.update_hint(retort.load(manager.dialog_data["hints"], list[hints.AnyHint]))
@@ -139,7 +141,8 @@ async def on_finish(
 
 
 async def hint_on_start(start_data: dict, manager: DialogManager):
-    prev_time = int(manager.start_data.get("previous_time", 0))
+    data: dict[str, Any] = manager.start_data  # type: ignore[assignment]
+    prev_time = int(data.get("previous_time", 0))
     if prev_time == -1:
         manager.dialog_data["time"] = 0
         await manager.switch_to(states.TimeHintSG.hint)
@@ -152,6 +155,7 @@ async def hint_edit_on_start(
     manager: DialogManager,
     retort: FromDishka[Retort],
 ):
-    hint = retort.load(manager.start_data["time_hint"], hints.TimeHint)
+    data: dict[str, Any] = manager.start_data  # type: ignore[assignment]
+    hint = retort.load(data["time_hint"], hints.TimeHint)
     manager.dialog_data["hints"] = retort.dump(hint.hint, list[hints.AnyHint])
     manager.dialog_data["time"] = hint.time

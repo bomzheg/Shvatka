@@ -1,10 +1,12 @@
+from abc import ABCMeta, abstractmethod
 from datetime import datetime
 from typing import Protocol
 
 from shvatka.core.models import dto
+from shvatka.core.models.dto import action
 
 
-class Scheduler(Protocol):
+class Scheduler(Protocol, metaclass=ABCMeta):
     async def plain_prepare(self, game: dto.Game):
         raise NotImplementedError
 
@@ -18,6 +20,12 @@ class Scheduler(Protocol):
         hint_number: int,
         lt_id: int,
         run_at: datetime,
+    ):
+        raise NotImplementedError
+
+    @abstractmethod
+    async def plain_level_event(
+        self, team: dto.Team, lt_id: int, effects: action.Effects, run_at: datetime
     ):
         raise NotImplementedError
 

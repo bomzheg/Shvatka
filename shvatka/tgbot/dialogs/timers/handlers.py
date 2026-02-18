@@ -179,7 +179,7 @@ async def on_process_timer_result(
         hints_: list[hints.AnyHint] = result.get("hints", [])
         manager.dialog_data["effects"] = retort.dump(
             action.Effects(
-                id=UUID(effect_id),
+                id=effect_id,
                 next_level=next_level,
                 bonus_minutes=bonus_minutes,
                 level_up=level_up,

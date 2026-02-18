@@ -1,3 +1,4 @@
+from aiogram import F
 from aiogram_dialog import Dialog, Window
 from aiogram_dialog.widgets.input import TextInput
 from aiogram_dialog.widgets.kbd import (
@@ -82,6 +83,7 @@ timer_dialog = Dialog(
         Button(
             id="save_timer",
             text=Jinja("✅Готово"),
+            when=F["time"] & F["effects"].id,
             on_click=save_timer,
         ),
         Cancel(text=Const("🔙Вернуться, не сохранять")),

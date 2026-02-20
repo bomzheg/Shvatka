@@ -18,6 +18,7 @@ from .keys import (
     KeyDecision,
     TypedKeyDecision,
     KeyWinCondition,
+    KeyCondition,
     TypedKeyAction,
     TypedKeysState,
     KeyBonusCondition,

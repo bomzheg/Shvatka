@@ -255,19 +255,10 @@ class Conditions(Sequence[AnyCondition]):
         return [c for c in self.conditions if isinstance(c, action.KeyBonusCondition)]
 
     def get_default_key_conditions(self) -> list[action.KeyWinCondition]:
-        return [
-            c
-            for c in self.conditions
-            if isinstance(c, action.KeyWinCondition) and c.next_level is None
-        ]
+        return get_default_key_conditions(self.conditions)
 
     def get_effects_key_conditions(self) -> list[action.KeyEffectsCondition]:
         return [c for c in self.conditions if isinstance(c, action.KeyEffectsCondition)]
-
-    def get_default_key_condition(self) -> action.KeyWinCondition | None:
-        """TODO #128"""
-        conditions = self.get_default_key_conditions()
-        return conditions[0] if conditions else None
 
     def get_force_level_up_time(self) -> timedelta | None:
         for condition in self.conditions:
@@ -322,6 +313,17 @@ class Conditions(Sequence[AnyCondition]):
             return NotImplemented
         return self.conditions == other.conditions
 
+def get_default_key_conditions(conditions: Sequence[action.AnyCondition]) -> list[action.KeyWinCondition]:
+    return [
+        c
+        for c in conditions
+        if isinstance(c, action.KeyWinCondition) and c.next_level is None
+    ]
+
+def get_keys_default_condition(conditions: Sequence[action.AnyCondition]) -> set[action.SHKey]:
+    """TODO #128"""
+    key_conditions = get_default_key_conditions(conditions)
+    return key_conditions[0].keys if key_conditions else set()
 
 @dataclass
 class LevelScenario:

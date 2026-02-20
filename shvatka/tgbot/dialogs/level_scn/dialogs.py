@@ -177,7 +177,7 @@ level_edit_dialog = Dialog(
             Const("💾Готово, сохранить"),
             id="save",
             on_click=save_level,
-            when=F["keys"] & F["time_hints"],
+            when=F["time_hints"] & (F["keys"] | F["win_timer"]),
         ),
         Cancel(Const("🔙Назад")),
         state=states.LevelEditSg.menu,

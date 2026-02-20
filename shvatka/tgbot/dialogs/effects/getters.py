@@ -19,6 +19,7 @@ async def get_effects(dialog_manager: DialogManager, retort: Retort, **kwargs):
         "next_level": routed_level_up,
         "hints": hints_,
         "level_id": dialog_manager.dialog_data.get("level_id", None),
+        "game_id": dialog_manager.dialog_data.get("game_id", None),
     }
 
 

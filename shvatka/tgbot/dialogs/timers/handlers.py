@@ -1,5 +1,4 @@
 from typing import Any
-from uuid import UUID
 
 from adaptix import Retort
 from aiogram.types import CallbackQuery, Message

@@ -313,17 +313,20 @@ class Conditions(Sequence[AnyCondition]):
             return NotImplemented
         return self.conditions == other.conditions
 
-def get_default_key_conditions(conditions: Sequence[action.AnyCondition]) -> list[action.KeyWinCondition]:
+
+def get_default_key_conditions(
+    conditions: Sequence[action.AnyCondition],
+) -> list[action.KeyWinCondition]:
     return [
-        c
-        for c in conditions
-        if isinstance(c, action.KeyWinCondition) and c.next_level is None
+        c for c in conditions if isinstance(c, action.KeyWinCondition) and c.next_level is None
     ]
+
 
 def get_keys_default_condition(conditions: Sequence[action.AnyCondition]) -> set[action.SHKey]:
     """TODO #128"""
     key_conditions = get_default_key_conditions(conditions)
     return key_conditions[0].keys if key_conditions else set()
+
 
 @dataclass
 class LevelScenario:

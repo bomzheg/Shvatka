@@ -3,8 +3,10 @@ from typing import Any, Sequence
 from adaptix import Retort
 from aiogram_dialog import DialogManager
 
-from shvatka.core.models.dto import hints, action, scn
-from shvatka.core.models.dto.scn.level import get_default_key_conditions, get_keys_default_condition
+from shvatka.core.models.dto import hints, action
+from shvatka.core.models.dto.scn.level import (
+    get_keys_default_condition,
+)
 
 
 async def get_level_id(dialog_manager: DialogManager, **_):
@@ -38,11 +40,13 @@ async def get_level_data(dialog_manager: DialogManager, retort: Retort, **_):
         for condition in conditions
         if isinstance(condition, action.LevelTimerEffectsCondition)
     ]
+    win_timers = [t for t in timers if t.effects.level_up]
     return {
         "level_id": dialog_data["level_id"],
         "keys": keys,
         "timers": timers,
         "sly_types": sly_types_count,
+        "win_timer": win_timers[0] if win_timers else None,
         "time_hints": hints_,
     }
 

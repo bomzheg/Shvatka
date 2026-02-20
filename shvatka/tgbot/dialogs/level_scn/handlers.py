@@ -11,7 +11,9 @@ from dishka.integrations.aiogram_dialog import inject
 from shvatka.core.models import dto
 from shvatka.core.models.dto import scn, action
 from shvatka.core.models.dto import hints
-from shvatka.core.models.dto.scn.level import get_default_key_conditions, get_keys_default_condition
+from shvatka.core.models.dto.scn.level import (
+    get_keys_default_condition,
+)
 from shvatka.core.services.level import upsert_level, get_by_id
 from shvatka.core.utils.input_validation import (
     is_multiple_keys_normal,
@@ -19,6 +21,7 @@ from shvatka.core.utils.input_validation import (
 )
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.tgbot import states
+from shvatka.tgbot.models.conditions import IncompleteConditions
 from shvatka.tgbot.views.hint_factory.hint_parser import HintParser
 
 
@@ -150,11 +153,11 @@ async def process_level_result(  # noqa: C901
     if not keys and not conditions_list:
         return
     elif keys and conditions_list:
-        conditions = scn.Conditions(conditions=conditions_list).replace_default_keys(keys)
+        conditions = IncompleteConditions(conditions=conditions_list).replace_default_keys(keys)
     elif keys:
-        conditions = scn.Conditions([action.KeyWinCondition(keys=keys)])
+        conditions = IncompleteConditions([action.KeyWinCondition(keys=keys)])
     elif conditions_list:
-        conditions = scn.Conditions(conditions=conditions_list)
+        conditions = IncompleteConditions(conditions=conditions_list)
     else:
         typing.assert_never(raw_conditions)
 
@@ -168,7 +171,9 @@ async def process_level_result(  # noqa: C901
         conditions = conditions.replace_routed_conditions(
             retort.load(routed_conditions, list[action.KeyWinCondition])
         )
-    manager.dialog_data["conditions"] = retort.dump(conditions)
+    manager.dialog_data["conditions"] = retort.dump(
+        conditions.conditions, list[action.AnyCondition]
+    )
 
 
 async def on_start_level_edit(start_data: dict[str, Any], manager: DialogManager):

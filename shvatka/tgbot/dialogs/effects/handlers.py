@@ -11,7 +11,6 @@ from dishka import FromDishka
 from dishka.integrations.aiogram_dialog import inject
 
 from shvatka.core.interfaces.identity import IdentityProvider
-from shvatka.core.models import dto
 from shvatka.core.models.dto import hints
 from shvatka.core.services.game import get_full_game
 from shvatka.core.utils.input_validation import validate_level_id

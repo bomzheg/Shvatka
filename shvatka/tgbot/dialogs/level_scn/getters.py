@@ -37,9 +37,11 @@ async def get_level_data(dialog_manager: DialogManager, retort: Retort, **_):
         {
             c.type
             for c in conditions
-            if isinstance(c, action.KeyCondition) and not isinstance(c, action.KeyWinCondition)
+            if isinstance(c, action.KeyCondition)
+            and not (isinstance(c, action.KeyWinCondition) and c.next_level is None)
         }
     )
+
     keys: set[action.SHKey] = get_keys_default_condition(conditions)
     timers: Sequence[action.LevelTimerEffectsCondition] = [
         condition

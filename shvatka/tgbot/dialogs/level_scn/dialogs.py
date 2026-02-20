@@ -102,6 +102,7 @@ level = Dialog(
             "🗝Разновидностей хитрых ключей: {{sly_types}}\n"
             "{% endif %}"
             "🕑Таймеры: {{timers | length}}\n"
+            "{% if win_timer %}Завершение уровня в {{win_timer.action_time}} мин.\n{% endif %}"
             "\n💡Подсказки:\n"
             "{% if time_hints %}"
             "{{time_hints | time_hints}}"
@@ -110,16 +111,17 @@ level = Dialog(
             "{% endif %}"
         ),
         Jinja(
-            "ℹ️Для сохранения уровня необходимо добавить ключ и хотя бы одну подсказку",
-            when=~F["keys"] & ~F["time_hints"],
+            "ℹ️Для сохранения уровня необходимо добавить "
+            "(ключ или таймер на левелап) и хотя бы одну подсказку",
+            when=~(F["keys"] | F["win_timer"]) & ~F["time_hints"],
         ),
         Jinja(
-            "ℹ️️Для сохранения уровня необходимо добавить ключ",
-            when=~F["keys"] & F["time_hints"],
+            "ℹ️️Для сохранения уровня необходимо добавить ключ или таймер на левелап",
+            when=~(F["keys"] | F["win_timer"]) & F["time_hints"],
         ),
         Jinja(
             "ℹ️Для сохранения уровня необходимо добавить хотя бы одну подсказку",
-            when=F["keys"] & ~F["time_hints"],
+            when=(F["keys"] | F["win_timer"]) & ~F["time_hints"],
         ),
         Button(Const("🔑Ключи"), id="keys", on_click=start_level_keys),
         Button(Const("🗝Хитрые ключи"), id="sly_keys", on_click=start_sly_keys, when=F["keys"]),
@@ -129,7 +131,7 @@ level = Dialog(
             Const("✅Готово, сохранить"),
             id="save",
             on_click=save_level,
-            when=F["keys"] & F["time_hints"],
+            when=F["time_hints"] & (F["keys"] | F["win_timer"]),
         ),
         state=states.LevelSG.menu,
         getter=get_level_data,
@@ -175,7 +177,7 @@ level_edit_dialog = Dialog(
             Const("💾Готово, сохранить"),
             id="save",
             on_click=save_level,
-            when=F["keys"] & F["time_hints"],
+            when=F["time_hints"] & (F["keys"] | F["win_timer"]),
         ),
         Cancel(Const("🔙Назад")),
         state=states.LevelEditSg.menu,

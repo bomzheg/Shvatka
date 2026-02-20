@@ -3,7 +3,10 @@ from typing import Any, Sequence
 from adaptix import Retort
 from aiogram_dialog import DialogManager
 
-from shvatka.core.models.dto import hints, action, scn
+from shvatka.core.models.dto import hints, action
+from shvatka.core.models.dto.scn.level import (
+    get_keys_default_condition,
+)
 
 
 async def get_level_id(dialog_manager: DialogManager, **_):
@@ -28,25 +31,30 @@ async def get_bonus_keys(dialog_manager: DialogManager, retort: Retort, **_):
 async def get_level_data(dialog_manager: DialogManager, retort: Retort, **_):
     dialog_data = dialog_manager.dialog_data
     hints_ = retort.load(dialog_data.get("time_hints", []), list[hints.TimeHint])
-    if dumped_conditions := dialog_data.get("conditions", []):
-        conditions = retort.load(dumped_conditions, scn.Conditions)
-        sly_types_count = conditions.get_types_count()
-        key_condition = conditions.get_default_key_condition()
-        keys: set[action.SHKey] = key_condition.get_keys() if key_condition else set()
-        timers: Sequence[action.LevelTimerEffectsCondition] = [
-            condition
-            for condition in conditions
-            if isinstance(condition, action.LevelTimerEffectsCondition)
-        ]
-    else:
-        sly_types_count = 0
-        keys: set[action.SHKey] = set()  # type: ignore[no-redef]
-        timers: Sequence[action.LevelTimerEffectsCondition] = tuple()  # type: ignore[no-redef]
+    dumped_conditions = dialog_data.get("conditions", [])
+    conditions = retort.load(dumped_conditions, list[action.AnyCondition])
+    sly_types_count = len(
+        {
+            c.type
+            for c in conditions
+            if isinstance(c, action.KeyCondition)
+            and not (isinstance(c, action.KeyWinCondition) and c.next_level is None)
+        }
+    )
+
+    keys: set[action.SHKey] = get_keys_default_condition(conditions)
+    timers: Sequence[action.LevelTimerEffectsCondition] = [
+        condition
+        for condition in conditions
+        if isinstance(condition, action.LevelTimerEffectsCondition)
+    ]
+    win_timers = [t for t in timers if t.effects.level_up]
     return {
         "level_id": dialog_data["level_id"],
         "keys": keys,
         "timers": timers,
         "sly_types": sly_types_count,
+        "win_timer": win_timers[0] if win_timers else None,
         "time_hints": hints_,
     }
 

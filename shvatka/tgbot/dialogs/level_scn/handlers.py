@@ -11,6 +11,9 @@ from dishka.integrations.aiogram_dialog import inject
 from shvatka.core.models import dto
 from shvatka.core.models.dto import scn, action
 from shvatka.core.models.dto import hints
+from shvatka.core.models.dto.scn.level import (
+    get_keys_default_condition,
+)
 from shvatka.core.services.level import upsert_level, get_by_id
 from shvatka.core.utils.input_validation import (
     is_multiple_keys_normal,
@@ -18,6 +21,7 @@ from shvatka.core.utils.input_validation import (
 )
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.tgbot import states
+from shvatka.tgbot.models.conditions import IncompleteConditions
 from shvatka.tgbot.views.hint_factory.hint_parser import HintParser
 
 
@@ -137,18 +141,23 @@ async def process_level_result(  # noqa: C901
 ):
     if not result:
         return
-    raw_conditions = manager.dialog_data.get("conditions", [])
+    if raw_conditions := result.get("conditions", None):
+        manager.dialog_data["conditions"] = raw_conditions
+        return
     if hints_ := result.get("time_hints", None):
         manager.dialog_data["time_hints"] = hints_
     keys = result.get("keys", None)
-    if not keys and not raw_conditions:
+    raw_conditions = manager.dialog_data.get("conditions", [])
+    conditions_list = retort.load(raw_conditions, list[action.AnyCondition])
+
+    if not keys and not conditions_list:
         return
-    elif keys and raw_conditions:
-        conditions = retort.load(raw_conditions, scn.Conditions).replace_default_keys(keys)
+    elif keys and conditions_list:
+        conditions = IncompleteConditions(conditions=conditions_list).replace_default_keys(keys)
     elif keys:
-        conditions = scn.Conditions([action.KeyWinCondition(keys=keys)])
-    elif raw_conditions:
-        conditions = retort.load(raw_conditions, scn.Conditions)
+        conditions = IncompleteConditions([action.KeyWinCondition(keys=keys)])
+    elif conditions_list:
+        conditions = IncompleteConditions(conditions=conditions_list)
     else:
         typing.assert_never(raw_conditions)
 
@@ -162,9 +171,9 @@ async def process_level_result(  # noqa: C901
         conditions = conditions.replace_routed_conditions(
             retort.load(routed_conditions, list[action.KeyWinCondition])
         )
-    manager.dialog_data["conditions"] = retort.dump(conditions)
-    if raw_conditions := result.get("conditions", None):
-        manager.dialog_data["conditions"] = raw_conditions
+    manager.dialog_data["conditions"] = retort.dump(
+        conditions.conditions, list[action.AnyCondition]
+    )
 
 
 async def on_start_level_edit(start_data: dict[str, Any], manager: DialogManager):
@@ -218,11 +227,7 @@ async def start_level_keys(
     retort: FromDishka[Retort],
 ):
     raw_conditions = manager.dialog_data.get("conditions", [])
-    if raw_conditions:
-        condition = retort.load(raw_conditions, scn.Conditions).get_default_key_condition()
-        keys = condition.get_keys() if condition else set()
-    else:
-        keys = set()
+    keys = get_keys_default_condition(retort.load(raw_conditions, list[action.AnyCondition]))
 
     await manager.start(
         state=states.LevelKeysSG.keys,
@@ -246,7 +251,6 @@ async def start_sly_keys(
         conditions.get_bonus_hints_conditions(), list[action.AnyCondition]
     )
     routed_conditions = retort.dump(conditions.get_routed_conditions(), list[action.AnyCondition])
-    default_key_condition = conditions.get_default_key_condition()
     await manager.start(
         state=states.LevelSlyKeysSG.menu,
         data={
@@ -255,7 +259,7 @@ async def start_sly_keys(
             "routed_conditions": routed_conditions,
             "bonus_hint_conditions": bonus_hint_conditions,
             "keys": retort.dump(
-                default_key_condition.get_keys() if default_key_condition else set(),
+                get_keys_default_condition(conditions),
                 set[action.SHKey],
             ),
             "game_id": manager.dialog_data.get("game_id", None),

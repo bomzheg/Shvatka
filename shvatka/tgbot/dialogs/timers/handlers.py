@@ -1,5 +1,4 @@
 from typing import Any
-from uuid import UUID
 
 from adaptix import Retort
 from aiogram.types import CallbackQuery, Message
@@ -130,9 +129,13 @@ async def start_effects(
             "level_up": effects.level_up,
             "next_level": effects.next_level,
             "level_id": manager.dialog_data.get("level_id", None),
+            "game_id": manager.dialog_data.get("game_id", None),
         }
     else:
-        data = {}
+        data = {
+            "level_id": manager.dialog_data.get("level_id", None),
+            "game_id": manager.dialog_data.get("game_id", None),
+        }
     await manager.start(
         state=states.EffectsSG.menu,
         data=data,
@@ -179,7 +182,7 @@ async def on_process_timer_result(
         hints_: list[hints.AnyHint] = result.get("hints", [])
         manager.dialog_data["effects"] = retort.dump(
             action.Effects(
-                id=UUID(effect_id),
+                id=effect_id,
                 next_level=next_level,
                 bonus_minutes=bonus_minutes,
                 level_up=level_up,

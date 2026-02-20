@@ -65,7 +65,7 @@ effects = Dialog(
             Jinja("🔀Переход на уровень"),
             id="to_routed",
             state=states.EffectsSG.routed_level_up,
-            when=F["level_up"] and F["level_id"],
+            when=F["level_up"] & F["game_id"],
         ),
         Button(
             Jinja("✅Сохранить"),

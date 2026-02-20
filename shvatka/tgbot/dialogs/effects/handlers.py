@@ -10,8 +10,10 @@ from aiogram_dialog.widgets.kbd import Button
 from dishka import FromDishka
 from dishka.integrations.aiogram_dialog import inject
 
+from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.models import dto
 from shvatka.core.models.dto import hints
+from shvatka.core.services.game import get_full_game
 from shvatka.core.utils.input_validation import validate_level_id
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.tgbot import states
@@ -35,12 +37,14 @@ async def effects_on_start(start_data: dict, manager: DialogManager):
     level_up: bool = start_data.get("level_up", False)
     routed_level_up: str | None = start_data.get("next_level")
     level_id: str | None = start_data.get("level_id")
+    game_id: str | None = start_data.get("game_id")
     manager.dialog_data["effect_id"] = effect_id
     manager.dialog_data["next_level"] = routed_level_up
     manager.dialog_data["bonus_minutes"] = bonus
     manager.dialog_data["level_up"] = level_up
     manager.dialog_data["hints"] = hints_
     manager.dialog_data["level_id"] = level_id
+    manager.dialog_data["game_id"] = game_id
 
 
 @inject
@@ -141,13 +145,9 @@ async def process_routed_level_id(
     manager: DialogManager,
     name_id: str,
     dao: FromDishka[HolderDao],
+    identity: FromDishka[IdentityProvider],
 ):
-    level_id: str = manager.dialog_data["level_id"]
-    player: dto.Player = manager.middleware_data["player"]
-    level = await dao.level.get_by_author_and_name_id(player, level_id)
-    assert level
-    assert level.game_id
-    game = await dao.game.get_full(level.game_id)
+    game = await get_full_game(manager.dialog_data["game_id"], identity, dao.game)
     ids = {lvl.name_id for lvl in game.levels}
     if name_id not in ids:
         await m.reply(

@@ -130,9 +130,13 @@ async def start_effects(
             "level_up": effects.level_up,
             "next_level": effects.next_level,
             "level_id": manager.dialog_data.get("level_id", None),
+            "game_id": manager.dialog_data.get("game_id", None),
         }
     else:
-        data = {}
+        data = {
+            "level_id": manager.dialog_data.get("level_id", None),
+            "game_id": manager.dialog_data.get("game_id", None),
+        }
     await manager.start(
         state=states.EffectsSG.menu,
         data=data,

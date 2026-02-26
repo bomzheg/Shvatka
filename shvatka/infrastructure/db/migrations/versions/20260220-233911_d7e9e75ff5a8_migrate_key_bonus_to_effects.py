@@ -71,51 +71,46 @@ def downgrade():
                 l.scenario::JSONB,
                 '{conditions}',
                 (
-                    SELECT COALESCE(jsonb_agg(final_cond), '[]'::jsonb)
+                    SELECT COALESCE(jsonb_agg(cond), '[]'::jsonb)
                     FROM (
-                        SELECT
-                            CASE
-                                WHEN cond->>'type' = 'EFFECTS'
-                                    AND (cond->'effect'->>'bonus_minutes') IS NOT NULL
-                                    AND (cond->'effect'->>'bonus_minutes')::float != 0
-                                    AND (cond->'effect'->>'level_up')::boolean = false
-                                THEN NULL
-                                ELSE cond
-                            END AS cond,
-                            (cond->'effect'->>'bonus_minutes')::float AS bonus_minutes,
-                            jsonb_array_elements(cond->'keys') AS key_text
-                        FROM (
-                            SELECT jsonb_array_elements(l.scenario::JSONB->'conditions') AS cond
-                        ) conditions_array
-                    ) expanded
-                    WHERE cond IS NOT NULL
+                        SELECT jsonb_array_elements(l.scenario::JSONB->'conditions') AS cond
+                    ) conditions_array
+                    WHERE NOT (
+                        cond->>'type' = 'EFFECTS'
+                        AND (cond->'effect'->>'bonus_minutes') IS NOT NULL
+                        AND (cond->'effect'->>'bonus_minutes')::float != 0
+                        AND (cond->'effect'->>'level_up')::boolean = false
+                    )
                 )
             ) AS scenario_without_effects,
             (
                 SELECT COALESCE(
-                    jsonb_build_object(
-                        'type', 'BONUS_KEY',
-                        'keys', jsonb_agg(
-                            jsonb_build_object(
-                                'text', key_text,
-                                'bonus_minutes', bonus_minutes
+                    (
+                        SELECT jsonb_build_object(
+                            'type', 'BONUS_KEY',
+                            'keys', jsonb_agg(
+                                jsonb_build_object(
+                                    'text', key_text,
+                                    'bonus_minutes', bonus_minutes
+                                )
                             )
                         )
+                        FROM (
+                            SELECT
+                                (cond->'effect'->>'bonus_minutes')::float AS bonus_minutes,
+                                jsonb_array_elements_text(cond->'keys') AS key_text
+                            FROM (
+                                SELECT jsonb_array_elements(l.scenario::JSONB->'conditions') AS cond
+                            ) conditions_array
+                            WHERE cond->>'type' = 'EFFECTS'
+                                AND (cond->'effect'->>'bonus_minutes') IS NOT NULL
+                                AND (cond->'effect'->>'bonus_minutes')::float != 0
+                                AND (cond->'effect'->>'level_up')::boolean = false
+                        ) bonus_keys_data
+                        HAVING count(*) > 0
                     ),
                     '[]'::jsonb
                 )
-                FROM (
-                    SELECT
-                        (cond->'effect'->>'bonus_minutes')::float AS bonus_minutes,
-                        jsonb_array_elements_text(cond->'keys') AS key_text
-                    FROM (
-                        SELECT jsonb_array_elements(l.scenario::JSONB->'conditions') AS cond
-                    ) conditions_array
-                    WHERE cond->>'type' = 'EFFECTS'
-                        AND (cond->'effect'->>'bonus_minutes') IS NOT NULL
-                        AND (cond->'effect'->>'bonus_minutes')::float != 0
-                        AND (cond->'effect'->>'level_up')::boolean = false
-                ) bonus_keys_data
             ) AS bonus_condition,
             l.id
             FROM levels AS l

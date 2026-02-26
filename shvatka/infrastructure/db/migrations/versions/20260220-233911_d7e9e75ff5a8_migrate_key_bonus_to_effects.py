@@ -100,7 +100,9 @@ def downgrade():
                                 (cond->'effect'->>'bonus_minutes')::float AS bonus_minutes,
                                 jsonb_array_elements_text(cond->'keys') AS key_text
                             FROM (
-                                SELECT jsonb_array_elements(l.scenario::JSONB->'conditions') AS cond
+                                SELECT jsonb_array_elements(
+                                   l.scenario::JSONB->'conditions'
+                                ) AS cond
                             ) conditions_array
                             WHERE cond->>'type' = 'EFFECTS'
                                 AND (cond->'effect'->>'bonus_minutes') IS NOT NULL
@@ -121,7 +123,8 @@ def downgrade():
                 jsonb_set(
                     scn.scenario_without_effects,
                     '{conditions}',
-                    scn.scenario_without_effects->'conditions' || jsonb_build_array(scn.bonus_condition)
+                    scn.scenario_without_effects->'conditions'
+                        || jsonb_build_array(scn.bonus_condition)
                 )
             ELSE
                 scn.scenario_without_effects

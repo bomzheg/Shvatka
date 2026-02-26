@@ -54,6 +54,7 @@ def upgrade():
             ) AS scenario,
             l.id
             FROM levels AS l
+            WHERE l.scenario::JSONB->'conditions' @> '[{"type": "BONUS_KEY"}]'::jsonb
         )
         UPDATE levels lvl
         SET scenario = scn.scenario
@@ -116,6 +117,14 @@ def downgrade():
             ) AS bonus_condition,
             l.id
             FROM levels AS l
+            WHERE EXISTS (
+                SELECT 1
+                FROM jsonb_array_elements(l.scenario::JSONB->'conditions') AS cond
+                WHERE cond->>'type' = 'EFFECTS'
+                    AND (cond->'effect'->>'bonus_minutes') IS NOT NULL
+                    AND (cond->'effect'->>'bonus_minutes')::float != 0
+                    AND (cond->'effect'->>'level_up')::boolean = false
+            )
         )
         UPDATE levels lvl
         SET scenario = CASE

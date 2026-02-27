@@ -48,6 +48,7 @@ services:
       - "5432:5432"
     environment:
       - POSTGRES_PASSWORD=123456
+      - POSTGRES_DB=shvatka_dev
 
 volumes:
   telegram-bot-api-data:

@@ -24,7 +24,7 @@ class TestDbProvider(Provider):
 
     @provide
     def get_db_config(self, config: Config) -> Iterable[TrueConfig]:
-        postgres = PostgresContainer("postgres:16.1")
+        postgres = PostgresContainer("postgres:18.2")
         if os.name == "nt":  # TODO workaround from testcontainers/testcontainers-python#108
             postgres.get_container_host_ip = lambda: "localhost"
         try:

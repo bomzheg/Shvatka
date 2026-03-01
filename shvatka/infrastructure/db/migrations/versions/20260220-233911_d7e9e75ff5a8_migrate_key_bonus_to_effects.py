@@ -29,7 +29,7 @@ def upgrade():
                                     'type', 'EFFECTS',
                                     'keys', jsonb_build_array(key->>'text'),
                                     'effect', jsonb_build_object(
-                                        'id', gen_random_uuid_v7(),
+                                        'id', uuidv7(),
                                         'bonus_minutes', (key->>'bonus_minutes')::float,
                                         'level_up', false,
                                         'hints_', '[]'::jsonb,

@@ -41,3 +41,11 @@ class IncompleteConditions(scn.Conditions):
             if not isinstance(c, action.KeyWinCondition) or c.next_level is None
         ]
         return IncompleteConditions([*other_conditions, *conditions])
+
+    def replace_effects_conditions(
+        self, conditions: list[action.KeyEffectsCondition]
+    ) -> "IncompleteConditions":
+        other_conditions = [
+            c for c in self.conditions if not isinstance(c, action.KeyEffectsCondition)
+        ]
+        return IncompleteConditions([*other_conditions, *conditions])

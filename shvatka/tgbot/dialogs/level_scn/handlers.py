@@ -171,6 +171,10 @@ async def process_level_result(  # noqa: C901
         conditions = conditions.replace_routed_conditions(
             retort.load(routed_conditions, list[action.KeyWinCondition])
         )
+    if effects_conditions := result.get("effects_conditions", None):
+        conditions = conditions.replace_effects_conditions(
+            retort.load(effects_conditions, list[action.KeyEffectsCondition])
+        )
     manager.dialog_data["conditions"] = retort.dump(
         conditions.conditions, list[action.AnyCondition]
     )
@@ -258,6 +262,9 @@ async def start_sly_keys(
             "bonus_keys": retort.dump(conditions.get_bonus_keys(), set[action.BonusKey]),
             "routed_conditions": routed_conditions,
             "bonus_hint_conditions": bonus_hint_conditions,
+            "effects_conditions": retort.dump(
+                conditions.get_effects_key_conditions(), list[action.AnyCondition]
+            ),
             "keys": retort.dump(
                 get_keys_default_condition(conditions),
                 set[action.SHKey],
@@ -294,6 +301,7 @@ async def on_start_sly_keys(
     manager.dialog_data["game_id"] = start_data["game_id"]
     manager.dialog_data["bonus_hint_conditions"] = start_data["bonus_hint_conditions"]
     manager.dialog_data["routed_conditions"] = start_data["routed_conditions"]
+    manager.dialog_data["effects_conditions"] = start_data["effects_conditions"]
 
 
 @inject
@@ -303,6 +311,7 @@ async def save_sly_keys(c: CallbackQuery, button: Button, manager: DialogManager
             "bonus_keys": manager.dialog_data["bonus_keys"],
             "routed_conditions": manager.dialog_data["routed_conditions"],
             "bonus_hint_conditions": manager.dialog_data["bonus_hint_conditions"],
+            "effects_conditions": manager.dialog_data["effects_conditions"],
         }
     )
 
@@ -421,6 +430,9 @@ async def process_sly_keys_result(
     bonus_hint_conditions = retort.load(
         manager.dialog_data["bonus_hint_conditions"], list[action.KeyBonusHintCondition]
     )
+    effects_conditions = retort.load(
+        manager.dialog_data["effects_conditions"], list[action.KeyEffectsCondition]
+    )
     if result.get("__deleted__", False) and start_data:
         if (number := start_data.get("edited_bonus_hint_condition", None)) is not None:
             bonus_hint_conditions.pop(int(number))
@@ -431,6 +443,11 @@ async def process_sly_keys_result(
             routed_conditions.pop(int(number))
             manager.dialog_data["routed_conditions"] = retort.dump(
                 routed_conditions, list[action.KeyWinCondition]
+            )
+        if (number := start_data.get("edited_effects_condition", None)) is not None:
+            effects_conditions.pop(int(number))
+            manager.dialog_data["effects_conditions"] = retort.dump(
+                effects_conditions, list[action.KeyEffectsCondition]
             )
     if bonus_hint_condition := result.get("bonus_hint_condition", None):
         if (
@@ -450,6 +467,14 @@ async def process_sly_keys_result(
             routed_conditions.append(routed_condition)
         manager.dialog_data["routed_conditions"] = retort.dump(
             routed_conditions, list[action.KeyWinCondition]
+        )
+    if effects_condition := result.get("effects_condition", None):
+        if start_data and (number := start_data.get("edited_effects_condition", None)) is not None:
+            effects_conditions[int(number)] = effects_condition
+        else:
+            effects_conditions.append(effects_condition)
+        manager.dialog_data["effects_conditions"] = retort.dump(
+            effects_conditions, list[action.KeyEffectsCondition]
         )
 
 
@@ -532,6 +557,124 @@ async def edit_routed(
         },
     )
 
+
+
+
+@inject
+async def start_key_effects(
+    c: CallbackQuery,
+    button: Button,
+    manager: DialogManager,
+):
+    await manager.start(
+        state=states.KeyEffectsSG.menu,
+        data={
+            "level_id": manager.dialog_data["level_id"],
+        },
+    )
+
+
+@inject
+async def edit_effects_condition(
+    c: CallbackQuery, widget: Any, manager: DialogManager, number: str, retort: FromDishka[Retort]
+):
+    data = manager.dialog_data
+    conditions = dict(
+        enumerate(retort.load(data["effects_conditions"], list[action.KeyEffectsCondition]))
+    )
+    to_edit: action.KeyEffectsCondition = conditions[int(number)]
+    await manager.start(
+        state=states.KeyEffectsSG.menu,
+        data={
+            "edited_effects_condition": int(number),
+            "keys": retort.dump(to_edit.keys, list[str]),
+            "effects": retort.dump(to_edit.effect),
+            "level_id": data["level_id"],
+            "game_id": data.get("game_id", None),
+        },
+    )
+
+
+@inject
+async def on_start_effects_condition_edit(
+    start_data: dict[str, Any], manager: DialogManager, retort: FromDishka[Retort]
+):
+    if start_data is None:
+        start_data = {}
+    manager.dialog_data["effects"] = start_data.get("effects", None)
+    manager.dialog_data["keys"] = start_data.get("keys", [])
+    manager.dialog_data["level_id"] = start_data["level_id"]
+    manager.dialog_data["game_id"] = start_data.get("game_id", None)
+
+
+@inject
+async def process_effects_condition_result(
+    start_data: Data, result: Any, manager: DialogManager, retort: FromDishka[Retort]
+):
+    if not result:
+        return
+    if keys := result.get("keys", None):
+        manager.dialog_data["keys"] = keys
+
+    effect_id = result.get("effect_id")
+    if effect_id:
+        next_level: str | None = result.get("next_level")
+        bonus_minutes: float = result.get("bonus_minutes", 0.0)
+        level_up: bool = result.get("level_up", False)
+        hints_: list[hints.AnyHint] = result.get("hints", [])
+        manager.dialog_data["effects"] = retort.dump(
+            action.Effects(
+                id=effect_id,
+                next_level=next_level,
+                bonus_minutes=bonus_minutes,
+                level_up=level_up,
+                hints_=hints_,
+            )
+        )
+
+
+@inject
+async def start_effects(
+    c: CallbackQuery,
+    button: Button,
+    manager: DialogManager,
+    retort: FromDishka[Retort],
+):
+    raw_effects = manager.dialog_data.get("effects", None)
+    if raw_effects:
+        effects: action.Effects = retort.load(raw_effects, action.Effects)
+        data = {
+            "effect_id": str(effects.id),
+            "hints": retort.dump(effects.hints_, list[hints.AnyHint]),
+            "bonus_minutes": effects.bonus_minutes,
+            "level_up": effects.level_up,
+            "next_level": effects.next_level,
+            "level_id": manager.dialog_data.get("level_id", None),
+            "game_id": manager.dialog_data.get("game_id", None),
+        }
+    else:
+        data = {
+            "level_id": manager.dialog_data.get("level_id", None),
+            "game_id": manager.dialog_data.get("game_id", None),
+        }
+    await manager.start(state=states.EffectsSG.menu, data=data)
+
+
+@inject
+async def save_effects_condition(
+    c: CallbackQuery,
+    button: Button,
+    manager: DialogManager,
+    retort: FromDishka[Retort],
+):
+    effects = manager.dialog_data.get("effects")
+    if effects is None:
+        return
+    condition = action.KeyEffectsCondition(
+        keys=manager.dialog_data["keys"],
+        effect=retort.load(effects, action.Effects),
+    )
+    await manager.done({"effects_condition": condition})
 
 async def start_routed(
     c: CallbackQuery,

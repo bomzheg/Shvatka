@@ -335,7 +335,9 @@ sly_keys_dialog = Dialog(
         Jinja(
             "Сейчас сохранены бонусные ключи:\n"
             "{% for condition in bonus_effects_conditions %}"
-            "{% for key in condition.keys %}💰<code>{{key}}</code>: {{condition.effect.bonus_minutes}} мин.\n{% endfor %}"
+            "{% for key in condition.keys %}"
+            "💰<code>{{key}}</code>: {{condition.effect.bonus_minutes}} мин.\n"
+            "{% endfor %}"
             "{% endfor %}"
             "\nДля изменения пришли сообщение с новыми бонусными ключами в формате: ",
             when=F["bonus_effects_conditions"],
@@ -493,7 +495,6 @@ bonus_hint_dialog = Dialog(
     on_process_result=process_bonus_hint_result,
     on_start=on_start_bonus_hints_edit,
 )
-
 
 
 key_effects_condition_dialog = Dialog(

@@ -83,8 +83,6 @@ async def on_correct_keys(m: Message, dialog_: Any, manager: DialogManager, keys
     await manager.done({"keys": keys})
 
 
-
-
 def is_bonus_effect_condition(condition: action.KeyEffectsCondition) -> bool:
     return (
         bool(condition.effect.bonus_minutes)
@@ -275,9 +273,7 @@ async def start_sly_keys(
     routed_conditions = retort.dump(conditions.get_routed_conditions(), list[action.AnyCondition])
     effects_conditions = conditions.get_effects_key_conditions()
     bonus_effects_conditions = [
-        condition
-        for condition in effects_conditions
-        if is_bonus_effect_condition(condition)
+        condition for condition in effects_conditions if is_bonus_effect_condition(condition)
     ]
     await manager.start(
         state=states.LevelSlyKeysSG.menu,
@@ -459,7 +455,7 @@ async def delete_condition(
 
 
 @inject
-async def process_sly_keys_result(
+async def process_sly_keys_result(  # noqa: PLR0912, C901
     start_data: Data,
     result: Any,
     manager: DialogManager,
@@ -494,11 +490,7 @@ async def process_sly_keys_result(
                 effects_conditions, list[action.KeyEffectsCondition]
             )
             manager.dialog_data["bonus_effects_conditions"] = retort.dump(
-                [
-                    c
-                    for c in effects_conditions
-                    if is_bonus_effect_condition(c)
-                ],
+                [c for c in effects_conditions if is_bonus_effect_condition(c)],
                 list[action.KeyEffectsCondition],
             )
     if bonus_hint_condition := result.get("bonus_hint_condition", None):
@@ -529,11 +521,7 @@ async def process_sly_keys_result(
             effects_conditions, list[action.KeyEffectsCondition]
         )
         manager.dialog_data["bonus_effects_conditions"] = retort.dump(
-            [
-                c
-                for c in effects_conditions
-                if is_bonus_effect_condition(c)
-            ],
+            [c for c in effects_conditions if is_bonus_effect_condition(c)],
             list[action.KeyEffectsCondition],
         )
 
@@ -616,8 +604,6 @@ async def edit_routed(
             "level_id": data["level_id"],
         },
     )
-
-
 
 
 @inject
@@ -735,6 +721,7 @@ async def save_effects_condition(
         effect=retort.load(effects, action.Effects),
     )
     await manager.done({"effects_condition": condition})
+
 
 async def start_routed(
     c: CallbackQuery,

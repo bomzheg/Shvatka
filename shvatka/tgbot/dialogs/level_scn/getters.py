@@ -108,8 +108,6 @@ async def get_routed_conditions(dialog_manager: DialogManager, retort: Retort, *
     }
 
 
-
-
 async def get_effects_conditions(dialog_manager: DialogManager, retort: Retort, **_):
     data = dialog_manager.dialog_data
     conditions = retort.load(data["effects_conditions"], list[action.KeyEffectsCondition])
@@ -118,12 +116,11 @@ async def get_effects_conditions(dialog_manager: DialogManager, retort: Retort, 
         "game_id": data["game_id"],
     }
 
+
 async def get_bonus_hints(dialog_manager: DialogManager, retort: Retort, **_):
     return {
         "hints": retort.load(dialog_manager.dialog_data["hints"], list[hints.AnyHint]),
     }
-
-
 
 
 async def get_effects_condition(dialog_manager: DialogManager, **_):
@@ -131,6 +128,7 @@ async def get_effects_condition(dialog_manager: DialogManager, **_):
         "keys": dialog_manager.dialog_data.get("keys", []),
         "effects": dialog_manager.dialog_data.get("effects"),
     }
+
 
 async def get_route(dialog_manager: DialogManager, **_):
     return {"next_level": dialog_manager.dialog_data["next_level"]}

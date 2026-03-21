@@ -8,11 +8,13 @@ from shvatka.core.models.dto import scn
 from shvatka.core.models.dto import action
 from shvatka.core.utils import exceptions
 
+
 def bonus_effect(bonus_minutes: int) -> action.Effects:
     return Effects(
         id=uuid.uuid4(),
         bonus_minutes=bonus_minutes,
     )
+
 
 @pytest.fixture
 def complex_conditions() -> scn.Conditions:

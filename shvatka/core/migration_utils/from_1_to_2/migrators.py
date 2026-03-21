@@ -65,13 +65,13 @@ def hints_0_to_1(hints_: models_0.HintsList) -> scn.HintsList:
 def level_0_to_1(level: models_0.LevelScenario) -> scn.LevelScenario:
     conditions: list[action.AnyCondition] = [action.KeyWinCondition(set(level.keys))]
     for bonus_key in level.bonus_keys:
-        conditions.append(
+        conditions.append(  # noqa: PERF401
             action.KeyEffectsCondition(
                 keys={bonus_key.text},
                 effect=action.Effects(
                     id=uuid4(),
                     bonus_minutes=bonus_key.bonus_minutes,
-                )
+                ),
             )
         )
     return scn.LevelScenario(

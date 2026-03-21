@@ -205,14 +205,8 @@ class Conditions(Sequence[AnyCondition]):
             c
             for c in self.conditions
             if not (
-                (
-                    isinstance(c, action.KeyEffectsCondition)
-                    and c.effect.bonus_minutes
-                    and not c.effect.hints_
-                    and not c.effect.level_up
-                    and c.effect.next_level is None
-                )
-                or isinstance(c, action.KeyBonusCondition)
+                isinstance(c, action.KeyEffectsCondition)
+                and c.effect.is_bonus_only()
             )
         ]
         return Conditions([*other_conditions, *bonus_effects_conditions])
@@ -251,11 +245,10 @@ class Conditions(Sequence[AnyCondition]):
     def get_bonus_keys(self) -> set[BonusKey]:
         result: set[BonusKey] = set()
         for condition in self.get_bonus_effects_conditions():
-            result = result.union(
-                {
-                    BonusKey(text=key, bonus_minutes=condition.effect.bonus_minutes)
-                    for key in condition.keys
-                }
+            if len(condition.keys) > 1:
+                continue
+            result.add(
+                BonusKey(text=next(iter(condition.keys)), bonus_minutes=condition.effect.bonus_minutes)
             )
         return result
 

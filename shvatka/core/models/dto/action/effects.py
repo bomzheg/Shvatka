@@ -22,3 +22,11 @@ class Effects:
 
     def is_no_effects(self) -> bool:
         return not any((self.next_level, self.level_up, self.bonus_minutes, self.hints_))
+
+    def is_bonus_only(self) -> bool:
+        return (
+            self.bonus_minutes
+            and not self.hints_
+            and not self.level_up
+            and self.next_level is None
+        )

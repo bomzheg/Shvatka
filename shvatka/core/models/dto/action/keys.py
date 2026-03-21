@@ -151,39 +151,6 @@ class KeyWinCondition(KeyCondition):
 
 
 @dataclass
-class KeyBonusCondition(KeyCondition):
-    keys: set[BonusKey]  # any key is required
-    type: Literal["BONUS_KEY"] = ConditionType.BONUS_KEY.name
-
-    def check(self, action: Action, state_holder: "StateHolder") -> Decision:
-        if not isinstance(action, TypedKeyAction):
-            return NotImplementedActionDecision()
-        state = state_holder.get(TypedKeysState)
-        bonus = self._get_bonus(action)
-        if bonus is None:
-            return WrongKeyDecision(duplicate=state.is_duplicate(action), key=action.key)
-        return KeyEffectsDecision(
-            type=DecisionType.EFFECTS,
-            key_type=enums.KeyType.bonus,
-            duplicate=state.is_duplicate(action),
-            key=bonus.text,
-            effects=Effects(
-                id=uuid4(),
-                bonus_minutes=bonus.bonus_minutes,
-            ),
-        )
-
-    def get_keys(self) -> set[SHKey]:
-        return {key.text for key in self.keys}
-
-    def _get_bonus(self, action: TypedKeyAction) -> BonusKey | None:
-        for bonus_key in self.keys:
-            if action.key == bonus_key.text:
-                return bonus_key
-        return None
-
-
-@dataclass
 class KeyBonusHintCondition(KeyCondition):
     keys: set[SHKey]  # all keys are required
     bonus_hint: list[hints.AnyHint]

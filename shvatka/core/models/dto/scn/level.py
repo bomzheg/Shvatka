@@ -198,7 +198,12 @@ class Conditions(Sequence[AnyCondition]):
 
     def replace_bonus_keys(self, bonus_keys: set[action.BonusKey]) -> "Conditions":
         other_conditions = [
-            c for c in self.conditions if not isinstance(c, action.KeyBonusCondition)
+            c
+            for c in self.conditions
+            if not (
+                isinstance(c, action.KeyEffectsCondition)
+                and c.effect.is_bonus_only()
+            )
         ]
         if not bonus_keys:
             return Conditions(other_conditions)
@@ -237,8 +242,12 @@ class Conditions(Sequence[AnyCondition]):
 
     def get_bonus_keys(self) -> set[BonusKey]:
         result: set[BonusKey] = set()
-        for condition in self.get_bonus_conditions():
-            result = result.union(condition.keys)
+        for condition in self.get_bonus_effects_conditions():
+            if len(condition.keys) > 1:
+                continue
+            result.add(
+                BonusKey(text=next(iter(condition.keys)), bonus_minutes=condition.effect.bonus_minutes)
+            )
         return result
 
     def get_bonus_hints_conditions(self) -> list[action.KeyBonusHintCondition]:

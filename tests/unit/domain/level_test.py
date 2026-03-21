@@ -1,3 +1,4 @@
+import uuid
 from datetime import timedelta
 from uuid import uuid4
 
@@ -27,7 +28,10 @@ def level_one_key(hints_: scn.HintsList) -> scn.LevelScenario:
         conditions=scn.Conditions(
             [
                 action.KeyWinCondition({"SH123"}),
-                action.KeyBonusCondition({action.BonusKey(text="SHB1", bonus_minutes=1)}),
+                action.KeyEffectsCondition(keys={"SHB1"}, effect=action.Effects(
+                    id=uuid.uuid4(),
+                    bonus_minutes=1,
+                )),
             ]
         ),
         __model_version__=1,
@@ -42,7 +46,10 @@ def level_three_keys(hints_: scn.HintsList) -> scn.LevelScenario:
         conditions=scn.Conditions(
             [
                 action.KeyWinCondition({"SH123", "SH321", "СХ123"}),
-                action.KeyBonusCondition({action.BonusKey(text="SHB1", bonus_minutes=1)}),
+                action.KeyEffectsCondition(keys={"SHB1"}, effect=action.Effects(
+                    id=uuid.uuid4(),
+                    bonus_minutes=1,
+                )),
             ]
         ),
         __model_version__=1,

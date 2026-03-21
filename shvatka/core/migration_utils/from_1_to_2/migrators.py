@@ -1,3 +1,5 @@
+from uuid import uuid4
+
 from shvatka.core.migration_utils import models_0
 from shvatka.core.models.dto import scn, action
 from shvatka.core.models.dto import hints
@@ -62,9 +64,15 @@ def hints_0_to_1(hints_: models_0.HintsList) -> scn.HintsList:
 
 def level_0_to_1(level: models_0.LevelScenario) -> scn.LevelScenario:
     conditions: list[action.AnyCondition] = [action.KeyWinCondition(set(level.keys))]
-    if level.bonus_keys:
+    for bonus_key in level.bonus_keys:
         conditions.append(
-            action.KeyBonusCondition({bonus_key_0_to_1(b) for b in level.bonus_keys})
+            action.KeyEffectsCondition(
+                keys={bonus_key.text},
+                effect=action.Effects(
+                    id=uuid4(),
+                    bonus_minutes=bonus_key.bonus_minutes,
+                )
+            )
         )
     return scn.LevelScenario(
         id=level.id,

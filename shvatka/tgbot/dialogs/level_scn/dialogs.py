@@ -24,6 +24,8 @@ from .getters import (
     get_bonus_hints,
     get_route,
     get_routed_conditions,
+    get_effects_conditions,
+    get_effects_condition,
 )
 from .handlers import (
     process_time_hint_result,
@@ -64,6 +66,12 @@ from .handlers import (
     delete_condition,
     start_routed,
     start_level_timers,
+    start_key_effects,
+    edit_effects_condition,
+    on_start_effects_condition_edit,
+    process_effects_condition_result,
+    start_effects,
+    save_effects_condition,
 )
 from shvatka.tgbot.dialogs.preview_data import PreviewStart
 
@@ -286,9 +294,10 @@ sly_keys_dialog = Dialog(
     Window(
         Jinja(
             "Уровень <b>{{level_id}}</b>\n\n"
-            "💰Бонусных ключей: {{bonus_keys | length}}\n"
+            "💰Бонусных ключей: {{bonus_effects_conditions | length}}\n"
             "🔎Ключей с бонусными подсказками: {{bonus_hint_conditions | length}}\n"
             "🔀Нелинейных ключей: {{routed_conditions | length}}\n"
+            "✨Ключей с эффектами: {{effects_conditions | length}}\n"
         ),
         SwitchTo(
             Const("💰Бонусные ключи"),
@@ -306,6 +315,11 @@ sly_keys_dialog = Dialog(
             state=states.LevelSlyKeysSG.routed_keys,
             when=F["game_id"],
         ),
+        SwitchTo(
+            Const("✨Ключи с эффектами"),
+            id="to_effects_keys",
+            state=states.LevelSlyKeysSG.effects_keys,
+        ),
         Button(
             Const("✅Готово"),
             id="save",
@@ -320,15 +334,15 @@ sly_keys_dialog = Dialog(
         Const("💰<b>Бонусные ключи уровня</b>\n"),
         Jinja(
             "Сейчас сохранены бонусные ключи:\n"
-            "{% for key in bonus_keys %}"
-            "💰<code>{{key.text}}</code>: {{key.bonus_minutes}} мин.\n"
+            "{% for condition in bonus_effects_conditions %}"
+            "{% for key in condition.keys %}💰<code>{{key}}</code>: {{condition.effect.bonus_minutes}} мин.\n{% endfor %}"
             "{% endfor %}"
             "\nДля изменения пришли сообщение с новыми бонусными ключами в формате: ",
-            when=F["bonus_keys"],
+            when=F["bonus_effects_conditions"],
         ),
         Const(
             "У данного уровня нет бонусных ключей. Ключи принимаются в следующих форматах: ",
-            when=~F["bonus_keys"],
+            when=~F["bonus_effects_conditions"],
         ),
         Const(
             "<code>СХБОНУСНЫЙ</code> 2\n"
@@ -406,6 +420,38 @@ sly_keys_dialog = Dialog(
         getter=(get_level_id, get_routed_conditions),
         state=states.LevelSlyKeysSG.routed_keys,
     ),
+    Window(
+        Jinja("Уровень <b>{{level_id}}</b>\n\n"),
+        Jinja(
+            "✨Текущие ключи с эффектами:\n"
+            "{% for index, c in effects_conditions.items() %}"
+            "{{index + 1}}: {{c.effect | effects}}\n"
+            "{% for key in c.keys %}"
+            "  🔑<code>{{key}}</code>\n"
+            "{% endfor %}\n"
+            "{% endfor %}",
+            when=F["effects_conditions"],
+        ),
+        ScrollingGroup(
+            Select(
+                Jinja("{{item + 1}} - {{data['effects_conditions'][item].effect | effects}}"),
+                id="effects_conditions",
+                item_id_getter=lambda x: x,
+                items="effects_conditions",
+                on_click=edit_effects_condition,
+            ),
+            id="effects_conditions_sg",
+            width=1,
+            height=10,
+        ),
+        Button(Const("➕Добавить"), id="add_effects_key", on_click=start_key_effects),
+        SwitchTo(Const("🔙Назад"), id="to_menu", state=states.LevelSlyKeysSG.menu),
+        preview_add_transitions=[
+            PreviewStart(state=states.KeyEffectsSG.menu),
+        ],
+        getter=(get_level_id, get_effects_conditions),
+        state=states.LevelSlyKeysSG.effects_keys,
+    ),
     on_process_result=process_sly_keys_result,
     on_start=on_start_sly_keys,
 )
@@ -447,6 +493,35 @@ bonus_hint_dialog = Dialog(
     on_process_result=process_bonus_hint_result,
     on_start=on_start_bonus_hints_edit,
 )
+
+
+
+key_effects_condition_dialog = Dialog(
+    Window(
+        Jinja(
+            "✨Ключи с эффектами\n"
+            "Ключей: {{keys | length}}\n"
+            "{% for key in keys %}"
+            "🔑<code>{{key}}</code>\n"
+            "{% endfor %}"
+            "{% if effects %}Эффекты: {{effects | effects}}{% endif %}"
+        ),
+        Button(Const("🔑Ключи"), on_click=start_keys, id="to_keys"),
+        Button(Const("✨Эффекты"), on_click=start_effects, id="to_effects"),
+        Button(Const("✅Готово"), id="done", on_click=save_effects_condition, when=F["effects"]),
+        Button(Const("🗑Удалить"), id="delete", on_click=delete_condition),
+        Cancel(Const("🔙Назад")),
+        preview_add_transitions=[
+            PreviewStart(state=states.LevelKeysSG.keys),
+            PreviewStart(state=states.EffectsSG.menu),
+        ],
+        getter=get_effects_condition,
+        state=states.KeyEffectsSG.menu,
+    ),
+    on_process_result=process_effects_condition_result,
+    on_start=on_start_effects_condition_edit,
+)
+
 
 routed_conditions_dialog = Dialog(
     Window(

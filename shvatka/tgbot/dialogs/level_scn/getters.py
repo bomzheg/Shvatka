@@ -22,9 +22,12 @@ async def get_keys(dialog_manager: DialogManager, **_):
 
 
 async def get_bonus_keys(dialog_manager: DialogManager, retort: Retort, **_):
-    keys_raw = dialog_manager.dialog_data.get("bonus_keys", [])
+    conditions_raw = dialog_manager.dialog_data.get("bonus_effects_conditions", [])
     return {
-        "bonus_keys": retort.load(keys_raw, list[action.BonusKey]),
+        "bonus_effects_conditions": retort.load(
+            conditions_raw,
+            list[action.KeyEffectsCondition],
+        ),
     }
 
 
@@ -73,11 +76,16 @@ async def get_sly_keys(dialog_manager: DialogManager, retort: Retort, **_):
     data = dialog_manager.dialog_data
     return {
         "level_id": data["level_id"],
-        "bonus_keys": retort.load(data["bonus_keys"], list[action.BonusKey]),
+        "bonus_effects_conditions": retort.load(
+            data["bonus_effects_conditions"], list[action.KeyEffectsCondition]
+        ),
         "bonus_hint_conditions": retort.load(
             data["bonus_hint_conditions"], list[action.KeyBonusHintCondition]
         ),
         "routed_conditions": retort.load(data["routed_conditions"], list[action.KeyWinCondition]),
+        "effects_conditions": retort.load(
+            data["effects_conditions"], list[action.KeyEffectsCondition]
+        ),
         "game_id": data["game_id"],
     }
 
@@ -100,11 +108,29 @@ async def get_routed_conditions(dialog_manager: DialogManager, retort: Retort, *
     }
 
 
+
+
+async def get_effects_conditions(dialog_manager: DialogManager, retort: Retort, **_):
+    data = dialog_manager.dialog_data
+    conditions = retort.load(data["effects_conditions"], list[action.KeyEffectsCondition])
+    return {
+        "effects_conditions": dict(enumerate(conditions)),
+        "game_id": data["game_id"],
+    }
+
 async def get_bonus_hints(dialog_manager: DialogManager, retort: Retort, **_):
     return {
         "hints": retort.load(dialog_manager.dialog_data["hints"], list[hints.AnyHint]),
     }
 
+
+
+
+async def get_effects_condition(dialog_manager: DialogManager, **_):
+    return {
+        "keys": dialog_manager.dialog_data.get("keys", []),
+        "effects": dialog_manager.dialog_data.get("effects"),
+    }
 
 async def get_route(dialog_manager: DialogManager, **_):
     return {"next_level": dialog_manager.dialog_data["next_level"]}

@@ -8,14 +8,6 @@ class IncompleteConditions(scn.Conditions):
     def __init__(self, conditions: Sequence[AnyCondition]):
         self.conditions: Sequence[AnyCondition] = conditions
 
-    def replace_bonus_keys(self, bonus_keys: set[action.BonusKey]) -> "IncompleteConditions":
-        other_conditions = [
-            c for c in self.conditions if not isinstance(c, action.KeyBonusCondition)
-        ]
-        if not bonus_keys:
-            return IncompleteConditions(other_conditions)
-        return IncompleteConditions([*other_conditions, action.KeyBonusCondition(bonus_keys)])
-
     def replace_default_keys(self, keys: set[action.SHKey]) -> "IncompleteConditions":
         other_conditions = [
             c
@@ -39,5 +31,13 @@ class IncompleteConditions(scn.Conditions):
             c
             for c in self.conditions
             if not isinstance(c, action.KeyWinCondition) or c.next_level is None
+        ]
+        return IncompleteConditions([*other_conditions, *conditions])
+
+    def replace_effects_conditions(
+        self, conditions: list[action.KeyEffectsCondition]
+    ) -> "IncompleteConditions":
+        other_conditions = [
+            c for c in self.conditions if not isinstance(c, action.KeyEffectsCondition)
         ]
         return IncompleteConditions([*other_conditions, *conditions])

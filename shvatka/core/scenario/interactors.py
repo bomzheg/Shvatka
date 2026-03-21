@@ -53,7 +53,7 @@ class AllGameKeysReaderInteractor:
                 keys.extend(self.presenter_win_condition(routed_condition, game.levels))
             for bonus_hint_condition in level.scenario.conditions.get_bonus_hints_conditions():
                 keys.extend(self.presenter_bonus_hint_condition(bonus_hint_condition))
-            for bonus_condition in level.scenario.conditions.get_bonus_conditions():
+            for bonus_condition in level.scenario.conditions.get_bonus_effects_conditions():
                 keys.extend(self.presenter_bonus_condition(bonus_condition))
             lk = dto.LevelKeys(
                 level_number=level.number_in_game,
@@ -92,10 +92,10 @@ class AllGameKeysReaderInteractor:
             )
         ]
 
-    def presenter_bonus_condition(self, condition: action.KeyBonusCondition) -> list[dto.Key]:
+    def presenter_bonus_condition(self, condition: action.KeyEffectsCondition) -> list[dto.Key]:
         return [
-            dto.Key(keys={bk.text}, description=f"{bk.bonus_minutes} мин.")
-            for bk in condition.keys
+            dto.Key(keys={key}, description=f"{condition.effect.bonus_minutes} мин.")
+            for key in condition.keys
         ]
 
 

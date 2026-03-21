@@ -8,6 +8,7 @@ from .dialogs import (
     sly_keys_dialog,
     bonus_hint_dialog,
     routed_conditions_dialog,
+    key_effects_condition_dialog,
 )
 
 
@@ -19,3 +20,4 @@ def setup(router: Router):
     router.include_router(sly_keys_dialog)
     router.include_router(bonus_hint_dialog)
     router.include_router(routed_conditions_dialog)
+    router.include_router(key_effects_condition_dialog)

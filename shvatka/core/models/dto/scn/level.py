@@ -3,16 +3,13 @@ from collections.abc import Sequence, Iterable
 from dataclasses import dataclass
 from datetime import timedelta
 from typing import overload, Literal
-from uuid import UUID
+from uuid import UUID, uuid4
 
 from shvatka.core.models.dto import action, hints
 from shvatka.core.models.dto.hints import TimeHint, AnyHint
 from shvatka.core.models.dto.hints.time_hint import EnumeratedTimeHint
 from shvatka.core.utils import exceptions
-from shvatka.core.models.dto.action import (
-    KeyBonusCondition,
-    AnyCondition,
-)
+from shvatka.core.models.dto.action import AnyCondition
 from shvatka.core.models.dto.action.keys import (
     SHKey,
     KeyWinCondition,
@@ -197,12 +194,28 @@ class Conditions(Sequence[AnyCondition]):
                     )
 
     def replace_bonus_keys(self, bonus_keys: set[action.BonusKey]) -> "Conditions":
-        other_conditions = [
-            c for c in self.conditions if not isinstance(c, action.KeyBonusCondition)
+        bonus_effects_conditions = [
+            action.KeyEffectsCondition(
+                keys={bonus_key.text},
+                effect=action.Effects(id=uuid4(), bonus_minutes=bonus_key.bonus_minutes),
+            )
+            for bonus_key in bonus_keys
         ]
-        if not bonus_keys:
-            return Conditions(other_conditions)
-        return Conditions([*other_conditions, action.KeyBonusCondition(bonus_keys)])
+        other_conditions = [
+            c
+            for c in self.conditions
+            if not (
+                (
+                    isinstance(c, action.KeyEffectsCondition)
+                    and c.effect.bonus_minutes
+                    and not c.effect.hints_
+                    and not c.effect.level_up
+                    and c.effect.next_level is None
+                )
+                or isinstance(c, action.KeyBonusCondition)
+            )
+        ]
+        return Conditions([*other_conditions, *bonus_effects_conditions])
 
     def replace_default_keys(self, keys: set[action.SHKey]) -> "Conditions":
         other_conditions = [
@@ -237,9 +250,26 @@ class Conditions(Sequence[AnyCondition]):
 
     def get_bonus_keys(self) -> set[BonusKey]:
         result: set[BonusKey] = set()
-        for condition in self.get_bonus_conditions():
-            result = result.union(condition.keys)
+        for condition in self.get_bonus_effects_conditions():
+            result = result.union(
+                {
+                    BonusKey(text=key, bonus_minutes=condition.effect.bonus_minutes)
+                    for key in condition.keys
+                }
+            )
         return result
+
+    def get_bonus_effects_conditions(self) -> list[action.KeyEffectsCondition]:
+        return [
+            condition
+            for condition in self.get_effects_key_conditions()
+            if (
+                condition.effect.bonus_minutes
+                and not condition.effect.hints_
+                and not condition.effect.level_up
+                and condition.effect.next_level is None
+            )
+        ]
 
     def get_bonus_hints_conditions(self) -> list[action.KeyBonusHintCondition]:
         return [c for c in self.conditions if isinstance(c, action.KeyBonusHintCondition)]
@@ -250,9 +280,6 @@ class Conditions(Sequence[AnyCondition]):
             for c in self.conditions
             if isinstance(c, action.KeyWinCondition) and c.next_level is not None
         ]
-
-    def get_bonus_conditions(self) -> list[action.KeyBonusCondition]:
-        return [c for c in self.conditions if isinstance(c, action.KeyBonusCondition)]
 
     def get_default_key_conditions(self) -> list[action.KeyWinCondition]:
         return get_default_key_conditions(self.conditions)
@@ -269,8 +296,6 @@ class Conditions(Sequence[AnyCondition]):
 
     def get_types_count(self) -> int:
         result = 0
-        if self.get_bonus_keys():
-            result += 1
         if self.get_bonus_hints_conditions():
             result += 1
         if self.get_routed_conditions():
@@ -410,7 +435,13 @@ class LevelScenario:
     ) -> "LevelScenario":
         conditions: list[AnyCondition] = [KeyWinCondition(keys)]
         if bonus_keys:
-            conditions.append(KeyBonusCondition(bonus_keys))
+            conditions.extend(
+                action.KeyEffectsCondition(
+                    keys={bonus_key.text},
+                    effect=action.Effects(id=uuid4(), bonus_minutes=bonus_key.bonus_minutes),
+                )
+                for bonus_key in bonus_keys
+            )
         return cls(
             id=id,
             time_hints=time_hints,

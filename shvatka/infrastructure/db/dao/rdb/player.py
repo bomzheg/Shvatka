@@ -43,11 +43,16 @@ class PlayerDao(BaseDAO[models.Player]):
                 func.count(models.Player.typed_keys),
                 func.count(
                     case(
-                        (models.KeyTime.type_.in_([
-                            enums.KeyType.simple,
-                            enums.KeyType.bonus,
-                            enums.KeyType.effects,
-                        ]), 1)
+                        (
+                            models.KeyTime.type_.in_(
+                                [
+                                    enums.KeyType.simple,
+                                    enums.KeyType.bonus,
+                                    enums.KeyType.effects,
+                                ]
+                            ),
+                            1,
+                        )
                     )
                 ),
             )

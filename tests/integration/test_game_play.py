@@ -176,10 +176,10 @@ async def test_bonus_hint_key(
     assert_time_key(expected_first_key, list(keys[gryffindor])[0])
     dummy_view.asser_bonus_hint_key_only(
         expected_first_key,
-        [
+        (
             hints.GPSHint(type="gps", latitude=55.579282598950165, longitude=37.910306366539395),
             hints.TextHint(type="text", text="this is bonus hint"),
-        ],
+        ),
     )
 
 

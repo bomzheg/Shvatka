@@ -8,20 +8,22 @@ from shvatka.core.models.dto import scn
 from shvatka.core.models.dto import action
 from shvatka.core.utils import exceptions
 
+
 def bonus_effect(bonus_minutes: int) -> action.Effects:
     return Effects(
         id=uuid.uuid4(),
         bonus_minutes=bonus_minutes,
     )
 
+
 @pytest.fixture
 def complex_conditions() -> scn.Conditions:
     return scn.Conditions(
         [
             action.KeyWinCondition({keys.SHKey("SH123"), keys.SHKey("SH321")}),
-            action.KeyEffectsCondition(keys={"SHB1"}, effect=bonus_effect(1)),
-            action.KeyEffectsCondition(keys={"SHB2"}, effect=bonus_effect(-1)),
-            action.KeyEffectsCondition(keys={"SHB3"}, effect=bonus_effect(0)),
+            action.KeyEffectsCondition(keys={"SHB1"}, effects=bonus_effect(1)),
+            action.KeyEffectsCondition(keys={"SHB2"}, effects=bonus_effect(-1)),
+            action.KeyEffectsCondition(keys={"SHB3"}, effects=bonus_effect(0)),
             action.KeyWinCondition({keys.SHKey("СХ123")}),
         ]
     )
@@ -43,7 +45,6 @@ def test_create_one_key():
     c = scn.Conditions([action.KeyWinCondition({keys.SHKey("SH321")})])
     assert len(c) == 1
     assert len(c.get_keys()) == 1
-    assert len(c.get_bonus_keys()) == 0
     actual = c[0]
     assert isinstance(actual, action.KeyWinCondition)
     assert actual.keys == {keys.SHKey("SH321")}
@@ -57,7 +58,7 @@ def test_create_empty_condition():
 
 def test_create_only_bonus_condition():
     with pytest.raises(exceptions.LevelError):
-        scn.Conditions([action.KeyEffectsCondition(keys={"SH123"}, effect=bonus_effect(1))])
+        scn.Conditions([action.KeyEffectsCondition(keys={"SH123"}, effects=bonus_effect(1))])
 
 
 @pytest.mark.skip  # TODO 128
@@ -80,15 +81,6 @@ def test_conditions_get_keys_with_bonus(complex_conditions: scn.Conditions):
     }
 
 
-@pytest.mark.skip  # TODO 128
-def test_conditions_get_bonus_keys(complex_conditions: scn.Conditions):
-    assert complex_conditions.get_bonus_keys() == {
-        keys.BonusKey(text="SHB1", bonus_minutes=1),
-        keys.BonusKey(text="SHB2", bonus_minutes=-1),
-        keys.BonusKey(text="SHB3", bonus_minutes=0),
-    }
-
-
 def test_conditions_duplicate_keys():
     with pytest.raises(exceptions.LevelError):
         scn.Conditions(
@@ -105,9 +97,9 @@ def test_conditions_duplicate_bonus_keys():
         scn.Conditions(
             [
                 action.KeyWinCondition({keys.SHKey("SH123")}),
-                action.KeyEffectsCondition(keys={"SHB1"}, effect=bonus_effect(1)),
-                action.KeyEffectsCondition(keys={"SH123"}, effect=bonus_effect(-1)),
-                action.KeyEffectsCondition(keys={"SHB3"}, effect=bonus_effect(0)),
+                action.KeyEffectsCondition(keys={"SHB1"}, effects=bonus_effect(1)),
+                action.KeyEffectsCondition(keys={"SH123"}, effects=bonus_effect(-1)),
+                action.KeyEffectsCondition(keys={"SHB3"}, effects=bonus_effect(0)),
             ]
         )
 
@@ -118,9 +110,9 @@ def test_conditions_duplicate_both_keys():
             [
                 action.KeyWinCondition({keys.SHKey("SH123"), keys.SHKey("SH321")}),
                 action.KeyWinCondition({keys.SHKey("СХ123")}),
-                action.KeyEffectsCondition(keys={"SHB1"}, effect=bonus_effect(1)),
-                action.KeyEffectsCondition(keys={"СХ123"}, effect=bonus_effect(-1)),
-                action.KeyEffectsCondition(keys={"SHB3"}, effect=bonus_effect(0)),
+                action.KeyEffectsCondition(keys={"SHB1"}, effects=bonus_effect(1)),
+                action.KeyEffectsCondition(keys={"СХ123"}, effects=bonus_effect(-1)),
+                action.KeyEffectsCondition(keys={"SHB3"}, effects=bonus_effect(0)),
             ]
         )
 

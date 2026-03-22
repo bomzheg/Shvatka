@@ -388,7 +388,7 @@ async def edit_effects_condition(
         data={
             "edited_effects_condition": int(number),
             "keys": retort.dump(to_edit.keys, list[str]),
-            "effects": retort.dump(to_edit.effect),
+            "effects": retort.dump(to_edit.effects),
             "level_id": data["level_id"],
             "game_id": data.get("game_id", None),
         },
@@ -472,6 +472,6 @@ async def save_effects_condition(
         return
     condition = action.KeyEffectsCondition(
         keys=manager.dialog_data["keys"],
-        effect=retort.load(effects, action.Effects),
+        effects=retort.load(effects, action.Effects),
     )
     await manager.done({"effects_condition": condition})

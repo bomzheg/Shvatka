@@ -10,10 +10,8 @@ from .effects import Effects
 
 class ConditionType(enum.StrEnum):
     WIN_KEY = enum.auto()
-    BONUS_KEY = enum.auto()
-    BONUS_HINT_KEY = enum.auto()
-    WIN_TIMER = enum.auto()
-    EFFECTS = enum.auto()
+    EFFECTS_KEY = enum.auto()
+    EFFECTS_TIMER = enum.auto()
 
 
 class Condition(Protocol):

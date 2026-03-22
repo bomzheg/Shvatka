@@ -8,7 +8,7 @@ from shvatka.core.models.dto import action
 from shvatka.core.rules.game import check_can_read
 from shvatka.core.scenario import dto
 from shvatka.core.scenario.adapters import TransitionsPrinter
-from shvatka.tgbot.views.utils import render_hints
+from shvatka.tgbot.views.utils import render_effects
 
 GAME_NAME = CellAddress(row=1, column=1)
 FIRST_LEVEL_NUMBER = CellAddress(row=2, column=1)
@@ -49,12 +49,8 @@ class AllGameKeysReaderInteractor:
             keys = []
             for win_condition in level.scenario.conditions.get_default_key_conditions():
                 keys.extend(self.presenter_win_condition(win_condition, game.levels))
-            for routed_condition in level.scenario.conditions.get_routed_conditions():
-                keys.extend(self.presenter_win_condition(routed_condition, game.levels))
-            for bonus_hint_condition in level.scenario.conditions.get_bonus_hints_conditions():
-                keys.extend(self.presenter_bonus_hint_condition(bonus_hint_condition))
-            for bonus_condition in level.scenario.conditions.get_bonus_conditions():
-                keys.extend(self.presenter_bonus_condition(bonus_condition))
+            for effects_condition in level.scenario.conditions.get_effects_key_conditions():
+                keys.extend(self.presenter_effects_condition(effects_condition))
             lk = dto.LevelKeys(
                 level_number=level.number_in_game,
                 level_name_id=level.name_id,
@@ -82,20 +78,12 @@ class AllGameKeysReaderInteractor:
                 )
             ]
 
-    def presenter_bonus_hint_condition(
-        self, condition: action.KeyBonusHintCondition
-    ) -> list[dto.Key]:
+    def presenter_effects_condition(self, condition: action.KeyEffectsCondition) -> list[dto.Key]:
         return [
             dto.Key(
                 keys=condition.keys,
-                description=f"bonus hint: {render_hints(condition.bonus_hint)}",
+                description=f"effects: {render_effects(condition.effects)}",
             )
-        ]
-
-    def presenter_bonus_condition(self, condition: action.KeyBonusCondition) -> list[dto.Key]:
-        return [
-            dto.Key(keys={bk.text}, description=f"{bk.bonus_minutes} мин.")
-            for bk in condition.keys
         ]
 
 

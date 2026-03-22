@@ -84,7 +84,7 @@ class LevelTimerEffectsCondition(LevelTimerCondition):
 
     action_time: int
     effects: Effects
-    type: Literal["EFFECTS"] = ConditionType.EFFECTS.name
+    type: Literal["EFFECTS_TIMER"] = ConditionType.EFFECTS_TIMER.name
 
     def get_action_time(self) -> timedelta:
         return timedelta(minutes=self.action_time)

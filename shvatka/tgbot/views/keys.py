@@ -11,6 +11,7 @@ from shvatka.core.models.dto import scn, action
 from shvatka.core.services.game_stat import get_typed_keys
 from shvatka.core.utils.datetime_utils import tz_game, DATETIME_FORMAT
 from shvatka.infrastructure.db.dao.holder import HolderDao
+from shvatka.tgbot.views.utils import render_effects
 
 
 class KeyEmoji(enum.Enum):
@@ -18,6 +19,7 @@ class KeyEmoji(enum.Enum):
     incorrect = "❌"
     duplicate = "💤"
     bonus = "💰"
+    effects = "✨"
     unknown = "❔"
 
     @classmethod
@@ -31,6 +33,8 @@ class KeyEmoji(enum.Enum):
                 return KeyEmoji.incorrect
             case enums.KeyType.bonus:
                 return KeyEmoji.bonus
+            case enums.KeyType.effects:
+                return KeyEmoji.effects
         return KeyEmoji.unknown
 
 
@@ -95,9 +99,12 @@ def render_level_keys(level: scn.LevelScenario) -> str:
         text += render_win_key_condition(c)
     for c in level.conditions.get_routed_conditions():
         text += render_win_key_condition(c)
-    if level.get_bonus_keys():
-        text += "\nБонусные ключи:\n💰 " + "\n💰 ".join(
-            [f"{b.text} ({b.bonus_minutes} мин.)" for b in level.get_bonus_keys()]
+    if level.conditions.get_effects_key_conditions():
+        text += "\nКлючи с эффектами:\n✨ " + "\n✨ ".join(
+            [
+                f"{b.keys} ({render_effects(b.effects)})"
+                for b in level.conditions.get_effects_key_conditions()
+            ]
         )
     return text
 

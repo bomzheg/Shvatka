@@ -129,3 +129,4 @@ class GameViewMock(GameView):
         assert len(self.effects_key_calls) == 0
         assert_time_key(expected_key, actual_key)
         assert actual_effects.hints_ == expected_hint
+

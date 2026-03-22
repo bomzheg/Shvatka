@@ -22,7 +22,6 @@ from .keys import (
     TypedKeyAction,
     TypedKeysState,
     WrongKeyDecision,
-    KeyBonusHintCondition,
     KeyEffectsDecision,
     KeyEffectsCondition,
 )
@@ -36,9 +35,4 @@ from .timer import (
 )
 from .effects import EffectType, Effects
 
-AnyCondition: typing.TypeAlias = (
-    KeyWinCondition
-    | KeyBonusHintCondition
-    | KeyEffectsCondition
-    | LevelTimerEffectsCondition
-)
+AnyCondition: typing.TypeAlias = KeyWinCondition | KeyEffectsCondition | LevelTimerEffectsCondition

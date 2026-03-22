@@ -6,7 +6,6 @@ from datetime import timedelta
 from . import hints
 from .player import Player
 from .scn.level import LevelScenario
-from .action.keys import BonusKey
 
 
 @dataclass
@@ -29,12 +28,6 @@ class Level:
 
     def get_keys(self) -> set[str]:
         return self.scenario.get_keys()
-
-    def get_bonus_keys(self) -> set[BonusKey]:
-        return self.scenario.get_bonus_keys()
-
-    def get_bonus_keys_texts(self) -> set[str]:
-        return {key.text for key in self.scenario.get_bonus_keys()}
 
     def get_guids(self) -> list[str]:
         return self.scenario.get_guids()

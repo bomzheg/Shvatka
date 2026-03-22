@@ -241,10 +241,6 @@ class CheckKeyInteractor(GamePlayBaseInteractor):
                 await self.view.effects_key(
                     key=new_key, effects=new_key.parsed_key.effect, input_container=input_container
                 )
-            case enums.KeyType.bonus_hint:
-                await self.view.effects_key(
-                    key=new_key, effects=new_key.parsed_key.effect, input_container=input_container
-                )
             case enums.KeyType.simple:
                 await self.view.effects_key(
                     key=new_key, effects=new_key.parsed_key.effect, input_container=input_container

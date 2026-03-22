@@ -166,7 +166,7 @@ async def test_bonus_hint_key(
     assert 1 == len(keys[gryffindor])
     expected_first_key = dto.KeyTime(
         text="SHBONUSHINT",
-        type_=enums.KeyType.bonus_hint,
+        type_=enums.KeyType.effects,
         is_duplicate=False,
         at=datetime.now(tz=tz_utc),
         level_number=0,

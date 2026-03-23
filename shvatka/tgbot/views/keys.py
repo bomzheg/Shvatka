@@ -97,8 +97,6 @@ def render_level_keys(level: scn.LevelScenario) -> str:
     text = ""
     for c in level.conditions.get_default_key_conditions():
         text += render_win_key_condition(c)
-    for c in level.conditions.get_routed_conditions():
-        text += render_win_key_condition(c)
     if level.conditions.get_effects_key_conditions():
         text += "\nКлючи с эффектами:\n✨ " + "\n✨ ".join(
             [
@@ -110,7 +108,7 @@ def render_level_keys(level: scn.LevelScenario) -> str:
 
 
 def render_win_key_condition(condition: action.KeyWinCondition) -> str:
-    text = f"🗝🗝🗝{' -> ' + condition.next_level if condition.next_level else ''}\n"
+    text = "🗝🗝🗝\n"
     text += render_keys(condition.keys)
     text += "\n"
     return text

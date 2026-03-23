@@ -10,9 +10,7 @@ class IncompleteConditions(scn.Conditions):
 
     def replace_default_keys(self, keys: set[action.SHKey]) -> "IncompleteConditions":
         other_conditions = [
-            c
-            for c in self.conditions
-            if not isinstance(c, action.KeyWinCondition) or c.next_level is not None
+            c for c in self.conditions if not isinstance(c, action.KeyWinCondition)
         ]
         return IncompleteConditions([*other_conditions, action.KeyWinCondition(keys)])
 

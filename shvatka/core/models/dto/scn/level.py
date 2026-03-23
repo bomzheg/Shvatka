@@ -173,16 +173,8 @@ class Conditions(Sequence[AnyCondition]):
                 timers.append(c)
         if not win_conditions and not force_level_up_time and not win_effects_conditions:
             raise exceptions.LevelError(text="There is no win condition")
-        if (
-            all(c.next_level is not None for c in win_conditions)
-            and force_level_up_time is None
-            and all(c.effects.next_level is not None for c in win_effects_conditions)
-        ):
-            raise exceptions.LevelError(
-                text="At least one win condition should be simple (without routing (next_level))"
-            )
         # TODO #128 next is temporary restriction. we should allow multiple times
-        if (count := len([c for c in win_conditions if c.next_level is None])) > 1:
+        if (count := len(win_conditions)) > 1:
             raise exceptions.LevelError(
                 text=f"Default win condition must be exactly once, got {count}"
             )
@@ -197,9 +189,7 @@ class Conditions(Sequence[AnyCondition]):
 
     def replace_default_keys(self, keys: set[action.SHKey]) -> "Conditions":
         other_conditions = [
-            c
-            for c in self.conditions
-            if not isinstance(c, action.KeyWinCondition) or c.next_level is not None
+            c for c in self.conditions if not isinstance(c, action.KeyWinCondition)
         ]
         return Conditions([*other_conditions, action.KeyWinCondition(keys)])
 
@@ -209,13 +199,6 @@ class Conditions(Sequence[AnyCondition]):
             if isinstance(condition, KeyWinCondition):
                 result = result.union(condition.keys)
         return result
-
-    def get_routed_conditions(self) -> list[action.KeyWinCondition]:
-        return [
-            c
-            for c in self.conditions
-            if isinstance(c, action.KeyWinCondition) and c.next_level is not None
-        ]
 
     def get_default_key_conditions(self) -> list[action.KeyWinCondition]:
         return get_default_key_conditions(self.conditions)
@@ -269,9 +252,7 @@ class Conditions(Sequence[AnyCondition]):
 def get_default_key_conditions(
     conditions: Sequence[action.AnyCondition],
 ) -> list[action.KeyWinCondition]:
-    return [
-        c for c in conditions if isinstance(c, action.KeyWinCondition) and c.next_level is None
-    ]
+    return [c for c in conditions if isinstance(c, action.KeyWinCondition)]
 
 
 def get_keys_default_condition(conditions: Sequence[action.AnyCondition]) -> set[action.SHKey]:
@@ -374,9 +355,6 @@ class LevelScenario:
             conditions=Conditions(conditions),
             __model_version__=1,
         )
-
-    def is_routed(self) -> bool:
-        return bool(self.conditions.get_routed_conditions())
 
 
 def check_all_files_saved(level: LevelScenario, guids: set[str]):

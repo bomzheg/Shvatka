@@ -30,3 +30,6 @@ class Effects:
             and not self.level_up
             and self.next_level is None
         )
+
+    def is_routed_level_up(self) -> bool:
+        return self.level_up and self.next_level is not None

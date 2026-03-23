@@ -30,8 +30,7 @@ async def get_level_data(dialog_manager: DialogManager, retort: Retort, **_):
         {
             c.type
             for c in conditions
-            if isinstance(c, action.KeyCondition)
-            and not (isinstance(c, action.KeyWinCondition) and c.next_level is None)
+            if isinstance(c, action.KeyCondition) and not (isinstance(c, action.KeyWinCondition))
         }
     )
 

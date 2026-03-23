@@ -39,9 +39,6 @@ class Level:
     def get_hints_for_timedelta(self, delta: timedelta) -> list[hints.TimeHint]:
         return self.scenario.get_hints_for_timedelta(delta)
 
-    def is_routed(self) -> bool:
-        return self.scenario.is_routed()
-
 
 class GamedLevel(Level):
     game_id: int

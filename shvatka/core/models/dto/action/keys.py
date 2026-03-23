@@ -110,7 +110,6 @@ class KeyCondition(Condition, metaclass=abc.ABCMeta):
 class KeyWinCondition(KeyCondition):
     keys: set[SHKey]  # all keys are required
     type: Literal["WIN_KEY"] = ConditionType.WIN_KEY.name
-    next_level: str | None = None
 
     def check(self, action: Action, state_holder: "StateHolder") -> Decision:
         if not isinstance(action, TypedKeyAction):
@@ -124,29 +123,25 @@ class KeyWinCondition(KeyCondition):
         elif self._is_all_typed(action, state):
             return KeyEffectsDecision(
                 type=DecisionType.EFFECTS,
-                key_type=self._get_key_type(action),  # TODO always simple
+                key_type=enums.KeyType.simple,
                 duplicate=state.is_duplicate(action),
                 key=action.key,
                 effects=Effects(
                     id=uuid4(),
                     level_up=True,
-                    next_level=self.next_level,
                 ),
             )
         else:
             type_ = DecisionType.SIGNIFICANT_ACTION
         return TypedKeyDecision(
             type=type_,
-            key_type=self._get_key_type(action),  # TODO always simple
+            key_type=enums.KeyType.simple,
             duplicate=state.is_duplicate(action),
             key=action.key,
         )
 
     def get_keys(self) -> set[SHKey]:
         return self.keys
-
-    def _get_key_type(self, action: TypedKeyAction):
-        return enums.KeyType.simple if self._is_correct(action) else enums.KeyType.wrong
 
 
 @dataclass(kw_only=True, frozen=True)

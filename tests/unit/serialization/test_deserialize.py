@@ -123,7 +123,6 @@ def test_serialize_simple(retort: Retort):
                     "conditions": [
                         {
                             "type": "WIN_KEY",
-                            "next-level": None,
                             "keys": ("SH1",),
                         }
                     ],
@@ -203,7 +202,6 @@ def test_serialize_simple(retort: Retort):
                     "conditions": [
                         {
                             "type": "WIN_KEY",
-                            "next-level": None,
                             "keys": ("SH2",),
                         }
                     ],
@@ -283,7 +281,6 @@ def test_serialize_simple(retort: Retort):
                     "conditions": [
                         {
                             "type": "WIN_KEY",
-                            "next-level": None,
                             "keys": ("SH3",),
                         }
                     ],
@@ -363,7 +360,6 @@ def test_serialize_simple(retort: Retort):
                     "conditions": [
                         {
                             "type": "WIN_KEY",
-                            "next-level": None,
                             "keys": ("SH4",),
                         }
                     ],

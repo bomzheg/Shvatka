@@ -213,18 +213,26 @@ class Conditions(Sequence[AnyCondition]):
                     return condition.get_action_time()
         return None
 
+    def get_effects(self) -> Sequence[action.Effects]:
+        result: list[action.Effects] = []
+        result.extend(
+            [c.effects for c in self.conditions if isinstance(c, action.KeyEffectsCondition)]
+        )
+        result.extend(
+            [
+                c.effects
+                for c in self.conditions
+                if isinstance(c, action.LevelTimerEffectsCondition)
+            ]
+        )
+        return result
+
     @property
     def hints_count(self) -> int:
         return len(self.get_hints())
 
     def get_hints(self) -> list[hints.AnyHint]:
-        acc: list[action.Effects] = []
-        for c in self.conditions:
-            if isinstance(c, action.KeyEffectsCondition):
-                acc.append(c.effects)
-            if isinstance(c, action.LevelTimerEffectsCondition):
-                acc.append(c.effects)
-        return [h for c in acc if c.hints_ for h in c.hints_]
+        return [h for e in self.get_effects() if e.hints_ for h in e.hints_]
 
     @overload
     def __getitem__(self, index: int) -> AnyCondition:
@@ -316,6 +324,9 @@ class LevelScenario:
 
     def get_keys(self) -> set[SHKey]:
         return self.conditions.get_keys()
+
+    def get_effects(self) -> Sequence[action.Effects]:
+        return self.conditions.get_effects()
 
     def get_guids(self) -> list[str]:
         guids = []

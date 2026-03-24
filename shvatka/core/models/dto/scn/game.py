@@ -35,6 +35,7 @@ class FullGameScenario(GameScenario):
     files: Sequence[hints.FileMeta]
 
     def __post_init__(self):
+        super().__post_init__()
         check_all_files_saved(self, {f.guid for f in self.files})
 
 

@@ -17,7 +17,6 @@ from .getters import (
     get_level_id,
     get_level_data,
     get_keys,
-    get_sly_keys,
     get_effects_conditions,
     get_effects_condition,
 )
@@ -38,7 +37,7 @@ from .handlers import (
     on_correct_keys,
     not_correct_keys,
     clear_hints,
-    start_sly_keys,
+    start_effects_keys,
     start_edit_time_hint,
     on_start_sly_keys,
     save_sly_keys,
@@ -86,8 +85,8 @@ level = Dialog(
             "{% else %}"
             "🔑Ключи не введены\n"
             "{% endif %}"
-            "{% if sly_types %}"
-            "🗝Разновидностей хитрых ключей: {{sly_types}}\n"
+            "{% if effects_key %}"
+            "✨Ключей с эффектами: {{ effects_key | length }}\n"
             "{% endif %}"
             "🕑Таймеры: {{timers | length}}\n"
             "{% if win_timer %}Завершение уровня в {{win_timer.action_time}} мин.\n{% endif %}"
@@ -112,7 +111,7 @@ level = Dialog(
             when=(F["keys"] | F["win_timer"]) & ~F["time_hints"],
         ),
         Button(Const("🔑Ключи"), id="keys", on_click=start_level_keys),
-        Button(Const("🗝Хитрые ключи"), id="sly_keys", on_click=start_sly_keys, when=F["keys"]),
+        Button(Const("✨Ключи с эффектами"), id="effects_keys", on_click=start_effects_keys, when=F["keys"]),
         Button(Const("🕑Таймеры"), id="timers", on_click=start_level_timers),
         Button(Const("💡Подсказки"), id="hints", on_click=start_hints),
         Button(
@@ -146,8 +145,8 @@ level_edit_dialog = Dialog(
             "{% else %}"
             "🔑Ключи не введены\n"
             "{% endif %}"
-            "{% if sly_types %}"
-            "🗝Разновидностей хитрых ключей: {{sly_types}}\n"
+            "{% if effects_key %}"
+            "✨Ключей с эффектами: {{ effects_key | length }}\n"
             "{% endif %}"
             "🕑Таймеры: {{timers | length}}\n"
             "\n💡Подсказки:\n"
@@ -158,7 +157,7 @@ level_edit_dialog = Dialog(
             "{% endif %}"
         ),
         Button(Const("🔑Ключи"), id="keys", on_click=start_level_keys),
-        Button(Const("🗝Хитрые ключи"), id="sly_keys", on_click=start_sly_keys, when=F["keys"]),
+        Button(Const("✨Ключи с эффектами"), id="effects_keys", on_click=start_effects_keys, when=F["keys"]),
         Button(Const("🕑Таймеры"), id="timers", on_click=start_level_timers),
         Button(Const("💡Подсказки"), id="hints", on_click=start_hints),
         Button(
@@ -272,25 +271,6 @@ hints_dialog = Dialog(
 
 sly_keys_dialog = Dialog(
     Window(
-        Jinja(
-            "Уровень <b>{{level_id}}</b>\n\n"
-            "✨Ключей с эффектами: {{effects_conditions | length}}\n"
-        ),
-        SwitchTo(
-            Const("✨Ключи с эффектами"),
-            id="to_effects_keys",
-            state=states.LevelSlyKeysSG.effects_keys,
-        ),
-        Button(
-            Const("✅Готово"),
-            id="save",
-            on_click=save_sly_keys,
-        ),
-        Cancel(Const("🔙Назад")),
-        getter=get_sly_keys,
-        state=states.LevelSlyKeysSG.menu,
-    ),
-    Window(
         Jinja("Уровень <b>{{level_id}}</b>\n\n"),
         Jinja(
             "✨Текущие ключи с эффектами:\n"
@@ -315,12 +295,17 @@ sly_keys_dialog = Dialog(
             height=10,
         ),
         Button(Const("➕Добавить"), id="add_effects_key", on_click=start_key_effects),
-        SwitchTo(Const("🔙Назад"), id="to_menu", state=states.LevelSlyKeysSG.menu),
+        Button(
+            Const("✅Готово"),
+            id="save",
+            on_click=save_sly_keys,
+        ),
+        Cancel(Const("🔙Назад")),
         preview_add_transitions=[
             PreviewStart(state=states.KeyEffectsSG.menu),
         ],
         getter=(get_level_id, get_effects_conditions),
-        state=states.LevelSlyKeysSG.effects_keys,
+        state=states.LevelSlyKeysSG.menu,
     ),
     on_process_result=process_sly_keys_result,
     on_start=on_start_sly_keys,

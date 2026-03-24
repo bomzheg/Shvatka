@@ -43,10 +43,6 @@ class LevelKeysSG(StatesGroup):
 
 class LevelSlyKeysSG(StatesGroup):
     menu = State()
-    bonus_keys = State()
-    bonus_hint_keys = State()
-    routed_keys = State()
-    effects_keys = State()
 
 
 class LevelTimersSG(StatesGroup):

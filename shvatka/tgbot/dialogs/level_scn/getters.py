@@ -26,13 +26,11 @@ async def get_level_data(dialog_manager: DialogManager, retort: Retort, **_):
     hints_ = retort.load(dialog_data.get("time_hints", []), list[hints.TimeHint])
     dumped_conditions = dialog_data.get("conditions", [])
     conditions = retort.load(dumped_conditions, list[action.AnyCondition])
-    sly_types_count = len(
-        {
-            c.type
-            for c in conditions
-            if isinstance(c, action.KeyCondition) and not (isinstance(c, action.KeyWinCondition))
-        }
-    )
+    effects_key = [
+        c
+        for c in conditions
+        if isinstance(c, action.KeyEffectsCondition)
+    ]
 
     keys: set[action.SHKey] = get_keys_default_condition(conditions)
     timers: Sequence[action.LevelTimerEffectsCondition] = [
@@ -45,7 +43,7 @@ async def get_level_data(dialog_manager: DialogManager, retort: Retort, **_):
         "level_id": dialog_data["level_id"],
         "keys": keys,
         "timers": timers,
-        "sly_types": sly_types_count,
+        "effects_key": effects_key,
         "win_timer": win_timers[0] if win_timers else None,
         "time_hints": hints_,
     }
@@ -61,17 +59,6 @@ async def get_time_hints(dialog_manager: DialogManager, retort: Retort, **_):
     }
 
 
-async def get_sly_keys(dialog_manager: DialogManager, retort: Retort, **_):
-    data = dialog_manager.dialog_data
-    return {
-        "level_id": data["level_id"],
-        "effects_conditions": retort.load(
-            data["effects_conditions"], list[action.KeyEffectsCondition]
-        ),
-        "game_id": data["game_id"],
-    }
-
-
 async def get_effects_conditions(dialog_manager: DialogManager, retort: Retort, **_):
     data = dialog_manager.dialog_data
     conditions = retort.load(data["effects_conditions"], list[action.KeyEffectsCondition])
@@ -81,19 +68,9 @@ async def get_effects_conditions(dialog_manager: DialogManager, retort: Retort, 
     }
 
 
-async def get_bonus_hints(dialog_manager: DialogManager, retort: Retort, **_):
-    return {
-        "hints": retort.load(dialog_manager.dialog_data["hints"], list[hints.AnyHint]),
-    }
-
-
 async def get_effects_condition(dialog_manager: DialogManager, retort: Retort, **_):
     raw_effects = dialog_manager.dialog_data.get("effects", None)
     return {
         "keys": dialog_manager.dialog_data.get("keys", []),
         "effects": retort.load(raw_effects, action.Effects) if raw_effects else None,
     }
-
-
-async def get_route(dialog_manager: DialogManager, **_):
-    return {"next_level": dialog_manager.dialog_data["next_level"]}

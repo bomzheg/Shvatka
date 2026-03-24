@@ -213,7 +213,7 @@ async def start_level_keys(
 
 
 @inject
-async def start_sly_keys(
+async def start_effects_keys(
     c: CallbackQuery,
     button: Button,
     manager: DialogManager,

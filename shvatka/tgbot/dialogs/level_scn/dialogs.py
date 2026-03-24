@@ -7,7 +7,6 @@ from aiogram_dialog.widgets.kbd import (
     ScrollingGroup,
     Select,
     Next,
-    SwitchTo,
 )
 from aiogram_dialog.widgets.text import Const, Jinja
 
@@ -111,7 +110,12 @@ level = Dialog(
             when=(F["keys"] | F["win_timer"]) & ~F["time_hints"],
         ),
         Button(Const("🔑Ключи"), id="keys", on_click=start_level_keys),
-        Button(Const("✨Ключи с эффектами"), id="effects_keys", on_click=start_effects_keys, when=F["keys"]),
+        Button(
+            Const("✨Ключи с эффектами"),
+            id="effects_keys",
+            on_click=start_effects_keys,
+            when=F["keys"],
+        ),
         Button(Const("🕑Таймеры"), id="timers", on_click=start_level_timers),
         Button(Const("💡Подсказки"), id="hints", on_click=start_hints),
         Button(
@@ -157,7 +161,12 @@ level_edit_dialog = Dialog(
             "{% endif %}"
         ),
         Button(Const("🔑Ключи"), id="keys", on_click=start_level_keys),
-        Button(Const("✨Ключи с эффектами"), id="effects_keys", on_click=start_effects_keys, when=F["keys"]),
+        Button(
+            Const("✨Ключи с эффектами"),
+            id="effects_keys",
+            on_click=start_effects_keys,
+            when=F["keys"],
+        ),
         Button(Const("🕑Таймеры"), id="timers", on_click=start_level_timers),
         Button(Const("💡Подсказки"), id="hints", on_click=start_hints),
         Button(

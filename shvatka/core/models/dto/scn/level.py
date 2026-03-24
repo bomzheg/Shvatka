@@ -13,7 +13,8 @@ from shvatka.core.models.dto.action.keys import (
     SHKey,
     KeyWinCondition,
     BonusKey,
-    KeyCondition, KeyEffectsCondition,
+    KeyCondition,
+    KeyEffectsCondition,
 )
 
 logger = logging.getLogger(__name__)
@@ -129,7 +130,7 @@ class Conditions(Sequence[action.AnyCondition]):
         self.conditions: Sequence[action.AnyCondition] = conditions
 
     @staticmethod
-    def validate(conditions: Sequence[action.AnyCondition]) -> None:  # noqa: C901,PLR0912
+    def validate(conditions: Sequence[action.AnyCondition]) -> None:
         Conditions.validate_keys_unique(conditions)
         Conditions.validate_unique_effects(conditions)
         win_conditions = Conditions.get_conditions_type(conditions, KeyWinCondition)
@@ -172,11 +173,15 @@ class Conditions(Sequence[action.AnyCondition]):
             effects_ids.add(c.effects.id)
 
     @staticmethod
-    def get_conditions_type(conditions: Sequence[action.AnyCondition], types: Type[T] | tuple[T, ...]) -> Sequence[T]:
-        return [c for c in conditions if isinstance(c, types)]
+    def get_conditions_type(
+        conditions: Sequence[action.AnyCondition], types: Type[T] | tuple[T, ...]
+    ) -> Sequence[T]:
+        return [c for c in conditions if isinstance(c, types)]  # type: ignore[arg-type, misc]
 
     @staticmethod
-    def get_win_effects_conditions(conditions: Sequence[action.AnyCondition]) -> Sequence[action.EffectsCondition]:
+    def get_win_effects_conditions(
+        conditions: Sequence[action.AnyCondition],
+    ) -> Sequence[action.EffectsCondition]:
         return [
             c for c in conditions if isinstance(c, action.EffectsCondition) and c.effects.level_up
         ]
@@ -197,7 +202,9 @@ class Conditions(Sequence[action.AnyCondition]):
         return force_level_up_time
 
     @staticmethod
-    def validate_timers_times_is_unique(timers: Sequence[action.LevelTimerEffectsCondition]) -> None:
+    def validate_timers_times_is_unique(
+        timers: Sequence[action.LevelTimerEffectsCondition],
+    ) -> None:
         timers_times: set[timedelta] = set()
         for c in timers:
             if c.get_action_time() in timers_times:
@@ -205,7 +212,6 @@ class Conditions(Sequence[action.AnyCondition]):
                     text=f"there are duplicate actions with time {c.get_action_time()}"
                 )
             timers_times.add(c.get_action_time())
-
 
     @staticmethod
     def validate_all_timers_le_force(
@@ -218,8 +224,9 @@ class Conditions(Sequence[action.AnyCondition]):
             if timer.get_action_time() > force_level_up_time:
                 raise exceptions.LevelError(
                     text="all timers should be less or equal than level win time",
-                    confidential=f"win time={force_level_up_time}, "
-                                 f"timer={timer.get_action_time()}",
+                    confidential=(
+                        f"win time={force_level_up_time}, " f"timer={timer.get_action_time()}"
+                    ),
                 )
 
     def replace_default_keys(self, keys: set[action.SHKey]) -> "Conditions":

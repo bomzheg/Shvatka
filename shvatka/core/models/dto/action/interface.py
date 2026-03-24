@@ -62,6 +62,7 @@ class NoActionDecision(Decision):
 class EffectsCondition(Condition, metaclass=abc.ABCMeta):
     effects: Effects
 
+
 @dataclass(kw_only=True, frozen=True)
 class EffectsDecision(Decision):
     type: typing.Literal[DecisionType.EFFECTS] = DecisionType.EFFECTS

@@ -7,6 +7,7 @@ from uuid import uuid4
 
 from shvatka.core.models import enums
 from shvatka.core.utils.input_validation import is_key_valid
+from . import EffectsCondition
 from .effects import Effects
 from .decisions import NotImplementedActionDecision
 from .interface import (
@@ -150,7 +151,7 @@ class KeyEffectsDecision(TypedKeyDecision, EffectsDecision):
 
 
 @dataclass(kw_only=True, frozen=True)
-class KeyEffectsCondition(KeyCondition, EffectsDecision):
+class KeyEffectsCondition(KeyCondition, EffectsCondition):
     keys: set[SHKey]  # all keys are required
     effects: Effects
     type: Literal["EFFECTS_KEY"] = ConditionType.EFFECTS_KEY.name

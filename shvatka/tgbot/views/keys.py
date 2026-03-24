@@ -11,7 +11,7 @@ from shvatka.core.models.dto import scn, action
 from shvatka.core.services.game_stat import get_typed_keys
 from shvatka.core.utils.datetime_utils import tz_game, DATETIME_FORMAT
 from shvatka.infrastructure.db.dao.holder import HolderDao
-from shvatka.tgbot.views.utils import render_effects
+from shvatka.core.views.texts import render_effects
 
 
 class KeyEmoji(enum.Enum):

@@ -8,7 +8,7 @@ from shvatka.core.models.dto import action
 from shvatka.core.rules.game import check_can_read
 from shvatka.core.scenario import dto
 from shvatka.core.scenario.adapters import TransitionsPrinter
-from shvatka.tgbot.views.utils import render_effects
+from shvatka.core.views.texts import render_effects
 
 GAME_NAME = CellAddress(row=1, column=1)
 FIRST_LEVEL_NUMBER = CellAddress(row=2, column=1)

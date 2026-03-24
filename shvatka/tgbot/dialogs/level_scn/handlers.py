@@ -401,8 +401,6 @@ async def edit_effects_condition(
 async def on_start_effects_condition_edit(
     start_data: dict[str, Any], manager: DialogManager, retort: FromDishka[Retort]
 ):
-    if start_data is None:
-        start_data = {}
     manager.dialog_data["effects"] = start_data.get("effects", None)
     manager.dialog_data["keys"] = start_data.get("keys", [])
     manager.dialog_data["level_id"] = start_data["level_id"]

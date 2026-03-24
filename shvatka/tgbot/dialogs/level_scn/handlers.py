@@ -471,7 +471,7 @@ async def save_effects_condition(
     if effects is None:
         return
     condition = action.KeyEffectsCondition(
-        keys=manager.dialog_data["keys"],
+        keys=set(manager.dialog_data["keys"]),
         effects=retort.load(effects, action.Effects),
     )
     await manager.done({"effects_condition": condition})

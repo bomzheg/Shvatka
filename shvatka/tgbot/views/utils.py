@@ -1,13 +1,8 @@
 from contextlib import suppress
-from typing import Sequence
 
 from aiogram import Bot
 from aiogram.exceptions import AiogramError
 from aiogram.utils.text_decorations import html_decoration as hd
-
-from shvatka.core.models.dto import hints
-from shvatka.core.models.enums.hint_type import HintType
-from shvatka.core.views.texts import HINTS_EMOJI
 
 
 async def total_remove_msg(
@@ -42,19 +37,3 @@ async def edit_message_as_removed(
             inline_message_id=inline_message_id,
             reply_markup=None,
         )
-
-
-def render_time_hints(time_hints: list[hints.TimeHint]) -> str:
-    return "\n".join([render_time_hint(time_hint) for time_hint in time_hints])
-
-
-def render_time_hint(time_hint: hints.TimeHint) -> str:
-    return f"{time_hint.time}: {render_hints(time_hint.hint)}"
-
-
-def render_hints(hints_: Sequence[hints.AnyHint]) -> str:
-    return "".join([render_single_hint(hint) for hint in hints_])
-
-
-def render_single_hint(hint: hints.AnyHint) -> str:
-    return HINTS_EMOJI[HintType[hint.type]]

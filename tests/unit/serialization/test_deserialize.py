@@ -21,7 +21,7 @@ from shvatka.core.services.level import load_level
 from shvatka.core.services.scenario.game_ops import parse_game, parse_uploaded_game
 from shvatka.core.utils import exceptions
 from shvatka.core.utils.exceptions import ScenarioNotCorrect
-from shvatka.tgbot.views.utils import render_hints
+from shvatka.core.views.texts import render_hints
 
 
 def test_deserialize_game(simple_scn: RawGameScenario, retort: Retort):

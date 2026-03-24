@@ -3,8 +3,8 @@ from datetime import datetime
 from typing import Iterable
 
 from shvatka.core.utils import datetime_utils
-from shvatka.core.views.texts import KEY_PREFIXES
 
+KEY_PREFIXES = ("SH", "СХ")
 KEY_PREFIXES_REGEXP = "|".join(KEY_PREFIXES)
 KEY_REGEXP = re.compile(rf"^(?:{KEY_PREFIXES_REGEXP})[A-Z\dА-ЯЁ]+$")
 LEVEL_ID_REGEXP = re.compile(r"^[a-zA-Z\d_-]+$")

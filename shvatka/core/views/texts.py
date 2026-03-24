@@ -1,9 +1,9 @@
-from shvatka.core.models.dto import action
+from typing import Sequence
+
+from shvatka.core.models.dto import action, hints
 from shvatka.core.models.enums.hint_type import HintType
 from shvatka.core.models.enums.played import Played
-from shvatka.tgbot.views.utils import render_hints
-
-KEY_PREFIXES = ("SH", "СХ")
+from shvatka.core.utils.input_validation import KEY_PREFIXES
 
 INVALID_KEY_ERROR = (
     f"Ключ должен содержать один из префиксов ({', '.join(KEY_PREFIXES)}), "
@@ -46,3 +46,19 @@ def render_effects(effects: action.Effects | None) -> str:
     if effects.hints_:
         result += f"[{render_hints(effects.hints_)}]"
     return result
+
+
+def render_time_hints(time_hints: list[hints.TimeHint]) -> str:
+    return "\n".join([render_time_hint(time_hint) for time_hint in time_hints])
+
+
+def render_time_hint(time_hint: hints.TimeHint) -> str:
+    return f"{time_hint.time}: {render_hints(time_hint.hint)}"
+
+
+def render_hints(hints_: Sequence[hints.AnyHint]) -> str:
+    return "".join([render_single_hint(hint) for hint in hints_])
+
+
+def render_single_hint(hint: hints.AnyHint) -> str:
+    return HINTS_EMOJI[HintType[hint.type]]

@@ -2,6 +2,7 @@ import typing
 
 from .interface import (
     Condition,
+    EffectsCondition,
     ConditionType,
     Action,
     State,

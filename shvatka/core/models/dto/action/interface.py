@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import abc
 import enum
 import typing
 from dataclasses import dataclass
@@ -56,6 +57,10 @@ class Decision(Protocol):
 class NoActionDecision(Decision):
     type: Literal[DecisionType.NO_ACTION] = DecisionType.NO_ACTION
 
+
+@dataclass(kw_only=True, frozen=True)
+class EffectsCondition(Condition, metaclass=abc.ABCMeta):
+    effects: Effects
 
 @dataclass(kw_only=True, frozen=True)
 class EffectsDecision(Decision):

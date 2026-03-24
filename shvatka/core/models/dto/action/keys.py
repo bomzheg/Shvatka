@@ -149,8 +149,8 @@ class KeyEffectsDecision(TypedKeyDecision, EffectsDecision):
     pass
 
 
-@dataclass
-class KeyEffectsCondition(KeyCondition):
+@dataclass(kw_only=True, frozen=True)
+class KeyEffectsCondition(KeyCondition, EffectsDecision):
     keys: set[SHKey]  # all keys are required
     effects: Effects
     type: Literal["EFFECTS_KEY"] = ConditionType.EFFECTS_KEY.name

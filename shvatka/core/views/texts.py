@@ -1,5 +1,7 @@
+from shvatka.core.models.dto import action
 from shvatka.core.models.enums.hint_type import HintType
 from shvatka.core.models.enums.played import Played
+from shvatka.tgbot.views.utils import render_hints
 
 KEY_PREFIXES = ("SH", "СХ")
 
@@ -29,3 +31,18 @@ HINTS_EMOJI: dict[HintType, str] = {
     HintType.sticker: "🏷",
 }
 PERMISSION_EMOJI = {True: "✅", False: "🚫"}
+
+
+def render_effects(effects: action.Effects | None) -> str:
+    if effects is None:
+        return ""
+    result = ""
+    if effects.next_level:
+        result += "🔀"
+    elif effects.level_up:
+        result += "🚩"
+    if effects.bonus_minutes:
+        result += "💰"
+    if effects.hints_:
+        result += f"[{render_hints(effects.hints_)}]"
+    return result

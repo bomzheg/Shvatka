@@ -6,38 +6,24 @@ from shvatka.core.models.dto.action import AnyCondition
 
 class IncompleteConditions(scn.Conditions):
     def __init__(self, conditions: Sequence[AnyCondition]):
+        scn.Conditions.validate_keys_unique(conditions)
+        scn.Conditions.validate_unique_effects(conditions)
+        force_level_up_time = scn.Conditions.get_force_level_up(conditions)
+        timers = scn.Conditions.get_conditions_type(conditions, action.LevelTimerEffectsCondition)
+        scn.Conditions.validate_timers_times_is_unique(timers)
+        scn.Conditions.validate_all_timers_le_force(timers, force_level_up_time)
         self.conditions: Sequence[AnyCondition] = conditions
-
-    def replace_bonus_keys(self, bonus_keys: set[action.BonusKey]) -> "IncompleteConditions":
-        other_conditions = [
-            c for c in self.conditions if not isinstance(c, action.KeyBonusCondition)
-        ]
-        if not bonus_keys:
-            return IncompleteConditions(other_conditions)
-        return IncompleteConditions([*other_conditions, action.KeyBonusCondition(bonus_keys)])
 
     def replace_default_keys(self, keys: set[action.SHKey]) -> "IncompleteConditions":
         other_conditions = [
-            c
-            for c in self.conditions
-            if not isinstance(c, action.KeyWinCondition) or c.next_level is not None
+            c for c in self.conditions if not isinstance(c, action.KeyWinCondition)
         ]
         return IncompleteConditions([*other_conditions, action.KeyWinCondition(keys)])
 
-    def replace_bonus_hint_conditions(
-        self, conditions: list[action.KeyBonusHintCondition]
+    def replace_effects_conditions(
+        self, conditions: list[action.KeyEffectsCondition]
     ) -> "IncompleteConditions":
         other_conditions = [
-            c for c in self.conditions if not isinstance(c, action.KeyBonusHintCondition)
-        ]
-        return IncompleteConditions([*other_conditions, *conditions])
-
-    def replace_routed_conditions(
-        self, conditions: list[action.KeyWinCondition]
-    ) -> "IncompleteConditions":
-        other_conditions = [
-            c
-            for c in self.conditions
-            if not isinstance(c, action.KeyWinCondition) or c.next_level is None
+            c for c in self.conditions if not isinstance(c, action.KeyEffectsCondition)
         ]
         return IncompleteConditions([*other_conditions, *conditions])

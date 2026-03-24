@@ -14,7 +14,7 @@ from shvatka.core.models.dto.action import (
     ConditionType,
 )
 from .effects import Effects
-from .interface import EffectsDecision, NoActionDecision
+from .interface import EffectsDecision, NoActionDecision, EffectsCondition
 
 
 @dataclass
@@ -77,14 +77,14 @@ class LevelTimerCondition(Condition, metaclass=abc.ABCMeta):
 
 
 @dataclass(kw_only=True, frozen=True)
-class LevelTimerEffectsCondition(LevelTimerCondition):
+class LevelTimerEffectsCondition(LevelTimerCondition, EffectsCondition):
     """
     action_time - minutes
     """
 
     action_time: int
     effects: Effects
-    type: Literal["EFFECTS"] = ConditionType.EFFECTS.name
+    type: Literal["EFFECTS_TIMER"] = ConditionType.EFFECTS_TIMER.name
 
     def get_action_time(self) -> timedelta:
         return timedelta(minutes=self.action_time)

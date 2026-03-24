@@ -7,15 +7,24 @@ levels:
       - type: WIN_KEY
         keys:
           - "SH1"
-      - type: WIN_KEY
+      - type: EFFECTS_KEY
         keys: [ "SHTO1" ]
-        next-level: first
-      - type: WIN_KEY
+        effects:
+          id: 019d1bcc-7889-79c8-9bfb-0e7a2ec65dd8
+          level-up: true
+          next-level: first
+      - type: EFFECTS_KEY
         keys: [ "SHTO2" ]
-        next-level: second
-      - type: WIN_KEY
+        effects:
+          id: 019d1bcc-7889-79c8-9bfb-0e7a2ec65dd9
+          level-up: true
+          next-level: second
+      - type: EFFECTS_KEY
         keys: [ "SHTO3" ]
-        next-level: third
+        effects:
+          id: 019d1bcd-620f-7214-a61b-65764940ea7a
+          level-up: true
+          next-level: third
     time-hints:
       - time: 0
         hint:
@@ -41,15 +50,24 @@ levels:
     conditions:
       - type: WIN_KEY
         keys: [ "SH2" ]
-      - type: WIN_KEY
+      - type: EFFECTS_KEY
         keys: [ "SHTO1" ]
-        next-level: first
-      - type: WIN_KEY
+        effects:
+          id: 019d1c19-f72b-7e23-ae1e-a5eb9c2fb4b5
+          level-up: true
+          next-level: first
+      - type: EFFECTS_KEY
         keys: [ "SHTO2" ]
-        next-level: second
-      - type: WIN_KEY
+        effects:
+          id: 019d1c1a-254a-76f3-bfe3-18d0591788dd
+          level-up: true
+          next-level: second
+      - type: EFFECTS_KEY
         keys: [ "SHTO3" ]
-        next-level: third
+        effects:
+          id: 019d1c1a-4378-7093-82bf-6e676bfdea56
+          level-up: true
+          next-level: third
     time-hints:
       - time: 0
         hint:
@@ -76,15 +94,24 @@ levels:
     conditions:
       - type: WIN_KEY
         keys: [ "SH3" ]
-      - type: WIN_KEY
+      - type: EFFECTS_KEY
         keys: [ "SHTO1" ]
-        next-level: first
-      - type: WIN_KEY
+        effects:
+          id: 019d1c1a-6c30-7af7-88c9-85b65b2d4b18
+          level-up: true
+          next-level: first
+      - type: EFFECTS_KEY
         keys: [ "SHTO2" ]
-        next-level: second
-      - type: WIN_KEY
+        effects:
+          id: 019d1c1a-88e0-788a-8ada-ea3eccd7eb62
+          level-up: true
+          next-level: second
+      - type: EFFECTS_KEY
         keys: [ "SHTO3" ]
-        next-level: third
+        effects:
+          id: 019d1c1a-a64a-7f84-aabb-9c9d2dfdd4fb
+          level-up: true
+          next-level: third
     time-hints:
       - time: 0
         hint:

@@ -7,6 +7,7 @@ from uuid import uuid4
 
 from shvatka.core.models import enums
 from shvatka.core.utils.input_validation import is_key_valid
+from . import EffectsCondition
 from .effects import Effects
 from .decisions import NotImplementedActionDecision
 from .interface import (
@@ -19,7 +20,6 @@ from .interface import (
     EffectsDecision,
 )
 
-from shvatka.core.models.dto import hints
 
 if typing.TYPE_CHECKING:
     from .state_holder import StateHolder
@@ -111,7 +111,6 @@ class KeyCondition(Condition, metaclass=abc.ABCMeta):
 class KeyWinCondition(KeyCondition):
     keys: set[SHKey]  # all keys are required
     type: Literal["WIN_KEY"] = ConditionType.WIN_KEY.name
-    next_level: str | None = None
 
     def check(self, action: Action, state_holder: "StateHolder") -> Decision:
         if not isinstance(action, TypedKeyAction):
@@ -125,103 +124,25 @@ class KeyWinCondition(KeyCondition):
         elif self._is_all_typed(action, state):
             return KeyEffectsDecision(
                 type=DecisionType.EFFECTS,
-                key_type=self._get_key_type(action),  # TODO always simple
+                key_type=enums.KeyType.simple,
                 duplicate=state.is_duplicate(action),
                 key=action.key,
                 effects=Effects(
                     id=uuid4(),
                     level_up=True,
-                    next_level=self.next_level,
                 ),
             )
         else:
             type_ = DecisionType.SIGNIFICANT_ACTION
         return TypedKeyDecision(
             type=type_,
-            key_type=self._get_key_type(action),  # TODO always simple
+            key_type=enums.KeyType.simple,
             duplicate=state.is_duplicate(action),
             key=action.key,
         )
 
     def get_keys(self) -> set[SHKey]:
         return self.keys
-
-    def _get_key_type(self, action: TypedKeyAction):
-        return enums.KeyType.simple if self._is_correct(action) else enums.KeyType.wrong
-
-
-@dataclass
-class KeyBonusCondition(KeyCondition):
-    keys: set[BonusKey]  # any key is required
-    type: Literal["BONUS_KEY"] = ConditionType.BONUS_KEY.name
-
-    def check(self, action: Action, state_holder: "StateHolder") -> Decision:
-        if not isinstance(action, TypedKeyAction):
-            return NotImplementedActionDecision()
-        state = state_holder.get(TypedKeysState)
-        bonus = self._get_bonus(action)
-        if bonus is None:
-            return WrongKeyDecision(duplicate=state.is_duplicate(action), key=action.key)
-        return KeyEffectsDecision(
-            type=DecisionType.EFFECTS,
-            key_type=enums.KeyType.bonus,
-            duplicate=state.is_duplicate(action),
-            key=bonus.text,
-            effects=Effects(
-                id=uuid4(),
-                bonus_minutes=bonus.bonus_minutes,
-            ),
-        )
-
-    def get_keys(self) -> set[SHKey]:
-        return {key.text for key in self.keys}
-
-    def _get_bonus(self, action: TypedKeyAction) -> BonusKey | None:
-        for bonus_key in self.keys:
-            if action.key == bonus_key.text:
-                return bonus_key
-        return None
-
-
-@dataclass
-class KeyBonusHintCondition(KeyCondition):
-    keys: set[SHKey]  # all keys are required
-    bonus_hint: list[hints.AnyHint]
-    type: Literal["BONUS_HINT_KEY"] = ConditionType.BONUS_HINT_KEY.name
-
-    def check(self, action: Action, state_holder: "StateHolder") -> Decision:
-        if not isinstance(action, TypedKeyAction):
-            return NotImplementedActionDecision()
-        state = state_holder.get(TypedKeysState)
-        if not self._is_correct(action):
-            return WrongKeyDecision(duplicate=state.is_duplicate(action), key=action.key)
-        if state.is_duplicate(action):
-            type_ = DecisionType.NO_ACTION
-        elif self._is_all_typed(action, state):
-            return KeyEffectsDecision(
-                type=DecisionType.EFFECTS,
-                key_type=self._get_key_type(action),
-                duplicate=state.is_duplicate(action),
-                key=action.key,
-                effects=Effects(
-                    id=uuid4(),
-                    hints_=self.bonus_hint,
-                ),
-            )
-        else:
-            type_ = DecisionType.SIGNIFICANT_ACTION
-        return TypedKeyDecision(
-            type=type_,
-            key_type=self._get_key_type(action),
-            duplicate=state.is_duplicate(action),
-            key=action.key,
-        )
-
-    def get_keys(self) -> set[SHKey]:
-        return self.keys
-
-    def _get_key_type(self, action: TypedKeyAction):
-        return enums.KeyType.bonus_hint if self._is_correct(action) else enums.KeyType.wrong
 
 
 @dataclass(kw_only=True, frozen=True)
@@ -229,11 +150,11 @@ class KeyEffectsDecision(TypedKeyDecision, EffectsDecision):
     pass
 
 
-@dataclass
-class KeyEffectsCondition(KeyCondition):
+@dataclass(kw_only=True, frozen=True)
+class KeyEffectsCondition(KeyCondition, EffectsCondition):
     keys: set[SHKey]  # all keys are required
-    effect: Effects
-    type: Literal["EFFECTS"] = ConditionType.EFFECTS.name
+    effects: Effects
+    type: Literal["EFFECTS_KEY"] = ConditionType.EFFECTS_KEY.name
 
     def check(self, action: Action, state_holder: "StateHolder") -> Decision:
         if not isinstance(action, TypedKeyAction):
@@ -248,7 +169,7 @@ class KeyEffectsCondition(KeyCondition):
                 key_type=self._get_key_type(action),
                 duplicate=state.is_duplicate(action),
                 key=action.key,
-                effects=self.effect,
+                effects=self.effects,
                 type=DecisionType.EFFECTS,
             )
         else:

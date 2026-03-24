@@ -166,7 +166,7 @@ async def test_bonus_hint_key(
     assert 1 == len(keys[gryffindor])
     expected_first_key = dto.KeyTime(
         text="SHBONUSHINT",
-        type_=enums.KeyType.bonus_hint,
+        type_=enums.KeyType.effects,
         is_duplicate=False,
         at=datetime.now(tz=tz_utc),
         level_number=0,
@@ -176,10 +176,10 @@ async def test_bonus_hint_key(
     assert_time_key(expected_first_key, list(keys[gryffindor])[0])
     dummy_view.asser_bonus_hint_key_only(
         expected_first_key,
-        [
+        (
             hints.GPSHint(type="gps", latitude=55.579282598950165, longitude=37.910306366539395),
             hints.TextHint(type="text", text="this is bonus hint"),
-        ],
+        ),
     )
 
 
@@ -339,7 +339,7 @@ async def test_fast_play_routed_game(
     await check_key(key="SHTO3", identity=identity, input_container=MockInputContainer())
     expected_first_key = dto.KeyTime(
         text="SHTO3",
-        type_=enums.KeyType.simple,
+        type_=enums.KeyType.effects,
         is_duplicate=False,
         at=datetime.now(tz=tz_utc),
         level_number=0,
@@ -417,7 +417,7 @@ async def test_cycle_play_routed_game(
     await check_key(key="SHTO3", identity=identity, input_container=MockInputContainer())
     expected_first_key = dto.KeyTime(
         text="SHTO3",
-        type_=enums.KeyType.simple,
+        type_=enums.KeyType.effects,
         is_duplicate=False,
         at=datetime.now(tz=tz_utc),
         level_number=0,
@@ -433,7 +433,7 @@ async def test_cycle_play_routed_game(
     await check_key(key="SHTO1", identity=identity, input_container=MockInputContainer())
     expected_second_key = dto.KeyTime(
         text="SHTO1",
-        type_=enums.KeyType.simple,
+        type_=enums.KeyType.effects,
         is_duplicate=False,
         at=datetime.now(tz=tz_utc),
         level_number=2,
@@ -449,7 +449,7 @@ async def test_cycle_play_routed_game(
     await check_key(key="SHTO3", identity=identity, input_container=MockInputContainer())
     expected_third_key = dto.KeyTime(
         text="SHTO3",
-        type_=enums.KeyType.simple,
+        type_=enums.KeyType.effects,
         is_duplicate=False,
         at=datetime.now(tz=tz_utc),
         level_number=0,

@@ -2,25 +2,23 @@ import logging
 from collections.abc import Sequence, Iterable
 from dataclasses import dataclass
 from datetime import timedelta
-from typing import overload, Literal
-from uuid import UUID
+from typing import overload, Literal, Type, TypeVar
+from uuid import UUID, uuid4
 
 from shvatka.core.models.dto import action, hints
 from shvatka.core.models.dto.hints import TimeHint, AnyHint
 from shvatka.core.models.dto.hints.time_hint import EnumeratedTimeHint
 from shvatka.core.utils import exceptions
-from shvatka.core.models.dto.action import (
-    KeyBonusCondition,
-    AnyCondition,
-)
 from shvatka.core.models.dto.action.keys import (
     SHKey,
     KeyWinCondition,
     BonusKey,
     KeyCondition,
+    KeyEffectsCondition,
 )
 
 logger = logging.getLogger(__name__)
+T = TypeVar("T", bound=action.AnyCondition)
 
 
 class HintsList(Sequence[TimeHint]):
@@ -126,133 +124,123 @@ class HintsList(Sequence[TimeHint]):
         return repr(self.hints)
 
 
-class Conditions(Sequence[AnyCondition]):
-    def __init__(self, conditions: Sequence[AnyCondition]):
+class Conditions(Sequence[action.AnyCondition]):
+    def __init__(self, conditions: Sequence[action.AnyCondition]):
         self.validate(conditions)
-        self.conditions: Sequence[AnyCondition] = conditions
+        self.conditions: Sequence[action.AnyCondition] = conditions
 
     @staticmethod
-    def validate(conditions: Sequence[AnyCondition]) -> None:  # noqa: C901,PLR0912
-        keys: set[str] = set()
-        win_conditions: list[KeyWinCondition] = []
-        win_effects_conditions: list[action.KeyEffectsCondition] = []
-        effects_ids: set[UUID] = set()
-        force_level_up_time: timedelta | None = None
-        timers: list[action.LevelTimerEffectsCondition] = []
-        timers_times: set[timedelta] = set()
-        for c in conditions:
-            if isinstance(c, KeyCondition):
-                if isinstance(c, action.KeyEffectsCondition):
-                    if c.effect.level_up:
-                        win_effects_conditions.append(c)
-                if isinstance(c, KeyWinCondition):
-                    win_conditions.append(c)
-                if keys.intersection(c.get_keys()):
-                    raise exceptions.LevelError(
-                        text="keys exists multiple times",
-                        confidential=f"{keys.intersection(c.get_keys())}",
-                    )
-                keys = keys.union(c.get_keys())
-            if isinstance(c, action.LevelTimerEffectsCondition):
-                if c.effects.id in effects_ids:
-                    raise exceptions.LevelError(
-                        text=f"there are duplicate effects with id {c.effects.id}"
-                    )
-                effects_ids.add(c.effects.id)
-                if c.get_action_time() in timers_times:
-                    raise exceptions.LevelError(
-                        text=f"there are duplicate actions with time {c.get_action_time()}"
-                    )
-                timers_times.add(c.get_action_time())
-                if c.effects.level_up:
-                    if force_level_up_time is not None:
-                        raise exceptions.LevelError(
-                            text="winning timer condition exists multiple times",
-                        )
-                    force_level_up_time = c.get_action_time()
-                    continue
-                timers.append(c)
+    def validate(conditions: Sequence[action.AnyCondition]) -> None:
+        Conditions.validate_keys_unique(conditions)
+        Conditions.validate_unique_effects(conditions)
+        win_conditions = Conditions.get_conditions_type(conditions, KeyWinCondition)
+        win_effects_conditions = Conditions.get_win_effects_conditions(conditions)
+        force_level_up_time = Conditions.get_force_level_up(conditions)
+        timers = Conditions.get_conditions_type(conditions, action.LevelTimerEffectsCondition)
+        Conditions.validate_timers_times_is_unique(timers)
+        Conditions.validate_all_timers_le_force(timers, force_level_up_time)
         if not win_conditions and not force_level_up_time and not win_effects_conditions:
             raise exceptions.LevelError(text="There is no win condition")
-        if (
-            all(c.next_level is not None for c in win_conditions)
-            and force_level_up_time is None
-            and all(c.effect.next_level is not None for c in win_effects_conditions)
-        ):
-            raise exceptions.LevelError(
-                text="At least one win condition should be simple (without routing (next_level))"
-            )
         # TODO #128 next is temporary restriction. we should allow multiple times
-        if (count := len([c for c in win_conditions if c.next_level is None])) > 1:
+        if (count := len(win_conditions)) > 1:
             raise exceptions.LevelError(
                 text=f"Default win condition must be exactly once, got {count}"
             )
-        if force_level_up_time is not None:
-            for timer in timers:
-                if timer.get_action_time() > force_level_up_time:
-                    raise exceptions.LevelError(
-                        text="all timers should be less or equal than level win time",
-                        confidential=f"win time={force_level_up_time}, "
-                        f"timer={timer.get_action_time()}",
-                    )
 
-    def replace_bonus_keys(self, bonus_keys: set[action.BonusKey]) -> "Conditions":
-        other_conditions = [
-            c for c in self.conditions if not isinstance(c, action.KeyBonusCondition)
+    @staticmethod
+    def validate_keys_unique(conditions: Sequence[action.AnyCondition]) -> None:
+        keys: set[str] = set()
+        for c in conditions:
+            if not isinstance(c, KeyCondition):
+                continue
+            if keys.intersection(c.get_keys()):
+                raise exceptions.LevelError(
+                    text="keys exists multiple times",
+                    confidential=f"{keys.intersection(c.get_keys())}",
+                )
+            keys = keys.union(c.get_keys())
+
+    @staticmethod
+    def validate_unique_effects(conditions: Sequence[action.AnyCondition]) -> None:
+        effects_ids: set[UUID] = set()
+        for c in conditions:
+            if not isinstance(c, (KeyEffectsCondition, action.LevelTimerEffectsCondition)):
+                continue
+            if c.effects.id in effects_ids:
+                raise exceptions.LevelError(
+                    text=f"there are duplicate effects with id {c.effects.id}"
+                )
+            effects_ids.add(c.effects.id)
+
+    @staticmethod
+    def get_conditions_type(
+        conditions: Sequence[action.AnyCondition], types: Type[T] | tuple[T, ...]
+    ) -> Sequence[T]:
+        return [c for c in conditions if isinstance(c, types)]  # type: ignore[arg-type, misc]
+
+    @staticmethod
+    def get_win_effects_conditions(
+        conditions: Sequence[action.AnyCondition],
+    ) -> Sequence[action.EffectsCondition]:
+        return [
+            c for c in conditions if isinstance(c, action.EffectsCondition) and c.effects.level_up
         ]
-        if not bonus_keys:
-            return Conditions(other_conditions)
-        return Conditions([*other_conditions, action.KeyBonusCondition(bonus_keys)])
+
+    @staticmethod
+    def get_force_level_up(conditions: Sequence[action.AnyCondition]) -> timedelta | None:
+        force_level_up_time: timedelta | None = None
+        for c in conditions:
+            if not isinstance(c, action.LevelTimerEffectsCondition):
+                continue
+            if not c.effects.level_up:
+                continue
+            if force_level_up_time is not None:
+                raise exceptions.LevelError(
+                    text="winning timer condition exists multiple times",
+                )
+            force_level_up_time = c.get_action_time()
+        return force_level_up_time
+
+    @staticmethod
+    def validate_timers_times_is_unique(
+        timers: Sequence[action.LevelTimerEffectsCondition],
+    ) -> None:
+        timers_times: set[timedelta] = set()
+        for c in timers:
+            if c.get_action_time() in timers_times:
+                raise exceptions.LevelError(
+                    text=f"there are duplicate actions with time {c.get_action_time()}"
+                )
+            timers_times.add(c.get_action_time())
+
+    @staticmethod
+    def validate_all_timers_le_force(
+        timers: Sequence[action.LevelTimerEffectsCondition],
+        force_level_up_time: timedelta | None,
+    ) -> None:
+        if force_level_up_time is None:
+            return
+        for timer in timers:
+            if timer.get_action_time() > force_level_up_time:
+                raise exceptions.LevelError(
+                    text="all timers should be less or equal than level win time",
+                    confidential=(
+                        f"win time={force_level_up_time}, " f"timer={timer.get_action_time()}"
+                    ),
+                )
 
     def replace_default_keys(self, keys: set[action.SHKey]) -> "Conditions":
         other_conditions = [
-            c
-            for c in self.conditions
-            if not isinstance(c, action.KeyWinCondition) or c.next_level is not None
+            c for c in self.conditions if not isinstance(c, action.KeyWinCondition)
         ]
         return Conditions([*other_conditions, action.KeyWinCondition(keys)])
 
-    def replace_bonus_hint_conditions(
-        self, conditions: list[action.KeyBonusHintCondition]
-    ) -> "Conditions":
-        other_conditions = [
-            c for c in self.conditions if not isinstance(c, action.KeyBonusHintCondition)
-        ]
-        return Conditions([*other_conditions, *conditions])
-
-    def replace_routed_conditions(self, conditions: list[action.KeyWinCondition]) -> "Conditions":
-        other_conditions = [
-            c
-            for c in self.conditions
-            if not isinstance(c, action.KeyWinCondition) or c.next_level is None
-        ]
-        return Conditions([*other_conditions, *conditions])
-
-    def get_keys(self) -> set[str]:
+    def get_keys(self) -> set[action.SHKey]:
         result: set[SHKey] = set()
         for condition in self.conditions:
             if isinstance(condition, KeyWinCondition):
                 result = result.union(condition.keys)
         return result
-
-    def get_bonus_keys(self) -> set[BonusKey]:
-        result: set[BonusKey] = set()
-        for condition in self.get_bonus_conditions():
-            result = result.union(condition.keys)
-        return result
-
-    def get_bonus_hints_conditions(self) -> list[action.KeyBonusHintCondition]:
-        return [c for c in self.conditions if isinstance(c, action.KeyBonusHintCondition)]
-
-    def get_routed_conditions(self) -> list[action.KeyWinCondition]:
-        return [
-            c
-            for c in self.conditions
-            if isinstance(c, action.KeyWinCondition) and c.next_level is not None
-        ]
-
-    def get_bonus_conditions(self) -> list[action.KeyBonusCondition]:
-        return [c for c in self.conditions if isinstance(c, action.KeyBonusCondition)]
 
     def get_default_key_conditions(self) -> list[action.KeyWinCondition]:
         return get_default_key_conditions(self.conditions)
@@ -267,16 +255,18 @@ class Conditions(Sequence[AnyCondition]):
                     return condition.get_action_time()
         return None
 
-    def get_types_count(self) -> int:
-        result = 0
-        if self.get_bonus_keys():
-            result += 1
-        if self.get_bonus_hints_conditions():
-            result += 1
-        if self.get_routed_conditions():
-            result += 1
-        if self.get_effects_key_conditions():
-            result += 1
+    def get_effects(self) -> Sequence[action.Effects]:
+        result: list[action.Effects] = []
+        result.extend(
+            [c.effects for c in self.conditions if isinstance(c, action.KeyEffectsCondition)]
+        )
+        result.extend(
+            [
+                c.effects
+                for c in self.conditions
+                if isinstance(c, action.LevelTimerEffectsCondition)
+            ]
+        )
         return result
 
     @property
@@ -284,19 +274,14 @@ class Conditions(Sequence[AnyCondition]):
         return len(self.get_hints())
 
     def get_hints(self) -> list[hints.AnyHint]:
-        acc = []
-        for c in self.conditions:
-            if not isinstance(c, action.KeyBonusHintCondition):
-                continue
-            acc.extend(c.bonus_hint)
-        return acc
+        return [h for e in self.get_effects() if e.hints_ for h in e.hints_]
 
     @overload
-    def __getitem__(self, index: int) -> AnyCondition:
+    def __getitem__(self, index: int) -> action.AnyCondition:
         return self.conditions[index]
 
     @overload
-    def __getitem__(self, index: slice) -> Sequence[AnyCondition]:
+    def __getitem__(self, index: slice) -> Sequence[action.AnyCondition]:
         return self.conditions[index]
 
     def __getitem__(self, index):
@@ -317,9 +302,7 @@ class Conditions(Sequence[AnyCondition]):
 def get_default_key_conditions(
     conditions: Sequence[action.AnyCondition],
 ) -> list[action.KeyWinCondition]:
-    return [
-        c for c in conditions if isinstance(c, action.KeyWinCondition) and c.next_level is None
-    ]
+    return [c for c in conditions if isinstance(c, action.KeyWinCondition)]
 
 
 def get_keys_default_condition(conditions: Sequence[action.AnyCondition]) -> set[action.SHKey]:
@@ -384,8 +367,8 @@ class LevelScenario:
     def get_keys(self) -> set[SHKey]:
         return self.conditions.get_keys()
 
-    def get_bonus_keys(self) -> set[BonusKey]:
-        return self.conditions.get_bonus_keys()
+    def get_effects(self) -> Sequence[action.Effects]:
+        return self.conditions.get_effects()
 
     def get_guids(self) -> list[str]:
         guids = []
@@ -408,9 +391,17 @@ class LevelScenario:
         keys: set[SHKey],
         bonus_keys: set[BonusKey] | None = None,
     ) -> "LevelScenario":
-        conditions: list[AnyCondition] = [KeyWinCondition(keys)]
+        conditions: list[action.AnyCondition] = [KeyWinCondition(keys)]
         if bonus_keys:
-            conditions.append(KeyBonusCondition(bonus_keys))
+            conditions.extend(
+                [
+                    action.KeyEffectsCondition(
+                        keys={key.text},
+                        effects=action.Effects(id=uuid4(), bonus_minutes=key.bonus_minutes),
+                    )
+                    for key in bonus_keys
+                ]
+            )
         return cls(
             id=id,
             time_hints=time_hints,
@@ -418,19 +409,18 @@ class LevelScenario:
             __model_version__=1,
         )
 
-    def is_routed(self) -> bool:
-        return bool(self.conditions.get_routed_conditions())
-
 
 def check_all_files_saved(level: LevelScenario, guids: set[str]):
     for hints_ in level.time_hints:
         check_all_files_in_hints_saved(hints_.hint, guids)
     for condition in level.conditions:
-        if isinstance(condition, action.KeyBonusHintCondition):
-            check_all_files_in_hints_saved(condition.bonus_hint, guids)
+        if isinstance(condition, action.KeyEffectsCondition) and condition.effects.hints_:
+            check_all_files_in_hints_saved(condition.effects.hints_, guids)
+        if isinstance(condition, action.LevelTimerEffectsCondition) and condition.effects.hints_:
+            check_all_files_in_hints_saved(condition.effects.hints_, guids)
 
 
-def check_all_files_in_hints_saved(hints_: list[hints.AnyHint], guids: set[str]):
+def check_all_files_in_hints_saved(hints_: Sequence[hints.AnyHint], guids: set[str]):
     for hint in hints_:
         if isinstance(hint, hints.FileMixin) and hint.file_guid not in guids:
             raise exceptions.FileNotFound(text=f"not found {hint.file_guid} in files")

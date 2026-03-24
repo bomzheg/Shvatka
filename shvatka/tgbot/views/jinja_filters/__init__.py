@@ -12,8 +12,8 @@ from shvatka.tgbot.views.utils import (
     render_hints,
     render_time_hint,
     render_time_hints,
-    render_effects,
 )
+from shvatka.core.views.texts import render_effects
 
 
 def setup_jinja(bot: Bot):

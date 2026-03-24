@@ -3,7 +3,7 @@ from collections.abc import Sequence, Iterable
 from dataclasses import dataclass
 from datetime import timedelta
 from typing import overload, Literal, Type, TypeVar
-from uuid import UUID, uuid4
+from uuid import UUID
 
 from shvatka.core.models.dto import action, hints
 from shvatka.core.models.dto.hints import TimeHint, AnyHint
@@ -12,7 +12,6 @@ from shvatka.core.utils import exceptions
 from shvatka.core.models.dto.action.keys import (
     SHKey,
     KeyWinCondition,
-    BonusKey,
     KeyCondition,
     KeyEffectsCondition,
 )
@@ -382,32 +381,6 @@ class LevelScenario:
 
     def get_hints_for_timedelta(self, delta: timedelta) -> list[TimeHint]:
         return self.time_hints.get_hints_for_timedelta(delta)
-
-    @classmethod
-    def legacy_factory(
-        cls,
-        id: str,  # noqa: A002
-        time_hints: HintsList,
-        keys: set[SHKey],
-        bonus_keys: set[BonusKey] | None = None,
-    ) -> "LevelScenario":
-        conditions: list[action.AnyCondition] = [KeyWinCondition(keys)]
-        if bonus_keys:
-            conditions.extend(
-                [
-                    action.KeyEffectsCondition(
-                        keys={key.text},
-                        effects=action.Effects(id=uuid4(), bonus_minutes=key.bonus_minutes),
-                    )
-                    for key in bonus_keys
-                ]
-            )
-        return cls(
-            id=id,
-            time_hints=time_hints,
-            conditions=Conditions(conditions),
-            __model_version__=1,
-        )
 
 
 def check_all_files_saved(level: LevelScenario, guids: set[str]):

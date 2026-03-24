@@ -124,7 +124,24 @@ def test_serialize_simple(retort: Retort):
                         {
                             "type": "WIN_KEY",
                             "keys": ("SH1",),
-                        }
+                        },
+                        {
+                            "type": "EFFECTS_KEY",
+                            "keys": ("SHE1",),
+                            "effects": {
+                                "id": "019d2165-81a1-707b-926d-04921bf92158",
+                                "hints": (
+                                    {
+                                        "type": "text",
+                                        "text": "hello",
+                                        "link-preview": None,
+                                    },
+                                ),
+                                "bonus-minutes": 1,
+                                "level-up": False,
+                                "next-level": None,
+                            },
+                        },
                     ],
                     "time-hints": [
                         {

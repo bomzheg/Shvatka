@@ -16,7 +16,7 @@ from lxml import etree
 from lxml.etree import ElementBase
 
 from shvatka.core.models import enums
-from shvatka.core.models.dto import scn
+from shvatka.core.models.dto import scn, action
 from shvatka.core.models.dto import hints
 from shvatka.core.models.dto.export_stat import LevelTime, Key, GameStat
 from shvatka.core.utils.datetime_utils import tz_utc, tz_game, add_timezone
@@ -230,10 +230,17 @@ class SvastEngineGameParser:
 
     def build_level(self):
         self.build_time_hint()
-        level = scn.LevelScenario.legacy_factory(
+        level = scn.LevelScenario(
+            __model_version__=1,
             id=f"game_{self.id}-lvl_{self.level_number}",
             time_hints=scn.HintsList.parse(self.time_hints),
-            keys={typing.cast(hints.TextHint, self.time_hints[-1].hint).text},
+            conditions=scn.Conditions(
+                [
+                    action.KeyWinCondition(
+                        keys={typing.cast(hints.TextHint, self.time_hints[-1].hint).text}
+                    )
+                ]
+            ),
         )
         self.levels.append(level)
         logger.debug("for game %s parsed level %s", self.id, self.level_number)

@@ -295,7 +295,7 @@ sly_keys_dialog = Dialog(
         Jinja(
             "✨Текущие ключи с эффектами:\n"
             "{% for index, c in effects_conditions.items() %}"
-            "{{index + 1}}: {{c.effect | effects}}\n"
+            "{{index + 1}}: {{c.effects | effects}}\n"
             "{% for key in c.keys %}"
             "  🔑<code>{{key}}</code>\n"
             "{% endfor %}\n"
@@ -304,7 +304,7 @@ sly_keys_dialog = Dialog(
         ),
         ScrollingGroup(
             Select(
-                Jinja("{{item + 1}} - {{data['effects_conditions'][item].effect | effects}}"),
+                Jinja("{{item + 1}} - {{data['effects_conditions'][item].effects | effects}}"),
                 id="effects_conditions",
                 item_id_getter=lambda x: x,
                 items="effects_conditions",

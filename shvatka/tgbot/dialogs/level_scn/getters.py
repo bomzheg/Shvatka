@@ -87,10 +87,11 @@ async def get_bonus_hints(dialog_manager: DialogManager, retort: Retort, **_):
     }
 
 
-async def get_effects_condition(dialog_manager: DialogManager, **_):
+async def get_effects_condition(dialog_manager: DialogManager, retort: Retort, **_):
+    raw_effects = dialog_manager.dialog_data.get("effects", None)
     return {
         "keys": dialog_manager.dialog_data.get("keys", []),
-        "effects": dialog_manager.dialog_data.get("effects"),
+        "effects": retort.load(raw_effects, action.Effects) if raw_effects else None,
     }
 
 

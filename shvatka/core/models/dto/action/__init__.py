@@ -34,6 +34,6 @@ from .timer import (
     LevelTimerEffectsCondition,
     LevelTimerEffectsDecision,
 )
-from .effects import EffectType, Effects
+from .effects import Effects
 
 AnyCondition: typing.TypeAlias = KeyWinCondition | KeyEffectsCondition | LevelTimerEffectsCondition

@@ -44,6 +44,7 @@ class UploadedGameScenario(GameScenario):
     files: list[hints.UploadedFileMeta]
 
     def __post_init__(self):
+        super().__post_init__()
         check_all_files_saved(self, {f.guid for f in self.files})
 
 
@@ -52,6 +53,7 @@ class ParsedGameScenario(GameScenario):
     files: list[hints.FileMetaLightweight]
 
     def __post_init__(self):
+        super().__post_init__()
         check_all_files_saved(self, {f.guid for f in self.files})
 
 

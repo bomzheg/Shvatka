@@ -8,7 +8,7 @@ from shvatka.core.models.dto import action
 from shvatka.core.rules.game import check_can_read
 from shvatka.core.scenario import dto
 from shvatka.core.scenario.adapters import TransitionsPrinter
-from shvatka.tgbot.views.utils import render_hints
+from shvatka.core.views.texts import render_effects
 
 GAME_NAME = CellAddress(row=1, column=1)
 FIRST_LEVEL_NUMBER = CellAddress(row=2, column=1)
@@ -49,12 +49,8 @@ class AllGameKeysReaderInteractor:
             keys = []
             for win_condition in level.scenario.conditions.get_default_key_conditions():
                 keys.extend(self.presenter_win_condition(win_condition, game.levels))
-            for routed_condition in level.scenario.conditions.get_routed_conditions():
-                keys.extend(self.presenter_win_condition(routed_condition, game.levels))
-            for bonus_hint_condition in level.scenario.conditions.get_bonus_hints_conditions():
-                keys.extend(self.presenter_bonus_hint_condition(bonus_hint_condition))
-            for bonus_condition in level.scenario.conditions.get_bonus_conditions():
-                keys.extend(self.presenter_bonus_condition(bonus_condition))
+            for effects_condition in level.scenario.conditions.get_effects_key_conditions():
+                keys.extend(self.presenter_effects_condition(effects_condition))
             lk = dto.LevelKeys(
                 level_number=level.number_in_game,
                 level_name_id=level.name_id,
@@ -66,36 +62,19 @@ class AllGameKeysReaderInteractor:
     def presenter_win_condition(
         self, condition: action.KeyWinCondition, levels: Sequence[core.GamedLevel]
     ) -> list[dto.Key]:
-        if condition.next_level:
-            next_level = next(level for level in levels if level.name_id == condition.next_level)
-            return [
-                dto.Key(
-                    keys=condition.keys,
-                    description=f"-> {next_level.name_id} ({next_level.number_in_game})",
-                )
-            ]
-        else:
-            return [
-                dto.Key(
-                    keys=condition.keys,
-                    description="",
-                )
-            ]
-
-    def presenter_bonus_hint_condition(
-        self, condition: action.KeyBonusHintCondition
-    ) -> list[dto.Key]:
         return [
             dto.Key(
                 keys=condition.keys,
-                description=f"bonus hint: {render_hints(condition.bonus_hint)}",
+                description="",
             )
         ]
 
-    def presenter_bonus_condition(self, condition: action.KeyBonusCondition) -> list[dto.Key]:
+    def presenter_effects_condition(self, condition: action.KeyEffectsCondition) -> list[dto.Key]:
         return [
-            dto.Key(keys={bk.text}, description=f"{bk.bonus_minutes} мин.")
-            for bk in condition.keys
+            dto.Key(
+                keys=condition.keys,
+                description=f"effects: {render_effects(condition.effects)}",
+            )
         ]
 
 
@@ -120,11 +99,18 @@ class GameScenarioTransitionsInteractor:
                 self.process_default_key_condition(
                     prev_level, level.name_id, forward_transitions, levels_conditions
                 )
-            for condition in level.scenario.conditions.get_routed_conditions():
-                assert condition.next_level is not None
+            routed = [
+                c
+                for c in level.scenario.conditions.get_effects_key_conditions()
+                if c.effects.is_routed_level_up()
+            ]
+            for condition in routed:
+                assert condition.effects.next_level is not None
                 routed_transitions.append(
                     dto.Transition(
-                        level.name_id, condition.next_level, self.print_condition(condition)
+                        level.name_id,
+                        condition.effects.next_level,
+                        self.print_condition(condition),
                     )
                 )
                 levels_conditions[level.name_id].append((self.print_condition(condition), True))
@@ -156,5 +142,5 @@ class GameScenarioTransitionsInteractor:
             )
             levels_conditions[prev_level.name_id].append((self.print_condition(condition), False))
 
-    def print_condition(self, condition: action.KeyWinCondition) -> str:
-        return "\\n".join(condition.keys)
+    def print_condition(self, condition: action.KeyCondition) -> str:
+        return "\\n".join(condition.get_keys())

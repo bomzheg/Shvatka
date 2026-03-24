@@ -114,9 +114,6 @@ class PreviewGame(Game):
 class FullGame(Game):
     levels: list[GamedLevel] = field(default_factory=list)
 
-    def is_routed(self) -> bool:
-        return any(lvl.is_routed() for lvl in self.levels)
-
     def get_guids(self) -> list[str]:
         guids = []
         for hint in self.levels:

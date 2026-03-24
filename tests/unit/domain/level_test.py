@@ -1,3 +1,4 @@
+import uuid
 from datetime import timedelta
 from uuid import uuid4
 
@@ -27,7 +28,13 @@ def level_one_key(hints_: scn.HintsList) -> scn.LevelScenario:
         conditions=scn.Conditions(
             [
                 action.KeyWinCondition({"SH123"}),
-                action.KeyBonusCondition({action.BonusKey(text="SHB1", bonus_minutes=1)}),
+                action.KeyEffectsCondition(
+                    keys={"SHB1"},
+                    effects=action.Effects(
+                        id=uuid.uuid4(),
+                        bonus_minutes=1,
+                    ),
+                ),
             ]
         ),
         __model_version__=1,
@@ -42,7 +49,13 @@ def level_three_keys(hints_: scn.HintsList) -> scn.LevelScenario:
         conditions=scn.Conditions(
             [
                 action.KeyWinCondition({"SH123", "SH321", "СХ123"}),
-                action.KeyBonusCondition({action.BonusKey(text="SHB1", bonus_minutes=1)}),
+                action.KeyEffectsCondition(
+                    keys={"SHB1"},
+                    effects=action.Effects(
+                        id=uuid.uuid4(),
+                        bonus_minutes=1,
+                    ),
+                ),
             ]
         ),
         __model_version__=1,
@@ -144,7 +157,7 @@ def test_bonus_level_single_key(level_one_key: scn.LevelScenario):
     assert decision.key == "SHB1"
     assert decision.effects.bonus_minutes == 1
     assert decision.key_text == "SHB1"
-    assert decision.key_type == enums.KeyType.bonus
+    assert decision.key_type == enums.KeyType.effects
     assert decision.type == action.DecisionType.EFFECTS
     assert not decision.duplicate
 
@@ -154,12 +167,11 @@ def test_duplicate_bonus_level_single_key(level_one_key: scn.LevelScenario):
         action.TypedKeyAction("SHB1"), action.InMemoryKeyStateHolder(set(), {"SHWRONG", "SHB1"})
     )
 
-    assert isinstance(decision, action.KeyEffectsDecision)
+    assert isinstance(decision, action.TypedKeyDecision)
     assert decision.key == "SHB1"
-    assert decision.effects.bonus_minutes == 1
     assert decision.key_text == "SHB1"
-    assert decision.key_type == enums.KeyType.bonus
-    assert decision.type == action.DecisionType.EFFECTS
+    assert decision.key_type == enums.KeyType.effects
+    assert decision.type == action.DecisionType.NO_ACTION
     assert decision.duplicate
 
 

@@ -24,13 +24,13 @@ def test_decision_to_bonus_parsed_key():
     actual = decision_to_parsed_key(
         action.KeyEffectsDecision(
             type=action.DecisionType.EFFECTS,
-            key_type=enums.KeyType.bonus,
+            key_type=enums.KeyType.effects,
             duplicate=False,
             key="SH123",
             effects=action.Effects(id=uuid.uuid4(), bonus_minutes=10),
         )
     )
-    assert actual.type_ == enums.KeyType.bonus
+    assert actual.type_ == enums.KeyType.effects
     assert actual.text == "SH123"
     assert_effects_equal(actual.effect, action.Effects(id=uuid.uuid4(), bonus_minutes=10))
 

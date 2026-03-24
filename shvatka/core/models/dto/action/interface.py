@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import abc
 import enum
 import typing
 from dataclasses import dataclass
@@ -10,10 +11,8 @@ from .effects import Effects
 
 class ConditionType(enum.StrEnum):
     WIN_KEY = enum.auto()
-    BONUS_KEY = enum.auto()
-    BONUS_HINT_KEY = enum.auto()
-    WIN_TIMER = enum.auto()
-    EFFECTS = enum.auto()
+    EFFECTS_KEY = enum.auto()
+    EFFECTS_TIMER = enum.auto()
 
 
 class Condition(Protocol):
@@ -57,6 +56,11 @@ class Decision(Protocol):
 @dataclass(kw_only=True, frozen=True)
 class NoActionDecision(Decision):
     type: Literal[DecisionType.NO_ACTION] = DecisionType.NO_ACTION
+
+
+@dataclass(kw_only=True, frozen=True)
+class EffectsCondition(Condition, metaclass=abc.ABCMeta):
+    effects: Effects
 
 
 @dataclass(kw_only=True, frozen=True)

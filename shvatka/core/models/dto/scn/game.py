@@ -18,12 +18,13 @@ class GameScenario:
     def __post_init__(self):
         levels_ids = {level.id for level in self.levels}
         for level in self.levels:
-            for routed_condition in level.conditions.get_routed_conditions():
-                assert routed_condition.next_level is not None
-                if routed_condition.next_level not in levels_ids:
+            for effect in level.get_effects():
+                if not effect.is_routed_level_up():
+                    continue
+                if effect.next_level not in levels_ids:
                     raise exceptions.GameError(
                         f"Level {level.id} contains condition "
-                        f"with next level {routed_condition.next_level}, "
+                        f"with next level {effect.next_level}, "
                         f"but there is not any level with such id. "
                         f"Existed levels is {levels_ids}"
                     )
@@ -34,6 +35,7 @@ class FullGameScenario(GameScenario):
     files: Sequence[hints.FileMeta]
 
     def __post_init__(self):
+        super().__post_init__()
         check_all_files_saved(self, {f.guid for f in self.files})
 
 
@@ -42,6 +44,7 @@ class UploadedGameScenario(GameScenario):
     files: list[hints.UploadedFileMeta]
 
     def __post_init__(self):
+        super().__post_init__()
         check_all_files_saved(self, {f.guid for f in self.files})
 
 
@@ -50,6 +53,7 @@ class ParsedGameScenario(GameScenario):
     files: list[hints.FileMetaLightweight]
 
     def __post_init__(self):
+        super().__post_init__()
         check_all_files_saved(self, {f.guid for f in self.files})
 
 

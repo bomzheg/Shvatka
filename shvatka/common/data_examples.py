@@ -1,7 +1,8 @@
 from datetime import datetime, timedelta
+from uuid import UUID
 
 from shvatka.core.models import dto, enums
-from shvatka.core.models.dto import scn
+from shvatka.core.models.dto import scn, action
 from shvatka.core.models.dto import hints
 
 gryffindor = dto.Team(
@@ -40,9 +41,24 @@ game_example = dto.FullGame(
             name_id="level_100",
             game_id=10,
             number_in_game=0,
-            scenario=scn.LevelScenario.legacy_factory(
+            scenario=scn.LevelScenario(
+                __model_version__=1,
                 id="level_100",
-                keys={"SH1"},
+                conditions=scn.Conditions(
+                    [
+                        action.KeyWinCondition(keys={"SH1"}),
+                        action.KeyEffectsCondition(
+                            keys={"SHE1"},
+                            effects=action.Effects(
+                                id=UUID("019d2165-81a1-707b-926d-04921bf92158"),
+                                hints_=[
+                                    hints.TextHint(text="hello"),
+                                ],
+                                bonus_minutes=1,
+                            ),
+                        ),
+                    ]
+                ),
                 time_hints=scn.HintsList(
                     [
                         hints.TimeHint(
@@ -103,9 +119,14 @@ game_example = dto.FullGame(
             name_id="level_101",
             game_id=10,
             number_in_game=1,
-            scenario=scn.LevelScenario.legacy_factory(
+            scenario=scn.LevelScenario(
+                __model_version__=1,
                 id="level_101",
-                keys={"SH2"},
+                conditions=scn.Conditions(
+                    [
+                        action.KeyWinCondition(keys={"SH2"}),
+                    ]
+                ),
                 time_hints=scn.HintsList(
                     [
                         hints.TimeHint(
@@ -166,9 +187,14 @@ game_example = dto.FullGame(
             name_id="level_102",
             game_id=10,
             number_in_game=0,
-            scenario=scn.LevelScenario.legacy_factory(
+            scenario=scn.LevelScenario(
+                __model_version__=1,
                 id="level_102",
-                keys={"SH3"},
+                conditions=scn.Conditions(
+                    [
+                        action.KeyWinCondition(keys={"SH3"}),
+                    ]
+                ),
                 time_hints=scn.HintsList(
                     [
                         hints.TimeHint(
@@ -229,9 +255,14 @@ game_example = dto.FullGame(
             name_id="level_103",
             game_id=10,
             number_in_game=0,
-            scenario=scn.LevelScenario.legacy_factory(
+            scenario=scn.LevelScenario(
+                __model_version__=1,
                 id="level_103",
-                keys={"SH4"},
+                conditions=scn.Conditions(
+                    [
+                        action.KeyWinCondition(keys={"SH4"}),
+                    ]
+                ),
                 time_hints=scn.HintsList(
                     [
                         hints.TimeHint(

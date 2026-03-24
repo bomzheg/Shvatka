@@ -21,7 +21,7 @@ from shvatka.core.services.level import load_level
 from shvatka.core.services.scenario.game_ops import parse_game, parse_uploaded_game
 from shvatka.core.utils import exceptions
 from shvatka.core.utils.exceptions import ScenarioNotCorrect
-from shvatka.tgbot.views.utils import render_hints
+from shvatka.core.views.texts import render_hints
 
 
 def test_deserialize_game(simple_scn: RawGameScenario, retort: Retort):
@@ -123,9 +123,25 @@ def test_serialize_simple(retort: Retort):
                     "conditions": [
                         {
                             "type": "WIN_KEY",
-                            "next-level": None,
                             "keys": ("SH1",),
-                        }
+                        },
+                        {
+                            "type": "EFFECTS_KEY",
+                            "keys": ("SHE1",),
+                            "effects": {
+                                "id": "019d2165-81a1-707b-926d-04921bf92158",
+                                "hints": (
+                                    {
+                                        "type": "text",
+                                        "text": "hello",
+                                        "link-preview": None,
+                                    },
+                                ),
+                                "bonus-minutes": 1,
+                                "level-up": False,
+                                "next-level": None,
+                            },
+                        },
                     ],
                     "time-hints": [
                         {
@@ -203,7 +219,6 @@ def test_serialize_simple(retort: Retort):
                     "conditions": [
                         {
                             "type": "WIN_KEY",
-                            "next-level": None,
                             "keys": ("SH2",),
                         }
                     ],
@@ -283,7 +298,6 @@ def test_serialize_simple(retort: Retort):
                     "conditions": [
                         {
                             "type": "WIN_KEY",
-                            "next-level": None,
                             "keys": ("SH3",),
                         }
                     ],
@@ -363,7 +377,6 @@ def test_serialize_simple(retort: Retort):
                     "conditions": [
                         {
                             "type": "WIN_KEY",
-                            "next-level": None,
                             "keys": ("SH4",),
                         }
                     ],

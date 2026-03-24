@@ -2,6 +2,7 @@ import typing
 
 from .interface import (
     Condition,
+    EffectsCondition,
     ConditionType,
     Action,
     State,
@@ -21,9 +22,7 @@ from .keys import (
     KeyCondition,
     TypedKeyAction,
     TypedKeysState,
-    KeyBonusCondition,
     WrongKeyDecision,
-    KeyBonusHintCondition,
     KeyEffectsDecision,
     KeyEffectsCondition,
 )
@@ -35,12 +34,6 @@ from .timer import (
     LevelTimerEffectsCondition,
     LevelTimerEffectsDecision,
 )
-from .effects import EffectType, Effects
+from .effects import Effects
 
-AnyCondition: typing.TypeAlias = (
-    KeyWinCondition
-    | KeyBonusCondition
-    | KeyBonusHintCondition
-    | KeyEffectsCondition
-    | LevelTimerEffectsCondition
-)
+AnyCondition: typing.TypeAlias = KeyWinCondition | KeyEffectsCondition | LevelTimerEffectsCondition

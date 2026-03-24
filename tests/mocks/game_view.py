@@ -1,5 +1,6 @@
 import uuid
 from dataclasses import dataclass, field
+from typing import Sequence
 
 from shvatka.core.models import dto
 from shvatka.core.models.dto import hints, action
@@ -123,7 +124,7 @@ class GameViewMock(GameView):
         assert len(self.game_finished_by_all_calls) == 0
 
     def asser_bonus_hint_key_only(
-        self, expected_key: dto.KeyTime, expected_hint: list[hints.AnyHint]
+        self, expected_key: dto.KeyTime, expected_hint: Sequence[hints.AnyHint]
     ) -> None:
         actual_key, actual_effects = self.effects_key_calls.pop()
         assert len(self.effects_key_calls) == 0

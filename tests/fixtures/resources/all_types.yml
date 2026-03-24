@@ -7,8 +7,6 @@ levels:
       - type: WIN_KEY
         keys:
           - "SH123"
-      - type: BONUS_KEY
-        keys: []
     time-hints:
       - time: 0
         hint:

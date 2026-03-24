@@ -26,7 +26,7 @@ def upgrade():
                         CASE
                             WHEN cond->>'type' = 'BONUS_KEY' THEN
                                 jsonb_build_object(
-                                    'type', 'EFFECTS',
+                                    'type', 'EFFECTS_KEY',
                                     'keys', jsonb_build_array(key->>'text'),
                                     'effects', jsonb_build_object(
                                         'id', uuidv7(),
@@ -77,7 +77,7 @@ def downgrade():
                         SELECT jsonb_array_elements(l.scenario::JSONB->'conditions') AS cond
                     ) conditions_array
                     WHERE NOT (
-                        cond->>'type' = 'EFFECTS'
+                        cond->>'type' = 'EFFECTS_KEY'
                         AND (cond->'effect'->>'bonus_minutes') IS NOT NULL
                         AND (cond->'effect'->>'bonus_minutes')::float != 0
                         AND (cond->'effect'->>'level_up')::boolean = false
@@ -105,7 +105,7 @@ def downgrade():
                                    l.scenario::JSONB->'conditions'
                                 ) AS cond
                             ) conditions_array
-                            WHERE cond->>'type' = 'EFFECTS'
+                            WHERE cond->>'type' = 'EFFECTS_KEY'
                                 AND (cond->'effect'->>'bonus_minutes') IS NOT NULL
                                 AND (cond->'effect'->>'bonus_minutes')::float != 0
                                 AND (cond->'effect'->>'level_up')::boolean = false
@@ -120,7 +120,7 @@ def downgrade():
             WHERE EXISTS (
                 SELECT 1
                 FROM jsonb_array_elements(l.scenario::JSONB->'conditions') AS cond
-                WHERE cond->>'type' = 'EFFECTS'
+                WHERE cond->>'type' = 'EFFECTS_KEY'
                     AND (cond->'effect'->>'bonus_minutes') IS NOT NULL
                     AND (cond->'effect'->>'bonus_minutes')::float != 0
                     AND (cond->'effect'->>'level_up')::boolean = false

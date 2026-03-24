@@ -28,7 +28,7 @@ def upgrade():
                                 jsonb_build_object(
                                     'type', 'EFFECTS',
                                     'keys', jsonb_build_array(key->>'text'),
-                                    'effect', jsonb_build_object(
+                                    'effects', jsonb_build_object(
                                         'id', uuidv7(),
                                         'bonus_minutes', (key->>'bonus_minutes')::float,
                                         'level_up', false,

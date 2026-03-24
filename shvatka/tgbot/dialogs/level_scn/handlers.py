@@ -141,7 +141,7 @@ async def process_level_result(
     else:
         typing.assert_never(raw_conditions)
 
-    if effects_conditions := result.get("effects_conditions", None):
+    if (effects_conditions := result.get("effects_conditions", None)) is not None:
         conditions = conditions.replace_effects_conditions(
             retort.load(effects_conditions, list[action.KeyEffectsCondition])
         )

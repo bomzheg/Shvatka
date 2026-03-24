@@ -22,10 +22,10 @@ db:
   type: postgresql
   connector: asyncpg
   host: localhost
-  port: 5432
+  port: 5433
   login: postgres
   password: "123456"
-  name: shvatka_dev
+  name: postgres
 redis:
   url: localhost
   port: 6379

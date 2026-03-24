@@ -40,12 +40,12 @@ services:
     volumes:
       - redis_data:/data
     ports:
-      - "6379:6379"
+      - "127.0.0.1:6379:6379"
 
   postgres-dev:
     image: "postgres:18.2"
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5433:5432"
     environment:
       - POSTGRES_PASSWORD=123456
       - POSTGRES_DB=shvatka_dev

@@ -366,10 +366,12 @@ async def start_key_effects(
     button: Button,
     manager: DialogManager,
 ):
+    data = manager.dialog_data
     await manager.start(
         state=states.KeyEffectsSG.menu,
         data={
-            "level_id": manager.dialog_data["level_id"],
+            "level_id": data["level_id"],
+            "game_id": data.get("game_id", None),
         },
     )
 

@@ -78,9 +78,9 @@ def downgrade():
                     ) conditions_array
                     WHERE NOT (
                         cond->>'type' = 'EFFECTS_KEY'
-                        AND (cond->'effect'->>'bonus_minutes') IS NOT NULL
-                        AND (cond->'effect'->>'bonus_minutes')::float != 0
-                        AND (cond->'effect'->>'level_up')::boolean = false
+                        AND (cond->'effects'->>'bonus_minutes') IS NOT NULL
+                        AND (cond->'effects'->>'bonus_minutes')::float != 0
+                        AND (cond->'effects'->>'level_up')::boolean = false
                     )
                 )
             ) AS scenario_without_effects,
@@ -98,7 +98,7 @@ def downgrade():
                         )
                         FROM (
                             SELECT
-                                (cond->'effect'->>'bonus_minutes')::float AS bonus_minutes,
+                                (cond->'effects'->>'bonus_minutes')::float AS bonus_minutes,
                                 jsonb_array_elements_text(cond->'keys') AS key_text
                             FROM (
                                 SELECT jsonb_array_elements(
@@ -106,9 +106,9 @@ def downgrade():
                                 ) AS cond
                             ) conditions_array
                             WHERE cond->>'type' = 'EFFECTS_KEY'
-                                AND (cond->'effect'->>'bonus_minutes') IS NOT NULL
-                                AND (cond->'effect'->>'bonus_minutes')::float != 0
-                                AND (cond->'effect'->>'level_up')::boolean = false
+                                AND (cond->'effects'->>'bonus_minutes') IS NOT NULL
+                                AND (cond->'effects'->>'bonus_minutes')::float != 0
+                                AND (cond->'effects'->>'level_up')::boolean = false
                         ) bonus_keys_data
                         HAVING count(*) > 0
                     ),
@@ -121,9 +121,9 @@ def downgrade():
                 SELECT 1
                 FROM jsonb_array_elements(l.scenario::JSONB->'conditions') AS cond
                 WHERE cond->>'type' = 'EFFECTS_KEY'
-                    AND (cond->'effect'->>'bonus_minutes') IS NOT NULL
-                    AND (cond->'effect'->>'bonus_minutes')::float != 0
-                    AND (cond->'effect'->>'level_up')::boolean = false
+                    AND (cond->'effects'->>'bonus_minutes') IS NOT NULL
+                    AND (cond->'effects'->>'bonus_minutes')::float != 0
+                    AND (cond->'effects'->>'level_up')::boolean = false
             )
         )
         UPDATE levels lvl

@@ -58,5 +58,3 @@ def render_hints(hints_: Sequence[hints.AnyHint]) -> str:
 
 def render_single_hint(hint: hints.AnyHint) -> str:
     return HINTS_EMOJI[HintType[hint.type]]
-
-

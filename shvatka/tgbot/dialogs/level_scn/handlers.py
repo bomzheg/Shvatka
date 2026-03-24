@@ -401,10 +401,10 @@ async def edit_effects_condition(
 async def on_start_effects_condition_edit(
     start_data: dict[str, Any], manager: DialogManager, retort: FromDishka[Retort]
 ):
-    manager.dialog_data["effects"] = start_data.get("effects", None)
+    manager.dialog_data["effects"] = start_data.get("effects")
     manager.dialog_data["keys"] = start_data.get("keys", [])
     manager.dialog_data["level_id"] = start_data["level_id"]
-    manager.dialog_data["game_id"] = start_data.get("game_id", None)
+    manager.dialog_data["game_id"] = start_data.get("game_id")
 
 
 @inject

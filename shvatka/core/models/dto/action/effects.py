@@ -1,9 +1,9 @@
 from dataclasses import dataclass, field
-from enum import Enum, auto
 from typing import Sequence
 from uuid import UUID
 
 from shvatka.core.models.dto import hints
+
 
 @dataclass(kw_only=True)
 class Effects:
@@ -19,7 +19,6 @@ class Effects:
     def is_bonus_only(self) -> bool:
         return (
             self.bonus_minutes != 0.0
-
             and not self.hints_
             and not self.level_up
             and self.next_level is None

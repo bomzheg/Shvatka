@@ -17,19 +17,6 @@ def bonus_effect(bonus_minutes: int) -> action.Effects:
 
 
 @pytest.fixture
-def complex_conditions() -> scn.Conditions:
-    return scn.Conditions(
-        [
-            action.KeyWinCondition({keys.SHKey("SH123"), keys.SHKey("SH321")}),
-            action.KeyEffectsCondition(keys={"SHB1"}, effects=bonus_effect(1)),
-            action.KeyEffectsCondition(keys={"SHB2"}, effects=bonus_effect(-1)),
-            action.KeyEffectsCondition(keys={"SHB3"}, effects=bonus_effect(0)),
-            action.KeyWinCondition({keys.SHKey("СХ123")}),
-        ]
-    )
-
-
-@pytest.fixture
 def timer_condition() -> scn.Conditions:
     return scn.Conditions(
         [
@@ -60,25 +47,6 @@ def test_create_only_bonus_condition():
     with pytest.raises(exceptions.LevelError):
         scn.Conditions([action.KeyEffectsCondition(keys={"SH123"}, effects=bonus_effect(1))])
 
-
-@pytest.mark.skip  # TODO 128
-def test_conditions_get_keys():
-    c = scn.Conditions(
-        [
-            action.KeyWinCondition({keys.SHKey("SH123"), keys.SHKey("SH321")}),
-            action.KeyWinCondition({keys.SHKey("СХ123")}),
-        ]
-    )
-    assert c.get_keys() == {keys.SHKey("SH123"), keys.SHKey("SH321"), keys.SHKey("СХ123")}
-
-
-@pytest.mark.skip  # TODO 128
-def test_conditions_get_keys_with_bonus(complex_conditions: scn.Conditions):
-    assert complex_conditions.get_keys() == {
-        keys.SHKey("SH123"),
-        keys.SHKey("SH321"),
-        keys.SHKey("СХ123"),
-    }
 
 
 def test_conditions_duplicate_keys():

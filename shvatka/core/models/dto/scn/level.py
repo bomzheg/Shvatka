@@ -140,7 +140,6 @@ class Conditions(Sequence[action.AnyCondition]):
         Conditions.validate_all_timers_le_force(timers, force_level_up_time)
         if not win_conditions and not force_level_up_time and not win_effects_conditions:
             raise exceptions.LevelError(text="There is no win condition")
-        # TODO #128 next is temporary restriction. we should allow multiple times
         if (count := len(win_conditions)) > 1:
             raise exceptions.LevelError(
                 text=f"Default win condition must be exactly once, got {count}"
@@ -305,7 +304,6 @@ def get_default_key_conditions(
 
 
 def get_keys_default_condition(conditions: Sequence[action.AnyCondition]) -> set[action.SHKey]:
-    """TODO #128"""
     key_conditions = get_default_key_conditions(conditions)
     return key_conditions[0].keys if key_conditions else set()
 

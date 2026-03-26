@@ -7,6 +7,7 @@ from aiogram_dialog.widgets.kbd import (
     ScrollingGroup,
     Select,
     Next,
+    ListGroup,
 )
 from aiogram_dialog.widgets.text import Const, Jinja
 
@@ -38,10 +39,10 @@ from .handlers import (
     clear_hints,
     start_effects_keys,
     start_edit_time_hint,
-    on_start_sly_keys,
-    save_sly_keys,
+    on_start_effects_keys,
+    save_effects_keys,
     start_keys,
-    process_sly_keys_result,
+    process_effects_keys_result,
     delete_condition,
     start_level_timers,
     start_key_effects,
@@ -50,6 +51,7 @@ from .handlers import (
     process_effects_condition_result,
     start_effects,
     save_effects_condition,
+    delete_effects_condition,
 )
 from shvatka.tgbot.dialogs.preview_data import PreviewStart
 
@@ -131,7 +133,7 @@ level = Dialog(
         },
         preview_add_transitions=[
             PreviewStart(state=states.LevelKeysSG.keys),
-            PreviewStart(state=states.LevelSlyKeysSG.menu),
+            PreviewStart(state=states.LevelEffectsKeysSG.menu),
             PreviewStart(state=states.LevelHintsSG.time_hints),
             PreviewStart(state=states.LevelTimersSG.menu),
             Cancel(),
@@ -183,7 +185,7 @@ level_edit_dialog = Dialog(
         },
         preview_add_transitions=[
             PreviewStart(state=states.LevelKeysSG.keys),
-            PreviewStart(state=states.LevelSlyKeysSG.menu),
+            PreviewStart(state=states.LevelEffectsKeysSG.menu),
             PreviewStart(state=states.LevelHintsSG.time_hints),
             PreviewStart(state=states.LevelTimersSG.menu),
         ],
@@ -278,12 +280,12 @@ hints_dialog = Dialog(
     on_start=on_start_hints_edit,
 )
 
-sly_keys_dialog = Dialog(
+effects_key_dialog = Dialog(
     Window(
         Jinja("Уровень <b>{{level_id}}</b>\n\n"),
         Jinja(
             "✨Текущие ключи с эффектами:\n"
-            "{% for index, c in effects_conditions.items() %}"
+            "{% for index, c in effects_conditions %}"
             "{{index + 1}}: {{c.effects | effects}}\n"
             "{% for key in c.keys %}"
             "  🔑<code>{{key}}</code>\n"
@@ -292,32 +294,40 @@ sly_keys_dialog = Dialog(
             when=F["effects_conditions"],
         ),
         ScrollingGroup(
-            Select(
-                Jinja("{{item + 1}} - {{data['effects_conditions'][item].effects | effects}}"),
+            ListGroup(
+                Button(
+                    Jinja("{{item[0] + 1}} - {{item[1].effects | effects}}"),
+                    id="edit_effects_condition",
+                    on_click=edit_effects_condition,
+                ),
+                Button(
+                    Const("🗑"),
+                    on_click=delete_effects_condition,
+                    id="delete_effects_condition",
+                ),
                 id="effects_conditions",
-                item_id_getter=lambda x: x,
+                item_id_getter=lambda x: x[0],
                 items="effects_conditions",
-                on_click=edit_effects_condition,
             ),
-            id="effects_conditions_sg",
-            width=1,
+            id="effects_key_sg",
+            width=2,
             height=10,
         ),
         Button(Const("➕Добавить"), id="add_effects_key", on_click=start_key_effects),
         Button(
             Const("✅Готово"),
             id="save",
-            on_click=save_sly_keys,
+            on_click=save_effects_keys,
         ),
         Cancel(Const("🔙Назад")),
         preview_add_transitions=[
             PreviewStart(state=states.KeyEffectsSG.menu),
         ],
         getter=(get_level_id, get_effects_conditions),
-        state=states.LevelSlyKeysSG.menu,
+        state=states.LevelEffectsKeysSG.menu,
     ),
-    on_process_result=process_sly_keys_result,
-    on_start=on_start_sly_keys,
+    on_process_result=process_effects_keys_result,
+    on_start=on_start_effects_keys,
 )
 
 

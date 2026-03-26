@@ -60,7 +60,7 @@ timers_dialog = Dialog(
                 items="timers",
             ),
             id="timer_conditions_sg",
-            width=1,
+            width=2,
             height=10,
         ),
         Button(id="add_timer_start", text=Const("➕Добавить"), on_click=start_new_timer),

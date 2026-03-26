@@ -48,7 +48,6 @@ def test_create_only_bonus_condition():
         scn.Conditions([action.KeyEffectsCondition(keys={"SH123"}, effects=bonus_effect(1))])
 
 
-
 def test_conditions_duplicate_keys():
     with pytest.raises(exceptions.LevelError):
         scn.Conditions(

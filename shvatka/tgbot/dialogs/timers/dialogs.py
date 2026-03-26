@@ -8,6 +8,7 @@ from aiogram_dialog.widgets.kbd import (
     Select,
     SwitchTo,
     Group,
+    ListGroup,
 )
 from aiogram_dialog.widgets.text import Const, Jinja, Format
 
@@ -29,6 +30,7 @@ from .handlers import (
     start_effects,
     on_process_timer_result,
     save_timer,
+    delete_timer,
 )
 from shvatka.tgbot.dialogs.time_hint.getters import get_available_times
 
@@ -42,12 +44,20 @@ timers_dialog = Dialog(
             "{% endfor %}"
         ),
         ScrollingGroup(
-            Select(
-                Jinja("{{item.action_time}}: {{item.effects | effects}}"),
+            ListGroup(
+                Button(
+                    Jinja("{{item.action_time}}: {{item.effects | effects}}"),
+                    id="edit_timer",
+                    on_click=start_edit_timer,
+                ),
+                Button(
+                    Const("🗑"),
+                    id="delete_timer",
+                    on_click=delete_timer,
+                ),
                 id="timer_conditions",
                 item_id_getter=lambda x: x.action_time,
                 items="timers",
-                on_click=start_edit_timer,
             ),
             id="timer_conditions_sg",
             width=1,

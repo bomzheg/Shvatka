@@ -240,11 +240,14 @@ class Conditions(Sequence[action.AnyCondition]):
                 result = result.union(condition.keys)
         return result
 
-    def get_default_key_conditions(self) -> list[action.KeyWinCondition]:
-        return get_default_key_conditions(self.conditions)
+    def get_default_key_conditions(self) -> Sequence[action.KeyWinCondition]:
+        return Conditions.get_conditions_type(self.conditions, action.KeyWinCondition)
 
-    def get_effects_key_conditions(self) -> list[action.KeyEffectsCondition]:
-        return [c for c in self.conditions if isinstance(c, action.KeyEffectsCondition)]
+    def get_effects_key_conditions(self) -> Sequence[action.KeyEffectsCondition]:
+        return Conditions.get_conditions_type(self.conditions, action.KeyEffectsCondition)
+
+    def get_effects_timer_conditions(self) -> Sequence[action.LevelTimerEffectsCondition]:
+        return Conditions.get_conditions_type(self.conditions, action.LevelTimerEffectsCondition)
 
     def get_force_level_up_time(self) -> timedelta | None:
         for condition in self.conditions:
@@ -297,14 +300,8 @@ class Conditions(Sequence[action.AnyCondition]):
         return self.conditions == other.conditions
 
 
-def get_default_key_conditions(
-    conditions: Sequence[action.AnyCondition],
-) -> list[action.KeyWinCondition]:
-    return [c for c in conditions if isinstance(c, action.KeyWinCondition)]
-
-
 def get_keys_default_condition(conditions: Sequence[action.AnyCondition]) -> set[action.SHKey]:
-    key_conditions = get_default_key_conditions(conditions)
+    key_conditions = Conditions.get_conditions_type(conditions, action.KeyWinCondition)
     return key_conditions[0].keys if key_conditions else set()
 
 

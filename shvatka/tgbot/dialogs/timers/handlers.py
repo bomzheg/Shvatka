@@ -2,7 +2,7 @@ from typing import Any
 
 from adaptix import Retort
 from aiogram.types import CallbackQuery, Message
-from aiogram_dialog import Data, DialogManager
+from aiogram_dialog import Data, DialogManager, SubManager
 from aiogram_dialog.widgets.kbd import Button
 from dishka import FromDishka
 from dishka.integrations.aiogram_dialog import inject
@@ -77,9 +77,10 @@ async def start_edit_timer(
     c: CallbackQuery,
     button: Button,
     manager: DialogManager,
-    time: str,
     retort: FromDishka[Retort],
 ):
+    assert isinstance(manager, SubManager)
+    time = manager.item_id
     condition: action.LevelTimerEffectsCondition = next(  # type: ignore[assignment]
         filter(
             lambda x: hasattr(x, "action_time") and x.action_time == int(time),
@@ -94,6 +95,24 @@ async def start_edit_timer(
             "game_id": manager.dialog_data["game_id"],
         },
     )
+
+
+@inject
+async def delete_timer(
+    c: CallbackQuery,
+    button: Button,
+    manager: DialogManager,
+    retort: FromDishka[Retort],
+):
+    assert isinstance(manager, SubManager)
+    time = manager.item_id
+    conditions: list[action.LevelTimerEffectsCondition] = list(
+        filter(
+            lambda x: getattr(x, "action_time", None) != int(time),
+            retort.load(manager.dialog_data["conditions"], list[action.AnyCondition]),
+        )
+    )
+    manager.dialog_data["conditions"] = retort.dump(conditions, list[action.AnyCondition])
 
 
 @inject

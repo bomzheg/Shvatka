@@ -24,8 +24,11 @@ from shvatka.tgbot import keyboards as kb
 from shvatka.tgbot.views.hint_sender import HintSender
 from shvatka.tgbot.views.user import render_small_card_link
 from .getters import get_level_and_org, get_org
-from shvatka.tgbot.views.keys import render_level_keys, render_keys
-from shvatka.tgbot.views.level import render_bonus_hints
+from shvatka.tgbot.views.keys import render_win_key_condition
+from shvatka.tgbot.views.level import (
+    render_effects_key_caption,
+    render_effects_timer_caption,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -48,20 +51,35 @@ async def show_level(c: CallbackQuery, button: Button, manager: DialogManager):
 
 
 async def show_all_hints(author: dto.Player, hint_sender: HintSender, bot: Bot, level: dto.Level):
-    keys_text = f"Ключи уровня:\n{render_level_keys(level.scenario)}"
+    keys_text = "Ключи уровня:\n"
+    for c in level.scenario.conditions.get_default_key_conditions():
+        keys_text += render_win_key_condition(c)
     chat_id: int = author.get_chat_id()  # type: ignore[assignment]
     await bot.send_message(chat_id, keys_text)
+    if effect_keys := level.scenario.conditions.get_effects_key_conditions():
+        await bot.send_message(chat_id, "Ключи с эффектами:")
+        for effect_key in effect_keys:
+            caption, hints_ = render_effects_key_caption(effect_key)
+            await hint_sender.send_hints(
+                chat_id=chat_id,
+                hint_containers=hints_,
+                caption=caption,
+            )
+    if effect_timers := level.scenario.conditions.get_effects_timer_conditions():
+        await bot.send_message(chat_id, "Таймеры:")
+        for timer in effect_timers:
+            caption, hints_ = render_effects_timer_caption(timer)
+            await hint_sender.send_hints(
+                chat_id=chat_id,
+                hint_containers=hints_,
+                caption=caption,
+            )
+
     for hint in level.scenario.time_hints:
         await hint_sender.send_hints(
             chat_id=chat_id,
             hint_containers=hint.hint,
             caption=f"Подсказка {hint.time} мин.",
-        )
-    for keys, hints_ in render_bonus_hints(level.scenario).items():
-        await hint_sender.send_hints(
-            chat_id=chat_id,
-            hint_containers=hints_,
-            caption=f"Бонусная подсказка за ключи:\n{render_keys(keys)}",
         )
     await hint_sender.bot.send_message(
         chat_id=chat_id,

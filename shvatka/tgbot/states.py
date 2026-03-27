@@ -41,7 +41,7 @@ class LevelKeysSG(StatesGroup):
     keys = State()
 
 
-class LevelSlyKeysSG(StatesGroup):
+class LevelEffectsKeysSG(StatesGroup):
     menu = State()
 
 

@@ -5,7 +5,7 @@ from .dialogs import (
     keys_dialog,
     hints_dialog,
     level_edit_dialog,
-    sly_keys_dialog,
+    effects_key_dialog,
     key_effects_condition_dialog,
 )
 
@@ -15,5 +15,5 @@ def setup(router: Router):
     router.include_router(keys_dialog)
     router.include_router(hints_dialog)
     router.include_router(level_edit_dialog)
-    router.include_router(sly_keys_dialog)
+    router.include_router(effects_key_dialog)
     router.include_router(key_effects_condition_dialog)

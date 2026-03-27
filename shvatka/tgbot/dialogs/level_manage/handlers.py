@@ -1,7 +1,7 @@
 import asyncio
 import logging
 import typing
-from typing import Any
+from typing import Any, Callable, Awaitable
 
 from aiogram import Bot
 from aiogram.types import CallbackQuery, Message
@@ -24,7 +24,7 @@ from shvatka.tgbot import keyboards as kb
 from shvatka.tgbot.views.hint_sender import HintSender
 from shvatka.tgbot.views.user import render_small_card_link
 from .getters import get_level_and_org, get_org
-from shvatka.tgbot.views.keys import render_level_keys, render_keys
+from shvatka.tgbot.views.keys import render_level_keys, render_keys, render_win_key_condition
 from shvatka.tgbot.views.level import render_bonus_hints
 
 logger = logging.getLogger(__name__)
@@ -48,20 +48,42 @@ async def show_level(c: CallbackQuery, button: Button, manager: DialogManager):
 
 
 async def show_all_hints(author: dto.Player, hint_sender: HintSender, bot: Bot, level: dto.Level):
-    keys_text = f"Ключи уровня:\n{render_level_keys(level.scenario)}"
+    keys_text = f"Ключи уровня:\n"
+    for c in level.scenario.conditions.get_default_key_conditions():
+        keys_text += render_win_key_condition(c)
     chat_id: int = author.get_chat_id()  # type: ignore[assignment]
     await bot.send_message(chat_id, keys_text)
+    await bot.send_message(chat_id, "Ключи с эффектами:")
+    for effect_key in level.scenario.conditions.get_effects_key_conditions():
+        text = f"Ключ:\n{render_keys(effect_key.keys)}\n"
+        if effect_key.effects.is_no_effects():
+            text += "Не имеет эффектов"
+            await bot.send_message(chat_id, text)
+            continue
+        if effect_key.effects.is_routed_level_up():
+            text += f"переход на уровень {effect_key.effects.next_level}\n"
+        elif effect_key.effects.level_up:
+            text += f"переход на следующий уровень\n"
+        if bonus := effect_key.effects.bonus_minutes:
+            if bonus > 0:
+                text += f"Приносит бонус {bonus} мин.\n"
+            else:
+                text += f"Накладывает штраф {bonus} мин.\n"
+        if effect_key.effects.hints_:
+            text += f"Даёт бонусные подсказки:"
+            await hint_sender.send_hints(
+                chat_id=chat_id,
+                hint_containers=effect_key.effects.hints_,
+                caption=text,
+            )
+        else:
+            await bot.send_message(chat_id, text)
+
     for hint in level.scenario.time_hints:
         await hint_sender.send_hints(
             chat_id=chat_id,
             hint_containers=hint.hint,
             caption=f"Подсказка {hint.time} мин.",
-        )
-    for keys, hints_ in render_bonus_hints(level.scenario).items():
-        await hint_sender.send_hints(
-            chat_id=chat_id,
-            hint_containers=hints_,
-            caption=f"Бонусная подсказка за ключи:\n{render_keys(keys)}",
         )
     await hint_sender.bot.send_message(
         chat_id=chat_id,

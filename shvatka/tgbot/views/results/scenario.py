@@ -160,7 +160,7 @@ class LevelPublisher:
                 )
             else:
                 text = (
-                    f"🔖 Уровень №{self.get_level_name()}. "
+                    f"🔖 Уровень {self.get_level_name()}. "
                     f"Подсказка №{hint_number} ({hint.time} мин.):\n"
                 )
             await asyncio.sleep(self.SLEEP.seconds)
@@ -170,13 +170,13 @@ class LevelPublisher:
         await self.hint_sender.bot.send_message(self.chat_id, text)
 
     def get_level_name(self) -> str:
-        if self.level.number_in_game:
+        if self.level.number_in_game is not None:
             return self._level_number()
         else:
             return self._level_name_id()
 
     def get_full_level_name(self) -> str:
-        if self.level.number_in_game:
+        if self.level.number_in_game is not None:
             return f"<b>Уровень {self._level_number()}</b> ({self._level_name_id()})"
         else:
             return f"<b>Уровень {self._level_name_id()}</b>"
@@ -186,7 +186,7 @@ class LevelPublisher:
         return f"№ {self.level.number_in_game + 1}"
 
     def _level_name_id(self) -> str:
-        return f"({hd.quote(self.level.name_id)})"
+        return f"{hd.quote(self.level.name_id)}"
 
     @classmethod
     def get_approximate_time(cls, level: dto.Level) -> timedelta:

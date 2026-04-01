@@ -13,8 +13,14 @@ from shvatka.core.models import dto
 from shvatka.core.utils.datetime_utils import DATE_FORMAT
 from shvatka.tgbot.config.models.bot import BotConfig
 from shvatka.tgbot.views.hint_sender import HintSender
-from shvatka.tgbot.views.keys import render_log_keys, render_level_keys, render_keys
-from shvatka.tgbot.views.level import render_bonus_hints
+from shvatka.tgbot.views.keys import (
+    render_log_keys,
+    render_win_key_condition,
+)
+from shvatka.tgbot.views.level import (
+    render_effects_key_caption,
+    render_effects_timer_caption,
+)
 from shvatka.tgbot.views.results.level_times import export_results
 
 
@@ -50,7 +56,7 @@ class GamePublisher:
             level_publisher = LevelPublisher(
                 hint_sender=self.hint_sender,
                 level=level,
-                channel_id=self.channel_id,
+                chat_id=self.channel_id,
             )
             await level_publisher.publish()
         await self.bot.send_message(
@@ -89,46 +95,117 @@ class GamePublisher:
 
 
 class LevelPublisher:
-    SLEEP: timedelta = timedelta(seconds=10)
+    SLEEP: timedelta = timedelta(seconds=2)
 
-    def __init__(self, hint_sender: HintSender, level: dto.Level, channel_id: int) -> None:
+    def __init__(self, hint_sender: HintSender, level: dto.Level, chat_id: int) -> None:
         self.hint_sender = hint_sender
         self.level = level
-        self.channel_id = channel_id
+        self.chat_id = chat_id
 
     async def publish(self):
+        await self.publish_caption()
+        await asyncio.sleep(self.SLEEP.seconds)
+        await self.publish_effects_key()
+        await asyncio.sleep(self.SLEEP.seconds)
+        await self.publish_effects_timer()
+        await asyncio.sleep(self.SLEEP.seconds)
+        await self.publish_hints()
+
+    async def publish_caption(self):
+        text = f"🔒 {self.get_full_level_name()}\n"
+        if default_keys := self.level.scenario.conditions.get_default_key_conditions():
+            text += "Ключи уровня:\n"
+            for c in default_keys:
+                text += render_win_key_condition(c)
+        else:
+            text += "Не имеет ключей уровня."
+        await self.send_message(text)
+
+    async def publish_effects_key(self):
+        if effect_keys := self.level.scenario.conditions.get_effects_key_conditions():
+            await self.send_message("Ключи с эффектами:")
+            for effect_key in effect_keys:
+                await asyncio.sleep(self.SLEEP.seconds)
+                caption, hints_ = render_effects_key_caption(effect_key)
+                await self.hint_sender.send_hints(
+                    chat_id=self.chat_id,
+                    hint_containers=hints_,
+                    caption=caption,
+                )
+        else:
+            await self.send_message("Не имеет ключей с эффектами")
+
+    async def publish_effects_timer(self):
+        if effect_timers := self.level.scenario.conditions.get_effects_timer_conditions():
+            await self.send_message("Таймеры:")
+            for timer in effect_timers:
+                caption, hints_ = render_effects_timer_caption(timer)
+                await asyncio.sleep(self.SLEEP.seconds)
+                await self.hint_sender.send_hints(
+                    chat_id=self.chat_id,
+                    hint_containers=hints_,
+                    caption=caption,
+                )
+        else:
+            await self.send_message("Не имеет таймеров")
+
+    async def publish_hints(self):
         for hint_number, hint in enumerate(self.level.scenario.time_hints):
             if hint.time == 0:
-                text = (
-                    f"🔒 <b>Уровень № {self.level.number_in_game + 1}</b> "
-                    f"({hd.quote(self.level.name_id)})\n"
-                    f"Ключи уровня:\n{render_level_keys(self.level.scenario)}"
-                )
+                text = f"🔒 {self.get_full_level_name()}:\n"
             elif hint_number == len(self.level.scenario.time_hints) - 1:
                 text = (
-                    f"🔖 Последняя подсказка уровня №{self.level.number_in_game + 1} "
+                    f"🔖 Последняя подсказка уровня {self.get_level_name()} "
                     f"({hint.time} мин.):\n"
                 )
             else:
                 text = (
-                    f"🔖 Уровень №{self.level.number_in_game + 1}. "
+                    f"🔖 Уровень {self.get_level_name()}. "
                     f"Подсказка №{hint_number} ({hint.time} мин.):\n"
                 )
             await asyncio.sleep(self.SLEEP.seconds)
-            await self.hint_sender.send_hints(self.channel_id, hint.hint, text)
-        for keys, hints in render_bonus_hints(self.level.scenario).items():
-            await self.hint_sender.send_hints(
-                chat_id=self.channel_id,
-                hint_containers=hints,
-                caption=f"Бонусная подсказка за ключи:\n{render_keys(keys)}",
-            )
+            await self.hint_sender.send_hints(self.chat_id, hint.hint, text)
+
+    async def send_message(self, text: str) -> None:
+        await self.hint_sender.bot.send_message(self.chat_id, text)
+
+    def get_level_name(self) -> str:
+        if self.level.number_in_game is not None:
+            return self._level_number()
+        else:
+            return self._level_name_id()
+
+    def get_full_level_name(self) -> str:
+        if self.level.number_in_game is not None:
+            return f"<b>Уровень {self._level_number()}</b> ({self._level_name_id()})"
+        else:
+            return f"<b>Уровень {self._level_name_id()}</b>"
+
+    def _level_number(self) -> str:
+        assert self.level.number_in_game is not None
+        return f"№ {self.level.number_in_game + 1}"
+
+    def _level_name_id(self) -> str:
+        return f"{hd.quote(self.level.name_id)}"
 
     @classmethod
     def get_approximate_time(cls, level: dto.Level) -> timedelta:
-        captions_time = level.hints_count * cls.SLEEP
+        captions_time = level.hints_count * cls.SLEEP + 3 * cls.SLEEP
+        effects_keys_captions = (
+            len(level.scenario.conditions.get_effects_key_conditions()) * cls.SLEEP
+        )
+        effects_timers_captions = (
+            len(level.scenario.conditions.get_effects_timer_conditions()) * cls.SLEEP
+        )
         time_tints_time = reduce(
             add,
             (HintSender.get_approximate_time(hints.hint) for hints in level.scenario.time_hints),
         )
         bonus_hints_time = HintSender.get_approximate_time(level.scenario.conditions.get_hints())
-        return captions_time + time_tints_time + bonus_hints_time
+        return (
+            captions_time
+            + time_tints_time
+            + bonus_hints_time
+            + effects_keys_captions
+            + effects_timers_captions
+        )

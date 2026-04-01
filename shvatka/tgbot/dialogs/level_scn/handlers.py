@@ -3,7 +3,7 @@ from typing import Any
 
 from adaptix import Retort
 from aiogram.types import CallbackQuery, Message
-from aiogram_dialog import Data, DialogManager
+from aiogram_dialog import Data, DialogManager, SubManager
 from aiogram_dialog.widgets.kbd import Button
 from dishka import FromDishka
 from dishka.integrations.aiogram_dialog import inject
@@ -222,7 +222,7 @@ async def start_effects_keys(
     raw_conditions = manager.dialog_data.get("conditions", [])
     conditions = retort.load(raw_conditions, scn.Conditions)
     await manager.start(
-        state=states.LevelSlyKeysSG.menu,
+        state=states.LevelEffectsKeysSG.menu,
         data={
             "level_id": manager.dialog_data["level_id"],
             "effects_conditions": retort.dump(
@@ -255,7 +255,7 @@ async def start_level_timers(
 
 
 @inject
-async def on_start_sly_keys(
+async def on_start_effects_keys(
     start_data: dict[str, Any], manager: DialogManager, retort: FromDishka[Retort]
 ):
     manager.dialog_data["level_id"] = start_data["level_id"]
@@ -265,7 +265,7 @@ async def on_start_sly_keys(
 
 
 @inject
-async def save_sly_keys(c: CallbackQuery, button: Button, manager: DialogManager):
+async def save_effects_keys(c: CallbackQuery, button: Button, manager: DialogManager):
     await manager.done(
         {
             "effects_conditions": manager.dialog_data["effects_conditions"],
@@ -332,7 +332,7 @@ async def delete_condition(
 
 
 @inject
-async def process_sly_keys_result(
+async def process_effects_keys_result(
     start_data: Data,
     result: Any,
     manager: DialogManager,
@@ -350,7 +350,7 @@ async def process_sly_keys_result(
             manager.dialog_data["effects_conditions"] = retort.dump(
                 effects_conditions, list[action.KeyEffectsCondition]
             )
-    if effects_condition := result.get("effects_condition", None):
+    elif effects_condition := result.get("effects_condition", None):
         if start_data and (number := start_data.get("edited_effects_condition", None)) is not None:
             effects_conditions[int(number)] = effects_condition
         else:
@@ -378,12 +378,12 @@ async def start_key_effects(
 
 @inject
 async def edit_effects_condition(
-    c: CallbackQuery, widget: Any, manager: DialogManager, number: str, retort: FromDishka[Retort]
+    c: CallbackQuery, widget: Any, manager: DialogManager, retort: FromDishka[Retort]
 ):
+    assert isinstance(manager, SubManager)
     data = manager.dialog_data
-    conditions = dict(
-        enumerate(retort.load(data["effects_conditions"], list[action.KeyEffectsCondition]))
-    )
+    conditions = retort.load(data["effects_conditions"], list[action.KeyEffectsCondition])
+    number = manager.item_id
     to_edit: action.KeyEffectsCondition = conditions[int(number)]
     await manager.start(
         state=states.KeyEffectsSG.menu,
@@ -394,6 +394,20 @@ async def edit_effects_condition(
             "level_id": data["level_id"],
             "game_id": data.get("game_id", None),
         },
+    )
+
+
+@inject
+async def delete_effects_condition(
+    c: CallbackQuery, widget: Any, manager: DialogManager, retort: FromDishka[Retort]
+):
+    assert isinstance(manager, SubManager)
+    data = manager.dialog_data
+    conditions = retort.load(data["effects_conditions"], list[action.KeyEffectsCondition])
+    number = manager.item_id
+    conditions.pop(int(number))
+    manager.dialog_data["effects_conditions"] = retort.dump(
+        conditions, list[action.KeyEffectsCondition]
     )
 
 

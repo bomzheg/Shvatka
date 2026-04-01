@@ -59,7 +59,7 @@ async def get_effects_conditions(dialog_manager: DialogManager, retort: Retort, 
     data = dialog_manager.dialog_data
     conditions = retort.load(data["effects_conditions"], list[action.KeyEffectsCondition])
     return {
-        "effects_conditions": dict(enumerate(conditions)),
+        "effects_conditions": list(enumerate(conditions)),
         "game_id": data["game_id"],
     }
 

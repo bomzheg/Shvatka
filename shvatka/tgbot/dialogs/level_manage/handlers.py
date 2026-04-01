@@ -24,8 +24,7 @@ from shvatka.tgbot import keyboards as kb
 from shvatka.tgbot.views.hint_sender import HintSender
 from shvatka.tgbot.views.user import render_small_card_link
 from .getters import get_level_and_org, get_org
-from shvatka.tgbot.views.keys import render_level_keys, render_keys
-from shvatka.tgbot.views.level import render_bonus_hints
+from shvatka.tgbot.views.results.scenario import LevelPublisher
 
 logger = logging.getLogger(__name__)
 
@@ -42,31 +41,14 @@ async def show_level(c: CallbackQuery, button: Button, manager: DialogManager):
     author: dto.Player = manager.middleware_data["player"]
     dao: HolderDao = manager.middleware_data["dao"]
     level = await get_by_id(level_id, author, dao.level)
-    bot: Bot = manager.middleware_data["bot"]
     hint_sender: HintSender = manager.middleware_data["hint_sender"]
-    asyncio.create_task(show_all_hints(author, hint_sender, bot, level))
+    asyncio.create_task(show_all_hints(author, hint_sender, level))
 
 
-async def show_all_hints(author: dto.Player, hint_sender: HintSender, bot: Bot, level: dto.Level):
-    keys_text = f"Ключи уровня:\n{render_level_keys(level.scenario)}"
+async def show_all_hints(author: dto.Player, hint_sender: HintSender, level: dto.Level):
     chat_id: int = author.get_chat_id()  # type: ignore[assignment]
-    await bot.send_message(chat_id, keys_text)
-    for hint in level.scenario.time_hints:
-        await hint_sender.send_hints(
-            chat_id=chat_id,
-            hint_containers=hint.hint,
-            caption=f"Подсказка {hint.time} мин.",
-        )
-    for keys, hints_ in render_bonus_hints(level.scenario).items():
-        await hint_sender.send_hints(
-            chat_id=chat_id,
-            hint_containers=hints_,
-            caption=f"Бонусная подсказка за ключи:\n{render_keys(keys)}",
-        )
-    await hint_sender.bot.send_message(
-        chat_id=chat_id,
-        text=f"Это был весь уровень {level.name_id}",
-    )
+    publisher = LevelPublisher(hint_sender=hint_sender, level=level, chat_id=chat_id)
+    await publisher.publish()
 
 
 async def send_to_testing(c: CallbackQuery, widget: Any, manager: DialogManager, org_id: str):

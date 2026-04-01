@@ -12,7 +12,6 @@ from telegraph.aio import Telegraph
 from shvatka.core.models import dto
 from shvatka.core.utils.datetime_utils import DATE_FORMAT
 from shvatka.tgbot.config.models.bot import BotConfig
-from shvatka.tgbot.dialogs.level_scn import effects_key_dialog
 from shvatka.tgbot.views.hint_sender import HintSender
 from shvatka.tgbot.views.keys import (
     render_log_keys,
@@ -183,6 +182,7 @@ class LevelPublisher:
             return f"<b>Уровень {self._level_name_id()}</b>"
 
     def _level_number(self) -> str:
+        assert self.level.number_in_game is not None
         return f"№ {self.level.number_in_game + 1}"
 
     def _level_name_id(self) -> str:
@@ -191,11 +191,21 @@ class LevelPublisher:
     @classmethod
     def get_approximate_time(cls, level: dto.Level) -> timedelta:
         captions_time = level.hints_count * cls.SLEEP + 3 * cls.SLEEP
-        effects_keys_captions = len(level.scenario.conditions.get_effects_key_conditions()) * cls.SLEEP
-        effects_timers_captions = len(level.scenario.conditions.get_effects_timer_conditions()) * cls.SLEEP
+        effects_keys_captions = (
+            len(level.scenario.conditions.get_effects_key_conditions()) * cls.SLEEP
+        )
+        effects_timers_captions = (
+            len(level.scenario.conditions.get_effects_timer_conditions()) * cls.SLEEP
+        )
         time_tints_time = reduce(
             add,
             (HintSender.get_approximate_time(hints.hint) for hints in level.scenario.time_hints),
         )
         bonus_hints_time = HintSender.get_approximate_time(level.scenario.conditions.get_hints())
-        return captions_time + time_tints_time + bonus_hints_time + effects_keys_captions + effects_timers_captions
+        return (
+            captions_time
+            + time_tints_time
+            + bonus_hints_time
+            + effects_keys_captions
+            + effects_timers_captions
+        )

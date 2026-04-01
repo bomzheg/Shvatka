@@ -350,7 +350,7 @@ async def process_effects_keys_result(
             manager.dialog_data["effects_conditions"] = retort.dump(
                 effects_conditions, list[action.KeyEffectsCondition]
             )
-    if effects_condition := result.get("effects_condition", None):
+    elif effects_condition := result.get("effects_condition", None):
         if start_data and (number := start_data.get("edited_effects_condition", None)) is not None:
             effects_conditions[int(number)] = effects_condition
         else:

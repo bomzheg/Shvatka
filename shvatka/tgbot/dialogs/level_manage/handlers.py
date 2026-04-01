@@ -29,6 +29,7 @@ from shvatka.tgbot.views.level import (
     render_effects_key_caption,
     render_effects_timer_caption,
 )
+from ...views.results.scenario import LevelPublisher
 
 logger = logging.getLogger(__name__)
 
@@ -45,53 +46,14 @@ async def show_level(c: CallbackQuery, button: Button, manager: DialogManager):
     author: dto.Player = manager.middleware_data["player"]
     dao: HolderDao = manager.middleware_data["dao"]
     level = await get_by_id(level_id, author, dao.level)
-    bot: Bot = manager.middleware_data["bot"]
     hint_sender: HintSender = manager.middleware_data["hint_sender"]
-    asyncio.create_task(show_all_hints(author, hint_sender, bot, level))
+    asyncio.create_task(show_all_hints(author, hint_sender, level))
 
 
-async def show_all_hints(author: dto.Player, hint_sender: HintSender, bot: Bot, level: dto.Level):
+async def show_all_hints(author: dto.Player, hint_sender: HintSender, level: dto.Level):
     chat_id: int = author.get_chat_id()  # type: ignore[assignment]
-    if default_keys := level.scenario.conditions.get_default_key_conditions():
-        keys_text = "Ключи уровня:\n"
-        for c in default_keys:
-            keys_text += render_win_key_condition(c)
-        await bot.send_message(chat_id, keys_text)
-    else:
-        await bot.send_message(chat_id, "Не имеет ключей уровня.")
-    if effect_keys := level.scenario.conditions.get_effects_key_conditions():
-        await bot.send_message(chat_id, "Ключи с эффектами:")
-        for effect_key in effect_keys:
-            caption, hints_ = render_effects_key_caption(effect_key)
-            await hint_sender.send_hints(
-                chat_id=chat_id,
-                hint_containers=hints_,
-                caption=caption,
-            )
-    else:
-        await bot.send_message(chat_id, "Не имеет ключей с эффектами")
-    if effect_timers := level.scenario.conditions.get_effects_timer_conditions():
-        await bot.send_message(chat_id, "Таймеры:")
-        for timer in effect_timers:
-            caption, hints_ = render_effects_timer_caption(timer)
-            await hint_sender.send_hints(
-                chat_id=chat_id,
-                hint_containers=hints_,
-                caption=caption,
-            )
-    else:
-        await bot.send_message(chat_id, "Не имеет таймеров")
-
-    for hint in level.scenario.time_hints:
-        await hint_sender.send_hints(
-            chat_id=chat_id,
-            hint_containers=hint.hint,
-            caption=f"Подсказка {hint.time} мин.",
-        )
-    await bot.send_message(
-        chat_id=chat_id,
-        text=f"Это был весь уровень {level.name_id}",
-    )
+    publisher = LevelPublisher(hint_sender=hint_sender, level=level, chat_id=chat_id)
+    await publisher.publish()
 
 
 async def send_to_testing(c: CallbackQuery, widget: Any, manager: DialogManager, org_id: str):

@@ -1,7 +1,7 @@
 from typing import Sequence
 
 
-from shvatka.core.models.dto import scn, action, hints
+from shvatka.core.models.dto import action, hints
 from shvatka.tgbot.views.keys import render_keys
 
 

@@ -24,12 +24,7 @@ from shvatka.tgbot import keyboards as kb
 from shvatka.tgbot.views.hint_sender import HintSender
 from shvatka.tgbot.views.user import render_small_card_link
 from .getters import get_level_and_org, get_org
-from shvatka.tgbot.views.keys import render_win_key_condition
-from shvatka.tgbot.views.level import (
-    render_effects_key_caption,
-    render_effects_timer_caption,
-)
-from ...views.results.scenario import LevelPublisher
+from shvatka.tgbot.views.results.scenario import LevelPublisher
 
 logger = logging.getLogger(__name__)
 

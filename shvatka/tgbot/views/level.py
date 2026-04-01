@@ -24,7 +24,7 @@ def render_effects_key_caption(
 def render_effects_timer_caption(
     effect_timer: action.LevelTimerEffectsCondition,
 ) -> tuple[str, Sequence[hints.AnyHint]]:
-    text = f"Таймер срабатывает в {effect_timer.get_action_time().total_seconds()/60} мин.\n"
+    text = f"Таймер срабатывает в {effect_timer.action_time} мин.\n"
     effect_caption, hints_ = render_effects_caption(effect_timer.effects)
     return text + effect_caption, hints_
 
@@ -41,7 +41,7 @@ def render_effects_caption(effects: action.Effects) -> tuple[str, Sequence[hints
         if bonus > 0:
             text += f"Приносит бонус {bonus} мин.\n"
         else:
-            text += f"Накладывает штраф {bonus} мин.\n"
+            text += f"Накладывает штраф {abs(bonus)} мин.\n"
     if effects.hints_:
         text += "Даёт бонусные подсказки:"
     return text, effects.hints_

@@ -1,4 +1,4 @@
-from shvatka.core.views.game import InputContainer
+from shvatka.core.games.input import InputContainer
 
 
 class SchedulerContainer(InputContainer):

@@ -20,8 +20,8 @@ from shvatka.core.views.game import (
     LevelUp,
     GameLogEvent,
     GameLogType,
-    InputContainer,
 )
+from shvatka.core.games.input import InputContainer
 from shvatka.infrastructure.db import models
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from tests.fixtures.game_fixtures import CurrentGameProviderMock

@@ -26,8 +26,8 @@ from shvatka.core.views.game import (
     LevelTestCompleted,
     GameLogEvent,
     GameLogType,
-    InputContainer,
 )
+from shvatka.core.games.input import InputContainer
 from shvatka.tgbot.views.bot_alert import BotAlert
 from shvatka.tgbot.views.hint_sender import HintSender
 from shvatka.tgbot.views.keys import KeyEmoji

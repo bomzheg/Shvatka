@@ -4,7 +4,8 @@ from typing import Sequence
 
 from shvatka.core.models import dto
 from shvatka.core.models.dto import hints, action
-from shvatka.core.views.game import GameView, InputContainer
+from shvatka.core.views.game import GameView
+from shvatka.core.games.input import InputContainer
 from tests.utils.effects import assert_effects_equal
 from tests.utils.time_key import assert_time_key
 

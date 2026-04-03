@@ -30,11 +30,11 @@ from shvatka.core.views.game import (
     GameView,
     GameLogWriter,
     OrgNotifier,
-    InputContainer,
     LevelUp,
     GameLogEvent,
     GameLogType,
 )
+from shvatka.core.games.input import InputContainer
 from shvatka.infrastructure.scheduler import SchedulerContainer
 
 

@@ -13,7 +13,7 @@ from dataclass_factory import Factory
 from dishka import make_async_container, AsyncContainer, Provider, Scope
 from telegraph.aio import Telegraph
 
-from shvatka.api.dependencies import AuthProvider, ApiConfigProvider, ApiIdpProvider
+from shvatka.api.dependencies import AuthProvider, ApiConfigProvider, ApiOnlyProvider
 from shvatka.common import Paths
 from shvatka.common.factory import DCFProvider, TelegraphProvider, UrlProvider
 from shvatka.core.interfaces.clients.file_storage import FileStorage, FileGateway
@@ -34,7 +34,8 @@ from shvatka.infrastructure.di import (
     DAOProvider,
 )
 from shvatka.main_factory import IdpProvider
-from shvatka.tgbot.main_factory import DpProvider, LockProvider, GameToolsProvider, BotIdpProvider
+from shvatka.tgbot.main_factory import DpProvider, GameToolsProvider, BotIdpProvider
+from shvatka.infrastructure.db.factory import LockProvider
 from shvatka.tgbot.username_resolver.user_getter import UserGetter
 from shvatka.tgbot.views.hint_factory.hint_parser import HintParser
 from tests.fixtures.db_provider import TestDbProvider
@@ -77,7 +78,7 @@ async def dishka():
         GamePlayProvider(),
         PrinterProvider(),
         GameToolsProvider(),
-        ApiIdpProvider(),
+        ApiOnlyProvider(),
         BotIdpProvider(),
         IdpProvider(),
         mock_provider,

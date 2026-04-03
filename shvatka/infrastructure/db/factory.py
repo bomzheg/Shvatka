@@ -1,5 +1,6 @@
 import logging
 
+from dishka import Provider, Scope, provide
 from redis.asyncio import Redis
 from sqlalchemy.engine import make_url
 from sqlalchemy.ext.asyncio import (
@@ -33,10 +34,6 @@ def create_session_maker(engine: AsyncEngine) -> async_sessionmaker[AsyncSession
     return pool
 
 
-def create_lock_factory() -> KeyCheckerFactory:
-    return MemoryLockFactory()
-
-
 def create_redis(config: RedisConfig) -> Redis:
     logger.info("created redis for %s", config)
     return Redis(host=config.url, port=config.port, db=config.db)
@@ -45,3 +42,11 @@ def create_redis(config: RedisConfig) -> Redis:
 def create_level_test_dao():
     level_test_dao = LevelTestingData()
     return level_test_dao
+
+
+class LockProvider(Provider):
+    scope = Scope.APP
+
+    @provide
+    def get_lock_factory(self) -> KeyCheckerFactory:
+        return MemoryLockFactory()

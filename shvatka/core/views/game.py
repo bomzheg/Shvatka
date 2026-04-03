@@ -5,6 +5,7 @@ from dataclasses import dataclass, field
 from typing import Protocol, Iterable, Sequence, Any
 
 from shvatka.core.games.dto import GamePlayResponse
+from shvatka.core.games.input import InputContainer
 from shvatka.core.interfaces.dal.game_play import GamePreparer
 from shvatka.core.models import dto
 from shvatka.core.models.dto import action
@@ -19,10 +20,6 @@ class GameViewPreparer(Protocol):
         dao: GamePreparer,
     ) -> None:
         raise NotImplementedError
-
-
-class InputContainer(Protocol):
-    pass
 
 
 class GameView(Protocol):

@@ -2,19 +2,21 @@ from typing import Annotated
 
 from dishka.integrations.fastapi import FromDishka
 from dishka.integrations.fastapi import inject
-from fastapi import APIRouter
+from fastapi import APIRouter, Body
 from fastapi.params import Path
 from fastapi.responses import StreamingResponse, Response
 from starlette.status import HTTP_404_NOT_FOUND, HTTP_403_FORBIDDEN
+from watchfiles import awatch
 
 from shvatka.api.dependencies.auth import ApiIdentityProvider
-from shvatka.api.models import responses
+from shvatka.api.models import responses, req
 from shvatka.api.utils.error_converter import to_http_error
+from shvatka.api.utils.web_input import WebInput
 from shvatka.core.games.interactors import (
     GameFileReaderInteractor,
     GamePlayReaderInteractor,
     GameKeysReaderInteractor,
-    GameStatReaderInteractor,
+    GameStatReaderInteractor, CheckKeyInteractor,
 )
 from shvatka.core.interfaces.current_game import CurrentGameProvider
 from shvatka.core.services.game import (
@@ -107,13 +109,31 @@ async def get_running_game_hints(
 ) -> responses.CurrentHintResponse:
     return responses.CurrentHintResponse.from_core(await interactor(identity))
 
+@inject
+async def insert_key(
+    identity: FromDishka[ApiIdentityProvider],
+    interactor: FromDishka[CheckKeyInteractor],
+    input_container: FromDishka[WebInput],
+    key: Annotated[req.Key, Body()],
+) -> responses.InsertedKey:
+    result = await interactor(key=key.text, identity=identity, input_container=input_container)
+    return responses.InsertedKey(
+        text=result.new_key.text,
+        is_duplicate=result.new_key.is_duplicate,
+        wrong=result.wrong,
+        at=result.new_key.at,
+        effects=result.effects,
+        game_finished=result.game_finished,
+    )
+
 
 def setup() -> APIRouter:
     router = APIRouter(prefix="/games")
     router.add_api_route("", get_all_games, methods=["GET"])
     router.add_api_route("/my", get_my_games_list, methods=["GET"])
     router.add_api_route("/active", get_active_game, methods=["GET"])
-    router.add_api_route("/running/hints", get_running_game_hints, methods=["GET"])
+    router.add_api_route("/running/level/current/hints", get_running_game_hints, methods=["GET"])
+    router.add_api_route("/running/key", insert_key, methods=["POST"])
     router.add_api_route("/{id}", get_game_card, methods=["GET"])
     router.add_api_route("/{id}/keys", get_game_keys, methods=["GET"])
     router.add_api_route("/{id}/stat", get_game_stat, methods=["GET"])

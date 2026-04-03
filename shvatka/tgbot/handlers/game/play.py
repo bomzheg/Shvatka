@@ -5,6 +5,7 @@ from dishka.integrations.aiogram import inject
 
 from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.games.interactors import CheckKeyInteractor
+from shvatka.core.views.game import GameView
 from shvatka.tgbot.filters import is_key, IsTeamFilter
 from shvatka.tgbot.filters.game_status import GameStatusFilter
 from shvatka.tgbot.filters.team_player import TeamPlayerFilter
@@ -17,13 +18,16 @@ async def check_key_handler(
     message: Message,
     key: str,
     interactor: FromDishka[CheckKeyInteractor],
+    view: FromDishka[GameView],
     identity: FromDishka[IdentityProvider],
 ):
-    await interactor(
+    response = await interactor(
         key=key,
         input_container=BotInputContainer(message=message),
         identity=identity,
     )
+    await view.process_response(response)
+
 
 
 def setup() -> Router:

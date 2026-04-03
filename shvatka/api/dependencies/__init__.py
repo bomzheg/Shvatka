@@ -4,6 +4,7 @@ from fastapi import FastAPI
 
 from shvatka.api.dependencies.auth import AuthProvider, ApiIdpProvider
 from shvatka.api.dependencies.config import ApiConfigProvider
+from shvatka.api.dependencies.other import OtherApiProvider
 from shvatka.infrastructure.di import get_providers
 
 
@@ -29,6 +30,7 @@ def get_api_specific_providers() -> list[Provider]:
     return [
         AuthProvider(),
         ApiConfigProvider(),
+        OtherApiProvider(),
     ]
 
 

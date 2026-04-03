@@ -1,3 +1,4 @@
+import uuid
 from dataclasses import dataclass, field
 from typing import Sequence
 from uuid import UUID
@@ -26,3 +27,7 @@ class Effects:
 
     def is_routed_level_up(self) -> bool:
         return self.level_up and self.next_level is not None
+
+    @classmethod
+    def empty(cls) -> "Effects":
+        return cls(id=uuid.uuid4())

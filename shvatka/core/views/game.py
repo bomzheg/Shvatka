@@ -4,6 +4,7 @@ import enum
 from dataclasses import dataclass, field
 from typing import Protocol, Iterable, Sequence, Any
 
+from shvatka.core.games.dto import GamePlayResponse
 from shvatka.core.interfaces.dal.game_play import GamePreparer
 from shvatka.core.models import dto
 from shvatka.core.models.dto import action
@@ -52,6 +53,18 @@ class GameView(Protocol):
         self, team: dto.Team, effects: action.Effects, input_container: InputContainer
     ) -> None:
         raise NotImplementedError
+
+    async def process_response(self, response: GamePlayResponse) -> None:
+        if response.new_key.is_duplicate:
+            await self.duplicate_key(key=response.new_key, input_container=response.input_container)
+            return
+        if response.wrong:
+            await self.wrong_key(key=response.new_key, input_container=response.input_container)
+        for effect in response.effects:
+            await self.effects(team=response.team, effects=effect, input_container=response.input_container)
+        if response.game_finished:
+            await self.game_finished(team=response.team, input_container=response.input_container)
+
 
 
 class GameLogWriter(Protocol):

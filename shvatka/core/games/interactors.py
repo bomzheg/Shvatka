@@ -215,7 +215,7 @@ class CheckKeyInteractor(GamePlayBaseInteractor):
             )
 
         new_key = await self.key_processor.check_key(key=key, player=player, team=team)
-        response = GamePlayResponse(input_container=input_container, new_key=new_key)
+        response = GamePlayResponse(input_container=input_container, new_key=new_key, team=team)
         if new_key is None:
             return response
         self.view_(new_key, response)
@@ -229,7 +229,6 @@ class CheckKeyInteractor(GamePlayBaseInteractor):
 
     def view_(self, new_key: dto.InsertedKey, response: GamePlayResponse) -> None:
         if new_key.is_duplicate:
-            response.done = True
             # if duplicate - only show info about doubles, do not repeat bonuses or other effects
             return
         match new_key.type_:
@@ -263,7 +262,7 @@ class GamePlayTimerInteractor(GamePlayBaseInteractor):
             started_level_time_id=started_level_time_id,
         )
 
-        response = GamePlayResponse(input_container=input_container)
+        response = GamePlayResponse(input_container=input_container, team=team)
         if not effects_list:
             return response
 

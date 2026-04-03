@@ -52,16 +52,20 @@ class GameView(Protocol):
         raise NotImplementedError
 
     async def process_response(self, response: GamePlayResponse) -> None:
-        if response.new_key.is_duplicate:
-            await self.duplicate_key(key=response.new_key, input_container=response.input_container)
+        if response.new_key is not None and response.new_key.is_duplicate:
+            await self.duplicate_key(
+                key=response.new_key, input_container=response.input_container
+            )
             return
         if response.wrong:
+            assert response.new_key is not None
             await self.wrong_key(key=response.new_key, input_container=response.input_container)
         for effect in response.effects:
-            await self.effects(team=response.team, effects=effect, input_container=response.input_container)
+            await self.effects(
+                team=response.team, effects=effect, input_container=response.input_container
+            )
         if response.game_finished:
             await self.game_finished(team=response.team, input_container=response.input_container)
-
 
 
 class GameLogWriter(Protocol):

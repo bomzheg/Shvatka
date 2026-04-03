@@ -33,7 +33,6 @@ from shvatka.infrastructure.db.factory import (
 )
 from shvatka.infrastructure.di import get_providers
 from shvatka.infrastructure.picture import ResultsPainter
-from shvatka.infrastructure.scheduler.factory import SchedulerProvider
 from shvatka.tgbot.config.models.bot import BotConfig, TgClientConfig
 from shvatka.tgbot.handlers import setup_handlers
 from shvatka.tgbot.middlewares import setup_middlewares

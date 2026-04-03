@@ -6,7 +6,6 @@ from fastapi import APIRouter, Body
 from fastapi.params import Path
 from fastapi.responses import StreamingResponse, Response
 from starlette.status import HTTP_404_NOT_FOUND, HTTP_403_FORBIDDEN
-from watchfiles import awatch
 
 from shvatka.api.dependencies.auth import ApiIdentityProvider
 from shvatka.api.models import responses, req
@@ -16,7 +15,8 @@ from shvatka.core.games.interactors import (
     GameFileReaderInteractor,
     GamePlayReaderInteractor,
     GameKeysReaderInteractor,
-    GameStatReaderInteractor, CheckKeyInteractor,
+    GameStatReaderInteractor,
+    CheckKeyInteractor,
 )
 from shvatka.core.interfaces.current_game import CurrentGameProvider
 from shvatka.core.services.game import (
@@ -109,6 +109,7 @@ async def get_running_game_hints(
 ) -> responses.CurrentHintResponse:
     return responses.CurrentHintResponse.from_core(await interactor(identity))
 
+
 @inject
 async def insert_key(
     identity: FromDishka[ApiIdentityProvider],
@@ -117,6 +118,7 @@ async def insert_key(
     key: Annotated[req.Key, Body()],
 ) -> responses.InsertedKey:
     result = await interactor(key=key.text, identity=identity, input_container=input_container)
+    assert result.new_key is not None
     return responses.InsertedKey(
         text=result.new_key.text,
         is_duplicate=result.new_key.is_duplicate,

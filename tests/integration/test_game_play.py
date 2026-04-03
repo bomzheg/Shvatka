@@ -99,11 +99,13 @@ async def test_wrong_key(
         key_processor=key_processor,
     )
     identity = MockIdentityProvider(player=harry, team=gryffindor)
-    await dummy_view.process_response(await key_checker(
-        key="SHWRONG",
-        input_container=MockInputContainer(),
-        identity=identity,
-    ))
+    await dummy_view.process_response(
+        await key_checker(
+            key="SHWRONG",
+            input_container=MockInputContainer(),
+            identity=identity,
+        )
+    )
 
     identity = MockIdentityProvider(player=author)
     keys = await get_typed_keys(game=game, identity=identity, dao=check_dao.typed_keys)
@@ -154,11 +156,13 @@ async def test_bonus_hint_key(
         player=harry,
         team=gryffindor,
     )
-    await dummy_view.process_response(await check_key(
-        key="SHBONUSHINT",
-        input_container=MockInputContainer(),
-        identity=identity,
-    ))
+    await dummy_view.process_response(
+        await check_key(
+            key="SHBONUSHINT",
+            input_container=MockInputContainer(),
+            identity=identity,
+        )
+    )
 
     identity = MockIdentityProvider(player=author)
     keys = await get_typed_keys(game=game, identity=identity, dao=check_dao.typed_keys)
@@ -231,7 +235,9 @@ async def test_game_play(
         current_game=current_game,
         key_processor=key_processor,
     )
-    await dummy_view.process_response(await check_key(key="SH123", identity=identity, input_container=MockInputContainer()))
+    await dummy_view.process_response(
+        await check_key(key="SH123", identity=identity, input_container=MockInputContainer())
+    )
     expected_first_key = dto.KeyTime(
         text="SH123",
         type_=enums.KeyType.simple,
@@ -243,7 +249,9 @@ async def test_game_play(
     )
     dummy_view.assert_correct_key_no_effects_only(expected_first_key)
 
-    response = await check_key(key="SH123", identity=identity, input_container=MockInputContainer())
+    response = await check_key(
+        key="SH123", identity=identity, input_container=MockInputContainer()
+    )
     await dummy_view.process_response(response)
     expected_second_key = dto.KeyTime(
         text="SH123",
@@ -256,7 +264,9 @@ async def test_game_play(
     )
     dummy_view.assert_duplicate_key_only(expected_second_key)
 
-    response = await check_key(key="SH321", identity=identity, input_container=MockInputContainer())
+    response = await check_key(
+        key="SH321", identity=identity, input_container=MockInputContainer()
+    )
     await dummy_view.process_response(response)
     expected_third_key = dto.KeyTime(
         text="SH321",
@@ -273,7 +283,9 @@ async def test_game_play(
     dummy_view.assert_correct_key_level_up_only(expected_third_key)
     dummy_view.assert_send_only_puzzle(gryffindor, game.levels[1])
 
-    response = await check_key(key="SHOOT", identity=identity, input_container=MockInputContainer())
+    response = await check_key(
+        key="SHOOT", identity=identity, input_container=MockInputContainer()
+    )
     await dummy_view.process_response(response)
     dummy_log.assert_one_event(GameLogEvent(GameLogType.GAME_FINISHED, {"game": game.name}))
     expected_fourth_key = dto.KeyTime(
@@ -339,7 +351,9 @@ async def test_fast_play_routed_game(
         key_processor=key_processor,
     )
 
-    response = await check_key(key="SHTO3", identity=identity, input_container=MockInputContainer())
+    response = await check_key(
+        key="SHTO3", identity=identity, input_container=MockInputContainer()
+    )
     await dummy_view.process_response(response)
     expected_first_key = dto.KeyTime(
         text="SHTO3",
@@ -419,7 +433,9 @@ async def test_cycle_play_routed_game(
         key_processor=key_processor,
     )
 
-    response = await check_key(key="SHTO3", identity=identity, input_container=MockInputContainer())
+    response = await check_key(
+        key="SHTO3", identity=identity, input_container=MockInputContainer()
+    )
     await dummy_view.process_response(response)
     expected_first_key = dto.KeyTime(
         text="SHTO3",
@@ -436,7 +452,9 @@ async def test_cycle_play_routed_game(
     )
     dummy_view.assert_send_only_puzzle(gryffindor, game.levels[2])
 
-    response = await check_key(key="SHTO1", identity=identity, input_container=MockInputContainer())
+    response = await check_key(
+        key="SHTO1", identity=identity, input_container=MockInputContainer()
+    )
     await dummy_view.process_response(response)
     expected_second_key = dto.KeyTime(
         text="SHTO1",
@@ -453,7 +471,9 @@ async def test_cycle_play_routed_game(
     )
     dummy_view.assert_send_only_puzzle(gryffindor, game.levels[0])
 
-    response = await check_key(key="SHTO3", identity=identity, input_container=MockInputContainer())
+    response = await check_key(
+        key="SHTO3", identity=identity, input_container=MockInputContainer()
+    )
     await dummy_view.process_response(response)
     expected_third_key = dto.KeyTime(
         text="SHTO3",

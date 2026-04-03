@@ -24,7 +24,9 @@ class WebGameView(GameView):
     async def wrong_key(self, key: dto.KeyTime, input_container: InputContainer) -> None:
         pass
 
-    async def effects_key(self, key: dto.KeyTime, effects: action.Effects, input_container: InputContainer) -> None:
+    async def effects_key(
+        self, key: dto.KeyTime, effects: action.Effects, input_container: InputContainer
+    ) -> None:
         pass
 
     async def game_finished(self, team: dto.Team, input_container: InputContainer) -> None:
@@ -33,13 +35,16 @@ class WebGameView(GameView):
     async def game_finished_by_all(self, team: dto.Team) -> None:
         pass
 
-    async def effects(self, team: dto.Team, effects: action.Effects, input_container: InputContainer) -> None:
+    async def effects(
+        self, team: dto.Team, effects: action.Effects, input_container: InputContainer
+    ) -> None:
         pass
 
 
 class WebGameLogWriter(GameLogWriter):
     async def log(self, log_event: GameLogEvent) -> None:
         pass
+
 
 class WebOrgNotifier(OrgNotifier):
     async def notify(self, event: Event) -> None:

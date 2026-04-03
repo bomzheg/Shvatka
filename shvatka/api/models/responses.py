@@ -10,7 +10,6 @@ from shvatka.core.games.dto import CurrentHints
 from shvatka.core.models import dto, enums
 from shvatka.core.models.dto import scn, action
 from shvatka.core.models.dto import hints
-from shvatka.core.models.dto.action import effects
 from shvatka.core.models.enums import GameStatus
 
 T = typing.TypeVar("T")
@@ -209,6 +208,7 @@ class CurrentHintResponse:
             level_number=core.level_number,
             started_at=core.started_at,
         )
+
 
 @dataclass(kw_only=True, frozen=True, slots=True)
 class InsertedKey:

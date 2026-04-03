@@ -29,7 +29,6 @@ async def check_key_handler(
     await view.process_response(response)
 
 
-
 def setup() -> Router:
     router = Router(name=__name__)
     router.message.outer_middleware(TeamPlayerMiddleware())

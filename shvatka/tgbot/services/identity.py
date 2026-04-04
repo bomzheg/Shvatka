@@ -10,7 +10,7 @@ from shvatka.core.models import dto
 from shvatka.core.services.chat import upsert_chat
 from shvatka.core.services.player import (
     upsert_player,
-    get_full_team_player_or_none,
+    get_full_team_player_or_none, get_my_team,
 )
 from shvatka.core.services.team import get_by_chat
 from shvatka.core.services.user import upsert_user
@@ -80,6 +80,8 @@ class TgBotIdentityProvider(IdentityProvider):
         if "team" in self.cache:
             return self.cache["team"]
         team = await load_team(await self.get_chat(), self.dao)
+        if team is None:
+            team = await get_my_team(await self.get_player(), self.dao.team_player)
         self.cache["team"] = team
         return team
 

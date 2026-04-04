@@ -117,15 +117,14 @@ async def insert_key(
     input_container: FromDishka[WebInput],
     key: Annotated[req.Key, Body()],
 ) -> responses.InsertedKey:
-    result = await interactor(key=key.text, identity=identity, input_container=input_container)
-    assert result.new_key is not None
+    await interactor(key=key.text, identity=identity, input_container=input_container)
     return responses.InsertedKey(
-        text=result.new_key.text,
-        is_duplicate=result.new_key.is_duplicate,
-        wrong=result.wrong,
-        at=result.new_key.at,
-        effects=result.effects,
-        game_finished=result.game_finished,
+        text=input_container.new_key.text if input_container.new_key else "",
+        is_duplicate=input_container.duplicate_key,
+        wrong=input_container.wrong_key,
+        at=input_container.new_key.at if input_container.new_key else None,
+        effects=input_container.effects,
+        game_finished=input_container.game_finished,
     )
 
 

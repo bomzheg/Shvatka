@@ -1,14 +1,24 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
-from shvatka.core.games.input import InputContainer
 from shvatka.core.models import dto
 from shvatka.core.models.dto import action
-from shvatka.core.views.game import GameView, GameLogWriter, GameLogEvent, OrgNotifier, Event
+from shvatka.core.views.game import (
+    GameView,
+    GameLogWriter,
+    GameLogEvent,
+    OrgNotifier,
+    Event,
+    InputContainer,
+)
 
 
-@dataclass
+@dataclass(kw_only=True)
 class WebInput(InputContainer):
-    pass
+    new_key: dto.KeyTime | None = None
+    wrong_key: bool = False
+    duplicate_key: bool = False
+    effects: list[action.Effects] = field(default_factory=list)
+    game_finished: bool = False
 
 
 class WebGameView(GameView):
@@ -19,15 +29,18 @@ class WebGameView(GameView):
         pass
 
     async def duplicate_key(self, key: dto.KeyTime, input_container: InputContainer) -> None:
-        pass
+        if isinstance(input_container, WebInput):
+            input_container.duplicate_key = True
 
     async def wrong_key(self, key: dto.KeyTime, input_container: InputContainer) -> None:
-        pass
+        if isinstance(input_container, WebInput):
+            input_container.wrong_key = True
 
     async def effects_key(
         self, key: dto.KeyTime, effects: action.Effects, input_container: InputContainer
     ) -> None:
-        pass
+        if isinstance(input_container, WebInput):
+            input_container.effects.append(effects)
 
     async def game_finished(self, team: dto.Team, input_container: InputContainer) -> None:
         pass
@@ -38,7 +51,8 @@ class WebGameView(GameView):
     async def effects(
         self, team: dto.Team, effects: action.Effects, input_container: InputContainer
     ) -> None:
-        pass
+        if isinstance(input_container, WebInput):
+            input_container.effects.append(effects)
 
 
 class WebGameLogWriter(GameLogWriter):

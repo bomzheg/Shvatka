@@ -215,6 +215,6 @@ class InsertedKey:
     text: str
     is_duplicate: bool
     wrong: bool
-    at: datetime
+    at: datetime | None
     effects: list[action.Effects]
     game_finished: bool

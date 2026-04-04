@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import BinaryIO
 
-from shvatka.core.games.dto import CurrentHints, GamePlayResponse
+from shvatka.core.games.dto import CurrentHints
 from shvatka.core.games.game_play import schedule_first_hint
 from shvatka.core.interfaces.clients.file_storage import FileGateway
 from shvatka.core.games.adapters import (
@@ -30,11 +30,11 @@ from shvatka.core.views.game import (
     GameView,
     GameLogWriter,
     OrgNotifier,
+    InputContainer,
     LevelUp,
     GameLogEvent,
     GameLogType,
 )
-from shvatka.core.games.input import InputContainer
 from shvatka.infrastructure.scheduler import SchedulerContainer
 
 
@@ -145,13 +145,13 @@ class GamePlayBaseInteractor:
 
     async def process_level_up(
         self,
-        response: GamePlayResponse,
+        input_container: InputContainer,
         team: dto.Team,
         game: dto.FullGame,
     ) -> None:
         async with self.locker.lock_globally():
             if await self.dao.is_team_finished(team, game):
-                response.game_finished = True
+                await self.view.game_finished(team, input_container)
                 if await self.dao.is_all_team_finished(game):
                     await self.all_teams_finished(game)
                 return
@@ -188,7 +188,7 @@ class CheckKeyInteractor(GamePlayBaseInteractor):
         key: str,
         input_container: InputContainer,
         identity: IdentityProvider,
-    ) -> GamePlayResponse:
+    ):
         """
         Проверяет введённый игроком ключ. Может случиться несколько исходов:
         - ключ неверный - просто записываем его в лог и уведомляем команду
@@ -215,31 +215,37 @@ class CheckKeyInteractor(GamePlayBaseInteractor):
             )
 
         new_key = await self.key_processor.check_key(key=key, player=player, team=team)
-        response = GamePlayResponse(input_container=input_container, new_key=new_key, team=team)
         if new_key is None:
-            return response
-        self.view_(new_key, response)
+            return
+        await self.view_(new_key, input_container)
         if not new_key.is_duplicate and new_key.is_level_up():
             await self.process_level_up(
-                response=response,
+                input_container=input_container,
                 team=team,
                 game=game,
             )
-        return response
 
-    def view_(self, new_key: dto.InsertedKey, response: GamePlayResponse) -> None:
+    async def view_(self, new_key: dto.InsertedKey, input_container: InputContainer) -> None:
         if new_key.is_duplicate:
+            await self.view.duplicate_key(key=new_key, input_container=input_container)
             # if duplicate - only show info about doubles, do not repeat bonuses or other effects
             return
         match new_key.type_:
             case enums.KeyType.wrong:
-                response.wrong = True
+                await self.view.wrong_key(key=new_key, input_container=input_container)
             case enums.KeyType.effects:
-                response.effects.append(new_key.parsed_key.effect)
+                await self.view.effects_key(
+                    key=new_key, effects=new_key.parsed_key.effect, input_container=input_container
+                )
             case enums.KeyType.bonus:
-                response.effects.append(new_key.parsed_key.effect)
+                await self.view.effects_key(
+                    key=new_key, effects=new_key.parsed_key.effect, input_container=input_container
+                )
             case enums.KeyType.simple:
-                response.effects.append(new_key.parsed_key.effect)
+                await self.view.effects_key(
+                    key=new_key, effects=new_key.parsed_key.effect, input_container=input_container
+                )
+
             case _:
                 typing.assert_never(new_key.type_)
 
@@ -254,7 +260,7 @@ class GamePlayTimerInteractor(GamePlayBaseInteractor):
         now: datetime,
         started_level_time_id: int,
         input_container: SchedulerContainer,
-    ) -> GamePlayResponse:
+    ) -> None:
         team = await self.dao.get_by_id(team_id)
         effects_list = await self.processor.process(
             team=team,
@@ -262,9 +268,8 @@ class GamePlayTimerInteractor(GamePlayBaseInteractor):
             started_level_time_id=started_level_time_id,
         )
 
-        response = GamePlayResponse(input_container=input_container, team=team)
         if not effects_list:
-            return response
+            return
 
         game = await self.current_game.get_required_full_game()
         level_time = await self.dao.get_current_level_time(team, game)
@@ -272,7 +277,7 @@ class GamePlayTimerInteractor(GamePlayBaseInteractor):
         last_event: dto.GameEvent | None = None
         for effects in effects_list:
             last_event = await self.dao.save_event(team=team, game=game, effects=effects)
-            response.effects.append(effects)
+            await self.view.effects(team=team, effects=effects, input_container=input_container)
             if effects.level_up:
                 level_up_effect = effects
         if last_event is not None:
@@ -280,9 +285,8 @@ class GamePlayTimerInteractor(GamePlayBaseInteractor):
         if level_up_effect is not None:
             team = await self.dao.get_by_id(team_id)
             await self.process_level_up(
-                response=response,
+                input_container=input_container,
                 team=team,
                 game=await self.current_game.get_required_full_game(),
             )
         await self.dao.commit()
-        return response

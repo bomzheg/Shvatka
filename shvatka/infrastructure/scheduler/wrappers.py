@@ -120,12 +120,10 @@ async def event_wrapper(
     team_id: int,
     started_level_time_id: int,
     interactor: FromDishka[GamePlayTimerInteractor],
-    view: FromDishka[GameView],
 ):
-    response = await interactor(
+    await interactor(
         team_id=team_id,
         started_level_time_id=started_level_time_id,
         now=datetime.now(tz=tz_utc),
         input_container=SchedulerContainer(),
     )
-    await view.process_response(response)

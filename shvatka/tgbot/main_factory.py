@@ -24,18 +24,15 @@ from redis.asyncio import Redis
 from shvatka.common.factory import TelegraphProvider, DCFProvider, UrlProvider
 from shvatka.core.interfaces.clients.file_storage import FileStorage
 from shvatka.core.interfaces.identity import IdentityProvider
-from shvatka.core.utils.key_checker_lock import KeyCheckerFactory
 from shvatka.core.views.game import GameLogWriter, GameView, GameViewPreparer, OrgNotifier
 from shvatka.core.views.level import LevelView
 from shvatka.infrastructure.db.config.models.storage import StorageConfig, StorageType
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.infrastructure.db.factory import (
     create_redis,
-    create_lock_factory,
 )
 from shvatka.infrastructure.di import get_providers
 from shvatka.infrastructure.picture import ResultsPainter
-from shvatka.infrastructure.scheduler.factory import SchedulerProvider
 from shvatka.tgbot.config.models.bot import BotConfig, TgClientConfig
 from shvatka.tgbot.handlers import setup_handlers
 from shvatka.tgbot.middlewares import setup_middlewares
@@ -70,12 +67,10 @@ def get_bot_specific_providers() -> list[Provider]:
     return [
         DpProvider(),
         DialogManagerProvider(),
-        SchedulerProvider(),
         TelegraphProvider(),
         DCFProvider(),
         GameToolsProvider(),
         UserGetterProvider(),
-        LockProvider(),
         UrlProvider(),
         BotIdpProvider(),
     ]
@@ -93,14 +88,6 @@ class DialogManagerProvider(Provider):
     @provide
     def get_manager(self) -> MessageManagerProtocol:
         return MessageManager()
-
-
-class LockProvider(Provider):
-    scope = Scope.APP
-
-    @provide
-    def get_lock_factory(self) -> KeyCheckerFactory:
-        return create_lock_factory()
 
 
 class DpProvider(Provider):

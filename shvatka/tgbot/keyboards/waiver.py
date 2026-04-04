@@ -55,7 +55,7 @@ class WaiverAddForceMenuCD(CallbackData, prefix="waiver_add_force"):
     team_id: int
 
 
-class WaiverAddPlayerForceCD(CallbackData, prefix="waiver_add_force"):
+class WaiverAddPlayerForceCD(CallbackData, prefix="waiver_add_force_player"):
     game_id: int
     team_id: int
     player_id: int

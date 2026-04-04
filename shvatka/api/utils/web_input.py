@@ -35,15 +35,18 @@ class WebGameView(GameView):
     async def wrong_key(self, key: dto.KeyTime, input_container: InputContainer) -> None:
         if isinstance(input_container, WebInput):
             input_container.wrong_key = True
+            input_container.new_key = key
 
     async def effects_key(
         self, key: dto.KeyTime, effects: action.Effects, input_container: InputContainer
     ) -> None:
         if isinstance(input_container, WebInput):
             input_container.effects.append(effects)
+            input_container.new_key = key
 
     async def game_finished(self, team: dto.Team, input_container: InputContainer) -> None:
-        pass
+        if isinstance(input_container, WebInput):
+            input_container.game_finished = True
 
     async def game_finished_by_all(self, team: dto.Team) -> None:
         pass

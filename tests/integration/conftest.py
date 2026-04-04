@@ -13,7 +13,12 @@ from dataclass_factory import Factory
 from dishka import make_async_container, AsyncContainer, Provider, Scope
 from telegraph.aio import Telegraph
 
-from shvatka.api.dependencies import AuthProvider, ApiConfigProvider, ApiOnlyProvider, OtherApiProvider
+from shvatka.api.dependencies import (
+    AuthProvider,
+    ApiConfigProvider,
+    ApiOnlyProvider,
+    OtherApiProvider,
+)
 from shvatka.common import Paths
 from shvatka.common.factory import DCFProvider, TelegraphProvider, UrlProvider
 from shvatka.core.interfaces.clients.file_storage import FileStorage, FileGateway

@@ -57,13 +57,18 @@ class GameView(Protocol):
                 key=response.new_key, input_container=response.input_container
             )
             return
-        if response.wrong:
-            assert response.new_key is not None
+        if response.new_key is not None and response.wrong:
             await self.wrong_key(key=response.new_key, input_container=response.input_container)
-        for effect in response.effects:
-            await self.effects(
-                team=response.team, effects=effect, input_container=response.input_container
-            )
+        if response.new_key is not None:
+            for effect in response.effects:
+                await self.effects_key(
+                    key=response.new_key, effects=effect, input_container=response.input_container
+                )
+        else:
+            for effect in response.effects:
+                await self.effects(
+                    team=response.team, effects=effect, input_container=response.input_container
+                )
         if response.game_finished:
             await self.game_finished(team=response.team, input_container=response.input_container)
 

@@ -31,6 +31,7 @@ class WebGameView(GameView):
     async def duplicate_key(self, key: dto.KeyTime, input_container: InputContainer) -> None:
         if isinstance(input_container, WebInput):
             input_container.duplicate_key = True
+            input_container.new_key = key
 
     async def wrong_key(self, key: dto.KeyTime, input_container: InputContainer) -> None:
         if isinstance(input_container, WebInput):

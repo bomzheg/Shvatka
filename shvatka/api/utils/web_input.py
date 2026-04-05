@@ -2,7 +2,7 @@ from dataclasses import dataclass, field
 from typing import Iterable
 
 from shvatka.core.interfaces.dal.game_play import GamePreparer
-from shvatka.core.models import dto, enums
+from shvatka.core.models import dto
 from shvatka.core.models.dto import action
 from shvatka.core.views.game import (
     GameView,
@@ -20,14 +20,6 @@ class WebInput(InputContainer):
     new_key: dto.KeyTime | None = None
     effects: list[action.Effects] = field(default_factory=list)
     game_finished: bool = False
-
-    @property
-    def wrong_key(self) -> bool:
-        return self.new_key.type_ == enums.KeyType.wrong if self.new_key is not None else False
-
-    @property
-    def duplicate_key(self) -> bool:
-        return self.new_key.is_duplicate if self.new_key is not None else False
 
 
 class WebGameView(GameView):

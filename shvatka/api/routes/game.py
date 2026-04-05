@@ -20,6 +20,7 @@ from shvatka.core.games.interactors import (
     CheckKeyInteractor,
 )
 from shvatka.core.interfaces.current_game import CurrentGameProvider
+from shvatka.core.models import enums
 from shvatka.core.services.game import (
     get_authors_games,
     get_completed_games,
@@ -126,10 +127,10 @@ async def insert_key(
         logger.critical("not implemented condition for key %s", key.text)
         raise HTTPException(status_code=500, detail="not implemented state found")
     return responses.InsertedKey(
-        text=input_container.new_key.text if input_container.new_key else "",
-        is_duplicate=input_container.duplicate_key,
-        wrong=input_container.wrong_key,
-        at=input_container.new_key.at if input_container.new_key else None,
+        text=input_container.new_key.text,
+        is_duplicate=input_container.new_key.is_duplicate,
+        wrong=input_container.new_key.type_ == enums.KeyType.wrong,
+        at=input_container.new_key.at,
         effects=input_container.effects,
         game_finished=input_container.game_finished,
     )

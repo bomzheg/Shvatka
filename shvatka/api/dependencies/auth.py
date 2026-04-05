@@ -74,8 +74,13 @@ class AuthProperties:
         return Token(access_token=encoded_jwt, token_type="bearer")
 
     def create_user_token(self, user: dto.User) -> Token:
+        if user.db_id is None:
+            raise exceptions.UserNotFoundError
+        return self.create_user_id_token(user.db_id)
+
+    def create_user_id_token(self, user_id: int) -> Token:
         return self.create_access_token(
-            data={"sub": str(user.db_id)}, expires_delta=self.access_token_expire
+            data={"sub": str(user_id)}, expires_delta=self.access_token_expire
         )
 
     async def get_current_user(

@@ -1,8 +1,9 @@
+import logging
 from typing import Annotated
 
 from dishka.integrations.fastapi import FromDishka
 from dishka.integrations.fastapi import inject
-from fastapi import APIRouter, Body
+from fastapi import APIRouter, Body, HTTPException
 from fastapi.params import Path
 from fastapi.responses import StreamingResponse, Response
 from starlette.status import HTTP_404_NOT_FOUND, HTTP_403_FORBIDDEN
@@ -26,6 +27,9 @@ from shvatka.core.services.game import (
 )
 from shvatka.core.utils import exceptions
 from shvatka.infrastructure.db.dao.holder import HolderDao
+
+
+logger = logging.getLogger(__name__)
 
 
 @inject
@@ -118,6 +122,9 @@ async def insert_key(
     key: Annotated[req.Key, Body()],
 ) -> responses.InsertedKey:
     await interactor(key=key.text, identity=identity, input_container=input_container)
+    if input_container.new_key is None:
+        logger.critical("not implemented condition for key %s", key.text)
+        raise HTTPException(status_code=500, detail="not implemented state found")
     return responses.InsertedKey(
         text=input_container.new_key.text if input_container.new_key else "",
         is_duplicate=input_container.duplicate_key,

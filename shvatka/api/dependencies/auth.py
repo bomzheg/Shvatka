@@ -17,7 +17,6 @@ from starlette.requests import Request
 from shvatka.api.config.models.auth import AuthConfig
 from shvatka.api.models.auth import UserTgAuth, Token
 from shvatka.api.utils.cookie_auth import OAuth2PasswordBearerWithCookie
-from shvatka.api.utils.web_input import WebGameView, WebGameLogWriter, WebOrgNotifier
 from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.models import dto
 from shvatka.core.services.player import (
@@ -28,7 +27,6 @@ from shvatka.core.services.player import (
 from shvatka.core.utils import exceptions
 from shvatka.core.utils.datetime_utils import tz_utc
 from shvatka.core.utils.exceptions import NoUsernameFound
-from shvatka.core.views.game import GameView, GameLogWriter, OrgNotifier
 from shvatka.infrastructure.db.dao.holder import HolderDao
 
 
@@ -240,21 +238,3 @@ class AuthProvider(Provider):
     idp = provide(ApiIdentityProvider, scope=Scope.REQUEST)
 
 
-class ApiOnlyProvider(Provider):
-    scope = Scope.REQUEST
-
-    @provide
-    def get_idp(self, idp: ApiIdentityProvider) -> IdentityProvider:
-        return idp
-
-    @provide
-    def web_only_view(self, view: WebGameView) -> GameView:
-        return view
-
-    @provide
-    def web_only_log_writer(self, log_writer: WebGameLogWriter) -> GameLogWriter:
-        return log_writer
-
-    @provide
-    def web_only_org_notifier(self, org_notifier: WebOrgNotifier) -> OrgNotifier:
-        return org_notifier

@@ -2,7 +2,8 @@ from dishka import Provider, make_async_container, AsyncContainer
 from dishka.integrations.fastapi import setup_dishka
 from fastapi import FastAPI
 
-from shvatka.api.dependencies.auth import AuthProvider, ApiOnlyProvider
+from shvatka.api.dependencies.auth import AuthProvider
+from shvatka.api.dependencies.api_only import ApiOnlyProvider
 from shvatka.api.dependencies.config import ApiConfigProvider
 from shvatka.api.dependencies.other import OtherApiProvider
 from shvatka.infrastructure.di import get_providers

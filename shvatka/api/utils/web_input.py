@@ -1,5 +1,7 @@
 from dataclasses import dataclass, field
+from typing import Iterable
 
+from shvatka.core.interfaces.dal.game_play import GamePreparer
 from shvatka.core.models import dto, enums
 from shvatka.core.models.dto import action
 from shvatka.core.views.game import (
@@ -8,7 +10,7 @@ from shvatka.core.views.game import (
     GameLogEvent,
     OrgNotifier,
     Event,
-    InputContainer,
+    InputContainer, GameViewPreparer,
 )
 
 
@@ -61,6 +63,13 @@ class WebGameView(GameView):
     ) -> None:
         if isinstance(input_container, WebInput):
             input_container.effects.append(effects)
+
+
+class WebGamePreparer(GameViewPreparer):
+
+    async def prepare_game_view(self, game: dto.Game, teams: Iterable[dto.Team], orgs: Iterable[dto.Organizer],
+                                dao: GamePreparer) -> None:
+        pass
 
 
 class WebGameLogWriter(GameLogWriter):

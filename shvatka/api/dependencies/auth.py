@@ -236,5 +236,3 @@ class AuthProvider(Provider):
         return OAuth2PasswordBearerWithCookie(token_url="auth/token")
 
     idp = provide(ApiIdentityProvider, scope=Scope.REQUEST)
-
-

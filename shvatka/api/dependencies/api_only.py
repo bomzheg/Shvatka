@@ -1,7 +1,12 @@
 from dishka import Provider, Scope, provide
 
 from shvatka.api.dependencies.auth import ApiIdentityProvider
-from shvatka.api.utils.web_input import WebGameView, WebGameLogWriter, WebOrgNotifier, WebGamePreparer
+from shvatka.api.utils.web_input import (
+    WebGameView,
+    WebGameLogWriter,
+    WebOrgNotifier,
+    WebGamePreparer,
+)
 from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.views.game import GameView, GameLogWriter, OrgNotifier, GameViewPreparer
 

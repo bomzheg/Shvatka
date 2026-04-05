@@ -10,7 +10,8 @@ from shvatka.core.views.game import (
     GameLogEvent,
     OrgNotifier,
     Event,
-    InputContainer, GameViewPreparer,
+    InputContainer,
+    GameViewPreparer,
 )
 
 
@@ -66,9 +67,13 @@ class WebGameView(GameView):
 
 
 class WebGamePreparer(GameViewPreparer):
-
-    async def prepare_game_view(self, game: dto.Game, teams: Iterable[dto.Team], orgs: Iterable[dto.Organizer],
-                                dao: GamePreparer) -> None:
+    async def prepare_game_view(
+        self,
+        game: dto.Game,
+        teams: Iterable[dto.Team],
+        orgs: Iterable[dto.Organizer],
+        dao: GamePreparer,
+    ) -> None:
         pass
 
 

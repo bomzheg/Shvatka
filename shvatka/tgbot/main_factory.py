@@ -78,7 +78,7 @@ def get_bot_specific_providers() -> list[Provider]:
 
 def get_bot_only_providers() -> list[Provider]:
     return [
-        BotOnlyIdpProvider(),
+        BotOnlyProvider(),
     ]
 
 
@@ -151,12 +151,16 @@ class BotIdpProvider(Provider):
     bot_idp = provide(TgBotIdentityProvider)
 
 
-class BotOnlyIdpProvider(Provider):
+class BotOnlyProvider(Provider):
     scope = Scope.REQUEST
 
     @provide
     def get_idp(self, idp: TgBotIdentityProvider) -> IdentityProvider:
         return idp
+
+    @provide
+    def get_game_view(self, bot_game_view: BotView) -> AnyOf[GameViewPreparer, GameView]:
+        return bot_game_view
 
 
 class GameToolsProvider(Provider):
@@ -175,9 +179,7 @@ class GameToolsProvider(Provider):
         return BotOrgNotifier(bot=bot)
 
     get_hint_sender = provide(HintSender, scope=Scope.REQUEST)
-    get_bot_game_view = provide(
-        BotView, scope=Scope.REQUEST, provides=AnyOf[GameView, GameViewPreparer]
-    )
+    get_bot_game_view = provide(BotView, scope=Scope.REQUEST)
     level_bot_view = provide(LevelBotView, scope=Scope.REQUEST, provides=LevelView)
     hint_parser = provide(HintParser, scope=Scope.REQUEST)
     results_painter = provide(ResultsPainter, scope=Scope.REQUEST)

@@ -184,3 +184,68 @@ async def test_game_hints(
             "time": 2,
         },
     ]
+
+
+@pytest.mark.asyncio
+async def test_post_wrong_key(
+    client: AsyncClient,
+    auth: AuthProperties,
+    author: dto.Player,
+    harry: dto.Player,
+    gryffindor: dto.Team,
+    started_game: dto.FullGame,
+    dao: HolderDao,
+    check_dao: HolderDao,
+):
+    token = auth.create_user_token(harry._user)
+    resp = await client.post(
+        "/games/running/key",
+        json={"text": "SHWRONG"},
+        cookies={"Authorization": "Bearer " + token.access_token},
+    )
+    assert resp.status_code == 200
+    resp_json = resp.json()
+    assert resp_json["text"] == "SHWRONG"
+    assert resp_json["effects"] == []
+    assert resp_json["at"] is not None
+    assert resp_json["game_finished"] is False
+    assert resp_json["is_duplicate"] is False
+    assert resp_json["wrong"] is True
+
+
+@pytest.mark.asyncio
+async def test_post_bonus_hint_key(
+    client: AsyncClient,
+    auth: AuthProperties,
+    author: dto.Player,
+    harry: dto.Player,
+    gryffindor: dto.Team,
+    started_game: dto.FullGame,
+    dao: HolderDao,
+    check_dao: HolderDao,
+):
+    token = auth.create_user_token(harry._user)
+    resp = await client.post(
+        "/games/running/key",
+        json={"text": "SHBONUSHINT"},
+        cookies={"Authorization": "Bearer " + token.access_token},
+    )
+    assert resp.status_code == 200
+    resp_json = resp.json()
+    assert resp_json["text"] == "SHBONUSHINT"
+    assert resp_json["effects"] == [
+        {
+            "id": "019d16d6-e501-77fd-af89-50893a58b8f5",
+            "bonus_minutes": 0.0,
+            "hints_": [
+                {"latitude": 55.579282598950165, "longitude": 37.910306366539395, "type": "gps"},
+                {"link_preview": None, "text": "this is bonus hint", "type": "text"},
+            ],
+            "level_up": False,
+            "next_level": None,
+        }
+    ]
+    assert resp_json["at"] is not None
+    assert resp_json["game_finished"] is False
+    assert resp_json["is_duplicate"] is False
+    assert resp_json["wrong"] is False

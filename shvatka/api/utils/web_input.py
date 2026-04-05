@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
 
-from shvatka.core.models import dto
+from shvatka.core.models import dto, enums
 from shvatka.core.models.dto import action
 from shvatka.core.views.game import (
     GameView,
@@ -15,10 +15,16 @@ from shvatka.core.views.game import (
 @dataclass(kw_only=True)
 class WebInput(InputContainer):
     new_key: dto.KeyTime | None = None
-    wrong_key: bool = False
-    duplicate_key: bool = False
     effects: list[action.Effects] = field(default_factory=list)
     game_finished: bool = False
+
+    @property
+    def wrong_key(self) -> bool:
+        return self.new_key.type_ == enums.KeyType.wrong if self.new_key is not None else False
+
+    @property
+    def duplicate_key(self) -> bool:
+        return self.new_key.is_duplicate if self.new_key is not None else False
 
 
 class WebGameView(GameView):
@@ -30,12 +36,10 @@ class WebGameView(GameView):
 
     async def duplicate_key(self, key: dto.KeyTime, input_container: InputContainer) -> None:
         if isinstance(input_container, WebInput):
-            input_container.duplicate_key = True
             input_container.new_key = key
 
     async def wrong_key(self, key: dto.KeyTime, input_container: InputContainer) -> None:
         if isinstance(input_container, WebInput):
-            input_container.wrong_key = True
             input_container.new_key = key
 
     async def effects_key(

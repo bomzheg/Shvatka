@@ -37,7 +37,7 @@ from shvatka.infrastructure.di import (
     ContextProvider,
     DAOProvider,
 )
-from shvatka.main_factory import IdpProvider
+from shvatka.main_factory import ComplexOnlyProvider
 from shvatka.tgbot.main_factory import DpProvider, GameToolsProvider, BotIdpProvider
 from shvatka.infrastructure.db.factory import LockProvider
 from shvatka.tgbot.username_resolver.user_getter import UserGetter
@@ -84,7 +84,7 @@ async def dishka():
         PrinterProvider(),
         GameToolsProvider(),
         BotIdpProvider(),
-        IdpProvider(),
+        ComplexOnlyProvider(),
         mock_provider,
     )
     yield container

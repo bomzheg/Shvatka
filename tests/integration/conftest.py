@@ -16,7 +16,6 @@ from telegraph.aio import Telegraph
 from shvatka.api.dependencies import (
     AuthProvider,
     ApiConfigProvider,
-    ApiOnlyProvider,
     OtherApiProvider,
 )
 from shvatka.common import Paths
@@ -84,7 +83,6 @@ async def dishka():
         GamePlayProvider(),
         PrinterProvider(),
         GameToolsProvider(),
-        ApiOnlyProvider(),
         BotIdpProvider(),
         IdpProvider(),
         mock_provider,

@@ -106,7 +106,7 @@ class ComplexView(GameView):
         try:
             await self.bot.game_finished_by_all(team=team)
         except Exception as e:
-            logger.exception("web game_finished_by_all error", exc_info=e)
+            logger.exception("bot game_finished_by_all error", exc_info=e)
         try:
             await self.web.game_finished_by_all(team=team)
         except Exception as e:
@@ -118,7 +118,7 @@ class ComplexView(GameView):
         try:
             await self.bot.effects(team=team, effects=effects, input_container=input_container)
         except Exception as e:
-            logger.exception("web effects error", exc_info=e)
+            logger.exception("bot effects error", exc_info=e)
         try:
             await self.web.effects(team=team, effects=effects, input_container=input_container)
         except Exception as e:

@@ -8,7 +8,7 @@ from fastapi.responses import JSONResponse
 from starlette.requests import Request
 from starlette.responses import Response
 
-from shvatka.core.utils.exceptions import SHError
+from shvatka.core.utils import exceptions
 
 
 logger = logging.getLogger(__name__)
@@ -24,7 +24,7 @@ class ErrorContent:
     confidential: str | None = None
 
 
-def sh_exception_handler(request: Request, exc: SHError) -> Response:
+def sh_exception_handler(request: Request, exc: exceptions.SHError) -> Response:
     logger.error("got an sh error, during request %s", request, exc_info=exc)
     error_content = ErrorContent(
         text=exc.text,
@@ -33,11 +33,17 @@ def sh_exception_handler(request: Request, exc: SHError) -> Response:
         properties=exc.get_properties(),
         confidential=exc.confidential,
     )
+    if isinstance(exc, exceptions.NotAuthorizedForEdit):
+        status_code = 403
+    elif isinstance(exc, exceptions.FileNotFound):
+        status_code = 404
+    else:
+        status_code = 422
     return JSONResponse(
-        status_code=418,
+        status_code=status_code,
         content=retort.dump(error_content),
     )
 
 
 def setup(app: FastAPI):
-    app.add_exception_handler(SHError, sh_exception_handler)  # type: ignore[arg-type]
+    app.add_exception_handler(exceptions.SHError, sh_exception_handler)  # type: ignore[arg-type]

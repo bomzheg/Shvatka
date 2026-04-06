@@ -6,11 +6,9 @@ from dishka.integrations.fastapi import inject
 from fastapi import APIRouter, Body, HTTPException
 from fastapi.params import Path
 from fastapi.responses import StreamingResponse, Response
-from starlette.status import HTTP_404_NOT_FOUND, HTTP_403_FORBIDDEN
 
 from shvatka.api.dependencies.auth import ApiIdentityProvider
 from shvatka.api.models import responses, req
-from shvatka.api.utils.error_converter import to_http_error
 from shvatka.api.utils.web_input import WebInput
 from shvatka.core.games.interactors import (
     GameFileReaderInteractor,
@@ -26,7 +24,6 @@ from shvatka.core.services.game import (
     get_completed_games,
     get_full_game,
 )
-from shvatka.core.utils import exceptions
 from shvatka.infrastructure.db.dao.holder import HolderDao
 
 
@@ -48,7 +45,7 @@ async def get_active_game(
 ) -> responses.Game | None:
     game = await current_game.get_game()
     if game is None:
-        response.status_code = HTTP_404_NOT_FOUND
+        raise HTTPException(status_code=404, detail={"text": "game not found"})
     return responses.Game.from_core(game)
 
 
@@ -97,14 +94,9 @@ async def get_game_file(
     id_: Annotated[int, Path(alias="id")],
     guid: Annotated[str, Path(alias="guid")],
 ) -> StreamingResponse:
-    try:
-        return StreamingResponse(
-            b for b in await file_reader(guid=guid, identity=identity, game_id=id_)
-        )
-    except exceptions.FileNotFound as e:
-        raise to_http_error(e, HTTP_404_NOT_FOUND) from e
-    except exceptions.NotAuthorizedForEdit as e:
-        raise to_http_error(e, HTTP_403_FORBIDDEN) from e
+    return StreamingResponse(
+        b for b in await file_reader(guid=guid, identity=identity, game_id=id_)
+    )
 
 
 @inject

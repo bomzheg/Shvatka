@@ -24,18 +24,15 @@ from redis.asyncio import Redis
 from shvatka.common.factory import TelegraphProvider, DCFProvider, UrlProvider
 from shvatka.core.interfaces.clients.file_storage import FileStorage
 from shvatka.core.interfaces.identity import IdentityProvider
-from shvatka.core.utils.key_checker_lock import KeyCheckerFactory
 from shvatka.core.views.game import GameLogWriter, GameView, GameViewPreparer, OrgNotifier
 from shvatka.core.views.level import LevelView
 from shvatka.infrastructure.db.config.models.storage import StorageConfig, StorageType
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.infrastructure.db.factory import (
     create_redis,
-    create_lock_factory,
 )
 from shvatka.infrastructure.di import get_providers
 from shvatka.infrastructure.picture import ResultsPainter
-from shvatka.infrastructure.scheduler.factory import SchedulerProvider
 from shvatka.tgbot.config.models.bot import BotConfig, TgClientConfig
 from shvatka.tgbot.handlers import setup_handlers
 from shvatka.tgbot.middlewares import setup_middlewares
@@ -70,12 +67,10 @@ def get_bot_specific_providers() -> list[Provider]:
     return [
         DpProvider(),
         DialogManagerProvider(),
-        SchedulerProvider(),
         TelegraphProvider(),
         DCFProvider(),
         GameToolsProvider(),
         UserGetterProvider(),
-        LockProvider(),
         UrlProvider(),
         BotIdpProvider(),
     ]
@@ -83,7 +78,7 @@ def get_bot_specific_providers() -> list[Provider]:
 
 def get_bot_only_providers() -> list[Provider]:
     return [
-        BotOnlyIdpProvider(),
+        BotOnlyProvider(),
     ]
 
 
@@ -93,14 +88,6 @@ class DialogManagerProvider(Provider):
     @provide
     def get_manager(self) -> MessageManagerProtocol:
         return MessageManager()
-
-
-class LockProvider(Provider):
-    scope = Scope.APP
-
-    @provide
-    def get_lock_factory(self) -> KeyCheckerFactory:
-        return create_lock_factory()
 
 
 class DpProvider(Provider):
@@ -164,12 +151,16 @@ class BotIdpProvider(Provider):
     bot_idp = provide(TgBotIdentityProvider)
 
 
-class BotOnlyIdpProvider(Provider):
+class BotOnlyProvider(Provider):
     scope = Scope.REQUEST
 
     @provide
     def get_idp(self, idp: TgBotIdentityProvider) -> IdentityProvider:
         return idp
+
+    @provide
+    def get_game_view(self, bot_game_view: BotView) -> AnyOf[GameViewPreparer, GameView]:
+        return bot_game_view
 
 
 class GameToolsProvider(Provider):
@@ -188,9 +179,7 @@ class GameToolsProvider(Provider):
         return BotOrgNotifier(bot=bot)
 
     get_hint_sender = provide(HintSender, scope=Scope.REQUEST)
-    get_bot_game_view = provide(
-        BotView, scope=Scope.REQUEST, provides=AnyOf[GameView, GameViewPreparer]
-    )
+    get_bot_game_view = provide(BotView, scope=Scope.REQUEST)
     level_bot_view = provide(LevelBotView, scope=Scope.REQUEST, provides=LevelView)
     hint_parser = provide(HintParser, scope=Scope.REQUEST)
     results_painter = provide(ResultsPainter, scope=Scope.REQUEST)

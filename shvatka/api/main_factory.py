@@ -5,6 +5,7 @@ from fastapi import FastAPI
 
 from shvatka.api import routes, middlewares
 from shvatka.api.config.models.main import ApiConfig
+from shvatka.api.routes import error_handler
 from shvatka.common.config.models.paths import Paths
 from shvatka.common.config.parser.paths import common_get_paths
 
@@ -15,6 +16,7 @@ def create_app(config: ApiConfig) -> FastAPI:
     app = FastAPI()
     app.include_router(routes.setup())
     middlewares.setup(app, config)
+    error_handler.setup(app)
     setup_metrics(
         app,
         MetricsConfig(

@@ -2,8 +2,10 @@ from dishka import Provider, make_async_container, AsyncContainer
 from dishka.integrations.fastapi import setup_dishka
 from fastapi import FastAPI
 
-from shvatka.api.dependencies.auth import AuthProvider, ApiIdpProvider
+from shvatka.api.dependencies.auth import AuthProvider
+from shvatka.api.dependencies.api_only import ApiOnlyProvider
 from shvatka.api.dependencies.config import ApiConfigProvider
+from shvatka.api.dependencies.other import OtherApiProvider
 from shvatka.infrastructure.di import get_providers
 
 
@@ -29,10 +31,11 @@ def get_api_specific_providers() -> list[Provider]:
     return [
         AuthProvider(),
         ApiConfigProvider(),
+        OtherApiProvider(),
     ]
 
 
 def get_api_only_providers() -> list[Provider]:
     return [
-        ApiIdpProvider(),
+        ApiOnlyProvider(),
     ]

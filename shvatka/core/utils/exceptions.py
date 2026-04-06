@@ -43,6 +43,16 @@ class SHError(Exception):
         self.notify_user = notify_user or self.notify_user
         self.confidential = confidential
 
+    def get_properties(self) -> dict[str, Any]:
+        return {
+            "user_id": self.user_id,
+            "player_id": self.player_id,
+            "chat_id": self.chat_id,
+            "team_id": self.team_id,
+            "game_id": self.game_id,
+            "alarm": self.alarm,
+        }
+
     def __repr__(self) -> str:
         result_msg = f"Error: {self.text}"
         if self.user_id:

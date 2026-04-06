@@ -1,3 +1,5 @@
+from datetime import datetime, timedelta
+
 import pytest
 from adaptix import Retort
 from dataclass_factory import Factory
@@ -9,6 +11,8 @@ from shvatka.core.models import dto
 from shvatka.core.models.dto import scn
 from shvatka.core.models.enums import GameStatus
 from shvatka.core.services.player import upsert_player
+from shvatka.core.utils.datetime_utils import tz_utc
+from shvatka.infrastructure.db import models
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.api.dependencies.auth import AuthProperties
 from tests.fixtures.scn_fixtures import GUID, GUID_2
@@ -132,3 +136,116 @@ async def test_game_file_game_not_completed(
         cookies={"Authorization": "Bearer " + token.access_token},
     )
     assert resp.status_code == 403
+
+
+@pytest.mark.asyncio
+async def test_game_hints(
+    client: AsyncClient,
+    auth: AuthProperties,
+    author: dto.Player,
+    harry: dto.Player,
+    gryffindor: dto.Team,
+    started_game: dto.FullGame,
+    dao: HolderDao,
+    check_dao: HolderDao,
+):
+    await dao.level_time.delete_all()
+    level_time = models.LevelTime(
+        game_id=started_game.id,
+        team_id=gryffindor.id,
+        level_number=0,
+        start_at=datetime.now(tz=tz_utc) - timedelta(minutes=3),
+    )
+    dao.level_time._save(level_time)
+    await dao.commit()
+    token = auth.create_user_token(harry._user)
+    resp = await client.get(
+        "/games/running/level/current/hints",
+        cookies={"Authorization": "Bearer " + token.access_token},
+    )
+    assert resp.status_code == 200
+    assert resp.json().get("hints") == [
+        {
+            "hint": [
+                {"link_preview": None, "text": "загадка", "type": "text"},
+                {"link_preview": None, "text": "(сложная)", "type": "text"},
+            ],
+            "time": 0,
+        },
+        {
+            "hint": [
+                {
+                    "caption": "привет",
+                    "file_guid": "a3bc9b96-3bb8-4dbc-b996-ce1015e66e53",
+                    "show_caption_above_media": None,
+                    "type": "photo",
+                }
+            ],
+            "time": 2,
+        },
+    ]
+
+
+@pytest.mark.asyncio
+async def test_post_wrong_key(
+    client: AsyncClient,
+    auth: AuthProperties,
+    author: dto.Player,
+    harry: dto.Player,
+    gryffindor: dto.Team,
+    started_game: dto.FullGame,
+    dao: HolderDao,
+    check_dao: HolderDao,
+):
+    token = auth.create_user_token(harry._user)
+    resp = await client.post(
+        "/games/running/key",
+        json={"text": "SHWRONG"},
+        cookies={"Authorization": "Bearer " + token.access_token},
+    )
+    assert resp.status_code == 200
+    resp_json = resp.json()
+    assert resp_json["text"] == "SHWRONG"
+    assert resp_json["effects"] == []
+    assert resp_json["at"] is not None
+    assert resp_json["game_finished"] is False
+    assert resp_json["is_duplicate"] is False
+    assert resp_json["wrong"] is True
+
+
+@pytest.mark.asyncio
+async def test_post_bonus_hint_key(
+    client: AsyncClient,
+    auth: AuthProperties,
+    author: dto.Player,
+    harry: dto.Player,
+    gryffindor: dto.Team,
+    started_game: dto.FullGame,
+    dao: HolderDao,
+    check_dao: HolderDao,
+):
+    token = auth.create_user_token(harry._user)
+    resp = await client.post(
+        "/games/running/key",
+        json={"text": "SHBONUSHINT"},
+        cookies={"Authorization": "Bearer " + token.access_token},
+    )
+    assert resp.status_code == 200
+    resp_json = resp.json()
+    assert resp_json["text"] == "SHBONUSHINT"
+    assert resp_json["effects"] == [
+        {
+            "id": "019d16d6-e501-77fd-af89-50893a58b8f5",
+            "bonus_minutes": 0.0,
+            "hints_": [
+                {"latitude": 55.579282598950165, "longitude": 37.910306366539395, "type": "gps"},
+                {"link_preview": None, "text": "this is bonus hint", "type": "text"},
+            ],
+            "level_up": False,
+            "next_level": None,
+        }
+    ]
+    assert resp_json["at"] is not None
+    assert resp_json["game_finished"] is False
+    assert resp_json["is_duplicate"] is False
+    assert resp_json["wrong"] is False

@@ -114,6 +114,7 @@ class GamePlayReaderInteractor:
             typed_keys=keys,
             level_number=level_time.level_number,
             started_at=level_time.start_at,
+            game_id=game.id,
         )
 
 

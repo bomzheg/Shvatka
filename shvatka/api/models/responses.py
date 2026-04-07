@@ -191,10 +191,11 @@ class GameStat:
         )
 
 
-@dataclass
+@dataclass(kw_only=True, frozen=True, slots=True)
 class CurrentHintResponse:
     hints: list[hints.TimeHint]
     typed_keys: list[KeyTime]
+    game_id: int
     level_number: int
     started_at: datetime
 
@@ -203,6 +204,7 @@ class CurrentHintResponse:
         if core is None:
             return None
         return cls(
+            game_id=core.game_id,
             hints=core.hints,
             typed_keys=[KeyTime.from_core(kt) for kt in core.typed_keys],
             level_number=core.level_number,

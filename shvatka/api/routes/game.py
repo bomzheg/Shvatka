@@ -95,7 +95,11 @@ async def get_game_file(
     guid: Annotated[str, Path(alias="guid")],
 ) -> StreamingResponse:
     return StreamingResponse(
-        b for b in await file_reader(guid=guid, identity=identity, game_id=id_)
+        (b for b in await file_reader(guid=guid, identity=identity, game_id=id_)),
+        headers={
+            "Cache-Control": "private, max-age=86400",
+            "Vary": "Authorization, Cookie",
+        },
     )
 
 

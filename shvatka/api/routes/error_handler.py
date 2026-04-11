@@ -42,6 +42,9 @@ def sh_exception_handler(request: Request, exc: exceptions.SHError) -> Response:
     return JSONResponse(
         status_code=status_code,
         content=retort.dump(error_content),
+        headers={
+            "Cache-Control": "no-store",
+        },
     )
 
 

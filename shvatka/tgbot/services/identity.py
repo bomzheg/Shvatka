@@ -15,7 +15,6 @@ from shvatka.core.services.player import (
 )
 from shvatka.core.services.team import get_by_chat
 from shvatka.core.services.user import upsert_user
-from shvatka.core.utils import exceptions
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.tgbot.utils.data import SHMiddlewareData
 

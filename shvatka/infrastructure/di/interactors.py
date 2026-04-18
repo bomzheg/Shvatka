@@ -23,9 +23,7 @@ from shvatka.core.scenario.interactors import (
     AllGameKeysReaderInteractor,
     GameScenarioTransitionsInteractor,
 )
-from shvatka.core.services.current_game import CurrentGameProviderImpl
 from shvatka.core.services.key import KeyProcessor, TimerProcessor
-from shvatka.core.services.game_play import CheckKeyInteractor
 from shvatka.core.waiver.interactors import (
     WaiversReaderInteractor,
     AddWaiverVoteInteractor,

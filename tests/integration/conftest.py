@@ -86,7 +86,6 @@ async def dishka():
         PrinterProvider(),
         GameToolsProvider(),
         BotIdpProvider(),
-        IdpProvider(),
         ComplexOnlyProvider(),
         TestDbProvider(),
         mock_provider,

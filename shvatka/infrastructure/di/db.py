@@ -8,7 +8,6 @@ from shvatka.core.interfaces.dal.waiver import GameWaiversGetter
 from shvatka.infrastructure.db import dao
 from shvatka.infrastructure.db.config.models.db import DBConfig, RedisConfig
 from shvatka.infrastructure.db.dao import (
-    FileInfoDao,
     GameDao,
     UserDao,
     ChatDao,

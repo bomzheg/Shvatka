@@ -6,7 +6,6 @@ from shvatka.core.games.game_play import send_hint, start_game, prepare_game
 from shvatka.core.games.interactors import GamePlayTimerInteractor
 from shvatka.core.interfaces.current_game import CurrentGameProvider
 from shvatka.core.utils.datetime_utils import tz_utc
-from shvatka.core.interfaces.current_game import CurrentGameProvider
 from shvatka.core.views.game import GameViewPreparer, GameView, GameLogWriter
 from shvatka.core.views.level import LevelView
 from shvatka.infrastructure.db.dao.holder import HolderDao

@@ -160,7 +160,7 @@ async def test_game_hints(
     await dao.commit()
     token = auth.create_user_token(harry._user)
     resp = await client.get(
-        "/games/running/level/current/hints",
+        "/games/running/level/current",
         cookies={"Authorization": "Bearer " + token.access_token},
     )
     assert resp.status_code == 200

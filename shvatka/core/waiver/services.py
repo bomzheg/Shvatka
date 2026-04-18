@@ -4,7 +4,6 @@ from typing import Iterable, Sequence
 from shvatka.core.interfaces.dal.waiver import (
     WaiverApprover,
     GameWaiversGetter,
-    WaiverGetter,
 )
 from shvatka.core.waiver.adapters import WaiverVoteAdder, WaiverVoteGetter
 from shvatka.core.models import dto

@@ -8,7 +8,6 @@ from shvatka.core.games.game_play import schedule_first_hint, check_waivers
 from shvatka.core.interfaces.clients.file_storage import FileGateway
 from shvatka.core.games.adapters import (
     GameFileReader,
-    GamePlayReader,
     GameKeysReader,
     GameStatReader,
     GamePlayDao,
@@ -109,7 +108,6 @@ class GameFileReaderInteractor:
 
 @dataclass(kw_only=True, slots=True, frozen=True)
 class GamePlayReaderInteractor:
-    dao: GamePlayReader
     current_game: CurrentGameProvider
     game_play_dao: GamePlayDao
 

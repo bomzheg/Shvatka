@@ -10,7 +10,6 @@ from shvatka.core.games.interactors import (
 )
 from shvatka.core.games.adapters import (
     GameFileReader,
-    GamePlayReader,
     GameKeysReader,
     GameStatReader,
     GamePlayDao,
@@ -26,7 +25,6 @@ from shvatka.core.services.current_game import CurrentGameProviderImpl
 from shvatka.core.services.key import KeyProcessor, TimerProcessor
 from shvatka.infrastructure.db.dao.complex.game import (
     GameFilesGetterImpl,
-    GamePlayReaderImpl,
     GamePlayDaoImpl,
 )
 from shvatka.infrastructure.db.dao.complex.game_play import GamePlayerDaoImpl
@@ -60,11 +58,6 @@ class GamePlayProvider(Provider):
         return GameFilesGetterImpl(dao)
 
     file_reader = provide(GameFileReaderInteractor)
-
-    @provide
-    def game_play_reader(self, dao: HolderDao) -> GamePlayReader:
-        return GamePlayReaderImpl(dao)
-
     game_play_reader_interactor = provide(GamePlayReaderInteractor)
 
     @provide

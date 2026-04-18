@@ -20,7 +20,7 @@ class SHError(Exception):
         player: "dto.Player | None" = None,
         chat: "dto.Chat | None" = None,
         team: "dto.Team | None" = None,
-        game: Any | None = None,
+        game: "dto.Game | None" = None,
         alarm: bool | None = False,
         notify_user: str | None = None,
         confidential: str | None = None,
@@ -35,10 +35,20 @@ class SHError(Exception):
         self.team_id = team_id
         self.game_id = game_id
         self.user = user
+        if self.user_id is None and self.user is not None:
+            self.user_id = self.user.db_id
         self.player = player
+        if self.player_id is None and self.player is not None:
+            self.player_id = self.player.id
         self.chat = chat
+        if self.chat_id is None and self.chat is not None:
+            self.chat_id = self.chat.db_id
         self.team = team
+        if self.team_id is None and self.team is not None:
+            self.team_id = self.team.id
         self.game = game
+        if self.game_id is None and self.game is not None:
+            self.game_id = self.game.id
         self.alarm = alarm
         self.notify_user = notify_user or self.notify_user
         self.confidential = confidential

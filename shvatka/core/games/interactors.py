@@ -3,14 +3,14 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import BinaryIO
 
-from shvatka.core.games.dto import CurrentHints
-from shvatka.core.games.game_play import schedule_first_hint
+from shvatka.core.games.dto import CurrentHintsAndKeys
+from shvatka.core.games.game_play import schedule_first_hint, check_waivers
 from shvatka.core.interfaces.clients.file_storage import FileGateway
 from shvatka.core.games.adapters import (
     GameFileReader,
     GamePlayReader,
     GameKeysReader,
-    GameStatReader,
+    GameStatReader, GamePlayDao,
 )
 from shvatka.core.interfaces.current_game import CurrentGameProvider
 from shvatka.core.interfaces.dal.game_play import GamePlayerDao
@@ -61,60 +61,72 @@ class GameStatReaderInteractor:
 
 
 class GameFileReaderInteractor:
-    def __init__(self, dao: GameFileReader, file_gateway: FileGateway):
+    def __init__(
+        self,
+        dao: GameFileReader,
+        file_gateway: FileGateway,
+        current_game: CurrentGameProvider,
+        game_play_dao: GamePlayDao,
+    ):
         self.file_gateway = file_gateway
         self.dao = dao
+        self.current_game = current_game
+        self.game_play_dao = game_play_dao
 
     async def __call__(self, guid: str, game_id: int, identity: IdentityProvider) -> BinaryIO:
         user = await identity.get_required_user()
         player = await identity.get_required_player()
         game = await self.dao.get_full(game_id)
-        check_can_read(game, player)
-        if guid not in game.get_guids():
-            raise exceptions.FileNotFound(
-                text=f"There is no file with uuid {guid} associated with game id {game_id}",
-                game_id=game_id,
-                game=game,
-                user_id=user.db_id,
-                user=user,
-                player_id=player.id,
+        if game.author.id == player.id or game.is_complete():
+            if guid not in game.get_guids():
+                raise exceptions.FileNotFound(
+                    text=f"There is no file with uuid {guid} associated with game id {game_id}",
+                    game=game,
+                    user=user,
+                    player=player,
+                )
+        elif game.is_started():
+            hints_ = await self.game_play_dao.get_current_hints(identity)
+            guids = {g for h in hints_.hints for g in h.get_guids()}
+            if guid not in guids:
+                effects = await self.game_play_dao.get_effects(identity)
+                guids = {g for e in effects for g in e.effects.get_guids()}
+                if guid not in guids:
+                    raise exceptions.FileNotFound(
+                        text=f"There is no file with uuid {guid} associated "
+                             f"with game id {game_id} and available now",
+                        game=game,
+                        user=user,
+                        player=player,
+
+                    )
+        else:
+            raise exceptions.NotAuthorizedForEdit(
+                permission_name="game_file_read",
                 player=player,
+                game=game,
+                user=user
             )
+
         meta = await self.dao.get_by_guid(guid)
-        check_file_meta_can_read(player, meta, game)
         return await self.file_gateway.get(meta)
 
 
+@dataclass(kw_only=True, slots=True, frozen=True)
 class GamePlayReaderInteractor:
-    def __init__(self, dao: GamePlayReader, current_game: CurrentGameProvider):
-        self.dao = dao
-        self.current_game = current_game
+    dao: GamePlayReader
+    current_game: CurrentGameProvider
+    game_play_dao: GamePlayDao
 
-    async def __call__(self, identity: IdentityProvider) -> CurrentHints:
-        user = await identity.get_user()
-        player = await identity.get_required_player()
-        team = await self.dao.get_team(player)
-        if not team:
-            raise exceptions.PlayerNotInTeam(
-                player=player,
-                user=user,
-            )
-        game = await self.current_game.get_required_game()
-        if not await self.dao.check_waiver(player, team, game):
-            raise exceptions.WaiverError(
-                team=team, game=game, player=player, text="игрок не заявлен на игру, но ввёл ключ"
-            )
-        level_time = await self.dao.get_current_level_time(team, game)
-        level = await self.dao.get_level_by_game_and_number(game, level_time.level_number)
-        td = datetime.now(tz=tz_utc) - level_time.start_at
-        hints_ = level.get_hints_for_timedelta(td)
-        keys = await self.dao.get_team_typed_keys(game, team, level_time)
-        return CurrentHints(
-            hints=hints_,
+    async def __call__(self, identity: IdentityProvider) -> CurrentHintsAndKeys:
+        hints_ = await self.game_play_dao.get_current_hints(identity)
+        keys = await self.game_play_dao.get_team_typed_keys(identity)
+        return CurrentHintsAndKeys(
+            hints=hints_.hints,
             typed_keys=keys,
-            level_number=level_time.level_number,
-            started_at=level_time.start_at,
-            game_id=game.id,
+            level_number=hints_.level_number,
+            started_at=hints_.started_at,
+            game_id=hints_.game_id,
         )
 
 
@@ -204,14 +216,13 @@ class CheckKeyInteractor(GamePlayBaseInteractor):
             пишем в лог игры уведомление о финале, уведомляем команды
 
         :param key: Введённый ключ.
-        :param player: Игрок, который ввёл ключ.
-        :param team: Команда, в которой ввели ключ.
-        :param game: Текущая игра.
+        :param identity: Идентичность игрока, который ввёл ключ
+        :param input_container: штуковина связанная со вьюхой
         """
         game = await self.current_game.get_required_full_game()
         player = await identity.get_required_player()
         team = await identity.get_required_team()
-        if not await self.dao.check_waiver(player, team, game):
+        if not await check_waivers(current_game=self.current_game, identity=identity, dao=self.dao):
             raise exceptions.WaiverError(
                 team=team, game=game, player=player, text="игрок не заявлен на игру, но ввёл ключ"
             )
@@ -219,6 +230,8 @@ class CheckKeyInteractor(GamePlayBaseInteractor):
         new_key = await self.key_processor.check_key(key=key, player=player, team=team)
         if new_key is None:
             return
+        if not (effects := new_key.parsed_key.effect).is_no_effects():
+            await self.dao.save_event(team=team, game=game, effects=effects)
         await self.view_(new_key, input_container)
         if not new_key.is_duplicate and new_key.is_level_up():
             await self.process_level_up(

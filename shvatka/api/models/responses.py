@@ -6,7 +6,7 @@ from typing import Sequence, Generic
 from adaptix import Retort, dumper
 
 from shvatka.common.factory import REQUIRED_GAME_RECIPES
-from shvatka.core.games.dto import CurrentHints
+from shvatka.core.games.dto import CurrentHintsAndKeys
 from shvatka.core.models import dto, enums
 from shvatka.core.models.dto import scn, action
 from shvatka.core.models.dto import hints
@@ -200,7 +200,7 @@ class CurrentHintResponse:
     started_at: datetime
 
     @classmethod
-    def from_core(cls, core: CurrentHints):
+    def from_core(cls, core: CurrentHintsAndKeys):
         if core is None:
             return None
         return cls(

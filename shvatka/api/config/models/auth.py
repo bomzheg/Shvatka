@@ -15,3 +15,4 @@ class AuthConfig:
     auth_url: str
     bot_token: str
     disable_cors: bool = False
+    enable_basic: bool = False

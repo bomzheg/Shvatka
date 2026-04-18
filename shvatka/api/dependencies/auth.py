@@ -116,6 +116,8 @@ class AuthProperties:
         return user
 
     async def get_user_basic(self, request: Request, dao: HolderDao) -> dto.User | None:
+        if not self.config.enable_basic:
+            return None
         if (header := request.headers.get("Authorization")) is None:
             return None
         schema, token = header.split(" ", maxsplit=1)

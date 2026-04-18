@@ -6,7 +6,7 @@ from typing import Sequence, Generic
 from adaptix import Retort, dumper
 
 from shvatka.common.factory import REQUIRED_GAME_RECIPES
-from shvatka.core.games.dto import CurrentHintsAndKeys
+from shvatka.core.games.dto import CurrentHintsAndKeys, MyRole
 from shvatka.core.models import dto, enums
 from shvatka.core.models.dto import scn, action
 from shvatka.core.models.dto import hints
@@ -220,3 +220,39 @@ class InsertedKey:
     at: datetime | None
     effects: list[action.Effects]
     game_finished: bool
+
+
+@dataclass(kw_only=True)
+class OrganizerDto:
+    player: Player
+    can_spy: bool
+    can_see_log_keys: bool
+    can_validate_waivers: bool
+    deleted: bool
+
+    @classmethod
+    def from_core(cls, core: dto.Organizer | None) -> "OrganizerDto | None":
+        if core is None:
+            return None
+        return cls(
+            player=Player.from_core(core.player),
+            can_spy=core.can_spy,
+            can_see_log_keys=core.can_see_log_keys,
+            can_validate_waivers=core.can_validate_waivers,
+            deleted=core.deleted,
+        )
+
+
+@dataclass(kw_only=True)
+class MyRoleDto:
+    waiver_vote: enums.Played | None
+    team: Team | None
+    org: OrganizerDto | None
+
+    @classmethod
+    def from_core(cls, core: MyRole) -> "MyRoleDto":
+        return cls(
+            waiver_vote=core.waiver_vote,
+            team=Team.from_core(core.team),
+            org=OrganizerDto.from_core(core.org),
+        )

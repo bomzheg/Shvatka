@@ -35,9 +35,8 @@ from shvatka.infrastructure.db.dao.complex2.waiver import (
     WaiverVoteGetterImpl,
     PollDraftsReaderImpl,
 )
-from shvatka.infrastructure.db.dao.complex.game import GameFilesGetterImpl, GamePlayReaderImpl
+from shvatka.infrastructure.db.dao.complex.game import GameFilesGetterImpl
 from shvatka.infrastructure.db.dao.complex.game import (
-    GameFilesGetterImpl,
     GamePlayDaoImpl,
 )
 from shvatka.infrastructure.db.dao.complex.game_play import GamePlayerDaoImpl

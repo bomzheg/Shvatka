@@ -35,7 +35,6 @@ from shvatka.core.views.game import (
     GameLogEvent,
     GameLogType,
 )
-from shvatka.core.waiver.services import get_my_waiver
 from shvatka.infrastructure.scheduler import SchedulerContainer
 
 
@@ -120,7 +119,7 @@ class GamePlayRoleReader:
         team = await identity.get_team()
         player = await identity.get_player()
         if team is not None and player is not None:
-            waiver = await get_my_waiver(player=player, team=team, game=game, dao=self.waiver_dao)
+            waiver = await self.waiver_dao.get_player_waiver(player=player, team=team, game=game)
             played = waiver.played if waiver else None
         else:
             played = None

@@ -60,11 +60,11 @@ class KeyProcessor:
                     game=game,
                     player=player,
                     type_=decision.key_type,
-                    # TODO save effects
                     is_duplicate=decision.duplicate,
                 )
                 is_level_up = False
                 if isinstance(decision, action.KeyEffectsDecision):
+                    await self.dao.save_event(team=team, game=game, effects=decision.effects)
                     if is_level_up := decision.effects.level_up:
                         await self.dao.level_up(
                             team=team,

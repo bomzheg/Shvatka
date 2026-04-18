@@ -228,8 +228,6 @@ class CheckKeyInteractor(GamePlayBaseInteractor):
         await self.view_(new_key, input_container)
         if new_key.is_duplicate:
             return
-        if not (effects := new_key.parsed_key.effect).is_no_effects():
-            await self.dao.save_event(team=team, game=game, effects=effects)
         if new_key.is_level_up():
             await self.process_level_up(
                 input_container=input_container,

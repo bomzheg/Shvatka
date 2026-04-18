@@ -46,9 +46,7 @@ class AddWaiverVoteInteractor:
 
     async def __call__(self, identity: IdentityProvider, vote: Played) -> None:
         player = await identity.get_required_player()
-        team = await identity.get_team()
-        if team is None:
-            raise exceptions.PlayerNotInTeam(player=player)
+        team = await identity.get_required_team()
         game = await self.current_game.get_required_game()
         await add_vote(
             game=game,

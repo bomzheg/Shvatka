@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 
 @inject
 async def read_users_me(identity: FromDishka[IdentityProvider]) -> dto.User | None:
-    return await identity.get_user()
+    return await identity.get_required_user()
 
 
 @inject

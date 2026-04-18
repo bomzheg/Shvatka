@@ -128,6 +128,8 @@ async def clear_data(dao: HolderDao):
     await dao.waiver.delete_all()
     await dao.level.delete_all()
     await dao.key_time.delete_all()
+    await dao.timers.delete_all()
+    await dao.events.delete_all()
     await dao.level_time.delete_all()
     await dao.game.delete_all()
     await dao.team_player.delete_all()

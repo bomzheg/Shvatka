@@ -227,10 +227,12 @@ class CheckKeyInteractor(GamePlayBaseInteractor):
         new_key = await self.key_processor.check_key(key=key, player=player, team=team)
         if new_key is None:
             return
+        await self.view_(new_key, input_container)
+        if new_key.is_duplicate:
+            return
         if not (effects := new_key.parsed_key.effect).is_no_effects():
             await self.dao.save_event(team=team, game=game, effects=effects)
-        await self.view_(new_key, input_container)
-        if not new_key.is_duplicate and new_key.is_level_up():
+        if new_key.is_level_up():
             await self.process_level_up(
                 input_container=input_container,
                 team=team,

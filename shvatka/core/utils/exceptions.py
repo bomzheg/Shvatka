@@ -79,6 +79,7 @@ class SHError(Exception):
         return (
             f"Error.\ntype: {self.__class__.__name__}\n"
             f"text: {self.text}\n"
+            f"player: {self.player_id} user: {self.user_id} team: {self.team_id}\n"
             f"notify info: {self.notify_user}"
         )
 

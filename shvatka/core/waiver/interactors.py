@@ -2,7 +2,7 @@ from typing import Iterable
 
 from shvatka.core.interfaces.current_game import CurrentGameProvider
 from shvatka.core.interfaces.dal.waiver import GameWaiversGetter
-from shvatka.core.services.organizers import get_by_player, check_can_check_waivers
+from shvatka.core.services.organizers import get_by_player, check_can_check_waivers_draft
 from shvatka.core.services.team import get_team_by_id
 from shvatka.core.waiver.adapters import WaiverVoteAdder, WaiverVoteGetter, PollDraftsReader
 from shvatka.core.interfaces.identity import IdentityProvider
@@ -25,7 +25,7 @@ class WaiverCompleteReaderInteractor:
         return await get_all_played(game, self.dao)
 
 
-class WaiversReaderInteractor:
+class TeamWaiversDraftReaderInteractor:
     def __init__(self, dao: WaiverVoteGetter) -> None:
         self.dao = dao
 
@@ -37,9 +37,7 @@ class WaiversReaderInteractor:
             raise exceptions.PlayerNotInTeam(
                 player=await identity.get_player(), team=await identity.get_team()
             )
-        check_allow_approve_waivers(team_player)
-        team = team_player.team
-        return await get_vote_to_voted(team, self.dao)
+        return await get_vote_to_voted(team_player.team, self.dao)
 
 
 class AddWaiverVoteInteractor:
@@ -51,7 +49,7 @@ class AddWaiverVoteInteractor:
         player = await identity.get_required_player()
         team = await identity.get_team()
         if team is None:
-            raise exceptions.PlayerNotInTeam(player=player, team=team)
+            raise exceptions.PlayerNotInTeam(player=player)
         game = await self.current_game.get_required_game()
         await add_vote(
             game=game,
@@ -62,7 +60,7 @@ class AddWaiverVoteInteractor:
         )
 
 
-class WaiverDraftReaderInteractor:
+class AllWaiversDraftReaderInteractor:
     def __init__(
         self,
         dao: PollDraftsReader,
@@ -75,7 +73,7 @@ class WaiverDraftReaderInteractor:
         player = await identity.get_required_player()
         game = await self.current_game.get_required_game()
         org = await get_by_player(game=game, player=player, dao=self.dao)
-        check_can_check_waivers(org)
+        check_can_check_waivers_draft(org)
         team_ids = await self.dao.get_polled_teams()
         results: dict[dto.Team, dict[Played, int]] = {}
         for team_id in team_ids:

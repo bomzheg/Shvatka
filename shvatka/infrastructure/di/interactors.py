@@ -25,10 +25,10 @@ from shvatka.core.scenario.interactors import (
 )
 from shvatka.core.services.key import KeyProcessor, TimerProcessor
 from shvatka.core.waiver.interactors import (
-    WaiversReaderInteractor,
+    TeamWaiversDraftReaderInteractor,
     AddWaiverVoteInteractor,
     WaiverCompleteReaderInteractor,
-    WaiverDraftReaderInteractor,
+    AllWaiversDraftReaderInteractor,
 )
 from shvatka.infrastructure.db.dao.complex2.waiver import (
     WaiverVoteAdderImpl,
@@ -96,10 +96,10 @@ class GamePlayProvider(Provider):
 class WaiverProvider(Provider):
     scope = Scope.REQUEST
 
-    waivers_reader_interactor = provide(WaiversReaderInteractor)
+    waivers_reader_interactor = provide(TeamWaiversDraftReaderInteractor)
     add_waiver_vote = provide(AddWaiverVoteInteractor)
     waivers_complete_reader_interactor = provide(WaiverCompleteReaderInteractor)
-    waiver_draft_reader_interactor = provide(WaiverDraftReaderInteractor)
+    waiver_draft_reader_interactor = provide(AllWaiversDraftReaderInteractor)
 
     waiver_vote_adder_dao = provide(WaiverVoteAdderImpl, provides=WaiverVoteAdder)
     waiver_vote_getter_dao = provide(WaiverVoteGetterImpl, provides=WaiverVoteGetter)

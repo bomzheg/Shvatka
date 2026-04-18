@@ -7,7 +7,7 @@ from dishka.integrations.aiogram import inject
 from shvatka.core.interfaces.current_game import CurrentGameProvider
 from shvatka.core.waiver.interactors import (
     WaiverCompleteReaderInteractor,
-    WaiverDraftReaderInteractor,
+    AllWaiversDraftReaderInteractor,
 )
 from shvatka.tgbot.filters import GameStatusFilter
 from shvatka.tgbot.services.identity import TgBotIdentityProvider
@@ -33,7 +33,7 @@ async def get_waivers_cmd(
 async def get_waivers_draft_cmd(
     m: Message,
     identity_provider: FromDishka[TgBotIdentityProvider],
-    interactor: FromDishka[WaiverDraftReaderInteractor],
+    interactor: FromDishka[AllWaiversDraftReaderInteractor],
 ):
     data = await interactor(identity=identity_provider)
     await m.answer(

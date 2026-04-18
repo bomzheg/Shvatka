@@ -143,7 +143,8 @@ def check_can_spy(org: dto.Organizer):
         )
 
 
-def check_can_check_waivers(org: dto.Organizer):
+def check_can_check_waivers_draft(org: dto.Organizer):
+    # TODO add specific permission
     if not org:
         raise exceptions.PermissionsError(
             permission_name="can_check_waivers",

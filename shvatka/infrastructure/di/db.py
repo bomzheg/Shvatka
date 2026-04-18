@@ -81,68 +81,64 @@ class DAOProvider(Provider):
         return holder.timers
 
     @provide
-    def user_dao(self, dao: HolderDao) -> UserDao:
-        return dao.user
+    def user_dao(self, holder: HolderDao) -> dao.UserDao:
+        return holder.user
 
     @provide
-    def chat_dao(self, dao: HolderDao) -> ChatDao:
-        return dao.chat
+    def chat_dao(self, holder: HolderDao) -> dao.ChatDao:
+        return holder.chat
 
     @provide
-    def game_dao(self, dao: HolderDao) -> GameDao:
-        return dao.game
+    def level_dao(self, holder: HolderDao) -> dao.LevelDao:
+        return holder.level
 
     @provide
-    def level_dao(self, dao: HolderDao) -> LevelDao:
-        return dao.level
+    def level_time_dao(self, holder: HolderDao) -> dao.LevelTimeDao:
+        return holder.level_time
 
     @provide
-    def level_time_dao(self, dao: HolderDao) -> LevelTimeDao:
-        return dao.level_time
+    def key_time_dao(self, holder: HolderDao) -> dao.KeyTimeDao:
+        return holder.key_time
 
     @provide
-    def key_time_dao(self, dao: HolderDao) -> KeyTimeDao:
-        return dao.key_time
+    def organizer_dao(self, holder: HolderDao) -> dao.OrganizerDao:
+        return holder.organizer
 
     @provide
-    def organizer_dao(self, dao: HolderDao) -> OrganizerDao:
-        return dao.organizer
+    def player_dao(self, holder: HolderDao) -> dao.PlayerDao:
+        return holder.player
 
     @provide
-    def player_dao(self, dao: HolderDao) -> PlayerDao:
-        return dao.player
+    def team_player_dao(self, holder: HolderDao) -> dao.TeamPlayerDao:
+        return holder.team_player
 
     @provide
-    def team_player_dao(self, dao: HolderDao) -> TeamPlayerDao:
-        return dao.team_player
-
-    @provide
-    def team_dao(self, dao: HolderDao) -> TeamDao:
-        return dao.team
+    def team_dao(self, holder: HolderDao) -> dao.TeamDao:
+        return holder.team
 
     @provide(provides=AnyOf[WaiverDao, GameWaiversGetter])
-    def waiver_dao(self, dao: HolderDao) -> WaiverDao:
-        return dao.waiver
+    def waiver_dao(self, holder: HolderDao) -> dao.WaiverDao:
+        return holder.waiver
 
     @provide
-    def achievement_dao(self, dao: HolderDao) -> AchievementDAO:
-        return dao.achievement
+    def achievement_dao(self, holder: HolderDao) -> dao.AchievementDAO:
+        return holder.achievement
 
     @provide
-    def forum_user_dao(self, dao: HolderDao) -> ForumUserDAO:
-        return dao.forum_user
+    def forum_user_dao(self, holder: HolderDao) -> dao.ForumUserDAO:
+        return holder.forum_user
 
     @provide
-    def forum_team_dao(self, dao: HolderDao) -> ForumTeamDAO:
-        return dao.forum_team
+    def forum_team_dao(self, holder: HolderDao) -> dao.ForumTeamDAO:
+        return holder.forum_team
 
     @provide
-    def poll_dao(self, dao: HolderDao) -> PollDao:
-        return dao.poll
+    def poll_dao(self, holder: HolderDao) -> dao.PollDao:
+        return holder.poll
 
     @provide
-    def secure_invite_dao(self, dao: HolderDao) -> SecureInvite:
-        return dao.secure_invite
+    def secure_invite_dao(self, holder: HolderDao) -> dao.SecureInvite:
+        return holder.secure_invite
 
 
 class RedisProvider(Provider):

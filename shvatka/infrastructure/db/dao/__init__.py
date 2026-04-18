@@ -14,5 +14,8 @@ from .rdb import (
     WaiverDao,
     TimersDAO,
     GameEventDao,
+    ForumUserDAO,
+    AchievementDAO,
+    ForumTeamDAO,
 )
 from .redis import PollDao, SecureInvite

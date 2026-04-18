@@ -14,3 +14,5 @@ from .user import UserDao
 from .waiver import WaiverDao
 from .events import GameEventDao
 from .timers import TimersDAO
+from .forum_team import ForumTeamDAO
+from .achievement import AchievementDAO

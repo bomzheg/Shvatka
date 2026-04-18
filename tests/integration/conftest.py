@@ -80,7 +80,6 @@ async def dishka():
         UrlProvider(),
         TelegraphProvider(),
         ContextProvider(),
-        DAOProvider(),
         GamePlayProvider(),
         WaiverProvider(),
         PrinterProvider(),

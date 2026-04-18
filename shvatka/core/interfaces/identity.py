@@ -44,3 +44,10 @@ class IdentityProvider(Protocol):
         if team is None:
             raise exceptions.TeamError
         return team
+
+    async def get_required_full_team_player(self) -> dto.FullTeamPlayer:
+        full_team_player = await self.get_full_team_player()
+        if full_team_player is None:
+            player = await self.get_player()
+            raise exceptions.PlayerNotInTeam(player=player)
+        return full_team_player

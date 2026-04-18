@@ -12,7 +12,10 @@ from dishka.integrations.aiogram import inject
 from shvatka.core.interfaces.current_game import CurrentGameProvider
 from shvatka.core.utils import exceptions
 from shvatka.core.waiver.adapters import WaiverVoteAdder
-from shvatka.core.waiver.interactors import TeamWaiversDraftReaderInteractor, AddWaiverVoteInteractor
+from shvatka.core.waiver.interactors import (
+    TeamWaiversDraftReaderInteractor,
+    AddWaiverVoteInteractor,
+)
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.core.models import dto
 from shvatka.core.models.enums import GameStatus

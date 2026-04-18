@@ -9,7 +9,6 @@ from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.models import dto
 from shvatka.core.models.enums import Played
 from shvatka.core.waiver.services import (
-    check_allow_approve_waivers,
     get_vote_to_voted,
     add_vote,
     get_all_played,

@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from shvatka.core.models import dto
 from shvatka.core.models import enums
 from shvatka.infrastructure.db import models
-from shvatka.infrastructure.db.dao import BaseDAO
+from .base import BaseDAO
 
 
 class AchievementDAO(BaseDAO[models.Achievement]):

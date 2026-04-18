@@ -1,4 +1,3 @@
-from .base import BaseDAO
 from .chat import ChatDao
 from .file_info import FileInfoDao
 from .forum_user import ForumUserDAO

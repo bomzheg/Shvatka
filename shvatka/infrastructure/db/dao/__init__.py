@@ -1,5 +1,5 @@
+from .rdb.base import BaseDAO
 from .rdb import (
-    BaseDAO,
     ChatDao,
     FileInfoDao,
     GameDao,

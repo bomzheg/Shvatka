@@ -8,25 +8,10 @@ from shvatka.core.interfaces.dal.waiver import GameWaiversGetter
 from shvatka.infrastructure.db import dao
 from shvatka.infrastructure.db.config.models.db import DBConfig, RedisConfig
 from shvatka.infrastructure.db.dao import (
-    GameDao,
-    UserDao,
-    ChatDao,
-    LevelDao,
-    LevelTimeDao,
-    KeyTimeDao,
-    OrganizerDao,
-    PlayerDao,
-    TeamPlayerDao,
-    TeamDao,
     WaiverDao,
-    PollDao,
-    SecureInvite,
 )
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.infrastructure.db.dao.memory.level_testing import LevelTestingData
-from shvatka.infrastructure.db.dao.rdb import ForumUserDAO
-from shvatka.infrastructure.db.dao.rdb.achievement import AchievementDAO
-from shvatka.infrastructure.db.dao.rdb.forum_team import ForumTeamDAO
 from shvatka.infrastructure.db.factory import create_engine, create_session_maker, create_redis
 
 

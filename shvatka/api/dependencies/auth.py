@@ -183,7 +183,7 @@ class ApiIdentityProvider(IdentityProvider):
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
         return user
 
-    async def get_player(self) -> dto.Player:
+    async def get_player(self) -> dto.Player | None:
         if "player" in self.cache:
             return self.cache["player"]
         player = await upsert_player(await self.get_required_user(), self.dao.player)
@@ -191,9 +191,9 @@ class ApiIdentityProvider(IdentityProvider):
         return player
 
     async def get_team(self) -> dto.Team | None:
-        player = await self.get_player()
         if "team" in self.cache:
             return self.cache["team"]
+        player = await self.get_required_player()
         team = await get_my_team(player, self.dao.team_player)
         self.cache["team"] = team
         return team

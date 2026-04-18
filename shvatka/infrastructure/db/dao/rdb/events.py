@@ -3,7 +3,6 @@ import typing
 
 from sqlalchemy import select, ScalarResult
 from sqlalchemy.ext.asyncio import AsyncSession
-from testcontainers import aws
 
 from shvatka.core.models import dto
 from shvatka.core.models.dto import action

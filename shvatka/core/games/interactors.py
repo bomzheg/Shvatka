@@ -10,7 +10,8 @@ from shvatka.core.games.adapters import (
     GameFileReader,
     GamePlayReader,
     GameKeysReader,
-    GameStatReader, GamePlayDao,
+    GameStatReader,
+    GamePlayDao,
 )
 from shvatka.core.interfaces.current_game import CurrentGameProvider
 from shvatka.core.interfaces.dal.game_play import GamePlayerDao
@@ -18,11 +19,9 @@ from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.interfaces.scheduler import Scheduler
 from shvatka.core.models import dto, enums
 from shvatka.core.models.dto import action
-from shvatka.core.rules.game import check_can_read
 from shvatka.core.services.game_stat import get_typed_keys, get_game_stat_with_hints
 from shvatka.core.services.key import TimerProcessor, KeyProcessor
 from shvatka.core.services.organizers import get_spying_orgs
-from shvatka.core.services.scenario.files import check_file_meta_can_read
 from shvatka.core.utils import exceptions
 from shvatka.core.utils.datetime_utils import tz_utc
 from shvatka.core.utils.key_checker_lock import KeyCheckerFactory
@@ -94,18 +93,14 @@ class GameFileReaderInteractor:
                 if guid not in guids:
                     raise exceptions.FileNotFound(
                         text=f"There is no file with uuid {guid} associated "
-                             f"with game id {game_id} and available now",
+                        f"with game id {game_id} and available now",
                         game=game,
                         user=user,
                         player=player,
-
                     )
         else:
             raise exceptions.NotAuthorizedForEdit(
-                permission_name="game_file_read",
-                player=player,
-                game=game,
-                user=user
+                permission_name="game_file_read", player=player, game=game, user=user
             )
 
         meta = await self.dao.get_by_guid(guid)
@@ -222,7 +217,9 @@ class CheckKeyInteractor(GamePlayBaseInteractor):
         game = await self.current_game.get_required_full_game()
         player = await identity.get_required_player()
         team = await identity.get_required_team()
-        if not await check_waivers(current_game=self.current_game, identity=identity, dao=self.dao):
+        if not await check_waivers(
+            current_game=self.current_game, identity=identity, dao=self.dao
+        ):
             raise exceptions.WaiverError(
                 team=team, game=game, player=player, text="игрок не заявлен на игру, но ввёл ключ"
             )

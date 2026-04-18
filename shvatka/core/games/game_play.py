@@ -11,7 +11,6 @@ from shvatka.core.interfaces.scheduler import Scheduler
 from shvatka.core.models import dto
 from shvatka.core.models.dto import hints, action
 from shvatka.core.services.organizers import get_orgs
-from shvatka.core.utils import exceptions
 from shvatka.core.utils.datetime_utils import tz_utc
 from shvatka.core.views.game import (
     GameViewPreparer,

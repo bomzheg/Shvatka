@@ -1,7 +1,6 @@
 from typing import Protocol
 
-from shvatka.core.games.dto import CurrentHintsOnly, FoundBonusHints
-from shvatka.core.interfaces.current_game import CurrentGameProvider
+from shvatka.core.games.dto import CurrentHintsOnly
 from shvatka.core.interfaces.dal.complex import TypedKeyGetter, GameStatDao
 from shvatka.core.interfaces.dal.file_info import FileInfoGetter
 from shvatka.core.interfaces.dal.game import GameByIdGetter, ActiveGameFinder
@@ -52,9 +51,9 @@ class GamePlayDao(Protocol):
     ) -> list[dto.GameEvent]:
         pass
 
-
     async def get_team_typed_keys(
-        self, identity: IdentityProvider,
+        self,
+        identity: IdentityProvider,
     ) -> list[dto.KeyTime]:
         pass
 

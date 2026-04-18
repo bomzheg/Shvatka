@@ -3,7 +3,7 @@ import typing
 from dataclasses import dataclass
 from typing import Iterable
 
-from shvatka.core.games.dto import CurrentHintsOnly, FoundBonusHints
+from shvatka.core.games.dto import CurrentHintsOnly
 from shvatka.core.games.game_play import check_waivers
 from shvatka.core.interfaces.current_game import CurrentGameProvider
 
@@ -165,6 +165,7 @@ class GamePlayReaderImpl(GamePlayReader):
     ) -> list[dto.KeyTime]:
         return await self.dao.key_time.get_team_typed_keys(game, team, level_time)
 
+
 @dataclass(kw_only=True, slots=True)
 class CacheItem:
     waivers_ok: bool | None = None
@@ -180,12 +181,12 @@ class GamePlayDaoImpl(GamePlayDao):
     async def get_current_hints(self, identity: IdentityProvider) -> CurrentHintsOnly:
         level_time = await self.get_level_time(identity)
         game = await self.current_game.get_required_game()
-        level = await self.dao.level.get_level_by_game_and_number(game, level_time.level_number)
+        level = await self.dao.level.get_by_number(game, level_time.level_number)
         td = datetime.now(tz=tz_utc) - level_time.start_at
         hints_ = level.get_hints_for_timedelta(td)
         return CurrentHintsOnly(
             hints=hints_,
-            level_number=level.level_number,
+            level_number=level.number_in_game,
             game_id=game.id,
             started_at=level_time.start_at,
         )
@@ -211,24 +212,26 @@ class GamePlayDaoImpl(GamePlayDao):
         game = await self.current_game.get_required_game()
         if not await self.check_waivers(identity):
             raise exceptions.WaiverError(
-                team=team, game=game, player=player, text="игрок не заявлен на игру, но пытается участвовать"
+                team=team,
+                game=game,
+                player=player,
+                text="игрок не заявлен на игру, но пытается участвовать",
             )
         level_time = await self.dao.level_time.get_current_level_time(team, game)
         self.cache[user_id].level_time = level_time
         return level_time
 
-
     async def check_waivers(self, identity: IdentityProvider) -> bool:
         user_id = await identity.get_required_user_db_id()
-        if self.cache.setdefault(user_id, CacheItem()).waivers_ok is not None:
-            return self.cache[user_id].waivers_ok
+        cache = self.cache.setdefault(user_id, CacheItem())
+        if cache.waivers_ok is not None:
+            return cache.waivers_ok
         waivers_check_result = await check_waivers(self.current_game, identity, self.dao.waiver)
-        self.cache[user_id].waivers_ok = waivers_check_result
+        cache.waivers_ok = waivers_check_result
         return waivers_check_result
 
     async def get_effects(self, identity: IdentityProvider) -> list[dto.GameEvent]:
         return await self.dao.events.get_team_events(
-            team=await identity.get_team(),
+            team=await identity.get_required_team(),
             game_id=(await self.current_game.get_required_game()).id,
         )
-

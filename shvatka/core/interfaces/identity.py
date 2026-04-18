@@ -27,6 +27,12 @@ class IdentityProvider(Protocol):
             raise exceptions.PlayerNotFoundError
         return user
 
+    async def get_required_user_db_id(self) -> int:
+        user = await self.get_required_user()
+        if user.db_id is None:
+            raise exceptions.UserNotFoundError
+        return user.db_id
+
     async def get_required_player(self) -> dto.Player:
         player = await self.get_player()
         if player is None:

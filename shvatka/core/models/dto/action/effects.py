@@ -26,3 +26,6 @@ class Effects:
 
     def is_routed_level_up(self) -> bool:
         return self.level_up and self.next_level is not None
+
+    def get_guids(self) -> list[str]:
+        return [g for h in self.hints_ for g in h.get_guids()]

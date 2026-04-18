@@ -2,8 +2,11 @@ import asyncio
 import logging
 from datetime import timedelta, datetime
 
+from shvatka.core.interfaces.current_game import CurrentGameProvider
 from shvatka.core.interfaces.dal.game_play import GamePreparer
 from shvatka.core.interfaces.dal.level_times import GameStarter, LevelByTeamGetter
+from shvatka.core.interfaces.dal.waiver import WaiverChecker
+from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.interfaces.scheduler import Scheduler
 from shvatka.core.models import dto
 from shvatka.core.models.dto import hints, action
@@ -204,3 +207,14 @@ def need_prepare_now(game: dto.Game) -> bool:
         if (game.start_at - utcnow) < timedelta(minutes=6):
             return True
         return False
+
+
+async def check_waivers(
+    current_game: CurrentGameProvider,
+    identity: IdentityProvider,
+    dao: WaiverChecker,
+) -> bool:
+    game = await current_game.get_required_game()
+    player = await identity.get_required_player()
+    team = await identity.get_required_team()
+    return await dao.check_waiver(player, team, game)

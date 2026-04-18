@@ -17,14 +17,21 @@ class GameEventDao(BaseDAO[models.GameEvent]):
     ) -> None:
         super().__init__(models.GameEvent, session, clock=clock)
 
-    async def get_team_events(
+    async def get_team_level_events(
         self,
         team: dto.Team,
         level_time: dto.LevelTime,
     ) -> list[dto.GameEvent]:
+        return await self.get_team_events(team, level_time.game.id)
+
+    async def get_team_events(
+        self,
+        team: dto.Team,
+        game_id: int,
+    ) -> list[dto.GameEvent]:
         result: ScalarResult[models.GameEvent] = await self.session.scalars(
             select(models.GameEvent).where(
-                models.GameEvent.game_id == level_time.game.id,
+                models.GameEvent.game_id == game_id,
                 models.GameEvent.team_id == team.id,
             )
         )

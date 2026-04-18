@@ -1,11 +1,15 @@
 from typing import AsyncIterable
 
-from dishka import Provider, Scope, provide
+from dishka import Provider, Scope, provide, AnyOf
 from redis.asyncio.client import Redis
 from sqlalchemy.ext.asyncio import async_sessionmaker, AsyncSession, AsyncEngine
 
+from shvatka.core.interfaces.dal.waiver import GameWaiversGetter
 from shvatka.infrastructure.db import dao
 from shvatka.infrastructure.db.config.models.db import DBConfig, RedisConfig
+from shvatka.infrastructure.db.dao import (
+    WaiverDao,
+)
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.infrastructure.db.dao.memory.level_testing import LevelTestingData
 from shvatka.infrastructure.db.factory import create_engine, create_session_maker, create_redis
@@ -60,6 +64,66 @@ class DAOProvider(Provider):
     @provide
     def get_timers(self, holder: HolderDao) -> dao.TimersDAO:
         return holder.timers
+
+    @provide
+    def user_dao(self, holder: HolderDao) -> dao.UserDao:
+        return holder.user
+
+    @provide
+    def chat_dao(self, holder: HolderDao) -> dao.ChatDao:
+        return holder.chat
+
+    @provide
+    def level_dao(self, holder: HolderDao) -> dao.LevelDao:
+        return holder.level
+
+    @provide
+    def level_time_dao(self, holder: HolderDao) -> dao.LevelTimeDao:
+        return holder.level_time
+
+    @provide
+    def key_time_dao(self, holder: HolderDao) -> dao.KeyTimeDao:
+        return holder.key_time
+
+    @provide
+    def organizer_dao(self, holder: HolderDao) -> dao.OrganizerDao:
+        return holder.organizer
+
+    @provide
+    def player_dao(self, holder: HolderDao) -> dao.PlayerDao:
+        return holder.player
+
+    @provide
+    def team_player_dao(self, holder: HolderDao) -> dao.TeamPlayerDao:
+        return holder.team_player
+
+    @provide
+    def team_dao(self, holder: HolderDao) -> dao.TeamDao:
+        return holder.team
+
+    @provide(provides=AnyOf[WaiverDao, GameWaiversGetter])
+    def waiver_dao(self, holder: HolderDao) -> dao.WaiverDao:
+        return holder.waiver
+
+    @provide
+    def achievement_dao(self, holder: HolderDao) -> dao.AchievementDAO:
+        return holder.achievement
+
+    @provide
+    def forum_user_dao(self, holder: HolderDao) -> dao.ForumUserDAO:
+        return holder.forum_user
+
+    @provide
+    def forum_team_dao(self, holder: HolderDao) -> dao.ForumTeamDAO:
+        return holder.forum_team
+
+    @provide
+    def poll_dao(self, holder: HolderDao) -> dao.PollDao:
+        return holder.poll
+
+    @provide
+    def secure_invite_dao(self, holder: HolderDao) -> dao.SecureInvite:
+        return holder.secure_invite
 
 
 class RedisProvider(Provider):

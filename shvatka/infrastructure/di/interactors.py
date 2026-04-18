@@ -17,14 +17,26 @@ from shvatka.core.games.adapters import (
 from shvatka.core.interfaces.current_game import CurrentGameProvider
 from shvatka.core.interfaces.dal.game import GameByIdGetter
 from shvatka.core.interfaces.dal.game_play import GamePlayerDao
+from shvatka.core.services.current_game import CurrentGameProviderImpl
+from shvatka.core.waiver.adapters import WaiverVoteAdder, WaiverVoteGetter, PollDraftsReader
 from shvatka.core.scenario.interactors import (
     AllGameKeysReaderInteractor,
     GameScenarioTransitionsInteractor,
 )
-from shvatka.core.services.current_game import CurrentGameProviderImpl
 from shvatka.core.services.key import KeyProcessor, TimerProcessor
+from shvatka.core.waiver.interactors import (
+    TeamWaiversDraftReaderInteractor,
+    AddWaiverVoteInteractor,
+    WaiverCompleteReaderInteractor,
+    AllWaiversDraftReaderInteractor,
+)
+from shvatka.infrastructure.db.dao.complex2.waiver import (
+    WaiverVoteAdderImpl,
+    WaiverVoteGetterImpl,
+    PollDraftsReaderImpl,
+)
+from shvatka.infrastructure.db.dao.complex.game import GameFilesGetterImpl
 from shvatka.infrastructure.db.dao.complex.game import (
-    GameFilesGetterImpl,
     GamePlayDaoImpl,
 )
 from shvatka.infrastructure.db.dao.complex.game_play import GamePlayerDaoImpl
@@ -79,3 +91,16 @@ class GamePlayProvider(Provider):
 
     all_game_keys_reader_interactor = provide(AllGameKeysReaderInteractor)
     transitions_reader_interactor = provide(GameScenarioTransitionsInteractor)
+
+
+class WaiverProvider(Provider):
+    scope = Scope.REQUEST
+
+    waivers_reader_interactor = provide(TeamWaiversDraftReaderInteractor)
+    add_waiver_vote = provide(AddWaiverVoteInteractor)
+    waivers_complete_reader_interactor = provide(WaiverCompleteReaderInteractor)
+    waiver_draft_reader_interactor = provide(AllWaiversDraftReaderInteractor)
+
+    waiver_vote_adder_dao = provide(WaiverVoteAdderImpl, provides=WaiverVoteAdder)
+    waiver_vote_getter_dao = provide(WaiverVoteGetterImpl, provides=WaiverVoteGetter)
+    poll_drafts_reader_dao = provide(PollDraftsReaderImpl, provides=PollDraftsReader)

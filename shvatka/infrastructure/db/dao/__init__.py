@@ -1,5 +1,5 @@
+from .rdb.base import BaseDAO
 from .rdb import (
-    BaseDAO,
     ChatDao,
     FileInfoDao,
     GameDao,
@@ -14,5 +14,8 @@ from .rdb import (
     WaiverDao,
     TimersDAO,
     GameEventDao,
+    ForumUserDAO,
+    AchievementDAO,
+    ForumTeamDAO,
 )
 from .redis import PollDao, SecureInvite

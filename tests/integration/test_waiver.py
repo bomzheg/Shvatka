@@ -1,17 +1,19 @@
 import pytest
 import pytest_asyncio
+from dishka import AsyncContainer
 
 from shvatka.core.models import dto
 from shvatka.core.models.enums.played import Played
 from shvatka.core.services.game import start_waivers
 from shvatka.core.services.player import join_team, leave
-from shvatka.core.services.waiver import (
+from shvatka.core.waiver.services import (
     get_vote_to_voted,
     add_vote,
     approve_waivers,
     get_all_played,
 )
 from shvatka.core.utils.exceptions import PlayerRestoredInTeam, WaiverForbidden
+from shvatka.core.waiver.adapters import WaiverVoteAdder, WaiverVoteGetter
 from shvatka.infrastructure.db import models
 from shvatka.infrastructure.db.dao.holder import HolderDao
 
@@ -24,14 +26,17 @@ async def test_get_voted_list(
     gryffindor: dto.Team,
     game: dto.FullGame,
     dao: HolderDao,
+    dishka_request: AsyncContainer,
 ):
     await start_waivers(game, author, dao.game)
 
     await join_team(hermione, gryffindor, harry, dao.team_player)
-    await add_vote(game, gryffindor, harry, Played.yes, dao.waiver_vote_adder)
-    await add_vote(game, gryffindor, hermione, Played.yes, dao.waiver_vote_adder)
+    waiver_vote_adder = await dishka_request.get(WaiverVoteAdder)
+    await add_vote(game, gryffindor, harry, Played.yes, waiver_vote_adder)
+    await add_vote(game, gryffindor, hermione, Played.yes, waiver_vote_adder)
 
-    actual = await get_vote_to_voted(gryffindor, dao.waiver_vote_getter)
+    waiver_vote_getter = await dishka_request.get(WaiverVoteGetter)
+    actual = await get_vote_to_voted(gryffindor, waiver_vote_getter)
     assert len(actual) == 1
     actual_voted = actual[Played.yes]
     assert len(actual_voted) == 2
@@ -46,7 +51,7 @@ async def test_get_voted_list(
     assert {harry.id, hermione.id} == {player.player.id for player in players}
 
     await leave(hermione, hermione, dao.team_leaver)
-    actual = await get_vote_to_voted(gryffindor, dao.waiver_vote_getter)
+    actual = await get_vote_to_voted(gryffindor, waiver_vote_getter)
     assert len(actual) == 1
     actual_voted = actual[Played.yes]
     assert len(actual_voted) == 1
@@ -72,7 +77,7 @@ async def test_get_voted_list(
     dao.waiver._save(waiver)
     await dao.waiver.commit()
     with pytest.raises(WaiverForbidden):
-        await add_vote(game, gryffindor, hermione, Played.yes, dao.waiver_vote_adder)
+        await add_vote(game, gryffindor, hermione, Played.yes, waiver_vote_adder)
 
     await approve_waivers(game, gryffindor, harry, dao.waiver_approver)
     assert 2 == await dao.waiver.count()

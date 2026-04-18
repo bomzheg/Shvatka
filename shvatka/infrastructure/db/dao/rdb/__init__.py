@@ -1,4 +1,3 @@
-from .base import BaseDAO
 from .chat import ChatDao
 from .file_info import FileInfoDao
 from .forum_user import ForumUserDAO
@@ -14,3 +13,5 @@ from .user import UserDao
 from .waiver import WaiverDao
 from .events import GameEventDao
 from .timers import TimersDAO
+from .forum_team import ForumTeamDAO
+from .achievement import AchievementDAO

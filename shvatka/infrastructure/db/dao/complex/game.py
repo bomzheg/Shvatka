@@ -1,6 +1,6 @@
 from datetime import datetime
 import typing
-from dataclasses import dataclass, fields
+from dataclasses import dataclass
 from typing import Iterable
 
 from shvatka.core.games.dto import CurrentHintsOnly

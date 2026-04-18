@@ -512,8 +512,12 @@ async def test_get_current_hints(
     dao.level_time._save(level_time)
     await dao.commit()
     interactor = await dishka_request.get(GamePlayReaderInteractor)
-    hints_ = await interactor(MockIdentityProvider(user=hermione._user, player=hermione, team=gryffindor))
-    hints_harry = await interactor(MockIdentityProvider(user=harry._user, player=harry, team=gryffindor))
+    hints_ = await interactor(
+        MockIdentityProvider(user=hermione._user, player=hermione, team=gryffindor)
+    )
+    hints_harry = await interactor(
+        MockIdentityProvider(user=harry._user, player=harry, team=gryffindor)
+    )
     assert len(hints_.hints) == 2
     assert len(hints_harry.hints) == 2
     assert hints_harry.hints == hints_.hints

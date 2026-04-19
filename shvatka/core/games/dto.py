@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from uuid import UUID
 
-from shvatka.core.models import dto
+from shvatka.core.models import dto, enums
 from shvatka.core.models.dto import hints
 
 
@@ -27,3 +27,10 @@ class CurrentHintsOnly:
 class FoundBonusHints:
     bonus_hints: dict[UUID, list[hints.AnyHint]]
     """{effect_id: []}"""
+
+
+@dataclass(kw_only=True, frozen=True, slots=True)
+class MyRole:
+    waiver_vote: enums.Played | None
+    team: dto.Team | None
+    org: dto.Organizer | None

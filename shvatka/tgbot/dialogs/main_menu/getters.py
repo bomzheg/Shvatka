@@ -1,29 +1,33 @@
 from aiogram_dialog import DialogManager
+from dishka import FromDishka
+from dishka.integrations.aiogram_dialog import inject
 
+from shvatka.core.games.interactors import GamePlayRoleReader
+from shvatka.core.interfaces.current_game import CurrentGameProvider
 from shvatka.core.models import dto
-from shvatka.core.services.organizers import get_by_player_or_none
-from shvatka.core.services.player import save_promotion_invite, get_my_team, get_full_team_player
-from shvatka.core.waiver.services import get_my_waiver
-from shvatka.core.utils.exceptions import PlayerNotInTeam
+from shvatka.core.services.player import save_promotion_invite
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.tgbot import keyboards as kb
+from shvatka.tgbot.services.identity import TgBotIdentityProvider
 
 
-async def get_main(dao: HolderDao, player: dto.Player, game: dto.Game, **_):
+@inject
+async def get_main(
+    current_game: FromDishka[CurrentGameProvider],
+    identity: FromDishka[TgBotIdentityProvider],
+    interactor: FromDishka[GamePlayRoleReader],
+    **_,
+):
+    game = await current_game.get_game()
+    player = await identity.get_required_player()
+    team = await identity.get_team()
+    team_player = await identity.get_full_team_player()
     if game:
-        org = await get_by_player_or_none(player=player, game=game, dao=dao.organizer)
+        my_role = await interactor(identity)
+        org = my_role.org
+        waiver = my_role.waiver_vote
     else:
         org = None
-    try:
-        team = await get_my_team(player=player, dao=dao.team_player)
-        team_player = await get_full_team_player(player=player, team=team, dao=dao.team_player)
-        if game and team:
-            waiver = await get_my_waiver(player=player, team=team, game=game, dao=dao.waiver)
-        else:
-            waiver = None
-    except PlayerNotInTeam:
-        team = None
-        team_player = None
         waiver = None
 
     return {

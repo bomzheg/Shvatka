@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import BinaryIO
 
-from shvatka.core.games.dto import CurrentHintsAndKeys
+from shvatka.core.games.dto import CurrentHintsAndKeys, MyRole
 from shvatka.core.games.game_play import schedule_first_hint, check_waivers
 from shvatka.core.interfaces.clients.file_storage import FileGateway
 from shvatka.core.games.adapters import (
@@ -14,13 +14,15 @@ from shvatka.core.games.adapters import (
 )
 from shvatka.core.interfaces.current_game import CurrentGameProvider
 from shvatka.core.interfaces.dal.game_play import GamePlayerDao
+from shvatka.core.interfaces.dal.organizer import OrgByPlayerGetter
+from shvatka.core.interfaces.dal.waiver import WaiverGetter
 from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.interfaces.scheduler import Scheduler
 from shvatka.core.models import dto, enums
 from shvatka.core.models.dto import action
 from shvatka.core.services.game_stat import get_typed_keys, get_game_stat_with_hints
 from shvatka.core.services.key import TimerProcessor, KeyProcessor
-from shvatka.core.services.organizers import get_spying_orgs
+from shvatka.core.services.organizers import get_spying_orgs, get_by_player_or_none
 from shvatka.core.utils import exceptions
 from shvatka.core.utils.datetime_utils import tz_utc
 from shvatka.core.utils.key_checker_lock import KeyCheckerFactory
@@ -104,6 +106,32 @@ class GameFileReaderInteractor:
 
         meta = await self.dao.get_by_guid(guid)
         return await self.file_gateway.get(meta)
+
+
+@dataclass(kw_only=True, slots=True, frozen=True)
+class GamePlayRoleReader:
+    current_game: CurrentGameProvider
+    waiver_dao: WaiverGetter
+    org_dao: OrgByPlayerGetter
+
+    async def __call__(self, identity: IdentityProvider) -> MyRole:
+        game = await self.current_game.get_required_game()
+        team = await identity.get_team()
+        player = await identity.get_player()
+        if team is not None and player is not None:
+            waiver = await self.waiver_dao.get_player_waiver(player=player, team=team, game=game)
+            played = waiver.played if waiver else None
+        else:
+            played = None
+        if player is not None:
+            org = await get_by_player_or_none(player=player, game=game, dao=self.org_dao)
+        else:
+            org = None
+        return MyRole(
+            team=team,
+            waiver_vote=played,
+            org=org,
+        )
 
 
 @dataclass(kw_only=True, slots=True, frozen=True)

@@ -175,12 +175,7 @@ class GamePlayDaoImpl(GamePlayDao):
         if (level_time := self.cache.setdefault(user_id, CacheItem()).level_time) is not None:
             return level_time
         player = await identity.get_required_player()
-        team = await identity.get_team()
-        if not team:
-            raise exceptions.PlayerNotInTeam(
-                player=player,
-                user=(await identity.get_user()),
-            )
+        team = await identity.get_required_team()
         game = await self.current_game.get_required_game()
         if not await self.check_waivers(identity):
             raise exceptions.WaiverError(

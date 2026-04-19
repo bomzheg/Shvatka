@@ -167,8 +167,6 @@ class ApiIdentityProvider(IdentityProvider):
 
     async def get_user(self) -> dto.User | None:
         if "user" in self.cache:
-            if self.cache["user"] is None:
-                raise HTTPException(status_code=401)
             return self.cache["user"]
         user: dto.User | None
         try:
@@ -177,49 +175,46 @@ class ApiIdentityProvider(IdentityProvider):
         except (JWTError, HTTPException):
             user = await self.auth_properties.get_user_basic(self.request, self.dao)
         self.cache["user"] = user
-        if user is None:
-            raise HTTPException(status_code=401)
         return user
 
-    async def get_player(self) -> dto.Player:
+    async def get_required_user(self) -> dto.User:
+        user = await self.get_user()
+        if user is None:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
+        return user
+
+    async def get_player(self) -> dto.Player | None:
         if "player" in self.cache:
-            if self.cache["player"] is None:
-                raise HTTPException(status_code=401)
             return self.cache["player"]
         player = await upsert_player(await self.get_required_user(), self.dao.player)
         self.cache["player"] = player
         return player
 
-    async def get_team(self) -> dto.Team:
-        player = await self.get_player()
+    async def get_team(self) -> dto.Team | None:
         if "team" in self.cache:
-            if self.cache["team"] is None:
-                raise exceptions.PlayerNotInTeam(player=player)
             return self.cache["team"]
+        player = await self.get_required_player()
         team = await get_my_team(player, self.dao.team_player)
         self.cache["team"] = team
-        if team is None:
-            raise exceptions.PlayerNotInTeam(player=player)
         return team
 
-    async def get_chat(self) -> dto.Chat:
+    async def get_chat(self) -> dto.Chat | None:
         if "chat" in self.cache:
-            if self.cache["chat"] is None:
-                raise HTTPException(status_code=401)
             return self.cache["chat"]
         team = await self.get_team()
-        if team.has_chat():
+        if team and team.has_chat():
             chat = await self.dao.chat.get_by_tg_id(cast(int, team.get_chat_id()))
             self.cache["chat"] = chat
             return chat
         else:
-            raise exceptions.ChatNotFound(team=team)
+            self.cache["chat"] = None
+            return None
 
     async def get_full_team_player(self) -> dto.FullTeamPlayer | None:
         if "full_team_player" in self.cache:
             return self.cache["full_team_player"]
         team_player = await get_full_team_player_or_none(
-            await self.get_player(), await self.get_team(), dao=self.dao.team_player
+            await self.get_required_player(), await self.get_team(), dao=self.dao.team_player
         )
         self.cache["full_team_player"] = team_player
         return team_player

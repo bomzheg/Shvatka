@@ -5,10 +5,11 @@ from dishka.integrations.fastapi import FromDishka
 from dishka.integrations.fastapi import inject
 from fastapi import APIRouter, Body, HTTPException
 from fastapi.params import Path
-from fastapi.responses import StreamingResponse, Response
+from fastapi.responses import StreamingResponse
 
 from shvatka.api.dependencies.auth import ApiIdentityProvider
 from shvatka.api.models import responses, req
+from shvatka.api.models.responses import MyRoleDto
 from shvatka.api.utils.web_input import WebInput
 from shvatka.core.games.interactors import (
     GameFileReaderInteractor,
@@ -16,6 +17,7 @@ from shvatka.core.games.interactors import (
     GameKeysReaderInteractor,
     GameStatReaderInteractor,
     CheckKeyInteractor,
+    GamePlayRoleReader,
 )
 from shvatka.core.interfaces.current_game import CurrentGameProvider
 from shvatka.core.models import enums
@@ -41,12 +43,20 @@ async def get_my_games_list(
 @inject
 async def get_active_game(
     current_game: FromDishka[CurrentGameProvider],
-    response: Response,
 ) -> responses.Game | None:
     game = await current_game.get_game()
     if game is None:
         raise HTTPException(status_code=404, detail={"text": "game not found"})
     return responses.Game.from_core(game)
+
+
+@inject
+async def get_my_role(
+    identity: FromDishka[ApiIdentityProvider],
+    interactor: FromDishka[GamePlayRoleReader],
+) -> MyRoleDto:
+    my_role = await interactor(identity=identity)
+    return MyRoleDto.from_core(my_role)
 
 
 @inject
@@ -104,7 +114,7 @@ async def get_game_file(
 
 
 @inject
-async def get_running_game_hints(
+async def get_current_level(
     identity: FromDishka[ApiIdentityProvider],
     interactor: FromDishka[GamePlayReaderInteractor],
 ) -> responses.CurrentHintResponse:
@@ -137,7 +147,8 @@ def setup() -> APIRouter:
     router.add_api_route("", get_all_games, methods=["GET"])
     router.add_api_route("/my", get_my_games_list, methods=["GET"])
     router.add_api_route("/active", get_active_game, methods=["GET"])
-    router.add_api_route("/running/level/current/hints", get_running_game_hints, methods=["GET"])
+    router.add_api_route("/active/me", get_my_role, methods=["GET"])
+    router.add_api_route("/running/level/current", get_current_level, methods=["GET"])
     router.add_api_route("/running/key", insert_key, methods=["POST"])
     router.add_api_route("/{id}", get_game_card, methods=["GET"])
     router.add_api_route("/{id}/keys", get_game_keys, methods=["GET"])

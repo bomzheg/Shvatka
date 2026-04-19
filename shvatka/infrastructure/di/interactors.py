@@ -7,6 +7,7 @@ from shvatka.core.games.interactors import (
     GameStatReaderInteractor,
     GamePlayTimerInteractor,
     CheckKeyInteractor,
+    GamePlayRoleReader,
 )
 from shvatka.core.games.adapters import (
     GameFileReader,
@@ -79,6 +80,8 @@ class GamePlayProvider(Provider):
     @provide
     def game_player_dao(self, dao: HolderDao) -> GamePlayerDao:
         return GamePlayerDaoImpl(dao)
+
+    game_play_role_reader = provide(GamePlayRoleReader)
 
     check_key_interactor = provide(CheckKeyInteractor)
     key_processor = provide(KeyProcessor)

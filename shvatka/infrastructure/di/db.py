@@ -4,7 +4,8 @@ from dishka import Provider, Scope, provide, AnyOf
 from redis.asyncio.client import Redis
 from sqlalchemy.ext.asyncio import async_sessionmaker, AsyncSession, AsyncEngine
 
-from shvatka.core.interfaces.dal.waiver import GameWaiversGetter
+from shvatka.core.interfaces.dal.organizer import OrgByPlayerGetter
+from shvatka.core.interfaces.dal.waiver import GameWaiversGetter, WaiverGetter
 from shvatka.infrastructure.db import dao
 from shvatka.infrastructure.db.config.models.db import DBConfig, RedisConfig
 from shvatka.infrastructure.db.dao import (
@@ -85,7 +86,7 @@ class DAOProvider(Provider):
     def key_time_dao(self, holder: HolderDao) -> dao.KeyTimeDao:
         return holder.key_time
 
-    @provide
+    @provide(provides=AnyOf[dao.OrganizerDao, OrgByPlayerGetter])
     def organizer_dao(self, holder: HolderDao) -> dao.OrganizerDao:
         return holder.organizer
 
@@ -101,7 +102,7 @@ class DAOProvider(Provider):
     def team_dao(self, holder: HolderDao) -> dao.TeamDao:
         return holder.team
 
-    @provide(provides=AnyOf[WaiverDao, GameWaiversGetter])
+    @provide(provides=AnyOf[WaiverDao, GameWaiversGetter, WaiverGetter])
     def waiver_dao(self, holder: HolderDao) -> dao.WaiverDao:
         return holder.waiver
 

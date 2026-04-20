@@ -21,6 +21,9 @@ class Condition(Protocol):
     def check(self, action: Action, state_holder: StateHolder) -> Decision:
         raise NotImplementedError
 
+    def get_guids(self) -> list[str]:
+        raise NotImplementedError
+
 
 class Action(Protocol):
     pass
@@ -61,6 +64,9 @@ class NoActionDecision(Decision):
 @dataclass(kw_only=True, frozen=True)
 class EffectsCondition(Condition, metaclass=abc.ABCMeta):
     effects: Effects
+
+    def get_guids(self) -> list[str]:
+        return self.effects.get_guids()
 
 
 @dataclass(kw_only=True, frozen=True)

@@ -86,13 +86,10 @@ class GameFileReaderInteractor:
                     player=player,
                 )
         elif game.is_started():
-            hints_ = await self.game_play_dao.get_current_hints(identity)
-            guids = {g for h in hints_.hints for g in h.get_guids()}
-            if guid not in guids:
-                effects = await self.game_play_dao.get_effects(identity)
-                guids = {g for e in effects for g in e.effects.get_guids()}
-                if guid not in guids:
-                    raise exceptions.FileNotFound(
+            if not await self.is_guid_in_current_hint(identity, guid):
+                if not await self.is_guid_in_applied_effects(identity, guid):
+                    raise exceptions.NotAuthorizedForEdit(
+                        permission_name="game_file_read",
                         text=f"There is no file with uuid {guid} associated "
                         f"with game id {game_id} and available now",
                         game=game,
@@ -106,6 +103,15 @@ class GameFileReaderInteractor:
 
         meta = await self.dao.get_by_guid(guid)
         return await self.file_gateway.get(meta)
+
+    async def is_guid_in_current_hint(self, identity: IdentityProvider, guid: str) -> bool:
+        hints_ = await self.game_play_dao.get_current_hints(identity)
+        return guid in hints_.get_guids()
+
+    async def is_guid_in_applied_effects(self, identity: IdentityProvider, guid: str) -> bool:
+        effects = await self.game_play_dao.get_effects(identity)
+        guids = {g for e in effects for g in e.effects.get_guids()}
+        return guid in guids
 
 
 @dataclass(kw_only=True, slots=True, frozen=True)

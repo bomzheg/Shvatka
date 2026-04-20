@@ -144,6 +144,9 @@ class KeyWinCondition(KeyCondition):
     def get_keys(self) -> set[SHKey]:
         return self.keys
 
+    def get_guids(self) -> list[str]:
+        return []
+
 
 @dataclass(kw_only=True, frozen=True)
 class KeyEffectsDecision(TypedKeyDecision, EffectsDecision):

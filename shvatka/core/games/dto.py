@@ -22,6 +22,9 @@ class CurrentHintsOnly:
     started_at: datetime
     game_id: int
 
+    def get_guids(self) -> list[str]:
+        return [g for h in self.hints for g in h.get_guids()]
+
 
 @dataclass(kw_only=True, frozen=True, slots=True)
 class FoundBonusHints:

@@ -116,8 +116,8 @@ class FullGame(Game):
 
     def get_guids(self) -> list[str]:
         guids = []
-        for hint in self.levels:
-            guids.extend(hint.get_guids())
+        for level in self.levels:
+            guids.extend(level.get_guids())
         return guids
 
     def get_hint(self, level_number: int, hint_number: int) -> hints.TimeHint:

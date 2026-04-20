@@ -368,6 +368,8 @@ class LevelScenario:
         guids = []
         for hint in self.time_hints:
             guids.extend(hint.get_guids())
+        for condition in self.conditions:
+            guids.extend(condition.get_guids())
         return guids
 
     @property

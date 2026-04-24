@@ -41,5 +41,5 @@ def set_auth_response(config: AuthConfig, response: Response, token: Token) -> N
         domain=config.domain,
         httponly=config.httponly,
         secure=config.secure,
-        max_age=config.token_expire.seconds,
+        max_age=int(config.token_expire.total_seconds()),
     )

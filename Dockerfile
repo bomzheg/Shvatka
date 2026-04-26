@@ -19,5 +19,5 @@ ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 COPY --from=builder $VIRTUAL_ENV $VIRTUAL_ENV
 COPY . ${CODE_PATH}/shvatka
 WORKDIR $CODE_PATH/shvatka
-RUN echo "{\"vcs_hash\": \"${VCS_HASH}\", \"commit_at\": \"${COMMIT_AT}\", \"branch\": \"${VCS_NAME}\", \"build_at\": \"${BUILD_AT}\" }" > version.yaml
+RUN echo "{\"vcs_hash\": \"${VCS_HASH}\", \"commit_at\": \"${COMMIT_AT}\", \"vcs_name\": \"${VCS_NAME}\", \"build_at\": \"${BUILD_AT}\" }" > version.yaml
 ENTRYPOINT ["python3", "-m", "shvatka"]

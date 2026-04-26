@@ -3,13 +3,13 @@
 
 
 .Например, если добавить бота в чат с типом обычная группа — бот сразу сообщает, что для создания команды требуется создать супергруппу
-image::{attachmentsdir}/tg-check_is_sg-bot_show.png[]
+image::{attachmentsdir}/team/tg-check_is_sg-bot_show.png[]
 
 .Бот не даст создать команду, даже если проигнорировать его предупреждения
-image::{attachmentsdir}/tg-check_is_sg-error.png[]
+image::{attachmentsdir}/team/tg-check_is_sg-error.png[]
 
 .Кроме того, можно явно спросить тип чата командой `/chat_type`
-image::{attachmentsdir}/tg-check_is_sg-chat_type.png[]
+image::{attachmentsdir}/team/tg-check_is_sg-chat_type.png[]
 
 .После успешного преобразования группы — бот сразу сообщит
-image::{attachmentsdir}/tg-check_is_sg-after_sg.png[]
+image::{attachmentsdir}/team/tg-check_is_sg-after_sg.png[]

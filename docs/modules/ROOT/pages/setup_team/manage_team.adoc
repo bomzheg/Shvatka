@@ -3,17 +3,17 @@
 
 
 .Капитанский мостик
-image::{attachmentsdir}/tg-manage_team.png[]
+image::{attachmentsdir}/team/tg-manage_team.png[]
 В главном меню мостика доступно: переход в меню игроков, изменение названия команды и изменение девиза команды
 
 
 .Список игроков в команде
-image::{attachmentsdir}/tg-team_players.png[]
+image::{attachmentsdir}/team/tg-team_players.png[]
 По клику на "игроков" открывается список игроков команды и кнопка, возвращающая в главное меню
 
 
 .Управление конкретным игроком
-image::{attachmentsdir}/tg-team_player.png[]
+image::{attachmentsdir}/team/tg-team_player.png[]
 При нажатии на конкретного игрока появится подробная информация об игроке и возможность изменить различные вещи:
 
 - Роль и emoji — ни на что не влияют, кроме отображения этих самых ролей и emoji.

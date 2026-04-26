@@ -3,12 +3,12 @@
 
 
 .Создание команды
-image::{attachmentsdir}/tg-create_team.png[]
+image::{attachmentsdir}/team/tg-create_team.png[]
 
 == Добавление игроков
 Добавление игроков может занять некоторое время, поскольку на сообщение каждого необходимо отправить команду `/add_in_team` ответом на сообщение пользователя
 
 .Добавление игроков в команду
-video::{attachmentsdir}/tg-add-player.mp4[opts=autoplay,loop,nocontrols,nofullscreen,muted]
+video::{attachmentsdir}/team/tg-add-player.mp4[opts=autoplay,loop,nocontrols,nofullscreen,muted]
 
 К сожалению, бот не может получить доступ к списку участников чата, чтобы автоматизировать этот не интересный, но к счастью одноразовый процесс

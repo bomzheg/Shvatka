@@ -10,17 +10,17 @@
 
 
 .В окне просмотра информации о чате нажимаем на "карандашик"
-image::{attachmentsdir}/tg-group-info.jpg[]
+image::{attachmentsdir}/team/tg-group-info.jpg[]
 
 .Кроме прочего — видно, что история чата для новых участников скрыта.
-image::{attachmentsdir}/tg-group-history-hidden.jpg[]
+image::{attachmentsdir}/team/tg-group-history-hidden.jpg[]
 
 Изменим эту настройку, для того, чтобы преобразовать группу в супергруппу. При желании впоследствии можно менять любые настройки, (в том числе эту). Группа навсегда останется супергруппой.
 
 
 .Изменили настройку, можно сохранять и выходить (на галочку в правом верхнем углу)
-image::{attachmentsdir}/tg-group-history-visible.jpg[]
+image::{attachmentsdir}/team/tg-group-history-visible.jpg[]
 
 
 .Весь процесс преобразования группы в супергруппу
-video::{attachmentsdir}/tg-group2sg.mp4[opts=autoplay,loop,nocontrols,nofullscreen,muted]
+video::{attachmentsdir}/team/tg-group2sg.mp4[opts=autoplay,loop,nocontrols,nofullscreen,muted]

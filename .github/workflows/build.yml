@@ -22,7 +22,9 @@ jobs:
         id: date
         run: |
           echo "BUILD_AT=$(date +'%Y-%m-%dT%H:%M:%S%z')" >> "$GITHUB_OUTPUT"
-          echo "VCS_SHA=${GITHUB_SHA}" >> "$GITHUB_OUTPUT"
+          echo "VCS_HASH=${GITHUB_SHA}" >> "$GITHUB_OUTPUT"
+          echo "COMMIT_AT=$(git show -s --format=%cI ${GITHUB_SHA})" >> "$GITHUB_OUTPUT"
+          echo "VCS_NAME=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
       - uses: mr-smithers-excellent/docker-build-push@v6.3
         with:
           image: bomzheg/shvatka
@@ -30,4 +32,4 @@ jobs:
           registry: docker.io
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-          buildArgs: "BUILD_AT=${{steps.date.outputs.BUILD_AT}},VCS_SHA=${{steps.date.outputs.VCS_SHA}}"
+          buildArgs: "BUILD_AT=${{steps.date.outputs.BUILD_AT}},VCS_HASH=${{steps.date.outputs.VCS_HASH}},COMMIT_AT==${{steps.date.outputs.COMMIT_AT}},VCS_NAME==${{steps.date.outputs.VCS_NAME}}"

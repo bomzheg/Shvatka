@@ -22,7 +22,14 @@ class GameEventDao(BaseDAO[models.GameEvent]):
         team: dto.Team,
         level_time: dto.LevelTime,
     ) -> list[dto.GameEvent]:
-        return await self.get_team_events(team, level_time.game.id)
+        result: ScalarResult[models.GameEvent] = await self.session.scalars(
+            select(models.GameEvent).where(
+                models.GameEvent.game_id == level_time.game.id,
+                models.GameEvent.level_time_id == level_time.id,
+                models.GameEvent.team_id == team.id,
+            )
+        )
+        return [event.to_dto() for event in result.all()]
 
     async def get_team_events(
         self,
@@ -41,6 +48,7 @@ class GameEventDao(BaseDAO[models.GameEvent]):
         self,
         team: dto.Team,
         game: dto.Game,
+        level_time: dto.LevelTime,
         effects: action.Effects,
         at: datetime | None = None,
     ) -> dto.GameEvent:
@@ -49,8 +57,10 @@ class GameEventDao(BaseDAO[models.GameEvent]):
         event = models.GameEvent(
             team_id=team.id,
             game_id=game.id,
+            level_time_id=level_time.id,
             at=at,
             effects=effects,
         )
         self._save(event)
+        await self._flush(event)
         return event.to_dto()

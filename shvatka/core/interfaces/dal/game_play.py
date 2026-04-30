@@ -86,6 +86,7 @@ class GamePlayerDao(
         self,
         team: dto.Team,
         game: dto.Game,
+        level_time: dto.LevelTime,
         effects: action.Effects,
     ) -> dto.GameEvent:
         raise NotImplementedError
@@ -97,7 +98,7 @@ class GamePlayerDao(
     ) -> dto.Timer:
         raise NotImplementedError
 
-    async def get_team_events(
+    async def get_team_level_events(
         self, team: dto.Team, level_time: dto.LevelTime
     ) -> list[dto.GameEvent]:
         raise NotImplementedError

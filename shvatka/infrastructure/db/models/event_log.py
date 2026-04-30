@@ -63,6 +63,7 @@ class GameEvent(Base):
         "Game",
         foreign_keys=game_id,
     )
+    level_time_id = mapped_column(ForeignKey("levels_times.id"), nullable=True)
     at = mapped_column(
         DateTime(timezone=True),
         default=lambda: datetime.now(tz=tz_utc),
@@ -75,6 +76,7 @@ class GameEvent(Base):
         return dto.GameEvent(
             id=self.id,
             at=self.at,
+            level_time_id=self.level_time_id,
             team_id=self.team_id,
             effects=self.effects,
         )

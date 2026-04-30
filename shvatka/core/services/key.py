@@ -64,7 +64,10 @@ class KeyProcessor:
                 )
                 is_level_up = False
                 if isinstance(decision, action.KeyEffectsDecision):
-                    await self.dao.save_event(team=team, game=game, effects=decision.effects)
+                    await self.dao.save_event(
+                        team=team, game=game, effects=decision.effects, level_time=level_time
+                    )
+                    # TODO #208 save link event - key
                     if is_level_up := decision.effects.level_up:
                         await self.dao.level_up(
                             team=team,
@@ -166,7 +169,7 @@ class TimerProcessor:
                     current_level_time_id=current_level_time.id,
                     applied_effects=[
                         e.effects
-                        for e in await self.dao.get_team_events(
+                        for e in await self.dao.get_team_level_events(
                             team=team, level_time=started_level_time
                         )
                     ],

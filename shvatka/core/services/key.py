@@ -83,10 +83,10 @@ class KeyProcessor:
                     saved_key, is_level_up, parsed_key=decision_to_parsed_key(decision)
                 )
             elif isinstance(decision, action.NotImplementedActionDecision):
-                logger.warning("impossible decision here cant be not implemented")
+                logger.warning("impossible key decision here cant be not implemented")
                 return None
             else:
-                logger.warning("impossible decision here is %s", type(decision))
+                logger.warning("impossible key decision here is %s", type(decision))
                 return None
 
 
@@ -194,7 +194,7 @@ class TimerProcessor:
                         assert level_up_effect is None
                         level_up_effect = effects
                     else:
-                        logger.warning("unprocessable effects %s", effects)
+                        logger.warning("unprocessable timer effects %s", effects)
                 if level_up_effect:
                     await self.dao.level_up(
                         team=team,
@@ -209,8 +209,8 @@ class TimerProcessor:
                     )
                 return decision.effects
             elif isinstance(decision, action.NotImplementedActionDecision):
-                logger.warning("impossible decision here cant be not implemented")
+                logger.warning("impossible timer decision here cant be not implemented")
                 return []
             else:
-                logger.warning("impossible decision here is %s", type(decision))
+                logger.warning("impossible timer decision here is %s", type(decision))
                 return []

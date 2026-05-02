@@ -6,6 +6,7 @@ from functools import partial
 from aiogram import Dispatcher, Bot
 from aiogram.exceptions import AiogramError
 from aiogram.filters import ExceptionTypeFilter
+from aiogram.types import InlineKeyboardMarkup
 from aiogram.types.error_event import ErrorEvent
 from aiogram.utils.markdown import html_decoration as hd
 from aiogram_dialog.api.exceptions import UnknownIntent
@@ -42,7 +43,7 @@ async def clear_unknown_intent(error: ErrorEvent, bot: Bot):
     await bot.edit_message_reply_markup(
         chat_id=error.update.callback_query.message.chat.id,
         message_id=error.update.callback_query.message.message_id,
-        reply_markup=None,
+        reply_markup=InlineKeyboardMarkup(inline_keyboard=[]),
     )
 
 

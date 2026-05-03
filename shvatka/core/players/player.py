@@ -44,7 +44,7 @@ async def upsert_player(user: dto.User, dao: PlayerUpserter) -> dto.Player:
 
 
 async def set_player_username(player: dto.Player, username: str, dao: PlayerUsernameChanger):
-    if player.username != username and await dao.is_username_occupied(username):
+    if player.username and player.username.strip().lower() != username.strip().lower() and await dao.is_username_occupied(username):
         raise exceptions.PlayerUsernameOccupied
     await dao.set_username(player, username)
     await dao.commit()

@@ -3,7 +3,7 @@ from datetime import datetime, tzinfo
 import typing
 from typing import Iterable
 
-from sqlalchemy import select, func, Result, case, delete, ScalarResult
+from sqlalchemy import select, func, Result, case, delete, ScalarResult, inspect
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload, selectinload, contains_eager
@@ -220,12 +220,13 @@ class PlayerDao(BaseDAO[models.Player]):
     async def get_free_and_associated_username(self, player: models.Player) -> str:
         if player.username is not None:
             return player.username
-        if player.user and player.user.username:
+        state = inspect(player)
+        if "user" not in state.unloaded and player.user.username:
             if not await self.is_username_occupied(player.user.username):
                 return player.user.username
-        if player.forum_user and player.forum_user.username:
-            if not await self.is_username_occupied(player.forum_user.username):
-                return player.forum_user.username
+        if "forum_user" not in state.unloaded and player.forum_user.name:
+            if not await self.is_username_occupied(player.forum_user.name):
+                return player.forum_user.name
         if not await self.is_username_occupied(f"id{player.id}"):
             return f"id{player.id}"
         for i in range(1000):

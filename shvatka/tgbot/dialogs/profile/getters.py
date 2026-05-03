@@ -26,12 +26,10 @@ async def player_stat_getter(
 
 @inject
 async def player_getter(
-    dao: HolderDao,
     identity: FromDishka[IdentityProvider],
     **_,
 ) -> dict[str, Any]:
-    player_common = await identity.get_required_player()
-    player = await get_player_with_stat(player_common.id, dao.player)
+    player = await identity.get_required_player()
     return {
         "player": player,
     }

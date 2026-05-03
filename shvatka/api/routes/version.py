@@ -2,13 +2,12 @@ from dishka.integrations.fastapi import FromDishka
 from dishka.integrations.fastapi import inject
 from fastapi import APIRouter
 
-from shvatka.common import Paths
-from shvatka.infrastructure.version import get_version
+from shvatka.core.models import dto
 
 
 @inject
-def get_version_route(paths: FromDishka[Paths]):
-    return get_version(paths)
+def get_version_route(version: FromDishka[dto.VersionInfo]):
+    return version
 
 
 def setup() -> APIRouter:

@@ -8,10 +8,9 @@ from aiogram.exceptions import TelegramAPIError
 from aiogram.filters import Command
 from aiogram.types import Message, BotCommandScopeChat
 
+from shvatka.core.models import dto
 from shvatka.infrastructure.db.dao.holder import HolderDao
-from shvatka.infrastructure.version import get_version
 from shvatka.tgbot.config.models.bot import BotConfig
-from shvatka.tgbot.config.models.main import TgBotConfig
 from shvatka.tgbot.filters.superusers import is_superuser
 from shvatka.tgbot.views.commands import (
     GET_OUT,
@@ -54,9 +53,11 @@ async def clean_commands_menu_handler(message: Message, bot: Bot, dao: HolderDao
     await message.answer("обновлено!")
 
 
-async def version_handler(message: Message, main_config: TgBotConfig):
-    version = get_version(main_config.paths)
-    await message.answer(f"Дата билда: {version.build_at}\nВерсия: {version.vcs_hash}")
+async def version_handler(message: Message, version: dto.VersionInfo):
+    await message.answer(
+        f"Дата билда: {version.build_at}\n"
+        f"Версия: {version.vcs_name}@{version.vcs_hash} ({version.commit_at})\n"
+    )
 
 
 async def cmd_help_admin(message: Message):

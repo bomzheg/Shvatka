@@ -3,8 +3,10 @@ from dishka import Provider, provide, Scope
 from shvatka.common import FileStorageConfig, Paths, Config
 from shvatka.common.config.models.main import WebConfig
 from shvatka.common.config.parser.paths import common_get_paths
+from shvatka.core.models import dto
 from shvatka.infrastructure.db.config.models.db import RedisConfig, DBConfig
 from shvatka.infrastructure.db.config.models.storage import StorageConfig
+from shvatka.infrastructure.version import get_version
 from shvatka.tgbot.config.models.bot import BotConfig, TgClientConfig
 from shvatka.tgbot.config.models.main import TgBotConfig
 from shvatka.tgbot.config.parser.main import load_config as load_bot_config
@@ -48,6 +50,10 @@ class ConfigProvider(Provider):
     @provide
     def get_web_app_config(self, config: TgBotConfig) -> WebConfig:
         return config.web
+
+    @provide
+    def get_version(self, paths: Paths) -> dto.VersionInfo:
+        return get_version(paths=paths)
 
 
 class DbConfigProvider(Provider):

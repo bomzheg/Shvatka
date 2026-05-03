@@ -8,6 +8,7 @@ from shvatka.core.players.player import get_player_with_stat, get_teams_history
 from shvatka.infrastructure.db.dao.holder import HolderDao
 
 
+@inject
 async def player_stat_getter(
     dao: HolderDao, identity: FromDishka[IdentityProvider], **_
 ) -> dict[str, Any]:

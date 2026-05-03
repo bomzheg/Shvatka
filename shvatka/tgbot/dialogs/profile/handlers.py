@@ -9,13 +9,14 @@ from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.players.player import set_player_username
 from shvatka.core.utils import exceptions
 from shvatka.infrastructure.db.dao.holder import HolderDao
+from shvatka.tgbot import states
 
 
 @inject
 async def save_new_username(
     message: Message,
     __: Any,
-    ___: DialogManager,
+    manager: DialogManager,
     new_username: str,
     identity: FromDishka[IdentityProvider],
     holder: FromDishka[HolderDao],
@@ -25,3 +26,5 @@ async def save_new_username(
         await set_player_username(player, new_username, holder.player)
     except exceptions.PlayerUsernameOccupied:
         await message.reply("Это имя пользователя уже кем-то занято, попробуй другое")
+    else:
+        await manager.switch_to(state=states.ProfileSG.main)

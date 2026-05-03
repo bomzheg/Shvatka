@@ -10,7 +10,7 @@ from shvatka.tgbot.dialogs.profile.handlers import save_new_username
 profile_dialog = Dialog(
     Window(
         Jinja(
-            "Игрок {{player.name_mention}} ({{palyer.id}})\n"
+            "Игрок {{player.name_mention}} ({{player.id}})\n"
             "Введено корректных ключей / введено всего ключей (%) \n"
             "{{player.typed_correct_keys_count}} / {{player.typed_keys_count}} "
             "({{'%.2f'| format(correct_keys*100|float)}}%)"
@@ -33,6 +33,11 @@ profile_dialog = Dialog(
     ),
     Window(
         Jinja("Введи своё новое имя пользователя. Сейчас сохранено {{player.username}}"),
+        SwitchTo(
+            Const("Назад"),
+            state=states.ProfileSG.main,
+            id="to_main",
+        ),
         TextInput(
             id="get_new_username",
             on_success=save_new_username,

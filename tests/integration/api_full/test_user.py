@@ -2,6 +2,7 @@ import pytest
 from httpx import AsyncClient
 
 from shvatka.api.dependencies.auth import AuthProperties
+from shvatka.api.models import responses
 from shvatka.api.models.auth import Token
 from shvatka.core.models import dto
 from shvatka.infrastructure.db.dao.holder import HolderDao
@@ -14,12 +15,14 @@ def token(harry: dto.Player, auth: AuthProperties) -> Token:
 
 @pytest.mark.asyncio
 async def test_get_user(client: AsyncClient, harry: dto.Player):
-    user: dto.User = harry._user  # type: ignore[assignment]
-    resp_user = await client.get(f"/users/{user.db_id}")
+    resp_user = await client.get(f"/users/{harry.id}")
     assert resp_user.is_success
     resp_user.read()
-    actual_user = dto.User(**resp_user.json())
-    assert user == actual_user
+    actual = responses.Player(**resp_user.json())
+    assert responses.Player.from_core(harry) == actual
+    assert actual.id == harry.id
+    assert actual.name_mention == harry.username
+    assert actual.can_be_author == harry.can_be_author
 
 
 @pytest.mark.asyncio
@@ -47,8 +50,11 @@ async def test_user_get(client: AsyncClient, harry: dto.Player, token: Token):
     )
 
     assert resp.is_success
-    actual = dto.User(**resp.json())
-    assert harry._user == actual
+    actual = responses.Player(**resp.json())
+    assert responses.Player.from_core(harry) == actual
+    assert actual.id == harry.id
+    assert actual.name_mention == harry.username
+    assert actual.can_be_author == harry.can_be_author
 
 
 @pytest.mark.asyncio

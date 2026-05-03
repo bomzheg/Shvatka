@@ -10,7 +10,6 @@ from shvatka.common.factory import REQUIRED_GAME_RECIPES
 from shvatka.core.models import dto
 from shvatka.core.models.dto import scn
 from shvatka.core.models.enums import GameStatus
-from shvatka.core.players.player import upsert_player
 from shvatka.core.utils.datetime_utils import tz_utc
 from shvatka.infrastructure.db import models
 from shvatka.infrastructure.db.dao.holder import HolderDao
@@ -55,9 +54,9 @@ async def test_game_card(
     dao: HolderDao,
     client: AsyncClient,
     auth: AuthProperties,
-    user: dto.User,
+    harry: dto.Player,
 ):
-    token = auth.create_user_token(user)
+    token = auth.create_user_token(harry)
     await dao.game.set_completed(finished_game)
     await dao.game.set_number(finished_game, 1)
     await dao.commit()
@@ -88,9 +87,9 @@ async def test_game_file(
     dao: HolderDao,
     client: AsyncClient,
     auth: AuthProperties,
-    user: dto.User,
+    harry: dto.Player,
 ):
-    token = auth.create_user_token(user)
+    token = auth.create_user_token(harry)
     await dao.game.set_completed(finished_game)
     await dao.game.set_number(finished_game, 1)
     await dao.commit()
@@ -108,9 +107,9 @@ async def test_game_file_not_accessible(
     dao: HolderDao,
     client: AsyncClient,
     auth: AuthProperties,
-    user: dto.User,
+    harry: dto.Player,
 ):
-    token = auth.create_user_token(user)
+    token = auth.create_user_token(harry)
     await dao.game.set_completed(finished_game)
     await dao.game.set_number(finished_game, 1)
     await dao.commit()
@@ -127,10 +126,9 @@ async def test_game_file_game_not_completed(
     dao: HolderDao,
     client: AsyncClient,
     auth: AuthProperties,
-    user: dto.User,
+    harry: dto.Player,
 ):
-    await upsert_player(user, dao.player)
-    token = auth.create_user_token(user)
+    token = auth.create_user_token(harry)
     resp = await client.get(
         f"/games/{game.id}/files/{GUID}",
         cookies={"Authorization": "Bearer " + token.access_token},
@@ -158,7 +156,7 @@ async def test_game_hints(
     )
     dao.level_time._save(level_time)
     await dao.commit()
-    token = auth.create_user_token(harry._user)
+    token = auth.create_user_token(harry)
     resp = await client.get(
         "/games/running/level/current",
         cookies={"Authorization": "Bearer " + token.access_token},
@@ -197,7 +195,7 @@ async def test_post_wrong_key(
     dao: HolderDao,
     check_dao: HolderDao,
 ):
-    token = auth.create_user_token(harry._user)
+    token = auth.create_user_token(harry)
     resp = await client.post(
         "/games/running/key",
         json={"text": "SHWRONG"},
@@ -224,7 +222,7 @@ async def test_post_bonus_hint_key(
     dao: HolderDao,
     check_dao: HolderDao,
 ):
-    token = auth.create_user_token(harry._user)
+    token = auth.create_user_token(harry)
     resp = await client.post(
         "/games/running/key",
         json={"text": "SHBONUSHINT"},

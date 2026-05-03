@@ -14,7 +14,7 @@ from .level_testing import (
 )
 from .levels_times import LevelTime, GameStatWithHints, LevelTimeOnGame, SpyHintInfo, GameStat
 from .organizer import Organizer, PrimaryOrganizer, SecondaryOrganizer
-from .player import Player, PlayerWithStat
+from .player import Player, PlayerWithStat, PlayerWithCreds
 from .poll import VotedPlayer, Vote
 from .team import Team
 from .team_player import TeamPlayer, FullTeamPlayer, TeamDataRange
@@ -24,7 +24,7 @@ from .time_key import (
     KeyInsertResult,
     ParsedKey,
 )
-from .user import User, UserWithCreds
+from .user import User
 from .waiver import Waiver, WaiverQuery
 from .version import VersionInfo
 from .event_log import GameEvent

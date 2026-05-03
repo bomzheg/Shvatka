@@ -18,10 +18,11 @@ from shvatka.core.interfaces.dal.player import (
     PlayerByUserIdGetter,
 )
 from shvatka.core.interfaces.dal.secure_invite import InviteSaver, InviteRemover, InviterDao
+from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.models import dto
 from shvatka.core.models import enums
 from shvatka.core.models.enums.invite_type import InviteType
-from shvatka.core.players.interfaces import PlayerUsernameChanger
+from shvatka.core.players.interfaces import PlayerUsernameChanger, UserPasswordSetter
 from shvatka.core.utils import exceptions
 from shvatka.core.utils.defaults_constants import DEFAULT_ROLE, EMOJI_BY_ROLE, DEFAULT_EMOJI
 from shvatka.core.utils.exceptions import (
@@ -384,4 +385,9 @@ async def flip_permission(
             team=actor.team,
         )
     await dao.flip_permission(team_player, permission)
+    await dao.commit()
+
+
+async def set_password(identity: IdentityProvider, hashed_password: str, dao: UserPasswordSetter):
+    await dao.set_password(await identity.get_required_player(), hashed_password)
     await dao.commit()

@@ -9,11 +9,6 @@ class UserUpserter(Committer, Protocol):
         raise NotImplementedError
 
 
-class UserPasswordSetter(Committer, Protocol):
-    async def set_password(self, user: dto.User, hashed_password: str):
-        raise NotImplementedError
-
-
 class UserByUsernameResolver(Protocol):
     async def get_by_username(self, username: str) -> dto.User:
         raise NotImplementedError

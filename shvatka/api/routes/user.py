@@ -7,7 +7,8 @@ from fastapi.params import Body, Path
 
 from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.models import dto
-from shvatka.core.services.user import set_password, get_user
+from shvatka.core.services.user import get_user
+from shvatka.core.players.player import set_password
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.api.dependencies.auth import AuthProperties
 
@@ -35,7 +36,7 @@ async def set_password_route(
     password: str = Body(),  # type: ignore[assignment]
 ):
     hashed_password = auth.get_password_hash(password)
-    await set_password(identity, hashed_password, dao.user)
+    await set_password(identity, hashed_password, dao.player)
     raise HTTPException(status_code=200)
 
 

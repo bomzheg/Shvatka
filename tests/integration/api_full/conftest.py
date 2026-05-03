@@ -9,7 +9,8 @@ from shvatka.api.config.models.auth import AuthConfig
 from shvatka.api.config.models.main import ApiConfig
 from shvatka.api.main_factory import create_app
 from shvatka.core.models import dto
-from shvatka.core.services.user import upsert_user, set_password
+from shvatka.core.services.user import upsert_user
+from shvatka.core.players.player import set_password
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.api.dependencies.auth import AuthProperties
 from tests.fixtures.identity import MockIdentityProvider
@@ -46,5 +47,5 @@ async def client(app: FastAPI):
 async def user(dao: HolderDao, auth: AuthProperties) -> dto.User:
     user_ = await upsert_user(create_dto_harry(), dao.user)
     password = auth.get_password_hash("12345")
-    await set_password(MockIdentityProvider(user=user_), password, dao.user)
+    await set_password(MockIdentityProvider(user=user_), password, dao.player)
     return user_

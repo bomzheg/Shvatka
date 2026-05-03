@@ -12,6 +12,7 @@ from shvatka.api.config.models.auth import AuthConfig
 from shvatka.api.models.auth import UserTgAuth, WebAppAuth
 from shvatka.api.utils.cookie_auth import set_auth_response
 from shvatka.core.models import dto
+from shvatka.core.players.player import upsert_player
 from shvatka.core.services.user import upsert_user
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.api.dependencies.auth import AuthProperties, check_tg_hash, check_webapp_hash
@@ -73,7 +74,8 @@ async def tg_login_result(
 ):
     check_tg_hash(user, config.bot_token)
     saved = await upsert_user(user.to_dto(), dao.user)
-    token = auth_properties.create_user_token(saved)
+    player = await upsert_player(saved, dao.player)
+    token = auth_properties.create_user_token(player)
     set_auth_response(config, response, token)
     return {"ok": True}
 
@@ -88,7 +90,8 @@ async def tg_login_result_post(
 ):
     check_tg_hash(user, config.bot_token)
     saved = await upsert_user(user.to_dto(), dao.user)
-    token = auth_properties.create_user_token(saved)
+    player = await upsert_player(saved, dao.player)
+    token = auth_properties.create_user_token(player)
     set_auth_response(config, response, token)
     return {"ok": True}
 
@@ -104,7 +107,8 @@ async def webapp_login_result_post(
     parsed = check_webapp_hash(web_auth.init_data, config.bot_token)
     user = dto.User.from_aiogram(typing.cast(User, parsed.user))
     saved = await upsert_user(user, dao.user)
-    token = auth_properties.create_user_token(saved)
+    player = await upsert_player(saved, dao.player)
+    token = auth_properties.create_user_token(player)
     set_auth_response(config, response, token)
     return {"ok": True}
 

@@ -13,7 +13,6 @@ class User(Base):
     first_name = mapped_column(Text, nullable=True)
     last_name = mapped_column(Text, nullable=True)
     username = mapped_column(Text, nullable=True)
-    hashed_password = mapped_column(Text, nullable=True)
     is_bot = mapped_column(Boolean, default=False)
     player_id = mapped_column(ForeignKey("players.id"), unique=True)
 

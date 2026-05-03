@@ -5,7 +5,8 @@ from httpx import AsyncClient
 from shvatka.api.dependencies.auth import AuthProperties
 from shvatka.api.models.auth import Token
 from shvatka.core.models import dto
-from shvatka.core.services.user import upsert_user, set_password
+from shvatka.core.services.user import upsert_user
+from shvatka.core.players.player import set_password
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from tests.fixtures.identity import MockIdentityProvider
 from tests.fixtures.user_constants import create_dto_harry
@@ -34,10 +35,10 @@ async def test_get_user(client: AsyncClient, user: dto.User):
 
 
 @pytest.mark.asyncio
-async def test_auth(client: AsyncClient, user: dto.User, auth: AuthProperties, dao: HolderDao):
+async def test_auth(client: AsyncClient, harry: dto.Player, auth: AuthProperties, dao: HolderDao):
     resp = await client.post(
         "/auth/token",
-        data={"username": user.username, "password": "12345"},
+        data={"username": harry.username, "password": "12345"},
     )
     assert resp.is_success
     resp.read()
@@ -46,7 +47,7 @@ async def test_auth(client: AsyncClient, user: dto.User, auth: AuthProperties, d
         Token(access_token=access_token.removeprefix("bearer "), token_type="bearer"),
         dao,
     )
-    assert user == actual_user
+    assert harry == actual_user
 
 
 @pytest.mark.asyncio

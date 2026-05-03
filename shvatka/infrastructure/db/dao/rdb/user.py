@@ -39,10 +39,6 @@ class UserDao(BaseDAO[User]):
         user = await self._get_by_username(username)
         return user.to_dto()
 
-    async def get_by_username_with_password(self, username: str) -> dto.UserWithCreds:
-        user = await self._get_by_username(username)
-        return user.to_dto().add_password(user.hashed_password)
-
     async def _get_by_username(self, username: str) -> User:
         result: Result[tuple[User]] = await self.session.execute(
             select(User).where(User.username == username)
@@ -54,11 +50,6 @@ class UserDao(BaseDAO[User]):
         except NoResultFound as e:
             raise NoUsernameFound(username=username) from e
         return user
-
-    async def set_password(self, user: dto.User, hashed_password: str):
-        assert user.db_id
-        db_user = await self._get_by_id(user.db_id)
-        db_user.hashed_password = hashed_password
 
     async def upsert_user(self, user: dto.User) -> dto.User:
         kwargs = {

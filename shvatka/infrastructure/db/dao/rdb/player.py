@@ -4,7 +4,7 @@ import typing
 from typing import Iterable
 
 from sqlalchemy import select, func, Result, case, delete, ScalarResult, inspect
-from sqlalchemy.exc import NoResultFound
+from sqlalchemy.exc import NoResultFound, MultipleResultsFound
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload, selectinload, contains_eager
 
@@ -208,6 +208,25 @@ class PlayerDao(BaseDAO[models.Player]):
             select(models.Player).where(models.Player.username.ilike(username))
         )
         return result.one_or_none() is not None
+
+    async def get_by_username_with_password(self, username: str) -> dto.PlayerWithCreds:
+        player = await self._get_by_username(username)
+        return player.to_dto().add_password(player.hashed_password)
+
+    async def _get_by_username(self, username: str) -> models.Player:
+        result = await self.session.scalars(
+            select(models.Player).where(models.Player.username.ilike(username))
+        )
+        try:
+            return result.one()
+        except MultipleResultsFound as e:
+            raise exceptions.MultipleUsernameFound(username=username) from e
+        except NoResultFound as e:
+            raise exceptions.NoUsernameFound(username=username) from e
+
+    async def set_password(self, player: dto.Player, hashed_password: str):
+        db_user = await self._get_by_id(player.id)
+        db_user.hashed_password = hashed_password
 
     async def set_username(self, player: dto.Player, username: str) -> None:
         player_db = await self._get_by_id(player.id)

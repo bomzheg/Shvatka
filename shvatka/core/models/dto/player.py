@@ -77,6 +77,32 @@ class Player:
             typed_correct_keys_count=typed_correct_keys_count,
         )
 
+    def add_password(self, hashed_password: str) -> PlayerWithCreds:
+        return PlayerWithCreds(
+            id=self.id,
+            can_be_author=self.can_be_author,
+            is_dummy=self.is_dummy,
+            username=self.username,
+            hashed_password=hashed_password,
+            user=self._user,
+            forum_user=self._forum_user,
+        )
+
+
+@dataclass
+class PlayerWithCreds(Player):
+    hashed_password: str | None = None
+
+    def without_password(self) -> Player:
+        return Player(
+            id=self.id,
+            can_be_author=self.can_be_author,
+            is_dummy=self.is_dummy,
+            username=self.username,
+            user=self._user,
+            forum_user=self._forum_user,
+        )
+
 
 @dataclass
 class PlayerWithStat(Player):

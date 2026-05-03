@@ -20,7 +20,6 @@ from shvatka.api.utils.cookie_auth import OAuth2PasswordBearerWithCookie
 from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.models import dto
 from shvatka.core.players.player import (
-    upsert_player,
     get_my_team,
     get_full_team_player_or_none,
 )
@@ -50,19 +49,19 @@ class AuthProperties:
     def get_password_hash(self, password: str) -> str:
         return self.pwd_context.hash(password)
 
-    async def authenticate_user(self, username: str, password: str, dao: HolderDao) -> dto.User:
+    async def authenticate_user(self, username: str, password: str, dao: HolderDao) -> dto.Player:
         http_status_401 = HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect username or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
         try:
-            user = await dao.user.get_by_username_with_password(username)
+            player = await dao.player.get_by_username_with_password(username)
         except NoUsernameFound as e:
             raise http_status_401 from e
-        if not self.verify_password(password, user.hashed_password or ""):
+        if not self.verify_password(password, player.hashed_password or ""):
             raise http_status_401
-        return user.without_password()
+        return player.without_password()
 
     def create_access_token(self, data: dict, expires_delta: timedelta) -> Token:
         to_encode = data.copy()
@@ -71,10 +70,10 @@ class AuthProperties:
         encoded_jwt = jwt.encode(to_encode, self.secret_key, algorithm=self.algorythm)
         return Token(access_token=encoded_jwt, token_type="bearer")
 
-    def create_user_token(self, user: dto.User) -> Token:
-        if user.db_id is None:
+    def create_user_token(self, user: dto.Player) -> Token:
+        if user.id is None:
             raise exceptions.UserNotFoundError
-        return self.create_user_id_token(user.db_id)
+        return self.create_user_id_token(user.id)
 
     def create_user_id_token(self, user_id: int) -> Token:
         return self.create_access_token(
@@ -85,7 +84,7 @@ class AuthProperties:
         self,
         token: Token,
         dao: HolderDao,
-    ) -> dto.User:
+    ) -> dto.Player:
         logger.debug("try to check token %s", token)
         credentials_exception = HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -101,7 +100,7 @@ class AuthProperties:
             if payload.get("sub") is None:
                 logger.warning("valid jwt contains no user id")
                 raise credentials_exception
-            user_db_id = int(typing.cast(str, payload.get("sub")))
+            player_id = int(typing.cast(str, payload.get("sub")))
         except JWTError as e:
             logger.info("invalid jwt", exc_info=e)
             raise credentials_exception from e
@@ -109,13 +108,13 @@ class AuthProperties:
             logger.warning("some jwt error", exc_info=e)
             raise
         try:
-            user = await dao.user.get_by_id(user_db_id)
+            player = await dao.player.get_by_id(player_id)
         except Exception as e:
-            logger.info("user by id %s not found", user_db_id)
+            logger.info("player by id %s not found", player_id)
             raise credentials_exception from e
-        return user
+        return player
 
-    async def get_user_basic(self, request: Request, dao: HolderDao) -> dto.User | None:
+    async def get_user_basic(self, request: Request, dao: HolderDao) -> dto.Player | None:
         if not self.config.enable_basic:
             return None
         if (header := request.headers.get("Authorization")) is None:
@@ -168,12 +167,8 @@ class ApiIdentityProvider(IdentityProvider):
     async def get_user(self) -> dto.User | None:
         if "user" in self.cache:
             return self.cache["user"]
-        user: dto.User | None
-        try:
-            token = self.cookie_auth.get_token(self.request)
-            user = await self.auth_properties.get_current_user(token, self.dao)
-        except (JWTError, HTTPException):
-            user = await self.auth_properties.get_user_basic(self.request, self.dao)
+        player = await self.get_required_player()
+        user = player._user  # noqa: SLF001
         self.cache["user"] = user
         return user
 
@@ -186,7 +181,13 @@ class ApiIdentityProvider(IdentityProvider):
     async def get_player(self) -> dto.Player | None:
         if "player" in self.cache:
             return self.cache["player"]
-        player = await upsert_player(await self.get_required_user(), self.dao.player)
+        player: dto.Player | None
+        try:
+            token = self.cookie_auth.get_token(self.request)
+            player = await self.auth_properties.get_current_user(token, self.dao)
+        except (JWTError, HTTPException):
+            player = await self.auth_properties.get_user_basic(self.request, self.dao)
+
         self.cache["player"] = player
         return player
 

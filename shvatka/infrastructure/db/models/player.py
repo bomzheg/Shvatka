@@ -1,4 +1,4 @@
-from sqlalchemy import BigInteger, ForeignKey, Boolean
+from sqlalchemy import BigInteger, ForeignKey, Boolean, Text
 from sqlalchemy.orm import relationship, mapped_column, Mapped
 
 from shvatka.core.models import dto
@@ -11,6 +11,7 @@ class Player(Base):
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
     can_be_author: Mapped[bool] = mapped_column(Boolean, server_default="f", nullable=False)
     username: Mapped[str | None] = mapped_column(nullable=True, default=None, unique=True)
+    hashed_password = mapped_column(Text, nullable=True)
     promoted_by_id: Mapped[int | None] = mapped_column(ForeignKey("players.id"))
     is_dummy: Mapped[bool] = mapped_column(nullable=False, default=False, server_default="f")
     user = relationship(

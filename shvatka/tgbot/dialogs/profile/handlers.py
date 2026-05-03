@@ -8,13 +8,13 @@ from dishka.integrations.aiogram_dialog import inject
 from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.players.player import set_player_username
 from shvatka.core.utils import exceptions
-from shvatka.core.utils.input_validation import validate_username_
+from shvatka.core.utils.input_validation import validate_new_username
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.tgbot import states
 
 
 def validate_username(username: str) -> str:
-    if new_username := validate_username_(username):
+    if new_username := validate_new_username(username):
         return new_username
     raise ValueError
 

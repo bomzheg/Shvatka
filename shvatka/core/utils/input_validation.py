@@ -33,7 +33,7 @@ def validate_level_id(id_expectant: str) -> str | None:
     return result.group() if result is not None else None
 
 
-def validate_username_(username_expectant: str) -> str | None:
+def validate_new_username(username_expectant: str) -> str | None:
     result = re.search(USERNAME_REGEXP, username_expectant.strip())
     return result.group() if result is not None else None
 

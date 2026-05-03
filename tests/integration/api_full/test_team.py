@@ -13,8 +13,8 @@ from tests.mocks.game_log import GameLogWriterMock
 
 
 @pytest.fixture
-def token(user: dto.User, auth: AuthProperties) -> Token:
-    return auth.create_user_token(user)
+def token(harry: dto.Player, auth: AuthProperties) -> Token:
+    return auth.create_user_token(harry)
 
 
 @pytest.mark.asyncio

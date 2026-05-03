@@ -225,8 +225,8 @@ class PlayerDao(BaseDAO[models.Player]):
             raise exceptions.NoUsernameFound(username=username) from e
 
     async def set_password(self, player: dto.Player, hashed_password: str):
-        db_user = await self._get_by_id(player.id)
-        db_user.hashed_password = hashed_password
+        db_player = await self._get_by_id(player.id)
+        db_player.hashed_password = hashed_password
 
     async def set_username(self, player: dto.Player, username: str) -> None:
         player_db = await self._get_by_id(player.id)

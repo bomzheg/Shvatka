@@ -5,7 +5,7 @@ from shvatka.core.models import dto
 
 
 class UserPasswordSetter(Committer, Protocol):
-    async def set_password(self, user: dto.Player, hashed_password: str):
+    async def set_password(self, player: dto.Player, hashed_password: str):
         raise NotImplementedError
 
 

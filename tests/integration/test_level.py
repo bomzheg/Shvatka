@@ -4,7 +4,7 @@ from adaptix import Retort
 from shvatka.core.models.dto.scn.game import RawGameScenario
 from shvatka.core.models.dto.scn.level import LevelScenario
 from shvatka.core.services.level import upsert_raw_level
-from shvatka.core.services.player import upsert_player
+from shvatka.core.players.player import upsert_player
 from shvatka.core.services.user import upsert_user
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from tests.fixtures.user_constants import create_dto_harry

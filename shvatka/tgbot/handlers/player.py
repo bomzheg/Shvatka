@@ -15,7 +15,7 @@ from aiogram.utils.text_decorations import html_decoration as hd
 from aiogram_dialog.api.protocols import BgManagerFactory
 
 from shvatka.core.models import dto
-from shvatka.core.services.player import (
+from shvatka.core.players.player import (
     save_promotion_confirm_invite,
     check_promotion_invite,
     dismiss_promotion,

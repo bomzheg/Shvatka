@@ -4,7 +4,7 @@ from aiogram import Router, Bot
 from aiogram.types import CallbackQuery, Message
 from aiogram_dialog.api.protocols import BgManagerFactory
 
-from shvatka.core.services.player import get_player_by_id, merge_players
+from shvatka.core.players.player import get_player_by_id, merge_players
 from shvatka.core.services.team import get_team_by_id, merge_teams
 from shvatka.core.views.game import GameLogWriter
 from shvatka.infrastructure.db.dao.holder import HolderDao

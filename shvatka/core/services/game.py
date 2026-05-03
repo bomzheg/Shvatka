@@ -27,7 +27,7 @@ from shvatka.core.rules.level import (
     check_is_author as check_is_level_author,
     check_can_link_to_game,
 )
-from shvatka.core.services.player import check_allow_be_author
+from shvatka.core.players.player import check_allow_be_author
 from shvatka.core.services.scenario.files import upsert_files, get_file_metas, get_file_contents
 from shvatka.core.services.scenario.game_ops import parse_uploaded_game
 from shvatka.core.models.dto.scn.game import check_all_files_saved

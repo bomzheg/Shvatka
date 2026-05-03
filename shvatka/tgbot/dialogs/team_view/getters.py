@@ -1,7 +1,7 @@
 from aiogram_dialog import DialogManager
 
 from shvatka.core.models import dto
-from shvatka.core.services.player import get_team_players
+from shvatka.core.players.player import get_team_players
 from shvatka.core.services.team import get_teams, get_team_by_id, get_played_games
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from .common import get_active_filter, get_archive_filter

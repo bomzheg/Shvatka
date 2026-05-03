@@ -203,5 +203,17 @@ class PlayerDao(BaseDAO[models.Player]):
             for player, pit in players
         ]
 
+    async def is_username_occupied(self, username: str) -> bool:
+        result = await self.session.scalars(
+            select(models.Player).where(models.Player.username == username)
+        )
+        return result.one_or_none() is not None
+
+    async def set_username(self, player: dto.Player, username: str) -> None:
+        player_db = await self._get_by_id(player.id)
+        player_db.username = username
+        self._save(player_db)
+
+
     async def delete(self, player: dto.Player) -> None:
         await self.session.execute(delete(models.Player).where(models.Player.id == player.id))

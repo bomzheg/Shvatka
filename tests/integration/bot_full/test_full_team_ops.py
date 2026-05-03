@@ -10,7 +10,7 @@ from aiogram.types import Update, Message, ChatMemberOwner, ChatMemberMember
 
 from shvatka.core.models import dto
 from shvatka.core.models.enums.chat_type import ChatType
-from shvatka.core.services.player import upsert_player, get_my_role
+from shvatka.core.players.player import upsert_player, get_my_role
 from shvatka.core.services.user import upsert_user
 from shvatka.core.utils.datetime_utils import tz_utc
 from shvatka.infrastructure.db.dao.holder import HolderDao

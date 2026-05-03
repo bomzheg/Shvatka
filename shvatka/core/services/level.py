@@ -10,7 +10,7 @@ from shvatka.core.interfaces.dal.level import (
 from shvatka.core.models import dto
 from shvatka.core.models.dto import scn
 from shvatka.core.rules.level import check_is_author, check_is_org, check_can_edit
-from shvatka.core.services.player import check_allow_be_author
+from shvatka.core.players.player import check_allow_be_author
 from shvatka.core.services.scenario.level_ops import load_level
 
 

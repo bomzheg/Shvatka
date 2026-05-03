@@ -1,7 +1,7 @@
 import pytest_asyncio
 
 from shvatka.core.models import dto
-from shvatka.core.services.player import upsert_player
+from shvatka.core.players.player import upsert_player
 from shvatka.core.services.user import upsert_user
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from tests.fixtures.user_constants import (

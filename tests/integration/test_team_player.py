@@ -2,7 +2,7 @@ import pytest
 
 from shvatka.core.models import dto
 from shvatka.core.models import enums
-from shvatka.core.services.player import (
+from shvatka.core.players.player import (
     join_team,
     get_my_team,
     get_my_role,

@@ -2,7 +2,7 @@ from typing import Any
 
 from aiogram_dialog import DialogManager
 
-from shvatka.core.services.player import get_player_with_stat, get_teams_history
+from shvatka.core.players.player import get_player_with_stat, get_teams_history
 from shvatka.infrastructure.db.dao.holder import HolderDao
 
 

@@ -5,6 +5,7 @@ from aiogram_dialog.api.protocols import MessageManagerProtocol, BgManagerFactor
 from aiogram_dialog.manager.message_manager import MessageManager
 from aiogram_dialog.tools import render_transitions
 
+from dialogs import profile
 from shvatka.tgbot.dialogs import (
     game_orgs,
     game_manage,
@@ -45,6 +46,7 @@ def setup_all_dialogs() -> Router:
     router.message.filter(GameStatusFilter(running=False))
 
     main_menu.setup(router)
+    profile.setup(router)
     game_manage.setup(router)
     game_scn.setup(router)
     level_scn.setup(router)

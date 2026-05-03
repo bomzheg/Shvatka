@@ -1,7 +1,7 @@
 import pytest
 
 from shvatka.core.services.chat import upsert_chat
-from shvatka.core.services.player import upsert_player
+from shvatka.core.players.player import upsert_player
 from shvatka.core.services.team import create_team, get_by_chat
 from shvatka.core.services.user import upsert_user
 from shvatka.core.views.game import GameLogWriter

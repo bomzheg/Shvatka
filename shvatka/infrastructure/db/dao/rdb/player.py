@@ -204,7 +204,7 @@ class PlayerDao(BaseDAO[models.Player]):
 
     async def is_username_occupied(self, username: str) -> bool:
         result = await self.session.scalars(
-            select(models.Player).where(models.Player.username == username)
+            select(models.Player).where(models.Player.username.ilike(username))
         )
         return result.one_or_none() is not None
 

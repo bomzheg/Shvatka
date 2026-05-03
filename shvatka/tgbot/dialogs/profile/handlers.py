@@ -14,9 +14,9 @@ from shvatka.tgbot import states
 
 
 def validate_username(username: str) -> str:
-    if not validate_username_(username):
-        raise ValueError
-    return username
+    if new_username := validate_username_(username):
+        return new_username
+    raise ValueError
 
 
 @inject

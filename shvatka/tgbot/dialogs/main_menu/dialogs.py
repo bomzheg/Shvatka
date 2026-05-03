@@ -51,6 +51,11 @@ main_menu = Dialog(
             "{% endif %}"
         ),
         Start(
+            Const("🪪Мой профиль"),
+            id="to_profile",
+            state=states.ProfileSG.main,
+        ),
+        Start(
             Const("🗄Прошедшие игры"),
             id="completed_games",
             state=states.CompletedGamesPanelSG.list,

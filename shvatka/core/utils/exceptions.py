@@ -233,6 +233,10 @@ class PlayerNotFoundError(SHError):
     notify_user = "Игрок не найден"
 
 
+class PlayerUsernameOccupied(SHError):
+    notify_user = "username уже занят"
+
+
 class PlayerTeamError(SHError):
     notify_user = "Проблема связанные с членством игрока в команде"
 

@@ -15,7 +15,7 @@ from aiogram.types import Message, ChatMemberUpdated, CallbackQuery, LinkPreview
 from aiogram.utils.text_decorations import html_decoration as hd
 
 from shvatka.core.models import dto
-from shvatka.core.services.player import get_team_players, get_player_by_id, join_team
+from shvatka.core.players.player import get_team_players, get_player_by_id, join_team
 from shvatka.core.services.team import create_team
 from shvatka.core.utils import exceptions
 from shvatka.core.utils.defaults_constants import DEFAULT_ROLE

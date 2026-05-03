@@ -9,7 +9,7 @@ from shvatka.core.waiver.adapters import WaiverVoteAdder, WaiverVoteGetter
 from shvatka.core.models import dto
 from shvatka.core.models import enums
 from shvatka.core.models.enums.played import Played
-from shvatka.core.services.player import get_checked_player_on_team, get_full_team_player
+from shvatka.core.players.player import get_checked_player_on_team, get_full_team_player
 from shvatka.core.utils.exceptions import WaiverForbidden, PermissionsError
 
 

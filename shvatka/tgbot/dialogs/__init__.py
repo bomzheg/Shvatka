@@ -22,6 +22,7 @@ from shvatka.tgbot.dialogs import (
     starters,
     timers,
     effects,
+    profile,
 )
 from shvatka.tgbot.filters import GameStatusFilter
 
@@ -45,6 +46,7 @@ def setup_all_dialogs() -> Router:
     router.message.filter(GameStatusFilter(running=False))
 
     main_menu.setup(router)
+    profile.setup(router)
     game_manage.setup(router)
     game_scn.setup(router)
     level_scn.setup(router)

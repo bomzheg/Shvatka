@@ -16,7 +16,7 @@ from shvatka.core.interfaces.dal.team import (
 )
 from shvatka.core.models import dto
 from shvatka.core.models import enums
-from shvatka.core.services.player import check_allow_be_author
+from shvatka.core.players.player import check_allow_be_author
 from shvatka.core.utils import exceptions
 from shvatka.core.utils.defaults_constants import CAPTAIN_ROLE
 from shvatka.core.utils.exceptions import SHDataBreach, PermissionsError

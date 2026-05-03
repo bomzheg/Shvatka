@@ -10,7 +10,7 @@ from aiogram_dialog.widgets.kbd import Button
 
 from shvatka.core.models import dto
 from shvatka.core.models import enums
-from shvatka.core.services.player import (
+from shvatka.core.players.player import (
     get_my_team,
     get_full_team_player,
     flip_permission,

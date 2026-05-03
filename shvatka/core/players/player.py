@@ -21,6 +21,7 @@ from shvatka.core.interfaces.dal.secure_invite import InviteSaver, InviteRemover
 from shvatka.core.models import dto
 from shvatka.core.models import enums
 from shvatka.core.models.enums.invite_type import InviteType
+from shvatka.core.players.interfaces import PlayerUsernameChanger
 from shvatka.core.utils import exceptions
 from shvatka.core.utils.defaults_constants import DEFAULT_ROLE, EMOJI_BY_ROLE, DEFAULT_EMOJI
 from shvatka.core.utils.exceptions import (
@@ -40,6 +41,19 @@ async def upsert_player(user: dto.User, dao: PlayerUpserter) -> dto.Player:
     player_user = await dao.upsert_player(user)
     await dao.commit()
     return player_user
+
+
+async def set_player_username(player: dto.Player, username: str, dao: PlayerUsernameChanger):
+    if not is_same_username(player, username) and await dao.is_username_occupied(username):
+        raise exceptions.PlayerUsernameOccupied
+    await dao.set_username(player, username)
+    await dao.commit()
+
+
+def is_same_username(player: dto.Player, username: str) -> bool:
+    if not player.username:
+        return False
+    return player.username.strip().lower() == username.strip().lower()
 
 
 async def have_team(player: dto.Player, dao: PlayerTeamChecker) -> bool:

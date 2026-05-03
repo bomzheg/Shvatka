@@ -5,7 +5,7 @@ from dishka.integrations.aiogram_dialog import inject
 from shvatka.core.games.interactors import GamePlayRoleReader
 from shvatka.core.interfaces.current_game import CurrentGameProvider
 from shvatka.core.models import dto
-from shvatka.core.services.player import save_promotion_invite
+from shvatka.core.players.player import save_promotion_invite
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.tgbot import keyboards as kb
 from shvatka.tgbot.services.identity import TgBotIdentityProvider

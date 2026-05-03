@@ -3,7 +3,7 @@ from typing import Any
 from aiogram_dialog import DialogManager
 
 from shvatka.core.models import dto
-from shvatka.core.services.player import get_full_team_player, get_my_team, get_team_players
+from shvatka.core.players.player import get_full_team_player, get_my_team, get_team_players
 from shvatka.core.utils.exceptions import PlayerNotInTeam
 from shvatka.core.views.texts import PERMISSION_EMOJI
 from shvatka.infrastructure.db.dao.holder import HolderDao

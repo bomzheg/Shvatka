@@ -12,7 +12,7 @@ from shvatka.core.games.game_play import start_game, send_hint
 from shvatka.core.services.game_stat import get_typed_keys
 from shvatka.core.services.key import KeyProcessor
 from shvatka.core.services.organizers import get_orgs
-from shvatka.core.services.player import join_team, leave
+from shvatka.core.players.player import join_team, leave
 from shvatka.core.utils import exceptions
 from shvatka.core.utils.datetime_utils import tz_utc
 from shvatka.core.utils.key_checker_lock import KeyCheckerFactory

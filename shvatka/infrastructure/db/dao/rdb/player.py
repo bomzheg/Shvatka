@@ -1,8 +1,9 @@
+import uuid
 from datetime import datetime, tzinfo
 import typing
 from typing import Iterable
 
-from sqlalchemy import select, func, Result, case, delete, ScalarResult
+from sqlalchemy import select, func, Result, case, delete, ScalarResult, inspect
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload, selectinload, contains_eager
@@ -104,6 +105,7 @@ class PlayerDao(BaseDAO[models.Player]):
         user_db.player = player
         self._save(player)
         await self._flush(player)
+        player.username = await self.get_free_and_associated_username(player)
         return player.to_dto(user=user)
 
     async def get_by_forum_player_name(self, name: str) -> dto.Player | None:
@@ -127,6 +129,7 @@ class PlayerDao(BaseDAO[models.Player]):
         forum_user_db.player = player
         self.session.add(forum_user_db)
         await self._flush(forum_user_db)
+        player.username = await self.get_free_and_associated_username(player)
         return player.to_dto(forum_user=forum_user_db.to_dto())
 
     async def create_for_forum_user(self, user: dto.ForumUser) -> dto.Player:
@@ -138,6 +141,7 @@ class PlayerDao(BaseDAO[models.Player]):
         else:
             player = await self._create_dummy()
             forum_user_db.player = player
+            player.username = await self.get_free_and_associated_username(player)
         return player.to_dto(forum_user=forum_user_db.to_dto())
 
     async def link_forum_user(self, player: dto.Player, user: dto.ForumUser) -> None:
@@ -199,5 +203,33 @@ class PlayerDao(BaseDAO[models.Player]):
             for player, pit in players
         ]
 
+    async def is_username_occupied(self, username: str) -> bool:
+        result = await self.session.scalars(
+            select(models.Player).where(models.Player.username.ilike(username))
+        )
+        return result.one_or_none() is not None
+
+    async def set_username(self, player: dto.Player, username: str) -> None:
+        player_db = await self._get_by_id(player.id)
+        player_db.username = username
+        self._save(player_db)
+
     async def delete(self, player: dto.Player) -> None:
         await self.session.execute(delete(models.Player).where(models.Player.id == player.id))
+
+    async def get_free_and_associated_username(self, player: models.Player) -> str:
+        if player.username is not None:
+            return player.username
+        state = inspect(player)
+        if "user" not in state.unloaded and player.user and player.user.username:
+            if not await self.is_username_occupied(player.user.username):
+                return player.user.username
+        if "forum_user" not in state.unloaded and player.forum_user and player.forum_user.name:
+            if not await self.is_username_occupied(player.forum_user.name):
+                return player.forum_user.name
+        if not await self.is_username_occupied(f"id{player.id}"):
+            return f"id{player.id}"
+        for i in range(1000):
+            if not await self.is_username_occupied(f"id{player.id}_{i}"):
+                return f"id{player.id}_{i}"
+        return uuid.uuid4().hex

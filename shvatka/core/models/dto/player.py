@@ -11,6 +11,7 @@ class Player:
     id: int
     can_be_author: bool
     is_dummy: bool
+    username: str | None = field(default=None)
     user: InitVar[User | None] = field(default=None)
     _user: User | None = field(init=False)
     forum_user: InitVar[ForumUser | None] = field(default=None)
@@ -22,14 +23,16 @@ class Player:
 
     @property
     def name_mention(self) -> str:
+        if self.username is not None:
+            return self.username
         if self.is_dummy:
             if self._forum_user:
                 return self._forum_user.name_mention
             return f"dummy-{self.id}"
-        if not self.has_user():
-            pass
-        assert self._user, f"only tg users supported, got forum user, {self!r}"
-        return self._user.name_mention
+        if self.has_user():
+            assert self._user, f"only tg users supported, got forum user, {self!r}"
+            return self._user.name_mention
+        return f"player_id{self.id}"
 
     def has_user(self) -> bool:
         return self._user is not None
@@ -65,6 +68,7 @@ class Player:
     def with_stat(self, typed_keys_count: int, typed_correct_keys_count: int) -> PlayerWithStat:
         return PlayerWithStat(
             id=self.id,
+            username=self.username,
             can_be_author=self.can_be_author,
             is_dummy=self.is_dummy,
             user=self._user,

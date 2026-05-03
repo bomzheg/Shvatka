@@ -8,7 +8,7 @@ KEY_PREFIXES = ("SH", "СХ")
 KEY_PREFIXES_REGEXP = "|".join(KEY_PREFIXES)
 KEY_REGEXP = re.compile(rf"^(?:{KEY_PREFIXES_REGEXP})[A-Z\dА-ЯЁ]+$")
 LEVEL_ID_REGEXP = re.compile(r"^[a-zA-Z\d_-]+$")
-USERNAME_REGEXP = re.compile(r"^[a-zA-Z\d_]{3-50}$")
+USERNAME_REGEXP = re.compile(r"^[a-zA-Z\d_]{3,50}$")
 
 
 def is_key_valid(key_expectant: str) -> bool:

@@ -101,10 +101,12 @@ class PlayerDao(BaseDAO[models.Player]):
         user_db = await self.session.get(models.User, user.db_id)
         assert user_db
         player = models.Player()
+        player.username = player.get_username()
         user_db.player = player
         self._save(player)
         await self._flush(player)
         return player.to_dto(user=user)
+
 
     async def get_by_forum_player_name(self, name: str) -> dto.Player | None:
         result = await self.session.scalars(
@@ -127,6 +129,7 @@ class PlayerDao(BaseDAO[models.Player]):
         forum_user_db.player = player
         self.session.add(forum_user_db)
         await self._flush(forum_user_db)
+        player.username = player.get_username()
         return player.to_dto(forum_user=forum_user_db.to_dto())
 
     async def create_for_forum_user(self, user: dto.ForumUser) -> dto.Player:
@@ -138,6 +141,7 @@ class PlayerDao(BaseDAO[models.Player]):
         else:
             player = await self._create_dummy()
             forum_user_db.player = player
+            player.username = player.get_username()
         return player.to_dto(forum_user=forum_user_db.to_dto())
 
     async def link_forum_user(self, player: dto.Player, user: dto.ForumUser) -> None:

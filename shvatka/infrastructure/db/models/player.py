@@ -10,6 +10,7 @@ class Player(Base):
     __mapper_args__ = {"eager_defaults": True}
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
     can_be_author: Mapped[bool] = mapped_column(Boolean, server_default="f", nullable=False)
+    username: Mapped[str | None] = mapped_column(nullable=True, default=None)
     promoted_by_id: Mapped[int | None] = mapped_column(ForeignKey("players.id"))
     is_dummy: Mapped[bool] = mapped_column(nullable=False, default=False, server_default="f")
     user = relationship(
@@ -79,6 +80,7 @@ class Player(Base):
     ) -> dto.Player:
         return dto.Player(
             id=self.id,
+            username=self.username,
             user=user,
             forum_user=forum_user,
             can_be_author=self.can_be_author,
@@ -90,3 +92,12 @@ class Player(Base):
             user=self.user.to_dto() if self.user else None,
             forum_user=self.forum_user.to_dto() if self.forum_user else None,
         )
+
+    def get_username(self) -> str | None:
+        if self.username is not None:
+            return self.username
+        if self.user is not None and self.user.username is not None:
+            return self.user.username
+        if self.forum_user is not None and self.forum_user.name is not None:
+            return self.forum_user.name
+        return f"id{self.id}"

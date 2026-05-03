@@ -99,7 +99,7 @@ def test_serialize_simple(retort: Retort):
     serialized = retort.dump(game_example)
     assert serialized == {
         "name": "Funny game",
-        "author": {"can-be-author": True, "id": 100, "is-dummy": False},
+        "author": {"can-be-author": True, "id": 100, "is-dummy": False, "username": None},
         "id": 10,
         "number": 20,
         "manage-token": "",
@@ -113,7 +113,7 @@ def test_serialize_simple(retort: Retort):
         "levels": [
             {
                 "db-id": 100,
-                "author": {"can-be-author": True, "id": 100, "is-dummy": False},
+                "author": {"can-be-author": True, "id": 100, "is-dummy": False, "username": None},
                 "name-id": "level_100",
                 "game-id": 10,
                 "number-in-game": 0,
@@ -209,7 +209,7 @@ def test_serialize_simple(retort: Retort):
             },
             {
                 "db-id": 101,
-                "author": {"can-be-author": True, "id": 100, "is-dummy": False},
+                "author": {"can-be-author": True, "id": 100, "is-dummy": False, "username": None},
                 "name-id": "level_101",
                 "game-id": 10,
                 "number-in-game": 1,
@@ -288,7 +288,7 @@ def test_serialize_simple(retort: Retort):
             },
             {
                 "db-id": 102,
-                "author": {"can-be-author": True, "id": 100, "is-dummy": False},
+                "author": {"can-be-author": True, "id": 100, "is-dummy": False, "username": None},
                 "name-id": "level_102",
                 "game-id": 10,
                 "number-in-game": 0,
@@ -367,7 +367,7 @@ def test_serialize_simple(retort: Retort):
             },
             {
                 "db-id": 103,
-                "author": {"can-be-author": True, "id": 100, "is-dummy": False},
+                "author": {"can-be-author": True, "id": 100, "is-dummy": False, "username": None},
                 "name-id": "level_103",
                 "game-id": 10,
                 "number-in-game": 0,

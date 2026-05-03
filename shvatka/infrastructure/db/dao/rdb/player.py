@@ -221,10 +221,10 @@ class PlayerDao(BaseDAO[models.Player]):
         if player.username is not None:
             return player.username
         state = inspect(player)
-        if "user" not in state.unloaded and player.user.username:
+        if "user" not in state.unloaded and player.user and player.user.username:
             if not await self.is_username_occupied(player.user.username):
                 return player.user.username
-        if "forum_user" not in state.unloaded and player.forum_user.name:
+        if "forum_user" not in state.unloaded and player.forum_user and player.forum_user.name:
             if not await self.is_username_occupied(player.forum_user.name):
                 return player.forum_user.name
         if not await self.is_username_occupied(f"id{player.id}"):

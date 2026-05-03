@@ -44,14 +44,16 @@ async def upsert_player(user: dto.User, dao: PlayerUpserter) -> dto.Player:
 
 
 async def set_player_username(player: dto.Player, username: str, dao: PlayerUsernameChanger):
-    if (
-        player.username
-        and player.username.strip().lower() != username.strip().lower()
-        and await dao.is_username_occupied(username)
-    ):
+    if not is_same_username(player, username) and await dao.is_username_occupied(username):
         raise exceptions.PlayerUsernameOccupied
     await dao.set_username(player, username)
     await dao.commit()
+
+
+def is_same_username(player: dto.Player, username: str) -> bool:
+    if not player.username:
+        return False
+    return player.username.strip().lower() == username.strip().lower()
 
 
 async def have_team(player: dto.Player, dao: PlayerTeamChecker) -> bool:

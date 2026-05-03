@@ -8,8 +8,29 @@ from dishka.integrations.aiogram_dialog import inject
 from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.players.player import set_player_username
 from shvatka.core.utils import exceptions
+from shvatka.core.utils.input_validation import validate_username_
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.tgbot import states
+
+
+def validate_username(username: str) -> str:
+    if not validate_username_(username):
+        raise ValueError
+    return username
+
+
+@inject
+async def username_invalid(
+    message: Message,
+    __: Any,
+    manager: DialogManager,
+    error: ValueError,
+) -> None:
+    await message.reply(
+        "такое имя пользователя использовать нельзя. "
+        "можно использовать a-z, A-Z, 0-9, _. "
+        "длина от 3 до 50 символов"
+    )
 
 
 @inject

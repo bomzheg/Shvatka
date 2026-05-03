@@ -5,7 +5,11 @@ from aiogram_dialog.widgets.text import Const, Jinja
 
 from shvatka.tgbot import states
 from shvatka.tgbot.dialogs.profile.getters import player_getter, player_stat_getter
-from shvatka.tgbot.dialogs.profile.handlers import save_new_username
+from shvatka.tgbot.dialogs.profile.handlers import (
+    save_new_username,
+    validate_username,
+    username_invalid,
+)
 
 profile_dialog = Dialog(
     Window(
@@ -40,7 +44,9 @@ profile_dialog = Dialog(
         ),
         TextInput(
             id="get_new_username",
+            type_factory=validate_username,
             on_success=save_new_username,
+            on_error=username_invalid,
         ),
         state=states.ProfileSG.username,
         getter=player_getter,

@@ -18,7 +18,6 @@ depends_on = None
 
 def upgrade():
     op.add_column("players", sa.Column("username", sa.String(), nullable=True))
-    op.create_unique_constraint(op.f("uq__players__username"), "players", ["username"])
     op.execute(
         """
         update players p
@@ -29,6 +28,7 @@ def upgrade():
         );
         """
     )
+    op.create_unique_constraint(op.f("uq__players__username"), "players", ["username"])
 
 
 def downgrade():

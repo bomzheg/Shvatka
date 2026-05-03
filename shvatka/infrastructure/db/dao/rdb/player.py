@@ -102,9 +102,9 @@ class PlayerDao(BaseDAO[models.Player]):
         assert user_db
         player = models.Player()
         user_db.player = player
-        player.username = player.get_username()
         self._save(player)
         await self._flush(player)
+        player.username = player.get_username()
         return player.to_dto(user=user)
 
     async def get_by_forum_player_name(self, name: str) -> dto.Player | None:

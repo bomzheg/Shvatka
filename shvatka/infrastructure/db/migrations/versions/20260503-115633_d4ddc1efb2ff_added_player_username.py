@@ -1,15 +1,16 @@
 """added player username
 
-Revision ID: b2f620488568
+Revision ID: d4ddc1efb2ff
 Revises: 4cfd8c9cf4f0
-Create Date: 2026-05-03 11:08:17.268762
+Create Date: 2026-05-03 11:56:33.447312
 
 """
 from alembic import op
 import sqlalchemy as sa
 
+
 # revision identifiers, used by Alembic.
-revision = 'b2f620488568'
+revision = 'd4ddc1efb2ff'
 down_revision = '4cfd8c9cf4f0'
 branch_labels = None
 depends_on = None
@@ -17,6 +18,7 @@ depends_on = None
 
 def upgrade():
     op.add_column('players', sa.Column('username', sa.String(), nullable=True))
+    op.create_unique_constraint(op.f('uq__players__username'), 'players', ['username'])
     op.execute(
         """
         update players p
@@ -30,4 +32,5 @@ def upgrade():
 
 
 def downgrade():
+    op.drop_constraint(op.f('uq__players__username'), 'players', type_='unique')
     op.drop_column('players', 'username')

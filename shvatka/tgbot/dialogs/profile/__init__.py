@@ -1,7 +1,7 @@
 from aiogram import Router
 
-from .dialogs import profile
+from .dialogs import profile_dialog
 
 
 def setup(router: Router):
-    router.include_router(profile.router)
+    router.include_router(profile_dialog)

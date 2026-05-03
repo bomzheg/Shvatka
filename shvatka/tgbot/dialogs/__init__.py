@@ -5,7 +5,6 @@ from aiogram_dialog.api.protocols import MessageManagerProtocol, BgManagerFactor
 from aiogram_dialog.manager.message_manager import MessageManager
 from aiogram_dialog.tools import render_transitions
 
-from dialogs import profile
 from shvatka.tgbot.dialogs import (
     game_orgs,
     game_manage,
@@ -23,6 +22,7 @@ from shvatka.tgbot.dialogs import (
     starters,
     timers,
     effects,
+    profile,
 )
 from shvatka.tgbot.filters import GameStatusFilter
 

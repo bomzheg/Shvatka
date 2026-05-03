@@ -107,7 +107,6 @@ class PlayerDao(BaseDAO[models.Player]):
         await self._flush(player)
         return player.to_dto(user=user)
 
-
     async def get_by_forum_player_name(self, name: str) -> dto.Player | None:
         result = await self.session.scalars(
             select(models.Player)
@@ -213,7 +212,6 @@ class PlayerDao(BaseDAO[models.Player]):
         player_db = await self._get_by_id(player.id)
         player_db.username = username
         self._save(player_db)
-
 
     async def delete(self, player: dto.Player) -> None:
         await self.session.execute(delete(models.Player).where(models.Player.id == player.id))

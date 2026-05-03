@@ -4,10 +4,10 @@ from aiogram_dialog.widgets.kbd import Cancel, SwitchTo
 from aiogram_dialog.widgets.text import Const, Jinja
 
 from shvatka.tgbot import states
-from shvatka.tgbot.dialogs.profile.getters import player_getter
+from shvatka.tgbot.dialogs.profile.getters import player_getter, player_stat_getter
 from shvatka.tgbot.dialogs.profile.handlers import save_new_username
 
-profile = Dialog(
+profile_dialog = Dialog(
     Window(
         Jinja(
             "Игрок {{player.name_mention}} ({{palyer.id}})\n"
@@ -29,12 +29,10 @@ profile = Dialog(
         ),
         Cancel(Const("🔙Выход")),
         state=states.ProfileSG.main,
-        getter=player_getter,
+        getter=player_stat_getter,
     ),
     Window(
-        Jinja(
-            "Введи своё новое имя пользователя. Сейчас сохранено {{player.username}}"
-        ),
+        Jinja("Введи своё новое имя пользователя. Сейчас сохранено {{player.username}}"),
         TextInput(
             id="get_new_username",
             on_success=save_new_username,

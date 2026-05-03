@@ -10,15 +10,15 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = 'd4ddc1efb2ff'
-down_revision = '4cfd8c9cf4f0'
+revision = "d4ddc1efb2ff"
+down_revision = "4cfd8c9cf4f0"
 branch_labels = None
 depends_on = None
 
 
 def upgrade():
-    op.add_column('players', sa.Column('username', sa.String(), nullable=True))
-    op.create_unique_constraint(op.f('uq__players__username'), 'players', ['username'])
+    op.add_column("players", sa.Column("username", sa.String(), nullable=True))
+    op.create_unique_constraint(op.f("uq__players__username"), "players", ["username"])
     op.execute(
         """
         update players p
@@ -32,5 +32,5 @@ def upgrade():
 
 
 def downgrade():
-    op.drop_constraint(op.f('uq__players__username'), 'players', type_='unique')
-    op.drop_column('players', 'username')
+    op.drop_constraint(op.f("uq__players__username"), "players", type_="unique")
+    op.drop_column("players", "username")

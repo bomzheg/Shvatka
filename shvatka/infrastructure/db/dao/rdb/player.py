@@ -101,8 +101,8 @@ class PlayerDao(BaseDAO[models.Player]):
         user_db = await self.session.get(models.User, user.db_id)
         assert user_db
         player = models.Player()
-        player.username = player.get_username()
         user_db.player = player
+        player.username = player.get_username()
         self._save(player)
         await self._flush(player)
         return player.to_dto(user=user)

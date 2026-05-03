@@ -92,12 +92,3 @@ class Player(Base):
             user=self.user.to_dto() if self.user else None,
             forum_user=self.forum_user.to_dto() if self.forum_user else None,
         )
-
-    def get_username(self) -> str | None:
-        if self.username is not None:
-            return self.username
-        if self.user is not None and self.user.username is not None:
-            return self.user.username
-        if self.forum_user is not None and self.forum_user.name is not None:
-            return self.forum_user.name
-        return f"id{self.id}"

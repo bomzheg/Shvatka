@@ -1,15 +1,10 @@
 import pytest
-import pytest_asyncio
 from httpx import AsyncClient
 
 from shvatka.api.dependencies.auth import AuthProperties
 from shvatka.api.models.auth import Token
 from shvatka.core.models import dto
-from shvatka.core.services.user import upsert_user
-from shvatka.core.players.player import set_password, upsert_player
 from shvatka.infrastructure.db.dao.holder import HolderDao
-from tests.fixtures.identity import MockIdentityProvider
-from tests.fixtures.user_constants import create_dto_harry
 
 
 @pytest.fixture
@@ -18,7 +13,8 @@ def token(harry: dto.Player, auth: AuthProperties) -> Token:
 
 
 @pytest.mark.asyncio
-async def test_get_user(client: AsyncClient, user: dto.User):
+async def test_get_user(client: AsyncClient, harry: dto.Player):
+    user: dto.User = harry._user  # type: ignore[assignment]
     resp_user = await client.get(f"/users/{user.db_id}")
     assert resp_user.is_success
     resp_user.read()
@@ -43,7 +39,7 @@ async def test_auth(client: AsyncClient, harry: dto.Player, auth: AuthProperties
 
 
 @pytest.mark.asyncio
-async def test_user_get(client: AsyncClient, user: dto.User, token: Token):
+async def test_user_get(client: AsyncClient, harry: dto.Player, token: Token):
     resp = await client.get(
         "/users/me",
         cookies={"Authorization": f"{token.token_type} {token.access_token}"},
@@ -52,7 +48,7 @@ async def test_user_get(client: AsyncClient, user: dto.User, token: Token):
 
     assert resp.is_success
     actual = dto.User(**resp.json())
-    assert user == actual
+    assert harry._user == actual
 
 
 @pytest.mark.asyncio

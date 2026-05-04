@@ -55,6 +55,7 @@ class GamePlayerDao(
         player: dto.Player,
         type_: enums.KeyType,
         is_duplicate: bool,
+        event: dto.GameEvent | None = None,
     ) -> dto.KeyTime:
         raise NotImplementedError
 

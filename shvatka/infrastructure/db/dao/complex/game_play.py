@@ -103,6 +103,7 @@ class GamePlayerDaoImpl(GamePlayerDao):
         player: dto.Player,
         type_: enums.KeyType,
         is_duplicate: bool,
+        event: dto.GameEvent | None = None,
     ) -> dto.KeyTime:
         return await self.dao.key_time.save_key(
             key=key,
@@ -112,6 +113,7 @@ class GamePlayerDaoImpl(GamePlayerDao):
             player=player,
             type_=type_,
             is_duplicate=is_duplicate,
+            event=event,
         )
 
     async def get_team_typed_keys(

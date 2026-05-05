@@ -53,6 +53,12 @@ class KeyProcessor:
                 state=state,
             )
             if isinstance(decision, action.KeyDecision):
+                if isinstance(decision, action.KeyEffectsDecision):
+                    event = await self.dao.save_event(
+                        team=team, game=game, effects=decision.effects, level_time=level_time
+                    )
+                else:
+                    event = None
                 saved_key = await self.dao.save_key(
                     key=decision.key_text,
                     team=team,
@@ -61,13 +67,10 @@ class KeyProcessor:
                     player=player,
                     type_=decision.key_type,
                     is_duplicate=decision.duplicate,
+                    event=event,
                 )
                 is_level_up = False
                 if isinstance(decision, action.KeyEffectsDecision):
-                    await self.dao.save_event(
-                        team=team, game=game, effects=decision.effects, level_time=level_time
-                    )
-                    # TODO #208 save link event - key
                     if is_level_up := decision.effects.level_up:
                         await self.dao.level_up(
                             team=team,

@@ -80,6 +80,7 @@ class KeyTimeDao(BaseDAO[models.KeyTime]):
         player: dto.Player,
         type_: enums.KeyType,
         is_duplicate: bool,
+        event: dto.GameEvent | None = None,
         at: datetime | None = None,
     ) -> dto.KeyTime:
         if at is None:
@@ -93,6 +94,7 @@ class KeyTimeDao(BaseDAO[models.KeyTime]):
             player_id=player.id,
             type_=type_,
             is_duplicate=is_duplicate,
+            event_id=event.id if event else None,
             enter_time=at,
         )
         self._save(key_time)

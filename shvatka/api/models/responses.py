@@ -192,11 +192,32 @@ class GameStat:
 
 
 @dataclass(kw_only=True, frozen=True, slots=True)
+class GameEvent:
+    id: int
+    team_id: int
+    level_time_id: int
+    at: datetime
+    effects: action.Effects
+
+    @classmethod
+    def from_core(cls, core: dto.GameEvent):
+        return cls(
+            id=core.id,
+            team_id=core.team_id,
+            level_time_id=core.level_time_id,
+            at=core.at,
+            effects=core.effects,
+        )
+
+
+@dataclass(kw_only=True, frozen=True, slots=True)
 class CurrentHintResponse:
     hints: list[hints.TimeHint]
     typed_keys: list[KeyTime]
+    events: list[GameEvent]
     game_id: int
     level_number: int
+    level_time_id: int
     started_at: datetime
 
     @classmethod
@@ -207,8 +228,10 @@ class CurrentHintResponse:
             game_id=core.game_id,
             hints=core.hints,
             typed_keys=[KeyTime.from_core(kt) for kt in core.typed_keys],
+            events=[GameEvent.from_core(e) for e in core.events],
             level_number=core.level_number,
             started_at=core.started_at,
+            level_time_id=core.level_time_id,
         )
 
 

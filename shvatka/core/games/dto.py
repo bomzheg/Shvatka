@@ -10,7 +10,9 @@ from shvatka.core.models.dto import hints
 class CurrentHintsAndKeys:
     hints: list[hints.TimeHint]
     typed_keys: list[dto.KeyTime]
+    events: list[dto.GameEvent]
     level_number: int
+    level_time_id: int
     started_at: datetime
     game_id: int
 
@@ -19,6 +21,7 @@ class CurrentHintsAndKeys:
 class CurrentHintsOnly:
     hints: list[hints.TimeHint]
     level_number: int
+    level_time_id: int
     started_at: datetime
     game_id: int
 

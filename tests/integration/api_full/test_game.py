@@ -162,7 +162,8 @@ async def test_game_hints(
         cookies={"Authorization": "Bearer " + token.access_token},
     )
     assert resp.status_code == 200
-    assert resp.json().get("hints") == [
+    resp_json = resp.json()
+    assert resp_json["hints"] == [
         {
             "hint": [
                 {"link_preview": None, "text": "загадка", "type": "text"},
@@ -182,6 +183,9 @@ async def test_game_hints(
             "time": 2,
         },
     ]
+    assert resp_json["level_number"] == 0
+    assert resp_json["game_id"] == started_game.id
+    assert resp_json["level_time_id"] == level_time.id
 
 
 @pytest.mark.asyncio

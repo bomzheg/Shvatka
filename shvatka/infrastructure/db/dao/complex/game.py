@@ -161,6 +161,7 @@ class GamePlayDaoImpl(GamePlayDao):
             level_number=level.number_in_game,
             game_id=game.id,
             started_at=level_time.start_at,
+            level_time_id=level_time.id,
         )
 
     async def get_team_typed_keys(self, identity: IdentityProvider) -> list[dto.KeyTime]:

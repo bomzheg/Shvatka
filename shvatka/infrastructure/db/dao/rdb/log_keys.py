@@ -29,7 +29,7 @@ class KeyTimeDao(BaseDAO[models.KeyTime]):
                 models.KeyTime.game_id == game.id,
                 models.KeyTime.level_time_id == level_time.id,
                 models.KeyTime.team_id == team.id,
-                models.KeyTime.type_ == enums.KeyType.simple,
+                models.KeyTime.type_ != enums.KeyType.wrong,
             )
         )
         return {key.key_text for key in result.all()}

@@ -199,8 +199,6 @@ class TimerProcessor:
                     if effects.level_up:
                         assert level_up_effect is None
                         level_up_effect = effects
-                    else:
-                        logger.warning("unprocessable timer effects %s", effects)
                 if level_up_effect:
                     await self.dao.level_up(
                         team=team,

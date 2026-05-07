@@ -47,5 +47,5 @@ async def player_one_time_url_getter(
     token = await holder.one_time_token.save_new_token(dct={"player_id": player.id})
     return {
         "player": player,
-        "token": f"{config_.web.base_url}/auth/one-time-token?token={token}",
+        "url": f"{config_.web.base_url}/auth/one-time-token?token={token}",
     }

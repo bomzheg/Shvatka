@@ -35,6 +35,11 @@ profile_dialog = Dialog(
             state=states.ProfileSG.username,
             id="to_change_username",
         ),
+        SwitchTo(
+            Const("Быстрый вход"),
+            state=states.ProfileSG.one_time_login,
+            id="to_ott",
+        ),
         Cancel(Const("🔙Выход")),
         state=states.ProfileSG.main,
         getter=player_stat_getter,

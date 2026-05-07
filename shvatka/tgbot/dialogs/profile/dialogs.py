@@ -1,10 +1,10 @@
 from aiogram_dialog import Dialog, Window
 from aiogram_dialog.widgets.input import TextInput
-from aiogram_dialog.widgets.kbd import Cancel, SwitchTo
-from aiogram_dialog.widgets.text import Const, Jinja
+from aiogram_dialog.widgets.kbd import Cancel, SwitchTo, Url
+from aiogram_dialog.widgets.text import Const, Jinja, Format
 
 from shvatka.tgbot import states
-from shvatka.tgbot.dialogs.profile.getters import player_getter, player_stat_getter
+from shvatka.tgbot.dialogs.profile.getters import player_getter, player_stat_getter, player_one_time_url_getter
 from shvatka.tgbot.dialogs.profile.handlers import (
     save_new_username,
     validate_username,
@@ -38,7 +38,7 @@ profile_dialog = Dialog(
     Window(
         Jinja("Введи своё новое имя пользователя. Сейчас сохранено {{player.username}}"),
         SwitchTo(
-            Const("Назад"),
+            Const("🔙Назад"),
             state=states.ProfileSG.main,
             id="to_main",
         ),
@@ -50,5 +50,19 @@ profile_dialog = Dialog(
         ),
         state=states.ProfileSG.username,
         getter=player_getter,
+    ),
+    Window(
+        Jinja("{{player.username}}\nДля входа нажми на кнопку ниже"),
+        Url(
+            text=Const("Войти"),
+            url=Format("{url}"),
+        ),
+        SwitchTo(
+            Const("🔙Назад"),
+            state=states.ProfileSG.main,
+            id="to_main",
+        ),
+        state=states.ProfileSG.one_time_login,
+        getter=(player_getter, player_one_time_url_getter),
     ),
 )

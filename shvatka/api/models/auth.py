@@ -58,3 +58,7 @@ class UserTgAuth(BaseModel):
 class Token(BaseModel):
     access_token: str
     token_type: str
+
+
+class OneTimeToken(BaseModel):
+    token: str

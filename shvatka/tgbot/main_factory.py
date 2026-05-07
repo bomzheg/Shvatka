@@ -6,6 +6,7 @@ from aiogram.fsm.storage.base import BaseStorage, BaseEventIsolation
 from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.fsm.storage.redis import RedisStorage, DefaultKeyBuilder, RedisEventIsolation
 from aiogram.types import TelegramObject
+from aiogram_dialog import BgManagerFactory
 from aiogram_dialog.api.protocols import MessageManagerProtocol
 from aiogram_dialog.manager.message_manager import MessageManager
 from dishka import (
@@ -37,6 +38,7 @@ from shvatka.tgbot.config.models.bot import BotConfig, TgClientConfig
 from shvatka.tgbot.handlers import setup_handlers
 from shvatka.tgbot.middlewares import setup_middlewares
 from shvatka.tgbot.services.identity import TgBotIdentityProvider
+from shvatka.tgbot.services.used_one_time_token import UsedOneTimeTokenInteractorImpl
 from shvatka.tgbot.username_resolver.user_getter import UserGetter
 from shvatka.tgbot.utils.router import print_router_tree
 from shvatka.tgbot.views.game import GameBotLog, BotView, BotOrgNotifier
@@ -93,6 +95,11 @@ class DialogManagerProvider(Provider):
 class DpProvider(Provider):
     scope = Scope.APP
 
+    def __init__(self):
+        super().__init__()
+        self.dp: Dispatcher | None = None
+        self.bg_manager_factory: BgManagerFactory | None = None
+
     @provide
     def create_dispatcher(
         self,
@@ -106,14 +113,22 @@ class DpProvider(Provider):
             storage=storage,
             events_isolation=event_isolation,
         )
-        setup_dishka(container=dishka, router=dp)
+        self.dp = dp
         bg_manager_factory = setup_handlers(dp, bot_config, message_manager)
+        self.bg_manager_factory = bg_manager_factory
+        setup_dishka(container=dishka, router=dp)
         setup_middlewares(
             dp=dp,
             bg_manager_factory=bg_manager_factory,
         )
         logger.info("Configured bot routers \n%s", print_router_tree(dp))
         return dp
+
+    @provide
+    def bg_manager_factory(self, dp: Dispatcher) -> BgManagerFactory:
+        if self.bg_manager_factory is None:
+            raise RuntimeError(f"{self.bg_manager_factory} {self.dp} {dp}")
+        return self.bg_manager_factory
 
     @provide
     def create_storage(self, config: StorageConfig) -> BaseStorage:
@@ -133,6 +148,8 @@ class DpProvider(Provider):
     @provide
     def get_event_isolation(self, redis: Redis) -> BaseEventIsolation:
         return RedisEventIsolation(redis)
+
+    used_one_time_token_interactor = provide(UsedOneTimeTokenInteractorImpl)
 
 
 class UserGetterProvider(Provider):

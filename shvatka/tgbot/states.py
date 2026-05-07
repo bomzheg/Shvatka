@@ -175,6 +175,8 @@ class PlayerSg(StatesGroup):
 class ProfileSG(StatesGroup):
     main = State()
     username = State()
+    one_time_login = State()
+    password = State()
 
 
 class CapchaSG(StatesGroup):

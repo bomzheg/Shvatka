@@ -9,11 +9,12 @@ from fastapi.security import OAuth2PasswordRequestForm
 from starlette.responses import HTMLResponse, Response
 
 from shvatka.api.config.models.auth import AuthConfig
-from shvatka.api.models.auth import UserTgAuth, WebAppAuth
+from shvatka.api.models.auth import UserTgAuth, WebAppAuth, OneTimeToken
 from shvatka.api.utils.cookie_auth import set_auth_response
 from shvatka.core.models import dto
 from shvatka.core.players.player import upsert_player
 from shvatka.core.services.user import upsert_user
+from shvatka.core.utils import exceptions
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.api.dependencies.auth import AuthProperties, check_tg_hash, check_webapp_hash
 
@@ -121,8 +122,25 @@ async def tg_login_page(config: FromDishka[AuthConfig]):
     )
 
 
+@inject
+async def one_time_token_login(
+    one_time_token: Annotated[OneTimeToken, Body()],
+    holder: FromDishka[HolderDao],
+    auth_properties: FromDishka[AuthProperties],
+    config: FromDishka[AuthConfig],
+    response: Response,
+):
+    player_data = await holder.one_time_token.get_invite(token=one_time_token.token)
+    if not player_data or "player_id" not in player_data:
+        raise exceptions.SaltError
+    token = auth_properties.create_user_id_token(player_data["player_id"])
+    set_auth_response(config, response, token)
+    return {"ok": True}
+
+
 def setup() -> APIRouter:
     router = APIRouter(prefix="/auth")
+    router.add_api_route("/one-time-token", one_time_token_login, methods=["POST"])
     router.add_api_route("/token", login, methods=["POST"])
     router.add_api_route("/login", tg_login_page, response_class=HTMLResponse, methods=["GET"])
     router.add_api_route("/logout", logout, methods=["POST"])

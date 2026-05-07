@@ -15,6 +15,7 @@ from shvatka.core.games.adapters import (
     GameStatReader,
     GamePlayDao,
 )
+from shvatka.core.interfaces.bus import Bus
 from shvatka.core.interfaces.current_game import CurrentGameProvider
 from shvatka.core.interfaces.dal.game import GameByIdGetter
 from shvatka.core.interfaces.dal.game_play import GamePlayerDao
@@ -31,6 +32,7 @@ from shvatka.core.waiver.interactors import (
     WaiverCompleteReaderInteractor,
     AllWaiversDraftReaderInteractor,
 )
+from shvatka.infrastructure.bus.in_memory import InMemoryBus
 from shvatka.infrastructure.db.dao.complex2.waiver import (
     WaiverVoteAdderImpl,
     WaiverVoteGetterImpl,
@@ -49,6 +51,7 @@ from shvatka.infrastructure.db.dao.holder import HolderDao
 class ContextProvider(Provider):
     scope = Scope.REQUEST
     current_game = provide(CurrentGameProviderImpl, provides=CurrentGameProvider)
+    bus = provide(InMemoryBus, provides=Bus)
 
 
 class GamePlayProvider(Provider):

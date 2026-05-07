@@ -9,6 +9,12 @@ from shvatka.api.utils.web_input import (
 )
 from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.views.game import GameView, GameLogWriter, OrgNotifier, GameViewPreparer
+from shvatka.infrastructure.bus.in_memory import UsedOneTimeTokenInteractor
+
+
+class MockUsedOneTimeTokenInteractor(UsedOneTimeTokenInteractor):
+    async def __call__(self, player_id: int) -> None:
+        pass
 
 
 class ApiOnlyProvider(Provider):
@@ -33,3 +39,7 @@ class ApiOnlyProvider(Provider):
     @provide
     def web_only_preparer_view(self) -> GameViewPreparer:
         return WebGamePreparer()
+
+    @provide
+    def used_one_time_token_interactor(self) -> UsedOneTimeTokenInteractor:
+        return MockUsedOneTimeTokenInteractor()

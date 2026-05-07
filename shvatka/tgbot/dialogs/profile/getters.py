@@ -7,7 +7,6 @@ from shvatka.common import Config
 from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.players.player import get_player_with_stat, get_teams_history
 from shvatka.infrastructure.db.dao.holder import HolderDao
-from shvatka.tgbot.config.models.main import TgBotConfig
 
 
 @inject
@@ -35,6 +34,7 @@ async def player_getter(
     return {
         "player": player,
     }
+
 
 @inject
 async def player_one_time_url_getter(

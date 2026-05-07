@@ -4,7 +4,11 @@ from aiogram_dialog.widgets.kbd import Cancel, SwitchTo, Url
 from aiogram_dialog.widgets.text import Const, Jinja, Format
 
 from shvatka.tgbot import states
-from shvatka.tgbot.dialogs.profile.getters import player_getter, player_stat_getter, player_one_time_url_getter
+from shvatka.tgbot.dialogs.profile.getters import (
+    player_getter,
+    player_stat_getter,
+    player_one_time_url_getter,
+)
 from shvatka.tgbot.dialogs.profile.handlers import (
     save_new_username,
     validate_username,

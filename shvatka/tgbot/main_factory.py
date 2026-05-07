@@ -95,10 +95,10 @@ class DialogManagerProvider(Provider):
 class DpProvider(Provider):
     scope = Scope.APP
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self.dp: Dispatcher | None = None
-        self.bg_manager_factory: BgManagerFactory | None = None
+        self.bg_manager_factory: BgManagerFactory | None = None  # type: ignore[assignment]
 
     @provide
     def create_dispatcher(
@@ -115,7 +115,7 @@ class DpProvider(Provider):
         )
         self.dp = dp
         bg_manager_factory = setup_handlers(dp, bot_config, message_manager)
-        self.bg_manager_factory = bg_manager_factory
+        self.bg_manager_factory = bg_manager_factory  # type: ignore[assignment]
         setup_dishka(container=dishka, router=dp)
         setup_middlewares(
             dp=dp,
@@ -128,7 +128,7 @@ class DpProvider(Provider):
     def bg_manager_factory(self, dp: Dispatcher) -> BgManagerFactory:
         if self.bg_manager_factory is None:
             raise RuntimeError(f"{self.bg_manager_factory} {self.dp} {dp}")
-        return self.bg_manager_factory
+        return self.bg_manager_factory  # type: ignore[return-value]
 
     @provide
     def create_storage(self, config: StorageConfig) -> BaseStorage:

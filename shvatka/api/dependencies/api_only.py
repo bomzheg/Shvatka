@@ -43,4 +43,3 @@ class ApiOnlyProvider(Provider):
     @provide
     def used_one_time_token_interactor(self) -> UsedOneTimeTokenInteractor:
         return MockUsedOneTimeTokenInteractor()
-

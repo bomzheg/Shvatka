@@ -19,4 +19,3 @@ class InMemoryBus(Bus):
         match evet:
             case OneTimeTokenUsed(player_id=player_id):
                 await self.one_time_token(player_id=player_id)
-

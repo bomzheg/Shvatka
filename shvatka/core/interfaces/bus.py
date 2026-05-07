@@ -13,5 +13,5 @@ class OneTimeTokenUsed(Event):
 
 
 class Bus(Protocol):
-    async def submit(self, evet: Event) -> None:
+    async def submit(self, event: Event) -> None:
         pass

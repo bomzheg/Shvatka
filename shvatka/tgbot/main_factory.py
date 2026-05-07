@@ -27,6 +27,7 @@ from shvatka.core.interfaces.clients.file_storage import FileStorage
 from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.views.game import GameLogWriter, GameView, GameViewPreparer, OrgNotifier
 from shvatka.core.views.level import LevelView
+from shvatka.infrastructure.bus.in_memory import UsedOneTimeTokenInteractor
 from shvatka.infrastructure.db.config.models.storage import StorageConfig, StorageType
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.infrastructure.db.factory import (
@@ -149,7 +150,9 @@ class DpProvider(Provider):
     def get_event_isolation(self, redis: Redis) -> BaseEventIsolation:
         return RedisEventIsolation(redis)
 
-    used_one_time_token_interactor = provide(UsedOneTimeTokenInteractorImpl)
+    used_one_time_token_interactor = provide(
+        UsedOneTimeTokenInteractorImpl, provides=UsedOneTimeTokenInteractor, scope=Scope.REQUEST
+    )
 
 
 class UserGetterProvider(Provider):

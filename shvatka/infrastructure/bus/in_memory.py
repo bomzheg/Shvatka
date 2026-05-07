@@ -15,7 +15,7 @@ class UsedOneTimeTokenInteractor(Protocol, metaclass=ABCMeta):
 class InMemoryBus(Bus):
     one_time_token: UsedOneTimeTokenInteractor
 
-    async def submit(self, evet: Event) -> None:
-        match evet:
+    async def submit(self, event: Event) -> None:
+        match event:
             case OneTimeTokenUsed(player_id=player_id):
                 await self.one_time_token(player_id=player_id)

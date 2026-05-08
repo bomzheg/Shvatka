@@ -25,7 +25,7 @@ class ErrorContent:
 
 
 def sh_exception_handler(request: Request, exc: exceptions.SHError) -> Response:
-    logger.error("got an sh error, during request %s", request, exc_info=exc)
+    logger.error("got an sh error, during request %s", request.url, exc_info=exc)
     error_content = ErrorContent(
         text=exc.text,
         type=type(exc).__name__,
@@ -35,10 +35,14 @@ def sh_exception_handler(request: Request, exc: exceptions.SHError) -> Response:
     )
     if isinstance(exc, exceptions.NotAuthorizedForEdit):
         status_code = 403
+    elif isinstance(exc, (exceptions.UserNotFoundError, exceptions.PlayerNotFoundError)):
+        status_code = 404
     elif isinstance(exc, exceptions.FileNotFound):
         status_code = 404
-    else:
+    elif isinstance(exc, exceptions.SHError):
         status_code = 422
+    else:
+        status_code = 500
     return JSONResponse(
         status_code=status_code,
         content=retort.dump(error_content),

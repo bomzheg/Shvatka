@@ -25,4 +25,3 @@ class InMemoryBus(Bus):
                     await self.one_time_token(player_id=player_id)
         except Exception as e:
             logger.error("error while processing event %s", event, exc_info=e)
-

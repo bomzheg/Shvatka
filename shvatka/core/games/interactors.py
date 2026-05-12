@@ -181,7 +181,6 @@ class GamePlayBaseInteractor:
 
     async def all_teams_finished(self, game: dto.FullGame) -> None:
         await self.dao.finish(game)
-        await self.dao.commit()
         await self.game_log.log(GameLogEvent(GameLogType.GAME_FINISHED, {"game": game.name}))
         self.locker.clear()
         for team in await self.dao.get_played_teams(game):
@@ -271,6 +270,7 @@ class CheckKeyInteractor(GamePlayBaseInteractor):
                 team=team,
                 game=game,
             )
+        await self.dao.commit()
 
     async def view_(self, new_key: dto.InsertedKey, input_container: InputContainer) -> None:
         if new_key.is_duplicate:
@@ -309,6 +309,8 @@ class GamePlayTimerInteractor(GamePlayBaseInteractor):
         input_container: SchedulerContainer,
     ) -> None:
         team = await self.dao.get_by_id(team_id)
+        game = await self.current_game.get_required_full_game()
+        level_time = await self.dao.get_current_level_time(team, game)
         effects_list = await self.processor.process(
             team=team,
             now=now,
@@ -318,8 +320,6 @@ class GamePlayTimerInteractor(GamePlayBaseInteractor):
         if not effects_list:
             return
 
-        game = await self.current_game.get_required_full_game()
-        level_time = await self.dao.get_current_level_time(team, game)
         level_up_effect: action.Effects | None = None
         last_event: dto.GameEvent | None = None
         for effects in effects_list:

@@ -16,7 +16,10 @@ logger = logging.getLogger(__name__)
 
 @inject
 async def read_users_me(identity: FromDishka[IdentityProvider]) -> responses.Player | None:
-    return responses.Player.from_core(await identity.get_required_player())
+    player_ = await identity.get_player()
+    if player_ is None:
+        raise HTTPException(status_code=401, detail="User not found")
+    return responses.Player.from_core(player_)
 
 
 @inject

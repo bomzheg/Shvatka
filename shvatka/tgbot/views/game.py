@@ -221,9 +221,13 @@ class BotView(GameViewPreparer, GameView):
         if (reply_to := await get_message_id(input_container)) is not None:
             chat_id: int = key.team.get_chat_id()  # type: ignore[assignment]
             if reaction := map_effect_to_reaction(effects):
-                await self.bot.set_message_reaction(
-                    chat_id=chat_id, message_id=reply_to, reaction=reaction
-                )
+                try:
+                    await self.bot.set_message_reaction(
+                        chat_id=chat_id, message_id=reply_to, reaction=reaction
+                    )
+                except Exception as e:
+                    logger.exception("can't set message reaction as effects", exc_info=e)
+
 
     async def bonus_key(
         self, key: dto.KeyTime, bonus: float, input_container: InputContainer
@@ -254,7 +258,7 @@ class BotView(GameViewPreparer, GameView):
                 text="Бонусная подсказка",
             )
         except TelegramAPIError as e:
-            logger.exception("can't send bonus hint key caption", exc_info=e)
+            logger.exception("can't send bonus hint key caption to team %s", key.team.id, exc_info=e)
         await self.hint_sender.send_hints(
             chat_id=chat_id,
             hint_containers=bonus_hint,
@@ -262,10 +266,13 @@ class BotView(GameViewPreparer, GameView):
 
     async def game_finished(self, team: dto.Team, input_container: InputContainer) -> None:
         chat_id: int = team.get_chat_id()  # type: ignore[assignment]
-        await self.bot.send_message(
-            chat_id=chat_id,
-            text="Игра завершена! Поздравляю!",
-        )
+        try:
+            await self.bot.send_message(
+                chat_id=chat_id,
+                text="Игра завершена! Поздравляю!",
+            )
+        except TelegramAPIError as e:
+            logger.exception("can't send game finished to team %s", team.id, exc_info=e)
 
     async def game_finished_by_all(self, team: dto.Team) -> None:
         """todo change bot commands"""
@@ -351,21 +358,21 @@ class BotOrgNotifier(OrgNotifier):
                         logger.warning("player %s have no user chat_id", org.player)
                         continue
                     with suppress(TelegramAPIError):
-                        await self.notify_level_up(cast(LevelUp, event), org)
+                        await self.notify_level_up(event, org)
             case NewOrg():
                 for org in event.orgs_list:
                     if org.player.get_chat_id() is None:
                         logger.warning("player %s have no user chat_id", org.player)
                         continue
                     with suppress(TelegramAPIError):
-                        await self.notify_new_org(cast(NewOrg, event), org)
+                        await self.notify_new_org(event, org)
             case LevelTestCompleted():
                 for org in event.orgs_list:
                     if org.player.get_chat_id() is None:
                         logger.warning("player %s have no user chat_id", org.player)
                         continue
                     with suppress(TelegramAPIError):
-                        await self.level_test_completed(cast(LevelTestCompleted, event), org)
+                        await self.level_test_completed(event, org)
 
     async def notify_level_up(self, level_up: LevelUp, org: dto.Organizer):
         assert level_up.new_level.number_in_game is not None

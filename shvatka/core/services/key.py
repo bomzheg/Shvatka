@@ -84,7 +84,6 @@ class KeyProcessor:
                             ),
                         )
 
-                await self.dao.commit()
                 return dto.InsertedKey.from_key_time(
                     saved_key, is_level_up, parsed_key=decision_to_parsed_key(decision)
                 )

@@ -337,6 +337,7 @@ class LevelScenario:
         decisions = action.Decisions([cond.check(action_, state) for cond in self.conditions])
         implemented = decisions.get_implemented()
         if not implemented:
+            logger.warning("for action all is %s not implemented. found %s", action_, decisions.decisions)
             return action.NotImplementedActionDecision()
         if isinstance(action_, action.TypedKeyAction):
             key_decisions = implemented.get_all(action.TypedKeyDecision, action.WrongKeyDecision)
@@ -356,6 +357,7 @@ class LevelScenario:
         if isinstance(action_, action.LevelTimerAction):
             return implemented.get_significant_effects()
         else:
+            logger.warning("any other actions isn't implemented. got %s", action_)
             return action.NotImplementedActionDecision()
 
     def get_keys(self) -> set[SHKey]:

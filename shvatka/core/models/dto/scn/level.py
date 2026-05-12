@@ -337,7 +337,9 @@ class LevelScenario:
         decisions = action.Decisions([cond.check(action_, state) for cond in self.conditions])
         implemented = decisions.get_implemented()
         if not implemented:
-            logger.warning("for action all is %s not implemented. found %s", action_, decisions.decisions)
+            logger.warning(
+                "for action all is %s not implemented. found %s", action_, decisions.decisions
+            )
             return action.NotImplementedActionDecision()
         if isinstance(action_, action.TypedKeyAction):
             key_decisions = implemented.get_all(action.TypedKeyDecision, action.WrongKeyDecision)

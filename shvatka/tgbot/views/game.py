@@ -3,7 +3,7 @@ import json
 import logging
 from contextlib import suppress
 from dataclasses import dataclass
-from typing import Iterable, cast, Sequence
+from typing import Iterable, Sequence
 
 from aiogram import Bot
 from aiogram.types import Message, ReactionTypeEmoji, ReactionTypeCustomEmoji, ReactionTypePaid
@@ -228,7 +228,6 @@ class BotView(GameViewPreparer, GameView):
                 except Exception as e:
                     logger.exception("can't set message reaction as effects", exc_info=e)
 
-
     async def bonus_key(
         self, key: dto.KeyTime, bonus: float, input_container: InputContainer
     ) -> None:
@@ -258,7 +257,9 @@ class BotView(GameViewPreparer, GameView):
                 text="Бонусная подсказка",
             )
         except TelegramAPIError as e:
-            logger.exception("can't send bonus hint key caption to team %s", key.team.id, exc_info=e)
+            logger.exception(
+                "can't send bonus hint key caption to team %s", key.team.id, exc_info=e
+            )
         await self.hint_sender.send_hints(
             chat_id=chat_id,
             hint_containers=bonus_hint,

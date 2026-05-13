@@ -1,4 +1,5 @@
 import abc
+import logging
 from dataclasses import dataclass
 from datetime import timedelta, datetime
 from typing import Literal
@@ -15,6 +16,8 @@ from shvatka.core.models.dto.action import (
 )
 from .effects import Effects
 from .interface import EffectsDecision, NoActionDecision, EffectsCondition
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -57,23 +60,38 @@ class LevelTimerCondition(Condition, metaclass=abc.ABCMeta):
         if not isinstance(action, LevelTimerAction):
             return NotImplementedActionDecision()
         state = state_holder.get(LevelTimerState)
-        if (
-            self.should_execute(action.now - state.started_at)
-            and state.current_level_time_id == state.started_level_time_id
-        ):
-            decision = self.get_decision()
-            if decision.type == DecisionType.EFFECTS:
-                if isinstance(decision, LevelTimerEffectsDecision):
-                    if state.contains_effects(decision.effects):
-                        return NoActionDecision()
-                else:
-                    raise NotImplementedError(
-                        f"decision should contains effects "
-                        f"but class is unknown here: {type(decision)}"
-                    )
-            return decision
-        else:
+        if state.current_level_time_id != state.started_level_time_id:
+            logger.debug(
+                "current lt %s is different from started lt %s, so skip",
+                state.current_level_time_id,
+                state.started_level_time_id,
+            )
             return NoActionDecision()
+        current_td = action.now - state.started_at
+        if not self.should_execute(current_td):
+            logger.debug(
+                "%r lt correct but time: (now: %s - start_at: %s) = %s > action_time: %s",
+                self,
+                action.now,
+                state.started_at,
+                current_td,
+                self.get_action_time(),
+            )
+            return NoActionDecision()
+        decision = self.get_decision()
+        if decision.type == DecisionType.EFFECTS:
+            if isinstance(decision, LevelTimerEffectsDecision):
+                if state.contains_effects(decision.effects):
+                    logger.debug(
+                        "effect %s already in applied %s", decision.effects, state.applied_effects
+                    )
+                    return NoActionDecision()
+            else:
+                raise NotImplementedError(
+                    f"decision should contains effects "
+                    f"but class is unknown here: {type(decision)}"
+                )
+        return decision
 
 
 @dataclass(kw_only=True, frozen=True)

@@ -22,19 +22,24 @@ class KeyProcessor:
     locker: KeyCheckerFactory
 
     async def check_key(
-        self, key: str, team: dto.Team, player: dto.Player
+        self,
+        key: str,
+        team: dto.Team,
+        player: dto.Player,
+        now: datetime,
     ) -> dto.InsertedKey | None:
         if not is_key_valid(key):
             raise exceptions.InvalidKey(
                 key=key, team=team, player=player, game=await self.current_game.get_required_game()
             )
-        return await self.submit_key(key=key, player=player, team=team)
+        return await self.submit_key(key=key, player=player, team=team, now=now)
 
     async def submit_key(
         self,
         key: str,
         player: dto.Player,
         team: dto.Team,
+        now: datetime,
     ) -> dto.InsertedKey | None:
         game = await self.current_game.get_required_full_game()
         async with self.locker.lock_team(team):
@@ -68,6 +73,7 @@ class KeyProcessor:
                     type_=decision.key_type,
                     is_duplicate=decision.duplicate,
                     event=event,
+                    at=now,
                 )
                 is_level_up = False
                 if isinstance(decision, action.KeyEffectsDecision):
@@ -82,6 +88,7 @@ class KeyProcessor:
                                 level=lvl,
                                 level_name=decision.effects.next_level,
                             ),
+                            at=now,
                         )
 
                 return dto.InsertedKey.from_key_time(
@@ -180,10 +187,14 @@ class TimerProcessor:
             )
             logger.debug("found decision %s %s", type(decision), decision)
             if isinstance(decision, action.LevelTimerEffectsDecision):
-                await self.find_and_process_level_up_if_needed(team, lvl, [decision.effects])
+                await self.find_and_process_level_up_if_needed(
+                    team, lvl, [decision.effects], now=now
+                )
                 return [decision.effects]
             elif isinstance(decision, action.MultipleEffectsDecision):
-                await self.find_and_process_level_up_if_needed(team, lvl, decision.effects)
+                await self.find_and_process_level_up_if_needed(
+                    team, lvl, decision.effects, now=now
+                )
                 logger.debug("found multiple effects %s", decision.effects)
                 return decision.effects
             elif isinstance(decision, action.NotImplementedActionDecision):
@@ -198,6 +209,7 @@ class TimerProcessor:
         team: dto.Team,
         lvl: dto.Level,
         effects_list: list[action.Effects],
+        now: datetime,
     ) -> None:
         level_up_effect: Effects | None = None
         game = await self.current_game.get_required_game()
@@ -217,4 +229,5 @@ class TimerProcessor:
                     level=lvl,
                     level_name=level_up_effect.next_level,
                 ),
+                at=now,
             )

@@ -69,7 +69,7 @@ async def start_game(
 
     level_times = {}
     for team in teams:
-        level_times[team.id] = await dao.set_to_level(team=team, game=game, level_number=0)
+        level_times[team.id] = await dao.set_to_level(team=team, game=game, level_number=0, at=now)
     await dao.commit()
 
     await asyncio.gather(*[view.send_puzzle(team, game.levels[0]) for team in teams])

@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Iterable, Protocol
 
 from shvatka.core.interfaces.dal.base import Committer
@@ -16,6 +17,7 @@ class GameStarter(Committer, Protocol):
         team: dto.Team,
         game: dto.Game,
         level_number: int,
+        at: datetime | None = None,
     ) -> dto.LevelTime:
         raise NotImplementedError
 

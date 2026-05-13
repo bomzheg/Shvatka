@@ -94,26 +94,31 @@ async def finished_game(
         key="SHWRONG",
         player=ron,
         team=gryffindor,
+        now=datetime.now(tz_utc),
     )
     await key_processor.submit_key(
         key="SH123",
         team=gryffindor,
         player=harry,
+        now=datetime.now(tz_utc),
     )
     await key_processor.submit_key(
         key="SH123",
         team=slytherin,
         player=draco,
+        now=datetime.now(tz_utc),
     )
     await key_processor.submit_key(
         key="SH123",
         team=gryffindor,
         player=hermione,
+        now=datetime.now(tz_utc),
     )
     await key_processor.submit_key(
         key="SH321",
         team=slytherin,
         player=draco,
+        now=datetime.now(tz_utc),
     )
     await dao.game_player.level_up(slytherin, game.levels[0], game, 1)
     await asyncio.sleep(0.1)
@@ -121,6 +126,7 @@ async def finished_game(
         key="SH123",
         team=gryffindor,
         player=ron,
+        now=datetime.now(tz_utc),
     )
     await dao.game_player.level_up(gryffindor, game.levels[0], game, 1)
     await asyncio.sleep(0.2)
@@ -128,6 +134,7 @@ async def finished_game(
         key="SHOOT",
         team=gryffindor,
         player=hermione,
+        now=datetime.now(tz_utc),
     )
     await dao.game_player.level_up(gryffindor, game.levels[1], game, 2)
     await asyncio.sleep(0.1)
@@ -135,6 +142,7 @@ async def finished_game(
         key="SHOOT",
         team=slytherin,
         player=draco,
+        now=datetime.now(tz_utc),
     )
     await dao.game_player.level_up(slytherin, game.levels[1], game, 2)
     await dao.game.set_finished(game)
@@ -213,40 +221,47 @@ async def finished_routed_game(
         key="SHWRONG",
         player=ron,
         team=gryffindor,
+        now=datetime.now(tz_utc),
     )
     await key_processor.submit_key(
         key="SHTO3",
         player=hermione,
         team=gryffindor,
+        now=datetime.now(tz_utc),
     )
     await dao.game_player.level_up(gryffindor, game.levels[0], game, 2)
     await key_processor.submit_key(
         key="SHTO3",
         player=draco,
         team=slytherin,
+        now=datetime.now(tz_utc),
     )
     await dao.game_player.level_up(slytherin, game.levels[0], game, 2)
     await key_processor.submit_key(
         key="SHTO1",
         player=ron,
         team=gryffindor,
+        now=datetime.now(tz_utc),
     )
     await dao.game_player.level_up(gryffindor, game.levels[0], game, 0)
     await key_processor.submit_key(
         key="SHTO3",
         player=harry,
         team=gryffindor,
+        now=datetime.now(tz_utc),
     )
     await key_processor.submit_key(
         key="SH3",
         player=hermione,
         team=gryffindor,
+        now=datetime.now(tz_utc),
     )
     await dao.game_player.level_up(slytherin, game.levels[0], game, 3)
     await key_processor.submit_key(
         key="SHT3",
         player=draco,
         team=slytherin,
+        now=datetime.now(tz_utc),
     )
     await dao.game_player.level_up(slytherin, game.levels[0], game, 3)
     await dao.game.set_finished(game)

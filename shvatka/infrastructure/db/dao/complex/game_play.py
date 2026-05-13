@@ -1,5 +1,6 @@
 import typing
 from dataclasses import dataclass
+from datetime import datetime
 from typing import Iterable
 
 
@@ -48,9 +49,10 @@ class GameStarterImpl(GameStarter):
         team: dto.Team,
         game: dto.Game,
         level_number: int,
+        at: datetime | None = None,
     ) -> dto.LevelTime:
         return await self.dao.level_time.set_to_level(
-            team=team, game=game, level_number=level_number
+            team=team, game=game, level_number=level_number, at=at
         )
 
     async def commit(self) -> None:
@@ -104,6 +106,7 @@ class GamePlayerDaoImpl(GamePlayerDao):
         type_: enums.KeyType,
         is_duplicate: bool,
         event: dto.GameEvent | None = None,
+        at: datetime | None = None,
     ) -> dto.KeyTime:
         return await self.dao.key_time.save_key(
             key=key,
@@ -122,12 +125,18 @@ class GamePlayerDaoImpl(GamePlayerDao):
         return await self.dao.key_time.get_team_typed_keys(game, team, level_time)
 
     async def level_up(
-        self, team: dto.Team, level: dto.Level, game: dto.Game, next_level_number: int
+        self,
+        team: dto.Team,
+        level: dto.Level,
+        game: dto.Game,
+        next_level_number: int,
+        at: datetime | None = None,
     ) -> None:
         await self.dao.level_time.set_to_level(
             team=team,
             game=game,
             level_number=next_level_number,
+            at=at,
         )
 
     async def finish(self, game: dto.Game) -> None:

@@ -195,6 +195,7 @@ class GamePlayBaseInteractor:
         input_container: InputContainer,
         team: dto.Team,
         game: dto.FullGame,
+        at: datetime,
     ) -> None:
         async with self.locker.lock_globally():
             if await self.dao.is_team_finished(team, game):
@@ -202,12 +203,13 @@ class GamePlayBaseInteractor:
                 if await self.dao.is_all_team_finished(game):
                     await self.all_teams_finished(game)
                 return
-        await self.process_plain_level_up(team, game)
+        await self.process_plain_level_up(team, game, at)
 
     async def process_plain_level_up(
         self,
         team: dto.Team,
         game: dto.FullGame,
+        now: datetime,
     ) -> None:
         next_level = await self.dao.get_current_level(team, game)
         lt = await self.dao.get_current_level_time(team, game)
@@ -218,7 +220,7 @@ class GamePlayBaseInteractor:
             team=team,
             next_level=next_level,
             lt_id=lt.id,
-            now=datetime.now(tz=tz_utc),
+            now=now,
         )
         level_up_event = LevelUp(
             team=team, new_level=next_level, orgs_list=await get_spying_orgs(game, self.dao)
@@ -252,6 +254,7 @@ class CheckKeyInteractor(GamePlayBaseInteractor):
         :param identity: Идентичность игрока, который ввёл ключ
         :param input_container: штуковина связанная со вьюхой
         """
+        now = datetime.now(tz=tz_utc)
         game = await self.current_game.get_required_full_game()
         player = await identity.get_required_player()
         team = await identity.get_required_team()
@@ -262,7 +265,7 @@ class CheckKeyInteractor(GamePlayBaseInteractor):
                 team=team, game=game, player=player, text="игрок не заявлен на игру, но ввёл ключ"
             )
 
-        new_key = await self.key_processor.check_key(key=key, player=player, team=team)
+        new_key = await self.key_processor.check_key(key=key, player=player, team=team, now=now)
         if new_key is None:
             return
         await self.view_(new_key, input_container)
@@ -273,6 +276,7 @@ class CheckKeyInteractor(GamePlayBaseInteractor):
                 input_container=input_container,
                 team=team,
                 game=game,
+                at=now,
             )
         await self.dao.commit()
 
@@ -346,5 +350,6 @@ class GamePlayTimerInteractor(GamePlayBaseInteractor):
                 input_container=input_container,
                 team=team,
                 game=game,
+                at=now,
             )
         await self.dao.commit()

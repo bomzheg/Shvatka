@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Iterable, Protocol
 
 from shvatka.core.interfaces.dal.base import Committer
@@ -56,6 +57,7 @@ class GamePlayerDao(
         type_: enums.KeyType,
         is_duplicate: bool,
         event: dto.GameEvent | None = None,
+        at: datetime | None = None,
     ) -> dto.KeyTime:
         raise NotImplementedError
 
@@ -65,7 +67,12 @@ class GamePlayerDao(
         raise NotImplementedError
 
     async def level_up(
-        self, team: dto.Team, level: dto.Level, game: dto.Game, next_level_number: int
+        self,
+        team: dto.Team,
+        level: dto.Level,
+        game: dto.Game,
+        next_level_number: int,
+        at: datetime | None = None,
     ) -> None:
         raise NotImplementedError
 

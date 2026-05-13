@@ -1,3 +1,4 @@
+import logging
 from datetime import datetime
 
 from dishka.integrations.base import FromDishka
@@ -16,6 +17,8 @@ from shvatka.core.models import dto
 from shvatka.core.services.level_testing import send_testing_level_hint
 from shvatka.core.services.organizers import get_by_player
 from shvatka.tgbot.views.bot_alert import BotAlert
+
+logger = logging.getLogger(__name__)
 
 
 @inject
@@ -72,6 +75,7 @@ async def send_hint_wrapper(
     current_game: FromDishka[CurrentGameProvider],
 ):
     try:
+        logger.info("sent hint %s lt %s for team %s", hint_number, lt_id, team_id)
         level = await dao.level.get_by_id(level_id)
         team = await dao.team.get_by_id(team_id)
         game = await current_game.get_required_game()
@@ -88,7 +92,15 @@ async def send_hint_wrapper(
         )
     except Exception as e:
         await alerter.alert(f"hint for team {team_id} not sent because of {e!s}")
+        logger.exception(
+            "got an error during send hint %s lt %s for team %s",
+            hint_number,
+            lt_id,
+            team_id,
+            exc_info=e,
+        )
         raise
+    logger.info("hint %s lt %s for team %s was sent", hint_number, lt_id, team_id)
 
 
 @inject
@@ -120,10 +132,20 @@ async def event_wrapper(
     team_id: int,
     started_level_time_id: int,
     interactor: FromDishka[GamePlayTimerInteractor],
+    alerter: FromDishka[BotAlert],
 ):
-    await interactor(
-        team_id=team_id,
-        started_level_time_id=started_level_time_id,
-        now=datetime.now(tz=tz_utc),
-        input_container=SchedulerContainer(),
+    try:
+        logger.info("timer event for team %s at %s", team_id, started_level_time_id)
+        await interactor(
+            team_id=team_id,
+            started_level_time_id=started_level_time_id,
+            now=datetime.now(tz=tz_utc),
+            input_container=SchedulerContainer(),
+        )
+    except Exception as e:
+        await alerter.alert(f"team {team_id} event wasn't processed because of {e!s}")
+        logger.exception("got an error during process event for team %s", team_id, exc_info=e)
+        raise
+    logger.info(
+        "finished processing timer event for team %s at %s", team_id, started_level_time_id
     )

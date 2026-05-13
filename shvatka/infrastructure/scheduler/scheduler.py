@@ -34,7 +34,7 @@ class ApScheduler(Scheduler, LevelTestScheduler):
             "max_instances": 20,
             "misfire_grace_time": 3600,
         }
-        logger.info("configuring shedulder...")
+        logger.info("configuring schedulder...")
         self.scheduler = AsyncIOScheduler(
             jobstores={"default": self.job_store},
             job_defaults=job_defaults,

@@ -178,38 +178,13 @@ class TimerProcessor:
                     started_at=started_level_time.start_at,
                 ),
             )
+            logger.debug("found decision %s %s", type(decision), decision)
             if isinstance(decision, action.LevelTimerEffectsDecision):
-                if decision.is_level_up():
-                    await self.dao.level_up(
-                        team=team,
-                        level=lvl,
-                        game=game,
-                        next_level_number=await define_next_level(
-                            dao=self.dao,
-                            game=await self.current_game.get_required_full_game(),
-                            level=lvl,
-                            level_name=decision.effects.next_level,
-                        ),
-                    )
+                await self.find_and_process_level_up_if_needed(team, lvl, [decision.effects])
                 return [decision.effects]
             elif isinstance(decision, action.MultipleEffectsDecision):
-                level_up_effect: Effects | None = None
-                for effects in decision.effects:
-                    if effects.level_up:
-                        assert level_up_effect is None
-                        level_up_effect = effects
-                if level_up_effect:
-                    await self.dao.level_up(
-                        team=team,
-                        level=lvl,
-                        game=game,
-                        next_level_number=await define_next_level(
-                            dao=self.dao,
-                            game=await self.current_game.get_required_full_game(),
-                            level=lvl,
-                            level_name=level_up_effect.next_level,
-                        ),
-                    )
+                await self.find_and_process_level_up_if_needed(team, lvl, decision.effects)
+                logger.debug("found multiple effects %s", decision.effects)
                 return decision.effects
             elif isinstance(decision, action.NotImplementedActionDecision):
                 logger.warning("impossible timer decision here cant be not implemented")
@@ -217,3 +192,29 @@ class TimerProcessor:
             else:
                 logger.warning("impossible timer decision here is %s", type(decision))
                 return []
+
+    async def find_and_process_level_up_if_needed(
+        self,
+        team: dto.Team,
+        lvl: dto.Level,
+        effects_list: list[action.Effects],
+    ) -> None:
+        level_up_effect: Effects | None = None
+        game = await self.current_game.get_required_game()
+        for effects in effects_list:
+            if effects.level_up:
+                if level_up_effect is not None:
+                    raise RuntimeError("unprocessable - have multiple level up")
+                level_up_effect = effects
+        if level_up_effect:
+            await self.dao.level_up(
+                team=team,
+                level=lvl,
+                game=game,
+                next_level_number=await define_next_level(
+                    dao=self.dao,
+                    game=await self.current_game.get_required_full_game(),
+                    level=lvl,
+                    level_name=level_up_effect.next_level,
+                ),
+            )

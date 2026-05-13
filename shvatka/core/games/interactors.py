@@ -1,3 +1,4 @@
+import logging
 import typing
 from dataclasses import dataclass
 from datetime import datetime
@@ -36,6 +37,9 @@ from shvatka.core.views.game import (
     GameLogType,
 )
 from shvatka.infrastructure.scheduler import SchedulerContainer
+
+
+logger = logging.getLogger(__name__)
 
 
 class GameKeysReaderInteractor:
@@ -318,6 +322,9 @@ class GamePlayTimerInteractor(GamePlayBaseInteractor):
         )
 
         if not effects_list:
+            logger.warning(
+                "no effects after processing for team %s on lt %s", team_id, started_level_time_id
+            )
             return
 
         level_up_effect: action.Effects | None = None
@@ -335,10 +342,9 @@ class GamePlayTimerInteractor(GamePlayBaseInteractor):
         if last_event is not None:
             await self.dao.save_timer(level_time, last_event)
         if level_up_effect is not None:
-            team = await self.dao.get_by_id(team_id)
             await self.process_level_up(
                 input_container=input_container,
                 team=team,
-                game=await self.current_game.get_required_full_game(),
+                game=game,
             )
         await self.dao.commit()

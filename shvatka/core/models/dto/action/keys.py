@@ -104,7 +104,7 @@ class KeyCondition(Condition, metaclass=abc.ABCMeta):
         return action.key in self.get_keys()
 
     def _is_all_typed(self, action: TypedKeyAction, state: TypedKeysState) -> bool:
-        return self.get_keys() == {*state.typed_correct, action.key}
+        return self.get_keys().issubset({*state.typed_correct, action.key})
 
 
 @dataclass

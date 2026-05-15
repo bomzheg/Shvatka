@@ -9,4 +9,5 @@
 ** xref:setup_team/manage_team.adoc[Управление командой]
 ** xref:setup_team/waivers.adoc[Вейверы]
 * Автору
-** xref:author-check-list.adoc[Чек-лист для автора перед игрой]
+** xref:author/author-check-list.adoc[Чек-лист для автора перед игрой]
+** xref:author/level-concept.adoc[Введение в описание уровня]

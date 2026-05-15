@@ -38,7 +38,7 @@ class GamePlayDao(Protocol):
     async def get_team_typed_keys(
         self,
         identity: IdentityProvider,
-    ) -> list[dto.KeyTime]:
+    ) -> list[dto.InsertedKey]:
         pass
 
     async def check_waivers(self, identity: IdentityProvider) -> bool:

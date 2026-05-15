@@ -164,11 +164,11 @@ class GamePlayDaoImpl(GamePlayDao):
             level_time_id=level_time.id,
         )
 
-    async def get_team_typed_keys(self, identity: IdentityProvider) -> list[dto.KeyTime]:
+    async def get_team_typed_keys(self, identity: IdentityProvider) -> list[dto.InsertedKey]:
         level_time = await self.get_level_time(identity)
         game = await self.current_game.get_required_game()
         team = await identity.get_required_team()
-        keys = await self.dao.key_time.get_team_typed_keys(game, team, level_time)
+        keys = await self.dao.key_time.get_team_inserted_keys(game, team, level_time)
         return keys
 
     async def get_level_time(self, identity: IdentityProvider) -> dto.LevelTime:

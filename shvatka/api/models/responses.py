@@ -154,6 +154,33 @@ class KeyTime:
         )
 
 
+@dataclass(frozen=True)
+class KeyWithEffects:
+    text: str
+    type_: enums.KeyType
+    is_duplicate: bool
+    at: datetime
+    level_number: int
+    player: Player
+    team: Team
+    effects: action.Effects
+
+    @classmethod
+    def from_core(cls, core: dto.InsertedKey | None):
+        if core is None:
+            return None
+        return cls(
+            text=core.text,
+            type_=core.type_,
+            is_duplicate=core.is_duplicate,
+            at=core.at,
+            level_number=core.level_number,
+            player=Player.from_core(core.player),
+            team=Team.from_core(core.team),
+            effects=core.parsed_key.effect,
+        )
+
+
 @dataclass
 class LevelTime:
     id: int
@@ -227,7 +254,7 @@ class CurrentHintResponse:
         return cls(
             game_id=core.game_id,
             hints=core.hints,
-            typed_keys=[KeyTime.from_core(kt) for kt in core.typed_keys],
+            typed_keys=[KeyWithEffects.from_core(kt) for kt in core.typed_keys],
             events=[GameEvent.from_core(e) for e in core.events],
             level_number=core.level_number,
             started_at=core.started_at,

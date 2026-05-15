@@ -9,7 +9,7 @@ from shvatka.core.models.dto import hints
 @dataclass(kw_only=True, frozen=True, slots=True)
 class CurrentHintsAndKeys:
     hints: list[hints.TimeHint]
-    typed_keys: list[dto.KeyTime]
+    typed_keys: list[dto.InsertedKey]
     events: list[dto.GameEvent]
     level_number: int
     level_time_id: int

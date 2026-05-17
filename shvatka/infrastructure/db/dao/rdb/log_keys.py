@@ -1,3 +1,4 @@
+import uuid
 from datetime import datetime, tzinfo
 import typing
 from typing import Sequence
@@ -7,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 
 from shvatka.core.models import dto, enums
+from shvatka.core.models.dto import action
 from shvatka.core.utils.datetime_utils import tz_utc
 from shvatka.infrastructure.db import models
 from .base import BaseDAO
@@ -85,7 +87,7 @@ class KeyTimeDao(BaseDAO[models.KeyTime]):
                 parsed_key=dto.ParsedKey(
                     text=key.key_text,
                     type_=key.type_,
-                    effect=key.event.effects,
+                    effect=key.event.effects if key.event else action.Effects(id=uuid.uuid4()),
                 ),
             )
             for key in result.all()

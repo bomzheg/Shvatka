@@ -81,7 +81,7 @@ class KeyTimeDao(BaseDAO[models.KeyTime]):
         return [
             dto.InsertedKey.from_key_time(
                 key_time=key.to_dto(player=key.player.to_dto_user_prefetched(), team=team),
-                is_level_up=key.event.effects.level_up,
+                is_level_up=key.event.effects.level_up if key.event else False,
                 parsed_key=dto.ParsedKey(
                     text=key.key_text,
                     type_=key.type_,

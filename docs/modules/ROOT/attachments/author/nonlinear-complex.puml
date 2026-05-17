@@ -1,0 +1,36 @@
+@startuml
+state 1 {
+}
+state 2 {
+}
+state 3 {
+}
+state 4 {
+}
+state 5 {
+}
+state 6 {
+}
+state 7 {
+}
+state 8 {
+}
+state 9 {
+}
+
+1 -right-> 2: SHMK1
+2 -down-> 3: SHMK2 (не публикуется)
+3 -down-> 4: SHMK3 (не публикуется)
+4 -right-> 5: SHMK4
+5 -right-> 6: SHMK5
+6 -right-> 7: SHMK6
+7 -right-> 8: SHMK7
+8 -right-> 9: SHMK8
+
+1 -right-> 3: SHEFFECT13
+1 -right-> 4: SHEFFECT14
+2 -right-> 5: SHEFFECT25
+3 -right-> 9: SHEFFECT39
+
+
+@enduml

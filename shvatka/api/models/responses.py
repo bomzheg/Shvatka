@@ -177,7 +177,7 @@ class KeyWithEffects:
             level_number=core.level_number,
             player=Player.from_core(core.player),
             team=Team.from_core(core.team),
-            effects=core.parsed_key.effect,
+            effects=core.parsed_key.effect if core.parsed_key is not None else None,
         )
 
 
@@ -240,7 +240,7 @@ class GameEvent:
 @dataclass(kw_only=True, frozen=True, slots=True)
 class CurrentHintResponse:
     hints: list[hints.TimeHint]
-    typed_keys: list[KeyTime]
+    typed_keys: list[KeyWithEffects]
     events: list[GameEvent]
     game_id: int
     level_number: int

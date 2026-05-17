@@ -58,6 +58,39 @@ class KeyTimeDao(BaseDAO[models.KeyTime]):
             for key in result.all()
         ]
 
+    async def get_team_inserted_keys(
+        self,
+        game: dto.Game,
+        team: dto.Team,
+        level_time: dto.LevelTime,
+    ) -> list[dto.InsertedKey]:
+        result: ScalarResult[models.KeyTime] = await self.session.scalars(
+            select(models.KeyTime)
+            .options(
+                joinedload(models.KeyTime.player).options(
+                    joinedload(models.Player.user), joinedload(models.Player.forum_user)
+                ),
+                joinedload(models.KeyTime.event),
+            )
+            .where(
+                models.KeyTime.game_id == game.id,
+                models.KeyTime.level_time_id == level_time.id,
+                models.KeyTime.team_id == team.id,
+            )
+        )
+        return [
+            dto.InsertedKey.from_key_time(
+                key_time=key.to_dto(player=key.player.to_dto_user_prefetched(), team=team),
+                is_level_up=key.event.effects.level_up,
+                parsed_key=dto.ParsedKey(
+                    text=key.key_text,
+                    type_=key.type_,
+                    effect=key.event.effects,
+                ),
+            )
+            for key in result.all()
+        ]
+
     async def is_duplicate(self, level_time: dto.LevelTime, team: dto.Team, key: str) -> bool:
         result: ScalarResult[int] = await self.session.scalars(
             select(self.model.id)

@@ -1,0 +1,21 @@
+@startuml
+state 1 {
+}
+state 2 {
+}
+state 3 {
+}
+state 4 {
+}
+state 5 {
+}
+
+1 -right-> 2: SHMK1
+2 -down-> 3: SHMK2 (не публикуется)
+3 -right-> 4: SHMK3
+4 -right-> 5: SHMK4
+
+1 --> 3: SHEFFECT1
+2 --> 4: SHEFFECT2
+
+@enduml

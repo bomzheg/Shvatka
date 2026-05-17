@@ -1,6 +1,6 @@
 * xref:technical-task.adoc[Техническое задание]
 * Игроку
-** xref:auth.adoc[Вход]
+** xref:player/auth.adoc[Вход]
 * Капитану
 ** xref:setup_team/create_chat.adoc[Создать чат]
 ** xref:setup_team/group2sg.adoc[Преобразовать чат в супергруппу]

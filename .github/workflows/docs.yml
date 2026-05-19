@@ -16,13 +16,18 @@ jobs:
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
 
+      - name: Install system deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y default-jre graphviz
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
 
       - name: Install Antora
-        run: npm install antora@latest asciidoctor asciidoctor-kroki
+        run: npm install antora@latest asciidoctor asciidoctor-diagram
 
       - name: Build Site
         working-directory: docs

@@ -79,6 +79,7 @@ class KeyTimeDao(BaseDAO[models.KeyTime]):
                 models.KeyTime.level_time_id == level_time.id,
                 models.KeyTime.team_id == team.id,
             )
+            .order_by(models.KeyTime.enter_time.desc())
         )
         return [
             dto.InsertedKey.from_key_time(

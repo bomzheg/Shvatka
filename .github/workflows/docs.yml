@@ -22,7 +22,7 @@ jobs:
           node-version: '20'
 
       - name: Install Antora
-        run: npm install antora@latest
+        run: npm install antora@latest asciidoctor @asciidoctor/diagram
 
       - name: Build Site
         working-directory: docs

@@ -17,7 +17,7 @@ c эффектом "завершение уровня"
 
 Предположим мы хотим получить что-то вроде:
 
-[plantuml, format=png]
+[plantuml, format=svg]
 ----
 @startuml
 state 1 {
@@ -45,7 +45,7 @@ state 5 {
 Делаем всё то же самое как в классической игре, но добавляем ключи с эффектами там,
 где нужны развилки. Например:
 
-[plantuml, format=png]
+[plantuml, format=svg]
 ----
 @startuml
 state 1 {
@@ -96,7 +96,7 @@ SHEFFECT1 и SHEFFECT2 ключи с эффектами на уровнях 1 и
 
 Разумеется возможно делать и более сложные переходы таким же образом
 
-[plantuml, format=png]
+[plantuml, format=svg]
 ----
 @startuml
 state 1 {

@@ -17,7 +17,7 @@ c эффектом "завершение уровня"
 
 Предположим мы хотим получить что-то вроде:
 
-[plantuml, format=svg]
+[plantuml, format=png]
 ----
 include::{attachmentsdir}/author/nonlinear-target.puml[]
 ----
@@ -25,7 +25,7 @@ include::{attachmentsdir}/author/nonlinear-target.puml[]
 Делаем всё то же самое как в классической игре, но добавляем ключи с эффектами там,
 где нужны развилки. Например:
 
-[plantuml, format=svg]
+[plantuml, format=png]
 ----
 include::{attachmentsdir}/author/nonlinear.puml[]
 ----
@@ -55,7 +55,7 @@ SHEFFECT1 и SHEFFECT2 ключи с эффектами на уровнях 1 и
 
 Разумеется возможно делать и более сложные переходы таким же образом
 
-[plantuml, format=svg]
+[plantuml, format=png]
 ----
 include::{attachmentsdir}/author/nonlinear-complex.puml[]
 ----

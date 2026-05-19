@@ -12,3 +12,6 @@ content:
       start_path: docs
       tags: ['2.*.*']
       branches: ['master', '*']
+asciidoc:
+  extensions:
+    - 'asciidoctor-kroki'

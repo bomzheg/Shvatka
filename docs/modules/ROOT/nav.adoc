@@ -1,6 +1,6 @@
 * xref:technical-task.adoc[Техническое задание]
 * Игроку
-** xref:auth.adoc[Вход]
+** xref:player/auth.adoc[Вход]
 * Капитану
 ** xref:setup_team/create_chat.adoc[Создать чат]
 ** xref:setup_team/group2sg.adoc[Преобразовать чат в супергруппу]
@@ -9,4 +9,6 @@
 ** xref:setup_team/manage_team.adoc[Управление командой]
 ** xref:setup_team/waivers.adoc[Вейверы]
 * Автору
-** xref:author-check-list.adoc[Чек-лист для автора перед игрой]
+** xref:author/author-check-list.adoc[Чек-лист для автора перед игрой]
+** xref:author/level-concept.adoc[Введение в описание уровня]
+** xref:author/level-howto.adoc[Как использовать]

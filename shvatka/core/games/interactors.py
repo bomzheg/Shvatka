@@ -268,6 +268,7 @@ class CheckKeyInteractor(GamePlayBaseInteractor):
         new_key = await self.key_processor.check_key(key=key, player=player, team=team, now=now)
         if new_key is None:
             return
+        await self.dao.commit()
         await self.view_(new_key, input_container)
         if new_key.is_duplicate:
             return
@@ -278,7 +279,6 @@ class CheckKeyInteractor(GamePlayBaseInteractor):
                 game=game,
                 at=now,
             )
-        await self.dao.commit()
 
     async def view_(self, new_key: dto.InsertedKey, input_container: InputContainer) -> None:
         if new_key.is_duplicate:

@@ -19,8 +19,8 @@ state 9 {
 }
 
 1 -right-> 2: SHMK1
-2 -down-> 3: SHMK2 (не публикуется)
-3 -down-> 4: SHMK3 (не публикуется)
+2 -down[dotted]-> 3: SHMK2 (не публикуется)
+3 -down[dotted]-> 4: SHMK3 (не публикуется)
 4 -right-> 5: SHMK4
 5 -right-> 6: SHMK5
 6 -right-> 7: SHMK6

@@ -14,4 +14,4 @@ content:
       branches: ['master', '*']
 asciidoc:
   extensions:
-    - '@asciidoctor/diagram'
+    - 'asciidoctor-kroki'

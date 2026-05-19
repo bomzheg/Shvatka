@@ -16,34 +16,23 @@ c эффектом "завершение уровня"
 == Как делать нелинейную игру?
 
 Предположим мы хотим получить что-то вроде:
+
 [plantuml, format=svg]
-....
-@startuml
-state 1 {
-}
-state 2 {
-}
-state 3 {
-}
-state 4 {
-}
-state 5 {
-}
-
-1 -right-> 2
-3 -right-> 4
-4 -right-> 5
-
-1 --> 3
-2 --> 4
-
-@enduml
-....
+----
+include::{attachmentsdir}/author/nonlinear-target.puml[]
+----
 
 Делаем всё то же самое как в классической игре, но добавляем ключи с эффектами там,
 где нужны развилки. Например:
 
-image::{attachmentsdir}/author/nonlinear.png[]
+[plantuml, format=svg]
+----
+include::{attachmentsdir}/author/nonlinear.puml[]
+----
+
+.Чтобы игрокам было доступно прохождение следующими способами
+* 1->2->4->5
+* 1->3->4->5
 
 В данном случае:
 SHMK1, SHMK2, SHMK3, SHMK4 - мастер-ключи уровней 1, 2, 3, 4 соответственно
@@ -62,10 +51,14 @@ SHEFFECT1 и SHEFFECT2 ключи с эффектами на уровнях 1 и
 .Иными словами у нас есть два варианта прохождения игры:
 * 1->2->4->5
 * 1->3->4->5
+* [.line-through]#1->2->3->4->5# недоступно потому что никто не знает ключ 2->3
 
 Разумеется возможно делать и более сложные переходы таким же образом
 
-image::{attachmentsdir}/author/nonlinear-complex.png[]
+[plantuml, format=svg]
+----
+include::{attachmentsdir}/author/nonlinear-complex.puml[]
+----
 
 .Тут мы получили три варианта прохождения игры:
 * 1->2->5->6->7->8->9

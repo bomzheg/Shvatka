@@ -8,6 +8,7 @@ from shvatka.core.models.dto import hints, action
 
 @dataclass(kw_only=True, frozen=True, slots=True)
 class Event:
+    id: int
     level_time_id: int
     at: datetime
     effects: action.Effects

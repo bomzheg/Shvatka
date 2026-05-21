@@ -220,6 +220,7 @@ class GameStat:
 
 @dataclass(kw_only=True, frozen=True, slots=True)
 class GameEvent:
+    id: int
     level_time_id: int
     at: datetime
     effects: action.Effects
@@ -229,6 +230,7 @@ class GameEvent:
     @classmethod
     def from_core(cls, core: Event):
         return cls(
+            id=core.id,
             level_time_id=core.level_time_id,
             at=core.at,
             effects=core.effects,

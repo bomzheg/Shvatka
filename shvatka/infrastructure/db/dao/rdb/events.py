@@ -62,6 +62,7 @@ class GameEventDao(BaseDAO[models.GameEvent]):
 
     def map_to_event(self, event: models.GameEvent) -> Event:
         return Event(
+            id=event.id,
             level_time_id=event.level_time_id,
             at=event.at,
             effects=event.effects,

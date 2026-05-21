@@ -1,6 +1,6 @@
 from typing import Protocol
 
-from shvatka.core.games.dto import CurrentHintsOnly
+from shvatka.core.games.dto import CurrentHintsOnly, Event
 from shvatka.core.interfaces.dal.complex import TypedKeyGetter, GameStatDao
 from shvatka.core.interfaces.dal.file_info import FileInfoGetter
 from shvatka.core.interfaces.dal.game import GameByIdGetter
@@ -33,6 +33,12 @@ class GamePlayDao(Protocol):
         self,
         identity: IdentityProvider,
     ) -> list[dto.GameEvent]:
+        pass
+
+    async def get_events(
+        self,
+        identity: IdentityProvider,
+    ) -> list[Event]:
         pass
 
     async def get_team_typed_keys(

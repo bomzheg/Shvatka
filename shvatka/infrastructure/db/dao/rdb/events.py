@@ -3,7 +3,9 @@ import typing
 
 from sqlalchemy import select, ScalarResult
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import joinedload
 
+from shvatka.core.games.dto import Event
 from shvatka.core.models import dto
 from shvatka.core.models.dto import action
 from shvatka.core.utils.datetime_utils import tz_utc
@@ -43,6 +45,30 @@ class GameEventDao(BaseDAO[models.GameEvent]):
             )
         )
         return [event.to_dto() for event in result.all()]
+
+    async def get_team_events_with_source(self, team: dto.Team, game_id: int) -> list[Event]:
+        result: ScalarResult[models.GameEvent] = await self.session.scalars(
+            select(models.GameEvent)
+            .options(
+                joinedload(models.GameEvent.key),
+                joinedload(models.GameEvent.timer),
+            )
+            .where(
+                models.GameEvent.game_id == game_id,
+                models.GameEvent.team_id == team.id,
+            )
+        )
+        return [self.map_to_event(event) for event in result.all()]
+
+    def map_to_event(self, event: models.GameEvent) -> Event:
+        return Event(
+            id=event.id,
+            level_time_id=event.level_time_id,
+            at=event.at,
+            effects=event.effects,
+            key=event.key.key_text if event.key else None,
+            is_timer=event.timer is not None,
+        )
 
     async def save_event(
         self,

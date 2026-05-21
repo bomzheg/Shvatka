@@ -3,7 +3,7 @@ import typing
 from dataclasses import dataclass
 from typing import Iterable
 
-from shvatka.core.games.dto import CurrentHintsOnly
+from shvatka.core.games.dto import CurrentHintsOnly, Event
 from shvatka.core.games.game_play import check_waivers
 from shvatka.core.interfaces.current_game import CurrentGameProvider
 
@@ -200,6 +200,15 @@ class GamePlayDaoImpl(GamePlayDao):
 
     async def get_effects(self, identity: IdentityProvider) -> list[dto.GameEvent]:
         return await self.dao.events.get_team_events(
+            team=await identity.get_required_team(),
+            game_id=(await self.current_game.get_required_game()).id,
+        )
+
+    async def get_events(
+        self,
+        identity: IdentityProvider,
+    ) -> list[Event]:
+        return await self.dao.events.get_team_events_with_source(
             team=await identity.get_required_team(),
             game_id=(await self.current_game.get_required_game()).id,
         )

@@ -1,4 +1,5 @@
 import logging
+import typing
 from datetime import datetime
 from typing import Any
 
@@ -15,6 +16,9 @@ from shvatka.infrastructure.db.models import Base
 
 
 logger = logging.getLogger(__name__)
+if typing.TYPE_CHECKING:
+    from .log_keys import KeyTime
+    from .timer_actions import TimerAction
 
 
 class EffectsField(TypeDecorator):
@@ -71,6 +75,16 @@ class GameEvent(Base):
         nullable=False,
     )
     effects: Mapped[action.Effects] = mapped_column(EffectsField, nullable=False)
+    key: Mapped["KeyTime | None"] = relationship(
+        "KeyTime",
+        back_populates="event",
+        foreign_keys="KeyTime.event_id",
+    )
+    timer: Mapped["TimerAction | None"] = relationship(
+        "TimerAction",
+        back_populates="event",
+        foreign_keys="TimerAction.event_id",
+    )
 
     def to_dto(self) -> dto.GameEvent:
         return dto.GameEvent(

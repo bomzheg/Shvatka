@@ -6,7 +6,7 @@ from typing import Sequence, Generic
 from adaptix import Retort, dumper
 
 from shvatka.common.factory import REQUIRED_GAME_RECIPES
-from shvatka.core.games.dto import CurrentHintsAndKeys, MyRole
+from shvatka.core.games.dto import CurrentHintsAndKeys, MyRole, Event
 from shvatka.core.models import dto, enums
 from shvatka.core.models.dto import scn, action
 from shvatka.core.models.dto import hints
@@ -221,19 +221,21 @@ class GameStat:
 @dataclass(kw_only=True, frozen=True, slots=True)
 class GameEvent:
     id: int
-    team_id: int
     level_time_id: int
     at: datetime
     effects: action.Effects
+    key: str | None = None
+    is_timer: bool = False
 
     @classmethod
-    def from_core(cls, core: dto.GameEvent):
+    def from_core(cls, core: Event):
         return cls(
             id=core.id,
-            team_id=core.team_id,
             level_time_id=core.level_time_id,
             at=core.at,
             effects=core.effects,
+            key=core.key,
+            is_timer=core.is_timer,
         )
 
 

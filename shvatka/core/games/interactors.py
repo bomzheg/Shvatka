@@ -151,7 +151,7 @@ class GamePlayReaderInteractor:
 
     async def __call__(self, identity: IdentityProvider) -> CurrentHintsAndKeys:
         hints_ = await self.game_play_dao.get_current_hints(identity)
-        events = await self.game_play_dao.get_effects(identity)
+        events = await self.game_play_dao.get_events(identity)
         keys = await self.game_play_dao.get_team_typed_keys(identity)
         return CurrentHintsAndKeys(
             hints=hints_.hints,

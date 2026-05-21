@@ -3,14 +3,24 @@ from datetime import datetime
 from uuid import UUID
 
 from shvatka.core.models import dto, enums
-from shvatka.core.models.dto import hints
+from shvatka.core.models.dto import hints, action
+
+
+@dataclass(kw_only=True, frozen=True, slots=True)
+class Event:
+    id: int
+    level_time_id: int
+    at: datetime
+    effects: action.Effects
+    key: action.SHKey | None = None
+    is_timer: bool
 
 
 @dataclass(kw_only=True, frozen=True, slots=True)
 class CurrentHintsAndKeys:
     hints: list[hints.TimeHint]
     typed_keys: list[dto.InsertedKey]
-    events: list[dto.GameEvent]
+    events: list[Event]
     level_number: int
     level_time_id: int
     started_at: datetime

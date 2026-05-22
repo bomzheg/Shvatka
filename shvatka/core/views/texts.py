@@ -40,11 +40,13 @@ def render_effects(effects: action.Effects | None) -> str:
     if effects.next_level:
         result += "🔀"
     elif effects.level_up:
-        result += "🚩"
-    if effects.bonus_minutes:
-        result += "💰"
+        result += "✅"
+    if effects.bonus_minutes > 0:
+        result += "+💰"
+    elif effects.bonus_minutes < 0:
+        result += "-💸"
     if effects.hints_:
-        result += f"[{render_hints(effects.hints_)}]"
+        result += f"💡[{render_hints(effects.hints_)}]"
     return result
 
 

@@ -66,7 +66,7 @@ def setup(bot_config: BotConfig) -> Router:
     is_superuser_ = partial(is_superuser, superusers=bot_config.superusers)
     router.message.filter(is_superuser_)
 
-    router.message.register(merge_teams, Command(MERGE_TEAMS))
+    router.message.register(merge_teams_command, Command(MERGE_TEAMS))
     router.message.register(merge_players_command, Command(MERGE_PLAYERS))
 
     return router

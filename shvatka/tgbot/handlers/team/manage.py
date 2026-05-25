@@ -96,6 +96,8 @@ async def cmd_create_team_group(message: Message, user: dto.User, chat: dto.Chat
 async def user_join_chat_with_team(
     event: ChatMemberUpdated, team: dto.Team, player: dto.Player, bot: Bot
 ) -> None:
+    if team.get_chat_id() != event.chat.id:
+        return
     await bot.send_message(
         chat_id=event.chat.id,
         text=f"Принять {hd.quote(player.name_mention)} в команду {hd.quote(team.name)}?",

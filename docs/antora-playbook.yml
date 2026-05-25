@@ -10,7 +10,7 @@ content:
   sources:
     - url: ../
       start_path: docs
-      tags: ['2.*.*']
+      tags: ['2.*.*', '3.*.*']
       branches: ['master', '*']
 asciidoc:
   extensions:

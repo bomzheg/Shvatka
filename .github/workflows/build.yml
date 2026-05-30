@@ -5,7 +5,7 @@ name: ShvatkaBotBuild
 
 on:
   push:
-    branches: [ master ]
+    branches: [ master, "tech/109" ]
     tags: ["*.*.*"]
 
 jobs:

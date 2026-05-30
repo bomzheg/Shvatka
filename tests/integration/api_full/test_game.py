@@ -94,11 +94,11 @@ async def test_game_file(
     await dao.game.set_number(finished_game, 1)
     await dao.commit()
     resp = await client.get(
-        f"/games/{finished_game.id}/files/{GUID}",
+        f"/cdn/games/{finished_game.id}/files/{GUID}",
         cookies={"Authorization": "Bearer " + token.access_token},
     )
     assert resp.is_success
-    assert resp.read() == b"123"
+    assert resp.headers.get("X-Accel-Redirect") == f"/protected-files/{GUID}.jpg"
 
 
 @pytest.mark.asyncio
@@ -114,7 +114,7 @@ async def test_game_file_not_accessible(
     await dao.game.set_number(finished_game, 1)
     await dao.commit()
     resp = await client.get(
-        f"/games/{finished_game.id}/files/{GUID_2}",
+        f"/cdn/games/{finished_game.id}/files/{GUID_2}",
         cookies={"Authorization": "Bearer " + token.access_token},
     )
     assert resp.status_code == 404
@@ -130,7 +130,7 @@ async def test_game_file_game_not_completed(
 ):
     token = auth.create_user_token(harry)
     resp = await client.get(
-        f"/games/{game.id}/files/{GUID}",
+        f"/cdn/games/{game.id}/files/{GUID}",
         cookies={"Authorization": "Bearer " + token.access_token},
     )
     assert resp.status_code == 403

@@ -2,7 +2,6 @@ import logging
 import typing
 from dataclasses import dataclass
 from datetime import datetime
-from typing import BinaryIO
 
 from shvatka.core.games.dto import CurrentHintsAndKeys, MyRole
 from shvatka.core.games.game_play import schedule_first_hint, check_waivers
@@ -21,6 +20,7 @@ from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.interfaces.scheduler import Scheduler
 from shvatka.core.models import dto, enums
 from shvatka.core.models.dto import action
+from shvatka.core.models.dto.hints import VerifiableFileMeta
 from shvatka.core.services.game_stat import get_typed_keys, get_game_stat_with_hints
 from shvatka.core.services.key import TimerProcessor, KeyProcessor
 from shvatka.core.services.organizers import get_spying_orgs, get_by_player_or_none
@@ -77,7 +77,9 @@ class GameFileReaderInteractor:
         self.current_game = current_game
         self.game_play_dao = game_play_dao
 
-    async def __call__(self, guid: str, game_id: int, identity: IdentityProvider) -> BinaryIO:
+    async def __call__(
+        self, guid: str, game_id: int, identity: IdentityProvider
+    ) -> VerifiableFileMeta:
         user = await identity.get_required_user()
         player = await identity.get_required_player()
         game = await self.dao.get_full(game_id)
@@ -106,7 +108,7 @@ class GameFileReaderInteractor:
             )
 
         meta = await self.dao.get_by_guid(guid)
-        return await self.file_gateway.get(meta)
+        return meta
 
     async def is_guid_in_current_hint(self, identity: IdentityProvider, guid: str) -> bool:
         hints_ = await self.game_play_dao.get_current_hints(identity)

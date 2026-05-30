@@ -5,14 +5,12 @@ from dishka.integrations.fastapi import FromDishka
 from dishka.integrations.fastapi import inject
 from fastapi import APIRouter, Body, HTTPException
 from fastapi.params import Path
-from fastapi.responses import StreamingResponse
 
 from shvatka.api.dependencies.auth import ApiIdentityProvider
 from shvatka.api.models import responses, req
 from shvatka.api.models.responses import MyRoleDto
 from shvatka.api.utils.web_input import WebInput
 from shvatka.core.games.interactors import (
-    GameFileReaderInteractor,
     GamePlayReaderInteractor,
     GameKeysReaderInteractor,
     GameStatReaderInteractor,
@@ -98,22 +96,6 @@ async def get_game_stat(
 
 
 @inject
-async def get_game_file(
-    identity: FromDishka[ApiIdentityProvider],
-    file_reader: FromDishka[GameFileReaderInteractor],
-    id_: Annotated[int, Path(alias="id")],
-    guid: Annotated[str, Path(alias="guid")],
-) -> StreamingResponse:
-    return StreamingResponse(
-        (b for b in await file_reader(guid=guid, identity=identity, game_id=id_)),
-        headers={
-            "Cache-Control": "private, max-age=86400",
-            "Vary": "Authorization, Cookie",
-        },
-    )
-
-
-@inject
 async def get_current_level(
     identity: FromDishka[ApiIdentityProvider],
     interactor: FromDishka[GamePlayReaderInteractor],
@@ -153,5 +135,4 @@ def setup() -> APIRouter:
     router.add_api_route("/{id}", get_game_card, methods=["GET"])
     router.add_api_route("/{id}/keys", get_game_keys, methods=["GET"])
     router.add_api_route("/{id}/stat", get_game_stat, methods=["GET"])
-    router.add_api_route("/{id}/files/{guid}", get_game_file, methods=["GET"])
     return router

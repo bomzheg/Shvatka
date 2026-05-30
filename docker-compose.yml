@@ -2,8 +2,8 @@ version: '3.2'
 
 services:
 
-  shvatka:
-    container_name: "shvatka-${ENV_NAME}"
+  shvatka-backend:
+    container_name: "shvatka-backend"
     restart: always
     image: "bomzheg/shvatka:${SHVATKA_VERSION:-latest}"
     volumes:
@@ -15,7 +15,7 @@ services:
         source: "./files/"
         target: "/files/"
     networks:
-      - reverse-proxy
+      - backend
       - botapi
       - redis
     extra_hosts:
@@ -48,6 +48,19 @@ services:
         limits:
           memory: 80M
           cpus: "0.01"
+
+  app-nginx:
+    image: nginx:latest
+    restart: always
+    container_name: "shvatka-${ENV_NAME}"
+    depends_on:
+      - shvatka-backend
+    volumes:
+      - ./nginx/app.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./files:/data/files:ro
+    networks:
+      - backend
+      - reverse-proxy
 
   migrations:
     profiles:
@@ -126,3 +139,4 @@ networks:
       name: nginx-reverse-proxy
   redis:
   botapi:
+  backend:

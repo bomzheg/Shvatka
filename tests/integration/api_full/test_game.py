@@ -98,7 +98,7 @@ async def test_game_file(
         cookies={"Authorization": "Bearer " + token.access_token},
     )
     assert resp.is_success
-    assert resp.read() == b"123"
+    assert resp.headers.get("X-Accel-Redirect") == f"/protected-files/{GUID}.jpg"
 
 
 @pytest.mark.asyncio

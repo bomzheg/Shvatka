@@ -35,6 +35,6 @@ async def get_game_file(
 
 
 def setup() -> APIRouter:
-    router = APIRouter(prefix="/sdn")
+    router = APIRouter(prefix="/cdn")
     router.add_api_route("/games/{id}/files/{guid}", get_game_file, methods=["GET"])
     return router

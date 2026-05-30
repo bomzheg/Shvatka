@@ -114,7 +114,7 @@ async def test_game_file_not_accessible(
     await dao.game.set_number(finished_game, 1)
     await dao.commit()
     resp = await client.get(
-        f"/sdn/games/{finished_game.id}/files/{GUID_2}",
+        f"/cdn/games/{finished_game.id}/files/{GUID_2}",
         cookies={"Authorization": "Bearer " + token.access_token},
     )
     assert resp.status_code == 404

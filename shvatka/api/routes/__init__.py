@@ -1,7 +1,6 @@
 from fastapi import APIRouter
 
-from shvatka.api.routes import team, version, auth, waivers
-from shvatka.api.routes import user, game
+from . import team, version, auth, waivers, cdn, user, game
 
 
 def setup() -> APIRouter:
@@ -12,4 +11,5 @@ def setup() -> APIRouter:
     router.include_router(waivers.setup())
     router.include_router(team.setup())
     router.include_router(version.setup())
+    router.include_router(cdn.setup())
     return router

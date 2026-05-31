@@ -3,7 +3,6 @@ version: '3.2'
 services:
 
   shvatka-backend:
-    container_name: "shvatka-backend"
     restart: always
     image: "bomzheg/shvatka:${SHVATKA_VERSION:-latest}"
     volumes:

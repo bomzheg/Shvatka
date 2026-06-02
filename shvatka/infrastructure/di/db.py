@@ -126,6 +126,10 @@ class DAOProvider(Provider):
     def secure_invite_dao(self, holder: HolderDao) -> dao.SecureInvite:
         return holder.secure_invite
 
+    @provide
+    def push_subscription_dao(self, holder: HolderDao) -> dao.PushSubscriptionDAO:
+        return holder.push_subscription
+
 
 class RedisProvider(Provider):
     scope = Scope.APP

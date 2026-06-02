@@ -2,6 +2,7 @@ from dataclass_factory import Factory, Schema, NameStyle
 
 from shvatka.api.config.models.main import ApiConfig
 from shvatka.api.config.parser.auth import load_auth
+from shvatka.api.config.parser.push import load_push
 from shvatka.common.config.models.paths import Paths
 from shvatka.common.config.parser.config_file_reader import read_config
 from shvatka.common.config.parser.main import load_config as load_common_config
@@ -15,4 +16,5 @@ def load_config(paths: Paths) -> ApiConfig:
         auth=load_auth(config_dct["api"]["auth"]),
         context_path=config_dct["api"].get("context-path", ""),
         enable_logging=bool(config_dct["api"].get("enable-logging", False)),
+        push=load_push(config_dct["api"].get("push")),
     )

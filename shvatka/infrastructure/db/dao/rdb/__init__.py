@@ -15,3 +15,5 @@ from .events import GameEventDao
 from .timers import TimersDAO
 from .forum_team import ForumTeamDAO
 from .achievement import AchievementDAO
+
+from .push_subscription import PushSubscriptionDAO

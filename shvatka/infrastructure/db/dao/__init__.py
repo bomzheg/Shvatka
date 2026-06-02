@@ -17,5 +17,6 @@ from .rdb import (
     ForumUserDAO,
     AchievementDAO,
     ForumTeamDAO,
+    PushSubscriptionDAO,
 )
 from .redis import PollDao, SecureInvite

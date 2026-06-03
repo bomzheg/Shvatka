@@ -33,7 +33,7 @@ class WebGameView(GameView):
             PushMessage(
                 title="Новый уровень",
                 body=f"{team.name}: открыт уровень {self._level_label(level)}",
-                url="/games/running/level/current",
+                url="/games/running",
                 tag=f"level-{team.id}-{level.db_id}",
                 data={"kind": "puzzle", "team_id": team.id, "level_id": level.db_id},
             ),
@@ -44,8 +44,8 @@ class WebGameView(GameView):
             team.id,
             PushMessage(
                 title="Новая подсказка",
-                body=f"{team.name}: доступна подсказка #{hint_number}",
-                url="/games/running/level/current",
+                body=f"{team.name}: подсказка #{hint_number}",
+                url="/games/running",
                 tag=f"hint-{team.id}-{level.db_id}-{hint_number}",
                 data={
                     "kind": "hint",
@@ -79,7 +79,7 @@ class WebGameView(GameView):
             PushMessage(
                 title="Финиш!",
                 body=f"{team.name}: вы завершили игру",
-                url="/games/running/level/current",
+                url="/games/running",
                 tag=f"finish-{team.id}",
                 data={"kind": "team_finished", "team_id": team.id},
             ),
@@ -90,8 +90,8 @@ class WebGameView(GameView):
             team.id,
             PushMessage(
                 title="Игра завершена",
-                body="Все команды завершили игру",
-                url="/games/active",
+                body="Все завершили игру",
+                url="/games/running",
                 tag="game-finished",
                 data={"kind": "game_finished", "team_id": team.id},
             ),
@@ -106,8 +106,8 @@ class WebGameView(GameView):
             team.id,
             PushMessage(
                 title="Событие на уровне",
-                body=f"{team.name}: обновилось состояние игры",
-                url="/games/running/level/current",
+                body=f"{team.name}: сработал эффект",
+                url="/games/running",
                 tag=f"effects-{team.id}-{effects.id}",
                 data={"kind": "effects", "team_id": team.id, "effects_id": str(effects.id)},
             ),

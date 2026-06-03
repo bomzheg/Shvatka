@@ -42,7 +42,6 @@ from .rdb import (
     TeamDao,
     WaiverDao,
     ForumUserDAO,
-    PushSubscriptionDAO,
 )
 from .rdb.achievement import AchievementDAO
 from .rdb.events import GameEventDao
@@ -78,7 +77,6 @@ class HolderDao:
         self.forum_team = ForumTeamDAO(self.session, clock=clock)
         self.events = GameEventDao(self.session, clock=clock)
         self.timers = TimersDAO(self.session, clock=clock)
-        self.push_subscription = PushSubscriptionDAO(self.session, clock=clock)
         self.poll = PollDao(redis=redis, clock=clock)
         self.secure_invite = SecureInvite(redis=redis, clock=clock)
         self.one_time_token = OneTimeToken(redis=redis, clock=clock)

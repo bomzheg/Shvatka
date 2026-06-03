@@ -16,5 +16,5 @@ def load_config(paths: Paths) -> ApiConfig:
         auth=load_auth(config_dct["api"]["auth"]),
         context_path=config_dct["api"].get("context-path", ""),
         enable_logging=bool(config_dct["api"].get("enable-logging", False)),
-        push=load_push(config_dct["api"].get("push")),
+        push=load_push(config_dct["api"].get("push"), dcf),
     )

@@ -7,7 +7,7 @@ from starlette import status
 from shvatka.api.config.models.main import ApiConfig
 from shvatka.api.dependencies.auth import ApiIdentityProvider
 from shvatka.api.models import req, responses
-from shvatka.infrastructure.db.dao.holder import HolderDao
+from shvatka.infrastructure.db.dao import PushSubscriptionDAO
 
 
 @inject
@@ -21,12 +21,12 @@ async def get_push_config(config: FromDishka[ApiConfig]) -> responses.PushConfig
 @inject
 async def subscribe(
     identity: FromDishka[ApiIdentityProvider],
-    dao: FromDishka[HolderDao],
+    dao: FromDishka[PushSubscriptionDAO],
     subscription: Annotated[req.PushSubscription, Body()],
     user_agent: Annotated[str | None, Header()] = None,
 ) -> Response:
     player = await identity.get_required_player()
-    await dao.push_subscription.upsert(
+    await dao.upsert(
         player_id=player.id,
         endpoint=subscription.endpoint,
         p256dh=subscription.keys.p256dh,
@@ -40,11 +40,11 @@ async def subscribe(
 @inject
 async def unsubscribe(
     identity: FromDishka[ApiIdentityProvider],
-    dao: FromDishka[HolderDao],
+    dao: FromDishka[PushSubscriptionDAO],
     subscription: Annotated[req.PushSubscription, Body()],
 ) -> Response:
     player = await identity.get_required_player()
-    await dao.push_subscription.delete_by_endpoint(
+    await dao.delete_by_endpoint(
         player_id=player.id,
         endpoint=subscription.endpoint,
     )

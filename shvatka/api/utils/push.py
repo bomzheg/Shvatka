@@ -84,5 +84,5 @@ class WebPushSender:
             data=message.to_json(),
             vapid_private_key=self.config.vapid_private_key,
             vapid_claims={"sub": self.config.vapid_claims_sub},
-            ttl=12 * 60 * 60,
+            ttl=10 * 60,
         )

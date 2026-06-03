@@ -29,7 +29,7 @@ https://bomzheg.github.io/Shvatka[Documentation]
 .
 [source,shell]
 ----
-uv pip install .
+uv sync --group test
 export BOT_PATH=$PWD
 shvatka-tgbot
 ----

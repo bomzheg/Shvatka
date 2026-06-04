@@ -126,6 +126,13 @@ class DAOProvider(Provider):
     def secure_invite_dao(self, holder: HolderDao) -> dao.SecureInvite:
         return holder.secure_invite
 
+    @provide
+    async def push_subscription_dao(
+        self, pool: async_sessionmaker[AsyncSession]
+    ) -> AsyncIterable[dao.PushSubscriptionDAO]:
+        async with pool() as session:
+            yield dao.PushSubscriptionDAO(session=session)
+
 
 class RedisProvider(Provider):
     scope = Scope.APP

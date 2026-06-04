@@ -12,6 +12,7 @@ from .levels_times import LevelTime
 from .log_keys import KeyTime
 from .organizer import Organizer
 from .player import Player
+from .push_subscription import PushSubscription
 from .team import Team
 from .team_player import TeamPlayer
 from .user import User

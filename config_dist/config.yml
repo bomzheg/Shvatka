@@ -49,6 +49,12 @@ api:
     samesite: "none"
     secure: false
     httponly: false
+  push:
+    enabled: false
+    # Generate once with: python -m py_vapid --gen
+    vapid-public-key: ""
+    vapid-private-key: ""
+    vapid-claims-sub: "mailto:admin@example.org"
 file-storage-config:
   path: ./local-storage/files
   mkdir: true

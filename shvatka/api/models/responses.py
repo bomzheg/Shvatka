@@ -308,3 +308,9 @@ class MyRoleDto:
             team=Team.from_core(core.team),
             org=OrganizerDto.from_core(core.org),
         )
+
+
+@dataclass(frozen=True, slots=True)
+class PushConfigResponse:
+    enabled: bool
+    public_key: str | None

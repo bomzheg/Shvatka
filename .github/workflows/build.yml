@@ -5,7 +5,7 @@ name: ShvatkaBotBuild
 
 on:
   push:
-    branches: [ master ]
+    branches: [ master, "codex/add-push-notifications-to-pwa"]
     tags: ["*.*.*"]
 
 jobs:

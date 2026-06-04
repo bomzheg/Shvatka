@@ -52,6 +52,28 @@ api:
   push:
     enabled: false
     # Generate once with: python -m py_vapid --gen
+    # >>> from py_vapid import Vapid
+    #...
+    #... vapid = Vapid()
+    #... vapid.generate_keys()
+    #...
+    #... print(vapid.private_pem().decode())  # remove start and end lines and join without line separator
+    #... print(vapid.public_pem().decode())
+    #>>> from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat
+    #... import base64
+    #...
+    #... raw = vapid._public_key.public_bytes(
+    #...     Encoding.X962,
+    #...     PublicFormat.UncompressedPoint,
+    #... )
+    #...
+    #... print(len(raw))  # should be 65
+    #...
+    #... print(
+    #...     base64.urlsafe_b64encode(raw)
+    #...     .rstrip(b'=')
+    #...     .decode()
+    #... )  # should be something like: BA3... - it is for private key
     vapid-public-key: ""
     vapid-private-key: ""
     vapid-claims-sub: "mailto:admin@example.org"

@@ -1,13 +1,34 @@
+import hashlib
 import logging
+import mimetypes
 from io import BytesIO
 from pathlib import Path
 from typing import BinaryIO
+
+import magic
 
 from shvatka.common.config.models.main import FileStorageConfig
 from shvatka.core.interfaces.clients.file_storage import FileStorage
 from shvatka.core.models.dto import hints
 
 logger = logging.getLogger(__name__)
+
+
+def compute_sha256(data: bytes) -> str:
+    return hashlib.sha256(data).hexdigest()
+
+
+def detect_mime_type(data: bytes) -> str:
+    return magic.from_buffer(data, mime=True)
+
+
+def extension_from_mime(mime_type: str) -> str:
+    ext = mimetypes.guess_extension(mime_type)
+    if ext is None:
+        return ""
+    # mimetypes may return .jpe for image/jpeg — normalise common cases
+    _normalise = {".jpe": ".jpg", ".jfif": ".jpg"}
+    return _normalise.get(ext, ext)
 
 
 class LocalFileStorage(FileStorage):
@@ -18,13 +39,21 @@ class LocalFileStorage(FileStorage):
             self.path.mkdir(exist_ok=config.exist_ok, parents=config.parents)
 
     async def put(self, file_meta: hints.UploadedFileMeta, content: BinaryIO) -> hints.FileMeta:
+        data = content.read()
+        sha256 = compute_sha256(data)
+        mime_type = detect_mime_type(data)
+        extension = file_meta.extension or extension_from_mime(mime_type)
+        local_name = file_meta.guid + extension
+        file_content_link = await self.put_content(local_name, BytesIO(data))
         return hints.FileMeta(
-            file_content_link=await self.put_content(file_meta.local_file_name, content),
+            file_content_link=file_content_link,
             guid=file_meta.guid,
             original_filename=file_meta.original_filename,
-            extension=file_meta.extension,
+            extension=extension,
             tg_link=file_meta.tg_link,  # type: ignore
             content_type=file_meta.content_type,
+            sha256=sha256,
+            mime_type=mime_type,
         )
 
     async def put_content(self, local_file_name: str, content: BinaryIO) -> hints.FileContentLink:

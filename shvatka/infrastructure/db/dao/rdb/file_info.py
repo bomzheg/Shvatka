@@ -36,8 +36,21 @@ class FileInfoDao(BaseDAO[models.FileInfo]):
             db_file.content_type = file.tg_link.content_type.name
         if file.content_type:
             db_file.content_type = file.content_type.name
+        if file.sha256:
+            db_file.sha256 = file.sha256
+        if file.mime_type:
+            db_file.mime_type = file.mime_type
 
         return db_file.to_dto(author=author)
+
+    async def get_by_sha256(self, sha256: str) -> hints.VerifiableFileMeta | None:
+        result: ScalarResult[models.FileInfo] = await self.session.scalars(
+            select(models.FileInfo).where(models.FileInfo.sha256 == sha256)
+        )
+        db_file = result.first()
+        if db_file is None:
+            return None
+        return db_file.to_short_dto()
 
     async def check_author_can_own_guid(self, author: dto.Player, guid: str) -> None:
         try:
@@ -74,6 +87,33 @@ class FileInfoDao(BaseDAO[models.FileInfo]):
     async def update_file_id(self, guid: str, file_id: str):
         await self.session.execute(
             update(models.FileInfo).where(models.FileInfo.guid == guid).values(file_id=file_id)
+        )
+
+    async def get_all(self, limit: int, offset: int) -> Sequence[hints.SavedFileMeta]:
+        result: ScalarResult[models.FileInfo] = await self.session.scalars(
+            select(models.FileInfo)
+            .options(
+                joinedload(models.FileInfo.author).options(
+                    joinedload(models.Player.user), joinedload(models.Player.forum_user)
+                )
+            )
+            .order_by(models.FileInfo.id)
+            .limit(limit)
+            .offset(offset)
+        )
+        return [f.to_dto(f.author.to_dto_user_prefetched()) for f in result.all()]
+
+    async def update_sha256_and_mime(self, guid: str, sha256: str, mime_type: str):
+        await self.session.execute(
+            update(models.FileInfo)
+            .where(models.FileInfo.guid == guid)
+            .values(sha256=sha256, mime_type=mime_type)
+        )
+
+    async def delete_by_guid(self, guid: str):
+        from sqlalchemy import delete
+        await self.session.execute(
+            delete(models.FileInfo).where(models.FileInfo.guid == guid)
         )
 
     async def get_without_file_id(self, limit: int) -> Sequence[hints.SavedFileMeta]:

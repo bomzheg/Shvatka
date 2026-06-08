@@ -9,6 +9,7 @@ from aiogram.types import Message, ContentType, PhotoSize
 from shvatka.core.interfaces.clients.file_storage import FileStorage
 from shvatka.core.models import dto, enums
 from shvatka.core.models.dto import hints
+from shvatka.infrastructure.clients.file_storage import compute_sha256
 from shvatka.infrastructure.db.dao import FileInfoDao
 
 
@@ -135,6 +136,11 @@ class HintParser:
         filename = tg_link.filename or "unknown"
         content = await self.bot.download(tg_link.file_id, BytesIO())
         assert content is not None
+        data = content.read()
+        sha256 = compute_sha256(data)
+        existing = await self.dao.get_by_sha256(sha256)
+        if existing is not None:
+            return existing
         extension = "".join(Path(filename).suffixes)
         file_meta = hints.UploadedFileMeta(
             content_type=tg_link.content_type,
@@ -142,8 +148,9 @@ class HintParser:
             original_filename=get_name_without_extension(filename, extension),
             extension=extension,
             tg_link=hints.TgLink(file_id=tg_link.file_id, content_type=tg_link.content_type),
+            sha256=sha256,
         )
-        stored_file = await self.storage.put(file_meta, content)
+        stored_file = await self.storage.put(file_meta, BytesIO(data))
         await self.dao.upsert(stored_file, author)
         await self.dao.commit()
         return stored_file

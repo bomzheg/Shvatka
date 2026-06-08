@@ -8,6 +8,7 @@ Duplicate files_info records and their physical files are removed.
 Run with:
     python -m shvatka.infrastructure.file_deduplicator
 """
+
 import asyncio
 import logging
 from collections import defaultdict
@@ -131,9 +132,7 @@ async def deduplicate(session: AsyncSession) -> None:
     logger.info("deduplication complete, removed %d duplicate records", len(replacement))
 
 
-async def _rewrite_scenarios(
-    session: AsyncSession, replacement: dict[str, str]
-) -> None:
+async def _rewrite_scenarios(session: AsyncSession, replacement: dict[str, str]) -> None:
     """Load all Level scenarios and replace duplicate guids with canonical guids."""
     result = await session.scalars(select(models.Level))
     levels = list(result.all())
@@ -151,12 +150,14 @@ async def _rewrite_scenarios(
 def _scenario_to_dict(scenario) -> dict:
     from shvatka.infrastructure.db.models.level import ScenarioField
     from shvatka.core.models.dto import scn
+
     return ScenarioField.retort.dump(scenario, scn.LevelScenario)
 
 
 def _dict_to_scenario(d: dict):
     from shvatka.infrastructure.db.models.level import ScenarioField
     from shvatka.core.models.dto import scn
+
     return ScenarioField.retort.load(d, scn.LevelScenario)
 
 
@@ -198,9 +199,7 @@ async def _delete_duplicates(
             except OSError as e:
                 logger.error("could not delete %s: %s", path, e)
 
-    await session.execute(
-        delete(models.FileInfo).where(models.FileInfo.guid.in_(dup_guids))
-    )
+    await session.execute(delete(models.FileInfo).where(models.FileInfo.guid.in_(dup_guids)))
 
 
 async def main() -> None:

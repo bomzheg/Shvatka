@@ -112,9 +112,8 @@ class FileInfoDao(BaseDAO[models.FileInfo]):
 
     async def delete_by_guid(self, guid: str):
         from sqlalchemy import delete
-        await self.session.execute(
-            delete(models.FileInfo).where(models.FileInfo.guid == guid)
-        )
+
+        await self.session.execute(delete(models.FileInfo).where(models.FileInfo.guid == guid))
 
     async def get_without_file_id(self, limit: int) -> Sequence[hints.SavedFileMeta]:
         result: ScalarResult[models.FileInfo] = await self.session.scalars(

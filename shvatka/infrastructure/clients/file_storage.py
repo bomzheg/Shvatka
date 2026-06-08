@@ -10,6 +10,7 @@ import magic
 from shvatka.common.config.models.main import FileStorageConfig
 from shvatka.core.interfaces.clients.file_storage import FileStorage
 from shvatka.core.models.dto import hints
+from shvatka.infrastructure.db.dao.rdb.file_info import FileInfoDao
 
 logger = logging.getLogger(__name__)
 
@@ -63,6 +64,45 @@ class LocalFileStorage(FileStorage):
         return hints.FileContentLink(file_path=str(result_path))
 
     async def get(self, file_link: hints.FileContentLink) -> BinaryIO:
-        with Path(file_link.file_path).open("rb") as f:  # noqa: ASYNC101
+        with Path(file_link.file_path).open("rb") as f:  # noqa: ASYNC230
             result = BytesIO(f.read())
         return result
+
+
+class DeduplicatingFileStorage(FileStorage):
+    """Wraps LocalFileStorage and transparently deduplicates by content hash.
+
+    When a file with the same SHA-256 already exists in the DB, no new physical
+    file is written; the returned FileMeta points to the existing file_path so
+    multiple file_info rows share one file on disk.
+    """
+
+    def __init__(self, storage: LocalFileStorage, dao: FileInfoDao) -> None:
+        self.storage = storage
+        self.dao = dao
+
+    async def put(self, file_meta: hints.UploadedFileMeta, content: BinaryIO) -> hints.FileMeta:
+        data = content.read()
+        sha256 = compute_sha256(data)
+        existing = await self.dao.get_by_sha256(sha256)
+        if existing is not None:
+            mime_type = existing.mime_type or detect_mime_type(data)
+            extension = existing.extension or file_meta.extension or extension_from_mime(mime_type)
+            logger.debug("dedup hit for sha256=%.12s..., reusing %s", sha256, existing.guid)
+            return hints.FileMeta(
+                guid=file_meta.guid,
+                original_filename=file_meta.original_filename,
+                extension=extension,
+                tg_link=file_meta.tg_link,  # type: ignore
+                content_type=file_meta.content_type,
+                file_content_link=existing.file_content_link,
+                sha256=sha256,
+                mime_type=mime_type,
+            )
+        return await self.storage.put(file_meta, BytesIO(data))
+
+    async def put_content(self, local_file_name: str, content: BinaryIO) -> hints.FileContentLink:
+        return await self.storage.put_content(local_file_name, content)
+
+    async def get(self, file_link: hints.FileContentLink) -> BinaryIO:
+        return await self.storage.get(file_link)

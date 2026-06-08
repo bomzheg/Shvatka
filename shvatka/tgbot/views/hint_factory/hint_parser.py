@@ -9,7 +9,6 @@ from aiogram.types import Message, ContentType, PhotoSize
 from shvatka.core.interfaces.clients.file_storage import FileStorage
 from shvatka.core.models import dto, enums
 from shvatka.core.models.dto import hints
-from shvatka.infrastructure.clients.file_storage import compute_sha256
 from shvatka.infrastructure.db.dao import FileInfoDao
 
 
@@ -136,38 +135,15 @@ class HintParser:
         filename = tg_link.filename or "unknown"
         content = await self.bot.download(tg_link.file_id, BytesIO())
         assert content is not None
-        data = content.read()
-        sha256 = compute_sha256(data)
         extension = "".join(Path(filename).suffixes)
-        original_filename = get_name_without_extension(filename, extension)
-        tg = hints.TgLink(file_id=tg_link.file_id, content_type=tg_link.content_type)
-
-        existing = await self.dao.get_by_sha256(sha256)
-        if existing is not None:
-            # Reuse the canonical physical file; create a new file_info row for this guid
-            file_meta = hints.FileMeta(
-                guid=guid,
-                original_filename=original_filename,
-                extension=existing.extension or extension,
-                tg_link=tg,
-                content_type=tg_link.content_type,
-                file_content_link=existing.file_content_link,
-                sha256=sha256,
-                mime_type=existing.mime_type,
-            )
-            await self.dao.upsert(file_meta, author)
-            await self.dao.commit()
-            return file_meta
-
-        file_meta_upload = hints.UploadedFileMeta(
+        file_meta = hints.UploadedFileMeta(
             content_type=tg_link.content_type,
             guid=guid,
-            original_filename=original_filename,
+            original_filename=get_name_without_extension(filename, extension),
             extension=extension,
-            tg_link=tg,
-            sha256=sha256,
+            tg_link=hints.TgLink(file_id=tg_link.file_id, content_type=tg_link.content_type),
         )
-        stored_file = await self.storage.put(file_meta_upload, BytesIO(data))
+        stored_file = await self.storage.put(file_meta, content)
         await self.dao.upsert(stored_file, author)
         await self.dao.commit()
         return stored_file

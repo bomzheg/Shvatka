@@ -5,6 +5,7 @@ from shvatka.common import FileStorageConfig
 from shvatka.core.interfaces.clients.file_storage import FileStorage, FileGateway
 from shvatka.infrastructure.clients.factory import create_file_storage
 from shvatka.infrastructure.clients.file_gateway import BotFileGateway
+from shvatka.infrastructure.clients.file_storage import DeduplicatingFileStorage, LocalFileStorage
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.tgbot.config.models.bot import BotConfig
 
@@ -13,8 +14,12 @@ class FileClientProvider(Provider):
     scope = Scope.APP
 
     @provide
-    def get_file_client(self, config: FileStorageConfig) -> FileStorage:
+    def get_local_file_storage(self, config: FileStorageConfig) -> LocalFileStorage:
         return create_file_storage(config)
+
+    @provide(scope=Scope.REQUEST)
+    def get_file_client(self, storage: LocalFileStorage, dao: HolderDao) -> FileStorage:
+        return DeduplicatingFileStorage(storage=storage, dao=dao.file_info)
 
     @provide(scope=Scope.REQUEST)
     def get_file_gateway(

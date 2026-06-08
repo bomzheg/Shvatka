@@ -143,6 +143,7 @@ async def _rewrite_scenarios(session: AsyncSession, replacement: dict[str, str])
         scenario_dict = _scenario_to_dict(level.scenario)
         changed, new_dict = _replace_guids_in_dict(scenario_dict, replacement)
         if changed:
+            assert isinstance(new_dict, dict)
             level.scenario = _dict_to_scenario(new_dict)
             logger.info("updated scenario for level id=%d name=%s", level.id, level.name_id)
 

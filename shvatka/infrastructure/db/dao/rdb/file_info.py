@@ -2,6 +2,7 @@ from datetime import datetime, tzinfo
 import typing
 from typing import Sequence
 
+from sqlalchemy import delete
 from sqlalchemy import select, ScalarResult
 from sqlalchemy import update
 from sqlalchemy.exc import NoResultFound
@@ -43,14 +44,12 @@ class FileInfoDao(BaseDAO[models.FileInfo]):
 
         return db_file.to_dto(author=author)
 
-    async def get_by_sha256(self, sha256: str) -> hints.VerifiableFileMeta | None:
+    async def get_by_sha256(self, sha256: str) -> list[hints.VerifiableFileMeta]:
         result: ScalarResult[models.FileInfo] = await self.session.scalars(
             select(models.FileInfo).where(models.FileInfo.sha256 == sha256)
         )
-        db_file = result.first()
-        if db_file is None:
-            return None
-        return db_file.to_short_dto()
+        db_files = result.all()
+        return [file.to_short_dto() for file in db_files]
 
     async def check_author_can_own_guid(self, author: dto.Player, guid: str) -> None:
         try:
@@ -111,8 +110,6 @@ class FileInfoDao(BaseDAO[models.FileInfo]):
         )
 
     async def delete_by_guid(self, guid: str):
-        from sqlalchemy import delete
-
         await self.session.execute(delete(models.FileInfo).where(models.FileInfo.guid == guid))
 
     async def get_without_file_id(self, limit: int) -> Sequence[hints.SavedFileMeta]:

@@ -1,9 +1,11 @@
 """
-Migration script: compute sha256 and mime_type for all existing files,
-then deduplicate: for each group of files sharing the same sha256, keep
-the record with the lowest id (oldest) and rewrite every Level scenario
-that references a duplicate guid to point to the canonical guid instead.
-Duplicate files_info records and their physical files are removed.
+Migration script: compute sha256 and mime_type for all existing files, then
+deduplicate physical storage by pointing every duplicate file_info row at the
+canonical (oldest) physical file.
+
+No file_info rows are deleted and no scenario JSONs are touched.  The result is
+that multiple file_info records (each with their own guid) share a single file
+on disk.  Orphaned physical files whose path is no longer referenced are removed.
 
 Run with:
     python -m shvatka.infrastructure.file_deduplicator
@@ -15,7 +17,7 @@ from collections import defaultdict
 from pathlib import Path
 
 from dishka import make_async_container
-from sqlalchemy import select, delete
+from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from shvatka.common import setup_logging
@@ -83,13 +85,14 @@ async def fill_hashes_and_mime(
 
 
 async def deduplicate(session: AsyncSession) -> None:
-    """Find files sharing the same sha256 and collapse duplicates.
+    """Point every duplicate file_info row at the canonical physical file.
 
-    For each duplicate group:
-    - Keep the record with the lowest id (canonical).
-    - Update every Level scenario that references a duplicate guid to use the
-      canonical guid instead.
-    - Delete duplicate files_info records and their physical files.
+    For each group of rows sharing the same sha256:
+    - The row with the lowest id is the canonical one (its file_path is kept).
+    - All other rows have their file_path updated to the canonical path.
+    - The now-orphaned physical files are deleted from disk.
+
+    No file_info rows are removed and no scenario JSONs are modified.
     """
     result = await session.scalars(
         select(models.FileInfo)
@@ -109,98 +112,44 @@ async def deduplicate(session: AsyncSession) -> None:
 
     logger.info("found %d duplicate groups", len(duplicate_groups))
 
-    replacement: dict[str, str] = {}
-    dup_paths: list[str] = []
+    redirected = 0
     for sha256, files in duplicate_groups.items():
         canonical = files[0]
+        canonical_path = canonical.file_path
+        if not canonical_path:
+            logger.warning("canonical record %s has no file_path, skipping group", canonical.guid)
+            continue
+
         for dup in files[1:]:
-            replacement[dup.guid] = canonical.guid
-            if dup.file_path:
-                dup_paths.append(dup.file_path)
+            orphan_path = dup.file_path
+            if orphan_path and orphan_path != canonical_path:
+                _delete_physical_file(orphan_path)
+
+            await session.execute(
+                update(models.FileInfo)
+                .where(models.FileInfo.guid == dup.guid)
+                .values(file_path=canonical_path)
+            )
             logger.info(
-                "duplicate guid=%s -> canonical guid=%s (sha256=%.12s...)",
+                "redirected guid=%s -> canonical path=%s (sha256=%.12s...)",
                 dup.guid,
-                canonical.guid,
+                canonical_path,
                 sha256,
             )
+            redirected += 1
 
-    if replacement:
-        await _rewrite_scenarios(session, replacement)
-        await _delete_duplicates(session, list(replacement.keys()), dup_paths)
-        await session.commit()
-
-    logger.info("deduplication complete, removed %d duplicate records", len(replacement))
+    await session.commit()
+    logger.info("deduplication complete, redirected %d duplicate records", redirected)
 
 
-async def _rewrite_scenarios(session: AsyncSession, replacement: dict[str, str]) -> None:
-    """Load all Level scenarios and replace duplicate guids with canonical guids."""
-    result = await session.scalars(select(models.Level))
-    levels = list(result.all())
-
-    for level in levels:
-        if level.scenario is None:
-            continue
-        scenario_dict = _scenario_to_dict(level.scenario)
-        changed, new_dict = _replace_guids_in_dict(scenario_dict, replacement)
-        if changed:
-            assert isinstance(new_dict, dict)
-            level.scenario = _dict_to_scenario(new_dict)
-            logger.info("updated scenario for level id=%d name=%s", level.id, level.name_id)
-
-
-def _scenario_to_dict(scenario) -> dict:
-    from shvatka.infrastructure.db.models.level import ScenarioField
-    from shvatka.core.models.dto import scn
-
-    return ScenarioField.retort.dump(scenario, scn.LevelScenario)
-
-
-def _dict_to_scenario(d: dict):
-    from shvatka.infrastructure.db.models.level import ScenarioField
-    from shvatka.core.models.dto import scn
-
-    return ScenarioField.retort.load(d, scn.LevelScenario)
-
-
-def _replace_guids_in_dict(obj, replacement: dict[str, str]) -> tuple[bool, object]:
-    """Recursively walk a JSON-like structure and replace guid values."""
-    changed = False
-    if isinstance(obj, dict):
-        new_obj = {}
-        for k, v in obj.items():
-            sub_changed, new_v = _replace_guids_in_dict(v, replacement)
-            if sub_changed:
-                changed = True
-            new_obj[k] = new_v
-        return changed, new_obj
-    elif isinstance(obj, list):
-        new_list = []
-        for item in obj:
-            sub_changed, new_item = _replace_guids_in_dict(item, replacement)
-            if sub_changed:
-                changed = True
-            new_list.append(new_item)
-        return changed, new_list
-    elif isinstance(obj, str) and obj in replacement:
-        return True, replacement[obj]
-    return False, obj
-
-
-async def _delete_duplicates(
-    session: AsyncSession,
-    dup_guids: list[str],
-    dup_paths: list[str],
-) -> None:
-    for path_str in dup_paths:
-        path = Path(path_str)
-        if path.exists():
-            try:
-                path.unlink()
-                logger.info("deleted physical file %s", path)
-            except OSError as e:
-                logger.error("could not delete %s: %s", path, e)
-
-    await session.execute(delete(models.FileInfo).where(models.FileInfo.guid.in_(dup_guids)))
+def _delete_physical_file(path_str: str) -> None:
+    path = Path(path_str)
+    if path.exists():
+        try:
+            path.unlink()
+            logger.info("deleted orphaned physical file %s", path)
+        except OSError as e:
+            logger.error("could not delete %s: %s", path, e)
 
 
 async def main() -> None:
@@ -215,7 +164,7 @@ async def main() -> None:
         logger.info("=== Step 1: filling sha256 and mime_type ===")
         await fill_hashes_and_mime(session, file_storage)
 
-        logger.info("=== Step 2: deduplicating ===")
+        logger.info("=== Step 2: deduplicating physical files ===")
         await deduplicate(session)
     finally:
         await dishka.close()

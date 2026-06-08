@@ -138,19 +138,36 @@ class HintParser:
         assert content is not None
         data = content.read()
         sha256 = compute_sha256(data)
+        extension = "".join(Path(filename).suffixes)
+        original_filename = get_name_without_extension(filename, extension)
+        tg = hints.TgLink(file_id=tg_link.file_id, content_type=tg_link.content_type)
+
         existing = await self.dao.get_by_sha256(sha256)
         if existing is not None:
-            return existing
-        extension = "".join(Path(filename).suffixes)
-        file_meta = hints.UploadedFileMeta(
+            # Reuse the canonical physical file; create a new file_info row for this guid
+            file_meta = hints.FileMeta(
+                guid=guid,
+                original_filename=original_filename,
+                extension=existing.extension or extension,
+                tg_link=tg,
+                content_type=tg_link.content_type,
+                file_content_link=existing.file_content_link,
+                sha256=sha256,
+                mime_type=existing.mime_type,
+            )
+            await self.dao.upsert(file_meta, author)
+            await self.dao.commit()
+            return file_meta
+
+        file_meta_upload = hints.UploadedFileMeta(
             content_type=tg_link.content_type,
             guid=guid,
-            original_filename=get_name_without_extension(filename, extension),
+            original_filename=original_filename,
             extension=extension,
-            tg_link=hints.TgLink(file_id=tg_link.file_id, content_type=tg_link.content_type),
+            tg_link=tg,
             sha256=sha256,
         )
-        stored_file = await self.storage.put(file_meta, BytesIO(data))
+        stored_file = await self.storage.put(file_meta_upload, BytesIO(data))
         await self.dao.upsert(stored_file, author)
         await self.dao.commit()
         return stored_file

@@ -36,54 +36,6 @@ from shvatka.infrastructure.di import get_providers
 logger = logging.getLogger(__name__)
 
 
-async def fill_hashes_and_mime(
-    session: AsyncSession,
-    file_storage: FileStorage,
-    batch_size: int = 100,
-) -> None:
-    """Compute and store sha256 + mime_type for all files that are missing them."""
-    offset = 0
-    while True:
-        result = await session.scalars(
-            select(models.FileInfo)
-            .where(models.FileInfo.sha256.is_(None))
-            .order_by(models.FileInfo.id)
-            .limit(batch_size)
-            .offset(offset)
-        )
-        batch = list(result.all())
-        if not batch:
-            break
-
-        for db_file in batch:
-            if not db_file.file_path:
-                logger.warning("file %s has no file_path, skipping", db_file.guid)
-                continue
-            link = hints.FileContentLink(file_path=db_file.file_path)
-            try:
-                content = await file_storage.get(link)
-                data = content.read()
-            except (IOError, OSError) as e:
-                logger.error("cannot read %s: %s", db_file.file_path, e)
-                continue
-
-            sha256 = compute_sha256(data)
-            mime_type = detect_mime_type(data)
-            extension = db_file.extension or extension_from_mime(mime_type)
-
-            db_file.sha256 = sha256
-            db_file.mime_type = mime_type
-            if not db_file.extension and extension:
-                db_file.extension = extension
-                logger.info(
-                    "detected extension %s for %s (mime: %s)", extension, db_file.guid, mime_type
-                )
-
-        await session.commit()
-        logger.info("processed batch at offset %d", offset)
-        offset += batch_size
-
-
 async def deduplicate(session: AsyncSession) -> None:
     """Point every duplicate file_info row at the canonical physical file.
 
@@ -153,19 +105,13 @@ def _delete_physical_file(path_str: str) -> None:
 
 
 async def main() -> None:
-    paths = common_get_paths("CRAWLER_PATH")
+    paths = common_get_paths("INFRA_PATH")
     setup_logging(paths)
-    dishka = make_async_container(*get_providers("CRAWLER_PATH"))
+    dishka = make_async_container(*get_providers("INFRA_PATH"))
     try:
-        holder = await dishka.get(HolderDao)
-        file_storage = await dishka.get(FileStorage)
-        session: AsyncSession = holder.file_info.session
-
-        logger.info("=== Step 1: filling sha256 and mime_type ===")
-        await fill_hashes_and_mime(session, file_storage)
-
-        logger.info("=== Step 2: deduplicating physical files ===")
-        await deduplicate(session)
+        async with dishka() as request_dishka:
+            session = await request_dishka.get(AsyncSession)
+            await deduplicate(session)
     finally:
         await dishka.close()
 

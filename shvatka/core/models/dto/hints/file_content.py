@@ -30,6 +30,10 @@ class FileMetaLightweight:
     """extension with leading dot: ".zip" ".tar.gz" etc"""
     content_type: HintType | None = field(kw_only=True, default=None)
     """type of content"""
+    sha256: str | None = field(kw_only=True, default=None)
+    """SHA-256 hex digest of file content for deduplication"""
+    mime_type: str | None = field(kw_only=True, default=None)
+    """Actual MIME type detected from file content (e.g. image/jpeg)"""
 
     @property
     def local_file_name(self):

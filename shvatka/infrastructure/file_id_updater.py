@@ -13,11 +13,11 @@ from shvatka.infrastructure.di import get_providers
 
 
 async def main():
-    paths = common_get_paths("CRAWLER_PATH")
+    paths = common_get_paths("INFRA_PATH")
 
     setup_logging(paths)
     dishka = make_async_container(
-        *get_providers("CRAWLER_PATH"),
+        *get_providers("INFRA_PATH"),
     )
     try:
         dao = await dishka.get(HolderDao)

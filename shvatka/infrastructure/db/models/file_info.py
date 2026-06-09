@@ -17,6 +17,8 @@ class FileInfo(Base):
     extension = mapped_column(Text)
     file_id = mapped_column(Text)
     content_type = mapped_column(Text)
+    sha256 = mapped_column(Text, index=True)
+    mime_type = mapped_column(Text)
     author_id = mapped_column(ForeignKey("players.id"), nullable=False)
     author = relationship(
         "Player",
@@ -36,6 +38,8 @@ class FileInfo(Base):
             tg_link=hints.TgLink(file_id=self.file_id, content_type=content_type),
             content_type=content_type,
             file_content_link=hints.FileContentLink(file_path=self.file_path),
+            sha256=self.sha256,
+            mime_type=self.mime_type,
         )
 
     def to_short_dto(self) -> hints.VerifiableFileMeta:
@@ -48,4 +52,6 @@ class FileInfo(Base):
             tg_link=hints.TgLink(file_id=self.file_id, content_type=content_type),
             content_type=content_type,
             file_content_link=hints.FileContentLink(file_path=self.file_path),
+            sha256=self.sha256,
+            mime_type=self.mime_type,
         )

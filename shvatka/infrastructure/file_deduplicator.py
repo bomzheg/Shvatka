@@ -22,15 +22,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from shvatka.common import setup_logging
 from shvatka.common.config.parser.paths import common_get_paths
-from shvatka.core.interfaces.clients.file_storage import FileStorage
-from shvatka.core.models.dto import hints
-from shvatka.infrastructure.clients.file_storage import (
-    compute_sha256,
-    detect_mime_type,
-    extension_from_mime,
-)
 from shvatka.infrastructure.db import models
-from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.infrastructure.di import get_providers
 
 logger = logging.getLogger(__name__)

@@ -64,7 +64,7 @@ class LocalFileStorage(FileStorage):
         return hints.FileContentLink(file_path=str(result_path))
 
     async def get(self, file_link: hints.FileContentLink) -> BinaryIO:
-        with Path(file_link.file_path).open("rb") as f:  # noqa: ASYNC230
+        with Path(file_link.file_path).open("rb") as f:  # noqa: ASYNC101
             result = BytesIO(f.read())
         return result
 
@@ -89,7 +89,9 @@ class DeduplicatingFileStorage(FileStorage):
             existing_content = await self.get(existing.file_content_link)
             if data == existing_content.read():
                 mime_type = existing.mime_type or detect_mime_type(data)
-                extension = existing.extension or file_meta.extension or extension_from_mime(mime_type)
+                extension = (
+                    existing.extension or file_meta.extension or extension_from_mime(mime_type)
+                )
                 logger.debug("dedup hit for sha256=%.12s..., reusing %s", sha256, existing.guid)
                 return hints.FileMeta(
                     guid=file_meta.guid,

@@ -13,11 +13,9 @@ Run with:
 
 import asyncio
 import logging
-from collections import defaultdict
-from pathlib import Path
 
 from dishka import make_async_container
-from sqlalchemy import select, update
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from shvatka.common import setup_logging
@@ -30,7 +28,6 @@ from shvatka.infrastructure.clients.file_storage import (
     extension_from_mime,
 )
 from shvatka.infrastructure.db import models
-from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.infrastructure.di import get_providers
 
 logger = logging.getLogger(__name__)

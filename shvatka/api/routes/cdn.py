@@ -1,3 +1,4 @@
+import html
 import logging
 from typing import Annotated
 
@@ -24,10 +25,16 @@ async def get_game_file(
     guid: Annotated[str, Path(alias="guid")],
 ) -> Response:
     meta = await file_reader(guid=guid, identity=identity, game_id=id_)
+    if meta.original_filename.isascii():
+        fallback = meta.original_filename
+    else:
+        fallback = "document"
+    encoded = html.escape(meta.original_filename)
+    content_disposition = f"attachment; filename=\"{fallback}\"; filename*=UTF-8''{encoded}"
     return Response(
         headers={
             "X-Accel-Redirect": f"/protected-files/{meta.local_file_name}",
-            "Content-Disposition": f'attachment; filename="{meta.original_filename}"',
+            "Content-Disposition": content_disposition,
             "Cache-Control": "private, max-age=86400",
             "Vary": "Authorization, Cookie",
         }

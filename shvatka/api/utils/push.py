@@ -3,7 +3,7 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
-from collections.abc import Sequence
+from collections.abc import Collection, Sequence
 from dataclasses import dataclass
 from typing import Any
 
@@ -42,11 +42,15 @@ class WebPushSender:
     config: PushConfig
     dao: PushSubscriptionDAO
 
-    async def send_to_team(self, team_id: int, message: PushMessage) -> None:
+    async def send_to_players(
+        self, player_ids: Collection[int], message: PushMessage
+    ) -> None:
         if not self.config.is_configured:
             logger.debug("web push is disabled or not configured")
             return
-        subscriptions = await self.dao.get_enabled_for_team(team_id)
+        if not player_ids:
+            return
+        subscriptions = await self.dao.get_enabled_for_players(player_ids)
         await self.send_many(subscriptions, message)
 
     async def send_many(

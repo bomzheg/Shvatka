@@ -1,13 +1,13 @@
 from datetime import datetime, tzinfo
 import typing
-from collections.abc import Sequence
+from collections.abc import Collection, Sequence
 
 from sqlalchemy import delete, select, update
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from shvatka.core.utils.datetime_utils import tz_utc
-from shvatka.infrastructure.db.models import PushSubscription, TeamPlayer
+from shvatka.infrastructure.db.models import PushSubscription
 from .base import BaseDAO
 
 
@@ -67,13 +67,14 @@ class PushSubscriptionDAO(BaseDAO[PushSubscription]):
             .values(enabled=False, updated_at=self.clock(tz_utc))
         )
 
-    async def get_enabled_for_team(self, team_id: int) -> Sequence[PushSubscription]:
+    async def get_enabled_for_players(
+        self, player_ids: Collection[int]
+    ) -> Sequence[PushSubscription]:
+        if not player_ids:
+            return []
         result = await self.session.scalars(
-            select(PushSubscription)
-            .join(TeamPlayer, TeamPlayer.player_id == PushSubscription.player_id)
-            .where(
-                TeamPlayer.team_id == team_id,
-                TeamPlayer.date_left.is_(None),
+            select(PushSubscription).where(
+                PushSubscription.player_id.in_(player_ids),
                 PushSubscription.enabled.is_(True),
             )
         )

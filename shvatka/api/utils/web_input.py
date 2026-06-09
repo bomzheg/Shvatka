@@ -2,6 +2,7 @@ from dataclasses import dataclass, field
 from typing import Iterable
 
 from shvatka.api.utils.push import PushMessage, WebPushSender
+from shvatka.core.interfaces.current_game import CurrentGameProvider
 from shvatka.core.interfaces.dal.game_play import GamePreparer
 from shvatka.core.models import dto
 from shvatka.core.models.dto import action
@@ -24,12 +25,18 @@ class WebInput(InputContainer):
 
 
 class WebGameView(GameView):
-    def __init__(self, push_sender: WebPushSender) -> None:
+    def __init__(self, push_sender: WebPushSender, current_game: CurrentGameProvider) -> None:
         self.push_sender = push_sender
+        self.current_game = current_game
+
+    async def _voted_player_ids(self, team: dto.Team) -> set[int]:
+        """Only players who voted yes for the current game should get in-game pushes."""
+        waivers = await self.current_game.get_waivers()
+        return {voted.player.id for voted in waivers.get(team, ())}
 
     async def send_puzzle(self, team: dto.Team, level: dto.Level) -> None:
-        await self.push_sender.send_to_team(
-            team.id,
+        await self.push_sender.send_to_players(
+            await self._voted_player_ids(team),
             PushMessage(
                 title="Новый уровень",
                 body=f"{team.name}: открыт уровень {self._level_label(level)}",
@@ -40,8 +47,8 @@ class WebGameView(GameView):
         )
 
     async def send_hint(self, team: dto.Team, hint_number: int, level: dto.Level) -> None:
-        await self.push_sender.send_to_team(
-            team.id,
+        await self.push_sender.send_to_players(
+            await self._voted_player_ids(team),
             PushMessage(
                 title="Новая подсказка",
                 body=f"{team.name}: подсказка #{hint_number}",
@@ -74,8 +81,8 @@ class WebGameView(GameView):
     async def game_finished(self, team: dto.Team, input_container: InputContainer) -> None:
         if isinstance(input_container, WebInput):
             input_container.game_finished = True
-        await self.push_sender.send_to_team(
-            team.id,
+        await self.push_sender.send_to_players(
+            await self._voted_player_ids(team),
             PushMessage(
                 title="Финиш!",
                 body=f"{team.name}: вы завершили игру",
@@ -86,8 +93,8 @@ class WebGameView(GameView):
         )
 
     async def game_finished_by_all(self, team: dto.Team) -> None:
-        await self.push_sender.send_to_team(
-            team.id,
+        await self.push_sender.send_to_players(
+            await self._voted_player_ids(team),
             PushMessage(
                 title="Игра завершена",
                 body="Все завершили игру",
@@ -102,8 +109,8 @@ class WebGameView(GameView):
     ) -> None:
         if isinstance(input_container, WebInput):
             input_container.effects.append(effects)
-        await self.push_sender.send_to_team(
-            team.id,
+        await self.push_sender.send_to_players(
+            await self._voted_player_ids(team),
             PushMessage(
                 title="Событие на уровне",
                 body=f"{team.name}: сработал эффект",

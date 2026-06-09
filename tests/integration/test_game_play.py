@@ -82,7 +82,7 @@ async def test_wrong_key(
     dishka_request: AsyncContainer,
 ):
     game = started_game
-    current_game = CurrentGameProviderMock(game)
+    current_game = CurrentGameProviderMock(game, dao.waiver)
     key_processor = KeyProcessor(dao=dao.game_player, current_game=current_game, locker=locker)
     dummy_view = GameViewMock()
     dummy_log = GameLogWriterMock()
@@ -134,7 +134,7 @@ async def test_bonus_hint_key(
     scheduler: SchedulerMock,
 ):
     game = started_game
-    current_game = CurrentGameProviderMock(game)
+    current_game = CurrentGameProviderMock(game, dao.waiver)
     key_processor = KeyProcessor(dao=dao.game_player, current_game=current_game, locker=locker)
     dummy_view = GameViewMock()
     dummy_log = GameLogWriterMock()
@@ -197,7 +197,7 @@ async def test_game_play(
     started_game: dto.FullGame,
 ):
     game = started_game
-    current_game = CurrentGameProviderMock(game)
+    current_game = CurrentGameProviderMock(game, dao.waiver)
     key_processor = KeyProcessor(dao=dao.game_player, current_game=current_game, locker=locker)
     # delete slytherin from game
     await leave(draco, draco, dao.team_leaver)
@@ -315,7 +315,7 @@ async def test_fast_play_routed_game(
     started_routed_game: dto.FullGame,
 ):
     game = started_routed_game
-    current_game = CurrentGameProviderMock(game)
+    current_game = CurrentGameProviderMock(game, dao.waiver)
     key_processor = KeyProcessor(dao=dao.game_player, current_game=current_game, locker=locker)
     # delete slytherin from game
     await leave(draco, draco, dao.team_leaver)
@@ -393,7 +393,7 @@ async def test_cycle_play_routed_game(
     started_routed_game: dto.FullGame,
 ):
     game = started_routed_game
-    current_game = CurrentGameProviderMock(game)
+    current_game = CurrentGameProviderMock(game, dao.waiver)
     key_processor = KeyProcessor(dao=dao.game_player, current_game=current_game, locker=locker)
     # delete slytherin from game
     await leave(draco, draco, dao.team_leaver)

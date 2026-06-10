@@ -16,6 +16,9 @@ ARG BUILD_AT
 ENV VIRTUAL_ENV=/opt/venv
 ENV CODE_PATH=/code
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
+RUN apt-get update && \
+    apt-get install -y libmagic1 && \
+    rm -rf /var/lib/apt/lists/*
 COPY --from=builder $VIRTUAL_ENV $VIRTUAL_ENV
 COPY . ${CODE_PATH}/shvatka
 WORKDIR $CODE_PATH/shvatka

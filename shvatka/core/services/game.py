@@ -3,7 +3,7 @@ from datetime import datetime
 from adaptix import Retort
 
 from shvatka.core.interfaces.clients.file_storage import FileGateway
-from shvatka.core.interfaces.dal.complex import GameCompleter, GamePackager
+from shvatka.core.interfaces.dal.complex import GameCompleter, GamePackager, GameScenarioEditor
 from shvatka.core.interfaces.dal.game import (
     GameUpserter,
     GameCreator,
@@ -54,6 +54,44 @@ async def upsert_game(
     guids = await upsert_files(author, raw_scn.files, game_scn.files, dao, file_gateway)
     check_all_files_saved(game=game_scn, guids=guids)
     game = await dao.upsert_game(author, game_scn)
+    await dao.unlink_all(game)
+    levels = []
+    for number, level in enumerate(game_scn.levels):
+        saved_level = await dao.upsert_gamed(author, level, game, number)
+        levels.append(saved_level)
+    await dao.commit()
+    return game.to_full_game(levels)
+
+
+async def update_game_scenario(
+    id_: int,
+    raw_scn: dict,
+    author: dto.Player,
+    dao: GameScenarioEditor,
+    retort: Retort,
+) -> dto.FullGame:
+    """Replace the whole scenario of an existing game draft identified by ``id_``.
+
+    Unlike :func:`upsert_game`, this does not receive file contents: files are
+    expected to be already uploaded (e.g. via the cdn endpoint) and the scenario
+    only references their guids. The game is looked up by id (and ownership is
+    enforced) instead of by name, so the game can be safely renamed.
+    """
+    check_allow_be_author(author)
+    game_scn = parse_uploaded_game(scn.RawGameScenario(scn=raw_scn, files={}), retort)
+    game = await dao.get_by_id(id_=id_, author=author)
+    check_can_read(game, author)
+    check_game_editable(game)
+    for file in game_scn.files:
+        await dao.check_author_can_own_guid(author, file.guid)
+    if game.name != game_scn.name:
+        if not await dao.is_name_available(game_scn.name):
+            raise CantEditGame(
+                player=author,
+                text=f"cant rename game to {game_scn.name} (name is already taken)",
+            )
+        await dao.rename_game(game, game_scn.name)
+        game.name = game_scn.name
     await dao.unlink_all(game)
     levels = []
     for number, level in enumerate(game_scn.levels):

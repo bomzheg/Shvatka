@@ -7,6 +7,8 @@ from shvatka.core.interfaces.dal.game import (
     GameNumberUpdater,
     GameStatusCompleter,
     GameByIdGetter,
+    GameUpserter,
+    GameRenamer,
 )
 from shvatka.core.interfaces.dal.key_log import TeamKeysMerger, GameKeyGetter
 from shvatka.core.interfaces.dal.level import MaxLevelNumberGetter
@@ -50,3 +52,9 @@ class GameCompleter(
 class GamePackager(GameKeyGetter, LevelTimesGetter, GameWaiversGetter, FileInfoGetter, Protocol):
     async def get_full(self, id_: int) -> dto.FullGame:
         raise NotImplementedError
+
+
+class GameScenarioEditor(
+    GameUpserter, GameRenamer, GameByIdGetter, FileInfoGetter, Protocol
+):
+    pass

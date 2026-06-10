@@ -62,6 +62,27 @@ class GameUpserterImpl(GameUpserter):
 
 
 @dataclass
+class GameScenarioEditorImpl(GameUpserterImpl):
+    """Combines game upsert, rename, reading by id and file checks for editing
+    an existing game draft (identified by id) from the web UI."""
+
+    async def get_by_id(self, id_: int, author: dto.Player | None = None) -> dto.Game:
+        return await self.dao.game.get_by_id(id_, author)
+
+    async def get_full(self, id_: int) -> dto.FullGame:
+        return await self.dao.game.get_full(id_)
+
+    async def add_levels(self, game: dto.Game) -> dto.FullGame:
+        return await self.dao.game.add_levels(game)
+
+    async def rename_game(self, game: dto.Game, new_name: str) -> None:
+        await self.dao.game.rename_game(game, new_name)
+
+    async def get_by_guid(self, guid: str) -> hints.VerifiableFileMeta:
+        return await self.dao.file_info.get_by_guid(guid)
+
+
+@dataclass
 class GameCreatorImpl(GameCreator):
     dao: "HolderDao"
 

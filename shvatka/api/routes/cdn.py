@@ -1,17 +1,20 @@
 import logging
+from io import BytesIO
 from typing import Annotated
 from urllib.parse import quote
 
 from dishka.integrations.fastapi import FromDishka
 from dishka.integrations.fastapi import inject
-from fastapi import APIRouter
+from fastapi import APIRouter, File, UploadFile
 from fastapi.params import Path
 from fastapi.responses import Response
 
 from shvatka.api.dependencies.auth import ApiIdentityProvider
+from shvatka.api.models import responses
 from shvatka.core.games.interactors import (
     GameFileReaderInteractor,
 )
+from shvatka.core.games.editing_interactors import UploadGameFileInteractor
 
 
 logger = logging.getLogger(__name__)
@@ -42,7 +45,25 @@ async def get_game_file(
     )
 
 
+@inject
+async def upload_game_file(
+    identity: FromDishka[ApiIdentityProvider],
+    interactor: FromDishka[UploadGameFileInteractor],
+    id_: Annotated[int, Path(alias="id")],
+    file: Annotated[UploadFile, File()],
+) -> responses.UploadedFile:
+    content = BytesIO(await file.read())
+    saved = await interactor(
+        game_id=id_,
+        content=content,
+        original_filename=file.filename or "document",
+        identity=identity,
+    )
+    return responses.UploadedFile.from_core(saved)
+
+
 def setup() -> APIRouter:
     router = APIRouter(prefix="/cdn")
+    router.add_api_route("/games/{id}/files", upload_game_file, methods=["POST"])
     router.add_api_route("/games/{id}/files/{guid}", get_game_file, methods=["GET"])
     return router

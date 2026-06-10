@@ -31,6 +31,7 @@ async def get_game_file(
         fallback = "document"
     encoded = html.escape(meta.original_filename)
     content_disposition = f"attachment; filename=\"{fallback}\"; filename*=UTF-8''{encoded}"
+    logger.info("content_disposition: %s", content_disposition)
     return Response(
         headers={
             "X-Accel-Redirect": f"/protected-files/{meta.local_file_name}",

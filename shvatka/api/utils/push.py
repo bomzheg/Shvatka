@@ -42,9 +42,7 @@ class WebPushSender:
     config: PushConfig
     dao: PushSubscriptionDAO
 
-    async def send_to_players(
-        self, player_ids: Collection[int], message: PushMessage
-    ) -> None:
+    async def send_to_players(self, player_ids: Collection[int], message: PushMessage) -> None:
         if not self.config.is_configured:
             logger.debug("web push is disabled or not configured")
             return

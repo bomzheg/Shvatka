@@ -28,15 +28,16 @@ class CurrentGameProvider(Protocol):
         """All teams (with players) which voted yes for the current game."""
         raise NotImplementedError
 
-    async def get_team_waivers(self, identity: IdentityProvider) -> Iterable[dto.VotedPlayer]:
+    async def get_team_waivers_by_team(self, team: dto.Team) -> Iterable[dto.VotedPlayer]:
         """Players of the identity's team which voted yes for the current game."""
         raise NotImplementedError
 
+    async def get_team_waivers(self, identity: IdentityProvider) -> Iterable[dto.VotedPlayer]:
+        return await self.get_team_waivers_by_team(await identity.get_required_team())
+
     async def is_player_played(self, identity: IdentityProvider) -> bool:
         player = await identity.get_required_player()
-        return any(
-            voted.player.id == player.id for voted in await self.get_team_waivers(identity)
-        )
+        return any(voted.player.id == player.id for voted in await self.get_team_waivers(identity))
 
     async def is_team_played(self, identity: IdentityProvider) -> bool:
         return any(True for _ in await self.get_team_waivers(identity))

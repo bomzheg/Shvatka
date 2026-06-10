@@ -10,7 +10,6 @@ from dishka import AsyncContainer
 from shvatka.core.interfaces.clients.file_storage import FileGateway
 from shvatka.core.interfaces.current_game import CurrentGameProvider
 from shvatka.core.interfaces.dal.waiver import GameWaiversGetter
-from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.models import dto
 from shvatka.core.models.dto.scn.game import RawGameScenario
 from shvatka.core.models.enums.played import Played
@@ -327,10 +326,7 @@ class CurrentGameProviderMock(CurrentGameProvider):
             return {}
         return await get_all_played(self.game, self.waiver_getter)
 
-    async def get_team_waivers(
-        self, identity: IdentityProvider
-    ) -> typing.Iterable[dto.VotedPlayer]:
+    async def get_team_waivers_by_team(self, team: dto.Team) -> typing.Iterable[dto.VotedPlayer]:
         if self.waiver_getter is None:
             return []
-        team = await identity.get_required_team()
         return await self.waiver_getter.get_played(self.game, team)

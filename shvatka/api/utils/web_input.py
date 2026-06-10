@@ -31,12 +31,18 @@ class WebGameView(GameView):
 
     async def _voted_player_ids(self, team: dto.Team) -> set[int]:
         """Only players who voted yes for the current game should get in-game pushes."""
-        waivers = await self.current_game.get_waivers()
-        return {voted.player.id for voted in waivers.get(team, ())}
+        waivers = await self.current_game.get_team_waivers_by_team(team)
+        return {voted.player.id for voted in waivers}
+
+    async def _send_to_played(self, team: dto.Team, message: PushMessage) -> None:
+        await self.push_sender.send_to_players(
+            player_ids=await self._voted_player_ids(team),
+            message=message,
+        )
 
     async def send_puzzle(self, team: dto.Team, level: dto.Level) -> None:
-        await self.push_sender.send_to_players(
-            await self._voted_player_ids(team),
+        await self._send_to_played(
+            team,
             PushMessage(
                 title="Новый уровень",
                 body=f"{team.name}: открыт уровень {self._level_label(level)}",
@@ -47,8 +53,8 @@ class WebGameView(GameView):
         )
 
     async def send_hint(self, team: dto.Team, hint_number: int, level: dto.Level) -> None:
-        await self.push_sender.send_to_players(
-            await self._voted_player_ids(team),
+        await self._send_to_played(
+            team,
             PushMessage(
                 title="Новая подсказка",
                 body=f"{team.name}: подсказка #{hint_number}",
@@ -81,8 +87,8 @@ class WebGameView(GameView):
     async def game_finished(self, team: dto.Team, input_container: InputContainer) -> None:
         if isinstance(input_container, WebInput):
             input_container.game_finished = True
-        await self.push_sender.send_to_players(
-            await self._voted_player_ids(team),
+        await self._send_to_played(
+            team,
             PushMessage(
                 title="Финиш!",
                 body=f"{team.name}: вы завершили игру",
@@ -93,8 +99,8 @@ class WebGameView(GameView):
         )
 
     async def game_finished_by_all(self, team: dto.Team) -> None:
-        await self.push_sender.send_to_players(
-            await self._voted_player_ids(team),
+        await self._send_to_played(
+            team,
             PushMessage(
                 title="Игра завершена",
                 body="Все завершили игру",
@@ -109,8 +115,8 @@ class WebGameView(GameView):
     ) -> None:
         if isinstance(input_container, WebInput):
             input_container.effects.append(effects)
-        await self.push_sender.send_to_players(
-            await self._voted_player_ids(team),
+        await self._send_to_played(
+            team,
             PushMessage(
                 title="Событие на уровне",
                 body=f"{team.name}: сработал эффект",

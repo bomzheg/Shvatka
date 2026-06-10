@@ -2,7 +2,6 @@ from typing import Iterable, TypedDict
 
 from shvatka.core.interfaces.current_game import CurrentGameProvider
 from shvatka.core.interfaces.dal.waiver import GameWaiversGetter
-from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.models import dto
 from shvatka.core.waiver.services import get_all_played
 from shvatka.infrastructure.db.dao import GameDao
@@ -53,8 +52,7 @@ class CurrentGameProviderImpl(CurrentGameProvider):
         self.cache["waivers"] = waivers
         return waivers
 
-    async def get_team_waivers(self, identity: IdentityProvider) -> Iterable[dto.VotedPlayer]:
-        team = await identity.get_required_team()
+    async def get_team_waivers_by_team(self, team: dto.Team) -> Iterable[dto.VotedPlayer]:
         if team.id in self.team_waivers_cache:
             return self.team_waivers_cache[team.id]
         game = await self.get_required_game()

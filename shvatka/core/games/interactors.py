@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from datetime import datetime
 
 from shvatka.core.games.dto import CurrentHintsAndKeys, MyRole
-from shvatka.core.games.game_play import schedule_first_hint, check_waivers
+from shvatka.core.games.game_play import schedule_first_hint
 from shvatka.core.interfaces.clients.file_storage import FileGateway
 from shvatka.core.games.adapters import (
     GameFileReader,
@@ -260,9 +260,7 @@ class CheckKeyInteractor(GamePlayBaseInteractor):
         game = await self.current_game.get_required_full_game()
         player = await identity.get_required_player()
         team = await identity.get_required_team()
-        if not await check_waivers(
-            current_game=self.current_game, identity=identity, dao=self.dao
-        ):
+        if not await self.current_game.is_player_played(identity):
             raise exceptions.WaiverError(
                 team=team, game=game, player=player, text="игрок не заявлен на игру, но ввёл ключ"
             )

@@ -89,7 +89,7 @@ async def test_game_simple(
     assert game.id == gotten_games[0].id
 
     await start_waivers(game, author, dao.game)
-    active_game = await CurrentGameProviderImpl(dao=dao.game).get_game()
+    active_game = await CurrentGameProviderImpl(dao=dao.game, waiver_dao=dao.waiver).get_game()
     assert GameStatus.getting_waivers == active_game.status
     assert active_game.id == game.id
 

@@ -4,7 +4,6 @@ from dataclasses import dataclass
 from typing import Iterable
 
 from shvatka.core.games.dto import CurrentHintsOnly, Event
-from shvatka.core.games.game_play import check_waivers
 from shvatka.core.interfaces.current_game import CurrentGameProvider
 
 from shvatka.core.interfaces.dal.complex import GamePackager
@@ -140,7 +139,6 @@ class GameFilesGetterImpl(GameFileReader):
 
 @dataclass(kw_only=True, slots=True)
 class CacheItem:
-    waivers_ok: bool | None = None
     level_time: dto.LevelTime | None = None
 
 
@@ -190,13 +188,7 @@ class GamePlayDaoImpl(GamePlayDao):
         return level_time
 
     async def check_waivers(self, identity: IdentityProvider) -> bool:
-        user_id = await identity.get_required_user_db_id()
-        cache = self.cache.setdefault(user_id, CacheItem())
-        if cache.waivers_ok is not None:
-            return cache.waivers_ok
-        waivers_check_result = await check_waivers(self.current_game, identity, self.dao.waiver)
-        cache.waivers_ok = waivers_check_result
-        return waivers_check_result
+        return await self.current_game.is_player_played(identity)
 
     async def get_effects(self, identity: IdentityProvider) -> list[dto.GameEvent]:
         return await self.dao.events.get_team_events(

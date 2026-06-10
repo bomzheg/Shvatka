@@ -1,4 +1,5 @@
 import asyncio
+import typing
 from dataclasses import dataclass
 from datetime import datetime
 
@@ -8,13 +9,14 @@ from dishka import AsyncContainer
 
 from shvatka.core.interfaces.clients.file_storage import FileGateway
 from shvatka.core.interfaces.current_game import CurrentGameProvider
+from shvatka.core.interfaces.dal.waiver import GameWaiversGetter
 from shvatka.core.models import dto
 from shvatka.core.models.dto.scn.game import RawGameScenario
 from shvatka.core.models.enums.played import Played
 from shvatka.core.services.game import upsert_game, start_waivers
 from shvatka.core.services.key import KeyProcessor
 from shvatka.core.players.player import join_team
-from shvatka.core.waiver.services import add_vote, approve_waivers
+from shvatka.core.waiver.services import add_vote, approve_waivers, get_all_played
 from shvatka.core.utils.datetime_utils import tz_utc
 from shvatka.core.utils.key_checker_lock import KeyCheckerFactory
 from shvatka.core.waiver.adapters import WaiverVoteAdder
@@ -88,7 +90,7 @@ async def finished_game(
     locker: KeyCheckerFactory,
 ) -> dto.FullGame:
     game = started_game
-    current_game = CurrentGameProviderMock(game)
+    current_game = CurrentGameProviderMock(game, dao.waiver)
     key_processor = KeyProcessor(dao=dao.game_player, current_game=current_game, locker=locker)
     await key_processor.submit_key(
         key="SHWRONG",
@@ -215,7 +217,7 @@ async def finished_routed_game(
     locker: KeyCheckerFactory,
 ) -> dto.FullGame:
     game = started_routed_game
-    current_game = CurrentGameProviderMock(game)
+    current_game = CurrentGameProviderMock(game, dao.waiver)
     key_processor = KeyProcessor(dao=dao.game_player, current_game=current_game, locker=locker)
     await key_processor.submit_key(
         key="SHWRONG",
@@ -311,9 +313,20 @@ async def set_game_started(
 @dataclass
 class CurrentGameProviderMock(CurrentGameProvider):
     game: dto.FullGame
+    waiver_getter: GameWaiversGetter | None = None
 
     async def get_full_game(self) -> dto.FullGame | None:
         return self.game
 
     async def get_game(self) -> dto.Game | None:
         return self.game
+
+    async def get_waivers(self) -> dict[dto.Team, typing.Iterable[dto.VotedPlayer]]:
+        if self.waiver_getter is None:
+            return {}
+        return await get_all_played(self.game, self.waiver_getter)
+
+    async def get_team_waivers_by_team(self, team: dto.Team) -> typing.Iterable[dto.VotedPlayer]:
+        if self.waiver_getter is None:
+            return []
+        return await self.waiver_getter.get_played(self.game, team)

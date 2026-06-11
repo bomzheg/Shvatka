@@ -2499,7 +2499,7 @@ dependencies = [
 [package.dev-dependencies]
 dev = [
     { name = "locust" },
-    { name = "python-magic-bin" },
+    { name = "python-magic-bin", marker = "sys_platform == 'darwin' or sys_platform == 'win32'" },
     { name = "tgcrypto" },
 ]
 test = [
@@ -2559,7 +2559,7 @@ requires-dist = [
 [package.metadata.requires-dev]
 dev = [
     { name = "locust", specifier = ">=2.15.1,<3" },
-    { name = "python-magic-bin" },
+    { name = "python-magic-bin", marker = "sys_platform == 'darwin' or sys_platform == 'win32'", specifier = ">=0.4.14" },
     { name = "tgcrypto", specifier = ">=1.2.5" },
 ]
 test = [

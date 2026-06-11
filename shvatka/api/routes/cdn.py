@@ -25,11 +25,11 @@ async def get_game_file(
     guid: Annotated[str, Path(alias="guid")],
 ) -> Response:
     meta = await file_reader(guid=guid, identity=identity, game_id=id_)
-    if meta.original_filename.isascii():
-        fallback = meta.original_filename
+    if meta.public_filename.isascii():
+        fallback = meta.public_filename
     else:
-        fallback = "document"
-    encoded = quote(meta.original_filename, safe="")
+        fallback = "document" + (meta.extension or "")
+    encoded = quote(meta.public_filename, safe="")
     content_disposition = f"attachment; filename=\"{fallback}\"; filename*=UTF-8''{encoded}"
     logger.info("content_disposition: %s", content_disposition)
     return Response(

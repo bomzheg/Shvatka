@@ -1,6 +1,6 @@
-import html
 import logging
 from typing import Annotated
+from urllib.parse import quote
 
 from dishka.integrations.fastapi import FromDishka
 from dishka.integrations.fastapi import inject
@@ -29,7 +29,7 @@ async def get_game_file(
         fallback = meta.original_filename
     else:
         fallback = "document"
-    encoded = html.escape(meta.original_filename)
+    encoded = quote(meta.original_filename, safe="")
     content_disposition = f"attachment; filename=\"{fallback}\"; filename*=UTF-8''{encoded}"
     logger.info("content_disposition: %s", content_disposition)
     return Response(

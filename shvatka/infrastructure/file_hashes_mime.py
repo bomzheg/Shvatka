@@ -35,7 +35,7 @@ from shvatka.infrastructure.di.infra import get_infra_only_providers
 logger = logging.getLogger(__name__)
 
 
-async def fill_hashes_and_mime(
+async def fill_hashes(
     session: AsyncSession,
     file_storage: FileStorage,
     batch_size: int = 100,
@@ -68,9 +68,46 @@ async def fill_hashes_and_mime(
 
             sha256 = compute_sha256(data)
             mime_type = detect_mime_type(data)
-            extension = db_file.extension or extension_from_mime(mime_type)
 
             db_file.sha256 = sha256
+            db_file.mime_type = mime_type
+            logger.info(
+                "detected sha for %s (mime: %s)",
+                db_file.guid,
+                mime_type,
+            )
+
+        await session.commit()
+        logger.info("processed batch at offset %d", offset)
+        offset += batch_size
+
+
+async def fill_extension(
+    session: AsyncSession,
+    batch_size: int = 100,
+) -> None:
+    """Compute and store sha256 + mime_type for all files that are missing them."""
+    offset = 0
+    while True:
+        result: ScalarResult[models.FileInfo] = await session.scalars(
+            select(models.FileInfo)
+            .where(models.FileInfo.extension == "")
+            .order_by(models.FileInfo.id)
+            .limit(batch_size)
+            .offset(offset)
+        )
+        batch = list(result.all())
+        if not batch:
+            break
+
+        for db_file in batch:
+            if not db_file.file_path:
+                logger.warning("file %s has no file_path, skipping", db_file.guid)
+                continue
+
+            mime_type = db_file.mime_type
+            extension = db_file.extension or extension_from_mime(mime_type)
+
             db_file.mime_type = mime_type
             if not db_file.extension and extension:
                 if db_file.extension != extension:
@@ -100,7 +137,8 @@ async def main() -> None:
         async with dishka() as request_dishka:
             file_storage = await request_dishka.get(FileStorage)
             session = await request_dishka.get(AsyncSession)
-            await fill_hashes_and_mime(session, file_storage)
+            await fill_hashes(session, file_storage)
+            await fill_extension(session)
     finally:
         await dishka.close()
 

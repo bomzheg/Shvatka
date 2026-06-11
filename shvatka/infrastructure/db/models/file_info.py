@@ -1,5 +1,5 @@
 from sqlalchemy import Integer, Text, ForeignKey
-from sqlalchemy.orm import relationship, mapped_column
+from sqlalchemy.orm import relationship, mapped_column, Mapped
 
 from shvatka.core.models import dto
 from shvatka.core.models.dto import hints
@@ -14,7 +14,7 @@ class FileInfo(Base):
     file_path = mapped_column(Text)
     guid = mapped_column(Text, unique=True)
     original_filename = mapped_column(Text)
-    extension = mapped_column(Text)
+    extension: Mapped[str] = mapped_column(Text)
     file_id = mapped_column(Text)
     content_type = mapped_column(Text)
     sha256 = mapped_column(Text, index=True)

@@ -3,22 +3,15 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Sequence, Generic
 
-from adaptix import Retort, dumper
-
-from shvatka.common.factory import REQUIRED_GAME_RECIPES
+from shvatka.common.factory import GAME_SCENARIO_RETORT
 from shvatka.core.games.dto import CurrentHintsAndKeys, MyRole, Event
 from shvatka.core.models import dto, enums
-from shvatka.core.models.dto import scn, action
+from shvatka.core.models.dto import action
 from shvatka.core.models.dto import hints
 from shvatka.core.models.enums import GameStatus
 
 T = typing.TypeVar("T")
-retort = Retort(
-    recipe=[
-        *REQUIRED_GAME_RECIPES,
-        dumper(scn.HintsList, lambda x: x.hints),
-    ]
-)
+retort = GAME_SCENARIO_RETORT
 
 
 @dataclass

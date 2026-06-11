@@ -78,10 +78,10 @@ async def update_game_scenario(
     enforced) instead of by name, so the game can be safely renamed.
     """
     check_allow_be_author(author)
-    game_scn = parse_uploaded_game(scn.RawGameScenario(scn=raw_scn, files={}), retort)
     game = await dao.get_by_id(id_=id_, author=author)
     check_can_read(game, author)
     check_game_editable(game)
+    game_scn = parse_uploaded_game(scn.RawGameScenario(scn=raw_scn, files={}), retort)
     for file in game_scn.files:
         await dao.check_author_can_own_guid(author, file.guid)
     if game.name != game_scn.name:

@@ -1,18 +1,42 @@
 from datetime import datetime, timedelta
 
 import pytest
-from adaptix import Retort
 from httpx import AsyncClient
 
 from shvatka.api.dependencies.auth import AuthProperties
 from shvatka.api.models import responses
-from shvatka.common.factory import REQUIRED_GAME_RECIPES
+from shvatka.common.factory import GAME_SCENARIO_RETORT
 from shvatka.core.models import dto
-from shvatka.core.models.dto.scn.game import RawGameScenario
 from shvatka.core.models.enums import GameStatus
 from shvatka.core.services.game import create_game
 from shvatka.core.utils.datetime_utils import tz_utc
 from shvatka.infrastructure.db.dao.holder import HolderDao
+
+# Scenario body for PUT /games/my/{id}/scenario — snake_case (same casing in and out).
+SNAKE_SCENARIO: dict = {
+    "name": "scenario via api",
+    "__model_version__": 1,
+    "files": [],
+    "levels": [
+        {
+            "id": "first",
+            "__model_version__": 1,
+            "conditions": [{"type": "WIN_KEY", "keys": ["SH123", "SH321"]}],
+            "time_hints": [
+                {"time": 0, "hint": [{"type": "text", "text": "загадка"}]},
+                {"time": 5, "hint": [{"type": "text", "text": "подсказка"}]},
+            ],
+        },
+        {
+            "id": "second",
+            "__model_version__": 1,
+            "conditions": [{"type": "WIN_KEY", "keys": ["SHOOT"]}],
+            "time_hints": [
+                {"time": 0, "hint": [{"type": "text", "text": "загадка два"}]},
+            ],
+        },
+    ],
+}
 
 
 def auth_cookies(auth: AuthProperties, player: dto.Player) -> dict[str, str]:
@@ -74,23 +98,23 @@ async def test_change_scenario(
     auth: AuthProperties,
     author: dto.Player,
     dao: HolderDao,
-    simple_scn: RawGameScenario,
 ):
     game = await create_game(author=author, name="draft to fill", dao=dao.game_creator)
     resp = await client.put(
         f"/games/my/{game.id}/scenario",
-        json=simple_scn.scn,
+        json=SNAKE_SCENARIO,
         cookies=auth_cookies(auth, author),
     )
     assert resp.status_code == 200, resp.text
-    retort = Retort(recipe=[*REQUIRED_GAME_RECIPES])
-    actual = retort.load(resp.json(), responses.FullGame)
+    actual = GAME_SCENARIO_RETORT.load(resp.json(), responses.FullGame)
     assert actual.id == game.id
-    assert actual.name == simple_scn.scn["name"]
-    assert len(actual.levels) == len(simple_scn.scn["levels"])
+    assert actual.name == SNAKE_SCENARIO["name"]
+    assert len(actual.levels) == len(SNAKE_SCENARIO["levels"])
+    # response scenario must be the same snake_case shape that was sent in
+    assert "time_hints" in actual.levels[0].scenario
     stored = await dao.game.get_full(game.id)
-    assert stored.name == simple_scn.scn["name"]
-    assert len(stored.levels) == len(simple_scn.scn["levels"])
+    assert stored.name == SNAKE_SCENARIO["name"]
+    assert len(stored.levels) == len(SNAKE_SCENARIO["levels"])
 
 
 @pytest.mark.asyncio
@@ -169,12 +193,11 @@ async def test_change_scenario_foreign_game_forbidden(
     auth: AuthProperties,
     harry: dto.Player,
     game: dto.FullGame,
-    simple_scn: RawGameScenario,
 ):
     # harry is not the author of `game`
     resp = await client.put(
         f"/games/my/{game.id}/scenario",
-        json=simple_scn.scn,
+        json=SNAKE_SCENARIO,
         cookies=auth_cookies(auth, harry),
     )
     assert resp.status_code == 422, resp.text

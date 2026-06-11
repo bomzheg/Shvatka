@@ -6,7 +6,6 @@ from shvatka.api.dependencies.auth import AuthProvider
 from shvatka.api.dependencies.api_only import ApiOnlyProvider
 from shvatka.api.dependencies.config import ApiConfigProvider
 from shvatka.api.dependencies.other import OtherApiProvider
-from shvatka.common.factory import DCFProvider
 from shvatka.infrastructure.di import get_providers
 from shvatka.infrastructure.di.interactors import GameEditProvider
 
@@ -34,7 +33,6 @@ def get_api_specific_providers() -> list[Provider]:
         AuthProvider(),
         ApiConfigProvider(),
         OtherApiProvider(),
-        DCFProvider(),
         GameEditProvider(),
     ]
 

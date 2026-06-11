@@ -1,5 +1,6 @@
-from adaptix import Retort
 from dishka import Provider, Scope, provide
+
+from shvatka.common.factory import GAME_SCENARIO_RETORT
 
 from shvatka.core.games.interactors import (
     GameFileReaderInteractor,
@@ -127,8 +128,10 @@ class GameEditProvider(Provider):
         return CreateGameInteractor(dao.game_creator)
 
     @provide
-    def change_scenario(self, dao: HolderDao, retort: Retort) -> ChangeGameScenarioInteractor:
-        return ChangeGameScenarioInteractor(dao=dao.game_scenario_editor, retort=retort)
+    def change_scenario(self, dao: HolderDao) -> ChangeGameScenarioInteractor:
+        return ChangeGameScenarioInteractor(
+            dao=dao.game_scenario_editor, retort=GAME_SCENARIO_RETORT
+        )
 
     @provide
     def change_start_at(

@@ -13,9 +13,10 @@ Run with:
 
 import asyncio
 import logging
+from pathlib import Path
 
 from dishka import make_async_container
-from sqlalchemy import select
+from sqlalchemy import select, ScalarResult
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from shvatka.common import setup_logging
@@ -42,7 +43,7 @@ async def fill_hashes_and_mime(
     """Compute and store sha256 + mime_type for all files that are missing them."""
     offset = 0
     while True:
-        result = await session.scalars(
+        result: ScalarResult[models.FileInfo] = await session.scalars(
             select(models.FileInfo)
             .where(models.FileInfo.sha256.is_(None))
             .order_by(models.FileInfo.id)
@@ -72,10 +73,16 @@ async def fill_hashes_and_mime(
             db_file.sha256 = sha256
             db_file.mime_type = mime_type
             if not db_file.extension and extension:
-                db_file.extension = extension
-                logger.info(
-                    "detected extension %s for %s (mime: %s)", extension, db_file.guid, mime_type
-                )
+                if db_file.extension != extension:
+                    old_path = Path(db_file.file_path)
+                    db_file.extension = extension
+                    old_path.rename(db_file.file_path + extension)
+                    logger.info(
+                        "detected extension %s for %s (mime: %s)",
+                        extension,
+                        db_file.guid,
+                        mime_type,
+                    )
 
         await session.commit()
         logger.info("processed batch at offset %d", offset)

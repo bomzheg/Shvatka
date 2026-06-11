@@ -24,6 +24,7 @@ from shvatka.common import setup_logging
 from shvatka.common.config.parser.paths import common_get_paths
 from shvatka.infrastructure.db import models
 from shvatka.infrastructure.di import get_providers
+from shvatka.infrastructure.di.infra import get_infra_only_providers
 
 logger = logging.getLogger(__name__)
 
@@ -99,7 +100,10 @@ def _delete_physical_file(path_str: str) -> None:
 async def main() -> None:
     paths = common_get_paths("INFRA_PATH")
     setup_logging(paths)
-    dishka = make_async_container(*get_providers("INFRA_PATH"))
+    dishka = make_async_container(
+        *get_providers("INFRA_PATH"),
+        *get_infra_only_providers(),
+    )
     try:
         async with dishka() as request_dishka:
             session = await request_dishka.get(AsyncSession)

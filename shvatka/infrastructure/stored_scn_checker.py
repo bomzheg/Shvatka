@@ -8,6 +8,7 @@ from shvatka.common.config.parser.paths import common_get_paths
 from shvatka.core.utils import exceptions
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.infrastructure.di import get_providers
+from shvatka.infrastructure.di.infra import get_infra_only_providers
 
 logger = logging.getLogger(__name__)
 
@@ -19,6 +20,7 @@ async def main() -> None:
     logger.setLevel(logging.WARNING)
     dishka = make_async_container(
         *get_providers("CRAWLER_PATH"),
+        *get_infra_only_providers(),
     )
     try:
         async with dishka() as request_dishka:

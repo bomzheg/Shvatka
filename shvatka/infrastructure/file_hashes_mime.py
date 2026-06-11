@@ -29,6 +29,7 @@ from shvatka.infrastructure.clients.file_storage import (
 )
 from shvatka.infrastructure.db import models
 from shvatka.infrastructure.di import get_providers
+from shvatka.infrastructure.di.infra import get_infra_only_providers
 
 logger = logging.getLogger(__name__)
 
@@ -84,7 +85,10 @@ async def fill_hashes_and_mime(
 async def main() -> None:
     paths = common_get_paths("INFRA_PATH")
     setup_logging(paths)
-    dishka = make_async_container(*get_providers("INFRA_PATH"))
+    dishka = make_async_container(
+        *get_providers("INFRA_PATH"),
+        *get_infra_only_providers(),
+    )
     try:
         async with dishka() as request_dishka:
             file_storage = await request_dishka.get(FileStorage)

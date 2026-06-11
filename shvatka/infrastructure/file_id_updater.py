@@ -10,6 +10,7 @@ from shvatka.infrastructure.clients.file_gateway import BotFileGateway
 from shvatka.infrastructure.db.dao import FileInfoDao
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.infrastructure.di import get_providers
+from shvatka.infrastructure.di.infra import get_infra_only_providers
 
 
 async def main():
@@ -18,6 +19,7 @@ async def main():
     setup_logging(paths)
     dishka = make_async_container(
         *get_providers("INFRA_PATH"),
+        *get_infra_only_providers(),
     )
     try:
         dao = await dishka.get(HolderDao)

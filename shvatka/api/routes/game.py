@@ -1,6 +1,7 @@
 import logging
 from typing import Annotated, Any
 
+from adaptix import Retort
 from dishka.integrations.fastapi import FromDishka
 from dishka.integrations.fastapi import inject
 from fastapi import APIRouter, Body, HTTPException
@@ -50,10 +51,11 @@ async def get_my_games_list(
 async def get_my_game(
     identity: FromDishka[ApiIdentityProvider],
     interactor: FromDishka[MyGameInteractor],
+    retort: FromDishka[Retort],
     id_: Annotated[int, Path(alias="id")],
 ) -> responses.FullGame:
     game = await interactor(game_id=id_, identity=identity)
-    return responses.FullGame.from_core(game)
+    return responses.FullGame.from_core(retort, game)
 
 
 @inject
@@ -70,11 +72,12 @@ async def create_my_game(
 async def change_my_game_scenario(
     identity: FromDishka[ApiIdentityProvider],
     interactor: FromDishka[ChangeGameScenarioInteractor],
+    retort: FromDishka[Retort],
     id_: Annotated[int, Path(alias="id")],
     scenario: Annotated[dict[str, Any], Body()],
 ) -> responses.FullGame:
     game = await interactor(game_id=id_, raw_scn=scenario, identity=identity)
-    return responses.FullGame.from_core(game)
+    return responses.FullGame.from_core(retort, game)
 
 
 @inject
@@ -130,10 +133,11 @@ async def get_all_games(
 async def get_game_card(
     dao: FromDishka[HolderDao],
     identity: FromDishka[ApiIdentityProvider],
+    retort: FromDishka[Retort],
     id_: Annotated[int, Path(alias="id")],
 ):
     game = await get_full_game(id_, identity, dao.game)
-    return responses.FullGame.from_core(game)
+    return responses.FullGame.from_core(retort, game)
 
 
 @inject

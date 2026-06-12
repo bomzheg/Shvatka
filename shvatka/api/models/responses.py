@@ -3,7 +3,8 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Sequence, Generic
 
-from shvatka.common.factory import GAME_SCENARIO_RETORT
+from adaptix import Retort
+
 from shvatka.core.games.dto import CurrentHintsAndKeys, MyRole, Event
 from shvatka.core.models import dto, enums
 from shvatka.core.models.dto import action
@@ -11,7 +12,6 @@ from shvatka.core.models.dto import hints
 from shvatka.core.models.enums import GameStatus
 
 T = typing.TypeVar("T")
-retort = GAME_SCENARIO_RETORT
 
 
 @dataclass
@@ -86,7 +86,7 @@ class Level:
     number_in_game: int | None = None
 
     @classmethod
-    def from_core(cls, core: dto.Level | None = None):
+    def from_core(cls, retort: Retort, core: dto.Level | None = None):
         if core is None:
             return None
         return cls(
@@ -109,7 +109,7 @@ class FullGame:
     levels: list[Level] = field(default_factory=list)
 
     @classmethod
-    def from_core(cls, core: dto.FullGame | None = None):
+    def from_core(cls, retort: Retort, core: dto.FullGame | None = None):
         if core is None:
             return None
         return cls(
@@ -118,7 +118,7 @@ class FullGame:
             name=core.name,
             status=core.status,
             start_at=core.start_at,
-            levels=[Level.from_core(level) for level in core.levels],
+            levels=[Level.from_core(retort, level) for level in core.levels],
         )
 
 

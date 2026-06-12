@@ -8,7 +8,6 @@ from adaptix import (
     P,
     name_mapping,
     loader,
-    dumper,
     Chain,
 )
 from adaptix.load_error import LoadError
@@ -48,42 +47,28 @@ REQUIRED_GAME_RECIPES = [
     ),  # internal class, can be broken in next adaptix version
 ]
 
-
-def create_game_retort() -> Retort:
-    """adaptix Retort for game scenarios using plain snake_case field names.
-
-    Used by the API for both parsing incoming scenarios and dumping them back, so the
-    request and response shapes are symmetric. Unlike :class:`DCFProvider` (legacy, kebab),
-    this does not pull in dataclass_factory.
-    """
-    return Retort(
-        recipe=[
-            *REQUIRED_GAME_RECIPES,
-            dumper(scn.HintsList, lambda x: x.hints),
-            validator(
-                pred=P[scn.LevelScenario].id,
-                func=lambda x: validate_level_id(x) is not None,
-                error=lambda x: typing.cast(
-                    LoadError,
-                    exceptions.ScenarioNotCorrect(name_id=x, text=f"name_id ({x}) not correct"),
-                ),
+VALIDATION_GAME_RECIPES = [
+    validator(
+        pred=P[scn.LevelScenario].id,
+        func=lambda x: validate_level_id(x) is not None,
+        error=lambda x: typing.cast(
+            LoadError,
+            exceptions.ScenarioNotCorrect(
+                name_id=x, text=f"name_id ({x}) not correct"
             ),
-            validator(
-                pred=P[scn.LevelScenario].keys,
-                func=is_multiple_keys_normal,
-                error=lambda x: typing.cast(
-                    LoadError,
-                    exceptions.ScenarioNotCorrect(
-                        notify_user=INVALID_KEY_ERROR, text="invalid keys"
-                    ),
-                ),
+        ),
+    ),
+    validator(
+        pred=P[scn.LevelScenario].keys,
+        func=is_multiple_keys_normal,
+        error=lambda x: typing.cast(
+            LoadError,
+            exceptions.ScenarioNotCorrect(
+                notify_user=INVALID_KEY_ERROR, text="invalid keys"
             ),
-        ]
-    )
-
-
-GAME_SCENARIO_RETORT: Retort = create_game_retort()
-
+        ),
+    ),
+]
 
 class DCFProvider(Provider):
     scope = Scope.APP
@@ -100,30 +85,8 @@ class DCFProvider(Provider):
     def create_retort(self) -> Retort:
         retort = Retort(
             recipe=[
-                name_mapping(
-                    name_style=adaptix.NameStyle.LOWER_KEBAB,
-                ),
                 *REQUIRED_GAME_RECIPES,
-                validator(
-                    pred=P[scn.LevelScenario].id,
-                    func=lambda x: validate_level_id(x) is not None,
-                    error=lambda x: typing.cast(
-                        LoadError,
-                        exceptions.ScenarioNotCorrect(
-                            name_id=x, text=f"name_id ({x}) not correct"
-                        ),
-                    ),
-                ),
-                validator(
-                    pred=P[scn.LevelScenario].keys,
-                    func=is_multiple_keys_normal,
-                    error=lambda x: typing.cast(
-                        LoadError,
-                        exceptions.ScenarioNotCorrect(
-                            notify_user=INVALID_KEY_ERROR, text="invalid keys"
-                        ),
-                    ),
-                ),
+                *VALIDATION_GAME_RECIPES
             ]
         )
         return retort

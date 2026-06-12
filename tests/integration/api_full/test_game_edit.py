@@ -1,11 +1,11 @@
 from datetime import datetime, timedelta
 
 import pytest
+from adaptix import Retort
 from httpx import AsyncClient
 
 from shvatka.api.dependencies.auth import AuthProperties
 from shvatka.api.models import responses
-from shvatka.common.factory import GAME_SCENARIO_RETORT
 from shvatka.core.models import dto
 from shvatka.core.models.enums import GameStatus
 from shvatka.core.services.game import create_game
@@ -98,6 +98,7 @@ async def test_change_scenario(
     auth: AuthProperties,
     author: dto.Player,
     dao: HolderDao,
+    retort: Retort,
 ):
     game = await create_game(author=author, name="draft to fill", dao=dao.game_creator)
     resp = await client.put(
@@ -106,7 +107,7 @@ async def test_change_scenario(
         cookies=auth_cookies(auth, author),
     )
     assert resp.status_code == 200, resp.text
-    actual = GAME_SCENARIO_RETORT.load(resp.json(), responses.FullGame)
+    actual = retort.load(resp.json(), responses.FullGame)
     assert actual.id == game.id
     assert actual.name == SNAKE_SCENARIO["name"]
     assert len(actual.levels) == len(SNAKE_SCENARIO["levels"])

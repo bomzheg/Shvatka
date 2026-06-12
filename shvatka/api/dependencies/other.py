@@ -7,8 +7,6 @@ from shvatka.core.interfaces.current_game import CurrentGameProvider
 from shvatka.infrastructure.db.dao.rdb.push_subscription import PushSubscriptionDAO
 
 
-
-
 class OtherApiProvider(Provider):
     scope = Scope.REQUEST
 

@@ -1,6 +1,5 @@
 import typing
 
-import adaptix
 import dataclass_factory
 from adaptix import (
     Retort,
@@ -53,9 +52,7 @@ VALIDATION_GAME_RECIPES = [
         func=lambda x: validate_level_id(x) is not None,
         error=lambda x: typing.cast(
             LoadError,
-            exceptions.ScenarioNotCorrect(
-                name_id=x, text=f"name_id ({x}) not correct"
-            ),
+            exceptions.ScenarioNotCorrect(name_id=x, text=f"name_id ({x}) not correct"),
         ),
     ),
     validator(
@@ -63,12 +60,11 @@ VALIDATION_GAME_RECIPES = [
         func=is_multiple_keys_normal,
         error=lambda x: typing.cast(
             LoadError,
-            exceptions.ScenarioNotCorrect(
-                notify_user=INVALID_KEY_ERROR, text="invalid keys"
-            ),
+            exceptions.ScenarioNotCorrect(notify_user=INVALID_KEY_ERROR, text="invalid keys"),
         ),
     ),
 ]
+
 
 class DCFProvider(Provider):
     scope = Scope.APP
@@ -83,12 +79,7 @@ class DCFProvider(Provider):
 
     @provide
     def create_retort(self) -> Retort:
-        retort = Retort(
-            recipe=[
-                *REQUIRED_GAME_RECIPES,
-                *VALIDATION_GAME_RECIPES
-            ]
-        )
+        retort = Retort(recipe=[*REQUIRED_GAME_RECIPES, *VALIDATION_GAME_RECIPES])
         return retort
 
 

@@ -131,9 +131,7 @@ class GameEditProvider(Provider):
         return ChangeGameScenarioInteractor(dao=dao.game_scenario_editor, retort=retort)
 
     @provide
-    def change_start_at(
-        self, dao: HolderDao, scheduler: Scheduler
-    ) -> ChangeGameStartAtInteractor:
+    def change_start_at(self, dao: HolderDao, scheduler: Scheduler) -> ChangeGameStartAtInteractor:
         return ChangeGameStartAtInteractor(getter=dao.game, dao=dao.game, scheduler=scheduler)
 
     @provide
@@ -144,9 +142,7 @@ class GameEditProvider(Provider):
 
     @provide
     def upload_file(self, dao: HolderDao, storage: FileStorage) -> UploadGameFileInteractor:
-        return UploadGameFileInteractor(
-            storage=storage, game_dao=dao.game, file_dao=dao.file_info
-        )
+        return UploadGameFileInteractor(storage=storage, game_dao=dao.game, file_dao=dao.file_info)
 
 
 class WaiverProvider(Provider):

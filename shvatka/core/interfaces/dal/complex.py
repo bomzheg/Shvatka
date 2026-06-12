@@ -54,7 +54,5 @@ class GamePackager(GameKeyGetter, LevelTimesGetter, GameWaiversGetter, FileInfoG
         raise NotImplementedError
 
 
-class GameScenarioEditor(
-    GameUpserter, GameRenamer, GameByIdGetter, FileInfoGetter, Protocol
-):
+class GameScenarioEditor(GameUpserter, GameRenamer, GameByIdGetter, FileInfoGetter, Protocol):
     pass

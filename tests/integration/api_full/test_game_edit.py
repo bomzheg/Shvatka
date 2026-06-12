@@ -92,9 +92,7 @@ async def test_my_game_full(
     assert body["id"] == game.id
     assert len(body["levels"]) == len(game.levels)
     # the `game` fixture references one file (deduplicated across hints)
-    assert body["files"] == [
-        {"guid": GUID, "original_filename": "hint2", "extension": ".jpg"}
-    ]
+    assert body["files"] == [{"guid": GUID, "original_filename": "hint2", "extension": ".jpg"}]
 
 
 @pytest.mark.asyncio

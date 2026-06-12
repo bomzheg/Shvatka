@@ -6,7 +6,7 @@ name: ShvatkaBotBuild
 on:
   push:
     branches: [ master ]
-    tags: ["*.*.*"]
+    tags: ["*.*.*", "*.*.*-dev"]
 
 jobs:
   lint-and-test:

@@ -50,7 +50,7 @@ class KeyTime(Base):
     def to_dto(self, player: dto.Player, team: dto.Team) -> dto.KeyTime:
         return dto.KeyTime(
             text=self.key_text,
-            type_=self.type_,
+            type_=enums.KeyType[str(self.type_)],
             is_duplicate=self.is_duplicate,
             at=self.enter_time,
             level_number=self.level_number,

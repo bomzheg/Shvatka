@@ -11,6 +11,7 @@ from shvatka.core.models.enums import GameStatus
 from shvatka.core.services.game import create_game
 from shvatka.core.utils.datetime_utils import tz_utc
 from shvatka.infrastructure.db.dao.holder import HolderDao
+from tests.fixtures.scn_fixtures import GUID
 
 # Scenario body for PUT /games/my/{id}/scenario — snake_case (same casing in and out).
 SNAKE_SCENARIO: dict = {
@@ -90,6 +91,67 @@ async def test_my_game_full(
     body = resp.json()
     assert body["id"] == game.id
     assert len(body["levels"]) == len(game.levels)
+    # the `game` fixture references one file (deduplicated across hints)
+    assert body["files"] == [
+        {"guid": GUID, "original_filename": "hint2", "extension": ".jpg"}
+    ]
+
+
+@pytest.mark.asyncio
+async def test_scenario_files_round_trip(
+    client: AsyncClient,
+    auth: AuthProperties,
+    author: dto.Player,
+    dao: HolderDao,
+):
+    game = await create_game(author=author, name="draft with file ref", dao=dao.game_creator)
+    cookies = auth_cookies(auth, author)
+    # upload a file and reference it from a hint
+    up = await client.post(
+        f"/cdn/games/{game.id}/files",
+        files={"file": ("pic.png", b"\x89PNG\r\n\x1a\n binary", "image/png")},
+        cookies=cookies,
+    )
+    assert up.status_code == 200, up.text
+    f = up.json()
+    scenario = {
+        "name": "with files",
+        "__model_version__": 1,
+        "files": [
+            {
+                "guid": f["guid"],
+                "original_filename": f["original_filename"],
+                "extension": f["extension"],
+            }
+        ],
+        "levels": [
+            {
+                "id": "first",
+                "__model_version__": 1,
+                "conditions": [{"type": "WIN_KEY", "keys": ["SH123"]}],
+                "time_hints": [
+                    {
+                        "time": 0,
+                        "hint": [{"type": "photo", "file_guid": f["guid"], "caption": "pic"}],
+                    }
+                ],
+            }
+        ],
+    }
+    expected_files = [
+        {
+            "guid": f["guid"],
+            "original_filename": f["original_filename"],
+            "extension": f["extension"],
+        }
+    ]
+    put = await client.put(f"/games/my/{game.id}/scenario", json=scenario, cookies=cookies)
+    assert put.status_code == 200, put.text
+    assert put.json()["files"] == expected_files
+    # and the GET reflects the same files section
+    got = await client.get(f"/games/my/{game.id}", cookies=cookies)
+    assert got.status_code == 200, got.text
+    assert got.json()["files"] == expected_files
 
 
 @pytest.mark.asyncio

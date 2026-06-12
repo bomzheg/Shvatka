@@ -83,6 +83,26 @@ async def get_file_metas(
     return file_metas
 
 
+async def get_game_file_metas(
+    game: dto.FullGame, author: dto.Player, dao: FileInfoGetter
+) -> list[hints.FileMeta]:
+    """File metas of every distinct file referenced by the game (for the web UI).
+
+    Deduplicates guids (a file may be used by several hints) and enforces the same
+    read permission as the other file readers.
+    """
+    file_metas: list[hints.FileMeta] = []
+    seen: set[str] = set()
+    for guid in game.get_guids():
+        if guid in seen:
+            continue
+        seen.add(guid)
+        file_meta = await dao.get_by_guid(guid)
+        check_file_meta_can_read(author, file_meta, game)
+        file_metas.append(file_meta)
+    return file_metas
+
+
 async def get_file_contents(
     file_metas: Sequence[hints.FileMeta], file_gateway: FileGateway
 ) -> dict[str, BinaryIO]:

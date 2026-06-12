@@ -100,6 +100,21 @@ class Level:
 
 
 @dataclass
+class GameFile:
+    guid: str
+    original_filename: str
+    extension: str
+
+    @classmethod
+    def from_core(cls, core: hints.FileMeta) -> "GameFile":
+        return cls(
+            guid=core.guid,
+            original_filename=core.original_filename,
+            extension=core.extension,
+        )
+
+
+@dataclass
 class FullGame:
     id: int
     author: Player
@@ -107,9 +122,15 @@ class FullGame:
     status: GameStatus
     start_at: datetime | None
     levels: list[Level] = field(default_factory=list)
+    files: list[GameFile] = field(default_factory=list)
 
     @classmethod
-    def from_core(cls, retort: Retort, core: dto.FullGame | None = None):
+    def from_core(
+        cls,
+        retort: Retort,
+        core: dto.FullGame | None = None,
+        files: Sequence[hints.FileMeta] = (),
+    ):
         if core is None:
             return None
         return cls(
@@ -119,6 +140,7 @@ class FullGame:
             status=core.status,
             start_at=core.start_at,
             levels=[Level.from_core(retort, level) for level in core.levels],
+            files=[GameFile.from_core(file) for file in files],
         )
 
 

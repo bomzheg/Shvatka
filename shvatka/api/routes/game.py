@@ -18,12 +18,12 @@ from shvatka.core.games.interactors import (
     CheckKeyInteractor,
     GamePlayRoleReader,
 )
-from shvatka.core.games.editing_interactors import (
+from shvatka.core.games.editor_interactors import (
     MyGamesInteractor,
     MyGameInteractor,
     CreateGameInteractor,
     ChangeGameScenarioInteractor,
-    ChangeGameStartAtInteractor,
+    PlanGameStartInteractor,
     ChangeGameStatusInteractor,
 )
 from shvatka.core.interfaces.current_game import CurrentGameProvider
@@ -83,7 +83,7 @@ async def change_my_game_scenario(
 @inject
 async def change_my_game_start_at(
     identity: FromDishka[ApiIdentityProvider],
-    interactor: FromDishka[ChangeGameStartAtInteractor],
+    interactor: FromDishka[PlanGameStartInteractor],
     id_: Annotated[int, Path(alias="id")],
     body: Annotated[req.GameStartAt, Body()],
 ) -> responses.Game:

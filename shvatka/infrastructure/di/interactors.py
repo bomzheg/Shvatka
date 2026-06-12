@@ -10,16 +10,17 @@ from shvatka.core.games.interactors import (
     CheckKeyInteractor,
     GamePlayRoleReader,
 )
-from shvatka.core.games.editing_interactors import (
+from shvatka.core.games.editor_interactors import (
     MyGamesInteractor,
     MyGameInteractor,
     CreateGameInteractor,
     ChangeGameScenarioInteractor,
-    ChangeGameStartAtInteractor,
+    PlanGameStartInteractor,
     ChangeGameStatusInteractor,
     UploadGameFileInteractor,
 )
 from shvatka.core.interfaces.clients.file_storage import FileStorage
+from shvatka.core.interfaces.dal.complex import GameScenarioEditor
 from shvatka.core.interfaces.scheduler import Scheduler
 from shvatka.core.games.adapters import (
     GameFileReader,
@@ -50,7 +51,7 @@ from shvatka.infrastructure.db.dao.complex2.waiver import (
     WaiverVoteGetterImpl,
     PollDraftsReaderImpl,
 )
-from shvatka.infrastructure.db.dao.complex.game import GameFilesGetterImpl
+from shvatka.infrastructure.db.dao.complex.game import GameFilesGetterImpl, GameScenarioEditorImpl
 from shvatka.infrastructure.db.dao.complex.game import (
     GamePlayDaoImpl,
 )
@@ -127,12 +128,18 @@ class GameEditProvider(Provider):
         return CreateGameInteractor(dao.game_creator)
 
     @provide
-    def change_scenario(self, dao: HolderDao, retort: Retort) -> ChangeGameScenarioInteractor:
-        return ChangeGameScenarioInteractor(dao=dao.game_scenario_editor, retort=retort)
+    def game_scenario_editor(self, dao: HolderDao) -> GameScenarioEditor:
+        return GameScenarioEditorImpl(dao=dao)
 
     @provide
-    def change_start_at(self, dao: HolderDao, scheduler: Scheduler) -> ChangeGameStartAtInteractor:
-        return ChangeGameStartAtInteractor(getter=dao.game, dao=dao.game, scheduler=scheduler)
+    def change_scenario(
+        self, dao: GameScenarioEditor, retort: Retort
+    ) -> ChangeGameScenarioInteractor:
+        return ChangeGameScenarioInteractor(dao=dao, retort=retort)
+
+    @provide
+    def change_start_at(self, dao: HolderDao, scheduler: Scheduler) -> PlanGameStartInteractor:
+        return PlanGameStartInteractor(getter=dao.game, dao=dao.game, scheduler=scheduler)
 
     @provide
     def change_status(self, dao: HolderDao) -> ChangeGameStatusInteractor:

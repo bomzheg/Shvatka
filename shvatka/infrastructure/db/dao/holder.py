@@ -9,7 +9,6 @@ from shvatka.core.interfaces.dal.complex import (
     TypedKeyGetter,
     GameStatDao,
     GamePackager,
-    GameScenarioEditor,
 )
 from shvatka.core.interfaces.dal.game import GameUpserter, GameCreator
 from shvatka.core.interfaces.dal.game_play import GamePreparer, GamePlayerDao
@@ -23,7 +22,6 @@ from .complex.game import (
     GameUpserterImpl,
     GameCreatorImpl,
     GamePackagerImpl,
-    GameScenarioEditorImpl,
 )
 from .complex.game_play import GamePreparerImpl, GameStarterImpl, GamePlayerDaoImpl
 from .complex.key_log import TypedKeyGetterImpl
@@ -106,10 +104,6 @@ class HolderDao:
     @property
     def game_packager(self) -> GamePackager:
         return GamePackagerImpl(dao=self)
-
-    @property
-    def game_scenario_editor(self) -> GameScenarioEditor:
-        return GameScenarioEditorImpl(dao=self)
 
     @property
     def team_creator(self) -> TeamCreator:

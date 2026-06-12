@@ -82,7 +82,7 @@ class ChangeGameScenarioInteractor:
 
 
 @dataclass
-class ChangeGameStartAtInteractor:
+class PlanGameStartInteractor:
     getter: GameByIdGetter
     dao: GameStartPlanner
     scheduler: Scheduler

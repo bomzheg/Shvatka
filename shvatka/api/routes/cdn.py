@@ -14,7 +14,7 @@ from shvatka.api.models import responses
 from shvatka.core.games.interactors import (
     GameFileReaderInteractor,
 )
-from shvatka.core.games.editing_interactors import UploadGameFileInteractor
+from shvatka.core.games.editor_interactors import UploadGameFileInteractor
 
 
 logger = logging.getLogger(__name__)

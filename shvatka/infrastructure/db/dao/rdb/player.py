@@ -3,7 +3,8 @@ from datetime import datetime, tzinfo
 import typing
 from typing import Iterable
 
-from sqlalchemy import select, func, Result, case, delete, ScalarResult, inspect
+from sqlalchemy import select, func, Result, case, delete, ScalarResult, inspect, or_
+from sqlalchemy.sql.elements import ColumnElement
 from sqlalchemy.exc import NoResultFound, MultipleResultsFound
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload, selectinload, contains_eager
@@ -107,6 +108,55 @@ class PlayerDao(BaseDAO[models.Player]):
         await self._flush(player)
         player.username = await self.get_free_and_associated_username(player)
         return player.to_dto(user=user)
+
+    async def search_players(
+        self,
+        *,
+        username: str | None = None,
+        name: str | None = None,
+        active: bool = True,
+        archive: bool = False,
+    ) -> list[dto.Player]:
+        if not active and not archive:
+            return []
+        query = (
+            select(models.Player)
+            .outerjoin(models.Player.user)
+            .options(
+                contains_eager(models.Player.user),
+                selectinload(models.Player.forum_user),
+            )
+        )
+        if active and not archive:
+            query = query.where(models.User.id.is_not(None))
+        elif archive and not active:
+            query = query.where(models.User.id.is_(None))
+
+        match_conditions: list[ColumnElement[bool]] = []
+        username_match = None
+        if username:
+            username_match = models.Player.username.ilike(f"%{username}%")
+            match_conditions.append(username_match)
+        if name:
+            pattern = f"%{name}%"
+            match_conditions.append(
+                or_(
+                    models.User.username.ilike(pattern),
+                    models.User.first_name.ilike(pattern),
+                    models.User.last_name.ilike(pattern),
+                )
+            )
+        if match_conditions:
+            query = query.where(or_(*match_conditions))
+
+        # players matched by username go first, matched by name go next
+        if username_match is not None:
+            query = query.order_by(case((username_match, 0), else_=1), models.Player.id)
+        else:
+            query = query.order_by(models.Player.id)
+
+        result: ScalarResult[models.Player] = await self.session.scalars(query)
+        return [player.to_dto_user_prefetched() for player in result.unique().all()]
 
     async def get_by_forum_player_name(self, name: str) -> dto.Player | None:
         result = await self.session.scalars(

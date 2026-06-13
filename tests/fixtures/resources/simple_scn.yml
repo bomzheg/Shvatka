@@ -8,7 +8,7 @@ levels:
         keys:
           - "SH123"
           - "SH321"
-    time-hints:
+    time_hints:
       - time: 0
         hint:
           - type: text
@@ -33,7 +33,7 @@ levels:
     conditions:
       - type: WIN_KEY
         keys: [ "SHOOT" ]
-    time-hints:
+    time_hints:
       - time: 0
         hint:
           - type: text

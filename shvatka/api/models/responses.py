@@ -3,22 +3,15 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Sequence, Generic
 
-from adaptix import Retort, dumper
+from adaptix import Retort
 
-from shvatka.common.factory import REQUIRED_GAME_RECIPES
 from shvatka.core.games.dto import CurrentHintsAndKeys, MyRole, Event
 from shvatka.core.models import dto, enums
-from shvatka.core.models.dto import scn, action
+from shvatka.core.models.dto import action
 from shvatka.core.models.dto import hints
 from shvatka.core.models.enums import GameStatus
 
 T = typing.TypeVar("T")
-retort = Retort(
-    recipe=[
-        *REQUIRED_GAME_RECIPES,
-        dumper(scn.HintsList, lambda x: x.hints),
-    ]
-)
 
 
 @dataclass
@@ -93,7 +86,7 @@ class Level:
     number_in_game: int | None = None
 
     @classmethod
-    def from_core(cls, core: dto.Level | None = None):
+    def from_core(cls, retort: Retort, core: dto.Level | None = None):
         if core is None:
             return None
         return cls(
@@ -107,6 +100,21 @@ class Level:
 
 
 @dataclass
+class GameFile:
+    guid: str
+    original_filename: str
+    extension: str
+
+    @classmethod
+    def from_core(cls, core: hints.FileMeta) -> "GameFile":
+        return cls(
+            guid=core.guid,
+            original_filename=core.original_filename,
+            extension=core.extension,
+        )
+
+
+@dataclass
 class FullGame:
     id: int
     author: Player
@@ -114,9 +122,15 @@ class FullGame:
     status: GameStatus
     start_at: datetime | None
     levels: list[Level] = field(default_factory=list)
+    files: list[GameFile] = field(default_factory=list)
 
     @classmethod
-    def from_core(cls, core: dto.FullGame | None = None):
+    def from_core(
+        cls,
+        retort: Retort,
+        core: dto.FullGame | None = None,
+        files: Sequence[hints.FileMeta] = (),
+    ):
         if core is None:
             return None
         return cls(
@@ -125,7 +139,8 @@ class FullGame:
             name=core.name,
             status=core.status,
             start_at=core.start_at,
-            levels=[Level.from_core(level) for level in core.levels],
+            levels=[Level.from_core(retort, level) for level in core.levels],
+            files=[GameFile.from_core(file) for file in files],
         )
 
 
@@ -314,3 +329,22 @@ class MyRoleDto:
 class PushConfigResponse:
     enabled: bool
     public_key: str | None
+
+
+@dataclass
+class UploadedFile:
+    guid: str
+    original_filename: str
+    extension: str
+    content_type: enums.HintType | None
+    mime_type: str | None
+
+    @classmethod
+    def from_core(cls, core: hints.SavedFileMeta) -> "UploadedFile":
+        return cls(
+            guid=core.guid,
+            original_filename=core.original_filename,
+            extension=core.extension,
+            content_type=core.content_type,
+            mime_type=core.mime_type,
+        )

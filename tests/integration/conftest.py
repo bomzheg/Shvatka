@@ -38,6 +38,7 @@ from shvatka.infrastructure.di import (
     ContextProvider,
     DAOProvider,
 )
+from shvatka.infrastructure.di.interactors import GameEditProvider
 from shvatka.main_factory import ComplexOnlyProvider
 from shvatka.tgbot.main_factory import DpProvider, GameToolsProvider, BotIdpProvider
 from shvatka.infrastructure.db.factory import LockProvider
@@ -81,6 +82,7 @@ async def dishka():
         TelegraphProvider(),
         ContextProvider(),
         GamePlayProvider(),
+        GameEditProvider(),
         WaiverProvider(),
         PrinterProvider(),
         GameToolsProvider(),

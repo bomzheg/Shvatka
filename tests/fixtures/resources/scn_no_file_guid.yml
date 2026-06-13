@@ -7,7 +7,7 @@ levels:
       - type: WIN_KEY
         keys:
           - "SH123"
-    time-hints:
+    time_hints:
       - time: 0
         hint:
           - type: text
@@ -16,7 +16,7 @@ levels:
         hint:
           - type: photo
             # next is guid with 54 at the end. in files there is guid with 53
-            file-guid: a3bc9b96-3bb8-4dbc-b996-ce1015e66e54
+            file_guid: a3bc9b96-3bb8-4dbc-b996-ce1015e66e54
             caption: "привет"
       - time: 6
         hint:
@@ -24,10 +24,10 @@ levels:
             text: "SH123\nSH321"
 files:
   - guid: "a3bc9b96-3bb8-4dbc-b996-ce1015e66e53"
-    original-filename: "hint2"
+    original_filename: "hint2"
     extension: ".jpg"
-    tg-link:
-      file-id: "98765"
-      content-type: "photo"
-    file-content-link:
-      file-path: "tests/fixtures/resources/a3bc9b96-3bb8-4dbc-b996-ce1015e66e53.jpg"
+    tg_link:
+      file_id: "98765"
+      content_type: "photo"
+    file_content_link:
+      file_path: "tests/fixtures/resources/a3bc9b96-3bb8-4dbc-b996-ce1015e66e53.jpg"

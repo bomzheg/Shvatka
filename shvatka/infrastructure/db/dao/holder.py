@@ -18,7 +18,11 @@ from shvatka.core.interfaces.dal.organizer import OrgAdder
 from shvatka.core.interfaces.dal.player import TeamLeaver, PlayerPromoter, PlayerMerger
 from shvatka.core.interfaces.dal.team import TeamCreator
 from shvatka.core.interfaces.dal.waiver import WaiverApprover
-from .complex.game import GameUpserterImpl, GameCreatorImpl, GamePackagerImpl
+from .complex.game import (
+    GameUpserterImpl,
+    GameCreatorImpl,
+    GamePackagerImpl,
+)
 from .complex.game_play import GamePreparerImpl, GameStarterImpl, GamePlayerDaoImpl
 from .complex.key_log import TypedKeyGetterImpl
 from .complex.level_testing import LevelTestComplex

@@ -1,6 +1,7 @@
 import logging
-from typing import Annotated
+from typing import Annotated, Any
 
+from adaptix import Retort
 from dishka.integrations.fastapi import FromDishka
 from dishka.integrations.fastapi import inject
 from fastapi import APIRouter, Body, HTTPException
@@ -17,13 +18,21 @@ from shvatka.core.games.interactors import (
     CheckKeyInteractor,
     GamePlayRoleReader,
 )
+from shvatka.core.games.editor_interactors import (
+    MyGamesInteractor,
+    MyGameInteractor,
+    CreateGameInteractor,
+    ChangeGameScenarioInteractor,
+    PlanGameStartInteractor,
+    ChangeGameStatusInteractor,
+)
 from shvatka.core.interfaces.current_game import CurrentGameProvider
 from shvatka.core.models import enums
 from shvatka.core.services.game import (
-    get_authors_games,
     get_completed_games,
     get_full_game,
 )
+from shvatka.core.services.scenario.files import get_game_file_metas
 from shvatka.infrastructure.db.dao.holder import HolderDao
 
 
@@ -33,9 +42,71 @@ logger = logging.getLogger(__name__)
 @inject
 async def get_my_games_list(
     identity: FromDishka[ApiIdentityProvider],
+    interactor: FromDishka[MyGamesInteractor],
+) -> responses.Page[responses.Game]:
+    games = await interactor(identity=identity)
+    return responses.Page([responses.Game.from_core(game) for game in games])
+
+
+@inject
+async def get_my_game(
+    identity: FromDishka[ApiIdentityProvider],
+    interactor: FromDishka[MyGameInteractor],
     dao: FromDishka[HolderDao],
-):
-    return responses.Page(await get_authors_games(identity, dao.game))
+    retort: FromDishka[Retort],
+    id_: Annotated[int, Path(alias="id")],
+) -> responses.FullGame:
+    game = await interactor(game_id=id_, identity=identity)
+    author = await identity.get_required_player()
+    files = await get_game_file_metas(game, author, dao.file_info)
+    return responses.FullGame.from_core(retort, game, files)
+
+
+@inject
+async def create_my_game(
+    identity: FromDishka[ApiIdentityProvider],
+    interactor: FromDishka[CreateGameInteractor],
+    game: Annotated[req.NewGame, Body()],
+) -> responses.Game:
+    created = await interactor(name=game.name, identity=identity)
+    return responses.Game.from_core(created)
+
+
+@inject
+async def change_my_game_scenario(
+    identity: FromDishka[ApiIdentityProvider],
+    interactor: FromDishka[ChangeGameScenarioInteractor],
+    dao: FromDishka[HolderDao],
+    retort: FromDishka[Retort],
+    id_: Annotated[int, Path(alias="id")],
+    scenario: Annotated[dict[str, Any], Body()],
+) -> responses.FullGame:
+    game = await interactor(game_id=id_, raw_scn=scenario, identity=identity)
+    author = await identity.get_required_player()
+    files = await get_game_file_metas(game, author, dao.file_info)
+    return responses.FullGame.from_core(retort, game, files)
+
+
+@inject
+async def change_my_game_start_at(
+    identity: FromDishka[ApiIdentityProvider],
+    interactor: FromDishka[PlanGameStartInteractor],
+    id_: Annotated[int, Path(alias="id")],
+    body: Annotated[req.GameStartAt, Body()],
+) -> responses.Game:
+    game = await interactor(game_id=id_, start_at=body.start_at, identity=identity)
+    return responses.Game.from_core(game)
+
+
+@inject
+async def change_my_game_status(
+    identity: FromDishka[ApiIdentityProvider],
+    interactor: FromDishka[ChangeGameStatusInteractor],
+    id_: Annotated[int, Path(alias="id")],
+    body: Annotated[req.GameStatusChange, Body()],
+) -> responses.Game:
+    game = await interactor(game_id=id_, status=body.status, identity=identity)
+    return responses.Game.from_core(game)
 
 
 @inject
@@ -69,10 +140,13 @@ async def get_all_games(
 async def get_game_card(
     dao: FromDishka[HolderDao],
     identity: FromDishka[ApiIdentityProvider],
+    retort: FromDishka[Retort],
     id_: Annotated[int, Path(alias="id")],
 ):
     game = await get_full_game(id_, identity, dao.game)
-    return responses.FullGame.from_core(game)
+    author = await identity.get_required_player()
+    files = await get_game_file_metas(game, author, dao.file_info)
+    return responses.FullGame.from_core(retort, game, files)
 
 
 @inject
@@ -128,6 +202,11 @@ def setup() -> APIRouter:
     router = APIRouter(prefix="/games")
     router.add_api_route("", get_all_games, methods=["GET"])
     router.add_api_route("/my", get_my_games_list, methods=["GET"])
+    router.add_api_route("/my", create_my_game, methods=["POST"])
+    router.add_api_route("/my/{id}", get_my_game, methods=["GET"])
+    router.add_api_route("/my/{id}/scenario", change_my_game_scenario, methods=["PUT"])
+    router.add_api_route("/my/{id}/start_at", change_my_game_start_at, methods=["PUT"])
+    router.add_api_route("/my/{id}/status", change_my_game_status, methods=["PUT"])
     router.add_api_route("/active", get_active_game, methods=["GET"])
     router.add_api_route("/active/me", get_my_role, methods=["GET"])
     router.add_api_route("/running/level/current", get_current_level, methods=["GET"])

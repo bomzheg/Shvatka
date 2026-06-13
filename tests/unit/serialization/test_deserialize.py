@@ -52,7 +52,7 @@ def test_deserialize_invalid_level(simple_scn: RawGameScenario, retort: Retort):
         load_level(level, retort)
 
     level = deepcopy(level_source)
-    level["time_hints"] = level.pop("time-hints")
+    level["time-hints"] = level.pop("time_hints")
     with pytest.raises(ScenarioNotCorrect):
         load_level(level, retort)
 
@@ -99,24 +99,24 @@ def test_serialize_simple(retort: Retort):
     serialized = retort.dump(game_example)
     assert serialized == {
         "name": "Funny game",
-        "author": {"can-be-author": True, "id": 100, "is-dummy": False, "username": None},
+        "author": {"can_be_author": True, "id": 100, "is_dummy": False, "username": None},
         "id": 10,
         "number": 20,
-        "manage-token": "",
-        "start-at": GAME_START_EXAMPLE.isoformat(),
+        "manage_token": "",
+        "start_at": GAME_START_EXAMPLE.isoformat(),
         "status": "complete",
         "results": {
-            "published-chanel-id": None,
-            "results-picture-file-id": None,
-            "keys-url": None,
+            "published_chanel_id": None,
+            "results_picture_file_id": None,
+            "keys_url": None,
         },
         "levels": [
             {
-                "db-id": 100,
-                "author": {"can-be-author": True, "id": 100, "is-dummy": False, "username": None},
-                "name-id": "level_100",
-                "game-id": 10,
-                "number-in-game": 0,
+                "db_id": 100,
+                "author": {"can_be_author": True, "id": 100, "is_dummy": False, "username": None},
+                "name_id": "level_100",
+                "game_id": 10,
+                "number_in_game": 0,
                 "scenario": {
                     "id": "level_100",
                     "__model_version__": 1,
@@ -134,23 +134,23 @@ def test_serialize_simple(retort: Retort):
                                     {
                                         "type": "text",
                                         "text": "hello",
-                                        "link-preview": None,
+                                        "link_preview": None,
                                     },
                                 ),
-                                "bonus-minutes": 1,
-                                "level-up": False,
-                                "next-level": None,
+                                "bonus_minutes": 1,
+                                "level_up": False,
+                                "next_level": None,
                             },
                         },
                     ],
-                    "time-hints": [
+                    "time_hints": [
                         {
                             "time": 0,
                             "hint": [
                                 {
                                     "type": "text",
                                     "text": "level_100_0",
-                                    "link-preview": None,
+                                    "link_preview": None,
                                 }
                             ],
                         },
@@ -160,7 +160,7 @@ def test_serialize_simple(retort: Retort):
                                 {
                                     "type": "text",
                                     "text": "level_100_10",
-                                    "link-preview": None,
+                                    "link_preview": None,
                                 }
                             ],
                         },
@@ -170,7 +170,7 @@ def test_serialize_simple(retort: Retort):
                                 {
                                     "type": "text",
                                     "text": "level_100_20",
-                                    "link-preview": None,
+                                    "link_preview": None,
                                 }
                             ],
                         },
@@ -180,7 +180,7 @@ def test_serialize_simple(retort: Retort):
                                 {
                                     "type": "text",
                                     "text": "level_100_20",
-                                    "link-preview": None,
+                                    "link_preview": None,
                                 }
                             ],
                         },
@@ -190,7 +190,7 @@ def test_serialize_simple(retort: Retort):
                                 {
                                     "type": "text",
                                     "text": "level_100_20",
-                                    "link-preview": None,
+                                    "link_preview": None,
                                 }
                             ],
                         },
@@ -200,7 +200,7 @@ def test_serialize_simple(retort: Retort):
                                 {
                                     "type": "text",
                                     "text": "level_100_20",
-                                    "link-preview": None,
+                                    "link_preview": None,
                                 }
                             ],
                         },
@@ -208,11 +208,11 @@ def test_serialize_simple(retort: Retort):
                 },
             },
             {
-                "db-id": 101,
-                "author": {"can-be-author": True, "id": 100, "is-dummy": False, "username": None},
-                "name-id": "level_101",
-                "game-id": 10,
-                "number-in-game": 1,
+                "db_id": 101,
+                "author": {"can_be_author": True, "id": 100, "is_dummy": False, "username": None},
+                "name_id": "level_101",
+                "game_id": 10,
+                "number_in_game": 1,
                 "scenario": {
                     "id": "level_101",
                     "__model_version__": 1,
@@ -222,14 +222,14 @@ def test_serialize_simple(retort: Retort):
                             "keys": ("SH2",),
                         }
                     ],
-                    "time-hints": [
+                    "time_hints": [
                         {
                             "time": 0,
                             "hint": [
                                 {
                                     "type": "text",
                                     "text": "level_101_0",
-                                    "link-preview": None,
+                                    "link_preview": None,
                                 }
                             ],
                         },
@@ -239,7 +239,7 @@ def test_serialize_simple(retort: Retort):
                                 {
                                     "type": "text",
                                     "text": "level_101_10",
-                                    "link-preview": None,
+                                    "link_preview": None,
                                 }
                             ],
                         },
@@ -249,7 +249,7 @@ def test_serialize_simple(retort: Retort):
                                 {
                                     "type": "text",
                                     "text": "level_101_20",
-                                    "link-preview": None,
+                                    "link_preview": None,
                                 }
                             ],
                         },
@@ -259,7 +259,7 @@ def test_serialize_simple(retort: Retort):
                                 {
                                     "type": "text",
                                     "text": "level_101_20",
-                                    "link-preview": None,
+                                    "link_preview": None,
                                 }
                             ],
                         },
@@ -269,7 +269,7 @@ def test_serialize_simple(retort: Retort):
                                 {
                                     "type": "text",
                                     "text": "level_101_20",
-                                    "link-preview": None,
+                                    "link_preview": None,
                                 }
                             ],
                         },
@@ -279,7 +279,7 @@ def test_serialize_simple(retort: Retort):
                                 {
                                     "type": "text",
                                     "text": "level_101_20",
-                                    "link-preview": None,
+                                    "link_preview": None,
                                 }
                             ],
                         },
@@ -287,11 +287,11 @@ def test_serialize_simple(retort: Retort):
                 },
             },
             {
-                "db-id": 102,
-                "author": {"can-be-author": True, "id": 100, "is-dummy": False, "username": None},
-                "name-id": "level_102",
-                "game-id": 10,
-                "number-in-game": 0,
+                "db_id": 102,
+                "author": {"can_be_author": True, "id": 100, "is_dummy": False, "username": None},
+                "name_id": "level_102",
+                "game_id": 10,
+                "number_in_game": 0,
                 "scenario": {
                     "id": "level_102",
                     "__model_version__": 1,
@@ -301,14 +301,14 @@ def test_serialize_simple(retort: Retort):
                             "keys": ("SH3",),
                         }
                     ],
-                    "time-hints": [
+                    "time_hints": [
                         {
                             "time": 0,
                             "hint": [
                                 {
                                     "type": "text",
                                     "text": "level_102_0",
-                                    "link-preview": None,
+                                    "link_preview": None,
                                 }
                             ],
                         },
@@ -318,7 +318,7 @@ def test_serialize_simple(retort: Retort):
                                 {
                                     "type": "text",
                                     "text": "level_102_10",
-                                    "link-preview": None,
+                                    "link_preview": None,
                                 }
                             ],
                         },
@@ -328,7 +328,7 @@ def test_serialize_simple(retort: Retort):
                                 {
                                     "type": "text",
                                     "text": "level_102_20",
-                                    "link-preview": None,
+                                    "link_preview": None,
                                 }
                             ],
                         },
@@ -338,7 +338,7 @@ def test_serialize_simple(retort: Retort):
                                 {
                                     "type": "text",
                                     "text": "level_102_20",
-                                    "link-preview": None,
+                                    "link_preview": None,
                                 }
                             ],
                         },
@@ -348,7 +348,7 @@ def test_serialize_simple(retort: Retort):
                                 {
                                     "type": "text",
                                     "text": "level_102_20",
-                                    "link-preview": None,
+                                    "link_preview": None,
                                 }
                             ],
                         },
@@ -358,7 +358,7 @@ def test_serialize_simple(retort: Retort):
                                 {
                                     "type": "text",
                                     "text": "level_102_20",
-                                    "link-preview": None,
+                                    "link_preview": None,
                                 }
                             ],
                         },
@@ -366,11 +366,11 @@ def test_serialize_simple(retort: Retort):
                 },
             },
             {
-                "db-id": 103,
-                "author": {"can-be-author": True, "id": 100, "is-dummy": False, "username": None},
-                "name-id": "level_103",
-                "game-id": 10,
-                "number-in-game": 0,
+                "db_id": 103,
+                "author": {"can_be_author": True, "id": 100, "is_dummy": False, "username": None},
+                "name_id": "level_103",
+                "game_id": 10,
+                "number_in_game": 0,
                 "scenario": {
                     "id": "level_103",
                     "__model_version__": 1,
@@ -380,14 +380,14 @@ def test_serialize_simple(retort: Retort):
                             "keys": ("SH4",),
                         }
                     ],
-                    "time-hints": [
+                    "time_hints": [
                         {
                             "time": 0,
                             "hint": [
                                 {
                                     "type": "text",
                                     "text": "level_103_0",
-                                    "link-preview": None,
+                                    "link_preview": None,
                                 }
                             ],
                         },
@@ -397,7 +397,7 @@ def test_serialize_simple(retort: Retort):
                                 {
                                     "type": "text",
                                     "text": "level_103_10",
-                                    "link-preview": None,
+                                    "link_preview": None,
                                 }
                             ],
                         },
@@ -407,7 +407,7 @@ def test_serialize_simple(retort: Retort):
                                 {
                                     "type": "text",
                                     "text": "level_103_20",
-                                    "link-preview": None,
+                                    "link_preview": None,
                                 }
                             ],
                         },
@@ -417,7 +417,7 @@ def test_serialize_simple(retort: Retort):
                                 {
                                     "type": "text",
                                     "text": "level_103_20",
-                                    "link-preview": None,
+                                    "link_preview": None,
                                 }
                             ],
                         },
@@ -427,7 +427,7 @@ def test_serialize_simple(retort: Retort):
                                 {
                                     "type": "text",
                                     "text": "level_103_20",
-                                    "link-preview": None,
+                                    "link_preview": None,
                                 }
                             ],
                         },
@@ -437,7 +437,7 @@ def test_serialize_simple(retort: Retort):
                                 {
                                     "type": "text",
                                     "text": "level_103_20",
-                                    "link-preview": None,
+                                    "link_preview": None,
                                 }
                             ],
                         },

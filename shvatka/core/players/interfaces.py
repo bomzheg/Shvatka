@@ -15,3 +15,15 @@ class PlayerUsernameChanger(Committer, Protocol):
 
     async def set_username(self, player: dto.Player, username: str) -> None:
         raise NotImplementedError
+
+
+class PlayerSearcher(Protocol):
+    async def search_players(
+        self,
+        *,
+        username: str | None = None,
+        name: str | None = None,
+        active: bool = True,
+        archive: bool = False,
+    ) -> list[dto.Player]:
+        raise NotImplementedError

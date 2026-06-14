@@ -8,16 +8,9 @@ from dataclasses import dataclass
 
 from shvatka.core.interfaces.dal.player import PlayerByIdGetter, PlayerTeamChecker
 from shvatka.core.models import dto
+from shvatka.core.players.dto import PlayerMainInfo
 from shvatka.core.players.interfaces import PlayerSearcher
 from shvatka.core.players.player import get_full_team_player_or_none
-
-
-@dataclass(frozen=True, slots=True)
-class PlayerMainInfo:
-    """Main info about a player together with their current team membership."""
-
-    player: dto.Player
-    team_player: dto.FullTeamPlayer | None
 
 
 @dataclass

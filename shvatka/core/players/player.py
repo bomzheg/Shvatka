@@ -34,6 +34,7 @@ from shvatka.core.utils.exceptions import (
     SaltError,
 )
 from shvatka.core.views.game import GameLogWriter, GameLogEvent, GameLogType
+from shvatka.core.views.team import TeamNotifier, PlayerJoinedTeam, PlayerLeftTeam
 
 logger = logging.getLogger(__name__)
 
@@ -113,13 +114,17 @@ async def join_team(
     manager: dto.Player,
     dao: TeamJoiner,
     role: str = DEFAULT_ROLE,
+    notifier: TeamNotifier | None = None,
 ):
     await dao.check_player_free(player)
-    check_can_add_players(await get_full_team_player(manager, team, dao))
+    # the captain is allowed to manage the team even if they temporarily left it
+    if not is_team_captain(team, manager):
+        check_can_add_players(await get_full_team_player(manager, team, dao))
     try:
         await dao.join_team(player, team, role=role)
     except PlayerRestoredInTeam:
         await dao.commit()
+        await _notify_joined(notifier, team, player, manager)
         raise
     await dao.commit()
     logger.info(
@@ -128,6 +133,25 @@ async def join_team(
         team.id,
         player.id,
     )
+    await _notify_joined(notifier, team, player, manager)
+
+
+def is_team_captain(team: dto.Team, player: dto.Player) -> bool:
+    return team.captain is not None and team.captain.id == player.id
+
+
+async def _notify_joined(
+    notifier: TeamNotifier | None, team: dto.Team, player: dto.Player, inviter: dto.Player
+) -> None:
+    if notifier is not None:
+        await notifier.notify(PlayerJoinedTeam(team=team, player=player, inviter=inviter))
+
+
+async def _notify_left(
+    notifier: TeamNotifier | None, team: dto.Team, player: dto.Player, remover: dto.Player
+) -> None:
+    if notifier is not None:
+        await notifier.notify(PlayerLeftTeam(team=team, player=player, remover=remover))
 
 
 async def get_checked_player_on_team(
@@ -167,15 +191,22 @@ async def change_emoji(
     await dao.commit()
 
 
-async def leave(player: dto.Player, remover: dto.Player, dao: TeamLeaver):
+async def leave(
+    player: dto.Player,
+    remover: dto.Player,
+    dao: TeamLeaver,
+    notifier: TeamNotifier | None = None,
+):
     team = await dao.get_team(player)
     if not team:
         raise PlayerNotInTeam(player=player)
     if player.id != remover.id:  # player itself always can leave
-        team_player = await get_full_team_player(
-            remover, team, dao
-        )  # team of remover must be the same as player
-        check_can_remove_player(team_player)  # and remover must have permission for remove
+        # the captain is allowed to manage the team even if they temporarily left it
+        if not is_team_captain(team, remover):
+            team_player = await get_full_team_player(
+                remover, team, dao
+            )  # team of remover must be the same as player
+            check_can_remove_player(team_player)  # and remover must have permission for remove
     if game := await dao.get_active_game():
         await dao.delete(
             dto.WaiverQuery(
@@ -187,6 +218,7 @@ async def leave(player: dto.Player, remover: dto.Player, dao: TeamLeaver):
         await dao.del_player_vote(team_id=team.id, player_id=player.id)
     await dao.leave_team(player)
     await dao.commit()
+    await _notify_left(notifier, team, player, remover)
 
 
 def check_allow_be_author(player: dto.Player):

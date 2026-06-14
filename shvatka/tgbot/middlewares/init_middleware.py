@@ -10,6 +10,7 @@ from shvatka.core.interfaces.clients.file_storage import FileStorage, FileGatewa
 from shvatka.core.interfaces.scheduler import Scheduler
 from shvatka.core.utils.key_checker_lock import KeyCheckerFactory
 from shvatka.core.views.game import GameLogWriter
+from shvatka.core.views.team import TeamNotifier
 from shvatka.core.views.level import LevelView
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.infrastructure.picture.results_painter import ResultsPainter
@@ -48,6 +49,7 @@ class InitMiddleware(BaseMiddleware):
         data["telegraph"] = await dishka.get(Telegraph)
         data["bg_manager_factory"] = self.bg_manager_factory
         data["game_log"] = await dishka.get(GameLogWriter)
+        data["team_notifier"] = await dishka.get(TeamNotifier)
         data["file_gateway"] = await dishka.get(FileGateway)
         data["hint_sender"] = await dishka.get(HintSender)
         data["level_view"] = await dishka.get(LevelView)

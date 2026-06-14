@@ -2,7 +2,13 @@ from dishka import Provider, Scope, provide
 
 from shvatka.api.config.models.main import ApiConfig
 from shvatka.api.utils.push import WebPushSender
-from shvatka.api.utils.web_input import WebInput, WebGameView, WebGameLogWriter, WebOrgNotifier
+from shvatka.api.utils.web_input import (
+    WebInput,
+    WebGameView,
+    WebGameLogWriter,
+    WebOrgNotifier,
+    WebTeamNotifier,
+)
 from shvatka.core.interfaces.current_game import CurrentGameProvider
 from shvatka.infrastructure.db.dao.rdb.push_subscription import PushSubscriptionDAO
 
@@ -29,3 +35,7 @@ class OtherApiProvider(Provider):
     @provide
     def org_notifier(self) -> WebOrgNotifier:
         return WebOrgNotifier()
+
+    @provide
+    def team_notifier(self) -> WebTeamNotifier:
+        return WebTeamNotifier()

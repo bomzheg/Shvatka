@@ -9,7 +9,12 @@ import contextlib
 from dataclasses import dataclass
 from typing import Sequence
 
-from shvatka.core.interfaces.dal.player import PlayerByIdGetter, TeamLeaver, TeamPlayersGetter
+from shvatka.core.interfaces.dal.player import (
+    PlayerByIdGetter,
+    TeamLeaver,
+    TeamPlayerGetter,
+    TeamPlayersGetter,
+)
 from shvatka.core.interfaces.dal.team import TeamByIdGetter, TeamsGetter
 from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.models import dto, enums
@@ -17,18 +22,15 @@ from shvatka.core.players.player import (
     check_can_manage_players,
     get_full_team_player,
     get_team_players,
+    is_team_captain,
     join_team,
     leave,
 )
-from shvatka.core.services.team import (
-    change_team_desc,
-    get_team_by_id,
-    get_teams,
-    rename_team,
-)
+from shvatka.core.services.team import check_can_change_name, get_team_by_id, get_teams
 from shvatka.core.teams.adapters import TeamEditor, TeamPlayerAdder, TeamPlayerUpdater
 from shvatka.core.utils.defaults_constants import DEFAULT_ROLE
 from shvatka.core.utils.exceptions import PlayerRestoredInTeam
+from shvatka.core.views.team import TeamNotifier
 
 
 @dataclass
@@ -58,22 +60,27 @@ class TeamPlayersInteractor:
 
 
 @dataclass
-class AddPlayerToMyTeamInteractor:
+class AddPlayerToTeamInteractor:
     dao: TeamPlayerAdder
+    team_dao: TeamByIdGetter
     player_dao: PlayerByIdGetter
+    notifier: TeamNotifier
 
     async def __call__(
         self,
+        team_id: int,
         player_id: int,
         identity: IdentityProvider,
         role: str | None = None,
         emoji: str | None = None,
     ) -> dto.FullTeamPlayer:
         manager = await identity.get_required_player()
-        team = await identity.get_required_team()
+        team = await get_team_by_id(team_id, self.team_dao)
         player = await self.player_dao.get_by_id(player_id)
         with contextlib.suppress(PlayerRestoredInTeam):
-            await join_team(player, team, manager, self.dao, role=role or DEFAULT_ROLE)
+            await join_team(
+                player, team, manager, self.dao, role=role or DEFAULT_ROLE, notifier=self.notifier
+            )
         if emoji is not None:
             team_player = await self.dao.get_team_player(player)
             await self.dao.change_emoji(team_player, emoji)
@@ -85,11 +92,12 @@ class AddPlayerToMyTeamInteractor:
 class RemovePlayerFromTeamInteractor:
     dao: TeamLeaver
     player_dao: PlayerByIdGetter
+    notifier: TeamNotifier
 
     async def __call__(self, player_id: int, identity: IdentityProvider) -> None:
         remover = await identity.get_required_player()
         player = await self.player_dao.get_by_id(player_id)
-        await leave(player, remover, self.dao)
+        await leave(player, remover, self.dao, notifier=self.notifier)
 
 
 @dataclass
@@ -109,8 +117,9 @@ class UpdateTeamPlayerInteractor:
     ) -> dto.FullTeamPlayer:
         manager = await identity.get_required_player()
         team = await get_team_by_id(team_id, self.team_dao)
-        manager_team_player = await get_full_team_player(manager, team, self.dao)
-        check_can_manage_players(manager_team_player)
+        # the captain may manage the team even if they temporarily left it
+        if not is_team_captain(team, manager):
+            check_can_manage_players(await get_full_team_player(manager, team, self.dao))
         player = await self.player_dao.get_by_id(player_id)
         # raises PlayerNotInTeam if the player is not in this team (or already left)
         target = await get_full_team_player(player, team, self.dao)
@@ -129,6 +138,7 @@ class UpdateTeamPlayerInteractor:
 @dataclass
 class EditTeamInteractor:
     dao: TeamEditor
+    team_player_dao: TeamPlayerGetter
 
     async def __call__(
         self,
@@ -137,10 +147,16 @@ class EditTeamInteractor:
         name: str | None = None,
         description: str | None = None,
     ) -> dto.Team:
-        captain = await identity.get_required_full_team_player()
+        manager = await identity.get_required_player()
         team = await get_team_by_id(team_id, self.dao)
+        # the captain may rename the team even if they temporarily left it
+        if not is_team_captain(team, manager):
+            check_can_change_name(
+                team, await get_full_team_player(manager, team, self.team_player_dao)
+            )
         if name is not None:
-            await rename_team(team, captain, name, self.dao)
+            await self.dao.rename_team(team, name)
         if description is not None:
-            await change_team_desc(team, captain, description, self.dao)
+            await self.dao.change_team_desc(team, description)
+        await self.dao.commit()
         return await get_team_by_id(team_id, self.dao)

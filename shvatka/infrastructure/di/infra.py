@@ -11,6 +11,7 @@ from shvatka.core.views.game import (
     OrgNotifier,
     Event,
 )
+from shvatka.core.views.team import TeamNotifier, TeamEvent
 from shvatka.infrastructure.bus.in_memory import UsedOneTimeTokenInteractor
 
 
@@ -54,6 +55,11 @@ class NoOpOrgNotifier(OrgNotifier):
         pass
 
 
+class NoOpTeamNotifier(TeamNotifier):
+    async def notify(self, event: TeamEvent) -> None:
+        pass
+
+
 class InfrastructureProvider(Provider):
     scope = Scope.APP
 
@@ -72,6 +78,10 @@ class InfrastructureProvider(Provider):
     @provide
     def org_notifier(self) -> OrgNotifier:
         return NoOpOrgNotifier()
+
+    @provide
+    def team_notifier(self) -> TeamNotifier:
+        return NoOpTeamNotifier()
 
 
 def get_infra_only_providers() -> list[Provider]:

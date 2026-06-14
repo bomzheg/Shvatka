@@ -78,19 +78,23 @@ class TgUser:
 
 
 @dataclass
-class PlayerInTeam:
-    current_team: Team | None
+class TeamPlayer:
+    id: int
+    team: Team | None
     date_joined: datetime
     role: str
+    emoji: str | None
 
     @classmethod
-    def from_core(cls, core: dto.FullTeamPlayer | None) -> "PlayerInTeam | None":
+    def from_core(cls, core: dto.FullTeamPlayer | None) -> "TeamPlayer | None":
         if core is None:
             return None
         return cls(
-            current_team=Team.from_core(core.team),
+            id=core.id,
+            team=Team.from_core(core.team),
             date_joined=core.date_joined,
             role=core.role,
+            emoji=core.emoji,
         )
 
 
@@ -100,7 +104,7 @@ class FullPlayer:
     username: str | None
     can_be_author: bool
     tg: TgUser | None
-    player_in_team: PlayerInTeam | None
+    player_in_team: TeamPlayer | None
 
     @classmethod
     def from_core(cls, player: dto.Player, team_player: dto.FullTeamPlayer | None) -> "FullPlayer":
@@ -109,7 +113,7 @@ class FullPlayer:
             username=player.username,
             can_be_author=player.can_be_author,
             tg=TgUser.from_core(player._user),  # noqa: SLF001
-            player_in_team=PlayerInTeam.from_core(team_player),
+            player_in_team=TeamPlayer.from_core(team_player),
         )
 
 

@@ -9,7 +9,7 @@ from shvatka.api.dependencies.auth import ApiIdentityProvider
 from shvatka.api.models import req, responses
 from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.teams.interactors import (
-    AddPlayerToMyTeamInteractor,
+    AddPlayerToTeamInteractor,
     EditTeamInteractor,
     GetTeamInteractor,
     RemovePlayerFromTeamInteractor,
@@ -35,12 +35,14 @@ async def get_my_team(identity: FromDishka[IdentityProvider]) -> responses.Team 
 
 
 @inject
-async def add_player_to_my_team(
+async def add_player_to_team(
     identity: FromDishka[ApiIdentityProvider],
-    interactor: FromDishka[AddPlayerToMyTeamInteractor],
+    interactor: FromDishka[AddPlayerToTeamInteractor],
+    id_: Annotated[int, Path(alias="id")],
     body: Annotated[req.JoinTeam, Body()],
 ) -> responses.TeamMember:
     team_player = await interactor(
+        team_id=id_,
         player_id=body.player_id,
         identity=identity,
         role=body.role,
@@ -114,10 +116,10 @@ def setup() -> APIRouter:
     router = APIRouter(prefix="/teams")
     router.add_api_route("", get_teams, methods=["GET"])
     router.add_api_route("/my", get_my_team, methods=["GET"])
-    router.add_api_route("/my/players", add_player_to_my_team, methods=["POST"])
     router.add_api_route("/{id}", get_team, methods=["GET"])
     router.add_api_route("/{id}", edit_team, methods=["PUT"])
     router.add_api_route("/{id}/players", get_team_players, methods=["GET"])
+    router.add_api_route("/{id}/players", add_player_to_team, methods=["POST"])
     router.add_api_route(
         "/{id}/players/{player_id}",
         remove_player_from_team,

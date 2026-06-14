@@ -101,7 +101,7 @@ async def test_add_player_to_my_team(
     check_dao: HolderDao,
 ):
     resp = await client.post(
-        "/teams/my/players",
+        f"/teams/{gryffindor.id}/players",
         cookies=auth_cookies(token),
         json={"player_id": hermione.id, "role": "seeker", "emoji": "🧹"},
         follow_redirects=True,
@@ -130,7 +130,7 @@ async def test_add_player_forbidden_for_non_captain(
     await join_team(hermione, gryffindor, harry, dao.team_player)
     hermione_token = auth.create_user_token(hermione)
     resp = await client.post(
-        "/teams/my/players",
+        f"/teams/{gryffindor.id}/players",
         cookies=auth_cookies(hermione_token),
         json={"player_id": draco.id},
         follow_redirects=True,

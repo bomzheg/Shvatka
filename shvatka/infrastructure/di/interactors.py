@@ -24,7 +24,7 @@ from shvatka.core.players.interactors import (
     SearchPlayersInteractor,
 )
 from shvatka.core.teams.interactors import (
-    AddPlayerToMyTeamInteractor,
+    AddPlayerToTeamInteractor,
     EditTeamInteractor,
     GetTeamInteractor,
     RemovePlayerFromTeamInteractor,
@@ -32,6 +32,7 @@ from shvatka.core.teams.interactors import (
     TeamsListInteractor,
     UpdateTeamPlayerInteractor,
 )
+from shvatka.core.views.team import TeamNotifier
 from shvatka.core.interfaces.clients.file_storage import FileStorage
 from shvatka.core.interfaces.dal.complex import GameScenarioEditor
 from shvatka.core.interfaces.scheduler import Scheduler
@@ -206,12 +207,18 @@ class TeamProvider(Provider):
         return TeamPlayersInteractor(team_dao=dao.team, players_dao=dao.team_player)
 
     @provide
-    def add_player(self, dao: HolderDao) -> AddPlayerToMyTeamInteractor:
-        return AddPlayerToMyTeamInteractor(dao=dao.team_player, player_dao=dao.player)
+    def add_player(self, dao: HolderDao, notifier: TeamNotifier) -> AddPlayerToTeamInteractor:
+        return AddPlayerToTeamInteractor(
+            dao=dao.team_player, team_dao=dao.team, player_dao=dao.player, notifier=notifier
+        )
 
     @provide
-    def remove_player(self, dao: HolderDao) -> RemovePlayerFromTeamInteractor:
-        return RemovePlayerFromTeamInteractor(dao=dao.team_leaver, player_dao=dao.player)
+    def remove_player(
+        self, dao: HolderDao, notifier: TeamNotifier
+    ) -> RemovePlayerFromTeamInteractor:
+        return RemovePlayerFromTeamInteractor(
+            dao=dao.team_leaver, player_dao=dao.player, notifier=notifier
+        )
 
     @provide
     def update_team_player(self, dao: HolderDao) -> UpdateTeamPlayerInteractor:
@@ -221,4 +228,4 @@ class TeamProvider(Provider):
 
     @provide
     def edit_team(self, dao: HolderDao) -> EditTeamInteractor:
-        return EditTeamInteractor(dao=dao.team)
+        return EditTeamInteractor(dao=dao.team, team_player_dao=dao.team_player)

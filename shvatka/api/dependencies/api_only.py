@@ -6,9 +6,11 @@ from shvatka.api.utils.web_input import (
     WebGameLogWriter,
     WebOrgNotifier,
     WebGamePreparer,
+    WebTeamNotifier,
 )
 from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.views.game import GameView, GameLogWriter, OrgNotifier, GameViewPreparer
+from shvatka.core.views.team import TeamNotifier
 from shvatka.infrastructure.bus.in_memory import UsedOneTimeTokenInteractor
 
 
@@ -35,6 +37,10 @@ class ApiOnlyProvider(Provider):
     @provide
     def web_only_org_notifier(self, org_notifier: WebOrgNotifier) -> OrgNotifier:
         return org_notifier
+
+    @provide
+    def web_only_team_notifier(self, team_notifier: WebTeamNotifier) -> TeamNotifier:
+        return team_notifier
 
     @provide
     def web_only_preparer_view(self) -> GameViewPreparer:

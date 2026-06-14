@@ -27,6 +27,7 @@ from shvatka.core.services.team import (
     change_team_desc,
     change_chat,
 )
+from shvatka.core.views.team import TeamNotifier
 from shvatka.core.utils import exceptions
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.tgbot import keyboards as kb
@@ -100,16 +101,10 @@ async def remove_player_handler(c: CallbackQuery, button: Button, manager: Dialo
     await c.answer()
     dao: HolderDao = manager.middleware_data["dao"]
     captain: dto.Player = manager.middleware_data["player"]
+    team_notifier: TeamNotifier = manager.middleware_data["team_notifier"]
     player_id = manager.dialog_data["selected_player_id"]
     player = await get_player_by_id(player_id, dao.player)
-    await leave(player=player, remover=captain, dao=dao.team_leaver)
-    bot: Bot = manager.middleware_data["bot"]
-    team = await get_my_team(captain, dao.team_player)
-    assert team
-    await bot.send_message(
-        chat_id=team.get_chat_id(),  # type: ignore[arg-type]
-        text=f"Игрок {hd.quote(player.name_mention)} был исключён из команды.",
-    )
+    await leave(player=player, remover=captain, dao=dao.team_leaver, notifier=team_notifier)
     await manager.switch_to(state=states.CaptainsBridgeSG.players)
 
 
@@ -217,13 +212,14 @@ async def gotten_user_request(m: Message, widget: Any, manager: DialogManager):
         raise RuntimeError("only user shared and contact are allowed")
     dao: HolderDao = manager.middleware_data["dao"]
     captain: dto.Player = manager.middleware_data["player"]
+    team_notifier: TeamNotifier = manager.middleware_data["team_notifier"]
     team = await get_my_team(captain, dao.team_player)
     assert team
     player = await get_player_by_user_id(target_id, dao.player)
     bot: Bot = manager.middleware_data["bot"]
     chat: dto.Chat = manager.middleware_data["chat"]
     try:
-        await join_team(player, team, captain, dao.team_player)
+        await join_team(player, team, captain, dao.team_player, notifier=team_notifier)
     except exceptions.PlayerAlreadyInTeam as e:
         await player_already_in_team(
             e=e,

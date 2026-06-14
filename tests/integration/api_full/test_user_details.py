@@ -7,12 +7,12 @@ from shvatka.infrastructure.db.dao.holder import HolderDao
 
 
 @pytest.mark.asyncio
-async def test_get_player_main_info(
+async def test_get_user_details(
     client: AsyncClient,
     harry: dto.Player,
     gryffindor: dto.Team,
 ):
-    resp = await client.get(f"/players/{harry.id}")
+    resp = await client.get(f"/users/{harry.id}/details")
     assert resp.is_success
     resp.read()
     body = resp.json()
@@ -22,16 +22,17 @@ async def test_get_player_main_info(
     assert body["tg"]["tg_id"] == harry.get_chat_id()
     assert body["tg"]["username"] == harry.get_tg_username()
     assert body["player_in_team"] is not None
-    assert body["player_in_team"]["current_team"]["id"] == gryffindor.id
+    assert body["player_in_team"]["id"] is not None
+    assert body["player_in_team"]["team"]["id"] == gryffindor.id
     assert body["player_in_team"]["role"] == CAPTAIN_ROLE
 
 
 @pytest.mark.asyncio
-async def test_get_player_without_team(
+async def test_get_user_details_without_team(
     client: AsyncClient,
     hermione: dto.Player,
 ):
-    resp = await client.get(f"/players/{hermione.id}")
+    resp = await client.get(f"/users/{hermione.id}/details")
     assert resp.is_success
     resp.read()
     body = resp.json()
@@ -40,12 +41,12 @@ async def test_get_player_without_team(
 
 
 @pytest.mark.asyncio
-async def test_search_players_by_username(
+async def test_search_users_by_username(
     client: AsyncClient,
     harry: dto.Player,
     hermione: dto.Player,
 ):
-    resp = await client.get("/players/search", params={"username": harry.username})
+    resp = await client.get("/users", params={"username": harry.username}, follow_redirects=True)
     assert resp.is_success
     resp.read()
     items = resp.json()["items"]
@@ -55,12 +56,12 @@ async def test_search_players_by_username(
 
 
 @pytest.mark.asyncio
-async def test_search_players_by_name(
+async def test_search_users_by_name(
     client: AsyncClient,
     harry: dto.Player,
     hermione: dto.Player,
 ):
-    resp = await client.get("/players/search", params={"name": "Hermione"})
+    resp = await client.get("/users", params={"name": "Hermione"}, follow_redirects=True)
     assert resp.is_success
     resp.read()
     items = resp.json()["items"]
@@ -70,15 +71,16 @@ async def test_search_players_by_name(
 
 
 @pytest.mark.asyncio
-async def test_search_players_archive_excludes_tg(
+async def test_search_users_archive_excludes_tg(
     client: AsyncClient,
     harry: dto.Player,
     dao: HolderDao,
 ):
     # archive only -> only forum users (without tg). harry has tg, so excluded.
     resp = await client.get(
-        "/players/search",
+        "/users",
         params={"username": harry.username, "active": False, "archive": True},
+        follow_redirects=True,
     )
     assert resp.is_success
     resp.read()

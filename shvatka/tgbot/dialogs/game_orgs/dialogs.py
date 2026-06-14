@@ -61,6 +61,11 @@ game_orgs = Dialog(
             on_click=change_permission_handler,
         ),
         Button(
+            Format("{view_scenario}Смотреть сценарий"),
+            id="view_scenario",
+            on_click=change_permission_handler,
+        ),
+        Button(
             Format("{can_validate_waivers}Принимать вейверы"),
             id="can_validate_waivers",
             on_click=change_permission_handler,

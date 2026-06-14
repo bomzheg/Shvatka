@@ -24,6 +24,7 @@ class Organizer(Base):
     can_spy = mapped_column(Boolean, default=False, nullable=False)
     can_see_log_keys = mapped_column(Boolean, default=False, nullable=False)
     can_validate_waivers = mapped_column(Boolean, default=False, nullable=False)
+    view_scenario = mapped_column(Boolean, default=False, nullable=False)
     deleted = mapped_column(Boolean, default=False, nullable=False)
 
     __table_args__ = (UniqueConstraint("player_id", "game_id"),)
@@ -36,5 +37,6 @@ class Organizer(Base):
             can_spy=self.can_spy,
             can_see_log_keys=self.can_see_log_keys,
             can_validate_waivers=self.can_validate_waivers,
+            view_scenario=self.view_scenario,
             deleted=self.deleted,
         )

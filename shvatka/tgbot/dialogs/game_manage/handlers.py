@@ -240,7 +240,7 @@ async def publish_game_forum(
     assert m.text
     username, password = map(str.strip, m.text.split("\n", maxsplit=1))
     game_id = manager.dialog_data["my_game_id"]
-    game_ = await get_full_game(game_id, identity, dao.game)
+    game_ = await get_full_game(game_id, identity, dao.game, dao.organizer)
     asyncio.create_task(upload_wrapper(game_, username, password, m))
 
 
@@ -258,7 +258,9 @@ async def get_excel_results_handler(
     dao: FromDishka[HolderDao],
 ):
     game_id = manager.dialog_data["game_id"]
-    full_game = await get_full_game(id_=game_id, identity=identity, dao=dao.game)
+    full_game = await get_full_game(
+        id_=game_id, identity=identity, dao=dao.game, org_dao=dao.organizer
+    )
     game_stat = await get_game_stat(game=full_game, identity=identity, dao=dao.game_stat)
     file = BytesIO()
     export_results(game=full_game, game_stat=game_stat, file=file)

@@ -11,6 +11,7 @@ class Organizer:
     can_spy: bool
     can_see_log_keys: bool
     can_validate_waivers: bool
+    view_scenario: bool
     deleted: bool
 
 
@@ -24,4 +25,5 @@ class PrimaryOrganizer(Organizer):
     can_spy: bool = True
     can_see_log_keys: bool = True
     can_validate_waivers: bool = True
+    view_scenario: bool = True
     deleted: bool = False

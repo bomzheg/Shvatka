@@ -22,6 +22,7 @@ from shvatka.core.interfaces.dal.game import (
     GameStartPlanner,
     WaiverStarter,
 )
+from shvatka.core.interfaces.dal.organizer import OrgByPlayerGetter
 from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.interfaces.scheduler import Scheduler
 from shvatka.core.models import dto, enums
@@ -55,9 +56,10 @@ class MyGamesInteractor:
 @dataclass
 class MyGameInteractor:
     dao: GameByIdGetter
+    org_dao: OrgByPlayerGetter
 
     async def __call__(self, game_id: int, identity: IdentityProvider) -> dto.FullGame:
-        return await get_full_game(game_id, identity, self.dao)
+        return await get_full_game(game_id, identity, self.dao, self.org_dao)
 
 
 @dataclass

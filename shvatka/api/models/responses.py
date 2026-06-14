@@ -384,6 +384,7 @@ class OrganizerDto:
     can_spy: bool
     can_see_log_keys: bool
     can_validate_waivers: bool
+    view_scenario: bool
     deleted: bool
 
     @classmethod
@@ -395,6 +396,7 @@ class OrganizerDto:
             can_spy=core.can_spy,
             can_see_log_keys=core.can_see_log_keys,
             can_validate_waivers=core.can_validate_waivers,
+            view_scenario=core.view_scenario,
             deleted=core.deleted,
         )
 

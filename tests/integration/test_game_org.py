@@ -69,6 +69,7 @@ async def test_agree_invite(
     assert not actual.can_spy
     assert not actual.can_see_log_keys
     assert not actual.can_validate_waivers
+    assert not actual.view_scenario
     assert not actual.deleted
 
     event = org_notifier.calls.pop()

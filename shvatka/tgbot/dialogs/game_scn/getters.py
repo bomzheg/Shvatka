@@ -34,7 +34,7 @@ async def select_full_game(
 ):
     data: dict[str, Any] = dialog_manager.start_data  # type: ignore[assignment]
     id_: int = data["game_id"]
-    game = await get_full_game(id_, identity, dao.game)
+    game = await get_full_game(id_, identity, dao.game, dao.organizer)
     return {
         "levels": game.levels,
         "game": game,

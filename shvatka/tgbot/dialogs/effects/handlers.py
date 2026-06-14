@@ -146,7 +146,7 @@ async def process_routed_level_id(
     dao: FromDishka[HolderDao],
     identity: FromDishka[IdentityProvider],
 ):
-    game = await get_full_game(manager.dialog_data["game_id"], identity, dao.game)
+    game = await get_full_game(manager.dialog_data["game_id"], identity, dao.game, dao.organizer)
     ids = {lvl.name_id for lvl in game.levels}
     if name_id not in ids:
         await m.reply(

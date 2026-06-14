@@ -137,7 +137,7 @@ class GameEditProvider(Provider):
 
     @provide
     def my_game(self, dao: HolderDao) -> MyGameInteractor:
-        return MyGameInteractor(dao.game)
+        return MyGameInteractor(dao.game, dao.organizer)
 
     @provide
     def create_game(self, dao: HolderDao) -> CreateGameInteractor:

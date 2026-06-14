@@ -18,11 +18,16 @@ from shvatka.core.interfaces.dal.game import (
     PreviewGameByIdGetter,
 )
 from shvatka.core.interfaces.dal.level import LevelLinker
+from shvatka.core.interfaces.dal.organizer import OrgByPlayerGetter
 from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.interfaces.scheduler import Scheduler
 from shvatka.core.models import dto
 from shvatka.core.models.dto import scn, export_stat
-from shvatka.core.rules.game import check_can_read, check_game_editable
+from shvatka.core.rules.game import (
+    check_can_read,
+    check_can_view_scenario,
+    check_game_editable,
+)
 from shvatka.core.rules.level import (
     check_is_author as check_is_level_author,
     check_can_link_to_game,
@@ -152,10 +157,15 @@ async def get_preview_game(
     return await dao.get_preview(id_=id_, author=author)
 
 
-async def get_full_game(id_: int, identity: IdentityProvider, dao: GameByIdGetter) -> dto.FullGame:
-    author = await identity.get_required_player()
+async def get_full_game(
+    id_: int,
+    identity: IdentityProvider,
+    dao: GameByIdGetter,
+    org_dao: OrgByPlayerGetter,
+) -> dto.FullGame:
+    player = await identity.get_required_player()
     game = await dao.get_full(id_=id_)
-    check_can_read(game, author)
+    await check_can_view_scenario(game, player, org_dao)
     return game
 
 

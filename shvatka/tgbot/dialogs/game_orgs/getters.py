@@ -41,4 +41,5 @@ async def get_org(dialog_manager: DialogManager, dao: HolderDao, **_):
         "can_spy": PERMISSION_EMOJI[org.can_spy],
         "can_see_log_keys": PERMISSION_EMOJI[org.can_see_log_keys],
         "can_validate_waivers": PERMISSION_EMOJI[org.can_validate_waivers],
+        "view_scenario": PERMISSION_EMOJI[org.view_scenario],
     }

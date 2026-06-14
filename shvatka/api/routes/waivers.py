@@ -11,7 +11,7 @@ from sqlalchemy.exc import NoResultFound
 from shvatka.api.dependencies.auth import ApiIdentityProvider
 from shvatka.api.models import req, responses
 from shvatka.core.interfaces.current_game import CurrentGameProvider
-from shvatka.core.models import dto, enums
+from shvatka.core.models import dto
 from shvatka.core.services.game import get_game
 from shvatka.core.waiver.interactors import (
     WaiverCompleteReaderInteractor,
@@ -47,29 +47,6 @@ class WaiversDto:
         )
 
 
-@dataclass(kw_only=True, frozen=True, slots=True)
-class WaiverPlayer:
-    player: responses.Player
-    played: enums.Played
-
-    @classmethod
-    def from_core(cls, waiver: dto.Waiver) -> "WaiverPlayer":
-        return cls(player=responses.Player.from_core(waiver.player), played=waiver.played)
-
-
-@dataclass(kw_only=True, frozen=True, slots=True)
-class TeamWaivers:
-    team: responses.Team
-    players: list[WaiverPlayer]
-
-    @classmethod
-    def from_core(cls, team: dto.Team, waivers: list[dto.Waiver]) -> "TeamWaivers":
-        return cls(
-            team=responses.Team.from_core(team),
-            players=[WaiverPlayer.from_core(w) for w in waivers],
-        )
-
-
 @inject
 async def get_current_waivers(
     interactor: FromDishka[WaiverCompleteReaderInteractor],
@@ -87,13 +64,13 @@ async def replace_current_waivers(
     identity: FromDishka[ApiIdentityProvider],
     interactor: FromDishka[ReplaceTeamWaiversInteractor],
     body: Annotated[req.ReplaceWaivers, Body()],
-) -> TeamWaivers:
+) -> responses.TeamWaivers:
     waivers = await interactor(
         identity=identity,
         votes={vote.player_id: vote.played for vote in body.waivers},
     )
     team = await identity.get_required_team()
-    return TeamWaivers.from_core(team, waivers)
+    return responses.TeamWaivers.from_core(team, waivers)
 
 
 @inject

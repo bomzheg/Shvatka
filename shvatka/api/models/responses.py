@@ -437,3 +437,26 @@ class UploadedFile:
             content_type=core.content_type,
             mime_type=core.mime_type,
         )
+
+
+@dataclass(kw_only=True, frozen=True, slots=True)
+class WaiverPlayer:
+    player: Player
+    played: enums.Played
+
+    @classmethod
+    def from_core(cls, waiver: dto.Waiver) -> "WaiverPlayer":
+        return cls(player=Player.from_core(waiver.player), played=waiver.played)
+
+
+@dataclass(kw_only=True, frozen=True, slots=True)
+class TeamWaivers:
+    team: Team | None
+    players: list[WaiverPlayer]
+
+    @classmethod
+    def from_core(cls, team: dto.Team, waivers: list[dto.Waiver]) -> "TeamWaivers":
+        return cls(
+            team=Team.from_core(team),
+            players=[WaiverPlayer.from_core(w) for w in waivers],
+        )

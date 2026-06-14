@@ -47,6 +47,7 @@ from shvatka.core.interfaces.current_game import CurrentGameProvider
 from shvatka.core.interfaces.dal.game import GameByIdGetter
 from shvatka.core.interfaces.dal.game_play import GamePlayerDao
 from shvatka.core.services.current_game import CurrentGameProviderImpl
+from shvatka.core.interfaces.dal.waiver import WaiverApprover
 from shvatka.core.waiver.adapters import WaiverVoteAdder, WaiverVoteGetter, PollDraftsReader
 from shvatka.core.scenario.interactors import (
     AllGameKeysReaderInteractor,
@@ -58,6 +59,7 @@ from shvatka.core.waiver.interactors import (
     AddWaiverVoteInteractor,
     WaiverCompleteReaderInteractor,
     AllWaiversDraftReaderInteractor,
+    ReplaceTeamWaiversInteractor,
 )
 from shvatka.infrastructure.bus.in_memory import InMemoryBus
 from shvatka.infrastructure.db.dao.complex2.waiver import (
@@ -173,10 +175,15 @@ class WaiverProvider(Provider):
     add_waiver_vote = provide(AddWaiverVoteInteractor)
     waivers_complete_reader_interactor = provide(WaiverCompleteReaderInteractor)
     waiver_draft_reader_interactor = provide(AllWaiversDraftReaderInteractor)
+    replace_team_waivers_interactor = provide(ReplaceTeamWaiversInteractor)
 
     waiver_vote_adder_dao = provide(WaiverVoteAdderImpl, provides=WaiverVoteAdder)
     waiver_vote_getter_dao = provide(WaiverVoteGetterImpl, provides=WaiverVoteGetter)
     poll_drafts_reader_dao = provide(PollDraftsReaderImpl, provides=PollDraftsReader)
+
+    @provide
+    def waiver_approver(self, dao: HolderDao) -> WaiverApprover:
+        return dao.waiver_approver
 
 
 class PlayerProvider(Provider):

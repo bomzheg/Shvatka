@@ -100,6 +100,21 @@ class WaiverDao(BaseDAO[models.Waiver]):
             for w in result.all()
         ]
 
+    async def get_all_by_team(self, game: dto.Game, team: dto.Team) -> list[dto.Waiver]:
+        result: ScalarResult[models.Waiver] = await self.session.scalars(
+            select(models.Waiver)
+            .options(
+                joinedload(models.Waiver.player).options(
+                    joinedload(models.Player.user), joinedload(models.Player.forum_user)
+                ),
+            )
+            .where(
+                models.Waiver.game_id == game.id,
+                models.Waiver.team_id == team.id,
+            )
+        )
+        return [w.to_dto(w.player.to_dto_user_prefetched(), team, game) for w in result.all()]
+
     async def get_played_teams(self, game: dto.Game) -> Iterable[dto.Team]:
         result = await self.session.scalars(
             select(models.Waiver)

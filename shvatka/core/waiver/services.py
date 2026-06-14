@@ -10,7 +10,7 @@ from shvatka.core.models import dto
 from shvatka.core.models import enums
 from shvatka.core.models.enums.played import Played
 from shvatka.core.players.player import get_checked_player_on_team, get_full_team_player
-from shvatka.core.utils.exceptions import WaiverForbidden, PermissionsError
+from shvatka.core.utils.exceptions import WaiverForbidden, PermissionsError, PlayerNotInTeam
 
 
 async def get_vote_to_voted(
@@ -94,6 +94,50 @@ async def approve_waivers(
         )
         await dao.upsert(waiver)
     await dao.commit()
+
+
+async def replace_team_waivers(
+    game: dto.Game,
+    team: dto.Team,
+    approver: dto.Player,
+    votes: dict[int, Played],
+    dao: WaiverApprover,
+) -> list[dto.Waiver]:
+    """
+    Полностью заменяет вейверы команды на игру.
+
+    Доступно капитану или игроку с правом ``can_manage_waivers``. Игроки,
+    переданные в ``votes`` (player_id -> статус участия), сохраняются/обновляются,
+    а вейверы игроков, отсутствующих в ``votes``, удаляются.
+
+    :param game: игра, для которой заменяются вейверы
+    :param team: команда, чьи вейверы заменяются
+    :param approver: игрок, выполняющий замену (как правило — капитан)
+    :param votes: маппинг id игрока -> статус участия
+    :param dao:
+    :return: итоговый список вейверов команды
+    """
+    team_player = await get_full_team_player(approver, team, dao)
+    check_allow_approve_waivers(team_player)
+    members = {tp.player.id: tp for tp in await dao.get_players(team)}
+    for player_id in votes:
+        if player_id not in members:
+            raise PlayerNotInTeam(player_id=player_id, team=team)
+    for existing in await dao.get_team_waivers(game, team):
+        if existing.player.id not in votes:
+            await dao.delete(dto.WaiverQuery(player=existing.player, team=team, game=game))
+    result = []
+    for player_id, played in votes.items():
+        waiver = dto.Waiver(
+            player=members[player_id].player,
+            team=team,
+            game=game,
+            played=played,
+        )
+        await dao.upsert(waiver)
+        result.append(waiver)
+    await dao.commit()
+    return result
 
 
 async def get_voted_yes(team: dto.Team, dao: WaiverApprover) -> list[dto.Vote]:

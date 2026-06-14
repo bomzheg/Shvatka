@@ -71,11 +71,13 @@ class GameFileReaderInteractor:
         file_gateway: FileGateway,
         current_game: CurrentGameProvider,
         game_play_dao: GamePlayDao,
+        org_dao: OrgByPlayerGetter,
     ):
         self.file_gateway = file_gateway
         self.dao = dao
         self.current_game = current_game
         self.game_play_dao = game_play_dao
+        self.org_dao = org_dao
 
     async def __call__(
         self, guid: str, game_id: int, identity: IdentityProvider
@@ -83,7 +85,11 @@ class GameFileReaderInteractor:
         user = await identity.get_required_user()
         player = await identity.get_required_player()
         game = await self.dao.get_full(game_id)
-        if game.author.id == player.id or game.is_complete():
+        if (
+            game.author.id == player.id
+            or game.is_complete()
+            or await self.can_view_scenario(game, player)
+        ):
             if guid not in game.get_guids():
                 raise exceptions.FileNotFound(
                     text=f"There is no file with uuid {guid} associated with game id {game_id}",
@@ -109,6 +115,10 @@ class GameFileReaderInteractor:
 
         meta = await self.dao.get_by_guid(guid)
         return meta
+
+    async def can_view_scenario(self, game: dto.Game, player: dto.Player) -> bool:
+        org = await self.org_dao.get_by_player_or_none(game=game, player=player)
+        return org is not None and not org.deleted and org.view_scenario
 
     async def is_guid_in_current_hint(self, identity: IdentityProvider, guid: str) -> bool:
         hints_ = await self.game_play_dao.get_current_hints(identity)

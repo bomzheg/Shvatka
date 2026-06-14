@@ -10,6 +10,8 @@ from shvatka.common.factory import REQUIRED_GAME_RECIPES
 from shvatka.core.models import dto
 from shvatka.core.models.dto import scn
 from shvatka.core.models.enums import GameStatus
+from shvatka.core.models.enums.org_permission import OrgPermission
+from shvatka.core.services.organizers import flip_permission
 from shvatka.core.utils.datetime_utils import tz_utc
 from shvatka.infrastructure.db import models
 from shvatka.infrastructure.db.dao.holder import HolderDao
@@ -134,6 +136,26 @@ async def test_game_file_game_not_completed(
         cookies={"Authorization": "Bearer " + token.access_token},
     )
     assert resp.status_code == 403
+
+
+@pytest.mark.asyncio
+async def test_game_file_view_scenario_org(
+    game: dto.FullGame,
+    dao: HolderDao,
+    client: AsyncClient,
+    auth: AuthProperties,
+    harry: dto.Player,
+):
+    token = auth.create_user_token(harry)
+    org = await dao.organizer.add_new(game, harry)
+    await dao.commit()
+    await flip_permission(game.author, org, OrgPermission.view_scenario, dao.organizer)
+    resp = await client.get(
+        f"/cdn/games/{game.id}/files/{GUID}",
+        cookies={"Authorization": "Bearer " + token.access_token},
+    )
+    assert resp.is_success
+    assert resp.headers.get("X-Accel-Redirect") == f"/protected-files/{GUID}.jpg"
 
 
 @pytest.mark.asyncio

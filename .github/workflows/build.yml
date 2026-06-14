@@ -5,7 +5,13 @@ name: ShvatkaBotBuild
 
 on:
   push:
-    branches: [ master ]
+    branches:
+      - master
+      - "claude/**"
+      - "codex/**"
+      - "feature/**"
+      - "tech/**"
+      - "fix/**"
     tags: ["*.*.*", "*.*.*-dev"]
 
 jobs:
@@ -25,10 +31,21 @@ jobs:
           echo "VCS_HASH=${GITHUB_SHA}" >> "$GITHUB_OUTPUT"
           echo "COMMIT_AT=$(git show -s --format=%cI ${GITHUB_SHA})" >> "$GITHUB_OUTPUT"
           echo "VCS_NAME=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
+      - name: Determine docker tag
+        id: tag
+        run: |
+          if [[ "${GITHUB_REF_TYPE}" == "tag" ]]; then
+            echo "TAG=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
+          elif [[ "${GITHUB_REF_NAME}" == "master" ]]; then
+            echo "TAG=latest" >> "$GITHUB_OUTPUT"
+          else
+            echo "TAG=dev" >> "$GITHUB_OUTPUT"
+          fi
       - uses: mr-smithers-excellent/docker-build-push@v6.3
         with:
           image: bomzheg/shvatka
-          addLatest: true
+          tags: ${{ steps.tag.outputs.TAG }}
+          addLatest: false
           registry: docker.io
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}

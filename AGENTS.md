@@ -8,6 +8,8 @@ Telegram bot.
 
 - **Write new code as `Interactor` classes** (callable, DI-wired), not as free
   service functions. The project is mid-migration — see below.
+- **Don't add new to HolderDAO properties** - prefer DI
+- **Don't add to middleware data new keys** - prefer DI
 - **Don't rewrite existing code** unless the task requires it. Leave working
   service functions alone; only new functionality should adopt the new style.
 - **Prefer `IdentityProvider` and `CurrentGameProvider`** for resolving the

@@ -1,15 +1,23 @@
 import logging
 from dataclasses import dataclass
-from typing import Iterable
+from typing import Annotated, Iterable
 
 from dishka import FromDishka
 from dishka.integrations.fastapi import inject
-from fastapi import APIRouter
+from fastapi import APIRouter, Body, HTTPException
+from fastapi.params import Path
+from sqlalchemy.exc import NoResultFound
 
-from shvatka.api.models import responses
+from shvatka.api.dependencies.auth import ApiIdentityProvider
+from shvatka.api.models import req, responses
 from shvatka.core.interfaces.current_game import CurrentGameProvider
-from shvatka.core.models import dto
-from shvatka.core.waiver.interactors import WaiverCompleteReaderInteractor
+from shvatka.core.models import dto, enums
+from shvatka.core.services.game import get_game
+from shvatka.core.waiver.interactors import (
+    WaiverCompleteReaderInteractor,
+    ReplaceTeamWaiversInteractor,
+)
+from shvatka.infrastructure.db.dao.holder import HolderDao
 
 logger = logging.getLogger(__name__)
 
@@ -39,8 +47,31 @@ class WaiversDto:
         )
 
 
+@dataclass(kw_only=True, frozen=True, slots=True)
+class WaiverPlayer:
+    player: responses.Player
+    played: enums.Played
+
+    @classmethod
+    def from_core(cls, waiver: dto.Waiver) -> "WaiverPlayer":
+        return cls(player=responses.Player.from_core(waiver.player), played=waiver.played)
+
+
+@dataclass(kw_only=True, frozen=True, slots=True)
+class TeamWaivers:
+    team: responses.Team
+    players: list[WaiverPlayer]
+
+    @classmethod
+    def from_core(cls, team: dto.Team, waivers: list[dto.Waiver]) -> "TeamWaivers":
+        return cls(
+            team=responses.Team.from_core(team),
+            players=[WaiverPlayer.from_core(w) for w in waivers],
+        )
+
+
 @inject
-async def get_waivers(
+async def get_current_waivers(
     interactor: FromDishka[WaiverCompleteReaderInteractor],
     current_game: FromDishka[CurrentGameProvider],
 ) -> WaiversDto | None:
@@ -51,7 +82,38 @@ async def get_waivers(
     return WaiversDto.from_core(waivers)
 
 
+@inject
+async def replace_current_waivers(
+    identity: FromDishka[ApiIdentityProvider],
+    interactor: FromDishka[ReplaceTeamWaiversInteractor],
+    body: Annotated[req.ReplaceWaivers, Body()],
+) -> TeamWaivers:
+    waivers = await interactor(
+        identity=identity,
+        votes={vote.player_id: vote.played for vote in body.waivers},
+    )
+    team = await identity.get_required_team()
+    return TeamWaivers.from_core(team, waivers)
+
+
+@inject
+async def get_waivers_by_game(
+    interactor: FromDishka[WaiverCompleteReaderInteractor],
+    dao: FromDishka[HolderDao],
+    id_: Annotated[int, Path(alias="id")],
+) -> WaiversDto:
+    try:
+        game = await get_game(id_, dao=dao.game)
+    except NoResultFound as e:
+        logger.info("game %s not found", id_, exc_info=e)
+        raise HTTPException(status_code=404, detail={"text": "game not found"}) from e
+    waivers: dict[dto.Team, Iterable[dto.VotedPlayer]] = await interactor(game)
+    return WaiversDto.from_core(waivers)
+
+
 def setup() -> APIRouter:
     router = APIRouter(prefix="/waivers")
-    router.add_api_route("/game/current", get_waivers, methods=["GET"])
+    router.add_api_route("/game/current", get_current_waivers, methods=["GET"])
+    router.add_api_route("/game/current", replace_current_waivers, methods=["PUT"])
+    router.add_api_route("/game/{id}", get_waivers_by_game, methods=["GET"])
     return router

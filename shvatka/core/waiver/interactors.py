@@ -1,7 +1,8 @@
+from dataclasses import dataclass
 from typing import Iterable
 
 from shvatka.core.interfaces.current_game import CurrentGameProvider
-from shvatka.core.interfaces.dal.waiver import GameWaiversGetter
+from shvatka.core.interfaces.dal.waiver import GameWaiversGetter, WaiverApprover
 from shvatka.core.services.organizers import get_by_player, check_can_check_waivers_draft
 from shvatka.core.services.team import get_team_by_id
 from shvatka.core.waiver.adapters import WaiverVoteAdder, WaiverVoteGetter, PollDraftsReader
@@ -12,6 +13,7 @@ from shvatka.core.waiver.services import (
     get_vote_to_voted,
     add_vote,
     get_all_played,
+    replace_team_waivers,
 )
 from shvatka.core.utils import exceptions
 
@@ -37,6 +39,26 @@ class TeamWaiversDraftReaderInteractor:
                 player=await identity.get_player(), team=await identity.get_team()
             )
         return await get_vote_to_voted(team_player.team, self.dao)
+
+
+@dataclass(kw_only=True, slots=True, frozen=True)
+class ReplaceTeamWaiversInteractor:
+    dao: WaiverApprover
+    current_game: CurrentGameProvider
+
+    async def __call__(
+        self, identity: IdentityProvider, votes: dict[int, Played]
+    ) -> list[dto.Waiver]:
+        approver = await identity.get_required_player()
+        team = await identity.get_required_team()
+        game = await self.current_game.get_required_game()
+        return await replace_team_waivers(
+            game=game,
+            team=team,
+            approver=approver,
+            votes=votes,
+            dao=self.dao,
+        )
 
 
 class AddWaiverVoteInteractor:

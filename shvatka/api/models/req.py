@@ -1,7 +1,8 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
 
 from shvatka.core.models.enums import GameStatus
+from shvatka.core.models.enums.played import Played
 
 
 @dataclass
@@ -42,6 +43,17 @@ class TeamPlayerSettings:
 class TeamSettings:
     name: str | None = None
     description: str | None = None
+
+
+@dataclass
+class WaiverVote:
+    player_id: int
+    played: Played = Played.yes
+
+
+@dataclass
+class ReplaceWaivers:
+    waivers: list[WaiverVote] = field(default_factory=list)
 
 
 @dataclass(frozen=True, slots=True)

@@ -30,6 +30,12 @@ class WaiverApproverImpl(WaiverApprover, WaiverVoteGetter):
     async def del_player_vote(self, team_id: int, player_id: int) -> None:
         return await self.dao.poll.del_player_vote(team_id, player_id)
 
+    async def get_team_waivers(self, game: dto.Game, team: dto.Team) -> list[dto.Waiver]:
+        return await self.dao.waiver.get_all_by_team(game, team)
+
+    async def delete(self, waiver: dto.WaiverQuery) -> None:
+        return await self.dao.waiver.delete(waiver)
+
     async def get_dict_player_vote(self, team_id: int) -> dict[int, Played]:
         return await self.dao.poll.get_dict_player_vote(team_id)
 

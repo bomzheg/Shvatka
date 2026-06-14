@@ -13,6 +13,12 @@ class WaiverApprover(Committer, TeamPlayerGetter, WaiverVoteGetter, TeamPlayersG
     async def del_player_vote(self, team_id: int, player_id: int) -> None:
         raise NotImplementedError
 
+    async def get_team_waivers(self, game: dto.Game, team: dto.Team) -> list[dto.Waiver]:
+        raise NotImplementedError
+
+    async def delete(self, waiver: dto.WaiverQuery) -> None:
+        raise NotImplementedError
+
 
 class GameWaiversGetter(Protocol):
     async def get_played_teams(self, game: dto.Game) -> Iterable[dto.Team]:

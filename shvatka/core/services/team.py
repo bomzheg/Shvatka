@@ -16,7 +16,12 @@ from shvatka.core.interfaces.dal.team import (
 )
 from shvatka.core.models import dto
 from shvatka.core.models import enums
-from shvatka.core.players.player import check_allow_be_author
+from shvatka.core.interfaces.dal.player import TeamPlayerGetter
+from shvatka.core.players.player import (
+    check_allow_be_author,
+    get_full_team_player,
+    is_team_captain,
+)
 from shvatka.core.utils import exceptions
 from shvatka.core.utils.defaults_constants import CAPTAIN_ROLE
 from shvatka.core.utils.exceptions import SHDataBreach, PermissionsError
@@ -67,7 +72,7 @@ async def get_by_chat(chat: dto.Chat, dao: TeamGetter) -> dto.Team | None:
 async def rename_team(
     team: dto.Team, captain: dto.FullTeamPlayer, new_name: str, dao: TeamRenamer
 ):
-    check_can_change_name(team=team, captain=captain)
+    assert_can_change_name(team=team, captain=captain)
     await dao.rename_team(team=team, new_name=new_name)
     await dao.commit()
 
@@ -75,7 +80,7 @@ async def rename_team(
 async def change_team_desc(
     team: dto.Team, captain: dto.FullTeamPlayer, new_desc: str, dao: TeamDescChanger
 ):
-    check_can_change_name(team=team, captain=captain)
+    assert_can_change_name(team=team, captain=captain)
     await dao.change_team_desc(team=team, new_desc=new_desc)
     await dao.commit()
 
@@ -165,7 +170,14 @@ def check_can_change_chat(team: dto.Team, captain: dto.FullTeamPlayer):
     )
 
 
-def check_can_change_name(team: dto.Team, captain: dto.FullTeamPlayer):
+async def check_can_change_name(actor: dto.Player, team: dto.Team, dao: TeamPlayerGetter) -> None:
+    # the captain is allowed to manage the team even if they temporarily left it
+    if is_team_captain(team, actor):
+        return
+    assert_can_change_name(team, await get_full_team_player(actor, team, dao))
+
+
+def assert_can_change_name(team: dto.Team, captain: dto.FullTeamPlayer) -> None:
     if team.id != captain.team_id or captain.team_id != captain.team.id:
         raise SHDataBreach(
             team=team, player=captain.player, notify_user="Вы не игрок этой команды"

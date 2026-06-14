@@ -20,6 +20,11 @@ class Page(Generic[T]):
 
 
 @dataclass
+class Items(Generic[T]):
+    items: Sequence[T]
+
+
+@dataclass
 class Player:
     id: int
     can_be_author: bool
@@ -50,6 +55,90 @@ class Team:
             name=core.name,
             captain=Player.from_core(core.captain) if core.captain else None,
             description=core.description,
+        )
+
+
+@dataclass
+class TgUser:
+    tg_id: int
+    username: str | None
+    first_name: str | None
+    last_name: str | None
+
+    @classmethod
+    def from_core(cls, core: dto.User | None) -> "TgUser | None":
+        if core is None:
+            return None
+        return cls(
+            tg_id=core.tg_id,
+            username=core.username,
+            first_name=core.first_name,
+            last_name=core.last_name,
+        )
+
+
+@dataclass
+class TeamPlayer:
+    id: int
+    team: Team | None
+    date_joined: datetime
+    role: str
+    emoji: str | None
+
+    @classmethod
+    def from_core(cls, core: dto.FullTeamPlayer | None) -> "TeamPlayer | None":
+        if core is None:
+            return None
+        return cls(
+            id=core.id,
+            team=Team.from_core(core.team),
+            date_joined=core.date_joined,
+            role=core.role,
+            emoji=core.emoji,
+        )
+
+
+@dataclass
+class FullPlayer:
+    id: int
+    username: str | None
+    can_be_author: bool
+    tg: TgUser | None
+    player_in_team: TeamPlayer | None
+
+    @classmethod
+    def from_core(cls, player: dto.Player, team_player: dto.FullTeamPlayer | None) -> "FullPlayer":
+        return cls(
+            id=player.id,
+            username=player.username,
+            can_be_author=player.can_be_author,
+            tg=TgUser.from_core(player._user),  # noqa: SLF001
+            player_in_team=TeamPlayer.from_core(team_player),
+        )
+
+
+@dataclass
+class TeamMember:
+    team_player_id: int
+    id: int
+    username: str | None
+    can_be_author: bool
+    emoji: str | None
+    role: str
+    permissions: dict[str, bool]
+    date_joined: datetime
+
+    @classmethod
+    def from_core(cls, core: dto.FullTeamPlayer) -> "TeamMember":
+        return cls(
+            team_player_id=core.id,
+            id=core.player.id,
+            username=core.player.username,
+            can_be_author=core.player.can_be_author,
+            emoji=core.emoji,
+            role=core.role,
+            permissions={permission.name: value for permission, value in core.permissions.items()},
+            date_joined=core.date_joined,
         )
 
 

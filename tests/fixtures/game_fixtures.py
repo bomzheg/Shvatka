@@ -21,6 +21,7 @@ from shvatka.core.utils.datetime_utils import tz_utc
 from shvatka.core.utils.key_checker_lock import KeyCheckerFactory
 from shvatka.core.waiver.adapters import WaiverVoteAdder
 from shvatka.infrastructure.db.dao.holder import HolderDao
+from tests.mocks.team_notifier import TeamNotifierMock
 
 
 @pytest_asyncio.fixture
@@ -284,8 +285,8 @@ async def add_waivers(
     dao: HolderDao,
     request_dishka: AsyncContainer,
 ) -> dto.FullGame:
-    await join_team(hermione, gryffindor, harry, dao.team_player)
-    await join_team(ron, gryffindor, harry, dao.team_player)
+    await join_team(hermione, gryffindor, harry, dao.team_player, notifier=TeamNotifierMock())
+    await join_team(ron, gryffindor, harry, dao.team_player, notifier=TeamNotifierMock())
 
     await start_waivers(game, author, dao.game)
     waiver_vote_adder = await request_dishka.get(WaiverVoteAdder)

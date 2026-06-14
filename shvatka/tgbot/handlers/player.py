@@ -13,6 +13,8 @@ from aiogram.types import (
 )
 from aiogram.utils.text_decorations import html_decoration as hd
 from aiogram_dialog.api.protocols import BgManagerFactory
+from dishka import FromDishka
+from dishka.integrations.aiogram import inject
 
 from shvatka.core.models import dto
 from shvatka.core.players.player import (
@@ -23,6 +25,7 @@ from shvatka.core.players.player import (
     get_my_team,
     leave,
 )
+from shvatka.core.views.team import TeamNotifier
 from shvatka.core.utils.exceptions import SaltError, SaltNotExist
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.tgbot import keyboards as kb
@@ -133,17 +136,19 @@ async def get_my_team_cmd(message: Message, player: dto.Player, dao: HolderDao):
     await message.answer("Ты не состоишь в команде")
 
 
-async def leave_handler(message: Message, player: dto.Player, dao: HolderDao, bot: Bot):
+@inject
+async def leave_handler(
+    message: Message,
+    player: dto.Player,
+    dao: HolderDao,
+    team_notifier: FromDishka[TeamNotifier],
+):
     team = await get_my_team(player, dao.team_player)
     if team is None:
         await message.answer("Ты не состоишь в команде")
         return
-    await leave(player, player, dao.team_leaver)
+    await leave(player, player, dao.team_leaver, notifier=team_notifier)
     await message.answer(f"Ты вышел из команды {hd.quote(team.name)}")
-    await bot.send_message(
-        chat_id=team.get_chat_id(),  # type: ignore[arg-type]
-        text=f"Игрок {hd.quote(player.name_mention)} вышел из команды.",
-    )
 
 
 def setup() -> Router:

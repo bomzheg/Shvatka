@@ -37,6 +37,8 @@ from shvatka.infrastructure.di import (
     WaiverProvider,
     ContextProvider,
     DAOProvider,
+    PlayerProvider,
+    TeamProvider,
 )
 from shvatka.infrastructure.di.interactors import GameEditProvider
 from shvatka.main_factory import ComplexOnlyProvider
@@ -84,6 +86,8 @@ async def dishka():
         GamePlayProvider(),
         GameEditProvider(),
         WaiverProvider(),
+        PlayerProvider(),
+        TeamProvider(),
         PrinterProvider(),
         GameToolsProvider(),
         BotIdpProvider(),

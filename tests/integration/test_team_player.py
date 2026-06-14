@@ -15,6 +15,7 @@ from shvatka.core.views.game import GameLogWriter
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from tests.fixtures.player import promote
 from tests.fixtures.team import create_second_team
+from tests.mocks.team_notifier import TeamNotifierMock
 
 
 @pytest.mark.asyncio
@@ -30,19 +31,19 @@ async def test_add_player_to_team(
     assert gryffindor == await get_my_team(harry, dao.team_player)
     assert CAPTAIN_ROLE == await get_my_role(harry, dao.team_player)
 
-    await join_team(hermione, gryffindor, harry, dao.team_player)
+    await join_team(hermione, gryffindor, harry, dao.team_player, notifier=TeamNotifierMock())
     assert gryffindor == await get_my_team(hermione, dao.team_player)
     assert 2 == await dao.team_player.count()
     assert DEFAULT_ROLE == await get_my_role(hermione, dao.team_player)
 
     with pytest.raises(PlayerAlreadyInTeam):
-        await join_team(harry, gryffindor, harry, dao.team_player)
+        await join_team(harry, gryffindor, harry, dao.team_player, notifier=TeamNotifierMock())
 
     with pytest.raises(PermissionsError):
-        await join_team(draco, gryffindor, hermione, dao.team_player)
+        await join_team(draco, gryffindor, hermione, dao.team_player, notifier=TeamNotifierMock())
 
     with pytest.raises(PlayerAlreadyInTeam):
-        await join_team(hermione, gryffindor, harry, dao.team_player)
+        await join_team(hermione, gryffindor, harry, dao.team_player, notifier=TeamNotifierMock())
 
     with pytest.raises(CantBeAuthor):
         await create_second_team(hermione, dao, game_log)
@@ -59,10 +60,10 @@ async def test_add_player_to_team(
     assert CAPTAIN_ROLE == await get_my_role(draco, dao.team_player)
 
     with pytest.raises(PlayerAlreadyInTeam):
-        await join_team(harry, slytherin, draco, dao.team_player)
+        await join_team(harry, slytherin, draco, dao.team_player, notifier=TeamNotifierMock())
 
     with pytest.raises(PlayerAlreadyInTeam):
-        await join_team(hermione, slytherin, draco, dao.team_player)
+        await join_team(hermione, slytherin, draco, dao.team_player, notifier=TeamNotifierMock())
 
     assert 3 == await dao.team_player.count()
 
@@ -75,7 +76,7 @@ async def test_flip_permission(
     dao: HolderDao,
     check_dao: HolderDao,
 ):
-    await join_team(hermione, gryffindor, harry, dao.team_player)
+    await join_team(hermione, gryffindor, harry, dao.team_player, notifier=TeamNotifierMock())
     permission = enums.TeamPlayerPermission.can_change_team_name
     harry_team_player = await get_full_team_player(harry, gryffindor, dao.team_player)
     hermione_team_player = await get_full_team_player(hermione, gryffindor, dao.team_player)

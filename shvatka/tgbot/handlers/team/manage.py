@@ -3,6 +3,8 @@ import logging
 from aiogram import Bot, F, Router
 from aiogram.enums import ChatType
 from aiogram.exceptions import TelegramBadRequest
+from dishka import FromDishka
+from dishka.integrations.aiogram import inject
 from aiogram.filters import (
     Command,
     CommandObject,
@@ -25,6 +27,7 @@ from shvatka.core.utils.exceptions import (
     AnotherTeamInChat,
 )
 from shvatka.core.views.game import GameLogWriter
+from shvatka.core.views.team import TeamNotifier
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.tgbot import keyboards as kb
 from shvatka.tgbot.filters.has_target import HasTargetFilter
@@ -105,6 +108,7 @@ async def user_join_chat_with_team(
     )
 
 
+@inject
 async def cmd_add_in_team(
     _: Message,
     team: dto.Team,
@@ -113,6 +117,7 @@ async def cmd_add_in_team(
     bot: Bot,
     command: CommandObject,
     dao: HolderDao,
+    team_notifier: FromDishka[TeamNotifier],
 ):
     role = command.args or DEFAULT_ROLE
     logger.info(
@@ -138,7 +143,7 @@ async def cmd_add_in_team(
         )
         return
     try:
-        await join_team(target, team, player, dao.team_player, role)
+        await join_team(target, team, player, dao.team_player, role=role, notifier=team_notifier)
     except exceptions.PlayerAlreadyInTeam as e:
         await player_already_in_team(
             e=e,
@@ -159,16 +164,8 @@ async def cmd_add_in_team(
         )
         return
 
-    await bot.send_message(
-        chat_id=team.get_chat_id(),  # type: ignore[arg-type]
-        text="В команду {team} добавлен игрок {player} в качестве роли указано: {role}".format(
-            team=hd.bold(hd.quote(team.name)),
-            player=hd.bold(hd.quote(target.name_mention)),
-            role=hd.italic(role),
-        ),
-    )
 
-
+@inject
 async def button_join(
     callback_query: CallbackQuery,
     callback_data: kb.JoinToTeamRequestCD,
@@ -177,6 +174,7 @@ async def button_join(
     team_player: dto.TeamPlayer,
     bot: Bot,
     dao: HolderDao,
+    team_notifier: FromDishka[TeamNotifier],
 ):
     if team.id != callback_data.team_id:
         raise exceptions.SHDataBreach(
@@ -204,7 +202,7 @@ async def button_join(
         return
     assert callback_query.message
     try:
-        await join_team(target, team, player, dao.team_player)
+        await join_team(target, team, player, dao.team_player, notifier=team_notifier)
     except exceptions.PlayerAlreadyInTeam as e:
         await player_already_in_team(
             e=e,

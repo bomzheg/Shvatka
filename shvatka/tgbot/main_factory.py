@@ -27,6 +27,7 @@ from shvatka.core.interfaces.clients.file_storage import FileStorage
 from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.views.game import GameLogWriter, GameView, GameViewPreparer, OrgNotifier
 from shvatka.core.views.level import LevelView
+from shvatka.core.views.team import TeamNotifier
 from shvatka.infrastructure.bus.in_memory import UsedOneTimeTokenInteractor
 from shvatka.infrastructure.db.config.models.storage import StorageConfig, StorageType
 from shvatka.infrastructure.db.dao.holder import HolderDao
@@ -43,6 +44,7 @@ from shvatka.tgbot.services.used_one_time_token import UsedOneTimeTokenInteracto
 from shvatka.tgbot.username_resolver.user_getter import UserGetter
 from shvatka.tgbot.utils.router import print_router_tree
 from shvatka.tgbot.views.game import GameBotLog, BotView, BotOrgNotifier
+from shvatka.tgbot.views.team import BotTeamNotifier
 from shvatka.tgbot.views.hint_factory.hint_content_resolver import HintContentResolver
 from shvatka.tgbot.views.hint_factory.hint_parser import HintParser
 from shvatka.tgbot.views.hint_sender import HintSender
@@ -181,6 +183,10 @@ class BotOnlyProvider(Provider):
     @provide
     def get_game_view(self, bot_game_view: BotView) -> AnyOf[GameViewPreparer, GameView]:
         return bot_game_view
+
+    @provide
+    def get_team_notifier(self, bot: Bot) -> TeamNotifier:
+        return BotTeamNotifier(bot=bot)
 
 
 class GameToolsProvider(Provider):

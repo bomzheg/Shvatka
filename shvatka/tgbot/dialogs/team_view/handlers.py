@@ -3,9 +3,12 @@ from typing import Any
 from aiogram.types import CallbackQuery
 from aiogram_dialog import DialogManager
 from aiogram_dialog.widgets.kbd import Button
+from dishka import FromDishka
+from dishka.integrations.aiogram_dialog import inject
 
 from shvatka.core.models import dto
 from shvatka.core.players.player import get_my_team, leave
+from shvatka.core.views.team import TeamNotifier
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.tgbot import states
 from shvatka.tgbot.dialogs.team_view.common import get_active_filter, get_archive_filter
@@ -28,10 +31,16 @@ async def change_archive_filter(c: CallbackQuery, button: Button, manager: Dialo
     manager.dialog_data[button.widget_id] = not get_archive_filter(manager)
 
 
-async def on_leave_team(c: CallbackQuery, button: Button, dialog_manager: DialogManager):
+@inject
+async def on_leave_team(
+    c: CallbackQuery,
+    button: Button,
+    dialog_manager: DialogManager,
+    team_notifier: FromDishka[TeamNotifier],
+):
     dao: HolderDao = dialog_manager.middleware_data["dao"]
     player: dto.Player = dialog_manager.middleware_data["player"]
-    await leave(player, player, dao.team_leaver)
+    await leave(player, player, dao.team_leaver, notifier=team_notifier)
     await dialog_manager.done()
 
 

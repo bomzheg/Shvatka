@@ -16,6 +16,7 @@ from shvatka.core.utils.exceptions import PlayerRestoredInTeam, WaiverForbidden
 from shvatka.core.waiver.adapters import WaiverVoteAdder, WaiverVoteGetter
 from shvatka.infrastructure.db import models
 from shvatka.infrastructure.db.dao.holder import HolderDao
+from tests.mocks.team_notifier import TeamNotifierMock
 
 
 @pytest.mark.asyncio
@@ -30,7 +31,7 @@ async def test_get_voted_list(
 ):
     await start_waivers(game, author, dao.game)
 
-    await join_team(hermione, gryffindor, harry, dao.team_player)
+    await join_team(hermione, gryffindor, harry, dao.team_player, notifier=TeamNotifierMock())
     waiver_vote_adder = await dishka_request.get(WaiverVoteAdder)
     await add_vote(game, gryffindor, harry, Played.yes, waiver_vote_adder)
     await add_vote(game, gryffindor, hermione, Played.yes, waiver_vote_adder)
@@ -50,7 +51,7 @@ async def test_get_voted_list(
     assert 2 == len(players)
     assert {harry.id, hermione.id} == {player.player.id for player in players}
 
-    await leave(hermione, hermione, dao.team_leaver)
+    await leave(hermione, hermione, dao.team_leaver, notifier=TeamNotifierMock())
     actual = await get_vote_to_voted(gryffindor, waiver_vote_getter)
     assert len(actual) == 1
     actual_voted = actual[Played.yes]
@@ -62,7 +63,7 @@ async def test_get_voted_list(
     assert [gryffindor] == await dao.waiver.get_played_teams(game)
 
     with pytest.raises(PlayerRestoredInTeam):
-        await join_team(hermione, gryffindor, harry, dao.team_player)
+        await join_team(hermione, gryffindor, harry, dao.team_player, notifier=TeamNotifierMock())
     await approve_waivers(game, gryffindor, harry, dao.waiver_approver)
     # vote not restored after restored player in team
     assert 1 == await dao.waiver.count()
@@ -111,7 +112,7 @@ async def hermi_waiver(
     game: dto.FullGame,
     dao: HolderDao,
 ):
-    await join_team(hermione, gryffindor, harry, dao.team_player)
+    await join_team(hermione, gryffindor, harry, dao.team_player, notifier=TeamNotifierMock())
     waiver = models.Waiver(
         player_id=hermione.id,
         team_id=gryffindor.id,
@@ -132,7 +133,7 @@ async def ron_waiver(
     game: dto.FullGame,
     dao: HolderDao,
 ):
-    await join_team(ron, gryffindor, harry, dao.team_player)
+    await join_team(ron, gryffindor, harry, dao.team_player, notifier=TeamNotifierMock())
     waiver = models.Waiver(
         player_id=ron.id,
         team_id=gryffindor.id,

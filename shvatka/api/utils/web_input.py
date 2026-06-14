@@ -15,6 +15,7 @@ from shvatka.core.views.game import (
     InputContainer,
     GameViewPreparer,
 )
+from shvatka.core.views.team import TeamNotifier, TeamEvent
 
 
 @dataclass(kw_only=True)
@@ -151,4 +152,9 @@ class WebGameLogWriter(GameLogWriter):
 
 class WebOrgNotifier(OrgNotifier):
     async def notify(self, event: Event) -> None:
+        pass
+
+
+class WebTeamNotifier(TeamNotifier):
+    async def notify(self, event: TeamEvent) -> None:
         pass

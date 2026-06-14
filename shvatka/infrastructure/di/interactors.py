@@ -19,6 +19,20 @@ from shvatka.core.games.editor_interactors import (
     ChangeGameStatusInteractor,
     UploadGameFileInteractor,
 )
+from shvatka.core.players.interactors import (
+    GetPlayerInteractor,
+    SearchPlayersInteractor,
+)
+from shvatka.core.teams.interactors import (
+    AddPlayerToTeamInteractor,
+    EditTeamInteractor,
+    GetTeamInteractor,
+    RemovePlayerFromTeamInteractor,
+    TeamPlayersInteractor,
+    TeamsListInteractor,
+    UpdateTeamPlayerInteractor,
+)
+from shvatka.core.views.team import TeamNotifier
 from shvatka.core.interfaces.clients.file_storage import FileStorage
 from shvatka.core.interfaces.dal.complex import GameScenarioEditor
 from shvatka.core.interfaces.scheduler import Scheduler
@@ -163,3 +177,55 @@ class WaiverProvider(Provider):
     waiver_vote_adder_dao = provide(WaiverVoteAdderImpl, provides=WaiverVoteAdder)
     waiver_vote_getter_dao = provide(WaiverVoteGetterImpl, provides=WaiverVoteGetter)
     poll_drafts_reader_dao = provide(PollDraftsReaderImpl, provides=PollDraftsReader)
+
+
+class PlayerProvider(Provider):
+    scope = Scope.REQUEST
+
+    @provide
+    def get_player(self, dao: HolderDao) -> GetPlayerInteractor:
+        return GetPlayerInteractor(player_dao=dao.player, team_player_dao=dao.team_player)
+
+    @provide
+    def search_players(self, dao: HolderDao) -> SearchPlayersInteractor:
+        return SearchPlayersInteractor(dao=dao.player)
+
+
+class TeamProvider(Provider):
+    scope = Scope.REQUEST
+
+    @provide
+    def get_teams(self, dao: HolderDao) -> TeamsListInteractor:
+        return TeamsListInteractor(dao=dao.team)
+
+    @provide
+    def get_team(self, dao: HolderDao) -> GetTeamInteractor:
+        return GetTeamInteractor(dao=dao.team)
+
+    @provide
+    def get_team_players(self, dao: HolderDao) -> TeamPlayersInteractor:
+        return TeamPlayersInteractor(team_dao=dao.team, players_dao=dao.team_player)
+
+    @provide
+    def add_player(self, dao: HolderDao, notifier: TeamNotifier) -> AddPlayerToTeamInteractor:
+        return AddPlayerToTeamInteractor(
+            dao=dao.team_player, team_dao=dao.team, player_dao=dao.player, notifier=notifier
+        )
+
+    @provide
+    def remove_player(
+        self, dao: HolderDao, notifier: TeamNotifier
+    ) -> RemovePlayerFromTeamInteractor:
+        return RemovePlayerFromTeamInteractor(
+            dao=dao.team_leaver, player_dao=dao.player, notifier=notifier
+        )
+
+    @provide
+    def update_team_player(self, dao: HolderDao) -> UpdateTeamPlayerInteractor:
+        return UpdateTeamPlayerInteractor(
+            dao=dao.team_player, team_dao=dao.team, player_dao=dao.player
+        )
+
+    @provide
+    def edit_team(self, dao: HolderDao) -> EditTeamInteractor:
+        return EditTeamInteractor(dao=dao.team, team_player_dao=dao.team_player)

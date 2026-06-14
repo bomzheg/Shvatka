@@ -13,6 +13,7 @@ from shvatka.api.dependencies.auth import AuthProperties
 from tests.fixtures.chat_constants import create_gryffindor_dto_chat
 from tests.fixtures.team import create_team_
 from tests.mocks.game_log import GameLogWriterMock
+from tests.mocks.team_notifier import TeamNotifierMock
 
 
 @pytest.fixture
@@ -78,7 +79,7 @@ async def test_get_team_players(
     gryffindor: dto.Team,
     dao: HolderDao,
 ):
-    await join_team(hermione, gryffindor, harry, dao.team_player)
+    await join_team(hermione, gryffindor, harry, dao.team_player, notifier=TeamNotifierMock())
     resp = await client.get(f"/teams/{gryffindor.id}/players")
     assert resp.is_success
     resp.read()
@@ -127,7 +128,7 @@ async def test_add_player_forbidden_for_non_captain(
     auth: AuthProperties,
     dao: HolderDao,
 ):
-    await join_team(hermione, gryffindor, harry, dao.team_player)
+    await join_team(hermione, gryffindor, harry, dao.team_player, notifier=TeamNotifierMock())
     hermione_token = auth.create_user_token(hermione)
     resp = await client.post(
         f"/teams/{gryffindor.id}/players",
@@ -148,7 +149,7 @@ async def test_update_team_player(
     dao: HolderDao,
     check_dao: HolderDao,
 ):
-    await join_team(hermione, gryffindor, harry, dao.team_player)
+    await join_team(hermione, gryffindor, harry, dao.team_player, notifier=TeamNotifierMock())
     resp = await client.put(
         f"/teams/{gryffindor.id}/players/{hermione.id}",
         cookies=auth_cookies(token),
@@ -180,7 +181,7 @@ async def test_remove_player_from_team(
     dao: HolderDao,
     check_dao: HolderDao,
 ):
-    await join_team(hermione, gryffindor, harry, dao.team_player)
+    await join_team(hermione, gryffindor, harry, dao.team_player, notifier=TeamNotifierMock())
     resp = await client.request(
         "DELETE",
         f"/teams/{gryffindor.id}/players/{hermione.id}",

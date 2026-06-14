@@ -184,6 +184,10 @@ class BotOnlyProvider(Provider):
     def get_game_view(self, bot_game_view: BotView) -> AnyOf[GameViewPreparer, GameView]:
         return bot_game_view
 
+    @provide
+    def get_team_notifier(self, bot: Bot) -> TeamNotifier:
+        return BotTeamNotifier(bot=bot)
+
 
 class GameToolsProvider(Provider):
     @provide(scope=Scope.APP)
@@ -199,10 +203,6 @@ class GameToolsProvider(Provider):
     @provide(scope=Scope.APP)
     def get_org_notifier(self, bot: Bot) -> OrgNotifier:
         return BotOrgNotifier(bot=bot)
-
-    @provide(scope=Scope.APP)
-    def get_team_notifier(self, bot: Bot) -> TeamNotifier:
-        return BotTeamNotifier(bot=bot)
 
     get_hint_sender = provide(HintSender, scope=Scope.REQUEST)
     get_bot_game_view = provide(BotView, scope=Scope.REQUEST)

@@ -31,6 +31,7 @@ from tests.mocks.game_view import GameViewMock
 from tests.mocks.org_notifier import OrgNotifierMock
 from tests.mocks.scheduler_mock import SchedulerMock
 from tests.utils.time_key import assert_time_key
+from tests.mocks.team_notifier import TeamNotifierMock
 
 
 class MockInputContainer(InputContainer):
@@ -200,7 +201,7 @@ async def test_game_play(
     current_game = CurrentGameProviderMock(game, dao.waiver)
     key_processor = KeyProcessor(dao=dao.game_player, current_game=current_game, locker=locker)
     # delete slytherin from game
-    await leave(draco, draco, dao.team_leaver)
+    await leave(draco, draco, dao.team_leaver, notifier=TeamNotifierMock())
 
     dummy_view = GameViewMock()
     dummy_log = GameLogWriterMock()
@@ -318,7 +319,7 @@ async def test_fast_play_routed_game(
     current_game = CurrentGameProviderMock(game, dao.waiver)
     key_processor = KeyProcessor(dao=dao.game_player, current_game=current_game, locker=locker)
     # delete slytherin from game
-    await leave(draco, draco, dao.team_leaver)
+    await leave(draco, draco, dao.team_leaver, notifier=TeamNotifierMock())
     dummy_view = GameViewMock()
     dummy_log = GameLogWriterMock()
 
@@ -396,7 +397,7 @@ async def test_cycle_play_routed_game(
     current_game = CurrentGameProviderMock(game, dao.waiver)
     key_processor = KeyProcessor(dao=dao.game_player, current_game=current_game, locker=locker)
     # delete slytherin from game
-    await leave(draco, draco, dao.team_leaver)
+    await leave(draco, draco, dao.team_leaver, notifier=TeamNotifierMock())
     dummy_view = GameViewMock()
     dummy_log = GameLogWriterMock()
 
@@ -502,7 +503,7 @@ async def test_get_current_hints(
     hermione: dto.Player,
     gryffindor: dto.Team,
 ):
-    await leave(ron, ron, dao.team_leaver)
+    await leave(ron, ron, dao.team_leaver, notifier=TeamNotifierMock())
     level_time = models.LevelTime(
         game_id=game_with_waivers.id,
         team_id=gryffindor.id,
@@ -524,6 +525,6 @@ async def test_get_current_hints(
     with pytest.raises(exceptions.PlayerNotInTeam):
         await interactor(MockIdentityProvider(user=ron._user, player=ron))
     with suppress(exceptions.PlayerRestoredInTeam):
-        await join_team(ron, gryffindor, harry, dao.team_player)
+        await join_team(ron, gryffindor, harry, dao.team_player, notifier=TeamNotifierMock())
     with pytest.raises(exceptions.WaiverError):
         await interactor(MockIdentityProvider(user=ron._user, player=ron, team=gryffindor))

@@ -65,17 +65,17 @@ class BotTeamNotifier(TeamNotifier):
         match event:
             case PlayerJoinedTeam():
                 if event.by_self:
-                    return f"Игрок {hd.quote(event.player.name_mention)} вступил в команду."
+                    return f"Игрок {hd.quote(event.invited.name_mention)} вступил в команду."
                 return (
-                    f"Игрок {hd.quote(event.player.name_mention)} добавлен в команду "
-                    f"(пригласил {hd.quote(event.inviter.name_mention)})."
+                    f"Игрок {hd.quote(event.invited.name_mention)} добавлен в команду "
+                    f"(пригласил {hd.quote(event.actor.name_mention)})."
                 )
             case PlayerLeftTeam():
                 if event.by_self:
-                    return f"Игрок {hd.quote(event.player.name_mention)} вышел из команды."
+                    return f"Игрок {hd.quote(event.removed.name_mention)} вышел из команды."
                 return (
-                    f"Игрок {hd.quote(event.player.name_mention)} удалён из команды "
-                    f"(капитан {hd.quote(event.remover.name_mention)})."
+                    f"Игрок {hd.quote(event.removed.name_mention)} удалён из команды "
+                    f"(капитан {hd.quote(event.actor.name_mention)})."
                 )
             case _:
                 return None

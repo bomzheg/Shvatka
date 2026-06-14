@@ -7,6 +7,8 @@ from aiogram.types import Message, CallbackQuery
 from aiogram.utils.text_decorations import html_decoration as hd
 from aiogram_dialog import DialogManager
 from aiogram_dialog.widgets.kbd import Button
+from dishka import FromDishka
+from dishka.integrations.aiogram_dialog import inject
 
 from shvatka.core.models import dto
 from shvatka.core.models import enums
@@ -97,11 +99,16 @@ async def start_merge(c: CallbackQuery, button: Button, manager: DialogManager):
     await manager.start(states.MergeTeamsSG.main, data={"team_id": team.id})
 
 
-async def remove_player_handler(c: CallbackQuery, button: Button, manager: DialogManager):
+@inject
+async def remove_player_handler(
+    c: CallbackQuery,
+    button: Button,
+    manager: DialogManager,
+    team_notifier: FromDishka[TeamNotifier],
+):
     await c.answer()
     dao: HolderDao = manager.middleware_data["dao"]
     captain: dto.Player = manager.middleware_data["player"]
-    team_notifier: TeamNotifier = manager.middleware_data["team_notifier"]
     player_id = manager.dialog_data["selected_player_id"]
     player = await get_player_by_id(player_id, dao.player)
     await leave(player=player, remover=captain, dao=dao.team_leaver, notifier=team_notifier)
@@ -200,7 +207,13 @@ async def gotten_chat_request(m: Message, widget: Any, manager: DialogManager):
     )
 
 
-async def gotten_user_request(m: Message, widget: Any, manager: DialogManager):
+@inject
+async def gotten_user_request(
+    m: Message,
+    widget: Any,
+    manager: DialogManager,
+    team_notifier: FromDishka[TeamNotifier],
+):
     if m.user_shared:
         target_id = m.user_shared.user_id
     elif m.contact:
@@ -212,7 +225,6 @@ async def gotten_user_request(m: Message, widget: Any, manager: DialogManager):
         raise RuntimeError("only user shared and contact are allowed")
     dao: HolderDao = manager.middleware_data["dao"]
     captain: dto.Player = manager.middleware_data["player"]
-    team_notifier: TeamNotifier = manager.middleware_data["team_notifier"]
     team = await get_my_team(captain, dao.team_player)
     assert team
     player = await get_player_by_user_id(target_id, dao.player)

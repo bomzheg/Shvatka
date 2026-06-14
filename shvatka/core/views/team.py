@@ -14,26 +14,27 @@ class TeamNotifier(Protocol):
 @dataclass
 class TeamEvent:
     team: dto.Team
-    player: dto.Player
+    actor: dto.Player
+    """The player who performed the action (inviter / remover / the player themselves)."""
 
 
 @dataclass
 class PlayerJoinedTeam(TeamEvent):
     """A player joined (or was added to) a team."""
 
-    inviter: dto.Player
+    invited: dto.Player
 
     @property
     def by_self(self) -> bool:
-        return self.inviter.id == self.player.id
+        return self.actor.id == self.invited.id
 
 
 @dataclass
 class PlayerLeftTeam(TeamEvent):
     """A player left a team (by themselves or was removed by a manager)."""
 
-    remover: dto.Player
+    removed: dto.Player
 
     @property
     def by_self(self) -> bool:
-        return self.remover.id == self.player.id
+        return self.actor.id == self.removed.id

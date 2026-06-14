@@ -13,7 +13,6 @@ from shvatka.core.interfaces.scheduler import Scheduler
 from shvatka.core.models import dto
 from shvatka.core.utils.key_checker_lock import KeyCheckerFactory
 from shvatka.core.views.game import GameLogWriter
-from shvatka.core.views.team import TeamNotifier
 from shvatka.core.views.level import LevelView
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.infrastructure.picture.results_painter import ResultsPainter
@@ -55,5 +54,4 @@ class SHMiddlewareData(DialogMiddlewareData, total=False):
     team_player: dto.FullTeamPlayer | None
     results_painter: ResultsPainter
     game_log: GameLogWriter
-    team_notifier: TeamNotifier
     bg_manager_factory: BgManagerFactory

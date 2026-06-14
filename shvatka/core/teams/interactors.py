@@ -22,7 +22,6 @@ from shvatka.core.players.player import (
     check_can_manage_players,
     get_full_team_player,
     get_team_players,
-    is_team_captain,
     join_team,
     leave,
 )
@@ -79,7 +78,7 @@ class AddPlayerToTeamInteractor:
         player = await self.player_dao.get_by_id(player_id)
         with contextlib.suppress(PlayerRestoredInTeam):
             await join_team(
-                player, team, manager, self.dao, role=role or DEFAULT_ROLE, notifier=self.notifier
+                player, team, manager, self.dao, notifier=self.notifier, role=role or DEFAULT_ROLE
             )
         if emoji is not None:
             team_player = await self.dao.get_team_player(player)
@@ -117,9 +116,7 @@ class UpdateTeamPlayerInteractor:
     ) -> dto.FullTeamPlayer:
         manager = await identity.get_required_player()
         team = await get_team_by_id(team_id, self.team_dao)
-        # the captain may manage the team even if they temporarily left it
-        if not is_team_captain(team, manager):
-            check_can_manage_players(await get_full_team_player(manager, team, self.dao))
+        await check_can_manage_players(manager, team, self.dao)
         player = await self.player_dao.get_by_id(player_id)
         # raises PlayerNotInTeam if the player is not in this team (or already left)
         target = await get_full_team_player(player, team, self.dao)
@@ -149,11 +146,7 @@ class EditTeamInteractor:
     ) -> dto.Team:
         manager = await identity.get_required_player()
         team = await get_team_by_id(team_id, self.dao)
-        # the captain may rename the team even if they temporarily left it
-        if not is_team_captain(team, manager):
-            check_can_change_name(
-                team, await get_full_team_player(manager, team, self.team_player_dao)
-            )
+        await check_can_change_name(manager, team, self.team_player_dao)
         if name is not None:
             await self.dao.rename_team(team, name)
         if description is not None:

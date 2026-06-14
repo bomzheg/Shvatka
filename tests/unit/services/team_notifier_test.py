@@ -24,7 +24,7 @@ def _team(captain: dto.Player | None = None, *, with_chat: bool = True) -> dto.T
 
 def test_joined_by_self() -> None:
     harry = _player(1, "harry")
-    event = PlayerJoinedTeam(team=_team(harry), player=harry, inviter=harry)
+    event = PlayerJoinedTeam(team=_team(harry), actor=harry, invited=harry)
     assert event.by_self
     assert "вступил" in (BotTeamNotifier._render(event) or "")
 
@@ -32,7 +32,7 @@ def test_joined_by_self() -> None:
 def test_joined_by_captain() -> None:
     harry = _player(1, "harry")
     ron = _player(2, "ron")
-    event = PlayerJoinedTeam(team=_team(harry), player=ron, inviter=harry)
+    event = PlayerJoinedTeam(team=_team(harry), actor=harry, invited=ron)
     assert not event.by_self
     text = BotTeamNotifier._render(event) or ""
     assert "добавлен" in text
@@ -41,7 +41,7 @@ def test_joined_by_captain() -> None:
 
 def test_left_by_self() -> None:
     ron = _player(2, "ron")
-    event = PlayerLeftTeam(team=_team(), player=ron, remover=ron)
+    event = PlayerLeftTeam(team=_team(), actor=ron, removed=ron)
     assert event.by_self
     assert "вышел" in (BotTeamNotifier._render(event) or "")
 
@@ -49,7 +49,7 @@ def test_left_by_self() -> None:
 def test_left_by_captain() -> None:
     harry = _player(1, "harry")
     ron = _player(2, "ron")
-    event = PlayerLeftTeam(team=_team(harry), player=ron, remover=harry)
+    event = PlayerLeftTeam(team=_team(harry), actor=harry, removed=ron)
     assert not event.by_self
     text = BotTeamNotifier._render(event) or ""
     assert "удалён" in text
@@ -66,5 +66,5 @@ async def test_no_notify_without_chat() -> None:
 
     ron = _player(2, "ron")
     notifier = BotTeamNotifier(bot=_Bot())
-    await notifier.notify(PlayerLeftTeam(team=_team(with_chat=False), player=ron, remover=ron))
+    await notifier.notify(PlayerLeftTeam(team=_team(with_chat=False), actor=ron, removed=ron))
     assert sent == []

@@ -3,6 +3,8 @@ import logging
 from aiogram import Bot, F, Router
 from aiogram.enums import ChatType
 from aiogram.exceptions import TelegramBadRequest
+from dishka import FromDishka
+from dishka.integrations.aiogram import inject
 from aiogram.filters import (
     Command,
     CommandObject,
@@ -106,6 +108,7 @@ async def user_join_chat_with_team(
     )
 
 
+@inject
 async def cmd_add_in_team(
     _: Message,
     team: dto.Team,
@@ -114,7 +117,7 @@ async def cmd_add_in_team(
     bot: Bot,
     command: CommandObject,
     dao: HolderDao,
-    team_notifier: TeamNotifier,
+    team_notifier: FromDishka[TeamNotifier],
 ):
     role = command.args or DEFAULT_ROLE
     logger.info(
@@ -140,7 +143,7 @@ async def cmd_add_in_team(
         )
         return
     try:
-        await join_team(target, team, player, dao.team_player, role, notifier=team_notifier)
+        await join_team(target, team, player, dao.team_player, role=role, notifier=team_notifier)
     except exceptions.PlayerAlreadyInTeam as e:
         await player_already_in_team(
             e=e,
@@ -162,6 +165,7 @@ async def cmd_add_in_team(
         return
 
 
+@inject
 async def button_join(
     callback_query: CallbackQuery,
     callback_data: kb.JoinToTeamRequestCD,
@@ -170,7 +174,7 @@ async def button_join(
     team_player: dto.TeamPlayer,
     bot: Bot,
     dao: HolderDao,
-    team_notifier: TeamNotifier,
+    team_notifier: FromDishka[TeamNotifier],
 ):
     if team.id != callback_data.team_id:
         raise exceptions.SHDataBreach(

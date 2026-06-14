@@ -13,6 +13,8 @@ from aiogram.types import (
 )
 from aiogram.utils.text_decorations import html_decoration as hd
 from aiogram_dialog.api.protocols import BgManagerFactory
+from dishka import FromDishka
+from dishka.integrations.aiogram import inject
 
 from shvatka.core.models import dto
 from shvatka.core.players.player import (
@@ -134,11 +136,12 @@ async def get_my_team_cmd(message: Message, player: dto.Player, dao: HolderDao):
     await message.answer("Ты не состоишь в команде")
 
 
+@inject
 async def leave_handler(
     message: Message,
     player: dto.Player,
     dao: HolderDao,
-    team_notifier: TeamNotifier,
+    team_notifier: FromDishka[TeamNotifier],
 ):
     team = await get_my_team(player, dao.team_player)
     if team is None:

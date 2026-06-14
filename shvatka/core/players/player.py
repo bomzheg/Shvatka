@@ -113,18 +113,18 @@ async def join_team(
     team: dto.Team,
     manager: dto.Player,
     dao: TeamJoiner,
+    notifier: TeamNotifier,
     role: str = DEFAULT_ROLE,
-    notifier: TeamNotifier | None = None,
 ):
     await dao.check_player_free(player)
-    # the captain is allowed to manage the team even if they temporarily left it
-    if not is_team_captain(team, manager):
-        check_can_add_players(await get_full_team_player(manager, team, dao))
+    await check_can_add_players(manager, team, dao)
     try:
         await dao.join_team(player, team, role=role)
     except PlayerRestoredInTeam:
+        # the player was previously in this team and is restored rather than re-created;
+        # we still commit and notify, then re-raise so callers can react to the restore
         await dao.commit()
-        await _notify_joined(notifier, team, player, manager)
+        await notifier.notify(PlayerJoinedTeam(team=team, actor=manager, invited=player))
         raise
     await dao.commit()
     logger.info(
@@ -133,25 +133,11 @@ async def join_team(
         team.id,
         player.id,
     )
-    await _notify_joined(notifier, team, player, manager)
+    await notifier.notify(PlayerJoinedTeam(team=team, actor=manager, invited=player))
 
 
 def is_team_captain(team: dto.Team, player: dto.Player) -> bool:
     return team.captain is not None and team.captain.id == player.id
-
-
-async def _notify_joined(
-    notifier: TeamNotifier | None, team: dto.Team, player: dto.Player, inviter: dto.Player
-) -> None:
-    if notifier is not None:
-        await notifier.notify(PlayerJoinedTeam(team=team, player=player, inviter=inviter))
-
-
-async def _notify_left(
-    notifier: TeamNotifier | None, team: dto.Team, player: dto.Player, remover: dto.Player
-) -> None:
-    if notifier is not None:
-        await notifier.notify(PlayerLeftTeam(team=team, player=player, remover=remover))
 
 
 async def get_checked_player_on_team(
@@ -170,8 +156,7 @@ def check_team_player_on_team(team_player: dto.TeamPlayer, team: dto.Team | None
 async def change_role(
     player: dto.Player, team: dto.Team, manager: dto.Player, role: str, dao: TeamPlayerRoleUpdater
 ) -> None:
-    manager_tp = await get_full_team_player(manager, team, dao)
-    check_can_manage_players(manager_tp)
+    await check_can_manage_players(manager, team, dao)
     tp = await get_checked_player_on_team(player, team, dao)
     await dao.change_role(tp, role)
     await dao.commit()
@@ -184,8 +169,7 @@ async def change_emoji(
     emoji: str,
     dao: TeamPlayerEmojiUpdater,
 ) -> None:
-    manager_tp = await get_full_team_player(manager, team, dao)
-    check_can_manage_players(manager_tp)
+    await check_can_manage_players(manager, team, dao)
     tp = await get_checked_player_on_team(player, team, dao)
     await dao.change_emoji(tp, emoji)
     await dao.commit()
@@ -195,18 +179,13 @@ async def leave(
     player: dto.Player,
     remover: dto.Player,
     dao: TeamLeaver,
-    notifier: TeamNotifier | None = None,
+    notifier: TeamNotifier,
 ):
     team = await dao.get_team(player)
     if not team:
         raise PlayerNotInTeam(player=player)
     if player.id != remover.id:  # player itself always can leave
-        # the captain is allowed to manage the team even if they temporarily left it
-        if not is_team_captain(team, remover):
-            team_player = await get_full_team_player(
-                remover, team, dao
-            )  # team of remover must be the same as player
-            check_can_remove_player(team_player)  # and remover must have permission for remove
+        await check_can_remove_player(remover, team, dao)
     if game := await dao.get_active_game():
         await dao.delete(
             dto.WaiverQuery(
@@ -218,7 +197,7 @@ async def leave(
         await dao.del_player_vote(team_id=team.id, player_id=player.id)
     await dao.leave_team(player)
     await dao.commit()
-    await _notify_left(notifier, team, player, remover)
+    await notifier.notify(PlayerLeftTeam(team=team, actor=remover, removed=player))
 
 
 def check_allow_be_author(player: dto.Player):
@@ -226,7 +205,16 @@ def check_allow_be_author(player: dto.Player):
         raise CantBeAuthor(player=player)
 
 
-def check_can_manage_players(team_player: dto.FullTeamPlayer):
+async def check_can_manage_players(
+    actor: dto.Player, team: dto.Team, dao: TeamPlayerGetter
+) -> None:
+    # the captain is allowed to manage the team even if they temporarily left it
+    if is_team_captain(team, actor):
+        return
+    assert_can_manage_players(await get_full_team_player(actor, team, dao))
+
+
+def assert_can_manage_players(team_player: dto.FullTeamPlayer) -> None:
     if not team_player.can_manage_players:
         raise PermissionsError(
             permission_name=enums.TeamPlayerPermission.can_manage_players.name,
@@ -235,7 +223,12 @@ def check_can_manage_players(team_player: dto.FullTeamPlayer):
         )
 
 
-def check_can_remove_player(team_player: dto.FullTeamPlayer):
+async def check_can_remove_player(
+    actor: dto.Player, team: dto.Team, dao: TeamPlayerGetter
+) -> None:
+    if is_team_captain(team, actor):
+        return
+    team_player = await get_full_team_player(actor, team, dao)
     if not team_player.can_remove_players:
         raise PermissionsError(
             permission_name=enums.TeamPlayerPermission.can_remove_players.name,
@@ -244,7 +237,10 @@ def check_can_remove_player(team_player: dto.FullTeamPlayer):
         )
 
 
-def check_can_add_players(team_player: dto.FullTeamPlayer):
+async def check_can_add_players(actor: dto.Player, team: dto.Team, dao: TeamPlayerGetter) -> None:
+    if is_team_captain(team, actor):
+        return
+    team_player = await get_full_team_player(actor, team, dao)
     if not team_player.can_add_players:
         raise PermissionsError(
             permission_name=enums.TeamPlayerPermission.can_add_players.name,
@@ -408,7 +404,7 @@ async def flip_permission(
     permission: enums.TeamPlayerPermission,
     dao: TeamPlayerPermissionFlipper,
 ):
-    check_can_manage_players(actor)
+    assert_can_manage_players(actor)
     if actor.player_id == team_player.player_id:
         raise exceptions.PermissionsError(
             permission_name=enums.TeamPlayerPermission.can_manage_players.name,

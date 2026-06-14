@@ -19,9 +19,7 @@ FIRST_LEVEL_KEYS_DESCRIPTION = CellAddress(row=2, column=4)
 
 
 class AllGameKeysReaderInteractor:
-    def __init__(
-        self, dao: GameByIdGetter, org_dao: OrgByPlayerGetter, printer: TablePrinter
-    ):
+    def __init__(self, dao: GameByIdGetter, org_dao: OrgByPlayerGetter, printer: TablePrinter):
         self.dao = dao
         self.org_dao = org_dao
         self.printer = printer
@@ -92,9 +90,7 @@ class GameScenarioTransitionsInteractor:
 
     async def __call__(self, game_id: int, identity: IdentityProvider) -> BinaryIO:
         game = await self.dao.get_full(game_id)
-        await check_can_view_scenario(
-            game, await identity.get_required_player(), self.org_dao
-        )
+        await check_can_view_scenario(game, await identity.get_required_player(), self.org_dao)
         return await self.printer.render(self.printer.print(self.convert(game)))
 
     def convert(self, game: core.FullGame) -> dto.Transitions:

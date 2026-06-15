@@ -81,6 +81,7 @@ async def get_file_metas(
     for guid in game.get_guids():
         if guid in seen:
             continue
+        seen.add(guid)
         file_meta = await dao.get_by_guid(guid)
         await check_file_meta_can_read(identity, file_meta, game)
         file_metas.append(file_meta)

@@ -5,6 +5,7 @@ from uuid import uuid4
 from shvatka.core.interfaces.clients.file_storage import FileGateway, FileStorage
 from shvatka.core.interfaces.dal.file_info import FileInfoGetter, FileUpserter
 from shvatka.core.interfaces.dal.game import GameUpserter
+from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.models import dto, enums
 from shvatka.core.models.dto import hints
 from shvatka.core.utils.exceptions import NotAuthorizedForEdit
@@ -73,24 +74,8 @@ async def upsert_files(
 
 
 async def get_file_metas(
-    game: dto.FullGame, author: dto.Player, dao: FileInfoGetter
+    game: dto.FullGame, identity: IdentityProvider, dao: FileInfoGetter
 ) -> Sequence[hints.FileMeta]:
-    file_metas: list[hints.FileMeta] = []
-    for guid in game.get_guids():
-        file_meta = await dao.get_by_guid(guid)
-        check_file_meta_can_read(author, file_meta, game)
-        file_metas.append(file_meta)
-    return file_metas
-
-
-async def get_game_file_metas(
-    game: dto.FullGame, author: dto.Player, dao: FileInfoGetter
-) -> list[hints.FileMeta]:
-    """File metas of every distinct file referenced by the game (for the web UI).
-
-    Deduplicates guids (a file may be used by several hints) and enforces the same
-    read permission as the other file readers.
-    """
     file_metas: list[hints.FileMeta] = []
     seen: set[str] = set()
     for guid in game.get_guids():
@@ -98,7 +83,7 @@ async def get_game_file_metas(
             continue
         seen.add(guid)
         file_meta = await dao.get_by_guid(guid)
-        check_file_meta_can_read(author, file_meta, game)
+        await check_file_meta_can_read(identity, file_meta, game)
         file_metas.append(file_meta)
     return file_metas
 
@@ -113,22 +98,21 @@ async def get_file_contents(
     return contents
 
 
-async def get_file_content(
-    guid: str, file_gateway: FileGateway, author: dto.Player, game: dto.Game, dao: FileInfoGetter
-) -> BinaryIO:
-    meta = await dao.get_by_guid(guid)
-    check_file_meta_can_read(author, meta, game)
-    return await file_gateway.get(meta)
-
-
-def check_file_meta_can_read(
-    author: dto.Player, file_meta: hints.VerifiableFileMeta, game: dto.Game
+async def check_file_meta_can_read(
+    identity: IdentityProvider,
+    file_meta: hints.VerifiableFileMeta,
+    game: dto.Game,
 ):
     if game.is_complete():
         return
-    if file_meta.author_id != author.id:
-        raise NotAuthorizedForEdit(
-            permission_name="file_edit",
-            player=author,
-            notify_user="невозможно открыть этот файл",
-        )
+    author = await identity.get_required_player()
+    if file_meta.author_id == author.id:
+        return
+    if org := await identity.get_org(game=game):
+        if not org.deleted and org.view_scenario:
+            return
+    raise NotAuthorizedForEdit(
+        permission_name="file_edit",
+        player=author,
+        notify_user="невозможно открыть этот файл",
+    )

@@ -72,16 +72,28 @@ async def show_scn(c: CallbackQuery, widget: Button, manager: DialogManager):
     await manager.start(states.GameEditSG.current_levels, data={"game_id": int(game_id)})
 
 
-async def show_zip_scn(c: CallbackQuery, widget: Button, manager: DialogManager):
+@inject
+async def show_zip_scn(
+    c: CallbackQuery,
+    widget: Button,
+    manager: DialogManager,
+    identity: FromDishka[IdentityProvider],
+):
     await c.answer()
     game_id = manager.dialog_data["game_id"]
-    await common_show_zip(c, game_id, manager)
+    await common_show_zip(c, game_id, manager, identity)
 
 
-async def show_my_zip_scn(c: CallbackQuery, widget: Button, manager: DialogManager):
+@inject
+async def show_my_zip_scn(
+    c: CallbackQuery,
+    widget: Button,
+    manager: DialogManager,
+    identity: FromDishka[IdentityProvider],
+):
     await c.answer()
     game_id = manager.dialog_data["my_game_id"]
-    await common_show_zip(c, game_id, manager)
+    await common_show_zip(c, game_id, manager, identity)
 
 
 @inject
@@ -122,12 +134,13 @@ async def show_transitions(
     )
 
 
-async def common_show_zip(c: CallbackQuery, game_id: int, manager: DialogManager):
-    player: dto.Player = manager.middleware_data["player"]
+async def common_show_zip(
+    c: CallbackQuery, game_id: int, manager: DialogManager, identity: IdentityProvider
+):
     dao: HolderDao = manager.middleware_data["dao"]
     retort: Retort = manager.middleware_data["retort"]
     file_gateway: FileGateway = manager.middleware_data["file_gateway"]
-    game_ = await game.get_game_package(game_id, player, dao.game_packager, retort, file_gateway)
+    game_ = await game.get_game_package(game_id, identity, dao.game_packager, retort, file_gateway)
     zip_ = pack_scn(game_)
     assert isinstance(c.message, Message)
     await c.message.answer_document(BufferedInputFile(file=zip_.read(), filename="scenario.zip"))
@@ -240,7 +253,7 @@ async def publish_game_forum(
     assert m.text
     username, password = map(str.strip, m.text.split("\n", maxsplit=1))
     game_id = manager.dialog_data["my_game_id"]
-    game_ = await get_full_game(game_id, identity, dao.game, dao.organizer)
+    game_ = await get_full_game(game_id, identity, dao.game)
     asyncio.create_task(upload_wrapper(game_, username, password, m))
 
 
@@ -258,9 +271,7 @@ async def get_excel_results_handler(
     dao: FromDishka[HolderDao],
 ):
     game_id = manager.dialog_data["game_id"]
-    full_game = await get_full_game(
-        id_=game_id, identity=identity, dao=dao.game, org_dao=dao.organizer
-    )
+    full_game = await get_full_game(id_=game_id, identity=identity, dao=dao.game)
     game_stat = await get_game_stat(game=full_game, identity=identity, dao=dao.game_stat)
     file = BytesIO()
     export_results(game=full_game, game_stat=game_stat, file=file)

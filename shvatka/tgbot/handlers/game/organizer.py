@@ -24,9 +24,7 @@ async def publish_game_forum(
     if not command.args:
         return
     game_id, username, password = map(str.strip, command.args.split(maxsplit=2))
-    game_ = await get_full_game(
-        id_=int(game_id), identity=identity, dao=dao.game, org_dao=dao.organizer
-    )
+    game_ = await get_full_game(id_=int(game_id), identity=identity, dao=dao.game)
     asyncio.create_task(upload_wrapper(game_, username, password, m))
 
 

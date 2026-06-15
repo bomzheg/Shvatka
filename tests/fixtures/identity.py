@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.models import dto
@@ -11,6 +11,7 @@ class MockIdentityProvider(IdentityProvider):
     team: dto.Team | None = None
     chat: dto.Chat | None = None
     full_team_player: dto.FullTeamPlayer | None = None
+    organizer: dict[int, dto.Organizer | None] = field(default_factory=dict)
 
     async def get_chat(self) -> dto.Chat | None:
         return self.chat
@@ -26,3 +27,6 @@ class MockIdentityProvider(IdentityProvider):
 
     async def get_full_team_player(self) -> dto.FullTeamPlayer | None:
         return self.full_team_player
+
+    async def get_org(self, game: dto.Game) -> dto.Organizer | None:
+        return self.organizer.get(game.id)

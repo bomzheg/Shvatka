@@ -52,7 +52,7 @@ async def process_publish_message(
     data: dict[str, Any] = manager.start_data  # type: ignore[assignment]
     game_id: int = data["game_id"]
     config: BotConfig = manager.middleware_data["config"]
-    game = await get_full_game(id_=game_id, identity=idp, dao=dao.game, org_dao=dao.organizer)
+    game = await get_full_game(id_=game_id, identity=idp, dao=dao.game)
     game_stat = await get_game_stat(game=game, identity=idp, dao=dao.game_stat)
     keys = await get_typed_keys(game=game, identity=idp, dao=dao.typed_keys)
     game_publisher = GamePublisher(

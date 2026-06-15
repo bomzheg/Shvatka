@@ -21,6 +21,9 @@ class IdentityProvider(Protocol):
     async def get_full_team_player(self) -> dto.FullTeamPlayer | None:
         raise NotImplementedError
 
+    async def get_org(self, game: dto.Game) -> dto.Organizer | None:
+        raise NotImplementedError
+
     async def get_required_user(self) -> dto.User:
         user = await self.get_user()
         if user is None:
@@ -54,3 +57,11 @@ class IdentityProvider(Protocol):
             player = await self.get_player()
             raise exceptions.PlayerNotInTeam(player=player)
         return full_team_player
+
+    async def get_required_org(self, game: dto.Game) -> dto.Organizer:
+        org = await self.get_org(game)
+        if org is None:
+            user = await self.get_user()
+            player = await self.get_player()
+            raise exceptions.IsNotOrganizer(user=user, player=player, game_id=game.id)
+        return org

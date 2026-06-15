@@ -23,7 +23,6 @@ class ResultsPainter:
             id_=game.id,
             identity=identity,
             dao=self.dao.game,
-            org_dao=self.dao.organizer,
         )
         game_stat = await get_game_stat(current_game, identity, self.dao.game_stat)
         picture = paint_it(game_stat, current_game)

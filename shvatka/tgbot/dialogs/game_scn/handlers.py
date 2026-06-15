@@ -106,7 +106,7 @@ async def add_level_handler(
     data: dict[str, Any] = manager.start_data  # type: ignore[assignment]
     game_id = data["game_id"]
     author = await idp.get_required_player()
-    game = await get_full_game(game_id, identity=idp, dao=dao.game, org_dao=dao.organizer)
+    game = await get_full_game(game_id, identity=idp, dao=dao.game)
     level = await get_by_id(int(item_id), author=author, dao=dao.level)
     await add_level(game=game, level=level, author=author, dao=dao.level)
     await manager.switch_to(state=states.GameEditSG.current_levels)

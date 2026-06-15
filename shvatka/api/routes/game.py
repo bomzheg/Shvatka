@@ -141,7 +141,7 @@ async def get_game_card(
     retort: FromDishka[Retort],
     id_: Annotated[int, Path(alias="id")],
 ):
-    game = await get_full_game(id_, identity, dao.game, dao.organizer)
+    game = await get_full_game(id_, identity, dao.game)
     files = await get_file_metas(game, identity, dao.file_info)
     return responses.FullGame.from_core(retort, game, files)
 

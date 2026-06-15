@@ -18,7 +18,6 @@ from shvatka.core.interfaces.dal.game import (
     PreviewGameByIdGetter,
 )
 from shvatka.core.interfaces.dal.level import LevelLinker
-from shvatka.core.interfaces.dal.organizer import OrgByPlayerGetter
 from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.interfaces.scheduler import Scheduler
 from shvatka.core.models import dto
@@ -161,7 +160,6 @@ async def get_full_game(
     id_: int,
     identity: IdentityProvider,
     dao: GameByIdGetter,
-    org_dao: OrgByPlayerGetter,
 ) -> dto.FullGame:
     game = await dao.get_full(id_=id_)
     await check_can_view_scenario(game, identity)

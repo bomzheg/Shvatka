@@ -147,6 +147,7 @@ class LoadedData(TypedDict, total=False):
     player: dto.Player | None
     team: dto.Team | None
     full_team_player: dto.FullTeamPlayer | None
+    organizer: dict[int, dto.Organizer | None]
 
 
 class ApiIdentityProvider(IdentityProvider):
@@ -163,6 +164,7 @@ class ApiIdentityProvider(IdentityProvider):
         self.auth_properties = auth_properties
         self.dao = dao
         self.cache = LoadedData()
+        self.cache["organizer"] = {}
 
     async def get_user(self) -> dto.User | None:
         if "user" in self.cache:
@@ -219,6 +221,18 @@ class ApiIdentityProvider(IdentityProvider):
         )
         self.cache["full_team_player"] = team_player
         return team_player
+
+    async def get_org(self, game: dto.Game) -> dto.Organizer | None:
+        if game.id in self.cache["organizer"]:
+            return self.cache["organizer"][game.id]
+        if game.author.id == (await self.get_required_player()).id:
+            self.cache["organizer"][game.id] = dto.PrimaryOrganizer(player=game.author, game=game)
+            return self.cache["organizer"][game.id]
+        organizer = await self.dao.organizer.get_by_player_or_none(
+            game=game, player=await self.get_required_player()
+        )
+        self.cache["organizer"][game.id] = organizer
+        return organizer
 
 
 class AuthProvider(Provider):

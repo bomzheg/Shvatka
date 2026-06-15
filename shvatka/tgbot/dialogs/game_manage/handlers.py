@@ -72,16 +72,28 @@ async def show_scn(c: CallbackQuery, widget: Button, manager: DialogManager):
     await manager.start(states.GameEditSG.current_levels, data={"game_id": int(game_id)})
 
 
-async def show_zip_scn(c: CallbackQuery, widget: Button, manager: DialogManager):
+@inject
+async def show_zip_scn(
+    c: CallbackQuery,
+    widget: Button,
+    manager: DialogManager,
+    identity: FromDishka[IdentityProvider],
+):
     await c.answer()
     game_id = manager.dialog_data["game_id"]
-    await common_show_zip(c, game_id, manager)
+    await common_show_zip(c, game_id, manager, identity)
 
 
-async def show_my_zip_scn(c: CallbackQuery, widget: Button, manager: DialogManager):
+@inject
+async def show_my_zip_scn(
+    c: CallbackQuery,
+    widget: Button,
+    manager: DialogManager,
+    identity: FromDishka[IdentityProvider],
+):
     await c.answer()
     game_id = manager.dialog_data["my_game_id"]
-    await common_show_zip(c, game_id, manager)
+    await common_show_zip(c, game_id, manager, identity)
 
 
 @inject
@@ -122,12 +134,13 @@ async def show_transitions(
     )
 
 
-async def common_show_zip(c: CallbackQuery, game_id: int, manager: DialogManager):
-    player: dto.Player = manager.middleware_data["player"]
+async def common_show_zip(
+    c: CallbackQuery, game_id: int, manager: DialogManager, identity: IdentityProvider
+):
     dao: HolderDao = manager.middleware_data["dao"]
     retort: Retort = manager.middleware_data["retort"]
     file_gateway: FileGateway = manager.middleware_data["file_gateway"]
-    game_ = await game.get_game_package(game_id, player, dao.game_packager, retort, file_gateway)
+    game_ = await game.get_game_package(game_id, identity, dao.game_packager, retort, file_gateway)
     zip_ = pack_scn(game_)
     assert isinstance(c.message, Message)
     await c.message.answer_document(BufferedInputFile(file=zip_.read(), filename="scenario.zip"))

@@ -32,7 +32,7 @@ from shvatka.core.services.game import (
     get_completed_games,
     get_full_game,
 )
-from shvatka.core.services.scenario.files import get_game_file_metas
+from shvatka.core.services.scenario.files import get_file_metas
 from shvatka.infrastructure.db.dao.holder import HolderDao
 
 
@@ -57,8 +57,7 @@ async def get_my_game(
     id_: Annotated[int, Path(alias="id")],
 ) -> responses.FullGame:
     game = await interactor(game_id=id_, identity=identity)
-    author = await identity.get_required_player()
-    files = await get_game_file_metas(game, author, dao.file_info)
+    files = await get_file_metas(game, identity, dao.file_info)
     return responses.FullGame.from_core(retort, game, files)
 
 
@@ -82,8 +81,7 @@ async def change_my_game_scenario(
     scenario: Annotated[dict[str, Any], Body()],
 ) -> responses.FullGame:
     game = await interactor(game_id=id_, raw_scn=scenario, identity=identity)
-    author = await identity.get_required_player()
-    files = await get_game_file_metas(game, author, dao.file_info)
+    files = await get_file_metas(game, identity, dao.file_info)
     return responses.FullGame.from_core(retort, game, files)
 
 
@@ -144,8 +142,7 @@ async def get_game_card(
     id_: Annotated[int, Path(alias="id")],
 ):
     game = await get_full_game(id_, identity, dao.game, dao.organizer)
-    author = await identity.get_required_player()
-    files = await get_game_file_metas(game, author, dao.file_info)
+    files = await get_file_metas(game, identity, dao.file_info)
     return responses.FullGame.from_core(retort, game, files)
 
 

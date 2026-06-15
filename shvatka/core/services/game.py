@@ -163,22 +163,22 @@ async def get_full_game(
     dao: GameByIdGetter,
     org_dao: OrgByPlayerGetter,
 ) -> dto.FullGame:
-    player = await identity.get_required_player()
     game = await dao.get_full(id_=id_)
-    await check_can_view_scenario(game, player, org_dao)
+    await check_can_view_scenario(game, identity)
     return game
 
 
 async def get_game_package(
     id_: int,
-    author: dto.Player,
+    identity: IdentityProvider,
     dao: GamePackager,
     retort: Retort,
     file_gateway: FileGateway,
 ) -> scn.RawGameScenario:
     game = await dao.get_full(id_=id_)
+    author = await identity.get_required_player()
     check_can_read(game, author)
-    file_metas = await get_file_metas(game, author, dao)
+    file_metas = await get_file_metas(game, identity, dao)
     contents = await get_file_contents(file_metas, file_gateway)
     scenario = scn.FullGameScenario(
         name=game.name,

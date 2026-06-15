@@ -1,4 +1,4 @@
-from shvatka.core.interfaces.dal.organizer import OrgByPlayerGetter
+from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.models import dto
 from shvatka.core.models.enums.org_permission import OrgPermission
 from shvatka.core.utils.exceptions import NotAuthorizedForEdit, CantEditGame
@@ -15,22 +15,13 @@ def check_can_read(game: dto.Game, player: dto.Player):
         )
 
 
-async def check_can_view_scenario(
-    game: dto.Game,
-    player: dto.Player,
-    dao: OrgByPlayerGetter,
-) -> None:
-    """Check the player is allowed to view the whole scenario of the game.
-
-    Unlike :func:`check_can_read`, this also allows secondary organizers that
-    were granted the ``view_scenario`` permission to read the scenario in any
-    game status (not only after the game is completed).
-    """
+async def check_can_view_scenario(game: dto.Game, identity: IdentityProvider) -> None:
+    player = await identity.get_required_player()
     if game.is_complete():
         return  # for completed - available for all
     if game.is_author_id(player.id):
         return
-    org = await dao.get_by_player_or_none(player=player, game=game)
+    org = await identity.get_org(game=game)
     if org is not None and not org.deleted and org.view_scenario:
         return
     raise NotAuthorizedForEdit(

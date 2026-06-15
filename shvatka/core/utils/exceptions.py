@@ -205,6 +205,10 @@ class PermissionsError(SHError):
         self.permission_name = permission_name
 
 
+class IsNotOrganizer(SHError):
+    notify_user = "Игрок не является организатором"
+
+
 class PromoteError(PermissionsError):
     notify_user = "Ошибка распространения права быть автором"
     permission_name = "can_be_author"

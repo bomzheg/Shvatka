@@ -52,6 +52,7 @@ class AddGameOrgInteractor:
     player_dao: PlayerByIdGetter
     org_getter: OrgByPlayerGetter
     org_adder: OrgAdder
+    org_deleted_flipper: OrgDeletedFlipper
 
     async def __call__(
         self, game_id: int, player_id: int, identity: IdentityProvider
@@ -60,12 +61,17 @@ class AddGameOrgInteractor:
         game = await get_game(id_=game_id, dao=self.game_dao)
         check_allow_manage_orgs(game, manager.id)
         player = await self.player_dao.get_by_id(player_id)
-        if await self.org_getter.get_by_player_or_none(game=game, player=player) is not None:
-            raise exceptions.PlayerAlreadyOrganizer(
-                player=player,
-                game=game,
-                text="player is already an organizer of this game",
-            )
+        existing = await self.org_getter.get_by_player_or_none(game=game, player=player)
+        if existing is not None:
+            if not existing.deleted:
+                raise exceptions.PlayerAlreadyOrganizer(
+                    player=player,
+                    game=game,
+                    text="player is already an organizer of this game",
+                )
+            # a previously removed organizer is restored via the same POST endpoint
+            await flip_deleted(manager, existing, self.org_deleted_flipper)
+            return await self.org_deleted_flipper.get_by_id(existing.id)
         org = await self.org_adder.add_new_org(game, player)
         await self.org_adder.commit()
         return org

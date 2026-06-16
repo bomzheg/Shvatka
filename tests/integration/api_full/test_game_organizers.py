@@ -141,6 +141,36 @@ async def test_add_org_twice_rejected(
 
 
 @pytest.mark.asyncio
+async def test_restore_org_via_post(
+    client: AsyncClient,
+    auth: AuthProperties,
+    author: dto.Player,
+    harry: dto.Player,
+    game: dto.FullGame,
+    dao: HolderDao,
+    check_dao: HolderDao,
+):
+    org = await dao.organizer.add_new(game, harry)
+    await dao.organizer.flip_deleted(org)
+    await dao.commit()
+    assert (await check_dao.organizer.get_by_id(org.id)).deleted is True
+
+    cookies = auth_cookies(auth, author)
+    resp = await client.post(
+        f"/games/{game.id}/organizers",
+        json={"player_id": harry.id},
+        cookies=cookies,
+    )
+    assert resp.status_code == 200, resp.text
+    body = resp.json()
+    # the same org is restored, not a duplicate created
+    assert body["org_id"] == org.id
+    assert body["deleted"] is False
+    assert (await check_dao.organizer.get_by_id(org.id)).deleted is False
+    assert len(await check_dao.organizer.get_orgs(game, with_deleted=True)) == 1
+
+
+@pytest.mark.asyncio
 async def test_change_org_permission(
     client: AsyncClient,
     auth: AuthProperties,

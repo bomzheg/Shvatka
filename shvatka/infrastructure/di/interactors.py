@@ -184,6 +184,7 @@ class GameEditProvider(Provider):
             player_dao=dao.player,
             org_getter=dao.organizer,
             org_adder=dao.org_adder,
+            org_deleted_flipper=dao.organizer,
         )
 
     @provide

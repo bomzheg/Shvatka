@@ -167,6 +167,7 @@ async def test_add_org(author: dto.Player, stranger: dto.Player):
         player_dao=FakePlayerDao({stranger.id: stranger}),
         org_getter=org_dao,
         org_adder=org_dao,
+        org_deleted_flipper=org_dao,
     )
 
     org = await interactor(
@@ -186,6 +187,7 @@ async def test_add_org_rejects_non_author(author: dto.Player, stranger: dto.Play
         player_dao=FakePlayerDao({stranger.id: stranger}),
         org_getter=org_dao,
         org_adder=org_dao,
+        org_deleted_flipper=org_dao,
     )
     with pytest.raises(exceptions.GameHasAnotherAuthor):
         await interactor(
@@ -203,11 +205,34 @@ async def test_add_org_rejects_duplicate(author: dto.Player, stranger: dto.Playe
         player_dao=FakePlayerDao({stranger.id: stranger}),
         org_getter=org_dao,
         org_adder=org_dao,
+        org_deleted_flipper=org_dao,
     )
     with pytest.raises(exceptions.PlayerAlreadyOrganizer):
         await interactor(
             game_id=game.id, player_id=stranger.id, identity=MockIdentityProvider(player=author)
         )
+
+
+@pytest.mark.asyncio
+async def test_add_org_restores_deleted(author: dto.Player, stranger: dto.Player):
+    game = make_game(10, author, GameStatus.underconstruction)
+    org_dao = FakeOrgDao(game=game)
+    removed = org_dao.add(stranger, deleted=True)
+    interactor = AddGameOrgInteractor(
+        game_dao=FakeGameDao({game.id: game}),
+        player_dao=FakePlayerDao({stranger.id: stranger}),
+        org_getter=org_dao,
+        org_adder=org_dao,
+        org_deleted_flipper=org_dao,
+    )
+
+    org = await interactor(
+        game_id=game.id, player_id=stranger.id, identity=MockIdentityProvider(player=author)
+    )
+    # the same org record is restored rather than a new one being created
+    assert org.id == removed.id
+    assert org.deleted is False
+    assert len(org_dao.orgs) == 1
 
 
 @pytest.mark.asyncio

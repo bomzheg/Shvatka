@@ -98,7 +98,7 @@ async def test_change_username(client: AsyncClient, harry: dto.Player, token: To
     resp = await client.put(
         "/users/me/username",
         cookies={"Authorization": f"{token.token_type} {token.access_token}"},
-        json=new_username,
+        json={"username": new_username},
     )
     assert resp.is_success
 
@@ -120,6 +120,6 @@ async def test_change_username_occupied(
     resp = await client.put(
         "/users/me/username",
         cookies={"Authorization": f"{token.token_type} {token.access_token}"},
-        json=hermione.username,
+        json={"username": hermione.username},
     )
     assert resp.status_code == 422

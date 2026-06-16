@@ -6,7 +6,7 @@ from dishka.integrations.fastapi import inject
 from fastapi import APIRouter, HTTPException
 from fastapi.params import Body, Path, Query
 
-from shvatka.api.models import responses
+from shvatka.api.models import responses, req
 from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.players.interactors import GetPlayerInteractor, SearchPlayersInteractor
 from shvatka.core.players.player import set_password, set_player_username, get_player_by_id
@@ -74,10 +74,10 @@ async def set_password_route(
 async def set_username_route(
     identity: FromDishka[IdentityProvider],
     dao: FromDishka[HolderDao],
-    username: str = Body(),  # type: ignore[assignment]
+    body: Annotated[req.ChangeUsername, Body()],
 ) -> None:
     player = await identity.get_required_player()
-    await set_player_username(player, username, dao.player)
+    await set_player_username(player, body.username, dao.player)
     raise HTTPException(status_code=200)
 
 

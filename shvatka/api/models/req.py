@@ -26,6 +26,22 @@ class GameStatusChange:
 
 
 @dataclass
+class NewOrg:
+    player_id: int
+
+
+@dataclass
+class DeleteOrg:
+    org_id: int
+
+
+@dataclass
+class OrgPermissionUpdate:
+    permission: str
+    value: bool
+
+
+@dataclass
 class JoinTeam:
     player_id: int
     role: str | None = None

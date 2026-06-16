@@ -19,6 +19,12 @@ from shvatka.core.games.editor_interactors import (
     ChangeGameStatusInteractor,
     UploadGameFileInteractor,
 )
+from shvatka.core.games.org_interactors import (
+    ListGameOrgsInteractor,
+    AddGameOrgInteractor,
+    ChangeOrgPermissionInteractor,
+    RemoveGameOrgInteractor,
+)
 from shvatka.core.players.interactors import (
     GetPlayerInteractor,
     SearchPlayersInteractor,
@@ -166,6 +172,27 @@ class GameEditProvider(Provider):
     @provide
     def upload_file(self, dao: HolderDao, storage: FileStorage) -> UploadGameFileInteractor:
         return UploadGameFileInteractor(storage=storage, game_dao=dao.game, file_dao=dao.file_info)
+
+    @provide
+    def list_orgs(self, dao: HolderDao) -> ListGameOrgsInteractor:
+        return ListGameOrgsInteractor(game_dao=dao.game, org_dao=dao.organizer)
+
+    @provide
+    def add_org(self, dao: HolderDao) -> AddGameOrgInteractor:
+        return AddGameOrgInteractor(
+            game_dao=dao.game,
+            player_dao=dao.player,
+            org_getter=dao.organizer,
+            org_adder=dao.org_adder,
+        )
+
+    @provide
+    def change_org_permission(self, dao: HolderDao) -> ChangeOrgPermissionInteractor:
+        return ChangeOrgPermissionInteractor(org_dao=dao.organizer)
+
+    @provide
+    def remove_org(self, dao: HolderDao) -> RemoveGameOrgInteractor:
+        return RemoveGameOrgInteractor(org_dao=dao.organizer)
 
 
 class WaiverProvider(Provider):

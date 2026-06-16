@@ -209,6 +209,10 @@ class IsNotOrganizer(SHError):
     notify_user = "Игрок не является организатором"
 
 
+class PlayerAlreadyOrganizer(SHError):
+    notify_user = "Игрок уже является организатором этой игры"
+
+
 class PromoteError(PermissionsError):
     notify_user = "Ошибка распространения права быть автором"
     permission_name = "can_be_author"

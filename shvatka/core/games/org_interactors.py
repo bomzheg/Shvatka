@@ -73,6 +73,7 @@ class AddGameOrgInteractor:
 
 @dataclass
 class ChangeOrgPermissionInteractor:
+    game_dao: GameByIdGetter
     org_dao: OrgPermissionFlipper
 
     async def __call__(
@@ -84,9 +85,10 @@ class ChangeOrgPermissionInteractor:
         identity: IdentityProvider,
     ) -> dto.SecondaryOrganizer:
         manager = await identity.get_required_player()
+        game = await get_game(id_=game_id, dao=self.game_dao)
+        check_allow_manage_orgs(game, manager.id)
         org = await get_org_by_id(org_id, self.org_dao)
-        check_org_belongs_to_game(org, game_id)
-        check_allow_manage_orgs(org.game, manager.id)
+        check_org_belongs_to_game(org, game.id)
         if getattr(org, permission.name) != value:
             await flip_permission(manager, org, permission, self.org_dao)
         return await self.org_dao.get_by_id(org_id)
@@ -94,15 +96,17 @@ class ChangeOrgPermissionInteractor:
 
 @dataclass
 class RemoveGameOrgInteractor:
+    game_dao: GameByIdGetter
     org_dao: OrgDeletedFlipper
 
     async def __call__(
         self, game_id: int, org_id: int, identity: IdentityProvider
     ) -> dto.SecondaryOrganizer:
         manager = await identity.get_required_player()
+        game = await get_game(id_=game_id, dao=self.game_dao)
+        check_allow_manage_orgs(game, manager.id)
         org = await get_org_by_id(org_id, self.org_dao)
-        check_org_belongs_to_game(org, game_id)
-        check_allow_manage_orgs(org.game, manager.id)
+        check_org_belongs_to_game(org, game.id)
         if not org.deleted:
             await flip_deleted(manager, org, self.org_dao)
         return await self.org_dao.get_by_id(org_id)

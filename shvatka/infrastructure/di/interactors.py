@@ -188,11 +188,11 @@ class GameEditProvider(Provider):
 
     @provide
     def change_org_permission(self, dao: HolderDao) -> ChangeOrgPermissionInteractor:
-        return ChangeOrgPermissionInteractor(org_dao=dao.organizer)
+        return ChangeOrgPermissionInteractor(game_dao=dao.game, org_dao=dao.organizer)
 
     @provide
     def remove_org(self, dao: HolderDao) -> RemoveGameOrgInteractor:
-        return RemoveGameOrgInteractor(org_dao=dao.organizer)
+        return RemoveGameOrgInteractor(game_dao=dao.game, org_dao=dao.organizer)
 
 
 class WaiverProvider(Provider):

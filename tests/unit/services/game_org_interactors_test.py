@@ -91,10 +91,10 @@ class FakeOrgDao:
 
 @dataclass
 class FakeGameDao:
-    game: dto.Game
+    games: dict[int, dto.Game]
 
     async def get_by_id(self, id_: int, author: dto.Player | None = None) -> dto.Game:
-        return self.game
+        return self.games[id_]
 
 
 @dataclass
@@ -125,7 +125,7 @@ async def test_list_returns_primary_and_secondary(author: dto.Player, stranger: 
         player=author, organizer={game.id: dto.PrimaryOrganizer(player=author, game=game)}
     )
 
-    interactor = ListGameOrgsInteractor(game_dao=FakeGameDao(game), org_dao=org_dao)
+    interactor = ListGameOrgsInteractor(game_dao=FakeGameDao({game.id: game}), org_dao=org_dao)
     result = await interactor(game_id=game.id, identity=identity)
 
     ids = [getattr(o, "id", None) for o in result]
@@ -139,7 +139,9 @@ async def test_list_forbidden_for_stranger(author: dto.Player, stranger: dto.Pla
     game = make_game(10, author, GameStatus.underconstruction)
     identity = MockIdentityProvider(player=stranger, organizer={game.id: None})
 
-    interactor = ListGameOrgsInteractor(game_dao=FakeGameDao(game), org_dao=FakeOrgDao(game=game))
+    interactor = ListGameOrgsInteractor(
+        game_dao=FakeGameDao({game.id: game}), org_dao=FakeOrgDao(game=game)
+    )
     with pytest.raises(exceptions.IsNotOrganizer):
         await interactor(game_id=game.id, identity=identity)
 
@@ -149,7 +151,9 @@ async def test_list_public_when_completed(author: dto.Player, stranger: dto.Play
     game = make_game(10, author, GameStatus.complete)
     identity = MockIdentityProvider(player=stranger, organizer={game.id: None})
 
-    interactor = ListGameOrgsInteractor(game_dao=FakeGameDao(game), org_dao=FakeOrgDao(game=game))
+    interactor = ListGameOrgsInteractor(
+        game_dao=FakeGameDao({game.id: game}), org_dao=FakeOrgDao(game=game)
+    )
     result = await interactor(game_id=game.id, identity=identity)
     assert [o.player.id for o in result] == [author.id]
 
@@ -159,7 +163,7 @@ async def test_add_org(author: dto.Player, stranger: dto.Player):
     game = make_game(10, author, GameStatus.underconstruction)
     org_dao = FakeOrgDao(game=game)
     interactor = AddGameOrgInteractor(
-        game_dao=FakeGameDao(game),
+        game_dao=FakeGameDao({game.id: game}),
         player_dao=FakePlayerDao({stranger.id: stranger}),
         org_getter=org_dao,
         org_adder=org_dao,
@@ -178,7 +182,7 @@ async def test_add_org_rejects_non_author(author: dto.Player, stranger: dto.Play
     game = make_game(10, author, GameStatus.underconstruction)
     org_dao = FakeOrgDao(game=game)
     interactor = AddGameOrgInteractor(
-        game_dao=FakeGameDao(game),
+        game_dao=FakeGameDao({game.id: game}),
         player_dao=FakePlayerDao({stranger.id: stranger}),
         org_getter=org_dao,
         org_adder=org_dao,
@@ -195,7 +199,7 @@ async def test_add_org_rejects_duplicate(author: dto.Player, stranger: dto.Playe
     org_dao = FakeOrgDao(game=game)
     org_dao.add(stranger)
     interactor = AddGameOrgInteractor(
-        game_dao=FakeGameDao(game),
+        game_dao=FakeGameDao({game.id: game}),
         player_dao=FakePlayerDao({stranger.id: stranger}),
         org_getter=org_dao,
         org_adder=org_dao,
@@ -211,7 +215,9 @@ async def test_change_permission_is_idempotent(author: dto.Player, stranger: dto
     game = make_game(10, author, GameStatus.underconstruction)
     org_dao = FakeOrgDao(game=game)
     org = org_dao.add(stranger)
-    interactor = ChangeOrgPermissionInteractor(org_dao=org_dao)
+    interactor = ChangeOrgPermissionInteractor(
+        game_dao=FakeGameDao({game.id: game}), org_dao=org_dao
+    )
     identity = MockIdentityProvider(player=author)
 
     result = await interactor(
@@ -238,13 +244,17 @@ async def test_change_permission_is_idempotent(author: dto.Player, stranger: dto
 
 @pytest.mark.asyncio
 async def test_change_permission_wrong_game(author: dto.Player, stranger: dto.Player):
+    # org belongs to game 10, but the request targets a different game (20)
     game = make_game(10, author, GameStatus.underconstruction)
+    other_game = make_game(20, author, GameStatus.underconstruction)
     org_dao = FakeOrgDao(game=game)
     org = org_dao.add(stranger)
-    interactor = ChangeOrgPermissionInteractor(org_dao=org_dao)
+    interactor = ChangeOrgPermissionInteractor(
+        game_dao=FakeGameDao({game.id: game, other_game.id: other_game}), org_dao=org_dao
+    )
     with pytest.raises(exceptions.GameNotFound):
         await interactor(
-            game_id=999,
+            game_id=other_game.id,
             org_id=org.id,
             permission=OrgPermission.can_spy,
             value=True,
@@ -257,7 +267,7 @@ async def test_remove_org_is_idempotent(author: dto.Player, stranger: dto.Player
     game = make_game(10, author, GameStatus.underconstruction)
     org_dao = FakeOrgDao(game=game)
     org = org_dao.add(stranger)
-    interactor = RemoveGameOrgInteractor(org_dao=org_dao)
+    interactor = RemoveGameOrgInteractor(game_dao=FakeGameDao({game.id: game}), org_dao=org_dao)
     identity = MockIdentityProvider(player=author)
 
     result = await interactor(game_id=game.id, org_id=org.id, identity=identity)

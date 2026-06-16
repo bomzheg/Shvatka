@@ -71,13 +71,11 @@ async def test_logout(client: AsyncClient, token: Token):
 
 
 @pytest.mark.asyncio
-@pytest.mark.skip(reason="doesnt work. TODO")
 async def test_change_password(client: AsyncClient, harry: dto.Player, token: Token):
     resp = await client.put(
-        "/users/me/password/",
+        "/users/me/password",
         cookies={"Authorization": f"{token.token_type} {token.access_token}"},
         json="09876",
-        follow_redirects=True,
     )
     assert resp.is_success
 
@@ -92,3 +90,36 @@ async def test_change_password(client: AsyncClient, harry: dto.Player, token: To
         data={"username": harry.username, "password": "09876"},
     )
     assert resp.is_success
+
+
+@pytest.mark.asyncio
+async def test_change_username(client: AsyncClient, harry: dto.Player, token: Token):
+    new_username = "the_chosen_one"
+    resp = await client.put(
+        "/users/me/username",
+        cookies={"Authorization": f"{token.token_type} {token.access_token}"},
+        json={"username": new_username},
+    )
+    assert resp.is_success
+
+    resp = await client.get(
+        "/users/me",
+        cookies={"Authorization": f"{token.token_type} {token.access_token}"},
+        follow_redirects=True,
+    )
+    assert resp.is_success
+    actual = responses.Player(**resp.json())
+    assert actual.id == harry.id
+    assert actual.name_mention == new_username
+
+
+@pytest.mark.asyncio
+async def test_change_username_occupied(
+    client: AsyncClient, harry: dto.Player, hermione: dto.Player, token: Token
+):
+    resp = await client.put(
+        "/users/me/username",
+        cookies={"Authorization": f"{token.token_type} {token.access_token}"},
+        json={"username": hermione.username},
+    )
+    assert resp.status_code == 422

@@ -6,10 +6,10 @@ from dishka.integrations.fastapi import inject
 from fastapi import APIRouter, HTTPException
 from fastapi.params import Body, Path, Query
 
-from shvatka.api.models import responses
+from shvatka.api.models import responses, req
 from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.players.interactors import GetPlayerInteractor, SearchPlayersInteractor
-from shvatka.core.players.player import set_password, get_player_by_id
+from shvatka.core.players.player import set_password, set_player_username, get_player_by_id
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.api.dependencies.auth import AuthProperties
 
@@ -70,12 +70,24 @@ async def set_password_route(
     raise HTTPException(status_code=200)
 
 
+@inject
+async def set_username_route(
+    identity: FromDishka[IdentityProvider],
+    dao: FromDishka[HolderDao],
+    body: Annotated[req.ChangeUsername, Body()],
+) -> None:
+    player = await identity.get_required_player()
+    await set_player_username(player, body.username, dao.player)
+    raise HTTPException(status_code=200)
+
+
 # users in API is players in core and db
 def setup() -> APIRouter:
     router = APIRouter(prefix="/users")
     router.add_api_route("", search_users, methods=["GET"])
     router.add_api_route("/me", read_users_me, methods=["GET"])
     router.add_api_route("/me/password", set_password_route, methods=["PUT"])
+    router.add_api_route("/me/username", set_username_route, methods=["PUT"])
     router.add_api_route("/{id}/details", read_user_details, methods=["GET"])
     router.add_api_route("/{id}", read_user, methods=["GET"])
     return router

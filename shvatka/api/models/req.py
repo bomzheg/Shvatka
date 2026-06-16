@@ -16,6 +16,11 @@ class NewGame:
 
 
 @dataclass
+class ChangeUsername:
+    username: str
+
+
+@dataclass
 class GameStartAt:
     start_at: datetime | None = None
 

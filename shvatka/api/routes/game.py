@@ -26,8 +26,15 @@ from shvatka.core.games.editor_interactors import (
     PlanGameStartInteractor,
     ChangeGameStatusInteractor,
 )
+from shvatka.core.games.org_interactors import (
+    ListGameOrgsInteractor,
+    AddGameOrgInteractor,
+    ChangeOrgPermissionInteractor,
+    RemoveGameOrgInteractor,
+)
 from shvatka.core.interfaces.current_game import CurrentGameProvider
 from shvatka.core.models import enums
+from shvatka.core.models.enums.org_permission import OrgPermission
 from shvatka.core.services.game import (
     get_completed_games,
     get_full_game,
@@ -195,6 +202,62 @@ async def insert_key(
     )
 
 
+@inject
+async def get_game_organizers(
+    identity: FromDishka[ApiIdentityProvider],
+    interactor: FromDishka[ListGameOrgsInteractor],
+    id_: Annotated[int, Path(alias="id")],
+) -> responses.Page[responses.GameOrganizer]:
+    orgs = await interactor(game_id=id_, identity=identity)
+    return responses.Page([responses.GameOrganizer.from_core(org) for org in orgs])
+
+
+@inject
+async def add_game_organizer(
+    identity: FromDishka[ApiIdentityProvider],
+    interactor: FromDishka[AddGameOrgInteractor],
+    id_: Annotated[int, Path(alias="id")],
+    body: Annotated[req.NewOrg, Body()],
+) -> responses.GameOrganizer:
+    org = await interactor(game_id=id_, player_id=body.player_id, identity=identity)
+    return responses.GameOrganizer.from_core(org)
+
+
+@inject
+async def delete_game_organizer(
+    identity: FromDishka[ApiIdentityProvider],
+    interactor: FromDishka[RemoveGameOrgInteractor],
+    id_: Annotated[int, Path(alias="id")],
+    body: Annotated[req.DeleteOrg, Body()],
+) -> responses.GameOrganizer:
+    org = await interactor(game_id=id_, org_id=body.org_id, identity=identity)
+    return responses.GameOrganizer.from_core(org)
+
+
+@inject
+async def change_game_organizer_permission(
+    identity: FromDishka[ApiIdentityProvider],
+    interactor: FromDishka[ChangeOrgPermissionInteractor],
+    id_: Annotated[int, Path(alias="id")],
+    org_id: Annotated[int, Path()],
+    body: Annotated[req.OrgPermissionUpdate, Body()],
+) -> responses.GameOrganizer:
+    try:
+        permission = OrgPermission[body.permission]
+    except KeyError as e:
+        raise HTTPException(
+            status_code=422, detail={"text": f"unknown permission {body.permission}"}
+        ) from e
+    org = await interactor(
+        game_id=id_,
+        org_id=org_id,
+        permission=permission,
+        value=body.value,
+        identity=identity,
+    )
+    return responses.GameOrganizer.from_core(org)
+
+
 def setup() -> APIRouter:
     router = APIRouter(prefix="/games")
     router.add_api_route("", get_all_games, methods=["GET"])
@@ -211,4 +274,10 @@ def setup() -> APIRouter:
     router.add_api_route("/{id}", get_game_card, methods=["GET"])
     router.add_api_route("/{id}/keys", get_game_keys, methods=["GET"])
     router.add_api_route("/{id}/stat", get_game_stat, methods=["GET"])
+    router.add_api_route("/{id}/organizers", get_game_organizers, methods=["GET"])
+    router.add_api_route("/{id}/organizers", add_game_organizer, methods=["POST"])
+    router.add_api_route("/{id}/organizers", delete_game_organizer, methods=["DELETE"])
+    router.add_api_route(
+        "/{id}/organizers/{org_id}", change_game_organizer_permission, methods=["PUT"]
+    )
     return router

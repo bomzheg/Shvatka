@@ -33,8 +33,8 @@ class OtherApiProvider(Provider):
         return WebGameLogWriter()
 
     @provide
-    def org_notifier(self) -> WebOrgNotifier:
-        return WebOrgNotifier()
+    def org_notifier(self, push_sender: WebPushSender) -> WebOrgNotifier:
+        return WebOrgNotifier(push_sender)
 
     @provide
     def team_notifier(self) -> WebTeamNotifier:

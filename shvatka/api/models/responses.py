@@ -193,6 +193,8 @@ class GameFile:
     guid: str
     original_filename: str
     extension: str
+    content_type: enums.HintType | None
+    mime_type: str | None
 
     @classmethod
     def from_core(cls, core: hints.FileMeta) -> "GameFile":
@@ -200,6 +202,8 @@ class GameFile:
             guid=core.guid,
             original_filename=core.original_filename,
             extension=core.extension,
+            content_type=core.content_type,
+            mime_type=core.mime_type,
         )
 
 

@@ -92,7 +92,15 @@ async def test_my_game_full(
     assert body["id"] == game.id
     assert len(body["levels"]) == len(game.levels)
     # the `game` fixture references one file (deduplicated across hints)
-    assert body["files"] == [{"guid": GUID, "original_filename": "hint2", "extension": ".jpg"}]
+    assert body["files"] == [
+        {
+            "guid": GUID,
+            "original_filename": "hint2",
+            "extension": ".jpg",
+            "content_type": "photo",
+            "mime_type": "text/plain",
+        }
+    ]
 
 
 @pytest.mark.asyncio
@@ -141,6 +149,8 @@ async def test_scenario_files_round_trip(
             "guid": f["guid"],
             "original_filename": f["original_filename"],
             "extension": f["extension"],
+            "content_type": f["content_type"],
+            "mime_type": f["mime_type"],
         }
     ]
     put = await client.put(f"/games/my/{game.id}/scenario", json=scenario, cookies=cookies)

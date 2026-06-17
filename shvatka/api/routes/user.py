@@ -83,7 +83,7 @@ async def set_username_route(
 
 # users in API is players in core and db
 def setup() -> APIRouter:
-    router = APIRouter(prefix="/users")
+    router = APIRouter(prefix="/users", tags=["users"])
     router.add_api_route("", search_users, methods=["GET"])
     router.add_api_route("/me", read_users_me, methods=["GET"])
     router.add_api_route("/me/password", set_password_route, methods=["PUT"])

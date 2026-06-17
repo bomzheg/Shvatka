@@ -98,7 +98,7 @@ async def test_my_game_full(
             "original_filename": "hint2",
             "extension": ".jpg",
             "content_type": "photo",
-            "mime_type": None,
+            "mime_type": "text/plain",
         }
     ]
 

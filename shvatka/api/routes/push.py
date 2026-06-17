@@ -53,7 +53,7 @@ async def unsubscribe(
 
 
 def setup() -> APIRouter:
-    router = APIRouter(prefix="/push")
+    router = APIRouter(prefix="/push", tags=["push"])
     router.add_api_route("/config", get_push_config, methods=["GET"])
     router.add_api_route("/subscriptions", subscribe, methods=["PUT"])
     router.add_api_route("/subscriptions", unsubscribe, methods=["DELETE"])

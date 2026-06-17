@@ -89,7 +89,7 @@ async def get_waivers_by_game(
 
 
 def setup() -> APIRouter:
-    router = APIRouter(prefix="/waivers")
+    router = APIRouter(prefix="/waivers", tags=["waivers"])
     router.add_api_route("/game/current", get_current_waivers, methods=["GET"])
     router.add_api_route("/game/current", replace_current_waivers, methods=["PUT"])
     router.add_api_route("/game/{id}", get_waivers_by_game, methods=["GET"])

@@ -113,7 +113,7 @@ async def update_team_player(
 
 
 def setup() -> APIRouter:
-    router = APIRouter(prefix="/teams")
+    router = APIRouter(prefix="/teams", tags=["teams"])
     router.add_api_route("", get_teams, methods=["GET"])
     router.add_api_route("/my", get_my_team, methods=["GET"])
     router.add_api_route("/{id}", get_team, methods=["GET"])

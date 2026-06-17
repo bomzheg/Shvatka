@@ -142,7 +142,7 @@ async def one_time_token_login(
 
 
 def setup() -> APIRouter:
-    router = APIRouter(prefix="/auth")
+    router = APIRouter(prefix="/auth", tags=["auth"])
     router.add_api_route("/one-time-token", one_time_token_login, methods=["POST"])
     router.add_api_route("/token", login, methods=["POST"])
     router.add_api_route("/login", tg_login_page, response_class=HTMLResponse, methods=["GET"])

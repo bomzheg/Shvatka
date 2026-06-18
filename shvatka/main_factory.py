@@ -1,6 +1,5 @@
 import logging
 
-from aiogram import Bot
 from dishka import Provider, Scope, AsyncContainer, provide
 from dishka.exceptions import NoContextValueError
 
@@ -20,7 +19,6 @@ from shvatka.core.views.game import (
     GameLogWriter,
 )
 from shvatka.core.views.team import TeamNotifier
-from shvatka.tgbot.config.models.bot import BotConfig
 from shvatka.tgbot.services.identity import TgBotIdentityProvider
 from shvatka.tgbot.views.game import BotView, BotOrgNotifier, GameBotLog
 from shvatka.tgbot.views.team import BotTeamNotifier
@@ -50,23 +48,24 @@ class ComplexOnlyProvider(Provider):
         return ComplexView(bot_view, web_view)
 
     @provide
-    def complex_preparer(self, bot_view: BotView) -> GameViewPreparer:
-        return ComplexGameViewPreparer(bot_view, WebGamePreparer())
+    def complex_preparer(
+        self, bot_view: BotView, web_preparer: WebGamePreparer
+    ) -> GameViewPreparer:
+        return ComplexGameViewPreparer(bot_view, web_preparer)
 
     @provide
-    def complex_team_notifier(self, bot: Bot, web: WebTeamNotifier) -> TeamNotifier:
-        return ComplexTeamNotifier(BotTeamNotifier(bot=bot), web)
+    def complex_team_notifier(
+        self, bot: BotTeamNotifier, web: WebTeamNotifier
+    ) -> TeamNotifier:
+        return ComplexTeamNotifier(bot, web)
 
     @provide
-    def complex_org_notifier(self, bot: Bot, web: WebOrgNotifier) -> OrgNotifier:
-        return ComplexOrgNotifier(BotOrgNotifier(bot=bot), web)
+    def complex_org_notifier(self, bot: BotOrgNotifier, web: WebOrgNotifier) -> OrgNotifier:
+        return ComplexOrgNotifier(bot, web)
 
     @provide
-    def complex_log_writer(self, bot: Bot, config: BotConfig) -> GameLogWriter:
-        return ComplexGameLogWriter(
-            GameBotLog(bot=bot, log_chat_id=config.game_log_chat),
-            WebGameLogWriter(),
-        )
+    def complex_log_writer(self, bot: GameBotLog, web: WebGameLogWriter) -> GameLogWriter:
+        return ComplexGameLogWriter(bot, web)
 
 
 def get_complex_only_providers() -> list[Provider]:

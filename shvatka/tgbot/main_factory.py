@@ -185,16 +185,16 @@ class BotOnlyProvider(Provider):
         return bot_game_view
 
     @provide
-    def get_team_notifier(self, bot: Bot) -> TeamNotifier:
-        return BotTeamNotifier(bot=bot)
+    def get_team_notifier(self, notifier: BotTeamNotifier) -> TeamNotifier:
+        return notifier
 
     @provide
-    def get_org_notifier(self, bot: Bot) -> OrgNotifier:
-        return BotOrgNotifier(bot=bot)
+    def get_org_notifier(self, notifier: BotOrgNotifier) -> OrgNotifier:
+        return notifier
 
     @provide
-    def get_game_log(self, bot: Bot, config: BotConfig) -> GameLogWriter:
-        return GameBotLog(bot=bot, log_chat_id=config.game_log_chat)
+    def get_game_log(self, game_log: GameBotLog) -> GameLogWriter:
+        return game_log
 
 
 class GameToolsProvider(Provider):
@@ -204,8 +204,14 @@ class GameToolsProvider(Provider):
     ) -> HintContentResolver:
         return HintContentResolver(dao=dao.file_info, file_storage=file_storage)
 
+    @provide(scope=Scope.REQUEST)
+    def get_bot_game_log(self, bot: Bot, config: BotConfig) -> GameBotLog:
+        return GameBotLog(bot=bot, log_chat_id=config.game_log_chat)
+
     get_hint_sender = provide(HintSender, scope=Scope.REQUEST)
     get_bot_game_view = provide(BotView, scope=Scope.REQUEST)
+    get_bot_team_notifier = provide(BotTeamNotifier, scope=Scope.REQUEST)
+    get_bot_org_notifier = provide(BotOrgNotifier, scope=Scope.REQUEST)
     level_bot_view = provide(LevelBotView, scope=Scope.REQUEST, provides=LevelView)
     hint_parser = provide(HintParser, scope=Scope.REQUEST)
     results_painter = provide(ResultsPainter, scope=Scope.REQUEST)

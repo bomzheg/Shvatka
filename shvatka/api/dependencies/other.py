@@ -8,6 +8,7 @@ from shvatka.api.utils.web_input import (
     WebGameLogWriter,
     WebOrgNotifier,
     WebTeamNotifier,
+    WebGamePreparer,
 )
 from shvatka.core.interfaces.current_game import CurrentGameProvider
 from shvatka.infrastructure.db.dao.rdb.push_subscription import PushSubscriptionDAO
@@ -27,6 +28,10 @@ class OtherApiProvider(Provider):
     @provide
     def view(self, push_sender: WebPushSender, current_game: CurrentGameProvider) -> WebGameView:
         return WebGameView(push_sender, current_game)
+
+    @provide
+    def preparer(self) -> WebGamePreparer:
+        return WebGamePreparer()
 
     @provide
     def log_writer(self) -> WebGameLogWriter:

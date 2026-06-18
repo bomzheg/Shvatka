@@ -1,7 +1,7 @@
 import pytest
 
 from shvatka.core.views.game import GameLogWriter, GameLogEvent, GameLogType, GameViewPreparer
-from shvatka.main_factory import ComplexGameLogWriter, ComplexGameViewPreparer
+from shvatka.views import ComplexGameLogWriter, ComplexGameViewPreparer
 
 
 class RecordingLogWriter(GameLogWriter):

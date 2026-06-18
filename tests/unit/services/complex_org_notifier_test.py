@@ -1,7 +1,7 @@
 import pytest
 
 from shvatka.core.views.game import Event, OrgNotifier
-from shvatka.main_factory import ComplexOrgNotifier
+from shvatka.views import ComplexOrgNotifier
 
 
 class RecordingNotifier(OrgNotifier):

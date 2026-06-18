@@ -70,7 +70,7 @@ async def test_preparer_web_runs_even_if_bot_fails() -> None:
     web = RecordingPreparer()
     preparer = ComplexGameViewPreparer(bot, web)
 
-    await preparer.prepare_game_view("game", ["t1"], ["o1"], "dao")
+    await preparer.prepare_game_view("game", iter(["t1"]), iter(["o1"]), "dao")
 
     assert bot.calls
     assert web.calls == [("game", ["t1"], ["o1"], "dao")]

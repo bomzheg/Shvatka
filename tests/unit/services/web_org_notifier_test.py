@@ -21,13 +21,18 @@ def _org(player_id: int):
     return SimpleNamespace(player=SimpleNamespace(id=player_id, name_mention="org"))
 
 
+def _data(message: PushMessage) -> dict:
+    assert message.data is not None
+    return message.data
+
+
 @pytest.mark.asyncio
 async def test_level_up_pushes_to_all_orgs() -> None:
     sender = FakePushSender()
-    notifier = WebOrgNotifier(sender)  # type: ignore[arg-type]
+    notifier = WebOrgNotifier(sender)
     team = SimpleNamespace(id=7, name="Gryffindor")
     level = SimpleNamespace(db_id=3, name_id="lvl-1", number_in_game=0)
-    event = LevelUp(orgs_list=[_org(1), _org(2)], team=team, new_level=level)  # type: ignore[arg-type]
+    event = LevelUp(orgs_list=[_org(1), _org(2)], team=team, new_level=level)
 
     await notifier.notify(event)
 
@@ -36,16 +41,16 @@ async def test_level_up_pushes_to_all_orgs() -> None:
     assert player_ids == {1, 2}
     assert "Gryffindor" in message.body
     assert "1" in message.body  # number_in_game + 1
-    assert message.data["kind"] == "org_level_up"
+    assert _data(message)["kind"] == "org_level_up"
 
 
 @pytest.mark.asyncio
 async def test_level_up_uses_name_id_without_number() -> None:
     sender = FakePushSender()
-    notifier = WebOrgNotifier(sender)  # type: ignore[arg-type]
+    notifier = WebOrgNotifier(sender)
     team = SimpleNamespace(id=7, name="Gryffindor")
     level = SimpleNamespace(db_id=3, name_id="secret-lvl", number_in_game=None)
-    event = LevelUp(orgs_list=[_org(1)], team=team, new_level=level)  # type: ignore[arg-type]
+    event = LevelUp(orgs_list=[_org(1)], team=team, new_level=level)
 
     await notifier.notify(event)
 
@@ -56,10 +61,10 @@ async def test_level_up_uses_name_id_without_number() -> None:
 @pytest.mark.asyncio
 async def test_new_org_pushes_to_all_orgs() -> None:
     sender = FakePushSender()
-    notifier = WebOrgNotifier(sender)  # type: ignore[arg-type]
+    notifier = WebOrgNotifier(sender)
     game = SimpleNamespace(id=5, name="My Game")
     new_org = SimpleNamespace(id=9, player=SimpleNamespace(id=42, name_mention="newbie"))
-    event = NewOrg(orgs_list=[_org(1), _org(2)], game=game, org=new_org)  # type: ignore[arg-type]
+    event = NewOrg(orgs_list=[_org(1), _org(2)], game=game, org=new_org)
 
     await notifier.notify(event)
 
@@ -67,17 +72,17 @@ async def test_new_org_pushes_to_all_orgs() -> None:
     assert player_ids == {1, 2}
     assert "My Game" in message.body
     assert "newbie" in message.body
-    assert message.data["kind"] == "new_org"
+    assert _data(message)["kind"] == "new_org"
 
 
 @pytest.mark.asyncio
 async def test_level_test_completed_pushes_to_all_orgs() -> None:
     sender = FakePushSender()
-    notifier = WebOrgNotifier(sender)  # type: ignore[arg-type]
+    notifier = WebOrgNotifier(sender)
     tester = SimpleNamespace(player=SimpleNamespace(id=42, name_mention="tester"))
     suite = SimpleNamespace(level=SimpleNamespace(name_id="lvl-1"), tester=tester)
     result = SimpleNamespace(td=timedelta(minutes=2, seconds=5))
-    event = LevelTestCompleted(orgs_list=[_org(1)], suite=suite, result=result)  # type: ignore[arg-type]
+    event = LevelTestCompleted(orgs_list=[_org(1)], suite=suite, result=result)
 
     await notifier.notify(event)
 
@@ -85,4 +90,4 @@ async def test_level_test_completed_pushes_to_all_orgs() -> None:
     assert player_ids == {1}
     assert "tester" in message.body
     assert "2 минут 5 с" in message.body
-    assert message.data["kind"] == "level_test_completed"
+    assert _data(message)["kind"] == "level_test_completed"

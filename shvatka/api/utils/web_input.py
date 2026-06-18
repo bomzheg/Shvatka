@@ -233,7 +233,7 @@ class WebOrgNotifier(OrgNotifier):
     def _level_label(level: dto.Level) -> str:
         if level.number_in_game is None:
             return level.name_id
-        return f"{level.number_in_game + 1} ({level.name_id}"
+        return f"{level.number_in_game + 1} ({level.name_id})"
 
 
 class WebTeamNotifier(TeamNotifier):

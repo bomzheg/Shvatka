@@ -6,6 +6,8 @@ from shvatka.api.utils.web_input import (
     WebGameView,
     WebTeamNotifier,
     WebOrgNotifier,
+    WebGamePreparer,
+    WebGameLogWriter,
 )
 from shvatka.core.interfaces.dal.game_play import GamePreparer
 from shvatka.core.models import dto
@@ -20,7 +22,7 @@ from shvatka.core.views.game import (
     GameLogEvent,
 )
 from shvatka.core.views.team import TeamNotifier, TeamEvent
-from shvatka.tgbot.views.game import BotView, BotOrgNotifier
+from shvatka.tgbot.views.game import BotView, BotOrgNotifier, GameBotLog
 from shvatka.tgbot.views.team import BotTeamNotifier
 
 logger = logging.getLogger(__name__)
@@ -44,8 +46,8 @@ class ComplexOrgNotifier(OrgNotifier):
 
 @dataclass
 class ComplexGameViewPreparer(GameViewPreparer):
-    bot: GameViewPreparer
-    web: GameViewPreparer
+    bot: BotView
+    web: WebGamePreparer
 
     async def prepare_game_view(
         self,
@@ -68,8 +70,8 @@ class ComplexGameViewPreparer(GameViewPreparer):
 
 @dataclass
 class ComplexGameLogWriter(GameLogWriter):
-    bot: GameLogWriter
-    web: GameLogWriter
+    bot: GameBotLog
+    web: WebGameLogWriter
 
     async def log(self, log_event: GameLogEvent) -> None:
         try:

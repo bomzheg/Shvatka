@@ -54,9 +54,7 @@ class ComplexOnlyProvider(Provider):
         return ComplexGameViewPreparer(bot_view, web_preparer)
 
     @provide
-    def complex_team_notifier(
-        self, bot: BotTeamNotifier, web: WebTeamNotifier
-    ) -> TeamNotifier:
+    def complex_team_notifier(self, bot: BotTeamNotifier, web: WebTeamNotifier) -> TeamNotifier:
         return ComplexTeamNotifier(bot, web)
 
     @provide

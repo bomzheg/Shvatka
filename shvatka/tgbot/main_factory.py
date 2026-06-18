@@ -192,12 +192,12 @@ class BotOnlyProvider(Provider):
     def get_org_notifier(self, bot: Bot) -> OrgNotifier:
         return BotOrgNotifier(bot=bot)
 
-
-class GameToolsProvider(Provider):
-    @provide(scope=Scope.APP)
+    @provide
     def get_game_log(self, bot: Bot, config: BotConfig) -> GameLogWriter:
         return GameBotLog(bot=bot, log_chat_id=config.game_log_chat)
 
+
+class GameToolsProvider(Provider):
     @provide(scope=Scope.REQUEST)
     def get_hint_content_resolver(
         self, dao: HolderDao, file_storage: FileStorage

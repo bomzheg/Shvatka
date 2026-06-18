@@ -1,19 +1,36 @@
 import logging
 from dataclasses import dataclass
+from typing import Iterable
 
 from aiogram import Bot
 from dishka import Provider, Scope, AsyncContainer, provide
 from dishka.exceptions import NoContextValueError
 
 from shvatka.api.dependencies.auth import ApiIdentityProvider
-from shvatka.api.utils.web_input import WebGameView, WebTeamNotifier, WebOrgNotifier
+from shvatka.api.utils.web_input import (
+    WebGameView,
+    WebTeamNotifier,
+    WebOrgNotifier,
+    WebGamePreparer,
+    WebGameLogWriter,
+)
+from shvatka.core.interfaces.dal.game_play import GamePreparer
 from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.models import dto
 from shvatka.core.models.dto import action
-from shvatka.core.views.game import GameView, GameViewPreparer, InputContainer, OrgNotifier, Event
+from shvatka.core.views.game import (
+    GameView,
+    GameViewPreparer,
+    InputContainer,
+    OrgNotifier,
+    Event,
+    GameLogWriter,
+    GameLogEvent,
+)
 from shvatka.core.views.team import TeamNotifier, TeamEvent
+from shvatka.tgbot.config.models.bot import BotConfig
 from shvatka.tgbot.services.identity import TgBotIdentityProvider
-from shvatka.tgbot.views.game import BotView, BotOrgNotifier
+from shvatka.tgbot.views.game import BotView, BotOrgNotifier, GameBotLog
 from shvatka.tgbot.views.team import BotTeamNotifier
 
 logger = logging.getLogger(__name__)
@@ -35,7 +52,7 @@ class ComplexOnlyProvider(Provider):
 
     @provide
     def complex_preparer(self, bot_view: BotView) -> GameViewPreparer:
-        return bot_view
+        return ComplexGameViewPreparer(bot_view, WebGamePreparer())
 
     @provide
     def complex_team_notifier(self, bot: Bot, web: WebTeamNotifier) -> TeamNotifier:
@@ -44,6 +61,13 @@ class ComplexOnlyProvider(Provider):
     @provide
     def complex_org_notifier(self, bot: Bot, web: WebOrgNotifier) -> OrgNotifier:
         return ComplexOrgNotifier(BotOrgNotifier(bot=bot), web)
+
+    @provide
+    def complex_log_writer(self, bot: Bot, config: BotConfig) -> GameLogWriter:
+        return ComplexGameLogWriter(
+            GameBotLog(bot=bot, log_chat_id=config.game_log_chat),
+            WebGameLogWriter(),
+        )
 
 
 @dataclass
@@ -60,6 +84,46 @@ class ComplexOrgNotifier(OrgNotifier):
             await self.web.notify(event)
         except Exception as e:
             logger.exception("web org notify error", exc_info=e)
+
+
+@dataclass
+class ComplexGameViewPreparer(GameViewPreparer):
+    bot: GameViewPreparer
+    web: GameViewPreparer
+
+    async def prepare_game_view(
+        self,
+        game: dto.Game,
+        teams: Iterable[dto.Team],
+        orgs: Iterable[dto.Organizer],
+        dao: GamePreparer,
+    ) -> None:
+        teams = list(teams)
+        orgs = list(orgs)
+        try:
+            await self.bot.prepare_game_view(game, teams, orgs, dao)
+        except Exception as e:
+            logger.exception("bot prepare_game_view error", exc_info=e)
+        try:
+            await self.web.prepare_game_view(game, teams, orgs, dao)
+        except Exception as e:
+            logger.exception("web prepare_game_view error", exc_info=e)
+
+
+@dataclass
+class ComplexGameLogWriter(GameLogWriter):
+    bot: GameLogWriter
+    web: GameLogWriter
+
+    async def log(self, log_event: GameLogEvent) -> None:
+        try:
+            await self.bot.log(log_event)
+        except Exception as e:
+            logger.exception("bot game log error", exc_info=e)
+        try:
+            await self.web.log(log_event)
+        except Exception as e:
+            logger.exception("web game log error", exc_info=e)
 
 
 @dataclass

@@ -181,9 +181,9 @@ class WebOrgNotifier(OrgNotifier):
         await self._notify_orgs(
             event,
             PushMessage(
-                title="Команда перешла на уровень",
+                title=f"{event.team.name} на {event.new_level.name_id}",
                 body=f"Команда {event.team.name} перешла на уровень "
-                f"{self._level_label(event.new_level)} ({event.new_level.name_id})",
+                f"{self._level_label(event.new_level)}",
                 url="/games/running",
                 tag=f"org-level-up-{event.team.id}-{event.new_level.db_id}",
                 data={
@@ -198,7 +198,7 @@ class WebOrgNotifier(OrgNotifier):
         await self._notify_orgs(
             event,
             PushMessage(
-                title="Новый орг",
+                title=f"Новый орг {event.org.player.name_mention}",
                 body=f"На игру {event.game.name} добавлен новый орг "
                 f"{event.org.player.name_mention}",
                 url="/games/running",
@@ -230,10 +230,10 @@ class WebOrgNotifier(OrgNotifier):
         )
 
     @staticmethod
-    def _level_label(level: dto.Level) -> int | str:
+    def _level_label(level: dto.Level) -> str:
         if level.number_in_game is None:
             return level.name_id
-        return level.number_in_game + 1
+        return f"{level.number_in_game + 1} ({level.name_id}"
 
 
 class WebTeamNotifier(TeamNotifier):

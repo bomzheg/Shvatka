@@ -188,6 +188,10 @@ class BotOnlyProvider(Provider):
     def get_team_notifier(self, bot: Bot) -> TeamNotifier:
         return BotTeamNotifier(bot=bot)
 
+    @provide
+    def get_org_notifier(self, bot: Bot) -> OrgNotifier:
+        return BotOrgNotifier(bot=bot)
+
 
 class GameToolsProvider(Provider):
     @provide(scope=Scope.APP)
@@ -199,10 +203,6 @@ class GameToolsProvider(Provider):
         self, dao: HolderDao, file_storage: FileStorage
     ) -> HintContentResolver:
         return HintContentResolver(dao=dao.file_info, file_storage=file_storage)
-
-    @provide(scope=Scope.APP)
-    def get_org_notifier(self, bot: Bot) -> OrgNotifier:
-        return BotOrgNotifier(bot=bot)
 
     get_hint_sender = provide(HintSender, scope=Scope.REQUEST)
     get_bot_game_view = provide(BotView, scope=Scope.REQUEST)

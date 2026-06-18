@@ -6,14 +6,14 @@ from dishka import Provider, Scope, AsyncContainer, provide
 from dishka.exceptions import NoContextValueError
 
 from shvatka.api.dependencies.auth import ApiIdentityProvider
-from shvatka.api.utils.web_input import WebGameView, WebTeamNotifier
+from shvatka.api.utils.web_input import WebGameView, WebTeamNotifier, WebOrgNotifier
 from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.models import dto
 from shvatka.core.models.dto import action
-from shvatka.core.views.game import GameView, GameViewPreparer, InputContainer
+from shvatka.core.views.game import GameView, GameViewPreparer, InputContainer, OrgNotifier, Event
 from shvatka.core.views.team import TeamNotifier, TeamEvent
 from shvatka.tgbot.services.identity import TgBotIdentityProvider
-from shvatka.tgbot.views.game import BotView
+from shvatka.tgbot.views.game import BotView, BotOrgNotifier
 from shvatka.tgbot.views.team import BotTeamNotifier
 
 logger = logging.getLogger(__name__)
@@ -40,6 +40,26 @@ class ComplexOnlyProvider(Provider):
     @provide
     def complex_team_notifier(self, bot: Bot, web: WebTeamNotifier) -> TeamNotifier:
         return ComplexTeamNotifier(BotTeamNotifier(bot=bot), web)
+
+    @provide
+    def complex_org_notifier(self, bot: Bot, web: WebOrgNotifier) -> OrgNotifier:
+        return ComplexOrgNotifier(BotOrgNotifier(bot=bot), web)
+
+
+@dataclass
+class ComplexOrgNotifier(OrgNotifier):
+    bot: BotOrgNotifier
+    web: WebOrgNotifier
+
+    async def notify(self, event: Event) -> None:
+        try:
+            await self.bot.notify(event)
+        except Exception as e:
+            logger.exception("bot org notify error", exc_info=e)
+        try:
+            await self.web.notify(event)
+        except Exception as e:
+            logger.exception("web org notify error", exc_info=e)
 
 
 @dataclass

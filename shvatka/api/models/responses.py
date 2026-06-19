@@ -274,10 +274,8 @@ class Effects:
 
     @classmethod
     def from_core(
-        cls, core: action.Effects | None, level_numbers_by_name_id: Mapping[str, int]
-    ) -> "Effects | None":
-        if core is None:
-            return None
+        cls, core: action.Effects, level_numbers_by_name_id: Mapping[str, int]
+    ) -> "Effects":
         return cls(
             id=core.id,
             hints_=core.hints_,
@@ -314,9 +312,10 @@ class KeyWithEffects:
             level_number=core.level_number,
             player=Player.from_core(core.player),
             team=Team.from_core(core.team),
-            effects=Effects.from_core(
-                core.parsed_key.effect if core.parsed_key is not None else None,
-                level_numbers_by_name_id,
+            effects=(
+                Effects.from_core(core.parsed_key.effect, level_numbers_by_name_id)
+                if core.parsed_key is not None
+                else None
             ),
         )
 
@@ -363,7 +362,7 @@ class GameEvent:
     id: int
     level_time_id: int
     at: datetime
-    effects: Effects | None
+    effects: Effects
     key: str | None = None
     is_timer: bool = False
 
@@ -413,7 +412,7 @@ class InsertedKey:
     is_duplicate: bool
     wrong: bool
     at: datetime | None
-    effects: list[action.Effects]
+    effects: list[Effects]
     game_finished: bool
 
 

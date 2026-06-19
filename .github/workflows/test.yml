@@ -47,6 +47,9 @@ jobs:
   test:
     needs: [build]
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      checks: write
     steps:
       - uses: actions/checkout@v5
       - name: Install uv
@@ -60,7 +63,32 @@ jobs:
       - name: Install dependencies
         run: uv venv && uv sync --group test
       - name: Test with pytest
-        run: source .venv/bin/activate && pytest --cov-report "xml:coverage.xml" --cov=shvatka tests/
+        run: >
+          source .venv/bin/activate &&
+          pytest
+          --junitxml=junit.xml
+          --cov-report "xml:coverage.xml"
+          --cov=shvatka tests/
+      - name: Publish test report
+        if: always()
+        continue-on-error: true
+        uses: dorny/test-reporter@v3
+        with:
+          name: pytest results
+          path: junit.xml
+          reporter: java-junit
+      - name: Coverage summary
+        if: always()
+        continue-on-error: true
+        uses: irongut/CodeCoverageSummary@v1.3.0
+        with:
+          filename: coverage.xml
+          format: markdown
+          output: both
+      - name: Write coverage to job summary
+        if: always()
+        continue-on-error: true
+        run: cat code-coverage-results.md >> "$GITHUB_STEP_SUMMARY"
       - name: Coverage comment
         id: coverageComment
         continue-on-error: true
@@ -70,13 +98,13 @@ jobs:
           title: Let's see coverage
           badge-title: coverage
           hide-badge: false
-          hide-report: false
+          hide-report: true
           create-new-comment: false
           hide-comment: false
           report-only-changed-files: false
           remove-link-from-badge: false
       - name: Create the Badge
-        uses: schneegans/dynamic-badges-action@v1.7.0
+        uses: schneegans/dynamic-badges-action@v1.8.0
         continue-on-error: true
         with:
           auth: ${{ secrets.BAGE_GIST }}

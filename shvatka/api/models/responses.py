@@ -325,6 +325,7 @@ class LevelTime:
     id: int
     team: Team
     level_number: int
+    name_id: str | None
     start_at: datetime
     is_finished: bool
 
@@ -336,6 +337,7 @@ class LevelTime:
             id=core.id,
             team=Team.from_core(core.team),
             level_number=core.level_number,
+            name_id=core.name_id,
             start_at=core.start_at,
             is_finished=core.is_finished,
         )

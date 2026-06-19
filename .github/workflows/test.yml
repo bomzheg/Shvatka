@@ -9,35 +9,21 @@ on:
   pull_request:
     branches: [ master ]
 jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v5
-      - name: Install uv
-        run: pipx install uv
-      - name: Set up Python 3.13
-        uses: actions/setup-python@v6
-        with:
-          python-version: '3.13'
-          cache: "pip"
-          cache-dependency-path: pyproject.toml
-      - name: Install dependencies
-        run: uv venv && uv pip install -e .[test]
   lint:
-    needs: [build]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-      - name: Install uv
-        run: pipx install uv
       - name: Set up Python 3.13
         uses: actions/setup-python@v6
         with:
           python-version: '3.13'
-          cache: "pip"
-          cache-dependency-path: pyproject.toml
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
       - name: Install dependencies
-        run: uv venv && uv sync --group test
+        run: uv sync --group test
       - name: black (ruff format)
         run: source .venv/bin/activate && ruff format --check .
       - name: ruff
@@ -45,23 +31,23 @@ jobs:
       - name: mypy
         run: source .venv/bin/activate && mypy .
   test:
-    needs: [build]
     runs-on: ubuntu-latest
     permissions:
       contents: read
       checks: write
     steps:
       - uses: actions/checkout@v5
-      - name: Install uv
-        run: pipx install uv
       - name: Set up Python 3.13
         uses: actions/setup-python@v6
         with:
           python-version: '3.13'
-          cache: "pip"
-          cache-dependency-path: pyproject.toml
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
       - name: Install dependencies
-        run: uv venv && uv sync --group test
+        run: uv sync --group test
       - name: Test with pytest
         run: >
           source .venv/bin/activate &&
@@ -115,23 +101,23 @@ jobs:
           color: ${{ steps.coverageComment.outputs.color }}
           namedLogo: python
   diagrams:
-    needs: [build]
     runs-on: ubuntu-latest
     continue-on-error: true
     steps:
       - uses: actions/checkout@v5
-      - name: Install uv
-        run: pipx install uv
       - name: Install graphviz
         run: sudo apt install -y graphviz
       - name: Set up Python 3.13
         uses: actions/setup-python@v6
         with:
           python-version: '3.13'
-          cache: "pip"
-          cache-dependency-path: pyproject.toml
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
       - name: Install dependencies
-        run: uv venv && uv sync --group test
+        run: uv sync --group test
       - name: Render Aiogram-dialogs transitions
         run: source .venv/bin/activate && python -m shvatka.tgbot.dialogs.__init__
       - name: Upload artifacts
@@ -139,4 +125,3 @@ jobs:
         with:
           name: transitions
           path: out/shvatka-dialogs.png
-

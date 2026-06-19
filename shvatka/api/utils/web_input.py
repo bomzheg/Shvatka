@@ -1,3 +1,4 @@
+import logging
 from dataclasses import dataclass, field
 from typing import Iterable
 
@@ -12,10 +13,15 @@ from shvatka.core.views.game import (
     GameLogEvent,
     OrgNotifier,
     Event,
+    LevelUp,
+    NewOrg,
+    LevelTestCompleted,
     InputContainer,
     GameViewPreparer,
 )
 from shvatka.core.views.team import TeamNotifier, TeamEvent
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass(kw_only=True)
@@ -151,8 +157,83 @@ class WebGameLogWriter(GameLogWriter):
 
 
 class WebOrgNotifier(OrgNotifier):
+    def __init__(self, push_sender: WebPushSender) -> None:
+        self.push_sender = push_sender
+
     async def notify(self, event: Event) -> None:
-        pass
+        match event:
+            case LevelUp():
+                await self._notify_level_up(event)
+            case NewOrg():
+                await self._notify_new_org(event)
+            case LevelTestCompleted():
+                await self._notify_level_test_completed(event)
+            case _:
+                logger.warning("unknown org event %s, no web push sent", type(event))
+
+    async def _notify_orgs(self, event: Event, message: PushMessage) -> None:
+        await self.push_sender.send_to_players(
+            player_ids={org.player.id for org in event.orgs_list},
+            message=message,
+        )
+
+    async def _notify_level_up(self, event: LevelUp) -> None:
+        await self._notify_orgs(
+            event,
+            PushMessage(
+                title=f"{event.team.name} на {event.new_level.name_id}",
+                body=f"Команда {event.team.name} перешла на уровень "
+                f"{self._level_label(event.new_level)}",
+                url="/games/running",
+                tag=f"org-level-up-{event.team.id}-{event.new_level.db_id}",
+                data={
+                    "kind": "org_level_up",
+                    "team_id": event.team.id,
+                    "level_id": event.new_level.db_id,
+                },
+            ),
+        )
+
+    async def _notify_new_org(self, event: NewOrg) -> None:
+        await self._notify_orgs(
+            event,
+            PushMessage(
+                title=f"Новый орг {event.org.player.name_mention}",
+                body=f"На игру {event.game.name} добавлен новый орг "
+                f"{event.org.player.name_mention}",
+                url="/games/running",
+                tag=f"org-new-org-{event.game.id}-{event.org.id}",
+                data={
+                    "kind": "new_org",
+                    "game_id": event.game.id,
+                    "org_id": event.org.id,
+                },
+            ),
+        )
+
+    async def _notify_level_test_completed(self, event: LevelTestCompleted) -> None:
+        seconds = event.result.td.seconds
+        await self._notify_orgs(
+            event,
+            PushMessage(
+                title="Тестирование уровня завершено",
+                body=f"Игрок {event.suite.tester.player.name_mention} "
+                f"закончил тестирование уровня {event.suite.level.name_id} "
+                f"за {seconds // 60} минут {seconds % 60} с.",
+                url="/games/running",
+                tag=f"org-level-test-{event.suite.level.name_id}",
+                data={
+                    "kind": "level_test_completed",
+                    "level_name_id": event.suite.level.name_id,
+                },
+            ),
+        )
+
+    @staticmethod
+    def _level_label(level: dto.Level) -> str:
+        if level.number_in_game is None:
+            return level.name_id
+        return f"{level.number_in_game + 1} ({level.name_id})"
 
 
 class WebTeamNotifier(TeamNotifier):

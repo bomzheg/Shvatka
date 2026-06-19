@@ -43,8 +43,8 @@ class ApiOnlyProvider(Provider):
         return team_notifier
 
     @provide
-    def web_only_preparer_view(self) -> GameViewPreparer:
-        return WebGamePreparer()
+    def web_only_preparer_view(self, preparer: WebGamePreparer) -> GameViewPreparer:
+        return preparer
 
     @provide
     def used_one_time_token_interactor(self) -> UsedOneTimeTokenInteractor:

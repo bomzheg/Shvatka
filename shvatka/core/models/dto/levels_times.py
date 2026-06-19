@@ -51,8 +51,8 @@ class SpyHintInfo:
 class LevelTimeOnGame(LevelTime):
     is_finished: bool
     hint: SpyHintInfo | None
-    name_id: str | None = None
-    """name_id of the level (number_in_game); None when the team has finished the game."""
+    name_id: str | None
+    """name_id of the current level; None when the team has finished the game."""
 
     def __repr__(self) -> str:
         return super().__repr__()

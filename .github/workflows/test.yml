@@ -91,6 +91,7 @@ jobs:
           report-only-changed-files: false
           remove-link-from-badge: false
       - name: Create the Badge
+        if: github.ref == 'refs/heads/master'
         uses: schneegans/dynamic-badges-action@v1.8.0
         continue-on-error: true
         with:

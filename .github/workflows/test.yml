@@ -72,7 +72,7 @@ jobs:
       - name: Publish test report
         if: always()
         continue-on-error: true
-        uses: dorny/test-reporter@v1
+        uses: dorny/test-reporter@v3
         with:
           name: pytest results
           path: junit.xml
@@ -98,13 +98,13 @@ jobs:
           title: Let's see coverage
           badge-title: coverage
           hide-badge: false
-          hide-report: false
+          hide-report: true
           create-new-comment: false
           hide-comment: true
           report-only-changed-files: false
           remove-link-from-badge: false
       - name: Create the Badge
-        uses: schneegans/dynamic-badges-action@v1.7.0
+        uses: schneegans/dynamic-badges-action@v1.8.0
         continue-on-error: true
         with:
           auth: ${{ secrets.BAGE_GIST }}

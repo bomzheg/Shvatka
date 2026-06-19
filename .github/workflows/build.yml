@@ -41,12 +41,21 @@ jobs:
           else
             echo "TAG=dev" >> "$GITHUB_OUTPUT"
           fi
-      - uses: mr-smithers-excellent/docker-build-push@v6.3
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
         with:
-          image: bomzheg/shvatka
-          tags: ${{ steps.tag.outputs.TAG }}
-          addLatest: false
           registry: docker.io
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-          buildArgs: "BUILD_AT=${{steps.date.outputs.BUILD_AT}},VCS_HASH=${{steps.date.outputs.VCS_HASH}},COMMIT_AT=${{steps.date.outputs.COMMIT_AT}},VCS_NAME=${{steps.date.outputs.VCS_NAME}}"
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: bomzheg/shvatka:${{ steps.tag.outputs.TAG }}
+          build-args: |
+            BUILD_AT=${{ steps.date.outputs.BUILD_AT }}
+            VCS_HASH=${{ steps.date.outputs.VCS_HASH }}
+            COMMIT_AT=${{ steps.date.outputs.COMMIT_AT }}
+            VCS_NAME=${{ steps.date.outputs.VCS_NAME }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

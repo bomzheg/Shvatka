@@ -1,7 +1,8 @@
 import typing
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Sequence, Generic
+from typing import Mapping, Sequence, Generic
+from uuid import UUID
 
 from adaptix import Retort
 
@@ -262,6 +263,34 @@ class KeyTime:
         )
 
 
+@dataclass(kw_only=True, frozen=True, slots=True)
+class Effects:
+    id: UUID
+    hints_: Sequence[hints.AnyHint]
+    bonus_minutes: float
+    level_up: bool
+    next_level: int | None
+    """number_in_game of the level the key routes to (resolved from name_id)."""
+
+    @classmethod
+    def from_core(
+        cls, core: action.Effects | None, level_numbers_by_name_id: Mapping[str, int]
+    ) -> "Effects | None":
+        if core is None:
+            return None
+        return cls(
+            id=core.id,
+            hints_=core.hints_,
+            bonus_minutes=core.bonus_minutes,
+            level_up=core.level_up,
+            next_level=(
+                level_numbers_by_name_id.get(core.next_level)
+                if core.next_level is not None
+                else None
+            ),
+        )
+
+
 @dataclass(frozen=True)
 class KeyWithEffects:
     text: str
@@ -271,10 +300,10 @@ class KeyWithEffects:
     level_number: int
     player: Player
     team: Team
-    effects: action.Effects
+    effects: Effects | None
 
     @classmethod
-    def from_core(cls, core: dto.InsertedKey | None):
+    def from_core(cls, core: dto.InsertedKey | None, level_numbers_by_name_id: Mapping[str, int]):
         if core is None:
             return None
         return cls(
@@ -285,7 +314,10 @@ class KeyWithEffects:
             level_number=core.level_number,
             player=Player.from_core(core.player),
             team=Team.from_core(core.team),
-            effects=core.parsed_key.effect if core.parsed_key is not None else None,
+            effects=Effects.from_core(
+                core.parsed_key.effect if core.parsed_key is not None else None,
+                level_numbers_by_name_id,
+            ),
         )
 
 
@@ -331,17 +363,17 @@ class GameEvent:
     id: int
     level_time_id: int
     at: datetime
-    effects: action.Effects
+    effects: Effects | None
     key: str | None = None
     is_timer: bool = False
 
     @classmethod
-    def from_core(cls, core: Event):
+    def from_core(cls, core: Event, level_numbers_by_name_id: Mapping[str, int]):
         return cls(
             id=core.id,
             level_time_id=core.level_time_id,
             at=core.at,
-            effects=core.effects,
+            effects=Effects.from_core(core.effects, level_numbers_by_name_id),
             key=core.key,
             is_timer=core.is_timer,
         )
@@ -361,11 +393,14 @@ class CurrentHintResponse:
     def from_core(cls, core: CurrentHintsAndKeys):
         if core is None:
             return None
+        level_numbers_by_name_id = core.level_numbers_by_name_id
         return cls(
             game_id=core.game_id,
             hints=core.hints,
-            typed_keys=[KeyWithEffects.from_core(kt) for kt in core.typed_keys],
-            events=[GameEvent.from_core(e) for e in core.events],
+            typed_keys=[
+                KeyWithEffects.from_core(kt, level_numbers_by_name_id) for kt in core.typed_keys
+            ],
+            events=[GameEvent.from_core(e, level_numbers_by_name_id) for e in core.events],
             level_number=core.level_number,
             started_at=core.started_at,
             level_time_id=core.level_time_id,

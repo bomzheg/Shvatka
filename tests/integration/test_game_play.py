@@ -522,6 +522,9 @@ async def test_get_current_hints(
     assert len(hints_.hints) == 2
     assert len(hints_harry.hints) == 2
     assert hints_harry.hints == hints_.hints
+    assert hints_.level_numbers_by_name_id == {
+        level.name_id: level.number_in_game for level in game_with_waivers.levels
+    }
     with pytest.raises(exceptions.PlayerNotInTeam):
         await interactor(MockIdentityProvider(user=ron._user, player=ron))
     with suppress(exceptions.PlayerRestoredInTeam):

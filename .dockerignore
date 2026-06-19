@@ -1,8 +1,12 @@
+.git/
 .idea/
 .github/
+.run/
 .*ignore
 README.md
+README.adoc
 __pycache__
+*.pyc
 .env*
 docker-compose*.yml
 Dockerfile
@@ -10,6 +14,13 @@ Dockerfile
 *.db
 *.db*
 docs/
+develop/
+nginx/
 jsons/
 log/
 config_dist/
+tests/
+uv.lock
+.python-version
+AGENTS.md
+LICENSE

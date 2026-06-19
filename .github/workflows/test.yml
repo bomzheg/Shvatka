@@ -89,7 +89,7 @@ jobs:
         if: always()
         continue-on-error: true
         run: cat code-coverage-results.md >> "$GITHUB_STEP_SUMMARY"
-      - name: Coverage badge values
+      - name: Coverage comment
         id: coverageComment
         continue-on-error: true
         uses: MishaKav/pytest-coverage-comment@main
@@ -100,7 +100,7 @@ jobs:
           hide-badge: false
           hide-report: true
           create-new-comment: false
-          hide-comment: true
+          hide-comment: false
           report-only-changed-files: false
           remove-link-from-badge: false
       - name: Create the Badge

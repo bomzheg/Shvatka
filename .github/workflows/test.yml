@@ -10,6 +10,17 @@ on:
     branches: [ master ]
 jobs:
   lint:
+    # Skip the standalone PR run when the branch already triggers build.yml
+    # (push) so lint/test/diagrams don't run twice. Still runs for forks and
+    # for branches build.yml does not cover. Keep patterns in sync with build.yml.
+    if: >-
+      github.event_name != 'pull_request'
+      || github.event.pull_request.head.repo.fork
+      || !(startsWith(github.head_ref, 'claude/')
+      || startsWith(github.head_ref, 'codex/')
+      || startsWith(github.head_ref, 'feature/')
+      || startsWith(github.head_ref, 'tech/')
+      || startsWith(github.head_ref, 'fix/'))
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
@@ -31,6 +42,15 @@ jobs:
       - name: mypy
         run: source .venv/bin/activate && mypy .
   test:
+    # See lint job: avoid running twice when build.yml already covers the branch.
+    if: >-
+      github.event_name != 'pull_request'
+      || github.event.pull_request.head.repo.fork
+      || !(startsWith(github.head_ref, 'claude/')
+      || startsWith(github.head_ref, 'codex/')
+      || startsWith(github.head_ref, 'feature/')
+      || startsWith(github.head_ref, 'tech/')
+      || startsWith(github.head_ref, 'fix/'))
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -103,6 +123,15 @@ jobs:
           color: ${{ steps.coverageComment.outputs.color }}
           namedLogo: python
   diagrams:
+    # See lint job: avoid running twice when build.yml already covers the branch.
+    if: >-
+      github.event_name != 'pull_request'
+      || github.event.pull_request.head.repo.fork
+      || !(startsWith(github.head_ref, 'claude/')
+      || startsWith(github.head_ref, 'codex/')
+      || startsWith(github.head_ref, 'feature/')
+      || startsWith(github.head_ref, 'tech/')
+      || startsWith(github.head_ref, 'fix/'))
     runs-on: ubuntu-latest
     continue-on-error: true
     steps:

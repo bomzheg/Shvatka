@@ -87,7 +87,7 @@ jobs:
           hide-badge: false
           hide-report: true
           create-new-comment: false
-          hide-comment: false
+          hide-comment: ${{ github.event_name != 'pull_request' }}
           report-only-changed-files: false
           remove-link-from-badge: false
       - name: Create the Badge

@@ -173,8 +173,10 @@ class GamePlayDaoImpl(GamePlayDao):
         game = await self.current_game.get_required_full_game()
         level_time = await self.get_level_time(identity)
         if level_time.has_finished(game):
+            is_finished = True
             hints_ = []
         else:
+            is_finished = False
             level = await self.dao.level.get_by_number(game, level_time.level_number)
             td = datetime.now(tz=tz_utc) - level_time.start_at
             hints_ = level.get_hints_for_timedelta(td)
@@ -184,6 +186,7 @@ class GamePlayDaoImpl(GamePlayDao):
             game_id=game.id,
             started_at=level_time.start_at,
             level_time_id=level_time.id,
+            is_finished=is_finished,
         )
 
     async def get_team_typed_keys(self, identity: IdentityProvider) -> list[dto.InsertedKey]:

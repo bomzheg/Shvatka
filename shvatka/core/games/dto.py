@@ -25,6 +25,7 @@ class CurrentHintsAndKeys:
     level_time_id: int
     started_at: datetime
     game_id: int
+    is_finished: bool
     level_numbers_by_name_id: dict[str, int]
     """Mapping of level name_id to its number_in_game, used to resolve effects' next_level."""
 
@@ -36,6 +37,7 @@ class CurrentHintsOnly:
     level_time_id: int
     started_at: datetime
     game_id: int
+    is_finished: bool
 
     def get_guids(self) -> list[str]:
         return [g for h in self.hints for g in h.get_guids()]

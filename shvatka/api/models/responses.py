@@ -389,6 +389,7 @@ class CurrentHintResponse:
     level_number: int
     level_time_id: int
     started_at: datetime
+    is_finished: bool
 
     @classmethod
     def from_core(cls, core: CurrentHintsAndKeys):
@@ -405,6 +406,7 @@ class CurrentHintResponse:
             level_number=core.level_number,
             started_at=core.started_at,
             level_time_id=core.level_time_id,
+            is_finished=core.is_finished,
         )
 
 

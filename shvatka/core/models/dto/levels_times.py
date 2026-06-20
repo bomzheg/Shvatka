@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime
 
-from .game import Game
+from .game import Game, FullGame
 from .team import Team
 
 
@@ -17,21 +17,23 @@ class LevelTime:
 
     def to_on_game(
         self,
-        levels_count: int,
+        game: FullGame,
         hint: SpyHintInfo | None,
         name_id: str | None = None,
     ) -> LevelTimeOnGame:
-        is_finished = self.level_number >= levels_count
         return LevelTimeOnGame(
             id=self.id,
             game=self.game,
             team=self.team,
             level_number=self.level_number,
             start_at=self.start_at,
-            is_finished=is_finished,
+            is_finished=self.has_finished(game),
             hint=hint,
             name_id=name_id,
         )
+
+    def has_finished(self, game: FullGame) -> bool:
+        return self.level_number >= len(game.levels)
 
     def __repr__(self) -> str:
         return (

@@ -34,7 +34,6 @@ async def get_game_file(
         fallback = "document" + (meta.extension or "")
     encoded = quote(meta.public_filename, safe="")
     content_disposition = f"attachment; filename=\"{fallback}\"; filename*=UTF-8''{encoded}"
-    logger.info("content_disposition: %s", content_disposition)
     return Response(
         headers={
             "X-Accel-Redirect": f"/protected-files/{meta.local_file_name}",

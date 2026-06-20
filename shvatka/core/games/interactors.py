@@ -175,6 +175,7 @@ class GamePlayReaderInteractor:
             game_id=hints_.game_id,
             level_time_id=hints_.level_time_id,
             events=events,
+            is_finished=hints_.is_finished,
             level_numbers_by_name_id=level_numbers_by_name_id,
         )
 

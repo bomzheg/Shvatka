@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 
 from shvatka.core.models import dto
+from shvatka.core.utils import exceptions
 from shvatka.core.utils.datetime_utils import tz_utc
 from shvatka.infrastructure.db import models
 from .base import BaseDAO
@@ -40,14 +41,13 @@ class LevelTimeDao(BaseDAO[models.LevelTime]):
         await self._flush(level_time)
         return level_time.to_dto(team=team, game=game)
 
-    async def get_current_level(self, team: dto.Team, game: dto.Game) -> int:
-        return (await self.get_current_level_time(team=team, game=game)).level_number
-
     async def get_current_level_time(self, team: dto.Team, game: dto.Game) -> dto.LevelTime:
-        db: models.LevelTime = await self._get_current(team.id, game.id)
+        db = await self._get_current(team.id, game.id)
+        if db is None:
+            raise exceptions.TeamCurrentLevelNotFound(team=team, game=game)
         return db.to_dto(team=team, game=game)
 
-    async def _get_current(self, team_id: int, game_id: int) -> models.LevelTime:
+    async def _get_current(self, team_id: int, game_id: int) -> models.LevelTime | None:
         result = await self.session.execute(
             select(models.LevelTime)
             .where(
@@ -57,7 +57,7 @@ class LevelTimeDao(BaseDAO[models.LevelTime]):
             .order_by(models.LevelTime.start_at.desc())
             .limit(1)
         )
-        return result.scalar_one()
+        return result.scalar_one_or_none()
 
     async def get_game_level_times(self, game: dto.Game) -> list[dto.LevelTime]:
         result = await self.session.scalars(
@@ -108,7 +108,7 @@ class LevelTimeDao(BaseDAO[models.LevelTime]):
                 hint = None
                 name_id = None
             result.setdefault(lt.team, []).append(
-                lt.to_on_game(levels_count=len(game.levels), hint=hint, name_id=name_id)
+                lt.to_on_game(game=game, hint=hint, name_id=name_id)
             )
         return result
 

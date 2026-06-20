@@ -170,17 +170,23 @@ class GamePlayDaoImpl(GamePlayDao):
     cache: dict[int, CacheItem]
 
     async def get_current_hints(self, identity: IdentityProvider) -> CurrentHintsOnly:
+        game = await self.current_game.get_required_full_game()
         level_time = await self.get_level_time(identity)
-        game = await self.current_game.get_required_game()
-        level = await self.dao.level.get_by_number(game, level_time.level_number)
-        td = datetime.now(tz=tz_utc) - level_time.start_at
-        hints_ = level.get_hints_for_timedelta(td)
+        if level_time.has_finished(game):
+            is_finished = True
+            hints_ = []
+        else:
+            is_finished = False
+            level = await self.dao.level.get_by_number(game, level_time.level_number)
+            td = datetime.now(tz=tz_utc) - level_time.start_at
+            hints_ = level.get_hints_for_timedelta(td)
         return CurrentHintsOnly(
             hints=hints_,
-            level_number=level.number_in_game,
+            level_number=level_time.level_number,
             game_id=game.id,
             started_at=level_time.start_at,
             level_time_id=level_time.id,
+            is_finished=is_finished,
         )
 
     async def get_team_typed_keys(self, identity: IdentityProvider) -> list[dto.InsertedKey]:

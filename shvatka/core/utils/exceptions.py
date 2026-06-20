@@ -181,6 +181,10 @@ class GameNotFinished(GameStatusError):
     notify_user = "Игра не завершена. Данное действие можно выполнить только с завершённой игрой"
 
 
+class TeamCurrentLevelNotFound(GameError):
+    notify_user = "Текущий уровень команды не найден. Не заявлена?"
+
+
 class GameNotFound(GameError, AttributeError):
     notify_user = "Игра не найдена"
 

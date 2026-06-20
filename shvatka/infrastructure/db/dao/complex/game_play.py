@@ -67,8 +67,8 @@ class GamePlayerDaoImpl(GamePlayerDao):
         return await self.dao.waiver.check_waiver(player, team, game)
 
     async def is_team_finished(self, team: dto.Team, game: dto.FullGame) -> bool:
-        level_number = await self.dao.level_time.get_current_level(team, game)
-        return level_number == len(game.levels)
+        level_time = await self.dao.level_time.get_current_level_time(team, game)
+        return level_time.has_finished(game)
 
     async def get_played_teams(self, game: dto.Game) -> Iterable[dto.Team]:
         return await self.dao.waiver.get_played_teams(game)
@@ -83,9 +83,10 @@ class GamePlayerDaoImpl(GamePlayerDao):
         return await self.dao.key_time.is_duplicate(level, team, key)
 
     async def get_current_level(self, team: dto.Team, game: dto.Game) -> dto.Level:
+        level_time = await self.dao.level_time.get_current_level_time(team=team, game=game)
         return await self.dao.level.get_by_number(
             game=game,
-            level_number=await self.dao.level_time.get_current_level(team=team, game=game),
+            level_number=level_time.level_number,
         )
 
     async def get_correct_typed_keys(

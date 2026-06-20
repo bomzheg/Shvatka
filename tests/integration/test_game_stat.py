@@ -54,6 +54,7 @@ async def test_game_spy_started(started_game: dto.FullGame, dao: HolderDao, cloc
         assert level_time.hint.time == 0
         assert level_time.is_finished is False
         assert level_time.level_number == 0
+        assert level_time.name_id == started_game.levels[level_time.level_number].name_id
 
 
 @pytest.mark.asyncio

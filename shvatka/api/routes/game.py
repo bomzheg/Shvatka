@@ -186,18 +186,24 @@ async def insert_key(
     identity: FromDishka[ApiIdentityProvider],
     interactor: FromDishka[CheckKeyInteractor],
     input_container: FromDishka[WebInput],
+    current_game: FromDishka[CurrentGameProvider],
     key: Annotated[req.Key, Body()],
 ) -> responses.InsertedKey:
     await interactor(key=key.text, identity=identity, input_container=input_container)
     if input_container.new_key is None:
         logger.critical("not implemented condition for key %s", key.text)
         raise HTTPException(status_code=500, detail="not implemented state found")
+    game = await current_game.get_required_full_game()
+    level_numbers_by_name_id = {level.name_id: level.number_in_game for level in game.levels}
     return responses.InsertedKey(
         text=input_container.new_key.text,
         is_duplicate=input_container.new_key.is_duplicate,
         wrong=input_container.new_key.type_ == enums.KeyType.wrong,
         at=input_container.new_key.at,
-        effects=input_container.effects,
+        effects=[
+            responses.Effects.from_core(effect, level_numbers_by_name_id)
+            for effect in input_container.effects
+        ],
         game_finished=input_container.game_finished,
     )
 

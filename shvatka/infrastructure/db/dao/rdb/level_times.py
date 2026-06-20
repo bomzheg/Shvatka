@@ -103,10 +103,12 @@ class LevelTimeDao(BaseDAO[models.LevelTime]):
         for lt in level_times:
             if lt.level_number < len(game.levels):
                 hint = self._get_hint(game, lt)
+                name_id = game.levels[lt.level_number].name_id
             else:
                 hint = None
+                name_id = None
             result.setdefault(lt.team, []).append(
-                lt.to_on_game(levels_count=len(game.levels), hint=hint)
+                lt.to_on_game(levels_count=len(game.levels), hint=hint, name_id=name_id)
             )
         return result
 

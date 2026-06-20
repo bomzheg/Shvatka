@@ -165,6 +165,8 @@ class GamePlayReaderInteractor:
         hints_ = await self.game_play_dao.get_current_hints(identity)
         events = await self.game_play_dao.get_events(identity)
         keys = await self.game_play_dao.get_team_typed_keys(identity)
+        game = await self.current_game.get_required_full_game()
+        level_numbers_by_name_id = {level.name_id: level.number_in_game for level in game.levels}
         return CurrentHintsAndKeys(
             hints=hints_.hints,
             typed_keys=keys,
@@ -173,6 +175,7 @@ class GamePlayReaderInteractor:
             game_id=hints_.game_id,
             level_time_id=hints_.level_time_id,
             events=events,
+            level_numbers_by_name_id=level_numbers_by_name_id,
         )
 
 

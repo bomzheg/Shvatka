@@ -136,7 +136,9 @@ class TeamDao(BaseDAO[models.Team]):
         )
         return result.one().to_dto_chat_prefetched()
 
-    async def get_teams(self, active: bool = True, archive: bool = False) -> list[dto.Team]:
+    async def get_teams(
+        self, active: bool = True, archive: bool = False, name: str | None = None
+    ) -> list[dto.Team]:
         query = select(models.Team).options(*get_team_options())
         if not active and not archive:
             query = query.where(false())
@@ -144,6 +146,8 @@ class TeamDao(BaseDAO[models.Team]):
             query = query.where(models.Team.is_dummy.is_(False))
         elif archive:
             query = query.where(models.Team.is_dummy.is_(True))
+        if name:
+            query = query.where(models.Team.name.ilike(f"%{name}%"))
         teams: ScalarResult[models.Team] = await self.session.scalars(query)
         return [team.to_dto_chat_prefetched() for team in teams]
 

@@ -76,6 +76,27 @@ class PlayerDao(BaseDAO[models.Player]):
             typed_correct_keys_count=keys_correct_count,
         )
 
+    async def get_played_games(self, player: dto.Player) -> list[dto.Game]:
+        result = await self.session.scalars(
+            select(models.Game)
+            .distinct()
+            .options(
+                joinedload(models.Game.author).options(
+                    joinedload(models.Player.user),
+                    joinedload(models.Player.forum_user),
+                ),
+            )
+            .join(models.Game.waivers)
+            .where(
+                models.Waiver.player_id == player.id,
+                models.Waiver.played == enums.Played.yes,
+                models.Game.number.is_not(None),
+            )
+            .order_by(models.Game.number)
+        )
+        games = result.all()
+        return [game.to_dto(game.author.to_dto_user_prefetched()) for game in games]
+
     async def get_by_user(self, user: dto.User) -> dto.Player:
         return await self.get_by_user_id(user.tg_id)
 

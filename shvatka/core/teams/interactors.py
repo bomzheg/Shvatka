@@ -15,7 +15,11 @@ from shvatka.core.interfaces.dal.player import (
     TeamPlayerGetter,
     TeamPlayersGetter,
 )
-from shvatka.core.interfaces.dal.team import TeamByIdGetter, TeamsGetter
+from shvatka.core.interfaces.dal.team import (
+    PlayedGamesByTeamGetter,
+    TeamByIdGetter,
+    TeamsGetter,
+)
 from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.models import dto, enums
 from shvatka.core.players.player import (
@@ -25,7 +29,12 @@ from shvatka.core.players.player import (
     join_team,
     leave,
 )
-from shvatka.core.services.team import check_can_change_name, get_team_by_id, get_teams
+from shvatka.core.services.team import (
+    check_can_change_name,
+    get_played_games,
+    get_team_by_id,
+    get_teams,
+)
 from shvatka.core.teams.adapters import TeamEditor, TeamPlayerAdder, TeamPlayerUpdater
 from shvatka.core.utils.defaults_constants import DEFAULT_ROLE
 from shvatka.core.utils.exceptions import PlayerRestoredInTeam
@@ -36,8 +45,10 @@ from shvatka.core.views.team import TeamNotifier
 class TeamsListInteractor:
     dao: TeamsGetter
 
-    async def __call__(self, active: bool = True, archive: bool = False) -> list[dto.Team]:
-        return await get_teams(self.dao, active=active, archive=archive)
+    async def __call__(
+        self, active: bool = True, archive: bool = False, name: str | None = None
+    ) -> list[dto.Team]:
+        return await get_teams(self.dao, active=active, archive=archive, name=name)
 
 
 @dataclass
@@ -46,6 +57,16 @@ class GetTeamInteractor:
 
     async def __call__(self, team_id: int) -> dto.Team:
         return await get_team_by_id(team_id, self.dao)
+
+
+@dataclass
+class TeamPlayedGamesInteractor:
+    team_dao: TeamByIdGetter
+    played_games_dao: PlayedGamesByTeamGetter
+
+    async def __call__(self, team_id: int) -> list[dto.Game]:
+        team = await get_team_by_id(team_id, self.team_dao)
+        return await get_played_games(team, self.played_games_dao)
 
 
 @dataclass

@@ -27,6 +27,7 @@ from shvatka.core.games.org_interactors import (
 )
 from shvatka.core.players.interactors import (
     GetPlayerInteractor,
+    GetPlayerStatInteractor,
     SearchPlayersInteractor,
 )
 from shvatka.core.teams.interactors import (
@@ -34,6 +35,7 @@ from shvatka.core.teams.interactors import (
     EditTeamInteractor,
     GetTeamInteractor,
     RemovePlayerFromTeamInteractor,
+    TeamPlayedGamesInteractor,
     TeamPlayersInteractor,
     TeamsListInteractor,
     UpdateTeamPlayerInteractor,
@@ -225,6 +227,14 @@ class PlayerProvider(Provider):
     def search_players(self, dao: HolderDao) -> SearchPlayersInteractor:
         return SearchPlayersInteractor(dao=dao.player)
 
+    @provide
+    def get_player_stat(self, dao: HolderDao) -> GetPlayerStatInteractor:
+        return GetPlayerStatInteractor(
+            player_dao=dao.player,
+            history_dao=dao.team_player,
+            played_games_dao=dao.player,
+        )
+
 
 class TeamProvider(Provider):
     scope = Scope.REQUEST
@@ -236,6 +246,10 @@ class TeamProvider(Provider):
     @provide
     def get_team(self, dao: HolderDao) -> GetTeamInteractor:
         return GetTeamInteractor(dao=dao.team)
+
+    @provide
+    def get_team_stat(self, dao: HolderDao) -> TeamPlayedGamesInteractor:
+        return TeamPlayedGamesInteractor(team_dao=dao.team, played_games_dao=dao.team)
 
     @provide
     def get_team_players(self, dao: HolderDao) -> TeamPlayersInteractor:

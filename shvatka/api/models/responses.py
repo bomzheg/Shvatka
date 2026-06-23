@@ -8,6 +8,7 @@ from adaptix import Retort
 
 from shvatka.core.games.dto import CurrentHintsAndKeys, MyRole, Event
 from shvatka.core.models import dto, enums
+from shvatka.core.players.dto import PlayerStat as PlayerStatDto
 from shvatka.core.models.dto import action
 from shvatka.core.models.dto import hints
 from shvatka.core.models.enums import GameStatus
@@ -96,6 +97,50 @@ class TeamPlayer:
             date_joined=core.date_joined,
             role=core.role,
             emoji=core.emoji,
+        )
+
+
+@dataclass
+class TeamPlayerHistory:
+    team_player_id: int
+    team: Team | None
+    date_joined: datetime
+    date_left: datetime | None
+    role: str
+    emoji: str | None
+
+    @classmethod
+    def from_core(cls, core: dto.FullTeamPlayer) -> "TeamPlayerHistory":
+        return cls(
+            team_player_id=core.id,
+            team=Team.from_core(core.team),
+            date_joined=core.date_joined,
+            date_left=core.date_left,
+            role=core.role,
+            emoji=core.emoji,
+        )
+
+
+@dataclass
+class PlayerStat:
+    id: int
+    username: str | None
+    can_be_author: bool
+    typed_keys_count: int
+    typed_correct_keys_count: int
+    team_history: list[TeamPlayerHistory]
+    played_games: list["Game"]
+
+    @classmethod
+    def from_core(cls, core: PlayerStatDto) -> "PlayerStat":
+        return cls(
+            id=core.player.id,
+            username=core.player.username,
+            can_be_author=core.player.can_be_author,
+            typed_keys_count=core.player.typed_keys_count,
+            typed_correct_keys_count=core.player.typed_correct_keys_count,
+            team_history=[TeamPlayerHistory.from_core(tp) for tp in core.team_history],
+            played_games=[Game.from_core(game) for game in core.played_games],
         )
 
 

@@ -86,9 +86,9 @@ async def change_team_desc(
 
 
 async def get_teams(
-    dao: TeamsGetter, active: bool = True, archive: bool = False
+    dao: TeamsGetter, active: bool = True, archive: bool = False, name: str | None = None
 ) -> list[dto.Team]:
-    return await dao.get_teams(active, archive)
+    return await dao.get_teams(active, archive, name)
 
 
 async def get_team_by_id(team_id: int, dao: TeamByIdGetter) -> dto.Team:

@@ -8,7 +8,11 @@ from fastapi.params import Body, Path, Query
 
 from shvatka.api.models import responses, req
 from shvatka.core.interfaces.identity import IdentityProvider
-from shvatka.core.players.interactors import GetPlayerInteractor, SearchPlayersInteractor
+from shvatka.core.players.interactors import (
+    GetPlayerInteractor,
+    GetPlayerStatInteractor,
+    SearchPlayersInteractor,
+)
 from shvatka.core.players.player import set_password, set_player_username, get_player_by_id
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.api.dependencies.auth import AuthProperties
@@ -59,6 +63,15 @@ async def read_user_details(
 
 
 @inject
+async def read_user_stat(
+    interactor: FromDishka[GetPlayerStatInteractor],
+    id_: Annotated[int, Path(alias="id")],
+) -> responses.PlayerStat:
+    stat = await interactor(id_)
+    return responses.PlayerStat.from_core(stat)
+
+
+@inject
 async def set_password_route(
     auth: FromDishka[AuthProperties],
     identity: FromDishka[IdentityProvider],
@@ -89,5 +102,6 @@ def setup() -> APIRouter:
     router.add_api_route("/me/password", set_password_route, methods=["PUT"])
     router.add_api_route("/me/username", set_username_route, methods=["PUT"])
     router.add_api_route("/{id}/details", read_user_details, methods=["GET"])
+    router.add_api_route("/{id}/stat", read_user_stat, methods=["GET"])
     router.add_api_route("/{id}", read_user, methods=["GET"])
     return router

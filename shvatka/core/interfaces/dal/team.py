@@ -29,7 +29,9 @@ class TeamDescChanger(Committer, Protocol):
 
 
 class TeamsGetter(Protocol):
-    async def get_teams(self, active: bool = True, archive: bool = False) -> list[dto.Team]:
+    async def get_teams(
+        self, active: bool = True, archive: bool = False, name: str | None = None
+    ) -> list[dto.Team]:
         raise NotImplementedError
 
 

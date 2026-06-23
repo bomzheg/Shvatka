@@ -6,11 +6,21 @@ on internal domain models so the transport layer (api routes) stays thin.
 
 from dataclasses import dataclass
 
-from shvatka.core.interfaces.dal.player import PlayerByIdGetter, PlayerTeamChecker
+from shvatka.core.interfaces.dal.player import (
+    PlayedGamesByPlayerGetter,
+    PlayerByIdGetter,
+    PlayerTeamChecker,
+    PlayerWithStatGetter,
+    TeamPlayerFullHistoryGetter,
+)
 from shvatka.core.models import dto
-from shvatka.core.players.dto import PlayerMainInfo
+from shvatka.core.players.dto import PlayerMainInfo, PlayerStat
 from shvatka.core.players.interfaces import PlayerSearcher
-from shvatka.core.players.player import get_full_team_player_or_none
+from shvatka.core.players.player import (
+    get_full_team_player_or_none,
+    get_player_with_stat,
+    get_teams_history,
+)
 
 
 @dataclass
@@ -23,6 +33,23 @@ class GetPlayerInteractor:
         team = await self.team_player_dao.get_team(player)
         team_player = await get_full_team_player_or_none(player, team, self.team_player_dao)
         return PlayerMainInfo(player=player, team_player=team_player)
+
+
+@dataclass
+class GetPlayerStatInteractor:
+    player_dao: PlayerWithStatGetter
+    history_dao: TeamPlayerFullHistoryGetter
+    played_games_dao: PlayedGamesByPlayerGetter
+
+    async def __call__(self, player_id: int) -> PlayerStat:
+        player = await get_player_with_stat(player_id, self.player_dao)
+        team_history = await get_teams_history(player, self.history_dao)
+        played_games = await self.played_games_dao.get_played_games(player)
+        return PlayerStat(
+            player=player,
+            team_history=team_history,
+            played_games=played_games,
+        )
 
 
 @dataclass

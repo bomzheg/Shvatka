@@ -13,6 +13,7 @@ from shvatka.core.teams.interactors import (
     EditTeamInteractor,
     GetTeamInteractor,
     RemovePlayerFromTeamInteractor,
+    TeamPlayedGamesInteractor,
     TeamPlayersInteractor,
     TeamsListInteractor,
     UpdateTeamPlayerInteractor,
@@ -24,9 +25,19 @@ async def get_teams(
     interactor: FromDishka[TeamsListInteractor],
     active: Annotated[bool, Query()] = True,
     archive: Annotated[bool, Query()] = False,
+    search: Annotated[str | None, Query()] = None,
 ) -> responses.Items[responses.Team]:
-    teams = await interactor(active=active, archive=archive)
+    teams = await interactor(active=active, archive=archive, name=search)
     return responses.Items([responses.Team.from_core(team) for team in teams])
+
+
+@inject
+async def get_team_stat(
+    interactor: FromDishka[TeamPlayedGamesInteractor],
+    id_: Annotated[int, Path(alias="id")],
+) -> responses.Items[responses.Game]:
+    games = await interactor(id_)
+    return responses.Items([responses.Game.from_core(game) for game in games])
 
 
 @inject
@@ -116,6 +127,7 @@ def setup() -> APIRouter:
     router = APIRouter(prefix="/teams", tags=["teams"])
     router.add_api_route("", get_teams, methods=["GET"])
     router.add_api_route("/my", get_my_team, methods=["GET"])
+    router.add_api_route("/{id}/stat", get_team_stat, methods=["GET"])
     router.add_api_route("/{id}", get_team, methods=["GET"])
     router.add_api_route("/{id}", edit_team, methods=["PUT"])
     router.add_api_route("/{id}/players", get_team_players, methods=["GET"])

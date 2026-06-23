@@ -58,6 +58,41 @@ async def test_get_all_teams(
 
 
 @pytest.mark.asyncio
+async def test_search_teams_by_name(
+    client: AsyncClient,
+    gryffindor: dto.Team,
+    slytherin: dto.Team,
+):
+    resp = await client.get(
+        "/teams",
+        params={"search": gryffindor.name[:4]},
+        follow_redirects=True,
+    )
+    assert resp.is_success
+    resp.read()
+    ids = [team["id"] for team in resp.json()["items"]]
+    assert gryffindor.id in ids
+    assert slytherin.id not in ids
+
+
+@pytest.mark.asyncio
+async def test_get_team_stat(
+    client: AsyncClient,
+    finished_game: dto.FullGame,
+    gryffindor: dto.Team,
+    dao: HolderDao,
+):
+    await dao.game.set_completed(finished_game)
+    await dao.game.set_number(finished_game, 1)
+    await dao.commit()
+    resp = await client.get(f"/teams/{gryffindor.id}/stat")
+    assert resp.is_success
+    resp.read()
+    items = resp.json()["items"]
+    assert finished_game.id in [game["id"] for game in items]
+
+
+@pytest.mark.asyncio
 async def test_get_team_by_id(
     client: AsyncClient,
     gryffindor: dto.Team,

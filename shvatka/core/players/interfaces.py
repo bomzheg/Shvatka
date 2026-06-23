@@ -27,3 +27,13 @@ class PlayerSearcher(Protocol):
         archive: bool = False,
     ) -> list[dto.Player]:
         raise NotImplementedError
+
+
+class PlayerWithStatGetter(Protocol):
+    async def get_player_with_stat(self, id_: int) -> dto.PlayerWithStat:
+        raise NotImplementedError
+
+
+class PlayedGamesByPlayerGetter(Protocol):
+    async def get_played_games(self, player: dto.Player) -> list[dto.Game]:
+        raise NotImplementedError

@@ -7,15 +7,17 @@ on internal domain models so the transport layer (api routes) stays thin.
 from dataclasses import dataclass
 
 from shvatka.core.interfaces.dal.player import (
-    PlayedGamesByPlayerGetter,
     PlayerByIdGetter,
     PlayerTeamChecker,
-    PlayerWithStatGetter,
     TeamPlayerFullHistoryGetter,
 )
 from shvatka.core.models import dto
 from shvatka.core.players.dto import PlayerMainInfo, PlayerStat
-from shvatka.core.players.interfaces import PlayerSearcher
+from shvatka.core.players.interfaces import (
+    PlayedGamesByPlayerGetter,
+    PlayerSearcher,
+    PlayerWithStatGetter,
+)
 from shvatka.core.players.player import (
     get_full_team_player_or_none,
     get_player_with_stat,

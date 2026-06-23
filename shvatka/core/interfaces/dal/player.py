@@ -117,16 +117,6 @@ class TeamPlayerFullHistoryGetter(Protocol):
         raise NotImplementedError
 
 
-class PlayerWithStatGetter(Protocol):
-    async def get_player_with_stat(self, id_: int) -> dto.PlayerWithStat:
-        raise NotImplementedError
-
-
-class PlayedGamesByPlayerGetter(Protocol):
-    async def get_played_games(self, player: dto.Player) -> list[dto.Game]:
-        raise NotImplementedError
-
-
 class TeamPlayersMerger(Protocol):
     async def replace_team_players(self, primary: dto.Team, secondary: dto.Team):
         raise NotImplementedError

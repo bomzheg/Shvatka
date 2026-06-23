@@ -88,7 +88,7 @@ my_team_view = Dialog(
             "Сыгранные игры: {{' '.join(game_numbers)}}"
         ),
         Button(Const("☄️Выйти из команды"), id="leave_team", on_click=on_leave_team),
-        Cancel(Const("🔙Выход")),
+        Cancel(Const("🔙Назад")),
         getter=team_getter,
         state=states.MyTeamSg.team,
     ),

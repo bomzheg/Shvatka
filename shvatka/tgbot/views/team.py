@@ -20,7 +20,9 @@ from shvatka.tgbot.views.user import get_small_card_no_link, get_small_card
 logger = logging.getLogger(__name__)
 
 
-def render_team_card(team: dto.Team) -> str:
+def render_team_players(
+    team: dto.Team, players: Sequence[dto.FullTeamPlayer], *, notification: bool = False
+) -> str:
     cap = team.captain
     cap_card = get_small_card_no_link(cap) if cap else "отсутствует"
     rez = f"🚩Команда: {hd.bold(hd.quote(team.name))}\n"
@@ -28,13 +30,7 @@ def render_team_card(team: dto.Team) -> str:
     rez += f"👑Капитан: {cap_card}\n"
     if team.description is not None:
         rez += f"📃Девиз: {hd.quote(team.description)}"
-    return rez
-
-
-def render_team_players(
-    team: dto.Team, players: Sequence[dto.FullTeamPlayer], *, notification: bool = False
-) -> str:
-    rez = f"Список игроков команды {hd.bold(hd.quote(team.name))}:\n"
+    rez += "Список игроков:\n"
     for team_player in players:
         rez += (
             f"{hd.quote(get_emoji(team_player))} "

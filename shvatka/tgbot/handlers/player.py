@@ -16,6 +16,7 @@ from aiogram_dialog.api.protocols import BgManagerFactory
 from dishka import FromDishka
 from dishka.integrations.aiogram import inject
 
+from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.models import dto
 from shvatka.core.players.player import (
     save_promotion_confirm_invite,
@@ -24,14 +25,15 @@ from shvatka.core.players.player import (
     agree_promotion,
     get_my_team,
     leave,
+    get_team_players,
 )
 from shvatka.core.views.team import TeamNotifier
 from shvatka.core.utils.exceptions import SaltError, SaltNotExist
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.tgbot import keyboards as kb
 from shvatka.tgbot.utils.router import disable_router_on_game
-from shvatka.tgbot.views.commands import TEAM_COMMAND, LEAVE_COMMAND
-from shvatka.tgbot.views.team import render_team_card
+from shvatka.tgbot.views.commands import TEAM_COMMAND, LEAVE_COMMAND, PLAYERS_COMMAND
+from shvatka.tgbot.views.team import render_team_players
 
 
 async def send_promotion_invite(
@@ -125,11 +127,15 @@ async def inviter_click_handler(c: CallbackQuery):
     await c.answer("ну и смысл?", cache_time=30)
 
 
-async def get_my_team_cmd(message: Message, player: dto.Player, dao: HolderDao):
-    team = await get_my_team(player, dao.team_player)
+@inject
+async def get_my_team_cmd(
+    message: Message, identity: FromDishka[IdentityProvider], dao: HolderDao
+):
+    team = await identity.get_team()
     if team:
+        players = await get_team_players(team, dao.team_player)
         await message.answer(
-            text=render_team_card(team),
+            text=render_team_players(team=team, players=players, notification=True),
             link_preview_options=LinkPreviewOptions(is_disabled=True),
         )
         return
@@ -169,7 +175,9 @@ def setup() -> Router:
     )
 
     router.message.register(
-        get_my_team_cmd, Command(TEAM_COMMAND), F.chat.type == ChatType.PRIVATE
+        get_my_team_cmd,
+        Command(commands=[TEAM_COMMAND, PLAYERS_COMMAND]),
+        F.chat.type == ChatType.PRIVATE,
     )
     router.message.register(leave_handler, Command(LEAVE_COMMAND))
     return router

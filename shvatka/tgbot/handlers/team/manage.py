@@ -16,6 +16,7 @@ from aiogram.filters import (
 from aiogram.types import Message, ChatMemberUpdated, CallbackQuery, LinkPreviewOptions
 from aiogram.utils.text_decorations import html_decoration as hd
 
+from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.models import dto
 from shvatka.core.players.player import get_team_players, get_player_by_id, join_team
 from shvatka.core.services.team import create_team
@@ -43,7 +44,7 @@ from shvatka.tgbot.views.commands import (
     PLAYERS_COMMAND,
 )
 from shvatka.tgbot.views.errors import player_already_in_team
-from shvatka.tgbot.views.team import render_team_card, render_team_players
+from shvatka.tgbot.views.team import render_team_players
 from shvatka.tgbot.views.texts import NOT_SUPERGROUP_ERROR
 
 logger = logging.getLogger(__name__)
@@ -260,19 +261,15 @@ async def answer_not_enough_rights(callback_query: CallbackQuery):
     await callback_query.answer("Недостаточно прав", show_alert=True)
 
 
-async def cmd_team(message: Message, team: dto.Team):
-    await message.answer(
-        text=render_team_card(team),
-        link_preview_options=LinkPreviewOptions(is_disabled=True),
-    )
-
-
-async def cmd_players(message: Message, team: dto.Team, dao: HolderDao):
-    players = await get_team_players(team, dao.team_player)
-    await message.answer(
-        text=render_team_players(team=team, players=players, notification=False),
-        link_preview_options=LinkPreviewOptions(is_disabled=True),
-    )
+@inject
+async def cmd_team(message: Message, identity: FromDishka[IdentityProvider], dao: HolderDao):
+    team = await identity.get_team()
+    if team:
+        players = await get_team_players(team, dao.team_player)
+        await message.answer(
+            text=render_team_players(team=team, players=players, notification=False),
+            link_preview_options=LinkPreviewOptions(is_disabled=True),
+        )
 
 
 def setup() -> Router:
@@ -283,28 +280,23 @@ def setup() -> Router:
 
     router.message.register(
         cmd_create_team,
-        Command(commands=CREATE_TEAM_COMMAND.command),
+        Command(commands=CREATE_TEAM_COMMAND),
         F.chat.type == ChatType.SUPERGROUP,
     )
     router.message.register(
         cmd_create_team_group,
-        Command(commands=CREATE_TEAM_COMMAND.command),
+        Command(commands=CREATE_TEAM_COMMAND),
         F.chat.type == ChatType.GROUP,
     )
     router.message.register(
         cmd_add_in_team,
-        Command(commands=ADD_IN_TEAM_COMMAND.command),
+        Command(commands=ADD_IN_TEAM_COMMAND),
         HasTargetFilter(),
         IsTeamFilter(),
     )
     router.message.register(
         cmd_team,
-        Command(commands=TEAM_COMMAND),
-        IsTeamFilter(),
-    )
-    router.message.register(
-        cmd_players,
-        Command(commands=PLAYERS_COMMAND),
+        Command(commands=[TEAM_COMMAND, PLAYERS_COMMAND]),
         IsTeamFilter(),
     )
     router.chat_member.register(

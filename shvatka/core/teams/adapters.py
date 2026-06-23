@@ -1,4 +1,4 @@
-from typing import Protocol
+from typing import Protocol, Sequence
 
 from shvatka.core.interfaces.dal.base import Committer
 from shvatka.core.interfaces.dal.player import (
@@ -12,6 +12,7 @@ from shvatka.core.interfaces.dal.team import (
     TeamByIdGetter,
     TeamDescChanger,
     TeamRenamer,
+    TeamsGetter,
 )
 
 
@@ -32,3 +33,21 @@ class TeamPlayerUpdater(
 
 class TeamEditor(TeamRenamer, TeamDescChanger, TeamByIdGetter, Protocol):
     """DAO contract for renaming a team and changing its description."""
+
+
+class TeamPlayedGamesCounter(Protocol):
+    """DAO contract for counting played games per team in one query."""
+
+    async def get_played_games_counts(self, team_ids: Sequence[int]) -> dict[int, int]:
+        raise NotImplementedError
+
+
+class PlayerPlayedGamesCounter(Protocol):
+    """DAO contract for counting played games per player in one query."""
+
+    async def get_played_games_counts(self, player_ids: Sequence[int]) -> dict[int, int]:
+        raise NotImplementedError
+
+
+class TeamsWithStatGetter(TeamsGetter, TeamPlayedGamesCounter, Protocol):
+    """DAO contract for listing teams together with their played games counts."""

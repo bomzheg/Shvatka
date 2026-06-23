@@ -26,9 +26,9 @@ async def get_teams(
     active: Annotated[bool, Query()] = True,
     archive: Annotated[bool, Query()] = False,
     search: Annotated[str | None, Query()] = None,
-) -> responses.Items[responses.Team]:
+) -> responses.Items[responses.TeamWithStat]:
     teams = await interactor(active=active, archive=archive, name=search)
-    return responses.Items([responses.Team.from_core(team) for team in teams])
+    return responses.Items([responses.TeamWithStat.from_core(team) for team in teams])
 
 
 @inject
@@ -90,9 +90,9 @@ async def edit_team(
 async def get_team_players(
     interactor: FromDishka[TeamPlayersInteractor],
     id_: Annotated[int, Path(alias="id")],
-) -> responses.Items[responses.TeamMember]:
+) -> responses.Items[responses.TeamMemberWithStat]:
     players = await interactor(id_)
-    return responses.Items([responses.TeamMember.from_core(player) for player in players])
+    return responses.Items([responses.TeamMemberWithStat.from_core(player) for player in players])
 
 
 @inject

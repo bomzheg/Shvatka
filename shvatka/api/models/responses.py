@@ -9,6 +9,8 @@ from adaptix import Retort
 from shvatka.core.games.dto import CurrentHintsAndKeys, MyRole, Event
 from shvatka.core.models import dto, enums
 from shvatka.core.players.dto import PlayerStat as PlayerStatDto
+from shvatka.core.teams.dto import TeamWithStat as TeamWithStatDto
+from shvatka.core.teams.dto import TeamPlayerWithStat as TeamPlayerWithStatDto
 from shvatka.core.models.dto import action
 from shvatka.core.models.dto import hints
 from shvatka.core.models.enums import GameStatus
@@ -57,6 +59,25 @@ class Team:
             name=core.name,
             captain=Player.from_core(core.captain) if core.captain else None,
             description=core.description,
+        )
+
+
+@dataclass
+class TeamWithStat:
+    id: int
+    name: str
+    captain: Player | None
+    description: str | None
+    played_games_count: int
+
+    @classmethod
+    def from_core(cls, core: TeamWithStatDto) -> "TeamWithStat":
+        return cls(
+            id=core.team.id,
+            name=core.team.name,
+            captain=Player.from_core(core.team.captain) if core.team.captain else None,
+            description=core.team.description,
+            played_games_count=core.played_games_count,
         )
 
 
@@ -185,6 +206,34 @@ class TeamMember:
             role=core.role,
             permissions={permission.name: value for permission, value in core.permissions.items()},
             date_joined=core.date_joined,
+        )
+
+
+@dataclass
+class TeamMemberWithStat:
+    team_player_id: int
+    id: int
+    username: str | None
+    can_be_author: bool
+    emoji: str | None
+    role: str
+    permissions: dict[str, bool]
+    date_joined: datetime
+    played_games_count: int
+
+    @classmethod
+    def from_core(cls, core: TeamPlayerWithStatDto) -> "TeamMemberWithStat":
+        tp = core.team_player
+        return cls(
+            team_player_id=tp.id,
+            id=tp.player.id,
+            username=tp.player.username,
+            can_be_author=tp.player.can_be_author,
+            emoji=tp.emoji,
+            role=tp.role,
+            permissions={permission.name: value for permission, value in tp.permissions.items()},
+            date_joined=tp.date_joined,
+            played_games_count=core.played_games_count,
         )
 
 

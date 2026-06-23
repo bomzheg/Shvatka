@@ -2,7 +2,7 @@ from datetime import datetime, tzinfo
 import typing
 from typing import Sequence
 
-from sqlalchemy import select, ScalarResult, false
+from sqlalchemy import select, ScalarResult, false, func, distinct
 from sqlalchemy import update
 from sqlalchemy.exc import NoResultFound, IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -170,6 +170,23 @@ class TeamDao(BaseDAO[models.Team]):
         )
         games: Sequence[models.Game] = result.all()
         return [game.to_dto(game.author.to_dto_user_prefetched()) for game in games]
+
+    async def get_played_games_counts(self, team_ids: Sequence[int]) -> dict[int, int]:
+        if not team_ids:
+            return {}
+        result = await self.session.execute(
+            select(
+                models.Waiver.team_id,
+                func.count(distinct(models.Waiver.game_id)),
+            )
+            .join(models.Game, models.Game.id == models.Waiver.game_id)
+            .where(
+                models.Waiver.team_id.in_(team_ids),
+                models.Game.number.is_not(None),
+            )
+            .group_by(models.Waiver.team_id)
+        )
+        return dict(result.tuples().all())
 
     async def delete(self, team: dto.Team):
         team_db = await self._get_by_id(team.id)

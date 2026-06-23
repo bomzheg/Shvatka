@@ -1,9 +1,9 @@
 import uuid
 from datetime import datetime, tzinfo
 import typing
-from typing import Iterable
+from typing import Iterable, Sequence
 
-from sqlalchemy import select, func, Result, case, delete, ScalarResult, inspect, or_
+from sqlalchemy import select, func, distinct, Result, case, delete, ScalarResult, inspect, or_
 from sqlalchemy.sql.elements import ColumnElement
 from sqlalchemy.exc import NoResultFound, MultipleResultsFound
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -96,6 +96,24 @@ class PlayerDao(BaseDAO[models.Player]):
         )
         games = result.all()
         return [game.to_dto(game.author.to_dto_user_prefetched()) for game in games]
+
+    async def get_played_games_counts(self, player_ids: Sequence[int]) -> dict[int, int]:
+        if not player_ids:
+            return {}
+        result = await self.session.execute(
+            select(
+                models.Waiver.player_id,
+                func.count(distinct(models.Waiver.game_id)),
+            )
+            .join(models.Game, models.Game.id == models.Waiver.game_id)
+            .where(
+                models.Waiver.player_id.in_(player_ids),
+                models.Waiver.played == enums.Played.yes,
+                models.Game.number.is_not(None),
+            )
+            .group_by(models.Waiver.player_id)
+        )
+        return dict(result.tuples().all())
 
     async def get_by_user(self, user: dto.User) -> dto.Player:
         return await self.get_by_user_id(user.tg_id)

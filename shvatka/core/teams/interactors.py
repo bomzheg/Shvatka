@@ -18,7 +18,6 @@ from shvatka.core.interfaces.dal.player import (
 from shvatka.core.interfaces.dal.team import (
     PlayedGamesByTeamGetter,
     TeamByIdGetter,
-    TeamsGetter,
 )
 from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.models import dto, enums
@@ -35,7 +34,14 @@ from shvatka.core.services.team import (
     get_team_by_id,
     get_teams,
 )
-from shvatka.core.teams.adapters import TeamEditor, TeamPlayerAdder, TeamPlayerUpdater
+from shvatka.core.teams.adapters import (
+    PlayerPlayedGamesCounter,
+    TeamEditor,
+    TeamPlayerAdder,
+    TeamPlayerUpdater,
+    TeamsWithStatGetter,
+)
+from shvatka.core.teams.dto import TeamPlayerWithStat, TeamWithStat
 from shvatka.core.utils.defaults_constants import DEFAULT_ROLE
 from shvatka.core.utils.exceptions import PlayerRestoredInTeam
 from shvatka.core.views.team import TeamNotifier
@@ -43,12 +49,16 @@ from shvatka.core.views.team import TeamNotifier
 
 @dataclass
 class TeamsListInteractor:
-    dao: TeamsGetter
+    dao: TeamsWithStatGetter
 
     async def __call__(
         self, active: bool = True, archive: bool = False, name: str | None = None
-    ) -> list[dto.Team]:
-        return await get_teams(self.dao, active=active, archive=archive, name=name)
+    ) -> list[TeamWithStat]:
+        teams = await get_teams(self.dao, active=active, archive=archive, name=name)
+        counts = await self.dao.get_played_games_counts([team.id for team in teams])
+        return [
+            TeamWithStat(team=team, played_games_count=counts.get(team.id, 0)) for team in teams
+        ]
 
 
 @dataclass
@@ -73,10 +83,19 @@ class TeamPlayedGamesInteractor:
 class TeamPlayersInteractor:
     team_dao: TeamByIdGetter
     players_dao: TeamPlayersGetter
+    counter: PlayerPlayedGamesCounter
 
-    async def __call__(self, team_id: int) -> Sequence[dto.FullTeamPlayer]:
+    async def __call__(self, team_id: int) -> Sequence[TeamPlayerWithStat]:
         team = await get_team_by_id(team_id, self.team_dao)
-        return await get_team_players(team, self.players_dao)
+        players = await get_team_players(team, self.players_dao)
+        counts = await self.counter.get_played_games_counts([p.player_id for p in players])
+        return [
+            TeamPlayerWithStat(
+                team_player=player,
+                played_games_count=counts.get(player.player_id, 0),
+            )
+            for player in players
+        ]
 
 
 @dataclass

@@ -54,7 +54,26 @@ async def test_get_all_teams(
     assert resp.is_success
     resp.read()
     items = resp.json()["items"]
-    assert gryffindor.id in [team["id"] for team in items]
+    by_id = {team["id"]: team for team in items}
+    assert gryffindor.id in by_id
+    assert by_id[gryffindor.id]["played_games_count"] == 0
+
+
+@pytest.mark.asyncio
+async def test_team_list_played_games_count(
+    client: AsyncClient,
+    finished_game: dto.FullGame,
+    gryffindor: dto.Team,
+    dao: HolderDao,
+):
+    await dao.game.set_completed(finished_game)
+    await dao.game.set_number(finished_game, 1)
+    await dao.commit()
+    resp = await client.get("/teams")
+    assert resp.is_success
+    resp.read()
+    by_id = {team["id"]: team for team in resp.json()["items"]}
+    assert by_id[gryffindor.id]["played_games_count"] == 1
 
 
 @pytest.mark.asyncio
@@ -125,6 +144,29 @@ async def test_get_team_players(
     assert by_player[harry.id]["role"] == CAPTAIN_ROLE
     assert "permissions" in by_player[hermione.id]
     assert by_player[hermione.id]["date_joined"] is not None
+    assert by_player[harry.id]["played_games_count"] == 0
+    assert by_player[hermione.id]["played_games_count"] == 0
+
+
+@pytest.mark.asyncio
+async def test_get_team_players_played_games_count(
+    client: AsyncClient,
+    finished_game: dto.FullGame,
+    harry: dto.Player,
+    ron: dto.Player,
+    gryffindor: dto.Team,
+    dao: HolderDao,
+):
+    await dao.game.set_completed(finished_game)
+    await dao.game.set_number(finished_game, 1)
+    await dao.commit()
+    resp = await client.get(f"/teams/{gryffindor.id}/players")
+    assert resp.is_success
+    resp.read()
+    by_player = {item["id"]: item for item in resp.json()["items"]}
+    # harry voted "yes" in the finished game; ron voted "no"
+    assert by_player[harry.id]["played_games_count"] == 1
+    assert by_player[ron.id]["played_games_count"] == 0
 
 
 @pytest.mark.asyncio

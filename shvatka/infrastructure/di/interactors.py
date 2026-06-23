@@ -253,7 +253,9 @@ class TeamProvider(Provider):
 
     @provide
     def get_team_players(self, dao: HolderDao) -> TeamPlayersInteractor:
-        return TeamPlayersInteractor(team_dao=dao.team, players_dao=dao.team_player)
+        return TeamPlayersInteractor(
+            team_dao=dao.team, players_dao=dao.team_player, counter=dao.player
+        )
 
     @provide
     def add_player(self, dao: HolderDao, notifier: TeamNotifier) -> AddPlayerToTeamInteractor:

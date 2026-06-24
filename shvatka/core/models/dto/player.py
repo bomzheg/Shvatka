@@ -23,7 +23,7 @@ class Player:
 
     @property
     def name_mention(self) -> str:
-        if self.username is not None:
+        if self.username is not None and self.username != f"id{self.id}":
             return self.username
         if self.is_dummy:
             if self._forum_user:
@@ -32,7 +32,7 @@ class Player:
         if self.has_user():
             assert self._user, f"only tg users supported, got forum user, {self!r}"
             return self._user.name_mention
-        return f"player_id{self.id}"
+        return f"id{self.id}"
 
     def has_user(self) -> bool:
         return self._user is not None

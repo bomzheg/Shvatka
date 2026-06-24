@@ -33,6 +33,7 @@ class Player:
     id: int
     can_be_author: bool
     name_mention: str
+    username: str | None
 
     @classmethod
     def from_core(cls, core: dto.Player):
@@ -40,6 +41,7 @@ class Player:
             id=core.id,
             can_be_author=core.can_be_author,
             name_mention=core.name_mention,
+            username=core.username,
         )
 
 

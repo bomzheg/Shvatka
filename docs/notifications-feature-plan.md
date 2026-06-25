@@ -38,7 +38,8 @@ One row = one notification delivered to exactly one recipient.
 |---|---|---|
 | `id` | bigint PK | |
 | `recipient_id` | FK `players.id`, not null | indexed; the tab is "give me my notifications" |
-| `type` | enum/text, not null | `player_joined_team`, `player_left_team`, `team_renamed`, `org_added`, `schedule_changed`, `team_join_invite`, `team_join_request`, `org_invite`, … |
+| `type` | enum/text, not null | `player_joined_team`, `player_left_team`, `team_renamed`, `org_added`, `game_schedule_changed`, `season_schedule_changed`, `team_join_invite`, `team_join_request`, `org_invite`, … |
+| `severity` | enum/text, not null, default `normal` | `low` / `normal` / `important` — drives UI emphasis, badge, and push urgency (§2.3) |
 | `actor_id` | FK `players.id`, nullable | who triggered it (inviter / remover / renamer) |
 | `payload` | JSONB, not null, default `{}` | denormalized render context (team name, game name, role, …) so the tab renders without N+1 joins **and survives later renames** |
 | `request_id` | FK `action_requests.id`, nullable | set when this feed item is/was an actionable request |
@@ -72,6 +73,31 @@ Dedup: partial unique index to stop duplicate pending requests, e.g.
 `unique (type, team_id, coalesce(target_player_id, 0)) where status = 'pending'`.
 On conflict the create-interactor is idempotent (return the existing pending
 request instead of erroring).
+
+### 2.3 `severity` — why notifications need it
+
+Not all notifications matter equally, and "schedule changed" is the clearest
+example because it actually means **two different things**:
+
+| meaning | source | importance |
+|---|---|---|
+| **Season schedule** — the rough plan of upcoming games for the year | not implemented yet; today orgs keep it in a Telegram channel by hand | low — informational, "FYI a game appeared on the calendar" |
+| **Planned-game schedule change** — the start time of an *already planned* game moves | `PlanGameStartInteractor` | **very high** — players have committed; a missed change means they miss the game |
+
+So a single `schedule_changed` type isn't enough. The plan uses two event
+types (`season_schedule_changed`, `game_schedule_changed`) **and** a
+`severity` field on every notification:
+
+- `low` — background/system noise (season calendar appears, you joined a team).
+- `normal` — default (player joined/left your team, team renamed, org added).
+- `important` — must not be missed. **Today the only `important` case is
+  `game_schedule_changed`** (start time of a planned game moved). Kept as an
+  open enum so we can promote others later.
+
+`severity` drives three things: visual emphasis in the tab, whether it counts
+toward a separate "important" badge, and push urgency (§8). Keeping it a column
+(not inferred from `type` on the client) means the backend stays the single
+source of truth and the frontend logic stays trivial.
 
 Both tables get a normal Alembic migration. No changes to existing tables.
 
@@ -114,11 +140,14 @@ Plan:
    committing. They keep doing exactly that; only the web channel's behaviour
    grows.
 
-3. **New events for things not yet wired.** "captain renamed team" and
-   "schedule changed" don't emit notifier events today. Add `TeamRenamed`
+3. **New events for things not yet wired.** "captain renamed team" and the
+   schedule changes don't emit notifier events today. Add `TeamRenamed`
    (a `TeamEvent` subclass) emitted from `EditTeamInteractor`, and a
-   schedule/status event emitted from `PlanGameStartInteractor` /
-   `ChangeGameStatusInteractor`. This is additive and can be phased (§8).
+   `GameScheduleChanged` event (severity `important`) emitted from
+   `PlanGameStartInteractor` when the start time of an already-planned game
+   moves. The `season_schedule_changed` event waits until the season-schedule
+   feature itself exists (orgs maintain that by hand in Telegram today). This
+   is additive and can be phased (§10).
 
 Optionally we add persistence as a **third channel** in the `Complex*`
 wrappers instead of folding it into `Web*`. Recommendation: fold into the web
@@ -131,13 +160,23 @@ Informational events fan out differently from the current bot behaviour (which
 posts to the team chat / orgs). For the inbox we resolve concrete recipient
 player-ids per event type:
 
-| event | recipients |
-|---|---|
-| `PlayerJoinedTeam` | existing team members (optionally the joined player too) |
-| `PlayerLeftTeam` | remaining team members |
-| `TeamRenamed` | team members |
-| `NewOrg` (org added) | the game's orgs + the newly added org |
-| `schedule/status changed` | members of teams registered/with a waiver for the game |
+| event | recipients | severity |
+|---|---|---|
+| `PlayerJoinedTeam` | existing team members **and the joined player themselves** (decision below) | `low` |
+| `PlayerLeftTeam` | remaining team members | `normal` |
+| `TeamRenamed` | team members | `normal` |
+| `NewOrg` (org added) | the game's orgs + the newly added org | `normal` |
+| `game_schedule_changed` (planned game's start time moved) | **every player with a waiver** for that game (captains included) | `important` |
+| `season_schedule_changed` (a game appears on the calendar) | broad / opt-in audience — TBD when the season schedule feature itself exists | `low` |
+
+**Self-notification (decision):** the joined player **does** get their own
+"you joined team X" feed entry. It's useful as a shareable system message
+("I joined this team") and costs nothing extra given the per-recipient row
+model.
+
+**`game_schedule_changed` audience (decision):** because this is the
+`important` one, it goes to **every player who has a waiver** for the planned
+game, not just captains — a missed start-time change means a missed game.
 
 The web notifier has DAO access, so recipient resolution is a read against the
 team/org/waiver DAOs. This logic lives in the core notifications adapters so
@@ -234,6 +273,12 @@ nudge** — an offline user still sees it in the tab; an online user also gets t
 SW notification. Use `data.kind` so the service worker routes clicks to
 `/notifications` or the relevant page (same convention as existing pushes).
 
+`severity` (§2.3) feeds the push too: include it in `data` so the service
+worker can render `important` ones with `requireInteraction` (they don't
+auto-dismiss) and a distinct tone, while `low` ones can be silent or skipped
+entirely. `game_schedule_changed` is the motivating case — it must reach the
+player even if they ignore everything else.
+
 ## 9. Bot send
 
 The bot keeps its current behaviour (`BotTeamNotifier` posts to the team chat,
@@ -246,13 +291,46 @@ request state now lives in the DB (not just a Redis token), the web tab and the
 bot DM act on one source of truth, and the `status='pending'` check prevents
 double-accept across channels.
 
-Relationship to the existing Redis `SecureInvite` flow (org-add, promotion):
-- v1: leave Redis invites as-is; add the DB-backed feed alongside.
-- Recommended follow-up: migrate **team-join** and **org-add** invites onto
-  `action_requests` (durable, visible in the web tab, cancellable, deduped) and
-  retire those Redis tokens. Keep Redis for ephemeral one-time confirmations
-  (e.g. promotion-confirm) where no inbox entry is wanted. **This is a decision
-  to confirm before building.**
+### 9.1 Migrating off the Redis `SecureInvite` tokens (decision: yes)
+
+We **migrate** team-join and org-add invites from the Redis token flow onto
+`action_requests`. The token approach is disliked precisely because it leans on
+sharing an opaque secret and re-validating it; a DB request that is owned,
+addressed, cancellable, deduped, and visible in the web tab is strictly better.
+Keep Redis only for ephemeral one-time confirmations where no inbox entry is
+wanted (e.g. promotion-confirm).
+
+### 9.2 The group-chat / "who clicked" problem (needs more thought)
+
+This is the open hard part the user flagged. With the old token flow, *whoever*
+clicks the inline button and presents the token is treated as the actor — fine
+when the message is a private DM, but a bot message can live in a **group
+chat** where the person who taps Accept/Decline may not be the intended target.
+
+With DB-backed requests the authorization model **inverts in our favour**, but
+needs to be made explicit:
+
+- The request row already names `target_player_id` (for invites) or an
+  authorization rule (for join-requests: "any captain of `team_id`"). The token
+  no longer grants anything by itself.
+- At **callback time** we resolve the *clicking* Telegram user → their
+  `Player`, and check that player against the request:
+  - invite → clicker must equal `target_player_id`;
+  - join-request → clicker must be an authorized member (captain /
+    `can_add_players`) of `team_id`.
+  - Otherwise: reject the tap ("this invite isn't for you") and do nothing.
+- This means an inline button posted in a group is safe: a wrong person tapping
+  it can't accept on the target's behalf. The button effectively just *links*
+  to request `id`; the DB state + the click-time identity check are the real
+  gate.
+
+Open sub-questions to settle before building Phase 2's bot side:
+- Do we even post actionable requests into group chats, or only DM the specific
+  target? (DM is simplest and avoids the wrong-clicker UX entirely; group post
+  is nice for "ask to join" visibility.)
+- For a join-*request* answered by "any captain", several captains may see the
+  button — first authorized responder wins (the `status='pending'` guard makes
+  the rest no-ops), and we edit the message to show who responded.
 
 ### Single-table fallback (if we want the smallest v1)
 Collapse into one `notifications` table with nullable `status`,
@@ -271,9 +349,15 @@ the recommendation; this is the escape hatch.
    `RequestDAO`, create/accept/decline/cancel interactors + routes, feed
    embedding of request status, `BotRequestNotifier` with inline buttons.
    Covers team-join invite, ask-to-join, org invite.
-3. **Phase 3 — more informational events.** `TeamRenamed`, schedule/status
-   change events emitted from the relevant interactors; recipient resolution
-   for game participants.
+3. **Phase 3 — more informational events.** `TeamRenamed` and
+   `GameScheduleChanged` (severity `important`) emitted from the relevant
+   interactors; recipient resolution for game participants (every player with a
+   waiver). `season_schedule_changed` deferred until the season-schedule feature
+   exists.
+
+`severity` ships in **Phase 1** (it's just a column + a default) so the
+frontend can build the important-badge from the start, even though the only
+`important` producer arrives in Phase 3.
 
 ## 11. Testing
 
@@ -284,12 +368,24 @@ notifier persistence); new API endpoints → integration tests in
 via `dao`, `commit`, hit the route, assert). There are existing notifier mocks
 (`tests/mocks/team_notifier.py`, `org_notifier.py`) to extend.
 
-## 12. Open questions for the user
+## 12. Decisions made & questions still open
 
-1. Migrate the existing Redis team-join / org-add invites onto the new
-   `action_requests` table (recommended), or run both in parallel for now?
-2. Should the joined player themselves get a feed entry, or only the rest of
-   the team?
-3. Retention — keep notifications forever, or prune read ones after N days?
-4. Should "schedule changed" reach every player with a waiver, or only team
-   captains?
+Resolved with the user:
+1. **Migrate** off the Redis invite tokens onto `action_requests` (don't run
+   both long-term). See §9.1.
+2. The joined player **does** get their own feed entry (nice as a shareable
+   "I joined" system message). See §5.
+3. **Keep notifications forever** for now; add pruning later only if needed.
+4. `game_schedule_changed` is **`important`** and goes to **every player with a
+   waiver**, not just captains. Introduced a `severity` field (§2.3) and split
+   "schedule changed" into season vs planned-game events.
+
+Still open:
+- **Bot delivery of actionable requests in group chats** (§9.2): DM the target
+  only, or also post into the team chat? And confirm the click-time identity
+  check as the authorization model that replaces the shared token.
+- **Season schedule** notifications: deferred — depends on building the
+  season-schedule feature itself (today it's hand-maintained in a Telegram
+  channel). Audience/opt-in TBD then.
+- Any other notification types that should be `important` besides
+  `game_schedule_changed`? (Currently it's the only one.)

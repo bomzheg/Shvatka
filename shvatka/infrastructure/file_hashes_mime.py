@@ -165,9 +165,7 @@ async def repair_file_path_extensions(
             if not db_file.file_path.endswith(db_file.extension):
                 db_file.file_path = db_file.file_path + db_file.extension
                 repaired += 1
-                logger.info(
-                    "repaired file_path for %s -> %s", db_file.guid, db_file.file_path
-                )
+                logger.info("repaired file_path for %s -> %s", db_file.guid, db_file.file_path)
 
         await session.commit()
         offset += batch_size

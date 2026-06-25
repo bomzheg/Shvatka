@@ -3,8 +3,11 @@ Migration script: backfill sha256, mime_type and extension for existing files.
 
 For every file_info row missing them, the physical file is read to compute its
 sha256 and detect its mime_type; a missing extension is then derived from the
-mime_type (renaming the physical file accordingly).  No file_info rows are
-deleted and no scenario JSONs are touched.
+mime_type (renaming the physical file accordingly and keeping file_path in
+sync).  A final pass repairs any file_path left without its extension by an
+earlier run.  No file_info rows are deleted and no scenario JSONs are touched.
+
+Safe to re-run; every step is idempotent.
 
 Run with:
     python -m shvatka.infrastructure.file_hashes_mime
@@ -85,7 +88,12 @@ async def fill_extension(
     session: AsyncSession,
     batch_size: int = 100,
 ) -> None:
-    """Compute and store sha256 + mime_type for all files that are missing them."""
+    """Backfill a missing extension and rename the physical file to match.
+
+    For files whose extension is empty, derive it from the detected mime type,
+    rename the physical file to include it and keep file_path in sync with the
+    new on-disk name (file_path is authoritative for serving).
+    """
     offset = 0
     while True:
         result: ScalarResult[models.FileInfo] = await session.scalars(
@@ -111,8 +119,10 @@ async def fill_extension(
             if not db_file.extension and extension:
                 if db_file.extension != extension:
                     old_path = Path(db_file.file_path)
+                    new_path = db_file.file_path + extension
+                    old_path.rename(new_path)
                     db_file.extension = extension
-                    old_path.rename(db_file.file_path + extension)
+                    db_file.file_path = new_path
                     logger.info(
                         "detected extension %s for %s (mime: %s)",
                         extension,
@@ -123,6 +133,45 @@ async def fill_extension(
         await session.commit()
         logger.info("processed batch at offset %d", offset)
         offset += batch_size
+
+
+async def repair_file_path_extensions(
+    session: AsyncSession,
+    batch_size: int = 100,
+) -> None:
+    """Repair file_path values that are missing their extension.
+
+    An earlier fill_extension run renamed the physical file to include the
+    extension but did not update file_path. Since serving now resolves the
+    physical file by file_path, bring file_path back in sync with the on-disk
+    name (file_path + extension) for any such row. Idempotent.
+    """
+    offset = 0
+    repaired = 0
+    while True:
+        result: ScalarResult[models.FileInfo] = await session.scalars(
+            select(models.FileInfo)
+            .where(models.FileInfo.extension != "")
+            .where(models.FileInfo.file_path.is_not(None))
+            .order_by(models.FileInfo.id)
+            .limit(batch_size)
+            .offset(offset)
+        )
+        batch = list(result.all())
+        if not batch:
+            break
+
+        for db_file in batch:
+            if not db_file.file_path.endswith(db_file.extension):
+                db_file.file_path = db_file.file_path + db_file.extension
+                repaired += 1
+                logger.info(
+                    "repaired file_path for %s -> %s", db_file.guid, db_file.file_path
+                )
+
+        await session.commit()
+        offset += batch_size
+    logger.info("repaired %d file_path values", repaired)
 
 
 async def main() -> None:
@@ -138,6 +187,7 @@ async def main() -> None:
             session = await request_dishka.get(AsyncSession)
             await fill_hashes(session, file_storage)
             await fill_extension(session)
+            await repair_file_path_extensions(session)
     finally:
         await dishka.close()
 

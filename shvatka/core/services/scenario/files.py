@@ -40,8 +40,8 @@ async def save_file(
     """Store a single uploaded file (from the web UI) and persist its FileInfo.
 
     Generates a fresh guid, stores the content via the file storage (which detects
-    sha256/mime and deduplicates) and saves the resulting meta to the DB. The actual
-    content type is derived from the detected mime type.
+    sha256/mime) and saves the resulting meta to the DB. The actual content type is
+    derived from the detected mime type.
     """
     guid = str(uuid4())
     extension = "".join(Path(original_filename).suffixes)

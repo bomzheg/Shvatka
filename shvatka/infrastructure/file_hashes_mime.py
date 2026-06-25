@@ -1,14 +1,13 @@
 """
-Migration script: compute sha256 and mime_type for all existing files, then
-deduplicate physical storage by pointing every duplicate file_info row at the
-canonical (oldest) physical file.
+Migration script: backfill sha256, mime_type and extension for existing files.
 
-No file_info rows are deleted and no scenario JSONs are touched.  The result is
-that multiple file_info records (each with their own guid) share a single file
-on disk.  Orphaned physical files whose path is no longer referenced are removed.
+For every file_info row missing them, the physical file is read to compute its
+sha256 and detect its mime_type; a missing extension is then derived from the
+mime_type (renaming the physical file accordingly).  No file_info rows are
+deleted and no scenario JSONs are touched.
 
 Run with:
-    python -m shvatka.infrastructure.file_deduplicator
+    python -m shvatka.infrastructure.file_hashes_mime
 """
 
 import asyncio

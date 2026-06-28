@@ -297,7 +297,7 @@ async def test_game_play(
     assert_time_key(expected_third_key, list(keys[gryffindor])[2])
     assert_time_key(expected_fourth_key, list(keys[gryffindor])[3])
     assert await dao.game_player.is_all_team_finished(game)
-    assert GameStatus.finished == (await dao.game.get_by_id(game.id, author)).status
+    assert GameStatus.finished == (await check_dao.game.get_by_id(game.id, author)).status
     dummy_view.assert_no_unchecked()
     dummy_org_notifier.assert_no_calls()
 
@@ -375,7 +375,7 @@ async def test_fast_play_routed_game(
     assert_time_key(expected_first_key, list(keys[gryffindor])[0])
     assert_time_key(expected_second_key, list(keys[gryffindor])[1])
     assert await dao.game_player.is_all_team_finished(game)
-    assert GameStatus.finished == (await dao.game.get_by_id(game.id, author)).status
+    assert GameStatus.finished == (await check_dao.game.get_by_id(game.id, author)).status
     dummy_view.assert_no_unchecked()
     dummy_org_notifier.assert_no_calls()
 
@@ -487,7 +487,7 @@ async def test_cycle_play_routed_game(
     assert_time_key(expected_third_key, list(keys[gryffindor])[2])
     assert_time_key(expected_last_key, list(keys[gryffindor])[3])
     assert await dao.game_player.is_all_team_finished(game)
-    assert GameStatus.finished == (await dao.game.get_by_id(game.id, author)).status
+    assert GameStatus.finished == (await check_dao.game.get_by_id(game.id, author)).status
     dummy_view.assert_no_unchecked()
     dummy_org_notifier.assert_no_calls()
 

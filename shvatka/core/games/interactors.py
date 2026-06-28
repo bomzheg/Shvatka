@@ -201,7 +201,6 @@ class GamePlayBaseInteractor:
 
     async def all_teams_finished(self, game: dto.FullGame) -> None:
         await self.dao.finish(game)
-        await self.dao.commit()
         await self.game_log.log(GameLogEvent(GameLogType.GAME_FINISHED, {"game": game.name}))
         self.locker.clear()
         for team in await self.dao.get_played_teams(game):
@@ -283,7 +282,6 @@ class CheckKeyInteractor(GamePlayBaseInteractor):
         new_key = await self.key_processor.check_key(key=key, player=player, team=team, now=now)
         if new_key is None:
             return
-        await self.dao.commit()
         await self.view_(new_key, input_container)
         if new_key.is_duplicate:
             return
@@ -294,6 +292,7 @@ class CheckKeyInteractor(GamePlayBaseInteractor):
                 game=game,
                 at=now,
             )
+        await self.dao.commit()
 
     async def view_(self, new_key: dto.InsertedKey, input_container: InputContainer) -> None:
         if new_key.is_duplicate:

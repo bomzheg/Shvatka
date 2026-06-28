@@ -201,6 +201,7 @@ class GamePlayBaseInteractor:
 
     async def all_teams_finished(self, game: dto.FullGame) -> None:
         await self.dao.finish(game)
+        await self.dao.commit()
         await self.game_log.log(GameLogEvent(GameLogType.GAME_FINISHED, {"game": game.name}))
         self.locker.clear()
         for team in await self.dao.get_played_teams(game):

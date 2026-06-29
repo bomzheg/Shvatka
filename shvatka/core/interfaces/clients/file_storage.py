@@ -21,3 +21,6 @@ class FileStorage(Protocol):
 
     async def put_content(self, local_file_name: str, content: BinaryIO) -> hints.FileContentLink:
         raise NotImplementedError
+
+    async def exists(self, file_link: hints.FileContentLink) -> bool:
+        raise NotImplementedError

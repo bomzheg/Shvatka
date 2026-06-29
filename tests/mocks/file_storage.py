@@ -23,3 +23,6 @@ class MemoryFileStorage(FileStorage):
 
     async def get(self, file_link: hints.FileContentLink) -> BinaryIO:
         return self.storage[file_link.file_path]
+
+    async def exists(self, file_link: hints.FileContentLink) -> bool:
+        return file_link.file_path in self.storage

@@ -1,5 +1,6 @@
 import logging
 from io import BytesIO
+from pathlib import PurePosixPath
 from typing import Annotated
 from urllib.parse import quote
 
@@ -15,6 +16,7 @@ from shvatka.core.games.interactors import (
     GameFileReaderInteractor,
 )
 from shvatka.core.games.editor_interactors import UploadGameFileInteractor
+from shvatka.core.interfaces.clients.file_storage import FileStorage
 
 
 logger = logging.getLogger(__name__)
@@ -24,10 +26,24 @@ logger = logging.getLogger(__name__)
 async def get_game_file(
     identity: FromDishka[ApiIdentityProvider],
     file_reader: FromDishka[GameFileReaderInteractor],
+    storage: FromDishka[FileStorage],
     id_: Annotated[int, Path(alias="id")],
     guid: Annotated[str, Path(alias="guid")],
 ) -> Response:
     meta = await file_reader(guid=guid, identity=identity, game_id=id_)
+    if not await storage.exists(meta.file_content_link):
+        logger.warning(
+            "file %s of game %s is registered but missing on disk at %s",
+            guid,
+            id_,
+            meta.file_content_link.file_path,
+        )
+        # the file is gone; answer with a non-cacheable 404 so a later upload is
+        # picked up instead of a stale 404 being served from the browser cache.
+        return Response(status_code=404, headers={"Cache-Control": "no-store"})
+    # serve by the stored physical path, not by guid: the two can differ (e.g. for
+    # files saved under a shared physical name), and only file_path is authoritative.
+    local_file_name = PurePosixPath(meta.file_content_link.file_path).name
     if meta.public_filename.isascii():
         fallback = meta.public_filename
     else:
@@ -36,7 +52,7 @@ async def get_game_file(
     content_disposition = f"attachment; filename=\"{fallback}\"; filename*=UTF-8''{encoded}"
     return Response(
         headers={
-            "X-Accel-Redirect": f"/protected-files/{meta.local_file_name}",
+            "X-Accel-Redirect": f"/protected-files/{local_file_name}",
             "Content-Disposition": content_disposition,
             "Cache-Control": "private, max-age=86400",
             "Vary": "Authorization, Cookie",

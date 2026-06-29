@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from pathlib import Path
 
 import pytest
 from adaptix import Retort
@@ -101,6 +102,30 @@ async def test_game_file(
     )
     assert resp.is_success
     assert resp.headers.get("X-Accel-Redirect") == f"/protected-files/{GUID}.jpg"
+
+
+@pytest.mark.asyncio
+async def test_game_file_missing_on_disk_not_cached(
+    finished_game: dto.FullGame,
+    dao: HolderDao,
+    client: AsyncClient,
+    auth: AuthProperties,
+    harry: dto.Player,
+):
+    token = auth.create_user_token(harry)
+    await dao.game.set_completed(finished_game)
+    await dao.game.set_number(finished_game, 1)
+    await dao.commit()
+    # the file is registered in the DB but its physical content is gone
+    meta = await dao.file_info.get_by_guid(GUID)
+    Path(meta.file_content_link.file_path).unlink(missing_ok=True)
+    resp = await client.get(
+        f"/cdn/games/{finished_game.id}/files/{GUID}",
+        cookies={"Authorization": "Bearer " + token.access_token},
+    )
+    assert resp.status_code == 404
+    assert resp.headers.get("X-Accel-Redirect") is None
+    assert resp.headers.get("Cache-Control") == "no-store"
 
 
 @pytest.mark.asyncio

@@ -2,6 +2,7 @@ from .achievement import Achievement
 from .base import Base
 from .chat import Chat
 from .file_info import FileInfo
+from .file_link import GameFile, LevelFile
 from .forum_team import ForumTeam
 from .forum_user import ForumUser
 from .game import Game

@@ -79,6 +79,11 @@ class GameByIdGetter(Protocol):
         raise NotImplementedError
 
 
+class GameFileLinker(GameByIdGetter, Committer, Protocol):
+    async def add_game_file(self, game_id: int, file_id: int) -> None:
+        raise NotImplementedError
+
+
 class ActiveGameFinder(Protocol):
     async def get_active_game(self) -> dto.Game | None:
         raise NotImplementedError

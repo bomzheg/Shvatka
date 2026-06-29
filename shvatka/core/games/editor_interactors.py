@@ -19,6 +19,7 @@ from shvatka.core.interfaces.dal.game import (
     GameAuthorsFinder,
     GameByIdGetter,
     GameCreator,
+    GameFileLinker,
     GameStartPlanner,
     WaiverStarter,
 )
@@ -126,7 +127,7 @@ class ChangeGameStatusInteractor:
 @dataclass
 class UploadGameFileInteractor:
     storage: FileStorage
-    game_dao: GameByIdGetter
+    game_dao: GameFileLinker
     file_dao: FileUpserter
 
     async def __call__(
@@ -140,4 +141,9 @@ class UploadGameFileInteractor:
         check_allow_be_author(author)
         game = await self.game_dao.get_by_id(id_=game_id, author=author)
         check_game_editable(game)
-        return await save_file(author, content, original_filename, self.storage, self.file_dao)
+        saved = await save_file(author, content, original_filename, self.storage, self.file_dao)
+        # the file is uploaded for later use in this game even though it is not yet
+        # assigned to any level, so register it as usable in the game.
+        await self.game_dao.add_game_file(game.id, saved.id)
+        await self.game_dao.commit()
+        return saved

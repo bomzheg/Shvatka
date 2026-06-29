@@ -77,6 +77,7 @@ from shvatka.infrastructure.db.dao.complex2.waiver import (
 )
 from shvatka.infrastructure.db.dao.complex.game import GameFilesGetterImpl, GameScenarioEditorImpl
 from shvatka.infrastructure.db.dao.complex.game import (
+    GameFileUploaderImpl,
     GamePlayDaoImpl,
 )
 from shvatka.infrastructure.db.dao.complex.game_play import GamePlayerDaoImpl
@@ -173,7 +174,7 @@ class GameEditProvider(Provider):
 
     @provide
     def upload_file(self, dao: HolderDao, storage: FileStorage) -> UploadGameFileInteractor:
-        return UploadGameFileInteractor(storage=storage, game_dao=dao.game, file_dao=dao.file_info)
+        return UploadGameFileInteractor(storage=storage, dao=GameFileUploaderImpl(dao=dao))
 
     @provide
     def list_orgs(self, dao: HolderDao) -> ListGameOrgsInteractor:

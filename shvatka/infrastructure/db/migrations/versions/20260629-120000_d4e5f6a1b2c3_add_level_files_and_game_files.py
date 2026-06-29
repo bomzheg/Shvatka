@@ -18,39 +18,43 @@ depends_on = None
 def upgrade():
     op.create_table(
         "level_files",
+        sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("level_id", sa.Integer(), nullable=False),
         sa.Column("file_id", sa.Integer(), nullable=False),
         sa.ForeignKeyConstraint(
             ["level_id"],
             ["levels.id"],
-            name="level_files_level_id_fkey",
+            name=op.f("level_files_level_id_fkey"),
             ondelete="CASCADE",
         ),
         sa.ForeignKeyConstraint(
             ["file_id"],
             ["files_info.id"],
-            name="level_files_file_id_fkey",
+            name=op.f("level_files_file_id_fkey"),
             ondelete="CASCADE",
         ),
-        sa.PrimaryKeyConstraint("level_id", "file_id", name="pk__level_files"),
+        sa.PrimaryKeyConstraint("id", name=op.f("pk__level_files")),
+        sa.UniqueConstraint("level_id", "file_id", name=op.f("uq__level_files__level_id")),
     )
     op.create_table(
         "game_files",
+        sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("game_id", sa.Integer(), nullable=False),
         sa.Column("file_id", sa.Integer(), nullable=False),
         sa.ForeignKeyConstraint(
             ["game_id"],
             ["games.id"],
-            name="game_files_game_id_fkey",
+            name=op.f("game_files_game_id_fkey"),
             ondelete="CASCADE",
         ),
         sa.ForeignKeyConstraint(
             ["file_id"],
             ["files_info.id"],
-            name="game_files_file_id_fkey",
+            name=op.f("game_files_file_id_fkey"),
             ondelete="CASCADE",
         ),
-        sa.PrimaryKeyConstraint("game_id", "file_id", name="pk__game_files"),
+        sa.PrimaryKeyConstraint("id", name=op.f("pk__game_files")),
+        sa.UniqueConstraint("game_id", "file_id", name=op.f("uq__game_files__game_id")),
     )
 
     # Fill both tables from the existing level scenarios. File references are stored

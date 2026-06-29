@@ -1,5 +1,6 @@
 from .chat import ChatDao
 from .file_info import FileInfoDao
+from .file_link import FileLinkDao
 from .forum_user import ForumUserDAO
 from .game import GameDao
 from .level import LevelDao

@@ -14,12 +14,11 @@ from adaptix import Retort
 
 from shvatka.core.interfaces.clients.file_storage import FileStorage
 from shvatka.core.interfaces.dal.complex import GameCompleter, GameScenarioEditor
-from shvatka.core.interfaces.dal.file_info import FileUpserter
 from shvatka.core.interfaces.dal.game import (
     GameAuthorsFinder,
     GameByIdGetter,
     GameCreator,
-    GameFileLinker,
+    GameFileUploader,
     GameStartPlanner,
     WaiverStarter,
 )
@@ -127,8 +126,7 @@ class ChangeGameStatusInteractor:
 @dataclass
 class UploadGameFileInteractor:
     storage: FileStorage
-    game_dao: GameFileLinker
-    file_dao: FileUpserter
+    dao: GameFileUploader
 
     async def __call__(
         self,
@@ -139,11 +137,11 @@ class UploadGameFileInteractor:
     ) -> hints.SavedFileMeta:
         author = await identity.get_required_player()
         check_allow_be_author(author)
-        game = await self.game_dao.get_by_id(id_=game_id, author=author)
+        game = await self.dao.get_by_id(id_=game_id, author=author)
         check_game_editable(game)
-        saved = await save_file(author, content, original_filename, self.storage, self.file_dao)
+        saved = await save_file(author, content, original_filename, self.storage, self.dao)
         # the file is uploaded for later use in this game even though it is not yet
         # assigned to any level, so register it as usable in the game.
-        await self.game_dao.add_game_file(game.id, saved.id)
-        await self.game_dao.commit()
+        await self.dao.add_game_file(game.id, saved.id)
+        await self.dao.commit()
         return saved

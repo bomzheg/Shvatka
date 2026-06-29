@@ -44,6 +44,14 @@ class FileInfoDao(BaseDAO[models.FileInfo]):
 
         return db_file.to_dto(author=author)
 
+    async def get_ids_by_guids(self, guids: typing.Collection[str]) -> list[int]:
+        if not guids:
+            return []
+        result: ScalarResult[int] = await self.session.scalars(
+            select(models.FileInfo.id).where(models.FileInfo.guid.in_(set(guids)))
+        )
+        return list(result.all())
+
     async def get_by_sha256(self, sha256: str) -> list[hints.VerifiableFileMeta]:
         result: ScalarResult[models.FileInfo] = await self.session.scalars(
             select(models.FileInfo).where(models.FileInfo.sha256 == sha256)

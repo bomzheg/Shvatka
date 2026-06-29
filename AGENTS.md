@@ -161,6 +161,24 @@ So: an Interactor takes `identity: IdentityProvider` as a `__call__` arg (or a
 player/team, and it should not re-implement auth. The DAO layer is the
 exception: DAOs take concrete `dto.Player`/`dto.Team`/etc.
 
+## DAO layer
+
+- **One table per DAO.** A `core/.../rdb/*.py` DAO owns its own table(s) and
+  must not read or write another table's models. Need a new table? Add a new
+  DAO for it (e.g. `FileLinkDao` for `level_files` / `game_files`), don't bolt
+  the logic onto an unrelated DAO.
+- **Cross-table work goes in the complex layer.** When an operation spans
+  several tables (resolve ids in one table, then write links in another), put
+  the orchestration in a `dao/complex/*` impl that composes the per-table DAOs —
+  not inside a single rdb DAO.
+- **At most one DAO per interactor.** Don't inject several DAOs into an
+  interactor/service. Compose what it needs behind a single Protocol and a
+  single `dao/complex/*` adapter, and pass that one adapter.
+- **Use generic SQLAlchemy.** Prefer creating a model and adding it to the
+  session (or generic `select`/`delete`) over dialect-specific helpers like
+  `postgresql.insert(...).on_conflict_do_nothing()`. For "add if missing",
+  read the existing rows and add only the new ones.
+
 ## Testing
 
 Framework: **pytest** + `pytest-asyncio` (mark async tests with
@@ -178,6 +196,9 @@ Rules for new work:
 - **New domain class/method → unit test** in `tests/unit/` (e.g.
   `tests/unit/domain/`, `tests/unit/services/`). Unit tests are pure/fast and do
   not touch the DB.
+- **Assert through `check_dao`, not the acting `dao`.** Integration tests get a
+  separate `check_dao` (its own session) for reading back state — use it for
+  assertions so you observe committed data, and keep `dao` for the action.
 
 Run locally:
 

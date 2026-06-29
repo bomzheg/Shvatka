@@ -1,9 +1,7 @@
-from collections.abc import Collection
 from datetime import datetime, tzinfo
 import typing
-from sqlalchemy import delete, select, ScalarResult
+from sqlalchemy import select, ScalarResult
 from sqlalchemy import update
-from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
@@ -57,44 +55,7 @@ class LevelDao(BaseDAO[models.Level]):
             level.game_id = game.id
             level.number_in_game = no_in_game
         await self._flush(level)
-        guids = scn.get_guids()
-        await self._sync_level_files(level.id, guids)
-        if level.game_id is not None:
-            await self._add_game_files(level.game_id, guids)
         return level.to_dto(author)
-
-    async def _resolve_file_ids(self, guids: Collection[str]) -> list[int]:
-        if not guids:
-            return []
-        result: ScalarResult[int] = await self.session.scalars(
-            select(models.FileInfo.id).where(models.FileInfo.guid.in_(set(guids)))
-        )
-        return list(result.all())
-
-    async def _sync_level_files(self, level_id: int, guids: Collection[str]) -> None:
-        """Make level_files match exactly the files referenced by the level."""
-        file_ids = await self._resolve_file_ids(guids)
-        stmt = delete(models.LevelFile).where(models.LevelFile.level_id == level_id)
-        if file_ids:
-            stmt = stmt.where(models.LevelFile.file_id.notin_(file_ids))
-        await self.session.execute(stmt)
-        if file_ids:
-            await self.session.execute(
-                pg_insert(models.LevelFile)
-                .values([{"level_id": level_id, "file_id": fid} for fid in file_ids])
-                .on_conflict_do_nothing()
-            )
-
-    async def _add_game_files(self, game_id: int, guids: Collection[str]) -> None:
-        """Register files as usable in the game (never removed here)."""
-        file_ids = await self._resolve_file_ids(guids)
-        if not file_ids:
-            return
-        await self.session.execute(
-            pg_insert(models.GameFile)
-            .values([{"game_id": game_id, "file_id": fid} for fid in file_ids])
-            .on_conflict_do_nothing()
-        )
 
     async def _get_by_author_and_scn(self, author: dto.Player, scn: LevelScenario) -> models.Level:
         return await self._get_by_author_and_name_id(author, scn.id)
@@ -168,7 +129,6 @@ class LevelDao(BaseDAO[models.Level]):
             .where(models.Level.id == level.db_id)
             .values(game_id=game.id, number_in_game=max_level + 1)
         )
-        await self._add_game_files(game.id, level.get_guids())
         level.game_id = game.id
         level.number_in_game = max_level + 1
         return typing.cast(dto.GamedLevel, level)

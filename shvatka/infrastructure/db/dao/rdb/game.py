@@ -4,7 +4,6 @@ from typing import Sequence
 
 from sqlalchemy import select, ScalarResult
 from sqlalchemy import update, func
-from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
@@ -66,14 +65,6 @@ class GameDao(BaseDAO[models.Game]):
         return game_db.to_full_dto(
             author=author,
             levels=[level.to_gamed_dto(author) for level in game_db.levels],
-        )
-
-    async def add_game_file(self, game_id: int, file_id: int) -> None:
-        """Register a single file as usable in the game (idempotent, never removed)."""
-        await self.session.execute(
-            pg_insert(models.GameFile)
-            .values(game_id=game_id, file_id=file_id)
-            .on_conflict_do_nothing()
         )
 
     async def add_levels(self, game: dto.Game) -> dto.FullGame:

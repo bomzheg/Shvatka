@@ -3,37 +3,13 @@ from io import BytesIO
 
 import pytest
 from adaptix import Retort
-from sqlalchemy import select
 
 from shvatka.core.interfaces.clients.file_storage import FileGateway
 from shvatka.core.models import dto
 from shvatka.core.models.dto.scn.game import RawGameScenario
 from shvatka.core.services.game import upsert_game
-from shvatka.infrastructure.db import models
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from tests.fixtures.scn_fixtures import GUID
-
-
-async def _level_file_ids(dao: HolderDao, level_id: int) -> set[int]:
-    result = await dao.session.scalars(
-        select(models.LevelFile.file_id).where(models.LevelFile.level_id == level_id)
-    )
-    return set(result.all())
-
-
-async def _game_file_ids(dao: HolderDao, game_id: int) -> set[int]:
-    result = await dao.session.scalars(
-        select(models.GameFile.file_id).where(models.GameFile.game_id == game_id)
-    )
-    return set(result.all())
-
-
-async def _file_id_by_guid(dao: HolderDao, guid: str) -> int:
-    file_id = await dao.session.scalar(
-        select(models.FileInfo.id).where(models.FileInfo.guid == guid)
-    )
-    assert file_id is not None
-    return file_id
 
 
 @pytest.mark.asyncio
@@ -41,18 +17,19 @@ async def test_upsert_game_fills_level_and_game_files(
     author: dto.Player,
     complex_scn: RawGameScenario,
     dao: HolderDao,
+    check_dao: HolderDao,
     retort: Retort,
     file_gateway: FileGateway,
 ):
     game = await upsert_game(complex_scn, author, dao.game_upserter, retort, file_gateway)
-    file_id = await _file_id_by_guid(dao, GUID)
+    (file_id,) = await check_dao.file_info.get_ids_by_guids([GUID])
 
     first, second = game.levels[0], game.levels[1]
     # only the first level references the file
-    assert await _level_file_ids(dao, first.db_id) == {file_id}
-    assert await _level_file_ids(dao, second.db_id) == set()
+    assert await check_dao.file_link.get_level_file_ids(first.db_id) == {file_id}
+    assert await check_dao.file_link.get_level_file_ids(second.db_id) == set()
     # the file is registered as usable in the game
-    assert await _game_file_ids(dao, game.id) == {file_id}
+    assert await check_dao.file_link.get_game_file_ids(game.id) == {file_id}
 
 
 @pytest.mark.asyncio
@@ -60,13 +37,14 @@ async def test_removing_file_syncs_level_files_but_keeps_game_files(
     author: dto.Player,
     complex_scn: RawGameScenario,
     dao: HolderDao,
+    check_dao: HolderDao,
     retort: Retort,
     file_gateway: FileGateway,
 ):
     game = await upsert_game(complex_scn, author, dao.game_upserter, retort, file_gateway)
-    file_id = await _file_id_by_guid(dao, GUID)
+    (file_id,) = await check_dao.file_info.get_ids_by_guids([GUID])
     first = game.levels[0]
-    assert await _level_file_ids(dao, first.db_id) == {file_id}
+    assert await check_dao.file_link.get_level_file_ids(first.db_id) == {file_id}
 
     stripped = deepcopy(complex_scn.scn)
     _strip_files(stripped["levels"][0])
@@ -81,9 +59,9 @@ async def test_removing_file_syncs_level_files_but_keeps_game_files(
     )
 
     # the level no longer references the file, so level_files is synced empty ...
-    assert await _level_file_ids(dao, first.db_id) == set()
+    assert await check_dao.file_link.get_level_file_ids(first.db_id) == set()
     # ... but the game keeps it as a usable file (never removed)
-    assert await _game_file_ids(dao, game.id) == {file_id}
+    assert await check_dao.file_link.get_game_file_ids(game.id) == {file_id}
 
 
 def _strip_files(level: dict) -> None:

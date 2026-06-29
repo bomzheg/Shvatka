@@ -1,4 +1,4 @@
-from sqlalchemy import ForeignKey
+from sqlalchemy import ForeignKey, Integer, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column
 
 from shvatka.infrastructure.db.models import Base
@@ -13,12 +13,11 @@ class LevelFile(Base):
     """
 
     __tablename__ = "level_files"
-    level_id: Mapped[int] = mapped_column(
-        ForeignKey("levels.id", ondelete="CASCADE"), primary_key=True
-    )
-    file_id: Mapped[int] = mapped_column(
-        ForeignKey("files_info.id", ondelete="CASCADE"), primary_key=True
-    )
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    level_id: Mapped[int] = mapped_column(ForeignKey("levels.id", ondelete="CASCADE"))
+    file_id: Mapped[int] = mapped_column(ForeignKey("files_info.id", ondelete="CASCADE"))
+
+    __table_args__ = (UniqueConstraint("level_id", "file_id"),)
 
 
 class GameFile(Base):
@@ -31,9 +30,8 @@ class GameFile(Base):
     """
 
     __tablename__ = "game_files"
-    game_id: Mapped[int] = mapped_column(
-        ForeignKey("games.id", ondelete="CASCADE"), primary_key=True
-    )
-    file_id: Mapped[int] = mapped_column(
-        ForeignKey("files_info.id", ondelete="CASCADE"), primary_key=True
-    )
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    game_id: Mapped[int] = mapped_column(ForeignKey("games.id", ondelete="CASCADE"))
+    file_id: Mapped[int] = mapped_column(ForeignKey("files_info.id", ondelete="CASCADE"))
+
+    __table_args__ = (UniqueConstraint("game_id", "file_id"),)

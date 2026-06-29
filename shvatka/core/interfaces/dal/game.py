@@ -2,6 +2,7 @@ from datetime import datetime
 from typing import Protocol
 
 from shvatka.core.interfaces.dal.base import Committer
+from shvatka.core.interfaces.dal.file_info import FileUpserter
 from shvatka.core.interfaces.dal.level import LevelUpserter
 from shvatka.core.models import dto
 from shvatka.core.models.dto import scn
@@ -79,7 +80,7 @@ class GameByIdGetter(Protocol):
         raise NotImplementedError
 
 
-class GameFileLinker(GameByIdGetter, Committer, Protocol):
+class GameFileUploader(GameByIdGetter, FileUpserter, Protocol):
     async def add_game_file(self, game_id: int, file_id: int) -> None:
         raise NotImplementedError
 

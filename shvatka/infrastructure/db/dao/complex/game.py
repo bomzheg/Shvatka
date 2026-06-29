@@ -8,7 +8,7 @@ from shvatka.core.interfaces.current_game import CurrentGameProvider
 
 from shvatka.core.interfaces.dal.complex import GamePackager
 from shvatka.core.games.adapters import GameFileReader, GamePlayDao
-from shvatka.core.interfaces.dal.game import GameUpserter, GameCreator
+from shvatka.core.interfaces.dal.game import GameUpserter, GameCreator, GameFileUploader
 from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.models import dto
 from shvatka.core.models.dto import scn
@@ -18,6 +18,19 @@ from shvatka.core.utils.datetime_utils import tz_utc
 
 if typing.TYPE_CHECKING:
     from shvatka.infrastructure.db.dao.holder import HolderDao
+
+
+async def sync_level_files(dao: "HolderDao", level: dto.Level) -> None:
+    """Reconcile the file links of a level after its scenario was saved.
+
+    ``level_files`` is kept in sync with what the level references; for a level
+    that belongs to a game its files are additionally registered as usable in
+    that game (``game_files``, add-only).
+    """
+    file_ids = await dao.file_info.get_ids_by_guids(level.get_guids())
+    await dao.file_link.sync_level_files(level.db_id, file_ids)
+    if level.game_id is not None:
+        await dao.file_link.add_game_files(level.game_id, file_ids)
 
 
 @dataclass
@@ -30,14 +43,18 @@ class GameUpserterImpl(GameUpserter):
     async def upsert_gamed(
         self, author: dto.Player, scenario: scn.LevelScenario, game: dto.Game, no_in_game: int
     ) -> dto.GamedLevel:
-        return await self.dao.level.upsert_gamed(author, scenario, game, no_in_game)
+        level = await self.dao.level.upsert_gamed(author, scenario, game, no_in_game)
+        await sync_level_files(self.dao, level)
+        return level
 
     async def upsert(
         self,
         author: dto.Player,
         scenario: scn.LevelScenario,
     ) -> dto.Level:
-        return await self.dao.level.upsert(author, scenario)
+        level = await self.dao.level.upsert(author, scenario)
+        await sync_level_files(self.dao, level)
+        return level
 
     async def unlink_all(self, game: dto.Game) -> None:
         return await self.dao.level.unlink_all(game)
@@ -90,13 +107,44 @@ class GameCreatorImpl(GameCreator):
         return await self.dao.game.create_game(author, name)
 
     async def link_to_game(self, level: dto.Level, game: dto.Game) -> dto.GamedLevel:
-        return await self.dao.level.link_to_game(level, game)
+        linked = await self.dao.level.link_to_game(level, game)
+        file_ids = await self.dao.file_info.get_ids_by_guids(linked.get_guids())
+        await self.dao.file_link.add_game_files(game.id, file_ids)
+        return linked
 
     async def commit(self) -> None:
         return await self.dao.commit()
 
     async def is_name_available(self, name: str) -> bool:
         return await self.dao.game.is_name_available(name)
+
+
+@dataclass
+class GameFileUploaderImpl(GameFileUploader):
+    """Single DAO for uploading a file directly for a game (cdn endpoint)."""
+
+    dao: "HolderDao"
+
+    async def get_by_id(self, id_: int, author: dto.Player | None = None) -> dto.Game:
+        return await self.dao.game.get_by_id(id_, author)
+
+    async def get_full(self, id_: int) -> dto.FullGame:
+        return await self.dao.game.get_full(id_)
+
+    async def add_levels(self, game: dto.Game) -> dto.FullGame:
+        return await self.dao.game.add_levels(game)
+
+    async def upsert(self, file: hints.FileMeta, author: dto.Player) -> hints.SavedFileMeta:
+        return await self.dao.file_info.upsert(file, author)
+
+    async def check_author_can_own_guid(self, author: dto.Player, guid: str) -> None:
+        return await self.dao.file_info.check_author_can_own_guid(author, guid)
+
+    async def add_game_file(self, game_id: int, file_id: int) -> None:
+        await self.dao.file_link.add_game_files(game_id, [file_id])
+
+    async def commit(self) -> None:
+        await self.dao.commit()
 
 
 @dataclass

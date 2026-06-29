@@ -163,21 +163,26 @@ exception: DAOs take concrete `dto.Player`/`dto.Team`/etc.
 
 ## DAO layer
 
-- **One table per DAO.** A `core/.../rdb/*.py` DAO owns its own table(s) and
-  must not read or write another table's models. Need a new table? Add a new
-  DAO for it (e.g. `FileLinkDao` for `level_files` / `game_files`), don't bolt
-  the logic onto an unrelated DAO.
-- **Cross-table work goes in the complex layer.** When an operation spans
-  several tables (resolve ids in one table, then write links in another), put
-  the orchestration in a `dao/complex/*` impl that composes the per-table DAOs —
-  not inside a single rdb DAO.
+- **Writes belong to the table's own DAO.** A plain `core/.../rdb/*.py` DAO may
+  run complex `SELECT`s with joins rooted at its own entity, but
+  `INSERT`/`UPDATE`/`DELETE` for a table must live in that table's DAO. Need a
+  new table? Add a new DAO for it (e.g. `LevelFileDao` for `level_files`,
+  `GameFileDao` for `game_files`); each DAO is parametrised with exactly one
+  model — don't make one DAO write to several models.
+- **Orchestration is a use-case action, not a DAO action.** When an operation
+  spans tables (resolve ids in one table, then write links in another), the DAO
+  only *provides* the per-table methods; the use case (a service function /
+  Interactor) decides *when* and in what order to call them. A `dao/complex/*`
+  impl may exist to expose those methods behind one Protocol, but it should not
+  itself drive the sequence.
 - **At most one DAO per interactor.** Don't inject several DAOs into an
   interactor/service. Compose what it needs behind a single Protocol and a
   single `dao/complex/*` adapter, and pass that one adapter.
-- **Use generic SQLAlchemy.** Prefer creating a model and adding it to the
-  session (or generic `select`/`delete`) over dialect-specific helpers like
-  `postgresql.insert(...).on_conflict_do_nothing()`. For "add if missing",
-  read the existing rows and add only the new ones.
+- **Generic SQLAlchemy by default; dialect-specific when justified.** Prefer
+  creating a model and adding it to the session (or generic `select`/`delete`).
+  Dialect-specific helpers (e.g. `postgresql.insert(...).on_conflict_do_nothing()`)
+  are fine when they make a query meaningfully better or faster — just don't
+  reach for them without that justification.
 
 ## Testing
 

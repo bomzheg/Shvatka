@@ -36,9 +36,10 @@ from .rdb import (
     ChatDao,
     UserDao,
     FileInfoDao,
-    FileLinkDao,
     GameDao,
+    GameFileDao,
     LevelDao,
+    LevelFileDao,
     LevelTimeDao,
     KeyTimeDao,
     OrganizerDao,
@@ -68,9 +69,10 @@ class HolderDao:
         self.user = UserDao(self.session, clock=clock)
         self.chat = ChatDao(self.session, clock=clock)
         self.file_info = FileInfoDao(self.session, clock=clock)
-        self.file_link = FileLinkDao(self.session, clock=clock)
         self.game = GameDao(self.session, clock=clock)
+        self.game_file = GameFileDao(self.session, clock=clock)
         self.level = LevelDao(self.session, clock=clock)
+        self.level_file = LevelFileDao(self.session, clock=clock)
         self.level_time = LevelTimeDao(self.session, clock=clock)
         self.key_time = KeyTimeDao(self.session, clock=clock)
         self.organizer = OrganizerDao(self.session, clock=clock)

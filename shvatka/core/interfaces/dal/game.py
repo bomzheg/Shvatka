@@ -3,6 +3,7 @@ from typing import Protocol
 
 from shvatka.core.interfaces.dal.base import Committer
 from shvatka.core.interfaces.dal.file_info import FileUpserter
+from shvatka.core.interfaces.dal.file_link import LevelFilesSyncDao
 from shvatka.core.interfaces.dal.level import LevelUpserter
 from shvatka.core.models import dto
 from shvatka.core.models.dto import scn
@@ -46,11 +47,11 @@ class GameUpserter(LevelUpserter, GameNameChecker, Protocol):
         raise NotImplementedError
 
 
-class GameCreator(Committer, GameNameChecker, Protocol):
+class GameCreator(Committer, GameNameChecker, LevelFilesSyncDao, Protocol):
     async def create_game(self, author: dto.Player, name: str) -> dto.Game:
         raise NotImplementedError
 
-    async def link_to_game(self, level: dto.Level, game: dto.Game) -> dto.Level:
+    async def link_to_game(self, level: dto.Level, game: dto.Game) -> dto.GamedLevel:
         raise NotImplementedError
 
 

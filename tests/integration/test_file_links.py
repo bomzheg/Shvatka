@@ -26,10 +26,10 @@ async def test_upsert_game_fills_level_and_game_files(
 
     first, second = game.levels[0], game.levels[1]
     # only the first level references the file
-    assert await check_dao.file_link.get_level_file_ids(first.db_id) == {file_id}
-    assert await check_dao.file_link.get_level_file_ids(second.db_id) == set()
+    assert await check_dao.level_file.get_file_ids(first.db_id) == {file_id}
+    assert await check_dao.level_file.get_file_ids(second.db_id) == set()
     # the file is registered as usable in the game
-    assert await check_dao.file_link.get_game_file_ids(game.id) == {file_id}
+    assert await check_dao.game_file.get_file_ids(game.id) == {file_id}
 
 
 @pytest.mark.asyncio
@@ -44,7 +44,7 @@ async def test_removing_file_syncs_level_files_but_keeps_game_files(
     game = await upsert_game(complex_scn, author, dao.game_upserter, retort, file_gateway)
     (file_id,) = await check_dao.file_info.get_ids_by_guids([GUID])
     first = game.levels[0]
-    assert await check_dao.file_link.get_level_file_ids(first.db_id) == {file_id}
+    assert await check_dao.level_file.get_file_ids(first.db_id) == {file_id}
 
     stripped = deepcopy(complex_scn.scn)
     _strip_files(stripped["levels"][0])
@@ -59,9 +59,9 @@ async def test_removing_file_syncs_level_files_but_keeps_game_files(
     )
 
     # the level no longer references the file, so level_files is synced empty ...
-    assert await check_dao.file_link.get_level_file_ids(first.db_id) == set()
+    assert await check_dao.level_file.get_file_ids(first.db_id) == set()
     # ... but the game keeps it as a usable file (never removed)
-    assert await check_dao.file_link.get_game_file_ids(game.id) == {file_id}
+    assert await check_dao.game_file.get_file_ids(game.id) == {file_id}
 
 
 def _strip_files(level: dict) -> None:

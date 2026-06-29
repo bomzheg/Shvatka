@@ -1,11 +1,12 @@
 from typing import Protocol
 
 from shvatka.core.interfaces.dal.base import Committer
+from shvatka.core.interfaces.dal.file_link import LevelFilesSyncDao
 from shvatka.core.models import dto
 from shvatka.core.models.dto import scn
 
 
-class LevelUpserter(Committer, Protocol):
+class LevelUpserter(Committer, LevelFilesSyncDao, Protocol):
     async def upsert_gamed(
         self,
         author: dto.Player,
@@ -41,7 +42,7 @@ class LevelByIdGetter(Protocol):
         raise NotImplementedError
 
 
-class LevelLinker(Committer, Protocol):
+class LevelLinker(Committer, LevelFilesSyncDao, Protocol):
     async def link_to_game(self, level: dto.Level, game: dto.Game) -> dto.GamedLevel:
         raise NotImplementedError
 

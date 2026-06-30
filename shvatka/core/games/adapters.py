@@ -19,7 +19,9 @@ class GameStatReader(GameStatDao, GameByIdGetter, PlayerByUserGetter, Protocol):
 
 
 class GameFileReader(FileInfoGetter, GameByIdGetter, PlayerByUserGetter, WaiverChecker, Protocol):
-    pass
+    async def is_game_file(self, game_id: int, guid: str) -> bool:
+        """Whether the file is registered as usable in the game (game_files)."""
+        raise NotImplementedError
 
 
 class GamePlayDao(Protocol):

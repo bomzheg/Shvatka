@@ -224,6 +224,12 @@ class GameFilesGetterImpl(GameFileReader):
     async def check_waiver(self, player: dto.Player, team: dto.Team, game: dto.Game) -> bool:
         return await self.dao.waiver.check_waiver(player, team, game)
 
+    async def is_game_file(self, game_id: int, guid: str) -> bool:
+        file_ids = await self.dao.file_info.get_ids_by_guids([guid])
+        if not file_ids:
+            return False
+        return file_ids[0] in await self.dao.game_file.get_file_ids(game_id)
+
 
 @dataclass(kw_only=True, slots=True)
 class CacheItem:

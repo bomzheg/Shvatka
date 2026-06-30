@@ -12,6 +12,7 @@ from shvatka.core.models import dto
 from shvatka.core.models.dto import scn
 from shvatka.core.models.enums import GameStatus
 from shvatka.core.models.enums.org_permission import OrgPermission
+from shvatka.core.services.game import create_game
 from shvatka.core.services.organizers import flip_permission
 from shvatka.core.utils.datetime_utils import tz_utc
 from shvatka.infrastructure.db import models
@@ -161,6 +162,28 @@ async def test_game_file_game_not_completed(
         cookies={"Authorization": "Bearer " + token.access_token},
     )
     assert resp.status_code == 403
+
+
+@pytest.mark.asyncio
+async def test_game_file_uploaded_not_referenced(
+    client: AsyncClient,
+    auth: AuthProperties,
+    author: dto.Player,
+    dao: HolderDao,
+):
+    # a file uploaded for the game but never referenced by a hint must still be
+    # readable by the author (authorization is based on game_files, not scenario).
+    game = await create_game(author=author, name="game with unref file", dao=dao.game_creator)
+    cookies = {"Authorization": "Bearer " + auth.create_user_token(author).access_token}
+    up = await client.post(
+        f"/cdn/games/{game.id}/files",
+        files={"file": ("note.txt", b"hello world", "text/plain")},
+        cookies=cookies,
+    )
+    assert up.status_code == 200, up.text
+    guid = up.json()["guid"]
+    resp = await client.get(f"/cdn/games/{game.id}/files/{guid}", cookies=cookies)
+    assert resp.is_success, resp.text
 
 
 @pytest.mark.asyncio

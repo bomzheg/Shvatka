@@ -25,6 +25,9 @@ class GameFilesMetaGetter(Protocol):
     async def get_metas_by_ids(self, file_ids: Collection[int]) -> list[hints.VerifiableFileMeta]:
         raise NotImplementedError
 
+    async def get_game_file_metas(self, game_id: int) -> list[hints.VerifiableFileMeta]:
+        return await self.get_metas_by_ids(await self.get_game_file_ids(game_id))
+
 
 class FileUpserter(Committer, Protocol):
     async def upsert(self, file: hints.FileMeta, author: dto.Player) -> hints.SavedFileMeta:

@@ -12,7 +12,6 @@ from shvatka.core.interfaces.dal.complex import (
 )
 from shvatka.core.interfaces.dal.game import GameUpserter, GameCreator
 from shvatka.core.interfaces.dal.game_play import GamePreparer, GamePlayerDao
-from shvatka.core.interfaces.dal.level import LevelDeleter
 from shvatka.core.interfaces.dal.level_testing import LevelTestingDao
 from shvatka.core.interfaces.dal.level_times import GameStarter
 from shvatka.core.interfaces.dal.organizer import OrgAdder
@@ -23,7 +22,6 @@ from .complex.game import (
     GameUpserterImpl,
     GameCreatorImpl,
     GamePackagerImpl,
-    LevelDeleterImpl,
 )
 from .complex.game_play import GamePreparerImpl, GameStarterImpl, GamePlayerDaoImpl
 from .complex.key_log import TypedKeyGetterImpl
@@ -106,10 +104,6 @@ class HolderDao:
     @property
     def game_creator(self) -> GameCreator:
         return GameCreatorImpl(dao=self)
-
-    @property
-    def level_deleter(self) -> LevelDeleter:
-        return LevelDeleterImpl(dao=self)
 
     @property
     def game_packager(self) -> GamePackager:

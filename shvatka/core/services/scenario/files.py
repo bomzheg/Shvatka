@@ -100,7 +100,7 @@ async def get_file_metas(
     scenario references a file that is not registered there, it is logged as a
     warning (and the file is omitted, since it is not a usable game file).
     """
-    metas = await dao.get_metas_by_ids(await dao.get_game_file_ids(game.id))
+    metas = await dao.get_game_file_metas(game.id)
     available = {meta.guid for meta in metas}
     for guid in game.get_guids():
         if guid not in available:

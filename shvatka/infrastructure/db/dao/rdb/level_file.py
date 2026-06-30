@@ -37,3 +37,8 @@ class LevelFileDao(BaseDAO[models.LevelFile]):
                     models.LevelFile.file_id.in_(to_remove),
                 )
             )
+
+    async def delete_for_level(self, level_id: int) -> None:
+        await self.session.execute(
+            delete(models.LevelFile).where(models.LevelFile.level_id == level_id)
+        )

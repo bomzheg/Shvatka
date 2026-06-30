@@ -52,6 +52,8 @@ async def get_by_id(id_: int, author: dto.Player, dao: LevelByIdGetter) -> dto.L
 
 async def delete_level(level: dto.Level, author: dto.Player, dao: LevelDeleter) -> None:
     check_can_edit(level, author)
+    # there is no ON DELETE CASCADE; drop the level's file links explicitly first.
+    await dao.delete_level_files(level.db_id)
     await dao.delete(level.db_id)
     await dao.commit()
 

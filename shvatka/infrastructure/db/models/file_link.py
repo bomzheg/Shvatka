@@ -14,8 +14,8 @@ class LevelFile(Base):
 
     __tablename__ = "level_files"
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    level_id: Mapped[int] = mapped_column(ForeignKey("levels.id", ondelete="CASCADE"))
-    file_id: Mapped[int] = mapped_column(ForeignKey("files_info.id", ondelete="CASCADE"))
+    level_id: Mapped[int] = mapped_column(ForeignKey("levels.id"))
+    file_id: Mapped[int] = mapped_column(ForeignKey("files_info.id"))
 
     __table_args__ = (UniqueConstraint("level_id", "file_id"),)
 
@@ -31,7 +31,7 @@ class GameFile(Base):
 
     __tablename__ = "game_files"
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    game_id: Mapped[int] = mapped_column(ForeignKey("games.id", ondelete="CASCADE"))
-    file_id: Mapped[int] = mapped_column(ForeignKey("files_info.id", ondelete="CASCADE"))
+    game_id: Mapped[int] = mapped_column(ForeignKey("games.id"))
+    file_id: Mapped[int] = mapped_column(ForeignKey("files_info.id"))
 
     __table_args__ = (UniqueConstraint("game_id", "file_id"),)

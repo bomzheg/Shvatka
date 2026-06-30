@@ -10,6 +10,7 @@ from shvatka.core.interfaces.current_game import CurrentGameProvider
 from shvatka.core.interfaces.dal.complex import GamePackager
 from shvatka.core.games.adapters import GameFileReader, GamePlayDao
 from shvatka.core.interfaces.dal.game import GameUpserter, GameCreator, GameFileUploader
+from shvatka.core.interfaces.dal.level import LevelDeleter
 from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.models import dto
 from shvatka.core.models.dto import scn
@@ -113,6 +114,22 @@ class GameCreatorImpl(FileLinkMixin, GameCreator):
 
     async def is_name_available(self, name: str) -> bool:
         return await self.dao.game.is_name_available(name)
+
+
+@dataclass
+class LevelDeleterImpl(LevelDeleter):
+    """Deletes a level together with its file links (no DB cascade)."""
+
+    dao: "HolderDao"
+
+    async def delete_level_files(self, level_id: int) -> None:
+        await self.dao.level_file.delete_for_level(level_id)
+
+    async def delete(self, level_id: int) -> None:
+        await self.dao.level.delete(level_id)
+
+    async def commit(self) -> None:
+        await self.dao.commit()
 
 
 @dataclass

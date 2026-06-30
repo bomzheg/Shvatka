@@ -25,13 +25,11 @@ def upgrade():
             ["level_id"],
             ["levels.id"],
             name=op.f("level_files_level_id_fkey"),
-            ondelete="CASCADE",
         ),
         sa.ForeignKeyConstraint(
             ["file_id"],
             ["files_info.id"],
             name=op.f("level_files_file_id_fkey"),
-            ondelete="CASCADE",
         ),
         sa.PrimaryKeyConstraint("id", name=op.f("pk__level_files")),
         sa.UniqueConstraint("level_id", "file_id", name=op.f("uq__level_files__level_id")),
@@ -45,13 +43,11 @@ def upgrade():
             ["game_id"],
             ["games.id"],
             name=op.f("game_files_game_id_fkey"),
-            ondelete="CASCADE",
         ),
         sa.ForeignKeyConstraint(
             ["file_id"],
             ["files_info.id"],
             name=op.f("game_files_file_id_fkey"),
-            ondelete="CASCADE",
         ),
         sa.PrimaryKeyConstraint("id", name=op.f("pk__game_files")),
         sa.UniqueConstraint("game_id", "file_id", name=op.f("uq__game_files__game_id")),
@@ -76,7 +72,7 @@ def upgrade():
         SELECT DISTINCT lg.level_id, fi.id
         FROM level_guids lg
         JOIN files_info fi ON fi.guid = lg.guid
-        WHERE lg.guid IS NOT NULL
+        WHERE lg.guid IS NOT NULL AND lg.guid <> ''
         ON CONFLICT DO NOTHING
         """
     )
@@ -95,7 +91,7 @@ def upgrade():
         SELECT DISTINCT lg.game_id, fi.id
         FROM level_guids lg
         JOIN files_info fi ON fi.guid = lg.guid
-        WHERE lg.guid IS NOT NULL AND lg.game_id IS NOT NULL
+        WHERE lg.guid IS NOT NULL AND lg.guid <> '' AND lg.game_id IS NOT NULL
         ON CONFLICT DO NOTHING
         """
     )

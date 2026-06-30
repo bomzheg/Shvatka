@@ -1,7 +1,7 @@
 from typing import Protocol
 
 from shvatka.core.interfaces.dal.base import Committer
-from shvatka.core.interfaces.dal.file_link import LevelFilesSyncDao
+from shvatka.core.interfaces.dal.file_link import LevelFilesDeleter, LevelFilesSyncDao
 from shvatka.core.models import dto
 from shvatka.core.models.dto import scn
 
@@ -62,7 +62,7 @@ class LevelReorder(Protocol):
         raise NotImplementedError
 
 
-class LevelDeleter(Committer, Protocol):
+class LevelDeleter(Committer, LevelFilesDeleter, Protocol):
     async def delete(self, level_id: int) -> None:
         raise NotImplementedError
 

@@ -17,6 +17,11 @@ class GameFilesAdder(Protocol):
         raise NotImplementedError
 
 
+class LevelFilesDeleter(Protocol):
+    async def delete_level_files(self, level_id: int) -> None:
+        raise NotImplementedError
+
+
 class LevelFilesSyncDao(FileIdsByGuidsGetter, LevelFilesSyncer, GameFilesAdder, Protocol):
     """Methods a use case needs to reconcile a level's files (and a game's usable
     files). The DAO only provides these operations; sequencing them is the use

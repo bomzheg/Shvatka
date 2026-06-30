@@ -12,6 +12,10 @@ Telegram bot.
 - **Don't add to middleware data new keys** - prefer DI
 - **Don't rewrite existing code** unless the task requires it. Leave working
   service functions alone; only new functionality should adopt the new style.
+- **Capture review feedback as rules.** When you act on a code-review comment,
+  decide whether it states a one-off fix or a reusable project convention. If
+  it's a convention, write it down in this file so it's not re-litigated on the
+  next PR.
 - **Prefer `IdentityProvider` and `CurrentGameProvider`** for resolving the
   current user/player/team/game everywhere except the DAO layer.
 - **New API endpoints → integration tests.** New **domain** classes/methods →

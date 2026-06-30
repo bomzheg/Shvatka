@@ -105,7 +105,7 @@ async def delete_level_handler(c: CallbackQuery, button: Button, manager: Dialog
     level_id = data["level_id"]
     author: dto.Player = manager.middleware_data["player"]
     level = await get_by_id(level_id, author, dao.level)
-    await delete_level(level, author, dao.level)
+    await delete_level(level, author, dao.level_deleter)
     await manager.done()
 
 

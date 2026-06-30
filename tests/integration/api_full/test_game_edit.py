@@ -259,6 +259,29 @@ async def test_upload_game_file(
 
 
 @pytest.mark.asyncio
+async def test_uploaded_file_listed_without_reference(
+    client: AsyncClient,
+    auth: AuthProperties,
+    author: dto.Player,
+    dao: HolderDao,
+):
+    game = await create_game(author=author, name="draft unref file", dao=dao.game_creator)
+    cookies = auth_cookies(auth, author)
+    # upload a file for the game but never reference it from any level
+    up = await client.post(
+        f"/cdn/games/{game.id}/files",
+        files={"file": ("note.txt", b"hello world", "text/plain")},
+        cookies=cookies,
+    )
+    assert up.status_code == 200, up.text
+    guid = up.json()["guid"]
+    # it must still appear in the files section (game_files is the source of truth)
+    got = await client.get(f"/games/my/{game.id}", cookies=cookies)
+    assert got.status_code == 200, got.text
+    assert guid in [item["guid"] for item in got.json()["files"]]
+
+
+@pytest.mark.asyncio
 async def test_change_scenario_foreign_game_forbidden(
     client: AsyncClient,
     auth: AuthProperties,

@@ -1,3 +1,4 @@
+from collections.abc import Collection
 from typing import Protocol
 
 from shvatka.core.interfaces.dal.base import Committer
@@ -12,6 +13,16 @@ class FileInfoMerger(Protocol):
 
 class FileInfoGetter(Protocol):
     async def get_by_guid(self, guid: str) -> hints.VerifiableFileMeta:
+        raise NotImplementedError
+
+
+class GameFilesMetaGetter(Protocol):
+    """Reads the files usable in a game (the ``game_files`` table) as metas."""
+
+    async def get_game_file_ids(self, game_id: int) -> set[int]:
+        raise NotImplementedError
+
+    async def get_metas_by_ids(self, file_ids: Collection[int]) -> list[hints.VerifiableFileMeta]:
         raise NotImplementedError
 
 

@@ -195,6 +195,12 @@ class GamePackagerImpl(GamePackager):
     async def get_by_guid(self, guid: str) -> hints.VerifiableFileMeta:
         return await self.dao.file_info.get_by_guid(guid)
 
+    async def get_game_file_ids(self, game_id: int) -> set[int]:
+        return await self.dao.game_file.get_file_ids(game_id)
+
+    async def get_metas_by_ids(self, file_ids: Collection[int]) -> list[hints.VerifiableFileMeta]:
+        return await self.dao.file_info.get_metas_by_ids(file_ids)
+
 
 class GameFilesGetterImpl(GameFileReader):
     def __init__(self, dao: "HolderDao"):

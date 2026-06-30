@@ -2,7 +2,9 @@ from .chat import ChatDao
 from .file_info import FileInfoDao
 from .forum_user import ForumUserDAO
 from .game import GameDao
+from .game_file import GameFileDao
 from .level import LevelDao
+from .level_file import LevelFileDao
 from .level_times import LevelTimeDao
 from .log_keys import KeyTimeDao
 from .organizer import OrganizerDao

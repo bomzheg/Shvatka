@@ -32,7 +32,12 @@ from shvatka.core.rules.level import (
     check_can_link_to_game,
 )
 from shvatka.core.players.player import check_allow_be_author
-from shvatka.core.services.scenario.files import upsert_files, get_file_metas, get_file_contents
+from shvatka.core.services.scenario.files import (
+    upsert_files,
+    get_file_metas,
+    get_file_contents,
+    sync_files_for_level,
+)
 from shvatka.core.services.scenario.game_ops import parse_uploaded_game
 from shvatka.core.models.dto.scn.game import check_all_files_saved
 from shvatka.core.utils import exceptions
@@ -62,6 +67,7 @@ async def upsert_game(
     levels = []
     for number, level in enumerate(game_scn.levels):
         saved_level = await dao.upsert_gamed(author, level, game, number)
+        await sync_files_for_level(saved_level, dao)
         levels.append(saved_level)
     await dao.commit()
     return game.to_full_game(levels)
@@ -100,6 +106,7 @@ async def update_game_scenario(
     levels = []
     for number, level in enumerate(game_scn.levels):
         saved_level = await dao.upsert_gamed(author, level, game, number)
+        await sync_files_for_level(saved_level, dao)
         levels.append(saved_level)
     await dao.commit()
     return game.to_full_game(levels)
@@ -118,7 +125,8 @@ async def create_game(
     game = await dao.create_game(author, name)
     for level in levels:
         check_can_link_to_game(game, level)
-        await dao.link_to_game(level, game)
+        linked = await dao.link_to_game(level, game)
+        await sync_files_for_level(linked, dao)
     await dao.commit()
     return game
 
@@ -142,7 +150,8 @@ async def add_level(game: dto.Game, level: dto.Level, author: dto.Player, dao: L
     check_game_editable(game=game)
     check_is_level_author(level=level, player=author)
     check_can_link_to_game(game=game, level=level, author=author)
-    await dao.link_to_game(level=level, game=game)
+    linked = await dao.link_to_game(level=level, game=game)
+    await sync_files_for_level(linked, dao)
     await dao.commit()
 
 

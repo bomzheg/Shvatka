@@ -7,9 +7,11 @@ from aiogram import Bot
 from aiogram.types import CallbackQuery, Message
 from aiogram_dialog import DialogManager
 from aiogram_dialog.widgets.kbd import Button
-from dishka import AsyncContainer
+from dishka import AsyncContainer, FromDishka
 from dishka.integrations.aiogram import CONTAINER_NAME
+from dishka.integrations.aiogram_dialog import inject
 
+from shvatka.core.interfaces.dal.level import LevelDeleter
 from shvatka.core.interfaces.scheduler import LevelTestScheduler
 from shvatka.core.models import dto
 from shvatka.core.services.level import get_by_id, unlink_level, delete_level
@@ -99,13 +101,19 @@ async def unlink_level_handler(c: CallbackQuery, button: Button, manager: Dialog
     await manager.done()
 
 
-async def delete_level_handler(c: CallbackQuery, button: Button, manager: DialogManager) -> None:
-    dao: HolderDao = manager.middleware_data["dao"]
+@inject
+async def delete_level_handler(
+    c: CallbackQuery,
+    button: Button,
+    manager: DialogManager,
+    dao: FromDishka[HolderDao],
+    level_deleter: FromDishka[LevelDeleter],
+) -> None:
     data: dict[str, Any] = manager.start_data  # type: ignore[assignment]
     level_id = data["level_id"]
     author: dto.Player = manager.middleware_data["player"]
     level = await get_by_id(level_id, author, dao.level)
-    await delete_level(level, author, dao.level)
+    await delete_level(level, author, level_deleter)
     await manager.done()
 
 

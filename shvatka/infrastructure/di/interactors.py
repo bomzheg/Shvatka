@@ -52,7 +52,7 @@ from shvatka.core.games.adapters import (
 )
 from shvatka.core.interfaces.bus import Bus
 from shvatka.core.interfaces.current_game import CurrentGameProvider
-from shvatka.core.interfaces.dal.game import GameByIdGetter
+from shvatka.core.interfaces.dal.game import GameByIdGetter, GameFileUploader
 from shvatka.core.interfaces.dal.game_play import GamePlayerDao
 from shvatka.core.services.current_game import CurrentGameProviderImpl
 from shvatka.core.interfaces.dal.waiver import WaiverApprover
@@ -77,6 +77,7 @@ from shvatka.infrastructure.db.dao.complex2.waiver import (
 )
 from shvatka.infrastructure.db.dao.complex.game import GameFilesGetterImpl, GameScenarioEditorImpl
 from shvatka.infrastructure.db.dao.complex.game import (
+    GameFileUploaderImpl,
     GamePlayDaoImpl,
 )
 from shvatka.infrastructure.db.dao.complex.game_play import GamePlayerDaoImpl
@@ -172,8 +173,12 @@ class GameEditProvider(Provider):
         )
 
     @provide
-    def upload_file(self, dao: HolderDao, storage: FileStorage) -> UploadGameFileInteractor:
-        return UploadGameFileInteractor(storage=storage, game_dao=dao.game, file_dao=dao.file_info)
+    def game_file_uploader(self, dao: HolderDao) -> GameFileUploader:
+        return GameFileUploaderImpl(dao=dao)
+
+    @provide
+    def upload_file(self, dao: GameFileUploader, storage: FileStorage) -> UploadGameFileInteractor:
+        return UploadGameFileInteractor(storage=storage, dao=dao)
 
     @provide
     def list_orgs(self, dao: HolderDao) -> ListGameOrgsInteractor:

@@ -128,7 +128,7 @@ async def test_game_get_preview(
 async def test_cant_change_finished(finished_game: dto.FullGame, dao: HolderDao):
     level = finished_game.levels[0]
     with pytest.raises(CantEditGame):
-        await upsert_level(finished_game.author, level.scenario, dao.level)
+        await upsert_level(finished_game.author, level.scenario, dao.game_upserter)
 
 
 @pytest.mark.asyncio

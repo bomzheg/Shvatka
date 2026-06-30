@@ -1,14 +1,31 @@
+import logging
 from pathlib import Path
 from typing import BinaryIO, Sequence
 from uuid import uuid4
 
 from shvatka.core.interfaces.clients.file_storage import FileGateway, FileStorage
-from shvatka.core.interfaces.dal.file_info import FileInfoGetter, FileUpserter
+from shvatka.core.interfaces.dal.file_info import FileUpserter, GameFilesMetaGetter
+from shvatka.core.interfaces.dal.file_link import LevelFilesSyncDao
 from shvatka.core.interfaces.dal.game import GameUpserter
 from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.models import dto, enums
 from shvatka.core.models.dto import hints
 from shvatka.core.utils.exceptions import NotAuthorizedForEdit
+
+logger = logging.getLogger(__name__)
+
+
+async def sync_files_for_level(level: dto.Level, dao: LevelFilesSyncDao) -> None:
+    """Reconcile a level's file links after its scenario was saved.
+
+    ``level_files`` is made to match exactly the files the level references; for a
+    level that belongs to a game, those files are additionally registered as
+    usable in that game (``game_files``, add-only).
+    """
+    file_ids = await dao.get_ids_by_guids(level.get_guids())
+    await dao.sync_level_files(level.db_id, file_ids)
+    if level.game_id is not None:
+        await dao.add_game_files(level.game_id, file_ids)
 
 
 _MIME_PREFIX_TO_HINT_TYPE = {
@@ -74,17 +91,24 @@ async def upsert_files(
 
 
 async def get_file_metas(
-    game: dto.FullGame, identity: IdentityProvider, dao: FileInfoGetter
+    game: dto.FullGame, identity: IdentityProvider, dao: GameFilesMetaGetter
 ) -> Sequence[hints.FileMeta]:
-    file_metas: list[hints.FileMeta] = []
-    seen: set[str] = set()
+    """Files usable in the game — the whole ``game_files`` set, not just the files
+    referenced by the current scenario.
+
+    ``game_files`` is expected to be a superset of the scenario's files; if the
+    scenario references a file that is not registered there, it is logged as a
+    warning (and the file is omitted, since it is not a usable game file).
+    """
+    metas = await dao.get_game_file_metas(game.id)
+    available = {meta.guid for meta in metas}
     for guid in game.get_guids():
-        if guid in seen:
-            continue
-        seen.add(guid)
-        file_meta = await dao.get_by_guid(guid)
-        await check_file_meta_can_read(identity, file_meta, game)
-        file_metas.append(file_meta)
+        if guid not in available:
+            logger.warning("game %s references file %s missing from its game_files", game.id, guid)
+    file_metas: list[hints.FileMeta] = []
+    for meta in metas:
+        await check_file_meta_can_read(identity, meta, game)
+        file_metas.append(meta)
     return file_metas
 
 

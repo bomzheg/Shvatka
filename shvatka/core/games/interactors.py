@@ -90,7 +90,7 @@ class GameFileReaderInteractor:
             or game.is_complete()
             or await self.can_view_scenario(game, player)
         ):
-            if guid not in game.get_guids():
+            if not await self.dao.is_game_file(game_id, guid):
                 raise exceptions.FileNotFound(
                     text=f"There is no file with uuid {guid} associated with game id {game_id}",
                     game=game,

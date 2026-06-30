@@ -12,6 +12,10 @@ Telegram bot.
 - **Don't add to middleware data new keys** - prefer DI
 - **Don't rewrite existing code** unless the task requires it. Leave working
   service functions alone; only new functionality should adopt the new style.
+- **Capture review feedback as rules.** When you act on a code-review comment,
+  decide whether it states a one-off fix or a reusable project convention. If
+  it's a convention, write it down in this file so it's not re-litigated on the
+  next PR.
 - **Prefer `IdentityProvider` and `CurrentGameProvider`** for resolving the
   current user/player/team/game everywhere except the DAO layer.
 - **New API endpoints → integration tests.** New **domain** classes/methods →
@@ -161,6 +165,29 @@ So: an Interactor takes `identity: IdentityProvider` as a `__call__` arg (or a
 player/team, and it should not re-implement auth. The DAO layer is the
 exception: DAOs take concrete `dto.Player`/`dto.Team`/etc.
 
+## DAO layer
+
+- **Writes belong to the table's own DAO.** A plain `core/.../rdb/*.py` DAO may
+  run complex `SELECT`s with joins rooted at its own entity, but
+  `INSERT`/`UPDATE`/`DELETE` for a table must live in that table's DAO. Need a
+  new table? Add a new DAO for it (e.g. `LevelFileDao` for `level_files`,
+  `GameFileDao` for `game_files`); each DAO is parametrised with exactly one
+  model — don't make one DAO write to several models.
+- **Orchestration is a use-case action, not a DAO action.** When an operation
+  spans tables (resolve ids in one table, then write links in another), the DAO
+  only *provides* the per-table methods; the use case (a service function /
+  Interactor) decides *when* and in what order to call them. A `dao/complex/*`
+  impl may exist to expose those methods behind one Protocol, but it should not
+  itself drive the sequence.
+- **At most one DAO per interactor.** Don't inject several DAOs into an
+  interactor/service. Compose what it needs behind a single Protocol and a
+  single `dao/complex/*` adapter, and pass that one adapter.
+- **Generic SQLAlchemy by default; dialect-specific when justified.** Prefer
+  creating a model and adding it to the session (or generic `select`/`delete`).
+  Dialect-specific helpers (e.g. `postgresql.insert(...).on_conflict_do_nothing()`)
+  are fine when they make a query meaningfully better or faster — just don't
+  reach for them without that justification.
+
 ## Testing
 
 Framework: **pytest** + `pytest-asyncio` (mark async tests with
@@ -178,6 +205,9 @@ Rules for new work:
 - **New domain class/method → unit test** in `tests/unit/` (e.g.
   `tests/unit/domain/`, `tests/unit/services/`). Unit tests are pure/fast and do
   not touch the DB.
+- **Assert through `check_dao`, not the acting `dao`.** Integration tests get a
+  separate `check_dao` (its own session) for reading back state — use it for
+  assertions so you observe committed data, and keep `dao` for the action.
 
 Run locally:
 

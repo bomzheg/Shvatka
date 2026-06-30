@@ -16,7 +16,7 @@ async def test_simple_level(simple_scn: RawGameScenario, dao: HolderDao, retort:
     await dao.player.promote(author, author)
     await dao.commit()
     author.can_be_author = True
-    lvl = await upsert_raw_level(simple_scn.scn["levels"][0], author, retort, dao.level)
+    lvl = await upsert_raw_level(simple_scn.scn["levels"][0], author, retort, dao.game_upserter)
 
     assert lvl.db_id is not None
     assert await dao.level.count() == 1

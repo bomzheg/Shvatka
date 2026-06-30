@@ -296,7 +296,7 @@ async def save_level(c: CallbackQuery, button: Button, manager: DialogManager):
         conditions=conditions,
         __model_version__=1,
     )
-    level = await upsert_level(author=author, scenario=level_scn, dao=dao.level)
+    level = await upsert_level(author=author, scenario=level_scn, dao=dao.game_upserter)
     await manager.done(result={"level": retort.dump(level)})
     await c.answer(text="Уровень успешно сохранён")
 

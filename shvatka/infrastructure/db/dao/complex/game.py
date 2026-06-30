@@ -1,3 +1,4 @@
+from collections.abc import Collection
 from datetime import datetime
 import typing
 from dataclasses import dataclass
@@ -8,7 +9,8 @@ from shvatka.core.interfaces.current_game import CurrentGameProvider
 
 from shvatka.core.interfaces.dal.complex import GamePackager
 from shvatka.core.games.adapters import GameFileReader, GamePlayDao
-from shvatka.core.interfaces.dal.game import GameUpserter, GameCreator
+from shvatka.core.interfaces.dal.game import GameUpserter, GameCreator, GameFileUploader
+from shvatka.core.interfaces.dal.level import LevelDeleter
 from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.models import dto
 from shvatka.core.models.dto import scn
@@ -21,9 +23,26 @@ if typing.TYPE_CHECKING:
 
 
 @dataclass
-class GameUpserterImpl(GameUpserter):
+class FileLinkMixin:
+    """Pass-through to the per-table file-link DAOs.
+
+    These are plain operations; deciding *when* to sync (e.g. after a level
+    upsert) is up to the use case, not the DAO."""
+
     dao: "HolderDao"
 
+    async def get_ids_by_guids(self, guids: Collection[str]) -> list[int]:
+        return await self.dao.file_info.get_ids_by_guids(guids)
+
+    async def sync_level_files(self, level_id: int, file_ids: Collection[int]) -> None:
+        await self.dao.level_file.sync_level_files(level_id, file_ids)
+
+    async def add_game_files(self, game_id: int, file_ids: Collection[int]) -> None:
+        await self.dao.game_file.add_game_files(game_id, file_ids)
+
+
+@dataclass
+class GameUpserterImpl(FileLinkMixin, GameUpserter):
     async def upsert_game(self, author: dto.Player, scenario: scn.GameScenario) -> dto.Game:
         return await self.dao.game.upsert_game(author, scenario)
 
@@ -83,9 +102,7 @@ class GameScenarioEditorImpl(GameUpserterImpl):
 
 
 @dataclass
-class GameCreatorImpl(GameCreator):
-    dao: "HolderDao"
-
+class GameCreatorImpl(FileLinkMixin, GameCreator):
     async def create_game(self, author: dto.Player, name: str) -> dto.Game:
         return await self.dao.game.create_game(author, name)
 
@@ -97,6 +114,50 @@ class GameCreatorImpl(GameCreator):
 
     async def is_name_available(self, name: str) -> bool:
         return await self.dao.game.is_name_available(name)
+
+
+@dataclass
+class LevelDeleterImpl(LevelDeleter):
+    """Deletes a level together with its file links (no DB cascade)."""
+
+    dao: "HolderDao"
+
+    async def delete_level_files(self, level_id: int) -> None:
+        await self.dao.level_file.delete_for_level(level_id)
+
+    async def delete(self, level_id: int) -> None:
+        await self.dao.level.delete(level_id)
+
+    async def commit(self) -> None:
+        await self.dao.commit()
+
+
+@dataclass
+class GameFileUploaderImpl(GameFileUploader):
+    """Single DAO for uploading a file directly for a game (cdn endpoint)."""
+
+    dao: "HolderDao"
+
+    async def get_by_id(self, id_: int, author: dto.Player | None = None) -> dto.Game:
+        return await self.dao.game.get_by_id(id_, author)
+
+    async def get_full(self, id_: int) -> dto.FullGame:
+        return await self.dao.game.get_full(id_)
+
+    async def add_levels(self, game: dto.Game) -> dto.FullGame:
+        return await self.dao.game.add_levels(game)
+
+    async def upsert(self, file: hints.FileMeta, author: dto.Player) -> hints.SavedFileMeta:
+        return await self.dao.file_info.upsert(file, author)
+
+    async def check_author_can_own_guid(self, author: dto.Player, guid: str) -> None:
+        return await self.dao.file_info.check_author_can_own_guid(author, guid)
+
+    async def add_game_file(self, game_id: int, file_id: int) -> None:
+        await self.dao.game_file.add_game_files(game_id, [file_id])
+
+    async def commit(self) -> None:
+        await self.dao.commit()
 
 
 @dataclass
@@ -134,6 +195,12 @@ class GamePackagerImpl(GamePackager):
     async def get_by_guid(self, guid: str) -> hints.VerifiableFileMeta:
         return await self.dao.file_info.get_by_guid(guid)
 
+    async def get_game_file_ids(self, game_id: int) -> set[int]:
+        return await self.dao.game_file.get_file_ids(game_id)
+
+    async def get_metas_by_ids(self, file_ids: Collection[int]) -> list[hints.VerifiableFileMeta]:
+        return await self.dao.file_info.get_metas_by_ids(file_ids)
+
 
 class GameFilesGetterImpl(GameFileReader):
     def __init__(self, dao: "HolderDao"):
@@ -156,6 +223,12 @@ class GameFilesGetterImpl(GameFileReader):
 
     async def check_waiver(self, player: dto.Player, team: dto.Team, game: dto.Game) -> bool:
         return await self.dao.waiver.check_waiver(player, team, game)
+
+    async def is_game_file(self, game_id: int, guid: str) -> bool:
+        file_ids = await self.dao.file_info.get_ids_by_guids([guid])
+        if not file_ids:
+            return False
+        return file_ids[0] in await self.dao.game_file.get_file_ids(game_id)
 
 
 @dataclass(kw_only=True, slots=True)

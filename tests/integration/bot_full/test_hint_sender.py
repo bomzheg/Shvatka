@@ -1,4 +1,5 @@
 import typing
+from datetime import datetime, timezone
 from io import BytesIO
 from unittest.mock import MagicMock
 
@@ -7,6 +8,9 @@ import pytest_asyncio
 from aiogram import Bot
 from aiogram.client.session.base import BaseSession
 from aiogram.exceptions import TelegramAPIError
+from aiogram.types import Chat, Message, PhotoSize
+from dishka import AsyncContainer
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from aiogram.methods import (
     SendPhoto,
     TelegramMethod,
@@ -21,7 +25,8 @@ from aiogram.methods import (
 from aiogram.methods.base import TelegramType
 
 from shvatka.core.interfaces.clients.file_storage import FileStorage
-from shvatka.core.models import dto
+from shvatka.core.models import dto, enums
+from shvatka.core.models.dto import hints
 from shvatka.core.models.dto.hints import TextHint, GPSHint, PhotoHint, BaseHint
 from shvatka.core.models.dto.hints import (
     VenueHint,
@@ -57,11 +62,18 @@ PARAMETERS = [
 
 @pytest_asyncio.fixture
 async def hint_sender(
-    dao: HolderDao, file_storage: FileStorage, bot_session: BaseSession, bot_config: TgBotConfig
+    dao: HolderDao,
+    file_storage: FileStorage,
+    bot_session: BaseSession,
+    bot_config: TgBotConfig,
+    dishka: AsyncContainer,
 ):
     bot = Bot(token=bot_config.bot.token, session=bot_session)
+    pool = await dishka.get(async_sessionmaker[AsyncSession])
     return HintSender(
-        bot=bot, resolver=HintContentResolver(dao=dao.file_info, file_storage=file_storage)
+        bot=bot,
+        resolver=HintContentResolver(dao=dao.file_info, file_storage=file_storage),
+        pool=pool,
     )
 
 
@@ -173,3 +185,59 @@ async def test_send_photo_by_content(
     request = call.args[1]
     assert request.__api_method__ == method_name
     assert getattr(request, content_type) == FILE_ID
+
+
+@pytest.mark.asyncio
+async def test_send_by_content_when_file_id_missing(
+    hint_sender: HintSender,
+    harry: dto.Player,
+    bot_session: BaseSession,
+):
+    file_meta = hints.FileMeta(
+        guid=GUID,
+        tg_link=hints.TgLink(file_id=None, content_type=enums.HintType.photo),
+        extension=".jpg",
+        file_content_link=hints.FileContentLink(file_path=GUID + ".jpg"),
+        original_filename="файло",
+    )
+    await hint_sender.resolver.storage.put_content(file_meta.local_file_name, BytesIO(b"12345"))
+    await hint_sender.resolver.dao.upsert(file=file_meta, author=harry)
+    await hint_sender.resolver.dao.commit()
+
+    await hint_sender.send_hint(PhotoHint(file_guid=GUID), CHAT_ID)
+
+    session = typing.cast(MagicMock, bot_session)
+    # no attempt to send by (missing) file_id, straight to content
+    assert 1 == session.call_count
+    call = session.mock_calls.pop()
+    request = call.args[1]
+    assert request.__api_method__ == "sendPhoto"
+    assert request.photo is not None
+
+
+@pytest.mark.asyncio
+async def test_renew_file_id_after_send_by_content(
+    hint_sender: HintSender,
+    harry: dto.Player,
+    dao: HolderDao,
+    bot_session: BaseSession,
+):
+    await hint_sender.resolver.storage.put_content(FILE_META.local_file_name, BytesIO(b"12345"))
+    await hint_sender.resolver.dao.upsert(file=FILE_META, author=harry)
+    await hint_sender.resolver.dao.commit()
+    session = typing.cast(MagicMock, bot_session)
+    sent_message = Message(
+        message_id=1,
+        date=datetime.now(tz=timezone.utc),
+        chat=Chat(id=CHAT_ID, type="private"),
+        photo=[PhotoSize(file_id="RENEWED_FILE_ID", file_unique_id="u", width=1, height=1)],
+    )
+    session.side_effect = [
+        TelegramAPIError(message="", method=SendPhoto),
+        sent_message,
+    ]
+
+    await hint_sender.send_hint(PhotoHint(file_guid=GUID), CHAT_ID)
+
+    renewed = await dao.file_info.get_by_guid(GUID)
+    assert renewed.tg_link.file_id == "RENEWED_FILE_ID"

@@ -21,6 +21,7 @@ from dishka import (
 )
 from dishka.integrations.aiogram import setup_dishka, AiogramMiddlewareData
 from redis.asyncio import Redis
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from shvatka.common.factory import TelegraphProvider, DCFProvider, UrlProvider
 from shvatka.core.interfaces.clients.file_storage import FileStorage
@@ -30,6 +31,7 @@ from shvatka.core.views.level import LevelView
 from shvatka.core.views.team import TeamNotifier
 from shvatka.infrastructure.bus.in_memory import UsedOneTimeTokenInteractor
 from shvatka.infrastructure.db.config.models.storage import StorageConfig, StorageType
+from shvatka.infrastructure.db.dao import FileInfoDao
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.infrastructure.db.factory import (
     create_redis,
@@ -208,7 +210,22 @@ class GameToolsProvider(Provider):
     def get_bot_game_log(self, bot: Bot, config: BotConfig) -> GameBotLog:
         return GameBotLog(bot=bot, log_chat_id=config.game_log_chat)
 
-    get_hint_sender = provide(HintSender, scope=Scope.REQUEST)
+    @provide(scope=Scope.REQUEST)
+    async def get_hint_sender(
+        self,
+        bot: Bot,
+        resolver: HintContentResolver,
+        pool: async_sessionmaker[AsyncSession],
+    ) -> AsyncIterable[HintSender]:
+        # dedicated session so renewed file_ids are committed in their own
+        # transaction, independently of the request-scoped HolderDao session
+        async with pool() as session:
+            yield HintSender(
+                bot=bot,
+                resolver=resolver,
+                file_info_dao=FileInfoDao(session),
+            )
+
     get_bot_game_view = provide(BotView, scope=Scope.REQUEST)
     get_bot_team_notifier = provide(BotTeamNotifier, scope=Scope.REQUEST)
     get_bot_org_notifier = provide(BotOrgNotifier, scope=Scope.REQUEST)

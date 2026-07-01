@@ -259,6 +259,12 @@ with a curated ignore list, mypy overrides) lives in `pyproject.toml`.
 - Keep `core` framework-free; put framework glue in `api`, `tgbot`,
   `infrastructure`.
 - Line length 99. Match surrounding style; don't reformat untouched code.
+- **Log exceptions with an explicit `exc_info=e`.** Capture the exception
+  (`except SomeError as e:`) and pass it to the logging call
+  (`logger.warning("...", exc_info=e)` / `logger.error("...", exc_info=e)`)
+  rather than using `logger.exception(...)` or `exc_info=True`. Being explicit
+  keeps the logged exception independent of the active `except` block and lets
+  you choose the log level.
 - Some docstrings/comments are in Russian — that's expected; keep the existing
   language of the file you're editing.
 </content>

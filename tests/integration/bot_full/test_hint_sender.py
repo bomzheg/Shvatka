@@ -38,6 +38,7 @@ from shvatka.core.models.dto.hints import (
     VideoNoteHint,
     StickerHint,
 )
+from shvatka.infrastructure.db.dao import FileInfoDao
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.tgbot.config.models.main import TgBotConfig
 from shvatka.tgbot.views.hint_factory.hint_content_resolver import HintContentResolver
@@ -70,11 +71,12 @@ async def hint_sender(
 ):
     bot = Bot(token=bot_config.bot.token, session=bot_session)
     pool = await dishka.get(async_sessionmaker[AsyncSession])
-    return HintSender(
-        bot=bot,
-        resolver=HintContentResolver(dao=dao.file_info, file_storage=file_storage),
-        pool=pool,
-    )
+    async with pool() as session:
+        yield HintSender(
+            bot=bot,
+            resolver=HintContentResolver(dao=dao.file_info, file_storage=file_storage),
+            file_info_dao=FileInfoDao(session),
+        )
 
 
 @pytest.mark.asyncio

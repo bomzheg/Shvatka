@@ -7,7 +7,6 @@ from typing import Iterable, Callable, Awaitable, Collection
 from aiogram import Bot
 from aiogram.exceptions import TelegramAPIError
 from aiogram.types import Message
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from shvatka.core.models import enums
 from shvatka.core.models.dto import hints
@@ -41,11 +40,13 @@ class HintSender:
         self,
         bot: Bot,
         resolver: HintContentResolver,
-        pool: async_sessionmaker[AsyncSession],
+        file_info_dao: FileInfoDao,
     ) -> None:
         self.bot = bot
         self.resolver = resolver
-        self.pool = pool
+        # dedicated dao (its own session/transaction) used to persist a fresh
+        # file_id after sending by content, independently of the request's tx
+        self.file_info_dao = file_info_dao
         self.methods: dict[enums.HintType, Callable[..., Awaitable[Message]]] = {
             t: partial(m, bot) for t, m in METHODS.items()
         }
@@ -92,10 +93,8 @@ class HintSender:
             tg_link = parse_message(message)
             if tg_link is None:
                 return
-            async with self.pool() as session:
-                dao = FileInfoDao(session)
-                await dao.update_file_id(guid, tg_link.file_id)
-                await dao.commit()
+            await self.file_info_dao.update_file_id(guid, tg_link.file_id)
+            await self.file_info_dao.commit()
         except Exception:
             # renewing file_id is best-effort and must never break sending
             logger.exception("cant renew file_id for hint with guid %s", guid)
@@ -130,11 +129,15 @@ class HintSender:
         return len(hints) * cls.SLEEP + len(hints) * approximate_io_time
 
 
-def _is_file_id_missing(hint_link: hints.BaseHint | object) -> bool:
+def _is_file_id_missing(hint_link: object) -> bool:
     """
-    File-based link views carry a ``file_id`` attribute. When it is ``None``
-    (e.g. it was never uploaded to telegram) we can't send by file_id and
-    have to fall back to sending by content. Views without a ``file_id``
-    (text, gps, venue, contact) are always sendable as a link.
+    Only file-based link views (photo, audio, video, ...) carry a ``file_id``
+    attribute. When that attribute exists but is ``None`` the file was never
+    uploaded to telegram, so we can't send by file_id and must fall back to
+    sending by content.
+
+    Views without a ``file_id`` attribute at all (text, gps, venue, contact)
+    have nothing to be missing - they are always sendable as a link, so the
+    sentinel default keeps them out of the content fallback.
     """
     return getattr(hint_link, "file_id", _MISSING) is None

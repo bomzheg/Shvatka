@@ -34,4 +34,5 @@ class ApiConfig(Config):
             app=base.app,
             enable_logging=enable_logging,
             web=base.web,
+            mail=base.mail,
         )

@@ -31,4 +31,5 @@ class TgBotConfig(Config):
             file_storage_config=base.file_storage_config,
             app=base.app,
             web=base.web,
+            mail=base.mail,
         )

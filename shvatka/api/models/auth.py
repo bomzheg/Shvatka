@@ -62,3 +62,23 @@ class Token(BaseModel):
 
 class OneTimeToken(BaseModel):
     token: str
+
+
+class EmailRegister(BaseModel):
+    email: str
+    password: str
+
+
+class EmailLogin(BaseModel):
+    email: str
+    password: str
+
+
+class EmailConfirm(BaseModel):
+    email: str
+    code: str
+
+
+class EmailLink(BaseModel):
+    email: str
+    password: str | None = None

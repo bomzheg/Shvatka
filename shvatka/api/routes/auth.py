@@ -4,16 +4,28 @@ from typing import Annotated
 from aiogram.types import User
 from dishka.integrations.fastapi import inject, FromDishka
 from fastapi import Depends as fDepends, Body
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 from fastapi.security import OAuth2PasswordRequestForm
 from starlette.responses import HTMLResponse, Response
 
 from shvatka.api.config.models.auth import AuthConfig
-from shvatka.api.models.auth import UserTgAuth, WebAppAuth, OneTimeToken
+from shvatka.api.models.auth import (
+    UserTgAuth,
+    WebAppAuth,
+    OneTimeToken,
+    EmailRegister,
+    EmailLogin,
+    EmailConfirm,
+    EmailLink,
+)
 from shvatka.api.utils.cookie_auth import set_auth_response
 from shvatka.core.interfaces.bus import Bus, OneTimeTokenUsed
+from shvatka.core.interfaces.hasher import PasswordHasher
+from shvatka.core.interfaces.identity import IdentityProvider
+from shvatka.core.interfaces.mail import EmailSender
 from shvatka.core.models import dto
 from shvatka.core.players.player import upsert_player
+from shvatka.core.services import email as email_service
 from shvatka.core.services.user import upsert_user
 from shvatka.core.utils import exceptions
 from shvatka.infrastructure.db.dao.holder import HolderDao
@@ -141,6 +153,111 @@ async def one_time_token_login(
     return {"ok": True}
 
 
+@inject
+async def email_register(
+    body: Annotated[EmailRegister, Body()],
+    dao: FromDishka[HolderDao],
+    hasher: FromDishka[PasswordHasher],
+    sender: FromDishka[EmailSender],
+):
+    try:
+        await email_service.register_by_email(
+            email=body.email,
+            password=body.password,
+            dao=dao.email,
+            hasher=hasher,
+            store=dao.email_confirm,
+            sender=sender,
+        )
+    except exceptions.EmailInvalid as e:
+        raise HTTPException(status_code=422, detail="invalid email") from e
+    except exceptions.EmailAlreadyExist as e:
+        raise HTTPException(status_code=409, detail="email already exists") from e
+    return {"ok": True}
+
+
+@inject
+async def email_login(
+    response: Response,
+    body: Annotated[EmailLogin, Body()],
+    dao: FromDishka[HolderDao],
+    auth_properties: FromDishka[AuthProperties],
+    config: FromDishka[AuthConfig],
+):
+    player = await auth_properties.authenticate_by_email(body.email, body.password, dao)
+    token = auth_properties.create_user_token(player)
+    set_auth_response(config, response, token)
+    return {"ok": True}
+
+
+@inject
+async def email_confirm(
+    body: Annotated[EmailConfirm, Body()],
+    dao: FromDishka[HolderDao],
+):
+    try:
+        await email_service.confirm_email(
+            email=body.email,
+            code=body.code,
+            dao=dao.email,
+            store=dao.email_confirm,
+        )
+    except exceptions.EmailConfirmationCodeInvalid as e:
+        raise HTTPException(status_code=400, detail="invalid or expired code") from e
+    return {"ok": True}
+
+
+@inject
+async def email_link(
+    body: Annotated[EmailLink, Body()],
+    identity: FromDishka[IdentityProvider],
+    dao: FromDishka[HolderDao],
+    hasher: FromDishka[PasswordHasher],
+    sender: FromDishka[EmailSender],
+):
+    player = await identity.get_required_player()
+    try:
+        await email_service.add_email_to_player(
+            player=player,
+            email=body.email,
+            password=body.password,
+            dao=dao.email,
+            hasher=hasher,
+            store=dao.email_confirm,
+            sender=sender,
+        )
+    except exceptions.EmailInvalid as e:
+        raise HTTPException(status_code=422, detail="invalid email") from e
+    except exceptions.EmailAlreadyExist as e:
+        raise HTTPException(status_code=409, detail="email already exists") from e
+    return {"ok": True}
+
+
+@inject
+async def link_tg(
+    user: Annotated[UserTgAuth, Body()],
+    identity: FromDishka[IdentityProvider],
+    dao: FromDishka[HolderDao],
+    config: FromDishka[AuthConfig],
+):
+    check_tg_hash(user, config.bot_token)
+    player = await identity.get_required_player()
+    if player.has_user():
+        raise HTTPException(status_code=409, detail="player already has linked telegram")
+    saved = await upsert_user(user.to_dto(), dao.user)
+    try:
+        existing = await dao.player.get_by_user_id(saved.tg_id)
+    except exceptions.PlayerNotFoundError:
+        existing = None
+    if existing is not None and existing.id != player.id:
+        raise HTTPException(
+            status_code=409, detail="this telegram account is linked to another player"
+        )
+    await dao.player.link_user(player, saved)
+    await dao.commit()
+    return {"ok": True}
+
+
 def setup() -> APIRouter:
     router = APIRouter(prefix="/auth", tags=["auth"])
     router.add_api_route("/one-time-token", one_time_token_login, methods=["POST"])
@@ -150,4 +267,9 @@ def setup() -> APIRouter:
     router.add_api_route("/login/data", tg_login_result, methods=["GET"])
     router.add_api_route("/login/data", tg_login_result_post, methods=["POST"])
     router.add_api_route("/login/webapp", webapp_login_result_post, methods=["POST"])
+    router.add_api_route("/register/email", email_register, methods=["POST"])
+    router.add_api_route("/login/email", email_login, methods=["POST"])
+    router.add_api_route("/email/confirm", email_confirm, methods=["POST"])
+    router.add_api_route("/email/link", email_link, methods=["POST"])
+    router.add_api_route("/link/tg", link_tg, methods=["POST"])
     return router

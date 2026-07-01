@@ -26,6 +26,12 @@ class Player(Base):
         foreign_keys="ForumUser.player_id",
         uselist=False,
     )
+    email = relationship(
+        "EmailAccount",
+        back_populates="player",
+        foreign_keys="EmailAccount.player_id",
+        uselist=False,
+    )
 
     my_games = relationship(
         "Game",

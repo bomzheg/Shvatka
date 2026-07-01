@@ -39,6 +39,7 @@ dependencies = [
     "asgi-monitor>=0.4.0,<0.5.0",
     "pywebpush>=2.3,<3.0",
     "python-magic>=0.4.27,<0.5.0",
+    "aiosmtplib>=3.0,<4.0",
 ]
 
 [dependency-groups]

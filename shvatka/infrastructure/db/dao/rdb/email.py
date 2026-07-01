@@ -39,7 +39,8 @@ class EmailAccountDao(BaseDAO[models.EmailAccount]):
         return player.to_dto()
 
     async def add_email_to_player(self, player: dto.Player, email: str) -> dto.EmailAccount:
-        player_db = await self._get_by_id(player.id)
+        player_db = await self.session.get(models.Player, player.id)
+        assert player_db is not None
         account = models.EmailAccount(email=email, player=player_db)
         self._save(account)
         await self._flush(account)
@@ -52,7 +53,8 @@ class EmailAccountDao(BaseDAO[models.EmailAccount]):
         account.is_verified = True
 
     async def set_password_if_absent(self, player: dto.Player, hashed_password: str) -> None:
-        player_db = await self._get_by_id(player.id)
+        player_db = await self.session.get(models.Player, player.id)
+        assert player_db is not None
         if not player_db.hashed_password:
             player_db.hashed_password = hashed_password
 

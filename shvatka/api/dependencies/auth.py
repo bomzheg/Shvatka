@@ -64,9 +64,7 @@ class AuthProperties:
             raise http_status_401
         return player.without_password()
 
-    async def authenticate_by_email(
-        self, email: str, password: str, dao: HolderDao
-    ) -> dto.Player:
+    async def authenticate_by_email(self, email: str, password: str, dao: HolderDao) -> dto.Player:
         http_status_401 = HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect email or password",

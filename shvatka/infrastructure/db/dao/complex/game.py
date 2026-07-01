@@ -46,6 +46,18 @@ class FileLinkMixin:
         await self.dao.game_file.add_game_files(game_id, file_ids)
 
 
+class IsGameFileMixin:
+    """Tells whether a file (by guid) is usable in a given game."""
+
+    dao: "HolderDao"
+
+    async def is_game_file(self, game_id: int, guid: str) -> bool:
+        file_ids = await self.dao.file_info.get_ids_by_guids([guid])
+        if not file_ids:
+            return False
+        return file_ids[0] in await self.dao.game_file.get_file_ids(game_id)
+
+
 @dataclass
 class GameUpserterImpl(FileLinkMixin, GameUpserter):
     async def upsert_game(self, author: dto.Player, scenario: scn.GameScenario) -> dto.Game:
@@ -166,7 +178,7 @@ class GameFileUploaderImpl(GameFileUploader):
 
 
 @dataclass
-class GameFileRenamerImpl(GameFileRenamer):
+class GameFileRenamerImpl(IsGameFileMixin, GameFileRenamer):
     """Single DAO for renaming a file usable in a game (cdn endpoint)."""
 
     dao: "HolderDao"
@@ -179,12 +191,6 @@ class GameFileRenamerImpl(GameFileRenamer):
 
     async def add_levels(self, game: dto.Game) -> dto.FullGame:
         return await self.dao.game.add_levels(game)
-
-    async def is_game_file(self, game_id: int, guid: str) -> bool:
-        file_ids = await self.dao.file_info.get_ids_by_guids([guid])
-        if not file_ids:
-            return False
-        return file_ids[0] in await self.dao.game_file.get_file_ids(game_id)
 
     async def rename_file(self, guid: str, filename: str) -> None:
         await self.dao.file_info.rename_file(guid, filename)
@@ -238,7 +244,7 @@ class GamePackagerImpl(GamePackager):
         return await self.dao.file_info.get_metas_by_ids(file_ids)
 
 
-class GameFilesGetterImpl(GameFileReader):
+class GameFilesGetterImpl(IsGameFileMixin, GameFileReader):
     def __init__(self, dao: "HolderDao"):
         self.dao = dao
 
@@ -259,12 +265,6 @@ class GameFilesGetterImpl(GameFileReader):
 
     async def check_waiver(self, player: dto.Player, team: dto.Team, game: dto.Game) -> bool:
         return await self.dao.waiver.check_waiver(player, team, game)
-
-    async def is_game_file(self, game_id: int, guid: str) -> bool:
-        file_ids = await self.dao.file_info.get_ids_by_guids([guid])
-        if not file_ids:
-            return False
-        return file_ids[0] in await self.dao.game_file.get_file_ids(game_id)
 
 
 @dataclass(kw_only=True, slots=True)

@@ -203,10 +203,11 @@ async def test_send_by_content_when_file_id_missing(
     await hint_sender.resolver.storage.put_content(file_meta.local_file_name, BytesIO(b"12345"))
     await hint_sender.resolver.dao.upsert(file=file_meta, author=harry)
     await hint_sender.resolver.dao.commit()
+    session = typing.cast(MagicMock, bot_session)
+    session.side_effect = [{}]
 
     await hint_sender.send_hint(PhotoHint(file_guid=GUID), CHAT_ID)
 
-    session = typing.cast(MagicMock, bot_session)
     # no attempt to send by (missing) file_id, straight to content
     assert 1 == session.call_count
     call = session.mock_calls.pop()

@@ -63,7 +63,7 @@ class HintSender:
             try:
                 return await method(chat_id=chat_id, **hint_link.kwargs())
             except TelegramAPIError:
-                logger.warning("cant send hint by file_id %s", hint_link)
+                logger.warning("cant send hint by file_id %s", hint_link, exc_info=True)
         return await self._send_by_content(method, hint_container, chat_id)
 
     async def _send_by_content(

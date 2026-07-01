@@ -18,6 +18,7 @@ from shvatka.core.interfaces.dal.game import (
     GameAuthorsFinder,
     GameByIdGetter,
     GameCreator,
+    GameFileRenamer,
     GameFileUploader,
     GameStartPlanner,
     WaiverStarter,
@@ -38,7 +39,7 @@ from shvatka.core.services.game import (
     start_waivers,
     update_game_scenario,
 )
-from shvatka.core.services.scenario.files import save_file
+from shvatka.core.services.scenario.files import rename_file, save_file
 from shvatka.core.utils import exceptions
 
 logger = logging.getLogger(__name__)
@@ -145,3 +146,23 @@ class UploadGameFileInteractor:
         await self.dao.add_game_file(game.id, saved.id)
         await self.dao.commit()
         return saved
+
+
+@dataclass
+class RenameGameFileInteractor:
+    dao: GameFileRenamer
+
+    async def __call__(
+        self,
+        game_id: int,
+        guid: str,
+        filename: str,
+        identity: IdentityProvider,
+    ) -> hints.VerifiableFileMeta:
+        author = await identity.get_required_player()
+        check_allow_be_author(author)
+        game = await self.dao.get_by_id(id_=game_id, author=author)
+        check_game_editable(game)
+        renamed = await rename_file(guid, game_id, filename, self.dao)
+        await self.dao.commit()
+        return renamed

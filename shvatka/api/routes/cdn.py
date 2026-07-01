@@ -6,16 +6,19 @@ from urllib.parse import quote
 
 from dishka.integrations.fastapi import FromDishka
 from dishka.integrations.fastapi import inject
-from fastapi import APIRouter, File, UploadFile
+from fastapi import APIRouter, Body, File, UploadFile
 from fastapi.params import Path
 from fastapi.responses import Response
 
 from shvatka.api.dependencies.auth import ApiIdentityProvider
-from shvatka.api.models import responses
+from shvatka.api.models import responses, req
 from shvatka.core.games.interactors import (
     GameFileReaderInteractor,
 )
-from shvatka.core.games.editor_interactors import UploadGameFileInteractor
+from shvatka.core.games.editor_interactors import (
+    RenameGameFileInteractor,
+    UploadGameFileInteractor,
+)
 from shvatka.core.interfaces.clients.file_storage import FileStorage
 
 
@@ -77,8 +80,26 @@ async def upload_game_file(
     return responses.UploadedFile.from_core(saved)
 
 
+@inject
+async def rename_game_file(
+    identity: FromDishka[ApiIdentityProvider],
+    interactor: FromDishka[RenameGameFileInteractor],
+    id_: Annotated[int, Path(alias="id")],
+    guid: Annotated[str, Path(alias="guid")],
+    body: Annotated[req.RenameFile, Body()],
+) -> responses.GameFile:
+    renamed = await interactor(
+        game_id=id_,
+        guid=guid,
+        filename=body.filename,
+        identity=identity,
+    )
+    return responses.GameFile.from_core(renamed)
+
+
 def setup() -> APIRouter:
     router = APIRouter(prefix="/cdn")
     router.add_api_route("/games/{id}/files", upload_game_file, methods=["POST"])
     router.add_api_route("/games/{id}/files/{guid}", get_game_file, methods=["GET"])
+    router.add_api_route("/games/{id}/files/{guid}", rename_game_file, methods=["PATCH"])
     return router

@@ -6,11 +6,11 @@ from uuid import uuid4
 from shvatka.core.interfaces.clients.file_storage import FileGateway, FileStorage
 from shvatka.core.interfaces.dal.file_info import FileUpserter, GameFilesMetaGetter
 from shvatka.core.interfaces.dal.file_link import LevelFilesSyncDao
-from shvatka.core.interfaces.dal.game import GameUpserter
+from shvatka.core.interfaces.dal.game import GameFileRenamer, GameUpserter
 from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.models import dto, enums
 from shvatka.core.models.dto import hints
-from shvatka.core.utils.exceptions import NotAuthorizedForEdit
+from shvatka.core.utils.exceptions import FileNotFound, NotAuthorizedForEdit
 
 logger = logging.getLogger(__name__)
 
@@ -73,6 +73,27 @@ async def save_file(
     saved = await dao.upsert(stored, author)
     await dao.commit()
     return saved
+
+
+async def rename_file(
+    guid: str,
+    game_id: int,
+    filename: str,
+    dao: GameFileRenamer,
+) -> hints.VerifiableFileMeta:
+    """Rename a file (its human-readable ``original_filename``) by guid.
+
+    The file must be usable in the given game (registered in ``game_files``);
+    the physical content and the guid are left untouched, only the display name
+    is changed. The extension is kept as-is.
+    """
+    if not await dao.is_game_file(game_id, guid):
+        raise FileNotFound(
+            text=f"There is no file with uuid {guid} associated with game id {game_id}",
+            game_id=game_id,
+        )
+    await dao.rename_file(guid, filename)
+    return await dao.get_by_guid(guid)
 
 
 async def upsert_files(

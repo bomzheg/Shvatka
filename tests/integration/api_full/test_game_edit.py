@@ -259,6 +259,78 @@ async def test_upload_game_file(
 
 
 @pytest.mark.asyncio
+async def test_rename_game_file(
+    client: AsyncClient,
+    auth: AuthProperties,
+    author: dto.Player,
+    dao: HolderDao,
+):
+    game = await create_game(author=author, name="draft rename file", dao=dao.game_creator)
+    cookies = auth_cookies(auth, author)
+    up = await client.post(
+        f"/cdn/games/{game.id}/files",
+        files={"file": ("note.txt", b"hello world", "text/plain")},
+        cookies=cookies,
+    )
+    assert up.status_code == 200, up.text
+    guid = up.json()["guid"]
+
+    resp = await client.patch(
+        f"/cdn/games/{game.id}/files/{guid}",
+        json={"filename": "renamed"},
+        cookies=cookies,
+    )
+    assert resp.status_code == 200, resp.text
+    assert resp.json()["guid"] == guid
+    assert resp.json()["original_filename"] == "renamed"
+    # extension is preserved, only the display name changes
+    assert resp.json()["extension"] == ".txt"
+    stored = await dao.file_info.get_by_guid(guid)
+    assert stored.original_filename == "renamed"
+
+
+@pytest.mark.asyncio
+async def test_rename_foreign_game_file_forbidden(
+    client: AsyncClient,
+    auth: AuthProperties,
+    author: dto.Player,
+    harry: dto.Player,
+    dao: HolderDao,
+):
+    game = await create_game(author=author, name="draft rename forbidden", dao=dao.game_creator)
+    up = await client.post(
+        f"/cdn/games/{game.id}/files",
+        files={"file": ("note.txt", b"hello world", "text/plain")},
+        cookies=auth_cookies(auth, author),
+    )
+    assert up.status_code == 200, up.text
+    guid = up.json()["guid"]
+    # harry is not the author of `game`
+    resp = await client.patch(
+        f"/cdn/games/{game.id}/files/{guid}",
+        json={"filename": "hacked"},
+        cookies=auth_cookies(auth, harry),
+    )
+    assert resp.status_code == 422, resp.text
+
+
+@pytest.mark.asyncio
+async def test_rename_file_not_in_game(
+    client: AsyncClient,
+    auth: AuthProperties,
+    author: dto.Player,
+    dao: HolderDao,
+):
+    game = await create_game(author=author, name="draft rename missing", dao=dao.game_creator)
+    resp = await client.patch(
+        f"/cdn/games/{game.id}/files/00000000-0000-0000-0000-000000000000",
+        json={"filename": "renamed"},
+        cookies=auth_cookies(auth, author),
+    )
+    assert resp.status_code == 404, resp.text
+
+
+@pytest.mark.asyncio
 async def test_uploaded_file_listed_without_reference(
     client: AsyncClient,
     auth: AuthProperties,

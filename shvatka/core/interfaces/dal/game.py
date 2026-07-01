@@ -86,6 +86,17 @@ class GameFileUploader(GameByIdGetter, FileUpserter, Protocol):
         raise NotImplementedError
 
 
+class GameFileRenamer(GameByIdGetter, Committer, Protocol):
+    async def is_game_file(self, game_id: int, guid: str) -> bool:
+        raise NotImplementedError
+
+    async def rename_file(self, guid: str, filename: str) -> None:
+        raise NotImplementedError
+
+    async def get_by_guid(self, guid: str) -> hints.VerifiableFileMeta:
+        raise NotImplementedError
+
+
 class ActiveGameFinder(Protocol):
     async def get_active_game(self) -> dto.Game | None:
         raise NotImplementedError

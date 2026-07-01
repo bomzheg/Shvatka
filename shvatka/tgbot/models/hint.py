@@ -22,7 +22,17 @@ class BaseHintView(ABC):
 
 @dataclass(kw_only=True)
 class BaseHintLinkView(BaseHintView, metaclass=ABCMeta):
-    pass
+    def is_sendable(self) -> bool:
+        """whether there is enough data (e.g. file_id) to send this view at all"""
+        return True
+
+
+@dataclass(kw_only=True)
+class FileIdLinkViewMixin(BaseHintLinkView, metaclass=ABCMeta):
+    file_id: str | None
+
+    def is_sendable(self) -> bool:
+        return self.file_id is not None
 
 
 @dataclass(kw_only=True)
@@ -77,8 +87,7 @@ class VenueHintView(BaseHintLinkView, BaseHintContentView):
 
 
 @dataclass(kw_only=True)
-class PhotoLinkView(BaseHintLinkView, CaptionViewMixin):
-    file_id: str
+class PhotoLinkView(FileIdLinkViewMixin, CaptionViewMixin):
     show_caption_above_media: bool | None = None
 
     def specific_kwargs(self) -> dict[str, Any]:
@@ -103,8 +112,7 @@ class PhotoContentView(BaseHintContentView, CaptionViewMixin):
 
 
 @dataclass(kw_only=True)
-class AudioLinkView(BaseHintLinkView, CaptionViewMixin):
-    file_id: str
+class AudioLinkView(FileIdLinkViewMixin, CaptionViewMixin):
     thumb: str | None = None
 
     def specific_kwargs(self) -> dict[str, Any]:
@@ -128,8 +136,7 @@ class AudioContentView(BaseHintContentView, CaptionViewMixin):
 
 
 @dataclass(kw_only=True)
-class VideoLinkView(BaseHintLinkView, CaptionViewMixin):
-    file_id: str
+class VideoLinkView(FileIdLinkViewMixin, CaptionViewMixin):
     show_caption_above_media: bool | None = None
     thumb: str | None = None
 
@@ -157,8 +164,7 @@ class VideoContentView(BaseHintContentView, CaptionViewMixin):
 
 
 @dataclass(kw_only=True)
-class DocumentLinkView(BaseHintLinkView, CaptionViewMixin):
-    file_id: str
+class DocumentLinkView(FileIdLinkViewMixin, CaptionViewMixin):
     thumb: str | None = None
 
     def specific_kwargs(self) -> dict[str, Any]:
@@ -182,8 +188,7 @@ class DocumentContentView(BaseHintContentView, CaptionViewMixin):
 
 
 @dataclass(kw_only=True)
-class AnimationLinkView(BaseHintLinkView, CaptionViewMixin):
-    file_id: str
+class AnimationLinkView(FileIdLinkViewMixin, CaptionViewMixin):
     thumb: str | None = None
     show_caption_above_media: bool | None = None
 
@@ -211,9 +216,7 @@ class AnimationContentView(BaseHintContentView, CaptionViewMixin):
 
 
 @dataclass(kw_only=True)
-class VoiceLinkView(BaseHintLinkView, CaptionViewMixin):
-    file_id: str
-
+class VoiceLinkView(FileIdLinkViewMixin, CaptionViewMixin):
     def specific_kwargs(self) -> dict[str, Any]:
         return {
             "voice": self.file_id,
@@ -233,9 +236,7 @@ class VoiceContentView(BaseHintContentView, CaptionViewMixin):
 
 
 @dataclass(kw_only=True)
-class VideoNoteLinkView(BaseHintLinkView):
-    file_id: str
-
+class VideoNoteLinkView(FileIdLinkViewMixin):
     def specific_kwargs(self) -> dict[str, Any]:
         return {"video_note": self.file_id}
 
@@ -265,9 +266,7 @@ class ContactHintView(BaseHintLinkView, BaseHintContentView):
 
 
 @dataclass(kw_only=True)
-class StickerHintLinkView(BaseHintLinkView):
-    file_id: str
-
+class StickerHintLinkView(FileIdLinkViewMixin):
     def specific_kwargs(self) -> dict[str, Any]:
         return {"sticker": self.file_id}
 

@@ -7,10 +7,13 @@ from typing import Iterable, Callable, Awaitable, Collection
 from aiogram import Bot
 from aiogram.exceptions import TelegramAPIError
 from aiogram.types import Message
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from shvatka.core.models import enums
 from shvatka.core.models.dto import hints
+from shvatka.infrastructure.db.dao import FileInfoDao
 from shvatka.tgbot.views.hint_factory.hint_content_resolver import HintContentResolver
+from shvatka.tgbot.views.hint_factory.hint_parser import parse_message
 
 logger = logging.getLogger(__name__)
 METHODS: dict[enums.HintType, Callable[..., Awaitable[Message]]] = {
@@ -32,9 +35,15 @@ METHODS: dict[enums.HintType, Callable[..., Awaitable[Message]]] = {
 class HintSender:
     SLEEP: timedelta = timedelta(seconds=1)
 
-    def __init__(self, bot: Bot, resolver: HintContentResolver) -> None:
+    def __init__(
+        self,
+        bot: Bot,
+        resolver: HintContentResolver,
+        session_pool: async_sessionmaker[AsyncSession],
+    ) -> None:
         self.bot = bot
         self.resolver = resolver
+        self.session_pool = session_pool
         self.methods: dict[enums.HintType, Callable[..., Awaitable[Message]]] = {
             t: partial(m, bot) for t, m in METHODS.items()
         }
@@ -45,12 +54,28 @@ class HintSender:
     async def send_hint(self, hint_container: hints.BaseHint, chat_id: int) -> Message:
         method = self.method(enums.HintType[hint_container.type])
         hint_link = await self.resolver.resolve_link(hint_container)
-        try:
-            return await method(chat_id=chat_id, **hint_link.kwargs())
-        except TelegramAPIError:
-            logger.warning("cant send hint by file_id %s", hint_link)
-            hint_content = await self.resolver.resolve_content(hint_container)
-            return await method(chat_id=chat_id, **hint_content.kwargs())
+        if hint_link.is_sendable():
+            try:
+                return await method(chat_id=chat_id, **hint_link.kwargs())
+            except TelegramAPIError:
+                logger.warning("cant send hint by file_id %s", hint_link)
+        else:
+            logger.info("no file_id to send hint %s, sending by content", hint_container)
+        hint_content = await self.resolver.resolve_content(hint_container)
+        message = await method(chat_id=chat_id, **hint_content.kwargs())
+        await self._save_new_file_id(hint_container, message)
+        return message
+
+    async def _save_new_file_id(self, hint_container: hints.BaseHint, message: Message) -> None:
+        file_guid = getattr(hint_container, "file_guid", None)
+        if file_guid is None or not isinstance(message, Message):
+            return
+        tg_link = parse_message(message)
+        if tg_link is None:
+            return
+        async with self.session_pool() as session:
+            await FileInfoDao(session).update_file_id(file_guid, tg_link.file_id)
+            await session.commit()
 
     async def send_hints(
         self,

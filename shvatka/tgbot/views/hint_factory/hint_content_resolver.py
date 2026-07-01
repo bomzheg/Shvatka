@@ -134,7 +134,7 @@ class HintContentResolver:
             case _:
                 raise RuntimeError("unknown hint type")
 
-    async def _resolve_file_id(self, guid: str) -> str:
+    async def _resolve_file_id(self, guid: str) -> str | None:
         tg_link = (await self.dao.get_by_guid(guid)).tg_link
         return tg_link.file_id
 

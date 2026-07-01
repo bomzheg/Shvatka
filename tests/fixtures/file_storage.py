@@ -15,6 +15,13 @@ FILE_META = hints.FileMeta(
     file_content_link=hints.FileContentLink(file_path=GUID + ".jpg"),
     original_filename="файло",
 )
+NO_FILE_ID_META = hints.FileMeta(
+    guid=GUID,
+    tg_link=hints.TgLink(file_id=None, content_type=enums.HintType.photo),
+    extension=".jpg",
+    file_content_link=hints.FileContentLink(file_path=GUID + ".jpg"),
+    original_filename="файло",
+)
 
 
 class MemoryFileStorageProvider(Provider):

@@ -9,7 +9,12 @@ from shvatka.core.interfaces.current_game import CurrentGameProvider
 
 from shvatka.core.interfaces.dal.complex import GamePackager
 from shvatka.core.games.adapters import GameFileReader, GamePlayDao
-from shvatka.core.interfaces.dal.game import GameUpserter, GameCreator, GameFileUploader
+from shvatka.core.interfaces.dal.game import (
+    GameUpserter,
+    GameCreator,
+    GameFileRenamer,
+    GameFileUploader,
+)
 from shvatka.core.interfaces.dal.level import LevelDeleter
 from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.models import dto
@@ -39,6 +44,18 @@ class FileLinkMixin:
 
     async def add_game_files(self, game_id: int, file_ids: Collection[int]) -> None:
         await self.dao.game_file.add_game_files(game_id, file_ids)
+
+
+class IsGameFileMixin:
+    """Tells whether a file (by guid) is usable in a given game."""
+
+    dao: "HolderDao"
+
+    async def is_game_file(self, game_id: int, guid: str) -> bool:
+        file_ids = await self.dao.file_info.get_ids_by_guids([guid])
+        if not file_ids:
+            return False
+        return file_ids[0] in await self.dao.game_file.get_file_ids(game_id)
 
 
 @dataclass
@@ -161,6 +178,31 @@ class GameFileUploaderImpl(GameFileUploader):
 
 
 @dataclass
+class GameFileRenamerImpl(IsGameFileMixin, GameFileRenamer):
+    """Single DAO for renaming a file usable in a game (cdn endpoint)."""
+
+    dao: "HolderDao"
+
+    async def get_by_id(self, id_: int, author: dto.Player | None = None) -> dto.Game:
+        return await self.dao.game.get_by_id(id_, author)
+
+    async def get_full(self, id_: int) -> dto.FullGame:
+        return await self.dao.game.get_full(id_)
+
+    async def add_levels(self, game: dto.Game) -> dto.FullGame:
+        return await self.dao.game.add_levels(game)
+
+    async def rename_file(self, guid: str, filename: str) -> None:
+        await self.dao.file_info.rename_file(guid, filename)
+
+    async def get_by_guid(self, guid: str) -> hints.VerifiableFileMeta:
+        return await self.dao.file_info.get_by_guid(guid)
+
+    async def commit(self) -> None:
+        await self.dao.commit()
+
+
+@dataclass
 class GamePackagerImpl(GamePackager):
     dao: "HolderDao"
 
@@ -202,7 +244,7 @@ class GamePackagerImpl(GamePackager):
         return await self.dao.file_info.get_metas_by_ids(file_ids)
 
 
-class GameFilesGetterImpl(GameFileReader):
+class GameFilesGetterImpl(IsGameFileMixin, GameFileReader):
     def __init__(self, dao: "HolderDao"):
         self.dao = dao
 
@@ -223,12 +265,6 @@ class GameFilesGetterImpl(GameFileReader):
 
     async def check_waiver(self, player: dto.Player, team: dto.Team, game: dto.Game) -> bool:
         return await self.dao.waiver.check_waiver(player, team, game)
-
-    async def is_game_file(self, game_id: int, guid: str) -> bool:
-        file_ids = await self.dao.file_info.get_ids_by_guids([guid])
-        if not file_ids:
-            return False
-        return file_ids[0] in await self.dao.game_file.get_file_ids(game_id)
 
 
 @dataclass(kw_only=True, slots=True)

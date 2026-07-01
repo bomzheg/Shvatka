@@ -21,6 +21,11 @@ class ChangeUsername:
 
 
 @dataclass
+class RenameFile:
+    filename: str
+
+
+@dataclass
 class GameStartAt:
     start_at: datetime | None = None
 

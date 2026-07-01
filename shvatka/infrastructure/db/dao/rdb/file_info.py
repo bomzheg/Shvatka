@@ -108,6 +108,13 @@ class FileInfoDao(BaseDAO[models.FileInfo]):
             update(models.FileInfo).where(models.FileInfo.guid == guid).values(file_id=file_id)
         )
 
+    async def rename_file(self, guid: str, filename: str) -> None:
+        await self.session.execute(
+            update(models.FileInfo)
+            .where(models.FileInfo.guid == guid)
+            .values(original_filename=filename)
+        )
+
     async def get_all(self, limit: int, offset: int) -> Sequence[hints.SavedFileMeta]:
         result: ScalarResult[models.FileInfo] = await self.session.scalars(
             select(models.FileInfo)

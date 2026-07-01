@@ -18,6 +18,7 @@ from shvatka.core.games.editor_interactors import (
     PlanGameStartInteractor,
     ChangeGameStatusInteractor,
     UploadGameFileInteractor,
+    RenameGameFileInteractor,
 )
 from shvatka.core.games.org_interactors import (
     ListGameOrgsInteractor,
@@ -52,7 +53,7 @@ from shvatka.core.games.adapters import (
 )
 from shvatka.core.interfaces.bus import Bus
 from shvatka.core.interfaces.current_game import CurrentGameProvider
-from shvatka.core.interfaces.dal.game import GameByIdGetter, GameFileUploader
+from shvatka.core.interfaces.dal.game import GameByIdGetter, GameFileRenamer, GameFileUploader
 from shvatka.core.interfaces.dal.game_play import GamePlayerDao
 from shvatka.core.services.current_game import CurrentGameProviderImpl
 from shvatka.core.interfaces.dal.waiver import WaiverApprover
@@ -77,6 +78,7 @@ from shvatka.infrastructure.db.dao.complex2.waiver import (
 )
 from shvatka.infrastructure.db.dao.complex.game import GameFilesGetterImpl, GameScenarioEditorImpl
 from shvatka.infrastructure.db.dao.complex.game import (
+    GameFileRenamerImpl,
     GameFileUploaderImpl,
     GamePlayDaoImpl,
 )
@@ -179,6 +181,14 @@ class GameEditProvider(Provider):
     @provide
     def upload_file(self, dao: GameFileUploader, storage: FileStorage) -> UploadGameFileInteractor:
         return UploadGameFileInteractor(storage=storage, dao=dao)
+
+    @provide
+    def game_file_renamer(self, dao: HolderDao) -> GameFileRenamer:
+        return GameFileRenamerImpl(dao=dao)
+
+    @provide
+    def rename_file(self, dao: GameFileRenamer) -> RenameGameFileInteractor:
+        return RenameGameFileInteractor(dao=dao)
 
     @provide
     def list_orgs(self, dao: HolderDao) -> ListGameOrgsInteractor:

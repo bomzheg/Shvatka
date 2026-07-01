@@ -62,8 +62,8 @@ class HintSender:
         else:
             try:
                 return await method(chat_id=chat_id, **hint_link.kwargs())
-            except TelegramAPIError:
-                logger.warning("cant send hint by file_id %s", hint_link, exc_info=True)
+            except TelegramAPIError as e:
+                logger.warning("cant send hint by file_id %s", hint_link, exc_info=e)
         return await self._send_by_content(method, hint_container, chat_id)
 
     async def _send_by_content(
@@ -95,9 +95,9 @@ class HintSender:
                 return
             await self.file_info_dao.update_file_id(guid, tg_link.file_id)
             await self.file_info_dao.commit()
-        except Exception:
+        except Exception as e:
             # renewing file_id is best-effort and must never break sending
-            logger.exception("cant renew file_id for hint with guid %s", guid)
+            logger.error("cant renew file_id for hint with guid %s", guid, exc_info=e)
 
     async def send_hints(
         self,

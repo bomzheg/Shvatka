@@ -249,6 +249,34 @@ class PlayerUsernameOccupied(SHError):
     notify_user = "username уже занят"
 
 
+class PlayerInvalidUsername(SHError):
+    notify_user = "некорректный username"
+
+
+class EmailError(SHError):
+    notify_user = "Проблема, связанная с электронной почтой"
+
+
+class EmailAlreadyExist(EmailError):
+    notify_user = "Эта электронная почта уже используется"
+
+
+class EmailNotFound(EmailError):
+    notify_user = "Электронная почта не найдена"
+
+
+class EmailInvalid(EmailError):
+    notify_user = "Некорректный адрес электронной почты"
+
+
+class EmailNotVerified(EmailError):
+    notify_user = "Электронная почта не подтверждена"
+
+
+class EmailConfirmationCodeInvalid(EmailError):
+    notify_user = "Неверный или устаревший код подтверждения"
+
+
 class PlayerTeamError(SHError):
     notify_user = "Проблема связанные с членством игрока в команде"
 

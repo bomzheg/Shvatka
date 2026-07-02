@@ -9,6 +9,7 @@ KEY_PREFIXES_REGEXP = "|".join(KEY_PREFIXES)
 KEY_REGEXP = re.compile(rf"^(?:{KEY_PREFIXES_REGEXP})[A-Z\dА-ЯЁ]+$")
 LEVEL_ID_REGEXP = re.compile(r"^[a-zA-Z\d_-]+$")
 USERNAME_REGEXP = re.compile(r"^[a-zA-Z\d_]{3,50}$")
+EMAIL_REGEXP = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 
 
 def is_key_valid(key_expectant: str) -> bool:
@@ -36,6 +37,12 @@ def validate_level_id(id_expectant: str) -> str | None:
 def validate_new_username(username_expectant: str) -> str | None:
     result = re.search(USERNAME_REGEXP, username_expectant.strip())
     return result.group() if result is not None else None
+
+
+def validate_email(email_expectant: str) -> str | None:
+    normalized = email_expectant.strip().lower()
+    result = re.search(EMAIL_REGEXP, normalized)
+    return normalized if result is not None else None
 
 
 def date_from_text(text):

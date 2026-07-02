@@ -84,3 +84,14 @@ file-storage-config:
   parents: true
 web:
   base-url: https://exmple.org
+mail:
+  # if disabled, confirmation codes are only written to the log (see ConsoleEmailSender)
+  enabled: false
+  host: "smtp.gmail.com"
+  port: 587
+  username: "your-account@gmail.com"
+  # for gmail/yandex use an app password, not the account password
+  password: ""
+  from-addr: "your-account@gmail.com"
+  use-tls: false
+  start-tls: true

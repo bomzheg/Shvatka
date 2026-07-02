@@ -82,7 +82,7 @@ class GameFileReaderInteractor:
     async def __call__(
         self, guid: str, game_id: int, identity: IdentityProvider
     ) -> VerifiableFileMeta:
-        user = await identity.get_required_user()
+        user = await identity.get_user()
         player = await identity.get_required_player()
         game = await self.dao.get_full(game_id)
         if (

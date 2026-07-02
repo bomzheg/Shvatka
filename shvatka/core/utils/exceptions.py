@@ -249,6 +249,10 @@ class PlayerUsernameOccupied(SHError):
     notify_user = "username уже занят"
 
 
+class PlayerInvalidUsername(SHError):
+    notify_user = "некорректный username"
+
+
 class EmailError(SHError):
     notify_user = "Проблема, связанная с электронной почтой"
 

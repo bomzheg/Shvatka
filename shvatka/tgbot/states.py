@@ -178,7 +178,6 @@ class ProfileSG(StatesGroup):
     one_time_login = State()
     password = State()
     email = State()
-    email_password = State()
     email_code = State()
 
 

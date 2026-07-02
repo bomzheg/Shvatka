@@ -8,6 +8,7 @@ from httpx import AsyncClient
 from shvatka.api.config.models.auth import AuthConfig
 from shvatka.api.config.models.main import ApiConfig
 from shvatka.api.main_factory import create_app
+from shvatka.core.interfaces.hasher import PasswordHasher
 from shvatka.core.models import dto
 from shvatka.core.services.user import upsert_user
 from shvatka.core.players.player import set_password, upsert_player
@@ -32,7 +33,7 @@ def app(dishka: AsyncContainer, api_config: ApiConfig):
 
 @pytest_asyncio.fixture(scope="session")
 async def auth(dishka: AsyncContainer) -> AuthProperties:
-    return AuthProperties(await dishka.get(AuthConfig))
+    return AuthProperties(await dishka.get(AuthConfig), await dishka.get(PasswordHasher))
 
 
 @pytest.mark.anyio

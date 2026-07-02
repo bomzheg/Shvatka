@@ -16,7 +16,6 @@ from shvatka.tgbot.dialogs.profile.handlers import (
     validate_email_input,
     email_invalid,
     on_email_entered,
-    on_email_password_entered,
     on_email_code_entered,
 )
 
@@ -68,23 +67,6 @@ profile_dialog = Dialog(
             on_error=email_invalid,
         ),
         state=states.ProfileSG.email,
-    ),
-    Window(
-        Const(
-            "Для входа по email нужен пароль, а он ещё не задан.\n"
-            "Введи пароль, который будешь использовать для входа"
-        ),
-        SwitchTo(
-            Const("🔙Назад"),
-            state=states.ProfileSG.main,
-            id="email_pass_to_main",
-        ),
-        TextInput(
-            id="get_email_password",
-            type_factory=str,
-            on_success=on_email_password_entered,
-        ),
-        state=states.ProfileSG.email_password,
     ),
     Window(
         Const("Введи код подтверждения, отправленный на указанную почту"),

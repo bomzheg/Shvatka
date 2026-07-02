@@ -65,6 +65,7 @@ class OneTimeToken(BaseModel):
 
 
 class EmailRegister(BaseModel):
+    username: str
     email: str
     password: str
 
@@ -79,6 +80,9 @@ class EmailConfirm(BaseModel):
     code: str
 
 
+class EmailResend(BaseModel):
+    email: str
+
+
 class EmailLink(BaseModel):
     email: str
-    password: str | None = None

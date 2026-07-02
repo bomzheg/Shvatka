@@ -313,10 +313,6 @@ class PlayerDao(BaseDAO[models.Player]):
         except NoResultFound as e:
             raise exceptions.NoUsernameFound(username=username) from e
 
-    async def has_password(self, player: dto.Player) -> bool:
-        db_player = await self._get_by_id(player.id)
-        return bool(db_player.hashed_password)
-
     async def set_password(self, player: dto.Player, hashed_password: str):
         db_player = await self._get_by_id(player.id)
         db_player.hashed_password = hashed_password

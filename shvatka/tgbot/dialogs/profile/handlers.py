@@ -5,11 +5,9 @@ from aiogram.types import Message
 from aiogram_dialog import DialogManager
 from dishka.integrations.aiogram_dialog import inject
 
-from shvatka.core.interfaces.hasher import PasswordHasher
 from shvatka.core.interfaces.identity import IdentityProvider
-from shvatka.core.interfaces.mail import EmailSender
 from shvatka.core.players.player import set_player_username
-from shvatka.core.services import email as email_service
+from shvatka.core.services.email import EmailLinkInteractor, EmailConfirmInteractor
 from shvatka.core.utils import exceptions
 from shvatka.core.utils.input_validation import validate_new_username, validate_email
 from shvatka.infrastructure.db.dao.holder import HolderDao
@@ -77,59 +75,18 @@ async def on_email_entered(
     manager: DialogManager,
     email: str,
     identity: FromDishka[IdentityProvider],
-    holder: FromDishka[HolderDao],
-    hasher: FromDishka[PasswordHasher],
-    sender: FromDishka[EmailSender],
+    link_email: FromDishka[EmailLinkInteractor],
 ) -> None:
     player = await identity.get_required_player()
-    if await holder.email.is_email_occupied(email):
-        await message.reply("Эта электронная почта уже используется, попробуй другую")
-        return
-    manager.dialog_data["email"] = email
-    if not await holder.player.has_password(player):
-        # a shared password is required to be able to log in by email later
-        await manager.switch_to(state=states.ProfileSG.email_password)
-        return
-    await _send_and_go_to_code(message, manager, player, email, None, holder, hasher, sender)
-
-
-@inject
-async def on_email_password_entered(
-    message: Message,
-    __: Any,
-    manager: DialogManager,
-    password: str,
-    identity: FromDishka[IdentityProvider],
-    holder: FromDishka[HolderDao],
-    hasher: FromDishka[PasswordHasher],
-    sender: FromDishka[EmailSender],
-) -> None:
-    player = await identity.get_required_player()
-    email = manager.dialog_data["email"]
-    await _send_and_go_to_code(message, manager, player, email, password, holder, hasher, sender)
-
-
-async def _send_and_go_to_code(
-    message, manager, player, email, password, holder, hasher, sender
-) -> None:
     try:
-        await email_service.add_email_to_player(
-            player=player,
-            email=email,
-            password=password,
-            dao=holder.email,
-            hasher=hasher,
-            store=holder.email_confirm,
-            sender=sender,
-        )
+        await link_email(player=player, email=email)
     except exceptions.EmailAlreadyExist:
         await message.reply("Эта электронная почта уже используется, попробуй другую")
-        await manager.switch_to(state=states.ProfileSG.main)
         return
     except exceptions.EmailInvalid:
-        await message.reply("Некорректный адрес электронной почты")
-        await manager.switch_to(state=states.ProfileSG.main)
+        await message.reply("Некорректный адрес электронной почты, попробуй ещё раз")
         return
+    manager.dialog_data["email"] = email
     await message.reply("На указанную почту отправлен код подтверждения")
     await manager.switch_to(state=states.ProfileSG.email_code)
 
@@ -140,16 +97,11 @@ async def on_email_code_entered(
     __: Any,
     manager: DialogManager,
     code: str,
-    holder: FromDishka[HolderDao],
+    confirm_email: FromDishka[EmailConfirmInteractor],
 ) -> None:
     email = manager.dialog_data["email"]
     try:
-        await email_service.confirm_email(
-            email=email,
-            code=code,
-            dao=holder.email,
-            store=holder.email_confirm,
-        )
+        await confirm_email(email=email, code=code)
     except exceptions.EmailConfirmationCodeInvalid:
         await message.reply("Неверный или устаревший код, попробуй ещё раз")
         return

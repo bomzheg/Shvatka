@@ -2,7 +2,7 @@ from shvatka.infrastructure.di.bot import BotProvider
 from shvatka.infrastructure.di.config import ConfigProvider, DbConfigProvider
 from shvatka.infrastructure.di.db import DbProvider, RedisProvider, DAOProvider
 from shvatka.infrastructure.di.files import FileClientProvider
-from shvatka.infrastructure.di.mail import MailProvider
+from shvatka.infrastructure.di.mail import MailProvider, EmailInteractorProvider
 from shvatka.infrastructure.di.interactors import GamePlayProvider, ContextProvider
 from shvatka.infrastructure.di.interactors import WaiverProvider, PlayerProvider, TeamProvider
 from shvatka.infrastructure.di.printer import PrinterProvider
@@ -19,6 +19,7 @@ def get_providers(paths_env):
         RedisProvider(),
         FileClientProvider(),
         MailProvider(),
+        EmailInteractorProvider(),
         BotProvider(),
         ContextProvider(),
         GamePlayProvider(),

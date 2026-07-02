@@ -28,14 +28,15 @@ class EmailAccountDao(BaseDAO[models.EmailAccount]):
         )
         return result.one_or_none() is not None
 
-    async def create_player_for_email(self, email: str, hashed_password: str) -> dto.Player:
-        player = models.Player(hashed_password=hashed_password)
+    async def create_player_for_email(
+        self, username: str, email: str, hashed_password: str
+    ) -> dto.Player:
+        player = models.Player(username=username, hashed_password=hashed_password)
         self._save(player)
         await self._flush(player)
         account = models.EmailAccount(email=email, player=player)
         self._save(account)
         await self._flush(account)
-        player.username = await self._free_username(player)
         return player.to_dto()
 
     async def add_email_to_player(self, player: dto.Player, email: str) -> dto.EmailAccount:
@@ -51,12 +52,6 @@ class EmailAccountDao(BaseDAO[models.EmailAccount]):
         if account is None:
             raise exceptions.EmailNotFound(text=f"email {email} not found")
         account.is_verified = True
-
-    async def set_password_if_absent(self, player: dto.Player, hashed_password: str) -> None:
-        player_db = await self.session.get(models.Player, player.id)
-        assert player_db is not None
-        if not player_db.hashed_password:
-            player_db.hashed_password = hashed_password
 
     async def get_verified_player_by_email(self, email: str) -> dto.PlayerWithCreds:
         result = await self.session.scalars(
@@ -83,12 +78,3 @@ class EmailAccountDao(BaseDAO[models.EmailAccount]):
             select(models.EmailAccount).where(func.lower(models.EmailAccount.email) == email)
         )
         return result.one_or_none()
-
-    async def _free_username(self, player: models.Player) -> str:
-        candidate = f"id{player.id}"
-        result = await self.session.scalars(
-            select(models.Player).where(models.Player.username.ilike(candidate))
-        )
-        if result.one_or_none() is None:
-            return candidate
-        return f"id{player.id}_{player.id}"

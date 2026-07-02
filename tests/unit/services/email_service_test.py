@@ -2,6 +2,12 @@ import pytest
 
 from shvatka.core.models import dto
 from shvatka.core.services import email as email_service
+from shvatka.core.services.email import (
+    EmailRegisterInteractor,
+    EmailLinkInteractor,
+    EmailConfirmInteractor,
+    EmailResendInteractor,
+)
 from shvatka.core.utils import exceptions
 
 
@@ -17,22 +23,27 @@ class FakeEmailDao:
     def __init__(self) -> None:
         self.accounts: dict[str, dto.EmailAccount] = {}
         self.passwords: dict[int, str] = {}
+        self.usernames: set[str] = set()
         self.committed = False
         self._next_player_id = 1
 
     async def is_email_occupied(self, email: str) -> bool:
         return email in self.accounts
 
-    async def create_player_for_email(self, email: str, hashed_password: str) -> dto.Player:
+    async def is_username_occupied(self, username: str) -> bool:
+        return username in self.usernames
+
+    async def create_player_for_email(
+        self, username: str, email: str, hashed_password: str
+    ) -> dto.Player:
         player_id = self._next_player_id
         self._next_player_id += 1
         self.passwords[player_id] = hashed_password
+        self.usernames.add(username)
         self.accounts[email] = dto.EmailAccount(
             email=email, player_id=player_id, is_verified=False
         )
-        return dto.Player(
-            id=player_id, can_be_author=False, is_dummy=False, username=f"id{player_id}"
-        )
+        return dto.Player(id=player_id, can_be_author=False, is_dummy=False, username=username)
 
     async def add_email_to_player(self, player: dto.Player, email: str) -> dto.EmailAccount:
         account = dto.EmailAccount(email=email, player_id=player.id, is_verified=False)
@@ -41,9 +52,6 @@ class FakeEmailDao:
 
     async def set_verified(self, email: str) -> None:
         self.accounts[email].is_verified = True
-
-    async def set_password_if_absent(self, player: dto.Player, hashed_password: str) -> None:
-        self.passwords.setdefault(player.id, hashed_password)
 
     async def get_by_email(self, email: str) -> dto.EmailAccount | None:
         return self.accounts.get(email)
@@ -75,17 +83,47 @@ class FakeSender:
 
 
 @pytest.fixture
-def deps():
-    return FakeEmailDao(), FakeStore(), FakeSender(), FakeHasher()
+def dao() -> FakeEmailDao:
+    return FakeEmailDao()
+
+
+@pytest.fixture
+def store() -> FakeStore:
+    return FakeStore()
+
+
+@pytest.fixture
+def sender() -> FakeSender:
+    return FakeSender()
+
+
+@pytest.fixture
+def register(dao, store, sender) -> EmailRegisterInteractor:
+    return EmailRegisterInteractor(
+        dao=dao, player_dao=dao, hasher=FakeHasher(), store=store, sender=sender
+    )
+
+
+@pytest.fixture
+def link(dao, store, sender) -> EmailLinkInteractor:
+    return EmailLinkInteractor(dao=dao, store=store, sender=sender)
+
+
+@pytest.fixture
+def confirm(dao, store) -> EmailConfirmInteractor:
+    return EmailConfirmInteractor(dao=dao, store=store)
+
+
+@pytest.fixture
+def resend(dao, store, sender) -> EmailResendInteractor:
+    return EmailResendInteractor(dao=dao, store=store, sender=sender)
 
 
 @pytest.mark.asyncio
-async def test_register_normalizes_and_sends_code(deps):
-    dao, store, sender, hasher = deps
-    player = await email_service.register_by_email(
-        " Test@Example.COM ", "pw", dao, hasher, store, sender
-    )
+async def test_register_normalizes_and_sends_code(register, dao, sender):
+    player = await register(username="harry", email=" Test@Example.COM ", password="pw")
     assert player.id == 1
+    assert player.username == "harry"
     assert "test@example.com" in dao.accounts
     assert dao.committed
     assert len(sender.sent) == 1
@@ -96,43 +134,70 @@ async def test_register_normalizes_and_sends_code(deps):
 
 
 @pytest.mark.asyncio
-async def test_register_rejects_duplicate(deps):
-    dao, store, sender, hasher = deps
-    await email_service.register_by_email("a@b.com", "pw", dao, hasher, store, sender)
+async def test_register_rejects_duplicate_email(register):
+    await register(username="harry", email="a@b.com", password="pw")
     with pytest.raises(exceptions.EmailAlreadyExist):
-        await email_service.register_by_email("a@b.com", "pw", dao, hasher, store, sender)
+        await register(username="ronald", email="a@b.com", password="pw")
 
 
 @pytest.mark.asyncio
-async def test_register_rejects_invalid(deps):
-    dao, store, sender, hasher = deps
+async def test_register_rejects_occupied_username(register):
+    await register(username="harry", email="a@b.com", password="pw")
+    with pytest.raises(exceptions.PlayerUsernameOccupied):
+        await register(username="harry", email="c@d.com", password="pw")
+
+
+@pytest.mark.asyncio
+async def test_register_rejects_invalid_email(register):
     with pytest.raises(exceptions.EmailInvalid):
-        await email_service.register_by_email("not-an-email", "pw", dao, hasher, store, sender)
+        await register(username="harry", email="not-an-email", password="pw")
 
 
 @pytest.mark.asyncio
-async def test_confirm_email_flow(deps):
-    dao, store, sender, hasher = deps
-    await email_service.register_by_email("a@b.com", "pw", dao, hasher, store, sender)
+async def test_register_rejects_invalid_username(register):
+    with pytest.raises(exceptions.PlayerInvalidUsername):
+        await register(username="a", email="a@b.com", password="pw")
+
+
+@pytest.mark.asyncio
+async def test_confirm_email_flow(register, confirm, dao, store, sender):
+    await register(username="harry", email="a@b.com", password="pw")
     code = sender.sent[0][1]
 
     with pytest.raises(exceptions.EmailConfirmationCodeInvalid):
-        await email_service.confirm_email("a@b.com", "000000", dao, store)
+        await confirm(email="a@b.com", code="000000")
     assert not dao.accounts["a@b.com"].is_verified
 
-    await email_service.confirm_email("a@b.com", code, dao, store)
+    await confirm(email="a@b.com", code=code)
     assert dao.accounts["a@b.com"].is_verified
     assert store.codes.get("a@b.com") is None
 
 
 @pytest.mark.asyncio
-async def test_add_email_to_existing_player(deps):
-    dao, store, sender, hasher = deps
+async def test_link_email_to_existing_player(link, dao, sender):
     player = dto.Player(id=42, can_be_author=False, is_dummy=False, username="tg_user")
-    await email_service.add_email_to_player(
-        player, "New@Mail.com", "pw", dao, hasher, store, sender
-    )
+    await link(player=player, email="New@Mail.com")
     assert "new@mail.com" in dao.accounts
     assert dao.accounts["new@mail.com"].player_id == 42
-    assert dao.passwords[42] == "hashed:pw"
     assert sender.sent[0][0] == "new@mail.com"
+
+
+@pytest.mark.asyncio
+async def test_resend_sends_new_code_for_unverified(register, resend, sender):
+    await register(username="harry", email="a@b.com", password="pw")
+    await resend(email="a@b.com")
+    assert len(sender.sent) == 2
+
+
+@pytest.mark.asyncio
+async def test_resend_skips_verified(register, confirm, resend, sender):
+    await register(username="harry", email="a@b.com", password="pw")
+    await confirm(email="a@b.com", code=sender.sent[0][1])
+    await resend(email="a@b.com")
+    assert len(sender.sent) == 1
+
+
+@pytest.mark.asyncio
+async def test_resend_unknown_email(resend):
+    with pytest.raises(exceptions.EmailNotFound):
+        await resend(email="nobody@nowhere.com")

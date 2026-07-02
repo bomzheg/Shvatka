@@ -1,3 +1,4 @@
+import contextlib
 import typing
 from typing import Annotated
 
@@ -16,16 +17,20 @@ from shvatka.api.models.auth import (
     EmailRegister,
     EmailLogin,
     EmailConfirm,
+    EmailResend,
     EmailLink,
 )
 from shvatka.api.utils.cookie_auth import set_auth_response
 from shvatka.core.interfaces.bus import Bus, OneTimeTokenUsed
-from shvatka.core.interfaces.hasher import PasswordHasher
 from shvatka.core.interfaces.identity import IdentityProvider
-from shvatka.core.interfaces.mail import EmailSender
 from shvatka.core.models import dto
 from shvatka.core.players.player import upsert_player
-from shvatka.core.services import email as email_service
+from shvatka.core.services.email import (
+    EmailRegisterInteractor,
+    EmailLinkInteractor,
+    EmailConfirmInteractor,
+    EmailResendInteractor,
+)
 from shvatka.core.services.user import upsert_user
 from shvatka.core.utils import exceptions
 from shvatka.infrastructure.db.dao.holder import HolderDao
@@ -156,23 +161,18 @@ async def one_time_token_login(
 @inject
 async def email_register(
     body: Annotated[EmailRegister, Body()],
-    dao: FromDishka[HolderDao],
-    hasher: FromDishka[PasswordHasher],
-    sender: FromDishka[EmailSender],
+    interactor: FromDishka[EmailRegisterInteractor],
 ):
     try:
-        await email_service.register_by_email(
-            email=body.email,
-            password=body.password,
-            dao=dao.email,
-            hasher=hasher,
-            store=dao.email_confirm,
-            sender=sender,
-        )
+        await interactor(username=body.username, email=body.email, password=body.password)
     except exceptions.EmailInvalid as e:
         raise HTTPException(status_code=422, detail="invalid email") from e
+    except exceptions.PlayerInvalidUsername as e:
+        raise HTTPException(status_code=422, detail="invalid username") from e
     except exceptions.EmailAlreadyExist as e:
         raise HTTPException(status_code=409, detail="email already exists") from e
+    except exceptions.PlayerUsernameOccupied as e:
+        raise HTTPException(status_code=409, detail="username already occupied") from e
     return {"ok": True}
 
 
@@ -193,17 +193,23 @@ async def email_login(
 @inject
 async def email_confirm(
     body: Annotated[EmailConfirm, Body()],
-    dao: FromDishka[HolderDao],
+    interactor: FromDishka[EmailConfirmInteractor],
 ):
     try:
-        await email_service.confirm_email(
-            email=body.email,
-            code=body.code,
-            dao=dao.email,
-            store=dao.email_confirm,
-        )
+        await interactor(email=body.email, code=body.code)
     except exceptions.EmailConfirmationCodeInvalid as e:
         raise HTTPException(status_code=400, detail="invalid or expired code") from e
+    return {"ok": True}
+
+
+@inject
+async def email_resend(
+    body: Annotated[EmailResend, Body()],
+    interactor: FromDishka[EmailResendInteractor],
+):
+    # do not disclose whether the email is registered
+    with contextlib.suppress(exceptions.EmailNotFound):
+        await interactor(email=body.email)
     return {"ok": True}
 
 
@@ -211,21 +217,11 @@ async def email_confirm(
 async def email_link(
     body: Annotated[EmailLink, Body()],
     identity: FromDishka[IdentityProvider],
-    dao: FromDishka[HolderDao],
-    hasher: FromDishka[PasswordHasher],
-    sender: FromDishka[EmailSender],
+    interactor: FromDishka[EmailLinkInteractor],
 ):
     player = await identity.get_required_player()
     try:
-        await email_service.add_email_to_player(
-            player=player,
-            email=body.email,
-            password=body.password,
-            dao=dao.email,
-            hasher=hasher,
-            store=dao.email_confirm,
-            sender=sender,
-        )
+        await interactor(player=player, email=body.email)
     except exceptions.EmailInvalid as e:
         raise HTTPException(status_code=422, detail="invalid email") from e
     except exceptions.EmailAlreadyExist as e:
@@ -270,6 +266,7 @@ def setup() -> APIRouter:
     router.add_api_route("/register/email", email_register, methods=["POST"])
     router.add_api_route("/login/email", email_login, methods=["POST"])
     router.add_api_route("/email/confirm", email_confirm, methods=["POST"])
+    router.add_api_route("/email/resend", email_resend, methods=["POST"])
     router.add_api_route("/email/link", email_link, methods=["POST"])
     router.add_api_route("/link/tg", link_tg, methods=["POST"])
     return router

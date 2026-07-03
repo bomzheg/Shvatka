@@ -103,6 +103,52 @@ class TgUser:
 
 
 @dataclass
+class ForumUser:
+    name: str
+
+    @classmethod
+    def from_core(cls, core: dto.ForumUser | None) -> "ForumUser | None":
+        if core is None:
+            return None
+        return cls(name=core.name)
+
+
+@dataclass
+class EmailAccount:
+    email: str
+    is_verified: bool
+
+    @classmethod
+    def from_core(cls, core: dto.EmailAccount | None) -> "EmailAccount | None":
+        if core is None:
+            return None
+        return cls(email=core.email, is_verified=core.is_verified)
+
+
+@dataclass
+class Me:
+    id: int
+    can_be_author: bool
+    name_mention: str
+    username: str | None
+    tg: TgUser | None
+    forum: ForumUser | None
+    email: EmailAccount | None
+
+    @classmethod
+    def from_core(cls, player: dto.Player, email: dto.EmailAccount | None) -> "Me":
+        return cls(
+            id=player.id,
+            can_be_author=player.can_be_author,
+            name_mention=player.name_mention,
+            username=player.username,
+            tg=TgUser.from_core(player._user),  # noqa: SLF001
+            forum=ForumUser.from_core(player._forum_user),  # noqa: SLF001
+            email=EmailAccount.from_core(email),
+        )
+
+
+@dataclass
 class TeamPlayer:
     id: int
     team: Team | None

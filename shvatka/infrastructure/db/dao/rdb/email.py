@@ -22,6 +22,13 @@ class EmailAccountDao(BaseDAO[models.EmailAccount]):
         db_account = await self._get_by_email_or_none(email)
         return db_account.to_dto() if db_account is not None else None
 
+    async def get_by_player_id(self, player_id: int) -> dto.EmailAccount | None:
+        result = await self.session.scalars(
+            select(models.EmailAccount).where(models.EmailAccount.player_id == player_id)
+        )
+        db_account = result.one_or_none()
+        return db_account.to_dto() if db_account is not None else None
+
     async def is_email_occupied(self, email: str) -> bool:
         result = await self.session.scalars(
             select(models.EmailAccount).where(func.lower(models.EmailAccount.email) == email)

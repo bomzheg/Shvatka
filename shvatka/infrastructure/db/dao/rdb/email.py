@@ -80,6 +80,8 @@ class EmailAccountDao(BaseDAO[models.EmailAccount]):
 
     async def _get_by_email_or_none(self, email: str) -> models.EmailAccount | None:
         result = await self.session.scalars(
-            select(models.EmailAccount).where(func.lower(models.EmailAccount.email) == email.lower())
+            select(models.EmailAccount).where(
+                func.lower(models.EmailAccount.email) == email.lower()
+            )
         )
         return result.one_or_none()

@@ -277,6 +277,10 @@ class EmailConfirmationCodeInvalid(EmailError):
     notify_user = "Неверный или устаревший код подтверждения"
 
 
+class RateLimitExceeded(SHError):
+    notify_user = "Слишком много запросов, попробуйте позже"
+
+
 class PlayerTeamError(SHError):
     notify_user = "Проблема связанные с членством игрока в команде"
 

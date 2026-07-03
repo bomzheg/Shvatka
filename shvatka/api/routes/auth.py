@@ -19,6 +19,7 @@ from shvatka.api.models.auth import (
     EmailConfirm,
     EmailResend,
     EmailLink,
+    ForgotPassword,
 )
 from shvatka.api.utils.cookie_auth import set_auth_response
 from shvatka.core.interfaces.bus import Bus, OneTimeTokenUsed
@@ -30,6 +31,7 @@ from shvatka.core.services.email import (
     EmailLinkInteractor,
     EmailConfirmInteractor,
     EmailResendInteractor,
+    ForgotPasswordInteractor,
 )
 from shvatka.core.services.user import upsert_user
 from shvatka.core.utils import exceptions
@@ -230,6 +232,19 @@ async def email_link(
 
 
 @inject
+async def forgot_password(
+    body: Annotated[ForgotPassword, Body()],
+    interactor: FromDishka[ForgotPasswordInteractor],
+):
+    try:
+        await interactor(email=body.email)
+    except exceptions.RateLimitExceeded as e:
+        raise HTTPException(status_code=429, detail="too many requests") from e
+    # do not disclose whether the email is registered
+    return {"ok": True}
+
+
+@inject
 async def link_tg(
     user: Annotated[UserTgAuth, Body()],
     identity: FromDishka[IdentityProvider],
@@ -268,5 +283,6 @@ def setup() -> APIRouter:
     router.add_api_route("/email/confirm", email_confirm, methods=["POST"])
     router.add_api_route("/email/resend", email_resend, methods=["POST"])
     router.add_api_route("/email/link", email_link, methods=["POST"])
+    router.add_api_route("/forgot-password", forgot_password, methods=["POST"])
     router.add_api_route("/link/tg", link_tg, methods=["POST"])
     return router

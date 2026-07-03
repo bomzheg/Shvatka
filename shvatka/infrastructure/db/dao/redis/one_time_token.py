@@ -28,7 +28,7 @@ class OneTimeToken:
         return f"{self.prefix}:{token}"
 
     async def save_new_token(
-        self, token_len: int = TOKEN_LEN, expire=EXPIRE_TIME, **dct: dict
+        self, *, token_len: int = TOKEN_LEN, expire: int = EXPIRE_TIME, **dct: dict
     ) -> str:
         """
 

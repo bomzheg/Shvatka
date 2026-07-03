@@ -103,6 +103,9 @@ PLAYERS_COMMAND = BotCommand(command="players", description="игроки ком
 ME_COMMAND = BotCommand(command="me", description="мой профиль")  # TODO
 GAMES_COMMAND = BotCommand(command="games", description="список игр")
 LEAVE_COMMAND = BotCommand(command="leave", description="выйти из команды")
+OTL_COMMAND = BotCommand(
+    command="otl", description="одноразовая ссылка для быстрого входа на сайт"
+)
 
 HELP_INFO = CommandsGroup(
     "Другие команды:",
@@ -113,6 +116,7 @@ HELP_INFO = CommandsGroup(
         ME_COMMAND,
         GAMES_COMMAND,
         LEAVE_COMMAND,
+        OTL_COMMAND,
     ],
 )
 

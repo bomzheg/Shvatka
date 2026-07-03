@@ -54,7 +54,7 @@ from .rdb.achievement import AchievementDAO
 from .rdb.events import GameEventDao
 from .rdb.forum_team import ForumTeamDAO
 from .rdb.timers import TimersDAO
-from .redis import PollDao, SecureInvite, OneTimeToken, EmailConfirmationStore
+from .redis import PollDao, SecureInvite, OneTimeToken, EmailConfirmationStore, RateLimiter
 
 
 class HolderDao:
@@ -91,6 +91,7 @@ class HolderDao:
         self.secure_invite = SecureInvite(redis=redis, clock=clock)
         self.one_time_token = OneTimeToken(redis=redis, clock=clock)
         self.email_confirm = EmailConfirmationStore(redis=redis, clock=clock)
+        self.rate_limiter = RateLimiter(redis=redis)
         self.level_test = level_test
 
     async def commit(self):

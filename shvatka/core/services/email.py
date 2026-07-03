@@ -1,14 +1,18 @@
 import logging
 import secrets
 from dataclasses import dataclass
+from datetime import timedelta
 
 from shvatka.core.interfaces.dal.email import (
+    EmailAccountDao,
     EmailDao,
     EmailConfirmationStore,
     UsernameOccupiedChecker,
 )
 from shvatka.core.interfaces.hasher import PasswordHasher
 from shvatka.core.interfaces.mail import EmailSender
+from shvatka.core.interfaces.one_time_token import OneTimeTokenCreator
+from shvatka.core.interfaces.rate_limiter import RateLimiter
 from shvatka.core.models import dto
 from shvatka.core.utils import exceptions
 from shvatka.core.utils.input_validation import validate_email, validate_new_username
@@ -16,6 +20,7 @@ from shvatka.core.utils.input_validation import validate_email, validate_new_use
 logger = logging.getLogger(__name__)
 
 CODE_LEN = 6
+FORGOT_PASSWORD_COOLDOWN = timedelta(minutes=2)
 
 
 @dataclass
@@ -91,6 +96,33 @@ class EmailResendInteractor:
         if account.is_verified:
             return
         await send_new_code(email, account.player_id, self.store, self.sender)
+
+
+@dataclass
+class ForgotPasswordInteractor:
+    dao: EmailAccountDao
+    limiter: RateLimiter
+    token_creator: OneTimeTokenCreator
+    sender: EmailSender
+    base_url: str
+
+    async def __call__(self, email: str) -> None:
+        email = normalize_email_or_raise(email)
+        try:
+            player = await self.dao.find_verified_player_by_email(email)
+        except exceptions.EmailNotVerified:
+            logger.info("forgot password requested for email without a verified account")
+            return
+        allowed = await self.limiter.is_allowed(
+            f"forgot_password:{player.id}", FORGOT_PASSWORD_COOLDOWN
+        )
+        if not allowed:
+            raise exceptions.RateLimitExceeded(
+                text=f"forgot password rate limited for player {player.id}"
+            )
+        token = await self.token_creator.save_new_token(dct={"player_id": player.id})
+        url = f"{self.base_url}/auth/one-time-token?token={token}"
+        await self.sender.send_one_time_link(email, url)
 
 
 def normalize_email_or_raise(email: str) -> str:

@@ -21,9 +21,12 @@ class Player:
         self._user = user
         self._forum_user = forum_user
 
+    def username_is_dummy(self) -> bool:
+        return self.username == f"id{self.id}"
+
     @property
     def name_mention(self) -> str:
-        if self.username is not None and self.username != f"id{self.id}":
+        if self.username is not None and not self.username_is_dummy():
             return self.username
         if self.is_dummy:
             if self._forum_user:

@@ -34,7 +34,9 @@ class Player:
 
     @classmethod
     def from_dto(cls, player: "dto.Player"):
-        if player.has_user():
+        if player.username is not None and not player.username_is_dummy():
+            return Player(username=player.username, identity=PlayerIdentity.username)
+        elif player.has_user():
             player_tg_id = player.get_chat_id()
             assert player_tg_id is not None
             return Player(tg_user_id=player_tg_id, identity=PlayerIdentity.tg_user_id)
@@ -42,9 +44,6 @@ class Player:
             player_name = player.get_forum_name()
             assert player_name is not None
             return Player(forum_name=player_name, identity=PlayerIdentity.forum_name)
-        elif player.username is not None:
-            # player without external identities (e.g. registered by email)
-            return Player(username=player.username, identity=PlayerIdentity.username)
         else:
             raise RuntimeError("player without user, forum_user and username")
 

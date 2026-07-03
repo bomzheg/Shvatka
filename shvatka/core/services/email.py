@@ -108,16 +108,18 @@ class ForgotPasswordInteractor:
 
     async def __call__(self, email: str) -> None:
         email = normalize_email_or_raise(email)
-        allowed = await self.limiter.is_allowed(
-            f"forgot_password:{email}", FORGOT_PASSWORD_COOLDOWN
-        )
-        if not allowed:
-            raise exceptions.RateLimitExceeded(text=f"forgot password rate limited for {email}")
         try:
-            player = await self.dao.get_verified_player_by_email(email)
+            player = await self.dao.find_verified_player_by_email(email)
         except exceptions.EmailNotVerified:
             logger.info("forgot password requested for email without a verified account")
             return
+        allowed = await self.limiter.is_allowed(
+            f"forgot_password:{player.id}", FORGOT_PASSWORD_COOLDOWN
+        )
+        if not allowed:
+            raise exceptions.RateLimitExceeded(
+                text=f"forgot password rate limited for player {player.id}"
+            )
         token = await self.token_creator.save_new_token(dct={"player_id": player.id})
         url = f"{self.base_url}/auth/one-time-token?token={token}"
         await self.sender.send_one_time_link(email, url)

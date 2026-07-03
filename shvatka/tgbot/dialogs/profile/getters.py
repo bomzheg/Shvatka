@@ -3,9 +3,9 @@ from typing import Any
 from dishka import FromDishka
 from dishka.integrations.aiogram_dialog import inject
 
-from shvatka.common import Config
 from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.players.player import get_player_with_stat, get_teams_history
+from shvatka.core.services.one_time_link import GenerateOneTimeLoginLinkInteractor
 from shvatka.infrastructure.db.dao.holder import HolderDao
 
 
@@ -38,14 +38,9 @@ async def player_getter(
 
 @inject
 async def player_one_time_url_getter(
-    identity: FromDishka[IdentityProvider],
-    config_: FromDishka[Config],
-    holder: FromDishka[HolderDao],
+    interactor: FromDishka[GenerateOneTimeLoginLinkInteractor],
     **_,
 ) -> dict[str, Any]:
-    player = await identity.get_required_player()
-    token = await holder.one_time_token.save_new_token(dct={"player_id": player.id})
     return {
-        "player": player,
-        "url": f"{config_.web.base_url}/auth/one-time-token?token={token}",
+        "url": await interactor(),
     }

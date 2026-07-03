@@ -59,6 +59,15 @@ class EmailAccountDao(BaseDAO[models.EmailAccount]):
         account.is_verified = True
 
     async def get_verified_player_by_email(self, email: str) -> dto.PlayerWithCreds:
+        """Use only for authentication, where the password is actually checked."""
+        player = await self._get_verified_player_model_or_raise(email)
+        return player.to_dto_user_prefetched().add_password(player.hashed_password)
+
+    async def find_verified_player_by_email(self, email: str) -> dto.Player:
+        player = await self._get_verified_player_model_or_raise(email)
+        return player.to_dto_user_prefetched()
+
+    async def _get_verified_player_model_or_raise(self, email: str) -> models.Player:
         result = await self.session.scalars(
             select(models.Player)
             .join(models.Player.email)
@@ -73,10 +82,9 @@ class EmailAccountDao(BaseDAO[models.EmailAccount]):
             )
         )
         try:
-            player = result.one()
+            return result.one()
         except NoResultFound as e:
             raise exceptions.EmailNotVerified(text=f"no verified email {email}") from e
-        return player.to_dto_user_prefetched().add_password(player.hashed_password)
 
     async def _get_by_email_or_none(self, email: str) -> models.EmailAccount | None:
         result = await self.session.scalars(

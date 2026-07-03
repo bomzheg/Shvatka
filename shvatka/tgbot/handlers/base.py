@@ -17,10 +17,9 @@ from dishka import FromDishka
 from dishka.integrations.aiogram import inject
 from prometheus_client import Counter, REGISTRY
 
-from shvatka.common import Config
-from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.models import dto
 from shvatka.core.services.chat import update_chat_id
+from shvatka.core.services.one_time_link import GenerateOneTimeLoginLinkInteractor
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.tgbot.views.commands import (
     CANCEL_COMMAND,
@@ -111,13 +110,9 @@ async def privacy(message: Message, user: dto.User):
 @inject
 async def one_time_link(
     message: Message,
-    dao: HolderDao,
-    identity: FromDishka[IdentityProvider],
-    config_: FromDishka[Config],
+    interactor: FromDishka[GenerateOneTimeLoginLinkInteractor],
 ):
-    player = await identity.get_required_player()
-    token = await dao.one_time_token.save_new_token(dct={"player_id": player.id})
-    url = f"{config_.web.base_url}/auth/one-time-token?token={token}"
+    url = await interactor()
     await message.answer(
         "Одноразовая ссылка для входа на сайт.\n"
         "Для входа нажми на кнопку ниже (ссылка одноразовая и скоро истечёт)",

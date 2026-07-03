@@ -59,16 +59,15 @@ class FakeEmailDao:
     async def get_by_email(self, email: str) -> dto.EmailAccount | None:
         return self.accounts.get(email)
 
-    async def get_verified_player_by_email(self, email: str) -> dto.PlayerWithCreds:
+    async def find_verified_player_by_email(self, email: str) -> dto.Player:
         account = self.accounts.get(email)
         if account is None or not account.is_verified:
             raise exceptions.EmailNotVerified(text=f"no verified email {email}")
-        return dto.PlayerWithCreds(
+        return dto.Player(
             id=account.player_id,
             can_be_author=False,
             is_dummy=False,
             username="player",
-            hashed_password=self.passwords.get(account.player_id),
         )
 
     async def commit(self) -> None:
@@ -299,7 +298,7 @@ async def test_forgot_password_rejects_invalid_email(forgot_password):
 
 
 @pytest.mark.asyncio
-async def test_forgot_password_is_rate_limited_per_email(
+async def test_forgot_password_is_rate_limited_per_player(
     register, confirm, forgot_password, sender
 ):
     await register(username="harry", email="a@b.com", password="pw")
@@ -309,3 +308,25 @@ async def test_forgot_password_is_rate_limited_per_email(
     with pytest.raises(exceptions.RateLimitExceeded):
         await forgot_password(email="a@b.com")
     assert len(sender.links) == 1
+
+
+@pytest.mark.asyncio
+async def test_forgot_password_rate_limit_is_shared_across_a_players_emails(
+    register, confirm, forgot_password, sender, dao
+):
+    await register(username="harry", email="a@b.com", password="pw")
+    await confirm(email="a@b.com", code=sender.sent[0][1])
+    player = dto.Player(id=1, can_be_author=False, is_dummy=False, username="harry")
+    await dao.add_email_to_player(player, "second@b.com")
+    await dao.set_verified("second@b.com")
+
+    await forgot_password(email="a@b.com")
+    with pytest.raises(exceptions.RateLimitExceeded):
+        await forgot_password(email="second@b.com")
+    assert len(sender.links) == 1
+
+
+@pytest.mark.asyncio
+async def test_forgot_password_unknown_email_does_not_consume_rate_limit(forgot_password, limiter):
+    await forgot_password(email="nobody@nowhere.com")
+    assert limiter.used == set()

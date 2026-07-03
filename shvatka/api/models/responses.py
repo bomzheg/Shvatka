@@ -126,7 +126,7 @@ class EmailAccount:
 
 
 @dataclass
-class Me:
+class PlayerWithIdentities:
     id: int
     can_be_author: bool
     name_mention: str
@@ -136,7 +136,9 @@ class Me:
     email: EmailAccount | None
 
     @classmethod
-    def from_core(cls, player: dto.Player, email: dto.EmailAccount | None) -> "Me":
+    def from_core(
+        cls, player: dto.Player, email: dto.EmailAccount | None
+    ) -> "PlayerWithIdentities":
         return cls(
             id=player.id,
             can_be_author=player.can_be_author,

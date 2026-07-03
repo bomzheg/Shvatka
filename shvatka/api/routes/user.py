@@ -24,37 +24,46 @@ logger = logging.getLogger(__name__)
 async def read_users_me(
     identity: FromDishka[IdentityProvider],
     dao: FromDishka[HolderDao],
-) -> responses.Me:
+) -> responses.PlayerWithIdentities:
     player_ = await identity.get_player()
     if player_ is None:
         raise HTTPException(status_code=401, detail="User not found")
     email = await dao.email.get_by_player_id(player_.id)
-    return responses.Me.from_core(player_, email)
+    return responses.PlayerWithIdentities.from_core(player_, email)
 
 
 @inject
 async def search_users(
     interactor: FromDishka[SearchPlayersInteractor],
+    dao: FromDishka[HolderDao],
     username: Annotated[str | None, Query()] = None,
     name: Annotated[str | None, Query()] = None,
     active: Annotated[bool, Query()] = True,
     archive: Annotated[bool, Query()] = False,
-) -> responses.Items[responses.Player]:
+) -> responses.Items[responses.PlayerWithIdentities]:
     players = await interactor(
         username=username,
         name=name,
         active=active,
         archive=archive,
     )
-    return responses.Items([responses.Player.from_core(player) for player in players])
+    emails = await dao.email.get_by_player_ids([player.id for player in players])
+    return responses.Items(
+        [
+            responses.PlayerWithIdentities.from_core(player, emails.get(player.id))
+            for player in players
+        ]
+    )
 
 
 @inject
 async def read_user(
     dao: FromDishka[HolderDao],
     id_: int = Path(alias="id"),  # type: ignore[assignment]
-) -> responses.Player:
-    return responses.Player.from_core(await get_player_by_id(id_, dao.player))
+) -> responses.PlayerWithIdentities:
+    player = await get_player_by_id(id_, dao.player)
+    email = await dao.email.get_by_player_id(player.id)
+    return responses.PlayerWithIdentities.from_core(player, email)
 
 
 @inject

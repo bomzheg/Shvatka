@@ -2,7 +2,6 @@ import pytest
 from httpx import AsyncClient
 
 from shvatka.api.dependencies.auth import AuthProperties
-from shvatka.api.models import responses
 from shvatka.api.models.auth import Token
 from shvatka.core.models import dto
 from shvatka.infrastructure.db.dao.holder import HolderDao
@@ -18,11 +17,13 @@ async def test_get_user(client: AsyncClient, harry: dto.Player):
     resp_user = await client.get(f"/users/{harry.id}")
     assert resp_user.is_success
     resp_user.read()
-    actual = responses.Player(**resp_user.json())
-    assert responses.Player.from_core(harry) == actual
-    assert actual.id == harry.id
-    assert actual.name_mention == harry.username
-    assert actual.can_be_author == harry.can_be_author
+    body = resp_user.json()
+    assert body["id"] == harry.id
+    assert body["name_mention"] == harry.username
+    assert body["can_be_author"] == harry.can_be_author
+    assert body["tg"]["tg_id"] == harry.get_chat_id()
+    assert body["forum"] is None
+    assert body["email"] is None
 
 
 @pytest.mark.asyncio

@@ -102,9 +102,7 @@ async def test_change_status_to_waivers_writes_game_log():
     )
 
     assert dao.started is True
-    assert game_log.calls == [
-        GameLogEvent(GameLogType.GAME_WAIVERS_STARTED, {"game": game.name})
-    ]
+    assert game_log.calls == [GameLogEvent(GameLogType.GAME_WAIVERS_STARTED, {"game": game.name})]
 
 
 @pytest.mark.asyncio

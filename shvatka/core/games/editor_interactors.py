@@ -41,6 +41,8 @@ from shvatka.core.services.game import (
 )
 from shvatka.core.services.scenario.files import rename_file, save_file
 from shvatka.core.utils import exceptions
+from shvatka.core.utils.datetime_utils import DATETIME_FORMAT, tz_game
+from shvatka.core.views.game import GameLogEvent, GameLogType, GameLogWriter
 
 logger = logging.getLogger(__name__)
 
@@ -87,6 +89,7 @@ class PlanGameStartInteractor:
     getter: GameByIdGetter
     dao: GameStartPlanner
     scheduler: Scheduler
+    game_log: GameLogWriter
 
     async def __call__(
         self, game_id: int, start_at: datetime | None, identity: IdentityProvider
@@ -97,6 +100,15 @@ class PlanGameStartInteractor:
             await cancel_planed_start(game, author, self.scheduler, self.dao)
         else:
             await plain_start(game, author, start_at, self.dao, self.scheduler)
+            await self.game_log.log(
+                GameLogEvent(
+                    GameLogType.GAME_PLANED,
+                    {
+                        "game": game.name,
+                        "at": start_at.astimezone(tz_game).strftime(DATETIME_FORMAT),
+                    },
+                )
+            )
         return game
 
 
@@ -105,6 +117,7 @@ class ChangeGameStatusInteractor:
     getter: GameByIdGetter
     waiver_starter: WaiverStarter
     completer: GameCompleter
+    game_log: GameLogWriter
 
     async def __call__(
         self, game_id: int, status: enums.GameStatus, identity: IdentityProvider
@@ -113,6 +126,9 @@ class ChangeGameStatusInteractor:
         game = await self.getter.get_by_id(id_=game_id, author=author)
         if status == enums.GameStatus.getting_waivers:
             await start_waivers(game, author, self.waiver_starter)
+            await self.game_log.log(
+                GameLogEvent(GameLogType.GAME_WAIVERS_STARTED, {"game": game.name})
+            )
         elif status == enums.GameStatus.complete:
             await complete_game(game, self.completer)
         else:

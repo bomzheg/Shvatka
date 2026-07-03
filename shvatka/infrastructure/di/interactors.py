@@ -43,6 +43,7 @@ from shvatka.core.teams.interactors import (
     TeamsListInteractor,
     UpdateTeamPlayerInteractor,
 )
+from shvatka.core.views.game import GameLogWriter
 from shvatka.core.views.team import TeamNotifier
 from shvatka.core.interfaces.clients.file_storage import FileStorage
 from shvatka.core.interfaces.dal.complex import GameScenarioEditor
@@ -167,13 +168,17 @@ class GameEditProvider(Provider):
         return ChangeGameScenarioInteractor(dao=dao, retort=retort)
 
     @provide
-    def change_start_at(self, dao: HolderDao, scheduler: Scheduler) -> PlanGameStartInteractor:
-        return PlanGameStartInteractor(getter=dao.game, dao=dao.game, scheduler=scheduler)
+    def change_start_at(
+        self, dao: HolderDao, scheduler: Scheduler, game_log: GameLogWriter
+    ) -> PlanGameStartInteractor:
+        return PlanGameStartInteractor(
+            getter=dao.game, dao=dao.game, scheduler=scheduler, game_log=game_log
+        )
 
     @provide
-    def change_status(self, dao: HolderDao) -> ChangeGameStatusInteractor:
+    def change_status(self, dao: HolderDao, game_log: GameLogWriter) -> ChangeGameStatusInteractor:
         return ChangeGameStatusInteractor(
-            getter=dao.game, waiver_starter=dao.game, completer=dao.game
+            getter=dao.game, waiver_starter=dao.game, completer=dao.game, game_log=game_log
         )
 
     @provide

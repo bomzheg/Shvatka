@@ -150,6 +150,7 @@ async def clear_data(dao: HolderDao):
     await dao.chat.delete_all()
     await dao.team.delete_all()
     await dao.user.delete_all()
+    await dao.email.delete_all()
     await dao.player.delete_all()
     await dao.commit()
 

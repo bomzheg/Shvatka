@@ -35,35 +35,26 @@ async def read_users_me(
 @inject
 async def search_users(
     interactor: FromDishka[SearchPlayersInteractor],
-    dao: FromDishka[HolderDao],
     username: Annotated[str | None, Query()] = None,
     name: Annotated[str | None, Query()] = None,
     active: Annotated[bool, Query()] = True,
     archive: Annotated[bool, Query()] = False,
-) -> responses.Items[responses.PlayerWithIdentities]:
+) -> responses.Items[responses.Player]:
     players = await interactor(
         username=username,
         name=name,
         active=active,
         archive=archive,
     )
-    emails = await dao.email.get_by_player_ids([player.id for player in players])
-    return responses.Items(
-        [
-            responses.PlayerWithIdentities.from_core(player, emails.get(player.id))
-            for player in players
-        ]
-    )
+    return responses.Items([responses.Player.from_core(player) for player in players])
 
 
 @inject
 async def read_user(
     dao: FromDishka[HolderDao],
     id_: int = Path(alias="id"),  # type: ignore[assignment]
-) -> responses.PlayerWithIdentities:
-    player = await get_player_by_id(id_, dao.player)
-    email = await dao.email.get_by_player_id(player.id)
-    return responses.PlayerWithIdentities.from_core(player, email)
+) -> responses.Player:
+    return responses.Player.from_core(await get_player_by_id(id_, dao.player))
 
 
 @inject

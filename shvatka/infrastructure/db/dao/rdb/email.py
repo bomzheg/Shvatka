@@ -30,10 +30,8 @@ class EmailAccountDao(BaseDAO[models.EmailAccount]):
         return db_account.to_dto() if db_account is not None else None
 
     async def is_email_occupied(self, email: str) -> bool:
-        result = await self.session.scalars(
-            select(models.EmailAccount).where(func.lower(models.EmailAccount.email) == email)
-        )
-        return result.one_or_none() is not None
+        result = await self._get_by_email_or_none(email)
+        return result is not None
 
     async def create_player_for_email(
         self, username: str, email: str, hashed_password: str
@@ -70,7 +68,7 @@ class EmailAccountDao(BaseDAO[models.EmailAccount]):
                 contains_eager(models.Player.email),
             )
             .where(
-                func.lower(models.EmailAccount.email) == email,
+                func.lower(models.EmailAccount.email) == email.lower(),
                 models.EmailAccount.is_verified.is_(True),
             )
         )
@@ -82,6 +80,6 @@ class EmailAccountDao(BaseDAO[models.EmailAccount]):
 
     async def _get_by_email_or_none(self, email: str) -> models.EmailAccount | None:
         result = await self.session.scalars(
-            select(models.EmailAccount).where(func.lower(models.EmailAccount.email) == email)
+            select(models.EmailAccount).where(func.lower(models.EmailAccount.email) == email.lower())
         )
         return result.one_or_none()

@@ -13,6 +13,10 @@ from shvatka.tgbot.dialogs.profile.handlers import (
     save_new_username,
     validate_username,
     username_invalid,
+    validate_email_input,
+    email_invalid,
+    on_email_entered,
+    on_email_code_entered,
 )
 
 profile_dialog = Dialog(
@@ -40,9 +44,43 @@ profile_dialog = Dialog(
             state=states.ProfileSG.one_time_login,
             id="to_ott",
         ),
+        SwitchTo(
+            Const("Привязать email"),
+            state=states.ProfileSG.email,
+            id="to_email",
+        ),
         Cancel(Const("🔙Выход")),
         state=states.ProfileSG.main,
         getter=player_stat_getter,
+    ),
+    Window(
+        Const("Введи адрес электронной почты, который хочешь привязать к аккаунту"),
+        SwitchTo(
+            Const("🔙Назад"),
+            state=states.ProfileSG.main,
+            id="email_to_main",
+        ),
+        TextInput(
+            id="get_email",
+            type_factory=validate_email_input,
+            on_success=on_email_entered,
+            on_error=email_invalid,
+        ),
+        state=states.ProfileSG.email,
+    ),
+    Window(
+        Const("Введи код подтверждения, отправленный на указанную почту"),
+        SwitchTo(
+            Const("🔙Назад"),
+            state=states.ProfileSG.main,
+            id="email_code_to_main",
+        ),
+        TextInput(
+            id="get_email_code",
+            type_factory=str,
+            on_success=on_email_code_entered,
+        ),
+        state=states.ProfileSG.email_code,
     ),
     Window(
         Jinja("Введи своё новое имя пользователя. Сейчас сохранено {{player.username}}"),

@@ -7,6 +7,7 @@ from shvatka.api.main_factory import (
 )
 from shvatka.common.config.parser.logging_config import setup_logging
 from shvatka.api.dependencies.auth import AuthProperties
+from shvatka.infrastructure.crypto.hasher import BcryptPasswordHasher
 
 logger = logging.getLogger(__name__)
 
@@ -16,7 +17,7 @@ def generate():
 
     setup_logging(paths)
     config = load_config(paths)
-    auth = AuthProperties(config.auth)
+    auth = AuthProperties(config.auth, BcryptPasswordHasher())
     return auth.get_password_hash(sys.argv[1])
 
 

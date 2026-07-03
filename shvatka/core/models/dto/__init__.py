@@ -1,6 +1,7 @@
 from .achievement import Achievement
 from .chat import Chat
 from .common import DateRange
+from .email import EmailAccount, EmailConfirmation
 from .forum_team import ForumTeam
 from .forum_user import ForumUser
 from .game import Game, PreviewGame, FullGame, GameResults, GameFinished

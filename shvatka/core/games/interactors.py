@@ -82,7 +82,6 @@ class GameFileReaderInteractor:
     async def __call__(
         self, guid: str, game_id: int, identity: IdentityProvider
     ) -> VerifiableFileMeta:
-        user = await identity.get_required_user()
         player = await identity.get_required_player()
         game = await self.dao.get_full(game_id)
         if (
@@ -94,7 +93,7 @@ class GameFileReaderInteractor:
                 raise exceptions.FileNotFound(
                     text=f"There is no file with uuid {guid} associated with game id {game_id}",
                     game=game,
-                    user=user,
+                    user=await identity.get_user(),
                     player=player,
                 )
         elif game.is_started():
@@ -105,12 +104,15 @@ class GameFileReaderInteractor:
                         text=f"There is no file with uuid {guid} associated "
                         f"with game id {game_id} and available now",
                         game=game,
-                        user=user,
+                        user=await identity.get_user(),
                         player=player,
                     )
         else:
             raise exceptions.NotAuthorizedForEdit(
-                permission_name="game_file_read", player=player, game=game, user=user
+                permission_name="game_file_read",
+                player=player,
+                game=game,
+                user=await identity.get_user(),
             )
 
         meta = await self.dao.get_by_guid(guid)

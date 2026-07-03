@@ -10,13 +10,13 @@ from aiogram.utils.web_app import check_webapp_signature, parse_webapp_init_data
 from dishka import Provider, provide, Scope, from_context
 from fastapi import HTTPException
 from jose import jwt, JWTError
-from passlib.context import CryptContext
 from starlette import status
 from starlette.requests import Request
 
 from shvatka.api.config.models.auth import AuthConfig
 from shvatka.api.models.auth import UserTgAuth, Token
 from shvatka.api.utils.cookie_auth import OAuth2PasswordBearerWithCookie
+from shvatka.core.interfaces.hasher import PasswordHasher
 from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.models import dto
 from shvatka.core.players.player import (
@@ -25,6 +25,7 @@ from shvatka.core.players.player import (
 )
 from shvatka.core.utils import exceptions
 from shvatka.core.utils.datetime_utils import tz_utc
+from shvatka.core.utils.input_validation import validate_email
 from shvatka.core.utils.exceptions import NoUsernameFound
 from shvatka.infrastructure.db.dao.holder import HolderDao
 
@@ -33,10 +34,10 @@ logger = logging.getLogger(__name__)
 
 
 class AuthProperties:
-    def __init__(self, config: AuthConfig) -> None:
+    def __init__(self, config: AuthConfig, hasher: PasswordHasher) -> None:
         super().__init__()
         self.config = config
-        self.pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+        self.hasher = hasher
         # to get a string like this run:
         # openssl rand -hex 32
         self.secret_key = config.secret_key
@@ -44,10 +45,10 @@ class AuthProperties:
         self.access_token_expire = config.token_expire
 
     def verify_password(self, plain_password: str, hashed_password: str) -> bool:
-        return self.pwd_context.verify(plain_password, hashed_password)
+        return self.hasher.verify(plain_password, hashed_password)
 
     def get_password_hash(self, password: str) -> str:
-        return self.pwd_context.hash(password)
+        return self.hasher.hash(password)
 
     async def authenticate_user(self, username: str, password: str, dao: HolderDao) -> dto.Player:
         http_status_401 = HTTPException(
@@ -58,6 +59,23 @@ class AuthProperties:
         try:
             player = await dao.player.get_by_username_with_password(username)
         except NoUsernameFound as e:
+            raise http_status_401 from e
+        if not self.verify_password(password, player.hashed_password or ""):
+            raise http_status_401
+        return player.without_password()
+
+    async def authenticate_by_email(self, email: str, password: str, dao: HolderDao) -> dto.Player:
+        http_status_401 = HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect email or password",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+        normalized = validate_email(email)
+        if normalized is None:
+            raise http_status_401
+        try:
+            player = await dao.email.get_verified_player_by_email(normalized)
+        except exceptions.EmailNotVerified as e:
             raise http_status_401 from e
         if not self.verify_password(password, player.hashed_password or ""):
             raise http_status_401
@@ -240,8 +258,8 @@ class AuthProvider(Provider):
     request = from_context(provides=Request, scope=Scope.REQUEST)
 
     @provide
-    def get_auth_properties(self, config: AuthConfig) -> AuthProperties:
-        return AuthProperties(config)
+    def get_auth_properties(self, config: AuthConfig, hasher: PasswordHasher) -> AuthProperties:
+        return AuthProperties(config, hasher)
 
     @provide
     def get_cookie_auth(self) -> OAuth2PasswordBearerWithCookie:

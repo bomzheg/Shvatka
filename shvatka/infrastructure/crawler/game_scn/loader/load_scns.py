@@ -157,6 +157,11 @@ async def get_or_create_player(dao: HolderDao, player: Player):
                 return await dao.player.create_for_user(
                     await dao.user.upsert_user(dto.User(tg_id=player.tg_user_id))
                 )
+        case PlayerIdentity.username:
+            result = await dao.player.get_by_username_or_none(player.username)
+            if not result:
+                result = await dao.player.create_dummy_with_username(player.username)
+            return result
 
 
 async def add_waiver_if_already_not(

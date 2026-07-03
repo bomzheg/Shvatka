@@ -112,6 +112,15 @@ wheels = [
 ]
 
 [[package]]
+name = "aiosmtplib"
+version = "3.0.2"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/91/2a/812517f8350cd317aad2ba1ce25dfc213c6f1f2e62e1cbf662b4bdc51d34/aiosmtplib-3.0.2.tar.gz", hash = "sha256:08fd840f9dbc23258025dca229e8a8f04d2ccf3ecb1319585615bfc7933f7f47", size = 59941, upload-time = "2024-07-31T05:13:10.065Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/87/35/441faea7a11159795881a6ec869454f40269e4e3806dced935a35d83a412/aiosmtplib-3.0.2-py3-none-any.whl", hash = "sha256:8783059603a34834c7c90ca51103c3aa129d5922003b5ce98dbaa6d4440f10fc", size = 27111, upload-time = "2024-07-31T05:13:08.515Z" },
+]
+
+[[package]]
 name = "alembic"
 version = "1.17.2"
 source = { registry = "https://pypi.org/simple" }
@@ -2467,6 +2476,7 @@ dependencies = [
     { name = "adaptix" },
     { name = "aiogram" },
     { name = "aiogram-dialog", extra = ["tools"] },
+    { name = "aiosmtplib" },
     { name = "alembic" },
     { name = "apscheduler" },
     { name = "asgi-monitor" },
@@ -2527,6 +2537,7 @@ requires-dist = [
     { name = "adaptix", specifier = "==3.0.0b9" },
     { name = "aiogram", specifier = ">=3.20.0,<3.21.0" },
     { name = "aiogram-dialog", extras = ["tools"], specifier = ">=2.6,<3.0" },
+    { name = "aiosmtplib", specifier = ">=3.0,<4.0" },
     { name = "alembic", specifier = ">=1.10.0,<2.0" },
     { name = "apscheduler", specifier = ">=3.9.1,<4.0" },
     { name = "asgi-monitor", specifier = ">=0.4.0,<0.5.0" },

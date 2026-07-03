@@ -50,11 +50,13 @@ async def test_user_get(client: AsyncClient, harry: dto.Player, token: Token):
     )
 
     assert resp.is_success
-    actual = responses.Player(**resp.json())
-    assert responses.Player.from_core(harry) == actual
-    assert actual.id == harry.id
-    assert actual.name_mention == harry.username
-    assert actual.can_be_author == harry.can_be_author
+    body = resp.json()
+    assert body["id"] == harry.id
+    assert body["name_mention"] == harry.username
+    assert body["can_be_author"] == harry.can_be_author
+    assert body["tg"]["tg_id"] == harry.get_chat_id()
+    assert body["forum"] is None
+    assert body["email"] is None
 
 
 @pytest.mark.asyncio
@@ -108,9 +110,9 @@ async def test_change_username(client: AsyncClient, harry: dto.Player, token: To
         follow_redirects=True,
     )
     assert resp.is_success
-    actual = responses.Player(**resp.json())
-    assert actual.id == harry.id
-    assert actual.name_mention == new_username
+    body = resp.json()
+    assert body["id"] == harry.id
+    assert body["name_mention"] == new_username
 
 
 @pytest.mark.asyncio

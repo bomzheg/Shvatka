@@ -21,9 +21,12 @@ class Player:
         self._user = user
         self._forum_user = forum_user
 
+    def username_is_dummy(self) -> bool:
+        return self.username == f"id{self.id}"
+
     @property
     def name_mention(self) -> str:
-        if self.username is not None and self.username != f"id{self.id}":
+        if self.username is not None and not self.username_is_dummy():
             return self.username
         if self.is_dummy:
             if self._forum_user:
@@ -41,22 +44,17 @@ class Player:
         return self._forum_user is not None
 
     def get_tech_chat_id(self, reserve_chat_id: int) -> int:
-        if self.is_dummy:
-            return reserve_chat_id
-        chat_id = self.get_chat_id()
-        assert chat_id, f"chat_id required, got, {self!r}"
-        return chat_id
+        return self.get_chat_id() or reserve_chat_id
 
     def get_chat_id(self) -> int | None:
-        if self.is_dummy:
+        # player may have no telegram identity (dummy, forum-only or email-only)
+        if self._user is None:
             return None
-        assert self._user, f"only tg users supported, got forum user, {self!r}"
         return self._user.tg_id
 
     def get_tg_username(self) -> str | None:
-        if self.is_dummy:
+        if self._user is None:
             return None
-        assert self._user, f"only tg users supported, got forum user, {self!r}"
         return self._user.username
 
     def get_forum_name(self) -> str | None:

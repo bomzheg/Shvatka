@@ -15,6 +15,7 @@ class Config:
     redis: RedisConfig
     file_storage_config: FileStorageConfig
     web: WebConfig
+    mail: MailConfig
 
     @property
     def app_dir(self) -> Path:
@@ -45,3 +46,15 @@ class FileStorageConfig:
 @dataclass
 class WebConfig:
     base_url: str
+
+
+@dataclass
+class MailConfig:
+    enabled: bool = False
+    host: str = ""
+    port: int = 587
+    username: str = ""
+    password: str = ""
+    from_addr: str = ""
+    use_tls: bool = False
+    start_tls: bool = True

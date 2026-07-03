@@ -1,6 +1,7 @@
 from .achievement import Achievement
 from .base import Base
 from .chat import Chat
+from .email import EmailAccount
 from .file_info import FileInfo
 from .file_link import GameFile, LevelFile
 from .forum_team import ForumTeam

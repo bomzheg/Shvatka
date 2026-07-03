@@ -13,6 +13,7 @@ if typing.TYPE_CHECKING:
 class PlayerIdentity(enum.StrEnum):
     forum_name = enum.auto()
     tg_user_id = enum.auto()
+    username = enum.auto()
 
 
 class TeamIdentity(enum.StrEnum):
@@ -25,25 +26,26 @@ class Player:
     identity: PlayerIdentity
     forum_name: str | None = None
     tg_user_id: int | None = None
+    username: str | None = None
 
     def __post_init__(self) -> None:
-        if self.forum_name is None and self.tg_user_id is None:
-            raise RuntimeError("forum name and tg_user_id are None both")
+        if self.forum_name is None and self.tg_user_id is None and self.username is None:
+            raise RuntimeError("forum_name, tg_user_id and username are None all")
 
     @classmethod
     def from_dto(cls, player: "dto.Player"):
-        if player.has_user():
+        if player.username is not None and not player.username_is_dummy():
+            return Player(username=player.username, identity=PlayerIdentity.username)
+        elif player.has_user():
             player_tg_id = player.get_chat_id()
             assert player_tg_id is not None
-            player_identity = PlayerIdentity.tg_user_id
-            return Player(tg_user_id=player_tg_id, identity=player_identity)
+            return Player(tg_user_id=player_tg_id, identity=PlayerIdentity.tg_user_id)
         elif player.has_forum_user():
             player_name = player.get_forum_name()
             assert player_name is not None
-            player_identity = PlayerIdentity.forum_name
-            return Player(forum_name=player_name, identity=player_identity)
+            return Player(forum_name=player_name, identity=PlayerIdentity.forum_name)
         else:
-            raise RuntimeError("player without user and forum_user")
+            raise RuntimeError("player without user, forum_user and username")
 
 
 @dataclass

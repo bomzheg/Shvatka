@@ -1,4 +1,5 @@
 from .chat import ChatDao
+from .email import EmailAccountDao
 from .file_info import FileInfoDao
 from .forum_user import ForumUserDAO
 from .game import GameDao

@@ -161,15 +161,19 @@ class PlayerDao(BaseDAO[models.Player]):
         query = (
             select(models.Player)
             .outerjoin(models.Player.user)
+            .outerjoin(models.Player.email)
             .options(
                 contains_eager(models.Player.user),
                 selectinload(models.Player.forum_user),
             )
         )
+        # a player is active if they can log in: via telegram or via email
         if active and not archive:
-            query = query.where(models.User.id.is_not(None))
+            query = query.where(
+                or_(models.User.id.is_not(None), models.EmailAccount.id.is_not(None))
+            )
         elif archive and not active:
-            query = query.where(models.User.id.is_(None))
+            query = query.where(models.User.id.is_(None), models.EmailAccount.id.is_(None))
 
         match_conditions: list[ColumnElement[bool]] = []
         username_match = None
@@ -297,6 +301,18 @@ class PlayerDao(BaseDAO[models.Player]):
             select(models.Player).where(models.Player.username.ilike(username))
         )
         return result.one_or_none() is not None
+
+    async def get_by_username_or_none(self, username: str) -> dto.Player | None:
+        try:
+            player = await self._get_by_username(username)
+        except exceptions.NoUsernameFound:
+            return None
+        return player.to_dto()
+
+    async def create_dummy_with_username(self, username: str) -> dto.Player:
+        player = await self._create_dummy()
+        player.username = username
+        return player.to_dto()
 
     async def get_by_username_with_password(self, username: str) -> dto.PlayerWithCreds:
         player = await self._get_by_username(username)

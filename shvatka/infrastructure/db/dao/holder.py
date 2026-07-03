@@ -34,6 +34,7 @@ from .complex.waiver import WaiverApproverImpl
 from .memory.level_testing import LevelTestingData
 from .rdb import (
     ChatDao,
+    EmailAccountDao,
     UserDao,
     FileInfoDao,
     GameDao,
@@ -53,7 +54,7 @@ from .rdb.achievement import AchievementDAO
 from .rdb.events import GameEventDao
 from .rdb.forum_team import ForumTeamDAO
 from .rdb.timers import TimersDAO
-from .redis import PollDao, SecureInvite, OneTimeToken
+from .redis import PollDao, SecureInvite, OneTimeToken, EmailConfirmationStore
 
 
 class HolderDao:
@@ -77,6 +78,7 @@ class HolderDao:
         self.key_time = KeyTimeDao(self.session, clock=clock)
         self.organizer = OrganizerDao(self.session, clock=clock)
         self.player = PlayerDao(self.session, clock=clock)
+        self.email = EmailAccountDao(self.session, clock=clock)
         self.team_player = TeamPlayerDao(self.session, clock=clock)
         self.team = TeamDao(self.session, clock=clock)
         self.waiver = WaiverDao(self.session, clock=clock)
@@ -88,6 +90,7 @@ class HolderDao:
         self.poll = PollDao(redis=redis, clock=clock)
         self.secure_invite = SecureInvite(redis=redis, clock=clock)
         self.one_time_token = OneTimeToken(redis=redis, clock=clock)
+        self.email_confirm = EmailConfirmationStore(redis=redis, clock=clock)
         self.level_test = level_test
 
     async def commit(self):

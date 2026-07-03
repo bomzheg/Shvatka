@@ -195,12 +195,16 @@ async def gotten_chat_request(m: Message, widget: Any, manager: DialogManager):
             text=f"‼️Другая команда уже находится в чате " f"({hd.quote(chat.name)}).\n",
         )
         return
-    await bot.send_message(
-        chat_id=captain.get_chat_id(),  # type: ignore[arg-type]
-        text=(
+    if old_chat_id is None:
+        text = f"Команда {hd.bold(team.name)} привязана к чату {hd.bold(chat.name)}"
+    else:
+        text = (
             f"Команда {hd.bold(team.name)} перенесена в чат {hd.bold(chat.name)}\n"
             f"{old_chat_id}➡️{chat.tg_id}"
-        ),
+        )
+    await bot.send_message(
+        chat_id=captain.get_chat_id(),  # type: ignore[arg-type]
+        text=text,
     )
     await total_remove_msg(
         bot, chat_id=m.chat.id, msg_id=manager.dialog_data.pop("chat_request_message")

@@ -46,6 +46,64 @@ async def test_get_team(
 
 
 @pytest.mark.asyncio
+async def test_create_team_without_chat(
+    client: AsyncClient,
+    harry: dto.Player,
+    token: Token,
+    check_dao: HolderDao,
+):
+    resp = await client.post(
+        "/teams",
+        cookies=auth_cookies(token),
+        json={"name": "Web Team", "description": "plays only via web"},
+        follow_redirects=True,
+    )
+    assert resp.status_code == 201
+    resp.read()
+    body = resp.json()
+    assert body["name"] == "Web Team"
+    assert body["description"] == "plays only via web"
+    assert body["captain"]["id"] == harry.id
+    team = await check_dao.team.get_by_id(body["id"])
+    assert not team.has_chat()
+    assert team.get_chat_id() is None
+    assert not team.is_dummy
+    team_player = await get_full_team_player(harry, team, check_dao.team_player)
+    assert team_player.role == CAPTAIN_ROLE
+
+
+@pytest.mark.asyncio
+async def test_create_team_when_already_in_team(
+    client: AsyncClient,
+    harry: dto.Player,
+    gryffindor: dto.Team,
+    token: Token,
+):
+    resp = await client.post(
+        "/teams",
+        cookies=auth_cookies(token),
+        json={"name": "Second Team"},
+        follow_redirects=True,
+    )
+    assert resp.status_code == 422  # PlayerAlreadyInTeam -> SHError
+
+
+@pytest.mark.asyncio
+async def test_create_team_with_empty_name(
+    client: AsyncClient,
+    harry: dto.Player,
+    token: Token,
+):
+    resp = await client.post(
+        "/teams",
+        cookies=auth_cookies(token),
+        json={"name": "   "},
+        follow_redirects=True,
+    )
+    assert resp.status_code == 422
+
+
+@pytest.mark.asyncio
 async def test_get_all_teams(
     client: AsyncClient,
     gryffindor: dto.Team,

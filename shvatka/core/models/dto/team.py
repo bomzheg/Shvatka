@@ -35,9 +35,8 @@ class Team:
         return f"<Team id={self.id} name={self.name}>"
 
     def get_chat_id(self) -> int | None:
-        if self.is_dummy:
+        if self._chat is None:
             return None
-        assert self._chat
         return self._chat.tg_id
 
     def has_chat(self) -> bool:

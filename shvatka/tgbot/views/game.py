@@ -107,6 +107,8 @@ class BotView(GameViewPreparer, GameView):
     ) -> None:
         # TODO set bot commands for orgs, hide bot commands for players
         for team in teams:
+            if team.get_chat_id() is None:
+                continue
             try:
                 await self.bot.edit_message_reply_markup(
                     chat_id=team.get_chat_id(),
@@ -140,8 +142,10 @@ class BotView(GameViewPreparer, GameView):
 
     async def send_puzzle(self, team: dto.Team, level: dto.Level) -> None:
         assert level.number_in_game is not None
+        if (chat_id := team.get_chat_id()) is None:
+            return
         await self.hint_sender.send_hints(
-            chat_id=team.get_chat_id(),  # type: ignore[arg-type]
+            chat_id=chat_id,
             hint_containers=level.get_hint(0).hint,
             caption=hd.bold(f"Уровень № {level.number_in_game + 1}"),
         )
@@ -155,14 +159,17 @@ class BotView(GameViewPreparer, GameView):
             )
         else:
             hint_caption = f"Уровень №{level.number_in_game + 1}. Подсказка ({hint.time} мин.):\n"
+        if (chat_id := team.get_chat_id()) is None:
+            return
         await self.hint_sender.send_hints(
-            chat_id=team.get_chat_id(),  # type: ignore[arg-type]
+            chat_id=chat_id,
             hint_containers=hint.hint,
             caption=hint_caption,
         )
 
     async def duplicate_key(self, key: dto.KeyTime, input_container: InputContainer) -> None:
-        chat_id: int = key.team.get_chat_id()  # type: ignore[assignment]
+        if (chat_id := key.team.get_chat_id()) is None:
+            return
         reply_to = await get_message_id(input_container)
         try:
             await self.bot.send_message(
@@ -182,7 +189,8 @@ class BotView(GameViewPreparer, GameView):
             )
 
     async def correct_key(self, key: dto.KeyTime, input_container: InputContainer) -> None:
-        chat_id: int = key.team.get_chat_id()  # type: ignore[assignment]
+        if (chat_id := key.team.get_chat_id()) is None:
+            return
         reply_to = await get_message_id(input_container)
         try:
             await self.bot.send_message(
@@ -194,7 +202,8 @@ class BotView(GameViewPreparer, GameView):
             logger.exception("can't send view about correct key", exc_info=e)
 
     async def wrong_key(self, key: dto.KeyTime, input_container: InputContainer) -> None:
-        chat_id: int = key.team.get_chat_id()  # type: ignore[assignment]
+        if (chat_id := key.team.get_chat_id()) is None:
+            return
         reply_to = await get_message_id(input_container)
         try:
             await self.bot.send_message(
@@ -219,7 +228,8 @@ class BotView(GameViewPreparer, GameView):
             await self.bonus_hint_key(key, effects.hints_, input_container)
 
         if (reply_to := await get_message_id(input_container)) is not None:
-            chat_id: int = key.team.get_chat_id()  # type: ignore[assignment]
+            if (chat_id := key.team.get_chat_id()) is None:
+                return
             if reaction := map_effect_to_reaction(effects):
                 try:
                     await self.bot.set_message_reaction(
@@ -231,7 +241,8 @@ class BotView(GameViewPreparer, GameView):
     async def bonus_key(
         self, key: dto.KeyTime, bonus: float, input_container: InputContainer
     ) -> None:
-        chat_id: int = key.team.get_chat_id()  # type: ignore[assignment]
+        if (chat_id := key.team.get_chat_id()) is None:
+            return
         reply_to = await get_message_id(input_container)
         try:
             await self.bot.send_message(
@@ -248,7 +259,8 @@ class BotView(GameViewPreparer, GameView):
         bonus_hint: Sequence[hints.AnyHint],
         input_container: InputContainer,
     ):
-        chat_id: int = key.team.get_chat_id()  # type: ignore[assignment]
+        if (chat_id := key.team.get_chat_id()) is None:
+            return
         reply_to = await get_message_id(input_container)
         try:
             await self.bot.send_message(
@@ -266,7 +278,8 @@ class BotView(GameViewPreparer, GameView):
         )
 
     async def game_finished(self, team: dto.Team, input_container: InputContainer) -> None:
-        chat_id: int = team.get_chat_id()  # type: ignore[assignment]
+        if (chat_id := team.get_chat_id()) is None:
+            return
         try:
             await self.bot.send_message(
                 chat_id=chat_id,
@@ -282,7 +295,8 @@ class BotView(GameViewPreparer, GameView):
     async def hint(
         self, team: dto.Team, hint: Sequence[hints.AnyHint], input_container: InputContainer
     ):
-        chat_id: int = team.get_chat_id()  # type: ignore[assignment]
+        if (chat_id := team.get_chat_id()) is None:
+            return
         try:
             await self.bot.send_message(
                 chat_id=chat_id,
@@ -297,7 +311,8 @@ class BotView(GameViewPreparer, GameView):
         )
 
     async def bonus(self, team: dto.Team, bonus: float, input_container: InputContainer) -> None:
-        chat_id: int = team.get_chat_id()  # type: ignore[assignment]
+        if (chat_id := team.get_chat_id()) is None:
+            return
         try:
             await self.bot.send_message(
                 reply_to_message_id=await get_message_id(input_container),

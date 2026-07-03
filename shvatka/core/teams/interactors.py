@@ -22,6 +22,7 @@ from shvatka.core.interfaces.dal.team import (
 from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.models import dto, enums
 from shvatka.core.players.player import (
+    check_allow_be_author,
     check_can_manage_players,
     get_full_team_player,
     get_team_players,
@@ -35,6 +36,7 @@ from shvatka.core.services.team import (
     get_teams,
 )
 from shvatka.core.teams.adapters import (
+    ChatlessTeamCreator,
     PlayerPlayedGamesCounter,
     TeamEditor,
     TeamPlayerAdder,
@@ -42,8 +44,9 @@ from shvatka.core.teams.adapters import (
     TeamsWithStatGetter,
 )
 from shvatka.core.teams.dto import TeamPlayerWithStat, TeamWithStat
-from shvatka.core.utils.defaults_constants import DEFAULT_ROLE
-from shvatka.core.utils.exceptions import PlayerRestoredInTeam
+from shvatka.core.utils.defaults_constants import CAPTAIN_ROLE, DEFAULT_ROLE
+from shvatka.core.utils.exceptions import PlayerRestoredInTeam, TeamError
+from shvatka.core.views.game import GameLogEvent, GameLogType, GameLogWriter
 from shvatka.core.views.team import TeamNotifier
 
 
@@ -59,6 +62,49 @@ class TeamsListInteractor:
         return [
             TeamWithStat(team=team, played_games_count=counts.get(team.id, 0)) for team in teams
         ]
+
+
+@dataclass
+class CreateTeamInteractor:
+    """Creates a team without a telegram chat, so it can play only via web.
+
+    A chat can be linked later in the tgbot captain's bridge (the "move team to
+    another chat" flow).
+    """
+
+    dao: ChatlessTeamCreator
+    game_log: GameLogWriter
+
+    async def __call__(
+        self,
+        identity: IdentityProvider,
+        name: str,
+        description: str | None = None,
+    ) -> dto.Team:
+        captain = await identity.get_required_player()
+        name = name.strip()
+        if not name:
+            raise TeamError(
+                player=captain,
+                text="can't create team with empty name",
+                notify_user="Название команды не может быть пустым",
+            )
+        check_allow_be_author(captain)
+        await self.dao.check_player_free(captain)
+        team = await self.dao.create_no_chat(name=name, description=description, captain=captain)
+        with contextlib.suppress(PlayerRestoredInTeam):
+            await self.dao.join_team(captain, team, CAPTAIN_ROLE, as_captain=True)
+        await self.dao.commit()
+        await self.game_log.log(
+            GameLogEvent(
+                GameLogType.TEAM_CREATED,
+                data={
+                    "team": team.name,
+                    "captain": captain.name_mention,
+                },
+            )
+        )
+        return team
 
 
 @dataclass

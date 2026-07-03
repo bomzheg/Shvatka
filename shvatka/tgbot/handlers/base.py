@@ -17,6 +17,7 @@ from dishka import FromDishka
 from dishka.integrations.aiogram import inject
 from prometheus_client import Counter, REGISTRY
 
+from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.models import dto
 from shvatka.core.services.chat import update_chat_id
 from shvatka.core.services.one_time_link import GenerateOneTimeLoginLinkInteractor
@@ -111,8 +112,9 @@ async def privacy(message: Message, user: dto.User):
 async def one_time_link(
     message: Message,
     interactor: FromDishka[GenerateOneTimeLoginLinkInteractor],
+    identity: FromDishka[IdentityProvider],
 ):
-    url = await interactor()
+    url = await interactor(identity=identity)
     await message.answer(
         "Одноразовая ссылка для входа на сайт.\n"
         "Для входа нажми на кнопку ниже (ссылка одноразовая и скоро истечёт)",

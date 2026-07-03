@@ -1,6 +1,7 @@
 from adaptix import Retort
 from dishka import Provider, Scope, provide
 
+from shvatka.common.config.models.main import WebConfig
 from shvatka.core.games.interactors import (
     GameFileReaderInteractor,
     GamePlayReaderInteractor,
@@ -31,6 +32,7 @@ from shvatka.core.players.interactors import (
     GetPlayerStatInteractor,
     SearchPlayersInteractor,
 )
+from shvatka.core.services.one_time_link import GenerateOneTimeLoginLinkInteractor
 from shvatka.core.teams.interactors import (
     AddPlayerToTeamInteractor,
     EditTeamInteractor,
@@ -248,6 +250,15 @@ class PlayerProvider(Provider):
             player_dao=dao.player,
             history_dao=dao.team_player,
             played_games_dao=dao.player,
+        )
+
+    @provide
+    def get_otl_link_interactor(
+        self, dao: HolderDao, config: WebConfig
+    ) -> GenerateOneTimeLoginLinkInteractor:
+        return GenerateOneTimeLoginLinkInteractor(
+            token_creator=dao.one_time_token,
+            base_url=config.base_url,
         )
 
 

@@ -29,12 +29,12 @@ async def test_generates_link_for_current_player():
     player = dto.Player(id=1, can_be_author=False, is_dummy=False, username="harry")
     token_creator = FakeTokenCreator()
     interactor = GenerateOneTimeLoginLinkInteractor(
-        identity=FakeIdentity(player),
         token_creator=token_creator,
         base_url="https://example.com",
     )
+    identity = FakeIdentity(player)
 
-    url = await interactor()
+    url = await interactor(identity=identity)
 
     assert url == "https://example.com/auth/one-time-token?token=the-token"
     assert token_creator.saved == [{"player_id": 1}]
@@ -43,10 +43,10 @@ async def test_generates_link_for_current_player():
 @pytest.mark.asyncio
 async def test_requires_a_player():
     interactor = GenerateOneTimeLoginLinkInteractor(
-        identity=FakeIdentity(None),
         token_creator=FakeTokenCreator(),
         base_url="https://example.com",
     )
+    identity = FakeIdentity(None)
 
     with pytest.raises(exceptions.PlayerNotFoundError):
-        await interactor()
+        await interactor(identity=identity)

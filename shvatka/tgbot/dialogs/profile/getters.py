@@ -39,8 +39,10 @@ async def player_getter(
 @inject
 async def player_one_time_url_getter(
     interactor: FromDishka[GenerateOneTimeLoginLinkInteractor],
+    identity: FromDishka[IdentityProvider],
     **_,
 ) -> dict[str, Any]:
     return {
-        "url": await interactor(),
+        "player": await identity.get_required_player(),
+        "url": await interactor(identity=identity),
     }

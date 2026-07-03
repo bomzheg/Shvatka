@@ -23,11 +23,9 @@ from dishka.integrations.aiogram import setup_dishka, AiogramMiddlewareData
 from redis.asyncio import Redis
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
-from shvatka.common import Config
 from shvatka.common.factory import TelegraphProvider, DCFProvider, UrlProvider
 from shvatka.core.interfaces.clients.file_storage import FileStorage
 from shvatka.core.interfaces.identity import IdentityProvider
-from shvatka.core.services.one_time_link import GenerateOneTimeLoginLinkInteractor
 from shvatka.core.views.game import GameLogWriter, GameView, GameViewPreparer, OrgNotifier
 from shvatka.core.views.level import LevelView
 from shvatka.core.views.team import TeamNotifier
@@ -183,16 +181,6 @@ class BotOnlyProvider(Provider):
     @provide
     def get_idp(self, idp: TgBotIdentityProvider) -> IdentityProvider:
         return idp
-
-    @provide
-    def get_otl_link_interactor(
-        self, identity: IdentityProvider, dao: HolderDao, config: Config
-    ) -> GenerateOneTimeLoginLinkInteractor:
-        return GenerateOneTimeLoginLinkInteractor(
-            identity=identity,
-            token_creator=dao.one_time_token,
-            base_url=config.web.base_url,
-        )
 
     @provide
     def get_game_view(self, bot_game_view: BotView) -> AnyOf[GameViewPreparer, GameView]:

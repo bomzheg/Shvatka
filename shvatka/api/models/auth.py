@@ -86,3 +86,7 @@ class EmailResend(BaseModel):
 
 class EmailLink(BaseModel):
     email: str
+
+
+class ForgotPassword(BaseModel):
+    email: str

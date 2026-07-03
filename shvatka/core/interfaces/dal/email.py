@@ -22,6 +22,9 @@ class EmailAccountDao(typing.Protocol):
     async def set_verified(self, email: str) -> None:
         raise NotImplementedError
 
+    async def get_verified_player_by_email(self, email: str) -> dto.PlayerWithCreds:
+        raise NotImplementedError
+
 
 class UsernameOccupiedChecker(typing.Protocol):
     async def is_username_occupied(self, username: str) -> bool:

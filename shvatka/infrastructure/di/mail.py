@@ -8,6 +8,7 @@ from shvatka.core.services.email import (
     EmailLinkInteractor,
     EmailConfirmInteractor,
     EmailResendInteractor,
+    ForgotPasswordInteractor,
 )
 from shvatka.infrastructure.crypto.hasher import BcryptPasswordHasher
 from shvatka.infrastructure.db.dao.holder import HolderDao
@@ -52,3 +53,15 @@ class EmailInteractorProvider(Provider):
     @provide
     def resend(self, dao: HolderDao, sender: EmailSender) -> EmailResendInteractor:
         return EmailResendInteractor(dao=dao.email, store=dao.email_confirm, sender=sender)
+
+    @provide
+    def forgot_password(
+        self, dao: HolderDao, sender: EmailSender, config: Config
+    ) -> ForgotPasswordInteractor:
+        return ForgotPasswordInteractor(
+            dao=dao.email,
+            limiter=dao.rate_limiter,
+            token_creator=dao.one_time_token,
+            sender=sender,
+            base_url=config.web.base_url,
+        )

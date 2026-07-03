@@ -1,3 +1,5 @@
+from datetime import timedelta
+
 import pytest
 
 from shvatka.core.models import dto
@@ -7,6 +9,7 @@ from shvatka.core.services.email import (
     EmailLinkInteractor,
     EmailConfirmInteractor,
     EmailResendInteractor,
+    ForgotPasswordInteractor,
 )
 from shvatka.core.utils import exceptions
 
@@ -56,6 +59,18 @@ class FakeEmailDao:
     async def get_by_email(self, email: str) -> dto.EmailAccount | None:
         return self.accounts.get(email)
 
+    async def get_verified_player_by_email(self, email: str) -> dto.PlayerWithCreds:
+        account = self.accounts.get(email)
+        if account is None or not account.is_verified:
+            raise exceptions.EmailNotVerified(text=f"no verified email {email}")
+        return dto.PlayerWithCreds(
+            id=account.player_id,
+            can_be_author=False,
+            is_dummy=False,
+            username="player",
+            hashed_password=self.passwords.get(account.player_id),
+        )
+
     async def commit(self) -> None:
         self.committed = True
 
@@ -77,9 +92,36 @@ class FakeStore:
 class FakeSender:
     def __init__(self) -> None:
         self.sent: list[tuple[str, str]] = []
+        self.links: list[tuple[str, str]] = []
 
     async def send_confirmation_code(self, email: str, code: str) -> None:
         self.sent.append((email, code))
+
+    async def send_one_time_link(self, email: str, url: str) -> None:
+        self.links.append((email, url))
+
+
+class FakeLimiter:
+    def __init__(self) -> None:
+        self.used: set[str] = set()
+
+    async def is_allowed(self, key: str, cooldown: timedelta) -> bool:
+        if key in self.used:
+            return False
+        self.used.add(key)
+        return True
+
+
+class FakeTokenCreator:
+    def __init__(self) -> None:
+        self.saved: list[dict] = []
+        self._next = 1
+
+    async def save_new_token(self, **dct: dict) -> str:
+        token = f"token{self._next}"
+        self._next += 1
+        self.saved.append(dct["dct"])
+        return token
 
 
 @pytest.fixture
@@ -117,6 +159,27 @@ def confirm(dao, store) -> EmailConfirmInteractor:
 @pytest.fixture
 def resend(dao, store, sender) -> EmailResendInteractor:
     return EmailResendInteractor(dao=dao, store=store, sender=sender)
+
+
+@pytest.fixture
+def limiter() -> FakeLimiter:
+    return FakeLimiter()
+
+
+@pytest.fixture
+def token_creator() -> FakeTokenCreator:
+    return FakeTokenCreator()
+
+
+@pytest.fixture
+def forgot_password(dao, limiter, token_creator, sender) -> ForgotPasswordInteractor:
+    return ForgotPasswordInteractor(
+        dao=dao,
+        limiter=limiter,
+        token_creator=token_creator,
+        sender=sender,
+        base_url="https://example.com",
+    )
 
 
 @pytest.mark.asyncio
@@ -201,3 +264,48 @@ async def test_resend_skips_verified(register, confirm, resend, sender):
 async def test_resend_unknown_email(resend):
     with pytest.raises(exceptions.EmailNotFound):
         await resend(email="nobody@nowhere.com")
+
+
+@pytest.mark.asyncio
+async def test_forgot_password_sends_link_for_verified_email(
+    register, confirm, forgot_password, sender, token_creator
+):
+    await register(username="harry", email="a@b.com", password="pw")
+    await confirm(email="a@b.com", code=sender.sent[0][1])
+
+    await forgot_password(email="A@B.com")
+
+    assert token_creator.saved == [{"player_id": 1}]
+    assert sender.links == [("a@b.com", "https://example.com/auth/one-time-token?token=token1")]
+
+
+@pytest.mark.asyncio
+async def test_forgot_password_silent_for_unverified_email(register, forgot_password, sender):
+    await register(username="harry", email="a@b.com", password="pw")
+    await forgot_password(email="a@b.com")
+    assert sender.links == []
+
+
+@pytest.mark.asyncio
+async def test_forgot_password_silent_for_unknown_email(forgot_password, sender):
+    await forgot_password(email="nobody@nowhere.com")
+    assert sender.links == []
+
+
+@pytest.mark.asyncio
+async def test_forgot_password_rejects_invalid_email(forgot_password):
+    with pytest.raises(exceptions.EmailInvalid):
+        await forgot_password(email="not-an-email")
+
+
+@pytest.mark.asyncio
+async def test_forgot_password_is_rate_limited_per_email(
+    register, confirm, forgot_password, sender
+):
+    await register(username="harry", email="a@b.com", password="pw")
+    await confirm(email="a@b.com", code=sender.sent[0][1])
+
+    await forgot_password(email="a@b.com")
+    with pytest.raises(exceptions.RateLimitExceeded):
+        await forgot_password(email="a@b.com")
+    assert len(sender.links) == 1

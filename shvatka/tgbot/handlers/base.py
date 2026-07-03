@@ -5,10 +5,20 @@ from aiogram import F, Router
 from aiogram.enums import ChatType
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
-from aiogram.types import Message, ReplyKeyboardRemove, ContentType
+from aiogram.types import (
+    Message,
+    ReplyKeyboardRemove,
+    ContentType,
+    InlineKeyboardMarkup,
+    InlineKeyboardButton,
+)
 from aiogram.utils.markdown import html_decoration as hd
+from dishka import FromDishka
+from dishka.integrations.aiogram import inject
 from prometheus_client import Counter, REGISTRY
 
+from shvatka.common import Config
+from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.models import dto
 from shvatka.core.services.chat import update_chat_id
 from shvatka.infrastructure.db.dao.holder import HolderDao
@@ -19,6 +29,7 @@ from shvatka.tgbot.views.commands import (
     CHAT_TYPE_COMMAND,
     HELP_USER,
     HELP_COMMAND,
+    OTL_COMMAND,
 )
 
 logger = logging.getLogger(__name__)
@@ -97,6 +108,29 @@ async def privacy(message: Message, user: dto.User):
     privacy_counter.inc(1, {"user": str(user.tg_id)})
 
 
+@inject
+async def one_time_link(
+    message: Message,
+    dao: HolderDao,
+    identity: FromDishka[IdentityProvider],
+    config_: FromDishka[Config],
+):
+    player = await identity.get_required_player()
+    token = await dao.one_time_token.save_new_token(dct={"player_id": player.id})
+    url = f"{config_.web.base_url}/auth/one-time-token?token={token}"
+    await message.answer(
+        "Одноразовая ссылка для входа на сайт.\n"
+        "Для входа нажми на кнопку ниже (ссылка одноразовая и скоро истечёт)",
+        reply_markup=InlineKeyboardMarkup(
+            inline_keyboard=[[InlineKeyboardButton(text="Войти", url=url)]]
+        ),
+    )
+
+
+async def one_time_link_wrong_chat_type(message: Message):
+    await message.reply("Одноразовую ссылку для входа можно получить только в личке с ботом")
+
+
 def setup() -> Router:
     router = Router(name=__name__)
     router.message.register(
@@ -114,6 +148,10 @@ def setup() -> Router:
         Command(commands=CHAT_TYPE_COMMAND),
         F.chat.type == ChatType.SUPERGROUP,
     )
+    router.message.register(
+        one_time_link, Command(commands=OTL_COMMAND), F.chat.type == ChatType.PRIVATE
+    )
+    router.message.register(one_time_link_wrong_chat_type, Command(commands=OTL_COMMAND))
     router.message.register(cancel_state, Command(commands=CANCEL_COMMAND))
     router.message.register(chat_migrate, F.content_types == ContentType.MIGRATE_TO_CHAT_ID)
     return router

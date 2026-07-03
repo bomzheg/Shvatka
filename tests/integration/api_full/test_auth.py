@@ -30,9 +30,20 @@ async def test_forgot_password_does_not_disclose_unknown_email(client: AsyncClie
 
 
 @pytest.mark.asyncio
-async def test_forgot_password_is_rate_limited(client: AsyncClient):
-    first = await client.post("/auth/forgot-password", json={"email": "rate-limited@example.com"})
+async def test_forgot_password_is_rate_limited(
+    client: AsyncClient, harry_with_verified_email: dto.Player
+):
+    first = await client.post("/auth/forgot-password", json={"email": "harry@example.com"})
     assert first.is_success
 
-    second = await client.post("/auth/forgot-password", json={"email": "rate-limited@example.com"})
+    second = await client.post("/auth/forgot-password", json={"email": "harry@example.com"})
     assert second.status_code == 429
+
+
+@pytest.mark.asyncio
+async def test_forgot_password_unknown_email_is_never_rate_limited(client: AsyncClient):
+    first = await client.post("/auth/forgot-password", json={"email": "nobody@example.com"})
+    assert first.is_success
+
+    second = await client.post("/auth/forgot-password", json={"email": "nobody@example.com"})
+    assert second.is_success

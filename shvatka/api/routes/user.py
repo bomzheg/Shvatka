@@ -6,6 +6,7 @@ from dishka.integrations.fastapi import inject
 from fastapi import APIRouter, HTTPException
 from fastapi.params import Body, Path, Query
 
+from shvatka.api.config.models.main import ApiConfig
 from shvatka.api.models import responses, req
 from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.players.interactors import (
@@ -24,12 +25,13 @@ logger = logging.getLogger(__name__)
 async def read_users_me(
     identity: FromDishka[IdentityProvider],
     dao: FromDishka[HolderDao],
+    config: FromDishka[ApiConfig],
 ) -> responses.PlayerWithIdentities:
     player_ = await identity.get_player()
     if player_ is None:
         raise HTTPException(status_code=401, detail="User not found")
     email = await dao.email.get_by_player_id(player_.id)
-    return responses.PlayerWithIdentities.from_core(player_, email)
+    return responses.PlayerWithIdentities.from_core(player_, email, config.superusers)
 
 
 @inject

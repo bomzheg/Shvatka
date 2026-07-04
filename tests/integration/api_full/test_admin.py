@@ -45,6 +45,20 @@ async def test_admin_endpoint_forbidden_for_non_superuser(
 
 
 @pytest.mark.asyncio
+async def test_users_me_is_admin_flag(
+    client: AsyncClient, admin_token: Token, hermione_token: Token
+):
+    admin_resp = await client.get(
+        "/users/me", cookies=auth_cookies(admin_token), follow_redirects=True
+    )
+    assert admin_resp.json()["is_admin"] is True
+    plain_resp = await client.get(
+        "/users/me", cookies=auth_cookies(hermione_token), follow_redirects=True
+    )
+    assert plain_resp.json()["is_admin"] is False
+
+
+@pytest.mark.asyncio
 async def test_list_players(
     client: AsyncClient, admin_token: Token, harry: dto.Player, hermione: dto.Player
 ):

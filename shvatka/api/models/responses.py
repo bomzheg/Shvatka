@@ -134,19 +134,26 @@ class PlayerWithIdentities:
     tg: TgUser | None
     forum: ForumUser | None
     email: EmailAccount | None
+    is_admin: bool = False
+    """whether this player may use the admin panel (tg id in configured superusers)"""
 
     @classmethod
     def from_core(
-        cls, player: dto.Player, email: dto.EmailAccount | None
+        cls,
+        player: dto.Player,
+        email: dto.EmailAccount | None,
+        superusers: "Sequence[int]" = (),
     ) -> "PlayerWithIdentities":
+        tg = player._user  # noqa: SLF001
         return cls(
             id=player.id,
             can_be_author=player.can_be_author,
             name_mention=player.name_mention,
             username=player.username,
-            tg=TgUser.from_core(player._user),  # noqa: SLF001
+            tg=TgUser.from_core(tg),
             forum=ForumUser.from_core(player._forum_user),  # noqa: SLF001
             email=EmailAccount.from_core(email),
+            is_admin=tg is not None and tg.tg_id in superusers,
         )
 
 

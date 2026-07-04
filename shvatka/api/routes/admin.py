@@ -7,6 +7,7 @@ from fastapi import APIRouter, Body, HTTPException
 from fastapi.params import Path, Query
 from sqlalchemy.exc import NoResultFound
 
+from shvatka.api.config.models.main import ApiConfig
 from shvatka.api.dependencies.admin import Superuser
 from shvatka.api.models import req, responses
 from shvatka.api.routes.waivers import WaiversDto
@@ -54,11 +55,12 @@ async def get_player(
     _superuser: FromDishka[Superuser],
     interactor: FromDishka[GetPlayerInteractor],
     dao: FromDishka[HolderDao],
+    config: FromDishka[ApiConfig],
     id_: Annotated[int, Path(alias="id")],
 ) -> responses.PlayerWithIdentities:
     info = await interactor(id_)
     email = await dao.email.get_by_player_id(info.player.id)
-    return responses.PlayerWithIdentities.from_core(info.player, email)
+    return responses.PlayerWithIdentities.from_core(info.player, email, config.superusers)
 
 
 @inject
@@ -90,6 +92,7 @@ async def change_tg(
     _superuser: FromDishka[Superuser],
     interactor: FromDishka[AdminChangePlayerTgInteractor],
     dao: FromDishka[HolderDao],
+    config: FromDishka[ApiConfig],
     id_: Annotated[int, Path(alias="id")],
     body: Annotated[req.AdminChangeTg, Body()],
 ) -> responses.PlayerWithIdentities:
@@ -108,7 +111,7 @@ async def change_tg(
             status_code=409, detail="this telegram account is linked to another player"
         ) from e
     email = await dao.email.get_by_player_id(player.id)
-    return responses.PlayerWithIdentities.from_core(player, email)
+    return responses.PlayerWithIdentities.from_core(player, email, config.superusers)
 
 
 @inject

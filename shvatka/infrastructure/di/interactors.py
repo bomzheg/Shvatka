@@ -32,7 +32,19 @@ from shvatka.core.players.interactors import (
     GetPlayerStatInteractor,
     SearchPlayersInteractor,
 )
-from shvatka.core.services.one_time_link import GenerateOneTimeLoginLinkInteractor
+from shvatka.core.players.admin_interactors import (
+    AdminSetPlayerEmailInteractor,
+    AdminChangePlayerTgInteractor,
+)
+from shvatka.core.players.adapters import AdminEmailSetter, AdminTgChanger
+from shvatka.core.services.one_time_link import (
+    GenerateOneTimeLoginLinkInteractor,
+    GenerateOneTimeLoginLinkForPlayerInteractor,
+)
+from shvatka.core.waiver.admin_interactors import (
+    AdminPollReaderInteractor,
+    AdminRemovePollVoteInteractor,
+)
 from shvatka.core.teams.interactors import (
     AddPlayerToTeamInteractor,
     CreateTeamInteractor,
@@ -62,7 +74,13 @@ from shvatka.core.interfaces.dal.game import GameByIdGetter, GameFileRenamer, Ga
 from shvatka.core.interfaces.dal.game_play import GamePlayerDao
 from shvatka.core.services.current_game import CurrentGameProviderImpl
 from shvatka.core.interfaces.dal.waiver import WaiverApprover
-from shvatka.core.waiver.adapters import WaiverVoteAdder, WaiverVoteGetter, PollDraftsReader
+from shvatka.core.waiver.adapters import (
+    WaiverVoteAdder,
+    WaiverVoteGetter,
+    PollDraftsReader,
+    PollVoteRemover,
+    AdminPollReader,
+)
 from shvatka.core.scenario.interactors import (
     AllGameKeysReaderInteractor,
     GameScenarioTransitionsInteractor,
@@ -80,7 +98,10 @@ from shvatka.infrastructure.db.dao.complex2.waiver import (
     WaiverVoteAdderImpl,
     WaiverVoteGetterImpl,
     PollDraftsReaderImpl,
+    AdminPollReaderImpl,
+    PollVoteRemoverImpl,
 )
+from shvatka.infrastructure.db.dao.complex.player import AdminEmailSetterImpl, AdminTgChangerImpl
 from shvatka.infrastructure.db.dao.complex.game import GameFilesGetterImpl, GameScenarioEditorImpl
 from shvatka.infrastructure.db.dao.complex.game import (
     GameFileRenamerImpl,
@@ -324,3 +345,41 @@ class TeamProvider(Provider):
         self, dao: ChatlessTeamCreator, game_log: GameLogWriter
     ) -> CreateTeamInteractor:
         return CreateTeamInteractor(dao=dao, game_log=game_log)
+
+
+class AdminProvider(Provider):
+    scope = Scope.REQUEST
+
+    @provide
+    def admin_otl(
+        self, dao: HolderDao, config: WebConfig
+    ) -> GenerateOneTimeLoginLinkForPlayerInteractor:
+        return GenerateOneTimeLoginLinkForPlayerInteractor(
+            player_getter=dao.player,
+            token_creator=dao.one_time_token,
+            base_url=config.base_url,
+        )
+
+    @provide
+    def admin_email_setter(self, dao: HolderDao) -> AdminEmailSetter:
+        return AdminEmailSetterImpl(dao)
+
+    admin_set_email = provide(AdminSetPlayerEmailInteractor)
+
+    @provide
+    def admin_tg_changer(self, dao: HolderDao) -> AdminTgChanger:
+        return AdminTgChangerImpl(dao)
+
+    admin_change_tg = provide(AdminChangePlayerTgInteractor)
+
+    @provide
+    def admin_poll_reader_dao(self, dao: HolderDao) -> AdminPollReader:
+        return AdminPollReaderImpl(dao)
+
+    admin_poll_reader = provide(AdminPollReaderInteractor)
+
+    @provide
+    def poll_vote_remover_dao(self, dao: HolderDao) -> PollVoteRemover:
+        return PollVoteRemoverImpl(dao)
+
+    admin_remove_poll_vote = provide(AdminRemovePollVoteInteractor)

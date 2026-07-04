@@ -16,6 +16,8 @@ class Config:
     file_storage_config: FileStorageConfig
     web: WebConfig
     mail: MailConfig
+    superusers: list[int]
+    """tg ids of users allowed to use the admin panel / superuser bot commands"""
 
     @property
     def app_dir(self) -> Path:

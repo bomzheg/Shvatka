@@ -52,6 +52,25 @@ class EmailAccountDao(BaseDAO[models.EmailAccount]):
         await self._flush(account)
         return account.to_dto()
 
+    async def set_player_email(
+        self, player_id: int, email: str, is_verified: bool
+    ) -> dto.EmailAccount:
+        """Set (create or replace) the email of a player. Used by the admin panel."""
+        result = await self.session.scalars(
+            select(models.EmailAccount).where(models.EmailAccount.player_id == player_id)
+        )
+        account = result.one_or_none()
+        if account is None:
+            player_db = await self.session.get(models.Player, player_id)
+            assert player_db is not None
+            account = models.EmailAccount(email=email, player=player_db, is_verified=is_verified)
+            self._save(account)
+        else:
+            account.email = email
+            account.is_verified = is_verified
+        await self._flush(account)
+        return account.to_dto()
+
     async def set_verified(self, email: str) -> None:
         account = await self._get_by_email_or_none(email)
         if account is None:

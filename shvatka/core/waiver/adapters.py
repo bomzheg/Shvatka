@@ -42,3 +42,12 @@ class PollDraftsReader(
     PollTeamsGetter, WaiverVoteGetter, TeamByIdGetter, OrgByPlayerGetter, Protocol
 ):
     pass
+
+
+class PollVoteRemover(Protocol):
+    async def del_player_vote(self, team_id: int, player_id: int) -> None:
+        raise NotImplementedError
+
+
+class AdminPollReader(PollTeamsGetter, WaiverVoteGetter, TeamByIdGetter, Protocol):
+    pass

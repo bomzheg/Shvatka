@@ -12,7 +12,10 @@ def load_config(paths: Paths) -> TgBotConfig:
     dcf = Factory(default_schema=Schema(name_style=NameStyle.kebab))
     config_dct = read_config(paths)
 
-    bot_config = dcf.load(config_dct["bot"], BotConfig)
+    # superusers live at the top level of the config (shared by api and bot),
+    # but BotConfig still exposes them for the bot's superuser handlers/filters.
+    bot_dct = {**config_dct["bot"], "superusers": config_dct.get("superusers", [])}
+    bot_config = dcf.load(bot_dct, BotConfig)
     return TgBotConfig.from_base(
         base=load_common_config(config_dct, paths, dcf),
         bot=bot_config,

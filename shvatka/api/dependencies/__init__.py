@@ -3,11 +3,13 @@ from dishka.integrations.fastapi import setup_dishka
 from fastapi import FastAPI
 
 from shvatka.api.dependencies.auth import AuthProvider
+from shvatka.api.dependencies.admin import AdminProvider
 from shvatka.api.dependencies.api_only import ApiOnlyProvider
 from shvatka.api.dependencies.config import ApiConfigProvider
 from shvatka.api.dependencies.other import OtherApiProvider
 from shvatka.infrastructure.di import get_providers
 from shvatka.infrastructure.di.interactors import GameEditProvider
+from shvatka.infrastructure.di.interactors import AdminProvider as AdminInteractorProvider
 
 
 def setup_di(app: FastAPI, paths_env: str):
@@ -31,6 +33,8 @@ def get_api_providers(paths_env: str) -> list[Provider]:
 def get_api_specific_providers() -> list[Provider]:
     return [
         AuthProvider(),
+        AdminProvider(),
+        AdminInteractorProvider(),
         ApiConfigProvider(),
         OtherApiProvider(),
         GameEditProvider(),

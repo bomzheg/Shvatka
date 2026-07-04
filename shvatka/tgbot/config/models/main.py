@@ -32,4 +32,5 @@ class TgBotConfig(Config):
             app=base.app,
             web=base.web,
             mail=base.mail,
+            superusers=base.superusers,
         )

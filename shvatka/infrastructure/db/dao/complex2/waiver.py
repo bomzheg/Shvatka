@@ -3,7 +3,13 @@ from typing import Iterable
 
 from shvatka.core.models import dto
 from shvatka.core.models.enums import Played
-from shvatka.core.waiver.adapters import WaiverVoteAdder, WaiverVoteGetter, PollDraftsReader
+from shvatka.core.waiver.adapters import (
+    WaiverVoteAdder,
+    WaiverVoteGetter,
+    PollDraftsReader,
+    PollVoteRemover,
+    AdminPollReader,
+)
 from shvatka.infrastructure.db.dao.holder import HolderDao
 
 
@@ -60,3 +66,28 @@ class PollDraftsReaderImpl(PollDraftsReader):
 
     async def get_by_player(self, game: dto.Game, player: dto.Player) -> dto.SecondaryOrganizer:
         return await self.dao.organizer.get_by_player(game=game, player=player)
+
+
+@dataclass
+class AdminPollReaderImpl(AdminPollReader):
+    dao: HolderDao
+
+    async def get_polled_teams(self) -> list[int]:
+        return await self.dao.poll.get_polled_teams()
+
+    async def get_by_ids_with_user_and_pit(self, ids: Iterable[int]) -> list[dto.VotedPlayer]:
+        return await self.dao.player.get_by_ids_with_user_and_pit(ids)
+
+    async def get_dict_player_vote(self, team_id: int) -> dict[int, Played]:
+        return await self.dao.poll.get_dict_player_vote(team_id)
+
+    async def get_by_id(self, id_: int) -> dto.Team:
+        return await self.dao.team.get_by_id(id_)
+
+
+@dataclass
+class PollVoteRemoverImpl(PollVoteRemover):
+    dao: HolderDao
+
+    async def del_player_vote(self, team_id: int, player_id: int) -> None:
+        return await self.dao.poll.del_player_vote(team_id, player_id)

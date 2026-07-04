@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from . import team, version, auth, waivers, cdn, user, game, push
+from . import team, version, auth, waivers, cdn, user, game, push, admin
 
 
 def setup() -> APIRouter:
@@ -13,4 +13,5 @@ def setup() -> APIRouter:
     router.include_router(push.setup())
     router.include_router(version.setup())
     router.include_router(cdn.setup())
+    router.include_router(admin.setup())
     return router

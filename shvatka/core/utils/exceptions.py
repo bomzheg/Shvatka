@@ -249,6 +249,10 @@ class PlayerUsernameOccupied(SHError):
     notify_user = "username уже занят"
 
 
+class PlayerTgAlreadyLinked(SHError):
+    notify_user = "Этот телеграм-аккаунт уже привязан к другому игроку"
+
+
 class PlayerInvalidUsername(SHError):
     notify_user = "некорректный username"
 

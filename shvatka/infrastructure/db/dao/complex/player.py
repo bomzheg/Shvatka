@@ -3,6 +3,7 @@ from dataclasses import dataclass
 
 from shvatka.core.interfaces.dal.player import PlayerPromoter, PlayerMerger
 from shvatka.core.models import dto
+from shvatka.core.players.adapters import AdminEmailSetter, AdminTgChanger
 
 if typing.TYPE_CHECKING:
     from shvatka.infrastructure.db.dao.holder import HolderDao
@@ -64,6 +65,48 @@ class PlayerMergerImpl(PlayerMerger):
 
     async def delete_player(self, player: dto.Player) -> None:
         return await self.dao.player.delete(player)
+
+    async def commit(self) -> None:
+        return await self.dao.commit()
+
+
+@dataclass
+class AdminEmailSetterImpl(AdminEmailSetter):
+    dao: "HolderDao"
+
+    async def get_by_id(self, id_: int) -> dto.Player:
+        return await self.dao.player.get_by_id(id_)
+
+    async def get_by_email(self, email: str) -> dto.EmailAccount | None:
+        return await self.dao.email.get_by_email(email)
+
+    async def set_player_email(
+        self, player_id: int, email: str, is_verified: bool
+    ) -> dto.EmailAccount:
+        return await self.dao.email.set_player_email(player_id, email, is_verified)
+
+    async def commit(self) -> None:
+        return await self.dao.commit()
+
+
+@dataclass
+class AdminTgChangerImpl(AdminTgChanger):
+    dao: "HolderDao"
+
+    async def upsert_user(self, user: dto.User) -> dto.User:
+        return await self.dao.user.upsert_user(user)
+
+    async def get_by_id(self, id_: int) -> dto.Player:
+        return await self.dao.player.get_by_id(id_)
+
+    async def get_by_user_id(self, user_id: int) -> dto.Player:
+        return await self.dao.player.get_by_user_id(user_id)
+
+    async def unlink_user(self, player: dto.Player) -> None:
+        return await self.dao.player.unlink_user(player)
+
+    async def link_user(self, player: dto.Player, user: dto.User) -> None:
+        return await self.dao.player.link_user(player, user)
 
     async def commit(self) -> None:
         return await self.dao.commit()

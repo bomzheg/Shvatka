@@ -1,5 +1,7 @@
 app:
   name: shvatka
+superusers:
+  - 666
 bot:
   token: ""
   telegraph-token: ""
@@ -8,8 +10,6 @@ bot:
   public-chats:
     - "1001232232152"
   enabled-capcha: false
-  superusers:
-    - 666
   bot-api:
     type: local
     botapi-url: "http://telegram-bot-api:8081"

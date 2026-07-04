@@ -10,6 +10,7 @@ from shvatka.api.models import req, responses
 from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.teams.interactors import (
     AddPlayerToTeamInteractor,
+    CreateTeamInteractor,
     EditTeamInteractor,
     GetTeamInteractor,
     RemovePlayerFromTeamInteractor,
@@ -71,6 +72,20 @@ async def get_team(
 
 
 @inject
+async def create_team(
+    identity: FromDishka[ApiIdentityProvider],
+    interactor: FromDishka[CreateTeamInteractor],
+    body: Annotated[req.NewTeam, Body()],
+) -> responses.Team:
+    team = await interactor(
+        identity=identity,
+        name=body.name,
+        description=body.description,
+    )
+    return responses.Team.from_core(team)
+
+
+@inject
 async def edit_team(
     identity: FromDishka[ApiIdentityProvider],
     interactor: FromDishka[EditTeamInteractor],
@@ -126,6 +141,7 @@ async def update_team_player(
 def setup() -> APIRouter:
     router = APIRouter(prefix="/teams", tags=["teams"])
     router.add_api_route("", get_teams, methods=["GET"])
+    router.add_api_route("", create_team, methods=["POST"], status_code=201)
     router.add_api_route("/my", get_my_team, methods=["GET"])
     router.add_api_route("/{id}/stat", get_team_stat, methods=["GET"])
     router.add_api_route("/{id}", get_team, methods=["GET"])

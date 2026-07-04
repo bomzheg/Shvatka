@@ -35,6 +35,7 @@ from shvatka.core.players.interactors import (
 from shvatka.core.services.one_time_link import GenerateOneTimeLoginLinkInteractor
 from shvatka.core.teams.interactors import (
     AddPlayerToTeamInteractor,
+    CreateTeamInteractor,
     EditTeamInteractor,
     GetTeamInteractor,
     RemovePlayerFromTeamInteractor,
@@ -43,6 +44,7 @@ from shvatka.core.teams.interactors import (
     TeamsListInteractor,
     UpdateTeamPlayerInteractor,
 )
+from shvatka.core.teams.adapters import ChatlessTeamCreator
 from shvatka.core.views.game import GameLogWriter
 from shvatka.core.views.team import TeamNotifier
 from shvatka.core.interfaces.clients.file_storage import FileStorage
@@ -86,6 +88,7 @@ from shvatka.infrastructure.db.dao.complex.game import (
     GamePlayDaoImpl,
 )
 from shvatka.infrastructure.db.dao.complex.game_play import GamePlayerDaoImpl
+from shvatka.infrastructure.db.dao.complex.team import TeamCreatorImpl
 from shvatka.infrastructure.db.dao.complex.key_log import GameKeysReaderImpl
 from shvatka.infrastructure.db.dao.complex.level_times import GameStatReaderImpl
 from shvatka.infrastructure.db.dao.holder import HolderDao
@@ -311,3 +314,13 @@ class TeamProvider(Provider):
     @provide
     def edit_team(self, dao: HolderDao) -> EditTeamInteractor:
         return EditTeamInteractor(dao=dao.team, team_player_dao=dao.team_player)
+
+    @provide
+    def chatless_team_creator(self, dao: HolderDao) -> ChatlessTeamCreator:
+        return TeamCreatorImpl(dao=dao)
+
+    @provide
+    def create_team(
+        self, dao: ChatlessTeamCreator, game_log: GameLogWriter
+    ) -> CreateTeamInteractor:
+        return CreateTeamInteractor(dao=dao, game_log=game_log)

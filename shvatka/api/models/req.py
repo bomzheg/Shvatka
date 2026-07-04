@@ -72,6 +72,12 @@ class TeamSettings:
 
 
 @dataclass
+class NewTeam:
+    name: str
+    description: str | None = None
+
+
+@dataclass
 class WaiverVote:
     player_id: int
     played: Played = Played.yes

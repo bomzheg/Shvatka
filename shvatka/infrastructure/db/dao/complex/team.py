@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from shvatka.core.interfaces.dal.complex import TeamMerger
 from shvatka.core.interfaces.dal.player import TeamLeaver
 from shvatka.core.interfaces.dal.team import TeamCreator
+from shvatka.core.teams.adapters import ChatlessTeamCreator
 from shvatka.core.models import dto
 
 if typing.TYPE_CHECKING:
@@ -11,7 +12,7 @@ if typing.TYPE_CHECKING:
 
 
 @dataclass
-class TeamCreatorImpl(TeamCreator):
+class TeamCreatorImpl(TeamCreator, ChatlessTeamCreator):
     dao: "HolderDao"
 
     async def check_no_team_in_chat(self, chat: dto.Chat) -> None:
@@ -19,6 +20,11 @@ class TeamCreatorImpl(TeamCreator):
 
     async def create(self, chat: dto.Chat, captain: dto.Player) -> dto.Team:
         return await self.dao.team.create(chat, captain)
+
+    async def create_no_chat(
+        self, name: str, description: str | None, captain: dto.Player
+    ) -> dto.Team:
+        return await self.dao.team.create_no_chat(name, description, captain)
 
     async def join_team(
         self, player: dto.Player, team: dto.Team, role: str, as_captain: bool = False

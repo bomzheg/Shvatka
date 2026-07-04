@@ -31,9 +31,10 @@ class ChatDao(BaseDAO[models.Chat]):
             raise exceptions.ChatNotFound(chat_id=tg_id) from e
 
     async def change_team_chat(self, team: dto.Team, chat: dto.Chat) -> None:
-        await self.session.execute(
-            update(models.Chat).where(models.Chat.tg_id == team.get_chat_id()).values(team_id=None)
-        )
+        if (old_chat_id := team.get_chat_id()) is not None:
+            await self.session.execute(
+                update(models.Chat).where(models.Chat.tg_id == old_chat_id).values(team_id=None)
+            )
         await self.session.execute(
             update(models.Chat).where(models.Chat.tg_id == chat.tg_id).values(team_id=team.id)
         )

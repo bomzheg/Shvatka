@@ -14,6 +14,16 @@ from shvatka.core.interfaces.dal.team import (
     TeamRenamer,
     TeamsGetter,
 )
+from shvatka.core.models import dto
+
+
+class ChatlessTeamCreator(TeamJoiner, Protocol):
+    """DAO contract for creating a team that is not bound to any telegram chat."""
+
+    async def create_no_chat(
+        self, name: str, description: str | None, captain: dto.Player
+    ) -> dto.Team:
+        raise NotImplementedError
 
 
 class TeamPlayerAdder(TeamJoiner, TeamPlayerEmojiChanger, Protocol):

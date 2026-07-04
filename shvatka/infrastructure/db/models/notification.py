@@ -15,18 +15,24 @@ class Notification(Base):
     __mapper_args__ = {"eager_defaults": True}
 
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
-    recipient_id: Mapped[int] = mapped_column(ForeignKey("players.id"), nullable=False, index=True)
+    recipient_id: Mapped[int] = mapped_column(
+        ForeignKey("players.id", ondelete="CASCADE"), nullable=False, index=True
+    )
     type: Mapped[str] = mapped_column(Text, nullable=False)
     severity: Mapped[NotificationSeverity] = mapped_column(
         Enum(NotificationSeverity, name="notification_severity"),
         nullable=False,
         server_default=NotificationSeverity.normal.name,
     )
-    actor_id: Mapped[int | None] = mapped_column(ForeignKey("players.id"), nullable=True)
+    actor_id: Mapped[int | None] = mapped_column(
+        ForeignKey("players.id", ondelete="SET NULL"), nullable=True
+    )
     payload: Mapped[dict[str, Any]] = mapped_column(
         JSONB, nullable=False, server_default="{}", default=dict
     )
-    request_id: Mapped[int | None] = mapped_column(ForeignKey("action_requests.id"), nullable=True)
+    request_id: Mapped[int | None] = mapped_column(
+        ForeignKey("action_requests.id", ondelete="CASCADE"), nullable=True
+    )
     read_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False

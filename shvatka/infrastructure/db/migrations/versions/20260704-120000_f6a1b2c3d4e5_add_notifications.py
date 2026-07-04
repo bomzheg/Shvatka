@@ -53,21 +53,34 @@ def upgrade():
         sa.Column("responded_at", sa.DateTime(timezone=True), nullable=True),
         sa.Column("expires_at", sa.DateTime(timezone=True), nullable=True),
         sa.ForeignKeyConstraint(
-            ["initiator_id"], ["players.id"], name=op.f("action_requests_initiator_id_fkey")
+            ["initiator_id"],
+            ["players.id"],
+            name=op.f("action_requests_initiator_id_fkey"),
+            ondelete="CASCADE",
         ),
         sa.ForeignKeyConstraint(
             ["target_player_id"],
             ["players.id"],
             name=op.f("action_requests_target_player_id_fkey"),
+            ondelete="SET NULL",
         ),
         sa.ForeignKeyConstraint(
-            ["team_id"], ["teams.id"], name=op.f("action_requests_team_id_fkey")
+            ["team_id"],
+            ["teams.id"],
+            name=op.f("action_requests_team_id_fkey"),
+            ondelete="CASCADE",
         ),
         sa.ForeignKeyConstraint(
-            ["game_id"], ["games.id"], name=op.f("action_requests_game_id_fkey")
+            ["game_id"],
+            ["games.id"],
+            name=op.f("action_requests_game_id_fkey"),
+            ondelete="CASCADE",
         ),
         sa.ForeignKeyConstraint(
-            ["responder_id"], ["players.id"], name=op.f("action_requests_responder_id_fkey")
+            ["responder_id"],
+            ["players.id"],
+            name=op.f("action_requests_responder_id_fkey"),
+            ondelete="SET NULL",
         ),
         sa.PrimaryKeyConstraint("id", name=op.f("pk__action_requests")),
     )
@@ -102,15 +115,22 @@ def upgrade():
             nullable=False,
         ),
         sa.ForeignKeyConstraint(
-            ["recipient_id"], ["players.id"], name=op.f("notifications_recipient_id_fkey")
+            ["recipient_id"],
+            ["players.id"],
+            name=op.f("notifications_recipient_id_fkey"),
+            ondelete="CASCADE",
         ),
         sa.ForeignKeyConstraint(
-            ["actor_id"], ["players.id"], name=op.f("notifications_actor_id_fkey")
+            ["actor_id"],
+            ["players.id"],
+            name=op.f("notifications_actor_id_fkey"),
+            ondelete="SET NULL",
         ),
         sa.ForeignKeyConstraint(
             ["request_id"],
             ["action_requests.id"],
             name=op.f("notifications_request_id_fkey"),
+            ondelete="CASCADE",
         ),
         sa.PrimaryKeyConstraint("id", name=op.f("pk__notifications")),
     )

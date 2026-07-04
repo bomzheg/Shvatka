@@ -21,14 +21,24 @@ class ActionRequest(Base):
         nullable=False,
         server_default=RequestStatus.pending.name,
     )
-    initiator_id: Mapped[int] = mapped_column(ForeignKey("players.id"), nullable=False)
-    target_player_id: Mapped[int | None] = mapped_column(ForeignKey("players.id"), nullable=True)
-    team_id: Mapped[int | None] = mapped_column(ForeignKey("teams.id"), nullable=True)
-    game_id: Mapped[int | None] = mapped_column(ForeignKey("games.id"), nullable=True)
+    initiator_id: Mapped[int] = mapped_column(
+        ForeignKey("players.id", ondelete="CASCADE"), nullable=False
+    )
+    target_player_id: Mapped[int | None] = mapped_column(
+        ForeignKey("players.id", ondelete="SET NULL"), nullable=True
+    )
+    team_id: Mapped[int | None] = mapped_column(
+        ForeignKey("teams.id", ondelete="CASCADE"), nullable=True
+    )
+    game_id: Mapped[int | None] = mapped_column(
+        ForeignKey("games.id", ondelete="CASCADE"), nullable=True
+    )
     payload: Mapped[dict[str, Any]] = mapped_column(
         JSONB, nullable=False, server_default="{}", default=dict
     )
-    responder_id: Mapped[int | None] = mapped_column(ForeignKey("players.id"), nullable=True)
+    responder_id: Mapped[int | None] = mapped_column(
+        ForeignKey("players.id", ondelete="SET NULL"), nullable=True
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )

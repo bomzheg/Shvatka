@@ -7,6 +7,12 @@ from sqlalchemy.ext.asyncio import async_sessionmaker, AsyncSession, AsyncEngine
 from shvatka.core.interfaces.dal.level import LevelDeleter
 from shvatka.core.interfaces.dal.organizer import OrgByPlayerGetter
 from shvatka.core.interfaces.dal.waiver import GameWaiversGetter, WaiverGetter
+from shvatka.core.notifications.adapters import (
+    NotificationReader,
+    NotificationMarker,
+    NotificationWriter,
+    RequestStorage,
+)
 from shvatka.infrastructure.db import dao
 from shvatka.infrastructure.db.dao.complex.game import LevelDeleterImpl
 from shvatka.infrastructure.db.config.models.db import DBConfig, RedisConfig
@@ -138,6 +144,18 @@ class DAOProvider(Provider):
     ) -> AsyncIterable[dao.PushSubscriptionDAO]:
         async with pool() as session:
             yield dao.PushSubscriptionDAO(session=session)
+
+    @provide
+    def notification_dao(
+        self, session: AsyncSession
+    ) -> AnyOf[dao.NotificationDAO, NotificationReader, NotificationMarker, NotificationWriter]:
+        return dao.NotificationDAO(session=session)
+
+    @provide
+    def action_request_dao(
+        self, session: AsyncSession
+    ) -> AnyOf[dao.ActionRequestDAO, RequestStorage]:
+        return dao.ActionRequestDAO(session=session)
 
 
 class RedisProvider(Provider):

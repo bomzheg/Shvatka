@@ -20,3 +20,5 @@ from .forum_team import ForumTeamDAO
 from .achievement import AchievementDAO
 
 from .push_subscription import PushSubscriptionDAO
+from .notification import NotificationDAO
+from .action_request import ActionRequestDAO

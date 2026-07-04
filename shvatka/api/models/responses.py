@@ -8,6 +8,10 @@ from adaptix import Retort
 
 from shvatka.core.games.dto import CurrentHintsAndKeys, MyRole, Event
 from shvatka.core.models import dto, enums
+from shvatka.core.notifications.dto import (
+    Notification as NotificationDto,
+    ActionRequest as ActionRequestDto,
+)
 from shvatka.core.players.dto import PlayerStat as PlayerStatDto
 from shvatka.core.teams.dto import TeamWithStat as TeamWithStatDto
 from shvatka.core.teams.dto import TeamPlayerWithStat as TeamPlayerWithStatDto
@@ -743,4 +747,63 @@ class TeamWaivers:
         return cls(
             team=Team.from_core(team),
             players=[WaiverPlayer.from_core(w) for w in waivers],
+        )
+
+
+@dataclass(kw_only=True, frozen=True, slots=True)
+class Notification:
+    id: int
+    type: str
+    severity: str
+    payload: Mapping[str, typing.Any]
+    created_at: datetime
+    read: bool
+    actor_id: int | None
+    request_id: int | None
+
+    @classmethod
+    def from_core(cls, core: NotificationDto) -> "Notification":
+        return cls(
+            id=core.id,
+            type=core.type.name,
+            severity=core.severity.name,
+            payload=core.payload,
+            created_at=core.created_at,
+            read=core.is_read,
+            actor_id=core.actor_id,
+            request_id=core.request_id,
+        )
+
+
+@dataclass(kw_only=True, frozen=True, slots=True)
+class UnreadCount:
+    count: int
+
+
+@dataclass(kw_only=True, frozen=True, slots=True)
+class ActionRequest:
+    id: int
+    type: str
+    status: str
+    initiator_id: int
+    target_player_id: int | None
+    team_id: int | None
+    game_id: int | None
+    payload: Mapping[str, typing.Any]
+    created_at: datetime
+    responded_at: datetime | None
+
+    @classmethod
+    def from_core(cls, core: ActionRequestDto) -> "ActionRequest":
+        return cls(
+            id=core.id,
+            type=core.type.name,
+            status=core.status.name,
+            initiator_id=core.initiator_id,
+            target_player_id=core.target_player_id,
+            team_id=core.team_id,
+            game_id=core.game_id,
+            payload=core.payload,
+            created_at=core.created_at,
+            responded_at=core.responded_at,
         )

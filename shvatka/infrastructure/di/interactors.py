@@ -27,6 +27,12 @@ from shvatka.core.games.org_interactors import (
     ChangeOrgPermissionInteractor,
     RemoveGameOrgInteractor,
 )
+from shvatka.core.notifications.interactors import (
+    ListNotificationsInteractor,
+    UnreadCountInteractor,
+    MarkNotificationsReadInteractor,
+    MarkAllNotificationsReadInteractor,
+)
 from shvatka.core.players.interactors import (
     GetPlayerInteractor,
     GetPlayerStatInteractor,
@@ -418,3 +424,12 @@ class AdminProvider(Provider):
             token_creator=dao.one_time_token,
             base_url=config.base_url,
         )
+
+
+class NotificationProvider(Provider):
+    scope = Scope.REQUEST
+
+    list_notifications = provide(ListNotificationsInteractor)
+    unread_count = provide(UnreadCountInteractor)
+    mark_read = provide(MarkNotificationsReadInteractor)
+    mark_all_read = provide(MarkAllNotificationsReadInteractor)

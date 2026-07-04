@@ -237,6 +237,11 @@ class NotAuthorizedForEdit(PermissionsError):
     permission_name = "level_edit"
 
 
+class NotAuthorizedForAdmin(PermissionsError):
+    notify_user = "Админ-панель доступна только суперпользователям"
+    permission_name = "admin"
+
+
 class TeamError(SHError):
     notify_user = "Проблема связанные с командой"
 

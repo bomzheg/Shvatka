@@ -9,6 +9,7 @@ from sqlalchemy.exc import NoResultFound
 
 from shvatka.api.config.models.main import ApiConfig
 from shvatka.api.dependencies.admin import Superuser
+from shvatka.api.dependencies.auth import ApiIdentityProvider
 from shvatka.api.models import req, responses
 from shvatka.api.routes.waivers import WaiversDto
 from shvatka.core.models import dto
@@ -65,23 +66,25 @@ async def get_player(
 
 @inject
 async def create_one_time_link(
-    _superuser: FromDishka[Superuser],
+    identity: FromDishka[ApiIdentityProvider],
     interactor: FromDishka[GenerateOneTimeLoginLinkForPlayerInteractor],
     id_: Annotated[int, Path(alias="id")],
 ) -> responses.OneTimeLink:
-    url = await interactor(id_)
+    url = await interactor(identity=identity, player_id=id_)
     return responses.OneTimeLink(url=url)
 
 
 @inject
 async def change_email(
-    _superuser: FromDishka[Superuser],
+    identity: FromDishka[ApiIdentityProvider],
     interactor: FromDishka[AdminSetPlayerEmailInteractor],
     id_: Annotated[int, Path(alias="id")],
     body: Annotated[req.AdminChangeEmail, Body()],
 ) -> responses.EmailAccount:
     try:
-        account = await interactor(player_id=id_, email=body.email, is_verified=body.verified)
+        account = await interactor(
+            identity=identity, player_id=id_, email=body.email, is_verified=body.verified
+        )
     except exceptions.EmailAlreadyExist as e:
         raise HTTPException(status_code=409, detail="email already exists") from e
     return responses.EmailAccount(email=account.email, is_verified=account.is_verified)
@@ -89,7 +92,7 @@ async def change_email(
 
 @inject
 async def change_tg(
-    _superuser: FromDishka[Superuser],
+    identity: FromDishka[ApiIdentityProvider],
     interactor: FromDishka[AdminChangePlayerTgInteractor],
     dao: FromDishka[HolderDao],
     config: FromDishka[ApiConfig],
@@ -98,6 +101,7 @@ async def change_tg(
 ) -> responses.PlayerWithIdentities:
     try:
         player = await interactor(
+            identity=identity,
             player_id=id_,
             user=dto.User(
                 tg_id=body.tg_id,
@@ -116,20 +120,20 @@ async def change_tg(
 
 @inject
 async def get_poll(
-    _superuser: FromDishka[Superuser],
+    identity: FromDishka[ApiIdentityProvider],
     interactor: FromDishka[AdminPollReaderInteractor],
 ) -> responses.AdminPoll:
-    return responses.AdminPoll.from_core(await interactor())
+    return responses.AdminPoll.from_core(await interactor(identity))
 
 
 @inject
 async def remove_poll_vote(
-    _superuser: FromDishka[Superuser],
+    identity: FromDishka[ApiIdentityProvider],
     interactor: FromDishka[AdminRemovePollVoteInteractor],
     team_id: Annotated[int, Path()],
     player_id: Annotated[int, Path()],
 ) -> None:
-    await interactor(team_id=team_id, player_id=player_id)
+    await interactor(identity=identity, team_id=team_id, player_id=player_id)
 
 
 @inject

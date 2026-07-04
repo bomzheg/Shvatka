@@ -45,6 +45,20 @@ async def test_admin_endpoint_forbidden_for_non_superuser(
 
 
 @pytest.mark.asyncio
+async def test_admin_interactor_forbidden_for_non_superuser(
+    client: AsyncClient, hermione_token: Token, hermione: dto.Player
+):
+    # this route self-checks inside the interactor (no route-level guard)
+    resp = await client.put(
+        f"/admin/players/{hermione.id}/email",
+        json={"email": "x@example.org", "verified": True},
+        cookies=auth_cookies(hermione_token),
+        follow_redirects=True,
+    )
+    assert resp.status_code == 403
+
+
+@pytest.mark.asyncio
 async def test_users_me_is_admin_flag(
     client: AsyncClient, admin_token: Token, hermione_token: Token
 ):

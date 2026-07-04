@@ -1,14 +1,16 @@
 """Interactors backing the admin panel player operations.
 
-They are authorised at the transport edge (only superusers may reach them), so
-they do not re-check permissions themselves — they just perform the operation on
-behalf of an admin acting on an arbitrary player.
+Each interactor receives the configured superusers via DI and the acting user
+via an ``IdentityProvider`` argument, and verifies superuser rights itself
+before performing the operation on an arbitrary player.
 """
 
 from dataclasses import dataclass
 
+from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.models import dto
 from shvatka.core.players.adapters import AdminEmailSetter, AdminTgChanger
+from shvatka.core.players.superuser import Superusers, check_is_superuser
 from shvatka.core.utils import exceptions
 from shvatka.core.utils.input_validation import validate_email
 
@@ -16,8 +18,12 @@ from shvatka.core.utils.input_validation import validate_email
 @dataclass
 class AdminSetPlayerEmailInteractor:
     dao: AdminEmailSetter
+    superusers: Superusers
 
-    async def __call__(self, player_id: int, email: str, is_verified: bool) -> dto.EmailAccount:
+    async def __call__(
+        self, identity: IdentityProvider, player_id: int, email: str, is_verified: bool
+    ) -> dto.EmailAccount:
+        await check_is_superuser(identity, self.superusers)
         player = await self.dao.get_by_id(player_id)
         normalized = validate_email(email)
         if normalized is None:
@@ -35,8 +41,12 @@ class AdminSetPlayerEmailInteractor:
 @dataclass
 class AdminChangePlayerTgInteractor:
     dao: AdminTgChanger
+    superusers: Superusers
 
-    async def __call__(self, player_id: int, user: dto.User) -> dto.Player:
+    async def __call__(
+        self, identity: IdentityProvider, player_id: int, user: dto.User
+    ) -> dto.Player:
+        await check_is_superuser(identity, self.superusers)
         player = await self.dao.get_by_id(player_id)
         saved = await self.dao.upsert_user(user)
         try:

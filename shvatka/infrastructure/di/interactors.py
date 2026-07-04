@@ -1,7 +1,8 @@
 from adaptix import Retort
 from dishka import Provider, Scope, provide
 
-from shvatka.common.config.models.main import WebConfig
+from shvatka.common.config.models.main import Config, WebConfig
+from shvatka.core.players.superuser import Superusers
 from shvatka.core.games.interactors import (
     GameFileReaderInteractor,
     GamePlayReaderInteractor,
@@ -350,13 +351,18 @@ class TeamProvider(Provider):
 class AdminProvider(Provider):
     scope = Scope.REQUEST
 
+    @provide(scope=Scope.APP)
+    def superusers(self, config: Config) -> Superusers:
+        return Superusers(frozenset(config.superusers))
+
     @provide
     def admin_otl(
-        self, dao: HolderDao, config: WebConfig
+        self, dao: HolderDao, config: WebConfig, superusers: Superusers
     ) -> GenerateOneTimeLoginLinkForPlayerInteractor:
         return GenerateOneTimeLoginLinkForPlayerInteractor(
             player_getter=dao.player,
             token_creator=dao.one_time_token,
+            superusers=superusers,
             base_url=config.base_url,
         )
 

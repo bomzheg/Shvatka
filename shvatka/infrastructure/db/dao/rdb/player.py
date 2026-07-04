@@ -248,9 +248,10 @@ class PlayerDao(BaseDAO[models.Player]):
 
     async def link_user(self, player: dto.Player, user: dto.User) -> None:
         user_db = await self.session.get(models.User, user.db_id)
-        player_db = await self.get_by_id(player.id)
         assert user_db is not None
-        user_db.player = player_db
+        # set the FK by id; get_by_id returns a dto, which can't be assigned to the
+        # ORM relationship (it has no _sa_instance_state)
+        user_db.player_id = player.id
 
     async def unlink_user(self, player: dto.Player) -> None:
         """Detach any telegram user currently linked to this player.

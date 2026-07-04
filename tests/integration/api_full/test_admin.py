@@ -225,8 +225,9 @@ async def test_merge_players(
     client: AsyncClient, admin_token: Token, dao: HolderDao, check_dao: HolderDao
 ):
     primary = await upsert_player(await upsert_user(create_dto_ron(), dao.user), dao.player)
-    # secondary must have no telegram account (a forum-only player)
-    secondary = await dao.player.create_for_forum_user_name("MergeMe")
+    # secondary must have no telegram account; a dummy player fits and, unlike a
+    # forum player, leaves no forum_users row for clear_data to trip over
+    secondary = await dao.player.upsert_author_dummy()
     await dao.commit()
 
     resp = await client.post(

@@ -15,10 +15,12 @@ from shvatka.api.routes.waivers import WaiversDto
 from shvatka.core.models import dto
 from shvatka.core.players.admin_interactors import (
     AdminChangePlayerTgInteractor,
+    AdminMergePlayersInteractor,
     AdminSetPlayerEmailInteractor,
 )
 from shvatka.core.players.interactors import GetPlayerInteractor, SearchPlayersInteractor
 from shvatka.core.services.one_time_link import GenerateOneTimeLoginLinkForPlayerInteractor
+from shvatka.core.teams.admin_interactors import AdminMergeTeamsInteractor
 from shvatka.core.utils import exceptions
 from shvatka.core.waiver.admin_interactors import (
     AdminPollReaderInteractor,
@@ -137,6 +139,40 @@ async def remove_poll_vote(
 
 
 @inject
+async def merge_players(
+    identity: FromDishka[ApiIdentityProvider],
+    interactor: FromDishka[AdminMergePlayersInteractor],
+    body: Annotated[req.MergeRequest, Body()],
+) -> responses.Player:
+    try:
+        player = await interactor(
+            identity=identity, primary_id=body.primary_id, secondary_id=body.secondary_id
+        )
+    except NoResultFound as e:
+        logger.info("player not found while merging", exc_info=e)
+        raise HTTPException(status_code=404, detail={"text": "player not found"}) from e
+    return responses.Player.from_core(player)
+
+
+@inject
+async def merge_teams(
+    identity: FromDishka[ApiIdentityProvider],
+    interactor: FromDishka[AdminMergeTeamsInteractor],
+    body: Annotated[req.MergeRequest, Body()],
+) -> responses.Team:
+    try:
+        team = await interactor(
+            identity=identity, primary_id=body.primary_id, secondary_id=body.secondary_id
+        )
+    except NoResultFound as e:
+        logger.info("team not found while merging", exc_info=e)
+        raise HTTPException(status_code=404, detail={"text": "team not found"}) from e
+    result = responses.Team.from_core(team)
+    assert result is not None
+    return result
+
+
+@inject
 async def get_waivers_by_game(
     _superuser: FromDishka[Superuser],
     interactor: FromDishka[WaiverCompleteReaderInteractor],
@@ -166,5 +202,7 @@ def setup() -> APIRouter:
         methods=["DELETE"],
         status_code=204,
     )
+    router.add_api_route("/players/merge", merge_players, methods=["POST"])
+    router.add_api_route("/teams/merge", merge_teams, methods=["POST"])
     router.add_api_route("/waivers/game/{id}", get_waivers_by_game, methods=["GET"])
     return router

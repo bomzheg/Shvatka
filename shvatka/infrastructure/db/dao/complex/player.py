@@ -3,7 +3,7 @@ from dataclasses import dataclass
 
 from shvatka.core.interfaces.dal.player import PlayerPromoter, PlayerMerger
 from shvatka.core.models import dto
-from shvatka.core.players.adapters import AdminEmailSetter, AdminTgChanger
+from shvatka.core.players.adapters import AdminEmailSetter, AdminPlayerMerger, AdminTgChanger
 
 if typing.TYPE_CHECKING:
     from shvatka.infrastructure.db.dao.holder import HolderDao
@@ -68,6 +68,12 @@ class PlayerMergerImpl(PlayerMerger):
 
     async def commit(self) -> None:
         return await self.dao.commit()
+
+
+@dataclass
+class AdminPlayerMergerImpl(PlayerMergerImpl, AdminPlayerMerger):
+    async def get_by_id(self, id_: int) -> dto.Player:
+        return await self.dao.player.get_by_id(id_)
 
 
 @dataclass

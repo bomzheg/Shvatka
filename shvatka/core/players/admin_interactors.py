@@ -9,10 +9,12 @@ from dataclasses import dataclass
 
 from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.models import dto
-from shvatka.core.players.adapters import AdminEmailSetter, AdminTgChanger
+from shvatka.core.players.adapters import AdminEmailSetter, AdminPlayerMerger, AdminTgChanger
+from shvatka.core.players.player import merge_players
 from shvatka.core.players.superuser import Superusers, check_is_superuser
 from shvatka.core.utils import exceptions
 from shvatka.core.utils.input_validation import validate_email
+from shvatka.core.views.game import GameLogWriter
 
 
 @dataclass
@@ -62,3 +64,24 @@ class AdminChangePlayerTgInteractor:
         await self.dao.link_user(player, saved)
         await self.dao.commit()
         return await self.dao.get_by_id(player.id)
+
+
+@dataclass
+class AdminMergePlayersInteractor:
+    dao: AdminPlayerMerger
+    game_log: GameLogWriter
+    superusers: Superusers
+
+    async def __call__(
+        self, identity: IdentityProvider, primary_id: int, secondary_id: int
+    ) -> dto.Player:
+        """Merge ``secondary`` player into ``primary``; ``secondary`` is deleted."""
+        await check_is_superuser(identity, self.superusers)
+        if primary_id == secondary_id:
+            raise exceptions.SHDataBreach(
+                player_id=primary_id, notify_user="нельзя объединить игрока с самим собой"
+            )
+        primary = await self.dao.get_by_id(primary_id)
+        secondary = await self.dao.get_by_id(secondary_id)
+        await merge_players(primary, secondary, self.game_log, self.dao)
+        return await self.dao.get_by_id(primary_id)

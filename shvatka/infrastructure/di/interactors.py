@@ -36,8 +36,10 @@ from shvatka.core.players.interactors import (
 from shvatka.core.players.admin_interactors import (
     AdminSetPlayerEmailInteractor,
     AdminChangePlayerTgInteractor,
+    AdminMergePlayersInteractor,
 )
-from shvatka.core.players.adapters import AdminEmailSetter, AdminTgChanger
+from shvatka.core.players.adapters import AdminEmailSetter, AdminTgChanger, AdminPlayerMerger
+from shvatka.core.teams.admin_interactors import AdminMergeTeamsInteractor
 from shvatka.core.services.one_time_link import (
     GenerateOneTimeLoginLinkInteractor,
     GenerateOneTimeLoginLinkForPlayerInteractor,
@@ -57,7 +59,7 @@ from shvatka.core.teams.interactors import (
     TeamsListInteractor,
     UpdateTeamPlayerInteractor,
 )
-from shvatka.core.teams.adapters import ChatlessTeamCreator
+from shvatka.core.teams.adapters import ChatlessTeamCreator, AdminTeamMerger
 from shvatka.core.views.game import GameLogWriter
 from shvatka.core.views.team import TeamNotifier
 from shvatka.core.interfaces.clients.file_storage import FileStorage
@@ -102,7 +104,11 @@ from shvatka.infrastructure.db.dao.complex2.waiver import (
     AdminPollReaderImpl,
     PollVoteRemoverImpl,
 )
-from shvatka.infrastructure.db.dao.complex.player import AdminEmailSetterImpl, AdminTgChangerImpl
+from shvatka.infrastructure.db.dao.complex.player import (
+    AdminEmailSetterImpl,
+    AdminTgChangerImpl,
+    AdminPlayerMergerImpl,
+)
 from shvatka.infrastructure.db.dao.complex.game import GameFilesGetterImpl, GameScenarioEditorImpl
 from shvatka.infrastructure.db.dao.complex.game import (
     GameFileRenamerImpl,
@@ -110,7 +116,7 @@ from shvatka.infrastructure.db.dao.complex.game import (
     GamePlayDaoImpl,
 )
 from shvatka.infrastructure.db.dao.complex.game_play import GamePlayerDaoImpl
-from shvatka.infrastructure.db.dao.complex.team import TeamCreatorImpl
+from shvatka.infrastructure.db.dao.complex.team import TeamCreatorImpl, AdminTeamMergerImpl
 from shvatka.infrastructure.db.dao.complex.key_log import GameKeysReaderImpl
 from shvatka.infrastructure.db.dao.complex.level_times import GameStatReaderImpl
 from shvatka.infrastructure.db.dao.holder import HolderDao
@@ -389,3 +395,15 @@ class AdminProvider(Provider):
         return PollVoteRemoverImpl(dao)
 
     admin_remove_poll_vote = provide(AdminRemovePollVoteInteractor)
+
+    @provide
+    def admin_player_merger_dao(self, dao: HolderDao) -> AdminPlayerMerger:
+        return AdminPlayerMergerImpl(dao)
+
+    admin_merge_players = provide(AdminMergePlayersInteractor)
+
+    @provide
+    def admin_team_merger_dao(self, dao: HolderDao) -> AdminTeamMerger:
+        return AdminTeamMergerImpl(dao)
+
+    admin_merge_teams = provide(AdminMergeTeamsInteractor)

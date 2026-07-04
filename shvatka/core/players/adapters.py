@@ -1,7 +1,11 @@
 from typing import Protocol
 
 from shvatka.core.interfaces.dal.base import Committer
-from shvatka.core.interfaces.dal.player import PlayerByIdGetter, PlayerByUserIdGetter
+from shvatka.core.interfaces.dal.player import (
+    PlayerByIdGetter,
+    PlayerByUserIdGetter,
+    PlayerMerger,
+)
 from shvatka.core.interfaces.dal.user import UserUpserter
 from shvatka.core.models import dto
 
@@ -22,3 +26,7 @@ class AdminTgChanger(UserUpserter, PlayerByIdGetter, PlayerByUserIdGetter, Proto
 
     async def link_user(self, player: dto.Player, user: dto.User) -> None:
         raise NotImplementedError
+
+
+class AdminPlayerMerger(PlayerMerger, PlayerByIdGetter, Protocol):
+    """Merge one player into another, plus load both by id."""

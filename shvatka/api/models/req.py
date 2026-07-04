@@ -102,6 +102,13 @@ class AdminChangeTg:
     last_name: str | None = None
 
 
+@dataclass
+class MergeRequest:
+    primary_id: int
+    secondary_id: int
+    """the record merged into primary and then deleted"""
+
+
 @dataclass(frozen=True, slots=True)
 class PushKeys:
     p256dh: str

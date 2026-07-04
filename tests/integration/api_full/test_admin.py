@@ -1,6 +1,7 @@
 import pytest
 import pytest_asyncio
 from httpx import AsyncClient
+from sqlalchemy.exc import NoResultFound
 
 from shvatka.api.dependencies.auth import AuthProperties
 from shvatka.api.models.auth import Token
@@ -8,7 +9,11 @@ from shvatka.core.models import dto
 from shvatka.core.players.player import upsert_player
 from shvatka.core.services.user import upsert_user
 from shvatka.infrastructure.db.dao.holder import HolderDao
-from tests.fixtures.user_constants import create_dto_hermione
+from tests.fixtures.user_constants import (
+    create_dto_hermione,
+    create_dto_ron,
+    create_dto_draco,
+)
 
 
 def auth_cookies(token: Token) -> dict[str, str]:
@@ -213,3 +218,74 @@ async def test_remove_poll_vote(client: AsyncClient, admin_token: Token, hermion
         follow_redirects=True,
     )
     assert resp.status_code == 204
+
+
+@pytest.mark.asyncio
+async def test_merge_players(
+    client: AsyncClient, admin_token: Token, dao: HolderDao, check_dao: HolderDao
+):
+    primary = await upsert_player(await upsert_user(create_dto_ron(), dao.user), dao.player)
+    # secondary must have no telegram account (a forum-only player)
+    secondary = await dao.player.create_for_forum_user_name("MergeMe")
+    await dao.commit()
+
+    resp = await client.post(
+        "/admin/players/merge",
+        json={"primary_id": primary.id, "secondary_id": secondary.id},
+        cookies=auth_cookies(admin_token),
+        follow_redirects=True,
+    )
+    assert resp.is_success, resp.text
+    assert resp.json()["id"] == primary.id
+    assert (await check_dao.player.get_by_id(primary.id)).id == primary.id
+    with pytest.raises(NoResultFound):
+        await check_dao.player.get_by_id(secondary.id)
+
+
+@pytest.mark.asyncio
+async def test_merge_players_same_id_rejected(
+    client: AsyncClient, admin_token: Token, hermione: dto.Player
+):
+    resp = await client.post(
+        "/admin/players/merge",
+        json={"primary_id": hermione.id, "secondary_id": hermione.id},
+        cookies=auth_cookies(admin_token),
+        follow_redirects=True,
+    )
+    assert resp.status_code == 422
+
+
+@pytest.mark.asyncio
+async def test_merge_teams(
+    client: AsyncClient, admin_token: Token, dao: HolderDao, check_dao: HolderDao
+):
+    cap1 = await upsert_player(await upsert_user(create_dto_ron(), dao.user), dao.player)
+    cap2 = await upsert_player(await upsert_user(create_dto_draco(), dao.user), dao.player)
+    primary = await dao.team.create_no_chat("PrimaryTeam", None, cap1)
+    secondary = await dao.team.create_no_chat("SecondaryTeam", None, cap2)
+    await dao.commit()
+
+    resp = await client.post(
+        "/admin/teams/merge",
+        json={"primary_id": primary.id, "secondary_id": secondary.id},
+        cookies=auth_cookies(admin_token),
+        follow_redirects=True,
+    )
+    assert resp.is_success, resp.text
+    assert resp.json()["id"] == primary.id
+    assert (await check_dao.team.get_by_id(primary.id)).id == primary.id
+    with pytest.raises(NoResultFound):
+        await check_dao.team.get_by_id(secondary.id)
+
+
+@pytest.mark.asyncio
+async def test_merge_forbidden_for_non_superuser(
+    client: AsyncClient, hermione_token: Token, hermione: dto.Player
+):
+    resp = await client.post(
+        "/admin/players/merge",
+        json={"primary_id": hermione.id, "secondary_id": hermione.id},
+        cookies=auth_cookies(hermione_token),
+        follow_redirects=True,
+    )
+    assert resp.status_code == 403

@@ -184,6 +184,37 @@ Returns `{ "teams": [] }` when nobody has voted.
 Removes one player's poll vote for a team. Returns **204 No Content**.
 Idempotent — deleting a non-existent entry still returns 204.
 
+### Merge (destructive)
+
+Both merges fold a `secondary` record into a `primary` one and then **delete
+the secondary**. They are irreversible — the UI should require an explicit
+confirmation. Same body shape for both:
+
+```jsonc
+{ "primary_id": 1, "secondary_id": 2 }   // 2 is merged into 1, then deleted
+```
+
+#### `POST /admin/players/merge`
+
+Moves the secondary player's games, levels, keys, org roles, waivers, forum
+identity and team history onto the primary, then deletes the secondary.
+Constraints (else `422`): the secondary must have **no telegram account**
+(typically a forum-only player), and the primary must have **no forum identity**
+already. `primary_id == secondary_id` → `422`. Missing id → `404`. Response is
+the primary `Player`.
+
+> A merge can also fail (`500`) if the two players' team histories overlap in
+> time and can't be ordered automatically — surface a "couldn't merge
+> automatically" message if that happens.
+
+#### `POST /admin/teams/merge`
+
+Moves the secondary team's waivers, keys, level times, players and forum team
+onto the primary, then deletes the secondary. Constraints (else `422`): the
+secondary must have **no active chat**, and the primary must have **no forum
+team** already. `primary_id == secondary_id` → `422`. Missing id → `404`.
+Response is the primary `Team`.
+
 ### Waivers (approved rosters)
 
 #### `GET /admin/waivers/game/{id}` — approved waivers for a game
@@ -225,10 +256,12 @@ What the panel is expected to let a superuser do today (phase 1):
 5. **Moderate the poll** — see who voted for the current game per team and
    remove a stray/incorrect entry.
 6. **Inspect approved waivers** — read the confirmed roster for any game.
+7. **Merge duplicates** — fold a duplicate player or team into the canonical
+   one (e.g. a forum-only player into their telegram player). Destructive —
+   confirm first.
 
 ### Not yet available (planned)
 
-- Merge players / merge teams.
 - Promote / demote authors from the panel (today you can only *see* promoted
   users via the `can_be_author` filter).
 - Removing **approved** waiver entries (only poll entries can be removed today).

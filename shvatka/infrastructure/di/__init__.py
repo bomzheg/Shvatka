@@ -5,7 +5,7 @@ from shvatka.infrastructure.di.files import FileClientProvider
 from shvatka.infrastructure.di.mail import MailProvider, EmailInteractorProvider
 from shvatka.infrastructure.di.interactors import GamePlayProvider, ContextProvider
 from shvatka.infrastructure.di.interactors import WaiverProvider, PlayerProvider, TeamProvider
-from shvatka.infrastructure.di.interactors import NotificationProvider
+from shvatka.infrastructure.di.interactors import NotificationProvider, RequestProvider
 from shvatka.infrastructure.di.printer import PrinterProvider
 from shvatka.infrastructure.db.factory import LockProvider
 from shvatka.infrastructure.scheduler.factory import SchedulerProvider
@@ -28,6 +28,7 @@ def get_providers(paths_env):
         PlayerProvider(),
         TeamProvider(),
         NotificationProvider(),
+        RequestProvider(),
         PrinterProvider(),
         LockProvider(),
         SchedulerProvider(),

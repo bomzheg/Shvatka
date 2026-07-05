@@ -33,6 +33,16 @@ from shvatka.core.notifications.interactors import (
     MarkNotificationsReadInteractor,
     MarkAllNotificationsReadInteractor,
 )
+from shvatka.core.notifications.request_interactors import (
+    CreateTeamJoinInviteInteractor,
+    CreateTeamJoinRequestInteractor,
+    CreateOrgInviteInteractor,
+    AcceptRequestInteractor,
+    DeclineRequestInteractor,
+    CancelRequestInteractor,
+    ListRequestsInteractor,
+)
+from shvatka.core.notifications.adapters import RequestStorage, NotificationWriter
 from shvatka.core.players.interactors import (
     GetPlayerInteractor,
     GetPlayerStatInteractor,
@@ -73,7 +83,7 @@ from shvatka.core.teams.interactors import (
     UpdateTeamPlayerInteractor,
 )
 from shvatka.core.teams.adapters import ChatlessTeamCreator, AdminTeamMerger
-from shvatka.core.views.game import GameLogWriter
+from shvatka.core.views.game import GameLogWriter, OrgNotifier
 from shvatka.core.views.team import TeamNotifier
 from shvatka.core.interfaces.clients.file_storage import FileStorage
 from shvatka.core.interfaces.dal.complex import GameScenarioEditor
@@ -433,3 +443,81 @@ class NotificationProvider(Provider):
     unread_count = provide(UnreadCountInteractor)
     mark_read = provide(MarkNotificationsReadInteractor)
     mark_all_read = provide(MarkAllNotificationsReadInteractor)
+
+
+class RequestProvider(Provider):
+    scope = Scope.REQUEST
+
+    @provide
+    def create_team_join_invite(
+        self, dao: HolderDao, requests: RequestStorage, notifications: NotificationWriter
+    ) -> CreateTeamJoinInviteInteractor:
+        return CreateTeamJoinInviteInteractor(
+            requests=requests,
+            notifications=notifications,
+            team_dao=dao.team,
+            player_dao=dao.player,
+            team_player_dao=dao.team_player,
+        )
+
+    @provide
+    def create_team_join_request(
+        self, dao: HolderDao, requests: RequestStorage, notifications: NotificationWriter
+    ) -> CreateTeamJoinRequestInteractor:
+        return CreateTeamJoinRequestInteractor(
+            requests=requests,
+            notifications=notifications,
+            team_dao=dao.team,
+            team_players_dao=dao.team_player,
+        )
+
+    @provide
+    def create_org_invite(
+        self, dao: HolderDao, requests: RequestStorage, notifications: NotificationWriter
+    ) -> CreateOrgInviteInteractor:
+        return CreateOrgInviteInteractor(
+            requests=requests,
+            notifications=notifications,
+            player_dao=dao.player,
+            org_adder=dao.org_adder,
+        )
+
+    @provide
+    def accept_request(
+        self,
+        dao: HolderDao,
+        requests: RequestStorage,
+        notifications: NotificationWriter,
+        team_notifier: TeamNotifier,
+        org_notifier: OrgNotifier,
+    ) -> AcceptRequestInteractor:
+        return AcceptRequestInteractor(
+            requests=requests,
+            notifications=notifications,
+            team_joiner=dao.team_player,
+            team_dao=dao.team,
+            team_player_dao=dao.team_player,
+            player_dao=dao.player,
+            org_adder=dao.org_adder,
+            team_notifier=team_notifier,
+            org_notifier=org_notifier,
+        )
+
+    @provide
+    def decline_request(
+        self, dao: HolderDao, requests: RequestStorage, notifications: NotificationWriter
+    ) -> DeclineRequestInteractor:
+        return DeclineRequestInteractor(
+            requests=requests,
+            notifications=notifications,
+            team_dao=dao.team,
+            team_player_dao=dao.team_player,
+        )
+
+    @provide
+    def cancel_request(self, requests: RequestStorage) -> CancelRequestInteractor:
+        return CancelRequestInteractor(requests=requests)
+
+    @provide
+    def list_requests(self, requests: RequestStorage) -> ListRequestsInteractor:
+        return ListRequestsInteractor(requests=requests)

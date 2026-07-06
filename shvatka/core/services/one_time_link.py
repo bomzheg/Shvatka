@@ -3,7 +3,6 @@ from dataclasses import dataclass
 from shvatka.core.interfaces.dal.player import PlayerByIdGetter
 from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.interfaces.one_time_token import OneTimeTokenCreator
-from shvatka.core.players.superuser import Superusers, check_is_superuser
 
 
 @dataclass
@@ -23,11 +22,10 @@ class GenerateOneTimeLoginLinkForPlayerInteractor:
 
     player_getter: PlayerByIdGetter
     token_creator: OneTimeTokenCreator
-    superusers: Superusers
     base_url: str
 
     async def __call__(self, identity: IdentityProvider, player_id: int) -> str:
-        await check_is_superuser(identity, self.superusers)
+        await identity.get_superuser()
         player = await self.player_getter.get_by_id(player_id)
         token = await self.token_creator.save_new_token(dct={"player_id": player.id})
         return f"{self.base_url}/auth/one-time-token?token={token}"

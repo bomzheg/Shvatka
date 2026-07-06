@@ -10,6 +10,15 @@ from shvatka.core.interfaces.dal.user import UserUpserter
 from shvatka.core.models import dto
 
 
+class EmailByPlayerIdReader(Protocol):
+    async def get_email_by_player_id(self, player_id: int) -> dto.EmailAccount | None:
+        raise NotImplementedError
+
+
+class AdminPlayerReader(PlayerByIdGetter, EmailByPlayerIdReader, Protocol):
+    """Load a player by id together with their email account."""
+
+
 class AdminEmailSetter(PlayerByIdGetter, Committer, Protocol):
     async def get_by_email(self, email: str) -> dto.EmailAccount | None:
         raise NotImplementedError
@@ -20,7 +29,9 @@ class AdminEmailSetter(PlayerByIdGetter, Committer, Protocol):
         raise NotImplementedError
 
 
-class AdminTgChanger(UserUpserter, PlayerByIdGetter, PlayerByUserIdGetter, Protocol):
+class AdminTgChanger(
+    UserUpserter, PlayerByIdGetter, PlayerByUserIdGetter, EmailByPlayerIdReader, Protocol
+):
     async def unlink_user(self, player: dto.Player) -> None:
         raise NotImplementedError
 

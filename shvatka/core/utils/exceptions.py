@@ -258,6 +258,10 @@ class PlayerTgAlreadyLinked(SHError):
     notify_user = "Этот телеграм-аккаунт уже привязан к другому игроку"
 
 
+class MergeError(SHError):
+    notify_user = "Невозможно выполнить объединение"
+
+
 class PlayerInvalidUsername(SHError):
     notify_user = "некорректный username"
 

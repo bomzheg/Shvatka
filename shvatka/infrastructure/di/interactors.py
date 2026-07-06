@@ -1,8 +1,7 @@
 from adaptix import Retort
 from dishka import Provider, Scope, provide
 
-from shvatka.common.config.models.main import Config, WebConfig
-from shvatka.core.players.superuser import Superusers
+from shvatka.common.config.models.main import WebConfig
 from shvatka.core.games.interactors import (
     GameFileReaderInteractor,
     GamePlayReaderInteractor,
@@ -37,8 +36,15 @@ from shvatka.core.players.admin_interactors import (
     AdminSetPlayerEmailInteractor,
     AdminChangePlayerTgInteractor,
     AdminMergePlayersInteractor,
+    AdminSearchPlayersInteractor,
+    AdminGetPlayerInteractor,
 )
-from shvatka.core.players.adapters import AdminEmailSetter, AdminTgChanger, AdminPlayerMerger
+from shvatka.core.players.adapters import (
+    AdminEmailSetter,
+    AdminTgChanger,
+    AdminPlayerMerger,
+    AdminPlayerReader,
+)
 from shvatka.core.teams.admin_interactors import AdminMergeTeamsInteractor
 from shvatka.core.services.one_time_link import (
     GenerateOneTimeLoginLinkInteractor,
@@ -47,6 +53,7 @@ from shvatka.core.services.one_time_link import (
 from shvatka.core.waiver.admin_interactors import (
     AdminPollReaderInteractor,
     AdminRemovePollVoteInteractor,
+    AdminGameWaiversReaderInteractor,
 )
 from shvatka.core.teams.interactors import (
     AddPlayerToTeamInteractor,
@@ -83,6 +90,7 @@ from shvatka.core.waiver.adapters import (
     PollDraftsReader,
     PollVoteRemover,
     AdminPollReader,
+    AdminGameWaiversReader,
 )
 from shvatka.core.scenario.interactors import (
     AllGameKeysReaderInteractor,
@@ -103,11 +111,13 @@ from shvatka.infrastructure.db.dao.complex2.waiver import (
     PollDraftsReaderImpl,
     AdminPollReaderImpl,
     PollVoteRemoverImpl,
+    AdminGameWaiversReaderImpl,
 )
 from shvatka.infrastructure.db.dao.complex.player import (
     AdminEmailSetterImpl,
     AdminTgChangerImpl,
     AdminPlayerMergerImpl,
+    AdminPlayerReaderImpl,
 )
 from shvatka.infrastructure.db.dao.complex.game import GameFilesGetterImpl, GameScenarioEditorImpl
 from shvatka.infrastructure.db.dao.complex.game import (
@@ -357,53 +367,54 @@ class TeamProvider(Provider):
 class AdminProvider(Provider):
     scope = Scope.REQUEST
 
-    @provide(scope=Scope.APP)
-    def superusers(self, config: Config) -> Superusers:
-        return Superusers(frozenset(config.superusers))
-
-    @provide
-    def admin_otl(
-        self, dao: HolderDao, config: WebConfig, superusers: Superusers
-    ) -> GenerateOneTimeLoginLinkForPlayerInteractor:
-        return GenerateOneTimeLoginLinkForPlayerInteractor(
-            player_getter=dao.player,
-            token_creator=dao.one_time_token,
-            superusers=superusers,
-            base_url=config.base_url,
-        )
+    # DAO adapters. complex2/waiver impls import HolderDao directly, so dishka can
+    # analyse the class-provide shorthand. complex/player and complex/team impls
+    # import HolderDao under TYPE_CHECKING (to break a circular import), so they
+    # need an explicit factory instead.
+    admin_poll_reader_dao = provide(AdminPollReaderImpl, provides=AdminPollReader)
+    poll_vote_remover_dao = provide(PollVoteRemoverImpl, provides=PollVoteRemover)
+    admin_waivers_reader_dao = provide(AdminGameWaiversReaderImpl, provides=AdminGameWaiversReader)
 
     @provide
     def admin_email_setter(self, dao: HolderDao) -> AdminEmailSetter:
         return AdminEmailSetterImpl(dao)
 
-    admin_set_email = provide(AdminSetPlayerEmailInteractor)
-
     @provide
     def admin_tg_changer(self, dao: HolderDao) -> AdminTgChanger:
         return AdminTgChangerImpl(dao)
 
-    admin_change_tg = provide(AdminChangePlayerTgInteractor)
-
     @provide
-    def admin_poll_reader_dao(self, dao: HolderDao) -> AdminPollReader:
-        return AdminPollReaderImpl(dao)
-
-    admin_poll_reader = provide(AdminPollReaderInteractor)
-
-    @provide
-    def poll_vote_remover_dao(self, dao: HolderDao) -> PollVoteRemover:
-        return PollVoteRemoverImpl(dao)
-
-    admin_remove_poll_vote = provide(AdminRemovePollVoteInteractor)
+    def admin_player_reader(self, dao: HolderDao) -> AdminPlayerReader:
+        return AdminPlayerReaderImpl(dao)
 
     @provide
     def admin_player_merger_dao(self, dao: HolderDao) -> AdminPlayerMerger:
         return AdminPlayerMergerImpl(dao)
 
-    admin_merge_players = provide(AdminMergePlayersInteractor)
-
     @provide
     def admin_team_merger_dao(self, dao: HolderDao) -> AdminTeamMerger:
         return AdminTeamMergerImpl(dao)
 
+    # Interactors
+    admin_set_email = provide(AdminSetPlayerEmailInteractor)
+    admin_change_tg = provide(AdminChangePlayerTgInteractor)
+    admin_get_player = provide(AdminGetPlayerInteractor)
+    admin_poll_reader = provide(AdminPollReaderInteractor)
+    admin_remove_poll_vote = provide(AdminRemovePollVoteInteractor)
+    admin_merge_players = provide(AdminMergePlayersInteractor)
     admin_merge_teams = provide(AdminMergeTeamsInteractor)
+    admin_waivers_reader = provide(AdminGameWaiversReaderInteractor)
+
+    @provide
+    def admin_search_players(self, dao: HolderDao) -> AdminSearchPlayersInteractor:
+        return AdminSearchPlayersInteractor(dao=dao.player)
+
+    @provide
+    def admin_otl(
+        self, dao: HolderDao, config: WebConfig
+    ) -> GenerateOneTimeLoginLinkForPlayerInteractor:
+        return GenerateOneTimeLoginLinkForPlayerInteractor(
+            player_getter=dao.player,
+            token_creator=dao.one_time_token,
+            base_url=config.base_url,
+        )

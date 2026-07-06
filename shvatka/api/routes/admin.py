@@ -1,42 +1,36 @@
-import logging
-from typing import Annotated, Iterable
+from typing import Annotated
 
 from dishka import FromDishka
 from dishka.integrations.fastapi import inject
 from fastapi import APIRouter, Body, HTTPException
 from fastapi.params import Path, Query
-from sqlalchemy.exc import NoResultFound
 
 from shvatka.api.config.models.main import ApiConfig
-from shvatka.api.dependencies.admin import Superuser
 from shvatka.api.dependencies.auth import ApiIdentityProvider
 from shvatka.api.models import req, responses
 from shvatka.api.routes.waivers import WaiversDto
 from shvatka.core.models import dto
 from shvatka.core.players.admin_interactors import (
     AdminChangePlayerTgInteractor,
+    AdminGetPlayerInteractor,
     AdminMergePlayersInteractor,
+    AdminSearchPlayersInteractor,
     AdminSetPlayerEmailInteractor,
 )
-from shvatka.core.players.interactors import GetPlayerInteractor, SearchPlayersInteractor
 from shvatka.core.services.one_time_link import GenerateOneTimeLoginLinkForPlayerInteractor
 from shvatka.core.teams.admin_interactors import AdminMergeTeamsInteractor
 from shvatka.core.utils import exceptions
 from shvatka.core.waiver.admin_interactors import (
+    AdminGameWaiversReaderInteractor,
     AdminPollReaderInteractor,
     AdminRemovePollVoteInteractor,
 )
-from shvatka.core.waiver.interactors import WaiverCompleteReaderInteractor
-from shvatka.core.services.game import get_game
-from shvatka.infrastructure.db.dao.holder import HolderDao
-
-logger = logging.getLogger(__name__)
 
 
 @inject
 async def list_players(
-    _superuser: FromDishka[Superuser],
-    interactor: FromDishka[SearchPlayersInteractor],
+    identity: FromDishka[ApiIdentityProvider],
+    interactor: FromDishka[AdminSearchPlayersInteractor],
     username: Annotated[str | None, Query()] = None,
     name: Annotated[str | None, Query()] = None,
     active: Annotated[bool, Query()] = True,
@@ -44,6 +38,7 @@ async def list_players(
     can_be_author: Annotated[bool | None, Query()] = None,
 ) -> responses.Items[responses.AdminPlayer]:
     players = await interactor(
+        identity,
         username=username,
         name=name,
         active=active,
@@ -55,15 +50,13 @@ async def list_players(
 
 @inject
 async def get_player(
-    _superuser: FromDishka[Superuser],
-    interactor: FromDishka[GetPlayerInteractor],
-    dao: FromDishka[HolderDao],
+    identity: FromDishka[ApiIdentityProvider],
+    interactor: FromDishka[AdminGetPlayerInteractor],
     config: FromDishka[ApiConfig],
     id_: Annotated[int, Path(alias="id")],
 ) -> responses.PlayerWithIdentities:
-    info = await interactor(id_)
-    email = await dao.email.get_by_player_id(info.player.id)
-    return responses.PlayerWithIdentities.from_core(info.player, email, config.superusers)
+    info = await interactor(identity, id_)
+    return responses.PlayerWithIdentities.from_core(info.player, info.email, config.superusers)
 
 
 @inject
@@ -96,13 +89,12 @@ async def change_email(
 async def change_tg(
     identity: FromDishka[ApiIdentityProvider],
     interactor: FromDishka[AdminChangePlayerTgInteractor],
-    dao: FromDishka[HolderDao],
     config: FromDishka[ApiConfig],
     id_: Annotated[int, Path(alias="id")],
     body: Annotated[req.AdminChangeTg, Body()],
 ) -> responses.PlayerWithIdentities:
     try:
-        player = await interactor(
+        info = await interactor(
             identity=identity,
             player_id=id_,
             user=dto.User(
@@ -116,8 +108,7 @@ async def change_tg(
         raise HTTPException(
             status_code=409, detail="this telegram account is linked to another player"
         ) from e
-    email = await dao.email.get_by_player_id(player.id)
-    return responses.PlayerWithIdentities.from_core(player, email, config.superusers)
+    return responses.PlayerWithIdentities.from_core(info.player, info.email, config.superusers)
 
 
 @inject
@@ -144,13 +135,9 @@ async def merge_players(
     interactor: FromDishka[AdminMergePlayersInteractor],
     body: Annotated[req.MergeRequest, Body()],
 ) -> responses.Player:
-    try:
-        player = await interactor(
-            identity=identity, primary_id=body.primary_id, secondary_id=body.secondary_id
-        )
-    except NoResultFound as e:
-        logger.info("player not found while merging", exc_info=e)
-        raise HTTPException(status_code=404, detail={"text": "player not found"}) from e
+    player = await interactor(
+        identity=identity, primary_id=body.primary_id, secondary_id=body.secondary_id
+    )
     return responses.Player.from_core(player)
 
 
@@ -160,13 +147,9 @@ async def merge_teams(
     interactor: FromDishka[AdminMergeTeamsInteractor],
     body: Annotated[req.MergeRequest, Body()],
 ) -> responses.Team:
-    try:
-        team = await interactor(
-            identity=identity, primary_id=body.primary_id, secondary_id=body.secondary_id
-        )
-    except NoResultFound as e:
-        logger.info("team not found while merging", exc_info=e)
-        raise HTTPException(status_code=404, detail={"text": "team not found"}) from e
+    team = await interactor(
+        identity=identity, primary_id=body.primary_id, secondary_id=body.secondary_id
+    )
     result = responses.Team.from_core(team)
     assert result is not None
     return result
@@ -174,18 +157,11 @@ async def merge_teams(
 
 @inject
 async def get_waivers_by_game(
-    _superuser: FromDishka[Superuser],
-    interactor: FromDishka[WaiverCompleteReaderInteractor],
-    dao: FromDishka[HolderDao],
+    identity: FromDishka[ApiIdentityProvider],
+    interactor: FromDishka[AdminGameWaiversReaderInteractor],
     id_: Annotated[int, Path(alias="id")],
 ) -> WaiversDto:
-    try:
-        game = await get_game(id_, dao=dao.game)
-    except NoResultFound as e:
-        logger.info("game %s not found", id_, exc_info=e)
-        raise HTTPException(status_code=404, detail={"text": "game not found"}) from e
-    waivers: dict[dto.Team, Iterable[dto.VotedPlayer]] = await interactor(game)
-    return WaiversDto.from_core(waivers)
+    return WaiversDto.from_core(await interactor(identity, id_))
 
 
 def setup() -> APIRouter:

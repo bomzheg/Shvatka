@@ -24,6 +24,16 @@ class IdentityProvider(Protocol):
     async def get_org(self, game: dto.Game) -> dto.Organizer | None:
         raise NotImplementedError
 
+    async def get_superuser(self) -> dto.Player:
+        """Resolve the acting player and ensure they may use the admin panel.
+
+        By default nobody is a superuser; edges that expose the admin panel
+        override this to check the player against the configured superusers, log
+        the attempt, and return the player. Non-superusers always raise
+        :class:`exceptions.NotAuthorizedForAdmin`.
+        """
+        raise exceptions.NotAuthorizedForAdmin(player=await self.get_player())
+
     async def get_required_user(self) -> dto.User:
         user = await self.get_user()
         if user is None:

@@ -14,6 +14,7 @@ from starlette import status
 from starlette.requests import Request
 
 from shvatka.api.config.models.auth import AuthConfig
+from shvatka.api.config.models.main import ApiConfig
 from shvatka.api.models.auth import UserTgAuth, Token
 from shvatka.api.utils.cookie_auth import OAuth2PasswordBearerWithCookie
 from shvatka.core.interfaces.hasher import PasswordHasher
@@ -176,13 +177,24 @@ class ApiIdentityProvider(IdentityProvider):
         cookie_auth: OAuth2PasswordBearerWithCookie,
         auth_properties: AuthProperties,
         dao: HolderDao,
+        config: ApiConfig,
     ):
         self.request = request
         self.cookie_auth = cookie_auth
         self.auth_properties = auth_properties
         self.dao = dao
+        self.config = config
         self.cache = LoadedData()
         self.cache["organizer"] = {}
+
+    async def get_superuser(self) -> dto.Player:
+        player = await self.get_required_player()
+        user = await self.get_user()
+        if user is None or user.tg_id not in self.config.superusers:
+            logger.warning("player %s tried to use admin panel without rights", player.id)
+            raise exceptions.NotAuthorizedForAdmin(player=player, user=user)
+        logger.warning("superuser %s performs an admin action", player.id)
+        return player
 
     async def get_user(self) -> dto.User | None:
         if "user" in self.cache:

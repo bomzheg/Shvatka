@@ -35,7 +35,10 @@ def sh_exception_handler(request: Request, exc: exceptions.SHError) -> Response:
     )
     if isinstance(exc, (exceptions.NotAuthorizedForEdit, exceptions.NotAuthorizedForAdmin)):
         status_code = 403
-    elif isinstance(exc, (exceptions.UserNotFoundError, exceptions.PlayerNotFoundError)):
+    elif isinstance(
+        exc,
+        (exceptions.UserNotFoundError, exceptions.PlayerNotFoundError, exceptions.GameNotFound),
+    ):
         status_code = 404
     elif isinstance(exc, exceptions.FileNotFound):
         status_code = 404

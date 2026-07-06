@@ -3,7 +3,12 @@ from dataclasses import dataclass
 
 from shvatka.core.interfaces.dal.player import PlayerPromoter, PlayerMerger
 from shvatka.core.models import dto
-from shvatka.core.players.adapters import AdminEmailSetter, AdminPlayerMerger, AdminTgChanger
+from shvatka.core.players.adapters import (
+    AdminEmailSetter,
+    AdminPlayerMerger,
+    AdminPlayerReader,
+    AdminTgChanger,
+)
 
 if typing.TYPE_CHECKING:
     from shvatka.infrastructure.db.dao.holder import HolderDao
@@ -77,6 +82,17 @@ class AdminPlayerMergerImpl(PlayerMergerImpl, AdminPlayerMerger):
 
 
 @dataclass
+class AdminPlayerReaderImpl(AdminPlayerReader):
+    dao: "HolderDao"
+
+    async def get_by_id(self, id_: int) -> dto.Player:
+        return await self.dao.player.get_by_id(id_)
+
+    async def get_email_by_player_id(self, player_id: int) -> dto.EmailAccount | None:
+        return await self.dao.email.get_by_player_id(player_id)
+
+
+@dataclass
 class AdminEmailSetterImpl(AdminEmailSetter):
     dao: "HolderDao"
 
@@ -113,6 +129,9 @@ class AdminTgChangerImpl(AdminTgChanger):
 
     async def link_user(self, player: dto.Player, user: dto.User) -> None:
         return await self.dao.player.link_user(player, user)
+
+    async def get_email_by_player_id(self, player_id: int) -> dto.EmailAccount | None:
+        return await self.dao.email.get_by_player_id(player_id)
 
     async def commit(self) -> None:
         return await self.dao.commit()

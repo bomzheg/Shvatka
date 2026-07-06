@@ -5,6 +5,7 @@ authorises through ``identity.get_superuser()`` before performing the operation
 on an arbitrary player.
 """
 
+import logging
 from dataclasses import dataclass
 
 from shvatka.core.interfaces.identity import IdentityProvider
@@ -22,6 +23,8 @@ from shvatka.core.utils import exceptions
 from shvatka.core.utils.input_validation import validate_email
 from shvatka.core.views.game import GameLogWriter
 
+logger = logging.getLogger(__name__)
+
 
 @dataclass
 class AdminSearchPlayersInteractor:
@@ -37,7 +40,14 @@ class AdminSearchPlayersInteractor:
         archive: bool = False,
         can_be_author: bool | None = None,
     ) -> list[dto.Player]:
-        await identity.get_superuser()
+        admin = await identity.get_superuser()
+        logger.warning(
+            "admin %s searched players (username=%s, name=%s, can_be_author=%s)",
+            admin.id,
+            username,
+            name,
+            can_be_author,
+        )
         return await self.dao.search_players(
             username=username,
             name=name,
@@ -52,7 +62,8 @@ class AdminGetPlayerInteractor:
     dao: AdminPlayerReader
 
     async def __call__(self, identity: IdentityProvider, player_id: int) -> PlayerIdentitiesInfo:
-        await identity.get_superuser()
+        admin = await identity.get_superuser()
+        logger.warning("admin %s viewed player %s", admin.id, player_id)
         player = await self.dao.get_by_id(player_id)
         email = await self.dao.get_email_by_player_id(player.id)
         return PlayerIdentitiesInfo(player=player, email=email)
@@ -65,7 +76,10 @@ class AdminSetPlayerEmailInteractor:
     async def __call__(
         self, identity: IdentityProvider, player_id: int, email: str, is_verified: bool
     ) -> dto.EmailAccount:
-        await identity.get_superuser()
+        admin = await identity.get_superuser()
+        logger.warning(
+            "admin %s changed email of player %s (verified=%s)", admin.id, player_id, is_verified
+        )
         player = await self.dao.get_by_id(player_id)
         normalized = validate_email(email)
         if normalized is None:
@@ -87,7 +101,10 @@ class AdminChangePlayerTgInteractor:
     async def __call__(
         self, identity: IdentityProvider, player_id: int, user: dto.User
     ) -> PlayerIdentitiesInfo:
-        await identity.get_superuser()
+        admin = await identity.get_superuser()
+        logger.warning(
+            "admin %s changed tg of player %s to tg_id %s", admin.id, player_id, user.tg_id
+        )
         player = await self.dao.get_by_id(player_id)
         saved = await self.dao.upsert_user(user)
         try:
@@ -116,7 +133,8 @@ class AdminMergePlayersInteractor:
         self, identity: IdentityProvider, primary_id: int, secondary_id: int
     ) -> dto.Player:
         """Merge ``secondary`` player into ``primary``; ``secondary`` is deleted."""
-        await identity.get_superuser()
+        admin = await identity.get_superuser()
+        logger.warning("admin %s merges player %s into %s", admin.id, secondary_id, primary_id)
         if primary_id == secondary_id:
             raise exceptions.MergeError(
                 player_id=primary_id, notify_user="нельзя объединить игрока с самим собой"

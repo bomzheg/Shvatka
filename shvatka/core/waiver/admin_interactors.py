@@ -4,6 +4,7 @@ Each interactor takes the acting user via an ``IdentityProvider`` argument and
 authorises through ``identity.get_superuser()`` before reading or mutating data.
 """
 
+import logging
 from dataclasses import dataclass
 from typing import Iterable
 
@@ -17,6 +18,8 @@ from shvatka.core.waiver.adapters import (
 )
 from shvatka.core.waiver.services import get_all_played, get_vote_to_voted
 
+logger = logging.getLogger(__name__)
+
 
 @dataclass
 class AdminPollReaderInteractor:
@@ -25,7 +28,8 @@ class AdminPollReaderInteractor:
     async def __call__(
         self, identity: IdentityProvider
     ) -> dict[dto.Team, dict[Played, list[dto.VotedPlayer]]]:
-        await identity.get_superuser()
+        admin = await identity.get_superuser()
+        logger.warning("admin %s read the poll", admin.id)
         result: dict[dto.Team, dict[Played, list[dto.VotedPlayer]]] = {}
         for team_id in await self.dao.get_polled_teams():
             team = await self.dao.get_by_id(team_id)
@@ -38,7 +42,10 @@ class AdminRemovePollVoteInteractor:
     dao: PollVoteRemover
 
     async def __call__(self, identity: IdentityProvider, team_id: int, player_id: int) -> None:
-        await identity.get_superuser()
+        admin = await identity.get_superuser()
+        logger.warning(
+            "admin %s removed poll vote of player %s in team %s", admin.id, player_id, team_id
+        )
         await self.dao.del_player_vote(team_id, player_id)
 
 
@@ -49,6 +56,7 @@ class AdminGameWaiversReaderInteractor:
     async def __call__(
         self, identity: IdentityProvider, game_id: int
     ) -> dict[dto.Team, Iterable[dto.VotedPlayer]]:
-        await identity.get_superuser()
+        admin = await identity.get_superuser()
+        logger.warning("admin %s read waivers of game %s", admin.id, game_id)
         game = await self.dao.get_by_id(game_id)  # raises GameNotFound if absent
         return await get_all_played(game, self.dao)

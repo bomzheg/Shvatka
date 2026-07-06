@@ -193,7 +193,6 @@ class ApiIdentityProvider(IdentityProvider):
         if user is None or user.tg_id not in self.config.superusers:
             logger.warning("player %s tried to use admin panel without rights", player.id)
             raise exceptions.NotAuthorizedForAdmin(player=player, user=user)
-        logger.warning("superuser %s performs an admin action", player.id)
         return player
 
     async def get_user(self) -> dto.User | None:

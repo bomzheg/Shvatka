@@ -4,6 +4,7 @@ Each interactor takes the acting user via an ``IdentityProvider`` argument and
 authorises through ``identity.get_superuser()`` before performing the operation.
 """
 
+import logging
 from dataclasses import dataclass
 
 from shvatka.core.interfaces.identity import IdentityProvider
@@ -12,6 +13,8 @@ from shvatka.core.services.team import merge_teams
 from shvatka.core.teams.adapters import AdminTeamMerger
 from shvatka.core.utils import exceptions
 from shvatka.core.views.game import GameLogWriter
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -24,6 +27,7 @@ class AdminMergeTeamsInteractor:
     ) -> dto.Team:
         """Merge ``secondary`` team into ``primary``; ``secondary`` is deleted."""
         actor = await identity.get_superuser()
+        logger.warning("admin %s merges team %s into %s", actor.id, secondary_id, primary_id)
         if primary_id == secondary_id:
             raise exceptions.MergeError(
                 team_id=primary_id, notify_user="нельзя объединить команду с самой собой"

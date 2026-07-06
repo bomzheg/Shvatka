@@ -2,6 +2,7 @@ import typing
 from dataclasses import dataclass
 
 from shvatka.core.interfaces.dal.complex import TeamMerger
+from shvatka.core.teams.adapters import AdminTeamMerger
 from shvatka.core.interfaces.dal.player import TeamLeaver
 from shvatka.core.interfaces.dal.team import TeamCreator
 from shvatka.core.teams.adapters import ChatlessTeamCreator
@@ -91,3 +92,9 @@ class TeamMergerImpl(TeamMerger):
 
     async def commit(self) -> None:
         return await self.dao.commit()
+
+
+@dataclass
+class AdminTeamMergerImpl(TeamMergerImpl, AdminTeamMerger):
+    async def get_by_id(self, id_: int) -> dto.Team:
+        return await self.dao.team.get_by_id(id_)

@@ -35,4 +35,5 @@ class ApiConfig(Config):
             enable_logging=enable_logging,
             web=base.web,
             mail=base.mail,
+            superusers=base.superusers,
         )

@@ -20,6 +20,7 @@ def load_config(config_dct: dict, paths: Paths, dcf: Factory) -> Config:
         app=load_app_config(config_dct["app"], dcf),
         web=load_web_config(config_dct["web"], dcf),
         mail=load_mail_config(config_dct.get("mail"), dcf),
+        superusers=list(config_dct.get("superusers", [])),
     )
 
 

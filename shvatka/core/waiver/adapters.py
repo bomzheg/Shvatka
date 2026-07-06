@@ -42,3 +42,28 @@ class PollDraftsReader(
     PollTeamsGetter, WaiverVoteGetter, TeamByIdGetter, OrgByPlayerGetter, Protocol
 ):
     pass
+
+
+class PollVoteRemover(Protocol):
+    async def del_player_vote(self, team_id: int, player_id: int) -> None:
+        raise NotImplementedError
+
+
+class AdminPollReader(PollTeamsGetter, WaiverVoteGetter, TeamByIdGetter, Protocol):
+    pass
+
+
+class AdminGameWaiversReader(Protocol):
+    """Load a game by id and read its approved waivers, for the admin panel."""
+
+    async def get_by_id(self, id_: int) -> dto.Game:
+        raise NotImplementedError
+
+    async def get_played_teams(self, game: dto.Game) -> Iterable[dto.Team]:
+        raise NotImplementedError
+
+    async def get_played(self, game: dto.Game, team: dto.Team) -> Iterable[dto.VotedPlayer]:
+        raise NotImplementedError
+
+    async def get_all_by_game(self, game: dto.Game) -> list[dto.Waiver]:
+        raise NotImplementedError

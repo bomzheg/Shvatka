@@ -237,6 +237,11 @@ class NotAuthorizedForEdit(PermissionsError):
     permission_name = "level_edit"
 
 
+class NotAuthorizedForAdmin(PermissionsError):
+    notify_user = "Админ-панель доступна только суперпользователям"
+    permission_name = "admin"
+
+
 class TeamError(SHError):
     notify_user = "Проблема связанные с командой"
 
@@ -247,6 +252,14 @@ class PlayerNotFoundError(SHError):
 
 class PlayerUsernameOccupied(SHError):
     notify_user = "username уже занят"
+
+
+class PlayerTgAlreadyLinked(SHError):
+    notify_user = "Этот телеграм-аккаунт уже привязан к другому игроку"
+
+
+class MergeError(SHError):
+    notify_user = "Невозможно выполнить объединение"
 
 
 class PlayerInvalidUsername(SHError):

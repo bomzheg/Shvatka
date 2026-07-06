@@ -8,6 +8,7 @@ from shvatka.api.dependencies.config import ApiConfigProvider
 from shvatka.api.dependencies.other import OtherApiProvider
 from shvatka.infrastructure.di import get_providers
 from shvatka.infrastructure.di.interactors import GameEditProvider
+from shvatka.infrastructure.di.interactors import AdminProvider as AdminInteractorProvider
 
 
 def setup_di(app: FastAPI, paths_env: str):
@@ -31,6 +32,7 @@ def get_api_providers(paths_env: str) -> list[Provider]:
 def get_api_specific_providers() -> list[Provider]:
     return [
         AuthProvider(),
+        AdminInteractorProvider(),
         ApiConfigProvider(),
         OtherApiProvider(),
         GameEditProvider(),

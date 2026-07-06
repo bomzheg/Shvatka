@@ -65,10 +65,12 @@ class SearchPlayersInteractor:
         name: str | None = None,
         active: bool = True,
         archive: bool = False,
+        can_be_author: bool | None = None,
     ) -> list[dto.Player]:
         return await self.dao.search_players(
             username=username,
             name=name,
             active=active,
             archive=archive,
+            can_be_author=can_be_author,
         )

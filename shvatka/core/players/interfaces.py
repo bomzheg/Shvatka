@@ -25,6 +25,7 @@ class PlayerSearcher(Protocol):
         name: str | None = None,
         active: bool = True,
         archive: bool = False,
+        can_be_author: bool | None = None,
     ) -> list[dto.Player]:
         raise NotImplementedError
 

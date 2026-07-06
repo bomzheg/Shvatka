@@ -15,6 +15,7 @@ from telegraph.aio import Telegraph
 
 from shvatka.api.dependencies import (
     AuthProvider,
+    AdminInteractorProvider,
     ApiConfigProvider,
     OtherApiProvider,
 )
@@ -76,6 +77,7 @@ async def dishka():
         RedisProvider(),
         FileClientProvider(),
         AuthProvider(),
+        AdminInteractorProvider(),
         MemoryFileStorageProvider(),
         DpProvider(),
         MockBotProvider(),

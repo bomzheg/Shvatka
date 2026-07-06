@@ -88,6 +88,27 @@ class ReplaceWaivers:
     waivers: list[WaiverVote] = field(default_factory=list)
 
 
+@dataclass
+class AdminChangeEmail:
+    email: str
+    verified: bool = False
+
+
+@dataclass
+class AdminChangeTg:
+    tg_id: int
+    username: str | None = None
+    first_name: str | None = None
+    last_name: str | None = None
+
+
+@dataclass
+class MergeRequest:
+    primary_id: int
+    secondary_id: int
+    """the record merged into primary and then deleted"""
+
+
 @dataclass(frozen=True, slots=True)
 class PushKeys:
     p256dh: str

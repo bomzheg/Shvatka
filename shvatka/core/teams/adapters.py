@@ -1,6 +1,7 @@
 from typing import Protocol, Sequence
 
 from shvatka.core.interfaces.dal.base import Committer
+from shvatka.core.interfaces.dal.complex import TeamMerger
 from shvatka.core.interfaces.dal.player import (
     TeamJoiner,
     TeamPlayerEmojiChanger,
@@ -61,3 +62,7 @@ class PlayerPlayedGamesCounter(Protocol):
 
 class TeamsWithStatGetter(TeamsGetter, TeamPlayedGamesCounter, Protocol):
     """DAO contract for listing teams together with their played games counts."""
+
+
+class AdminTeamMerger(TeamMerger, TeamByIdGetter, Protocol):
+    """Merge one team into another, plus load both by id."""

@@ -12,6 +12,14 @@ class PlayerMainInfo:
 
 
 @dataclass(frozen=True, slots=True)
+class PlayerIdentitiesInfo:
+    """A player together with their email account (telegram/forum live on the player)."""
+
+    player: dto.Player
+    email: dto.EmailAccount | None
+
+
+@dataclass(frozen=True, slots=True)
 class PlayerStat:
     """Aggregated player statistics for the web UI.
 

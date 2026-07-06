@@ -57,6 +57,7 @@ async def test_user_get(client: AsyncClient, harry: dto.Player, token: Token):
     assert body["tg"]["tg_id"] == harry.get_chat_id()
     assert body["forum"] is None
     assert body["email"] is None
+    assert body["is_admin"] is True  # harry's tg is in the configured superusers
 
 
 @pytest.mark.asyncio

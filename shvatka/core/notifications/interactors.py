@@ -1,6 +1,6 @@
 """Interactors backing the web "notifications" tab: read the feed and mark read."""
 
-from collections.abc import Collection, Sequence
+from collections.abc import Collection
 from dataclasses import dataclass
 
 from shvatka.core.interfaces.identity import IdentityProvider
@@ -19,12 +19,18 @@ class ListNotificationsInteractor:
         unread_only: bool = False,
         limit: int = 50,
         offset: int = 0,
-    ) -> Sequence[dto.Notification]:
+    ) -> dto.Page[dto.Notification]:
         player = await identity.get_required_player()
         limit = max(1, min(limit, 100))
         offset = max(0, offset)
-        return await self.dao.get_for_player(
+        items = await self.dao.get_for_player(
             player.id, unread_only=unread_only, limit=limit, offset=offset
+        )
+        return dto.Page(
+            items=items,
+            limit=limit,
+            offset=offset,
+            filters={"unread_only": unread_only},
         )
 
 

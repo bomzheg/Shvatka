@@ -21,11 +21,9 @@ async def get_notifications(
     unread: Annotated[bool, Query()] = False,
     limit: Annotated[int, Query(ge=1, le=100)] = 50,
     offset: Annotated[int, Query(ge=0)] = 0,
-) -> responses.Items[responses.Notification]:
-    notifications = await interactor(
-        identity=identity, unread_only=unread, limit=limit, offset=offset
-    )
-    return responses.Items([responses.Notification.from_core(n) for n in notifications])
+) -> responses.NotificationsPage:
+    page = await interactor(identity=identity, unread_only=unread, limit=limit, offset=offset)
+    return responses.NotificationsPage.from_core(page)
 
 
 @inject

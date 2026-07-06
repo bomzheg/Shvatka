@@ -4,6 +4,7 @@ from collections.abc import Collection, Sequence
 from datetime import datetime
 from typing import Any, Protocol
 
+from shvatka.core.interfaces.dal.base import Committer
 from shvatka.core.models.enums.notification import NotificationType, NotificationSeverity
 from shvatka.core.models.enums.request import RequestType, RequestStatus
 from shvatka.core.notifications import dto
@@ -14,28 +15,25 @@ class NotificationReader(Protocol):
         self,
         player_id: int,
         *,
-        unread_only: bool = False,
-        limit: int = 50,
-        offset: int = 0,
+        unread_only: bool = ...,
+        limit: int = ...,
+        offset: int = ...,
     ) -> Sequence[dto.Notification]:
-        ...
+        raise NotImplementedError
 
     async def count_unread(self, player_id: int) -> int:
-        ...
+        raise NotImplementedError
 
 
-class NotificationMarker(Protocol):
+class NotificationMarker(Committer, Protocol):
     async def mark_read(self, player_id: int, notification_ids: Collection[int]) -> None:
-        ...
+        raise NotImplementedError
 
     async def mark_all_read(self, player_id: int) -> None:
-        ...
-
-    async def commit(self) -> None:
-        ...
+        raise NotImplementedError
 
 
-class NotificationWriter(Protocol):
+class NotificationWriter(Committer, Protocol):
     async def create(
         self,
         *,
@@ -46,7 +44,7 @@ class NotificationWriter(Protocol):
         payload: dict[str, Any] | None = ...,
         request_id: int | None = ...,
     ) -> dto.Notification:
-        ...
+        raise NotImplementedError
 
     async def create_for_recipients(
         self,
@@ -58,13 +56,10 @@ class NotificationWriter(Protocol):
         payload: dict[str, Any] | None = ...,
         request_id: int | None = ...,
     ) -> None:
-        ...
-
-    async def commit(self) -> None:
-        ...
+        raise NotImplementedError
 
 
-class RequestStorage(Protocol):
+class RequestStorage(Committer, Protocol):
     async def create(
         self,
         *,
@@ -76,10 +71,10 @@ class RequestStorage(Protocol):
         payload: dict[str, Any] | None = ...,
         expires_at: datetime | None = ...,
     ) -> dto.ActionRequest:
-        ...
+        raise NotImplementedError
 
     async def get_by_id(self, request_id: int) -> dto.ActionRequest:
-        ...
+        raise NotImplementedError
 
     async def get_pending(
         self,
@@ -90,7 +85,7 @@ class RequestStorage(Protocol):
         target_player_id: int | None = ...,
         initiator_id: int | None = ...,
     ) -> dto.ActionRequest | None:
-        ...
+        raise NotImplementedError
 
     async def set_status(
         self,
@@ -99,20 +94,17 @@ class RequestStorage(Protocol):
         *,
         responder_id: int | None = ...,
     ) -> dto.ActionRequest:
-        ...
+        raise NotImplementedError
 
     async def get_incoming(
-        self, player_id: int, *, only_pending: bool = False
+        self, player_id: int, *, only_pending: bool = ...
     ) -> Sequence[dto.ActionRequest]:
-        ...
+        raise NotImplementedError
 
     async def get_outgoing(
-        self, player_id: int, *, only_pending: bool = False
+        self, player_id: int, *, only_pending: bool = ...
     ) -> Sequence[dto.ActionRequest]:
-        ...
+        raise NotImplementedError
 
     async def get_pending_for_teams(self, team_ids: Sequence[int]) -> Sequence[dto.ActionRequest]:
-        ...
-
-    async def commit(self) -> None:
-        ...
+        raise NotImplementedError

@@ -1,11 +1,24 @@
 from __future__ import annotations
 
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any
+from typing import Any, Generic, TypeVar
 
 from shvatka.core.models.enums.notification import NotificationType, NotificationSeverity
 from shvatka.core.models.enums.request import RequestType, RequestStatus
+
+T = TypeVar("T")
+
+
+@dataclass
+class Page(Generic[T]):
+    """A slice of a listing: the fetched items plus the applied window and filters."""
+
+    items: Sequence[T]
+    limit: int
+    offset: int
+    filters: Mapping[str, Any] = field(default_factory=dict)
 
 
 @dataclass

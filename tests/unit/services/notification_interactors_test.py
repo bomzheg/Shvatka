@@ -69,8 +69,11 @@ def _notification(id_: int, recipient_id: int, read: bool = False) -> dto.Notifi
 async def test_list_returns_only_my_notifications() -> None:
     dao = FakeNotificationDao()
     dao.rows = [_notification(1, 42), _notification(2, 99), _notification(3, 42)]
-    result = await ListNotificationsInteractor(dao)(FakeIdentity(42))
-    assert {n.id for n in result} == {1, 3}
+    page = await ListNotificationsInteractor(dao)(FakeIdentity(42), unread_only=True)
+    assert {n.id for n in page.items} == {1, 3}
+    assert page.limit == 50
+    assert page.offset == 0
+    assert page.filters == {"unread_only": True}
 
 
 @pytest.mark.asyncio

@@ -11,6 +11,7 @@ from shvatka.core.models import dto, enums
 from shvatka.core.notifications.dto import (
     Notification as NotificationDto,
     ActionRequest as ActionRequestDto,
+    Page as PageDto,
 )
 from shvatka.core.players.dto import PlayerStat as PlayerStatDto
 from shvatka.core.teams.dto import TeamWithStat as TeamWithStatDto
@@ -772,6 +773,23 @@ class Notification:
             read=core.is_read,
             actor_id=core.actor_id,
             request_id=core.request_id,
+        )
+
+
+@dataclass(kw_only=True, frozen=True, slots=True)
+class NotificationsPage:
+    items: Sequence[Notification]
+    limit: int
+    offset: int
+    unread_only: bool
+
+    @classmethod
+    def from_core(cls, page: "PageDto[NotificationDto]") -> "NotificationsPage":
+        return cls(
+            items=[Notification.from_core(n) for n in page.items],
+            limit=page.limit,
+            offset=page.offset,
+            unread_only=bool(page.filters.get("unread_only", False)),
         )
 
 

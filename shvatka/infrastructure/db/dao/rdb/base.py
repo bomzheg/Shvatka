@@ -14,6 +14,19 @@ from shvatka.infrastructure.db.models import Base
 Model_co = TypeVar("Model_co", bound=Base, covariant=True, contravariant=False)
 
 
+ILIKE_ESCAPE = "!"
+
+
+def ilike_pattern(text: str) -> str:
+    """Паттерн для ilike(..., escape=ILIKE_ESCAPE): ищем подстроку, спецсимволы экранированы."""
+    escaped = (
+        text.replace(ILIKE_ESCAPE, ILIKE_ESCAPE * 2)
+        .replace("%", ILIKE_ESCAPE + "%")
+        .replace("_", ILIKE_ESCAPE + "_")
+    )
+    return f"%{escaped}%"
+
+
 class BaseDAO(Generic[Model_co]):
     def __init__(
         self,

@@ -12,7 +12,7 @@ from sqlalchemy.orm.interfaces import ORMOption
 from shvatka.core.models import dto
 from shvatka.core.utils.exceptions import TeamError, AnotherTeamInChat
 from shvatka.infrastructure.db import models
-from .base import BaseDAO
+from .base import BaseDAO, ILIKE_ESCAPE, ilike_pattern
 
 
 class TeamDao(BaseDAO[models.Team]):
@@ -174,6 +174,16 @@ class TeamDao(BaseDAO[models.Team]):
         if name:
             query = query.where(models.Team.name.ilike(f"%{name}%"))
         teams: ScalarResult[models.Team] = await self.session.scalars(query)
+        return [team.to_dto_chat_prefetched() for team in teams]
+
+    async def search_by_name(self, text: str) -> list[dto.Team]:
+        """Поиск по названию среди всех команд, включая архивные (форумные)."""
+        teams: ScalarResult[models.Team] = await self.session.scalars(
+            select(models.Team)
+            .options(*get_team_options())
+            .where(models.Team.name.ilike(ilike_pattern(text), escape=ILIKE_ESCAPE))
+            .order_by(models.Team.id)
+        )
         return [team.to_dto_chat_prefetched() for team in teams]
 
     async def get_played_games(self, team: dto.Team) -> list[dto.Game]:

@@ -43,7 +43,7 @@ from shvatka.infrastructure.di import (
     MailProvider,
     EmailInteractorProvider,
     NotificationProvider,
-    RequestProvider,
+    RequestProvider, SearchProvider,
 )
 from shvatka.infrastructure.di.interactors import GameEditProvider
 from shvatka.main_factory import ComplexOnlyProvider
@@ -103,6 +103,7 @@ async def dishka():
         BotIdpProvider(),
         ComplexOnlyProvider(),
         TestDbProvider(),
+        SearchProvider(),
         mock_provider,
     )
     yield container

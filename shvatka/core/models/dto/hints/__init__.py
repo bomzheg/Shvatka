@@ -13,6 +13,7 @@ from .hint_part import (
     AnyHint,
     BaseHint,
     FileMixin,
+    CaptionMixin,
     TextHint,
     GPSHint,
     VenueHint,

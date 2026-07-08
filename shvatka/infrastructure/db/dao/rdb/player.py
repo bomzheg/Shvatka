@@ -12,7 +12,7 @@ from sqlalchemy.orm import joinedload, selectinload, contains_eager
 from shvatka.core.models import dto, enums
 from shvatka.core.utils import exceptions
 from shvatka.infrastructure.db import models
-from .base import BaseDAO
+from .base import BaseDAO, ILIKE_ESCAPE, ilike_pattern
 
 
 class PlayerDao(BaseDAO[models.Player]):
@@ -202,6 +202,30 @@ class PlayerDao(BaseDAO[models.Player]):
             query = query.order_by(models.Player.id)
 
         result: ScalarResult[models.Player] = await self.session.scalars(query)
+        return [player.to_dto_user_prefetched() for player in result.unique().all()]
+
+    async def search_by_any_name(self, text: str) -> list[dto.Player]:
+        """Поиск по любому имени: username, tg-username, имени в tg и имени на форуме."""
+        pattern = ilike_pattern(text)
+        tg_name = func.concat_ws(" ", models.User.first_name, models.User.last_name)
+        result: ScalarResult[models.Player] = await self.session.scalars(
+            select(models.Player)
+            .outerjoin(models.Player.user)
+            .outerjoin(models.Player.forum_user)
+            .options(
+                contains_eager(models.Player.user),
+                contains_eager(models.Player.forum_user),
+            )
+            .where(
+                or_(
+                    models.Player.username.ilike(pattern, escape=ILIKE_ESCAPE),
+                    models.User.username.ilike(pattern, escape=ILIKE_ESCAPE),
+                    tg_name.ilike(pattern, escape=ILIKE_ESCAPE),
+                    models.ForumUser.name.ilike(pattern, escape=ILIKE_ESCAPE),
+                )
+            )
+            .order_by(models.Player.id)
+        )
         return [player.to_dto_user_prefetched() for player in result.unique().all()]
 
     async def get_by_forum_player_name(self, name: str) -> dto.Player | None:

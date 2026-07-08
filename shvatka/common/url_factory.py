@@ -6,4 +6,4 @@ class UrlFactory:
         self.config = config
 
     def get_game_id_web_url(self, game_id: int) -> str:
-        return f"{self.config.base_url}/games/{game_id}"
+        return f"{self.config.base_url}/games/{game_id}?tg=true"

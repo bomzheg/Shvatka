@@ -102,7 +102,12 @@ async def test_team_join_invite_and_accept(
     invite = await client.post(
         "/requests/team-join-invite",
         cookies=auth_cookies(harry_token),
-        json={"team_id": gryffindor.id, "player_id": hermione.id, "role": "seeker", "emoji": "💁‍♂️"},
+        json={
+            "team_id": gryffindor.id,
+            "player_id": hermione.id,
+            "role": "seeker",
+            "emoji": "💁‍♂️",
+        },
         follow_redirects=True,
     )
     assert invite.is_success

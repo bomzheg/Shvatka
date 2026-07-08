@@ -225,7 +225,9 @@ class AcceptRequestInteractor:
         team = await get_team_by_id(request.team_id, self.team_dao)
         updated = await self._resolve(request, RequestStatus.accepted, actor)
         await self._notify_initiator(request, NotificationType.request_accepted, actor)
-        await self._join(actor, team, manager, request.payload.get("role"), request.payload.get("emoji"))
+        await self._join(
+            actor, team, manager, request.payload.get("role"), request.payload.get("emoji")
+        )
         return updated
 
     async def _accept_team_join_request(
@@ -237,7 +239,9 @@ class AcceptRequestInteractor:
         joining = await self.player_dao.get_by_id(request.initiator_id)
         updated = await self._resolve(request, RequestStatus.accepted, actor)
         await self._notify_initiator(request, NotificationType.request_accepted, actor)
-        await self._join(joining, team, actor, request.payload.get("role"), request.payload.get("emoji"))
+        await self._join(
+            joining, team, actor, request.payload.get("role"), request.payload.get("emoji")
+        )
         return updated
 
     async def _accept_org_invite(
@@ -256,7 +260,12 @@ class AcceptRequestInteractor:
         return updated
 
     async def _join(
-        self, player: dto.Player, team: dto.Team, manager: dto.Player, role: str | None, emoji: str | None
+        self,
+        player: dto.Player,
+        team: dto.Team,
+        manager: dto.Player,
+        role: str | None,
+        emoji: str | None,
     ) -> None:
         with contextlib.suppress(PlayerRestoredInTeam):
             await join_team(

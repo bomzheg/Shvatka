@@ -23,7 +23,7 @@ async def create_team_join_invite(
     body: Annotated[req.TeamJoinInvite, Body()],
 ) -> responses.ActionRequest:
     request = await interactor(
-        identity=identity, team_id=body.team_id, player_id=body.player_id, role=body.role
+        identity=identity, team_id=body.team_id, player_id=body.player_id, role=body.role, emoji=body.emoji,
     )
     return responses.ActionRequest.from_core(request)
 

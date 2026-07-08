@@ -54,6 +54,7 @@ class TeamPlayerDao(BaseDAO[models.TeamPlayer]):
         player: dto.Player,
         team: dto.Team,
         role: str,
+        emoji: str | None = None,
         as_captain: bool = False,
         joined_at: datetime | None = None,
     ):
@@ -65,6 +66,7 @@ class TeamPlayerDao(BaseDAO[models.TeamPlayer]):
             player_id=player.id,
             team_id=team.id,
             role=role,
+            emoji=emoji,
         )
         if joined_at:
             team_player.date_joined = joined_at

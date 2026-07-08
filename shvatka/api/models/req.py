@@ -131,6 +131,7 @@ class TeamJoinInvite:
     team_id: int
     player_id: int
     role: str | None = None
+    emoji: str | None = None
 
 
 @dataclass

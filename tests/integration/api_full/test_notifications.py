@@ -102,7 +102,7 @@ async def test_team_join_invite_and_accept(
     invite = await client.post(
         "/requests/team-join-invite",
         cookies=auth_cookies(harry_token),
-        json={"team_id": gryffindor.id, "player_id": hermione.id, "role": "seeker"},
+        json={"team_id": gryffindor.id, "player_id": hermione.id, "role": "seeker", "emoji": "💁‍♂️"},
         follow_redirects=True,
     )
     assert invite.is_success
@@ -131,6 +131,9 @@ async def test_team_join_invite_and_accept(
     assert accept.json()["status"] == "accepted"
 
     assert await check_dao.team_player.get_team(hermione) is not None
+    tp = await check_dao.team_player.get_team_player(hermione)
+    assert tp.role == "seeker"
+    assert tp.emoji == "💁‍♂️"
 
 
 @pytest.mark.asyncio

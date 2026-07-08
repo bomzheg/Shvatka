@@ -53,7 +53,7 @@ class PlayerPromoter(Committer, PlayerByIdGetter, InviteReader, InviteRemover, P
 
 class TeamJoiner(Committer, TeamPlayerGetter, Protocol):
     async def join_team(
-        self, player: dto.Player, team: dto.Team, role: str, as_captain: bool = False
+        self, player: dto.Player, team: dto.Team, role: str, emoji: str | None = None, as_captain: bool = False
     ) -> None:
         raise NotImplementedError
 

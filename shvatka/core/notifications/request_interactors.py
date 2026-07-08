@@ -55,6 +55,7 @@ class CreateTeamJoinInviteInteractor:
         team_id: int,
         player_id: int,
         role: str | None = None,
+        emoji: str | None = None,
     ) -> ndto.ActionRequest:
         manager = await identity.get_required_player()
         team = await get_team_by_id(team_id, self.team_dao)
@@ -69,6 +70,7 @@ class CreateTeamJoinInviteInteractor:
             "team_id": team.id,
             "team_name": team.name,
             "role": role,
+            "emoji": emoji,
             "inviter_id": manager.id,
             "inviter_name": manager.name_mention,
             "player_id": target.id,
@@ -223,7 +225,7 @@ class AcceptRequestInteractor:
         team = await get_team_by_id(request.team_id, self.team_dao)
         updated = await self._resolve(request, RequestStatus.accepted, actor)
         await self._notify_initiator(request, NotificationType.request_accepted, actor)
-        await self._join(actor, team, manager, request.payload.get("role"))
+        await self._join(actor, team, manager, request.payload.get("role"), request.payload.get("emoji"))
         return updated
 
     async def _accept_team_join_request(
@@ -235,7 +237,7 @@ class AcceptRequestInteractor:
         joining = await self.player_dao.get_by_id(request.initiator_id)
         updated = await self._resolve(request, RequestStatus.accepted, actor)
         await self._notify_initiator(request, NotificationType.request_accepted, actor)
-        await self._join(joining, team, actor, request.payload.get("role"))
+        await self._join(joining, team, actor, request.payload.get("role"), request.payload.get("emoji"))
         return updated
 
     async def _accept_org_invite(
@@ -254,7 +256,7 @@ class AcceptRequestInteractor:
         return updated
 
     async def _join(
-        self, player: dto.Player, team: dto.Team, manager: dto.Player, role: str | None
+        self, player: dto.Player, team: dto.Team, manager: dto.Player, role: str | None, emoji: str | None
     ) -> None:
         with contextlib.suppress(PlayerRestoredInTeam):
             await join_team(
@@ -264,6 +266,7 @@ class AcceptRequestInteractor:
                 self.team_joiner,
                 notifier=self.team_notifier,
                 role=role or DEFAULT_ROLE,
+                emoji=emoji,
             )
 
     async def _resolve(

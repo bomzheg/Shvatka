@@ -115,11 +115,12 @@ async def join_team(
     dao: TeamJoiner,
     notifier: TeamNotifier,
     role: str = DEFAULT_ROLE,
+    emoji: str | None = None,
 ):
     await dao.check_player_free(player)
     await check_can_add_players(manager, team, dao)
     try:
-        await dao.join_team(player, team, role=role)
+        await dao.join_team(player, team, role=role, emoji=emoji)
     except PlayerRestoredInTeam:
         # the player was previously in this team and is restored rather than re-created;
         # we still commit and notify, then re-raise so callers can react to the restore

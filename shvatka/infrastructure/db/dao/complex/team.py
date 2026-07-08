@@ -28,9 +28,9 @@ class TeamCreatorImpl(TeamCreator, ChatlessTeamCreator):
         return await self.dao.team.create_no_chat(name, description, captain)
 
     async def join_team(
-        self, player: dto.Player, team: dto.Team, role: str, as_captain: bool = False
+        self, player: dto.Player, team: dto.Team, role: str, emoji: str | None = None, as_captain: bool = False
     ) -> None:
-        return await self.dao.team_player.join_team(player, team, role, as_captain)
+        return await self.dao.team_player.join_team(player, team, role, emoji=emoji, as_captain=as_captain)
 
     async def check_player_free(self, player: dto.Player) -> None:
         return await self.dao.team_player.check_player_free(player)

@@ -1,7 +1,9 @@
 import enum
+from collections.abc import Sequence
 from dataclasses import dataclass, field
 
 from shvatka.core.models import dto
+from shvatka.core.models.dto import action
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -25,6 +27,7 @@ class LevelWithGame:
 class LevelMatchField(enum.Enum):
     name_id = "name_id"
     hint = "hint"
+    key = "key"
 
 
 class PlayerMatchField(enum.Enum):
@@ -47,11 +50,16 @@ class LevelHit:
     found_in: LevelMatchField
     snippet: str
     hint_number: int | None = None
-    """Номер временнОй подсказки в списке подсказок уровня (с нуля)."""
+    """Номер подсказки в списке подсказок уровня (с нуля)."""
     hint_time: int | None = None
     """Время выхода подсказки, минуты."""
     hint_part_number: int | None = None
-    """Номер части внутри временнОй подсказки (с нуля)."""
+    """Номер части внутри подсказки (с нуля)."""
+    condition_key: Sequence[str] = ()
+    """Ключи которые выводят такую подсказку"""
+    condition_timer: int | None = None
+    """Таймер в минутах"""
+    key: action.SHKey | None = None
 
 
 @dataclass(frozen=True, kw_only=True)

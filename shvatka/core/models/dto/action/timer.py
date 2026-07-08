@@ -101,6 +101,7 @@ class LevelTimerEffectsCondition(LevelTimerCondition, EffectsCondition):
     """
 
     action_time: int
+    """minutes"""
     effects: Effects
     type: Literal["EFFECTS_TIMER"] = ConditionType.EFFECTS_TIMER.name
 

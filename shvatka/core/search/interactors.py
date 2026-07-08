@@ -1,8 +1,8 @@
-from collections.abc import Iterator
+from collections.abc import Iterator, Sequence
 from dataclasses import dataclass
 
 from shvatka.core.models import dto
-from shvatka.core.models.dto import hints
+from shvatka.core.models.dto import hints, Level, action
 from shvatka.core.search.adapters import GlobalSearchDao
 from shvatka.core.search.dto import (
     GameHit,
@@ -48,7 +48,6 @@ def iter_hint_texts(hint: hints.AnyHint) -> Iterator[str]:
 
 
 def find_level_hits(candidate: LevelWithGame, query: str) -> list[LevelHit]:
-    """Точные места совпадений внутри уровня: name_id и текстовые части подсказок."""
     result: list[LevelHit] = []
     level = candidate.level
     if snippet := make_snippet(level.name_id, query):
@@ -61,21 +60,65 @@ def find_level_hits(candidate: LevelWithGame, query: str) -> list[LevelHit]:
             )
         )
     for hint_number, time_hint in enumerate(level.scenario.time_hints):
-        for part_number, hint_part in enumerate(time_hint.hint):
-            for text in iter_hint_texts(hint_part):
-                if snippet := make_snippet(text, query):
-                    result.append(
-                        LevelHit(
-                            level=level,
-                            game=candidate.game,
-                            found_in=LevelMatchField.hint,
-                            hint_number=hint_number,
-                            hint_time=time_hint.time,
-                            hint_part_number=part_number,
-                            snippet=snippet,
-                        )
+        result.extend(
+            make_hint_part_snippet(
+                candidate=candidate,
+                level=level,
+                query=query,
+                hint_=time_hint.hint,
+                hint_time=time_hint.time,
+                hint_number=hint_number,
+            )
+        )
+    for condition in level.scenario.conditions:
+        if isinstance(condition, action.EffectsCondition):
+            result.extend(
+                make_hint_part_snippet(
+                    candidate=candidate,
+                    level=level,
+                    query=query,
+                    hint_=condition.effects.hints_,
+                    condition_key=condition.get_keys()
+                    if isinstance(condition, action.KeyEffectsCondition)
+                    else (),
+                    condition_timer=condition.action_time
+                    if isinstance(condition, action.LevelTimerEffectsCondition)
+                    else None,
+                )
+            )
+    for key in level.scenario.get_keys():
+        if snippet := make_snippet(key, query):
+            result.append(  # noqa: PERF401
+                LevelHit(
+                    level=level,
+                    game=candidate.game,
+                    found_in=LevelMatchField.key,
+                    snippet=snippet,
+                    key=key,
+                )
+            )
+
+    return result
+
+
+def make_hint_part_snippet(
+    candidate: LevelWithGame, level: Level, query: str, hint_: Sequence[hints.AnyHint], **kwargs
+) -> list[LevelHit]:
+    result: list[LevelHit] = []
+    for part_number, hint_part in enumerate(hint_):
+        for text in iter_hint_texts(hint_part):
+            if snippet := make_snippet(text, query):
+                result.append(
+                    LevelHit(
+                        level=level,
+                        game=candidate.game,
+                        found_in=LevelMatchField.hint,
+                        hint_part_number=part_number,
+                        snippet=snippet,
+                        **kwargs,
                     )
-                    break
+                )
+                break
     return result
 
 

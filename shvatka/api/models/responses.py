@@ -854,10 +854,13 @@ class LevelSearchResult:
     game_id: int
     game_name: str
     game_number: int | None
-    found_in: typing.Literal["name_id", "hint"]
+    found_in: typing.Literal["name_id", "hint", "key"]
     hint_number: int | None
     hint_time: int | None
     hint_part_number: int | None
+    condition_key: Sequence[str] = ()
+    condition_timer: int | None = None
+    key: str | None = None
     snippet: str
     type: typing.Literal["level"] = "level"
 
@@ -870,10 +873,13 @@ class LevelSearchResult:
             game_id=hit.game.id,
             game_name=hit.game.name,
             game_number=hit.game.number,
-            found_in=typing.cast(typing.Literal["name_id", "hint"], hit.found_in.value),
+            found_in=typing.cast(typing.Literal["name_id", "hint", "key"], hit.found_in.value),
             hint_number=hit.hint_number,
             hint_time=hit.hint_time,
             hint_part_number=hit.hint_part_number,
+            condition_key=hit.condition_key,
+            condition_timer=hit.condition_timer,
+            key=hit.key,
             snippet=hit.snippet,
         )
 

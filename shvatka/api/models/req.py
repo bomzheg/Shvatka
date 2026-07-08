@@ -119,3 +119,27 @@ class PushKeys:
 class PushSubscription:
     endpoint: str
     keys: PushKeys
+
+
+@dataclass
+class MarkNotificationsRead:
+    ids: list[int] = field(default_factory=list)
+
+
+@dataclass
+class TeamJoinInvite:
+    team_id: int
+    player_id: int
+    role: str | None = None
+    emoji: str | None = None
+
+
+@dataclass
+class TeamJoinRequest:
+    team_id: int
+
+
+@dataclass
+class OrgInvite:
+    game_id: int
+    player_id: int

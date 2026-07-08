@@ -19,7 +19,15 @@ from shvatka.core.views.game import (
     InputContainer,
     GameViewPreparer,
 )
-from shvatka.core.views.team import TeamNotifier, TeamEvent
+from shvatka.core.interfaces.dal.player import TeamPlayersGetter
+from shvatka.core.models.enums.notification import NotificationType, NotificationSeverity
+from shvatka.core.notifications.adapters import NotificationWriter
+from shvatka.core.views.team import (
+    TeamNotifier,
+    TeamEvent,
+    PlayerJoinedTeam,
+    PlayerLeftTeam,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -157,8 +165,9 @@ class WebGameLogWriter(GameLogWriter):
 
 
 class WebOrgNotifier(OrgNotifier):
-    def __init__(self, push_sender: WebPushSender) -> None:
+    def __init__(self, push_sender: WebPushSender, notification_dao: NotificationWriter) -> None:
         self.push_sender = push_sender
+        self.notification_dao = notification_dao
 
     async def notify(self, event: Event) -> None:
         match event:
@@ -195,6 +204,23 @@ class WebOrgNotifier(OrgNotifier):
         )
 
     async def _notify_new_org(self, event: NewOrg) -> None:
+        recipient_ids = {org.player.id for org in event.orgs_list} | {event.org.player.id}
+        try:
+            await self.notification_dao.create_for_recipients(
+                recipient_ids=recipient_ids,
+                type_=NotificationType.org_added,
+                severity=NotificationSeverity.normal,
+                actor_id=event.org.player.id,
+                payload={
+                    "game_id": event.game.id,
+                    "game_name": event.game.name,
+                    "org_id": event.org.id,
+                    "org_name": event.org.player.name_mention,
+                },
+            )
+            await self.notification_dao.commit()
+        except Exception as e:
+            logger.exception("failed to persist org_added notifications", exc_info=e)
         await self._notify_orgs(
             event,
             PushMessage(
@@ -237,5 +263,94 @@ class WebOrgNotifier(OrgNotifier):
 
 
 class WebTeamNotifier(TeamNotifier):
+    def __init__(
+        self,
+        notification_dao: NotificationWriter,
+        team_players_dao: TeamPlayersGetter,
+        push_sender: WebPushSender,
+    ) -> None:
+        self.notification_dao = notification_dao
+        self.team_players_dao = team_players_dao
+        self.push_sender = push_sender
+
     async def notify(self, event: TeamEvent) -> None:
-        pass
+        match event:
+            case PlayerJoinedTeam():
+                await self._notify(event, self._joined_spec(event))
+            case PlayerLeftTeam():
+                await self._notify(event, self._left_spec(event))
+            case _:
+                logger.warning("unknown team event %s, no notification persisted", type(event))
+
+    async def _notify(self, event: TeamEvent, spec: "_TeamNotificationSpec") -> None:
+        recipient_ids = await self._team_member_ids(event.team)
+        if not recipient_ids:
+            return
+        try:
+            await self.notification_dao.create_for_recipients(
+                recipient_ids=recipient_ids,
+                type_=spec.type,
+                severity=spec.severity,
+                actor_id=event.actor.id,
+                payload=spec.payload,
+            )
+            await self.notification_dao.commit()
+        except Exception as e:
+            logger.exception("failed to persist team notifications", exc_info=e)
+        await self.push_sender.send_to_players(player_ids=recipient_ids, message=spec.push)
+
+    async def _team_member_ids(self, team: dto.Team) -> set[int]:
+        players = await self.team_players_dao.get_players(team)
+        return {tp.player.id for tp in players}
+
+    @staticmethod
+    def _joined_spec(event: PlayerJoinedTeam) -> "_TeamNotificationSpec":
+        payload = {
+            "team_id": event.team.id,
+            "team_name": event.team.name,
+            "player_id": event.invited.id,
+            "player_name": event.invited.name_mention,
+            "by_self": event.by_self,
+        }
+        return _TeamNotificationSpec(
+            type=NotificationType.player_joined_team,
+            severity=NotificationSeverity.low,
+            payload=payload,
+            push=PushMessage(
+                title=f"{event.team.name}: новый игрок",
+                body=f"{event.invited.name_mention} вступил в команду",
+                url="/teams",
+                tag=f"team-join-{event.team.id}-{event.invited.id}",
+                data={"kind": "player_joined_team", "team_id": event.team.id},
+            ),
+        )
+
+    @staticmethod
+    def _left_spec(event: PlayerLeftTeam) -> "_TeamNotificationSpec":
+        payload = {
+            "team_id": event.team.id,
+            "team_name": event.team.name,
+            "player_id": event.removed.id,
+            "player_name": event.removed.name_mention,
+            "by_self": event.by_self,
+        }
+        return _TeamNotificationSpec(
+            type=NotificationType.player_left_team,
+            severity=NotificationSeverity.normal,
+            payload=payload,
+            push=PushMessage(
+                title=f"{event.team.name}: игрок вышел",
+                body=f"{event.removed.name_mention} покинул команду",
+                url="/teams",
+                tag=f"team-leave-{event.team.id}-{event.removed.id}",
+                data={"kind": "player_left_team", "team_id": event.team.id},
+            ),
+        )
+
+
+@dataclass(frozen=True, slots=True)
+class _TeamNotificationSpec:
+    type: NotificationType
+    severity: NotificationSeverity
+    payload: dict
+    push: PushMessage

@@ -310,6 +310,22 @@ class PlayerNotInTeam(PlayerTeamError):
     notify_user = "Игрок не в команде"
 
 
+class RequestError(SHError):
+    notify_user = "Проблема, связанная с запросом"
+
+
+class RequestNotFound(RequestError):
+    notify_user = "Запрос не найден"
+
+
+class RequestNotPending(RequestError):
+    notify_user = "Этот запрос уже обработан"
+
+
+class RequestPermissionError(RequestError):
+    notify_user = "Недостаточно прав для этого запроса"
+
+
 class AnotherTeamInChat(PlayerTeamError):
     notify_user = "В чате уже есть другая команда"
 

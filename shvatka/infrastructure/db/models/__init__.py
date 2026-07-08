@@ -1,8 +1,10 @@
 from .achievement import Achievement
+from .action_request import ActionRequest
 from .base import Base
 from .chat import Chat
 from .email import EmailAccount
 from .file_info import FileInfo
+from .notification import Notification
 from .file_link import GameFile, LevelFile
 from .forum_team import ForumTeam
 from .forum_user import ForumUser

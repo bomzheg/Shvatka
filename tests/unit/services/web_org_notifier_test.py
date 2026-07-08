@@ -17,6 +17,18 @@ class FakePushSender:
         self.calls.append((set(player_ids), message))
 
 
+class FakeNotificationDao:
+    def __init__(self) -> None:
+        self.created: list[dict] = []
+        self.commits = 0
+
+    async def create_for_recipients(self, **kwargs) -> None:
+        self.created.append(kwargs)
+
+    async def commit(self) -> None:
+        self.commits += 1
+
+
 def _org(player_id: int):
     return SimpleNamespace(player=SimpleNamespace(id=player_id, name_mention="org"))
 
@@ -29,7 +41,7 @@ def _data(message: PushMessage) -> dict:
 @pytest.mark.asyncio
 async def test_level_up_pushes_to_all_orgs() -> None:
     sender = FakePushSender()
-    notifier = WebOrgNotifier(sender)
+    notifier = WebOrgNotifier(sender, FakeNotificationDao())
     team = SimpleNamespace(id=7, name="Gryffindor")
     level = SimpleNamespace(db_id=3, name_id="lvl-1", number_in_game=0)
     event = LevelUp(orgs_list=[_org(1), _org(2)], team=team, new_level=level)
@@ -47,7 +59,7 @@ async def test_level_up_pushes_to_all_orgs() -> None:
 @pytest.mark.asyncio
 async def test_level_up_uses_name_id_without_number() -> None:
     sender = FakePushSender()
-    notifier = WebOrgNotifier(sender)
+    notifier = WebOrgNotifier(sender, FakeNotificationDao())
     team = SimpleNamespace(id=7, name="Gryffindor")
     level = SimpleNamespace(db_id=3, name_id="secret-lvl", number_in_game=None)
     event = LevelUp(orgs_list=[_org(1)], team=team, new_level=level)
@@ -61,7 +73,8 @@ async def test_level_up_uses_name_id_without_number() -> None:
 @pytest.mark.asyncio
 async def test_new_org_pushes_to_all_orgs() -> None:
     sender = FakePushSender()
-    notifier = WebOrgNotifier(sender)
+    notification_dao = FakeNotificationDao()
+    notifier = WebOrgNotifier(sender, notification_dao)
     game = SimpleNamespace(id=5, name="My Game")
     new_org = SimpleNamespace(id=9, player=SimpleNamespace(id=42, name_mention="newbie"))
     event = NewOrg(orgs_list=[_org(1), _org(2)], game=game, org=new_org)
@@ -74,11 +87,18 @@ async def test_new_org_pushes_to_all_orgs() -> None:
     assert "newbie" in message.body
     assert _data(message)["kind"] == "new_org"
 
+    # the new_org notification is persisted to orgs + the newly added org
+    assert notification_dao.commits == 1
+    assert len(notification_dao.created) == 1
+    persisted = notification_dao.created[0]
+    assert persisted["recipient_ids"] == {1, 2, 42}
+    assert persisted["type_"].name == "org_added"
+
 
 @pytest.mark.asyncio
 async def test_level_test_completed_pushes_to_all_orgs() -> None:
     sender = FakePushSender()
-    notifier = WebOrgNotifier(sender)
+    notifier = WebOrgNotifier(sender, FakeNotificationDao())
     tester = SimpleNamespace(player=SimpleNamespace(id=42, name_mention="tester"))
     suite = SimpleNamespace(level=SimpleNamespace(name_id="lvl-1"), tester=tester)
     result = SimpleNamespace(td=timedelta(minutes=2, seconds=5))

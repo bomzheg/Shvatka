@@ -42,6 +42,8 @@ from shvatka.infrastructure.di import (
     TeamProvider,
     MailProvider,
     EmailInteractorProvider,
+    NotificationProvider,
+    RequestProvider,
 )
 from shvatka.infrastructure.di.interactors import GameEditProvider
 from shvatka.main_factory import ComplexOnlyProvider
@@ -92,6 +94,8 @@ async def dishka():
         WaiverProvider(),
         PlayerProvider(),
         TeamProvider(),
+        NotificationProvider(),
+        RequestProvider(),
         MailProvider(),
         EmailInteractorProvider(),
         PrinterProvider(),

@@ -1,5 +1,7 @@
 import pytest
 
+from shvatka.common.config.models.main import WebConfig
+from shvatka.common.url_factory import UrlFactory
 from shvatka.core.models import dto
 from shvatka.core.services.one_time_link import GenerateOneTimeLoginLinkInteractor
 from shvatka.core.utils import exceptions
@@ -30,7 +32,11 @@ async def test_generates_link_for_current_player():
     token_creator = FakeTokenCreator()
     interactor = GenerateOneTimeLoginLinkInteractor(
         token_creator=token_creator,
-        base_url="https://example.com",
+        url_factory=UrlFactory(
+            config=WebConfig(
+                base_url="https://example.com",
+            )
+        ),
     )
     identity = FakeIdentity(player)
 
@@ -44,7 +50,11 @@ async def test_generates_link_for_current_player():
 async def test_requires_a_player():
     interactor = GenerateOneTimeLoginLinkInteractor(
         token_creator=FakeTokenCreator(),
-        base_url="https://example.com",
+        url_factory=UrlFactory(
+            config=WebConfig(
+                base_url="https://example.com",
+            )
+        ),
     )
     identity = FakeIdentity(None)
 

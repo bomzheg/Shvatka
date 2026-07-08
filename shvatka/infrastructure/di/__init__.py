@@ -1,3 +1,4 @@
+from shvatka.common.factory import UrlProvider
 from shvatka.infrastructure.di.bot import BotProvider
 from shvatka.infrastructure.di.config import ConfigProvider, DbConfigProvider
 from shvatka.infrastructure.di.db import DbProvider, RedisProvider, DAOProvider
@@ -15,6 +16,7 @@ def get_providers(paths_env):
         ConfigProvider(paths_env),
         DbConfigProvider(),
         DbProvider(),
+        UrlProvider(),
         DAOProvider(),
         RedisProvider(),
         FileClientProvider(),

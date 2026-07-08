@@ -23,7 +23,7 @@ from dishka.integrations.aiogram import setup_dishka, AiogramMiddlewareData
 from redis.asyncio import Redis
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
-from shvatka.common.factory import TelegraphProvider, DCFProvider, UrlProvider
+from shvatka.common.factory import TelegraphProvider, DCFProvider
 from shvatka.core.interfaces.clients.file_storage import FileStorage
 from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.views.game import GameLogWriter, GameView, GameViewPreparer, OrgNotifier
@@ -78,7 +78,6 @@ def get_bot_specific_providers() -> list[Provider]:
         DCFProvider(),
         GameToolsProvider(),
         UserGetterProvider(),
-        UrlProvider(),
         BotIdpProvider(),
     ]
 

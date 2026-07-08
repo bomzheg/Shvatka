@@ -2,6 +2,8 @@ from datetime import timedelta
 
 import pytest
 
+from shvatka.common.config.models.main import WebConfig
+from shvatka.common.url_factory import UrlFactory
 from shvatka.core.models import dto
 from shvatka.core.services import email as email_service
 from shvatka.core.services.email import (
@@ -177,7 +179,11 @@ def forgot_password(dao, limiter, token_creator, sender) -> ForgotPasswordIntera
         limiter=limiter,
         token_creator=token_creator,
         sender=sender,
-        base_url="https://example.com",
+        url_factory=UrlFactory(
+            config=WebConfig(
+                base_url="https://example.com",
+            )
+        ),
     )
 
 

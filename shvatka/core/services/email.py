@@ -3,6 +3,7 @@ import secrets
 from dataclasses import dataclass
 from datetime import timedelta
 
+from shvatka.common.url_factory import UrlFactory
 from shvatka.core.interfaces.dal.email import (
     EmailAccountDao,
     EmailDao,
@@ -104,7 +105,7 @@ class ForgotPasswordInteractor:
     limiter: RateLimiter
     token_creator: OneTimeTokenCreator
     sender: EmailSender
-    base_url: str
+    url_factory: UrlFactory
 
     async def __call__(self, email: str) -> None:
         email = normalize_email_or_raise(email)
@@ -121,7 +122,7 @@ class ForgotPasswordInteractor:
                 text=f"forgot password rate limited for player {player.id}"
             )
         token = await self.token_creator.save_new_token(dct={"player_id": player.id})
-        url = f"{self.base_url}/auth/one-time-token?token={token}"
+        url = self.url_factory.get_otl(token)
         await self.sender.send_one_time_link(email, url)
 
 

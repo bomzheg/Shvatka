@@ -1,6 +1,7 @@
 from dishka import Provider, Scope, provide
 
 from shvatka.common import Config
+from shvatka.common.url_factory import UrlFactory
 from shvatka.core.interfaces.hasher import PasswordHasher
 from shvatka.core.interfaces.mail import EmailSender
 from shvatka.core.services.email import (
@@ -56,12 +57,12 @@ class EmailInteractorProvider(Provider):
 
     @provide
     def forgot_password(
-        self, dao: HolderDao, sender: EmailSender, config: Config
+        self, dao: HolderDao, sender: EmailSender, url_factory: UrlFactory
     ) -> ForgotPasswordInteractor:
         return ForgotPasswordInteractor(
             dao=dao.email,
             limiter=dao.rate_limiter,
             token_creator=dao.one_time_token,
             sender=sender,
-            base_url=config.web.base_url,
+            url_factory=url_factory,
         )

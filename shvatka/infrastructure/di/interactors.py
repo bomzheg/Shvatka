@@ -1,7 +1,7 @@
 from adaptix import Retort
 from dishka import Provider, Scope, provide
 
-from shvatka.common.config.models.main import WebConfig
+from shvatka.common.url_factory import UrlFactory
 from shvatka.core.games.interactors import (
     GameFileReaderInteractor,
     GamePlayReaderInteractor,
@@ -300,11 +300,11 @@ class PlayerProvider(Provider):
 
     @provide
     def get_otl_link_interactor(
-        self, dao: HolderDao, config: WebConfig
+        self, dao: HolderDao, url_factory: UrlFactory
     ) -> GenerateOneTimeLoginLinkInteractor:
         return GenerateOneTimeLoginLinkInteractor(
             token_creator=dao.one_time_token,
-            base_url=config.base_url,
+            url_factory=url_factory,
         )
 
 
@@ -411,10 +411,10 @@ class AdminProvider(Provider):
 
     @provide
     def admin_otl(
-        self, dao: HolderDao, config: WebConfig
+        self, dao: HolderDao, url_factory: UrlFactory
     ) -> GenerateOneTimeLoginLinkForPlayerInteractor:
         return GenerateOneTimeLoginLinkForPlayerInteractor(
             player_getter=dao.player,
             token_creator=dao.one_time_token,
-            base_url=config.base_url,
+            url_factory=url_factory,
         )

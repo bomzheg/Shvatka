@@ -7,3 +7,6 @@ class UrlFactory:
 
     def get_game_id_web_url(self, game_id: int) -> str:
         return f"{self.config.base_url}/games/{game_id}?tg=true"
+
+    def get_otl(self, token: str) -> str:
+        return f"{self.config.base_url}/auth/one-time-token?token={token}"

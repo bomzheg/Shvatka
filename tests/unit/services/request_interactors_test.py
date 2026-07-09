@@ -1,5 +1,5 @@
 from collections.abc import Sequence
-from datetime import datetime, timezone
+from datetime import datetime, UTC
 from types import SimpleNamespace
 
 import pytest
@@ -58,7 +58,7 @@ class FakeRequests:
             type=kwargs["type_"],
             status=RequestStatus.pending,
             initiator_id=kwargs["initiator_id"],
-            created_at=datetime.now(tz=timezone.utc),
+            created_at=datetime.now(tz=UTC),
             payload=kwargs.get("payload") or {},
             target_player_id=kwargs.get("target_player_id"),
             team_id=kwargs.get("team_id"),
@@ -82,6 +82,29 @@ class FakeRequests:
 
     async def commit(self) -> None:
         self.commits += 1
+
+    async def add_bot_message(
+        self, request_id: int, *, chat_id: int, message_id: int
+    ) -> ndto.ActionRequest:
+        request = self.rows[request_id]
+        request.bot_messages.append({"chat_id": chat_id, "message_id": message_id})
+        return request
+
+
+class FakeNotifier:
+    def __init__(self) -> None:
+        self.created: list[ndto.ActionRequest] = []
+
+    async def notify_created(self, request: ndto.ActionRequest) -> None:
+        self.created.append(request)
+
+
+class FakeBus:
+    def __init__(self) -> None:
+        self.events: list[object] = []
+
+    async def submit(self, event: object) -> None:
+        self.events.append(event)
 
 
 class FakeNotifications:
@@ -141,6 +164,7 @@ async def test_create_team_join_invite() -> None:
         team_dao=FakeTeamDao(team),
         player_dao=FakePlayerDao({2: target}),
         team_player_dao=SimpleNamespace(),
+        notifier=FakeNotifier(),
     )
     request = await interactor(FakeIdentity(cap), team_id=1, player_id=2, role="chaser")
     assert request.type == RequestType.team_join_invite
@@ -161,7 +185,7 @@ async def test_create_team_join_invite_is_idempotent() -> None:
         type=RequestType.team_join_invite,
         status=RequestStatus.pending,
         initiator_id=1,
-        created_at=datetime.now(tz=timezone.utc),
+        created_at=datetime.now(tz=UTC),
     )
     requests.pending = existing
     notifications = FakeNotifications()
@@ -171,6 +195,7 @@ async def test_create_team_join_invite_is_idempotent() -> None:
         team_dao=FakeTeamDao(team),
         player_dao=FakePlayerDao({2: target}),
         team_player_dao=SimpleNamespace(),
+        notifier=FakeNotifier(),
     )
     request = await interactor(FakeIdentity(cap), team_id=1, player_id=2)
     assert request.id == 99
@@ -197,6 +222,7 @@ async def test_create_team_join_request_notifies_managers_only() -> None:
         notifications=notifications,
         team_dao=FakeTeamDao(team),
         team_players_dao=FakeTeamPlayersDao(members),
+        notifier=FakeNotifier(),
     )
     request = await interactor(FakeIdentity(asker), team_id=1)
     assert request.type == RequestType.team_join_request
@@ -211,9 +237,9 @@ async def test_cancel_only_by_initiator() -> None:
         type=RequestType.team_join_invite,
         status=RequestStatus.pending,
         initiator_id=1,
-        created_at=datetime.now(tz=timezone.utc),
+        created_at=datetime.now(tz=UTC),
     )
-    interactor = CancelRequestInteractor(requests=requests)
+    interactor = CancelRequestInteractor(requests=requests, bus=FakeBus())
     with pytest.raises(RequestPermissionError):
         await interactor(FakeIdentity(_player(2)), request_id=1)
     updated = await interactor(FakeIdentity(_player(1)), request_id=1)
@@ -228,10 +254,12 @@ async def test_cancel_rejects_non_pending() -> None:
         type=RequestType.team_join_invite,
         status=RequestStatus.accepted,
         initiator_id=1,
-        created_at=datetime.now(tz=timezone.utc),
+        created_at=datetime.now(tz=UTC),
     )
     with pytest.raises(RequestNotPending):
-        await CancelRequestInteractor(requests=requests)(FakeIdentity(_player(1)), request_id=1)
+        await CancelRequestInteractor(requests=requests, bus=FakeBus())(
+            FakeIdentity(_player(1)), request_id=1
+        )
 
 
 @pytest.mark.asyncio
@@ -244,7 +272,7 @@ async def test_decline_invite_notifies_initiator() -> None:
         status=RequestStatus.pending,
         initiator_id=1,
         target_player_id=2,
-        created_at=datetime.now(tz=timezone.utc),
+        created_at=datetime.now(tz=UTC),
     )
     notifications = FakeNotifications()
     interactor = DeclineRequestInteractor(
@@ -252,6 +280,7 @@ async def test_decline_invite_notifies_initiator() -> None:
         notifications=notifications,
         team_dao=SimpleNamespace(),
         team_player_dao=SimpleNamespace(),
+        bus=FakeBus(),
     )
     updated = await interactor(FakeIdentity(target), request_id=1)
     assert updated.status == RequestStatus.declined
@@ -267,13 +296,14 @@ async def test_decline_invite_wrong_actor_forbidden() -> None:
         status=RequestStatus.pending,
         initiator_id=1,
         target_player_id=2,
-        created_at=datetime.now(tz=timezone.utc),
+        created_at=datetime.now(tz=UTC),
     )
     interactor = DeclineRequestInteractor(
         requests=requests,
         notifications=FakeNotifications(),
         team_dao=SimpleNamespace(),
         team_player_dao=SimpleNamespace(),
+        bus=FakeBus(),
     )
     with pytest.raises(RequestPermissionError):
         await interactor(FakeIdentity(_player(7)), request_id=1)
@@ -288,7 +318,7 @@ async def test_accept_rejects_non_pending() -> None:
         status=RequestStatus.cancelled,
         initiator_id=1,
         target_player_id=2,
-        created_at=datetime.now(tz=timezone.utc),
+        created_at=datetime.now(tz=UTC),
     )
     interactor = AcceptRequestInteractor(
         requests=requests,
@@ -300,6 +330,7 @@ async def test_accept_rejects_non_pending() -> None:
         org_adder=SimpleNamespace(),
         team_notifier=SimpleNamespace(),
         org_notifier=SimpleNamespace(),
+        bus=FakeBus(),
     )
     with pytest.raises(RequestNotPending):
         await interactor(FakeIdentity(_player(2)), request_id=1)
@@ -315,7 +346,7 @@ async def test_accept_invite_wrong_actor_forbidden() -> None:
         initiator_id=1,
         target_player_id=2,
         team_id=1,
-        created_at=datetime.now(tz=timezone.utc),
+        created_at=datetime.now(tz=UTC),
     )
     interactor = AcceptRequestInteractor(
         requests=requests,
@@ -327,6 +358,7 @@ async def test_accept_invite_wrong_actor_forbidden() -> None:
         org_adder=SimpleNamespace(),
         team_notifier=SimpleNamespace(),
         org_notifier=SimpleNamespace(),
+        bus=FakeBus(),
     )
     with pytest.raises(RequestPermissionError):
         await interactor(FakeIdentity(_player(7)), request_id=1)

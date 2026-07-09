@@ -24,7 +24,8 @@ from shvatka.core.models import dto
 from shvatka.core.models.enums.notification import NotificationType, NotificationSeverity
 from shvatka.core.models.enums.request import RequestType, RequestStatus
 from shvatka.core.notifications import dto as ndto
-from shvatka.core.notifications.adapters import NotificationWriter, RequestStorage
+from shvatka.core.interfaces.bus import ActionRequestResolved, Bus
+from shvatka.core.notifications.adapters import NotificationWriter, RequestNotifier, RequestStorage
 from shvatka.core.players.player import check_can_add_players, join_team
 from shvatka.core.services.game import get_game
 from shvatka.core.services.organizers import check_allow_manage_orgs, get_orgs
@@ -48,6 +49,7 @@ class CreateTeamJoinInviteInteractor:
     team_dao: TeamByIdGetter
     player_dao: PlayerByIdGetter
     team_player_dao: TeamPlayerGetter
+    notifier: RequestNotifier
 
     async def __call__(
         self,
@@ -91,8 +93,9 @@ class CreateTeamJoinInviteInteractor:
             payload=payload,
             request_id=request.id,
         )
+        await self.notifier.notify_created(request)
         await self.requests.commit()
-        return request
+        return await self.requests.get_by_id(request.id)
 
 
 @dataclass
@@ -103,6 +106,7 @@ class CreateTeamJoinRequestInteractor:
     notifications: NotificationWriter
     team_dao: TeamByIdGetter
     team_players_dao: TeamPlayersGetter
+    notifier: RequestNotifier
 
     async def __call__(self, identity: IdentityProvider, team_id: int) -> ndto.ActionRequest:
         player = await identity.get_required_player()
@@ -133,8 +137,9 @@ class CreateTeamJoinRequestInteractor:
             payload=payload,
             request_id=request.id,
         )
+        await self.notifier.notify_created(request)
         await self.requests.commit()
-        return request
+        return await self.requests.get_by_id(request.id)
 
     async def _manager_ids(self, team: dto.Team) -> set[int]:
         players = await self.team_players_dao.get_players(team)
@@ -149,6 +154,7 @@ class CreateOrgInviteInteractor:
     notifications: NotificationWriter
     player_dao: PlayerByIdGetter
     org_adder: OrgAdder
+    notifier: RequestNotifier
 
     async def __call__(
         self, identity: IdentityProvider, game_id: int, player_id: int
@@ -185,8 +191,9 @@ class CreateOrgInviteInteractor:
             payload=payload,
             request_id=request.id,
         )
+        await self.notifier.notify_created(request)
         await self.requests.commit()
-        return request
+        return await self.requests.get_by_id(request.id)
 
 
 @dataclass
@@ -200,6 +207,7 @@ class AcceptRequestInteractor:
     org_adder: OrgAdder
     team_notifier: TeamNotifier
     org_notifier: OrgNotifier
+    bus: Bus
 
     async def __call__(self, identity: IdentityProvider, request_id: int) -> ndto.ActionRequest:
         actor = await identity.get_required_player()
@@ -228,6 +236,7 @@ class AcceptRequestInteractor:
         await self._join(
             actor, team, manager, request.payload.get("role"), request.payload.get("emoji")
         )
+        await self._submit_resolved(updated)
         return updated
 
     async def _accept_team_join_request(
@@ -242,6 +251,7 @@ class AcceptRequestInteractor:
         await self._join(
             joining, team, actor, request.payload.get("role"), request.payload.get("emoji")
         )
+        await self._submit_resolved(updated)
         return updated
 
     async def _accept_org_invite(
@@ -257,6 +267,7 @@ class AcceptRequestInteractor:
         org = await self.org_adder.add_new_org(game, actor)
         await self.requests.commit()
         await self.org_notifier.notify(NewOrg(orgs_list=notify_orgs, game=game, org=org))
+        await self._submit_resolved(updated)
         return updated
 
     async def _join(
@@ -283,6 +294,14 @@ class AcceptRequestInteractor:
     ) -> ndto.ActionRequest:
         return await self.requests.set_status(request.id, status, responder_id=actor.id)
 
+    async def _submit_resolved(self, request: ndto.ActionRequest) -> None:
+        await self.bus.submit(
+            ActionRequestResolved(
+                request_id=request.id,
+                bot_messages=tuple(request.bot_messages),
+            )
+        )
+
     async def _notify_initiator(
         self, request: ndto.ActionRequest, type_: NotificationType, actor: dto.Player
     ) -> None:
@@ -302,6 +321,7 @@ class DeclineRequestInteractor:
     notifications: NotificationWriter
     team_dao: TeamByIdGetter
     team_player_dao: TeamPlayerGetter
+    bus: Bus
 
     async def __call__(self, identity: IdentityProvider, request_id: int) -> ndto.ActionRequest:
         actor = await identity.get_required_player()
@@ -321,6 +341,12 @@ class DeclineRequestInteractor:
             request_id=request.id,
         )
         await self.requests.commit()
+        await self.bus.submit(
+            ActionRequestResolved(
+                request_id=updated.id,
+                bot_messages=tuple(updated.bot_messages),
+            )
+        )
         return updated
 
     async def _check_can_respond(self, actor: dto.Player, request: ndto.ActionRequest) -> None:
@@ -337,6 +363,7 @@ class CancelRequestInteractor:
     """The initiator withdraws their own pending request."""
 
     requests: RequestStorage
+    bus: Bus
 
     async def __call__(self, identity: IdentityProvider, request_id: int) -> ndto.ActionRequest:
         actor = await identity.get_required_player()
@@ -349,6 +376,12 @@ class CancelRequestInteractor:
             request.id, RequestStatus.cancelled, responder_id=actor.id
         )
         await self.requests.commit()
+        await self.bus.submit(
+            ActionRequestResolved(
+                request_id=updated.id,
+                bot_messages=tuple(updated.bot_messages),
+            )
+        )
         return updated
 
 

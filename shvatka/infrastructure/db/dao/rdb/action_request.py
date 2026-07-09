@@ -114,6 +114,17 @@ class ActionRequestDAO(BaseDAO[ActionRequest]):
         result = await self.session.scalars(stmt)
         return [request.to_dto() for request in result.all()]
 
+    async def add_bot_message(
+        self, request_id: int, *, chat_id: int, message_id: int
+    ) -> dto.ActionRequest:
+        request = await self._get_by_id(request_id)
+        request.bot_messages = [
+            *(request.bot_messages or []),
+            {"chat_id": chat_id, "message_id": message_id},
+        ]
+        await self._flush(request)
+        return request.to_dto()
+
     async def get_pending_for_teams(self, team_ids: Sequence[int]) -> Sequence[dto.ActionRequest]:
         """Pending team-join requests answerable by managers of the given teams."""
         if not team_ids:

@@ -44,6 +44,9 @@ class ActionRequest(Base):
     )
     responded_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    bot_messages: Mapped[list[dict[str, int]]] = mapped_column(
+        JSONB, nullable=False, server_default="[]", default=list
+    )
 
     def to_dto(self) -> dto.ActionRequest:
         return dto.ActionRequest(
@@ -59,4 +62,5 @@ class ActionRequest(Base):
             responder_id=self.responder_id,
             responded_at=self.responded_at,
             expires_at=self.expires_at,
+            bot_messages=list(self.bot_messages or []),
         )

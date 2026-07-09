@@ -17,6 +17,7 @@ from shvatka.tgbot.handlers import (
     superuser,
     base,
     team,
+    action_request,
 )
 
 logger = logging.getLogger(__name__)
@@ -30,6 +31,7 @@ def setup_handlers(
     dp.include_router(superuser.setup(bot_config))
     dp.include_router(player.setup())
     dp.include_router(team.setup())
+    dp.include_router(action_request.setup())
     dp.include_router(merge.setup(bot_config))
     dp.include_router(game.setup())
     dp.include_router(waivers.setup())

@@ -3,16 +3,14 @@ from __future__ import annotations
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any, Generic, TypeVar
+from typing import Any
 
 from shvatka.core.models.enums.notification import NotificationType, NotificationSeverity
 from shvatka.core.models.enums.request import RequestType, RequestStatus
 
-T = TypeVar("T")
-
 
 @dataclass
-class Page(Generic[T]):
+class Page[T]:
     """A slice of a listing: the fetched items plus the applied window and filters."""
 
     items: Sequence[T]
@@ -56,6 +54,7 @@ class ActionRequest:
     responder_id: int | None = None
     responded_at: datetime | None = None
     expires_at: datetime | None = None
+    bot_messages: list[dict[str, int]] = field(default_factory=list)
 
     @property
     def is_pending(self) -> bool:

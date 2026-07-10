@@ -84,9 +84,7 @@ class FakeRequests:
     async def commit(self) -> None:
         self.commits += 1
 
-    async def add_bot_message(
-        self, request_id: int, *, chat_id: int, message_id: int
-    ) -> ndto.ActionRequest:
+    async def add_bot_message(self, request_id: int, *, chat_id: int, message_id: int) -> None:
         pass
 
 

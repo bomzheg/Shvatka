@@ -3,7 +3,7 @@ from collections.abc import Sequence
 from datetime import datetime, tzinfo
 from typing import Any
 
-from sqlalchemy import or_, select
+from sqlalchemy import or_, select, ScalarResult
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -114,16 +114,19 @@ class ActionRequestDAO(BaseDAO[ActionRequest]):
         result = await self.session.scalars(stmt)
         return [request.to_dto() for request in result.all()]
 
-    async def add_bot_message(
-        self, request_id: int, *, chat_id: int, message_id: int
-    ) -> dto.ActionRequest:
+    async def add_bot_message(self, request_id: int, *, chat_id: int, message_id: int) -> None:
         request = await self._get_by_id(request_id)
         request.bot_messages = [
             *(request.bot_messages or []),
             {"chat_id": chat_id, "message_id": message_id},
         ]
         await self._flush(request)
-        return request.to_dto()
+
+    async def get_bot_messages(self, request_id: int) -> Sequence[tuple[int, int]]:
+        result: ScalarResult[list[dict[str, int]]] = await self.session.scalars(
+            select(ActionRequest.bot_messages).where(ActionRequest.id == request_id)
+        )
+        return [(d["chat_id"], d["message_id"]) for d in result.one()]
 
     async def get_pending_for_teams(self, team_ids: Sequence[int]) -> Sequence[dto.ActionRequest]:
         """Pending team-join requests answerable by managers of the given teams."""

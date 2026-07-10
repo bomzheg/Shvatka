@@ -114,7 +114,8 @@ class RequestStorage(Committer, Protocol):
     async def get_pending_for_teams(self, team_ids: Sequence[int]) -> Sequence[dto.ActionRequest]:
         raise NotImplementedError
 
-    async def add_bot_message(
-        self, request_id: int, *, chat_id: int, message_id: int
-    ) -> dto.ActionRequest:
+    async def add_bot_message(self, request_id: int, *, chat_id: int, message_id: int) -> None:
+        raise NotImplementedError
+
+    async def get_bot_messages(self, request_id: int) -> Sequence[tuple[int, int]]:
         raise NotImplementedError

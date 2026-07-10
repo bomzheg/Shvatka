@@ -95,7 +95,7 @@ class CreateTeamJoinInviteInteractor:
         )
         await self.notifier.notify_created(request)
         await self.requests.commit()
-        return await self.requests.get_by_id(request.id)
+        return request
 
 
 @dataclass
@@ -139,7 +139,7 @@ class CreateTeamJoinRequestInteractor:
         )
         await self.notifier.notify_created(request)
         await self.requests.commit()
-        return await self.requests.get_by_id(request.id)
+        return request
 
     async def _manager_ids(self, team: dto.Team) -> set[int]:
         players = await self.team_players_dao.get_players(team)
@@ -193,7 +193,7 @@ class CreateOrgInviteInteractor:
         )
         await self.notifier.notify_created(request)
         await self.requests.commit()
-        return await self.requests.get_by_id(request.id)
+        return request
 
 
 @dataclass
@@ -298,7 +298,6 @@ class AcceptRequestInteractor:
         await self.bus.submit(
             ActionRequestResolved(
                 request_id=request.id,
-                bot_messages=tuple(request.bot_messages),
             )
         )
 
@@ -344,7 +343,6 @@ class DeclineRequestInteractor:
         await self.bus.submit(
             ActionRequestResolved(
                 request_id=updated.id,
-                bot_messages=tuple(updated.bot_messages),
             )
         )
         return updated
@@ -379,7 +377,6 @@ class CancelRequestInteractor:
         await self.bus.submit(
             ActionRequestResolved(
                 request_id=updated.id,
-                bot_messages=tuple(updated.bot_messages),
             )
         )
         return updated

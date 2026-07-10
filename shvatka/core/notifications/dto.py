@@ -54,7 +54,6 @@ class ActionRequest:
     responder_id: int | None = None
     responded_at: datetime | None = None
     expires_at: datetime | None = None
-    bot_messages: list[dict[str, int]] = field(default_factory=list)
 
     @property
     def is_pending(self) -> bool:

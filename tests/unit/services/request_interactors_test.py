@@ -1,5 +1,5 @@
 from collections.abc import Sequence
-from datetime import datetime, UTC
+from datetime import datetime
 from types import SimpleNamespace
 
 import pytest
@@ -15,6 +15,7 @@ from shvatka.core.notifications.request_interactors import (
     DeclineRequestInteractor,
     AcceptRequestInteractor,
 )
+from shvatka.core.utils.datetime_utils import tz_utc
 from shvatka.core.utils.exceptions import RequestNotPending, RequestPermissionError
 
 
@@ -58,7 +59,7 @@ class FakeRequests:
             type=kwargs["type_"],
             status=RequestStatus.pending,
             initiator_id=kwargs["initiator_id"],
-            created_at=datetime.now(tz=UTC),
+            created_at=datetime.now(tz=tz_utc),
             payload=kwargs.get("payload") or {},
             target_player_id=kwargs.get("target_player_id"),
             team_id=kwargs.get("team_id"),
@@ -185,7 +186,7 @@ async def test_create_team_join_invite_is_idempotent() -> None:
         type=RequestType.team_join_invite,
         status=RequestStatus.pending,
         initiator_id=1,
-        created_at=datetime.now(tz=UTC),
+        created_at=datetime.now(tz=tz_utc),
     )
     requests.pending = existing
     notifications = FakeNotifications()
@@ -237,7 +238,7 @@ async def test_cancel_only_by_initiator() -> None:
         type=RequestType.team_join_invite,
         status=RequestStatus.pending,
         initiator_id=1,
-        created_at=datetime.now(tz=UTC),
+        created_at=datetime.now(tz=tz_utc),
     )
     interactor = CancelRequestInteractor(requests=requests, bus=FakeBus())
     with pytest.raises(RequestPermissionError):
@@ -254,7 +255,7 @@ async def test_cancel_rejects_non_pending() -> None:
         type=RequestType.team_join_invite,
         status=RequestStatus.accepted,
         initiator_id=1,
-        created_at=datetime.now(tz=UTC),
+        created_at=datetime.now(tz=tz_utc),
     )
     with pytest.raises(RequestNotPending):
         await CancelRequestInteractor(requests=requests, bus=FakeBus())(
@@ -272,7 +273,7 @@ async def test_decline_invite_notifies_initiator() -> None:
         status=RequestStatus.pending,
         initiator_id=1,
         target_player_id=2,
-        created_at=datetime.now(tz=UTC),
+        created_at=datetime.now(tz=tz_utc),
     )
     notifications = FakeNotifications()
     interactor = DeclineRequestInteractor(
@@ -296,7 +297,7 @@ async def test_decline_invite_wrong_actor_forbidden() -> None:
         status=RequestStatus.pending,
         initiator_id=1,
         target_player_id=2,
-        created_at=datetime.now(tz=UTC),
+        created_at=datetime.now(tz=tz_utc),
     )
     interactor = DeclineRequestInteractor(
         requests=requests,
@@ -318,7 +319,7 @@ async def test_accept_rejects_non_pending() -> None:
         status=RequestStatus.cancelled,
         initiator_id=1,
         target_player_id=2,
-        created_at=datetime.now(tz=UTC),
+        created_at=datetime.now(tz=tz_utc),
     )
     interactor = AcceptRequestInteractor(
         requests=requests,
@@ -346,7 +347,7 @@ async def test_accept_invite_wrong_actor_forbidden() -> None:
         initiator_id=1,
         target_player_id=2,
         team_id=1,
-        created_at=datetime.now(tz=UTC),
+        created_at=datetime.now(tz=tz_utc),
     )
     interactor = AcceptRequestInteractor(
         requests=requests,

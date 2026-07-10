@@ -37,6 +37,14 @@ HELP_BASE = CommandsGroup(
 CREATE_TEAM_COMMAND = BotCommand(
     command="create_team", description="создать команду на базе текущего чата"
 )
+WHICH_TEAM_COMMAND = BotCommand(
+    command="which_team",
+    description="найти чат моей команды",
+)
+WHO_THERE_COMMAND = BotCommand(
+    command="who_there",
+    description="узнать какая команда в чате",
+)
 ADD_IN_TEAM_COMMAND = BotCommand(
     command="add_in_team", description="добавить в команду игрока (реплаем по игроку)"
 )

@@ -16,9 +16,10 @@ from aiogram.filters import (
 from aiogram.types import Message, ChatMemberUpdated, CallbackQuery, LinkPreviewOptions
 from aiogram.utils.text_decorations import html_decoration as hd
 
+from shvatka.core.interfaces.dal.player import PlayerTeamChecker
 from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.models import dto
-from shvatka.core.players.player import get_team_players, get_player_by_id, join_team
+from shvatka.core.players.player import get_team_players, get_player_by_id, join_team, get_my_team
 from shvatka.core.services.team import create_team
 from shvatka.core.utils import exceptions
 from shvatka.core.utils.defaults_constants import DEFAULT_ROLE
@@ -36,9 +37,12 @@ from shvatka.tgbot.filters.is_admin import is_admin_filter
 from shvatka.tgbot.filters.is_team import IsTeamFilter
 from shvatka.tgbot.filters.team_player import TeamPlayerFilter
 from shvatka.tgbot.middlewares import TeamPlayerMiddleware
+from shvatka.tgbot.services.identity import load_team
 from shvatka.tgbot.utils.router import disable_router_on_game
 from shvatka.tgbot.views.commands import (
     CREATE_TEAM_COMMAND,
+    WHICH_TEAM_COMMAND,
+    WHO_THERE_COMMAND,
     ADD_IN_TEAM_COMMAND,
     TEAM_COMMAND,
     PLAYERS_COMMAND,
@@ -46,6 +50,7 @@ from shvatka.tgbot.views.commands import (
 from shvatka.tgbot.views.errors import player_already_in_team
 from shvatka.tgbot.views.team import render_team_players
 from shvatka.tgbot.views.texts import NOT_SUPERGROUP_ERROR
+from shvatka.tgbot.views.user import render_small_card_link
 
 logger = logging.getLogger(__name__)
 
@@ -89,6 +94,48 @@ async def cmd_create_team(
         "Для просмотра списка игроков /players\n"
         "Чтобы добавить игрока в команду - отправьте реплаем на его сообщение "
         "<b>/add_in_team [необязательно: роль в команде (водитель, полевой, мозг, итд)]</b>"
+    )
+
+
+@inject
+async def cmd_which_team(
+    message: Message,
+    identity: FromDishka[IdentityProvider],
+    player_dao: FromDishka[PlayerTeamChecker],
+    bot: Bot,
+):
+    player = await identity.get_required_player()
+    team = await get_my_team(player, player_dao)
+    if team is None:
+        await message.reply("ты не состоишь в команде")
+        return
+    chat_id = team.get_chat_id()
+    if chat_id is None:
+        await message.reply("твоя команда не имеет командного чата")
+        return
+    await bot.send_message(
+        chat_id=chat_id,
+        text=(
+            f"{render_small_card_link(player)}, "
+            f"твоя команда {hd.quote(team.name)} использует этот чат"
+        ),
+    )
+
+
+@inject
+async def cmd_who_there(message: Message, identity: FromDishka[IdentityProvider], dao: HolderDao):
+    chat = await identity.get_chat()
+    if chat is None:
+        await message.reply("это не чат (где я?)")
+        return
+    team = await load_team(chat, dao)
+    if team is None:
+        await message.reply("тут нет команды")
+        return
+    players = await get_team_players(team, dao.team_player)
+    await message.answer(
+        text=render_team_players(team=team, players=players, notification=False),
+        link_preview_options=LinkPreviewOptions(is_disabled=True),
     )
 
 
@@ -298,6 +345,15 @@ def setup() -> Router:
         cmd_team,
         Command(commands=[TEAM_COMMAND, PLAYERS_COMMAND]),
         IsTeamFilter(),
+    )
+    router.message.register(
+        cmd_which_team,
+        Command(WHICH_TEAM_COMMAND),
+    )
+    router.message.register(
+        cmd_who_there,
+        Command(WHO_THERE_COMMAND),
+        F.chat.type != ChatType.PRIVATE,
     )
     router.chat_member.register(
         user_join_chat_with_team,

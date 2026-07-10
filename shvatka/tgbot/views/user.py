@@ -18,4 +18,4 @@ def get_small_card(player: dto.Player, *, notification: bool) -> str:
 
 
 def render_small_card_link(player: dto.Player) -> str:
-    return hd.link(player.name_mention, f"tg://user?id={player.get_chat_id()}")
+    return hd.link(hd.quote(player.name_mention), f"tg://user?id={player.get_chat_id()}")

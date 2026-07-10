@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import async_sessionmaker, AsyncSession, AsyncEngine
 
 from shvatka.core.interfaces.dal.level import LevelDeleter
 from shvatka.core.interfaces.dal.organizer import OrgByPlayerGetter
+from shvatka.core.interfaces.dal.player import PlayerTeamChecker
 from shvatka.core.interfaces.dal.waiver import GameWaiversGetter, WaiverGetter
 from shvatka.core.notifications.adapters import (
     NotificationReader,
@@ -106,7 +107,12 @@ class DAOProvider(Provider):
     def player_dao(self, holder: HolderDao) -> dao.PlayerDao:
         return holder.player
 
-    @provide
+    @provide(
+        provides=AnyOf[
+            dao.TeamPlayerDao,
+            PlayerTeamChecker,
+        ]
+    )
     def team_player_dao(self, holder: HolderDao) -> dao.TeamPlayerDao:
         return holder.team_player
 

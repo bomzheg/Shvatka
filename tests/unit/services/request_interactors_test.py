@@ -87,9 +87,7 @@ class FakeRequests:
     async def add_bot_message(
         self, request_id: int, *, chat_id: int, message_id: int
     ) -> ndto.ActionRequest:
-        request = self.rows[request_id]
-        request.bot_messages.append({"chat_id": chat_id, "message_id": message_id})
-        return request
+        pass
 
 
 class FakeNotifier:

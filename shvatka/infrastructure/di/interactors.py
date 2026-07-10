@@ -1,3 +1,4 @@
+from aiogram import Bot
 from adaptix import Retort
 from dishka import Provider, Scope, provide
 
@@ -42,7 +43,8 @@ from shvatka.core.notifications.request_interactors import (
     CancelRequestInteractor,
     ListRequestsInteractor,
 )
-from shvatka.core.notifications.adapters import RequestStorage, NotificationWriter
+from shvatka.core.notifications.adapters import RequestNotifier, RequestStorage, NotificationWriter
+from shvatka.tgbot.views.action_request import BotRequestNotifier
 from shvatka.core.players.interactors import (
     GetPlayerInteractor,
     GetPlayerStatInteractor,
@@ -152,6 +154,18 @@ class ContextProvider(Provider):
     scope = Scope.REQUEST
     current_game = provide(CurrentGameProviderImpl, provides=CurrentGameProvider)
     bus = provide(InMemoryBus, provides=Bus)
+
+    @provide
+    def request_notifier(
+        self, bot: Bot, dao: HolderDao, requests: RequestStorage
+    ) -> RequestNotifier:
+        return BotRequestNotifier(
+            bot=bot,
+            requests=requests,
+            player_dao=dao.player,
+            team_dao=dao.team,
+            team_players_dao=dao.team_player,
+        )
 
 
 class GamePlayProvider(Provider):
@@ -450,7 +464,11 @@ class RequestProvider(Provider):
 
     @provide
     def create_team_join_invite(
-        self, dao: HolderDao, requests: RequestStorage, notifications: NotificationWriter
+        self,
+        dao: HolderDao,
+        requests: RequestStorage,
+        notifications: NotificationWriter,
+        notifier: RequestNotifier,
     ) -> CreateTeamJoinInviteInteractor:
         return CreateTeamJoinInviteInteractor(
             requests=requests,
@@ -458,28 +476,39 @@ class RequestProvider(Provider):
             team_dao=dao.team,
             player_dao=dao.player,
             team_player_dao=dao.team_player,
+            notifier=notifier,
         )
 
     @provide
     def create_team_join_request(
-        self, dao: HolderDao, requests: RequestStorage, notifications: NotificationWriter
+        self,
+        dao: HolderDao,
+        requests: RequestStorage,
+        notifications: NotificationWriter,
+        notifier: RequestNotifier,
     ) -> CreateTeamJoinRequestInteractor:
         return CreateTeamJoinRequestInteractor(
             requests=requests,
             notifications=notifications,
             team_dao=dao.team,
             team_players_dao=dao.team_player,
+            notifier=notifier,
         )
 
     @provide
     def create_org_invite(
-        self, dao: HolderDao, requests: RequestStorage, notifications: NotificationWriter
+        self,
+        dao: HolderDao,
+        requests: RequestStorage,
+        notifications: NotificationWriter,
+        notifier: RequestNotifier,
     ) -> CreateOrgInviteInteractor:
         return CreateOrgInviteInteractor(
             requests=requests,
             notifications=notifications,
             player_dao=dao.player,
             org_adder=dao.org_adder,
+            notifier=notifier,
         )
 
     @provide
@@ -490,6 +519,7 @@ class RequestProvider(Provider):
         notifications: NotificationWriter,
         team_notifier: TeamNotifier,
         org_notifier: OrgNotifier,
+        bus: Bus,
     ) -> AcceptRequestInteractor:
         return AcceptRequestInteractor(
             requests=requests,
@@ -501,22 +531,24 @@ class RequestProvider(Provider):
             org_adder=dao.org_adder,
             team_notifier=team_notifier,
             org_notifier=org_notifier,
+            bus=bus,
         )
 
     @provide
     def decline_request(
-        self, dao: HolderDao, requests: RequestStorage, notifications: NotificationWriter
+        self, dao: HolderDao, requests: RequestStorage, notifications: NotificationWriter, bus: Bus
     ) -> DeclineRequestInteractor:
         return DeclineRequestInteractor(
             requests=requests,
             notifications=notifications,
             team_dao=dao.team,
             team_player_dao=dao.team_player,
+            bus=bus,
         )
 
     @provide
-    def cancel_request(self, requests: RequestStorage) -> CancelRequestInteractor:
-        return CancelRequestInteractor(requests=requests)
+    def cancel_request(self, requests: RequestStorage, bus: Bus) -> CancelRequestInteractor:
+        return CancelRequestInteractor(requests=requests, bus=bus)
 
     @provide
     def list_requests(self, requests: RequestStorage) -> ListRequestsInteractor:

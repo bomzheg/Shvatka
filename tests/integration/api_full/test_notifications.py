@@ -1,10 +1,18 @@
+import typing
+from datetime import datetime
+from unittest.mock import MagicMock
+
 import pytest
+from aiogram.client.session.base import BaseSession
+from aiogram.types import Message
 from httpx import AsyncClient
 
 from shvatka.api.dependencies.auth import AuthProperties
 from shvatka.api.models.auth import Token
 from shvatka.core.models import dto
+from shvatka.core.utils.datetime_utils import tz_utc
 from shvatka.infrastructure.db.dao.holder import HolderDao
+from tests.fixtures.chat_constants import create_tg_chat
 
 
 def auth_cookies(token: Token) -> dict[str, str]:
@@ -98,7 +106,12 @@ async def test_team_join_invite_and_accept(
     harry_token: Token,
     hermione_token: Token,
     check_dao: HolderDao,
+    bot_session: BaseSession,
 ):
+    session = typing.cast(MagicMock, bot_session)
+    session.side_effect = [
+        Message(message_id=1, chat=create_tg_chat(), date=datetime.now(tz=tz_utc)),
+    ]
     invite = await client.post(
         "/requests/team-join-invite",
         cookies=auth_cookies(harry_token),
@@ -150,7 +163,12 @@ async def test_team_join_invite_accept_forbidden_for_stranger(
     gryffindor: dto.Team,
     harry_token: Token,
     auth: AuthProperties,
+    bot_session: BaseSession,
 ):
+    session = typing.cast(MagicMock, bot_session)
+    session.side_effect = [
+        Message(message_id=1, chat=create_tg_chat(), date=datetime.now(tz=tz_utc)),
+    ]
     invite = await client.post(
         "/requests/team-join-invite",
         cookies=auth_cookies(harry_token),
@@ -178,7 +196,12 @@ async def test_join_request_and_accept_by_captain(
     harry_token: Token,
     hermione_token: Token,
     check_dao: HolderDao,
+    bot_session: BaseSession,
 ):
+    session = typing.cast(MagicMock, bot_session)
+    session.side_effect = [
+        Message(message_id=1, chat=create_tg_chat(), date=datetime.now(tz=tz_utc)),
+    ]
     ask = await client.post(
         "/requests/team-join",
         cookies=auth_cookies(hermione_token),
@@ -207,7 +230,12 @@ async def test_cancel_own_invite(
     hermione: dto.Player,
     gryffindor: dto.Team,
     harry_token: Token,
+    bot_session: BaseSession,
 ):
+    session = typing.cast(MagicMock, bot_session)
+    session.side_effect = [
+        Message(message_id=1, chat=create_tg_chat(), date=datetime.now(tz=tz_utc)),
+    ]
     invite = await client.post(
         "/requests/team-join-invite",
         cookies=auth_cookies(harry_token),

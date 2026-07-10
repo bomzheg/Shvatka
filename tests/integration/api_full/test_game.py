@@ -1,3 +1,4 @@
+import sys
 from datetime import datetime, timedelta
 from pathlib import Path
 
@@ -85,6 +86,7 @@ async def test_game_card(
     ]
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Does not run on Windows")
 @pytest.mark.asyncio
 async def test_game_file(
     finished_game: dto.FullGame,
@@ -186,6 +188,7 @@ async def test_game_file_uploaded_not_referenced(
     assert resp.is_success, resp.text
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Does not run on Windows")
 @pytest.mark.asyncio
 async def test_game_file_view_scenario_org(
     game: dto.FullGame,

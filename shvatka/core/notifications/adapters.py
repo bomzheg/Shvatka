@@ -59,6 +59,11 @@ class NotificationWriter(Committer, Protocol):
         raise NotImplementedError
 
 
+class RequestNotifier(Protocol):
+    async def notify_created(self, request: dto.ActionRequest) -> None:
+        raise NotImplementedError
+
+
 class RequestStorage(Committer, Protocol):
     async def create(
         self,
@@ -107,4 +112,10 @@ class RequestStorage(Committer, Protocol):
         raise NotImplementedError
 
     async def get_pending_for_teams(self, team_ids: Sequence[int]) -> Sequence[dto.ActionRequest]:
+        raise NotImplementedError
+
+    async def add_bot_message(self, request_id: int, *, chat_id: int, message_id: int) -> None:
+        raise NotImplementedError
+
+    async def get_bot_messages(self, request_id: int) -> Sequence[tuple[int, int]]:
         raise NotImplementedError

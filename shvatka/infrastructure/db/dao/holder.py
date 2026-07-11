@@ -15,7 +15,8 @@ from shvatka.core.interfaces.dal.game_play import GamePreparer, GamePlayerDao
 from shvatka.core.interfaces.dal.level_testing import LevelTestingDao
 from shvatka.core.interfaces.dal.level_times import GameStarter
 from shvatka.core.interfaces.dal.organizer import OrgAdder
-from shvatka.core.interfaces.dal.player import TeamLeaver, PlayerPromoter, PlayerMerger
+from shvatka.core.interfaces.dal.player import TeamLeaver, PlayerPromoter
+from shvatka.core.players.interfaces import PlayerMerger
 from shvatka.core.interfaces.dal.team import TeamCreator
 from shvatka.core.interfaces.dal.waiver import WaiverApprover
 from .complex.game import (

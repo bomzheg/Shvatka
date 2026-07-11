@@ -10,14 +10,9 @@ from dataclasses import dataclass
 
 from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.models import dto
-from shvatka.core.players.adapters import (
-    AdminEmailSetter,
-    AdminPlayerMerger,
-    AdminPlayerReader,
-    AdminTgChanger,
-)
 from shvatka.core.players.dto import PlayerIdentitiesInfo
-from shvatka.core.players.interfaces import PlayerSearcher
+from shvatka.core.players.interfaces import PlayerSearcher, AdminPlayerReader, AdminEmailSetter, AdminTgChanger, \
+    AdminPlayerMerger
 from shvatka.core.players.player import merge_players
 from shvatka.core.utils import exceptions
 from shvatka.core.utils.input_validation import validate_email

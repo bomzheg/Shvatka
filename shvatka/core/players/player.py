@@ -13,7 +13,6 @@ from shvatka.core.interfaces.dal.player import (
     TeamPlayerPermissionFlipper,
     TeamPlayerRoleUpdater,
     TeamPlayerEmojiUpdater,
-    PlayerMerger,
     TeamPlayerFullHistoryGetter,
     PlayerByUserIdGetter,
 )
@@ -22,7 +21,7 @@ from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.models import dto
 from shvatka.core.models import enums
 from shvatka.core.models.enums.invite_type import InviteType
-from shvatka.core.players.interfaces import PlayerUsernameChanger, UserPasswordSetter
+from shvatka.core.players.interfaces import PlayerUsernameChanger, UserPasswordSetter, PlayerMerger
 from shvatka.core.utils import exceptions
 from shvatka.core.utils.defaults_constants import DEFAULT_ROLE, EMOJI_BY_ROLE, DEFAULT_EMOJI
 from shvatka.core.utils.exceptions import (
@@ -331,6 +330,15 @@ async def merge_players(
             notify_user="Невозможно привязать к тебе этот форумный аккаунт "
             "(этот аккаунт уже привязан к другому пользователю)",
         )
+    primary_email = await dao.get_email_by_player_id(primary.id)
+    secondary_email = await dao.get_email_by_player_id(secondary.id)
+    if primary_email is not None:
+        # todo drop secondary email if exists
+        ...
+    elif secondary_email is not None:
+        # todo replace it
+        ...
+    
     await dao.replace_player_keys(primary, secondary)
     await dao.replace_player_org(primary, secondary)
     await dao.replace_games_author(primary, secondary)

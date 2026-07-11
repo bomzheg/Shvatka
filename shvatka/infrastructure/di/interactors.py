@@ -57,12 +57,7 @@ from shvatka.core.players.admin_interactors import (
     AdminSearchPlayersInteractor,
     AdminGetPlayerInteractor,
 )
-from shvatka.core.players.adapters import (
-    AdminEmailSetter,
-    AdminTgChanger,
-    AdminPlayerMerger,
-    AdminPlayerReader,
-)
+from shvatka.core.players.interfaces import AdminPlayerReader, AdminEmailSetter, AdminTgChanger, AdminPlayerMerger
 from shvatka.core.teams.admin_interactors import AdminMergeTeamsInteractor
 from shvatka.core.services.one_time_link import (
     GenerateOneTimeLoginLinkInteractor,

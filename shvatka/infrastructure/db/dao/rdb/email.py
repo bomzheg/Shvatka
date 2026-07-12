@@ -1,7 +1,7 @@
 from datetime import datetime, tzinfo
 import typing
 
-from sqlalchemy import select, func
+from sqlalchemy import select, func, delete, update
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload, contains_eager
@@ -104,6 +104,18 @@ class EmailAccountDao(BaseDAO[models.EmailAccount]):
             return result.one()
         except NoResultFound as e:
             raise exceptions.EmailNotVerified(text=f"no verified email {email}") from e
+
+    async def delete(self, email: dto.EmailAccount) -> None:
+        await self.session.execute(
+            delete(models.EmailAccount).where(models.EmailAccount.id == email.db_id)
+        )
+
+    async def replace_player_id(self, email: dto.EmailAccount, player_id: int) -> None:
+        await self.session.execute(
+            update(models.EmailAccount)
+            .where(models.EmailAccount.id == email.db_id)
+            .values(player_id=player_id)
+        )
 
     async def _get_by_email_or_none(self, email: str) -> models.EmailAccount | None:
         result = await self.session.scalars(

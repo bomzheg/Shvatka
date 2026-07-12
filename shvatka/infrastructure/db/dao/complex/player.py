@@ -2,8 +2,13 @@ import typing
 from dataclasses import dataclass
 
 from shvatka.core.interfaces.dal.player import PlayerPromoter
-from shvatka.core.players.interfaces import PlayerMerger, AdminPlayerReader, AdminEmailSetter, AdminTgChanger, \
-    AdminPlayerMerger
+from shvatka.core.players.interfaces import (
+    PlayerMerger,
+    AdminPlayerReader,
+    AdminEmailSetter,
+    AdminTgChanger,
+    AdminPlayerMerger,
+)
 from shvatka.core.models import dto
 
 if typing.TYPE_CHECKING:
@@ -69,6 +74,12 @@ class PlayerMergerImpl(PlayerMerger):
 
     async def get_email_by_player_id(self, player_id: int) -> dto.EmailAccount | None:
         return await self.dao.email.get_by_player_id(player_id)
+
+    async def delete_email(self, email: dto.EmailAccount) -> None:
+        await self.dao.email.delete(email)
+
+    async def replace_email_player(self, email: dto.EmailAccount, player_id: int) -> None:
+        await self.dao.email.replace_player_id(email, player_id)
 
     async def commit(self) -> None:
         return await self.dao.commit()

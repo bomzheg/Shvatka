@@ -7,7 +7,7 @@ from dataclasses import dataclass
 class EmailAccount:
     email: str
     player_id: int
-    db_id: int | None = None
+    db_id: int
     is_verified: bool = False
 
 

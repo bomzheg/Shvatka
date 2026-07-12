@@ -6,9 +6,16 @@ from shvatka.core.interfaces.dal.game import GameAuthorMerger
 from shvatka.core.interfaces.dal.key_log import PlayerKeysMerger
 from shvatka.core.interfaces.dal.level import LevelAuthorMerger
 from shvatka.core.interfaces.dal.organizer import PlayerOrgMerger
-from shvatka.core.interfaces.dal.player import TeamPlayerHistoryGetter, TeamPlayerHistoryCleaner, \
-    TeamPlayerHistorySetter, ForumPlayerMerger, PlayerDeleter, WaiverPlayerMerger, PlayerByIdGetter, \
-    PlayerByUserIdGetter
+from shvatka.core.interfaces.dal.player import (
+    TeamPlayerHistoryGetter,
+    TeamPlayerHistoryCleaner,
+    TeamPlayerHistorySetter,
+    ForumPlayerMerger,
+    PlayerDeleter,
+    WaiverPlayerMerger,
+    PlayerByIdGetter,
+    PlayerByUserIdGetter,
+)
 from shvatka.core.interfaces.dal.user import UserUpserter
 from shvatka.core.models import dto
 
@@ -54,6 +61,14 @@ class EmailByPlayerIdReader(Protocol):
         raise NotImplementedError
 
 
+class EmailMerger(EmailByPlayerIdReader, Protocol):
+    async def delete_email(self, email: dto.EmailAccount) -> None:
+        raise NotImplementedError
+
+    async def replace_email_player(self, email: dto.EmailAccount, player_id: int) -> None:
+        raise NotImplementedError
+
+
 class PlayerMerger(
     GameAuthorMerger,
     LevelAuthorMerger,
@@ -66,7 +81,7 @@ class PlayerMerger(
     PlayerDeleter,
     WaiverPlayerMerger,
     FileInfoMerger,
-    EmailByPlayerIdReader,
+    EmailMerger,
     Committer,
     Protocol,
 ):

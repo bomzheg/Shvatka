@@ -46,12 +46,12 @@ class FakeEmailDao:
         self.passwords[player_id] = hashed_password
         self.usernames.add(username)
         self.accounts[email] = dto.EmailAccount(
-            email=email, player_id=player_id, is_verified=False
+            email=email, player_id=player_id, is_verified=False, db_id=963
         )
         return dto.Player(id=player_id, can_be_author=False, is_dummy=False, username=username)
 
     async def add_email_to_player(self, player: dto.Player, email: str) -> dto.EmailAccount:
-        account = dto.EmailAccount(email=email, player_id=player.id, is_verified=False)
+        account = dto.EmailAccount(email=email, player_id=player.id, is_verified=False, db_id=998)
         self.accounts[email] = account
         return account
 

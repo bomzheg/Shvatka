@@ -333,12 +333,11 @@ async def merge_players(
     primary_email = await dao.get_email_by_player_id(primary.id)
     secondary_email = await dao.get_email_by_player_id(secondary.id)
     if primary_email is not None:
-        # todo drop secondary email if exists
-        ...
+        if secondary_email is not None:
+            await dao.delete_email(secondary_email)
     elif secondary_email is not None:
-        # todo replace it
-        ...
-    
+        await dao.replace_email_player(secondary_email, primary.id)
+
     await dao.replace_player_keys(primary, secondary)
     await dao.replace_player_org(primary, secondary)
     await dao.replace_games_author(primary, secondary)

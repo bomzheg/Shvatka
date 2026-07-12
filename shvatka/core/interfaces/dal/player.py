@@ -151,5 +151,3 @@ class ForumPlayerMerger(Protocol):
 class PlayerDeleter(Protocol):
     async def delete_player(self, player: dto.Player):
         raise NotImplementedError
-
-

@@ -1,11 +1,7 @@
 from typing import Protocol, Sequence
 
 from shvatka.core.interfaces.dal.base import Committer
-from shvatka.core.interfaces.dal.file_info import FileInfoMerger
-from shvatka.core.interfaces.dal.game import ActiveGameFinder, GameAuthorMerger
-from shvatka.core.interfaces.dal.key_log import PlayerKeysMerger
-from shvatka.core.interfaces.dal.level import LevelAuthorMerger
-from shvatka.core.interfaces.dal.organizer import PlayerOrgMerger
+from shvatka.core.interfaces.dal.game import ActiveGameFinder
 from shvatka.core.interfaces.dal.secure_invite import InviteRemover, InviteReader
 from shvatka.core.models import dto
 from shvatka.core.models import enums
@@ -155,21 +151,3 @@ class ForumPlayerMerger(Protocol):
 class PlayerDeleter(Protocol):
     async def delete_player(self, player: dto.Player):
         raise NotImplementedError
-
-
-class PlayerMerger(
-    GameAuthorMerger,
-    LevelAuthorMerger,
-    PlayerKeysMerger,
-    PlayerOrgMerger,
-    TeamPlayerHistoryGetter,
-    TeamPlayerHistoryCleaner,
-    TeamPlayerHistorySetter,
-    ForumPlayerMerger,
-    PlayerDeleter,
-    WaiverPlayerMerger,
-    FileInfoMerger,
-    Committer,
-    Protocol,
-):
-    pass

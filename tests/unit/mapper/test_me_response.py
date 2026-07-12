@@ -17,7 +17,7 @@ def test_me_from_core_tg_only():
 
 def test_me_from_core_email_only():
     player = dto.Player(id=2, can_be_author=False, is_dummy=False, username="mail_user")
-    email = dto.EmailAccount(email="user@example.com", player_id=2, is_verified=True)
+    email = dto.EmailAccount(email="user@example.com", player_id=2, is_verified=True, db_id=948)
 
     me = responses.PlayerWithIdentities.from_core(player, email=email)
 
@@ -33,7 +33,7 @@ def test_me_from_core_forum_and_unverified_email():
     player = dto.Player(
         id=3, can_be_author=False, is_dummy=False, username="harry", forum_user=forum
     )
-    email = dto.EmailAccount(email="h@example.com", player_id=3, is_verified=False)
+    email = dto.EmailAccount(email="h@example.com", player_id=3, is_verified=False, db_id=918)
 
     me = responses.PlayerWithIdentities.from_core(player, email=email)
 

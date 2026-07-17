@@ -114,6 +114,8 @@ from shvatka.core.scenario.interactors import (
     AllGameKeysReaderInteractor,
     GameScenarioTransitionsInteractor,
 )
+from shvatka.core.search.adapters import GlobalSearchDao
+from shvatka.core.search.interactors import GlobalSearchInteractor
 from shvatka.core.services.key import KeyProcessor, TimerProcessor
 from shvatka.core.waiver.interactors import (
     TeamWaiversDraftReaderInteractor,
@@ -147,6 +149,7 @@ from shvatka.infrastructure.db.dao.complex.game_play import GamePlayerDaoImpl
 from shvatka.infrastructure.db.dao.complex.team import TeamCreatorImpl, AdminTeamMergerImpl
 from shvatka.infrastructure.db.dao.complex.key_log import GameKeysReaderImpl
 from shvatka.infrastructure.db.dao.complex.level_times import GameStatReaderImpl
+from shvatka.infrastructure.db.dao.complex.search import GlobalSearchDaoImpl
 from shvatka.infrastructure.db.dao.holder import HolderDao
 
 
@@ -392,6 +395,16 @@ class TeamProvider(Provider):
         self, dao: ChatlessTeamCreator, game_log: GameLogWriter
     ) -> CreateTeamInteractor:
         return CreateTeamInteractor(dao=dao, game_log=game_log)
+
+
+class SearchProvider(Provider):
+    scope = Scope.REQUEST
+
+    @provide
+    def global_search_dao(self, dao: HolderDao) -> GlobalSearchDao:
+        return GlobalSearchDaoImpl(dao)
+
+    global_search = provide(GlobalSearchInteractor)
 
 
 class AdminProvider(Provider):

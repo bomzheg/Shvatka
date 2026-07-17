@@ -57,6 +57,11 @@ class Player:
             return None
         return self._user.username
 
+    def get_tg_fullname(self) -> str | None:
+        if self._user is None:
+            return None
+        return self._user.fullname or None
+
     def get_forum_name(self) -> str | None:
         if self._forum_user is None:
             return None

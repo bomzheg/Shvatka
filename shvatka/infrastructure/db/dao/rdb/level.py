@@ -1,17 +1,19 @@
 from datetime import datetime, tzinfo
 import typing
-from sqlalchemy import select, ScalarResult
+from sqlalchemy import select, ScalarResult, Text, cast, or_
 from sqlalchemy import update
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import joinedload
+from sqlalchemy.orm import contains_eager, joinedload
 
 from shvatka.core.models import dto
 from shvatka.core.models.dto.scn.level import LevelScenario
+from shvatka.core.models.enums import GameStatus
 from shvatka.core.rules.game import check_game_editable
 from shvatka.core.rules.level import check_can_link_to_game
+from shvatka.core.search.dto import LevelWithGame
 from shvatka.infrastructure.db import models
-from .base import BaseDAO
+from .base import BaseDAO, ILIKE_ESCAPE, ilike_pattern
 
 
 class LevelDao(BaseDAO[models.Level]):
@@ -95,6 +97,48 @@ class LevelDao(BaseDAO[models.Level]):
             ),
         )
         return level.to_dto(level.author.to_dto_user_prefetched())
+
+    async def search_in_completed_games(self, text: str) -> list[LevelWithGame]:
+        """Уровни завершённых игр с вхождением text в name_id или где-то внутри сценария.
+
+        Фильтр по сценарию грубый (ilike по json-тексту): точное место совпадения
+        ищет вызывающая сторона, обходя загруженный сценарий.
+        """
+        pattern = ilike_pattern(text)
+        result: ScalarResult[models.Level] = await self.session.scalars(
+            select(models.Level)
+            .join(models.Level.game)
+            .options(
+                contains_eager(models.Level.game)
+                .joinedload(models.Game.author)
+                .options(
+                    joinedload(models.Player.user),
+                    joinedload(models.Player.forum_user),
+                ),
+                joinedload(models.Level.author).options(
+                    joinedload(models.Player.user),
+                    joinedload(models.Player.forum_user),
+                ),
+            )
+            .where(
+                models.Game.status == GameStatus.complete,
+                or_(
+                    models.Level.name_id.ilike(pattern, escape=ILIKE_ESCAPE),
+                    cast(models.Level.scenario, Text).ilike(pattern, escape=ILIKE_ESCAPE),
+                ),
+            )
+            .order_by(models.Game.number, models.Level.number_in_game)
+        )
+        found: list[LevelWithGame] = []
+        for level in result.unique().all():
+            game = level.game.to_dto(level.game.author.to_dto_user_prefetched())
+            found.append(
+                LevelWithGame(
+                    level=level.to_dto(level.author.to_dto_user_prefetched()),
+                    game=game,
+                )
+            )
+        return found
 
     async def unlink(self, level: dto.Level):
         await self.session.execute(

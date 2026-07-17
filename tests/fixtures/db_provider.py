@@ -24,6 +24,12 @@ class TestDbProvider(Provider):
 
     @provide
     def get_db_config(self, config: Config) -> Iterable[TrueConfig]:
+        if url := os.getenv("SHVATKA_TEST_DB_URL"):
+            db_config = DBConfig(url)
+            db_config.echo = config.db.echo
+            config.db = db_config
+            yield db_config
+            return
         postgres = PostgresContainer("postgres:18.2")
         if os.name == "nt":  # TODO workaround from testcontainers/testcontainers-python#108
             postgres.get_container_host_ip = lambda: "localhost"
@@ -40,6 +46,9 @@ class TestDbProvider(Provider):
 
     @provide
     def get_redis_config(self, config: Config) -> Iterable[RedisConfig]:
+        if port := os.getenv("SHVATKA_TEST_REDIS_PORT"):
+            yield RedisConfig(url="localhost", port=int(port))
+            return
         redis_container = RedisContainer("redis:6.2.13-alpine")
         if os.name == "nt":  # TODO workaround from testcontainers/testcontainers-python#108
             redis_container.get_container_host_ip = lambda: "localhost"

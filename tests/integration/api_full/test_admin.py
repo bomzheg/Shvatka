@@ -1,3 +1,5 @@
+from datetime import datetime, timedelta, timezone
+
 import pytest
 import pytest_asyncio
 from httpx import AsyncClient
@@ -6,14 +8,18 @@ from sqlalchemy.exc import NoResultFound
 from shvatka.api.dependencies.auth import AuthProperties
 from shvatka.api.models.auth import Token
 from shvatka.core.models import dto
+from shvatka.core.models.enums.played import Played
 from shvatka.core.players.player import upsert_player
 from shvatka.core.services.user import upsert_user
+from shvatka.core.utils.defaults_constants import DEFAULT_ROLE
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from tests.fixtures.user_constants import (
     create_dto_hermione,
     create_dto_ron,
     create_dto_draco,
 )
+
+GAME_START_AT = datetime(2025, 4, 12, 16, 0, tzinfo=timezone.utc)
 
 
 def auth_cookies(token: Token) -> dict[str, str]:
@@ -254,6 +260,206 @@ async def test_merge_players_same_id_rejected(
         follow_redirects=True,
     )
     assert resp.status_code == 422
+
+
+@pytest.mark.asyncio
+async def test_get_player_waiver_points(
+    client: AsyncClient,
+    admin_token: Token,
+    dao: HolderDao,
+    game: dto.FullGame,
+    gryffindor: dto.Team,
+    hermione: dto.Player,
+):
+    await dao.game.set_start_at(game, GAME_START_AT)
+    await dao.waiver.upsert(
+        dto.Waiver(player=hermione, team=gryffindor, game=game, played=Played.yes)
+    )
+    await dao.commit()
+
+    resp = await client.get(
+        f"/admin/players/{hermione.id}/waiver-points",
+        cookies=auth_cookies(admin_token),
+        follow_redirects=True,
+    )
+    assert resp.is_success, resp.text
+    items = resp.json()["items"]
+    assert len(items) == 1
+    point = items[0]
+    assert point["game"]["id"] == game.id
+    assert point["team"]["id"] == gryffindor.id
+    assert datetime.fromisoformat(point["at_since"]) == GAME_START_AT - timedelta(hours=12)
+    assert datetime.fromisoformat(point["at_until"]) == GAME_START_AT + timedelta(hours=48)
+
+
+@pytest.mark.asyncio
+async def test_get_player_waiver_points_forbidden_for_non_superuser(
+    client: AsyncClient, hermione_token: Token, hermione: dto.Player
+):
+    resp = await client.get(
+        f"/admin/players/{hermione.id}/waiver-points",
+        cookies=auth_cookies(hermione_token),
+        follow_redirects=True,
+    )
+    assert resp.status_code == 403
+
+
+async def prepare_incompatible_players(
+    dao: HolderDao,
+    game: dto.FullGame,
+    gryffindor: dto.Team,
+    slytherin: dto.Team,
+) -> tuple[dto.Player, dto.Player]:
+    """Primary (tg) and secondary (dummy) with overlapping current memberships.
+
+    The secondary played the game as a member of slytherin, so a waiver pins
+    them to that team around the game start date.
+    """
+    await dao.game.set_start_at(game, GAME_START_AT)
+    primary = await upsert_player(await upsert_user(create_dto_ron(), dao.user), dao.player)
+    secondary = await dao.player.upsert_author_dummy()
+    await dao.team_player.join_team(
+        primary, gryffindor, role=DEFAULT_ROLE, joined_at=GAME_START_AT + timedelta(days=30)
+    )
+    await dao.team_player.join_team(
+        secondary, slytherin, role=DEFAULT_ROLE, joined_at=GAME_START_AT - timedelta(days=30)
+    )
+    await dao.waiver.upsert(
+        dto.Waiver(player=secondary, team=slytherin, game=game, played=Played.yes)
+    )
+    await dao.commit()
+    return primary, secondary
+
+
+@pytest.mark.asyncio
+async def test_merge_players_incompatible_history_rejected(
+    client: AsyncClient,
+    admin_token: Token,
+    dao: HolderDao,
+    game: dto.FullGame,
+    gryffindor: dto.Team,
+    slytherin: dto.Team,
+):
+    primary, secondary = await prepare_incompatible_players(dao, game, gryffindor, slytherin)
+
+    resp = await client.post(
+        "/admin/players/merge",
+        json={"primary_id": primary.id, "secondary_id": secondary.id},
+        cookies=auth_cookies(admin_token),
+        follow_redirects=True,
+    )
+    assert resp.status_code == 422
+    assert resp.json()["type"] == "MergeError"
+
+
+@pytest.mark.asyncio
+async def test_merge_players_with_timeline(
+    client: AsyncClient,
+    admin_token: Token,
+    dao: HolderDao,
+    check_dao: HolderDao,
+    game: dto.FullGame,
+    gryffindor: dto.Team,
+    slytherin: dto.Team,
+):
+    primary, secondary = await prepare_incompatible_players(dao, game, gryffindor, slytherin)
+
+    resp = await client.post(
+        "/admin/players/merge",
+        json={
+            "primary_id": primary.id,
+            "secondary_id": secondary.id,
+            "timeline": [
+                {
+                    "team_id": slytherin.id,
+                    "date_joined": (GAME_START_AT - timedelta(days=30)).isoformat(),
+                    "date_left": (GAME_START_AT + timedelta(days=3)).isoformat(),
+                },
+                {
+                    "team_id": gryffindor.id,
+                    "date_joined": (GAME_START_AT + timedelta(days=30)).isoformat(),
+                },
+            ],
+        },
+        cookies=auth_cookies(admin_token),
+        follow_redirects=True,
+    )
+    assert resp.is_success, resp.text
+    assert resp.json()["id"] == primary.id
+    with pytest.raises(NoResultFound):
+        await check_dao.player.get_by_id(secondary.id)
+    history = await check_dao.team_player.get_history(primary)
+    assert [tp.team_id for tp in history] == [slytherin.id, gryffindor.id]
+    assert history[0].date_left == GAME_START_AT + timedelta(days=3)
+    assert history[1].date_left is None
+
+
+@pytest.mark.asyncio
+async def test_merge_players_timeline_violates_waiver_points(
+    client: AsyncClient,
+    admin_token: Token,
+    dao: HolderDao,
+    check_dao: HolderDao,
+    game: dto.FullGame,
+    gryffindor: dto.Team,
+    slytherin: dto.Team,
+):
+    primary, secondary = await prepare_incompatible_players(dao, game, gryffindor, slytherin)
+
+    # the timeline puts the player into gryffindor during the played game
+    resp = await client.post(
+        "/admin/players/merge",
+        json={
+            "primary_id": primary.id,
+            "secondary_id": secondary.id,
+            "timeline": [
+                {
+                    "team_id": gryffindor.id,
+                    "date_joined": (GAME_START_AT - timedelta(days=30)).isoformat(),
+                },
+            ],
+        },
+        cookies=auth_cookies(admin_token),
+        follow_redirects=True,
+    )
+    assert resp.status_code == 422
+    assert resp.json()["type"] == "MergeError"
+    # nothing merged: the secondary player is still there
+    assert (await check_dao.player.get_by_id(secondary.id)).id == secondary.id
+
+
+@pytest.mark.asyncio
+async def test_merge_players_overlapping_timeline_rejected(
+    client: AsyncClient,
+    admin_token: Token,
+    dao: HolderDao,
+    game: dto.FullGame,
+    gryffindor: dto.Team,
+    slytherin: dto.Team,
+):
+    primary, secondary = await prepare_incompatible_players(dao, game, gryffindor, slytherin)
+
+    resp = await client.post(
+        "/admin/players/merge",
+        json={
+            "primary_id": primary.id,
+            "secondary_id": secondary.id,
+            "timeline": [
+                {
+                    "team_id": slytherin.id,
+                    "date_joined": (GAME_START_AT - timedelta(days=30)).isoformat(),
+                },
+                {
+                    "team_id": gryffindor.id,
+                    "date_joined": (GAME_START_AT + timedelta(days=30)).isoformat(),
+                },
+            ],
+        },
+        cookies=auth_cookies(admin_token),
+        follow_redirects=True,
+    )
+    assert resp.status_code == 422
+    assert resp.json()["type"] == "MergeError"
 
 
 @pytest.mark.asyncio

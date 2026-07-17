@@ -12,6 +12,7 @@ from shvatka.core.interfaces.dal.player import (
     TeamPlayerHistorySetter,
     ForumPlayerMerger,
     PlayerDeleter,
+    PlayerWaiversGetter,
     WaiverPlayerMerger,
     PlayerByIdGetter,
     PlayerByUserIdGetter,
@@ -80,6 +81,7 @@ class PlayerMerger(
     ForumPlayerMerger,
     PlayerDeleter,
     WaiverPlayerMerger,
+    PlayerWaiversGetter,
     FileInfoMerger,
     EmailMerger,
     Committer,
@@ -114,3 +116,7 @@ class AdminTgChanger(
 
 class AdminPlayerMerger(PlayerMerger, PlayerByIdGetter, Protocol):
     """Merge one player into another, plus load both by id."""
+
+
+class AdminPlayerWaiverPointsReader(PlayerByIdGetter, PlayerWaiversGetter, Protocol):
+    """Load a player and their waivers to compute unchangeable timeline points."""

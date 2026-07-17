@@ -138,6 +138,11 @@ class TeamPlayerHistorySetter(Protocol):
         raise NotImplementedError
 
 
+class PlayerWaiversGetter(Protocol):
+    async def get_player_waivers(self, player: dto.Player) -> list[dto.Waiver]:
+        raise NotImplementedError
+
+
 class WaiverPlayerMerger(Protocol):
     async def replace_player_waiver(self, primary: dto.Player, secondary: dto.Player):
         raise NotImplementedError

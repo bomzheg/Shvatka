@@ -14,6 +14,7 @@ from shvatka.core.notifications.dto import (
     Page as PageDto,
 )
 from shvatka.core.players.dto import PlayerStat as PlayerStatDto
+from shvatka.core.players.dto import WaiverPoint as WaiverPointDto
 from shvatka.core.teams.dto import TeamWithStat as TeamWithStatDto
 from shvatka.core.teams.dto import TeamPlayerWithStat as TeamPlayerWithStatDto
 from shvatka.core.models.dto import action
@@ -186,6 +187,25 @@ class AdminPlayer:
 @dataclass
 class OneTimeLink:
     url: str
+
+
+@dataclass(kw_only=True, frozen=True, slots=True)
+class WaiverPoint:
+    """Interval in which the player must stay in the given team (fixed by a waiver)."""
+
+    game: "Game"
+    team: Team | None
+    at_since: datetime
+    at_until: datetime
+
+    @classmethod
+    def from_core(cls, core: WaiverPointDto) -> "WaiverPoint":
+        return cls(
+            game=Game.from_core(core.game),
+            team=Team.from_core(core.team),
+            at_since=core.at_since,
+            at_until=core.at_until,
+        )
 
 
 @dataclass(kw_only=True, frozen=True, slots=True)

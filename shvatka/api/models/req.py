@@ -109,6 +109,20 @@ class MergeRequest:
     """the record merged into primary and then deleted"""
 
 
+@dataclass
+class TimelineItem:
+    team_id: int
+    date_joined: datetime
+    date_left: datetime | None = None
+
+
+@dataclass
+class MergePlayersRequest(MergeRequest):
+    timeline: list[TimelineItem] | None = None
+    """manually built team history for the merged player; replaces both histories.
+    Must not violate the waiver points of either player."""
+
+
 @dataclass(frozen=True, slots=True)
 class PushKeys:
     p256dh: str

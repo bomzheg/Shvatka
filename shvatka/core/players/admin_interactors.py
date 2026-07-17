@@ -10,15 +10,16 @@ from dataclasses import dataclass
 
 from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.models import dto
-from shvatka.core.players.dto import PlayerIdentitiesInfo
+from shvatka.core.players.dto import PlayerIdentitiesInfo, TimelineItem, WaiverPoint
 from shvatka.core.players.interfaces import (
     PlayerSearcher,
     AdminPlayerReader,
     AdminEmailSetter,
     AdminTgChanger,
     AdminPlayerMerger,
+    AdminPlayerWaiverPointsReader,
 )
-from shvatka.core.players.player import merge_players
+from shvatka.core.players.player import merge_players, get_waiver_points
 from shvatka.core.utils import exceptions
 from shvatka.core.utils.input_validation import validate_email
 from shvatka.core.views.game import GameLogWriter
@@ -125,14 +126,35 @@ class AdminChangePlayerTgInteractor:
 
 
 @dataclass
+class AdminGetPlayerWaiverPointsInteractor:
+    dao: AdminPlayerWaiverPointsReader
+
+    async def __call__(self, identity: IdentityProvider, player_id: int) -> list[WaiverPoint]:
+        """List intervals in which the player's team membership is fixed by waivers."""
+        admin = await identity.get_superuser()
+        logger.warning("admin %s viewed waiver points of player %s", admin.id, player_id)
+        player = await self.dao.get_by_id(player_id)
+        return await get_waiver_points(player, self.dao)
+
+
+@dataclass
 class AdminMergePlayersInteractor:
     dao: AdminPlayerMerger
     game_log: GameLogWriter
 
     async def __call__(
-        self, identity: IdentityProvider, primary_id: int, secondary_id: int
+        self,
+        identity: IdentityProvider,
+        primary_id: int,
+        secondary_id: int,
+        timeline: list[TimelineItem] | None = None,
     ) -> dto.Player:
-        """Merge ``secondary`` player into ``primary``; ``secondary`` is deleted."""
+        """Merge ``secondary`` player into ``primary``; ``secondary`` is deleted.
+
+        When the players' team histories are not compatible, the admin can pass a
+        manually built ``timeline`` which replaces both histories; it is validated
+        against the waiver points of both players.
+        """
         admin = await identity.get_superuser()
         logger.warning("admin %s merges player %s into %s", admin.id, secondary_id, primary_id)
         if primary_id == secondary_id:
@@ -141,5 +163,5 @@ class AdminMergePlayersInteractor:
             )
         primary = await self.dao.get_by_id(primary_id)
         secondary = await self.dao.get_by_id(secondary_id)
-        await merge_players(primary, secondary, self.game_log, self.dao)
+        await merge_players(primary, secondary, self.game_log, self.dao, timeline=timeline)
         return await self.dao.get_by_id(primary_id)

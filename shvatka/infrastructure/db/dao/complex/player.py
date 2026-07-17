@@ -8,6 +8,7 @@ from shvatka.core.players.interfaces import (
     AdminEmailSetter,
     AdminTgChanger,
     AdminPlayerMerger,
+    AdminPlayerWaiverPointsReader,
 )
 from shvatka.core.models import dto
 
@@ -57,6 +58,9 @@ class PlayerMergerImpl(PlayerMerger):
     async def replace_player_waiver(self, primary: dto.Player, secondary: dto.Player) -> None:
         return await self.dao.waiver.replace_all_waivers(primary, secondary)
 
+    async def get_player_waivers(self, player: dto.Player) -> list[dto.Waiver]:
+        return await self.dao.waiver.get_all_by_player(player)
+
     async def get_player_teams_history(self, player: dto.Player) -> list[dto.TeamPlayer]:
         return await self.dao.team_player.get_history(player)
 
@@ -89,6 +93,17 @@ class PlayerMergerImpl(PlayerMerger):
 class AdminPlayerMergerImpl(PlayerMergerImpl, AdminPlayerMerger):
     async def get_by_id(self, id_: int) -> dto.Player:
         return await self.dao.player.get_by_id(id_)
+
+
+@dataclass
+class AdminPlayerWaiverPointsReaderImpl(AdminPlayerWaiverPointsReader):
+    dao: "HolderDao"
+
+    async def get_by_id(self, id_: int) -> dto.Player:
+        return await self.dao.player.get_by_id(id_)
+
+    async def get_player_waivers(self, player: dto.Player) -> list[dto.Waiver]:
+        return await self.dao.waiver.get_all_by_player(player)
 
 
 @dataclass

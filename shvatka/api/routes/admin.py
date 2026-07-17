@@ -1,3 +1,5 @@
+import typing
+from datetime import datetime
 from typing import Annotated
 
 from dishka import FromDishka
@@ -13,10 +15,13 @@ from shvatka.core.models import dto
 from shvatka.core.players.admin_interactors import (
     AdminChangePlayerTgInteractor,
     AdminGetPlayerInteractor,
+    AdminGetPlayerWaiverPointsInteractor,
     AdminMergePlayersInteractor,
     AdminSearchPlayersInteractor,
     AdminSetPlayerEmailInteractor,
 )
+from shvatka.core.players.dto import TimelineItem
+from shvatka.core.utils.datetime_utils import tz_utc
 from shvatka.core.services.one_time_link import GenerateOneTimeLoginLinkForPlayerInteractor
 from shvatka.core.teams.admin_interactors import AdminMergeTeamsInteractor
 from shvatka.core.utils import exceptions
@@ -130,13 +135,46 @@ async def remove_poll_vote(
 
 
 @inject
+async def get_player_waiver_points(
+    identity: FromDishka[ApiIdentityProvider],
+    interactor: FromDishka[AdminGetPlayerWaiverPointsInteractor],
+    id_: Annotated[int, Path(alias="id")],
+) -> responses.Items[responses.WaiverPoint]:
+    points = await interactor(identity, id_)
+    return responses.Items([responses.WaiverPoint.from_core(point) for point in points])
+
+
+def to_core_timeline(timeline: list[req.TimelineItem] | None) -> list[TimelineItem] | None:
+    if timeline is None:
+        return None
+
+    def with_tz(at: datetime | None) -> datetime | None:
+        # datetimes sent without an offset are treated as UTC
+        if at is None or at.tzinfo is not None:
+            return at
+        return at.replace(tzinfo=tz_utc)
+
+    return [
+        TimelineItem(
+            team_id=item.team_id,
+            date_joined=typing.cast(datetime, with_tz(item.date_joined)),
+            date_left=with_tz(item.date_left),
+        )
+        for item in timeline
+    ]
+
+
+@inject
 async def merge_players(
     identity: FromDishka[ApiIdentityProvider],
     interactor: FromDishka[AdminMergePlayersInteractor],
-    body: Annotated[req.MergeRequest, Body()],
+    body: Annotated[req.MergePlayersRequest, Body()],
 ) -> responses.Player:
     player = await interactor(
-        identity=identity, primary_id=body.primary_id, secondary_id=body.secondary_id
+        identity=identity,
+        primary_id=body.primary_id,
+        secondary_id=body.secondary_id,
+        timeline=to_core_timeline(body.timeline),
     )
     return responses.Player.from_core(player)
 
@@ -169,6 +207,7 @@ def setup() -> APIRouter:
     router.add_api_route("/players", list_players, methods=["GET"])
     router.add_api_route("/players/{id}", get_player, methods=["GET"])
     router.add_api_route("/players/{id}/one-time-link", create_one_time_link, methods=["POST"])
+    router.add_api_route("/players/{id}/waiver-points", get_player_waiver_points, methods=["GET"])
     router.add_api_route("/players/{id}/email", change_email, methods=["PUT"])
     router.add_api_route("/players/{id}/tg", change_tg, methods=["PUT"])
     router.add_api_route("/poll", get_poll, methods=["GET"])

@@ -1,5 +1,3 @@
-import typing
-from datetime import datetime
 from typing import Annotated
 
 from dishka import FromDishka
@@ -20,8 +18,6 @@ from shvatka.core.players.admin_interactors import (
     AdminSearchPlayersInteractor,
     AdminSetPlayerEmailInteractor,
 )
-from shvatka.core.players.dto import TimelineItem
-from shvatka.core.utils.datetime_utils import tz_utc
 from shvatka.core.services.one_time_link import GenerateOneTimeLoginLinkForPlayerInteractor
 from shvatka.core.teams.admin_interactors import AdminMergeTeamsInteractor
 from shvatka.core.utils import exceptions
@@ -144,26 +140,6 @@ async def get_player_waiver_points(
     return responses.Items([responses.WaiverPoint.from_core(point) for point in points])
 
 
-def to_core_timeline(timeline: list[req.TimelineItem] | None) -> list[TimelineItem] | None:
-    if timeline is None:
-        return None
-
-    def with_tz(at: datetime | None) -> datetime | None:
-        # datetimes sent without an offset are treated as UTC
-        if at is None or at.tzinfo is not None:
-            return at
-        return at.replace(tzinfo=tz_utc)
-
-    return [
-        TimelineItem(
-            team_id=item.team_id,
-            date_joined=typing.cast(datetime, with_tz(item.date_joined)),
-            date_left=with_tz(item.date_left),
-        )
-        for item in timeline
-    ]
-
-
 @inject
 async def merge_players(
     identity: FromDishka[ApiIdentityProvider],
@@ -174,7 +150,7 @@ async def merge_players(
         identity=identity,
         primary_id=body.primary_id,
         secondary_id=body.secondary_id,
-        timeline=to_core_timeline(body.timeline),
+        timeline=body.core_timeline(),
     )
     return responses.Player.from_core(player)
 

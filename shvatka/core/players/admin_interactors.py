@@ -133,8 +133,7 @@ class AdminGetPlayerWaiverPointsInteractor:
         """List intervals in which the player's team membership is fixed by waivers."""
         admin = await identity.get_superuser()
         logger.warning("admin %s viewed waiver points of player %s", admin.id, player_id)
-        player = await self.dao.get_by_id(player_id)
-        return await get_waiver_points(player, self.dao)
+        return await get_waiver_points(await self.dao.get_by_id(player_id), self.dao)
 
 
 @dataclass

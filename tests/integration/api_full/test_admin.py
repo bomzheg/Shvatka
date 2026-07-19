@@ -374,10 +374,13 @@ async def test_merge_players_with_timeline(
                     "team_id": slytherin.id,
                     "date_joined": (GAME_START_AT - timedelta(days=30)).isoformat(),
                     "date_left": (GAME_START_AT + timedelta(days=3)).isoformat(),
+                    "role": "мозг",
+                    "emoji": "🐍",
                 },
                 {
                     "team_id": gryffindor.id,
                     "date_joined": (GAME_START_AT + timedelta(days=30)).isoformat(),
+                    "permissions": {"can_manage_waivers": True},
                 },
             ],
         },
@@ -391,7 +394,43 @@ async def test_merge_players_with_timeline(
     history = await check_dao.team_player.get_history(primary)
     assert [tp.team_id for tp in history] == [slytherin.id, gryffindor.id]
     assert history[0].date_left == GAME_START_AT + timedelta(days=3)
+    assert history[0].role == "мозг"
+    assert history[0].emoji == "🐍"
     assert history[1].date_left is None
+    assert history[1].role == DEFAULT_ROLE
+    assert history[1].get_permissions()["can_manage_waivers"] is True
+    assert history[1].get_permissions()["can_manage_players"] is False
+
+
+@pytest.mark.asyncio
+async def test_merge_players_naive_datetime_rejected(
+    client: AsyncClient,
+    admin_token: Token,
+    dao: HolderDao,
+    game: dto.FullGame,
+    gryffindor: dto.Team,
+    slytherin: dto.Team,
+):
+    primary, secondary = await prepare_incompatible_players(dao, game, gryffindor, slytherin)
+
+    resp = await client.post(
+        "/admin/players/merge",
+        json={
+            "primary_id": primary.id,
+            "secondary_id": secondary.id,
+            "timeline": [
+                {
+                    "team_id": slytherin.id,
+                    # no timezone offset -> rejected
+                    "date_joined": "2025-03-13T16:00:00",
+                },
+            ],
+        },
+        cookies=auth_cookies(admin_token),
+        follow_redirects=True,
+    )
+    assert resp.status_code == 422
+    assert resp.json()["type"] == "MergeError"
 
 
 @pytest.mark.asyncio

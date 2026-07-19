@@ -1,7 +1,9 @@
 import logging
+from datetime import datetime
 from typing import Sequence
 
 from shvatka.core.players.dto import TimelineItem, WaiverPoint
+from shvatka.core.utils.datetime_utils import tz_utc
 from shvatka.core.interfaces.dal.player import (
     PlayerUpserter,
     PlayerTeamChecker,
@@ -394,17 +396,23 @@ async def merge_team_history(primary: dto.Player, secondary: dto.Player, dao: Pl
     await dao.set_history(merged)
 
 
-async def get_waiver_points(player: dto.Player, dao: PlayerWaiversGetter) -> list[WaiverPoint]:
+async def get_waiver_points(
+    player: dto.Player, dao: PlayerWaiversGetter, now: datetime | None = None
+) -> list[WaiverPoint]:
     """Return intervals in which the player's team membership is fixed by waivers.
 
-    Only waivers with vote ``yes`` for games with a known start date pin the player
-    to a team: around the game start the player certainly acted as a team member.
+    Only waivers with vote ``yes`` pin the player to a team: around the game start
+    the player certainly acted as a team member. A game that is still getting
+    waivers has no start date yet, so its point is the current week.
     """
+    if now is None:
+        now = datetime.now(tz=tz_utc)
     waivers = await dao.get_player_waivers(player)
     points = [
-        WaiverPoint.from_waiver(waiver)
+        WaiverPoint.from_waiver(waiver, now)
         for waiver in waivers
-        if waiver.played.can_play and waiver.game.start_at is not None
+        if waiver.played.can_play
+        and (waiver.game.start_at is not None or waiver.game.is_getting_waivers())
     ]
     return sorted(points, key=lambda point: point.at_since)
 
@@ -418,11 +426,25 @@ def normalize_timeline(timeline: list[TimelineItem]) -> list[TimelineItem]:
         )
     timeline = sorted(timeline, key=lambda item: item.date_joined)
     for item in timeline:
+        if item.date_joined.tzinfo is None or (
+            item.date_left is not None and item.date_left.tzinfo is None
+        ):
+            raise exceptions.MergeError(
+                text=f"timeline item for team {item.team_id} has a naive datetime",
+                notify_user="Даты в таймлайне должны содержать часовой пояс "
+                "(например, суффикс Z)",
+            )
         if item.date_left is not None and item.date_left <= item.date_joined:
             raise exceptions.MergeError(
                 text=f"timeline item for team {item.team_id} ends before it starts",
                 notify_user="Дата выхода из команды должна быть позже даты вступления",
             )
+        for permission_name in item.permissions or {}:
+            if permission_name not in enums.TeamPlayerPermission.__members__:
+                raise exceptions.MergeError(
+                    text=f"unknown team player permission {permission_name}",
+                    notify_user=f"Неизвестное разрешение: {permission_name}",
+                )
     for current, following in zip(timeline[:-1], timeline[1:]):
         if current.date_left is None or current.date_left > following.date_joined:
             raise exceptions.MergeError(
@@ -461,31 +483,27 @@ async def set_merged_team_history(
 ) -> None:
     """Replace both players' team histories with the manually built timeline.
 
-    Role, emoji and permissions are inherited from the latest existing membership
-    in the same team (of either player), falling back to plain defaults.
+    Role, emoji and permissions come from the timeline items themselves; unset
+    values get the same defaults as a regular team join.
     """
-    history = await dao.get_player_teams_history(primary)
-    history += await dao.get_player_teams_history(secondary)
-    last_by_team: dict[int, dto.TeamPlayer] = {
-        tp.team_id: tp for tp in sorted(history, key=lambda tp: tp.date_joined)
-    }
     merged = []
     for item in timeline:
-        source = last_by_team.get(item.team_id)
+        permissions = {p.name: False for p in enums.TeamPlayerPermission}
+        permissions.update(item.permissions or {})
         merged.append(
             dto.TeamPlayer(
-                id=source.id if source else 0,
+                id=0,
                 player_id=primary.id,
                 team_id=item.team_id,
                 date_joined=item.date_joined,
                 date_left=item.date_left,
-                role=source.role if source else DEFAULT_ROLE,
-                emoji=source.emoji if source else None,
-                _can_manage_waivers=source._can_manage_waivers if source else False,  # noqa: SLF001
-                _can_manage_players=source._can_manage_players if source else False,  # noqa: SLF001
-                _can_change_team_name=source._can_change_team_name if source else False,  # noqa: SLF001
-                _can_add_players=source._can_add_players if source else False,  # noqa: SLF001
-                _can_remove_players=source._can_remove_players if source else False,  # noqa: SLF001
+                role=item.role or DEFAULT_ROLE,
+                emoji=item.emoji,
+                _can_manage_waivers=permissions["can_manage_waivers"],
+                _can_manage_players=permissions["can_manage_players"],
+                _can_change_team_name=permissions["can_change_team_name"],
+                _can_add_players=permissions["can_add_players"],
+                _can_remove_players=permissions["can_remove_players"],
             )
         )
     await dao.clean_history(primary)

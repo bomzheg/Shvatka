@@ -142,6 +142,18 @@ class MergePlayersRequest(MergeRequest):
         return [item.to_core() for item in self.timeline]
 
 
+@dataclass
+class AcceptRequest:
+    timeline: list[TimelineItem] | None = None
+    """only for player merge requests: manually built team history replacing
+    both players' histories when they are not compatible."""
+
+    def core_timeline(self) -> list[CoreTimelineItem] | None:
+        if self.timeline is None:
+            return None
+        return [item.to_core() for item in self.timeline]
+
+
 @dataclass(frozen=True, slots=True)
 class PushKeys:
     p256dh: str

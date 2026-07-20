@@ -57,8 +57,14 @@ async def accept_request(
     identity: FromDishka[ApiIdentityProvider],
     interactor: FromDishka[AcceptRequestInteractor],
     id_: Annotated[int, Path(alias="id")],
+    body: Annotated[req.AcceptRequest | None, Body()] = None,
 ) -> responses.ActionRequest:
-    return responses.ActionRequest.from_core(await interactor(identity=identity, request_id=id_))
+    request = await interactor(
+        identity=identity,
+        request_id=id_,
+        timeline=body.core_timeline() if body is not None else None,
+    )
+    return responses.ActionRequest.from_core(request)
 
 
 @inject

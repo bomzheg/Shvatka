@@ -20,6 +20,7 @@ from shvatka.core.notifications.request_interactors import (
     AcceptRequestInteractor,
     ListRequestsInteractor,
 )
+from shvatka.core.players.dto import TimelineItem
 from shvatka.core.utils.datetime_utils import tz_utc
 from shvatka.core.utils.exceptions import (
     NotAuthorizedForAdmin,
@@ -568,8 +569,8 @@ async def test_accept_player_merge_performs_merge(monkeypatch: pytest.MonkeyPatc
     )
     merged = []
 
-    async def fake_merge_players(primary, secondary, game_log, dao):
-        merged.append((primary, secondary))
+    async def fake_merge_players(primary, secondary, game_log, dao, timeline=None):
+        merged.append((primary, secondary, timeline))
 
     monkeypatch.setattr(request_interactors, "merge_players", fake_merge_players)
     bus = FakeBus()
@@ -578,8 +579,38 @@ async def test_accept_player_merge_performs_merge(monkeypatch: pytest.MonkeyPatc
     )
     updated = await interactor(FakeIdentity(admin, superuser=True), request_id=1)
     assert updated.status == RequestStatus.accepted
-    assert merged == [(player, forum_copy)]
+    assert merged == [(player, forum_copy, None)]
     assert bus.events == [ActionRequestResolved(request_id=1)]
+
+
+@pytest.mark.asyncio
+async def test_accept_player_merge_forwards_timeline(monkeypatch: pytest.MonkeyPatch) -> None:
+    player = _player(3, "harry")
+    forum_copy = _player(8, "harry_forum")
+    admin = _player(42, "admin")
+    requests = FakeRequests()
+    requests.rows[1] = ndto.ActionRequest(
+        id=1,
+        type=RequestType.player_merge,
+        status=RequestStatus.pending,
+        initiator_id=3,
+        target_player_id=3,
+        created_at=datetime.now(tz=tz_utc),
+        payload={"primary_player_id": 3, "secondary_player_id": 8},
+    )
+    passed_timelines = []
+
+    async def fake_merge_players(primary, secondary, game_log, dao, timeline=None):
+        passed_timelines.append(timeline)
+
+    monkeypatch.setattr(request_interactors, "merge_players", fake_merge_players)
+    interactor = _accept_interactor(requests, player_dao=FakePlayerDao({3: player, 8: forum_copy}))
+    timeline = [TimelineItem(team_id=1, date_joined=datetime.now(tz=tz_utc))]
+    updated = await interactor(
+        FakeIdentity(admin, superuser=True), request_id=1, timeline=timeline
+    )
+    assert updated.status == RequestStatus.accepted
+    assert passed_timelines == [timeline]
 
 
 @pytest.mark.asyncio

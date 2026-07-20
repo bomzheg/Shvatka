@@ -39,6 +39,7 @@ from shvatka.core.notifications.adapters import (
     RequestStorage,
     SuperusersResolver,
 )
+from shvatka.core.players.dto import TimelineItem
 from shvatka.core.players.interfaces import PlayerMerger
 from shvatka.core.players.player import check_can_add_players, join_team, merge_players
 from shvatka.core.services.game import get_game
@@ -337,7 +338,19 @@ class AcceptRequestInteractor:
     org_notifier: OrgNotifier
     bus: Bus
 
-    async def __call__(self, identity: IdentityProvider, request_id: int) -> ndto.ActionRequest:
+    async def __call__(
+        self,
+        identity: IdentityProvider,
+        request_id: int,
+        timeline: list[TimelineItem] | None = None,
+    ) -> ndto.ActionRequest:
+        """Accept the request.
+
+        ``timeline`` only applies to player merge requests: when the players'
+        team histories are not compatible, the admin passes a manually built
+        history which replaces both (validated against the waiver points of
+        both players).
+        """
         actor = await identity.get_required_player()
         request = await self.requests.get_by_id(request_id)
         if not request.is_pending:
@@ -352,7 +365,7 @@ class AcceptRequestInteractor:
             case RequestType.team_merge:
                 return await self._accept_team_merge(identity, request)
             case RequestType.player_merge:
-                return await self._accept_player_merge(identity, request)
+                return await self._accept_player_merge(identity, request, timeline)
         raise RequestNotPending(player=actor)  # pragma: no cover - exhaustive match
 
     async def _accept_team_join_invite(
@@ -418,7 +431,10 @@ class AcceptRequestInteractor:
         return updated
 
     async def _accept_player_merge(
-        self, identity: IdentityProvider, request: ndto.ActionRequest
+        self,
+        identity: IdentityProvider,
+        request: ndto.ActionRequest,
+        timeline: list[TimelineItem] | None = None,
     ) -> ndto.ActionRequest:
         admin = await identity.get_superuser()
         primary = await self.player_dao.get_by_id(request.payload["primary_player_id"])
@@ -426,7 +442,7 @@ class AcceptRequestInteractor:
         updated = await self._resolve(request, RequestStatus.accepted, admin)
         await self._notify_initiator(request, NotificationType.request_accepted, admin)
         # merge_players commits, taking the resolution and notification along
-        await merge_players(primary, secondary, self.game_log, self.player_merger)
+        await merge_players(primary, secondary, self.game_log, self.player_merger, timeline)
         await self._submit_resolved(updated)
         return updated
 

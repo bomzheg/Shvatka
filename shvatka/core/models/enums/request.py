@@ -10,6 +10,10 @@ class RequestType(enum.Enum):
     """A player asks to join a team; answered by any authorized team member."""
     org_invite = enum.auto()
     """A game author invites a player to become an organizer."""
+    team_merge = enum.auto()
+    """A captain asks admins to merge their team with its forum copy."""
+    player_merge = enum.auto()
+    """A player asks admins to merge their achievements with a forum copy."""
 
 
 class RequestStatus(enum.Enum):

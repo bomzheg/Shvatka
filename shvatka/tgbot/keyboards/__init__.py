@@ -5,8 +5,6 @@ from .invite_test_level import (
 from .merge import (
     TeamMergeCD,
     PlayerMergeCD,
-    get_team_merge_confirm_kb,
-    get_player_merge_confirm_kb,
 )
 from .organizer import (
     AddGameOrgID,

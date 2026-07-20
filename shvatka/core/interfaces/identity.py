@@ -34,6 +34,14 @@ class IdentityProvider(Protocol):
         """
         raise exceptions.NotAuthorizedForAdmin(player=await self.get_player())
 
+    async def is_superuser(self) -> bool:
+        """Quiet check of admin rights: no logging, no exceptions.
+
+        By default nobody is a superuser; edges that expose the admin panel
+        override this consistently with :meth:`get_superuser`.
+        """
+        return False
+
     async def get_required_user(self) -> dto.User:
         user = await self.get_user()
         if user is None:

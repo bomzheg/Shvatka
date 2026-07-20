@@ -1,3 +1,4 @@
+import logging
 from typing import TypedDict, cast
 
 from aiogram import types
@@ -15,8 +16,12 @@ from shvatka.core.players.player import (
 )
 from shvatka.core.services.team import get_by_chat
 from shvatka.core.services.user import upsert_user
+from shvatka.core.utils import exceptions
 from shvatka.infrastructure.db.dao.holder import HolderDao
+from shvatka.tgbot.config.models.bot import BotConfig
 from shvatka.tgbot.utils.data import SHMiddlewareData
+
+logger = logging.getLogger(__name__)
 
 
 class LoadedData(TypedDict, total=False):
@@ -35,12 +40,28 @@ class TgBotIdentityProvider(IdentityProvider):
         dao: HolderDao,
         event: TelegramObject,
         aiogram_data: AiogramMiddlewareData,
+        bot_config: BotConfig,
     ) -> None:
         self.dao = dao
         self.event = event
         self.aiogram_data = aiogram_data
+        self.bot_config = bot_config
         self.cache = LoadedData()
         self.cache["organizer"] = {}
+
+    async def get_superuser(self) -> dto.Player:
+        player = await self.get_required_player()
+        user = await self.get_user()
+        if user is None or user.tg_id not in self.bot_config.superusers:
+            logger.warning("player %s tried to use admin actions without rights", player.id)
+            raise exceptions.NotAuthorizedForAdmin(player=player, user=user)
+        return player
+
+    async def is_superuser(self) -> bool:
+        if await self.get_player() is None:
+            return False
+        user = await self.get_user()
+        return user is not None and user.tg_id in self.bot_config.superusers
 
     async def get_user(self) -> dto.User | None:
         data = cast(SHMiddlewareData, self.aiogram_data)

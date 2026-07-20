@@ -6,6 +6,7 @@ from shvatka.core.notifications.request_interactors import (
     AcceptRequestInteractor,
     DeclineRequestInteractor,
 )
+from shvatka.core.utils.exceptions import NotAuthorizedForAdmin, RequestNotPending
 from shvatka.tgbot.keyboards.action_request import ActionRequestCD
 from shvatka.tgbot.services.identity import TgBotIdentityProvider
 from shvatka.tgbot.views.utils import total_remove_msg
@@ -20,12 +21,23 @@ async def resolve_action_request(
     decline_interactor: FromDishka[DeclineRequestInteractor],
     bot: FromDishka[Bot],
 ) -> None:
-    if callback_data.accept:
-        await accept_interactor(identity=identity, request_id=callback_data.request_id)
-        text = "Запрос принят"
-    else:
-        await decline_interactor(identity=identity, request_id=callback_data.request_id)
-        text = "Запрос отклонён"
+    try:
+        if callback_data.accept:
+            await accept_interactor(identity=identity, request_id=callback_data.request_id)
+            text = "Запрос принят"
+        else:
+            await decline_interactor(identity=identity, request_id=callback_data.request_id)
+            text = "Запрос отклонён"
+    except NotAuthorizedForAdmin:
+        await callback.answer("Недостаточно прав, сорян", cache_time=3600)
+        return
+    except RequestNotPending:
+        await callback.answer("Запрос уже обработан", show_alert=True)
+        if callback.message is not None:
+            await total_remove_msg(
+                bot, chat_id=callback.message.chat.id, msg_id=callback.message.message_id
+            )
+        return
     if callback.message is not None:
         await total_remove_msg(
             bot, chat_id=callback.message.chat.id, msg_id=callback.message.message_id

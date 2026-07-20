@@ -29,10 +29,7 @@ from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.views.game import GameLogWriter, GameView, GameViewPreparer, OrgNotifier
 from shvatka.core.views.level import LevelView
 from shvatka.core.views.team import TeamNotifier
-from shvatka.infrastructure.bus.in_memory import (
-    UsedOneTimeTokenInteractor,
-    ActionResolvedInteractor,
-)
+from shvatka.infrastructure.bus.in_memory import UsedOneTimeTokenInteractor
 from shvatka.infrastructure.db.config.models.storage import StorageConfig, StorageType
 from shvatka.infrastructure.db.dao import FileInfoDao
 from shvatka.infrastructure.db.dao.holder import HolderDao
@@ -44,7 +41,6 @@ from shvatka.infrastructure.picture import ResultsPainter
 from shvatka.tgbot.config.models.bot import BotConfig, TgClientConfig
 from shvatka.tgbot.handlers import setup_handlers
 from shvatka.tgbot.middlewares import setup_middlewares
-from shvatka.tgbot.services.action_requests import ActionResolvedInteractorImpl
 from shvatka.tgbot.services.identity import TgBotIdentityProvider
 from shvatka.tgbot.services.used_one_time_token import UsedOneTimeTokenInteractorImpl
 from shvatka.tgbot.username_resolver.user_getter import UserGetter
@@ -159,9 +155,6 @@ class DpProvider(Provider):
 
     used_one_time_token_interactor = provide(
         UsedOneTimeTokenInteractorImpl, provides=UsedOneTimeTokenInteractor, scope=Scope.REQUEST
-    )
-    action_request_interactor = provide(
-        ActionResolvedInteractorImpl, provides=ActionResolvedInteractor, scope=Scope.REQUEST
     )
 
 

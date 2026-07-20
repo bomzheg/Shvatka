@@ -64,6 +64,13 @@ class RequestNotifier(Protocol):
         raise NotImplementedError
 
 
+class SuperusersResolver(Protocol):
+    """Resolves the configured superusers (admins) to their player ids."""
+
+    async def get_superuser_player_ids(self) -> set[int]:
+        raise NotImplementedError
+
+
 class RequestStorage(Committer, Protocol):
     async def create(
         self,
@@ -112,6 +119,11 @@ class RequestStorage(Committer, Protocol):
         raise NotImplementedError
 
     async def get_pending_for_teams(self, team_ids: Sequence[int]) -> Sequence[dto.ActionRequest]:
+        raise NotImplementedError
+
+    async def get_pending_by_types(
+        self, types: Collection[RequestType]
+    ) -> Sequence[dto.ActionRequest]:
         raise NotImplementedError
 
     async def add_bot_message(self, request_id: int, *, chat_id: int, message_id: int) -> None:

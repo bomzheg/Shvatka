@@ -195,6 +195,12 @@ class ApiIdentityProvider(IdentityProvider):
             raise exceptions.NotAuthorizedForAdmin(player=player, user=user)
         return player
 
+    async def is_superuser(self) -> bool:
+        if await self.get_player() is None:
+            return False
+        user = await self.get_user()
+        return user is not None and user.tg_id in self.config.superusers
+
     async def get_user(self) -> dto.User | None:
         if "user" in self.cache:
             return self.cache["user"]

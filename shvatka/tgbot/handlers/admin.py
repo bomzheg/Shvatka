@@ -1,17 +1,16 @@
 from functools import partial
 
-from aiogram import Router, types, Bot
+from aiogram import Router, types
 from aiogram.filters import Command, CommandObject
+from dishka.integrations.aiogram import FromDishka, inject
 
-from aiogram.utils.text_decorations import html_decoration as hd
-
-from shvatka.core.models import dto
-from shvatka.tgbot import keyboards as kb
+from shvatka.core.notifications.request_interactors import CreatePlayerMergeRequestInteractor
 from shvatka.core.services.team import get_team_by_id, merge_teams
 from shvatka.core.views.game import GameLogWriter
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.tgbot.config.models.bot import BotConfig
 from shvatka.tgbot.filters import is_superuser
+from shvatka.tgbot.services.identity import TgBotIdentityProvider
 from shvatka.tgbot.views.commands import MERGE_TEAMS, MERGE_PLAYERS
 
 
@@ -35,13 +34,12 @@ async def merge_teams_command(
     await message.reply(f"Успешно объединены {primary.name} и {secondary.name}")
 
 
+@inject
 async def merge_players_command(
     message: types.Message,
-    bot: Bot,
-    player: dto.Player,
-    config: BotConfig,
     command: CommandObject,
-    dao: HolderDao,
+    identity: FromDishka[TgBotIdentityProvider],
+    interactor: FromDishka[CreatePlayerMergeRequestInteractor],
 ):
     if not command.args:
         await message.reply(
@@ -50,15 +48,8 @@ async def merge_players_command(
         )
         return
     old_id, new_id = map(int, command.args.split())
-    primary = await dao.player.get_by_id(new_id)
-    secondary = await dao.player.get_by_id(old_id)
-    await bot.send_message(
-        chat_id=config.game_log_chat,
-        text=f"Админ {hd.quote(player.name_mention)} предлагает объединить "
-        f"достижения игрока {hd.quote(primary.name_mention)}"
-        f"с форумной версией {hd.quote(secondary.name_mention)}",
-        reply_markup=kb.get_player_merge_confirm_kb(primary, secondary),
-    )
+    await interactor(identity=identity, primary_player_id=new_id, secondary_player_id=old_id)
+    await message.reply("Заявка на объединение отправлена")
 
 
 def setup(bot_config: BotConfig) -> Router:

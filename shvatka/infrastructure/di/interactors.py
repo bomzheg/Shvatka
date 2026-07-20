@@ -2,6 +2,7 @@ from aiogram import Bot
 from adaptix import Retort
 from dishka import Provider, Scope, provide
 
+from shvatka.common import Config
 from shvatka.common.url_factory import UrlFactory
 from shvatka.core.games.interactors import (
     GameFileReaderInteractor,
@@ -38,12 +39,21 @@ from shvatka.core.notifications.request_interactors import (
     CreateTeamJoinInviteInteractor,
     CreateTeamJoinRequestInteractor,
     CreateOrgInviteInteractor,
+    CreateTeamMergeRequestInteractor,
+    CreatePlayerMergeRequestInteractor,
     AcceptRequestInteractor,
     DeclineRequestInteractor,
     CancelRequestInteractor,
     ListRequestsInteractor,
 )
-from shvatka.core.notifications.adapters import RequestNotifier, RequestStorage, NotificationWriter
+from shvatka.core.notifications.adapters import (
+    RequestNotifier,
+    RequestStorage,
+    NotificationWriter,
+    SuperusersResolver,
+)
+from shvatka.tgbot.config.models.bot import BotConfig
+from shvatka.tgbot.services.action_requests import ActionResolvedInteractorImpl
 from shvatka.tgbot.views.action_request import BotRequestNotifier
 from shvatka.core.players.interactors import (
     GetPlayerInteractor,
@@ -126,7 +136,8 @@ from shvatka.core.waiver.interactors import (
     AllWaiversDraftReaderInteractor,
     ReplaceTeamWaiversInteractor,
 )
-from shvatka.infrastructure.bus.in_memory import InMemoryBus
+from shvatka.infrastructure.bus.in_memory import ActionResolvedInteractor, InMemoryBus
+from shvatka.infrastructure.superusers import ConfigSuperusersResolver
 from shvatka.infrastructure.db.dao.complex2.waiver import (
     WaiverVoteAdderImpl,
     WaiverVoteGetterImpl,
@@ -160,10 +171,11 @@ class ContextProvider(Provider):
     scope = Scope.REQUEST
     current_game = provide(CurrentGameProviderImpl, provides=CurrentGameProvider)
     bus = provide(InMemoryBus, provides=Bus)
+    action_resolved = provide(ActionResolvedInteractorImpl, provides=ActionResolvedInteractor)
 
     @provide
     def request_notifier(
-        self, bot: Bot, dao: HolderDao, requests: RequestStorage
+        self, bot: Bot, dao: HolderDao, requests: RequestStorage, bot_config: BotConfig
     ) -> RequestNotifier:
         return BotRequestNotifier(
             bot=bot,
@@ -171,7 +183,12 @@ class ContextProvider(Provider):
             player_dao=dao.player,
             team_dao=dao.team,
             team_players_dao=dao.team_player,
+            game_log_chat=bot_config.game_log_chat,
         )
+
+    @provide
+    def superusers_resolver(self, config: Config, dao: HolderDao) -> SuperusersResolver:
+        return ConfigSuperusersResolver(config=config, player_dao=dao.player)
 
 
 class GamePlayProvider(Provider):
@@ -533,6 +550,40 @@ class RequestProvider(Provider):
         )
 
     @provide
+    def create_team_merge_request(
+        self,
+        dao: HolderDao,
+        requests: RequestStorage,
+        notifications: NotificationWriter,
+        superusers: SuperusersResolver,
+        notifier: RequestNotifier,
+    ) -> CreateTeamMergeRequestInteractor:
+        return CreateTeamMergeRequestInteractor(
+            requests=requests,
+            notifications=notifications,
+            team_dao=dao.team,
+            superusers=superusers,
+            notifier=notifier,
+        )
+
+    @provide
+    def create_player_merge_request(
+        self,
+        dao: HolderDao,
+        requests: RequestStorage,
+        notifications: NotificationWriter,
+        superusers: SuperusersResolver,
+        notifier: RequestNotifier,
+    ) -> CreatePlayerMergeRequestInteractor:
+        return CreatePlayerMergeRequestInteractor(
+            requests=requests,
+            notifications=notifications,
+            player_dao=dao.player,
+            superusers=superusers,
+            notifier=notifier,
+        )
+
+    @provide
     def accept_request(
         self,
         dao: HolderDao,
@@ -540,6 +591,7 @@ class RequestProvider(Provider):
         notifications: NotificationWriter,
         team_notifier: TeamNotifier,
         org_notifier: OrgNotifier,
+        game_log: GameLogWriter,
         bus: Bus,
     ) -> AcceptRequestInteractor:
         return AcceptRequestInteractor(
@@ -550,6 +602,9 @@ class RequestProvider(Provider):
             team_player_dao=dao.team_player,
             player_dao=dao.player,
             org_adder=dao.org_adder,
+            team_merger=dao.team_merger,
+            player_merger=dao.player_merger,
+            game_log=game_log,
             team_notifier=team_notifier,
             org_notifier=org_notifier,
             bus=bus,

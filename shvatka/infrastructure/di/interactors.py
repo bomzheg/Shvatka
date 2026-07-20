@@ -56,12 +56,14 @@ from shvatka.core.players.admin_interactors import (
     AdminMergePlayersInteractor,
     AdminSearchPlayersInteractor,
     AdminGetPlayerInteractor,
+    AdminGetPlayerWaiverPointsInteractor,
 )
 from shvatka.core.players.interfaces import (
     AdminPlayerReader,
     AdminEmailSetter,
     AdminTgChanger,
     AdminPlayerMerger,
+    AdminPlayerWaiverPointsReader,
 )
 from shvatka.core.teams.admin_interactors import AdminMergeTeamsInteractor
 from shvatka.core.services.one_time_link import (
@@ -138,6 +140,7 @@ from shvatka.infrastructure.db.dao.complex.player import (
     AdminTgChangerImpl,
     AdminPlayerMergerImpl,
     AdminPlayerReaderImpl,
+    AdminPlayerWaiverPointsReaderImpl,
 )
 from shvatka.infrastructure.db.dao.complex.game import GameFilesGetterImpl, GameScenarioEditorImpl
 from shvatka.infrastructure.db.dao.complex.game import (
@@ -435,6 +438,10 @@ class AdminProvider(Provider):
         return AdminPlayerMergerImpl(dao)
 
     @provide
+    def admin_player_waiver_points_dao(self, dao: HolderDao) -> AdminPlayerWaiverPointsReader:
+        return AdminPlayerWaiverPointsReaderImpl(dao)
+
+    @provide
     def admin_team_merger_dao(self, dao: HolderDao) -> AdminTeamMerger:
         return AdminTeamMergerImpl(dao)
 
@@ -445,6 +452,7 @@ class AdminProvider(Provider):
     admin_poll_reader = provide(AdminPollReaderInteractor)
     admin_remove_poll_vote = provide(AdminRemovePollVoteInteractor)
     admin_merge_players = provide(AdminMergePlayersInteractor)
+    admin_player_waiver_points = provide(AdminGetPlayerWaiverPointsInteractor)
     admin_merge_teams = provide(AdminMergeTeamsInteractor)
     admin_waivers_reader = provide(AdminGameWaiversReaderInteractor)
 

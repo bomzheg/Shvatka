@@ -13,6 +13,7 @@ from shvatka.core.models import dto
 from shvatka.core.players.admin_interactors import (
     AdminChangePlayerTgInteractor,
     AdminGetPlayerInteractor,
+    AdminGetPlayerWaiverPointsInteractor,
     AdminMergePlayersInteractor,
     AdminSearchPlayersInteractor,
     AdminSetPlayerEmailInteractor,
@@ -130,13 +131,26 @@ async def remove_poll_vote(
 
 
 @inject
+async def get_player_waiver_points(
+    identity: FromDishka[ApiIdentityProvider],
+    interactor: FromDishka[AdminGetPlayerWaiverPointsInteractor],
+    id_: Annotated[int, Path(alias="id")],
+) -> responses.Items[responses.WaiverPoint]:
+    points = await interactor(identity, id_)
+    return responses.Items([responses.WaiverPoint.from_core(point) for point in points])
+
+
+@inject
 async def merge_players(
     identity: FromDishka[ApiIdentityProvider],
     interactor: FromDishka[AdminMergePlayersInteractor],
-    body: Annotated[req.MergeRequest, Body()],
+    body: Annotated[req.MergePlayersRequest, Body()],
 ) -> responses.Player:
     player = await interactor(
-        identity=identity, primary_id=body.primary_id, secondary_id=body.secondary_id
+        identity=identity,
+        primary_id=body.primary_id,
+        secondary_id=body.secondary_id,
+        timeline=body.core_timeline(),
     )
     return responses.Player.from_core(player)
 
@@ -169,6 +183,7 @@ def setup() -> APIRouter:
     router.add_api_route("/players", list_players, methods=["GET"])
     router.add_api_route("/players/{id}", get_player, methods=["GET"])
     router.add_api_route("/players/{id}/one-time-link", create_one_time_link, methods=["POST"])
+    router.add_api_route("/players/{id}/waiver-points", get_player_waiver_points, methods=["GET"])
     router.add_api_route("/players/{id}/email", change_email, methods=["PUT"])
     router.add_api_route("/players/{id}/tg", change_tg, methods=["PUT"])
     router.add_api_route("/poll", get_poll, methods=["GET"])

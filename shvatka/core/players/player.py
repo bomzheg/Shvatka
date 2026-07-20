@@ -1,6 +1,9 @@
 import logging
+from datetime import datetime
 from typing import Sequence
 
+from shvatka.core.players.dto import TimelineItem, WaiverPoint
+from shvatka.core.utils.datetime_utils import tz_utc
 from shvatka.core.interfaces.dal.player import (
     PlayerUpserter,
     PlayerTeamChecker,
@@ -15,6 +18,7 @@ from shvatka.core.interfaces.dal.player import (
     TeamPlayerEmojiUpdater,
     TeamPlayerFullHistoryGetter,
     PlayerByUserIdGetter,
+    PlayerWaiversGetter,
 )
 from shvatka.core.interfaces.dal.secure_invite import InviteSaver, InviteRemover, InviterDao
 from shvatka.core.interfaces.identity import IdentityProvider
@@ -317,6 +321,7 @@ async def merge_players(
     secondary: dto.Player,
     game_log: GameLogWriter,
     dao: PlayerMerger,
+    timeline: list[TimelineItem] | None = None,
 ):
     if primary.has_forum_user():
         raise exceptions.SHDataBreach(
@@ -330,6 +335,10 @@ async def merge_players(
             notify_user="Невозможно привязать к тебе этот форумный аккаунт "
             "(этот аккаунт уже привязан к другому пользователю)",
         )
+    if timeline is not None:
+        timeline = normalize_timeline(timeline)
+        points = await get_waiver_points(primary, dao) + await get_waiver_points(secondary, dao)
+        check_timeline_matches_points(timeline, points)
     primary_email = await dao.get_email_by_player_id(primary.id)
     secondary_email = await dao.get_email_by_player_id(secondary.id)
     if primary_email is not None:
@@ -343,7 +352,10 @@ async def merge_players(
     await dao.replace_games_author(primary, secondary)
     await dao.replace_levels_author(primary, secondary)
     await dao.replace_file_info(primary, secondary)
-    await merge_team_history(primary, secondary, dao)
+    if timeline is not None:
+        await set_merged_team_history(primary, secondary, timeline, dao)
+    else:
+        await merge_team_history(primary, secondary, dao)
     await dao.replace_player_waiver(primary, secondary)
     await dao.replace_forum_player(primary, secondary)
     await dao.delete_player(secondary)
@@ -371,9 +383,129 @@ async def merge_team_history(primary: dto.Player, secondary: dto.Player, dao: Pl
         merged = sorted(primary_history + secondary_history, key=lambda tp: tp.date_joined)
     for tp1, tp2 in zip(merged[:-1:], merged[1::]):
         if tp1.date_left is None or (tp1.date_left > tp2.date_joined):
-            raise ValueError("can't join automatically")
+            raise exceptions.MergeError(
+                player=primary,
+                text="team histories are not compatible, can't merge automatically",
+                notify_user="Истории команд игроков несовместимы, автоматическое объединение "
+                "невозможно — требуется вручную задать таймлайн (timeline)",
+            )
     for tp in merged:
         tp.player_id = primary.id
+    await dao.clean_history(primary)
+    await dao.clean_history(secondary)
+    await dao.set_history(merged)
+
+
+async def get_waiver_points(
+    player: dto.Player, dao: PlayerWaiversGetter, now: datetime | None = None
+) -> list[WaiverPoint]:
+    """Return intervals in which the player's team membership is fixed by waivers.
+
+    Only waivers with vote ``yes`` pin the player to a team: around the game start
+    the player certainly acted as a team member. A game that is still getting
+    waivers has no start date yet, so its point is the current week.
+    """
+    if now is None:
+        now = datetime.now(tz=tz_utc)
+    waivers = await dao.get_player_waivers(player)
+    points = [
+        WaiverPoint.from_waiver(waiver, now)
+        for waiver in waivers
+        if waiver.played.can_play
+        and (waiver.game.start_at is not None or waiver.game.is_getting_waivers())
+    ]
+    return sorted(points, key=lambda point: point.at_since)
+
+
+def normalize_timeline(timeline: list[TimelineItem]) -> list[TimelineItem]:
+    """Sort the timeline and check that it forms a valid membership history."""
+    if not timeline:
+        raise exceptions.MergeError(
+            text="timeline is empty",
+            notify_user="Таймлайн не может быть пустым",
+        )
+    timeline = sorted(timeline, key=lambda item: item.date_joined)
+    for item in timeline:
+        if item.date_joined.tzinfo is None or (
+            item.date_left is not None and item.date_left.tzinfo is None
+        ):
+            raise exceptions.MergeError(
+                text=f"timeline item for team {item.team_id} has a naive datetime",
+                notify_user="Даты в таймлайне должны содержать часовой пояс "
+                "(например, суффикс Z)",
+            )
+        if item.date_left is not None and item.date_left <= item.date_joined:
+            raise exceptions.MergeError(
+                text=f"timeline item for team {item.team_id} ends before it starts",
+                notify_user="Дата выхода из команды должна быть позже даты вступления",
+            )
+        for permission_name in item.permissions or {}:
+            if permission_name not in enums.TeamPlayerPermission.__members__:
+                raise exceptions.MergeError(
+                    text=f"unknown team player permission {permission_name}",
+                    notify_user=f"Неизвестное разрешение: {permission_name}",
+                )
+    for current, following in zip(timeline[:-1], timeline[1:]):
+        if current.date_left is None or current.date_left > following.date_joined:
+            raise exceptions.MergeError(
+                text=f"timeline items for teams {current.team_id} "
+                f"and {following.team_id} overlap",
+                notify_user="Интервалы таймлайна пересекаются — игрок не может быть "
+                "в двух командах одновременно",
+            )
+    return timeline
+
+
+def check_timeline_matches_points(timeline: list[TimelineItem], points: list[WaiverPoint]) -> None:
+    for point in points:
+        if not any(
+            item.team_id == point.team.id
+            and item.date_joined <= point.at_since
+            and (item.date_left is None or item.date_left >= point.at_until)
+            for item in timeline
+        ):
+            raise exceptions.MergeError(
+                team=point.team,
+                text=f"timeline violates waiver point: "
+                f"game {point.game.id} requires team {point.team.id} "
+                f"from {point.at_since} to {point.at_until}",
+                notify_user=f"Таймлайн нарушает вейвер: во время игры «{point.game.name}» "
+                f"(с {point.at_since:%d.%m.%Y %H:%M} по {point.at_until:%d.%m.%Y %H:%M}) "
+                f"игрок должен состоять в команде «{point.team.name}»",
+            )
+
+
+async def set_merged_team_history(
+    primary: dto.Player,
+    secondary: dto.Player,
+    timeline: list[TimelineItem],
+    dao: PlayerMerger,
+) -> None:
+    """Replace both players' team histories with the manually built timeline.
+
+    Role, emoji and permissions come from the timeline items themselves; unset
+    values get the same defaults as a regular team join.
+    """
+    merged = []
+    for item in timeline:
+        permissions = {p.name: False for p in enums.TeamPlayerPermission}
+        permissions.update(item.permissions or {})
+        merged.append(
+            dto.TeamPlayer(
+                id=0,
+                player_id=primary.id,
+                team_id=item.team_id,
+                date_joined=item.date_joined,
+                date_left=item.date_left,
+                role=item.role or DEFAULT_ROLE,
+                emoji=item.emoji,
+                _can_manage_waivers=permissions["can_manage_waivers"],
+                _can_manage_players=permissions["can_manage_players"],
+                _can_change_team_name=permissions["can_change_team_name"],
+                _can_add_players=permissions["can_add_players"],
+                _can_remove_players=permissions["can_remove_players"],
+            )
+        )
     await dao.clean_history(primary)
     await dao.clean_history(secondary)
     await dao.set_history(merged)

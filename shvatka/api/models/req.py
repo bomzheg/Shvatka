@@ -3,6 +3,7 @@ from datetime import datetime
 
 from shvatka.core.models.enums import GameStatus
 from shvatka.core.models.enums.played import Played
+from shvatka.core.players.dto import TimelineItem as CoreTimelineItem
 
 
 @dataclass
@@ -107,6 +108,38 @@ class MergeRequest:
     primary_id: int
     secondary_id: int
     """the record merged into primary and then deleted"""
+
+
+@dataclass
+class TimelineItem:
+    team_id: int
+    date_joined: datetime
+    date_left: datetime | None = None
+    role: str | None = None
+    emoji: str | None = None
+    permissions: dict[str, bool] | None = None
+
+    def to_core(self) -> CoreTimelineItem:
+        return CoreTimelineItem(
+            team_id=self.team_id,
+            date_joined=self.date_joined,
+            date_left=self.date_left,
+            role=self.role,
+            emoji=self.emoji,
+            permissions=self.permissions,
+        )
+
+
+@dataclass
+class MergePlayersRequest(MergeRequest):
+    timeline: list[TimelineItem] | None = None
+    """manually built team history for the merged player; replaces both histories.
+    Must not violate the waiver points of either player."""
+
+    def core_timeline(self) -> list[CoreTimelineItem] | None:
+        if self.timeline is None:
+            return None
+        return [item.to_core() for item in self.timeline]
 
 
 @dataclass(frozen=True, slots=True)

@@ -12,7 +12,7 @@ treated as not found (an admin cannot even see it here).
 """
 
 import logging
-from dataclasses import dataclass, replace
+from dataclasses import dataclass
 from typing import BinaryIO
 
 from adaptix import Retort
@@ -23,11 +23,9 @@ from shvatka.core.interfaces.dal.game import GameFileUploader
 from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.models import dto
 from shvatka.core.models.dto import hints, scn
-from shvatka.core.models.enums import GameStatus
-from shvatka.core.players.player import check_allow_be_author
 from shvatka.core.services.scenario.files import save_file, sync_files_for_level
 from shvatka.core.services.scenario.game_ops import parse_uploaded_game
-from shvatka.core.utils.exceptions import CantEditGame, GameNotFound
+from shvatka.core.utils.exceptions import CantEditGame, GameNotFound, SHDataBreach
 
 logger = logging.getLogger(__name__)
 
@@ -55,16 +53,12 @@ class AdminUpdateGameScenarioInteractor:
         game_scn = parse_uploaded_game(scn.RawGameScenario(scn=raw_scn, files={}), self.retort)
         game = await self.dao.get_by_id(id_=game_id)
         if not game.is_complete():
-            # admins operate on completed games only; anything else is hidden
             raise GameNotFound(game=game)
-        # detach the current levels first, while the game still carries its current
-        # author (unlink_all matches by the game's author), so a later re-author does
-        # not leave the old levels dangling.
-        await self.dao.unlink_all(game)
         if new_author_id is not None and new_author_id != game.author.id:
             new_author = await self.dao.get_player_by_id(new_author_id)
-            check_allow_be_author(new_author)
+            # move the game and its level rows together so authorship stays consistent
             await self.dao.transfer(game, new_author)
+            await self.dao.transfer_levels(game, new_author)
             logger.warning(
                 "admin %s changed author of game %s to player %s",
                 admin.id,
@@ -81,16 +75,23 @@ class AdminUpdateGameScenarioInteractor:
                 )
             await self.dao.rename_game(game, game_scn.name)
             game.name = game_scn.name
-        # the game may already be started or completed, but an admin is allowed to
-        # edit it; present an editable snapshot to the persistence guards that
-        # otherwise forbid linking levels to a non-editable game. The real status is
-        # never written back — upsert_gamed only reads it for the editability check.
-        editable_game = replace(game, status=GameStatus.underconstruction)
+        # detach all current levels, then re-attach exactly the ones the new scenario
+        # keeps (matched by author + name_id, so the same rows are reused). upsert
+        # without a game and link_to_game do not run the editability guard, so a
+        # completed game can be edited without faking its status.
+        await self.dao.unlink_all(game)
         levels = []
-        for number, level in enumerate(game_scn.levels):
-            saved_level = await self.dao.upsert_gamed(author, level, editable_game, number)
-            await sync_files_for_level(saved_level, self.dao)
-            levels.append(saved_level)
+        for level in game_scn.levels:
+            saved = await self.dao.upsert(author, level)
+            if saved.game_id is not None:
+                # the level is attached to another game — never steal it
+                raise SHDataBreach(
+                    player=admin,
+                    notify_user=f"уровень {saved.name_id} привязан к другой игре",
+                )
+            linked = await self.dao.link_to_game(saved, game)
+            await sync_files_for_level(linked, self.dao)
+            levels.append(linked)
         await self.dao.commit()
         logger.warning("admin %s edited scenario of game %s", admin.id, game.id)
         return game.to_full_game(levels)

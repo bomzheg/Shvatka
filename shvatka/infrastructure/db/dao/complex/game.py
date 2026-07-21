@@ -128,6 +128,12 @@ class AdminGameScenarioEditorImpl(GameScenarioEditorImpl):
     async def transfer(self, game: dto.Game, new_author: dto.Player) -> None:
         await self.dao.game.transfer(game, new_author)
 
+    async def transfer_levels(self, game: dto.Game, new_author: dto.Player) -> None:
+        await self.dao.level.transfer_game_levels(game, new_author)
+
+    async def link_to_game(self, level: dto.Level, game: dto.Game) -> dto.GamedLevel:
+        return await self.dao.level.link_to_game(level, game)
+
     async def get_player_by_id(self, id_: int) -> dto.Player:
         return await self.dao.player.get_by_id(id_)
 

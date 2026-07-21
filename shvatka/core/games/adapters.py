@@ -18,12 +18,19 @@ class AdminGameScenarioEditor(GameScenarioEditor, GameAuthorTransferer, Protocol
     """Edit a completed game's scenario on behalf of an admin.
 
     Extends the regular scenario editor with the ability to reassign the game's
-    author (``transfer``) and to resolve the target player by id
-    (``get_player_by_id``). ``PlayerByIdGetter.get_by_id`` is not composed in
+    author (``transfer``) and its levels (``transfer_levels``), to resolve the
+    target player by id (``get_player_by_id``) and to link a level to a game
+    (``link_to_game``). ``PlayerByIdGetter.get_by_id`` is not composed in
     directly because it collides with ``GameByIdGetter.get_by_id``.
     """
 
     async def get_player_by_id(self, id_: int) -> dto.Player:
+        raise NotImplementedError
+
+    async def transfer_levels(self, game: dto.Game, new_author: dto.Player) -> None:
+        raise NotImplementedError
+
+    async def link_to_game(self, level: dto.Level, game: dto.Game) -> dto.GamedLevel:
         raise NotImplementedError
 
 

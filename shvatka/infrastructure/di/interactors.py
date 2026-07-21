@@ -486,21 +486,12 @@ class AdminProvider(Provider):
     def admin_search_players(self, dao: HolderDao) -> AdminSearchPlayersInteractor:
         return AdminSearchPlayersInteractor(dao=dao.player)
 
+    admin_update_scenario = provide(AdminUpdateGameScenarioInteractor)
+    admin_upload_file = provide(AdminUploadGameFileInteractor)
+
     @provide
     def admin_game_scenario_editor(self, dao: HolderDao) -> AdminGameScenarioEditor:
         return AdminGameScenarioEditorImpl(dao=dao)
-
-    @provide
-    def admin_update_scenario(
-        self, dao: AdminGameScenarioEditor, retort: Retort
-    ) -> AdminUpdateGameScenarioInteractor:
-        return AdminUpdateGameScenarioInteractor(dao=dao, retort=retort)
-
-    @provide
-    def admin_upload_file(
-        self, dao: GameFileUploader, storage: FileStorage
-    ) -> AdminUploadGameFileInteractor:
-        return AdminUploadGameFileInteractor(storage=storage, dao=dao)
 
     @provide
     def admin_otl(

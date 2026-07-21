@@ -1,5 +1,6 @@
 from dataclasses import dataclass, field
 from datetime import datetime
+from typing import Any
 
 from shvatka.core.models.enums import GameStatus
 from shvatka.core.models.enums.played import Played
@@ -87,6 +88,13 @@ class WaiverVote:
 @dataclass
 class ReplaceWaivers:
     waivers: list[WaiverVote] = field(default_factory=list)
+
+
+@dataclass
+class AdminGameScenarioEdit:
+    scenario: dict[str, Any]
+    author_id: int | None = None
+    """when set, the game is reassigned to this player before the scenario is saved"""
 
 
 @dataclass

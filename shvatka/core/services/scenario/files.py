@@ -150,6 +150,8 @@ async def check_file_meta_can_read(
 ):
     if game.is_complete():
         return
+    if await identity.is_superuser():
+        return
     author = await identity.get_required_player()
     if file_meta.author_id == author.id:
         return

@@ -1,9 +1,9 @@
 from typing import Protocol
 
 from shvatka.core.games.dto import CurrentHintsOnly, Event
-from shvatka.core.interfaces.dal.complex import TypedKeyGetter, GameStatDao
+from shvatka.core.interfaces.dal.complex import GameScenarioEditor, TypedKeyGetter, GameStatDao
 from shvatka.core.interfaces.dal.file_info import FileInfoGetter
-from shvatka.core.interfaces.dal.game import GameByIdGetter
+from shvatka.core.interfaces.dal.game import GameAuthorTransferer, GameByIdGetter
 from shvatka.core.interfaces.dal.player import PlayerByUserGetter
 from shvatka.core.interfaces.dal.waiver import WaiverChecker
 from shvatka.core.interfaces.identity import IdentityProvider
@@ -12,6 +12,19 @@ from shvatka.core.models import dto
 
 class GameKeysReader(TypedKeyGetter, GameByIdGetter, PlayerByUserGetter, Protocol):
     pass
+
+
+class AdminGameScenarioEditor(GameScenarioEditor, GameAuthorTransferer, Protocol):
+    """Edit any game's scenario on behalf of an admin.
+
+    Extends the regular scenario editor with the ability to reassign the game's
+    author (``transfer``) and to resolve the target player by id
+    (``get_player_by_id``). ``PlayerByIdGetter.get_by_id`` is not composed in
+    directly because it collides with ``GameByIdGetter.get_by_id``.
+    """
+
+    async def get_player_by_id(self, id_: int) -> dto.Player:
+        raise NotImplementedError
 
 
 class GameStatReader(GameStatDao, GameByIdGetter, PlayerByUserGetter, Protocol):

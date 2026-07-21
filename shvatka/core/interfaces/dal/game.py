@@ -60,6 +60,11 @@ class GameRenamer(Committer, Protocol):
         raise NotImplementedError
 
 
+class GameAuthorTransferer(Protocol):
+    async def transfer(self, game: dto.Game, new_author: dto.Player) -> None:
+        raise NotImplementedError
+
+
 class GameAuthorsFinder(Committer, Protocol):
     async def get_all_by_author(self, author: dto.Player) -> list[dto.Game]:
         raise NotImplementedError

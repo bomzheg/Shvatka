@@ -1,5 +1,5 @@
 import typing
-from collections.abc import Sequence
+from collections.abc import Collection, Sequence
 from datetime import datetime, tzinfo
 from typing import Any
 
@@ -127,6 +127,23 @@ class ActionRequestDAO(BaseDAO[ActionRequest]):
             select(ActionRequest.bot_messages).where(ActionRequest.id == request_id)
         )
         return [(d["chat_id"], d["message_id"]) for d in result.one()]
+
+    async def get_pending_by_types(
+        self, types: Collection[RequestType]
+    ) -> Sequence[dto.ActionRequest]:
+        """Pending requests of the given types, newest first (e.g. merges for admins)."""
+        if not types:
+            return []
+        stmt = (
+            select(ActionRequest)
+            .where(
+                ActionRequest.type.in_([type_.name for type_ in types]),
+                ActionRequest.status == RequestStatus.pending,
+            )
+            .order_by(ActionRequest.created_at.desc())
+        )
+        result = await self.session.scalars(stmt)
+        return [request.to_dto() for request in result.all()]
 
     async def get_pending_for_teams(self, team_ids: Sequence[int]) -> Sequence[dto.ActionRequest]:
         """Pending team-join requests answerable by managers of the given teams."""

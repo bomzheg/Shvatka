@@ -1,8 +1,11 @@
+import logging
 from typing import Protocol
 
 
 from shvatka.core.models import dto
 from shvatka.core.utils import exceptions
+
+logger = logging.getLogger(__name__)
 
 
 class IdentityProvider(Protocol):
@@ -24,15 +27,35 @@ class IdentityProvider(Protocol):
     async def get_org(self, game: dto.Game) -> dto.Organizer | None:
         raise NotImplementedError
 
+    async def _get_optional_superuser(self) -> dto.Player | None:
+        """Return the acting player if they may use the admin panel, else ``None``.
+
+        This is the single per-edge hook for admin rights: edges that expose the
+        admin panel override it (checking the player against the configured
+        superusers); everything else derives from it. By default nobody is a
+        superuser.
+        """
+        return None
+
     async def get_superuser(self) -> dto.Player:
         """Resolve the acting player and ensure they may use the admin panel.
 
-        By default nobody is a superuser; edges that expose the admin panel
-        override this to check the player against the configured superusers, log
-        the attempt, and return the player. Non-superusers always raise
-        :class:`exceptions.NotAuthorizedForAdmin`.
+        Non-superusers always raise :class:`exceptions.NotAuthorizedForAdmin`;
+        the attempt is logged.
         """
-        raise exceptions.NotAuthorizedForAdmin(player=await self.get_player())
+        player = await self._get_optional_superuser()
+        if player is None:
+            actor = await self.get_player()
+            logger.warning(
+                "player %s tried to use admin panel without rights",
+                actor.id if actor is not None else None,
+            )
+            raise exceptions.NotAuthorizedForAdmin(player=actor, user=await self.get_user())
+        return player
+
+    async def is_superuser(self) -> bool:
+        """Quiet check of admin rights: no logging, no exceptions."""
+        return await self._get_optional_superuser() is not None
 
     async def get_required_user(self) -> dto.User:
         user = await self.get_user()

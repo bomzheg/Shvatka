@@ -6,6 +6,7 @@ from aiogram_dialog.api.entities import DialogUpdate
 from dishka.integrations.aiogram import AiogramMiddlewareData
 
 from shvatka.core.interfaces.identity import IdentityProvider
+from shvatka.core.interfaces.superusers import SuperusersResolver
 from shvatka.core.models import dto
 from shvatka.core.services.chat import upsert_chat
 from shvatka.core.players.player import (
@@ -35,12 +36,23 @@ class TgBotIdentityProvider(IdentityProvider):
         dao: HolderDao,
         event: TelegramObject,
         aiogram_data: AiogramMiddlewareData,
+        superusers: SuperusersResolver,
     ) -> None:
         self.dao = dao
         self.event = event
         self.aiogram_data = aiogram_data
+        self.superusers = superusers
         self.cache = LoadedData()
         self.cache["organizer"] = {}
+
+    async def _get_optional_superuser(self) -> dto.Player | None:
+        player = await self.get_player()
+        if player is None:
+            return None
+        user = await self.get_user()
+        if user is None or not self.superusers.is_superuser(user):
+            return None
+        return player
 
     async def get_user(self) -> dto.User | None:
         data = cast(SHMiddlewareData, self.aiogram_data)

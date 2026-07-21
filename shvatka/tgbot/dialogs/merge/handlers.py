@@ -1,15 +1,19 @@
-import typing
 import urllib.parse
 from typing import Any
 
 from aiogram.types import CallbackQuery, Message
-from aiogram.utils.text_decorations import html_decoration as hd
 from aiogram_dialog import DialogManager
+from dishka import FromDishka
+from dishka.integrations.aiogram_dialog import inject
 
-from shvatka.core.services.team import get_team_by_id, get_team_by_forum_team_id
+from shvatka.core.interfaces.identity import IdentityProvider
+from shvatka.core.notifications.request_interactors import (
+    CreatePlayerMergeRequestInteractor,
+    CreateTeamMergeRequestInteractor,
+)
+from shvatka.core.services.team import get_team_by_forum_team_id
 from shvatka.infrastructure.db.dao.holder import HolderDao
-from shvatka.tgbot import states, keyboards as kb
-from shvatka.tgbot.utils.data import SHMiddlewareData
+from shvatka.tgbot import states
 
 
 async def select_forum_team(
@@ -19,48 +23,48 @@ async def select_forum_team(
     await manager.switch_to(states.MergeTeamsSG.confirm)
 
 
-async def confirm_merge(c: CallbackQuery, button: Any, manager: DialogManager):
-    data = typing.cast(SHMiddlewareData, manager.middleware_data)
-    dao = data["dao"]
-    captain = data["player"]
-    assert captain
+@inject
+async def confirm_merge(
+    c: CallbackQuery,
+    button: Any,
+    manager: DialogManager,
+    dao: FromDishka[HolderDao],
+    identity: FromDishka[IdentityProvider],
+    interactor: FromDishka[CreateTeamMergeRequestInteractor],
+):
     start_data: dict[str, Any] = manager.start_data  # type: ignore[assignment]
-    primary = await get_team_by_id(start_data["team_id"], dao.team)
     secondary = await get_team_by_forum_team_id(manager.dialog_data["forum_team_id"], dao.team)
-    await data["bot"].send_message(
-        chat_id=data["config"].game_log_chat,
-        text=f"Капитан {hd.quote(captain.name_mention)} предлагает объединить "
-        f"свою команду {hd.quote(primary.name)} "
-        f"с форумной версией {hd.quote(secondary.name)}",
-        reply_markup=kb.get_team_merge_confirm_kb(primary, secondary),
+    await interactor(
+        identity=identity,
+        primary_team_id=start_data["team_id"],
+        secondary_team_id=secondary.id,
     )
     await c.answer("Заявка на объединение отправлена", show_alert=True)
     await manager.done()
 
 
-async def player_link_handler(m: Message, widget: Any, manager: DialogManager):
+@inject
+async def player_link_handler(
+    m: Message, widget: Any, manager: DialogManager, dao: FromDishka[HolderDao]
+):
     url = urllib.parse.urlparse(m.text)
     assert isinstance(url.query, str)
     forum_id = int(urllib.parse.parse_qs(url.query)["showuser"][0])
-    dao: HolderDao = manager.middleware_data["dao"]
     forum_user = await dao.forum_user.get_by_forum_id(forum_id)
     manager.dialog_data["forum_player_id"] = forum_user.db_id
     await manager.switch_to(states.MergePlayersSG.confirm)
 
 
-async def confirm_merge_player(c: CallbackQuery, button: Any, manager: DialogManager):
-    data = typing.cast(SHMiddlewareData, manager.middleware_data)
-    dao = data["dao"]
-    primary = data["player"]
-    assert primary
+@inject
+async def confirm_merge_player(
+    c: CallbackQuery,
+    button: Any,
+    manager: DialogManager,
+    dao: FromDishka[HolderDao],
+    identity: FromDishka[IdentityProvider],
+    interactor: FromDishka[CreatePlayerMergeRequestInteractor],
+):
     secondary_forum = await dao.forum_user.get_by_id(manager.dialog_data["forum_player_id"])
-    secondary = await dao.player.get_by_id(secondary_forum.player_id)
-    await data["bot"].send_message(
-        chat_id=data["config"].game_log_chat,
-        text=f"Игрок {hd.quote(primary.name_mention)} предлагает объединить "
-        f"свои достижения "
-        f"с форумной версией {hd.quote(secondary.name_mention)}",
-        reply_markup=kb.get_player_merge_confirm_kb(primary, secondary),
-    )
+    await interactor(identity=identity, secondary_player_id=secondary_forum.player_id)
     await c.answer("Заявка на объединение отправлена", show_alert=True)
     await manager.done()

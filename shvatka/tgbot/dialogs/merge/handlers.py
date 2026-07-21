@@ -1,4 +1,3 @@
-import typing
 import urllib.parse
 from typing import Any
 
@@ -15,7 +14,6 @@ from shvatka.core.notifications.request_interactors import (
 from shvatka.core.services.team import get_team_by_forum_team_id
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.tgbot import states
-from shvatka.tgbot.utils.data import SHMiddlewareData
 
 
 async def select_forum_team(
@@ -30,11 +28,10 @@ async def confirm_merge(
     c: CallbackQuery,
     button: Any,
     manager: DialogManager,
+    dao: FromDishka[HolderDao],
     identity: FromDishka[IdentityProvider],
     interactor: FromDishka[CreateTeamMergeRequestInteractor],
 ):
-    data = typing.cast(SHMiddlewareData, manager.middleware_data)
-    dao = data["dao"]
     start_data: dict[str, Any] = manager.start_data  # type: ignore[assignment]
     secondary = await get_team_by_forum_team_id(manager.dialog_data["forum_team_id"], dao.team)
     await interactor(
@@ -46,11 +43,13 @@ async def confirm_merge(
     await manager.done()
 
 
-async def player_link_handler(m: Message, widget: Any, manager: DialogManager):
+@inject
+async def player_link_handler(
+    m: Message, widget: Any, manager: DialogManager, dao: FromDishka[HolderDao]
+):
     url = urllib.parse.urlparse(m.text)
     assert isinstance(url.query, str)
     forum_id = int(urllib.parse.parse_qs(url.query)["showuser"][0])
-    dao: HolderDao = manager.middleware_data["dao"]
     forum_user = await dao.forum_user.get_by_forum_id(forum_id)
     manager.dialog_data["forum_player_id"] = forum_user.db_id
     await manager.switch_to(states.MergePlayersSG.confirm)
@@ -61,11 +60,10 @@ async def confirm_merge_player(
     c: CallbackQuery,
     button: Any,
     manager: DialogManager,
+    dao: FromDishka[HolderDao],
     identity: FromDishka[IdentityProvider],
     interactor: FromDishka[CreatePlayerMergeRequestInteractor],
 ):
-    data = typing.cast(SHMiddlewareData, manager.middleware_data)
-    dao = data["dao"]
     secondary_forum = await dao.forum_user.get_by_id(manager.dialog_data["forum_player_id"])
     await interactor(identity=identity, secondary_player_id=secondary_forum.player_id)
     await c.answer("Заявка на объединение отправлена", show_alert=True)

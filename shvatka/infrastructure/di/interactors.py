@@ -46,11 +46,11 @@ from shvatka.core.notifications.request_interactors import (
     CancelRequestInteractor,
     ListRequestsInteractor,
 )
+from shvatka.core.interfaces.superusers import SuperusersResolver
 from shvatka.core.notifications.adapters import (
     RequestNotifier,
     RequestStorage,
     NotificationWriter,
-    SuperusersResolver,
 )
 from shvatka.tgbot.config.models.bot import BotConfig
 from shvatka.tgbot.services.action_requests import ActionResolvedInteractorImpl

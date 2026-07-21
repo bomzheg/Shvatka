@@ -47,7 +47,8 @@ async def merge_players_command(
             "Сначала id игрока в новом движке, а потом id игрока с форума."
         )
         return
-    old_id, new_id = map(int, command.args.split())
+    # help above: first the id in the new engine (kept, primary), then the forum id
+    new_id, old_id = map(int, command.args.split())
     await interactor(identity=identity, primary_player_id=new_id, secondary_player_id=old_id)
     await message.reply("Заявка на объединение отправлена")
 

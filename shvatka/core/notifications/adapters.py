@@ -64,13 +64,6 @@ class RequestNotifier(Protocol):
         raise NotImplementedError
 
 
-class SuperusersResolver(Protocol):
-    """Resolves the configured superusers (admins) to their player ids."""
-
-    async def get_superuser_player_ids(self) -> set[int]:
-        raise NotImplementedError
-
-
 class RequestStorage(Committer, Protocol):
     async def create(
         self,

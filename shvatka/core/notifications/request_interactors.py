@@ -15,6 +15,7 @@ and the merge itself writes the usual game-log entry.
 """
 
 import contextlib
+import logging
 from collections.abc import Sequence
 from dataclasses import dataclass
 
@@ -33,11 +34,11 @@ from shvatka.core.models.enums.notification import NotificationType, Notificatio
 from shvatka.core.models.enums.request import RequestType, RequestStatus
 from shvatka.core.notifications import dto as ndto
 from shvatka.core.interfaces.bus import ActionRequestResolved, Bus
+from shvatka.core.interfaces.superusers import SuperusersResolver
 from shvatka.core.notifications.adapters import (
     NotificationWriter,
     RequestNotifier,
     RequestStorage,
-    SuperusersResolver,
 )
 from shvatka.core.players.dto import TimelineItem
 from shvatka.core.players.interfaces import PlayerMerger
@@ -53,6 +54,8 @@ from shvatka.core.utils.exceptions import (
 )
 from shvatka.core.views.game import GameLogWriter, OrgNotifier, NewOrg
 from shvatka.core.views.team import TeamNotifier
+
+logger = logging.getLogger(__name__)
 
 MERGE_REQUEST_TYPES = (RequestType.team_merge, RequestType.player_merge)
 
@@ -423,6 +426,13 @@ class AcceptRequestInteractor:
         primary = await get_team_by_id(request.team_id, self.team_dao)
         secondary = await get_team_by_id(request.payload["secondary_team_id"], self.team_dao)
         captain = await self.player_dao.get_by_id(request.initiator_id)
+        logger.warning(
+            "admin %s accepted team merge request %s: merging team %s into %s",
+            admin.id,
+            request.id,
+            secondary.id,
+            primary.id,
+        )
         updated = await self._resolve(request, RequestStatus.accepted, admin)
         await self._notify_initiator(request, NotificationType.request_accepted, admin)
         # merge_teams commits, taking the resolution and notification along
@@ -439,6 +449,14 @@ class AcceptRequestInteractor:
         admin = await identity.get_superuser()
         primary = await self.player_dao.get_by_id(request.payload["primary_player_id"])
         secondary = await self.player_dao.get_by_id(request.payload["secondary_player_id"])
+        logger.warning(
+            "admin %s accepted player merge request %s: merging player %s into %s%s",
+            admin.id,
+            request.id,
+            secondary.id,
+            primary.id,
+            " with a custom timeline" if timeline is not None else "",
+        )
         updated = await self._resolve(request, RequestStatus.accepted, admin)
         await self._notify_initiator(request, NotificationType.request_accepted, admin)
         # merge_players commits, taking the resolution and notification along
@@ -504,6 +522,10 @@ class DeclineRequestInteractor:
         if not request.is_pending:
             raise RequestNotPending(player=actor)
         await self._check_can_respond(identity, actor, request)
+        if request.type in MERGE_REQUEST_TYPES:
+            logger.warning(
+                "admin %s declined %s request %s", actor.id, request.type.name, request.id
+            )
         updated = await self.requests.set_status(
             request.id, RequestStatus.declined, responder_id=actor.id
         )

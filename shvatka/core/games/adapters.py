@@ -15,7 +15,7 @@ class GameKeysReader(TypedKeyGetter, GameByIdGetter, PlayerByUserGetter, Protoco
 
 
 class AdminGameScenarioEditor(GameScenarioEditor, GameAuthorTransferer, Protocol):
-    """Edit any game's scenario on behalf of an admin.
+    """Edit a completed game's scenario on behalf of an admin.
 
     Extends the regular scenario editor with the ability to reassign the game's
     author (``transfer``) and to resolve the target player by id

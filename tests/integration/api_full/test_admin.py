@@ -671,3 +671,36 @@ async def test_admin_upload_file_forbidden_for_non_superuser(
         follow_redirects=True,
     )
     assert resp.status_code == 403
+
+
+@pytest.mark.asyncio
+async def test_admin_edit_non_completed_game_hidden(
+    client: AsyncClient,
+    admin_token: Token,
+    game: dto.FullGame,
+):
+    # the game is under construction (not completed) — an admin must not reach it
+    resp = await client.put(
+        f"/admin/games/{game.id}/scenario",
+        json={"scenario": ADMIN_SCENARIO},
+        cookies=auth_cookies(admin_token),
+        follow_redirects=True,
+    )
+    assert resp.status_code == 404, resp.text
+    assert resp.json()["type"] == "GameNotFound"
+
+
+@pytest.mark.asyncio
+async def test_admin_upload_file_non_completed_game_hidden(
+    client: AsyncClient,
+    admin_token: Token,
+    game: dto.FullGame,
+):
+    resp = await client.post(
+        f"/admin/games/{game.id}/files",
+        files={"file": ("note.txt", b"nope", "text/plain")},
+        cookies=auth_cookies(admin_token),
+        follow_redirects=True,
+    )
+    assert resp.status_code == 404, resp.text
+    assert resp.json()["type"] == "GameNotFound"

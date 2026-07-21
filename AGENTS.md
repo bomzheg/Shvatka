@@ -267,5 +267,16 @@ with a curated ignore list, mypy overrides) lives in `pyproject.toml`.
   you choose the log level.
 - Some docstrings/comments are in Russian — that's expected; keep the existing
   language of the file you're editing.
+- **In aiogram / aiogram_dialog handlers, take dependencies from DI**
+  (`FromDishka[...]` on an `@inject`-decorated handler) rather than reaching
+  into `manager.middleware_data` / event middleware data. That includes
+  `dao: FromDishka[HolderDao]`.
+- **Superuser rights resolve through `SuperusersResolver`**
+  (`core/interfaces/superusers.py`) — the single source for who the configured
+  admins are. `IdentityProvider` derives `get_superuser` / `is_superuser` from
+  one `_get_optional_superuser` hook; per-edge providers override only that hook.
+  Don't re-read `config.superusers` at a new call site.
+- **Log admin/superuser actions with the acting admin's id** so there's an
+  audit trail, e.g. `logger.warning("admin %s accepted merge request %s", admin.id, request.id)`.
 </content>
 </invoke>

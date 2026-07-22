@@ -35,9 +35,7 @@ def convert_heic_to_jpeg(data: bytes) -> bytes:
         pillow_heif.register_heif_opener()
         from PIL import Image
     except ImportError:
-        logger.warning(
-            "can't convert HEIC to JPEG: pillow-heif is not installed, storing as-is"
-        )
+        logger.warning("can't convert HEIC to JPEG: pillow-heif is not installed, storing as-is")
         return data
     try:
         with Image.open(BytesIO(data)) as image:

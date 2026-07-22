@@ -91,7 +91,7 @@ class HintSender:
             return
         try:
             tg_link = parse_message(message)
-            if tg_link is None:
+            if tg_link is None or tg_link.file_id is None:
                 return
             await self.file_info_dao.update_file_id(guid, tg_link.file_id)
             await self.file_info_dao.commit()

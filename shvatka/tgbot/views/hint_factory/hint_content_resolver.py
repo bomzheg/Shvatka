@@ -18,6 +18,7 @@ from shvatka.core.models.dto.hints import (
     VideoNoteHint,
     StickerHint,
 )
+from shvatka.core.utils.exceptions import FileNotFound
 from shvatka.infrastructure.db.dao import FileInfoDao
 from shvatka.tgbot.models.hint import (
     BaseHintLinkView,
@@ -136,6 +137,10 @@ class HintContentResolver:
 
     async def _resolve_file_id(self, guid: str) -> str:
         tg_link = (await self.dao.get_by_guid(guid)).tg_link
+        if tg_link.file_id is None:
+            raise FileNotFound(
+                text=f"file {guid} has no telegram file_id yet",
+            )
         return tg_link.file_id
 
     async def _resolve_thumb_file_id(self, guid: str | None) -> str | None:

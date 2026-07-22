@@ -59,9 +59,12 @@ class BotFileGateway(FileGateway):
         await msg.delete()
         tg_link = parse_message(msg)
         assert tg_link
+        assert tg_link.file_id is not None
         await self.dao.update_file_id(file_meta.guid, tg_link.file_id)
 
     async def download_from_tg(self, tg_link: hints.TgLink) -> BinaryIO:
+        if tg_link.file_id is None:
+            raise IOError("file has no telegram file_id yet")
         result = await self.bot.download(tg_link.file_id, BytesIO())
         if not result:
             raise IOError

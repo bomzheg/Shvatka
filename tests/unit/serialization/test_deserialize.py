@@ -64,6 +64,20 @@ def test_deserialize_bonus_hint_without_correct_guid(
         parse_uploaded_game(no_file_guid_scn, retort)
 
 
+def test_reupload_scenario_with_file_without_tg_file_id(
+    complex_scn: RawGameScenario, retort: Retort
+):
+    """A file that was never uploaded to telegram has ``tg_link.file_id == None``.
+
+    Such scenarios must still be re-uploadable (regression for #298).
+    """
+    scn = deepcopy(complex_scn.scn)
+    scn["files"][0]["tg_link"]["file_id"] = None
+    game = parse_uploaded_game(RawGameScenario(scn=scn, files=complex_scn.files), retort)
+    assert game.files[0].tg_link is not None
+    assert game.files[0].tg_link.file_id is None
+
+
 def test_deserialize_all_types(all_types_scn: RawGameScenario, retort: Retort):
     game_scn = parse_game(all_types_scn, retort)
     hints = game_scn.levels[0].time_hints

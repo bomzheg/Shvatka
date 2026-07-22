@@ -8,8 +8,8 @@ from shvatka.core.models.enums.hint_type import HintType
 
 @dataclass
 class TgLink:
-    file_id: str
-    """telegram file_id"""
+    file_id: str | None
+    """telegram file_id (``None`` until the file is uploaded to telegram)"""
     content_type: HintType
     """type of content"""
 

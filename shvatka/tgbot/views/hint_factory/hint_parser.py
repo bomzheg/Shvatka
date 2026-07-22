@@ -133,7 +133,6 @@ class HintParser:
         guid: str,
     ) -> hints.FileMeta:
         filename = tg_link.filename or "unknown"
-        assert tg_link.file_id is not None
         content = await self.bot.download(tg_link.file_id, BytesIO())
         assert content is not None
         extension = "".join(Path(filename).suffixes)

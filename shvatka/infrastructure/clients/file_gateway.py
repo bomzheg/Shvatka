@@ -59,7 +59,6 @@ class BotFileGateway(FileGateway):
         await msg.delete()
         tg_link = parse_message(msg)
         assert tg_link
-        assert tg_link.file_id is not None
         await self.dao.update_file_id(file_meta.guid, tg_link.file_id)
 
     async def download_from_tg(self, tg_link: hints.TgLink) -> BinaryIO:

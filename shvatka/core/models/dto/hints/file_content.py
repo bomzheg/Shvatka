@@ -72,4 +72,6 @@ class SavedFileMeta(VerifiableFileMeta):
 
 @dataclass
 class ParsedTgLink(TgLink):
+    file_id: str
+    """always present: a link parsed from a live telegram message has a file_id"""
     filename: str | None = None

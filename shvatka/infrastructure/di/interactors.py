@@ -44,6 +44,7 @@ from shvatka.core.notifications.request_interactors import (
     CreateTeamJoinInviteInteractor,
     CreateTeamJoinRequestInteractor,
     CreateOrgInviteInteractor,
+    CreatePromotionInviteInteractor,
     CreateTeamMergeRequestInteractor,
     CreatePlayerMergeRequestInteractor,
     AcceptRequestInteractor,
@@ -566,6 +567,21 @@ class RequestProvider(Provider):
         )
 
     @provide
+    def create_promotion_invite(
+        self,
+        dao: HolderDao,
+        requests: RequestStorage,
+        notifications: NotificationWriter,
+        notifier: RequestNotifier,
+    ) -> CreatePromotionInviteInteractor:
+        return CreatePromotionInviteInteractor(
+            requests=requests,
+            notifications=notifications,
+            player_dao=dao.player,
+            notifier=notifier,
+        )
+
+    @provide
     def create_team_merge_request(
         self,
         dao: HolderDao,
@@ -620,6 +636,7 @@ class RequestProvider(Provider):
             org_adder=dao.org_adder,
             team_merger=dao.team_merger,
             player_merger=dao.player_merger,
+            player_promoter=dao.player_promoter,
             game_log=game_log,
             team_notifier=team_notifier,
             org_notifier=org_notifier,

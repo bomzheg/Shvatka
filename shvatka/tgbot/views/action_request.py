@@ -84,6 +84,11 @@ class BotRequestNotifier(RequestNotifier):
                 author_name = payload.get("author_name", "Автор")
                 game_name = payload.get("game_name", "")
                 return f"{author_name} приглашает вас стать организатором игры {game_name}."
+            case RequestType.promotion:
+                return (
+                    f"{payload.get('inviter_name', 'Игрок')} предлагает наделить вас "
+                    f"полномочиями автора (аппрувом) — для написания игр и создания команд."
+                )
             case RequestType.team_merge:
                 return (
                     f"Капитан {hd.quote(payload.get('captain_name', ''))} "

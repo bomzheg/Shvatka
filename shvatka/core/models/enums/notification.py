@@ -15,6 +15,7 @@ class NotificationType(enum.Enum):
     org_invite = enum.auto()
     team_merge_request = enum.auto()
     player_merge_request = enum.auto()
+    promotion_invite = enum.auto()
     request_accepted = enum.auto()
     request_declined = enum.auto()
 

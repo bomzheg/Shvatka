@@ -196,3 +196,8 @@ class TeamJoinRequest:
 class OrgInvite:
     game_id: int
     player_id: int
+
+
+@dataclass
+class PromotionInvite:
+    player_id: int

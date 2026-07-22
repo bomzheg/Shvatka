@@ -196,6 +196,8 @@ it's testable without the web layer.
   invites a player.
 - `POST /requests/team-join` `{team_id}` — player asks to join.
 - `POST /requests/org-invite` `{game_id, player_id}` — invite an org.
+- `POST /requests/promotion-invite` `{player_id}` — an author invites a player
+  to be promoted to author ("аппрув"); the target accepts to get the rights.
 - `POST /requests/{id}/accept`
 - `POST /requests/{id}/decline`
 - `POST /requests/{id}/cancel` — initiator withdraws.

@@ -155,6 +155,81 @@ async def test_team_join_invite_and_accept(
 
 
 @pytest.mark.asyncio
+async def test_promotion_invite_and_accept(
+    client: AsyncClient,
+    harry: dto.Player,
+    hermione: dto.Player,
+    harry_token: Token,
+    hermione_token: Token,
+    check_dao: HolderDao,
+    bot_session: BaseSession,
+):
+    session = typing.cast(MagicMock, bot_session)
+    session.side_effect = [
+        Message(message_id=1, chat=create_tg_chat(), date=datetime.now(tz=tz_utc)),
+    ]
+    assert (await check_dao.player.get_by_id(hermione.id)).can_be_author is False
+
+    invite = await client.post(
+        "/requests/promotion-invite",
+        cookies=auth_cookies(harry_token),
+        json={"player_id": hermione.id},
+        follow_redirects=True,
+    )
+    assert invite.is_success
+    invite.read()
+    request_id = invite.json()["id"]
+    assert invite.json()["type"] == "promotion"
+    assert invite.json()["status"] == "pending"
+
+    # hermione sees the invite as incoming
+    incoming = await client.get(
+        "/requests",
+        params={"direction": "incoming", "pending": True},
+        cookies=auth_cookies(hermione_token),
+        follow_redirects=True,
+    )
+    incoming.read()
+    assert request_id in [r["id"] for r in incoming.json()["items"]]
+
+    # hermione accepts -> gets author rights
+    accept = await client.post(
+        f"/requests/{request_id}/accept",
+        cookies=auth_cookies(hermione_token),
+        follow_redirects=True,
+    )
+    assert accept.is_success
+    accept.read()
+    assert accept.json()["status"] == "accepted"
+
+    assert (await check_dao.player.get_by_id(hermione.id)).can_be_author is True
+
+
+@pytest.mark.asyncio
+async def test_promotion_invite_forbidden_for_non_author(
+    client: AsyncClient,
+    hermione: dto.Player,
+    harry: dto.Player,
+    hermione_token: Token,
+    bot_session: BaseSession,
+):
+    session = typing.cast(MagicMock, bot_session)
+    session.side_effect = [
+        Message(message_id=1, chat=create_tg_chat(), date=datetime.now(tz=tz_utc)),
+    ]
+    # hermione is not an author, so she cannot promote anyone
+    resp = await client.post(
+        "/requests/promotion-invite",
+        cookies=auth_cookies(hermione_token),
+        json={"player_id": harry.id},
+        follow_redirects=True,
+    )
+    assert resp.status_code == 422
+    resp.read()
+    assert resp.json()["type"] == "CantBeAuthor"
+
+
+@pytest.mark.asyncio
 async def test_team_join_invite_accept_forbidden_for_stranger(
     client: AsyncClient,
     harry: dto.Player,

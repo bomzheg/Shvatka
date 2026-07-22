@@ -1,7 +1,5 @@
 import logging
-from io import BytesIO
 from typing import Annotated, Any
-from urllib.parse import quote
 
 from adaptix import Retort
 from dishka.integrations.fastapi import FromDishka
@@ -18,6 +16,7 @@ from shvatka.core.games.interactors import (
     GamePlayReaderInteractor,
     GameKeysReaderInteractor,
     GameStatReaderInteractor,
+    GameResultsFileInteractor,
     CheckKeyInteractor,
     GamePlayRoleReader,
 )
@@ -42,10 +41,8 @@ from shvatka.core.services.game import (
     get_completed_games,
     get_full_game,
 )
-from shvatka.core.services.game_stat import get_game_stat as read_game_stat
 from shvatka.core.services.scenario.files import get_file_metas
 from shvatka.infrastructure.db.dao.holder import HolderDao
-from shvatka.infrastructure.printer.results import export_results
 
 XLSX_MEDIA_TYPE = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 
@@ -183,24 +180,14 @@ async def get_game_stat(
 @inject
 async def export_game_results(
     identity: FromDishka[ApiIdentityProvider],
-    dao: FromDishka[HolderDao],
+    interactor: FromDishka[GameResultsFileInteractor],
     id_: Annotated[int, Path(alias="id")],
 ) -> Response:
-    game = await get_full_game(id_=id_, identity=identity, dao=dao.game)
-    game_stat = await read_game_stat(game=game, identity=identity, dao=dao.game_stat)
-    file = BytesIO()
-    export_results(game=game, game_stat=game_stat, file=file)
-    filename = f"{game.name}.xlsx"
-    if filename.isascii():
-        fallback = filename
-    else:
-        fallback = "results.xlsx"
-    encoded = quote(filename, safe="")
-    content_disposition = f"attachment; filename=\"{fallback}\"; filename*=UTF-8''{encoded}"
+    file = await interactor(game_id=id_, identity=identity)
     return Response(
-        content=file.getvalue(),
+        content=file.read(),
         media_type=XLSX_MEDIA_TYPE,
-        headers={"Content-Disposition": content_disposition},
+        headers={"Content-Disposition": f'attachment; filename="results_{id_}.xlsx"'},
     )
 
 

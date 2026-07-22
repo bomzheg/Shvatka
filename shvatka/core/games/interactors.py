@@ -5,7 +5,9 @@ from datetime import datetime
 
 from shvatka.core.games.dto import CurrentHintsAndKeys, MyRole
 from shvatka.core.games.game_play import schedule_first_hint
+from shvatka.core.games.results import build_results_table
 from shvatka.core.interfaces.clients.file_storage import FileGateway
+from shvatka.core.interfaces.printer import TablePrinter
 from shvatka.core.games.adapters import (
     GameFileReader,
     GameKeysReader,
@@ -21,7 +23,11 @@ from shvatka.core.interfaces.scheduler import Scheduler
 from shvatka.core.models import dto, enums
 from shvatka.core.models.dto import action
 from shvatka.core.models.dto.hints import VerifiableFileMeta
-from shvatka.core.services.game_stat import get_typed_keys, get_game_stat_with_hints
+from shvatka.core.services.game_stat import (
+    get_typed_keys,
+    get_game_stat,
+    get_game_stat_with_hints,
+)
 from shvatka.core.services.key import TimerProcessor, KeyProcessor
 from shvatka.core.services.organizers import get_spying_orgs, get_by_player_or_none
 from shvatka.core.utils import exceptions
@@ -62,6 +68,17 @@ class GameStatReaderInteractor:
         player = await identity.get_required_player()
         game = await self.dao.get_by_id(game_id)
         return await get_game_stat_with_hints(game, player, self.dao)
+
+
+class GameResultsFileInteractor:
+    def __init__(self, dao: GameStatReader, printer: TablePrinter):
+        self.dao = dao
+        self.printer = printer
+
+    async def __call__(self, game_id: int, identity: IdentityProvider) -> typing.BinaryIO:
+        game = await self.dao.get_full(game_id)
+        game_stat = await get_game_stat(game, identity, self.dao)
+        return self.printer.print_table(build_results_table(game, game_stat))
 
 
 class GameFileReaderInteractor:

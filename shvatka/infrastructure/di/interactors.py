@@ -23,6 +23,11 @@ from shvatka.core.games.editor_interactors import (
     UploadGameFileInteractor,
     RenameGameFileInteractor,
 )
+from shvatka.core.games.admin_interactors import (
+    AdminUpdateGameScenarioInteractor,
+    AdminUploadGameFileInteractor,
+)
+from shvatka.core.games.adapters import AdminGameScenarioEditor
 from shvatka.core.games.org_interactors import (
     ListGameOrgsInteractor,
     AddGameOrgInteractor,
@@ -153,7 +158,11 @@ from shvatka.infrastructure.db.dao.complex.player import (
     AdminPlayerReaderImpl,
     AdminPlayerWaiverPointsReaderImpl,
 )
-from shvatka.infrastructure.db.dao.complex.game import GameFilesGetterImpl, GameScenarioEditorImpl
+from shvatka.infrastructure.db.dao.complex.game import (
+    AdminGameScenarioEditorImpl,
+    GameFilesGetterImpl,
+    GameScenarioEditorImpl,
+)
 from shvatka.infrastructure.db.dao.complex.game import (
     GameFileRenamerImpl,
     GameFileUploaderImpl,
@@ -476,6 +485,13 @@ class AdminProvider(Provider):
     @provide
     def admin_search_players(self, dao: HolderDao) -> AdminSearchPlayersInteractor:
         return AdminSearchPlayersInteractor(dao=dao.player)
+
+    admin_update_scenario = provide(AdminUpdateGameScenarioInteractor)
+    admin_upload_file = provide(AdminUploadGameFileInteractor)
+
+    @provide
+    def admin_game_scenario_editor(self, dao: HolderDao) -> AdminGameScenarioEditor:
+        return AdminGameScenarioEditorImpl(dao=dao)
 
     @provide
     def admin_otl(

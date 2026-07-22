@@ -119,6 +119,26 @@ class GameScenarioEditorImpl(GameUpserterImpl):
 
 
 @dataclass
+class AdminGameScenarioEditorImpl(GameScenarioEditorImpl):
+    """Scenario editor for admins: also reassigns the game's author.
+
+    ``transfer`` moves the game to another author; ``get_player_by_id`` resolves
+    the target player. Everything else is inherited from the regular editor."""
+
+    async def transfer(self, game: dto.Game, new_author: dto.Player) -> None:
+        await self.dao.game.transfer(game, new_author)
+
+    async def transfer_levels(self, game: dto.Game, new_author: dto.Player) -> None:
+        await self.dao.level.transfer_game_levels(game, new_author)
+
+    async def link_to_game(self, level: dto.Level, game: dto.Game) -> dto.GamedLevel:
+        return await self.dao.level.link_to_game(level, game)
+
+    async def get_player_by_id(self, id_: int) -> dto.Player:
+        return await self.dao.player.get_by_id(id_)
+
+
+@dataclass
 class GameCreatorImpl(FileLinkMixin, GameCreator):
     async def create_game(self, author: dto.Player, name: str) -> dto.Game:
         return await self.dao.game.create_game(author, name)

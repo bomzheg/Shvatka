@@ -21,9 +21,33 @@ from tests.fixtures.user_constants import (
 
 GAME_START_AT = datetime(2025, 4, 12, 16, 0, tzinfo=timezone.utc)
 
+# Scenario body for PUT /admin/games/{id}/scenario.
+ADMIN_SCENARIO: dict = {
+    "name": "admin edited game",
+    "__model_version__": 1,
+    "files": [],
+    "levels": [
+        {
+            "id": "first",
+            "__model_version__": 1,
+            "conditions": [{"type": "WIN_KEY", "keys": ["SH123"]}],
+            "time_hints": [
+                {"time": 0, "hint": [{"type": "text", "text": "загадка"}]},
+            ],
+        },
+    ],
+}
+
 
 def auth_cookies(token: Token) -> dict[str, str]:
     return {"Authorization": f"{token.token_type} {token.access_token}"}
+
+
+async def complete_game(game: dto.FullGame, dao: HolderDao) -> None:
+    """Bring a freshly built game to the ``complete`` status (uneditable by author)."""
+    await dao.game.set_number(game, await dao.game.get_max_number() + 1)
+    await dao.game.set_completed(game)
+    await dao.commit()
 
 
 @pytest_asyncio.fixture
@@ -535,3 +559,148 @@ async def test_merge_forbidden_for_non_superuser(
         follow_redirects=True,
     )
     assert resp.status_code == 403
+
+
+@pytest.mark.asyncio
+async def test_admin_edit_completed_game_scenario(
+    client: AsyncClient,
+    admin_token: Token,
+    game: dto.FullGame,
+    author: dto.Player,
+    dao: HolderDao,
+    check_dao: HolderDao,
+):
+    await complete_game(game, dao)
+    resp = await client.put(
+        f"/admin/games/{game.id}/scenario",
+        json={"scenario": ADMIN_SCENARIO},
+        cookies=auth_cookies(admin_token),
+        follow_redirects=True,
+    )
+    assert resp.is_success, resp.text
+    body = resp.json()
+    assert body["id"] == game.id
+    assert body["name"] == ADMIN_SCENARIO["name"]
+    assert len(body["levels"]) == len(ADMIN_SCENARIO["levels"])
+    stored = await check_dao.game.get_full(game.id)
+    assert stored.name == ADMIN_SCENARIO["name"]
+    assert len(stored.levels) == len(ADMIN_SCENARIO["levels"])
+    # the game stays completed; only its scenario changed
+    assert stored.is_complete()
+    # author is untouched when author_id is not supplied
+    assert stored.author.id == author.id
+
+
+@pytest.mark.asyncio
+async def test_admin_change_completed_game_author(
+    client: AsyncClient,
+    admin_token: Token,
+    harry: dto.Player,
+    game: dto.FullGame,
+    dao: HolderDao,
+    check_dao: HolderDao,
+):
+    await complete_game(game, dao)
+    resp = await client.put(
+        f"/admin/games/{game.id}/scenario",
+        json={"scenario": ADMIN_SCENARIO, "author_id": harry.id},
+        cookies=auth_cookies(admin_token),
+        follow_redirects=True,
+    )
+    assert resp.is_success, resp.text
+    assert resp.json()["author"]["id"] == harry.id
+    stored = await check_dao.game.get_by_id(game.id)
+    assert stored.author.id == harry.id
+
+
+@pytest.mark.asyncio
+async def test_admin_edit_game_forbidden_for_non_superuser(
+    client: AsyncClient,
+    hermione_token: Token,
+    game: dto.FullGame,
+    dao: HolderDao,
+):
+    await complete_game(game, dao)
+    resp = await client.put(
+        f"/admin/games/{game.id}/scenario",
+        json={"scenario": ADMIN_SCENARIO},
+        cookies=auth_cookies(hermione_token),
+        follow_redirects=True,
+    )
+    assert resp.status_code == 403
+
+
+@pytest.mark.asyncio
+async def test_admin_upload_file_to_completed_game(
+    client: AsyncClient,
+    admin_token: Token,
+    game: dto.FullGame,
+    author: dto.Player,
+    dao: HolderDao,
+    check_dao: HolderDao,
+):
+    await complete_game(game, dao)
+    resp = await client.post(
+        f"/admin/games/{game.id}/files",
+        files={"file": ("note.txt", b"admin uploaded", "text/plain")},
+        cookies=auth_cookies(admin_token),
+        follow_redirects=True,
+    )
+    assert resp.is_success, resp.text
+    body = resp.json()
+    assert body["guid"]
+    assert body["original_filename"] == "note"
+    assert body["extension"] == ".txt"
+    stored = await check_dao.file_info.get_by_guid(body["guid"])
+    # the uploaded file is owned by the game's author, not the acting admin
+    assert stored.author_id == author.id
+
+
+@pytest.mark.asyncio
+async def test_admin_upload_file_forbidden_for_non_superuser(
+    client: AsyncClient,
+    hermione_token: Token,
+    game: dto.FullGame,
+    dao: HolderDao,
+):
+    await complete_game(game, dao)
+    resp = await client.post(
+        f"/admin/games/{game.id}/files",
+        files={"file": ("note.txt", b"nope", "text/plain")},
+        cookies=auth_cookies(hermione_token),
+        follow_redirects=True,
+    )
+    assert resp.status_code == 403
+
+
+@pytest.mark.asyncio
+async def test_admin_edit_non_completed_game_hidden(
+    client: AsyncClient,
+    admin_token: Token,
+    game: dto.FullGame,
+):
+    # the game is under construction (not completed) — an admin must not reach it
+    resp = await client.put(
+        f"/admin/games/{game.id}/scenario",
+        json={"scenario": ADMIN_SCENARIO},
+        cookies=auth_cookies(admin_token),
+        follow_redirects=True,
+    )
+    assert resp.status_code == 404, resp.text
+    assert resp.json()["type"] == "GameNotFound"
+
+
+@pytest.mark.asyncio
+async def test_admin_upload_file_non_completed_game_hidden(
+    client: AsyncClient,
+    admin_token: Token,
+    game: dto.FullGame,
+):
+    resp = await client.post(
+        f"/admin/games/{game.id}/files",
+        files={"file": ("note.txt", b"nope", "text/plain")},
+        cookies=auth_cookies(admin_token),
+        follow_redirects=True,
+    )
+    assert resp.status_code == 404, resp.text
+    assert resp.json()["type"] == "GameNotFound"

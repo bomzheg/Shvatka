@@ -166,6 +166,14 @@ class LevelDao(BaseDAO[models.Level]):
             )
         )
 
+    async def transfer_game_levels(self, game: dto.Game, new_author: dto.Player) -> None:
+        """Reassign every level of ``game`` to ``new_author`` (used by admin edits)."""
+        await self.session.execute(
+            update(models.Level)
+            .where(models.Level.game_id == game.id)
+            .values(author_id=new_author.id)
+        )
+
     async def link_to_game(self, level: dto.Level, game: dto.Game) -> dto.GamedLevel:
         max_level = await self.get_max_level_number(game)
         await self.session.execute(

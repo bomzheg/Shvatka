@@ -1,14 +1,20 @@
+from io import BytesIO
 from typing import Annotated
 
+from adaptix import Retort
 from dishka import FromDishka
 from dishka.integrations.fastapi import inject
-from fastapi import APIRouter, Body, HTTPException
+from fastapi import APIRouter, Body, File, HTTPException, UploadFile
 from fastapi.params import Path, Query
 
 from shvatka.api.config.models.main import ApiConfig
 from shvatka.api.dependencies.auth import ApiIdentityProvider
 from shvatka.api.models import req, responses
 from shvatka.api.routes.waivers import WaiversDto
+from shvatka.core.games.admin_interactors import (
+    AdminUpdateGameScenarioInteractor,
+    AdminUploadGameFileInteractor,
+)
 from shvatka.core.models import dto
 from shvatka.core.players.admin_interactors import (
     AdminChangePlayerTgInteractor,
@@ -19,6 +25,7 @@ from shvatka.core.players.admin_interactors import (
     AdminSetPlayerEmailInteractor,
 )
 from shvatka.core.services.one_time_link import GenerateOneTimeLoginLinkForPlayerInteractor
+from shvatka.core.services.scenario.files import get_file_metas
 from shvatka.core.teams.admin_interactors import AdminMergeTeamsInteractor
 from shvatka.core.utils import exceptions
 from shvatka.core.waiver.admin_interactors import (
@@ -26,6 +33,7 @@ from shvatka.core.waiver.admin_interactors import (
     AdminPollReaderInteractor,
     AdminRemovePollVoteInteractor,
 )
+from shvatka.infrastructure.db.dao.holder import HolderDao
 
 
 @inject
@@ -178,6 +186,42 @@ async def get_waivers_by_game(
     return WaiversDto.from_core(await interactor(identity, id_))
 
 
+@inject
+async def change_game_scenario(
+    identity: FromDishka[ApiIdentityProvider],
+    interactor: FromDishka[AdminUpdateGameScenarioInteractor],
+    dao: FromDishka[HolderDao],
+    retort: FromDishka[Retort],
+    id_: Annotated[int, Path(alias="id")],
+    body: Annotated[req.AdminGameScenarioEdit, Body()],
+) -> responses.FullGame:
+    game = await interactor(
+        game_id=id_,
+        raw_scn=body.scenario,
+        new_author_id=body.author_id,
+        identity=identity,
+    )
+    files = await get_file_metas(game, identity, dao.game_packager)
+    return responses.FullGame.from_core(retort, game, files)
+
+
+@inject
+async def upload_game_file(
+    identity: FromDishka[ApiIdentityProvider],
+    interactor: FromDishka[AdminUploadGameFileInteractor],
+    id_: Annotated[int, Path(alias="id")],
+    file: Annotated[UploadFile, File()],
+) -> responses.UploadedFile:
+    content = BytesIO(await file.read())
+    saved = await interactor(
+        game_id=id_,
+        content=content,
+        original_filename=file.filename or "document",
+        identity=identity,
+    )
+    return responses.UploadedFile.from_core(saved)
+
+
 def setup() -> APIRouter:
     router = APIRouter(prefix="/admin", tags=["admin"])
     router.add_api_route("/players", list_players, methods=["GET"])
@@ -196,4 +240,6 @@ def setup() -> APIRouter:
     router.add_api_route("/players/merge", merge_players, methods=["POST"])
     router.add_api_route("/teams/merge", merge_teams, methods=["POST"])
     router.add_api_route("/waivers/game/{id}", get_waivers_by_game, methods=["GET"])
+    router.add_api_route("/games/{id}/scenario", change_game_scenario, methods=["PUT"])
+    router.add_api_route("/games/{id}/files", upload_game_file, methods=["POST"])
     return router

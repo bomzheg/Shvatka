@@ -10,6 +10,11 @@ import magic
 from shvatka.common.config.models.main import FileStorageConfig
 from shvatka.core.interfaces.clients.file_storage import FileStorage
 from shvatka.core.models.dto import hints
+from shvatka.infrastructure.clients.image_converter import (
+    JPEG_EXTENSION,
+    convert_heic_to_jpeg,
+    is_heic,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -40,9 +45,17 @@ class LocalFileStorage(FileStorage):
 
     async def put(self, file_meta: hints.UploadedFileMeta, content: BinaryIO) -> hints.FileMeta:
         data = content.read()
-        sha256 = compute_sha256(data)
         mime_type = detect_mime_type(data)
         extension = file_meta.extension or extension_from_mime(mime_type)
+        if is_heic(mime_type):
+            # HEIC/HEIF can't be shown in browsers and isn't supported by Telegram,
+            # so transcode it to JPEG before storing (see issue #289).
+            converted = convert_heic_to_jpeg(data)
+            if converted is not data:
+                data = converted
+                mime_type = detect_mime_type(data)
+                extension = JPEG_EXTENSION
+        sha256 = compute_sha256(data)
         local_name = file_meta.guid + extension
         file_content_link = await self.put_content(local_name, BytesIO(data))
         return hints.FileMeta(

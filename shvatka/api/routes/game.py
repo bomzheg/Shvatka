@@ -1,11 +1,14 @@
 import logging
+from io import BytesIO
 from typing import Annotated, Any
+from urllib.parse import quote
 
 from adaptix import Retort
 from dishka.integrations.fastapi import FromDishka
 from dishka.integrations.fastapi import inject
 from fastapi import APIRouter, Body, HTTPException
 from fastapi.params import Path
+from fastapi.responses import Response
 
 from shvatka.api.dependencies.auth import ApiIdentityProvider
 from shvatka.api.models import responses, req
@@ -39,8 +42,12 @@ from shvatka.core.services.game import (
     get_completed_games,
     get_full_game,
 )
+from shvatka.core.services.game_stat import get_game_stat as read_game_stat
 from shvatka.core.services.scenario.files import get_file_metas
 from shvatka.infrastructure.db.dao.holder import HolderDao
+from shvatka.infrastructure.printer.results import export_results
+
+XLSX_MEDIA_TYPE = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 
 
 logger = logging.getLogger(__name__)
@@ -174,6 +181,30 @@ async def get_game_stat(
 
 
 @inject
+async def export_game_results(
+    identity: FromDishka[ApiIdentityProvider],
+    dao: FromDishka[HolderDao],
+    id_: Annotated[int, Path(alias="id")],
+) -> Response:
+    game = await get_full_game(id_=id_, identity=identity, dao=dao.game)
+    game_stat = await read_game_stat(game=game, identity=identity, dao=dao.game_stat)
+    file = BytesIO()
+    export_results(game=game, game_stat=game_stat, file=file)
+    filename = f"{game.name}.xlsx"
+    if filename.isascii():
+        fallback = filename
+    else:
+        fallback = "results.xlsx"
+    encoded = quote(filename, safe="")
+    content_disposition = f"attachment; filename=\"{fallback}\"; filename*=UTF-8''{encoded}"
+    return Response(
+        content=file.getvalue(),
+        media_type=XLSX_MEDIA_TYPE,
+        headers={"Content-Disposition": content_disposition},
+    )
+
+
+@inject
 async def get_current_level(
     identity: FromDishka[ApiIdentityProvider],
     interactor: FromDishka[GamePlayReaderInteractor],
@@ -281,6 +312,7 @@ def setup() -> APIRouter:
     games_router.add_api_route("/{id}", get_game_card, methods=["GET"])
     games_router.add_api_route("/{id}/keys", get_game_keys, methods=["GET"])
     games_router.add_api_route("/{id}/stat", get_game_stat, methods=["GET"])
+    games_router.add_api_route("/{id}/stat/export", export_game_results, methods=["GET"])
     org_router = APIRouter(prefix="/games", tags=["game orgs"])
     org_router.add_api_route("/{id}/organizers", get_game_organizers, methods=["GET"])
     org_router.add_api_route("/{id}/organizers", add_game_organizer, methods=["POST"])

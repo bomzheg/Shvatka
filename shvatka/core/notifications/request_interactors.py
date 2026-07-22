@@ -237,9 +237,7 @@ class CreatePromotionInviteInteractor:
     player_dao: PlayerByIdGetter
     notifier: RequestNotifier
 
-    async def __call__(
-        self, identity: IdentityProvider, player_id: int
-    ) -> ndto.ActionRequest:
+    async def __call__(self, identity: IdentityProvider, player_id: int) -> ndto.ActionRequest:
         author = await identity.get_required_player()
         check_allow_be_author(author)
         target = await self.player_dao.get_by_id(player_id)

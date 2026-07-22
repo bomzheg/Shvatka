@@ -23,6 +23,7 @@ from shvatka.core.interfaces.dal.complex import TeamMerger
 from shvatka.core.interfaces.dal.organizer import OrgAdder
 from shvatka.core.interfaces.dal.player import (
     PlayerByIdGetter,
+    PlayerPromoter,
     TeamJoiner,
     TeamPlayerGetter,
     TeamPlayersGetter,
@@ -42,13 +43,20 @@ from shvatka.core.notifications.adapters import (
 )
 from shvatka.core.players.dto import TimelineItem
 from shvatka.core.players.interfaces import PlayerMerger
-from shvatka.core.players.player import check_can_add_players, join_team, merge_players
+from shvatka.core.players.player import (
+    check_allow_be_author,
+    check_can_add_players,
+    join_team,
+    merge_players,
+    promote,
+)
 from shvatka.core.services.game import get_game
 from shvatka.core.services.organizers import check_allow_manage_orgs, get_orgs
 from shvatka.core.services.team import get_team_by_id, merge_teams
 from shvatka.core.utils.defaults_constants import DEFAULT_ROLE
 from shvatka.core.utils.exceptions import (
     PlayerRestoredInTeam,
+    PromoteError,
     RequestNotPending,
     RequestPermissionError,
 )
@@ -217,6 +225,55 @@ class CreateOrgInviteInteractor:
 
 
 @dataclass
+class CreatePromotionInviteInteractor:
+    """An author invites a player to be promoted to author (get "аппрув").
+
+    The target accepts the request to actually receive author rights, mirroring
+    the inline-invite / confirm flow the bot exposes.
+    """
+
+    requests: RequestStorage
+    notifications: NotificationWriter
+    player_dao: PlayerByIdGetter
+    notifier: RequestNotifier
+
+    async def __call__(self, identity: IdentityProvider, player_id: int) -> ndto.ActionRequest:
+        author = await identity.get_required_player()
+        check_allow_be_author(author)
+        target = await self.player_dao.get_by_id(player_id)
+        if target.can_be_author:
+            raise PromoteError(text="user already have author rights", player=author)
+        existing = await self.requests.get_pending(
+            type_=RequestType.promotion, target_player_id=target.id
+        )
+        if existing is not None:
+            return existing
+        payload = {
+            "inviter_id": author.id,
+            "inviter_name": author.name_mention,
+            "player_id": target.id,
+            "player_name": target.name_mention,
+        }
+        request = await self.requests.create(
+            type_=RequestType.promotion,
+            initiator_id=author.id,
+            target_player_id=target.id,
+            payload=payload,
+        )
+        await self.notifications.create(
+            recipient_id=target.id,
+            type_=NotificationType.promotion_invite,
+            severity=NotificationSeverity.normal,
+            actor_id=author.id,
+            payload=payload,
+            request_id=request.id,
+        )
+        await self.notifier.notify_created(request)
+        await self.requests.commit()
+        return request
+
+
+@dataclass
 class CreateTeamMergeRequestInteractor:
     """A captain asks the admins to merge their team with its forum copy."""
 
@@ -336,6 +393,7 @@ class AcceptRequestInteractor:
     org_adder: OrgAdder
     team_merger: TeamMerger
     player_merger: PlayerMerger
+    player_promoter: PlayerPromoter
     game_log: GameLogWriter
     team_notifier: TeamNotifier
     org_notifier: OrgNotifier
@@ -369,6 +427,8 @@ class AcceptRequestInteractor:
                 return await self._accept_team_merge(identity, request)
             case RequestType.player_merge:
                 return await self._accept_player_merge(identity, request, timeline)
+            case RequestType.promotion:
+                return await self._accept_promotion(actor, request)
         raise RequestNotPending(player=actor)  # pragma: no cover - exhaustive match
 
     async def _accept_team_join_invite(
@@ -415,6 +475,19 @@ class AcceptRequestInteractor:
         org = await self.org_adder.add_new_org(game, actor)
         await self.requests.commit()
         await self.org_notifier.notify(NewOrg(orgs_list=notify_orgs, game=game, org=org))
+        await self._submit_resolved(updated)
+        return updated
+
+    async def _accept_promotion(
+        self, actor: dto.Player, request: ndto.ActionRequest
+    ) -> ndto.ActionRequest:
+        if request.target_player_id != actor.id:
+            raise RequestPermissionError(player=actor)
+        inviter = await self.player_dao.get_by_id(request.initiator_id)
+        updated = await self._resolve(request, RequestStatus.accepted, actor)
+        await self._notify_initiator(request, NotificationType.request_accepted, actor)
+        # promote commits, taking the resolution and notification along
+        await promote(inviter, actor, self.player_promoter)
         await self._submit_resolved(updated)
         return updated
 

@@ -13,6 +13,7 @@ from shvatka.core.notifications import request_interactors
 from shvatka.core.notifications.request_interactors import (
     CreateTeamJoinInviteInteractor,
     CreateTeamJoinRequestInteractor,
+    CreatePromotionInviteInteractor,
     CreateTeamMergeRequestInteractor,
     CreatePlayerMergeRequestInteractor,
     CancelRequestInteractor,
@@ -23,7 +24,9 @@ from shvatka.core.notifications.request_interactors import (
 from shvatka.core.players.dto import TimelineItem
 from shvatka.core.utils.datetime_utils import tz_utc
 from shvatka.core.utils.exceptions import (
+    CantBeAuthor,
     NotAuthorizedForAdmin,
+    PromoteError,
     RequestNotPending,
     RequestPermissionError,
 )
@@ -181,6 +184,18 @@ class FakePlayerDao:
 
     async def get_by_id(self, player_id: int) -> dto.Player:
         return self._players[player_id]
+
+
+class FakePromoter:
+    def __init__(self) -> None:
+        self.promoted: list[tuple[int, int]] = []
+        self.commits = 0
+
+    async def promote(self, actor: dto.Player, target: dto.Player) -> None:
+        self.promoted.append((actor.id, target.id))
+
+    async def commit(self) -> None:
+        self.commits += 1
 
 
 class FakeTeamPlayersDao:
@@ -359,6 +374,7 @@ def _accept_interactor(
     notifications: FakeNotifications | None = None,
     team_dao=None,
     player_dao=None,
+    player_promoter=None,
     bus: FakeBus | None = None,
 ) -> AcceptRequestInteractor:
     return AcceptRequestInteractor(
@@ -371,6 +387,7 @@ def _accept_interactor(
         org_adder=SimpleNamespace(),
         team_merger=SimpleNamespace(),
         player_merger=SimpleNamespace(),
+        player_promoter=player_promoter or SimpleNamespace(),
         game_log=SimpleNamespace(),
         team_notifier=SimpleNamespace(),
         org_notifier=SimpleNamespace(),
@@ -408,6 +425,139 @@ async def test_accept_invite_wrong_actor_forbidden() -> None:
     )
     interactor = _accept_interactor(
         requests, team_dao=FakeTeamDao(_team()), player_dao=FakePlayerDao({1: _player(1)})
+    )
+    with pytest.raises(RequestPermissionError):
+        await interactor(FakeIdentity(_player(7)), request_id=1)
+
+
+def _author(id_: int, username: str = "author") -> dto.Player:
+    return dto.Player(id=id_, can_be_author=True, is_dummy=False, username=username)
+
+
+@pytest.mark.asyncio
+async def test_create_promotion_invite() -> None:
+    author = _author(1, "author")
+    target = _player(2, "target")
+    requests = FakeRequests()
+    notifications = FakeNotifications()
+    notifier = FakeNotifier()
+    interactor = CreatePromotionInviteInteractor(
+        requests=requests,
+        notifications=notifications,
+        player_dao=FakePlayerDao({2: target}),
+        notifier=notifier,
+    )
+    request = await interactor(FakeIdentity(author), player_id=2)
+    assert request.type == RequestType.promotion
+    assert request.initiator_id == 1
+    assert request.target_player_id == 2
+    assert requests.commits == 1
+    assert notifications.created[0]["recipient_id"] == 2
+    assert notifications.created[0]["request_id"] == request.id
+    assert notifier.created == [request]
+
+
+@pytest.mark.asyncio
+async def test_create_promotion_invite_requires_author() -> None:
+    not_author = _player(1, "plain")
+    interactor = CreatePromotionInviteInteractor(
+        requests=FakeRequests(),
+        notifications=FakeNotifications(),
+        player_dao=FakePlayerDao({2: _player(2)}),
+        notifier=FakeNotifier(),
+    )
+    with pytest.raises(CantBeAuthor):
+        await interactor(FakeIdentity(not_author), player_id=2)
+
+
+@pytest.mark.asyncio
+async def test_create_promotion_invite_rejects_existing_author() -> None:
+    author = _author(1, "author")
+    interactor = CreatePromotionInviteInteractor(
+        requests=FakeRequests(),
+        notifications=FakeNotifications(),
+        player_dao=FakePlayerDao({2: _author(2, "already")}),
+        notifier=FakeNotifier(),
+    )
+    with pytest.raises(PromoteError):
+        await interactor(FakeIdentity(author), player_id=2)
+
+
+@pytest.mark.asyncio
+async def test_create_promotion_invite_is_idempotent() -> None:
+    author = _author(1, "author")
+    requests = FakeRequests()
+    existing = ndto.ActionRequest(
+        id=77,
+        type=RequestType.promotion,
+        status=RequestStatus.pending,
+        initiator_id=1,
+        target_player_id=2,
+        created_at=datetime.now(tz=tz_utc),
+    )
+    requests.pending = existing
+    notifications = FakeNotifications()
+    interactor = CreatePromotionInviteInteractor(
+        requests=requests,
+        notifications=notifications,
+        player_dao=FakePlayerDao({2: _player(2)}),
+        notifier=FakeNotifier(),
+    )
+    request = await interactor(FakeIdentity(author), player_id=2)
+    assert request.id == 77
+    assert notifications.created == []
+    assert requests.commits == 0
+
+
+@pytest.mark.asyncio
+async def test_accept_promotion_promotes_target() -> None:
+    author = _author(1, "author")
+    target = _player(2, "target")
+    requests = FakeRequests()
+    requests.rows[1] = ndto.ActionRequest(
+        id=1,
+        type=RequestType.promotion,
+        status=RequestStatus.pending,
+        initiator_id=1,
+        target_player_id=2,
+        created_at=datetime.now(tz=tz_utc),
+        payload={"inviter_id": 1, "player_id": 2},
+    )
+    notifications = FakeNotifications()
+    promoter = FakePromoter()
+    bus = FakeBus()
+    interactor = _accept_interactor(
+        requests,
+        notifications=notifications,
+        player_dao=FakePlayerDao({1: author, 2: target}),
+        player_promoter=promoter,
+        bus=bus,
+    )
+    updated = await interactor(FakeIdentity(target), request_id=1)
+    assert updated.status == RequestStatus.accepted
+    assert updated.responder_id == 2
+    assert promoter.promoted == [(1, 2)]
+    assert promoter.commits == 1
+    assert notifications.created[0]["recipient_id"] == 1
+    assert bus.events == [ActionRequestResolved(request_id=1)]
+
+
+@pytest.mark.asyncio
+async def test_accept_promotion_wrong_actor_forbidden() -> None:
+    requests = FakeRequests()
+    requests.rows[1] = ndto.ActionRequest(
+        id=1,
+        type=RequestType.promotion,
+        status=RequestStatus.pending,
+        initiator_id=1,
+        target_player_id=2,
+        created_at=datetime.now(tz=tz_utc),
+        payload={"inviter_id": 1, "player_id": 2},
+    )
+    interactor = _accept_interactor(
+        requests,
+        player_dao=FakePlayerDao({1: _author(1), 2: _player(2)}),
+        player_promoter=FakePromoter(),
     )
     with pytest.raises(RequestPermissionError):
         await interactor(FakeIdentity(_player(7)), request_id=1)

@@ -9,6 +9,7 @@ from shvatka.core.notifications.request_interactors import (
     CreateTeamJoinInviteInteractor,
     CreateTeamJoinRequestInteractor,
     CreateOrgInviteInteractor,
+    CreatePromotionInviteInteractor,
     AcceptRequestInteractor,
     DeclineRequestInteractor,
     CancelRequestInteractor,
@@ -49,6 +50,16 @@ async def create_org_invite(
     body: Annotated[req.OrgInvite, Body()],
 ) -> responses.ActionRequest:
     request = await interactor(identity=identity, game_id=body.game_id, player_id=body.player_id)
+    return responses.ActionRequest.from_core(request)
+
+
+@inject
+async def create_promotion_invite(
+    identity: FromDishka[ApiIdentityProvider],
+    interactor: FromDishka[CreatePromotionInviteInteractor],
+    body: Annotated[req.PromotionInvite, Body()],
+) -> responses.ActionRequest:
+    request = await interactor(identity=identity, player_id=body.player_id)
     return responses.ActionRequest.from_core(request)
 
 
@@ -105,6 +116,7 @@ def setup() -> APIRouter:
     router.add_api_route("/team-join-invite", create_team_join_invite, methods=["POST"])
     router.add_api_route("/team-join", create_team_join_request, methods=["POST"])
     router.add_api_route("/org-invite", create_org_invite, methods=["POST"])
+    router.add_api_route("/promotion-invite", create_promotion_invite, methods=["POST"])
     router.add_api_route("/{id}/accept", accept_request, methods=["POST"])
     router.add_api_route("/{id}/decline", decline_request, methods=["POST"])
     router.add_api_route("/{id}/cancel", cancel_request, methods=["POST"])

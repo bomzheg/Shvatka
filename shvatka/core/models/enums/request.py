@@ -14,6 +14,8 @@ class RequestType(enum.Enum):
     """A captain asks admins to merge their team with its forum copy."""
     player_merge = enum.auto()
     """A player asks admins to merge their achievements with a forum copy."""
+    promotion = enum.auto()
+    """An author invites a player to be promoted to author (get "аппрув")."""
 
 
 class RequestStatus(enum.Enum):

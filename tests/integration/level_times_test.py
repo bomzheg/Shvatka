@@ -3,7 +3,7 @@ from datetime import timedelta, time
 
 from shvatka.core.models import dto
 from shvatka.core.utils.datetime_utils import trim_tz
-from shvatka.tgbot.views.results.level_times import (
+from shvatka.core.games.results import (
     to_results,
     GAME_NAME,
     FIRST_TEAM_NAME,

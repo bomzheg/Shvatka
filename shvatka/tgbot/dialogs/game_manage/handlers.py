@@ -30,7 +30,7 @@ from shvatka.infrastructure.crawler.game_scn.uploader.forum_scenario_uploader im
 from shvatka.infrastructure.crawler.game_scn.uploader.game_mapper import map_game_for_upload
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.tgbot import states
-from shvatka.tgbot.views.results.level_times import export_results
+from shvatka.infrastructure.printer.results import export_results
 
 
 async def select_my_game(c: CallbackQuery, widget: Any, manager: DialogManager, item_id: str):

@@ -6,6 +6,7 @@ from dishka.integrations.fastapi import FromDishka
 from dishka.integrations.fastapi import inject
 from fastapi import APIRouter, Body, HTTPException
 from fastapi.params import Path
+from fastapi.responses import Response
 
 from shvatka.api.dependencies.auth import ApiIdentityProvider
 from shvatka.api.models import responses, req
@@ -15,6 +16,7 @@ from shvatka.core.games.interactors import (
     GamePlayReaderInteractor,
     GameKeysReaderInteractor,
     GameStatReaderInteractor,
+    GameResultsFileInteractor,
     CheckKeyInteractor,
     GamePlayRoleReader,
 )
@@ -41,6 +43,8 @@ from shvatka.core.services.game import (
 )
 from shvatka.core.services.scenario.files import get_file_metas
 from shvatka.infrastructure.db.dao.holder import HolderDao
+
+XLSX_MEDIA_TYPE = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 
 
 logger = logging.getLogger(__name__)
@@ -174,6 +178,20 @@ async def get_game_stat(
 
 
 @inject
+async def export_game_results(
+    identity: FromDishka[ApiIdentityProvider],
+    interactor: FromDishka[GameResultsFileInteractor],
+    id_: Annotated[int, Path(alias="id")],
+) -> Response:
+    file = await interactor(game_id=id_, identity=identity)
+    return Response(
+        content=file.read(),
+        media_type=XLSX_MEDIA_TYPE,
+        headers={"Content-Disposition": f'attachment; filename="results_{id_}.xlsx"'},
+    )
+
+
+@inject
 async def get_current_level(
     identity: FromDishka[ApiIdentityProvider],
     interactor: FromDishka[GamePlayReaderInteractor],
@@ -281,6 +299,7 @@ def setup() -> APIRouter:
     games_router.add_api_route("/{id}", get_game_card, methods=["GET"])
     games_router.add_api_route("/{id}/keys", get_game_keys, methods=["GET"])
     games_router.add_api_route("/{id}/stat", get_game_stat, methods=["GET"])
+    games_router.add_api_route("/{id}/stat/export", export_game_results, methods=["GET"])
     org_router = APIRouter(prefix="/games", tags=["game orgs"])
     org_router.add_api_route("/{id}/organizers", get_game_organizers, methods=["GET"])
     org_router.add_api_route("/{id}/organizers", add_game_organizer, methods=["POST"])

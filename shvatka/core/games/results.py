@@ -1,14 +1,10 @@
 import typing
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import Any  # noqa: F401
 
 from shvatka.core.models import dto
 from shvatka.core.utils.datetime_utils import trim_tz
 from shvatka.core.utils.exceptions import GameNotFinished
-from shvatka.infrastructure.printer.table import (
-    print_table,
-)
 from shvatka.core.interfaces.printer import (
     DATETIME_EXCEL_FORMAT,
     CellAddress,
@@ -62,10 +58,10 @@ class Results:
     game_stat: dto.GameStat
 
 
-def export_results(game: dto.FullGame, game_stat: dto.GameStat, file: typing.Any) -> None:
+def build_results_table(game: dto.FullGame, game_stat: dto.GameStat) -> Table:
     if not (game.is_complete() or game.is_finished()):
         raise GameNotFinished
-    return print_table(results_to_table_routed(game, to_results(game_stat)), file)
+    return results_to_table_routed(game, to_results(game_stat))
 
 
 def results_to_table_routed(game: dto.FullGame, results: Results) -> Table:  # noqa: C901

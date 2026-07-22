@@ -21,7 +21,7 @@ from shvatka.tgbot.views.level import (
     render_effects_key_caption,
     render_effects_timer_caption,
 )
-from shvatka.tgbot.views.results.level_times import export_results
+from shvatka.infrastructure.printer.results import export_results
 
 
 class GamePublisher:

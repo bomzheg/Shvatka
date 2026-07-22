@@ -9,6 +9,7 @@ from shvatka.core.games.interactors import (
     GamePlayReaderInteractor,
     GameKeysReaderInteractor,
     GameStatReaderInteractor,
+    GameResultsFileInteractor,
     GamePlayTimerInteractor,
     CheckKeyInteractor,
     GamePlayRoleReader,
@@ -215,6 +216,7 @@ class GamePlayProvider(Provider):
         return GameStatReaderImpl(dao)
 
     get_game_state_interactor = provide(GameStatReaderInteractor)
+    get_game_results_file_interactor = provide(GameResultsFileInteractor)
 
     @provide
     def get_game_files(self, dao: HolderDao) -> GameFileReader:

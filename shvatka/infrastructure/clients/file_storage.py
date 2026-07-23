@@ -50,7 +50,7 @@ class LocalFileStorage(FileStorage):
             guid=file_meta.guid,
             original_filename=file_meta.original_filename,
             extension=extension,
-            tg_link=file_meta.tg_link,  # type: ignore
+            file_id=file_meta.file_id,
             content_type=file_meta.content_type,
             sha256=sha256,
             mime_type=mime_type,

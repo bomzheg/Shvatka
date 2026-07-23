@@ -197,7 +197,8 @@ async def test_send_by_content_when_file_id_missing(
 ):
     file_meta = hints.FileMeta(
         guid=GUID,
-        tg_link=hints.TgLink(file_id=None, content_type=enums.HintType.photo),
+        file_id=None,
+        content_type=enums.HintType.photo,
         extension=".jpg",
         file_content_link=hints.FileContentLink(file_path=GUID + ".jpg"),
         original_filename="файло",

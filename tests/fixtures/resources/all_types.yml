@@ -77,8 +77,7 @@ files:
   - guid: "a3bc9b96-3bb8-4dbc-b996-ce1015e66e53"
     original_filename: "hint2"
     extension: ".jpg"
-    tg_link:
-      file_id: "98765"
-      content_type: "photo"
+    content_type: "photo"
+    file_id: "98765"
     file_content_link:
       file_path: "tests/fixtures/resources/a3bc9b96-3bb8-4dbc-b996-ce1015e66e53.jpg"

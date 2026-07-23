@@ -10,7 +10,8 @@ FILE_ID = "98765"
 CHAT_ID = 111
 FILE_META = hints.FileMeta(
     guid=GUID,
-    tg_link=hints.TgLink(file_id=FILE_ID, content_type=enums.HintType.photo),
+    file_id=FILE_ID,
+    content_type=enums.HintType.photo,
     extension=".jpg",
     file_content_link=hints.FileContentLink(file_path=GUID + ".jpg"),
     original_filename="файло",

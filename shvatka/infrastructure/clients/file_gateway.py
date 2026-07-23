@@ -38,6 +38,8 @@ class BotFileGateway(FileGateway):
         try:
             return await self.storage.get(file.file_content_link)
         except (IOError, OSError):
+            if file.tg_link is None:
+                raise
             return await self.download_from_tg(tg_link=file.tg_link)
 
     async def renew_file_id(self, author: dto.Player, file_meta: hints.SavedFileMeta):
@@ -62,8 +64,6 @@ class BotFileGateway(FileGateway):
         await self.dao.update_file_id(file_meta.guid, tg_link.file_id)
 
     async def download_from_tg(self, tg_link: hints.TgLink) -> BinaryIO:
-        if tg_link.file_id is None:
-            raise IOError("file has no telegram file_id yet")
         result = await self.bot.download(tg_link.file_id, BytesIO())
         if not result:
             raise IOError

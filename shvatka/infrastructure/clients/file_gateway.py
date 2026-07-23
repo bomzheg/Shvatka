@@ -38,6 +38,8 @@ class BotFileGateway(FileGateway):
         try:
             return await self.storage.get(file.file_content_link)
         except (IOError, OSError):
+            if file.tg_link is None:
+                raise
             return await self.download_from_tg(tg_link=file.tg_link)
 
     async def renew_file_id(self, author: dto.Player, file_meta: hints.SavedFileMeta):

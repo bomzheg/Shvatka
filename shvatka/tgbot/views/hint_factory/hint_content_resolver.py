@@ -134,9 +134,10 @@ class HintContentResolver:
             case _:
                 raise RuntimeError("unknown hint type")
 
-    async def _resolve_file_id(self, guid: str) -> str:
-        tg_link = (await self.dao.get_by_guid(guid)).tg_link
-        return tg_link.file_id
+    async def _resolve_file_id(self, guid: str) -> str | None:
+        """``None`` when the file has no telegram file_id yet — the caller
+        (``HintSender``) then falls back to sending by content."""
+        return (await self.dao.get_by_guid(guid)).file_id
 
     async def _resolve_thumb_file_id(self, guid: str | None) -> str | None:
         if guid is None:

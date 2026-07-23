@@ -18,7 +18,8 @@ class MemoryFileStorage(FileStorage):
             guid=file_meta.guid,
             original_filename=file_meta.original_filename,
             extension=file_meta.extension,
-            tg_link=file_meta.tg_link,
+            file_id=file_meta.file_id,
+            content_type=file_meta.content_type,
         )
 
     async def get(self, file_link: hints.FileContentLink) -> BinaryIO:

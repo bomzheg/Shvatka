@@ -51,6 +51,7 @@ from shvatka.tgbot.views.hint_factory.hint_content_resolver import HintContentRe
 from shvatka.tgbot.views.hint_factory.hint_parser import HintParser
 from shvatka.tgbot.views.hint_sender import HintSender
 from shvatka.tgbot.views.level_testing import LevelBotView
+from shvatka.tgbot.views.pinner import MessagePinner
 
 logger = logging.getLogger(__name__)
 
@@ -225,6 +226,7 @@ class GameToolsProvider(Provider):
                 file_info_dao=FileInfoDao(session),
             )
 
+    message_pinner = provide(MessagePinner, scope=Scope.REQUEST)
     get_bot_game_view = provide(BotView, scope=Scope.REQUEST)
     get_bot_team_notifier = provide(BotTeamNotifier, scope=Scope.REQUEST)
     get_bot_org_notifier = provide(BotOrgNotifier, scope=Scope.REQUEST)

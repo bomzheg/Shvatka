@@ -220,6 +220,31 @@ async def test_send_by_content_when_file_id_missing(
 
 
 @pytest.mark.asyncio
+async def test_send_hints_returns_all_sent_messages(
+    hint_sender: HintSender,
+    bot_session: BaseSession,
+):
+    session = typing.cast(MagicMock, bot_session)
+    session.side_effect = [
+        Message(
+            message_id=message_id,
+            date=datetime.now(tz=timezone.utc),
+            chat=Chat(id=CHAT_ID, type="supergroup"),
+        )
+        for message_id in (1, 2, 3)
+    ]
+
+    messages = await hint_sender.send_hints(
+        chat_id=CHAT_ID,
+        hint_containers=[TextHint(text="первая часть"), TextHint(text="вторая часть")],
+        caption="Подсказка",
+        sleep=0,
+    )
+
+    assert [1, 2, 3] == [message.message_id for message in messages]
+
+
+@pytest.mark.asyncio
 async def test_renew_file_id_after_send_by_content(
     hint_sender: HintSender,
     harry: dto.Player,

@@ -31,6 +31,7 @@ from shvatka.core.views.game import (
 from shvatka.tgbot.views.bot_alert import BotAlert
 from shvatka.tgbot.views.hint_sender import HintSender
 from shvatka.tgbot.views.keys import KeyEmoji
+from shvatka.tgbot.views.pinner import MessagePinner, PinCategory
 
 PREPARE_GAME_TEMPLATE = (
     "Игра {game_name} начнётся через {second_left} сек. \n"
@@ -97,6 +98,7 @@ class BotView(GameViewPreparer, GameView):
     bot: Bot
     hint_sender: HintSender
     bot_alert: BotAlert
+    pinner: MessagePinner
 
     async def prepare_game_view(
         self,
@@ -107,8 +109,10 @@ class BotView(GameViewPreparer, GameView):
     ) -> None:
         # TODO set bot commands for orgs, hide bot commands for players
         for team in teams:
-            if team.get_chat_id() is None:
+            if (chat_id := team.get_chat_id()) is None:
                 continue
+            # если прошлая игра завершилась не штатно - могли остаться закреплённые сообщения
+            await self.unpin_all(chat_id)
             try:
                 await self.bot.edit_message_reply_markup(
                     chat_id=team.get_chat_id(),
@@ -144,11 +148,14 @@ class BotView(GameViewPreparer, GameView):
         assert level.number_in_game is not None
         if (chat_id := team.get_chat_id()) is None:
             return
-        await self.hint_sender.send_hints(
+        # предыдущий уровень пройден, его загадка и подсказки больше не актуальны
+        await self.pinner.unpin(chat_id, PinCategory.level)
+        messages = await self.hint_sender.send_hints(
             chat_id=chat_id,
             hint_containers=level.get_hint(0).hint,
             caption=hd.bold(f"Уровень № {level.number_in_game + 1}"),
         )
+        await self.pinner.pin(chat_id, messages, PinCategory.level)
 
     async def send_hint(self, team: dto.Team, hint_number: int, level: dto.Level) -> None:
         assert level.number_in_game is not None
@@ -161,11 +168,12 @@ class BotView(GameViewPreparer, GameView):
             hint_caption = f"Уровень №{level.number_in_game + 1}. Подсказка ({hint.time} мин.):\n"
         if (chat_id := team.get_chat_id()) is None:
             return
-        await self.hint_sender.send_hints(
+        messages = await self.hint_sender.send_hints(
             chat_id=chat_id,
             hint_containers=hint.hint,
             caption=hint_caption,
         )
+        await self.pinner.pin(chat_id, messages, PinCategory.level)
 
     async def duplicate_key(self, key: dto.KeyTime, input_container: InputContainer) -> None:
         if (chat_id := key.team.get_chat_id()) is None:
@@ -262,20 +270,26 @@ class BotView(GameViewPreparer, GameView):
         if (chat_id := key.team.get_chat_id()) is None:
             return
         reply_to = await get_message_id(input_container)
+        messages: list[Message] = []
         try:
-            await self.bot.send_message(
-                chat_id=chat_id,
-                reply_to_message_id=reply_to,
-                text="Бонусная подсказка",
+            messages.append(
+                await self.bot.send_message(
+                    chat_id=chat_id,
+                    reply_to_message_id=reply_to,
+                    text="Бонусная подсказка",
+                )
             )
         except TelegramAPIError as e:
             logger.exception(
                 "can't send bonus hint key caption to team %s", key.team.id, exc_info=e
             )
-        await self.hint_sender.send_hints(
-            chat_id=chat_id,
-            hint_containers=bonus_hint,
+        messages.extend(
+            await self.hint_sender.send_hints(
+                chat_id=chat_id,
+                hint_containers=bonus_hint,
+            )
         )
+        await self.pinner.pin(chat_id, messages, PinCategory.bonus)
 
     async def game_finished(self, team: dto.Team, input_container: InputContainer) -> None:
         if (chat_id := team.get_chat_id()) is None:
@@ -287,28 +301,42 @@ class BotView(GameViewPreparer, GameView):
             )
         except TelegramAPIError as e:
             logger.exception("can't send game finished to team %s", team.id, exc_info=e)
+        await self.unpin_all(chat_id)
 
     async def game_finished_by_all(self, team: dto.Team) -> None:
         """todo change bot commands"""
-        pass
+        if (chat_id := team.get_chat_id()) is None:
+            return
+        await self.unpin_all(chat_id)
+
+    async def unpin_all(self, chat_id: int) -> None:
+        """Игра закончилась - открепляем и подсказки уровня, и бонусные."""
+        await self.pinner.unpin(chat_id, PinCategory.level)
+        await self.pinner.unpin(chat_id, PinCategory.bonus)
 
     async def hint(
         self, team: dto.Team, hint: Sequence[hints.AnyHint], input_container: InputContainer
     ):
         if (chat_id := team.get_chat_id()) is None:
             return
+        messages: list[Message] = []
         try:
-            await self.bot.send_message(
-                chat_id=chat_id,
-                reply_to_message_id=await get_message_id(input_container),
-                text="Бонусная подсказка",
+            messages.append(
+                await self.bot.send_message(
+                    chat_id=chat_id,
+                    reply_to_message_id=await get_message_id(input_container),
+                    text="Бонусная подсказка",
+                )
             )
         except TelegramAPIError as e:
             logger.exception("can't send bonus hint caption", exc_info=e)
-        await self.hint_sender.send_hints(
-            chat_id=chat_id,
-            hint_containers=hint,
+        messages.extend(
+            await self.hint_sender.send_hints(
+                chat_id=chat_id,
+                hint_containers=hint,
+            )
         )
+        await self.pinner.pin(chat_id, messages, PinCategory.bonus)
 
     async def bonus(self, team: dto.Team, bonus: float, input_container: InputContainer) -> None:
         if (chat_id := team.get_chat_id()) is None:

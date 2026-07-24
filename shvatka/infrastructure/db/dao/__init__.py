@@ -21,4 +21,4 @@ from .rdb import (
     NotificationDAO,
     ActionRequestDAO,
 )
-from .redis import PollDao, SecureInvite
+from .redis import PollDao, SecureInvite, PinnedMessageDao

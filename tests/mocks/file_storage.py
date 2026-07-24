@@ -12,7 +12,12 @@ class MemoryFileStorage(FileStorage):
         self.storage[local_file_name] = content
         return hints.FileContentLink(file_path=local_file_name)
 
-    async def put(self, file_meta: hints.UploadedFileMeta, content: BinaryIO) -> hints.FileMeta:
+    async def put(
+        self,
+        file_meta: hints.UploadedFileMeta,
+        content: BinaryIO,
+        options: hints.FileUploadOptions = hints.DEFAULT_UPLOAD_OPTIONS,
+    ) -> hints.FileMeta:
         return hints.FileMeta(
             file_content_link=await self.put_content(file_meta.local_file_name, content),
             guid=file_meta.guid,

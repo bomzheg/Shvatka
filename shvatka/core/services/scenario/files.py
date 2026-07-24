@@ -53,12 +53,14 @@ async def save_file(
     original_filename: str,
     storage: FileStorage,
     dao: FileUpserter,
+    options: hints.FileUploadOptions = hints.DEFAULT_UPLOAD_OPTIONS,
 ) -> hints.SavedFileMeta:
     """Store a single uploaded file (from the web UI) and persist its FileInfo.
 
     Generates a fresh guid, stores the content via the file storage (which detects
     sha256/mime) and saves the resulting meta to the DB. The actual content type is
-    derived from the detected mime type.
+    derived from the detected mime type. ``options`` controls how an unsupported
+    image (e.g. HEIC) is handled — converted, stored as-is, or rejected.
     """
     guid = str(uuid4())
     extension = "".join(Path(original_filename).suffixes)
@@ -68,7 +70,7 @@ async def save_file(
         original_filename=name,
         extension=extension,
     )
-    stored = await storage.put(file_meta, content)
+    stored = await storage.put(file_meta, content, options)
     stored.content_type = hint_type_by_mime(stored.mime_type)
     saved = await dao.upsert(stored, author)
     await dao.commit()

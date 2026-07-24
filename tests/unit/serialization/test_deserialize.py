@@ -78,6 +78,34 @@ def test_reupload_scenario_with_file_without_tg_file_id(
     assert game.files[0].tg_link is None
 
 
+def test_deserialize_legacy_scenario_with_nested_tg_link(
+    complex_scn: RawGameScenario, retort: Retort
+):
+    """Scenarios exported before file_id/content_type were inlined nested them
+    under ``tg_link``. Those zips must still load with both values preserved."""
+    scn = deepcopy(complex_scn.scn)
+    file = scn["files"][0]
+    file["tg_link"] = {"file_id": file.pop("file_id"), "content_type": file.pop("content_type")}
+    game = parse_uploaded_game(RawGameScenario(scn=scn, files=complex_scn.files), retort)
+    assert game.files[0].file_id == "98765"
+    assert game.files[0].content_type == HintType.photo
+
+
+def test_deserialize_legacy_scenario_without_tg_file_id(
+    complex_scn: RawGameScenario, retort: Retort
+):
+    """Legacy nesting plus a missing file_id: content_type must survive, so the
+    file can still be re-uploaded to telegram (regression for #298)."""
+    scn = deepcopy(complex_scn.scn)
+    file = scn["files"][0]
+    file.pop("file_id")
+    file["tg_link"] = {"file_id": None, "content_type": file.pop("content_type")}
+    game = parse_uploaded_game(RawGameScenario(scn=scn, files=complex_scn.files), retort)
+    assert game.files[0].file_id is None
+    assert game.files[0].content_type == HintType.photo
+    assert game.files[0].tg_link is None
+
+
 def test_deserialize_all_types(all_types_scn: RawGameScenario, retort: Retort):
     game_scn = parse_game(all_types_scn, retort)
     hints = game_scn.levels[0].time_hints

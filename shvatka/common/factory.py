@@ -34,8 +34,30 @@ class TelegraphProvider(Provider):
         return telegraph
 
 
+def flatten_legacy_tg_link(data):
+    """Accept scenarios written before file_id/content_type were inlined.
+
+    Older zips nested them under ``tg_link``; that key is unknown now, so
+    without this the values would be silently dropped and the file would end
+    up with no content_type at all.
+    """
+    if not isinstance(data, dict):
+        return data
+    tg_link = data.get("tg_link")
+    if not isinstance(tg_link, dict):
+        return data
+    data = {k: v for k, v in data.items() if k != "tg_link"}
+    data.setdefault("file_id", tg_link.get("file_id"))
+    data.setdefault("content_type", tg_link.get("content_type"))
+    return data
+
+
 REQUIRED_GAME_RECIPES = [
     name_mapping(map={"__model_version__": "__model_version__"}),
+    loader(hints.FileMetaLightweight, flatten_legacy_tg_link, Chain.FIRST),
+    loader(hints.UploadedFileMeta, flatten_legacy_tg_link, Chain.FIRST),
+    loader(hints.StoredFileMeta, flatten_legacy_tg_link, Chain.FIRST),
+    loader(hints.FileMeta, flatten_legacy_tg_link, Chain.FIRST),
     loader(scn.HintsList, lambda x: scn.HintsList.parse(x), Chain.LAST),
     ABCProxy(
         scn.HintsList, list[hints.TimeHint]

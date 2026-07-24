@@ -26,8 +26,8 @@ def convert_heic_to_jpeg(data: bytes) -> bytes:
     """Transcode HEIC/HEIF image bytes to JPEG.
 
     Returns the original bytes unchanged if the conversion can't be performed
-    (missing optional dependency, corrupted image, unsupported feature) so that
-    an upload never fails just because a file couldn't be converted.
+    (missing optional dependency, corrupted image, unsupported feature); the
+    caller decides what to do with an unconverted file based on its upload policy.
     """
     try:
         import pillow_heif
@@ -35,7 +35,7 @@ def convert_heic_to_jpeg(data: bytes) -> bytes:
         pillow_heif.register_heif_opener()
         from PIL import Image
     except ImportError:
-        logger.warning("can't convert HEIC to JPEG: pillow-heif is not installed, storing as-is")
+        logger.warning("can't convert HEIC to JPEG: pillow-heif is not installed")
         return data
     try:
         with Image.open(BytesIO(data)) as image:
@@ -44,5 +44,5 @@ def convert_heic_to_jpeg(data: bytes) -> bytes:
             rgb_image.save(out, format="JPEG", quality=90)
         return out.getvalue()
     except Exception:
-        logger.exception("failed to convert HEIC image to JPEG, storing original bytes")
+        logger.exception("failed to convert HEIC image to JPEG")
         return data

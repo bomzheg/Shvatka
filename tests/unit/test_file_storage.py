@@ -55,7 +55,8 @@ async def test_put_heic_is_converted_to_jpeg():
     heic = make_heic_bytes()
     assert detect_mime_type(heic) == "image/heic"
 
-    stored = await file_storage.put(make_heic_meta(), BytesIO(heic))
+    options = hints.FileUploadOptions(allow_conversion=True)
+    stored = await file_storage.put(make_heic_meta(), BytesIO(heic), options)
 
     assert stored.extension == ".jpg"
     assert stored.mime_type == "image/jpeg"
@@ -88,3 +89,12 @@ async def test_put_heic_raises_when_both_flags_disabled():
 
     with pytest.raises(UnsupportedFileFormat):
         await file_storage.put(make_heic_meta(), BytesIO(heic), options)
+
+
+@pytest.mark.asyncio
+async def test_put_heic_raises_by_default():
+    file_storage = make_storage()
+    heic = make_heic_bytes()
+
+    with pytest.raises(UnsupportedFileFormat):
+        await file_storage.put(make_heic_meta(), BytesIO(heic))

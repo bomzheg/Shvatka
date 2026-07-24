@@ -72,7 +72,7 @@ async def upload_game_file(
     interactor: FromDishka[UploadGameFileInteractor],
     id_: Annotated[int, Path(alias="id")],
     file: Annotated[UploadFile, File()],
-    allow_conversion: Annotated[bool, Query()] = True,
+    allow_conversion: Annotated[bool, Query()] = False,
     save_unsupported_as_is: Annotated[bool, Query()] = False,
 ) -> responses.UploadedFile:
     options = hints.FileUploadOptions(

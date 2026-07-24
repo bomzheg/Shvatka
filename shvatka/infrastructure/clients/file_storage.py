@@ -24,6 +24,10 @@ def compute_sha256(data: bytes) -> str:
     return hashlib.sha256(data).hexdigest()
 
 
+EMPTY_CONTENT_SHA256 = compute_sha256(b"")
+"""sha256 of no content at all — marks a file that was saved empty"""
+
+
 def detect_mime_type(data: bytes) -> str:
     return magic.from_buffer(data, mime=True)
 
@@ -65,7 +69,7 @@ class LocalFileStorage(FileStorage):
             guid=file_meta.guid,
             original_filename=file_meta.original_filename,
             extension=extension,
-            tg_link=file_meta.tg_link,  # type: ignore
+            file_id=file_meta.file_id,
             content_type=file_meta.content_type,
             sha256=sha256,
             mime_type=mime_type,

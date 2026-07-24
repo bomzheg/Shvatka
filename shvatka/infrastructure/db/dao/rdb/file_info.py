@@ -32,9 +32,8 @@ class FileInfoDao(BaseDAO[models.FileInfo]):
         db_file.file_path = file.file_content_link.file_path
         db_file.original_filename = file.original_filename
         db_file.extension = file.extension
-        if file.tg_link:
-            db_file.file_id = file.tg_link.file_id
-            db_file.content_type = file.tg_link.content_type.name
+        if file.file_id:
+            db_file.file_id = file.file_id
         if file.content_type:
             db_file.content_type = file.content_type.name
         if file.sha256:

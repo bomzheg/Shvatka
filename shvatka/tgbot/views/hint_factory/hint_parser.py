@@ -141,7 +141,7 @@ class HintParser:
             guid=guid,
             original_filename=get_name_without_extension(filename, extension),
             extension=extension,
-            tg_link=hints.TgLink(file_id=tg_link.file_id, content_type=tg_link.content_type),
+            file_id=tg_link.file_id,
         )
         stored_file = await self.storage.put(file_meta, content)
         await self.dao.upsert(stored_file, author)

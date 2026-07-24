@@ -78,7 +78,7 @@ class VenueHintView(BaseHintLinkView, BaseHintContentView):
 
 @dataclass(kw_only=True)
 class PhotoLinkView(BaseHintLinkView, CaptionViewMixin):
-    file_id: str
+    file_id: str | None
     show_caption_above_media: bool | None = None
 
     def specific_kwargs(self) -> dict[str, Any]:
@@ -104,7 +104,7 @@ class PhotoContentView(BaseHintContentView, CaptionViewMixin):
 
 @dataclass(kw_only=True)
 class AudioLinkView(BaseHintLinkView, CaptionViewMixin):
-    file_id: str
+    file_id: str | None
     thumb: str | None = None
 
     def specific_kwargs(self) -> dict[str, Any]:
@@ -129,7 +129,7 @@ class AudioContentView(BaseHintContentView, CaptionViewMixin):
 
 @dataclass(kw_only=True)
 class VideoLinkView(BaseHintLinkView, CaptionViewMixin):
-    file_id: str
+    file_id: str | None
     show_caption_above_media: bool | None = None
     thumb: str | None = None
 
@@ -158,7 +158,7 @@ class VideoContentView(BaseHintContentView, CaptionViewMixin):
 
 @dataclass(kw_only=True)
 class DocumentLinkView(BaseHintLinkView, CaptionViewMixin):
-    file_id: str
+    file_id: str | None
     thumb: str | None = None
 
     def specific_kwargs(self) -> dict[str, Any]:
@@ -183,7 +183,7 @@ class DocumentContentView(BaseHintContentView, CaptionViewMixin):
 
 @dataclass(kw_only=True)
 class AnimationLinkView(BaseHintLinkView, CaptionViewMixin):
-    file_id: str
+    file_id: str | None
     thumb: str | None = None
     show_caption_above_media: bool | None = None
 
@@ -212,7 +212,7 @@ class AnimationContentView(BaseHintContentView, CaptionViewMixin):
 
 @dataclass(kw_only=True)
 class VoiceLinkView(BaseHintLinkView, CaptionViewMixin):
-    file_id: str
+    file_id: str | None
 
     def specific_kwargs(self) -> dict[str, Any]:
         return {
@@ -234,7 +234,7 @@ class VoiceContentView(BaseHintContentView, CaptionViewMixin):
 
 @dataclass(kw_only=True)
 class VideoNoteLinkView(BaseHintLinkView):
-    file_id: str
+    file_id: str | None
 
     def specific_kwargs(self) -> dict[str, Any]:
         return {"video_note": self.file_id}
@@ -266,7 +266,7 @@ class ContactHintView(BaseHintLinkView, BaseHintContentView):
 
 @dataclass(kw_only=True)
 class StickerHintLinkView(BaseHintLinkView):
-    file_id: str
+    file_id: str | None
 
     def specific_kwargs(self) -> dict[str, Any]:
         return {"sticker": self.file_id}

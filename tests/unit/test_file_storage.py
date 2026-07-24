@@ -7,6 +7,7 @@ import pytest
 
 from shvatka.common.config.models.main import FileStorageConfig
 from shvatka.core.models.dto import hints
+from shvatka.core.utils.exceptions import UnsupportedFileFormat
 from shvatka.infrastructure.clients.file_storage import LocalFileStorage, detect_mime_type
 from tests.fixtures.file_storage import FILE_META
 
@@ -40,18 +41,21 @@ async def test_file_storage():
     assert loaded.read() == b"12345"
 
 
+def make_heic_meta() -> hints.UploadedFileMeta:
+    return hints.UploadedFileMeta(
+        guid=str(uuid4()),
+        original_filename="photo",
+        extension=".heic",
+    )
+
+
 @pytest.mark.asyncio
 async def test_put_heic_is_converted_to_jpeg():
     file_storage = make_storage()
     heic = make_heic_bytes()
     assert detect_mime_type(heic) == "image/heic"
 
-    file_meta = hints.UploadedFileMeta(
-        guid=str(uuid4()),
-        original_filename="photo",
-        extension=".heic",
-    )
-    stored = await file_storage.put(file_meta, BytesIO(heic))
+    stored = await file_storage.put(make_heic_meta(), BytesIO(heic))
 
     assert stored.extension == ".jpg"
     assert stored.mime_type == "image/jpeg"
@@ -60,3 +64,27 @@ async def test_put_heic_is_converted_to_jpeg():
 
     content = await file_storage.get(stored.file_content_link)
     assert detect_mime_type(content.read()) == "image/jpeg"
+
+
+@pytest.mark.asyncio
+async def test_put_heic_saved_as_is_when_conversion_disabled():
+    file_storage = make_storage()
+    heic = make_heic_bytes()
+    options = hints.FileUploadOptions(allow_conversion=False, save_unsupported_as_is=True)
+
+    stored = await file_storage.put(make_heic_meta(), BytesIO(heic), options)
+
+    assert stored.extension == ".heic"
+    assert stored.mime_type == "image/heic"
+    content = await file_storage.get(stored.file_content_link)
+    assert content.read() == heic
+
+
+@pytest.mark.asyncio
+async def test_put_heic_raises_when_both_flags_disabled():
+    file_storage = make_storage()
+    heic = make_heic_bytes()
+    options = hints.FileUploadOptions(allow_conversion=False, save_unsupported_as_is=False)
+
+    with pytest.raises(UnsupportedFileFormat):
+        await file_storage.put(make_heic_meta(), BytesIO(heic), options)

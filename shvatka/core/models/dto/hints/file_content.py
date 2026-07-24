@@ -6,6 +6,21 @@ from shvatka.core.models import dto
 from shvatka.core.models.enums.hint_type import HintType
 
 
+@dataclass(frozen=True)
+class FileUploadOptions:
+    """How to treat a file that can't be shown as-is (e.g. HEIC) on upload."""
+
+    allow_conversion: bool = True
+    """convert an unsupported image to a browser/Telegram-friendly format (JPEG)"""
+    save_unsupported_as_is: bool = False
+    """when conversion is not allowed, store the original bytes untouched instead
+    of rejecting the upload"""
+
+
+DEFAULT_UPLOAD_OPTIONS = FileUploadOptions()
+"""shared immutable default for callers that don't set an explicit upload policy"""
+
+
 @dataclass
 class TgLink:
     file_id: str

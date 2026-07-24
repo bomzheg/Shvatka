@@ -6,12 +6,13 @@ from urllib.parse import quote
 
 from dishka.integrations.fastapi import FromDishka
 from dishka.integrations.fastapi import inject
-from fastapi import APIRouter, Body, File, UploadFile
+from fastapi import APIRouter, Body, File, Query, UploadFile
 from fastapi.params import Path
 from fastapi.responses import Response
 
 from shvatka.api.dependencies.auth import ApiIdentityProvider
 from shvatka.api.models import responses, req
+from shvatka.api.utils.error_converter import to_http_error
 from shvatka.core.games.interactors import (
     GameFileReaderInteractor,
 )
@@ -20,6 +21,8 @@ from shvatka.core.games.editor_interactors import (
     UploadGameFileInteractor,
 )
 from shvatka.core.interfaces.clients.file_storage import FileStorage
+from shvatka.core.models.dto import hints
+from shvatka.core.utils.exceptions import UnsupportedFileFormat
 
 
 logger = logging.getLogger(__name__)
@@ -69,14 +72,24 @@ async def upload_game_file(
     interactor: FromDishka[UploadGameFileInteractor],
     id_: Annotated[int, Path(alias="id")],
     file: Annotated[UploadFile, File()],
+    allow_conversion: Annotated[bool, Query()] = True,
+    save_unsupported_as_is: Annotated[bool, Query()] = False,
 ) -> responses.UploadedFile:
-    content = BytesIO(await file.read())
-    saved = await interactor(
-        game_id=id_,
-        content=content,
-        original_filename=file.filename or "document",
-        identity=identity,
+    options = hints.FileUploadOptions(
+        allow_conversion=allow_conversion,
+        save_unsupported_as_is=save_unsupported_as_is,
     )
+    content = BytesIO(await file.read())
+    try:
+        saved = await interactor(
+            game_id=id_,
+            content=content,
+            original_filename=file.filename or "document",
+            identity=identity,
+            options=options,
+        )
+    except UnsupportedFileFormat as e:
+        raise to_http_error(e, code=415) from e
     return responses.UploadedFile.from_core(saved)
 
 

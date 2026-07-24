@@ -1,6 +1,8 @@
 from .file_content import (
     FileMeta,
     FileContentLink,
+    FileUploadOptions,
+    DEFAULT_UPLOAD_OPTIONS,
     TgLink,
     ParsedTgLink,
     SavedFileMeta,

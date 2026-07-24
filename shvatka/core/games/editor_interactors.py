@@ -151,12 +151,15 @@ class UploadGameFileInteractor:
         content: BinaryIO,
         original_filename: str,
         identity: IdentityProvider,
+        options: hints.FileUploadOptions = hints.DEFAULT_UPLOAD_OPTIONS,
     ) -> hints.SavedFileMeta:
         author = await identity.get_required_player()
         check_allow_be_author(author)
         game = await self.dao.get_by_id(id_=game_id, author=author)
         check_game_editable(game)
-        saved = await save_file(author, content, original_filename, self.storage, self.dao)
+        saved = await save_file(
+            author, content, original_filename, self.storage, self.dao, options
+        )
         # the file is uploaded for later use in this game even though it is not yet
         # assigned to any level, so register it as usable in the game.
         await self.dao.add_game_file(game.id, saved.id)

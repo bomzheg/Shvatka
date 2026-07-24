@@ -13,7 +13,12 @@ class FileGateway(Protocol):
 
 
 class FileStorage(Protocol):
-    async def put(self, file_meta: hints.UploadedFileMeta, content: BinaryIO) -> hints.FileMeta:
+    async def put(
+        self,
+        file_meta: hints.UploadedFileMeta,
+        content: BinaryIO,
+        options: hints.FileUploadOptions = hints.DEFAULT_UPLOAD_OPTIONS,
+    ) -> hints.FileMeta:
         raise NotImplementedError
 
     async def get(self, file_link: hints.FileContentLink) -> BinaryIO:

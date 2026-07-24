@@ -109,6 +109,10 @@ class FileNotFound(SHError, AttributeError):
     notify_user = "Файл не найден"
 
 
+class UnsupportedFileFormat(SHError):
+    notify_user = "Формат файла не поддерживается"
+
+
 class ActionCantBeNow(SHError):
     notify_user = "Действие не может быть выполнено сейчас"
 

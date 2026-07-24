@@ -18,6 +18,10 @@ def compute_sha256(data: bytes) -> str:
     return hashlib.sha256(data).hexdigest()
 
 
+EMPTY_CONTENT_SHA256 = compute_sha256(b"")
+"""sha256 of no content at all — marks a file that was saved empty"""
+
+
 def detect_mime_type(data: bytes) -> str:
     return magic.from_buffer(data, mime=True)
 

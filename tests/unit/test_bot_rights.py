@@ -40,7 +40,7 @@ class ClockMock:
         return self.now.astimezone(tz)
 
 
-def admin(can_pin: bool) -> ChatMemberAdministrator:
+def admin(can_pin: bool, can_manage_tags: bool | None = None) -> ChatMemberAdministrator:
     return ChatMemberAdministrator(
         user=BOT,
         can_be_edited=False,
@@ -56,6 +56,7 @@ def admin(can_pin: bool) -> ChatMemberAdministrator:
         can_edit_stories=False,
         can_delete_stories=False,
         can_pin_messages=can_pin,
+        can_manage_tags=can_manage_tags,
     )
 
 
@@ -77,6 +78,7 @@ def restricted(can_pin: bool, is_member: bool = True) -> ChatMemberRestricted:
         can_invite_users=False,
         can_pin_messages=can_pin,
         can_manage_topics=False,
+        can_edit_tag=False,
         until_date=0,
     )
 
@@ -127,6 +129,28 @@ async def test_ordinary_member_depends_on_chat(chat: Chat, can_pin: bool):
 
     assert can_pin == await rights.can_pin(CHAT_ID)
     assert 1 == bot.get_chat.await_count
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("member", "can_manage_tags"),
+    [
+        (ChatMemberOwner(user=BOT, is_anonymous=False), True),
+        (admin(can_pin=False, can_manage_tags=True), True),
+        (admin(can_pin=True, can_manage_tags=False), False),
+        # telegram omits the field for admins promoted before tags existed
+        (admin(can_pin=True), True),
+        (admin(can_pin=False), False),
+        # tagging others is an admin right, no member can have it
+        (ChatMemberMember(user=BOT), False),
+        (restricted(can_pin=True), False),
+        (ChatMemberBanned(user=BOT, until_date=0), False),
+    ],
+)
+async def test_can_manage_tags(member: ChatMember, can_manage_tags: bool):
+    rights, _ = bot_rights(member, ClockMock(), chat=EVERYONE_CAN_PIN)
+
+    assert can_manage_tags == await rights.can_manage_tags(CHAT_ID)
 
 
 @pytest.mark.asyncio

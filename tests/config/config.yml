@@ -8,8 +8,9 @@ bot:
   telegraph-token: "42"
   log-chat: -1001234567890
   game-log-chat: -1009876543210
-  public-chats:
-    - "1001232232152"
+  # empty: tagging members of public chats would add telegram calls to every
+  # test that touches a team, tagging itself is tested with its own config
+  public-chats: []
   bot-api:
     type: official
   webhook:

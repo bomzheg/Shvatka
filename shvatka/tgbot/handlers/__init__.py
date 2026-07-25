@@ -18,6 +18,7 @@ from shvatka.tgbot.handlers import (
     base,
     team,
     action_request,
+    member_tags,
 )
 
 logger = logging.getLogger(__name__)
@@ -37,6 +38,7 @@ def setup_handlers(
     dp.include_router(waivers.setup())
     dp.include_router(admin.setup(bot_config))
     dp.include_router(capcha.setup(bot_config))
+    dp.include_router(member_tags.setup(bot_config))
 
     bg_manager_factory = dialogs.setup(dp, message_manager)
 

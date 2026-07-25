@@ -12,7 +12,7 @@ dependencies = [
     "pyyaml>=6.0,<7.0",
     "python-dateutil>=2.8.2,<3.0",
     "colorlog>=6.7.0,<7.0",
-    "aiogram>=3.20.0,<3.21.0",
+    "aiogram>=3.26.0,<3.27.0",
     "pydantic>=2.11,<3.0",
     "aiogram_dialog[tools]>=2.6,<3.0",
     "sqlalchemy[asyncio]>=2.0,<3.0",
@@ -76,6 +76,7 @@ shvatka-api = "shvbatka.api.__main__:run"
 shvatka-file-id-updater = "shvatka.infrastructure.file_id_updater:run"
 shvatka-empty-file-repairer = "shvatka.infrastructure.empty_file_repairer:run"
 shvatka-password = "shvatka.api.password_hash:generate"
+shvatka-member-tags-backfill = "shvatka.tgbot.member_tags_backfill:run"
 
 [build-system]
 requires = ["setuptools"]

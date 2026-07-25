@@ -34,6 +34,21 @@ export BOT_PATH=$PWD
 shvatka-tgbot
 ----
 
+== How to tag members of public chats
+
+Players are tagged with the name of their team in the chats listed in
+`bot.public-chats`. The bot has to be an administrator with the
+`can_manage_tags` right in those chats.
+
+Tags are set and cleared when a player joins or leaves a team and when
+a player joins the chat. Chats that already existed have to be filled once:
+
+[source,shell]
+----
+export BOT_PATH=$PWD
+shvatka-member-tags-backfill
+----
+
 == How to run with Docker
 
 . `cp config_dist config`

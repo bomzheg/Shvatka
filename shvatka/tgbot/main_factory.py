@@ -41,6 +41,7 @@ from shvatka.infrastructure.picture import ResultsPainter
 from shvatka.tgbot.config.models.bot import BotConfig, TgClientConfig
 from shvatka.tgbot.handlers import setup_handlers
 from shvatka.tgbot.middlewares import setup_middlewares
+from shvatka.tgbot.services.bot_rights import BotRights
 from shvatka.tgbot.services.identity import TgBotIdentityProvider
 from shvatka.tgbot.services.used_one_time_token import UsedOneTimeTokenInteractorImpl
 from shvatka.tgbot.username_resolver.user_getter import UserGetter
@@ -51,6 +52,7 @@ from shvatka.tgbot.views.hint_factory.hint_content_resolver import HintContentRe
 from shvatka.tgbot.views.hint_factory.hint_parser import HintParser
 from shvatka.tgbot.views.hint_sender import HintSender
 from shvatka.tgbot.views.level_testing import LevelBotView
+from shvatka.tgbot.views.pinner import MessagePinner
 
 logger = logging.getLogger(__name__)
 
@@ -205,6 +207,10 @@ class GameToolsProvider(Provider):
     ) -> HintContentResolver:
         return HintContentResolver(dao=dao.file_info, file_storage=file_storage)
 
+    @provide(scope=Scope.APP)
+    def get_bot_rights(self, bot: Bot) -> BotRights:
+        return BotRights(bot=bot)
+
     @provide(scope=Scope.REQUEST)
     def get_bot_game_log(self, bot: Bot, config: BotConfig) -> GameBotLog:
         return GameBotLog(bot=bot, log_chat_id=config.game_log_chat)
@@ -225,6 +231,7 @@ class GameToolsProvider(Provider):
                 file_info_dao=FileInfoDao(session),
             )
 
+    message_pinner = provide(MessagePinner, scope=Scope.REQUEST)
     get_bot_game_view = provide(BotView, scope=Scope.REQUEST)
     get_bot_team_notifier = provide(BotTeamNotifier, scope=Scope.REQUEST)
     get_bot_org_notifier = provide(BotOrgNotifier, scope=Scope.REQUEST)
@@ -234,4 +241,8 @@ class GameToolsProvider(Provider):
 
 
 def resolve_update_types(dp: Dispatcher) -> list[str]:
-    return dp.resolve_used_update_types(skip_events={"aiogd_update"})
+    types = dp.resolve_used_update_types(skip_events={"aiogd_update"})
+    # my_chat_member is processed by BotRightsMiddleware, aiogram resolves handlers only
+    if "my_chat_member" not in types:
+        types.append("my_chat_member")
+    return types

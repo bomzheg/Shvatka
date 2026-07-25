@@ -145,6 +145,10 @@ class DAOProvider(Provider):
         return holder.secure_invite
 
     @provide
+    def pinned_message_dao(self, redis: Redis) -> dao.PinnedMessageDao:
+        return dao.PinnedMessageDao(redis=redis)
+
+    @provide
     async def push_subscription_dao(
         self, pool: async_sessionmaker[AsyncSession]
     ) -> AsyncIterable[dao.PushSubscriptionDAO]:

@@ -105,23 +105,25 @@ class HintSender:
         hint_containers: Iterable[hints.BaseHint],
         caption: str | None = None,
         sleep: int | None = None,
-    ):
+    ) -> list[Message]:
         """
         sending caption if exist and all hint parts in chat with chat_id
         :param chat_id:
         :param hint_containers:
         :param caption: this text may send before hints
         :param sleep:  time to sleep inter sending parts (default 1 sec)
-        :return:
+        :return: all sent messages (caption first, if it was sent)
         """
         if sleep is None:
             sleep = self.SLEEP.seconds
+        messages: list[Message] = []
         if caption is not None:
-            await self.bot.send_message(chat_id=chat_id, text=caption)
+            messages.append(await self.bot.send_message(chat_id=chat_id, text=caption))
             await asyncio.sleep(sleep)
         for hint_container in hint_containers:
-            await self.send_hint(hint_container, chat_id)
+            messages.append(await self.send_hint(hint_container, chat_id))
             await asyncio.sleep(sleep)
+        return messages
 
     @classmethod
     def get_approximate_time(cls, hints: Collection[hints.BaseHint]) -> timedelta:

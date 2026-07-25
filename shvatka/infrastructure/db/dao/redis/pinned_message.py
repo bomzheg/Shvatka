@@ -9,9 +9,9 @@ logger = logging.getLogger(__name__)
 
 class PinnedMessageDao:
     """
-    Хранит id закреплённых ботом сообщений, чтобы потом их можно было открепить.
-    Сообщения группируются по чату и категории (например подсказки уровня
-    открепляются при переходе на следующий уровень, а бонусные - в конце игры).
+    Keeps ids of messages pinned by the bot, so they can be unpinned later.
+    Messages are grouped by chat and category (e.g. hints of a level are
+    unpinned on level up, while bonus hints are unpinned at the end of a game).
     """
 
     TTL = timedelta(days=30)
@@ -29,7 +29,7 @@ class PinnedMessageDao:
         await self.redis.expire(key, self.TTL)
 
     async def pop_all(self, chat_id: int, category: str) -> list[int]:
-        """Возвращает все сохранённые id и забывает их."""
+        """Returns all saved ids and forgets them."""
         key = self._create_key(chat_id=chat_id, category=category)
         message_ids = await self.redis.lrange(key, 0, -1)
         await self.redis.delete(key)

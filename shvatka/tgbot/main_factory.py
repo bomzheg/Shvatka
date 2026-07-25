@@ -41,6 +41,7 @@ from shvatka.infrastructure.picture import ResultsPainter
 from shvatka.tgbot.config.models.bot import BotConfig, TgClientConfig
 from shvatka.tgbot.handlers import setup_handlers
 from shvatka.tgbot.middlewares import setup_middlewares
+from shvatka.tgbot.services.bot_rights import BotRights
 from shvatka.tgbot.services.identity import TgBotIdentityProvider
 from shvatka.tgbot.services.used_one_time_token import UsedOneTimeTokenInteractorImpl
 from shvatka.tgbot.username_resolver.user_getter import UserGetter
@@ -205,6 +206,10 @@ class GameToolsProvider(Provider):
         self, dao: HolderDao, file_storage: FileStorage
     ) -> HintContentResolver:
         return HintContentResolver(dao=dao.file_info, file_storage=file_storage)
+
+    @provide(scope=Scope.APP)
+    def get_bot_rights(self, bot: Bot) -> BotRights:
+        return BotRights(bot=bot)
 
     @provide(scope=Scope.REQUEST)
     def get_bot_game_log(self, bot: Bot, config: BotConfig) -> GameBotLog:

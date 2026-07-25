@@ -7,12 +7,14 @@ import pytest_asyncio
 from aiogram.client.session.base import BaseSession
 from aiogram.exceptions import TelegramAPIError
 from aiogram.methods import PinChatMessage
-from aiogram.types import Chat, Message
+from aiogram.types import Chat, ChatMemberMember, ChatMemberOwner, Message, User
 from dishka import AsyncContainer
 
 from shvatka.infrastructure.db.dao import PinnedMessageDao
 from shvatka.tgbot.views.pinner import MessagePinner, PinCategory
 from tests.fixtures.file_storage import CHAT_ID
+
+BOT_USER = User(id=1, is_bot=True, first_name="bot")
 
 
 @pytest_asyncio.fixture
@@ -20,6 +22,8 @@ async def pinner(dishka_request: AsyncContainer):
     pinner_ = await dishka_request.get(MessagePinner)
     for category in PinCategory:
         await pinner_.dao.pop_all(chat_id=CHAT_ID, category=category.value)
+    # bot is an admin who can pin, so it doesn't ask telegram about its rights
+    pinner_.rights.update(CHAT_ID, ChatMemberOwner(user=BOT_USER, is_anonymous=False))
     return pinner_
 
 
@@ -77,10 +81,38 @@ async def test_categories_are_independent(pinner: MessagePinner, bot_session: Ba
 
 
 @pytest.mark.asyncio
+async def test_dont_pin_without_rights(
+    pinner: MessagePinner, bot_session: BaseSession, dishka_request: AsyncContainer
+):
+    pinner.rights.update(CHAT_ID, ChatMemberMember(user=BOT_USER))
+
+    await pinner.pin(CHAT_ID, [message(1)], PinCategory.level)
+
+    assert [] == requests(bot_session, "pinChatMessage")
+    dao = await dishka_request.get(PinnedMessageDao)
+    assert [] == await dao.pop_all(chat_id=CHAT_ID, category=PinCategory.level.value)
+
+
+@pytest.mark.asyncio
+async def test_pinned_messages_kept_until_rights_are_back(
+    pinner: MessagePinner, bot_session: BaseSession
+):
+    await pinner.pin(CHAT_ID, [message(1)], PinCategory.level)
+    pinner.rights.update(CHAT_ID, ChatMemberMember(user=BOT_USER))
+
+    await pinner.unpin(CHAT_ID, PinCategory.level)
+    assert [] == requests(bot_session, "unpinChatMessage")
+
+    pinner.rights.update(CHAT_ID, ChatMemberOwner(user=BOT_USER, is_anonymous=False))
+    await pinner.unpin(CHAT_ID, PinCategory.level)
+    assert [1] == [request.message_id for request in requests(bot_session, "unpinChatMessage")]
+
+
+@pytest.mark.asyncio
 async def test_pin_error_dont_break_flow(
     pinner: MessagePinner, bot_session: BaseSession, dishka_request: AsyncContainer
 ):
-    # бот может не быть админом чата - тогда телеграм ответит ошибкой
+    # even an admin bot can get an error from telegram
     session = typing.cast(MagicMock, bot_session)
     session.side_effect = [TelegramAPIError(message="not enough rights", method=PinChatMessage)]
 
@@ -101,5 +133,5 @@ async def test_unpin_error_dont_break_flow(pinner: MessagePinner, bot_session: B
 
     await pinner.unpin(CHAT_ID, PinCategory.level)
 
-    # ошибка на первом сообщении не мешает открепить остальные
+    # an error on the first message doesn't prevent unpinning the rest
     assert [1, 2] == [request.message_id for request in requests(bot_session, "unpinChatMessage")]

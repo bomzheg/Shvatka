@@ -111,7 +111,7 @@ class BotView(GameViewPreparer, GameView):
         for team in teams:
             if (chat_id := team.get_chat_id()) is None:
                 continue
-            # если прошлая игра завершилась не штатно - могли остаться закреплённые сообщения
+            # a previous game could be finished abnormally and leave pinned messages
             await self.unpin_all(chat_id)
             try:
                 await self.bot.edit_message_reply_markup(
@@ -148,7 +148,7 @@ class BotView(GameViewPreparer, GameView):
         assert level.number_in_game is not None
         if (chat_id := team.get_chat_id()) is None:
             return
-        # предыдущий уровень пройден, его загадка и подсказки больше не актуальны
+        # previous level is completed, its puzzle and hints are outdated now
         await self.pinner.unpin(chat_id, PinCategory.level)
         messages = await self.hint_sender.send_hints(
             chat_id=chat_id,
@@ -310,7 +310,7 @@ class BotView(GameViewPreparer, GameView):
         await self.unpin_all(chat_id)
 
     async def unpin_all(self, chat_id: int) -> None:
-        """Игра закончилась - открепляем и подсказки уровня, и бонусные."""
+        """Game is over - unpin both level and bonus hints."""
         await self.pinner.unpin(chat_id, PinCategory.level)
         await self.pinner.unpin(chat_id, PinCategory.bonus)
 

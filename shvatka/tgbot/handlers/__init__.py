@@ -18,6 +18,7 @@ from shvatka.tgbot.handlers import (
     base,
     team,
     action_request,
+    bot_rights,
 )
 
 logger = logging.getLogger(__name__)
@@ -27,6 +28,7 @@ def setup_handlers(
     dp: Dispatcher, bot_config: BotConfig, message_manager: MessageManagerProtocol
 ) -> BgManagerFactory:
     errors.setup(dp, bot_config.log_chat)
+    dp.include_router(bot_rights.setup())
     dp.include_router(base.setup())
     dp.include_router(superuser.setup(bot_config))
     dp.include_router(player.setup())

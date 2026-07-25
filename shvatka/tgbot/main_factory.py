@@ -241,4 +241,8 @@ class GameToolsProvider(Provider):
 
 
 def resolve_update_types(dp: Dispatcher) -> list[str]:
-    return dp.resolve_used_update_types(skip_events={"aiogd_update"})
+    types = dp.resolve_used_update_types(skip_events={"aiogd_update"})
+    # my_chat_member is processed by BotRightsMiddleware, aiogram resolves handlers only
+    if "my_chat_member" not in types:
+        types.append("my_chat_member")
+    return types

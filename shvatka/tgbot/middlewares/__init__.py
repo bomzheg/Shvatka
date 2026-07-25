@@ -3,6 +3,7 @@ from aiogram_dialog.api.protocols import BgManagerFactory
 from dishka import AsyncContainer
 
 
+from .bot_rights_middleware import BotRightsMiddleware
 from .data_load_middleware import LoadDataMiddleware
 from .fix_target_middleware import FixTargetMiddleware
 from .init_middleware import InitMiddleware
@@ -16,3 +17,4 @@ def setup_middlewares(
     dp.update.middleware(InitMiddleware(bg_manager_factory=bg_manager_factory))
     dp.update.middleware(LoadDataMiddleware())
     dp.message.middleware(FixTargetMiddleware())
+    dp.my_chat_member.outer_middleware(BotRightsMiddleware())

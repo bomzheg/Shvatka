@@ -7,14 +7,16 @@ import pytest_asyncio
 from aiogram.client.session.base import BaseSession
 from aiogram.exceptions import TelegramAPIError
 from aiogram.methods import PinChatMessage
-from aiogram.types import Chat, ChatMemberMember, ChatMemberOwner, Message, User
+from aiogram.types import Chat, Message
 from dishka import AsyncContainer
 
 from shvatka.infrastructure.db.dao import PinnedMessageDao
+from shvatka.tgbot.services.bot_rights import ChatRights
 from shvatka.tgbot.views.pinner import MessagePinner, PinCategory
 from tests.fixtures.file_storage import CHAT_ID
 
-BOT_USER = User(id=1, is_bot=True, first_name="bot")
+CAN_PIN = ChatRights(can_pin_messages=True)
+CANT_PIN = ChatRights(can_pin_messages=False)
 
 
 @pytest_asyncio.fixture
@@ -22,8 +24,8 @@ async def pinner(dishka_request: AsyncContainer):
     pinner_ = await dishka_request.get(MessagePinner)
     for category in PinCategory:
         await pinner_.dao.pop_all(chat_id=CHAT_ID, category=category.value)
-    # bot is an admin who can pin, so it doesn't ask telegram about its rights
-    pinner_.rights.update(CHAT_ID, ChatMemberOwner(user=BOT_USER, is_anonymous=False))
+    # rights are cached, so the pinner doesn't ask telegram about them
+    pinner_.rights.save(CHAT_ID, CAN_PIN)
     return pinner_
 
 
@@ -84,7 +86,7 @@ async def test_categories_are_independent(pinner: MessagePinner, bot_session: Ba
 async def test_dont_pin_without_rights(
     pinner: MessagePinner, bot_session: BaseSession, dishka_request: AsyncContainer
 ):
-    pinner.rights.update(CHAT_ID, ChatMemberMember(user=BOT_USER))
+    pinner.rights.save(CHAT_ID, CANT_PIN)
 
     await pinner.pin(CHAT_ID, [message(1)], PinCategory.level)
 
@@ -98,12 +100,12 @@ async def test_pinned_messages_kept_until_rights_are_back(
     pinner: MessagePinner, bot_session: BaseSession
 ):
     await pinner.pin(CHAT_ID, [message(1)], PinCategory.level)
-    pinner.rights.update(CHAT_ID, ChatMemberMember(user=BOT_USER))
+    pinner.rights.save(CHAT_ID, CANT_PIN)
 
     await pinner.unpin(CHAT_ID, PinCategory.level)
     assert [] == requests(bot_session, "unpinChatMessage")
 
-    pinner.rights.update(CHAT_ID, ChatMemberOwner(user=BOT_USER, is_anonymous=False))
+    pinner.rights.save(CHAT_ID, CAN_PIN)
     await pinner.unpin(CHAT_ID, PinCategory.level)
     assert [1] == [request.message_id for request in requests(bot_session, "unpinChatMessage")]
 

@@ -13,7 +13,7 @@ from shvatka.core.players.player import join_team, leave
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.tgbot.config.models.bot import BotConfig
 from shvatka.tgbot.services.bot_rights import BotRights, ChatRights
-from shvatka.tgbot.services.member_tags import MemberTagger
+from shvatka.tgbot.services.member_tags import MemberTagger, render_tag
 from shvatka.tgbot.views.team import BotTeamNotifier
 
 PUBLIC_CHAT = -1001232232152
@@ -60,7 +60,8 @@ async def test_tag_set_and_cleared_on_team_ops(
     (tag,) = tags(bot_session)
     assert PUBLIC_CHAT == tag.chat_id
     assert hermione.get_chat_id() == tag.user_id
-    assert gryffindor.name == tag.tag
+    # the team name is longer than the 16 characters telegram allows in a tag
+    assert render_tag(gryffindor.name) == tag.tag
 
     await leave(hermione, harry, dao.team_player, notifier=notifier)
 

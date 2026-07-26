@@ -1,6 +1,6 @@
 from typing import Protocol
 
-from shvatka.core.games.dto import CurrentHintsOnly, Event
+from shvatka.core.games.dto import BonusEvent, CurrentHintsOnly, Event
 from shvatka.core.interfaces.dal.complex import GameScenarioEditor, TypedKeyGetter, GameStatDao
 from shvatka.core.interfaces.dal.file_info import FileInfoGetter
 from shvatka.core.interfaces.dal.game import GameAuthorTransferer, GameByIdGetter
@@ -34,7 +34,13 @@ class AdminGameScenarioEditor(GameScenarioEditor, GameAuthorTransferer, Protocol
         raise NotImplementedError
 
 
-class GameStatReader(GameStatDao, GameByIdGetter, PlayerByUserGetter, Protocol):
+class GameBonusesGetter(Protocol):
+    async def get_game_bonuses_by_teams(self, game: dto.Game) -> dict[int, list[BonusEvent]]:
+        """All teams' bonuses and penalties for the game, grouped by team id."""
+        raise NotImplementedError
+
+
+class GameStatReader(GameStatDao, GameBonusesGetter, GameByIdGetter, PlayerByUserGetter, Protocol):
     pass
 
 

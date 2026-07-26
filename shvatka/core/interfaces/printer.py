@@ -20,7 +20,7 @@ class CellAddress:
 
 @dataclass(kw_only=True)
 class Cell:
-    value: str | datetime | int | time
+    value: str | datetime | int | float | time
     format: str | None = None
 
 

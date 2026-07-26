@@ -2,6 +2,7 @@ import typing
 from dataclasses import dataclass
 
 from shvatka.core.games.adapters import GameStatReader
+from shvatka.core.games.dto import BonusEvent
 from shvatka.core.interfaces.dal.complex import GameStatDao
 from shvatka.core.models import dto
 
@@ -74,6 +75,9 @@ class GameStatReaderImpl(GameStatReader):
         self, game: dto.FullGame
     ) -> dict[dto.Team, list[dto.LevelTimeOnGame]]:
         return await self.dao.level_time.get_game_level_times_with_hints(game)
+
+    async def get_game_bonuses_by_teams(self, game: dto.Game) -> dict[int, list[BonusEvent]]:
+        return await self.dao.events.get_game_bonuses_by_teams(game)
 
     async def get_by_id(self, id_: int, author: dto.Player | None = None) -> dto.Game:
         return await self.dao.game.get_by_id(id_, author)

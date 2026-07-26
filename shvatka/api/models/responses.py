@@ -6,7 +6,14 @@ from uuid import UUID
 
 from adaptix import Retort
 
-from shvatka.core.games.dto import CurrentHintsAndKeys, MyRole, Event
+from shvatka.core.games.dto import (
+    CurrentHintsAndKeys,
+    MyRole,
+    Event,
+    BonusSource,
+    GameStatWithBonuses,
+    BonusEvent as CoreBonusEvent,
+)
 from shvatka.core.models import dto, enums
 from shvatka.core.notifications.dto import (
     Notification as NotificationDto,
@@ -508,6 +515,13 @@ class KeyTime:
 
 @dataclass(kw_only=True, frozen=True, slots=True)
 class Effects:
+    """Effects addressing ``next_level`` by number, hiding the level's name_id.
+
+    For endpoints a playing team can read, where a name_id would leak part of
+    the scenario. Resolving it needs the game's levels — see
+    ``EffectsWithNameId`` for the places that don't have to hide anything.
+    """
+
     id: UUID
     hints_: Sequence[hints.AnyHint]
     bonus_minutes: float
@@ -529,6 +543,33 @@ class Effects:
                 if core.next_level is not None
                 else None
             ),
+        )
+
+
+@dataclass(kw_only=True, frozen=True, slots=True)
+class EffectsWithNameId:
+    """Effects as stored, addressing ``next_level`` by the level's name_id.
+
+    For endpoints where name_ids are not secret anyway — game results, readable
+    only by orgs until the game is complete, and already carrying level name_ids
+    in ``LevelTime``. Needs no level mapping, so no extra query.
+    """
+
+    id: UUID
+    hints_: Sequence[hints.AnyHint]
+    bonus_minutes: float
+    level_up: bool
+    next_level: str | None
+    """name_id of the level the key routes to."""
+
+    @classmethod
+    def from_core(cls, core: action.Effects) -> "EffectsWithNameId":
+        return cls(
+            id=core.id,
+            hints_=core.hints_,
+            bonus_minutes=core.bonus_minutes,
+            level_up=core.level_up,
+            next_level=core.next_level,
         )
 
 
@@ -586,18 +627,52 @@ class LevelTime:
         )
 
 
+@dataclass(kw_only=True, frozen=True, slots=True)
+class BonusEvent:
+    """An event that changed a team's time, with the whole effects that caused it.
+
+    The bonus itself is ``effects.bonus_minutes``: positive is a bonus, negative
+    a penalty. Only events that carry bonus minutes are returned.
+    """
+
+    at: datetime
+    effects: EffectsWithNameId
+    source: BonusSource
+    key: str | None
+    level_time_id: int | None
+    level_number: int | None
+    """Level it was earned on. None when unresolved — then count it in the total only."""
+
+    @classmethod
+    def from_core(cls, core: CoreBonusEvent) -> "BonusEvent":
+        return cls(
+            at=core.at,
+            effects=EffectsWithNameId.from_core(core.effects),
+            source=core.source,
+            key=core.key,
+            level_time_id=core.level_time_id,
+            level_number=core.level_number,
+        )
+
+
 @dataclass
 class GameStat:
     level_times: dict[int, list[LevelTime]]
+    bonuses: dict[int, list[BonusEvent]]
+    """{team_id: [...]} — only teams that actually have bonuses."""
 
     @classmethod
-    def from_core(cls, core: dto.GameStatWithHints | None):
+    def from_core(cls, core: GameStatWithBonuses | None):
         if core is None:
             return None
         return cls(
             level_times={
                 team.id: [LevelTime.from_core(lt) for lt in lts]
                 for team, lts in core.level_times.items()
+            },
+            bonuses={
+                team_id: [BonusEvent.from_core(bonus) for bonus in bonuses]
+                for team_id, bonuses in core.bonuses.items()
             },
         )
 

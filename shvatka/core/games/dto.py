@@ -1,5 +1,6 @@
+import enum
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timedelta
 from uuid import UUID
 
 from shvatka.core.models import dto, enums
@@ -14,6 +15,65 @@ class Event:
     effects: action.Effects
     key: action.SHKey | None = None
     is_timer: bool
+
+
+class BonusSource(enum.StrEnum):
+    """What brought the team a bonus (or a penalty)."""
+
+    key = enum.auto()
+    timer = enum.auto()
+    unknown = enum.auto()
+
+
+@dataclass(kw_only=True, frozen=True, slots=True)
+class BonusEvent:
+    """An event that changed a team's time: bonus (>0 minutes) or penalty (<0).
+
+    Carries the whole ``effects`` rather than just its bonus minutes, so new
+    kinds of effect become visible to clients without an API change.
+
+    ``level_time_id`` is nullable in the DB, so the level may stay unresolved —
+    then ``level_number`` is None and the bonus only counts towards the total.
+    """
+
+    at: datetime
+    effects: action.Effects
+    source: BonusSource
+    key: action.SHKey | None
+    level_time_id: int | None
+    level_number: int | None = None
+
+    def with_level_number(self, level_number: int | None) -> "BonusEvent":
+        return BonusEvent(
+            at=self.at,
+            effects=self.effects,
+            source=self.source,
+            key=self.key,
+            level_time_id=self.level_time_id,
+            level_number=level_number,
+        )
+
+    @property
+    def minutes(self) -> float:
+        return self.effects.bonus_minutes
+
+    @property
+    def td(self) -> timedelta:
+        """How much time the bonus takes off the result (a penalty is negative)."""
+        return timedelta(minutes=self.minutes)
+
+
+@dataclass(kw_only=True, frozen=True, slots=True)
+class GameStatWithBonuses:
+    """Game stat together with the teams' bonuses and penalties.
+
+    Adjusted times are not computed here: we hand out the raw times and the
+    bonuses themselves, so a client can switch display modes without requests.
+    """
+
+    level_times: dict[dto.Team, list[dto.LevelTimeOnGame]]
+    bonuses: dict[int, list[BonusEvent]]
+    """{team_id: [...]} — only teams that actually have bonuses."""
 
 
 @dataclass(kw_only=True, frozen=True, slots=True)

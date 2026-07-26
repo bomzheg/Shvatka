@@ -265,8 +265,10 @@ with a curated ignore list, mypy overrides) lives in `pyproject.toml`.
   rather than using `logger.exception(...)` or `exc_info=True`. Being explicit
   keeps the logged exception independent of the active `except` block and lets
   you choose the log level.
-- Some docstrings/comments are in Russian — that's expected; keep the existing
-  language of the file you're editing.
+- **Write comments and docstrings in English.** Some older ones are in Russian —
+  that's expected, and there's no need to translate them when you touch a file —
+  but anything you add should be English. User-facing strings (bot replies,
+  Excel report headers, etc.) stay Russian.
 - **In aiogram / aiogram_dialog handlers, take dependencies from DI**
   (`FromDishka[...]` on an `@inject`-decorated handler) rather than reaching
   into `manager.middleware_data` / event middleware data. That includes

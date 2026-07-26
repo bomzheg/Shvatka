@@ -515,6 +515,13 @@ class KeyTime:
 
 @dataclass(kw_only=True, frozen=True, slots=True)
 class Effects:
+    """Effects addressing ``next_level`` by number, hiding the level's name_id.
+
+    For endpoints a playing team can read, where a name_id would leak part of
+    the scenario. Resolving it needs the game's levels — see
+    ``EffectsWithNameId`` for the places that don't have to hide anything.
+    """
+
     id: UUID
     hints_: Sequence[hints.AnyHint]
     bonus_minutes: float
@@ -536,6 +543,33 @@ class Effects:
                 if core.next_level is not None
                 else None
             ),
+        )
+
+
+@dataclass(kw_only=True, frozen=True, slots=True)
+class EffectsWithNameId:
+    """Effects as stored, addressing ``next_level`` by the level's name_id.
+
+    For endpoints where name_ids are not secret anyway — game results, readable
+    only by orgs until the game is complete, and already carrying level name_ids
+    in ``LevelTime``. Needs no level mapping, so no extra query.
+    """
+
+    id: UUID
+    hints_: Sequence[hints.AnyHint]
+    bonus_minutes: float
+    level_up: bool
+    next_level: str | None
+    """name_id of the level the key routes to."""
+
+    @classmethod
+    def from_core(cls, core: action.Effects) -> "EffectsWithNameId":
+        return cls(
+            id=core.id,
+            hints_=core.hints_,
+            bonus_minutes=core.bonus_minutes,
+            level_up=core.level_up,
+            next_level=core.next_level,
         )
 
 
@@ -602,7 +636,7 @@ class BonusEvent:
     """
 
     at: datetime
-    effects: Effects
+    effects: EffectsWithNameId
     source: BonusSource
     key: str | None
     level_time_id: int | None
@@ -610,12 +644,10 @@ class BonusEvent:
     """Level it was earned on. None when unresolved — then count it in the total only."""
 
     @classmethod
-    def from_core(
-        cls, core: CoreBonusEvent, level_numbers_by_name_id: Mapping[str, int]
-    ) -> "BonusEvent":
+    def from_core(cls, core: CoreBonusEvent) -> "BonusEvent":
         return cls(
             at=core.at,
-            effects=Effects.from_core(core.effects, level_numbers_by_name_id),
+            effects=EffectsWithNameId.from_core(core.effects),
             source=core.source,
             key=core.key,
             level_time_id=core.level_time_id,
@@ -639,9 +671,7 @@ class GameStat:
                 for team, lts in core.level_times.items()
             },
             bonuses={
-                team_id: [
-                    BonusEvent.from_core(bonus, core.level_numbers_by_name_id) for bonus in bonuses
-                ]
+                team_id: [BonusEvent.from_core(bonus) for bonus in bonuses]
                 for team_id, bonuses in core.bonuses.items()
             },
         )

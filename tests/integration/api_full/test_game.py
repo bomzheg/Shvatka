@@ -362,7 +362,12 @@ async def test_game_stat_bonuses(
         team=gryffindor,
         game=finished_game,
         level_time=second_level,
-        effects=action.Effects(id=uuid4(), bonus_minutes=-3.0),
+        effects=action.Effects(
+            id=uuid4(),
+            bonus_minutes=-3.0,
+            level_up=True,
+            next_level=finished_game.levels[2].name_id,
+        ),
         at=second_level.start_at + timedelta(seconds=1),
     )
     # an event with no bonus must not show up in the response
@@ -395,6 +400,9 @@ async def test_game_stat_bonuses(
         {"type": "text", "text": "bonus hint", "link_preview": None}
     ]
     assert team_bonuses[0]["effects"]["level_up"] is False
+    # next_level stays a name_id here: results already expose level name_ids,
+    # so there is nothing to hide and no level mapping to load
+    assert team_bonuses[1]["effects"]["next_level"] == finished_game.levels[2].name_id
 
 
 @pytest.mark.asyncio

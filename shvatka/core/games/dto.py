@@ -74,8 +74,6 @@ class GameStatWithBonuses:
     level_times: dict[dto.Team, list[dto.LevelTimeOnGame]]
     bonuses: dict[int, list[BonusEvent]]
     """{team_id: [...]} — only teams that actually have bonuses."""
-    level_numbers_by_name_id: dict[str, int]
-    """Mapping of level name_id to its number_in_game, used to resolve effects' next_level."""
 
 
 @dataclass(kw_only=True, frozen=True, slots=True)

@@ -5,7 +5,7 @@ from sqlalchemy import select, ScalarResult
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 
-from shvatka.core.games.dto import Event
+from shvatka.core.games.dto import BonusEvent, BonusSource, Event
 from shvatka.core.models import dto
 from shvatka.core.models.dto import action
 from shvatka.core.utils.datetime_utils import tz_utc
@@ -64,6 +64,41 @@ class GameEventDao(BaseDAO[models.GameEvent]):
             .order_by(models.GameEvent.at.desc())
         )
         return [self.map_to_event(event) for event in result.all()]
+
+    async def get_game_bonuses_by_teams(self, game: dto.Game) -> dict[int, list[BonusEvent]]:
+        """Бонусы и штрафы всех команд за игру, сгруппированные по id команды."""
+        result: ScalarResult[models.GameEvent] = await self.session.scalars(
+            select(models.GameEvent)
+            .options(
+                joinedload(models.GameEvent.key),
+                joinedload(models.GameEvent.timer),
+            )
+            .where(models.GameEvent.game_id == game.id)
+            .order_by(models.GameEvent.at)
+        )
+        bonuses: dict[int, list[BonusEvent]] = {}
+        for event in result.all():
+            if not event.effects.bonus_minutes:
+                continue
+            bonuses.setdefault(event.team_id, []).append(self.map_to_bonus(event))
+        return bonuses
+
+    def map_to_bonus(self, event: models.GameEvent) -> BonusEvent:
+        return BonusEvent(
+            at=event.at,
+            minutes=event.effects.bonus_minutes,
+            source=self._resolve_source(event),
+            key=event.key.key_text if event.key else None,
+            level_time_id=event.level_time_id,
+        )
+
+    @staticmethod
+    def _resolve_source(event: models.GameEvent) -> BonusSource:
+        if event.key is not None:
+            return BonusSource.key
+        if event.timer is not None:
+            return BonusSource.timer
+        return BonusSource.unknown
 
     def map_to_event(self, event: models.GameEvent) -> Event:
         return Event(

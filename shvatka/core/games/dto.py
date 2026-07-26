@@ -1,5 +1,6 @@
+import enum
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timedelta
 from uuid import UUID
 
 from shvatka.core.models import dto, enums
@@ -14,6 +15,58 @@ class Event:
     effects: action.Effects
     key: action.SHKey | None = None
     is_timer: bool
+
+
+class BonusSource(enum.StrEnum):
+    """Что именно принесло команде бонус (или штраф)."""
+
+    key = enum.auto()
+    timer = enum.auto()
+    unknown = enum.auto()
+
+
+@dataclass(kw_only=True, frozen=True, slots=True)
+class BonusEvent:
+    """Одно событие, изменившее время команды: бонус (>0) или штраф (<0).
+
+    ``level_time_id`` в БД nullable, поэтому уровень может остаться нерешённым —
+    тогда ``level_number`` равен None и бонус учитывается только в итоге.
+    """
+
+    at: datetime
+    minutes: float
+    source: BonusSource
+    key: action.SHKey | None
+    level_time_id: int | None
+    level_number: int | None = None
+
+    def with_level_number(self, level_number: int | None) -> "BonusEvent":
+        return BonusEvent(
+            at=self.at,
+            minutes=self.minutes,
+            source=self.source,
+            key=self.key,
+            level_time_id=self.level_time_id,
+            level_number=level_number,
+        )
+
+    @property
+    def td(self) -> timedelta:
+        """Сколько времени бонус снимает с результата (штраф — отрицательный)."""
+        return timedelta(minutes=self.minutes)
+
+
+@dataclass(kw_only=True, frozen=True, slots=True)
+class GameStatWithBonuses:
+    """Статистика игры вместе с бонусами и штрафами команд.
+
+    Скорректированные времена здесь не считаются: отдаём исходные времена и
+    сами бонусы, чтобы клиент мог переключать режимы отображения без запросов.
+    """
+
+    level_times: dict[dto.Team, list[dto.LevelTimeOnGame]]
+    bonuses: dict[int, list[BonusEvent]]
+    """{team_id: [...]} — только команды, у которых бонусы есть."""
 
 
 @dataclass(kw_only=True, frozen=True, slots=True)

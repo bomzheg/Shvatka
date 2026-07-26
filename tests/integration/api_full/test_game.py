@@ -1,6 +1,7 @@
 import sys
 from datetime import datetime, timedelta
 from pathlib import Path
+from uuid import uuid4
 
 import pytest
 from adaptix import Retort
@@ -10,7 +11,7 @@ from httpx import AsyncClient
 from shvatka.api.models import responses
 from shvatka.common.factory import REQUIRED_GAME_RECIPES
 from shvatka.core.models import dto
-from shvatka.core.models.dto import scn
+from shvatka.core.models.dto import action, scn
 from shvatka.core.models.enums import GameStatus
 from shvatka.core.models.enums.org_permission import OrgPermission
 from shvatka.core.services.game import create_game
@@ -324,3 +325,82 @@ async def test_post_bonus_hint_key(
     assert resp_json["game_finished"] is False
     assert resp_json["is_duplicate"] is False
     assert resp_json["wrong"] is False
+
+
+@pytest.mark.asyncio
+async def test_game_stat_bonuses(
+    finished_game: dto.FullGame,
+    gryffindor: dto.Team,
+    dao: HolderDao,
+    client: AsyncClient,
+    auth: AuthProperties,
+    harry: dto.Player,
+):
+    """Бонусы и штрафы отдаются вместе со статистикой, с номером уровня."""
+    token = auth.create_user_token(harry)
+    await dao.game.set_completed(finished_game)
+    await dao.game.set_number(finished_game, 1)
+    level_times = [
+        lt
+        for lt in await dao.level_time.get_game_level_times(finished_game)
+        if lt.team.id == gryffindor.id
+    ]
+    first_level = next(lt for lt in level_times if lt.level_number == 0)
+    second_level = next(lt for lt in level_times if lt.level_number == 1)
+    await dao.events.save_event(
+        team=gryffindor,
+        game=finished_game,
+        level_time=first_level,
+        effects=action.Effects(id=uuid4(), bonus_minutes=5.0),
+        at=first_level.start_at + timedelta(seconds=1),
+    )
+    await dao.events.save_event(
+        team=gryffindor,
+        game=finished_game,
+        level_time=second_level,
+        effects=action.Effects(id=uuid4(), bonus_minutes=-3.0),
+        at=second_level.start_at + timedelta(seconds=1),
+    )
+    # событие без бонуса в выдачу попадать не должно
+    await dao.events.save_event(
+        team=gryffindor,
+        game=finished_game,
+        level_time=second_level,
+        effects=action.Effects(id=uuid4(), level_up=True),
+        at=second_level.start_at + timedelta(seconds=2),
+    )
+    await dao.commit()
+
+    resp = await client.get(
+        f"/games/{finished_game.id}/stat",
+        cookies={"Authorization": "Bearer " + token.access_token},
+    )
+    assert resp.status_code == 200, resp.text
+    bonuses = resp.json()["bonuses"]
+    assert list(bonuses) == [str(gryffindor.id)]
+    team_bonuses = bonuses[str(gryffindor.id)]
+    assert [(b["minutes"], b["level_number"]) for b in team_bonuses] == [(5.0, 0), (-3.0, 1)]
+    assert {b["source"] for b in team_bonuses} == {"unknown"}
+    assert team_bonuses[0]["level_time_id"] == first_level.id
+    assert team_bonuses[1]["level_time_id"] == second_level.id
+
+
+@pytest.mark.asyncio
+async def test_game_stat_without_bonuses(
+    finished_game: dto.FullGame,
+    dao: HolderDao,
+    client: AsyncClient,
+    auth: AuthProperties,
+    harry: dto.Player,
+):
+    token = auth.create_user_token(harry)
+    await dao.game.set_completed(finished_game)
+    await dao.game.set_number(finished_game, 1)
+    await dao.commit()
+    resp = await client.get(
+        f"/games/{finished_game.id}/stat",
+        cookies={"Authorization": "Bearer " + token.access_token},
+    )
+    assert resp.status_code == 200, resp.text
+    assert resp.json()["bonuses"] == {}
+    assert resp.json()["level_times"]

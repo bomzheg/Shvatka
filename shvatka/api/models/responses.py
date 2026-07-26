@@ -6,7 +6,14 @@ from uuid import UUID
 
 from adaptix import Retort
 
-from shvatka.core.games.dto import CurrentHintsAndKeys, MyRole, Event
+from shvatka.core.games.dto import (
+    CurrentHintsAndKeys,
+    MyRole,
+    Event,
+    BonusSource,
+    GameStatWithBonuses,
+    BonusEvent as CoreBonusEvent,
+)
 from shvatka.core.models import dto, enums
 from shvatka.core.notifications.dto import (
     Notification as NotificationDto,
@@ -586,18 +593,48 @@ class LevelTime:
         )
 
 
+@dataclass(kw_only=True, frozen=True, slots=True)
+class BonusEvent:
+    """Бонус (minutes > 0) или штраф (minutes < 0), полученный командой."""
+
+    at: datetime
+    minutes: float
+    source: BonusSource
+    key: str | None
+    level_time_id: int | None
+    level_number: int | None
+    """Уровень, на котором получен. None — определить не удалось, учитывать только в итоге."""
+
+    @classmethod
+    def from_core(cls, core: CoreBonusEvent) -> "BonusEvent":
+        return cls(
+            at=core.at,
+            minutes=core.minutes,
+            source=core.source,
+            key=core.key,
+            level_time_id=core.level_time_id,
+            level_number=core.level_number,
+        )
+
+
 @dataclass
 class GameStat:
     level_times: dict[int, list[LevelTime]]
+    bonuses: dict[int, list[BonusEvent]]
+    """{team_id: [...]} — только команды, у которых бонусы есть."""
 
     @classmethod
-    def from_core(cls, core: dto.GameStatWithHints | None):
+    def from_core(cls, core: GameStatWithBonuses | None):
         if core is None:
             return None
         return cls(
             level_times={
                 team.id: [LevelTime.from_core(lt) for lt in lts]
                 for team, lts in core.level_times.items()
+            },
+            bonuses={
+                team_id: [BonusEvent.from_core(bonus) for bonus in bonuses]
+                for team_id, bonuses in core.bonuses.items()
             },
         )
 

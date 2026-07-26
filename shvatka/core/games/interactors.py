@@ -3,9 +3,9 @@ import typing
 from dataclasses import dataclass
 from datetime import datetime
 
-from shvatka.core.games.dto import CurrentHintsAndKeys, MyRole
+from shvatka.core.games.dto import CurrentHintsAndKeys, GameStatWithBonuses, MyRole
 from shvatka.core.games.game_play import schedule_first_hint
-from shvatka.core.games.results import build_results_table
+from shvatka.core.games.results import build_results_table, resolve_bonus_levels
 from shvatka.core.interfaces.clients.file_storage import FileGateway
 from shvatka.core.interfaces.printer import TablePrinter
 from shvatka.core.games.adapters import (
@@ -64,10 +64,19 @@ class GameStatReaderInteractor:
     def __init__(self, dao: GameStatReader):
         self.dao = dao
 
-    async def __call__(self, game_id: int, identity: IdentityProvider) -> dto.GameStatWithHints:
+    async def __call__(self, game_id: int, identity: IdentityProvider) -> GameStatWithBonuses:
         player = await identity.get_required_player()
         game = await self.dao.get_by_id(game_id)
-        return await get_game_stat_with_hints(game, player, self.dao)
+        stat = await get_game_stat_with_hints(game, player, self.dao)
+        bonuses = await self.dao.get_game_bonuses_by_teams(game)
+        return GameStatWithBonuses(
+            level_times=stat.level_times,
+            bonuses={
+                team.id: resolve_bonus_levels(lts, bonuses[team.id])
+                for team, lts in stat.level_times.items()
+                if bonuses.get(team.id)
+            },
+        )
 
 
 class GameResultsFileInteractor:
@@ -78,7 +87,8 @@ class GameResultsFileInteractor:
     async def __call__(self, game_id: int, identity: IdentityProvider) -> typing.BinaryIO:
         game = await self.dao.get_full(game_id)
         game_stat = await get_game_stat(game, identity, self.dao)
-        return self.printer.print_table(build_results_table(game, game_stat))
+        bonuses = await self.dao.get_game_bonuses_by_teams(game)
+        return self.printer.print_table(build_results_table(game, game_stat, bonuses))
 
 
 class GameFileReaderInteractor:

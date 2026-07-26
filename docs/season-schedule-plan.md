@@ -17,14 +17,16 @@ can't show the year at a glance.
 
 The feature has four parts:
 
-1. **A season** — the year's calendar, generated from a default rule, freely
-   editable, then *confirmed and published*.
-2. **Publication** — one message in the game-log channel that is **edited in
-   place** on every later change, plus a REST endpoint so the web UI and anyone
-   else can read the schedule.
+1. **Composing a season** — the year's calendar, generated from a default rule
+   and freely edited **client-side**, then *confirmed* — and confirmation is
+   what creates it in the engine (§4.1).
+2. **Publication** — one message in the game-log channel, **pinned**, and
+   **edited in place** on every later change, plus a REST endpoint so the web UI
+   and anyone else can read the schedule.
 3. **Change accumulation** — after publication, edits are collected and
-   published **once a day** as a digest: a new game-log message plus a
-   `low`-severity notification to a defined audience.
+   published **once a day** as a digest that **collapses repeated edits to the
+   net change**: a new game-log message plus a `low`-severity notification to a
+   defined audience.
 4. **Slot taking** — an approved player claims a slot for themselves, for their
    team (captains only), and may list additional orgs. A taken slot is locked to
    its owner.
@@ -41,6 +43,7 @@ no slot nearby.
 | Notifications feed + web push + bot DMs | `core/notifications/`, `notifications` table, `WebOrgNotifier`, `WebPushSender` | delivers the digest to players |
 | `NotificationType.season_schedule_changed`, `NotificationSeverity.low` | `core/models/enums/notification.py` | already reserved for exactly this — see `docs/notifications-feature-plan.md` §12, which defers it pending this feature |
 | Game-log channel | `BotConfig.game_log_chat`, `GameBotLog` (`tgbot/views/game.py:363`) | the channel the schedule is published to |
+| `BotRights.can_pin(chat_id)` | `tgbot/services/bot_rights.py` | cached rights check before pinning the schedule message |
 | `action_requests.bot_messages` JSONB | `infrastructure/db/models/action_request.py` | precedent for storing `(chat_id, message_id)` so a bot message can be edited later |
 | `PlanGameStartInteractor` | `core/games/editor_interactors.py:88` | the seam for slot linking and the "out of schedule" marker |
 | `GameScheduleSG` + aiogram_dialog `Calendar` | `tgbot/dialogs/game_manage/dialogs.py:368` | the bot flow the link offer plugs into |
@@ -52,26 +55,38 @@ Nothing named `season` exists in the codebase today — this is all new.
 
 Agreed with the author before writing this plan:
 
-1. **Permissions: any approved player** (`can_be_author`) may create, generate,
-   edit, publish and take. No new role, no grant/revoke UI. Every change is
-   auditable through the change log, the channel message and the digest.
-2. **One season per calendar year** (2026, 2027, …), unique on the year. Several
-   coexist — 2026 published while 2027 is still a draft — and **past seasons are
-   kept**, not deleted.
-3. **Notification audience** (see §8): everyone who is *now* in a team, or *was*
+1. **Permissions: any approved player** (`can_be_author`) may compose, publish,
+   edit and take. No new role, no grant/revoke UI. Every change is auditable
+   through the change log, the channel message and the digest.
+2. **No draft entity.** A season exists in the database only once it has been
+   **published**. Everything before that — generating the default dates, moving
+   and adding them — happens in the client's own state (aiogram_dialog
+   `dialog_data` in the bot, component state in the web UI). See §4.1.
+3. **One season per calendar year** (2026, 2027, …), unique on the year. Several
+   coexist and **past seasons are kept**, not deleted. Next year's season can be
+   published while this year's is still running.
+4. **Notification audience** (see §8): everyone who is *now* in a team, or *was*
    in a team during the current or previous year, plus everyone who was an org
    for a game in the current or previous year even if they are in no team now.
-4. **Digest at 10:00 MSK**, fixed, daily, only when there is something to report.
-5. **Slots are date-only.** No time of day; the exact start time comes from the
+5. **Digest at 10:00 MSK**, fixed, daily, only when there is something to
+   report, and **collapsed per slot to the net change** — collapsing is the
+   whole point of accumulating (§6.3).
+6. **Slots are date-only.** No time of day; the exact start time comes from the
    real game when it is planned.
-6. **Link window ±3 days** for offering a slot↔game link.
-7. **One game per slot, date synced**: linking a game moves the slot onto the
+7. **Link window ±3 days** for offering a slot↔game link.
+8. **One game per slot, date synced**: linking a game moves the slot onto the
    game's actual date, and that move is itself a recorded change.
-8. **Slot taking records owner + optional co-orgs**: the taking player, an
+9. **Slot taking records owner + optional co-orgs**: the taking player, an
    optional team (only if they captain it), a flag saying whether the author is
    the player or the team, and a list of additional org players.
-9. **Default generation: 9 slots**, the first on the first Saturday **strictly
-   after** 9 May, then every 21 days (§5).
+10. **Default generation: 9 slots**, the first on the first Saturday **strictly
+    after** 9 May, then every 21 days (§5).
+11. **The schedule message is pinned** on publication and **unpinned once the
+    season is over** (§6.4).
+12. **Past slots are left alone.** A slot whose date passed with no linked game
+    keeps its data unchanged — no "skipped" state, nothing to implement, and the
+    calendar still reads honestly a year later.
+13. **A season is created manually.** No auto-creation of next year's calendar.
 
 ## 3. Data model
 
@@ -79,17 +94,21 @@ Four new tables. No changes to existing tables.
 
 ### 3.1 `seasons`
 
+Every row is a published season — there is no draft status to model.
+
 | column | type | notes |
 |---|---|---|
 | `id` | bigint PK | |
 | `year` | int, not null, **unique** | 2026, 2027 … |
-| `status` | text, not null, default `draft` | `draft` → `published` |
-| `created_by_id` | FK `players.id`, not null | who created the draft |
-| `published_by_id` | FK `players.id`, nullable | who confirmed it |
-| `published_at` | timestamptz, nullable | |
+| `published_by_id` | FK `players.id`, not null | who confirmed and published it |
+| `published_at` | timestamptz, not null | |
 | `log_chat_id` | bigint, nullable | channel the schedule message lives in |
 | `log_message_id` | bigint, nullable | **the message edited in place on every change** |
-| `created_at` / `updated_at` | timestamptz, not null | |
+| `unpinned_at` | timestamptz, nullable | set when the season ended and the message was unpinned (§6.4) |
+| `updated_at` | timestamptz, not null | |
+
+`log_chat_id` / `log_message_id` stay nullable because publication to Telegram is
+best-effort: a failed channel post must not roll back a published season.
 
 ### 3.2 `season_slots`
 
@@ -128,15 +147,16 @@ rows once a real game exists.
 
 ### 3.4 `season_changes` — the accumulator
 
-One row per mutation after the season was published. This is the audit trail
-**and** the source of the daily digest.
+One row per mutation. Because a season is only ever persisted in its published
+form, every change row is by definition post-publication: this is both the audit
+trail **and** the source of the daily digest.
 
 | column | type | notes |
 |---|---|---|
 | `id` | bigint PK | |
 | `season_id` | FK `seasons.id` ON DELETE CASCADE, not null | |
 | `slot_id` | FK `season_slots.id` ON DELETE SET NULL, nullable | null once the slot is gone |
-| `type` | text, not null | `season_published`, `slot_added`, `slot_moved`, `slot_removed`, `slot_taken`, `slot_released`, `slot_orgs_changed`, `slot_note_changed`, `slot_game_linked`, `slot_game_unlinked` |
+| `type` | text, not null | `slot_added`, `slot_moved`, `slot_removed`, `slot_taken`, `slot_released`, `slot_orgs_changed`, `slot_note_changed`, `slot_game_linked`, `slot_game_unlinked` |
 | `actor_id` | FK `players.id`, nullable | who did it |
 | `by_superuser` | bool, not null, default false | drives «изменено администратором» wording |
 | `payload` | JSONB, not null, default `{}` | denormalized: `old_date`, `new_date`, `owner_name`, `team_name`, `game_name`, `org_names` — so the digest renders with no joins and **survives later renames and deletes** |
@@ -145,17 +165,15 @@ One row per mutation after the season was published. This is the audit trail
 
 Partial index `(season_id) where published_at is null` — the digest query.
 
-Changes made while the season is still a **draft** are not recorded: there is
-nothing to diff against and nobody has been told about the schedule yet.
-
 ## 4. Domain model (`shvatka/core/season/`)
 
 Following the Interactor conventions in `AGENTS.md`:
 
 ```
 core/season/
-  dto.py           Season, SeasonStatus, Slot, SlotAuthor, ScheduleChange, ChangeType
-  rules.py         pure: default_slot_dates(year), permission checks, "near" search
+  dto.py           Season, Slot, SlotAuthor, ScheduleChange, ChangeType
+  rules.py         pure: default_slot_dates(year), permission checks, "near" search,
+                   digest collapsing
   adapters.py      Protocols, composed from core/interfaces/dal/*
   interactors.py   the use cases
 ```
@@ -165,21 +183,45 @@ queries: `id, date, note, owner: dto.Player | None, author_kind, team: dto.Team
 | None, orgs: Sequence[dto.Player], game: dto.Game | None`, plus helpers
 `is_free`, `is_mine(player)`.
 
-Interactors (all take `identity: IdentityProvider`, none take a resolved player):
+### 4.1 Composing a season without a draft entity
+
+The engine never stores a half-built calendar. The flow is:
+
+1. The client asks the engine for the **default dates**:
+   `GetDefaultSlotDatesInteractor(year)` — a pure call, no reads, no writes,
+   returning the 9 dates of §5. The engine stays the single source of truth for
+   the rule while nothing is persisted.
+2. The user edits that list **locally** — moves, adds, deletes, writes notes.
+   In the bot that list lives in `dialog_data`; in the web UI in component state
+   (optionally mirrored to `localStorage` so a refresh doesn't lose it).
+3. «Опубликовать» submits the **whole list at once**:
+   `PublishSeasonInteractor(year, slots)` inserts the `seasons` row and all
+   `season_slots` in **one transaction**, then announces (§6).
+
+Consequences worth being explicit about:
+
+- An unfinished composition is lost if the dialog is cancelled or the browser
+  cache cleared. That is acceptable — it is nine dates, one tap to regenerate.
+- Two people could compose 2027 in parallel; the first to publish wins and the
+  second gets `SeasonAlreadyExists` → HTTP 409, with the UI offering to open the
+  now-published season and edit it slot by slot instead.
+- After publication there is exactly one editing path — the per-slot endpoints
+  of §10 — so "edit the schedule" always means "make a tracked change".
+
+### 4.2 Interactors
 
 | Interactor | Does |
 |---|---|
-| `GetSeasonInteractor` | read one season with its slots (public for `published`) |
+| `GetDefaultSlotDatesInteractor` | the 9 default dates for a year; pure, no persistence |
+| `PublishSeasonInteractor` | create the season + its slots from a submitted list, announce, pin, notify |
+| `GetSeasonInteractor` | read one season with its slots (public) |
 | `ListSeasonsInteractor` | the years that exist |
-| `CreateSeasonInteractor` | create a `draft` for a year, generating the 9 default slots (§5) |
-| `RegenerateSlotsInteractor` | reset a **draft** back to the default slots |
 | `AddSlotInteractor` / `MoveSlotInteractor` / `RemoveSlotInteractor` / `EditSlotNoteInteractor` | structural edits |
-| `PublishSeasonInteractor` | draft → published, post the channel message, store its id, notify |
 | `TakeSlotInteractor` / `ReleaseSlotInteractor` / `SetSlotOrgsInteractor` | ownership (§7) |
 | `LinkGameToSlotInteractor` / `UnlinkGameFromSlotInteractor` | the game link (§9) |
 | `SuggestSlotsForGameInteractor` | read-only ±3-day lookup used by both edges (§9) |
 | `SyncLinkedSlotInteractor` | move a linked slot when its game's `start_at` moves |
-| `PublishSeasonDigestInteractor` | the 10:00 MSK job (§6.2) |
+| `PublishSeasonDigestInteractor` | the 10:00 MSK job — digest **and** end-of-season unpin (§6.3, §6.4) |
 
 Per the "at most one DAO per interactor" rule, all of them take a single
 composed `SeasonScheduleDao` Protocol (`core/season/adapters.py`), implemented
@@ -188,8 +230,8 @@ by `infrastructure/db/dao/complex/season.py` over per-table DAOs `SeasonDao`,
 stay in that table's own DAO, and the interactor decides the ordering.
 
 New exceptions in `core/utils/exceptions.py`: `SeasonAlreadyExists`,
-`SeasonNotPublished`, `SeasonAlreadyPublished`, `SlotAlreadyTaken`,
-`NotSlotOwner`, `SlotAlreadyLinked`, `GameAlreadyInSchedule`.
+`SeasonNotFound`, `SlotAlreadyTaken`, `NotSlotOwner`, `SlotAlreadyLinked`,
+`GameAlreadyInSchedule`.
 
 ## 5. Default generation
 
@@ -223,16 +265,17 @@ which is what "every 3 weeks up to October" means in practice — without needin
 a fragile end-boundary rule.
 
 The user may then change anything: move, add, delete slots, including into
-January–April or November–December.
+January–April or November–December — before publication in the client, after it
+through the tracked endpoints.
 
-## 6. Publication and the channel message
+## 6. Publication, the channel message, the digest
 
 ### 6.1 A dedicated announcer protocol, not `GameLogWriter`
 
 `GameLogWriter.log()` returns `None`, and `ComplexGameLogWriter` fans out to
 several channels swallowing errors — so it cannot hand back the `message_id` we
-must store and edit later. Rather than distort it, add a sibling protocol in
-`core/views/season.py`:
+must store, edit and later unpin. Rather than distort it, add a sibling protocol
+in `core/views/season.py`:
 
 ```python
 @dataclass
@@ -245,24 +288,34 @@ class SeasonAnnouncer(Protocol):
     async def update(self, season: dto.Season) -> None: ...          # edits the stored message
     async def announce_digest(self, season: dto.Season,
                               changes: Sequence[dto.ScheduleChange]) -> None: ...
+    async def close(self, season: dto.Season) -> None: ...           # unpin at season end
 ```
 
-- `BotSeasonAnnouncer` (`tgbot/views/season.py`) — sends/edits in
-  `BotConfig.game_log_chat`; `update` is a no-op when the season has no stored
-  message; swallows Telegram's "message is not modified".
+- `BotSeasonAnnouncer` (`tgbot/views/season.py`) — sends, pins, edits and
+  unpins in `BotConfig.game_log_chat`; checks `BotRights.can_pin` first, exactly
+  as `MessagePinner` does, and treats a missing pin right as a logged no-op;
+  `update` is a no-op when the season has no stored message; swallows Telegram's
+  "message is not modified".
 - `WebSeasonAnnouncer` (`api/utils/web_input.py`) — no-op; the web side is served
   by the REST endpoint and the notification feed, not by an announcement.
 - `ComplexSeasonAnnouncer` (`shvatka/views.py`) — same swallow-and-log shape as
   `ComplexGameLogWriter`, except `publish` returns the **bot's** announcement so
   the interactor can persist it.
 
-`PublishSeasonInteractor`: flip status → commit → `announcer.publish(...)` →
-store `log_chat_id`/`log_message_id` → commit → write `season_schedule_changed`
-notifications (`low`) to the §8 audience.
+### 6.2 Publishing
 
-### 6.2 After publication: edit immediately, digest daily
+`PublishSeasonInteractor`: insert season + slots → commit → `announcer.publish`
+(send + pin) → store `log_chat_id`/`log_message_id` → commit → write
+`season_schedule_changed` notifications (severity `low`) to the §8 audience.
 
-Every mutating interactor, when the season is `published`:
+The publication itself produces **no** `season_changes` rows: the pinned message
+and the "новое расписание сезона" notification already say everything, and the
+first digest should describe changes *to* the published plan, not the plan
+itself.
+
+### 6.3 After publication: edit immediately, digest daily
+
+Every mutating interactor:
 
 1. performs the write **and** inserts the `season_changes` row **in the same
    transaction** (the audit trail must not be lost — this deliberately differs
@@ -271,20 +324,25 @@ Every mutating interactor, when the season is `published`:
 3. calls `announcer.update(season)` post-commit, best-effort, so the pinned
    channel message always shows current truth.
 
-The daily job (`PublishSeasonDigestInteractor`, 10:00 MSK) then:
+The daily job (`PublishSeasonDigestInteractor`, 10:00 MSK) then, per season:
 
-1. selects `season_changes` with `published_at is null` per published season;
-2. renders them grouped by slot in date order;
-3. marks them published and writes `season_schedule_changed` notifications with
-   severity `low` — **one transaction**, committed;
+1. selects `season_changes` with `published_at is null`;
+2. **collapses them per slot to the net change** — five edits of one slot before
+   10:00 report as one line, and a slot that was moved and then moved back
+   drops out of the digest entirely. The full step-by-step trail stays in
+   `season_changes`. Collapsing lives in `core/season/rules.py` as a pure
+   function over a list of changes, so it is unit-testable without a DB;
+3. marks the rows published and writes `season_schedule_changed` notifications
+   with severity `low` — **one transaction**, committed;
 4. posts the digest as a **new** message in the game-log channel (best-effort,
    post-commit — consistent with the rest of the codebase's post-commit
-   notification pattern).
+   notification pattern). Nothing to post ⇒ nothing sent, no empty daily noise.
 
 If the channel post fails after the commit the digest is skipped for that day;
 the schedule message — edited in place on every change by step 3 above — still
-shows the correct state, and players still got the notification. The reverse order (send, then commit) was
-rejected because a crash in between would re-post the same digest.
+shows the correct state, and players still got the notification. The reverse
+order (send, then commit) was rejected because a crash in between would re-post
+the same digest.
 
 Wiring: a cron job registered once at scheduler start with a fixed id and
 `replace_existing=True`:
@@ -301,12 +359,22 @@ Note this is the first *recurring* job in `ApScheduler` — every existing job i
 a one-shot `date` trigger. The Redis jobstore keeps it across restarts, and
 `replace_existing` keeps redeploys idempotent.
 
+### 6.4 Unpinning when the season ends
+
+The same daily job also closes finished seasons: for every season with
+`unpinned_at is null` whose **latest slot date is in the past**, call
+`announcer.close(season)` (unpin, best-effort) and set `unpinned_at`. No extra
+scheduling is needed, and "latest slot date" naturally follows slots that moved
+or were synced to a late game.
+
+The message itself is kept and stays editable — only the pin is released, so the
+channel keeps a permanent record of the year.
+
 ## 7. Slot ownership
 
 Taking (`TakeSlotInteractor`):
 
 - requires `can_be_author` (`check_allow_be_author`);
-- requires the season to be `published` — a draft has nothing to claim;
 - the slot must be free, **or** already owned by the acting player (re-taking
   your own slot is how you change its author/orgs), **or** the actor is a
   superuser;
@@ -349,7 +417,7 @@ follows automatically via the existing `WebPushSender` path; `low` severity
 already means the service worker treats it quietly.
 
 The season year is *not* used for the window — the window is relative to
-**today**, so a 2027 draft published in 2026 still reaches the people active in
+**today**, so a 2027 season published in 2026 still reaches the people active in
 2025–2026.
 
 ## 9. Linking a game to a slot
@@ -359,9 +427,9 @@ linked automatically — the engine only *offers*.
 
 **A. Planning a game near a slot.** Both edges call the read-only
 `SuggestSlotsForGameInteractor(at: datetime)` before or right after planning. It
-returns slots of the current published season whose date is within **±3 days**
-of `at` (MSK) and that are free or already owned by the acting player, nearest
-first. The edge shows «Привязать игру к слоту 27.06?» with confirm/skip.
+returns slots of the current season whose date is within **±3 days** of `at`
+(MSK) and that are free or already owned by the acting player, nearest first.
+The edge shows «Привязать игру к слоту 27.06?» with confirm/skip.
 
 **B. Planning a game with no slot nearby.** The same interactor returning an
 empty list drives the warning, offering three actions:
@@ -392,17 +460,15 @@ gains a suffix when the freshly planned game has no linked slot — «(вне
 
 ## 10. API surface
 
-Read of a **published** season is public (the issue asks for the schedule to be
-"available by API"); drafts and all writes require an authenticated approved
-player.
+Reading a season is public (the issue asks for the schedule to be "available by
+API"); all writes require an authenticated approved player.
 
 ```
-GET    /seasons                                 list of years + status
+GET    /seasons                                 list of years
 GET    /seasons/current                         the current year's season
 GET    /seasons/{year}                          season + slots
-POST   /seasons                {year}           create draft with default slots
-POST   /seasons/{year}/regenerate               reset a draft to defaults
-POST   /seasons/{year}/publish                  confirm & publish
+GET    /seasons/defaults?year=2027              the 9 default dates, nothing persisted
+POST   /seasons  {year, slots: [{date, note?}]} publish a composed season
 POST   /seasons/{year}/slots   {date, note?}    add a slot
 PATCH  /seasons/{year}/slots/{id}  {date?, note?}
 DELETE /seasons/{year}/slots/{id}
@@ -417,13 +483,20 @@ GET    /seasons/slots/suggest?at=<iso datetime>   ±3-day candidates for the off
 Thin routes in `api/routes/season.py` following the existing pattern (`@inject`,
 `FromDishka[SomeInteractor]`, `ApiIdentityProvider`, `req`/`responses` models
 with `.from_core` / `.to_core`), registered in `api/routes/__init__.py`.
-Conflicts map to 409 (`SlotAlreadyTaken`, `SeasonAlreadyExists`,
+Conflicts map to 409 (`SeasonAlreadyExists`, `SlotAlreadyTaken`,
 `GameAlreadyInSchedule`), permission failures to 403 via the existing
 `error_converter`.
 
 ## 11. Bot UX
 
-New `SeasonSG` states group: `calendar`, `slot`, `take`, `orgs`, `confirm_publish`.
+New `SeasonSG` states group: `calendar`, `slot`, `take`, `orgs`, `compose`,
+`confirm_publish`.
+
+**Composing.** For a year with no season yet, `compose` starts from
+`GET /seasons/defaults`, keeps the working list in `dialog_data`, and lets the
+user tap days to add/remove and pick a slot to move. «Опубликовать» leads to a
+confirm window (publication announces to everyone, so it deserves one) and
+submits the whole list. Cancelling drops `dialog_data` — nothing was persisted.
 
 **The calendar widget.** As the author expected, aiogram_dialog's `Calendar` is
 subclassed rather than used as-is:
@@ -435,19 +508,18 @@ class SeasonCalendar(Calendar):
         # so each day cell can be marked
 ```
 
-Day marks come from a getter that loads the season once: `🟢` free slot, `🔒`
-taken by someone else, `⭐` taken by you, `🎮` linked to a game, plain number
-otherwise. `CalendarConfig(min_date, max_date)` pins the view to the season's
-year, with month scope as the entry point so a whole season is two taps away.
+Day marks come from a getter that loads the season (or the `dialog_data` draft)
+once: `🟢` free slot, `🔒` taken by someone else, `⭐` taken by you, `🎮` linked
+to a game, plain number otherwise. `CalendarConfig(min_date, max_date)` pins the
+view to the season's year, with month scope as the entry point so a whole season
+is two taps away.
 
-Flows:
+Flows on a published season:
 
 - tap a day **with** a slot → slot window: take / release / change author
   (self vs team) / edit orgs / move / delete / open the linked game;
 - tap a day **without** a slot → «Добавить слот на эту дату» for approved
-  players;
-- a season menu window with «Сгенерировать по умолчанию» (draft only) and
-  «Опубликовать» (with a confirm step, since publication announces to everyone).
+  players.
 
 **Link offer inside the existing flow.** `GameScheduleSG` gets one extra window
 after `confirm`: if `SuggestSlotsForGameInteractor` returns candidates, offer the
@@ -465,10 +537,14 @@ New standalone component `src/app/season/` plus `season.service.ts`, route
   month up to the full January–December so a user can plan a cold-month game.
 - **Cell states** mirror the bot marks: free, taken (owner or team name +
   emoji), linked game (links to the game page), your slot highlighted.
-- **Actions** for approved players: take (dialog choosing self vs team, plus an
-  org picker reusing the existing player search), release, add slot, move slot,
-  publish. Everything else is read-only, and the published season renders for
-  anonymous visitors.
+- **Compose mode** for a year with no season: fetch the defaults, edit the list
+  in component state (mirrored to `localStorage` so a refresh is survivable),
+  publish in one request. A 409 means someone else published first — offer to
+  reload the now-published season.
+- **Actions** on a published season, for approved players: take (dialog choosing
+  self vs team, plus an org picker reusing the existing player search), release,
+  add slot, move slot. Everything else is read-only, and a published season
+  renders for anonymous visitors.
 - **Notifications tab**: add a `season_schedule_changed` renderer to
   `notification-render.ts` producing e.g. «Расписание сезона 2027: 3 изменения»
   linking to `/season/2027`.
@@ -480,43 +556,43 @@ Per `AGENTS.md`:
 - **Unit** (`tests/unit/season/`): `default_slot_dates` for several years
   including the 9 May-is-Saturday case and the count/interval invariants; the
   ownership rules (free/owner/superuser/captain matrix); the ±3-day nearest-slot
-  search including ties; digest rendering from a list of changes.
-- **Integration** (`tests/integration/api_full/test_season.py`): create draft →
-  9 slots; publish → status flips and the change row appears; take → 409 on a
-  second taker, 403 for a non-approved player; link a game → slot date syncs;
-  re-plan the game → slot follows; run the digest interactor → changes marked
-  published and notifications written. Assert through `check_dao` as the
-  existing tests do.
+  search including ties; **digest collapsing** (repeated moves of one slot → one
+  line; move-and-move-back → nothing; take then release → nothing).
+- **Integration** (`tests/integration/api_full/test_season.py`): publish a
+  composed season → row + slots + pinned announcement; publish the same year
+  twice → 409; take → 409 on a second taker, 403 for a non-approved player; link
+  a game → slot date syncs; re-plan the game → slot follows; run the digest
+  interactor → changes marked published and notifications written; run it on a
+  season whose last slot has passed → `unpinned_at` set. Assert through
+  `check_dao` as the existing tests do.
 - Announcer and notification side effects are asserted through mocks in the
   style of `tests/mocks/org_notifier.py`.
 
 ## 14. Phasing
 
 1. **Phase 1 — engine.** Tables + migration, `core/season/`, DAOs, DI wiring,
-   REST API, `SeasonAnnouncer` + bot implementation, publication, the daily
-   digest job and the notification audience. This is the reviewable core and
-   makes the schedule real and readable everywhere.
-2. **Phase 2 — bot.** `SeasonSG` dialogs, the `SeasonCalendar` subclass, and the
-   link offer / no-slot warning grafted onto `GameScheduleSG`.
-3. **Phase 3 — web UI.** The season calendar component, the extend-months
-   controls, and the `season_schedule_changed` notification renderer.
+   REST API, `SeasonAnnouncer` + bot implementation, publication with pinning,
+   the daily digest + unpin job, and the notification audience. This is the
+   reviewable core and makes the schedule real and readable everywhere.
+2. **Phase 2 — bot.** `SeasonSG` dialogs including compose-in-`dialog_data`, the
+   `SeasonCalendar` subclass, and the link offer / no-slot warning grafted onto
+   `GameScheduleSG`.
+3. **Phase 3 — web UI.** The season calendar component, compose mode, the
+   extend-months controls, and the `season_schedule_changed` notification
+   renderer.
 
 Phases 2 and 3 are independent of each other and can land in either order.
 
 ## 15. Open questions
 
-- **Who creates next year's draft?** Currently a manual `POST /seasons`. Should
-  the engine auto-create a draft for year+1 at some point (say, after the last
-  slot of the current season), or is manual creation fine?
-- **Pinning.** Should the published schedule message be pinned in the game-log
-  channel? (The bot already handles pin permissions for puzzle messages, so it's
-  cheap either way.)
-- **Digest wording for a busy day.** If one slot is edited five times before
-  10:00, do we report every step, or collapse to the net before/after? Collapsing
-  reads better; the full trail stays in `season_changes` either way. Proposal:
-  collapse per slot, listing the net change.
-- **Past-slot hygiene.** A slot whose date has passed with no linked game — leave
-  as-is, or mark it as skipped so the calendar reads honestly a year later?
-- **Draft visibility.** Should a draft season be readable by *any* authenticated
-  player (so people can see what's coming), or only by approved players as
-  proposed here?
+None outstanding — every question raised while drafting has been answered and
+folded into §2. Two things worth a second look during implementation rather than
+now:
+
+- **Digest wording** once collapsing is implemented — a slot that was taken and
+  then moved on the same day is one line or two? (Proposal: one line per slot,
+  listing its net state change.)
+- **Compose-mode conflict UX** on the web: whether "someone published first"
+  should try to merge the local list into the published season, or simply
+  discard and reload. (Proposal: discard and reload — the local list is nine
+  dates.)

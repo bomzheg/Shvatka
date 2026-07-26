@@ -4,7 +4,7 @@ import typing
 from functools import partial
 
 from aiogram import Dispatcher, Bot
-from aiogram.exceptions import AiogramError
+from aiogram.exceptions import AiogramError, TelegramBadRequest
 from aiogram.filters import ExceptionTypeFilter
 from aiogram.types import InlineKeyboardMarkup
 from aiogram.types.error_event import ErrorEvent
@@ -14,6 +14,21 @@ from aiogram_dialog.api.exceptions import UnknownIntent
 from shvatka.core.utils.exceptions import SHError
 
 logger = logging.getLogger(__name__)
+
+MESSAGE_IS_NOT_MODIFIED = "message is not modified"
+
+
+def is_message_not_modified(error: ErrorEvent) -> bool:
+    exception = error.exception
+    return (
+        isinstance(exception, TelegramBadRequest) and MESSAGE_IS_NOT_MODIFIED in exception.message
+    )
+
+
+async def ignore_message_not_modified(error: ErrorEvent) -> None:
+    logger.debug("Ignoring %s", error.exception)
+    if c := error.update.callback_query:
+        await c.answer()
 
 
 async def handle_sh_error(error: ErrorEvent, log_chat_id: int, bot: Bot):
@@ -72,4 +87,5 @@ def setup(dp: Dispatcher, log_chat_id: int):
         partial(handle_sh_error, log_chat_id=log_chat_id), ExceptionTypeFilter(SHError)
     )
     dp.errors.register(clear_unknown_intent, ExceptionTypeFilter(UnknownIntent))
+    dp.errors.register(ignore_message_not_modified, is_message_not_modified)
     dp.errors.register(partial(handle, log_chat_id=log_chat_id))

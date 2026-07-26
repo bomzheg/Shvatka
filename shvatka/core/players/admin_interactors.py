@@ -16,12 +16,13 @@ from shvatka.core.players.interfaces import (
     AdminPlayerReader,
     AdminEmailSetter,
     AdminTgChanger,
+    AdminUsernameSetter,
     AdminPlayerMerger,
     AdminPlayerWaiverPointsReader,
 )
-from shvatka.core.players.player import merge_players, get_waiver_points
+from shvatka.core.players.player import merge_players, get_waiver_points, set_player_username
 from shvatka.core.utils import exceptions
-from shvatka.core.utils.input_validation import validate_email
+from shvatka.core.utils.input_validation import validate_email, validate_new_username
 from shvatka.core.views.game import GameLogWriter
 
 logger = logging.getLogger(__name__)
@@ -93,6 +94,27 @@ class AdminSetPlayerEmailInteractor:
         )
         await self.dao.commit()
         return account
+
+
+@dataclass
+class AdminSetPlayerUsernameInteractor:
+    dao: AdminUsernameSetter
+
+    async def __call__(
+        self, identity: IdentityProvider, player_id: int, username: str
+    ) -> PlayerIdentitiesInfo:
+        admin = await identity.get_superuser()
+        logger.warning(
+            "admin %s changed username of player %s to %s", admin.id, player_id, username
+        )
+        player = await self.dao.get_by_id(player_id)
+        normalized = validate_new_username(username)
+        if normalized is None:
+            raise exceptions.PlayerInvalidUsername(text=f"invalid username {username}")
+        await set_player_username(player, normalized, self.dao)
+        updated = await self.dao.get_by_id(player.id)
+        email = await self.dao.get_email_by_player_id(updated.id)
+        return PlayerIdentitiesInfo(player=updated, email=email)
 
 
 @dataclass

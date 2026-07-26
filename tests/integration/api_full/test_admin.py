@@ -230,6 +230,95 @@ async def test_change_tg_conflict(
 
 
 @pytest.mark.asyncio
+async def test_change_username(
+    client: AsyncClient,
+    admin_token: Token,
+    hermione: dto.Player,
+    check_dao: HolderDao,
+):
+    resp = await client.put(
+        f"/admin/players/{hermione.id}/username",
+        json={"username": "granger"},
+        cookies=auth_cookies(admin_token),
+        follow_redirects=True,
+    )
+    assert resp.is_success
+    assert resp.json()["username"] == "granger"
+    reloaded = await check_dao.player.get_by_id(hermione.id)
+    assert reloaded.username == "granger"
+
+
+@pytest.mark.asyncio
+async def test_change_username_invalid(
+    client: AsyncClient,
+    admin_token: Token,
+    hermione: dto.Player,
+    check_dao: HolderDao,
+):
+    before = (await check_dao.player.get_by_id(hermione.id)).username
+    resp = await client.put(
+        f"/admin/players/{hermione.id}/username",
+        json={"username": "не латиница"},
+        cookies=auth_cookies(admin_token),
+        follow_redirects=True,
+    )
+    assert resp.status_code == 422
+    assert (await check_dao.player.get_by_id(hermione.id)).username == before
+
+
+@pytest.mark.asyncio
+async def test_change_username_occupied(
+    client: AsyncClient,
+    admin_token: Token,
+    harry: dto.Player,
+    hermione: dto.Player,
+    check_dao: HolderDao,
+):
+    harry_username = (await check_dao.player.get_by_id(harry.id)).username
+    assert harry_username is not None
+    resp = await client.put(
+        f"/admin/players/{hermione.id}/username",
+        json={"username": harry_username},
+        cookies=auth_cookies(admin_token),
+        follow_redirects=True,
+    )
+    assert resp.status_code == 409
+
+
+@pytest.mark.asyncio
+async def test_change_own_username_to_the_same_one(
+    client: AsyncClient,
+    admin_token: Token,
+    hermione: dto.Player,
+    check_dao: HolderDao,
+):
+    """Keeping a player's current username must not trip the occupied check."""
+    current = (await check_dao.player.get_by_id(hermione.id)).username
+    assert current is not None
+    resp = await client.put(
+        f"/admin/players/{hermione.id}/username",
+        json={"username": current},
+        cookies=auth_cookies(admin_token),
+        follow_redirects=True,
+    )
+    assert resp.is_success
+    assert resp.json()["username"] == current
+
+
+@pytest.mark.asyncio
+async def test_change_username_forbidden_for_non_superuser(
+    client: AsyncClient, hermione_token: Token, hermione: dto.Player
+):
+    resp = await client.put(
+        f"/admin/players/{hermione.id}/username",
+        json={"username": "granger"},
+        cookies=auth_cookies(hermione_token),
+        follow_redirects=True,
+    )
+    assert resp.status_code == 403
+
+
+@pytest.mark.asyncio
 async def test_get_poll_empty(client: AsyncClient, admin_token: Token):
     resp = await client.get(
         "/admin/poll",

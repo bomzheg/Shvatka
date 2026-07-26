@@ -70,6 +70,7 @@ from shvatka.core.players.interactors import (
 from shvatka.core.players.admin_interactors import (
     AdminSetPlayerEmailInteractor,
     AdminChangePlayerTgInteractor,
+    AdminSetPlayerUsernameInteractor,
     AdminMergePlayersInteractor,
     AdminSearchPlayersInteractor,
     AdminGetPlayerInteractor,
@@ -79,6 +80,7 @@ from shvatka.core.players.interfaces import (
     AdminPlayerReader,
     AdminEmailSetter,
     AdminTgChanger,
+    AdminUsernameSetter,
     AdminPlayerMerger,
     AdminPlayerWaiverPointsReader,
 )
@@ -156,6 +158,7 @@ from shvatka.infrastructure.db.dao.complex2.waiver import (
 from shvatka.infrastructure.db.dao.complex.player import (
     AdminEmailSetterImpl,
     AdminTgChangerImpl,
+    AdminUsernameSetterImpl,
     AdminPlayerMergerImpl,
     AdminPlayerReaderImpl,
     AdminPlayerWaiverPointsReaderImpl,
@@ -459,6 +462,10 @@ class AdminProvider(Provider):
         return AdminTgChangerImpl(dao)
 
     @provide
+    def admin_username_setter(self, dao: HolderDao) -> AdminUsernameSetter:
+        return AdminUsernameSetterImpl(dao)
+
+    @provide
     def admin_player_reader(self, dao: HolderDao) -> AdminPlayerReader:
         return AdminPlayerReaderImpl(dao)
 
@@ -477,6 +484,7 @@ class AdminProvider(Provider):
     # Interactors
     admin_set_email = provide(AdminSetPlayerEmailInteractor)
     admin_change_tg = provide(AdminChangePlayerTgInteractor)
+    admin_set_username = provide(AdminSetPlayerUsernameInteractor)
     admin_get_player = provide(AdminGetPlayerInteractor)
     admin_poll_reader = provide(AdminPollReaderInteractor)
     admin_remove_poll_vote = provide(AdminRemovePollVoteInteractor)

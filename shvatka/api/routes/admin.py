@@ -23,6 +23,7 @@ from shvatka.core.players.admin_interactors import (
     AdminMergePlayersInteractor,
     AdminSearchPlayersInteractor,
     AdminSetPlayerEmailInteractor,
+    AdminSetPlayerUsernameInteractor,
 )
 from shvatka.core.services.one_time_link import GenerateOneTimeLoginLinkForPlayerInteractor
 from shvatka.core.services.scenario.files import get_file_metas
@@ -92,6 +93,23 @@ async def change_email(
     except exceptions.EmailAlreadyExist as e:
         raise HTTPException(status_code=409, detail="email already exists") from e
     return responses.EmailAccount(email=account.email, is_verified=account.is_verified)
+
+
+@inject
+async def change_username(
+    identity: FromDishka[ApiIdentityProvider],
+    interactor: FromDishka[AdminSetPlayerUsernameInteractor],
+    config: FromDishka[ApiConfig],
+    id_: Annotated[int, Path(alias="id")],
+    body: Annotated[req.AdminChangeUsername, Body()],
+) -> responses.PlayerWithIdentities:
+    try:
+        info = await interactor(identity=identity, player_id=id_, username=body.username)
+    except exceptions.PlayerInvalidUsername as e:
+        raise HTTPException(status_code=422, detail="invalid username") from e
+    except exceptions.PlayerUsernameOccupied as e:
+        raise HTTPException(status_code=409, detail="username already occupied") from e
+    return responses.PlayerWithIdentities.from_core(info.player, info.email, config.superusers)
 
 
 @inject
@@ -229,6 +247,7 @@ def setup() -> APIRouter:
     router.add_api_route("/players/{id}/one-time-link", create_one_time_link, methods=["POST"])
     router.add_api_route("/players/{id}/waiver-points", get_player_waiver_points, methods=["GET"])
     router.add_api_route("/players/{id}/email", change_email, methods=["PUT"])
+    router.add_api_route("/players/{id}/username", change_username, methods=["PUT"])
     router.add_api_route("/players/{id}/tg", change_tg, methods=["PUT"])
     router.add_api_route("/poll", get_poll, methods=["GET"])
     router.add_api_route(

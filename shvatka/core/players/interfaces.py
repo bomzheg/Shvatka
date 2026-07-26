@@ -104,6 +104,12 @@ class AdminEmailSetter(PlayerByIdGetter, Committer, Protocol):
         raise NotImplementedError
 
 
+class AdminUsernameSetter(
+    PlayerUsernameChanger, PlayerByIdGetter, EmailByPlayerIdReader, Protocol
+):
+    """Set the username of an arbitrary player, plus reload them by id."""
+
+
 class AdminTgChanger(
     UserUpserter, PlayerByIdGetter, PlayerByUserIdGetter, EmailByPlayerIdReader, Protocol
 ):

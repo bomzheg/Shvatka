@@ -104,6 +104,11 @@ class AdminChangeEmail:
 
 
 @dataclass
+class AdminChangeUsername:
+    username: str
+
+
+@dataclass
 class AdminChangeTg:
     tg_id: int
     username: str | None = None

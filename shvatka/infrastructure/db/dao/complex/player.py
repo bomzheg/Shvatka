@@ -7,6 +7,7 @@ from shvatka.core.players.interfaces import (
     AdminPlayerReader,
     AdminEmailSetter,
     AdminTgChanger,
+    AdminUsernameSetter,
     AdminPlayerMerger,
     AdminPlayerWaiverPointsReader,
 )
@@ -131,6 +132,26 @@ class AdminEmailSetterImpl(AdminEmailSetter):
         self, player_id: int, email: str, is_verified: bool
     ) -> dto.EmailAccount:
         return await self.dao.email.set_player_email(player_id, email, is_verified)
+
+    async def commit(self) -> None:
+        return await self.dao.commit()
+
+
+@dataclass
+class AdminUsernameSetterImpl(AdminUsernameSetter):
+    dao: "HolderDao"
+
+    async def get_by_id(self, id_: int) -> dto.Player:
+        return await self.dao.player.get_by_id(id_)
+
+    async def is_username_occupied(self, username: str) -> bool:
+        return await self.dao.player.is_username_occupied(username)
+
+    async def set_username(self, player: dto.Player, username: str) -> None:
+        return await self.dao.player.set_username(player, username)
+
+    async def get_email_by_player_id(self, player_id: int) -> dto.EmailAccount | None:
+        return await self.dao.email.get_by_player_id(player_id)
 
     async def commit(self) -> None:
         return await self.dao.commit()

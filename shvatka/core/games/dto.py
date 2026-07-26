@@ -18,7 +18,7 @@ class Event:
 
 
 class BonusSource(enum.StrEnum):
-    """Что именно принесло команде бонус (или штраф)."""
+    """What brought the team a bonus (or a penalty)."""
 
     key = enum.auto()
     timer = enum.auto()
@@ -27,14 +27,17 @@ class BonusSource(enum.StrEnum):
 
 @dataclass(kw_only=True, frozen=True, slots=True)
 class BonusEvent:
-    """Одно событие, изменившее время команды: бонус (>0) или штраф (<0).
+    """An event that changed a team's time: bonus (>0 minutes) or penalty (<0).
 
-    ``level_time_id`` в БД nullable, поэтому уровень может остаться нерешённым —
-    тогда ``level_number`` равен None и бонус учитывается только в итоге.
+    Carries the whole ``effects`` rather than just its bonus minutes, so new
+    kinds of effect become visible to clients without an API change.
+
+    ``level_time_id`` is nullable in the DB, so the level may stay unresolved —
+    then ``level_number`` is None and the bonus only counts towards the total.
     """
 
     at: datetime
-    minutes: float
+    effects: action.Effects
     source: BonusSource
     key: action.SHKey | None
     level_time_id: int | None
@@ -43,7 +46,7 @@ class BonusEvent:
     def with_level_number(self, level_number: int | None) -> "BonusEvent":
         return BonusEvent(
             at=self.at,
-            minutes=self.minutes,
+            effects=self.effects,
             source=self.source,
             key=self.key,
             level_time_id=self.level_time_id,
@@ -51,22 +54,28 @@ class BonusEvent:
         )
 
     @property
+    def minutes(self) -> float:
+        return self.effects.bonus_minutes
+
+    @property
     def td(self) -> timedelta:
-        """Сколько времени бонус снимает с результата (штраф — отрицательный)."""
+        """How much time the bonus takes off the result (a penalty is negative)."""
         return timedelta(minutes=self.minutes)
 
 
 @dataclass(kw_only=True, frozen=True, slots=True)
 class GameStatWithBonuses:
-    """Статистика игры вместе с бонусами и штрафами команд.
+    """Game stat together with the teams' bonuses and penalties.
 
-    Скорректированные времена здесь не считаются: отдаём исходные времена и
-    сами бонусы, чтобы клиент мог переключать режимы отображения без запросов.
+    Adjusted times are not computed here: we hand out the raw times and the
+    bonuses themselves, so a client can switch display modes without requests.
     """
 
     level_times: dict[dto.Team, list[dto.LevelTimeOnGame]]
     bonuses: dict[int, list[BonusEvent]]
-    """{team_id: [...]} — только команды, у которых бонусы есть."""
+    """{team_id: [...]} — only teams that actually have bonuses."""
+    level_numbers_by_name_id: dict[str, int]
+    """Mapping of level name_id to its number_in_game, used to resolve effects' next_level."""
 
 
 @dataclass(kw_only=True, frozen=True, slots=True)

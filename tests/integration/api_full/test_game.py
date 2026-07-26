@@ -11,7 +11,7 @@ from httpx import AsyncClient
 from shvatka.api.models import responses
 from shvatka.common.factory import REQUIRED_GAME_RECIPES
 from shvatka.core.models import dto
-from shvatka.core.models.dto import action, scn
+from shvatka.core.models.dto import action, hints, scn
 from shvatka.core.models.enums import GameStatus
 from shvatka.core.models.enums.org_permission import OrgPermission
 from shvatka.core.services.game import create_game
@@ -336,7 +336,7 @@ async def test_game_stat_bonuses(
     auth: AuthProperties,
     harry: dto.Player,
 ):
-    """Бонусы и штрафы отдаются вместе со статистикой, с номером уровня."""
+    """Bonuses and penalties come with the stat, carrying their level number."""
     token = auth.create_user_token(harry)
     await dao.game.set_completed(finished_game)
     await dao.game.set_number(finished_game, 1)
@@ -351,7 +351,11 @@ async def test_game_stat_bonuses(
         team=gryffindor,
         game=finished_game,
         level_time=first_level,
-        effects=action.Effects(id=uuid4(), bonus_minutes=5.0),
+        effects=action.Effects(
+            id=uuid4(),
+            bonus_minutes=5.0,
+            hints_=[hints.TextHint(text="bonus hint")],
+        ),
         at=first_level.start_at + timedelta(seconds=1),
     )
     await dao.events.save_event(
@@ -361,7 +365,7 @@ async def test_game_stat_bonuses(
         effects=action.Effects(id=uuid4(), bonus_minutes=-3.0),
         at=second_level.start_at + timedelta(seconds=1),
     )
-    # событие без бонуса в выдачу попадать не должно
+    # an event with no bonus must not show up in the response
     await dao.events.save_event(
         team=gryffindor,
         game=finished_game,
@@ -379,10 +383,18 @@ async def test_game_stat_bonuses(
     bonuses = resp.json()["bonuses"]
     assert list(bonuses) == [str(gryffindor.id)]
     team_bonuses = bonuses[str(gryffindor.id)]
-    assert [(b["minutes"], b["level_number"]) for b in team_bonuses] == [(5.0, 0), (-3.0, 1)]
+    assert [(b["effects"]["bonus_minutes"], b["level_number"]) for b in team_bonuses] == [
+        (5.0, 0),
+        (-3.0, 1),
+    ]
     assert {b["source"] for b in team_bonuses} == {"unknown"}
     assert team_bonuses[0]["level_time_id"] == first_level.id
     assert team_bonuses[1]["level_time_id"] == second_level.id
+    # the whole effects come through, not just the minutes
+    assert team_bonuses[0]["effects"]["hints_"] == [
+        {"type": "text", "text": "bonus hint", "link_preview": None}
+    ]
+    assert team_bonuses[0]["effects"]["level_up"] is False
 
 
 @pytest.mark.asyncio

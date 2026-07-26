@@ -595,21 +595,27 @@ class LevelTime:
 
 @dataclass(kw_only=True, frozen=True, slots=True)
 class BonusEvent:
-    """Бонус (minutes > 0) или штраф (minutes < 0), полученный командой."""
+    """An event that changed a team's time, with the whole effects that caused it.
+
+    The bonus itself is ``effects.bonus_minutes``: positive is a bonus, negative
+    a penalty. Only events that carry bonus minutes are returned.
+    """
 
     at: datetime
-    minutes: float
+    effects: Effects
     source: BonusSource
     key: str | None
     level_time_id: int | None
     level_number: int | None
-    """Уровень, на котором получен. None — определить не удалось, учитывать только в итоге."""
+    """Level it was earned on. None when unresolved — then count it in the total only."""
 
     @classmethod
-    def from_core(cls, core: CoreBonusEvent) -> "BonusEvent":
+    def from_core(
+        cls, core: CoreBonusEvent, level_numbers_by_name_id: Mapping[str, int]
+    ) -> "BonusEvent":
         return cls(
             at=core.at,
-            minutes=core.minutes,
+            effects=Effects.from_core(core.effects, level_numbers_by_name_id),
             source=core.source,
             key=core.key,
             level_time_id=core.level_time_id,
@@ -621,7 +627,7 @@ class BonusEvent:
 class GameStat:
     level_times: dict[int, list[LevelTime]]
     bonuses: dict[int, list[BonusEvent]]
-    """{team_id: [...]} — только команды, у которых бонусы есть."""
+    """{team_id: [...]} — only teams that actually have bonuses."""
 
     @classmethod
     def from_core(cls, core: GameStatWithBonuses | None):
@@ -633,7 +639,9 @@ class GameStat:
                 for team, lts in core.level_times.items()
             },
             bonuses={
-                team_id: [BonusEvent.from_core(bonus) for bonus in bonuses]
+                team_id: [
+                    BonusEvent.from_core(bonus, core.level_numbers_by_name_id) for bonus in bonuses
+                ]
                 for team_id, bonuses in core.bonuses.items()
             },
         )

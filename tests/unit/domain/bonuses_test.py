@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from uuid import uuid4
 
 import pytest
 
@@ -10,6 +11,7 @@ from shvatka.core.games.results import (
     to_results,
 )
 from shvatka.core.models import dto
+from shvatka.core.models.dto import action
 from shvatka.core.utils.datetime_utils import tz_utc
 
 BASE_TIME = datetime(2026, 7, 26, 20, 0, tzinfo=tz_utc)
@@ -22,7 +24,7 @@ def team() -> dto.Team:
 
 @pytest.fixture
 def level_times(team: dto.Team) -> list[dto.LevelTime]:
-    """Уровень 0 занял 20 минут, уровень 1 — 10 минут, дальше финиш."""
+    """Level 0 took 20 minutes, level 1 took 10, then the finish."""
     return [
         _level_time(id_=10, team=team, level_number=0, offset=0),
         _level_time(id_=11, team=team, level_number=1, offset=20),
@@ -31,7 +33,7 @@ def level_times(team: dto.Team) -> list[dto.LevelTime]:
 
 
 def _level_time(id_: int, team: dto.Team, level_number: int, offset: int) -> dto.LevelTime:
-    # расчёт бонусов игру не читает, поэтому здесь она не нужна
+    # computing bonuses never reads the game, so it is not needed here
     return dto.LevelTime(
         id=id_,
         game=None,
@@ -50,7 +52,7 @@ def _bonus(
 ) -> BonusEvent:
     return BonusEvent(
         at=BASE_TIME + timedelta(minutes=offset),
-        minutes=minutes,
+        effects=action.Effects(id=uuid4(), bonus_minutes=minutes),
         source=source,
         key=key,
         level_time_id=level_time_id,
@@ -63,7 +65,7 @@ def test_bonus_resolved_to_level_of_its_level_time(level_times: list[dto.LevelTi
 
 
 def test_bonus_without_level_time_resolved_by_time(level_times: list[dto.LevelTime]):
-    """level_time_id в БД nullable — тогда уровень ищется по времени события."""
+    """level_time_id is nullable in the DB — then the level comes from the event time."""
     resolved = resolve_bonus_levels(
         level_times,
         [
@@ -76,7 +78,7 @@ def test_bonus_without_level_time_resolved_by_time(level_times: list[dto.LevelTi
 
 
 def test_bonus_of_unknown_level_time_falls_back_to_time(level_times: list[dto.LevelTime]):
-    """Ссылка на чужой level_time не должна терять бонус — уровень ищем по времени."""
+    """A reference to someone else's level_time must not lose the bonus."""
     resolved = resolve_bonus_levels(level_times, [_bonus(5.0, level_time_id=999, offset=25)])
     assert [b.level_number for b in resolved] == [1]
 
@@ -138,7 +140,7 @@ class TestTeamLevelsBonuses:
     def test_total_includes_bonuses_without_level(
         self, team: dto.Team, level_times: list[dto.LevelTime]
     ):
-        """Бонус, чей уровень не определён, всё равно попадает в итог."""
+        """A bonus whose level is unresolved still lands in the total."""
         team_levels = self._to_team_levels(
             team,
             level_times,
@@ -150,7 +152,7 @@ class TestTeamLevelsBonuses:
     def test_bonus_bigger_than_level_duration_goes_negative(
         self, team: dto.Team, level_times: list[dto.LevelTime]
     ):
-        """Уровень 1 длился 10 минут, бонус 15 — не обрезаем, показываем минус."""
+        """Level 1 lasted 10 minutes, the bonus is 15 — not clamped, shown negative."""
         team_levels = self._to_team_levels(team, level_times, [_bonus(15.0, level_time_id=11)])
         raw = team_levels.get_level_timedelta(1)
         assert raw is not None
@@ -159,7 +161,7 @@ class TestTeamLevelsBonuses:
     def test_sum_of_level_bonuses_equals_total(
         self, team: dto.Team, level_times: list[dto.LevelTime]
     ):
-        """Аддитивность: сумма по уровням должна совпадать с итогом."""
+        """Additivity: the per-level sum must match the total."""
         team_levels = self._to_team_levels(
             team,
             level_times,

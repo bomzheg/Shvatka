@@ -37,17 +37,17 @@ class TeamLevels(typing.NamedTuple):
     levels_times: dict[int, list[LevelTime]]
     levels_timedelta: dict[int, list[LevelTimedelta]]
     bonuses: dict[int | None, list[BonusEvent]]
-    """Бонусы и штрафы, разложенные по номеру уровня. Ключ None — уровень не определён."""
+    """Bonuses and penalties routed by level number. The None key means level unknown."""
 
     def get_level_bonus(self, level_number: int) -> timedelta:
-        """Суммарный бонус (штраф — отрицательный) за один уровень."""
+        """Total bonus for a single level (a penalty is negative)."""
         return sum(
             (be.td for be in self.bonuses.get(level_number, [])),
             start=timedelta(seconds=0),
         )
 
     def get_total_bonus(self) -> timedelta:
-        """Суммарный бонус за всю игру, включая события без определённого уровня."""
+        """Total bonus for the whole game, including events with no resolved level."""
         return sum(
             (be.td for bes in self.bonuses.values() for be in bes),
             start=timedelta(seconds=0),
@@ -142,10 +142,10 @@ def _add_bonuses_part(
     results: Results,
     start_row: int,
 ) -> None:
-    """Блок с бонусами и штрафами в минутах: команда × уровень плюс итог.
+    """Block of bonuses and penalties in minutes: team x level plus a total.
 
-    Сами скорректированные времена не считаем — в файле даём исходные данные,
-    чтобы их можно было посчитать в самом Excel.
+    Adjusted times are not computed — the file carries the raw numbers so they
+    can be worked out in Excel itself.
     """
     if not any(team_levels.bonuses for team_levels in results.data):
         return
@@ -196,12 +196,12 @@ def resolve_bonus_levels(
     level_times: typing.Sequence[dto.LevelTime],
     bonuses: typing.Iterable[BonusEvent],
 ) -> list[BonusEvent]:
-    """Проставить каждому бонусу номер уровня, на котором он получен.
+    """Set on each bonus the number of the level it was earned on.
 
-    Уровень берётся из ``level_time_id`` события. Если его нет (колонка nullable),
-    уровень определяется по времени события: тот, на котором команда была в момент
-    ``at``. Что определить не удалось — остаётся с ``level_number=None`` и
-    учитывается только в итоге.
+    The level comes from the event's ``level_time_id``. When that is missing (the
+    column is nullable), the level is resolved by the event's time: the one the
+    team was on at ``at``. What cannot be resolved keeps ``level_number=None``
+    and only counts towards the total.
     """
     levels_by_time_id = {lt.id: lt.level_number for lt in level_times}
     result = []
@@ -219,7 +219,7 @@ def route_bonuses(
     level_times: typing.Sequence[dto.LevelTime],
     bonuses: typing.Iterable[BonusEvent],
 ) -> dict[int | None, list[BonusEvent]]:
-    """Разложить бонусы команды по номерам уровней. Ключ None — уровень не определён."""
+    """Route a team's bonuses by level number. The None key means level unknown."""
     routed: dict[int | None, list[BonusEvent]] = {}
     for bonus in resolve_bonus_levels(level_times, bonuses):
         routed.setdefault(bonus.level_number, []).append(bonus)
@@ -229,7 +229,7 @@ def route_bonuses(
 def _resolve_level_by_time(
     level_times: typing.Sequence[dto.LevelTime], at: datetime
 ) -> int | None:
-    """Найти уровень, на котором команда была в момент ``at``."""
+    """Find the level the team was on at ``at``."""
     ordered = sorted(level_times, key=lambda lt: lt.start_at)
     result = None
     for lt in ordered:

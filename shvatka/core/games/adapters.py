@@ -36,7 +36,7 @@ class AdminGameScenarioEditor(GameScenarioEditor, GameAuthorTransferer, Protocol
 
 class GameBonusesGetter(Protocol):
     async def get_game_bonuses_by_teams(self, game: dto.Game) -> dict[int, list[BonusEvent]]:
-        """Бонусы и штрафы всех команд за игру, сгруппированные по id команды."""
+        """All teams' bonuses and penalties for the game, grouped by team id."""
         raise NotImplementedError
 
 

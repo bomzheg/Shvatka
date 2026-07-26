@@ -66,7 +66,7 @@ class GameEventDao(BaseDAO[models.GameEvent]):
         return [self.map_to_event(event) for event in result.all()]
 
     async def get_game_bonuses_by_teams(self, game: dto.Game) -> dict[int, list[BonusEvent]]:
-        """Бонусы и штрафы всех команд за игру, сгруппированные по id команды."""
+        """All teams' bonuses and penalties for the game, grouped by team id."""
         result: ScalarResult[models.GameEvent] = await self.session.scalars(
             select(models.GameEvent)
             .options(
@@ -86,7 +86,7 @@ class GameEventDao(BaseDAO[models.GameEvent]):
     def map_to_bonus(self, event: models.GameEvent) -> BonusEvent:
         return BonusEvent(
             at=event.at,
-            minutes=event.effects.bonus_minutes,
+            effects=event.effects,
             source=self._resolve_source(event),
             key=event.key.key_text if event.key else None,
             level_time_id=event.level_time_id,

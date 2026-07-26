@@ -69,12 +69,16 @@ class GameStatReaderInteractor:
         game = await self.dao.get_by_id(game_id)
         stat = await get_game_stat_with_hints(game, player, self.dao)
         bonuses = await self.dao.get_game_bonuses_by_teams(game)
+        full_game = await self.dao.add_levels(game)
         return GameStatWithBonuses(
             level_times=stat.level_times,
             bonuses={
                 team.id: resolve_bonus_levels(lts, bonuses[team.id])
                 for team, lts in stat.level_times.items()
                 if bonuses.get(team.id)
+            },
+            level_numbers_by_name_id={
+                level.name_id: level.number_in_game for level in full_game.levels
             },
         )
 

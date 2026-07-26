@@ -32,10 +32,13 @@ async def main():
         *get_infra_only_providers(),
     )
     try:
-        dao = await dishka.get(HolderDao)
-        storage = await dishka.get(FileStorage)
-        file_gateway = await dishka.get(FileGateway)
-        await repair_empty_files(dao.file_info, storage, typing.cast(BotFileGateway, file_gateway))
+        async with dishka() as request_dishka:
+            dao = await request_dishka.get(HolderDao)
+            storage = await request_dishka.get(FileStorage)
+            file_gateway = await request_dishka.get(FileGateway)
+            await repair_empty_files(
+                dao.file_info, storage, typing.cast(BotFileGateway, file_gateway)
+            )
     finally:
         await dishka.close()
 

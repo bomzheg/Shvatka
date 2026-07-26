@@ -42,17 +42,18 @@ async def main():
     )
     try:
         config = await dishka.get(TgBotConfig)
-        dao = await dishka.get(HolderDao)
-        file_gateway = await dishka.get(FileGateway)
-        bot_player = await dao.player.upsert_author_dummy()
-        await dao.commit()
-        await load_scns(
-            bot_player=bot_player,
-            dao=dao,
-            file_gateway=file_gateway,
-            retort=await dishka.get(Retort),
-            path=config.file_storage_config.path.parent / "scn",
-        )
+        async with dishka() as request_dishka:
+            dao = await request_dishka.get(HolderDao)
+            file_gateway = await request_dishka.get(FileGateway)
+            bot_player = await dao.player.upsert_author_dummy()
+            await dao.commit()
+            await load_scns(
+                bot_player=bot_player,
+                dao=dao,
+                file_gateway=file_gateway,
+                retort=await dishka.get(Retort),
+                path=config.file_storage_config.path.parent / "scn",
+            )
     finally:
         await dishka.close()
 

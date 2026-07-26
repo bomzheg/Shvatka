@@ -31,10 +31,11 @@ async def main(with_team_players: bool):
     )
     try:
         config = await dishka.get(TgBotConfig)
-        dao = await dishka.get(HolderDao)
         dcf = await dishka.get(Factory)
-        path = config.file_storage_config.path.parent / "teams.json"
-        await load_teams(path, with_team_players, dao, dcf)
+        async with dishka() as request_dishka:
+            dao = await request_dishka.get(HolderDao)
+            path = config.file_storage_config.path.parent / "teams.json"
+            await load_teams(path, with_team_players, dao, dcf)
     finally:
         await dishka.close()
 

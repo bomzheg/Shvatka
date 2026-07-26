@@ -1,16 +1,15 @@
 import asyncio
-import typing
+import logging
 
 from dishka import make_async_container
 
 from shvatka.common import setup_logging
 from shvatka.common.config.parser.paths import common_get_paths
-from shvatka.core.interfaces.clients.file_storage import FileGateway
-from shvatka.infrastructure.clients.file_gateway import BotFileGateway
-from shvatka.infrastructure.db.dao import FileInfoDao
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.infrastructure.di import get_providers
 from shvatka.infrastructure.di.infra import get_infra_only_providers
+
+logger = logging.getLogger(__name__)
 
 
 async def main():
@@ -24,17 +23,23 @@ async def main():
     try:
         async with dishka() as request_dishka:
             dao = await request_dishka.get(HolderDao)
-            file_gateway = await request_dishka.get(FileGateway)
-            await fill_all_file_id(dao.file_info, typing.cast(BotFileGateway, file_gateway))
+            await renew_id_usernames(dao)
     finally:
         await dishka.close()
 
 
-async def fill_all_file_id(dao: FileInfoDao, file_gateway: BotFileGateway):
-    while batch := await dao.get_without_file_id(100):
-        for file in batch:
-            await file_gateway.renew_file_id(file.author, file)
-        await dao.commit()
+async def renew_id_usernames(dao: HolderDao) -> list[tuple[str, str]]:
+    """Give players with an `id{id}` username a name-based one instead.
+
+    Players are renamed only if their telegram or forum identity provides a free
+    username, so those without any name keep the id-based one.
+    """
+    renamed = await dao.player.renew_id_usernames()
+    for old, new in renamed:
+        logger.info("username %s renewed to %s", old, new)
+    await dao.commit()
+    logger.info("renewed %s usernames", len(renamed))
+    return renamed
 
 
 def run():

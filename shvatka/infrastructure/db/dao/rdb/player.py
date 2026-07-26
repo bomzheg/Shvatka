@@ -11,6 +11,7 @@ from sqlalchemy.orm import joinedload, selectinload, contains_eager
 
 from shvatka.core.models import dto, enums
 from shvatka.core.utils import exceptions
+from shvatka.core.utils.username import numbered_username, username_from_names
 from shvatka.infrastructure.db import models
 from .base import BaseDAO, ILIKE_ESCAPE, ilike_pattern
 
@@ -385,16 +386,76 @@ class PlayerDao(BaseDAO[models.Player]):
     async def get_free_and_associated_username(self, player: models.Player) -> str:
         if player.username is not None:
             return player.username
+        associated = await self.find_associated_username(player)
+        if associated is not None:
+            return associated
+        return await self._free_id_username(player)
+
+    async def find_associated_username(self, player: models.Player) -> str | None:
+        """Free username based on names of identities linked to the player.
+
+        Telegram username is the best one, then a forum name, then the telegram
+        first and last name transliterated to latin. Returns None if the player has
+        no name to build a username from (or all of them are occupied).
+        """
         state = inspect(player)
-        if "user" not in state.unloaded and player.user and player.user.username:
+        user_loaded = "user" not in state.unloaded and player.user is not None
+        if user_loaded and player.user.username:
             if not await self.is_username_occupied(player.user.username):
                 return player.user.username
         if "forum_user" not in state.unloaded and player.forum_user and player.forum_user.name:
             if not await self.is_username_occupied(player.forum_user.name):
                 return player.forum_user.name
+        if user_loaded:
+            from_names = username_from_names(player.user.first_name, player.user.last_name)
+            if from_names is not None:
+                return await self._free_variant(from_names)
+        return None
+
+    async def _free_variant(self, username: str) -> str | None:
+        """The username itself, or a numbered variant of it, if it's occupied."""
+        if not await self.is_username_occupied(username):
+            return username
+        for i in range(1, 100):
+            numbered = numbered_username(username, i)
+            if not await self.is_username_occupied(numbered):
+                return numbered
+        return None
+
+    async def _free_id_username(self, player: models.Player) -> str:
         if not await self.is_username_occupied(f"id{player.id}"):
             return f"id{player.id}"
         for i in range(1000):
             if not await self.is_username_occupied(f"id{player.id}_{i}"):
                 return f"id{player.id}_{i}"
         return uuid.uuid4().hex
+
+    async def renew_id_usernames(self) -> list[tuple[str, str]]:
+        """Replace `id{id}` usernames with ones based on names of linked identities.
+
+        Players saved before username generation from names was introduced (or before
+        they got any identity linked) still carry the id-based placeholder. Returns
+        pairs of old and new username of every renamed player.
+        """
+        renamed = []
+        for player in await self._get_with_id_username():
+            new_username = await self.find_associated_username(player)
+            if new_username is None or new_username == player.username:
+                continue
+            renamed.append((typing.cast(str, player.username), new_username))
+            player.username = new_username
+            # autoflush is off, but the next occupation check must see this username
+            await self._flush(player)
+        return renamed
+
+    async def _get_with_id_username(self) -> Sequence[models.Player]:
+        result: ScalarResult[models.Player] = await self.session.scalars(
+            select(models.Player)
+            .options(
+                selectinload(models.Player.user),
+                selectinload(models.Player.forum_user),
+            )
+            .where(models.Player.username == func.concat("id", models.Player.id))
+            .order_by(models.Player.id)
+        )
+        return result.all()

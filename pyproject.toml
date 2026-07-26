@@ -75,6 +75,7 @@ shvatka-tgbot = "shvatka.tgbot.__main__:run"
 shvatka-api = "shvbatka.api.__main__:run"
 shvatka-file-id-updater = "shvatka.infrastructure.file_id_updater:run"
 shvatka-empty-file-repairer = "shvatka.infrastructure.empty_file_repairer:run"
+shvatka-player-username-updater = "shvatka.infrastructure.player_username_updater:run"
 shvatka-password = "shvatka.api.password_hash:generate"
 
 [build-system]

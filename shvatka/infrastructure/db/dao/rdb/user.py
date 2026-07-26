@@ -65,7 +65,10 @@ class UserDao(BaseDAO[User]):
             .on_conflict_do_update(
                 index_elements=(User.tg_id,), set_=kwargs, where=User.tg_id == user.tg_id
             )
-            .returning(User)
+            .returning(User),
+            # the session never expires on commit, so a user already loaded into it
+            # would keep its old names here and in every relationship pointing at it
+            execution_options={"populate_existing": True},
         )
         return saved_user.scalar_one().to_dto()
 

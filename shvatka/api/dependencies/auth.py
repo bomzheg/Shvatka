@@ -14,7 +14,8 @@ from starlette import status
 from starlette.requests import Request
 
 from shvatka.api.config.models.auth import AuthConfig
-from shvatka.api.models.auth import UserTgAuth, Token
+from shvatka.api.models.auth.requests import UserTgAuth
+from shvatka.api.models.auth.responses import Token
 from shvatka.api.utils.cookie_auth import OAuth2PasswordBearerWithCookie
 from shvatka.core.interfaces.hasher import PasswordHasher
 from shvatka.core.interfaces.identity import IdentityProvider

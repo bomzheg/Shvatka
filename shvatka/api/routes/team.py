@@ -6,7 +6,8 @@ from fastapi import APIRouter
 from fastapi.params import Body, Path, Query
 
 from shvatka.api.dependencies.auth import ApiIdentityProvider
-from shvatka.api.models import req, responses
+from shvatka.api.models.shared import responses as shared
+from shvatka.api.models.teams import requests, responses
 from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.teams.interactors import (
     AddPlayerToTeamInteractor,
@@ -27,23 +28,23 @@ async def get_teams(
     active: Annotated[bool, Query()] = True,
     archive: Annotated[bool, Query()] = False,
     search: Annotated[str | None, Query()] = None,
-) -> responses.Items[responses.TeamWithStat]:
+) -> shared.Items[responses.TeamWithStat]:
     teams = await interactor(active=active, archive=archive, name=search)
-    return responses.Items([responses.TeamWithStat.from_core(team) for team in teams])
+    return shared.Items([responses.TeamWithStat.from_core(team) for team in teams])
 
 
 @inject
 async def get_team_stat(
     interactor: FromDishka[TeamPlayedGamesInteractor],
     id_: Annotated[int, Path(alias="id")],
-) -> responses.Items[responses.Game]:
+) -> shared.Items[shared.Game]:
     games = await interactor(id_)
-    return responses.Items([responses.Game.from_core(game) for game in games])
+    return shared.Items([shared.Game.from_core(game) for game in games])
 
 
 @inject
-async def get_my_team(identity: FromDishka[IdentityProvider]) -> responses.Team | None:
-    return responses.Team.from_core(await identity.get_team())
+async def get_my_team(identity: FromDishka[IdentityProvider]) -> shared.Team | None:
+    return shared.Team.from_core(await identity.get_team())
 
 
 @inject
@@ -51,7 +52,7 @@ async def add_player_to_team(
     identity: FromDishka[ApiIdentityProvider],
     interactor: FromDishka[AddPlayerToTeamInteractor],
     id_: Annotated[int, Path(alias="id")],
-    body: Annotated[req.JoinTeam, Body()],
+    body: Annotated[requests.JoinTeam, Body()],
 ) -> responses.TeamMember:
     team_player = await interactor(
         team_id=id_,
@@ -67,22 +68,22 @@ async def add_player_to_team(
 async def get_team(
     interactor: FromDishka[GetTeamInteractor],
     id_: Annotated[int, Path(alias="id")],
-) -> responses.Team:
-    return responses.Team.from_core(await interactor(id_))
+) -> shared.Team:
+    return shared.Team.from_core(await interactor(id_))
 
 
 @inject
 async def create_team(
     identity: FromDishka[ApiIdentityProvider],
     interactor: FromDishka[CreateTeamInteractor],
-    body: Annotated[req.NewTeam, Body()],
-) -> responses.Team:
+    body: Annotated[requests.NewTeam, Body()],
+) -> shared.Team:
     team = await interactor(
         identity=identity,
         name=body.name,
         description=body.description,
     )
-    return responses.Team.from_core(team)
+    return shared.Team.from_core(team)
 
 
 @inject
@@ -90,24 +91,24 @@ async def edit_team(
     identity: FromDishka[ApiIdentityProvider],
     interactor: FromDishka[EditTeamInteractor],
     id_: Annotated[int, Path(alias="id")],
-    body: Annotated[req.TeamSettings, Body()],
-) -> responses.Team:
+    body: Annotated[requests.TeamSettings, Body()],
+) -> shared.Team:
     team = await interactor(
         team_id=id_,
         identity=identity,
         name=body.name,
         description=body.description,
     )
-    return responses.Team.from_core(team)
+    return shared.Team.from_core(team)
 
 
 @inject
 async def get_team_players(
     interactor: FromDishka[TeamPlayersInteractor],
     id_: Annotated[int, Path(alias="id")],
-) -> responses.Items[responses.TeamMemberWithStat]:
+) -> shared.Items[responses.TeamMemberWithStat]:
     players = await interactor(id_)
-    return responses.Items([responses.TeamMemberWithStat.from_core(player) for player in players])
+    return shared.Items([responses.TeamMemberWithStat.from_core(player) for player in players])
 
 
 @inject
@@ -125,7 +126,7 @@ async def update_team_player(
     interactor: FromDishka[UpdateTeamPlayerInteractor],
     id_: Annotated[int, Path(alias="id")],
     player_id: Annotated[int, Path()],
-    body: Annotated[req.TeamPlayerSettings, Body()],
+    body: Annotated[requests.TeamPlayerSettings, Body()],
 ) -> responses.TeamMember:
     team_player = await interactor(
         team_id=id_,

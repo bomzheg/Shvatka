@@ -5,7 +5,8 @@ from dishka.integrations.fastapi import inject
 from fastapi import APIRouter
 from fastapi.params import Query
 
-from shvatka.api.models import responses
+from shvatka.api.models.search import responses
+from shvatka.api.models.shared import responses as shared
 from shvatka.core.search.dto import SearchFilters
 from shvatka.core.search.interactors import GlobalSearchInteractor
 
@@ -18,7 +19,7 @@ async def global_search(
     levels: Annotated[bool, Query()] = True,
     teams: Annotated[bool, Query()] = True,
     players: Annotated[bool, Query()] = True,
-) -> responses.Page[responses.SearchResult]:
+) -> shared.Page[responses.SearchResult]:
     results = await interactor(
         query=query,
         filters=SearchFilters(games=games, levels=levels, teams=teams, players=players),

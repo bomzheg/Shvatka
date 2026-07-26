@@ -11,7 +11,7 @@ from fastapi.params import Path
 from fastapi.responses import Response
 
 from shvatka.api.dependencies.auth import ApiIdentityProvider
-from shvatka.api.models import responses, req
+from shvatka.api.models.files import requests, responses
 from shvatka.api.utils.error_converter import to_http_error
 from shvatka.core.games.interactors import (
     GameFileReaderInteractor,
@@ -99,7 +99,7 @@ async def rename_game_file(
     interactor: FromDishka[RenameGameFileInteractor],
     id_: Annotated[int, Path(alias="id")],
     guid: Annotated[str, Path(alias="guid")],
-    body: Annotated[req.RenameFile, Body()],
+    body: Annotated[requests.RenameFile, Body()],
 ) -> responses.GameFile:
     renamed = await interactor(
         game_id=id_,

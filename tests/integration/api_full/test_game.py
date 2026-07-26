@@ -8,7 +8,8 @@ from adaptix import Retort
 from dataclass_factory import Factory
 from httpx import AsyncClient
 
-from shvatka.api.models import responses
+from shvatka.api.models.games import responses as game_responses
+from shvatka.api.models.shared import responses
 from shvatka.common.factory import REQUIRED_GAME_RECIPES
 from shvatka.core.models import dto
 from shvatka.core.models.dto import action, hints, scn
@@ -78,7 +79,7 @@ async def test_game_card(
             *REQUIRED_GAME_RECIPES,
         ]
     )
-    actual = retort.load(resp.json(), responses.FullGame)
+    actual = retort.load(resp.json(), game_responses.FullGame)
     assert actual.id == finished_game.id
     assert actual.status == GameStatus.complete
     assert len(actual.levels) == len(finished_game.levels)

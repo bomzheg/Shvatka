@@ -22,9 +22,10 @@ async def main():
         *get_infra_only_providers(),
     )
     try:
-        dao = await dishka.get(HolderDao)
-        file_gateway = await dishka.get(FileGateway)
-        await fill_all_file_id(dao.file_info, typing.cast(BotFileGateway, file_gateway))
+        async with dishka() as request_dishka:
+            dao = await request_dishka.get(HolderDao)
+            file_gateway = await request_dishka.get(FileGateway)
+            await fill_all_file_id(dao.file_info, typing.cast(BotFileGateway, file_gateway))
     finally:
         await dishka.close()
 

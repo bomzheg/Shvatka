@@ -21,8 +21,9 @@ async def main():
         *get_infra_only_providers(),
     )
     try:
-        dao = await dishka.get(HolderDao)
-        await renew_id_usernames(dao)
+        async with dishka() as request_dishka:
+            dao = await request_dishka.get(HolderDao)
+            await renew_id_usernames(dao)
     finally:
         await dishka.close()
 

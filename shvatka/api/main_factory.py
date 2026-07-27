@@ -2,6 +2,7 @@ import logging
 
 from asgi_monitor.integrations.fastapi import setup_metrics, MetricsConfig
 from fastapi import FastAPI
+from prometheus_client import REGISTRY
 
 from shvatka.api.app import error_handler, middlewares, router
 from shvatka.api.app.config.models.main import ApiConfig
@@ -22,6 +23,9 @@ def create_app(config: ApiConfig) -> FastAPI:
             app_name=config.app.name,
             include_metrics_endpoint=True,
             include_trace_exemplar=True,
+            # the global registry, so that metrics collected outside of asgi
+            # (e.g. outgoing bot api requests) are exposed by /metrics too
+            registry=REGISTRY,
         ),
     )
 

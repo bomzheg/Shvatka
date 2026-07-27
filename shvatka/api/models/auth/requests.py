@@ -55,11 +55,6 @@ class UserTgAuth(BaseModel):
         return "\n".join([f"{key}={data[key]}" for key in sorted(data.keys()) if data.get(key)])
 
 
-class Token(BaseModel):
-    access_token: str
-    token_type: str
-
-
 class OneTimeToken(BaseModel):
     token: str
 

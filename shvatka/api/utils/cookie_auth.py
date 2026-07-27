@@ -7,7 +7,7 @@ from fastapi.security.utils import get_authorization_scheme_param
 from starlette.responses import Response
 
 from shvatka.api.config.models.auth import AuthConfig
-from shvatka.api.models.auth import Token
+from shvatka.api.models.auth.responses import Token
 
 
 class OAuth2PasswordBearerWithCookie(OAuth2):

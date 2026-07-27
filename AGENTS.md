@@ -36,7 +36,7 @@ shvatka/
     scenario/      # interactors.py ...
     waiver/        # interactors.py, services.py, adapters.py
     rules/         # pure business rules / checks
-  api/             # FastAPI app: routes/, dependencies/, models/ (req + responses)
+  api/             # FastAPI app: routes/, dependencies/, models/<subdomain>/
   tgbot/           # aiogram 3 + aiogram_dialog bot: handlers/, dialogs/, views/
   infrastructure/
     db/            # SQLAlchemy 2 models, dao/ (impls), migrations (alembic)
@@ -254,8 +254,17 @@ with a curated ignore list, mypy overrides) lives in `pyproject.toml`.
 ## Conventions cheat sheet
 
 - Domain DTOs are referenced as `dto.*` from `shvatka.core.models`.
-- API response/request models live in `shvatka/api/models/` and convert with
-  `.from_core(...)` / `.to_core(...)` helpers.
+- API response/request models live in `shvatka/api/models/<subdomain>/` —
+  `requests.py` and `responses.py` per subdomain (`games`, `players`, `teams`,
+  `waivers`, `admin`, ...) — and convert with `.from_core(...)` / `.to_core(...)`
+  helpers. `models/shared/` is only for models **two or more** subdomains use
+  (`Page`, `Items`, `Player`, `Team`, `Game`, ...); anything one subdomain owns
+  stays with it, even if it looks generic. Cross-subdomain reuse is an explicit
+  import (`from shvatka.api.models.waivers import responses as waivers_responses`),
+  not a reason to promote a model into `shared/`.
+- Import the model module, not a bag of names: `from shvatka.api.models.games
+  import requests, responses`, then `responses.FullGame` — so the reader sees
+  which subdomain a model came from.
 - Keep `core` framework-free; put framework glue in `api`, `tgbot`,
   `infrastructure`.
 - Line length 99. Match surrounding style; don't reformat untouched code.

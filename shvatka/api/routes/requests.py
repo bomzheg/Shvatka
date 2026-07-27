@@ -4,7 +4,8 @@ from dishka.integrations.fastapi import FromDishka, inject
 from fastapi import APIRouter, Body, Path, Query
 
 from shvatka.api.dependencies.auth import ApiIdentityProvider
-from shvatka.api.models import req, responses
+from shvatka.api.models.action_requests import requests, responses
+from shvatka.api.models.shared import responses as shared
 from shvatka.core.notifications.request_interactors import (
     CreateTeamJoinInviteInteractor,
     CreateTeamJoinRequestInteractor,
@@ -21,7 +22,7 @@ from shvatka.core.notifications.request_interactors import (
 async def create_team_join_invite(
     identity: FromDishka[ApiIdentityProvider],
     interactor: FromDishka[CreateTeamJoinInviteInteractor],
-    body: Annotated[req.TeamJoinInvite, Body()],
+    body: Annotated[requests.TeamJoinInvite, Body()],
 ) -> responses.ActionRequest:
     request = await interactor(
         identity=identity,
@@ -37,7 +38,7 @@ async def create_team_join_invite(
 async def create_team_join_request(
     identity: FromDishka[ApiIdentityProvider],
     interactor: FromDishka[CreateTeamJoinRequestInteractor],
-    body: Annotated[req.TeamJoinRequest, Body()],
+    body: Annotated[requests.TeamJoinRequest, Body()],
 ) -> responses.ActionRequest:
     request = await interactor(identity=identity, team_id=body.team_id)
     return responses.ActionRequest.from_core(request)
@@ -47,7 +48,7 @@ async def create_team_join_request(
 async def create_org_invite(
     identity: FromDishka[ApiIdentityProvider],
     interactor: FromDishka[CreateOrgInviteInteractor],
-    body: Annotated[req.OrgInvite, Body()],
+    body: Annotated[requests.OrgInvite, Body()],
 ) -> responses.ActionRequest:
     request = await interactor(identity=identity, game_id=body.game_id, player_id=body.player_id)
     return responses.ActionRequest.from_core(request)
@@ -57,7 +58,7 @@ async def create_org_invite(
 async def create_promotion_invite(
     identity: FromDishka[ApiIdentityProvider],
     interactor: FromDishka[CreatePromotionInviteInteractor],
-    body: Annotated[req.PromotionInvite, Body()],
+    body: Annotated[requests.PromotionInvite, Body()],
 ) -> responses.ActionRequest:
     request = await interactor(identity=identity, player_id=body.player_id)
     return responses.ActionRequest.from_core(request)
@@ -68,7 +69,7 @@ async def accept_request(
     identity: FromDishka[ApiIdentityProvider],
     interactor: FromDishka[AcceptRequestInteractor],
     id_: Annotated[int, Path(alias="id")],
-    body: Annotated[req.AcceptRequest | None, Body()] = None,
+    body: Annotated[requests.AcceptRequest | None, Body()] = None,
 ) -> responses.ActionRequest:
     request = await interactor(
         identity=identity,
@@ -102,12 +103,12 @@ async def get_requests(
     interactor: FromDishka[ListRequestsInteractor],
     direction: Annotated[str, Query()] = "incoming",
     pending: Annotated[bool, Query()] = False,
-) -> responses.Items[responses.ActionRequest]:
+) -> shared.Items[responses.ActionRequest]:
     if direction == "outgoing":
-        requests = await interactor.outgoing(identity=identity, only_pending=pending)
+        found = await interactor.outgoing(identity=identity, only_pending=pending)
     else:
-        requests = await interactor.incoming(identity=identity, only_pending=pending)
-    return responses.Items([responses.ActionRequest.from_core(r) for r in requests])
+        found = await interactor.incoming(identity=identity, only_pending=pending)
+    return shared.Items([responses.ActionRequest.from_core(r) for r in found])
 
 
 def setup() -> APIRouter:

@@ -9,8 +9,7 @@ from fastapi import APIRouter, HTTPException
 from fastapi.security import OAuth2PasswordRequestForm
 from starlette.responses import HTMLResponse, Response
 
-from shvatka.api.config.models.auth import AuthConfig
-from shvatka.api.models.auth import (
+from shvatka.api.models.auth.requests import (
     UserTgAuth,
     WebAppAuth,
     OneTimeToken,
@@ -21,6 +20,7 @@ from shvatka.api.models.auth import (
     EmailLink,
     ForgotPassword,
 )
+from shvatka.api.config.models.auth import AuthConfig
 from shvatka.api.utils.cookie_auth import set_auth_response
 from shvatka.core.interfaces.bus import Bus, OneTimeTokenUsed
 from shvatka.core.interfaces.identity import IdentityProvider

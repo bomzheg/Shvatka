@@ -6,7 +6,7 @@ from shvatka.core.models.enums.played import Played
 from shvatka.core.players.player import join_team
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.api.dependencies.auth import AuthProperties
-from shvatka.api.models.auth import Token
+from shvatka.api.models.auth.responses import Token
 from tests.mocks.team_notifier import TeamNotifierMock
 
 

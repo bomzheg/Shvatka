@@ -2,8 +2,8 @@ import pytest
 from dataclass_factory import Factory
 from httpx import AsyncClient
 
-from shvatka.api.models import responses
-from shvatka.api.models.auth import Token
+from shvatka.api.models.auth.responses import Token
+from shvatka.api.models.shared import responses
 from shvatka.core.models import dto
 from shvatka.core.models import enums
 from shvatka.core.players.player import get_full_team_player, join_team

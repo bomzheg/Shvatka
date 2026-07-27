@@ -1,4 +1,4 @@
-from shvatka.api.models import responses
+from shvatka.api.models.players import responses
 from shvatka.core.models import dto
 
 

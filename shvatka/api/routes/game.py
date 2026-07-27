@@ -9,8 +9,9 @@ from fastapi.params import Path
 from fastapi.responses import Response
 
 from shvatka.api.dependencies.auth import ApiIdentityProvider
-from shvatka.api.models import responses, req
-from shvatka.api.models.responses import MyRoleDto
+from shvatka.api.models.games import requests, responses
+from shvatka.api.models.games.responses import MyRoleDto
+from shvatka.api.models.shared import responses as shared
 from shvatka.api.utils.web_input import WebInput
 from shvatka.core.games.interactors import (
     GamePlayReaderInteractor,
@@ -54,9 +55,9 @@ logger = logging.getLogger(__name__)
 async def get_my_games_list(
     identity: FromDishka[ApiIdentityProvider],
     interactor: FromDishka[MyGamesInteractor],
-) -> responses.Page[responses.Game]:
+) -> shared.Page[shared.Game]:
     games = await interactor(identity=identity)
-    return responses.Page([responses.Game.from_core(game) for game in games])
+    return shared.Page([shared.Game.from_core(game) for game in games])
 
 
 @inject
@@ -76,10 +77,10 @@ async def get_my_game(
 async def create_my_game(
     identity: FromDishka[ApiIdentityProvider],
     interactor: FromDishka[CreateGameInteractor],
-    game: Annotated[req.NewGame, Body()],
-) -> responses.Game:
+    game: Annotated[requests.NewGame, Body()],
+) -> shared.Game:
     created = await interactor(name=game.name, identity=identity)
-    return responses.Game.from_core(created)
+    return shared.Game.from_core(created)
 
 
 @inject
@@ -101,10 +102,10 @@ async def change_my_game_start_at(
     identity: FromDishka[ApiIdentityProvider],
     interactor: FromDishka[PlanGameStartInteractor],
     id_: Annotated[int, Path(alias="id")],
-    body: Annotated[req.GameStartAt, Body()],
-) -> responses.Game:
+    body: Annotated[requests.GameStartAt, Body()],
+) -> shared.Game:
     game = await interactor(game_id=id_, start_at=body.start_at, identity=identity)
-    return responses.Game.from_core(game)
+    return shared.Game.from_core(game)
 
 
 @inject
@@ -112,20 +113,20 @@ async def change_my_game_status(
     identity: FromDishka[ApiIdentityProvider],
     interactor: FromDishka[ChangeGameStatusInteractor],
     id_: Annotated[int, Path(alias="id")],
-    body: Annotated[req.GameStatusChange, Body()],
-) -> responses.Game:
+    body: Annotated[requests.GameStatusChange, Body()],
+) -> shared.Game:
     game = await interactor(game_id=id_, status=body.status, identity=identity)
-    return responses.Game.from_core(game)
+    return shared.Game.from_core(game)
 
 
 @inject
 async def get_active_game(
     current_game: FromDishka[CurrentGameProvider],
-) -> responses.Game | None:
+) -> shared.Game | None:
     game = await current_game.get_game()
     if game is None:
         raise HTTPException(status_code=404, detail={"text": "game not found"})
-    return responses.Game.from_core(game)
+    return shared.Game.from_core(game)
 
 
 @inject
@@ -140,9 +141,9 @@ async def get_my_role(
 @inject
 async def get_all_games(
     dao: FromDishka[HolderDao],
-) -> responses.Page[responses.Game]:
+) -> shared.Page[shared.Game]:
     games = await get_completed_games(dao.game)
-    return responses.Page([responses.Game.from_core(game) for game in games])
+    return shared.Page([shared.Game.from_core(game) for game in games])
 
 
 @inject
@@ -205,7 +206,7 @@ async def insert_key(
     interactor: FromDishka[CheckKeyInteractor],
     input_container: FromDishka[WebInput],
     current_game: FromDishka[CurrentGameProvider],
-    key: Annotated[req.Key, Body()],
+    key: Annotated[requests.Key, Body()],
 ) -> responses.InsertedKey:
     await interactor(key=key.text, identity=identity, input_container=input_container)
     if input_container.new_key is None:
@@ -231,9 +232,9 @@ async def get_game_organizers(
     identity: FromDishka[ApiIdentityProvider],
     interactor: FromDishka[ListGameOrgsInteractor],
     id_: Annotated[int, Path(alias="id")],
-) -> responses.Page[responses.GameOrganizer]:
+) -> shared.Page[responses.GameOrganizer]:
     orgs = await interactor(game_id=id_, identity=identity)
-    return responses.Page([responses.GameOrganizer.from_core(org) for org in orgs])
+    return shared.Page([responses.GameOrganizer.from_core(org) for org in orgs])
 
 
 @inject
@@ -241,7 +242,7 @@ async def add_game_organizer(
     identity: FromDishka[ApiIdentityProvider],
     interactor: FromDishka[AddGameOrgInteractor],
     id_: Annotated[int, Path(alias="id")],
-    body: Annotated[req.NewOrg, Body()],
+    body: Annotated[requests.NewOrg, Body()],
 ) -> responses.GameOrganizer:
     org = await interactor(game_id=id_, player_id=body.player_id, identity=identity)
     return responses.GameOrganizer.from_core(org)
@@ -252,7 +253,7 @@ async def delete_game_organizer(
     identity: FromDishka[ApiIdentityProvider],
     interactor: FromDishka[RemoveGameOrgInteractor],
     id_: Annotated[int, Path(alias="id")],
-    body: Annotated[req.DeleteOrg, Body()],
+    body: Annotated[requests.DeleteOrg, Body()],
 ) -> responses.GameOrganizer:
     org = await interactor(game_id=id_, org_id=body.org_id, identity=identity)
     return responses.GameOrganizer.from_core(org)
@@ -264,7 +265,7 @@ async def change_game_organizer_permission(
     interactor: FromDishka[ChangeOrgPermissionInteractor],
     id_: Annotated[int, Path(alias="id")],
     org_id: Annotated[int, Path()],
-    body: Annotated[req.OrgPermissionUpdate, Body()],
+    body: Annotated[requests.OrgPermissionUpdate, Body()],
 ) -> responses.GameOrganizer:
     try:
         permission = OrgPermission[body.permission]

@@ -7,7 +7,8 @@ from fastapi import APIRouter, HTTPException
 from fastapi.params import Body, Path, Query
 
 from shvatka.api.config.models.main import ApiConfig
-from shvatka.api.models import responses, req
+from shvatka.api.models.players import requests, responses
+from shvatka.api.models.shared import responses as shared
 from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.players.interactors import (
     GetPlayerInteractor,
@@ -41,22 +42,22 @@ async def search_users(
     name: Annotated[str | None, Query()] = None,
     active: Annotated[bool, Query()] = True,
     archive: Annotated[bool, Query()] = False,
-) -> responses.Items[responses.Player]:
+) -> shared.Items[shared.Player]:
     players = await interactor(
         username=username,
         name=name,
         active=active,
         archive=archive,
     )
-    return responses.Items([responses.Player.from_core(player) for player in players])
+    return shared.Items([shared.Player.from_core(player) for player in players])
 
 
 @inject
 async def read_user(
     dao: FromDishka[HolderDao],
     id_: int = Path(alias="id"),  # type: ignore[assignment]
-) -> responses.Player:
-    return responses.Player.from_core(await get_player_by_id(id_, dao.player))
+) -> shared.Player:
+    return shared.Player.from_core(await get_player_by_id(id_, dao.player))
 
 
 @inject
@@ -93,7 +94,7 @@ async def set_password_route(
 async def set_username_route(
     identity: FromDishka[IdentityProvider],
     dao: FromDishka[HolderDao],
-    body: Annotated[req.ChangeUsername, Body()],
+    body: Annotated[requests.ChangeUsername, Body()],
 ) -> None:
     player = await identity.get_required_player()
     await set_player_username(player, body.username, dao.player)

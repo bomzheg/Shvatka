@@ -5,7 +5,7 @@ from fastapi import APIRouter, Body, Query, Response
 from starlette import status
 
 from shvatka.api.dependencies.auth import ApiIdentityProvider
-from shvatka.api.models import req, responses
+from shvatka.api.models.notifications import requests, responses
 from shvatka.core.notifications.interactors import (
     ListNotificationsInteractor,
     UnreadCountInteractor,
@@ -38,7 +38,7 @@ async def get_unread_count(
 async def mark_read(
     identity: FromDishka[ApiIdentityProvider],
     interactor: FromDishka[MarkNotificationsReadInteractor],
-    body: Annotated[req.MarkNotificationsRead, Body()],
+    body: Annotated[requests.MarkNotificationsRead, Body()],
 ) -> Response:
     await interactor(identity=identity, notification_ids=body.ids)
     return Response(status_code=status.HTTP_204_NO_CONTENT)

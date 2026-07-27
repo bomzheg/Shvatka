@@ -4,8 +4,8 @@ import pytest
 from adaptix import Retort
 from httpx import AsyncClient
 
-from shvatka.api.dependencies.auth import AuthProperties
-from shvatka.api.models.games import responses
+from shvatka.api.app.dependencies.auth import AuthProperties
+from shvatka.api.games import responses
 from shvatka.core.models import dto
 from shvatka.core.models.enums import GameStatus
 from shvatka.core.services.game import create_game

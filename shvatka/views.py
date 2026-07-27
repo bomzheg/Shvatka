@@ -2,7 +2,7 @@ import logging
 from dataclasses import dataclass
 from typing import Iterable
 
-from shvatka.api.utils.web_input import (
+from shvatka.api.app.utils.web_input import (
     WebGameView,
     WebTeamNotifier,
     WebOrgNotifier,

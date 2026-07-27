@@ -3,8 +3,8 @@ from types import SimpleNamespace
 
 import pytest
 
-from shvatka.api.utils.push import PushMessage
-from shvatka.api.utils.web_input import WebTeamNotifier
+from shvatka.api.app.utils.push import PushMessage
+from shvatka.api.app.utils.web_input import WebTeamNotifier
 from shvatka.core.views.team import PlayerJoinedTeam, PlayerLeftTeam
 
 

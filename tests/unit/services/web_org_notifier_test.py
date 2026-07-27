@@ -4,8 +4,8 @@ from types import SimpleNamespace
 
 import pytest
 
-from shvatka.api.utils.push import PushMessage
-from shvatka.api.utils.web_input import WebOrgNotifier
+from shvatka.api.app.utils.push import PushMessage
+from shvatka.api.app.utils.web_input import WebOrgNotifier
 from shvatka.core.views.game import LevelUp, NewOrg, LevelTestCompleted
 
 

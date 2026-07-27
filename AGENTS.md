@@ -36,7 +36,7 @@ shvatka/
     scenario/      # interactors.py ...
     waiver/        # interactors.py, services.py, adapters.py
     rules/         # pure business rules / checks
-  api/             # FastAPI app: routes/, dependencies/, models/<subdomain>/
+  api/             # FastAPI app, split by subdomain (see below)
   tgbot/           # aiogram 3 + aiogram_dialog bot: handlers/, dialogs/, views/
   infrastructure/
     db/            # SQLAlchemy 2 models, dao/ (impls), migrations (alembic)
@@ -131,7 +131,7 @@ class GamePlayProvider(Provider):
 Consume them at the edges via `FromDishka[...]`:
 
 ```python
-# shvatka/api/routes/game.py
+# shvatka/api/games/routes.py
 @inject
 async def get_game_stat(
     interactor: FromDishka[GameStatReaderInteractor],
@@ -155,7 +155,7 @@ much as possible — **everywhere except the DAO layer**.
 
 Implementations are per-edge and cache within a request:
 
-- API: `ApiIdentityProvider` in `shvatka/api/dependencies/auth.py`.
+- API: `ApiIdentityProvider` in `shvatka/api/app/dependencies/auth.py`.
 - Bot: `TgBotIdentityProvider` in `shvatka/tgbot/services/identity.py`.
 - Game: `CurrentGameProviderImpl` in `shvatka/core/services/current_game.py`.
 
@@ -187,6 +187,55 @@ exception: DAOs take concrete `dto.Player`/`dto.Team`/etc.
   Dialect-specific helpers (e.g. `postgresql.insert(...).on_conflict_do_nothing()`)
   are fine when they make a query meaningfully better or faster — just don't
   reach for them without that justification.
+
+## API layout (subdomain packages)
+
+`shvatka/api/` separates **what the API is about** (subdomains) from **how the
+app is wired** (`app/`). Each subdomain is a package holding its own endpoints
+and the models only it speaks:
+
+```
+shvatka/api/
+  __main__.py        # entrypoints stay at the top
+  main_factory.py    #   create_app / get_paths
+  password_hash.py   #   shvatka-password script
+  app/               # framework plumbing — nothing subdomain-specific
+    router.py        #   aggregates every subdomain router; called by main_factory
+    error_handler.py #   SHError -> HTTP response
+    config/          #   ApiConfig models + parsers
+    dependencies/    #   dishka providers, ApiIdentityProvider, AuthProperties
+    middlewares/     #   logging, CORS
+    utils/           #   cookie auth, web views/notifiers, push sender
+  shared/            # models used by more than one subdomain
+    responses.py     #   Page, Items, Player, Team, Game, TgUser, ForumUser, EmailAccount
+    requests.py      #   MergeRequest, TimelineItem
+  auth/              # routes.py + requests.py + responses.py
+  players/           # /users (players in core and db)
+  teams/
+  games/             # game cards, play, orgs
+  waivers/
+  files/             # /cdn — game file upload/download/rename
+  notifications/
+  action_requests/   # /requests — invites and join requests
+  search/
+  push/
+  admin/             # /admin panel
+  version/
+```
+
+Rules:
+
+- A subdomain package contains `routes.py` (with `setup() -> APIRouter`) plus
+  `requests.py` / `responses.py` as needed. Register the router in
+  `shvatka/api/app/router.py`.
+- `app/` holds only what every subdomain shares — config, DI, middlewares,
+  framework helpers. Endpoints and their models never go there; if something in
+  `app/` knows about one subdomain, it belongs in that subdomain.
+- A model belongs in `shared/` only when **two or more** subdomains use it.
+  Anything one subdomain owns stays in that subdomain, even if it looks generic.
+- Cross-subdomain reuse is fine and explicit — import
+  `from shvatka.api.waivers import responses as waivers_responses` rather than
+  copying the model or promoting it to `shared/`.
 
 ## Testing
 
@@ -254,17 +303,12 @@ with a curated ignore list, mypy overrides) lives in `pyproject.toml`.
 ## Conventions cheat sheet
 
 - Domain DTOs are referenced as `dto.*` from `shvatka.core.models`.
-- API response/request models live in `shvatka/api/models/<subdomain>/` —
-  `requests.py` and `responses.py` per subdomain (`games`, `players`, `teams`,
-  `waivers`, `admin`, ...) — and convert with `.from_core(...)` / `.to_core(...)`
-  helpers. `models/shared/` is only for models **two or more** subdomains use
-  (`Page`, `Items`, `Player`, `Team`, `Game`, ...); anything one subdomain owns
-  stays with it, even if it looks generic. Cross-subdomain reuse is an explicit
-  import (`from shvatka.api.models.waivers import responses as waivers_responses`),
-  not a reason to promote a model into `shared/`.
-- Import the model module, not a bag of names: `from shvatka.api.models.games
-  import requests, responses`, then `responses.FullGame` — so the reader sees
-  which subdomain a model came from.
+- API endpoints and their models live together in `shvatka/api/<subdomain>/`
+  (see the API layout section). Models convert with `.from_core(...)` /
+  `.to_core(...)` helpers.
+- Import the model module, not a bag of names: `from shvatka.api.games import
+  requests, responses`, then `responses.FullGame` — so the reader sees which
+  subdomain a model came from.
 - Keep `core` framework-free; put framework glue in `api`, `tgbot`,
   `infrastructure`.
 - Line length 99. Match surrounding style; don't reformat untouched code.

@@ -1,9 +1,9 @@
 import pytest
 from httpx import AsyncClient
 
-from shvatka.api.dependencies.auth import AuthProperties
-from shvatka.api.models.auth.responses import Token
-from shvatka.api.models.shared import responses
+from shvatka.api.app.dependencies.auth import AuthProperties
+from shvatka.api.auth.responses import Token
+from shvatka.api.shared import responses
 from shvatka.core.models import dto
 from shvatka.infrastructure.db.dao.holder import HolderDao
 

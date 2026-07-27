@@ -5,8 +5,8 @@ import pytest_asyncio
 from httpx import AsyncClient
 from sqlalchemy.exc import NoResultFound
 
-from shvatka.api.dependencies.auth import AuthProperties
-from shvatka.api.models.auth.responses import Token
+from shvatka.api.app.dependencies.auth import AuthProperties
+from shvatka.api.auth.responses import Token
 from shvatka.core.models import dto
 from shvatka.core.models.enums.played import Played
 from shvatka.core.players.player import upsert_player

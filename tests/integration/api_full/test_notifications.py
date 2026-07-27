@@ -7,8 +7,8 @@ from aiogram.client.session.base import BaseSession
 from aiogram.types import Message
 from httpx import AsyncClient
 
-from shvatka.api.dependencies.auth import AuthProperties
-from shvatka.api.models.auth.responses import Token
+from shvatka.api.app.dependencies.auth import AuthProperties
+from shvatka.api.auth.responses import Token
 from shvatka.core.models import dto
 from shvatka.core.utils.datetime_utils import tz_utc
 from shvatka.infrastructure.db.dao.holder import HolderDao

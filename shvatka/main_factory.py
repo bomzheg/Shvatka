@@ -3,8 +3,8 @@ import logging
 from dishka import Provider, Scope, AsyncContainer, provide
 from dishka.exceptions import NoContextValueError
 
-from shvatka.api.dependencies.auth import ApiIdentityProvider
-from shvatka.api.utils.web_input import (
+from shvatka.api.app.dependencies.auth import ApiIdentityProvider
+from shvatka.api.app.utils.web_input import (
     WebGameView,
     WebTeamNotifier,
     WebOrgNotifier,

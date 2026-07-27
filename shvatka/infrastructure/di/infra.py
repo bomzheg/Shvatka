@@ -1,6 +1,6 @@
 from dishka import Provider, provide, Scope
 
-from shvatka.api.dependencies.api_only import MockUsedOneTimeTokenInteractor
+from shvatka.api.app.dependencies.api_only import MockUsedOneTimeTokenInteractor
 from shvatka.core.models import dto
 from shvatka.core.models.dto import action
 from shvatka.core.views.game import (

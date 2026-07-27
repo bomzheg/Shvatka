@@ -1,0 +1,59 @@
+from dishka import Provider, Scope, provide
+
+from shvatka.api.app.config.models.main import ApiConfig
+from shvatka.api.app.utils.push import WebPushSender
+from shvatka.api.app.utils.web_input import (
+    WebInput,
+    WebGameView,
+    WebGameLogWriter,
+    WebOrgNotifier,
+    WebTeamNotifier,
+    WebGamePreparer,
+)
+from shvatka.core.interfaces.current_game import CurrentGameProvider
+from shvatka.core.notifications.adapters import NotificationWriter
+from shvatka.infrastructure.db.dao.holder import HolderDao
+from shvatka.infrastructure.db.dao.rdb.push_subscription import PushSubscriptionDAO
+
+
+class OtherApiProvider(Provider):
+    scope = Scope.REQUEST
+
+    @provide
+    def input(self) -> WebInput:
+        return WebInput()
+
+    @provide
+    def push_sender(self, config: ApiConfig, dao: PushSubscriptionDAO) -> WebPushSender:
+        return WebPushSender(config=config.push, dao=dao)
+
+    @provide
+    def view(self, push_sender: WebPushSender, current_game: CurrentGameProvider) -> WebGameView:
+        return WebGameView(push_sender, current_game)
+
+    @provide
+    def preparer(self) -> WebGamePreparer:
+        return WebGamePreparer()
+
+    @provide
+    def log_writer(self) -> WebGameLogWriter:
+        return WebGameLogWriter()
+
+    @provide
+    def org_notifier(
+        self, push_sender: WebPushSender, notification_dao: NotificationWriter
+    ) -> WebOrgNotifier:
+        return WebOrgNotifier(push_sender, notification_dao)
+
+    @provide
+    def team_notifier(
+        self,
+        push_sender: WebPushSender,
+        notification_dao: NotificationWriter,
+        dao: HolderDao,
+    ) -> WebTeamNotifier:
+        return WebTeamNotifier(
+            notification_dao=notification_dao,
+            team_players_dao=dao.team_player,
+            push_sender=push_sender,
+        )

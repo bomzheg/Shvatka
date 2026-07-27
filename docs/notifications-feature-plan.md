@@ -205,7 +205,7 @@ it's testable without the web layer.
 
 Routes follow the existing thin-route pattern (`@inject`,
 `FromDishka[SomeInteractor]`, `ApiIdentityProvider`, `req`/`responses` models
-with `.from_core` / `.to_core`). Mirrors `shvatka/api/routes/push.py` and
+with `.from_core` / `.to_core`). Mirrors `shvatka/api/push/routes.py` and
 `team.py`.
 
 Frontend (out of scope for this plan): a bell/badge from `unread-count`, a tab

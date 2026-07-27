@@ -1,12 +1,12 @@
 import logging
 import sys
 
-from shvatka.api.config.parser.main import load_config
+from shvatka.api.app.config.parser.main import load_config
 from shvatka.api.main_factory import (
     get_paths,
 )
 from shvatka.common.config.parser.logging_config import setup_logging
-from shvatka.api.dependencies.auth import AuthProperties
+from shvatka.api.app.dependencies.auth import AuthProperties
 from shvatka.infrastructure.crypto.hasher import BcryptPasswordHasher
 
 logger = logging.getLogger(__name__)

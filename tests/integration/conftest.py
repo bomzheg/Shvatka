@@ -13,7 +13,7 @@ from dataclass_factory import Factory
 from dishka import make_async_container, AsyncContainer, Provider, Scope
 from telegraph.aio import Telegraph
 
-from shvatka.api.dependencies import (
+from shvatka.api.app.dependencies import (
     AuthProvider,
     AdminInteractorProvider,
     ApiConfigProvider,

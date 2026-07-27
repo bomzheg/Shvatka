@@ -3,8 +3,8 @@ import logging
 import uvicorn
 from fastapi import FastAPI
 
-from shvatka.api.config.parser.main import load_config
-from shvatka.api.dependencies import setup_di
+from shvatka.api.app.config.parser.main import load_config
+from shvatka.api.app.dependencies import setup_di
 from shvatka.api.main_factory import (
     create_app,
 )

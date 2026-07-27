@@ -2,14 +2,14 @@ import pytest
 from dataclass_factory import Factory
 from httpx import AsyncClient
 
-from shvatka.api.models.auth.responses import Token
-from shvatka.api.models.shared import responses
+from shvatka.api.auth.responses import Token
+from shvatka.api.shared import responses
 from shvatka.core.models import dto
 from shvatka.core.models import enums
 from shvatka.core.players.player import get_full_team_player, join_team
 from shvatka.core.utils.defaults_constants import CAPTAIN_ROLE
 from shvatka.infrastructure.db.dao.holder import HolderDao
-from shvatka.api.dependencies.auth import AuthProperties
+from shvatka.api.app.dependencies.auth import AuthProperties
 from tests.fixtures.chat_constants import create_gryffindor_dto_chat
 from tests.fixtures.team import create_team_
 from tests.mocks.game_log import GameLogWriterMock

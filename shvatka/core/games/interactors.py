@@ -312,9 +312,7 @@ class CheckKeyInteractor(GamePlayBaseInteractor):
         if new_key is None:
             return
         await self.view_(new_key, input_container)
-        if new_key.is_duplicate:
-            return
-        if new_key.is_level_up():
+        if not new_key.is_duplicate and new_key.is_level_up():
             await self.process_level_up(
                 input_container=input_container,
                 team=team,

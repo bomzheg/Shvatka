@@ -149,10 +149,12 @@ jobs:
           cache-dependency-glob: "uv.lock"
       - name: Install dependencies
         run: uv sync --group test
-      - name: Render Aiogram-dialogs transitions
+      - name: Render Aiogram-dialogs transitions and preview
         run: source .venv/bin/activate && python -m shvatka.tgbot.dialogs.__init__
       - name: Upload artifacts
         uses: actions/upload-artifact@v7
         with:
           name: transitions
-          path: out/shvatka-dialogs.png
+          path: |
+            out/shvatka-dialogs.png
+            out/shvatka-dialogs-preview.html

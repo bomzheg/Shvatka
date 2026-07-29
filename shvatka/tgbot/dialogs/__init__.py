@@ -1,3 +1,5 @@
+import asyncio
+
 from aiogram import Router, F
 from aiogram.enums import ChatType
 from aiogram_dialog import setup_dialogs
@@ -24,6 +26,7 @@ from shvatka.tgbot.dialogs import (
     effects,
     profile,
 )
+from shvatka.tgbot.dialogs.preview import render_dialogs_preview
 from shvatka.tgbot.filters import GameStatusFilter
 
 
@@ -73,6 +76,8 @@ def setup_active_game_dialogs() -> Router:
 def render_all():
     router = Router(name="main")
     setup(router, MessageManager())
+    # preview first: it needs no graphviz, so it is produced even without `dot`
+    asyncio.run(render_dialogs_preview(router))
     render_transitions(router, title="Shvatka", filename="out/shvatka-dialogs")
 
 

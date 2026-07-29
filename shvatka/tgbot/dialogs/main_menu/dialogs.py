@@ -6,6 +6,14 @@ from aiogram_dialog.widgets.text import Const, Format, Jinja
 from shvatka.core.models import enums
 from shvatka.tgbot import states
 from .getters import get_promotion_token, get_main
+from shvatka.tgbot.dialogs.preview_data import (
+    PREVIEW_AUTHOR,
+    PREVIEW_ORG,
+    PREVIEW_SIMPLE_GAME,
+    PREVIEW_TEAM,
+    PREVIEW_TEAM_PLAYER,
+    PREVIEW_VOTE,
+)
 
 main_menu = Dialog(
     Window(
@@ -109,6 +117,14 @@ main_menu = Dialog(
         # ачивки
         state=states.MainMenuSG.main,
         getter=get_main,
+        preview_data={
+            "player": PREVIEW_AUTHOR,
+            "game": PREVIEW_SIMPLE_GAME,
+            "org": PREVIEW_ORG,
+            "team": PREVIEW_TEAM,
+            "team_player": PREVIEW_TEAM_PLAYER,
+            "waiver": PREVIEW_VOTE,
+        },
     ),
 )
 
@@ -134,5 +150,6 @@ promote_dialog = Dialog(
         Cancel(Const("🔙Назад")),
         state=states.PromotionSG.disclaimer,
         getter=get_promotion_token,
+        preview_data={"player": PREVIEW_AUTHOR, "inline_query": "promote-player-token"},
     )
 )

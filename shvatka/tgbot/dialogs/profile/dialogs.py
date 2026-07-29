@@ -9,6 +9,7 @@ from shvatka.tgbot.dialogs.profile.getters import (
     player_stat_getter,
     player_one_time_url_getter,
 )
+from shvatka.tgbot.dialogs.preview_data import PREVIEW_AUTHOR, PREVIEW_PLAYER_STAT
 from shvatka.tgbot.dialogs.profile.handlers import (
     save_new_username,
     validate_username,
@@ -52,6 +53,7 @@ profile_dialog = Dialog(
         Cancel(Const("🔙Выход")),
         state=states.ProfileSG.main,
         getter=player_stat_getter,
+        preview_data=PREVIEW_PLAYER_STAT,
     ),
     Window(
         Const("Введи адрес электронной почты, который хочешь привязать к аккаунту"),
@@ -97,6 +99,7 @@ profile_dialog = Dialog(
         ),
         state=states.ProfileSG.username,
         getter=player_getter,
+        preview_data={"player": PREVIEW_AUTHOR},
     ),
     Window(
         Jinja("{{player.username}}\nДля входа нажми на кнопку ниже"),
@@ -111,5 +114,6 @@ profile_dialog = Dialog(
         ),
         state=states.ProfileSG.one_time_login,
         getter=(player_getter, player_one_time_url_getter),
+        preview_data={"player": PREVIEW_AUTHOR, "url": "https://shvatka.ru/login?token=1"},
     ),
 )

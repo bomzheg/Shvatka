@@ -32,6 +32,13 @@ from .handlers import (
     save_timer,
     delete_timer,
 )
+from shvatka.tgbot.dialogs.preview_data import (
+    PREVIEW_EFFECTS,
+    PREVIEW_LEVEL,
+    PREVIEW_TIMER,
+    PREVIEW_TIMERS,
+    TIMES_PRESET,
+)
 from shvatka.tgbot.dialogs.time_hint.getters import get_available_times
 
 timers_dialog = Dialog(
@@ -72,6 +79,10 @@ timers_dialog = Dialog(
         Cancel(Const("🔙Назад")),
         getter=get_timers,
         state=states.LevelTimersSG.menu,
+        preview_data={
+            "level_id": PREVIEW_LEVEL.name_id,
+            "timers": PREVIEW_TIMERS,
+        },
     ),
     on_process_result=process_timers_result,
     on_start=on_start_timers,
@@ -99,6 +110,10 @@ timer_dialog = Dialog(
         Cancel(text=Const("🔙Вернуться, не сохранять")),
         state=states.LevelTimerSG.menu,
         getter=get_timer,
+        preview_data={
+            "time": PREVIEW_TIMER.action_time,
+            "effects": PREVIEW_EFFECTS,
+        },
     ),
     Window(
         Const("Время выхода подсказки (можно выбрать или ввести)"),
@@ -127,6 +142,7 @@ timer_dialog = Dialog(
         Cancel(text=Const("🔙Вернуться, не сохранять")),
         state=states.LevelTimerSG.timer,
         getter=get_available_times,
+        preview_data={"times": TIMES_PRESET},
     ),
     on_process_result=on_process_timer_result,
     on_start=on_start_timer,

@@ -10,6 +10,7 @@ from shvatka.tgbot import states
 from .getters import get_org
 from .handlers import process_publish_message
 from shvatka.tgbot.dialogs.game_manage.handlers import publish_game_forum
+from shvatka.tgbot.dialogs.preview_data import PREVIEW_AUTHOR, PREVIEW_SIMPLE_GAME
 
 game_publish = Dialog(
     Window(
@@ -38,6 +39,13 @@ game_publish = Dialog(
         MessageInput(func=process_publish_message, filter=Command("publish")),
         state=states.GamePublishSG.prepare,
         getter=get_org,
+        preview_data={
+            "game": PREVIEW_SIMPLE_GAME,
+            "player": PREVIEW_AUTHOR,
+            "started": False,
+            "started_at": None,
+            "text_invite": None,
+        },
     ),
     Window(
         Jinja(

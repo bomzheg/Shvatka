@@ -25,6 +25,7 @@ from .handlers import (
     not_correct_id,
     process_routed_level_id,
 )
+from shvatka.tgbot.dialogs.preview_data import PREVIEW_EFFECTS_DATA, PREVIEW_HINTS_DATA
 
 
 effects = Dialog(
@@ -75,6 +76,7 @@ effects = Dialog(
         Cancel(Const("🔙Назад")),
         state=states.EffectsSG.menu,
         getter=get_effects,
+        preview_data=PREVIEW_EFFECTS_DATA,
     ),
     Window(
         Jinja(
@@ -96,6 +98,7 @@ effects = Dialog(
         ),
         state=states.EffectsSG.bonus,
         getter=get_effects,
+        preview_data=PREVIEW_EFFECTS_DATA,
     ),
     Window(
         Jinja("🔀Переход на уровень:\n{{next_level}}"),
@@ -112,6 +115,7 @@ effects = Dialog(
         ),
         state=states.EffectsSG.routed_level_up,
         getter=get_effects,
+        preview_data=PREVIEW_EFFECTS_DATA,
     ),
     Window(
         Jinja("💡Подсказки\n\n{{hints | hints}}"),
@@ -143,6 +147,7 @@ effects = Dialog(
         ),
         getter=get_hints,
         state=states.EffectsSG.hints,
+        preview_data=PREVIEW_HINTS_DATA,
     ),
     Window(
         Jinja("Подсказка выходящая в {{time}} мин."),
@@ -161,6 +166,7 @@ effects = Dialog(
         ),
         getter=get_hints,
         state=states.EffectsSG.add_hints,
+        preview_data=PREVIEW_HINTS_DATA,
     ),
     on_start=effects_on_start,
 )

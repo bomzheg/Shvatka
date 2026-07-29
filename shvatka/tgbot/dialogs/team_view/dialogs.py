@@ -13,6 +13,7 @@ from .handlers import (
     on_leave_team,
 )
 from shvatka.tgbot.dialogs.common import BOOL_VIEW
+from shvatka.tgbot.dialogs.preview_data import PREVIEW_TEAM_CARD, PREVIEW_TEAMS
 
 team_view = Dialog(
     Window(
@@ -37,6 +38,7 @@ team_view = Dialog(
         Cancel(Const("🔙Назад")),
         getter=teams_getter,
         state=states.TeamsSg.list,
+        preview_data={"teams": PREVIEW_TEAMS, "active": True, "archive": False},
     ),
     Window(
         Jinja(
@@ -60,6 +62,7 @@ team_view = Dialog(
         Cancel(Const("🔙Выход")),
         getter=team_getter,
         state=states.TeamsSg.one,
+        preview_data=PREVIEW_TEAM_CARD,
     ),
     Window(
         Const("Отметь типы команд для отображения"),
@@ -76,6 +79,7 @@ team_view = Dialog(
         SwitchTo(Const("🔙Назад"), state=states.TeamsSg.list, id="to_list"),
         getter=filter_getter,
         state=states.TeamsSg.filter,
+        preview_data={"active": True, "archive": False},
     ),
 )
 
@@ -91,6 +95,7 @@ my_team_view = Dialog(
         Cancel(Const("🔙Назад")),
         getter=team_getter,
         state=states.MyTeamSg.team,
+        preview_data=PREVIEW_TEAM_CARD,
     ),
     on_start=on_start_my_team,
 )

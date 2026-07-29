@@ -16,8 +16,8 @@ from shvatka.core.views.texts import (
 )
 
 
-def setup_jinja(bot: Bot):
-    filters: Mapping[str, Callable[..., str]] = {
+def get_filters() -> Mapping[str, Callable[..., str]]:
+    return {
         "user_timezone": datetime_filter,
         "time_user_timezone": time_user_timezone,
         "player_emoji": get_emoji,
@@ -30,7 +30,10 @@ def setup_jinja(bot: Bot):
         "time_hints": render_time_hints,
         "effects": render_effects,
     }
+
+
+def setup_jinja(bot: Bot):
     setup_jinja_internal(
         bot,
-        filters=filters,
+        filters=get_filters(),
     )

@@ -10,13 +10,13 @@
 
 .В боте
 `/manage_team` -> "👥Игроки" -> выбрать игрока. У каждого полномочия своя кнопка,
-нажатие переключает его вкл/выкл.
+нажатие переключает его вкл/выкл: ✅ — полномочие выдано, 🚫 — нет.
 
 .Список игроков в команде
-image::{attachmentsdir}/team/tg-team_players.png[]
+image::{attachmentsdir}/team/tg-bridge-players.png[]
 
-.Управление конкретным игроком
-image::{attachmentsdir}/team/tg-team_player.png[]
+.Управление конкретным игроком: полномочия, должность, emoji и изгнание
+image::{attachmentsdir}/team/tg-bridge-player.png[]
 
 .На сайте
 Раздел "Команда" -> у нужного участника нажать карандашик -> блок "Права".

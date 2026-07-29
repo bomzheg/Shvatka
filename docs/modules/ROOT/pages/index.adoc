@@ -25,7 +25,7 @@ xref:player/play.adoc[как проходит игра].
 xref:setup_team/create_chat.adoc[Создай чат],
 xref:setup_team/create_team.adoc[зарегистрируй команду],
 xref:setup_team/add_players.adoc[добавь игроков] и
-xref:setup_team/permissions.adoc[раздай полномочия заместителям].
+xref:setup_team/waivers.adoc[подай вейверы].
 
 Я пишу игру::
 Начни с xref:author/level-concept.adoc[описания уровня], потом

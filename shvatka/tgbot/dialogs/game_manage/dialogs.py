@@ -49,7 +49,14 @@ from .handlers import (
     show_all_keys,
     show_transitions,
 )
-from shvatka.tgbot.dialogs.preview_data import PREVIEW_GAME, PreviewSwitchTo, PreviewStart
+from shvatka.tgbot.dialogs.preview_data import (
+    PREVIEW_GAME,
+    PREVIEW_NOW,
+    PREVIEW_RESULTS_MEDIA,
+    PREVIEW_WAIVERS,
+    PreviewStart,
+    PreviewSwitchTo,
+)
 
 games = Dialog(
     Window(
@@ -125,7 +132,7 @@ games = Dialog(
         ),
         state=states.CompletedGamesPanelSG.game,
         getter=get_completed_game,
-        preview_data={"game": PREVIEW_GAME},
+        preview_data={"game": PREVIEW_GAME, "webapp_url": "https://shvatka.ru/games/1"},
         preview_add_transitions=[
             PreviewStart(states.GameOrgsSG.orgs_list),
         ],
@@ -161,6 +168,7 @@ games = Dialog(
         ),
         getter=get_game_waivers,
         state=states.CompletedGamesPanelSG.waivers,
+        preview_data={"game": PREVIEW_GAME, "waivers": PREVIEW_WAIVERS},
     ),
     Window(
         DynamicMedia(selector="results.png"),
@@ -185,6 +193,7 @@ games = Dialog(
         ),
         getter=get_game_results,
         state=states.CompletedGamesPanelSG.results,
+        preview_data={"game": PREVIEW_GAME, "results.png": PREVIEW_RESULTS_MEDIA},
     ),
     Window(
         Jinja("Сценарий игры тут: {{invite}}\n"),
@@ -200,6 +209,7 @@ games = Dialog(
         ),
         getter=get_game_with_channel,
         state=states.CompletedGamesPanelSG.scenario_channel,
+        preview_data={"game": PREVIEW_GAME, "invite": "https://t.me/+preview"},
     ),
     Window(
         Jinja(
@@ -224,6 +234,7 @@ games = Dialog(
         ),
         getter=get_game_keys,
         state=states.CompletedGamesPanelSG.keys,
+        preview_data={"game": PREVIEW_GAME, "key_link": "https://telegra.ph/keys"},
     ),
 )
 
@@ -358,6 +369,7 @@ my_games = Dialog(
         SwitchTo(Const("🔙Назад"), id="back", state=states.MyGamesPanelSG.game_menu),
         state=states.MyGamesPanelSG.rename,
         getter=get_game,
+        preview_data={"game": PREVIEW_GAME},
     ),
 )
 
@@ -393,7 +405,7 @@ schedule_game_dialog = Dialog(
         ),
         Cancel(Const("🔙Назад")),
         getter=get_game_time,
-        preview_data={"game": PREVIEW_GAME, "has_time": True},
+        preview_data={"game": PREVIEW_GAME, "has_time": True, "scheduled_time": "21:00"},
         state=states.GameScheduleSG.time,
     ),
     Window(
@@ -411,7 +423,7 @@ schedule_game_dialog = Dialog(
         ),
         Cancel(Const("❌Отменить")),
         getter=get_game_datetime,
-        preview_data={"game": PREVIEW_GAME},
+        preview_data={"game": PREVIEW_GAME, "scheduled_datetime": PREVIEW_NOW},
         state=states.GameScheduleSG.confirm,
     ),
 )

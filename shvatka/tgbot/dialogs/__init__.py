@@ -1,6 +1,8 @@
+import asyncio
+
 from aiogram import Router, F
 from aiogram.enums import ChatType
-from aiogram_dialog import setup_dialogs
+from aiogram_dialog import Dialog, setup_dialogs
 from aiogram_dialog.api.protocols import MessageManagerProtocol, BgManagerFactory
 from aiogram_dialog.manager.message_manager import MessageManager
 from aiogram_dialog.tools import render_transitions
@@ -24,7 +26,43 @@ from shvatka.tgbot.dialogs import (
     effects,
     profile,
 )
+from shvatka.tgbot.dialogs.preview import render_dialogs_preview
 from shvatka.tgbot.filters import GameStatusFilter
+
+DIALOG_PACKAGES = (
+    starters,
+    main_menu,
+    profile,
+    game_manage,
+    game_scn,
+    level_scn,
+    time_hint,
+    level_manage,
+    game_orgs,
+    game_publish,
+    team_manage,
+    merge,
+    team_view,
+    player_view,
+    timers,
+    effects,
+    game_spy,
+)
+
+
+def collect_all_dialogs() -> list[Dialog]:
+    """Every dialog of the bot, without attaching it to a router.
+
+    Dialogs are module-level singletons, so `setup` can run only once per
+    process - which the bot itself does. Tools that only need to read the
+    dialogs (the preview) go through here instead.
+    """
+    found: dict[int, Dialog] = {}
+    for package in DIALOG_PACKAGES:
+        for obj in vars(package).values():
+            if isinstance(obj, Dialog):
+                found.setdefault(id(obj), obj)
+    return list(found.values())
 
 
 def setup(router: Router, message_manager: MessageManagerProtocol) -> BgManagerFactory:
@@ -71,6 +109,8 @@ def setup_active_game_dialogs() -> Router:
 
 
 def render_all():
+    # preview first: it needs no graphviz, so it is produced even without `dot`
+    asyncio.run(render_dialogs_preview(collect_all_dialogs()))
     router = Router(name="main")
     setup(router, MessageManager())
     render_transitions(router, title="Shvatka", filename="out/shvatka-dialogs")

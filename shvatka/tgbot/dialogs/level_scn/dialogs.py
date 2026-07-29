@@ -53,7 +53,16 @@ from .handlers import (
     save_effects_condition,
     delete_effects_condition,
 )
-from shvatka.tgbot.dialogs.preview_data import PreviewStart
+from shvatka.tgbot.dialogs.preview_data import (
+    PREVIEW_EFFECTS,
+    PREVIEW_EFFECTS_CONDITIONS,
+    PREVIEW_GAME,
+    PREVIEW_KEYS,
+    PREVIEW_LEVEL,
+    PREVIEW_LEVEL_SCN,
+    PREVIEW_TIME_HINTS,
+    PreviewStart,
+)
 
 level = Dialog(
     Window(
@@ -128,9 +137,7 @@ level = Dialog(
         ),
         state=states.LevelSG.menu,
         getter=get_level_data,
-        preview_data={
-            "level_id": "Pinky Pie",
-        },
+        preview_data=PREVIEW_LEVEL_SCN,
         preview_add_transitions=[
             PreviewStart(state=states.LevelKeysSG.keys),
             PreviewStart(state=states.LevelEffectsKeysSG.menu),
@@ -180,9 +187,7 @@ level_edit_dialog = Dialog(
         Cancel(Const("🔙Назад")),
         state=states.LevelEditSg.menu,
         getter=get_level_data,
-        preview_data={
-            "level_id": "Pinky Pie",
-        },
+        preview_data=PREVIEW_LEVEL_SCN,
         preview_add_transitions=[
             PreviewStart(state=states.LevelKeysSG.keys),
             PreviewStart(state=states.LevelEffectsKeysSG.menu),
@@ -226,6 +231,7 @@ keys_dialog = Dialog(
         ),
         state=states.LevelKeysSG.keys,
         getter=(get_level_id, get_keys),
+        preview_data={"level_id": PREVIEW_LEVEL.name_id, "keys": PREVIEW_KEYS},
     ),
 )
 
@@ -268,8 +274,9 @@ hints_dialog = Dialog(
         state=states.LevelHintsSG.time_hints,
         getter=get_time_hints,
         preview_data={
-            "time_hints": [],
-            "level_id": "Pinky Pie",
+            "time_hints": PREVIEW_TIME_HINTS,
+            "level_id": PREVIEW_LEVEL.name_id,
+            "dialog_data": {"time_hints": PREVIEW_TIME_HINTS},
         },
         preview_add_transitions=[
             PreviewStart(state=states.TimeHintSG.time),
@@ -323,6 +330,11 @@ effects_key_dialog = Dialog(
         preview_add_transitions=[
             PreviewStart(state=states.KeyEffectsSG.menu),
         ],
+        preview_data={
+            "level_id": PREVIEW_LEVEL.name_id,
+            "effects_conditions": PREVIEW_EFFECTS_CONDITIONS,
+            "game_id": PREVIEW_GAME.id,
+        },
         getter=(get_level_id, get_effects_conditions),
         state=states.LevelEffectsKeysSG.menu,
     ),
@@ -350,6 +362,7 @@ key_effects_condition_dialog = Dialog(
             PreviewStart(state=states.LevelKeysSG.keys),
             PreviewStart(state=states.EffectsSG.menu),
         ],
+        preview_data={"keys": PREVIEW_KEYS, "effects": PREVIEW_EFFECTS},
         getter=get_effects_condition,
         state=states.KeyEffectsSG.menu,
     ),

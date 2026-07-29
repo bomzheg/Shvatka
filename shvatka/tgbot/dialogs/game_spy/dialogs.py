@@ -6,6 +6,12 @@ from aiogram_dialog.widgets.text import Const, Jinja, Multi
 from shvatka.tgbot import states
 from .getters import get_org, get_spy, get_keys
 from .handlers import keys_handler
+from shvatka.tgbot.dialogs.preview_data import (
+    PREVIEW_FINISHED_LEVEL_TIME,
+    PREVIEW_NOW,
+    PREVIEW_SPY_ORG,
+    PREVIEW_SPY_STAT,
+)
 
 game_spy = Dialog(
     Window(
@@ -34,6 +40,7 @@ game_spy = Dialog(
         Cancel(Const("🔙Назад")),
         state=states.OrgSpySG.main,
         getter=get_org,
+        preview_data=PREVIEW_SPY_ORG,
     ),
     Window(
         Const("Актуальные сведения с полей схватки:"),
@@ -56,6 +63,12 @@ game_spy = Dialog(
         SwitchTo(Const("🔙Назад"), id="back", state=states.OrgSpySG.main),
         state=states.OrgSpySG.spy,
         getter=(get_spy, get_org),
+        preview_data={
+            **PREVIEW_SPY_ORG,
+            "stat": PREVIEW_SPY_STAT,
+            "finished": [PREVIEW_FINISHED_LEVEL_TIME],
+            "now": PREVIEW_NOW,
+        },
     ),
     Window(
         Jinja(
@@ -73,6 +86,11 @@ game_spy = Dialog(
         SwitchTo(Const("🔙Назад"), id="back", state=states.OrgSpySG.main),
         state=states.OrgSpySG.keys,
         getter=(get_org, get_keys),
+        preview_data={
+            **PREVIEW_SPY_ORG,
+            "key_link": "https://telegra.ph/keys",
+            "updated": PREVIEW_NOW,
+        },
         disable_web_page_preview=True,
     ),
 )

@@ -28,7 +28,11 @@ from .handlers import (
     delete_single_hint,
     delete_whole_time_hint,
 )
-from shvatka.tgbot.dialogs.preview_data import TIMES_PRESET, PreviewSwitchTo
+from shvatka.tgbot.dialogs.preview_data import (
+    PREVIEW_HINTS_DATA,
+    TIMES_PRESET,
+    PreviewSwitchTo,
+)
 
 time_hint = Dialog(
     Window(
@@ -73,7 +77,7 @@ time_hint = Dialog(
         Back(text=Const("⏱️Изменить время")),
         getter=get_hints,
         state=states.TimeHintSG.hint,
-        preview_data={"has_hints": True},
+        preview_data=PREVIEW_HINTS_DATA,
     ),
     on_start=hint_on_start,
 )
@@ -122,12 +126,14 @@ time_hint_edit = Dialog(
         Cancel(text=Const("🔙Вернуться, ничего не менять")),
         getter=get_hints,
         state=states.TimeHintEditSG.details,
+        preview_data=PREVIEW_HINTS_DATA,
     ),
     Window(
         Jinja("Введи новое время выхода подсказки"),
         MessageInput(func=process_edit_time_message),
         getter=get_hints,
         state=states.TimeHintEditSG.time,
+        preview_data=PREVIEW_HINTS_DATA,
     ),
     Window(
         Jinja("Подсказка выходящая в {{time}} мин."),
@@ -146,6 +152,7 @@ time_hint_edit = Dialog(
         ),
         getter=get_hints,
         state=states.TimeHintEditSG.add_part,
+        preview_data=PREVIEW_HINTS_DATA,
     ),
     on_start=hint_edit_on_start,
 )

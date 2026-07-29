@@ -52,7 +52,6 @@ class LevelTimersSG(StatesGroup):
 class LevelTimerSG(StatesGroup):
     menu = State()
     timer = State()
-    effects = State()
 
 
 class BonusHintSG(StatesGroup):
@@ -176,7 +175,6 @@ class ProfileSG(StatesGroup):
     main = State()
     username = State()
     one_time_login = State()
-    password = State()
     email = State()
     email_code = State()
 

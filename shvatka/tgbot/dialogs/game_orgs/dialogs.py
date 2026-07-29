@@ -13,6 +13,12 @@ from aiogram_dialog.widgets.text import Format, Const, Multi, Jinja
 from shvatka.tgbot import states
 from .getters import get_orgs, get_org
 from .handlers import select_org, change_permission_handler, change_deleted_handler
+from shvatka.tgbot.dialogs.preview_data import (
+    PREVIEW_ORG,
+    PREVIEW_ORG_PERMISSIONS,
+    PREVIEW_ORGS,
+    PREVIEW_SIMPLE_GAME,
+)
 
 game_orgs = Dialog(
     Window(
@@ -41,6 +47,11 @@ game_orgs = Dialog(
         Cancel(Const("🔙Назад")),
         getter=get_orgs,
         state=states.GameOrgsSG.orgs_list,
+        preview_data={
+            "game": PREVIEW_SIMPLE_GAME,
+            "orgs": PREVIEW_ORGS,
+            "inline_query": "add-game-org-token",
+        },
     ),
     Window(
         Multi(
@@ -84,5 +95,6 @@ game_orgs = Dialog(
         Back(text=Const("К списку организаторов")),
         getter=get_org,
         state=states.GameOrgsSG.org_menu,
+        preview_data={"org": PREVIEW_ORG, **PREVIEW_ORG_PERMISSIONS},
     ),
 )

@@ -19,7 +19,14 @@ from .handlers import (
     unlink_level_handler,
     delete_level_handler,
 )
-from shvatka.tgbot.dialogs.preview_data import PreviewStart
+from shvatka.tgbot.dialogs.preview_data import (
+    PREVIEW_FULL_GAME,
+    PREVIEW_LEVEL,
+    PREVIEW_LEVELS,
+    PREVIEW_MANAGED_LEVEL,
+    PREVIEW_ORGS,
+    PreviewStart,
+)
 
 levels_list = Dialog(
     Window(
@@ -39,6 +46,7 @@ levels_list = Dialog(
         Cancel(Const("🔙Назад")),
         state=states.LevelListSG.levels,
         getter=get_levels,
+        preview_data={"levels": PREVIEW_LEVELS},
         preview_add_transitions=[PreviewStart(states.LevelManageSG.menu)],
     ),
 )
@@ -91,6 +99,7 @@ level_manage = Dialog(
         Cancel(Const("🔙Назад")),
         state=states.LevelManageSG.menu,
         getter=get_level_id,
+        preview_data=PREVIEW_MANAGED_LEVEL,
         preview_add_transitions=[
             PreviewStart(states.LevelEditSg.menu),
             PreviewStart(states.LevelTestSG.wait_key),
@@ -117,6 +126,11 @@ level_manage = Dialog(
         SwitchTo(Const("🔙Назад"), id="back", state=states.LevelManageSG.menu),
         state=states.LevelManageSG.send_to_test,
         getter=get_orgs,
+        preview_data={
+            "game": PREVIEW_FULL_GAME,
+            "orgs": PREVIEW_ORGS,
+            "level": PREVIEW_LEVEL,
+        },
     ),
 )
 
@@ -132,6 +146,7 @@ level_test_dialog = Dialog(
         ),
         getter=get_level_id,
         state=states.LevelTestSG.wait_key,
+        preview_data=PREVIEW_MANAGED_LEVEL,
         preview_add_transitions=[Cancel()],
     ),
 )

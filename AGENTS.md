@@ -322,6 +322,13 @@ with a curated ignore list, mypy overrides) lives in `pyproject.toml`.
   that's expected, and there's no need to translate them when you touch a file —
   but anything you add should be English. User-facing strings (bot replies,
   Excel report headers, etc.) stay Russian.
+- **Every aiogram_dialog `Window` with a getter needs `preview_data`.** Getters
+  are not called in preview mode, so a window without it renders against an
+  empty dict. Reuse the fixtures in `shvatka/tgbot/dialogs/preview_data.py` and
+  add new ones there. `tests/unit/test_dialogs_preview.py` renders every window
+  and fails when one is missing; `python -m shvatka.tgbot.dialogs.__init__`
+  writes the page to `out/shvatka-dialogs-preview.html`. Each state of a
+  `StatesGroup` must have a window too — the same test asserts it.
 - **In aiogram / aiogram_dialog handlers, take dependencies from DI**
   (`FromDishka[...]` on an `@inject`-decorated handler) rather than reaching
   into `manager.middleware_data` / event middleware data. That includes

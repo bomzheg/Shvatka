@@ -7,6 +7,12 @@ from aiogram_dialog.widgets.text import Jinja, Const
 from shvatka.tgbot import states
 from .getters import get_team, get_forum_team, get_forum_teams, get_forum_user
 from .handlers import select_forum_team, confirm_merge, player_link_handler, confirm_merge_player
+from shvatka.tgbot.dialogs.preview_data import (
+    PREVIEW_FORUM_TEAM,
+    PREVIEW_FORUM_TEAMS,
+    PREVIEW_FORUM_USER,
+    PREVIEW_TEAM,
+)
 
 merge_teams_dialog = Dialog(
     Window(
@@ -24,6 +30,7 @@ merge_teams_dialog = Dialog(
         Cancel(Const("🔙Ой нет, это я случайно")),
         getter=get_team,
         state=states.MergeTeamsSG.main,
+        preview_data={"team": PREVIEW_TEAM},
     ),
     Window(
         Jinja("Итак мы ищем форумную версию для команды {{team.name}}"),
@@ -42,6 +49,7 @@ merge_teams_dialog = Dialog(
         Cancel(Const("🔙Не надо ничего объединять")),
         getter=(get_team, get_forum_teams),
         state=states.MergeTeamsSG.list_forum,
+        preview_data={"team": PREVIEW_TEAM, "forum_teams": PREVIEW_FORUM_TEAMS},
     ),
     Window(
         Jinja(
@@ -57,6 +65,7 @@ merge_teams_dialog = Dialog(
         Cancel(Const("🔙Нет!!")),
         getter=(get_team, get_forum_team),
         state=states.MergeTeamsSG.confirm,
+        preview_data={"team": PREVIEW_TEAM, "forum_team": PREVIEW_FORUM_TEAM},
     ),
 )
 
@@ -103,5 +112,6 @@ merge_player_dialog = Dialog(
         Cancel(Const("🔙Я передумал, не надо")),
         getter=get_forum_user,
         state=states.MergePlayersSG.confirm,
+        preview_data={"forum_user": PREVIEW_FORUM_USER},
     ),
 )

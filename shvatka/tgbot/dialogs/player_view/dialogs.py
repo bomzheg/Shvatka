@@ -4,6 +4,7 @@ from aiogram_dialog.widgets.text import Jinja, Const
 
 from shvatka.tgbot import states
 from .getters import player_getter
+from shvatka.tgbot.dialogs.preview_data import PREVIEW_PLAYER_STAT
 
 player_dialog = Dialog(
     Window(
@@ -23,5 +24,6 @@ player_dialog = Dialog(
         Cancel(Const("🔙Выход")),
         getter=player_getter,
         state=states.PlayerSg.main,
+        preview_data=PREVIEW_PLAYER_STAT,
     ),
 )

@@ -10,6 +10,11 @@ from .getters import (
     get_team_with_players,
     get_selected_player,
 )
+from shvatka.tgbot.dialogs.preview_data import (
+    PREVIEW_MY_TEAM,
+    PREVIEW_SELECTED_TEAM_PLAYER_DATA,
+    PREVIEW_TEAM_WITH_PLAYERS,
+)
 from .handlers import (
     rename_team_handler,
     change_desc_team_handler,
@@ -79,6 +84,7 @@ captains_bridge = Dialog(
         Cancel(Const("🔙Назад")),
         state=states.CaptainsBridgeSG.main,
         getter=get_my_team_,
+        preview_data=PREVIEW_MY_TEAM,
     ),
     Window(
         Jinja("Переименовать команду 🚩<b>{{team.name}}</b>"),
@@ -86,6 +92,7 @@ captains_bridge = Dialog(
         TextInput(id="rename", on_success=rename_team_handler),
         getter=get_my_team_,
         state=states.CaptainsBridgeSG.name,
+        preview_data=PREVIEW_MY_TEAM,
     ),
     Window(
         Jinja("Изменить девиз команды 🚩<b>{{team.name}}</b>"),
@@ -93,6 +100,7 @@ captains_bridge = Dialog(
         TextInput(id="change_desc", on_success=change_desc_team_handler),
         getter=get_my_team_,
         state=states.CaptainsBridgeSG.description,
+        preview_data=PREVIEW_MY_TEAM,
     ),
     Window(
         Jinja("Игроки команды 🚩<b>{{team.name}}</b>"),
@@ -117,6 +125,7 @@ captains_bridge = Dialog(
         SwitchTo(Const("🔙Назад"), id="back", state=states.CaptainsBridgeSG.main),
         getter=get_team_with_players,
         state=states.CaptainsBridgeSG.players,
+        preview_data=PREVIEW_TEAM_WITH_PLAYERS,
     ),
     Window(
         Jinja("Чтобы добавить игрока нажми на кнопку в самом внизу, затем выбери пользователя"),
@@ -129,6 +138,7 @@ captains_bridge = Dialog(
         ),
         getter=get_my_team_,
         state=states.CaptainsBridgeSG.add_player,
+        preview_data=PREVIEW_MY_TEAM,
     ),
     Window(
         TEAM_PLAYER_CARD,
@@ -184,6 +194,7 @@ captains_bridge = Dialog(
         SwitchTo(Const("🔙Назад"), id="back", state=states.CaptainsBridgeSG.players),
         getter=get_selected_player,
         state=states.CaptainsBridgeSG.player,
+        preview_data=PREVIEW_SELECTED_TEAM_PLAYER_DATA,
     ),
     Window(
         TEAM_PLAYER_CARD,
@@ -200,6 +211,7 @@ captains_bridge = Dialog(
         ),
         getter=get_selected_player,
         state=states.CaptainsBridgeSG.confirm_delete,
+        preview_data=PREVIEW_SELECTED_TEAM_PLAYER_DATA,
     ),
     Window(
         TEAM_PLAYER_CARD,
@@ -216,6 +228,7 @@ captains_bridge = Dialog(
         ),
         getter=get_selected_player,
         state=states.CaptainsBridgeSG.player_role,
+        preview_data=PREVIEW_SELECTED_TEAM_PLAYER_DATA,
     ),
     Window(
         TEAM_PLAYER_CARD,
@@ -232,5 +245,6 @@ captains_bridge = Dialog(
         ),
         getter=get_selected_player,
         state=states.CaptainsBridgeSG.player_emoji,
+        preview_data=PREVIEW_SELECTED_TEAM_PLAYER_DATA,
     ),
 )

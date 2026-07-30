@@ -18,6 +18,7 @@ from shvatka.tgbot.dialogs.preview_data import (
     PREVIEW_ORG_PERMISSIONS,
     PREVIEW_ORGS,
     PREVIEW_SIMPLE_GAME,
+    PreviewSwitchTo,
 )
 
 game_orgs = Dialog(
@@ -52,6 +53,7 @@ game_orgs = Dialog(
             "orgs": PREVIEW_ORGS,
             "inline_query": "add-game-org-token",
         },
+        preview_add_transitions=[PreviewSwitchTo(states.GameOrgsSG.org_menu)],
     ),
     Window(
         Multi(

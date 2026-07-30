@@ -78,6 +78,8 @@ time_hint = Dialog(
         getter=get_hints,
         state=states.TimeHintSG.hint,
         preview_data=PREVIEW_HINTS_DATA,
+        # 'to_next_hint' closes the dialog, returning the collected hint
+        preview_add_transitions=[Cancel()],
     ),
     on_start=hint_on_start,
 )
@@ -134,6 +136,7 @@ time_hint_edit = Dialog(
         getter=get_hints,
         state=states.TimeHintEditSG.time,
         preview_data=PREVIEW_HINTS_DATA,
+        preview_add_transitions=[PreviewSwitchTo(states.TimeHintEditSG.details)],
     ),
     Window(
         Jinja("Подсказка выходящая в {{time}} мин."),

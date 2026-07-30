@@ -38,6 +38,7 @@ from shvatka.tgbot.dialogs.preview_data import (
     PREVIEW_TIMER,
     PREVIEW_TIMERS,
     TIMES_PRESET,
+    PreviewStart,
 )
 from shvatka.tgbot.dialogs.time_hint.getters import get_available_times
 
@@ -83,6 +84,7 @@ timers_dialog = Dialog(
             "level_id": PREVIEW_LEVEL.name_id,
             "timers": PREVIEW_TIMERS,
         },
+        preview_add_transitions=[PreviewStart(states.LevelTimerSG.menu)],
     ),
     on_process_result=process_timers_result,
     on_start=on_start_timers,
@@ -114,6 +116,7 @@ timer_dialog = Dialog(
             "time": PREVIEW_TIMER.action_time,
             "effects": PREVIEW_EFFECTS,
         },
+        preview_add_transitions=[PreviewStart(states.EffectsSG.menu)],
     ),
     Window(
         Const("Время выхода подсказки (можно выбрать или ввести)"),

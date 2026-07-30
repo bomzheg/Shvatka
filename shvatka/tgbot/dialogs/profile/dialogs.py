@@ -9,7 +9,11 @@ from shvatka.tgbot.dialogs.profile.getters import (
     player_stat_getter,
     player_one_time_url_getter,
 )
-from shvatka.tgbot.dialogs.preview_data import PREVIEW_AUTHOR, PREVIEW_PLAYER_STAT
+from shvatka.tgbot.dialogs.preview_data import (
+    PREVIEW_AUTHOR,
+    PREVIEW_PLAYER_STAT,
+    PreviewSwitchTo,
+)
 from shvatka.tgbot.dialogs.profile.handlers import (
     save_new_username,
     validate_username,
@@ -69,6 +73,7 @@ profile_dialog = Dialog(
             on_error=email_invalid,
         ),
         state=states.ProfileSG.email,
+        preview_add_transitions=[PreviewSwitchTo(states.ProfileSG.email_code)],
     ),
     Window(
         Const("Введи код подтверждения, отправленный на указанную почту"),

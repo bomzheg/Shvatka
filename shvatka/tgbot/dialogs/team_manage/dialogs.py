@@ -14,6 +14,8 @@ from shvatka.tgbot.dialogs.preview_data import (
     PREVIEW_MY_TEAM,
     PREVIEW_SELECTED_TEAM_PLAYER_DATA,
     PREVIEW_TEAM_WITH_PLAYERS,
+    PreviewStart,
+    PreviewSwitchTo,
 )
 from .handlers import (
     rename_team_handler,
@@ -85,6 +87,7 @@ captains_bridge = Dialog(
         state=states.CaptainsBridgeSG.main,
         getter=get_my_team_,
         preview_data=PREVIEW_MY_TEAM,
+        preview_add_transitions=[PreviewStart(states.MergeTeamsSG.main)],
     ),
     Window(
         Jinja("Переименовать команду 🚩<b>{{team.name}}</b>"),
@@ -126,6 +129,7 @@ captains_bridge = Dialog(
         getter=get_team_with_players,
         state=states.CaptainsBridgeSG.players,
         preview_data=PREVIEW_TEAM_WITH_PLAYERS,
+        preview_add_transitions=[PreviewSwitchTo(states.CaptainsBridgeSG.player)],
     ),
     Window(
         Jinja("Чтобы добавить игрока нажми на кнопку в самом внизу, затем выбери пользователя"),
@@ -229,6 +233,7 @@ captains_bridge = Dialog(
         getter=get_selected_player,
         state=states.CaptainsBridgeSG.player_role,
         preview_data=PREVIEW_SELECTED_TEAM_PLAYER_DATA,
+        preview_add_transitions=[PreviewSwitchTo(states.CaptainsBridgeSG.player)],
     ),
     Window(
         TEAM_PLAYER_CARD,
@@ -246,5 +251,6 @@ captains_bridge = Dialog(
         getter=get_selected_player,
         state=states.CaptainsBridgeSG.player_emoji,
         preview_data=PREVIEW_SELECTED_TEAM_PLAYER_DATA,
+        preview_add_transitions=[PreviewSwitchTo(states.CaptainsBridgeSG.player)],
     ),
 )

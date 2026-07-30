@@ -102,7 +102,7 @@ game_editor = Dialog(
         getter=select_full_game,
         preview_data={"game": PREVIEW_FULL_GAME, "levels": PREVIEW_LEVELS},
         preview_add_transitions=[
-            PreviewStart(states.LevelTestSG.wait_key),
+            PreviewStart(states.LevelManageSG.menu),
         ],
     ),
     Window(

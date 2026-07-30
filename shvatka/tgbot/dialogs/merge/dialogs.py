@@ -12,6 +12,7 @@ from shvatka.tgbot.dialogs.preview_data import (
     PREVIEW_FORUM_TEAMS,
     PREVIEW_FORUM_USER,
     PREVIEW_TEAM,
+    PreviewSwitchTo,
 )
 
 merge_teams_dialog = Dialog(
@@ -50,6 +51,7 @@ merge_teams_dialog = Dialog(
         getter=(get_team, get_forum_teams),
         state=states.MergeTeamsSG.list_forum,
         preview_data={"team": PREVIEW_TEAM, "forum_teams": PREVIEW_FORUM_TEAMS},
+        preview_add_transitions=[PreviewSwitchTo(states.MergeTeamsSG.confirm)],
     ),
     Window(
         Jinja(
@@ -96,6 +98,7 @@ merge_player_dialog = Dialog(
         Cancel(Const("🔙Я передумал, не надо")),
         MessageInput(func=player_link_handler, content_types=ContentType.TEXT),
         state=states.MergePlayersSG.input,
+        preview_add_transitions=[PreviewSwitchTo(states.MergePlayersSG.confirm)],
     ),
     Window(
         Jinja("Объединить свои достижения с {{forum_user.name}}?"),

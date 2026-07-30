@@ -329,6 +329,16 @@ with a curated ignore list, mypy overrides) lives in `pyproject.toml`.
   and fails when one is missing; `python -m shvatka.tgbot.dialogs.__init__`
   writes the page to `out/shvatka-dialogs-preview.html`. Each state of a
   `StatesGroup` must have a window too — the same test asserts it.
+- **A handler that jumps to another window must declare it in
+  `preview_add_transitions`.** The transitions diagram is built from the
+  `Start` / `SwitchTo` / `Next` / `Back` / `Cancel` widgets it can see in a
+  window; a `manager.start(...)` / `manager.switch_to(...)` inside an
+  `on_click` / `on_success` / `MessageInput` handler is invisible to it, so
+  add `PreviewStart(state)` / `PreviewSwitchTo(state)` (and `Cancel()` when the
+  handler closes the dialog as its normal outcome — not for error-only
+  `done()` paths). `tests/unit/test_dialogs_transitions.py` fails on an
+  undeclared jump; `python -m shvatka.tgbot.dialogs.__init__` writes the
+  diagram to `out/shvatka-dialogs.png` (needs graphviz).
 - **In aiogram / aiogram_dialog handlers, take dependencies from DI**
   (`FromDishka[...]` on an `@inject`-decorated handler) rather than reaching
   into `manager.middleware_data` / event middleware data. That includes

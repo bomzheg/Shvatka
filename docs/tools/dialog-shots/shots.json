@@ -4,14 +4,12 @@
   "MyTeamSg:team": "player/tg-my-team.png",
   "TeamsSg:list": "player/tg-teams-list.png",
   "CompletedGamesPanelSG:game": "player/tg-completed-game.png",
-
   "CaptainsBridgeSG:main": "team/tg-bridge-main.png",
   "CaptainsBridgeSG:players": "team/tg-bridge-players.png",
   "CaptainsBridgeSG:add_player": "team/tg-bridge-add-player.png",
   "CaptainsBridgeSG:player": "team/tg-bridge-player.png",
   "CaptainsBridgeSG:confirm_delete": "team/tg-bridge-confirm-delete.png",
   "CaptainsBridgeSG:name": "team/tg-bridge-rename.png",
-
   "MyGamesPanelSG:choose_game": "author/tg-my-games.png",
   "MyGamesPanelSG:game_menu": "author/tg-game-menu.png",
   "GameWriteSG:game_name": "author/tg-new-game-name.png",
@@ -28,13 +26,11 @@
   "LevelEffectsKeysSG:menu": "author/tg-effects-keys.png",
   "EffectsSG:menu": "author/tg-effects.png",
   "LevelManageSG:menu": "author/tg-level-manage.png",
-  "LevelManageSG:send_to_test": "author/tg-level-send-test.png",
   "GameScheduleSG:date": "author/tg-schedule-date.png",
   "GameScheduleSG:time": "author/tg-schedule-time.png",
   "GameScheduleSG:confirm": "author/tg-schedule-confirm.png",
   "GameOrgsSG:orgs_list": "author/tg-orgs-list.png",
   "GameOrgsSG:org_menu": "author/tg-org-perms.png",
-
   "OrgSpySG:main": "org/tg-spy-main.png",
   "OrgSpySG:spy": "org/tg-spy-levels.png",
   "OrgSpySG:keys": "org/tg-spy-keys.png"

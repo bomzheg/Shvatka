@@ -243,5 +243,16 @@ where that is so, the row says as much.
   description, in Russian, of how a level scenario is put together.
 - `docs/modules/ROOT/pages/author/level-howto.adoc` — building linear and
   non-linear games out of keys, timers and effects.
+- `docs/modules/ROOT/pages/author/` — the rest of the author's path: writing a
+  level, assembling a game out of levels, inviting organizers, scheduling a start.
 - `docs/modules/ROOT/pages/setup_team/` — teams, chats and waivers from the
-  players' side.
+  captain's side, including team permissions.
+- `docs/modules/ROOT/pages/player/` — joining and leaving a team, promotion,
+  and how a game is played.
+- `docs/modules/ROOT/pages/org/spy.adoc` — the spy, the key log and the rest of
+  what an organizer sees while a game runs.
+
+The user documentation is written for players and organizers, so it uses the
+Russian half of this glossary and nothing else. Where the interface contradicts a
+term, the docs use the term and mention the label in passing — see *роль*, which
+the bot calls «должность».

@@ -64,7 +64,7 @@ the edge-specific twist.
 | --- | --- | --- | --- |
 | **User** | Пользователь | A Telegram account. Purely an external identity — it carries no game meaning on its own. | `dto.User` |
 | **Player** | Игрок | A person as the domain knows them: the identity everything else hangs off. A player may be linked to a Telegram `User`, to a `ForumUser`, to an `EmailAccount`, or to none of these. | `dto.Player` |
-| **Dummy player** | Пустышка | A player created from imported forum data with nobody behind it yet (`is_dummy`). Exists so historical games have real participants; merged into a live player later. | `Player.is_dummy` |
+| **Dummy player** | — | A player created from imported forum data with nobody behind it yet (`is_dummy`). Exists so historical games have real participants; merged into a live player later. | `Player.is_dummy` |
 | **Author** | Автор | A player allowed to write games (`can_be_author`). The right is granted by another author — see *promotion*. | `Player.can_be_author` |
 | **Promotion** | Аппрув | An existing author invites a player to become an author; on acceptance `can_be_author` is set. | `player.promote`, `RequestType.promotion` |
 | **Superuser** | Админ движка | A configured operator of the engine itself, above the game roles. Resolved only through `SuperusersResolver` — never by re-reading config at a call site. | `core/interfaces/superusers.py` |
@@ -97,7 +97,7 @@ the edge-specific twist.
 | **Game number** | Номер игры | The game's place in the archive. Assigned as `max + 1` at completion, so only played games have one. | `Game.number`, `game.complete_game` |
 | **Organizer (org)** | Организатор (орг) | A player who runs a game rather than playing it. The author is the **primary organizer** and holds every right; anyone else invited is a **secondary organizer** with explicit permissions. | `dto.Organizer`, `dto.PrimaryOrganizer`, `dto.SecondaryOrganizer` |
 | **Org permission** | Полномочие орга | What a secondary organizer may do: spy, see the key log, validate waivers, view the scenario. **Nothing is granted by default.** | `enums.OrgPermission` |
-| **Manage token** | Токен управления | The game's secret, checked when someone acts on the game through an invite link. | `Game.manage_token`, `organizers.check_game_token` |
+| **Manage token** | — | The game's secret, checked when someone acts on the game through an invite link. | `Game.manage_token`, `organizers.check_game_token` |
 | **Publication** | Публикация | Posting a finished game's results to a Telegram channel. Possible once, after the game is finished or complete. | `GameResults.published_chanel_id`, `Game.can_be_publish` |
 
 ### Game statuses
@@ -105,15 +105,20 @@ the edge-specific twist.
 | Status | Русский | Meaning |
 | --- | --- | --- |
 | `underconstruction` | в процессе создания | Being written. Editable, deletable. |
-| `ready` | полностью готова | Finished scenario, not yet collecting waivers. |
+| `ready` | полностью готова | Finished scenario, not yet collecting waivers. **Not used any more** — kept for old games; a game goes straight from `underconstruction` to `getting_waivers`. |
 | `getting_waivers` | сбор вейверов | Teams are declaring who plays. Still editable. |
 | `started` | началась | Being played. |
 | `finished` | все команды финишировали | Every team has passed the last level; results not yet closed. |
-| `complete` | завершена | Closed and archived; the game gets its number here. |
+| `complete` | завершена | **Terminal.** The game is closed and archived, and gets its number here. This is also the status that makes a game public: any player may read the game, its whole scenario, its key log and its results, with no organizer permission involved. |
 
 `ACTIVE_STATUSES` = `getting_waivers`, `started`, `finished` — only one game may be
 active at a time. `EDITABLE_STATUSES` = `underconstruction`, `ready`,
 `getting_waivers`.
+
+Every "is this visible?" check in the engine hangs off `complete`: `check_can_read`
+and `check_can_view_scenario` in `core/rules/game.py`, and `get_typed_keys` /
+`get_game_stat` in `core/services/game_stat.py`, all return early for a complete
+game and only then fall back to author or organizer rights.
 
 ## Scenario — what an author writes
 
@@ -123,12 +128,12 @@ active at a time. `EDITABLE_STATUSES` = `underconstruction`, `ready`,
 | **Level scenario** | Сценарий уровня | The level's content proper: the time hints plus the conditions. This is what gets validated, exported and imported. | `scn.LevelScenario` |
 | **Game scenario** | Сценарий игры | The whole game as a portable document — levels plus files. Uploaded and downloaded as a zip. | `scn.GameScenario`, `scn.FullGameScenario`, `scn.RawGameScenario` |
 | **`name_id`** | — | The author-chosen id of a level, unique per author (`[a-zA-Z0-9_-]+`). Used to route between levels, and stable across games. | `Level.name_id`, `validate_level_id` |
-| **Scenario model version** | Версия модели сценария | The schema version of a stored scenario (`__model_version__`). Version 0 documents are upgraded on read. | `core/migration_utils/` |
+| **Scenario model version** | — | The schema version of a stored scenario (`__model_version__`). Version 0 documents are upgraded on read. | `core/migration_utils/` |
 | **Puzzle** | Загадка уровня | The hint released at minute 0 — the level's starting point. Not a separate concept: it is simply the first time hint, and every level must have one. A level must be solvable from its puzzle alone. | `HintsList.verify` |
 | **Time hint** | Подсказка | A batch of content released this many minutes after the team reached the level. Times are unique and sorted; there is always one at 0. | `hints.TimeHint` |
 | **Hint part** | Часть подсказки | One piece of a hint's content: text, photo, video, audio, document, GPS point, venue, contact, sticker… A hint is a list of parts. | `hints.AnyHint`, `enums.HintType` |
 | **Key** | Ключ | The code string a team submits. Starts with `SH` or `СХ`, then uppercase Latin/Cyrillic letters and digits — e.g. `SHHELLO99`, `СХПРИВЕТ13`. | `action.SHKey`, `is_key_valid` |
-| **Master key** | Мастер-ключ | The key that completes the level. Modelled as the *win condition*: a set of keys, **all** of which must be entered, in any order. At most one per level. The author need not publish it if the level ends by another route. | `action.KeyWinCondition` |
+| **Master key** | — | The key that completes the level. Modelled as the *win condition*: a set of keys, **all** of which must be entered, in any order. At most one per level. The author need not publish it if the level ends by another route. | `action.KeyWinCondition` |
 | **Effects key** | Ключ с эффектами | A key that triggers effects instead of (or as well as) completing the level. Any number per level. | `action.KeyEffectsCondition` |
 | **Timer** | Таймер | Time from the start of the level at which effects fire. Any number per level; at most one may end the level, and no other timer may be set later than that one. | `action.LevelTimerEffectsCondition` |
 | **Condition** | Условие | The general form of "when X, do Y" in a level — a win condition, an effects key, or an effects timer. A level must have at least one that can end it. | `action.AnyCondition`, `scn.Conditions` |
@@ -141,9 +146,9 @@ active at a time. `EDITABLE_STATUSES` = `underconstruction`, `ready`,
 
 | Term | Русский | Meaning | Where |
 | --- | --- | --- | --- |
-| **Action** | Действие | Something that happens and may change the game: a team typed a key, or a level timer fired. | `action.Action`, `TypedKeyAction`, `LevelTimerAction` |
-| **State** | Состояние | What the engine knows when judging an action: which keys the team has already typed, which effects already fired. | `action.State`, `TypedKeysState`, `LevelTimerState` |
-| **Decision** | Решение | The verdict on an action: significant, effects, no action, or not implemented. Each condition returns one; the level picks the one that counts. | `action.Decision`, `DecisionType` |
+| **Action** | — | Something that happens and may change the game: a team typed a key, or a level timer fired. | `action.Action`, `TypedKeyAction`, `LevelTimerAction` |
+| **State** | — | What the engine knows when judging an action: which keys the team has already typed, which effects already fired. | `action.State`, `TypedKeysState`, `LevelTimerState` |
+| **Decision** | — | The verdict on an action: significant, effects, no action, or not implemented. Each condition returns one; the level picks the one that counts. | `action.Decision`, `DecisionType` |
 | **Level time** | Время уровня | The record that a team reached a given level at a given moment. The backbone of results — a team's progress *is* its list of level times. | `dto.LevelTime`, `levels_times` table |
 | **Level up** | Переход на уровень | A team leaving its current level for the next (or a routed) one. | `Effects.level_up`, `views.game.LevelUp` |
 | **Key log** | Лог ключей | Every key ever submitted, right or wrong, with who typed it and when. Visible to organizers with `can_see_log_keys`, and published with the game. | `dto.KeyTime`, `dto.InsertedKey`, `log_keys` table |
@@ -177,7 +182,7 @@ active at a time. `EDITABLE_STATUSES` = `underconstruction`, `ready`,
 
 | Term | Русский | Meaning | Where |
 | --- | --- | --- | --- |
-| **Action request** | Запрос | A user-to-user request that needs someone's decision, with a lifecycle: `pending` → `accepted` / `declined` / `cancelled` / `expired`. | `notifications.dto.ActionRequest`, `enums.RequestStatus` |
+| **Action request** | Заявка | A user-to-user request that needs someone's decision, with a lifecycle: `pending` → `accepted` / `declined` / `cancelled` / `expired`. *Заявка* is the term — plain *запрос* is too generic, though it reads fine mid-sentence ("ваш запрос на вступление в команду"). | `notifications.dto.ActionRequest`, `enums.RequestStatus` |
 | **Request type** | Тип запроса | `team_join_invite`, `team_join_request`, `org_invite`, `team_merge`, `player_merge`, `promotion`. | `enums.RequestType` |
 | **Notification** | Уведомление | One inbox item for exactly one recipient — the record that something happened. A request produces notifications; a notification is not itself actionable. | `notifications.dto.Notification`, `enums.NotificationType` |
 | **Severity** | Важность | How much a notification matters (`low` / `normal` / `important`); drives UI emphasis and push urgency. | `enums.NotificationSeverity` |
@@ -212,14 +217,19 @@ active at a time. `EDITABLE_STATUSES` = `underconstruction`, `ready`,
 Each of these has shown up in review or in an old name. They are ambiguous or
 belong to a neighbouring game, and the right-hand column is what to say instead.
 
+This is about **written** language — identifiers, docstrings, docs, UI copy. Some
+of these words are in live spoken use and nobody needs correcting for saying them;
+where that is so, the row says as much.
+
 | Not this | Say this | Why |
 | --- | --- | --- |
 | Quest, task, stage, mission | **Level** (`Level`) | The domain word is уровень; the others come from other games. |
-| Answer, code, password | **Key** (`SHKey`) | A key has a defined format and a life in the key log. |
+| Answer, password | **Key** (`SHKey`) | A key has a defined format and a life in the key log. |
+| Code / код | **Key** (`SHKey`) | People do say *код* out loud, and that's fine in speech — but it isn't the term. In code and copy it's a key, because only a key has the `SH`/`СХ` format and a row in the key log. |
 | Registration, application, sign-up | **Waiver** (`Waiver`) | Вейвер is the domain word and covers the vote → approve flow. |
 | Admin (for a game) | **Organizer** / **org** | *Admin* means the engine's superuser. A game has organizers. |
 | Moderator | **Organizer** or **superuser** | Neither role exists under that name. |
-| Level text | **Puzzle** (the 0-minute hint) | There is no separate "level text" concept. |
+| Level text / текст уровня | **Puzzle** — загадка уровня | Say *текст уровня* all you like in conversation; it's the popular name and it's exact whenever the puzzle happens to be text. In writing use *загадка уровня*, because a puzzle can just as well be a photo, a video or an audio file, and because there is no separate "level text" in the model — it is the 0-minute hint. `level-concept.adoc` already says this: «Текст уровня это частный случай подсказки выходящей в 0 минут. Отдельной концепции текста уровня не существует.» |
 | Clue, tip | **Hint** (`TimeHint`) | One word for the thing released on a timer. |
 | Fine, malus | **Penalty** (negative `bonus_minutes`) | A penalty is a negative bonus, not another field. |
 | Group, squad, crew | **Team** (`Team`) | Group means a Telegram chat here. |

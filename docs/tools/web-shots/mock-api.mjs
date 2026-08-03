@@ -48,14 +48,14 @@ const levels = [
     scenario: {
       id: 'pinky_pie',
       time_hints: [
-        hint(0, text('Там, где смеются громче всего, ищи вывеску с воздушным шаром. Код под козырьком.')),
-        hint(10, text('Это заведение работает круглосуточно, на вывеске три шара.')),
-        hint(20, text('Улица Ленина, 15. Смотри со стороны двора.')),
+        hint(0, text('В этот момент Пинки почувствовала, что готова заниматься праздниками всю жизнь и через секунду получила свой знак отличия')),
+        hint(10, text('Позже она открыла заведение, на лого которого разместила свой знак отличия')),
+        hint(20, text('Город Праздников')),
       ],
       conditions: [
         winKey('СХПИНКИ'),
         effectsKey(['СХБОНУС'], [{id: 'e1', hints_: [], bonus_minutes: 10, level_up: false, next_level: null}]),
-        effectsTimer(30, [{id: 'e2', hints_: [text('Совсем подсказка: код написан мелом.')], bonus_minutes: -5, level_up: false, next_level: null}]),
+        effectsTimer(30, [{id: 'e2', hints_: [text('Пинки может и уехать, если не поспешить')], bonus_minutes: -5, level_up: false, next_level: null}]),
       ],
     },
   },
@@ -64,8 +64,8 @@ const levels = [
     scenario: {
       id: 'fluttershy',
       time_hints: [
-        hint(0, text('Где тише всего — там и ответ. Ищи домик для птиц в парке.')),
-        hint(15, text('Парк у реки, восточный вход.')),
+        hint(0, text('Флаттершай была полной противоположностью Пинки и её дом был таким же')),
+        hint(15, text('Какой-то шутник повесил на её доме надпись "Трактир"')),
       ],
       conditions: [winKey('СХФЛАТТЕР'), effectsTimer(40, [{id: 'e3', hints_: [], bonus_minutes: 0, level_up: true, next_level: null}])],
     },
@@ -74,7 +74,7 @@ const levels = [
     db_id: 3, name_id: 'rainbow', author: captain, game_id: 1, number_in_game: 2,
     scenario: {
       id: 'rainbow',
-      time_hints: [hint(0, text('Радуга приходит после дождя. Мост, семь цветов, ищи опору №3.'))],
+      time_hints: [hint(0, text('Радуга Деш произвела звуковую радугу - эффект который считался мифическим'))],
       conditions: [winKey('СХРАДУГА')],
     },
   },
@@ -140,8 +140,8 @@ const routes = {
   'GET /games/running/level/current': {
     level_number: 1, level_time_id: 2, started_at: LEVEL2_START, game_id: 1, is_finished: false,
     hints: [
-      hint(0, text('Где тише всего — там и ответ. Ищи домик для птиц в парке.')),
-      hint(15, text('Парк у реки, восточный вход.')),
+      hint(0, text('Флаттершай была полной противоположностью Пинки и её дом был таким же')),
+      hint(15, text('Какой-то шутник повесил на её доме надпись "Трактир"')),
     ],
     typed_keys: [
       {text: 'СХПИНКИ', type_: 'simple', is_duplicate: false, at: LEVEL2_START, level_number: 0, player: rd, team},

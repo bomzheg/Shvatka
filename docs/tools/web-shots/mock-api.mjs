@@ -5,7 +5,10 @@ import http from 'node:http';
 
 // Fixture timestamps are relative to "now" so the running-game counters read
 // naturally whenever the screenshots are re-taken.
-const iso = minutesAgo => new Date(Date.now() - minutesAgo * 60000).toISOString().slice(0, 19);
+// keep the Z: the real API stores start_at as DateTime(timezone=True) and serialises
+// an offset, and the UI does Date.parse — a naive string would be read as local time
+// and the "уровень начался N назад" counters would be off by the timezone.
+const iso = minutesAgo => new Date(Date.now() - minutesAgo * 60000).toISOString().slice(0, 19) + 'Z';
 const GAME_START = iso(63);
 const LEVEL1_START = iso(63);
 const LEVEL2_START = iso(17);

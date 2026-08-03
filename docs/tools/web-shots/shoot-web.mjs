@@ -11,7 +11,8 @@ const shots = JSON.parse(fs.readFileSync(process.argv[2], 'utf-8'));
 const outDir = path.resolve(process.argv[3]);
 const base = 'http://127.0.0.1:4300';
 
-const browser = await chromium.launch();
+// channel: the default resolves to the headless shell, which crashes on this app
+const browser = await chromium.launch({channel: 'chromium'});
 const context = await browser.newContext({
   viewport: {width: 1180, height: 900},
   deviceScaleFactor: 2,

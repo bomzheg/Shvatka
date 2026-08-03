@@ -70,6 +70,9 @@ node shoot-web.mjs shots-web-waivers.json ../../modules/ROOT/attachments
 блокирует внешний виджет telegram и прячет "липкую" шапку, когда снимает
 отдельный блок.
 
+NOTE: Chromium запрашивается как `channel: "chromium"` — по умолчанию playwright
+может взять headless shell, на котором приложение падает.
+
 == Данные заглушки
 
 Все временные метки в `mock-api.mjs` считаются от текущего момента, поэтому

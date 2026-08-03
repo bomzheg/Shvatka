@@ -12,6 +12,7 @@
 import {chromium} from 'playwright';
 import fs from 'node:fs';
 import path from 'node:path';
+import {fileURLToPath} from 'node:url';
 
 const [previewArg, shotsArg, outArg] = process.argv.slice(2);
 if (!previewArg || !shotsArg || !outArg) {
@@ -24,10 +25,21 @@ const outDir = path.resolve(outArg);
 const width = 700;
 const pad = 14;
 
-const browser = await chromium.launch();
+// channel: the default may resolve to the headless shell; ask for the full browser
+const browser = await chromium.launch({channel: 'chromium'});
 const page = await browser.newPage({viewport: {width, height: 1400}, deviceScaleFactor: 2});
 await page.goto('file://' + path.resolve(previewArg));
 await page.waitForLoadState('load');
+// Roboto, cached next to this script as data-uri @font-face rules. The preview page
+// asks Google Fonts for it, which needs network; with the cache the render is the
+// same everywhere, and the committed screenshots stay reproducible.
+const here = path.dirname(fileURLToPath(import.meta.url));
+const robotoPath = path.join(here, 'roboto.css');
+if (fs.existsSync(robotoPath)) {
+  await page.addStyleTag({content: fs.readFileSync(robotoPath, 'utf-8')});
+} else {
+  console.log('roboto.css missing — falling back to whatever font the system provides');
+}
 await page.evaluate(() => document.fonts.ready);
 await page.addStyleTag({
   content: `
@@ -38,9 +50,10 @@ await page.addStyleTag({
     .time {display: none !important;}
     /* no filler space under short messages */
     .body {min-height: auto !important;}
-    /* Roboto comes from the network; without it pick a sane local face
-       instead of whatever generic sans-serif resolves to */
-    * {font-family: 'Roboto', 'Liberation Sans', 'DejaVu Sans', Arial, 'Noto Color Emoji', sans-serif;}
+    /* Noto Color Emoji goes right after Roboto: DejaVu and Liberation carry
+       monochrome glyphs for pictographs like U+270F, so if they come first those
+       emoji render as black-and-white text. */
+    * {font-family: 'Roboto', 'Noto Color Emoji', 'Liberation Sans', 'DejaVu Sans', sans-serif;}
   `,
 });
 await page.evaluate(() => {

@@ -44,7 +44,7 @@ image::{attachmentsdir}/team/web-captain-bridge.png[]
 Может принимать в команду новых людей всеми способами
 из xref:setup_team/add_players.adoc[инструкции по добавлению игроков].
 
-Исключать игроков (`can_remove_players`)::
+Удалять игроков (`can_remove_players`)::
 Может выгонять игроков из команды.
 
 == Что остаётся только капитану

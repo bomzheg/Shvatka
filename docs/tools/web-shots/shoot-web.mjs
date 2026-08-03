@@ -1,7 +1,8 @@
 /*
  * Screenshots of the Shvatka web UI for the documentation.
- * Expects the built UI on :4300 and the mock API on :8099.
+ * Expects shvatka-ui running against its own API stub — see the README.
  *   node shoot-web.mjs <shots.json> <out-dir>
+ * UI_URL overrides the address (default http://localhost:4200).
  */
 import {chromium} from 'playwright';
 import fs from 'node:fs';
@@ -9,7 +10,8 @@ import path from 'node:path';
 
 const shots = JSON.parse(fs.readFileSync(process.argv[2], 'utf-8'));
 const outDir = path.resolve(process.argv[3]);
-const base = 'http://127.0.0.1:4300';
+// where the UI is served; `npm run start:mock` in shvatka-ui puts it here
+const base = process.env.UI_URL ?? 'http://localhost:4200';
 
 // channel: the default resolves to the headless shell, which crashes on this app
 const browser = await chromium.launch({channel: 'chromium'});
@@ -27,8 +29,9 @@ const page = await context.newPage();
 const HIDE_STICKY = 'app-header, .actions-bar {visibility: hidden !important;}';
 
 for (const shot of shots) {
-  const {url, out, clicks = [], clip, wait = 800} = shot;
-  await page.goto(base + url, {waitUntil: 'networkidle'});
+  const {url, out, clicks = [], clip, wait = 1500} = shot;
+  // not networkidle: the dev server keeps a live-reload socket open forever
+  await page.goto(base + url, {waitUntil: 'load'});
   await page.waitForTimeout(wait);
   for (const sel of clicks) {
     const el = page.locator(sel).first();

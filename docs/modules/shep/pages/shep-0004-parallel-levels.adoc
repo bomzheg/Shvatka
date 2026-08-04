@@ -1,0 +1,449 @@
+= SHEP-0004 — Parallel levels
+:navtitle: SHEP-0004 Parallel levels
+
+[cols="1,4"]
+|===
+| SHEP | 0004
+| Title | Parallel levels
+| Status | `Draft` — the model is agreed in issue #217; nothing is implemented
+| Created | 2026-08-12
+| Updated | 2026-08-12
+| Related | issue #217, PR #320
+|===
+
+== Summary
+
+A team can work several levels at once. Its position stops being "the level it
+is on" and becomes *a set of open branches*; a branch that closes points at a
+target — another level, or the finish — and *a target opens when no open branch
+can still reach it*. The finish is an ordinary target, which is what makes the
+two motivating mechanics one mechanism instead of two.
+
+The immediate payoff is the *полевой + мозговой* level, today written as a single
+level whose puzzle says «полю: … мозгу: …» and whose win condition needs both
+keys: the author gets to write and test the halves separately, and each half
+gets its own hint schedule.
+
+== Context
+
+=== The mechanics that forced the question
+
+Four of them, and they are not four features — they fall into two families.
+
+[cols="2,4,1",options="header"]
+|===
+| Mechanic | What it is | Family
+
+| *полевой + мозговой*
+| One level is really two: a field task and an armchair task. Written today as
+  one level with both keys required, which is why the two halves share one hint
+  timeline — armchair hints come out paced by how fast the car is moving.
+| chains
+
+| *одинокий рыцарь*
+| The team walks its own chain of levels; one player walks a shorter, easier
+  chain alongside. When the knight is done he rejoins the team; the game ends
+  when both chains are done.
+| chains
+
+| *штурм*
+| Every level is open from the start and the team solves all of them in any
+  order. Hints are paid — a hint costs penalty minutes — because nobody tracks
+  twenty levels on a timer.
+| pool
+
+| *своя игра*
+| A pool of independent tasks, two open at once. Solve one, or give it up after
+  X minutes, and draw the next. The block is time-boxed; scoring is by task
+  cost.
+| pool
+|===
+
+=== Where "one team, one level" lives today
+
+The whole assumption rests on one query: `LevelTimeDao._get_current` orders
+`levels_times` by `start_at DESC LIMIT 1`
+(`shvatka/infrastructure/db/dao/rdb/level_times.py`). The team's current level is
+literally the newest row. Everything else follows from it:
+
+[cols="2,3",options="header"]
+|===
+| Place | What it assumes
+
+| `KeyProcessor.submit_key` (`core/services/key.py`)
+| A key is checked against one level — `get_current_level`.
+
+| `TimerProcessor.process` (`core/services/key.py`)
+| The same, for level timers.
+
+| `game_play.send_hint` (`core/games/game_play.py`)
+| "Has the team left this level?" is `lt.id != lt_id`.
+
+| `GamePlayerDaoImpl.level_up` (`infrastructure/db/dao/complex/game_play.py`)
+| Level-up only *inserts* a new row. Nothing is ever closed.
+
+| `LevelTime.has_finished` (`core/models/dto/levels_times.py`)
+| A team is finished when its level number ran off the end of the list.
+
+| `results.to_results` (`core/games/results.py`)
+| A level's duration is the gap to the next row in the chain — a `zip` over
+  adjacent pairs.
+
+| `CurrentHintsAndKeys` (`core/games/dto.py`), `CurrentHintResponse`
+  (`api/games/responses.py`)
+| One `level_number`, one `level_time_id`, one hint list.
+
+| `LevelTimeOnGame` (`core/models/dto/levels_times.py`)
+| The spy sees one current level per team.
+|===
+
+So the work is not "allow two levels". It is replacing a cursor with a set and
+carrying that set through DAO → interactors → API → UI.
+
+== Decision
+
+=== Scope: chains now, the pool later
+
+*In scope: parallel chains.* The pool family needs two mechanics that exist
+nowhere in the engine and are useful well outside parallelism — *hints on demand
+with a penalty*, and *the team choosing which level to take next* — plus a slot
+count and a time-box for the block. Each gets its own issue. This SHEP only
+undertakes not to preclude them.
+
+They can wait because both are already faked with today's tools: a paid hint is a
+key whose effects carry a penalty and a hint, with the key printed in the level
+text — chain the keys and successive hints cost successively more. Level choice
+is likewise keys with effects, at the cost of the team having to remember which
+levels it has already taken.
+
+=== Branches and position
+
+Two new domain words, to be added to `context.md`:
+
+*Branch* / _ветка_:: One open line of progress for a team. Concretely, a
+`levels_times` row that has not been closed yet.
+
+*Position* / _позиция команды_:: The set of a team's open branches. Replaces "the
+team's current level" everywhere above the DAO.
+
+One new column: *`levels_times.finished_at`*, nullable. Open branches are the
+rows where it is null. A branch is closed when it is *left*, not when the next
+one starts — which is what makes a duration meaningful once two branches overlap.
+
+=== The one rule
+
+A closing branch *points at a target* — a level, or the finish.
+
+[quote]
+____
+A target opens when no open branch can still reach it.
+____
+
+That single rule covers every chain case, with no author-facing flag:
+
+*полевой + мозговой*:: 5a and 5b both point at 6. The field half closes after
+twenty minutes, but 5b is open and can still reach 6, so 6 waits. When 5b closes,
+6 opens. This reproduces today's "both keys required" semantics exactly — which is
+the point: the author writes the halves separately and the engine glues them.
+
+*одинокий рыцарь*:: The team's chain and the knight's chain never point at the
+same level, so nothing ever waits and each branch advances on its own. Both
+chains eventually point at *the finish*, and the finish is a target like any
+other — unreachable until both are closed.
+
+*Early finish*:: In a linear game, a branch pointing at the finish from any level
+ends the game for that team, because no other branch is open.
+
+[plantuml, format=svg]
+....
+@startuml
+hide empty description
+state "полевой + мозговой" as A {
+  state "5a полевой" as A5a
+  state "5b мозговой" as A5b
+  state "6" as A6
+  [*] --> A5a : fork
+  [*] --> A5b : fork
+  A5a --> A6
+  A5b --> A6
+  note right of A6
+    waits: 5b is open
+    and can still reach 6
+  end note
+}
+state "одинокий рыцарь" as B {
+  state "team 5 - 6 - 7" as Bteam
+  state "knight 5k - 6k" as Bknight
+  state "finish" as Bfin
+  [*] --> Bteam : fork
+  [*] --> Bknight : fork
+  Bteam --> Bfin
+  Bknight --> Bfin
+  note right of Bfin
+    never waits: the chains
+    meet only at the finish
+  end note
+}
+@enduml
+....
+
+The finish being an ordinary target is what unifies these. It also replaces
+`has_finished`: a team is finished when it has *no open branches*, not when a
+level number ran off the end of the list.
+
+==== Reachability
+
+"Can still reach" is computed over the routing graph of the scenario — the same
+graph the front-end already builds for the scenario view
+(`shvatka-ui/src/app/scenario_graph.part`, `routingGraphFromGame`). Cycles are
+allowed in the engine (see the `allow_level_times_cycles` migration), and a cycle
+upstream of a barrier can leave a target permanently reachable-but-never-reached.
+That deadlock is a real risk and is left open below.
+
+=== Scenario language
+
+Effects get two orthogonal fields instead of one entangled pair:
+
+`level_up: bool`:: *Close the current branch.* The name now means exactly that,
+not "move to the next level". `context.md` needs the correction; a rename is not
+proposed here.
+
+`next_level: list[str] | None`:: *What to open*, by `name_id`. Was a single
+optional `name_id`.
+
+[cols="1,2,4",options="header"]
+|===
+| `level_up` | `next_level` | Meaning
+
+| `true` | not set (`null`)
+| Close the branch, open the next level in order. *Today's plain level-up.*
+
+| `true` | `["x"]`
+| Close the branch, open `x`. *Today's routed level-up.*
+
+| `true` | `["x", "y"]`
+| Close the branch, open two — a fork.
+
+| `true` | `[]`
+| Close the branch, point at the finish.
+
+| `false` | `["x"]`
+| Open `x` and keep the current branch — a fork that keeps its parent.
+
+| `false` | `null` or `[]`
+| No routing, effects only. *Today's bonus and hint effects.*
+|===
+
+Note the two distinct empty values: `null` means "next in order", kept for
+backwards compatibility, and `[]` means "the finish". JSON keeps them apart, but
+in the level editor they are two different buttons, not one — worth getting right
+or authors will fall into it.
+
+`штурм` needs no support of its own in this language: it is one fork from the
+opening level into every other level, each of which points at the finish.
+
+The scenario model version goes *1 → 2*, migrating `next_level: "x"` to
+`next_level: ["x"]` on read (`core/migration_utils/`, alongside the existing
+`from_1_to_2`). Stored games keep working untouched.
+
+=== Validation
+
+`Conditions.validate_keys_unique` (`core/models/dto/scn/level.py`) enforces key
+uniqueness *within* a level. With parallel branches that is no longer enough:
+
+* *keys must be unique across levels that can be open simultaneously* — decidable
+  statically from the fork graph, and what lets a submitted key be routed to a
+  branch with no player input;
+* *fork targets must exist* — every `name_id` in `next_level` resolves;
+* *barrier reachability* — refuse, or at least warn about, a target sitting
+  behind a cycle such that it can never satisfy the rule.
+
+The existing per-level rules are unchanged: a level still needs at least one
+condition that can end it.
+
+=== Runtime
+
+*Keys.* A submitted key is checked against *every open branch*. Validation
+guarantees at most one match, so there is nothing to disambiguate at play time
+and the player never chooses a branch. `LevelScenario.check` already returns a
+`Decisions` collection; the change is collecting across several scenarios instead
+of one.
+
+*Duplicates.* Scoped to the branch, not the team. `get_correct_typed_keys` and
+`get_team_typed_keys` are already keyed on `level_time`, so this falls out. The
+key log records everything either way.
+
+*Hints.* The cheapest part of the change: `schedule_first_hint` already carries
+`lt_id` into the scheduler and `send_hint` already compares against it. The
+comparison changes from "is this the current level time" to "is this level time
+still open", and the scheduler supports N parallel hint timelines unchanged.
+
+*Level timers.* Already scoped by `lt_id`, so a force-level-up timer closes its
+own branch and leaves the others alone.
+
+=== Results and time
+
+The results sheet already carries two independent blocks and both survive.
+*Wall clock* — when each level was entered — is unchanged. *Duration* becomes
+_more_ correct: with `finished_at` it is `finished_at - start_at` for that
+branch, rather than the gap to whatever row happened to come next, and the
+adjacent-pair `zip` in `to_results` goes away.
+
+Durations of parallel branches must not be summed; they overlap in real time. The
+sheet computes no adjusted totals anyway, by design, so this is a matter of
+labelling the parallel block rather than new arithmetic. A team's total stays
+wall-clock: finish minus start.
+
+*Numbering stays flat.* Splitting one level into two shifts the levels after it,
+and a parallel pair shows as two numbers at once. Accepted as-is: teams here are
+never told how many levels a game has, so there is no "level 5 of 12" to break.
+
+=== API and web
+
+`CurrentHintsAndKeys` and `CurrentHintResponse` change from one level to a list:
+
+[source]
+----
+branches: [{ level_time_id, level_number, name_id, hints, started_at }, …]
+typed_keys, events   # each tagged with its branch
+is_finished          # now: no open branches
+----
+
+For two branches the layout is *two columns on desktop, stacked on mobile* — not
+tabs. The armchair level wants to stay in view while the field level is being
+driven; that is the entire reason the mechanic exists. Tabs or an accordion are
+the fallback for three or more.
+
+One key input, at the top, shared. The engine routes the key and the UI reports
+which branch took it. Players should not have to aim under adrenaline.
+
+Also needed: a per-branch countdown to the next hint; a branch colour or icon so
+the key log and event feed can be read at a glance; and the spy
+(`GameStatWithHints`, `LevelTimeOnGame`) showing a team's cell as a list rather
+than a single level. The scenario graph already draws forks, and that is where an
+author will actually see what they have built.
+
+*Branch names.* Levels carry only `name_id`, which is technical and often
+deliberately meaningless — a semantic one leaks the location. Side by side,
+«Уровень 5a / Уровень 5б» reads badly where «Полевой / Мозговой» reads well.
+Whether that means a display label on levels or exposing `name_id` is left open.
+
+=== Telegram
+
+Not solved in this iteration; the bot must merely not get worse.
+
+No topics — nobody likes them. Hints from all open branches go to the team chat as
+they do now, prefixed with the branch. This is not a regression: today полевой and
+мозговой hints already interleave in the chat, because they are one level.
+Optionally the bot can post each branch's hints as *replies* to that branch's
+first message, which Telegram renders as a thread — the cheapest threading
+available without topics.
+
+Key submission needs no change: auto-routing works and the reply names the branch.
+
+[[alternatives]]
+=== Alternatives considered
+
+*A level container — a game as a list of steps.* The author declares a group:
+levels 5a and 5b run together, exit to 6, with a completion rule (all / any / K
+of N). Convergence points become declarative and statically checkable. Rejected:
+it breaks the flat `number_in_game`, and it sits badly next to `next_level`
+routing, which is already how non-linear games are built. The rule above buys the
+same guarantees without a second structural concept.
+
+*An explicit join declaration on the level* — "wait for branches X and Y".
+Rejected: reachability derives it, and an author would have to keep the list in
+sync with the graph by hand.
+
+*A separate `spawn` field* alongside `next_level`, for forks only. Rejected: the
+`level_up` / `next_level` split expresses forks, routing, plain level-up and the
+finish in one pair of fields, where `spawn` would add a third that overlaps both.
+
+=== Out of scope, and what holds until then
+
+* *Paid hints* — hints on demand with a penalty. Needed by штурм, useful alone.
+  Faked today by a key with penalty-and-hint effects, printed in the level text.
+* *Team-chosen levels, slot counts, block time-boxes* — needed by своя игра.
+* *New condition types* — a button rather than a key; conditions over which levels
+  the team has already taken; possibly conditions over what *other* teams have
+  taken, since in the Jeopardy version a task taken by anyone is gone for
+  everyone. These are what would make the pool family pleasant rather than merely
+  possible.
+* *Splitting player subsets across branches.* Decided against: everyone sees every
+  level and everyone may submit every key, including on the knight's branch.
+  Restricting it buys nothing — the knight screenshots his task to the team chat
+  anyway, and the team helping him is the point.
+
+== Consequences
+
+* One new nullable column, no changes to existing columns. `finished_at` has to
+  be backfilled for historical games — from the next row's `start_at`, which is
+  exactly what the results code infers today.
+* Per-level durations become honest independently of parallelism, and one piece
+  of fragile inference (`zip` over adjacent rows) disappears.
+* Key uniqueness grows from a per-level rule to a per-game one. Existing
+  scenarios keep passing, since a single chain has no simultaneously open levels.
+* Every place that says "the team's current level" has to say "the team's
+  position" instead. That is the bulk of the work and it touches DAO, interactors,
+  API and both front-ends.
+* Reachability makes the engine depend on the routing graph at play time, where
+  today it only ever asks for the next level. Cycles become a correctness concern
+  rather than a curiosity.
+* `level_up` keeps a name that no longer describes it.
+
+== Phases and status
+
+Nothing is started. Phases 1 and 2 change no behaviour — the set always has one
+element — so they can land before the rest of this document is settled.
+
+[cols="1,4,2",options="header"]
+|===
+| Phase | Content | Status
+
+| 1
+| `finished_at` + backfill migration; position as a set through the DAO and
+  interactors
+| ⏳ not started
+
+| 2
+| API returns a list of branches; the web renders a list of length one
+| ⏳ not started
+
+| 3
+| Fork and the target rule: `next_level` as a list, `level_up` means "close the
+  branch", the finish as a target. Web handles two or more; the bot gets prefixes
+| ⏳ not started
+
+| 4
+| Validation — cross-level key uniqueness, fork targets, barrier reachability
+| ⏳ not started
+
+| 5
+| Editor — fork and finish-target in the constructor and in the scenario graph
+| ⏳ not started
+
+| 6
+| Results — label parallel blocks in the sheet
+| ⏳ not started
+|===
+
+== Deviations from the plan
+
+Nothing implemented yet. Filled in as the phases land.
+
+== Open questions
+
+* *Cycles plus barriers can deadlock.* Refuse such scenarios in validation, or
+  detect at runtime and force the target open? Needs an answer before phase 4.
+* *Does barrier waiting time count?* Proposal: yes. The total is wall-clock so it
+  counts automatically, and anything else invites racing to the barrier.
+* *Naming branches for players* — a display label on the level, an exposed
+  `name_id`, or nothing? Affects the web layout and the spy.
+* *Nested forks* — a branch forking again is technically free. Allow in the model
+  and restrict in the editor until someone asks for it?
+* *A hint scheduled for a branch closed by a barrier* — the `lt_id` check
+  suppresses it, which is right; confirm the same holds for a branch that closed
+  while waiting.
+* *Does the pool family need branches to carry a slot identity?* Worth checking
+  before phase 3 freezes the model, since штурм and своя игра are the reason it
+  must scale to N branches rather than two.

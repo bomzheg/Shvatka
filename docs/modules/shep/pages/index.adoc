@@ -38,6 +38,10 @@ came out of it*.
 | xref:shep-0003-season-schedule.adoc[SHEP-0003]
 | Season schedule
 | Accepted, not started
+
+| xref:shep-0004-parallel-levels.adoc[SHEP-0004]
+| Parallel levels
+| Draft
 |===
 
 == Status vocabulary

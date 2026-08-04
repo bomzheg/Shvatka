@@ -1,0 +1,12 @@
+[
+  {"url": "/team", "out": "team/web-captain-bridge.png"},
+  {"url": "/games/constructor/1", "out": "author/web-game-editor.png"},
+  {"url": "/games/constructor/1", "out": "author/web-level-editor.png",
+   "clicks": [".level-card .level-summary"], "clip": ".level-card"},
+  {"url": "/games/constructor/1", "out": "author/web-orgs.png", "clip": "app-organizers-editor"},
+  {"url": "/games/running", "out": "player/web-play.png"},
+  {"url": "/games/running", "out": "org/web-spy-keys.png",
+   "clicks": [".spy-panel details summary"], "clip": ".spy-panel"},
+  {"url": "/notifications", "out": "player/web-requests.png", "clicks": ["text=Заявки"]},
+  {"url": "/games/1", "out": "player/web-game-scenario.png", "clicks": ["text=Сценарий"]}
+]

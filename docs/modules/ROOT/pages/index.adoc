@@ -14,3 +14,28 @@
 * Информирование организаторов о ходе игры,
 * Формирование результатов игры,
 * Сохранение статистики прошедших игр
+
+== С чего начать
+
+Я хочу поиграть::
+xref:player/join_team.adoc[Вступи в команду] и прочитай,
+xref:player/play.adoc[как проходит игра].
+
+Я капитан, собираю команду::
+xref:setup_team/create_chat.adoc[Создай чат],
+xref:setup_team/create_team.adoc[зарегистрируй команду],
+xref:setup_team/add_players.adoc[добавь игроков] и
+xref:setup_team/waivers.adoc[подай вейверы].
+
+Я пишу игру::
+Начни с xref:author/level-concept.adoc[описания уровня], потом
+xref:author/level-create.adoc[напиши уровни],
+xref:author/game-create.adoc[собери игру],
+xref:author/game-orgs.adoc[позови оргов] и
+xref:author/game-schedule.adoc[запланируй старт].
+
+Я организатор на игре::
+xref:org/spy.adoc[Следи за ходом игры из меню шпиона].
+
+Почти всё, что описано в документации, доступно и в telegram-боте, и в
+веб-версии — выбирай, что удобнее.

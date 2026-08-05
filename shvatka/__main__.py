@@ -6,6 +6,7 @@ of the application (aiogram, pyrogram, matplotlib, sqlalchemy, ...) happens in
 complete silence and the process looks hung for tens of seconds.
 """
 
+import uvicorn
 import logging
 import time
 from typing import TYPE_CHECKING
@@ -31,8 +32,6 @@ def main() -> "FastAPI":
 
 
 def run():
-    import uvicorn
-
     uvicorn.run(
         "shvatka.__main__:main",
         host="0.0.0.0",  # noqa: S104

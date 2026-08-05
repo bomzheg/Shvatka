@@ -1,4 +1,5 @@
 import logging
+import time
 from functools import partial
 
 from aiogram import Bot, Dispatcher
@@ -98,6 +99,7 @@ def get_complex_only_providers() -> list[Provider]:
 
 
 def create_root_app(paths: Paths) -> FastAPI:
+    started_at = time.monotonic()
     api_config = load_api_config(paths)
     bot_config = load_bot_config(paths)
     webhook_config = bot_config.bot.webhook
@@ -125,7 +127,8 @@ def create_root_app(paths: Paths) -> FastAPI:
     root_app.router.add_event_handler("startup", setup)
     setup_dishka(dishka, root_app)
     logger.info(
-        "app prepared with dishka:\n%s",
+        "app prepared in %.2f s with dishka:\n%s",
+        time.monotonic() - started_at,
         plotter.render_d2(dishka),
     )
     return root_app

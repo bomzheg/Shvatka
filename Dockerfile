@@ -24,6 +24,9 @@ RUN apt-get update && \
     apt-get install -y --no-install-recommends libmagic1 && \
     rm -rf /var/lib/apt/lists/*
 COPY --from=builder $VIRTUAL_ENV $VIRTUAL_ENV
+# bake the matplotlib font cache into the image, otherwise every fresh
+# container spends seconds on "generated new fontManager" at the first import
+RUN python3 -c "from matplotlib import pyplot"
 COPY . ${CODE_PATH}/shvatka
 WORKDIR $CODE_PATH/shvatka
 RUN python3 -m compileall -q ${CODE_PATH}/shvatka/shvatka

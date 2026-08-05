@@ -14,6 +14,7 @@ from shvatka.core.views.team import (
     TeamEvent,
     TeamNotifier,
 )
+from shvatka.tgbot.services.member_tags import MemberTagger
 from shvatka.tgbot.views.player import get_emoji
 from shvatka.tgbot.views.user import get_small_card_no_link, get_small_card
 
@@ -43,8 +44,21 @@ def render_team_players(
 @dataclass
 class BotTeamNotifier(TeamNotifier):
     bot: Bot
+    tagger: MemberTagger
 
     async def notify(self, event: TeamEvent) -> None:
+        await self._retag(event)
+        await self._send_to_team_chat(event)
+
+    async def _retag(self, event: TeamEvent) -> None:
+        """Team membership defines the tag of the player in public chats."""
+        match event:
+            case PlayerJoinedTeam():
+                await self.tagger.sync(event.invited, event.team)
+            case PlayerLeftTeam():
+                await self.tagger.sync(event.removed, None)
+
+    async def _send_to_team_chat(self, event: TeamEvent) -> None:
         if not event.team.has_chat():
             return
         chat_id = event.team.get_chat_id()

@@ -43,6 +43,7 @@ from shvatka.tgbot.handlers import setup_handlers
 from shvatka.tgbot.middlewares import setup_middlewares
 from shvatka.tgbot.services.bot_rights import BotRights
 from shvatka.tgbot.services.identity import TgBotIdentityProvider
+from shvatka.tgbot.services.member_tags import MemberTagger
 from shvatka.tgbot.services.used_one_time_token import UsedOneTimeTokenInteractorImpl
 from shvatka.tgbot.username_resolver.user_getter import UserGetter
 from shvatka.tgbot.utils.router import print_router_tree
@@ -232,6 +233,7 @@ class GameToolsProvider(Provider):
             )
 
     message_pinner = provide(MessagePinner, scope=Scope.REQUEST)
+    member_tagger = provide(MemberTagger, scope=Scope.REQUEST)
     get_bot_game_view = provide(BotView, scope=Scope.REQUEST)
     get_bot_team_notifier = provide(BotTeamNotifier, scope=Scope.REQUEST)
     get_bot_org_notifier = provide(BotOrgNotifier, scope=Scope.REQUEST)

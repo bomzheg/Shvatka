@@ -56,6 +56,14 @@ def test_left_by_captain() -> None:
     assert "harry" in text
 
 
+class _Tagger:
+    def __init__(self) -> None:
+        self.synced: list = []
+
+    async def sync(self, player: dto.Player, team: dto.Team | None) -> None:
+        self.synced.append((player, team))
+
+
 @pytest.mark.asyncio
 async def test_no_notify_without_chat() -> None:
     sent: list = []
@@ -65,6 +73,20 @@ async def test_no_notify_without_chat() -> None:
             sent.append(kwargs)
 
     ron = _player(2, "ron")
-    notifier = BotTeamNotifier(bot=_Bot())
+    notifier = BotTeamNotifier(bot=_Bot(), tagger=_Tagger())
     await notifier.notify(PlayerLeftTeam(team=_team(with_chat=False), actor=ron, removed=ron))
     assert sent == []
+
+
+@pytest.mark.asyncio
+async def test_tag_synced_even_without_team_chat() -> None:
+    # the tag lives in a public chat, the team chat has nothing to do with it
+    ron = _player(2, "ron")
+    tagger = _Tagger()
+    notifier = BotTeamNotifier(bot=None, tagger=tagger)
+    team = _team(with_chat=False)
+
+    await notifier.notify(PlayerJoinedTeam(team=team, actor=ron, invited=ron))
+    await notifier.notify(PlayerLeftTeam(team=team, actor=ron, removed=ron))
+
+    assert [(ron, team), (ron, None)] == tagger.synced

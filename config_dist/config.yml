@@ -8,7 +8,8 @@ bot:
   log-chat: -1001234567890
   game-log-chat: -1009876543210
   public-chats:
-    - "1001232232152"
+    # full supergroup id, the bot tags members of these chats with their team name
+    - "-1001232232152"
   enabled-capcha: false
   bot-api:
     type: local

@@ -24,9 +24,10 @@ class ChatRights:
     """What the bot is allowed to do in a chat."""
 
     can_pin_messages: bool
+    can_manage_tags: bool
 
 
-NO_RIGHTS = ChatRights(can_pin_messages=False)
+NO_RIGHTS = ChatRights(can_pin_messages=False, can_manage_tags=False)
 
 
 def rights_of_member(member: ChatMember) -> ChatRights | None:
@@ -39,12 +40,25 @@ def rights_of_member(member: ChatMember) -> ChatRights | None:
     """
     match member:
         case ChatMemberOwner():
-            return ChatRights(can_pin_messages=True)
+            return ChatRights(can_pin_messages=True, can_manage_tags=True)
         case ChatMemberAdministrator():
-            return ChatRights(can_pin_messages=bool(member.can_pin_messages))
+            return ChatRights(
+                can_pin_messages=bool(member.can_pin_messages),
+                # telegram omits can_manage_tags for admins promoted before the
+                # right existed, it defaults to can_pin_messages then
+                can_manage_tags=bool(
+                    member.can_pin_messages
+                    if member.can_manage_tags is None
+                    else member.can_manage_tags
+                ),
+            )
         case ChatMemberRestricted():
             # restricted member can be forbidden to pin even if everyone else can
-            return ChatRights(can_pin_messages=member.is_member and member.can_pin_messages)
+            return ChatRights(
+                can_pin_messages=member.is_member and member.can_pin_messages,
+                # tagging others is an admin right, no member has it
+                can_manage_tags=False,
+            )
         case ChatMemberMember():
             return None
         case _:  # left the chat or banned in it
@@ -54,9 +68,13 @@ def rights_of_member(member: ChatMember) -> ChatRights | None:
 def rights_of_chat(chat: Chat) -> ChatRights:
     """What is allowed to everyone in the chat."""
     if chat.type == ChatType.PRIVATE:
-        return ChatRights(can_pin_messages=True)
+        return ChatRights(can_pin_messages=True, can_manage_tags=False)
     permissions = chat.permissions
-    return ChatRights(can_pin_messages=bool(permissions and permissions.can_pin_messages))
+    return ChatRights(
+        can_pin_messages=bool(permissions and permissions.can_pin_messages),
+        # tagging others is an admin right, it can't be granted to everyone
+        can_manage_tags=False,
+    )
 
 
 @dataclass(frozen=True)
@@ -89,6 +107,9 @@ class BotRights:
 
     async def can_pin(self, chat_id: int) -> bool:
         return (await self.get(chat_id)).can_pin_messages
+
+    async def can_manage_tags(self, chat_id: int) -> bool:
+        return (await self.get(chat_id)).can_manage_tags
 
     async def get(self, chat_id: int) -> ChatRights:
         cached = self.cache.get(chat_id)

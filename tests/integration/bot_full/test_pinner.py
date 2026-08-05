@@ -15,8 +15,8 @@ from shvatka.tgbot.services.bot_rights import ChatRights
 from shvatka.tgbot.views.pinner import MessagePinner, PinCategory
 from tests.fixtures.file_storage import CHAT_ID
 
-CAN_PIN = ChatRights(can_pin_messages=True)
-CANT_PIN = ChatRights(can_pin_messages=False)
+CAN_PIN = ChatRights(can_pin_messages=True, can_manage_tags=False)
+CANT_PIN = ChatRights(can_pin_messages=False, can_manage_tags=False)
 
 
 @pytest_asyncio.fixture

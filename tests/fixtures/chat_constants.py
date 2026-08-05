@@ -66,6 +66,7 @@ def chat_to_full_chat(chat: tg.Chat) -> tg.ChatFullInfo:
             limited_gifts=True,
             unique_gifts=True,
             premium_subscription=False,
+            gifts_from_channels=False,
         ),
     )
 

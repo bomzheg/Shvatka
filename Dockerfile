@@ -1,6 +1,9 @@
 FROM python:3.13-bookworm AS builder
 ENV VIRTUAL_ENV=/opt/venv
 ENV CODE_PATH=/code
+# ship .pyc alongside the .py, otherwise every fresh container compiles the
+# whole venv on the first import, which more than doubles the startup time
+ENV UV_COMPILE_BYTECODE=1
 RUN pip install --no-cache-dir uv
 RUN python3 -m venv $VIRTUAL_ENV
 WORKDIR $CODE_PATH
@@ -23,5 +26,6 @@ RUN apt-get update && \
 COPY --from=builder $VIRTUAL_ENV $VIRTUAL_ENV
 COPY . ${CODE_PATH}/shvatka
 WORKDIR $CODE_PATH/shvatka
+RUN python3 -m compileall -q ${CODE_PATH}/shvatka/shvatka
 RUN echo "{\"vcs_hash\": \"${VCS_HASH}\", \"commit_at\": \"${COMMIT_AT}\", \"vcs_name\": \"${VCS_NAME}\", \"build_at\": \"${BUILD_AT}\" }" > version.yaml
 ENTRYPOINT ["python3", "-m", "shvatka"]

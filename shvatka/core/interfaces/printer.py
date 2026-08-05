@@ -90,6 +90,8 @@ class Table:
     charts: list[Chart] = field(default_factory=list)
     freeze: CellAddress | None = None
     """Cell above and left of which everything stays put while scrolling."""
+    hidden_columns: list[int] = field(default_factory=list)
+    """Columns kept out of the way — present, but not shown until asked for."""
 
 
 def as_time(td: timedelta) -> time:

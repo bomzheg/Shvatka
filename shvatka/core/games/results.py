@@ -19,10 +19,17 @@ from shvatka.core.interfaces.printer import (
     as_time,
 )
 
-FIRST_TEAM_NAME = CellAddress(row=3, column=1)
 GAME_NAME = CellAddress(row=1, column=1)
+LABEL_COLUMN = 1
+"""Column of the team names and of every block's caption."""
+START_COLUMN = 2
+"""Column of the start of the game — hidden, it only lines the blocks up."""
+FIRST_TEAM_NAME = CellAddress(row=GAME_NAME.row + 3, column=LABEL_COLUMN)
+"""First team of the first block, under the game name and the two header rows."""
+BLOCK_GAP_ROWS = 2
 BONUSES_TITLE = "Бонусы, мин"
 TOTAL_TITLE = "Итого"
+START_TITLE = 0
 LEVEL_TIMES_TITLE = "Время взятия"
 LEVEL_DURATIONS_TITLE = "Время на уровне"
 CHRONOLOGY_TITLE = "Хронология"
@@ -30,7 +37,6 @@ AVERAGE_TITLE = "Среднее"
 CHART_X_TITLE = "Уровень"
 CHART_Y_TITLE = "Время на уровне"
 CHART_TIME_FORMAT = "[h]:mm"
-CHART_GAP_ROWS = 2
 
 
 class LevelTime(typing.NamedTuple):
@@ -100,95 +106,154 @@ def build_results_table(
     return results_to_table_routed(game, to_results(game_stat, bonuses))
 
 
-def results_to_table_routed(game: dto.FullGame, results: Results) -> Table:  # noqa: C901
-    table = {
-        GAME_NAME: Cell(value=game.name, style=CellStyle.TITLE),
-        FIRST_TEAM_NAME.shift(rows=-1, columns=0): Cell(
-            value=LEVEL_TIMES_TITLE, style=CellStyle.SECTION
-        ),
-        FIRST_TEAM_NAME.shift(rows=-1, columns=1): Cell(value=0, style=CellStyle.HEADER),
-    }
+def results_to_table_routed(game: dto.FullGame, results: Results) -> Table:
+    """Lay the game out block by block, every block over the same columns.
+
+    Column ``START_COLUMN`` is the start of the game — the same instant for
+    every team, so only the chronology has anything to say there. It is kept as
+    a column all the same, to line the blocks up, and hidden by default.
+    Column ``START_COLUMN + n`` is level ``n`` counted from one.
+    """
+    table = {GAME_NAME: Cell(value=game.name, style=CellStyle.TITLE)}
+    row = _add_level_times_part(table, game, results, row=GAME_NAME.row + 1)
+    durations = _add_durations_part(table, game, results, row=row + BLOCK_GAP_ROWS)
+    row = _add_bonuses_part(table, game, results, row=durations.average_row + BLOCK_GAP_ROWS)
+    row = _add_chronology_part(table, results, row=row + BLOCK_GAP_ROWS)
+    return Table(
+        fields=table,
+        charts=_build_charts(game, results, durations, anchor_row=row + BLOCK_GAP_ROWS),
+        freeze=CellAddress(row=FIRST_TEAM_NAME.row, column=START_COLUMN),
+        hidden_columns=[START_COLUMN],
+    )
+
+
+@dataclass(frozen=True)
+class DurationsBlock:
+    """Where the per-level durations landed — the chart is drawn from them."""
+
+    header_row: int
+    first_team_row: int
+    last_team_row: int
+    average_row: int
+
+
+def _add_levels_header(
+    table: dict[CellAddress, Cell],
+    game: dto.FullGame,
+    row: int,
+    caption: str,
+) -> int:
+    """Caption plus a two row header — level name over level number. Returns the first data row."""
+    table[CellAddress(row=row, column=LABEL_COLUMN)] = Cell(value=caption, style=CellStyle.SECTION)
+    table[CellAddress(row=row + 1, column=START_COLUMN)] = Cell(
+        value=START_TITLE, style=CellStyle.HEADER
+    )
     for level in game.levels:
-        table[FIRST_TEAM_NAME.shift(rows=-1, columns=level.number_in_game + 2)] = Cell(
+        column = _level_column(level.number_in_game)
+        table[CellAddress(row=row, column=column)] = Cell(
+            value=level.name_id, style=CellStyle.HEADER
+        )
+        table[CellAddress(row=row + 1, column=column)] = Cell(
             value=level.number_in_game + 1, style=CellStyle.HEADER
         )
+    return row + 2
+
+
+def _level_column(level_number: int) -> int:
+    """Column of level ``level_number`` (counted from zero) in every block but the chronology."""
+    return START_COLUMN + level_number + 1
+
+
+def _add_level_times_part(
+    table: dict[CellAddress, Cell],
+    game: dto.FullGame,
+    results: Results,
+    row: int,
+) -> int:
+    """When each team took each level. The level after the last one is the finish."""
+    first_row = _add_levels_header(table, game, row, LEVEL_TIMES_TITLE)
     _fill_grid(
         table,
-        FIRST_TEAM_NAME.shift(columns=1),
+        CellAddress(row=first_row, column=START_COLUMN),
         rows=len(results.data),
         columns=len(game.levels) + 1,
     )
-    i = 0
     for i, team_level_times in enumerate(results.data):
-        table[FIRST_TEAM_NAME.shift(rows=i, columns=0)] = Cell(
+        table[CellAddress(row=first_row + i, column=LABEL_COLUMN)] = Cell(
             value=team_level_times.team.name, style=CellStyle.TEAM
         )
         for level_number in team_level_times.levels_times:
             level_time = team_level_times.get_level_time(level_number)
             if level_time is None:
                 continue
-            table[FIRST_TEAM_NAME.shift(rows=i, columns=level_number + 1)] = Cell(
+            table[CellAddress(row=first_row + i, column=START_COLUMN + level_number)] = Cell(
                 value=level_time.time, format=DATETIME_EXCEL_FORMAT, style=CellStyle.DATA
             )
-    second_part_start = i + 3
-    table[FIRST_TEAM_NAME.shift(rows=second_part_start - 1, columns=0)] = Cell(
-        value=LEVEL_DURATIONS_TITLE, style=CellStyle.SECTION
-    )
-    for level in game.levels:
-        table[
-            FIRST_TEAM_NAME.shift(rows=second_part_start - 1, columns=level.number_in_game + 1)
-        ] = Cell(value=level.number_in_game + 1, style=CellStyle.HEADER)
+    return first_row + len(results.data) - 1
+
+
+def _add_durations_part(
+    table: dict[CellAddress, Cell],
+    game: dto.FullGame,
+    results: Results,
+    row: int,
+) -> DurationsBlock:
+    """How long each team spent on each level, with the fastest marked and an average under it."""
+    first_row = _add_levels_header(table, game, row, LEVEL_DURATIONS_TITLE)
     _fill_grid(
         table,
-        FIRST_TEAM_NAME.shift(rows=second_part_start, columns=1),
+        CellAddress(row=first_row, column=_level_column(0)),
         rows=len(results.data),
         columns=len(game.levels),
     )
     durations: dict[int, list[timedelta]] = {}
-    for i, team_level_times in enumerate(results.data, second_part_start):
-        table[FIRST_TEAM_NAME.shift(rows=i, columns=0)] = Cell(
+    for i, team_level_times in enumerate(results.data):
+        table[CellAddress(row=first_row + i, column=LABEL_COLUMN)] = Cell(
             value=team_level_times.team.name, style=CellStyle.TEAM
         )
-
         for level_id in team_level_times.levels_timedelta:
             ltd = team_level_times.get_level_timedelta(level_id)
             if ltd is None:
                 continue
             durations.setdefault(level_id, []).append(ltd.td)
-            table[FIRST_TEAM_NAME.shift(rows=i, columns=level_id + 1)] = Cell(
+            table[CellAddress(row=first_row + i, column=_level_column(level_id))] = Cell(
                 value=as_time(ltd.td), format=DATETIME_EXCEL_FORMAT, style=CellStyle.DATA
             )
-    durations_last_row = i
-    _mark_best_durations(table, results, second_part_start)
-    _add_averages_row(table, durations, row=durations_last_row + 1)
+    last_team_row = first_row + len(results.data) - 1
+    _mark_best_durations(table, results, first_row)
+    average_row = last_team_row + 1
+    _add_averages_row(table, durations, average_row)
+    return DurationsBlock(
+        header_row=first_row - 1,
+        first_team_row=first_row,
+        last_team_row=last_team_row,
+        average_row=average_row,
+    )
 
-    third_part_start = i + 3
-    table[FIRST_TEAM_NAME.shift(rows=third_part_start - 1, columns=0)] = Cell(
+
+def _add_chronology_part(
+    table: dict[CellAddress, Cell],
+    results: Results,
+    row: int,
+) -> int:
+    """Every team's levels in the order it took them — the level number under its time."""
+    table[CellAddress(row=row, column=LABEL_COLUMN)] = Cell(
         value=CHRONOLOGY_TITLE, style=CellStyle.SECTION
     )
-    for i, (team, lts) in enumerate(results.game_stat.level_times.items()):
-        table[FIRST_TEAM_NAME.shift(rows=i * 2 + third_part_start)] = Cell(
+    row += 1
+    for team, lts in results.game_stat.level_times.items():
+        table[CellAddress(row=row, column=LABEL_COLUMN)] = Cell(
             value=team.name, style=CellStyle.TEAM
         )
-        for j, lt in enumerate(lts, 1):
-            table[FIRST_TEAM_NAME.shift(rows=i * 2 + third_part_start - 1, columns=j)] = Cell(
+        for i, lt in enumerate(lts):
+            table[CellAddress(row=row, column=START_COLUMN + i)] = Cell(
                 value=trim_tz(lt.start_at), format=DATETIME_EXCEL_FORMAT, style=CellStyle.DATA
             )
-            table[FIRST_TEAM_NAME.shift(rows=i * 2 + third_part_start, columns=j)] = Cell(
+            table[CellAddress(row=row + 1, column=START_COLUMN + i)] = Cell(
                 value=lt.level_number + 1, style=CellStyle.HEADER
             )
-    last_row = _add_bonuses_part(table, game, results, start_row=i * 2 + third_part_start + 3)
-    return Table(
-        fields=table,
-        charts=_build_charts(
-            game,
-            results,
-            durations_start_row=second_part_start,
-            durations_last_row=durations_last_row,
-            anchor_row=last_row + CHART_GAP_ROWS,
-        ),
-        freeze=FIRST_TEAM_NAME.shift(rows=-1, columns=1),
-    )
+        row += 2
+    return row - 1
 
 
 def _fill_grid(
@@ -208,11 +273,11 @@ def _fill_grid(
 def _mark_best_durations(
     table: dict[CellAddress, Cell],
     results: Results,
-    start_row: int,
+    first_row: int,
 ) -> None:
     """Repaint the fastest team of every level, the way the hand-made tables do it."""
     best: dict[int, tuple[timedelta, int]] = {}
-    for row, team_level_times in enumerate(results.data, start_row):
+    for row, team_level_times in enumerate(results.data, first_row):
         for level_id in team_level_times.levels_timedelta:
             ltd = team_level_times.get_level_timedelta(level_id)
             if ltd is None or not ltd.td:
@@ -220,7 +285,7 @@ def _mark_best_durations(
             if level_id not in best or ltd.td < best[level_id][0]:
                 best[level_id] = (ltd.td, row)
     for level_id, (_, row) in best.items():
-        table[FIRST_TEAM_NAME.shift(rows=row, columns=level_id + 1)].style = CellStyle.BEST
+        table[CellAddress(row=row, column=_level_column(level_id))].style = CellStyle.BEST
 
 
 def _add_averages_row(
@@ -230,12 +295,12 @@ def _add_averages_row(
 ) -> None:
     if not durations:
         return
-    table[FIRST_TEAM_NAME.shift(rows=row, columns=0)] = Cell(
+    table[CellAddress(row=row, column=LABEL_COLUMN)] = Cell(
         value=AVERAGE_TITLE, style=CellStyle.ACCENT
     )
     for level_id, tds in durations.items():
         average = sum(tds, start=timedelta(seconds=0)) / len(tds)
-        table[FIRST_TEAM_NAME.shift(rows=row, columns=level_id + 1)] = Cell(
+        table[CellAddress(row=row, column=_level_column(level_id))] = Cell(
             value=as_time(average), format=DATETIME_EXCEL_FORMAT, style=CellStyle.ACCENT
         )
 
@@ -243,33 +308,32 @@ def _add_averages_row(
 def _build_charts(
     game: dto.FullGame,
     results: Results,
-    durations_start_row: int,
-    durations_last_row: int,
+    durations: DurationsBlock,
     anchor_row: int,
 ) -> list[Chart]:
     """One bar per team per level, plus the average as a reference line over them."""
     if not game.levels or not results.data:
         return []
-    last_column = len(game.levels)
-    header_row = durations_start_row - 1
+    first_column = _level_column(0)
+    last_column = _level_column(len(game.levels) - 1)
+
+    def over_levels(row: int) -> CellRange:
+        return CellRange(
+            start=CellAddress(row=row, column=first_column),
+            end=CellAddress(row=row, column=last_column),
+        )
+
     series = [
         ChartSeries(
-            title=FIRST_TEAM_NAME.shift(rows=row, columns=0),
-            value_range=CellRange(
-                start=FIRST_TEAM_NAME.shift(rows=row, columns=1),
-                end=FIRST_TEAM_NAME.shift(rows=row, columns=last_column),
-            ),
+            title=CellAddress(row=row, column=LABEL_COLUMN),
+            value_range=over_levels(row),
         )
-        for row in range(durations_start_row, durations_last_row + 1)
+        for row in range(durations.first_team_row, durations.last_team_row + 1)
     ]
-    average_row = durations_last_row + 1
     series.append(
         ChartSeries(
-            title=FIRST_TEAM_NAME.shift(rows=average_row, columns=0),
-            value_range=CellRange(
-                start=FIRST_TEAM_NAME.shift(rows=average_row, columns=1),
-                end=FIRST_TEAM_NAME.shift(rows=average_row, columns=last_column),
-            ),
+            title=CellAddress(row=durations.average_row, column=LABEL_COLUMN),
+            value_range=over_levels(durations.average_row),
             kind=SeriesKind.LINE,
             accent=True,
         )
@@ -277,11 +341,8 @@ def _build_charts(
     return [
         Chart(
             title=game.name,
-            anchor=FIRST_TEAM_NAME.shift(rows=anchor_row, columns=0),
-            categories=CellRange(
-                start=FIRST_TEAM_NAME.shift(rows=header_row, columns=1),
-                end=FIRST_TEAM_NAME.shift(rows=header_row, columns=last_column),
-            ),
+            anchor=CellAddress(row=anchor_row, column=START_COLUMN),
+            categories=over_levels(durations.header_row),
             series=series,
             x_title=CHART_X_TITLE,
             y_title=CHART_Y_TITLE,
@@ -294,7 +355,7 @@ def _add_bonuses_part(
     table: dict[CellAddress, Cell],
     game: dto.FullGame,
     results: Results,
-    start_row: int,
+    row: int,
 ) -> int:
     """Block of bonuses and penalties in minutes: team x level plus a total.
 
@@ -302,39 +363,32 @@ def _add_bonuses_part(
     can be worked out in Excel itself. Returns the last row the table occupies.
     """
     if not any(team_levels.bonuses for team_levels in results.data):
-        return start_row - 3
-    total_column = len(game.levels) + 1
-    table[FIRST_TEAM_NAME.shift(rows=start_row - 1, columns=0)] = Cell(
-        value=BONUSES_TITLE, style=CellStyle.SECTION
-    )
-    for level in game.levels:
-        table[FIRST_TEAM_NAME.shift(rows=start_row - 1, columns=level.number_in_game + 1)] = Cell(
-            value=level.number_in_game + 1, style=CellStyle.HEADER
-        )
-    table[FIRST_TEAM_NAME.shift(rows=start_row - 1, columns=total_column)] = Cell(
+        return row - BLOCK_GAP_ROWS
+    total_column = _level_column(len(game.levels))
+    first_row = _add_levels_header(table, game, row, BONUSES_TITLE)
+    table[CellAddress(row=first_row - 1, column=total_column)] = Cell(
         value=TOTAL_TITLE, style=CellStyle.HEADER
     )
     _fill_grid(
         table,
-        FIRST_TEAM_NAME.shift(rows=start_row, columns=1),
+        CellAddress(row=first_row, column=_level_column(0)),
         rows=len(results.data),
-        columns=total_column,
+        columns=len(game.levels),
     )
-    i = start_row
-    for i, team_levels in enumerate(results.data, start_row):
-        table[FIRST_TEAM_NAME.shift(rows=i, columns=0)] = Cell(
+    for i, team_levels in enumerate(results.data):
+        table[CellAddress(row=first_row + i, column=LABEL_COLUMN)] = Cell(
             value=team_levels.team.name, style=CellStyle.TEAM
         )
         for level_number, bonus_events in team_levels.bonuses.items():
             if level_number is None:
                 continue
-            table[FIRST_TEAM_NAME.shift(rows=i, columns=level_number + 1)] = Cell(
+            table[CellAddress(row=first_row + i, column=_level_column(level_number))] = Cell(
                 value=sum(be.minutes for be in bonus_events), style=CellStyle.DATA
             )
-        table[FIRST_TEAM_NAME.shift(rows=i, columns=total_column)] = Cell(
+        table[CellAddress(row=first_row + i, column=total_column)] = Cell(
             value=team_levels.get_total_bonus().total_seconds() / 60, style=CellStyle.ACCENT
         )
-    return i
+    return first_row + len(results.data) - 1
 
 
 def to_results(

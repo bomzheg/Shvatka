@@ -35,7 +35,9 @@ SURFACE = "FFFFFF"
 GENERAL_FORMAT = "General"
 MAX_COLUMN_WIDTH = 32
 MIN_COLUMN_WIDTH = 4
-COLUMN_PADDING = 2
+COLUMN_PADDING = 1
+DATA_FONT_SCALE = 0.85
+"""Column width is counted in the default font; ours is smaller than that."""
 
 SERIES_COLORS = (
     "2A78D6",
@@ -110,6 +112,11 @@ FORMATS: dict[CellStyle, CellFormat] = {
     ),
 }
 
+WIDTH_STYLES = frozenset(
+    {CellStyle.TEAM, CellStyle.DATA, CellStyle.ACCENT, CellStyle.BEST, CellStyle.PLAIN}
+)
+"""Styles a column is sized to fit. Headers and captions wrap instead."""
+
 
 class ExcellPrinter(TablePrinter):
     def print_table(self, table: Table) -> BytesIO:
@@ -123,13 +130,18 @@ def print_table(table: Table, file: typing.Any) -> None:
     wb = Workbook()
     ws = typing.cast(Worksheet, wb.active)
     ws.sheet_view.showGridLines = False
+    widths: dict[int, int] = {}
     for address, cell_ in table.fields.items():
         cell = ws.cell(**address.to_dict())
         cell.value = cell_.value
         if cell_.format is not None:
             cell.number_format = cell_.format
         apply_style(cell, cell_.style)
-    resize_columns(ws)
+        if cell_.style in WIDTH_STYLES:
+            widths[address.column] = max(widths.get(address.column, 0), _display_len(cell))
+    resize_columns(ws, widths)
+    for column in table.hidden_columns:
+        ws.column_dimensions[get_column_letter(column)].hidden = True
     if table.freeze is not None:
         ws.freeze_panes = ws.cell(**table.freeze.to_dict())
     for chart in table.charts:
@@ -149,11 +161,13 @@ def apply_style(cell: typing.Any, style: CellStyle) -> None:
         cell.alignment = format_.alignment
 
 
-def resize_columns(worksheet: Worksheet):
-    for col in worksheet.columns:  # type: typing.Any  # =(
-        new_len = max([MIN_COLUMN_WIDTH, *[_display_len(cell) for cell in col]])
-        worksheet.column_dimensions[col[0].column_letter].width = min(
-            new_len + COLUMN_PADDING, MAX_COLUMN_WIDTH
+def resize_columns(worksheet: Worksheet, widths: dict[int, int]) -> None:
+    """Fit every column to its data. Headers are wrapped rather than fitted — a long
+    level name would otherwise stretch a column of eight-character times.
+    """
+    for column, width in widths.items():
+        worksheet.column_dimensions[get_column_letter(column)].width = min(
+            max(width * DATA_FONT_SCALE + COLUMN_PADDING, MIN_COLUMN_WIDTH), MAX_COLUMN_WIDTH
         )
 
 

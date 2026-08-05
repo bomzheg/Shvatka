@@ -30,7 +30,6 @@ services:
           cpus: "0.008"
         limits:
           memory: 800M
-          cpus: "0.15"
 
   shvatka-ui:
     container_name: "shvatka_ui-${ENV_NAME}"

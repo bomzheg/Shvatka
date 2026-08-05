@@ -131,7 +131,8 @@ def results_to_table_routed(game: dto.FullGame, results: Results) -> Table:
 class DurationsBlock:
     """Where the per-level durations landed — the chart is drawn from them."""
 
-    header_row: int
+    names_row: int
+    """Row of the level names — what the chart labels its bars with."""
     first_team_row: int
     last_team_row: int
     average_row: int
@@ -178,6 +179,7 @@ def _add_level_times_part(
         rows=len(results.data),
         columns=len(game.levels) + 1,
     )
+    best: dict[int, tuple[datetime, int]] = {}
     for i, team_level_times in enumerate(results.data):
         table[CellAddress(row=first_row + i, column=LABEL_COLUMN)] = Cell(
             value=team_level_times.team.name, style=CellStyle.TEAM
@@ -186,9 +188,12 @@ def _add_level_times_part(
             level_time = team_level_times.get_level_time(level_number)
             if level_time is None:
                 continue
-            table[CellAddress(row=first_row + i, column=START_COLUMN + level_number)] = Cell(
+            column = START_COLUMN + level_number
+            table[CellAddress(row=first_row + i, column=column)] = Cell(
                 value=level_time.time, format=DATETIME_EXCEL_FORMAT, style=CellStyle.DATA
             )
+            _keep_best(best, column, level_time.time, first_row + i)
+    _mark_best(table, best)
     return first_row + len(results.data) - 1
 
 
@@ -207,6 +212,7 @@ def _add_durations_part(
         columns=len(game.levels),
     )
     durations: dict[int, list[timedelta]] = {}
+    best: dict[int, tuple[timedelta, int]] = {}
     for i, team_level_times in enumerate(results.data):
         table[CellAddress(row=first_row + i, column=LABEL_COLUMN)] = Cell(
             value=team_level_times.team.name, style=CellStyle.TEAM
@@ -216,15 +222,18 @@ def _add_durations_part(
             if ltd is None:
                 continue
             durations.setdefault(level_id, []).append(ltd.td)
-            table[CellAddress(row=first_row + i, column=_level_column(level_id))] = Cell(
+            column = _level_column(level_id)
+            table[CellAddress(row=first_row + i, column=column)] = Cell(
                 value=as_time(ltd.td), format=DATETIME_EXCEL_FORMAT, style=CellStyle.DATA
             )
+            if ltd.td:
+                _keep_best(best, column, ltd.td, first_row + i)
+    _mark_best(table, best)
     last_team_row = first_row + len(results.data) - 1
-    _mark_best_durations(table, results, first_row)
     average_row = last_team_row + 1
     _add_averages_row(table, durations, average_row)
     return DurationsBlock(
-        header_row=first_row - 1,
+        names_row=first_row - 2,
         first_team_row=first_row,
         last_team_row=last_team_row,
         average_row=average_row,
@@ -270,22 +279,24 @@ def _fill_grid(
             )
 
 
-def _mark_best_durations(
-    table: dict[CellAddress, Cell],
-    results: Results,
-    first_row: int,
+_Best = typing.TypeVar("_Best", datetime, timedelta)
+
+
+def _keep_best(
+    best: dict[int, tuple[_Best, int]],
+    column: int,
+    value: _Best,
+    row: int,
 ) -> None:
-    """Repaint the fastest team of every level, the way the hand-made tables do it."""
-    best: dict[int, tuple[timedelta, int]] = {}
-    for row, team_level_times in enumerate(results.data, first_row):
-        for level_id in team_level_times.levels_timedelta:
-            ltd = team_level_times.get_level_timedelta(level_id)
-            if ltd is None or not ltd.td:
-                continue
-            if level_id not in best or ltd.td < best[level_id][0]:
-                best[level_id] = (ltd.td, row)
-    for level_id, (_, row) in best.items():
-        table[CellAddress(row=row, column=_level_column(level_id))].style = CellStyle.BEST
+    """Remember the smallest value of a column and the row it is on."""
+    if column not in best or value < best[column][0]:
+        best[column] = (value, row)
+
+
+def _mark_best(table: dict[CellAddress, Cell], best: dict[int, tuple[_Best, int]]) -> None:
+    """Repaint the leader of every column, the way the hand-made tables do it."""
+    for column, (_, row) in best.items():
+        table[CellAddress(row=row, column=column)].style = CellStyle.BEST
 
 
 def _add_averages_row(
@@ -342,7 +353,7 @@ def _build_charts(
         Chart(
             title=game.name,
             anchor=CellAddress(row=anchor_row, column=START_COLUMN),
-            categories=over_levels(durations.header_row),
+            categories=over_levels(durations.names_row),
             series=series,
             x_title=CHART_X_TITLE,
             y_title=CHART_Y_TITLE,
@@ -366,8 +377,13 @@ def _add_bonuses_part(
         return row - BLOCK_GAP_ROWS
     total_column = _level_column(len(game.levels))
     first_row = _add_levels_header(table, game, row, BONUSES_TITLE)
-    table[CellAddress(row=first_row - 1, column=total_column)] = Cell(
+    # the total is a column of its own: its caption goes where the level names are,
+    # and the number row under it stays empty rather than ragged
+    table[CellAddress(row=first_row - 2, column=total_column)] = Cell(
         value=TOTAL_TITLE, style=CellStyle.HEADER
+    )
+    table[CellAddress(row=first_row - 1, column=total_column)] = Cell(
+        value=None, style=CellStyle.HEADER
     )
     _fill_grid(
         table,

@@ -2,7 +2,13 @@ from typing import BinaryIO, Sequence
 
 from shvatka.core.interfaces.dal.game import GameByIdGetter
 from shvatka.core.interfaces.identity import IdentityProvider
-from shvatka.core.interfaces.printer import TablePrinter, Table, CellAddress, Cell
+from shvatka.core.interfaces.printer import (
+    TablePrinter,
+    Table,
+    CellAddress,
+    CellStyle,
+    Cell,
+)
 from shvatka.core.models import dto as core
 from shvatka.core.models.dto import action
 from shvatka.core.rules.game import check_can_view_scenario
@@ -11,10 +17,11 @@ from shvatka.core.scenario.adapters import TransitionsPrinter
 from shvatka.core.views.texts import render_effects
 
 GAME_NAME = CellAddress(row=1, column=1)
-FIRST_LEVEL_NUMBER = CellAddress(row=2, column=1)
-FIRST_LEVEL_NAME = CellAddress(row=2, column=2)
-FIRST_LEVEL_KEYS = CellAddress(row=2, column=3)
-FIRST_LEVEL_KEYS_DESCRIPTION = CellAddress(row=2, column=4)
+FIRST_LEVEL_NUMBER = CellAddress(row=3, column=1)
+FIRST_LEVEL_NAME = CellAddress(row=3, column=2)
+FIRST_LEVEL_KEYS = CellAddress(row=3, column=3)
+FIRST_LEVEL_KEYS_DESCRIPTION = CellAddress(row=3, column=4)
+KEYS_HEADERS = ("Уровень", "Название", "Ключи", "Описание")
 
 
 class AllGameKeysReaderInteractor:
@@ -31,16 +38,28 @@ class AllGameKeysReaderInteractor:
         return self.printer.print_table(self.to_table(game, keys))
 
     def to_table(self, game: core.FullGame, keys: list[dto.LevelKeys]) -> Table:
-        fields: dict[CellAddress, Cell] = {GAME_NAME: Cell(value=game.name)}
+        fields: dict[CellAddress, Cell] = {GAME_NAME: Cell(value=game.name, style=CellStyle.TITLE)}
+        for column, header in enumerate(KEYS_HEADERS):
+            fields[FIRST_LEVEL_NUMBER.shift(rows=-1, columns=column)] = Cell(
+                value=header, style=CellStyle.HEADER
+            )
         i = 0
         for lk in keys:
             for key in lk.keys:
-                fields[FIRST_LEVEL_NUMBER.shift(rows=i)] = Cell(value=lk.level_number)
-                fields[FIRST_LEVEL_NAME.shift(rows=i)] = Cell(value=lk.level_name_id)
-                fields[FIRST_LEVEL_KEYS.shift(rows=i)] = Cell(value="\n".join(key.keys))
-                fields[FIRST_LEVEL_KEYS_DESCRIPTION.shift(rows=i)] = Cell(value=key.description)
+                fields[FIRST_LEVEL_NUMBER.shift(rows=i)] = Cell(
+                    value=lk.level_number, style=CellStyle.DATA
+                )
+                fields[FIRST_LEVEL_NAME.shift(rows=i)] = Cell(
+                    value=lk.level_name_id, style=CellStyle.TEAM
+                )
+                fields[FIRST_LEVEL_KEYS.shift(rows=i)] = Cell(
+                    value="\n".join(key.keys), style=CellStyle.DATA
+                )
+                fields[FIRST_LEVEL_KEYS_DESCRIPTION.shift(rows=i)] = Cell(
+                    value=key.description, style=CellStyle.DATA
+                )
                 i += 1
-        return Table(fields=fields)
+        return Table(fields=fields, freeze=FIRST_LEVEL_NUMBER)
 
     def presenter(self, game: core.FullGame) -> list[dto.LevelKeys]:
         result = []

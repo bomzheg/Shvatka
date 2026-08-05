@@ -18,6 +18,7 @@ from shvatka.core.interfaces.clients.file_storage import FileGateway
 from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.models import dto, enums
 from shvatka.core.scenario.interactors import (
+    AllGameKeysPrintInteractor,
     AllGameKeysReaderInteractor,
     GameScenarioTransitionsInteractor,
 )
@@ -113,6 +114,23 @@ async def show_all_keys(
         document=BufferedInputFile(
             file=(await interactor(manager.dialog_data["my_game_id"], identity)).read(),
             filename="all_keys.xlsx",
+        )
+    )
+
+
+@inject
+async def show_all_keys_to_print(
+    c: CallbackQuery,
+    widget: Button,
+    manager: DialogManager,
+    interactor: FromDishka[AllGameKeysPrintInteractor],
+    identity: FromDishka[IdentityProvider],
+):
+    assert isinstance(c.message, Message)
+    await c.message.answer_document(
+        document=BufferedInputFile(
+            file=(await interactor(manager.dialog_data["my_game_id"], identity)).read(),
+            filename="keys_to_print.pdf",
         )
     )
 

@@ -13,7 +13,7 @@ from shvatka.core.models import dto as core
 from shvatka.core.models.dto import action
 from shvatka.core.rules.game import check_can_view_scenario
 from shvatka.core.scenario import dto
-from shvatka.core.scenario.adapters import TransitionsPrinter
+from shvatka.core.scenario.adapters import KeysSheetPrinter, TransitionsPrinter
 from shvatka.core.views.texts import render_effects
 
 GAME_NAME = CellAddress(row=1, column=1)
@@ -62,38 +62,70 @@ class AllGameKeysReaderInteractor:
         return Table(fields=fields, freeze=FIRST_LEVEL_NUMBER)
 
     def presenter(self, game: core.FullGame) -> list[dto.LevelKeys]:
-        result = []
-        for level in game.levels:
-            keys = []
-            for win_condition in level.scenario.conditions.get_default_key_conditions():
-                keys.extend(self.presenter_win_condition(win_condition, game.levels))
-            for effects_condition in level.scenario.conditions.get_effects_key_conditions():
-                keys.extend(self.presenter_effects_condition(effects_condition))
-            lk = dto.LevelKeys(
-                level_number=level.number_in_game,
-                level_name_id=level.name_id,
-                keys=keys,
-            )
-            result.append(lk)
-        return result
+        return present_game_keys(game)
 
-    def presenter_win_condition(
-        self, condition: action.KeyWinCondition, levels: Sequence[core.GamedLevel]
-    ) -> list[dto.Key]:
-        return [
-            dto.Key(
-                keys=condition.keys,
-                description="",
-            )
-        ]
 
-    def presenter_effects_condition(self, condition: action.KeyEffectsCondition) -> list[dto.Key]:
-        return [
-            dto.Key(
-                keys=condition.keys,
-                description=f"effects: {render_effects(condition.effects)}",
-            )
-        ]
+class AllGameKeysPrintInteractor:
+    """The same keys, but as a sheet to print, cut and hand out to the orgs."""
+
+    def __init__(self, dao: GameByIdGetter, printer: KeysSheetPrinter):
+        self.dao = dao
+        self.printer = printer
+
+    async def __call__(self, game_id: int, identity: IdentityProvider) -> BinaryIO:
+        game = await self.dao.get_full(game_id)
+        await check_can_view_scenario(game, identity)
+        return self.view(self.presenter(game))
+
+    def view(self, sheet: dto.KeysSheet) -> BinaryIO:
+        return self.printer.print_keys_sheet(sheet)
+
+    def presenter(self, game: core.FullGame) -> dto.KeysSheet:
+        keys: list[action.SHKey] = []
+        for level_keys in present_game_keys(game):
+            for key in level_keys.keys:
+                for one in sorted(key.keys):
+                    # a key can win one level and route another one — print it once
+                    if one not in keys:
+                        keys.append(one)
+        return dto.KeysSheet(game_name=game.name, game_date=game.start_at, keys=keys)
+
+
+def present_game_keys(game: core.FullGame) -> list[dto.LevelKeys]:
+    result = []
+    for level in game.levels:
+        keys = []
+        for win_condition in level.scenario.conditions.get_default_key_conditions():
+            keys.extend(present_win_condition(win_condition, game.levels))
+        for effects_condition in level.scenario.conditions.get_effects_key_conditions():
+            keys.extend(present_effects_condition(effects_condition))
+        lk = dto.LevelKeys(
+            level_number=level.number_in_game,
+            level_name_id=level.name_id,
+            keys=keys,
+        )
+        result.append(lk)
+    return result
+
+
+def present_win_condition(
+    condition: action.KeyWinCondition, levels: Sequence[core.GamedLevel]
+) -> list[dto.Key]:
+    return [
+        dto.Key(
+            keys=condition.keys,
+            description="",
+        )
+    ]
+
+
+def present_effects_condition(condition: action.KeyEffectsCondition) -> list[dto.Key]:
+    return [
+        dto.Key(
+            keys=condition.keys,
+            description=f"effects: {render_effects(condition.effects)}",
+        )
+    ]
 
 
 class GameScenarioTransitionsInteractor:

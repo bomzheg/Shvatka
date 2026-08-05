@@ -2,8 +2,9 @@ from aiohttp import ClientSession
 from dishka import Provider, Scope, provide
 
 from shvatka.core.interfaces.printer import TablePrinter
-from shvatka.core.scenario.adapters import TransitionsPrinter
+from shvatka.core.scenario.adapters import KeysSheetPrinter, TransitionsPrinter
 from shvatka.infrastructure.printer.diagrams import DiagramPrinter
+from shvatka.infrastructure.printer.keys_sheet import PdfKeysSheetPrinter
 from shvatka.infrastructure.printer.table import ExcellPrinter
 
 
@@ -16,3 +17,4 @@ class PrinterProvider(Provider):
 
     excel_printer = provide(ExcellPrinter, provides=TablePrinter)
     diagram_printer = provide(DiagramPrinter, provides=TransitionsPrinter)
+    keys_sheet_printer = provide(PdfKeysSheetPrinter, provides=KeysSheetPrinter)

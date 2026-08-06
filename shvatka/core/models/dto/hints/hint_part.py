@@ -104,6 +104,7 @@ class AudioHint(BaseHint, CaptionMixin, ThumbMixin, FileMixin):
 class VideoHint(BaseHint, CaptionMixin, ThumbMixin, FileMixin):
     type: Literal["video"] = HintType.video.name
     show_caption_above_media: bool | None = None
+    has_spoiler: bool | None = None
 
     def get_guids(self) -> list[str]:
         result = [self.file_guid]
@@ -125,6 +126,7 @@ class DocumentHint(BaseHint, CaptionMixin, ThumbMixin, FileMixin):
 class AnimationHint(BaseHint, CaptionMixin, ThumbMixin, FileMixin):
     type: Literal["animation"] = HintType.animation.name
     show_caption_above_media: bool | None = None
+    has_spoiler: bool | None = None
 
     def get_guids(self) -> list[str]:
         result = [self.file_guid]

@@ -59,6 +59,17 @@ PARAMETERS = [
     (SendVideoNote, VideoNoteHint(file_guid=GUID), "sendVideoNote", "video_note"),
     (SendSticker, StickerHint(file_guid=GUID), "sendSticker", "sticker"),
 ]
+# telegram supports a spoiler only for these three
+SPOILER_PARAMETERS = [
+    (SendPhoto, PhotoHint(file_guid=GUID, has_spoiler=True), "sendPhoto", "photo"),
+    (SendVideo, VideoHint(file_guid=GUID, has_spoiler=True), "sendVideo", "video"),
+    (
+        SendAnimation,
+        AnimationHint(file_guid=GUID, has_spoiler=True),
+        "sendAnimation",
+        "animation",
+    ),
+]
 
 
 @pytest_asyncio.fixture
@@ -220,28 +231,38 @@ async def test_send_by_content_when_file_id_missing(
 
 
 @pytest.mark.asyncio
-async def test_send_photo_with_spoiler_by_id(
+@pytest.mark.parametrize(("tg_method", "hint", "method_name", "content_type"), SPOILER_PARAMETERS)
+async def test_send_spoiler_by_id(
     hint_sender: HintSender,
     harry: dto.Player,
+    hint: BaseHint,
+    tg_method: type[TelegramMethod[TelegramType]],
+    method_name: str,
+    content_type: str,
     bot_session: BaseSession,
 ):
     await hint_sender.resolver.dao.upsert(file=FILE_META, author=harry)
     await hint_sender.resolver.dao.commit()
 
-    await hint_sender.send_hint(PhotoHint(file_guid=GUID, has_spoiler=True), CHAT_ID)
+    await hint_sender.send_hint(hint, CHAT_ID)
 
     session = typing.cast(MagicMock, bot_session)
     call = session.mock_calls.pop()
     request = call.args[1]
-    assert request.__api_method__ == "sendPhoto"
-    assert request.photo == FILE_ID
+    assert request.__api_method__ == method_name
+    assert getattr(request, content_type) == FILE_ID
     assert request.has_spoiler is True
 
 
 @pytest.mark.asyncio
-async def test_send_photo_with_spoiler_by_content(
+@pytest.mark.parametrize(("tg_method", "hint", "method_name", "content_type"), SPOILER_PARAMETERS)
+async def test_send_spoiler_by_content(
     hint_sender: HintSender,
     harry: dto.Player,
+    hint: BaseHint,
+    tg_method: type[TelegramMethod[TelegramType]],
+    method_name: str,
+    content_type: str,
     bot_session: BaseSession,
 ):
     await hint_sender.resolver.storage.put_content(FILE_META.local_file_name, BytesIO(b"12345"))
@@ -249,16 +270,16 @@ async def test_send_photo_with_spoiler_by_content(
     await hint_sender.resolver.dao.commit()
     session = typing.cast(MagicMock, bot_session)
     session.side_effect = [
-        TelegramAPIError(message="", method=SendPhoto),
+        TelegramAPIError(message="", method=tg_method),
         {},
     ]
 
-    await hint_sender.send_hint(PhotoHint(file_guid=GUID, has_spoiler=True), CHAT_ID)
+    await hint_sender.send_hint(hint, CHAT_ID)
 
     call = session.mock_calls.pop()
     request = call.args[1]
-    assert request.__api_method__ == "sendPhoto"
-    assert request.photo is not None
+    assert request.__api_method__ == method_name
+    assert getattr(request, content_type) is not None
     assert request.has_spoiler is True
 
 

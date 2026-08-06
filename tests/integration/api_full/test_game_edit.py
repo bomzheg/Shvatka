@@ -458,3 +458,66 @@ async def test_keys_to_print_of_foreign_game_forbidden(
         cookies=auth_cookies(auth, harry),
     )
     assert resp.status_code == 403, resp.text
+
+
+@pytest.mark.asyncio
+async def test_rich_hint_round_trip(
+    client: AsyncClient,
+    auth: AuthProperties,
+    author: dto.Player,
+    dao: HolderDao,
+):
+    """A rich hint keeps its markup, format and embedded media when read back."""
+    game = await create_game(author=author, name="draft with rich hint", dao=dao.game_creator)
+    cookies = auth_cookies(auth, author)
+    up = await client.post(
+        f"/cdn/games/{game.id}/files",
+        files={"file": ("pic.png", b"\x89PNG\r\n\x1a\n binary", "image/png")},
+        cookies=cookies,
+    )
+    assert up.status_code == 200, up.text
+    f = up.json()
+    markup = '<h1>Загадка</h1><p>смотри <img src="pic"></p>'
+    scenario = {
+        "name": "with rich hint",
+        "__model_version__": 1,
+        "files": [
+            {
+                "guid": f["guid"],
+                "original_filename": f["original_filename"],
+                "extension": f["extension"],
+            }
+        ],
+        "levels": [
+            {
+                "id": "first",
+                "__model_version__": 1,
+                "conditions": [{"type": "WIN_KEY", "keys": ["SH123"]}],
+                "time_hints": [
+                    {
+                        "time": 0,
+                        "hint": [
+                            {
+                                "type": "rich",
+                                "text": markup,
+                                "format": "html",
+                                "media": [{"id": "pic", "file_guid": f["guid"]}],
+                            }
+                        ],
+                    }
+                ],
+            }
+        ],
+    }
+    put = await client.put(f"/games/my/{game.id}/scenario", json=scenario, cookies=cookies)
+    assert put.status_code == 200, put.text
+
+    got = await client.get(f"/games/my/{game.id}", cookies=cookies)
+    assert got.status_code == 200, got.text
+    hint = got.json()["levels"][0]["scenario"]["time_hints"][0]["hint"][0]
+    assert hint["text"] == markup
+    assert hint["format"] == "html"
+    assert hint["media"] == [{"id": "pic", "file_guid": f["guid"]}]
+    stored = await dao.game.get_full(game.id)
+    stored_hint = stored.levels[0].scenario.time_hints[0].hint[0]
+    assert stored_hint.get_guids() == [f["guid"]]

@@ -334,3 +334,92 @@ async def test_renew_file_id_after_send_by_content(
 
     renewed = await dao.file_info.get_by_guid(GUID)
     assert renewed.tg_link.file_id == "RENEWED_FILE_ID"
+
+
+@pytest.mark.asyncio
+async def test_send_rich(hint_sender: HintSender, bot_session: BaseSession):
+    hint = hints.RichHint(text="<h1>Загадка</h1>")
+
+    await hint_sender.send_hint(hint, CHAT_ID)
+
+    session = typing.cast(MagicMock, bot_session)
+    assert 1 == session.call_count
+    call = session.mock_calls.pop()
+    request = call.args[1]
+    assert request.__api_method__ == "sendRichMessage"
+    assert request.rich_message.html == hint.text
+    assert request.rich_message.markdown is None
+
+
+@pytest.mark.asyncio
+async def test_send_rich_markdown(hint_sender: HintSender, bot_session: BaseSession):
+    hint = hints.RichHint(text="# Загадка", format=enums.RichFormat.markdown)
+
+    await hint_sender.send_hint(hint, CHAT_ID)
+
+    session = typing.cast(MagicMock, bot_session)
+    call = session.mock_calls.pop()
+    request = call.args[1]
+    assert request.__api_method__ == "sendRichMessage"
+    assert request.rich_message.markdown == hint.text
+    assert request.rich_message.html is None
+
+
+@pytest.mark.asyncio
+async def test_send_rich_media_by_id(
+    hint_sender: HintSender,
+    harry: dto.Player,
+    bot_session: BaseSession,
+):
+    await hint_sender.resolver.dao.upsert(file=FILE_META, author=harry)
+    await hint_sender.resolver.dao.commit()
+    hint = hints.RichHint(
+        text='<p><img src="pic"></p>',
+        media=[hints.RichMedia(id="pic", file_guid=GUID)],
+    )
+
+    await hint_sender.send_hint(hint, CHAT_ID)
+
+    session = typing.cast(MagicMock, bot_session)
+    assert 1 == session.call_count
+    call = session.mock_calls.pop()
+    request = call.args[1]
+    assert request.__api_method__ == "sendRichMessage"
+    (media,) = request.rich_message.media
+    assert media.id == "pic"
+    assert media.media.media == FILE_ID
+
+
+@pytest.mark.asyncio
+async def test_send_rich_media_by_content_when_file_id_missing(
+    hint_sender: HintSender,
+    harry: dto.Player,
+    bot_session: BaseSession,
+):
+    file_meta = hints.FileMeta(
+        guid=GUID,
+        file_id=None,
+        content_type=enums.HintType.photo,
+        extension=".jpg",
+        file_content_link=hints.FileContentLink(file_path=GUID + ".jpg"),
+        original_filename="файло",
+    )
+    await hint_sender.resolver.storage.put_content(file_meta.local_file_name, BytesIO(b"12345"))
+    await hint_sender.resolver.dao.upsert(file=file_meta, author=harry)
+    await hint_sender.resolver.dao.commit()
+    session = typing.cast(MagicMock, bot_session)
+    session.side_effect = [{}]
+    hint = hints.RichHint(
+        text='<p><img src="pic"></p>',
+        media=[hints.RichMedia(id="pic", file_guid=GUID)],
+    )
+
+    await hint_sender.send_hint(hint, CHAT_ID)
+
+    # no attempt to send by (missing) file_id, straight to content
+    assert 1 == session.call_count
+    call = session.mock_calls.pop()
+    request = call.args[1]
+    assert request.__api_method__ == "sendRichMessage"
+    (media,) = request.rich_message.media
+    assert media.media.media.data == b"12345"

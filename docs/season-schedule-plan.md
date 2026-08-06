@@ -89,6 +89,9 @@ Agreed with the author before writing this plan:
     keeps its data unchanged — no "skipped" state, nothing to implement, and the
     calendar still reads honestly a year later.
 13. **A season is created manually.** No auto-creation of next year's calendar.
+14. **A planned date is «дата игры» — «дата» for short** — in the glossary and in
+    every user-facing string. The code calls it `Slot` for identifier reasons
+    only (§3.4); no Russian text says *слот*.
 
 ## 3. Ubiquitous language
 
@@ -117,10 +120,10 @@ Three of them fix wording the issue phrased differently:
 | Term | Русский | Meaning | Where |
 | --- | --- | --- | --- |
 | **Season** | Сезон | One calendar year's plan of games, as a list of slots. Exists in the engine only once published. | `season.dto.Season`, `seasons` table |
-| **Slot** | Слот | One planned date in a season, before there is a game to put in it. Date-only; may be free or taken; may be linked to exactly one game. | `season.dto.Slot`, `season_slots` table |
-| **Taking a slot** | Занять слот | An author claiming a slot, declaring whether the game will be authored by them or by their team. A taken slot is locked to its owner. | `TakeSlotInteractor` |
-| **Slot owner** | Владелец слота | The author who took the slot. The only person besides the superuser who may move, release or delete it. | `season_slots.owner_id` |
-| **Slot org** | Орг слота | A player the owner names as a co-organizer of the future game. Declared intent only — it becomes an `Organizer` when the game exists. | `season_slot_orgs` table |
+| **Slot** | Дата игры (в разговоре — просто «дата») | One planned date in a season, before there is a game to put in it. Date-only; may be free or taken; may be linked to exactly one game. | `season.dto.Slot`, `season_slots` table |
+| **Taking a slot** | Взять дату | An author claiming a slot, declaring whether the game will be authored by them or by their team. A taken slot is locked to its owner. | `TakeSlotInteractor` |
+| **Slot owner** | Владелец даты | The author who took the slot. The only person besides the superuser who may move, release or delete it. | `season_slots.owner_id` |
+| **Slot org** | Орг на дату | A player the owner names as a co-organizer of the future game. Declared intent only — it becomes an `Organizer` when the game exists. | `season_slot_orgs` table |
 | **Schedule publication** | Публикация расписания | Confirming a composed season: it is written to the database, announced in the game-log channel and pinned. | `PublishSeasonInteractor` |
 | **Schedule change** | Изменение расписания | One recorded edit of a published season — the audit trail and the digest's raw material. | `season.dto.ScheduleChange`, `season_changes` table |
 | **Change digest** | Сводка изменений | The once-a-day message collapsing every unpublished change to its net effect per slot. | `PublishSeasonDigestInteractor` |
@@ -140,10 +143,20 @@ Three of them fix wording the issue phrased differently:
    qualification means the season schedule. `GameScheduleSG` contradicts the
    glossary and should be noted as such — renaming it is out of scope here.
 
-One term needs the author's confirmation: **слот** is a borrowing. The
-alternative is «игровая дата». The plan uses *слот* because it is short, already
-current in the night-game community, and doesn't collide with «дата» as a plain
-calendar date — but it is the one name here nobody has said out loud yet.
+### 3.4 Why «дата» in Russian and `Slot` in code
+
+People say **«дата игры»**, or just **«дата»**. That is the term, and every
+user-facing string uses it: «Взять дату», «Добавить дату», «Дата занята». A
+borrowed *слот* was considered and rejected — inventing a word for something the
+domain already names is exactly what the glossary exists to prevent, and generic
+beats novel here.
+
+The English half stays **`Slot`**. `date` is unusable as an identifier: it is a
+Python builtin, the column's own type, and would give `season_dates.date`. The
+glossary already carries pairs whose halves are unrelated words — **Promotion /
+Аппрув**, **Puzzle / Загадка уровня**, **Waiver / Вейвер** — so `Slot` ↔ «дата
+игры» fits the pattern. What matters is that no Russian string anywhere says
+*слот*.
 
 ## 4. Data model
 
@@ -487,7 +500,7 @@ linked automatically — the engine only *offers*.
 `FindSlotsNearGameStartInteractor(at: datetime)` before or right after planning. It
 returns slots of the current season whose date is within **±3 days** of `at`
 (MSK) and that are free or already owned by the acting player, nearest first.
-The edge shows «Привязать игру к слоту 27.06?» with confirm/skip.
+The edge shows «Привязать игру к дате 27.06?» with confirm/skip.
 
 **B. Planning a game with no slot nearby.** The same interactor returning an
 empty list drives the warning, offering three actions:
@@ -576,7 +589,7 @@ Flows on a published season:
 
 - tap a day **with** a slot → slot window: take / release / change author
   (self vs team) / edit orgs / move / delete / open the linked game;
-- tap a day **without** a slot → «Добавить слот на эту дату» for authors.
+- tap a day **without** a slot → «Добавить дату» for authors.
 
 **Link offer inside the existing flow.** `GameScheduleSG` gets one extra window
 after `confirm`: if `FindSlotsNearGameStartInteractor` returns candidates, offer the
@@ -644,15 +657,9 @@ Phases 2 and 3 are independent of each other and can land in either order.
 
 ## 16. Open questions
 
-One naming question is open, and two things are worth a second look during
-implementation rather than now.
-
-**Open:** is a planned date a **слот** or an **игровая дата** (§3.3)? Everything
-else in §2 is settled; this is the one word in the plan that nobody has said out
-loud yet, and it goes into the glossary and into the UI copy, so it is worth
-picking deliberately.
-
-Later:
+None outstanding — every question raised while drafting has been answered and
+folded into §2 and §3. Two things are worth a second look during implementation
+rather than now:
 
 - **Digest wording** once collapsing is implemented — a slot that was taken and
   then moved on the same day is one line or two? (Proposal: one line per slot,

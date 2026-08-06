@@ -51,6 +51,7 @@ class HintParser:
                     caption=message.html_text,
                     file_guid=guid,
                     show_caption_above_media=parse_bool_default(message.show_caption_above_media),
+                    has_spoiler=message.has_media_spoiler,
                 )
             case ContentType.AUDIO:
                 assert message.audio
@@ -68,6 +69,7 @@ class HintParser:
                     file_guid=guid,
                     thumb_guid=thumb.guid if thumb else None,
                     show_caption_above_media=parse_bool_default(message.show_caption_above_media),
+                    has_spoiler=message.has_media_spoiler,
                 )
             case ContentType.DOCUMENT:
                 assert message.document
@@ -85,6 +87,7 @@ class HintParser:
                     file_guid=guid,
                     thumb_guid=thumb.guid if thumb else None,
                     show_caption_above_media=parse_bool_default(message.show_caption_above_media),
+                    has_spoiler=message.has_media_spoiler,
                 )
             case ContentType.VOICE:
                 return hints.VoiceHint(caption=message.html_text, file_guid=guid)

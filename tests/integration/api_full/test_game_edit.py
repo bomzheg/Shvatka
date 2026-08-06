@@ -163,6 +163,65 @@ async def test_scenario_files_round_trip(
 
 
 @pytest.mark.asyncio
+async def test_photo_hint_spoiler_round_trip(
+    client: AsyncClient,
+    auth: AuthProperties,
+    author: dto.Player,
+    dao: HolderDao,
+):
+    """A photo hint uploaded with ``has_spoiler`` keeps it when read back."""
+    game = await create_game(author=author, name="draft with spoiler", dao=dao.game_creator)
+    cookies = auth_cookies(auth, author)
+    up = await client.post(
+        f"/cdn/games/{game.id}/files",
+        files={"file": ("pic.png", b"\x89PNG\r\n\x1a\n binary", "image/png")},
+        cookies=cookies,
+    )
+    assert up.status_code == 200, up.text
+    f = up.json()
+    scenario = {
+        "name": "with spoiler",
+        "__model_version__": 1,
+        "files": [
+            {
+                "guid": f["guid"],
+                "original_filename": f["original_filename"],
+                "extension": f["extension"],
+            }
+        ],
+        "levels": [
+            {
+                "id": "first",
+                "__model_version__": 1,
+                "conditions": [{"type": "WIN_KEY", "keys": ["SH123"]}],
+                "time_hints": [
+                    {
+                        "time": 0,
+                        "hint": [
+                            {
+                                "type": "photo",
+                                "file_guid": f["guid"],
+                                "caption": "pic",
+                                "has_spoiler": True,
+                            }
+                        ],
+                    }
+                ],
+            }
+        ],
+    }
+    put = await client.put(f"/games/my/{game.id}/scenario", json=scenario, cookies=cookies)
+    assert put.status_code == 200, put.text
+
+    got = await client.get(f"/games/my/{game.id}", cookies=cookies)
+    assert got.status_code == 200, got.text
+    hint = got.json()["levels"][0]["scenario"]["time_hints"][0]["hint"][0]
+    assert hint["has_spoiler"] is True
+    stored = await dao.game.get_full(game.id)
+    assert stored.levels[0].scenario.time_hints[0].hint[0].has_spoiler is True
+
+
+@pytest.mark.asyncio
 async def test_change_scenario(
     client: AsyncClient,
     auth: AuthProperties,

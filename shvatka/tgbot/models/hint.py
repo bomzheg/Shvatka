@@ -80,11 +80,13 @@ class VenueHintView(BaseHintLinkView, BaseHintContentView):
 class PhotoLinkView(BaseHintLinkView, CaptionViewMixin):
     file_id: str | None
     show_caption_above_media: bool | None = None
+    has_spoiler: bool | None = None
 
     def specific_kwargs(self) -> dict[str, Any]:
         return {
             "photo": self.file_id,
             "show_caption_above_media": self.show_caption_above_media,
+            "has_spoiler": self.has_spoiler,
             **self.caption_kwargs(),
         }
 
@@ -93,11 +95,13 @@ class PhotoLinkView(BaseHintLinkView, CaptionViewMixin):
 class PhotoContentView(BaseHintContentView, CaptionViewMixin):
     content: BinaryIO
     show_caption_above_media: bool | None = None
+    has_spoiler: bool | None = None
 
     def specific_kwargs(self) -> dict[str, Any]:
         return {
             "photo": _get_input_file(self.content),
             "show_caption_above_media": self.show_caption_above_media,
+            "has_spoiler": self.has_spoiler,
             **self.caption_kwargs(),
         }
 
@@ -131,12 +135,14 @@ class AudioContentView(BaseHintContentView, CaptionViewMixin):
 class VideoLinkView(BaseHintLinkView, CaptionViewMixin):
     file_id: str | None
     show_caption_above_media: bool | None = None
+    has_spoiler: bool | None = None
     thumb: str | None = None
 
     def specific_kwargs(self) -> dict[str, Any]:
         return {
             "video": self.file_id,
             "show_caption_above_media": self.show_caption_above_media,
+            "has_spoiler": self.has_spoiler,
             **self.caption_kwargs(),
         }
 
@@ -145,12 +151,14 @@ class VideoLinkView(BaseHintLinkView, CaptionViewMixin):
 class VideoContentView(BaseHintContentView, CaptionViewMixin):
     content: BinaryIO
     show_caption_above_media: bool | None = None
+    has_spoiler: bool | None = None
     thumb: BinaryIO | None = None
 
     def specific_kwargs(self) -> dict[str, Any]:
         return {
             "video": _get_input_file(self.content),
             "show_caption_above_media": self.show_caption_above_media,
+            "has_spoiler": self.has_spoiler,
             "thumbnail": _get_input_file(self.thumb),
             **self.caption_kwargs(),
         }
@@ -186,11 +194,13 @@ class AnimationLinkView(BaseHintLinkView, CaptionViewMixin):
     file_id: str | None
     thumb: str | None = None
     show_caption_above_media: bool | None = None
+    has_spoiler: bool | None = None
 
     def specific_kwargs(self) -> dict[str, Any]:
         return {
             "animation": self.file_id,
             "show_caption_above_media": self.show_caption_above_media,
+            "has_spoiler": self.has_spoiler,
             **self.caption_kwargs(),
         }
 
@@ -200,11 +210,13 @@ class AnimationContentView(BaseHintContentView, CaptionViewMixin):
     content: BinaryIO
     thumb: BinaryIO | None = None
     show_caption_above_media: bool | None = None
+    has_spoiler: bool | None = None
 
     def specific_kwargs(self) -> dict[str, Any]:
         return {
             "animation": _get_input_file(self.content),
             "show_caption_above_media": self.show_caption_above_media,
+            "has_spoiler": self.has_spoiler,
             "thumbnail": _get_input_file(self.thumb),
             **self.caption_kwargs(),
         }

@@ -252,6 +252,7 @@ async def test_game_hints(
                     "caption": "привет",
                     "file_guid": "a3bc9b96-3bb8-4dbc-b996-ce1015e66e53",
                     "show_caption_above_media": None,
+                    "has_spoiler": None,
                     "type": "photo",
                 }
             ],

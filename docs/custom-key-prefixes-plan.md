@@ -334,16 +334,16 @@ rather than one change; see below.
 §9 splits into sub-issues of #162 along the seams where each piece is
 independently mergeable and independently useful:
 
-| # | Subtask | Depends on |
+| Issue | Subtask | Depends on |
 | --- | --- | --- |
-| 1 | Parametrise `input_validation` by prefixes + `validate_key_prefix` | — |
-| 2 | `LevelScenario.keys_prefix`, validation of authored keys, glossary edits in both repos | 1 |
-| 3 | Widen the play-path and level-testing gate to the prefix union; prefix-aware copy | 1, 2 |
-| 4 | `ActiveKeyPrefixesProvider` + injected `is_key` filter | 1, 2 |
-| 5 | Author UI: set the prefix in the bot level editor | 2 |
-| 6 | Author UI: set the prefix in the web editor, incl. "apply to all levels" (decision C) | 2 |
-| 7 | User docs — `level-concept.adoc` states the SH/СХ rule as absolute | 2 |
+| #326 | Parametrise `input_validation` by prefixes + `validate_key_prefix` | — |
+| #327 | `LevelScenario.keys_prefix`, validation of authored keys, glossary edits in both repos | #326 |
+| #328 | Widen the play-path and level-testing gate to the prefix union; prefix-aware copy | #326, #327 |
+| #329 | `ActiveKeyPrefixesProvider` + injected `is_key` filter | #326, #327 |
+| #330 | Author UI: set the prefix in the bot level editor | #327 |
+| #331 | Author UI: set the prefix in the web editor, incl. "apply to all levels" (decision C) | #327 |
+| #332 | User docs — `level-concept.adoc` states the SH/СХ rule as absolute | #327 |
 
-After 1–3 the feature works end to end for scenarios uploaded via API/zip.
-4 is what makes a custom-prefix key typeable in a Telegram game, so it is the
-last *required* piece; 5–7 are ergonomics and documentation.
+After #326–#328 the feature works end to end for scenarios uploaded via
+API/zip. #329 is what makes a custom-prefix key typeable in a Telegram game, so
+it is the last *required* piece; #330–#332 are ergonomics and documentation.

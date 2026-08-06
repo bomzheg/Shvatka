@@ -29,10 +29,12 @@ SLIP_PADDING_MM = 2.0
 PT_IN_MM = 25.4 / 72
 
 KEY_FONT_MAX_PT = 14.0
-KEY_FONT_MIN_PT = 11.0
+"""The size the orgs used in the game document, and it is a good one."""
+KEY_FONT_MIN_PT = 12.0
 """Smaller than this is not worth reading in the dark, so the grid grows instead."""
 LONG_KEY_FONT_MAX_PT = 24.0
-CAPTION_FONT_PT = 9.0
+CAPTION_FONT_PT = 10.0
+"""Also from the game document — a key is twice the size of what signs it."""
 CAPTION_FONT_MIN_PT = 6.0
 CAPTION_GAP_MM = 3.0
 """Distance between the name of the game and the date of it inside one caption."""

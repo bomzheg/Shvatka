@@ -20,8 +20,10 @@ ARG BUILD_AT
 ENV VIRTUAL_ENV=/opt/venv
 ENV CODE_PATH=/code
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
+# fonts-liberation: Liberation Serif has the metrics of Times New Roman, the
+# font the keys to print are laid out in
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends libmagic1 && \
+    apt-get install -y --no-install-recommends libmagic1 fonts-liberation && \
     rm -rf /var/lib/apt/lists/*
 COPY --from=builder $VIRTUAL_ENV $VIRTUAL_ENV
 # bake the matplotlib font cache into the image, otherwise every fresh

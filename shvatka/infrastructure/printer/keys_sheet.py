@@ -10,6 +10,7 @@ from io import BytesIO
 
 from matplotlib.backends.backend_pdf import FigureCanvasPdf, PdfPages
 from matplotlib.figure import Figure
+from matplotlib import font_manager
 from matplotlib.font_manager import FontProperties
 from matplotlib.patches import Rectangle
 from matplotlib.textpath import TextToPath
@@ -28,9 +29,22 @@ from shvatka.infrastructure.printer.keys_layout import (
     Slip,
 )
 
-FONT_FAMILY = "DejaVu Sans"
-"""Ships with matplotlib, has Cyrillic, and 0 is told apart from O."""
-KEY_WEIGHT = "bold"
+FONT_FAMILIES = (
+    "Times New Roman",
+    "Liberation Serif",
+    "Nimbus Roman",
+    "FreeSerif",
+    "DejaVu Serif",
+)
+"""Times New Roman, the font of the game document, or its closest stand-in.
+
+Liberation Serif has the same metrics and is installed in the image; DejaVu
+Serif ships with matplotlib itself and closes the list, so there is always
+something with Cyrillic in it. Whatever is found is what gets measured, so the
+layout holds either way.
+"""
+KEY_WEIGHT = "normal"
+"""The game document doesn't embolden the keys — the size tells them apart."""
 CAPTION_COLOR = "0.35"
 CUT_LINE_COLOR = "0.8"
 CUT_LINE_WIDTH = 0.4
@@ -40,11 +54,24 @@ MM_IN_INCH = 25.4
 _text_to_path = TextToPath()
 
 
+def font_family() -> str:
+    """The first font of the list this machine really has.
+
+    Asking matplotlib for a family it doesn't have works, but complains into the
+    log on every single string — and a sheet is hundreds of them.
+    """
+    available = set(font_manager.get_font_names())
+    return next((family for family in FONT_FAMILIES if family in available), FONT_FAMILIES[-1])
+
+
+FONT = font_family()
+
+
 def measure(text: str, font_pt: float) -> float:
     """Width of a key printed at this size, in millimetres."""
     if not text:
         return 0.0
-    prop = FontProperties(family=FONT_FAMILY, size=font_pt, weight=KEY_WEIGHT)
+    prop = FontProperties(family=FONT, size=font_pt, weight=KEY_WEIGHT)
     width, _, _ = _text_to_path.get_text_width_height_descent(text, prop, ismath=False)
     return width * PT_IN_MM
 
@@ -141,7 +168,7 @@ def _text(
         y,
         text,
         fontsize=font_pt,
-        family=FONT_FAMILY,
+        family=FONT,
         fontweight=weight,
         color=color,
         horizontalalignment=horizontal,

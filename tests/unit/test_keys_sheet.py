@@ -31,6 +31,27 @@ from tests.fixtures.identity import MockIdentityProvider
 
 CHAR_WIDTH_EM = 0.6
 
+AMNESIA_KEYS = [
+    "СХПОЛОСАТЫЙРЕЙС",
+    "СХНЕВЛЕЗАЙУБЬЮ",
+    "СХБОБРКУРВАЩАВПЕРДОЛЮ",
+    "СХМАТЬДРАКОШИ",
+    "СХСМОТРЯКАКОЙФЭБРИК",
+    "СХДЫРЯВЫЙГАНДОН",
+    "СХВКУСНОИГРУСТНО",
+    "СХКРОШКАЕНОТ",
+    "СХГОЛОПОМСКАЧИКОНЯГА",
+    "СХ875550",
+    "СХНЕДЫШИНЕМОРГАЙ",
+    "СХРЫБАЯЗЬЗДОРОВЕННЫЙ",
+    "СХБУКЕНГЕМСКИЙГЕЙ",
+    "СХКОТИКИНАРКОТИКИ",
+    "СХСОВИНЬОНКАБЕРНЕ",
+    "СХМАМБОИТАЛИАНО",
+    "СХТЫВСПОМНИЛНАЧАЛО",
+]
+"""Keys of a game that really was played — the one the printed page comes from."""
+
 
 def measure(text: str, font_pt: float) -> float:
     return len(text) * CHAR_WIDTH_EM * font_pt * PT_IN_MM
@@ -168,18 +189,23 @@ def columns_of(sheet: Sheet) -> int:
     return tops.count(tops[0])
 
 
-def test_real_font_makes_a_readable_sheet():
-    """The measurements of the font we really print with are not way off."""
-    from shvatka.infrastructure.printer.keys_sheet import PdfKeysSheetPrinter
+def test_real_font_makes_the_sheet_of_the_game_document():
+    """A game of ordinary keys comes out as the orgs used to lay it out by hand.
 
-    printer = PdfKeysSheetPrinter()
-    sheet = printer.layout.plan(sheet_of(*[f"СХКЛЮЧНОМЕР{i}" for i in range(1, 18)]))
+    Times New Roman (or the stand-in this machine has instead), keys at 14 pt,
+    signed at 10 pt — and every key printed more than once.
+    """
+    from shvatka.infrastructure.printer import keys_sheet
 
+    printer = keys_sheet.PdfKeysSheetPrinter()
+    sheet = printer.layout.plan(sheet_of(*AMNESIA_KEYS))
+
+    assert keys_sheet.FONT in keys_sheet.FONT_FAMILIES, "no font of the list was found"
+    slips = [slip for page in sheet.pages for slip in page.slips]
+    assert {slip.font_pt for slip in slips} == {keys_layout.KEY_FONT_MAX_PT}
+    assert {slip.caption_font_pt for slip in slips} == {keys_layout.CAPTION_FONT_PT}
     assert len(sheet.pages) == 1
     assert sheet.copies >= 2
-    assert all(
-        slip.font_pt >= keys_layout.KEY_FONT_MIN_PT for page in sheet.pages for slip in page.slips
-    )
     assert printer.print_keys_sheet(sheet_of("СХКЛЮЧ")).getvalue().startswith(b"%PDF")
 
 

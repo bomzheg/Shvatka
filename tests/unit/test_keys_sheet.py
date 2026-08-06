@@ -24,6 +24,7 @@ from shvatka.infrastructure.printer.keys_layout import (
     PAGE_HEIGHT_MM,
     PAGE_WIDTH_MM,
     PT_IN_MM,
+    SLIP_PADDING_MM,
     KeysSheetLayout,
     Sheet,
 )
@@ -172,7 +173,30 @@ def test_page_is_filled_by_the_grid(layout: KeysSheetLayout):
     sheet = layout.plan(sheet_of(*[f"СХКЛЮЧ{i}" for i in range(12)]))
 
     slips = sheet.pages[0].slips
-    assert slips[-1].top + slips[-1].height == pytest.approx(PAGE_HEIGHT_MM - MARGIN_MM)
+    above = slips[0].top - MARGIN_MM
+    below = PAGE_HEIGHT_MM - MARGIN_MM - (slips[-1].top + slips[-1].height)
+    assert above == pytest.approx(below), "the rows are spread over the whole page"
+
+
+def test_slip_is_cut_out_by_the_width_of_its_key(layout: KeysSheetLayout):
+    """The name of the game starts under the first letter of the key, the date
+    ends under the last one — so the piece of paper to carry is a small one."""
+    sheet = layout.plan(sheet_of("СХДЛИННЫЙКЛЮЧИГРЫ", "СХКОРОЧЕ"))
+
+    long_key, short_key = sheet.pages[0].slips[0], sheet.pages[0].slips[-1]
+    assert long_key.width == pytest.approx(
+        measure(long_key.lines[0], long_key.font_pt) + 2 * SLIP_PADDING_MM
+    )
+    assert long_key.width > short_key.width
+    assert all(slip.width < CONTENT_WIDTH_MM for slip in sheet.pages[0].slips)
+
+
+def test_slip_never_narrower_than_its_own_caption(layout: KeysSheetLayout):
+    sheet = layout.plan(sheet_of("СХ1"))
+
+    slip = sheet.pages[0].slips[0]
+    caption = layout.caption_width(slip.caption_name, slip.caption_date, slip.caption_font_pt)
+    assert slip.width == pytest.approx(caption + 2 * SLIP_PADDING_MM)
 
 
 def test_empty_sheet_has_no_pages(layout: KeysSheetLayout):

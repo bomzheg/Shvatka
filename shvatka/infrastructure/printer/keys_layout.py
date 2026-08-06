@@ -159,7 +159,7 @@ class KeysSheetLayout:
     ) -> Slip:
         available = width - 2 * SLIP_PADDING_MM
         caption_font, caption_name = self.caption(name, date, available)
-        return Slip(
+        return self.fitted(
             lines=(key,),
             font_pt=self.fitting_font(key, available, KEY_FONT_MAX_PT),
             caption_name=caption_name,
@@ -169,6 +169,43 @@ class KeysSheetLayout:
             top=top,
             width=width,
             height=height,
+        )
+
+    def fitted(
+        self,
+        lines: tuple[str, ...],
+        font_pt: float,
+        caption_name: str,
+        caption_date: str,
+        caption_font_pt: float,
+        left: float,
+        top: float,
+        width: float,
+        height: float,
+    ) -> Slip:
+        """A slip shrunk to what is written on it and centred in its place.
+
+        The point is the scissors: a cut out key should be a small piece of
+        paper, not a quarter of a sheet. The width is the width of the key
+        itself, so the name of the game starts under its first letter and the
+        date ends under its last one.
+        """
+        content = max(
+            *(self.measure(line, font_pt) for line in lines),
+            self.caption_width(caption_name, caption_date, caption_font_pt),
+        )
+        fit_width = min(width, content + 2 * SLIP_PADDING_MM)
+        fit_height = min(height, self.block_height(len(lines), font_pt, caption_font_pt))
+        return Slip(
+            lines=lines,
+            font_pt=font_pt,
+            caption_name=caption_name,
+            caption_date=caption_date,
+            caption_font_pt=caption_font_pt,
+            left=left + (width - fit_width) / 2,
+            top=top + (height - fit_height) / 2,
+            width=fit_width,
+            height=fit_height,
         )
 
     def long_key_pages(self, keys: list[str], name: str, date: str) -> list[Page]:
@@ -189,7 +226,7 @@ class KeysSheetLayout:
         row_height = CONTENT_HEIGHT_MM / copies
         return Page(
             slips=tuple(
-                Slip(
+                self.fitted(
                     lines=lines,
                     font_pt=font,
                     caption_name=caption_name,

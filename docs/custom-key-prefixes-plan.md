@@ -55,6 +55,12 @@ So:
   *older deployment* importing a *newer* export, and there the graceful
   outcome (prefix silently ignored, defaults apply) is what a bump would
   turn into a hard parse error.
+- Look at what a bump costs in this repository. `core/migration_utils/` holds
+  the 0 → 1 upgrade: an entire parallel `models_0` package (`level.py`,
+  `game.py`, `time_hint.py`, `hint_part.py`, …) plus a migrator per type in
+  `from_1_to_2/migrators.py`. That machinery is the right shape for a
+  *structural* change; spending it on one nullable string would be pure
+  ceremony, and it would leave a `models_1` package to maintain forever.
 - One adaptix detail: the retort dumps every field by default, which would
   write `keys_prefix: null` into every stored scenario and every export. Add an
   `omit_default()` recipe for the field in `common/factory.py` so untouched
@@ -102,7 +108,8 @@ place where prefix correctness is decided:
   non-empty) and the bonus range. It no longer imports `is_key_valid`.
 - `LevelScenario.__post_init__` → gains a check that **every** key in
   `self.conditions.get_keys()` matches the level's prefixes. This is strictly
-  more coverage than today, because win/effects keys were never validated.
+  more coverage than today, because the keys of the **master key** (win
+  condition) and of **effects keys** were never validated at all.
 
 This is the one behaviour change that can reject scenarios which currently
 load. Worth a scan of production scenarios before merging — if any existing
@@ -170,16 +177,58 @@ for whether that rejection is logged as a wrong key.
 prefix of the level being edited, which imposes an ordering constraint on the
 dialog: **the prefix must be settable before the keys are entered.** That means
 a new window/state in `LevelKeysSG`/level-edit flow plus a place to display and
-change the current prefix. See open question C for whether this ships in v1.
+change the current prefix. See open question D for whether this ships in v1.
 
 ## 6. API / UI
 
 The API serialises the scenario dataclasses directly through adaptix, so
 `keys_prefix` appears in game/level payloads with no schema work. `shvatka-ui`
-needs a change only if the prefix should be *shown* (scenario view) or *edited*
-in the web editor — worth confirming, but it is not on the critical path.
+needs *code* changes only if the prefix should be *shown* (scenario view) or
+*edited* in the web editor — worth confirming, but not on the critical path.
+Its `context.md` is a different matter and does have to change; see §7.
 
-## 7. Tests
+## 7. Ubiquitous language (`context.md`)
+
+`context.md` states its own rule: *"The glossary follows the domain. When the
+domain gains a concept (or an existing word shifts meaning), change this file in
+the same PR that changes the code."* This feature does both, so the glossary
+edits are part of the work, not a follow-up:
+
+**A term shifts meaning.** The **Key / Ключ** row currently reads "Starts with
+`SH` or `СХ`, then uppercase Latin/Cyrillic letters and digits". That stops
+being true. It becomes: starts with the level's **key prefix** — `SH` or `СХ`
+unless the author set another — then uppercase Latin/Cyrillic letters and
+digits.
+
+**A second row leans on the same claim.** In *Words we don't use*, the
+`Code / код` row justifies itself with "only a key has the `SH`/`СХ` format and
+a row in the key log". The justification survives, the wording does not: it
+should say *the key format defined by the level* rather than naming the two
+default prefixes.
+
+**The domain gains a concept**, so a new row belongs in *Scenario — what an
+author writes*, next to **Master key** and **Effects key**:
+
+| Term | Русский | Meaning | Where |
+| --- | --- | --- | --- |
+| **Key prefix** | Префикс ключа | The leading letters every key of a level must start with. `SH` and `СХ` by default; an author may set another for a level, and then the defaults are no longer keys there. | `LevelScenario.keys_prefix`, `DEFAULT_KEY_PREFIXES` |
+
+The Russian term is settled by the issue title itself — «Кастомные префиксы
+ключей» — so *префикс ключа* is what organizers already say.
+
+**And the front-end carries the same glossary.** `context.md` says
+[bomzheg/shvatka-ui](https://github.com/bomzheg/shvatka-ui) has its own copy and
+that "when a term changes here, change it there too". So the UI repo's
+`context.md` needs the same three edits even if no UI code changes — which
+makes the shvatka-ui side of this feature non-optional, unlike §6 suggests.
+
+One naming check against the glossary's own rules: `ActiveKeyPrefixesProvider`
+(§5.1) follows the `CurrentGameProvider` / `IdentityProvider` pattern the
+glossary sanctions for "the way any layer above the DAO asks a question", and
+`keys_prefix` sits in `scn.*` where scenario documents live. No new interactor
+is introduced, so the *use case is an `Interactor`* rule does not bite.
+
+## 8. Tests
 
 - `tests/unit/input_validation/test_key_validation.py` — parametrise over
   prefixes; add cases where `SH…` is invalid under a custom prefix.
@@ -191,7 +240,7 @@ in the web editor — worth confirming, but it is not on the critical path.
   level, a `SH…` key is not accepted, and the custom-prefix key levels up.
 - Level testing: same via `test_level_tesing.py`.
 
-## 8. Suggested order of work
+## 9. Suggested order of work
 
 1. `input_validation.py` — parametrised API + `validate_key_prefix`, defaults
    unchanged. Pure addition, no behaviour change. *(tests)*
@@ -201,15 +250,18 @@ in the web editor — worth confirming, but it is not on the critical path.
 4. Play path + level testing + `InvalidKey.expected_prefixes` + dynamic texts.
    *(integration tests)*
 5. `ActiveKeyPrefixesProvider` + injected `is_key` filter.
-6. Author UI in the bot dialog (if in scope — open question C).
+6. Author UI in the bot dialog (if in scope — open question D).
 7. Docs: `docs/modules/ROOT/pages/author/level-concept.adoc:33` currently states
    the SH/СХ rule as absolute.
+
+Glossary edits (§7) ride along with whichever step first makes the term real —
+step 2 — in that same PR, in both repositories.
 
 Steps 1–4 are independently shippable and leave the product working with
 prefixes settable via scenario upload / API only; 5 is what makes a custom
 prefix usable in a real game over Telegram.
 
-## 9. Open questions
+## 10. Open questions
 
 **A. What happens to a well-formed key with the wrong prefix during play?**
 `SH123` typed in a `ZZ` level. Either (a) invalid key — not written to the key

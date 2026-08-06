@@ -220,6 +220,49 @@ async def test_send_by_content_when_file_id_missing(
 
 
 @pytest.mark.asyncio
+async def test_send_photo_with_spoiler_by_id(
+    hint_sender: HintSender,
+    harry: dto.Player,
+    bot_session: BaseSession,
+):
+    await hint_sender.resolver.dao.upsert(file=FILE_META, author=harry)
+    await hint_sender.resolver.dao.commit()
+
+    await hint_sender.send_hint(PhotoHint(file_guid=GUID, has_spoiler=True), CHAT_ID)
+
+    session = typing.cast(MagicMock, bot_session)
+    call = session.mock_calls.pop()
+    request = call.args[1]
+    assert request.__api_method__ == "sendPhoto"
+    assert request.photo == FILE_ID
+    assert request.has_spoiler is True
+
+
+@pytest.mark.asyncio
+async def test_send_photo_with_spoiler_by_content(
+    hint_sender: HintSender,
+    harry: dto.Player,
+    bot_session: BaseSession,
+):
+    await hint_sender.resolver.storage.put_content(FILE_META.local_file_name, BytesIO(b"12345"))
+    await hint_sender.resolver.dao.upsert(file=FILE_META, author=harry)
+    await hint_sender.resolver.dao.commit()
+    session = typing.cast(MagicMock, bot_session)
+    session.side_effect = [
+        TelegramAPIError(message="", method=SendPhoto),
+        {},
+    ]
+
+    await hint_sender.send_hint(PhotoHint(file_guid=GUID, has_spoiler=True), CHAT_ID)
+
+    call = session.mock_calls.pop()
+    request = call.args[1]
+    assert request.__api_method__ == "sendPhoto"
+    assert request.photo is not None
+    assert request.has_spoiler is True
+
+
+@pytest.mark.asyncio
 async def test_send_hints_returns_all_sent_messages(
     hint_sender: HintSender,
     bot_session: BaseSession,

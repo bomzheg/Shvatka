@@ -77,6 +77,7 @@ class HintContentResolver:
                 return PhotoLinkView(
                     file_id=await self._resolve_file_id(hint_.file_guid),
                     show_caption_above_media=hint_.show_caption_above_media,
+                    has_spoiler=hint_.has_spoiler,
                     caption=hint_.caption,
                 )
             case AudioHint():
@@ -171,6 +172,7 @@ class HintContentResolver:
                 return PhotoContentView(
                     content=await self._resolve_bytes(hint_.file_guid),
                     show_caption_above_media=hint_.show_caption_above_media,
+                    has_spoiler=hint_.has_spoiler,
                     caption=hint_.caption,
                 )
             case AudioHint():

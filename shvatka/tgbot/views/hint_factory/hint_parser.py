@@ -51,6 +51,7 @@ class HintParser:
                     caption=message.html_text,
                     file_guid=guid,
                     show_caption_above_media=parse_bool_default(message.show_caption_above_media),
+                    has_spoiler=message.has_media_spoiler,
                 )
             case ContentType.AUDIO:
                 assert message.audio

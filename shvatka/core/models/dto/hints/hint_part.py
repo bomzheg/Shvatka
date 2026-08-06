@@ -76,6 +76,7 @@ class FileMixin:
 class PhotoHint(BaseHint, CaptionMixin, FileMixin):
     type: Literal["photo"] = HintType.photo.name
     show_caption_above_media: bool | None = None
+    has_spoiler: bool | None = None
 
     def get_guids(self) -> list[str]:
         return [self.file_guid]

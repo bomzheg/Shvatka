@@ -1,4 +1,4 @@
-from sqlalchemy import ForeignKey
+from sqlalchemy import ForeignKey, Index
 from sqlalchemy.orm import mapped_column, relationship, Mapped
 
 from shvatka.core.models import dto
@@ -51,6 +51,8 @@ class Team(Base):
         back_populates="team",
         foreign_keys="TeamPlayer.team_id",
     )
+
+    __table_args__ = (Index("ix__teams__captain_id", "captain_id"),)
 
     def to_dto(
         self,

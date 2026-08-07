@@ -55,6 +55,11 @@ class ActionRequest(Base):
             "team_id",
             postgresql_where=text("status = 'pending'"),
         ),
+        Index("ix__action_requests__initiator_id", "initiator_id"),
+        # the index above covers this column only for pending requests
+        Index("ix__action_requests__team_id", "team_id"),
+        Index("ix__action_requests__game_id", "game_id"),
+        Index("ix__action_requests__responder_id", "responder_id"),
     )
 
     def to_dto(self) -> dto.ActionRequest:

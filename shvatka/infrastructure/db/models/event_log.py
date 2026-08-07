@@ -89,6 +89,8 @@ class GameEvent(Base):
     __table_args__ = (
         Index("ix__event_log__game_id_team_id_at", "game_id", "team_id", "at"),
         Index("ix__event_log__level_time_id", "level_time_id"),
+        # team_id is second above, which a lookup on it alone cannot use
+        Index("ix__event_log__team_id", "team_id"),
     )
 
     def to_dto(self) -> dto.GameEvent:

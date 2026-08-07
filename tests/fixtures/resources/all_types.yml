@@ -72,6 +72,14 @@ levels:
         hint:
           - type: sticker
             file_guid: a3bc9b96-3bb8-4dbc-b996-ce1015e66e53
+      - time: 12
+        hint:
+          - type: rich
+            format: html
+            text: "<h1>заголовок</h1><p>и <b>картинка</b> <img src=\"pic\"></p>"
+            media:
+              - id: pic
+                file_guid: a3bc9b96-3bb8-4dbc-b996-ce1015e66e53
 
 files:
   - guid: "a3bc9b96-3bb8-4dbc-b996-ce1015e66e53"

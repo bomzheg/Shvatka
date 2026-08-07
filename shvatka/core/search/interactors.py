@@ -33,7 +33,7 @@ def make_snippet(text: str, query: str, radius: int = SNIPPET_RADIUS) -> str | N
 
 def iter_hint_texts(hint: hints.AnyHint) -> Iterator[str]:
     """Все текстовые поля подсказки, в которых имеет смысл искать."""
-    if isinstance(hint, hints.TextHint):
+    if isinstance(hint, hints.TextHint | hints.RichHint):
         yield hint.text
     elif isinstance(hint, hints.VenueHint):
         yield hint.title

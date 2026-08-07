@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Any
 
-from sqlalchemy import BigInteger, DateTime, Enum, ForeignKey, Text, func
+from sqlalchemy import BigInteger, DateTime, Enum, ForeignKey, Index, Text, func, text
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -46,6 +46,20 @@ class ActionRequest(Base):
     expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     bot_messages: Mapped[list[dict[str, int]]] = mapped_column(
         JSONB, nullable=False, server_default="[]", default=list
+    )
+
+    __table_args__ = (
+        Index("ix__action_requests_target_player_id", "target_player_id"),
+        Index(
+            "ix__action_requests_pending_team",
+            "team_id",
+            postgresql_where=text("status = 'pending'"),
+        ),
+        Index("ix__action_requests__initiator_id", "initiator_id"),
+        # the index above covers this column only for pending requests
+        Index("ix__action_requests__team_id", "team_id"),
+        Index("ix__action_requests__game_id", "game_id"),
+        Index("ix__action_requests__responder_id", "responder_id"),
     )
 
     def to_dto(self) -> dto.ActionRequest:

@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import Integer, ForeignKey, Text, Boolean, DateTime, func
+from sqlalchemy import Integer, ForeignKey, Index, Text, Boolean, DateTime, func
 from sqlalchemy.orm import relationship, mapped_column, Mapped
 
 from shvatka.core.models import dto, enums
@@ -46,6 +46,16 @@ class KeyTime(Base):
     key_text = mapped_column(Text, nullable=False)
     type_: Mapped[enums.KeyType] = mapped_column("type", Text, nullable=False)
     is_duplicate: Mapped[bool] = mapped_column(Boolean, nullable=False)
+
+    __table_args__ = (
+        # all per-level key queries filter game_id + level_time_id + team_id, but
+        # level_time_id alone already narrows to a single team's single level
+        Index("ix__log_keys__level_time_id", "level_time_id"),
+        Index("ix__log_keys__game_id_enter_time", "game_id", "enter_time"),
+        Index("ix__log_keys__player_id", "player_id"),
+        Index("ix__log_keys__team_id", "team_id"),
+        Index("ix__log_keys__event_id", "event_id"),
+    )
 
     def to_dto(self, player: dto.Player, team: dto.Team) -> dto.KeyTime:
         return dto.KeyTime(

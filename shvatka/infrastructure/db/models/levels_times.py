@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import Integer, ForeignKey, DateTime, func
+from sqlalchemy import Integer, ForeignKey, DateTime, Index, func
 from sqlalchemy.orm import relationship, mapped_column, Mapped
 
 from shvatka.core.models import dto
@@ -30,6 +30,13 @@ class LevelTime(Base):
         default=lambda: datetime.now(tz=tz_utc),
         server_default=func.now(),
         nullable=False,
+    )
+
+    __table_args__ = (
+        # serves both the current-level lookup (game + team, latest start_at) and
+        # the whole-game listing ordered by team_id, start_at
+        Index("ix__levels_times__game_id_team_id_start_at", "game_id", "team_id", "start_at"),
+        Index("ix__levels_times__team_id", "team_id"),
     )
 
     def to_dto(self, game: dto.Game, team: dto.Team) -> dto.LevelTime:

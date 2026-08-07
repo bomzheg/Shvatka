@@ -3,7 +3,7 @@ import typing
 from typing import Any
 
 from adaptix import Retort
-from sqlalchemy import Integer, Text, ForeignKey, TypeDecorator, UniqueConstraint
+from sqlalchemy import Index, Integer, Text, ForeignKey, TypeDecorator, UniqueConstraint
 from sqlalchemy.engine import Dialect
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import relationship, mapped_column, Mapped
@@ -72,7 +72,10 @@ class Level(Base):
     number_in_game = mapped_column(Integer, nullable=True)
     scenario: Mapped[scn.LevelScenario] = mapped_column(ScenarioField)
 
-    __table_args__ = (UniqueConstraint("author_id", "name_id"),)
+    __table_args__ = (
+        UniqueConstraint("author_id", "name_id"),
+        Index("ix__levels__game_id_number_in_game", "game_id", "number_in_game"),
+    )
 
     def to_dto(self, author: dto.Player) -> dto.Level:
         return dto.Level(

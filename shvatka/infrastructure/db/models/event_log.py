@@ -4,7 +4,7 @@ from datetime import datetime
 from typing import Any
 
 from adaptix import Retort
-from sqlalchemy import Integer, ForeignKey, DateTime, func, TypeDecorator, Dialect
+from sqlalchemy import Integer, ForeignKey, DateTime, Index, func, TypeDecorator, Dialect
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import mapped_column, Mapped, relationship
 
@@ -84,6 +84,13 @@ class GameEvent(Base):
         "TimerAction",
         back_populates="event",
         foreign_keys="TimerAction.event_id",
+    )
+
+    __table_args__ = (
+        Index("ix__event_log__game_id_team_id_at", "game_id", "team_id", "at"),
+        Index("ix__event_log__level_time_id", "level_time_id"),
+        # team_id is second above, which a lookup on it alone cannot use
+        Index("ix__event_log__team_id", "team_id"),
     )
 
     def to_dto(self) -> dto.GameEvent:

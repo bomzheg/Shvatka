@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import Integer, ForeignKey, DateTime, func
+from sqlalchemy import Integer, ForeignKey, DateTime, Index, func
 from sqlalchemy.orm import relationship, mapped_column, Mapped
 
 from shvatka.core.models import dto
@@ -39,6 +39,11 @@ class TeamPlayer(Base):
     can_change_team_name: Mapped[bool] = mapped_column(default=False, nullable=False)
     can_add_players: Mapped[bool] = mapped_column(default=False, nullable=False)
     can_remove_players: Mapped[bool] = mapped_column(default=False, nullable=False)
+
+    __table_args__ = (
+        Index("ix__team_players__player_id", "player_id"),
+        Index("ix__team_players__team_id", "team_id"),
+    )
 
     def to_dto(self) -> dto.TeamPlayer:
         return dto.TeamPlayer(

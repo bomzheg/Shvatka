@@ -1,7 +1,7 @@
 import typing
 from datetime import datetime
 
-from sqlalchemy import BigInteger, ForeignKey, DateTime, func, Enum
+from sqlalchemy import BigInteger, ForeignKey, DateTime, Index, func, Enum
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 
 from shvatka.core.models import dto
@@ -34,6 +34,8 @@ class Achievement(Base):
         nullable=False,
     )
     first: Mapped[bool] = mapped_column(nullable=False, default=False, server_default="F")
+
+    __table_args__ = (Index("ix__achievements__player_id", "player_id"),)
 
     def to_dto(self, player: dto.Player) -> dto.Achievement:
         return dto.Achievement(

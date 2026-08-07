@@ -6,11 +6,13 @@ from datetime import datetime
 
 from sqlalchemy import (
     ForeignKey,
+    Index,
     Text,
     Enum,
     DateTime,
     UniqueConstraint,
     BigInteger,
+    text,
 )
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 
@@ -74,7 +76,16 @@ class Game(Base):
     results_picture_file_id: Mapped[str | None] = mapped_column(nullable=True)
     keys_url: Mapped[str | None] = mapped_column(nullable=True)
 
-    __table_args__ = (UniqueConstraint("author_id", "name"),)
+    __table_args__ = (
+        UniqueConstraint("author_id", "name"),
+        # keep in step with ACTIVE_STATUSES: Postgres only uses a partial index
+        # for a query whose predicate this one implies
+        Index(
+            "ix__games__active_status",
+            "status",
+            postgresql_where=text("status IN ('getting_waivers', 'started', 'finished')"),
+        ),
+    )
 
     def to_dto(self, author: dto.Player) -> dto.Game:
         return dto.Game(

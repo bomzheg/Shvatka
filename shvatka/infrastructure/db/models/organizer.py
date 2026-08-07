@@ -1,4 +1,4 @@
-from sqlalchemy import Integer, ForeignKey, Boolean, UniqueConstraint
+from sqlalchemy import Integer, ForeignKey, Boolean, Index, UniqueConstraint
 from sqlalchemy.orm import relationship, mapped_column
 
 from shvatka.core.models import dto
@@ -27,7 +27,10 @@ class Organizer(Base):
     view_scenario = mapped_column(Boolean, default=False, nullable=False)
     deleted = mapped_column(Boolean, default=False, nullable=False)
 
-    __table_args__ = (UniqueConstraint("player_id", "game_id"),)
+    __table_args__ = (
+        UniqueConstraint("player_id", "game_id"),
+        Index("ix__organizers__game_id", "game_id"),
+    )
 
     def to_dto(self, player: dto.Player, game: dto.Game) -> dto.SecondaryOrganizer:
         return dto.SecondaryOrganizer(

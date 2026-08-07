@@ -282,20 +282,29 @@ class GameDao(BaseDAO[models.Game]):
         # the identity map without its author, and a later get_by_id (which
         # relies on joinedload-ing the author) would get that stripped instance
         result = await self.session.execute(
-            select(models.Game.release, models.Game.release_post).where(models.Game.id == game_id)
+            select(
+                models.Game.release,
+                models.Game.release_banner,
+                models.Game.release_post,
+            ).where(models.Game.id == game_id)
         )
         row = result.one_or_none()
-        if row is None or row.release is None:
+        if row is None or (row.release is None and row.release_banner is None):
             return None
         return dto.GameRelease(
             game_id=game_id,
-            hints=row.release,
+            banner=row.release_banner,
+            hints=row.release or [],
             post=_release_post_from_db(row.release_post),
         )
 
-    async def save_release(self, game: dto.Game, hints_: list[hints.AnyHint]) -> None:
+    async def save_release(
+        self, game: dto.Game, banner: hints.PhotoHint | None, hints_: list[hints.AnyHint]
+    ) -> None:
         await self.session.execute(
-            update(models.Game).where(models.Game.id == game.id).values(release=hints_)
+            update(models.Game)
+            .where(models.Game.id == game.id)
+            .values(release=hints_, release_banner=banner)
         )
 
     async def save_release_post(self, game: dto.Game, post: dto.ReleasePost | None) -> None:
@@ -309,7 +318,7 @@ class GameDao(BaseDAO[models.Game]):
         await self.session.execute(
             update(models.Game)
             .where(models.Game.id == game.id)
-            .values(release=None, release_post=None)
+            .values(release=None, release_banner=None, release_post=None)
         )
 
     async def is_author_game_by_name(self, name: str, author: dto.Player) -> bool:

@@ -35,6 +35,7 @@ async def get_release(
     is_published = release is not None and release.is_published
     return {
         "game": game,
+        "banner": release.banner if release else None,
         "hints": release.hints if release else [],
         "has_release": release is not None,
         "is_published": is_published,
@@ -46,10 +47,15 @@ async def get_release(
     }
 
 
-async def get_composed_hints(dialog_manager: DialogManager, **_):
+async def get_composed_release(dialog_manager: DialogManager, **_):
     retort: Retort = dialog_manager.middleware_data["retort"]
+    dumped_banner = dialog_manager.dialog_data.get("banner")
+    banner = retort.load(dumped_banner, hints.PhotoHint) if dumped_banner else None
     hints_ = retort.load(dialog_manager.dialog_data.get("hints", []), list[hints.AnyHint])
     return {
+        "banner": banner,
+        "has_banner": banner is not None,
         "hints": hints_,
         "has_hints": len(hints_) > 0,
+        "is_empty": banner is None and not hints_,
     }

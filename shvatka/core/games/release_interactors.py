@@ -1,7 +1,8 @@
 """Interactors for a game's release — the promo published before a game.
 
-A release is a plain list of hints (banner, text about the theme, a map)
-attached to a game. Writing it and announcing it are separate steps:
+A release is a banner — a wide title picture with a caption — followed by a
+plain list of hints (the theme, a map, the rules). Writing it and announcing it
+are separate steps:
 
 * it can be written and rewritten at any time, up to and including a finished
   game (a complete one is history — only an admin may still touch it);
@@ -78,7 +79,11 @@ class SaveGameReleaseInteractor:
     announcer: GameReleaseAnnouncer
 
     async def __call__(
-        self, game_id: int, hints_: list[hints.AnyHint], identity: IdentityProvider
+        self,
+        game_id: int,
+        banner: hints.PhotoHint | None,
+        hints_: list[hints.AnyHint],
+        identity: IdentityProvider,
     ) -> dto.GameRelease:
         author = await identity.get_required_player()
         is_superuser = await identity.is_superuser()
@@ -86,9 +91,10 @@ class SaveGameReleaseInteractor:
             check_allow_be_author(author)
         game = await self.dao.get_by_id(id_=game_id, author=None if is_superuser else author)
         check_can_edit_release(game, author, is_superuser)
-        await self.link_files(game, hints_, author)
+        parts = [banner, *hints_] if banner is not None else list(hints_)
+        await self.link_files(game, parts, author)
         stored = await self.dao.get_release(game_id)
-        await self.dao.save_release(game, hints_)
+        await self.dao.save_release(game, banner, hints_)
         await self.dao.commit()
         if self.should_announce(game, stored):
             await self.announcer.announce(game)

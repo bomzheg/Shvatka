@@ -113,7 +113,9 @@ class GameReleasePostSaver(Committer, GameReleaseGetter, Protocol):
 
 
 class GameReleaseSaver(GameReleasePostSaver, Protocol):
-    async def save_release(self, game: dto.Game, hints_: list[hints.AnyHint]) -> None:
+    async def save_release(
+        self, game: dto.Game, banner: hints.PhotoHint | None, hints_: list[hints.AnyHint]
+    ) -> None:
         raise NotImplementedError
 
     async def delete_release(self, game: dto.Game) -> None:

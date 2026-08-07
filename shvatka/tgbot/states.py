@@ -126,6 +126,7 @@ class GamePublishSG(StatesGroup):
 
 class GameReleaseSG(StatesGroup):
     menu = State()
+    banner = State()
     compose = State()
     confirm = State()
 

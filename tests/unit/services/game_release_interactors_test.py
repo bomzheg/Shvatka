@@ -37,9 +37,18 @@ def make_game(author: dto.Player, status: GameStatus = GameStatus.ready) -> dto.
     )
 
 
-def make_release(hints_: list[hints.AnyHint], published: bool = False) -> dto.GameRelease:
+def make_banner(caption: str = "тема игры") -> hints.PhotoHint:
+    return hints.PhotoHint(file_guid=BANNER_GUID, caption=caption)
+
+
+def make_release(
+    hints_: list[hints.AnyHint],
+    published: bool = False,
+    banner: hints.PhotoHint | None = None,
+) -> dto.GameRelease:
     return dto.GameRelease(
         game_id=10,
+        banner=banner,
         hints=hints_,
         post=(dto.ReleasePost(chat_id=CHANNEL_ID, message_ids=[1]) if published else None),
     )
@@ -67,9 +76,11 @@ class FakeReleaseDao:
     async def get_release(self, game_id: int) -> dto.GameRelease | None:
         return self.release
 
-    async def save_release(self, game: dto.Game, hints_: list[hints.AnyHint]) -> None:
+    async def save_release(
+        self, game: dto.Game, banner: hints.PhotoHint | None, hints_: list[hints.AnyHint]
+    ) -> None:
         post = self.release.post if self.release else None
-        self.release = dto.GameRelease(game_id=10, hints=hints_, post=post)
+        self.release = dto.GameRelease(game_id=10, banner=banner, hints=hints_, post=post)
 
     async def save_release_post(self, game: dto.Game, post: dto.ReleasePost | None) -> None:
         assert self.release is not None
@@ -126,11 +137,15 @@ async def test_release_written_before_waivers_waits_for_them():
 
     release = await make_interactor(dao, publisher)(
         game_id=10,
-        hints_=[hints.PhotoHint(file_guid=BANNER_GUID), hints.TextHint(text="тема игры")],
+        banner=make_banner(),
+        hints_=[hints.TextHint(text="карта района")],
         identity=MockIdentityProvider(player=author),
     )
 
-    assert len(release.hints) == 2
+    assert release.banner is not None
+    assert len(release.hints) == 1
+    # the banner leads the release wherever it is shown
+    assert release.parts[0] == release.banner
     assert not release.is_published
     assert publisher.posted == []
     # the files it references became usable in the game
@@ -146,6 +161,7 @@ async def test_release_written_while_collecting_waivers_goes_out_at_once():
 
     release = await make_interactor(dao, publisher)(
         game_id=10,
+        banner=None,
         hints_=[hints.TextHint(text="тема игры")],
         identity=MockIdentityProvider(player=author),
     )
@@ -162,6 +178,7 @@ async def test_release_written_after_the_game_started_is_only_stored():
 
     release = await make_interactor(dao, publisher)(
         game_id=10,
+        banner=None,
         hints_=[hints.TextHint(text="тема игры")],
         identity=MockIdentityProvider(player=author),
     )
@@ -181,6 +198,7 @@ async def test_editing_a_published_release_edits_it_in_the_channel():
 
     release = await make_interactor(dao, publisher)(
         game_id=10,
+        banner=None,
         hints_=[hints.TextHint(text="новая тема")],
         identity=MockIdentityProvider(player=author),
     )
@@ -197,6 +215,7 @@ async def test_release_of_a_finished_game_is_still_editable():
 
     release = await make_interactor(dao, RecordingPublisher())(
         game_id=10,
+        banner=None,
         hints_=[hints.TextHint(text="тема игры")],
         identity=MockIdentityProvider(player=author),
     )
@@ -213,6 +232,7 @@ async def test_release_of_a_complete_game_is_admin_only():
     with pytest.raises(exceptions.NotAuthorizedForEdit):
         await make_interactor(dao, RecordingPublisher())(
             game_id=10,
+            banner=None,
             hints_=[hints.TextHint(text="тема игры")],
             identity=MockIdentityProvider(player=author),
         )
@@ -226,6 +246,7 @@ async def test_admin_edits_the_release_of_a_complete_game():
 
     release = await make_interactor(dao, RecordingPublisher())(
         game_id=10,
+        banner=None,
         hints_=[hints.TextHint(text="тема игры")],
         identity=MockIdentityProvider(player=admin, superuser=admin),
     )
@@ -241,6 +262,7 @@ async def test_release_of_another_author_is_not_editable():
     with pytest.raises(exceptions.NotAuthorizedForEdit):
         await make_interactor(dao, publisher)(
             game_id=10,
+            banner=None,
             hints_=[hints.TextHint(text="тема игры")],
             identity=MockIdentityProvider(player=make_player(2)),
         )
@@ -280,6 +302,44 @@ async def test_deleting_a_published_release_takes_it_out_of_the_channel():
     assert dao.release is None
     assert dao.committed == 1
     assert len(publisher.unpublished) == 1
+
+
+@pytest.mark.asyncio
+async def test_a_release_may_be_just_a_banner():
+    """The banner alone is a release — the site can show it above the header."""
+    author = make_player(1)
+    dao = FakeReleaseDao(game=make_game(author, GameStatus.getting_waivers))
+
+    release = await make_interactor(dao, RecordingPublisher())(
+        game_id=10,
+        banner=make_banner(),
+        hints_=[],
+        identity=MockIdentityProvider(player=author),
+    )
+
+    assert release.banner is not None
+    assert release.hints == []
+    assert not release.is_empty
+    assert release.get_guids() == [BANNER_GUID]
+
+
+@pytest.mark.asyncio
+async def test_dropping_the_banner_keeps_the_rest_of_the_release():
+    author = make_player(1)
+    dao = FakeReleaseDao(
+        game=make_game(author, GameStatus.ready),
+        release=make_release([hints.TextHint(text="тема")], banner=make_banner()),
+    )
+
+    release = await make_interactor(dao, RecordingPublisher())(
+        game_id=10,
+        banner=None,
+        hints_=[hints.TextHint(text="тема")],
+        identity=MockIdentityProvider(player=author),
+    )
+
+    assert release.banner is None
+    assert len(release.parts) == 1
 
 
 @pytest.mark.asyncio

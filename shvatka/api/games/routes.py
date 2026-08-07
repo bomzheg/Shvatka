@@ -191,7 +191,12 @@ async def change_my_game_release(
     When it reaches the announcements channel is up to the game's status — see
     :mod:`shvatka.core.games.release_interactors`.
     """
-    release = await interactor(game_id=id_, hints_=body.to_core(retort), identity=identity)
+    release = await interactor(
+        game_id=id_,
+        banner=body.banner_to_core(retort),
+        hints_=body.hints_to_core(retort),
+        identity=identity,
+    )
     return responses.GameRelease.from_core(release)
 
 

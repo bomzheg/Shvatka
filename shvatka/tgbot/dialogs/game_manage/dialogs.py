@@ -324,10 +324,12 @@ my_games = Dialog(
             on_click=show_transitions,
         ),
         Button(
+            # no `when`: a release outlives the scenario freeze — it stays
+            # editable up to and including a finished game, and a complete
+            # game's one is still worth reading
             Const("📢Релиз"),
             id="game_release",
             on_click=show_game_release,
-            when=F["game"].can_be_edited,
         ),
         Button(
             Const("📨Опубликовать"),

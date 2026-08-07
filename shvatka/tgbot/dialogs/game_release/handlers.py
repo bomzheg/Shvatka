@@ -25,8 +25,17 @@ def _game_id(manager: DialogManager) -> int:
 
 
 def _composed(manager: DialogManager) -> list[dict[str, Any]]:
-    """The release being composed. It lives in dialog data until it is saved."""
+    """The body of the release being composed. It lives in dialog data until saved."""
     return manager.dialog_data.setdefault("hints", [])
+
+
+def load_banner(manager: DialogManager, retort: Retort) -> hints.PhotoHint | None:
+    dumped = manager.dialog_data.get("banner")
+    return retort.load(dumped, hints.PhotoHint) if dumped else None
+
+
+def load_composed(manager: DialogManager, retort: Retort) -> list[hints.AnyHint]:
+    return retort.load(_composed(manager), list[hints.AnyHint])
 
 
 @inject
@@ -39,10 +48,36 @@ async def to_compose_release(
 ):
     """Start composing from the stored release, if the game has one."""
     release = await interactor(game_id=_game_id(manager))
+    manager.dialog_data["banner"] = (
+        retort.dump(release.banner, hints.PhotoHint) if release and release.banner else None
+    )
     manager.dialog_data["hints"] = (
         retort.dump(release.hints, list[hints.AnyHint]) if release else []
     )
+    await manager.switch_to(states.GameReleaseSG.banner)
+
+
+@inject
+async def process_banner(
+    m: Message,
+    dialog_: Any,
+    manager: DialogManager,
+    retort: FromDishka[Retort],
+    parser: FromDishka[HintParser],
+    idp: FromDishka[IdentityProvider],
+) -> None:
+    """The banner is a photo with a caption — anything else is not one."""
+    hint = await parser.parse(m, await idp.get_required_player())
+    if not isinstance(hint, hints.PhotoHint):
+        await m.reply("Баннер — это картинка (можно с подписью). Пришли фото.")
+        return
+    manager.dialog_data["banner"] = retort.dump(hint, hints.PhotoHint)
     await manager.switch_to(states.GameReleaseSG.compose)
+
+
+async def drop_banner(c: CallbackQuery, button: Button, manager: DialogManager):
+    manager.dialog_data["banner"] = None
+    await c.answer("Баннер убран")
 
 
 @inject
@@ -75,10 +110,11 @@ async def preview_release(
     hint_sender: FromDishka[HintSender],
 ):
     """Send the composed release back, exactly as the channel will see it."""
-    composed = retort.load(_composed(manager), list[hints.AnyHint])
+    banner = load_banner(manager, retort)
+    composed = load_composed(manager, retort)
     await c.answer()
     assert c.message is not None
-    for hint in composed:
+    for hint in [banner, *composed] if banner else composed:
         await hint_sender.send_hint(hint, c.message.chat.id)
     await manager.switch_to(states.GameReleaseSG.confirm)
 
@@ -92,8 +128,15 @@ async def save_release(
     idp: FromDishka[IdentityProvider],
     interactor: FromDishka[SaveGameReleaseInteractor],
 ):
-    composed = retort.load(_composed(manager), list[hints.AnyHint])
-    release = await interactor(game_id=_game_id(manager), hints_=composed, identity=idp)
+    banner = load_banner(manager, retort)
+    composed = load_composed(manager, retort)
+    if banner is None and not composed:
+        await c.answer("Релиз пустой — нечего сохранять", show_alert=True)
+        return
+    release = await interactor(
+        game_id=_game_id(manager), banner=banner, hints_=composed, identity=idp
+    )
+    manager.dialog_data["banner"] = None
     manager.dialog_data["hints"] = []
     await c.answer("Релиз опубликован" if release.is_published else "Релиз сохранён")
     await manager.switch_to(states.GameReleaseSG.menu)
@@ -113,7 +156,7 @@ async def show_release(
         return
     await c.answer()
     assert c.message is not None
-    for hint in release.hints:
+    for hint in release.parts:
         await hint_sender.send_hint(hint, c.message.chat.id)
 
 
@@ -126,5 +169,6 @@ async def delete_release(
     interactor: FromDishka[DeleteGameReleaseInteractor],
 ):
     await interactor(game_id=_game_id(manager), identity=idp)
+    manager.dialog_data["banner"] = None
     manager.dialog_data["hints"] = []
     await c.answer("Релиз удалён")

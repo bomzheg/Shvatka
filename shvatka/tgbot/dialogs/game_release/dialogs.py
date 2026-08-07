@@ -6,10 +6,12 @@ from aiogram_dialog.widgets.text import Case, Const, Jinja
 
 from shvatka.tgbot import states
 from shvatka.tgbot.dialogs.preview_data import PREVIEW_GAME, PreviewSwitchTo
-from .getters import get_composed_hints, get_release
+from .getters import get_composed_release, get_release
 from .handlers import (
     delete_release,
+    drop_banner,
     preview_release,
+    process_banner,
     process_release_message,
     reset_composed_release,
     save_release,
@@ -23,12 +25,13 @@ game_release = Dialog(
             "Релиз игры <b>{{game.name}}</b>\n"
             "{% if not has_release %}"
             "Релиза пока нет. Это необязательно — игра прекрасно пройдёт и без него.\n"
-            "Обычно в релизе есть баннер, описание темы и карта района.\n"
-            "{% elif is_published %}"
-            "Опубликован в канале:\n{{hints | hints}}\n"
-            "Если изменить — сообщения в канале обновятся."
+            "Обычно релиз — это баннер с подписью, описание темы и карта района.\n"
             "{% else %}"
-            "Сохранён, уйдёт в канал вместе с началом сбора вейверов:\n{{hints | hints}}"
+            "{% if is_published %}Опубликован в канале:{% else %}"
+            "Сохранён, уйдёт в канал вместе с началом сбора вейверов:{% endif %}\n"
+            "{% if banner %}🖼{{banner | single_hint}}\n{% endif %}"
+            "{{hints | hints}}\n"
+            "{% if is_published %}Если изменить — сообщения в канале обновятся.{% endif %}"
             "{% endif %}"
         ),
         Button(
@@ -51,15 +54,55 @@ game_release = Dialog(
         Cancel(Const("🔙Назад")),
         state=states.GameReleaseSG.menu,
         getter=get_release,
-        preview_data={"game": PREVIEW_GAME, "has_release": True, "is_published": True},
+        preview_data={
+            "game": PREVIEW_GAME,
+            "has_release": True,
+            "is_published": True,
+            "banner": None,
+        },
+        preview_add_transitions=[PreviewSwitchTo(states.GameReleaseSG.banner)],
+    ),
+    Window(
+        Case(
+            {
+                False: Const(
+                    "Пришли баннер — картинку, с которой начнётся релиз, "
+                    "можно сразу с подписью.\n"
+                    "Обычно это широкая картинка (примерно 1280×250—1280×550): "
+                    "именно её увидят на сайте над шапкой.\n"
+                    "Баннер необязателен — можно сразу перейти к остальному."
+                ),
+                True: Jinja(
+                    "Баннер:\n{{banner | single_hint}}\n"
+                    "Можно прислать другую картинку или идти дальше."
+                ),
+            },
+            selector="has_banner",
+        ),
+        MessageInput(func=process_banner),
+        SwitchTo(
+            Const("➡️Дальше"),
+            id="to_compose",
+            state=states.GameReleaseSG.compose,
+        ),
+        Button(
+            Const("🚫Без баннера"),
+            id="drop_banner",
+            on_click=drop_banner,
+            when=F["has_banner"],
+        ),
+        SwitchTo(Const("🔙Назад"), id="to_release_menu", state=states.GameReleaseSG.menu),
+        state=states.GameReleaseSG.banner,
+        getter=get_composed_release,
+        preview_data={"has_banner": False},
         preview_add_transitions=[PreviewSwitchTo(states.GameReleaseSG.compose)],
     ),
     Window(
         Case(
             {
                 False: Const(
-                    "Присылай сообщения релиза (текст, фото, видео итд). "
-                    "Они будут опубликованы именно в таком виде и порядке."
+                    "Присылай остальные сообщения релиза (текст про тему, карта, что угодно). "
+                    "Они будут опубликованы именно в таком виде и порядке — после баннера."
                 ),
                 True: Jinja(
                     "{{hints | hints}}\nМожно прислать ещё сообщения или перейти к предпросмотру"
@@ -72,7 +115,7 @@ game_release = Dialog(
             Const("👁Предпросмотр"),
             id="preview_release",
             on_click=preview_release,
-            when=F["has_hints"],
+            when=~F["is_empty"],
         ),
         Button(
             Const("♻️Начать заново"),
@@ -80,10 +123,15 @@ game_release = Dialog(
             on_click=reset_composed_release,
             when=F["has_hints"],
         ),
+        SwitchTo(
+            Const("🖼К баннеру"),
+            id="to_banner",
+            state=states.GameReleaseSG.banner,
+        ),
         SwitchTo(Const("🔙Назад"), id="to_release_menu", state=states.GameReleaseSG.menu),
         state=states.GameReleaseSG.compose,
-        getter=get_composed_hints,
-        preview_data={"has_hints": True},
+        getter=get_composed_release,
+        preview_data={"has_hints": True, "is_empty": False},
         preview_add_transitions=[PreviewSwitchTo(states.GameReleaseSG.confirm)],
     ),
     Window(
@@ -111,6 +159,10 @@ game_release = Dialog(
         SwitchTo(Const("🔙Назад"), id="to_release_menu", state=states.GameReleaseSG.menu),
         state=states.GameReleaseSG.confirm,
         getter=get_release,
-        preview_data={"game": PREVIEW_GAME, "is_published": False, "waits_for_waivers": True},
+        preview_data={
+            "game": PREVIEW_GAME,
+            "is_published": False,
+            "waits_for_waivers": True,
+        },
     ),
 )

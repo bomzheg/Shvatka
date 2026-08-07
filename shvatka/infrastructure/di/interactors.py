@@ -132,6 +132,7 @@ from shvatka.core.waiver.adapters import (
     AdminGameWaiversReader,
 )
 from shvatka.core.scenario.interactors import (
+    AllGameKeysPrintInteractor,
     AllGameKeysReaderInteractor,
     GameScenarioTransitionsInteractor,
 )
@@ -248,6 +249,7 @@ class GamePlayProvider(Provider):
         return dao.game
 
     all_game_keys_reader_interactor = provide(AllGameKeysReaderInteractor)
+    all_game_keys_print_interactor = provide(AllGameKeysPrintInteractor)
     transitions_reader_interactor = provide(GameScenarioTransitionsInteractor)
 
 

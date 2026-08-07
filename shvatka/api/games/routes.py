@@ -36,6 +36,7 @@ from shvatka.core.games.org_interactors import (
     RemoveGameOrgInteractor,
 )
 from shvatka.core.interfaces.current_game import CurrentGameProvider
+from shvatka.core.scenario.interactors import AllGameKeysPrintInteractor
 from shvatka.core.models import enums
 from shvatka.core.models.enums.org_permission import OrgPermission
 from shvatka.core.services.game import (
@@ -46,6 +47,7 @@ from shvatka.core.services.scenario.files import get_file_metas
 from shvatka.infrastructure.db.dao.holder import HolderDao
 
 XLSX_MEDIA_TYPE = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+PDF_MEDIA_TYPE = "application/pdf"
 
 
 logger = logging.getLogger(__name__)
@@ -193,6 +195,20 @@ async def export_game_results(
 
 
 @inject
+async def export_game_keys_to_print(
+    identity: FromDishka[ApiIdentityProvider],
+    interactor: FromDishka[AllGameKeysPrintInteractor],
+    id_: Annotated[int, Path(alias="id")],
+) -> Response:
+    file = await interactor(id_, identity)
+    return Response(
+        content=file.read(),
+        media_type=PDF_MEDIA_TYPE,
+        headers={"Content-Disposition": f'attachment; filename="keys_{id_}.pdf"'},
+    )
+
+
+@inject
 async def get_current_level(
     identity: FromDishka[ApiIdentityProvider],
     interactor: FromDishka[GamePlayReaderInteractor],
@@ -293,6 +309,7 @@ def setup() -> APIRouter:
     games_router.add_api_route("/my/{id}/scenario", change_my_game_scenario, methods=["PUT"])
     games_router.add_api_route("/my/{id}/start_at", change_my_game_start_at, methods=["PUT"])
     games_router.add_api_route("/my/{id}/status", change_my_game_status, methods=["PUT"])
+    games_router.add_api_route("/my/{id}/keys/print", export_game_keys_to_print, methods=["GET"])
     games_router.add_api_route("/active", get_active_game, methods=["GET"])
     games_router.add_api_route("/active/me", get_my_role, methods=["GET"])
     games_router.add_api_route("/running/level/current", get_current_level, methods=["GET"])

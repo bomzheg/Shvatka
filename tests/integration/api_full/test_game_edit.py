@@ -368,3 +368,34 @@ async def test_change_scenario_foreign_game_forbidden(
     )
     assert resp.status_code == 422, resp.text
     assert resp.json()["type"] == "GameHasAnotherAuthor"
+
+
+@pytest.mark.asyncio
+async def test_keys_to_print(
+    client: AsyncClient,
+    auth: AuthProperties,
+    author: dto.Player,
+    game: dto.FullGame,
+):
+    resp = await client.get(
+        f"/games/my/{game.id}/keys/print",
+        cookies=auth_cookies(auth, author),
+    )
+    assert resp.status_code == 200, resp.text
+    assert resp.headers["content-type"] == "application/pdf"
+    assert f'filename="keys_{game.id}.pdf"' in resp.headers["content-disposition"]
+    assert resp.read().startswith(b"%PDF")
+
+
+@pytest.mark.asyncio
+async def test_keys_to_print_of_foreign_game_forbidden(
+    client: AsyncClient,
+    auth: AuthProperties,
+    harry: dto.Player,
+    game: dto.FullGame,
+):
+    resp = await client.get(
+        f"/games/my/{game.id}/keys/print",
+        cookies=auth_cookies(auth, harry),
+    )
+    assert resp.status_code == 403, resp.text

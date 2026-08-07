@@ -142,6 +142,15 @@ async def get_game_stat(
     return responses.GameStat.from_core(stat)
 ```
 
+**A dependency both edges need goes in the shared providers**
+(`infrastructure/di/`, listed by `get_providers()`), not in the bot-only or
+api-only ones — otherwise the same use case works from the chat and quietly does
+nothing from the site. Sending to telegram is not by itself bot-only: the api
+container has a `Bot` too, which is how a release written on the site still
+reaches the channel (`infrastructure/di/hints.py`). The integration tests build
+their container by hand in `tests/integration/conftest.py`, so a new shared
+provider has to be added there as well.
+
 ## Use the providers (`IdentityProvider` / `CurrentGameProvider`)
 
 Resolve "who is acting" and "what game is active" through these Protocols as

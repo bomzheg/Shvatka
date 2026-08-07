@@ -36,3 +36,27 @@ def check_game_editable(game: dto.Game):
         raise CantEditGame(
             game=game, player=game.author, notify_user="Невозможно изменить игру после начала"
         )
+
+
+def check_can_edit_release(game: dto.Game, player: dto.Player, is_superuser: bool = False) -> None:
+    """A release can be rewritten up to and including a finished game.
+
+    Unlike the scenario it stays editable while the game runs — it is promo,
+    not part of the play. Once the game is complete it is history, and only an
+    admin may still touch it.
+    """
+    if is_superuser:
+        return
+    if game.is_complete():
+        raise NotAuthorizedForEdit(
+            permission_name="game_release_edit",
+            player=player,
+            game=game,
+            notify_user="Игра уже завершена, релиз может изменить только администратор",
+        )
+    if not game.is_author_id(player.id):
+        raise NotAuthorizedForEdit(
+            permission_name="game_release_edit",
+            player=player,
+            game=game,
+        )

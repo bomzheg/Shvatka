@@ -74,6 +74,20 @@ class FullGame:
         )
 
 
+@dataclass
+class GameRelease:
+    """A game's release: a banner, some text, a map — as plain hints."""
+
+    game_id: int
+    hints: Sequence[hints.AnyHint]
+    is_published: bool
+    """Whether it already stands in the announcements channel."""
+
+    @classmethod
+    def from_core(cls, core: dto.GameRelease) -> "GameRelease":
+        return cls(game_id=core.game_id, hints=core.hints, is_published=core.is_published)
+
+
 @dataclass(frozen=True)
 class KeyTime:
     text: str

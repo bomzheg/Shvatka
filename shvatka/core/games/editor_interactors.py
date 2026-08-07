@@ -23,6 +23,7 @@ from shvatka.core.interfaces.dal.game import (
     GameStartPlanner,
     WaiverStarter,
 )
+from shvatka.core.games.release_interactors import GameReleaseAnnouncer
 from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.interfaces.scheduler import Scheduler
 from shvatka.core.models import dto, enums
@@ -118,6 +119,7 @@ class ChangeGameStatusInteractor:
     waiver_starter: WaiverStarter
     completer: GameCompleter
     game_log: GameLogWriter
+    release_announcer: GameReleaseAnnouncer
 
     async def __call__(
         self, game_id: int, status: enums.GameStatus, identity: IdentityProvider
@@ -129,6 +131,8 @@ class ChangeGameStatusInteractor:
             await self.game_log.log(
                 GameLogEvent(GameLogType.GAME_WAIVERS_STARTED, {"game": game.name})
             )
+            # the release was waiting for exactly this moment to reach the channel
+            await self.release_announcer.announce(game)
         elif status == enums.GameStatus.complete:
             await complete_game(game, self.completer)
         else:

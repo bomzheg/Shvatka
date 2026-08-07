@@ -1,29 +1,69 @@
 from __future__ import annotations
 
+import logging
 import secrets
 import typing
 from datetime import datetime
+from typing import Any
 
+from adaptix import Retort
 from sqlalchemy import (
     ForeignKey,
     Index,
     Text,
     Enum,
     DateTime,
+    TypeDecorator,
     UniqueConstraint,
     BigInteger,
     text,
 )
+from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.engine import Dialect
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 
+from shvatka.common.factory import REQUIRED_GAME_RECIPES
 from shvatka.core.models import dto
+from shvatka.core.models.dto import hints
 from shvatka.core.models.enums.game_status import GameStatus
 from shvatka.infrastructure.db.models import Base
 
 if typing.TYPE_CHECKING:
     from shvatka.infrastructure.db import models
 
+logger = logging.getLogger(__name__)
+
 _TOKEN_LEN = 32  # обязательно кратно 4
+
+
+class ReleaseField(TypeDecorator):
+    """The game's release — a plain list of hints — stored as jsonb."""
+
+    impl = JSONB
+    cache_ok = True
+    retort = Retort(
+        recipe=[
+            *REQUIRED_GAME_RECIPES,
+        ],
+    )
+
+    def process_bind_param(self, value: list[hints.AnyHint] | None, dialect: Dialect):
+        if value is None:
+            return None
+        try:
+            return self.retort.dump(value, list[hints.AnyHint])
+        except Exception as e:
+            logger.error("can't dump game release", exc_info=e)
+            raise
+
+    def process_result_value(self, value: Any, dialect: Dialect) -> list[hints.AnyHint] | None:
+        if value is None:
+            return None
+        try:
+            return self.retort.load(value, list[hints.AnyHint])
+        except Exception as e:
+            logger.error("can't load game release from %s", value, exc_info=e)
+            raise
 
 
 class Game(Base):
@@ -75,6 +115,8 @@ class Game(Base):
     published_channel_id: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
     results_picture_file_id: Mapped[str | None] = mapped_column(nullable=True)
     keys_url: Mapped[str | None] = mapped_column(nullable=True)
+    release: Mapped[list[hints.AnyHint] | None] = mapped_column(ReleaseField, nullable=True)
+    release_post: Mapped[dict[str, typing.Any] | None] = mapped_column(JSONB, nullable=True)
 
     __table_args__ = (
         UniqueConstraint("author_id", "name"),

@@ -8,7 +8,12 @@ from shvatka.core.games.dto import CurrentHintsOnly, Event
 from shvatka.core.interfaces.current_game import CurrentGameProvider
 
 from shvatka.core.interfaces.dal.complex import GamePackager
-from shvatka.core.games.adapters import GameFileReader, GamePlayDao
+from shvatka.core.games.adapters import (
+    GameFileReader,
+    GamePlayDao,
+    GameReleaseEditor,
+    GameReleaseReader,
+)
 from shvatka.core.interfaces.dal.game import (
     GameUpserter,
     GameCreator,
@@ -223,6 +228,57 @@ class GameFileRenamerImpl(IsGameFileMixin, GameFileRenamer):
 
 
 @dataclass
+class GameReleaseReaderImpl(GameReleaseReader):
+    """Single DAO for reading a game's announcement."""
+
+    dao: "HolderDao"
+
+    async def get_by_id(self, id_: int, author: dto.Player | None = None) -> dto.Game:
+        return await self.dao.game.get_by_id(id_, author)
+
+    async def get_full(self, id_: int) -> dto.FullGame:
+        return await self.dao.game.get_full(id_)
+
+    async def add_levels(self, game: dto.Game) -> dto.FullGame:
+        return await self.dao.game.add_levels(game)
+
+    async def get_release(self, game_id: int) -> dto.GameRelease | None:
+        return await self.dao.game.get_release(game_id)
+
+
+@dataclass
+class GameReleaseEditorImpl(FileLinkMixin, GameReleaseEditor):
+    """Single DAO for writing a game's announcement and linking its files."""
+
+    async def get_by_id(self, id_: int, author: dto.Player | None = None) -> dto.Game:
+        return await self.dao.game.get_by_id(id_, author)
+
+    async def get_full(self, id_: int) -> dto.FullGame:
+        return await self.dao.game.get_full(id_)
+
+    async def add_levels(self, game: dto.Game) -> dto.FullGame:
+        return await self.dao.game.add_levels(game)
+
+    async def get_release(self, game_id: int) -> dto.GameRelease | None:
+        return await self.dao.game.get_release(game_id)
+
+    async def save_release(self, game: dto.Game, hints_: list[hints.AnyHint]) -> None:
+        await self.dao.game.save_release(game, hints_)
+
+    async def save_release_post(self, game: dto.Game, post: dto.ReleasePost | None) -> None:
+        await self.dao.game.save_release_post(game, post)
+
+    async def delete_release(self, game: dto.Game) -> None:
+        await self.dao.game.delete_release(game)
+
+    async def check_author_can_own_guid(self, author: dto.Player, guid: str) -> None:
+        await self.dao.file_info.check_author_can_own_guid(author, guid)
+
+    async def commit(self) -> None:
+        await self.dao.commit()
+
+
+@dataclass
 class GamePackagerImpl(GamePackager):
     dao: "HolderDao"
 
@@ -285,6 +341,9 @@ class GameFilesGetterImpl(IsGameFileMixin, GameFileReader):
 
     async def check_waiver(self, player: dto.Player, team: dto.Team, game: dto.Game) -> bool:
         return await self.dao.waiver.check_waiver(player, team, game)
+
+    async def get_release(self, game_id: int) -> dto.GameRelease | None:
+        return await self.dao.game.get_release(game_id)
 
 
 @dataclass(kw_only=True, slots=True)

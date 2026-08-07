@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Any
 
-from sqlalchemy import BigInteger, DateTime, Enum, ForeignKey, Text, func
+from sqlalchemy import BigInteger, DateTime, Enum, ForeignKey, Index, Text, func, text
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -36,6 +36,15 @@ class Notification(Base):
     read_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+
+    __table_args__ = (
+        Index("ix__notifications_recipient_created", "recipient_id", text("created_at DESC")),
+        Index(
+            "ix__notifications_unread", "recipient_id", postgresql_where=text("read_at IS NULL")
+        ),
+        Index("ix__notifications__actor_id", "actor_id"),
+        Index("ix__notifications__request_id", "request_id"),
     )
 
     def to_dto(self) -> dto.Notification:

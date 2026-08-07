@@ -1,4 +1,4 @@
-from sqlalchemy import Integer, Text, ForeignKey
+from sqlalchemy import Index, Integer, Text, ForeignKey
 from sqlalchemy.orm import relationship, mapped_column, Mapped
 
 from shvatka.core.models import dto
@@ -17,13 +17,20 @@ class FileInfo(Base):
     extension: Mapped[str] = mapped_column(Text)
     file_id = mapped_column(Text)
     content_type = mapped_column(Text)
-    sha256 = mapped_column(Text, index=True)
+    sha256 = mapped_column(Text)
     mime_type = mapped_column(Text)
     author_id = mapped_column(ForeignKey("players.id"), nullable=False)
     author = relationship(
         "Player",
         foreign_keys=author_id,
         back_populates="my_files",
+    )
+
+    __table_args__ = (
+        # named explicitly: the existing index in the database uses a double
+        # underscore, which the "ix" naming convention would not produce
+        Index("ix__files_info__sha256", "sha256"),
+        Index("ix__files_info__author_id", "author_id"),
     )
 
     def to_dto(self, author: dto.Player) -> hints.SavedFileMeta:

@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import Integer, ForeignKey, DateTime, func
+from sqlalchemy import Integer, ForeignKey, DateTime, Index, func
 from sqlalchemy.orm import mapped_column, relationship, Mapped
 
 from shvatka.core.models import dto
@@ -23,6 +23,11 @@ class TimerAction(Base):
     event = relationship(
         "GameEvent",
         foreign_keys=event_id,
+    )
+
+    __table_args__ = (
+        Index("ix__timers_log__level_time_id", "level_time_id"),
+        Index("ix__timers_log__event_id", "event_id"),
     )
 
     def to_dto(self, event: dto.GameEvent) -> dto.Timer:

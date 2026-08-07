@@ -1,4 +1,4 @@
-from sqlalchemy import ForeignKey, Enum, UniqueConstraint
+from sqlalchemy import ForeignKey, Enum, Index, UniqueConstraint
 from sqlalchemy.orm import relationship, mapped_column, Mapped
 
 from shvatka.infrastructure.db.models import Base
@@ -9,7 +9,12 @@ from shvatka.core.models.enums.played import Played
 class Waiver(Base):
     __tablename__ = "waivers"
     __mapper_args__ = {"eager_defaults": True}
-    __table_args__ = (UniqueConstraint("game_id", "team_id", "player_id"),)
+    # the unique constraint leads with game_id, so player/team lookups need their own
+    __table_args__ = (
+        UniqueConstraint("game_id", "team_id", "player_id"),
+        Index("ix__waivers__player_id", "player_id"),
+        Index("ix__waivers__team_id", "team_id"),
+    )
     id: Mapped[int] = mapped_column(primary_key=True)
     player_id: Mapped[int] = mapped_column(ForeignKey("players.id"), nullable=False)
     player = relationship(

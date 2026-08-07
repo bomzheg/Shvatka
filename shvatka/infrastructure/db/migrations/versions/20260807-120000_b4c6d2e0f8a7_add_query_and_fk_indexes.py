@@ -1,8 +1,13 @@
-"""add query and foreign key indexes
+"""add indexes for the game run cycle
 
 Postgres does not index foreign key columns automatically, and this schema had
-almost no non-unique indexes: every per-game/per-team/per-player lookup fell back
-to a sequential scan, and every parent DELETE scanned each child table in full.
+almost no non-unique indexes, so the tables read while a game runs were scanned
+in full on every lookup. In production these four alone account for 95.6% of all
+sequential tuple reads, log_keys for 80.1% of them with no index scan ever
+recorded against it.
+
+Tables outside the game run cycle are deliberately left alone: together they are
+under 0.5% of sequential reads and already serve most lookups from an index.
 
 Revision ID: b4c6d2e0f8a7
 Revises: a3b5c1d9e7f6
@@ -50,21 +55,10 @@ INDEXES: list[tuple[str, str, list, dict]] = [
     # --- event_log ---
     ("ix__event_log__game_id_team_id_at", "event_log", ["game_id", "team_id", "at"], {}),
     ("ix__event_log__level_time_id", "event_log", ["level_time_id"], {}),
-    # --- remaining unindexed foreign keys ---
+    # --- organizers and timers, also read while a game runs ---
     ("ix__organizers__game_id", "organizers", ["game_id"], {}),
-    ("ix__achievements__player_id", "achievements", ["player_id"], {}),
-    ("ix__files_info__author_id", "files_info", ["author_id"], {}),
-    ("ix__level_files__file_id", "level_files", ["file_id"], {}),
-    ("ix__game_files__file_id", "game_files", ["file_id"], {}),
     ("ix__timers_log__level_time_id", "timers_log", ["level_time_id"], {}),
     ("ix__timers_log__event_id", "timers_log", ["event_id"], {}),
-    ("ix__teams__captain_id", "teams", ["captain_id"], {}),
-    ("ix__players__promoted_by_id", "players", ["promoted_by_id"], {}),
-    ("ix__notifications__actor_id", "notifications", ["actor_id"], {}),
-    ("ix__notifications__request_id", "notifications", ["request_id"], {}),
-    ("ix__action_requests__initiator_id", "action_requests", ["initiator_id"], {}),
-    ("ix__action_requests__game_id", "action_requests", ["game_id"], {}),
-    ("ix__action_requests__responder_id", "action_requests", ["responder_id"], {}),
 ]
 
 

@@ -43,8 +43,6 @@ class Notification(Base):
         Index(
             "ix__notifications_unread", "recipient_id", postgresql_where=text("read_at IS NULL")
         ),
-        Index("ix__notifications__actor_id", "actor_id"),
-        Index("ix__notifications__request_id", "request_id"),
     )
 
     def to_dto(self) -> dto.Notification:

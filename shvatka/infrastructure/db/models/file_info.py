@@ -30,7 +30,6 @@ class FileInfo(Base):
         # named explicitly: the existing index in the database uses a double
         # underscore, which the "ix" naming convention would not produce
         Index("ix__files_info__sha256", "sha256"),
-        Index("ix__files_info__author_id", "author_id"),
     )
 
     def to_dto(self, author: dto.Player) -> hints.SavedFileMeta:

@@ -1,4 +1,4 @@
-from sqlalchemy import BigInteger, ForeignKey, Boolean, Index, Text
+from sqlalchemy import BigInteger, ForeignKey, Boolean, Text
 from sqlalchemy.orm import relationship, mapped_column, Mapped
 
 from shvatka.core.models import dto
@@ -78,8 +78,6 @@ class Player(Base):
         foreign_keys="Achievement.player_id",
         back_populates="player",
     )
-
-    __table_args__ = (Index("ix__players__promoted_by_id", "promoted_by_id"),)
 
     def __repr__(self) -> str:
         return f"<Player id={self.id} >"

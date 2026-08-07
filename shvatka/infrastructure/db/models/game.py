@@ -36,16 +36,23 @@ logger = logging.getLogger(__name__)
 _TOKEN_LEN = 32  # обязательно кратно 4
 
 
+_RELEASE_RETORT = Retort(
+    recipe=[
+        *REQUIRED_GAME_RECIPES,
+    ],
+)
+
+
 class ReleaseField(TypeDecorator):
-    """The game's release — a plain list of hints — stored as jsonb."""
+    """The body of a game's release — a plain list of hints — stored as jsonb.
+
+    The banner that leads the release lives in its own column: the site needs
+    to render it alone, above the header, without reading the rest.
+    """
 
     impl = JSONB
     cache_ok = True
-    retort = Retort(
-        recipe=[
-            *REQUIRED_GAME_RECIPES,
-        ],
-    )
+    retort = _RELEASE_RETORT
 
     def process_bind_param(self, value: list[hints.AnyHint] | None, dialect: Dialect):
         if value is None:
@@ -63,6 +70,32 @@ class ReleaseField(TypeDecorator):
             return self.retort.load(value, list[hints.AnyHint])
         except Exception as e:
             logger.error("can't load game release from %s", value, exc_info=e)
+            raise
+
+
+class ReleaseBannerField(TypeDecorator):
+    """The release's banner — a wide title picture with a caption — as jsonb."""
+
+    impl = JSONB
+    cache_ok = True
+    retort = _RELEASE_RETORT
+
+    def process_bind_param(self, value: hints.PhotoHint | None, dialect: Dialect):
+        if value is None:
+            return None
+        try:
+            return self.retort.dump(value, hints.PhotoHint)
+        except Exception as e:
+            logger.error("can't dump game release banner", exc_info=e)
+            raise
+
+    def process_result_value(self, value: Any, dialect: Dialect) -> hints.PhotoHint | None:
+        if value is None:
+            return None
+        try:
+            return self.retort.load(value, hints.PhotoHint)
+        except Exception as e:
+            logger.error("can't load game release banner from %s", value, exc_info=e)
             raise
 
 
@@ -116,6 +149,9 @@ class Game(Base):
     results_picture_file_id: Mapped[str | None] = mapped_column(nullable=True)
     keys_url: Mapped[str | None] = mapped_column(nullable=True)
     release: Mapped[list[hints.AnyHint] | None] = mapped_column(ReleaseField, nullable=True)
+    release_banner: Mapped[hints.PhotoHint | None] = mapped_column(
+        ReleaseBannerField, nullable=True
+    )
     release_post: Mapped[dict[str, typing.Any] | None] = mapped_column(JSONB, nullable=True)
 
     __table_args__ = (

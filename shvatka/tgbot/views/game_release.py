@@ -37,7 +37,7 @@ INPUT_MEDIA: dict[enums.HintType, type[EditableMedia]] = {
 
 @dataclass
 class GameBotReleasePublisher(GameReleasePublisher):
-    """Keeps a game's release in the announcements channel, one message per hint.
+    """Keeps a game's release in the announcements channel, one message per part.
 
     A release is posted once and edited in place afterwards, so the channel
     keeps a single announcement per game instead of a pile of revisions. When
@@ -61,7 +61,7 @@ class GameBotReleasePublisher(GameReleasePublisher):
 
     async def post(self, release: dto.GameRelease) -> dto.ReleasePost:
         message_ids = []
-        for hint in release.hints:
+        for hint in release.parts:
             message = await self.hint_sender.send_hint(hint, self.log_chat_id)
             message_ids.append(message.message_id)
         logger.info("release of game %s posted to chat %s", release.game_id, self.log_chat_id)
@@ -69,9 +69,10 @@ class GameBotReleasePublisher(GameReleasePublisher):
 
     async def edit(self, release: dto.GameRelease, post: dto.ReleasePost) -> bool:
         """Update the posted messages in place. False if telegram won't have it."""
-        if len(release.hints) != len(post.message_ids):
+        parts = release.parts
+        if len(parts) != len(post.message_ids):
             return False
-        for hint, message_id in zip(release.hints, post.message_ids):
+        for hint, message_id in zip(parts, post.message_ids):
             if not await self.edit_one(hint, post.chat_id, message_id):
                 return False
         logger.info("release of game %s edited in chat %s", release.game_id, post.chat_id)

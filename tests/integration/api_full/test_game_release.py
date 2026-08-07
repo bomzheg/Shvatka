@@ -58,6 +58,54 @@ async def test_save_release(
 
 
 @pytest.mark.asyncio
+async def test_save_release_with_a_banner(
+    game: dto.FullGame,
+    check_dao: HolderDao,
+    client: AsyncClient,
+    auth: AuthProperties,
+    author: dto.Player,
+):
+    cookies = auth_cookies(auth, author)
+    up = await client.post(
+        f"/cdn/games/{game.id}/files",
+        files={"file": ("banner.png", b"\x89PNG\r\n\x1a\n binary", "image/png")},
+        cookies=cookies,
+    )
+    assert up.status_code == 200, up.text
+    guid = up.json()["guid"]
+
+    resp = await client.put(
+        f"/games/my/{game.id}/release",
+        json={
+            "banner": {"type": "photo", "file_guid": guid, "caption": RELEASE_TEXT},
+            "hints": [{"type": "text", "text": "карта района"}],
+        },
+        cookies=cookies,
+    )
+    assert resp.is_success, resp.text
+
+    saved = await check_dao.game.get_release(game.id)
+    assert saved is not None
+    assert isinstance(saved.banner, hints.PhotoHint)
+    assert saved.banner.file_guid == guid
+    assert saved.banner.caption == RELEASE_TEXT
+    # the banner leads the release, the rest follows
+    assert len(saved.parts) == 2
+
+    # guests get the banner too — the site shows it above the header
+    resp = await client.get(f"/games/{game.id}/release")
+    assert resp.is_success
+    resp.read()
+    actual = Factory().load(resp.json(), game_responses.GameRelease)
+    assert actual.banner is not None
+    assert actual.banner.file_guid == guid
+
+    # and the file behind it is readable without auth
+    resp = await client.get(f"/cdn/games/{game.id}/files/{guid}")
+    assert resp.is_success
+
+
+@pytest.mark.asyncio
 async def test_release_of_another_author_forbidden(
     game: dto.FullGame,
     check_dao: HolderDao,

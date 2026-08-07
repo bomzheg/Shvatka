@@ -49,6 +49,7 @@ from .handlers import (
     show_all_keys,
     show_all_keys_to_print,
     show_transitions,
+    show_game_release,
 )
 from shvatka.tgbot.dialogs.preview_data import (
     PREVIEW_GAME,
@@ -323,6 +324,12 @@ my_games = Dialog(
             on_click=show_transitions,
         ),
         Button(
+            Const("📢Релиз"),
+            id="game_release",
+            on_click=show_game_release,
+            when=F["game"].can_be_edited,
+        ),
+        Button(
             Const("📨Опубликовать"),
             id="game_publish",
             on_click=publish_game,
@@ -364,6 +371,7 @@ my_games = Dialog(
             PreviewStart(states.GameEditSG.current_levels),
             PreviewStart(states.GameOrgsSG.orgs_list),
             PreviewStart(states.GamePublishSG.prepare),
+            PreviewStart(states.GameReleaseSG.menu),
             PreviewStart(states.GamePublishSG.forum),
             Cancel(),
             PreviewStart(states.GameScheduleSG.date),

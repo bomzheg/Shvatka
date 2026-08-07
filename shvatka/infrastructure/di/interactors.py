@@ -28,7 +28,17 @@ from shvatka.core.games.admin_interactors import (
     AdminUpdateGameScenarioInteractor,
     AdminUploadGameFileInteractor,
 )
-from shvatka.core.games.adapters import AdminGameScenarioEditor
+from shvatka.core.games.adapters import (
+    AdminGameScenarioEditor,
+    GameReleaseEditor,
+    GameReleaseReader,
+)
+from shvatka.core.games.release_interactors import (
+    GameReleaseAnnouncer,
+    GetGameReleaseInteractor,
+    SaveGameReleaseInteractor,
+    DeleteGameReleaseInteractor,
+)
 from shvatka.core.games.org_interactors import (
     ListGameOrgsInteractor,
     AddGameOrgInteractor,
@@ -119,7 +129,12 @@ from shvatka.core.games.adapters import (
 )
 from shvatka.core.interfaces.bus import Bus
 from shvatka.core.interfaces.current_game import CurrentGameProvider
-from shvatka.core.interfaces.dal.game import GameByIdGetter, GameFileRenamer, GameFileUploader
+from shvatka.core.interfaces.dal.game import (
+    GameByIdGetter,
+    GameFileRenamer,
+    GameFileUploader,
+    GameReleasePostSaver,
+)
 from shvatka.core.interfaces.dal.game_play import GamePlayerDao
 from shvatka.core.services.current_game import CurrentGameProviderImpl
 from shvatka.core.interfaces.dal.waiver import WaiverApprover
@@ -173,6 +188,8 @@ from shvatka.infrastructure.db.dao.complex.game import (
     GameFileRenamerImpl,
     GameFileUploaderImpl,
     GamePlayDaoImpl,
+    GameReleaseEditorImpl,
+    GameReleaseReaderImpl,
 )
 from shvatka.infrastructure.db.dao.complex.game_play import GamePlayerDaoImpl
 from shvatka.infrastructure.db.dao.complex.team import TeamCreatorImpl, AdminTeamMergerImpl
@@ -287,9 +304,18 @@ class GameEditProvider(Provider):
         )
 
     @provide
-    def change_status(self, dao: HolderDao, game_log: GameLogWriter) -> ChangeGameStatusInteractor:
+    def change_status(
+        self,
+        dao: HolderDao,
+        game_log: GameLogWriter,
+        release_announcer: GameReleaseAnnouncer,
+    ) -> ChangeGameStatusInteractor:
         return ChangeGameStatusInteractor(
-            getter=dao.game, waiver_starter=dao.game, completer=dao.game, game_log=game_log
+            getter=dao.game,
+            waiver_starter=dao.game,
+            completer=dao.game,
+            game_log=game_log,
+            release_announcer=release_announcer,
         )
 
     @provide
@@ -329,6 +355,29 @@ class GameEditProvider(Provider):
     @provide
     def remove_org(self, dao: HolderDao) -> RemoveGameOrgInteractor:
         return RemoveGameOrgInteractor(game_dao=dao.game, org_dao=dao.organizer)
+
+
+class GameReleaseProvider(Provider):
+    """Game releases — used by both edges, so shared instead of api-only."""
+
+    scope = Scope.REQUEST
+
+    @provide
+    def game_release_reader(self, dao: HolderDao) -> GameReleaseReader:
+        return GameReleaseReaderImpl(dao=dao)
+
+    @provide
+    def game_release_editor(self, dao: HolderDao) -> GameReleaseEditor:
+        return GameReleaseEditorImpl(dao=dao)
+
+    @provide
+    def game_release_post_saver(self, dao: HolderDao) -> GameReleasePostSaver:
+        return GameReleaseEditorImpl(dao=dao)
+
+    release_announcer = provide(GameReleaseAnnouncer)
+    get_release = provide(GetGameReleaseInteractor)
+    save_release = provide(SaveGameReleaseInteractor)
+    delete_release = provide(DeleteGameReleaseInteractor)
 
 
 class WaiverProvider(Provider):

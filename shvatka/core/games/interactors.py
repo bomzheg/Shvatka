@@ -109,6 +109,9 @@ class GameFileReaderInteractor:
     async def __call__(
         self, guid: str, game_id: int, identity: IdentityProvider
     ) -> VerifiableFileMeta:
+        if await self.is_guid_in_release(game_id, guid):
+            # a release is promo: its banner is public, even for guests
+            return await self.dao.get_by_guid(guid)
         player = await identity.get_required_player()
         game = await self.dao.get_full(game_id)
         if (
@@ -148,6 +151,12 @@ class GameFileReaderInteractor:
     async def can_view_scenario(self, game: dto.Game, player: dto.Player) -> bool:
         org = await self.org_dao.get_by_player_or_none(game=game, player=player)
         return org is not None and not org.deleted and org.view_scenario
+
+    async def is_guid_in_release(self, game_id: int, guid: str) -> bool:
+        release = await self.dao.get_release(game_id)
+        if release is None:
+            return False
+        return guid in release.get_guids()
 
     async def is_guid_in_current_hint(self, identity: IdentityProvider, guid: str) -> bool:
         hints_ = await self.game_play_dao.get_current_hints(identity)

@@ -21,18 +21,14 @@ from dishka import (
 )
 from dishka.integrations.aiogram import setup_dishka, AiogramMiddlewareData
 from redis.asyncio import Redis
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from shvatka.common.factory import TelegraphProvider, DCFProvider
-from shvatka.core.interfaces.clients.file_storage import FileStorage
 from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.views.game import GameLogWriter, GameView, GameViewPreparer, OrgNotifier
 from shvatka.core.views.level import LevelView
 from shvatka.core.views.team import TeamNotifier
 from shvatka.infrastructure.bus.in_memory import UsedOneTimeTokenInteractor
 from shvatka.infrastructure.db.config.models.storage import StorageConfig, StorageType
-from shvatka.infrastructure.db.dao import FileInfoDao
-from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.infrastructure.db.factory import (
     create_redis,
 )
@@ -49,9 +45,7 @@ from shvatka.tgbot.username_resolver.user_getter import UserGetter
 from shvatka.tgbot.utils.router import print_router_tree
 from shvatka.tgbot.views.game import GameBotLog, BotView, BotOrgNotifier
 from shvatka.tgbot.views.team import BotTeamNotifier
-from shvatka.tgbot.views.hint_factory.hint_content_resolver import HintContentResolver
 from shvatka.tgbot.views.hint_factory.hint_parser import HintParser
-from shvatka.tgbot.views.hint_sender import HintSender
 from shvatka.tgbot.views.level_testing import LevelBotView
 from shvatka.tgbot.views.pinner import MessagePinner
 
@@ -202,12 +196,6 @@ class BotOnlyProvider(Provider):
 
 
 class GameToolsProvider(Provider):
-    @provide(scope=Scope.REQUEST)
-    def get_hint_content_resolver(
-        self, dao: HolderDao, file_storage: FileStorage
-    ) -> HintContentResolver:
-        return HintContentResolver(dao=dao.file_info, file_storage=file_storage)
-
     @provide(scope=Scope.APP)
     def get_bot_rights(self, bot: Bot) -> BotRights:
         return BotRights(bot=bot)
@@ -215,22 +203,6 @@ class GameToolsProvider(Provider):
     @provide(scope=Scope.REQUEST)
     def get_bot_game_log(self, bot: Bot, config: BotConfig) -> GameBotLog:
         return GameBotLog(bot=bot, log_chat_id=config.game_log_chat)
-
-    @provide(scope=Scope.REQUEST)
-    async def get_hint_sender(
-        self,
-        bot: Bot,
-        resolver: HintContentResolver,
-        pool: async_sessionmaker[AsyncSession],
-    ) -> AsyncIterable[HintSender]:
-        # dedicated session so renewed file_ids are committed in their own
-        # transaction, independently of the request-scoped HolderDao session
-        async with pool() as session:
-            yield HintSender(
-                bot=bot,
-                resolver=resolver,
-                file_info_dao=FileInfoDao(session),
-            )
 
     message_pinner = provide(MessagePinner, scope=Scope.REQUEST)
     member_tagger = provide(MemberTagger, scope=Scope.REQUEST)

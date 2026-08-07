@@ -9,6 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 
 from shvatka.core.models import dto
+from shvatka.core.models.dto import hints
 from shvatka.core.models.dto.scn.game import GameScenario
 from shvatka.core.models.enums import GameStatus
 from shvatka.core.models.enums.game_status import ACTIVE_STATUSES
@@ -276,6 +277,41 @@ class GameDao(BaseDAO[models.Game]):
             update(models.Game).where(models.Game.id == game.id).values(keys_url=url)
         )
 
+    async def get_release(self, game_id: int) -> dto.GameRelease | None:
+        # only the release columns: loading the whole Game here would put it in
+        # the identity map without its author, and a later get_by_id (which
+        # relies on joinedload-ing the author) would get that stripped instance
+        result = await self.session.execute(
+            select(models.Game.release, models.Game.release_post).where(models.Game.id == game_id)
+        )
+        row = result.one_or_none()
+        if row is None or row.release is None:
+            return None
+        return dto.GameRelease(
+            game_id=game_id,
+            hints=row.release,
+            post=_release_post_from_db(row.release_post),
+        )
+
+    async def save_release(self, game: dto.Game, hints_: list[hints.AnyHint]) -> None:
+        await self.session.execute(
+            update(models.Game).where(models.Game.id == game.id).values(release=hints_)
+        )
+
+    async def save_release_post(self, game: dto.Game, post: dto.ReleasePost | None) -> None:
+        await self.session.execute(
+            update(models.Game)
+            .where(models.Game.id == game.id)
+            .values(release_post=_release_post_to_db(post))
+        )
+
+    async def delete_release(self, game: dto.Game) -> None:
+        await self.session.execute(
+            update(models.Game)
+            .where(models.Game.id == game.id)
+            .values(release=None, release_post=None)
+        )
+
     async def is_author_game_by_name(self, name: str, author: dto.Player) -> bool:
         result = await self._get_game_by_name(name)
         if result is None:
@@ -289,3 +325,20 @@ class GameDao(BaseDAO[models.Game]):
             select(models.Game).where(models.Game.name == name)
         )
         return result.one_or_none()
+
+
+def _release_post_from_db(stored: dict[str, typing.Any] | None) -> dto.ReleasePost | None:
+    if not stored:
+        return None
+    return dto.ReleasePost(
+        chat_id=stored["chat_id"],
+        message_ids=list(stored["message_ids"]),
+    )
+
+
+def _release_post_to_db(
+    post: dto.ReleasePost | None,
+) -> dict[str, typing.Any] | None:
+    if post is None:
+        return None
+    return {"chat_id": post.chat_id, "message_ids": post.message_ids}

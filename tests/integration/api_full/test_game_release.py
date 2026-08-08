@@ -106,6 +106,37 @@ async def test_save_release_with_a_banner(
 
 
 @pytest.mark.asyncio
+async def test_banner_can_be_uploaded_after_the_game_started(
+    game: dto.FullGame,
+    dao: HolderDao,
+    client: AsyncClient,
+    auth: AuthProperties,
+    author: dto.Player,
+):
+    """The scenario is frozen by then, but the release — and its banner — is not."""
+    await dao.game.start(game)
+    await dao.commit()
+
+    cookies = auth_cookies(auth, author)
+    up = await client.post(
+        f"/cdn/games/{game.id}/files",
+        files={"file": ("banner.png", b"\x89PNG\r\n\x1a\n binary", "image/png")},
+        cookies=cookies,
+    )
+    assert up.status_code == 200, up.text
+
+    resp = await client.put(
+        f"/games/my/{game.id}/release",
+        json={
+            "banner": {"type": "photo", "file_guid": up.json()["guid"]},
+            "hints": [],
+        },
+        cookies=cookies,
+    )
+    assert resp.is_success, resp.text
+
+
+@pytest.mark.asyncio
 async def test_release_of_another_author_forbidden(
     game: dto.FullGame,
     check_dao: HolderDao,

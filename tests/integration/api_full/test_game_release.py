@@ -137,6 +137,85 @@ async def test_banner_can_be_uploaded_after_the_game_started(
 
 
 @pytest.mark.asyncio
+async def test_admin_brings_a_banner_to_a_complete_game(
+    game: dto.FullGame,
+    dao: HolderDao,
+    check_dao: HolderDao,
+    client: AsyncClient,
+    auth: AuthProperties,
+    author: dto.Player,
+    harry: dto.Player,
+):
+    """A complete game's release is the admin's to fix — banner included."""
+    await dao.game.set_number(game, await dao.game.get_max_number() + 1)
+    await dao.game.set_completed(game)
+    await dao.commit()
+
+    # harry's tg is in the configured superusers, and the game is not his
+    cookies = auth_cookies(auth, harry)
+    up = await client.post(
+        f"/cdn/games/{game.id}/files",
+        files={"file": ("banner.png", b"\x89PNG\r\n\x1a\n binary", "image/png")},
+        cookies=cookies,
+    )
+    assert up.status_code == 200, up.text
+
+    resp = await client.put(
+        f"/games/my/{game.id}/release",
+        json={
+            "banner": {"type": "photo", "file_guid": up.json()["guid"]},
+            "hints": [{"type": "text", "text": RELEASE_TEXT}],
+        },
+        cookies=cookies,
+    )
+    assert resp.is_success, resp.text
+    saved = await check_dao.game.get_release(game.id)
+    assert saved is not None
+    assert saved.banner is not None
+
+
+@pytest.mark.asyncio
+async def test_admin_rewrites_a_release_keeping_the_authors_banner(
+    game: dto.FullGame,
+    dao: HolderDao,
+    check_dao: HolderDao,
+    client: AsyncClient,
+    auth: AuthProperties,
+    author: dto.Player,
+    harry: dto.Player,
+):
+    """The banner stays the author's file — that must not block the admin."""
+    up = await client.post(
+        f"/cdn/games/{game.id}/files",
+        files={"file": ("banner.png", b"\x89PNG\r\n\x1a\n binary", "image/png")},
+        cookies=auth_cookies(auth, author),
+    )
+    assert up.status_code == 200, up.text
+    banner = {"type": "photo", "file_guid": up.json()["guid"]}
+
+    resp = await client.put(
+        f"/games/my/{game.id}/release",
+        json={"banner": banner, "hints": []},
+        cookies=auth_cookies(auth, author),
+    )
+    assert resp.is_success, resp.text
+
+    await dao.game.set_number(game, await dao.game.get_max_number() + 1)
+    await dao.game.set_completed(game)
+    await dao.commit()
+
+    resp = await client.put(
+        f"/games/my/{game.id}/release",
+        json={"banner": banner, "hints": [{"type": "text", "text": RELEASE_TEXT}]},
+        cookies=auth_cookies(auth, harry),
+    )
+    assert resp.is_success, resp.text
+    saved = await check_dao.game.get_release(game.id)
+    assert saved is not None
+    assert len(saved.hints) == 1
+
+
+@pytest.mark.asyncio
 async def test_release_of_another_author_forbidden(
     game: dto.FullGame,
     check_dao: HolderDao,

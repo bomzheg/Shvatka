@@ -158,9 +158,11 @@ class UploadGameFileInteractor:
         options: hints.FileUploadOptions = hints.DEFAULT_UPLOAD_OPTIONS,
     ) -> hints.SavedFileMeta:
         author = await identity.get_required_player()
-        check_allow_be_author(author)
-        game = await self.dao.get_by_id(id_=game_id, author=author)
-        check_can_add_file(game, author)
+        is_superuser = await identity.is_superuser()
+        if not is_superuser:
+            check_allow_be_author(author)
+        game = await self.dao.get_by_id(id_=game_id, author=None if is_superuser else author)
+        check_can_add_file(game, author, is_superuser)
         saved = await save_file(
             author, content, original_filename, self.storage, self.dao, options
         )
@@ -184,6 +186,8 @@ class RenameGameFileInteractor:
     ) -> hints.VerifiableFileMeta:
         author = await identity.get_required_player()
         check_allow_be_author(author)
+        # renaming changes a file that is already the author's, so unlike
+        # uploading it is not something an admin does on their behalf
         game = await self.dao.get_by_id(id_=game_id, author=author)
         check_can_add_file(game, author)
         renamed = await rename_file(guid, game_id, filename, self.dao)

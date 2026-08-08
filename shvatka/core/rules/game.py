@@ -38,16 +38,19 @@ def check_game_editable(game: dto.Game):
         )
 
 
-def check_can_add_file(game: dto.Game, player: dto.Player, is_superuser: bool = False) -> None:
-    """Whether a file may still be uploaded to (or renamed in) the game.
+def check_can_add_file(game: dto.Game, player: dto.Player) -> None:
+    """Whether the author may still upload a file to (or rename one in) the game.
 
-    Wider than :func:`check_game_editable`: the scenario freezes when the game
+    Later than :func:`check_game_editable`: the scenario freezes when the game
     starts, but the release does not, and its banner has to be uploaded
     somewhere. A file nothing references is inert — what it may be used for is
-    guarded where it is used — so this need only be as strict as the widest
-    thing that can still reference it, which is the release.
+    guarded where it is used — so the deadline need only be as late as the
+    latest thing that can still reference it, which is the release.
+
+    Only *when* is relaxed, never *who*: files stay the author's, so an admin
+    editing someone else's release cannot bring a new banner with them.
     """
-    check_can_edit_release(game, player, is_superuser)
+    check_can_edit_release(game, player)
 
 
 def check_can_edit_release(game: dto.Game, player: dto.Player, is_superuser: bool = False) -> None:

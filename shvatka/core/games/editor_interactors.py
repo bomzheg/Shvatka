@@ -29,7 +29,7 @@ from shvatka.core.interfaces.scheduler import Scheduler
 from shvatka.core.models import dto, enums
 from shvatka.core.models.dto import hints
 from shvatka.core.players.player import check_allow_be_author
-from shvatka.core.rules.game import check_game_editable
+from shvatka.core.rules.game import check_can_add_file
 from shvatka.core.services.game import (
     cancel_planed_start,
     complete_game,
@@ -158,9 +158,11 @@ class UploadGameFileInteractor:
         options: hints.FileUploadOptions = hints.DEFAULT_UPLOAD_OPTIONS,
     ) -> hints.SavedFileMeta:
         author = await identity.get_required_player()
-        check_allow_be_author(author)
-        game = await self.dao.get_by_id(id_=game_id, author=author)
-        check_game_editable(game)
+        is_superuser = await identity.is_superuser()
+        if not is_superuser:
+            check_allow_be_author(author)
+        game = await self.dao.get_by_id(id_=game_id, author=None if is_superuser else author)
+        check_can_add_file(game, author, is_superuser)
         saved = await save_file(
             author, content, original_filename, self.storage, self.dao, options
         )
@@ -183,9 +185,11 @@ class RenameGameFileInteractor:
         identity: IdentityProvider,
     ) -> hints.VerifiableFileMeta:
         author = await identity.get_required_player()
-        check_allow_be_author(author)
-        game = await self.dao.get_by_id(id_=game_id, author=author)
-        check_game_editable(game)
+        is_superuser = await identity.is_superuser()
+        if not is_superuser:
+            check_allow_be_author(author)
+        game = await self.dao.get_by_id(id_=game_id, author=None if is_superuser else author)
+        check_can_add_file(game, author, is_superuser)
         renamed = await rename_file(guid, game_id, filename, self.dao)
         await self.dao.commit()
         return renamed

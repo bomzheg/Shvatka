@@ -92,7 +92,7 @@ class SaveGameReleaseInteractor:
         game = await self.dao.get_by_id(id_=game_id, author=None if is_superuser else author)
         check_can_edit_release(game, author, is_superuser)
         parts = [banner, *hints_] if banner is not None else list(hints_)
-        await self.link_files(game, parts, author)
+        await self.link_files(game, parts, author, is_superuser)
         stored = await self.dao.get_release(game_id)
         await self.dao.save_release(game, banner, hints_)
         await self.dao.commit()
@@ -119,7 +119,11 @@ class SaveGameReleaseInteractor:
         return game.status == GameStatus.getting_waivers
 
     async def link_files(
-        self, game: dto.Game, hints_: list[hints.AnyHint], author: dto.Player
+        self,
+        game: dto.Game,
+        hints_: list[hints.AnyHint],
+        author: dto.Player,
+        is_superuser: bool = False,
     ) -> None:
         """Make every file the release references usable in the game.
 
@@ -129,6 +133,11 @@ class SaveGameReleaseInteractor:
         """
         guids = [guid for hint in hints_ for guid in hint.get_guids()]
         for guid in guids:
+            if is_superuser:
+                # the guids of a release an admin is fixing are the author's,
+                # not theirs — the ownership check is there to stop an author
+                # claiming someone else's file, which is not what this is
+                continue
             await self.dao.check_author_can_own_guid(author, guid)
         if guids:
             await self.dao.add_game_files(game.id, await self.dao.get_ids_by_guids(guids))

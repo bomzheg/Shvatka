@@ -19,6 +19,7 @@ from shvatka.tgbot.dialogs import (
     game_spy,
     main_menu,
     game_publish,
+    game_release,
     team_manage,
     team_view,
     starters,
@@ -92,6 +93,7 @@ def setup_all_dialogs() -> Router:
     level_manage.setup(router)
     game_orgs.setup(router)
     game_publish.setup(router)
+    game_release.setup(router)
     team_manage.setup(router)
     merge.setup(router)
     team_view.setup(router)

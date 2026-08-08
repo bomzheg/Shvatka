@@ -12,6 +12,7 @@ class MockIdentityProvider(IdentityProvider):
     chat: dto.Chat | None = None
     full_team_player: dto.FullTeamPlayer | None = None
     organizer: dict[int, dto.Organizer | None] = field(default_factory=dict)
+    superuser: dto.Player | None = None
 
     async def get_chat(self) -> dto.Chat | None:
         return self.chat
@@ -30,3 +31,6 @@ class MockIdentityProvider(IdentityProvider):
 
     async def get_org(self, game: dto.Game) -> dto.Organizer | None:
         return self.organizer.get(game.id)
+
+    async def _get_optional_superuser(self) -> dto.Player | None:
+        return self.superuser

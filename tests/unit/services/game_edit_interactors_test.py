@@ -12,7 +12,9 @@ from shvatka.core.models.dto import GameResults
 from shvatka.core.models.enums import GameStatus
 from shvatka.core.utils import exceptions
 from shvatka.core.utils.datetime_utils import DATETIME_FORMAT, tz_game, tz_utc
+from shvatka.core.games.release_interactors import GameReleaseAnnouncer
 from shvatka.core.views.game import GameLogEvent, GameLogType, GameLogWriter
+from shvatka.infrastructure.di.infra import NoOpGameReleasePublisher
 from tests.fixtures.identity import MockIdentityProvider
 
 
@@ -31,6 +33,22 @@ def make_game(author: dto.Player, status: GameStatus) -> dto.Game:
         number=None,
         results=GameResults(published_chanel_id=None, results_picture_file_id=None, keys_url=None),
     )
+
+
+def silent_release_announcer() -> GameReleaseAnnouncer:
+    """A game with no release announces nothing, whatever the publisher is."""
+    return GameReleaseAnnouncer(dao=NoReleaseDao(), publisher=NoOpGameReleasePublisher())
+
+
+class NoReleaseDao:
+    async def get_release(self, game_id: int) -> dto.GameRelease | None:
+        return None
+
+    async def save_release_post(self, game: dto.Game, post: dto.ReleasePost | None) -> None:
+        raise AssertionError("nothing to publish")
+
+    async def commit(self) -> None:
+        raise AssertionError("nothing to commit")
 
 
 class RecordingLogWriter(GameLogWriter):
@@ -92,7 +110,11 @@ async def test_change_status_to_waivers_writes_game_log():
     dao = FakeGameDao(game=game)
     game_log = RecordingLogWriter()
     interactor = ChangeGameStatusInteractor(
-        getter=dao, waiver_starter=dao, completer=dao, game_log=game_log
+        getter=dao,
+        waiver_starter=dao,
+        completer=dao,
+        game_log=game_log,
+        release_announcer=silent_release_announcer(),
     )
 
     await interactor(
@@ -112,7 +134,11 @@ async def test_change_status_unsupported_does_not_write_game_log():
     dao = FakeGameDao(game=game)
     game_log = RecordingLogWriter()
     interactor = ChangeGameStatusInteractor(
-        getter=dao, waiver_starter=dao, completer=dao, game_log=game_log
+        getter=dao,
+        waiver_starter=dao,
+        completer=dao,
+        game_log=game_log,
+        release_announcer=silent_release_announcer(),
     )
 
     with pytest.raises(exceptions.CantEditGame):

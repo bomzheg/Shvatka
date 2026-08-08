@@ -24,7 +24,7 @@ from shvatka.common.factory import DCFProvider, TelegraphProvider, UrlProvider
 from shvatka.core.interfaces.clients.file_storage import FileStorage, FileGateway
 from shvatka.core.interfaces.scheduler import Scheduler
 from shvatka.core.utils.key_checker_lock import KeyCheckerFactory
-from shvatka.core.views.game import GameLogWriter
+from shvatka.core.views.game import GameLogWriter, GameReleasePublisher
 from shvatka.infrastructure.db.config.models.db import DBConfig
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.infrastructure.db.dao.memory.level_testing import LevelTestingData
@@ -45,7 +45,9 @@ from shvatka.infrastructure.di import (
     NotificationProvider,
     RequestProvider,
     SearchProvider,
+    GameReleaseProvider,
 )
+from shvatka.infrastructure.di.hints import HintSenderProvider
 from shvatka.infrastructure.di.interactors import GameEditProvider
 from shvatka.main_factory import ComplexOnlyProvider
 from shvatka.tgbot.main_factory import DpProvider, GameToolsProvider, BotIdpProvider
@@ -58,6 +60,7 @@ from tests.mocks.bot import MockMessageManagerProvider, MockBotProvider
 from tests.mocks.datetime_mock import ClockMock
 from tests.mocks.file_storage import MemoryFileStorage
 from tests.mocks.game_log import GameLogWriterMock
+from tests.mocks.game_release import GameReleasePublisherMock
 from tests.mocks.scheduler_mock import SchedulerMock
 from tests.mocks.user_getter import UserGetterMock
 
@@ -68,6 +71,7 @@ logger = logging.getLogger(__name__)
 async def dishka():
     mock_provider = Provider(scope=Scope.APP)
     mock_provider.provide(GameLogWriterMock, provides=GameLogWriter)
+    mock_provider.provide(GameReleasePublisherMock, provides=GameReleasePublisher)
     mock_provider.provide(UserGetterMock, provides=UserGetter)
     mock_provider.provide(SchedulerMock, provides=Scheduler)
     mock_provider.provide(ClockMock)
@@ -92,6 +96,7 @@ async def dishka():
         ContextProvider(),
         GamePlayProvider(),
         GameEditProvider(),
+        GameReleaseProvider(),
         WaiverProvider(),
         PlayerProvider(),
         TeamProvider(),
@@ -101,6 +106,7 @@ async def dishka():
         EmailInteractorProvider(),
         PrinterProvider(),
         GameToolsProvider(),
+        HintSenderProvider(),
         BotIdpProvider(),
         ComplexOnlyProvider(),
         TestDbProvider(),

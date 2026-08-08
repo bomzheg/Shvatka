@@ -124,6 +124,13 @@ class GamePublishSG(StatesGroup):
     forum = State()
 
 
+class GameReleaseSG(StatesGroup):
+    menu = State()
+    banner = State()
+    compose = State()
+    confirm = State()
+
+
 class CaptainsBridgeSG(StatesGroup):
     main = State()
     name = State()

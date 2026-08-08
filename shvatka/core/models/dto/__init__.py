@@ -4,7 +4,15 @@ from .common import DateRange
 from .email import EmailAccount, EmailConfirmation
 from .forum_team import ForumTeam
 from .forum_user import ForumUser
-from .game import Game, PreviewGame, FullGame, GameResults, GameFinished
+from .game import (
+    Game,
+    PreviewGame,
+    FullGame,
+    GameRelease,
+    ReleasePost,
+    GameResults,
+    GameFinished,
+)
 from .level import Level, GamedLevel
 from .level_testing import (
     LevelTestSuite,

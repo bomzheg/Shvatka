@@ -59,6 +59,22 @@ class GameLogWriter(Protocol):
         raise NotImplementedError
 
 
+class GameReleasePublisher(Protocol):
+    """Announces a game where the audience is (a telegram channel, ...)."""
+
+    async def publish(self, game: dto.Game, release: dto.GameRelease) -> dto.ReleasePost | None:
+        """Post the release, or update what ``release.post`` points at.
+
+        Returns where the release lives now, or ``None`` when this edge cannot
+        publish at all — then whatever was published stays as it is.
+        """
+        raise NotImplementedError
+
+    async def unpublish(self, game: dto.Game, post: dto.ReleasePost) -> None:
+        """Take a published release out of the channel."""
+        raise NotImplementedError
+
+
 class GameLogType(enum.Enum):
     GAME_WAIVERS_STARTED = enum.auto()
     GAME_PLANED = enum.auto()

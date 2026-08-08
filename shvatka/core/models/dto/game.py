@@ -8,6 +8,7 @@ from shvatka.core.models.enums import GameStatus
 from shvatka.core.models.enums.game_status import ACTIVE_STATUSES, EDITABLE_STATUSES
 from shvatka.core.utils.datetime_utils import tz_game, tz_utc
 from . import hints
+from .hints import AnyHint
 from .level import GamedLevel
 from .player import Player
 
@@ -126,6 +127,63 @@ class FullGame(Game):
     @property
     def hints_count(self) -> int:
         return sum(level.hints_count for level in self.levels)
+
+
+@dataclass
+class ReleasePost:
+    """Where a release currently lives in the announcements channel.
+
+    One message per hint, in order, so editing the release edits exactly these
+    messages instead of posting the whole thing again.
+    """
+
+    chat_id: int
+    message_ids: list[int]
+
+
+@dataclass
+class GameRelease:
+    """A game's release — the promo published before it.
+
+    It leads with a *banner*: a wide title picture with a caption, the one part
+    of a release small enough to stand above the site's header. Everything
+    after it — the theme, the map, the rules — is a plain list of hints, so the
+    whole existing hint machinery (editors, senders, renderers) works for it as
+    is.
+
+    Both halves are optional, and so is the release itself: a game without one
+    is played exactly as before.
+
+    Saving a release and announcing it are separate: it can be written and
+    rewritten any time, and it goes to the channel when the game starts
+    collecting waivers.
+    """
+
+    game_id: int
+    banner: hints.PhotoHint | None = None
+    hints: list[hints.AnyHint] = field(default_factory=list)
+    post: ReleasePost | None = None
+
+    @property
+    def is_published(self) -> bool:
+        return self.post is not None
+
+    @property
+    def is_empty(self) -> bool:
+        return self.banner is None and not self.hints
+
+    @property
+    def parts(self) -> list[AnyHint]:
+        """The whole release in the order it is shown — the banner leads."""
+        if self.banner is None:
+            return list(self.hints)
+        return [self.banner, *self.hints]
+
+    def get_guids(self) -> list[str]:
+        guids = []
+        for hint in self.parts:
+            guids.extend(hint.get_guids())
+        return guids
 
 
 @dataclass

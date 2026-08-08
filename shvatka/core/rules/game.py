@@ -36,3 +36,44 @@ def check_game_editable(game: dto.Game):
         raise CantEditGame(
             game=game, player=game.author, notify_user="Невозможно изменить игру после начала"
         )
+
+
+def check_can_add_file(game: dto.Game, player: dto.Player, is_superuser: bool = False) -> None:
+    """Whether a file may still be added to the game.
+
+    Later than :func:`check_game_editable`: the scenario freezes when the game
+    starts, but the release does not, and its banner has to be uploaded
+    somewhere. A file nothing references is inert — what it may be used for is
+    guarded where it is used — so adding one need only be allowed as widely as
+    the widest thing that can still reference it, which is the release.
+
+    An admin may rewrite any release, a complete game's included, so an admin
+    may bring a banner for it. Callers that let an author *change* an existing
+    file rather than add one leave ``is_superuser`` alone: that is the author's
+    to do.
+    """
+    check_can_edit_release(game, player, is_superuser)
+
+
+def check_can_edit_release(game: dto.Game, player: dto.Player, is_superuser: bool = False) -> None:
+    """A release can be rewritten up to and including a finished game.
+
+    Unlike the scenario it stays editable while the game runs — it is promo,
+    not part of the play. Once the game is complete it is history, and only an
+    admin may still touch it.
+    """
+    if is_superuser:
+        return
+    if game.is_complete():
+        raise NotAuthorizedForEdit(
+            permission_name="game_release_edit",
+            player=player,
+            game=game,
+            notify_user="Игра уже завершена, релиз может изменить только администратор",
+        )
+    if not game.is_author_id(player.id):
+        raise NotAuthorizedForEdit(
+            permission_name="game_release_edit",
+            player=player,
+            game=game,
+        )

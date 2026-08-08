@@ -23,12 +23,13 @@ from shvatka.core.interfaces.dal.game import (
     GameStartPlanner,
     WaiverStarter,
 )
+from shvatka.core.games.release_interactors import GameReleaseAnnouncer
 from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.interfaces.scheduler import Scheduler
 from shvatka.core.models import dto, enums
 from shvatka.core.models.dto import hints
 from shvatka.core.players.player import check_allow_be_author
-from shvatka.core.rules.game import check_game_editable
+from shvatka.core.rules.game import check_can_add_file
 from shvatka.core.services.game import (
     cancel_planed_start,
     complete_game,
@@ -118,6 +119,7 @@ class ChangeGameStatusInteractor:
     waiver_starter: WaiverStarter
     completer: GameCompleter
     game_log: GameLogWriter
+    release_announcer: GameReleaseAnnouncer
 
     async def __call__(
         self, game_id: int, status: enums.GameStatus, identity: IdentityProvider
@@ -129,6 +131,8 @@ class ChangeGameStatusInteractor:
             await self.game_log.log(
                 GameLogEvent(GameLogType.GAME_WAIVERS_STARTED, {"game": game.name})
             )
+            # the release was waiting for exactly this moment to reach the channel
+            await self.release_announcer.announce(game)
         elif status == enums.GameStatus.complete:
             await complete_game(game, self.completer)
         else:
@@ -154,9 +158,11 @@ class UploadGameFileInteractor:
         options: hints.FileUploadOptions = hints.DEFAULT_UPLOAD_OPTIONS,
     ) -> hints.SavedFileMeta:
         author = await identity.get_required_player()
-        check_allow_be_author(author)
-        game = await self.dao.get_by_id(id_=game_id, author=author)
-        check_game_editable(game)
+        is_superuser = await identity.is_superuser()
+        if not is_superuser:
+            check_allow_be_author(author)
+        game = await self.dao.get_by_id(id_=game_id, author=None if is_superuser else author)
+        check_can_add_file(game, author, is_superuser)
         saved = await save_file(
             author, content, original_filename, self.storage, self.dao, options
         )
@@ -180,8 +186,10 @@ class RenameGameFileInteractor:
     ) -> hints.VerifiableFileMeta:
         author = await identity.get_required_player()
         check_allow_be_author(author)
+        # renaming changes a file that is already the author's, so unlike
+        # uploading it is not something an admin does on their behalf
         game = await self.dao.get_by_id(id_=game_id, author=author)
-        check_game_editable(game)
+        check_can_add_file(game, author)
         renamed = await rename_file(guid, game_id, filename, self.dao)
         await self.dao.commit()
         return renamed

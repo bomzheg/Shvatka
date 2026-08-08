@@ -1,13 +1,13 @@
-from adaptix import Retort, NameStyle, name_mapping
+import dature
 
+from shvatka.common.config.models.paths import Paths
+from shvatka.common.config.parser.config_source import config_source
 from shvatka.infrastructure.db.config.models.db import DBConfig, RedisConfig, DBConfigProperties
 
-dcf = Retort(recipe=[name_mapping(name_style=NameStyle.LOWER_KEBAB)])
+
+def load_db_config(paths: Paths) -> DBConfig:
+    return dature.load(config_source(paths, prefix="db"), schema=DBConfigProperties)
 
 
-def load_db_config(db_dict: dict) -> DBConfig:
-    return dcf.load(db_dict, DBConfigProperties)
-
-
-def load_redis_config(redis_dict: dict) -> RedisConfig:
-    return dcf.load(redis_dict, RedisConfig)
+def load_redis_config(paths: Paths) -> RedisConfig:
+    return dature.load(config_source(paths, prefix="redis"), schema=RedisConfig)

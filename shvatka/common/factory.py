@@ -3,6 +3,7 @@ import typing
 import dataclass_factory
 from adaptix import (
     Retort,
+    TypeHint,
     validator,
     P,
     name_mapping,
@@ -34,6 +35,19 @@ class TelegraphProvider(Provider):
         return telegraph
 
 
+class ConcreteProxy(ABCProxy):
+    """Load/dump an abstract type as a fixed concrete one.
+
+    ``ABCProxy`` parametrises its target with the generic args of the abstract
+    type, which only works for a still-generic abstract like ``Sequence``.
+    ``HintsList``/``Conditions`` are plain, already parametrised subclasses of
+    ``Sequence[...]``, so the target type is complete as given.
+    """
+
+    def _get_proxy_target(self, tp: TypeHint) -> TypeHint:
+        return self._impl
+
+
 def flatten_legacy_tg_link(data):
     """Accept scenarios written before file_id/content_type were inlined.
 
@@ -59,11 +73,11 @@ REQUIRED_GAME_RECIPES = [
     loader(hints.StoredFileMeta, flatten_legacy_tg_link, Chain.FIRST),
     loader(hints.FileMeta, flatten_legacy_tg_link, Chain.FIRST),
     loader(scn.HintsList, lambda x: scn.HintsList.parse(x), Chain.LAST),
-    ABCProxy(
+    ConcreteProxy(
         scn.HintsList, list[hints.TimeHint]
     ),  # internal class, can be broken in next adaptix version
     loader(scn.Conditions, lambda x: scn.Conditions(x), Chain.LAST),
-    ABCProxy(
+    ConcreteProxy(
         scn.Conditions, list[action.AnyCondition]
     ),  # internal class, can be broken in next adaptix version
 ]

@@ -1,11 +1,9 @@
-from typing import Any
+import dature
 
-from shvatka.infrastructure.db.config.models.storage import StorageConfig, StorageType
-from shvatka.infrastructure.db.config.parser.db import load_redis_config
+from shvatka.common.config.models.paths import Paths
+from shvatka.common.config.parser.config_source import config_source
+from shvatka.infrastructure.db.config.models.storage import StorageConfig
 
 
-def load_storage_config(dct: dict[str, Any]) -> StorageConfig:
-    config = StorageConfig(type_=StorageType[dct["type"]])
-    if config.type_ == StorageType.redis:
-        config.redis = load_redis_config(dct["redis"])
-    return config
+def load_storage_config(paths: Paths) -> StorageConfig:
+    return dature.load(config_source(paths, prefix="storage"), schema=StorageConfig)

@@ -4,11 +4,11 @@ requires-python = ">=3.13, <3.15"
 
 [[package]]
 name = "adaptix"
-version = "3.0.0b9"
+version = "3.0.0b12"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/78/26/072201952b87f0ce7da5341ef03a7c86bc0cad0959f6a63c9412f11bac3e/adaptix-3.0.0b9.tar.gz", hash = "sha256:5a29b112f48586185b3d0fc5f31a5946df540b17f4c2c0f50d86eb9020b3a44f", size = 122670, upload-time = "2024-12-14T22:42:34.475Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/5d/82/aa17eb2968cf7c78caf4915ca62397214f196dc1bef07e4d81bfb4c4abc5/adaptix-3.0.0b12.tar.gz", hash = "sha256:906053a39ff509f0aa4ca9faa07dffa205bd90fa41d9774cd849d3454565b0ea", size = 128634, upload-time = "2026-04-04T17:31:01.084Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/d1/3d/8796369ff7bf9c0f7acd238b4be1c0478c76302258482b3bc242a32caf26/adaptix-3.0.0b9-py3-none-any.whl", hash = "sha256:95612533819f65064dc5ee15cb2ea46cea51ad5f587859e6bd7f064a69220f7f", size = 163820, upload-time = "2024-12-14T22:42:31.491Z" },
+    { url = "https://files.pythonhosted.org/packages/11/66/abcca849b17e4a3adf5116e58c51471f37264a190cee2c67f1ba57782a7f/adaptix-3.0.0b12-py3-none-any.whl", hash = "sha256:8156f0549b96fcd193d13efca7bfbda39b3d6389085556d930e204c09f9ae6ed", size = 188651, upload-time = "2026-04-04T17:30:59.17Z" },
 ]
 
 [[package]]
@@ -637,6 +637,23 @@ version = "2.16"
 source = { registry = "https://pypi.org/simple" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/f1/66/50b9f5d8a0e9fbe5469c5b8a7f198511fff9959347fc2443531d651b21d7/dataclass_factory-2.16-py3-none-any.whl", hash = "sha256:9d01e73d40b8f74051df822f21d8dc8bbf2754b11670cd1c477357e8b21323ed", size = 29693, upload-time = "2022-07-20T14:21:06.678Z" },
+]
+
+[[package]]
+name = "dature"
+version = "1.1.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "adaptix" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/89/ba/d79bac02d6fdcf95c255b3ebf59317df518728ea7086b0e04af7cbf28d43/dature-1.1.1.tar.gz", hash = "sha256:0733236f337eb2372b8423cd105074a8c846e74180f622bafb185c46d1a74f21", size = 409328, upload-time = "2026-08-08T06:47:28.155Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/40/fb/1fe2497153772a897c5b5200c87b025402fedeb347128afdb7fc7bed1c5a/dature-1.1.1-py3-none-any.whl", hash = "sha256:c60ff88de98b030fa717d8b477a2e72eff16e701b81c0c10124471dbc13193c7", size = 154282, upload-time = "2026-08-08T06:47:26.824Z" },
+]
+
+[package.optional-dependencies]
+yaml = [
+    { name = "ruamel-yaml" },
 ]
 
 [[package]]
@@ -2428,6 +2445,15 @@ wheels = [
 ]
 
 [[package]]
+name = "ruamel-yaml"
+version = "0.19.1"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/c7/3b/ebda527b56beb90cb7652cb1c7e4f91f48649fbcd8d2eb2fb6e77cd3329b/ruamel_yaml-0.19.1.tar.gz", hash = "sha256:53eb66cd27849eff968ebf8f0bf61f46cdac2da1d1f3576dd4ccee9b25c31993", size = 142709, upload-time = "2026-01-02T16:50:31.84Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/b8/0c/51f6841f1d84f404f92463fc2b1ba0da357ca1e3db6b7fbda26956c3b82a/ruamel_yaml-0.19.1-py3-none-any.whl", hash = "sha256:27592957fedf6e0b62f281e96effd28043345e0e66001f97683aa9a40c667c93", size = 118102, upload-time = "2026-01-02T16:50:29.201Z" },
+]
+
+[[package]]
 name = "ruff"
 version = "0.2.2"
 source = { registry = "https://pypi.org/simple" }
@@ -2485,6 +2511,7 @@ dependencies = [
     { name = "bcrypt" },
     { name = "colorlog" },
     { name = "dataclass-factory" },
+    { name = "dature", extra = ["yaml"] },
     { name = "dishka" },
     { name = "fastapi" },
     { name = "greenlet" },
@@ -2537,7 +2564,7 @@ test = [
 
 [package.metadata]
 requires-dist = [
-    { name = "adaptix", specifier = "==3.0.0b9" },
+    { name = "adaptix", specifier = "==3.0.0b12" },
     { name = "aiogram", specifier = ">=3.26.0,<3.27.0" },
     { name = "aiogram-dialog", extras = ["tools"], specifier = ">=2.6,<3.0" },
     { name = "aiosmtplib", specifier = ">=3.0,<4.0" },
@@ -2548,6 +2575,7 @@ requires-dist = [
     { name = "bcrypt", specifier = "==4.0.1" },
     { name = "colorlog", specifier = ">=6.7.0,<7.0" },
     { name = "dataclass-factory", specifier = ">=2.16,<3.0" },
+    { name = "dature", extras = ["yaml"], specifier = ">=1.1.1,<2.0" },
     { name = "dishka", specifier = "==1.5.2" },
     { name = "fastapi", specifier = "==0.111.1" },
     { name = "greenlet", specifier = "<4.0.0" },

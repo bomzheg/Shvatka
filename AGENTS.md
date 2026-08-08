@@ -295,7 +295,7 @@ with a curated ignore list, mypy overrides) lives in `pyproject.toml`.
 - Setup: `uv venv && uv sync --group test`.
 - Key stack: FastAPI, aiogram 3 + aiogram_dialog, SQLAlchemy 2 (async,
   asyncpg), Alembic, **dishka** (DI), adaptix/dataclass_factory (serialization),
-  pydantic, redis, APScheduler.
+  **dature** (config), pydantic, redis, APScheduler.
 - DB migrations: `python -m alembic upgrade head` (DB URL in `alembic.ini`).
 - Entry points: `shvatka-tgbot`, `shvatka-api` (see `[project.scripts]`).
 - Config: copy `config_dist` → `config` and fill it in.
@@ -311,6 +311,16 @@ with a curated ignore list, mypy overrides) lives in `pyproject.toml`.
   subdomain a model came from.
 - Keep `core` framework-free; put framework glue in `api`, `tgbot`,
   `infrastructure`.
+- **Config is parsed by `dature`, config models stay plain dataclasses.** A
+  `config/models/*` class is a bare `@dataclass` — never decorated with
+  `@dature.load`, never carrying loading metadata. The whole knowledge of where
+  a value comes from lives in the matching `config/parser/*` loader function,
+  which builds a source with `config_source(paths, prefix=...)`
+  (`shvatka/common/config/parser/config_source.py`) and hands it to
+  `dature.load(..., schema=TheModel)`. A new section means a new loader function
+  with the section's `prefix`; kebab-case keys and defaults come for free from
+  the model. Keep loaders free of module-level retorts/factories — build the
+  source per call.
 - Line length 99. Match surrounding style; don't reformat untouched code.
 - **Log exceptions with an explicit `exc_info=e`.** Capture the exception
   (`except SomeError as e:`) and pass it to the logging call

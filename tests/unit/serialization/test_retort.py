@@ -20,8 +20,8 @@ def retort():
 
 
 def test_retort(retort: Retort):
-    assert retort.dump(set(), set) == ()
+    assert retort.dump(set(), set) == []
     assert retort.load([], set) == set()
-    assert retort.dump({1, 2}, set) == (1, 2)
+    assert retort.dump({1, 2}, set) == [1, 2]
     assert retort.load([1, 2], set) == {1, 2}
-    assert retort.dump(A({B("a")})) == {"a": ({"b": "a"},)}
+    assert retort.dump(A({B("a")})) == {"a": [{"b": "a"}]}

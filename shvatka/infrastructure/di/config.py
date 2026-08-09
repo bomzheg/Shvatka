@@ -44,8 +44,8 @@ class ConfigProvider(Provider):
         return config.storage
 
     @provide
-    def get_tg_client_config(self, config: TgBotConfig) -> TgClientConfig:
-        return config.tg_client
+    def get_tg_client_config(self, bot_config: BotConfig) -> TgClientConfig:
+        return TgClientConfig(bot_token=bot_config.token)
 
     @provide
     def get_web_app_config(self, config: TgBotConfig) -> WebConfig:

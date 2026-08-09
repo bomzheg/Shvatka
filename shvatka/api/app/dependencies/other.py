@@ -25,7 +25,7 @@ class OtherApiProvider(Provider):
 
     @provide
     def push_sender(self, config: ApiConfig, dao: PushSubscriptionDAO) -> WebPushSender:
-        return WebPushSender(config=config.push, dao=dao)
+        return WebPushSender(config=config.api.push, dao=dao)
 
     @provide
     def view(self, push_sender: WebPushSender, current_game: CurrentGameProvider) -> WebGameView:

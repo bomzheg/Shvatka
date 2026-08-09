@@ -7,9 +7,9 @@ from shvatka.api.app.middlewares.log import LoggingMiddleware
 
 
 def setup(app: FastAPI, config: ApiConfig) -> None:
-    if config.enable_logging:
+    if config.api.enable_logging:
         app.add_middleware(BaseHTTPMiddleware, dispatch=LoggingMiddleware())
-    if config.auth.disable_cors:
+    if config.api.auth.disable_cors:
         patch_for_cors(app)
 
 

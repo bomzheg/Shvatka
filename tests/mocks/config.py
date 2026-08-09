@@ -1,12 +1,13 @@
 from dataclasses import dataclass
 
-from shvatka.infrastructure.db.config.models.db import DBConfig as TrueConfig
+from shvatka.infrastructure.db.config.models.db import DBConfigProperties
 
 
 @dataclass
-class DBConfig(TrueConfig):
-    uri_: str
-    echo: bool = False
+class DBConfig(DBConfigProperties):
+    """A db config built from a ready-made url, as testcontainers hands it over."""
+
+    uri_: str = ""
 
     @property
     def uri(self) -> str:

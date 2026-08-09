@@ -4,7 +4,7 @@ from aiogram import Dispatcher
 from aiogram_dialog.api.protocols import MessageManagerProtocol, BgManagerFactory
 
 from shvatka.tgbot import dialogs
-from shvatka.tgbot.config.models.bot import BotConfig
+from shvatka.tgbot.config.models.main import TgBotConfig
 from shvatka.tgbot.handlers import (
     errors,
     merge,
@@ -25,20 +25,20 @@ logger = logging.getLogger(__name__)
 
 
 def setup_handlers(
-    dp: Dispatcher, bot_config: BotConfig, message_manager: MessageManagerProtocol
+    dp: Dispatcher, config: TgBotConfig, message_manager: MessageManagerProtocol
 ) -> BgManagerFactory:
-    errors.setup(dp, bot_config.log_chat)
+    errors.setup(dp, config.bot.log_chat)
     dp.include_router(base.setup())
-    dp.include_router(superuser.setup(bot_config))
+    dp.include_router(superuser.setup(config.superusers))
     dp.include_router(player.setup())
     dp.include_router(team.setup())
     dp.include_router(action_request.setup())
-    dp.include_router(merge.setup(bot_config))
+    dp.include_router(merge.setup(config.superusers))
     dp.include_router(game.setup())
     dp.include_router(waivers.setup())
-    dp.include_router(admin.setup(bot_config))
-    dp.include_router(capcha.setup(bot_config))
-    dp.include_router(member_tags.setup(bot_config))
+    dp.include_router(admin.setup(config.superusers))
+    dp.include_router(capcha.setup(config.bot))
+    dp.include_router(member_tags.setup(config.bot))
 
     bg_manager_factory = dialogs.setup(dp, message_manager)
 

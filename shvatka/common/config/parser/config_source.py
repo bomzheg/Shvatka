@@ -8,15 +8,16 @@ CONFIG_FILE_NAME = "config.yml"
 
 def config_source(
     paths: Paths,
-    prefix: str | None = None,
     field_mapping: FieldMapping | None = None,
     type_loaders: TypeLoaderMap | None = None,
 ) -> dature.Yaml11Source:
     """Build a dature source over the app's ``config.yml``.
 
-    The whole app is configured by one file, so every loader below reads its own
-    subtree of it: ``prefix`` is the dot-separated path of the section a loader
-    owns (``"db"``, ``"api.auth"``, ...), and ``None`` means the file root.
+    The config model mirrors the file, so the whole of it is loaded in one
+    ``dature.load(config_source(paths), schema=...)`` call: field names become
+    kebab-case keys and nested sections are nested dataclasses. Pass
+    ``field_mapping`` / ``type_loaders`` only where the file can't say it — a key
+    the model spells differently, or a value it stores in another unit.
 
     YAML 1.1 (not 1.2) is intentional — it is the dialect PyYAML implemented, so
     configs written for the previous parser keep resolving to the same values.
@@ -25,7 +26,6 @@ def config_source(
     """
     return dature.Yaml11Source(
         file=paths.config_path / CONFIG_FILE_NAME,
-        prefix=prefix,
         name_style="lower_kebab",
         field_mapping=field_mapping,
         type_loaders=type_loaders,

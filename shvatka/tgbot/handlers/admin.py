@@ -8,7 +8,6 @@ from shvatka.core.notifications.request_interactors import CreatePlayerMergeRequ
 from shvatka.core.services.team import get_team_by_id, merge_teams
 from shvatka.core.views.game import GameLogWriter
 from shvatka.infrastructure.db.dao.holder import HolderDao
-from shvatka.tgbot.config.models.bot import BotConfig
 from shvatka.tgbot.filters import is_superuser
 from shvatka.tgbot.services.identity import TgBotIdentityProvider
 from shvatka.tgbot.views.commands import MERGE_TEAMS, MERGE_PLAYERS
@@ -53,9 +52,9 @@ async def merge_players_command(
     await message.reply("Заявка на объединение отправлена")
 
 
-def setup(bot_config: BotConfig) -> Router:
+def setup(superusers: list[int]) -> Router:
     router = Router(name=__name__)
-    is_superuser_ = partial(is_superuser, superusers=bot_config.superusers)
+    is_superuser_ = partial(is_superuser, superusers=superusers)
     router.message.filter(is_superuser_)
 
     router.message.register(merge_teams_command, Command(MERGE_TEAMS))

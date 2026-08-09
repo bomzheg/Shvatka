@@ -11,10 +11,7 @@ from shvatka.tgbot.config.models.main import TgBotConfig
 def test_load_bot_config(bot_config: TgBotConfig):
     assert "shvatka-pytest" == bot_config.app.name
     assert [666, 46866565] == bot_config.superusers
-    # superusers live at the top level of config.yml, the bot section gets them injected
-    assert bot_config.superusers == bot_config.bot.superusers
     assert "123:ABC" == bot_config.bot.token
-    assert bot_config.bot.token == bot_config.tg_client.bot_token
     assert -1001234567890 == bot_config.bot.log_chat
     assert -1009876543210 == bot_config.bot.game_log_chat
     assert [] == bot_config.bot.public_chats
@@ -35,14 +32,16 @@ def test_load_bot_config(bot_config: TgBotConfig):
 
 def test_load_api_config(paths: Paths):
     config = load_api_config(paths)
-    assert "" == config.context_path
-    assert not config.enable_logging
-    assert timedelta(minutes=30) == config.auth.token_expire
-    assert "shvatkatestbot" == config.auth.bot_username
-    assert "none" == config.auth.samesite
-    assert not config.auth.secure
-    assert not config.auth.httponly
-    assert not config.auth.disable_cors
+    assert "" == config.api.context_path
+    assert not config.api.enable_logging
+    assert timedelta(minutes=30) == config.api.auth.token_expire
+    assert "shvatkatestbot" == config.api.auth.bot_username
+    assert "none" == config.api.auth.samesite
+    assert not config.api.auth.secure
+    assert not config.api.auth.httponly
+    assert not config.api.auth.disable_cors
     # the test config declares no push section at all
-    assert not config.push.is_configured
+    assert not config.api.push.is_configured
+    # the same top level sections are shared with the bot config
     assert [666, 46866565] == config.superusers
+    assert "shvatka-pytest" == config.app.name

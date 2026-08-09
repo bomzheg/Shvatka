@@ -311,16 +311,25 @@ with a curated ignore list, mypy overrides) lives in `pyproject.toml`.
   subdomain a model came from.
 - Keep `core` framework-free; put framework glue in `api`, `tgbot`,
   `infrastructure`.
-- **Config is parsed by `dature`, config models stay plain dataclasses.** A
-  `config/models/*` class is a bare `@dataclass` — never decorated with
-  `@dature.load`, never carrying loading metadata. The whole knowledge of where
-  a value comes from lives in the matching `config/parser/*` loader function,
-  which builds a source with `config_source(paths, prefix=...)`
-  (`shvatka/common/config/parser/config_source.py`) and hands it to
-  `dature.load(..., schema=TheModel)`. A new section means a new loader function
-  with the section's `prefix`; kebab-case keys and defaults come for free from
-  the model. Keep loaders free of module-level retorts/factories — build the
-  source per call.
+- **The config model mirrors `config.yml`, and `dature` loads the whole file in
+  one call.** `ApiConfig` and `TgBotConfig` are the two roots; each is loaded by
+  a single `dature.load(config_source(paths), schema=TheConfig)`, so a new
+  section in the file means **one new field** on the model and nothing else — no
+  loader function, no prefix, no wiring. Field names map to kebab-case keys
+  automatically, nested sections are nested dataclasses (`api:` → `ApiSection`),
+  and an absent optional section falls back to the field's default. Keep it that
+  way:
+  - models are bare `@dataclass`es — never decorated with `@dature.load`, never
+    carrying loading metadata;
+  - don't add a field that isn't in the file. `Paths` is the input that *locates*
+    `config.yml`, so it is not part of `Config` — take it from DI. Anything
+    derived (e.g. `TgClientConfig` from the bot token) is built in a dishka
+    provider, not stored in the config tree;
+  - a value belongs to exactly one field. `field_mapping` **moves** a source key
+    rather than copying it, so two fields cannot read the same key — superusers
+    live on `Config.superusers` alone;
+  - keep loaders free of module-level retorts/factories — build the source per
+    call.
 - Line length 99. Match surrounding style; don't reformat untouched code.
 - **Log exceptions with an explicit `exc_info=e`.** Capture the exception
   (`except SomeError as e:`) and pass it to the logging call

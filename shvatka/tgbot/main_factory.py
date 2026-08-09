@@ -38,7 +38,6 @@ from shvatka.core.views.team import TeamNotifier
 from shvatka.infrastructure.bus.in_memory import UsedOneTimeTokenInteractor
 from shvatka.infrastructure.db.config.models.storage import StorageConfig, StorageType
 from shvatka.infrastructure.db.dao import FileInfoDao
-from shvatka.infrastructure.db.dao import ReleasePostDao
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.infrastructure.db.factory import (
     create_redis,
@@ -250,14 +249,14 @@ class GameToolsProvider(Provider):
         bot: Bot,
         hint_sender: HintSender,
         resolver: HintContentResolver,
-        dao: ReleasePostDao,
+        dao: HolderDao,
         config: BotConfig,
     ) -> GameBotReleasePublisher:
         return GameBotReleasePublisher(
             bot=bot,
             hint_sender=hint_sender,
             resolver=resolver,
-            dao=dao,
+            dao=dao.game,
             log_chat_id=config.game_log_chat,
         )
 

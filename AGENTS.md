@@ -151,10 +151,12 @@ each container binds its own implementation: the bot one in
 one to the `Bus` instead.) That way the same use case reaches the channel from
 the site, without `HintSender` leaking into every container.
 
-**What a view showed is the view's to remember**, not the game's. Chat ids and
-message ids never reach the domain or the games table: the view keeps them
-beside the bot's other bookkeeping in redis — see `MessagePinner` with
-`PinnedMessageDao`, and `GameBotReleasePublisher` with `ReleasePostDao`.
+**What a view showed is the view's to remember**, not the domain's. Postgres is
+fine for it — what must not happen is a chat or message id reaching a core
+entity. Store it in its own column (or its own table), read and write it
+through dao methods that return plain values, and keep it out of `to_dto`:
+`action_requests.bot_messages` and `games.release_post` both work that way,
+and `MessagePinner` keeps its ids in redis for the same reason.
 
 A dependency that genuinely belongs to both edges — a dao, a policy, an
 interactor — does go in the shared providers (`infrastructure/di/`, listed by

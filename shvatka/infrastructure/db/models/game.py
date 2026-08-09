@@ -152,6 +152,8 @@ class Game(Base):
     release_banner: Mapped[hints.PhotoHint | None] = mapped_column(
         ReleaseBannerField, nullable=True
     )
+    release_post: Mapped[dict[str, typing.Any] | None] = mapped_column(JSONB, nullable=True)
+    """Where the bot posted the release. Never part of `to_dto` — see `GameDao`."""
 
     __table_args__ = (
         UniqueConstraint("author_id", "name"),

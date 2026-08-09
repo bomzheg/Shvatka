@@ -305,10 +305,38 @@ class GameDao(BaseDAO[models.Game]):
         )
 
     async def delete_release(self, game: dto.Game) -> None:
+        # release_post is not cleared here: it is the view's, and the view still
+        # needs it to take the messages down after this commit
         await self.session.execute(
             update(models.Game)
             .where(models.Game.id == game.id)
             .values(release=None, release_banner=None)
+        )
+
+    async def get_release_post(self, game_id: int) -> tuple[int, list[int]] | None:
+        """The chat and messages the release was posted as, if it was.
+
+        The bot's own bookkeeping: stored beside the game but deliberately kept
+        out of `to_dto`, so no chat or message id ever reaches the domain.
+        """
+        result = await self.session.scalars(
+            select(models.Game.release_post).where(models.Game.id == game_id)
+        )
+        stored = result.one_or_none()
+        if not stored:
+            return None
+        return stored["chat_id"], list(stored["message_ids"])
+
+    async def save_release_post(self, game_id: int, chat_id: int, message_ids: list[int]) -> None:
+        await self.session.execute(
+            update(models.Game)
+            .where(models.Game.id == game_id)
+            .values(release_post={"chat_id": chat_id, "message_ids": message_ids})
+        )
+
+    async def clear_release_post(self, game_id: int) -> None:
+        await self.session.execute(
+            update(models.Game).where(models.Game.id == game_id).values(release_post=None)
         )
 
     async def is_author_game_by_name(self, name: str, author: dto.Player) -> bool:

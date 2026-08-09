@@ -149,10 +149,6 @@ class DAOProvider(Provider):
         return dao.PinnedMessageDao(redis=redis)
 
     @provide
-    def release_post_dao(self, redis: Redis) -> dao.ReleasePostDao:
-        return dao.ReleasePostDao(redis=redis)
-
-    @provide
     async def push_subscription_dao(
         self, pool: async_sessionmaker[AsyncSession]
     ) -> AsyncIterable[dao.PushSubscriptionDAO]:

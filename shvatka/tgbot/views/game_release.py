@@ -15,7 +15,7 @@ from aiogram.types import (
 from shvatka.core.models import dto, enums
 from shvatka.core.models.dto import hints
 from shvatka.core.views.game import GameReleasePublisher
-from shvatka.infrastructure.db.dao import ReleasePost, ReleasePostDao
+from shvatka.infrastructure.db.dao import GameDao
 from shvatka.tgbot.models.hint import BaseHintLinkView
 from shvatka.tgbot.views.hint_factory.hint_content_resolver import HintContentResolver
 from shvatka.tgbot.views.hint_sender import HintSender
@@ -46,33 +46,33 @@ class GameBotReleasePublisher(GameReleasePublisher):
     added, removed or turned into another kind of content), the old messages
     are dropped and the release is posted anew.
 
-    Which messages those are is remembered here rather than by the game: it is
-    the same bookkeeping as pinned messages, and it means nothing outside the
-    bot.
+    Which messages those are is the bot's own bookkeeping: it is stored beside
+    the game but read and written only here, never through the domain — the
+    same arrangement as an action request's bot messages.
     """
 
     bot: Bot
     hint_sender: HintSender
     resolver: HintContentResolver
-    dao: ReleasePostDao
+    dao: GameDao
     log_chat_id: int
 
     async def publish(self, game: dto.Game, release: dto.GameRelease) -> None:
-        posted = await self.dao.get(game.id)
+        posted = await self.dao.get_release_post(game.id)
         if posted is not None:
-            if await self.edit(release, posted):
+            if await self.edit(release, *posted):
                 return
-            await self.take_down(game, posted)
+            await self.take_down(game.id, *posted)
         await self.post(release)
 
     async def update(self, game: dto.Game, release: dto.GameRelease) -> None:
         """Only refresh what is already up — never announce a game by itself."""
-        posted = await self.dao.get(game.id)
+        posted = await self.dao.get_release_post(game.id)
         if posted is None:
             return
-        if await self.edit(release, posted):
+        if await self.edit(release, *posted):
             return
-        await self.take_down(game, posted)
+        await self.take_down(game.id, *posted)
         await self.post(release)
 
     async def post(self, release: dto.GameRelease) -> None:
@@ -80,20 +80,19 @@ class GameBotReleasePublisher(GameReleasePublisher):
         for hint in release.parts:
             message = await self.hint_sender.send_hint(hint, self.log_chat_id)
             message_ids.append(message.message_id)
-        await self.dao.save(
-            game_id=release.game_id, chat_id=self.log_chat_id, message_ids=message_ids
-        )
+        await self.dao.save_release_post(release.game_id, self.log_chat_id, message_ids)
+        await self.dao.commit()
         logger.info("release of game %s posted to chat %s", release.game_id, self.log_chat_id)
 
-    async def edit(self, release: dto.GameRelease, post: ReleasePost) -> bool:
+    async def edit(self, release: dto.GameRelease, chat_id: int, message_ids: list[int]) -> bool:
         """Update the posted messages in place. False if telegram won't have it."""
         parts = release.parts
-        if len(parts) != len(post.message_ids):
+        if len(parts) != len(message_ids):
             return False
-        for hint, message_id in zip(parts, post.message_ids):
-            if not await self.edit_one(hint, post.chat_id, message_id):
+        for hint, message_id in zip(parts, message_ids):
+            if not await self.edit_one(hint, chat_id, message_id):
                 return False
-        logger.info("release of game %s edited in chat %s", release.game_id, post.chat_id)
+        logger.info("release of game %s edited in chat %s", release.game_id, chat_id)
         return True
 
     async def edit_one(self, hint: hints.BaseHint, chat_id: int, message_id: int) -> bool:
@@ -137,15 +136,16 @@ class GameBotReleasePublisher(GameReleasePublisher):
         return media
 
     async def unpublish(self, game: dto.Game) -> None:
-        posted = await self.dao.get(game.id)
+        posted = await self.dao.get_release_post(game.id)
         if posted is None:
             return
-        await self.take_down(game, posted)
+        await self.take_down(game.id, *posted)
 
-    async def take_down(self, game: dto.Game, post: ReleasePost) -> None:
-        for message_id in post.message_ids:
-            await self.delete_one(post.chat_id, message_id)
-        await self.dao.drop(game.id)
+    async def take_down(self, game_id: int, chat_id: int, message_ids: list[int]) -> None:
+        for message_id in message_ids:
+            await self.delete_one(chat_id, message_id)
+        await self.dao.clear_release_post(game_id)
+        await self.dao.commit()
 
     async def delete_one(self, chat_id: int, message_id: int) -> None:
         try:

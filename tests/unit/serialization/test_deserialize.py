@@ -165,11 +165,11 @@ def test_serialize_simple(retort: Retort):
                     "conditions": [
                         {
                             "type": "WIN_KEY",
-                            "keys": ("SH1",),
+                            "keys": ["SH1"],
                         },
                         {
                             "type": "EFFECTS_KEY",
-                            "keys": ("SHE1",),
+                            "keys": ["SHE1"],
                             "effects": {
                                 "id": "019d2165-81a1-707b-926d-04921bf92158",
                                 "hints": (
@@ -261,7 +261,7 @@ def test_serialize_simple(retort: Retort):
                     "conditions": [
                         {
                             "type": "WIN_KEY",
-                            "keys": ("SH2",),
+                            "keys": ["SH2"],
                         }
                     ],
                     "time_hints": [
@@ -340,7 +340,7 @@ def test_serialize_simple(retort: Retort):
                     "conditions": [
                         {
                             "type": "WIN_KEY",
-                            "keys": ("SH3",),
+                            "keys": ["SH3"],
                         }
                     ],
                     "time_hints": [
@@ -419,7 +419,7 @@ def test_serialize_simple(retort: Retort):
                     "conditions": [
                         {
                             "type": "WIN_KEY",
-                            "keys": ("SH4",),
+                            "keys": ["SH4"],
                         }
                     ],
                     "time_hints": [

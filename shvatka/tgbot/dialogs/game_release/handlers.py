@@ -133,12 +133,10 @@ async def save_release(
     if banner is None and not composed:
         await c.answer("Релиз пустой — нечего сохранять", show_alert=True)
         return
-    release = await interactor(
-        game_id=_game_id(manager), banner=banner, hints_=composed, identity=idp
-    )
+    await interactor(game_id=_game_id(manager), banner=banner, hints_=composed, identity=idp)
     manager.dialog_data["banner"] = None
     manager.dialog_data["hints"] = []
-    await c.answer("Релиз опубликован" if release.is_published else "Релиз сохранён")
+    await c.answer("Релиз сохранён")
     await manager.switch_to(states.GameReleaseSG.menu)
 
 

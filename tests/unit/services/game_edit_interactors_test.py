@@ -44,12 +44,6 @@ class NoReleaseDao:
     async def get_release(self, game_id: int) -> dto.GameRelease | None:
         return None
 
-    async def save_release_post(self, game: dto.Game, post: dto.ReleasePost | None) -> None:
-        raise AssertionError("nothing to publish")
-
-    async def commit(self) -> None:
-        raise AssertionError("nothing to commit")
-
 
 class RecordingLogWriter(GameLogWriter):
     def __init__(self) -> None:

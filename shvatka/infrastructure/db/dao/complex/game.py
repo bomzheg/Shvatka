@@ -267,9 +267,6 @@ class GameReleaseEditorImpl(FileLinkMixin, GameReleaseEditor):
     ) -> None:
         await self.dao.game.save_release(game, banner, hints_)
 
-    async def save_release_post(self, game: dto.Game, post: dto.ReleasePost | None) -> None:
-        await self.dao.game.save_release_post(game, post)
-
     async def delete_release(self, game: dto.Game) -> None:
         await self.dao.game.delete_release(game)
 

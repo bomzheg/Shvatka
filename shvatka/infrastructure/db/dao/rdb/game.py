@@ -282,11 +282,9 @@ class GameDao(BaseDAO[models.Game]):
         # the identity map without its author, and a later get_by_id (which
         # relies on joinedload-ing the author) would get that stripped instance
         result = await self.session.execute(
-            select(
-                models.Game.release,
-                models.Game.release_banner,
-                models.Game.release_post,
-            ).where(models.Game.id == game_id)
+            select(models.Game.release, models.Game.release_banner).where(
+                models.Game.id == game_id
+            )
         )
         row = result.one_or_none()
         if row is None or (row.release is None and row.release_banner is None):
@@ -295,7 +293,6 @@ class GameDao(BaseDAO[models.Game]):
             game_id=game_id,
             banner=row.release_banner,
             hints=row.release or [],
-            post=_release_post_from_db(row.release_post),
         )
 
     async def save_release(
@@ -307,18 +304,11 @@ class GameDao(BaseDAO[models.Game]):
             .values(release=hints_, release_banner=banner)
         )
 
-    async def save_release_post(self, game: dto.Game, post: dto.ReleasePost | None) -> None:
-        await self.session.execute(
-            update(models.Game)
-            .where(models.Game.id == game.id)
-            .values(release_post=_release_post_to_db(post))
-        )
-
     async def delete_release(self, game: dto.Game) -> None:
         await self.session.execute(
             update(models.Game)
             .where(models.Game.id == game.id)
-            .values(release=None, release_banner=None, release_post=None)
+            .values(release=None, release_banner=None)
         )
 
     async def is_author_game_by_name(self, name: str, author: dto.Player) -> bool:
@@ -334,20 +324,3 @@ class GameDao(BaseDAO[models.Game]):
             select(models.Game).where(models.Game.name == name)
         )
         return result.one_or_none()
-
-
-def _release_post_from_db(stored: dict[str, typing.Any] | None) -> dto.ReleasePost | None:
-    if not stored:
-        return None
-    return dto.ReleasePost(
-        chat_id=stored["chat_id"],
-        message_ids=list(stored["message_ids"]),
-    )
-
-
-def _release_post_to_db(
-    post: dto.ReleasePost | None,
-) -> dict[str, typing.Any] | None:
-    if post is None:
-        return None
-    return {"chat_id": post.chat_id, "message_ids": post.message_ids}

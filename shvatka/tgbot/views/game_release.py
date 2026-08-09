@@ -15,6 +15,7 @@ from aiogram.types import (
 from shvatka.core.models import dto, enums
 from shvatka.core.models.dto import hints
 from shvatka.core.views.game import GameReleasePublisher
+from shvatka.infrastructure.db.dao import ReleasePost, ReleasePostDao
 from shvatka.tgbot.models.hint import BaseHintLinkView
 from shvatka.tgbot.views.hint_factory.hint_content_resolver import HintContentResolver
 from shvatka.tgbot.views.hint_sender import HintSender
@@ -44,30 +45,47 @@ class GameBotReleasePublisher(GameReleasePublisher):
     the shape of the release changed too much for telegram to edit it (a hint
     added, removed or turned into another kind of content), the old messages
     are dropped and the release is posted anew.
+
+    Which messages those are is remembered here rather than by the game: it is
+    the same bookkeeping as pinned messages, and it means nothing outside the
+    bot.
     """
 
     bot: Bot
     hint_sender: HintSender
     resolver: HintContentResolver
+    dao: ReleasePostDao
     log_chat_id: int
 
-    async def publish(self, game: dto.Game, release: dto.GameRelease) -> dto.ReleasePost | None:
-        posted = release.post
+    async def publish(self, game: dto.Game, release: dto.GameRelease) -> None:
+        posted = await self.dao.get(game.id)
         if posted is not None:
             if await self.edit(release, posted):
-                return posted
-            await self.unpublish(game, posted)
-        return await self.post(release)
+                return
+            await self.take_down(game, posted)
+        await self.post(release)
 
-    async def post(self, release: dto.GameRelease) -> dto.ReleasePost:
+    async def update(self, game: dto.Game, release: dto.GameRelease) -> None:
+        """Only refresh what is already up — never announce a game by itself."""
+        posted = await self.dao.get(game.id)
+        if posted is None:
+            return
+        if await self.edit(release, posted):
+            return
+        await self.take_down(game, posted)
+        await self.post(release)
+
+    async def post(self, release: dto.GameRelease) -> None:
         message_ids = []
         for hint in release.parts:
             message = await self.hint_sender.send_hint(hint, self.log_chat_id)
             message_ids.append(message.message_id)
+        await self.dao.save(
+            game_id=release.game_id, chat_id=self.log_chat_id, message_ids=message_ids
+        )
         logger.info("release of game %s posted to chat %s", release.game_id, self.log_chat_id)
-        return dto.ReleasePost(chat_id=self.log_chat_id, message_ids=message_ids)
 
-    async def edit(self, release: dto.GameRelease, post: dto.ReleasePost) -> bool:
+    async def edit(self, release: dto.GameRelease, post: ReleasePost) -> bool:
         """Update the posted messages in place. False if telegram won't have it."""
         parts = release.parts
         if len(parts) != len(post.message_ids):
@@ -118,9 +136,16 @@ class GameBotReleasePublisher(GameReleasePublisher):
             media.show_caption_above_media = kwargs.get("show_caption_above_media")
         return media
 
-    async def unpublish(self, game: dto.Game, post: dto.ReleasePost) -> None:
+    async def unpublish(self, game: dto.Game) -> None:
+        posted = await self.dao.get(game.id)
+        if posted is None:
+            return
+        await self.take_down(game, posted)
+
+    async def take_down(self, game: dto.Game, post: ReleasePost) -> None:
         for message_id in post.message_ids:
             await self.delete_one(post.chat_id, message_id)
+        await self.dao.drop(game.id)
 
     async def delete_one(self, chat_id: int, message_id: int) -> None:
         try:

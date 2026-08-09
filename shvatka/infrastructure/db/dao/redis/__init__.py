@@ -4,3 +4,4 @@ from .one_time_token import OneTimeToken
 from .email_confirm import EmailConfirmationStore
 from .rate_limiter import RateLimiter
 from .pinned_message import PinnedMessageDao
+from .release_post import ReleasePost, ReleasePostDao

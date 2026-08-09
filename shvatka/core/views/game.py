@@ -60,18 +60,23 @@ class GameLogWriter(Protocol):
 
 
 class GameReleasePublisher(Protocol):
-    """Announces a game where the audience is (a telegram channel, ...)."""
+    """Announces a game where the audience is (a telegram channel, ...).
 
-    async def publish(self, game: dto.Game, release: dto.GameRelease) -> dto.ReleasePost | None:
-        """Post the release, or update what ``release.post`` points at.
+    Whether the release is currently on show, and where — a chat, some message
+    ids — is the view's own business, kept by the view and never handed to the
+    domain, exactly as pinned messages are.
+    """
 
-        Returns where the release lives now, or ``None`` when this edge cannot
-        publish at all — then whatever was published stays as it is.
-        """
+    async def publish(self, game: dto.Game, release: dto.GameRelease) -> None:
+        """Show the release: put it up, or bring what is up to date."""
         raise NotImplementedError
 
-    async def unpublish(self, game: dto.Game, post: dto.ReleasePost) -> None:
-        """Take a published release out of the channel."""
+    async def update(self, game: dto.Game, release: dto.GameRelease) -> None:
+        """Bring an already shown release up to date. Show nothing new."""
+        raise NotImplementedError
+
+    async def unpublish(self, game: dto.Game) -> None:
+        """Take the release out of the channel, if it is there."""
         raise NotImplementedError
 
 

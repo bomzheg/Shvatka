@@ -101,7 +101,7 @@ the edge-specific twist.
 | **Publication** | Публикация | Posting a finished game's results to a Telegram channel. Possible once, after the game is finished or complete. | `GameResults.published_chanel_id`, `Game.can_be_publish` |
 | **Release** | Релиз | The promo an author publishes before a game — a **banner** followed by a few words about the theme and a map of the district. The part after the banner is a plain list of hint parts, so it is written and rendered with the same machinery as a hint. Optional: a game without one is played exactly as before. | `dto.GameRelease`, `core/games/release_interactors.py` |
 | **Banner** | Баннер | The wide title picture (with its caption) that leads a release. Kept apart from the rest because it is the one part small enough to stand alone above the site's header; roughly 1280×250—1280×550, though nothing enforces that. A release may be just a banner, or have none at all. | `dto.GameRelease.banner`, `games.release_banner` |
-| **Release post** | Пост релиза | Where a release currently stands in the announcements channel: one message per part, the banner first. Editing the release edits those messages; it is not a second **publication**, which stays the word for a finished game's results. | `dto.ReleasePost`, `tgbot/views/game_release.py` |
+| **Release post** | Пост релиза | Where a release currently stands in the announcements channel: one message per part, the banner first. Editing the release edits those messages; it is not a second **publication**, which stays the word for a finished game's results. Purely the bot's bookkeeping, kept beside its pinned messages — a game holds no chat or message ids. | `ReleasePostDao`, `tgbot/views/game_release.py` |
 
 ### Game statuses
 

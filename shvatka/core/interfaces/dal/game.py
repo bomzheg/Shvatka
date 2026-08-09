@@ -107,12 +107,7 @@ class GameReleaseGetter(Protocol):
         raise NotImplementedError
 
 
-class GameReleasePostSaver(Committer, GameReleaseGetter, Protocol):
-    async def save_release_post(self, game: dto.Game, post: dto.ReleasePost | None) -> None:
-        raise NotImplementedError
-
-
-class GameReleaseSaver(GameReleasePostSaver, Protocol):
+class GameReleaseSaver(Committer, GameReleaseGetter, Protocol):
     async def save_release(
         self, game: dto.Game, banner: hints.PhotoHint | None, hints_: list[hints.AnyHint]
     ) -> None:

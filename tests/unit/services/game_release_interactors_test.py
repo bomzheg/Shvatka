@@ -43,15 +43,9 @@ def make_banner(caption: str = "тема игры") -> hints.PhotoHint:
 
 def make_release(
     hints_: list[hints.AnyHint],
-    published: bool = False,
     banner: hints.PhotoHint | None = None,
 ) -> dto.GameRelease:
-    return dto.GameRelease(
-        game_id=10,
-        banner=banner,
-        hints=hints_,
-        post=(dto.ReleasePost(chat_id=CHANNEL_ID, message_ids=[1]) if published else None),
-    )
+    return dto.GameRelease(game_id=10, banner=banner, hints=hints_)
 
 
 @dataclass
@@ -79,12 +73,7 @@ class FakeReleaseDao:
     async def save_release(
         self, game: dto.Game, banner: hints.PhotoHint | None, hints_: list[hints.AnyHint]
     ) -> None:
-        post = self.release.post if self.release else None
-        self.release = dto.GameRelease(game_id=10, banner=banner, hints=hints_, post=post)
-
-    async def save_release_post(self, game: dto.Game, post: dto.ReleasePost | None) -> None:
-        assert self.release is not None
-        self.release.post = post
+        self.release = dto.GameRelease(game_id=10, banner=banner, hints=hints_)
 
     async def delete_release(self, game: dto.Game) -> None:
         self.release = None
@@ -103,22 +92,35 @@ class FakeReleaseDao:
 
 
 class RecordingPublisher(GameReleasePublisher):
-    """Records what it was asked to do, telling posts from edits apart."""
+    """A stand-in for the announcing view, recording what it was asked to show.
+
+    Like the real one it remembers on its own whether it is showing anything —
+    the domain never tells it, and never asks.
+    """
 
     def __init__(self) -> None:
         self.posted: list[dto.GameRelease] = []
         self.edited: list[dto.GameRelease] = []
-        self.unpublished: list[dto.ReleasePost] = []
+        self.unpublished: list[int] = []
+        self.showing = False
 
-    async def publish(self, game: dto.Game, release: dto.GameRelease) -> dto.ReleasePost | None:
-        if release.post is not None:
+    async def publish(self, game: dto.Game, release: dto.GameRelease) -> None:
+        if self.showing:
             self.edited.append(release)
-            return release.post
+            return
+        self.showing = True
         self.posted.append(release)
-        return dto.ReleasePost(chat_id=CHANNEL_ID, message_ids=[1])
 
-    async def unpublish(self, game: dto.Game, post: dto.ReleasePost) -> None:
-        self.unpublished.append(post)
+    async def update(self, game: dto.Game, release: dto.GameRelease) -> None:
+        if not self.showing:
+            return
+        self.edited.append(release)
+
+    async def unpublish(self, game: dto.Game) -> None:
+        if not self.showing:
+            return
+        self.showing = False
+        self.unpublished.append(game.id)
 
 
 def make_interactor(
@@ -146,7 +148,6 @@ async def test_release_written_before_waivers_waits_for_them():
     assert len(release.hints) == 1
     # the banner leads the release wherever it is shown
     assert release.parts[0] == release.banner
-    assert not release.is_published
     assert publisher.posted == []
     # the files it references became usable in the game
     assert dao.checked_guids == [BANNER_GUID]
@@ -159,14 +160,13 @@ async def test_release_written_while_collecting_waivers_goes_out_at_once():
     dao = FakeReleaseDao(game=make_game(author, GameStatus.getting_waivers))
     publisher = RecordingPublisher()
 
-    release = await make_interactor(dao, publisher)(
+    await make_interactor(dao, publisher)(
         game_id=10,
         banner=None,
         hints_=[hints.TextHint(text="тема игры")],
         identity=MockIdentityProvider(player=author),
     )
 
-    assert release.is_published
     assert len(publisher.posted) == 1
 
 
@@ -176,14 +176,13 @@ async def test_release_written_after_the_game_started_is_only_stored():
     dao = FakeReleaseDao(game=make_game(author, GameStatus.started))
     publisher = RecordingPublisher()
 
-    release = await make_interactor(dao, publisher)(
+    await make_interactor(dao, publisher)(
         game_id=10,
         banner=None,
         hints_=[hints.TextHint(text="тема игры")],
         identity=MockIdentityProvider(player=author),
     )
 
-    assert not release.is_published
     assert publisher.posted == []
 
 
@@ -192,18 +191,18 @@ async def test_editing_a_published_release_edits_it_in_the_channel():
     author = make_player(1)
     dao = FakeReleaseDao(
         game=make_game(author, GameStatus.started),
-        release=make_release([hints.TextHint(text="старая тема")], published=True),
+        release=make_release([hints.TextHint(text="старая тема")]),
     )
     publisher = RecordingPublisher()
+    publisher.showing = True  # the channel already carries this release
 
-    release = await make_interactor(dao, publisher)(
+    await make_interactor(dao, publisher)(
         game_id=10,
         banner=None,
         hints_=[hints.TextHint(text="новая тема")],
         identity=MockIdentityProvider(player=author),
     )
 
-    assert release.is_published
     assert publisher.posted == []
     assert len(publisher.edited) == 1
 
@@ -290,9 +289,10 @@ async def test_deleting_a_published_release_takes_it_out_of_the_channel():
     author = make_player(1)
     dao = FakeReleaseDao(
         game=make_game(author),
-        release=make_release([hints.TextHint(text="а")], published=True),
+        release=make_release([hints.TextHint(text="а")]),
     )
     publisher = RecordingPublisher()
+    publisher.showing = True
     interactor = DeleteGameReleaseInteractor(
         dao=dao, announcer=GameReleaseAnnouncer(dao=dao, publisher=publisher)
     )

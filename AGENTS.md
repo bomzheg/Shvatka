@@ -142,14 +142,25 @@ async def get_game_stat(
     return responses.GameStat.from_core(stat)
 ```
 
-**A dependency both edges need goes in the shared providers**
-(`infrastructure/di/`, listed by `get_providers()`), not in the bot-only or
-api-only ones — otherwise the same use case works from the chat and quietly does
-nothing from the site. Sending to telegram is not by itself bot-only: the api
-container has a `Bot` too, which is how a release written on the site still
-reaches the channel (`infrastructure/di/hints.py`). The integration tests build
-their container by hand in `tests/integration/conftest.py`, so a new shared
-provider has to be added there as well.
+**Showing something in telegram stays in `tgbot`.** Never move a bot view or
+its tools into the shared providers to reach them from the api — an interactor
+that needs the chat to change takes a **view Protocol** from `core/views/` and
+each container binds its own implementation: the bot one in
+`tgbot/main_factory.py`, a web one in `api/app/dependencies/`, a no-op in
+`infrastructure/di/infra.py`. (Where an event fits better than a call, submit
+one to the `Bus` instead.) That way the same use case reaches the channel from
+the site, without `HintSender` leaking into every container.
+
+**What a view showed is the view's to remember**, not the game's. Chat ids and
+message ids never reach the domain or the games table: the view keeps them
+beside the bot's other bookkeeping in redis — see `MessagePinner` with
+`PinnedMessageDao`, and `GameBotReleasePublisher` with `ReleasePostDao`.
+
+A dependency that genuinely belongs to both edges — a dao, a policy, an
+interactor — does go in the shared providers (`infrastructure/di/`, listed by
+`get_providers()`). The integration tests build their container by hand in
+`tests/integration/conftest.py`, so a new shared provider has to be added
+there as well.
 
 ## Use the providers (`IdentityProvider` / `CurrentGameProvider`)
 

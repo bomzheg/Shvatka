@@ -32,18 +32,18 @@ async def get_release(
     game_id = int(data["game_id"])
     game = await get_game(id_=game_id, author=await idp.get_required_player(), dao=dao.game)
     release = await interactor(game_id=game_id)
-    is_published = release is not None and release.is_published
     return {
         "game": game,
         "banner": release.banner if release else None,
         "hints": release.hints if release else [],
         "has_release": release is not None,
-        "is_published": is_published,
+        # where a release stands is the announcing view's business, so what it
+        # is doing now is read off the game's status instead
+        "in_channel": game.status == GameStatus.getting_waivers,
         # a release written before the waivers start waits for them; one written
         # after the game started stays on the site only
-        "waits_for_waivers": not is_published
-        and game.status in (GameStatus.underconstruction, GameStatus.ready),
-        "late": not is_published and game.status not in EARLY_ENOUGH,
+        "waits_for_waivers": game.status in (GameStatus.underconstruction, GameStatus.ready),
+        "late": game.status not in EARLY_ENOUGH,
     }
 
 

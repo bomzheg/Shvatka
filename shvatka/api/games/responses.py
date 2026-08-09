@@ -82,8 +82,6 @@ class GameRelease:
     banner: hints.PhotoHint | None
     """The wide title picture, shown alone above the site's header."""
     hints: Sequence[hints.AnyHint]
-    is_published: bool
-    """Whether it already stands in the announcements channel."""
 
     @classmethod
     def from_core(cls, core: dto.GameRelease) -> "GameRelease":
@@ -91,7 +89,6 @@ class GameRelease:
             game_id=core.game_id,
             banner=core.banner,
             hints=core.hints,
-            is_published=core.is_published,
         )
 
 

@@ -27,11 +27,12 @@ game_release = Dialog(
             "Релиза пока нет. Это необязательно — игра прекрасно пройдёт и без него.\n"
             "Обычно релиз — это баннер с подписью, описание темы и карта района.\n"
             "{% else %}"
-            "{% if is_published %}Опубликован в канале:{% else %}"
-            "Сохранён, уйдёт в канал вместе с началом сбора вейверов:{% endif %}\n"
+            "{% if in_channel %}Опубликован в канале:{% elif waits_for_waivers %}"
+            "Сохранён, уйдёт в канал вместе с началом сбора вейверов:{% else %}"
+            "Сохранён — виден на сайте:{% endif %}\n"
             "{% if banner %}🖼{{banner | single_hint}}\n{% endif %}"
             "{{hints | hints}}\n"
-            "{% if is_published %}Если изменить — сообщения в канале обновятся.{% endif %}"
+            "{% if in_channel %}Если изменить — сообщения в канале обновятся.{% endif %}"
             "{% endif %}"
         ),
         Button(
@@ -57,7 +58,8 @@ game_release = Dialog(
         preview_data={
             "game": PREVIEW_GAME,
             "has_release": True,
-            "is_published": True,
+            "in_channel": True,
+            "waits_for_waivers": False,
             "banner": None,
         },
         preview_add_transitions=[PreviewSwitchTo(states.GameReleaseSG.banner)],
@@ -136,14 +138,13 @@ game_release = Dialog(
     ),
     Window(
         Jinja(
-            "{% if is_published %}"
-            "Так релиз будет выглядеть после правки — сообщения в канале обновятся."
+            "{% if in_channel %}"
+            "Так релиз увидят все — он сразу уйдёт в канал (или обновит то, что там уже есть)."
             "{% elif waits_for_waivers %}"
             "Так релиз увидят все. Он уйдёт в канал, когда начнётся сбор вейверов."
-            "{% elif late %}"
-            "Так релиз увидят на сайте. Игра уже началась, поэтому в канал он не пойдёт."
             "{% else %}"
-            "Так релиз увидят все — он сразу уйдёт в канал."
+            "Так релиз увидят на сайте. Игра уже началась, поэтому в канал он не пойдёт "
+            "— но если он уже там, правки его обновят."
             "{% endif %}"
         ),
         Button(
@@ -161,7 +162,7 @@ game_release = Dialog(
         getter=get_release,
         preview_data={
             "game": PREVIEW_GAME,
-            "is_published": False,
+            "in_channel": False,
             "waits_for_waivers": True,
         },
     ),

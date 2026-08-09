@@ -19,7 +19,7 @@ import logging
 from dataclasses import dataclass
 
 from shvatka.core.games.adapters import GameReleaseEditor, GameReleaseReader
-from shvatka.core.interfaces.dal.game import GameReleasePostSaver
+from shvatka.core.interfaces.dal.game import GameReleaseGetter
 from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.models import dto
 from shvatka.core.models.dto import hints
@@ -34,31 +34,29 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class GameReleaseAnnouncer:
-    """Puts the release in the channel and remembers where it landed.
+    """Tells the announcing view what the release should look like.
 
-    Posts it the first time and edits those messages afterwards — the
-    publisher decides which of the two it can do. An edge that has no channel
-    to post to (or a game whose release was never posted) simply changes
-    nothing.
+    Only *whether the audience should see it now* is decided here; putting it
+    up, bringing it up to date and remembering where it stands are the view's,
+    and an edge with no channel to announce in simply does nothing.
     """
 
-    dao: GameReleasePostSaver
+    dao: GameReleaseGetter
     publisher: GameReleasePublisher
 
     async def announce(self, game: dto.Game) -> None:
+        """Show the release to the audience the game is collecting."""
         release = await self.dao.get_release(game.id)
         if release is None:
             return
-        post = await self.publisher.publish(game, release)
-        if post == release.post:
-            return
-        await self.dao.save_release_post(game, post)
-        await self.dao.commit()
+        await self.publisher.publish(game, release)
 
-    async def revoke(self, game: dto.Game, release: dto.GameRelease) -> None:
-        if release.post is None:
-            return
-        await self.publisher.unpublish(game, release.post)
+    async def refresh(self, game: dto.Game, release: dto.GameRelease) -> None:
+        """The release changed: whoever shows it should show the new one."""
+        await self.publisher.update(game, release)
+
+    async def revoke(self, game: dto.Game) -> None:
+        await self.publisher.unpublish(game)
 
 
 @dataclass
@@ -93,29 +91,29 @@ class SaveGameReleaseInteractor:
         check_can_edit_release(game, author, is_superuser)
         parts = [banner, *hints_] if banner is not None else list(hints_)
         await self.link_files(game, parts, author, is_superuser)
-        stored = await self.dao.get_release(game_id)
         await self.dao.save_release(game, banner, hints_)
         await self.dao.commit()
-        if self.should_announce(game, stored):
-            await self.announcer.announce(game)
         release = await self.dao.get_release(game_id)
         if release is None:
             raise exceptions.SHDataBreach(
                 game=game, player=author, text="release is missing right after saving"
             )
+        if self.should_announce(game):
+            await self.announcer.announce(game)
+        else:
+            # not this game's moment to announce — but if the release is
+            # already on show somewhere, it should show what was just written
+            await self.announcer.refresh(game, release)
         return release
 
     @staticmethod
-    def should_announce(game: dto.Game, stored: dto.GameRelease | None) -> bool:
-        """Whether saving this release should also reach the channel.
+    def should_announce(game: dto.Game) -> bool:
+        """Whether saving this release should also put it in front of people.
 
-        An already posted release is kept in sync whatever the game's status.
-        A new one only goes out while the game is collecting waivers — before
-        that it waits for the waivers to start, after that its audience is
-        already playing.
+        Only while the game is collecting waivers: before that the release
+        waits for them to start, after that its audience is already playing.
+        A release already on show is kept up to date either way.
         """
-        if stored is not None and stored.is_published:
-            return True
         return game.status == GameStatus.getting_waivers
 
     async def link_files(
@@ -153,9 +151,8 @@ class DeleteGameReleaseInteractor:
         is_superuser = await identity.is_superuser()
         game = await self.dao.get_by_id(id_=game_id, author=None if is_superuser else author)
         check_can_edit_release(game, author, is_superuser)
-        release = await self.dao.get_release(game_id)
-        if release is None:
+        if await self.dao.get_release(game_id) is None:
             return
         await self.dao.delete_release(game)
         await self.dao.commit()
-        await self.announcer.revoke(game, release)
+        await self.announcer.revoke(game)

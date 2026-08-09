@@ -133,7 +133,7 @@ from shvatka.core.interfaces.dal.game import (
     GameByIdGetter,
     GameFileRenamer,
     GameFileUploader,
-    GameReleasePostSaver,
+    GameReleaseGetter,
 )
 from shvatka.core.interfaces.dal.game_play import GamePlayerDao
 from shvatka.core.services.current_game import CurrentGameProviderImpl
@@ -371,8 +371,8 @@ class GameReleaseProvider(Provider):
         return GameReleaseEditorImpl(dao=dao)
 
     @provide
-    def game_release_post_saver(self, dao: HolderDao) -> GameReleasePostSaver:
-        return GameReleaseEditorImpl(dao=dao)
+    def game_release_getter(self, dao: HolderDao) -> GameReleaseGetter:
+        return GameReleaseReaderImpl(dao=dao)
 
     release_announcer = provide(GameReleaseAnnouncer)
     get_release = provide(GetGameReleaseInteractor)

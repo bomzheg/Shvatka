@@ -52,10 +52,13 @@ class NoOpGameLogWriter(GameLogWriter):
 
 
 class NoOpGameReleasePublisher(GameReleasePublisher):
-    async def publish(self, game: dto.Game, release: dto.GameRelease) -> dto.ReleasePost | None:
-        return None
+    async def publish(self, game: dto.Game, release: dto.GameRelease) -> None:
+        pass
 
-    async def unpublish(self, game: dto.Game, post: dto.ReleasePost) -> None:
+    async def update(self, game: dto.Game, release: dto.GameRelease) -> None:
+        pass
+
+    async def unpublish(self, game: dto.Game) -> None:
         pass
 
 

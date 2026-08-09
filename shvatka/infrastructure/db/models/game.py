@@ -152,7 +152,6 @@ class Game(Base):
     release_banner: Mapped[hints.PhotoHint | None] = mapped_column(
         ReleaseBannerField, nullable=True
     )
-    release_post: Mapped[dict[str, typing.Any] | None] = mapped_column(JSONB, nullable=True)
 
     __table_args__ = (
         UniqueConstraint("author_id", "name"),

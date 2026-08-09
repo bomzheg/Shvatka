@@ -130,18 +130,6 @@ class FullGame(Game):
 
 
 @dataclass
-class ReleasePost:
-    """Where a release currently lives in the announcements channel.
-
-    One message per hint, in order, so editing the release edits exactly these
-    messages instead of posting the whole thing again.
-    """
-
-    chat_id: int
-    message_ids: list[int]
-
-
-@dataclass
 class GameRelease:
     """A game's release — the promo published before it.
 
@@ -156,17 +144,13 @@ class GameRelease:
 
     Saving a release and announcing it are separate: it can be written and
     rewritten any time, and it goes to the channel when the game starts
-    collecting waivers.
+    collecting waivers. Where it stands once announced is the announcing view's
+    business, not the game's.
     """
 
     game_id: int
     banner: hints.PhotoHint | None = None
     hints: list[hints.AnyHint] = field(default_factory=list)
-    post: ReleasePost | None = None
-
-    @property
-    def is_published(self) -> bool:
-        return self.post is not None
 
     @property
     def is_empty(self) -> bool:

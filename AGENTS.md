@@ -294,7 +294,7 @@ with a curated ignore list, mypy overrides) lives in `pyproject.toml`.
 - Python **>=3.13,<3.15**. Package/dependency manager: **uv**.
 - Setup: `uv venv && uv sync --group test`.
 - Key stack: FastAPI, aiogram 3 + aiogram_dialog, SQLAlchemy 2 (async,
-  asyncpg), Alembic, **dishka** (DI), adaptix/dataclass_factory (serialization),
+  asyncpg), Alembic, **dishka** (DI), **adaptix** (serialization),
   **dature** (config), pydantic, redis, APScheduler.
 - DB migrations: `python -m alembic upgrade head` (DB URL in `alembic.ini`).
 - Entry points: `shvatka-tgbot`, `shvatka-api` (see `[project.scripts]`).
@@ -303,6 +303,12 @@ with a curated ignore list, mypy overrides) lives in `pyproject.toml`.
 ## Conventions cheat sheet
 
 - Domain DTOs are referenced as `dto.*` from `shvatka.core.models`.
+- **Serialization is adaptix, and only adaptix.** `dataclass_factory` is gone —
+  don't reintroduce it. Take the game `Retort` from DI (`FromDishka[Retort]` or
+  a constructor dep); it carries `REQUIRED_GAME_RECIPES`, which is what teaches
+  adaptix the non-model scenario types (`HintsList`, `Conditions`). Build a
+  `Retort` locally only for a format the game recipes don't describe — see
+  `infrastructure/crawler/retort.py` — and never at module level.
 - API endpoints and their models live together in `shvatka/api/<subdomain>/`
   (see the API layout section). Models convert with `.from_core(...)` /
   `.to_core(...)` helpers.

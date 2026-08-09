@@ -5,7 +5,6 @@ from uuid import uuid4
 
 import pytest
 from adaptix import Retort
-from dataclass_factory import Factory
 from httpx import AsyncClient
 
 from shvatka.api.games import responses as game_responses
@@ -32,8 +31,8 @@ async def test_active_game(game: dto.FullGame, dao: HolderDao, client: AsyncClie
     assert resp.is_success
     resp.read()
 
-    dcf = Factory()
-    actual = dcf.load(resp.json(), responses.Game)
+    retort = Retort()
+    actual = retort.load(resp.json(), responses.Game)
     assert game.id == actual.id
     assert actual.status == GameStatus.getting_waivers
 
@@ -47,8 +46,10 @@ async def test_games_list(finished_game: dto.FullGame, dao: HolderDao, client: A
     assert resp.is_success
     resp.read()
 
-    dcf = Factory()
-    actual: responses.Page[responses.Game] = dcf.load(resp.json(), responses.Page[responses.Game])
+    retort = Retort()
+    actual: responses.Page[responses.Game] = retort.load(
+        resp.json(), responses.Page[responses.Game]
+    )
     assert len(actual.content) == 1
     game = actual.content[0]
     assert game.id == finished_game.id

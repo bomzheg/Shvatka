@@ -4,7 +4,6 @@ from aiogram_dialog import DialogManager
 from aiogram_dialog.api.entities import Stack, Context
 from aiogram_dialog.api.protocols import BgManagerFactory
 from aiogram_dialog.context.storage import StorageProxy
-from dataclass_factory import Factory
 from dishka import AsyncContainer
 from telegraph.aio import Telegraph
 
@@ -35,7 +34,6 @@ class SHMiddlewareData(DialogMiddlewareData, total=False):
     main_config: TgBotConfig
     dishka_container: AsyncContainer
     user_getter: UserGetter
-    dcf: Factory
     retort: Retort
     dao: HolderDao
     scheduler: Scheduler

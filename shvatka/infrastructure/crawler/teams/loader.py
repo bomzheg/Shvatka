@@ -4,7 +4,7 @@ import logging
 from datetime import datetime, timedelta
 from pathlib import Path
 
-from dataclass_factory import Factory
+from adaptix import Retort
 from dishka import make_async_container
 
 from shvatka.common.config.parser.logging_config import setup_logging
@@ -14,6 +14,7 @@ from shvatka.core.utils import exceptions
 from shvatka.core.utils.datetime_utils import tz_utc
 from shvatka.infrastructure.crawler.game_scn.common import UNPARSEABLE_GAMES
 from shvatka.infrastructure.crawler.models.team import ParsedTeam, ParsedPlayer
+from shvatka.infrastructure.crawler.retort import create_teams_retort
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.infrastructure.di import get_providers
 from shvatka.tgbot.config.models.main import TgBotConfig
@@ -31,18 +32,18 @@ async def main(with_team_players: bool):
     )
     try:
         config = await dishka.get(TgBotConfig)
-        dcf = await dishka.get(Factory)
+        retort = create_teams_retort()
         async with dishka() as request_dishka:
             dao = await request_dishka.get(HolderDao)
             path = config.file_storage_config.path.parent / "teams.json"
-            await load_teams(path, with_team_players, dao, dcf)
+            await load_teams(path, with_team_players, dao, retort)
     finally:
         await dishka.close()
 
 
-async def load_teams(path: Path, with_team_players: bool, dao: HolderDao, dcf: Factory):
+async def load_teams(path: Path, with_team_players: bool, dao: HolderDao, retort: Retort):
     with path.open(encoding="utf8") as f:
-        teams = dcf.load(json.load(f), list[ParsedTeam])
+        teams = retort.load(json.load(f), list[ParsedTeam])
     for team in teams:
         logger.info("loading team %s", team.name)
         await save_team(team, with_team_players, dao)

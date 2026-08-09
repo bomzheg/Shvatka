@@ -1,6 +1,5 @@
 import typing
 
-import dataclass_factory
 from adaptix import (
     Retort,
     TypeHint,
@@ -12,14 +11,12 @@ from adaptix import (
 )
 from adaptix.load_error import LoadError
 from adaptix._internal.morphing.provider_template import ABCProxy
-from dataclass_factory import Schema, NameStyle
 from dishka import Provider, Scope, provide
 from telegraph.aio import Telegraph
 
 from shvatka.common.url_factory import UrlFactory
 from shvatka.core.models.dto import scn, action
 from shvatka.core.models.dto import hints
-from shvatka.core.models.schems import schemas
 from shvatka.core.utils import exceptions
 from shvatka.core.utils.input_validation import validate_level_id, is_multiple_keys_normal
 from shvatka.core.views.texts import INVALID_KEY_ERROR
@@ -104,14 +101,6 @@ VALIDATION_GAME_RECIPES = [
 
 class DCFProvider(Provider):
     scope = Scope.APP
-
-    @provide
-    def create_dataclass_factory(self) -> dataclass_factory.Factory:
-        dcf = dataclass_factory.Factory(
-            schemas=schemas,  # type:ignore[arg-type]
-            default_schema=Schema(name_style=NameStyle.kebab),
-        )
-        return dcf
 
     @provide
     def create_retort(self) -> Retort:

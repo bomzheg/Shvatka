@@ -1,5 +1,5 @@
 import pytest
-from dataclass_factory import Factory
+from adaptix import Retort
 from httpx import AsyncClient
 
 from shvatka.api.auth.responses import Token
@@ -40,9 +40,9 @@ async def test_get_team(
         follow_redirects=True,
     )
     assert resp.is_success
-    dcf = Factory()
+    retort = Retort()
     resp.read()
-    assert responses.Team.from_core(team) == dcf.load(resp.json(), responses.Team)
+    assert responses.Team.from_core(team) == retort.load(resp.json(), responses.Team)
 
 
 @pytest.mark.asyncio

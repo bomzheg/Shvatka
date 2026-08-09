@@ -4,7 +4,6 @@ from adaptix import Retort
 from aiogram import BaseMiddleware
 from aiogram.types import TelegramObject
 from aiogram_dialog.api.protocols import BgManagerFactory
-from dataclass_factory import Factory
 
 from shvatka.core.interfaces.clients.file_storage import FileStorage, FileGateway
 from shvatka.core.interfaces.scheduler import Scheduler
@@ -40,7 +39,6 @@ class InitMiddleware(BaseMiddleware):
         data["config"] = await dishka.get(BotConfig)
         data["main_config"] = await dishka.get(TgBotConfig)
         data["user_getter"] = await dishka.get(UserGetter)
-        data["dcf"] = await dishka.get(Factory)
         data["retort"] = await dishka.get(Retort)
         data["scheduler"] = await dishka.get(Scheduler)
         data["locker"] = await dishka.get(KeyCheckerFactory)

@@ -165,6 +165,47 @@ So: an Interactor takes `identity: IdentityProvider` as a `__call__` arg (or a
 player/team, and it should not re-implement auth. The DAO layer is the
 exception: DAOs take concrete `dto.Player`/`dto.Team`/etc.
 
+## Background work goes through the nursery
+
+**Never start a task yourself.** `asyncio.create_task`, `asyncio.ensure_future`
+and `asyncio.TaskGroup` are banned by lint (`TID251`); the single caller is
+`AsyncioNursery` in `shvatka/infrastructure/nursery.py`. Everything that has to
+outlive the request that asked for it — publishing a scenario, uploading to the
+forum, sending a pile of hints — is spawned on the app-scoped
+`Nursery` (`core/interfaces/nursery.py`), taken as `FromDishka[Nursery]`:
+
+```python
+nursery.spawn(
+    PublishScenarioToForumTask,
+    PublishScenarioToForumParams(game_id=game_id, player_id=player.id, ...),
+)
+```
+
+A task is a pair, both in `shvatka/tgbot/tasks.py` and registered in
+`BackgroundTasksProvider`:
+
+- a **frozen params dataclass** with the data of one run, handed to `spawn` and
+  put into the task's scope under its own type (`from_context(...)`);
+- a **task class** built by DI exactly like an Interactor — an async `__call__`
+  taking no arguments, everything else injected into `__init__`.
+
+Why it matters: the nursery opens a **fresh REQUEST scope** per task, so the
+task acquires and finalizes its own db session (and views, clients, …) instead
+of borrowing the handler's, which is closed the moment the handler returns.
+The nursery also keeps a strong reference until the task ends, logs failures
+instead of dropping them, and cancels what is still running when the app shuts
+down.
+
+Two rules for writing one:
+
+- **Params carry ids, not entities.** The task loads what it needs itself, on
+  behalf of the player who asked for it — build a `PlayerIdentityProvider`
+  (`core/services/identity.py`) from the player id and pass it to the usual
+  services, so authorization is re-checked in the task's own scope.
+- **Authorize eagerly in the handler too.** The spawning handler runs the same
+  check before spawning, so a player without rights is told immediately rather
+  than failing inside a task nobody is looking at.
+
 ## DAO layer
 
 - **Writes belong to the table's own DAO.** A plain `core/.../rdb/*.py` DAO may

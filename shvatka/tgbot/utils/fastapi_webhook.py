@@ -1,4 +1,3 @@
-import asyncio
 import secrets
 from abc import ABC, abstractmethod
 from contextlib import asynccontextmanager
@@ -12,6 +11,9 @@ from dishka import AsyncContainer
 from dishka.integrations.fastapi import FromDishka
 from dishka.integrations.fastapi import inject
 from fastapi import FastAPI, Request, Response, HTTPException, APIRouter
+
+from shvatka.core.interfaces.nursery import Nursery
+from shvatka.tgbot.tasks import FeedUpdateParams, FeedUpdateTask
 
 
 def setup_application(app: FastAPI, dishka: AsyncContainer, /, **kwargs: Any) -> None:
@@ -61,7 +63,6 @@ class BaseRequestHandler(ABC):
     ) -> None:
         self.handle_in_background = handle_in_background
         self.data = data
-        self._background_feed_update_tasks: set[asyncio.Task[Any]] = set()
 
     def register(self, app: FastAPI, /, path: str, **kwargs: Any) -> None:
         router = APIRouter(prefix="/webhook")
@@ -72,24 +73,12 @@ class BaseRequestHandler(ABC):
     def verify_secret(self, telegram_secret_token: str, bot: Bot) -> bool:
         pass
 
-    async def _background_feed_update(
-        self, bot: Bot, dispatcher: Dispatcher, update: dict[str, Any]
-    ) -> None:
-        result = await dispatcher.feed_raw_update(bot=bot, update=update, **self.data)
-        if isinstance(result, TelegramMethod):
-            await dispatcher.silent_call_request(bot=bot, result=result)
-
-    async def _handle_request_background(
-        self, bot: Bot, dispatcher: Dispatcher, request: Request
-    ) -> Response:
-        feed_update_task = asyncio.create_task(
-            self._background_feed_update(
-                bot=bot, dispatcher=dispatcher, update=bot.session.json_loads(request.body)
-            )
+    async def _handle_request_background(self, nursery: Nursery, request: Request) -> Response:
+        nursery.spawn(
+            FeedUpdateTask,
+            FeedUpdateParams(update=await request.json(), data=self.data),
         )
-        self._background_feed_update_tasks.add(feed_update_task)
-        feed_update_task.add_done_callback(self._background_feed_update_tasks.discard)
-        return Response(content={})
+        return Response(status_code=200)
 
     async def _build_response_writer(
         self, bot: Bot, dispatcher: Dispatcher, result: TelegramMethod[TelegramType] | None
@@ -118,13 +107,12 @@ class BaseRequestHandler(ABC):
         request: Request,
         bot: FromDishka[Bot],
         dispatcher: FromDishka[Dispatcher],
+        nursery: FromDishka[Nursery],
     ) -> Response:
         if not self.verify_secret(request.headers.get("X-Telegram-Bot-Api-Secret-Token", ""), bot):
             return Response(content="Unauthorized", status_code=401)
         if self.handle_in_background:
-            return await self._handle_request_background(
-                bot=bot, dispatcher=dispatcher, request=request
-            )
+            return await self._handle_request_background(nursery=nursery, request=request)
         return await self._handle_request(bot=bot, dispatcher=dispatcher, request=request)
 
     __call__ = handle

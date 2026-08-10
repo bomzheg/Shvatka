@@ -132,6 +132,9 @@ def create_root_app(paths: Paths) -> FastAPI:
     setup = partial(on_startup, dishka, webhook_config)
     root_app.router.add_event_handler("startup", setup)
     setup_dishka(dishka, root_app)
+    # dishka's fastapi integration doesn't close the container itself, and
+    # app-scoped things (the nursery among them) finalize on that close
+    root_app.router.add_event_handler("shutdown", dishka.close)
     logger.info(
         "app prepared in %.2f s with dishka:\n%s",
         time.monotonic() - started_at,

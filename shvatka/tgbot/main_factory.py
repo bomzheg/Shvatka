@@ -45,6 +45,7 @@ from shvatka.tgbot.middlewares import setup_middlewares
 from shvatka.tgbot.services.bot_rights import BotRights
 from shvatka.tgbot.services.identity import TgBotIdentityProvider
 from shvatka.tgbot.services.member_tags import MemberTagger
+from shvatka.tgbot.tasks import BackgroundTasksProvider
 from shvatka.tgbot.services.used_one_time_token import UsedOneTimeTokenInteractorImpl
 from shvatka.tgbot.username_resolver.user_getter import UserGetter
 from shvatka.tgbot.utils.router import print_router_tree
@@ -82,6 +83,7 @@ def get_bot_specific_providers() -> list[Provider]:
         GameToolsProvider(),
         UserGetterProvider(),
         BotIdpProvider(),
+        BackgroundTasksProvider(),
     ]
 
 

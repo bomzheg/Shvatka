@@ -14,6 +14,9 @@ from shvatka.infrastructure.di.interactors import AdminProvider as AdminInteract
 def setup_di(app: FastAPI, paths_env: str):
     container = create_dishka(paths_env)
     setup_dishka(container, app)
+    # dishka's fastapi integration doesn't close the container itself, and
+    # app-scoped things (the nursery among them) finalize on that close
+    app.router.add_event_handler("shutdown", container.close)
 
 
 def create_dishka(paths_env: str) -> AsyncContainer:

@@ -14,6 +14,7 @@ from shvatka.infrastructure.di.interactors import (
 from shvatka.infrastructure.di.interactors import NotificationProvider, RequestProvider
 from shvatka.infrastructure.di.printer import PrinterProvider
 from shvatka.infrastructure.db.factory import LockProvider
+from shvatka.infrastructure.nursery import NurseryProvider
 from shvatka.infrastructure.scheduler.factory import SchedulerProvider
 
 
@@ -40,5 +41,6 @@ def get_providers(paths_env):
         SearchProvider(),
         PrinterProvider(),
         LockProvider(),
+        NurseryProvider(),
         SchedulerProvider(),
     ]

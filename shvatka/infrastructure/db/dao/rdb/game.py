@@ -1,3 +1,4 @@
+from dataclasses import asdict
 from datetime import datetime, tzinfo
 import typing
 from typing import Sequence
@@ -9,6 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 
 from shvatka.core.models import dto
+from shvatka.core.models.dto import hints
 from shvatka.core.models.dto.scn.game import GameScenario
 from shvatka.core.models.enums import GameStatus
 from shvatka.core.models.enums.game_status import ACTIVE_STATUSES
@@ -274,6 +276,69 @@ class GameDao(BaseDAO[models.Game]):
     async def set_keys_url(self, game: dto.Game, url: str):
         await self.session.execute(
             update(models.Game).where(models.Game.id == game.id).values(keys_url=url)
+        )
+
+    async def get_release(self, game_id: int) -> dto.GameRelease | None:
+        # only the release columns: loading the whole Game here would put it in
+        # the identity map without its author, and a later get_by_id (which
+        # relies on joinedload-ing the author) would get that stripped instance
+        result = await self.session.execute(
+            select(models.Game.release, models.Game.release_banner).where(
+                models.Game.id == game_id
+            )
+        )
+        row = result.one_or_none()
+        if row is None or (row.release is None and row.release_banner is None):
+            return None
+        return dto.GameRelease(
+            game_id=game_id,
+            banner=row.release_banner,
+            hints=row.release or [],
+        )
+
+    async def save_release(
+        self, game: dto.Game, banner: hints.PhotoHint | None, hints_: list[hints.AnyHint]
+    ) -> None:
+        await self.session.execute(
+            update(models.Game)
+            .where(models.Game.id == game.id)
+            .values(release=hints_, release_banner=banner)
+        )
+
+    async def delete_release(self, game: dto.Game) -> None:
+        # release_post is not cleared here: it is the view's, and the view still
+        # needs it to take the messages down after this commit
+        await self.session.execute(
+            update(models.Game)
+            .where(models.Game.id == game.id)
+            .values(release=None, release_banner=None)
+        )
+
+    async def get_release_post(self, game_id: int) -> list[dto.BotMessage]:
+        """The messages the release was posted as, in order. Empty if none.
+
+        The bot's own bookkeeping: stored beside the game but deliberately kept
+        out of `to_dto`, so no chat or message id ever reaches the domain —
+        the same arrangement as `action_requests.bot_messages`.
+        """
+        result = await self.session.scalars(
+            select(models.Game.release_post).where(models.Game.id == game_id)
+        )
+        stored = result.one_or_none()
+        if not stored:
+            return []
+        return [dto.BotMessage(**message) for message in stored]
+
+    async def save_release_post(self, game_id: int, messages: list[dto.BotMessage]) -> None:
+        await self.session.execute(
+            update(models.Game)
+            .where(models.Game.id == game_id)
+            .values(release_post=[asdict(message) for message in messages])
+        )
+
+    async def clear_release_post(self, game_id: int) -> None:
+        await self.session.execute(
+            update(models.Game).where(models.Game.id == game_id).values(release_post=None)
         )
 
     async def is_author_game_by_name(self, name: str, author: dto.Player) -> bool:

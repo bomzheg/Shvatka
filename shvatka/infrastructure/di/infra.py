@@ -8,6 +8,7 @@ from shvatka.core.views.game import (
     InputContainer,
     GameLogWriter,
     GameLogEvent,
+    GameReleasePublisher,
     OrgNotifier,
     Event,
 )
@@ -50,6 +51,17 @@ class NoOpGameLogWriter(GameLogWriter):
         pass
 
 
+class NoOpGameReleasePublisher(GameReleasePublisher):
+    async def publish(self, game: dto.Game, release: dto.GameRelease) -> None:
+        pass
+
+    async def update(self, game: dto.Game, release: dto.GameRelease) -> None:
+        pass
+
+    async def unpublish(self, game: dto.Game) -> None:
+        pass
+
+
 class NoOpOrgNotifier(OrgNotifier):
     async def notify(self, event: Event) -> None:
         pass
@@ -74,6 +86,10 @@ class InfrastructureProvider(Provider):
     @provide
     def log_writer(self) -> GameLogWriter:
         return NoOpGameLogWriter()
+
+    @provide
+    def release_publisher(self) -> GameReleasePublisher:
+        return NoOpGameReleasePublisher()
 
     @provide
     def org_notifier(self) -> OrgNotifier:

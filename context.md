@@ -99,6 +99,10 @@ the edge-specific twist.
 | **Org permission** | Полномочие орга | What a secondary organizer may do: spy, see the key log, validate waivers, view the scenario. **Nothing is granted by default.** | `enums.OrgPermission` |
 | **Manage token** | — | The game's secret, checked when someone acts on the game through an invite link. | `Game.manage_token`, `organizers.check_game_token` |
 | **Publication** | Публикация | Posting a finished game's results to a Telegram channel. Possible once, after the game is finished or complete. | `GameResults.published_chanel_id`, `Game.can_be_publish` |
+| **Release** | Релиз | The promo an author publishes before a game — a **banner** followed by a few words about the theme and a map of the district. The part after the banner is a plain list of hint parts, so it is written and rendered with the same machinery as a hint. Optional: a game without one is played exactly as before. | `dto.GameRelease`, `core/games/release_interactors.py` |
+| **Bot message** | — | One message the bot posted, kept so it can be edited or removed later: a chat id and a message id, nothing more. Shared by everything that has to clean up after itself — an action request's messages, a release's post — and never part of a game, a request or a release itself. | `dto.BotMessage` |
+| **Banner** | Баннер | The wide title picture (with its caption) that leads a release. Kept apart from the rest because it is the one part small enough to stand alone above the site's header; roughly 1280×250—1280×550, though nothing enforces that. A release may be just a banner, or have none at all. | `dto.GameRelease.banner`, `games.release_banner` |
+| **Release post** | Пост релиза | Where a release currently stands in the announcements channel: one message per part, the banner first. Editing the release edits those messages; it is not a second **publication**, which stays the word for a finished game's results. Purely the bot's bookkeeping: a list of **bot messages** in `games.release_post`, read and written only by the announcing view, never through a core entity — the same arrangement as `action_requests.bot_messages`. | `GameDao.get_release_post`, `tgbot/views/game_release.py` |
 
 ### Game statuses
 
@@ -114,6 +118,13 @@ the edge-specific twist.
 `ACTIVE_STATUSES` = `getting_waivers`, `started`, `finished` — only one game may be
 active at a time. `EDITABLE_STATUSES` = `underconstruction`, `ready`,
 `getting_waivers`.
+
+A game's **release** follows the statuses on its own schedule, wider than
+`EDITABLE_STATUSES`: it may be rewritten up to and including `finished` (it is
+promo, not part of the play) and only an admin may touch it once the game is
+`complete`. It reaches the channel with the move to `getting_waivers` — written
+later than that, while the game runs, it is stored but never posted, because the
+audience it was meant for is already playing.
 
 Every "is this visible?" check in the engine hangs off `complete`: `check_can_read`
 and `check_can_view_scenario` in `core/rules/game.py`, and `get_typed_keys` /
@@ -231,6 +242,7 @@ where that is so, the row says as much.
 | Moderator | **Organizer** or **superuser** | Neither role exists under that name. |
 | Level text / текст уровня | **Puzzle** — загадка уровня | Say *текст уровня* all you like in conversation; it's the popular name and it's exact whenever the puzzle happens to be text. In writing use *загадка уровня*, because a puzzle can just as well be a photo, a video or an audio file, and because there is no separate "level text" in the model — it is the 0-minute hint. `level-concept.adoc` already says this: «Текст уровня это частный случай подсказки выходящей в 0 минут. Отдельной концепции текста уровня не существует.» |
 | Clue, tip | **Hint** (`TimeHint`) | One word for the thing released on a timer. |
+| Announcement, анонс | **Release** — релиз | Организаторы говорят *релиз* про промо перед игрой; *анонс* размывает его с любым другим объявлением. |
 | Fine, malus | **Penalty** (negative `bonus_minutes`) | A penalty is a negative bonus, not another field. |
 | Group, squad, crew | **Team** (`Team`) | Group means a Telegram chat here. |
 | Member | **Team player** (`TeamPlayer`) | Membership is an interval with permissions, not a flag. |

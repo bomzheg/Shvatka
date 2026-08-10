@@ -241,6 +241,12 @@ async def show_my_game_orgs(c: CallbackQuery, widget: Button, manager: DialogMan
     await manager.start(states.GameOrgsSG.orgs_list, data={"game_id": game_id})
 
 
+async def show_game_release(c: CallbackQuery, widget: Button, manager: DialogManager):
+    await c.answer()
+    game_id = manager.dialog_data["my_game_id"]
+    await manager.start(states.GameReleaseSG.menu, data={"game_id": int(game_id)})
+
+
 async def publish_game(c: CallbackQuery, widget: Button, manager: DialogManager):
     await c.answer()
     game_id = manager.dialog_data["my_game_id"]

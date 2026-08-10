@@ -59,6 +59,27 @@ class GameLogWriter(Protocol):
         raise NotImplementedError
 
 
+class GameReleasePublisher(Protocol):
+    """Announces a game where the audience is (a telegram channel, ...).
+
+    Whether the release is currently on show, and where — a chat, some message
+    ids — is the view's own business, kept by the view and never handed to the
+    domain, exactly as pinned messages are.
+    """
+
+    async def publish(self, game: dto.Game, release: dto.GameRelease) -> None:
+        """Show the release: put it up, or bring what is up to date."""
+        raise NotImplementedError
+
+    async def update(self, game: dto.Game, release: dto.GameRelease) -> None:
+        """Bring an already shown release up to date. Show nothing new."""
+        raise NotImplementedError
+
+    async def unpublish(self, game: dto.Game) -> None:
+        """Take the release out of the channel, if it is there."""
+        raise NotImplementedError
+
+
 class GameLogType(enum.Enum):
     GAME_WAIVERS_STARTED = enum.auto()
     GAME_PLANED = enum.auto()

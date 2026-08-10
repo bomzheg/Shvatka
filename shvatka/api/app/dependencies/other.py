@@ -6,6 +6,7 @@ from shvatka.api.app.utils.web_input import (
     WebInput,
     WebGameView,
     WebGameLogWriter,
+    WebGameReleasePublisher,
     WebOrgNotifier,
     WebTeamNotifier,
     WebGamePreparer,
@@ -38,6 +39,10 @@ class OtherApiProvider(Provider):
     @provide
     def log_writer(self) -> WebGameLogWriter:
         return WebGameLogWriter()
+
+    @provide
+    def release_publisher(self) -> WebGameReleasePublisher:
+        return WebGameReleasePublisher()
 
     @provide
     def org_notifier(

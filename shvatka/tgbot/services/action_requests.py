@@ -14,9 +14,9 @@ class ActionResolvedInteractorImpl(ActionResolvedInteractor):
 
     async def __call__(self, request_id: int) -> None:
         bot_messages = await self.requests.get_bot_messages(request_id)
-        for chat_id, message_id in bot_messages:
+        for message in bot_messages:
             await total_remove_msg(
                 self.bot,
-                chat_id=chat_id,
-                msg_id=message_id,
+                chat_id=message.chat_id,
+                msg_id=message.message_id,
             )

@@ -74,6 +74,24 @@ class FullGame:
         )
 
 
+@dataclass
+class GameRelease:
+    """A game's release: a banner leading some text, a map — as plain hints."""
+
+    game_id: int
+    banner: hints.PhotoHint | None
+    """The wide title picture, shown alone above the site's header."""
+    hints: Sequence[hints.AnyHint]
+
+    @classmethod
+    def from_core(cls, core: dto.GameRelease) -> "GameRelease":
+        return cls(
+            game_id=core.game_id,
+            banner=core.banner,
+            hints=core.hints,
+        )
+
+
 @dataclass(frozen=True)
 class KeyTime:
     text: str

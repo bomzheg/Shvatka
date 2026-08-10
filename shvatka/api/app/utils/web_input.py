@@ -10,6 +10,7 @@ from shvatka.core.models.dto import action
 from shvatka.core.views.game import (
     GameView,
     GameLogWriter,
+    GameReleasePublisher,
     GameLogEvent,
     OrgNotifier,
     Event,
@@ -161,6 +162,19 @@ class WebGamePreparer(GameViewPreparer):
 
 class WebGameLogWriter(GameLogWriter):
     async def log(self, log_event: GameLogEvent) -> None:
+        pass
+
+
+class WebGameReleasePublisher(GameReleasePublisher):
+    """The site has no announcement to keep: it reads the release as it is."""
+
+    async def publish(self, game: dto.Game, release: dto.GameRelease) -> None:
+        pass
+
+    async def update(self, game: dto.Game, release: dto.GameRelease) -> None:
+        pass
+
+    async def unpublish(self, game: dto.Game) -> None:
         pass
 
 

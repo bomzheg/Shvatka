@@ -142,6 +142,28 @@ async def get_game_stat(
     return responses.GameStat.from_core(stat)
 ```
 
+**Showing something in telegram stays in `tgbot`.** Never move a bot view or
+its tools into the shared providers to reach them from the api — an interactor
+that needs the chat to change takes a **view Protocol** from `core/views/` and
+each container binds its own implementation: the bot one in
+`tgbot/main_factory.py`, a web one in `api/app/dependencies/`, a no-op in
+`infrastructure/di/infra.py`. (Where an event fits better than a call, submit
+one to the `Bus` instead.) That way the same use case reaches the channel from
+the site, without `HintSender` leaking into every container.
+
+**What a view showed is the view's to remember**, not the domain's. Postgres is
+fine for it — what must not happen is a chat or message id reaching a core
+entity. Store it in its own column (or its own table), read and write it
+through dao methods that return plain values, and keep it out of `to_dto`:
+`action_requests.bot_messages` and `games.release_post` both work that way,
+and `MessagePinner` keeps its ids in redis for the same reason.
+
+A dependency that genuinely belongs to both edges — a dao, a policy, an
+interactor — does go in the shared providers (`infrastructure/di/`, listed by
+`get_providers()`). The integration tests build their container by hand in
+`tests/integration/conftest.py`, so a new shared provider has to be added
+there as well.
+
 ## Use the providers (`IdentityProvider` / `CurrentGameProvider`)
 
 Resolve "who is acting" and "what game is active" through these Protocols as

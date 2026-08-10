@@ -29,6 +29,11 @@ from shvatka.core.games.editor_interactors import (
     PlanGameStartInteractor,
     ChangeGameStatusInteractor,
 )
+from shvatka.core.games.release_interactors import (
+    DeleteGameReleaseInteractor,
+    GetGameReleaseInteractor,
+    SaveGameReleaseInteractor,
+)
 from shvatka.core.games.org_interactors import (
     ListGameOrgsInteractor,
     AddGameOrgInteractor,
@@ -158,6 +163,50 @@ async def get_game_card(
     game = await get_full_game(id_, identity, dao.game)
     files = await get_file_metas(game, identity, dao.game_packager)
     return responses.FullGame.from_core(retort, game, files)
+
+
+@inject
+async def get_game_release(
+    interactor: FromDishka[GetGameReleaseInteractor],
+    id_: Annotated[int, Path(alias="id")],
+) -> responses.GameRelease | None:
+    """The game's release, or ``null`` when it has none.
+
+    Readable by anyone — a release is promo, shown to guests too.
+    """
+    release = await interactor(game_id=id_)
+    return None if release is None else responses.GameRelease.from_core(release)
+
+
+@inject
+async def change_my_game_release(
+    identity: FromDishka[ApiIdentityProvider],
+    interactor: FromDishka[SaveGameReleaseInteractor],
+    retort: FromDishka[Retort],
+    id_: Annotated[int, Path(alias="id")],
+    body: Annotated[requests.GameRelease, Body()],
+) -> responses.GameRelease:
+    """Write (or rewrite) the release.
+
+    When it reaches the announcements channel is up to the game's status — see
+    :mod:`shvatka.core.games.release_interactors`.
+    """
+    release = await interactor(
+        game_id=id_,
+        banner=body.banner_to_core(retort),
+        hints_=body.hints_to_core(retort),
+        identity=identity,
+    )
+    return responses.GameRelease.from_core(release)
+
+
+@inject
+async def delete_my_game_release(
+    identity: FromDishka[ApiIdentityProvider],
+    interactor: FromDishka[DeleteGameReleaseInteractor],
+    id_: Annotated[int, Path(alias="id")],
+) -> None:
+    await interactor(game_id=id_, identity=identity)
 
 
 @inject
@@ -310,11 +359,14 @@ def setup() -> APIRouter:
     games_router.add_api_route("/my/{id}/start_at", change_my_game_start_at, methods=["PUT"])
     games_router.add_api_route("/my/{id}/status", change_my_game_status, methods=["PUT"])
     games_router.add_api_route("/my/{id}/keys/print", export_game_keys_to_print, methods=["GET"])
+    games_router.add_api_route("/my/{id}/release", change_my_game_release, methods=["PUT"])
+    games_router.add_api_route("/my/{id}/release", delete_my_game_release, methods=["DELETE"])
     games_router.add_api_route("/active", get_active_game, methods=["GET"])
     games_router.add_api_route("/active/me", get_my_role, methods=["GET"])
     games_router.add_api_route("/running/level/current", get_current_level, methods=["GET"])
     games_router.add_api_route("/running/key", insert_key, methods=["POST"])
     games_router.add_api_route("/{id}", get_game_card, methods=["GET"])
+    games_router.add_api_route("/{id}/release", get_game_release, methods=["GET"])
     games_router.add_api_route("/{id}/keys", get_game_keys, methods=["GET"])
     games_router.add_api_route("/{id}/stat", get_game_stat, methods=["GET"])
     games_router.add_api_route("/{id}/stat/export", export_game_results, methods=["GET"])

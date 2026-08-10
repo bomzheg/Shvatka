@@ -102,6 +102,21 @@ class GameFileRenamer(GameByIdGetter, Committer, Protocol):
         raise NotImplementedError
 
 
+class GameReleaseGetter(Protocol):
+    async def get_release(self, game_id: int) -> dto.GameRelease | None:
+        raise NotImplementedError
+
+
+class GameReleaseSaver(Committer, GameReleaseGetter, Protocol):
+    async def save_release(
+        self, game: dto.Game, banner: hints.PhotoHint | None, hints_: list[hints.AnyHint]
+    ) -> None:
+        raise NotImplementedError
+
+    async def delete_release(self, game: dto.Game) -> None:
+        raise NotImplementedError
+
+
 class ActiveGameFinder(Protocol):
     async def get_active_game(self) -> dto.Game | None:
         raise NotImplementedError

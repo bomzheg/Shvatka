@@ -3,7 +3,13 @@ from typing import Protocol
 from shvatka.core.games.dto import BonusEvent, CurrentHintsOnly, Event
 from shvatka.core.interfaces.dal.complex import GameScenarioEditor, TypedKeyGetter, GameStatDao
 from shvatka.core.interfaces.dal.file_info import FileInfoGetter
-from shvatka.core.interfaces.dal.game import GameAuthorTransferer, GameByIdGetter
+from shvatka.core.interfaces.dal.file_link import FileIdsByGuidsGetter, GameFilesAdder
+from shvatka.core.interfaces.dal.game import (
+    GameAuthorTransferer,
+    GameByIdGetter,
+    GameReleaseGetter,
+    GameReleaseSaver,
+)
 from shvatka.core.interfaces.dal.player import PlayerByUserGetter
 from shvatka.core.interfaces.dal.waiver import WaiverChecker
 from shvatka.core.interfaces.identity import IdentityProvider
@@ -44,9 +50,39 @@ class GameStatReader(GameStatDao, GameBonusesGetter, GameByIdGetter, PlayerByUse
     pass
 
 
-class GameFileReader(FileInfoGetter, GameByIdGetter, PlayerByUserGetter, WaiverChecker, Protocol):
+class GameFileReader(
+    FileInfoGetter,
+    GameByIdGetter,
+    GameReleaseGetter,
+    PlayerByUserGetter,
+    WaiverChecker,
+    Protocol,
+):
     async def is_game_file(self, game_id: int, guid: str) -> bool:
         """Whether the file is registered as usable in the game (game_files)."""
+        raise NotImplementedError
+
+
+class GameReleaseReader(GameByIdGetter, GameReleaseGetter, Protocol):
+    """Reads a game's announcement (and the game it belongs to)."""
+
+
+class GameReleaseEditor(
+    GameByIdGetter,
+    GameReleaseSaver,
+    FileIdsByGuidsGetter,
+    GameFilesAdder,
+    Protocol,
+):
+    """Writes a game's announcement, registering the files it references.
+
+    A release may reference files the author uploaded straight into the
+    announcement (that's how the bot works), so saving it also makes them
+    usable in the game — otherwise the banner couldn't be served from the cdn
+    endpoint.
+    """
+
+    async def check_author_can_own_guid(self, author: dto.Player, guid: str) -> None:
         raise NotImplementedError
 
 

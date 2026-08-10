@@ -26,7 +26,13 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from shvatka.common.factory import TelegraphProvider
 from shvatka.core.interfaces.clients.file_storage import FileStorage
 from shvatka.core.interfaces.identity import IdentityProvider
-from shvatka.core.views.game import GameLogWriter, GameView, GameViewPreparer, OrgNotifier
+from shvatka.core.views.game import (
+    GameLogWriter,
+    GameReleasePublisher,
+    GameView,
+    GameViewPreparer,
+    OrgNotifier,
+)
 from shvatka.core.views.level import LevelView
 from shvatka.core.views.team import TeamNotifier
 from shvatka.infrastructure.bus.in_memory import UsedOneTimeTokenInteractor
@@ -54,6 +60,7 @@ from shvatka.tgbot.views.hint_factory.hint_content_resolver import HintContentRe
 from shvatka.tgbot.views.hint_factory.hint_parser import HintParser
 from shvatka.tgbot.views.hint_sender import HintSender
 from shvatka.tgbot.views.level_testing import LevelBotView
+from shvatka.tgbot.views.game_release import GameBotReleasePublisher
 from shvatka.tgbot.views.pinner import MessagePinner
 
 logger = logging.getLogger(__name__)
@@ -200,6 +207,10 @@ class BotOnlyProvider(Provider):
     def get_game_log(self, game_log: GameBotLog) -> GameLogWriter:
         return game_log
 
+    @provide
+    def get_release_publisher(self, publisher: GameBotReleasePublisher) -> GameReleasePublisher:
+        return publisher
+
 
 class GameToolsProvider(Provider):
     @provide(scope=Scope.REQUEST)
@@ -231,6 +242,23 @@ class GameToolsProvider(Provider):
                 resolver=resolver,
                 file_info_dao=FileInfoDao(session),
             )
+
+    @provide(scope=Scope.REQUEST)
+    def get_release_publisher(
+        self,
+        bot: Bot,
+        hint_sender: HintSender,
+        resolver: HintContentResolver,
+        dao: HolderDao,
+        config: BotConfig,
+    ) -> GameBotReleasePublisher:
+        return GameBotReleasePublisher(
+            bot=bot,
+            hint_sender=hint_sender,
+            resolver=resolver,
+            dao=dao.game,
+            log_chat_id=config.game_log_chat,
+        )
 
     message_pinner = provide(MessagePinner, scope=Scope.REQUEST)
     member_tagger = provide(MemberTagger, scope=Scope.REQUEST)

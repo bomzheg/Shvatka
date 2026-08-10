@@ -28,7 +28,16 @@ from shvatka.core.games.admin_interactors import (
     AdminUpdateGameScenarioInteractor,
     AdminUploadGameFileInteractor,
 )
-from shvatka.core.games.adapters import AdminGameScenarioEditor
+from shvatka.core.games.adapters import (
+    AdminGameScenarioEditor,
+    GameReleaseEditor,
+    GameReleaseReader,
+)
+from shvatka.core.games.release_interactors import (
+    GetGameReleaseInteractor,
+    SaveGameReleaseInteractor,
+    DeleteGameReleaseInteractor,
+)
 from shvatka.core.games.org_interactors import (
     ListGameOrgsInteractor,
     AddGameOrgInteractor,
@@ -109,7 +118,7 @@ from shvatka.core.teams.adapters import ChatlessTeamCreator, AdminTeamMerger
 from shvatka.core.views.game import GameLogWriter, OrgNotifier
 from shvatka.core.views.team import TeamNotifier
 from shvatka.core.interfaces.clients.file_storage import FileStorage
-from shvatka.core.interfaces.dal.complex import GameScenarioEditor
+from shvatka.core.interfaces.dal.complex import GameScenarioEditor, GameStatusChanger
 from shvatka.core.interfaces.scheduler import Scheduler
 from shvatka.core.games.adapters import (
     GameFileReader,
@@ -119,7 +128,11 @@ from shvatka.core.games.adapters import (
 )
 from shvatka.core.interfaces.bus import Bus
 from shvatka.core.interfaces.current_game import CurrentGameProvider
-from shvatka.core.interfaces.dal.game import GameByIdGetter, GameFileRenamer, GameFileUploader
+from shvatka.core.interfaces.dal.game import (
+    GameByIdGetter,
+    GameFileRenamer,
+    GameFileUploader,
+)
 from shvatka.core.interfaces.dal.game_play import GamePlayerDao
 from shvatka.core.services.current_game import CurrentGameProviderImpl
 from shvatka.core.interfaces.dal.waiver import WaiverApprover
@@ -173,6 +186,8 @@ from shvatka.infrastructure.db.dao.complex.game import (
     GameFileRenamerImpl,
     GameFileUploaderImpl,
     GamePlayDaoImpl,
+    GameReleaseEditorImpl,
+    GameReleaseReaderImpl,
 )
 from shvatka.infrastructure.db.dao.complex.game_play import GamePlayerDaoImpl
 from shvatka.infrastructure.db.dao.complex.team import TeamCreatorImpl, AdminTeamMergerImpl
@@ -287,10 +302,10 @@ class GameEditProvider(Provider):
         )
 
     @provide
-    def change_status(self, dao: HolderDao, game_log: GameLogWriter) -> ChangeGameStatusInteractor:
-        return ChangeGameStatusInteractor(
-            getter=dao.game, waiver_starter=dao.game, completer=dao.game, game_log=game_log
-        )
+    def game_status_changer(self, dao: HolderDao) -> GameStatusChanger:
+        return dao.game
+
+    change_status = provide(ChangeGameStatusInteractor)
 
     @provide
     def game_file_uploader(self, dao: HolderDao) -> GameFileUploader:
@@ -329,6 +344,27 @@ class GameEditProvider(Provider):
     @provide
     def remove_org(self, dao: HolderDao) -> RemoveGameOrgInteractor:
         return RemoveGameOrgInteractor(game_dao=dao.game, org_dao=dao.organizer)
+
+
+class GameReleaseProvider(Provider):
+    """Game releases — used by both edges, so shared instead of api-only."""
+
+    scope = Scope.REQUEST
+
+    # these two take a `HolderDao` the impl only imports under TYPE_CHECKING,
+    # so dishka cannot build them from the annotation — same as every other
+    # complex dao here (`game_scenario_editor`, `admin_game_scenario_editor`)
+    @provide
+    def game_release_reader(self, dao: HolderDao) -> GameReleaseReader:
+        return GameReleaseReaderImpl(dao=dao)
+
+    @provide
+    def game_release_editor(self, dao: HolderDao) -> GameReleaseEditor:
+        return GameReleaseEditorImpl(dao=dao)
+
+    get_release = provide(GetGameReleaseInteractor)
+    save_release = provide(SaveGameReleaseInteractor)
+    delete_release = provide(DeleteGameReleaseInteractor)
 
 
 class WaiverProvider(Provider):

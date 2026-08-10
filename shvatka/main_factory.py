@@ -32,6 +32,7 @@ from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.views.game import (
     GameView,
     GameViewPreparer,
+    GameReleasePublisher,
     OrgNotifier,
     GameLogWriter,
 )
@@ -47,6 +48,7 @@ from shvatka.tgbot.main_factory import (
 from shvatka.tgbot.services.identity import TgBotIdentityProvider
 from shvatka.tgbot.utils.fastapi_webhook import setup_application, SimpleRequestHandler
 from shvatka.tgbot.views.game import BotView, BotOrgNotifier, GameBotLog
+from shvatka.tgbot.views.game_release import GameBotReleasePublisher
 from shvatka.tgbot.views.team import BotTeamNotifier
 from shvatka.views import (
     ComplexOrgNotifier,
@@ -90,6 +92,12 @@ class ComplexOnlyProvider(Provider):
     @provide
     def complex_log_writer(self, bot: GameBotLog, web: WebGameLogWriter) -> GameLogWriter:
         return ComplexGameLogWriter(bot, web)
+
+    @provide
+    def complex_release_publisher(self, bot: GameBotReleasePublisher) -> GameReleasePublisher:
+        # nothing to compose: the web side of a release is the site reading it
+        # from the database, so only the bot has anything to announce
+        return bot
 
 
 def get_complex_only_providers() -> list[Provider]:

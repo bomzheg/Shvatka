@@ -19,6 +19,7 @@ from shvatka.infrastructure.db.dao import GameDao
 from shvatka.tgbot.models.hint import BaseHintLinkView
 from shvatka.tgbot.views.hint_factory.hint_content_resolver import HintContentResolver
 from shvatka.tgbot.views.hint_sender import HintSender
+from shvatka.tgbot.views.utils import total_remove_msg
 
 logger = logging.getLogger(__name__)
 
@@ -59,64 +60,64 @@ class GameBotReleasePublisher(GameReleasePublisher):
 
     async def publish(self, game: dto.Game, release: dto.GameRelease) -> None:
         posted = await self.dao.get_release_post(game.id)
-        if posted is not None:
-            if await self.edit(release, *posted):
+        if posted:
+            if await self.edit(release, posted):
                 return
-            await self.take_down(game.id, *posted)
+            await self.take_down(game.id, posted)
         await self.post(release)
 
     async def update(self, game: dto.Game, release: dto.GameRelease) -> None:
         """Only refresh what is already up — never announce a game by itself."""
         posted = await self.dao.get_release_post(game.id)
-        if posted is None:
+        if not posted:
             return
-        if await self.edit(release, *posted):
+        if await self.edit(release, posted):
             return
-        await self.take_down(game.id, *posted)
+        await self.take_down(game.id, posted)
         await self.post(release)
 
     async def post(self, release: dto.GameRelease) -> None:
-        message_ids = []
+        posted = []
         for hint in release.parts:
             message = await self.hint_sender.send_hint(hint, self.log_chat_id)
-            message_ids.append(message.message_id)
-        await self.dao.save_release_post(release.game_id, self.log_chat_id, message_ids)
+            posted.append(dto.BotMessage(chat_id=self.log_chat_id, message_id=message.message_id))
+        await self.dao.save_release_post(release.game_id, posted)
         await self.dao.commit()
         logger.info("release of game %s posted to chat %s", release.game_id, self.log_chat_id)
 
-    async def edit(self, release: dto.GameRelease, chat_id: int, message_ids: list[int]) -> bool:
+    async def edit(self, release: dto.GameRelease, posted: list[dto.BotMessage]) -> bool:
         """Update the posted messages in place. False if telegram won't have it."""
         parts = release.parts
-        if len(parts) != len(message_ids):
+        if len(parts) != len(posted):
             return False
-        for hint, message_id in zip(parts, message_ids):
-            if not await self.edit_one(hint, chat_id, message_id):
+        for hint, message in zip(parts, posted):
+            if not await self.edit_one(hint, message):
                 return False
-        logger.info("release of game %s edited in chat %s", release.game_id, chat_id)
+        logger.info("release of game %s edited in chat %s", release.game_id, self.log_chat_id)
         return True
 
-    async def edit_one(self, hint: hints.BaseHint, chat_id: int, message_id: int) -> bool:
+    async def edit_one(self, hint: hints.BaseHint, message: dto.BotMessage) -> bool:
         view = await self.resolver.resolve_link(hint)
         type_ = enums.HintType[hint.type]
         try:
             if type_ == enums.HintType.text:
                 await self.bot.edit_message_text(
-                    chat_id=chat_id, message_id=message_id, **view.kwargs()
+                    chat_id=message.chat_id, message_id=message.message_id, **view.kwargs()
                 )
             else:
                 media = self.to_input_media(type_, view)
                 if media is None:
                     return False
                 await self.bot.edit_message_media(
-                    chat_id=chat_id, message_id=message_id, media=media
+                    chat_id=message.chat_id, message_id=message.message_id, media=media
                 )
         except TelegramBadRequest as e:
             if "not modified" in str(e):
                 return True  # this part of the release did not change
-            logger.info("can't edit release message %s in place", message_id, exc_info=e)
+            logger.info("can't edit release message %s in place", message, exc_info=e)
             return False
         except TelegramAPIError as e:
-            logger.warning("can't edit release message %s", message_id, exc_info=e)
+            logger.warning("can't edit release message %s", message, exc_info=e)
             return False
         return True
 
@@ -137,19 +138,14 @@ class GameBotReleasePublisher(GameReleasePublisher):
 
     async def unpublish(self, game: dto.Game) -> None:
         posted = await self.dao.get_release_post(game.id)
-        if posted is None:
+        if not posted:
             return
-        await self.take_down(game.id, *posted)
+        await self.take_down(game.id, posted)
 
-    async def take_down(self, game_id: int, chat_id: int, message_ids: list[int]) -> None:
-        for message_id in message_ids:
-            await self.delete_one(chat_id, message_id)
+    async def take_down(self, game_id: int, posted: list[dto.BotMessage]) -> None:
+        for message in posted:
+            # a message too old to delete is struck through instead, so the
+            # channel never keeps a release that no longer exists
+            await total_remove_msg(self.bot, chat_id=message.chat_id, msg_id=message.message_id)
         await self.dao.clear_release_post(game_id)
         await self.dao.commit()
-
-    async def delete_one(self, chat_id: int, message_id: int) -> None:
-        try:
-            await self.bot.delete_message(chat_id=chat_id, message_id=message_id)
-        except TelegramAPIError as e:
-            # an already deleted (or too old) message must not block the rest
-            logger.info("can't delete release message %s", message_id, exc_info=e)

@@ -1,3 +1,4 @@
+from dataclasses import asdict
 from datetime import datetime, tzinfo
 import typing
 from typing import Sequence
@@ -313,25 +314,26 @@ class GameDao(BaseDAO[models.Game]):
             .values(release=None, release_banner=None)
         )
 
-    async def get_release_post(self, game_id: int) -> tuple[int, list[int]] | None:
-        """The chat and messages the release was posted as, if it was.
+    async def get_release_post(self, game_id: int) -> list[dto.BotMessage]:
+        """The messages the release was posted as, in order. Empty if none.
 
         The bot's own bookkeeping: stored beside the game but deliberately kept
-        out of `to_dto`, so no chat or message id ever reaches the domain.
+        out of `to_dto`, so no chat or message id ever reaches the domain —
+        the same arrangement as `action_requests.bot_messages`.
         """
         result = await self.session.scalars(
             select(models.Game.release_post).where(models.Game.id == game_id)
         )
         stored = result.one_or_none()
         if not stored:
-            return None
-        return stored["chat_id"], list(stored["message_ids"])
+            return []
+        return [dto.BotMessage(**message) for message in stored]
 
-    async def save_release_post(self, game_id: int, chat_id: int, message_ids: list[int]) -> None:
+    async def save_release_post(self, game_id: int, messages: list[dto.BotMessage]) -> None:
         await self.session.execute(
             update(models.Game)
             .where(models.Game.id == game_id)
-            .values(release_post={"chat_id": chat_id, "message_ids": message_ids})
+            .values(release_post=[asdict(message) for message in messages])
         )
 
     async def clear_release_post(self, game_id: int) -> None:

@@ -37,3 +37,4 @@ from .waiver import Waiver, WaiverQuery
 from .version import VersionInfo
 from .event_log import GameEvent
 from .timers import Timer
+from .bot_message import BotMessage

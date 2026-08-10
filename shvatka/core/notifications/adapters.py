@@ -7,6 +7,7 @@ from typing import Any, Protocol
 from shvatka.core.interfaces.dal.base import Committer
 from shvatka.core.models.enums.notification import NotificationType, NotificationSeverity
 from shvatka.core.models.enums.request import RequestType, RequestStatus
+from shvatka.core.models.dto import BotMessage
 from shvatka.core.notifications import dto
 
 
@@ -122,5 +123,5 @@ class RequestStorage(Committer, Protocol):
     async def add_bot_message(self, request_id: int, *, chat_id: int, message_id: int) -> None:
         raise NotImplementedError
 
-    async def get_bot_messages(self, request_id: int) -> Sequence[tuple[int, int]]:
+    async def get_bot_messages(self, request_id: int) -> Sequence[BotMessage]:
         raise NotImplementedError

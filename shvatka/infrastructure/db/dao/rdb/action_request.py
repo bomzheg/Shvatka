@@ -8,6 +8,7 @@ from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from shvatka.core.models.enums.request import RequestType, RequestStatus
+from shvatka.core.models.dto import BotMessage
 from shvatka.core.notifications import dto
 from shvatka.core.utils.datetime_utils import tz_utc
 from shvatka.core.utils.exceptions import RequestNotFound
@@ -122,11 +123,11 @@ class ActionRequestDAO(BaseDAO[ActionRequest]):
         ]
         await self._flush(request)
 
-    async def get_bot_messages(self, request_id: int) -> Sequence[tuple[int, int]]:
+    async def get_bot_messages(self, request_id: int) -> Sequence[BotMessage]:
         result: ScalarResult[list[dict[str, int]]] = await self.session.scalars(
             select(ActionRequest.bot_messages).where(ActionRequest.id == request_id)
         )
-        return [(d["chat_id"], d["message_id"]) for d in result.one()]
+        return [BotMessage(**d) for d in result.one()]
 
     async def get_pending_by_types(
         self, types: Collection[RequestType]

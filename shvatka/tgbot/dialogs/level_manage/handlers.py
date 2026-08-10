@@ -49,12 +49,14 @@ async def show_level(
     data: dict[str, Any] = manager.start_data  # type: ignore[assignment]
     level_id = data["level_id"]
     author = await identity.get_required_player()
-    # authorize here so a player without rights is told right away, not in a
-    # background task nobody is looking at; the task checks again on its own
-    await get_by_id(level_id, author, dao.level)
+    level = await get_by_id(level_id, author, dao.level)
+    chat_id = author.get_chat_id()
+    if chat_id is None:
+        logger.warning("player %s has no telegram chat, hints not sent", author.id)
+        return
     nursery.spawn(
         SendLevelHintsTask,
-        SendLevelHintsParams(level_id=level_id, player_id=author.id),
+        SendLevelHintsParams(level=level, chat_id=chat_id),
     )
 
 

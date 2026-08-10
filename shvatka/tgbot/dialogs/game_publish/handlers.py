@@ -10,6 +10,7 @@ from dishka.integrations.aiogram_dialog import inject
 from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.interfaces.nursery import Nursery
 from shvatka.core.services.game import get_full_game
+from shvatka.core.services.game_stat import get_game_stat, get_typed_keys
 from shvatka.core.utils.datetime_utils import tz_utc
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.tgbot.tasks import (
@@ -49,8 +50,9 @@ async def process_publish_message(
 
     data: dict[str, Any] = manager.start_data  # type: ignore[assignment]
     game_id: int = data["game_id"]
-    player = await idp.get_required_player()
     game = await get_full_game(id_=game_id, identity=idp, dao=dao.game)
+    game_stat = await get_game_stat(game=game, identity=idp, dao=dao.game_stat)
+    keys = await get_typed_keys(game=game, identity=idp, dao=dao.typed_keys)
     approximate_time = GamePublisher.get_approximate_time_of(game)
     await message.answer(
         "Начинаю отправку сценария в канал, в связи с ограничениями платформы, "
@@ -62,8 +64,9 @@ async def process_publish_message(
     nursery.spawn(
         PublishScenarioToChannelTask,
         PublishScenarioToChannelParams(
-            game_id=game_id,
-            player_id=player.id,
+            game=game,
+            game_stat=game_stat,
+            keys=keys,
             channel_id=channel_id,
             manager=manager.bg(),
         ),

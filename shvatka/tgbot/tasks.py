@@ -2,13 +2,14 @@
 
 Each task is a pair — a frozen params dataclass carrying the data of a single
 run, and a class whose dependencies come from DI. The task runs in a scope of
-its own, so it opens its own db session (and every other request-scoped
-resource) rather than borrowing the handler's, which is gone by the time the
-task starts.
+its own, so the session-bound things it works with (a :class:`HintSender` and
+its dao, for one) are acquired and finalized by that scope rather than borrowed
+from the handler's, which is gone by the time the task starts.
 
-Params carry ids, not entities: the task loads what it needs itself, on behalf
-of the player who asked for it, so its authorization is checked in its own
-scope instead of trusting whatever the handler happened to have in hand.
+Entities travel in params: they are plain dataclasses, detached from any
+session, so handing a loaded game or level to a task is free. What must never
+cross is a resource tied to the caller's scope — a dao, a session, a sender —
+those come from DI inside the task.
 """
 
 import logging
@@ -22,13 +23,9 @@ from aiogram_dialog import BaseDialogManager
 from dishka import Provider, Scope, from_context, provide
 from telegraph.aio import Telegraph
 
-from shvatka.core.services.game import get_full_game
-from shvatka.core.services.game_stat import get_game_stat, get_typed_keys
-from shvatka.core.services.identity import PlayerIdentityProvider
-from shvatka.core.services.level import get_by_id
+from shvatka.core.models import dto
 from shvatka.infrastructure.crawler.game_scn.uploader.forum_scenario_uploader import upload
 from shvatka.infrastructure.crawler.game_scn.uploader.game_mapper import map_game_for_upload
-from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.tgbot.config.models.bot import BotConfig
 from shvatka.tgbot.views.hint_sender import HintSender
 from shvatka.tgbot.views.results.scenario import GamePublisher, LevelPublisher
@@ -38,8 +35,7 @@ logger = logging.getLogger(__name__)
 
 @dataclass(kw_only=True, slots=True, frozen=True)
 class PublishScenarioToForumParams:
-    game_id: int
-    player_id: int
+    game: dto.FullGame
     username: str
     password: str
     chat_id: int
@@ -48,30 +44,23 @@ class PublishScenarioToForumParams:
 @dataclass(kw_only=True, slots=True, frozen=True)
 class PublishScenarioToForumTask:
     params: PublishScenarioToForumParams
-    dao: HolderDao
     bot: Bot
 
     async def __call__(self) -> None:
-        game = await get_full_game(
-            id_=self.params.game_id,
-            identity=await self._identity(),
-            dao=self.dao.game,
+        await upload(
+            map_game_for_upload(self.params.game), self.params.username, self.params.password
         )
-        await upload(map_game_for_upload(game), self.params.username, self.params.password)
         await self.bot.send_message(
             chat_id=self.params.chat_id,
             text="Сценарий успешно загружен на форум",
         )
 
-    async def _identity(self) -> PlayerIdentityProvider:
-        player = await self.dao.player.get_by_id(self.params.player_id)
-        return PlayerIdentityProvider(player=player, dao=self.dao.organizer)
-
 
 @dataclass(kw_only=True, slots=True, frozen=True)
 class PublishScenarioToChannelParams:
-    game_id: int
-    player_id: int
+    game: dto.FullGame
+    game_stat: dto.GameStat
+    keys: dict[dto.Team, list[dto.KeyTime]]
     channel_id: int
     manager: BaseDialogManager
 
@@ -79,18 +68,27 @@ class PublishScenarioToChannelParams:
 @dataclass(kw_only=True, slots=True, frozen=True)
 class PublishScenarioToChannelTask:
     params: PublishScenarioToChannelParams
-    dao: HolderDao
     hint_sender: HintSender
     telegraph: Telegraph
     bot: Bot
     config: BotConfig
 
     async def __call__(self) -> None:
-        publisher = await self._build_publisher()
+        game = self.params.game
+        channel_id = self.params.channel_id
+        publisher = GamePublisher(
+            hint_sender=self.hint_sender,
+            game=game,
+            channel_id=channel_id,
+            bot=self.bot,
+            config=self.config,
+            game_stat=self.params.game_stat,
+            keys=self.params.keys,
+            telegraph=self.telegraph,
+        )
         started_msg_id = await publisher.publish_scn()
         results_msg_id = await publisher.publish_results()
         keys_msg_id = await publisher.publish_keys()
-        channel_id = self.params.channel_id
         table_of_content = (
             f"Начало сценария: {no_public_message_link(channel_id, started_msg_id)}\n"
             f"Результаты игры: {no_public_message_link(channel_id, results_msg_id)}\n"
@@ -102,18 +100,17 @@ class PublishScenarioToChannelTask:
         text_invite_scn = f"Чтобы его увидеть, нужно войти в канал: {invite}"
         await self.bot.send_message(
             self.config.game_log_chat,
-            f"Загружен сценарий игры {hd.bold(hd.quote(publisher.game.name))}."
-            f"\n{text_invite_scn}",
+            f"Загружен сценарий игры {hd.bold(hd.quote(game.name))}.\n{text_invite_scn}",
         )
         await self.params.manager.update(
             {"text_invite": text_invite_scn + "\n" + table_of_content, "started": False}
         )
-        author_chat_id = publisher.game.author.get_chat_id()
+        author_chat_id = game.author.get_chat_id()
         if author_chat_id is None:
             logger.warning(
                 "game %s author %s has no telegram chat, scenario link not sent",
-                publisher.game.id,
-                publisher.game.author.id,
+                game.id,
+                game.author.id,
             )
             return
         await self.bot.send_message(
@@ -121,42 +118,24 @@ class PublishScenarioToChannelTask:
             text=f"Сценарий загружен.\n{text_invite_scn}",
         )
 
-    async def _build_publisher(self) -> GamePublisher:
-        player = await self.dao.player.get_by_id(self.params.player_id)
-        identity = PlayerIdentityProvider(player=player, dao=self.dao.organizer)
-        game = await get_full_game(id_=self.params.game_id, identity=identity, dao=self.dao.game)
-        return GamePublisher(
-            hint_sender=self.hint_sender,
-            game=game,
-            channel_id=self.params.channel_id,
-            bot=self.bot,
-            config=self.config,
-            game_stat=await get_game_stat(game=game, identity=identity, dao=self.dao.game_stat),
-            keys=await get_typed_keys(game=game, identity=identity, dao=self.dao.typed_keys),
-            telegraph=self.telegraph,
-        )
-
 
 @dataclass(kw_only=True, slots=True, frozen=True)
 class SendLevelHintsParams:
-    level_id: int
-    player_id: int
+    level: dto.Level
+    chat_id: int
 
 
 @dataclass(kw_only=True, slots=True, frozen=True)
 class SendLevelHintsTask:
     params: SendLevelHintsParams
-    dao: HolderDao
     hint_sender: HintSender
 
     async def __call__(self) -> None:
-        author = await self.dao.player.get_by_id(self.params.player_id)
-        chat_id = author.get_chat_id()
-        if chat_id is None:
-            logger.warning("player %s has no telegram chat, hints not sent", author.id)
-            return
-        level = await get_by_id(self.params.level_id, author, self.dao.level)
-        publisher = LevelPublisher(hint_sender=self.hint_sender, level=level, chat_id=chat_id)
+        publisher = LevelPublisher(
+            hint_sender=self.hint_sender,
+            level=self.params.level,
+            chat_id=self.params.chat_id,
+        )
         await publisher.publish()
 
 

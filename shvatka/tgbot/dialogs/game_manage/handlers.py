@@ -264,15 +264,11 @@ async def publish_game_forum(
     assert m.text
     username, password = map(str.strip, m.text.split("\n", maxsplit=1))
     game_id = manager.dialog_data["my_game_id"]
-    player = await identity.get_required_player()
-    # authorize here so a player without rights is told right away, not in a
-    # background task nobody is looking at; the task checks again on its own
-    await get_full_game(game_id, identity, dao.game)
+    game_ = await get_full_game(game_id, identity, dao.game)
     nursery.spawn(
         PublishScenarioToForumTask,
         PublishScenarioToForumParams(
-            game_id=game_id,
-            player_id=player.id,
+            game=game_,
             username=username,
             password=password,
             chat_id=m.chat.id,

@@ -177,7 +177,7 @@ forum, sending a pile of hints — is spawned on the app-scoped
 ```python
 nursery.spawn(
     PublishScenarioToForumTask,
-    PublishScenarioToForumParams(game_id=game_id, player_id=player.id, ...),
+    PublishScenarioToForumParams(game=game, username=..., password=..., chat_id=...),
 )
 ```
 
@@ -196,15 +196,13 @@ The nursery also keeps a strong reference until the task ends, logs failures
 instead of dropping them, and cancels what is still running when the app shuts
 down.
 
-Two rules for writing one:
-
-- **Params carry ids, not entities.** The task loads what it needs itself, on
-  behalf of the player who asked for it — build a `PlayerIdentityProvider`
-  (`core/services/identity.py`) from the player id and pass it to the usual
-  services, so authorization is re-checked in the task's own scope.
-- **Authorize eagerly in the handler too.** The spawning handler runs the same
-  check before spawning, so a player without rights is told immediately rather
-  than failing inside a task nobody is looking at.
+One rule for writing one: **entities travel in params, resources come from
+DI.** Domain DTOs are plain dataclasses detached from any session, so handing a
+loaded game or level to a task is free — and it keeps the authorization the
+handler already did (the load *is* the check) instead of repeating it. What
+must never cross the boundary is anything tied to the caller's scope: a dao, a
+session, a `HintSender`. Those the task takes from DI, so its own scope owns
+them.
 
 ## DAO layer
 

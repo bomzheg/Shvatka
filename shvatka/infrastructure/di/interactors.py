@@ -115,10 +115,10 @@ from shvatka.core.teams.interactors import (
     UpdateTeamPlayerInteractor,
 )
 from shvatka.core.teams.adapters import ChatlessTeamCreator, AdminTeamMerger
-from shvatka.core.views.game import GameLogWriter, GameReleasePublisher, OrgNotifier
+from shvatka.core.views.game import GameLogWriter, OrgNotifier
 from shvatka.core.views.team import TeamNotifier
 from shvatka.core.interfaces.clients.file_storage import FileStorage
-from shvatka.core.interfaces.dal.complex import GameScenarioEditor
+from shvatka.core.interfaces.dal.complex import GameScenarioEditor, GameStatusChanger
 from shvatka.core.interfaces.scheduler import Scheduler
 from shvatka.core.games.adapters import (
     GameFileReader,
@@ -132,7 +132,6 @@ from shvatka.core.interfaces.dal.game import (
     GameByIdGetter,
     GameFileRenamer,
     GameFileUploader,
-    GameReleaseGetter,
 )
 from shvatka.core.interfaces.dal.game_play import GamePlayerDao
 from shvatka.core.services.current_game import CurrentGameProviderImpl
@@ -303,21 +302,10 @@ class GameEditProvider(Provider):
         )
 
     @provide
-    def change_status(
-        self,
-        dao: HolderDao,
-        game_log: GameLogWriter,
-        release_dao: GameReleaseGetter,
-        release_publisher: GameReleasePublisher,
-    ) -> ChangeGameStatusInteractor:
-        return ChangeGameStatusInteractor(
-            getter=dao.game,
-            waiver_starter=dao.game,
-            completer=dao.game,
-            game_log=game_log,
-            release_dao=release_dao,
-            release_publisher=release_publisher,
-        )
+    def game_status_changer(self, dao: HolderDao) -> GameStatusChanger:
+        return dao.game
+
+    change_status = provide(ChangeGameStatusInteractor)
 
     @provide
     def game_file_uploader(self, dao: HolderDao) -> GameFileUploader:
@@ -363,6 +351,9 @@ class GameReleaseProvider(Provider):
 
     scope = Scope.REQUEST
 
+    # these two take a `HolderDao` the impl only imports under TYPE_CHECKING,
+    # so dishka cannot build them from the annotation — same as every other
+    # complex dao here (`game_scenario_editor`, `admin_game_scenario_editor`)
     @provide
     def game_release_reader(self, dao: HolderDao) -> GameReleaseReader:
         return GameReleaseReaderImpl(dao=dao)
@@ -370,10 +361,6 @@ class GameReleaseProvider(Provider):
     @provide
     def game_release_editor(self, dao: HolderDao) -> GameReleaseEditor:
         return GameReleaseEditorImpl(dao=dao)
-
-    @provide
-    def game_release_getter(self, dao: HolderDao) -> GameReleaseGetter:
-        return GameReleaseReaderImpl(dao=dao)
 
     get_release = provide(GetGameReleaseInteractor)
     save_release = provide(SaveGameReleaseInteractor)

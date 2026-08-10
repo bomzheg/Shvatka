@@ -13,16 +13,14 @@ from typing import BinaryIO
 from adaptix import Retort
 
 from shvatka.core.interfaces.clients.file_storage import FileStorage
-from shvatka.core.interfaces.dal.complex import GameCompleter, GameScenarioEditor
+from shvatka.core.interfaces.dal.complex import GameScenarioEditor, GameStatusChanger
 from shvatka.core.interfaces.dal.game import (
     GameAuthorsFinder,
     GameByIdGetter,
     GameCreator,
     GameFileRenamer,
     GameFileUploader,
-    GameReleaseGetter,
     GameStartPlanner,
-    WaiverStarter,
 )
 from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.interfaces.scheduler import Scheduler
@@ -120,29 +118,26 @@ class PlanGameStartInteractor:
 
 @dataclass
 class ChangeGameStatusInteractor:
-    getter: GameByIdGetter
-    waiver_starter: WaiverStarter
-    completer: GameCompleter
+    dao: GameStatusChanger
     game_log: GameLogWriter
-    release_dao: GameReleaseGetter
     release_publisher: GameReleasePublisher
 
     async def __call__(
         self, game_id: int, status: enums.GameStatus, identity: IdentityProvider
     ) -> dto.Game:
         author = await identity.get_required_player()
-        game = await self.getter.get_by_id(id_=game_id, author=author)
+        game = await self.dao.get_by_id(id_=game_id, author=author)
         if status == enums.GameStatus.getting_waivers:
-            await start_waivers(game, author, self.waiver_starter)
+            await start_waivers(game, author, self.dao)
             await self.game_log.log(
                 GameLogEvent(GameLogType.GAME_WAIVERS_STARTED, {"game": game.name})
             )
             # the release was waiting for exactly this moment to reach the channel
-            release = await self.release_dao.get_release(game.id)
+            release = await self.dao.get_release(game.id)
             if release is not None:
                 await self.release_publisher.publish(game, release)
         elif status == enums.GameStatus.complete:
-            await complete_game(game, self.completer)
+            await complete_game(game, self.dao)
         else:
             raise exceptions.CantEditGame(
                 game=game,

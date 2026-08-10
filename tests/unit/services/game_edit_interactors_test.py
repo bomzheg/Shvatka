@@ -34,21 +34,6 @@ def make_game(author: dto.Player, status: GameStatus) -> dto.Game:
     )
 
 
-class NoReleaseDao:
-    """A game with no release: starting the waivers announces nothing."""
-
-    async def get_release(self, game_id: int) -> dto.GameRelease | None:
-        return None
-
-
-@dataclass
-class StoredReleaseDao:
-    release: dto.GameRelease
-
-    async def get_release(self, game_id: int) -> dto.GameRelease | None:
-        return self.release
-
-
 class RecordingReleasePublisher(NoOpGameReleasePublisher):
     def __init__(self) -> None:
         self.published: list[dto.GameRelease] = []
@@ -75,12 +60,16 @@ class FakeGameDao:
     committed: int = 0
     start_at: datetime | None = None
     cancelled: bool = False
+    release: dto.GameRelease | None = None
 
     async def get_by_id(self, id_: int, author: dto.Player | None = None) -> dto.Game:
         return self.game
 
     async def get_active_game(self) -> dto.Game | None:
         return self.active_game
+
+    async def get_release(self, game_id: int) -> dto.GameRelease | None:
+        return self.release
 
     async def start_waivers(self, game: dto.Game) -> None:
         self.started = True
@@ -116,11 +105,8 @@ async def test_change_status_to_waivers_writes_game_log():
     dao = FakeGameDao(game=game)
     game_log = RecordingLogWriter()
     interactor = ChangeGameStatusInteractor(
-        getter=dao,
-        waiver_starter=dao,
-        completer=dao,
+        dao=dao,
         game_log=game_log,
-        release_dao=NoReleaseDao(),
         release_publisher=NoOpGameReleasePublisher(),
     )
 
@@ -139,15 +125,12 @@ async def test_starting_waivers_puts_the_release_in_front_of_people():
     """What the release was waiting for: the waivers opening."""
     author = make_player(1)
     game = make_game(author, GameStatus.ready)
-    dao = FakeGameDao(game=game)
     release = dto.GameRelease(game_id=game.id, hints=[hints.TextHint(text="тема игры")])
+    dao = FakeGameDao(game=game, release=release)
     publisher = RecordingReleasePublisher()
     interactor = ChangeGameStatusInteractor(
-        getter=dao,
-        waiver_starter=dao,
-        completer=dao,
+        dao=dao,
         game_log=RecordingLogWriter(),
-        release_dao=StoredReleaseDao(release),
         release_publisher=publisher,
     )
 
@@ -167,11 +150,8 @@ async def test_change_status_unsupported_does_not_write_game_log():
     dao = FakeGameDao(game=game)
     game_log = RecordingLogWriter()
     interactor = ChangeGameStatusInteractor(
-        getter=dao,
-        waiver_starter=dao,
-        completer=dao,
+        dao=dao,
         game_log=game_log,
-        release_dao=NoReleaseDao(),
         release_publisher=NoOpGameReleasePublisher(),
     )
 

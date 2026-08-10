@@ -7,8 +7,10 @@ from shvatka.core.interfaces.dal.game import (
     GameNumberUpdater,
     GameStatusCompleter,
     GameByIdGetter,
+    GameReleaseGetter,
     GameUpserter,
     GameRenamer,
+    WaiverStarter,
 )
 from shvatka.core.interfaces.dal.key_log import TeamKeysMerger, GameKeyGetter
 from shvatka.core.interfaces.dal.level import MaxLevelNumberGetter
@@ -47,6 +49,14 @@ class GameCompleter(
     MaxGameNumberGetter, GameNumberUpdater, GameStatusCompleter, Committer, Protocol
 ):
     pass
+
+
+class GameStatusChanger(GameByIdGetter, WaiverStarter, GameCompleter, GameReleaseGetter, Protocol):
+    """Everything moving a game to its next status needs of storage.
+
+    The release comes along because starting the waivers is what finally puts
+    it in front of people.
+    """
 
 
 class GamePackager(

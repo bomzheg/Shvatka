@@ -9,7 +9,6 @@ from aiogram.client.session.base import BaseSession
 from aiogram_dialog.api.protocols import MessageManagerProtocol
 from alembic.command import upgrade
 from alembic.config import Config as AlembicConfig
-from dataclass_factory import Factory
 from dishka import make_async_container, AsyncContainer, Provider, Scope
 from telegraph.aio import Telegraph
 
@@ -109,11 +108,6 @@ async def dishka():
     )
     yield container
     await container.close()
-
-
-@pytest_asyncio.fixture(scope="session")
-async def dcf(dishka: AsyncContainer) -> Factory:
-    return await dishka.get(Factory)
 
 
 @pytest_asyncio.fixture(scope="session")

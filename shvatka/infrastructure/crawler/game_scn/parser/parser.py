@@ -14,7 +14,6 @@ from aiohttp import (
     ServerDisconnectedError,
     ClientOSError,
 )
-from dataclass_factory import Factory, Schema, NameStyle
 from lxml import etree
 from lxml.etree import ElementBase
 
@@ -27,6 +26,7 @@ from shvatka.infrastructure.crawler.auth import get_auth_cookie
 from shvatka.infrastructure.crawler.constants import GAME_URL_TEMPLATE
 from shvatka.infrastructure.crawler.game_scn.common import UNPARSEABLE_GAMES
 from shvatka.infrastructure.crawler.game_scn.parser.resourses import load_error_img
+from shvatka.infrastructure.crawler.retort import create_scenario_retort
 
 logger = logging.getLogger(__name__)
 EVENING_TIME = datetime.strptime("20:00:00", "%H:%M:%S").time()
@@ -301,15 +301,15 @@ class GameParser:
 
 async def save_all_scns_to_files(game_ids: list[int]):
     games = await get_all_games(game_ids)
-    dcf = Factory(default_schema=Schema(name_style=NameStyle.kebab))
+    retort = create_scenario_retort()
     path = Path() / "scn"
     path.mkdir(exist_ok=True)
     for game in games:
-        dct = dcf.dump(game, scn.ParsedGameScenario)
+        dct = retort.dump(game, scn.ParsedGameScenario)
         scenario = scn.RawGameScenario(
             scn=dct,
             files=game.files_contents,
-            stat=dcf.dump(game.stat),
+            stat=retort.dump(game.stat),
         )
         packed_scenario = pack_scn(scenario)
         with (path / f"{game.id}.zip").open("wb") as f:

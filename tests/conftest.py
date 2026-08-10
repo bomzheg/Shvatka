@@ -5,7 +5,6 @@ from pathlib import Path
 import pytest
 import pytest_asyncio
 from adaptix import Retort
-from dataclass_factory import Factory
 from dishka import make_async_container
 
 from shvatka.common import Paths
@@ -51,12 +50,6 @@ def event_loop():
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
         return loop
-
-
-@pytest_asyncio.fixture(scope="session")
-async def dcf():
-    dishka = make_async_container(DCFProvider())
-    return await dishka.get(Factory)
 
 
 @pytest_asyncio.fixture(scope="session")

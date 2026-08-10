@@ -9,7 +9,7 @@ from aiogram import Bot
 from aiogram.types import Message, ReactionTypeEmoji, ReactionTypeCustomEmoji, ReactionTypePaid
 from aiogram.exceptions import TelegramAPIError
 from aiogram.utils.markdown import html_decoration as hd
-from dataclass_factory import Factory
+from adaptix import Retort
 
 from shvatka.core.interfaces.dal.game_play import GamePreparer
 from shvatka.core.models import dto, enums
@@ -392,7 +392,7 @@ class GameBotLog(GameLogWriter):
 @dataclass
 class BotOrgNotifier(OrgNotifier):
     bot: Bot
-    dcf = Factory()
+    retort: Retort
 
     async def notify(self, event: Event) -> None:
         match event:
@@ -435,7 +435,7 @@ class BotOrgNotifier(OrgNotifier):
         )
 
     async def level_test_completed(self, event: LevelTestCompleted, org: dto.Organizer):
-        results = json.dumps(self.dcf.dump(event.result.full_data), ensure_ascii=False)[:3000]
+        results = json.dumps(self.retort.dump(event.result.full_data), ensure_ascii=False)[:3000]
         await self.bot.send_message(
             chat_id=org.player.get_chat_id(),  # type: ignore[arg-type]
             text=f"Тестирование уровня {event.suite.level.name_id}.\n"

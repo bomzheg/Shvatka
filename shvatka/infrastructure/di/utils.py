@@ -1,7 +1,6 @@
 from typing import Any
 
 from adaptix import Retort
-from dataclass_factory import Factory
 from dishka import AsyncContainer
 from telegraph.aio import Telegraph
 
@@ -22,7 +21,6 @@ async def warm_up(dishka: AsyncContainer) -> None:
             FileStorage,
             UserGetter,
             Retort,
-            Factory,
             Telegraph,
             HintParser,
             HintSender,

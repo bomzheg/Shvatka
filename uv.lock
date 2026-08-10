@@ -632,14 +632,6 @@ wheels = [
 ]
 
 [[package]]
-name = "dataclass-factory"
-version = "2.16"
-source = { registry = "https://pypi.org/simple" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/f1/66/50b9f5d8a0e9fbe5469c5b8a7f198511fff9959347fc2443531d651b21d7/dataclass_factory-2.16-py3-none-any.whl", hash = "sha256:9d01e73d40b8f74051df822f21d8dc8bbf2754b11670cd1c477357e8b21323ed", size = 29693, upload-time = "2022-07-20T14:21:06.678Z" },
-]
-
-[[package]]
 name = "dature"
 version = "1.1.1"
 source = { registry = "https://pypi.org/simple" }
@@ -2510,7 +2502,6 @@ dependencies = [
     { name = "asyncpg" },
     { name = "bcrypt" },
     { name = "colorlog" },
-    { name = "dataclass-factory" },
     { name = "dature", extra = ["yaml"] },
     { name = "dishka" },
     { name = "fastapi" },
@@ -2574,7 +2565,6 @@ requires-dist = [
     { name = "asyncpg", specifier = ">=0.27.0,<1.0" },
     { name = "bcrypt", specifier = "==4.0.1" },
     { name = "colorlog", specifier = ">=6.7.0,<7.0" },
-    { name = "dataclass-factory", specifier = ">=2.16,<3.0" },
     { name = "dature", extras = ["yaml"], specifier = ">=1.1.1,<2.0" },
     { name = "dishka", specifier = "==1.5.2" },
     { name = "fastapi", specifier = "==0.111.1" },

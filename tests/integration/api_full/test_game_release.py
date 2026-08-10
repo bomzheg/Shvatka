@@ -1,8 +1,9 @@
 import pytest
-from dataclass_factory import Factory
+from adaptix import Retort
 from httpx import AsyncClient
 
 from shvatka.api.app.dependencies.auth import AuthProperties
+from shvatka.common.factory import REQUIRED_GAME_RECIPES
 from shvatka.api.games import responses as game_responses
 from shvatka.core.models import dto
 from shvatka.core.models.dto import hints
@@ -52,7 +53,7 @@ async def test_save_release(
     resp = await client.get(f"/games/{game.id}/release")
     assert resp.is_success
     resp.read()
-    actual = Factory().load(resp.json(), game_responses.GameRelease)
+    actual = Retort(recipe=[*REQUIRED_GAME_RECIPES]).load(resp.json(), game_responses.GameRelease)
     assert actual.game_id == game.id
     assert actual.hints[0].type == HintType.text.name
 
@@ -96,7 +97,7 @@ async def test_save_release_with_a_banner(
     resp = await client.get(f"/games/{game.id}/release")
     assert resp.is_success
     resp.read()
-    actual = Factory().load(resp.json(), game_responses.GameRelease)
+    actual = Retort(recipe=[*REQUIRED_GAME_RECIPES]).load(resp.json(), game_responses.GameRelease)
     assert actual.banner is not None
     assert actual.banner.file_guid == guid
 

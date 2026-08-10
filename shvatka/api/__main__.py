@@ -34,7 +34,7 @@ def main() -> "FastAPI":
 
     app = create_app(api_config)
     root_app = FastAPI()
-    root_app.mount(api_config.context_path, app)
+    root_app.mount(api_config.api.context_path, app)
     setup_di(root_app, "SHVATKA_API_PATH")
     logger.info("app prepared")
     return root_app

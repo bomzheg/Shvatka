@@ -13,8 +13,8 @@ from shvatka.infrastructure.db.dao import PushSubscriptionDAO
 @inject
 async def get_push_config(config: FromDishka[ApiConfig]) -> responses.PushConfigResponse:
     return responses.PushConfigResponse(
-        enabled=config.push.is_configured,
-        public_key=config.push.vapid_public_key if config.push.is_configured else None,
+        enabled=config.api.push.is_configured,
+        public_key=config.api.push.vapid_public_key if config.api.push.is_configured else None,
     )
 
 

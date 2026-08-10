@@ -122,7 +122,7 @@ def create_root_app(paths: Paths) -> FastAPI:
     webhook_handler.register(app, webhook_config.path)
 
     root_app = FastAPI()
-    root_app.mount(api_config.context_path, app)
+    root_app.mount(api_config.api.context_path, app)
     setup = partial(on_startup, dishka, webhook_config)
     root_app.router.add_event_handler("startup", setup)
     setup_dishka(dishka, root_app)

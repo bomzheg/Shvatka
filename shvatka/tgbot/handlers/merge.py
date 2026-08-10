@@ -9,7 +9,6 @@ from shvatka.core.services.team import get_team_by_id, merge_teams
 from shvatka.core.views.game import GameLogWriter
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.tgbot import keyboards as kb
-from shvatka.tgbot.config.models.bot import BotConfig
 from shvatka.tgbot.filters import is_superuser
 from shvatka.tgbot.utils.router import disable_router_on_game
 
@@ -57,10 +56,10 @@ async def confirm_merge_players(
     await bg.update({})
 
 
-def setup(bot_config: BotConfig) -> Router:
+def setup(superusers: list[int]) -> Router:
     router = Router(name=__name__)
     disable_router_on_game(router)
-    is_superuser_ = partial(is_superuser, superusers=bot_config.superusers)
+    is_superuser_ = partial(is_superuser, superusers=superusers)
     router.callback_query.register(confirm_merge_team, kb.TeamMergeCD.filter(), is_superuser_)
     router.callback_query.register(confirm_merge_not_superuser, kb.TeamMergeCD.filter())
     router.callback_query.register(confirm_merge_players, kb.PlayerMergeCD.filter(), is_superuser_)

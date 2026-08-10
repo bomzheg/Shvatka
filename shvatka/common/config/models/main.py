@@ -1,35 +1,9 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 
-from shvatka.infrastructure.db.config.models.db import DBConfig, RedisConfig
-from .paths import Paths
-
-
-@dataclass
-class Config:
-    app: AppConfig
-    paths: Paths
-    db: DBConfig
-    redis: RedisConfig
-    file_storage_config: FileStorageConfig
-    web: WebConfig
-    mail: MailConfig
-    superusers: list[int]
-    """tg ids of users allowed to use the admin panel / superuser bot commands"""
-
-    @property
-    def app_dir(self) -> Path:
-        return self.paths.app_dir
-
-    @property
-    def config_path(self) -> Path:
-        return self.paths.config_path
-
-    @property
-    def log_path(self) -> Path:
-        return self.paths.log_path
+from shvatka.infrastructure.db.config.models.db import DBConfigProperties, RedisConfig
 
 
 @dataclass
@@ -60,3 +34,21 @@ class MailConfig:
     from_addr: str = ""
     use_tls: bool = False
     start_tls: bool = True
+
+
+@dataclass(kw_only=True)
+class Config:
+    """The shared part of config.yml — one field per top level section of it.
+
+    ``Paths`` is deliberately not a field here: it is the input that locates
+    config.yml, so it can't be read out of it. Take it from DI instead.
+    """
+
+    app: AppConfig
+    db: DBConfigProperties
+    redis: RedisConfig
+    file_storage_config: FileStorageConfig
+    web: WebConfig
+    mail: MailConfig = field(default_factory=MailConfig)
+    superusers: list[int] = field(default_factory=list)
+    """tg ids of users allowed to use the admin panel / superuser bot commands"""

@@ -1,33 +1,20 @@
-from dataclasses import dataclass
+from datetime import timedelta
 
 import dature
+from dature import F
 
 from shvatka.api.app.config.models.main import ApiConfig
-from shvatka.api.app.config.parser.auth import load_auth
-from shvatka.api.app.config.parser.push import load_push
 from shvatka.common.config.models.paths import Paths
 from shvatka.common.config.parser.config_source import config_source
-from shvatka.common.config.parser.main import load_config as load_common_config
-
-
-@dataclass(frozen=True, slots=True)
-class ApiSection:
-    """Keys of the api section which are not a section on their own."""
-
-    context_path: str = ""
-    enable_logging: bool = False
 
 
 def load_config(paths: Paths) -> ApiConfig:
-    api = load_api_section(paths)
-    return ApiConfig.from_base(
-        base=load_common_config(paths),
-        auth=load_auth(paths),
-        context_path=api.context_path,
-        enable_logging=api.enable_logging,
-        push=load_push(paths),
+    return dature.load(
+        config_source(
+            paths,
+            # the config states the token lifetime in minutes, the model keeps a timedelta
+            field_mapping={F[ApiConfig].api.auth.token_expire: "token-expire-minutes"},
+            type_loaders={timedelta: lambda minutes: timedelta(minutes=int(minutes))},
+        ),
+        schema=ApiConfig,
     )
-
-
-def load_api_section(paths: Paths) -> ApiSection:
-    return dature.load(config_source(paths, prefix="api"), schema=ApiSection)

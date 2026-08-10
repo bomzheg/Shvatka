@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from enum import Enum
 
 from aiogram.client.session.aiohttp import AiohttpSession
@@ -17,7 +17,6 @@ class BotConfig:
     public_chats: list[int]
     """chats with public moderation"""
     enabled_capcha: bool = False
-    superusers: list[int] = field(default_factory=list)
     bot_api: BotApiConfig
     telegraph_token: str
     webhook: WebhookConfig | None = None

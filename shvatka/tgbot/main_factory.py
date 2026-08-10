@@ -39,6 +39,7 @@ from shvatka.infrastructure.db.factory import (
 from shvatka.infrastructure.di import get_providers
 from shvatka.infrastructure.picture import ResultsPainter
 from shvatka.tgbot.config.models.bot import BotConfig, TgClientConfig
+from shvatka.tgbot.config.models.main import TgBotConfig
 from shvatka.tgbot.handlers import setup_handlers
 from shvatka.tgbot.middlewares import setup_middlewares
 from shvatka.tgbot.services.bot_rights import BotRights
@@ -112,7 +113,7 @@ class DpProvider(Provider):
         self,
         dishka: AsyncContainer,
         event_isolation: BaseEventIsolation,
-        bot_config: BotConfig,
+        config: TgBotConfig,
         storage: BaseStorage,
         message_manager: MessageManagerProtocol,
     ) -> Dispatcher:
@@ -121,7 +122,7 @@ class DpProvider(Provider):
             events_isolation=event_isolation,
         )
         self.dp = dp
-        bg_manager_factory = setup_handlers(dp, bot_config, message_manager)
+        bg_manager_factory = setup_handlers(dp, config, message_manager)
         self.bg_manager_factory = bg_manager_factory  # type: ignore[assignment]
         setup_dishka(container=dishka, router=dp)
         setup_middlewares(

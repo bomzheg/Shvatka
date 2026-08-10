@@ -17,7 +17,7 @@ def generate():
 
     setup_logging(paths)
     config = load_config(paths)
-    auth = AuthProperties(config.auth, BcryptPasswordHasher())
+    auth = AuthProperties(config.api.auth, BcryptPasswordHasher())
     return auth.get_password_hash(sys.argv[1])
 
 

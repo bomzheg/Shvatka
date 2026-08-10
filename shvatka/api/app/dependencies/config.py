@@ -15,4 +15,4 @@ class ApiConfigProvider(Provider):
 
     @provide
     def get_auth_config(self, config: ApiConfig) -> AuthConfig:
-        return config.auth
+        return config.api.auth

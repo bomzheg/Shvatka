@@ -10,7 +10,6 @@ from aiogram.types import Message, BotCommandScopeChat
 
 from shvatka.core.models import dto
 from shvatka.infrastructure.db.dao.holder import HolderDao
-from shvatka.tgbot.config.models.bot import BotConfig
 from shvatka.tgbot.filters.superusers import is_superuser
 from shvatka.tgbot.views.commands import (
     GET_OUT,
@@ -64,9 +63,9 @@ async def cmd_help_admin(message: Message):
     await message.reply(HELP_USER_ADMIN)
 
 
-def setup(bot_config: BotConfig) -> Router:
+def setup(superusers: list[int]) -> Router:
     router = Router(name=__name__)
-    is_superuser_ = partial(is_superuser, superusers=bot_config.superusers)
+    is_superuser_ = partial(is_superuser, superusers=superusers)
     router.message.filter(is_superuser_)
 
     router.message.register(exception, Command(commands=EXCEPTION_COMMAND))

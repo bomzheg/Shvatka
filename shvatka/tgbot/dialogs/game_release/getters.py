@@ -23,14 +23,14 @@ EARLY_ENOUGH = (
 @inject
 async def get_release(
     dialog_manager: DialogManager,
-    dao: FromDishka[HolderDao],
+    holder_dao: FromDishka[HolderDao],
     idp: FromDishka[IdentityProvider],
     interactor: FromDishka[GetGameReleaseInteractor],
     **_,
 ):
     data: dict[str, Any] = dialog_manager.start_data  # type: ignore[assignment]
     game_id = int(data["game_id"])
-    game = await get_game(id_=game_id, author=await idp.get_required_player(), dao=dao.game)
+    game = await get_game(id_=game_id, author=await idp.get_required_player(), dao=holder_dao.game)
     release = await interactor(game_id=game_id)
     return {
         "game": game,
@@ -47,8 +47,7 @@ async def get_release(
     }
 
 
-async def get_composed_release(dialog_manager: DialogManager, **_):
-    retort: Retort = dialog_manager.middleware_data["retort"]
+async def get_composed_release(dialog_manager: DialogManager, retort: Retort, **_):
     dumped_banner = dialog_manager.dialog_data.get("banner")
     banner = retort.load(dumped_banner, hints.PhotoHint) if dumped_banner else None
     hints_ = retort.load(dialog_manager.dialog_data.get("hints", []), list[hints.AnyHint])

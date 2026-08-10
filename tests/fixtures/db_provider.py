@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 class TestDbProvider(Provider):
     scope = Scope.APP
 
-    @provide
+    @provide(override=True)
     def get_db_config(self, config: Config) -> Iterable[TrueConfig]:
         if url := os.getenv("SHVATKA_TEST_DB_URL"):
             db_config = DBConfig(url)
@@ -44,7 +44,7 @@ class TestDbProvider(Provider):
         finally:
             postgres.stop()
 
-    @provide
+    @provide(override=True)
     def get_redis_config(self, config: Config) -> Iterable[RedisConfig]:
         if port := os.getenv("SHVATKA_TEST_REDIS_PORT"):
             yield RedisConfig(url="localhost", port=int(port))
@@ -61,7 +61,7 @@ class TestDbProvider(Provider):
         finally:
             redis_container.stop()
 
-    @provide(scope=Scope.REQUEST)
+    @provide(scope=Scope.REQUEST, override=True)
     async def get_dao(
         self,
         session: AsyncSession,

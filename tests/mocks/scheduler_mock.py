@@ -65,3 +65,9 @@ class SchedulerMock(Scheduler):
         self, team: dto.Team, lt_id: int, effects: action.Effects, run_at: datetime
     ):
         pass
+
+    async def start(self) -> None:
+        pass
+
+    async def close(self) -> None:
+        pass

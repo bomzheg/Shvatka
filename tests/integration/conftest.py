@@ -9,102 +9,31 @@ from aiogram.client.session.base import BaseSession
 from aiogram_dialog.api.protocols import MessageManagerProtocol
 from alembic.command import upgrade
 from alembic.config import Config as AlembicConfig
-from dishka import make_async_container, AsyncContainer, Provider, Scope
+from dishka import make_async_container, AsyncContainer, STRICT_VALIDATION
 from telegraph.aio import Telegraph
 
-from shvatka.api.app.dependencies import (
-    AuthProvider,
-    AdminInteractorProvider,
-    ApiConfigProvider,
-    OtherApiProvider,
-)
 from shvatka.common import Paths
-from shvatka.common.factory import DCFProvider, TelegraphProvider, UrlProvider
-from shvatka.core.interfaces.clients.file_storage import FileStorage, FileGateway
+from shvatka.core.interfaces.clients.file_storage import FileGateway
 from shvatka.core.interfaces.scheduler import Scheduler
 from shvatka.core.utils.key_checker_lock import KeyCheckerFactory
-from shvatka.core.views.game import GameLogWriter
 from shvatka.infrastructure.db.config.models.db import DBConfig
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.infrastructure.db.dao.memory.level_testing import LevelTestingData
-from shvatka.infrastructure.di import (
-    ConfigProvider,
-    DbProvider,
-    RedisProvider,
-    FileClientProvider,
-    GamePlayProvider,
-    PrinterProvider,
-    WaiverProvider,
-    ContextProvider,
-    DAOProvider,
-    PlayerProvider,
-    TeamProvider,
-    MailProvider,
-    EmailInteractorProvider,
-    NotificationProvider,
-    RequestProvider,
-    SearchProvider,
-)
-from shvatka.infrastructure.di.interactors import GameEditProvider
-from shvatka.main_factory import ComplexOnlyProvider
-from shvatka.tgbot.main_factory import DpProvider, GameToolsProvider, BotIdpProvider
-from shvatka.infrastructure.db.factory import LockProvider
 from shvatka.tgbot.username_resolver.user_getter import UserGetter
 from shvatka.tgbot.views.hint_factory.hint_parser import HintParser
-from tests.fixtures.db_provider import TestDbProvider
-from tests.fixtures.file_storage import MemoryFileStorageProvider
-from tests.mocks.bot import MockMessageManagerProvider, MockBotProvider
+from tests.fixtures.di import get_test_providers
 from tests.mocks.datetime_mock import ClockMock
 from tests.mocks.file_storage import MemoryFileStorage
 from tests.mocks.game_log import GameLogWriterMock
-from tests.mocks.scheduler_mock import SchedulerMock
-from tests.mocks.user_getter import UserGetterMock
 
 logger = logging.getLogger(__name__)
 
 
 @pytest_asyncio.fixture(scope="session")
 async def dishka():
-    mock_provider = Provider(scope=Scope.APP)
-    mock_provider.provide(GameLogWriterMock, provides=GameLogWriter)
-    mock_provider.provide(UserGetterMock, provides=UserGetter)
-    mock_provider.provide(SchedulerMock, provides=Scheduler)
-    mock_provider.provide(ClockMock)
     container = make_async_container(
-        ConfigProvider("SHVATKA_TEST_PATH"),
-        DAOProvider(),
-        OtherApiProvider(),
-        ApiConfigProvider(),
-        DbProvider(),
-        RedisProvider(),
-        FileClientProvider(),
-        AuthProvider(),
-        AdminInteractorProvider(),
-        MemoryFileStorageProvider(),
-        DpProvider(),
-        MockBotProvider(),
-        MockMessageManagerProvider(),
-        LockProvider(),
-        DCFProvider(),
-        UrlProvider(),
-        TelegraphProvider(),
-        ContextProvider(),
-        GamePlayProvider(),
-        GameEditProvider(),
-        WaiverProvider(),
-        PlayerProvider(),
-        TeamProvider(),
-        NotificationProvider(),
-        RequestProvider(),
-        MailProvider(),
-        EmailInteractorProvider(),
-        PrinterProvider(),
-        GameToolsProvider(),
-        BotIdpProvider(),
-        ComplexOnlyProvider(),
-        TestDbProvider(),
-        SearchProvider(),
-        mock_provider,
+        *get_test_providers(),
+        validation_settings=STRICT_VALIDATION,
     )
     yield container
     await container.close()
@@ -210,14 +139,14 @@ def upgrade_schema_db(alembic_config: AlembicConfig):
 
 
 @pytest_asyncio.fixture(scope="session")
-async def file_storage(dishka: AsyncContainer) -> FileStorage:
-    return await dishka.get(FileStorage)
+async def file_storage(dishka: AsyncContainer) -> MemoryFileStorage:
+    return await dishka.get(MemoryFileStorage)
 
 
 @pytest.fixture
 def hint_parser(
     dao: HolderDao,
-    file_storage: FileStorage,
+    file_storage: MemoryFileStorage,
     bot: Bot,
 ) -> HintParser:
     return HintParser(dao=dao.file_info, file_storage=file_storage, bot=bot)
@@ -229,13 +158,18 @@ async def file_gateway(dishka_request: AsyncContainer) -> FileGateway:
 
 
 @pytest_asyncio.fixture
-async def game_log(dishka: AsyncContainer) -> GameLogWriter:
-    return await dishka.get(GameLogWriter)
+async def game_log(dishka: AsyncContainer) -> GameLogWriterMock:
+    return await dishka.get(GameLogWriterMock)
 
 
 @pytest.fixture(autouse=True)
 def clean_up_memory(file_storage: MemoryFileStorage):
     file_storage.storage.clear()
+
+
+@pytest.fixture(autouse=True)
+def clean_up_game_log(game_log: GameLogWriterMock):
+    game_log.requests.clear()
 
 
 @pytest_asyncio.fixture

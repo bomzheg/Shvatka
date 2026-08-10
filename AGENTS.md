@@ -258,6 +258,29 @@ Rules for new work:
   separate `check_dao` (its own session) for reading back state — use it for
   assertions so you observe committed data, and keep `dao` for the action.
 
+### The test container is the app container plus overrides
+
+`tests/fixtures/di.py` builds the integration container from
+`get_root_app_providers(...)` — the very list `create_root_app` runs on — and
+only then adds the test doubles. Don't copy provider lists into tests: a new app
+provider must reach the tests without touching `tests/`.
+
+Test doubles live in `get_test_override_providers()` and go **last**: dishka
+rejects `override=True` for something nobody provided yet.
+
+- Replacing an app dependency → `@provide(override=True)` **in the same scope**
+  as the factory being replaced. A different scope leaves the original factory
+  alive in its own registry and it wins there — the override silently does
+  nothing.
+- A double that's only passed to services by hand (`GameLogWriterMock`,
+  `MemoryFileStorage`) is provided under its own concrete type, without
+  `override=True`, so container-resolved code keeps using the real
+  implementation.
+- The container is built with `STRICT_VALIDATION`, so an override that overrides
+  nothing (or a shadowed factory) fails the build instead of quietly changing
+  behavior. `tests/unit/test_di.py` builds every container (api, bot, root,
+  tests) and is the fast check that DI still holds together.
+
 Run locally:
 
 ```shell

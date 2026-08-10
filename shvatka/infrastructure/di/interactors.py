@@ -34,7 +34,6 @@ from shvatka.core.games.adapters import (
     GameReleaseReader,
 )
 from shvatka.core.games.release_interactors import (
-    GameReleaseAnnouncer,
     GetGameReleaseInteractor,
     SaveGameReleaseInteractor,
     DeleteGameReleaseInteractor,
@@ -116,7 +115,7 @@ from shvatka.core.teams.interactors import (
     UpdateTeamPlayerInteractor,
 )
 from shvatka.core.teams.adapters import ChatlessTeamCreator, AdminTeamMerger
-from shvatka.core.views.game import GameLogWriter, OrgNotifier
+from shvatka.core.views.game import GameLogWriter, GameReleasePublisher, OrgNotifier
 from shvatka.core.views.team import TeamNotifier
 from shvatka.core.interfaces.clients.file_storage import FileStorage
 from shvatka.core.interfaces.dal.complex import GameScenarioEditor
@@ -308,14 +307,16 @@ class GameEditProvider(Provider):
         self,
         dao: HolderDao,
         game_log: GameLogWriter,
-        release_announcer: GameReleaseAnnouncer,
+        release_dao: GameReleaseGetter,
+        release_publisher: GameReleasePublisher,
     ) -> ChangeGameStatusInteractor:
         return ChangeGameStatusInteractor(
             getter=dao.game,
             waiver_starter=dao.game,
             completer=dao.game,
             game_log=game_log,
-            release_announcer=release_announcer,
+            release_dao=release_dao,
+            release_publisher=release_publisher,
         )
 
     @provide
@@ -374,7 +375,6 @@ class GameReleaseProvider(Provider):
     def game_release_getter(self, dao: HolderDao) -> GameReleaseGetter:
         return GameReleaseReaderImpl(dao=dao)
 
-    release_announcer = provide(GameReleaseAnnouncer)
     get_release = provide(GetGameReleaseInteractor)
     save_release = provide(SaveGameReleaseInteractor)
     delete_release = provide(DeleteGameReleaseInteractor)

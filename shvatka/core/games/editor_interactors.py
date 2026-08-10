@@ -20,10 +20,10 @@ from shvatka.core.interfaces.dal.game import (
     GameCreator,
     GameFileRenamer,
     GameFileUploader,
+    GameReleaseGetter,
     GameStartPlanner,
     WaiverStarter,
 )
-from shvatka.core.games.release_interactors import GameReleaseAnnouncer
 from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.interfaces.scheduler import Scheduler
 from shvatka.core.models import dto, enums
@@ -43,7 +43,12 @@ from shvatka.core.services.game import (
 from shvatka.core.services.scenario.files import rename_file, save_file
 from shvatka.core.utils import exceptions
 from shvatka.core.utils.datetime_utils import DATETIME_FORMAT, tz_game
-from shvatka.core.views.game import GameLogEvent, GameLogType, GameLogWriter
+from shvatka.core.views.game import (
+    GameLogEvent,
+    GameLogType,
+    GameLogWriter,
+    GameReleasePublisher,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -119,7 +124,8 @@ class ChangeGameStatusInteractor:
     waiver_starter: WaiverStarter
     completer: GameCompleter
     game_log: GameLogWriter
-    release_announcer: GameReleaseAnnouncer
+    release_dao: GameReleaseGetter
+    release_publisher: GameReleasePublisher
 
     async def __call__(
         self, game_id: int, status: enums.GameStatus, identity: IdentityProvider
@@ -132,7 +138,9 @@ class ChangeGameStatusInteractor:
                 GameLogEvent(GameLogType.GAME_WAIVERS_STARTED, {"game": game.name})
             )
             # the release was waiting for exactly this moment to reach the channel
-            await self.release_announcer.announce(game)
+            release = await self.release_dao.get_release(game.id)
+            if release is not None:
+                await self.release_publisher.publish(game, release)
         elif status == enums.GameStatus.complete:
             await complete_game(game, self.completer)
         else:

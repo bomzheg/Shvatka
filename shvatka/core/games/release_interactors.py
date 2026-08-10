@@ -19,7 +19,6 @@ import logging
 from dataclasses import dataclass
 
 from shvatka.core.games.adapters import GameReleaseEditor, GameReleaseReader
-from shvatka.core.interfaces.dal.game import GameReleaseGetter
 from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.models import dto
 from shvatka.core.models.dto import hints
@@ -30,33 +29,6 @@ from shvatka.core.utils import exceptions
 from shvatka.core.views.game import GameReleasePublisher
 
 logger = logging.getLogger(__name__)
-
-
-@dataclass
-class GameReleaseAnnouncer:
-    """Tells the announcing view what the release should look like.
-
-    Only *whether the audience should see it now* is decided here; putting it
-    up, bringing it up to date and remembering where it stands are the view's,
-    and an edge with no channel to announce in simply does nothing.
-    """
-
-    dao: GameReleaseGetter
-    publisher: GameReleasePublisher
-
-    async def announce(self, game: dto.Game) -> None:
-        """Show the release to the audience the game is collecting."""
-        release = await self.dao.get_release(game.id)
-        if release is None:
-            return
-        await self.publisher.publish(game, release)
-
-    async def refresh(self, game: dto.Game, release: dto.GameRelease) -> None:
-        """The release changed: whoever shows it should show the new one."""
-        await self.publisher.update(game, release)
-
-    async def revoke(self, game: dto.Game) -> None:
-        await self.publisher.unpublish(game)
 
 
 @dataclass
@@ -74,7 +46,7 @@ class GetGameReleaseInteractor:
 @dataclass
 class SaveGameReleaseInteractor:
     dao: GameReleaseEditor
-    announcer: GameReleaseAnnouncer
+    publisher: GameReleasePublisher
 
     async def __call__(
         self,
@@ -99,11 +71,11 @@ class SaveGameReleaseInteractor:
                 game=game, player=author, text="release is missing right after saving"
             )
         if self.should_announce(game):
-            await self.announcer.announce(game)
+            await self.publisher.publish(game, release)
         else:
             # not this game's moment to announce — but if the release is
             # already on show somewhere, it should show what was just written
-            await self.announcer.refresh(game, release)
+            await self.publisher.update(game, release)
         return release
 
     @staticmethod
@@ -144,7 +116,7 @@ class SaveGameReleaseInteractor:
 @dataclass
 class DeleteGameReleaseInteractor:
     dao: GameReleaseEditor
-    announcer: GameReleaseAnnouncer
+    publisher: GameReleasePublisher
 
     async def __call__(self, game_id: int, identity: IdentityProvider) -> None:
         author = await identity.get_required_player()
@@ -155,4 +127,4 @@ class DeleteGameReleaseInteractor:
             return
         await self.dao.delete_release(game)
         await self.dao.commit()
-        await self.announcer.revoke(game)
+        await self.publisher.unpublish(game)

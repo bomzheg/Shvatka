@@ -8,11 +8,10 @@ from shvatka.core.games.editor_interactors import (
     PlanGameStartInteractor,
 )
 from shvatka.core.models import dto
-from shvatka.core.models.dto import GameResults
+from shvatka.core.models.dto import GameResults, hints
 from shvatka.core.models.enums import GameStatus
 from shvatka.core.utils import exceptions
 from shvatka.core.utils.datetime_utils import DATETIME_FORMAT, tz_game, tz_utc
-from shvatka.core.games.release_interactors import GameReleaseAnnouncer
 from shvatka.core.views.game import GameLogEvent, GameLogType, GameLogWriter
 from shvatka.infrastructure.di.infra import NoOpGameReleasePublisher
 from tests.fixtures.identity import MockIdentityProvider
@@ -35,14 +34,27 @@ def make_game(author: dto.Player, status: GameStatus) -> dto.Game:
     )
 
 
-def silent_release_announcer() -> GameReleaseAnnouncer:
-    """A game with no release announces nothing, whatever the publisher is."""
-    return GameReleaseAnnouncer(dao=NoReleaseDao(), publisher=NoOpGameReleasePublisher())
-
-
 class NoReleaseDao:
+    """A game with no release: starting the waivers announces nothing."""
+
     async def get_release(self, game_id: int) -> dto.GameRelease | None:
         return None
+
+
+@dataclass
+class StoredReleaseDao:
+    release: dto.GameRelease
+
+    async def get_release(self, game_id: int) -> dto.GameRelease | None:
+        return self.release
+
+
+class RecordingReleasePublisher(NoOpGameReleasePublisher):
+    def __init__(self) -> None:
+        self.published: list[dto.GameRelease] = []
+
+    async def publish(self, game: dto.Game, release: dto.GameRelease) -> None:
+        self.published.append(release)
 
 
 class RecordingLogWriter(GameLogWriter):
@@ -108,7 +120,8 @@ async def test_change_status_to_waivers_writes_game_log():
         waiver_starter=dao,
         completer=dao,
         game_log=game_log,
-        release_announcer=silent_release_announcer(),
+        release_dao=NoReleaseDao(),
+        release_publisher=NoOpGameReleasePublisher(),
     )
 
     await interactor(
@@ -122,6 +135,32 @@ async def test_change_status_to_waivers_writes_game_log():
 
 
 @pytest.mark.asyncio
+async def test_starting_waivers_puts_the_release_in_front_of_people():
+    """What the release was waiting for: the waivers opening."""
+    author = make_player(1)
+    game = make_game(author, GameStatus.ready)
+    dao = FakeGameDao(game=game)
+    release = dto.GameRelease(game_id=game.id, hints=[hints.TextHint(text="тема игры")])
+    publisher = RecordingReleasePublisher()
+    interactor = ChangeGameStatusInteractor(
+        getter=dao,
+        waiver_starter=dao,
+        completer=dao,
+        game_log=RecordingLogWriter(),
+        release_dao=StoredReleaseDao(release),
+        release_publisher=publisher,
+    )
+
+    await interactor(
+        game_id=game.id,
+        status=GameStatus.getting_waivers,
+        identity=MockIdentityProvider(player=author),
+    )
+
+    assert publisher.published == [release]
+
+
+@pytest.mark.asyncio
 async def test_change_status_unsupported_does_not_write_game_log():
     author = make_player(1)
     game = make_game(author, GameStatus.ready)
@@ -132,7 +171,8 @@ async def test_change_status_unsupported_does_not_write_game_log():
         waiver_starter=dao,
         completer=dao,
         game_log=game_log,
-        release_announcer=silent_release_announcer(),
+        release_dao=NoReleaseDao(),
+        release_publisher=NoOpGameReleasePublisher(),
     )
 
     with pytest.raises(exceptions.CantEditGame):

@@ -5,7 +5,6 @@ import pytest
 
 from shvatka.core.games.release_interactors import (
     DeleteGameReleaseInteractor,
-    GameReleaseAnnouncer,
     GetGameReleaseInteractor,
     SaveGameReleaseInteractor,
 )
@@ -126,9 +125,7 @@ class RecordingPublisher(GameReleasePublisher):
 def make_interactor(
     dao: FakeReleaseDao, publisher: RecordingPublisher
 ) -> SaveGameReleaseInteractor:
-    return SaveGameReleaseInteractor(
-        dao=dao, announcer=GameReleaseAnnouncer(dao=dao, publisher=publisher)
-    )
+    return SaveGameReleaseInteractor(dao=dao, publisher=publisher)
 
 
 @pytest.mark.asyncio
@@ -293,9 +290,7 @@ async def test_deleting_a_published_release_takes_it_out_of_the_channel():
     )
     publisher = RecordingPublisher()
     publisher.showing = True
-    interactor = DeleteGameReleaseInteractor(
-        dao=dao, announcer=GameReleaseAnnouncer(dao=dao, publisher=publisher)
-    )
+    interactor = DeleteGameReleaseInteractor(dao=dao, publisher=publisher)
 
     await interactor(game_id=10, identity=MockIdentityProvider(player=author))
 
@@ -340,13 +335,3 @@ async def test_dropping_the_banner_keeps_the_rest_of_the_release():
 
     assert release.banner is None
     assert len(release.parts) == 1
-
-
-@pytest.mark.asyncio
-async def test_announcing_a_game_without_a_release_does_nothing():
-    dao = FakeReleaseDao(game=make_game(make_player(1), GameStatus.getting_waivers))
-    publisher = RecordingPublisher()
-
-    await GameReleaseAnnouncer(dao=dao, publisher=publisher).announce(dao.game)
-
-    assert publisher.posted == []

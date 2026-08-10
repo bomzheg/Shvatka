@@ -15,7 +15,7 @@ from shvatka.tgbot.views.jinja_filters import setup_jinja
 class MockMessageManagerProvider(Provider):
     scope = Scope.APP
 
-    @provide
+    @provide(override=True)
     def get_manager(self) -> MessageManagerProtocol:
         return MockMessageManager()
 
@@ -28,12 +28,12 @@ class MockBotProvider(Provider):
         session = mock.AsyncMock(BaseSession)
         return session
 
-    @provide
+    @provide(override=True)
     async def get_bot(self, config: TgBotConfig, session: BaseSession) -> Bot:
         bot = Bot(token=config.bot.token, session=session)
         setup_jinja(bot)
         return bot
 
-    @provide
+    @provide(override=True)
     async def bot_alert(self, bot: Bot, config: BotConfig) -> BotAlert:
         return BotAlert(bot, config.log_chat)

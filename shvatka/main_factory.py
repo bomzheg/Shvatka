@@ -98,6 +98,15 @@ def get_complex_only_providers() -> list[Provider]:
     ]
 
 
+def get_root_app_providers(paths_env: str) -> list[Provider]:
+    return [
+        *get_providers(paths_env),
+        *get_bot_specific_providers(),
+        *get_api_specific_providers(),
+        *get_complex_only_providers(),
+    ]
+
+
 def create_root_app(paths: Paths) -> FastAPI:
     started_at = time.monotonic()
     api_config = load_api_config(paths)
@@ -108,10 +117,7 @@ def create_root_app(paths: Paths) -> FastAPI:
 
     app = create_app(api_config)
     dishka = make_async_container(
-        *get_providers("SHVATKA_PATH"),
-        *get_bot_specific_providers(),
-        *get_api_specific_providers(),
-        *get_complex_only_providers(),
+        *get_root_app_providers("SHVATKA_PATH"),
         validation_settings=STRICT_VALIDATION,
     )
     setup_application(app, dishka)

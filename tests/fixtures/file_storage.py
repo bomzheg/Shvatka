@@ -1,6 +1,5 @@
 from dishka import Provider, Scope, provide
 
-from shvatka.core.interfaces.clients.file_storage import FileStorage
 from shvatka.core.models import enums
 from shvatka.core.models.dto import hints
 from tests.fixtures.scn_fixtures import GUID
@@ -19,8 +18,11 @@ FILE_META = hints.FileMeta(
 
 
 class MemoryFileStorageProvider(Provider):
+    """Not an override: the app's local storage stays for container-resolved
+    code (it's the one tested against a real dir), the in-memory one is for
+    services called by hand.
+    """
+
     scope = Scope.APP
 
-    @provide
-    def get_file_storage(self) -> FileStorage:
-        return MemoryFileStorage()
+    memory_storage = provide(MemoryFileStorage)

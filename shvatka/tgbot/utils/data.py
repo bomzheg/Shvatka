@@ -5,7 +5,6 @@ from aiogram_dialog.api.entities import Stack, Context
 from aiogram_dialog.context.storage import StorageProxy
 from dishka import AsyncContainer
 
-from shvatka.core.models import dto
 from shvatka.infrastructure.db.dao.holder import HolderDao
 
 
@@ -22,10 +21,10 @@ class SHMiddlewareData(DialogMiddlewareData, total=False):
 
     Only what a lot of handlers need belongs here — anything else is requested
     from the container with ``FromDishka`` at the single place that uses it.
-    Who is acting comes from ``IdentityProvider``, not from this dict.
+    Who is acting comes from ``IdentityProvider`` and what is being played from
+    ``CurrentGameProvider``, not from this dict.
     """
 
     dishka_container: AsyncContainer
     retort: Retort
     dao: HolderDao
-    game: dto.Game | None

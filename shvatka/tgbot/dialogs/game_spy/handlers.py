@@ -6,8 +6,8 @@ from aiogram_dialog.widgets.kbd import Button
 from dishka import FromDishka
 from dishka.integrations.aiogram_dialog import inject
 
+from shvatka.core.interfaces.current_game import CurrentGameProvider
 from shvatka.core.interfaces.identity import IdentityProvider
-from shvatka.core.models import dto
 from shvatka.core.utils.datetime_utils import tz_utc
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.tgbot.views.keys import create_keys_page
@@ -22,9 +22,10 @@ async def keys_handler(
     identity: FromDishka[IdentityProvider],
     dao: FromDishka[HolderDao],
     telegraph: FromDishka[Telegraph],
+    current_game: FromDishka[CurrentGameProvider],
 ):
     await c.answer()
-    game: dto.Game = manager.middleware_data["game"]
+    game = await current_game.get_required_game()
     page = await create_keys_page(
         game=game, telegraph=telegraph, dao=dao, salt=game.manage_token[:8], identity=identity
     )

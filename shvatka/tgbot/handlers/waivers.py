@@ -48,12 +48,13 @@ from shvatka.tgbot.views.waiver import (
 @inject
 async def start_waivers(
     message: Message,
-    game: dto.Game,
     dao: HolderDao,
     bot: Bot,
     identity_provider: FromDishka[TgBotIdentityProvider],
+    current_game: FromDishka[CurrentGameProvider],
     interactor: FromDishka[TeamWaiversDraftReaderInteractor],
 ):
+    game = await current_game.get_required_game()
     try:
         waiver_results = await interactor(game_id=game.id, identity=identity_provider)
         check_allow_approve_waivers(await identity_provider.get_required_full_team_player())
@@ -106,12 +107,13 @@ async def add_vote_handler(
 @inject
 async def start_approve_waivers_cmd_handler(
     _: Message,
-    game: dto.Game,
     dao: HolderDao,
     bot: Bot,
     identity_provider: FromDishka[TgBotIdentityProvider],
     read_interactor: FromDishka[TeamWaiversDraftReaderInteractor],
+    current_game: FromDishka[CurrentGameProvider],
 ):
+    game = await current_game.get_required_game()
     player = await identity_provider.get_required_player()
     user = await identity_provider.get_required_user()
     team = await get_my_team(player, dao.team_player)
@@ -131,12 +133,13 @@ async def start_approve_waivers_cmd_handler(
 async def start_approve_waivers_cb_handler(
     c: CallbackQuery,
     callback_data: kb.WaiverToApproveCD,
-    game: dto.Game,
     dao: HolderDao,
     bot: Bot,
     identity_provider: FromDishka[TgBotIdentityProvider],
     read_interactor: FromDishka[TeamWaiversDraftReaderInteractor],
+    current_game: FromDishka[CurrentGameProvider],
 ):
+    game = await current_game.get_required_game()
     player = await identity_provider.get_required_player()
     user = await identity_provider.get_required_user()
     check_same_game(callback_data, game, player)
@@ -159,11 +162,12 @@ async def start_approve_waivers_cb_handler(
 async def waiver_main_menu(
     c: CallbackQuery,
     callback_data: kb.WaiverMainCD,
-    game: dto.Game,
     dao: HolderDao,
     identity_provider: FromDishka[TgBotIdentityProvider],
     read_interactor: FromDishka[TeamWaiversDraftReaderInteractor],
+    current_game: FromDishka[CurrentGameProvider],
 ):
+    game = await current_game.get_required_game()
     player = await identity_provider.get_required_player()
     check_same_game(callback_data, game, player)
     team = await get_my_team(player, dao.team_player)
@@ -181,12 +185,13 @@ async def waiver_main_menu(
 async def confirm_approve_waivers_handler(
     c: CallbackQuery,
     callback_data: kb.WaiverConfirmCD,
-    game: dto.Game,
     dao: HolderDao,
     bot: Bot,
     identity_provider: FromDishka[TgBotIdentityProvider],
     interactor: FromDishka[TeamWaiversDraftReaderInteractor],
+    current_game: FromDishka[CurrentGameProvider],
 ):
+    game = await current_game.get_required_game()
     player = await identity_provider.get_required_player()
     check_same_game(callback_data, game, player)
     team = await get_my_team(player, dao.team_player)
@@ -208,11 +213,12 @@ async def confirm_approve_waivers_handler(
 async def cancel_waivers_handler(
     c: CallbackQuery,
     callback_data: kb.WaiverConfirmCD,
-    game: dto.Game,
     dao: HolderDao,
     bot: Bot,
     identity_provider: FromDishka[TgBotIdentityProvider],
+    current_game: FromDishka[CurrentGameProvider],
 ):
+    game = await current_game.get_required_game()
     player = await identity_provider.get_required_player()
     check_same_game(callback_data, game, player)
     team = await get_my_team(player, dao.team_player)
@@ -227,10 +233,11 @@ async def cancel_waivers_handler(
 async def waiver_user_menu(
     c: CallbackQuery,
     callback_data: kb.WaiverManagePlayerCD,
-    game: dto.Game,
     dao: HolderDao,
     identity_provider: FromDishka[TgBotIdentityProvider],
+    current_game: FromDishka[CurrentGameProvider],
 ):
+    game = await current_game.get_required_game()
     player = await identity_provider.get_required_player()
     check_same_game(callback_data, game, player)
     team = await get_my_team(player, dao.team_player)
@@ -251,11 +258,12 @@ async def waiver_user_menu(
 async def waiver_remove_user_vote(
     c: CallbackQuery,
     callback_data: kb.WaiverRemovePlayerCD,
-    game: dto.Game,
     dao: HolderDao,
     identity_provider: FromDishka[TgBotIdentityProvider],
     read_interactor: FromDishka[TeamWaiversDraftReaderInteractor],
+    current_game: FromDishka[CurrentGameProvider],
 ):
+    game = await current_game.get_required_game()
     player = await identity_provider.get_required_player()
     check_same_game(callback_data, game, player)
     team = await get_my_team(player, dao.team_player)
@@ -275,10 +283,11 @@ async def waiver_remove_user_vote(
 async def waiver_add_force_menu(
     c: CallbackQuery,
     callback_data: kb.WaiverRemovePlayerCD,
-    game: dto.Game,
     dao: HolderDao,
     identity_provider: FromDishka[TgBotIdentityProvider],
+    current_game: FromDishka[CurrentGameProvider],
 ):
+    game = await current_game.get_required_game()
     player = await identity_provider.get_required_player()
     check_same_game(callback_data, game, player)
     team = await get_my_team(player, dao.team_player)
@@ -299,11 +308,12 @@ async def waiver_add_force_menu(
 async def add_force_player(
     c: CallbackQuery,
     callback_data: kb.WaiverAddPlayerForceCD,
-    game: dto.Game,
     dao: HolderDao,
     identity_provider: FromDishka[TgBotIdentityProvider],
     waiver_vote_adder_dao: FromDishka[WaiverVoteAdder],
+    current_game: FromDishka[CurrentGameProvider],
 ):
+    game = await current_game.get_required_game()
     player = await identity_provider.get_required_player()
     check_same_game(callback_data, game, player)
     team = await get_my_team(player, dao.team_player)

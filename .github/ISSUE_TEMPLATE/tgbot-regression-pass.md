@@ -60,6 +60,24 @@ matter, so each check names the account to use.
 - [ ] **C** — on a fresh invite, «не согласен» declines and edits the message.
 - [ ] **A** — invite B to be an organizer inline; your own click gives «ну и смысл?», B's acceptance makes them an org and refreshes B's open main menu. `is_inviter` + `BgManagerFactory`
 
+### Game-state gating
+
+`GameStatusFilter` is the widest filter in the bot: `disable_router_on_game`
+mounts it on the message, callback_query and inline_query of nearly every
+router, so almost every update passes through it. Its two failure modes are
+opposite and both quiet — answer `False` too often and the bot goes mute
+outside games, answer `True` too often and commands that must be blocked
+during a game become available. Test it in both game states, not just one.
+
+- [ ] With **no active game**: `/start`, `/team`, `/teams`, `/create_team`, `/my_games` all respond. `GameStatusFilter(running=False)`
+- [ ] With a game in **getting_waivers**: the same commands still respond — the routers are disabled only once a game is *started*, not merely active.
+- [ ] With a game **started**: those same commands go quiet. If `/create_team` still answers mid-game, the filter is inverted. `running=False`, inverse
+- [ ] With a game **started**: a correct key from a team chat is still accepted — the play router is gated the other way. `GameStatusFilter(running=True)`
+- [ ] After the game **finishes**: the normal commands answer again.
+- [ ] During **getting_waivers**: `/waivers` and `/approve_waivers` work; outside that status they do not. `GameStatusFilter(status=getting_waivers)`
+- [ ] **org** — during a started game, `/spy` opens and the spy view lists teams by level. `OrgFilter` + spy getters
+- [ ] **org** — the spy «Лог ключей» button builds its Telegraph page. spy `keys_handler`
+
 ## 2. Identity is still written on every update
 
 Resolving the identity is a write: it upserts the user and the chat, and creates

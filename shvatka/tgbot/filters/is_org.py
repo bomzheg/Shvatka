@@ -6,6 +6,7 @@ from aiogram.types import Message
 from dishka import FromDishka
 from dishka.integrations.aiogram import inject
 
+from shvatka.core.interfaces.current_game import CurrentGameProvider
 from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.models import dto
 from shvatka.core.services.organizers import get_by_player_or_none
@@ -30,10 +31,11 @@ class OrgFilter(BaseFilter):
     async def __call__(  # noqa: C901
         self,
         message: Message,
-        game: dto.Game | None,
         dao: HolderDao,
         identity: FromDishka[IdentityProvider],
+        current_game: FromDishka[CurrentGameProvider],
     ) -> bool | dict[str, Any]:
+        game = await current_game.get_game()
         if not game or not game.is_active():
             return False
         if self.only_for_running_game and not game.is_started():

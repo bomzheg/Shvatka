@@ -82,10 +82,11 @@ async def show_zip_scn(
     widget: Button,
     manager: DialogManager,
     identity: FromDishka[IdentityProvider],
+    file_gateway: FromDishka[FileGateway],
 ):
     await c.answer()
     game_id = manager.dialog_data["game_id"]
-    await common_show_zip(c, game_id, manager, identity)
+    await common_show_zip(c, game_id, manager, identity, file_gateway)
 
 
 @inject
@@ -94,10 +95,11 @@ async def show_my_zip_scn(
     widget: Button,
     manager: DialogManager,
     identity: FromDishka[IdentityProvider],
+    file_gateway: FromDishka[FileGateway],
 ):
     await c.answer()
     game_id = manager.dialog_data["my_game_id"]
-    await common_show_zip(c, game_id, manager, identity)
+    await common_show_zip(c, game_id, manager, identity, file_gateway)
 
 
 @inject
@@ -156,11 +158,14 @@ async def show_transitions(
 
 
 async def common_show_zip(
-    c: CallbackQuery, game_id: int, manager: DialogManager, identity: IdentityProvider
+    c: CallbackQuery,
+    game_id: int,
+    manager: DialogManager,
+    identity: IdentityProvider,
+    file_gateway: FileGateway,
 ):
     dao: HolderDao = manager.middleware_data["dao"]
     retort: Retort = manager.middleware_data["retort"]
-    file_gateway: FileGateway = manager.middleware_data["file_gateway"]
     game_ = await game.get_game_package(game_id, identity, dao.game_packager, retort, file_gateway)
     zip_ = pack_scn(game_)
     assert isinstance(c.message, Message)

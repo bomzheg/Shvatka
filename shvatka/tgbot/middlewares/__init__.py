@@ -1,6 +1,4 @@
 from aiogram import Dispatcher
-from aiogram_dialog.api.protocols import BgManagerFactory
-from dishka import AsyncContainer
 
 
 from .bot_rights_middleware import BotRightsMiddleware
@@ -10,11 +8,8 @@ from .init_middleware import InitMiddleware
 from .load_team_player import TeamPlayerMiddleware
 
 
-def setup_middlewares(
-    dp: Dispatcher,
-    bg_manager_factory: BgManagerFactory,
-):
-    dp.update.middleware(InitMiddleware(bg_manager_factory=bg_manager_factory))
+def setup_middlewares(dp: Dispatcher):
+    dp.update.middleware(InitMiddleware())
     dp.update.middleware(LoadDataMiddleware())
     dp.message.middleware(FixTargetMiddleware())
     dp.my_chat_member.outer_middleware(BotRightsMiddleware())

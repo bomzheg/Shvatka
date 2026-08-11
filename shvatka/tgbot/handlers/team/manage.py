@@ -55,6 +55,7 @@ from shvatka.tgbot.views.user import render_small_card_link
 logger = logging.getLogger(__name__)
 
 
+@inject
 async def cmd_create_team(
     message: Message,
     chat: dto.Chat,
@@ -62,7 +63,7 @@ async def cmd_create_team(
     user: dto.User,
     dao: HolderDao,
     bot: Bot,
-    game_log: GameLogWriter,
+    game_log: FromDishka[GameLogWriter],
 ):
     logger.info("Player %s try create team in %s", player.id, chat.tg_id)
     if not await is_admin_filter(bot, chat, user):

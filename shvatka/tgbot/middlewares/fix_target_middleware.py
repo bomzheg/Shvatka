@@ -2,10 +2,12 @@ from typing import Callable, Any, Awaitable
 
 from aiogram import BaseMiddleware
 from aiogram.types import TelegramObject
+from dishka.integrations.aiogram import CONTAINER_NAME
 
 from shvatka.core.players.player import upsert_player
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.tgbot.username_resolver.find_target_user import get_db_user_by_tg_user
+from shvatka.tgbot.username_resolver.user_getter import UserGetter
 
 
 class FixTargetMiddleware(BaseMiddleware):
@@ -17,6 +19,7 @@ class FixTargetMiddleware(BaseMiddleware):
     ) -> Any:
         if target := data.get("target"):
             dao: HolderDao = data["dao"]
-            target = await get_db_user_by_tg_user(target, data["user_getter"], dao)
+            user_getter = await data[CONTAINER_NAME].get(UserGetter)
+            target = await get_db_user_by_tg_user(target, user_getter, dao)
             data["target"] = await upsert_player(target, dao.player)
         return await handler(event, data)

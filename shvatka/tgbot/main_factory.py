@@ -131,10 +131,7 @@ class DpProvider(Provider):
         bg_manager_factory = setup_handlers(dp, config, message_manager)
         self.bg_manager_factory = bg_manager_factory  # type: ignore[assignment]
         setup_dishka(container=dishka, router=dp)
-        setup_middlewares(
-            dp=dp,
-            bg_manager_factory=bg_manager_factory,
-        )
+        setup_middlewares(dp=dp)
         logger.info("Configured bot routers \n%s", print_router_tree(dp))
         return dp
 

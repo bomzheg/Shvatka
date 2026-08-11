@@ -13,10 +13,11 @@ from shvatka.tgbot.services.identity import TgBotIdentityProvider
 from shvatka.tgbot.views.commands import MERGE_TEAMS, MERGE_PLAYERS
 
 
+@inject
 async def merge_teams_command(
     message: types.Message,
     command: CommandObject,
-    game_log: GameLogWriter,
+    game_log: FromDishka[GameLogWriter],
     dao: HolderDao,
 ):
     if not command.args:

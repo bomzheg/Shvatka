@@ -89,13 +89,14 @@ async def dismiss_promotion_handler(
     )
 
 
+@inject
 async def agree_promotion_handler(
     c: CallbackQuery,
     callback_data: kb.AgreePromotionCD,
     player: dto.Player,
     dao: HolderDao,
     bot: Bot,
-    bg_manager_factory: BgManagerFactory,
+    bg_manager_factory: FromDishka[BgManagerFactory],
 ):
     await c.answer()
     try:

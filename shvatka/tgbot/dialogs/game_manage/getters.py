@@ -9,7 +9,7 @@ from aiogram_dialog.api.entities import MediaAttachment, MediaId
 from dishka import AsyncContainer, FromDishka
 from dishka.integrations.aiogram import CONTAINER_NAME
 from dishka.integrations.aiogram_dialog import inject
-from telegraph import Telegraph
+from telegraph.aio import Telegraph
 
 from shvatka.common.url_factory import UrlFactory
 from shvatka.core.interfaces.identity import IdentityProvider
@@ -67,7 +67,7 @@ async def get_game_waivers(dao: HolderDao, dialog_manager: DialogManager, **_):
 async def get_game_keys(
     dao: HolderDao,
     dialog_manager: DialogManager,
-    telegraph: Telegraph,
+    telegraph: FromDishka[Telegraph],
     identity: FromDishka[IdentityProvider],
     **_,
 ):
@@ -90,7 +90,7 @@ async def get_game_results(
     dialog_manager: DialogManager,
     dao: HolderDao,
     identity: FromDishka[IdentityProvider],
-    results_painter: ResultsPainter,
+    results_painter: FromDishka[ResultsPainter],
     **_,
 ):
     data: dict[str, Any] = dialog_manager.start_data  # type: ignore[assignment]

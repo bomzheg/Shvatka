@@ -14,10 +14,8 @@ those are what ``FromDishka`` is for.
 """
 
 import logging
-from typing import Any
 
-from aiogram import Bot, Dispatcher
-from aiogram.methods import TelegramMethod
+from aiogram import Bot
 from aiogram.utils.text_decorations import html_decoration as hd
 from aiogram_dialog import BaseDialogManager
 from dishka import FromDishka
@@ -105,18 +103,6 @@ async def send_level_hints(
 ) -> None:
     publisher = LevelPublisher(hint_sender=hint_sender, level=level, chat_id=chat_id)
     await publisher.publish()
-
-
-async def feed_update(
-    update: dict[str, Any],
-    data: dict[str, Any],
-    bot: FromDishka[Bot],
-    dispatcher: FromDishka[Dispatcher],
-) -> None:
-    """Process one webhook update after the http response is already sent."""
-    result = await dispatcher.feed_raw_update(bot=bot, update=update, **data)
-    if isinstance(result, TelegramMethod):
-        await dispatcher.silent_call_request(bot=bot, result=result)
 
 
 async def get_invite(channel_id: int, bot: Bot) -> str:

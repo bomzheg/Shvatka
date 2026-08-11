@@ -209,6 +209,12 @@ group. It is the wrong tool for the nursery: its exit waits for every child
 cancels its siblings, which is exactly what independent background jobs must
 not do.
 
+One file is exempt from the ban: `tgbot/utils/fastapi_webhook.py` is a
+portable copy of aiogram's webhook handler, meant to be pasted into another
+bot as-is. It must not import from `shvatka`, so it keeps managing its own
+background updates. Leave it alone — if you need to touch it, keep it
+self-contained and close to upstream.
+
 ## DAO layer
 
 - **Writes belong to the table's own DAO.** A plain `core/.../rdb/*.py` DAO may

@@ -1,17 +1,25 @@
-# Telegram bot — manual regression checklist
+---
+name: Bot regression pass
+about: Manual checklist to run against a real bot before merging a middleware, DI or filter change
+title: 'Bot regression pass: '
+---
 
-> Written while moving dependencies out of aiogram's middleware data into DI,
-> but not tied to that change. Run it after anything that touches **middleware,
-> DI wiring, filters, or how the acting user is resolved** — that is the class
-> of change whose damage the automated suite cannot see.
+**Branch / commit under test:**
+**Run by:**
 
-Unit tests cover the domain; `test_dialogs_preview` renders every window. What
-neither can check is whether a real update still reaches the right handler with
-the right person attached. That is what this list is for.
+Open this as an issue and tick the boxes as you go — GitHub only makes task
+lists interactive in issues and comments, never when viewing a file.
+
+Run it after anything that touches **middleware, DI wiring, filters, or how the
+acting user is resolved**. That is the class of change whose damage the
+automated suite cannot see: unit tests cover the domain and
+`test_dialogs_preview` renders every window, but neither can check whether a
+real update still reaches the right handler with the right person attached.
 
 The order is **by how quietly a bug would hide**, not by feature area. Section 1
 is the part worth doing carefully; everything below it fails in a way you would
-notice anyway.
+notice anyway. Delete the sections a given change can't possibly affect rather
+than ticking them untested.
 
 ## Accounts and fixtures
 

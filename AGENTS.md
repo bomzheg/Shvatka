@@ -364,9 +364,12 @@ pytest tests/unit       # fast unit-only loop, no DB
 
 Changes to **middleware, DI wiring, filters, or how the acting user is
 resolved** break in ways no test catches: a filter that wrongly answers `False`
-raises nothing, it just makes a command stop responding. `docs/tgbot-regression-checklist.md`
-is the manual pass for that class of change, ordered by how quietly each bug
-would hide. Run it against a real bot before merging one of those.
+raises nothing, it just makes a command stop responding. Before merging one of
+those, run the manual pass against a real bot — open a new issue from the
+**Bot regression pass** template
+(`.github/ISSUE_TEMPLATE/tgbot-regression-pass.md`) and work through it there,
+where the checkboxes actually tick. It is ordered by how quietly each bug would
+hide, so section 1 is the part that repays care.
 
 ## Linting & CI
 

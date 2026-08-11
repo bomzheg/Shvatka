@@ -83,7 +83,7 @@ async def agree_to_be_org_handler(
     dao: FromDishka[HolderDao],
     bot: FromDishka[Bot],
     org_notifier: FromDishka[OrgNotifier],
-    bg_manager_factory: BgManagerFactory,
+    bg_manager_factory: FromDishka[BgManagerFactory],
 ):
     await c.answer()
     try:

@@ -2,24 +2,11 @@ from adaptix import Retort
 from aiogram.dispatcher.middlewares.data import MiddlewareData
 from aiogram_dialog import DialogManager
 from aiogram_dialog.api.entities import Stack, Context
-from aiogram_dialog.api.protocols import BgManagerFactory
 from aiogram_dialog.context.storage import StorageProxy
 from dishka import AsyncContainer
-from telegraph.aio import Telegraph
 
-from shvatka.core.interfaces.clients.file_storage import FileStorage, FileGateway
-from shvatka.core.interfaces.scheduler import Scheduler
 from shvatka.core.models import dto
-from shvatka.core.utils.key_checker_lock import KeyCheckerFactory
-from shvatka.core.views.game import GameLogWriter
-from shvatka.core.views.level import LevelView
 from shvatka.infrastructure.db.dao.holder import HolderDao
-from shvatka.infrastructure.picture.results_painter import ResultsPainter
-from shvatka.tgbot.config.models.bot import BotConfig
-from shvatka.tgbot.config.models.main import TgBotConfig
-from shvatka.tgbot.username_resolver.user_getter import UserGetter
-from shvatka.tgbot.views.hint_factory.hint_parser import HintParser
-from shvatka.tgbot.views.hint_sender import HintSender
 
 
 class DialogMiddlewareData(MiddlewareData, total=False):
@@ -30,26 +17,19 @@ class DialogMiddlewareData(MiddlewareData, total=False):
 
 
 class SHMiddlewareData(DialogMiddlewareData, total=False):
-    config: BotConfig
-    main_config: TgBotConfig
+    """
+    Data every handler receives by name.
+
+    Only what a lot of handlers need belongs here — anything else is requested
+    from the container with ``FromDishka`` at the single place that uses it.
+    """
+
     dishka_container: AsyncContainer
-    user_getter: UserGetter
     retort: Retort
     dao: HolderDao
-    scheduler: Scheduler
-    locker: KeyCheckerFactory
-    file_storage: FileStorage
-    telegraph: Telegraph
-    hint_parser: HintParser
-    file_gateway: FileGateway
-    hint_sender: HintSender
-    level_view: LevelView
     user: dto.User | None
     chat: dto.Chat | None
     team: dto.Team | None
     player: dto.Player | None
     game: dto.Game | None
     team_player: dto.FullTeamPlayer | None
-    results_painter: ResultsPainter
-    game_log: GameLogWriter
-    bg_manager_factory: BgManagerFactory

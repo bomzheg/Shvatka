@@ -3,6 +3,7 @@ from functools import partial
 from aiogram import Router, Bot
 from aiogram.types import CallbackQuery, Message
 from aiogram_dialog.api.protocols import BgManagerFactory
+from dishka.integrations.aiogram import FromDishka, inject
 
 from shvatka.core.players.player import get_player_by_id, merge_players
 from shvatka.core.services.team import get_team_by_id, merge_teams
@@ -17,12 +18,13 @@ async def confirm_merge_not_superuser(callback_query: CallbackQuery):
     await callback_query.answer("Недостаточно прав, сорян", cache_time=3600)
 
 
+@inject
 async def confirm_merge_team(
     callback_query: CallbackQuery,
     callback_data: kb.TeamMergeCD,
     dao: HolderDao,
-    game_log: GameLogWriter,
-    bg_manager_factory: BgManagerFactory,
+    game_log: FromDishka[GameLogWriter],
+    bg_manager_factory: FromDishka[BgManagerFactory],
     bot: Bot,
 ):
     primary = await get_team_by_id(callback_data.primary_team_id, dao.team)
@@ -37,12 +39,13 @@ async def confirm_merge_team(
     await bg.update({})
 
 
+@inject
 async def confirm_merge_players(
     callback_query: CallbackQuery,
     callback_data: kb.PlayerMergeCD,
     dao: HolderDao,
-    game_log: GameLogWriter,
-    bg_manager_factory: BgManagerFactory,
+    game_log: FromDishka[GameLogWriter],
+    bg_manager_factory: FromDishka[BgManagerFactory],
     bot: Bot,
 ):
     primary = await get_player_by_id(callback_data.primary_player_id, dao.player)

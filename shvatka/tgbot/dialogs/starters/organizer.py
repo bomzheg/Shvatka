@@ -1,6 +1,8 @@
 from aiogram import Router
 from aiogram.types import CallbackQuery
 from aiogram_dialog import DialogManager
+from dishka import FromDishka
+from dishka.integrations.aiogram import inject
 
 from shvatka.core.interfaces.scheduler import LevelTestScheduler
 from shvatka.core.models import dto
@@ -15,14 +17,15 @@ from shvatka.tgbot import states
 from shvatka.tgbot.utils.router import disable_router_on_game
 
 
+@inject
 async def start_test_level(
     c: CallbackQuery,
     player: dto.Player,
     callback_data: kb.LevelTestInviteCD,
     dao: HolderDao,
     dialog_manager: DialogManager,
-    scheduler: LevelTestScheduler,
-    level_view: LevelView,
+    scheduler: FromDishka[LevelTestScheduler],
+    level_view: FromDishka[LevelView],
 ):
     await c.answer()
     org = await get_org_by_id(callback_data.org_id, dao.organizer)

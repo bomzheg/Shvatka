@@ -74,9 +74,15 @@ async def send_to_testing(c: CallbackQuery, widget: Any, manager: DialogManager,
     await c.answer("Приглашение отправлено")
 
 
-async def level_testing(c: CallbackQuery, button: Button, manager: DialogManager):
+@inject
+async def level_testing(
+    c: CallbackQuery,
+    button: Button,
+    manager: DialogManager,
+    scheduler: FromDishka[LevelTestScheduler],
+    view: FromDishka[LevelView],
+) -> None:
     await c.answer()
-    scheduler: LevelTestScheduler = manager.middleware_data["scheduler"]
     dao: HolderDao = manager.middleware_data["dao"]
     data: dict[str, Any] = manager.start_data  # type: ignore[assignment]
     level_id = data["level_id"]
@@ -88,7 +94,6 @@ async def level_testing(c: CallbackQuery, button: Button, manager: DialogManager
         await manager.done()
         return
     suite = dto.LevelTestSuite(tester=org, level=level)
-    view: LevelView = manager.middleware_data["level_view"]
     await manager.start(state=states.LevelTestSG.wait_key, data={"level_id": level_id})
     await start_level_test(
         suite=suite, scheduler=scheduler, view=view, dao=dao.level_testing_complex

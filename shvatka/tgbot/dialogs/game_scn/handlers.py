@@ -55,11 +55,16 @@ async def process_name(m: Message, dialog_: Any, manager: DialogManager):
     await manager.next()
 
 
-async def process_zip_scn(m: Message, dialog_: Any, manager: DialogManager):
+@inject
+async def process_zip_scn(
+    m: Message,
+    dialog_: Any,
+    manager: DialogManager,
+    file_gateway: FromDishka[FileGateway],
+) -> None:
     player: dto.Player = manager.middleware_data["player"]
     dao: HolderDao = manager.middleware_data["dao"]
     bot: Bot = manager.middleware_data["bot"]
-    file_gateway: FileGateway = manager.middleware_data["file_gateway"]
     retort: Retort = manager.middleware_data["retort"]
     assert m.document
     document: IO[bytes] = await bot.download(m.document.file_id)  # type: ignore[assignment]

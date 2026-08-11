@@ -360,6 +360,14 @@ pytest tests            # everything (needs Docker for testcontainers)
 pytest tests/unit       # fast unit-only loop, no DB
 ```
 
+### What the suite can't see
+
+Changes to **middleware, DI wiring, filters, or how the acting user is
+resolved** break in ways no test catches: a filter that wrongly answers `False`
+raises nothing, it just makes a command stop responding. `docs/tgbot-regression-checklist.md`
+is the manual pass for that class of change, ordered by how quietly each bug
+would hide. Run it against a real bot before merging one of those.
+
 ## Linting & CI
 
 CI (`.github/workflows/test.yml`) runs three gates on PRs to `master` and on

@@ -19,8 +19,15 @@ from aiogram.utils.text_decorations import html_decoration as hd
 from shvatka.core.interfaces.dal.player import PlayerTeamChecker
 from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.models import dto
-from shvatka.core.players.player import get_team_players, get_player_by_id, join_team, get_my_team
+from shvatka.core.players.player import (
+    get_team_players,
+    get_player_by_id,
+    join_team,
+    get_my_team,
+    upsert_player,
+)
 from shvatka.core.services.team import create_team
+from shvatka.core.services.user import upsert_user
 from shvatka.core.utils import exceptions
 from shvatka.core.utils.defaults_constants import DEFAULT_ROLE
 from shvatka.core.utils.exceptions import (
@@ -150,12 +157,26 @@ async def cmd_create_team_group(message: Message, identity: FromDishka[IdentityP
 
 @inject
 async def user_join_chat_with_team(
-    event: ChatMemberUpdated, bot: Bot, identity: FromDishka[IdentityProvider]
+    event: ChatMemberUpdated,
+    bot: Bot,
+    dao: HolderDao,
+    identity: FromDishka[IdentityProvider],
 ) -> None:
+    """Offer the captain to take the newcomer into the team.
+
+    The offer is about whoever joined, which is not who the identity resolves
+    to: an update about a membership change carries the member who *caused* it
+    as its user, so an invite by the captain would otherwise ask to accept the
+    captain themselves.
+    """
     team = await identity.get_required_team()
-    player = await identity.get_required_player()
-    if team.get_chat_id() != event.chat.id:
+    joined = event.new_chat_member.user
+    if joined.is_bot or team.get_chat_id() != event.chat.id:
         return
+    # the newcomer may be unknown to us — this is the first time we see them
+    player = await upsert_player(
+        await upsert_user(dto.User.from_aiogram(joined), dao.user), dao.player
+    )
     await bot.send_message(
         chat_id=event.chat.id,
         text=f"Принять {hd.quote(player.name_mention)} в команду {hd.quote(team.name)}?",

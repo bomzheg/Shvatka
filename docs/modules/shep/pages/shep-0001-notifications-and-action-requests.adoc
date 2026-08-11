@@ -1,0 +1,458 @@
+= SHEP-0001 — Notifications and action requests
+:navtitle: SHEP-0001 Notifications and action requests
+
+[cols="1,4"]
+|===
+| SHEP | 0001
+| Title | Notifications and action requests
+| Status | `Accepted, partially implemented` — phases 1 and 2 are in `master`, phase 3 is not started
+| Created | 2026-06-24
+| Updated | 2026-08-11
+| Related | PR #263 (feed + requests), PR #296 (merge proposals as requests), promotion via action requests
+|===
+
+== Summary
+
+A persistent *notifications* tab for the web frontend, backed by two new tables,
+covering two different things that used to have no home at all:
+
+* *notifications* — an append-only per-recipient inbox ("a player joined your
+  team", "the start time moved"), which survives the user being offline;
+* *action requests* — user-to-user asks that need a decision (team invites,
+  join requests, org invites, promotions, merge proposals), with a real status
+  machine shared by the web and the bot.
+
+Web push stays what it always was: a transient nudge on top of the durable row.
+
+== Context
+
+Before this SHEP, everything the engine wanted to tell a player was a Telegram
+message. Two mechanisms carried it:
+
+* `OrgNotifier.notify(Event)` / `TeamNotifier.notify(TeamEvent)`
+  (`shvatka/core/views/`) — fired *after* the business commit and fanned out
+  per channel with swallow-and-log isolation in `shvatka/views.py`. The web
+  implementations were thin: `WebTeamNotifier` was a no-op, `WebOrgNotifier`
+  only pushed.
+* Redis `SecureInvite` tokens — an opaque secret embedded in an inline button.
+  Whoever presented the token was treated as the actor.
+
+Both are lossy. A push that arrives while the browser is closed is gone. A token
+invite is invisible in the UI, cannot be listed, cancelled or deduplicated, and
+in a group chat the *wrong person* can tap the button.
+
+== Decision
+
+=== Two tables, not one
+
+[cols="2,3,2,1",options="header"]
+|===
+| Concept | Examples | Needs a decision? | Mutable?
+
+| *Notification* — informational feed
+| org added to game, player joined/left a team, team renamed, schedule changed
+| no
+| only `read_at` flips
+
+| *Request* — user to user, actionable
+| captain invites a player; player asks to join; invite an org; promotion; merge
+| yes (accept / decline)
+| yes, has a state machine
+|===
+
+A notification row *may* reference a request, so the tab renders both kinds from
+one query while the request keeps its own lifecycle.
+
+Why not one table: a request needs `status`, dedup of pending items, expiry, and
+to be queryable by the *sender* too ("my outgoing invites"). Folding that into
+an append-only feed forces several nullable columns and an awkward unique index
+over rows that are otherwise immutable. The single-table variant is recorded
+under <<alternatives>>.
+
+=== `notifications` — the inbox feed
+
+One row = one notification delivered to exactly one recipient.
+Model: `shvatka/infrastructure/db/models/notification.py`.
+
+[cols="2,2,4",options="header"]
+|===
+| column | type | notes
+
+| `id` | bigint PK |
+| `recipient_id` | FK `players.id`, not null | indexed; the tab is "give me my notifications"
+| `type` | Text, not null | stored as the enum *name*, so a new type needs no migration
+| `severity` | enum `notification_severity`, default `normal` | drives UI emphasis, the important badge and push urgency
+| `actor_id` | FK `players.id`, nullable | who triggered it
+| `payload` | JSONB, not null, default `{}` | denormalized render context, so the tab renders without N+1 joins *and* survives later renames
+| `request_id` | FK `action_requests.id`, nullable | set when the feed item is an actionable request
+| `read_at` | timestamptz, nullable | null = unread
+| `created_at` | timestamptz, not null, `now()` |
+|===
+
+Indexes: `(recipient_id, created_at desc)` for the listing, and a partial
+`(recipient_id) where read_at is null` for the badge count.
+
+=== `action_requests` — the state machine
+
+Model: `shvatka/infrastructure/db/models/action_request.py`.
+
+[cols="2,2,4",options="header"]
+|===
+| column | type | notes
+
+| `id` | bigint PK |
+| `type` | Text, not null | enum name: `team_join_invite`, `team_join_request`, `org_invite`, `promotion`, `team_merge`, `player_merge`
+| `status` | enum `request_status`, default `pending` |
+| `initiator_id` | FK `players.id`, not null | who sent it
+| `target_player_id` | FK `players.id`, nullable | the player who must respond. Null when the responder is "any authorized member"
+| `team_id` | FK `teams.id`, nullable |
+| `game_id` | FK `games.id`, nullable |
+| `payload` | JSONB, not null | proposed role/emoji, rendered names, …
+| `responder_id` | FK `players.id`, nullable | who actually answered
+| `created_at` / `responded_at` / `expires_at` | timestamptz |
+| `bot_messages` | JSONB, not null, default `[]` | chat/message ids of the bot messages that offered this request, so they can be cleaned up from either side
+|===
+
+`bot_messages` is deliberately *not* part of `to_dto()`: what a view showed is
+the view's to remember, and no chat id reaches a core entity.
+
+[plantuml, format=svg]
+....
+@startuml
+hide empty description
+[*] --> pending : create
+pending --> accepted : target (or authorized member) accepts
+pending --> declined : target declines
+pending --> cancelled : initiator withdraws
+pending --> expired  : TTL passes
+accepted --> [*]
+declined --> [*]
+cancelled --> [*]
+expired --> [*]
+@enduml
+....
+
+=== `severity` — why the feed needs it
+
+Not everything matters equally, and "schedule changed" is the clearest example,
+because it means two different things:
+
+[cols="2,3,3",options="header"]
+|===
+| meaning | source | importance
+
+| *Season schedule* — the rough plan of games for the year
+| not implemented yet; orgs keep it in a Telegram channel by hand
+| low, "a game appeared on the calendar"
+
+| *Planned-game schedule change* — the start of an already planned game moves
+| `PlanGameStartInteractor`
+| *very high* — players have committed; a missed change means a missed game
+|===
+
+So one `schedule_changed` type is not enough: there are two event types
+(`season_schedule_changed`, `game_schedule_changed`) *and* a `severity` column
+on every notification — `low` / `normal` / `important`. Keeping it a column
+rather than inferring it from `type` on the client leaves the backend the single
+source of truth.
+
+Today the only `important` case is `game_schedule_changed`. The enum stays open
+so others can be promoted later.
+
+=== Domain model
+
+`shvatka/core/notifications/`, framework-free as the rest of `core`:
+
+* `dto.py` — `Notification`, `ActionRequest`, and the generic `Page[T]`;
+* `adapters.py` — narrow Protocols (`NotificationReader`, `NotificationWriter`,
+  `NotificationMarker`, `RequestStorage`, `RequestNotifier`);
+* `interactors.py` — the feed use cases;
+* `request_interactors.py` — create / accept / decline / cancel / list.
+
+Enums live with the other domain enums: `core/models/enums/notification.py`,
+`core/models/enums/request.py`.
+
+=== Plugging into the existing notifiers
+
+`OrgNotifier.notify` / `TeamNotifier.notify` are the right seam — they already
+fire after the business commit and are already fanned out per channel with
+per-channel error isolation. So the web notifiers grow a body instead of a new
+mechanism being invented: resolve recipients, write the rows, commit them, then
+push. The two steps are wrapped separately, so a failing push does not skip the
+inbox and vice versa.
+
+Business interactors keep calling `notifier.notify(...)` exactly as before —
+no call site changes.
+
+=== Recipient resolution
+
+[cols="2,3,1",options="header"]
+|===
+| event | recipients | severity
+
+| `PlayerJoinedTeam` | the team's members, *including the player who joined* | `low`
+| `PlayerLeftTeam` | the remaining members | `normal`
+| `TeamRenamed` | team members | `normal`
+| `NewOrg` | the game's orgs plus the newly added one | `normal`
+| `game_schedule_changed` | *every player with a waiver* for that game, captains included | `important`
+| `season_schedule_changed` | broad / opt-in, TBD with the feature itself | `low`
+|===
+
+The joined player gets their own "you joined team X" entry — it is useful as a
+shareable system message and costs nothing given per-recipient rows.
+`game_schedule_changed` goes to every player with a waiver precisely because it
+is the `important` one.
+
+=== API surface
+
+Feed — `shvatka/api/notifications/`:
+
+* `GET /notifications?unread=&limit=&offset=`
+* `GET /notifications/unread-count`
+* `POST /notifications/read` (ids) and `PUT /notifications/read-all`
+
+Requests — `shvatka/api/action_requests/`:
+
+* `POST /requests/team-join-invite`, `/team-join`, `/org-invite`,
+  `/promotion-invite`
+* `POST /requests/{id}/accept`, `/decline`, `/cancel`
+* `GET /requests?direction=incoming|outgoing&pending=`
+
+Routes stay thin: `@inject`, `FromDishka[SomeInteractor]`,
+`ApiIdentityProvider`, `requests`/`responses` models with `.from_core` /
+`.to_core`.
+
+The frontend (bell, badge, tab, accept/decline buttons) lives in another
+repository and is out of scope here.
+
+=== Sessions, transactions, error handling
+
+*One session, two commits.* The notifier fires when the business operation has
+*already committed*, so the request-scoped session is clean and reusing it is
+safe. The DAOs are provided straight from the session by dishka — like
+`PushSubscriptionDAO`, and not added to `HolderDao`.
+
+The informational feed is written and committed *separately* from the business
+change, which means a notification write can never roll back a user's durable
+action, and no business transaction is held open across push I/O. This is the
+pattern `WebPushSender._send_one` already uses.
+
+*Actionable requests are different — they are the business operation.*
+
+* creating a request writes the `action_requests` row *and* the recipient's
+  notification row in one transaction; a failure is an API error, not a
+  swallowed one;
+* accepting a request that performs a real change flips `status = accepted` in
+  the same session and then calls the existing domain service (`join_team`,
+  `agree_to_be_org`, …) which commits — one commit covers both the membership
+  change and the status flip, with no refactor of the existing services. The
+  "your invite was accepted" notification to the initiator rides along.
+
+*Delivery guarantee.* A crash between the business commit and the notification
+commit loses the *feed entry* while the business change stands. That matches
+how pushes already behave and is accepted for v1. At-least-once delivery would
+mean a transactional outbox — noted, not built.
+
+*Concurrency.* Accepting a non-pending request raises `RequestNotPending` → 409,
+which is also what makes double-accept across channels harmless.
+
+=== Pushes
+
+`WebPushSender` is reused unchanged: after persisting a row, build a
+`PushMessage(title, body, url, tag, data={"kind": …})` and
+`send_to_players(...)`. It already handles "is configured", dead-subscription
+cleanup on 404/410, and swallowing errors. The row is the durable inbox; the
+push is the transient nudge.
+
+`severity` is meant to feed the push as well, so the service worker can render
+`important` ones with `requireInteraction` and a distinct tone, and skip `low`
+ones. See <<deviations>> — that part is not wired yet.
+
+=== Bot delivery
+
+The bot keeps its current behaviour for informational events: `BotTeamNotifier`
+posts to the team chat, `BotOrgNotifier` DMs orgs.
+
+For actionable requests, `BotRequestNotifier`
+(`shvatka/tgbot/views/action_request.py`) DMs the target with inline
+*Accept / Decline* buttons whose callbacks hit the *same* interactors as the
+web. Merge proposals go to the game-log chat instead, because they are answered
+by admins. Every message it sends is recorded in `bot_messages`, so whichever
+side resolves the request can clean the others up.
+
+==== Replacing the Redis tokens
+
+Team-join and org-add invites *migrate* off the Redis `SecureInvite` tokens onto
+`action_requests`. The token approach is disliked precisely because it leans on
+sharing an opaque secret and re-validating it; a request that is owned,
+addressed, cancellable, deduped and visible in the tab is strictly better. Redis
+stays only for ephemeral one-time confirmations where no inbox entry is wanted.
+
+==== The group-chat "who clicked" problem
+
+With tokens, whoever clicks and presents the secret is the actor — fine in a DM,
+wrong in a group chat. With DB-backed requests the authorization inverts: the
+button carries nothing but the request `id`, and the *click-time identity check*
+is the gate.
+
+At callback time the clicking Telegram user is resolved to their `Player` and
+checked against the request:
+
+* invite → the clicker must be `target_player_id`;
+* join request → the clicker must be a captain or hold `can_add_players` on
+  `team_id`;
+* merge proposal → the clicker must be a superuser, except that the player whose
+  account would be merged may always decline their own;
+* otherwise the tap is rejected with "недостаточно прав" and nothing happens.
+
+An inline button posted in a group is therefore safe. For a join request several
+managers may see the button: the first authorized responder wins, the rest get
+`RequestNotPending`, and the messages are removed.
+
+[[alternatives]]
+=== Alternative considered: a single table
+
+Collapse everything into `notifications` with nullable `status`,
+`requires_action`, `initiator_id`, `target_*` and a partial unique index over
+pending rows. Simpler migration, one query for the tab — at the cost of a
+muddier model and awkward "outgoing requests" queries. Rejected; kept as the
+escape hatch if the two-table version ever proves too heavy.
+
+== Consequences
+
+* Two new tables and one enum type per table; no changes to existing tables.
+* Notifications are kept *forever* for now. Pruning is a later decision, taken
+  only if volume demands it.
+* The web tab and the bot act on one source of truth, so a request can be
+  offered in both channels without double-accept.
+* Every new informational event costs a recipient-resolution rule; that logic
+  lives in the notifiers and is unit-testable without the web layer.
+
+== Phases and status
+
+[cols="1,4,2",options="header"]
+|===
+| Phase | Content | Status
+
+| 1
+| Tables + migration, DAOs, feed endpoints, web notifiers persist and push
+| ✅ done (PR #263)
+
+| 2
+| `action_requests`, create/accept/decline/cancel, bot buttons
+| ✅ done (PR #263, extended by PR #296)
+
+| 3
+| `TeamRenamed` and `GameScheduleChanged` events
+| ⏳ not started
+|===
+
+=== Phase 1 — feed and pushes ✅
+
+* [x] `notifications` table and migration
+  (`20260704-120000_f6a1b2c3d4e5_add_notifications.py`)
+* [x] `NotificationType` / `NotificationSeverity`, `severity` shipped from the
+  start as planned
+* [x] `NotificationDAO` (`infrastructure/db/dao/rdb/notification.py`) provided
+  through dishka, not through `HolderDao`
+* [x] `WebTeamNotifier` and `WebOrgNotifier` persist then push
+  (`shvatka/api/app/utils/web_input.py`) — `PlayerJoinedTeam`, `PlayerLeftTeam`,
+  `NewOrg`
+* [x] `GET /notifications`, `/unread-count`, `POST /read`, `PUT /read-all`
+* [x] tests: `tests/unit/services/web_team_notifier_test.py`,
+  `web_org_notifier_test.py`, `notification_interactors_test.py`,
+  `tests/integration/api_full/test_notifications.py`
+
+=== Phase 2 — actionable requests ✅
+
+* [x] `action_requests` table, plus `bot_messages`
+  (`20260709-120000_a1b2c3d4e5f6_add_action_request_bot_message.py`)
+* [x] create interactors for all six types — the three planned ones, plus
+  `promotion`, `team_merge` and `player_merge`, which were folded in later
+* [x] `AcceptRequestInteractor` / `Decline` / `Cancel` / `ListRequests`, with
+  `RequestNotPending` → 409
+* [x] `/requests` routes
+* [x] `BotRequestNotifier` and the callback handler
+  (`shvatka/tgbot/handlers/action_request.py`) with the click-time identity check
+* [x] feed rows link to the request through `request_id`
+* [x] tests: `tests/unit/services/request_interactors_test.py`
+
+=== Phase 3 — more informational events ⏳
+
+Nothing is started. The enum members exist
+(`core/models/enums/notification.py`), nothing produces them.
+
+* [ ] *`TeamRenamed`* — a `TeamEvent` subclass emitted from `EditTeamInteractor`
+  (`shvatka/core/teams/interactors.py`), handled in `WebTeamNotifier.notify`,
+  which today matches only `PlayerJoinedTeam` / `PlayerLeftTeam`
+* [ ] *`GameScheduleChanged`*, severity `important` — emitted from
+  `PlanGameStartInteractor` (`shvatka/core/games/editor_interactors.py`) when the
+  start of an *already planned* game moves, with waiver-based recipient
+  resolution
+* [ ] *`season_schedule_changed`* — deferred by design: it waits for the season
+  schedule feature itself, which is still only a proposal
+
+[[deviations]]
+== Deviations from the plan, and what they leave open
+
+Found while checking the shipped code against this document. Each one is real
+work, not a rewording.
+
+=== Delivery
+
+* Action requests reach Telegram but *never produce a web push*.
+  `RequestNotifier` is bound to `BotRequestNotifier` only
+  (`infrastructure/di/interactors.py`), and `request_interactors.py` touches no
+  push sender. The tab is correct; a web-only user simply gets no nudge.
+* `severity` never reaches the push payload, so the `requireInteraction`
+  behaviour for `important` notifications described above has nothing to read.
+* `BotRequestNotifier.notify_created` is called *before* `requests.commit()`, so
+  a failing commit can leave a Telegram message offering a request that does not
+  exist. The plan put the push after the commit.
+
+=== Feed contract
+
+* Feed items expose `request_id` but not the request's *status*, so a client
+  cannot tell an actionable item from a resolved one without a second call to
+  `/requests`. This document promised the status embedded
+  (`shvatka/api/notifications/responses.py`).
+
+=== Requests
+
+* Dedup of pending requests is a read-then-create (`RequestStorage.get_pending`),
+  not the partial *unique* index this SHEP specified. The index in `master`
+  (`ix__action_requests_pending_team`) is non-unique, so two concurrent invites
+  can still both be created.
+* `expires_at` and `RequestStatus.expired` exist as columns and enum members,
+  and nothing ever sets or reaps them. There is no TTL parity with the 12-hour
+  Redis invites yet.
+* `AcceptRequestInteractor` takes fourteen constructor dependencies, against the
+  "at most one DAO per interactor, composed behind one adapter" rule in
+  `AGENTS.md`. It grew that way as request types were added; worth composing
+  before a seventh type arrives.
+
+=== The Redis migration is half done
+
+The web side creates org invites and promotions as `action_requests`, but the
+bot's inline-token flows were never removed, so both mechanisms are live:
+
+* org invites — `shvatka/tgbot/handlers/game/add_organizer.py` still uses
+  `save_invite_to_orgs` / `dismiss_to_be_org` through `dao.secure_invite`;
+* promotions — `shvatka/tgbot/handlers/player.py` still uses
+  `save_promotion_confirm_invite` / `dismiss_promotion`. This SHEP wanted Redis
+  kept for the promotion *confirm* step only, so which half stays needs deciding
+  explicitly;
+* the bot cannot *create* any request. `handlers/team/manage.py` still calls
+  `join_team` directly, so `team_join_invite` and `team_join_request` are
+  web-only to create and either-channel to answer.
+
+== Open questions
+
+* *Group-chat delivery.* The code answered it in practice — DM the target,
+  merge proposals to the game-log chat — but the alternative (posting a join
+  request into the team chat for visibility) was never explicitly rejected. The
+  click-time identity check makes either safe.
+* *Season schedule.* Audience and opt-in stay undecided until the season
+  schedule feature exists.
+* *Other `important` types.* `game_schedule_changed` is still the only one. Game
+  start, or a waiver deadline, are candidates nobody has argued for yet.

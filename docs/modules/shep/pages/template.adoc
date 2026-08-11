@@ -1,0 +1,61 @@
+= SHEP-XXXX — Short title
+:navtitle: SHEP template
+
+[cols="1,4"]
+|===
+| SHEP | XXXX
+| Title | Short title
+| Status | `Draft`
+| Created | YYYY-MM-DD
+| Updated | YYYY-MM-DD
+| Related | issue #NNN, PR #NNN
+|===
+
+== Summary
+
+Two or three sentences: what changes, and what the reader gets out of it. Enough
+for someone who will never read the rest.
+
+== Context
+
+What exists today, what hurts about it, what forced the question. Facts and
+constraints, not the solution — code references (`shvatka/core/...`) beat prose.
+
+== Decision
+
+What we are going to do, and why this option and not the neighbouring one. Split
+into as many sections as the change has moving parts: data model, domain model,
+API surface, transactions, delivery channels. Each section states the decision
+first and the reasoning after it.
+
+Alternatives that were seriously considered belong here too, with the reason
+they lost. A rejected option nobody wrote down comes back next quarter.
+
+== Consequences
+
+What this makes easy, what it makes hard, what it costs. Migrations, one-way
+doors, performance, extra surface to maintain.
+
+== Phases and status
+
+The plan broken into landable steps, each carrying its own state. Update this
+section as the phases land — this is what makes the SHEP worth reading a year
+later.
+
+[cols="1,4,2",options="header"]
+|===
+| Phase | Content | Status
+
+| 1 | … | ✅ done in PR #NNN
+| 2 | … | ⏳ not started
+|===
+
+== Deviations from the plan
+
+Filled in during implementation: everywhere the code ended up different from
+what this document proposed, and whether that was deliberate.
+
+== Open questions
+
+Questions that block nothing today but will need an answer. Move each one into
+`Decision` when it is settled, with a note of what was decided.

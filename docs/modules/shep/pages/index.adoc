@@ -1,0 +1,79 @@
+= SHEP — architecture decisions
+:navtitle: SHEP — architecture decisions
+
+*SHEP* — **Sh**vatka **E**nhancement **P**roposal, by analogy with PEP (Python)
+and JEP (Java). A SHEP is this project's flavour of an *architecture decision
+record*: one document per non-trivial change to how Shvatka is built — a new
+subsystem, a new table, a change to a cross-cutting convention — written before
+the code and kept alive afterwards.
+
+Small changes don't need one. A SHEP earns its place when at least one of these
+is true:
+
+* it adds or reshapes a domain area (new tables, new core package);
+* it changes a convention that other code has to follow;
+* it will be implemented in several steps, so the plan has to outlive a single
+  pull request;
+* it settles a question that would otherwise be re-litigated on every review.
+
+Everything else — bug fixes, refactors, one-off endpoints — goes straight to a
+pull request. Project-wide coding conventions live in `AGENTS.md`, not here: a
+SHEP records *a decision and its rationale*, `AGENTS.md` records *the rule that
+came out of it*.
+
+== The register
+
+[cols="1,4,2",options="header"]
+|===
+| SHEP | Title | Status
+
+| xref:shep-0001-notifications-and-action-requests.adoc[SHEP-0001]
+| Notifications and action requests
+| Accepted, partially implemented
+|===
+
+== Status vocabulary
+
+[cols="1,4",options="header"]
+|===
+| Status | Meaning
+
+| `Draft`
+| Written, not agreed yet. Anything may still change.
+
+| `Accepted`
+| Agreed. Implementation may not have started.
+
+| `Partially implemented`
+| Some phases are in `master`, the rest is still ahead. The SHEP says which is
+  which.
+
+| `Implemented`
+| Everything described is in `master`. The document stays as the explanation of
+  why the code looks the way it does.
+
+| `Deferred`
+| Agreed in principle, parked — usually blocked by another feature.
+
+| `Rejected`
+| Considered and turned down. Kept, because "why not" is worth as much as "why".
+
+| `Superseded by SHEP-XXXX`
+| Replaced by a later decision. Kept for the history.
+|===
+
+== Writing one
+
+. Copy xref:template.adoc[the template] to
+  `docs/modules/shep/pages/shep-XXXX-short-slug.adoc`.
+. Take the next free number from the register above. Numbers are assigned when
+  the SHEP is merged, so two open pull requests never fight over one — renumber
+  on rebase if needed.
+. Add the page to `docs/modules/shep/nav.adoc` and a row to the register.
+. Write it in English, like the rest of the developer-facing documentation.
+  (User-facing pages under `ROOT` stay Russian.)
+
+Keep it *actual*. A SHEP is not an archive of what was once planned: when a
+phase lands, mark it in the same document — status line, per-item marks, and the
+deviations the implementation made from the plan. A stale SHEP is worse than no
+SHEP, because it is trusted.

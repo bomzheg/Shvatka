@@ -1,0 +1,3 @@
+* xref:index.adoc[SHEP — architecture decisions]
+** xref:shep-0001-notifications-and-action-requests.adoc[SHEP-0001 Notifications and action requests]
+** xref:template.adoc[SHEP template]

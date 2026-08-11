@@ -1,6 +1,5 @@
 from aiogram import Router, F, Bot
 from aiogram.enums import InlineQueryResultType
-from aiogram.filters import MagicData
 from aiogram.types import (
     InlineQuery,
     InlineQueryResultArticle,
@@ -12,7 +11,7 @@ from aiogram_dialog.api.protocols import BgManagerFactory
 from dishka import FromDishka
 from dishka.integrations.aiogram import inject
 
-from shvatka.core.models import dto
+from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.services.game import get_game
 from shvatka.core.services.organizers import (
     check_allow_manage_orgs,
@@ -25,15 +24,18 @@ from shvatka.core.utils import exceptions
 from shvatka.core.views.game import OrgNotifier
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.tgbot import keyboards as kb
+from shvatka.tgbot.filters.is_inviter import is_inviter
 from shvatka.tgbot.utils.router import disable_router_on_game
 
 
+@inject
 async def invite_org_inline_query(
     q: InlineQuery,
     inline_data: kb.AddGameOrgID,
-    player: dto.Player,
     dao: HolderDao,
+    identity: FromDishka[IdentityProvider],
 ):
+    player = await identity.get_required_player()
     game = await get_game(id_=inline_data.game_id, dao=dao.game)
     check_game_token(game, inline_data.game_manage_token)
     check_allow_manage_orgs(game, player.id)
@@ -60,13 +62,15 @@ async def invite_org_inline_query(
     )
 
 
+@inject
 async def dismiss_to_be_org_handler(
     c: CallbackQuery,
     callback_data: kb.AgreeBeOrgCD,
-    player: dto.Player,
     dao: HolderDao,
     bot: Bot,
+    identity: FromDishka[IdentityProvider],
 ):
+    player = await identity.get_required_player()
     await dismiss_to_be_org(callback_data.token, dao.secure_invite)
     await c.answer("правильно, лучше поиграть!", show_alert=True)
     await bot.edit_message_text(
@@ -79,12 +83,13 @@ async def dismiss_to_be_org_handler(
 async def agree_to_be_org_handler(
     c: CallbackQuery,
     callback_data: kb.AgreeBeOrgCD,
-    player: dto.Player,
     dao: FromDishka[HolderDao],
     bot: FromDishka[Bot],
+    identity: FromDishka[IdentityProvider],
     org_notifier: FromDishka[OrgNotifier],
     bg_manager_factory: FromDishka[BgManagerFactory],
 ):
+    player = await identity.get_required_player()
     await c.answer()
     try:
         await agree_to_be_org(
@@ -121,7 +126,7 @@ def setup() -> Router:
     router.callback_query.register(
         inviter_click_handler,
         kb.AgreeBeOrgCD.filter(),
-        MagicData(F.callback_data.inviter_id == F.player.id),
+        is_inviter,
     )
     router.callback_query.register(
         dismiss_to_be_org_handler, kb.AgreeBeOrgCD.filter(~F.is_agreement)

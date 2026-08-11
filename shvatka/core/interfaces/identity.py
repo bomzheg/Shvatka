@@ -69,6 +69,12 @@ class IdentityProvider(Protocol):
             raise exceptions.UserNotFoundError
         return user.db_id
 
+    async def get_required_chat(self) -> dto.Chat:
+        chat = await self.get_chat()
+        if chat is None:
+            raise exceptions.ChatNotFound(user=await self.get_user())
+        return chat
+
     async def get_required_player(self) -> dto.Player:
         player = await self.get_player()
         if player is None:

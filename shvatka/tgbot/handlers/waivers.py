@@ -33,7 +33,6 @@ from shvatka.tgbot import keyboards as kb
 from shvatka.tgbot.filters.game_status import GameStatusFilter
 from shvatka.tgbot.filters.is_team import IsTeamFilter
 from shvatka.tgbot.filters.team_player import TeamPlayerFilter
-from shvatka.tgbot.middlewares import TeamPlayerMiddleware
 from shvatka.tgbot.services.identity import TgBotIdentityProvider
 from shvatka.tgbot.services.waiver import swap_saved_message, get_saved_message
 from shvatka.tgbot.utils.router import disable_router_on_game
@@ -107,14 +106,14 @@ async def add_vote_handler(
 @inject
 async def start_approve_waivers_cmd_handler(
     _: Message,
-    player: dto.Player,
-    user: dto.User,
     game: dto.Game,
     dao: HolderDao,
     bot: Bot,
     identity_provider: FromDishka[TgBotIdentityProvider],
     read_interactor: FromDishka[TeamWaiversDraftReaderInteractor],
 ):
+    player = await identity_provider.get_required_player()
+    user = await identity_provider.get_required_user()
     team = await get_my_team(player, dao.team_player)
     check_allow_approve_waivers(await identity_provider.get_required_full_team_player())
     assert team is not None
@@ -132,14 +131,14 @@ async def start_approve_waivers_cmd_handler(
 async def start_approve_waivers_cb_handler(
     c: CallbackQuery,
     callback_data: kb.WaiverToApproveCD,
-    player: dto.Player,
-    user: dto.User,
     game: dto.Game,
     dao: HolderDao,
     bot: Bot,
     identity_provider: FromDishka[TgBotIdentityProvider],
     read_interactor: FromDishka[TeamWaiversDraftReaderInteractor],
 ):
+    player = await identity_provider.get_required_player()
+    user = await identity_provider.get_required_user()
     check_same_game(callback_data, game, player)
     team = await get_my_team(player, dao.team_player)
     check_same_team(callback_data, player, team)
@@ -160,12 +159,12 @@ async def start_approve_waivers_cb_handler(
 async def waiver_main_menu(
     c: CallbackQuery,
     callback_data: kb.WaiverMainCD,
-    player: dto.Player,
     game: dto.Game,
     dao: HolderDao,
     identity_provider: FromDishka[TgBotIdentityProvider],
     read_interactor: FromDishka[TeamWaiversDraftReaderInteractor],
 ):
+    player = await identity_provider.get_required_player()
     check_same_game(callback_data, game, player)
     team = await get_my_team(player, dao.team_player)
     if team is None:
@@ -205,14 +204,16 @@ async def confirm_approve_waivers_handler(
     await total_remove_msg(bot, chat_id=c.message.chat.id, msg_id=c.message.message_id)
 
 
+@inject
 async def cancel_waivers_handler(
     c: CallbackQuery,
     callback_data: kb.WaiverConfirmCD,
-    player: dto.Player,
     game: dto.Game,
     dao: HolderDao,
     bot: Bot,
+    identity_provider: FromDishka[TgBotIdentityProvider],
 ):
+    player = await identity_provider.get_required_player()
     check_same_game(callback_data, game, player)
     team = await get_my_team(player, dao.team_player)
     check_same_team(callback_data, player, team)
@@ -222,13 +223,15 @@ async def cancel_waivers_handler(
     await total_remove_msg(bot, chat_id=c.message.chat.id, msg_id=c.message.message_id)
 
 
+@inject
 async def waiver_user_menu(
     c: CallbackQuery,
     callback_data: kb.WaiverManagePlayerCD,
     game: dto.Game,
-    player: dto.Player,
     dao: HolderDao,
+    identity_provider: FromDishka[TgBotIdentityProvider],
 ):
+    player = await identity_provider.get_required_player()
     check_same_game(callback_data, game, player)
     team = await get_my_team(player, dao.team_player)
     check_same_team(callback_data, player, team)
@@ -248,12 +251,12 @@ async def waiver_user_menu(
 async def waiver_remove_user_vote(
     c: CallbackQuery,
     callback_data: kb.WaiverRemovePlayerCD,
-    player: dto.Player,
     game: dto.Game,
     dao: HolderDao,
     identity_provider: FromDishka[TgBotIdentityProvider],
     read_interactor: FromDishka[TeamWaiversDraftReaderInteractor],
 ):
+    player = await identity_provider.get_required_player()
     check_same_game(callback_data, game, player)
     team = await get_my_team(player, dao.team_player)
     if team is None:
@@ -268,13 +271,15 @@ async def waiver_remove_user_vote(
     )
 
 
+@inject
 async def waiver_add_force_menu(
     c: CallbackQuery,
     callback_data: kb.WaiverRemovePlayerCD,
-    player: dto.Player,
     game: dto.Game,
     dao: HolderDao,
+    identity_provider: FromDishka[TgBotIdentityProvider],
 ):
+    player = await identity_provider.get_required_player()
     check_same_game(callback_data, game, player)
     team = await get_my_team(player, dao.team_player)
     if team is None:
@@ -294,11 +299,12 @@ async def waiver_add_force_menu(
 async def add_force_player(
     c: CallbackQuery,
     callback_data: kb.WaiverAddPlayerForceCD,
-    player: dto.Player,
     game: dto.Game,
     dao: HolderDao,
+    identity_provider: FromDishka[TgBotIdentityProvider],
     waiver_vote_adder_dao: FromDishka[WaiverVoteAdder],
 ):
+    player = await identity_provider.get_required_player()
     check_same_game(callback_data, game, player)
     team = await get_my_team(player, dao.team_player)
     if team is None:
@@ -358,9 +364,6 @@ def setup() -> Router:
     player_router.callback_query.filter(TeamPlayerFilter())
     captain_router.callback_query.filter(TeamPlayerFilter(can_manage_waivers=True))
     # middlewares
-    player_router.callback_query.outer_middleware.register(TeamPlayerMiddleware())
-    captain_router.message.outer_middleware.register(TeamPlayerMiddleware())
-    captain_router.callback_query.outer_middleware.register(TeamPlayerMiddleware())
 
     # handlers
     captain_router.message.register(

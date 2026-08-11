@@ -5,6 +5,7 @@ from dishka import FromDishka
 from dishka.integrations.aiogram import inject
 
 from shvatka.core.interfaces.scheduler import LevelTestScheduler
+from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.models import dto
 from shvatka.core.services.level import get_level_by_id_for_org
 from shvatka.core.services.level_testing import start_level_test
@@ -20,13 +21,14 @@ from shvatka.tgbot.utils.router import disable_router_on_game
 @inject
 async def start_test_level(
     c: CallbackQuery,
-    player: dto.Player,
     callback_data: kb.LevelTestInviteCD,
     dao: HolderDao,
     dialog_manager: DialogManager,
+    identity: FromDishka[IdentityProvider],
     scheduler: FromDishka[LevelTestScheduler],
     level_view: FromDishka[LevelView],
 ):
+    player = await identity.get_required_player()
     await c.answer()
     org = await get_org_by_id(callback_data.org_id, dao.organizer)
     if org.player.id != player.id:

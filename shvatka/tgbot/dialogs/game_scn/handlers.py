@@ -14,7 +14,6 @@ from dishka.integrations.aiogram_dialog import inject
 
 from shvatka.core.interfaces.clients.file_storage import FileGateway
 from shvatka.core.interfaces.identity import IdentityProvider
-from shvatka.core.models import dto
 from shvatka.core.models import enums
 from shvatka.core.models.dto import scn  # noqa: F401
 from shvatka.core.services.achievement import add_achievement
@@ -34,8 +33,11 @@ from shvatka.tgbot import states
 logger = logging.getLogger(__name__)
 
 
-async def process_name(m: Message, dialog_: Any, manager: DialogManager):
-    author: dto.Player = manager.middleware_data["player"]
+@inject
+async def process_name(
+    m: Message, dialog_: Any, manager: DialogManager, identity: FromDishka[IdentityProvider]
+):
+    author = await identity.get_required_player()
     dao: HolderDao = manager.middleware_data["dao"]
     game_name: str = typing.cast(str, m.text)
     if game_name.lower().strip() == "мудро":
@@ -61,8 +63,9 @@ async def process_zip_scn(
     dialog_: Any,
     manager: DialogManager,
     file_gateway: FromDishka[FileGateway],
+    identity: FromDishka[IdentityProvider],
 ) -> None:
-    player: dto.Player = manager.middleware_data["player"]
+    player = await identity.get_required_player()
     dao: HolderDao = manager.middleware_data["dao"]
     bot: Bot = manager.middleware_data["bot"]
     retort: Retort = manager.middleware_data["retort"]
@@ -79,10 +82,16 @@ async def process_zip_scn(
     await manager.done(result={"game": game})
 
 
-async def save_game(c: CallbackQuery, button: Button, manager: DialogManager):
+@inject
+async def save_game(
+    c: CallbackQuery,
+    button: Button,
+    manager: DialogManager,
+    identity: FromDishka[IdentityProvider],
+):
     await c.answer()
     dao: HolderDao = manager.middleware_data["dao"]
-    author: dto.Player = manager.middleware_data["player"]
+    author = await identity.get_required_player()
     name: str = manager.dialog_data["game_name"]
     levels = await get_all_my_free_levels(author, dao.level)
     multiselect = typing.cast(ManagedMultiselect, manager.find("my_free_level_ids"))

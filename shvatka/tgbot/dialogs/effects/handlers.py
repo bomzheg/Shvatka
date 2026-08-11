@@ -100,8 +100,9 @@ async def process_hint(
     manager: DialogManager,
     retort: FromDishka[Retort],
     parser: FromDishka[HintParser],
+    identity: FromDishka[IdentityProvider],
 ) -> None:
-    hint = await parser.parse(m, manager.middleware_data["player"])
+    hint = await parser.parse(m, await identity.get_required_player())
     manager.dialog_data["hints"].append(retort.dump(hint))
 
 

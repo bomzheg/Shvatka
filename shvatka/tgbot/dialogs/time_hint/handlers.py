@@ -8,6 +8,7 @@ from aiogram_dialog.widgets.kbd import Button
 from dishka import FromDishka
 from dishka.integrations.aiogram_dialog import inject
 
+from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.models.dto import hints
 from shvatka.core.utils import exceptions
 from shvatka.tgbot import states
@@ -122,8 +123,9 @@ async def process_hint(
     manager: DialogManager,
     retort: FromDishka[Retort],
     parser: FromDishka[HintParser],
+    identity: FromDishka[IdentityProvider],
 ) -> None:
-    hint = await parser.parse(m, manager.middleware_data["player"])
+    hint = await parser.parse(m, await identity.get_required_player())
     manager.dialog_data["hints"].append(retort.dump(hint))
 
 

@@ -2,6 +2,9 @@ from typing import Any
 
 from aiogram_dialog import DialogManager
 
+from shvatka.core.interfaces.identity import IdentityProvider
+from dishka import FromDishka
+from dishka.integrations.aiogram_dialog import inject
 from shvatka.core.models import dto
 from shvatka.core.services import organizers
 from shvatka.core.services.game import get_game
@@ -10,8 +13,11 @@ from shvatka.core.services.organizers import get_org_by_id, get_by_player
 from shvatka.infrastructure.db.dao.holder import HolderDao
 
 
-async def get_level_id(dao: HolderDao, dialog_manager: DialogManager, **_):
-    author: dto.Player = dialog_manager.middleware_data["player"]
+@inject
+async def get_level_id(
+    dao: HolderDao, dialog_manager: DialogManager, identity: FromDishka[IdentityProvider], **_
+):
+    author = await identity.get_required_player()
     level, org = await get_level_and_org(author, dao, dialog_manager)
     hints_ = level.scenario.time_hints
     return {
@@ -21,10 +27,13 @@ async def get_level_id(dao: HolderDao, dialog_manager: DialogManager, **_):
     }
 
 
-async def get_orgs(dao: HolderDao, dialog_manager: DialogManager, **_):
+@inject
+async def get_orgs(
+    dao: HolderDao, dialog_manager: DialogManager, identity: FromDishka[IdentityProvider], **_
+):
     data: dict[str, Any] = dialog_manager.start_data  # type: ignore[assignment]
     level_id = data["level_id"]
-    author: dto.Player = dialog_manager.middleware_data["player"]
+    author = await identity.get_required_player()
     level = await get_by_id(level_id, author, dao.level)
     if level.game_id is not None:
         game = await get_game(id_=level.game_id, author=author, dao=dao.game)
@@ -55,12 +64,13 @@ async def get_level_and_org(
         return level, org_
 
 
+@inject
 async def get_levels(
-    player: dto.Player,
     dao: HolderDao,
+    identity: FromDishka[IdentityProvider],
     **_,
 ):
-    levels = await get_all_my_free_levels(player, dao.level)
+    levels = await get_all_my_free_levels(await identity.get_required_player(), dao.level)
     return {"levels": levels}
 
 

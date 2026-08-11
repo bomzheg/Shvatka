@@ -3,8 +3,10 @@ from typing import Any
 
 from aiogram.filters import BaseFilter
 from aiogram.types import Message
+from dishka import FromDishka
+from dishka.integrations.aiogram import inject
 
-from shvatka.core.models import dto
+from shvatka.core.interfaces.identity import IdentityProvider
 
 
 @dataclass
@@ -18,11 +20,13 @@ class TeamPlayerFilter(BaseFilter):
     can_remove_players: bool | None = None
     is_captain: bool | None = None
 
+    @inject
     async def __call__(  # noqa: C901
         self,
         message: Message,
-        team_player: dto.FullTeamPlayer | None,
+        identity: FromDishka[IdentityProvider],
     ) -> bool | dict[str, Any]:
+        team_player = await identity.get_full_team_player()
         if not team_player:
             return False
         if self.is_captain is not None:

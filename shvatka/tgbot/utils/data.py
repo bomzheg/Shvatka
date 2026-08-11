@@ -22,14 +22,10 @@ class SHMiddlewareData(DialogMiddlewareData, total=False):
 
     Only what a lot of handlers need belongs here — anything else is requested
     from the container with ``FromDishka`` at the single place that uses it.
+    Who is acting comes from ``IdentityProvider``, not from this dict.
     """
 
     dishka_container: AsyncContainer
     retort: Retort
     dao: HolderDao
-    user: dto.User | None
-    chat: dto.Chat | None
-    team: dto.Team | None
-    player: dto.Player | None
     game: dto.Game | None
-    team_player: dto.FullTeamPlayer | None

@@ -16,7 +16,7 @@ from shvatka.core.games.editor_interactors import (
 from shvatka.core.interfaces.clients.file_storage import FileGateway
 from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.interfaces.nursery import Nursery
-from shvatka.core.models import dto, enums
+from shvatka.core.models import enums
 from shvatka.core.scenario.interactors import (
     AllGameKeysPrintInteractor,
     AllGameKeysReaderInteractor,
@@ -172,9 +172,12 @@ async def common_show_zip(
     await c.message.answer_document(BufferedInputFile(file=zip_.read(), filename="scenario.zip"))
 
 
-async def rename_game_handler(m: Message, dialog: Any, dialog_manager: DialogManager):
+@inject
+async def rename_game_handler(
+    m: Message, dialog: Any, dialog_manager: DialogManager, identity: FromDishka[IdentityProvider]
+):
     dao: HolderDao = dialog_manager.middleware_data["dao"]
-    player: dto.Player = dialog_manager.middleware_data["player"]
+    player = await identity.get_required_player()
     game_ = await get_game(dialog_manager.dialog_data["my_game_id"], dao=dao.game)
     assert m.text
     await rename_game(player, game_, m.text.strip(), dao.game)

@@ -19,8 +19,15 @@ from aiogram.utils.text_decorations import html_decoration as hd
 from shvatka.core.interfaces.dal.player import PlayerTeamChecker
 from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.models import dto
-from shvatka.core.players.player import get_team_players, get_player_by_id, join_team, get_my_team
+from shvatka.core.players.player import (
+    get_team_players,
+    get_player_by_id,
+    join_team,
+    get_my_team,
+    upsert_player,
+)
 from shvatka.core.services.team import create_team
+from shvatka.core.services.user import upsert_user
 from shvatka.core.utils import exceptions
 from shvatka.core.utils.defaults_constants import DEFAULT_ROLE
 from shvatka.core.utils.exceptions import (
@@ -36,7 +43,6 @@ from shvatka.tgbot.filters.has_target import HasTargetFilter
 from shvatka.tgbot.filters.is_admin import is_admin_filter
 from shvatka.tgbot.filters.is_team import IsTeamFilter
 from shvatka.tgbot.filters.team_player import TeamPlayerFilter
-from shvatka.tgbot.middlewares import TeamPlayerMiddleware
 from shvatka.tgbot.services.identity import load_team
 from shvatka.tgbot.utils.router import disable_router_on_game
 from shvatka.tgbot.views.commands import (
@@ -58,13 +64,14 @@ logger = logging.getLogger(__name__)
 @inject
 async def cmd_create_team(
     message: Message,
-    chat: dto.Chat,
-    player: dto.Player,
-    user: dto.User,
     dao: HolderDao,
     bot: Bot,
+    identity: FromDishka[IdentityProvider],
     game_log: FromDishka[GameLogWriter],
 ):
+    chat = await identity.get_required_chat()
+    player = await identity.get_required_player()
+    user = await identity.get_required_user()
     logger.info("Player %s try create team in %s", player.id, chat.tg_id)
     if not await is_admin_filter(bot, chat, user):
         return await message.reply(
@@ -140,16 +147,36 @@ async def cmd_who_there(message: Message, identity: FromDishka[IdentityProvider]
     )
 
 
-async def cmd_create_team_group(message: Message, user: dto.User, chat: dto.Chat):
+@inject
+async def cmd_create_team_group(message: Message, identity: FromDishka[IdentityProvider]):
+    user = await identity.get_required_user()
+    chat = await identity.get_required_chat()
     logger.info("User %s try create team in GROUP %s", user.tg_id, chat.tg_id)
     await message.reply(NOT_SUPERGROUP_ERROR)
 
 
+@inject
 async def user_join_chat_with_team(
-    event: ChatMemberUpdated, team: dto.Team, player: dto.Player, bot: Bot
+    event: ChatMemberUpdated,
+    bot: Bot,
+    dao: HolderDao,
+    identity: FromDishka[IdentityProvider],
 ) -> None:
-    if team.get_chat_id() != event.chat.id:
+    """Offer the captain to take the newcomer into the team.
+
+    The offer is about whoever joined, which is not who the identity resolves
+    to: an update about a membership change carries the member who *caused* it
+    as its user, so an invite by the captain would otherwise ask to accept the
+    captain themselves.
+    """
+    team = await identity.get_required_team()
+    joined = event.new_chat_member.user
+    if joined.is_bot or team.get_chat_id() != event.chat.id:
         return
+    # the newcomer may be unknown to us — this is the first time we see them
+    player = await upsert_player(
+        await upsert_user(dto.User.from_aiogram(joined), dao.user), dao.player
+    )
     await bot.send_message(
         chat_id=event.chat.id,
         text=f"Принять {hd.quote(player.name_mention)} в команду {hd.quote(team.name)}?",
@@ -160,14 +187,15 @@ async def user_join_chat_with_team(
 @inject
 async def cmd_add_in_team(
     _: Message,
-    team: dto.Team,
     target: dto.Player,
-    player: dto.Player,
     bot: Bot,
     command: CommandObject,
     dao: HolderDao,
+    identity: FromDishka[IdentityProvider],
     team_notifier: FromDishka[TeamNotifier],
 ):
+    team = await identity.get_required_team()
+    player = await identity.get_required_player()
     role = command.args or DEFAULT_ROLE
     logger.info(
         "Captain %s try to add %s in team %s",
@@ -218,13 +246,14 @@ async def cmd_add_in_team(
 async def button_join(
     callback_query: CallbackQuery,
     callback_data: kb.JoinToTeamRequestCD,
-    team: dto.Team,
-    player: dto.Player,
-    team_player: dto.TeamPlayer,
     bot: Bot,
     dao: HolderDao,
+    identity: FromDishka[IdentityProvider],
     team_notifier: FromDishka[TeamNotifier],
 ):
+    team = await identity.get_required_team()
+    player = await identity.get_required_player()
+    team_player = await identity.get_required_full_team_player()
     if team.id != callback_data.team_id:
         raise exceptions.SHDataBreach(
             f"asked about team_id {callback_data.team_id} but in team {team.id}"
@@ -282,14 +311,16 @@ async def button_join(
     )
 
 
+@inject
 async def button_join_no(
     callback_query: CallbackQuery,
     callback_data: kb.JoinToTeamRequestCD,
-    team: dto.Team,
-    player: dto.Player,
-    team_player: dto.TeamPlayer,
     dao: HolderDao,
+    identity: FromDishka[IdentityProvider],
 ):
+    team = await identity.get_required_team()
+    player = await identity.get_required_player()
+    team_player = await identity.get_required_full_team_player()
     if team.id != callback_data.team_id:
         raise exceptions.SHDataBreach(
             f"asked about team_id {callback_data.team_id} but in team {team.id}"
@@ -322,8 +353,6 @@ async def cmd_team(message: Message, identity: FromDishka[IdentityProvider], dao
 
 def setup() -> Router:
     router = Router(name=__name__)
-    router.message.outer_middleware.register(TeamPlayerMiddleware())
-    router.callback_query.outer_middleware.register(TeamPlayerMiddleware())
     disable_router_on_game(router)
 
     router.message.register(

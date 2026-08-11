@@ -3,6 +3,9 @@ from datetime import datetime
 
 from aiogram_dialog import DialogManager
 
+from shvatka.core.interfaces.identity import IdentityProvider
+from dishka import FromDishka
+from dishka.integrations.aiogram_dialog import inject
 from shvatka.core.models import dto
 from shvatka.core.services.game_stat import get_game_spy
 from shvatka.core.services.organizers import get_by_player
@@ -10,9 +13,15 @@ from shvatka.core.utils.datetime_utils import tz_utc
 from shvatka.infrastructure.db.dao.holder import HolderDao
 
 
+@inject
 async def get_org(
-    dao: HolderDao, player: dto.Player, game: dto.Game, dialog_manager: DialogManager, **_
+    dao: HolderDao,
+    game: dto.Game,
+    dialog_manager: DialogManager,
+    identity: FromDishka[IdentityProvider],
+    **_,
 ):
+    player = await identity.get_required_player()
     if dialog_manager.middleware_data.get("org", None) is not None:
         org = dialog_manager.middleware_data["org"]
     else:
@@ -24,9 +33,15 @@ async def get_org(
     }
 
 
+@inject
 async def get_spy(
-    dao: HolderDao, player: dto.Player, game: dto.Game, dialog_manager: DialogManager, **_
+    dao: HolderDao,
+    game: dto.Game,
+    dialog_manager: DialogManager,
+    identity: FromDishka[IdentityProvider],
+    **_,
 ):
+    player = await identity.get_required_player()
     stat = sorted(
         await get_game_spy(game, player, dao.game_stat),
         key=lambda x: (-x.level_number, x.start_at),

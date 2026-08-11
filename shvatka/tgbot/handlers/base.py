@@ -18,7 +18,6 @@ from dishka.integrations.aiogram import inject
 from prometheus_client import Counter, REGISTRY
 
 from shvatka.core.interfaces.identity import IdentityProvider
-from shvatka.core.models import dto
 from shvatka.core.services.chat import update_chat_id
 from shvatka.core.services.one_time_link import GenerateOneTimeLoginLinkInteractor
 from shvatka.infrastructure.db.dao.holder import HolderDao
@@ -40,7 +39,10 @@ privacy_counter = Counter(
 )
 
 
-async def chat_id(message: Message, chat: dto.Chat, user: dto.User):
+@inject
+async def chat_id(message: Message, identity: FromDishka[IdentityProvider]):
+    chat = await identity.get_required_chat()
+    user = await identity.get_required_user()
     text = f"id этого чата: {hd.pre(str(chat.tg_id))}\nВаш id: {hd.pre(str(user.tg_id))}"
     if message.reply_to_message and message.reply_to_message.from_user:
         text += (
@@ -63,7 +65,10 @@ async def cancel_state(message: Message, state: FSMContext):
     )
 
 
-async def cmd_about(message: Message, user: dto.User, chat: dto.Chat):
+@inject
+async def cmd_about(message: Message, identity: FromDishka[IdentityProvider]):
+    user = await identity.get_required_user()
+    chat = await identity.get_required_chat()
     logger.info("User %s read about in %s", user.tg_id, chat.tg_id)
     await message.reply("Разработчик бота - @bomzheg\n")
 
@@ -87,14 +92,18 @@ async def chat_type_cmd_group(message: Message):
     )
 
 
-async def chat_migrate(message: Message, chat: dto.Chat, dao: HolderDao):
+@inject
+async def chat_migrate(message: Message, dao: HolderDao, identity: FromDishka[IdentityProvider]):
+    chat = await identity.get_required_chat()
     new_id = message.migrate_to_chat_id
     assert new_id is not None
     await update_chat_id(chat, new_id, dao.chat)
     logger.info("Migrate chat from %s to %s", message.chat.id, new_id)
 
 
-async def privacy(message: Message, user: dto.User):
+@inject
+async def privacy(message: Message, identity: FromDishka[IdentityProvider]):
+    user = await identity.get_required_user()
     with (
         importlib.resources.path("shvatka.infrastructure.assets", "privacy.txt") as path,
         path.open("r") as f,

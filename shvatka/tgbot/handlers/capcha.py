@@ -7,7 +7,7 @@ from aiogram.utils.text_decorations import html_decoration as hd
 from dishka import FromDishka
 from dishka.integrations.aiogram import inject
 
-from shvatka.core.models import dto
+from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.utils import exceptions
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.tgbot import states
@@ -58,12 +58,14 @@ async def chat_join_handler(
         )
 
 
+@inject
 async def correct_answer(
     m: Message,
-    user: dto.User,
     bot: Bot,
     state: FSMContext,
+    identity: FromDishka[IdentityProvider],
 ):
+    user = await identity.get_required_user()
     assert m.text
     if "лыткарино" in m.text.lower():
         await bot.approve_chat_join_request(

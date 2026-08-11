@@ -57,10 +57,17 @@ async def show_level(
     nursery.spawn(send_level_hints, level=level, chat_id=chat_id)
 
 
-async def send_to_testing(c: CallbackQuery, widget: Any, manager: DialogManager, org_id: str):
+@inject
+async def send_to_testing(
+    c: CallbackQuery,
+    widget: Any,
+    manager: DialogManager,
+    org_id: str,
+    identity: FromDishka[IdentityProvider],
+):
     dao: HolderDao = manager.middleware_data["dao"]
     bot: Bot = manager.middleware_data["bot"]
-    author: dto.Player = manager.middleware_data["player"]
+    author = await identity.get_required_player()
     data: dict[str, Any] = manager.start_data  # type: ignore[assignment]
     level = await get_by_id(data["level_id"], author, dao.level)
     org = await get_org_by_id(id_=int(org_id), dao=dao.organizer)
@@ -81,12 +88,13 @@ async def level_testing(
     manager: DialogManager,
     scheduler: FromDishka[LevelTestScheduler],
     view: FromDishka[LevelView],
+    identity: FromDishka[IdentityProvider],
 ) -> None:
     await c.answer()
     dao: HolderDao = manager.middleware_data["dao"]
     data: dict[str, Any] = manager.start_data  # type: ignore[assignment]
     level_id = data["level_id"]
-    author: dto.Player = manager.middleware_data["player"]
+    author = await identity.get_required_player()
     level = await get_by_id(level_id, author, dao.level)
     org = await get_org(author, level, dao)
     if org is None:
@@ -100,11 +108,17 @@ async def level_testing(
     )
 
 
-async def unlink_level_handler(c: CallbackQuery, button: Button, manager: DialogManager):
+@inject
+async def unlink_level_handler(
+    c: CallbackQuery,
+    button: Button,
+    manager: DialogManager,
+    identity: FromDishka[IdentityProvider],
+):
     dao: HolderDao = manager.middleware_data["dao"]
     data: dict[str, Any] = manager.start_data  # type: ignore[assignment]
     level_id = data["level_id"]
-    author: dto.Player = manager.middleware_data["player"]
+    author = await identity.get_required_player()
     level = await get_by_id(level_id, author, dao.level)
     await unlink_level(level, author, dao.level)
     await manager.done()
@@ -117,19 +131,26 @@ async def delete_level_handler(
     manager: DialogManager,
     dao: FromDishka[HolderDao],
     level_deleter: FromDishka[LevelDeleter],
+    identity: FromDishka[IdentityProvider],
 ) -> None:
     data: dict[str, Any] = manager.start_data  # type: ignore[assignment]
     level_id = data["level_id"]
-    author: dto.Player = manager.middleware_data["player"]
+    author = await identity.get_required_player()
     level = await get_by_id(level_id, author, dao.level)
     await delete_level(level, author, level_deleter)
     await manager.done()
 
 
-async def cancel_level_test(c: CallbackQuery, button: Button, manager: DialogManager):
+@inject
+async def cancel_level_test(
+    c: CallbackQuery,
+    button: Button,
+    manager: DialogManager,
+    identity: FromDishka[IdentityProvider],
+):
     await c.answer()
     dao: HolderDao = manager.middleware_data["dao"]
-    author: dto.Player = manager.middleware_data["player"]
+    author = await identity.get_required_player()
     level, org = await get_level_and_org(author, dao, manager)
     if org is None:
         logger.warning("org is none?!")
@@ -140,9 +161,12 @@ async def cancel_level_test(c: CallbackQuery, button: Button, manager: DialogMan
     await manager.done()
 
 
-async def process_key_message(m: Message, dialog_: Any, manager: DialogManager) -> None:
+@inject
+async def process_key_message(
+    m: Message, dialog_: Any, manager: DialogManager, identity: FromDishka[IdentityProvider]
+) -> None:
     dishka: AsyncContainer = manager.middleware_data[CONTAINER_NAME]
-    author: dto.Player = manager.middleware_data["player"]
+    author = await identity.get_required_player()
     dao = await dishka.get(HolderDao)
     locker = await dishka.get(KeyCheckerFactory)
     level, org = await get_level_and_org(author, dao, manager)

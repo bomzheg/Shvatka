@@ -8,7 +8,6 @@ from shvatka.core.games.interactors import CheckKeyInteractor
 from shvatka.tgbot.filters import is_key, IsTeamFilter
 from shvatka.tgbot.filters.game_status import GameStatusFilter
 from shvatka.tgbot.filters.team_player import TeamPlayerFilter
-from shvatka.tgbot.middlewares import TeamPlayerMiddleware
 from shvatka.tgbot.views.game import BotInputContainer
 
 
@@ -28,7 +27,6 @@ async def check_key_handler(
 
 def setup() -> Router:
     router = Router(name=__name__)
-    router.message.outer_middleware(TeamPlayerMiddleware())
     router.message.filter(GameStatusFilter(running=True))
     router.message.register(
         check_key_handler,

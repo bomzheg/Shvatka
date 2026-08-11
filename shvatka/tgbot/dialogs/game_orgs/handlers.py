@@ -4,7 +4,10 @@ from aiogram.types import CallbackQuery
 from aiogram_dialog import DialogManager
 from aiogram_dialog.widgets.kbd import Button
 
-from shvatka.core.models import dto
+from shvatka.core.interfaces.identity import IdentityProvider
+from dishka import FromDishka
+from dishka.integrations.aiogram_dialog import inject
+
 from shvatka.core.models.enums.org_permission import OrgPermission
 from shvatka.core.services.organizers import flip_permission, get_org_by_id, flip_deleted
 from shvatka.core.utils import exceptions
@@ -21,9 +24,15 @@ async def select_org(c: CallbackQuery, widget: Any, manager: DialogManager, item
     await manager.switch_to(states.GameOrgsSG.org_menu)
 
 
-async def change_permission_handler(c: CallbackQuery, button: Button, manager: DialogManager):
+@inject
+async def change_permission_handler(
+    c: CallbackQuery,
+    button: Button,
+    manager: DialogManager,
+    identity: FromDishka[IdentityProvider],
+):
     dao: HolderDao = manager.middleware_data["dao"]
-    author: dto.Player = manager.middleware_data["player"]
+    author = await identity.get_required_player()
     org_id = manager.dialog_data["org_id"]
     org = await get_org_by_id(org_id, dao.organizer)
     assert button.widget_id
@@ -34,10 +43,16 @@ async def change_permission_handler(c: CallbackQuery, button: Button, manager: D
         await c.answer("разрешён только просмотр")
 
 
-async def change_deleted_handler(c: CallbackQuery, button: Button, manager: DialogManager):
+@inject
+async def change_deleted_handler(
+    c: CallbackQuery,
+    button: Button,
+    manager: DialogManager,
+    identity: FromDishka[IdentityProvider],
+):
     await c.answer()
     dao: HolderDao = manager.middleware_data["dao"]
-    author: dto.Player = manager.middleware_data["player"]
+    author = await identity.get_required_player()
     org_id = manager.dialog_data["org_id"]
     org = await get_org_by_id(org_id, dao.organizer)
     try:

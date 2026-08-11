@@ -4,7 +4,7 @@ from dishka.integrations.aiogram_dialog import inject
 
 from shvatka.core.games.interactors import GamePlayRoleReader
 from shvatka.core.interfaces.current_game import CurrentGameProvider
-from shvatka.core.models import dto
+from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.players.player import save_promotion_invite
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.tgbot import keyboards as kb
@@ -40,9 +40,12 @@ async def get_main(
     }
 
 
-async def get_promotion_token(dialog_manager: DialogManager, **_):
+@inject
+async def get_promotion_token(
+    dialog_manager: DialogManager, identity: FromDishka[IdentityProvider], **_
+):
     dao: HolderDao = dialog_manager.middleware_data["dao"]
-    player: dto.Player = dialog_manager.middleware_data["player"]
+    player = await identity.get_required_player()
     token = await save_promotion_invite(player, dao.secure_invite)
     return {
         "player": player,

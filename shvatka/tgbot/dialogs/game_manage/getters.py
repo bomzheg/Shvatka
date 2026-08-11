@@ -106,8 +106,8 @@ async def get_game_results(
     }
 
 
-async def get_game(
-    dao: HolderDao, player: dto.Player, dialog_manager: DialogManager, **_
+async def _my_game(
+    dao: HolderDao, player: dto.Player, dialog_manager: DialogManager
 ) -> dict[str, Any]:
     data: dict[str, Any] = dialog_manager.start_data  # type: ignore[assignment]
     game_id = dialog_manager.dialog_data.get("my_game_id", None) or data["my_game_id"]
@@ -118,6 +118,13 @@ async def get_game(
             dao=dao.game,
         )
     }
+
+
+@inject
+async def get_game(
+    dao: HolderDao, dialog_manager: DialogManager, identity: FromDishka[IdentityProvider], **_
+) -> dict[str, Any]:
+    return await _my_game(dao, await identity.get_required_player(), dialog_manager)
 
 
 async def get_game_with_channel(dao: HolderDao, dialog_manager: DialogManager, bot: Bot, **_):
@@ -136,19 +143,21 @@ async def get_game_with_channel(dao: HolderDao, dialog_manager: DialogManager, b
     }
 
 
+@inject
 async def get_game_time(
-    dao: HolderDao, player: dto.Player, dialog_manager: DialogManager, **kwargs
+    dao: HolderDao, dialog_manager: DialogManager, identity: FromDishka[IdentityProvider], **_
 ):
-    result = await get_game(dao, player, dialog_manager, **kwargs)
+    result = await _my_game(dao, await identity.get_required_player(), dialog_manager)
     time_: str | None = dialog_manager.dialog_data.get("scheduled_time", None)
     result.update(scheduled_time=time_, has_time=time_ is not None)
     return result
 
 
+@inject
 async def get_game_datetime(
-    dao: HolderDao, player: dto.Player, dialog_manager: DialogManager, **kwargs
+    dao: HolderDao, dialog_manager: DialogManager, identity: FromDishka[IdentityProvider], **_
 ):
-    result = await get_game(dao, player, dialog_manager, **kwargs)
+    result = await _my_game(dao, await identity.get_required_player(), dialog_manager)
     date_: str = dialog_manager.dialog_data["scheduled_date"]
     time_: str = dialog_manager.dialog_data["scheduled_time"]
     result["scheduled_datetime"] = datetime.combine(

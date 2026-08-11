@@ -8,6 +8,7 @@ from aiogram_dialog.widgets.kbd import Button
 from dishka import FromDishka
 from dishka.integrations.aiogram_dialog import inject
 
+from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.models import dto
 from shvatka.core.models.dto import scn, action
 from shvatka.core.models.dto import hints
@@ -42,8 +43,9 @@ async def process_id(
     manager: DialogManager,
     name_id: str,
     dao: FromDishka[HolderDao],
+    identity: FromDishka[IdentityProvider],
 ):
-    author: dto.Player = manager.middleware_data["player"]
+    author = await identity.get_required_player()
     if lvl := await dao.level.get_by_author_and_name_id(author, name_id):
         await raise_restrict_rewrite_level(m, author, lvl, dao)
         return
@@ -150,10 +152,13 @@ async def process_level_result(
     )
 
 
-async def on_start_level_edit(start_data: dict[str, Any], manager: DialogManager):
+@inject
+async def on_start_level_edit(
+    start_data: dict[str, Any], manager: DialogManager, identity: FromDishka[IdentityProvider]
+):
     dao: HolderDao = manager.middleware_data["dao"]
     retort: Retort = manager.middleware_data["retort"]
-    author: dto.Player = manager.middleware_data["player"]
+    author = await identity.get_required_player()
     level = await get_by_id(start_data["level_id"], author, dao.level)
     manager.dialog_data["level_id"] = level.name_id
     manager.dialog_data["game_id"] = level.game_id
@@ -281,9 +286,15 @@ async def clear_hints(c: CallbackQuery, button: Button, manager: DialogManager):
     manager.dialog_data.setdefault("time_hints", []).clear()
 
 
-async def save_level(c: CallbackQuery, button: Button, manager: DialogManager):
+@inject
+async def save_level(
+    c: CallbackQuery,
+    button: Button,
+    manager: DialogManager,
+    identity: FromDishka[IdentityProvider],
+):
     retort: Retort = manager.middleware_data["retort"]
-    author: dto.Player = manager.middleware_data["player"]
+    author = await identity.get_required_player()
     dao: HolderDao = manager.middleware_data["dao"]
     data = manager.dialog_data
     id_ = data["level_id"]
@@ -317,8 +328,9 @@ async def process_hint(
     manager: DialogManager,
     retort: FromDishka[Retort],
     parser: FromDishka[HintParser],
+    identity: FromDishka[IdentityProvider],
 ) -> None:
-    hint = await parser.parse(m, manager.middleware_data["player"])
+    hint = await parser.parse(m, await identity.get_required_player())
     manager.dialog_data["hints"].append(retort.dump(hint))
 
 

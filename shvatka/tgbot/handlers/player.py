@@ -2,7 +2,7 @@ from contextlib import suppress
 
 from aiogram import Router, Bot, F
 from aiogram.enums import ChatType, InlineQueryResultType
-from aiogram.filters import Command, MagicData
+from aiogram.filters import Command
 from aiogram.types import (
     Message,
     InlineQuery,
@@ -17,7 +17,6 @@ from dishka import FromDishka
 from dishka.integrations.aiogram import inject
 
 from shvatka.core.interfaces.identity import IdentityProvider
-from shvatka.core.models import dto
 from shvatka.core.players.player import (
     save_promotion_confirm_invite,
     check_promotion_invite,
@@ -31,17 +30,20 @@ from shvatka.core.views.team import TeamNotifier
 from shvatka.core.utils.exceptions import SaltError, SaltNotExist
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.tgbot import keyboards as kb
+from shvatka.tgbot.filters.is_inviter import is_inviter
 from shvatka.tgbot.utils.router import disable_router_on_game
 from shvatka.tgbot.views.commands import TEAM_COMMAND, LEAVE_COMMAND, PLAYERS_COMMAND
 from shvatka.tgbot.views.team import render_team_players
 
 
+@inject
 async def send_promotion_invite(
     inline_query: InlineQuery,
     inline_data: kb.PromotePlayerID,
-    player: dto.Player,
     dao: HolderDao,
+    identity: FromDishka[IdentityProvider],
 ):
+    player = await identity.get_required_player()
     try:
         await check_promotion_invite(
             inviter=player, token=inline_data.token, dao=dao.secure_invite
@@ -73,13 +75,15 @@ async def send_promotion_invite(
     )
 
 
+@inject
 async def dismiss_promotion_handler(
     c: CallbackQuery,
     callback_data: kb.AgreePromotionCD,
-    player: dto.Player,
     dao: HolderDao,
     bot: Bot,
+    identity: FromDishka[IdentityProvider],
 ):
+    player = await identity.get_required_player()
     with suppress(SaltNotExist):
         await dismiss_promotion(callback_data.token, dao.secure_invite)
     await c.answer("правильно, большая сила - большая ответственность!", show_alert=True)
@@ -93,11 +97,12 @@ async def dismiss_promotion_handler(
 async def agree_promotion_handler(
     c: CallbackQuery,
     callback_data: kb.AgreePromotionCD,
-    player: dto.Player,
     dao: HolderDao,
     bot: Bot,
+    identity: FromDishka[IdentityProvider],
     bg_manager_factory: FromDishka[BgManagerFactory],
 ):
+    player = await identity.get_required_player()
     await c.answer()
     try:
         await agree_promotion(
@@ -146,10 +151,11 @@ async def get_my_team_cmd(
 @inject
 async def leave_handler(
     message: Message,
-    player: dto.Player,
     dao: HolderDao,
+    identity: FromDishka[IdentityProvider],
     team_notifier: FromDishka[TeamNotifier],
 ):
+    player = await identity.get_required_player()
     team = await get_my_team(player, dao.team_player)
     if team is None:
         await message.answer("Ты не состоишь в команде")
@@ -166,7 +172,7 @@ def setup() -> Router:
     router.callback_query.register(
         inviter_click_handler,
         kb.AgreePromotionCD.filter(),
-        MagicData(F.callback_data.inviter_id == F.player.id),
+        is_inviter,
     )
     router.callback_query.register(
         dismiss_promotion_handler, kb.AgreePromotionCD.filter(~F.is_agreement)

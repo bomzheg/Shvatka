@@ -6,11 +6,14 @@ They are wired through ``@inject``, which only works because aiogram passes
 disable a command rather than fail, so drive them through the real machinery.
 """
 
+from datetime import datetime, timezone
 from typing import Any
 from unittest.mock import AsyncMock
 
 import pytest
+from aiogram import Router
 from aiogram.dispatcher.event.handler import FilterObject
+from aiogram.types import Chat, Message
 from dishka import Provider, Scope, make_async_container, provide
 from dishka.integrations.aiogram import CONTAINER_NAME
 
@@ -23,6 +26,7 @@ from shvatka.tgbot.filters.game_status import GameStatusFilter
 from shvatka.tgbot.filters.is_inviter import is_inviter
 from shvatka.tgbot.filters.is_team import IsTeamFilter
 from shvatka.tgbot.filters.team_player import TeamPlayerFilter
+from shvatka.tgbot.utils.router import disable_router_on_game
 
 PLAYER = dto.Player(id=1, can_be_author=True, is_dummy=False, username="harry")
 NO_AUTHOR = dto.Player(id=2, can_be_author=False, is_dummy=False, username="ron")
@@ -169,3 +173,47 @@ async def test_game_status_active():
     assert await call(GameStatusFilter(active=True), identity(), current_game(None)) is False
     started = current_game(game(GameStatus.started))
     assert await call(GameStatusFilter(active=True), identity(), started) is True
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("active_game", "reaches_handlers"),
+    [(None, True), (GameStatus.getting_waivers, True), (GameStatus.started, False)],
+)
+async def test_disable_router_on_game_through_root_filters(active_game, reaches_handlers):
+    """`disable_router_on_game` registers *root* filters, not handler filters.
+
+    Those run through `check_root_filters`, so an `@inject` that worked on a
+    handler filter is not by itself proof that this path works — and this one
+    gates nearly every router in the bot.
+    """
+    router = Router(name="test")
+    disable_router_on_game(router)
+    provider = current_game(game(active_game) if active_game else None)
+
+    class Providers(Provider):
+        scope = Scope.REQUEST
+
+        @provide
+        def idp(self) -> IdentityProvider:
+            return identity()
+
+        @provide
+        def cg(self) -> CurrentGameProvider:
+            return provider
+
+    event = Message(
+        message_id=1,
+        date=datetime.now(tz=timezone.utc),
+        chat=Chat(id=1, type="private"),
+        text="/start",
+    )
+    container = make_async_container(Providers())
+    try:
+        async with container() as request_container:
+            passed, _ = await router.message.check_root_filters(
+                event, **{CONTAINER_NAME: request_container}
+            )
+    finally:
+        await container.close()
+    assert bool(passed) is reaches_handlers

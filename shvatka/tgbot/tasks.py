@@ -1,26 +1,26 @@
 """Background tasks of the bot: work spawned through the app :class:`Nursery`.
 
-Each task is a pair — a frozen params dataclass carrying the data of a single
-run, and a class whose dependencies come from DI. The task runs in a scope of
-its own, so the session-bound things it works with (a :class:`HintSender` and
-its dao, for one) are acquired and finalized by that scope rather than borrowed
-from the handler's, which is gone by the time the task starts.
+A task is an ordinary async function. Its plain parameters are the data of one
+run, passed to :meth:`Nursery.spawn`; its ``FromDishka[...]`` parameters are
+resolved in the fresh scope the nursery opens for it, so the session-bound
+things it works with (a :class:`HintSender` and its dao, for one) are acquired
+and finalized by that scope rather than borrowed from the handler's, which is
+gone by the time the task starts.
 
-Entities travel in params: they are plain dataclasses, detached from any
+Entities travel as arguments: they are plain dataclasses, detached from any
 session, so handing a loaded game or level to a task is free. What must never
 cross is a resource tied to the caller's scope — a dao, a session, a sender —
-those come from DI inside the task.
+those are what ``FromDishka`` is for.
 """
 
 import logging
-from dataclasses import dataclass, field
 from typing import Any
 
 from aiogram import Bot, Dispatcher
 from aiogram.methods import TelegramMethod
 from aiogram.utils.text_decorations import html_decoration as hd
 from aiogram_dialog import BaseDialogManager
-from dishka import Provider, Scope, from_context, provide
+from dishka import FromDishka
 from telegraph.aio import Telegraph
 
 from shvatka.core.models import dto
@@ -33,132 +33,90 @@ from shvatka.tgbot.views.results.scenario import GamePublisher, LevelPublisher
 logger = logging.getLogger(__name__)
 
 
-@dataclass(kw_only=True, slots=True, frozen=True)
-class PublishScenarioToForumParams:
-    game: dto.FullGame
-    username: str
-    password: str
-    chat_id: int
+async def publish_scenario_to_forum(
+    game: dto.FullGame,
+    username: str,
+    password: str,
+    chat_id: int,
+    bot: FromDishka[Bot],
+) -> None:
+    await upload(map_game_for_upload(game), username, password)
+    await bot.send_message(chat_id=chat_id, text="Сценарий успешно загружен на форум")
 
 
-@dataclass(kw_only=True, slots=True, frozen=True)
-class PublishScenarioToForumTask:
-    params: PublishScenarioToForumParams
-    bot: Bot
+async def publish_scenario_to_channel(
+    game: dto.FullGame,
+    game_stat: dto.GameStat,
+    keys: dict[dto.Team, list[dto.KeyTime]],
+    channel_id: int,
+    manager: BaseDialogManager,
+    hint_sender: FromDishka[HintSender],
+    telegraph: FromDishka[Telegraph],
+    bot: FromDishka[Bot],
+    config: FromDishka[BotConfig],
+) -> None:
+    publisher = GamePublisher(
+        hint_sender=hint_sender,
+        game=game,
+        channel_id=channel_id,
+        bot=bot,
+        config=config,
+        game_stat=game_stat,
+        keys=keys,
+        telegraph=telegraph,
+    )
+    started_msg_id = await publisher.publish_scn()
+    results_msg_id = await publisher.publish_results()
+    keys_msg_id = await publisher.publish_keys()
+    table_of_content = (
+        f"Начало сценария: {no_public_message_link(channel_id, started_msg_id)}\n"
+        f"Результаты игры: {no_public_message_link(channel_id, results_msg_id)}\n"
+        f"Лог ключей: {no_public_message_link(channel_id, keys_msg_id)}"
+    )
+    await bot.send_message(chat_id=channel_id, text=table_of_content)
+    invite = await get_invite(channel_id=channel_id, bot=bot)
 
-    async def __call__(self) -> None:
-        await upload(
-            map_game_for_upload(self.params.game), self.params.username, self.params.password
+    text_invite_scn = f"Чтобы его увидеть, нужно войти в канал: {invite}"
+    await bot.send_message(
+        config.game_log_chat,
+        f"Загружен сценарий игры {hd.bold(hd.quote(game.name))}.\n{text_invite_scn}",
+    )
+    await manager.update(
+        {"text_invite": text_invite_scn + "\n" + table_of_content, "started": False}
+    )
+    author_chat_id = game.author.get_chat_id()
+    if author_chat_id is None:
+        logger.warning(
+            "game %s author %s has no telegram chat, scenario link not sent",
+            game.id,
+            game.author.id,
         )
-        await self.bot.send_message(
-            chat_id=self.params.chat_id,
-            text="Сценарий успешно загружен на форум",
-        )
+        return
+    await bot.send_message(
+        chat_id=author_chat_id,
+        text=f"Сценарий загружен.\n{text_invite_scn}",
+    )
 
 
-@dataclass(kw_only=True, slots=True, frozen=True)
-class PublishScenarioToChannelParams:
-    game: dto.FullGame
-    game_stat: dto.GameStat
-    keys: dict[dto.Team, list[dto.KeyTime]]
-    channel_id: int
-    manager: BaseDialogManager
+async def send_level_hints(
+    level: dto.Level,
+    chat_id: int,
+    hint_sender: FromDishka[HintSender],
+) -> None:
+    publisher = LevelPublisher(hint_sender=hint_sender, level=level, chat_id=chat_id)
+    await publisher.publish()
 
 
-@dataclass(kw_only=True, slots=True, frozen=True)
-class PublishScenarioToChannelTask:
-    params: PublishScenarioToChannelParams
-    hint_sender: HintSender
-    telegraph: Telegraph
-    bot: Bot
-    config: BotConfig
-
-    async def __call__(self) -> None:
-        game = self.params.game
-        channel_id = self.params.channel_id
-        publisher = GamePublisher(
-            hint_sender=self.hint_sender,
-            game=game,
-            channel_id=channel_id,
-            bot=self.bot,
-            config=self.config,
-            game_stat=self.params.game_stat,
-            keys=self.params.keys,
-            telegraph=self.telegraph,
-        )
-        started_msg_id = await publisher.publish_scn()
-        results_msg_id = await publisher.publish_results()
-        keys_msg_id = await publisher.publish_keys()
-        table_of_content = (
-            f"Начало сценария: {no_public_message_link(channel_id, started_msg_id)}\n"
-            f"Результаты игры: {no_public_message_link(channel_id, results_msg_id)}\n"
-            f"Лог ключей: {no_public_message_link(channel_id, keys_msg_id)}"
-        )
-        await self.bot.send_message(chat_id=channel_id, text=table_of_content)
-        invite = await get_invite(channel_id=channel_id, bot=self.bot)
-
-        text_invite_scn = f"Чтобы его увидеть, нужно войти в канал: {invite}"
-        await self.bot.send_message(
-            self.config.game_log_chat,
-            f"Загружен сценарий игры {hd.bold(hd.quote(game.name))}.\n{text_invite_scn}",
-        )
-        await self.params.manager.update(
-            {"text_invite": text_invite_scn + "\n" + table_of_content, "started": False}
-        )
-        author_chat_id = game.author.get_chat_id()
-        if author_chat_id is None:
-            logger.warning(
-                "game %s author %s has no telegram chat, scenario link not sent",
-                game.id,
-                game.author.id,
-            )
-            return
-        await self.bot.send_message(
-            chat_id=author_chat_id,
-            text=f"Сценарий загружен.\n{text_invite_scn}",
-        )
-
-
-@dataclass(kw_only=True, slots=True, frozen=True)
-class SendLevelHintsParams:
-    level: dto.Level
-    chat_id: int
-
-
-@dataclass(kw_only=True, slots=True, frozen=True)
-class SendLevelHintsTask:
-    params: SendLevelHintsParams
-    hint_sender: HintSender
-
-    async def __call__(self) -> None:
-        publisher = LevelPublisher(
-            hint_sender=self.hint_sender,
-            level=self.params.level,
-            chat_id=self.params.chat_id,
-        )
-        await publisher.publish()
-
-
-@dataclass(kw_only=True, slots=True, frozen=True)
-class FeedUpdateParams:
-    update: dict[str, Any]
-    data: dict[str, Any] = field(default_factory=dict)
-
-
-@dataclass(kw_only=True, slots=True, frozen=True)
-class FeedUpdateTask:
+async def feed_update(
+    update: dict[str, Any],
+    data: dict[str, Any],
+    bot: FromDishka[Bot],
+    dispatcher: FromDishka[Dispatcher],
+) -> None:
     """Process one webhook update after the http response is already sent."""
-
-    params: FeedUpdateParams
-    bot: Bot
-    dispatcher: Dispatcher
-
-    async def __call__(self) -> None:
-        result = await self.dispatcher.feed_raw_update(
-            bot=self.bot, update=self.params.update, **self.params.data
-        )
-        if isinstance(result, TelegramMethod):
-            await self.dispatcher.silent_call_request(bot=self.bot, result=result)
+    result = await dispatcher.feed_raw_update(bot=bot, update=update, **data)
+    if isinstance(result, TelegramMethod):
+        await dispatcher.silent_call_request(bot=bot, result=result)
 
 
 async def get_invite(channel_id: int, bot: Bot) -> str:
@@ -172,19 +130,3 @@ async def get_invite(channel_id: int, bot: Bot) -> str:
 
 def no_public_message_link(chat_id: int, message_id: int) -> str:
     return f"https://t.me/c/{str(chat_id)[4:]}/{message_id}"
-
-
-class BackgroundTasksProvider(Provider):
-    scope = Scope.REQUEST
-
-    publish_to_forum_params = from_context(PublishScenarioToForumParams)
-    publish_to_forum = provide(PublishScenarioToForumTask)
-
-    publish_to_channel_params = from_context(PublishScenarioToChannelParams)
-    publish_to_channel = provide(PublishScenarioToChannelTask)
-
-    send_level_hints_params = from_context(SendLevelHintsParams)
-    send_level_hints = provide(SendLevelHintsTask)
-
-    feed_update_params = from_context(FeedUpdateParams)
-    feed_update = provide(FeedUpdateTask)

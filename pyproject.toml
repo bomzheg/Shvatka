@@ -151,7 +151,6 @@ ignore = [
 [tool.ruff.lint.flake8-tidy-imports.banned-api]
 "asyncio.create_task".msg = "spawn detached work through the app Nursery (shvatka.core.interfaces.nursery) instead"
 "asyncio.ensure_future".msg = "spawn detached work through the app Nursery (shvatka.core.interfaces.nursery) instead"
-"asyncio.TaskGroup".msg = "spawn detached work through the app Nursery (shvatka.core.interfaces.nursery) instead"
 
 [tool.ruff.lint.per-file-ignores]
 "__init__.py" = ["F401"]

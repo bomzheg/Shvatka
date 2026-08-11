@@ -24,7 +24,7 @@ from shvatka.core.views.level import LevelView
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.tgbot import states
 from shvatka.tgbot import keyboards as kb
-from shvatka.tgbot.tasks import SendLevelHintsParams, SendLevelHintsTask
+from shvatka.tgbot.tasks import send_level_hints
 from shvatka.tgbot.views.user import render_small_card_link
 from .getters import get_level_and_org, get_org
 
@@ -54,10 +54,7 @@ async def show_level(
     if chat_id is None:
         logger.warning("player %s has no telegram chat, hints not sent", author.id)
         return
-    nursery.spawn(
-        SendLevelHintsTask,
-        SendLevelHintsParams(level=level, chat_id=chat_id),
-    )
+    nursery.spawn(send_level_hints, level=level, chat_id=chat_id)
 
 
 async def send_to_testing(c: CallbackQuery, widget: Any, manager: DialogManager, org_id: str):

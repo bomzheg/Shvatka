@@ -13,7 +13,7 @@ from dishka.integrations.fastapi import inject
 from fastapi import FastAPI, Request, Response, HTTPException, APIRouter
 
 from shvatka.core.interfaces.nursery import Nursery
-from shvatka.tgbot.tasks import FeedUpdateParams, FeedUpdateTask
+from shvatka.tgbot.tasks import feed_update
 
 
 def setup_application(app: FastAPI, dishka: AsyncContainer, /, **kwargs: Any) -> None:
@@ -74,10 +74,7 @@ class BaseRequestHandler(ABC):
         pass
 
     async def _handle_request_background(self, nursery: Nursery, request: Request) -> Response:
-        nursery.spawn(
-            FeedUpdateTask,
-            FeedUpdateParams(update=await request.json(), data=self.data),
-        )
+        nursery.spawn(feed_update, update=await request.json(), data=self.data)
         return Response(status_code=200)
 
     async def _build_response_writer(

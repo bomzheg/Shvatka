@@ -29,7 +29,7 @@ from shvatka.core.services.scenario.scn_zip import pack_scn
 from shvatka.core.utils.datetime_utils import TIME_FORMAT, tz_game
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.tgbot import states
-from shvatka.tgbot.tasks import PublishScenarioToForumParams, PublishScenarioToForumTask
+from shvatka.tgbot.tasks import publish_scenario_to_forum
 from shvatka.infrastructure.printer.results import export_results
 
 
@@ -266,13 +266,11 @@ async def publish_game_forum(
     game_id = manager.dialog_data["my_game_id"]
     game_ = await get_full_game(game_id, identity, dao.game)
     nursery.spawn(
-        PublishScenarioToForumTask,
-        PublishScenarioToForumParams(
-            game=game_,
-            username=username,
-            password=password,
-            chat_id=m.chat.id,
-        ),
+        publish_scenario_to_forum,
+        game=game_,
+        username=username,
+        password=password,
+        chat_id=m.chat.id,
     )
 
 

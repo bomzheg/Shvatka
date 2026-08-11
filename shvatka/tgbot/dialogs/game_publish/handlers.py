@@ -13,10 +13,7 @@ from shvatka.core.services.game import get_full_game
 from shvatka.core.services.game_stat import get_game_stat, get_typed_keys
 from shvatka.core.utils.datetime_utils import tz_utc
 from shvatka.infrastructure.db.dao.holder import HolderDao
-from shvatka.tgbot.tasks import (
-    PublishScenarioToChannelParams,
-    PublishScenarioToChannelTask,
-)
+from shvatka.tgbot.tasks import publish_scenario_to_channel
 from shvatka.tgbot.views.results.scenario import GamePublisher
 
 
@@ -62,14 +59,12 @@ async def process_publish_message(
         "после завершения я в любом случае пришлю ссылку для входа"
     )
     nursery.spawn(
-        PublishScenarioToChannelTask,
-        PublishScenarioToChannelParams(
-            game=game,
-            game_stat=game_stat,
-            keys=keys,
-            channel_id=channel_id,
-            manager=manager.bg(),
-        ),
+        publish_scenario_to_channel,
+        game=game,
+        game_stat=game_stat,
+        keys=keys,
+        channel_id=channel_id,
+        manager=manager.bg(),
     )
     await dao.game.set_published_channel_id(game, channel_id)
     await dao.commit()

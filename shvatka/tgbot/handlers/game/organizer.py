@@ -8,7 +8,7 @@ from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.interfaces.nursery import Nursery
 from shvatka.core.services.game import get_full_game
 from shvatka.infrastructure.db.dao.holder import HolderDao
-from shvatka.tgbot.tasks import PublishScenarioToForumParams, PublishScenarioToForumTask
+from shvatka.tgbot.tasks import publish_scenario_to_forum
 from shvatka.tgbot.utils.router import disable_router_on_game
 from shvatka.tgbot.views.commands import PUBLISH_COMMAND
 
@@ -26,13 +26,11 @@ async def publish_game_forum(
     game_id, username, password = map(str.strip, command.args.split(maxsplit=2))
     game_ = await get_full_game(id_=int(game_id), identity=identity, dao=dao.game)
     nursery.spawn(
-        PublishScenarioToForumTask,
-        PublishScenarioToForumParams(
-            game=game_,
-            username=username,
-            password=password,
-            chat_id=m.chat.id,
-        ),
+        publish_scenario_to_forum,
+        game=game_,
+        username=username,
+        password=password,
+        chat_id=m.chat.id,
     )
 
 

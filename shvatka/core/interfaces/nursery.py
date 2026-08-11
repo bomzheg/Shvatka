@@ -1,17 +1,6 @@
-from typing import Protocol
+from typing import Any, Awaitable, Callable, Protocol
 
-
-class BackgroundTask(Protocol):
-    """A unit of work detached from whatever asked for it.
-
-    A task is built by the DI container, so everything it needs (a db session,
-    views, clients) is injected into ``__init__`` the same way an interactor
-    gets its dependencies. The runtime data of a single run is passed as a
-    params object to :meth:`Nursery.spawn`.
-    """
-
-    async def __call__(self) -> None:
-        raise NotImplementedError
+BackgroundTask = Callable[..., Awaitable[None]]
 
 
 class Nursery(Protocol):
@@ -23,13 +12,13 @@ class Nursery(Protocol):
     them all on shutdown.
     """
 
-    def spawn(self, task: type[BackgroundTask], params: object) -> None:
+    def spawn(self, task: BackgroundTask, /, *args: Any, **kwargs: Any) -> None:
         """Run ``task`` detached from the caller and return immediately.
 
-        The task is resolved in a scope of its own, so it acquires (and
-        finalizes) its own db session and every other request-scoped resource
-        instead of borrowing the caller's — which is closed as soon as the
-        caller returns. ``params`` carries the data of this particular run and
-        is available in that scope under its own type.
+        ``task`` is an ordinary async function called with the given arguments.
+        It runs in a DI scope of its own, so its ``FromDishka[...]`` parameters
+        are resolved there and it acquires (and finalizes) its own db session
+        and every other request-scoped resource, instead of borrowing the
+        caller's — which is closed as soon as the caller returns.
         """
         raise NotImplementedError

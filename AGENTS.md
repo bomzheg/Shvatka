@@ -16,6 +16,10 @@ Telegram bot.
   decide whether it states a one-off fix or a reusable project convention. If
   it's a convention, write it down in this file so it's not re-litigated on the
   next PR.
+- **Design decisions live in SHEPs** (`docs/modules/shep/`) — one page per
+  non-trivial change, in the Antora docs. Read the relevant one before touching
+  the subsystem it describes, and update its status section when a phase lands.
+  This file keeps the *rules*; a SHEP keeps the *decision and why*.
 - **Prefer `IdentityProvider` and `CurrentGameProvider`** for resolving the
   current user/player/team/game everywhere except the DAO layer.
 - **New API endpoints → integration tests.** New **domain** classes/methods →

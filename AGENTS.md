@@ -187,6 +187,56 @@ So: an Interactor takes `identity: IdentityProvider` as a `__call__` arg (or a
 player/team, and it should not re-implement auth. The DAO layer is the
 exception: DAOs take concrete `dto.Player`/`dto.Team`/etc.
 
+## Background work goes through the nursery
+
+**Never start a detached task yourself.** `asyncio.create_task` and
+`asyncio.ensure_future` are banned by lint (`TID251`); the single caller is
+`AsyncioNursery` in `shvatka/infrastructure/nursery.py`. Everything that has to
+outlive the request that asked for it — publishing a scenario, uploading to the
+forum, sending a pile of hints — is spawned on the app-scoped `Nursery`
+(`core/interfaces/nursery.py`), taken as `FromDishka[Nursery]`.
+
+A task is just an async function in `shvatka/tgbot/tasks.py` — no class, no
+params object, nothing to register. Plain parameters are the data of the run;
+`FromDishka[...]` parameters are injected, same as in the scheduler wrappers
+(`infrastructure/scheduler/wrappers.py`), which use the same mechanism:
+
+```python
+async def publish_scenario_to_forum(
+    game: dto.FullGame, username: str, password: str, chat_id: int,
+    bot: FromDishka[Bot],
+) -> None: ...
+
+nursery.spawn(publish_scenario_to_forum, game=game, username=..., password=..., chat_id=...)
+```
+
+Why it matters: the nursery opens a **fresh REQUEST scope** per task and
+resolves the injected parameters there, so the task acquires and finalizes its
+own db session (and views, clients, …) instead of borrowing the handler's,
+which is closed the moment the handler returns. The nursery also keeps a strong
+reference until the task ends, logs failures instead of dropping them, and
+cancels what is still running when the app shuts down.
+
+One rule for writing one: **entities travel as arguments, resources come from
+DI.** Domain DTOs are plain dataclasses detached from any session, so handing a
+loaded game or level to a task is free — and it keeps the authorization the
+handler already did (the load *is* the check) instead of repeating it. What
+must never cross the boundary is anything tied to the caller's scope: a dao, a
+session, a `HintSender`. Those the task takes from DI, so its own scope owns
+them.
+
+`asyncio.TaskGroup` is *not* banned — it is the right tool when you await the
+group. It is the wrong tool for the nursery: its exit waits for every child
+(shutdown would block on a half-hour scenario publish) and a raising child
+cancels its siblings, which is exactly what independent background jobs must
+not do.
+
+One file is exempt from the ban: `tgbot/utils/fastapi_webhook.py` is a
+portable copy of aiogram's webhook handler, meant to be pasted into another
+bot as-is. It must not import from `shvatka`, so it keeps managing its own
+background updates. Leave it alone — if you need to touch it, keep it
+self-contained and close to upstream.
+
 ## DAO layer
 
 - **Writes belong to the table's own DAO.** A plain `core/.../rdb/*.py` DAO may

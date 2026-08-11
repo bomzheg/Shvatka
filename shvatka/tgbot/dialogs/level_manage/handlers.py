@@ -1,4 +1,3 @@
-import asyncio
 import logging
 import typing
 from typing import Any
@@ -12,6 +11,8 @@ from dishka.integrations.aiogram import CONTAINER_NAME
 from dishka.integrations.aiogram_dialog import inject
 
 from shvatka.core.interfaces.dal.level import LevelDeleter
+from shvatka.core.interfaces.identity import IdentityProvider
+from shvatka.core.interfaces.nursery import Nursery
 from shvatka.core.interfaces.scheduler import LevelTestScheduler
 from shvatka.core.models import dto
 from shvatka.core.services.level import get_by_id, unlink_level, delete_level
@@ -23,10 +24,9 @@ from shvatka.core.views.level import LevelView
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.tgbot import states
 from shvatka.tgbot import keyboards as kb
-from shvatka.tgbot.views.hint_sender import HintSender
+from shvatka.tgbot.tasks import send_level_hints
 from shvatka.tgbot.views.user import render_small_card_link
 from .getters import get_level_and_org, get_org
-from shvatka.tgbot.views.results.scenario import LevelPublisher
 
 logger = logging.getLogger(__name__)
 
@@ -36,21 +36,25 @@ async def edit_level(c: CallbackQuery, button: Button, manager: DialogManager):
     await manager.start(state=states.LevelEditSg.menu, data={"level_id": data["level_id"]})
 
 
-async def show_level(c: CallbackQuery, button: Button, manager: DialogManager):
+@inject
+async def show_level(
+    c: CallbackQuery,
+    button: Button,
+    manager: DialogManager,
+    dao: FromDishka[HolderDao],
+    identity: FromDishka[IdentityProvider],
+    nursery: FromDishka[Nursery],
+):
     await c.answer()
     data: dict[str, Any] = manager.start_data  # type: ignore[assignment]
     level_id = data["level_id"]
-    author: dto.Player = manager.middleware_data["player"]
-    dao: HolderDao = manager.middleware_data["dao"]
+    author = await identity.get_required_player()
     level = await get_by_id(level_id, author, dao.level)
-    hint_sender: HintSender = manager.middleware_data["hint_sender"]
-    asyncio.create_task(show_all_hints(author, hint_sender, level))
-
-
-async def show_all_hints(author: dto.Player, hint_sender: HintSender, level: dto.Level):
-    chat_id: int = author.get_chat_id()  # type: ignore[assignment]
-    publisher = LevelPublisher(hint_sender=hint_sender, level=level, chat_id=chat_id)
-    await publisher.publish()
+    chat_id = author.get_chat_id()
+    if chat_id is None:
+        logger.warning("player %s has no telegram chat, hints not sent", author.id)
+        return
+    nursery.spawn(send_level_hints, level=level, chat_id=chat_id)
 
 
 async def send_to_testing(c: CallbackQuery, widget: Any, manager: DialogManager, org_id: str):

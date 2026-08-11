@@ -148,8 +148,16 @@ ignore = [
     "TRY301", "ANN202", "SIM114",
 ]
 
+[tool.ruff.lint.flake8-tidy-imports.banned-api]
+"asyncio.create_task".msg = "spawn detached work through the app Nursery (shvatka.core.interfaces.nursery) instead"
+"asyncio.ensure_future".msg = "spawn detached work through the app Nursery (shvatka.core.interfaces.nursery) instead"
+
 [tool.ruff.lint.per-file-ignores]
 "__init__.py" = ["F401"]
+# a portable copy of aiogram's webhook handler, kept self-contained (and close
+# to upstream) so it can be pasted into another bot — it must not reach into
+# shvatka, so it manages its own background updates
+"shvatka/tgbot/utils/fastapi_webhook.py" = ["TID251"]
 "tests/*" = [
     "SLF001", "PLR2004", "PLR0913", "PT004", "PT023", "PT001",
     "PLR0915", "ARG001", "PTH123"  # fixme

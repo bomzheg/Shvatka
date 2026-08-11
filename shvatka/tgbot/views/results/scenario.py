@@ -89,9 +89,13 @@ class GamePublisher:
         return msg.message_id
 
     def get_approximate_time(self) -> timedelta:
-        return reduce(
-            add, (LevelPublisher.get_approximate_time(level) for level in self.game.levels)
-        )
+        return self.get_approximate_time_of(self.game)
+
+    @classmethod
+    def get_approximate_time_of(cls, game: dto.FullGame) -> timedelta:
+        # publishing is slow enough to be told about before it starts, so the
+        # estimate has to be available without building a publisher
+        return reduce(add, (LevelPublisher.get_approximate_time(level) for level in game.levels))
 
 
 class LevelPublisher:

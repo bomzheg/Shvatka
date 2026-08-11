@@ -1,5 +1,3 @@
-import asyncio
-
 from aiogram import Router
 from aiogram.filters import CommandObject, Command
 from aiogram.types import Message
@@ -7,9 +5,10 @@ from dishka import FromDishka
 from dishka.integrations.aiogram import inject
 
 from shvatka.core.interfaces.identity import IdentityProvider
+from shvatka.core.interfaces.nursery import Nursery
 from shvatka.core.services.game import get_full_game
 from shvatka.infrastructure.db.dao.holder import HolderDao
-from shvatka.tgbot.dialogs.game_manage.handlers import upload_wrapper
+from shvatka.tgbot.tasks import publish_scenario_to_forum
 from shvatka.tgbot.utils.router import disable_router_on_game
 from shvatka.tgbot.views.commands import PUBLISH_COMMAND
 
@@ -20,12 +19,19 @@ async def publish_game_forum(
     command: CommandObject,
     dao: HolderDao,
     identity: FromDishka[IdentityProvider],
+    nursery: FromDishka[Nursery],
 ):
     if not command.args:
         return
     game_id, username, password = map(str.strip, command.args.split(maxsplit=2))
     game_ = await get_full_game(id_=int(game_id), identity=identity, dao=dao.game)
-    asyncio.create_task(upload_wrapper(game_, username, password, m))
+    nursery.spawn(
+        publish_scenario_to_forum,
+        game=game_,
+        username=username,
+        password=password,
+        chat_id=m.chat.id,
+    )
 
 
 def setup() -> Router:

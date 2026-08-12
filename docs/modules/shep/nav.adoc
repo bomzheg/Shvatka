@@ -1,3 +1,4 @@
 * xref:index.adoc[SHEP — architecture decisions]
 ** xref:shep-0001-notifications-and-action-requests.adoc[SHEP-0001 Notifications and action requests]
+** xref:shep-0002-custom-key-prefixes.adoc[SHEP-0002 Custom key prefixes]
 ** xref:template.adoc[SHEP template]

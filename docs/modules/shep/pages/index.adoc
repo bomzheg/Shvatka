@@ -30,6 +30,10 @@ came out of it*.
 | xref:shep-0001-notifications-and-action-requests.adoc[SHEP-0001]
 | Notifications and action requests
 | Accepted, partially implemented
+
+| xref:shep-0002-custom-key-prefixes.adoc[SHEP-0002]
+| Custom key prefixes
+| Accepted
 |===
 
 == Status vocabulary

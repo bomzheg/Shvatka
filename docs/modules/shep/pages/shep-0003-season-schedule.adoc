@@ -741,27 +741,62 @@ a default time in the schedule would be a number nobody meant.
 | ⏳ not started
 |===
 
-Phases 2 and 3 are independent of each other and may land in either order.
+Phase 1 leaves the schedule complete for anything that speaks HTTP: composed,
+published, announced, edited and digested. Phase 2 is what makes it usable from
+Telegram, phase 3 from the browser; the two are independent and may land in
+either order.
 
-=== Testing each phase
+Tests follow `AGENTS.md` — new domain classes get unit tests, new endpoints get
+integration tests — and are listed inside the phase that introduces them.
 
-Per `AGENTS.md`: new domain classes get unit tests, new endpoints get
-integration tests.
+=== Phase 1 — engine ⏳
 
-* *Unit* (`tests/unit/season/`): `default_slot_dates` across years including the
-  9-May-is-Saturday case; the ownership matrix of free / owner / superuser /
-  captain; the ±3-day search including ties; digest collapsing — repeated moves
-  of one date become one line, move-and-move-back becomes nothing, take then
-  release becomes nothing.
-* *Integration* (`tests/integration/api_full/test_season.py`): publish a composed
-  season, then publish the same year again → 409; take → 409 for a second taker
-  and 403 for a non-author; link a game → the date syncs; re-plan the game → the
-  date follows; run the digest → changes marked published and notifications
-  written; run it on a season whose last date has passed → `unpinned_at` set.
-  Assert through `check_dao`.
-* Announcer and notification side effects go through mocks in the style of
-  `tests/mocks/org_notifier.py`.
+* [ ] `seasons`, `season_slots`, `season_slot_orgs`, `season_changes` + migration
+* [ ] `core/season/` — `dto`, `rules`, `adapters`, `interactors`
+* [ ] per-table DAOs behind one composed `SeasonScheduleDao`, wired in
+  `infrastructure/di/`
+* [ ] `SeasonAnnouncer` + `BotSeasonAnnouncer` (send, pin, edit, unpin) and the
+  no-op web side, fanned out by `ComplexSeasonAnnouncer`
+* [ ] `PublishSeasonInteractor`, the per-date edit interactors, take/release,
+  link/unlink, `FindSlotsNearGameStartInteractor`, `SyncLinkedSlotInteractor`
+* [ ] `publish_season_digest_wrapper` on a 10:00 MSK cron trigger — digest *and*
+  end-of-season unpin
+* [ ] `SeasonAudienceReader` and `season_schedule_changed` notifications
+* [ ] `/seasons` routes
+* [ ] glossary rows in `context.md` here *and* in shvatka-ui
+* [ ] unit tests (`tests/unit/season/`): `default_slot_dates` across years
+  including the 9-May-is-Saturday case; the ownership matrix of free / owner /
+  superuser / captain; the ±3-day search including ties; digest collapsing —
+  repeated moves of one date become one line, move-and-move-back becomes
+  nothing, take then release becomes nothing
+* [ ] integration tests (`tests/integration/api_full/test_season.py`): publish,
+  then publish the same year again → 409; take → 409 for a second taker and 403
+  for a non-author; link a game → the date syncs; re-plan the game → the date
+  follows; run the digest → changes marked published and notifications written;
+  run it on a season whose last date has passed → `unpinned_at` set. Assert
+  through `check_dao`, with announcer and notification effects through mocks in
+  the style of `tests/mocks/org_notifier.py`
 
+=== Phase 2 — bot ⏳
+
+* [ ] `SeasonSG` with `compose` holding the working list in `dialog_data`
+* [ ] `SeasonCalendar(Calendar)` with per-day marks and the season's year pinned
+  by `CalendarConfig`
+* [ ] date window: take / release / change author / edit orgs / move / delete /
+  open the linked game
+* [ ] the link offer and the no-date warning after `GameScheduleSG.confirm`
+* [ ] «(вне расписания сезона)» on the `GAME_PLANED` log line
+
+=== Phase 3 — web UI ⏳
+
+* [ ] `src/app/season/` component + service, routes `/season` and `/season/:year`
+* [ ] the May–October grid with extend-months controls and auto-extension for
+  dates outside it
+* [ ] compose mode backed by `localStorage`, with 409 handling
+* [ ] take / release / add / move for authors; read-only for everyone else
+* [ ] `season_schedule_changed` in `notification-render.ts`
+
+[[deviations]]
 == Deviations from the plan
 
 Nothing is implemented yet. This section is filled in as the phases land.

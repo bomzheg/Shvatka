@@ -30,8 +30,8 @@ async def change_permission_handler(
     button: Button,
     manager: DialogManager,
     identity: FromDishka[IdentityProvider],
+    dao: FromDishka[HolderDao],
 ):
-    dao: HolderDao = manager.middleware_data["dao"]
     author = await identity.get_required_player()
     org_id = manager.dialog_data["org_id"]
     org = await get_org_by_id(org_id, dao.organizer)
@@ -49,9 +49,9 @@ async def change_deleted_handler(
     button: Button,
     manager: DialogManager,
     identity: FromDishka[IdentityProvider],
+    dao: FromDishka[HolderDao],
 ):
     await c.answer()
-    dao: HolderDao = manager.middleware_data["dao"]
     author = await identity.get_required_player()
     org_id = manager.dialog_data["org_id"]
     org = await get_org_by_id(org_id, dao.organizer)

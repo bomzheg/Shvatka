@@ -18,8 +18,9 @@ class FixTargetMiddleware(BaseMiddleware):
         data: dict[str, Any],
     ) -> Any:
         if target := data.get("target"):
-            dao: HolderDao = data["dao"]
-            user_getter = await data[CONTAINER_NAME].get(UserGetter)
+            container = data[CONTAINER_NAME]
+            dao = await container.get(HolderDao)
+            user_getter = await container.get(UserGetter)
             target = await get_db_user_by_tg_user(target, user_getter, dao)
             data["target"] = await upsert_player(target, dao.player)
         return await handler(event, data)

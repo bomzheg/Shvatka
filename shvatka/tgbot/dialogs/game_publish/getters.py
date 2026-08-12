@@ -12,7 +12,10 @@ from shvatka.infrastructure.db.dao.holder import HolderDao
 
 @inject
 async def get_org(
-    dao: HolderDao, dialog_manager: DialogManager, identity: FromDishka[IdentityProvider], **_
+    dao: FromDishka[HolderDao],
+    dialog_manager: DialogManager,
+    identity: FromDishka[IdentityProvider],
+    **_,
 ):
     player = await identity.get_required_player()
     data: dict[str, Any] = dialog_manager.start_data  # type: ignore[assignment]

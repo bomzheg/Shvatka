@@ -19,7 +19,7 @@ async def get_my_team_(identity: FromDishka[IdentityProvider], **_) -> dict[str,
 
 @inject
 async def get_team_with_players(
-    dao: HolderDao, identity: FromDishka[IdentityProvider], **_
+    dao: FromDishka[HolderDao], identity: FromDishka[IdentityProvider], **_
 ) -> dict[str, Any]:
     team_player = await get_actual_team_player(identity)
     team = team_player.team
@@ -36,7 +36,7 @@ async def get_team_with_players(
 
 @inject
 async def get_selected_player(
-    dao: HolderDao,
+    dao: FromDishka[HolderDao],
     dialog_manager: DialogManager,
     identity: FromDishka[IdentityProvider],
     **_,

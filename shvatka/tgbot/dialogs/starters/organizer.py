@@ -22,7 +22,7 @@ from shvatka.tgbot.utils.router import disable_router_on_game
 async def start_test_level(
     c: CallbackQuery,
     callback_data: kb.LevelTestInviteCD,
-    dao: HolderDao,
+    dao: FromDishka[HolderDao],
     dialog_manager: DialogManager,
     identity: FromDishka[IdentityProvider],
     scheduler: FromDishka[LevelTestScheduler],

@@ -1,9 +1,10 @@
 from functools import partial
 
 from aiogram import Router, Bot
+from dishka import FromDishka
 from aiogram.types import CallbackQuery, Message
 from aiogram_dialog.api.protocols import BgManagerFactory
-from dishka.integrations.aiogram import FromDishka, inject
+from dishka.integrations.aiogram import inject
 
 from shvatka.core.players.player import get_player_by_id, merge_players
 from shvatka.core.services.team import get_team_by_id, merge_teams
@@ -22,7 +23,7 @@ async def confirm_merge_not_superuser(callback_query: CallbackQuery):
 async def confirm_merge_team(
     callback_query: CallbackQuery,
     callback_data: kb.TeamMergeCD,
-    dao: HolderDao,
+    dao: FromDishka[HolderDao],
     game_log: FromDishka[GameLogWriter],
     bg_manager_factory: FromDishka[BgManagerFactory],
     bot: Bot,
@@ -43,7 +44,7 @@ async def confirm_merge_team(
 async def confirm_merge_players(
     callback_query: CallbackQuery,
     callback_data: kb.PlayerMergeCD,
-    dao: HolderDao,
+    dao: FromDishka[HolderDao],
     game_log: FromDishka[GameLogWriter],
     bg_manager_factory: FromDishka[BgManagerFactory],
     bot: Bot,

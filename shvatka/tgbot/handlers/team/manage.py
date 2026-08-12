@@ -64,7 +64,7 @@ logger = logging.getLogger(__name__)
 @inject
 async def cmd_create_team(
     message: Message,
-    dao: HolderDao,
+    dao: FromDishka[HolderDao],
     bot: Bot,
     identity: FromDishka[IdentityProvider],
     game_log: FromDishka[GameLogWriter],
@@ -131,7 +131,9 @@ async def cmd_which_team(
 
 
 @inject
-async def cmd_who_there(message: Message, identity: FromDishka[IdentityProvider], dao: HolderDao):
+async def cmd_who_there(
+    message: Message, identity: FromDishka[IdentityProvider], dao: FromDishka[HolderDao]
+):
     chat = await identity.get_chat()
     if chat is None:
         await message.reply("это не чат (где я?)")
@@ -159,7 +161,7 @@ async def cmd_create_team_group(message: Message, identity: FromDishka[IdentityP
 async def user_join_chat_with_team(
     event: ChatMemberUpdated,
     bot: Bot,
-    dao: HolderDao,
+    dao: FromDishka[HolderDao],
     identity: FromDishka[IdentityProvider],
 ) -> None:
     """Offer the captain to take the newcomer into the team.
@@ -190,7 +192,7 @@ async def cmd_add_in_team(
     target: dto.Player,
     bot: Bot,
     command: CommandObject,
-    dao: HolderDao,
+    dao: FromDishka[HolderDao],
     identity: FromDishka[IdentityProvider],
     team_notifier: FromDishka[TeamNotifier],
 ):
@@ -247,7 +249,7 @@ async def button_join(
     callback_query: CallbackQuery,
     callback_data: kb.JoinToTeamRequestCD,
     bot: Bot,
-    dao: HolderDao,
+    dao: FromDishka[HolderDao],
     identity: FromDishka[IdentityProvider],
     team_notifier: FromDishka[TeamNotifier],
 ):
@@ -315,7 +317,7 @@ async def button_join(
 async def button_join_no(
     callback_query: CallbackQuery,
     callback_data: kb.JoinToTeamRequestCD,
-    dao: HolderDao,
+    dao: FromDishka[HolderDao],
     identity: FromDishka[IdentityProvider],
 ):
     team = await identity.get_required_team()
@@ -341,7 +343,9 @@ async def answer_not_enough_rights(callback_query: CallbackQuery):
 
 
 @inject
-async def cmd_team(message: Message, identity: FromDishka[IdentityProvider], dao: HolderDao):
+async def cmd_team(
+    message: Message, identity: FromDishka[IdentityProvider], dao: FromDishka[HolderDao]
+):
     team = await identity.get_team()
     if team:
         players = await get_team_players(team, dao.team_player)

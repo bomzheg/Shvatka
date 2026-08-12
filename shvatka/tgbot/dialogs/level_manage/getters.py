@@ -15,7 +15,10 @@ from shvatka.infrastructure.db.dao.holder import HolderDao
 
 @inject
 async def get_level_id(
-    dao: HolderDao, dialog_manager: DialogManager, identity: FromDishka[IdentityProvider], **_
+    dao: FromDishka[HolderDao],
+    dialog_manager: DialogManager,
+    identity: FromDishka[IdentityProvider],
+    **_,
 ):
     author = await identity.get_required_player()
     level, org = await get_level_and_org(author, dao, dialog_manager)
@@ -29,7 +32,10 @@ async def get_level_id(
 
 @inject
 async def get_orgs(
-    dao: HolderDao, dialog_manager: DialogManager, identity: FromDishka[IdentityProvider], **_
+    dao: FromDishka[HolderDao],
+    dialog_manager: DialogManager,
+    identity: FromDishka[IdentityProvider],
+    **_,
 ):
     data: dict[str, Any] = dialog_manager.start_data  # type: ignore[assignment]
     level_id = data["level_id"]
@@ -66,7 +72,7 @@ async def get_level_and_org(
 
 @inject
 async def get_levels(
-    dao: HolderDao,
+    dao: FromDishka[HolderDao],
     identity: FromDishka[IdentityProvider],
     **_,
 ):

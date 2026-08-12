@@ -13,11 +13,15 @@ from shvatka.tgbot import keyboards as kb
 
 
 @inject
-async def get_orgs(dialog_manager: DialogManager, identity: FromDishka[IdentityProvider], **_):
+async def get_orgs(
+    dialog_manager: DialogManager,
+    identity: FromDishka[IdentityProvider],
+    dao: FromDishka[HolderDao],
+    **_,
+):
     data: dict[str, Any] = dialog_manager.start_data  # type: ignore[assignment]
     game_id = data["game_id"]
     completed = data.get("completed", False)
-    dao: HolderDao = dialog_manager.middleware_data["dao"]
     author = await identity.get_required_player()
     game = await get_game(
         id_=game_id,
@@ -36,7 +40,8 @@ async def get_orgs(dialog_manager: DialogManager, identity: FromDishka[IdentityP
     }
 
 
-async def get_org(dialog_manager: DialogManager, dao: HolderDao, **_):
+@inject
+async def get_org(dialog_manager: DialogManager, dao: FromDishka[HolderDao], **_):
     org_id = dialog_manager.dialog_data["org_id"]
     org = await get_org_by_id(org_id, dao.organizer)
     return {

@@ -2,6 +2,8 @@ from typing import Any, Sequence
 
 from adaptix import Retort
 from aiogram_dialog import DialogManager
+from dishka import FromDishka
+from dishka.integrations.aiogram_dialog import inject
 
 from shvatka.core.models.dto import hints, action
 from shvatka.core.models.dto.scn.level import (
@@ -21,7 +23,8 @@ async def get_keys(dialog_manager: DialogManager, **_):
     }
 
 
-async def get_level_data(dialog_manager: DialogManager, retort: Retort, **_):
+@inject
+async def get_level_data(dialog_manager: DialogManager, retort: FromDishka[Retort], **_):
     dialog_data = dialog_manager.dialog_data
     hints_ = retort.load(dialog_data.get("time_hints", []), list[hints.TimeHint])
     dumped_conditions = dialog_data.get("conditions", [])
@@ -45,7 +48,8 @@ async def get_level_data(dialog_manager: DialogManager, retort: Retort, **_):
     }
 
 
-async def get_time_hints(dialog_manager: DialogManager, retort: Retort, **_):
+@inject
+async def get_time_hints(dialog_manager: DialogManager, retort: FromDishka[Retort], **_):
     dialog_data = dialog_manager.dialog_data
     data: dict[str, Any] = dialog_manager.start_data  # type: ignore[assignment]
     hints_ = retort.load(dialog_data.get("time_hints", []), list[hints.TimeHint])
@@ -55,7 +59,8 @@ async def get_time_hints(dialog_manager: DialogManager, retort: Retort, **_):
     }
 
 
-async def get_effects_conditions(dialog_manager: DialogManager, retort: Retort, **_):
+@inject
+async def get_effects_conditions(dialog_manager: DialogManager, retort: FromDishka[Retort], **_):
     data = dialog_manager.dialog_data
     conditions = retort.load(data["effects_conditions"], list[action.KeyEffectsCondition])
     return {
@@ -64,7 +69,8 @@ async def get_effects_conditions(dialog_manager: DialogManager, retort: Retort, 
     }
 
 
-async def get_effects_condition(dialog_manager: DialogManager, retort: Retort, **_):
+@inject
+async def get_effects_condition(dialog_manager: DialogManager, retort: FromDishka[Retort], **_):
     raw_effects = dialog_manager.dialog_data.get("effects", None)
     return {
         "keys": dialog_manager.dialog_data.get("keys", []),

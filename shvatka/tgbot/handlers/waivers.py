@@ -48,7 +48,7 @@ from shvatka.tgbot.views.waiver import (
 @inject
 async def start_waivers(
     message: Message,
-    dao: HolderDao,
+    dao: FromDishka[HolderDao],
     bot: Bot,
     identity_provider: FromDishka[TgBotIdentityProvider],
     current_game: FromDishka[CurrentGameProvider],
@@ -107,7 +107,7 @@ async def add_vote_handler(
 @inject
 async def start_approve_waivers_cmd_handler(
     _: Message,
-    dao: HolderDao,
+    dao: FromDishka[HolderDao],
     bot: Bot,
     identity_provider: FromDishka[TgBotIdentityProvider],
     read_interactor: FromDishka[TeamWaiversDraftReaderInteractor],
@@ -133,7 +133,7 @@ async def start_approve_waivers_cmd_handler(
 async def start_approve_waivers_cb_handler(
     c: CallbackQuery,
     callback_data: kb.WaiverToApproveCD,
-    dao: HolderDao,
+    dao: FromDishka[HolderDao],
     bot: Bot,
     identity_provider: FromDishka[TgBotIdentityProvider],
     read_interactor: FromDishka[TeamWaiversDraftReaderInteractor],
@@ -162,7 +162,7 @@ async def start_approve_waivers_cb_handler(
 async def waiver_main_menu(
     c: CallbackQuery,
     callback_data: kb.WaiverMainCD,
-    dao: HolderDao,
+    dao: FromDishka[HolderDao],
     identity_provider: FromDishka[TgBotIdentityProvider],
     read_interactor: FromDishka[TeamWaiversDraftReaderInteractor],
     current_game: FromDishka[CurrentGameProvider],
@@ -185,7 +185,7 @@ async def waiver_main_menu(
 async def confirm_approve_waivers_handler(
     c: CallbackQuery,
     callback_data: kb.WaiverConfirmCD,
-    dao: HolderDao,
+    dao: FromDishka[HolderDao],
     bot: Bot,
     identity_provider: FromDishka[TgBotIdentityProvider],
     interactor: FromDishka[TeamWaiversDraftReaderInteractor],
@@ -213,7 +213,7 @@ async def confirm_approve_waivers_handler(
 async def cancel_waivers_handler(
     c: CallbackQuery,
     callback_data: kb.WaiverConfirmCD,
-    dao: HolderDao,
+    dao: FromDishka[HolderDao],
     bot: Bot,
     identity_provider: FromDishka[TgBotIdentityProvider],
     current_game: FromDishka[CurrentGameProvider],
@@ -233,7 +233,7 @@ async def cancel_waivers_handler(
 async def waiver_user_menu(
     c: CallbackQuery,
     callback_data: kb.WaiverManagePlayerCD,
-    dao: HolderDao,
+    dao: FromDishka[HolderDao],
     identity_provider: FromDishka[TgBotIdentityProvider],
     current_game: FromDishka[CurrentGameProvider],
 ):
@@ -258,7 +258,7 @@ async def waiver_user_menu(
 async def waiver_remove_user_vote(
     c: CallbackQuery,
     callback_data: kb.WaiverRemovePlayerCD,
-    dao: HolderDao,
+    dao: FromDishka[HolderDao],
     identity_provider: FromDishka[TgBotIdentityProvider],
     read_interactor: FromDishka[TeamWaiversDraftReaderInteractor],
     current_game: FromDishka[CurrentGameProvider],
@@ -283,7 +283,7 @@ async def waiver_remove_user_vote(
 async def waiver_add_force_menu(
     c: CallbackQuery,
     callback_data: kb.WaiverRemovePlayerCD,
-    dao: HolderDao,
+    dao: FromDishka[HolderDao],
     identity_provider: FromDishka[TgBotIdentityProvider],
     current_game: FromDishka[CurrentGameProvider],
 ):
@@ -308,7 +308,7 @@ async def waiver_add_force_menu(
 async def add_force_player(
     c: CallbackQuery,
     callback_data: kb.WaiverAddPlayerForceCD,
-    dao: HolderDao,
+    dao: FromDishka[HolderDao],
     identity_provider: FromDishka[TgBotIdentityProvider],
     waiver_vote_adder_dao: FromDishka[WaiverVoteAdder],
     current_game: FromDishka[CurrentGameProvider],

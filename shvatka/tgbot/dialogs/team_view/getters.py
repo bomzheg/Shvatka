@@ -13,8 +13,9 @@ from shvatka.tgbot.dialogs.outdated import get_actual_team_player
 from .common import get_active_filter, get_archive_filter
 
 
+@inject
 async def teams_getter(
-    dao: HolderDao, dialog_manager: DialogManager, **_
+    dao: FromDishka[HolderDao], dialog_manager: DialogManager, **_
 ) -> dict[str, list[dto.Team]]:
     return {
         "teams": await get_teams(
@@ -27,7 +28,8 @@ async def teams_getter(
     }
 
 
-async def team_getter(dao: HolderDao, dialog_manager: DialogManager, **_):
+@inject
+async def team_getter(dao: FromDishka[HolderDao], dialog_manager: DialogManager, **_):
     team_id: int = dialog_manager.dialog_data["team_id"]
     return await team_card(await get_team_by_id(team_id, dao.team), dao)
 

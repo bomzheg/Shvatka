@@ -47,7 +47,8 @@ async def get_release(
     }
 
 
-async def get_composed_release(dialog_manager: DialogManager, retort: Retort, **_):
+@inject
+async def get_composed_release(dialog_manager: DialogManager, retort: FromDishka[Retort], **_):
     dumped_banner = dialog_manager.dialog_data.get("banner")
     banner = retort.load(dumped_banner, hints.PhotoHint) if dumped_banner else None
     hints_ = retort.load(dialog_manager.dialog_data.get("hints", []), list[hints.AnyHint])

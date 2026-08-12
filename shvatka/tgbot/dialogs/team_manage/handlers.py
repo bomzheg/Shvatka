@@ -46,8 +46,8 @@ async def rename_team_handler(
     dialog_manager: DialogManager,
     new_name: str,
     identity: FromDishka[IdentityProvider],
+    dao: FromDishka[HolderDao],
 ):
-    dao: HolderDao = dialog_manager.middleware_data["dao"]
     team_player = await get_actual_team_player(identity)
     await rename_team(team=team_player.team, captain=team_player, new_name=new_name, dao=dao.team)
 
@@ -59,8 +59,8 @@ async def change_desc_team_handler(
     dialog_manager: DialogManager,
     new_desc: str,
     identity: FromDishka[IdentityProvider],
+    dao: FromDishka[HolderDao],
 ):
-    dao: HolderDao = dialog_manager.middleware_data["dao"]
     team_player = await get_actual_team_player(identity)
     await change_team_desc(
         team=team_player.team, captain=team_player, new_desc=new_desc, dao=dao.team
@@ -79,9 +79,8 @@ async def change_permission_handler(
     button: Button,
     manager: DialogManager,
     identity: FromDishka[IdentityProvider],
+    dao: FromDishka[HolderDao],
 ):
-    await c.answer()
-    dao: HolderDao = manager.middleware_data["dao"]
     captain_team_player = await get_actual_team_player(identity)
     team = captain_team_player.team
     player_id = manager.dialog_data["selected_player_id"]
@@ -112,9 +111,9 @@ async def remove_player_handler(
     manager: DialogManager,
     identity: FromDishka[IdentityProvider],
     team_notifier: FromDishka[TeamNotifier],
+    dao: FromDishka[HolderDao],
 ):
     await c.answer()
-    dao: HolderDao = manager.middleware_data["dao"]
     captain_team_player = await get_actual_team_player(identity)
     player_id = manager.dialog_data["selected_player_id"]
     player = await get_player_by_id(player_id, dao.player)
@@ -158,8 +157,8 @@ async def change_role_handler(
     manager: DialogManager,
     role: str,
     identity: FromDishka[IdentityProvider],
+    dao: FromDishka[HolderDao],
 ):
-    dao: HolderDao = manager.middleware_data["dao"]
     captain_team_player = await get_actual_team_player(identity)
     team = captain_team_player.team
     player_id = manager.dialog_data["selected_player_id"]
@@ -176,8 +175,8 @@ async def change_emoji_handler(
     manager: DialogManager,
     emoji: str,
     identity: FromDishka[IdentityProvider],
+    dao: FromDishka[HolderDao],
 ):
-    dao: HolderDao = manager.middleware_data["dao"]
     captain_team_player = await get_actual_team_player(identity)
     team = captain_team_player.team
     player_id = manager.dialog_data["selected_player_id"]
@@ -207,11 +206,14 @@ async def send_user_request(c: CallbackQuery, widget: Any, manager: DialogManage
 
 @inject
 async def gotten_chat_request(
-    m: Message, widget: Any, manager: DialogManager, identity: FromDishka[IdentityProvider]
+    m: Message,
+    widget: Any,
+    manager: DialogManager,
+    identity: FromDishka[IdentityProvider],
+    dao: FromDishka[HolderDao],
 ):
     assert m.chat_shared
     target_id = m.chat_shared.chat_id
-    dao: HolderDao = manager.middleware_data["dao"]
     team_player = await get_actual_team_player(identity)
     captain = team_player.player
     team = team_player.team
@@ -263,6 +265,7 @@ async def gotten_user_request(
     manager: DialogManager,
     identity: FromDishka[IdentityProvider],
     team_notifier: FromDishka[TeamNotifier],
+    dao: FromDishka[HolderDao],
 ):
     if m.user_shared:
         target_id = m.user_shared.user_id
@@ -273,7 +276,6 @@ async def gotten_user_request(
         target_id = m.contact.user_id
     else:
         raise RuntimeError("only user shared and contact are allowed")
-    dao: HolderDao = manager.middleware_data["dao"]
     captain_team_player = await get_actual_team_player(identity)
     captain = captain_team_player.player
     team = captain_team_player.team

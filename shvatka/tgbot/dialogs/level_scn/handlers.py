@@ -94,7 +94,10 @@ async def not_correct_bonus_keys(
     )
 
 
-async def process_time_hint_result(start_data: Data, result: Any, manager: DialogManager):
+@inject
+async def process_time_hint_result(
+    start_data: Data, result: Any, manager: DialogManager, retort: FromDishka[Retort]
+):
     if not result:
         return
     if new_hint := result.get("time_hint", None):
@@ -103,7 +106,6 @@ async def process_time_hint_result(start_data: Data, result: Any, manager: Dialo
         old_hint = start_data["time_hint"]
         if edited_hint == old_hint:
             return
-        retort: Retort = manager.middleware_data["retort"]
         hints_list = retort.load(manager.dialog_data.get("time_hints", []), scn.HintsList)
         if edited_hint.get("__deleted__") == "__deleted_true__":
             edited_list = hints_list.delete(retort.load(old_hint, hints.TimeHint))
@@ -154,10 +156,12 @@ async def process_level_result(
 
 @inject
 async def on_start_level_edit(
-    start_data: dict[str, Any], manager: DialogManager, identity: FromDishka[IdentityProvider]
+    start_data: dict[str, Any],
+    manager: DialogManager,
+    identity: FromDishka[IdentityProvider],
+    dao: FromDishka[HolderDao],
+    retort: FromDishka[Retort],
 ):
-    dao: HolderDao = manager.middleware_data["dao"]
-    retort: Retort = manager.middleware_data["retort"]
     author = await identity.get_required_player()
     level = await get_by_id(start_data["level_id"], author, dao.level)
     manager.dialog_data["level_id"] = level.name_id
@@ -170,10 +174,14 @@ async def on_start_hints_edit(start_data: dict[str, Any], manager: DialogManager
     manager.dialog_data["time_hints"] = start_data["time_hints"]
 
 
+@inject
 async def start_edit_time_hint(
-    c: CallbackQuery, widget: Any, manager: DialogManager, hint_time: str
+    c: CallbackQuery,
+    widget: Any,
+    manager: DialogManager,
+    hint_time: str,
+    retort: FromDishka[Retort],
 ):
-    retort: Retort = manager.middleware_data["retort"]
     hints_ = retort.load(manager.dialog_data.get("time_hints", []), list[hints.TimeHint])
     await manager.start(
         state=states.TimeHintEditSG.details,
@@ -181,8 +189,10 @@ async def start_edit_time_hint(
     )
 
 
-async def start_add_time_hint(c: CallbackQuery, button: Button, manager: DialogManager):
-    retort: Retort = manager.middleware_data["retort"]
+@inject
+async def start_add_time_hint(
+    c: CallbackQuery, button: Button, manager: DialogManager, retort: FromDishka[Retort]
+):
     hints_ = retort.load(manager.dialog_data.get("time_hints", []), list[hints.TimeHint])
     previous_time = hints_[-1].time if hints_ else -1
     await manager.start(state=states.TimeHintSG.time, data={"previous_time": previous_time})
@@ -292,10 +302,10 @@ async def save_level(
     button: Button,
     manager: DialogManager,
     identity: FromDishka[IdentityProvider],
+    retort: FromDishka[Retort],
+    dao: FromDishka[HolderDao],
 ):
-    retort: Retort = manager.middleware_data["retort"]
     author = await identity.get_required_player()
-    dao: HolderDao = manager.middleware_data["dao"]
     data = manager.dialog_data
     id_ = data["level_id"]
     time_hints = retort.load(data["time_hints"], list[hints.TimeHint])

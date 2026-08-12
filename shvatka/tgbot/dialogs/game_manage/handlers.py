@@ -83,10 +83,12 @@ async def show_zip_scn(
     manager: DialogManager,
     identity: FromDishka[IdentityProvider],
     file_gateway: FromDishka[FileGateway],
+    dao: FromDishka[HolderDao],
+    retort: FromDishka[Retort],
 ):
     await c.answer()
     game_id = manager.dialog_data["game_id"]
-    await common_show_zip(c, game_id, manager, identity, file_gateway)
+    await common_show_zip(c, game_id, identity, file_gateway, dao, retort)
 
 
 @inject
@@ -96,10 +98,12 @@ async def show_my_zip_scn(
     manager: DialogManager,
     identity: FromDishka[IdentityProvider],
     file_gateway: FromDishka[FileGateway],
+    dao: FromDishka[HolderDao],
+    retort: FromDishka[Retort],
 ):
     await c.answer()
     game_id = manager.dialog_data["my_game_id"]
-    await common_show_zip(c, game_id, manager, identity, file_gateway)
+    await common_show_zip(c, game_id, identity, file_gateway, dao, retort)
 
 
 @inject
@@ -160,12 +164,11 @@ async def show_transitions(
 async def common_show_zip(
     c: CallbackQuery,
     game_id: int,
-    manager: DialogManager,
     identity: IdentityProvider,
     file_gateway: FileGateway,
+    dao: HolderDao,
+    retort: Retort,
 ):
-    dao: HolderDao = manager.middleware_data["dao"]
-    retort: Retort = manager.middleware_data["retort"]
     game_ = await game.get_game_package(game_id, identity, dao.game_packager, retort, file_gateway)
     zip_ = pack_scn(game_)
     assert isinstance(c.message, Message)
@@ -174,9 +177,12 @@ async def common_show_zip(
 
 @inject
 async def rename_game_handler(
-    m: Message, dialog: Any, dialog_manager: DialogManager, identity: FromDishka[IdentityProvider]
+    m: Message,
+    dialog: Any,
+    dialog_manager: DialogManager,
+    identity: FromDishka[IdentityProvider],
+    dao: FromDishka[HolderDao],
 ):
-    dao: HolderDao = dialog_manager.middleware_data["dao"]
     player = await identity.get_required_player()
     game_ = await get_game(dialog_manager.dialog_data["my_game_id"], dao=dao.game)
     assert m.text

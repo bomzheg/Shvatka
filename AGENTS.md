@@ -364,6 +364,21 @@ pytest tests            # everything (needs Docker for testcontainers)
 pytest tests/unit       # fast unit-only loop, no DB
 ```
 
+### Coverage
+
+`fail_under` in `[tool.coverage.report]` is the floor, and coverage itself
+enforces it — the CI `pytest --cov` step goes red below it. `branch = true`
+means the number counts branches next to statements, so one threshold guards
+both. Raise it as the number grows; don't lower it to turn a build green.
+Nothing enforces it locally unless you ask for coverage: the fast loop
+(`pytest tests/unit`) passes no `--cov`, so it never reports and never fails.
+
+`[tool.coverage.run] omit` in `pyproject.toml` drops what tests are never going
+to reach: the bot layer, alembic migrations, and **one-shot scripts** — the
+forum crawler (parsers, loader, uploader), the 0→1 scenario migration, and the
+maintenance scripts over prod data. New code of that kind belongs in the omit
+list with a comment saying why; everything else stays measured.
+
 ### What the suite can't see
 
 Changes to **middleware, DI wiring, filters, or how the acting user is

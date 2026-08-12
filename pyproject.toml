@@ -96,9 +96,36 @@ omit = [
     "shvatka/tgbot/*",
     "shvatka/infrastructure/db/migrations/*",
     "*/__main__.py",
+    # One-shot scripts: run by hand (or once, on a single deploy), talking to a
+    # foreign site or to prod data. They are not part of the product's
+    # behaviour and nobody is going to write tests for them, so measuring them
+    # only skews the numbers.
+    #
+    # the forum crawler: logs into the old engine, parses its HTML and uploads
+    # scenarios back. Its models/ stay measured — the DAO layer uses them.
+    "shvatka/infrastructure/crawler/auth.py",
+    "shvatka/infrastructure/crawler/constants.py",
+    "shvatka/infrastructure/crawler/factory.py",
+    "shvatka/infrastructure/crawler/retort.py",
+    "shvatka/infrastructure/crawler/game_scn/*",
+    "shvatka/infrastructure/crawler/teams/*",
+    # one-time migration of stored scenarios from format 0 to 1
+    "shvatka/core/migration_utils/*",
+    # maintenance scripts over prod data
+    "shvatka/infrastructure/empty_file_repairer.py",
+    "shvatka/infrastructure/file_id_updater.py",
+    "shvatka/infrastructure/stored_scn_checker.py",
 ]
 
 [tool.coverage.report]
+# The floor for the whole measured codebase. With branch = true this single
+# number covers both: coverage counts every branch as a measurable thing next
+# to the statements, so a PR that adds untested branches drags it down too.
+# The full suite gives ~80% today — raise this as the number grows, don't lower
+# it to make a red build green. It only applies where coverage runs at all, so
+# the fast local loop (pytest tests/unit, no --cov) is unaffected.
+fail_under = 78
+precision = 2
 exclude_lines = [
     "pragma: no cover",
     "def __repr__",

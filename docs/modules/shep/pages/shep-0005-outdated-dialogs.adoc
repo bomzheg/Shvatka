@@ -16,8 +16,9 @@
 A telegram window stays clickable forever, so the state a dialog was opened for
 can be gone by the time a button is pressed. Dialogs now say so explicitly: a
 getter or a handler raises `DialogOutdated`, and one middleware turns that into
-an alert for the user plus a closed dialog — instead of an `assert` blowing up
-or a handler silently acting on the wrong team.
+an alert for the user plus a fresh main menu — instead of an `assert` blowing
+up, a window rendering around a team that isn't there, or a handler silently
+acting on the wrong team.
 
 == Context
 
@@ -38,8 +39,11 @@ log chat gets a traceback.
 
 The same shape appeared all over the team dialogs:
 
-* `team_manage/getters.py` — `assert team`, and `get_my_team_` returning
-  `team=None` into a Jinja template that dereferences `team.name`;
+* `team_manage/getters.py` — `assert team` in `get_team_with_players`, and
+  `get_my_team_` returning `team=None`. That one does not raise: jinja2's
+  default `Undefined` renders `{{team.name}}` as an empty string, so the
+  captain's bridge came up as `🚩Команда: <b></b>` with every permission-gated
+  button hidden — a dead window with no hint of why;
 * `team_manage/handlers.py` — `assert team` in `start_merge`,
   `gotten_chat_request`, `gotten_user_request`; a bare `done()` with no
   explanation in the rename/role/emoji handlers;
@@ -50,8 +54,8 @@ The same shape appeared all over the team dialogs:
 
 Three constraints shaped the answer:
 
-* **Getters cannot close a dialog.** They run inside `manager.show()`; calling
-  `done()` from there re-enters the manager while it is rendering.
+* **Getters cannot end a dialog.** They run inside `manager.show()`; calling
+  `done()` or `start()` from there re-enters the manager while it is rendering.
 * **The existing `SHError` handler is not enough.** `dp.errors` already answers
   the callback with `notify_user`, but it leaves the dialog open on a window
   that will fail again on the next click. And most of these errors are not
@@ -74,7 +78,8 @@ the user is looking at describes a world that no longer exists. It carries
 
 `OutdatedDialogMiddleware` is an inner middleware of the dialogs router. It
 catches `DialogOutdated`, answers the callback query with an alert (or replies
-to the message, for `MessageInput` handlers), and calls `manager.done()`.
+to the message, for `MessageInput` handlers), and restarts the main menu with
+`StartMode.RESET_STACK`.
 
 Inner middlewares of a router wrap the handlers of its sub-routers too, so one
 registration covers every dialog — including window getters, which run inside
@@ -82,30 +87,37 @@ the handler call. It must be registered **after** `setup_dialogs`, so that it
 sits inside aiogram_dialog's own `ManagerMiddleware` and has `dialog_manager` in
 the data; `tests/unit/test_outdated_dialog_middleware.py` pins that ordering.
 
-Closing the dialog — rather than switching back a window — is the deliberate
-choice: whatever the dialog kept in `dialog_data` was captured against the old
-state, so the honest thing is to drop it and let the user re-enter from a window
-built out of current data. The parent dialog re-renders on the way out, so a
-button that should no longer be there disappears in the same round trip.
+Resetting the whole stack — rather than `done()`-ing just the broken dialog — is
+the deliberate choice. The dialogs underneath captured *their* `dialog_data`
+against the same state that has just turned out to be gone, so returning into
+one of them only moves the problem one window down. The main menu is the one
+window with no remembered state at all: it is built from the identity provider
+on every render, so whatever the player is now, it is right.
 
 === Guards instead of asserts
 
-Three helpers next to the exception replace the hand-written checks, so a call
+Two helpers next to the exception replace the hand-written checks, so a call
 site states which staleness it is guarding against:
 
 [cols="1,4",options="header"]
 |===
 | Helper | Answers
 
-| `get_actual_team(player, dao)`
-| the team the player is in *now*
-
-| `get_actual_team_player(player, team, dao)`
-| the acting player's own membership in that team
+| `get_actual_team_player(identity)`
+| the acting player's membership right now, `.team` included — a thin
+  translation of `IdentityProvider.get_required_full_team_player`, turning
+  `PlayerNotInTeam` into `DialogOutdated`
 
 | `get_actual_teammate(teammate, team, dao)`
-| another player's membership *in that team* — not wherever they are today
+| another player's membership *in that team* — not wherever they are today.
+  `IdentityProvider` only knows the acting player, so this one takes a dao
 |===
+
+The acting player's side goes through `IdentityProvider` rather than a fresh
+`get_my_team(player, dao)`: it is the same source the windows render from, it
+caches within the request, and `AGENTS.md` already asks for it everywhere but
+the dao layer. One helper covers both "is there a team" and "am I in it",
+because `dto.FullTeamPlayer` carries `.team`.
 
 === The "my team" window resolves its team on every render
 
@@ -125,9 +137,11 @@ card body is shared with the public team view through `team_card()`.
 * **Let getters return `None` and hide widgets with `when=`.** Rejected: it
   spreads a "maybe there is no team" branch through every template of a dialog
   that only makes sense for a team member.
-* **Reuse `PlayerNotInTeam`** and close the dialog on it. Rejected: the same
-  exception is raised about *other* players in perfectly healthy flows, so it
-  cannot mean "this window is stale".
+* **Treat `PlayerNotInTeam` itself as "outdated"** in the middleware, with no
+  new exception. Rejected: the same exception is raised about *other* players in
+  perfectly healthy flows, so by itself it cannot mean "this window is stale".
+  It is translated at the point where it does mean that, in
+  `get_actual_team_player`.
 
 == Consequences
 
@@ -135,10 +149,10 @@ card body is shared with the public team view through `team_card()`.
   — with one `raise`, and the user gets told why.
 * One more middleware in the dialogs router. It only wraps a `try/except`, but
   it is on the hot path of every dialog event.
-* Closing the dialog loses whatever the user had typed into it. That is the
-  point (the data was captured against stale state), but it is a real cost for
-  multi-step dialogs, and a future variant that switches to a safe window
-  instead is not precluded.
+* Resetting the stack loses whatever the user had typed into the dialogs below
+  as well. That is the point (their data was captured against the same stale
+  state), but it is a real cost for a deep stack, and a future variant that
+  falls back to a named safe window instead is not precluded.
 * `DialogOutdated` is tgbot-only. If the API grows the same problem, it needs
   its own answer — the exception must not migrate into `core`.
 
@@ -166,5 +180,6 @@ None yet.
 == Open questions
 
 * Should `DialogOutdated` be able to name a window to fall back to, instead of
-  always closing? The captain's bridge losing the whole dialog because one
-  selected player left is heavier than it needs to be.
+  always landing in the main menu? The captain's bridge being reset because one
+  selected player left is heavier than it needs to be — going back to the player
+  list would do.

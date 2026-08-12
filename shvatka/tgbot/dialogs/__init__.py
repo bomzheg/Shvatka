@@ -82,7 +82,7 @@ def setup(router: Router, message_manager: MessageManagerProtocol) -> BgManagerF
 
 
 def setup_outdated_dialogs(dialogs_router: Router) -> None:
-    """Let any dialog handler or getter close itself by raising `DialogOutdated`.
+    """Let any dialog handler or getter bail out by raising `DialogOutdated`.
 
     Must run after `setup_dialogs`: inner middlewares are applied in
     registration order, and this one needs `dialog_manager` in the data, which

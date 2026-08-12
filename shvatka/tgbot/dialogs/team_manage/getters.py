@@ -8,34 +8,23 @@ from dishka.integrations.aiogram_dialog import inject
 from shvatka.core.players.player import get_team_players
 from shvatka.core.views.texts import PERMISSION_EMOJI
 from shvatka.infrastructure.db.dao.holder import HolderDao
-from shvatka.tgbot.dialogs.outdated import (
-    get_actual_team,
-    get_actual_team_player,
-    get_actual_teammate,
-)
+from shvatka.tgbot.dialogs.outdated import get_actual_team_player, get_actual_teammate
 
 
 @inject
-async def get_my_team_(
-    dao: HolderDao, identity: FromDishka[IdentityProvider], **_
-) -> dict[str, Any]:
-    player = await identity.get_required_player()
-    team = await get_actual_team(player, dao.team_player)
-    return {
-        "team": team,
-        "team_player": await get_actual_team_player(player, team, dao.team_player),
-    }
+async def get_my_team_(identity: FromDishka[IdentityProvider], **_) -> dict[str, Any]:
+    team_player = await get_actual_team_player(identity)
+    return {"team": team_player.team, "team_player": team_player}
 
 
 @inject
 async def get_team_with_players(
     dao: HolderDao, identity: FromDishka[IdentityProvider], **_
 ) -> dict[str, Any]:
-    player = await identity.get_required_player()
-    team = await get_actual_team(player, dao.team_player)
-    team_player = await get_actual_team_player(player, team, dao.team_player)
+    team_player = await get_actual_team_player(identity)
+    team = team_player.team
     players = await get_team_players(team=team, dao=dao.team_player)
-    excluded = [player.id]
+    excluded = [team_player.player.id]
     if team.captain:
         excluded.append(team.captain.id)
     return {
@@ -52,9 +41,8 @@ async def get_selected_player(
     identity: FromDishka[IdentityProvider],
     **_,
 ):
-    player = await identity.get_required_player()
-    team = await get_actual_team(player, dao.team_player)
-    team_player = await get_actual_team_player(player, team, dao.team_player)
+    team_player = await get_actual_team_player(identity)
+    team = team_player.team
     selected_player = await dao.player.get_by_id(dialog_manager.dialog_data["selected_player_id"])
     selected_team_player = await get_actual_teammate(selected_player, team, dao.team_player)
     return {

@@ -9,8 +9,9 @@ option.
 
 `DialogOutdated`, raised from a getter or a handler, is how a dialog says "what
 I was opened for is gone". `OutdatedDialogMiddleware` catches it, tells the user
-what happened and closes the dialog, so they land back in a window built from
-current data instead of seeing an `assert` blow up.
+what happened and drops them back into the main menu, which is built out of
+current data - instead of an `assert` blowing up or a window rendering around a
+team that isn't there.
 """
 
 import logging
@@ -19,12 +20,15 @@ from typing import Any
 
 from aiogram import BaseMiddleware
 from aiogram.types import CallbackQuery, Message, TelegramObject
-from aiogram_dialog import DialogManager
+from aiogram_dialog import DialogManager, StartMode
 from aiogram_dialog.manager.manager_middleware import MANAGER_KEY
 
-from shvatka.core.interfaces.dal.player import PlayerTeamChecker, TeamPlayerGetter
+from shvatka.core.interfaces.dal.player import TeamPlayerGetter
+from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.models import dto
-from shvatka.core.players.player import get_full_team_player_or_none, get_my_team
+from shvatka.core.players.player import get_full_team_player_or_none
+from shvatka.core.utils.exceptions import PlayerNotInTeam
+from shvatka.tgbot import states
 
 logger = logging.getLogger(__name__)
 
@@ -45,22 +49,17 @@ class DialogOutdated(Exception):
         self.text = text or notify_user
 
 
-async def get_actual_team(player: dto.Player, dao: PlayerTeamChecker) -> dto.Team:
-    """The team the player belongs to right now, whatever the window shows."""
-    team = await get_my_team(player=player, dao=dao)
-    if team is None:
-        raise DialogOutdated(NOT_IN_TEAM, f"player {player.id} is not in a team anymore")
-    return team
+async def get_actual_team_player(identity: IdentityProvider) -> dto.FullTeamPlayer:
+    """The acting player's membership as it is right now, `.team` included.
 
-
-async def get_actual_team_player(
-    player: dto.Player, team: dto.Team, dao: TeamPlayerGetter
-) -> dto.FullTeamPlayer:
-    """The acting player's own membership in `team`, as it is right now."""
-    team_player = await get_full_team_player_or_none(player=player, team=team, dao=dao)
-    if team_player is None:
-        raise DialogOutdated(NOT_IN_TEAM, f"player {player.id} is not in team {team.id} anymore")
-    return team_player
+    The window was rendered against whatever `IdentityProvider` answered back
+    then; this asks it again, and turns "not in a team" from a domain error
+    into "this window is stale".
+    """
+    try:
+        return await identity.get_required_full_team_player()
+    except PlayerNotInTeam as e:
+        raise DialogOutdated(NOT_IN_TEAM, f"player {e.player_id} is not in a team anymore") from e
 
 
 async def get_actual_teammate(
@@ -71,6 +70,7 @@ async def get_actual_teammate(
     Guards the "selected player" of the captain's bridge: by the time the
     captain presses a button the player may have left, or even joined another
     team - and acting on their current membership would touch the wrong team.
+    `IdentityProvider` only knows the acting player, so this one takes the dao.
     """
     team_player = await get_full_team_player_or_none(player=teammate, team=team, dao=dao)
     if team_player is None:
@@ -81,11 +81,11 @@ async def get_actual_teammate(
 
 
 class OutdatedDialogMiddleware(BaseMiddleware):
-    """Turns `DialogOutdated` into a notification and a closed dialog.
+    """Turns `DialogOutdated` into a notification and a fresh main menu.
 
     Installed as an inner middleware of the dialogs router, so it wraps every
     dialog handler - including the window getters, which run inside `show()`
-    and therefore cannot close the dialog themselves.
+    and therefore cannot end the dialog themselves.
     """
 
     async def __call__(
@@ -99,7 +99,7 @@ class OutdatedDialogMiddleware(BaseMiddleware):
         except DialogOutdated as e:
             logger.info("dialog is outdated: %s", e.text, exc_info=e)
             await self._notify(event, e)
-            await self._close(data.get(MANAGER_KEY))
+            await self._restart(data.get(MANAGER_KEY))
             return None
 
     async def _notify(self, event: TelegramObject, e: DialogOutdated) -> None:
@@ -108,7 +108,13 @@ class OutdatedDialogMiddleware(BaseMiddleware):
         elif isinstance(event, Message):
             await event.answer(e.notify_user)
 
-    async def _close(self, manager: DialogManager | None) -> None:
-        if manager is None or not manager.has_context():
+    async def _restart(self, manager: DialogManager | None) -> None:
+        """Drop the whole stack, not just the broken dialog.
+
+        Whatever the dialogs below kept in their `dialog_data` was captured
+        against the same state that just turned out to be gone, so returning
+        into one of them only moves the problem one window down.
+        """
+        if manager is None:
             return
-        await manager.done()
+        await manager.start(states.MainMenuSG.main, mode=StartMode.RESET_STACK)

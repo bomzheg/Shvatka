@@ -11,7 +11,7 @@ from shvatka.core.players.player import leave
 from shvatka.core.views.team import TeamNotifier
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.tgbot import states
-from shvatka.tgbot.dialogs.outdated import get_actual_team
+from shvatka.tgbot.dialogs.outdated import get_actual_team_player
 from shvatka.tgbot.dialogs.team_view.common import get_active_filter, get_archive_filter
 
 
@@ -41,7 +41,6 @@ async def on_leave_team(
     team_notifier: FromDishka[TeamNotifier],
 ):
     dao: HolderDao = dialog_manager.middleware_data["dao"]
-    player = await identity.get_required_player()
-    await get_actual_team(player, dao.team_player)
+    player = (await get_actual_team_player(identity)).player
     await leave(player, player, dao.team_leaver, notifier=team_notifier)
     await dialog_manager.done()

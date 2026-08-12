@@ -479,11 +479,12 @@ with a curated ignore list, mypy overrides) lives in `pyproject.toml`.
   start (a team id in `dialog_data`, a permission a button was shown for) may be
   false by the time the button is pressed. Don't `assert` it and don't quietly
   `done()`: raise `DialogOutdated` (`tgbot/dialogs/outdated.py`) from the getter
-  or the handler — `OutdatedDialogMiddleware` answers the user and closes the
-  dialog. For team state use the guards next to it (`get_actual_team`,
-  `get_actual_team_player`, `get_actual_teammate`) rather than rolling the check
-  by hand. Better still, don't cache the state: resolve it in the getter on
-  every render, the way `my_team_getter` does. See SHEP-0005.
+  or the handler — `OutdatedDialogMiddleware` answers the user and restarts them
+  in the main menu. For the acting player's team use
+  `get_actual_team_player(identity)` (it translates `PlayerNotInTeam` for you
+  and carries `.team`), and `get_actual_teammate` for anybody else. Better
+  still, don't cache the state: resolve it in the getter on every render, the
+  way `my_team_getter` does. See SHEP-0005.
 - **In aiogram / aiogram_dialog handlers, take dependencies from DI**
   (`FromDishka[...]` on an `@inject`-decorated handler) rather than reaching
   into `manager.middleware_data` / event middleware data. That includes

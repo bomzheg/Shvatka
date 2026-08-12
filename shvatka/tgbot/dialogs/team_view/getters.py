@@ -9,7 +9,7 @@ from shvatka.core.models import dto
 from shvatka.core.players.player import get_team_players
 from shvatka.core.services.team import get_teams, get_team_by_id, get_played_games
 from shvatka.infrastructure.db.dao.holder import HolderDao
-from shvatka.tgbot.dialogs.outdated import get_actual_team
+from shvatka.tgbot.dialogs.outdated import get_actual_team_player
 from .common import get_active_filter, get_archive_filter
 
 
@@ -40,8 +40,7 @@ async def my_team_getter(dao: HolderDao, identity: FromDishka[IdentityProvider],
     the dialog started: between the two the player may have been removed from
     the team, and then there is no card to show at all.
     """
-    player = await identity.get_required_player()
-    return await team_card(await get_actual_team(player, dao.team_player), dao)
+    return await team_card((await get_actual_team_player(identity)).team, dao)
 
 
 async def team_card(team: dto.Team, dao: HolderDao) -> dict[str, Any]:

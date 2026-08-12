@@ -1,7 +1,8 @@
 """What happens when a dialog says the state it was opened for is gone.
 
-The user must learn why the window stopped working, and the window itself must
-go away - otherwise every next click hits the same dead state. See issue #339.
+The user must learn why the window stopped working, and must land somewhere
+built out of current data - otherwise every next click hits the same dead
+state. See issue #339.
 """
 
 from datetime import datetime
@@ -11,10 +12,11 @@ from unittest.mock import AsyncMock, patch
 import pytest
 from aiogram import Router
 from aiogram.types import CallbackQuery, Chat, Message
-from aiogram_dialog import DialogManager, setup_dialogs
+from aiogram_dialog import DialogManager, StartMode, setup_dialogs
 from aiogram_dialog.manager.manager_middleware import MANAGER_KEY, ManagerMiddleware
 
 from shvatka.core.utils.datetime_utils import tz_utc
+from shvatka.tgbot import states
 from shvatka.tgbot.dialogs import setup_outdated_dialogs
 from shvatka.tgbot.dialogs.outdated import DialogOutdated, OutdatedDialogMiddleware
 from tests.fixtures.user_constants import create_tg_user
@@ -41,10 +43,14 @@ def create_message() -> Message:
     )
 
 
-def create_manager(has_context: bool = True) -> DialogManager:
-    manager = AsyncMock(DialogManager)
-    manager.has_context = lambda: has_context
-    return manager
+def create_manager() -> DialogManager:
+    return AsyncMock(DialogManager)
+
+
+def assert_main_menu_restarted(manager: DialogManager) -> None:
+    manager.start.assert_awaited_once_with(  # type: ignore[attr-defined]
+        states.MainMenuSG.main, mode=StartMode.RESET_STACK
+    )
 
 
 async def run(event: Any, manager: DialogManager | None) -> None:
@@ -56,35 +62,37 @@ async def run(event: Any, manager: DialogManager | None) -> None:
 
 
 @pytest.mark.asyncio
-async def test_button_click_is_answered_with_alert_and_dialog_closed():
+async def test_button_click_is_answered_with_alert_and_menu_restarted():
     manager = create_manager()
 
     with patch.object(CallbackQuery, "answer", new_callable=AsyncMock) as answer:
         await run(create_callback(), manager)
 
     answer.assert_awaited_once_with(NOTIFY, show_alert=True)
-    manager.done.assert_awaited_once()
+    assert_main_menu_restarted(manager)
 
 
 @pytest.mark.asyncio
-async def test_typed_answer_is_replied_and_dialog_closed():
+async def test_typed_answer_is_replied_and_menu_restarted():
     manager = create_manager()
 
     with patch.object(Message, "answer", new_callable=AsyncMock) as answer:
         await run(create_message(), manager)
 
     answer.assert_awaited_once_with(NOTIFY)
-    manager.done.assert_awaited_once()
+    assert_main_menu_restarted(manager)
 
 
 @pytest.mark.asyncio
-async def test_nothing_to_close_when_the_dialog_is_already_gone():
-    manager = create_manager(has_context=False)
+async def test_dialogs_under_the_broken_one_are_dropped_too():
+    """They kept their own data from the same state that turned out to be gone."""
+    manager = create_manager()
 
     with patch.object(CallbackQuery, "answer", new_callable=AsyncMock):
         await run(create_callback(), manager)
 
     manager.done.assert_not_awaited()
+    assert_main_menu_restarted(manager)
 
 
 @pytest.mark.asyncio
@@ -97,7 +105,7 @@ async def test_user_is_still_notified_without_a_dialog_manager():
 
 @pytest.mark.parametrize("observer", ["callback_query", "message"])
 def test_installed_inside_the_aiogram_dialog_manager(observer: str):
-    """Without `dialog_manager` in the data there is nothing to close."""
+    """Without `dialog_manager` in the data there is no dialog to restart."""
     router = Router()
     setup_dialogs(router)
     setup_outdated_dialogs(router)

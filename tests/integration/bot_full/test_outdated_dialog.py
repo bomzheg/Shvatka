@@ -11,6 +11,7 @@ import pytest
 from aiogram import Bot, Dispatcher
 from aiogram.client.session.base import BaseSession
 from aiogram.methods import AnswerCallbackQuery
+from aiogram.types import Message
 from aiogram_dialog.test_tools import BotClient, MockMessageManager
 from aiogram_dialog.test_tools.keyboard import InlineButtonTextLocator
 
@@ -32,6 +33,8 @@ from tests.mocks.team_notifier import TeamNotifierMock
 MY_TEAM_BUTTON = "🚩Моя команда"
 MANAGE_TEAM_BUTTON = "🚩Управление командой"
 PLAYERS_BUTTON = "👥Игроки"
+# always in the main menu, whether the player has a team or not
+TEAMS_BUTTON = "👥Команды"
 
 
 @pytest.fixture
@@ -66,8 +69,7 @@ async def test_my_team_opened_after_removed_from_team(
     await hermione_client.click(main_menu, InlineButtonTextLocator(MY_TEAM_BUTTON))
 
     assert_answered_with(bot_session, NOT_IN_TEAM)
-    # the dialog is closed, so the main menu is shown again - without the button
-    assert find_button(message_manager.last_message(), MY_TEAM_BUTTON) is None
+    assert_main_menu_without(message_manager.last_message(), MY_TEAM_BUTTON)
 
 
 @pytest.mark.asyncio
@@ -99,7 +101,7 @@ async def test_captains_bridge_opened_after_removed_from_team(
     await hermione_client.click(captains_bridge, InlineButtonTextLocator(PLAYERS_BUTTON))
 
     assert_answered_with(bot_session, NOT_IN_TEAM)
-    assert find_button(message_manager.last_message(), PLAYERS_BUTTON) is None
+    assert_main_menu_without(message_manager.last_message(), PLAYERS_BUTTON)
 
 
 async def open_main_menu(client: BotClient, message_manager: MockMessageManager):
@@ -108,8 +110,10 @@ async def open_main_menu(client: BotClient, message_manager: MockMessageManager)
     return message_manager.last_message()
 
 
-def find_button(message, text: str):
-    return InlineButtonTextLocator(text).find_button(message)
+def assert_main_menu_without(message: Message, gone: str) -> None:
+    """The user is dropped into a menu built from current data."""
+    assert InlineButtonTextLocator(TEAMS_BUTTON).find_button(message) is not None
+    assert InlineButtonTextLocator(gone).find_button(message) is None
 
 
 def assert_answered_with(bot_session: BaseSession, text: str) -> None:

@@ -1,0 +1,411 @@
+= SHEP-0002 — Custom key prefixes
+:navtitle: SHEP-0002 Custom key prefixes
+
+[cols="1,4"]
+|===
+| SHEP | 0002
+| Title | Custom key prefixes
+| Status | `Accepted` — decided, no code yet
+| Created | 2026-07-31
+| Updated | 2026-08-12
+| Related | issue #162, PR #319, subtasks #326–#332
+|===
+
+== Summary
+
+A level may carry its own *key prefix* instead of the hardcoded `SH`/`СХ`, so an
+author can run a game where keys look like `ZZПРИВЕТ`. The prefix is one
+optional field on the level scenario; a level that does not set it behaves
+exactly as today.
+
+A custom prefix *replaces* the defaults for that level rather than adding to
+them, and a key typed with the wrong prefix is an ordinary wrong key — logged
+and counted like any other miss. Those two choices together keep the change
+small: the play path needs no prefix awareness at all.
+
+== Context
+
+Key format lives in one constant and one regexp
+(`shvatka/core/utils/input_validation.py`):
+
+[source,python]
+----
+KEY_PREFIXES = ("SH", "СХ")
+KEY_PREFIXES_REGEXP = "|".join(KEY_PREFIXES)
+KEY_REGEXP = re.compile(rf"^(?:{KEY_PREFIXES_REGEXP})[A-Z\dА-ЯЁ]+$")
+----
+
+Everything that asks "is this a key" reads that one constant, so nothing can
+vary per level. The consumers, ordered by how much level context each one has:
+
+[cols="3,2,4",options="header"]
+|===
+| Call site | Has the level? | Note
+
+| `core/services/key.py:31` — `KeyProcessor.check_key`
+| not yet, but `submit_key:47` fetches `lvl`
+| validation happens *before* the level is known
+
+| `core/services/level_testing.py:84`
+| yes — `suite.level`
+| easy
+
+| `core/models/dto/action/keys.py:36` — `BonusKey.__post_init__`
+| *no*
+| a value object validating itself against a global
+
+| `tgbot/filters/is_key.py`
+| *no*
+| sync aiogram filter, no DI, no game context
+
+| `tgbot/dialogs/level_scn/handlers.py:69` — `convert_keys`
+| the level being edited
+| author-side input
+
+| `core/views/texts.py:9` — `INVALID_KEY_ERROR`
+| no
+| f-string built at *import* time
+
+| `core/utils/exceptions.py:366` — `InvalidKey.notify_user`
+| no
+| hardcodes "начинается не с SH/СХ"
+|===
+
+Two facts about the existing code shape the decision:
+
+* *Authored keys are barely validated.* `BonusKey` checks itself; the keys of a
+  master key (`KeyWinCondition`) and of effects keys (`KeyEffectsCondition`) are
+  validated *nowhere*.
+* *The level scenario is already JSONB.* `ScenarioField` in
+  `infrastructure/db/models/level.py` dumps and loads `scn.LevelScenario`
+  through an adaptix retort, so a new scenario field needs no schema change.
+
+== Decision
+
+=== The prefix belongs to a level
+
+`LevelScenario` gains one optional field:
+
+[source,python]
+----
+@dataclass
+class LevelScenario:
+    id: str
+    time_hints: HintsList
+    conditions: Conditions
+    __model_version__: Literal[1]
+    keys_prefix: str | None = None      # None → DEFAULT_KEY_PREFIXES
+
+    def get_key_prefixes(self) -> tuple[str, ...]:
+        return (self.keys_prefix,) if self.keys_prefix else DEFAULT_KEY_PREFIXES
+----
+
+Not the game, not the author, not the config. A game whose levels want one
+shared prefix sets the same value on each level; making that convenient is a
+*web editor* job (see <<phases>>, phase 6), not a second place where a prefix
+can live. The moment a prefix can be stored in two places, every read needs a
+precedence rule and every level has to know whether its value is its own or
+inherited.
+
+=== A custom prefix replaces the defaults
+
+In a level with prefix `ZZ`, `SH…` and `СХ…` are no longer keys. This falls out
+of the model for free: correctness is set membership in the level's conditions,
+so a `SH…` string simply is not among the level's keys.
+
+=== One optional field, no model version bump
+
+The field lives inside the existing `levels.scenario` JSONB column, so *there is
+no alembic migration*, and `__model_version__` stays `1`. An optional field with
+a default loads every existing v1 document unchanged — in the database and in
+every exported `.yml`/zip.
+
+A bump would also be expensive here. `core/migration_utils/` shows what one
+costs in this project: an entire parallel `models_0` package (`level.py`,
+`game.py`, `time_hint.py`, `hint_part.py`, …) plus a migrator per type in
+`from_1_to_2/migrators.py`. That machinery is the right shape for a *structural*
+change and the wrong price for one nullable string, and it would leave a
+`models_1` package to maintain forever.
+
+The only case a bump would guard is an older deployment importing a newer
+export. There the graceful outcome — prefix ignored, defaults apply — is better
+than the hard parse error a version check would produce.
+
+One adaptix detail: the retort dumps every field, so without an `omit_default()`
+recipe in `common/factory.py` every stored scenario and every export gains
+`keys_prefix: null`.
+
+=== Prefixes are parameters, not a constant
+
+[source,python]
+----
+DEFAULT_KEY_PREFIXES = ("SH", "СХ")
+# letters only, and one alphabet per prefix — never both
+KEY_PREFIX_REGEXP = re.compile(r"^(?:[A-Z]{1,10}|[А-ЯЁ]{1,10})$")
+
+def build_key_regexp(prefixes: Sequence[str]) -> re.Pattern: ...
+def normalize_key(key_expectant: str, prefixes=DEFAULT_KEY_PREFIXES) -> str | None: ...
+def is_key_valid(key_expectant: str, prefixes=DEFAULT_KEY_PREFIXES) -> bool: ...
+def is_multiple_keys_normal(keys, prefixes=DEFAULT_KEY_PREFIXES) -> bool: ...
+def validate_key_prefix(prefix: str) -> str | None: ...
+----
+
+Keeping the current values as the default argument means every call site with no
+level context keeps behaving as today, and each one is migrated deliberately.
+`build_key_regexp` is `lru_cache`d — it runs per typed key. `KEY_PREFIXES` stays
+as a deprecated alias for one release.
+
+*The prefix rule is stricter than the key rule, on purpose.* Letters only — a
+prefix ending in a digit makes the prefix/body boundary ambiguous — and a single
+alphabet: `ZZ` and `ЖЖ` are fine, `SХ` (latin S, cyrillic Х) is not. That one
+rule kills the homoglyph trap where two visually identical prefixes are
+different strings.
+
+It does *not* apply to the key body, which keeps mixing alphabets:
+`tests/fixtures/resources/valid_keys.txt` has `SHПРИВЕТ` and `СХHFJD` as valid
+today and they must stay valid.
+
+=== Authored keys are validated by the level, not by the key
+
+`BonusKey.__post_init__` cannot know its level's prefix, so prefix correctness
+moves up:
+
+* `BonusKey.__post_init__` — checks only the body charset and the bonus range;
+* `LevelScenario.__post_init__` — checks every key in `conditions.get_keys()`
+  against the level's prefixes.
+
+This is more coverage than exists today, since master-key and effects-key keys
+were never checked. It is also the one change that can reject scenarios which
+currently load, so existing scenarios need a scan first; if any fail, the check
+degrades to a warning when `keys_prefix is None`.
+
+=== The play path stays prefix-blind
+
+Because a wrong-prefix key is just a wrong key, `LevelScenario.check` already
+returns `WrongKeyDecision` for `SH123` in a `ZZ` level and `submit_key` already
+logs it. *No per-level prefix check is added to the play path.*
+
+What changes at `core/services/key.py:31` is the opposite of a restriction.
+Today `is_key_valid(key)` rejects anything that is not `SH…`/`СХ…`, so a
+*correct* `ZZABC` would be thrown out as invalid before reaching the level. The
+gate widens to "does this look like a key attempt at all":
+
+[source,python]
+----
+if not is_key_valid(key, await self.key_prefixes.get_all()):   # defaults ∪ active custom
+    raise exceptions.InvalidKey(...)
+----
+
+It stays in `check_key` — no longer depending on the level, it does not need to
+move into `submit_key`. `level_testing.py:84` widens the same way.
+
+So the prefix has teeth in exactly three places, none of them the play path:
+authoring, the bot prefilter, and user-facing copy.
+
+=== The bot filter over-accepts on purpose
+
+`tgbot/filters/is_key.py` is a sync function with no DI, registered in
+`handlers/game/play.py:35` and as a `MessageInput` filter in
+`dialogs/level_manage/dialogs.py:141`. As written it can only ever match
+`SH…`/`СХ…`, so a custom-prefix key would never reach the handler.
+
+It becomes a *candidate extractor, not the authority*:
+
+* a core interface `ActiveKeyPrefixesProvider`, with an infra implementation
+  returning `DEFAULT_KEY_PREFIXES ∪ {custom prefixes of levels of active games}`;
+* the implementation queries `levels.scenario ->> 'keys_prefix'` joined to active
+  games — few rows, and `CurrentGameProvider` already establishes the "one active
+  game" pattern;
+* cached per request plus a short process-level TTL, since it is hit on *every*
+  text message in team chats;
+* `is_key` becomes a dishka-injected class-based filter matching that union.
+
+Letting it over-accept is what keeps it cheap. In a `ZZ` level a message `SH123`
+passes the filter, reaches the level, matches no key and is logged as a wrong
+key. The level's key set is the only thing deciding correctness.
+
+=== Copy names the prefixes in play
+
+`INVALID_KEY_ERROR` (`core/views/texts.py:9`) and `InvalidKey.notify_user` are
+built at import time and both name SH/СХ. They become functions of the prefixes
+in play. This copy is seen *less* often than today: a well-formed key with the
+wrong prefix now gets the ordinary wrong-key response instead of a format
+complaint.
+
+=== The glossary changes with the code
+
+`context.md` requires it: "when the domain gains a concept (or an existing word
+shifts meaning), change this file in the same PR that changes the code". Three
+edits:
+
+* *Key / Ключ* — "Starts with `SH` or `СХ`" stops being true; it starts with the
+  level's key prefix.
+* *Code / код*, in _Words we don't use_ — justified by "only a key has the
+  `SH`/`СХ` format"; reword without naming the defaults.
+* A new *Key prefix / Префикс ключа* row next to *Master key* and *Effects key*.
+  The Russian term is settled by the issue title — «Кастомные префиксы ключей».
+
+The web front-end carries the same glossary in its own `context.md` and
+`context.md` requires the two to be kept in sync, so the same three edits are due
+in https://github.com/bomzheg/shvatka-ui[shvatka-ui] even though no UI code has
+to change for the engine to work.
+
+[[alternatives]]
+=== Alternatives considered
+
+[cols="2,3",options="header"]
+|===
+| Option | Why it lost
+
+| Prefix on the *game*, levels inherit
+| Convenient for a 20-level game, but it puts the prefix in two places once a
+  level may override. Every read then needs a precedence rule. The same
+  convenience is available as an "apply to all levels" button in the web editor,
+  with one storage location.
+
+| Prefix on the *author*, all their games inherit
+| An author's prefix is a property of a particular game's flavour, not of the
+  person. Two games by one author routinely want different ones.
+
+| Just extend `KEY_PREFIXES` in config
+| Cheapest possible change and genuinely enough for "we want `ZZ` too", but it
+  is engine-wide: every game gets every prefix, and an author cannot make `SH`
+  keys *wrong* in their game.
+
+| Custom prefix *adds to* `SH`/`СХ`
+| Safer for players' muscle memory, but then a game can never treat a `SH…`
+  string as a wrong key — which is exactly the misdirection some authors want.
+
+| Bump `__model_version__` to 2
+| See above: in this codebase a bump means a parallel model package plus
+  migrators, for one nullable string.
+
+| Wrong prefix → `InvalidKey`, not a wrong key
+| Consistent with "replace" semantics, and it could tell the player which prefix
+  the game uses. Rejected because it splits one player-visible behaviour
+  (a key that does not work) into two, and it would require the play path to
+  know the level's prefix — the single change that keeps §"play path" empty.
+
+| Loose filter, strict core (accept any uppercase word)
+| Removes the need for a prefixes provider, but turns every stray CAPS message in
+  a team chat into a wrong-key row in the key log.
+|===
+
+== Consequences
+
+*Made easy.* Prefixes are settable through the API and scenario upload as soon
+as the scenario field exists — no migration, no schema work, no version
+negotiation. Games stay portable: a scenario exported with a prefix imports with
+it, and one exported without a prefix is byte-identical to today.
+
+*Made harder.* One more thing an author can get wrong, and one more thing a
+player can be confused by — a key that works in one level and not the next.
+The user documentation has to explain the prefix rather than state SH/СХ as law.
+
+*Costs and one-way doors:*
+
+* `LevelScenario.__post_init__` starts rejecting scenarios whose keys do not
+  match their prefixes. That is new validation on data that was never checked,
+  so it needs a scan of stored scenarios before it can be enforced.
+* The bot prefilter gains a lookup on every text message in team chats. It is
+  cached, and `ACTIVE_STATUSES` allows one active game at a time, but it is no
+  longer a pure function.
+* The key log now contains wrong-prefix attempts as ordinary wrong keys. This is
+  the deliberate consequence of the decision above; per-team wrong-key counts in
+  a custom-prefix game will include players typing `SH…` out of habit.
+* A key matching *another* concurrently active game's prefix is logged as a wrong
+  key rather than rejected. With one active game at a time this is close to
+  theoretical.
+* Storing the prefix per level is the reversible choice; adding a game-level
+  default later is additive. Starting with a game-level field and pushing it down
+  to levels would not have been.
+
+[[phases]]
+== Phases and status
+
+[cols="1,4,2",options="header"]
+|===
+| Phase | Content | Status
+
+| 1
+| Parametrise `input_validation` by prefixes, add `validate_key_prefix`
+| ⏳ not started (#326)
+
+| 2
+| `LevelScenario.keys_prefix`, validation of authored keys, glossary in both repos
+| ⏳ not started (#327)
+
+| 3
+| Widen the play-path and level-testing gate; prefix-aware copy
+| ⏳ not started (#328)
+
+| 4
+| `ActiveKeyPrefixesProvider` + injected `is_key` filter
+| ⏳ not started (#329)
+
+| 5
+| Author UI: set the prefix in the bot level editor
+| ⏳ not started (#330)
+
+| 6
+| Author UI: set the prefix in the web editor, incl. "apply to all levels"
+| ⏳ not started (#331)
+
+| 7
+| User docs — `level-concept.adoc` states the SH/СХ rule as absolute
+| ⏳ not started (#332)
+|===
+
+Phases 1–3 leave the engine working end to end for scenarios uploaded through
+the API or as a zip. Phase 4 is what makes a custom-prefix key typeable in a
+Telegram game, so it is the last *required* phase; 5–7 are ergonomics and
+documentation.
+
+=== Phase 1 — parametrise validation ⏳
+
+* [ ] `DEFAULT_KEY_PREFIXES`, `build_key_regexp` (`lru_cache`d), prefix-taking
+  `normalize_key` / `is_key_valid` / `is_multiple_keys_normal`
+* [ ] `validate_key_prefix` — letters only, one alphabet, rejects `SХ`
+* [ ] `KEY_PREFIXES` kept as a deprecated alias
+* [ ] `tests/unit/input_validation/test_key_validation.py` parametrised over
+  prefixes, including `SH…` invalid under a custom prefix
+
+=== Phase 2 — the scenario field ⏳
+
+* [ ] `LevelScenario.keys_prefix` + `get_key_prefixes()`
+* [ ] `omit_default()` recipe so unset scenarios round-trip unchanged
+* [ ] prefix check moved out of `BonusKey.__post_init__` into
+  `LevelScenario.__post_init__`
+* [ ] scan of stored scenarios for keys that would now fail
+* [ ] glossary rows in `context.md` here and in shvatka-ui
+
+=== Phase 3 — play path and copy ⏳
+
+* [ ] `check_key` / `submit_key_only` gate widened to the prefix union
+* [ ] `level_testing.py:84` likewise
+* [ ] `INVALID_KEY_ERROR` and `InvalidKey.notify_user` built from the prefixes in
+  play
+* [ ] integration test: custom-prefix key levels the team up, `SH…` is recorded
+  as a wrong key
+
+=== Phase 4 — the bot filter ⏳
+
+* [ ] `ActiveKeyPrefixesProvider` interface + infra implementation, cached
+* [ ] `is_key` as a dishka-injected filter over the union
+* [ ] level-testing dialog still matches keys
+
+[[deviations]]
+== Deviations from the plan
+
+Nothing implemented yet.
+
+== Open questions
+
+* *Prefix length cap.* The regexp above caps at 10 characters. Nothing turns on
+  the exact number; a cap exists so the union regexp stays bounded.
+* *Changing the prefix of a level that already has keys.* The bot editor has to
+  either refuse and explain, or offer to rewrite the existing keys' prefix.
+  Phase 5 decides.
+* *Prefix uniqueness across games.* Not required by anything in this document —
+  two authors may both pick `ZZ`. Worth revisiting only if the prefilter union
+  ever grows beyond one active game.

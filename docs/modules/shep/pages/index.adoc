@@ -34,6 +34,10 @@ came out of it*.
 | xref:shep-0002-custom-key-prefixes.adoc[SHEP-0002]
 | Custom key prefixes
 | Accepted
+
+| xref:shep-0003-season-schedule.adoc[SHEP-0003]
+| Season schedule
+| Accepted, not started
 |===
 
 == Status vocabulary

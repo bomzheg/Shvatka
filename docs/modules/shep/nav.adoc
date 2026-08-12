@@ -1,4 +1,5 @@
 * xref:index.adoc[SHEP — architecture decisions]
 ** xref:shep-0001-notifications-and-action-requests.adoc[SHEP-0001 Notifications and action requests]
 ** xref:shep-0002-custom-key-prefixes.adoc[SHEP-0002 Custom key prefixes]
+** xref:shep-0003-season-schedule.adoc[SHEP-0003 Season schedule]
 ** xref:template.adoc[SHEP template]

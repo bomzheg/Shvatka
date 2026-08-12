@@ -1,0 +1,778 @@
+= SHEP-0003 — Season schedule
+:navtitle: SHEP-0003 Season schedule
+
+[cols="1,4"]
+|===
+| SHEP | 0003
+| Title | Season schedule
+| Status | `Accepted` — nothing implemented yet, phase 1 not started
+| Created | 2026-07-26
+| Updated | 2026-08-12
+| Related | issue #167, PR #306; xref:shep-0001-notifications-and-action-requests.adoc[SHEP-0001] (which defers `season_schedule_changed` to this one)
+|===
+
+== Summary
+
+The plan of the year's games moves out of a hand-maintained Telegram channel
+post and into the engine: a *season* is a list of *dates*, generated from a
+default rule, composed by an author and published in one go. Publication writes
+it to the database, announces it in the game-log channel as a pinned message
+that is edited in place ever after, and exposes it over the REST API.
+
+Every later edit is recorded, and once a day at 10:00 MSK the accumulated edits
+are collapsed to their net effect and published — as a new channel message and
+as a `low`-severity notification to everyone who has played or organized
+recently. Any author may claim a free date for themselves or for their team; a
+taken date is locked to its owner. A real game can be linked to a date, and the
+engine offers the link when a game start is planned near one.
+
+== Context
+
+Today the season plan is a message an org edits by hand in a Telegram channel.
+Nothing else knows about it:
+
+* the engine cannot tell whether a planned game matches the plan, so nothing
+  warns an author who schedules a game nobody expected;
+* players cannot subscribe to changes — which is the actual ask in issue #167
+  («чтобы можно было подписываться на уведомления индивидуально»);
+* the web UI cannot show the year at a glance;
+* nothing records *who* intends to make which game, so the claim on a date lives
+  in chat history.
+
+Most of the machinery this needs already exists.
+
+[cols="2,3,3",options="header"]
+|===
+| Existing thing | Where | Role here
+
+| `Player.can_be_author` («аппрув»)
+| `core/models/dto/player.py`, `check_allow_be_author`
+| *is* the author gate — what issue #167 calls an "approved player"
+
+| Notifications feed, web push, bot DMs
+| `core/notifications/`, `WebOrgNotifier`, `WebPushSender`
+| delivers the digest to players
+
+| `NotificationType.season_schedule_changed`, severity `low`
+| `core/models/enums/notification.py`
+| already reserved for this; SHEP-0001 defers it pending this feature
+
+| Game-log channel
+| `BotConfig.game_log_chat`, `GameBotLog` (`tgbot/views/game.py`)
+| where the schedule is announced
+
+| `BotRights.can_pin(chat_id)`
+| `tgbot/services/bot_rights.py`
+| cached rights check before pinning, as `MessagePinner` does
+
+| `action_requests.bot_messages`
+| `infrastructure/db/models/action_request.py`
+| precedent for storing chat/message ids so a bot message can be edited later
+
+| `PlanGameStartInteractor`
+| `core/games/editor_interactors.py`
+| the seam for linking a game and for the "out of schedule" marker
+
+| `GameScheduleSG` + aiogram_dialog `Calendar`
+| `tgbot/dialogs/game_manage/dialogs.py`
+| the bot flow the link offer plugs into
+
+| APScheduler with a Redis jobstore
+| `infrastructure/scheduler/`
+| runs the daily digest job
+|===
+
+Nothing named `season` exists in the codebase — this is a new domain area.
+
+== Decision
+
+=== Decisions at a glance
+
+[cols="1,4",options="header"]
+|===
+| Topic | Decision
+
+| Permissions
+| Any *author* (`can_be_author`) may compose, publish, edit and take. No new role.
+
+| Draft state
+| *None.* A season row exists only once published; composing happens in client state.
+
+| Identity
+| One season per calendar year, unique on the year. Past seasons are kept.
+
+| Generation
+| 9 dates, the first on the first Saturday *strictly after* 9 May, then every 21 days.
+
+| Granularity
+| Dates only — no time of day. The time comes from the real game.
+
+| Digest
+| Daily at 10:00 MSK, only when there is something to say, collapsed to the net change.
+
+| Audience
+| In a team now or during the current/previous year, plus orgs and authors of games in that window.
+
+| Channel message
+| Pinned on publication, edited in place on every change, unpinned when the season ends.
+
+| Game link
+| Offered within ±3 days; one game per date; the date follows the game's real start.
+
+| Taking
+| Records the owner, optionally their team (captains only), and a list of slot orgs.
+
+| Creation
+| Manual. No auto-created calendar for next year.
+
+| Past dates
+| Left untouched. No "skipped" state.
+|===
+
+=== Ubiquitous language
+
+`context.md` is the project glossary and its rule is that the glossary follows
+the domain in the same pull request that adds the code. This feature introduces
+a whole area, so the terms are settled here and land in *both* `context.md`
+files — engine and `shvatka-ui` — with phase 1.
+
+Three existing terms fix wording issue #167 phrased differently:
+
+* *Author / Автор* (`can_be_author`) is the glossary's name for an "approved
+  player". *Approved player* is not a term; this document says author
+  throughout. The «аппрув» that grants the right is *promotion*.
+* *Superuser / Админ движка* is the engine operator, resolved only through
+  `SuperusersResolver`. The digest therefore says «изменено админом движка»: in
+  this glossary *admin* means the superuser, and a game has *organizers*.
+* *Organizer / org* is a player who runs *a game*. The people named on a date
+  are not organizers yet — there is no game — so they get their own term.
+
+New entries:
+
+[cols="2,2,4,2",options="header"]
+|===
+| Term | Русский | Meaning | Where
+
+| *Season*
+| Сезон
+| One calendar year's plan of games, as a list of dates. Exists in the engine only once published.
+| `season.dto.Season`, `seasons`
+
+| *Slot*
+| Дата игры (в разговоре — просто «дата»)
+| One planned date in a season, before there is a game to put in it. Date-only; free or taken; may be linked to exactly one game.
+| `season.dto.Slot`, `season_slots`
+
+| *Taking a slot*
+| Взять дату
+| An author claiming a date, declaring whether the game will be authored by them or by their team. A taken date is locked to its owner.
+| `TakeSlotInteractor`
+
+| *Slot owner*
+| Владелец даты
+| The author who took it. Besides the superuser, the only person who may move, release or delete it.
+| `season_slots.owner_id`
+
+| *Slot org*
+| Орг на дату
+| A player the owner names as a co-organizer of the future game. Declared intent — it becomes an `Organizer` when the game exists.
+| `season_slot_orgs`
+
+| *Schedule publication*
+| Публикация расписания
+| Confirming a composed season: written to the database, announced in the game-log channel, pinned.
+| `PublishSeasonInteractor`
+
+| *Schedule change*
+| Изменение расписания
+| One recorded edit of a published season — the audit trail and the digest's raw material.
+| `season.dto.ScheduleChange`, `season_changes`
+
+| *Change digest*
+| Сводка изменений
+| The once-a-day message collapsing every unpublished change to its net effect per date.
+| `PublishSeasonDigestInteractor`
+|===
+
+==== Why «дата» in Russian and `Slot` in code
+
+People say «дата игры», or just «дата». That is the term, and every user-facing
+string uses it: «Взять дату», «Добавить дату», «Дата занята». A borrowed *слот*
+was considered and rejected — inventing a word for something the domain already
+names is what the glossary exists to prevent.
+
+The English half stays `Slot`. `date` is unusable as an identifier: a Python
+builtin, the column's own type, and it would give `season_dates.date`. The
+glossary already carries pairs whose halves are unrelated words — *Promotion /
+Аппрув*, *Puzzle / Загадка уровня*, *Waiver / Вейвер* — so `Slot` ↔ «дата игры»
+fits the pattern. What matters is that no Russian string says *слот*.
+
+==== Two collisions to resolve in the glossary
+
+. *Публикация* already means posting a finished game's *results* to a channel
+  (`GameResults.published_chanel_id`). Publishing a schedule is a different act
+  on a different aggregate. Since «опубликовать расписание» is what orgs will
+  say, qualify both entries — *публикация результатов* and *публикация
+  расписания* — rather than invent a word nobody uses.
+. *Расписание* versus planning a game's start. The engine already plans a start
+  (`PlanGameStartInteractor`, «Начало игры … запланировано на …») and the dialog
+  is called `GameScheduleSG`. That is *планирование старта игры*; unqualified
+  «расписание» means the season schedule. `GameScheduleSG` therefore contradicts
+  the glossary — noted, but renaming it is out of scope here.
+
+[[no-draft]]
+=== No draft entity
+
+The engine never stores a half-built calendar. A `seasons` row exists only in
+its published form, and composing one happens in the client:
+
+. the client asks for the *default dates* — `GetDefaultSlotDatesInteractor`, a
+  pure call with no reads and no writes, so the engine stays the single source
+  of truth for the rule while nothing is persisted;
+. the user edits that list *locally* — moves, adds, deletes, notes. In the bot
+  it lives in `dialog_data`; in the web UI in component state, mirrored to
+  `localStorage` so a refresh survives;
+. «Опубликовать» submits the whole list at once, and `PublishSeasonInteractor`
+  inserts the season and all its dates in one transaction, then announces.
+
+What this buys, and what it costs:
+
+* an unfinished composition is lost when the dialog is cancelled or the cache
+  cleared — acceptable, it is nine dates and one tap to regenerate;
+* two people may compose 2027 in parallel. The first to publish wins; the second
+  gets `SeasonAlreadyExists` → 409, and the UI offers to open the published
+  season and edit it date by date;
+* after publication there is exactly one editing path — the per-date endpoints —
+  so "edit the schedule" always means "make a tracked change". No status column,
+  no draft visibility rules, no half-published states.
+
+=== Data model
+
+Four new tables, no changes to existing ones.
+
+==== `seasons`
+
+[cols="2,2,4",options="header"]
+|===
+| column | type | notes
+
+| `id` | bigint PK |
+| `year` | int, not null, *unique* | 2026, 2027 …
+| `published_by_id` | FK `players.id`, not null | who confirmed it
+| `published_at` | timestamptz, not null |
+| `log_chat_id` | bigint, nullable | channel the schedule message lives in
+| `log_message_id` | bigint, nullable | *the message edited in place on every change*
+| `unpinned_at` | timestamptz, nullable | set when the season ended and the pin was released
+| `updated_at` | timestamptz, not null |
+|===
+
+`log_chat_id` / `log_message_id` are nullable because announcing is best-effort:
+a failed channel post must not roll back a published season.
+
+==== `season_slots`
+
+[cols="2,2,4",options="header"]
+|===
+| column | type | notes
+
+| `id` | bigint PK |
+| `season_id` | FK `seasons.id` ON DELETE CASCADE, not null | indexed
+| `date` | date, not null | *date only*, read in MSK (`tz_game`)
+| `note` | text, nullable | free text — «зимняя игра», a city
+| `owner_id` | FK `players.id`, nullable | null ⇒ free
+| `author_kind` | text, nullable | `player` or `team`; null while free
+| `team_id` | FK `teams.id`, nullable | only when `author_kind` is `team`
+| `game_id` | FK `games.id` ON DELETE SET NULL, nullable, *unique* | at most one game per date, and a game sits in at most one date
+| `taken_at` | timestamptz, nullable |
+| `created_at` / `updated_at` | timestamptz, not null |
+|===
+
+Indexes: `(season_id, date)` for the calendar, unique `(game_id)` where not
+null, `(owner_id)` for "my dates".
+
+There is deliberately *no* unique constraint on `(season_id, date)`. The
+generator never produces duplicates, but syncing a date to its linked game can
+push two onto the same day, and two short games in one night is a legitimate
+plan.
+
+==== `season_slot_orgs`
+
+`id` PK, `slot_id` FK ON DELETE CASCADE, `player_id` FK ON DELETE CASCADE,
+unique `(slot_id, player_id)`.
+
+These are the *slot orgs*: the co-orgs an owner names for a game that does not
+exist yet. Declared intent only, independent of the `organizers` table, which
+gets rows once there is a real game to organize.
+
+==== `season_changes` — the accumulator
+
+One row per mutation. Since a season is only ever persisted published, every
+change row is by definition post-publication: this is both the audit trail and
+the digest's source.
+
+[cols="2,2,4",options="header"]
+|===
+| column | type | notes
+
+| `id` | bigint PK |
+| `season_id` | FK `seasons.id` ON DELETE CASCADE, not null |
+| `slot_id` | FK `season_slots.id` ON DELETE SET NULL, nullable | null once the date is gone
+| `type` | text, not null | `slot_added`, `slot_moved`, `slot_removed`, `slot_taken`, `slot_released`, `slot_orgs_changed`, `slot_note_changed`, `slot_game_linked`, `slot_game_unlinked`
+| `actor_id` | FK `players.id`, nullable | who did it
+| `by_superuser` | bool, not null, default false | drives the «изменено админом движка» wording
+| `payload` | JSONB, not null, default `{}` | denormalized old/new date, owner, team, game and org names — so the digest renders with no joins and survives later renames and deletes
+| `published_at` | timestamptz, nullable | null ⇒ not yet in a digest
+| `created_at` | timestamptz, not null |
+|===
+
+Partial index `(season_id) where published_at is null` — the digest query.
+
+=== Domain model
+
+New area `shvatka/core/season/`, framework-free like the rest of `core`:
+
+* `dto.py` — `Season`, `Slot`, `SlotAuthor`, `ScheduleChange`, `ChangeType`;
+* `rules.py` — pure: default dates, permission checks, the nearest-date search,
+  digest collapsing;
+* `adapters.py` — Protocols composed from `core/interfaces/dal/*`;
+* `interactors.py` — the use cases.
+
+`dto.Slot` carries what the calendar needs without extra queries: the date, the
+note, the owner, the author kind, the team, the slot orgs, the linked game, plus
+`is_free` and `is_mine(player)`.
+
+[cols="2,3",options="header"]
+|===
+| Interactor | Does
+
+| `GetDefaultSlotDatesInteractor` | the 9 default dates for a year; pure, nothing persisted
+| `PublishSeasonInteractor` | create season + dates from a submitted list, announce, pin, notify
+| `GetSeasonInteractor` / `ListSeasonsInteractor` | reads
+| `AddSlotInteractor` / `MoveSlotInteractor` / `RemoveSlotInteractor` / `EditSlotNoteInteractor` | structural edits
+| `TakeSlotInteractor` / `ReleaseSlotInteractor` / `SetSlotOrgsInteractor` | ownership
+| `LinkGameToSlotInteractor` / `UnlinkGameFromSlotInteractor` | the game link
+| `FindSlotsNearGameStartInteractor` | read-only ±3-day lookup used by both edges
+| `SyncLinkedSlotInteractor` | move a linked date when its game's start moves
+| `PublishSeasonDigestInteractor` | the 10:00 MSK job — digest *and* end-of-season unpin
+|===
+
+Per the "at most one DAO per interactor" rule in `AGENTS.md`, all of them take
+one composed `SeasonScheduleDao` Protocol, implemented by
+`infrastructure/db/dao/complex/season.py` over per-table DAOs `SeasonDao`,
+`SeasonSlotDao`, `SeasonSlotOrgDao` and `SeasonChangeDao` — each table's writes
+stay in its own DAO, and the interactor decides the ordering.
+
+New exceptions in `core/utils/exceptions.py`: `SeasonAlreadyExists`,
+`SeasonNotFound`, `SlotAlreadyTaken`, `NotSlotOwner`, `SlotAlreadyLinked`,
+`GameAlreadyInSchedule`.
+
+The lifecycle of one date:
+
+[plantuml, format=svg]
+....
+@startuml
+hide empty description
+[*] --> free : season published / date added
+free --> taken : owner takes it
+taken --> free : owner releases it
+taken --> linked : a game is linked, the date follows the game
+free --> linked : link takes the date for the game's author
+linked --> taken : game unlinked
+linked --> [*] : season over
+free --> [*] : passed with no game, left untouched
+taken --> [*] : season over
+@enduml
+....
+
+=== Default generation
+
+[source,python]
+----
+SEASON_SLOTS_COUNT = 9
+SEASON_SLOT_INTERVAL = timedelta(days=21)
+SEASON_START_AFTER = (5, 9)  # 9 May
+
+
+def default_slot_dates(year: int) -> list[date]:
+    first = _first_saturday_after(date(year, *SEASON_START_AFTER))
+    return [first + SEASON_SLOT_INTERVAL * i for i in range(SEASON_SLOTS_COUNT)]
+
+
+def _first_saturday_after(day: date) -> date:
+    # strictly after: a Saturday falling exactly on 9 May is skipped
+    delta = (SATURDAY - day.weekday()) % 7
+    return day + timedelta(days=delta or 7)
+----
+
+Verified output:
+
+[cols="1,2,5",options="header"]
+|===
+| year | 9 May is | generated dates
+
+| 2026 | *Saturday* (skipped) | 16.05, 06.06, 27.06, 18.07, 08.08, 29.08, 19.09, 10.10, *31.10*
+| 2027 | Sunday | 15.05, 05.06, 26.06, 17.07, 07.08, 28.08, 18.09, 09.10, *30.10*
+| 2028 | Tuesday | 13.05, 03.06, 24.06, 15.07, 05.08, 26.08, 16.09, 07.10, *28.10*
+|===
+
+A fixed count of nine always lands the last game in the second half of October,
+which is what «каждые 3 недели до октября» means in practice — and it needs no
+fragile end-boundary rule. Anything may then be changed: moved, added, deleted,
+including into January–April or November–December.
+
+=== Publication, the channel message, the digest
+
+==== A dedicated announcer, not `GameLogWriter`
+
+`GameLogWriter.log()` returns `None`, and `ComplexGameLogWriter` fans out to
+several channels swallowing errors — so it cannot hand back the `message_id`
+this feature must store, edit and later unpin. Rather than distort it, a sibling
+protocol in `core/views/season.py`:
+
+[source,python]
+----
+@dataclass
+class Announcement:
+    chat_id: int
+    message_id: int
+
+
+class SeasonAnnouncer(Protocol):
+    async def publish(self, season: dto.Season) -> Announcement | None: ...
+    async def update(self, season: dto.Season) -> None: ...   # edits the stored message
+    async def announce_digest(
+        self, season: dto.Season, changes: Sequence[dto.ScheduleChange]
+    ) -> None: ...
+    async def close(self, season: dto.Season) -> None: ...    # unpin at season end
+----
+
+* `BotSeasonAnnouncer` (`tgbot/views/season.py`) — sends, pins, edits and unpins
+  in `BotConfig.game_log_chat`; checks `BotRights.can_pin` first, exactly as
+  `MessagePinner` does, and treats a missing pin right as a logged no-op;
+  `update` is a no-op when there is no stored message; swallows Telegram's
+  "message is not modified".
+* `WebSeasonAnnouncer` — no-op; the web side is served by the REST endpoint and
+  the notification feed.
+* `ComplexSeasonAnnouncer` (`shvatka/views.py`) — the same swallow-and-log shape
+  as `ComplexGameLogWriter`, except `publish` returns the bot's announcement so
+  the interactor can persist it.
+
+==== Publishing
+
+`PublishSeasonInteractor`: insert season and dates → commit → `publish` (send +
+pin) → store chat and message id → commit → write `season_schedule_changed`
+notifications, severity `low`, to the audience below.
+
+Publication itself produces *no* `season_changes` rows: the pinned message and
+the "new schedule" notification already say everything, and the first digest
+should describe changes *to* the published plan, not the plan itself.
+
+==== Edit immediately, digest daily
+
+Every mutating interactor:
+
+. performs the write *and* inserts the `season_changes` row *in the same
+  transaction*. The audit trail must not be lost — this deliberately differs
+  from the informational feed of SHEP-0001, which is best-effort post-commit;
+. commits;
+. calls `update(season)` post-commit, best-effort, so the pinned message always
+  shows current truth.
+
+The daily job then, per season:
+
+. selects changes with `published_at is null`;
+. *collapses them per date to the net change* — five edits of one date before
+  10:00 become one line, and a date moved and moved back drops out entirely. The
+  step-by-step trail stays in `season_changes`. Collapsing is a pure function in
+  `core/season/rules.py`, unit-testable without a DB;
+. marks the rows published and writes the `low`-severity notifications — *one
+  transaction*, committed;
+. posts the digest as a *new* channel message, best-effort and post-commit,
+  consistent with the rest of the codebase. Nothing to report ⇒ nothing sent, so
+  there is no empty daily noise.
+
+If the channel post fails after the commit, that day's digest is skipped; the
+schedule message, edited in place by step 3 above, still shows the correct
+state, and players still got the notification. The reverse order — send, then
+commit — was rejected because a crash in between would re-post the same digest.
+
+The job is registered once at scheduler start:
+
+[source,python]
+----
+self.scheduler.add_job(
+    func="shvatka.infrastructure.scheduler.wrappers:publish_season_digest_wrapper",
+    trigger="cron", hour=10, minute=0, timezone=tz_game,
+    id="season_digest_daily", replace_existing=True,
+)
+----
+
+This is the first *recurring* job in `ApScheduler` — every existing one is a
+one-shot `date` trigger. The Redis jobstore keeps it across restarts, and
+`replace_existing` keeps redeploys idempotent.
+
+==== Unpinning when the season ends
+
+The same job closes finished seasons: for every season with `unpinned_at is
+null` whose latest date is in the past, `close(season)` releases the pin
+(best-effort) and `unpinned_at` is set. No extra scheduling, and "latest date"
+naturally follows dates that moved or synced to a late game.
+
+The message itself is kept and stays editable — only the pin is released, so the
+channel keeps a permanent record of the year.
+
+=== Slot ownership
+
+Taking requires `can_be_author` (`check_allow_be_author`), and:
+
+* the date must be free, *or* already owned by the acting player — re-taking
+  your own date is how you change its author or its orgs — *or* the actor is a
+  superuser, asked through `SuperusersResolver`, never by re-reading config;
+* `author_kind = team` additionally requires the actor to captain that team
+  (`is_team_captain`);
+* the named slot orgs may be any player: being an org does not require promotion
+  to author.
+
+Locking:
+
+* a *taken* date may be released, re-assigned, moved or deleted only by its
+  owner, or by a superuser. Anyone else gets `NotSlotOwner`;
+* a *free* date may be added, moved or deleted by any author;
+* superuser actions take the same routes and set `by_superuser`, so the digest
+  can say «изменено админом движка», and are logged with the acting admin's id
+  per `AGENTS.md`.
+
+`TakeSlotInteractor` re-reads the row `FOR UPDATE` inside the transaction and
+raises `SlotAlreadyTaken` → 409 if someone won the race.
+
+=== Notification audience
+
+Everyone in a team now, or in a team during the current or previous year, plus
+everyone who was an org for a game in that window even with no team now.
+
+One DAO method — `SeasonAudienceReader.get_recipient_ids(since)` where `since`
+is 1 January of `now(MSK).year - 1` — as a `UNION` of:
+
+* `team_players` where `date_left is null or date_left >= since`, i.e. a
+  membership overlapping the window;
+* `organizers` where not `deleted`, joined to `games` with `start_at >= since`;
+* `games.author_id` for those same games — the author is an org too.
+
+The window is relative to *today*, not to the season's year, so a 2027 season
+published in 2026 still reaches the people active in 2025–2026.
+
+Recipients get `season_schedule_changed`, severity `low`, with a payload
+carrying the year and a short summary so `notification-render.ts` can render it
+without another fetch. Web push follows through the existing `WebPushSender`
+path.
+
+=== Linking a game to a date
+
+Issue #167 asks for this "only if without bad ux", so nothing is linked
+automatically — the engine offers.
+
+*Planning near a date.* Both edges call the read-only
+`FindSlotsNearGameStartInteractor(at)`, which returns dates of the current
+season within ±3 days of `at` (MSK) that are free or already owned by the acting
+player, nearest first. The edge shows «Привязать игру к дате 27.06?» with
+confirm or skip.
+
+*Planning with nothing nearby.* An empty result drives the warning, offering
+three actions: add a date on the game's day and take it; move the nearest date
+before or after onto that day; or plan without the schedule.
+
+*A confirmed link* sets `game_id`, sets the date to the game's `start_at` date
+in MSK, takes the date for the game's author if it was free, and records
+`slot_game_linked` — plus `slot_moved` when the date actually changed.
+
+*Keeping it synced.* `PlanGameStartInteractor` gains one dependency,
+`SyncLinkedSlotInteractor`, invoked after a successful re-plan: if the game
+already sits in a date, that date follows the new `start_at` and a `slot_moved`
+change is recorded with the reason `game_rescheduled`. Cancelling a planned
+start unlinks nothing — the date keeps the game, it just has no start to sync
+from. The *suggestion* stays out of `PlanGameStartInteractor`: it is a separate
+read-only interactor the edges call, so no UI decision leaks into the planner.
+
+*Out of schedule.* The existing `GameLogType.GAME_PLANED` message gains a
+«(вне расписания сезона)» suffix when the freshly planned game has no linked
+date, so the channel and the orgs see it immediately.
+
+=== API surface
+
+Reading a season is public — issue #167 asks for the schedule to be available by
+API. Every write requires an authenticated author.
+
+[source]
+----
+GET    /seasons                                 list of years
+GET    /seasons/current                         the current year's season
+GET    /seasons/{year}                          season + dates
+GET    /seasons/defaults?year=2027              the 9 default dates, nothing persisted
+POST   /seasons  {year, slots: [{date, note?}]} publish a composed season
+POST   /seasons/{year}/slots   {date, note?}    add a date
+PATCH  /seasons/{year}/slots/{id}  {date?, note?}
+DELETE /seasons/{year}/slots/{id}
+POST   /seasons/{year}/slots/{id}/take
+       {author_kind, team_id?, org_player_ids?} take / re-assign
+DELETE /seasons/{year}/slots/{id}/take          release
+POST   /seasons/{year}/slots/{id}/game {game_id}  link
+DELETE /seasons/{year}/slots/{id}/game            unlink
+GET    /seasons/slots/suggest?at=<iso datetime>   ±3-day candidates for the offer
+----
+
+Thin routes following the existing pattern — `@inject`,
+`FromDishka[SomeInteractor]`, `ApiIdentityProvider`, request and response models
+with `.from_core` / `.to_core`. Conflicts map to 409 (`SeasonAlreadyExists`,
+`SlotAlreadyTaken`, `GameAlreadyInSchedule`), permission failures to 403 through
+the existing `error_converter`.
+
+=== Bot
+
+A new `SeasonSG`: `calendar`, `slot`, `take`, `orgs`, `compose`,
+`confirm_publish`.
+
+*Composing.* For a year with no season, `compose` starts from the defaults
+endpoint, keeps the working list in `dialog_data`, and lets the user tap days to
+add or remove and pick one to move. «Опубликовать» leads to a confirm window —
+publication announces to everyone, so it deserves one — and submits the whole
+list. Cancelling drops `dialog_data`; nothing was persisted.
+
+*The calendar widget.* aiogram_dialog's `Calendar` is subclassed rather than
+used as-is, so a day cell can be marked:
+
+[source,python]
+----
+class SeasonCalendar(Calendar):
+    def _init_views(self) -> dict[CalendarScope, CalendarScopeView]:
+        # the base views, but the days view gets a custom `text=`
+----
+
+Marks come from a getter that loads the season (or the `dialog_data` draft)
+once: 🟢 free, 🔒 taken by someone else, ⭐ yours, 🎮 linked to a game, a plain
+number otherwise. `CalendarConfig(min_date, max_date)` pins the view to the
+season's year, with month scope as the entry point so a whole season is two taps
+away.
+
+On a published season, tapping a day with a date opens take / release / change
+author / edit orgs / move / delete / open the linked game; tapping an empty day
+offers «Добавить дату» to authors.
+
+*The link offer* is one extra window after `GameScheduleSG.confirm`: candidates
+⇒ offer the nearest with «Привязать» / «Не привязывать»; none ⇒ the warning with
+the three options above.
+
+=== Web UI (shvatka-ui)
+
+A standalone `src/app/season/` component and service, routes `/season` and
+`/season/:year`, an entry in the header.
+
+* *The grid* shows May–October by default as month cards of day cells. If the
+  season has dates outside that range the view auto-extends to cover them;
+  «← Раньше» / «Позже →» extend month by month up to the full year, so a cold-month
+  game can be planned.
+* *Cell states* mirror the bot marks: free, taken with the owner or team name and
+  emoji, linked game linking to the game page, your own highlighted.
+* *Compose mode* for a year with no season: fetch the defaults, edit in component
+  state mirrored to `localStorage`, publish in one request. A 409 means someone
+  published first — offer to reload.
+* *Actions* for authors: take (choosing self or team, with an org picker reusing
+  the existing player search), release, add, move. Everything else is read-only,
+  and a published season renders for anonymous visitors.
+* *Notifications tab*: a `season_schedule_changed` renderer in
+  `notification-render.ts` producing «Расписание сезона 2027: 3 изменения»,
+  linking to `/season/2027`.
+
+[[alternatives]]
+=== Alternatives considered
+
+*A `draft` status on `seasons`.* The original shape of this document: create a
+draft, edit it server-side, flip it to published. Rejected — it buys nothing the
+client's own state doesn't, and it costs a status column, draft-visibility rules,
+"changes are only recorded after publication" special-casing, and a second
+editing path. See <<no-draft>>.
+
+*Reusing `GameLogWriter` for the announcement.* Rejected: it returns nothing, so
+the message id needed for editing and unpinning cannot come back.
+
+*An end-boundary rule for generation* ("while the date is before 31 October")
+instead of a fixed count. Nine dates lands in late October every year anyway,
+and a count needs no reasoning about inclusive or exclusive months.
+
+*Several games per one date.* Rejected in favour of one game per date; two games
+in one night are two dates on the same day, which the schema allows.
+
+*Time of day on a date.* Rejected: the real start time belongs to the game, and
+a default time in the schedule would be a number nobody meant.
+
+== Consequences
+
+* Four new tables and a new `core` area; no changes to existing tables.
+* The first recurring scheduler job in the project. If the bot process is down at
+  10:00 MSK the digest is late, not lost — the changes stay unpublished until the
+  next run, and APScheduler's `misfire_grace_time` covers a short outage.
+* The pinned channel message is edited on every change. Telegram's edit limits
+  are far above the volume this feature produces, but a mass edit — moving many
+  dates in a loop — will hit them; the digest, not the edit, is the mechanism for
+  bulk change.
+* A season is one aggregate published in one shot, so composing it needs a client
+  that can hold state. A curl-only user must send the whole list themselves; the
+  defaults endpoint makes that a two-call flow.
+* Recipient resolution is one `UNION` over three tables and runs at most once a
+  day per season, so it needs no cache.
+* `season_changes` grows without bound. It is small — tens of rows a year — and
+  is the audit trail, so pruning is not planned.
+
+== Phases and status
+
+[cols="1,4,2",options="header"]
+|===
+| Phase | Content | Status
+
+| 1
+| Tables + migration, `core/season/`, DAOs, DI, REST API, `SeasonAnnouncer` and its bot implementation, publication with pinning, the daily digest and unpin job, the notification audience, and the §Ubiquitous language entries in *both* `context.md` files
+| ⏳ not started
+
+| 2
+| `SeasonSG` dialogs with compose-in-`dialog_data`, the `SeasonCalendar` subclass, and the link offer grafted onto `GameScheduleSG`
+| ⏳ not started
+
+| 3
+| The web season calendar, compose mode, extend-months controls, and the `season_schedule_changed` renderer
+| ⏳ not started
+|===
+
+Phases 2 and 3 are independent of each other and may land in either order.
+
+=== Testing each phase
+
+Per `AGENTS.md`: new domain classes get unit tests, new endpoints get
+integration tests.
+
+* *Unit* (`tests/unit/season/`): `default_slot_dates` across years including the
+  9-May-is-Saturday case; the ownership matrix of free / owner / superuser /
+  captain; the ±3-day search including ties; digest collapsing — repeated moves
+  of one date become one line, move-and-move-back becomes nothing, take then
+  release becomes nothing.
+* *Integration* (`tests/integration/api_full/test_season.py`): publish a composed
+  season, then publish the same year again → 409; take → 409 for a second taker
+  and 403 for a non-author; link a game → the date syncs; re-plan the game → the
+  date follows; run the digest → changes marked published and notifications
+  written; run it on a season whose last date has passed → `unpinned_at` set.
+  Assert through `check_dao`.
+* Announcer and notification side effects go through mocks in the style of
+  `tests/mocks/org_notifier.py`.
+
+== Deviations from the plan
+
+Nothing is implemented yet. This section is filled in as the phases land.
+
+== Open questions
+
+Both are implementation details that block nothing today.
+
+* *Digest wording* once collapsing exists: a date that was taken and then moved
+  on the same day — one line or two? Proposal: one line per date, stating its net
+  state change.
+* *Compose-mode conflict UX* on the web: when someone else published first,
+  merge the local list into the published season, or discard and reload?
+  Proposal: discard and reload — the local list is nine dates.

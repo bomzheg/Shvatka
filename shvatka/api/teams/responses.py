@@ -3,6 +3,7 @@ from datetime import datetime
 
 from shvatka.api.shared.responses import Player
 from shvatka.core.models import dto
+from shvatka.core.teams.dto import CaptainedTeam as CaptainedTeamDto
 from shvatka.core.teams.dto import TeamPlayerWithStat as TeamPlayerWithStatDto
 from shvatka.core.teams.dto import TeamWithStat as TeamWithStatDto
 
@@ -23,6 +24,28 @@ class TeamWithStat:
             captain=Player.from_core(core.team.captain) if core.team.captain else None,
             description=core.team.description,
             played_games_count=core.played_games_count,
+        )
+
+
+@dataclass
+class CaptainedTeam:
+    id: int
+    name: str
+    captain: Player | None
+    description: str | None
+    played_games_count: int
+    is_current: bool
+    """Whether the captain plays in this team right now, or only leads it."""
+
+    @classmethod
+    def from_core(cls, core: CaptainedTeamDto) -> "CaptainedTeam":
+        return cls(
+            id=core.team.id,
+            name=core.team.name,
+            captain=Player.from_core(core.team.captain) if core.team.captain else None,
+            description=core.team.description,
+            played_games_count=core.played_games_count,
+            is_current=core.is_current,
         )
 
 

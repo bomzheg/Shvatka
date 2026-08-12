@@ -38,3 +38,19 @@ class PlayerLeftTeam(TeamEvent):
     @property
     def by_self(self) -> bool:
         return self.actor.id == self.removed.id
+
+
+@dataclass
+class CaptainChanged(TeamEvent):
+    """The team got a new captain.
+
+    ``old_captain`` is ``None`` for a team that had none (an imported forum team,
+    or one whose captain row was cleared).
+    """
+
+    new_captain: dto.Player
+    old_captain: dto.Player | None
+
+    @property
+    def by_old_captain(self) -> bool:
+        return self.old_captain is not None and self.actor.id == self.old_captain.id

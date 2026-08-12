@@ -93,7 +93,12 @@ from shvatka.core.players.interfaces import (
     AdminPlayerMerger,
     AdminPlayerWaiverPointsReader,
 )
-from shvatka.core.teams.admin_interactors import AdminMergeTeamsInteractor
+from shvatka.core.teams.admin_interactors import (
+    AdminAddPlayerToTeamInteractor,
+    AdminChangeTeamCaptainInteractor,
+    AdminMergeTeamsInteractor,
+    AdminRemovePlayerFromTeamInteractor,
+)
 from shvatka.core.services.one_time_link import (
     GenerateOneTimeLoginLinkInteractor,
     GenerateOneTimeLoginLinkForPlayerInteractor,
@@ -105,16 +110,25 @@ from shvatka.core.waiver.admin_interactors import (
 )
 from shvatka.core.teams.interactors import (
     AddPlayerToTeamInteractor,
+    ChangeCaptainInteractor,
     CreateTeamInteractor,
     EditTeamInteractor,
     GetTeamInteractor,
+    JoinCaptainedTeamInteractor,
+    MyCaptainedTeamsInteractor,
     RemovePlayerFromTeamInteractor,
     TeamPlayedGamesInteractor,
     TeamPlayersInteractor,
     TeamsListInteractor,
     UpdateTeamPlayerInteractor,
 )
-from shvatka.core.teams.adapters import ChatlessTeamCreator, AdminTeamMerger
+from shvatka.core.teams.adapters import (
+    AdminTeamMerger,
+    CaptainedTeamsReader,
+    CaptainTeamJoiner,
+    ChatlessTeamCreator,
+    TeamCaptainSetter,
+)
 from shvatka.core.views.game import GameLogWriter, OrgNotifier
 from shvatka.core.views.team import TeamNotifier
 from shvatka.core.interfaces.clients.file_storage import FileStorage
@@ -190,7 +204,13 @@ from shvatka.infrastructure.db.dao.complex.game import (
     GameReleaseReaderImpl,
 )
 from shvatka.infrastructure.db.dao.complex.game_play import GamePlayerDaoImpl
-from shvatka.infrastructure.db.dao.complex.team import TeamCreatorImpl, AdminTeamMergerImpl
+from shvatka.infrastructure.db.dao.complex.team import (
+    AdminTeamMergerImpl,
+    CaptainedTeamsReaderImpl,
+    CaptainTeamJoinerImpl,
+    TeamCaptainSetterImpl,
+    TeamCreatorImpl,
+)
 from shvatka.infrastructure.db.dao.complex.key_log import GameKeysReaderImpl
 from shvatka.infrastructure.db.dao.complex.level_times import GameStatReaderImpl
 from shvatka.infrastructure.db.dao.complex.search import GlobalSearchDaoImpl
@@ -460,6 +480,24 @@ class TeamProvider(Provider):
         return EditTeamInteractor(dao=dao.team, team_player_dao=dao.team_player)
 
     @provide
+    def captained_teams_reader(self, dao: HolderDao) -> CaptainedTeamsReader:
+        return CaptainedTeamsReaderImpl(dao=dao)
+
+    my_captained_teams = provide(MyCaptainedTeamsInteractor)
+
+    @provide
+    def captain_team_joiner(self, dao: HolderDao) -> CaptainTeamJoiner:
+        return CaptainTeamJoinerImpl(dao=dao)
+
+    join_captained_team = provide(JoinCaptainedTeamInteractor)
+
+    @provide
+    def team_captain_setter(self, dao: HolderDao) -> TeamCaptainSetter:
+        return TeamCaptainSetterImpl(dao=dao)
+
+    change_captain = provide(ChangeCaptainInteractor)
+
+    @provide
     def chatless_team_creator(self, dao: HolderDao) -> ChatlessTeamCreator:
         return TeamCreatorImpl(dao=dao)
 
@@ -529,6 +567,24 @@ class AdminProvider(Provider):
     admin_merge_players = provide(AdminMergePlayersInteractor)
     admin_player_waiver_points = provide(AdminGetPlayerWaiverPointsInteractor)
     admin_merge_teams = provide(AdminMergeTeamsInteractor)
+    admin_change_team_captain = provide(AdminChangeTeamCaptainInteractor)
+
+    @provide
+    def admin_add_player_to_team(
+        self, dao: HolderDao, notifier: TeamNotifier
+    ) -> AdminAddPlayerToTeamInteractor:
+        return AdminAddPlayerToTeamInteractor(
+            dao=dao.team_player, team_dao=dao.team, player_dao=dao.player, notifier=notifier
+        )
+
+    @provide
+    def admin_remove_player_from_team(
+        self, dao: HolderDao, notifier: TeamNotifier
+    ) -> AdminRemovePlayerFromTeamInteractor:
+        return AdminRemovePlayerFromTeamInteractor(
+            dao=dao.team_leaver, player_dao=dao.player, notifier=notifier
+        )
+
     admin_waivers_reader = provide(AdminGameWaiversReaderInteractor)
 
     @provide

@@ -1,8 +1,14 @@
 import typing
 from dataclasses import dataclass
+from typing import Sequence
 
 from shvatka.core.interfaces.dal.complex import TeamMerger
-from shvatka.core.teams.adapters import AdminTeamMerger
+from shvatka.core.teams.adapters import (
+    AdminTeamMerger,
+    CaptainedTeamsReader,
+    CaptainTeamJoiner,
+    TeamCaptainSetter,
+)
 from shvatka.core.interfaces.dal.player import TeamLeaver
 from shvatka.core.interfaces.dal.team import TeamCreator
 from shvatka.core.teams.adapters import ChatlessTeamCreator
@@ -105,3 +111,60 @@ class TeamMergerImpl(TeamMerger):
 class AdminTeamMergerImpl(TeamMergerImpl, AdminTeamMerger):
     async def get_by_id(self, id_: int) -> dto.Team:
         return await self.dao.team.get_by_id(id_)
+
+
+@dataclass
+class TeamCaptainSetterImpl(TeamCaptainSetter):
+    dao: "HolderDao"
+
+    async def get_by_id(self, id_: int) -> dto.Team:
+        return await self.dao.team.get_by_id(id_)
+
+    async def get_players(self, team: dto.Team) -> Sequence[dto.FullTeamPlayer]:
+        return await self.dao.team_player.get_players(team)
+
+    async def change_captain(self, team: dto.Team, captain: dto.Player) -> None:
+        return await self.dao.team.change_captain(team, captain)
+
+    async def change_role(self, team_player: dto.TeamPlayer, role: str) -> None:
+        return await self.dao.team_player.change_role(team_player, role)
+
+    async def commit(self) -> None:
+        return await self.dao.commit()
+
+
+@dataclass
+class CaptainedTeamsReaderImpl(CaptainedTeamsReader):
+    dao: "HolderDao"
+
+    async def get_captained_teams(self, captain: dto.Player) -> list[dto.Team]:
+        return await self.dao.team.get_captained_teams(captain)
+
+    async def get_team(self, player: dto.Player) -> dto.Team | None:
+        return await self.dao.team_player.get_team(player)
+
+    async def get_played_games_counts(self, team_ids: Sequence[int]) -> dict[int, int]:
+        return await self.dao.team.get_played_games_counts(team_ids)
+
+
+@dataclass
+class CaptainTeamJoinerImpl(TeamLeaverImpl, CaptainTeamJoiner):
+    """Leaving the current team and joining the captained one, in one adapter."""
+
+    async def get_by_id(self, id_: int) -> dto.Team:
+        return await self.dao.team.get_by_id(id_)
+
+    async def join_team(
+        self,
+        player: dto.Player,
+        team: dto.Team,
+        role: str,
+        emoji: str | None = None,
+        as_captain: bool = False,
+    ) -> None:
+        return await self.dao.team_player.join_team(
+            player, team, role, emoji=emoji, as_captain=as_captain
+        )
+
+    async def check_player_free(self, player: dto.Player) -> None:
+        return await self.dao.team_player.check_player_free(player)

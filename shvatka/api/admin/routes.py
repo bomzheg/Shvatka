@@ -13,6 +13,7 @@ from shvatka.api.admin import requests, responses
 from shvatka.api.shared import requests as shared_requests
 from shvatka.api.players import responses as players_responses
 from shvatka.api.shared import responses as shared
+from shvatka.api.teams import responses as teams_responses
 from shvatka.api.games import responses as games_responses
 from shvatka.api.files import responses as files_responses
 from shvatka.api.waivers import responses as waivers_responses
@@ -32,7 +33,12 @@ from shvatka.core.players.admin_interactors import (
 )
 from shvatka.core.services.one_time_link import GenerateOneTimeLoginLinkForPlayerInteractor
 from shvatka.core.services.scenario.files import get_file_metas
-from shvatka.core.teams.admin_interactors import AdminMergeTeamsInteractor
+from shvatka.core.teams.admin_interactors import (
+    AdminAddPlayerToTeamInteractor,
+    AdminChangeTeamCaptainInteractor,
+    AdminMergeTeamsInteractor,
+    AdminRemovePlayerFromTeamInteractor,
+)
 from shvatka.core.utils import exceptions
 from shvatka.core.waiver.admin_interactors import (
     AdminGameWaiversReaderInteractor,
@@ -207,6 +213,45 @@ async def merge_teams(
 
 
 @inject
+async def change_team_captain(
+    identity: FromDishka[ApiIdentityProvider],
+    interactor: FromDishka[AdminChangeTeamCaptainInteractor],
+    id_: Annotated[int, Path(alias="id")],
+    body: Annotated[requests.AdminNewCaptain, Body()],
+) -> shared.Team:
+    team = await interactor(identity=identity, team_id=id_, player_id=body.player_id)
+    result = shared.Team.from_core(team)
+    assert result is not None
+    return result
+
+
+@inject
+async def add_player_to_team(
+    identity: FromDishka[ApiIdentityProvider],
+    interactor: FromDishka[AdminAddPlayerToTeamInteractor],
+    id_: Annotated[int, Path(alias="id")],
+    body: Annotated[requests.AdminJoinTeam, Body()],
+) -> teams_responses.TeamMember:
+    team_player = await interactor(
+        identity=identity,
+        team_id=id_,
+        player_id=body.player_id,
+        role=body.role,
+        emoji=body.emoji,
+    )
+    return teams_responses.TeamMember.from_core(team_player)
+
+
+@inject
+async def remove_player_from_team(
+    identity: FromDishka[ApiIdentityProvider],
+    interactor: FromDishka[AdminRemovePlayerFromTeamInteractor],
+    player_id: Annotated[int, Path()],
+) -> None:
+    await interactor(identity=identity, player_id=player_id)
+
+
+@inject
 async def get_waivers_by_game(
     identity: FromDishka[ApiIdentityProvider],
     interactor: FromDishka[AdminGameWaiversReaderInteractor],
@@ -269,6 +314,14 @@ def setup() -> APIRouter:
     )
     router.add_api_route("/players/merge", merge_players, methods=["POST"])
     router.add_api_route("/teams/merge", merge_teams, methods=["POST"])
+    router.add_api_route("/teams/{id}/captain", change_team_captain, methods=["PUT"])
+    router.add_api_route("/teams/{id}/players", add_player_to_team, methods=["POST"])
+    router.add_api_route(
+        "/teams/{id}/players/{player_id}",
+        remove_player_from_team,
+        methods=["DELETE"],
+        status_code=204,
+    )
     router.add_api_route("/waivers/game/{id}", get_waivers_by_game, methods=["GET"])
     router.add_api_route("/games/{id}/scenario", change_game_scenario, methods=["PUT"])
     router.add_api_route("/games/{id}/files", upload_game_file, methods=["POST"])

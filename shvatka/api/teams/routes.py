@@ -11,9 +11,12 @@ from shvatka.api.teams import requests, responses
 from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.teams.interactors import (
     AddPlayerToTeamInteractor,
+    ChangeCaptainInteractor,
     CreateTeamInteractor,
     EditTeamInteractor,
     GetTeamInteractor,
+    JoinCaptainedTeamInteractor,
+    MyCaptainedTeamsInteractor,
     RemovePlayerFromTeamInteractor,
     TeamPlayedGamesInteractor,
     TeamPlayersInteractor,
@@ -45,6 +48,43 @@ async def get_team_stat(
 @inject
 async def get_my_team(identity: FromDishka[IdentityProvider]) -> shared.Team | None:
     return shared.Team.from_core(await identity.get_team())
+
+
+@inject
+async def get_my_captained_teams(
+    identity: FromDishka[ApiIdentityProvider],
+    interactor: FromDishka[MyCaptainedTeamsInteractor],
+) -> shared.Items[responses.CaptainedTeam]:
+    teams = await interactor(identity=identity)
+    return shared.Items([responses.CaptainedTeam.from_core(team) for team in teams])
+
+
+@inject
+async def join_captained_team(
+    identity: FromDishka[ApiIdentityProvider],
+    interactor: FromDishka[JoinCaptainedTeamInteractor],
+    id_: Annotated[int, Path(alias="id")],
+    body: Annotated[requests.JoinCaptainedTeam, Body()],
+) -> responses.TeamMember:
+    team_player = await interactor(
+        team_id=id_,
+        identity=identity,
+        leave_current=body.leave_current,
+    )
+    return responses.TeamMember.from_core(team_player)
+
+
+@inject
+async def change_captain(
+    identity: FromDishka[ApiIdentityProvider],
+    interactor: FromDishka[ChangeCaptainInteractor],
+    id_: Annotated[int, Path(alias="id")],
+    body: Annotated[requests.NewCaptain, Body()],
+) -> shared.Team:
+    team = await interactor(team_id=id_, new_captain_id=body.player_id, identity=identity)
+    result = shared.Team.from_core(team)
+    assert result is not None
+    return result
 
 
 @inject
@@ -144,9 +184,12 @@ def setup() -> APIRouter:
     router.add_api_route("", get_teams, methods=["GET"])
     router.add_api_route("", create_team, methods=["POST"], status_code=201)
     router.add_api_route("/my", get_my_team, methods=["GET"])
+    router.add_api_route("/my/captained", get_my_captained_teams, methods=["GET"])
     router.add_api_route("/{id}/stat", get_team_stat, methods=["GET"])
     router.add_api_route("/{id}", get_team, methods=["GET"])
     router.add_api_route("/{id}", edit_team, methods=["PUT"])
+    router.add_api_route("/{id}/join", join_captained_team, methods=["POST"])
+    router.add_api_route("/{id}/captain", change_captain, methods=["PUT"])
     router.add_api_route("/{id}/players", get_team_players, methods=["GET"])
     router.add_api_route("/{id}/players", add_player_to_team, methods=["POST"])
     router.add_api_route(

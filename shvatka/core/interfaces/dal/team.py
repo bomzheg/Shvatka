@@ -40,6 +40,16 @@ class TeamByIdGetter(Protocol):
         raise NotImplementedError
 
 
+class CaptainedTeamsGetter(Protocol):
+    async def get_captained_teams(self, captain: dto.Player) -> list[dto.Team]:
+        raise NotImplementedError
+
+
+class TeamCaptainChanger(Committer, Protocol):
+    async def change_captain(self, team: dto.Team, captain: dto.Player) -> None:
+        raise NotImplementedError
+
+
 class PlayedGamesByTeamGetter(Protocol):
     async def get_played_games(self, team: dto.Team) -> list[dto.Game]:
         raise NotImplementedError

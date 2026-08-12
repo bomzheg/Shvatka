@@ -3,14 +3,19 @@ from typing import Protocol, Sequence
 from shvatka.core.interfaces.dal.base import Committer
 from shvatka.core.interfaces.dal.complex import TeamMerger
 from shvatka.core.interfaces.dal.player import (
+    TeamByPlayerGetter,
     TeamJoiner,
+    TeamLeaver,
     TeamPlayerEmojiChanger,
     TeamPlayerGetter,
     TeamPlayerPermissionFlipper,
     TeamPlayerRoleChanger,
+    TeamPlayersGetter,
 )
 from shvatka.core.interfaces.dal.team import (
+    CaptainedTeamsGetter,
     TeamByIdGetter,
+    TeamCaptainChanger,
     TeamDescChanger,
     TeamRenamer,
     TeamsGetter,
@@ -66,3 +71,26 @@ class TeamsWithStatGetter(TeamsGetter, TeamPlayedGamesCounter, Protocol):
 
 class AdminTeamMerger(TeamMerger, TeamByIdGetter, Protocol):
     """Merge one team into another, plus load both by id."""
+
+
+class TeamCaptainSetter(
+    TeamCaptainChanger,
+    TeamByIdGetter,
+    TeamPlayersGetter,
+    TeamPlayerRoleChanger,
+    Protocol,
+):
+    """DAO contract for handing a team over to another of its players."""
+
+
+class CaptainedTeamsReader(
+    CaptainedTeamsGetter,
+    TeamByPlayerGetter,
+    TeamPlayedGamesCounter,
+    Protocol,
+):
+    """DAO contract for listing the teams a player captains, with their stats."""
+
+
+class CaptainTeamJoiner(TeamLeaver, TeamJoiner, TeamByIdGetter, Protocol):
+    """DAO contract for a captain joining a team they captain (leaving another first)."""

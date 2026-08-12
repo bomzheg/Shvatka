@@ -6,6 +6,7 @@ class NotificationType(enum.Enum):
 
     player_joined_team = enum.auto()
     player_left_team = enum.auto()
+    team_captain_changed = enum.auto()
     team_renamed = enum.auto()
     org_added = enum.auto()
     game_schedule_changed = enum.auto()

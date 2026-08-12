@@ -793,3 +793,149 @@ async def test_admin_upload_file_non_completed_game_hidden(
     )
     assert resp.status_code == 404, resp.text
     assert resp.json()["type"] == "GameNotFound"
+
+
+@pytest.mark.asyncio
+async def test_admin_change_team_captain(
+    client: AsyncClient,
+    admin_token: Token,
+    draco: dto.Player,
+    hermione: dto.Player,
+    slytherin: dto.Team,
+    dao: HolderDao,
+    check_dao: HolderDao,
+):
+    await dao.team_player.join_team(hermione, slytherin, role=DEFAULT_ROLE)
+    await dao.commit()
+    resp = await client.put(
+        f"/admin/teams/{slytherin.id}/captain",
+        json={"player_id": hermione.id},
+        cookies=auth_cookies(admin_token),
+        follow_redirects=True,
+    )
+    assert resp.is_success, resp.text
+    resp.read()
+    assert resp.json()["captain"]["id"] == hermione.id
+    team = await check_dao.team.get_by_id(slytherin.id)
+    assert team.captain is not None
+    assert team.captain.id == hermione.id
+
+
+@pytest.mark.asyncio
+async def test_admin_change_team_captain_forbidden_for_non_superuser(
+    client: AsyncClient,
+    hermione_token: Token,
+    hermione: dto.Player,
+    draco: dto.Player,
+    slytherin: dto.Team,
+    dao: HolderDao,
+    check_dao: HolderDao,
+):
+    await dao.team_player.join_team(hermione, slytherin, role=DEFAULT_ROLE)
+    await dao.commit()
+    resp = await client.put(
+        f"/admin/teams/{slytherin.id}/captain",
+        json={"player_id": hermione.id},
+        cookies=auth_cookies(hermione_token),
+        follow_redirects=True,
+    )
+    assert resp.status_code == 403
+    team = await check_dao.team.get_by_id(slytherin.id)
+    assert team.captain is not None
+    assert team.captain.id == draco.id
+
+
+@pytest.mark.asyncio
+async def test_admin_add_player_to_team(
+    client: AsyncClient,
+    admin_token: Token,
+    draco: dto.Player,
+    hermione: dto.Player,
+    slytherin: dto.Team,
+    check_dao: HolderDao,
+):
+    # the admin is in neither team, so no team permission could authorise this
+    resp = await client.post(
+        f"/admin/teams/{slytherin.id}/players",
+        json={"player_id": hermione.id, "role": "seeker", "emoji": "🐍"},
+        cookies=auth_cookies(admin_token),
+        follow_redirects=True,
+    )
+    assert resp.is_success, resp.text
+    resp.read()
+    body = resp.json()
+    assert body["id"] == hermione.id
+    assert body["role"] == "seeker"
+    assert body["emoji"] == "🐍"
+    team = await check_dao.team_player.get_team(hermione)
+    assert team is not None
+    assert team.id == slytherin.id
+
+
+@pytest.mark.asyncio
+async def test_admin_add_player_already_in_another_team(
+    client: AsyncClient,
+    admin_token: Token,
+    draco: dto.Player,
+    hermione: dto.Player,
+    gryffindor: dto.Team,
+    slytherin: dto.Team,
+    dao: HolderDao,
+    check_dao: HolderDao,
+):
+    await dao.team_player.join_team(hermione, gryffindor, role=DEFAULT_ROLE)
+    await dao.commit()
+    resp = await client.post(
+        f"/admin/teams/{slytherin.id}/players",
+        json={"player_id": hermione.id},
+        cookies=auth_cookies(admin_token),
+        follow_redirects=True,
+    )
+    assert resp.status_code == 422  # PlayerAlreadyInTeam -> SHError
+    team = await check_dao.team_player.get_team(hermione)
+    assert team is not None
+    assert team.id == gryffindor.id
+
+
+@pytest.mark.asyncio
+async def test_admin_remove_player_from_team(
+    client: AsyncClient,
+    admin_token: Token,
+    draco: dto.Player,
+    hermione: dto.Player,
+    slytherin: dto.Team,
+    dao: HolderDao,
+    check_dao: HolderDao,
+):
+    await dao.team_player.join_team(hermione, slytherin, role=DEFAULT_ROLE)
+    await dao.commit()
+    resp = await client.request(
+        "DELETE",
+        f"/admin/teams/{slytherin.id}/players/{hermione.id}",
+        cookies=auth_cookies(admin_token),
+        follow_redirects=True,
+    )
+    assert resp.status_code == 204, resp.text
+    assert await check_dao.team_player.get_team(hermione) is None
+
+
+@pytest.mark.asyncio
+async def test_admin_remove_player_forbidden_for_non_superuser(
+    client: AsyncClient,
+    hermione_token: Token,
+    draco: dto.Player,
+    hermione: dto.Player,
+    slytherin: dto.Team,
+    dao: HolderDao,
+    check_dao: HolderDao,
+):
+    await dao.team_player.join_team(hermione, slytherin, role=DEFAULT_ROLE)
+    await dao.commit()
+    resp = await client.request(
+        "DELETE",
+        f"/admin/teams/{slytherin.id}/players/{draco.id}",
+        cookies=auth_cookies(hermione_token),
+        follow_redirects=True,
+    )
+    assert resp.status_code == 403
+    assert await check_dao.team_player.get_team(draco) is not None

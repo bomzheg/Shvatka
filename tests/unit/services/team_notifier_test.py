@@ -2,7 +2,7 @@ import pytest
 
 from shvatka.core.models import dto
 from shvatka.core.models.enums.chat_type import ChatType
-from shvatka.core.views.team import PlayerJoinedTeam, PlayerLeftTeam
+from shvatka.core.views.team import CaptainChanged, PlayerJoinedTeam, PlayerLeftTeam
 from shvatka.tgbot.views.team import BotTeamNotifier
 
 
@@ -54,6 +54,37 @@ def test_left_by_captain() -> None:
     text = BotTeamNotifier._render(event) or ""
     assert "удалён" in text
     assert "harry" in text
+
+
+def test_captain_changed_by_old_captain() -> None:
+    harry = _player(1, "harry")
+    ron = _player(2, "ron")
+    event = CaptainChanged(team=_team(ron), actor=harry, new_captain=ron, old_captain=harry)
+    assert event.by_old_captain
+    text = BotTeamNotifier._render(event) or ""
+    assert "капитан" in text
+    assert "ron" in text
+    # the handover was the old captain's own doing — no need to name them again
+    assert "harry" not in text
+
+
+def test_captain_changed_by_admin() -> None:
+    harry = _player(1, "harry")
+    ron = _player(2, "ron")
+    admin = _player(3, "dumbledore")
+    event = CaptainChanged(team=_team(ron), actor=admin, new_captain=ron, old_captain=harry)
+    assert not event.by_old_captain
+    text = BotTeamNotifier._render(event) or ""
+    assert "ron" in text
+    assert "dumbledore" in text
+
+
+def test_captain_changed_for_team_without_captain() -> None:
+    ron = _player(2, "ron")
+    admin = _player(3, "dumbledore")
+    event = CaptainChanged(team=_team(ron), actor=admin, new_captain=ron, old_captain=None)
+    assert not event.by_old_captain
+    assert "ron" in (BotTeamNotifier._render(event) or "")
 
 
 class _Tagger:

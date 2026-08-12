@@ -165,6 +165,7 @@ async def game_log(dishka: AsyncContainer) -> GameLogWriterMock:
 @pytest.fixture(autouse=True)
 def clean_up_memory(file_storage: MemoryFileStorage):
     file_storage.storage.clear()
+    file_storage.modified_at.clear()
 
 
 @pytest.fixture(autouse=True)

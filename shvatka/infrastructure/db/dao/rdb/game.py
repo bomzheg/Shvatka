@@ -3,7 +3,7 @@ from datetime import datetime, tzinfo
 import typing
 from typing import Sequence
 
-from sqlalchemy import select, ScalarResult
+from sqlalchemy import or_, select, ScalarResult
 from sqlalchemy import update, func
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -295,6 +295,27 @@ class GameDao(BaseDAO[models.Game]):
             banner=row.release_banner,
             hints=row.release or [],
         )
+
+    async def get_release_guids(self) -> dict[int, set[str]]:
+        """Files every game's release refers to, by game id.
+
+        A release is jsonb on the game rather than rows in ``level_files``, so
+        it is the one reference to a file nothing else records — whoever counts
+        references has to read the releases too.
+        """
+        result = await self.session.execute(
+            select(models.Game.id, models.Game.release, models.Game.release_banner).where(
+                or_(models.Game.release.isnot(None), models.Game.release_banner.isnot(None))
+            )
+        )
+        guids = {}
+        for row in result:
+            release = dto.GameRelease(
+                game_id=row.id, banner=row.release_banner, hints=row.release or []
+            )
+            if release_guids := set(release.get_guids()):
+                guids[row.id] = release_guids
+        return guids
 
     async def save_release(
         self, game: dto.Game, banner: hints.PhotoHint | None, hints_: list[hints.AnyHint]

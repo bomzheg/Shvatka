@@ -2,7 +2,7 @@ from collections.abc import Collection
 from datetime import datetime, tzinfo
 import typing
 
-from sqlalchemy import ScalarResult, delete, select
+from sqlalchemy import ScalarResult, delete, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from shvatka.infrastructure.db import models
@@ -42,3 +42,18 @@ class LevelFileDao(BaseDAO[models.LevelFile]):
         await self.session.execute(
             delete(models.LevelFile).where(models.LevelFile.level_id == level_id)
         )
+
+    async def get_level_ids_by_file(self, game_id: int, file_id: int) -> set[int]:
+        """Levels of the given game that refer to the file."""
+        result: ScalarResult[int] = await self.session.scalars(
+            select(models.LevelFile.level_id)
+            .join(models.Level, models.Level.id == models.LevelFile.level_id)
+            .where(models.Level.game_id == game_id, models.LevelFile.file_id == file_id)
+        )
+        return set(result.all())
+
+    async def count_for_file(self, file_id: int) -> int:
+        result = await self.session.execute(
+            select(func.count(models.LevelFile.id)).where(models.LevelFile.file_id == file_id)
+        )
+        return result.scalar_one()

@@ -17,6 +17,7 @@ from shvatka.core.games.interactors import (
     GameFileReaderInteractor,
 )
 from shvatka.core.games.editor_interactors import (
+    DeleteGameFileInteractor,
     RenameGameFileInteractor,
     UploadGameFileInteractor,
 )
@@ -110,9 +111,22 @@ async def rename_game_file(
     return responses.GameFile.from_core(renamed)
 
 
+@inject
+async def delete_game_file(
+    identity: FromDishka[ApiIdentityProvider],
+    interactor: FromDishka[DeleteGameFileInteractor],
+    id_: Annotated[int, Path(alias="id")],
+    guid: Annotated[str, Path(alias="guid")],
+) -> None:
+    await interactor(game_id=id_, guid=guid, identity=identity)
+
+
 def setup() -> APIRouter:
     router = APIRouter(prefix="/cdn")
     router.add_api_route("/games/{id}/files", upload_game_file, methods=["POST"])
     router.add_api_route("/games/{id}/files/{guid}", get_game_file, methods=["GET"])
     router.add_api_route("/games/{id}/files/{guid}", rename_game_file, methods=["PATCH"])
+    router.add_api_route(
+        "/games/{id}/files/{guid}", delete_game_file, methods=["DELETE"], status_code=204
+    )
     return router

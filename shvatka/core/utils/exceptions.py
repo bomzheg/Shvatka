@@ -109,6 +109,12 @@ class FileNotFound(SHError, AttributeError):
     notify_user = "Файл не найден"
 
 
+class FileIsUsed(SHError):
+    """The file is still referenced, so it can't be detached from the game."""
+
+    notify_user = "Файл используется"
+
+
 class UnsupportedFileFormat(SHError):
     notify_user = "Формат файла не поддерживается"
 

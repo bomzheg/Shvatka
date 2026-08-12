@@ -2,7 +2,7 @@ from datetime import datetime, tzinfo
 import typing
 from typing import Sequence
 
-from sqlalchemy import delete
+from sqlalchemy import delete, func
 from sqlalchemy import select, ScalarResult
 from sqlalchemy import update
 from sqlalchemy.exc import NoResultFound
@@ -137,6 +137,57 @@ class FileInfoDao(BaseDAO[models.FileInfo]):
 
     async def delete_by_guid(self, guid: str):
         await self.session.execute(delete(models.FileInfo).where(models.FileInfo.guid == guid))
+
+    async def delete_by_guids(self, guids: typing.Collection[str]) -> None:
+        if not guids:
+            return
+        await self.session.execute(
+            delete(models.FileInfo).where(models.FileInfo.guid.in_(set(guids)))
+        )
+
+    async def get_guids_by_ids(self, file_ids: typing.Collection[int]) -> dict[int, str]:
+        if not file_ids:
+            return {}
+        result = await self.session.execute(
+            select(models.FileInfo.id, models.FileInfo.guid).where(
+                models.FileInfo.id.in_(set(file_ids))
+            )
+        )
+        return {row.id: row.guid for row in result}
+
+    async def get_paths_by_guid(self) -> dict[str, str]:
+        result = await self.session.execute(
+            select(models.FileInfo.guid, models.FileInfo.file_path)
+        )
+        return {row.guid: row.file_path for row in result}
+
+    async def count_by_file_path(self, file_path: str) -> int:
+        result = await self.session.execute(
+            select(func.count(models.FileInfo.id)).where(models.FileInfo.file_path == file_path)
+        )
+        return result.scalar_one()
+
+    async def get_unlinked(
+        self, ignored_game_link_ids: typing.Collection[int] = ()
+    ) -> list[hints.VerifiableFileMeta]:
+        """Files no level and no game links to.
+
+        ``ignored_game_link_ids`` are ``game_files`` rows to read as if they were
+        deleted already, so a caller about to delete them can see what that
+        would orphan without doing it first.
+        """
+        game_link = select(models.GameFile.id).where(models.GameFile.file_id == models.FileInfo.id)
+        if ignored_game_link_ids:
+            game_link = game_link.where(models.GameFile.id.notin_(set(ignored_game_link_ids)))
+        level_link = select(models.LevelFile.id).where(
+            models.LevelFile.file_id == models.FileInfo.id
+        )
+        result: ScalarResult[models.FileInfo] = await self.session.scalars(
+            select(models.FileInfo)
+            .where(~game_link.exists(), ~level_link.exists())
+            .order_by(models.FileInfo.id)
+        )
+        return [f.to_short_dto() for f in result.all()]
 
     async def get_without_file_id(self, limit: int) -> Sequence[hints.SavedFileMeta]:
         result: ScalarResult[models.FileInfo] = await self.session.scalars(

@@ -6,6 +6,7 @@ from .file_content import (
     TgLink,
     ParsedTgLink,
     SavedFileMeta,
+    StoredFile,
     StoredFileMeta,
     FileMetaLightweight,
     UploadedFileMeta,

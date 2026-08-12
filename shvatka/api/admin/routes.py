@@ -17,6 +17,7 @@ from shvatka.api.teams import responses as teams_responses
 from shvatka.api.games import responses as games_responses
 from shvatka.api.files import responses as files_responses
 from shvatka.api.waivers import responses as waivers_responses
+from shvatka.core.files.interactors import CollectFileGarbageInteractor
 from shvatka.core.games.admin_interactors import (
     AdminUpdateGameScenarioInteractor,
     AdminUploadGameFileInteractor,
@@ -296,6 +297,20 @@ async def upload_game_file(
     return files_responses.UploadedFile.from_core(saved)
 
 
+@inject
+async def collect_file_garbage(
+    identity: FromDishka[ApiIdentityProvider],
+    interactor: FromDishka[CollectFileGarbageInteractor],
+    dry_run: Annotated[bool, Query()] = True,
+) -> responses.FileGarbage:
+    """Sweep files nothing refers to any more.
+
+    Defaults to a dry run: the answer says what would go, and only an explicit
+    ``dry_run=false`` deletes it.
+    """
+    return responses.FileGarbage.from_core(await interactor(identity, dry_run=dry_run))
+
+
 def setup() -> APIRouter:
     router = APIRouter(prefix="/admin", tags=["admin"])
     router.add_api_route("/players", list_players, methods=["GET"])
@@ -325,4 +340,5 @@ def setup() -> APIRouter:
     router.add_api_route("/waivers/game/{id}", get_waivers_by_game, methods=["GET"])
     router.add_api_route("/games/{id}/scenario", change_game_scenario, methods=["PUT"])
     router.add_api_route("/games/{id}/files", upload_game_file, methods=["POST"])
+    router.add_api_route("/files/gc", collect_file_garbage, methods=["POST"])
     return router

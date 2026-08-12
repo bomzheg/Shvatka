@@ -1,6 +1,8 @@
 from dataclasses import dataclass
+from pathlib import PurePosixPath
 
 from shvatka.api.shared.responses import ForumUser, Player, Team, TgUser
+from shvatka.core.files import dto as files_dto
 from shvatka.core.models import dto, enums
 
 
@@ -68,3 +70,33 @@ class AdminPoll:
         cls, poll: "dict[dto.Team, dict[enums.Played, list[dto.VotedPlayer]]]"
     ) -> "AdminPoll":
         return cls(teams=[AdminPollTeam.from_core(team, votes) for team, votes in poll.items()])
+
+
+@dataclass(kw_only=True, frozen=True, slots=True)
+class UnusedGameFile:
+    game_id: int
+    file_id: int
+
+    @classmethod
+    def from_core(cls, core: files_dto.GameFileLink) -> "UnusedGameFile":
+        return cls(game_id=core.game_id, file_id=core.file_id)
+
+
+@dataclass(kw_only=True, frozen=True, slots=True)
+class FileGarbage:
+    """What a garbage collection run removed, or would have on a dry run."""
+
+    dry_run: bool
+    game_links: list[UnusedGameFile]
+    file_guids: list[str]
+    stored_files: list[str]
+
+    @classmethod
+    def from_core(cls, core: files_dto.FileGarbage) -> "FileGarbage":
+        return cls(
+            dry_run=core.dry_run,
+            game_links=[UnusedGameFile.from_core(link) for link in core.game_links],
+            file_guids=list(core.file_guids),
+            # only the names: where exactly the storage keeps them is its own business
+            stored_files=[PurePosixPath(path).name for path in core.stored_files],
+        )

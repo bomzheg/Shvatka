@@ -29,3 +29,11 @@ class FileStorage(Protocol):
 
     async def exists(self, file_link: hints.FileContentLink) -> bool:
         raise NotImplementedError
+
+    async def delete(self, file_link: hints.FileContentLink) -> None:
+        """Remove the content. Deleting what is already gone is not an error."""
+        raise NotImplementedError
+
+    async def list_files(self) -> list[hints.StoredFile]:
+        """Every file the storage holds, with the time its content last changed."""
+        raise NotImplementedError

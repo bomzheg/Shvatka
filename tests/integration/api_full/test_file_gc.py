@@ -1,4 +1,6 @@
-from datetime import timedelta
+import os
+from datetime import datetime, timedelta
+from pathlib import PurePath
 
 import pytest
 from httpx import AsyncClient
@@ -8,9 +10,10 @@ from shvatka.api.auth.responses import Token
 from shvatka.core.files.interactors import STORAGE_ORPHAN_MIN_AGE
 from shvatka.core.models import dto
 from shvatka.core.services.game import create_game
+from shvatka.core.utils.datetime_utils import tz_utc
+from shvatka.infrastructure.clients.file_storage import LocalFileStorage
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from tests.fixtures.scn_fixtures import GUID
-from tests.mocks.file_storage import MemoryFileStorage
 
 
 def auth_cookies(token: Token) -> dict[str, str]:
@@ -31,9 +34,10 @@ async def upload(client: AsyncClient, game_id: int, cookies: dict[str, str]) -> 
     return resp.json()["guid"]
 
 
-def age(storage: MemoryFileStorage, path: str) -> None:
+def age(path: str) -> None:
     """Backdate the content so the garbage collector stops sparing it."""
-    storage.modified_at[path] -= STORAGE_ORPHAN_MIN_AGE + timedelta(hours=1)
+    when = (datetime.now(tz=tz_utc) - STORAGE_ORPHAN_MIN_AGE - timedelta(hours=1)).timestamp()
+    os.utime(path, (when, when))
 
 
 @pytest.mark.asyncio
@@ -70,7 +74,7 @@ async def test_gc_deletes_unused_link_and_meta(
     harry: dto.Player,
     dao: HolderDao,
     check_dao: HolderDao,
-    file_storage: MemoryFileStorage,
+    local_storage: LocalFileStorage,
 ):
     game = await create_game(author=author, name="draft for gc", dao=dao.game_creator)
     guid = await upload(client, game.id, author_cookies(auth, author))
@@ -88,13 +92,13 @@ async def test_gc_deletes_unused_link_and_meta(
     assert await check_dao.game_file.get_file_ids(game.id) == set()
     assert await check_dao.file_info.get_ids_by_guids([guid]) == []
     # the content is younger than the grace period, so it is spared for now
-    assert await file_storage.exists(meta.file_content_link)
-    assert path not in body["stored_files"]
+    assert await local_storage.exists(meta.file_content_link)
+    assert PurePath(path).name not in body["stored_files"]
 
-    age(file_storage, path)
+    age(path)
     resp = await client.post("/admin/files/gc?dry_run=false", cookies=cookies)
     assert resp.status_code == 200, resp.text
-    assert not await file_storage.exists(meta.file_content_link)
+    assert not await local_storage.exists(meta.file_content_link)
 
 
 @pytest.mark.asyncio
@@ -104,11 +108,11 @@ async def test_gc_keeps_files_a_level_uses(
     harry: dto.Player,
     game: dto.FullGame,
     check_dao: HolderDao,
-    file_storage: MemoryFileStorage,
+    local_storage: LocalFileStorage,
 ):
     (file_id,) = await check_dao.file_info.get_ids_by_guids([GUID])
     meta = await check_dao.file_info.get_by_guid(GUID)
-    age(file_storage, meta.file_content_link.file_path)
+    age(meta.file_content_link.file_path)
 
     resp = await client.post(
         "/admin/files/gc?dry_run=false",
@@ -117,7 +121,7 @@ async def test_gc_keeps_files_a_level_uses(
     assert resp.status_code == 200, resp.text
     assert await check_dao.game_file.get_file_ids(game.id) == {file_id}
     assert await check_dao.file_info.get_ids_by_guids([GUID]) == [file_id]
-    assert await file_storage.exists(meta.file_content_link)
+    assert await local_storage.exists(meta.file_content_link)
 
 
 @pytest.mark.asyncio
@@ -128,7 +132,7 @@ async def test_gc_keeps_files_the_release_uses(
     harry: dto.Player,
     dao: HolderDao,
     check_dao: HolderDao,
-    file_storage: MemoryFileStorage,
+    local_storage: LocalFileStorage,
 ):
     """A banner has no ``level_files`` row — only the release itself knows it."""
     game = await create_game(author=author, name="draft with a banner", dao=dao.game_creator)
@@ -142,7 +146,7 @@ async def test_gc_keeps_files_the_release_uses(
     )
     assert saved.is_success, saved.text
     meta = await check_dao.file_info.get_by_guid(guid)
-    age(file_storage, meta.file_content_link.file_path)
+    age(meta.file_content_link.file_path)
 
     resp = await client.post(
         "/admin/files/gc?dry_run=false",
@@ -151,7 +155,7 @@ async def test_gc_keeps_files_the_release_uses(
     assert resp.status_code == 200, resp.text
     assert await check_dao.game_file.get_file_ids(game.id) == {file_id}
     assert await check_dao.file_info.get_ids_by_guids([guid]) == [file_id]
-    assert await file_storage.exists(meta.file_content_link)
+    assert await local_storage.exists(meta.file_content_link)
 
 
 @pytest.mark.asyncio

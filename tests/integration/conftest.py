@@ -16,6 +16,7 @@ from shvatka.common import Paths
 from shvatka.core.interfaces.clients.file_storage import FileGateway
 from shvatka.core.interfaces.scheduler import Scheduler
 from shvatka.core.utils.key_checker_lock import KeyCheckerFactory
+from shvatka.infrastructure.clients.file_storage import LocalFileStorage
 from shvatka.infrastructure.db.config.models.db import DBConfig
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.infrastructure.db.dao.memory.level_testing import LevelTestingData
@@ -141,6 +142,17 @@ def upgrade_schema_db(alembic_config: AlembicConfig):
 @pytest_asyncio.fixture(scope="session")
 async def file_storage(dishka: AsyncContainer) -> MemoryFileStorage:
     return await dishka.get(MemoryFileStorage)
+
+
+@pytest_asyncio.fixture(scope="session")
+async def local_storage(dishka: AsyncContainer) -> LocalFileStorage:
+    """The storage the app itself writes to.
+
+    ``file_storage`` above is the in-memory double for services called by hand;
+    anything going through the container — an upload through the api, the file
+    gateway — lands here, in a real directory.
+    """
+    return await dishka.get(LocalFileStorage)
 
 
 @pytest.fixture

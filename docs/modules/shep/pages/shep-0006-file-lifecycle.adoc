@@ -1,9 +1,9 @@
-= SHEP-0005 — File deletion and garbage collection
-:navtitle: SHEP-0005 File lifecycle
+= SHEP-0006 — File deletion and garbage collection
+:navtitle: SHEP-0006 File lifecycle
 
 [cols="1,4"]
 |===
-| SHEP | 0005
+| SHEP | 0006
 | Title | File deletion and garbage collection
 | Status | `Accepted`
 | Created | 2026-08-12

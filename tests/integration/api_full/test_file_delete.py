@@ -5,9 +5,9 @@ from sqlalchemy.exc import NoResultFound
 from shvatka.api.app.dependencies.auth import AuthProperties
 from shvatka.core.models import dto
 from shvatka.core.services.game import create_game
+from shvatka.infrastructure.clients.file_storage import LocalFileStorage
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from tests.fixtures.scn_fixtures import GUID
-from tests.mocks.file_storage import MemoryFileStorage
 
 
 def auth_cookies(auth: AuthProperties, player: dto.Player) -> dict[str, str]:
@@ -31,7 +31,7 @@ async def test_delete_unused_game_file(
     author: dto.Player,
     dao: HolderDao,
     check_dao: HolderDao,
-    file_storage: MemoryFileStorage,
+    local_storage: LocalFileStorage,
 ):
     game = await create_game(author=author, name="draft delete file", dao=dao.game_creator)
     cookies = auth_cookies(auth, author)
@@ -47,7 +47,7 @@ async def test_delete_unused_game_file(
     assert file_id not in await check_dao.file_info.get_ids_by_guids([guid])
     with pytest.raises(NoResultFound):
         await check_dao.file_info.get_by_guid(guid)
-    assert not await file_storage.exists(meta.file_content_link)
+    assert not await local_storage.exists(meta.file_content_link)
 
 
 @pytest.mark.asyncio
@@ -100,7 +100,7 @@ async def test_delete_keeps_a_file_another_game_still_uses(
     author: dto.Player,
     dao: HolderDao,
     check_dao: HolderDao,
-    file_storage: MemoryFileStorage,
+    local_storage: LocalFileStorage,
 ):
     game = await create_game(author=author, name="draft shared file", dao=dao.game_creator)
     other = await create_game(author=author, name="draft shared file 2", dao=dao.game_creator)
@@ -118,7 +118,7 @@ async def test_delete_keeps_a_file_another_game_still_uses(
     assert await check_dao.game_file.get_file_ids(game.id) == set()
     assert await check_dao.game_file.get_file_ids(other.id) == {file_id}
     assert (await check_dao.file_info.get_by_guid(guid)).guid == guid
-    assert await file_storage.exists(meta.file_content_link)
+    assert await local_storage.exists(meta.file_content_link)
 
 
 @pytest.mark.asyncio

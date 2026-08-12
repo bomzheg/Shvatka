@@ -42,6 +42,10 @@ came out of it*.
 | xref:shep-0004-parallel-levels.adoc[SHEP-0004]
 | Parallel levels
 | Draft
+
+| xref:shep-0005-outdated-dialogs.adoc[SHEP-0005]
+| Outdated dialogs
+| Accepted, partially implemented
 |===
 
 == Status vocabulary

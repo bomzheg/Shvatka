@@ -1,4 +1,3 @@
-import logging
 import typing
 from typing import Any
 
@@ -13,10 +12,7 @@ from dishka.integrations.aiogram_dialog import inject
 from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.models import enums
 from shvatka.core.players.player import (
-    get_my_team,
-    get_full_team_player,
     flip_permission,
-    get_team_player_by_player,
     get_player_by_id,
     leave,
     change_role,
@@ -34,11 +30,14 @@ from shvatka.core.utils import exceptions
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.tgbot import keyboards as kb
 from shvatka.tgbot import states
+from shvatka.tgbot.dialogs.outdated import (
+    get_actual_team,
+    get_actual_team_player,
+    get_actual_teammate,
+)
 from shvatka.tgbot.utils.data import SHMiddlewareData
 from shvatka.tgbot.views.errors import player_already_in_team
 from shvatka.tgbot.views.utils import total_remove_msg
-
-logger = logging.getLogger(__name__)
 
 
 @inject
@@ -51,12 +50,8 @@ async def rename_team_handler(
 ):
     dao: HolderDao = dialog_manager.middleware_data["dao"]
     player = await identity.get_required_player()
-    team = await get_my_team(player=player, dao=dao.team_player)
-    if not team:
-        logger.warning("player %s has no team", player.id)
-        await dialog_manager.done()
-        return
-    team_player = await get_full_team_player(player=player, team=team, dao=dao.team_player)
+    team = await get_actual_team(player, dao.team_player)
+    team_player = await get_actual_team_player(player, team, dao.team_player)
     await rename_team(team=team, captain=team_player, new_name=new_name, dao=dao.team)
 
 
@@ -70,12 +65,8 @@ async def change_desc_team_handler(
 ):
     dao: HolderDao = dialog_manager.middleware_data["dao"]
     player = await identity.get_required_player()
-    team = await get_my_team(player=player, dao=dao.team_player)
-    if team is None:
-        logger.warning("player %s has no team", player.id)
-        await dialog_manager.done()
-        return
-    team_player = await get_full_team_player(player=player, team=team, dao=dao.team_player)
+    team = await get_actual_team(player, dao.team_player)
+    team_player = await get_actual_team_player(player, team, dao.team_player)
     await change_team_desc(team=team, captain=team_player, new_desc=new_desc, dao=dao.team)
 
 
@@ -95,11 +86,13 @@ async def change_permission_handler(
     await c.answer()
     dao: HolderDao = manager.middleware_data["dao"]
     captain = await identity.get_required_player()
-    team = await get_my_team(captain, dao.team_player)
-    captain_team_player = await get_full_team_player(captain, team, dao.team_player)
+    team = await get_actual_team(captain, dao.team_player)
+    captain_team_player = await get_actual_team_player(captain, team, dao.team_player)
     player_id = manager.dialog_data["selected_player_id"]
     player = await get_player_by_id(player_id, dao.player)
-    team_player = await get_team_player_by_player(player, dao.team_player)
+    # by their own membership the player may already be in another team -
+    # take the one in the captain's team, or say the window is outdated
+    team_player = await get_actual_teammate(player, team, dao.team_player)
     assert button.widget_id
     permission = enums.TeamPlayerPermission[button.widget_id]
     await flip_permission(captain_team_player, team_player, permission, dao.team_player)
@@ -115,8 +108,7 @@ async def start_merge(
     data = typing.cast(SHMiddlewareData, manager.middleware_data)
     dao = data["dao"]
     captain = await identity.get_required_player()
-    team = await get_my_team(captain, dao.team_player)
-    assert team
+    team = await get_actual_team(captain, dao.team_player)
     await manager.start(states.MergeTeamsSG.main, data={"team_id": team.id})
 
 
@@ -131,8 +123,10 @@ async def remove_player_handler(
     await c.answer()
     dao: HolderDao = manager.middleware_data["dao"]
     captain = await identity.get_required_player()
+    team = await get_actual_team(captain, dao.team_player)
     player_id = manager.dialog_data["selected_player_id"]
     player = await get_player_by_id(player_id, dao.player)
+    await get_actual_teammate(player, team, dao.team_player)
     await leave(player=player, remover=captain, dao=dao.team_leaver, notifier=team_notifier)
     await manager.switch_to(state=states.CaptainsBridgeSG.players)
 
@@ -149,11 +143,8 @@ async def change_role_handler(
     captain = await identity.get_required_player()
     player_id = manager.dialog_data["selected_player_id"]
     player = await get_player_by_id(player_id, dao.player)
-    team = await get_my_team(captain, dao.team_player)
-    if team is None:
-        logger.warning("player %s has no team", captain.id)
-        await manager.done()
-        return
+    team = await get_actual_team(captain, dao.team_player)
+    await get_actual_teammate(player, team, dao.team_player)
     await change_role(player, team, captain, role, dao.team_player)
     await manager.switch_to(states.CaptainsBridgeSG.player)
 
@@ -170,11 +161,8 @@ async def change_emoji_handler(
     captain = await identity.get_required_player()
     player_id = manager.dialog_data["selected_player_id"]
     player = await get_player_by_id(player_id, dao.player)
-    team = await get_my_team(captain, dao.team_player)
-    if team is None:
-        logger.warning("player %s has no team", captain.id)
-        await manager.done()
-        return
+    team = await get_actual_team(captain, dao.team_player)
+    await get_actual_teammate(player, team, dao.team_player)
     await change_emoji(player, team, captain, emoji, dao.team_player)
     await manager.switch_to(states.CaptainsBridgeSG.player)
 
@@ -205,10 +193,8 @@ async def gotten_chat_request(
     target_id = m.chat_shared.chat_id
     dao: HolderDao = manager.middleware_data["dao"]
     captain = await identity.get_required_player()
-    team = await get_my_team(captain, dao.team_player)
-    assert team
+    team = await get_actual_team(captain, dao.team_player)
     old_chat_id = team.get_chat_id()
-    assert team
     try:
         chat = await dao.chat.get_by_tg_id(tg_id=target_id)
     except exceptions.ChatNotFound:
@@ -224,7 +210,7 @@ async def gotten_chat_request(
             disable_web_page_preview=True,
         )
         return
-    team_player = await get_full_team_player(player=captain, team=team, dao=dao.team_player)
+    team_player = await get_actual_team_player(captain, team, dao.team_player)
     bot: Bot = manager.middleware_data["bot"]
     try:
         await change_chat(team, team_player, chat, dao.chat)
@@ -269,8 +255,7 @@ async def gotten_user_request(
         raise RuntimeError("only user shared and contact are allowed")
     dao: HolderDao = manager.middleware_data["dao"]
     captain = await identity.get_required_player()
-    team = await get_my_team(captain, dao.team_player)
-    assert team
+    team = await get_actual_team(captain, dao.team_player)
     player = await get_player_by_user_id(target_id, dao.player)
     bot: Bot = manager.middleware_data["bot"]
     chat = await identity.get_required_chat()

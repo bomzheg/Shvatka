@@ -27,6 +27,7 @@ from shvatka.tgbot.dialogs import (
     effects,
     profile,
 )
+from shvatka.tgbot.dialogs.outdated import OutdatedDialogMiddleware
 from shvatka.tgbot.dialogs.preview import render_dialogs_preview
 from shvatka.tgbot.filters import GameStatusFilter
 
@@ -75,8 +76,21 @@ def setup(router: Router, message_manager: MessageManagerProtocol) -> BgManagerF
     dialogs_router.include_router(setup_active_game_dialogs())
 
     bg_manager = setup_dialogs(dialogs_router, message_manager=message_manager)
+    setup_outdated_dialogs(dialogs_router)
     router.include_router(dialogs_router)
     return bg_manager
+
+
+def setup_outdated_dialogs(dialogs_router: Router) -> None:
+    """Let any dialog handler or getter close itself by raising `DialogOutdated`.
+
+    Must run after `setup_dialogs`: inner middlewares are applied in
+    registration order, and this one needs `dialog_manager` in the data, which
+    aiogram_dialog's own middleware puts there.
+    """
+    middleware = OutdatedDialogMiddleware()
+    dialogs_router.callback_query.middleware(middleware)
+    dialogs_router.message.middleware(middleware)
 
 
 def setup_all_dialogs() -> Router:

@@ -7,10 +7,11 @@ from dishka import FromDishka
 from dishka.integrations.aiogram_dialog import inject
 
 from shvatka.core.interfaces.identity import IdentityProvider
-from shvatka.core.players.player import get_my_team, leave
+from shvatka.core.players.player import leave
 from shvatka.core.views.team import TeamNotifier
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.tgbot import states
+from shvatka.tgbot.dialogs.outdated import get_actual_team
 from shvatka.tgbot.dialogs.team_view.common import get_active_filter, get_archive_filter
 
 
@@ -41,16 +42,6 @@ async def on_leave_team(
 ):
     dao: HolderDao = dialog_manager.middleware_data["dao"]
     player = await identity.get_required_player()
+    await get_actual_team(player, dao.team_player)
     await leave(player, player, dao.team_leaver, notifier=team_notifier)
     await dialog_manager.done()
-
-
-@inject
-async def on_start_my_team(
-    start_data: dict, manager: DialogManager, identity: FromDishka[IdentityProvider]
-) -> None:
-    dao: HolderDao = manager.middleware_data["dao"]
-    player = await identity.get_required_player()
-    team = await get_my_team(player=player, dao=dao.team_player)
-    assert team
-    manager.dialog_data["team_id"] = team.id

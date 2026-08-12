@@ -1,0 +1,170 @@
+= SHEP-0005 — Outdated dialogs
+:navtitle: SHEP-0005 Outdated dialogs
+
+[cols="1,4"]
+|===
+| SHEP | 0005
+| Title | Outdated dialogs
+| Status | `Accepted`
+| Created | 2026-08-12
+| Updated | 2026-08-12
+| Related | issue #339
+|===
+
+== Summary
+
+A telegram window stays clickable forever, so the state a dialog was opened for
+can be gone by the time a button is pressed. Dialogs now say so explicitly: a
+getter or a handler raises `DialogOutdated`, and one middleware turns that into
+an alert for the user plus a closed dialog — instead of an `assert` blowing up
+or a handler silently acting on the wrong team.
+
+== Context
+
+`shvatka/tgbot/dialogs/team_view/handlers.py` used to open the "my team" dialog
+like this:
+
+[source,python]
+----
+team = await get_my_team(player=player, dao=dao.team_player)
+assert team
+manager.dialog_data["team_id"] = team.id
+----
+
+Weeks may pass between opening the main menu and pressing *🚩Моя команда* in it.
+If the captain removed the player meanwhile, `get_my_team` returns `None` and
+the bot answers with an `AssertionError` — the user sees a dead button and the
+log chat gets a traceback.
+
+The same shape appeared all over the team dialogs:
+
+* `team_manage/getters.py` — `assert team`, and `get_my_team_` returning
+  `team=None` into a Jinja template that dereferences `team.name`;
+* `team_manage/handlers.py` — `assert team` in `start_merge`,
+  `gotten_chat_request`, `gotten_user_request`; a bare `done()` with no
+  explanation in the rename/role/emoji handlers;
+* `change_permission_handler` took the *selected player's own* membership
+  (`get_team_player_by_player`) rather than their membership in the captain's
+  team — if that player had joined another team in the meantime, the captain
+  would have flipped a permission in a team they have nothing to do with.
+
+Three constraints shaped the answer:
+
+* **Getters cannot close a dialog.** They run inside `manager.show()`; calling
+  `done()` from there re-enters the manager while it is rendering.
+* **The existing `SHError` handler is not enough.** `dp.errors` already answers
+  the callback with `notify_user`, but it leaves the dialog open on a window
+  that will fail again on the next click. And most of these errors are not
+  domain errors at all — nothing went wrong, the window is simply old.
+* **Error handlers cannot reach the dialog.** aiogram_dialog puts
+  `dialog_manager` into the data of `dialogs_router.errors`, but the catch-all
+  handler on `dp.errors` runs first and stops propagation, so a handler
+  registered deeper is never reached.
+
+== Decision
+
+=== `DialogOutdated` is the signal
+
+A dedicated exception in `shvatka/tgbot/dialogs/outdated.py`, deliberately *not*
+an `SHError`: it does not mean the domain refused something, it means the window
+the user is looking at describes a world that no longer exists. It carries
+`notify_user` (Russian, shown to the user) and `text` (English, logged).
+
+=== One middleware handles it
+
+`OutdatedDialogMiddleware` is an inner middleware of the dialogs router. It
+catches `DialogOutdated`, answers the callback query with an alert (or replies
+to the message, for `MessageInput` handlers), and calls `manager.done()`.
+
+Inner middlewares of a router wrap the handlers of its sub-routers too, so one
+registration covers every dialog — including window getters, which run inside
+the handler call. It must be registered **after** `setup_dialogs`, so that it
+sits inside aiogram_dialog's own `ManagerMiddleware` and has `dialog_manager` in
+the data; `tests/unit/test_outdated_dialog_middleware.py` pins that ordering.
+
+Closing the dialog — rather than switching back a window — is the deliberate
+choice: whatever the dialog kept in `dialog_data` was captured against the old
+state, so the honest thing is to drop it and let the user re-enter from a window
+built out of current data. The parent dialog re-renders on the way out, so a
+button that should no longer be there disappears in the same round trip.
+
+=== Guards instead of asserts
+
+Three helpers next to the exception replace the hand-written checks, so a call
+site states which staleness it is guarding against:
+
+[cols="1,4",options="header"]
+|===
+| Helper | Answers
+
+| `get_actual_team(player, dao)`
+| the team the player is in *now*
+
+| `get_actual_team_player(player, team, dao)`
+| the acting player's own membership in that team
+
+| `get_actual_teammate(teammate, team, dao)`
+| another player's membership *in that team* — not wherever they are today
+|===
+
+=== The "my team" window resolves its team on every render
+
+`my_team_view` no longer captures a team id in `on_start`; `my_team_getter`
+resolves the current team on every render. Remembering an id and trusting it
+later is the bug this SHEP is about, so the dialog stopped doing it. The team
+card body is shared with the public team view through `team_card()`.
+
+=== Alternatives considered
+
+* **Handle it in `dp.errors`.** Rejected: the catch-all error handler already
+  registered there wins the propagation, and error handlers at that level have
+  no dialog manager.
+* **Move `setup_dialogs` onto the dispatcher** so error handlers get a manager.
+  Rejected: it puts the dialog middlewares on every handler in the bot, and
+  AGENTS.md is explicit that middleware changes break in ways no test catches.
+* **Let getters return `None` and hide widgets with `when=`.** Rejected: it
+  spreads a "maybe there is no team" branch through every template of a dialog
+  that only makes sense for a team member.
+* **Reuse `PlayerNotInTeam`** and close the dialog on it. Rejected: the same
+  exception is raised about *other* players in perfectly healthy flows, so it
+  cannot mean "this window is stale".
+
+== Consequences
+
+* Any dialog can now bail out from anywhere — getter, `on_click`, `MessageInput`
+  — with one `raise`, and the user gets told why.
+* One more middleware in the dialogs router. It only wraps a `try/except`, but
+  it is on the hot path of every dialog event.
+* Closing the dialog loses whatever the user had typed into it. That is the
+  point (the data was captured against stale state), but it is a real cost for
+  multi-step dialogs, and a future variant that switches to a safe window
+  instead is not precluded.
+* `DialogOutdated` is tgbot-only. If the API grows the same problem, it needs
+  its own answer — the exception must not migrate into `core`.
+
+== Phases and status
+
+[cols="1,4,2",options="header"]
+|===
+| Phase | Content | Status
+
+| 1
+| `DialogOutdated`, the middleware, the guards; team_view and team_manage
+  converted
+| ✅ done
+
+| 2
+| Sweep the remaining dialogs (game editing, orgs) for state that can change
+  under an open window
+| ⏳ not started
+|===
+
+== Deviations from the plan
+
+None yet.
+
+== Open questions
+
+* Should `DialogOutdated` be able to name a window to fall back to, instead of
+  always closing? The captain's bridge losing the whole dialog because one
+  selected player left is heavier than it needs to be.

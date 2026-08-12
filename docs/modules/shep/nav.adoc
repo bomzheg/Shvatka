@@ -3,4 +3,5 @@
 ** xref:shep-0002-custom-key-prefixes.adoc[SHEP-0002 Custom key prefixes]
 ** xref:shep-0003-season-schedule.adoc[SHEP-0003 Season schedule]
 ** xref:shep-0004-parallel-levels.adoc[SHEP-0004 Parallel levels]
+** xref:shep-0005-outdated-dialogs.adoc[SHEP-0005 Outdated dialogs]
 ** xref:template.adoc[SHEP template]

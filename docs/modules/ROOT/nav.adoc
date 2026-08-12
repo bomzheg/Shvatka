@@ -13,6 +13,7 @@
 ** xref:setup_team/add_players.adoc[Добавить игроков]
 ** xref:setup_team/manage_team.adoc[Управление командой]
 ** xref:setup_team/permissions.adoc[Полномочия в команде]
+** xref:setup_team/change_captain.adoc[Передача капитанства]
 ** xref:setup_team/waivers.adoc[Вейверы]
 ** xref:setup_team/move_chat.adoc[Перенести команду в другой чат]
 ** xref:setup_team/captain_faq.adoc[Частые вопросы капитана]

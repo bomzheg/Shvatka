@@ -2,4 +2,5 @@
 ** xref:shep-0001-notifications-and-action-requests.adoc[SHEP-0001 Notifications and action requests]
 ** xref:shep-0002-custom-key-prefixes.adoc[SHEP-0002 Custom key prefixes]
 ** xref:shep-0003-season-schedule.adoc[SHEP-0003 Season schedule]
+** xref:shep-0004-parallel-levels.adoc[SHEP-0004 Parallel levels]
 ** xref:template.adoc[SHEP template]

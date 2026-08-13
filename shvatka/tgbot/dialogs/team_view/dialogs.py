@@ -3,13 +3,12 @@ from aiogram_dialog.widgets.kbd import ScrollingGroup, Select, Cancel, SwitchTo,
 from aiogram_dialog.widgets.text import Const, Format, Jinja, Case
 
 from shvatka.tgbot import states
-from .getters import teams_getter, team_getter, filter_getter
+from .getters import teams_getter, team_getter, my_team_getter, filter_getter
 from .handlers import (
     select_team,
     select_player,
     change_active_filter,
     change_archive_filter,
-    on_start_my_team,
     on_leave_team,
 )
 from shvatka.tgbot.dialogs.common import BOOL_VIEW
@@ -100,9 +99,8 @@ my_team_view = Dialog(
         ),
         Button(Const("☄️Выйти из команды"), id="leave_team", on_click=on_leave_team),
         Cancel(Const("🔙Назад")),
-        getter=team_getter,
+        getter=my_team_getter,
         state=states.MyTeamSg.team,
         preview_data=PREVIEW_TEAM_CARD,
     ),
-    on_start=on_start_my_team,
 )

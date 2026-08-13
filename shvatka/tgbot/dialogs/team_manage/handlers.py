@@ -29,6 +29,7 @@ from shvatka.core.services.team import (
     change_team_desc,
     change_chat,
 )
+from shvatka.core.teams.interactors import ChangeCaptainInteractor
 from shvatka.core.views.team import TeamNotifier
 from shvatka.core.utils import exceptions
 from shvatka.infrastructure.db.dao.holder import HolderDao
@@ -135,6 +136,29 @@ async def remove_player_handler(
     player = await get_player_by_id(player_id, dao.player)
     await leave(player=player, remover=captain, dao=dao.team_leaver, notifier=team_notifier)
     await manager.switch_to(state=states.CaptainsBridgeSG.players)
+
+
+@inject
+async def change_captain_handler(
+    c: CallbackQuery,
+    button: Button,
+    manager: DialogManager,
+    identity: FromDishka[IdentityProvider],
+    interactor: FromDishka[ChangeCaptainInteractor],
+):
+    await c.answer()
+    dao: HolderDao = manager.middleware_data["dao"]
+    captain = await identity.get_required_player()
+    team = await get_my_team(captain, dao.team_player)
+    if team is None:
+        logger.warning("player %s has no team", captain.id)
+        await manager.done()
+        return
+    player_id = manager.dialog_data["selected_player_id"]
+    await interactor(team_id=team.id, new_captain_id=player_id, identity=identity)
+    # the acting player is no longer the captain, so the player card they came
+    # from would offer buttons they may not have any more
+    await manager.switch_to(state=states.CaptainsBridgeSG.main)
 
 
 @inject

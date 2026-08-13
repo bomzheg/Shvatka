@@ -19,6 +19,7 @@ from shvatka.tgbot.dialogs.preview_data import (
 )
 from .handlers import (
     rename_team_handler,
+    change_captain_handler,
     change_desc_team_handler,
     select_player,
     change_permission_handler,
@@ -189,6 +190,14 @@ captains_bridge = Dialog(
             when=F["team_player"].can_manage_players,
         ),
         SwitchTo(
+            Const("👑Передать капитанство"),
+            id="to_captain",
+            state=states.CaptainsBridgeSG.confirm_captain,
+            # the captaincy is the captain's alone to give away — no permission
+            # stands in for it. The player list already excludes the captain.
+            when=F["team_player"].is_captain,
+        ),
+        SwitchTo(
             Const("Изгнать"),
             id="delete",
             state=states.CaptainsBridgeSG.confirm_delete,
@@ -199,6 +208,29 @@ captains_bridge = Dialog(
         getter=get_selected_player,
         state=states.CaptainsBridgeSG.player,
         preview_data=PREVIEW_SELECTED_TEAM_PLAYER_DATA,
+    ),
+    Window(
+        TEAM_PLAYER_CARD,
+        Const(
+            "Сделать его капитаном команды?\n"
+            "Ты перестанешь быть капитаном, и забрать капитанство обратно "
+            "сможет только он.",
+        ),
+        SwitchTo(Const("Нет!"), id="back", state=states.CaptainsBridgeSG.player),
+        Button(
+            Const("👑Да, передать капитанство"),
+            id="change_captain",
+            on_click=change_captain_handler,
+        ),
+        SwitchTo(
+            Const("🔙Назад к списку игроков"),
+            id="to_players",
+            state=states.CaptainsBridgeSG.players,
+        ),
+        getter=get_selected_player,
+        state=states.CaptainsBridgeSG.confirm_captain,
+        preview_data=PREVIEW_SELECTED_TEAM_PLAYER_DATA,
+        preview_add_transitions=[PreviewSwitchTo(states.CaptainsBridgeSG.main)],
     ),
     Window(
         TEAM_PLAYER_CARD,

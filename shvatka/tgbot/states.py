@@ -139,6 +139,7 @@ class CaptainsBridgeSG(StatesGroup):
     add_player = State()
     player = State()
     confirm_delete = State()
+    confirm_captain = State()
     player_role = State()
     player_emoji = State()
 

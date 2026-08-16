@@ -104,7 +104,18 @@ class TeamPlayerDao(BaseDAO[models.TeamPlayer]):
                 models.TeamPlayer.team_id == team.id,
             )
         )
-        return result.one_or_none()
+        restored = result.one_or_none()
+        if restored is None:
+            return None
+        obstructive: ScalarResult[models.TeamPlayer] = await self.session.scalars(
+            select(models.TeamPlayer).where(
+                models.TeamPlayer.player_id == player.id,
+                models.TeamPlayer.date_joined >= restored.date_left,
+            )
+        )
+        if obstructive.one_or_none() is not None:
+            return None
+        return restored
 
     async def get_players(self, team: dto.Team) -> Sequence[dto.FullTeamPlayer]:
         result = await self.session.scalars(

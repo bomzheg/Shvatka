@@ -1,4 +1,5 @@
 import pytest
+import pytest_asyncio
 from adaptix import Retort
 from httpx import AsyncClient
 
@@ -7,7 +8,7 @@ from shvatka.api.shared import responses
 from shvatka.core.models import dto
 from shvatka.core.models import enums
 from shvatka.core.players.player import get_full_team_player, join_team
-from shvatka.core.utils.defaults_constants import CAPTAIN_ROLE
+from shvatka.core.utils.defaults_constants import CAPTAIN_ROLE, DEFAULT_ROLE
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.api.app.dependencies.auth import AuthProperties
 from tests.fixtures.chat_constants import create_gryffindor_dto_chat
@@ -325,6 +326,237 @@ async def test_remove_player_from_team(
     )
     assert resp.status_code == 204
     assert await check_dao.team_player.get_team(hermione) is None
+
+
+@pytest_asyncio.fixture
+async def dumbledores_army(harry: dto.Player, dao: HolderDao) -> dto.Team:
+    """A team harry captains without playing in it — he plays in gryffindor.
+
+    That is what a captain who moved to another team as a field player looks
+    like: the captaincy stays with them, the membership does not.
+    """
+    team = await dao.team.create_no_chat(name="Dumbledore's Army", description=None, captain=harry)
+    await dao.commit()
+    return team
+
+
+@pytest.mark.asyncio
+async def test_get_my_captained_teams(
+    client: AsyncClient,
+    harry: dto.Player,
+    gryffindor: dto.Team,
+    dumbledores_army: dto.Team,
+    token: Token,
+):
+    resp = await client.get(
+        "/teams/my/captained",
+        cookies=auth_cookies(token),
+        follow_redirects=True,
+    )
+    assert resp.is_success
+    resp.read()
+    by_id = {team["id"]: team for team in resp.json()["items"]}
+    assert set(by_id) == {gryffindor.id, dumbledores_army.id}
+    assert by_id[gryffindor.id]["is_current"] is True
+    assert by_id[dumbledores_army.id]["is_current"] is False
+    assert by_id[dumbledores_army.id]["captain"]["id"] == harry.id
+
+
+@pytest.mark.asyncio
+async def test_captained_teams_empty_for_plain_player(
+    client: AsyncClient,
+    harry: dto.Player,
+    hermione: dto.Player,
+    gryffindor: dto.Team,
+    auth: AuthProperties,
+    dao: HolderDao,
+):
+    await join_team(hermione, gryffindor, harry, dao.team_player, notifier=TeamNotifierMock())
+    resp = await client.get(
+        "/teams/my/captained",
+        cookies=auth_cookies(auth.create_user_token(hermione)),
+        follow_redirects=True,
+    )
+    assert resp.is_success
+    resp.read()
+    assert resp.json()["items"] == []
+
+
+@pytest.mark.asyncio
+async def test_join_captained_team_requires_leaving_current(
+    client: AsyncClient,
+    harry: dto.Player,
+    gryffindor: dto.Team,
+    dumbledores_army: dto.Team,
+    token: Token,
+    check_dao: HolderDao,
+):
+    resp = await client.post(
+        f"/teams/{dumbledores_army.id}/join",
+        cookies=auth_cookies(token),
+        json={"leave_current": False},
+        follow_redirects=True,
+    )
+    assert resp.status_code == 422  # PlayerAlreadyInTeam -> SHError
+    current = await check_dao.team_player.get_team(harry)
+    assert current is not None
+    assert current.id == gryffindor.id
+
+
+@pytest.mark.asyncio
+async def test_join_captained_team_leaving_current(
+    client: AsyncClient,
+    harry: dto.Player,
+    gryffindor: dto.Team,
+    dumbledores_army: dto.Team,
+    token: Token,
+    check_dao: HolderDao,
+):
+    resp = await client.post(
+        f"/teams/{dumbledores_army.id}/join",
+        cookies=auth_cookies(token),
+        json={"leave_current": True},
+        follow_redirects=True,
+    )
+    assert resp.is_success
+    resp.read()
+    assert resp.json()["id"] == harry.id
+    assert resp.json()["role"] == CAPTAIN_ROLE
+    current = await check_dao.team_player.get_team(harry)
+    assert current is not None
+    assert current.id == dumbledores_army.id
+
+
+@pytest.mark.asyncio
+async def test_join_captained_team_when_teamless(
+    client: AsyncClient,
+    harry: dto.Player,
+    dumbledores_army: dto.Team,
+    token: Token,
+    check_dao: HolderDao,
+):
+    resp = await client.post(
+        f"/teams/{dumbledores_army.id}/join",
+        cookies=auth_cookies(token),
+        json={},
+        follow_redirects=True,
+    )
+    assert resp.is_success
+    current = await check_dao.team_player.get_team(harry)
+    assert current is not None
+    assert current.id == dumbledores_army.id
+
+
+@pytest.mark.asyncio
+async def test_join_team_forbidden_for_non_captain(
+    client: AsyncClient,
+    hermione: dto.Player,
+    gryffindor: dto.Team,
+    auth: AuthProperties,
+    check_dao: HolderDao,
+):
+    resp = await client.post(
+        f"/teams/{gryffindor.id}/join",
+        cookies=auth_cookies(auth.create_user_token(hermione)),
+        json={"leave_current": True},
+        follow_redirects=True,
+    )
+    assert resp.status_code == 422  # PermissionsError -> SHError
+    assert await check_dao.team_player.get_team(hermione) is None
+
+
+@pytest.mark.asyncio
+async def test_change_captain(
+    client: AsyncClient,
+    harry: dto.Player,
+    hermione: dto.Player,
+    gryffindor: dto.Team,
+    token: Token,
+    dao: HolderDao,
+    check_dao: HolderDao,
+):
+    await join_team(hermione, gryffindor, harry, dao.team_player, notifier=TeamNotifierMock())
+    resp = await client.put(
+        f"/teams/{gryffindor.id}/captain",
+        cookies=auth_cookies(token),
+        json={"player_id": hermione.id},
+        follow_redirects=True,
+    )
+    assert resp.is_success
+    resp.read()
+    assert resp.json()["captain"]["id"] == hermione.id
+    team = await check_dao.team.get_by_id(gryffindor.id)
+    assert team.captain is not None
+    assert team.captain.id == hermione.id
+    new_captain = await get_full_team_player(hermione, team, check_dao.team_player)
+    assert new_captain.role == CAPTAIN_ROLE
+    assert new_captain.is_captain
+    # the previous captain keeps playing, but no longer under the captain's role
+    old_captain = await get_full_team_player(harry, team, check_dao.team_player)
+    assert old_captain.role == DEFAULT_ROLE
+    assert not old_captain.is_captain
+
+
+@pytest.mark.asyncio
+async def test_change_captain_to_player_outside_team(
+    client: AsyncClient,
+    harry: dto.Player,
+    hermione: dto.Player,
+    gryffindor: dto.Team,
+    token: Token,
+    check_dao: HolderDao,
+):
+    resp = await client.put(
+        f"/teams/{gryffindor.id}/captain",
+        cookies=auth_cookies(token),
+        json={"player_id": hermione.id},
+        follow_redirects=True,
+    )
+    assert resp.status_code == 422  # PlayerNotInTeam -> SHError
+    team = await check_dao.team.get_by_id(gryffindor.id)
+    assert team.captain is not None
+    assert team.captain.id == harry.id
+
+
+@pytest.mark.asyncio
+async def test_change_captain_forbidden_for_non_captain(
+    client: AsyncClient,
+    harry: dto.Player,
+    hermione: dto.Player,
+    ron: dto.Player,
+    gryffindor: dto.Team,
+    auth: AuthProperties,
+    dao: HolderDao,
+    check_dao: HolderDao,
+):
+    await join_team(hermione, gryffindor, harry, dao.team_player, notifier=TeamNotifierMock())
+    await join_team(ron, gryffindor, harry, dao.team_player, notifier=TeamNotifierMock())
+    resp = await client.put(
+        f"/teams/{gryffindor.id}/captain",
+        cookies=auth_cookies(auth.create_user_token(hermione)),
+        json={"player_id": ron.id},
+        follow_redirects=True,
+    )
+    assert resp.status_code == 422  # PermissionsError -> SHError
+    team = await check_dao.team.get_by_id(gryffindor.id)
+    assert team.captain is not None
+    assert team.captain.id == harry.id
+
+
+@pytest.mark.asyncio
+async def test_change_captain_to_the_same_player(
+    client: AsyncClient,
+    harry: dto.Player,
+    gryffindor: dto.Team,
+    token: Token,
+):
+    resp = await client.put(
+        f"/teams/{gryffindor.id}/captain",
+        cookies=auth_cookies(token),
+        json={"player_id": harry.id},
+        follow_redirects=True,
+    )
+    assert resp.status_code == 422  # TeamError -> SHError
 
 
 @pytest.mark.asyncio

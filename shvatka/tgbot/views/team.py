@@ -9,6 +9,7 @@ from aiogram.utils.markdown import html_decoration as hd
 
 from shvatka.core.models import dto
 from shvatka.core.views.team import (
+    CaptainChanged,
     PlayerJoinedTeam,
     PlayerLeftTeam,
     TeamEvent,
@@ -87,5 +88,10 @@ class BotTeamNotifier(TeamNotifier):
                     f"Игрок {hd.quote(event.removed.name_mention)} удалён из команды "
                     f"(капитан {hd.quote(event.actor.name_mention)})."
                 )
+            case CaptainChanged():
+                text = f"👑Новый капитан команды — {hd.quote(event.new_captain.name_mention)}."
+                if not event.by_old_captain:
+                    text += f" Капитанство передал {hd.quote(event.actor.name_mention)}."
+                return text
             case _:
                 return None

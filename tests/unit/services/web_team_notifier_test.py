@@ -5,7 +5,7 @@ import pytest
 
 from shvatka.api.app.utils.push import PushMessage
 from shvatka.api.app.utils.web_input import WebTeamNotifier
-from shvatka.core.views.team import PlayerJoinedTeam, PlayerLeftTeam
+from shvatka.core.views.team import CaptainChanged, PlayerJoinedTeam, PlayerLeftTeam
 
 
 class FakePushSender:
@@ -81,6 +81,33 @@ async def test_player_left_persists_to_remaining_members() -> None:
     assert persisted["recipient_ids"] == {10}
     assert persisted["type_"].name == "player_left_team"
     assert persisted["payload"]["player_id"] == 42
+
+
+@pytest.mark.asyncio
+async def test_captain_changed_persists_to_every_member() -> None:
+    sender = FakePushSender()
+    notification_dao = FakeNotificationDao()
+    notifier = WebTeamNotifier(notification_dao, FakeTeamPlayersDao([10, 42]), sender)
+    event = CaptainChanged(
+        team=_team(),
+        actor=_player(10, "cap"),
+        new_captain=_player(42, "heir"),
+        old_captain=_player(10, "cap"),
+    )
+
+    await notifier.notify(event)
+
+    persisted = notification_dao.created[0]
+    assert persisted["recipient_ids"] == {10, 42}
+    assert persisted["type_"].name == "team_captain_changed"
+    assert persisted["payload"]["player_id"] == 42
+    assert persisted["payload"]["old_captain_id"] == 10
+    assert persisted["severity"].name == "important"
+
+    player_ids, message = sender.calls[0]
+    assert player_ids == {10, 42}
+    assert message.data is not None
+    assert message.data["kind"] == "team_captain_changed"
 
 
 @pytest.mark.asyncio

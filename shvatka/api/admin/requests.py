@@ -32,6 +32,18 @@ class AdminChangeTg:
 
 
 @dataclass
+class AdminNewCaptain:
+    player_id: int
+
+
+@dataclass
+class AdminJoinTeam:
+    player_id: int
+    role: str | None = None
+    emoji: str | None = None
+
+
+@dataclass
 class MergePlayersRequest(MergeRequest):
     timeline: list[TimelineItem] | None = None
     """manually built team history for the merged player; replaces both histories.

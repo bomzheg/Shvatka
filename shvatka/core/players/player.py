@@ -122,6 +122,36 @@ async def join_team(
 ):
     await dao.check_player_free(player)
     await check_can_add_players(manager, team, dao)
+    await _join_team(player, team, manager, dao, notifier, role=role, emoji=emoji)
+
+
+async def superuser_force_join_team(
+    player: dto.Player,
+    team: dto.Team,
+    manager: dto.Player,
+    dao: TeamJoiner,
+    notifier: TeamNotifier,
+    role: str = DEFAULT_ROLE,
+    emoji: str | None = None,
+):
+    """Add a player to a team without asking whether the manager may.
+
+    For the engine's admins, who act above the team permissions rather than
+    inside them. A player still can be in only one team at a time.
+    """
+    await dao.check_player_free(player)
+    await _join_team(player, team, manager, dao, notifier, role=role, emoji=emoji)
+
+
+async def _join_team(
+    player: dto.Player,
+    team: dto.Team,
+    manager: dto.Player,
+    dao: TeamJoiner,
+    notifier: TeamNotifier,
+    role: str = DEFAULT_ROLE,
+    emoji: str | None = None,
+):
     try:
         await dao.join_team(player, team, role=role, emoji=emoji)
     except PlayerRestoredInTeam:
@@ -190,6 +220,32 @@ async def leave(
         raise PlayerNotInTeam(player=player)
     if player.id != remover.id:  # player itself always can leave
         await check_can_remove_player(remover, team, dao)
+    await _leave(player, remover, team, dao, notifier)
+
+
+async def superuser_force_leave(
+    player: dto.Player,
+    remover: dto.Player,
+    dao: TeamLeaver,
+    notifier: TeamNotifier,
+):
+    """Remove a player from their team without asking whether the remover may.
+
+    The counterpart of :func:`force_join_team` for the engine's admins.
+    """
+    team = await dao.get_team(player)
+    if not team:
+        raise PlayerNotInTeam(player=player)
+    await _leave(player, remover, team, dao, notifier)
+
+
+async def _leave(
+    player: dto.Player,
+    remover: dto.Player,
+    team: dto.Team,
+    dao: TeamLeaver,
+    notifier: TeamNotifier,
+):
     if game := await dao.get_active_game():
         await dao.delete(
             dto.WaiverQuery(

@@ -22,10 +22,12 @@ from shvatka.core.players.player import (
     get_full_team_player,
     is_team_captain,
 )
+from shvatka.core.teams.adapters import TeamCaptainSetter
 from shvatka.core.utils import exceptions
-from shvatka.core.utils.defaults_constants import CAPTAIN_ROLE
+from shvatka.core.utils.defaults_constants import CAPTAIN_ROLE, DEFAULT_ROLE
 from shvatka.core.utils.exceptions import SHDataBreach, PermissionsError
 from shvatka.core.views.game import GameLogWriter, GameLogEvent, GameLogType
+from shvatka.core.views.team import CaptainChanged, TeamNotifier
 
 
 async def create_team(
@@ -151,6 +153,68 @@ async def merge_teams(
                 "secondary_team": secondary.name,
             },
         )
+    )
+
+
+async def change_captain(
+    team: dto.Team,
+    actor: dto.Player,
+    new_captain_id: int,
+    dao: TeamCaptainSetter,
+    notifier: TeamNotifier,
+) -> dto.Team:
+    """Hand the team over to another of its players.
+
+    The new captain has to play in the team already — the captaincy is not an
+    invitation. Roles follow the handover: the newcomer becomes «капитан», and
+    the previous captain, if they are still in the team and still carry that
+    role, goes back to the default one.
+    """
+    players = await dao.get_players(team)
+    target = next((tp for tp in players if tp.player_id == new_captain_id), None)
+    if target is None:
+        raise exceptions.PlayerNotInTeam(
+            player_id=new_captain_id,
+            team=team,
+            text="can't make captain a player who is not in the team",
+            notify_user="Капитаном можно назначить только игрока этой команды",
+        )
+    old_captain = team.captain
+    if old_captain is not None and old_captain.id == new_captain_id:
+        raise exceptions.TeamError(
+            team=team,
+            player=actor,
+            text="player is already the captain of this team",
+            notify_user="Этот игрок уже капитан команды",
+        )
+    await dao.change_captain(team, target.player)
+    await dao.change_role(target, CAPTAIN_ROLE)
+    if old_captain is not None:
+        previous = next((tp for tp in players if tp.player_id == old_captain.id), None)
+        if previous is not None and previous.role == CAPTAIN_ROLE:
+            await dao.change_role(previous, DEFAULT_ROLE)
+    await dao.commit()
+    updated = await dao.get_by_id(team.id)
+    await notifier.notify(
+        CaptainChanged(
+            team=updated,
+            actor=actor,
+            new_captain=target.player,
+            old_captain=old_captain,
+        )
+    )
+    return updated
+
+
+def check_can_change_captain(actor: dto.Player, team: dto.Team) -> None:
+    """Only the captain hands their own team over; anyone else needs an admin."""
+    if is_team_captain(team, actor):
+        return
+    raise PermissionsError(
+        permission_name="change_captain",
+        team=team,
+        player=actor,
+        notify_user="Передать капитанство может только капитан команды",
     )
 
 

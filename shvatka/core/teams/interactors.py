@@ -26,26 +26,37 @@ from shvatka.core.players.player import (
     check_can_manage_players,
     get_full_team_player,
     get_team_players,
+    is_team_captain,
     join_team,
     leave,
 )
 from shvatka.core.services.team import (
+    change_captain,
+    check_can_change_captain,
     check_can_change_name,
     get_played_games,
     get_team_by_id,
     get_teams,
 )
 from shvatka.core.teams.adapters import (
+    CaptainedTeamsReader,
+    CaptainTeamJoiner,
     ChatlessTeamCreator,
     PlayerPlayedGamesCounter,
+    TeamCaptainSetter,
     TeamEditor,
     TeamPlayerAdder,
     TeamPlayerUpdater,
     TeamsWithStatGetter,
 )
-from shvatka.core.teams.dto import TeamPlayerWithStat, TeamWithStat
+from shvatka.core.teams.dto import CaptainedTeam, TeamPlayerWithStat, TeamWithStat
 from shvatka.core.utils.defaults_constants import CAPTAIN_ROLE, DEFAULT_ROLE
-from shvatka.core.utils.exceptions import PlayerRestoredInTeam, TeamError
+from shvatka.core.utils.exceptions import (
+    PermissionsError,
+    PlayerAlreadyInTeam,
+    PlayerRestoredInTeam,
+    TeamError,
+)
 from shvatka.core.views.game import GameLogEvent, GameLogType, GameLogWriter
 from shvatka.core.views.team import TeamNotifier
 
@@ -216,6 +227,94 @@ class UpdateTeamPlayerInteractor:
                 await self.dao.flip_permission(target, permission)
         await self.dao.commit()
         return await get_full_team_player(player, team, self.dao)
+
+
+@dataclass
+class MyCaptainedTeamsInteractor:
+    """Every team the acting player captains — including ones they don't play in."""
+
+    dao: CaptainedTeamsReader
+
+    async def __call__(self, identity: IdentityProvider) -> list[CaptainedTeam]:
+        captain = await identity.get_required_player()
+        teams = await self.dao.get_captained_teams(captain)
+        if not teams:
+            return []
+        current = await self.dao.get_team(captain)
+        counts = await self.dao.get_played_games_counts([team.id for team in teams])
+        return [
+            CaptainedTeam(
+                team=team,
+                played_games_count=counts.get(team.id, 0),
+                is_current=current is not None and current.id == team.id,
+            )
+            for team in teams
+        ]
+
+
+@dataclass
+class JoinCaptainedTeamInteractor:
+    """A captain returning to a team they already lead.
+
+    No invite is involved — the captaincy is the permission. Since a player is in
+    at most one team at a time, joining while playing elsewhere means leaving
+    that team first, and the caller has to ask for it explicitly.
+    """
+
+    dao: CaptainTeamJoiner
+    notifier: TeamNotifier
+
+    async def __call__(
+        self, team_id: int, identity: IdentityProvider, leave_current: bool = False
+    ) -> dto.FullTeamPlayer:
+        player = await identity.get_required_player()
+        team = await self.dao.get_by_id(team_id)
+        if not is_team_captain(team, player):
+            raise PermissionsError(
+                permission_name="join_captained_team",
+                team=team,
+                player=player,
+                text="only the captain can join their team without an invite",
+                notify_user="Так вступить можно только в команду, где вы капитан",
+            )
+        current = await self.dao.get_team(player)
+        if current is not None:
+            if current.id == team.id:
+                raise PlayerAlreadyInTeam(
+                    player=player,
+                    team=team,
+                    text="player is already in this team",
+                    notify_user="Вы уже в этой команде",
+                )
+            if not leave_current:
+                raise PlayerAlreadyInTeam(
+                    player=player,
+                    team=current,
+                    text="player is in another team",
+                    notify_user=f"Сначала нужно выйти из команды «{current.name}»",
+                )
+            await leave(player, player, self.dao, notifier=self.notifier)
+        with contextlib.suppress(PlayerRestoredInTeam):
+            await join_team(
+                player, team, player, self.dao, notifier=self.notifier, role=CAPTAIN_ROLE
+            )
+        return await get_full_team_player(player, team, self.dao)
+
+
+@dataclass
+class ChangeCaptainInteractor:
+    """The captain hands their team over to another of its players."""
+
+    dao: TeamCaptainSetter
+    notifier: TeamNotifier
+
+    async def __call__(
+        self, team_id: int, new_captain_id: int, identity: IdentityProvider
+    ) -> dto.Team:
+        actor = await identity.get_required_player()
+        team = await get_team_by_id(team_id, self.dao)
+        check_can_change_captain(actor, team)
+        return await change_captain(team, actor, new_captain_id, self.dao, self.notifier)
 
 
 @dataclass

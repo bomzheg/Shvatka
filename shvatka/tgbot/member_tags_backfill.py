@@ -25,7 +25,7 @@ DELAY = 0.05
 """pause between players, telegram allows about 20 requests per second"""
 
 
-async def main():
+async def main() -> None:
     paths = common_get_paths("BOT_PATH")
 
     setup_logging(paths)

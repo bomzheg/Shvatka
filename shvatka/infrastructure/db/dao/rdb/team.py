@@ -125,6 +125,21 @@ class TeamDao(BaseDAO[models.Team]):
         )
         return team.to_dto_chat_prefetched()
 
+    async def get_captained_teams(self, captain: dto.Player) -> list[dto.Team]:
+        """Every team this player is the captain of, whether they play in it or not."""
+        teams: ScalarResult[models.Team] = await self.session.scalars(
+            select(models.Team)
+            .options(*get_team_options())
+            .where(models.Team.captain_id == captain.id)
+            .order_by(models.Team.id)
+        )
+        return [team.to_dto_chat_prefetched() for team in teams]
+
+    async def change_captain(self, team: dto.Team, captain: dto.Player) -> None:
+        await self.session.execute(
+            update(models.Team).where(models.Team.id == team.id).values(captain_id=captain.id)
+        )
+
     async def rename_team(self, team: dto.Team, new_name: str) -> None:
         await self.session.execute(
             update(models.Team).where(models.Team.id == team.id).values(name=new_name)

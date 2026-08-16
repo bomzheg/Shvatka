@@ -24,6 +24,7 @@ from shvatka.core.interfaces.dal.player import TeamPlayersGetter
 from shvatka.core.models.enums.notification import NotificationType, NotificationSeverity
 from shvatka.core.notifications.adapters import NotificationWriter
 from shvatka.core.views.team import (
+    CaptainChanged,
     TeamNotifier,
     TeamEvent,
     PlayerJoinedTeam,
@@ -293,6 +294,8 @@ class WebTeamNotifier(TeamNotifier):
                 await self._notify(event, self._joined_spec(event))
             case PlayerLeftTeam():
                 await self._notify(event, self._left_spec(event))
+            case CaptainChanged():
+                await self._notify(event, self._captain_changed_spec(event))
             case _:
                 logger.warning("unknown team event %s, no notification persisted", type(event))
 
@@ -358,6 +361,30 @@ class WebTeamNotifier(TeamNotifier):
                 url="/teams",
                 tag=f"team-leave-{event.team.id}-{event.removed.id}",
                 data={"kind": "player_left_team", "team_id": event.team.id},
+            ),
+        )
+
+    @staticmethod
+    def _captain_changed_spec(event: CaptainChanged) -> "_TeamNotificationSpec":
+        payload = {
+            "team_id": event.team.id,
+            "team_name": event.team.name,
+            "player_id": event.new_captain.id,
+            "player_name": event.new_captain.name_mention,
+            "old_captain_id": event.old_captain.id if event.old_captain else None,
+            "old_captain_name": event.old_captain.name_mention if event.old_captain else None,
+            "by_self": event.by_old_captain,
+        }
+        return _TeamNotificationSpec(
+            type=NotificationType.team_captain_changed,
+            severity=NotificationSeverity.important,
+            payload=payload,
+            push=PushMessage(
+                title=f"{event.team.name}: новый капитан",
+                body=f"{event.new_captain.name_mention} теперь капитан команды",
+                url="/team",
+                tag=f"team-captain-{event.team.id}",
+                data={"kind": "team_captain_changed", "team_id": event.team.id},
             ),
         )
 

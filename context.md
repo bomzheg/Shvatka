@@ -82,7 +82,9 @@ the edge-specific twist.
 | --- | --- | --- | --- |
 | **Team** | Команда | The unit that plays. Has a name, a captain, optionally a Telegram chat and a forum counterpart. Teams play, players don't. | `dto.Team` |
 | **Team player** | Участник команды | A player's membership in a team over an interval (`date_joined` … `date_left`), with a role, an emoji and permissions. A player is in at most one team at a time. | `dto.TeamPlayer`, `dto.FullTeamPlayer` |
-| **Captain** | Капитан | The team's head: submits waivers, manages membership, implicitly holds every team permission. | `Team.captain`, `FullTeamPlayer.is_captain` |
+| **Captain** | Капитан | The team's head: submits waivers, manages membership, implicitly holds every team permission. Held by a player, not by a membership — see *captaincy transfer*. | `Team.captain`, `FullTeamPlayer.is_captain` |
+| **Captaincy transfer** | Передача капитанства | The captain making another **player of the same team** the captain. Only the current captain may (an admin may go over their head), and it is one-way — the old captain cannot take it back. | `services/team.change_captain`, `CaptainChanged` |
+| **Captained team** | Команда, где я капитан | A team a player captains whether or not they play in it. The captaincy outlives the membership: a captain who moves to another team as a field player keeps leading the old one, keeps managing its roster and name, and may return to it at any time — but cannot submit its waivers, because a waiver is submitted from inside the team. | `teams.dto.CaptainedTeam`, `TeamDao.get_captained_teams` |
 | **Role** | Роль | Free text describing what a member does in the field: `полевой` (default), `водитель`, `мозг`, `капитан`… Each has a default emoji. | `utils/defaults_constants.py` |
 | **Team permission** | Полномочие | A right delegated by the captain: manage waivers, manage players, change the team name, add/remove players. The captain has all of them regardless. | `enums.TeamPlayerPermission` |
 | **Team chat** | Чат команды | The Telegram supergroup the bot talks to the team in. | `dto.Chat`, `services/team.py` |

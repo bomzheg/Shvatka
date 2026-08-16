@@ -90,7 +90,6 @@ async def agree_to_be_org_handler(
     bg_manager_factory: FromDishka[BgManagerFactory],
 ):
     player = await identity.get_required_player()
-    await c.answer()
     try:
         await agree_to_be_org(
             token=callback_data.token,

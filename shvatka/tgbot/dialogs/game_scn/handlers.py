@@ -93,7 +93,6 @@ async def save_game(
     identity: FromDishka[IdentityProvider],
     dao: FromDishka[HolderDao],
 ):
-    await c.answer()
     author = await identity.get_required_player()
     name: str = manager.dialog_data["game_name"]
     levels = await get_all_my_free_levels(author, dao.level)
@@ -106,7 +105,6 @@ async def save_game(
 
 
 async def edit_level(c: CallbackQuery, widget: Any, manager: DialogManager, item_id: str):
-    await c.answer()
     await manager.start(states.LevelManageSG.menu, data={"level_id": int(item_id)})
 
 
@@ -119,7 +117,6 @@ async def add_level_handler(
     idp: FromDishka[IdentityProvider],
     dao: FromDishka[HolderDao],
 ):
-    await c.answer()
     data: dict[str, Any] = manager.start_data  # type: ignore[assignment]
     game_id = data["game_id"]
     author = await idp.get_required_player()

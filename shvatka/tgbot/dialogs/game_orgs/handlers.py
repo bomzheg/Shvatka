@@ -16,7 +16,6 @@ from shvatka.tgbot import states
 
 
 async def select_org(c: CallbackQuery, widget: Any, manager: DialogManager, item_id: str):
-    await c.answer()
     data = manager.dialog_data
     if data is None:
         data = {}
@@ -51,7 +50,6 @@ async def change_deleted_handler(
     identity: FromDishka[IdentityProvider],
     dao: FromDishka[HolderDao],
 ):
-    await c.answer()
     author = await identity.get_required_player()
     org_id = manager.dialog_data["org_id"]
     org = await get_org_by_id(org_id, dao.organizer)

@@ -95,7 +95,6 @@ async def add_vote_handler(
         identity=identity_provider,
         vote=callback_data.vote,
     )
-    await c.answer()
     waiver_results = await read_interactor(game_id=game.id, identity=identity_provider)
     await c.message.edit_text(  # type: ignore[union-attr]
         text=get_waiver_poll_text(waiver_results, game),
@@ -245,7 +244,6 @@ async def waiver_user_menu(
     assert team
 
     subject_player = await dao.player.get_by_id(callback_data.player_id)
-    await c.answer()
     await c.message.edit_text(  # type: ignore[union-attr]
         text=f"Схватчик {hd.quote(subject_player.name_mention)} команды {hd.quote(team.name)} "
         f"заявил что хочет участвовать в игре {hd.quote(game.name)}. Что хотите с ним делать?",
@@ -272,7 +270,6 @@ async def waiver_remove_user_vote(
     check_same_team(callback_data, player, team)
     target = await dao.player.get_by_id(callback_data.player_id)
     await revoke_vote_by_captain(game, team, player, target, dao.waiver_approver)
-    await c.answer()
     waiver_results = await read_interactor(game_id=game.id, identity=identity_provider)
     await c.message.edit_text(  # type: ignore[union-attr]
         **start_approve_waivers(game, team, waiver_results)
@@ -296,7 +293,6 @@ async def waiver_add_force_menu(
     check_same_team(callback_data, player, team)
     check_allow_approve_waivers(await get_full_team_player(player, team, dao.waiver_approver))
     players = await get_not_played_team_players(team=team, dao=dao.waiver_approver)
-    await c.answer()
     await c.message.edit_text(  # type: ignore[union-attr]
         text="Кого из игроков добавить в список вейверов принудительно?",
         reply_markup=kb.get_kb_force_add_waivers(team, players, game),
@@ -324,7 +320,6 @@ async def add_force_player(
     target = await dao.player.get_by_id(callback_data.player_id)
     await force_add_vote(game, team, target, Played.yes, dao=waiver_vote_adder_dao)
     players = await get_not_played_team_players(team=team, dao=dao.waiver_approver)
-    await c.answer()
     await c.message.edit_text(  # type: ignore[union-attr]
         text="Кого из игроков добавить в список вейверов принудительно?",
         reply_markup=kb.get_kb_force_add_waivers(team, players, game),

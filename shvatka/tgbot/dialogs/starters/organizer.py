@@ -29,7 +29,6 @@ async def start_test_level(
     level_view: FromDishka[LevelView],
 ):
     player = await identity.get_required_player()
-    await c.answer()
     org = await get_org_by_id(callback_data.org_id, dao.organizer)
     if org.player.id != player.id:
         raise PermissionsError(

@@ -112,7 +112,6 @@ async def remove_player_handler(
     team_notifier: FromDishka[TeamNotifier],
     dao: FromDishka[HolderDao],
 ):
-    await c.answer()
     captain_team_player = await get_actual_team_player(identity)
     player_id = manager.dialog_data["selected_player_id"]
     player = await get_player_by_id(player_id, dao.player)
@@ -134,7 +133,6 @@ async def change_captain_handler(
     identity: FromDishka[IdentityProvider],
     interactor: FromDishka[ChangeCaptainInteractor],
 ):
-    await c.answer()
     dao: HolderDao = manager.middleware_data["dao"]
     captain = await identity.get_required_player()
     team = await get_my_team(captain, dao.team_player)

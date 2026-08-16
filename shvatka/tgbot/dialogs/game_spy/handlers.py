@@ -24,7 +24,6 @@ async def keys_handler(
     telegraph: FromDishka[Telegraph],
     current_game: FromDishka[CurrentGameProvider],
 ):
-    await c.answer()
     game = await current_game.get_required_game()
     page = await create_keys_page(
         game=game, telegraph=telegraph, dao=dao, salt=game.manage_token[:8], identity=identity

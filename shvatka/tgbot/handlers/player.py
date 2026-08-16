@@ -103,7 +103,6 @@ async def agree_promotion_handler(
     bg_manager_factory: FromDishka[BgManagerFactory],
 ):
     player = await identity.get_required_player()
-    await c.answer()
     try:
         await agree_promotion(
             token=callback_data.token,

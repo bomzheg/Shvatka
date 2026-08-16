@@ -125,7 +125,7 @@ async def join_team(
     await _join_team(player, team, manager, dao, notifier, role=role, emoji=emoji)
 
 
-async def force_join_team(
+async def superuser_force_join_team(
     player: dto.Player,
     team: dto.Team,
     manager: dto.Player,
@@ -223,7 +223,7 @@ async def leave(
     await _leave(player, remover, team, dao, notifier)
 
 
-async def force_leave(
+async def superuser_force_leave(
     player: dto.Player,
     remover: dto.Player,
     dao: TeamLeaver,

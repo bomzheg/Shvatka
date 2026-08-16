@@ -13,8 +13,8 @@ from shvatka.core.interfaces.dal.team import TeamByIdGetter
 from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.models import dto
 from shvatka.core.players.player import (
-    force_join_team,
-    force_leave,
+    superuser_force_join_team,
+    superuser_force_leave,
     get_full_team_player,
 )
 from shvatka.core.services.team import change_captain, get_team_by_id, merge_teams
@@ -95,7 +95,7 @@ class AdminAddPlayerToTeamInteractor:
         player = await self.player_dao.get_by_id(player_id)
         logger.warning("admin %s adds player %s to team %s", admin.id, player_id, team_id)
         with contextlib.suppress(PlayerRestoredInTeam):
-            await force_join_team(
+            await superuser_force_join_team(
                 player,
                 team,
                 admin,
@@ -122,4 +122,4 @@ class AdminRemovePlayerFromTeamInteractor:
         admin = await identity.get_superuser()
         player = await self.player_dao.get_by_id(player_id)
         logger.warning("admin %s removes player %s from their team", admin.id, player_id)
-        await force_leave(player, admin, self.dao, notifier=self.notifier)
+        await superuser_force_leave(player, admin, self.dao, notifier=self.notifier)

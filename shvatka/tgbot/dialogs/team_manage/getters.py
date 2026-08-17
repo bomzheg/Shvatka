@@ -13,7 +13,9 @@ from shvatka.tgbot.dialogs.outdated import get_actual_team_player, get_actual_te
 
 
 @inject
-async def get_my_team_(identity: FromDishka[IdentityProvider], feature: FromDishka[FeaturesConfig], **_) -> dict[str, Any]:
+async def get_my_team_(
+    identity: FromDishka[IdentityProvider], feature: FromDishka[FeaturesConfig], **_
+) -> dict[str, Any]:
     team_player = await get_actual_team_player(identity)
     return {
         "team": team_player.team,

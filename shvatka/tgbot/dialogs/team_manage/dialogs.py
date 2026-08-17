@@ -30,7 +30,8 @@ from .handlers import (
     gotten_user_request,
     remove_user_request,
     send_chat_request,
-    gotten_chat_request, start_merge,
+    gotten_chat_request,
+    start_merge,
 )
 
 TEAM_PLAYER_CARD = Jinja(

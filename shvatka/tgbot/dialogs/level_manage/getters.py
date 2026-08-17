@@ -2,6 +2,7 @@ from typing import Any
 
 from aiogram_dialog import DialogManager
 
+from shvatka.common.config.models.main import FeaturesConfig
 from shvatka.core.interfaces.identity import IdentityProvider
 from dishka import FromDishka
 from dishka.integrations.aiogram_dialog import inject
@@ -18,6 +19,7 @@ async def get_level_id(
     dao: FromDishka[HolderDao],
     dialog_manager: DialogManager,
     identity: FromDishka[IdentityProvider],
+    features: FromDishka[FeaturesConfig],
     **_,
 ):
     author = await identity.get_required_player()
@@ -25,6 +27,7 @@ async def get_level_id(
     hints_ = level.scenario.time_hints
     return {
         "level": level,
+        "enabled_test": features.level_test,
         "time_hints": hints_,
         "org": org,
     }

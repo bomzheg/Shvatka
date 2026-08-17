@@ -1,7 +1,7 @@
 from dishka import Provider, provide, Scope
 
 from shvatka.common import FileStorageConfig, Paths, Config
-from shvatka.common.config.models.main import WebConfig
+from shvatka.common.config.models.main import WebConfig, FeaturesConfig
 from shvatka.common.config.parser.paths import common_get_paths
 from shvatka.core.models import dto
 from shvatka.infrastructure.db.config.models.db import RedisConfig, DBConfig
@@ -54,6 +54,10 @@ class ConfigProvider(Provider):
     @provide
     def get_version(self, paths: Paths) -> dto.VersionInfo:
         return get_version(paths=paths)
+
+    @provide
+    def get_features(self, config: Config) -> FeaturesConfig:
+        return config.features
 
 
 class DbConfigProvider(Provider):

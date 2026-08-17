@@ -55,7 +55,8 @@ async def clean_commands_menu_handler(message: Message, bot: Bot, dao: FromDishk
     await message.answer("обновлено!")
 
 
-async def version_handler(message: Message, version: dto.VersionInfo):
+@inject
+async def version_handler(message: Message, version: FromDishka[dto.VersionInfo]):
     await message.answer(
         f"Дата билда: {version.build_at}\n"
         f"Версия: {version.vcs_name}@{version.vcs_hash} ({version.commit_at})\n"

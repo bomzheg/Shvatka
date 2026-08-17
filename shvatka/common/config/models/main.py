@@ -50,5 +50,12 @@ class Config:
     file_storage_config: FileStorageConfig
     web: WebConfig
     mail: MailConfig = field(default_factory=MailConfig)
+    features: FeaturesConfig
     superusers: list[int] = field(default_factory=list)
     """tg ids of users allowed to use the admin panel / superuser bot commands"""
+
+
+@dataclass(kw_only=True)
+class FeaturesConfig:
+    level_test: bool
+    merge_team_button: bool

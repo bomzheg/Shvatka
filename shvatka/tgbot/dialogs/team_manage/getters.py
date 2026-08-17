@@ -2,6 +2,7 @@ from typing import Any
 
 from aiogram_dialog import DialogManager
 
+from shvatka.common.config.models.main import FeaturesConfig
 from shvatka.core.interfaces.identity import IdentityProvider
 from dishka import FromDishka
 from dishka.integrations.aiogram_dialog import inject
@@ -12,9 +13,13 @@ from shvatka.tgbot.dialogs.outdated import get_actual_team_player, get_actual_te
 
 
 @inject
-async def get_my_team_(identity: FromDishka[IdentityProvider], **_) -> dict[str, Any]:
+async def get_my_team_(identity: FromDishka[IdentityProvider], feature: FromDishka[FeaturesConfig], **_) -> dict[str, Any]:
     team_player = await get_actual_team_player(identity)
-    return {"team": team_player.team, "team_player": team_player}
+    return {
+        "team": team_player.team,
+        "team_player": team_player,
+        "merge_team": feature.merge_team_button,
+    }
 
 
 @inject

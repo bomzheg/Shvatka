@@ -26,7 +26,6 @@ from .handlers import (
     remove_player_handler,
     change_role_handler,
     change_emoji_handler,
-    start_merge,
     send_user_request,
     gotten_user_request,
     remove_user_request,
@@ -78,12 +77,7 @@ captains_bridge = Dialog(
             on_click=send_chat_request,
         ),
         MessageInput(func=gotten_chat_request, filter=F.chat_shared),
-        Button(
-            Const("🔮Былые свершения команды"),
-            id="merge_teams",
-            on_click=start_merge,
-            when=~F["team"].has_forum_team(),
-        ),
+        # here was "🔮Былые свершения команды" but I've deleted it. Most teams are merged.
         Cancel(Const("🔙Назад")),
         state=states.CaptainsBridgeSG.main,
         getter=get_my_team_,

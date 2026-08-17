@@ -1,3 +1,4 @@
+import logging
 from typing import Any
 
 from aiogram import Bot
@@ -18,6 +19,7 @@ from shvatka.core.players.player import (
     change_emoji,
     get_player_by_user_id,
     join_team,
+    get_my_team,
 )
 from shvatka.core.services.team import (
     rename_team,
@@ -33,6 +35,8 @@ from shvatka.tgbot import states
 from shvatka.tgbot.dialogs.outdated import get_actual_team_player, get_actual_teammate
 from shvatka.tgbot.views.errors import player_already_in_team
 from shvatka.tgbot.views.utils import total_remove_msg
+
+logger = logging.getLogger(__name__)
 
 
 @inject

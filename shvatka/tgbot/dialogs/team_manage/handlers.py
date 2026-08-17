@@ -131,10 +131,10 @@ async def change_captain_handler(
     c: CallbackQuery,
     button: Button,
     manager: DialogManager,
+    dao: FromDishka[HolderDao],
     identity: FromDishka[IdentityProvider],
     interactor: FromDishka[ChangeCaptainInteractor],
 ):
-    dao: HolderDao = manager.middleware_data["dao"]
     captain = await identity.get_required_player()
     team = await get_my_team(captain, dao.team_player)
     if team is None:

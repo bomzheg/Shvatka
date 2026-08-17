@@ -35,7 +35,7 @@ async def team_getter(dao: FromDishka[HolderDao], dialog_manager: DialogManager,
 
 
 @inject
-async def my_team_getter(dao: HolderDao, identity: FromDishka[IdentityProvider], **_):
+async def my_team_getter(dao: FromDishka[HolderDao], identity: FromDishka[IdentityProvider], **_):
     """The card of the team the player is in *at this moment*.
 
     Deliberately resolved on every render instead of remembering a team id when

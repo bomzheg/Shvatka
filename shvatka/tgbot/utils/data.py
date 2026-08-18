@@ -1,11 +1,8 @@
-from adaptix import Retort
 from aiogram.dispatcher.middlewares.data import MiddlewareData
 from aiogram_dialog import DialogManager
 from aiogram_dialog.api.entities import Stack, Context
 from aiogram_dialog.context.storage import StorageProxy
 from dishka import AsyncContainer
-
-from shvatka.infrastructure.db.dao.holder import HolderDao
 
 
 class DialogMiddlewareData(MiddlewareData, total=False):
@@ -19,12 +16,12 @@ class SHMiddlewareData(DialogMiddlewareData, total=False):
     """
     Data every handler receives by name.
 
-    Only what a lot of handlers need belongs here — anything else is requested
-    from the container with ``FromDishka`` at the single place that uses it.
-    Who is acting comes from ``IdentityProvider`` and what is being played from
-    ``CurrentGameProvider``, not from this dict.
+    Nothing but the container: everything a handler needs it asks the container
+    for with ``FromDishka``, including the dao and the retort. Who is acting
+    comes from ``IdentityProvider`` and what is being played from
+    ``CurrentGameProvider``.
+
+    The key itself is written by dishka's aiogram integration, not by us.
     """
 
     dishka_container: AsyncContainer
-    retort: Retort
-    dao: HolderDao

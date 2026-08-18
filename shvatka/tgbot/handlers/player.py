@@ -40,7 +40,7 @@ from shvatka.tgbot.views.team import render_team_players
 async def send_promotion_invite(
     inline_query: InlineQuery,
     inline_data: kb.PromotePlayerID,
-    dao: HolderDao,
+    dao: FromDishka[HolderDao],
     identity: FromDishka[IdentityProvider],
 ):
     player = await identity.get_required_player()
@@ -79,7 +79,7 @@ async def send_promotion_invite(
 async def dismiss_promotion_handler(
     c: CallbackQuery,
     callback_data: kb.AgreePromotionCD,
-    dao: HolderDao,
+    dao: FromDishka[HolderDao],
     bot: Bot,
     identity: FromDishka[IdentityProvider],
 ):
@@ -97,13 +97,12 @@ async def dismiss_promotion_handler(
 async def agree_promotion_handler(
     c: CallbackQuery,
     callback_data: kb.AgreePromotionCD,
-    dao: HolderDao,
+    dao: FromDishka[HolderDao],
     bot: Bot,
     identity: FromDishka[IdentityProvider],
     bg_manager_factory: FromDishka[BgManagerFactory],
 ):
     player = await identity.get_required_player()
-    await c.answer()
     try:
         await agree_promotion(
             token=callback_data.token,
@@ -135,7 +134,7 @@ async def inviter_click_handler(c: CallbackQuery):
 
 @inject
 async def get_my_team_cmd(
-    message: Message, identity: FromDishka[IdentityProvider], dao: HolderDao
+    message: Message, identity: FromDishka[IdentityProvider], dao: FromDishka[HolderDao]
 ):
     team = await identity.get_team()
     if team:
@@ -151,7 +150,7 @@ async def get_my_team_cmd(
 @inject
 async def leave_handler(
     message: Message,
-    dao: HolderDao,
+    dao: FromDishka[HolderDao],
     identity: FromDishka[IdentityProvider],
     team_notifier: FromDishka[TeamNotifier],
 ):

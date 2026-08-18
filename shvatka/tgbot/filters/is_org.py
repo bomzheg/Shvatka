@@ -31,7 +31,7 @@ class OrgFilter(BaseFilter):
     async def __call__(  # noqa: C901
         self,
         message: Message,
-        dao: HolderDao,
+        dao: FromDishka[HolderDao],
         identity: FromDishka[IdentityProvider],
         current_game: FromDishka[CurrentGameProvider],
     ) -> bool | dict[str, Any]:

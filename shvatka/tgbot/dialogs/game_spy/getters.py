@@ -15,7 +15,7 @@ from shvatka.infrastructure.db.dao.holder import HolderDao
 
 @inject
 async def get_org(
-    dao: HolderDao,
+    dao: FromDishka[HolderDao],
     dialog_manager: DialogManager,
     identity: FromDishka[IdentityProvider],
     current_game: FromDishka[CurrentGameProvider],
@@ -36,7 +36,7 @@ async def get_org(
 
 @inject
 async def get_spy(
-    dao: HolderDao,
+    dao: FromDishka[HolderDao],
     dialog_manager: DialogManager,
     identity: FromDishka[IdentityProvider],
     current_game: FromDishka[CurrentGameProvider],

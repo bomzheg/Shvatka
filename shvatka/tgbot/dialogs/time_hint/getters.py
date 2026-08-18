@@ -2,6 +2,8 @@ from typing import Any
 
 from adaptix import Retort
 from aiogram_dialog import DialogManager
+from dishka import FromDishka
+from dishka.integrations.aiogram_dialog import inject
 
 from shvatka.core.models.dto import hints
 
@@ -18,9 +20,9 @@ async def get_available_times(dialog_manager: DialogManager, **_) -> dict[str, l
     return {"times": times}
 
 
-async def get_hints(dialog_manager: DialogManager, **_):
+@inject
+async def get_hints(dialog_manager: DialogManager, retort: FromDishka[Retort], **_):
     dialog_data = dialog_manager.dialog_data
-    retort: Retort = dialog_manager.middleware_data["retort"]
 
     hints_ = retort.load(dialog_data["hints"], list[hints.AnyHint])
     time_ = dialog_data["time"]

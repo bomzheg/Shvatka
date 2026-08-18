@@ -22,14 +22,13 @@ from shvatka.tgbot.utils.router import disable_router_on_game
 async def start_test_level(
     c: CallbackQuery,
     callback_data: kb.LevelTestInviteCD,
-    dao: HolderDao,
+    dao: FromDishka[HolderDao],
     dialog_manager: DialogManager,
     identity: FromDishka[IdentityProvider],
     scheduler: FromDishka[LevelTestScheduler],
     level_view: FromDishka[LevelView],
 ):
     player = await identity.get_required_player()
-    await c.answer()
     org = await get_org_by_id(callback_data.org_id, dao.organizer)
     if org.player.id != player.id:
         raise PermissionsError(

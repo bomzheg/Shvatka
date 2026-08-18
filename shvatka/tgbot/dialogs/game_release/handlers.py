@@ -112,7 +112,6 @@ async def preview_release(
     """Send the composed release back, exactly as the channel will see it."""
     banner = load_banner(manager, retort)
     composed = load_composed(manager, retort)
-    await c.answer()
     assert c.message is not None
     for hint in [banner, *composed] if banner else composed:
         await hint_sender.send_hint(hint, c.message.chat.id)
@@ -152,7 +151,6 @@ async def show_release(
     if release is None:
         await c.answer("Релиза пока нет")
         return
-    await c.answer()
     assert c.message is not None
     for hint in release.parts:
         await hint_sender.send_hint(hint, c.message.chat.id)

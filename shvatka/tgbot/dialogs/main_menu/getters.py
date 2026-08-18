@@ -42,9 +42,11 @@ async def get_main(
 
 @inject
 async def get_promotion_token(
-    dialog_manager: DialogManager, identity: FromDishka[IdentityProvider], **_
+    dialog_manager: DialogManager,
+    identity: FromDishka[IdentityProvider],
+    dao: FromDishka[HolderDao],
+    **_,
 ):
-    dao: HolderDao = dialog_manager.middleware_data["dao"]
     player = await identity.get_required_player()
     token = await save_promotion_invite(player, dao.secure_invite)
     return {

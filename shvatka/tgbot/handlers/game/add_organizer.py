@@ -32,7 +32,7 @@ from shvatka.tgbot.utils.router import disable_router_on_game
 async def invite_org_inline_query(
     q: InlineQuery,
     inline_data: kb.AddGameOrgID,
-    dao: HolderDao,
+    dao: FromDishka[HolderDao],
     identity: FromDishka[IdentityProvider],
 ):
     player = await identity.get_required_player()
@@ -66,7 +66,7 @@ async def invite_org_inline_query(
 async def dismiss_to_be_org_handler(
     c: CallbackQuery,
     callback_data: kb.AgreeBeOrgCD,
-    dao: HolderDao,
+    dao: FromDishka[HolderDao],
     bot: Bot,
     identity: FromDishka[IdentityProvider],
 ):
@@ -90,7 +90,6 @@ async def agree_to_be_org_handler(
     bg_manager_factory: FromDishka[BgManagerFactory],
 ):
     player = await identity.get_required_player()
-    await c.answer()
     try:
         await agree_to_be_org(
             token=callback_data.token,

@@ -18,7 +18,10 @@ async def get_game_name(dialog_manager: DialogManager, **_):
 
 @inject
 async def select_my_levels(
-    dialog_manager: DialogManager, dao: HolderDao, identity: FromDishka[IdentityProvider], **_
+    dialog_manager: DialogManager,
+    dao: FromDishka[HolderDao],
+    identity: FromDishka[IdentityProvider],
+    **_,
 ):
     author = await identity.get_required_player()
     levels = await get_all_my_free_levels(author, dao.level)
@@ -30,7 +33,7 @@ async def select_my_levels(
 @inject
 async def select_full_game(
     dialog_manager: DialogManager,
-    dao: HolderDao,
+    dao: FromDishka[HolderDao],
     identity: FromDishka[IdentityProvider],
     **_,
 ):

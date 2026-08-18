@@ -93,7 +93,9 @@ async def chat_type_cmd_group(message: Message):
 
 
 @inject
-async def chat_migrate(message: Message, dao: HolderDao, identity: FromDishka[IdentityProvider]):
+async def chat_migrate(
+    message: Message, dao: FromDishka[HolderDao], identity: FromDishka[IdentityProvider]
+):
     chat = await identity.get_required_chat()
     new_id = message.migrate_to_chat_id
     assert new_id is not None

@@ -1,8 +1,9 @@
 from functools import partial
 
 from aiogram import Router, types
+from dishka import FromDishka
 from aiogram.filters import Command, CommandObject
-from dishka.integrations.aiogram import FromDishka, inject
+from dishka.integrations.aiogram import inject
 
 from shvatka.core.notifications.request_interactors import CreatePlayerMergeRequestInteractor
 from shvatka.core.services.team import get_team_by_id, merge_teams
@@ -18,7 +19,7 @@ async def merge_teams_command(
     message: types.Message,
     command: CommandObject,
     game_log: FromDishka[GameLogWriter],
-    dao: HolderDao,
+    dao: FromDishka[HolderDao],
 ):
     if not command.args:
         await message.reply(

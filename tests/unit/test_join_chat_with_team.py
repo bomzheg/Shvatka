@@ -17,6 +17,7 @@ from dishka.integrations.aiogram import CONTAINER_NAME
 from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.models import dto
 from shvatka.core.models.enums.chat_type import ChatType
+from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.tgbot.handlers.team.manage import user_join_chat_with_team
 from shvatka.tgbot.keyboards.team import JoinToTeamRequestCD
 
@@ -66,12 +67,14 @@ async def call(event: ChatMemberUpdated) -> AsyncMock:
         def idp(self) -> IdentityProvider:
             return identity
 
+        @provide
+        def holder(self) -> HolderDao:
+            return dao
+
     container = make_async_container(IdpProvider())
     try:
         async with container() as request_container:
-            await user_join_chat_with_team(
-                event, bot=bot, dao=dao, **{CONTAINER_NAME: request_container}
-            )
+            await user_join_chat_with_team(event, bot=bot, **{CONTAINER_NAME: request_container})
     finally:
         await container.close()
     return bot

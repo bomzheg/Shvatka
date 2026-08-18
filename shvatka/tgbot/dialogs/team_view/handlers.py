@@ -39,8 +39,8 @@ async def on_leave_team(
     dialog_manager: DialogManager,
     identity: FromDishka[IdentityProvider],
     team_notifier: FromDishka[TeamNotifier],
+    dao: FromDishka[HolderDao],
 ):
-    dao: HolderDao = dialog_manager.middleware_data["dao"]
     player = (await get_actual_team_player(identity)).player
     await leave(player, player, dao.team_leaver, notifier=team_notifier)
     await dialog_manager.done()

@@ -35,10 +35,13 @@ logger = logging.getLogger(__name__)
 
 @inject
 async def process_name(
-    m: Message, dialog_: Any, manager: DialogManager, identity: FromDishka[IdentityProvider]
+    m: Message,
+    dialog_: Any,
+    manager: DialogManager,
+    identity: FromDishka[IdentityProvider],
+    dao: FromDishka[HolderDao],
 ):
     author = await identity.get_required_player()
-    dao: HolderDao = manager.middleware_data["dao"]
     game_name: str = typing.cast(str, m.text)
     if game_name.lower().strip() == "мудро":
         await add_achievement(
@@ -64,11 +67,11 @@ async def process_zip_scn(
     manager: DialogManager,
     file_gateway: FromDishka[FileGateway],
     identity: FromDishka[IdentityProvider],
+    dao: FromDishka[HolderDao],
+    retort: FromDishka[Retort],
 ) -> None:
     player = await identity.get_required_player()
-    dao: HolderDao = manager.middleware_data["dao"]
     bot: Bot = manager.middleware_data["bot"]
-    retort: Retort = manager.middleware_data["retort"]
     assert m.document
     document: IO[bytes] = await bot.download(m.document.file_id)  # type: ignore[assignment]
     try:
@@ -88,9 +91,8 @@ async def save_game(
     button: Button,
     manager: DialogManager,
     identity: FromDishka[IdentityProvider],
+    dao: FromDishka[HolderDao],
 ):
-    await c.answer()
-    dao: HolderDao = manager.middleware_data["dao"]
     author = await identity.get_required_player()
     name: str = manager.dialog_data["game_name"]
     levels = await get_all_my_free_levels(author, dao.level)
@@ -103,7 +105,6 @@ async def save_game(
 
 
 async def edit_level(c: CallbackQuery, widget: Any, manager: DialogManager, item_id: str):
-    await c.answer()
     await manager.start(states.LevelManageSG.menu, data={"level_id": int(item_id)})
 
 
@@ -116,7 +117,6 @@ async def add_level_handler(
     idp: FromDishka[IdentityProvider],
     dao: FromDishka[HolderDao],
 ):
-    await c.answer()
     data: dict[str, Any] = manager.start_data  # type: ignore[assignment]
     game_id = data["game_id"]
     author = await idp.get_required_player()

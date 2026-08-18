@@ -96,3 +96,6 @@ mail:
   from-addr: "your-account@gmail.com"
   use-tls: false
   start-tls: true
+features:
+  level-test: false
+  merge-team-button: false

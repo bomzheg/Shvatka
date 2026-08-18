@@ -76,13 +76,13 @@ level_manage = Dialog(
             Const("🧩Тестировать"),
             id="level_test",
             on_click=level_testing,
-            when=F["level"].game_id < 0,  # disabled
+            when=F["level"].game_id & F["enabled_test"],
         ),
         SwitchTo(
             Const("🧩Отправить на тестирование"),
             id="send_to_test",
             state=states.LevelManageSG.send_to_test,
-            when=F["level"].game_id < 0,  # disabled
+            when=F["level"].game_id & F["enabled_test"],
         ),
         Button(
             Const("🗑Убрать из игры"),

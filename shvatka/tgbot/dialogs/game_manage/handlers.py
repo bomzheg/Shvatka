@@ -34,7 +34,6 @@ from shvatka.infrastructure.printer.results import export_results
 
 
 async def select_my_game(c: CallbackQuery, widget: Any, manager: DialogManager, item_id: str):
-    await c.answer()
     data = manager.dialog_data
     if not isinstance(data, dict):
         data = {}
@@ -43,7 +42,6 @@ async def select_my_game(c: CallbackQuery, widget: Any, manager: DialogManager, 
 
 
 async def select_game(c: CallbackQuery, widget: Any, manager: DialogManager, item_id: str):
-    await c.answer()
     data = manager.dialog_data
     if not isinstance(data, dict):
         data = {}
@@ -52,7 +50,6 @@ async def select_game(c: CallbackQuery, widget: Any, manager: DialogManager, ite
 
 
 async def start_schedule_game(c: CallbackQuery, widget: Button, manager: DialogManager):
-    await c.answer()
     game_id = manager.dialog_data["my_game_id"]
     await manager.start(states.GameScheduleSG.date, data={"my_game_id": int(game_id)})
 
@@ -65,13 +62,11 @@ async def cancel_scheduled_game(
     interactor: FromDishka[PlanGameStartInteractor],
     identity: FromDishka[IdentityProvider],
 ):
-    await c.answer()
     game_id = manager.dialog_data["my_game_id"]
     await interactor(game_id=game_id, start_at=None, identity=identity)
 
 
 async def show_scn(c: CallbackQuery, widget: Button, manager: DialogManager):
-    await c.answer()
     game_id = manager.dialog_data["my_game_id"]
     await manager.start(states.GameEditSG.current_levels, data={"game_id": int(game_id)})
 
@@ -83,10 +78,11 @@ async def show_zip_scn(
     manager: DialogManager,
     identity: FromDishka[IdentityProvider],
     file_gateway: FromDishka[FileGateway],
+    dao: FromDishka[HolderDao],
+    retort: FromDishka[Retort],
 ):
-    await c.answer()
     game_id = manager.dialog_data["game_id"]
-    await common_show_zip(c, game_id, manager, identity, file_gateway)
+    await common_show_zip(c, game_id, identity, file_gateway, dao, retort)
 
 
 @inject
@@ -96,10 +92,11 @@ async def show_my_zip_scn(
     manager: DialogManager,
     identity: FromDishka[IdentityProvider],
     file_gateway: FromDishka[FileGateway],
+    dao: FromDishka[HolderDao],
+    retort: FromDishka[Retort],
 ):
-    await c.answer()
     game_id = manager.dialog_data["my_game_id"]
-    await common_show_zip(c, game_id, manager, identity, file_gateway)
+    await common_show_zip(c, game_id, identity, file_gateway, dao, retort)
 
 
 @inject
@@ -160,12 +157,11 @@ async def show_transitions(
 async def common_show_zip(
     c: CallbackQuery,
     game_id: int,
-    manager: DialogManager,
     identity: IdentityProvider,
     file_gateway: FileGateway,
+    dao: HolderDao,
+    retort: Retort,
 ):
-    dao: HolderDao = manager.middleware_data["dao"]
-    retort: Retort = manager.middleware_data["retort"]
     game_ = await game.get_game_package(game_id, identity, dao.game_packager, retort, file_gateway)
     zip_ = pack_scn(game_)
     assert isinstance(c.message, Message)
@@ -174,9 +170,12 @@ async def common_show_zip(
 
 @inject
 async def rename_game_handler(
-    m: Message, dialog: Any, dialog_manager: DialogManager, identity: FromDishka[IdentityProvider]
+    m: Message,
+    dialog: Any,
+    dialog_manager: DialogManager,
+    identity: FromDishka[IdentityProvider],
+    dao: FromDishka[HolderDao],
 ):
-    dao: HolderDao = dialog_manager.middleware_data["dao"]
     player = await identity.get_required_player()
     game_ = await get_game(dialog_manager.dialog_data["my_game_id"], dao=dao.game)
     assert m.text
@@ -196,7 +195,6 @@ async def start_waivers(
 
 
 async def select_date(c: CallbackQuery, widget, manager: DialogManager, selected_date: date):
-    await c.answer()
     data = manager.dialog_data
     if not isinstance(data, dict):
         data = {}
@@ -237,31 +235,26 @@ async def schedule_game(
 
 
 async def show_game_orgs(c: CallbackQuery, widget: Button, manager: DialogManager):
-    await c.answer()
     game_id = manager.dialog_data["game_id"]
     await manager.start(states.GameOrgsSG.orgs_list, data={"game_id": game_id, "completed": True})
 
 
 async def show_my_game_orgs(c: CallbackQuery, widget: Button, manager: DialogManager):
-    await c.answer()
     game_id = manager.dialog_data["my_game_id"]
     await manager.start(states.GameOrgsSG.orgs_list, data={"game_id": game_id})
 
 
 async def show_game_release(c: CallbackQuery, widget: Button, manager: DialogManager):
-    await c.answer()
     game_id = manager.dialog_data["my_game_id"]
     await manager.start(states.GameReleaseSG.menu, data={"game_id": int(game_id)})
 
 
 async def publish_game(c: CallbackQuery, widget: Button, manager: DialogManager):
-    await c.answer()
     game_id = manager.dialog_data["my_game_id"]
     await manager.start(states.GamePublishSG.prepare, data={"game_id": game_id})
 
 
 async def to_publish_game_forum(c: CallbackQuery, widget: Button, manager: DialogManager):
-    await c.answer()
     game_id = manager.dialog_data["my_game_id"]
     await manager.start(states.GamePublishSG.forum, data={"game_id": game_id})
 
@@ -317,7 +310,6 @@ async def complete_game_handler(
     interactor: FromDishka[ChangeGameStatusInteractor],
     identity: FromDishka[IdentityProvider],
 ):
-    await c.answer()
     game_id = manager.dialog_data["my_game_id"]
     await interactor(game_id=game_id, status=enums.GameStatus.complete, identity=identity)
     await manager.done()

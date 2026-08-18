@@ -45,7 +45,6 @@ async def show_level(
     identity: FromDishka[IdentityProvider],
     nursery: FromDishka[Nursery],
 ):
-    await c.answer()
     data: dict[str, Any] = manager.start_data  # type: ignore[assignment]
     level_id = data["level_id"]
     author = await identity.get_required_player()
@@ -64,8 +63,8 @@ async def send_to_testing(
     manager: DialogManager,
     org_id: str,
     identity: FromDishka[IdentityProvider],
+    dao: FromDishka[HolderDao],
 ):
-    dao: HolderDao = manager.middleware_data["dao"]
     bot: Bot = manager.middleware_data["bot"]
     author = await identity.get_required_player()
     data: dict[str, Any] = manager.start_data  # type: ignore[assignment]
@@ -89,9 +88,8 @@ async def level_testing(
     scheduler: FromDishka[LevelTestScheduler],
     view: FromDishka[LevelView],
     identity: FromDishka[IdentityProvider],
+    dao: FromDishka[HolderDao],
 ) -> None:
-    await c.answer()
-    dao: HolderDao = manager.middleware_data["dao"]
     data: dict[str, Any] = manager.start_data  # type: ignore[assignment]
     level_id = data["level_id"]
     author = await identity.get_required_player()
@@ -114,8 +112,8 @@ async def unlink_level_handler(
     button: Button,
     manager: DialogManager,
     identity: FromDishka[IdentityProvider],
+    dao: FromDishka[HolderDao],
 ):
-    dao: HolderDao = manager.middleware_data["dao"]
     data: dict[str, Any] = manager.start_data  # type: ignore[assignment]
     level_id = data["level_id"]
     author = await identity.get_required_player()
@@ -147,9 +145,8 @@ async def cancel_level_test(
     button: Button,
     manager: DialogManager,
     identity: FromDishka[IdentityProvider],
+    dao: FromDishka[HolderDao],
 ):
-    await c.answer()
-    dao: HolderDao = manager.middleware_data["dao"]
     author = await identity.get_required_player()
     level, org = await get_level_and_org(author, dao, manager)
     if org is None:

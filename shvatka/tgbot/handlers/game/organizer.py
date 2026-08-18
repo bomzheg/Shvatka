@@ -17,7 +17,7 @@ from shvatka.tgbot.views.commands import PUBLISH_COMMAND
 async def publish_game_forum(
     m: Message,
     command: CommandObject,
-    dao: HolderDao,
+    dao: FromDishka[HolderDao],
     identity: FromDishka[IdentityProvider],
     nursery: FromDishka[Nursery],
 ):

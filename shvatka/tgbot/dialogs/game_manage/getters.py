@@ -27,16 +27,18 @@ logger = logging.getLogger(__name__)
 
 @inject
 async def get_my_games(
-    dao: HolderDao, identity: FromDishka[IdentityProvider], **_
+    dao: FromDishka[HolderDao], identity: FromDishka[IdentityProvider], **_
 ) -> dict[str, list[dto.Game]]:
     return {"games": await get_authors_games(identity, dao.game)}
 
 
-async def get_games(dao: HolderDao, **_) -> dict[str, list[dto.Game]]:
+@inject
+async def get_games(dao: FromDishka[HolderDao], **_) -> dict[str, list[dto.Game]]:
     return {"games": await get_completed_games(dao.game)}
 
 
-async def get_completed_game(dao: HolderDao, dialog_manager: DialogManager, **_):
+@inject
+async def get_completed_game(dao: FromDishka[HolderDao], dialog_manager: DialogManager, **_):
     data: dict[str, Any] = dialog_manager.start_data  # type: ignore[assignment]
     game_id = dialog_manager.dialog_data.get("game_id", None) or data["game_id"]
     dishka: AsyncContainer = dialog_manager.middleware_data[CONTAINER_NAME]
@@ -50,7 +52,8 @@ async def get_completed_game(dao: HolderDao, dialog_manager: DialogManager, **_)
     }
 
 
-async def get_game_waivers(dao: HolderDao, dialog_manager: DialogManager, **_):
+@inject
+async def get_game_waivers(dao: FromDishka[HolderDao], dialog_manager: DialogManager, **_):
     data: dict[str, Any] = dialog_manager.start_data  # type: ignore[assignment]
     game_id = dialog_manager.dialog_data.get("game_id", None) or data["game_id"]
     current_game = await game.get_game(
@@ -65,7 +68,7 @@ async def get_game_waivers(dao: HolderDao, dialog_manager: DialogManager, **_):
 
 @inject
 async def get_game_keys(
-    dao: HolderDao,
+    dao: FromDishka[HolderDao],
     dialog_manager: DialogManager,
     telegraph: FromDishka[Telegraph],
     identity: FromDishka[IdentityProvider],
@@ -88,7 +91,7 @@ async def get_game_keys(
 @inject
 async def get_game_results(
     dialog_manager: DialogManager,
-    dao: HolderDao,
+    dao: FromDishka[HolderDao],
     identity: FromDishka[IdentityProvider],
     results_painter: FromDishka[ResultsPainter],
     **_,
@@ -122,12 +125,18 @@ async def _my_game(
 
 @inject
 async def get_game(
-    dao: HolderDao, dialog_manager: DialogManager, identity: FromDishka[IdentityProvider], **_
+    dao: FromDishka[HolderDao],
+    dialog_manager: DialogManager,
+    identity: FromDishka[IdentityProvider],
+    **_,
 ) -> dict[str, Any]:
     return await _my_game(dao, await identity.get_required_player(), dialog_manager)
 
 
-async def get_game_with_channel(dao: HolderDao, dialog_manager: DialogManager, bot: Bot, **_):
+@inject
+async def get_game_with_channel(
+    dao: FromDishka[HolderDao], dialog_manager: DialogManager, bot: Bot, **_
+):
     game_id: int | None = dialog_manager.dialog_data.get("game_id", None)
     if game_id is None:
         logger.warning("game_id is None")
@@ -145,7 +154,10 @@ async def get_game_with_channel(dao: HolderDao, dialog_manager: DialogManager, b
 
 @inject
 async def get_game_time(
-    dao: HolderDao, dialog_manager: DialogManager, identity: FromDishka[IdentityProvider], **_
+    dao: FromDishka[HolderDao],
+    dialog_manager: DialogManager,
+    identity: FromDishka[IdentityProvider],
+    **_,
 ):
     result = await _my_game(dao, await identity.get_required_player(), dialog_manager)
     time_: str | None = dialog_manager.dialog_data.get("scheduled_time", None)
@@ -155,7 +167,10 @@ async def get_game_time(
 
 @inject
 async def get_game_datetime(
-    dao: HolderDao, dialog_manager: DialogManager, identity: FromDishka[IdentityProvider], **_
+    dao: FromDishka[HolderDao],
+    dialog_manager: DialogManager,
+    identity: FromDishka[IdentityProvider],
+    **_,
 ):
     result = await _my_game(dao, await identity.get_required_player(), dialog_manager)
     date_: str = dialog_manager.dialog_data["scheduled_date"]

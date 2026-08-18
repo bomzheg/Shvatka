@@ -31,6 +31,7 @@ from .handlers import (
     remove_user_request,
     send_chat_request,
     gotten_chat_request,
+    start_merge,
 )
 
 TEAM_PLAYER_CARD = Jinja(
@@ -77,7 +78,12 @@ captains_bridge = Dialog(
             on_click=send_chat_request,
         ),
         MessageInput(func=gotten_chat_request, filter=F.chat_shared),
-        # here was "🔮Былые свершения команды" but I've deleted it. Most teams are merged.
+        Button(
+            Const("🔮Былые свершения команды"),
+            id="merge_teams",
+            on_click=start_merge,
+            when=~F["team"].has_forum_team(),
+        ),
         Cancel(Const("🔙Назад")),
         state=states.CaptainsBridgeSG.main,
         getter=get_my_team_,

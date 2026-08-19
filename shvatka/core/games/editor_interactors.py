@@ -221,7 +221,7 @@ class DeleteGameFileInteractor:
                 text=f"file {guid} is used by the release of game {game.id}",
                 game=game,
                 player=author,
-                notify_user="Файл используется в анонсе игры",
+                notify_user="Файл используется в релизе игры",
             )
         if await self.dao.get_level_ids_using_file(game.id, file_id):
             raise exceptions.FileIsUsed(

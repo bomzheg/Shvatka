@@ -92,7 +92,7 @@ class AuthProperties:
 
     def create_user_token(self, user: dto.Player) -> Token:
         if user.id is None:
-            raise exceptions.UserNotFoundError
+            raise exceptions.IdentityWithoutUser
         return self.create_user_id_token(user.id)
 
     def create_user_id_token(self, user_id: int) -> Token:

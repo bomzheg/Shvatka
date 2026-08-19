@@ -254,6 +254,10 @@ class PlayerNotFoundError(SHError):
     notify_user = "Игрок не найден"
 
 
+class IdentityWithoutPlayer(PlayerNotFoundError):
+    pass
+
+
 class PlayerUsernameOccupied(SHError):
     notify_user = "username уже занят"
 
@@ -336,6 +340,10 @@ class AnotherTeamInChat(PlayerTeamError):
 
 class UserNotFoundError(SHError):
     notify_user = "Не удалось найти пользователя"
+
+
+class IdentityWithoutUser(UserNotFoundError):
+    pass
 
 
 class UsernameResolverError(UserNotFoundError):

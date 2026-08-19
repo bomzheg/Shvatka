@@ -25,7 +25,10 @@ class ErrorContent:
 
 
 def sh_exception_handler(request: Request, exc: exceptions.SHError) -> Response:
-    logger.error("got an sh error, during request %s", request.url, exc_info=exc)
+    if not isinstance(exc, (exceptions.IdentityWithoutUser, exceptions.IdentityWithoutPlayer)):
+        logger.error("got an sh error, during request %s", request.url, exc_info=exc)
+    else:
+        logger.debug("got an auth sh error, during request %s", request.url, exc_info=exc)
     error_content = ErrorContent(
         text=exc.text,
         type=type(exc).__name__,
@@ -35,6 +38,8 @@ def sh_exception_handler(request: Request, exc: exceptions.SHError) -> Response:
     )
     if isinstance(exc, (exceptions.NotAuthorizedForEdit, exceptions.NotAuthorizedForAdmin)):
         status_code = 403
+    elif isinstance(exc, (exceptions.IdentityWithoutPlayer, exceptions.IdentityWithoutUser)):
+        status_code = 401
     elif isinstance(
         exc,
         (exceptions.UserNotFoundError, exceptions.PlayerNotFoundError, exceptions.GameNotFound),

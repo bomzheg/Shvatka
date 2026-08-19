@@ -60,13 +60,13 @@ class IdentityProvider(Protocol):
     async def get_required_user(self) -> dto.User:
         user = await self.get_user()
         if user is None:
-            raise exceptions.UserNotFoundError
+            raise exceptions.IdentityWithoutUser
         return user
 
     async def get_required_user_db_id(self) -> int:
         user = await self.get_required_user()
         if user.db_id is None:
-            raise exceptions.UserNotFoundError
+            raise exceptions.IdentityWithoutUser
         return user.db_id
 
     async def get_required_chat(self) -> dto.Chat:
@@ -78,7 +78,7 @@ class IdentityProvider(Protocol):
     async def get_required_player(self) -> dto.Player:
         player = await self.get_player()
         if player is None:
-            raise exceptions.PlayerNotFoundError
+            raise exceptions.IdentityWithoutPlayer
         return player
 
     async def get_required_team(self) -> dto.Team:

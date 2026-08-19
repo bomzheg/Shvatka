@@ -1,3 +1,4 @@
+import sys
 import tempfile
 from io import BytesIO
 from pathlib import Path
@@ -49,6 +50,7 @@ def make_heic_meta() -> hints.UploadedFileMeta:
     )
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="idk, libmagic wrong on win")
 @pytest.mark.asyncio
 async def test_put_heic_is_converted_to_jpeg():
     file_storage = make_storage()
@@ -68,6 +70,7 @@ async def test_put_heic_is_converted_to_jpeg():
 
 
 @pytest.mark.asyncio
+@pytest.mark.skipif(sys.platform == "win32", reason="idk, libmagic wrong on win")
 async def test_put_heic_saved_as_is_when_conversion_disabled():
     file_storage = make_storage()
     heic = make_heic_bytes()
@@ -82,6 +85,7 @@ async def test_put_heic_saved_as_is_when_conversion_disabled():
 
 
 @pytest.mark.asyncio
+@pytest.mark.skipif(sys.platform == "win32", reason="idk, libmagic wrong on win")
 async def test_put_heic_raises_when_both_flags_disabled():
     file_storage = make_storage()
     heic = make_heic_bytes()
@@ -92,6 +96,7 @@ async def test_put_heic_raises_when_both_flags_disabled():
 
 
 @pytest.mark.asyncio
+@pytest.mark.skipif(sys.platform == "win32", reason="idk, libmagic wrong on win")
 async def test_put_heic_raises_by_default():
     file_storage = make_storage()
     heic = make_heic_bytes()

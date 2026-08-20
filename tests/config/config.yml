@@ -54,3 +54,5 @@ web:
 features:
   level-test: false
   merge-team-button: false
+  tg-channel-publication: false
+  forum-publication: false

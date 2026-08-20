@@ -59,3 +59,5 @@ class Config:
 class FeaturesConfig:
     level_test: bool
     merge_team_button: bool
+    tg_channel_publication: bool
+    forum_publication: bool

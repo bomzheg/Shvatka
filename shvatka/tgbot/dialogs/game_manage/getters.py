@@ -11,6 +11,7 @@ from dishka.integrations.aiogram import CONTAINER_NAME
 from dishka.integrations.aiogram_dialog import inject
 from telegraph.aio import Telegraph
 
+from shvatka.common.config.models.main import FeaturesConfig
 from shvatka.common.url_factory import UrlFactory
 from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.models import dto
@@ -128,9 +129,13 @@ async def get_game(
     dao: FromDishka[HolderDao],
     dialog_manager: DialogManager,
     identity: FromDishka[IdentityProvider],
+    features: FromDishka[FeaturesConfig],
     **_,
 ) -> dict[str, Any]:
-    return await _my_game(dao, await identity.get_required_player(), dialog_manager)
+    return dict(
+        features=features,
+        **await _my_game(dao, await identity.get_required_player(), dialog_manager),
+    )
 
 
 @inject

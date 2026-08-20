@@ -335,19 +335,20 @@ my_games = Dialog(
             Const("📨Опубликовать"),
             id="game_publish",
             on_click=publish_game,
-            when=F["game"].can_be_publish,
+            when=F["game"].can_be_publish & F["features"].tg_channel_publication,
         ),
         Button(
             Const("📨Опубликовать на форуме"),
             id="game_forum_publish",
             on_click=to_publish_game_forum,
-            when=F["game"].can_be_publish,
+            when=F["game"].can_be_publish & F["features"].forum_publication,
         ),
         Button(
             Const("✅Завершить (в прошедшие игры)"),
             id="complete_game",
             on_click=complete_game_handler,
-            when=F["game"].results.published_chanel_id,
+            when=F["game"].is_finished()
+            & (F["game"].results.published_chanel_id | ~F["features"].tg_channel_publication),
         ),
         Button(
             Const("📆Запланировать игру"),

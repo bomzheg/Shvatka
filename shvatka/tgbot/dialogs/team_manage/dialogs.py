@@ -82,7 +82,7 @@ captains_bridge = Dialog(
             Const("🔮Былые свершения команды"),
             id="merge_teams",
             on_click=start_merge,
-            when=~F["team"].has_forum_team(),
+            when=~F["team"].has_forum_team() & F["merge_team"],
         ),
         Cancel(Const("🔙Назад")),
         state=states.CaptainsBridgeSG.main,

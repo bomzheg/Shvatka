@@ -46,6 +46,10 @@ came out of it*.
 | xref:shep-0005-outdated-dialogs.adoc[SHEP-0005]
 | Outdated dialogs
 | Accepted, partially implemented
+
+| xref:shep-0006-file-lifecycle.adoc[SHEP-0006]
+| File deletion and garbage collection
+| Accepted, implemented
 |===
 
 == Status vocabulary

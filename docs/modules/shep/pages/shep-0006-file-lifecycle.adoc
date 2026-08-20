@@ -1,0 +1,159 @@
+= SHEP-0006 — File deletion and garbage collection
+:navtitle: SHEP-0006 File lifecycle
+
+[cols="1,4"]
+|===
+| SHEP | 0006
+| Title | File deletion and garbage collection
+| Status | `Accepted`
+| Created | 2026-08-12
+| Updated | 2026-08-12
+| Related | issue #348
+|===
+
+== Summary
+
+A file uploaded for a game could be added but never removed: `game_files` is
+add-only, `files_info` rows outlive whatever referenced them, and the content on
+the storage outlives both. This gives an author an explicit delete button for a
+file nothing in their game refers to, and an admin a garbage collector that
+sweeps the three layers in one pass. Neither runs on a schedule.
+
+== Context
+
+A file lives in three layers:
+
+* `files_info` — the meta row (guid, name, path, sha256, author);
+* `level_files` and `game_files` — what refers to it. `level_files` is *synced*
+  to a level's scenario (`sync_files_for_level` in
+  `shvatka/core/services/scenario/files.py`), `game_files` is *add-only* by
+  design: it is what the constructor lists as "files you may use here", so a
+  file stays listed after the hint that used it is rewritten away;
+* the storage — the bytes, under `<guid><extension>`
+  (`shvatka/infrastructure/clients/file_storage.py`).
+
+Nothing ever deleted from any of them. The issue's own query shows the result: a
+game with eight `game_files` rows, two of which no level has referenced since
+they were uploaded.
+
+Two constraints shape everything below:
+
+* **A release refers to files that no `level_files` row records.** A game's
+  release (`games.release`, `games.release_banner`) is jsonb holding hints, and
+  its banner is uploaded exactly like a scenario file. Anything counting
+  references has to read the releases, or it will delete a live banner.
+* **Content reaches the storage before its meta row is committed.** During an
+  upload there is a window where the bytes exist and nothing in the database
+  points at them — indistinguishable, from the outside, from a leftover.
+
+== Decision
+
+=== Deleting one file is the author's, sweeping everything is the admin's
+
+`DeleteGameFileInteractor` (`core/games/editor_interactors.py`, beside upload
+and rename) removes one `game_files` row, and — when that was the file's last
+reference anywhere — the `files_info` row and the content with it.
+
+It refuses (`FileIsUsed` → HTTP 409) while a level of the game or the game's
+release still refers to the file. The button therefore cannot break a scenario
+that is already written; a file that *is* used is removed by editing the
+scenario first, which syncs `level_files` on its own.
+
+Authorisation follows renaming, not uploading: `check_allow_be_author` plus
+`check_can_add_file` for the author of the game, with no superuser widening.
+`check_can_add_file` widens for admins because *adding* a file is inert;
+changing or removing one that exists is the author's, as its docstring says.
+An admin who needs to clear up after themselves has the collector below.
+
+=== The collector is one pass over the three layers, admin-triggered
+
+`CollectFileGarbageInteractor` (`core/files/interactors.py`) runs the same
+three deletions the issue asks for, in the order that makes each one see the
+previous:
+
+. `game_files` rows for a file no level of that game refers to and the game's
+  release does not use;
+. `files_info` rows left with no `level_files` and no `game_files` row, and not
+  used by any release;
+. stored files no surviving `files_info` row points at.
+
+It answers with what it removed (`FileGarbage`), and `dry_run` — the default of
+`POST /admin/files/gc` — reports the same lists without deleting anything. A
+dry run reads step 2 as if step 1 had already happened
+(`get_unlinked(ignored_game_link_ids=…)`), so what it reports is what a real run
+would remove, not a smaller subset.
+
+**No schedule.** It is rare, destructive, and worth reading before it runs, so
+it is a button rather than an APScheduler job. Making it periodic later is one
+scheduler wrapper away and needs nothing here to change.
+
+=== Two guards against deleting something live
+
+**Age.** A stored file is only swept once it has been unreferenced for
+`STORAGE_ORPHAN_MIN_AGE` (one day). This is what covers the upload window: a
+file being written right now looks exactly like a leftover, and the only thing
+that tells them apart is how long it has looked that way. `FileStorage` grew
+`list_files()` (returning `hints.StoredFile`, link + mtime) and `delete()` for
+this.
+
+**Shared paths.** Two metas may point at one physical file, so content is only
+deleted once no surviving guid maps to that path — `count_metas_with_path` for
+a single delete, and the `guid → path` map for a sweep.
+
+=== Ordering: database first, storage second
+
+Both use cases commit the row deletions before touching the storage. Content
+whose meta is gone is swept by the next run; a meta whose content is gone is a
+broken download that nothing repairs. The asymmetry decides the order.
+
+=== Where the code lives
+
+The single-file delete stays in `core/games/` with its siblings. The collector
+gets its own area, `core/files/` (`dto.py`, `adapters.py`, `interactors.py`),
+because it is not about one game. Both take one composed adapter
+(`infrastructure/db/dao/complex/file.py`), and the per-table writes stay in the
+per-table DAOs: `GameFileDao.delete_link` / `delete_links`,
+`FileInfoDao.delete_by_guids`, with the "what is unreferenced" selects rooted at
+each DAO's own table.
+
+`GameDao.get_release_guids()` is the one new cross-cutting read: guids per game
+for every game that has a release. It loads all releases, which is cheap because
+only a few games have one, and it serves both use cases so "a release counts as
+a reference" is written once.
+
+== Consequences
+
+* `game_files` stops being append-only *forever* — it is still append-only in
+  normal editing, and only the delete button and the collector remove rows.
+* The API grows `DELETE /cdn/games/{id}/files/{guid}` (204) and
+  `POST /admin/files/gc?dry_run=` (defaults to a dry run).
+* `FileStorage` implementations must now answer `list_files()` and `delete()`.
+* A file uploaded and never linked (an interrupted upload leaves the meta but no
+  link) is collectable — which is the point — so anything that creates a
+  `files_info` row must link it in the same transaction. Both upload paths
+  already do.
+* No migration: nothing about the schema changes.
+
+== Phases and status
+
+[cols="1,4,2",options="header"]
+|===
+| Phase | Content | Status
+
+| 1 | Explicit delete of a game file (api + core + dao + ui button) | ✅ done
+| 2 | Garbage collector behind an admin endpoint, with a dry run | ✅ done
+| 3 | Admin UI page for the collector | ✅ done
+| 4 | Run it periodically, if the manual sweep proves it is worth it | ⏳ not started
+|===
+
+== Deviations from the plan
+
+None so far.
+
+== Open questions
+
+* Should a *finished* game's unused files be swept more eagerly than a draft's?
+  Today the collector treats every game the same.
+* `files_info` has no `created_at`, so the collector cannot spare a meta row by
+  age the way it spares content. The single-transaction upload makes the window
+  negligible; a column would close it entirely.

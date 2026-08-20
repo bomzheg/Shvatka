@@ -1,6 +1,7 @@
 import hashlib
 import logging
 import mimetypes
+from datetime import datetime
 from io import BytesIO
 from pathlib import Path
 from typing import BinaryIO
@@ -10,6 +11,7 @@ import magic
 from shvatka.common.config.models.main import FileStorageConfig
 from shvatka.core.interfaces.clients.file_storage import FileStorage
 from shvatka.core.models.dto import hints
+from shvatka.core.utils.datetime_utils import tz_utc
 from shvatka.core.utils.exceptions import UnsupportedFileFormat
 from shvatka.infrastructure.clients.image_converter import (
     JPEG_EXTENSION,
@@ -114,3 +116,16 @@ class LocalFileStorage(FileStorage):
 
     async def exists(self, file_link: hints.FileContentLink) -> bool:
         return Path(file_link.file_path).is_file()
+
+    async def delete(self, file_link: hints.FileContentLink) -> None:
+        Path(file_link.file_path).unlink(missing_ok=True)
+
+    async def list_files(self) -> list[hints.StoredFile]:
+        return [
+            hints.StoredFile(
+                link=hints.FileContentLink(file_path=str(path)),
+                modified_at=datetime.fromtimestamp(path.stat().st_mtime, tz=tz_utc),
+            )
+            for path in self.path.iterdir()
+            if path.is_file()
+        ]

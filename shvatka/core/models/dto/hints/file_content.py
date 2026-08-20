@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from datetime import datetime
 
 from shvatka.core.models import dto
 from shvatka.core.models.enums.hint_type import HintType
@@ -37,6 +38,20 @@ class TgLink:
 class FileContentLink:
     file_path: str
     """path to file in file system"""
+
+
+@dataclass(frozen=True)
+class StoredFile:
+    """A file as the storage itself sees it, without any DB knowledge.
+
+    ``modified_at`` is what lets a caller tell a leftover apart from a file
+    whose meta row is still on its way: content reaches the storage before the
+    ``files_info`` row is committed, so a just-written file looks unreferenced
+    for a moment.
+    """
+
+    link: FileContentLink
+    modified_at: datetime
 
 
 @dataclass

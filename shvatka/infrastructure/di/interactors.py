@@ -23,7 +23,10 @@ from shvatka.core.games.editor_interactors import (
     ChangeGameStatusInteractor,
     UploadGameFileInteractor,
     RenameGameFileInteractor,
+    DeleteGameFileInteractor,
 )
+from shvatka.core.files.adapters import FileGarbageCollectorDao
+from shvatka.core.files.interactors import CollectFileGarbageInteractor
 from shvatka.core.games.admin_interactors import (
     AdminUpdateGameScenarioInteractor,
     AdminUploadGameFileInteractor,
@@ -144,6 +147,7 @@ from shvatka.core.interfaces.bus import Bus
 from shvatka.core.interfaces.current_game import CurrentGameProvider
 from shvatka.core.interfaces.dal.game import (
     GameByIdGetter,
+    GameFileDeleter,
     GameFileRenamer,
     GameFileUploader,
 )
@@ -202,6 +206,10 @@ from shvatka.infrastructure.db.dao.complex.game import (
     GamePlayDaoImpl,
     GameReleaseEditorImpl,
     GameReleaseReaderImpl,
+)
+from shvatka.infrastructure.db.dao.complex.file import (
+    FileGarbageCollectorImpl,
+    GameFileDeleterImpl,
 )
 from shvatka.infrastructure.db.dao.complex.game_play import GamePlayerDaoImpl
 from shvatka.infrastructure.db.dao.complex.team import (
@@ -342,6 +350,14 @@ class GameEditProvider(Provider):
     @provide
     def rename_file(self, dao: GameFileRenamer) -> RenameGameFileInteractor:
         return RenameGameFileInteractor(dao=dao)
+
+    @provide
+    def game_file_deleter(self, dao: HolderDao) -> GameFileDeleter:
+        return GameFileDeleterImpl(dao=dao)
+
+    @provide
+    def delete_file(self, dao: GameFileDeleter, storage: FileStorage) -> DeleteGameFileInteractor:
+        return DeleteGameFileInteractor(dao=dao, storage=storage)
 
     @provide
     def list_orgs(self, dao: HolderDao) -> ListGameOrgsInteractor:
@@ -593,6 +609,16 @@ class AdminProvider(Provider):
 
     admin_update_scenario = provide(AdminUpdateGameScenarioInteractor)
     admin_upload_file = provide(AdminUploadGameFileInteractor)
+
+    @provide
+    def file_garbage_collector_dao(self, dao: HolderDao) -> FileGarbageCollectorDao:
+        return FileGarbageCollectorImpl(dao=dao)
+
+    @provide
+    def collect_file_garbage(
+        self, dao: FileGarbageCollectorDao, storage: FileStorage
+    ) -> CollectFileGarbageInteractor:
+        return CollectFileGarbageInteractor(dao=dao, storage=storage)
 
     @provide
     def admin_game_scenario_editor(self, dao: HolderDao) -> AdminGameScenarioEditor:

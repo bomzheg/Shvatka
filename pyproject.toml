@@ -194,6 +194,7 @@ ignore = [
 "**/migrations/versions/*" = ["N999"]
 "**/crawler/**parser/*" = ["PLR0912", "B904"]
 "shvatka/infrastructure/db/models/*" = ["RUF012"]
+"tests/manual/files.py" = ["T201"]
 
 [tool.mypy]
 no_implicit_optional = true
@@ -212,6 +213,10 @@ disable_error_code = ["call-overload"]
 [[tool.mypy.overrides]]
 module = "shvatka.infrastructure.crawler.*"
 disable_error_code = ["union-attr", "arg-type", "index", "misc", "assignment"]
+
+[[tool.mypy.overrides]]
+module = "tests.manual.*"
+disable_error_code = ["import-untyped"]
 
 [[tool.mypy.overrides]]
 module = [

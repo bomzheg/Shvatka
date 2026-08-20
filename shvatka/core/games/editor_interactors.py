@@ -18,6 +18,7 @@ from shvatka.core.interfaces.dal.game import (
     GameAuthorsFinder,
     GameByIdGetter,
     GameCreator,
+    GameFileDeleter,
     GameFileRenamer,
     GameFileUploader,
     GameStartPlanner,
@@ -174,6 +175,89 @@ class UploadGameFileInteractor:
         await self.dao.add_game_file(game.id, saved.id)
         await self.dao.commit()
         return saved
+
+
+@dataclass
+class DeleteGameFileInteractor:
+    """Detach a file from a game, and delete the file itself with its last link.
+
+    A file may be detached only while nothing in the game refers to it — neither
+    a level's scenario nor the release — so the button can never break a game
+    that is written already. Once the link is gone and no other game, level or
+    release refers to the file, its meta row and its content go too: keeping a
+    file nothing can reach any more is what fills the storage up.
+
+    Like renaming, and unlike uploading, this changes a file that already exists
+    rather than bringing a new one, so it stays the author's to do. What an
+    admin needs is the broom, not this button — see
+    :class:`shvatka.core.files.interactors.CollectFileGarbageInteractor`.
+    """
+
+    dao: GameFileDeleter
+    storage: FileStorage
+
+    async def __call__(
+        self,
+        game_id: int,
+        guid: str,
+        identity: IdentityProvider,
+    ) -> None:
+        author = await identity.get_required_player()
+        check_allow_be_author(author)
+        game = await self.dao.get_by_id(id_=game_id, author=author)
+        check_can_add_file(game, author)
+
+        file_ids = await self.dao.get_ids_by_guids([guid])
+        if not file_ids or file_ids[0] not in await self.dao.get_game_file_ids(game.id):
+            raise exceptions.FileNotFound(
+                text=f"There is no file with uuid {guid} associated with game id {game.id}",
+                game_id=game.id,
+            )
+        file_id = file_ids[0]
+        meta = await self.dao.get_by_guid(guid)
+        release_guids = await self.dao.get_release_guids()
+        if guid in release_guids.get(game.id, frozenset()):
+            raise exceptions.FileIsUsed(
+                text=f"file {guid} is used by the release of game {game.id}",
+                game=game,
+                player=author,
+                notify_user="Файл используется в релизе игры",
+            )
+        if await self.dao.get_level_ids_using_file(game.id, file_id):
+            raise exceptions.FileIsUsed(
+                text=f"file {guid} is used by a level of game {game.id}",
+                game=game,
+                player=author,
+                notify_user="Файл используется в сценарии игры",
+            )
+
+        await self.dao.delete_game_file_link(game.id, file_id)
+        content = await self._delete_orphaned_meta(guid, file_id, meta, release_guids)
+        await self.dao.commit()
+        if content is not None:
+            # after the commit: content whose meta is gone is swept by the garbage
+            # collector anyway, a meta whose content is gone is a broken download
+            await self.storage.delete(content)
+        logger.info("player %s deleted file %s from game %s", author.id, guid, game.id)
+
+    async def _delete_orphaned_meta(
+        self,
+        guid: str,
+        file_id: int,
+        meta: hints.VerifiableFileMeta,
+        release_guids: dict[int, set[str]],
+    ) -> hints.FileContentLink | None:
+        """Delete the meta if that was its last reference; answer with the content
+        to remove, which is only the file's own when no other meta shares it."""
+        if await self.dao.count_links_for_file(file_id):
+            return None
+        if any(guid in guids for guids in release_guids.values()):
+            return None
+        await self.dao.delete_file_meta(guid)
+        path = meta.file_content_link.file_path
+        if await self.dao.count_metas_with_path(path):
+            return None
+        return meta.file_content_link
 
 
 @dataclass

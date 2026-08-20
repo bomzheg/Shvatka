@@ -2,8 +2,8 @@ from datetime import datetime
 from typing import Protocol
 
 from shvatka.core.interfaces.dal.base import Committer
-from shvatka.core.interfaces.dal.file_info import FileUpserter
-from shvatka.core.interfaces.dal.file_link import LevelFilesSyncDao
+from shvatka.core.interfaces.dal.file_info import FileInfoGetter, FileUpserter
+from shvatka.core.interfaces.dal.file_link import FileIdsByGuidsGetter, LevelFilesSyncDao
 from shvatka.core.interfaces.dal.level import LevelUpserter
 from shvatka.core.models import dto
 from shvatka.core.models.dto import scn
@@ -99,6 +99,38 @@ class GameFileRenamer(GameByIdGetter, Committer, Protocol):
         raise NotImplementedError
 
     async def get_by_guid(self, guid: str) -> hints.VerifiableFileMeta:
+        raise NotImplementedError
+
+
+class GameFileDeleter(GameByIdGetter, FileInfoGetter, FileIdsByGuidsGetter, Committer, Protocol):
+    """Reads and writes the deletion of one file from one game needs.
+
+    Everything a file can still be referenced by has a reader here: the levels
+    of the game, the releases of every game, and the remaining links of any
+    kind. Which of them make a file undeletable — and when the file itself may
+    follow its last link — is the interactor's call, not the DAO's.
+    """
+
+    async def get_game_file_ids(self, game_id: int) -> set[int]:
+        raise NotImplementedError
+
+    async def get_release_guids(self) -> dict[int, set[str]]:
+        raise NotImplementedError
+
+    async def get_level_ids_using_file(self, game_id: int, file_id: int) -> set[int]:
+        raise NotImplementedError
+
+    async def delete_game_file_link(self, game_id: int, file_id: int) -> None:
+        raise NotImplementedError
+
+    async def count_links_for_file(self, file_id: int) -> int:
+        """How many ``game_files`` and ``level_files`` rows point at the file."""
+        raise NotImplementedError
+
+    async def delete_file_meta(self, guid: str) -> None:
+        raise NotImplementedError
+
+    async def count_metas_with_path(self, file_path: str) -> int:
         raise NotImplementedError
 
 

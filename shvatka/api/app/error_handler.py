@@ -47,6 +47,8 @@ def sh_exception_handler(request: Request, exc: exceptions.SHError) -> Response:
         status_code = 404
     elif isinstance(exc, exceptions.FileNotFound):
         status_code = 404
+    elif isinstance(exc, exceptions.FileIsUsed):
+        status_code = 409
     elif isinstance(exc, exceptions.SHError):
         status_code = 422
     else:

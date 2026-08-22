@@ -235,6 +235,27 @@ group. It is the wrong tool for the nursery: its exit waits for every child
 cancels its siblings, which is exactly what independent background jobs must
 not do.
 
+### Showing the game in telegram is deferred, not awaited
+
+In the combined app the bot half of `ComplexView` / `ComplexOrgNotifier` /
+`ComplexGameLogWriter` is **recorded** into the request's `BotOutbox`
+(`tgbot/views/outbox.py`) and delivered by one nursery task afterwards
+(`deliver_bot_views`); only the web half — which fills the `InputContainer` the
+http response is built from — runs inline. A player typing a key must not wait
+for a puzzle's worth of messages, a second apart. See
+`docs/modules/shep/pages/shep-0007-key-submission-latency.adoc`.
+
+Two rules follow when you add a view method:
+
+- A recorded call closes over **domain dtos only** (an aiogram `Message` is
+  fine — it is detached too). Never over a dao, a session or a sender: those
+  are `BotSenders`, resolved in the task's own scope.
+- Anything the caller needs back — a field of the response, a message id —
+  belongs to the inline (web) half. What the outbox delivers, nobody awaits.
+
+The order of one request's messages is kept (one task replays them in order);
+the order between concurrent requests is not, and never was.
+
 One file is exempt from the ban: `tgbot/utils/fastapi_webhook.py` is a
 portable copy of aiogram's webhook handler, meant to be pasted into another
 bot as-is. It must not import from `shvatka`, so it keeps managing its own

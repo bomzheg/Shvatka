@@ -14,6 +14,8 @@ those are what ``FromDishka`` is for.
 """
 
 import logging
+from collections.abc import Awaitable, Callable, Sequence
+from dataclasses import dataclass
 
 from aiogram import Bot
 from aiogram.utils.text_decorations import html_decoration as hd
@@ -25,10 +27,62 @@ from shvatka.core.models import dto
 from shvatka.infrastructure.crawler.game_scn.uploader.forum_scenario_uploader import upload
 from shvatka.infrastructure.crawler.game_scn.uploader.game_mapper import map_game_for_upload
 from shvatka.tgbot.config.models.bot import BotConfig
+from shvatka.tgbot.views.bot_alert import BotAlert
+from shvatka.tgbot.views.game import BotOrgNotifier, BotView, GameBotLog
 from shvatka.tgbot.views.hint_sender import HintSender
 from shvatka.tgbot.views.results.scenario import GamePublisher, LevelPublisher
 
 logger = logging.getLogger(__name__)
+
+
+@dataclass(frozen=True, slots=True)
+class BotSenders:
+    """Everything the bot shows the game through, resolved in the task's scope."""
+
+    view: BotView
+    org_notifier: BotOrgNotifier
+    game_log: GameBotLog
+
+
+BotDelivery = Callable[[BotSenders], Awaitable[None]]
+"""One recorded bot-side view call, waiting for the senders to run against."""
+
+
+async def deliver_bot_views(
+    calls: Sequence[BotDelivery],
+    view: FromDishka[BotView],
+    org_notifier: FromDishka[BotOrgNotifier],
+    game_log: FromDishka[GameBotLog],
+    alerter: FromDishka[BotAlert],
+) -> None:
+    """Show in telegram what one request decided to show, after it answered.
+
+    The calls were recorded by :class:`~shvatka.tgbot.views.outbox.BotOutbox`
+    during the request and are replayed here in the order they were made — a
+    key is confirmed before the puzzle it opened. Only the order *within* one
+    request is kept: two players of a team typing at once are two tasks, and
+    their messages interleave exactly as they did when the request sent them
+    itself.
+
+    A failure is not the caller's problem anymore (it is long gone), so each
+    call is contained on its own — one chat that can't be written to must not
+    swallow the rest — and alerted, because nobody is watching the response
+    for it.
+    """
+    senders = BotSenders(view=view, org_notifier=org_notifier, game_log=game_log)
+    for call in calls:
+        await _deliver_one(call, senders, alerter)
+
+
+async def _deliver_one(call: BotDelivery, senders: BotSenders, alerter: BotAlert) -> None:
+    try:
+        await call(senders)
+    except Exception as e:
+        logger.exception("cant deliver bot view", exc_info=e)
+        try:
+            await alerter.alert(f"cant deliver bot view because of {e!s}")
+        except Exception as alert_error:
+            logger.error("cant alert about failed delivery", exc_info=alert_error)
 
 
 async def publish_scenario_to_forum(

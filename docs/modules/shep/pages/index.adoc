@@ -50,6 +50,10 @@ came out of it*.
 | xref:shep-0006-file-lifecycle.adoc[SHEP-0006]
 | File deletion and garbage collection
 | Accepted, implemented
+
+| xref:shep-0007-key-submission-latency.adoc[SHEP-0007]
+| Key submission latency
+| Accepted, partially implemented
 |===
 
 == Status vocabulary

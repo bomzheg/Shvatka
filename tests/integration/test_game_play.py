@@ -598,3 +598,31 @@ async def test_get_passed_levels_on_first_level(
     )
 
     assert passed.levels == []
+
+
+@pytest.mark.asyncio
+async def test_get_passed_levels_requires_waiver(
+    game_with_waivers: dto.FullGame,
+    dishka_request: AsyncContainer,
+    dao: HolderDao,
+    ron: dto.Player,
+    harry: dto.Player,
+    gryffindor: dto.Team,
+):
+    """Same guard as ``get_current_hints``: no waiver, no access — to any level."""
+    await leave(ron, ron, dao.team_leaver, notifier=TeamNotifierMock())
+    dao.level_time._save(
+        models.LevelTime(
+            game_id=game_with_waivers.id,
+            team_id=gryffindor.id,
+            level_number=0,
+            start_at=datetime.now(tz=tz_utc) - timedelta(minutes=5),
+        )
+    )
+    await dao.commit()
+    interactor = await dishka_request.get(PassedLevelsReaderInteractor)
+
+    with suppress(exceptions.PlayerRestoredInTeam):
+        await join_team(ron, gryffindor, harry, dao.team_player, notifier=TeamNotifierMock())
+    with pytest.raises(exceptions.WaiverError):
+        await interactor(MockIdentityProvider(user=ron._user, player=ron, team=gryffindor))

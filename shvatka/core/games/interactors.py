@@ -356,6 +356,11 @@ class CheckKeyInteractor(GamePlayBaseInteractor):
         new_key = await self.key_processor.check_key(key=key, player=player, team=team, now=now)
         if new_key is None:
             return
+        # the key is a fact of the game the moment it is typed, and showing it
+        # is a long story (a puzzle is several telegram messages apart). Commit
+        # before telling anyone, so the transaction — and the rows it locks —
+        # doesn't stay open for the whole of it.
+        await self.dao.commit()
         await self.view_(new_key, input_container)
         if not new_key.is_duplicate and new_key.is_level_up():
             await self.process_level_up(
@@ -364,6 +369,7 @@ class CheckKeyInteractor(GamePlayBaseInteractor):
                 game=game,
                 at=now,
             )
+        # the level up may have finished the game for everyone
         await self.dao.commit()
 
     async def view_(self, new_key: dto.InsertedKey, input_container: InputContainer) -> None:

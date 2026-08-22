@@ -1,10 +1,16 @@
+import asyncio
 import sys
+import typing
 from datetime import datetime, timedelta
 from pathlib import Path
+from unittest.mock import MagicMock
 from uuid import uuid4
 
 import pytest
 from adaptix import Retort
+from aiogram.client.session.base import BaseSession
+from aiogram.methods import SendMessage
+from dishka import AsyncContainer
 from httpx import AsyncClient
 
 from shvatka.api.games import responses as game_responses
@@ -16,8 +22,10 @@ from shvatka.core.models.enums import GameStatus
 from shvatka.core.models.enums.org_permission import OrgPermission
 from shvatka.core.services.game import create_game
 from shvatka.core.services.organizers import flip_permission
+from shvatka.core.interfaces.nursery import Nursery
 from shvatka.core.utils.datetime_utils import tz_utc
 from shvatka.infrastructure.db import models
+from shvatka.infrastructure.nursery import AsyncioNursery
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.api.app.dependencies.auth import AuthProperties
 from tests.fixtures.scn_fixtures import GUID, GUID_2
@@ -373,6 +381,56 @@ async def test_post_wrong_key(
     assert resp_json["game_finished"] is False
     assert resp_json["is_duplicate"] is False
     assert resp_json["wrong"] is True
+
+
+@pytest.mark.asyncio
+async def test_typed_key_is_shown_in_telegram_after_the_answer(
+    client: AsyncClient,
+    auth: AuthProperties,
+    author: dto.Player,
+    harry: dto.Player,
+    gryffindor: dto.Team,
+    started_game: dto.FullGame,
+    dao: HolderDao,
+    dishka: AsyncContainer,
+    bot_session: BaseSession,
+):
+    """Telegram is written to by a background task, not by the request.
+
+    A player typing a key waits for the database and nothing else; the chat is
+    caught up afterwards — see shep-0007.
+    """
+    token = auth.create_user_token(harry)
+
+    resp = await client.post(
+        "/games/running/key",
+        json={"text": "SHWRONG"},
+        cookies={"Authorization": "Bearer " + token.access_token},
+    )
+    assert resp.status_code == 200
+
+    await _wait_for_bot_delivery(dishka)
+
+    sent = _sent_messages(bot_session)
+    assert len(sent) == 1
+    assert sent[0].chat_id == gryffindor.get_chat_id()
+    assert "SHWRONG" in sent[0].text
+
+
+async def _wait_for_bot_delivery(dishka: AsyncContainer) -> None:
+    """Wait out what the request handed over, so the test can look at telegram."""
+    nursery = typing.cast(AsyncioNursery, await dishka.get(Nursery))
+    await asyncio.gather(*list(nursery.tasks))
+
+
+def _sent_messages(bot_session: BaseSession) -> list[SendMessage]:
+    session = typing.cast(MagicMock, bot_session)
+    return [
+        arg
+        for call in session.await_args_list
+        for arg in list(call.args) + list(call.kwargs.values())
+        if isinstance(arg, SendMessage)
+    ]
 
 
 @pytest.mark.asyncio

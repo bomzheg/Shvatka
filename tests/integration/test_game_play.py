@@ -4,7 +4,11 @@ from datetime import datetime, timedelta
 import pytest
 from dishka import AsyncContainer
 
-from shvatka.core.games.interactors import GamePlayReaderInteractor, CheckKeyInteractor
+from shvatka.core.games.interactors import (
+    GamePlayReaderInteractor,
+    CheckKeyInteractor,
+    PassedLevelsReaderInteractor,
+)
 from shvatka.core.models import dto, enums
 from shvatka.core.models.dto import hints
 from shvatka.core.models.enums import GameStatus
@@ -531,3 +535,66 @@ async def test_get_current_hints(
         await join_team(ron, gryffindor, harry, dao.team_player, notifier=TeamNotifierMock())
     with pytest.raises(exceptions.WaiverError):
         await interactor(MockIdentityProvider(user=ron._user, player=ron, team=gryffindor))
+
+
+@pytest.mark.asyncio
+async def test_get_passed_levels(
+    game_with_waivers: dto.FullGame,
+    dishka_request: AsyncContainer,
+    dao: HolderDao,
+    harry: dto.Player,
+    gryffindor: dto.Team,
+):
+    now = datetime.now(tz=tz_utc)
+    first_started_at = now - timedelta(minutes=9)
+    second_started_at = now - timedelta(minutes=2)
+    for level_number, start_at in ((0, first_started_at), (1, second_started_at)):
+        dao.level_time._save(
+            models.LevelTime(
+                game_id=game_with_waivers.id,
+                team_id=gryffindor.id,
+                level_number=level_number,
+                start_at=start_at,
+            )
+        )
+    await dao.commit()
+
+    interactor = await dishka_request.get(PassedLevelsReaderInteractor)
+    passed = await interactor(
+        MockIdentityProvider(user=harry._user, player=harry, team=gryffindor)
+    )
+
+    assert passed.game_id == game_with_waivers.id
+    # the current level is not among the passed ones
+    assert [level.level_number for level in passed.levels] == [0]
+    first = passed.levels[0]
+    assert first.started_at == first_started_at
+    assert first.finished_at == second_started_at
+    # seven minutes on a level with hints at 0, 2, 4 and 6 minutes
+    assert [hint.time for hint in first.hints] == [0, 2, 4, 6]
+
+
+@pytest.mark.asyncio
+async def test_get_passed_levels_on_first_level(
+    game_with_waivers: dto.FullGame,
+    dishka_request: AsyncContainer,
+    dao: HolderDao,
+    harry: dto.Player,
+    gryffindor: dto.Team,
+):
+    dao.level_time._save(
+        models.LevelTime(
+            game_id=game_with_waivers.id,
+            team_id=gryffindor.id,
+            level_number=0,
+            start_at=datetime.now(tz=tz_utc) - timedelta(minutes=5),
+        )
+    )
+    await dao.commit()
+
+    interactor = await dishka_request.get(PassedLevelsReaderInteractor)
+    passed = await interactor(
+        MockIdentityProvider(user=harry._user, player=harry, team=gryffindor)
+    )
+
+    assert passed.levels == []

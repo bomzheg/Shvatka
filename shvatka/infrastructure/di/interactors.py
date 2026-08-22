@@ -7,6 +7,7 @@ from shvatka.common.url_factory import UrlFactory
 from shvatka.core.games.interactors import (
     GameFileReaderInteractor,
     GamePlayReaderInteractor,
+    PassedLevelsReaderInteractor,
     GameKeysReaderInteractor,
     GameStatReaderInteractor,
     GameResultsFileInteractor,
@@ -271,6 +272,7 @@ class GamePlayProvider(Provider):
 
     file_reader = provide(GameFileReaderInteractor)
     game_play_reader_interactor = provide(GamePlayReaderInteractor)
+    passed_levels_reader_interactor = provide(PassedLevelsReaderInteractor)
 
     @provide
     def game_play_dao(self, dao: HolderDao, current_game: CurrentGameProvider) -> GamePlayDao:

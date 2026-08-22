@@ -4,7 +4,7 @@ import typing
 from dataclasses import dataclass
 from typing import Iterable
 
-from shvatka.core.games.dto import CurrentHintsOnly, Event
+from shvatka.core.games.dto import CurrentHintsOnly, Event, PassedLevelHints, PassedLevels
 from shvatka.core.interfaces.current_game import CurrentGameProvider
 
 from shvatka.core.interfaces.dal.complex import GamePackager
@@ -375,6 +375,30 @@ class GamePlayDaoImpl(GamePlayDao):
             level_time_id=level_time.id,
             is_finished=is_finished,
         )
+
+    async def get_passed_levels(self, identity: IdentityProvider) -> PassedLevels:
+        game = await self.current_game.get_required_full_game()
+        team = await identity.get_required_team()
+        # resolving the current level time also checks the waiver
+        current = await self.get_level_time(identity)
+        level_times = await self.dao.level_time.get_team_level_times(team, game)
+        passed: list[PassedLevelHints] = []
+        for level_time, next_level_time in zip(level_times, level_times[1:]):
+            if level_time.id == current.id or level_time.has_finished(game):
+                continue
+            level = game.levels[level_time.level_number]
+            passed.append(
+                PassedLevelHints(
+                    level_number=level_time.level_number,
+                    level_time_id=level_time.id,
+                    started_at=level_time.start_at,
+                    finished_at=next_level_time.start_at,
+                    hints=level.get_hints_for_timedelta(
+                        next_level_time.start_at - level_time.start_at
+                    ),
+                )
+            )
+        return PassedLevels(game_id=game.id, levels=passed)
 
     async def get_team_typed_keys(self, identity: IdentityProvider) -> list[dto.InsertedKey]:
         level_time = await self.get_level_time(identity)

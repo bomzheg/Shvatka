@@ -59,6 +59,18 @@ class LevelTimeDao(BaseDAO[models.LevelTime]):
         )
         return result.scalar_one_or_none()
 
+    async def get_team_level_times(self, team: dto.Team, game: dto.Game) -> list[dto.LevelTime]:
+        """Every level the team has been on in the game, oldest first."""
+        result = await self.session.scalars(
+            select(models.LevelTime)
+            .where(
+                models.LevelTime.game_id == game.id,
+                models.LevelTime.team_id == team.id,
+            )
+            .order_by(models.LevelTime.start_at)
+        )
+        return [lt.to_dto(game=game, team=team) for lt in result.all()]
+
     async def get_game_level_times(self, game: dto.Game) -> list[dto.LevelTime]:
         result = await self.session.scalars(
             select(models.LevelTime)

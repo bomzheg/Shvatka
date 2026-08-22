@@ -381,14 +381,19 @@ list with a comment saying why; everything else stays measured.
 
 ### What the suite can't see
 
-Changes to **middleware, DI wiring, filters, or how the acting user is
-resolved** break in ways no test catches: a filter that wrongly answers `False`
-raises nothing, it just makes a command stop responding. Before merging one of
-those, run the manual pass against a real bot — open a new issue from the
-**Bot regression pass** template
+The bot behaves differently in each game status: the ordinary routers switch
+themselves off once a game is **started**, waiver commands exist only during
+**getting_waivers**, editing closes after that, results appear only when it is
+**finished**. Nothing in the automated suite drives a real update through those
+states, and the usual failure is silent — a filter that wrongly answers `False`
+raises nothing, it just makes a command stop responding.
+
+So changes to the bot get a manual pass against a real one: open an issue from
+the **Bot regression pass** template
 (`.github/ISSUE_TEMPLATE/tgbot-regression-pass.md`) and work through it there,
-where the checkboxes actually tick. It is ordered by how quietly each bug would
-hide, so section 1 is the part that repays care.
+where the checkboxes actually tick. It is grouped by game status; run the states
+your change can reach and delete the rest. Checks marked **⚠ regression** are
+places that have broken before — read those rather than skim them.
 
 ## Linting & CI
 

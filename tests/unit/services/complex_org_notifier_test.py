@@ -1,7 +1,9 @@
 import pytest
 
 from shvatka.core.views.game import Event, OrgNotifier
+from shvatka.tgbot.views.outbox import BotOutbox
 from shvatka.views import ComplexOrgNotifier
+from tests.mocks.nursery import FakeNursery, deliver_recorded
 
 
 class RecordingNotifier(OrgNotifier):
@@ -16,39 +18,33 @@ class RecordingNotifier(OrgNotifier):
 
 
 @pytest.mark.asyncio
-async def test_notifies_both_bot_and_web() -> None:
+async def test_web_notified_now_bot_notified_after() -> None:
     bot = RecordingNotifier()
     web = RecordingNotifier()
-    notifier = ComplexOrgNotifier(bot, web)
+    outbox = BotOutbox(nursery=FakeNursery())
+    notifier = ComplexOrgNotifier(outbox, web)
     event = Event(orgs_list=[])
 
     await notifier.notify(event)
 
-    assert bot.calls == [event]
     assert web.calls == [event]
+    assert bot.calls == [], "telegram is not written to while the caller waits"
 
-
-@pytest.mark.asyncio
-async def test_web_notified_even_if_bot_fails() -> None:
-    bot = RecordingNotifier(fail=True)
-    web = RecordingNotifier()
-    notifier = ComplexOrgNotifier(bot, web)
-    event = Event(orgs_list=[])
-
-    await notifier.notify(event)
+    await deliver_recorded(outbox, org_notifier=bot)
 
     assert bot.calls == [event]
-    assert web.calls == [event]
 
 
 @pytest.mark.asyncio
 async def test_bot_notified_even_if_web_fails() -> None:
     bot = RecordingNotifier()
     web = RecordingNotifier(fail=True)
-    notifier = ComplexOrgNotifier(bot, web)
+    outbox = BotOutbox(nursery=FakeNursery())
+    notifier = ComplexOrgNotifier(outbox, web)
     event = Event(orgs_list=[])
 
     await notifier.notify(event)
+    await deliver_recorded(outbox, org_notifier=bot)
 
     assert bot.calls == [event]
     assert web.calls == [event]

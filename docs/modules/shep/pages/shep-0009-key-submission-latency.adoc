@@ -1,0 +1,176 @@
+= SHEP-0009 — Key submission latency
+:navtitle: SHEP-0009 Key submission latency
+
+[cols="1,4"]
+|===
+| SHEP | 0009
+| Title | Key submission latency
+| Status | `Accepted, partially implemented`
+| Created | 2026-08-22
+| Updated | 2026-08-22
+| Related | —
+|===
+
+== Summary
+
+Typing a key on the site used to wait for the whole game to be *told about it* —
+several telegram messages a second apart, then a web push per device of every
+player and org. None of that is part of the answer. The answer is built from the
+`InputContainer` the web view fills in memory, so the bot half of the fan-out is
+now recorded during the request and delivered by a background task afterwards,
+and the pushes that stay inline go out together instead of one after another.
+
+== Context
+
+`POST /games/running/key` (`shvatka/api/games/routes.py`) runs
+`CheckKeyInteractor` (`shvatka/core/games/interactors.py`) and answers with
+`responses.InsertedKey`. Everything in that response comes from `WebInput`,
+which `WebGameView` fills in memory — no io at all.
+
+What the request actually waited for, in order:
+
+* `HintSender.send_hints` sleeps `SLEEP` (one second) after the caption and
+  after every hint part (`shvatka/tgbot/views/hint_sender.py`). A puzzle of
+  three parts is four seconds of sleeping alone, and a level up sends one.
+* `WebPushSender.send_many` looped over subscriptions and awaited one blocking
+  `webpush` call at a time (`shvatka/api/app/utils/push.py`). A team of eight
+  with two devices each is sixteen https round trips in a row — and the same
+  again for the orgs in `WebOrgNotifier`.
+* `BotOrgNotifier.notify` sends one message per org, one at a time; on the last
+  team's last key `all_teams_finished` messages every team.
+* All of it inside the transaction: `CheckKeyInteractor` committed *after* the
+  fan-out, so the rows the key locked stayed locked for its whole duration.
+
+The one-second sleep is deliberate — it is what keeps the bot inside telegram's
+per-chat limits — so the fix cannot be "sleep less".
+
+== Decision
+
+=== The seam is the input container, not the view
+
+The web half of `ComplexView` (`shvatka/views.py`) does two different things:
+it fills `WebInput` (in memory, what the response is made of) and it sends web
+pushes. The bot half does neither — nothing the caller waits for depends on it.
+So the split is by *edge*: the web half keeps running inline, the bot half is
+recorded and delivered afterwards.
+
+This also means `core` does not change. `CheckKeyInteractor` still calls
+`GameView` and `OrgNotifier` exactly as before; only what those interfaces are
+bound to in the combined container changes.
+
+=== The recording: `BotOutbox`
+
+`shvatka/tgbot/views/outbox.py` holds the calls of one request as
+`Callable[[BotSenders], Awaitable[None]]` — a lambda closing over plain domain
+dtos (and the aiogram `Message` a bot handler replies to), never over a sender.
+`flush()` hands the whole recording to the nursery as **one**
+`deliver_bot_views` task (`shvatka/tgbot/tasks.py`), which resolves the senders
+in its own scope and replays the calls in order.
+
+One task per request, not per call: within one key the confirmation must reach
+the chat before the puzzle it opened. Across requests nothing is promised —
+two players of a team typing at once are two tasks — but that was already true,
+since `lock_team` only covers `KeyProcessor.submit_key` and never covered the
+views.
+
+=== Flushing when the request's scope closes
+
+The outbox is provided per request as an `AsyncIterable` in
+`ComplexOnlyProvider` and flushed in its finalizer. Every entry point — an api
+route, a bot handler, a scheduled job — therefore delivers without having to
+remember to, which no per-call-site `flush()` could promise.
+
+*Alternative rejected:* an explicit flush in `insert_key`. It is more visible,
+but a path that forgets it silently stops showing the game in telegram, and
+there are three kinds of callers to keep in sync.
+
+=== Failures are alerted, not swallowed
+
+`ComplexView` used to log a failing bot call and carry on; nobody watched the
+response for it either. Now each replayed call is contained on its own — one
+unreachable chat must not swallow the rest — and a failure additionally goes to
+`BotAlert`, because by then there is no request to fail.
+
+*Accepted cost:* the nursery cancels what is still running on shutdown
+(`AsyncioNursery.close`), so a deploy landing mid-delivery loses those messages
+with no retry. A durable job (apscheduler over the redis jobstore, as scheduled
+hints already are) would survive it. Not done: it buys durability for a window
+of a few seconds, at the price of a second delivery mechanism.
+
+=== Commit before showing anything
+
+`CheckKeyInteractor` now commits as soon as the key is saved, before the views,
+and again at the end for what a level up may have written (`dao.finish`).
+
+The key is a fact of the game the moment it is typed; holding its rows for the
+length of a chat conversation was never intentional. It does change failure
+semantics: if showing the key raises, the key and the level up stay committed
+instead of rolling back. That is the behaviour we want now that delivery is
+detached anyway — the site reads the new level from the database on its next
+poll, whatever telegram did.
+
+=== Pushes go together
+
+`WebPushSender` sends up to `PARALLEL` pushes at once and disables the
+subscriptions the provider reported gone *after* the gather, on the request's
+session — a session only one coroutine at a time may touch. The orm objects
+stay on the event loop: only plain values (`_Recipient`) are handed to the
+sending thread.
+
+== Consequences
+
+* The endpoint answers in about a database round trip; the response payload is
+  unchanged, so the front-end needs no change.
+* The site shows a level up before the team's chat does. Harmless — a player
+  typing the next key early is a wrong key at worst — but it is a real ordering
+  change between the two edges.
+* Scheduled hints go out the same way now: `send_hint_wrapper` resolves
+  `GameView`, so its job finishes as soon as the hint is *recorded*. A
+  delivery failure is alerted by `deliver_bot_views` instead of failing the
+  job, and the job's own "hint for team N not sent" alert only covers reading
+  the level and scheduling the next one.
+* `ComplexGameViewPreparer` and `ComplexTeamNotifier` still send inline. They
+  are not on the key path (game start, team membership) and can move later.
+* The bot-only container (`tgbot/main_factory.py`) binds `GameView` straight to
+  `BotView` and is unaffected — production runs the combined app.
+* One more thing to know when writing a view: a bot-side call is a recording, so
+  it must not carry anything scope-bound. `AGENTS.md` carries the rule.
+
+== Phases and status
+
+[cols="1,4,2",options="header"]
+|===
+| Phase | Content | Status
+
+| 1
+| Commit before the fan-out; web pushes in parallel
+| ✅ done
+
+| 2
+| `BotOutbox` + `deliver_bot_views`; `ComplexView`, `ComplexOrgNotifier` and
+  `ComplexGameLogWriter` record instead of awaiting
+| ✅ done
+
+| 3
+| Durable delivery for the level-up puzzle (apscheduler job instead of the
+  nursery), if a lost puzzle ever turns out to matter
+| ⏳ not started
+
+| 4
+| Per-chat outbox worker: one fifo per chat for every sender (keys, scheduled
+  hints, puzzles), with rate limiting in one place
+| ⏳ not started
+|===
+
+== Deviations from the plan
+
+None so far.
+
+== Open questions
+
+* How long does the endpoint actually take now? There is no measurement of the
+  view fan-out — `asgi_monitor` exposes the route's histogram, but the split
+  between database, push and telegram is guesswork. A timer around each view
+  call would settle whether phase 4 is worth it.
+* Should the web push half also be deferred? It is milliseconds now that it is
+  parallel, but it is still io in the request path.

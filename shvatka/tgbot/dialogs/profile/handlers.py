@@ -105,5 +105,9 @@ async def on_email_code_entered(
     except exceptions.EmailConfirmationCodeInvalid:
         await message.reply("Неверный или устаревший код, попробуй ещё раз")
         return
+    except exceptions.EmailAlreadyExist:
+        await message.reply("Эту почту успел занять кто-то другой, попробуй другую")
+        await manager.switch_to(state=states.ProfileSG.email)
+        return
     await message.reply("Электронная почта успешно подтверждена ✅")
     await manager.switch_to(state=states.ProfileSG.main)

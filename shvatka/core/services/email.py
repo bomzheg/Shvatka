@@ -59,12 +59,32 @@ class EmailLinkInteractor:
     sender: EmailSender
 
     async def __call__(self, player: dto.Player, email: str) -> None:
-        """Attach an email to an already existing player (e.g. a telegram user)."""
+        """
+        Attach an email to an already existing player (e.g. a telegram user),
+        or move the player to another email.
+
+        A pending (unconfirmed) email is replaced right away — nothing usable is
+        at stake. A *verified* one keeps working until the new address is
+        confirmed, so a typo can never lock its owner out of their account.
+        """
         email = normalize_email_or_raise(email)
-        if await self.dao.is_email_occupied(email):
+        occupant = await self.dao.get_by_email(email)
+        if occupant is not None and occupant.player_id != player.id:
             raise exceptions.EmailAlreadyExist(text=f"email {email} already occupied")
-        await self.dao.add_email_to_player(player, email)
-        await self.dao.commit()
+        if occupant is not None and occupant.is_verified:
+            raise exceptions.EmailAlreadyExist(text=f"email {email} already linked to this player")
+
+        current = await self.dao.get_by_player_id(player.id)
+        if current is None:
+            await self.dao.add_email_to_player(player, email)
+            await self.dao.commit()
+        elif not current.is_verified and current.email != email:
+            await self.dao.set_player_email(player.id, email, is_verified=False)
+            await self.dao.commit()
+            await self.store.remove_code(current.email)
+        # A verified email is left untouched: the new one is only remembered as a
+        # pending confirmation and replaces the old one in EmailConfirmInteractor.
+
         await send_new_code(email, player.id, self.store, self.sender)
 
 
@@ -78,7 +98,16 @@ class EmailConfirmInteractor:
         saved = await self.store.get_code(email)
         if saved is None or not secrets.compare_digest(saved.code, code.strip()):
             raise exceptions.EmailConfirmationCodeInvalid(text=f"wrong code for {email}")
-        await self.dao.set_verified(email)
+        account = await self.dao.get_by_email(email)
+        if account is None:
+            # A change requested from an already verified address: only now, with
+            # the new one proven, does the player stop using the old email.
+            await self.dao.set_player_email(saved.player_id, email, is_verified=True)
+        elif account.player_id != saved.player_id:
+            # Someone else took the address between the request and the confirmation.
+            raise exceptions.EmailAlreadyExist(text=f"email {email} already occupied")
+        else:
+            await self.dao.set_verified(email)
         await self.dao.commit()
         await self.store.remove_code(email)
 

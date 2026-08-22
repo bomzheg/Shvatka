@@ -24,6 +24,8 @@ class PlayerWithIdentities:
     email: EmailAccount | None
     is_admin: bool = False
     """whether this player may use the admin panel (tg id in configured superusers)"""
+    pending_email: str | None = None
+    """an address waiting for its confirmation code, when it is not `email` itself"""
 
     @classmethod
     def from_core(
@@ -31,6 +33,7 @@ class PlayerWithIdentities:
         player: dto.Player,
         email: dto.EmailAccount | None,
         superusers: "Sequence[int]" = (),
+        pending_email: str | None = None,
     ) -> "PlayerWithIdentities":
         tg = player._user  # noqa: SLF001
         return cls(
@@ -42,6 +45,11 @@ class PlayerWithIdentities:
             forum=ForumUser.from_core(player._forum_user),  # noqa: SLF001
             email=EmailAccount.from_core(email),
             is_admin=tg is not None and tg.tg_id in superusers,
+            # The address already linked (verified or not) is described by `email`;
+            # `pending_email` is only about a move to some *other* address.
+            pending_email=None
+            if email is not None and pending_email == email.email
+            else pending_email,
         )
 
 

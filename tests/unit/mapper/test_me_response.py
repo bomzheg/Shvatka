@@ -42,3 +42,27 @@ def test_me_from_core_forum_and_unverified_email():
     assert me.forum.name == "forum_harry"
     assert me.email is not None
     assert me.email.is_verified is False
+
+
+def test_me_pending_email_is_the_address_being_moved_to():
+    player = dto.Player(id=4, can_be_author=False, is_dummy=False, username="harry")
+    email = dto.EmailAccount(email="old@example.com", player_id=4, is_verified=True, db_id=1)
+
+    me = responses.PlayerWithIdentities.from_core(
+        player, email=email, pending_email="new@example.com"
+    )
+
+    assert me.email is not None
+    assert me.email.email == "old@example.com"
+    assert me.pending_email == "new@example.com"
+
+
+def test_me_pending_email_ignores_the_linked_address_itself():
+    player = dto.Player(id=5, can_be_author=False, is_dummy=False, username="harry")
+    email = dto.EmailAccount(email="h@example.com", player_id=5, is_verified=False, db_id=2)
+
+    me = responses.PlayerWithIdentities.from_core(
+        player, email=email, pending_email="h@example.com"
+    )
+
+    assert me.pending_email is None

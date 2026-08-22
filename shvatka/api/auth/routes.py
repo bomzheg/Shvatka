@@ -201,6 +201,8 @@ async def email_confirm(
         await interactor(email=body.email, code=body.code)
     except exceptions.EmailConfirmationCodeInvalid as e:
         raise HTTPException(status_code=400, detail="invalid or expired code") from e
+    except exceptions.EmailAlreadyExist as e:
+        raise HTTPException(status_code=409, detail="email already exists") from e
     return {"ok": True}
 
 

@@ -73,6 +73,7 @@ def restricted(can_pin: bool, is_member: bool = True) -> ChatMemberRestricted:
         can_send_voice_notes=True,
         can_send_polls=True,
         can_send_other_messages=True,
+        can_react_to_messages=True,
         can_add_web_page_previews=True,
         can_change_info=False,
         can_invite_users=False,

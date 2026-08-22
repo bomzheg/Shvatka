@@ -18,6 +18,8 @@ from .hint_part import (
     FileMixin,
     CaptionMixin,
     TextHint,
+    RichHint,
+    RichMedia,
     GPSHint,
     VenueHint,
     AudioHint,

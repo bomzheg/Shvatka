@@ -16,9 +16,9 @@ from shvatka.tgbot.views.hint_factory.hint_parser import parse_message
 
 logger = logging.getLogger(__name__)
 
-_MISSING = object()
 METHODS: dict[enums.HintType, Callable[..., Awaitable[Message]]] = {
     enums.HintType.text: Bot.send_message,
+    enums.HintType.rich: Bot.send_rich_message,
     enums.HintType.gps: Bot.send_location,
     enums.HintType.venue: Bot.send_venue,
     enums.HintType.photo: Bot.send_photo,
@@ -57,7 +57,7 @@ class HintSender:
     async def send_hint(self, hint_container: hints.BaseHint, chat_id: int) -> Message:
         method = self.method(enums.HintType[hint_container.type])
         hint_link = await self.resolver.resolve_link(hint_container)
-        if _is_file_id_missing(hint_link):
+        if hint_link.is_file_id_missing():
             logger.warning("hint has no file_id, sending by content: %s", hint_link)
         else:
             try:
@@ -129,17 +129,3 @@ class HintSender:
     def get_approximate_time(cls, hints: Collection[hints.BaseHint]) -> timedelta:
         approximate_io_time = timedelta(milliseconds=100)
         return len(hints) * cls.SLEEP + len(hints) * approximate_io_time
-
-
-def _is_file_id_missing(hint_link: object) -> bool:
-    """
-    Only file-based link views (photo, audio, video, ...) carry a ``file_id``
-    attribute. When that attribute exists but is ``None`` the file was never
-    uploaded to telegram, so we can't send by file_id and must fall back to
-    sending by content.
-
-    Views without a ``file_id`` attribute at all (text, gps, venue, contact)
-    have nothing to be missing - they are always sendable as a link, so the
-    sentinel default keeps them out of the content fallback.
-    """
-    return getattr(hint_link, "file_id", _MISSING) is None

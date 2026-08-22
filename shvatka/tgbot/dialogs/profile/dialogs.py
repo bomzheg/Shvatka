@@ -88,6 +88,8 @@ profile_dialog = Dialog(
             on_success=on_email_code_entered,
         ),
         state=states.ProfileSG.email_code,
+        # back to the address input when someone else took the email meanwhile
+        preview_add_transitions=[PreviewSwitchTo(states.ProfileSG.email)],
     ),
     Window(
         Jinja("Введи своё новое имя пользователя. Сейчас сохранено {{player.username}}"),

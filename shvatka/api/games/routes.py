@@ -20,6 +20,7 @@ from shvatka.core.games.interactors import (
     GameResultsFileInteractor,
     CheckKeyInteractor,
     GamePlayRoleReader,
+    PassedLevelsReaderInteractor,
 )
 from shvatka.core.games.editor_interactors import (
     MyGamesInteractor,
@@ -266,6 +267,19 @@ async def get_current_level(
 
 
 @inject
+async def get_passed_levels(
+    identity: FromDishka[ApiIdentityProvider],
+    interactor: FromDishka[PassedLevelsReaderInteractor],
+) -> responses.PassedLevelsResponse:
+    """Hints of the levels the team has already left.
+
+    Separate from the current level on purpose — the client polls the current
+    one constantly, and asks for the passed ones only when a player opens them.
+    """
+    return responses.PassedLevelsResponse.from_core(await interactor(identity))
+
+
+@inject
 async def insert_key(
     identity: FromDishka[ApiIdentityProvider],
     interactor: FromDishka[CheckKeyInteractor],
@@ -364,6 +378,7 @@ def setup() -> APIRouter:
     games_router.add_api_route("/active", get_active_game, methods=["GET"])
     games_router.add_api_route("/active/me", get_my_role, methods=["GET"])
     games_router.add_api_route("/running/level/current", get_current_level, methods=["GET"])
+    games_router.add_api_route("/running/level/passed", get_passed_levels, methods=["GET"])
     games_router.add_api_route("/running/key", insert_key, methods=["POST"])
     games_router.add_api_route("/{id}", get_game_card, methods=["GET"])
     games_router.add_api_route("/{id}/release", get_game_release, methods=["GET"])

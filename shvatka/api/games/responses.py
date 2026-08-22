@@ -15,6 +15,8 @@ from shvatka.core.games.dto import (
     Event,
     GameStatWithBonuses,
     MyRole,
+    PassedLevelHints,
+    PassedLevels,
 )
 from shvatka.core.models import dto, enums
 from shvatka.core.models.dto import action, hints
@@ -329,6 +331,38 @@ class CurrentHintResponse:
             started_at=core.started_at,
             level_time_id=core.level_time_id,
             is_finished=core.is_finished,
+        )
+
+
+@dataclass(kw_only=True, frozen=True, slots=True)
+class PassedLevel:
+    level_number: int
+    level_time_id: int
+    started_at: datetime
+    finished_at: datetime
+    hints: list[hints.TimeHint]
+
+    @classmethod
+    def from_core(cls, core: PassedLevelHints) -> "PassedLevel":
+        return cls(
+            level_number=core.level_number,
+            level_time_id=core.level_time_id,
+            started_at=core.started_at,
+            finished_at=core.finished_at,
+            hints=core.hints,
+        )
+
+
+@dataclass(kw_only=True, frozen=True, slots=True)
+class PassedLevelsResponse:
+    game_id: int
+    levels: list[PassedLevel]
+
+    @classmethod
+    def from_core(cls, core: PassedLevels) -> "PassedLevelsResponse":
+        return cls(
+            game_id=core.game_id,
+            levels=[PassedLevel.from_core(level) for level in core.levels],
         )
 
 

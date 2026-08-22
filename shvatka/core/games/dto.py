@@ -104,6 +104,41 @@ class CurrentHintsOnly:
 
 
 @dataclass(kw_only=True, frozen=True, slots=True)
+class PassedLevelHints:
+    """Hints a team had on a level it has already left.
+
+    Only the hints that were actually published to the team are listed: the
+    ones whose time had come between ``started_at`` and ``finished_at``. A team
+    that solved a level fast never saw its later hints, and doesn't see them
+    here either.
+    """
+
+    level_number: int
+    level_time_id: int
+    started_at: datetime
+    finished_at: datetime
+    hints: list[hints.TimeHint]
+
+    @property
+    def duration(self) -> timedelta:
+        return self.finished_at - self.started_at
+
+    def get_guids(self) -> list[str]:
+        return [g for h in self.hints for g in h.get_guids()]
+
+
+@dataclass(kw_only=True, frozen=True, slots=True)
+class PassedLevels:
+    """Every level the team has left behind, oldest first."""
+
+    game_id: int
+    levels: list[PassedLevelHints]
+
+    def get_guids(self) -> list[str]:
+        return [g for level in self.levels for g in level.get_guids()]
+
+
+@dataclass(kw_only=True, frozen=True, slots=True)
 class FoundBonusHints:
     bonus_hints: dict[UUID, list[hints.AnyHint]]
     """{effect_id: []}"""

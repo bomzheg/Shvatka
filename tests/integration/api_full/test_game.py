@@ -266,6 +266,89 @@ async def test_game_hints(
 
 
 @pytest.mark.asyncio
+async def test_game_passed_levels(
+    client: AsyncClient,
+    auth: AuthProperties,
+    harry: dto.Player,
+    gryffindor: dto.Team,
+    started_game: dto.FullGame,
+    dao: HolderDao,
+):
+    await dao.level_time.delete_all()
+    now = datetime.now(tz=tz_utc)
+    first = models.LevelTime(
+        game_id=started_game.id,
+        team_id=gryffindor.id,
+        level_number=0,
+        start_at=now - timedelta(minutes=5),
+    )
+    second = models.LevelTime(
+        game_id=started_game.id,
+        team_id=gryffindor.id,
+        level_number=1,
+        start_at=now - timedelta(minutes=2),
+    )
+    dao.level_time._save(first)
+    dao.level_time._save(second)
+    await dao.commit()
+    token = auth.create_user_token(harry)
+
+    resp = await client.get(
+        "/games/running/level/passed",
+        cookies={"Authorization": "Bearer " + token.access_token},
+    )
+
+    assert resp.status_code == 200
+    resp_json = resp.json()
+    assert resp_json["game_id"] == started_game.id
+    assert len(resp_json["levels"]) == 1
+    passed = resp_json["levels"][0]
+    assert passed["level_number"] == 0
+    assert passed["level_time_id"] == first.id
+    # three minutes on the level: only the hints of 0 and 2 minutes were shown
+    assert [hint["time"] for hint in passed["hints"]] == [0, 2]
+
+
+@pytest.mark.asyncio
+async def test_game_file_from_passed_level(
+    client: AsyncClient,
+    auth: AuthProperties,
+    harry: dto.Player,
+    gryffindor: dto.Team,
+    started_game: dto.FullGame,
+    dao: HolderDao,
+):
+    """A photo the team saw stays readable after it left the level."""
+    await dao.level_time.delete_all()
+    now = datetime.now(tz=tz_utc)
+    dao.level_time._save(
+        models.LevelTime(
+            game_id=started_game.id,
+            team_id=gryffindor.id,
+            level_number=0,
+            start_at=now - timedelta(minutes=5),
+        )
+    )
+    dao.level_time._save(
+        models.LevelTime(
+            game_id=started_game.id,
+            team_id=gryffindor.id,
+            level_number=1,
+            start_at=now - timedelta(minutes=2),
+        )
+    )
+    await dao.commit()
+    token = auth.create_user_token(harry)
+
+    resp = await client.get(
+        f"/cdn/games/{started_game.id}/files/{GUID}",
+        cookies={"Authorization": "Bearer " + token.access_token},
+    )
+
+    assert resp.is_success, resp.text
+
+
+@pytest.mark.asyncio
 async def test_post_wrong_key(
     client: AsyncClient,
     auth: AuthProperties,

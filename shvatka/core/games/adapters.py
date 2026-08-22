@@ -1,6 +1,6 @@
 from typing import Protocol
 
-from shvatka.core.games.dto import BonusEvent, CurrentHintsOnly, Event
+from shvatka.core.games.dto import BonusEvent, CurrentHintsOnly, Event, PassedLevels
 from shvatka.core.interfaces.dal.complex import GameScenarioEditor, TypedKeyGetter, GameStatDao
 from shvatka.core.interfaces.dal.file_info import FileInfoGetter
 from shvatka.core.interfaces.dal.file_link import FileIdsByGuidsGetter, GameFilesAdder
@@ -92,6 +92,12 @@ class GamePlayDao(Protocol):
         identity: IdentityProvider,
     ) -> CurrentHintsOnly:
         pass
+
+    async def get_passed_levels(
+        self,
+        identity: IdentityProvider,
+    ) -> PassedLevels:
+        """Levels the team has already left, with the hints it saw on each."""
 
     async def get_effects(
         self,

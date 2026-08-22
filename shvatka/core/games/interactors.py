@@ -3,7 +3,12 @@ import typing
 from dataclasses import dataclass
 from datetime import datetime
 
-from shvatka.core.games.dto import CurrentHintsAndKeys, GameStatWithBonuses, MyRole
+from shvatka.core.games.dto import (
+    CurrentHintsAndKeys,
+    GameStatWithBonuses,
+    MyRole,
+    PassedLevels,
+)
 from shvatka.core.games.game_play import schedule_first_hint
 from shvatka.core.games.results import build_results_table, resolve_bonus_levels
 from shvatka.core.interfaces.clients.file_storage import FileGateway
@@ -127,16 +132,15 @@ class GameFileReaderInteractor:
                     player=player,
                 )
         elif game.is_started():
-            if not await self.is_guid_in_current_hint(identity, guid):
-                if not await self.is_guid_in_applied_effects(identity, guid):
-                    raise exceptions.NotAuthorizedForEdit(
-                        permission_name="game_file_read",
-                        text=f"There is no file with uuid {guid} associated "
-                        f"with game id {game_id} and available now",
-                        game=game,
-                        user=await identity.get_user(),
-                        player=player,
-                    )
+            if not await self.is_guid_available_to_team(identity, guid):
+                raise exceptions.NotAuthorizedForEdit(
+                    permission_name="game_file_read",
+                    text=f"There is no file with uuid {guid} associated "
+                    f"with game id {game_id} and available now",
+                    game=game,
+                    user=await identity.get_user(),
+                    player=player,
+                )
         else:
             raise exceptions.NotAuthorizedForEdit(
                 permission_name="game_file_read",
@@ -158,9 +162,26 @@ class GameFileReaderInteractor:
             return False
         return guid in release.get_guids()
 
+    async def is_guid_available_to_team(self, identity: IdentityProvider, guid: str) -> bool:
+        """Whether the team has already been shown the file.
+
+        A hint the team saw stays readable after it left the level — that's
+        what makes the passed levels browsable — but a hint it never reached
+        does not become readable by passing the level.
+        """
+        return (
+            await self.is_guid_in_current_hint(identity, guid)
+            or await self.is_guid_in_applied_effects(identity, guid)
+            or await self.is_guid_in_passed_levels(identity, guid)
+        )
+
     async def is_guid_in_current_hint(self, identity: IdentityProvider, guid: str) -> bool:
         hints_ = await self.game_play_dao.get_current_hints(identity)
         return guid in hints_.get_guids()
+
+    async def is_guid_in_passed_levels(self, identity: IdentityProvider, guid: str) -> bool:
+        passed = await self.game_play_dao.get_passed_levels(identity)
+        return guid in passed.get_guids()
 
     async def is_guid_in_applied_effects(self, identity: IdentityProvider, guid: str) -> bool:
         effects = await self.game_play_dao.get_effects(identity)
@@ -216,6 +237,21 @@ class GamePlayReaderInteractor:
             is_finished=hints_.is_finished,
             level_numbers_by_name_id=level_numbers_by_name_id,
         )
+
+
+@dataclass(kw_only=True, slots=True, frozen=True)
+class PassedLevelsReaderInteractor:
+    """Hints of the levels the team has already passed.
+
+    Kept apart from :class:`GamePlayReaderInteractor` on purpose: the current
+    level is polled every few seconds, while the passed ones only grow when a
+    level is left, so the client asks for them separately and only on demand.
+    """
+
+    game_play_dao: GamePlayDao
+
+    async def __call__(self, identity: IdentityProvider) -> PassedLevels:
+        return await self.game_play_dao.get_passed_levels(identity)
 
 
 @dataclass(kw_only=True)

@@ -16,6 +16,14 @@ def check_can_read(game: dto.Game, player: dto.Player):
 
 
 async def check_can_view_scenario(game: dto.Game, identity: IdentityProvider) -> None:
+    """Who may read a game's scenario: everyone once it is complete, else the
+    author and the orgs given ``view_scenario``.
+
+    Admin rights are deliberately not on that list. An admin edits a game only
+    once it is complete (see :mod:`shvatka.core.games.admin_interactors`), and
+    a complete game is public anyway — so being a superuser never opens a
+    scenario still being written, however the game is addressed.
+    """
     player = await identity.get_required_player()
     if game.is_complete():
         return  # for completed - available for all

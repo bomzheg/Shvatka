@@ -13,6 +13,7 @@ from shvatka.core.players.player import upsert_player
 from shvatka.core.services.user import upsert_user
 from shvatka.core.utils.defaults_constants import DEFAULT_ROLE
 from shvatka.infrastructure.db.dao.holder import HolderDao
+from tests.fixtures.scn_fixtures import GUID
 from tests.fixtures.user_constants import (
     create_dto_hermione,
     create_dto_ron,
@@ -793,6 +794,96 @@ async def test_admin_upload_file_non_completed_game_hidden(
     )
     assert resp.status_code == 404, resp.text
     assert resp.json()["type"] == "GameNotFound"
+
+
+@pytest.mark.asyncio
+async def test_admin_cant_read_non_completed_game_scenario(
+    client: AsyncClient,
+    admin_token: Token,
+    game: dto.FullGame,
+):
+    """Being a superuser grants no sight of a game still being written.
+
+    The scenario of a game that is not complete belongs to its author and to
+    the orgs the author gave ``view_scenario`` — admin rights are not a way in,
+    not even knowing the game's id (the games list shows completed games only).
+    """
+    resp = await client.get(
+        f"/games/{game.id}",
+        cookies=auth_cookies(admin_token),
+        follow_redirects=True,
+    )
+    assert resp.status_code == 403, resp.text
+    assert resp.json()["type"] == "NotAuthorizedForEdit"
+
+
+@pytest.mark.asyncio
+async def test_admin_cant_read_non_completed_game_as_own(
+    client: AsyncClient,
+    admin_token: Token,
+    game: dto.FullGame,
+):
+    # the author-facing route is no way in either: the admin did not write it
+    resp = await client.get(
+        f"/games/my/{game.id}",
+        cookies=auth_cookies(admin_token),
+        follow_redirects=True,
+    )
+    assert resp.status_code == 403, resp.text
+    assert resp.json()["type"] == "NotAuthorizedForEdit"
+
+
+@pytest.mark.asyncio
+async def test_admin_cant_print_keys_of_non_completed_game(
+    client: AsyncClient,
+    admin_token: Token,
+    game: dto.FullGame,
+):
+    # the keys sheet is the scenario's secret half — same rule as the card
+    resp = await client.get(
+        f"/games/my/{game.id}/keys/print",
+        cookies=auth_cookies(admin_token),
+        follow_redirects=True,
+    )
+    assert resp.status_code == 403, resp.text
+    assert resp.json()["type"] == "NotAuthorizedForEdit"
+
+
+@pytest.mark.asyncio
+async def test_admin_cant_read_file_of_non_completed_game(
+    client: AsyncClient,
+    admin_token: Token,
+    game: dto.FullGame,
+):
+    # nor its media: a hint's picture is as much the scenario as its text
+    resp = await client.get(
+        f"/cdn/games/{game.id}/files/{GUID}",
+        cookies=auth_cookies(admin_token),
+        follow_redirects=True,
+    )
+    assert resp.status_code == 403, resp.text
+
+
+@pytest.mark.asyncio
+async def test_admin_reads_the_scenario_once_the_game_is_complete(
+    client: AsyncClient,
+    admin_token: Token,
+    game: dto.FullGame,
+    dao: HolderDao,
+):
+    """The other side of the rule — and what makes the admin editor work.
+
+    A complete game is public: the admin reads its scenario like everybody
+    else, which is what the admin scenario editor loads before saving.
+    """
+    await complete_game(game, dao)
+    resp = await client.get(
+        f"/games/{game.id}",
+        cookies=auth_cookies(admin_token),
+        follow_redirects=True,
+    )
+    assert resp.is_success, resp.text
+    assert len(resp.json()["levels"]) == len(game.levels)
 
 
 @pytest.mark.asyncio

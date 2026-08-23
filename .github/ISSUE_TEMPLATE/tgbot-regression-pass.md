@@ -1,152 +1,181 @@
 ---
 name: Bot regression pass
-about: Manual checklist to run against a real bot before merging a middleware, DI or filter change
+about: Manual checklist for the Telegram bot, grouped by what the active game is doing
 title: 'Bot regression pass: '
 ---
 
 **Branch / commit under test:**
 **Run by:**
 
-Open this as an issue and tick the boxes as you go — GitHub only makes task
-lists interactive in issues and comments, never when viewing a file.
+Open this as an issue and tick as you go — GitHub only makes task lists
+interactive in issues and comments, never when viewing a file.
 
-Run it after anything that touches **middleware, DI wiring, filters, or how the
-acting user is resolved**. That is the class of change whose damage the
-automated suite cannot see: unit tests cover the domain and
-`test_dialogs_preview` renders every window, but neither can check whether a
-real update still reaches the right handler with the right person attached.
+The bot is a different bot depending on what the active game is doing. Most
+routers switch themselves off once a game **starts**; waiver commands exist only
+while it is **getting_waivers**; editing closes after that; results appear only
+once it is **finished**. Testing one state therefore proves very little about
+the others, which is why this pass is grouped by status rather than by feature.
 
-The order is **by how quietly a bug would hide**, not by feature area. Section 1
-is the part worth doing carefully; everything below it fails in a way you would
-notice anyway. Delete the sections a given change can't possibly affect rather
-than ticking them untested.
+Work through the states your change can reach and delete the rest — deleting a
+section you didn't test beats ticking it untested.
+
+Two things worth knowing before you file anything:
+
+* Several buttons sit behind feature flags — `level_test`, `merge_team_button`,
+  `tg_channel_publication`, `forum_publication`. A missing button may be config
+  rather than a bug.
+* Some checks below are marked **⚠ regression** — those are places that have
+  broken before, so they are worth reading carefully rather than skimming.
 
 ## Accounts and fixtures
 
 | | who |
 |---|---|
-| **A** | approved author (`can_be_author`), and captain of a team |
+| **A** | approved author (`can_be_author`), captain of a team, org of the test game |
 | **B** | plain account, member of A's team, no team permissions |
-| **C** | in no team, and never seen by the bot before — needed for first-contact checks |
-| **S** | listed in `superusers`, for the merge commands |
+| **C** | in no team, and never seen by the bot before — for the first-contact checks |
+| **S** | listed in `superusers` |
 
-Also: the team's group chat, one fresh group the bot has just been added to, a
-game you can put into waivers and start, and a level you can send to testing.
+Also: the team's group chat (a supergroup), one fresh group the bot was just
+added to, and a game you can drive through the whole lifecycle.
 
-## 1. Filters — a wrong answer here is silent
+## How the statuses connect
 
-Filters resolve the acting player from the container. One that wrongly returns
-`False` raises nothing — the command simply stops responding; one that wrongly
-returns `True` hands someone rights they should not have. Both directions
-matter, so each check names the account to use.
+```mermaid
+stateDiagram-v2
+    [*] --> underconstruction: /new_game
+    underconstruction --> ready: scenario complete
+    ready --> getting_waivers: «📝Начать сборку вейверов»
+    underconstruction --> getting_waivers: «📝Начать сборку вейверов»
+    getting_waivers --> started: scheduler fires the planned time
+    started --> finished: every team finishes
+    finished --> complete: «✅Завершить (в прошедшие игры)»
+    complete --> [*]: shows up in /games
+```
 
-- [ ] **A** — `/new_level`, `/new_game`, `/my_games`, `/levels` in private each open their dialog. `can_be_author`
-- [ ] **B** — the same four commands get no reply at all. `can_be_author`, negative
-- [ ] **A** — `/manage_team` opens the Captain's bridge with team name, motto and captain. `TeamPlayerFilter(is_captain=True)`
-- [ ] **B** — `/manage_team` with no permissions does nothing. `TeamPlayerFilter`, negative
-- [ ] **B** — grant only «Переименовывать команду», then `/manage_team` still opens. This is the `or_f` branch and the likeliest thing to break.
-- [ ] **A** — in the bridge, open «Игроки» → B and flip a permission: buttons appear and disappear with it, and the card keeps showing B's role and emoji. `F["team_player"]` in `when=`
-- [ ] **A** — in the team chat, reply to a newcomer with `/add_in_team водитель`: added with that role, team notified. `IsTeamFilter` + `TeamPlayerFilter` + `HasTargetFilter`
-- [ ] In the fresh group with no team, `/who_there` answers «тут нет команды». `IsTeamFilter`, negative
-- [ ] **A** — add C to the team chat and **read the name in the prompt**: it must say «Принять **C** в команду …?». Naming the person who did the adding is a bug that has happened before. `user_join_chat_with_team`
-- [ ] Press «Принять» on that prompt; repeat the flow and press «Отказать». C joins on accept, declined on refuse, and neither says «уже находится в команде». `button_join` / `button_join_no`
-- [ ] Add another bot to the team chat: no prompt at all. `is_bot` guard
-- [ ] With a game running, a correct key sent from the team chat by a member is accepted. `play.py`: `IsTeamFilter` + `TeamPlayerFilter`
-- [ ] **org** — with the game active, `/spy` opens the spy menu. `OrgFilter(only_for_running_game=False)`
-- [ ] `/spy_levels` and `/spy_keys` as an org *without* those rights are silent; grant the rights and they open. `OrgFilter(can_spy)` / `OrgFilter(can_see_log_keys)`
-- [ ] **B** — `/spy` while not an org does nothing. `OrgFilter`, negative
-- [ ] **A** — send an inline «Аппрувнуть» invite to C, then **click your own button**: alert «ну и смысл?». `is_inviter`
-- [ ] **C** — click «согласен» on that invite: C is promoted. Getting «ну и смысл?» here means `is_inviter` is inverted. `is_inviter`
-- [ ] **C** — on a fresh invite, «не согласен» declines and edits the message.
-- [ ] **A** — invite B to be an organizer inline; your own click gives «ну и смысл?», B's acceptance makes them an org and refreshes B's open main menu. `is_inviter` + `BgManagerFactory`
+Only `getting_waivers`, `started` and `finished` count as **active**. Only
+`started` switches the ordinary routers off. Editing is allowed up to and
+including `getting_waivers`.
 
-### Game-state gating
+## 1. No active game
 
-`GameStatusFilter` is the widest filter in the bot: `disable_router_on_game`
-mounts it on the message, callback_query and inline_query of nearly every
-router, so almost every update passes through it. Its two failure modes are
-opposite and both quiet — answer `False` too often and the bot goes mute
-outside games, answer `True` too often and commands that must be blocked
-during a game become available. Test it in both game states, not just one.
+Peace time — everything that does not depend on a game. If your change touched
+anything shared, this is the section to run.
 
-- [ ] With **no active game**: `/start`, `/team`, `/teams`, `/create_team`, `/my_games` all respond. `GameStatusFilter(running=False)`
-- [ ] With a game in **getting_waivers**: the same commands still respond — the routers are disabled only once a game is *started*, not merely active.
-- [ ] With a game **started**: those same commands go quiet. If `/create_team` still answers mid-game, the filter is inverted. `running=False`, inverse
-- [ ] With a game **started**: a correct key from a team chat is still accepted — the play router is gated the other way. `GameStatusFilter(running=True)`
-- [ ] After the game **finishes**: the normal commands answer again.
-- [ ] During **getting_waivers**: `/waivers` and `/approve_waivers` work; outside that status they do not. `GameStatusFilter(status=getting_waivers)`
-- [ ] **org** — during a started game, `/spy` opens and the spy view lists teams by level. `OrgFilter` + spy getters
-- [ ] **org** — the spy «Лог ключей» button builds its Telegraph page. spy `keys_handler`
-
-## 2. Identity is still written on every update
-
-Resolving the identity is a write: it upserts the user and the chat, and creates
-the player for a first-time user. Handlers are not obliged to touch every
-entity, so the middleware triggers those lookups itself
-(`tests/unit/test_identity_middleware.py` guards it). These confirm it end to
-end against a real database.
-
-- [ ] **C** — from an account the bot has never seen, `/start` greets C by name: user row and player were created by that first update.
-- [ ] Change your Telegram **@username**, send any message, open `/me`: the new username shows. A stale one means the upsert stopped running.
-- [ ] Change your Telegram **first name**, send any message, reopen `/start`: the greeting uses it.
-- [ ] Rename the team's group chat, send a message there, `/who_there`: no error, and the chat row carries the new title.
-- [ ] In a plain group run `/chat_type`, convert it to a supergroup, then `/create_team`: the group-type hint first, the team after, and the migration message handled without error. `chat_migrate`
-- [ ] Add the bot to a brand-new group and immediately `/chat_id`: both ids come back — the chat is upserted by the very update that asked.
-- [ ] `/about` and `/privacy` reply in both a group and private.
-
-## 3. Dependencies resolved from DI
-
-These fail loudly rather than silently, but they sit on paths nobody hits by
-accident.
-
-- [ ] `/games` → a completed game → the keys page gives a working Telegraph link. `Telegraph`
-- [ ] The same game's results picture renders. `ResultsPainter`
-- [ ] Export a scenario as zip from both `/my_games` and a completed game. `FileGateway`
-- [ ] Start `/new_game` and upload that zip back: «Успешно сохранено», and the game appears in `/my_games`. `FileGateway`
-- [ ] Open a level from `/levels` and start testing it: the test starts and the first timed hint arrives on schedule. `LevelTestScheduler` + `LevelView`
-- [ ] Send a level to another org for testing and accept from their account. same two deps
-- [ ] Create a team and watch the game-log chat for the log message. `GameLogWriter`
-- [ ] **S** — `/merge_teams <new_id> <forum_id>`: merged, logged, and the captain's open dialog refreshes. `GameLogWriter` + `BgManagerFactory`
-- [ ] **S** — `/merge_players` and confirm: merged, and the target's dialog refreshes.
-- [ ] Play far enough into a game for a timed hint to fire: hints still arrive. `HintSender` is built lazily, so this is the check that it is still built at all.
-
-## 4. Edges where `None` used to pass quietly
-
-Handlers call `get_required_*`, which raises a domain error rather than
-propagating `None`. Normal users see no difference; these are the paths where
-the difference shows. The goal is a sensible message or silence — never a
-traceback loop.
-
-- [ ] Turn on «Remain anonymous» as a group admin and send `/chat_id` and `/start`. Watch the log for `PlayerNotFoundError` / `UserNotFoundError`.
-- [ ] Have a linked channel auto-forward a post into a group the bot is in: no error storm. These updates carry no real user.
-- [ ] **C** — `/team`, `/players`, `/leave` while in no team each answer «Ты не состоишь в команде».
-- [ ] Full waiver flow: `/waivers` as captain, vote as B, `/approve_waivers`, force-add a player, revoke a vote, cancel. This path has the most handlers on it.
-- [ ] **org** — `/get_waivers` and `/get_waivers_draft` render their lists.
-- [ ] Reply to someone's message with a command that takes a target (the promotion flow): the target is resolved and upserted. `FixTargetMiddleware`
-
-## 5. Dialog smoke
-
-Every window that reads the player, team or team_player in its template gets
-those from its own getter, so rendering should be untouched by DI work. Quick
-confirmations rather than real suspects — a blank field means a getter lost a
-key.
-
-- [ ] `/start` as a player in a team with an active game: name, team flag, role emoji, active game, and either the org powers block or the waiver status.
+- [ ] **A** — `/start`: main menu greets by name, shows the team flag, role emoji, and no active-game block.
+- [ ] **C** — `/start`: greets by name and says they are in no team.
 - [ ] `/me` → «Мой профиль»: key stats, correct-key ratio, team history.
-- [ ] From the profile, change the displayed username and request a login link: both windows show the current username, and the link opens the site.
-- [ ] `/teams` → a team → «Моя команда»: name, captain, players, played game numbers.
-- [ ] From the Captain's bridge, «Былые свершения команды» opens the merge dialog with the team preloaded.
-- [ ] «Перенести в другой чат» confirms with the old and new chat ids.
+- [ ] From the profile: change the displayed username, and request a one-time login link that opens the site.
+- [ ] `/teams` → a team → its players and the numbers of games it played.
+- [ ] **C** — `/team`, `/players`, `/leave` all answer «Ты не состоишь в команде».
+- [ ] **A** — `/create_team` in a supergroup where you are an admin creates the team; the game-log chat gets a message.
+- [ ] `/create_team` in a plain group returns the "convert to supergroup" hint instead.
+- [ ] **A** — reply to someone in the team chat with `/add_in_team водитель`: added with that role, team notified.
+- [ ] **A** — add C to the team chat and **read the name in the prompt**: «Принять **C** в команду …?» ⚠ regression — it has named the person doing the adding instead.
+- [ ] Press «Принять»; repeat and press «Отказать». Neither answers «уже находится в команде».
+- [ ] Add another bot to the team chat: no prompt at all.
+- [ ] **A** — `/manage_team`: Captain's bridge with team name, motto, captain.
+- [ ] **B** — `/manage_team` with no permissions: nothing happens. Grant only «Переименовывать команду» and it opens. ⚠ regression — this `or_f` branch is the fragile one.
+- [ ] In the bridge: rename, change the motto, open «Игроки», flip a permission and watch the buttons follow it.
+- [ ] «🔀Перенести в другой чат»: confirmation naming the old and new chat ids.
+- [ ] «🔮Былые свершения команды» opens the merge dialog (flag `merge_team_button`).
+- [ ] **A → C** — inline «Аппрувнуть»: clicking **your own** button gives «ну и смысл?»; C clicking «согласен» promotes them. ⚠ regression — getting these two the wrong way round lets the inviter approve themselves.
+- [ ] **B** — `/new_game`, `/new_level`, `/levels`, `/my_games` get no reply at all (not an approved author).
+- [ ] `/games`, `/chat_id`, `/chat_type`, `/about`, `/privacy`, `/help`, `/version` all answer.
+- [ ] `/cancel` closes an open dialog.
 
-## 6. What a broken injection looks like in the log
+## 2. `underconstruction` / `ready` — the game is being written
+
+- [ ] **A** — `/new_level`: create a level with keys, time hints, conditions, bonus keys.
+- [ ] `/levels` lists your free levels; open one and edit it.
+- [ ] Level testing (flag `level_test`): start a test, submit a key in it, cancel it.
+- [ ] Send a level to another org for testing and accept the invite from their account.
+- [ ] `/new_game`: create a game from free levels.
+- [ ] `/new_game` → upload a scenario zip instead: «Успешно сохранено».
+- [ ] `/my_games` → the game → «📜Сценарий»: add and remove levels.
+- [ ] «✏Переименовать» renames it.
+- [ ] «👥Организаторы»: invite an org inline, and flip their permissions. Your own click on the invite gives «ну и смысл?».
+- [ ] «📦zip-сценарий» downloads `scenario.zip`; «🔀Переходы» renders the transitions png.
+- [ ] «🔑🧾Все ключи в xlsx» and «🔑🖨Ключи для печати» both produce a file.
+- [ ] «📢Релиз»: attach a banner and hints.
+- [ ] «📆Запланировать игру» sets a date and time; «📥Отменить игру» clears it.
+- [ ] The game does **not** appear in `/games` yet.
+
+## 3. `getting_waivers`
+
+Reached with «📝Начать сборку вейверов» from the game menu.
+
+- [ ] The transition posts to the game-log chat, and publishes the release to the channel if one exists (flag `tg_channel_publication`).
+- [ ] `/start` main menu now shows the game, and your waiver status once you vote.
+- [ ] **A** — `/waivers` posts the poll into the team chat.
+- [ ] **B** — vote «Да», then change to «Нет»: the poll message updates each time.
+- [ ] **B** — `/waivers` and `/approve_waivers` are refused — captain only.
+- [ ] **A** — `/approve_waivers`: the bot writes to your DM with the draft.
+- [ ] From there: approve the waivers, force-add a player, revoke someone's vote, and cancel the collection.
+- [ ] **org** — `/get_waivers` and `/get_waivers_draft` render.
+- [ ] Editing is still open: the scenario, orgs and rename all still work.
+- [ ] Ordinary commands still answer — the routers switch off at `started`, not here. ⚠ regression — the gate reads "is the game *started*", and inverting it silently kills the bot outside games.
+
+## 4. `started`
+
+Reached when the scheduler fires the planned time.
+
+- [ ] Teams receive the first level at the planned moment.
+- [ ] A correct key from the team chat is accepted; a wrong one is rejected; bonus keys score.
+- [ ] Timed hints arrive on their schedule.
+- [ ] After a level change, hints from the previous level are not shown again.
+- [ ] Teams sitting on different levels progress independently of each other.
+- [ ] **A/B** — `/create_team`, `/my_games`, `/teams`, `/manage_team` all go quiet now. ⚠ regression — if they still answer mid-game the gate is inverted the other way.
+- [ ] **org** — `/spy` opens; the spy view lists teams by level and updates as they move.
+- [ ] **org without the right** — `/spy_levels` and `/spy_keys` stay silent; grant the rights and they open.
+- [ ] **B** — `/spy` as a non-org does nothing.
+- [ ] The spy «Лог ключей» button builds its Telegraph page.
+
+## 5. `finished`
+
+Every team has finished; the game is still active but no longer running.
+
+- [ ] Ordinary commands answer again — `started` was the only status that muted them.
+- [ ] The results picture renders.
+- [ ] «✅Завершить (в прошедшие игры)» has appeared in the game menu.
+- [ ] Keys log and zip export still work.
+
+## 6. `complete`
+
+- [ ] The game now appears in `/games`.
+- [ ] Open it: waivers list, results picture, keys log link, zip, transitions, and the "scenario on the site" web-app button.
+- [ ] The results picture renders. ⚠ If it fails with `MEDIA_EMPTY`, the cached `games.results_picture_file_id` was minted by a different bot token — file ids are per-bot. Clear the column and it re-renders.
+- [ ] Publish to the forum (flag `forum_publication`) if your change touched it.
+
+## 7. Independent of any game
+
+Identity is resolved and written on every single update, whatever the game is
+doing.
+
+- [ ] **C** — from an account the bot has never seen, `/start` works: the user row and player are created by that first update.
+- [ ] Change your Telegram **@username**, send any message, open `/me`: the new one shows. A stale one means the upsert stopped running.
+- [ ] Change your **first name**, send any message, reopen `/start`: the greeting uses it.
+- [ ] Rename the team's group chat, send a message there, `/who_there`: no error.
+- [ ] Convert a plain group to a supergroup: the migration is handled without error and `/create_team` becomes available.
+- [ ] Add the bot to a brand-new group and immediately `/chat_id`: both ids come back.
+- [ ] Send commands as an **anonymous group admin**: a sensible answer or silence, never a traceback loop.
+- [ ] Let a linked channel auto-forward a post into a group the bot is in: no error storm.
+- [ ] **S** — `/merge_teams`, `/merge_players`: merged, logged, and the target's open dialog refreshes.
+- [ ] **S** — `/jobs` lists scheduled jobs.
+
+## 8. When something breaks
 
 Handlers and filters are wired with dishka's `@inject`, which relies on aiogram
-passing `dishka_container` to everything it calls. When that link breaks it
-shows up in one of three shapes rather than as a wrong answer — worth grepping
-the run for while working through the list:
+passing `dishka_container` to everything it calls. When that breaks it shows up
+as one of these rather than as a wrong answer:
 
 | signature | meaning |
 |---|---|
 | `TypeError: … missing 1 required … argument: 'dishka_container'` | the container never reached the callable |
-| `KeyError: 'player'` (or `'team'`, `'team_player'`) | something still reads a middleware key that no longer exists |
+| `KeyError: 'player'` / `'dao'` / `'game'` | something still reads a middleware-data key that no longer exists |
 | a burst of `PlayerNotFoundError` / `ChatNotFound` | updates that used to carry `None` quietly now raise |
+| a command that simply stops answering | a filter is returning `False` — check the game status it is gated on |
+
+Grep the run for the first three while working through the list; the fourth only
+shows up by noticing the bot went quiet, which is what the status grouping above
+is for.

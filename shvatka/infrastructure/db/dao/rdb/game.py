@@ -1,3 +1,4 @@
+from collections.abc import Collection
 from dataclasses import asdict
 from datetime import datetime, tzinfo
 import typing
@@ -125,6 +126,22 @@ class GameDao(BaseDAO[models.Game]):
                 models.Game.number.is_not(None),
             )
             .order_by(models.Game.number.desc(), models.Game.start_at.desc())
+        )
+        games: Sequence[models.Game] = result.all()
+        return [game.to_dto(game.author.to_dto_user_prefetched()) for game in games]
+
+    async def get_by_statuses(self, statuses: Collection[GameStatus]) -> list[dto.Game]:
+        """Every game in one of the given statuses, newest first."""
+        result = await self.session.scalars(
+            select(models.Game)
+            .options(
+                joinedload(models.Game.author).options(
+                    joinedload(models.Player.user),
+                    joinedload(models.Player.forum_user),
+                )
+            )
+            .where(models.Game.status.in_(statuses))
+            .order_by(models.Game.id.desc())
         )
         games: Sequence[models.Game] = result.all()
         return [game.to_dto(game.author.to_dto_user_prefetched()) for game in games]

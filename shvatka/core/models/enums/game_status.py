@@ -21,6 +21,10 @@ status_desc = {
     GameStatus.complete: "завершена",
 }
 ACTIVE_STATUSES = (GameStatus.getting_waivers, GameStatus.started, GameStatus.finished)
+ADMIN_MANAGEABLE_STATUSES = (*ACTIVE_STATUSES, GameStatus.complete)
+"""Games an admin may see at all — and then only their status, never their
+content. A game still being written (``underconstruction``, ``ready``)
+belongs to its author alone and stays invisible to the admin panel."""
 EDITABLE_STATUSES = (
     GameStatus.underconstruction,
     GameStatus.ready,

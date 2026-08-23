@@ -9,6 +9,7 @@ from shvatka.core.interfaces.current_game import CurrentGameProvider
 
 from shvatka.core.interfaces.dal.complex import GamePackager
 from shvatka.core.games.adapters import (
+    AdminGameStatusChanger,
     GameFileReader,
     GamePlayDao,
     GameReleaseEditor,
@@ -24,6 +25,7 @@ from shvatka.core.interfaces.dal.level import LevelDeleter
 from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.models import dto
 from shvatka.core.models.dto import scn
+from shvatka.core.models.enums import GameStatus
 from shvatka.core.models.dto import hints
 from shvatka.core.utils import exceptions
 from shvatka.core.utils.datetime_utils import tz_utc
@@ -141,6 +143,54 @@ class AdminGameScenarioEditorImpl(GameScenarioEditorImpl):
 
     async def get_player_by_id(self, id_: int) -> dto.Player:
         return await self.dao.player.get_by_id(id_)
+
+
+@dataclass
+class AdminGameStatusChangerImpl(AdminGameStatusChanger):
+    """Status-only view of a game for the admin panel.
+
+    Everything it can reach is the games table: read one by id, list them by
+    status, write a status, a number, a planned start. No level, no hint, no
+    file — an admin has no way to a game's content through here.
+    """
+
+    dao: "HolderDao"
+
+    async def get_by_id(self, id_: int, author: dto.Player | None = None) -> dto.Game:
+        return await self.dao.game.get_by_id(id_, author)
+
+    async def get_full(self, id_: int) -> dto.FullGame:
+        return await self.dao.game.get_full(id_)
+
+    async def add_levels(self, game: dto.Game) -> dto.FullGame:
+        return await self.dao.game.add_levels(game)
+
+    async def get_by_statuses(self, statuses: Collection[GameStatus]) -> list[dto.Game]:
+        return await self.dao.game.get_by_statuses(statuses)
+
+    async def set_status(self, game: dto.Game, status: GameStatus) -> None:
+        await self.dao.game.set_status(game, status)
+
+    async def set_completed(self, game: dto.Game) -> None:
+        await self.dao.game.set_completed(game)
+
+    async def set_number(self, game: dto.Game, number: int) -> None:
+        await self.dao.game.set_number(game, number)
+
+    async def get_max_number(self) -> int:
+        return await self.dao.game.get_max_number()
+
+    async def get_active_game(self) -> dto.Game | None:
+        return await self.dao.game.get_active_game()
+
+    async def set_start_at(self, game: dto.Game, start_at: datetime) -> None:
+        await self.dao.game.set_start_at(game, start_at)
+
+    async def cancel_start(self, game: dto.Game) -> None:
+        await self.dao.game.cancel_start(game)
+
+    async def commit(self) -> None:
+        await self.dao.commit()
 
 
 @dataclass

@@ -29,11 +29,14 @@ from shvatka.core.games.editor_interactors import (
 from shvatka.core.files.adapters import FileGarbageCollectorDao
 from shvatka.core.files.interactors import CollectFileGarbageInteractor
 from shvatka.core.games.admin_interactors import (
+    AdminChangeGameStatusInteractor,
+    AdminGamesListInteractor,
     AdminUpdateGameScenarioInteractor,
     AdminUploadGameFileInteractor,
 )
 from shvatka.core.games.adapters import (
     AdminGameScenarioEditor,
+    AdminGameStatusChanger,
     GameReleaseEditor,
     GameReleaseReader,
 )
@@ -198,6 +201,7 @@ from shvatka.infrastructure.db.dao.complex.player import (
 )
 from shvatka.infrastructure.db.dao.complex.game import (
     AdminGameScenarioEditorImpl,
+    AdminGameStatusChangerImpl,
     GameFilesGetterImpl,
     GameScenarioEditorImpl,
 )
@@ -625,6 +629,13 @@ class AdminProvider(Provider):
     @provide
     def admin_game_scenario_editor(self, dao: HolderDao) -> AdminGameScenarioEditor:
         return AdminGameScenarioEditorImpl(dao=dao)
+
+    @provide
+    def admin_game_status_changer(self, dao: HolderDao) -> AdminGameStatusChanger:
+        return AdminGameStatusChangerImpl(dao=dao)
+
+    admin_games_list = provide(AdminGamesListInteractor)
+    admin_change_game_status = provide(AdminChangeGameStatusInteractor)
 
     @provide
     def admin_otl(

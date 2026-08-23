@@ -119,7 +119,13 @@ the edge-specific twist.
 
 `ACTIVE_STATUSES` = `getting_waivers`, `started`, `finished` — only one game may be
 active at a time. `EDITABLE_STATUSES` = `underconstruction`, `ready`,
-`getting_waivers`.
+`getting_waivers`. `ADMIN_MANAGEABLE_STATUSES` = the active ones plus `complete`
+— the games the **admin panel** sees at all, and of them only the *status*: an
+admin may walk a game to another status (`PUT /admin/games/{id}/status`, the way
+back out of waivers opened too early) but never read its content while it is not
+complete. A game in `underconstruction` or `ready` is its author's alone and is
+reported as not found there — including the game an admin has just moved back,
+which is the point: the fix hands the game over and ends the admin's part in it.
 
 A game's **release** follows the statuses on its own schedule, wider than
 `EDITABLE_STATUSES`: it may be rewritten up to and including `finished` (it is

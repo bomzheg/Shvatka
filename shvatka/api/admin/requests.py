@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from shvatka.api.shared.requests import MergeRequest, TimelineItem
+from shvatka.core.models.enums import GameStatus
 from shvatka.core.players.dto import TimelineItem as CoreTimelineItem
 
 
@@ -10,6 +11,12 @@ class AdminGameScenarioEdit:
     scenario: dict[str, Any]
     author_id: int | None = None
     """when set, the game is reassigned to this player before the scenario is saved"""
+
+
+@dataclass
+class AdminGameStatusChange:
+    status: GameStatus
+    """the status to move the game to; the game keeps everything else"""
 
 
 @dataclass

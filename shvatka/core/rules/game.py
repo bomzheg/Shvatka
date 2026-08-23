@@ -1,7 +1,8 @@
 from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.models import dto
 from shvatka.core.models.enums.org_permission import OrgPermission
-from shvatka.core.utils.exceptions import NotAuthorizedForEdit, CantEditGame
+from shvatka.core.models.enums.game_status import ADMIN_MANAGEABLE_STATUSES
+from shvatka.core.utils.exceptions import NotAuthorizedForEdit, CantEditGame, GameNotFound
 
 
 def check_can_read(game: dto.Game, player: dto.Player):
@@ -37,6 +38,22 @@ async def check_can_view_scenario(game: dto.Game, identity: IdentityProvider) ->
         player=player,
         game=game,
     )
+
+
+def check_admin_can_manage_game(game: dto.Game) -> None:
+    """Whether the admin panel may act on the game at all.
+
+    An admin sees a game only once it stops being a draft: while it collects
+    waivers, runs, is finished or is complete. A game in ``underconstruction``
+    or ``ready`` is its author's alone — reported as not found, the same way
+    the scenario endpoints hide it, so an admin cannot even tell it exists.
+
+    What the admin may then do with it is its *status*, nothing else: the
+    content of a game that is not complete stays closed to admins (see
+    :func:`check_can_view_scenario`).
+    """
+    if game.status not in ADMIN_MANAGEABLE_STATUSES:
+        raise GameNotFound(game=game)
 
 
 def check_game_editable(game: dto.Game):

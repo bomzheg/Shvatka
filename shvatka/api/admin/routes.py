@@ -19,6 +19,8 @@ from shvatka.api.files import responses as files_responses
 from shvatka.api.waivers import responses as waivers_responses
 from shvatka.core.files.interactors import CollectFileGarbageInteractor
 from shvatka.core.games.admin_interactors import (
+    AdminChangeGameStatusInteractor,
+    AdminGamesListInteractor,
     AdminUpdateGameScenarioInteractor,
     AdminUploadGameFileInteractor,
 )
@@ -262,6 +264,37 @@ async def get_waivers_by_game(
 
 
 @inject
+async def list_games(
+    identity: FromDishka[ApiIdentityProvider],
+    interactor: FromDishka[AdminGamesListInteractor],
+) -> shared.Page[shared.Game]:
+    """Games the admin panel may act on: active and complete ones.
+
+    Their status and nothing else — a game's content is not an admin's to read,
+    and a game still being written does not appear here at all.
+    """
+    games = await interactor(identity)
+    return shared.Page([shared.Game.from_core(game) for game in games])
+
+
+@inject
+async def change_game_status(
+    identity: FromDishka[ApiIdentityProvider],
+    interactor: FromDishka[AdminChangeGameStatusInteractor],
+    id_: Annotated[int, Path(alias="id")],
+    body: Annotated[requests.AdminGameStatusChange, Body()],
+) -> shared.Game:
+    """Move the game to another status.
+
+    Answers with the game as it now is. Moving it to a status an admin may not
+    see (``underconstruction``, ``ready``) is allowed and final: the game is
+    its author's again, and this endpoint answers 404 for it afterwards.
+    """
+    game = await interactor(game_id=id_, status=body.status, identity=identity)
+    return shared.Game.from_core(game)
+
+
+@inject
 async def change_game_scenario(
     identity: FromDishka[ApiIdentityProvider],
     interactor: FromDishka[AdminUpdateGameScenarioInteractor],
@@ -338,6 +371,8 @@ def setup() -> APIRouter:
         status_code=204,
     )
     router.add_api_route("/waivers/game/{id}", get_waivers_by_game, methods=["GET"])
+    router.add_api_route("/games", list_games, methods=["GET"])
+    router.add_api_route("/games/{id}/status", change_game_status, methods=["PUT"])
     router.add_api_route("/games/{id}/scenario", change_game_scenario, methods=["PUT"])
     router.add_api_route("/games/{id}/files", upload_game_file, methods=["POST"])
     router.add_api_route("/files/gc", collect_file_garbage, methods=["POST"])

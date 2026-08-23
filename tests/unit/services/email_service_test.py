@@ -55,11 +55,29 @@ class FakeEmailDao:
         self.accounts[email] = account
         return account
 
+    async def set_player_email(
+        self, player_id: int, email: str, is_verified: bool
+    ) -> dto.EmailAccount:
+        for existing in list(self.accounts.values()):
+            if existing.player_id == player_id:
+                del self.accounts[existing.email]
+        account = dto.EmailAccount(
+            email=email, player_id=player_id, is_verified=is_verified, db_id=999
+        )
+        self.accounts[email] = account
+        return account
+
     async def set_verified(self, email: str) -> None:
         self.accounts[email].is_verified = True
 
     async def get_by_email(self, email: str) -> dto.EmailAccount | None:
         return self.accounts.get(email)
+
+    async def get_by_player_id(self, player_id: int) -> dto.EmailAccount | None:
+        for account in self.accounts.values():
+            if account.player_id == player_id:
+                return account
+        return None
 
     async def find_verified_player_by_email(self, email: str) -> dto.Player:
         account = self.accounts.get(email)
@@ -88,6 +106,12 @@ class FakeStore:
 
     async def remove_code(self, email: str) -> None:
         self.codes.pop(email, None)
+
+    async def get_pending_email(self, player_id: int) -> str | None:
+        for confirmation in self.codes.values():
+            if confirmation.player_id == player_id:
+                return confirmation.email
+        return None
 
 
 class FakeSender:
@@ -248,6 +272,87 @@ async def test_link_email_to_existing_player(link, dao, sender):
     assert "new@mail.com" in dao.accounts
     assert dao.accounts["new@mail.com"].player_id == 42
     assert sender.sent[0][0] == "new@mail.com"
+
+
+@pytest.mark.asyncio
+async def test_link_replaces_a_pending_email_in_place(link, dao, store, sender):
+    player = dto.Player(id=42, can_be_author=False, is_dummy=False, username="tg_user")
+    await link(player=player, email="typo@mail.com")
+
+    await link(player=player, email="right@mail.com")
+
+    assert "typo@mail.com" not in dao.accounts
+    assert dao.accounts["right@mail.com"].player_id == 42
+    assert store.codes.get("typo@mail.com") is None
+    assert sender.sent[-1][0] == "right@mail.com"
+
+
+@pytest.mark.asyncio
+async def test_link_resends_the_code_for_the_same_pending_email(link, dao, sender):
+    player = dto.Player(id=42, can_be_author=False, is_dummy=False, username="tg_user")
+    await link(player=player, email="pending@mail.com")
+
+    await link(player=player, email="Pending@Mail.com")
+
+    assert list(dao.accounts) == ["pending@mail.com"]
+    assert len(sender.sent) == 2
+
+
+@pytest.mark.asyncio
+async def test_link_keeps_the_verified_email_until_the_new_one_is_confirmed(
+    link, confirm, dao, store, sender
+):
+    player = dto.Player(id=42, can_be_author=False, is_dummy=False, username="tg_user")
+    await link(player=player, email="old@mail.com")
+    await confirm(email="old@mail.com", code=sender.sent[0][1])
+
+    await link(player=player, email="new@mail.com")
+
+    # nothing has moved yet: the old address still logs its owner in
+    assert dao.accounts["old@mail.com"].is_verified
+    assert "new@mail.com" not in dao.accounts
+    assert store.codes["new@mail.com"].player_id == 42
+
+    await confirm(email="new@mail.com", code=sender.sent[-1][1])
+
+    assert "old@mail.com" not in dao.accounts
+    assert dao.accounts["new@mail.com"].is_verified
+    assert dao.accounts["new@mail.com"].player_id == 42
+    assert store.codes.get("new@mail.com") is None
+
+
+@pytest.mark.asyncio
+async def test_link_rejects_an_email_of_another_player(link, dao, sender):
+    harry = dto.Player(id=1, can_be_author=False, is_dummy=False, username="harry")
+    ron = dto.Player(id=2, can_be_author=False, is_dummy=False, username="ron")
+    await link(player=harry, email="taken@mail.com")
+
+    with pytest.raises(exceptions.EmailAlreadyExist):
+        await link(player=ron, email="taken@mail.com")
+
+
+@pytest.mark.asyncio
+async def test_link_rejects_the_already_verified_own_email(link, confirm, sender):
+    player = dto.Player(id=42, can_be_author=False, is_dummy=False, username="tg_user")
+    await link(player=player, email="mine@mail.com")
+    await confirm(email="mine@mail.com", code=sender.sent[0][1])
+
+    with pytest.raises(exceptions.EmailAlreadyExist):
+        await link(player=player, email="mine@mail.com")
+
+
+@pytest.mark.asyncio
+async def test_confirm_never_verifies_an_email_owned_by_another_player(confirm, dao, store):
+    ron = dto.Player(id=2, can_be_author=False, is_dummy=False, username="ron")
+    await dao.add_email_to_player(ron, "contested@mail.com")
+    # a code harry asked for the same address, before ron took it
+    await store.save_code("contested@mail.com", "123456", player_id=1)
+
+    with pytest.raises(exceptions.EmailAlreadyExist):
+        await confirm(email="contested@mail.com", code="123456")
+
+    assert dao.accounts["contested@mail.com"].player_id == 2
+    assert not dao.accounts["contested@mail.com"].is_verified
 
 
 @pytest.mark.asyncio

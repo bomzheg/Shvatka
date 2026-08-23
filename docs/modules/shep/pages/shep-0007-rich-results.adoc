@@ -1,0 +1,135 @@
+= SHEP-0007 — Results as a rich message
+:navtitle: SHEP-0007 Rich results
+
+[cols="1,4"]
+|===
+| SHEP | 0007
+| Title | Results as a rich message
+| Status | `Accepted, implemented`
+| Created | 2026-08-23
+| Updated | 2026-08-23
+| Related | issue #362
+|===
+
+== Summary
+
+The results of a finished game are shown in telegram as a *rich message* (Bot
+API 10.1): the chart of the game with a standings table right under it. The
+`xlsx` file is still produced — it is now one button away instead of being the
+only way to see who won.
+
+== Context
+
+Until now the bot could only *hand over* the results:
+
+* `CompletedGamesPanelSG.results` showed the matplotlib chart
+  (`shvatka/infrastructure/picture/results_painter.py`) with a single button
+  that sent the `xlsx` export;
+* the channel publication (`GamePublisher.publish_results`) posted that same
+  file and nothing else.
+
+A telegram message could not hold a table, so the numbers lived in a file that
+has to be downloaded and opened in a spreadsheet — on a phone, minutes after a
+night game, nobody does that. Bot API 10.1 added `sendRichMessage`, whose blocks
+include `table`, `photo` and `heading`, so a table finally fits in a chat.
+
+The table the game already builds (`build_results_table`,
+`shvatka/core/games/results.py`) is the *file*: four blocks — takes, durations,
+bonuses, chronology — plus charts, laid out over one sparse address grid. It is
+right for a spreadsheet and far too wide for a message.
+
+== Decision
+
+=== A second, shorter table in the domain
+
+`build_short_results_table(game, game_stat)` builds the standings alone: a row
+per team, a column per level, the total time of the game at the end. It reuses
+the printer primitives (`Cell`, `CellStyle`, `Table`) of the file export, so
+both tables speak the same language and both are pure domain code with no
+telegram in sight.
+
+Ordering is its own function, `build_standings`, because it is a domain
+question rather than a rendering one: teams that finished come first, ordered by
+when they finished; the rest follow by how far they got and how fast they got
+there. A team's take of a level is the *first* time it entered that level, so a
+re-entry (parallel levels, SHEP-0004) cannot make a team look slower than it was.
+
+=== The renderer is a view, and it is generic
+
+`shvatka/tgbot/views/results/rich.py` turns any `Table` into an
+`InputRichBlockTable`: the sparse address grid becomes a rectangle (a missing
+address is an empty cell, so rows stay aligned), `CellStyle` decides alignment,
+header cells and bold, and the excel number format of a cell (`HH:MM`) is
+translated into a `strftime` one. Nothing in it knows about games — it renders
+tables, and `build_results_message` is what knows the results are a heading, a
+chart and that table.
+
+Keeping the renderer style-driven rather than results-driven means the same
+function can show any other `Table` the domain builds later.
+
+=== The chart stays, and moves into the message
+
+`ResultsPainter.paint_game_results(game, game_stat)` is the old painter for a
+caller that has already loaded the game — the cached `file_id` in
+`games.results_picture_file_id` is reused, so a rich message costs no extra
+upload. The dialog window no longer carries the picture itself: it would then be
+shown twice, once by `DynamicMedia` and once inside the message.
+
+=== `xlsx` stays, as an option
+
+In the bot the results window keeps a button that sends the file, and a button
+that posts the table again. In the channel the file is posted right after the
+rich message: a channel has nobody to press a button, and the archive is the one
+place where the spreadsheet is worth keeping unconditionally. The table of
+contents links to the rich message, not to the file.
+
+=== Alternatives considered
+
+*Render the table as monospaced text* (`<pre>`) inside the existing window. No
+dependency bump, but a fixed-width grid of ten teams by fifteen levels does not
+fit a phone screen, and telegram gives it no horizontal scroll of its own.
+
+*Make the whole results window a rich message.* `aiogram_dialog` renders a
+window as a message it owns and edits; there is no rich-message widget, and
+teaching the dialog framework one is a far larger change than this feature
+deserves. The window stays an ordinary panel, and the results are a message
+next to it.
+
+== Consequences
+
+* `aiogram` is pinned to `>=3.30` — the first release carrying Bot API 10.1
+  rich messages (10.2 in 3.30 itself). `aiogram_dialog` 2.6 accepts it
+  (`aiogram>=3.14`). The bump also made `ChatMemberRestricted` require
+  `can_react_to_messages`, fixed in `tests/unit/test_bot_rights.py`.
+* Old telegram clients render a rich message as its plain-text fallback, so the
+  numbers are still readable there — but the layout is not ours to control.
+* Two tables of one game now exist. They are built from the same primitives and
+  the same stat, but a change to what "the results" mean has to be made in both.
+
+== Phases and status
+
+[cols="1,4,2",options="header"]
+|===
+| Phase | Content | Status
+
+| 1
+| Domain: standings and the short table
+| ✅ done
+
+| 2
+| View: `Table` → rich blocks, the results message, the sender
+| ✅ done
+
+| 3
+| Delivery: the completed-games dialog and the channel publication
+| ✅ done
+|===
+
+== Open questions
+
+* Bonuses and penalties are not in the short table — they are in the file. If
+  games start leaning on them, the standings need a column and the total needs
+  to account for them.
+* The table is not adjusted for very long games: forty levels make forty
+  columns, and telegram scrolls them horizontally. If that reads badly in
+  practice, the fix is to show the last levels only, with the file for the rest.

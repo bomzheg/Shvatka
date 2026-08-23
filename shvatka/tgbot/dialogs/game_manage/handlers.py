@@ -31,6 +31,7 @@ from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.tgbot import states
 from shvatka.tgbot.tasks import publish_scenario_to_forum
 from shvatka.infrastructure.printer.results import export_results
+from shvatka.tgbot.views.results.rich import ResultsRichSender
 
 
 async def select_my_game(c: CallbackQuery, widget: Any, manager: DialogManager, item_id: str):
@@ -279,6 +280,28 @@ async def publish_game_forum(
         password=password,
         chat_id=m.chat.id,
     )
+
+
+@inject
+async def show_results(
+    c: CallbackQuery,
+    widget: Button,
+    manager: DialogManager,
+    identity: FromDishka[IdentityProvider],
+    dao: FromDishka[HolderDao],
+    results_sender: FromDishka[ResultsRichSender],
+):
+    """Post the results as a rich message and open the window of what else can be done."""
+    game_id = manager.dialog_data["game_id"]
+    full_game = await get_full_game(id_=game_id, identity=identity, dao=dao.game)
+    game_stat = await get_game_stat(game=full_game, identity=identity, dao=dao.game_stat)
+    assert isinstance(c.message, Message)
+    await results_sender.send_results(
+        chat_id=c.message.chat.id,
+        game=full_game,
+        game_stat=game_stat,
+    )
+    await manager.switch_to(states.CompletedGamesPanelSG.results)
 
 
 @inject

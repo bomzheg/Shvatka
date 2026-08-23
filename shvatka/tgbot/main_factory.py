@@ -62,6 +62,7 @@ from shvatka.tgbot.views.hint_sender import HintSender
 from shvatka.tgbot.views.level_testing import LevelBotView
 from shvatka.tgbot.views.game_release import GameBotReleasePublisher
 from shvatka.tgbot.views.pinner import MessagePinner
+from shvatka.tgbot.views.results.rich import ResultsRichSender
 
 logger = logging.getLogger(__name__)
 
@@ -265,6 +266,7 @@ class GameToolsProvider(Provider):
     level_bot_view = provide(LevelBotView, scope=Scope.REQUEST, provides=LevelView)
     hint_parser = provide(HintParser, scope=Scope.REQUEST)
     results_painter = provide(ResultsPainter, scope=Scope.REQUEST)
+    results_rich_sender = provide(ResultsRichSender, scope=Scope.REQUEST)
 
 
 def resolve_update_types(dp: Dispatcher) -> list[str]:

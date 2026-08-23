@@ -22,6 +22,7 @@ from shvatka.tgbot.views.level import (
     render_effects_timer_caption,
 )
 from shvatka.infrastructure.printer.results import export_results
+from shvatka.tgbot.views.results.rich import ResultsRichSender
 
 
 class GamePublisher:
@@ -35,6 +36,7 @@ class GamePublisher:
         game_stat: dto.GameStat,
         telegraph: Telegraph,
         keys: dict[dto.Team, list[dto.KeyTime]],
+        results_sender: ResultsRichSender,
     ) -> None:
         self.hint_sender = hint_sender
         self.game = game
@@ -44,6 +46,7 @@ class GamePublisher:
         self.game_stat = game_stat
         self.telegraph = telegraph
         self.keys = keys
+        self.results_sender = results_sender
 
     async def publish_scn(self) -> int:
         assert self.game.start_at is not None
@@ -65,7 +68,17 @@ class GamePublisher:
         )
         return msg.message_id
 
-    async def publish_results(self):
+    async def publish_results(self) -> int:
+        """Post the results as a table under the chart, with the file itself after it."""
+        msg = await self.results_sender.send_results(
+            chat_id=self.channel_id,
+            game=self.game,
+            game_stat=self.game_stat,
+        )
+        await self.publish_results_file()
+        return msg.message_id
+
+    async def publish_results_file(self) -> int:
         file = BytesIO()
         export_results(game=self.game, game_stat=self.game_stat, file=file)
         file.seek(0)

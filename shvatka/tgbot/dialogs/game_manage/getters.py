@@ -3,9 +3,7 @@ from datetime import datetime, time, date
 from typing import Any
 
 from aiogram import Bot
-from aiogram.enums import ContentType
 from aiogram_dialog import DialogManager
-from aiogram_dialog.api.entities import MediaAttachment, MediaId
 from dishka import AsyncContainer, FromDishka
 from dishka.integrations.aiogram import CONTAINER_NAME
 from dishka.integrations.aiogram_dialog import inject
@@ -20,7 +18,6 @@ from shvatka.core.services.game import get_authors_games, get_completed_games
 from shvatka.core.waiver.services import get_all_played
 from shvatka.core.utils.datetime_utils import tz_game
 from shvatka.infrastructure.db.dao.holder import HolderDao
-from shvatka.infrastructure.picture import ResultsPainter
 from shvatka.tgbot.views.keys import get_or_create_keys_page
 
 logger = logging.getLogger(__name__)
@@ -93,20 +90,16 @@ async def get_game_keys(
 async def get_game_results(
     dialog_manager: DialogManager,
     dao: FromDishka[HolderDao],
-    identity: FromDishka[IdentityProvider],
-    results_painter: FromDishka[ResultsPainter],
     **_,
 ):
+    """The results themselves are a rich message of their own; the window only frames it."""
     data: dict[str, Any] = dialog_manager.start_data  # type: ignore[assignment]
     game_id = dialog_manager.dialog_data.get("game_id", None) or data["game_id"]
-    current_game = await game.get_game(
-        id_=game_id,
-        dao=dao.game,
-    )
-    file_id = await results_painter.get_game_results(current_game, identity=identity)
     return {
-        "game": current_game,
-        "results.png": MediaAttachment(file_id=MediaId(file_id=file_id), type=ContentType.PHOTO),
+        "game": await game.get_game(
+            id_=game_id,
+            dao=dao.game,
+        ),
     }
 
 

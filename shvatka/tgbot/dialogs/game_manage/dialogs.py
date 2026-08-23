@@ -11,7 +11,6 @@ from aiogram_dialog.widgets.kbd import (
     Start,
     WebApp,
 )
-from aiogram_dialog.widgets.media import DynamicMedia
 from aiogram_dialog.widgets.text import Const, Format, Case, Jinja
 
 from shvatka.tgbot import states
@@ -44,6 +43,7 @@ from .handlers import (
     show_my_game_orgs,
     show_my_zip_scn,
     get_excel_results_handler,
+    show_results,
     to_publish_game_forum,
     complete_game_handler,
     show_all_keys,
@@ -54,7 +54,6 @@ from .handlers import (
 from shvatka.tgbot.dialogs.preview_data import (
     PREVIEW_GAME,
     PREVIEW_NOW,
-    PREVIEW_RESULTS_MEDIA,
     PREVIEW_WAIVERS,
     PreviewStart,
     PreviewSwitchTo,
@@ -97,10 +96,10 @@ games = Dialog(
             id="to_waivers",
             state=states.CompletedGamesPanelSG.waivers,
         ),
-        SwitchTo(
+        Button(
             Const("📈Результаты"),
             id="to_results",
-            state=states.CompletedGamesPanelSG.results,
+            on_click=show_results,
         ),
         SwitchTo(
             Const("🔑Лог ключей"),
@@ -137,6 +136,7 @@ games = Dialog(
         preview_data={"game": PREVIEW_GAME, "webapp_url": "https://shvatka.ru/games/1"},
         preview_add_transitions=[
             PreviewStart(states.GameOrgsSG.orgs_list),
+            PreviewSwitchTo(states.CompletedGamesPanelSG.results),
         ],
     ),
     Window(
@@ -173,15 +173,20 @@ games = Dialog(
         preview_data={"game": PREVIEW_GAME, "waivers": PREVIEW_WAIVERS},
     ),
     Window(
-        DynamicMedia(selector="results.png"),
         Jinja(
-            "Выбрана игра №{{game.number}} <b>{{game.name}}</b>\n"
-            "которая началась: {{ game.start_at|user_timezone }} "
+            "Результаты игры №{{game.number}} <b>{{game.name}}</b> "
+            "— таблицей в отдельном сообщении.\n"
+            "Игра началась: {{ game.start_at|user_timezone }} "
         ),
         Button(
-            Const("📶Таблицей"),
+            Const("📊Файлом xlsx"),
             id="as_excel",
             on_click=get_excel_results_handler,
+        ),
+        Button(
+            Const("🔄Показать таблицу снова"),
+            id="results_again",
+            on_click=show_results,
         ),
         SwitchTo(
             Const("🔙Назад к списку игр"),
@@ -195,7 +200,7 @@ games = Dialog(
         ),
         getter=get_game_results,
         state=states.CompletedGamesPanelSG.results,
-        preview_data={"game": PREVIEW_GAME, "results.png": PREVIEW_RESULTS_MEDIA},
+        preview_data={"game": PREVIEW_GAME},
     ),
     Window(
         Jinja("Сценарий игры тут: {{invite}}\n"),

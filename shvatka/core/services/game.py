@@ -267,7 +267,11 @@ async def cancel_planed_start(
 async def complete_game(game: dto.Game, dao: GameCompleter):
     if not game.is_finished():
         raise exceptions.GameNotFinished(game=game)
-    await dao.set_number(game, await dao.get_max_number() + 1)
+    if game.number is None:
+        # the number is the game's place in the archive — a game that already
+        # has one (an admin walked it back out of `complete` and in again)
+        # keeps it, or the archive would renumber itself behind everyone.
+        await dao.set_number(game, await dao.get_max_number() + 1)
     await dao.set_completed(game)
     await dao.commit()
 

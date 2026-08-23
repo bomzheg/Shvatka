@@ -8,12 +8,14 @@ from sqlalchemy.exc import NoResultFound
 from shvatka.api.app.dependencies.auth import AuthProperties
 from shvatka.api.auth.responses import Token
 from shvatka.core.models import dto
+from shvatka.core.models.enums import GameStatus
 from shvatka.core.models.enums.played import Played
 from shvatka.core.players.player import upsert_player
 from shvatka.core.services.user import upsert_user
 from shvatka.core.utils.defaults_constants import DEFAULT_ROLE
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from tests.fixtures.scn_fixtures import GUID
+from tests.mocks.scheduler_mock import SchedulerMock
 from tests.fixtures.user_constants import (
     create_dto_hermione,
     create_dto_ron,
@@ -884,6 +886,316 @@ async def test_admin_reads_the_scenario_once_the_game_is_complete(
     )
     assert resp.is_success, resp.text
     assert len(resp.json()["levels"]) == len(game.levels)
+
+
+# ---------------------------------------------------------------------------
+# Game statuses. An admin sees the games that stopped being drafts, and of them
+# only the status — never the scenario, the keys or the files (that stays true
+# for a running game: the tests below check it while the game is played).
+# ---------------------------------------------------------------------------
+
+
+async def set_status(game: dto.Game, status: GameStatus, dao: HolderDao) -> None:
+    await dao.game.set_status(game, status)
+    await dao.commit()
+
+
+@pytest.mark.asyncio
+async def test_admin_games_list_hides_drafts(
+    client: AsyncClient,
+    admin_token: Token,
+    game: dto.FullGame,
+):
+    # the game is under construction — its author's alone
+    resp = await client.get(
+        "/admin/games",
+        cookies=auth_cookies(admin_token),
+        follow_redirects=True,
+    )
+    assert resp.is_success, resp.text
+    assert [g["id"] for g in resp.json()["content"]] == []
+
+
+@pytest.mark.asyncio
+async def test_admin_games_list_hides_ready_games(
+    client: AsyncClient,
+    admin_token: Token,
+    game: dto.FullGame,
+    dao: HolderDao,
+):
+    await set_status(game, GameStatus.ready, dao)
+    resp = await client.get(
+        "/admin/games",
+        cookies=auth_cookies(admin_token),
+        follow_redirects=True,
+    )
+    assert resp.is_success, resp.text
+    assert [g["id"] for g in resp.json()["content"]] == []
+
+
+@pytest.mark.parametrize(
+    "status",
+    [GameStatus.getting_waivers, GameStatus.started, GameStatus.finished],
+)
+@pytest.mark.asyncio
+async def test_admin_games_list_shows_active_games_without_content(
+    client: AsyncClient,
+    admin_token: Token,
+    game: dto.FullGame,
+    dao: HolderDao,
+    status: GameStatus,
+):
+    await set_status(game, status, dao)
+    resp = await client.get(
+        "/admin/games",
+        cookies=auth_cookies(admin_token),
+        follow_redirects=True,
+    )
+    assert resp.is_success, resp.text
+    (listed,) = resp.json()["content"]
+    assert listed["id"] == game.id
+    assert listed["status"] == status.value
+    # the status and the game's identity, nothing of what it is made of
+    assert "levels" not in listed
+    assert "scenario" not in listed
+
+
+@pytest.mark.asyncio
+async def test_admin_games_list_shows_completed_games(
+    client: AsyncClient,
+    admin_token: Token,
+    game: dto.FullGame,
+    dao: HolderDao,
+):
+    await set_status(game, GameStatus.finished, dao)
+    await complete_game(game, dao)
+    resp = await client.get(
+        "/admin/games",
+        cookies=auth_cookies(admin_token),
+        follow_redirects=True,
+    )
+    assert resp.is_success, resp.text
+    (listed,) = resp.json()["content"]
+    assert listed["id"] == game.id
+    assert listed["status"] == GameStatus.complete.value
+    assert "levels" not in listed
+
+
+@pytest.mark.asyncio
+async def test_admin_games_list_forbidden_for_non_superuser(
+    client: AsyncClient,
+    hermione_token: Token,
+):
+    resp = await client.get(
+        "/admin/games",
+        cookies=auth_cookies(hermione_token),
+        follow_redirects=True,
+    )
+    assert resp.status_code == 403
+
+
+@pytest.mark.asyncio
+async def test_admin_returns_game_from_waivers_to_under_construction(
+    client: AsyncClient,
+    admin_token: Token,
+    game: dto.FullGame,
+    dao: HolderDao,
+    check_dao: HolderDao,
+    scheduler: SchedulerMock,
+):
+    """The point of the whole feature — issue #164.
+
+    Waivers were opened too early: the admin hands the game back to its author,
+    and the start it was planned for goes with it, or the scheduler would start
+    the game anyway a few minutes later.
+    """
+    await dao.game.set_start_at(game, GAME_START_AT)
+    await set_status(game, GameStatus.getting_waivers, dao)
+    resp = await client.put(
+        f"/admin/games/{game.id}/status",
+        json={"status": GameStatus.underconstruction.value},
+        cookies=auth_cookies(admin_token),
+        follow_redirects=True,
+    )
+    assert resp.is_success, resp.text
+    assert resp.json()["status"] == GameStatus.underconstruction.value
+    stored = await check_dao.game.get_by_id(game.id)
+    assert stored.status == GameStatus.underconstruction
+    assert stored.start_at is None
+    assert scheduler.cancel_scheduled_game_calls
+
+
+@pytest.mark.asyncio
+async def test_admin_loses_the_game_once_it_is_a_draft_again(
+    client: AsyncClient,
+    admin_token: Token,
+    game: dto.FullGame,
+    dao: HolderDao,
+):
+    """After the save the game is the author's again — the admin cannot walk it
+    back, and does not see it in the list any more."""
+    await set_status(game, GameStatus.getting_waivers, dao)
+    resp = await client.put(
+        f"/admin/games/{game.id}/status",
+        json={"status": GameStatus.underconstruction.value},
+        cookies=auth_cookies(admin_token),
+        follow_redirects=True,
+    )
+    assert resp.is_success, resp.text
+
+    again = await client.put(
+        f"/admin/games/{game.id}/status",
+        json={"status": GameStatus.getting_waivers.value},
+        cookies=auth_cookies(admin_token),
+        follow_redirects=True,
+    )
+    assert again.status_code == 404, again.text
+    assert again.json()["type"] == "GameNotFound"
+
+    listed = await client.get(
+        "/admin/games",
+        cookies=auth_cookies(admin_token),
+        follow_redirects=True,
+    )
+    assert [g["id"] for g in listed.json()["content"]] == []
+
+
+@pytest.mark.asyncio
+async def test_admin_cant_change_status_of_a_draft(
+    client: AsyncClient,
+    admin_token: Token,
+    game: dto.FullGame,
+):
+    resp = await client.put(
+        f"/admin/games/{game.id}/status",
+        json={"status": GameStatus.getting_waivers.value},
+        cookies=auth_cookies(admin_token),
+        follow_redirects=True,
+    )
+    assert resp.status_code == 404, resp.text
+    assert resp.json()["type"] == "GameNotFound"
+
+
+@pytest.mark.asyncio
+async def test_admin_completes_a_finished_game(
+    client: AsyncClient,
+    admin_token: Token,
+    game: dto.FullGame,
+    dao: HolderDao,
+    check_dao: HolderDao,
+):
+    await set_status(game, GameStatus.finished, dao)
+    resp = await client.put(
+        f"/admin/games/{game.id}/status",
+        json={"status": GameStatus.complete.value},
+        cookies=auth_cookies(admin_token),
+        follow_redirects=True,
+    )
+    assert resp.is_success, resp.text
+    stored = await check_dao.game.get_by_id(game.id)
+    assert stored.is_complete()
+    # completing is what gives a game its place in the archive
+    assert stored.number is not None
+
+
+@pytest.mark.asyncio
+async def test_admin_cant_complete_a_game_that_is_not_finished(
+    client: AsyncClient,
+    admin_token: Token,
+    game: dto.FullGame,
+    dao: HolderDao,
+):
+    await set_status(game, GameStatus.started, dao)
+    resp = await client.put(
+        f"/admin/games/{game.id}/status",
+        json={"status": GameStatus.complete.value},
+        cookies=auth_cookies(admin_token),
+        follow_redirects=True,
+    )
+    assert resp.status_code == 422, resp.text
+    assert resp.json()["type"] == "GameNotFinished"
+
+
+@pytest.mark.asyncio
+async def test_admin_keeps_the_number_of_a_completed_game(
+    client: AsyncClient,
+    admin_token: Token,
+    game: dto.FullGame,
+    dao: HolderDao,
+    check_dao: HolderDao,
+):
+    """A round trip out of `complete` and back must not renumber the archive."""
+    await set_status(game, GameStatus.finished, dao)
+    await complete_game(game, dao)
+    number = (await check_dao.game.get_by_id(game.id)).number
+
+    for status in (GameStatus.finished, GameStatus.complete):
+        resp = await client.put(
+            f"/admin/games/{game.id}/status",
+            json={"status": status.value},
+            cookies=auth_cookies(admin_token),
+            follow_redirects=True,
+        )
+        assert resp.is_success, resp.text
+    stored = await check_dao.game.get_by_id(game.id)
+    assert stored.is_complete()
+    assert stored.number == number
+
+
+@pytest.mark.asyncio
+async def test_admin_change_game_status_forbidden_for_non_superuser(
+    client: AsyncClient,
+    hermione_token: Token,
+    game: dto.FullGame,
+    dao: HolderDao,
+):
+    await set_status(game, GameStatus.getting_waivers, dao)
+    resp = await client.put(
+        f"/admin/games/{game.id}/status",
+        json={"status": GameStatus.underconstruction.value},
+        cookies=auth_cookies(hermione_token),
+        follow_redirects=True,
+    )
+    assert resp.status_code == 403
+
+
+@pytest.mark.parametrize(
+    ("path", "status_code", "type_"),
+    [
+        ("/games/{id}", 403, "NotAuthorizedForEdit"),
+        ("/games/my/{id}", 403, "NotAuthorizedForEdit"),
+        ("/games/my/{id}/keys/print", 403, "NotAuthorizedForEdit"),
+        ("/games/{id}/keys", 403, "NotAuthorizedForEdit"),
+        ("/games/{id}/stat", 403, "NotAuthorizedForEdit"),
+        # the media of a running game is offered by what the *team* has been
+        # shown, so an admin in no team is turned away one step earlier
+        (f"/cdn/games/{{id}}/files/{GUID}", 422, "PlayerNotInTeam"),
+    ],
+)
+@pytest.mark.asyncio
+async def test_admin_cant_read_content_of_a_running_game(
+    client: AsyncClient,
+    admin_token: Token,
+    game: dto.FullGame,
+    dao: HolderDao,
+    path: str,
+    status_code: int,
+    type_: str,
+):
+    """A game being played is the one an admin must least be able to read.
+
+    Seeing its status (and being able to change it) opens nothing else: the
+    scenario, the key log, the results and the media all stay with the author
+    and the orgs until the game is complete.
+    """
+    await set_status(game, GameStatus.started, dao)
+    resp = await client.get(
+        path.format(id=game.id),
+        cookies=auth_cookies(admin_token),
+        follow_redirects=True,
+    )
+    assert resp.status_code == status_code, resp.text
+    assert resp.json()["type"] == type_
 
 
 @pytest.mark.asyncio

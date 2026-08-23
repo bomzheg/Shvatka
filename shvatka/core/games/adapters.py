@@ -1,7 +1,13 @@
+from collections.abc import Collection
 from typing import Protocol
 
 from shvatka.core.games.dto import BonusEvent, CurrentHintsOnly, Event, PassedLevels
-from shvatka.core.interfaces.dal.complex import GameScenarioEditor, TypedKeyGetter, GameStatDao
+from shvatka.core.interfaces.dal.complex import (
+    GameCompleter,
+    GameScenarioEditor,
+    GameStatDao,
+    TypedKeyGetter,
+)
 from shvatka.core.interfaces.dal.file_info import FileInfoGetter
 from shvatka.core.interfaces.dal.file_link import FileIdsByGuidsGetter, GameFilesAdder
 from shvatka.core.interfaces.dal.game import (
@@ -9,11 +15,13 @@ from shvatka.core.interfaces.dal.game import (
     GameByIdGetter,
     GameReleaseGetter,
     GameReleaseSaver,
+    GameStartPlanner,
 )
 from shvatka.core.interfaces.dal.player import PlayerByUserGetter
 from shvatka.core.interfaces.dal.waiver import WaiverChecker
 from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.models import dto
+from shvatka.core.models.enums import GameStatus
 
 
 class GameKeysReader(TypedKeyGetter, GameByIdGetter, PlayerByUserGetter, Protocol):
@@ -37,6 +45,23 @@ class AdminGameScenarioEditor(GameScenarioEditor, GameAuthorTransferer, Protocol
         raise NotImplementedError
 
     async def link_to_game(self, level: dto.Level, game: dto.Game) -> dto.GamedLevel:
+        raise NotImplementedError
+
+
+class AdminGameStatusChanger(GameByIdGetter, GameCompleter, GameStartPlanner, Protocol):
+    """Move a game between statuses on behalf of an admin, and list the ones
+    the admin may act on.
+
+    Deliberately narrow: it reads a game by id and writes its status (plus what
+    completing one needs — the number — and what leaving the active statuses
+    needs — cancelling the planned start). Nothing here reaches a level, a
+    hint or a file, so the admin panel cannot read a game's content through it.
+    """
+
+    async def set_status(self, game: dto.Game, status: GameStatus) -> None:
+        raise NotImplementedError
+
+    async def get_by_statuses(self, statuses: Collection[GameStatus]) -> list[dto.Game]:
         raise NotImplementedError
 
 

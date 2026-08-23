@@ -125,6 +125,29 @@ async def flip_deleted(manager: dto.Player, org: dto.SecondaryOrganizer, dao: Or
     await dao.commit()
 
 
+def check_is_org(org: dto.Organizer | None, player: dto.Player, game: dto.Game) -> dto.Organizer:
+    """The org, or a refusal for somebody who is not one.
+
+    A game that is not complete is readable by its author and its orgs, and by
+    nobody else — so looking the acting player's org up is itself a permission
+    check, and the answer to "no such org" is a refusal, not the storage error
+    of a row that isn't there.
+
+    The org is checked to be *this* player's for *this* game rather than taken
+    on trust. Every caller looks it up by that pair, so a mismatch cannot come
+    from a user; it would mean the wrong row reached the check, and answering
+    permission questions from it is how one player reads another's game. The
+    refusal is the same either way — the caller is not an org of this game.
+    """
+    if org is None or org.player.id != player.id or org.game.id != game.id:
+        raise exceptions.NotAuthorizedForEdit(
+            permission_name="game_org",
+            player=player,
+            game=game,
+        )
+    return org
+
+
 def check_can_see_log_keys(org: dto.Organizer):
     if not org.can_see_log_keys:
         raise PermissionsError(

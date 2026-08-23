@@ -5,6 +5,8 @@ from io import BytesIO
 from typing import Protocol
 
 DATETIME_EXCEL_FORMAT = "HH:MM:SS"
+TIME_EXCEL_FORMAT = "HH:MM"
+"""Minute precision — what a table meant to be read at a glance shows."""
 
 
 class CellStyle(enum.Enum):

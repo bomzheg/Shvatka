@@ -8,6 +8,7 @@ from shvatka.core.utils.datetime_utils import trim_tz
 from shvatka.core.utils.exceptions import GameNotFinished
 from shvatka.core.interfaces.printer import (
     DATETIME_EXCEL_FORMAT,
+    TIME_EXCEL_FORMAT,
     CellAddress,
     CellRange,
     CellStyle,
@@ -473,3 +474,130 @@ def _resolve_level_by_time(
             break
         result = lt.level_number
     return result
+
+
+SHORT_PLACE_TITLE = "#"
+SHORT_TEAM_TITLE = "Команда"
+SHORT_TOTAL_TITLE = "Итого"
+SHORT_PLACE_COLUMN = 1
+SHORT_TEAM_COLUMN = 2
+SHORT_HEADER_ROW = 1
+
+
+@dataclass(frozen=True)
+class TeamPlace:
+    """One line of the standings: what a team took and when it was over for it."""
+
+    team: dto.Team
+    takes: dict[int, datetime]
+    """When the team took each level, by level number counted from one."""
+    finished_at: datetime | None
+    """When the team took the last level of the game; None if it never did."""
+
+    @property
+    def levels_taken(self) -> int:
+        return len(self.takes)
+
+    @property
+    def last_take(self) -> datetime | None:
+        return max(self.takes.values(), default=None)
+
+
+def build_standings(game: dto.FullGame, game_stat: dto.GameStat) -> list[TeamPlace]:
+    """Order the teams the way the results are read: who finished first, then who got furthest."""
+    levels_count = len(game.levels)
+    places = []
+    for team, level_times in game_stat.level_times.items():
+        takes: dict[int, datetime] = {}
+        for level_time in level_times:
+            # entering level number n means the team has just taken level n — and
+            # entering the first level is the start of the game, taken by nobody
+            if level_time.level_number == 0:
+                continue
+            at = trim_tz(level_time.start_at)
+            taken = takes.get(level_time.level_number)
+            if taken is None or at < taken:
+                takes[level_time.level_number] = at
+        # taking the last level of the game is the finish, whatever its number is
+        finished = [at for number, at in takes.items() if number >= levels_count]
+        places.append(
+            TeamPlace(team=team, takes=takes, finished_at=min(finished, default=None)),
+        )
+    return sorted(places, key=_standings_key)
+
+
+def _standings_key(place: TeamPlace) -> tuple[bool, datetime, int, datetime, str]:
+    return (
+        place.finished_at is None,
+        place.finished_at or datetime.max,
+        -place.levels_taken,
+        place.last_take or datetime.max,
+        place.team.name or "",
+    )
+
+
+def build_short_results_table(game: dto.FullGame, game_stat: dto.GameStat) -> Table:
+    """The standings alone — a row per team, a column per level, no blocks and no charts.
+
+    Short enough to be read in a message, unlike the file the same game exports to.
+    """
+    if not (game.is_complete() or game.is_finished()):
+        raise GameNotFinished
+    assert game.start_at is not None
+    started_at = trim_tz(game.start_at)
+    table: dict[CellAddress, Cell] = {
+        CellAddress(row=SHORT_HEADER_ROW, column=SHORT_PLACE_COLUMN): Cell(
+            value=SHORT_PLACE_TITLE, style=CellStyle.HEADER
+        ),
+        CellAddress(row=SHORT_HEADER_ROW, column=SHORT_TEAM_COLUMN): Cell(
+            value=SHORT_TEAM_TITLE, style=CellStyle.HEADER
+        ),
+    }
+    for level_number in _short_levels(game):
+        table[CellAddress(row=SHORT_HEADER_ROW, column=_short_level_column(level_number))] = Cell(
+            value=level_number, style=CellStyle.HEADER
+        )
+    total_column = _short_total_column(game)
+    table[CellAddress(row=SHORT_HEADER_ROW, column=total_column)] = Cell(
+        value=SHORT_TOTAL_TITLE, style=CellStyle.HEADER
+    )
+    best: dict[int, tuple[datetime, int]] = {}
+    for place_number, place in enumerate(build_standings(game, game_stat), start=1):
+        row = SHORT_HEADER_ROW + place_number
+        # the place is what the row is called, like the team name next to it
+        table[CellAddress(row=row, column=SHORT_PLACE_COLUMN)] = Cell(
+            value=place_number, style=CellStyle.HEADER
+        )
+        table[CellAddress(row=row, column=SHORT_TEAM_COLUMN)] = Cell(
+            value=place.team.name, style=CellStyle.TEAM
+        )
+        for level_number in _short_levels(game):
+            column = _short_level_column(level_number)
+            take = place.takes.get(level_number)
+            table[CellAddress(row=row, column=column)] = Cell(
+                value=take,
+                format=TIME_EXCEL_FORMAT if take is not None else None,
+                style=CellStyle.DATA,
+            )
+            if take is not None:
+                _keep_best(best, column, take, row)
+        table[CellAddress(row=row, column=total_column)] = Cell(
+            value=as_time(place.finished_at - started_at) if place.finished_at else None,
+            format=DATETIME_EXCEL_FORMAT if place.finished_at else None,
+            style=CellStyle.ACCENT,
+        )
+    _mark_best(table, best)
+    return Table(fields=table)
+
+
+def _short_levels(game: dto.FullGame) -> range:
+    """Level numbers of the short table, counted from one."""
+    return range(1, len(game.levels) + 1)
+
+
+def _short_level_column(level_number: int) -> int:
+    return SHORT_TEAM_COLUMN + level_number
+
+
+def _short_total_column(game: dto.FullGame) -> int:
+    return _short_level_column(len(game.levels)) + 1

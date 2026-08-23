@@ -1,7 +1,12 @@
 from shvatka.core.interfaces.dal.complex import TypedKeyGetter, GameStatDao
 from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.models import dto
-from shvatka.core.services.organizers import get_by_player, check_can_see_log_keys, check_can_spy
+from shvatka.core.services.organizers import (
+    check_can_see_log_keys,
+    check_can_spy,
+    check_is_org,
+    get_by_player_or_none,
+)
 
 
 async def get_typed_keys(
@@ -11,7 +16,9 @@ async def get_typed_keys(
 ) -> dict[dto.Team, list[dto.KeyTime]]:
     if not game.is_complete():
         player = await identity.get_required_player()
-        org = await get_by_player(game=game, player=player, dao=dao)
+        org = check_is_org(
+            await get_by_player_or_none(game=game, player=player, dao=dao), player, game
+        )
         check_can_see_log_keys(org)
     return await dao.get_typed_keys_grouped(game)
 
@@ -22,7 +29,9 @@ async def get_game_stat(
     """return sorted by level number grouped by teams stat"""
     player = await identity.get_required_player()
     if not game.is_complete():
-        org = await get_by_player(game=game, player=player, dao=dao)
+        org = check_is_org(
+            await get_by_player_or_none(game=game, player=player, dao=dao), player, game
+        )
         check_can_spy(org)
     result = await dao.get_game_level_times_by_teams(game)
     return dto.GameStat(level_times=result)
@@ -33,7 +42,9 @@ async def get_game_stat_with_hints(
 ) -> dto.GameStatWithHints:
     """return sorted by level number grouped by teams stat"""
     if not game.is_complete():
-        org = await get_by_player(game=game, player=player, dao=dao)
+        org = check_is_org(
+            await get_by_player_or_none(game=game, player=player, dao=dao), player, game
+        )
         check_can_spy(org)
     full_game = await dao.add_levels(game)
     result = await dao.get_game_level_times_with_hints(full_game)

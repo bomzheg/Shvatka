@@ -1160,14 +1160,16 @@ async def test_admin_change_game_status_forbidden_for_non_superuser(
 
 
 @pytest.mark.parametrize(
-    ("path", "status_code"),
+    ("path", "status_code", "type_"),
     [
-        ("/games/{id}", 403),
-        ("/games/my/{id}", 403),
-        ("/games/my/{id}/keys/print", 403),
-        ("/games/{id}/keys", 403),
-        ("/games/{id}/stat", 403),
-        (f"/cdn/games/{{id}}/files/{GUID}", 403),
+        ("/games/{id}", 403, "NotAuthorizedForEdit"),
+        ("/games/my/{id}", 403, "NotAuthorizedForEdit"),
+        ("/games/my/{id}/keys/print", 403, "NotAuthorizedForEdit"),
+        ("/games/{id}/keys", 403, "NotAuthorizedForEdit"),
+        ("/games/{id}/stat", 403, "NotAuthorizedForEdit"),
+        # the media of a running game is offered by what the *team* has been
+        # shown, so an admin in no team is turned away one step earlier
+        (f"/cdn/games/{{id}}/files/{GUID}", 422, "PlayerNotInTeam"),
     ],
 )
 @pytest.mark.asyncio
@@ -1178,6 +1180,7 @@ async def test_admin_cant_read_content_of_a_running_game(
     dao: HolderDao,
     path: str,
     status_code: int,
+    type_: str,
 ):
     """A game being played is the one an admin must least be able to read.
 
@@ -1192,6 +1195,7 @@ async def test_admin_cant_read_content_of_a_running_game(
         follow_redirects=True,
     )
     assert resp.status_code == status_code, resp.text
+    assert resp.json()["type"] == type_
 
 
 @pytest.mark.asyncio

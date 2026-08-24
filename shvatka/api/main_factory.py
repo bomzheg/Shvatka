@@ -7,6 +7,7 @@ from prometheus_client import REGISTRY
 from shvatka.api.app import error_handler, middlewares, router
 from shvatka.api.app.config.models.main import ApiConfig
 from shvatka.common.config.models.paths import Paths
+from shvatka.common.docs import DocsUrlFactory
 from shvatka.common.config.parser.paths import common_get_paths
 
 logger = logging.getLogger(__name__)
@@ -16,7 +17,7 @@ def create_app(config: ApiConfig) -> FastAPI:
     app = FastAPI()
     app.include_router(router.setup())
     middlewares.setup(app, config)
-    error_handler.setup(app)
+    error_handler.setup(app, DocsUrlFactory(config.docs))
     setup_metrics(
         app,
         MetricsConfig(

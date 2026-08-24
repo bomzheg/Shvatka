@@ -25,6 +25,21 @@ class WebConfig:
 
 
 @dataclass
+class DocsConfig:
+    """Where the published user documentation lives.
+
+    The docs are an Antora site, so a page URL is
+    ``<base-url>/<component>/<version>/<page>.html``. ``version`` points at a
+    released tag rather than at ``master``: a link handed to a player has to keep
+    describing the engine they are using, not the one being written.
+    """
+
+    base_url: str = "https://bomzheg.github.io/Shvatka"
+    component: str = "shvatka"
+    version: str = "3.7.0"
+
+
+@dataclass
 class MailConfig:
     enabled: bool = False
     host: str = ""
@@ -49,6 +64,7 @@ class Config:
     redis: RedisConfig
     file_storage_config: FileStorageConfig
     web: WebConfig
+    docs: DocsConfig = field(default_factory=DocsConfig)
     mail: MailConfig = field(default_factory=MailConfig)
     features: FeaturesConfig
     superusers: list[int] = field(default_factory=list)

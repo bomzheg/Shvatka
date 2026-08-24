@@ -51,6 +51,9 @@ file-storage-config:
   parents: true
 web:
   base-url: https://shvatka-test.bomzheg.dev
+docs:
+  base-url: https://docs.shvatka-test.bomzheg.dev/
+  version: "3.7.0"
 features:
   level-test: false
   merge-team-button: false

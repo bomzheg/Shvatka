@@ -85,6 +85,12 @@ file-storage-config:
   parents: true
 web:
   base-url: https://exmple.org
+docs:
+  # where the user documentation is published; links to it are put into errors
+  base-url: https://bomzheg.github.io/Shvatka
+  component: shvatka
+  # a released tag, not master - a link must keep describing the running engine
+  version: "3.7.0"
 mail:
   # if disabled, confirmation codes are only written to the log (see ConsoleEmailSender)
   enabled: false

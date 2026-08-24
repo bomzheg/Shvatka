@@ -1,0 +1,120 @@
+= SHEP-0007 — Documentation links in error messages
+:navtitle: SHEP-0007 Error doc links
+
+[cols="1,4"]
+|===
+| SHEP | 0007
+| Title | Documentation links in error messages
+| Status | `Accepted, implemented`
+| Created | 2026-08-24
+| Updated | 2026-08-24
+| Related | PR bomzheg/Shvatka, PR bomzheg/shvatka-ui
+|===
+
+== Summary
+
+An error the engine refuses an action with now carries the documentation page
+that explains the rule. `SHError` names the page, the edges turn it into a link:
+the bot writes it into the error message, the API returns it as `docUrl` and the
+web ui offers it as a button on the error snackbar. Where the documentation is
+published is configuration, so an installation that hosts its own docs links to
+its own.
+
+== Context
+
+Every user-facing refusal is an `SHError` with a Russian `notify_user` string —
+"Это не ключ…", "В чате уже есть другая команда", "Передать капитанство может
+только капитан команды". The string says *what* happened; the *why*, and what to
+do instead, is written down in `docs/modules/ROOT/pages/` — a documentation site
+the user has no reason to know exists, because nothing in the product ever links
+to it.
+
+Both edges render errors in one place already: `handle_sh_error` in
+`shvatka/tgbot/handlers/errors.py` for the bot, `sh_exception_handler` in
+`shvatka/api/app/error_handler.py` for the API (the ui renders whatever that
+returns, centrally, in `http/error.handler.ts`). So the delivery side is one
+change per edge; the open question was where the *knowledge* lives — which error
+means which page, and what the page's URL is.
+
+== Decision
+
+=== The error names a page, not a URL
+
+`SHError.doc_page` holds a `DocPage` (`shvatka/core/utils/doc_pages.py`) — a
+`StrEnum` whose value is the page path inside the docs' ROOT module, optionally
+with an anchor (`player/play#keys`). It is a class attribute where every instance
+of an error means the same thing (`InvalidKey` always means the key-entry rules),
+and a constructor argument for a one-off raise site (the same `PermissionsError`
+means the captaincy page in one place and the permissions page in another).
+
+The alternative — storing a ready URL on the exception — was rejected: `core`
+would then have to know where the docs are published, which is deployment
+knowledge, and every raise site would repeat it.
+
+=== Where the docs live is config
+
+`DocsConfig` (`docs:` in `config.yml`) carries `base-url`, `component` and
+`version`; `DocsUrlFactory` (`shvatka/common/docs.py`) builds
+`<base-url>/<component>/<version>/<page>.html` from it. Antora publishes one
+directory per component and version, so all three parts are needed to address a
+page.
+
+`version` names a **released tag** (`3.7.0` today), not `master`. A link handed
+to a player has to describe the engine that refused their action; `master`
+documents the one being written. Bumping it is part of preparing a release.
+
+=== Each edge renders it its own way
+
+* **Bot.** `handle_sh_error` appends `ℹ️ Подробнее: <a>…</a>` to the error
+  message. A callback query is answered with an alert, and an alert renders no
+  html — so when such an error has a page, the link follows as a message of its
+  own rather than being dropped.
+* **API.** `ErrorContent.doc_url` is serialized as `docUrl` next to the existing
+  `type` / `text` / `description`. Purely additive: a client that ignores it sees
+  what it saw before.
+* **Web ui.** `GlobalErrorHandler` reads `docUrl` and shows the snackbar with a
+  «Справка» action that opens the page. The snackbar is text-only, so the action
+  button is the only place a link can go.
+
+=== The link is checked by the test suite
+
+A doc link that 404s is worse than no link, and nothing else in CI reads the
+`.adoc` tree. `tests/unit/docs/doc_pages_test.py` asserts that every `DocPage`
+has a file under `docs/modules/ROOT/pages/`, that every anchor it names is
+declared in that file, and that every page has a navigation title.
+
+== Consequences
+
+* A page that is renamed or deleted fails the unit suite instead of shipping a
+  dead link — but renaming a page now means touching `DocPage` too.
+* The version in config is a manual step at release time; a stale value points
+  users at an older-but-valid page rather than at a missing one.
+* Only errors somebody mapped carry a link. That is deliberate: an error with no
+  page renders exactly as before, so the mapping can grow error by error.
+* The bot sends one extra message per callback-query error that has a page.
+
+== Phases and status
+
+[cols="1,4,2",options="header"]
+|===
+| Phase | Content | Status
+
+| 1 | `DocPage`, `SHError.doc_page`, `DocsConfig` + `DocsUrlFactory`, the first
+mapping of errors onto pages | ✅ done
+| 2 | Bot: the link in `handle_sh_error` | ✅ done
+| 3 | API: `docUrl` in the error body; ui: «Справка» on the error snackbar | ✅ done
+| 4 | Widen the mapping as errors prove confusing in practice | ⏳ ongoing
+|===
+
+== Deviations from the plan
+
+`to_http_error` (`shvatka/api/app/utils/error_converter.py`, used by the file
+upload route) was left alone: it builds a `HTTPException` with its own body
+shape, which the ui does not read as an `ErrorContent`.
+
+== Open questions
+
+* Should the bot's alert path stay silent about the page instead of sending an
+  extra message? Worth revisiting once there is feedback from a live game.
+* `version` could be derived from the running engine's own version instead of
+  being configured, once the deployment reliably knows its tag.

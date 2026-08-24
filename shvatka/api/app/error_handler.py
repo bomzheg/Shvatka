@@ -1,5 +1,6 @@
 import logging
 from dataclasses import dataclass, field
+from functools import partial
 
 import adaptix
 from adaptix import Retort, name_mapping
@@ -8,6 +9,7 @@ from fastapi.responses import JSONResponse
 from starlette.requests import Request
 from starlette.responses import Response
 
+from shvatka.common.docs import DocsUrlFactory
 from shvatka.core.utils import exceptions
 
 
@@ -22,9 +24,13 @@ class ErrorContent:
     description: str = ""
     properties: dict = field(default_factory=dict)
     confidential: str | None = None
+    doc_url: str | None = None
+    """A link to the documentation page explaining the error, for the ui to show."""
 
 
-def sh_exception_handler(request: Request, exc: exceptions.SHError) -> Response:
+def sh_exception_handler(
+    request: Request, exc: exceptions.SHError, docs: DocsUrlFactory
+) -> Response:
     if not isinstance(exc, (exceptions.IdentityWithoutUser, exceptions.IdentityWithoutPlayer)):
         logger.error("got an sh error, during request %s", request.url, exc_info=exc)
     else:
@@ -35,6 +41,7 @@ def sh_exception_handler(request: Request, exc: exceptions.SHError) -> Response:
         description=exc.notify_user,
         properties=exc.get_properties(),
         confidential=exc.confidential,
+        doc_url=docs.get_error_url(exc),
     )
     if isinstance(exc, (exceptions.NotAuthorizedForEdit, exceptions.NotAuthorizedForAdmin)):
         status_code = 403
@@ -62,5 +69,5 @@ def sh_exception_handler(request: Request, exc: exceptions.SHError) -> Response:
     )
 
 
-def setup(app: FastAPI):
-    app.add_exception_handler(exceptions.SHError, sh_exception_handler)  # type: ignore[arg-type]
+def setup(app: FastAPI, docs: DocsUrlFactory):
+    app.add_exception_handler(exceptions.SHError, partial(sh_exception_handler, docs=docs))

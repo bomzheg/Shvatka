@@ -5,4 +5,5 @@
 ** xref:shep-0004-parallel-levels.adoc[SHEP-0004 Parallel levels]
 ** xref:shep-0005-outdated-dialogs.adoc[SHEP-0005 Outdated dialogs]
 ** xref:shep-0006-file-lifecycle.adoc[SHEP-0006 File deletion and garbage collection]
+** xref:shep-0007-error-doc-links.adoc[SHEP-0007 Error doc links]
 ** xref:template.adoc[SHEP template]

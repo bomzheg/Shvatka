@@ -25,6 +25,7 @@ from shvatka.core.players.player import (
 from shvatka.core.teams.adapters import TeamCaptainSetter
 from shvatka.core.utils import exceptions
 from shvatka.core.utils.defaults_constants import CAPTAIN_ROLE, DEFAULT_ROLE
+from shvatka.core.utils.doc_pages import DocPage
 from shvatka.core.utils.exceptions import SHDataBreach, PermissionsError
 from shvatka.core.views.game import GameLogWriter, GameLogEvent, GameLogType
 from shvatka.core.views.team import CaptainChanged, TeamNotifier
@@ -178,6 +179,7 @@ async def change_captain(
             team=team,
             text="can't make captain a player who is not in the team",
             notify_user="Капитаном можно назначить только игрока этой команды",
+            doc_page=DocPage.CHANGE_CAPTAIN,
         )
     old_captain = team.captain
     if old_captain is not None and old_captain.id == new_captain_id:
@@ -215,6 +217,7 @@ def check_can_change_captain(actor: dto.Player, team: dto.Team) -> None:
         team=team,
         player=actor,
         notify_user="Передать капитанство может только капитан команды",
+        doc_page=DocPage.CHANGE_CAPTAIN,
     )
 
 
@@ -231,6 +234,7 @@ def check_can_change_chat(team: dto.Team, captain: dto.FullTeamPlayer):
         permission_name="change_chat",  # TODO
         team=team,
         player=captain.player,
+        doc_page=DocPage.MOVE_CHAT,
     )
 
 
@@ -256,4 +260,5 @@ def assert_can_change_name(team: dto.Team, captain: dto.FullTeamPlayer) -> None:
         permission_name=enums.TeamPlayerPermission.can_change_team_name.name,
         team=team,
         player=captain.player,
+        doc_page=DocPage.TEAM_PERMISSIONS,
     )

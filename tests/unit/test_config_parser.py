@@ -25,6 +25,10 @@ def test_load_bot_config(bot_config: TgBotConfig):
     assert not bot_config.db.echo
     assert 1 == bot_config.redis.db
     assert "https://shvatka-test.bomzheg.dev" == bot_config.web.base_url
+    # the docs domain is a deploy decision, so it is read from the file
+    assert "https://docs.shvatka-test.bomzheg.dev/" == bot_config.docs.base_url
+    assert "3.7.0" == bot_config.docs.version
+    assert "shvatka" == bot_config.docs.component  # the file declares no component
     assert Path("local-storage/files") == bot_config.file_storage_config.path
     # the test config declares no mail section at all
     assert not bot_config.mail.enabled

@@ -59,9 +59,12 @@ knowledge, and every raise site would repeat it.
 directory per component and version, so all three parts are needed to address a
 page.
 
-`version` names a **released tag** (`3.7.0` today), not `master`. A link handed
-to a player has to describe the engine that refused their action; `master`
-documents the one being written. Bumping it is part of preparing a release.
+`version` defaults to `master` — an installation that configures nothing links
+to the docs as they are now, which stay right as the engine moves on. A
+deployment running a **released tag** pins that tag instead (`config_dist` ships
+`3.7.0`), because a link handed to a player has to describe the engine that
+refused their action, not the one being written. Bumping the pinned value is
+part of preparing a release.
 
 === Each edge renders it its own way
 
@@ -87,8 +90,10 @@ declared in that file, and that every page has a navigation title.
 
 * A page that is renamed or deleted fails the unit suite instead of shipping a
   dead link — but renaming a page now means touching `DocPage` too.
-* The version in config is a manual step at release time; a stale value points
-  users at an older-but-valid page rather than at a missing one.
+* The pinned version in config is a manual step at release time; a stale value
+  points users at an older-but-valid page rather than at a missing one. Leaving
+  it unset is the other valid choice — `master` never goes stale, but it can
+  describe a feature the running engine does not have yet.
 * Only errors somebody mapped carry a link. That is deliberate: an error with no
   page renders exactly as before, so the mapping can grow error by error.
 * The bot sends one extra message per callback-query error that has a page.
@@ -107,6 +112,10 @@ mapping of errors onto pages | ✅ done
 |===
 
 == Deviations from the plan
+
+`version` was going to default to the released tag; review settled on `master`
+as the code default, with the tag shown in `config_dist` — the default should
+not silently age out as the engine moves on.
 
 `to_http_error` (`shvatka/api/app/utils/error_converter.py`, used by the file
 upload route) was left alone: it builds a `HTTPException` with its own body

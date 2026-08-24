@@ -8,7 +8,7 @@ from shvatka.common.config.models.main import DocsConfig
 from shvatka.common.docs import DocsUrlFactory
 from shvatka.core.utils import exceptions
 
-DOCS = DocsUrlFactory(DocsConfig(base_url="https://docs.example.org"))
+DOCS = DocsUrlFactory(DocsConfig(base_url="https://docs.example.org", version="3.7.0"))
 
 
 def request() -> Request:

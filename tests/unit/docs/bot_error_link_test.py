@@ -11,7 +11,7 @@ from shvatka.common.docs import DocsUrlFactory
 from shvatka.core.utils import exceptions
 from shvatka.tgbot.handlers.errors import handle_sh_error
 
-DOCS = DocsUrlFactory(DocsConfig(base_url="https://docs.example.org"))
+DOCS = DocsUrlFactory(DocsConfig(base_url="https://docs.example.org", version="3.7.0"))
 KEYS_URL = "https://docs.example.org/shvatka/3.7.0/player/play.html#keys"
 CHAT_ID = 12345
 

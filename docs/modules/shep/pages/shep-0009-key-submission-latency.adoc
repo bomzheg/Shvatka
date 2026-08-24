@@ -97,10 +97,23 @@ with no retry. A durable job (apscheduler over the redis jobstore, as scheduled
 hints already are) would survive it. Not done: it buys durability for a window
 of a few seconds, at the price of a second delivery mechanism.
 
-=== Commit before showing anything
+=== Decide, commit, then show
 
-`CheckKeyInteractor` now commits as soon as the key is saved, before the views,
-and again at the end for what a level up may have written (`dao.finish`).
+The key path is one transaction and one commit, with every view after it.
+`GamePlayBaseInteractor.process_level_up` used to interleave the two — read
+whether the team finished, show it, read whether everyone finished, write
+`dao.finish`, show that — so a view always ran inside the transaction and a
+finished game needed a second commit to land. It is now two halves:
+
+* `resolve_level_up` does the locking, the reads and the one write
+  (`dao.finish`), and returns a `LevelUpOutcome` carrying everything a view
+  will need — the next level, the level time to schedule against, the spying
+  orgs, the teams to congratulate;
+* `show_level_up` takes that outcome and only shows it.
+
+`CheckKeyInteractor` resolves, commits once, then shows: the key first, the
+puzzle after. `GamePlayTimerInteractor` follows the same order for the same
+reason, so "no view inside a transaction" holds on both paths into a level up.
 
 The key is a fact of the game the moment it is typed; holding its rows for the
 length of a chat conversation was never intentional. It does change failure
@@ -164,7 +177,13 @@ sending thread.
 
 == Deviations from the plan
 
-None so far.
+The first cut committed twice — once for the key, once at the end for the
+`dao.finish` a level up may have written — because the level up mixed writes
+and views. Review asked for one commit with the views after it, which meant
+splitting `process_level_up` into `resolve_level_up` / `show_level_up`. That
+is a better shape than what this document originally proposed: the rule is now
+"no view runs inside a transaction" rather than "commit early and hope the
+fan-out is short".
 
 == Open questions
 

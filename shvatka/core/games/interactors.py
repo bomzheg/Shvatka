@@ -6,6 +6,7 @@ from datetime import datetime
 from shvatka.core.games.dto import (
     CurrentHintsAndKeys,
     GameStatWithBonuses,
+    LevelUpOutcome,
     MyRole,
     PassedLevels,
 )
@@ -273,49 +274,70 @@ class GamePlayBaseInteractor:
     scheduler: Scheduler
     current_game: CurrentGameProvider
 
-    async def all_teams_finished(self, game: dto.FullGame) -> None:
-        await self.dao.finish(game)
-        await self.game_log.log(GameLogEvent(GameLogType.GAME_FINISHED, {"game": game.name}))
-        self.locker.clear()
-        for team in await self.dao.get_played_teams(game):
-            await self.view.game_finished_by_all(team)
+    async def resolve_level_up(self, team: dto.Team, game: dto.FullGame) -> LevelUpOutcome:
+        """Work out — and write down — what leaving the level meant.
 
-    async def process_level_up(
+        Every database read and write of a level up happens here, and nothing
+        is shown: the caller commits what this decided and only then hands the
+        outcome to :meth:`show_level_up`. That is what keeps a view out of the
+        transaction, and the whole key path down to one commit.
+        """
+        async with self.locker.lock_globally():
+            if await self.dao.is_team_finished(team, game):
+                if not await self.dao.is_all_team_finished(game):
+                    return LevelUpOutcome(team_finished=True)
+                await self.dao.finish(game)
+                finished_teams = list(await self.dao.get_played_teams(game))
+                self.locker.clear()
+                return LevelUpOutcome(
+                    team_finished=True,
+                    all_finished=True,
+                    finished_teams=finished_teams,
+                )
+        next_level = await self.dao.get_current_level(team, game)
+        lt = await self.dao.get_current_level_time(team, game)
+        return LevelUpOutcome(
+            next_level=next_level,
+            level_time_id=lt.id,
+            orgs=list(await get_spying_orgs(game, self.dao)),
+        )
+
+    async def show_level_up(
         self,
+        outcome: LevelUpOutcome,
+        *,
         input_container: InputContainer,
         team: dto.Team,
         game: dto.FullGame,
         at: datetime,
     ) -> None:
-        async with self.locker.lock_globally():
-            if await self.dao.is_team_finished(team, game):
-                await self.view.game_finished(team, input_container)
-                if await self.dao.is_all_team_finished(game):
-                    await self.all_teams_finished(game)
-                return
-        await self.process_plain_level_up(team, game, at)
+        """Tell everyone what :meth:`resolve_level_up` already decided.
 
-    async def process_plain_level_up(
-        self,
-        team: dto.Team,
-        game: dto.FullGame,
-        now: datetime,
-    ) -> None:
-        next_level = await self.dao.get_current_level(team, game)
-        lt = await self.dao.get_current_level_time(team, game)
-
-        await self.view.send_puzzle(team=team, level=next_level)
+        Runs after the commit, so it must not touch the database — everything
+        it shows travels in the outcome.
+        """
+        if outcome.team_finished:
+            await self.view.game_finished(team, input_container)
+            if outcome.all_finished:
+                await self.game_log.log(
+                    GameLogEvent(GameLogType.GAME_FINISHED, {"game": game.name})
+                )
+                for finished in outcome.finished_teams:
+                    await self.view.game_finished_by_all(finished)
+            return
+        assert outcome.next_level is not None
+        assert outcome.level_time_id is not None
+        await self.view.send_puzzle(team=team, level=outcome.next_level)
         await schedule_first_hint(
             scheduler=self.scheduler,
             team=team,
-            next_level=next_level,
-            lt_id=lt.id,
-            now=now,
+            next_level=outcome.next_level,
+            lt_id=outcome.level_time_id,
+            now=at,
         )
-        level_up_event = LevelUp(
-            team=team, new_level=next_level, orgs_list=await get_spying_orgs(game, self.dao)
+        await self.org_notifier.notify(
+            LevelUp(team=team, new_level=outcome.next_level, orgs_list=outcome.orgs)
         )
-        await self.org_notifier.notify(level_up_event)
 
 
 @dataclass(kw_only=True)
@@ -356,21 +378,22 @@ class CheckKeyInteractor(GamePlayBaseInteractor):
         new_key = await self.key_processor.check_key(key=key, player=player, team=team, now=now)
         if new_key is None:
             return
-        # the key is a fact of the game the moment it is typed, and showing it
-        # is a long story (a puzzle is several telegram messages apart). Commit
-        # before telling anyone, so the transaction — and the rows it locks —
-        # doesn't stay open for the whole of it.
+        level_up: LevelUpOutcome | None = None
+        if not new_key.is_duplicate and new_key.is_level_up():
+            level_up = await self.resolve_level_up(team=team, game=game)
+        # everything the key changed is decided by now, so one commit closes
+        # the transaction — and showing it (a puzzle is several telegram
+        # messages apart) happens outside, with no rows held.
         await self.dao.commit()
         await self.view_(new_key, input_container)
-        if not new_key.is_duplicate and new_key.is_level_up():
-            await self.process_level_up(
+        if level_up is not None:
+            await self.show_level_up(
+                level_up,
                 input_container=input_container,
                 team=team,
                 game=game,
                 at=now,
             )
-        # the level up may have finished the game for everyone
-        await self.dao.commit()
 
     async def view_(self, new_key: dto.InsertedKey, input_container: InputContainer) -> None:
         if new_key.is_duplicate:
@@ -432,16 +455,22 @@ class GamePlayTimerInteractor(GamePlayBaseInteractor):
                 level_time=level_time,
                 effects=effects,
             )
-            await self.view.effects(team=team, effects=effects, input_container=input_container)
             if effects.level_up:
                 level_up_effect = effects
         if last_event is not None:
             await self.dao.save_timer(level_time, last_event)
+        level_up: LevelUpOutcome | None = None
         if level_up_effect is not None:
-            await self.process_level_up(
+            level_up = await self.resolve_level_up(team=team, game=game)
+        # same rule as a typed key: decide and write first, commit, then show
+        await self.dao.commit()
+        for effects in effects_list:
+            await self.view.effects(team=team, effects=effects, input_container=input_container)
+        if level_up is not None:
+            await self.show_level_up(
+                level_up,
                 input_container=input_container,
                 team=team,
                 game=game,
                 at=now,
             )
-        await self.dao.commit()

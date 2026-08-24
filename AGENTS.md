@@ -245,6 +245,11 @@ http response is built from — runs inline. A player typing a key must not wait
 for a puzzle's worth of messages, a second apart. See
 `docs/modules/shep/pages/shep-0009-key-submission-latency.adoc`.
 
+A level up follows the same rule from the other side: `resolve_level_up` does
+the database work and returns a `LevelUpOutcome`, the caller commits, and only
+then `show_level_up` shows it. Adding something to a level up means deciding
+which of those two halves it belongs to — never both.
+
 Two rules follow when you add a view method:
 
 - A recorded call closes over **domain dtos only** (an aiogram `Message` is

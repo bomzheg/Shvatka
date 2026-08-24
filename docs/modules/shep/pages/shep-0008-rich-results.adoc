@@ -1,13 +1,13 @@
-= SHEP-0007 — Results as a rich message
-:navtitle: SHEP-0007 Rich results
+= SHEP-0008 — Results as a rich message
+:navtitle: SHEP-0008 Rich results
 
 [cols="1,4"]
 |===
-| SHEP | 0007
+| SHEP | 0008
 | Title | Results as a rich message
 | Status | `Accepted, implemented`
 | Created | 2026-08-23
-| Updated | 2026-08-23
+| Updated | 2026-08-24
 | Related | issue #362
 |===
 

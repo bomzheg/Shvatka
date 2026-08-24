@@ -14,6 +14,7 @@ from adaptix._internal.morphing.provider_template import ABCProxy
 from dishka import Provider, Scope, provide
 from telegraph.aio import Telegraph
 
+from shvatka.common.docs import DocsUrlFactory
 from shvatka.common.url_factory import UrlFactory
 from shvatka.core.models.dto import scn, action
 from shvatka.core.models.dto import hints
@@ -112,3 +113,4 @@ class UrlProvider(Provider):
     scope = Scope.APP
 
     url_factory = provide(UrlFactory)
+    docs_url_factory = provide(DocsUrlFactory)

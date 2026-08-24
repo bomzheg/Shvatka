@@ -85,6 +85,14 @@ file-storage-config:
   parents: true
 web:
   base-url: https://exmple.org
+docs:
+  # where the user documentation is published; links to it are put into errors
+  # and handed to the web ui for its own hints
+  base-url: https://bomzheg.github.io/Shvatka
+  component: shvatka
+  # a released tag, so a link keeps describing the running engine; antora drops
+  # the segment for the latest version, so empty means the docs of master
+  version: "3.7.0"
 mail:
   # if disabled, confirmation codes are only written to the log (see ConsoleEmailSender)
   enabled: false

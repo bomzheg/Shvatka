@@ -1,12 +1,21 @@
 import typing
 from typing import Any
 
+from shvatka.core.utils.doc_pages import DocPage
+
 if typing.TYPE_CHECKING:
     from shvatka.core.models import dto
 
 
 class SHError(Exception):
     notify_user = "Ошибка"
+    doc_page: DocPage | None = None
+    """The documentation page that explains the rule this error is about.
+
+    Set it on the class when every instance means the same thing, or pass it to
+    the constructor for a one-off. The edges turn it into a link — the core
+    never knows where the docs are published.
+    """
 
     def __init__(
         self,
@@ -23,6 +32,7 @@ class SHError(Exception):
         game: "dto.Game | None" = None,
         alarm: bool | None = False,
         notify_user: str | None = None,
+        doc_page: DocPage | None = None,
         confidential: str | None = None,
         *args,
         **kwargs,
@@ -51,6 +61,7 @@ class SHError(Exception):
             self.game_id = self.game.id
         self.alarm = alarm
         self.notify_user = notify_user or self.notify_user
+        self.doc_page = doc_page or self.doc_page
         self.confidential = confidential
 
     def get_properties(self) -> dict[str, Any]:
@@ -86,6 +97,7 @@ class SHError(Exception):
 
 class ScenarioNotCorrect(SHError):
     notify_user = "JSON-файл некорректен"
+    doc_page = DocPage.LEVEL_CREATE
 
     def __init__(
         self, *args, level_id: int | None = None, name_id: str | None = None, **kwargs
@@ -103,6 +115,7 @@ class ScenarioNotCorrect(SHError):
 
 class ChatNotFound(SHError):
     notify_user = "Такой чат не найден"
+    doc_page = DocPage.CREATE_CHAT
 
 
 class FileNotFound(SHError, AttributeError):
@@ -173,6 +186,7 @@ class AnotherGameWasStarted(AnotherGameIsActive):
 
 class GameNotCompleted(GameStatusError):
     notify_user = "Данная игра не завершена. Невозможно отобразить её данные"
+    doc_page = DocPage.SPY
 
 
 class CantDeleteActiveGame(GameStatusError):
@@ -193,6 +207,7 @@ class GameNotFinished(GameStatusError):
 
 class TeamCurrentLevelNotFound(GameError):
     notify_user = "Текущий уровень команды не найден. Не заявлена?"
+    doc_page = DocPage.WAIVERS
 
 
 class GameNotFound(GameError, AttributeError):
@@ -201,6 +216,7 @@ class GameNotFound(GameError, AttributeError):
 
 class LevelError(SHError):
     notify_user = "Ошибка связанная с уровнем"
+    doc_page = DocPage.LEVEL_CREATE
 
     def __init__(self, level_id: int | None = None, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
@@ -209,6 +225,7 @@ class LevelError(SHError):
 
 class LevelNotLinked(LevelError):
     notify_user = "Уровень не привязан к игре"
+    doc_page = DocPage.GAME_LEVELS
 
 
 class PermissionsError(SHError):
@@ -221,20 +238,24 @@ class PermissionsError(SHError):
 
 class IsNotOrganizer(SHError):
     notify_user = "Игрок не является организатором"
+    doc_page = DocPage.GAME_ORGS
 
 
 class PlayerAlreadyOrganizer(SHError):
     notify_user = "Игрок уже является организатором этой игры"
+    doc_page = DocPage.GAME_ORGS
 
 
 class PromoteError(PermissionsError):
     notify_user = "Ошибка распространения права быть автором"
     permission_name = "can_be_author"
+    doc_page = DocPage.PROMOTION
 
 
 class CantBeAuthor(PermissionsError):
     notify_user = "Пользователь не имеет права быть автором"
     permission_name = "can_be_author"
+    doc_page = DocPage.PROMOTION
 
 
 class TestingNotAllowed(PermissionsError, LevelError):
@@ -254,6 +275,7 @@ class NotAuthorizedForAdmin(PermissionsError):
 
 class TeamError(SHError):
     notify_user = "Проблема связанные с командой"
+    doc_page = DocPage.CREATE_TEAM
 
 
 class PlayerNotFoundError(SHError):
@@ -270,6 +292,7 @@ class PlayerUsernameOccupied(SHError):
 
 class PlayerTgAlreadyLinked(SHError):
     notify_user = "Этот телеграм-аккаунт уже привязан к другому игроку"
+    doc_page = DocPage.AUTH
 
 
 class MergeError(SHError):
@@ -282,6 +305,7 @@ class PlayerInvalidUsername(SHError):
 
 class EmailError(SHError):
     notify_user = "Проблема, связанная с электронной почтой"
+    doc_page = DocPage.AUTH
 
 
 class EmailAlreadyExist(EmailError):
@@ -310,6 +334,7 @@ class RateLimitExceeded(SHError):
 
 class PlayerTeamError(SHError):
     notify_user = "Проблема связанные с членством игрока в команде"
+    doc_page = DocPage.JOIN_TEAM
 
 
 class PlayerAlreadyInTeam(PlayerTeamError):
@@ -322,6 +347,7 @@ class PlayerRestoredInTeam(PlayerTeamError):
 
 class PlayerNotInTeam(PlayerTeamError):
     notify_user = "Игрок не в команде"
+    doc_page = DocPage.JOIN_TEAM
 
 
 class RequestError(SHError):
@@ -342,6 +368,7 @@ class RequestPermissionError(RequestError):
 
 class AnotherTeamInChat(PlayerTeamError):
     notify_user = "В чате уже есть другая команда"
+    doc_page = DocPage.CREATE_TEAM
 
 
 class UserNotFoundError(SHError):
@@ -370,6 +397,7 @@ class MultipleUsernameFound(UsernameResolverError):
 
 class WaiverError(GameError):
     notify_user = "Ошибка вейверов"
+    doc_page = DocPage.WAIVERS
 
 
 class WaiverForbidden(WaiverError):
@@ -380,6 +408,7 @@ class InvalidKey(SHError):
     notify_user = (
         "Это не ключ. Например начинается не с SH/СХ, используется что-то кроме букв и цифр"
     )
+    doc_page = DocPage.PLAY_KEYS
 
     def __init__(self, key: str | None = None, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)

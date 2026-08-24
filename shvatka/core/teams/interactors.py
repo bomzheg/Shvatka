@@ -51,6 +51,7 @@ from shvatka.core.teams.adapters import (
 )
 from shvatka.core.teams.dto import CaptainedTeam, TeamPlayerWithStat, TeamWithStat
 from shvatka.core.utils.defaults_constants import CAPTAIN_ROLE, DEFAULT_ROLE
+from shvatka.core.utils.doc_pages import DocPage
 from shvatka.core.utils.exceptions import (
     PermissionsError,
     PlayerAlreadyInTeam,
@@ -276,6 +277,7 @@ class JoinCaptainedTeamInteractor:
                 player=player,
                 text="only the captain can join their team without an invite",
                 notify_user="Так вступить можно только в команду, где вы капитан",
+                doc_page=DocPage.JOIN_TEAM,
             )
         current = await self.dao.get_team(player)
         if current is not None:
@@ -292,6 +294,7 @@ class JoinCaptainedTeamInteractor:
                     team=current,
                     text="player is in another team",
                     notify_user=f"Сначала нужно выйти из команды «{current.name}»",
+                    doc_page=DocPage.LEAVE_TEAM,
                 )
             await leave(player, player, self.dao, notifier=self.notifier)
         with contextlib.suppress(PlayerRestoredInTeam):

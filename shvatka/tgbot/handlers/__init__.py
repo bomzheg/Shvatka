@@ -3,6 +3,7 @@ import logging
 from aiogram import Dispatcher
 from aiogram_dialog.api.protocols import MessageManagerProtocol, BgManagerFactory
 
+from shvatka.common.docs import DocsUrlFactory
 from shvatka.tgbot import dialogs
 from shvatka.tgbot.config.models.main import TgBotConfig
 from shvatka.tgbot.handlers import (
@@ -27,7 +28,7 @@ logger = logging.getLogger(__name__)
 def setup_handlers(
     dp: Dispatcher, config: TgBotConfig, message_manager: MessageManagerProtocol
 ) -> BgManagerFactory:
-    errors.setup(dp, config.bot.log_chat)
+    errors.setup(dp, config.bot.log_chat, DocsUrlFactory(config.docs))
     dp.include_router(base.setup())
     dp.include_router(superuser.setup(config.superusers))
     dp.include_router(player.setup())

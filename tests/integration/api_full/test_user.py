@@ -33,6 +33,8 @@ async def test_auth(client: AsyncClient, harry: dto.Player, auth: AuthProperties
     )
     assert resp.is_success
     resp.read()
+    # host-only, so a deployment on a neighbouring subdomain can't overwrite it
+    assert "Domain=" not in resp.headers["set-cookie"]
     access_token = resp.cookies.get("Authorization").removeprefix('"').removesuffix('"')
     actual_user = await auth.get_current_user(
         Token(access_token=access_token.removeprefix("bearer "), token_type="bearer"),

@@ -21,7 +21,7 @@ from shvatka.api.auth.requests import (
     ForgotPassword,
 )
 from shvatka.api.app.config.models.auth import AuthConfig
-from shvatka.api.app.utils.cookie_auth import set_auth_response
+from shvatka.api.app.utils.cookie_auth import delete_auth_response, set_auth_response
 from shvatka.core.interfaces.bus import Bus, OneTimeTokenUsed
 from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.models import dto
@@ -75,13 +75,7 @@ async def logout(
     response: Response,
     config: FromDishka[AuthConfig],
 ):
-    response.delete_cookie(
-        "Authorization",
-        samesite=config.samesite,
-        domain=config.domain,
-        httponly=config.httponly,
-        secure=config.secure,
-    )
+    delete_auth_response(config, response)
     return {"ok": True}
 
 

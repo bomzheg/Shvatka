@@ -40,6 +40,10 @@ def test_load_api_config(paths: Paths):
     assert not config.api.enable_logging
     assert timedelta(minutes=30) == config.api.auth.token_expire
     assert "shvatkatestbot" == config.api.auth.bot_username
+    # the file names no cookie domain, so the cookie is host-only
+    assert config.api.auth.domain is None
+    assert config.api.auth.cookie_domain is None
+    assert "Authorization" == config.api.auth.cookie_name
     assert "none" == config.api.auth.samesite
     assert not config.api.auth.secure
     assert not config.api.auth.httponly

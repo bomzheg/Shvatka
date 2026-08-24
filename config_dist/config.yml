@@ -46,7 +46,17 @@ api:
     bot-token: ""
     bot-username: ""
     auth-url: "https://example.org/sh/login/data"
-    domain: "example.org"
+    # Domain of the auth cookie. Leave it empty (or drop the key) to get a
+    # host-only cookie — the browser then sends it back only to the host that
+    # set it. A parent domain (example.org) hands the same cookie to every
+    # deployment under it, and because a cookie is keyed by (name, domain,
+    # path), logging into one of them overwrites the token of the others.
+    domain: ""
+    # Name of the auth cookie. Only worth changing when several deployments
+    # must share one `domain` — give each of them its own name so they stop
+    # overwriting each other.
+    cookie-name: "Authorization"
+    # "none" is only accepted by browsers together with secure: true
     samesite: "none"
     secure: false
     httponly: false

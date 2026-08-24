@@ -243,7 +243,9 @@ In the combined app the bot half of `ComplexView` / `ComplexOrgNotifier` /
 (`deliver_bot_views`); only the web half — which fills the `InputContainer` the
 http response is built from — runs inline. A player typing a key must not wait
 for a puzzle's worth of messages, a second apart. See
-`docs/modules/shep/pages/shep-0009-key-submission-latency.adoc`.
+`docs/modules/shep/pages/shep-0009-key-submission-latency.adoc`; durable
+delivery, if the deferred half ever turns out to lose messages that matter, is
+planned in `docs/modules/shep/pages/shep-0010-message-outbox.adoc`.
 
 A level up follows the same rule from the other side: `resolve_level_up` does
 the database work and returns a `LevelUpOutcome`, the caller commits, and only
@@ -260,6 +262,15 @@ Two rules follow when you add a view method:
 
 The order of one request's messages is kept (one task replays them in order);
 the order between concurrent requests is not, and never was.
+
+A recorded call may be **run more than once**: `deliver_bot_views` retries the
+whole call when telegram says the failure was its own (flood control, a dropped
+connection, a 5xx), so a call that sends several messages may resend the ones
+that already arrived. Write recorded calls to tolerate that — a resent puzzle is
+acceptable, a recorded call that *counts* something is not. Shutdown gives
+running deliveries `drain_timeout` before cancelling them
+(`AsyncioNursery.close`), so keep a deferred call short; minutes-long work is
+still cancelled on restart.
 
 One file is exempt from the ban: `tgbot/utils/fastapi_webhook.py` is a
 portable copy of aiogram's webhook handler, meant to be pasted into another

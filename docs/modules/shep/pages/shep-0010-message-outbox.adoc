@@ -1,0 +1,276 @@
+= SHEP-0010 — Durable delivery of what the game shows
+:navtitle: SHEP-0010 Message outbox
+
+[cols="1,4"]
+|===
+| SHEP | 0010
+| Title | Durable delivery of what the game shows
+| Status | `Draft`
+| Created | 2026-08-24
+| Updated | 2026-08-24
+| Related | xref:shep-0009-key-submission-latency.adoc[SHEP-0009], shvatka-ui issue #185
+|===
+
+== Summary
+
+xref:shep-0009-key-submission-latency.adoc[SHEP-0009] moved the bot half of the
+fan-out out of the request and into a background task. That made the endpoint
+fast and made one new thing possible: the database can say a team is on level
+four while telegram never told them so. This SHEP is the plan for closing that
+gap — first by giving an org a button to resend (a workaround that is worth
+having anyway), then, only if the losses turn out to be real, by writing what
+must be shown into the same transaction as the state that says it happened.
+
+== Context
+
+=== What can be lost today, exactly
+
+The recording (`BotOutbox`) lives in memory and is handed to the nursery when
+the request's di scope closes. Two windows follow from that.
+
+*Committed, never shown.* The key is in `key_times`, the level up is in
+`level_times`, and the process dies before `deliver_bot_views` reaches the
+chat. `AsyncioNursery.close` now drains for 15 s and transient telegram
+failures are retried (SHEP-0009 phase 3), so an ordinary restart is covered; a
+`SIGKILL`, an OOM or a container eviction is not. The team sits on a puzzle
+they never received, and the alert that would have said so died with the
+process.
+
+*Shown, never committed.* dishka finalizes generator providers with
+`asend(exception)` (`dishka/async_container.py`), so the code after `yield` —
+`outbox.flush()` — runs *even when the request raised*. A rolled-back request
+therefore still delivers its recording. On today's key path this is
+unreachable: `CheckKeyInteractor` records views only after `commit()`. Nothing
+in the design enforces that, though. The first view recorded before a commit
+that then fails announces a level up that did not happen, and no test would
+catch it.
+
+A real transactional outbox closes both by construction: the row exists *if and
+only if* the state change exists.
+
+=== Why this is not urgent
+
+A game is a few hours, a few times a year, on one process. The likeliest
+failure — a deploy landing mid-fan-out — is now drained, and the second
+likeliest — telegram flood control — is now retried. What is left is a hard
+crash during a game, and we have no evidence of one yet. So the phases below
+are deliberately ordered so that the cheap, useful, always-worth-it work lands
+first and the expensive part waits for evidence.
+
+=== The one change that would make it urgent
+
+Splitting the api and the bot into separate processes. The in-memory outbox
+only works because they share one: an api process on its own has no bot to hand
+a recording to. If that split is ever wanted, this SHEP stops being insurance
+and becomes the mechanism, and phases 3–4 move to the front.
+
+== Decision
+
+=== Phase 1 first: let an org resend, instead of letting a developer fix it
+
+shvatka-ui issue #185 asks for an admin button that resends the level message
+and the hints — for one team or for all at once, without giving the admin
+access to the hints themselves. That is a manual repair for exactly this
+failure, and it is worth having whatever happens to the rest of this document:
+a chat that was muted, a message a member deleted, a bot removed and re-added
+mid-game all produce the same symptom and none of them are fixed by an outbox.
+
+Shape:
+
+* *Core.* A `ResendLevelInteractor` next to the game-play interactors. It takes
+  the running game and either one team or all playing teams, reads each team's
+  *current* level (`dao.get_current_level`) and calls `view.send_puzzle` for it.
+  Per team, because two teams are rarely on the same level.
+* *Permission.* Orgs of the running game, plus superusers — the same check
+  `/spy` already uses. Not the level-hints permission: this sends hints to the
+  players, it does not show them to the org.
+* *No hint content crosses back.* The endpoint answers "sent to N teams" and
+  nothing else; the ui renders a button and a result, never a payload. That is
+  what "без доступа админу к подсказкам" means, and it is a property of the
+  response type, not of the ui.
+* *Delivery.* Through `GameView` like everything else, so it is recorded in the
+  `BotOutbox` and delivered after the request. A resend to twelve teams is
+  minutes of telegram calls; it must not be an http request the org waits for.
+* *Audit.* Who resent what goes to the game log chat. A duplicate puzzle
+  appearing in a team chat should be explainable without asking around.
+* *Deliberately not idempotent.* Resending is the point. Nothing is
+  deduplicated, nothing is marked.
+
+=== Phase 2: write the rows, keep delivering in memory
+
+Add the table and write a row for every deferred call *inside the request's
+transaction*, but keep `deliver_bot_views` exactly as it is. Nothing about
+delivery changes; the table is at first only a record of what the bot was asked
+to show.
+
+This is the step that pays for itself before it does anything:
+
+* "the team says they never got the puzzle" becomes a query instead of a grep
+  through rotated logs;
+* it measures the problem — how often is a row still unsent when the process
+  comes back? — which is the evidence phase 3 is gated on;
+* it is the whole schema and serialization work with none of the delivery risk,
+  so it can be merged and watched through a game on its own.
+
+Sketch, to be settled in the pull request:
+
+[source]
+----
+message_outbox
+  id             bigserial primary key
+  created_at     timestamptz not null default now()
+  available_at   timestamptz not null default now()  -- when a relay may take it
+  sent_at        timestamptz null                    -- null = still owed
+  attempts       int  not null default 0
+  last_error     text null
+  partition_key  text not null   -- the chat: ordering is promised per chat only
+  type           text not null   -- 'send_puzzle', 'wrong_key', 'notify_level_up'…
+  payload        jsonb not null
+----
+
+with a partial index on `(available_at)` where `sent_at is null`, and one on
+`(partition_key, id)`.
+
+*The hard part is not the table, it is the payload.* Today a recorded call is a
+closure:
+
+[source,python]
+----
+self.outbox.add(lambda senders: senders.view.send_puzzle(team=team, level=level))
+----
+
+and that is precisely why SHEP-0009 was a small change. A row cannot hold a
+closure, so every deferred view call needs a serializable command dataclass and
+a renderer keyed by `type`. `adaptix` is already a dependency and is the retort
+to dump and load them with.
+
+Three things fall out of that and have to be decided rather than discovered:
+
+* *Ids, not snapshots.* A payload carries `team_id`, `level_id`, `chat_id`,
+  `message_id` — never rendered text. A renderer therefore reads state at *send*
+  time, not at record time. That is a semantic change: `resolve_level_up`
+  deliberately collects `finished_teams` before the commit so the fan-out
+  matches the moment the game ended. Commands whose meaning depends on a
+  snapshot must carry the snapshot as ids (the list of team ids), not re-query.
+* *The reply target.* `duplicate_key` and friends reply to the player's actual
+  telegram message. `chat_id` + `message_id` is enough; an aiogram `Message` is
+  not storable.
+* *Schema evolution.* A row written by the previous version must still load
+  after a deploy. Commands stay additive, unknown `type` values are alerted and
+  left unsent rather than dropped.
+
+=== Phase 3: a relay, as a fallback — not as the path
+
+The instinct is to move delivery to a poller. Doing that would give back most of
+what SHEP-0009 bought, and the answer to "will it be as instant as now?" is:
+only if the relay is not the normal path.
+
+*Decision: hybrid.* The row is written in the transaction *and* the nursery
+delivers as it does today, marking the row sent. A relay only picks up rows
+still unsent after a grace period (order of 30 s). The normal path keeps its
+current latency exactly; the relay is crash recovery and nothing else.
+
+`LISTEN`/`NOTIFY` is available (the project is on asyncpg) and would wake a
+relay in milliseconds instead of a poll interval. It is not a replacement — a
+notify is fire-and-forget and a listener that is down misses it — so it is an
+optimisation on top of the poll, worth doing only if the relay ever becomes the
+normal path.
+
+Two things a relay must get right:
+
+* *Lease a partition, not a row.* `FOR UPDATE SKIP LOCKED` over individual rows
+  lets two workers reorder one chat. The lease is per `partition_key`, so
+  ordering is promised within a chat and parallelism is across chats. A single
+  global worker is the other failure: it would put every chat behind the
+  one-second sleeps of `HintSender`, which at a mass level up is a throughput
+  regression, not an improvement.
+* *At-least-once, on purpose.* Send succeeds, marking sent fails, the message
+  goes twice; telegram has no idempotency key to prevent it. For this domain
+  that is the right side to fail on — a duplicate puzzle is confusing but
+  recoverable, a lost one blocks a team for the rest of the game. Phase 1's
+  resend button is the same trade made by hand.
+
+=== Phase 4, only if the api and the bot ever split
+
+Relay as the primary path, `NOTIFY` to wake it, the in-memory `BotOutbox`
+reduced to "write the row and return". This is also where SHEP-0009's per-chat
+fifo and one central rate limiter land, since a partition lease already *is* a
+per-chat fifo.
+
+=== Alternatives considered
+
+*Apscheduler over the redis jobstore.* The project already runs it for timed
+hints, so durable delivery could be a job instead of a table — much less code.
+Rejected as the destination: redis is not in the transaction that wrote the
+game state, so both windows in the Context come straight back; a job can be
+scheduled for a key that then rolls back. It remains the cheapest way to buy
+*only* crash-survival, if that is ever all we want.
+
+*A broker (rabbit, kafka).* An operational component for a project that runs
+one process and one database. No.
+
+*Domain events instead of view commands.* If the row is written by the
+interactor rather than the view, `show_level_up` becomes "emit
+`LevelUpOccurred`" and a consumer decides that means a puzzle in telegram and a
+push on the web. Architecturally that is cleaner than persisting view calls, and
+it is where this ends up if the api and the bot ever split. It is also a rewrite
+of the view layer rather than a feature, so it is not phase 2 — but commands
+should be named after *what happened*, not after which sender method to call,
+so that the door stays open.
+
+== Consequences
+
+* A new table that grows fast during a game and is worthless a day later.
+  Retention (delete sent rows older than a week) belongs with the existing
+  garbage collection of xref:shep-0006-file-lifecycle.adoc[SHEP-0006].
+* Two new things to watch: backlog size, and the age of the oldest unsent row.
+  The second is the one that means something — a row unsent for a minute during
+  a game is an incident.
+* Every new deferred view call costs a command type and a renderer, forever.
+  That is the standing tax of this design, and the reason phase 2 should not
+  start before phase 1 has shown whether it is needed.
+* Phase 1 alone changes nothing structural and can ship on its own.
+
+== Phases and status
+
+[cols="1,4,2",options="header"]
+|===
+| Phase | Content | Status
+
+| 1
+| Resend the current level to one team or all, from the org ui (shvatka-ui #185)
+| ⏳ not started
+
+| 2
+| `message_outbox` table, command dataclasses and renderers; rows written in the
+  request's transaction, delivery unchanged
+| ⏳ not started
+
+| 3
+| Relay as fallback for rows the in-process delivery did not mark sent;
+  per-partition lease
+| ⏳ not started
+
+| 4
+| Relay as primary, `LISTEN`/`NOTIFY`, per-chat rate limiting in one place
+| ⏳ not started
+|===
+
+Phases 2–4 are gated on evidence: real losses in the alert chat, or a decision
+to run the api and the bot as separate processes.
+
+== Deviations from the plan
+
+—
+
+== Open questions
+
+* Does a resend (phase 1) also resend the *timed* hints already released on that
+  level, or only the puzzle and the hints released so far? "So far" is the
+  obvious reading of #185, but it needs confirming against what an org actually
+  wants when a team says they saw nothing.
+* Should the web push half be persisted too, or is a lost push acceptable
+  because the site re-reads state on its next poll? Today only the bot half is
+  deferred, so this only becomes a question at phase 4.
+* What is the retention window, and does deleting sent rows lose the audit trail
+  that made phase 2 worth doing on its own?

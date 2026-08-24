@@ -66,8 +66,10 @@ Both tables are built over that one ordering, so a team keeps its row in both.
 `shvatka/tgbot/views/results/rich.py` turns any `Table` into an
 `InputRichBlockTable`: the sparse address grid becomes a rectangle (a missing
 address is an empty cell, so rows stay aligned), `CellStyle` decides alignment,
-header cells and bold, and the excel number format of a cell (`HH:MM`) is
-translated into a `strftime` one. Nothing in it knows about games — it renders
+header cells and underline, and the excel number format of a cell (`HH:MM`) is
+translated into a `strftime` one. The best value of a column is *underlined*
+rather than bold: telegram already draws header cells bold, so a bold value read
+as one more header instead of as the fastest of its column. Nothing in it knows about games — it renders
 tables, and `build_results_message` is what knows the results are a heading, a
 chart and those two tables. The tables are the same grid of teams by levels, so
 each carries the caption that tells them apart — the same two the file export
@@ -75,6 +77,19 @@ uses for its blocks, "Время взятия" and "Время на уровне
 
 Keeping the renderer style-driven rather than results-driven means the same
 function can show any other `Table` the domain builds later.
+
+=== A game too long for a table falls back to the chart
+
+Telegram caps how many columns a table may have, and answers
+`RICH_MESSAGE_TABLE_COLS_TOO_MANY` when a game has more levels than that. Both
+tables are the same width, so nothing narrower is worth retrying: the sender
+catches the rejection and posts the chart alone, with a caption saying the table
+is in the `xlsx` — exactly what the bot showed before this SHEP.
+
+The catch is on `TelegramBadRequest` rather than on that one message, so a
+rejection nobody predicted still leaves the organisers with their results; the
+log tells the two apart (the known one at `info`, anything else at `warning`
+with the exception).
 
 === The chart stays, and moves into the message
 
@@ -133,6 +148,10 @@ next to it.
 | 3
 | Delivery: the completed-games dialog and the channel publication
 | ✅ done
+
+| 4
+| The chart-only fallback for a game with too many levels
+| ✅ done
 |===
 
 == Open questions
@@ -140,6 +159,7 @@ next to it.
 * Bonuses and penalties are not in the short table — they are in the file. If
   games start leaning on them, the standings need a column and the total needs
   to account for them.
-* The table is not adjusted for very long games: forty levels make forty
-  columns, and telegram scrolls them horizontally. If that reads badly in
-  practice, the fix is to show the last levels only, with the file for the rest.
+* A game past telegram's column limit shows no table at all. A narrow standings
+  table (place, team, finish, total) would fit any game and is the obvious next
+  step if the fallback turns out to be common; it was left out until the limit
+  is known, rather than guessed at.

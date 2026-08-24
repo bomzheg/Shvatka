@@ -1,15 +1,22 @@
 from datetime import datetime, time
+from unittest import mock
 
+import pytest
+from aiogram import Bot
+from aiogram.client.session.base import BaseSession
+from aiogram.exceptions import TelegramBadRequest
+from aiogram.methods import SendMessage
 from aiogram.types import (
     InputRichBlockParagraph,
     InputRichBlockPhoto,
     InputRichBlockSectionHeading,
     InputRichBlockTable,
-    RichTextBold,
+    RichTextUnderline,
 )
 
 from shvatka.common.data_examples import game_example
 from shvatka.core.games.results import LEVEL_DURATIONS_TITLE, LEVEL_TIMES_TITLE
+from shvatka.core.models import dto
 from shvatka.core.utils.datetime_utils import tz_game
 from shvatka.core.interfaces.printer import (
     DATETIME_EXCEL_FORMAT,
@@ -19,7 +26,13 @@ from shvatka.core.interfaces.printer import (
     CellStyle,
     Table,
 )
-from shvatka.tgbot.views.results.rich import build_results_message, render_table
+from shvatka.infrastructure.picture import ResultsPainter
+from shvatka.tgbot.views.results.rich import (
+    TOO_WIDE,
+    ResultsRichSender,
+    build_results_message,
+    render_table,
+)
 
 
 def _table(fields: dict[tuple[int, int], Cell], hidden: list[int] | None = None) -> Table:
@@ -72,12 +85,13 @@ def test_header_cells_are_marked_and_values_are_not() -> None:
     ]
 
 
-def test_the_best_value_of_a_column_is_bold() -> None:
+def test_the_best_value_of_a_column_is_underlined() -> None:
+    """Bold is what telegram draws a header cell with, so a bold value reads as a header."""
     table = _table({(1, 1): Cell(value=1, style=CellStyle.BEST)})
 
     ((cell,),) = render_table(table).cells
 
-    assert cell.text == RichTextBold(text="1")
+    assert cell.text == RichTextUnderline(text="1")
 
 
 def test_time_is_rendered_the_way_the_cell_asks() -> None:
@@ -145,3 +159,44 @@ def test_results_message_without_a_picture() -> None:
 
     assert message.blocks is not None
     assert not any(isinstance(block, InputRichBlockPhoto) for block in message.blocks)
+
+
+@pytest.mark.asyncio
+async def test_a_table_too_wide_falls_back_to_the_picture() -> None:
+    """A game with more levels than a table may have columns still shows its chart."""
+    bot = _bot()
+    bot.send_rich_message = mock.AsyncMock(  # type: ignore[method-assign]
+        side_effect=TelegramBadRequest(
+            method=SendMessage(chat_id=1, text="x"),
+            message=f"Bad Request: {TOO_WIDE}",
+        )
+    )
+    bot.send_photo = mock.AsyncMock()  # type: ignore[method-assign]
+    sender = ResultsRichSender(bot, _painter())
+
+    await sender.send_results(chat_id=1, game=game_example, game_stat=dto.GameStat(level_times={}))
+
+    bot.send_photo.assert_awaited_once()
+    assert bot.send_photo.await_args.kwargs["photo"] == "results-file-id"
+
+
+@pytest.mark.asyncio
+async def test_the_picture_is_not_sent_twice_when_the_message_fits() -> None:
+    bot = _bot()
+    bot.send_rich_message = mock.AsyncMock()  # type: ignore[method-assign]
+    bot.send_photo = mock.AsyncMock()  # type: ignore[method-assign]
+    sender = ResultsRichSender(bot, _painter())
+
+    await sender.send_results(chat_id=1, game=game_example, game_stat=dto.GameStat(level_times={}))
+
+    bot.send_photo.assert_not_awaited()
+
+
+def _bot() -> Bot:
+    return Bot(token="42:TESTTESTTESTTESTTESTTESTTESTTESTTES", session=mock.AsyncMock(BaseSession))
+
+
+def _painter() -> ResultsPainter:
+    painter = mock.AsyncMock(ResultsPainter)
+    painter.paint_game_results.return_value = "results-file-id"
+    return painter

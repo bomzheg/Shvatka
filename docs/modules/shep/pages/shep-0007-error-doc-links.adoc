@@ -79,6 +79,21 @@ part of preparing a release.
   «Справка» action that opens the page. The snackbar is text-only, so the action
   button is the only place a link can go.
 
+=== The ui also links from its own hints
+
+An error is not the only place a rule needs explaining: the info blocks next to
+a form say what will happen, and the page saying it in full is the same page.
+Those are `<app-info-notice [doc]="DocPage.createTeam">`, and the ui builds the
+url itself — there is no request to attach a `docUrl` to.
+
+So the ui keeps its own list of pages (`docs/doc-pages.ts`, mirroring
+`DocPage`) and its own docs root in `window.env.docsUrl`
+(`SHVATKA_UI_DOCS_URL`, shown in `config_dist/ui.env`), defaulting to the docs
+of `master` exactly as the engine does. Fetching the root from the engine
+instead would put a request between a static hint and its link, and the two
+services are deployed together anyway; the cost is that a release pins the
+version in two places.
+
 === The link is checked by the test suite
 
 A doc link that 404s is worse than no link, and nothing else in CI reads the
@@ -108,6 +123,7 @@ declared in that file, and that every page has a navigation title.
 mapping of errors onto pages | ✅ done
 | 2 | Bot: the link in `handle_sh_error` | ✅ done
 | 3 | API: `docUrl` in the error body; ui: «Справка» on the error snackbar | ✅ done
+| 3a | ui: `InfoNoticeComponent`, and the doc links on the hints of «Моя команда» | ✅ done
 | 4 | Widen the mapping as errors prove confusing in practice | ⏳ ongoing
 |===
 

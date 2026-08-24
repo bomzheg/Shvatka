@@ -275,7 +275,9 @@ class AuthProvider(Provider):
         return AuthProperties(config, hasher)
 
     @provide
-    def get_cookie_auth(self) -> OAuth2PasswordBearerWithCookie:
-        return OAuth2PasswordBearerWithCookie(token_url="auth/token")
+    def get_cookie_auth(self, config: AuthConfig) -> OAuth2PasswordBearerWithCookie:
+        return OAuth2PasswordBearerWithCookie(
+            token_url="auth/token", cookie_name=config.cookie_name
+        )
 
     idp = provide(ApiIdentityProvider, scope=Scope.REQUEST)

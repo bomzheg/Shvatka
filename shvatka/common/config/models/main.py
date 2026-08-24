@@ -28,19 +28,22 @@ class WebConfig:
 class DocsConfig:
     """Where the published user documentation lives.
 
-    The docs are an Antora site, so a page URL is
-    ``<base-url>/<component>/<version>/<page>.html``.
+    The docs are an Antora site: a page URL is
+    ``<base-url>/<component>/<version>/<page>.html``, and the version segment is
+    **dropped for the latest version**, which is what ``master`` is published as
+    — ``/Shvatka/shvatka/setup_team/create_team.html``. So ``version`` is empty
+    by default and a link then points at the docs of ``master``, which never go
+    stale.
 
-    ``version`` defaults to ``master`` — an installation that never configures
-    it gets the docs as they are now, which stay right as the engine moves on. A
-    deployment running a released tag pins that tag instead (``config_dist``
-    shows it), so a link handed to a player keeps describing the engine they are
-    using rather than the one being written.
+    A deployment running a released tag pins that tag instead (``config_dist``
+    shows it): the tag *is* a segment (``/shvatka/3.7.0/...``), and a link handed
+    to a player then keeps describing the engine they are using rather than the
+    one being written.
     """
 
     base_url: str = "https://bomzheg.github.io/Shvatka"
     component: str = "shvatka"
-    version: str = "master"
+    version: str = ""
 
 
 @dataclass

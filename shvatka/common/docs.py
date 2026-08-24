@@ -16,8 +16,10 @@ class DocsUrlFactory:
 
     def get_page_url(self, page: DocPage) -> str:
         path, _, anchor = page.value.partition("#")
-        site = self.config.base_url.rstrip("/")
-        url = f"{site}/{self.config.component}/{self.config.version}/{path}.html"
+        segments = [self.config.base_url.rstrip("/"), self.config.component]
+        if self.config.version:
+            segments.append(self.config.version)
+        url = f"{'/'.join(segments)}/{path}.html"
         return f"{url}#{anchor}" if anchor else url
 
     def get_error_url(self, error: SHError) -> str | None:

@@ -59,12 +59,14 @@ knowledge, and every raise site would repeat it.
 directory per component and version, so all three parts are needed to address a
 page.
 
-`version` defaults to `master` — an installation that configures nothing links
-to the docs as they are now, which stay right as the engine moves on. A
-deployment running a **released tag** pins that tag instead (`config_dist` ships
-`3.7.0`), because a link handed to a player has to describe the engine that
-refused their action, not the one being written. Bumping the pinned value is
-part of preparing a release.
+Antora drops the version segment for the latest version, and `master` is
+published as that one — `/Shvatka/shvatka/setup_team/create_team.html`, no
+`master` in it. So `version` is empty by default and links then point at the
+docs of `master`, which never go stale. A deployment running a **released tag**
+pins that tag instead (`config_dist` ships `3.7.0`); a tag *is* a segment
+(`/shvatka/3.7.0/...`), and the link then describes the engine that refused the
+action rather than the one being written. Bumping the pinned value is part of
+preparing a release.
 
 === Each edge renders it its own way
 
@@ -79,20 +81,29 @@ part of preparing a release.
   «Справка» action that opens the page. The snackbar is text-only, so the action
   button is the only place a link can go.
 
-=== The ui also links from its own hints
+=== The ui also links from its own hints, and asks the engine for the urls
 
 An error is not the only place a rule needs explaining: the info blocks next to
 a form say what will happen, and the page saying it in full is the same page.
-Those are `<app-info-notice [doc]="DocPage.createTeam">`, and the ui builds the
-url itself — there is no request to attach a `docUrl` to.
+Those are `<app-info-notice doc="CREATE_TEAM">` — but there is no failed request
+to attach a `docUrl` to, so the urls come from `GET /docs/pages`:
 
-So the ui keeps its own list of pages (`docs/doc-pages.ts`, mirroring
-`DocPage`) and its own docs root in `window.env.docsUrl`
-(`SHVATKA_UI_DOCS_URL`, shown in `config_dist/ui.env`), defaulting to the docs
-of `master` exactly as the engine does. Fetching the root from the engine
-instead would put a request between a static hint and its link, and the two
-services are deployed together anyway; the cost is that a release pins the
-version in two places.
+[source,json]
+----
+{"pages": {"CREATE_TEAM": {"url": "https://…/setup_team/create_team.html",
+                           "title": "Создание команды"}, …}}
+----
+
+Keyed by the **`DocPage` member name**, not by the path. That is what makes a
+rename safe: moving `create_team.adoc` changes the enum's value and the url in
+this response, and the ui — which only ever says `CREATE_TEAM` — keeps working.
+An id the engine does not know simply renders no link.
+
+The alternative, giving the ui its own copy of the page paths and its own docs
+root in `window.env`, was implemented first and rejected in review: the paths
+would drift the moment a page is renamed on one side only, and it made the docs
+location a second piece of deployment configuration. One request at startup, no
+ui configuration at all, one place to fix.
 
 === The link is checked by the test suite
 
@@ -123,15 +134,21 @@ declared in that file, and that every page has a navigation title.
 mapping of errors onto pages | ✅ done
 | 2 | Bot: the link in `handle_sh_error` | ✅ done
 | 3 | API: `docUrl` in the error body; ui: «Справка» on the error snackbar | ✅ done
-| 3a | ui: `InfoNoticeComponent`, and the doc links on the hints of «Моя команда» | ✅ done
+| 3a | `GET /docs/pages`; ui: `InfoNoticeComponent`, and the doc links on the
+hints of «Моя команда» | ✅ done
 | 4 | Widen the mapping as errors prove confusing in practice | ⏳ ongoing
 |===
 
 == Deviations from the plan
 
-`version` was going to default to the released tag; review settled on `master`
-as the code default, with the tag shown in `config_dist` — the default should
-not silently age out as the engine moves on.
+`version` was going to default to the released tag; review settled on the docs
+of `master` as the code default, with the tag shown in `config_dist` — the
+default should not silently age out as the engine moves on. The first attempt
+spelled that default `master`, which 404s: Antora publishes the latest version
+without a segment, so the default is an *empty* version.
+
+The ui was going to build its own urls from its own configuration; review
+settled on `GET /docs/pages` instead (see above).
 
 `to_http_error` (`shvatka/api/app/utils/error_converter.py`, used by the file
 upload route) was left alone: it builds a `HTTPException` with its own body

@@ -9,10 +9,9 @@ def factory(**kwargs) -> DocsUrlFactory:
 
 
 def test_defaults_point_at_the_docs_of_master():
-    """An installation that configures nothing links to the current docs."""
-    assert (
-        "https://bomzheg.github.io/Shvatka/shvatka/master/player/play.html"
-        == factory().get_page_url(DocPage.PLAY)
+    """Antora drops the segment for the latest version, so master has none."""
+    assert "https://bomzheg.github.io/Shvatka/shvatka/player/play.html" == factory().get_page_url(
+        DocPage.PLAY
     )
 
 
@@ -32,14 +31,12 @@ def test_a_release_pins_its_own_tag():
 
 def test_trailing_slash_does_not_double():
     docs = factory(base_url="https://docs.example.org/")
-    assert "https://docs.example.org/shvatka/master/player/play.html" == docs.get_page_url(
-        DocPage.PLAY
-    )
+    assert "https://docs.example.org/shvatka/player/play.html" == docs.get_page_url(DocPage.PLAY)
 
 
 def test_anchor_stays_after_the_extension():
     docs = factory(base_url="https://docs.example.org")
-    assert "https://docs.example.org/shvatka/master/player/play.html#keys" == docs.get_page_url(
+    assert "https://docs.example.org/shvatka/player/play.html#keys" == docs.get_page_url(
         DocPage.PLAY_KEYS
     )
 

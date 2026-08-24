@@ -521,7 +521,10 @@ with a curated ignore list, mypy overrides) lives in `pyproject.toml`.
   the bot appends it to the error message, the API returns it as `docUrl` — so
   never build a docs URL in `core`, and never hardcode the docs domain: it comes
   from `docs:` in `config.yml` through `DocsUrlFactory`. A new `DocPage` needs
-  the `.adoc` to exist; the unit suite checks that. See SHEP-0007.
+  the `.adoc` to exist; the unit suite checks that. The web ui links its own
+  hints to the same pages and asks `GET /docs/pages` for their urls, keyed by
+  the `DocPage` **member name** — so renaming a page is safe, but renaming a
+  member is not. See SHEP-0007.
 - **Log admin/superuser actions with the acting admin's id** so there's an
   audit trail, e.g. `logger.warning("admin %s accepted merge request %s", admin.id, request.id)`.
 </content>

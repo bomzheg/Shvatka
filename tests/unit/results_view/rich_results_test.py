@@ -15,17 +15,16 @@ from aiogram.types import (
 )
 
 from shvatka.common.data_examples import game_example
-from shvatka.core.games.results import LEVEL_DURATIONS_TITLE, LEVEL_TIMES_TITLE
-from shvatka.core.models import dto
-from shvatka.core.utils.datetime_utils import tz_game
 from shvatka.core.interfaces.printer import (
     DATETIME_EXCEL_FORMAT,
-    TIME_EXCEL_FORMAT,
     Cell,
     CellAddress,
     CellStyle,
     Table,
+    TableBlock,
 )
+from shvatka.core.models import dto
+from shvatka.core.utils.datetime_utils import tz_game
 from shvatka.infrastructure.picture import ResultsPainter
 from shvatka.tgbot.views.results.rich import (
     TOO_WIDE,
@@ -34,17 +33,27 @@ from shvatka.tgbot.views.results.rich import (
     render_table,
 )
 
+CAPTION = "Время взятия"
+
 
 def _table(fields: dict[tuple[int, int], Cell], hidden: list[int] | None = None) -> Table:
+    """A table of one block, addressed the way the file builder addresses its own."""
+    rows = [row for row, _ in fields]
     return Table(
         fields={
             CellAddress(row=row, column=column): cell for (row, column), cell in fields.items()
         },
+        blocks=[TableBlock(caption=CAPTION, first_row=min(rows), last_row=max(rows))],
         hidden_columns=hidden or [],
     )
 
 
-def test_rendered_table_is_a_rectangle() -> None:
+def _render(table: Table) -> InputRichBlockTable:
+    (block,) = table.blocks
+    return render_table(table, block)
+
+
+def test_rendered_block_is_a_rectangle() -> None:
     table = _table(
         {
             (1, 1): Cell(value="Команда", style=CellStyle.HEADER),
@@ -54,13 +63,35 @@ def test_rendered_table_is_a_rectangle() -> None:
         }
     )
 
-    block = render_table(table)
+    block = _render(table)
 
-    assert isinstance(block, InputRichBlockTable)
+    assert block.caption == CAPTION
     assert [[cell.text for cell in row] for row in block.cells] == [
         ["Команда", "1"],
         ["Gryffindor", None],
     ]
+
+
+def test_only_the_rows_of_the_block_are_rendered() -> None:
+    """A file lays every block over one grid; a message shows one block at a time."""
+    table = Table(
+        fields={
+            CellAddress(row=1, column=1): Cell(value="взятия", style=CellStyle.SECTION),
+            CellAddress(row=2, column=1): Cell(value="Gryffindor", style=CellStyle.TEAM),
+            CellAddress(row=4, column=1): Cell(value="на уровне", style=CellStyle.SECTION),
+            CellAddress(row=5, column=1): Cell(value="Gryffindor", style=CellStyle.TEAM),
+        },
+        blocks=[
+            TableBlock(caption="Время взятия", first_row=1, last_row=2),
+            TableBlock(caption="Время на уровне", first_row=4, last_row=5),
+        ],
+    )
+
+    first, second = (render_table(table, block) for block in table.blocks)
+
+    assert len(first.cells) == len(second.cells) == 2
+    # the caption of a block is the caption of the table, not its corner cell
+    assert [cell.text for row in first.cells for cell in row] == [None, "Gryffindor"]
 
 
 def test_header_cells_are_marked_and_values_are_not() -> None:
@@ -73,7 +104,7 @@ def test_header_cells_are_marked_and_values_are_not() -> None:
         }
     )
 
-    block = render_table(table)
+    block = _render(table)
 
     assert [[cell.is_header for cell in row] for row in block.cells] == [
         [True, True],
@@ -89,7 +120,7 @@ def test_the_best_value_of_a_column_is_underlined() -> None:
     """Bold is what telegram draws a header cell with, so a bold value reads as a header."""
     table = _table({(1, 1): Cell(value=1, style=CellStyle.BEST)})
 
-    ((cell,),) = render_table(table).cells
+    ((cell,),) = _render(table).cells
 
     assert cell.text == RichTextUnderline(text="1")
 
@@ -98,18 +129,20 @@ def test_time_is_rendered_the_way_the_cell_asks() -> None:
     table = _table(
         {
             (1, 1): Cell(
-                value=datetime(2023, 3, 19, 2, 30, 15, tzinfo=tz_game), format=TIME_EXCEL_FORMAT
+                value=datetime(2023, 3, 19, 2, 30, 15, tzinfo=tz_game),
+                format=DATETIME_EXCEL_FORMAT,
             ),
             (1, 2): Cell(value=time(2, 30, 15), format=DATETIME_EXCEL_FORMAT),
         }
     )
 
-    ((short, full),) = render_table(table).cells
+    ((full, duration),) = _render(table).cells
 
-    assert (short.text, full.text) == ("02:30", "02:30:15")
+    assert (full.text, duration.text) == ("02:30:15", "02:30:15")
 
 
 def test_hidden_columns_are_not_rendered() -> None:
+    """The file keeps a column to line its blocks up; a message has nothing to line up."""
     table = _table(
         {
             (1, 1): Cell(value="Команда"),
@@ -119,15 +152,17 @@ def test_hidden_columns_are_not_rendered() -> None:
         hidden=[2],
     )
 
-    ((first, second),) = render_table(table).cells
+    ((first, second),) = _render(table).cells
 
     assert (first.text, second.text) == ("Команда", "1")
 
 
-def test_results_message_shows_the_table_under_the_picture() -> None:
+def test_results_message_shows_the_blocks_under_the_picture() -> None:
     table = _table({(1, 1): Cell(value="Команда", style=CellStyle.HEADER)})
 
-    message = build_results_message(game_example, table, photo_file_id="results-file-id")
+    message = build_results_message(
+        game_example, table, table.blocks, photo_file_id="results-file-id"
+    )
 
     assert message.blocks is not None
     heading, photo, rendered, footer = message.blocks
@@ -136,26 +171,15 @@ def test_results_message_shows_the_table_under_the_picture() -> None:
     assert isinstance(photo, InputRichBlockPhoto)
     assert photo.photo.media == "results-file-id"
     assert isinstance(rendered, InputRichBlockTable)
+    assert rendered.caption == CAPTION
     assert isinstance(footer, InputRichBlockParagraph)
     assert footer.text == "Игра началась 19.03.23 02:00"
-
-
-def test_results_message_captions_both_tables() -> None:
-    takes = _table({(1, 1): Cell(value="Команда", style=CellStyle.HEADER)})
-    durations = _table({(1, 1): Cell(value="Команда", style=CellStyle.HEADER)})
-
-    message = build_results_message(game_example, takes, durations)
-
-    assert message.blocks is not None
-    assert [
-        block.caption for block in message.blocks if isinstance(block, InputRichBlockTable)
-    ] == [LEVEL_TIMES_TITLE, LEVEL_DURATIONS_TITLE]
 
 
 def test_results_message_without_a_picture() -> None:
     table = _table({(1, 1): Cell(value="Команда", style=CellStyle.HEADER)})
 
-    message = build_results_message(game_example, table)
+    message = build_results_message(game_example, table, table.blocks)
 
     assert message.blocks is not None
     assert not any(isinstance(block, InputRichBlockPhoto) for block in message.blocks)

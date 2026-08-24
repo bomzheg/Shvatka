@@ -5,8 +5,6 @@ from io import BytesIO
 from typing import Protocol
 
 DATETIME_EXCEL_FORMAT = "HH:MM:SS"
-TIME_EXCEL_FORMAT = "HH:MM"
-"""Minute precision — what a table meant to be read at a glance shows."""
 
 
 class CellStyle(enum.Enum):
@@ -86,9 +84,26 @@ class Chart:
     """Centimetres."""
 
 
+@dataclass(kw_only=True, frozen=True)
+class TableBlock:
+    """One block of a table: what it is called, and the rows it occupies.
+
+    A file shows every block of a table at once, one under another. Anything
+    that cannot (a chat message, a web page) needs to know where one block ends
+    and the next begins, and what to call each — that is all this says.
+    """
+
+    caption: str
+    first_row: int
+    """Row of the block's own header, the one carrying its caption."""
+    last_row: int
+
+
 @dataclass(kw_only=True)
 class Table:
     fields: dict[CellAddress, Cell]
+    blocks: list[TableBlock] = field(default_factory=list)
+    """The blocks the table is made of, in the order they are laid out."""
     charts: list[Chart] = field(default_factory=list)
     freeze: CellAddress | None = None
     """Cell above and left of which everything stays put while scrolling."""

@@ -6,6 +6,7 @@ stays available, but nobody has to open it to see who won.
 """
 
 import logging
+from collections.abc import Sequence
 from datetime import datetime, time
 
 from aiogram import Bot
@@ -28,10 +29,9 @@ from aiogram.utils.text_decorations import html_decoration as hd
 from shvatka.core.games.results import (
     LEVEL_DURATIONS_TITLE,
     LEVEL_TIMES_TITLE,
-    build_short_durations_table,
-    build_short_results_table,
+    build_results_table,
 )
-from shvatka.core.interfaces.printer import Cell, CellAddress, CellStyle, Table
+from shvatka.core.interfaces.printer import Cell, CellAddress, CellStyle, Table, TableBlock
 from shvatka.core.models import dto
 from shvatka.core.utils.datetime_utils import TIME_FORMAT
 from shvatka.infrastructure.picture import ResultsPainter
@@ -46,9 +46,12 @@ LEFT_STYLES = frozenset({CellStyle.PLAIN, CellStyle.TITLE, CellStyle.SECTION, Ce
 """Styles of the cells a row is read by — kept against the left edge."""
 HEADER_STYLES = frozenset({CellStyle.HEADER, CellStyle.TEAM})
 """Styles telegram draws as a header cell rather than as a value."""
-MARKED_STYLES = frozenset({CellStyle.BEST, CellStyle.ACCENT, CellStyle.TITLE})
+MARKED_STYLES = frozenset({CellStyle.BEST, CellStyle.ACCENT})
 """Styles telegram underlines. Bold is what it draws a header cell with, so a
 bold value reads as one more header rather than as the best of its column."""
+
+MESSAGE_CAPTIONS = (LEVEL_TIMES_TITLE, LEVEL_DURATIONS_TITLE)
+"""Blocks of the results a message shows. The rest of them stay in the file."""
 
 TOO_WIDE = "RICH_MESSAGE_TABLE_COLS_TOO_MANY"
 """What telegram answers when a game has more levels than a table may have columns."""
@@ -59,27 +62,37 @@ EXCEL_TIME_DIRECTIVES = {"HH": "%H", "MM": "%M", "SS": "%S"}
 """How the excel number format of a cell reads as a ``strftime`` one."""
 
 
-def render_table(table: Table, caption: str | None = None) -> InputRichBlockTable:
-    """Draw a table of cells addressed by row and column as a telegram table block.
+def render_table(table: Table, block: TableBlock) -> InputRichBlockTable:
+    """Draw one block of a table as a telegram table block.
 
-    Everything the address grid has no cell for is drawn as an empty cell, so the
-    rows stay aligned whatever the table left out.
+    A file lays every block over one grid of addresses; a message shows them one
+    at a time, so a block is the rows it occupies and the columns those rows
+    reach. What the grid has no cell for is drawn as an empty cell, and the
+    caption of the block is the caption of the table rather than a cell in it.
     """
-    rows = max((address.row for address in table.fields), default=0)
-    columns = max((address.column for address in table.fields), default=0)
+    rows = range(block.first_row, block.last_row + 1)
     hidden = set(table.hidden_columns)
+    columns = [
+        column for column in range(1, _last_column(table, rows) + 1) if column not in hidden
+    ]
     return InputRichBlockTable(
         cells=[
             [
                 _render_cell(table.fields.get(CellAddress(row=row, column=column)))
-                for column in range(1, columns + 1)
-                if column not in hidden
+                for column in columns
             ]
-            for row in range(1, rows + 1)
+            for row in rows
         ],
         is_bordered=True,
         is_striped=True,
-        caption=caption,
+        caption=block.caption,
+    )
+
+
+def _last_column(table: Table, rows: range) -> int:
+    return max(
+        (address.column for address in table.fields if address.row in rows),
+        default=0,
     )
 
 
@@ -89,30 +102,32 @@ def results_title(game: dto.Game) -> str:
 
 def build_results_message(
     game: dto.Game,
-    takes: Table,
-    durations: Table | None = None,
+    table: Table,
+    blocks: Sequence[TableBlock],
     photo_file_id: str | None = None,
 ) -> InputRichMessage:
-    """The whole results post: what game it is, the chart of it, and the tables under it.
+    """The whole results post: what game it is, the chart of it, and its blocks under it.
 
-    Both tables are the same grid of teams by levels — the first says when a
-    level was taken, the second how long it took — so their captions are what
-    tells them apart.
+    The blocks are the same ones the file is made of — when a level was taken,
+    how long it took — each carrying the caption it has there.
     """
-    blocks: list[InputRichBlockUnion] = [
+    rich_blocks: list[InputRichBlockUnion] = [
         InputRichBlockSectionHeading(text=results_title(game), size=HEADING_SIZE)
     ]
     if photo_file_id is not None:
-        blocks.append(InputRichBlockPhoto(photo=InputMediaPhoto(media=photo_file_id)))
-    blocks.append(render_table(takes, caption=LEVEL_TIMES_TITLE))
-    if durations is not None:
-        blocks.append(render_table(durations, caption=LEVEL_DURATIONS_TITLE))
+        rich_blocks.append(InputRichBlockPhoto(photo=InputMediaPhoto(media=photo_file_id)))
+    rich_blocks.extend(render_table(table, block) for block in blocks)
     if game.start_at is not None:
-        blocks.append(
+        rich_blocks.append(
             InputRichBlockParagraph(text=f"Игра началась {datetime_filter(game.start_at)}")
         )
     # team names are ordinary text: a hashtag or an @ in one is a name, not a link
-    return InputRichMessage(blocks=blocks, skip_entity_detection=True)
+    return InputRichMessage(blocks=rich_blocks, skip_entity_detection=True)
+
+
+def message_blocks(table: Table) -> list[TableBlock]:
+    """The blocks of the results a message is worth showing, in the file's order."""
+    return [block for block in table.blocks if block.caption in MESSAGE_CAPTIONS]
 
 
 class ResultsRichSender:
@@ -130,12 +145,13 @@ class ResultsRichSender:
     ) -> Message:
         photo_file_id = await self.results_painter.paint_game_results(game, game_stat)
         try:
+            table = build_results_table(game, game_stat)
             return await self.bot.send_rich_message(
                 chat_id=chat_id,
                 rich_message=build_results_message(
                     game=game,
-                    takes=build_short_results_table(game, game_stat),
-                    durations=build_short_durations_table(game, game_stat),
+                    table=table,
+                    blocks=message_blocks(table),
                     photo_file_id=photo_file_id,
                 ),
             )
@@ -166,7 +182,8 @@ class ResultsRichSender:
 
 
 def _render_cell(cell: Cell | None) -> RichBlockTableCell:
-    if cell is None:
+    if cell is None or cell.style is CellStyle.SECTION:
+        # the caption of a block is the caption of the table, not its corner cell
         return RichBlockTableCell(align="center", valign="middle")
     return RichBlockTableCell(
         align="left" if cell.style in LEFT_STYLES else "center",

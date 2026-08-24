@@ -13,11 +13,14 @@ cross is a resource tied to the caller's scope — a dao, a session, a sender �
 those are what ``FromDishka`` is for.
 """
 
+import asyncio
 import logging
+import typing
 from collections.abc import Awaitable, Callable, Sequence
 from dataclasses import dataclass
 
 from aiogram import Bot
+from aiogram.exceptions import TelegramNetworkError, TelegramRetryAfter, TelegramServerError
 from aiogram.utils.text_decorations import html_decoration as hd
 from aiogram_dialog import BaseDialogManager
 from dishka import FromDishka
@@ -75,15 +78,68 @@ async def deliver_bot_views(
         await _deliver_one(call, senders, alerter)
 
 
+DELIVERY_ATTEMPTS: typing.Final = 3
+"""How many times a deferred view call is tried before it is given up on."""
+
+RETRY_BACKOFF: typing.Final = 1.0
+"""Seconds before the second attempt; doubled for each one after it."""
+
+MAX_RETRY_DELAY: typing.Final = 30.0
+"""A wait longer than this is not worth it — the game has moved on by then."""
+
+RETRIABLE_ERRORS: typing.Final = (TelegramRetryAfter, TelegramNetworkError, TelegramServerError)
+"""Failures telegram may recover from on its own; everything else is ours."""
+
+
 async def _deliver_one(call: BotDelivery, senders: BotSenders, alerter: BotAlert) -> None:
     try:
-        await call(senders)
+        await _deliver_with_retry(call, senders)
     except Exception as e:
         logger.exception("cant deliver bot view", exc_info=e)
         try:
             await alerter.alert(f"cant deliver bot view because of {e!s}")
         except Exception as alert_error:
             logger.error("cant alert about failed delivery", exc_info=alert_error)
+
+
+async def _deliver_with_retry(call: BotDelivery, senders: BotSenders) -> None:
+    """Try a call again when telegram says the failure was its own fault.
+
+    Nobody is watching the response anymore, so a flood-control answer or a
+    dropped connection would otherwise cost a team its puzzle. Only failures
+    that a second attempt can fix are retried: being blocked by a chat or
+    sending something malformed is retried forever otherwise.
+
+    A call can be several messages (a puzzle is a caption and its hints), and a
+    retry starts it from the beginning — so a failure halfway through resends
+    what already arrived. That is deliberate: a duplicated puzzle is confusing,
+    a half-sent one leaves the team stuck with nothing to solve.
+    """
+    for attempt in range(1, DELIVERY_ATTEMPTS + 1):
+        try:
+            await call(senders)
+        except RETRIABLE_ERRORS as e:  # noqa: PERF203  # retrying is the point of the loop
+            delay = _retry_delay(e, attempt)
+            if attempt == DELIVERY_ATTEMPTS or delay is None:
+                raise
+            logger.warning(
+                "bot view delivery failed (attempt %s of %s), retrying in %.1f s: %s",
+                attempt,
+                DELIVERY_ATTEMPTS,
+                delay,
+                e,
+            )
+            await asyncio.sleep(delay)
+        else:
+            return
+
+
+def _retry_delay(error: Exception, attempt: int) -> float | None:
+    """How long to wait before trying again, or ``None`` to stop trying."""
+    if isinstance(error, TelegramRetryAfter):
+        # telegram said exactly how long it wants to be left alone
+        return float(error.retry_after) if error.retry_after <= MAX_RETRY_DELAY else None
+    return RETRY_BACKOFF * 2 ** (attempt - 1)
 
 
 async def publish_scenario_to_forum(

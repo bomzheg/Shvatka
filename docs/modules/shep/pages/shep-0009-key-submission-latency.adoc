@@ -7,8 +7,8 @@
 | Title | Key submission latency
 | Status | `Accepted, partially implemented`
 | Created | 2026-08-22
-| Updated | 2026-08-22
-| Related | —
+| Updated | 2026-08-24
+| Related | xref:shep-0010-message-outbox.adoc[SHEP-0010]
 |===
 
 == Summary
@@ -91,11 +91,31 @@ response for it either. Now each replayed call is contained on its own — one
 unreachable chat must not swallow the rest — and a failure additionally goes to
 `BotAlert`, because by then there is no request to fail.
 
-*Accepted cost:* the nursery cancels what is still running on shutdown
-(`AsyncioNursery.close`), so a deploy landing mid-delivery loses those messages
-with no retry. A durable job (apscheduler over the redis jobstore, as scheduled
-hints already are) would survive it. Not done: it buys durability for a window
-of a few seconds, at the price of a second delivery mechanism.
+=== Shutdown waits a little; telegram's own failures are retried
+
+Two cheap guards stand between "recorded" and "lost", both inside the existing
+mechanism rather than beside it:
+
+* `AsyncioNursery.close` waits `drain_timeout` (15 s) for what is running
+  before cancelling it. A delivery is seconds of telegram calls and nothing
+  will ever run it again, so a restart landing mid-puzzle used to leave a team
+  with half of one. The wait is bounded because other tasks (publishing a
+  scenario to the forum) are minutes long and a restart cannot wait them out.
+* `deliver_bot_views` retries a call when telegram says the failure was its own
+  — `TelegramRetryAfter` (waiting exactly as long as it asked, up to
+  `MAX_RETRY_DELAY`), `TelegramNetworkError`, `TelegramServerError` — three
+  attempts with doubling backoff. Being blocked by a chat or sending something
+  malformed is not retried: the second attempt would fail identically.
+
+*Accepted cost:* a retry restarts the whole call, and a call can be several
+messages, so a failure halfway through a puzzle resends the parts that already
+arrived. Deliberate — a duplicated puzzle is confusing, a half-sent one leaves
+the team with nothing to solve. Retrying one telegram request instead of one
+view call needs the retry to live in an aiogram session middleware; that is
+worth doing when it also covers the inline senders.
+
+*Still lost:* a hard kill (SIGKILL, OOM) during a delivery, and anything the
+drain gives up on. Durable delivery is xref:shep-0010-message-outbox.adoc[SHEP-0010].
 
 === Decide, commit, then show
 
@@ -165,11 +185,14 @@ sending thread.
 | ✅ done
 
 | 3
-| Durable delivery for the level-up puzzle (apscheduler job instead of the
-  nursery), if a lost puzzle ever turns out to matter
-| ⏳ not started
+| Bounded drain on shutdown; retry of transient telegram failures
+| ✅ done
 
 | 4
+| Durable delivery — xref:shep-0010-message-outbox.adoc[SHEP-0010]
+| ⏳ not started
+
+| 5
 | Per-chat outbox worker: one fifo per chat for every sender (keys, scheduled
   hints, puzzles), with rate limiting in one place
 | ⏳ not started

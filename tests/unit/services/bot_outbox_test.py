@@ -1,5 +1,14 @@
 import pytest
+from aiogram.exceptions import (
+    TelegramAPIError,
+    TelegramForbiddenError,
+    TelegramNetworkError,
+    TelegramRetryAfter,
+    TelegramServerError,
+)
+from aiogram.methods import SendMessage
 
+from shvatka.tgbot import tasks
 from shvatka.tgbot.tasks import BotSenders, deliver_bot_views
 from shvatka.tgbot.views.outbox import BotOutbox
 from tests.mocks.nursery import FakeNursery
@@ -150,3 +159,122 @@ async def test_broken_alerting_does_not_break_delivery() -> None:
     )
 
     assert journal == ["view: puzzle", "org_notifier: level up"]
+
+
+class FlakySender:
+    """Fails the first ``failures`` times it is called, then succeeds."""
+
+    def __init__(self, journal: list[str], errors: list[Exception]) -> None:
+        self.journal = journal
+        self.errors = errors
+        self.attempts = 0
+
+    async def game_finished_by_all(self, team) -> None:
+        self.attempts += 1
+        if self.errors:
+            error = self.errors.pop(0)
+            self.journal.append(f"failed: {type(error).__name__}")
+            raise error
+        self.journal.append(f"sent: {team}")
+
+
+def telegram_error(kind: type[TelegramAPIError], **kwargs) -> TelegramAPIError:
+    return kind(method=SendMessage(chat_id=1, text="x"), message="boom", **kwargs)
+
+
+@pytest.fixture
+def fast_retries(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(tasks, "RETRY_BACKOFF", 0.001)
+
+
+@pytest.mark.asyncio
+async def test_a_dropped_connection_is_tried_again(fast_retries: None) -> None:
+    journal: list[str] = []
+    view = FlakySender(journal, [telegram_error(TelegramNetworkError)])
+    alerter = RecordingAlerter()
+
+    await deliver_bot_views(
+        [lambda s: s.view.game_finished_by_all("puzzle")],
+        view=view,
+        org_notifier=RecordingSender(journal, "org_notifier"),
+        game_log=RecordingSender(journal, "game_log"),
+        alerter=alerter,
+    )
+
+    assert journal == ["failed: TelegramNetworkError", "sent: puzzle"]
+    assert alerter.alerts == [], "a failure the retry fixed is not worth waking anyone for"
+
+
+@pytest.mark.asyncio
+async def test_giving_up_after_the_last_attempt(fast_retries: None) -> None:
+    journal: list[str] = []
+    view = FlakySender(journal, [telegram_error(TelegramServerError) for _ in range(5)])
+    alerter = RecordingAlerter()
+
+    await deliver_bot_views(
+        [lambda s: s.view.game_finished_by_all("puzzle")],
+        view=view,
+        org_notifier=RecordingSender(journal, "org_notifier"),
+        game_log=RecordingSender(journal, "game_log"),
+        alerter=alerter,
+    )
+
+    assert view.attempts == tasks.DELIVERY_ATTEMPTS
+    assert len(alerter.alerts) == 1
+
+
+@pytest.mark.asyncio
+async def test_being_kicked_from_a_chat_is_not_retried(fast_retries: None) -> None:
+    journal: list[str] = []
+    view = FlakySender(journal, [telegram_error(TelegramForbiddenError) for _ in range(5)])
+    alerter = RecordingAlerter()
+
+    await deliver_bot_views(
+        [lambda s: s.view.game_finished_by_all("puzzle")],
+        view=view,
+        org_notifier=RecordingSender(journal, "org_notifier"),
+        game_log=RecordingSender(journal, "game_log"),
+        alerter=alerter,
+    )
+
+    assert view.attempts == 1, "the bot will be just as blocked in a second"
+    assert len(alerter.alerts) == 1
+
+
+@pytest.mark.asyncio
+async def test_the_rest_of_the_recording_survives_a_retried_failure(fast_retries: None) -> None:
+    journal: list[str] = []
+    view = FlakySender(journal, [telegram_error(TelegramServerError) for _ in range(5)])
+    org_notifier = RecordingSender(journal, "org_notifier")
+
+    await deliver_bot_views(
+        [
+            lambda s: s.view.game_finished_by_all("puzzle"),
+            lambda s: s.org_notifier.notify("level up"),
+        ],
+        view=view,
+        org_notifier=org_notifier,
+        game_log=RecordingSender(journal, "game_log"),
+        alerter=RecordingAlerter(),
+    )
+
+    assert journal[-1] == "org_notifier: level up"
+
+
+def test_flood_control_waits_exactly_as_long_as_telegram_asked() -> None:
+    error = telegram_error(TelegramRetryAfter, retry_after=7)
+
+    assert tasks._retry_delay(error, attempt=1) == 7
+
+
+def test_a_flood_wait_longer_than_the_game_can_afford_is_not_waited_out() -> None:
+    error = telegram_error(TelegramRetryAfter, retry_after=int(tasks.MAX_RETRY_DELAY) + 1)
+
+    assert tasks._retry_delay(error, attempt=1) is None
+
+
+def test_backoff_grows_between_attempts() -> None:
+    error = telegram_error(TelegramNetworkError)
+    delays = [tasks._retry_delay(error, attempt=i) for i in (1, 2, 3)]
+
+    assert delays == [tasks.RETRY_BACKOFF, tasks.RETRY_BACKOFF * 2, tasks.RETRY_BACKOFF * 4]

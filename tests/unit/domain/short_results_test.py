@@ -5,10 +5,12 @@ import pytest
 
 from shvatka.common.data_examples import GAME_START_EXAMPLE, game_example
 from shvatka.core.games.results import (
+    AVERAGE_TITLE,
     SHORT_HEADER_ROW,
     SHORT_PLACE_COLUMN,
     SHORT_TEAM_COLUMN,
     SHORT_TOTAL_TITLE,
+    build_short_durations_table,
     build_short_results_table,
     build_standings,
 )
@@ -137,3 +139,74 @@ def test_short_table_of_unfinished_game(game_stat: dto.GameStat) -> None:
 def _row(table: Table, row: int) -> list:
     columns = range(SHORT_PLACE_COLUMN, TOTAL_COLUMN + 1)
     return [table.fields[CellAddress(row=row, column=column)].value for column in columns]
+
+
+def test_durations_table_per_level(game_stat: dto.GameStat) -> None:
+    table = build_short_durations_table(game_example, game_stat)
+
+    # the winner took 30 minutes on every level of the game
+    assert _durations_row(table, SHORT_HEADER_ROW + 1) == [
+        1,
+        "Gryffindor",
+        time(0, 30),
+        time(0, 30),
+        time(0, 30),
+        time(0, 30),
+    ]
+
+
+def test_durations_table_leaves_a_level_never_taken_empty(game_stat: dto.GameStat) -> None:
+    table = build_short_durations_table(game_example, game_stat)
+
+    assert _durations_row(table, SHORT_HEADER_ROW + 3) == [
+        3,
+        "Hufflepuff",
+        time(0, 40),
+        time(0, 40),
+        None,
+        None,
+    ]
+
+
+def test_durations_table_marks_the_fastest_of_a_level(game_stat: dto.GameStat) -> None:
+    table = build_short_durations_table(game_example, game_stat)
+    second_level_column = SHORT_TEAM_COLUMN + 2
+
+    best_row = next(
+        row
+        for row in range(SHORT_HEADER_ROW + 1, SHORT_HEADER_ROW + 4)
+        if table.fields[CellAddress(row=row, column=second_level_column)].style is CellStyle.BEST
+    )
+
+    # 30 minutes on the second level against 50 and 40 of the others
+    assert table.fields[CellAddress(row=best_row, column=SHORT_TEAM_COLUMN)].value == "Gryffindor"
+
+
+def test_durations_table_averages_every_level(game_stat: dto.GameStat) -> None:
+    table = build_short_durations_table(game_example, game_stat)
+    average_row = SHORT_HEADER_ROW + 4
+
+    assert _durations_row(table, average_row) == [
+        None,
+        AVERAGE_TITLE,
+        time(0, 30),
+        time(0, 40),
+        time(0, 30),
+        time(0, 30),
+    ]
+
+
+def test_durations_table_of_unfinished_game(game_stat: dto.GameStat) -> None:
+    started = dataclasses.replace(game_example, status=enums.GameStatus.started)
+
+    with pytest.raises(GameNotFinished):
+        build_short_durations_table(started, game_stat)
+
+
+def _durations_row(table: Table, row: int) -> list:
+    """The durations table has no total column — everything up to the last level."""
+    columns = range(SHORT_PLACE_COLUMN, TOTAL_COLUMN)
+    return [
+        cell.value if (cell := table.fields.get(CellAddress(row=row, column=column))) else None
+        for column in columns
+    ]

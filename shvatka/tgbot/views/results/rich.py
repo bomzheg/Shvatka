@@ -22,7 +22,12 @@ from aiogram.types import (
     RichTextUnion,
 )
 
-from shvatka.core.games.results import build_short_results_table
+from shvatka.core.games.results import (
+    LEVEL_DURATIONS_TITLE,
+    LEVEL_TIMES_TITLE,
+    build_short_durations_table,
+    build_short_results_table,
+)
 from shvatka.core.interfaces.printer import Cell, CellAddress, CellStyle, Table
 from shvatka.core.models import dto
 from shvatka.core.utils.datetime_utils import TIME_FORMAT
@@ -68,10 +73,16 @@ def render_table(table: Table, caption: str | None = None) -> InputRichBlockTabl
 
 def build_results_message(
     game: dto.Game,
-    table: Table,
+    takes: Table,
+    durations: Table | None = None,
     photo_file_id: str | None = None,
 ) -> InputRichMessage:
-    """The whole results post: what game it is, the chart of it, and the table under it."""
+    """The whole results post: what game it is, the chart of it, and the tables under it.
+
+    Both tables are the same grid of teams by levels — the first says when a
+    level was taken, the second how long it took — so their captions are what
+    tells them apart.
+    """
     blocks: list[InputRichBlockUnion] = [
         InputRichBlockSectionHeading(
             text=f"Результаты игры №{game.number} «{game.name}»",
@@ -80,7 +91,9 @@ def build_results_message(
     ]
     if photo_file_id is not None:
         blocks.append(InputRichBlockPhoto(photo=InputMediaPhoto(media=photo_file_id)))
-    blocks.append(render_table(table))
+    blocks.append(render_table(takes, caption=LEVEL_TIMES_TITLE))
+    if durations is not None:
+        blocks.append(render_table(durations, caption=LEVEL_DURATIONS_TITLE))
     if game.start_at is not None:
         blocks.append(
             InputRichBlockParagraph(text=f"Игра началась {datetime_filter(game.start_at)}")
@@ -107,7 +120,8 @@ class ResultsRichSender:
             chat_id=chat_id,
             rich_message=build_results_message(
                 game=game,
-                table=build_short_results_table(game, game_stat),
+                takes=build_short_results_table(game, game_stat),
+                durations=build_short_durations_table(game, game_stat),
                 photo_file_id=photo_file_id,
             ),
         )

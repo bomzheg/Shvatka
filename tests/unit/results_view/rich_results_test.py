@@ -9,6 +9,7 @@ from aiogram.types import (
 )
 
 from shvatka.common.data_examples import game_example
+from shvatka.core.games.results import LEVEL_DURATIONS_TITLE, LEVEL_TIMES_TITLE
 from shvatka.core.utils.datetime_utils import tz_game
 from shvatka.core.interfaces.printer import (
     DATETIME_EXCEL_FORMAT,
@@ -123,6 +124,18 @@ def test_results_message_shows_the_table_under_the_picture() -> None:
     assert isinstance(rendered, InputRichBlockTable)
     assert isinstance(footer, InputRichBlockParagraph)
     assert footer.text == "Игра началась 19.03.23 02:00"
+
+
+def test_results_message_captions_both_tables() -> None:
+    takes = _table({(1, 1): Cell(value="Команда", style=CellStyle.HEADER)})
+    durations = _table({(1, 1): Cell(value="Команда", style=CellStyle.HEADER)})
+
+    message = build_results_message(game_example, takes, durations)
+
+    assert message.blocks is not None
+    assert [
+        block.caption for block in message.blocks if isinstance(block, InputRichBlockTable)
+    ] == [LEVEL_TIMES_TITLE, LEVEL_DURATIONS_TITLE]
 
 
 def test_results_message_without_a_picture() -> None:

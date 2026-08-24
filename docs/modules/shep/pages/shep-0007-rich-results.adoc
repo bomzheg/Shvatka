@@ -14,8 +14,8 @@
 == Summary
 
 The results of a finished game are shown in telegram as a *rich message* (Bot
-API 10.1): the chart of the game with a standings table right under it. The
-`xlsx` file is still produced — it is now one button away instead of being the
+API 10.1): the chart of the game, the standings under it, and how long every
+team spent on every level under that. The `xlsx` file is still produced — it is now one button away instead of being the
 only way to see who won.
 
 == Context
@@ -40,7 +40,7 @@ right for a spreadsheet and far too wide for a message.
 
 == Decision
 
-=== A second, shorter table in the domain
+=== Two shorter tables in the domain
 
 `build_short_results_table(game, game_stat)` builds the standings alone: a row
 per team, a column per level, the total time of the game at the end. It reuses
@@ -48,11 +48,18 @@ the printer primitives (`Cell`, `CellStyle`, `Table`) of the file export, so
 both tables speak the same language and both are pure domain code with no
 telegram in sight.
 
+`build_short_durations_table` is the same grid read the other way: how long a
+level took rather than when it was over, with the average of every level under
+the teams. A level lasts from taking the one before it (from the start of the
+game, for the first); a level whose predecessor was never taken is left blank,
+because there is nothing to measure it from.
+
 Ordering is its own function, `build_standings`, because it is a domain
 question rather than a rendering one: teams that finished come first, ordered by
 when they finished; the rest follow by how far they got and how fast they got
 there. A team's take of a level is the *first* time it entered that level, so a
 re-entry (parallel levels, SHEP-0004) cannot make a team look slower than it was.
+Both tables are built over that one ordering, so a team keeps its row in both.
 
 === The renderer is a view, and it is generic
 
@@ -62,7 +69,9 @@ address is an empty cell, so rows stay aligned), `CellStyle` decides alignment,
 header cells and bold, and the excel number format of a cell (`HH:MM`) is
 translated into a `strftime` one. Nothing in it knows about games — it renders
 tables, and `build_results_message` is what knows the results are a heading, a
-chart and that table.
+chart and those two tables. The tables are the same grid of teams by levels, so
+each carries the caption that tells them apart — the same two the file export
+uses for its blocks, "Время взятия" and "Время на уровне".
 
 Keeping the renderer style-driven rather than results-driven means the same
 function can show any other `Table` the domain builds later.
@@ -103,8 +112,9 @@ next to it.
   `can_react_to_messages`, fixed in `tests/unit/test_bot_rights.py`.
 * Old telegram clients render a rich message as its plain-text fallback, so the
   numbers are still readable there — but the layout is not ours to control.
-* Two tables of one game now exist. They are built from the same primitives and
-  the same stat, but a change to what "the results" mean has to be made in both.
+* The file and the message are two renderings of one game now. They are built
+  from the same primitives and the same stat, but a change to what "the results"
+  mean has to be made in both.
 
 == Phases and status
 
@@ -113,7 +123,7 @@ next to it.
 | Phase | Content | Status
 
 | 1
-| Domain: standings and the short table
+| Domain: standings, the takes table and the durations table
 | ✅ done
 
 | 2

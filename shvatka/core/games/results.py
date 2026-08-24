@@ -502,6 +502,21 @@ class TeamPlace:
     def last_take(self) -> datetime | None:
         return max(self.takes.values(), default=None)
 
+    def durations(self, started_at: datetime) -> dict[int, timedelta]:
+        """How long the team spent on each level, by level number counted from one.
+
+        A level lasted from taking the one before it (the start of the game, for
+        the first) until taking it. A level whose predecessor was never taken is
+        left out — there is nothing to measure it from.
+        """
+        result = {}
+        for level_number, at in self.takes.items():
+            previous = started_at if level_number == 1 else self.takes.get(level_number - 1)
+            if previous is None:
+                continue
+            result[level_number] = at - previous
+        return result
+
 
 def build_standings(game: dto.FullGame, game_stat: dto.GameStat) -> list[TeamPlace]:
     """Order the teams the way the results are read: who finished first, then who got furthest."""
@@ -541,36 +556,11 @@ def build_short_results_table(game: dto.FullGame, game_stat: dto.GameStat) -> Ta
 
     Short enough to be read in a message, unlike the file the same game exports to.
     """
-    if not (game.is_complete() or game.is_finished()):
-        raise GameNotFinished
-    assert game.start_at is not None
-    started_at = trim_tz(game.start_at)
-    table: dict[CellAddress, Cell] = {
-        CellAddress(row=SHORT_HEADER_ROW, column=SHORT_PLACE_COLUMN): Cell(
-            value=SHORT_PLACE_TITLE, style=CellStyle.HEADER
-        ),
-        CellAddress(row=SHORT_HEADER_ROW, column=SHORT_TEAM_COLUMN): Cell(
-            value=SHORT_TEAM_TITLE, style=CellStyle.HEADER
-        ),
-    }
-    for level_number in _short_levels(game):
-        table[CellAddress(row=SHORT_HEADER_ROW, column=_short_level_column(level_number))] = Cell(
-            value=level_number, style=CellStyle.HEADER
-        )
+    started_at = _short_start(game)
+    table = _short_header(game, total_title=SHORT_TOTAL_TITLE)
     total_column = _short_total_column(game)
-    table[CellAddress(row=SHORT_HEADER_ROW, column=total_column)] = Cell(
-        value=SHORT_TOTAL_TITLE, style=CellStyle.HEADER
-    )
     best: dict[int, tuple[datetime, int]] = {}
-    for place_number, place in enumerate(build_standings(game, game_stat), start=1):
-        row = SHORT_HEADER_ROW + place_number
-        # the place is what the row is called, like the team name next to it
-        table[CellAddress(row=row, column=SHORT_PLACE_COLUMN)] = Cell(
-            value=place_number, style=CellStyle.HEADER
-        )
-        table[CellAddress(row=row, column=SHORT_TEAM_COLUMN)] = Cell(
-            value=place.team.name, style=CellStyle.TEAM
-        )
+    for row, place in _short_rows(table, game, game_stat):
         for level_number in _short_levels(game):
             column = _short_level_column(level_number)
             take = place.takes.get(level_number)
@@ -588,6 +578,100 @@ def build_short_results_table(game: dto.FullGame, game_stat: dto.GameStat) -> Ta
         )
     _mark_best(table, best)
     return Table(fields=table)
+
+
+def build_short_durations_table(game: dto.FullGame, game_stat: dto.GameStat) -> Table:
+    """How long every team spent on every level, teams in the order the standings put them.
+
+    The companion of :func:`build_short_results_table`: the same grid, telling
+    how long a level took rather than when it was over.
+    """
+    started_at = _short_start(game)
+    table = _short_header(game)
+    best: dict[int, tuple[timedelta, int]] = {}
+    by_level: dict[int, list[timedelta]] = {}
+    last_row = SHORT_HEADER_ROW
+    for row, place in _short_rows(table, game, game_stat):
+        last_row = row
+        durations = place.durations(started_at)
+        for level_number in _short_levels(game):
+            column = _short_level_column(level_number)
+            duration = durations.get(level_number)
+            table[CellAddress(row=row, column=column)] = Cell(
+                value=as_time(duration) if duration is not None else None,
+                format=TIME_EXCEL_FORMAT if duration is not None else None,
+                style=CellStyle.DATA,
+            )
+            if duration:
+                by_level.setdefault(level_number, []).append(duration)
+                _keep_best(best, column, duration, row)
+    _mark_best(table, best)
+    _add_short_averages(table, by_level, row=last_row + 1)
+    return Table(fields=table)
+
+
+def _short_start(game: dto.FullGame) -> datetime:
+    if not (game.is_complete() or game.is_finished()):
+        raise GameNotFinished
+    assert game.start_at is not None
+    return trim_tz(game.start_at)
+
+
+def _short_header(game: dto.FullGame, total_title: str | None = None) -> dict[CellAddress, Cell]:
+    """Place, team, a column per level, and a summary column when the table has one."""
+    table = {
+        CellAddress(row=SHORT_HEADER_ROW, column=SHORT_PLACE_COLUMN): Cell(
+            value=SHORT_PLACE_TITLE, style=CellStyle.HEADER
+        ),
+        CellAddress(row=SHORT_HEADER_ROW, column=SHORT_TEAM_COLUMN): Cell(
+            value=SHORT_TEAM_TITLE, style=CellStyle.HEADER
+        ),
+    }
+    for level_number in _short_levels(game):
+        table[CellAddress(row=SHORT_HEADER_ROW, column=_short_level_column(level_number))] = Cell(
+            value=level_number, style=CellStyle.HEADER
+        )
+    if total_title is not None:
+        table[CellAddress(row=SHORT_HEADER_ROW, column=_short_total_column(game))] = Cell(
+            value=total_title, style=CellStyle.HEADER
+        )
+    return table
+
+
+def _short_rows(
+    table: dict[CellAddress, Cell],
+    game: dto.FullGame,
+    game_stat: dto.GameStat,
+) -> typing.Iterator[tuple[int, TeamPlace]]:
+    """Write the place and the name of every team, and hand its row back to be filled."""
+    for place_number, place in enumerate(build_standings(game, game_stat), start=1):
+        row = SHORT_HEADER_ROW + place_number
+        # the place is what the row is called, like the team name next to it
+        table[CellAddress(row=row, column=SHORT_PLACE_COLUMN)] = Cell(
+            value=place_number, style=CellStyle.HEADER
+        )
+        table[CellAddress(row=row, column=SHORT_TEAM_COLUMN)] = Cell(
+            value=place.team.name, style=CellStyle.TEAM
+        )
+        yield row, place
+
+
+def _add_short_averages(
+    table: dict[CellAddress, Cell],
+    by_level: dict[int, list[timedelta]],
+    row: int,
+) -> None:
+    """A last row of how long a level took on average, under the teams."""
+    if not by_level:
+        return
+    table[CellAddress(row=row, column=SHORT_TEAM_COLUMN)] = Cell(
+        value=AVERAGE_TITLE, style=CellStyle.ACCENT
+    )
+    for level_number, durations in by_level.items():
+        average = sum(durations, start=timedelta(seconds=0)) / len(durations)
+        table[CellAddress(row=row, column=_short_level_column(level_number))] = Cell(
+            value=as_time(average), format=TIME_EXCEL_FORMAT, style=CellStyle.ACCENT
+        )
 
 
 def _short_levels(game: dto.FullGame) -> range:

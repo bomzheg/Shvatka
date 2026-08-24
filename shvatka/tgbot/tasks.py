@@ -26,6 +26,7 @@ from shvatka.infrastructure.crawler.game_scn.uploader.forum_scenario_uploader im
 from shvatka.infrastructure.crawler.game_scn.uploader.game_mapper import map_game_for_upload
 from shvatka.tgbot.config.models.bot import BotConfig
 from shvatka.tgbot.views.hint_sender import HintSender
+from shvatka.tgbot.views.results.rich import ResultsRichSender
 from shvatka.tgbot.views.results.scenario import GamePublisher, LevelPublisher
 
 logger = logging.getLogger(__name__)
@@ -52,6 +53,7 @@ async def publish_scenario_to_channel(
     telegraph: FromDishka[Telegraph],
     bot: FromDishka[Bot],
     config: FromDishka[BotConfig],
+    results_sender: FromDishka[ResultsRichSender],
 ) -> None:
     publisher = GamePublisher(
         hint_sender=hint_sender,
@@ -62,6 +64,7 @@ async def publish_scenario_to_channel(
         game_stat=game_stat,
         keys=keys,
         telegraph=telegraph,
+        results_sender=results_sender,
     )
     started_msg_id = await publisher.publish_scn()
     results_msg_id = await publisher.publish_results()

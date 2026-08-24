@@ -16,6 +16,7 @@ from shvatka.core.interfaces.printer import (
     ChartSeries,
     SeriesKind,
     Table,
+    TableBlock,
     as_time,
 )
 
@@ -114,16 +115,51 @@ def results_to_table_routed(game: dto.FullGame, results: Results) -> Table:
     a column all the same, to line the blocks up, and hidden by default.
     Column ``START_COLUMN + n`` is level ``n`` counted from one.
     """
+    results.data.sort(key=lambda team_levels: _result_key(team_levels, len(game.levels)))
     table = {GAME_NAME: Cell(value=game.name, style=CellStyle.TITLE)}
-    row = _add_level_times_part(table, game, results, row=GAME_NAME.row + 1)
-    durations = _add_durations_part(table, game, results, row=row + BLOCK_GAP_ROWS)
-    row = _add_bonuses_part(table, game, results, row=durations.average_row + BLOCK_GAP_ROWS)
-    row = _add_chronology_part(table, results, row=row + BLOCK_GAP_ROWS)
+    blocks = []
+    first_row = GAME_NAME.row + 1
+    row = _add_level_times_part(table, game, results, row=first_row)
+    blocks.append(TableBlock(caption=LEVEL_TIMES_TITLE, first_row=first_row, last_row=row))
+    first_row = row + BLOCK_GAP_ROWS
+    durations = _add_durations_part(table, game, results, row=first_row)
+    blocks.append(
+        TableBlock(
+            caption=LEVEL_DURATIONS_TITLE, first_row=first_row, last_row=durations.average_row
+        )
+    )
+    first_row = durations.average_row + BLOCK_GAP_ROWS
+    row = _add_bonuses_part(table, game, results, row=first_row)
+    if row >= first_row:  # a game without a single bonus has no block at all
+        blocks.append(TableBlock(caption=BONUSES_TITLE, first_row=first_row, last_row=row))
+    first_row = row + BLOCK_GAP_ROWS
+    row = _add_chronology_part(table, results, row=first_row)
+    blocks.append(TableBlock(caption=CHRONOLOGY_TITLE, first_row=first_row, last_row=row))
     return Table(
         fields=table,
+        blocks=blocks,
         charts=_build_charts(game, results, durations, anchor_row=row + BLOCK_GAP_ROWS),
         freeze=CellAddress(row=FIRST_TEAM_NAME.row, column=START_COLUMN),
         hidden_columns=[START_COLUMN],
+    )
+
+
+def _result_key(team_levels: TeamLevels, levels_count: int) -> tuple[bool, datetime, int, str]:
+    """Order the teams the way the results are read.
+
+    Who finished first, then who got furthest; a team that never finished is
+    ordered by how far it got and how fast it got there.
+    """
+    finish = team_levels.get_level_time(levels_count)
+    last = max(
+        (lt.time for level_times in team_levels.levels_times.values() for lt in level_times),
+        default=datetime.max,
+    )
+    return (
+        finish is None,
+        finish.time if finish is not None else last,
+        -len(team_levels.levels_times),
+        team_levels.team.name or "",
     )
 
 

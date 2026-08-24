@@ -8,9 +8,7 @@ empty dict and usually just blows up on the first missing key.
 from datetime import datetime, timedelta
 from uuid import UUID
 
-from aiogram.enums import ContentType
 from aiogram.fsm.state import State
-from aiogram_dialog.api.entities import MediaAttachment, MediaId
 from aiogram_dialog.widgets.kbd import Start, SwitchTo
 from aiogram_dialog.widgets.text import Const
 
@@ -337,11 +335,6 @@ PREVIEW_FINISHED_LEVEL_TIME = dto.LevelTimeOnGame(
     name_id=None,
 )
 PREVIEW_SPY_STAT = {PREVIEW_LEVEL_TIME.level_number: [PREVIEW_LEVEL_TIME]}
-
-PREVIEW_RESULTS_MEDIA = MediaAttachment(
-    file_id=MediaId(file_id="preview-results-file-id"),
-    type=ContentType.PHOTO,
-)
 
 TIMES_PRESET = [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60]
 

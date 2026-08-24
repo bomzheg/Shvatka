@@ -54,6 +54,10 @@ came out of it*.
 | xref:shep-0007-error-doc-links.adoc[SHEP-0007]
 | Documentation links in error messages
 | Accepted, implemented
+
+| xref:shep-0008-rich-results.adoc[SHEP-0008]
+| Results as a rich message
+| Accepted, implemented
 |===
 
 == Status vocabulary

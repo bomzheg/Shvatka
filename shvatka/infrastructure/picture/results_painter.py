@@ -25,7 +25,13 @@ class ResultsPainter:
             dao=self.dao.game,
         )
         game_stat = await get_game_stat(current_game, identity, self.dao.game_stat)
-        picture = paint_it(game_stat, current_game)
+        return await self.paint_game_results(current_game, game_stat)
+
+    async def paint_game_results(self, game: dto.FullGame, game_stat: dto.GameStat) -> str:
+        """Same picture, for a caller that has already loaded the game and its stat."""
+        if game.results.results_picture_file_id:
+            return game.results.results_picture_file_id
+        picture = paint_it(game_stat, game)
         msg = await self.bot.send_photo(
             self.chat_id, BufferedInputFile(picture.read(), "results.png")
         )

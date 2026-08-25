@@ -142,10 +142,11 @@ Three things fall out of that and have to be decided rather than discovered:
 * *Ids, not snapshots.* A task today carries whole dtos, which is free in
   memory and impossible in a row. A payload carries `team_id`, `level_id`,
   `chat_id`, `message_id` — never rendered text. A renderer therefore reads
-  state at *send* time, not at record time. That is a semantic change: `resolve_level_up`
-  deliberately collects `finished_teams` before the commit so the fan-out
-  matches the moment the game ended. Commands whose meaning depends on a
-  snapshot must carry the snapshot as ids (the list of team ids), not re-query.
+  state at *send* time, not at record time. That is a semantic change:
+  `all_teams_finished` deliberately reads the played teams before the commit, so
+  the fan-out matches the moment the game ended. Tasks whose meaning depends on
+  a snapshot must carry the snapshot as ids (the list of team ids), not
+  re-query.
 * *The reply target.* `DuplicateKey` and its siblings carry an `InputContainer`,
   which on the bot side wraps an aiogram `Message`. `chat_id` + `message_id` is
   enough and is storable; the `Message` is not.

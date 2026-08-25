@@ -7,13 +7,14 @@ through the :class:`~shvatka.core.interfaces.nursery.Nursery` by the matching
 the request's is long closed by the time it runs.
 """
 
+import asyncio
 import logging
 from collections.abc import Sequence
 
 from dishka import FromDishka
 
 from shvatka.api.app.utils.web_input import WebGameLogWriter, WebGameView, WebOrgNotifier
-from shvatka.core.views.game import AnyViewTask, Event, GameLogEvent
+from shvatka.core.views.game import AnyViewTask, Event, GameLogEvent, group_by_team
 from shvatka.tgbot.tasks import deliver
 from shvatka.tgbot.views.bot_alert import BotAlert
 from shvatka.tgbot.views.game import BotOrgNotifier, BotView, GameBotLog
@@ -29,11 +30,22 @@ async def show_game(
 ) -> None:
     """Show one request's tasks on both edges, in the order they were decided.
 
-    The site goes first: a push is one https call, while a puzzle in telegram
-    is a caption and its hints a second apart. Each task is contained on its
-    own — one chat the bot was thrown out of must not cost the others their
-    puzzle.
+    One team at a time within a team, every team at once across them: a game
+    starting sends a puzzle to each of them, and doing that in turn would cost
+    the last team the whole fan-out of all the others.
+
+    Each task is contained on its own — one chat the bot was thrown out of must
+    not cost the others their puzzle.
     """
+    await asyncio.gather(
+        *(_show_to_team(group, bot, web, alerter) for group in group_by_team(tasks))
+    )
+
+
+async def _show_to_team(
+    tasks: Sequence[AnyViewTask], bot: BotView, web: WebGameView, alerter: BotAlert
+) -> None:
+    """The site first: a push is one https call, a puzzle is minutes of them."""
     for task in tasks:
         await deliver(lambda t=task: web.show([t]), alerter)  # type: ignore[misc]
     for task in tasks:

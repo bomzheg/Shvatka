@@ -1,5 +1,5 @@
 import enum
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 from uuid import UUID
 
@@ -149,31 +149,3 @@ class MyRole:
     waiver_vote: enums.Played | None
     team: dto.Team | None
     org: dto.Organizer | None
-
-
-@dataclass(kw_only=True, frozen=True, slots=True)
-class LevelUpOutcome:
-    """What leaving a level turned out to mean, once the database knows it.
-
-    Produced by ``GamePlayBaseInteractor.resolve_level_up`` before the commit
-    and shown by ``show_level_up`` after it, so no view ever runs inside the
-    transaction. Everything a view needs is here — nothing is read back later.
-    """
-
-    team_finished: bool = False
-    """The team has no next level: it finished the game."""
-
-    all_finished: bool = False
-    """This team was the last one, so the game itself is over."""
-
-    finished_teams: list[dto.Team] = field(default_factory=list)
-    """Who to congratulate when the game ends. Empty unless ``all_finished``."""
-
-    next_level: dto.Level | None = None
-    """The level the team moved to. None when it finished instead."""
-
-    level_time_id: int | None = None
-    """The team's new level time, to schedule the first hint against."""
-
-    orgs: list[dto.Organizer] = field(default_factory=list)
-    """The orgs spying on this game, to notify about the level up."""

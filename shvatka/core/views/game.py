@@ -51,6 +51,10 @@ class KeyShown(ViewTask):
     key: dto.KeyTime
     input_container: InputContainer
 
+    @property
+    def team(self) -> dto.Team:
+        return self.key.team
+
 
 @dataclass(frozen=True)
 class DuplicateKey(KeyShown):
@@ -111,6 +115,21 @@ AnyViewTask = (
     | ShowEffects
 )
 """Every task there is, as a union — so a view that forgets one fails to type."""
+
+
+def group_by_team(tasks: Sequence[AnyViewTask]) -> list[list[AnyViewTask]]:
+    """Split a batch into one list per team, keeping each team's order.
+
+    Teams play in their own chats and their own time: a key must be confirmed
+    before the puzzle it opened, but nothing connects one team's messages to
+    another's. So a view may show the groups at once — which is what keeps the
+    start of a game the few seconds of one puzzle rather than that times the
+    number of teams.
+    """
+    groups: dict[int, list[AnyViewTask]] = {}
+    for task in tasks:
+        groups.setdefault(task.team.id, []).append(task)
+    return list(groups.values())
 
 
 class GameView(Protocol):

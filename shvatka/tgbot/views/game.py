@@ -1,3 +1,4 @@
+import asyncio
 from datetime import datetime
 import json
 import logging
@@ -32,6 +33,7 @@ from shvatka.core.views.game import (
     LevelTestCompleted,
     GameLogEvent,
     GameLogType,
+    group_by_team,
     InputContainer,
     SendHint,
     SendPuzzle,
@@ -155,12 +157,16 @@ class BotView(GameViewPreparer, GameView):
                 )
 
     async def show(self, tasks: Sequence[AnyViewTask]) -> None:
-        """Show each task in the chat it belongs to, one after another.
+        """Show each task, one team at a time — but all teams at once.
 
-        The order matters and the sleeps are real: a key is confirmed before
-        the puzzle it opened, and a puzzle is a caption and its hints a second
-        apart. That is why this runs where nobody is waiting for it.
+        The order and the sleeps are real: a key is confirmed before the puzzle
+        it opened, and a puzzle is a caption and its hints a second apart. What
+        holds within a team must not hold between them, or a game starting
+        would reach the last team long after the first.
         """
+        await asyncio.gather(*(self._show_to_team(group) for group in group_by_team(tasks)))
+
+    async def _show_to_team(self, tasks: Sequence[AnyViewTask]) -> None:
         for task in tasks:
             await self._show_one(task)
 

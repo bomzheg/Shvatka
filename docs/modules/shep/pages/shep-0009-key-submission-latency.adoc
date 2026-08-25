@@ -55,9 +55,9 @@ transaction, and shows nothing:
 
 [source,python]
 ----
-tasks = ShowTasks(view=key_tasks(new_key, input_container))
-if level_up is not None:
-    tasks.extend(level_up_tasks(level_up, ...))
+tasks = ShowTasks(view=self.view_(new_key, input_container))
+if not new_key.is_duplicate and new_key.is_level_up():
+    tasks.extend(await self.process_level_up(...))
 await self.dao.commit()
 await self.show(tasks)
 ----
@@ -98,6 +98,19 @@ Two things fall out of this that the old fat interface made expensive:
 * *A view decides how to render a whole batch.* That is what lets the combined
   view hand the batch to the nursery as one job — which is what keeps the
   messages of one key in order.
+
+=== One team at a time, all teams at once
+
+`group_by_team` splits a batch into one list per team, keeping each team's
+order, and the views show the groups with `asyncio.gather`. Order is a promise
+about *a chat*, never about the game: a key must be confirmed before the puzzle
+it opened, but nothing connects one team's messages to another's.
+
+This is not a nicety. A game starting sends the first puzzle to every team, and
+a puzzle is a caption plus its hints a second apart — shown in turn, the last of
+twelve teams would get theirs a minute after the first. `start_game` used
+`asyncio.gather` for exactly this reason before, and the batch has to keep that
+property rather than quietly serialising it.
 
 === Showing is one background job, spawned by the view
 
@@ -158,20 +171,19 @@ drain gives up on. Durable delivery is xref:shep-0010-message-outbox.adoc[SHEP-0
 
 === Decide, commit, then show
 
-`GamePlayBaseInteractor.process_level_up` used to interleave the two — read
-whether the team finished, show it, read whether everyone finished, write
-`dao.finish`, show that — so a view always ran inside the transaction and a
-finished game needed a second commit to land. It is now two halves:
+`process_level_up`, `process_plain_level_up` and `all_teams_finished` keep their
+names, their reads and their writes; each one now *returns* a `ShowTasks`
+instead of awaiting a view. The whole change to them is one kind of line —
+`await self.view.send_puzzle(...)` becoming `tasks.view.append(SendPuzzle(...))`
+— and the caller commits once and then calls `show`.
 
-* `resolve_level_up` does the locking, the reads and the one write
-  (`dao.finish`), and returns a `LevelUpOutcome` carrying everything a view
-  will need;
-* `level_up_tasks` turns that outcome into tasks — a pure function, no `self`,
-  no io, so what a level up shows is unit-testable on its own.
-
-`CheckKeyInteractor` resolves, commits once, then shows. `GamePlayTimerInteractor`
-follows the same order, so "no view inside a transaction" holds on both paths
-into a level up.
+*Alternative rejected:* an earlier cut split them into `resolve_level_up`
+returning a `LevelUpOutcome` dto, plus a pure `level_up_tasks` that turned it
+into tasks. It read well and made the branch unit-testable, but the dto existed
+only to carry data across the commit — which is exactly what the task list
+already does. Review asked for the smaller diff, and it was right: the dto and
+two of the three functions disappeared, and what is left reads the same as
+master with the view lines replaced.
 
 The key is a fact of the game the moment it is typed; holding its rows for the
 length of a chat conversation was never intentional.
@@ -238,12 +250,12 @@ sending thread.
 
 == Deviations from the plan
 
-Twice, both times because review found a weaker version of the same rule.
+Three times, each because review found a weaker version of the same rule.
 
 The first cut committed twice — once for the key, once at the end for the
 `dao.finish` a level up may have written — because the level up mixed writes and
-views. That became `resolve_level_up` / `show_level_up`, one commit with the
-views after it.
+views. That became a decide half and a show half, with one commit between
+them.
 
 The second cut deferred at the *edge*: the bot half of each view call was
 recorded as a closure into a request-scoped `BotOutbox` and flushed by its
@@ -255,6 +267,14 @@ cannot be anything but run, which put the whole of
 xref:shep-0010-message-outbox.adoc[SHEP-0010] behind a rewrite. Moving the
 decision into the interactor as data fixed both and deleted more code than it
 added.
+
+The third cut carried the decision across the commit in a `LevelUpOutcome` dto,
+which meant rewriting `process_level_up` into `resolve_level_up` plus a pure
+mapper, and serialised the batch inside the views. Review asked for a smaller
+diff and for the teams to stay parallel; both were right. The dto was redundant
+once the tasks themselves crossed the commit, and serialising a batch quietly
+turned the start of a game from one puzzle's worth of seconds into that times
+the number of teams.
 
 == Open questions
 

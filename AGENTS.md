@@ -242,7 +242,8 @@ appends it to a plain list as `ViewTask` values (`core/views/game.py`), commits,
 and only then hands the list over:
 
 ```python
-tasks = ShowTasks(view=key_tasks(new_key, input_container))
+tasks = ShowTasks(view=self.view_(new_key, input_container))
+tasks.extend(await self.process_level_up(...))
 await self.dao.commit()
 await self.show(tasks)
 ```
@@ -259,10 +260,14 @@ delivery, if a lost message ever turns out to matter, is planned in
 `ViewTask` plus a branch in each view's router — never a new method on the
 protocol. `AnyViewTask` is a union, so a view that forgets one fails `mypy`.
 
-A level up follows the same rule from the other side: `resolve_level_up` does
-the database work and returns a `LevelUpOutcome`, and `level_up_tasks` turns
-that outcome into tasks. Both are pure of the other's concern; adding something
-to a level up means deciding which half it belongs to, never both.
+`process_level_up` and its two halves keep doing their reads and writes — they
+just return the tasks instead of showing them. When you add something to a level
+up, append a task; do not reach for a view.
+
+Order is a promise about **a chat, not the game**: `group_by_team` splits a
+batch per team and the views show the groups at once. A game starting must
+reach the twelfth team as fast as the first, so never make a view walk a batch
+in one sequence.
 
 Rules that follow when you add a view task:
 

@@ -57,15 +57,13 @@ async def create_team(
     await dao.commit()
     if created:
         await game_log.log(
-            [
-                GameLogEvent(
-                    GameLogType.TEAM_CREATED,
-                    data={
-                        "team": team.name,
-                        "captain": captain.name_mention,
-                    },
-                )
-            ]
+            GameLogEvent(
+                GameLogType.TEAM_CREATED,
+                data={
+                    "team": team.name,
+                    "captain": captain.name_mention,
+                },
+            )
         )
     return team
 
@@ -148,16 +146,14 @@ async def merge_teams(
     await dao.delete(secondary)
     await dao.commit()
     await game_log.log(
-        [
-            GameLogEvent(
-                GameLogType.TEAMS_MERGED,
-                {
-                    "captain": manager.name_mention,
-                    "primary_team": primary.name,
-                    "secondary_team": secondary.name,
-                },
-            )
-        ]
+        GameLogEvent(
+            GameLogType.TEAMS_MERGED,
+            {
+                "captain": manager.name_mention,
+                "primary_team": primary.name,
+                "secondary_team": secondary.name,
+            },
+        )
     )
 
 

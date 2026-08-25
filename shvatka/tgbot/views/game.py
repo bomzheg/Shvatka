@@ -405,11 +405,7 @@ class GameBotLog(GameLogWriter):
     bot: Bot
     log_chat_id: int
 
-    async def log(self, log_events: Sequence[GameLogEvent]) -> None:
-        for event_log in log_events:
-            await self._log_one(event_log)
-
-    async def _log_one(self, event_log: GameLogEvent) -> None:
+    async def log(self, event_log: GameLogEvent) -> None:
         match event_log:
             case GameLogEvent(GameLogType.GAME_WAIVERS_STARTED):
                 text = "Начался сбор вейверов на игру {game}"
@@ -439,11 +435,7 @@ class BotOrgNotifier(OrgNotifier):
     bot: Bot
     retort: Retort
 
-    async def notify(self, events: Sequence[Event]) -> None:
-        for event in events:
-            await self._notify_one(event)
-
-    async def _notify_one(self, event: Event) -> None:
+    async def notify(self, event: Event) -> None:
         match event:
             case LevelUp():
                 for org in event.orgs_list:

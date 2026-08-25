@@ -46,7 +46,7 @@ async def test_level_up_pushes_to_all_orgs() -> None:
     level = SimpleNamespace(db_id=3, name_id="lvl-1", number_in_game=0)
     event = LevelUp(orgs_list=[_org(1), _org(2)], team=team, new_level=level)
 
-    await notifier.notify([event])
+    await notifier.notify(event)
 
     assert len(sender.calls) == 1
     player_ids, message = sender.calls[0]
@@ -64,7 +64,7 @@ async def test_level_up_uses_name_id_without_number() -> None:
     level = SimpleNamespace(db_id=3, name_id="secret-lvl", number_in_game=None)
     event = LevelUp(orgs_list=[_org(1)], team=team, new_level=level)
 
-    await notifier.notify([event])
+    await notifier.notify(event)
 
     _, message = sender.calls[0]
     assert "secret-lvl" in message.body
@@ -79,7 +79,7 @@ async def test_new_org_pushes_to_all_orgs() -> None:
     new_org = SimpleNamespace(id=9, player=SimpleNamespace(id=42, name_mention="newbie"))
     event = NewOrg(orgs_list=[_org(1), _org(2)], game=game, org=new_org)
 
-    await notifier.notify([event])
+    await notifier.notify(event)
 
     player_ids, message = sender.calls[0]
     assert player_ids == {1, 2}
@@ -104,7 +104,7 @@ async def test_level_test_completed_pushes_to_all_orgs() -> None:
     result = SimpleNamespace(td=timedelta(minutes=2, seconds=5))
     event = LevelTestCompleted(orgs_list=[_org(1)], suite=suite, result=result)
 
-    await notifier.notify([event])
+    await notifier.notify(event)
 
     player_ids, message = sender.calls[0]
     assert player_ids == {1}

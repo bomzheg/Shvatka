@@ -70,34 +70,25 @@ async def test_the_caller_is_not_kept_waiting_for_an_edge() -> None:
 @pytest.mark.asyncio
 async def test_orgs_are_told_in_the_background() -> None:
     nursery = FakeNursery()
-    events = [Event(orgs_list=[])]
+    event = Event(orgs_list=[])
 
-    await ComplexOrgNotifier(nursery).notify(events)
+    await ComplexOrgNotifier(nursery).notify(event)
 
     job, kwargs = nursery.spawned[0]
     assert job is notify_orgs
-    assert list(kwargs["events"]) == events
-
-
-@pytest.mark.asyncio
-async def test_no_orgs_to_tell_starts_no_job() -> None:
-    nursery = FakeNursery()
-
-    await ComplexOrgNotifier(nursery).notify([])
-
-    assert nursery.spawned == []
+    assert kwargs["event"] is event
 
 
 @pytest.mark.asyncio
 async def test_game_log_is_written_in_the_background() -> None:
     nursery = FakeNursery()
-    events = [GameLogEvent(type=GameLogType.GAME_FINISHED)]
+    event = GameLogEvent(type=GameLogType.GAME_FINISHED)
 
-    await ComplexGameLogWriter(nursery).log(events)
+    await ComplexGameLogWriter(nursery).log(event)
 
     job, kwargs = nursery.spawned[0]
     assert job is write_game_log
-    assert list(kwargs["log_events"]) == events
+    assert kwargs["log_event"] is event
 
 
 @pytest.mark.asyncio

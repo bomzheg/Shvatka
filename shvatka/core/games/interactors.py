@@ -378,10 +378,10 @@ class GamePlayBaseInteractor:
         """Hand each list to the sender it belongs to. Never before a commit."""
         if tasks.view:
             await self.view.show(tasks.view)
-        if tasks.org:
-            await self.org_notifier.notify(tasks.org)
-        if tasks.log:
-            await self.game_log.log(tasks.log)
+        for event in tasks.org:
+            await self.org_notifier.notify(event)
+        for log_event in tasks.log:
+            await self.game_log.log(log_event)
 
 
 @dataclass(kw_only=True)

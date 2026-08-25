@@ -84,7 +84,7 @@ async def agree_to_be_org(
     notify_orgs = await get_orgs(game, dao)
     org = await dao.add_new_org(game, player)
     await dao.commit()
-    await org_notifier.notify([NewOrg(orgs_list=notify_orgs, game=game, org=org)])
+    await org_notifier.notify(NewOrg(orgs_list=notify_orgs, game=game, org=org))
     return org
 
 

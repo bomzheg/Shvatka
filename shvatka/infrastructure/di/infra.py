@@ -23,7 +23,7 @@ class NoOpGameView(GameView):
 
 
 class NoOpGameLogWriter(GameLogWriter):
-    async def log(self, log_events: Sequence[GameLogEvent]) -> None:
+    async def log(self, log_event: GameLogEvent) -> None:
         pass
 
 
@@ -39,7 +39,7 @@ class NoOpGameReleasePublisher(GameReleasePublisher):
 
 
 class NoOpOrgNotifier(OrgNotifier):
-    async def notify(self, events: Sequence[Event]) -> None:
+    async def notify(self, event: Event) -> None:
         pass
 
 

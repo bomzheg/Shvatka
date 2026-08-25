@@ -180,7 +180,7 @@ class WebGamePreparer(GameViewPreparer):
 
 
 class WebGameLogWriter(GameLogWriter):
-    async def log(self, log_events: Sequence[GameLogEvent]) -> None:
+    async def log(self, log_event: GameLogEvent) -> None:
         pass
 
 
@@ -202,11 +202,7 @@ class WebOrgNotifier(OrgNotifier):
         self.push_sender = push_sender
         self.notification_dao = notification_dao
 
-    async def notify(self, events: Sequence[Event]) -> None:
-        for event in events:
-            await self._notify_one(event)
-
-    async def _notify_one(self, event: Event) -> None:
+    async def notify(self, event: Event) -> None:
         match event:
             case LevelUp():
                 await self._notify_level_up(event)

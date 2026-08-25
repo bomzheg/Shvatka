@@ -418,15 +418,13 @@ async def merge_players(
 
     await dao.commit()
     await game_log.log(
-        [
-            GameLogEvent(
-                GameLogType.PLAYERS_MERGED,
-                {
-                    "primary": primary.name_mention,
-                    "secondary": secondary.name_mention,
-                },
-            )
-        ]
+        GameLogEvent(
+            GameLogType.PLAYERS_MERGED,
+            {
+                "primary": primary.name_mention,
+                "secondary": secondary.name_mention,
+            },
+        )
     )
 
 

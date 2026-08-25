@@ -106,15 +106,13 @@ class PlanGameStartInteractor:
         else:
             await plain_start(game, author, start_at, self.dao, self.scheduler)
             await self.game_log.log(
-                [
-                    GameLogEvent(
-                        GameLogType.GAME_PLANED,
-                        {
-                            "game": game.name,
-                            "at": start_at.astimezone(tz_game).strftime(DATETIME_FORMAT),
-                        },
-                    )
-                ]
+                GameLogEvent(
+                    GameLogType.GAME_PLANED,
+                    {
+                        "game": game.name,
+                        "at": start_at.astimezone(tz_game).strftime(DATETIME_FORMAT),
+                    },
+                )
             )
         return game
 
@@ -133,7 +131,7 @@ class ChangeGameStatusInteractor:
         if status == enums.GameStatus.getting_waivers:
             await start_waivers(game, author, self.dao)
             await self.game_log.log(
-                [GameLogEvent(GameLogType.GAME_WAIVERS_STARTED, {"game": game.name})]
+                GameLogEvent(GameLogType.GAME_WAIVERS_STARTED, {"game": game.name})
             )
             # the release was waiting for exactly this moment to reach the channel
             release = await self.dao.get_release(game.id)

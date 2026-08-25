@@ -29,9 +29,8 @@ class ComplexOrgNotifier(OrgNotifier):
 
     nursery: Nursery
 
-    async def notify(self, events: Sequence[Event]) -> None:
-        if events:
-            self.nursery.spawn(notify_orgs, events=tuple(events))
+    async def notify(self, event: Event) -> None:
+        self.nursery.spawn(notify_orgs, event=event)
 
 
 @dataclass
@@ -64,9 +63,8 @@ class ComplexGameLogWriter(GameLogWriter):
 
     nursery: Nursery
 
-    async def log(self, log_events: Sequence[GameLogEvent]) -> None:
-        if log_events:
-            self.nursery.spawn(write_game_log, log_events=tuple(log_events))
+    async def log(self, log_event: GameLogEvent) -> None:
+        self.nursery.spawn(write_game_log, log_event=log_event)
 
 
 @dataclass

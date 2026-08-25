@@ -72,6 +72,12 @@ inside the transaction is still recorded when the transaction rolls back.
 kept inside a list and promised nowhere else, because the three senders are
 three different audiences.
 
+Only the view list is ever longer than one: a level up is the key and then the
+puzzle, the last team finishing is the key, the finish, and one congratulation
+per team that played; the timer shows one task per effect; a game starting shows
+one puzzle per team. The org and log lists have never held more than a single
+event, which is why those two senders keep taking one.
+
 === `GameView` is one method
 
 [source,python]
@@ -194,9 +200,12 @@ sending thread.
   `AGENTS.md` carries the rule.
 * `ComplexGameViewPreparer` and `ComplexTeamNotifier` still send inline. They
   are not on the key path (game start, team membership) and can move later.
-* `OrgNotifier.notify` and `GameLogWriter.log` take a sequence now, so every
-  caller wraps its event in a list. Mechanical, and it is what lets one request
-  be one job per sender.
+* `OrgNotifier.notify` and `GameLogWriter.log` keep their old single-event
+  signatures. Only the view is ever handed more than one thing at a time, and
+  only the view needs to be: the batch is what makes one request one job, and
+  a job is what keeps its messages in order. The other two have never carried
+  more than one event, so they spawn a job each and nothing is out of order
+  because there is nothing to order.
 
 == Phases and status
 

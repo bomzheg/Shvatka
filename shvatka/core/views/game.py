@@ -129,8 +129,8 @@ class GameView(Protocol):
 
 
 class GameLogWriter(Protocol):
-    async def log(self, log_events: Sequence[GameLogEvent]) -> None:
-        """Write these down where the audience of the game watches it."""
+    async def log(self, log_event: GameLogEvent) -> None:
+        """Write this down where the audience of the game watches it."""
         raise NotImplementedError
 
 
@@ -163,6 +163,11 @@ class ShowTasks:
     only after it commits, so a transaction that never lands shows nothing.
     Separate lists because the three senders are separate: order is kept
     within a list, never between them.
+
+    Only the view really gets a list of its own — a level up shows the key,
+    then the puzzle, and the last team finishing congratulates every team that
+    played. The other two have never carried more than one, and are lists only
+    so that filling them reads the same way.
     """
 
     view: list[AnyViewTask] = field(default_factory=list)
@@ -192,8 +197,8 @@ class GameLogEvent:
 
 
 class OrgNotifier(Protocol):
-    async def notify(self, events: Sequence[Event]) -> None:
-        """Tell the orgs about these, in this order."""
+    async def notify(self, event: Event) -> None:
+        """Tell the orgs about this."""
         raise NotImplementedError
 
 

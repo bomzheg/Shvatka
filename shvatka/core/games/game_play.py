@@ -80,7 +80,7 @@ async def start_game(
         ]
     )
 
-    await game_log.log([GameLogEvent(GameLogType.GAME_STARTED, {"game": game.name})])
+    await game_log.log(GameLogEvent(GameLogType.GAME_STARTED, {"game": game.name}))
 
 
 async def send_hint(

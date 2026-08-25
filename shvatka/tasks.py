@@ -41,24 +41,20 @@ async def show_game(
 
 
 async def notify_orgs(
-    events: Sequence[Event],
+    event: Event,
     bot: FromDishka[BotOrgNotifier],
     web: FromDishka[WebOrgNotifier],
     alerter: FromDishka[BotAlert],
 ) -> None:
-    for event in events:
-        await deliver(lambda e=event: web.notify([e]), alerter)  # type: ignore[misc]
-    for event in events:
-        await deliver(lambda e=event: bot.notify([e]), alerter)  # type: ignore[misc]
+    await deliver(lambda: web.notify(event), alerter)
+    await deliver(lambda: bot.notify(event), alerter)
 
 
 async def write_game_log(
-    log_events: Sequence[GameLogEvent],
+    log_event: GameLogEvent,
     bot: FromDishka[GameBotLog],
     web: FromDishka[WebGameLogWriter],
     alerter: FromDishka[BotAlert],
 ) -> None:
-    for log_event in log_events:
-        await deliver(lambda e=log_event: web.log([e]), alerter)  # type: ignore[misc]
-    for log_event in log_events:
-        await deliver(lambda e=log_event: bot.log([e]), alerter)  # type: ignore[misc]
+    await deliver(lambda: web.log(log_event), alerter)
+    await deliver(lambda: bot.log(log_event), alerter)

@@ -1,6 +1,7 @@
 import logging
-from dataclasses import dataclass, field
-from typing import Iterable
+import typing
+from dataclasses import dataclass
+from typing import Iterable, Sequence
 
 from shvatka.api.app.utils.push import PushMessage, WebPushSender
 from shvatka.core.interfaces.current_game import CurrentGameProvider
@@ -8,6 +9,11 @@ from shvatka.core.interfaces.dal.game_play import GamePreparer
 from shvatka.core.models import dto
 from shvatka.core.models.dto import action
 from shvatka.core.views.game import (
+    AnyViewTask,
+    DuplicateKey,
+    EffectsKey,
+    GameFinished,
+    GameFinishedByAll,
     GameView,
     GameLogWriter,
     GameReleasePublisher,
@@ -17,8 +23,12 @@ from shvatka.core.views.game import (
     LevelUp,
     NewOrg,
     LevelTestCompleted,
-    InputContainer,
     GameViewPreparer,
+    InputContainer,
+    SendHint,
+    SendPuzzle,
+    ShowEffects,
+    WrongKey,
 )
 from shvatka.core.interfaces.dal.player import TeamPlayersGetter
 from shvatka.core.models.enums.notification import NotificationType, NotificationSeverity
@@ -34,11 +44,13 @@ from shvatka.core.views.team import (
 logger = logging.getLogger(__name__)
 
 
-@dataclass(kw_only=True)
-class WebInput(InputContainer):
-    new_key: dto.KeyTime | None = None
-    effects: list[action.Effects] = field(default_factory=list)
-    game_finished: bool = False
+class ApiInput(InputContainer):
+    """What a key typed on the site was typed *into* — nothing.
+
+    A bot handler passes the message it is replying to; http has no such
+    thing. The container is only an input now: what the api answers with is
+    built from the tasks the interactor returns.
+    """
 
 
 class WebGameView(GameView):
@@ -56,6 +68,33 @@ class WebGameView(GameView):
             player_ids=await self._voted_player_ids(team),
             message=message,
         )
+
+    async def show(self, tasks: Sequence[AnyViewTask]) -> None:
+        """Push what a browser cares about; ignore the rest.
+
+        The answer to a key is not here — the api builds it from the same task
+        list this is handed, so the site already knows. What a push adds is
+        telling a player whose tab is closed that something happened.
+        """
+        for task in tasks:
+            await self._show_one(task)
+
+    async def _show_one(self, task: AnyViewTask) -> None:
+        match task:
+            case SendPuzzle():
+                await self.send_puzzle(task.team, task.level)
+            case SendHint():
+                await self.send_hint(task.team, task.hint_number, task.level)
+            case GameFinished():
+                await self.game_finished(task.team)
+            case GameFinishedByAll():
+                await self.game_finished_by_all(task.team)
+            case ShowEffects():
+                await self.effects(task.team, task.effects)
+            case DuplicateKey() | WrongKey() | EffectsKey():
+                pass  # the site has the answer already, from the response
+            case _:
+                typing.assert_never(task)
 
     async def send_puzzle(self, team: dto.Team, level: dto.Level) -> None:
         await self._send_to_played(
@@ -86,24 +125,7 @@ class WebGameView(GameView):
             ),
         )
 
-    async def duplicate_key(self, key: dto.KeyTime, input_container: InputContainer) -> None:
-        if isinstance(input_container, WebInput):
-            input_container.new_key = key
-
-    async def wrong_key(self, key: dto.KeyTime, input_container: InputContainer) -> None:
-        if isinstance(input_container, WebInput):
-            input_container.new_key = key
-
-    async def effects_key(
-        self, key: dto.KeyTime, effects: action.Effects, input_container: InputContainer
-    ) -> None:
-        if isinstance(input_container, WebInput):
-            input_container.effects.append(effects)
-            input_container.new_key = key
-
-    async def game_finished(self, team: dto.Team, input_container: InputContainer) -> None:
-        if isinstance(input_container, WebInput):
-            input_container.game_finished = True
+    async def game_finished(self, team: dto.Team) -> None:
         await self._send_to_played(
             team,
             PushMessage(
@@ -127,11 +149,7 @@ class WebGameView(GameView):
             ),
         )
 
-    async def effects(
-        self, team: dto.Team, effects: action.Effects, input_container: InputContainer
-    ) -> None:
-        if isinstance(input_container, WebInput):
-            input_container.effects.append(effects)
+    async def effects(self, team: dto.Team, effects: action.Effects) -> None:
         await self._send_to_played(
             team,
             PushMessage(
@@ -162,7 +180,7 @@ class WebGamePreparer(GameViewPreparer):
 
 
 class WebGameLogWriter(GameLogWriter):
-    async def log(self, log_event: GameLogEvent) -> None:
+    async def log(self, log_events: Sequence[GameLogEvent]) -> None:
         pass
 
 
@@ -184,7 +202,11 @@ class WebOrgNotifier(OrgNotifier):
         self.push_sender = push_sender
         self.notification_dao = notification_dao
 
-    async def notify(self, event: Event) -> None:
+    async def notify(self, events: Sequence[Event]) -> None:
+        for event in events:
+            await self._notify_one(event)
+
+    async def _notify_one(self, event: Event) -> None:
         match event:
             case LevelUp():
                 await self._notify_level_up(event)

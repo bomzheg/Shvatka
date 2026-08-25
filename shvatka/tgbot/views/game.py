@@ -1,6 +1,7 @@
 from datetime import datetime
 import json
 import logging
+import typing
 from contextlib import suppress
 from dataclasses import dataclass
 from typing import Iterable, Sequence
@@ -16,6 +17,11 @@ from shvatka.core.models import dto, enums
 from shvatka.core.models.dto import hints, action, KeyTime
 from shvatka.core.utils.datetime_utils import tz_utc
 from shvatka.core.views.game import (
+    AnyViewTask,
+    DuplicateKey,
+    EffectsKey,
+    GameFinished,
+    GameFinishedByAll,
     GameViewPreparer,
     GameView,
     GameLogWriter,
@@ -27,6 +33,10 @@ from shvatka.core.views.game import (
     GameLogEvent,
     GameLogType,
     InputContainer,
+    SendHint,
+    SendPuzzle,
+    ShowEffects,
+    WrongKey,
 )
 from shvatka.tgbot.views.bot_alert import BotAlert
 from shvatka.tgbot.views.hint_sender import HintSender
@@ -143,6 +153,37 @@ class BotView(GameViewPreparer, GameView):
                 await self.bot_alert.alert(
                     f"can't send prepare message to team {team.id} [{e.__class__.__name__}]"
                 )
+
+    async def show(self, tasks: Sequence[AnyViewTask]) -> None:
+        """Show each task in the chat it belongs to, one after another.
+
+        The order matters and the sleeps are real: a key is confirmed before
+        the puzzle it opened, and a puzzle is a caption and its hints a second
+        apart. That is why this runs where nobody is waiting for it.
+        """
+        for task in tasks:
+            await self._show_one(task)
+
+    async def _show_one(self, task: AnyViewTask) -> None:
+        match task:
+            case SendPuzzle():
+                await self.send_puzzle(task.team, task.level)
+            case SendHint():
+                await self.send_hint(task.team, task.hint_number, task.level)
+            case DuplicateKey():
+                await self.duplicate_key(task.key, task.input_container)
+            case WrongKey():
+                await self.wrong_key(task.key, task.input_container)
+            case EffectsKey():
+                await self.effects_key(task.key, task.effects, task.input_container)
+            case GameFinished():
+                await self.game_finished(task.team, task.input_container)
+            case GameFinishedByAll():
+                await self.game_finished_by_all(task.team)
+            case ShowEffects():
+                await self.effects(task.team, task.effects, task.input_container)
+            case _:
+                typing.assert_never(task)
 
     async def send_puzzle(self, team: dto.Team, level: dto.Level) -> None:
         assert level.number_in_game is not None
@@ -364,7 +405,11 @@ class GameBotLog(GameLogWriter):
     bot: Bot
     log_chat_id: int
 
-    async def log(self, event_log: GameLogEvent) -> None:
+    async def log(self, log_events: Sequence[GameLogEvent]) -> None:
+        for event_log in log_events:
+            await self._log_one(event_log)
+
+    async def _log_one(self, event_log: GameLogEvent) -> None:
         match event_log:
             case GameLogEvent(GameLogType.GAME_WAIVERS_STARTED):
                 text = "Начался сбор вейверов на игру {game}"
@@ -394,7 +439,11 @@ class BotOrgNotifier(OrgNotifier):
     bot: Bot
     retort: Retort
 
-    async def notify(self, event: Event) -> None:
+    async def notify(self, events: Sequence[Event]) -> None:
+        for event in events:
+            await self._notify_one(event)
+
+    async def _notify_one(self, event: Event) -> None:
         match event:
             case LevelUp():
                 for org in event.orgs_list:

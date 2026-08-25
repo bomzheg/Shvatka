@@ -24,38 +24,113 @@ class InputContainer(Protocol):
     pass
 
 
+@dataclass(frozen=True)
+class ViewTask:
+    """One thing the game has to show, as data rather than as a call.
+
+    An interactor decides *what* to show while it still holds the transaction,
+    and collects the tasks in a plain list. Nothing is shown until it commits
+    and hands the list to :meth:`GameView.show` — so a transaction that never
+    lands shows nothing, which is the whole point of the shape.
+
+    A task must be self-contained: it carries the dtos a view needs and
+    survives the scope it was made in, because it is usually rendered later,
+    somewhere else.
+    """
+
+
+@dataclass(frozen=True)
+class KeyShown(ViewTask):
+    """The team typed a key and has to be told what it was.
+
+    Grouped under one base because the answer to a key is also what the http
+    response is built from — the api picks this out of the list without caring
+    which of the three it is.
+    """
+
+    key: dto.KeyTime
+    input_container: InputContainer
+
+
+@dataclass(frozen=True)
+class DuplicateKey(KeyShown):
+    pass
+
+
+@dataclass(frozen=True)
+class WrongKey(KeyShown):
+    pass
+
+
+@dataclass(frozen=True)
+class EffectsKey(KeyShown):
+    effects: action.Effects
+
+
+@dataclass(frozen=True)
+class SendPuzzle(ViewTask):
+    team: dto.Team
+    level: dto.Level
+
+
+@dataclass(frozen=True)
+class SendHint(ViewTask):
+    team: dto.Team
+    hint_number: int
+    level: dto.Level
+
+
+@dataclass(frozen=True)
+class GameFinished(ViewTask):
+    team: dto.Team
+    input_container: InputContainer
+
+
+@dataclass(frozen=True)
+class GameFinishedByAll(ViewTask):
+    team: dto.Team
+
+
+@dataclass(frozen=True)
+class ShowEffects(ViewTask):
+    """Effects that happened without a key — the level timer fired."""
+
+    team: dto.Team
+    effects: action.Effects
+    input_container: InputContainer
+
+
+AnyViewTask = (
+    DuplicateKey
+    | WrongKey
+    | EffectsKey
+    | SendPuzzle
+    | SendHint
+    | GameFinished
+    | GameFinishedByAll
+    | ShowEffects
+)
+"""Every task there is, as a union — so a view that forgets one fails to type."""
+
+
 class GameView(Protocol):
-    async def send_puzzle(self, team: dto.Team, level: dto.Level) -> None:
-        raise NotImplementedError
+    """Shows the game wherever its audience is — a chat, a browser, both.
 
-    async def send_hint(self, team: dto.Team, hint_number: int, level: dto.Level) -> None:
-        raise NotImplementedError
+    One method on purpose: a view decides for itself how to render each task,
+    and how to render a whole batch — the telegram one hands the batch to a
+    background task so a player never waits for it. Adding something to show
+    is a new :class:`ViewTask`, not a new method every implementation has to
+    grow.
+    """
 
-    async def duplicate_key(self, key: dto.KeyTime, input_container: InputContainer) -> None:
-        raise NotImplementedError
-
-    async def wrong_key(self, key: dto.KeyTime, input_container: InputContainer) -> None:
-        raise NotImplementedError
-
-    async def effects_key(
-        self, key: dto.KeyTime, effects: action.Effects, input_container: InputContainer
-    ) -> None:
-        raise NotImplementedError
-
-    async def game_finished(self, team: dto.Team, input_container: InputContainer) -> None:
-        raise NotImplementedError
-
-    async def game_finished_by_all(self, team: dto.Team) -> None:
-        raise NotImplementedError
-
-    async def effects(
-        self, team: dto.Team, effects: action.Effects, input_container: InputContainer
-    ) -> None:
+    async def show(self, tasks: Sequence[AnyViewTask]) -> None:
+        """Show these, in this order. Called after the transaction committed."""
         raise NotImplementedError
 
 
 class GameLogWriter(Protocol):
-    async def log(self, log_event: GameLogEvent) -> None:
+    async def log(self, log_events: Sequence[GameLogEvent]) -> None:
+        """Write these down where the audience of the game watches it."""
         raise NotImplementedError
 
 
@@ -80,6 +155,26 @@ class GameReleasePublisher(Protocol):
         raise NotImplementedError
 
 
+@dataclass
+class ShowTasks:
+    """What one request decided to show, one plain list per sender.
+
+    Filled while the interactor still holds the transaction and handed over
+    only after it commits, so a transaction that never lands shows nothing.
+    Separate lists because the three senders are separate: order is kept
+    within a list, never between them.
+    """
+
+    view: list[AnyViewTask] = field(default_factory=list)
+    org: list[Event] = field(default_factory=list)
+    log: list[GameLogEvent] = field(default_factory=list)
+
+    def extend(self, other: ShowTasks) -> None:
+        self.view.extend(other.view)
+        self.org.extend(other.org)
+        self.log.extend(other.log)
+
+
 class GameLogType(enum.Enum):
     GAME_WAIVERS_STARTED = enum.auto()
     GAME_PLANED = enum.auto()
@@ -97,7 +192,8 @@ class GameLogEvent:
 
 
 class OrgNotifier(Protocol):
-    async def notify(self, event: Event) -> None:
+    async def notify(self, events: Sequence[Event]) -> None:
+        """Tell the orgs about these, in this order."""
         raise NotImplementedError
 
 

@@ -474,7 +474,7 @@ class AcceptRequestInteractor:
         await self._notify_initiator(request, NotificationType.request_accepted, actor)
         org = await self.org_adder.add_new_org(game, actor)
         await self.requests.commit()
-        await self.org_notifier.notify(NewOrg(orgs_list=notify_orgs, game=game, org=org))
+        await self.org_notifier.notify([NewOrg(orgs_list=notify_orgs, game=game, org=org)])
         await self._submit_resolved(updated)
         return updated
 

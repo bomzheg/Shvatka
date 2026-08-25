@@ -1,5 +1,6 @@
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
+from typing import Sequence
 
 import pytest
 
@@ -46,8 +47,8 @@ class RecordingLogWriter(GameLogWriter):
     def __init__(self) -> None:
         self.calls: list[GameLogEvent] = []
 
-    async def log(self, log_event: GameLogEvent) -> None:
-        self.calls.append(log_event)
+    async def log(self, log_events: Sequence[GameLogEvent]) -> None:
+        self.calls.extend(log_events)
 
 
 @dataclass

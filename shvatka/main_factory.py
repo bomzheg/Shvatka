@@ -1,7 +1,6 @@
 import logging
 import time
 from functools import partial
-from typing import AsyncIterable
 
 from aiogram import Bot, Dispatcher
 from dishka import (
@@ -21,11 +20,8 @@ from shvatka.api.app.dependencies import get_api_specific_providers
 from shvatka.api.app.dependencies.auth import ApiIdentityProvider
 from shvatka.api.app.config.parser.main import load_config as load_api_config
 from shvatka.api.app.utils.web_input import (
-    WebGameView,
     WebTeamNotifier,
-    WebOrgNotifier,
     WebGamePreparer,
-    WebGameLogWriter,
 )
 from shvatka.api.main_factory import create_app
 from shvatka.common.config.models.paths import Paths
@@ -50,7 +46,6 @@ from shvatka.tgbot.main_factory import (
 from shvatka.tgbot.services.identity import TgBotIdentityProvider
 from shvatka.tgbot.utils.fastapi_webhook import setup_application, SimpleRequestHandler
 from shvatka.tgbot.views.game import BotView
-from shvatka.tgbot.views.outbox import BotOutbox
 from shvatka.tgbot.views.game_release import GameBotReleasePublisher
 from shvatka.tgbot.views.team import BotTeamNotifier
 from shvatka.views import (
@@ -75,21 +70,8 @@ class ComplexOnlyProvider(Provider):
             return await container.get(ApiIdentityProvider)
 
     @provide
-    async def bot_outbox(self, nursery: Nursery) -> AsyncIterable[BotOutbox]:
-        """One outbox per request, delivered when the request's scope closes.
-
-        Flushing here rather than at each call site is what makes it safe to
-        forget about: whatever showed something during the request — an api
-        route, a bot handler, a scheduled job — has it delivered, exactly once,
-        after it is done.
-        """
-        outbox = BotOutbox(nursery=nursery)
-        yield outbox
-        outbox.flush()
-
-    @provide
-    def complex_view(self, outbox: BotOutbox, web_view: WebGameView) -> GameView:
-        return ComplexView(outbox, web_view)
+    def complex_view(self, nursery: Nursery) -> GameView:
+        return ComplexView(nursery)
 
     @provide
     def complex_preparer(
@@ -102,12 +84,12 @@ class ComplexOnlyProvider(Provider):
         return ComplexTeamNotifier(bot, web)
 
     @provide
-    def complex_org_notifier(self, outbox: BotOutbox, web: WebOrgNotifier) -> OrgNotifier:
-        return ComplexOrgNotifier(outbox, web)
+    def complex_org_notifier(self, nursery: Nursery) -> OrgNotifier:
+        return ComplexOrgNotifier(nursery)
 
     @provide
-    def complex_log_writer(self, outbox: BotOutbox, web: WebGameLogWriter) -> GameLogWriter:
-        return ComplexGameLogWriter(outbox, web)
+    def complex_log_writer(self, nursery: Nursery) -> GameLogWriter:
+        return ComplexGameLogWriter(nursery)
 
     @provide
     def complex_release_publisher(self, bot: GameBotReleasePublisher) -> GameReleasePublisher:

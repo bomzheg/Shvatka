@@ -108,13 +108,15 @@ class CreateTeamInteractor:
             await self.dao.join_team(captain, team, CAPTAIN_ROLE, as_captain=True)
         await self.dao.commit()
         await self.game_log.log(
-            GameLogEvent(
-                GameLogType.TEAM_CREATED,
-                data={
-                    "team": team.name,
-                    "captain": captain.name_mention,
-                },
-            )
+            [
+                GameLogEvent(
+                    GameLogType.TEAM_CREATED,
+                    data={
+                        "team": team.name,
+                        "captain": captain.name_mention,
+                    },
+                )
+            ]
         )
         return team
 

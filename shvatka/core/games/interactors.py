@@ -40,6 +40,10 @@ from shvatka.core.utils import exceptions
 from shvatka.core.utils.datetime_utils import tz_utc
 from shvatka.core.utils.key_checker_lock import KeyCheckerFactory
 from shvatka.core.views.game import (
+    DuplicateKey,
+    EffectsKey,
+    GameFinished,
+    GameFinishedByAll,
     GameView,
     GameLogWriter,
     OrgNotifier,
@@ -47,6 +51,11 @@ from shvatka.core.views.game import (
     LevelUp,
     GameLogEvent,
     GameLogType,
+    SendPuzzle,
+    ShowEffects,
+    ShowTasks,
+    AnyViewTask,
+    WrongKey,
 )
 from shvatka.infrastructure.scheduler import SchedulerContainer
 
@@ -255,6 +264,53 @@ class PassedLevelsReaderInteractor:
         return await self.game_play_dao.get_passed_levels(identity)
 
 
+def key_tasks(new_key: dto.InsertedKey, input_container: InputContainer) -> list[AnyViewTask]:
+    """What the team has to be told about the key it just typed."""
+    if new_key.is_duplicate:
+        # if duplicate - only show info about doubles, do not repeat bonuses or other effects
+        return [DuplicateKey(key=new_key, input_container=input_container)]
+    match new_key.type_:
+        case enums.KeyType.wrong:
+            return [WrongKey(key=new_key, input_container=input_container)]
+        case enums.KeyType.effects | enums.KeyType.bonus | enums.KeyType.simple:
+            return [
+                EffectsKey(
+                    key=new_key,
+                    effects=new_key.parsed_key.effect,
+                    input_container=input_container,
+                )
+            ]
+        case _:
+            typing.assert_never(new_key.type_)
+
+
+def level_up_tasks(
+    outcome: LevelUpOutcome,
+    *,
+    input_container: InputContainer,
+    team: dto.Team,
+    game: dto.FullGame,
+) -> ShowTasks:
+    """Write down what :func:`GamePlayBaseInteractor.resolve_level_up` decided.
+
+    Nothing is shown and nothing is read: everything travels in the outcome,
+    and the caller shows the result once it has committed.
+    """
+    tasks = ShowTasks()
+    if outcome.team_finished:
+        tasks.view.append(GameFinished(team=team, input_container=input_container))
+        if outcome.all_finished:
+            tasks.log.append(GameLogEvent(GameLogType.GAME_FINISHED, {"game": game.name}))
+            tasks.view.extend(
+                GameFinishedByAll(team=finished) for finished in outcome.finished_teams
+            )
+        return tasks
+    assert outcome.next_level is not None
+    tasks.view.append(SendPuzzle(team=team, level=outcome.next_level))
+    tasks.org.append(LevelUp(team=team, new_level=outcome.next_level, orgs_list=outcome.orgs))
+    return tasks
+
+
 @dataclass(kw_only=True)
 class GamePlayBaseInteractor:
     """
@@ -302,32 +358,14 @@ class GamePlayBaseInteractor:
             orgs=list(await get_spying_orgs(game, self.dao)),
         )
 
-    async def show_level_up(
-        self,
-        outcome: LevelUpOutcome,
-        *,
-        input_container: InputContainer,
-        team: dto.Team,
-        game: dto.FullGame,
-        at: datetime,
+    async def schedule_level_up(
+        self, outcome: LevelUpOutcome, team: dto.Team, at: datetime
     ) -> None:
-        """Tell everyone what :meth:`resolve_level_up` already decided.
-
-        Runs after the commit, so it must not touch the database — everything
-        it shows travels in the outcome.
-        """
+        """Plan the first hint of the level the team has just been let onto."""
         if outcome.team_finished:
-            await self.view.game_finished(team, input_container)
-            if outcome.all_finished:
-                await self.game_log.log(
-                    GameLogEvent(GameLogType.GAME_FINISHED, {"game": game.name})
-                )
-                for finished in outcome.finished_teams:
-                    await self.view.game_finished_by_all(finished)
             return
         assert outcome.next_level is not None
         assert outcome.level_time_id is not None
-        await self.view.send_puzzle(team=team, level=outcome.next_level)
         await schedule_first_hint(
             scheduler=self.scheduler,
             team=team,
@@ -335,9 +373,15 @@ class GamePlayBaseInteractor:
             lt_id=outcome.level_time_id,
             now=at,
         )
-        await self.org_notifier.notify(
-            LevelUp(team=team, new_level=outcome.next_level, orgs_list=outcome.orgs)
-        )
+
+    async def show(self, tasks: ShowTasks) -> None:
+        """Hand each list to the sender it belongs to. Never before a commit."""
+        if tasks.view:
+            await self.view.show(tasks.view)
+        if tasks.org:
+            await self.org_notifier.notify(tasks.org)
+        if tasks.log:
+            await self.game_log.log(tasks.log)
 
 
 @dataclass(kw_only=True)
@@ -349,7 +393,7 @@ class CheckKeyInteractor(GamePlayBaseInteractor):
         key: str,
         input_container: InputContainer,
         identity: IdentityProvider,
-    ):
+    ) -> list[AnyViewTask]:
         """
         Проверяет введённый игроком ключ. Может случиться несколько исходов:
         - ключ неверный - просто записываем его в лог и уведомляем команду
@@ -377,47 +421,23 @@ class CheckKeyInteractor(GamePlayBaseInteractor):
 
         new_key = await self.key_processor.check_key(key=key, player=player, team=team, now=now)
         if new_key is None:
-            return
+            return []
         level_up: LevelUpOutcome | None = None
         if not new_key.is_duplicate and new_key.is_level_up():
             level_up = await self.resolve_level_up(team=team, game=game)
-        # everything the key changed is decided by now, so one commit closes
-        # the transaction — and showing it (a puzzle is several telegram
-        # messages apart) happens outside, with no rows held.
-        await self.dao.commit()
-        await self.view_(new_key, input_container)
+        tasks = ShowTasks(view=key_tasks(new_key, input_container))
         if level_up is not None:
-            await self.show_level_up(
-                level_up,
-                input_container=input_container,
-                team=team,
-                game=game,
-                at=now,
+            tasks.extend(
+                level_up_tasks(level_up, input_container=input_container, team=team, game=game)
             )
-
-    async def view_(self, new_key: dto.InsertedKey, input_container: InputContainer) -> None:
-        if new_key.is_duplicate:
-            await self.view.duplicate_key(key=new_key, input_container=input_container)
-            # if duplicate - only show info about doubles, do not repeat bonuses or other effects
-            return
-        match new_key.type_:
-            case enums.KeyType.wrong:
-                await self.view.wrong_key(key=new_key, input_container=input_container)
-            case enums.KeyType.effects:
-                await self.view.effects_key(
-                    key=new_key, effects=new_key.parsed_key.effect, input_container=input_container
-                )
-            case enums.KeyType.bonus:
-                await self.view.effects_key(
-                    key=new_key, effects=new_key.parsed_key.effect, input_container=input_container
-                )
-            case enums.KeyType.simple:
-                await self.view.effects_key(
-                    key=new_key, effects=new_key.parsed_key.effect, input_container=input_container
-                )
-
-            case _:
-                typing.assert_never(new_key.type_)
+        # everything the key changed is decided by now, and nothing has been
+        # shown: one commit closes the transaction, and only a transaction that
+        # landed gets to show anything.
+        await self.dao.commit()
+        if level_up is not None:
+            await self.schedule_level_up(level_up, team=team, at=now)
+        await self.show(tasks)
+        return tasks.view
 
 
 @dataclass(kw_only=True)
@@ -462,15 +482,18 @@ class GamePlayTimerInteractor(GamePlayBaseInteractor):
         level_up: LevelUpOutcome | None = None
         if level_up_effect is not None:
             level_up = await self.resolve_level_up(team=team, game=game)
+        tasks = ShowTasks(
+            view=[
+                ShowEffects(team=team, effects=effects, input_container=input_container)
+                for effects in effects_list
+            ]
+        )
+        if level_up is not None:
+            tasks.extend(
+                level_up_tasks(level_up, input_container=input_container, team=team, game=game)
+            )
         # same rule as a typed key: decide and write first, commit, then show
         await self.dao.commit()
-        for effects in effects_list:
-            await self.view.effects(team=team, effects=effects, input_container=input_container)
         if level_up is not None:
-            await self.show_level_up(
-                level_up,
-                input_container=input_container,
-                team=team,
-                game=game,
-                at=now,
-            )
+            await self.schedule_level_up(level_up, team=team, at=now)
+        await self.show(tasks)

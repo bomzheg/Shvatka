@@ -15,6 +15,8 @@ from shvatka.core.views.game import (
     GameView,
     GameLogEvent,
     GameLogType,
+    SendHint,
+    SendPuzzle,
 )
 
 logger = logging.getLogger(__name__)
@@ -69,7 +71,7 @@ async def start_game(
         level_times[team.id] = await dao.set_to_level(team=team, game=game, level_number=0, at=now)
     await dao.commit()
 
-    await asyncio.gather(*[view.send_puzzle(team, game.levels[0]) for team in teams])
+    await view.show([SendPuzzle(team=team, level=game.levels[0]) for team in teams])
 
     await asyncio.gather(
         *[
@@ -78,7 +80,7 @@ async def start_game(
         ]
     )
 
-    await game_log.log(GameLogEvent(GameLogType.GAME_STARTED, {"game": game.name}))
+    await game_log.log([GameLogEvent(GameLogType.GAME_STARTED, {"game": game.name})])
 
 
 async def send_hint(
@@ -115,7 +117,7 @@ async def send_hint(
             hint_number,
         )
         return
-    await view.send_hint(team, hint_number, level)
+    await view.show([SendHint(team=team, hint_number=hint_number, level=level)])
     next_hint_number = hint_number + 1
     if level.is_last_hint(hint_number):
         logger.debug(

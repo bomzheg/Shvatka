@@ -398,7 +398,7 @@ async def test_typed_key_is_shown_in_telegram_after_the_answer(
     """Telegram is written to by a background task, not by the request.
 
     A player typing a key waits for the database and nothing else; the chat is
-    caught up afterwards — see shep-0007.
+    caught up afterwards — see shep-0009.
     """
     token = auth.create_user_token(harry)
 

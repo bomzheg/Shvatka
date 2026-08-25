@@ -235,42 +235,53 @@ group. It is the wrong tool for the nursery: its exit waits for every child
 cancels its siblings, which is exactly what independent background jobs must
 not do.
 
-### Showing the game in telegram is deferred, not awaited
+### Showing the game is decided as data, and shown after the commit
 
-In the combined app the bot half of `ComplexView` / `ComplexOrgNotifier` /
-`ComplexGameLogWriter` is **recorded** into the request's `BotOutbox`
-(`tgbot/views/outbox.py`) and delivered by one nursery task afterwards
-(`deliver_bot_views`); only the web half — which fills the `InputContainer` the
-http response is built from — runs inline. A player typing a key must not wait
-for a puzzle's worth of messages, a second apart. See
+An interactor never shows anything while it works. It decides *what* to show,
+appends it to a plain list as `ViewTask` values (`core/views/game.py`), commits,
+and only then hands the list over:
+
+```python
+tasks = ShowTasks(view=key_tasks(new_key, input_container))
+await self.dao.commit()
+await self.show(tasks)
+```
+
+Before the commit it is a list and nothing else, so **a transaction that does
+not land shows nothing** — that is the point of the shape, not an optimisation.
+There is no finalizer that flushes what you forgot: showing is a line you write
+after the commit. See
 `docs/modules/shep/pages/shep-0009-key-submission-latency.adoc`; durable
-delivery, if the deferred half ever turns out to lose messages that matter, is
-planned in `docs/modules/shep/pages/shep-0010-message-outbox.adoc`.
+delivery, if a lost message ever turns out to matter, is planned in
+`docs/modules/shep/pages/shep-0010-message-outbox.adoc`.
+
+`GameView` has one method, `show(tasks)`. Adding something to show is a new
+`ViewTask` plus a branch in each view's router — never a new method on the
+protocol. `AnyViewTask` is a union, so a view that forgets one fails `mypy`.
 
 A level up follows the same rule from the other side: `resolve_level_up` does
-the database work and returns a `LevelUpOutcome`, the caller commits, and only
-then `show_level_up` shows it. Adding something to a level up means deciding
-which of those two halves it belongs to — never both.
+the database work and returns a `LevelUpOutcome`, and `level_up_tasks` turns
+that outcome into tasks. Both are pure of the other's concern; adding something
+to a level up means deciding which half it belongs to, never both.
 
-Two rules follow when you add a view method:
+Rules that follow when you add a view task:
 
-- A recorded call closes over **domain dtos only** (an aiogram `Message` is
-  fine — it is detached too). Never over a dao, a session or a sender: those
-  are `BotSenders`, resolved in the task's own scope.
-- Anything the caller needs back — a field of the response, a message id —
-  belongs to the inline (web) half. What the outbox delivers, nobody awaits.
+- A task carries **domain dtos only** (an aiogram `Message` inside an
+  `InputContainer` is fine — it is detached too). Never a dao, a session or a
+  sender: it is rendered later, in a scope of its own.
+- Anything the caller needs back belongs in the returned list, not in a
+  container the view writes into. `CheckKeyInteractor` returns its view tasks
+  and the api builds `InsertedKey` from them; that is why `WebInput` is gone.
+- A task may be **rendered more than once**: a failed delivery is retried whole,
+  so rendering one task can resend messages that already arrived. A resent
+  puzzle is acceptable; a task that *counts* something is not.
+- Keep rendering short. Shutdown gives running jobs `drain_timeout` before
+  cancelling them (`AsyncioNursery.close`); minutes-long work is still cancelled
+  on restart.
 
-The order of one request's messages is kept (one task replays them in order);
-the order between concurrent requests is not, and never was.
-
-A recorded call may be **run more than once**: `deliver_bot_views` retries the
-whole call when telegram says the failure was its own (flood control, a dropped
-connection, a 5xx), so a call that sends several messages may resend the ones
-that already arrived. Write recorded calls to tolerate that — a resent puzzle is
-acceptable, a recorded call that *counts* something is not. Shutdown gives
-running deliveries `drain_timeout` before cancelling them
-(`AsyncioNursery.close`), so keep a deferred call short; minutes-long work is
-still cancelled on restart.
+`ComplexView.show` hands the whole list to the nursery as one job, so the
+messages of one request keep their order. Between concurrent requests nothing is
+promised, and never was.
 
 One file is exempt from the ban: `tgbot/utils/fastapi_webhook.py` is a
 portable copy of aiogram's webhook handler, meant to be pasted into another

@@ -7,7 +7,7 @@
 | Title | Durable delivery of what the game shows
 | Status | `Draft`
 | Created | 2026-08-24
-| Updated | 2026-08-24
+| Updated | 2026-08-25
 | Related | xref:shep-0009-key-submission-latency.adoc[SHEP-0009], shvatka-ui issue #185
 |===
 
@@ -36,17 +36,16 @@ failures are retried (SHEP-0009 phase 3), so an ordinary restart is covered; a
 they never received, and the alert that would have said so died with the
 process.
 
-*Shown, never committed.* dishka finalizes generator providers with
-`asend(exception)` (`dishka/async_container.py`), so the code after `yield` —
-`outbox.flush()` — runs *even when the request raised*. A rolled-back request
-therefore still delivers its recording. On today's key path this is
-unreachable: `CheckKeyInteractor` records views only after `commit()`. Nothing
-in the design enforces that, though. The first view recorded before a commit
-that then fails announces a level up that did not happen, and no test would
-catch it.
+*Shown, never committed* — closed already. An earlier cut recorded view calls
+into a request-scoped outbox flushed by its dishka finalizer, and dishka
+finalizes generator providers with `asend(exception)`
+(`dishka/async_container.py`): the flush ran even when the request raised. That
+is gone. An interactor now collects tasks in a plain list and calls `show` on
+the line after `commit()` (xref:shep-0009-key-submission-latency.adoc[SHEP-0009]),
+so a transaction that does not land shows nothing, without a table.
 
-A real transactional outbox closes both by construction: the row exists *if and
-only if* the state change exists.
+What is left is only the first case. A transactional outbox would close it by
+construction too: the row exists *if and only if* the state change exists.
 
 === Why this is not urgent
 
@@ -131,33 +130,29 @@ message_outbox
 with a partial index on `(available_at)` where `sent_at is null`, and one on
 `(partition_key, id)`.
 
-*The hard part is not the table, it is the payload.* Today a recorded call is a
-closure:
-
-[source,python]
-----
-self.outbox.add(lambda senders: senders.view.send_puzzle(team=team, level=level))
-----
-
-and that is precisely why SHEP-0009 was a small change. A row cannot hold a
-closure, so every deferred view call needs a serializable command dataclass and
-a renderer keyed by `type`. `adaptix` is already a dependency and is the retort
-to dump and load them with.
+*Half of the hard part is already done.* What is deferred is no longer a
+closure but a `ViewTask` — a frozen dataclass over domain dtos, with a renderer
+per implementation that matches on its type (SHEP-0009 phase 2). A row can hold
+that; `adaptix` is already a dependency and is the retort to dump and load them
+with. What is left is making the dtos inside a task serializable, which means
+replacing them with ids.
 
 Three things fall out of that and have to be decided rather than discovered:
 
-* *Ids, not snapshots.* A payload carries `team_id`, `level_id`, `chat_id`,
-  `message_id` — never rendered text. A renderer therefore reads state at *send*
-  time, not at record time. That is a semantic change: `resolve_level_up`
+* *Ids, not snapshots.* A task today carries whole dtos, which is free in
+  memory and impossible in a row. A payload carries `team_id`, `level_id`,
+  `chat_id`, `message_id` — never rendered text. A renderer therefore reads
+  state at *send* time, not at record time. That is a semantic change: `resolve_level_up`
   deliberately collects `finished_teams` before the commit so the fan-out
   matches the moment the game ended. Commands whose meaning depends on a
   snapshot must carry the snapshot as ids (the list of team ids), not re-query.
-* *The reply target.* `duplicate_key` and friends reply to the player's actual
-  telegram message. `chat_id` + `message_id` is enough; an aiogram `Message` is
-  not storable.
+* *The reply target.* `DuplicateKey` and its siblings carry an `InputContainer`,
+  which on the bot side wraps an aiogram `Message`. `chat_id` + `message_id` is
+  enough and is storable; the `Message` is not.
 * *Schema evolution.* A row written by the previous version must still load
-  after a deploy. Commands stay additive, unknown `type` values are alerted and
-  left unsent rather than dropped.
+  after a deploy. Tasks stay additive, unknown `type` values are alerted and
+  left unsent rather than dropped. Note this is the one place the `AnyViewTask`
+  union stops helping: the compiler cannot check a row written last week.
 
 === Phase 3: a relay, as a fallback — not as the path
 
@@ -242,8 +237,8 @@ so that the door stays open.
 | ⏳ not started
 
 | 2
-| `message_outbox` table, command dataclasses and renderers; rows written in the
-  request's transaction, delivery unchanged
+| `message_outbox` table; tasks made serializable (dtos → ids) and rows written
+  in the request's transaction, delivery unchanged
 | ⏳ not started
 
 | 3

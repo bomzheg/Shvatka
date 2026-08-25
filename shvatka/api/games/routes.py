@@ -12,7 +12,8 @@ from shvatka.api.app.dependencies.auth import ApiIdentityProvider
 from shvatka.api.games import requests, responses
 from shvatka.api.games.responses import MyRoleDto
 from shvatka.api.shared import responses as shared
-from shvatka.api.app.utils.web_input import WebInput
+from shvatka.api.app.utils.web_input import ApiInput
+from shvatka.core.views.game import EffectsKey, GameFinished, KeyShown
 from shvatka.core.games.interactors import (
     GamePlayReaderInteractor,
     GameKeysReaderInteractor,
@@ -283,26 +284,33 @@ async def get_passed_levels(
 async def insert_key(
     identity: FromDishka[ApiIdentityProvider],
     interactor: FromDishka[CheckKeyInteractor],
-    input_container: FromDishka[WebInput],
+    input_container: FromDishka[ApiInput],
     current_game: FromDishka[CurrentGameProvider],
     key: Annotated[requests.Key, Body()],
 ) -> responses.InsertedKey:
-    await interactor(key=key.text, identity=identity, input_container=input_container)
-    if input_container.new_key is None:
+    """Answer a key from what the interactor decided to show.
+
+    The same tasks go to telegram in the background; here they are simply read
+    rather than sent, so the answer says exactly what the game will say.
+    """
+    tasks = await interactor(key=key.text, identity=identity, input_container=input_container)
+    shown_key = next((task for task in tasks if isinstance(task, KeyShown)), None)
+    if shown_key is None:
         logger.critical("not implemented condition for key %s", key.text)
         raise HTTPException(status_code=500, detail="not implemented state found")
     game = await current_game.get_required_full_game()
     level_numbers_by_name_id = {level.name_id: level.number_in_game for level in game.levels}
     return responses.InsertedKey(
-        text=input_container.new_key.text,
-        is_duplicate=input_container.new_key.is_duplicate,
-        wrong=input_container.new_key.type_ == enums.KeyType.wrong,
-        at=input_container.new_key.at,
+        text=shown_key.key.text,
+        is_duplicate=shown_key.key.is_duplicate,
+        wrong=shown_key.key.type_ == enums.KeyType.wrong,
+        at=shown_key.key.at,
         effects=[
-            responses.Effects.from_core(effect, level_numbers_by_name_id)
-            for effect in input_container.effects
+            responses.Effects.from_core(task.effects, level_numbers_by_name_id)
+            for task in tasks
+            if isinstance(task, EffectsKey)
         ],
-        game_finished=input_container.game_finished,
+        game_finished=any(isinstance(task, GameFinished) for task in tasks),
     )
 
 

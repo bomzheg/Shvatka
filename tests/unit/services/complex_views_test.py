@@ -1,29 +1,23 @@
+"""Nothing reaches an edge while the caller waits — it is handed to the nursery."""
+
 import pytest
 
-from shvatka.core.models import dto
-from shvatka.core.models.dto import action
 from shvatka.core.views.game import (
-    GameLogWriter,
+    Event,
     GameLogEvent,
     GameLogType,
-    GameView,
     GameViewPreparer,
-    InputContainer,
+    SendPuzzle,
+    WrongKey,
 )
-from shvatka.tgbot.views.outbox import BotOutbox
-from shvatka.views import ComplexGameLogWriter, ComplexGameViewPreparer, ComplexView
-from tests.mocks.nursery import FakeNursery, deliver_recorded
-
-
-class RecordingLogWriter(GameLogWriter):
-    def __init__(self, *, fail: bool = False) -> None:
-        self.calls: list[GameLogEvent] = []
-        self.fail = fail
-
-    async def log(self, log_event: GameLogEvent) -> None:
-        self.calls.append(log_event)
-        if self.fail:
-            raise RuntimeError("boom")
+from shvatka.tasks import notify_orgs, show_game, write_game_log
+from shvatka.views import (
+    ComplexGameLogWriter,
+    ComplexGameViewPreparer,
+    ComplexOrgNotifier,
+    ComplexView,
+)
+from tests.mocks.nursery import FakeNursery
 
 
 class RecordingPreparer(GameViewPreparer):
@@ -37,110 +31,73 @@ class RecordingPreparer(GameViewPreparer):
             raise RuntimeError("boom")
 
 
-class RecordingGameView(GameView):
-    """A view that only writes down what it was asked to show, in order."""
+@pytest.mark.asyncio
+async def test_one_job_for_the_whole_request() -> None:
+    nursery = FakeNursery()
+    tasks = [
+        WrongKey(key="key", input_container=None),
+        SendPuzzle(team="team", level="level"),
+    ]
 
-    def __init__(self, *, fail: bool = False) -> None:
-        self.calls: list[str] = []
-        self.fail = fail
+    await ComplexView(nursery).show(tasks)
 
-    async def send_puzzle(self, team: dto.Team, level: dto.Level) -> None:
-        self._record("send_puzzle")
-
-    async def send_hint(self, team: dto.Team, hint_number: int, level: dto.Level) -> None:
-        self._record("send_hint")
-
-    async def duplicate_key(self, key: dto.KeyTime, input_container: InputContainer) -> None:
-        self._record("duplicate_key")
-
-    async def wrong_key(self, key: dto.KeyTime, input_container: InputContainer) -> None:
-        self._record("wrong_key")
-
-    async def effects_key(
-        self, key: dto.KeyTime, effects: action.Effects, input_container: InputContainer
-    ) -> None:
-        self._record("effects_key")
-
-    async def game_finished(self, team: dto.Team, input_container: InputContainer) -> None:
-        self._record("game_finished")
-
-    async def game_finished_by_all(self, team: dto.Team) -> None:
-        self._record("game_finished_by_all")
-
-    async def effects(
-        self, team: dto.Team, effects: action.Effects, input_container: InputContainer
-    ) -> None:
-        self._record("effects")
-
-    def _record(self, name: str) -> None:
-        self.calls.append(name)
-        if self.fail:
-            raise RuntimeError("boom")
+    assert len(nursery.spawned) == 1, "messages of one request must keep their order"
+    job, kwargs = nursery.spawned[0]
+    assert job is show_game
+    assert list(kwargs["tasks"]) == tasks
 
 
 @pytest.mark.asyncio
-async def test_key_answered_before_telegram_is_written_to() -> None:
-    bot = RecordingGameView()
-    web = RecordingGameView()
-    outbox = BotOutbox(nursery=FakeNursery())
-    view = ComplexView(outbox, web)
+async def test_nothing_to_show_starts_no_job() -> None:
+    nursery = FakeNursery()
 
-    await view.effects_key(key=None, effects=None, input_container=None)
-    await view.send_puzzle(team=None, level=None)
+    await ComplexView(nursery).show([])
 
-    assert web.calls == ["effects_key", "send_puzzle"], "the response is built now"
-    assert bot.calls == [], "a puzzle is minutes of messages — not the caller's wait"
-
-    await deliver_recorded(outbox, view=bot)
-
-    assert bot.calls == ["effects_key", "send_puzzle"], "a key is confirmed before its puzzle"
+    assert nursery.spawned == []
 
 
 @pytest.mark.asyncio
-async def test_bot_still_shown_even_if_web_fails() -> None:
-    bot = RecordingGameView()
-    web = RecordingGameView(fail=True)
-    outbox = BotOutbox(nursery=FakeNursery())
-    view = ComplexView(outbox, web)
+async def test_the_caller_is_not_kept_waiting_for_an_edge() -> None:
+    nursery = FakeNursery()
 
-    await view.wrong_key(key=None, input_container=None)
-    await deliver_recorded(outbox, view=bot)
+    # a puzzle is minutes of telegram; show() only writes it down and returns
+    await ComplexView(nursery).show([SendPuzzle(team="team", level="level")])
 
-    assert web.calls == ["wrong_key"]
-    assert bot.calls == ["wrong_key"]
+    assert nursery.spawned, "handed over"
+    # nothing was sent: the job has not been run, and show() did not run it
 
 
 @pytest.mark.asyncio
-async def test_log_writer_writes_web_now_and_bot_after() -> None:
-    bot = RecordingLogWriter()
-    web = RecordingLogWriter()
-    outbox = BotOutbox(nursery=FakeNursery())
-    writer = ComplexGameLogWriter(outbox, web)
-    event = GameLogEvent(type=GameLogType.GAME_STARTED)
+async def test_orgs_are_told_in_the_background() -> None:
+    nursery = FakeNursery()
+    events = [Event(orgs_list=[])]
 
-    await writer.log(event)
+    await ComplexOrgNotifier(nursery).notify(events)
 
-    assert web.calls == [event]
-    assert bot.calls == []
-
-    await deliver_recorded(outbox, game_log=bot)
-
-    assert bot.calls == [event]
+    job, kwargs = nursery.spawned[0]
+    assert job is notify_orgs
+    assert list(kwargs["events"]) == events
 
 
 @pytest.mark.asyncio
-async def test_log_writer_writes_to_bot_even_if_web_fails() -> None:
-    bot = RecordingLogWriter()
-    web = RecordingLogWriter(fail=True)
-    outbox = BotOutbox(nursery=FakeNursery())
-    writer = ComplexGameLogWriter(outbox, web)
-    event = GameLogEvent(type=GameLogType.GAME_FINISHED)
+async def test_no_orgs_to_tell_starts_no_job() -> None:
+    nursery = FakeNursery()
 
-    await writer.log(event)
-    await deliver_recorded(outbox, game_log=bot)
+    await ComplexOrgNotifier(nursery).notify([])
 
-    assert bot.calls == [event]
-    assert web.calls == [event]
+    assert nursery.spawned == []
+
+
+@pytest.mark.asyncio
+async def test_game_log_is_written_in_the_background() -> None:
+    nursery = FakeNursery()
+    events = [GameLogEvent(type=GameLogType.GAME_FINISHED)]
+
+    await ComplexGameLogWriter(nursery).log(events)
+
+    job, kwargs = nursery.spawned[0]
+    assert job is write_game_log
+    assert list(kwargs["log_events"]) == events
 
 
 @pytest.mark.asyncio

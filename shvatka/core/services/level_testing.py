@@ -108,7 +108,7 @@ async def check_level_testing_key(
             orgs_list=await get_testing_observers(level=suite.level, dao=dao),
             result=await dao.get_testing_result(suite=suite),
         )
-        await org_notifier.notify(event)
+        await org_notifier.notify([event])
         return dto.KeyInsertResult.completed()
     return dto.KeyInsertResult.correct()
 

@@ -1,3 +1,5 @@
+from typing import Sequence
+
 from shvatka.core.views.game import OrgNotifier, Event
 
 
@@ -12,5 +14,5 @@ class OrgNotifierMock(OrgNotifier):
     def assert_no_calls(self):
         assert len(self.calls) == 0
 
-    async def notify(self, event: Event) -> None:
-        self.calls.append(event)
+    async def notify(self, events: Sequence[Event]) -> None:
+        self.calls.extend(events)

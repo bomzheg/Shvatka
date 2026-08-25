@@ -1,10 +1,23 @@
+import typing
 import uuid
 from dataclasses import dataclass, field
 from typing import Sequence
 
 from shvatka.core.models import dto
 from shvatka.core.models.dto import hints, action
-from shvatka.core.views.game import GameView, InputContainer
+from shvatka.core.views.game import (
+    AnyViewTask,
+    DuplicateKey,
+    EffectsKey,
+    GameFinished,
+    GameFinishedByAll,
+    GameView,
+    InputContainer,
+    SendHint,
+    SendPuzzle,
+    ShowEffects,
+    WrongKey,
+)
 from tests.utils.effects import assert_effects_equal
 from tests.utils.time_key import assert_time_key
 
@@ -19,6 +32,29 @@ class GameViewMock(GameView):
     effects_calls: list[tuple[dto.Team, action.Effects]] = field(default_factory=list)
     game_finished_calls: list[dto.Team] = field(default_factory=list)
     game_finished_by_all_calls: set[dto.Team] = field(default_factory=set)
+
+    async def show(self, tasks: Sequence[AnyViewTask]) -> None:
+        """Route each task to the list the assertions below read."""
+        for task in tasks:
+            match task:
+                case SendPuzzle():
+                    await self.send_puzzle(task.team, task.level)
+                case SendHint():
+                    await self.send_hint(task.team, task.hint_number, task.level)
+                case DuplicateKey():
+                    await self.duplicate_key(task.key, task.input_container)
+                case WrongKey():
+                    await self.wrong_key(task.key, task.input_container)
+                case EffectsKey():
+                    await self.effects_key(task.key, task.effects, task.input_container)
+                case GameFinished():
+                    await self.game_finished(task.team, task.input_container)
+                case GameFinishedByAll():
+                    await self.game_finished_by_all(task.team)
+                case ShowEffects():
+                    await self.effects(task.team, task.effects, task.input_container)
+                case _:
+                    typing.assert_never(task)
 
     async def send_puzzle(self, team: dto.Team, level: dto.Level) -> None:
         self.send_puzzle_calls.append((team, level))

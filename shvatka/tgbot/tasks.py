@@ -16,8 +16,7 @@ those are what ``FromDishka`` is for.
 import asyncio
 import logging
 import typing
-from collections.abc import Awaitable, Callable, Sequence
-from dataclasses import dataclass
+from collections.abc import Awaitable, Callable
 
 from aiogram import Bot
 from aiogram.exceptions import TelegramNetworkError, TelegramRetryAfter, TelegramServerError
@@ -31,7 +30,6 @@ from shvatka.infrastructure.crawler.game_scn.uploader.forum_scenario_uploader im
 from shvatka.infrastructure.crawler.game_scn.uploader.game_mapper import map_game_for_upload
 from shvatka.tgbot.config.models.bot import BotConfig
 from shvatka.tgbot.views.bot_alert import BotAlert
-from shvatka.tgbot.views.game import BotOrgNotifier, BotView, GameBotLog
 from shvatka.tgbot.views.hint_sender import HintSender
 from shvatka.tgbot.views.results.rich import ResultsRichSender
 from shvatka.tgbot.views.results.scenario import GamePublisher, LevelPublisher
@@ -39,47 +37,8 @@ from shvatka.tgbot.views.results.scenario import GamePublisher, LevelPublisher
 logger = logging.getLogger(__name__)
 
 
-@dataclass(frozen=True, slots=True)
-class BotSenders:
-    """Everything the bot shows the game through, resolved in the task's scope."""
-
-    view: BotView
-    org_notifier: BotOrgNotifier
-    game_log: GameBotLog
-
-
-BotDelivery = Callable[[BotSenders], Awaitable[None]]
-"""One recorded bot-side view call, waiting for the senders to run against."""
-
-
-async def deliver_bot_views(
-    calls: Sequence[BotDelivery],
-    view: FromDishka[BotView],
-    org_notifier: FromDishka[BotOrgNotifier],
-    game_log: FromDishka[GameBotLog],
-    alerter: FromDishka[BotAlert],
-) -> None:
-    """Show in telegram what one request decided to show, after it answered.
-
-    The calls were recorded by :class:`~shvatka.tgbot.views.outbox.BotOutbox`
-    during the request and are replayed here in the order they were made — a
-    key is confirmed before the puzzle it opened. Only the order *within* one
-    request is kept: two players of a team typing at once are two tasks, and
-    their messages interleave exactly as they did when the request sent them
-    itself.
-
-    A failure is not the caller's problem anymore (it is long gone), so each
-    call is contained on its own — one chat that can't be written to must not
-    swallow the rest — and alerted, because nobody is watching the response
-    for it.
-    """
-    senders = BotSenders(view=view, org_notifier=org_notifier, game_log=game_log)
-    for call in calls:
-        await _deliver_one(call, senders, alerter)
-
-
 DELIVERY_ATTEMPTS: typing.Final = 3
-"""How many times a deferred view call is tried before it is given up on."""
+"""How many times a deferred call is tried before it is given up on."""
 
 RETRY_BACKOFF: typing.Final = 1.0
 """Seconds before the second attempt; doubled for each one after it."""
@@ -90,25 +49,31 @@ MAX_RETRY_DELAY: typing.Final = 30.0
 RETRIABLE_ERRORS: typing.Final = (TelegramRetryAfter, TelegramNetworkError, TelegramServerError)
 """Failures telegram may recover from on its own; everything else is ours."""
 
+Delivery = Callable[[], Awaitable[None]]
+"""Showing one thing, ready to run — everything it needs is already bound."""
 
-async def _deliver_one(call: BotDelivery, senders: BotSenders, alerter: BotAlert) -> None:
+
+async def deliver(call: Delivery, alerter: BotAlert) -> None:
+    """Run one deferred send, contained and shouted about if it fails.
+
+    Nothing is watching a background delivery, so a failure has nowhere to go
+    but an alert — and it must not take the rest of the batch with it.
+    """
     try:
-        await _deliver_with_retry(call, senders)
+        await _with_retry(call)
     except Exception as e:
-        logger.exception("cant deliver bot view", exc_info=e)
+        logger.exception("cant deliver", exc_info=e)
         try:
-            await alerter.alert(f"cant deliver bot view because of {e!s}")
+            await alerter.alert(f"cant deliver because of {e!s}")
         except Exception as alert_error:
             logger.error("cant alert about failed delivery", exc_info=alert_error)
 
 
-async def _deliver_with_retry(call: BotDelivery, senders: BotSenders) -> None:
-    """Try a call again when telegram says the failure was its own fault.
+async def _with_retry(call: Delivery) -> None:
+    """Try again when telegram says the failure was its own fault.
 
-    Nobody is watching the response anymore, so a flood-control answer or a
-    dropped connection would otherwise cost a team its puzzle. Only failures
-    that a second attempt can fix are retried: being blocked by a chat or
-    sending something malformed is retried forever otherwise.
+    Only failures a second attempt can fix are retried: being blocked by a chat
+    or sending something malformed would fail identically forever.
 
     A call can be several messages (a puzzle is a caption and its hints), and a
     retry starts it from the beginning — so a failure halfway through resends
@@ -117,13 +82,13 @@ async def _deliver_with_retry(call: BotDelivery, senders: BotSenders) -> None:
     """
     for attempt in range(1, DELIVERY_ATTEMPTS + 1):
         try:
-            await call(senders)
+            await call()
         except RETRIABLE_ERRORS as e:  # noqa: PERF203  # retrying is the point of the loop
             delay = _retry_delay(e, attempt)
             if attempt == DELIVERY_ATTEMPTS or delay is None:
                 raise
             logger.warning(
-                "bot view delivery failed (attempt %s of %s), retrying in %.1f s: %s",
+                "delivery failed (attempt %s of %s), retrying in %.1f s: %s",
                 attempt,
                 DELIVERY_ATTEMPTS,
                 delay,

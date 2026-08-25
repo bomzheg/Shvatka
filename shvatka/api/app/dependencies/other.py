@@ -3,7 +3,7 @@ from dishka import Provider, Scope, provide
 from shvatka.api.app.config.models.main import ApiConfig
 from shvatka.api.app.utils.push import WebPushSender
 from shvatka.api.app.utils.web_input import (
-    WebInput,
+    ApiInput,
     WebGameView,
     WebGameLogWriter,
     WebGameReleasePublisher,
@@ -21,8 +21,8 @@ class OtherApiProvider(Provider):
     scope = Scope.REQUEST
 
     @provide
-    def input(self) -> WebInput:
-        return WebInput()
+    def input(self) -> ApiInput:
+        return ApiInput()
 
     @provide
     def push_sender(self, config: ApiConfig, dao: PushSubscriptionDAO) -> WebPushSender:

@@ -1,29 +1,23 @@
 import logging
 from dataclasses import dataclass
-from typing import Iterable
+from typing import Iterable, Sequence
 
-from shvatka.api.app.utils.web_input import (
-    WebGameView,
-    WebTeamNotifier,
-    WebOrgNotifier,
-    WebGamePreparer,
-    WebGameLogWriter,
-)
+from shvatka.api.app.utils.web_input import WebGamePreparer, WebTeamNotifier
 from shvatka.core.interfaces.dal.game_play import GamePreparer
 from shvatka.core.models import dto
-from shvatka.core.models.dto import action
+from shvatka.core.interfaces.nursery import Nursery
 from shvatka.core.views.game import (
+    AnyViewTask,
     GameView,
     GameViewPreparer,
-    InputContainer,
     OrgNotifier,
     Event,
     GameLogWriter,
     GameLogEvent,
 )
+from shvatka.tasks import notify_orgs, show_game, write_game_log
 from shvatka.core.views.team import TeamNotifier, TeamEvent
 from shvatka.tgbot.views.game import BotView
-from shvatka.tgbot.views.outbox import BotOutbox
 from shvatka.tgbot.views.team import BotTeamNotifier
 
 logger = logging.getLogger(__name__)
@@ -31,15 +25,13 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class ComplexOrgNotifier(OrgNotifier):
-    outbox: BotOutbox
-    web: WebOrgNotifier
+    """Tells the orgs on both edges, once the caller is done with them."""
 
-    async def notify(self, event: Event) -> None:
-        self.outbox.add(lambda senders: senders.org_notifier.notify(event))
-        try:
-            await self.web.notify(event)
-        except Exception as e:
-            logger.exception("web org notify error", exc_info=e)
+    nursery: Nursery
+
+    async def notify(self, events: Sequence[Event]) -> None:
+        if events:
+            self.nursery.spawn(notify_orgs, events=tuple(events))
 
 
 @dataclass
@@ -68,15 +60,13 @@ class ComplexGameViewPreparer(GameViewPreparer):
 
 @dataclass
 class ComplexGameLogWriter(GameLogWriter):
-    outbox: BotOutbox
-    web: WebGameLogWriter
+    """Writes the game's public log on both edges, after the caller commits."""
 
-    async def log(self, log_event: GameLogEvent) -> None:
-        self.outbox.add(lambda senders: senders.game_log.log(log_event))
-        try:
-            await self.web.log(log_event)
-        except Exception as e:
-            logger.exception("web game log error", exc_info=e)
+    nursery: Nursery
+
+    async def log(self, log_events: Sequence[GameLogEvent]) -> None:
+        if log_events:
+            self.nursery.spawn(write_game_log, log_events=tuple(log_events))
 
 
 @dataclass
@@ -97,90 +87,21 @@ class ComplexTeamNotifier(TeamNotifier):
 
 @dataclass
 class ComplexView(GameView):
-    """The game as both edges show it: the site now, telegram right after.
+    """Shows the game on both edges — and never while the caller waits.
 
-    The web half runs inline — it fills the container the http response is
-    built from and sends a push, both of which the caller is waiting for. The
-    bot half is only recorded (see :class:`~shvatka.tgbot.views.outbox.BotOutbox`):
-    a chat full of hints, a second apart, is not something a player submitting
-    a key should wait for.
+    By the time this is called the interactor has committed, so there is
+    nothing left to fail: the tasks go to the nursery as one background job
+    (:func:`~shvatka.tasks.show_game`) and the caller returns. A puzzle is a
+    caption and several hints, a second apart; a player who typed a key must
+    not wait for it, and neither must a scheduled job.
+
+    One job for the whole list, so the messages of one request keep their
+    order — a key is confirmed before the puzzle it opened. Between requests
+    nothing is promised, and never was.
     """
 
-    outbox: BotOutbox
-    web: WebGameView
+    nursery: Nursery
 
-    async def send_puzzle(self, team: dto.Team, level: dto.Level) -> None:
-        self.outbox.add(lambda senders: senders.view.send_puzzle(team=team, level=level))
-        try:
-            await self.web.send_puzzle(team=team, level=level)
-        except Exception as e:
-            logger.exception("web send_puzzle error", exc_info=e)
-
-    async def send_hint(self, team: dto.Team, hint_number: int, level: dto.Level) -> None:
-        self.outbox.add(
-            lambda senders: senders.view.send_hint(team=team, hint_number=hint_number, level=level)
-        )
-        try:
-            await self.web.send_hint(team=team, hint_number=hint_number, level=level)
-        except Exception as e:
-            logger.exception("web send hint error", exc_info=e)
-
-    async def duplicate_key(self, key: dto.KeyTime, input_container: InputContainer) -> None:
-        self.outbox.add(
-            lambda senders: senders.view.duplicate_key(key=key, input_container=input_container)
-        )
-        try:
-            await self.web.duplicate_key(key=key, input_container=input_container)
-        except Exception as e:
-            logger.exception("web duplicate_key error", exc_info=e)
-
-    async def wrong_key(self, key: dto.KeyTime, input_container: InputContainer) -> None:
-        self.outbox.add(
-            lambda senders: senders.view.wrong_key(key=key, input_container=input_container)
-        )
-        try:
-            await self.web.wrong_key(key=key, input_container=input_container)
-        except Exception as e:
-            logger.exception("web wrong_key error", exc_info=e)
-
-    async def effects_key(
-        self, key: dto.KeyTime, effects: action.Effects, input_container: InputContainer
-    ) -> None:
-        self.outbox.add(
-            lambda senders: senders.view.effects_key(
-                key=key, effects=effects, input_container=input_container
-            )
-        )
-        try:
-            await self.web.effects_key(key=key, effects=effects, input_container=input_container)
-        except Exception as e:
-            logger.exception("web effects_key error", exc_info=e)
-
-    async def game_finished(self, team: dto.Team, input_container: InputContainer) -> None:
-        self.outbox.add(
-            lambda senders: senders.view.game_finished(team=team, input_container=input_container)
-        )
-        try:
-            await self.web.game_finished(team=team, input_container=input_container)
-        except Exception as e:
-            logger.exception("web game_finished error", exc_info=e)
-
-    async def game_finished_by_all(self, team: dto.Team) -> None:
-        self.outbox.add(lambda senders: senders.view.game_finished_by_all(team=team))
-        try:
-            await self.web.game_finished_by_all(team=team)
-        except Exception as e:
-            logger.exception("web game_finished_by_all error", exc_info=e)
-
-    async def effects(
-        self, team: dto.Team, effects: action.Effects, input_container: InputContainer
-    ) -> None:
-        self.outbox.add(
-            lambda senders: senders.view.effects(
-                team=team, effects=effects, input_container=input_container
-            )
-        )
-        try:
-            await self.web.effects(team=team, effects=effects, input_container=input_container)
-        except Exception as e:
-            logger.exception("web effects error", exc_info=e)
+    async def show(self, tasks: Sequence[AnyViewTask]) -> None:
+        if tasks:
+            self.nursery.spawn(show_game, tasks=tuple(tasks))

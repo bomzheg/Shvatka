@@ -1,5 +1,3 @@
-"""Nothing reaches an edge while the caller waits — it is handed to the nursery."""
-
 import pytest
 
 from shvatka.core.views.game import (
@@ -41,7 +39,7 @@ async def test_one_job_for_the_whole_request() -> None:
 
     await ComplexView(nursery).show(tasks)
 
-    assert len(nursery.spawned) == 1, "messages of one request must keep their order"
+    assert len(nursery.spawned) == 1, "one job, so one request's messages keep their order"
     job, kwargs = nursery.spawned[0]
     assert job is show_game
     assert list(kwargs["tasks"]) == tasks
@@ -54,17 +52,6 @@ async def test_nothing_to_show_starts_no_job() -> None:
     await ComplexView(nursery).show([])
 
     assert nursery.spawned == []
-
-
-@pytest.mark.asyncio
-async def test_the_caller_is_not_kept_waiting_for_an_edge() -> None:
-    nursery = FakeNursery()
-
-    # a puzzle is minutes of telegram; show() only writes it down and returns
-    await ComplexView(nursery).show([SendPuzzle(team="team", level="level")])
-
-    assert nursery.spawned, "handed over"
-    # nothing was sent: the job has not been run, and show() did not run it
 
 
 @pytest.mark.asyncio

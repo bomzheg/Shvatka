@@ -1,5 +1,3 @@
-"""Showing something when nobody is waiting for it, and when it goes wrong."""
-
 import pytest
 from aiogram.exceptions import (
     TelegramAPIError,
@@ -72,7 +70,7 @@ async def test_a_dropped_connection_is_tried_again(fast_retries: None) -> None:
     await deliver(lambda: sender.show("puzzle"), alerter)
 
     assert journal == ["failed: TelegramNetworkError", "sent: puzzle"]
-    assert alerter.alerts == [], "a failure the retry fixed is not worth waking anyone for"
+    assert alerter.alerts == []
 
 
 @pytest.mark.asyncio
@@ -84,7 +82,7 @@ async def test_giving_up_after_the_last_attempt(fast_retries: None) -> None:
     await deliver(lambda: sender.show("puzzle"), alerter)
 
     assert sender.attempts == tasks.DELIVERY_ATTEMPTS
-    assert len(alerter.alerts) == 1, "nobody is watching the response, so it has to be shouted"
+    assert len(alerter.alerts) == 1
 
 
 @pytest.mark.asyncio
@@ -95,7 +93,7 @@ async def test_being_kicked_from_a_chat_is_not_retried(fast_retries: None) -> No
 
     await deliver(lambda: sender.show("puzzle"), alerter)
 
-    assert sender.attempts == 1, "the bot will be just as blocked in a second"
+    assert sender.attempts == 1
     assert len(alerter.alerts) == 1
 
 
@@ -106,8 +104,7 @@ async def test_a_failure_is_contained_not_raised(fast_retries: None) -> None:
 
     await deliver(lambda: sender.show("puzzle"), RecordingAlerter())
 
-    # the caller keeps going: one chat that can't be written to must not cost
-    # the rest of the batch its messages
+    # a chat that can't be written to must not cost the batch its other messages
     await deliver(lambda: FlakySender(journal).show("next"), RecordingAlerter())
     assert journal[-1] == "sent: next"
 

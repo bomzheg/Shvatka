@@ -26,28 +26,11 @@ class InputContainer(Protocol):
 
 @dataclass(frozen=True)
 class ViewTask:
-    """One thing the game has to show, as data rather than as a call.
-
-    An interactor decides *what* to show while it still holds the transaction,
-    and collects the tasks in a plain list. Nothing is shown until it commits
-    and hands the list to :meth:`GameView.show` — so a transaction that never
-    lands shows nothing, which is the whole point of the shape.
-
-    A task must be self-contained: it carries the dtos a view needs and
-    survives the scope it was made in, because it is usually rendered later,
-    somewhere else.
-    """
+    """One thing to show. Collected before a commit, rendered after it."""
 
 
 @dataclass(frozen=True)
 class KeyShown(ViewTask):
-    """The team typed a key and has to be told what it was.
-
-    Grouped under one base because the answer to a key is also what the http
-    response is built from — the api picks this out of the list without caring
-    which of the three it is.
-    """
-
     key: dto.KeyTime
     input_container: InputContainer
 
@@ -97,7 +80,7 @@ class GameFinishedByAll(ViewTask):
 
 @dataclass(frozen=True)
 class ShowEffects(ViewTask):
-    """Effects that happened without a key — the level timer fired."""
+    """Effects without a key: the level timer fired."""
 
     team: dto.Team
     effects: action.Effects
@@ -114,18 +97,11 @@ AnyViewTask = (
     | GameFinishedByAll
     | ShowEffects
 )
-"""Every task there is, as a union — so a view that forgets one fails to type."""
+"""A union, not just a base class: a view that forgets a task fails to type."""
 
 
 def group_by_team(tasks: Sequence[AnyViewTask]) -> list[list[AnyViewTask]]:
-    """Split a batch into one list per team, keeping each team's order.
-
-    Teams play in their own chats and their own time: a key must be confirmed
-    before the puzzle it opened, but nothing connects one team's messages to
-    another's. So a view may show the groups at once — which is what keeps the
-    start of a game the few seconds of one puzzle rather than that times the
-    number of teams.
-    """
+    """One list per team, each in order. Different teams may be shown at once."""
     groups: dict[int, list[AnyViewTask]] = {}
     for task in tasks:
         groups.setdefault(task.team.id, []).append(task)
@@ -133,23 +109,13 @@ def group_by_team(tasks: Sequence[AnyViewTask]) -> list[list[AnyViewTask]]:
 
 
 class GameView(Protocol):
-    """Shows the game wherever its audience is — a chat, a browser, both.
-
-    One method on purpose: a view decides for itself how to render each task,
-    and how to render a whole batch — the telegram one hands the batch to a
-    background task so a player never waits for it. Adding something to show
-    is a new :class:`ViewTask`, not a new method every implementation has to
-    grow.
-    """
-
     async def show(self, tasks: Sequence[AnyViewTask]) -> None:
-        """Show these, in this order. Called after the transaction committed."""
+        """Show these. Called after the transaction committed, never before."""
         raise NotImplementedError
 
 
 class GameLogWriter(Protocol):
     async def log(self, log_event: GameLogEvent) -> None:
-        """Write this down where the audience of the game watches it."""
         raise NotImplementedError
 
 
@@ -176,18 +142,7 @@ class GameReleasePublisher(Protocol):
 
 @dataclass
 class ShowTasks:
-    """What one request decided to show, one plain list per sender.
-
-    Filled while the interactor still holds the transaction and handed over
-    only after it commits, so a transaction that never lands shows nothing.
-    Separate lists because the three senders are separate: order is kept
-    within a list, never between them.
-
-    Only the view really gets a list of its own — a level up shows the key,
-    then the puzzle, and the last team finishing congratulates every team that
-    played. The other two have never carried more than one, and are lists only
-    so that filling them reads the same way.
-    """
+    """What one request decided to show, one list per sender."""
 
     view: list[AnyViewTask] = field(default_factory=list)
     org: list[Event] = field(default_factory=list)
@@ -217,7 +172,6 @@ class GameLogEvent:
 
 class OrgNotifier(Protocol):
     async def notify(self, event: Event) -> None:
-        """Tell the orgs about this."""
         raise NotImplementedError
 
 

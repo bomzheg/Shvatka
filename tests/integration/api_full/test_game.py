@@ -395,11 +395,7 @@ async def test_typed_key_is_shown_in_telegram_after_the_answer(
     dishka: AsyncContainer,
     bot_session: BaseSession,
 ):
-    """Telegram is written to by a background task, not by the request.
-
-    A player typing a key waits for the database and nothing else; the chat is
-    caught up afterwards — see shep-0009.
-    """
+    """Telegram is written to by a background job, not by the request."""
     token = auth.create_user_token(harry)
 
     resp = await client.post(
@@ -418,7 +414,6 @@ async def test_typed_key_is_shown_in_telegram_after_the_answer(
 
 
 async def _wait_for_bot_delivery(dishka: AsyncContainer) -> None:
-    """Wait out what the request handed over, so the test can look at telegram."""
     nursery = typing.cast(AsyncioNursery, await dishka.get(Nursery))
     await asyncio.gather(*list(nursery.tasks))
 

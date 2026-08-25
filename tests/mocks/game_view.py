@@ -34,7 +34,6 @@ class GameViewMock(GameView):
     game_finished_by_all_calls: set[dto.Team] = field(default_factory=set)
 
     async def show(self, tasks: Sequence[AnyViewTask]) -> None:
-        """Route each task to the list the assertions below read."""
         for task in tasks:
             match task:
                 case SendPuzzle():

@@ -62,7 +62,7 @@ async def test_long_task_is_cancelled_once_the_drain_is_over() -> None:
 
     assert cancelled.is_set()
     assert not finished.is_set()
-    assert spent < 5, "shutdown waits for the drain, not for the task"
+    assert spent < 5
 
 
 @pytest.mark.asyncio

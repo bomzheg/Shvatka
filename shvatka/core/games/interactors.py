@@ -332,11 +332,6 @@ class GamePlayBaseInteractor:
         return tasks
 
     async def show(self, tasks: ShowTasks) -> None:
-        """Hand each list to the sender it belongs to. Never before a commit.
-
-        Called on the line after the commit, so nothing here can be undone by a
-        transaction that fails: until then the tasks are only a list.
-        """
         if tasks.view:
             await self.view.show(tasks.view)
         for event in tasks.org:
@@ -393,7 +388,7 @@ class CheckKeyInteractor(GamePlayBaseInteractor):
                     at=now,
                 )
             )
-        # nothing has been shown yet, so a commit that fails shows nothing
+        # nothing is shown until this lands: until now the tasks are only a list
         await self.dao.commit()
         await self.show(tasks)
         return tasks.view
@@ -470,6 +465,5 @@ class GamePlayTimerInteractor(GamePlayBaseInteractor):
                     at=now,
                 )
             )
-        # same rule as a typed key: decide and write first, commit, then show
         await self.dao.commit()
         await self.show(tasks)

@@ -38,27 +38,16 @@ logger = logging.getLogger(__name__)
 
 
 DELIVERY_ATTEMPTS: typing.Final = 3
-"""How many times a deferred call is tried before it is given up on."""
-
 RETRY_BACKOFF: typing.Final = 1.0
-"""Seconds before the second attempt; doubled for each one after it."""
-
 MAX_RETRY_DELAY: typing.Final = 30.0
-"""A wait longer than this is not worth it — the game has moved on by then."""
-
+# what telegram may recover from on its own; everything else would fail the same
 RETRIABLE_ERRORS: typing.Final = (TelegramRetryAfter, TelegramNetworkError, TelegramServerError)
-"""Failures telegram may recover from on its own; everything else is ours."""
 
 Delivery = Callable[[], Awaitable[None]]
-"""Showing one thing, ready to run — everything it needs is already bound."""
 
 
 async def deliver(call: Delivery, alerter: BotAlert) -> None:
-    """Run one deferred send, contained and shouted about if it fails.
-
-    Nothing is watching a background delivery, so a failure has nowhere to go
-    but an alert — and it must not take the rest of the batch with it.
-    """
+    """Nothing watches a background send, so a failure is alerted, not raised."""
     try:
         await _with_retry(call)
     except Exception as e:
@@ -70,15 +59,8 @@ async def deliver(call: Delivery, alerter: BotAlert) -> None:
 
 
 async def _with_retry(call: Delivery) -> None:
-    """Try again when telegram says the failure was its own fault.
-
-    Only failures a second attempt can fix are retried: being blocked by a chat
-    or sending something malformed would fail identically forever.
-
-    A call can be several messages (a puzzle is a caption and its hints), and a
-    retry starts it from the beginning — so a failure halfway through resends
-    what already arrived. That is deliberate: a duplicated puzzle is confusing,
-    a half-sent one leaves the team stuck with nothing to solve.
+    """A retry re-runs the whole call, so a puzzle that failed halfway resends
+    the parts that arrived — better than leaving the team half a puzzle.
     """
     for attempt in range(1, DELIVERY_ATTEMPTS + 1):
         try:
@@ -100,9 +82,7 @@ async def _with_retry(call: Delivery) -> None:
 
 
 def _retry_delay(error: Exception, attempt: int) -> float | None:
-    """How long to wait before trying again, or ``None`` to stop trying."""
     if isinstance(error, TelegramRetryAfter):
-        # telegram said exactly how long it wants to be left alone
         return float(error.retry_after) if error.retry_after <= MAX_RETRY_DELAY else None
     return RETRY_BACKOFF * 2 ** (attempt - 1)
 

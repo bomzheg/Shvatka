@@ -25,8 +25,6 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class ComplexOrgNotifier(OrgNotifier):
-    """Tells the orgs on both edges, once the caller is done with them."""
-
     nursery: Nursery
 
     async def notify(self, event: Event) -> None:
@@ -59,8 +57,6 @@ class ComplexGameViewPreparer(GameViewPreparer):
 
 @dataclass
 class ComplexGameLogWriter(GameLogWriter):
-    """Writes the game's public log on both edges, after the caller commits."""
-
     nursery: Nursery
 
     async def log(self, log_event: GameLogEvent) -> None:
@@ -85,18 +81,7 @@ class ComplexTeamNotifier(TeamNotifier):
 
 @dataclass
 class ComplexView(GameView):
-    """Shows the game on both edges — and never while the caller waits.
-
-    By the time this is called the interactor has committed, so there is
-    nothing left to fail: the tasks go to the nursery as one background job
-    (:func:`~shvatka.tasks.show_game`) and the caller returns. A puzzle is a
-    caption and several hints, a second apart; a player who typed a key must
-    not wait for it, and neither must a scheduled job.
-
-    One job for the whole list, so the messages of one request keep their
-    order — a key is confirmed before the puzzle it opened. Between requests
-    nothing is promised, and never was.
-    """
+    """One job for the whole list, so one request's messages keep their order."""
 
     nursery: Nursery
 

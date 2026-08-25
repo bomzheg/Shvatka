@@ -45,12 +45,7 @@ logger = logging.getLogger(__name__)
 
 
 class ApiInput(InputContainer):
-    """What a key typed on the site was typed *into* — nothing.
-
-    A bot handler passes the message it is replying to; http has no such
-    thing. The container is only an input now: what the api answers with is
-    built from the tasks the interactor returns.
-    """
+    """Empty: a bot handler passes the message to reply to, http has none."""
 
 
 class WebGameView(GameView):
@@ -70,12 +65,6 @@ class WebGameView(GameView):
         )
 
     async def show(self, tasks: Sequence[AnyViewTask]) -> None:
-        """Push what a browser cares about; ignore the rest.
-
-        The answer to a key is not here — the api builds it from the same task
-        list this is handed, so the site already knows. What a push adds is
-        telling a player whose tab is closed that something happened.
-        """
         for task in tasks:
             await self._show_one(task)
 
@@ -92,7 +81,7 @@ class WebGameView(GameView):
             case ShowEffects():
                 await self.effects(task.team, task.effects)
             case DuplicateKey() | WrongKey() | EffectsKey():
-                pass  # the site has the answer already, from the response
+                pass  # already in the http response the api built from these
             case _:
                 typing.assert_never(task)
 

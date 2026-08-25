@@ -11,7 +11,6 @@ from shvatka.core.interfaces.nursery import BackgroundTask, Nursery
 logger = logging.getLogger(__name__)
 
 DEFAULT_DRAIN_TIMEOUT: typing.Final = 15.0
-"""How long shutdown waits for running tasks before cancelling them."""
 
 
 class AsyncioNursery(Nursery):
@@ -55,14 +54,10 @@ class AsyncioNursery(Nursery):
             logger.error("background task %s failed", task.__name__, exc_info=e)
 
     async def close(self) -> None:
-        """Give what is still running a moment to finish, then cancel the rest.
+        """Wait a bounded time for running tasks, then cancel the rest.
 
-        Most detached work is short and is the only thing that will ever run it:
-        the messages of one key (:func:`~shvatka.tgbot.tasks.deliver_bot_views`)
-        are seconds of telegram calls, and cancelling them halfway leaves a team
-        with half a puzzle and no one to tell. So shutdown waits — but only
-        :attr:`drain_timeout`, because some tasks (publishing a scenario to the
-        forum) are minutes long and a restart cannot wait them out.
+        Nothing will re-run a cancelled job, so a team would be left with half a
+        puzzle. Bounded because some jobs (publishing a scenario) take minutes.
         """
         if not self.tasks:
             return
@@ -72,8 +67,7 @@ class AsyncioNursery(Nursery):
             self.drain_timeout,
         )
         await asyncio.wait(set(self.tasks), timeout=self.drain_timeout)
-        # whatever is left outlived the drain — including anything spawned
-        # while it was running, which nothing is going to wait for either
+        # re-read: anything spawned during the drain is nobody's to wait for
         leftover = set(self.tasks)
         if not leftover:
             logger.info("all background tasks finished before shutdown")

@@ -1,5 +1,3 @@
-"""Deciding what to show, and in what order it may be shown."""
-
 import typing
 from datetime import datetime
 from uuid import uuid4
@@ -109,7 +107,6 @@ def test_teams_are_split_apart_so_they_can_be_shown_at_once() -> None:
 
     groups = group_by_team(tasks)
 
-    # a game starting must not reach the last team after every other fan-out
     assert groups == [[tasks[0]], [tasks[1]], [tasks[2]]]
 
 

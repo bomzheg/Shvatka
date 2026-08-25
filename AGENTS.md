@@ -235,11 +235,10 @@ group. It is the wrong tool for the nursery: its exit waits for every child
 cancels its siblings, which is exactly what independent background jobs must
 not do.
 
-### Showing the game is decided as data, and shown after the commit
+### Showing the game is decided as data, shown after the commit
 
-An interactor never shows anything while it works. It decides *what* to show,
-appends it to a plain list as `ViewTask` values (`core/views/game.py`), commits,
-and only then hands the list over:
+An interactor never shows anything while it works. It appends `ViewTask` values
+(`core/views/game.py`) to a plain list, commits, and hands the list over:
 
 ```python
 tasks = ShowTasks(view=self.view_(new_key, input_container))
@@ -248,45 +247,24 @@ await self.dao.commit()
 await self.show(tasks)
 ```
 
-Before the commit it is a list and nothing else, so **a transaction that does
-not land shows nothing** — that is the point of the shape, not an optimisation.
-There is no finalizer that flushes what you forgot: showing is a line you write
-after the commit. See
-`docs/modules/shep/pages/shep-0009-key-submission-latency.adoc`; durable
-delivery, if a lost message ever turns out to matter, is planned in
-`docs/modules/shep/pages/shep-0010-message-outbox.adoc`.
+Until the commit lands it is only a list, so **a transaction that fails shows
+nothing**. Nothing flushes what you forgot — showing is a line you write after
+the commit. See `docs/modules/shep/pages/shep-0009-key-submission-latency.adoc`.
 
-`GameView` has one method, `show(tasks)`. Adding something to show is a new
-`ViewTask` plus a branch in each view's router — never a new method on the
-protocol. `AnyViewTask` is a union, so a view that forgets one fails `mypy`.
+Rules when you add something to show:
 
-`process_level_up` and its two halves keep doing their reads and writes — they
-just return the tasks instead of showing them. When you add something to a level
-up, append a task; do not reach for a view.
-
-Order is a promise about **a chat, not the game**: `group_by_team` splits a
-batch per team and the views show the groups at once. A game starting must
-reach the twelfth team as fast as the first, so never make a view walk a batch
-in one sequence.
-
-Rules that follow when you add a view task:
-
-- A task carries **domain dtos only** (an aiogram `Message` inside an
-  `InputContainer` is fine — it is detached too). Never a dao, a session or a
-  sender: it is rendered later, in a scope of its own.
-- Anything the caller needs back belongs in the returned list, not in a
-  container the view writes into. `CheckKeyInteractor` returns its view tasks
-  and the api builds `InsertedKey` from them; that is why `WebInput` is gone.
-- A task may be **rendered more than once**: a failed delivery is retried whole,
-  so rendering one task can resend messages that already arrived. A resent
-  puzzle is acceptable; a task that *counts* something is not.
-- Keep rendering short. Shutdown gives running jobs `drain_timeout` before
-  cancelling them (`AsyncioNursery.close`); minutes-long work is still cancelled
-  on restart.
-
-`ComplexView.show` hands the whole list to the nursery as one job, so the
-messages of one request keep their order. Between concurrent requests nothing is
-promised, and never was.
+- New task class plus a branch in each view's router — never a new method on
+  `GameView`. `AnyViewTask` is a union, so a view that forgets one fails `mypy`.
+- A task carries **domain dtos only**; never a dao, session or sender. It is
+  rendered later, in a scope of its own.
+- Anything the caller needs back is in the returned list, not in a container a
+  view writes into — that is why `WebInput` is gone.
+- A task may be **rendered more than once**: a failed delivery is retried
+  whole. A resent puzzle is fine; a task that *counts* something is not.
+- Order is per chat, not per game. `group_by_team` splits a batch and the views
+  show the groups at once, so never walk a batch in one sequence.
+- Keep rendering short: shutdown cancels jobs still running after
+  `drain_timeout` (`AsyncioNursery.close`).
 
 One file is exempt from the ban: `tgbot/utils/fastapi_webhook.py` is a
 portable copy of aiogram's webhook handler, meant to be pasted into another

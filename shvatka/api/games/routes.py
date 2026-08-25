@@ -288,11 +288,6 @@ async def insert_key(
     current_game: FromDishka[CurrentGameProvider],
     key: Annotated[requests.Key, Body()],
 ) -> responses.InsertedKey:
-    """Answer a key from what the interactor decided to show.
-
-    The same tasks go to telegram in the background; here they are simply read
-    rather than sent, so the answer says exactly what the game will say.
-    """
     tasks = await interactor(key=key.text, identity=identity, input_container=input_container)
     shown_key = next((task for task in tasks if isinstance(task, KeyShown)), None)
     if shown_key is None:

@@ -57,19 +57,23 @@ RETRIABLE_ERRORS: typing.Final = (TelegramRetryAfter, TelegramNetworkError, Tele
 Delivery = Callable[[], Awaitable[None]]
 
 
-async def deliver(call: Delivery, alerter: BotAlert) -> None:
-    """Nothing watches a background send, so a failure is alerted, not raised."""
+async def deliver(call: Delivery, alerter: BotAlert, what: str) -> None:
+    """Nothing watches a background send, so a failure is alerted, not raised.
+
+    ``what`` names the team whose message was lost — an alert nobody can act on
+    is not worth sending.
+    """
     try:
-        await _with_retry(call)
+        await _with_retry(call, what)
     except Exception as e:
-        logger.exception("cant deliver", exc_info=e)
+        logger.exception("cant deliver %s", what, exc_info=e)
         try:
-            await alerter.alert(f"cant deliver because of {e!s}")
+            await alerter.alert(f"cant deliver {what} because of {e!s}")
         except Exception as alert_error:
             logger.error("cant alert about failed delivery", exc_info=alert_error)
 
 
-async def _with_retry(call: Delivery) -> None:
+async def _with_retry(call: Delivery, what: str) -> None:
     """A retry re-runs the whole call, so a puzzle that failed halfway resends
     the parts that arrived — better than leaving the team half a puzzle.
     """
@@ -81,7 +85,8 @@ async def _with_retry(call: Delivery) -> None:
             if attempt == DELIVERY_ATTEMPTS or delay is None:
                 raise
             logger.warning(
-                "delivery failed (attempt %s of %s), retrying in %.1f s: %s",
+                "cant deliver %s (attempt %s of %s), retrying in %.1f s: %s",
+                what,
                 attempt,
                 DELIVERY_ATTEMPTS,
                 delay,
@@ -126,14 +131,21 @@ async def show_game(
         *(_show_to_team(group, view, alerter) for group in group_by_team(tasks.view))
     )
     for event in tasks.org:
-        await deliver(lambda e=event: org_notifier.notify(e), alerter)  # type: ignore[misc]
+        what = f"{type(event).__name__} to {len(event.orgs_list)} orgs"
+        await deliver(lambda e=event: org_notifier.notify(e), alerter, what)  # type: ignore[misc]
     for log_event in tasks.log:
-        await deliver(lambda e=log_event: game_log.log(e), alerter)  # type: ignore[misc]
+        what = f"game log {log_event.type.name}"
+        await deliver(lambda e=log_event: game_log.log(e), alerter, what)  # type: ignore[misc]
 
 
 async def _show_to_team(tasks: Sequence[AnyViewTask], view: GameView, alerter: BotAlert) -> None:
     for task in tasks:
-        await deliver(lambda t=task: view.show([t]), alerter)  # type: ignore[misc]
+        await deliver(lambda t=task: view.show([t]), alerter, _describe(task))  # type: ignore[misc]
+
+
+def _describe(task: AnyViewTask) -> str:
+    team = task.team
+    return f"{type(task).__name__} to team {team.id} (chat {team.get_chat_id()})"
 
 
 async def publish_scenario_to_forum(

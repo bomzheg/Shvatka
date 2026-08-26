@@ -55,7 +55,7 @@ async def test_what_worked_is_not_alerted_about() -> None:
     sender = FlakySender(journal)
     alerter = RecordingAlerter()
 
-    await deliver(lambda: sender.show("puzzle"), alerter)
+    await deliver(lambda: sender.show("puzzle"), alerter, "puzzle to team 1")
 
     assert journal == ["sent: puzzle"]
     assert alerter.alerts == []
@@ -67,7 +67,7 @@ async def test_a_dropped_connection_is_tried_again(fast_retries: None) -> None:
     sender = FlakySender(journal, [telegram_error(TelegramNetworkError)])
     alerter = RecordingAlerter()
 
-    await deliver(lambda: sender.show("puzzle"), alerter)
+    await deliver(lambda: sender.show("puzzle"), alerter, "puzzle to team 1")
 
     assert journal == ["failed: TelegramNetworkError", "sent: puzzle"]
     assert alerter.alerts == []
@@ -79,7 +79,7 @@ async def test_giving_up_after_the_last_attempt(fast_retries: None) -> None:
     sender = FlakySender(journal, [telegram_error(TelegramServerError) for _ in range(5)])
     alerter = RecordingAlerter()
 
-    await deliver(lambda: sender.show("puzzle"), alerter)
+    await deliver(lambda: sender.show("puzzle"), alerter, "puzzle to team 1")
 
     assert sender.attempts == tasks.DELIVERY_ATTEMPTS
     assert len(alerter.alerts) == 1
@@ -91,7 +91,7 @@ async def test_being_kicked_from_a_chat_is_not_retried(fast_retries: None) -> No
     sender = FlakySender(journal, [telegram_error(TelegramForbiddenError) for _ in range(5)])
     alerter = RecordingAlerter()
 
-    await deliver(lambda: sender.show("puzzle"), alerter)
+    await deliver(lambda: sender.show("puzzle"), alerter, "puzzle to team 1")
 
     assert sender.attempts == 1
     assert len(alerter.alerts) == 1
@@ -102,10 +102,12 @@ async def test_a_failure_is_contained_not_raised(fast_retries: None) -> None:
     journal: list[str] = []
     sender = FlakySender(journal, [telegram_error(TelegramForbiddenError)])
 
-    await deliver(lambda: sender.show("puzzle"), RecordingAlerter())
+    await deliver(lambda: sender.show("puzzle"), RecordingAlerter(), "puzzle to team 1")
 
     # a chat that can't be written to must not cost the batch its other messages
-    await deliver(lambda: FlakySender(journal).show("next"), RecordingAlerter())
+    await deliver(
+        lambda: FlakySender(journal).show("next"), RecordingAlerter(), "puzzle to team 1"
+    )
     assert journal[-1] == "sent: next"
 
 
@@ -114,9 +116,20 @@ async def test_broken_alerting_does_not_break_delivery(fast_retries: None) -> No
     journal: list[str] = []
     sender = FlakySender(journal, [telegram_error(TelegramForbiddenError)])
 
-    await deliver(lambda: sender.show("puzzle"), RecordingAlerter(fail=True))
+    await deliver(lambda: sender.show("puzzle"), RecordingAlerter(fail=True), "puzzle to team 1")
 
     assert journal == ["failed: TelegramForbiddenError"]
+
+
+@pytest.mark.asyncio
+async def test_the_alert_names_who_lost_their_message() -> None:
+    journal: list[str] = []
+    sender = FlakySender(journal, [telegram_error(TelegramForbiddenError)])
+    alerter = RecordingAlerter()
+
+    await deliver(lambda: sender.show("puzzle"), alerter, "SendPuzzle to team 7 (chat -100)")
+
+    assert "team 7" in alerter.alerts[0], "an alert nobody can act on is not worth sending"
 
 
 def test_flood_control_waits_exactly_as_long_as_telegram_asked() -> None:

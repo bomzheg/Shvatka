@@ -11,12 +11,12 @@ from shvatka.core.services.organizers import get_orgs
 from shvatka.core.utils.datetime_utils import tz_utc
 from shvatka.core.views.game import (
     GameViewPreparer,
-    GameLogWriter,
-    GameView,
     GameLogEvent,
     GameLogType,
     SendHint,
     SendPuzzle,
+    ShowTasks,
+    ViewSender,
 )
 
 logger = logging.getLogger(__name__)
@@ -46,8 +46,7 @@ async def prepare_game(
 async def start_game(
     game: dto.FullGame,
     dao: GameStarter,
-    game_log: GameLogWriter,
-    view: GameView,
+    sender: ViewSender,
     scheduler: Scheduler,
 ):
     """
@@ -71,7 +70,7 @@ async def start_game(
         level_times[team.id] = await dao.set_to_level(team=team, game=game, level_number=0, at=now)
     await dao.commit()
 
-    await view.show([SendPuzzle(team=team, level=game.levels[0]) for team in teams])
+    tasks = ShowTasks(view=[SendPuzzle(team=team, level=game.levels[0]) for team in teams])
 
     await asyncio.gather(
         *[
@@ -80,7 +79,8 @@ async def start_game(
         ]
     )
 
-    await game_log.log(GameLogEvent(GameLogType.GAME_STARTED, {"game": game.name}))
+    tasks.log.append(GameLogEvent(GameLogType.GAME_STARTED, {"game": game.name}))
+    await sender.show_later(tasks)
 
 
 async def send_hint(
@@ -90,7 +90,7 @@ async def send_hint(
     team: dto.Team,
     game: dto.Game,
     dao: LevelByTeamGetter,
-    view: GameView,
+    sender: ViewSender,
     scheduler: Scheduler,
 ):
     """
@@ -103,7 +103,7 @@ async def send_hint(
     :param team: Какой команде надо отправить подсказку.
     :param game: Текущая игра.
     :param dao: Слой доступа к данным.
-    :param view: Слой отображения.
+    :param sender: Отправляет то, что надо показать, во вьюхи.
     :param scheduler: Планировщик.
     """
     lt = await dao.get_current_level_time(team, game)
@@ -117,7 +117,9 @@ async def send_hint(
             hint_number,
         )
         return
-    await view.show([SendHint(team=team, hint_number=hint_number, level=level)])
+    await sender.show_later(
+        ShowTasks(view=[SendHint(team=team, hint_number=hint_number, level=level)])
+    )
     next_hint_number = hint_number + 1
     if level.is_last_hint(hint_number):
         logger.debug(

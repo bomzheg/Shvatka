@@ -1,11 +1,16 @@
 import logging
 from dataclasses import dataclass
-from typing import Iterable, Sequence
+from typing import Awaitable, Iterable, Sequence
 
-from shvatka.api.app.utils.web_input import WebGamePreparer, WebTeamNotifier
+from shvatka.api.app.utils.web_input import (
+    WebGameLogWriter,
+    WebGamePreparer,
+    WebGameView,
+    WebOrgNotifier,
+    WebTeamNotifier,
+)
 from shvatka.core.interfaces.dal.game_play import GamePreparer
 from shvatka.core.models import dto
-from shvatka.core.interfaces.nursery import Nursery
 from shvatka.core.views.game import (
     AnyViewTask,
     GameView,
@@ -15,20 +20,33 @@ from shvatka.core.views.game import (
     GameLogWriter,
     GameLogEvent,
 )
-from shvatka.tasks import notify_orgs, show_game, write_game_log
 from shvatka.core.views.team import TeamNotifier, TeamEvent
-from shvatka.tgbot.views.game import BotView
+from shvatka.tgbot.views.game import BotOrgNotifier, BotView, GameBotLog
 from shvatka.tgbot.views.team import BotTeamNotifier
 
 logger = logging.getLogger(__name__)
 
 
+async def show_on_both(*, bot: Awaitable[None], web: Awaitable[None]) -> None:
+    """The site first: a push is one https call, telegram is minutes of them.
+
+    A web failure is logged and the bot half still runs; a bot failure is left
+    to the caller, which retries and alerts it.
+    """
+    try:
+        await web
+    except Exception as e:
+        logger.exception("web view error", exc_info=e)
+    await bot
+
+
 @dataclass
 class ComplexOrgNotifier(OrgNotifier):
-    nursery: Nursery
+    bot: BotOrgNotifier
+    web: WebOrgNotifier
 
     async def notify(self, event: Event) -> None:
-        self.nursery.spawn(notify_orgs, event=event)
+        await show_on_both(bot=self.bot.notify(event), web=self.web.notify(event))
 
 
 @dataclass
@@ -57,10 +75,11 @@ class ComplexGameViewPreparer(GameViewPreparer):
 
 @dataclass
 class ComplexGameLogWriter(GameLogWriter):
-    nursery: Nursery
+    bot: GameBotLog
+    web: WebGameLogWriter
 
     async def log(self, log_event: GameLogEvent) -> None:
-        self.nursery.spawn(write_game_log, log_event=log_event)
+        await show_on_both(bot=self.bot.log(log_event), web=self.web.log(log_event))
 
 
 @dataclass
@@ -81,10 +100,8 @@ class ComplexTeamNotifier(TeamNotifier):
 
 @dataclass
 class ComplexView(GameView):
-    """One job for the whole list, so one request's messages keep their order."""
-
-    nursery: Nursery
+    bot: BotView
+    web: WebGameView
 
     async def show(self, tasks: Sequence[AnyViewTask]) -> None:
-        if tasks:
-            self.nursery.spawn(show_game, tasks=tuple(tasks))
+        await show_on_both(bot=self.bot.show(tasks), web=self.web.show(tasks))

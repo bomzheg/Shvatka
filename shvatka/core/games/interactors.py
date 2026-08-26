@@ -44,9 +44,6 @@ from shvatka.core.views.game import (
     EffectsKey,
     GameFinished,
     GameFinishedByAll,
-    GameView,
-    GameLogWriter,
-    OrgNotifier,
     InputContainer,
     LevelUp,
     GameLogEvent,
@@ -54,6 +51,7 @@ from shvatka.core.views.game import (
     SendPuzzle,
     ShowEffects,
     ShowTasks,
+    ViewSender,
     WrongKey,
 )
 from shvatka.infrastructure.scheduler import SchedulerContainer
@@ -267,17 +265,13 @@ class PassedLevelsReaderInteractor:
 class GamePlayBaseInteractor:
     """
     :param dao: Слой доступа к бд.
-    :param view: Слой отображения данных.
-    :param game_log: Логгер игры (публичные уведомления о статусе игры).
-    :param org_notifier: Для уведомления оргов о важных событиях.
+    :param sender: Отправляет то, что надо показать, во вьюхи (после коммита).
     :param locker: Локи для обеспечения последовательного исполнения определённых операций.
     :param scheduler: Планировщик подсказок.
     """
 
     dao: GamePlayerDao
-    view: GameView
-    game_log: GameLogWriter
-    org_notifier: OrgNotifier
+    sender: ViewSender
     locker: KeyCheckerFactory
     scheduler: Scheduler
     current_game: CurrentGameProvider
@@ -331,14 +325,6 @@ class GamePlayBaseInteractor:
         tasks.org.append(level_up_event)
         return tasks
 
-    async def show(self, tasks: ShowTasks) -> None:
-        if tasks.view:
-            await self.view.show(tasks.view)
-        for event in tasks.org:
-            await self.org_notifier.notify(event)
-        for log_event in tasks.log:
-            await self.game_log.log(log_event)
-
 
 @dataclass(kw_only=True)
 class CheckKeyInteractor(GamePlayBaseInteractor):
@@ -390,7 +376,7 @@ class CheckKeyInteractor(GamePlayBaseInteractor):
             )
         # nothing is shown until this lands: until now the tasks are only a list
         await self.dao.commit()
-        await self.show(tasks)
+        await self.sender.show_later(tasks)
         return tasks.view
 
     @staticmethod
@@ -466,4 +452,4 @@ class GamePlayTimerInteractor(GamePlayBaseInteractor):
                 )
             )
         await self.dao.commit()
-        await self.show(tasks)
+        await self.sender.show_later(tasks)

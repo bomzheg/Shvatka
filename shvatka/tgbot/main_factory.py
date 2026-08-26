@@ -26,12 +26,14 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from shvatka.common.factory import TelegraphProvider
 from shvatka.core.interfaces.clients.file_storage import FileStorage
 from shvatka.core.interfaces.identity import IdentityProvider
+from shvatka.core.interfaces.nursery import Nursery
 from shvatka.core.views.game import (
     GameLogWriter,
     GameReleasePublisher,
     GameView,
     GameViewPreparer,
     OrgNotifier,
+    ViewSender,
 )
 from shvatka.core.views.level import LevelView
 from shvatka.core.views.team import TeamNotifier
@@ -54,6 +56,7 @@ from shvatka.tgbot.services.member_tags import MemberTagger
 from shvatka.tgbot.services.used_one_time_token import UsedOneTimeTokenInteractorImpl
 from shvatka.tgbot.username_resolver.user_getter import UserGetter
 from shvatka.tgbot.utils.router import print_router_tree
+from shvatka.tgbot.tasks import NurseryViewSender
 from shvatka.tgbot.views.game import GameBotLog, BotView, BotOrgNotifier
 from shvatka.tgbot.views.team import BotTeamNotifier
 from shvatka.tgbot.views.hint_factory.hint_content_resolver import HintContentResolver
@@ -192,6 +195,10 @@ class BotOnlyProvider(Provider):
     @provide
     def get_game_view(self, bot_game_view: BotView) -> AnyOf[GameViewPreparer, GameView]:
         return bot_game_view
+
+    @provide
+    def view_sender(self, nursery: Nursery) -> ViewSender:
+        return NurseryViewSender(nursery)
 
     @provide
     def get_team_notifier(self, notifier: BotTeamNotifier) -> TeamNotifier:

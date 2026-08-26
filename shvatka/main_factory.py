@@ -20,8 +20,11 @@ from shvatka.api.app.dependencies import get_api_specific_providers
 from shvatka.api.app.dependencies.auth import ApiIdentityProvider
 from shvatka.api.app.config.parser.main import load_config as load_api_config
 from shvatka.api.app.utils.web_input import (
-    WebTeamNotifier,
+    WebGameLogWriter,
     WebGamePreparer,
+    WebGameView,
+    WebOrgNotifier,
+    WebTeamNotifier,
 )
 from shvatka.api.main_factory import create_app
 from shvatka.common.config.models.paths import Paths
@@ -33,6 +36,7 @@ from shvatka.core.views.game import (
     GameReleasePublisher,
     OrgNotifier,
     GameLogWriter,
+    ViewSender,
 )
 from shvatka.core.views.team import TeamNotifier
 from shvatka.infrastructure.di import get_providers
@@ -45,9 +49,10 @@ from shvatka.tgbot.main_factory import (
 )
 from shvatka.tgbot.services.identity import TgBotIdentityProvider
 from shvatka.tgbot.utils.fastapi_webhook import setup_application, SimpleRequestHandler
-from shvatka.tgbot.views.game import BotView
+from shvatka.tgbot.views.game import BotOrgNotifier, BotView, GameBotLog
 from shvatka.tgbot.views.game_release import GameBotReleasePublisher
 from shvatka.tgbot.views.team import BotTeamNotifier
+from shvatka.tgbot.tasks import NurseryViewSender
 from shvatka.views import (
     ComplexOrgNotifier,
     ComplexGameViewPreparer,
@@ -70,8 +75,12 @@ class ComplexOnlyProvider(Provider):
             return await container.get(ApiIdentityProvider)
 
     @provide
-    def complex_view(self, nursery: Nursery) -> GameView:
-        return ComplexView(nursery)
+    def complex_view(self, bot_view: BotView, web_view: WebGameView) -> GameView:
+        return ComplexView(bot_view, web_view)
+
+    @provide
+    def view_sender(self, nursery: Nursery) -> ViewSender:
+        return NurseryViewSender(nursery)
 
     @provide
     def complex_preparer(
@@ -84,12 +93,12 @@ class ComplexOnlyProvider(Provider):
         return ComplexTeamNotifier(bot, web)
 
     @provide
-    def complex_org_notifier(self, nursery: Nursery) -> OrgNotifier:
-        return ComplexOrgNotifier(nursery)
+    def complex_org_notifier(self, bot: BotOrgNotifier, web: WebOrgNotifier) -> OrgNotifier:
+        return ComplexOrgNotifier(bot, web)
 
     @provide
-    def complex_log_writer(self, nursery: Nursery) -> GameLogWriter:
-        return ComplexGameLogWriter(nursery)
+    def complex_log_writer(self, bot: GameBotLog, web: WebGameLogWriter) -> GameLogWriter:
+        return ComplexGameLogWriter(bot, web)
 
     @provide
     def complex_release_publisher(self, bot: GameBotReleasePublisher) -> GameReleasePublisher:

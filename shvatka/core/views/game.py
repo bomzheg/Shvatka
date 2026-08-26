@@ -154,6 +154,13 @@ class ShowTasks:
         self.log.extend(other.log)
 
 
+class ViewSender(Protocol):
+    """Between an interactor and the views: takes what to show, shows nothing."""
+
+    async def show_later(self, tasks: ShowTasks) -> None:
+        raise NotImplementedError
+
+
 class GameLogType(enum.Enum):
     GAME_WAIVERS_STARTED = enum.auto()
     GAME_PLANED = enum.auto()

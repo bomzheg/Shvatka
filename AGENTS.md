@@ -244,7 +244,7 @@ An interactor never shows anything while it works. It appends `ViewTask` values
 tasks = ShowTasks(view=self.view_(new_key, input_container))
 tasks.extend(await self.process_level_up(...))
 await self.dao.commit()
-await self.show(tasks)
+await self.sender.show_later(tasks)
 ```
 
 Until the commit lands it is only a list, so **a transaction that fails shows
@@ -255,6 +255,10 @@ Rules when you add something to show:
 
 - New task class plus a branch in each view's router — never a new method on
   `GameView`. `AnyViewTask` is a union, so a view that forgets one fails `mypy`.
+- Two protocols, do not mix them: `GameView.show` **renders now** (Bot, Web and
+  Complex implement it and know nothing about background work);
+  `ViewSender.show_later` **arranges for it**, and only `NurseryViewSender`
+  implements it. A view must never spawn: the job calls a view.
 - A task carries **domain dtos only**; never a dao, session or sender. It is
   rendered later, in a scope of its own.
 - Anything the caller needs back is in the returned list, not in a container a

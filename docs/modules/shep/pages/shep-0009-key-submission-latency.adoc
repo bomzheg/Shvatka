@@ -59,7 +59,7 @@ tasks = ShowTasks(view=self.view_(new_key, input_container))
 if not new_key.is_duplicate and new_key.is_level_up():
     tasks.extend(await self.process_level_up(...))
 await self.dao.commit()
-await self.show(tasks)
+await self.sender.show_later(tasks)
 ----
 
 Before the commit it is a list and nothing else. If the commit raises, the
@@ -112,19 +112,31 @@ twelve teams would get theirs a minute after the first. `start_game` used
 `asyncio.gather` for exactly this reason before, and the batch has to keep that
 property rather than quietly serialising it.
 
-=== Showing is one background job, spawned by the view
+=== The nursery is a seam of its own, between the interactor and the views
 
-`ComplexView.show` does one thing: `nursery.spawn(show_game, tasks=...)`.
-`shvatka/tasks.py` is where a job that touches both edges lives, since it is the
-combined app that knows both. It pushes to the browser first (one https call),
-then writes to telegram (a caption and its hints, a second apart), containing
-and retrying each task on its own — one chat the bot was thrown out of must not
-cost the others their puzzle.
+Two protocols, because they promise different things:
 
-The nursery hop is the *view's* business, not the interactor's: core says "show
-these", and whether that happens now or in a background job is a property of
-where it is being shown. The bot-only app binds `GameView` straight to `BotView`
-and renders inline, unchanged.
+* `GameView.show(tasks)` — *renders now*. `BotView`, `WebGameView` and
+  `ComplexView` implement it and know nothing about background work.
+* `ViewSender.show_later(tasks)` — *arranges for them to be rendered*. The
+  interactor holds this one.
+
+`NurseryViewSender` is the only implementation: it spawns one job for the whole
+`ShowTasks`, so a request's messages keep their order. The job resolves
+`GameView`, `OrgNotifier` and `GameLogWriter` from its own di scope and shows
+through them — it does not know whether that is telegram, the site or both, and
+the same job serves the combined app, the bot alone and the api alone.
+
+*Alternative rejected:* making `ComplexView.show` spawn. It reads as if the
+composite is what defers, and it makes `show()` a method that returns before
+anything is shown — a name that lies to every reader. Pushing the spawn into
+`BotView` and `WebGameView` instead is worse still: the job calls a view, so a
+view that spawns would spawn again, forever.
+
+`ComplexView` is back to a plain fan-out over its two halves. The site goes
+first — a push is one https call, telegram is minutes of them — and a web
+failure is logged so it cannot cost the chat its message; a bot failure is left
+to the job, which retries and alerts it.
 
 === The api answers from the same list
 
@@ -175,7 +187,8 @@ drain gives up on. Durable delivery is xref:shep-0010-message-outbox.adoc[SHEP-0
 names, their reads and their writes; each one now *returns* a `ShowTasks`
 instead of awaiting a view. The whole change to them is one kind of line —
 `await self.view.send_puzzle(...)` becoming `tasks.view.append(SendPuzzle(...))`
-— and the caller commits once and then calls `show`.
+— and the caller commits once and then hands the tasks over. The interactors
+lost their `view`, `org_notifier` and `game_log` fields to a single `sender`.
 
 *Alternative rejected:* an earlier cut split them into `resolve_level_up`
 returning a `LevelUpOutcome` dto, plus a pure `level_up_tasks` that turned it
@@ -236,6 +249,11 @@ sending thread.
 
 | 3
 | Bounded drain on shutdown; retry of transient telegram failures
+| ✅ done
+
+| 3a
+| `ViewSender` seam: the nursery moves out of the views and between them and
+  the interactor
 | ✅ done
 
 | 4

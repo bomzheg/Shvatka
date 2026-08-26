@@ -12,6 +12,8 @@ from shvatka.core.views.game import (
     GameReleasePublisher,
     OrgNotifier,
     Event,
+    ShowTasks,
+    ViewSender,
 )
 from shvatka.core.views.team import TeamNotifier, TeamEvent
 from shvatka.infrastructure.bus.in_memory import UsedOneTimeTokenInteractor
@@ -19,6 +21,11 @@ from shvatka.infrastructure.bus.in_memory import UsedOneTimeTokenInteractor
 
 class NoOpGameView(GameView):
     async def show(self, tasks: Sequence[AnyViewTask]) -> None:
+        pass
+
+
+class NoOpViewSender(ViewSender):
+    async def show_later(self, tasks: ShowTasks) -> None:
         pass
 
 
@@ -58,6 +65,10 @@ class InfrastructureProvider(Provider):
     @provide
     def game_view(self) -> GameView:
         return NoOpGameView()
+
+    @provide
+    def view_sender(self) -> ViewSender:
+        return NoOpViewSender()
 
     @provide
     def log_writer(self) -> GameLogWriter:

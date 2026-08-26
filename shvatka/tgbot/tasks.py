@@ -16,7 +16,8 @@ those are what ``FromDishka`` is for.
 import asyncio
 import logging
 import typing
-from collections.abc import Awaitable, Callable
+from collections.abc import Awaitable, Callable, Sequence
+from dataclasses import dataclass
 
 from aiogram import Bot
 from aiogram.exceptions import TelegramNetworkError, TelegramRetryAfter, TelegramServerError
@@ -25,7 +26,17 @@ from aiogram_dialog import BaseDialogManager
 from dishka import FromDishka
 from telegraph.aio import Telegraph
 
+from shvatka.core.interfaces.nursery import Nursery
 from shvatka.core.models import dto
+from shvatka.core.views.game import (
+    AnyViewTask,
+    GameLogWriter,
+    GameView,
+    OrgNotifier,
+    ShowTasks,
+    ViewSender,
+    group_by_team,
+)
 from shvatka.infrastructure.crawler.game_scn.uploader.forum_scenario_uploader import upload
 from shvatka.infrastructure.crawler.game_scn.uploader.game_mapper import map_game_for_upload
 from shvatka.tgbot.config.models.bot import BotConfig
@@ -85,6 +96,44 @@ def _retry_delay(error: Exception, attempt: int) -> float | None:
     if isinstance(error, TelegramRetryAfter):
         return float(error.retry_after) if error.retry_after <= MAX_RETRY_DELAY else None
     return RETRY_BACKOFF * 2 ** (attempt - 1)
+
+
+@dataclass
+class NurseryViewSender(ViewSender):
+    """The nursery, between an interactor and the views.
+
+    One job for the whole request, so its messages keep their order. What the
+    job shows through is whatever di binds the views to — telegram, the site or
+    both; neither this nor the job knows which.
+    """
+
+    nursery: Nursery
+
+    async def show_later(self, tasks: ShowTasks) -> None:
+        if tasks.view or tasks.org or tasks.log:
+            self.nursery.spawn(show_game, tasks=tasks)
+
+
+async def show_game(
+    tasks: ShowTasks,
+    view: FromDishka[GameView],
+    org_notifier: FromDishka[OrgNotifier],
+    game_log: FromDishka[GameLogWriter],
+    alerter: FromDishka[BotAlert],
+) -> None:
+    """In order within a team; all teams at once, or a game start is teams × fan-out."""
+    await asyncio.gather(
+        *(_show_to_team(group, view, alerter) for group in group_by_team(tasks.view))
+    )
+    for event in tasks.org:
+        await deliver(lambda e=event: org_notifier.notify(e), alerter)  # type: ignore[misc]
+    for log_event in tasks.log:
+        await deliver(lambda e=log_event: game_log.log(e), alerter)  # type: ignore[misc]
+
+
+async def _show_to_team(tasks: Sequence[AnyViewTask], view: GameView, alerter: BotAlert) -> None:
+    for task in tasks:
+        await deliver(lambda t=task: view.show([t]), alerter)  # type: ignore[misc]
 
 
 async def publish_scenario_to_forum(

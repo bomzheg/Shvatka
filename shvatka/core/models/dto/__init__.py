@@ -24,7 +24,7 @@ from .level_testing import (
 )
 from .levels_times import GameStat, GameStatWithHints, LevelTime, LevelTimeOnGame, SpyHintInfo
 from .organizer import Organizer, PrimaryOrganizer, SecondaryOrganizer
-from .player import Player, PlayerWithCreds, PlayerWithStat
+from .player import Player, PlayerWithCreds, PlayerWithForum, PlayerWithStat
 from .poll import Vote, VotedPlayer
 from .team import Team
 from .team_player import FullTeamPlayer, TeamDataRange, TeamPlayer

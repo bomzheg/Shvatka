@@ -279,7 +279,6 @@ def not_leaved() -> Sequence[ColumnElement["bool"]]:
 def get_player_full_load_options() -> ORMOption:
     return joinedload(models.TeamPlayer.player).options(
         joinedload(models.Player.user),
-        joinedload(models.Player.forum_user),
     )
 
 
@@ -289,6 +288,5 @@ def get_team_load_options() -> ORMOption:
         joinedload(models.Team.forum_team),
         joinedload(models.Team.captain).options(
             joinedload(models.Player.user),
-            joinedload(models.Player.forum_user),
         ),
     )

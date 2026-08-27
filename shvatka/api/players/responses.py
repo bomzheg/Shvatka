@@ -30,7 +30,7 @@ class PlayerWithIdentities:
     @classmethod
     def from_core(
         cls,
-        player: dto.Player,
+        player: dto.PlayerWithForum,
         email: dto.EmailAccount | None,
         superusers: "Sequence[int]" = (),
         pending_email: str | None = None,
@@ -42,7 +42,7 @@ class PlayerWithIdentities:
             name_mention=player.name_mention,
             username=player.username,
             tg=TgUser.from_core(tg),
-            forum=ForumUser.from_core(player._forum_user),  # noqa: SLF001
+            forum=ForumUser.from_core(player.forum_user),
             email=EmailAccount.from_core(email),
             is_admin=tg is not None and tg.tg_id in superusers,
             # The address already linked (verified or not) is described by `email`;

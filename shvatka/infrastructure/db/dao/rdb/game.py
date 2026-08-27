@@ -59,7 +59,6 @@ class GameDao(BaseDAO[models.Game]):
                 joinedload(models.Game.levels),
                 joinedload(models.Game.author).options(
                     joinedload(models.Player.user),
-                    joinedload(models.Player.forum_user),
                 ),
             ),
         )
@@ -83,7 +82,6 @@ class GameDao(BaseDAO[models.Game]):
             options = (
                 joinedload(models.Game.author).options(
                     joinedload(models.Player.user),
-                    joinedload(models.Player.forum_user),
                 ),
             )
             game = await self._get_by_id(id_, options)
@@ -117,7 +115,6 @@ class GameDao(BaseDAO[models.Game]):
             .options(
                 joinedload(models.Game.author).options(
                     joinedload(models.Player.user),
-                    joinedload(models.Player.forum_user),
                 )
             )
             .where(
@@ -136,7 +133,6 @@ class GameDao(BaseDAO[models.Game]):
             .options(
                 joinedload(models.Game.author).options(
                     joinedload(models.Player.user),
-                    joinedload(models.Player.forum_user),
                 )
             )
             .where(models.Game.status.in_(statuses))
@@ -151,7 +147,6 @@ class GameDao(BaseDAO[models.Game]):
             .options(
                 joinedload(models.Game.author).options(
                     joinedload(models.Player.user),
-                    joinedload(models.Player.forum_user),
                 )
             )
             .where(
@@ -183,7 +178,6 @@ class GameDao(BaseDAO[models.Game]):
             .options(
                 joinedload(models.Game.author).options(
                     joinedload(models.Player.user),
-                    joinedload(models.Player.forum_user),
                 )
             )
         )
@@ -255,7 +249,6 @@ class GameDao(BaseDAO[models.Game]):
             .options(
                 joinedload(models.Game.author).options(
                     joinedload(models.Player.user),
-                    joinedload(models.Player.forum_user),
                 )
             )
         )

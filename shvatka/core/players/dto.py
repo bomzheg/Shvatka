@@ -21,7 +21,7 @@ class PlayerMainInfo:
 class PlayerIdentitiesInfo:
     """A player together with their email account (telegram/forum live on the player)."""
 
-    player: dto.Player
+    player: dto.PlayerWithForum
     email: dto.EmailAccount | None
 
 

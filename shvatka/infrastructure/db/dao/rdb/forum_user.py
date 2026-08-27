@@ -41,6 +41,13 @@ class ForumUserDAO(BaseDAO[models.ForumUser]):
         result = await self._get_by_id(id_)
         return result.to_dto()
 
+    async def exists_for_player(self, player_id: int) -> bool:
+        """Whether the player has a forum account, without loading it."""
+        result = await self.session.scalars(
+            select(models.ForumUser.id).where(models.ForumUser.player_id == player_id).limit(1)
+        )
+        return result.one_or_none() is not None
+
     async def get_by_forum_id(self, forum_id: int) -> dto.ForumUser:
         result = await self.session.scalars(
             select(models.ForumUser).where(models.ForumUser.forum_id == forum_id)

@@ -93,7 +93,6 @@ class EmailAccountDao(BaseDAO[models.EmailAccount]):
             .join(models.Player.email)
             .options(
                 joinedload(models.Player.user),
-                joinedload(models.Player.forum_user),
                 contains_eager(models.Player.email),
             )
             .where(

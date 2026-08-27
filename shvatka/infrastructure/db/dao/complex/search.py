@@ -22,5 +22,5 @@ class GlobalSearchDaoImpl(GlobalSearchDao):
     async def search_teams(self, text: str) -> list[dto.Team]:
         return await self.dao.team.search_by_name(text)
 
-    async def search_players(self, text: str) -> list[dto.Player]:
+    async def search_players(self, text: str) -> list[dto.PlayerWithForum]:
         return await self.dao.player.search_by_any_name(text)

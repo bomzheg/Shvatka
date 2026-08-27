@@ -46,9 +46,7 @@ class KeyTimeDao(BaseDAO[models.KeyTime]):
         result: ScalarResult[models.KeyTime] = await self.session.scalars(
             select(models.KeyTime)
             .options(
-                joinedload(models.KeyTime.player).options(
-                    joinedload(models.Player.user), joinedload(models.Player.forum_user)
-                ),
+                joinedload(models.KeyTime.player).options(joinedload(models.Player.user)),
             )
             .where(
                 models.KeyTime.game_id == game.id,
@@ -70,9 +68,7 @@ class KeyTimeDao(BaseDAO[models.KeyTime]):
         result: ScalarResult[models.KeyTime] = await self.session.scalars(
             select(models.KeyTime)
             .options(
-                joinedload(models.KeyTime.player).options(
-                    joinedload(models.Player.user), joinedload(models.Player.forum_user)
-                ),
+                joinedload(models.KeyTime.player).options(joinedload(models.Player.user)),
                 joinedload(models.KeyTime.event),
             )
             .where(
@@ -145,13 +141,9 @@ class KeyTimeDao(BaseDAO[models.KeyTime]):
                 joinedload(models.KeyTime.team).options(
                     joinedload(models.Team.chat),
                     joinedload(models.Team.forum_team),
-                    joinedload(models.Team.captain).options(
-                        joinedload(models.Player.user), joinedload(models.Player.forum_user)
-                    ),
+                    joinedload(models.Team.captain).options(joinedload(models.Player.user)),
                 ),
-                joinedload(models.KeyTime.player).options(
-                    joinedload(models.Player.user), joinedload(models.Player.forum_user)
-                ),
+                joinedload(models.KeyTime.player).options(joinedload(models.Player.user)),
             )
             .order_by(models.KeyTime.enter_time)
         )

@@ -24,6 +24,7 @@ from shvatka.core.interfaces.dal.complex import TeamMerger
 from shvatka.core.interfaces.dal.organizer import OrgAdder
 from shvatka.core.interfaces.dal.player import (
     PlayerByIdGetter,
+    PlayerMergeOperandsGetter,
     PlayerPromoter,
     TeamJoiner,
     TeamPlayerGetter,
@@ -389,7 +390,7 @@ class AcceptRequestInteractor:
     team_joiner: TeamJoiner
     team_dao: TeamByIdGetter
     team_player_dao: TeamPlayerGetter
-    player_dao: PlayerByIdGetter
+    player_dao: PlayerMergeOperandsGetter
     org_adder: OrgAdder
     team_merger: TeamMerger
     player_merger: PlayerMerger
@@ -520,8 +521,10 @@ class AcceptRequestInteractor:
         timeline: list[TimelineItem] | None = None,
     ) -> ndto.ActionRequest:
         admin = await identity.get_superuser()
-        primary = await self.player_dao.get_by_id(request.payload["primary_player_id"])
-        secondary = await self.player_dao.get_by_id(request.payload["secondary_player_id"])
+        primary = await self.player_dao.get_identities_by_id(request.payload["primary_player_id"])
+        secondary = await self.player_dao.get_identities_by_id(
+            request.payload["secondary_player_id"]
+        )
         logger.warning(
             "admin %s accepted player merge request %s: merging player %s into %s%s",
             admin.id,

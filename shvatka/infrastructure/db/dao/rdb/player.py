@@ -32,13 +32,26 @@ class PlayerDao(BaseDAO[models.Player]):
     async def get_by_id(self, id_: int) -> dto.Player:
         player = await self._get_by_id(
             id_,
-            (
-                selectinload(models.Player.forum_user),
-                selectinload(models.Player.user),
-            ),
+            (joinedload(models.Player.user),),
             populate_existing=True,
         )
         return player.to_dto_user_prefetched()
+
+    async def get_identities_by_id(self, id_: int) -> dto.PlayerWithForum:
+        """Like :meth:`get_by_id`, but also loads the forum identity.
+
+        For the few places that show or check it (profile, admin panel, merge);
+        every other caller must use the cheaper :meth:`get_by_id`.
+        """
+        player = await self._get_by_id(
+            id_,
+            (
+                joinedload(models.Player.forum_user),
+                joinedload(models.Player.user),
+            ),
+            populate_existing=True,
+        )
+        return player.to_dto_with_forum_prefetched()
 
     async def get_player_with_stat(self, id_: int) -> dto.PlayerWithStat:
         result: Result[tuple[models.Player, int, int]] = await self.session.execute(
@@ -61,10 +74,7 @@ class PlayerDao(BaseDAO[models.Player]):
                 ),
             )
             .outerjoin(models.Player.typed_keys)
-            .options(
-                selectinload(models.Player.forum_user),
-                selectinload(models.Player.user),
-            )
+            .options(selectinload(models.Player.user))
             .where(models.Player.id == id_)
             .group_by(models.Player.id)
         )
@@ -83,10 +93,7 @@ class PlayerDao(BaseDAO[models.Player]):
             select(models.Game)
             .distinct()
             .options(
-                joinedload(models.Game.author).options(
-                    joinedload(models.Player.user),
-                    joinedload(models.Player.forum_user),
-                ),
+                joinedload(models.Game.author).options(joinedload(models.Player.user)),
             )
             .join(models.Game.waivers)
             .where(
@@ -124,18 +131,14 @@ class PlayerDao(BaseDAO[models.Player]):
         result: ScalarResult[models.Player] = await self.session.scalars(
             select(models.Player)
             .join(models.Player.user)
-            .options(
-                joinedload(models.Player.forum_user),
-                contains_eager(models.Player.user),
-            )
+            .options(contains_eager(models.Player.user))
             .where(models.User.tg_id == user_id)
         )
         try:
             player = result.one()
         except NoResultFound as e:
             raise exceptions.PlayerNotFoundError from e
-        forum_user = forum_user_db.to_dto() if (forum_user_db := player.forum_user) else None
-        return player.to_dto(user=player.user.to_dto(), forum_user=forum_user)
+        return player.to_dto(user=player.user.to_dto())
 
     async def create_for_user(self, user: dto.User) -> dto.Player:
         user_db = await self.session.get(models.User, user.db_id)
@@ -155,7 +158,7 @@ class PlayerDao(BaseDAO[models.Player]):
         active: bool = True,
         archive: bool = False,
         can_be_author: bool | None = None,
-    ) -> list[dto.Player]:
+    ) -> list[dto.PlayerWithForum]:
         if not active and not archive:
             return []
         query = (
@@ -201,9 +204,9 @@ class PlayerDao(BaseDAO[models.Player]):
             query = query.order_by(models.Player.id)
 
         result: ScalarResult[models.Player] = await self.session.scalars(query)
-        return [player.to_dto_user_prefetched() for player in result.unique().all()]
+        return [player.to_dto_with_forum_prefetched() for player in result.unique().all()]
 
-    async def search_by_any_name(self, text: str) -> list[dto.Player]:
+    async def search_by_any_name(self, text: str) -> list[dto.PlayerWithForum]:
         """Поиск по любому имени: username, tg-username, имени в tg и имени на форуме."""
         pattern = ilike_pattern(text)
         tg_name = func.concat_ws(" ", models.User.first_name, models.User.last_name)
@@ -225,9 +228,9 @@ class PlayerDao(BaseDAO[models.Player]):
             )
             .order_by(models.Player.id)
         )
-        return [player.to_dto_user_prefetched() for player in result.unique().all()]
+        return [player.to_dto_with_forum_prefetched() for player in result.unique().all()]
 
-    async def get_by_forum_player_name(self, name: str) -> dto.Player | None:
+    async def get_by_forum_player_name(self, name: str) -> dto.PlayerWithForum | None:
         result = await self.session.scalars(
             select(models.Player)
             .join(models.Player.forum_user)
@@ -238,20 +241,20 @@ class PlayerDao(BaseDAO[models.Player]):
             .where(models.ForumUser.name == name)
         )
         try:
-            return result.one().to_dto_user_prefetched()
+            return result.one().to_dto_with_forum_prefetched()
         except NoResultFound:
             return None
 
-    async def create_for_forum_user_name(self, forum_user_name: str) -> dto.Player:
+    async def create_for_forum_user_name(self, forum_user_name: str) -> dto.PlayerWithForum:
         forum_user_db = models.ForumUser(name=forum_user_name)
         player = await self._create_dummy()
         forum_user_db.player = player
         self.session.add(forum_user_db)
         await self._flush(forum_user_db)
         player.username = await self.get_free_and_associated_username(player)
-        return player.to_dto(forum_user=forum_user_db.to_dto())
+        return player.to_dto_with_forum(forum_user=forum_user_db.to_dto())
 
-    async def create_for_forum_user(self, user: dto.ForumUser) -> dto.Player:
+    async def create_for_forum_user(self, user: dto.ForumUser) -> dto.PlayerWithForum:
         forum_user_db = await self.session.get(models.ForumUser, user.db_id)
         assert forum_user_db
         assert isinstance(forum_user_db, models.ForumUser)
@@ -261,7 +264,7 @@ class PlayerDao(BaseDAO[models.Player]):
             player = await self._create_dummy()
             forum_user_db.player = player
             player.username = await self.get_free_and_associated_username(player)
-        return player.to_dto(forum_user=forum_user_db.to_dto())
+        return player.to_dto_with_forum(forum_user=forum_user_db.to_dto())
 
     async def link_forum_user(self, player: dto.Player, user: dto.ForumUser) -> None:
         forum_user_db = await self.session.get(models.ForumUser, user.db_id)
@@ -317,10 +320,7 @@ class PlayerDao(BaseDAO[models.Player]):
     async def get_by_ids_with_user_and_pit(self, ids: Iterable[int]) -> list[dto.VotedPlayer]:
         result = await self.session.execute(
             select(models.Player, models.TeamPlayer)
-            .options(
-                joinedload(models.Player.user),
-                joinedload(models.Player.forum_user),
-            )
+            .options(joinedload(models.Player.user))
             .join(models.Player.teams)
             .where(
                 models.Player.id.in_(ids),

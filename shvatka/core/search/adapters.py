@@ -21,6 +21,6 @@ class GlobalSearchDao(Protocol):
         """Команды (включая архивные форумные), чьё название содержит text."""
         raise NotImplementedError
 
-    async def search_players(self, text: str) -> list[dto.Player]:
+    async def search_players(self, text: str) -> list[dto.PlayerWithForum]:
         """Игроки, у которых text встречается в username, имени в tg или имени на форуме."""
         raise NotImplementedError

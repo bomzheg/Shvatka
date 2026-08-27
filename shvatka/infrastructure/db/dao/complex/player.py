@@ -95,6 +95,9 @@ class AdminPlayerMergerImpl(PlayerMergerImpl, AdminPlayerMerger):
     async def get_by_id(self, id_: int) -> dto.Player:
         return await self.dao.player.get_by_id(id_)
 
+    async def get_identities_by_id(self, id_: int) -> dto.PlayerWithForum:
+        return await self.dao.player.get_identities_by_id(id_)
+
 
 @dataclass
 class AdminPlayerWaiverPointsReaderImpl(AdminPlayerWaiverPointsReader):
@@ -111,8 +114,8 @@ class AdminPlayerWaiverPointsReaderImpl(AdminPlayerWaiverPointsReader):
 class AdminPlayerReaderImpl(AdminPlayerReader):
     dao: "HolderDao"
 
-    async def get_by_id(self, id_: int) -> dto.Player:
-        return await self.dao.player.get_by_id(id_)
+    async def get_identities_by_id(self, id_: int) -> dto.PlayerWithForum:
+        return await self.dao.player.get_identities_by_id(id_)
 
     async def get_email_by_player_id(self, player_id: int) -> dto.EmailAccount | None:
         return await self.dao.email.get_by_player_id(player_id)
@@ -144,6 +147,9 @@ class AdminUsernameSetterImpl(AdminUsernameSetter):
     async def get_by_id(self, id_: int) -> dto.Player:
         return await self.dao.player.get_by_id(id_)
 
+    async def get_identities_by_id(self, id_: int) -> dto.PlayerWithForum:
+        return await self.dao.player.get_identities_by_id(id_)
+
     async def is_username_occupied(self, username: str) -> bool:
         return await self.dao.player.is_username_occupied(username)
 
@@ -166,6 +172,9 @@ class AdminTgChangerImpl(AdminTgChanger):
 
     async def get_by_id(self, id_: int) -> dto.Player:
         return await self.dao.player.get_by_id(id_)
+
+    async def get_identities_by_id(self, id_: int) -> dto.PlayerWithForum:
+        return await self.dao.player.get_identities_by_id(id_)
 
     async def get_by_user_id(self, user_id: int) -> dto.Player:
         return await self.dao.player.get_by_user_id(user_id)

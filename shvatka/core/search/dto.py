@@ -70,7 +70,7 @@ class TeamHit:
 
 @dataclass(frozen=True, kw_only=True)
 class PlayerHit:
-    player: dto.Player
+    player: dto.PlayerWithForum
     found_in: PlayerMatchField
     snippet: str
 

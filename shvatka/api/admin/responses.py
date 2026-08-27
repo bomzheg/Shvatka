@@ -16,14 +16,14 @@ class AdminPlayer:
     forum: ForumUser | None
 
     @classmethod
-    def from_core(cls, core: dto.Player) -> "AdminPlayer":
+    def from_core(cls, core: dto.PlayerWithForum) -> "AdminPlayer":
         return cls(
             id=core.id,
             can_be_author=core.can_be_author,
             name_mention=core.name_mention,
             username=core.username,
             tg=TgUser.from_core(core._user),  # noqa: SLF001
-            forum=ForumUser.from_core(core._forum_user),  # noqa: SLF001
+            forum=ForumUser.from_core(core.forum_user),
         )
 
 

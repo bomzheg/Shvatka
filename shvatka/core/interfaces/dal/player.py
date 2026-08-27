@@ -17,6 +17,22 @@ class PlayerByIdGetter(Protocol):
         raise NotImplementedError
 
 
+class PlayerIdentitiesGetter(Protocol):
+    """Load a player together with their forum identity.
+
+    Separate from :class:`PlayerByIdGetter` because reading the forum account
+    costs a join that almost nothing needs — only ask for it where the forum
+    identity is actually shown or checked.
+    """
+
+    async def get_identities_by_id(self, id_: int) -> dto.PlayerWithForum:
+        raise NotImplementedError
+
+
+class PlayerMergeOperandsGetter(PlayerByIdGetter, PlayerIdentitiesGetter, Protocol):
+    """Load players by id, plus the two sides of a merge with their forum identity."""
+
+
 class PlayerByUserIdGetter(Protocol):
     async def get_by_user_id(self, user_id: int) -> dto.Player:
         raise NotImplementedError

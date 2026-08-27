@@ -36,6 +36,11 @@ def _player(id_: int, username: str = "p") -> dto.Player:
     return dto.Player(id=id_, can_be_author=False, is_dummy=False, username=username)
 
 
+def _player_with_forum(id_: int, username: str = "p") -> dto.PlayerWithForum:
+    """A merge operand: merging checks the forum identity, so it must be loaded."""
+    return dto.PlayerWithForum(id=id_, can_be_author=False, is_dummy=False, username=username)
+
+
 def _team(captain: dto.Player | None = None, id_: int = 1, name: str = "Gryffindor") -> dto.Team:
     return dto.Team(
         id=id_,
@@ -184,6 +189,11 @@ class FakePlayerDao:
 
     async def get_by_id(self, player_id: int) -> dto.Player:
         return self._players[player_id]
+
+    async def get_identities_by_id(self, player_id: int) -> dto.PlayerWithForum:
+        player = self._players[player_id]
+        assert isinstance(player, dto.PlayerWithForum)
+        return player
 
 
 class FakePromoter:
@@ -606,8 +616,8 @@ async def test_create_team_merge_request_only_by_captain() -> None:
 
 @pytest.mark.asyncio
 async def test_create_player_merge_request_for_self() -> None:
-    player = _player(3, "harry")
-    forum_copy = _player(8, "harry_forum")
+    player = _player_with_forum(3, "harry")
+    forum_copy = _player_with_forum(8, "harry_forum")
     requests = FakeRequests()
     notifications = FakeNotifications()
     interactor = CreatePlayerMergeRequestInteractor(
@@ -704,8 +714,8 @@ async def test_accept_team_merge_performs_merge(monkeypatch: pytest.MonkeyPatch)
 
 @pytest.mark.asyncio
 async def test_accept_player_merge_performs_merge(monkeypatch: pytest.MonkeyPatch) -> None:
-    player = _player(3, "harry")
-    forum_copy = _player(8, "harry_forum")
+    player = _player_with_forum(3, "harry")
+    forum_copy = _player_with_forum(8, "harry_forum")
     admin = _player(42, "admin")
     requests = FakeRequests()
     requests.rows[1] = ndto.ActionRequest(
@@ -735,8 +745,8 @@ async def test_accept_player_merge_performs_merge(monkeypatch: pytest.MonkeyPatc
 
 @pytest.mark.asyncio
 async def test_accept_player_merge_forwards_timeline(monkeypatch: pytest.MonkeyPatch) -> None:
-    player = _player(3, "harry")
-    forum_copy = _player(8, "harry_forum")
+    player = _player_with_forum(3, "harry")
+    forum_copy = _player_with_forum(8, "harry_forum")
     admin = _player(42, "admin")
     requests = FakeRequests()
     requests.rows[1] = ndto.ActionRequest(

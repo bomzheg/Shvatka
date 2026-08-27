@@ -30,10 +30,11 @@ async def read_users_me(
     player_ = await identity.get_player()
     if player_ is None:
         raise HTTPException(status_code=401, detail="User not found")
-    email = await dao.email.get_by_player_id(player_.id)
-    pending_email = await dao.email_confirm.get_pending_email(player_.id)
+    identities = await dao.player.get_identities_by_id(player_.id)
+    email = await dao.email.get_by_player_id(identities.id)
+    pending_email = await dao.email_confirm.get_pending_email(identities.id)
     return responses.PlayerWithIdentities.from_core(
-        player_, email, config.superusers, pending_email
+        identities, email, config.superusers, pending_email
     )
 
 

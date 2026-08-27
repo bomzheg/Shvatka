@@ -116,11 +116,7 @@ class FileInfoDao(BaseDAO[models.FileInfo]):
     async def get_all(self, limit: int, offset: int) -> Sequence[hints.SavedFileMeta]:
         result: ScalarResult[models.FileInfo] = await self.session.scalars(
             select(models.FileInfo)
-            .options(
-                joinedload(models.FileInfo.author).options(
-                    joinedload(models.Player.user), joinedload(models.Player.forum_user)
-                )
-            )
+            .options(joinedload(models.FileInfo.author).options(joinedload(models.Player.user)))
             .order_by(models.FileInfo.id)
             .limit(limit)
             .offset(offset)
@@ -192,11 +188,7 @@ class FileInfoDao(BaseDAO[models.FileInfo]):
         result: ScalarResult[models.FileInfo] = await self.session.scalars(
             select(models.FileInfo)
             .where(models.FileInfo.file_id.is_(None))
-            .options(
-                joinedload(models.FileInfo.author).options(
-                    joinedload(models.Player.user), joinedload(models.Player.forum_user)
-                )
-            )
+            .options(joinedload(models.FileInfo.author).options(joinedload(models.Player.user)))
             .limit(limit)
         )
         return [f.to_dto(f.author.to_dto_user_prefetched()) for f in result.all()]

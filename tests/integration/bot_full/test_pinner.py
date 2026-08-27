@@ -1,5 +1,5 @@
 import typing
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from unittest.mock import MagicMock
 
 import pytest
@@ -12,6 +12,7 @@ from dishka import AsyncContainer
 
 from shvatka.infrastructure.db.dao import PinnedMessageDao
 from shvatka.tgbot.services.bot_rights import ChatRights
+from shvatka.tgbot.views import pinner as pinner_module
 from shvatka.tgbot.views.pinner import MessagePinner, PinCategory
 from tests.fixtures.file_storage import CHAT_ID
 
@@ -27,6 +28,12 @@ async def pinner(dishka_request: AsyncContainer):
     # rights are cached, so the pinner doesn't ask telegram about them
     pinner_.rights.save(CHAT_ID, CAN_PIN)
     return pinner_
+
+
+@pytest.fixture
+def instant(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Unpins wait a second apart; no test needs to sit through that."""
+    monkeypatch.setattr(MessagePinner, "SLEEP", timedelta(0))
 
 
 def message(message_id: int) -> Message:
@@ -47,7 +54,9 @@ def requests(bot_session: BaseSession, api_method: str) -> list:
 
 
 @pytest.mark.asyncio
-async def test_pin_all_parts_and_unpin(pinner: MessagePinner, bot_session: BaseSession):
+async def test_pin_all_parts_and_unpin(
+    pinner: MessagePinner, bot_session: BaseSession, instant: None
+):
     await pinner.pin(CHAT_ID, [message(1), message(2), message(3)], PinCategory.level)
 
     pins = requests(bot_session, "pinChatMessage")
@@ -62,7 +71,9 @@ async def test_pin_all_parts_and_unpin(pinner: MessagePinner, bot_session: BaseS
 
 
 @pytest.mark.asyncio
-async def test_unpin_forgets_messages(pinner: MessagePinner, bot_session: BaseSession):
+async def test_unpin_forgets_messages(
+    pinner: MessagePinner, bot_session: BaseSession, instant: None
+):
     await pinner.pin(CHAT_ID, [message(1)], PinCategory.level)
     await pinner.unpin(CHAT_ID, PinCategory.level)
     await pinner.unpin(CHAT_ID, PinCategory.level)
@@ -71,7 +82,9 @@ async def test_unpin_forgets_messages(pinner: MessagePinner, bot_session: BaseSe
 
 
 @pytest.mark.asyncio
-async def test_categories_are_independent(pinner: MessagePinner, bot_session: BaseSession):
+async def test_categories_are_independent(
+    pinner: MessagePinner, bot_session: BaseSession, instant: None
+):
     await pinner.pin(CHAT_ID, [message(1)], PinCategory.level)
     await pinner.pin(CHAT_ID, [message(2)], PinCategory.bonus)
 
@@ -97,7 +110,7 @@ async def test_dont_pin_without_rights(
 
 @pytest.mark.asyncio
 async def test_pinned_messages_kept_until_rights_are_back(
-    pinner: MessagePinner, bot_session: BaseSession
+    pinner: MessagePinner, bot_session: BaseSession, instant: None
 ):
     await pinner.pin(CHAT_ID, [message(1)], PinCategory.level)
     pinner.rights.save(CHAT_ID, CANT_PIN)
@@ -125,7 +138,9 @@ async def test_pin_error_dont_break_flow(
 
 
 @pytest.mark.asyncio
-async def test_unpin_error_dont_break_flow(pinner: MessagePinner, bot_session: BaseSession):
+async def test_unpin_error_dont_break_flow(
+    pinner: MessagePinner, bot_session: BaseSession, instant: None
+):
     await pinner.pin(CHAT_ID, [message(1), message(2)], PinCategory.level)
     session = typing.cast(MagicMock, bot_session)
     session.side_effect = [
@@ -137,3 +152,25 @@ async def test_unpin_error_dont_break_flow(pinner: MessagePinner, bot_session: B
 
     # an error on the first message doesn't prevent unpinning the rest
     assert [1, 2] == [request.message_id for request in requests(bot_session, "unpinChatMessage")]
+
+
+@pytest.mark.asyncio
+async def test_unpins_are_spread_out(
+    pinner: MessagePinner, bot_session: BaseSession, monkeypatch: pytest.MonkeyPatch
+):
+    slept: list[float] = []
+
+    async def record(delay: float) -> None:
+        slept.append(delay)
+
+    monkeypatch.setattr(pinner_module.asyncio, "sleep", record)
+    await pinner.pin(CHAT_ID, [message(1), message(2), message(3)], PinCategory.level)
+
+    await pinner.unpin(CHAT_ID, PinCategory.level)
+
+    # a level's worth of unpins at once is flood control, and telegram then
+    # refuses the whole chat for the better part of a minute
+    assert slept == [MessagePinner.SLEEP.total_seconds()] * 2
+    assert [1, 2, 3] == [
+        request.message_id for request in requests(bot_session, "unpinChatMessage")
+    ]

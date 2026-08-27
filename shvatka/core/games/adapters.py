@@ -1,4 +1,4 @@
-from collections.abc import Collection
+from collections.abc import Collection, Iterable
 from typing import Protocol
 
 from shvatka.core.games.dto import BonusEvent, CurrentHintsOnly, Event, PassedLevels
@@ -17,6 +17,7 @@ from shvatka.core.interfaces.dal.game import (
     GameReleaseSaver,
     GameStartPlanner,
 )
+from shvatka.core.interfaces.dal.level_times import LevelByTeamGetter
 from shvatka.core.interfaces.dal.player import PlayerByUserGetter
 from shvatka.core.interfaces.dal.waiver import WaiverChecker
 from shvatka.core.interfaces.identity import IdentityProvider
@@ -62,6 +63,20 @@ class AdminGameStatusChanger(GameByIdGetter, GameCompleter, GameStartPlanner, Pr
         raise NotImplementedError
 
     async def get_by_statuses(self, statuses: Collection[GameStatus]) -> list[dto.Game]:
+        raise NotImplementedError
+
+
+class AdminLevelResender(LevelByTeamGetter, Protocol):
+    """Resend a running level's messages to a team on behalf of an admin.
+
+    As narrow as the job: who is playing the game, and since when each of them
+    is on the level it is on. It reads no key, writes nothing, and the level
+    itself comes from the game the caller already holds — so the panel gains
+    no way to ask where a team is, only a way to send it what it should
+    already have.
+    """
+
+    async def get_played_teams(self, game: dto.Game) -> Iterable[dto.Team]:
         raise NotImplementedError
 
 

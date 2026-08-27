@@ -31,12 +31,14 @@ from shvatka.core.files.interactors import CollectFileGarbageInteractor
 from shvatka.core.games.admin_interactors import (
     AdminChangeGameStatusInteractor,
     AdminGamesListInteractor,
+    AdminResendCurrentLevelInteractor,
     AdminUpdateGameScenarioInteractor,
     AdminUploadGameFileInteractor,
 )
 from shvatka.core.games.adapters import (
     AdminGameScenarioEditor,
     AdminGameStatusChanger,
+    AdminLevelResender,
     GameReleaseEditor,
     GameReleaseReader,
 )
@@ -634,8 +636,14 @@ class AdminProvider(Provider):
     def admin_game_status_changer(self, dao: HolderDao) -> AdminGameStatusChanger:
         return AdminGameStatusChangerImpl(dao=dao)
 
+    @provide
+    def admin_level_resender(self, dao: GamePlayerDao) -> AdminLevelResender:
+        # the play dao already answers both questions; the admin sees only these two
+        return dao
+
     admin_games_list = provide(AdminGamesListInteractor)
     admin_change_game_status = provide(AdminChangeGameStatusInteractor)
+    admin_resend_current_level = provide(AdminResendCurrentLevelInteractor)
 
     @provide
     def admin_otl(

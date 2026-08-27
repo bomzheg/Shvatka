@@ -15,16 +15,28 @@ A game's *status* is a different matter: the panel may walk a game that
 collects waivers, runs, is finished or is complete to another status (see
 :class:`AdminChangeGameStatusInteractor`), without ever reading a level, a
 hint or a file of it. Games still being written stay invisible even to that.
+
+The same line runs through the one thing the panel may do to a game that is
+being *played* — resending a level's messages to a team that lost them (see
+:class:`AdminResendCurrentLevelInteractor`). The admin presses the button;
+the puzzle and the hints go from the engine straight to the team, and neither
+they nor the team's position in the game ever pass through the panel.
 """
 
 import logging
 from dataclasses import dataclass
+from datetime import datetime
 from typing import BinaryIO
 
 from adaptix import Retort
 
-from shvatka.core.games.adapters import AdminGameScenarioEditor, AdminGameStatusChanger
+from shvatka.core.games.adapters import (
+    AdminGameScenarioEditor,
+    AdminGameStatusChanger,
+    AdminLevelResender,
+)
 from shvatka.core.interfaces.clients.file_storage import FileStorage
+from shvatka.core.interfaces.current_game import CurrentGameProvider
 from shvatka.core.interfaces.dal.game import GameFileUploader
 from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.interfaces.scheduler import Scheduler
@@ -36,7 +48,22 @@ from shvatka.core.rules.game import check_admin_can_manage_game
 from shvatka.core.services.game import check_no_other_game_active, complete_game
 from shvatka.core.services.scenario.files import save_file, sync_files_for_level
 from shvatka.core.services.scenario.game_ops import parse_uploaded_game
-from shvatka.core.utils.exceptions import CantEditGame, GameNotFound, SHDataBreach
+from shvatka.core.utils.datetime_utils import tz_utc
+from shvatka.core.utils.exceptions import (
+    CantEditGame,
+    GameNotFound,
+    GameStatusError,
+    SHDataBreach,
+    TeamCurrentLevelNotFound,
+    TeamError,
+)
+from shvatka.core.views.game import (
+    AnyViewTask,
+    SendHint,
+    SendPuzzle,
+    ShowTasks,
+    ViewSender,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -207,3 +234,95 @@ class AdminChangeGameStatusInteractor:
         await self.dao.cancel_start(game)
         game.start_at = None
         await self.scheduler.cancel_scheduled_game(game)
+
+
+@dataclass
+class AdminResendCurrentLevelInteractor:
+    """Send a running level's messages to a team again, without reading them.
+
+    Telegram drops a message now and then, and a team is left staring at a
+    chat with no puzzle in it. Putting that right used to need an org; the
+    panel can do it now, for one team or for every team of the running game at
+    once.
+
+    What goes out is exactly what the team is entitled to have at this moment:
+    the puzzle of the level it is on, and every hint whose time has already
+    come — the same list its own screen shows, built here from the level and
+    the team's level time. It goes from the engine to the views directly, so
+    the admin sends the hints without ever seeing one.
+
+    The answer is the teams the request covered, in the order the panel asked
+    for them, and nothing else. Not the level any of them is on, not how many
+    hints it has had, not even whether it is still playing: a team that is
+    through the last level is answered for like all the others and simply has
+    nothing to resend. So the button says what it did, and the game keeps its
+    secrets — the panel cannot ask the same question twice and read the team's
+    progress off the difference.
+    """
+
+    dao: AdminLevelResender
+    sender: ViewSender
+    current_game: CurrentGameProvider
+
+    async def __call__(
+        self, identity: IdentityProvider, team_id: int | None = None
+    ) -> list[dto.Team]:
+        admin = await identity.get_superuser()
+        game = await self.current_game.get_required_full_game()
+        if not game.is_started():
+            # there is nothing to resend before the first puzzle went out
+            raise GameStatusError(
+                game_status=game.status.name,
+                game=game,
+                text="cant resend level messages of a game that is not started",
+                notify_user="Переотправить сообщения уровня можно только в идущей игре",
+            )
+        teams = await self._resolve_teams(game, team_id)
+        tasks = ShowTasks()
+        for team in teams:
+            tasks.view.extend(await self._level_messages(team, game))
+        await self.sender.show_later(tasks)
+        logger.warning(
+            "admin %s resent level messages of game %s to %s team(s)",
+            admin.id,
+            game.id,
+            len(teams),
+        )
+        return teams
+
+    async def _resolve_teams(self, game: dto.FullGame, team_id: int | None) -> list[dto.Team]:
+        """The teams to resend to — always taken from the ones playing.
+
+        A team that did not sign up for this game has no level to be sent, so
+        naming one is a mistake rather than a way to find out anything: the
+        answer is the same refusal whether the team exists or not.
+        """
+        played = list(await self.dao.get_played_teams(game))
+        if team_id is None:
+            return played
+        for team in played:
+            if team.id == team_id:
+                return [team]
+        raise TeamError(
+            team_id=team_id,
+            game=game,
+            text=f"team {team_id} does not play the current game",
+            notify_user="Эта команда не играет в текущей игре",
+        )
+
+    async def _level_messages(self, team: dto.Team, game: dto.FullGame) -> list[AnyViewTask]:
+        try:
+            level_time = await self.dao.get_current_level_time(team, game)
+        except TeamCurrentLevelNotFound:
+            # played teams normally have one; a team without it has nothing to lose
+            return []
+        if level_time.has_finished(game):
+            return []
+        level = game.levels[level_time.level_number]
+        shown = level.get_hints_for_timedelta(datetime.now(tz=tz_utc) - level_time.start_at)
+        # hint #0 is the puzzle itself, the rest are the hints already released
+        tasks: list[AnyViewTask] = [SendPuzzle(team=team, level=level)]
+        tasks.extend(
+            SendHint(team=team, hint_number=number, level=level) for number in range(1, len(shown))
+        )
+        return tasks

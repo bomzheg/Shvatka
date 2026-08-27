@@ -1166,7 +1166,9 @@ async def test_admin_change_game_status_forbidden_for_non_superuser(
         ("/games/my/{id}", 403, "NotAuthorizedForEdit"),
         ("/games/my/{id}/keys/print", 403, "NotAuthorizedForEdit"),
         ("/games/{id}/keys", 403, "NotAuthorizedForEdit"),
+        # where every team stands right now, and the same table as a file
         ("/games/{id}/stat", 403, "NotAuthorizedForEdit"),
+        ("/games/{id}/stat/export", 403, "NotAuthorizedForEdit"),
         # the media of a running game is offered by what the *team* has been
         # shown, so an admin in no team is turned away one step earlier
         (f"/cdn/games/{{id}}/files/{GUID}", 422, "PlayerNotInTeam"),
@@ -1342,3 +1344,104 @@ async def test_admin_remove_player_forbidden_for_non_superuser(
     )
     assert resp.status_code == 403
     assert await check_dao.team_player.get_team(draco) is not None
+
+
+# ---------------------------------------------------------------------------
+# Resending the running level's messages (issue shvatka-ui#185). The one thing
+# the panel may do to a game being played — and it does it blind: the answer
+# names the teams the request covered and nothing about where any of them is.
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.asyncio
+async def test_admin_resends_the_running_level_to_one_team(
+    client: AsyncClient,
+    admin_token: Token,
+    started_game: dto.FullGame,
+    gryffindor: dto.Team,
+):
+    resp = await client.post(
+        "/admin/games/running/resend",
+        json={"team_id": gryffindor.id},
+        cookies=auth_cookies(admin_token),
+        follow_redirects=True,
+    )
+    assert resp.status_code == 200, resp.text
+    assert [team["id"] for team in resp.json()["items"]] == [gryffindor.id]
+    # the answer carries the team, never a level, a hint or a position in the game
+    assert "level" not in resp.text
+    assert "hint" not in resp.text
+
+
+@pytest.mark.asyncio
+async def test_admin_resends_the_running_level_to_every_team(
+    client: AsyncClient,
+    admin_token: Token,
+    started_game: dto.FullGame,
+    gryffindor: dto.Team,
+    slytherin: dto.Team,
+):
+    resp = await client.post(
+        "/admin/games/running/resend",
+        json={},
+        cookies=auth_cookies(admin_token),
+        follow_redirects=True,
+    )
+    assert resp.status_code == 200, resp.text
+    assert {team["id"] for team in resp.json()["items"]} == {gryffindor.id, slytherin.id}
+
+
+@pytest.mark.asyncio
+async def test_admin_cant_resend_to_a_team_that_does_not_play(
+    client: AsyncClient,
+    admin_token: Token,
+    started_game: dto.FullGame,
+    gryffindor: dto.Team,
+):
+    """Naming a team that is not in the game answers the same either way.
+
+    A refusal that told a stranger's id from a player's would be a way to read
+    the game's roster out of the panel one guess at a time.
+    """
+    resp = await client.post(
+        "/admin/games/running/resend",
+        json={"team_id": gryffindor.id + 1000},
+        cookies=auth_cookies(admin_token),
+        follow_redirects=True,
+    )
+    assert resp.status_code == 422, resp.text
+    assert resp.json()["type"] == "TeamError"
+
+
+@pytest.mark.asyncio
+async def test_admin_cant_resend_before_the_game_runs(
+    client: AsyncClient,
+    admin_token: Token,
+    game: dto.FullGame,
+    dao: HolderDao,
+):
+    await set_status(game, GameStatus.getting_waivers, dao)
+    resp = await client.post(
+        "/admin/games/running/resend",
+        json={},
+        cookies=auth_cookies(admin_token),
+        follow_redirects=True,
+    )
+    assert resp.status_code == 422, resp.text
+    assert resp.json()["type"] == "GameStatusError"
+
+
+@pytest.mark.asyncio
+async def test_admin_resend_forbidden_for_non_superuser(
+    client: AsyncClient,
+    hermione_token: Token,
+    started_game: dto.FullGame,
+    gryffindor: dto.Team,
+):
+    resp = await client.post(
+        "/admin/games/running/resend",
+        json={"team_id": gryffindor.id},
+        cookies=auth_cookies(hermione_token),
+        follow_redirects=True,
+    )
+    assert resp.status_code == 403, resp.text

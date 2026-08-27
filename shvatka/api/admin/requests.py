@@ -20,6 +20,12 @@ class AdminGameStatusChange:
 
 
 @dataclass
+class AdminResendLevel:
+    team_id: int | None = None
+    """the single team to resend to; ``null`` means every team of the game"""
+
+
+@dataclass
 class AdminChangeEmail:
     email: str
     verified: bool = False

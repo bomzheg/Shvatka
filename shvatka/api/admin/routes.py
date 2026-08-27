@@ -21,6 +21,7 @@ from shvatka.core.files.interactors import CollectFileGarbageInteractor
 from shvatka.core.games.admin_interactors import (
     AdminChangeGameStatusInteractor,
     AdminGamesListInteractor,
+    AdminResendCurrentLevelInteractor,
     AdminUpdateGameScenarioInteractor,
     AdminUploadGameFileInteractor,
 )
@@ -314,6 +315,29 @@ async def change_game_scenario(
 
 
 @inject
+async def resend_current_level(
+    identity: FromDishka[ApiIdentityProvider],
+    interactor: FromDishka[AdminResendCurrentLevelInteractor],
+    body: Annotated[requests.AdminResendLevel, Body()],
+) -> shared.Items[shared.Team]:
+    """Send the running level's messages to a team again — telegram lost them.
+
+    With ``team_id`` it goes to that one team, without it to every team of the
+    game. The puzzle and the hints the team has already earned go from the
+    engine straight to it; the answer names the teams the request covered and
+    nothing else — not the level any of them is on, not how many hints it has
+    had, not whether it has finished.
+    """
+    teams = await interactor(identity=identity, team_id=body.team_id)
+    rendered = []
+    for team in teams:
+        one = shared.Team.from_core(team)
+        assert one is not None
+        rendered.append(one)
+    return shared.Items(rendered)
+
+
+@inject
 async def upload_game_file(
     identity: FromDishka[ApiIdentityProvider],
     interactor: FromDishka[AdminUploadGameFileInteractor],
@@ -375,5 +399,6 @@ def setup() -> APIRouter:
     router.add_api_route("/games/{id}/status", change_game_status, methods=["PUT"])
     router.add_api_route("/games/{id}/scenario", change_game_scenario, methods=["PUT"])
     router.add_api_route("/games/{id}/files", upload_game_file, methods=["POST"])
+    router.add_api_route("/games/running/resend", resend_current_level, methods=["POST"])
     router.add_api_route("/files/gc", collect_file_garbage, methods=["POST"])
     return router

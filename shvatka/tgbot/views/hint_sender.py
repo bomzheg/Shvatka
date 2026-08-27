@@ -1,5 +1,6 @@
 import asyncio
 import logging
+from dataclasses import dataclass, field
 from datetime import timedelta
 from functools import partial
 from typing import Iterable, Callable, Awaitable, Collection
@@ -15,6 +16,19 @@ from shvatka.tgbot.views.hint_factory.hint_content_resolver import HintContentRe
 from shvatka.tgbot.views.hint_factory.hint_parser import parse_message
 
 logger = logging.getLogger(__name__)
+
+
+@dataclass
+class SentHint:
+    """Messages of one sent hint: the parts themselves and their caption."""
+
+    parts: list[Message] = field(default_factory=list)
+    caption: Message | None = None
+
+    def all(self) -> list[Message]:
+        """All sent messages, caption first (the order they were sent in)."""
+        return [self.caption, *self.parts] if self.caption is not None else list(self.parts)
+
 
 _MISSING = object()
 METHODS: dict[enums.HintType, Callable[..., Awaitable[Message]]] = {
@@ -105,25 +119,33 @@ class HintSender:
         hint_containers: Iterable[hints.BaseHint],
         caption: str | None = None,
         sleep: int | None = None,
-    ) -> list[Message]:
+        reply_to_message_id: int | None = None,
+    ) -> SentHint:
         """
         sending caption if exist and all hint parts in chat with chat_id
         :param chat_id:
         :param hint_containers:
         :param caption: this text may send before hints
         :param sleep:  time to sleep inter sending parts (default 1 sec)
-        :return: all sent messages (caption first, if it was sent)
+        :param reply_to_message_id: the caption replies to this message, if given
+        :return: sent messages, the caption told apart from the hint parts
         """
         if sleep is None:
             sleep = self.SLEEP.seconds
-        messages: list[Message] = []
+        sent = SentHint()
         if caption is not None:
-            messages.append(await self.bot.send_message(chat_id=chat_id, text=caption))
+            sent.caption = await self.bot.send_message(
+                chat_id=chat_id,
+                text=caption,
+                reply_to_message_id=reply_to_message_id,
+                # the key a hint answers can be deleted - no reason to lose the hint
+                allow_sending_without_reply=True,
+            )
             await asyncio.sleep(sleep)
         for hint_container in hint_containers:
-            messages.append(await self.send_hint(hint_container, chat_id))
+            sent.parts.append(await self.send_hint(hint_container, chat_id))
             await asyncio.sleep(sleep)
-        return messages
+        return sent
 
     @classmethod
     def get_approximate_time(cls, hints: Collection[hints.BaseHint]) -> timedelta:

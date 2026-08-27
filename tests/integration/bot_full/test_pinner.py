@@ -71,6 +71,54 @@ async def test_pin_all_parts_and_unpin(
 
 
 @pytest.mark.asyncio
+async def test_caption_pinned_last_and_notifies(
+    pinner: MessagePinner, bot_session: BaseSession, instant: None
+):
+    await pinner.pin(CHAT_ID, [message(2), message(3)], PinCategory.level, caption=message(1))
+
+    pins = requests(bot_session, "pinChatMessage")
+    # telegram shows the last pinned message on top of the chat, so the caption
+    # ("Подсказка 2 (15 мин.)") is pinned after the parts it describes
+    assert [2, 3, 1] == [request.message_id for request in pins]
+    assert [True, True, False] == [request.disable_notification for request in pins]
+
+    await pinner.unpin(CHAT_ID, PinCategory.level)
+    unpins = requests(bot_session, "unpinChatMessage")
+    assert [2, 3, 1] == [request.message_id for request in unpins]
+
+
+@pytest.mark.asyncio
+async def test_caption_pinned_even_without_parts(
+    pinner: MessagePinner, bot_session: BaseSession, instant: None
+):
+    await pinner.pin(CHAT_ID, [], PinCategory.bonus, caption=message(1))
+
+    pins = requests(bot_session, "pinChatMessage")
+    assert [1] == [request.message_id for request in pins]
+    assert not pins[0].disable_notification
+
+    await pinner.unpin(CHAT_ID, PinCategory.bonus)
+    assert [1] == [request.message_id for request in requests(bot_session, "unpinChatMessage")]
+
+
+@pytest.mark.asyncio
+async def test_caption_pin_error_dont_break_flow(
+    pinner: MessagePinner, bot_session: BaseSession, dishka_request: AsyncContainer, instant: None
+):
+    session = typing.cast(MagicMock, bot_session)
+    session.side_effect = [
+        {},
+        TelegramAPIError(message="message to pin not found", method=PinChatMessage),
+    ]
+
+    await pinner.pin(CHAT_ID, [message(1)], PinCategory.level, caption=message(2))
+
+    dao = await dishka_request.get(PinnedMessageDao)
+    # the caption was not pinned, so it must not be unpinned later
+    assert [1] == await dao.pop_all(chat_id=CHAT_ID, category=PinCategory.level.value)
+
+
+@pytest.mark.asyncio
 async def test_unpin_forgets_messages(
     pinner: MessagePinner, bot_session: BaseSession, instant: None
 ):

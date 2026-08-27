@@ -298,14 +298,42 @@ async def test_send_hints_returns_all_sent_messages(
         for message_id in (1, 2, 3)
     ]
 
-    messages = await hint_sender.send_hints(
+    sent = await hint_sender.send_hints(
         chat_id=CHAT_ID,
         hint_containers=[TextHint(text="первая часть"), TextHint(text="вторая часть")],
         caption="Подсказка",
         sleep=0,
     )
 
-    assert [1, 2, 3] == [message.message_id for message in messages]
+    assert [1, 2, 3] == [message.message_id for message in sent.all()]
+    # the caption is told apart from the parts - it is pinned separately
+    assert sent.caption is not None
+    assert 1 == sent.caption.message_id
+    assert [2, 3] == [message.message_id for message in sent.parts]
+
+
+@pytest.mark.asyncio
+async def test_send_hints_without_caption(
+    hint_sender: HintSender,
+    bot_session: BaseSession,
+):
+    session = typing.cast(MagicMock, bot_session)
+    session.side_effect = [
+        Message(
+            message_id=1,
+            date=datetime.now(tz=timezone.utc),
+            chat=Chat(id=CHAT_ID, type="supergroup"),
+        )
+    ]
+
+    sent = await hint_sender.send_hints(
+        chat_id=CHAT_ID,
+        hint_containers=[TextHint(text="единственная часть")],
+        sleep=0,
+    )
+
+    assert sent.caption is None
+    assert [1] == [message.message_id for message in sent.all()]
 
 
 @pytest.mark.asyncio

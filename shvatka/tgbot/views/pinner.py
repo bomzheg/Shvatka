@@ -44,7 +44,22 @@ class MessagePinner:
     unpins everything the level pinned in one go.
     """
 
-    async def pin(self, chat_id: int, messages: Iterable[Message], category: PinCategory) -> None:
+    async def pin(
+        self,
+        chat_id: int,
+        messages: Iterable[Message],
+        category: PinCategory,
+        caption: Message | None = None,
+    ) -> None:
+        """
+        Pins ``messages`` quietly and ``caption`` (e.g. "Подсказка 2 (15 мин.)")
+        after them, notifying the whole chat.
+
+        Telegram shows the last pinned message at the top of the chat, so the
+        caption is pinned after the hint parts it describes - that way the team
+        sees what the pin is about, and the notification tells everyone (even
+        those who muted the chat) a new hint has come.
+        """
         if not await self.rights.can_pin(chat_id):
             logger.info("bot can't pin messages in chat %s", chat_id)
             return
@@ -53,6 +68,10 @@ class MessagePinner:
             for message in messages
             if await self._pin_one(chat_id=chat_id, message_id=message.message_id)
         ]
+        if caption is not None and await self._pin_one(
+            chat_id=chat_id, message_id=caption.message_id, notify=True
+        ):
+            pinned.append(caption.message_id)
         if not pinned:
             return
         try:
@@ -77,12 +96,12 @@ class MessagePinner:
                 await asyncio.sleep(self.SLEEP.total_seconds())
             await self._unpin_one(chat_id=chat_id, message_id=message_id)
 
-    async def _pin_one(self, chat_id: int, message_id: int) -> bool:
+    async def _pin_one(self, chat_id: int, message_id: int, notify: bool = False) -> bool:
         try:
             await self.bot.pin_chat_message(
                 chat_id=chat_id,
                 message_id=message_id,
-                disable_notification=True,
+                disable_notification=not notify,
             )
         except Exception as e:
             logger.warning("can't pin message %s in chat %s", message_id, chat_id, exc_info=e)

@@ -313,6 +313,35 @@ async def test_send_hints_returns_all_sent_messages(
 
 
 @pytest.mark.asyncio
+async def test_caption_replies_to_message(
+    hint_sender: HintSender,
+    bot_session: BaseSession,
+):
+    session = typing.cast(MagicMock, bot_session)
+    session.side_effect = [
+        Message(
+            message_id=2,
+            date=datetime.now(tz=timezone.utc),
+            chat=Chat(id=CHAT_ID, type="supergroup"),
+        )
+    ]
+
+    await hint_sender.send_hints(
+        chat_id=CHAT_ID,
+        hint_containers=[],
+        caption="Бонусная подсказка",
+        reply_to_message_id=17,
+        sleep=0,
+    )
+
+    request = session.mock_calls.pop().args[1]
+    assert "sendMessage" == request.__api_method__
+    assert 17 == request.reply_to_message_id
+    # the key a bonus hint answers can be deleted - that must not lose the hint
+    assert request.allow_sending_without_reply
+
+
+@pytest.mark.asyncio
 async def test_send_hints_without_caption(
     hint_sender: HintSender,
     bot_session: BaseSession,

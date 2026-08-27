@@ -273,7 +273,7 @@ class BotView(GameViewPreparer, GameView):
         if effects.bonus_minutes:
             await self.bonus_key(key, effects.bonus_minutes, input_container)
         if effects.hints_:
-            await self.bonus_hint_key(key, effects.hints_, input_container)
+            await self.hint(key.team, effects.hints_, input_container)
 
         if (reply_to := await get_message_id(input_container)) is not None:
             if (chat_id := key.team.get_chat_id()) is None:
@@ -300,32 +300,6 @@ class BotView(GameViewPreparer, GameView):
             )
         except TelegramAPIError as e:
             logger.exception("can't send view bonus key", exc_info=e)
-
-    async def bonus_hint_key(
-        self,
-        key: dto.KeyTime,
-        bonus_hint: Sequence[hints.AnyHint],
-        input_container: InputContainer,
-    ):
-        if (chat_id := key.team.get_chat_id()) is None:
-            return
-        reply_to = await get_message_id(input_container)
-        caption: Message | None = None
-        try:
-            caption = await self.bot.send_message(
-                chat_id=chat_id,
-                reply_to_message_id=reply_to,
-                text="Бонусная подсказка",
-            )
-        except TelegramAPIError as e:
-            logger.exception(
-                "can't send bonus hint key caption to team %s", key.team.id, exc_info=e
-            )
-        sent = await self.hint_sender.send_hints(
-            chat_id=chat_id,
-            hint_containers=bonus_hint,
-        )
-        await self.pinner.pin(chat_id, sent.parts, PinCategory.bonus, caption=caption)
 
     async def game_finished(self, team: dto.Team, input_container: InputContainer) -> None:
         if (chat_id := team.get_chat_id()) is None:
@@ -355,20 +329,13 @@ class BotView(GameViewPreparer, GameView):
     ):
         if (chat_id := team.get_chat_id()) is None:
             return
-        caption: Message | None = None
-        try:
-            caption = await self.bot.send_message(
-                chat_id=chat_id,
-                reply_to_message_id=await get_message_id(input_container),
-                text="Бонусная подсказка",
-            )
-        except TelegramAPIError as e:
-            logger.exception("can't send bonus hint caption", exc_info=e)
         sent = await self.hint_sender.send_hints(
             chat_id=chat_id,
             hint_containers=hint,
+            caption="Бонусная подсказка",
+            reply_to_message_id=await get_message_id(input_container),
         )
-        await self.pinner.pin(chat_id, sent.parts, PinCategory.bonus, caption=caption)
+        await self.pinner.pin(chat_id, sent.parts, PinCategory.bonus, caption=sent.caption)
 
     async def bonus(self, team: dto.Team, bonus: float, input_container: InputContainer) -> None:
         if (chat_id := team.get_chat_id()) is None:

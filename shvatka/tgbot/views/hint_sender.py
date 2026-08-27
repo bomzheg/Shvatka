@@ -119,6 +119,7 @@ class HintSender:
         hint_containers: Iterable[hints.BaseHint],
         caption: str | None = None,
         sleep: int | None = None,
+        reply_to_message_id: int | None = None,
     ) -> SentHint:
         """
         sending caption if exist and all hint parts in chat with chat_id
@@ -126,13 +127,20 @@ class HintSender:
         :param hint_containers:
         :param caption: this text may send before hints
         :param sleep:  time to sleep inter sending parts (default 1 sec)
+        :param reply_to_message_id: the caption replies to this message, if given
         :return: sent messages, the caption told apart from the hint parts
         """
         if sleep is None:
             sleep = self.SLEEP.seconds
         sent = SentHint()
         if caption is not None:
-            sent.caption = await self.bot.send_message(chat_id=chat_id, text=caption)
+            sent.caption = await self.bot.send_message(
+                chat_id=chat_id,
+                text=caption,
+                reply_to_message_id=reply_to_message_id,
+                # the key a hint answers can be deleted - no reason to lose the hint
+                allow_sending_without_reply=True,
+            )
             await asyncio.sleep(sleep)
         for hint_container in hint_containers:
             sent.parts.append(await self.send_hint(hint_container, chat_id))

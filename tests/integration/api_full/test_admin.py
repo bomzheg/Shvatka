@@ -1166,7 +1166,9 @@ async def test_admin_change_game_status_forbidden_for_non_superuser(
         ("/games/my/{id}", 403, "NotAuthorizedForEdit"),
         ("/games/my/{id}/keys/print", 403, "NotAuthorizedForEdit"),
         ("/games/{id}/keys", 403, "NotAuthorizedForEdit"),
+        # where every team stands right now, and the same table as a file
         ("/games/{id}/stat", 403, "NotAuthorizedForEdit"),
+        ("/games/{id}/stat/export", 403, "NotAuthorizedForEdit"),
         # the media of a running game is offered by what the *team* has been
         # shown, so an admin in no team is turned away one step earlier
         (f"/cdn/games/{{id}}/files/{GUID}", 422, "PlayerNotInTeam"),

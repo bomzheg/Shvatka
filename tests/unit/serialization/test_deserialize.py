@@ -4,7 +4,7 @@ import pytest
 from adaptix import Retort
 
 from shvatka.common.data_examples import game_example, GAME_START_EXAMPLE
-from shvatka.core.models.dto.hints import TextHint, GPSHint, PhotoHint, ContactHint
+from shvatka.core.models.dto.hints import TextHint, GPSHint, PhotoHint, ContactHint, RichHint
 from shvatka.core.models.dto.scn import RawGameScenario
 from shvatka.core.models.dto.hints import (
     VenueHint,
@@ -109,7 +109,7 @@ def test_deserialize_legacy_scenario_without_tg_file_id(
 def test_deserialize_all_types(all_types_scn: RawGameScenario, retort: Retort):
     game_scn = parse_game(all_types_scn, retort)
     hints = game_scn.levels[0].time_hints
-    assert 12 == len(hints)
+    assert 13 == len(hints)
     for i, type_ in enumerate(
         [
             TextHint,
@@ -124,6 +124,7 @@ def test_deserialize_all_types(all_types_scn: RawGameScenario, retort: Retort):
             VideoNoteHint,
             ContactHint,
             StickerHint,
+            RichHint,
         ]
     ):
         assert isinstance(hints[i].hint[0], type_)
@@ -133,8 +134,8 @@ def test_deserialize_all_types(all_types_scn: RawGameScenario, retort: Retort):
 def test_render_all_types(all_types_scn: RawGameScenario, retort: Retort):
     game_scn = parse_game(all_types_scn, retort)
     hints = [time_hint.hint[0] for time_hint in game_scn.levels[0].time_hints]
-    assert 12 == len(hints)
-    assert "📃📡🧭📷🎼🎬📎🌀🎤🤳🪪🏷" == render_hints(hints)
+    assert 13 == len(hints)
+    assert "📃📡🧭📷🎼🎬📎🌀🎤🤳🪪🏷📰" == render_hints(hints)
 
 
 def test_serialize_simple(retort: Retort):

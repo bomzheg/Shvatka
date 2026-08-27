@@ -6,6 +6,8 @@ from shvatka.core.interfaces.clients.file_storage import FileStorage
 from shvatka.core.models.dto.hints import (
     BaseHint,
     TextHint,
+    RichHint,
+    RichMedia,
     GPSHint,
     ContactHint,
     PhotoHint,
@@ -23,6 +25,9 @@ from shvatka.tgbot.models.hint import (
     BaseHintLinkView,
     BaseHintContentView,
     TextHintView,
+    RichHintLinkView,
+    RichHintContentView,
+    RichMediaView,
     GPSHintView,
     ContactHintView,
     PhotoLinkView,
@@ -56,6 +61,15 @@ class HintContentResolver:
                 return TextHintView(
                     text=text,
                     link_preview=hint_.link_preview,
+                )
+            case RichHint():
+                hint_ = typing.cast(RichHint, hint_)
+                return RichHintLinkView(
+                    text=hint_.text,
+                    format=hint_.format,
+                    is_rtl=hint_.is_rtl,
+                    skip_entity_detection=hint_.skip_entity_detection,
+                    media=[await self._resolve_media_link(media) for media in hint_.media],
                 )
             case GPSHint(latitude=latitude, longitude=longitude):
                 return GPSHintView(
@@ -147,12 +161,37 @@ class HintContentResolver:
             return None
         return await self._resolve_file_id(guid)
 
+    async def _resolve_media_link(self, media: RichMedia) -> RichMediaView:
+        file_info = await self.dao.get_by_guid(media.file_guid)
+        return RichMediaView(
+            id=media.id,
+            content_type=file_info.content_type,
+            file_id=file_info.file_id,
+        )
+
+    async def _resolve_media_content(self, media: RichMedia) -> RichMediaView:
+        file_info = await self.dao.get_by_guid(media.file_guid)
+        return RichMediaView(
+            id=media.id,
+            content_type=file_info.content_type,
+            content=await self._resolve_bytes(media.file_guid),
+        )
+
     async def resolve_content(self, hint_: BaseHint) -> BaseHintContentView:
         match hint_:
             case TextHint(text=text):
                 return TextHintView(
                     text=text,
                     link_preview=hint_.link_preview,
+                )
+            case RichHint():
+                hint_ = typing.cast(RichHint, hint_)
+                return RichHintContentView(
+                    text=hint_.text,
+                    format=hint_.format,
+                    is_rtl=hint_.is_rtl,
+                    skip_entity_detection=hint_.skip_entity_detection,
+                    media=[await self._resolve_media_content(media) for media in hint_.media],
                 )
             case GPSHint(latitude=latitude, longitude=longitude):
                 return GPSHintView(

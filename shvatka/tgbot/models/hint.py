@@ -5,8 +5,12 @@ from typing import BinaryIO, Any
 from aiogram import types
 from aiogram.types import BufferedInputFile, InputFile
 
+from shvatka.core.models import enums
 from shvatka.core.models.dto import hints
 from shvatka.core.models.dto.hints.hint_part import CaptionMixin
+from shvatka.core.utils import exceptions
+
+_MISSING = object()
 
 
 @dataclass(kw_only=True)
@@ -22,7 +26,18 @@ class BaseHintView(ABC):
 
 @dataclass(kw_only=True)
 class BaseHintLinkView(BaseHintView, metaclass=ABCMeta):
-    pass
+    def is_file_id_missing(self) -> bool:
+        """
+        Only file-based views (photo, audio, video, ...) carry a ``file_id``
+        attribute. When that attribute exists but is ``None`` the file was never
+        uploaded to telegram, so we can't send by file_id and the sender must
+        fall back to sending by content.
+
+        Views without a ``file_id`` attribute at all (text, gps, venue, contact)
+        have nothing to be missing - they are always sendable as a link, so the
+        sentinel default keeps them out of the content fallback.
+        """
+        return getattr(self, "file_id", _MISSING) is None
 
 
 @dataclass(kw_only=True)
@@ -45,6 +60,74 @@ class TextHintView(BaseHintLinkView, BaseHintContentView):
 
     def specific_kwargs(self) -> dict[str, Any]:
         return {"text": self.text, "link_preview_options": _link_preview_to_tg(self.link_preview)}
+
+
+@dataclass(kw_only=True)
+class RichMediaView:
+    """One file embedded in a rich message, either as a file_id or as bytes."""
+
+    id: str
+    content_type: enums.HintType | None
+    file_id: str | None = None
+    content: BinaryIO | None = None
+
+    def to_tg(self) -> types.InputRichMessageMedia:
+        return types.InputRichMessageMedia(id=self.id, media=self._media())
+
+    def _media(self) -> types.InputRichMessageMediaUnion:
+        media: str | InputFile
+        if self.content is not None:
+            media = _get_input_file(self.content)  # type: ignore[assignment]
+        else:
+            assert self.file_id is not None
+            media = self.file_id
+        match self.content_type:
+            case enums.HintType.photo:
+                return types.InputMediaPhoto(media=media)
+            case enums.HintType.video:
+                return types.InputMediaVideo(media=media)
+            case enums.HintType.animation:
+                return types.InputMediaAnimation(media=media)
+            case enums.HintType.audio:
+                return types.InputMediaAudio(media=media)
+            case _:
+                raise exceptions.UnsupportedFileFormat(
+                    text=f"file {self.id} ({self.content_type}) "
+                    f"can't be embedded into a rich message"
+                )
+
+
+@dataclass(kw_only=True)
+class RichHintViewMixin(metaclass=ABCMeta):
+    text: str
+    format: enums.RichFormat
+    is_rtl: bool | None = None
+    skip_entity_detection: bool | None = None
+    media: list[RichMediaView]
+
+    def specific_kwargs(self) -> dict[str, Any]:
+        return {"rich_message": self._rich_message()}
+
+    def _rich_message(self) -> types.InputRichMessage:
+        is_html = self.format == enums.RichFormat.html
+        return types.InputRichMessage(
+            html=self.text if is_html else None,
+            markdown=None if is_html else self.text,
+            is_rtl=self.is_rtl,
+            skip_entity_detection=self.skip_entity_detection,
+            media=[media.to_tg() for media in self.media] or None,
+        )
+
+
+@dataclass(kw_only=True)
+class RichHintLinkView(RichHintViewMixin, BaseHintLinkView):
+    def is_file_id_missing(self) -> bool:
+        return any(media.file_id is None for media in self.media)
+
+
+@dataclass(kw_only=True)
+class RichHintContentView(RichHintViewMixin, BaseHintContentView):
+    pass
 
 
 @dataclass(kw_only=True)

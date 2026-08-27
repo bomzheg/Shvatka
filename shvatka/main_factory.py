@@ -20,21 +20,23 @@ from shvatka.api.app.dependencies import get_api_specific_providers
 from shvatka.api.app.dependencies.auth import ApiIdentityProvider
 from shvatka.api.app.config.parser.main import load_config as load_api_config
 from shvatka.api.app.utils.web_input import (
-    WebGameView,
-    WebTeamNotifier,
-    WebOrgNotifier,
-    WebGamePreparer,
     WebGameLogWriter,
+    WebGamePreparer,
+    WebGameView,
+    WebOrgNotifier,
+    WebTeamNotifier,
 )
 from shvatka.api.main_factory import create_app
 from shvatka.common.config.models.paths import Paths
 from shvatka.core.interfaces.identity import IdentityProvider
+from shvatka.core.interfaces.nursery import Nursery
 from shvatka.core.views.game import (
     GameView,
     GameViewPreparer,
     GameReleasePublisher,
     OrgNotifier,
     GameLogWriter,
+    ViewSender,
 )
 from shvatka.core.views.team import TeamNotifier
 from shvatka.infrastructure.di import get_providers
@@ -47,9 +49,10 @@ from shvatka.tgbot.main_factory import (
 )
 from shvatka.tgbot.services.identity import TgBotIdentityProvider
 from shvatka.tgbot.utils.fastapi_webhook import setup_application, SimpleRequestHandler
-from shvatka.tgbot.views.game import BotView, BotOrgNotifier, GameBotLog
+from shvatka.tgbot.views.game import BotOrgNotifier, BotView, GameBotLog
 from shvatka.tgbot.views.game_release import GameBotReleasePublisher
 from shvatka.tgbot.views.team import BotTeamNotifier
+from shvatka.tgbot.tasks import NurseryViewSender
 from shvatka.views import (
     ComplexOrgNotifier,
     ComplexGameViewPreparer,
@@ -74,6 +77,10 @@ class ComplexOnlyProvider(Provider):
     @provide
     def complex_view(self, bot_view: BotView, web_view: WebGameView) -> GameView:
         return ComplexView(bot_view, web_view)
+
+    @provide
+    def view_sender(self, nursery: Nursery) -> ViewSender:
+        return NurseryViewSender(nursery)
 
     @provide
     def complex_preparer(

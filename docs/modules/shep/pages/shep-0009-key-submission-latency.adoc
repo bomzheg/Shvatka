@@ -1,0 +1,304 @@
+= SHEP-0009 — Key submission latency
+:navtitle: SHEP-0009 Key submission latency
+
+[cols="1,4"]
+|===
+| SHEP | 0009
+| Title | Key submission latency
+| Status | `Accepted, partially implemented`
+| Created | 2026-08-22
+| Updated | 2026-08-25
+| Related | xref:shep-0010-message-outbox.adoc[SHEP-0010]
+|===
+
+== Summary
+
+Typing a key on the site used to wait for the whole game to be *told about it* —
+several telegram messages a second apart, then a web push per device of every
+player and org. None of that is part of the answer. So an interactor no longer
+*shows* anything: it decides what to show, collects it as data in a plain list,
+commits, and hands the list over. The api builds its response by reading that
+list; telegram and the browser are caught up by a background task afterwards.
+
+== Context
+
+`POST /games/running/key` (`shvatka/api/games/routes.py`) runs
+`CheckKeyInteractor` (`shvatka/core/games/interactors.py`) and answers with
+`responses.InsertedKey`.
+
+What the request actually waited for, in order:
+
+* `HintSender.send_hints` sleeps `SLEEP` (one second) after the caption and
+  after every hint part (`shvatka/tgbot/views/hint_sender.py`). A puzzle of
+  three parts is four seconds of sleeping alone, and a level up sends one.
+* `WebPushSender.send_many` looped over subscriptions and awaited one blocking
+  `webpush` call at a time (`shvatka/api/app/utils/push.py`). A team of eight
+  with two devices each is sixteen https round trips in a row — and the same
+  again for the orgs in `WebOrgNotifier`.
+* `BotOrgNotifier.notify` sends one message per org, one at a time; on the last
+  team's last key `all_teams_finished` messages every team.
+* All of it inside the transaction: `CheckKeyInteractor` committed *after* the
+  fan-out, so the rows the key locked stayed locked for its whole duration.
+
+The one-second sleep is deliberate — it is what keeps the bot inside telegram's
+per-chat limits — so the fix cannot be "sleep less".
+
+== Decision
+
+=== What to show is data, decided before the commit
+
+A `ViewTask` (`shvatka/core/views/game.py`) is one thing the game has to show,
+as a frozen dataclass over domain dtos: `SendPuzzle`, `WrongKey`, `EffectsKey`,
+`GameFinished`, `GameFinishedByAll`, `SendHint`, `ShowEffects`, `DuplicateKey`.
+An interactor appends them to a plain `list` while it still holds the
+transaction, and shows nothing:
+
+[source,python]
+----
+tasks = ShowTasks(view=self.view_(new_key, input_container))
+if not new_key.is_duplicate and new_key.is_level_up():
+    tasks.extend(await self.process_level_up(...))
+await self.dao.commit()
+await self.sender.show_later(tasks)
+----
+
+Before the commit it is a list and nothing else. If the commit raises, the
+`show` line is never reached — *a transaction that does not land shows nothing*,
+by construction rather than by convention. That is the property the whole shape
+exists for, and it cannot be got by deferring at the edge: a view deferred
+inside the transaction is still recorded when the transaction rolls back.
+
+`ShowTasks` holds one list per sender — view, org notifier, game log. Order is
+kept inside a list and promised nowhere else, because the three senders are
+three different audiences.
+
+Only the view list is ever longer than one: a level up is the key and then the
+puzzle, the last team finishing is the key, the finish, and one congratulation
+per team that played; the timer shows one task per effect; a game starting shows
+one puzzle per team. The org and log lists have never held more than a single
+event, which is why those two senders keep taking one.
+
+=== `GameView` is one method
+
+[source,python]
+----
+class GameView(Protocol):
+    async def show(self, tasks: Sequence[AnyViewTask]) -> None: ...
+----
+
+The eight `send_puzzle` / `wrong_key` / … methods are gone from the interface.
+Each implementation keeps them privately and routes to them by matching on the
+task type; `AnyViewTask` is a union, so a view that forgets a task fails to
+type-check rather than silently ignoring it.
+
+Two things fall out of this that the old fat interface made expensive:
+
+* *Adding something to show is one task class and one branch per view*, instead
+  of a method on the protocol times four implementations plus a forwarder.
+* *A view decides how to render a whole batch.* That is what lets the combined
+  view hand the batch to the nursery as one job — which is what keeps the
+  messages of one key in order.
+
+=== One team at a time, all teams at once
+
+`group_by_team` splits a batch into one list per team, keeping each team's
+order, and the views show the groups with `asyncio.gather`. Order is a promise
+about *a chat*, never about the game: a key must be confirmed before the puzzle
+it opened, but nothing connects one team's messages to another's.
+
+This is not a nicety. A game starting sends the first puzzle to every team, and
+a puzzle is a caption plus its hints a second apart — shown in turn, the last of
+twelve teams would get theirs a minute after the first. `start_game` used
+`asyncio.gather` for exactly this reason before, and the batch has to keep that
+property rather than quietly serialising it.
+
+=== The nursery is a seam of its own, between the interactor and the views
+
+Two protocols, because they promise different things:
+
+* `GameView.show(tasks)` — *renders now*. `BotView`, `WebGameView` and
+  `ComplexView` implement it and know nothing about background work.
+* `ViewSender.show_later(tasks)` — *arranges for them to be rendered*. The
+  interactor holds this one.
+
+`NurseryViewSender` is the only implementation: it spawns one job for the whole
+`ShowTasks`, so a request's messages keep their order. The job resolves
+`GameView`, `OrgNotifier` and `GameLogWriter` from its own di scope and shows
+through them — it does not know whether that is telegram, the site or both, and
+the same job serves the combined app, the bot alone and the api alone.
+
+*Alternative rejected:* making `ComplexView.show` spawn. It reads as if the
+composite is what defers, and it makes `show()` a method that returns before
+anything is shown — a name that lies to every reader. Pushing the spawn into
+`BotView` and `WebGameView` instead is worse still: the job calls a view, so a
+view that spawns would spawn again, forever.
+
+`ComplexView` is back to a plain fan-out over its two halves. The site goes
+first — a push is one https call, telegram is minutes of them — and a web
+failure is logged so it cannot cost the chat its message; a bot failure is left
+to the job, which retries and alerts it.
+
+=== The api answers from the same list
+
+`insert_key` no longer reads a container the views wrote into — it reads what
+the interactor returned:
+
+[source,python]
+----
+tasks = await interactor(key=key.text, identity=identity, input_container=input_container)
+shown_key = next((task for task in tasks if isinstance(task, KeyShown)), None)
+----
+
+`WebInput` is deleted. It existed only to smuggle a return value back out of a
+view, which is why the route had to `logger.critical` and answer 500 when a view
+had not been called. `InputContainer` now means only what its name says: what
+the key was typed into, so the bot knows which message to reply to. The api
+passes `ApiInput`, which holds nothing.
+
+`WebGameView` is left with only what it was really for — pushes — and is
+deferred along with the bot half. The site does not need its own push to know
+what happened; it has the response.
+
+=== Failures are alerted, not swallowed
+
+Each task is delivered on its own and a failure goes to `BotAlert`, because by
+then there is no request to fail. Retries cover what telegram says is its own
+fault: `TelegramRetryAfter` (waiting exactly as long as it asked, up to
+`MAX_RETRY_DELAY`), `TelegramNetworkError`, `TelegramServerError` — three
+attempts, doubling backoff. Being blocked by a chat or sending something
+malformed is not retried; the second attempt would fail identically.
+
+`AsyncioNursery.close` waits `drain_timeout` (15 s) for running jobs before
+cancelling them, so an ordinary restart mid-fan-out no longer leaves a team with
+half a puzzle. Bounded, because other jobs (publishing a scenario to the forum)
+are minutes long and a restart cannot wait them out.
+
+*Accepted cost:* a retry restarts the whole task, and rendering one task can be
+several messages, so a failure halfway through a puzzle resends the parts that
+arrived. Deliberate — a duplicated puzzle is confusing, a half-sent one leaves
+the team with nothing to solve.
+
+*Still lost:* a hard kill (SIGKILL, OOM) during a delivery, and anything the
+drain gives up on. Durable delivery is xref:shep-0010-message-outbox.adoc[SHEP-0010].
+
+=== Decide, commit, then show
+
+`process_level_up`, `process_plain_level_up` and `all_teams_finished` keep their
+names, their reads and their writes; each one now *returns* a `ShowTasks`
+instead of awaiting a view. The whole change to them is one kind of line —
+`await self.view.send_puzzle(...)` becoming `tasks.view.append(SendPuzzle(...))`
+— and the caller commits once and then hands the tasks over. The interactors
+lost their `view`, `org_notifier` and `game_log` fields to a single `sender`.
+
+*Alternative rejected:* an earlier cut split them into `resolve_level_up`
+returning a `LevelUpOutcome` dto, plus a pure `level_up_tasks` that turned it
+into tasks. It read well and made the branch unit-testable, but the dto existed
+only to carry data across the commit — which is exactly what the task list
+already does. Review asked for the smaller diff, and it was right: the dto and
+two of the three functions disappeared, and what is left reads the same as
+master with the view lines replaced.
+
+The key is a fact of the game the moment it is typed; holding its rows for the
+length of a chat conversation was never intentional.
+
+=== Pushes go together
+
+`WebPushSender` sends up to `PARALLEL` pushes at once and disables the
+subscriptions the provider reported gone *after* the gather, on the request's
+session — a session only one coroutine at a time may touch. The orm objects
+stay on the event loop: only plain values (`_Recipient`) are handed to the
+sending thread.
+
+== Consequences
+
+* The endpoint answers in about a database round trip; the response payload is
+  unchanged, so the front-end needs no change.
+* The site shows a level up before the team's chat does. Harmless — a player
+  typing the next key early is a wrong key at worst — but it is a real ordering
+  change between the two edges.
+* An interactor that shows something must remember to call `show` after its
+  commit. There is no finalizer catching what it forgot, and that is on purpose:
+  a flush that runs whatever happened would also run after a rollback.
+* Scheduled hints go out the same way: `send_hint` collects one `SendHint` and
+  shows it, so the job finishes as soon as the task is handed over.
+* A view task must be self-contained — it is rendered later, in another scope.
+  `AGENTS.md` carries the rule.
+* `ComplexGameViewPreparer` and `ComplexTeamNotifier` still send inline. They
+  are not on the key path (game start, team membership) and can move later.
+* `OrgNotifier.notify` and `GameLogWriter.log` keep their old single-event
+  signatures. Only the view is ever handed more than one thing at a time, and
+  only the view needs to be: the batch is what makes one request one job, and
+  a job is what keeps its messages in order. The other two have never carried
+  more than one event, so they spawn a job each and nothing is out of order
+  because there is nothing to order.
+
+== Phases and status
+
+[cols="1,4,2",options="header"]
+|===
+| Phase | Content | Status
+
+| 1
+| Commit before the fan-out; web pushes in parallel
+| ✅ done
+
+| 2
+| `ViewTask`, one-method `GameView`, tasks collected in the interactor and shown
+  after the commit; the api answers from the task list
+| ✅ done
+
+| 3
+| Bounded drain on shutdown; retry of transient telegram failures
+| ✅ done
+
+| 3a
+| `ViewSender` seam: the nursery moves out of the views and between them and
+  the interactor
+| ✅ done
+
+| 4
+| Durable delivery — xref:shep-0010-message-outbox.adoc[SHEP-0010]
+| ⏳ not started
+
+| 5
+| Per-chat worker: one fifo per chat for every sender (keys, scheduled hints,
+  puzzles), with rate limiting in one place
+| ⏳ not started
+|===
+
+== Deviations from the plan
+
+Three times, each because review found a weaker version of the same rule.
+
+The first cut committed twice — once for the key, once at the end for the
+`dao.finish` a level up may have written — because the level up mixed writes and
+views. That became a decide half and a show half, with one commit between
+them.
+
+The second cut deferred at the *edge*: the bot half of each view call was
+recorded as a closure into a request-scoped `BotOutbox` and flushed by its
+dishka finalizer. It answered fast, but it kept two weaknesses this document
+originally accepted: dishka finalizes generator providers with
+`asend(exception)`, so the flush ran *even when the request raised* — a view
+recorded before a failed commit would have been shown anyway; and a closure
+cannot be anything but run, which put the whole of
+xref:shep-0010-message-outbox.adoc[SHEP-0010] behind a rewrite. Moving the
+decision into the interactor as data fixed both and deleted more code than it
+added.
+
+The third cut carried the decision across the commit in a `LevelUpOutcome` dto,
+which meant rewriting `process_level_up` into `resolve_level_up` plus a pure
+mapper, and serialised the batch inside the views. Review asked for a smaller
+diff and for the teams to stay parallel; both were right. The dto was redundant
+once the tasks themselves crossed the commit, and serialising a batch quietly
+turned the start of a game from one puzzle's worth of seconds into that times
+the number of teams.
+
+== Open questions
+
+* How long does the endpoint actually take now? There is no measurement of the
+  fan-out — `asgi_monitor` exposes the route's histogram, but the split between
+  database, push and telegram is guesswork.
+* `ComplexTeamNotifier` and `ComplexGameViewPreparer` are the last inline
+  senders. Are they worth converting to tasks for uniformity, or is "not on a
+  hot path" a good enough reason to leave them?

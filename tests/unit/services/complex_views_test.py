@@ -1,18 +1,21 @@
 import pytest
 
-from shvatka.core.views.game import GameLogWriter, GameLogEvent, GameLogType, GameViewPreparer
-from shvatka.views import ComplexGameLogWriter, ComplexGameViewPreparer
-
-
-class RecordingLogWriter(GameLogWriter):
-    def __init__(self, *, fail: bool = False) -> None:
-        self.calls: list[GameLogEvent] = []
-        self.fail = fail
-
-    async def log(self, log_event: GameLogEvent) -> None:
-        self.calls.append(log_event)
-        if self.fail:
-            raise RuntimeError("boom")
+from shvatka.core.views.game import (
+    Event,
+    GameLogEvent,
+    GameLogType,
+    GameViewPreparer,
+    SendPuzzle,
+    ShowTasks,
+)
+from shvatka.tgbot.tasks import NurseryViewSender, show_game
+from shvatka.views import (
+    ComplexGameLogWriter,
+    ComplexGameViewPreparer,
+    ComplexOrgNotifier,
+    ComplexView,
+)
+from tests.mocks.nursery import FakeNursery
 
 
 class RecordingPreparer(GameViewPreparer):
@@ -26,30 +29,88 @@ class RecordingPreparer(GameViewPreparer):
             raise RuntimeError("boom")
 
 
+class RecordingHalf:
+    def __init__(self, journal: list[str], name: str, *, fail: bool = False) -> None:
+        self.journal = journal
+        self.name = name
+        self.fail = fail
+
+    async def show(self, tasks) -> None:
+        self._record(list(tasks))
+
+    async def notify(self, event) -> None:
+        self._record(event)
+
+    async def log(self, log_event) -> None:
+        self._record(log_event)
+
+    def _record(self, what) -> None:
+        self.journal.append(f"{self.name}: {what}")
+        if self.fail:
+            raise RuntimeError("boom")
+
+
 @pytest.mark.asyncio
-async def test_log_writer_writes_to_both() -> None:
-    bot = RecordingLogWriter()
-    web = RecordingLogWriter()
-    writer = ComplexGameLogWriter(bot, web)
-    event = GameLogEvent(type=GameLogType.GAME_STARTED)
+async def test_one_job_for_the_whole_request() -> None:
+    nursery = FakeNursery()
+    tasks = ShowTasks(view=[SendPuzzle(team="team", level="level")])
 
-    await writer.log(event)
+    await NurseryViewSender(nursery).show_later(tasks)
 
-    assert bot.calls == [event]
-    assert web.calls == [event]
+    assert len(nursery.spawned) == 1, "one job, so one request's messages keep their order"
+    job, kwargs = nursery.spawned[0]
+    assert job is show_game
+    assert kwargs["tasks"] is tasks
 
 
 @pytest.mark.asyncio
-async def test_log_writer_web_runs_even_if_bot_fails() -> None:
-    bot = RecordingLogWriter(fail=True)
-    web = RecordingLogWriter()
-    writer = ComplexGameLogWriter(bot, web)
-    event = GameLogEvent(type=GameLogType.GAME_FINISHED)
+async def test_nothing_to_show_starts_no_job() -> None:
+    nursery = FakeNursery()
 
-    await writer.log(event)
+    await NurseryViewSender(nursery).show_later(ShowTasks())
 
-    assert bot.calls == [event]
-    assert web.calls == [event]
+    assert nursery.spawned == []
+
+
+@pytest.mark.asyncio
+async def test_view_shows_on_both_edges_site_first() -> None:
+    journal: list[str] = []
+    view = ComplexView(RecordingHalf(journal, "bot"), RecordingHalf(journal, "web"))
+
+    await view.show([SendPuzzle(team="team", level="level")])
+
+    assert [entry.split(":")[0] for entry in journal] == ["web", "bot"]
+
+
+@pytest.mark.asyncio
+async def test_a_broken_push_does_not_cost_the_chat_its_message() -> None:
+    journal: list[str] = []
+    view = ComplexView(RecordingHalf(journal, "bot"), RecordingHalf(journal, "web", fail=True))
+
+    await view.show([SendPuzzle(team="team", level="level")])
+
+    assert [entry.split(":")[0] for entry in journal] == ["web", "bot"]
+
+
+@pytest.mark.asyncio
+async def test_a_failing_chat_is_left_to_the_caller_to_retry() -> None:
+    journal: list[str] = []
+    view = ComplexView(RecordingHalf(journal, "bot", fail=True), RecordingHalf(journal, "web"))
+
+    with pytest.raises(RuntimeError):
+        await view.show([SendPuzzle(team="team", level="level")])
+
+
+@pytest.mark.asyncio
+async def test_orgs_and_log_go_to_both_edges() -> None:
+    journal: list[str] = []
+    notifier = ComplexOrgNotifier(RecordingHalf(journal, "bot"), RecordingHalf(journal, "web"))
+    writer = ComplexGameLogWriter(RecordingHalf(journal, "bot"), RecordingHalf(journal, "web"))
+
+    await notifier.notify(Event(orgs_list=[]))
+    await writer.log(GameLogEvent(type=GameLogType.GAME_FINISHED))
+
+    assert [entry.split(":")[0] for entry in journal] == ["web", "bot", "web", "bot"]
 
 
 @pytest.mark.asyncio

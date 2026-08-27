@@ -39,13 +39,20 @@ from shvatka.core.utils import exceptions
 from shvatka.core.utils.datetime_utils import tz_utc
 from shvatka.core.utils.key_checker_lock import KeyCheckerFactory
 from shvatka.core.views.game import (
-    GameView,
-    GameLogWriter,
-    OrgNotifier,
+    AnyViewTask,
+    DuplicateKey,
+    EffectsKey,
+    GameFinished,
+    GameFinishedByAll,
     InputContainer,
     LevelUp,
     GameLogEvent,
     GameLogType,
+    SendPuzzle,
+    ShowEffects,
+    ShowTasks,
+    ViewSender,
+    WrongKey,
 )
 from shvatka.infrastructure.scheduler import SchedulerContainer
 
@@ -258,27 +265,25 @@ class PassedLevelsReaderInteractor:
 class GamePlayBaseInteractor:
     """
     :param dao: Слой доступа к бд.
-    :param view: Слой отображения данных.
-    :param game_log: Логгер игры (публичные уведомления о статусе игры).
-    :param org_notifier: Для уведомления оргов о важных событиях.
+    :param sender: Отправляет то, что надо показать, во вьюхи (после коммита).
     :param locker: Локи для обеспечения последовательного исполнения определённых операций.
     :param scheduler: Планировщик подсказок.
     """
 
     dao: GamePlayerDao
-    view: GameView
-    game_log: GameLogWriter
-    org_notifier: OrgNotifier
+    sender: ViewSender
     locker: KeyCheckerFactory
     scheduler: Scheduler
     current_game: CurrentGameProvider
 
-    async def all_teams_finished(self, game: dto.FullGame) -> None:
+    async def all_teams_finished(self, game: dto.FullGame) -> ShowTasks:
+        tasks = ShowTasks()
         await self.dao.finish(game)
-        await self.game_log.log(GameLogEvent(GameLogType.GAME_FINISHED, {"game": game.name}))
+        tasks.log.append(GameLogEvent(GameLogType.GAME_FINISHED, {"game": game.name}))
         self.locker.clear()
         for team in await self.dao.get_played_teams(game):
-            await self.view.game_finished_by_all(team)
+            tasks.view.append(GameFinishedByAll(team=team))
+        return tasks
 
     async def process_level_up(
         self,
@@ -286,25 +291,27 @@ class GamePlayBaseInteractor:
         team: dto.Team,
         game: dto.FullGame,
         at: datetime,
-    ) -> None:
+    ) -> ShowTasks:
+        tasks = ShowTasks()
         async with self.locker.lock_globally():
             if await self.dao.is_team_finished(team, game):
-                await self.view.game_finished(team, input_container)
+                tasks.view.append(GameFinished(team=team, input_container=input_container))
                 if await self.dao.is_all_team_finished(game):
-                    await self.all_teams_finished(game)
-                return
-        await self.process_plain_level_up(team, game, at)
+                    tasks.extend(await self.all_teams_finished(game))
+                return tasks
+        return await self.process_plain_level_up(team, game, at)
 
     async def process_plain_level_up(
         self,
         team: dto.Team,
         game: dto.FullGame,
         now: datetime,
-    ) -> None:
+    ) -> ShowTasks:
+        tasks = ShowTasks()
         next_level = await self.dao.get_current_level(team, game)
         lt = await self.dao.get_current_level_time(team, game)
 
-        await self.view.send_puzzle(team=team, level=next_level)
+        tasks.view.append(SendPuzzle(team=team, level=next_level))
         await schedule_first_hint(
             scheduler=self.scheduler,
             team=team,
@@ -315,7 +322,8 @@ class GamePlayBaseInteractor:
         level_up_event = LevelUp(
             team=team, new_level=next_level, orgs_list=await get_spying_orgs(game, self.dao)
         )
-        await self.org_notifier.notify(level_up_event)
+        tasks.org.append(level_up_event)
+        return tasks
 
 
 @dataclass(kw_only=True)
@@ -327,7 +335,7 @@ class CheckKeyInteractor(GamePlayBaseInteractor):
         key: str,
         input_container: InputContainer,
         identity: IdentityProvider,
-    ):
+    ) -> list[AnyViewTask]:
         """
         Проверяет введённый игроком ключ. Может случиться несколько исходов:
         - ключ неверный - просто записываем его в лог и уведомляем команду
@@ -355,38 +363,38 @@ class CheckKeyInteractor(GamePlayBaseInteractor):
 
         new_key = await self.key_processor.check_key(key=key, player=player, team=team, now=now)
         if new_key is None:
-            return
-        await self.view_(new_key, input_container)
+            return []
+        tasks = ShowTasks(view=self.view_(new_key, input_container))
         if not new_key.is_duplicate and new_key.is_level_up():
-            await self.process_level_up(
-                input_container=input_container,
-                team=team,
-                game=game,
-                at=now,
+            tasks.extend(
+                await self.process_level_up(
+                    input_container=input_container,
+                    team=team,
+                    game=game,
+                    at=now,
+                )
             )
+        # nothing is shown until this lands: until now the tasks are only a list
         await self.dao.commit()
+        await self.sender.show_later(tasks)
+        return tasks.view
 
-    async def view_(self, new_key: dto.InsertedKey, input_container: InputContainer) -> None:
+    @staticmethod
+    def view_(new_key: dto.InsertedKey, input_container: InputContainer) -> list[AnyViewTask]:
         if new_key.is_duplicate:
-            await self.view.duplicate_key(key=new_key, input_container=input_container)
             # if duplicate - only show info about doubles, do not repeat bonuses or other effects
-            return
+            return [DuplicateKey(key=new_key, input_container=input_container)]
         match new_key.type_:
             case enums.KeyType.wrong:
-                await self.view.wrong_key(key=new_key, input_container=input_container)
-            case enums.KeyType.effects:
-                await self.view.effects_key(
-                    key=new_key, effects=new_key.parsed_key.effect, input_container=input_container
-                )
-            case enums.KeyType.bonus:
-                await self.view.effects_key(
-                    key=new_key, effects=new_key.parsed_key.effect, input_container=input_container
-                )
-            case enums.KeyType.simple:
-                await self.view.effects_key(
-                    key=new_key, effects=new_key.parsed_key.effect, input_container=input_container
-                )
-
+                return [WrongKey(key=new_key, input_container=input_container)]
+            case enums.KeyType.effects | enums.KeyType.bonus | enums.KeyType.simple:
+                return [
+                    EffectsKey(
+                        key=new_key,
+                        effects=new_key.parsed_key.effect,
+                        input_container=input_container,
+                    )
+                ]
             case _:
                 typing.assert_never(new_key.type_)
 
@@ -417,6 +425,7 @@ class GamePlayTimerInteractor(GamePlayBaseInteractor):
             )
             return
 
+        tasks = ShowTasks()
         level_up_effect: action.Effects | None = None
         last_event: dto.GameEvent | None = None
         for effects in effects_list:
@@ -426,16 +435,21 @@ class GamePlayTimerInteractor(GamePlayBaseInteractor):
                 level_time=level_time,
                 effects=effects,
             )
-            await self.view.effects(team=team, effects=effects, input_container=input_container)
+            tasks.view.append(
+                ShowEffects(team=team, effects=effects, input_container=input_container)
+            )
             if effects.level_up:
                 level_up_effect = effects
         if last_event is not None:
             await self.dao.save_timer(level_time, last_event)
         if level_up_effect is not None:
-            await self.process_level_up(
-                input_container=input_container,
-                team=team,
-                game=game,
-                at=now,
+            tasks.extend(
+                await self.process_level_up(
+                    input_container=input_container,
+                    team=team,
+                    game=game,
+                    at=now,
+                )
             )
         await self.dao.commit()
+        await self.sender.show_later(tasks)

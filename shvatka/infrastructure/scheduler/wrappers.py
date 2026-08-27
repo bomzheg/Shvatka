@@ -7,7 +7,7 @@ from shvatka.core.games.game_play import send_hint, start_game, prepare_game
 from shvatka.core.games.interactors import GamePlayTimerInteractor
 from shvatka.core.interfaces.current_game import CurrentGameProvider
 from shvatka.core.utils.datetime_utils import tz_utc
-from shvatka.core.views.game import GameViewPreparer, GameView, GameLogWriter
+from shvatka.core.views.game import GameViewPreparer, ViewSender
 from shvatka.core.views.level import LevelView
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.infrastructure.scheduler import SchedulerContainer
@@ -43,8 +43,7 @@ async def start_game_wrapper(
     author_id: int,
     dao: FromDishka[HolderDao],
     scheduler: FromDishka[Scheduler],
-    game_view: FromDishka[GameView],
-    game_log_writer: FromDishka[GameLogWriter],
+    sender: FromDishka[ViewSender],
     alerter: FromDishka[BotAlert],
 ):
     try:
@@ -53,8 +52,7 @@ async def start_game_wrapper(
         await start_game(
             game=game,
             dao=dao.game_starter,
-            game_log=game_log_writer,
-            view=game_view,
+            sender=sender,
             scheduler=scheduler,
         )
     except Exception as e:
@@ -69,7 +67,7 @@ async def send_hint_wrapper(
     hint_number: int,
     lt_id: int,
     dao: FromDishka[HolderDao],
-    game_view: FromDishka[GameView],
+    sender: FromDishka[ViewSender],
     scheduler: FromDishka[Scheduler],
     alerter: FromDishka[BotAlert],
     current_game: FromDishka[CurrentGameProvider],
@@ -87,7 +85,7 @@ async def send_hint_wrapper(
             team=team,
             game=game,
             dao=dao.level_time,
-            view=game_view,
+            sender=sender,
             scheduler=scheduler,
         )
     except Exception as e:

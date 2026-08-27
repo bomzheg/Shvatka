@@ -7,4 +7,6 @@
 ** xref:shep-0006-file-lifecycle.adoc[SHEP-0006 File deletion and garbage collection]
 ** xref:shep-0007-error-doc-links.adoc[SHEP-0007 Error doc links]
 ** xref:shep-0008-rich-results.adoc[SHEP-0008 Results as a rich message]
+** xref:shep-0009-key-submission-latency.adoc[SHEP-0009 Key submission latency]
+** xref:shep-0010-message-outbox.adoc[SHEP-0010 Message outbox]
 ** xref:template.adoc[SHEP template]

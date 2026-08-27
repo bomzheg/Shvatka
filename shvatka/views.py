@@ -1,31 +1,43 @@
 import logging
 from dataclasses import dataclass
-from typing import Iterable
+from typing import Awaitable, Iterable, Sequence
 
 from shvatka.api.app.utils.web_input import (
-    WebGameView,
-    WebTeamNotifier,
-    WebOrgNotifier,
-    WebGamePreparer,
     WebGameLogWriter,
+    WebGamePreparer,
+    WebGameView,
+    WebOrgNotifier,
+    WebTeamNotifier,
 )
 from shvatka.core.interfaces.dal.game_play import GamePreparer
 from shvatka.core.models import dto
-from shvatka.core.models.dto import action
 from shvatka.core.views.game import (
+    AnyViewTask,
     GameView,
     GameViewPreparer,
-    InputContainer,
     OrgNotifier,
     Event,
     GameLogWriter,
     GameLogEvent,
 )
 from shvatka.core.views.team import TeamNotifier, TeamEvent
-from shvatka.tgbot.views.game import BotView, BotOrgNotifier, GameBotLog
+from shvatka.tgbot.views.game import BotOrgNotifier, BotView, GameBotLog
 from shvatka.tgbot.views.team import BotTeamNotifier
 
 logger = logging.getLogger(__name__)
+
+
+async def show_on_both(*, bot: Awaitable[None], web: Awaitable[None]) -> None:
+    """The site first: a push is one https call, telegram is minutes of them.
+
+    A web failure is logged and the bot half still runs; a bot failure is left
+    to the caller, which retries and alerts it.
+    """
+    try:
+        await web
+    except Exception as e:
+        logger.exception("web view error", exc_info=e)
+    await bot
 
 
 @dataclass
@@ -34,14 +46,7 @@ class ComplexOrgNotifier(OrgNotifier):
     web: WebOrgNotifier
 
     async def notify(self, event: Event) -> None:
-        try:
-            await self.bot.notify(event)
-        except Exception as e:
-            logger.exception("bot org notify error", exc_info=e)
-        try:
-            await self.web.notify(event)
-        except Exception as e:
-            logger.exception("web org notify error", exc_info=e)
+        await show_on_both(bot=self.bot.notify(event), web=self.web.notify(event))
 
 
 @dataclass
@@ -74,14 +79,7 @@ class ComplexGameLogWriter(GameLogWriter):
     web: WebGameLogWriter
 
     async def log(self, log_event: GameLogEvent) -> None:
-        try:
-            await self.bot.log(log_event)
-        except Exception as e:
-            logger.exception("bot game log error", exc_info=e)
-        try:
-            await self.web.log(log_event)
-        except Exception as e:
-            logger.exception("web game log error", exc_info=e)
+        await show_on_both(bot=self.bot.log(log_event), web=self.web.log(log_event))
 
 
 @dataclass
@@ -105,86 +103,5 @@ class ComplexView(GameView):
     bot: BotView
     web: WebGameView
 
-    async def send_puzzle(self, team: dto.Team, level: dto.Level) -> None:
-        try:
-            await self.bot.send_puzzle(team=team, level=level)
-        except Exception as e:
-            logger.exception("bot send_puzzle error", exc_info=e)
-        try:
-            await self.web.send_puzzle(team=team, level=level)
-        except Exception as e:
-            logger.exception("web send_puzzle error", exc_info=e)
-
-    async def send_hint(self, team: dto.Team, hint_number: int, level: dto.Level) -> None:
-        try:
-            await self.bot.send_hint(team=team, hint_number=hint_number, level=level)
-        except Exception as e:
-            logger.exception("bot send hint error", exc_info=e)
-        try:
-            await self.web.send_hint(team=team, hint_number=hint_number, level=level)
-        except Exception as e:
-            logger.exception("web send hint error", exc_info=e)
-
-    async def duplicate_key(self, key: dto.KeyTime, input_container: InputContainer) -> None:
-        try:
-            await self.bot.duplicate_key(key=key, input_container=input_container)
-        except Exception as e:
-            logger.exception("bot duplicate_key error", exc_info=e)
-        try:
-            await self.web.duplicate_key(key=key, input_container=input_container)
-        except Exception as e:
-            logger.exception("web duplicate_key error", exc_info=e)
-
-    async def wrong_key(self, key: dto.KeyTime, input_container: InputContainer) -> None:
-        try:
-            await self.bot.wrong_key(key=key, input_container=input_container)
-        except Exception as e:
-            logger.exception("bot wrong_key error", exc_info=e)
-        try:
-            await self.web.wrong_key(key=key, input_container=input_container)
-        except Exception as e:
-            logger.exception("web wrong_key error", exc_info=e)
-
-    async def effects_key(
-        self, key: dto.KeyTime, effects: action.Effects, input_container: InputContainer
-    ) -> None:
-        try:
-            await self.bot.effects_key(key=key, effects=effects, input_container=input_container)
-        except Exception as e:
-            logger.exception("bot effects_key error", exc_info=e)
-        try:
-            await self.web.effects_key(key=key, effects=effects, input_container=input_container)
-        except Exception as e:
-            logger.exception("web effects_key error", exc_info=e)
-
-    async def game_finished(self, team: dto.Team, input_container: InputContainer) -> None:
-        try:
-            await self.bot.game_finished(team=team, input_container=input_container)
-        except Exception as e:
-            logger.exception("bot game_finished error", exc_info=e)
-        try:
-            await self.web.game_finished(team=team, input_container=input_container)
-        except Exception as e:
-            logger.exception("web game_finished error", exc_info=e)
-
-    async def game_finished_by_all(self, team: dto.Team) -> None:
-        try:
-            await self.bot.game_finished_by_all(team=team)
-        except Exception as e:
-            logger.exception("bot game_finished_by_all error", exc_info=e)
-        try:
-            await self.web.game_finished_by_all(team=team)
-        except Exception as e:
-            logger.exception("web game_finished_by_all error", exc_info=e)
-
-    async def effects(
-        self, team: dto.Team, effects: action.Effects, input_container: InputContainer
-    ) -> None:
-        try:
-            await self.bot.effects(team=team, effects=effects, input_container=input_container)
-        except Exception as e:
-            logger.exception("bot effects error", exc_info=e)
-        try:
-            await self.web.effects(team=team, effects=effects, input_container=input_container)
-        except Exception as e:
-            logger.exception("web effects error", exc_info=e)
+    async def show(self, tasks: Sequence[AnyViewTask]) -> None:
+        await show_on_both(bot=self.bot.show(tasks), web=self.web.show(tasks))

@@ -32,6 +32,7 @@ from tests.fixtures.game_fixtures import CurrentGameProviderMock
 from tests.fixtures.identity import MockIdentityProvider
 from tests.mocks.game_log import GameLogWriterMock
 from tests.mocks.game_view import GameViewMock
+from tests.mocks.view_sender import ViewSenderMock
 from tests.mocks.org_notifier import OrgNotifierMock
 from tests.mocks.scheduler_mock import SchedulerMock
 from tests.utils.time_key import assert_time_key
@@ -60,7 +61,8 @@ async def test_start_game(
     dummy_log = GameLogWriterMock()
     game_with_waivers.start_at = datetime.now(tz=tz_utc)
 
-    await start_game(game_with_waivers, dao.game_starter, dummy_log, dummy_view, scheduler)
+    sender = ViewSenderMock(dummy_view, OrgNotifierMock(), dummy_log)
+    await start_game(game_with_waivers, dao.game_starter, sender, scheduler)
 
     dummy_log.assert_one_event(
         GameLogEvent(GameLogType.GAME_STARTED, {"game": game_with_waivers.name})
@@ -95,9 +97,7 @@ async def test_wrong_key(
     dummy_org_notifier = OrgNotifierMock()
     key_checker = CheckKeyInteractor(
         dao=dao.game_player,
-        view=dummy_view,
-        game_log=dummy_log,
-        org_notifier=dummy_org_notifier,
+        sender=ViewSenderMock(dummy_view, dummy_org_notifier, dummy_log),
         locker=locker,
         scheduler=scheduler,
         current_game=current_game,
@@ -147,9 +147,7 @@ async def test_bonus_hint_key(
     dummy_org_notifier = OrgNotifierMock()
     check_key = CheckKeyInteractor(
         dao=dao.game_player,
-        view=dummy_view,
-        game_log=dummy_log,
-        org_notifier=dummy_org_notifier,
+        sender=ViewSenderMock(dummy_view, dummy_org_notifier, dummy_log),
         locker=locker,
         scheduler=scheduler,
         current_game=current_game,
@@ -217,7 +215,7 @@ async def test_game_play(
         team=gryffindor,
         game=game,
         dao=dao.level_time,
-        view=dummy_view,
+        sender=ViewSenderMock(dummy_view, OrgNotifierMock(), GameLogWriterMock()),
         scheduler=scheduler,
     )
     scheduler.assert_one_planned_hint(game.levels[0], gryffindor, 2)
@@ -228,9 +226,7 @@ async def test_game_play(
     identity = MockIdentityProvider(player=harry, team=gryffindor)
     check_key = CheckKeyInteractor(
         dao=dao.game_player,
-        view=dummy_view,
-        game_log=dummy_log,
-        org_notifier=dummy_org_notifier,
+        sender=ViewSenderMock(dummy_view, dummy_org_notifier, dummy_log),
         locker=locker,
         scheduler=scheduler,
         current_game=current_game,
@@ -332,9 +328,7 @@ async def test_fast_play_routed_game(
     identity = MockIdentityProvider(player=harry, team=gryffindor)
     check_key = CheckKeyInteractor(
         dao=dao.game_player,
-        view=dummy_view,
-        game_log=dummy_log,
-        org_notifier=dummy_org_notifier,
+        sender=ViewSenderMock(dummy_view, dummy_org_notifier, dummy_log),
         locker=locker,
         scheduler=scheduler,
         current_game=current_game,
@@ -410,9 +404,7 @@ async def test_cycle_play_routed_game(
     identity = MockIdentityProvider(player=harry, team=gryffindor)
     check_key = CheckKeyInteractor(
         dao=dao.game_player,
-        view=dummy_view,
-        game_log=dummy_log,
-        org_notifier=dummy_org_notifier,
+        sender=ViewSenderMock(dummy_view, dummy_org_notifier, dummy_log),
         locker=locker,
         scheduler=scheduler,
         current_game=current_game,

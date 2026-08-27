@@ -58,6 +58,14 @@ came out of it*.
 | xref:shep-0008-rich-results.adoc[SHEP-0008]
 | Results as a rich message
 | Accepted, implemented
+
+| xref:shep-0009-key-submission-latency.adoc[SHEP-0009]
+| Key submission latency
+| Accepted, partially implemented
+
+| xref:shep-0010-message-outbox.adoc[SHEP-0010]
+| Durable delivery of what the game shows
+| Draft
 |===
 
 == Status vocabulary

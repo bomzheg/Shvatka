@@ -235,6 +235,41 @@ group. It is the wrong tool for the nursery: its exit waits for every child
 cancels its siblings, which is exactly what independent background jobs must
 not do.
 
+### Showing the game is decided as data, shown after the commit
+
+An interactor never shows anything while it works. It appends `ViewTask` values
+(`core/views/game.py`) to a plain list, commits, and hands the list over:
+
+```python
+tasks = ShowTasks(view=self.view_(new_key, input_container))
+tasks.extend(await self.process_level_up(...))
+await self.dao.commit()
+await self.sender.show_later(tasks)
+```
+
+Until the commit lands it is only a list, so **a transaction that fails shows
+nothing**. Nothing flushes what you forgot — showing is a line you write after
+the commit. See `docs/modules/shep/pages/shep-0009-key-submission-latency.adoc`.
+
+Rules when you add something to show:
+
+- New task class plus a branch in each view's router — never a new method on
+  `GameView`. `AnyViewTask` is a union, so a view that forgets one fails `mypy`.
+- Two protocols, do not mix them: `GameView.show` **renders now** (Bot, Web and
+  Complex implement it and know nothing about background work);
+  `ViewSender.show_later` **arranges for it**, and only `NurseryViewSender`
+  implements it. A view must never spawn: the job calls a view.
+- A task carries **domain dtos only**; never a dao, session or sender. It is
+  rendered later, in a scope of its own.
+- Anything the caller needs back is in the returned list, not in a container a
+  view writes into — that is why `WebInput` is gone.
+- A task may be **rendered more than once**: a failed delivery is retried
+  whole. A resent puzzle is fine; a task that *counts* something is not.
+- Order is per chat, not per game. `group_by_team` splits a batch and the views
+  show the groups at once, so never walk a batch in one sequence.
+- Keep rendering short: shutdown cancels jobs still running after
+  `drain_timeout` (`AsyncioNursery.close`).
+
 One file is exempt from the ban: `tgbot/utils/fastapi_webhook.py` is a
 portable copy of aiogram's webhook handler, meant to be pasted into another
 bot as-is. It must not import from `shvatka`, so it keeps managing its own

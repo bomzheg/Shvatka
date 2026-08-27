@@ -24,33 +24,93 @@ class InputContainer(Protocol):
     pass
 
 
+@dataclass(frozen=True)
+class ViewTask:
+    """One thing to show. Collected before a commit, rendered after it."""
+
+
+@dataclass(frozen=True)
+class KeyShown(ViewTask):
+    key: dto.KeyTime
+    input_container: InputContainer
+
+    @property
+    def team(self) -> dto.Team:
+        return self.key.team
+
+
+@dataclass(frozen=True)
+class DuplicateKey(KeyShown):
+    pass
+
+
+@dataclass(frozen=True)
+class WrongKey(KeyShown):
+    pass
+
+
+@dataclass(frozen=True)
+class EffectsKey(KeyShown):
+    effects: action.Effects
+
+
+@dataclass(frozen=True)
+class SendPuzzle(ViewTask):
+    team: dto.Team
+    level: dto.Level
+
+
+@dataclass(frozen=True)
+class SendHint(ViewTask):
+    team: dto.Team
+    hint_number: int
+    level: dto.Level
+
+
+@dataclass(frozen=True)
+class GameFinished(ViewTask):
+    team: dto.Team
+    input_container: InputContainer
+
+
+@dataclass(frozen=True)
+class GameFinishedByAll(ViewTask):
+    team: dto.Team
+
+
+@dataclass(frozen=True)
+class ShowEffects(ViewTask):
+    """Effects without a key: the level timer fired."""
+
+    team: dto.Team
+    effects: action.Effects
+    input_container: InputContainer
+
+
+AnyViewTask = (
+    DuplicateKey
+    | WrongKey
+    | EffectsKey
+    | SendPuzzle
+    | SendHint
+    | GameFinished
+    | GameFinishedByAll
+    | ShowEffects
+)
+"""A union, not just a base class: a view that forgets a task fails to type."""
+
+
+def group_by_team(tasks: Sequence[AnyViewTask]) -> list[list[AnyViewTask]]:
+    """One list per team, each in order. Different teams may be shown at once."""
+    groups: dict[int, list[AnyViewTask]] = {}
+    for task in tasks:
+        groups.setdefault(task.team.id, []).append(task)
+    return list(groups.values())
+
+
 class GameView(Protocol):
-    async def send_puzzle(self, team: dto.Team, level: dto.Level) -> None:
-        raise NotImplementedError
-
-    async def send_hint(self, team: dto.Team, hint_number: int, level: dto.Level) -> None:
-        raise NotImplementedError
-
-    async def duplicate_key(self, key: dto.KeyTime, input_container: InputContainer) -> None:
-        raise NotImplementedError
-
-    async def wrong_key(self, key: dto.KeyTime, input_container: InputContainer) -> None:
-        raise NotImplementedError
-
-    async def effects_key(
-        self, key: dto.KeyTime, effects: action.Effects, input_container: InputContainer
-    ) -> None:
-        raise NotImplementedError
-
-    async def game_finished(self, team: dto.Team, input_container: InputContainer) -> None:
-        raise NotImplementedError
-
-    async def game_finished_by_all(self, team: dto.Team) -> None:
-        raise NotImplementedError
-
-    async def effects(
-        self, team: dto.Team, effects: action.Effects, input_container: InputContainer
-    ) -> None:
+    async def show(self, tasks: Sequence[AnyViewTask]) -> None:
+        """Show these. Called after the transaction committed, never before."""
         raise NotImplementedError
 
 
@@ -77,6 +137,27 @@ class GameReleasePublisher(Protocol):
 
     async def unpublish(self, game: dto.Game) -> None:
         """Take the release out of the channel, if it is there."""
+        raise NotImplementedError
+
+
+@dataclass
+class ShowTasks:
+    """What one request decided to show, one list per sender."""
+
+    view: list[AnyViewTask] = field(default_factory=list)
+    org: list[Event] = field(default_factory=list)
+    log: list[GameLogEvent] = field(default_factory=list)
+
+    def extend(self, other: ShowTasks) -> None:
+        self.view.extend(other.view)
+        self.org.extend(other.org)
+        self.log.extend(other.log)
+
+
+class ViewSender(Protocol):
+    """Between an interactor and the views: takes what to show, shows nothing."""
+
+    async def show_later(self, tasks: ShowTasks) -> None:
         raise NotImplementedError
 
 

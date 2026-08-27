@@ -13,23 +13,139 @@ cross is a resource tied to the caller's scope — a dao, a session, a sender �
 those are what ``FromDishka`` is for.
 """
 
+import asyncio
 import logging
+import typing
+from collections.abc import Awaitable, Callable, Sequence
+from dataclasses import dataclass
 
 from aiogram import Bot
+from aiogram.exceptions import TelegramNetworkError, TelegramRetryAfter, TelegramServerError
 from aiogram.utils.text_decorations import html_decoration as hd
 from aiogram_dialog import BaseDialogManager
 from dishka import FromDishka
 from telegraph.aio import Telegraph
 
+from shvatka.core.interfaces.nursery import Nursery
 from shvatka.core.models import dto
+from shvatka.core.views.game import (
+    AnyViewTask,
+    GameLogWriter,
+    GameView,
+    OrgNotifier,
+    ShowTasks,
+    ViewSender,
+    group_by_team,
+)
 from shvatka.infrastructure.crawler.game_scn.uploader.forum_scenario_uploader import upload
 from shvatka.infrastructure.crawler.game_scn.uploader.game_mapper import map_game_for_upload
 from shvatka.tgbot.config.models.bot import BotConfig
+from shvatka.tgbot.views.bot_alert import BotAlert
 from shvatka.tgbot.views.hint_sender import HintSender
 from shvatka.tgbot.views.results.rich import ResultsRichSender
 from shvatka.tgbot.views.results.scenario import GamePublisher, LevelPublisher
 
 logger = logging.getLogger(__name__)
+
+
+DELIVERY_ATTEMPTS: typing.Final = 3
+RETRY_BACKOFF: typing.Final = 1.0
+MAX_RETRY_DELAY: typing.Final = 30.0
+# what telegram may recover from on its own; everything else would fail the same
+RETRIABLE_ERRORS: typing.Final = (TelegramRetryAfter, TelegramNetworkError, TelegramServerError)
+
+Delivery = Callable[[], Awaitable[None]]
+
+
+async def deliver(call: Delivery, alerter: BotAlert, what: str) -> None:
+    """Nothing watches a background send, so a failure is alerted, not raised.
+
+    ``what`` names the team whose message was lost — an alert nobody can act on
+    is not worth sending.
+    """
+    try:
+        await _with_retry(call, what)
+    except Exception as e:
+        logger.exception("cant deliver %s", what, exc_info=e)
+        try:
+            await alerter.alert(f"cant deliver {what} because of {e!s}")
+        except Exception as alert_error:
+            logger.error("cant alert about failed delivery", exc_info=alert_error)
+
+
+async def _with_retry(call: Delivery, what: str) -> None:
+    """A retry re-runs the whole call, so a puzzle that failed halfway resends
+    the parts that arrived — better than leaving the team half a puzzle.
+    """
+    for attempt in range(1, DELIVERY_ATTEMPTS + 1):
+        try:
+            await call()
+        except RETRIABLE_ERRORS as e:  # noqa: PERF203  # retrying is the point of the loop
+            delay = _retry_delay(e, attempt)
+            if attempt == DELIVERY_ATTEMPTS or delay is None:
+                raise
+            logger.warning(
+                "cant deliver %s (attempt %s of %s), retrying in %.1f s: %s",
+                what,
+                attempt,
+                DELIVERY_ATTEMPTS,
+                delay,
+                e,
+            )
+            await asyncio.sleep(delay)
+        else:
+            return
+
+
+def _retry_delay(error: Exception, attempt: int) -> float | None:
+    if isinstance(error, TelegramRetryAfter):
+        return float(error.retry_after) if error.retry_after <= MAX_RETRY_DELAY else None
+    return RETRY_BACKOFF * 2 ** (attempt - 1)
+
+
+@dataclass
+class NurseryViewSender(ViewSender):
+    """The nursery, between an interactor and the views.
+
+    One job for the whole request, so its messages keep their order. What the
+    job shows through is whatever di binds the views to — telegram, the site or
+    both; neither this nor the job knows which.
+    """
+
+    nursery: Nursery
+
+    async def show_later(self, tasks: ShowTasks) -> None:
+        if tasks.view or tasks.org or tasks.log:
+            self.nursery.spawn(show_game, tasks=tasks)
+
+
+async def show_game(
+    tasks: ShowTasks,
+    view: FromDishka[GameView],
+    org_notifier: FromDishka[OrgNotifier],
+    game_log: FromDishka[GameLogWriter],
+    alerter: FromDishka[BotAlert],
+) -> None:
+    """In order within a team; all teams at once, or a game start is teams × fan-out."""
+    await asyncio.gather(
+        *(_show_to_team(group, view, alerter) for group in group_by_team(tasks.view))
+    )
+    for event in tasks.org:
+        what = f"{type(event).__name__} to {len(event.orgs_list)} orgs"
+        await deliver(lambda e=event: org_notifier.notify(e), alerter, what)  # type: ignore[misc]
+    for log_event in tasks.log:
+        what = f"game log {log_event.type.name}"
+        await deliver(lambda e=log_event: game_log.log(e), alerter, what)  # type: ignore[misc]
+
+
+async def _show_to_team(tasks: Sequence[AnyViewTask], view: GameView, alerter: BotAlert) -> None:
+    for task in tasks:
+        await deliver(lambda t=task: view.show([t]), alerter, _describe(task))  # type: ignore[misc]
+
+
+def _describe(task: AnyViewTask) -> str:
+    team = task.team
+    return f"{type(task).__name__} to team {team.id} (chat {team.get_chat_id()})"
 
 
 async def publish_scenario_to_forum(

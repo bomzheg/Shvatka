@@ -1,48 +1,31 @@
+from typing import Sequence
+
 from dishka import Provider, provide, Scope
 
 from shvatka.api.app.dependencies.api_only import MockUsedOneTimeTokenInteractor
 from shvatka.core.models import dto
-from shvatka.core.models.dto import action
 from shvatka.core.views.game import (
+    AnyViewTask,
     GameView,
-    InputContainer,
     GameLogWriter,
     GameLogEvent,
     GameReleasePublisher,
     OrgNotifier,
     Event,
+    ShowTasks,
+    ViewSender,
 )
 from shvatka.core.views.team import TeamNotifier, TeamEvent
 from shvatka.infrastructure.bus.in_memory import UsedOneTimeTokenInteractor
 
 
 class NoOpGameView(GameView):
-    async def send_puzzle(self, team: dto.Team, level: dto.Level) -> None:
+    async def show(self, tasks: Sequence[AnyViewTask]) -> None:
         pass
 
-    async def send_hint(self, team: dto.Team, hint_number: int, level: dto.Level) -> None:
-        pass
 
-    async def duplicate_key(self, key: dto.KeyTime, input_container: InputContainer) -> None:
-        pass
-
-    async def wrong_key(self, key: dto.KeyTime, input_container: InputContainer) -> None:
-        pass
-
-    async def effects_key(
-        self, key: dto.KeyTime, effects: action.Effects, input_container: InputContainer
-    ) -> None:
-        pass
-
-    async def game_finished(self, team: dto.Team, input_container: InputContainer) -> None:
-        pass
-
-    async def game_finished_by_all(self, team: dto.Team) -> None:
-        pass
-
-    async def effects(
-        self, team: dto.Team, effects: action.Effects, input_container: InputContainer
-    ) -> None:
+class NoOpViewSender(ViewSender):
+    async def show_later(self, tasks: ShowTasks) -> None:
         pass
 
 
@@ -82,6 +65,10 @@ class InfrastructureProvider(Provider):
     @provide
     def game_view(self) -> GameView:
         return NoOpGameView()
+
+    @provide
+    def view_sender(self) -> ViewSender:
+        return NoOpViewSender()
 
     @provide
     def log_writer(self) -> GameLogWriter:

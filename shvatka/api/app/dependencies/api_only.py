@@ -10,9 +10,12 @@ from shvatka.api.app.utils.web_input import (
     WebTeamNotifier,
 )
 from shvatka.core.interfaces.identity import IdentityProvider
+from shvatka.core.interfaces.nursery import Nursery
+from shvatka.tgbot.tasks import NurseryViewSender
 from shvatka.core.views.game import (
     GameView,
     GameLogWriter,
+    ViewSender,
     GameReleasePublisher,
     OrgNotifier,
     GameViewPreparer,
@@ -32,6 +35,10 @@ class ApiOnlyProvider(Provider):
     @provide
     def get_idp(self, idp: ApiIdentityProvider) -> IdentityProvider:
         return idp
+
+    @provide
+    def view_sender(self, nursery: Nursery) -> ViewSender:
+        return NurseryViewSender(nursery)
 
     @provide
     def web_only_view(self, view: WebGameView) -> GameView:

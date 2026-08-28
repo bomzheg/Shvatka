@@ -68,7 +68,7 @@ class FakeWaiversDao:
 
 def test_waiver_point_interval():
     point = create_point(create_team(), create_game())
-    assert point.at_since == START_AT - timedelta(hours=12)
+    assert point.at_since == START_AT - timedelta(hours=1)
     assert point.at_until == START_AT + timedelta(hours=48)
     assert point.at_since == START_AT - WAIVER_POINT_BEFORE_GAME
     assert point.at_until == START_AT + WAIVER_POINT_AFTER_GAME
@@ -219,7 +219,7 @@ def test_timeline_with_wrong_team_fails():
 def test_timeline_partially_covering_point_fails():
     point = create_point(create_team(1), create_game())
     # joined after the protected interval started
-    timeline = [TimelineItem(team_id=1, date_joined=START_AT - timedelta(hours=1))]
+    timeline = [TimelineItem(team_id=1, date_joined=START_AT - timedelta(minutes=30))]
     with pytest.raises(exceptions.MergeError):
         check_timeline_matches_points(timeline, [point])
 

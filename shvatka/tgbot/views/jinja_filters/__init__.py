@@ -1,4 +1,4 @@
-from typing import Mapping, Callable
+from collections.abc import Mapping, Callable
 
 from aiogram import Bot
 from aiogram_dialog.widgets.text import setup_jinja as setup_jinja_internal

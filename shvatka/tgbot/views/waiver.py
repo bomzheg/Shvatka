@@ -1,4 +1,4 @@
-from typing import Iterable
+from collections.abc import Iterable
 
 from aiogram.types import LinkPreviewOptions
 from aiogram.utils.text_decorations import html_decoration as hd
@@ -68,10 +68,13 @@ def get_waiver_final_text(vote: dict[Played, list[dto.VotedPlayer]], game: dto.G
 def start_approve_waivers(
     game: dto.Game, team: dto.Team, votes: dict[Played, list[dto.VotedPlayer]]
 ):
-    return dict(
-        text=f"Играющие в {hd.quote(game.name)} схватчики команды {hd.bold(hd.quote(team.name))}:",
-        reply_markup=kb.get_kb_manage_waivers(
-            team, map(lambda v: v.player, votes.get(Played.yes, [])), game
+    return {
+        "text": (
+            f"Играющие в {hd.quote(game.name)} "
+            f"схватчики команды {hd.bold(hd.quote(team.name))}:"
         ),
-        link_preview_options=LinkPreviewOptions(is_disabled=True),
-    )
+        "reply_markup": kb.get_kb_manage_waivers(
+            team, (v.player for v in votes.get(Played.yes, [])), game
+        ),
+        "link_preview_options": LinkPreviewOptions(is_disabled=True),
+    }

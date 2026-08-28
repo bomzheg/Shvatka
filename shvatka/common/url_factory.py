@@ -2,7 +2,7 @@ from shvatka.common.config.models.main import WebConfig
 
 
 class UrlFactory:
-    def __init__(self, config: WebConfig):
+    def __init__(self, config: WebConfig) -> None:
         self.config = config
 
     def get_game_id_web_url(self, game_id: int) -> str:

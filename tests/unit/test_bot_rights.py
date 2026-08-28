@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta, timezone, tzinfo
+from datetime import datetime, timedelta, tzinfo, UTC
 from types import SimpleNamespace
 from unittest.mock import AsyncMock
 
@@ -34,7 +34,7 @@ NOBODY_CAN_PIN = Chat(
 
 class ClockMock:
     def __init__(self) -> None:
-        self.now = datetime(2020, 1, 1, tzinfo=timezone.utc)
+        self.now = datetime(2020, 1, 1, tzinfo=UTC)
 
     def __call__(self, tz: tzinfo) -> datetime:
         return self.now.astimezone(tz)
@@ -111,7 +111,7 @@ async def test_rights_of_member(member: ChatMember, can_pin: bool):
 
     assert can_pin == await rights.can_pin(CHAT_ID)
     # membership is enough, no reason to ask about the chat itself
-    assert 0 == bot.get_chat.await_count
+    assert bot.get_chat.await_count == 0
 
 
 @pytest.mark.asyncio
@@ -129,7 +129,7 @@ async def test_ordinary_member_depends_on_chat(chat: Chat, can_pin: bool):
     rights, bot = bot_rights(ChatMemberMember(user=BOT), ClockMock(), chat=chat)
 
     assert can_pin == await rights.can_pin(CHAT_ID)
-    assert 1 == bot.get_chat.await_count
+    assert bot.get_chat.await_count == 1
 
 
 @pytest.mark.asyncio
@@ -161,7 +161,7 @@ async def test_rights_cached():
     assert await rights.can_pin(CHAT_ID)
     assert await rights.can_pin(CHAT_ID)
 
-    assert 1 == bot.get_chat_member.await_count
+    assert bot.get_chat_member.await_count == 1
 
 
 @pytest.mark.asyncio
@@ -174,7 +174,7 @@ async def test_cache_expired():
     bot.get_chat_member.return_value = admin(can_pin=False)
 
     assert not await rights.can_pin(CHAT_ID)
-    assert 2 == bot.get_chat_member.await_count
+    assert bot.get_chat_member.await_count == 2
 
 
 @pytest.mark.asyncio
@@ -186,7 +186,7 @@ async def test_update_rights():
 
     assert await rights.can_pin(CHAT_ID)
     # updated rights are cached too, no reason to ask telegram again
-    assert 1 == bot.get_chat_member.await_count
+    assert bot.get_chat_member.await_count == 1
 
 
 @pytest.mark.asyncio
@@ -199,8 +199,8 @@ async def test_update_to_ordinary_member_forgets_rights():
 
     # rights of a plain member depend on the chat, so they are asked again
     assert await rights.can_pin(CHAT_ID)
-    assert 2 == bot.get_chat_member.await_count
-    assert 1 == bot.get_chat.await_count
+    assert bot.get_chat_member.await_count == 2
+    assert bot.get_chat.await_count == 1
 
 
 @pytest.mark.asyncio
@@ -211,16 +211,16 @@ async def test_middleware_updates_rights_from_update():
     event = ChatMemberUpdated(
         chat=NOBODY_CAN_PIN,
         from_user=User(id=2, is_bot=False, first_name="admin"),
-        date=datetime.now(tz=timezone.utc),
+        date=datetime.now(tz=UTC),
         old_chat_member=ChatMemberMember(user=BOT),
         new_chat_member=admin(can_pin=True),
     )
 
-    assert "handled" == await BotRightsMiddleware()(handler, event, data)
+    assert await BotRightsMiddleware()(handler, event, data) == "handled"
 
     handler.assert_awaited_once()
     assert await rights.can_pin(CHAT_ID)
-    assert 0 == bot.get_chat_member.await_count
+    assert bot.get_chat_member.await_count == 0
 
 
 @pytest.mark.asyncio

@@ -1,6 +1,7 @@
 import enum
 from datetime import datetime
-from typing import Any, Iterable
+from typing import Any
+from collections.abc import Iterable
 
 from aiogram.utils.text_decorations import html_decoration as hd
 from telegraph.aio import Telegraph

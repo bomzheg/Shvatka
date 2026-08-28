@@ -17,12 +17,12 @@ class ForumUserDAO(BaseDAO[models.ForumUser]):
         super().__init__(models.ForumUser, session, clock=clock)
 
     async def upsert(self, parsed: ParsedPlayer) -> dto.ForumUser:
-        kwargs = dict(
-            forum_id=parsed.forum_id,
-            url=parsed.url,
-            name=parsed.name,
-            registered=parsed.registered_at,
-        )
+        kwargs = {
+            "forum_id": parsed.forum_id,
+            "url": parsed.url,
+            "name": parsed.name,
+            "registered": parsed.registered_at,
+        }
         saved_team = await self.session.scalars(
             insert(models.ForumUser)
             .values(**kwargs)

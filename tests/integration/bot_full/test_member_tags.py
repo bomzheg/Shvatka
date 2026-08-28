@@ -58,7 +58,7 @@ async def test_tag_set_and_cleared_on_team_ops(
     await join_team(hermione, gryffindor, harry, dao.team_player, notifier=notifier)
 
     (tag,) = tags(bot_session)
-    assert PUBLIC_CHAT == tag.chat_id
+    assert tag.chat_id == PUBLIC_CHAT
     assert hermione.get_chat_id() == tag.user_id
     # the team name is longer than the 16 characters telegram allows in a tag
     assert render_tag(gryffindor.name) == tag.tag

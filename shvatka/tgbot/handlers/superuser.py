@@ -48,7 +48,7 @@ async def clean_commands_menu_handler(message: Message, bot: Bot, dao: FromDishk
                     scope=BotCommandScopeChat(chat_id=user.tg_id, type=BotCommandScopeType.CHAT)
                 )
             except TelegramAPIError as e:
-                logger.error("some error with delete scope", exc_info=e)
+                logger.exception("some error with delete scope", exc_info=e)
             else:
                 logger.debug("updated scope for %s", user.tg_id)
             await asyncio.sleep(1)

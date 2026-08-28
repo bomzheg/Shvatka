@@ -84,4 +84,4 @@ class MultipleEffectsDecision(Decision):
     effects: list[Effects]
 
     def is_level_up(self) -> bool:
-        return any(map(lambda e: e.level_up, self.effects))
+        return any(e.level_up for e in self.effects)

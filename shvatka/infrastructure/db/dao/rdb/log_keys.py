@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime, tzinfo
 import typing
-from typing import Sequence
+from collections.abc import Sequence
 
 from sqlalchemy import select, update, ScalarResult
 from sqlalchemy.ext.asyncio import AsyncSession

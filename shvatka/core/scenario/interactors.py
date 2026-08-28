@@ -1,4 +1,5 @@
-from typing import BinaryIO, Sequence
+from typing import BinaryIO
+from collections.abc import Sequence
 
 from shvatka.core.interfaces.dal.game import GameByIdGetter
 from shvatka.core.interfaces.identity import IdentityProvider
@@ -25,7 +26,7 @@ KEYS_HEADERS = ("Уровень", "Название", "Ключи", "Описа�
 
 
 class AllGameKeysReaderInteractor:
-    def __init__(self, dao: GameByIdGetter, printer: TablePrinter):
+    def __init__(self, dao: GameByIdGetter, printer: TablePrinter) -> None:
         self.dao = dao
         self.printer = printer
 
@@ -68,7 +69,7 @@ class AllGameKeysReaderInteractor:
 class AllGameKeysPrintInteractor:
     """The same keys, but as a sheet to print, cut and hand out to the orgs."""
 
-    def __init__(self, dao: GameByIdGetter, printer: KeysSheetPrinter):
+    def __init__(self, dao: GameByIdGetter, printer: KeysSheetPrinter) -> None:
         self.dao = dao
         self.printer = printer
 
@@ -129,7 +130,7 @@ def present_effects_condition(condition: action.KeyEffectsCondition) -> list[dto
 
 
 class GameScenarioTransitionsInteractor:
-    def __init__(self, dao: GameByIdGetter, printer: TransitionsPrinter):
+    def __init__(self, dao: GameByIdGetter, printer: TransitionsPrinter) -> None:
         self.dao = dao
         self.printer = printer
 

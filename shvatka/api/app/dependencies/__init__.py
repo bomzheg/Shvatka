@@ -20,8 +20,7 @@ def setup_di(app: FastAPI, paths_env: str):
 
 
 def create_dishka(paths_env: str) -> AsyncContainer:
-    container = make_async_container(*get_api_providers(paths_env))
-    return container
+    return make_async_container(*get_api_providers(paths_env))
 
 
 def get_api_providers(paths_env: str) -> list[Provider]:

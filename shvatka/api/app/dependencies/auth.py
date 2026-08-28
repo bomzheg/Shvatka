@@ -88,7 +88,7 @@ class AuthProperties:
         expire = datetime.now(tz=tz_utc) + expires_delta
         to_encode.update({"exp": expire})
         encoded_jwt = jwt.encode(to_encode, self.secret_key, algorithm=self.algorythm)
-        return Token(access_token=encoded_jwt, token_type="bearer")
+        return Token(access_token=encoded_jwt, token_type="bearer")  # noqa: S106
 
     def create_user_token(self, user: dto.Player) -> Token:
         if user.id is None:
@@ -179,7 +179,7 @@ class ApiIdentityProvider(IdentityProvider):
         auth_properties: AuthProperties,
         dao: HolderDao,
         superusers: SuperusersResolver,
-    ):
+    ) -> None:
         self.request = request
         self.cookie_auth = cookie_auth
         self.auth_properties = auth_properties
@@ -240,9 +240,8 @@ class ApiIdentityProvider(IdentityProvider):
             chat = await self.dao.chat.get_by_tg_id(cast(int, team.get_chat_id()))
             self.cache["chat"] = chat
             return chat
-        else:
-            self.cache["chat"] = None
-            return None
+        self.cache["chat"] = None
+        return None
 
     async def get_full_team_player(self) -> dto.FullTeamPlayer | None:
         if "full_team_player" in self.cache:
@@ -277,7 +276,8 @@ class AuthProvider(Provider):
     @provide
     def get_cookie_auth(self, config: AuthConfig) -> OAuth2PasswordBearerWithCookie:
         return OAuth2PasswordBearerWithCookie(
-            token_url="auth/token", cookie_name=config.cookie_name
+            token_url="auth/token",  # noqa: S106
+            cookie_name=config.cookie_name,
         )
 
     idp = provide(ApiIdentityProvider, scope=Scope.REQUEST)

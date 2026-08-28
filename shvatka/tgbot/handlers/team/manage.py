@@ -82,13 +82,15 @@ async def cmd_create_team(
     try:
         await create_team(chat, player, dao.team_creator, game_log)
     except PlayerAlreadyInTeam as e:
+        team_name = hd.quote(e.team.name)  # type: ignore[union-attr]
         return await message.reply(
-            f"Вы уже находитесь в другой команде ({hd.quote(e.team.name)}).\n"  # type: ignore
+            f"Вы уже находитесь в другой команде ({team_name}).\n"
             "Сперва нужно выйти из другой команды, и затем уже создавать собственную!"
         )
     except AnotherTeamInChat as e:
+        team_name = hd.quote(e.team.name)  # type: ignore[union-attr]
         return await message.reply(
-            f"В этом чате уже создана команда ({hd.quote(e.team.name)}).\n"  # type: ignore
+            f"В этом чате уже создана команда ({team_name}).\n"
             "Создать другую команду можно только в другом чате!"
         )
     except TeamError as e:
@@ -103,6 +105,7 @@ async def cmd_create_team(
         "Чтобы добавить игрока в команду - отправьте реплаем на его сообщение "
         "<b>/add_in_team [необязательно: роль в команде (водитель, полевой, мозг, итд)]</b>"
     )
+    return None
 
 
 @inject
@@ -336,6 +339,7 @@ async def button_join_no(
         f"{hd.quote(player.name_mention)} не стал принимать "
         f"игрока {hd.quote(target.name_mention)} в команду"
     )
+    return None
 
 
 async def answer_not_enough_rights(callback_query: CallbackQuery):

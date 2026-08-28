@@ -36,7 +36,7 @@ async def test_level_testing(
     )
     actual_suite, actual_hint_number, actual_run_at = scheduler.calls.pop()
     assert suite == actual_suite
-    assert 1 == actual_hint_number
+    assert actual_hint_number == 1
     assert start_at < actual_run_at
 
     actual_suite = level_view.calls["send_puzzle"].pop()
@@ -50,13 +50,13 @@ async def test_level_testing(
     correct_keys = await dao.level_test.get_correct_tested_keys(suite)
     assert {"SH123"} == correct_keys
     all_keys = await dao.level_test.get_all_typed(suite)
-    assert 1 == len(all_keys)
-    assert "SH123" == all_keys[0].text
+    assert len(all_keys) == 1
+    assert all_keys[0].text == "SH123"
     assert all_keys[0].is_correct
     assert all_keys[0].at > start_at
     actual_suite, actual_key = level_view.calls["correct_key"].pop()
     assert suite == actual_suite
-    assert "SH123" == actual_key
+    assert actual_key == "SH123"
 
     await check_level_testing_key(
         "SHWRONG", suite, level_view, org_notifier, locker, dao.level_testing_complex
@@ -64,12 +64,12 @@ async def test_level_testing(
     correct_keys = await dao.level_test.get_correct_tested_keys(suite)
     assert {"SH123"} == correct_keys
     all_keys = await dao.level_test.get_all_typed(suite)
-    assert 2 == len(all_keys)
-    assert "SHWRONG" == all_keys[1].text
+    assert len(all_keys) == 2
+    assert all_keys[1].text == "SHWRONG"
     assert not all_keys[1].is_correct
     actual_suite, actual_key = level_view.calls["wrong_key"].pop()
     assert suite == actual_suite
-    assert "SHWRONG" == actual_key
+    assert actual_key == "SHWRONG"
 
     await check_level_testing_key(
         "SH321", suite, level_view, org_notifier, locker, dao.level_testing_complex
@@ -78,13 +78,13 @@ async def test_level_testing(
     correct_keys = await dao.level_test.get_correct_tested_keys(suite)
     assert {"SH123", "SH321"} == correct_keys
     all_keys = await dao.level_test.get_all_typed(suite)
-    assert 3 == len(all_keys)
-    assert "SH321" == all_keys[2].text
+    assert len(all_keys) == 3
+    assert all_keys[2].text == "SH321"
     assert all_keys[2].is_correct
     assert all_keys[2].at > start_at
     actual_suite, actual_key = level_view.calls["correct_key"].pop()
     assert suite == actual_suite
-    assert "SH321" == actual_key
+    assert actual_key == "SH321"
     result = await dao.level_test.get_testing_result(suite)
     assert result.td <= datetime.now(tz=tz_utc) - start_at
     actual_suite = level_view.calls["level_finished"].pop()
@@ -93,7 +93,7 @@ async def test_level_testing(
     assert isinstance(event, LevelTestCompleted)
     assert suite == event.suite
     assert result == event.result
-    assert 1 == len(event.orgs_list)
+    assert len(event.orgs_list) == 1
     assert game.author.id == event.orgs_list[0].player.id
 
 
@@ -115,8 +115,8 @@ async def test_send_hint_for_tester_level(
     await send_testing_level_hint(suite, 1, level_view, scheduler, dao.level_testing_complex)
     actual_suit, hint_number = level_view.calls["send_hint"].pop()
     assert suite == actual_suit
-    assert 1 == hint_number
+    assert hint_number == 1
     actual_suit, hint_number, run_at = scheduler.calls.pop()
     assert suite == actual_suit
-    assert 2 == hint_number
+    assert hint_number == 2
     assert run_at > start_at

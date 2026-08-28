@@ -27,15 +27,19 @@ if typing.TYPE_CHECKING:
 SHKey: typing.TypeAlias = str
 
 
+MIN_BONUS_MINUTES = -600
+MAX_BONUS_MINUTES = 60
+
+
 @dataclass(frozen=True)
 class BonusKey:
     text: SHKey
     bonus_minutes: float
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         if not is_key_valid(self.text):
             raise ValueError
-        if not (-600 < self.bonus_minutes < 60):
+        if not (MIN_BONUS_MINUTES < self.bonus_minutes < MAX_BONUS_MINUTES):
             raise ValueError("bonus out of available range")
 
     def __eq__(self, other: object) -> bool:

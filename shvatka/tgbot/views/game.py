@@ -5,7 +5,7 @@ import logging
 import typing
 from contextlib import suppress
 from dataclasses import dataclass
-from typing import Iterable, Sequence
+from collections.abc import Iterable, Sequence
 
 from aiogram import Bot
 from aiogram.types import Message, ReactionTypeEmoji, ReactionTypeCustomEmoji, ReactionTypePaid
@@ -66,15 +66,13 @@ class BotInputContainer(InputContainer):
 async def get_message_id(input_container: InputContainer) -> int | None:
     if isinstance(input_container, BotInputContainer):
         return input_container.get_message_id()
-    else:
-        return None
+    return None
 
 
 def format_bonus(bonus: float) -> str:
     if bonus >= 0:
         return f"Бонус: {bonus:.2f} мин."
-    else:
-        return f"Штраф: {bonus:.2f} мин."
+    return f"Штраф: {bonus:.2f} мин."
 
 
 def format_bonus_key(bonus: float, key: KeyTime) -> str:
@@ -83,11 +81,7 @@ def format_bonus_key(bonus: float, key: KeyTime) -> str:
             f"{KeyEmoji.bonus.value}Бонусный ключ {hd.code(key.text)}.\n"
             f"Бонус: {bonus:.2f} мин."
         )
-    else:
-        return (
-            f"{KeyEmoji.bonus.value}Штрафной ключ {hd.code(key.text)}.\n"
-            f"Штраф: {bonus:.2f} мин."
-        )
+    return f"{KeyEmoji.bonus.value}Штрафной ключ {hd.code(key.text)}.\n" f"Штраф: {bonus:.2f} мин."
 
 
 def map_effect_to_reaction(
@@ -95,14 +89,13 @@ def map_effect_to_reaction(
 ) -> list[ReactionTypeEmoji | ReactionTypeCustomEmoji | ReactionTypePaid]:
     if effect.level_up:
         return [ReactionTypeEmoji(emoji="👍")]
-    elif effect.hints_:
+    if effect.hints_:
         return [ReactionTypeEmoji(emoji="🤓")]
-    elif effect.bonus_minutes:
+    if effect.bonus_minutes:
         return [ReactionTypeEmoji(emoji="🤩")]
-    elif effect.is_no_effects():
+    if effect.is_no_effects():
         return [ReactionTypeEmoji(emoji="👍")]
-    else:
-        return []
+    return []
 
 
 @dataclass
@@ -136,7 +129,7 @@ class BotView(GameViewPreparer, GameView):
             try:
                 if not game.start_at:
                     await self.bot_alert.alert(f"Not set up game.start_at for game_id={game.id}")
-                    logger.error("not set up game.start_at", extra=dict(game_id=game.id))
+                    logger.error("not set up game.start_at", extra={"game_id": game.id})
                     raise RuntimeError("not set up game.start_at")
                 await self.bot.send_message(
                     chat_id=team.get_chat_id(),  # type: ignore[arg-type]
@@ -150,7 +143,7 @@ class BotView(GameViewPreparer, GameView):
                 logger.exception(
                     "can't send prepare message to team",
                     exc_info=e,
-                    extra=dict(team_id=team.id, chat_id=team.get_chat_id()),
+                    extra={"team_id": team.id, "chat_id": team.get_chat_id()},
                 )
                 await self.bot_alert.alert(
                     f"can't send prepare message to team {team.id} [{e.__class__.__name__}]"

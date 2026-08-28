@@ -84,9 +84,9 @@ def get_mentioned_user(message: Message) -> dto.User | None:
         if ent.type == MessageEntityType.TEXT_MENTION:
             assert ent.user is not None
             return dto.User.from_aiogram(ent.user)
-        elif ent.type == MessageEntityType.MENTION:
+        if ent.type == MessageEntityType.MENTION:
             username = ent.extract_from(possible_mentioned_text).lstrip("@")
-            return dto.User(username=username, tg_id=None)  # type: ignore
+            return dto.User(username=username, tg_id=None)  # type: ignore[arg-type]
     return None
 
 

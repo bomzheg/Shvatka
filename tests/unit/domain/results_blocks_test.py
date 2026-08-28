@@ -70,7 +70,7 @@ def test_every_block_of_the_table_is_reported(game_stat: dto.GameStat) -> None:
 def test_blocks_do_not_overlap(game_stat: dto.GameStat) -> None:
     table = build_results_table(game_example, game_stat)
 
-    for previous, block in zip(table.blocks[:-1], table.blocks[1:]):
+    for previous, block in zip(table.blocks[:-1], table.blocks[1:], strict=False):
         assert previous.last_row < block.first_row
 
 

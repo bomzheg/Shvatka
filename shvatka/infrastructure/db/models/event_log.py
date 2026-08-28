@@ -49,7 +49,7 @@ class EffectsField(TypeDecorator):
         try:
             return self.retort.load(value, action.Effects)
         except Exception:
-            logger.error("can't load effects from %s", value)
+            logger.exception("can't load effects from %s", value)
             raise
 
 

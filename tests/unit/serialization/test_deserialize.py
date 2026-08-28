@@ -26,17 +26,17 @@ from shvatka.core.views.texts import render_hints
 
 def test_deserialize_game(simple_scn: RawGameScenario, retort: Retort):
     game = parse_game(simple_scn, retort)
-    assert "My new game" == game.name
+    assert game.name == "My new game"
     assert HintType.text.name == game.levels[0].time_hints[0].hint[0].type
-    assert "загадка" == game.levels[0].time_hints[0].hint[0].text
+    assert game.levels[0].time_hints[0].hint[0].text == "загадка"
     assert HintType.gps.name == game.levels[0].time_hints[2].hint[0].type
 
 
 def test_deserialize_level(simple_scn: RawGameScenario, retort: Retort):
     level = load_level(simple_scn.scn["levels"][0], retort)
-    assert "first" == level.id
+    assert level.id == "first"
     assert HintType.text.name == level.time_hints[0].hint[0].type
-    assert "загадка" == level.time_hints[0].hint[0].text
+    assert level.time_hints[0].hint[0].text == "загадка"
     assert HintType.gps.name == level.time_hints[2].hint[0].type
 
 
@@ -109,7 +109,7 @@ def test_deserialize_legacy_scenario_without_tg_file_id(
 def test_deserialize_all_types(all_types_scn: RawGameScenario, retort: Retort):
     game_scn = parse_game(all_types_scn, retort)
     hints = game_scn.levels[0].time_hints
-    assert 12 == len(hints)
+    assert len(hints) == 12
     for i, type_ in enumerate(
         [
             TextHint,
@@ -133,8 +133,8 @@ def test_deserialize_all_types(all_types_scn: RawGameScenario, retort: Retort):
 def test_render_all_types(all_types_scn: RawGameScenario, retort: Retort):
     game_scn = parse_game(all_types_scn, retort)
     hints = [time_hint.hint[0] for time_hint in game_scn.levels[0].time_hints]
-    assert 12 == len(hints)
-    assert "📃📡🧭📷🎼🎬📎🌀🎤🤳🪪🏷" == render_hints(hints)
+    assert len(hints) == 12
+    assert render_hints(hints) == "📃📡🧭📷🎼🎬📎🌀🎤🤳🪪🏷"
 
 
 def test_serialize_simple(retort: Retort):

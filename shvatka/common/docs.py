@@ -11,7 +11,7 @@ class DocsUrlFactory:
     factory. Core code (an exception, a view text) only ever names the page.
     """
 
-    def __init__(self, config: DocsConfig):
+    def __init__(self, config: DocsConfig) -> None:
         self.config = config
 
     def get_page_url(self, page: DocPage) -> str:

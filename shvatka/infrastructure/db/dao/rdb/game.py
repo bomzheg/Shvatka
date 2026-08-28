@@ -2,7 +2,7 @@ from collections.abc import Collection
 from dataclasses import asdict
 from datetime import datetime, tzinfo
 import typing
-from typing import Sequence
+from collections.abc import Sequence
 
 from sqlalchemy import or_, select, ScalarResult
 from sqlalchemy import update, func

@@ -1,11 +1,11 @@
-from typing import Sequence
+from collections.abc import Sequence
 
 from shvatka.core.models.dto import scn, action
 from shvatka.core.models.dto.action import AnyCondition
 
 
 class IncompleteConditions(scn.Conditions):
-    def __init__(self, conditions: Sequence[AnyCondition]):
+    def __init__(self, conditions: Sequence[AnyCondition]) -> None:
         scn.Conditions.validate_keys_unique(conditions)
         scn.Conditions.validate_unique_effects(conditions)
         force_level_up_time = scn.Conditions.get_force_level_up(conditions)

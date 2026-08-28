@@ -1,6 +1,6 @@
 import logging
 from dataclasses import dataclass
-from typing import Awaitable, Iterable, Sequence
+from collections.abc import Awaitable, Iterable, Sequence
 
 from shvatka.api.app.utils.web_input import (
     WebGameLogWriter,

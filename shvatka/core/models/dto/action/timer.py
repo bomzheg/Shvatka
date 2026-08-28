@@ -33,7 +33,7 @@ class LevelTimerState(State):
     started_at: datetime
 
     def contains_effects(self, effects: Effects) -> bool:
-        return any(map(lambda e: e.id == effects.id, self.applied_effects))
+        return any(e.id == effects.id for e in self.applied_effects)
 
 
 @dataclass(kw_only=True, frozen=True)

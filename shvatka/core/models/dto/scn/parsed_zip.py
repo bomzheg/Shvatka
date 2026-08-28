@@ -1,7 +1,7 @@
 import typing
-from contextlib import contextmanager
+from contextlib import AbstractContextManager, contextmanager
 from dataclasses import dataclass
-from typing import ContextManager, BinaryIO, TextIO
+from typing import BinaryIO, TextIO
 from zipfile import Path
 
 import yaml
@@ -16,7 +16,7 @@ class ParsedZip:
     results: Path | None = None
 
     @contextmanager  # type: ignore[arg-type]
-    def open(self) -> ContextManager[RawGameScenario]:  # type: ignore[misc]
+    def open(self) -> AbstractContextManager[RawGameScenario]:  # type: ignore[misc]
         contents: dict[str, BinaryIO] = {}
         results = None
         try:
@@ -38,5 +38,4 @@ class ParsedZip:
     def open_results_if_present(self) -> TextIO | None:
         if self.results:
             return typing.cast(TextIO, self.results.open("r", encoding="utf8"))
-        else:
-            return None
+        return None

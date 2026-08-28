@@ -190,10 +190,9 @@ def need_start_now(game: dto.Game) -> bool:
         if (utcnow - game.start_at) < timedelta(minutes=30):
             return True
         return False
-    else:
-        if (game.start_at - utcnow) < timedelta(minutes=1):
-            return True
-        return False
+    if (game.start_at - utcnow) < timedelta(minutes=1):
+        return True
+    return False
 
 
 def need_prepare_now(game: dto.Game) -> bool:
@@ -204,7 +203,6 @@ def need_prepare_now(game: dto.Game) -> bool:
         if (utcnow - game.start_at) < timedelta(minutes=35):
             return True
         return False
-    else:
-        if (game.start_at - utcnow) < timedelta(minutes=6):
-            return True
-        return False
+    if (game.start_at - utcnow) < timedelta(minutes=6):
+        return True
+    return False

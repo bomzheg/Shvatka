@@ -1,7 +1,7 @@
 import typing
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Iterable
+from collections.abc import Iterable
 
 
 from shvatka.core.interfaces.dal.game_play import GamePreparer, GamePlayerDao

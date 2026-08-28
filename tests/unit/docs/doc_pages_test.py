@@ -29,16 +29,16 @@ def test_every_page_has_a_title(page: DocPage):
 
 
 def test_title_does_not_shadow_str_title():
-    assert "Player/Play" == DocPage.PLAY.title()
+    assert DocPage.PLAY.title() == "Player/Play"
 
 
 def test_error_declares_its_page():
-    assert DocPage.PLAY_KEYS == exceptions.InvalidKey().doc_page
-    assert DocPage.WAIVERS == exceptions.WaiverForbidden().doc_page
+    assert exceptions.InvalidKey().doc_page == DocPage.PLAY_KEYS
+    assert exceptions.WaiverForbidden().doc_page == DocPage.WAIVERS
 
 
 def test_page_is_inherited():
-    assert DocPage.JOIN_TEAM == exceptions.PlayerAlreadyInTeam().doc_page
+    assert exceptions.PlayerAlreadyInTeam().doc_page == DocPage.JOIN_TEAM
 
 
 def test_error_without_a_page():
@@ -47,9 +47,9 @@ def test_error_without_a_page():
 
 def test_page_can_be_given_at_the_raise_site():
     error = exceptions.PermissionsError(doc_page=DocPage.CHANGE_CAPTAIN)
-    assert DocPage.CHANGE_CAPTAIN == error.doc_page
+    assert error.doc_page == DocPage.CHANGE_CAPTAIN
 
 
 def test_given_page_overrides_the_class_one():
     error = exceptions.InvalidKey(doc_page=DocPage.LEVEL_CREATE)
-    assert DocPage.LEVEL_CREATE == error.doc_page
+    assert error.doc_page == DocPage.LEVEL_CREATE

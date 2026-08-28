@@ -1,4 +1,5 @@
-from typing import Iterable, TypedDict
+from typing import TypedDict
+from collections.abc import Iterable
 
 from shvatka.core.interfaces.current_game import CurrentGameProvider
 from shvatka.core.interfaces.dal.waiver import GameWaiversGetter

@@ -1,4 +1,4 @@
-from typing import AsyncIterable
+from collections.abc import AsyncIterable
 
 from dishka import Provider, Scope, provide, AnyOf
 from redis.asyncio.client import Redis
@@ -28,7 +28,7 @@ from shvatka.infrastructure.db.factory import create_engine, create_session_make
 class DbProvider(Provider):
     scope = Scope.APP
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self.level_test = LevelTestingData()
 
@@ -36,7 +36,7 @@ class DbProvider(Provider):
     async def get_engine(self, db_config: DBConfig) -> AsyncIterable[AsyncEngine]:
         engine = create_engine(db_config)
         yield engine
-        await engine.dispose(True)
+        await engine.dispose(close=True)
 
     @provide
     def get_pool(self, engine: AsyncEngine) -> async_sessionmaker[AsyncSession]:

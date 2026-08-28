@@ -40,8 +40,7 @@ def create_redis(config: RedisConfig) -> Redis:
 
 
 def create_level_test_dao():
-    level_test_dao = LevelTestingData()
-    return level_test_dao
+    return LevelTestingData()
 
 
 class LockProvider(Provider):

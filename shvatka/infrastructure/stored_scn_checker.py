@@ -31,8 +31,8 @@ async def main() -> None:
                 logger.info("checking game #%s %s (%s)", game.id, game.name, game.number)
                 try:
                     full = await dao.game.get_full(game.id)
-                except* exceptions.SHError as e:
-                    logger.error("got error %s %s", game.id, repr(e))
+                except* exceptions.SHError:
+                    logger.exception("got error %s", game.id)
                     failed.append(game)
                 logger.debug("game %s, levels %s", full, full.levels)
             logger.error("errors %s", [(g.id, g.name) for g in failed])

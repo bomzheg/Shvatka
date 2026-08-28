@@ -1,3 +1,4 @@
+from typing import Self
 import typing
 from collections.abc import Sequence, Iterable
 from dataclasses import dataclass, field
@@ -25,12 +26,12 @@ class BonusKey:
 
 
 class HintsList(Sequence[TimeHint]):
-    def __init__(self, hints_: list[TimeHint]):
+    def __init__(self, hints_: list[TimeHint]) -> None:
         self.verify(hints_)
         self.hints = hints_
 
     @classmethod
-    def parse(cls, hints_: list[TimeHint]):
+    def parse(cls, hints_: list[TimeHint]) -> Self:
         return cls(cls.normalize(hints_))
 
     @staticmethod

@@ -1,4 +1,5 @@
-from typing import Any, Awaitable, Callable, Protocol
+from typing import Any, Protocol
+from collections.abc import Awaitable, Callable
 
 BackgroundTask = Callable[..., Awaitable[None]]
 

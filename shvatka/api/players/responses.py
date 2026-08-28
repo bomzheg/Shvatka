@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Sequence
+from collections.abc import Sequence
 
 from shvatka.api.shared.responses import (
     EmailAccount,

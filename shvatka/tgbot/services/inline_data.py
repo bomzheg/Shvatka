@@ -103,11 +103,13 @@ class InlineData(BaseModel):
             )
         if prefix != cls.__prefix__:
             raise ValueError(f"Bad prefix ({prefix!r} != {cls.__prefix__!r})")
-        payload = {}
-        for k, v in zip(names, parts):  # type: str, str | None
-            if (field := cls.model_fields.get(k)) and v == "" and not field.is_required():
-                v = None
-            payload[k] = v
+        payload: dict[str, str | None] = {}
+        for k, raw in zip(names, parts, strict=False):  # type: str, str | None
+            field = cls.model_fields.get(k)
+            if field and raw == "" and not field.is_required():
+                payload[k] = None
+            else:
+                payload[k] = raw
         return cls(**payload)
 
     @classmethod

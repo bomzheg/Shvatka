@@ -1,5 +1,5 @@
 import logging
-from typing import AsyncIterable
+from collections.abc import AsyncIterable
 
 from aiogram import Dispatcher, Bot
 from aiogram.fsm.storage.base import BaseStorage, BaseEventIsolation
@@ -71,10 +71,9 @@ logger = logging.getLogger(__name__)
 
 
 def create_dishka(paths_env: str) -> AsyncContainer:
-    container = make_async_container(
+    return make_async_container(
         *get_bot_providers(paths_env), validation_settings=STRICT_VALIDATION
     )
-    return container
 
 
 def get_bot_providers(paths_env: str) -> list[Provider]:

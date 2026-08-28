@@ -41,7 +41,7 @@ class BotFileGateway(FileGateway):
     async def get(self, file: hints.FileMeta) -> BinaryIO:
         try:
             return await self.storage.get(file.file_content_link)
-        except (IOError, OSError):
+        except OSError:
             if file.tg_link is None:
                 raise
             return await self.download_from_tg(tg_link=file.tg_link)
@@ -70,5 +70,5 @@ class BotFileGateway(FileGateway):
     async def download_from_tg(self, tg_link: hints.TgLink) -> BinaryIO:
         result = await self.bot.download(tg_link.file_id, BytesIO())
         if not result:
-            raise IOError
+            raise OSError
         return result

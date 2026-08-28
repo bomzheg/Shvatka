@@ -1,4 +1,4 @@
-from typing import AsyncIterable
+from collections.abc import AsyncIterable
 
 from dishka import Provider, Scope, provide, AsyncContainer, AnyOf
 

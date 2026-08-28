@@ -4,7 +4,7 @@ import logging
 import typing
 from dataclasses import dataclass
 from datetime import timedelta
-from typing import Iterable
+from collections.abc import Iterable
 
 from aiogram import Bot
 from aiogram.types import Message
@@ -77,7 +77,9 @@ class MessagePinner:
         try:
             await self.dao.save(chat_id=chat_id, category=category.value, message_ids=pinned)
         except Exception as e:
-            logger.error("can't save pinned messages %s of chat %s", pinned, chat_id, exc_info=e)
+            logger.exception(
+                "can't save pinned messages %s of chat %s", pinned, chat_id, exc_info=e
+            )
 
     async def unpin(self, chat_id: int, category: PinCategory) -> None:
         if not await self.rights.can_pin(chat_id):
@@ -87,7 +89,7 @@ class MessagePinner:
         try:
             message_ids = await self.dao.pop_all(chat_id=chat_id, category=category.value)
         except Exception as e:
-            logger.error(
+            logger.exception(
                 "can't get pinned messages (%s) of chat %s", category.value, chat_id, exc_info=e
             )
             return

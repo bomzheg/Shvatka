@@ -3,7 +3,8 @@ import json
 import logging
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import BinaryIO, Any, Callable, Coroutine
+from typing import BinaryIO, Any
+from collections.abc import Callable, Coroutine
 from zipfile import Path as ZipPath
 
 from adaptix import Retort
@@ -113,12 +114,7 @@ async def set_results(game: dto.FullGame, results: GameStat, dao: HolderDao):
             player = await get_or_create_player(dao, key.player)
             await join_team_if_already_not(player, team, game_start_at, dao)
             await add_waiver_if_already_not(player, team, game, dao)
-            if i == len(keys) - 1:
-                is_correct = True
-            elif key.level != keys[i + 1].level:
-                is_correct = True
-            else:
-                is_correct = False
+            is_correct = bool(i == len(keys) - 1 or key.level != keys[i + 1].level)
             await dao.key_time.save_key(
                 key=key.value,
                 team=team,
@@ -211,8 +207,7 @@ def load_results(game_zip_scn: BinaryIO, retort: Retort) -> GameStat:
         if unpacked_file.name != "results.json":
             continue
         with unpacked_file.open("r", encoding="utf8") as results_file:
-            results = retort.load(json.load(results_file), GameStat)
-        return results
+            return retort.load(json.load(results_file), GameStat)
     raise ValueError("no results found")
 
 
@@ -227,7 +222,7 @@ async def load_scn(
         with unpack_scn(ZipPath(zip_scn)).open() as scenario:  # type: scn.RawGameScenario
             game = await upsert_game(scenario, player, dao.game_upserter, retort, file_gateway)
     except exceptions.ScenarioNotCorrect as e:
-        logger.error("game scenario from player %s has problems", player.id, exc_info=e)
+        logger.exception("game scenario from player %s has problems", player.id, exc_info=e)
         return None
     logger.info("game scenario with id %s saved", game.id)
     return game

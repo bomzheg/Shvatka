@@ -1,6 +1,6 @@
 from datetime import datetime, tzinfo
 import typing
-from typing import Sequence
+from collections.abc import Sequence
 
 from sqlalchemy import delete, func
 from sqlalchemy import select, ScalarResult

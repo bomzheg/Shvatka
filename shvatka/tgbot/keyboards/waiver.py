@@ -1,4 +1,5 @@
-from typing import Iterable, Protocol
+from typing import Protocol
+from collections.abc import Iterable
 
 from aiogram.filters.callback_data import CallbackData
 from aiogram.types import InlineKeyboardMarkup

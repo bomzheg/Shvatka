@@ -34,7 +34,7 @@ class SHError(Exception):
         notify_user: str | None = None,
         doc_page: DocPage | None = None,
         confidential: str | None = None,
-        *args,
+        *args: Any,
         **kwargs,
     ) -> None:
         super().__init__(args, kwargs)
@@ -100,7 +100,7 @@ class ScenarioNotCorrect(SHError):
     doc_page = DocPage.LEVEL_CREATE
 
     def __init__(
-        self, *args, level_id: int | None = None, name_id: str | None = None, **kwargs
+        self, *args: Any, level_id: int | None = None, name_id: str | None = None, **kwargs
     ) -> None:
         super().__init__(*args, **kwargs)
         self.level_id = level_id
@@ -141,7 +141,7 @@ class SHDataBreach(SHError):
 
 
 class SaltError(SHError):
-    def __init__(self, token: str | None = None, *args, **kwargs) -> None:
+    def __init__(self, token: str | None = None, *args: Any, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self.token = token
 
@@ -159,7 +159,7 @@ class GameHasAnotherAuthor(GameError):
 
 
 class GameStatusError(GameError):
-    def __init__(self, game_status: str | None = None, *args, **kwargs) -> None:
+    def __init__(self, game_status: str | None = None, *args: Any, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self.game_status = game_status
 
@@ -218,7 +218,7 @@ class LevelError(SHError):
     notify_user = "Ошибка связанная с уровнем"
     doc_page = DocPage.LEVEL_CREATE
 
-    def __init__(self, level_id: int | None = None, *args, **kwargs) -> None:
+    def __init__(self, level_id: int | None = None, *args: Any, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self.level_id = level_id
 
@@ -231,7 +231,7 @@ class LevelNotLinked(LevelError):
 class PermissionsError(SHError):
     notify_user = "Ошибка связанная с полномочиями"
 
-    def __init__(self, permission_name: str | None = None, *args, **kwargs) -> None:
+    def __init__(self, permission_name: str | None = None, *args: Any, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self.permission_name = permission_name
 
@@ -410,6 +410,6 @@ class InvalidKey(SHError):
     )
     doc_page = DocPage.PLAY_KEYS
 
-    def __init__(self, key: str | None = None, *args, **kwargs) -> None:
+    def __init__(self, key: str | None = None, *args: Any, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self.key = key

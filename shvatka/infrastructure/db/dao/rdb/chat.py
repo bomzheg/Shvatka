@@ -44,7 +44,12 @@ class ChatDao(BaseDAO[models.Chat]):
         return chat_db.team_id is not None
 
     async def upsert_chat(self, chat: dto.Chat) -> dto.Chat:
-        kwargs = dict(tg_id=chat.tg_id, title=chat.title, username=chat.username, type=chat.type)
+        kwargs = {
+            "tg_id": chat.tg_id,
+            "title": chat.title,
+            "username": chat.username,
+            "type": chat.type,
+        }
         saved_chat = await self.session.execute(
             insert(models.Chat)
             .values(**kwargs)

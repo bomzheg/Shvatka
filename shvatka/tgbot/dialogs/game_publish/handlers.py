@@ -70,3 +70,4 @@ async def process_publish_message(
     await dao.commit()
     manager.dialog_data["started"] = True
     manager.dialog_data["started_at"] = datetime.now(tz=tz_utc).isoformat()
+    return None

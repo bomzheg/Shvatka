@@ -64,10 +64,7 @@ async def get_spy(
 
 async def get_keys(dialog_manager: DialogManager, **_):
     date_iso = dialog_manager.dialog_data.get("updated", None)
-    if date_iso is not None:
-        updated = datetime.fromisoformat(date_iso)
-    else:
-        updated = None
+    updated = datetime.fromisoformat(date_iso) if date_iso is not None else None
     return {
         "key_link": dialog_manager.dialog_data.get("key_link", None),
         "updated": updated,

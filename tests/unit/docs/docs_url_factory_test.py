@@ -10,41 +10,45 @@ def factory(**kwargs) -> DocsUrlFactory:
 
 def test_defaults_point_at_the_docs_of_master():
     """Antora drops the segment for the latest version, so master has none."""
-    assert "https://bomzheg.github.io/Shvatka/shvatka/player/play.html" == factory().get_page_url(
-        DocPage.PLAY
+    assert (
+        factory().get_page_url(DocPage.PLAY)
+        == "https://bomzheg.github.io/Shvatka/shvatka/player/play.html"
     )
 
 
 def test_domain_is_configurable():
     docs = factory(base_url="https://docs.example.org", version="4.0.0")
-    assert "https://docs.example.org/shvatka/4.0.0/player/play.html" == docs.get_page_url(
-        DocPage.PLAY
+    assert (
+        docs.get_page_url(DocPage.PLAY)
+        == "https://docs.example.org/shvatka/4.0.0/player/play.html"
     )
 
 
 def test_a_release_pins_its_own_tag():
     docs = factory(version="3.7.0")
-    assert "https://bomzheg.github.io/Shvatka/shvatka/3.7.0/player/play.html" == docs.get_page_url(
-        DocPage.PLAY
+    assert (
+        docs.get_page_url(DocPage.PLAY)
+        == "https://bomzheg.github.io/Shvatka/shvatka/3.7.0/player/play.html"
     )
 
 
 def test_trailing_slash_does_not_double():
     docs = factory(base_url="https://docs.example.org/")
-    assert "https://docs.example.org/shvatka/player/play.html" == docs.get_page_url(DocPage.PLAY)
+    assert docs.get_page_url(DocPage.PLAY) == "https://docs.example.org/shvatka/player/play.html"
 
 
 def test_anchor_stays_after_the_extension():
     docs = factory(base_url="https://docs.example.org")
-    assert "https://docs.example.org/shvatka/player/play.html#keys" == docs.get_page_url(
-        DocPage.PLAY_KEYS
+    assert (
+        docs.get_page_url(DocPage.PLAY_KEYS)
+        == "https://docs.example.org/shvatka/player/play.html#keys"
     )
 
 
 def test_error_url():
     docs = factory(base_url="https://docs.example.org", version="3.7.0")
     url = docs.get_error_url(exceptions.InvalidKey())
-    assert "https://docs.example.org/shvatka/3.7.0/player/play.html#keys" == url
+    assert url == "https://docs.example.org/shvatka/3.7.0/player/play.html#keys"
 
 
 def test_error_without_a_page_has_no_url():

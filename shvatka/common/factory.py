@@ -29,8 +29,7 @@ class TelegraphProvider(Provider):
 
     @provide
     def create_telegraph(self, bot_config: BotConfig) -> Telegraph:
-        telegraph = Telegraph(access_token=bot_config.telegraph_token)
-        return telegraph
+        return Telegraph(access_token=bot_config.telegraph_token)
 
 
 class ConcreteProxy(ABCProxy):
@@ -92,7 +91,7 @@ VALIDATION_GAME_RECIPES = [
     validator(
         pred=P[scn.LevelScenario].keys,
         func=is_multiple_keys_normal,
-        error=lambda x: typing.cast(
+        error=lambda _: typing.cast(
             LoadError,
             exceptions.ScenarioNotCorrect(notify_user=INVALID_KEY_ERROR, text="invalid keys"),
         ),
@@ -105,8 +104,7 @@ class DCFProvider(Provider):
 
     @provide
     def create_retort(self) -> Retort:
-        retort = Retort(recipe=[*REQUIRED_GAME_RECIPES, *VALIDATION_GAME_RECIPES])
-        return retort
+        return Retort(recipe=[*REQUIRED_GAME_RECIPES, *VALIDATION_GAME_RECIPES])
 
 
 class UrlProvider(Provider):

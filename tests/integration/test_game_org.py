@@ -24,11 +24,11 @@ from tests.mocks.org_notifier import OrgNotifierMock
 @pytest.mark.asyncio
 async def test_only_org(game: dto.FullGame, author: dto.Player, dao: HolderDao):
     orgs = await get_orgs(game, dao.organizer)
-    assert 1 == len(orgs)
+    assert len(orgs) == 1
     assert author.id == orgs[0].player.id
 
     orgs = await get_spying_orgs(game, dao.organizer)
-    assert 1 == len(orgs)
+    assert len(orgs) == 1
     assert author.id == orgs[0].player.id
 
     assert [] == await get_secondary_orgs(game, dao.organizer)
@@ -61,7 +61,7 @@ async def test_agree_invite(
         dao=dao.org_adder,
     )
     secondary_orgs = await get_secondary_orgs(game, check_dao.organizer)
-    assert 1 == len(secondary_orgs)
+    assert len(secondary_orgs) == 1
     actual = secondary_orgs[0]
 
     assert game.id == actual.game.id
@@ -78,7 +78,7 @@ async def test_agree_invite(
     assert game.id == event.game.id
     assert actual.id == event.org.id
     assert harry.id == event.org.player.id
-    assert 1 == len(event.orgs_list)
+    assert len(event.orgs_list) == 1
     assert author.id == event.orgs_list[0].player.id
 
 

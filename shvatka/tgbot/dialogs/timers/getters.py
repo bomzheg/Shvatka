@@ -30,8 +30,7 @@ async def get_timer(dialog_manager: DialogManager, retort: FromDishka[Retort], *
             "time": time,
             "effects": effects,
         }
-    else:
-        return {
-            "time": time,
-            "effects": None,
-        }
+    return {
+        "time": time,
+        "effects": None,
+    }

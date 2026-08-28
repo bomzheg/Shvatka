@@ -1,7 +1,7 @@
 import logging
 import typing
 from dataclasses import dataclass
-from typing import Iterable, Sequence
+from collections.abc import Iterable, Sequence
 
 from shvatka.api.app.utils.push import PushMessage, WebPushSender
 from shvatka.core.interfaces.current_game import CurrentGameProvider

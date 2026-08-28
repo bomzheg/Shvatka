@@ -86,7 +86,11 @@ class WebPushSender:
             *(self._send_one(semaphore, recipient, message) for recipient in recipients)
         )
         await self._disable(
-            [recipient for recipient, is_expired in zip(recipients, expired) if is_expired]
+            [
+                recipient
+                for recipient, is_expired in zip(recipients, expired, strict=False)
+                if is_expired
+            ]
         )
 
     async def _send_one(

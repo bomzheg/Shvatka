@@ -61,7 +61,7 @@ logger = logging.getLogger(__name__)
 
 
 class GameKeysReaderInteractor:
-    def __init__(self, dao: GameKeysReader):
+    def __init__(self, dao: GameKeysReader) -> None:
         self.dao = dao
 
     async def __call__(
@@ -73,7 +73,7 @@ class GameKeysReaderInteractor:
 
 
 class GameStatReaderInteractor:
-    def __init__(self, dao: GameStatReader):
+    def __init__(self, dao: GameStatReader) -> None:
         self.dao = dao
 
     async def __call__(self, game_id: int, identity: IdentityProvider) -> GameStatWithBonuses:
@@ -92,7 +92,7 @@ class GameStatReaderInteractor:
 
 
 class GameResultsFileInteractor:
-    def __init__(self, dao: GameStatReader, printer: TablePrinter):
+    def __init__(self, dao: GameStatReader, printer: TablePrinter) -> None:
         self.dao = dao
         self.printer = printer
 
@@ -111,7 +111,7 @@ class GameFileReaderInteractor:
         current_game: CurrentGameProvider,
         game_play_dao: GamePlayDao,
         org_dao: OrgByPlayerGetter,
-    ):
+    ) -> None:
         self.file_gateway = file_gateway
         self.dao = dao
         self.current_game = current_game
@@ -156,8 +156,7 @@ class GameFileReaderInteractor:
                 user=await identity.get_user(),
             )
 
-        meta = await self.dao.get_by_guid(guid)
-        return meta
+        return await self.dao.get_by_guid(guid)
 
     async def can_view_scenario(self, game: dto.Game, player: dto.Player) -> bool:
         org = await self.org_dao.get_by_player_or_none(game=game, player=player)

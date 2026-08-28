@@ -49,7 +49,7 @@ class GameStatImpl(GameStatDao):
 
 
 class GameStatReaderImpl(GameStatReader):
-    def __init__(self, dao: "HolderDao"):
+    def __init__(self, dao: "HolderDao") -> None:
         self.dao = dao
 
     async def get_game_level_times(self, game: dto.Game) -> list[dto.LevelTime]:

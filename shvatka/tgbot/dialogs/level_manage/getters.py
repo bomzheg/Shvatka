@@ -67,10 +67,9 @@ async def get_level_and_org(
         org = await get_org_by_id(data["org_id"], dao.organizer)
         level = await get_level_by_id_for_org(data["level_id"], org, dao.level)
         return level, org
-    else:
-        level = await get_by_id(data["level_id"], author, dao.level)
-        org_ = await get_org(author, level, dao)
-        return level, org_
+    level = await get_by_id(data["level_id"], author, dao.level)
+    org_ = await get_org(author, level, dao)
+    return level, org_
 
 
 @inject
@@ -87,5 +86,4 @@ async def get_org(author: dto.Player, level: dto.Level, dao: HolderDao) -> dto.O
     if level.game_id:
         game = await get_game(level.game_id, author=author, dao=dao.game)
         return await get_by_player(author, game, dao.organizer)
-    else:
-        return None
+    return None

@@ -21,7 +21,7 @@ class TeamPlayerFilter(BaseFilter):
     is_captain: bool | None = None
 
     @inject
-    async def __call__(  # noqa: C901
+    async def __call__(
         self,
         message: Message,
         identity: FromDishka[IdentityProvider],
@@ -32,19 +32,29 @@ class TeamPlayerFilter(BaseFilter):
         if self.is_captain is not None:
             assert team_player.team.captain is not None
             return team_player.team.captain.id == team_player.player.id
-        if self.can_manage_waivers is not None:
-            if self.can_manage_waivers != team_player.can_manage_waivers:
-                return False
-        if self.can_manage_players is not None:
-            if self.can_manage_players != team_player.can_manage_players:
-                return False
-        if self.can_change_team_name is not None:
-            if self.can_change_team_name != team_player.can_change_team_name:
-                return False
-        if self.can_add_players is not None:
-            if self.can_add_players != team_player.can_add_players:
-                return False
-        if self.can_remove_players is not None:
-            if self.can_remove_players != team_player.can_remove_players:
-                return False
+        if (
+            self.can_manage_waivers is not None
+            and self.can_manage_waivers != team_player.can_manage_waivers
+        ):
+            return False
+        if (
+            self.can_manage_players is not None
+            and self.can_manage_players != team_player.can_manage_players
+        ):
+            return False
+        if (
+            self.can_change_team_name is not None
+            and self.can_change_team_name != team_player.can_change_team_name
+        ):
+            return False
+        if (
+            self.can_add_players is not None
+            and self.can_add_players != team_player.can_add_players
+        ):
+            return False
+        if (
+            self.can_remove_players is not None
+            and self.can_remove_players != team_player.can_remove_players
+        ):
+            return False
         return True

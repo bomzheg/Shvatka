@@ -46,7 +46,7 @@ async def get_all_games(games_ids: list[int]) -> list[scn.ParsedCompletedGameSce
             try:
                 games.append(await GameParser(html_text, session=session).build())
             except (ValueError, AttributeError) as e:
-                logger.error("can't parse game %s", game_id, exc_info=e)
+                logger.exception("can't parse game %s", game_id, exc_info=e)
     return games
 
 
@@ -153,7 +153,7 @@ class GameParser:
                 try:
                     at = self.get_result_datetime(cell)
                 except IndexError as e:
-                    logger.error("can't parse results", exc_info=e)
+                    logger.exception("can't parse results", exc_info=e)
                     break
                 level_times.append(
                     export_stat.LevelTime(
@@ -168,12 +168,8 @@ class GameParser:
             time = datetime.strptime(cell.text or cell.xpath("./font")[0].text, "%H:%M:%S").time()
         except ValueError:
             return None
-        if time < EVENING_TIME:
-            td = timedelta(days=1)
-        else:
-            td = timedelta(seconds=0)
-        at = datetime.combine(date=self.start_at.date() + td, time=time, tzinfo=tz_game)
-        return at
+        td = timedelta(days=1) if time < EVENING_TIME else timedelta(seconds=0)
+        return datetime.combine(date=self.start_at.date() + td, time=time, tzinfo=tz_game)
 
     def parse_keys(self) -> dict[str, list[export_stat.Key]]:
         tables = self.html.xpath("//div[@id='logs']//table")
@@ -201,7 +197,7 @@ class GameParser:
                 try:
                     time_element, key_element, player_element = cells  # type: ElementBase
                 except ValueError as e:
-                    logger.error(
+                    logger.exception(
                         "can't parse key log for cells %s",
                         [cell.text for cell in cells],
                         exc_info=e,
@@ -240,7 +236,7 @@ class GameParser:
             ClientOSError,
             ValueError,
         ) as e:
-            logger.error("couldn't load content for url %s", url, exc_info=e)
+            logger.exception("couldn't load content for url %s", url, exc_info=e)
             raise ContentDownloadError from e
 
     def build_current_hint(self):
@@ -280,7 +276,7 @@ class GameParser:
     async def build(self) -> scn.ParsedCompletedGameScenario:
         self.parse_game_head()
         await self.parse_scenario()
-        game = scn.ParsedCompletedGameScenario(
+        return scn.ParsedCompletedGameScenario(
             id=self.id,
             name=self.name,
             start_at=self.start_at,
@@ -296,7 +292,6 @@ class GameParser:
             ),
             __model_version__=1,
         )
-        return game
 
 
 async def save_all_scns_to_files(game_ids: list[int]):

@@ -1,4 +1,4 @@
-from typing import Sequence
+from collections.abc import Sequence
 
 from dishka import Provider, provide, Scope
 

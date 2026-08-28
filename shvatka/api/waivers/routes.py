@@ -1,5 +1,6 @@
 import logging
-from typing import Annotated, Iterable
+from typing import Annotated
+from collections.abc import Iterable
 
 from dishka import FromDishka
 from dishka.integrations.fastapi import inject

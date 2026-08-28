@@ -128,7 +128,7 @@ def create_root_app(paths: Paths) -> FastAPI:
     bot_config = load_bot_config(paths)
     webhook_config = bot_config.bot.webhook
     if not webhook_config:
-        raise EnvironmentError("No webhook configuration provided")
+        raise OSError("No webhook configuration provided")
 
     app = create_app(api_config)
     dishka = make_async_container(

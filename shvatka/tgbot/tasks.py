@@ -70,7 +70,7 @@ async def deliver(call: Delivery, alerter: BotAlert, what: str) -> None:
         try:
             await alerter.alert(f"cant deliver {what} because of {e!s}")
         except Exception as alert_error:
-            logger.error("cant alert about failed delivery", exc_info=alert_error)
+            logger.exception("cant alert about failed delivery", exc_info=alert_error)
 
 
 async def _with_retry(call: Delivery, what: str) -> None:
@@ -80,7 +80,7 @@ async def _with_retry(call: Delivery, what: str) -> None:
     for attempt in range(1, DELIVERY_ATTEMPTS + 1):
         try:
             await call()
-        except RETRIABLE_ERRORS as e:  # noqa: PERF203  # retrying is the point of the loop
+        except RETRIABLE_ERRORS as e:  # retrying is the point of the loop
             delay = _retry_delay(e, attempt)
             if attempt == DELIVERY_ATTEMPTS or delay is None:
                 raise

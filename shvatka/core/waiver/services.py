@@ -1,5 +1,5 @@
 import typing
-from typing import Iterable, Sequence
+from collections.abc import Iterable, Sequence
 
 from shvatka.core.interfaces.dal.waiver import (
     WaiverApprover,

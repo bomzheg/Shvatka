@@ -1,7 +1,7 @@
 import logging
 from contextlib import suppress
 from dataclasses import dataclass
-from typing import Sequence
+from collections.abc import Sequence
 
 from aiogram import Bot
 from aiogram.exceptions import TelegramAPIError

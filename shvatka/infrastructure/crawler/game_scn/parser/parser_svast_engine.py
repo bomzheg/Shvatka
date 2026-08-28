@@ -132,7 +132,7 @@ class SvastEngineGameParser:
                 try:
                     at = self.get_result_datetime(cell)
                 except IndexError as e:
-                    logger.error("can't parse results", exc_info=e)
+                    logger.exception("can't parse results", exc_info=e)
                     break
                 level_times.append(
                     LevelTime(number=level_number, at=at.astimezone(tz_utc) if at else None)
@@ -145,12 +145,8 @@ class SvastEngineGameParser:
             time = datetime.strptime(cell.text, "%H:%M:%S").time()
         except ValueError:
             return None
-        if time < EVENING_TIME:
-            td = timedelta(days=1)
-        else:
-            td = timedelta(seconds=0)
-        at = datetime.combine(date=self.start_at.date() + td, time=time, tzinfo=tz_game)
-        return at
+        td = timedelta(days=1) if time < EVENING_TIME else timedelta(seconds=0)
+        return datetime.combine(date=self.start_at.date() + td, time=time, tzinfo=tz_game)
 
     def parse_keys(self) -> dict[str, list[Key]]:
         tables = self.html.xpath(
@@ -170,7 +166,7 @@ class SvastEngineGameParser:
                 try:
                     time_element, key_element = cells  # type: ElementBase
                 except ValueError as e:
-                    logger.error(
+                    logger.exception(
                         "can't parse key log for cells %s",
                         [cell.text for cell in cells],
                         exc_info=e,
@@ -206,7 +202,7 @@ class SvastEngineGameParser:
             ClientOSError,
             ValueError,
         ) as e:
-            logger.error("couldn't load content for url %s", url, exc_info=e)
+            logger.exception("couldn't load content for url %s", url, exc_info=e)
             raise ContentDownloadError from e
 
     def build_current_hint(self):
@@ -252,7 +248,7 @@ class SvastEngineGameParser:
     async def build(self) -> scn.ParsedCompletedGameScenario:
         self.parse_game_head()
         await self.parse_scenario()
-        game = scn.ParsedCompletedGameScenario(
+        return scn.ParsedCompletedGameScenario(
             id=self.id,
             name=self.name,
             start_at=self.start_at,
@@ -267,7 +263,6 @@ class SvastEngineGameParser:
             ),
             __model_version__=1,
         )
-        return game
 
 
 def get_finished_level_number(cells: list[ElementBase]):

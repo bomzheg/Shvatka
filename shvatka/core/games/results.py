@@ -1,4 +1,5 @@
 import typing
+from itertools import pairwise
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 
@@ -455,7 +456,7 @@ def to_results(
         for lt in levels_times:
             routed_lt.setdefault(lt.level, []).append(lt)
         routed_ltd: dict[int, list[LevelTimedelta]] = {}
-        for previous, current in zip(levels_times[:-1], levels_times[1:]):  # type: LevelTime, LevelTime
+        for previous, current in pairwise(levels_times):  # type: LevelTime, LevelTime
             td = current.time - previous.time
             routed_ltd.setdefault(previous.level, []).append(LevelTimedelta(previous.level, td))
         result.append(

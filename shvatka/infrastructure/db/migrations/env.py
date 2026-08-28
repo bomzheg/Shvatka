@@ -10,7 +10,7 @@ from shvatka.infrastructure.db.models import Base
 
 config = context.config
 
-logging.config.fileConfig(config.config_file_name)  # type: ignore
+logging.config.fileConfig(config.config_file_name)  # type: ignore[arg-type]
 
 target_metadata = Base.metadata
 

@@ -1,5 +1,5 @@
 import contextlib
-from typing import Sequence
+from collections.abc import Sequence
 
 from shvatka.core.interfaces.dal.chat import TeamChatChanger
 from shvatka.core.interfaces.dal.complex import TeamMerger

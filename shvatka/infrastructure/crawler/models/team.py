@@ -22,10 +22,10 @@ class ParsedPlayer:
     registered_at: date
     forum_id: int | None
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return hash(self.forum_id)
 
-    def __eq__(self, other: object):
+    def __eq__(self, other: object) -> bool:
         if not isinstance(other, ParsedPlayer):
             return NotImplemented
         return self.forum_id == other.forum_id

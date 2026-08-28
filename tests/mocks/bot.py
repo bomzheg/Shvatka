@@ -25,8 +25,7 @@ class MockBotProvider(Provider):
 
     @provide
     async def get_bot_session(self) -> BaseSession:
-        session = mock.AsyncMock(BaseSession)
-        return session
+        return mock.AsyncMock(BaseSession)
 
     @provide(override=True)
     async def get_bot(self, config: TgBotConfig, session: BaseSession) -> Bot:

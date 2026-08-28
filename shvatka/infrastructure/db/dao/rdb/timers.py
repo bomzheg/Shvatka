@@ -11,7 +11,7 @@ from shvatka.infrastructure.db.models import TimerAction
 
 
 class TimersDAO(BaseDAO[TimerAction]):
-    def __init__(self, session: AsyncSession, clock: typing.Callable[[tzinfo], datetime]):
+    def __init__(self, session: AsyncSession, clock: typing.Callable[[tzinfo], datetime]) -> None:
         super().__init__(TimerAction, session, clock=clock)
 
     async def save_timer(

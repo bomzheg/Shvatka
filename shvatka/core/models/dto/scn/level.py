@@ -2,7 +2,7 @@ import logging
 from collections.abc import Sequence, Iterable
 from dataclasses import dataclass
 from datetime import timedelta
-from typing import overload, Literal, Type, TypeVar
+from typing import Literal, Self, TypeVar, overload
 from uuid import UUID
 
 from shvatka.core.models.dto import action, hints
@@ -21,12 +21,12 @@ T = TypeVar("T", bound=action.AnyCondition)
 
 
 class HintsList(Sequence[TimeHint]):
-    def __init__(self, hints_: list[TimeHint]):
+    def __init__(self, hints_: list[TimeHint]) -> None:
         self.verify(hints_)
         self.hints = hints_
 
     @classmethod
-    def parse(cls, hints_: list[TimeHint]):
+    def parse(cls, hints_: list[TimeHint]) -> Self:
         return cls(cls.normalize(hints_))
 
     @staticmethod
@@ -109,22 +109,22 @@ class HintsList(Sequence[TimeHint]):
     def __getitem__(self, index):
         return self.hints[index]
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.hints)
 
-    def __eq__(self, other):
+    def __eq__(self, other) -> bool:
         if isinstance(other, HintsList):
             return self.hints == other.hints
         if isinstance(other, list):
             return self.hints == other
         return NotImplemented
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return repr(self.hints)
 
 
 class Conditions(Sequence[action.AnyCondition]):
-    def __init__(self, conditions: Sequence[action.AnyCondition]):
+    def __init__(self, conditions: Sequence[action.AnyCondition]) -> None:
         self.validate(conditions)
         self.conditions: Sequence[action.AnyCondition] = conditions
 
@@ -162,7 +162,7 @@ class Conditions(Sequence[action.AnyCondition]):
     def validate_unique_effects(conditions: Sequence[action.AnyCondition]) -> None:
         effects_ids: set[UUID] = set()
         for c in conditions:
-            if not isinstance(c, (KeyEffectsCondition, action.LevelTimerEffectsCondition)):
+            if not isinstance(c, KeyEffectsCondition | action.LevelTimerEffectsCondition):
                 continue
             if c.effects.id in effects_ids:
                 raise exceptions.LevelError(
@@ -172,7 +172,7 @@ class Conditions(Sequence[action.AnyCondition]):
 
     @staticmethod
     def get_conditions_type(
-        conditions: Sequence[action.AnyCondition], types: Type[T] | tuple[T, ...]
+        conditions: Sequence[action.AnyCondition], types: type[T] | tuple[T, ...]
     ) -> Sequence[T]:
         return [c for c in conditions if isinstance(c, types)]  # type: ignore[arg-type, misc]
 
@@ -251,9 +251,10 @@ class Conditions(Sequence[action.AnyCondition]):
 
     def get_force_level_up_time(self) -> timedelta | None:
         for condition in self.conditions:
-            if isinstance(condition, action.LevelTimerEffectsCondition):
-                if condition.effects.level_up:
-                    return condition.get_action_time()
+            if isinstance(condition, action.LevelTimerEffectsCondition) and (
+                condition.effects.level_up
+            ):
+                return condition.get_action_time()
         return None
 
     def get_effects(self) -> Sequence[action.Effects]:
@@ -288,13 +289,13 @@ class Conditions(Sequence[action.AnyCondition]):
     def __getitem__(self, index):
         return self.conditions[index]
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.conditions)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return repr(self.conditions)
 
-    def __eq__(self, other):
+    def __eq__(self, other) -> bool:
         if not isinstance(other, Conditions):
             return NotImplemented
         return self.conditions == other.conditions
@@ -312,7 +313,7 @@ class LevelScenario:
     conditions: Conditions
     __model_version__: Literal[1]
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         if not self.conditions:
             raise exceptions.LevelError(text="no win conditions are present")
         force_level_up_time = self.conditions.get_force_level_up_time()
@@ -358,9 +359,8 @@ class LevelScenario:
             return significant_key_decisions.get_exactly_one(self.id)
         if isinstance(action_, action.LevelTimerAction):
             return implemented.get_significant_effects()
-        else:
-            logger.warning("any other actions isn't implemented. got %s", action_)
-            return action.NotImplementedActionDecision()
+        logger.warning("any other actions isn't implemented. got %s", action_)
+        return action.NotImplementedActionDecision()
 
     def get_keys(self) -> set[SHKey]:
         return self.conditions.get_keys()

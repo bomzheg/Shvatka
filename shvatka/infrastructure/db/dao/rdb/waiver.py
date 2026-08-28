@@ -1,6 +1,6 @@
 from datetime import datetime, tzinfo
 import typing
-from typing import Iterable, Sequence
+from collections.abc import Iterable, Sequence
 
 from sqlalchemy import select, Row, update, ScalarResult
 from sqlalchemy.ext.asyncio import AsyncSession

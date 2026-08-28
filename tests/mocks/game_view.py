@@ -1,7 +1,7 @@
 import typing
 import uuid
 from dataclasses import dataclass, field
-from typing import Sequence
+from collections.abc import Sequence
 
 from shvatka.core.models import dto
 from shvatka.core.models.dto import hints, action

@@ -127,4 +127,4 @@ def single_game_files(game, session: Session) -> Results:
 
 
 if __name__ == "__main__":
-    main_single(dict(id=129))
+    main_single({"id": 129})

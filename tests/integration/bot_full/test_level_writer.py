@@ -22,7 +22,7 @@ async def test_write_level(
     bot: Bot,
     bot_session: BaseSession,
 ):
-    assert 0 == await dao.level.count()
+    assert await dao.level.count() == 0
 
     await author_client.send("/" + NEW_LEVEL_COMMAND.command)
     first_message = message_manager.last_message()
@@ -123,7 +123,7 @@ async def test_write_level(
     new_message = message_manager.one_message()
     assert new_message.text
     assert "Время выхода подсказки" in new_message.text
-    assert "5" == new_message.reply_markup.inline_keyboard[0][0].text
+    assert new_message.reply_markup.inline_keyboard[0][0].text == "5"
 
     message_manager.reset_history()
     callback_id = await author_client.click(
@@ -168,9 +168,9 @@ async def test_write_level(
     message_manager.assert_answered(callback_id)
     session = typing.cast(MagicMock, bot_session)
     request = session.mock_calls.pop().args[1]
-    assert "Уровень успешно сохранён" == request.text
-    assert 1 == await dao.level.count()
+    assert request.text == "Уровень успешно сохранён"
+    assert await dao.level.count() == 1
     level, *_ = await dao.level.get_all_my(author)
     assert author.id == level.author.id
     assert {"SHTESTKEY"} == level.scenario.get_keys()
-    assert 2 == level.hints_count
+    assert level.hints_count == 2

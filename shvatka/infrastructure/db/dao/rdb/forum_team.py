@@ -1,6 +1,6 @@
 from datetime import datetime, tzinfo
 import typing
-from typing import Sequence
+from collections.abc import Sequence
 
 from sqlalchemy import update, select
 from sqlalchemy.dialects.postgresql import insert
@@ -20,11 +20,11 @@ class ForumTeamDAO(BaseDAO[models.ForumTeam]):
         super().__init__(models.ForumTeam, session, clock=clock)
 
     async def upsert(self, team: ParsedTeam) -> dto.ForumTeam:
-        kwargs = dict(
-            name=team.name,
-            forum_id=team.id,
-            url=team.url,
-        )
+        kwargs = {
+            "name": team.name,
+            "forum_id": team.id,
+            "url": team.url,
+        }
         saved_team = await self.session.scalars(
             insert(models.ForumTeam)
             .values(**kwargs)

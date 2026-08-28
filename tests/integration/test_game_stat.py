@@ -36,8 +36,8 @@ async def test_game_log_keys(
         identity=MockIdentityProvider(player=finished_game.author),
         dao=dao.typed_keys,
     )
-    assert 5 == len(actual[gryffindor])
-    assert 3 == len(actual[slytherin])
+    assert len(actual[gryffindor]) == 5
+    assert len(actual[slytherin]) == 3
 
 
 @pytest.mark.asyncio

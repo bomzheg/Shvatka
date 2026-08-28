@@ -1,6 +1,6 @@
 import logging
 from datetime import datetime
-from typing import Sequence
+from collections.abc import Sequence
 
 from shvatka.core.games.game_play import calculate_first_hint_time, calculate_next_hint_time
 from shvatka.core.interfaces.dal.game import GameByIdGetter
@@ -117,5 +117,4 @@ async def get_testing_observers(level: dto.Level, dao: GameByIdGetter) -> Sequen
     if level.game_id is not None:
         game = await dao.get_by_id(level.game_id)
         return await get_primary_orgs(game=game)
-    else:
-        raise NotImplementedError(f"level {level.db_id} without game_id")
+    raise NotImplementedError(f"level {level.db_id} without game_id")

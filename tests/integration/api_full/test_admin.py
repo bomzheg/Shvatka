@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta, UTC
 
 import pytest
 import pytest_asyncio
@@ -22,7 +22,7 @@ from tests.fixtures.user_constants import (
     create_dto_draco,
 )
 
-GAME_START_AT = datetime(2025, 4, 12, 16, 0, tzinfo=timezone.utc)
+GAME_START_AT = datetime(2025, 4, 12, 16, 0, tzinfo=UTC)
 
 # Scenario body for PUT /admin/games/{id}/scenario.
 ADMIN_SCENARIO: dict = {

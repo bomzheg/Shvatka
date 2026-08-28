@@ -22,8 +22,7 @@ logger = logging.getLogger(__name__)
 async def get_all_teams() -> list[ParsedTeam]:
     async with ClientSession(cookies=await get_auth_cookie()) as session:
         teams_html_text = await download_teams(session)
-        teams = await TeamsParser(teams_html_text, session=session).build()
-    return teams
+        return await TeamsParser(teams_html_text, session=session).build()
 
 
 async def download_teams(session: ClientSession) -> str:

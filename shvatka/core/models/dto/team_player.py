@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Self
+
 from dataclasses import dataclass
 from datetime import datetime
 
@@ -30,7 +32,7 @@ class TeamPlayer:
             return NotImplemented
         return self.id == other.id
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return hash(self.id)
 
     def get_permissions(self) -> dict[str, bool]:
@@ -83,7 +85,7 @@ class FullTeamPlayer(TeamPlayer):
         }
 
     @classmethod
-    def from_simple(cls, team_player: TeamPlayer, player: Player, team: Team):
+    def from_simple(cls, team_player: TeamPlayer, player: Player, team: Team) -> Self:
         assert team_player.team_id == team.id
         assert team_player.player_id == player.id
         return cls(
@@ -108,7 +110,7 @@ class FullTeamPlayer(TeamPlayer):
             return False
         return self.id == other.id
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return hash(self.id)
 
 
@@ -118,5 +120,5 @@ class TeamDataRange:
     team_id: int
 
     @classmethod
-    def from_team_player(cls, tp: TeamPlayer):
+    def from_team_player(cls, tp: TeamPlayer) -> Self:
         return cls(range=DateRange(tp.date_joined, tp.date_left), team_id=tp.team_id)

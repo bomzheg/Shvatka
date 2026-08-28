@@ -1,5 +1,5 @@
 import typing
-from datetime import datetime, timezone
+from datetime import datetime, UTC
 from io import BytesIO
 from unittest.mock import MagicMock
 
@@ -97,7 +97,7 @@ async def test_send_text(hint_sender: HintSender, bot_session: BaseSession):
     await hint_sender.send_hint(hint, CHAT_ID)
 
     session = typing.cast(MagicMock, bot_session)
-    assert 1 == session.call_count
+    assert session.call_count == 1
     call = session.mock_calls.pop()
     request = call.args[1]
     assert request.__api_method__ == "sendMessage"
@@ -111,7 +111,7 @@ async def test_send_location(hint_sender: HintSender, bot_session: BaseSession):
     await hint_sender.send_hint(hint, CHAT_ID)
 
     session = typing.cast(MagicMock, bot_session)
-    assert 1 == session.call_count
+    assert session.call_count == 1
     call = session.mock_calls.pop()
     request = call.args[1]
 
@@ -127,7 +127,7 @@ async def test_send_venue(hint_sender: HintSender, bot_session: BaseSession):
     await hint_sender.send_hint(hint, CHAT_ID)
 
     session = typing.cast(MagicMock, bot_session)
-    assert 1 == session.call_count
+    assert session.call_count == 1
     call = session.mock_calls.pop()
     request = call.args[1]
     assert request.__api_method__ == "sendVenue"
@@ -156,7 +156,7 @@ async def test_send_photo_by_id(
     await hint_sender.send_hint(hint, CHAT_ID)
 
     session = typing.cast(MagicMock, bot_session)
-    assert 1 == session.call_count
+    assert session.call_count == 1
     call = session.mock_calls.pop()
     request = call.args[1]
     assert request.__api_method__ == method_name
@@ -187,7 +187,7 @@ async def test_send_photo_by_content(
 
     await hint_sender.send_hint(hint, CHAT_ID)
 
-    assert 2 == session.call_count
+    assert session.call_count == 2
 
     call = session.mock_calls.pop()
     request = call.args[1]
@@ -223,7 +223,7 @@ async def test_send_by_content_when_file_id_missing(
     await hint_sender.send_hint(PhotoHint(file_guid=GUID), CHAT_ID)
 
     # no attempt to send by (missing) file_id, straight to content
-    assert 1 == session.call_count
+    assert session.call_count == 1
     call = session.mock_calls.pop()
     request = call.args[1]
     assert request.__api_method__ == "sendPhoto"
@@ -292,7 +292,7 @@ async def test_send_hints_returns_all_sent_messages(
     session.side_effect = [
         Message(
             message_id=message_id,
-            date=datetime.now(tz=timezone.utc),
+            date=datetime.now(tz=UTC),
             chat=Chat(id=CHAT_ID, type="supergroup"),
         )
         for message_id in (1, 2, 3)
@@ -308,7 +308,7 @@ async def test_send_hints_returns_all_sent_messages(
     assert [1, 2, 3] == [message.message_id for message in sent.all()]
     # the caption is told apart from the parts - it is pinned separately
     assert sent.caption is not None
-    assert 1 == sent.caption.message_id
+    assert sent.caption.message_id == 1
     assert [2, 3] == [message.message_id for message in sent.parts]
 
 
@@ -321,7 +321,7 @@ async def test_caption_replies_to_message(
     session.side_effect = [
         Message(
             message_id=2,
-            date=datetime.now(tz=timezone.utc),
+            date=datetime.now(tz=UTC),
             chat=Chat(id=CHAT_ID, type="supergroup"),
         )
     ]
@@ -335,8 +335,8 @@ async def test_caption_replies_to_message(
     )
 
     request = session.mock_calls.pop().args[1]
-    assert "sendMessage" == request.__api_method__
-    assert 17 == request.reply_to_message_id
+    assert request.__api_method__ == "sendMessage"
+    assert request.reply_to_message_id == 17
     # the key a bonus hint answers can be deleted - that must not lose the hint
     assert request.allow_sending_without_reply
 
@@ -350,7 +350,7 @@ async def test_send_hints_without_caption(
     session.side_effect = [
         Message(
             message_id=1,
-            date=datetime.now(tz=timezone.utc),
+            date=datetime.now(tz=UTC),
             chat=Chat(id=CHAT_ID, type="supergroup"),
         )
     ]
@@ -378,7 +378,7 @@ async def test_renew_file_id_after_send_by_content(
     session = typing.cast(MagicMock, bot_session)
     sent_message = Message(
         message_id=1,
-        date=datetime.now(tz=timezone.utc),
+        date=datetime.now(tz=UTC),
         chat=Chat(id=CHAT_ID, type="private"),
         photo=[PhotoSize(file_id="RENEWED_FILE_ID", file_unique_id="u", width=1, height=1)],
     )

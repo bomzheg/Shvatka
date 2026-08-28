@@ -48,7 +48,7 @@ class UserGetter:
             logger.info("Username not found %s", username)
             raise exceptions.NoUsernameFound(username=username) from e
         except FloodWait as e:
-            logger.error("Flood Wait %s", e, exc_info=e)
+            logger.exception("Flood Wait")
             await asyncio.sleep(e.value)
             raise exceptions.UsernameResolverError(username=username) from e
         except Exception as e:
@@ -73,7 +73,7 @@ class UserGetter:
         await self.start()
         return self
 
-    async def __aexit__(self, exc_type, exc_val, exc_tb):
+    async def __aexit__(self, exc_type, exc_val, exc_tb) -> None:
         await self.stop()
 
 

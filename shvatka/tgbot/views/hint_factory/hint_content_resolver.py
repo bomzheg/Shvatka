@@ -1,6 +1,6 @@
 import typing
 from io import BytesIO
-from typing import BinaryIO
+from typing import Any, BinaryIO
 
 from shvatka.core.interfaces.clients.file_storage import FileStorage
 from shvatka.core.models.dto.hints import (
@@ -235,8 +235,7 @@ class HintContentResolver:
     async def _resolve_bytes(self, guid: str) -> BinaryIO:
         file_info = await self.dao.get_by_guid(guid)
         content = await self.storage.get(file_info.file_content_link)
-        content = BytesWithName(content.read(), original_filename=file_info.public_filename)
-        return content
+        return BytesWithName(content.read(), original_filename=file_info.public_filename)
 
     async def _resolve_thumb_bytes(self, guid: str | None) -> BinaryIO | None:
         if guid is None:
@@ -245,7 +244,7 @@ class HintContentResolver:
 
 
 class BytesWithName(BytesIO):
-    def __init__(self, *args, **kwargs) -> None:
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         self._name = kwargs.pop("original_filename", "")
         super().__init__(*args, **kwargs)
 

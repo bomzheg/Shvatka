@@ -1,6 +1,6 @@
 import typing
 from dataclasses import dataclass
-from typing import Sequence
+from collections.abc import Sequence
 
 from shvatka.core.interfaces.dal.complex import TeamMerger
 from shvatka.core.teams.adapters import (

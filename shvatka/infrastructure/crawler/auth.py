@@ -54,9 +54,8 @@ async def get_auth_cookie(username: str = ENV_USERNAME, password: str = ENV_PASS
             password=password,
         )
         if not creds.username or not creds.password:
-            raise EnvironmentError(
+            raise OSError(
                 "For run forum parsers, you have to specify "
                 "next env variables: SH_USERNAME, SH_PASSWORD",
             )
-        cookies = await auth(session, creds)
-    return cookies
+        return await auth(session, creds)

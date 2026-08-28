@@ -1,4 +1,5 @@
-from typing import Any, Sequence
+from typing import Any
+from collections.abc import Sequence
 
 from adaptix import Retort
 from aiogram_dialog import DialogManager

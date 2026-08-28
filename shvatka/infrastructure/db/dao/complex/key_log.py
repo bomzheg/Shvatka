@@ -27,7 +27,7 @@ class TypedKeyGetterImpl(TypedKeyGetter):
 
 
 class GameKeysReaderImpl(GameKeysReader):
-    def __init__(self, dao: "HolderDao"):
+    def __init__(self, dao: "HolderDao") -> None:
         self.dao = dao
 
     async def get_typed_keys_grouped(self, game: dto.Game) -> dict[Team, list[KeyTime]]:

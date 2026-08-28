@@ -60,7 +60,7 @@ def _parse_functions(path: Path) -> dict[str, Func]:
     functions = {
         node.name: _parse_function(node)
         for node in ast.walk(ast.parse(path.read_text(encoding="utf-8")))
-        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
+        if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef)
     }
     # handlers often jump through a local helper, so follow calls inside the module
     for _ in range(len(functions)):

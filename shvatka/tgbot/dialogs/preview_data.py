@@ -169,7 +169,7 @@ PREVIEW_GAME = dto.PreviewGame(
     name="Схватка это чудо",
     start_at=PREVIEW_NOW,
     status=GameStatus.getting_waivers,
-    manage_token="1",
+    manage_token="1",  # noqa: S106
     results=dto.GameResults(
         published_chanel_id=-100123435,
         results_picture_file_id=None,
@@ -340,10 +340,10 @@ TIMES_PRESET = [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60]
 
 
 class PreviewStart(Start):
-    def __init__(self, state: State):
+    def __init__(self, state: State) -> None:
         super().__init__(Const(""), "", state)
 
 
 class PreviewSwitchTo(SwitchTo):
-    def __init__(self, state: State):
+    def __init__(self, state: State) -> None:
         super().__init__(Const(""), "", state)

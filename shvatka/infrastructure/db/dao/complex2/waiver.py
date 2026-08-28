@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Iterable
+from collections.abc import Iterable
 
 from sqlalchemy.exc import NoResultFound
 

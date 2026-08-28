@@ -1,6 +1,6 @@
 import logging
 import os
-from typing import Iterable
+from collections.abc import Iterable
 
 from dishka import provide, Scope, Provider
 from redis.asyncio import Redis

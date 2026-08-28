@@ -1,6 +1,6 @@
 from datetime import datetime, tzinfo
 import typing
-from typing import Sequence
+from collections.abc import Sequence
 
 from sqlalchemy import select, ScalarResult
 from sqlalchemy import update, not_
@@ -100,10 +100,7 @@ class OrganizerDao(BaseDAO[models.Organizer]):
     async def _get_orgs(
         self, game: dto.Game, with_deleted: bool = False
     ) -> Sequence[models.Organizer]:
-        if with_deleted:
-            deleted_clause = []
-        else:
-            deleted_clause = [models.Organizer.deleted == False]  # noqa
+        deleted_clause = [] if with_deleted else [models.Organizer.deleted.is_(False)]
 
         result = await self.session.scalars(
             select(models.Organizer)

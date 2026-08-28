@@ -15,7 +15,7 @@ from shvatka.tgbot.config.parser.main import load_config as load_bot_config
 class ConfigProvider(Provider):
     scope = Scope.APP
 
-    def __init__(self, path_env: str = "SHVATKA_PATH"):
+    def __init__(self, path_env: str = "SHVATKA_PATH") -> None:
         super().__init__()
         self.path_env = path_env
 

@@ -7,7 +7,8 @@ Anything that only one subdomain answers with belongs in that subdomain's
 import typing
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Generic, Sequence
+from typing import Generic, Self, overload
+from collections.abc import Sequence
 
 from shvatka.core.models import dto
 from shvatka.core.models.enums import GameStatus
@@ -33,7 +34,7 @@ class Player:
     username: str | None
 
     @classmethod
-    def from_core(cls, core: dto.Player):
+    def from_core(cls, core: dto.Player) -> Self:
         return cls(
             id=core.id,
             can_be_author=core.can_be_author,
@@ -49,8 +50,18 @@ class Team:
     captain: Player | None
     description: str | None
 
+    @overload
     @classmethod
-    def from_core(cls, core: dto.Team | None):
+    def from_core(cls, core: dto.Team) -> Self:
+        ...
+
+    @overload
+    @classmethod
+    def from_core(cls, core: None) -> None:
+        ...
+
+    @classmethod
+    def from_core(cls, core: dto.Team | None) -> "Self | None":
         if core is None:
             return None
         return cls(
@@ -70,8 +81,18 @@ class Game:
     start_at: datetime | None = None
     number: int | None = None
 
+    @overload
     @classmethod
-    def from_core(cls, core: dto.Game | None):
+    def from_core(cls, core: dto.Game) -> Self:
+        ...
+
+    @overload
+    @classmethod
+    def from_core(cls, core: None) -> None:
+        ...
+
+    @classmethod
+    def from_core(cls, core: dto.Game | None) -> "Self | None":
         if core is None:
             return None
         return cls(

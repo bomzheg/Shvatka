@@ -68,7 +68,7 @@ class ApScheduler(Scheduler, LevelTestScheduler):
         try:
             self.scheduler.remove_job(job_id=_prepare_game_key(game))
         except JobLookupError as e:
-            logger.error(
+            logger.exception(
                 "can't remove job %s for preparing game %s",
                 _prepare_game_key(game),
                 game.id,
@@ -77,7 +77,7 @@ class ApScheduler(Scheduler, LevelTestScheduler):
         try:
             self.scheduler.remove_job(job_id=_start_game_key(game))
         except JobLookupError as e:
-            logger.error(
+            logger.exception(
                 "can't remove job %s for start game %s", _start_game_key(game), game.id, exc_info=e
             )
 

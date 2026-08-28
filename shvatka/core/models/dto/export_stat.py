@@ -1,3 +1,4 @@
+from typing import Self
 import dataclasses
 import enum
 import typing
@@ -33,19 +34,18 @@ class Player:
             raise RuntimeError("forum_name, tg_user_id and username are None all")
 
     @classmethod
-    def from_dto(cls, player: "dto.Player"):
+    def from_dto(cls, player: "dto.Player") -> "Player":
         if player.username is not None and not player.username_is_dummy():
             return Player(username=player.username, identity=PlayerIdentity.username)
-        elif player.has_user():
+        if player.has_user():
             player_tg_id = player.get_chat_id()
             assert player_tg_id is not None
             return Player(tg_user_id=player_tg_id, identity=PlayerIdentity.tg_user_id)
-        elif player.has_forum_user():
+        if player.has_forum_user():
             player_name = player.get_forum_name()
             assert player_name is not None
             return Player(forum_name=player_name, identity=PlayerIdentity.forum_name)
-        else:
-            raise RuntimeError("player without user, forum_user and username")
+        raise RuntimeError("player without user, forum_user and username")
 
 
 @dataclass
@@ -54,7 +54,7 @@ class LevelTime:
     at: datetime | None
 
     @classmethod
-    def from_dto(cls, lt: "dto.LevelTime"):
+    def from_dto(cls, lt: "dto.LevelTime") -> Self:
         return cls(
             number=lt.level_number,
             at=lt.start_at,
@@ -69,7 +69,7 @@ class Key:
     value: str
 
     @classmethod
-    def from_dto(cls, key_time: "dto.KeyTime"):
+    def from_dto(cls, key_time: "dto.KeyTime") -> Self:
         return cls(
             level=key_time.level_number,
             at=key_time.at,
@@ -86,7 +86,7 @@ class Waiver:
     played: enums.Played = enums.Played.yes
 
     @classmethod
-    def from_dto(cls, waiver: "dto.Waiver"):
+    def from_dto(cls, waiver: "dto.Waiver") -> Self:
         return cls(
             player=Player.from_dto(waiver.player),
             team=waiver.team.name,

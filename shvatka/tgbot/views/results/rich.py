@@ -196,7 +196,7 @@ def _render_cell(cell: Cell | None) -> RichBlockTableCell:
 def _render_value(cell: Cell) -> RichTextUnion | None:
     if cell.value is None:
         return None
-    if isinstance(cell.value, (datetime, time)):
+    if isinstance(cell.value, datetime | time):
         text = cell.value.strftime(_time_format(cell.format))
     else:
         text = str(cell.value)

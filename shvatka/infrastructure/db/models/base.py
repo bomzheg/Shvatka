@@ -1,4 +1,4 @@
-from typing import Mapping
+from collections.abc import Mapping
 
 from sqlalchemy import MetaData
 from sqlalchemy.orm import DeclarativeBase

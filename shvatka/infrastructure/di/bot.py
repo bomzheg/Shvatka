@@ -1,4 +1,4 @@
-from typing import AsyncIterable
+from collections.abc import AsyncIterable
 
 from aiogram import Bot
 from aiogram.client.default import DefaultBotProperties

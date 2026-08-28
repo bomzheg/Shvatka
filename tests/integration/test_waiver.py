@@ -43,12 +43,12 @@ async def test_get_voted_list(
     assert len(actual_voted) == 2
 
     await approve_waivers(game, gryffindor, harry, dao.waiver_approver)
-    assert 2 == await dao.waiver.count()
+    assert await dao.waiver.count() == 2
     assert [gryffindor] == await dao.waiver.get_played_teams(game)
     waivers = await get_all_played(game, dao.waiver)
-    assert 1 == len(waivers)
+    assert len(waivers) == 1
     players = list(waivers[gryffindor])
-    assert 2 == len(players)
+    assert len(players) == 2
     assert {harry.id, hermione.id} == {player.player.id for player in players}
 
     await leave(hermione, hermione, dao.team_leaver, notifier=TeamNotifierMock())
@@ -59,14 +59,14 @@ async def test_get_voted_list(
     assert actual_voted[0].player.id == harry.id
 
     await approve_waivers(game, gryffindor, harry, dao.waiver_approver)
-    assert 1 == await dao.waiver.count()
+    assert await dao.waiver.count() == 1
     assert [gryffindor] == await dao.waiver.get_played_teams(game)
 
     with pytest.raises(PlayerRestoredInTeam):
         await join_team(hermione, gryffindor, harry, dao.team_player, notifier=TeamNotifierMock())
     await approve_waivers(game, gryffindor, harry, dao.waiver_approver)
     # vote not restored after restored player in team
-    assert 1 == await dao.waiver.count()
+    assert await dao.waiver.count() == 1
 
     waiver = models.Waiver(
         player_id=hermione.id,
@@ -81,7 +81,7 @@ async def test_get_voted_list(
         await add_vote(game, gryffindor, hermione, Played.yes, waiver_vote_adder)
 
     await approve_waivers(game, gryffindor, harry, dao.waiver_approver)
-    assert 2 == await dao.waiver.count()
+    assert await dao.waiver.count() == 2
     assert [gryffindor] == await dao.waiver.get_played_teams(game)
 
 
@@ -174,9 +174,9 @@ async def test_waiver_list(
     game: dto.FullGame,
     dao: HolderDao,
 ):
-    assert 4 == await dao.waiver.count()
+    assert await dao.waiver.count() == 4
     waivers = await get_all_played(game, dao.waiver)
-    assert 2 == len(waivers)
+    assert len(waivers) == 2
     slytherin_waivers = waivers.pop(draco_waiver.team)
     gryffindor_waivers = waivers.pop(hermi_waiver.team)
     assert not waivers

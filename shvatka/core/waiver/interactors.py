@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Iterable
+from collections.abc import Iterable
 
 from shvatka.core.interfaces.current_game import CurrentGameProvider
 from shvatka.core.interfaces.dal.waiver import GameWaiversGetter, WaiverApprover

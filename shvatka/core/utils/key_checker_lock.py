@@ -10,10 +10,10 @@ class KeyCheckerLock(Protocol):
     async def release(self):
         raise NotImplementedError
 
-    async def __aenter__(self):
+    async def __aenter__(self) -> None:
         await self.acquire()
 
-    async def __aexit__(self, exc_type, exc_val, exc_tb):
+    async def __aexit__(self, exc_type, exc_val, exc_tb) -> None:
         await self.release()
 
 

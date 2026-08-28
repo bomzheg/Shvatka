@@ -1,8 +1,9 @@
 from collections.abc import Collection
+from itertools import pairwise
 from datetime import datetime
 import typing
 from dataclasses import dataclass
-from typing import Iterable
+from collections.abc import Iterable
 
 from shvatka.core.games.dto import CurrentHintsOnly, Event, PassedLevelHints, PassedLevels
 from shvatka.core.interfaces.current_game import CurrentGameProvider
@@ -370,7 +371,7 @@ class GamePackagerImpl(GamePackager):
 
 
 class GameFilesGetterImpl(IsGameFileMixin, GameFileReader):
-    def __init__(self, dao: "HolderDao"):
+    def __init__(self, dao: "HolderDao") -> None:
         self.dao = dao
 
     async def get_by_guid(self, guid: str) -> hints.VerifiableFileMeta:
@@ -433,7 +434,7 @@ class GamePlayDaoImpl(GamePlayDao):
         current = await self.get_level_time(identity)
         level_times = await self.dao.level_time.get_team_level_times(team, game)
         passed: list[PassedLevelHints] = []
-        for level_time, next_level_time in zip(level_times, level_times[1:]):
+        for level_time, next_level_time in pairwise(level_times):
             if level_time.id == current.id or level_time.has_finished(game):
                 continue
             level = game.levels[level_time.level_number]
@@ -454,8 +455,7 @@ class GamePlayDaoImpl(GamePlayDao):
         level_time = await self.get_level_time(identity)
         game = await self.current_game.get_required_game()
         team = await identity.get_required_team()
-        keys = await self.dao.key_time.get_team_inserted_keys(game, team, level_time)
-        return keys
+        return await self.dao.key_time.get_team_inserted_keys(game, team, level_time)
 
     async def get_level_time(self, identity: IdentityProvider) -> dto.LevelTime:
         user_id = await identity.get_required_user_db_id()

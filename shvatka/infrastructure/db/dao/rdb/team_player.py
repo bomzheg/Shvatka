@@ -1,7 +1,7 @@
 from datetime import datetime, tzinfo
 import typing
 from datetime import timedelta
-from typing import Sequence
+from collections.abc import Sequence
 
 from sqlalchemy import select, or_, ScalarResult, Result, ColumnElement, delete
 from sqlalchemy import update, not_
@@ -261,11 +261,7 @@ class TeamPlayerDao(BaseDAO[models.TeamPlayer]):
 
 
 def get_leaved_condition(for_date: datetime | None = None) -> Sequence[ColumnElement["bool"]]:
-    if for_date is None:
-        leaved_condition = not_leaved()
-    else:
-        leaved_condition = not_leaved_for_date(for_date)
-    return leaved_condition
+    return not_leaved() if for_date is None else not_leaved_for_date(for_date)
 
 
 def not_leaved_for_date(for_date: datetime) -> Sequence[ColumnElement["bool"]]:

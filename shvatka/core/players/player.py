@@ -1,6 +1,7 @@
 import logging
+from itertools import pairwise
 from datetime import datetime
-from typing import Sequence
+from collections.abc import Sequence
 
 from shvatka.core.players.dto import TimelineItem, WaiverPoint
 from shvatka.core.utils.datetime_utils import tz_utc
@@ -432,12 +433,15 @@ async def merge_team_history(primary: dto.Player, secondary: dto.Player, dao: Pl
     primary_history = await dao.get_player_teams_history(primary)
     secondary_history = await dao.get_player_teams_history(secondary)
     merged = []
-    if len(primary_history) == 1 and secondary_history[-1].team_id == primary_history[0].team_id:
-        if primary_history[0].date_joined > secondary_history[0].date_joined:
-            merged = secondary_history
+    if (
+        len(primary_history) == 1
+        and secondary_history[-1].team_id == primary_history[0].team_id
+        and primary_history[0].date_joined > secondary_history[0].date_joined
+    ):
+        merged = secondary_history
     if not merged:
         merged = sorted(primary_history + secondary_history, key=lambda tp: tp.date_joined)
-    for tp1, tp2 in zip(merged[:-1:], merged[1::]):
+    for tp1, tp2 in pairwise(merged):
         if tp1.date_left is None or (tp1.date_left > tp2.date_joined):
             raise exceptions.MergeError(
                 player=primary,
@@ -501,7 +505,7 @@ def normalize_timeline(timeline: list[TimelineItem]) -> list[TimelineItem]:
                     text=f"unknown team player permission {permission_name}",
                     notify_user=f"Неизвестное разрешение: {permission_name}",
                 )
-    for current, following in zip(timeline[:-1], timeline[1:]):
+    for current, following in pairwise(timeline):
         if current.date_left is None or current.date_left > following.date_joined:
             raise exceptions.MergeError(
                 text=f"timeline items for teams {current.team_id} "

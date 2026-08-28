@@ -3,7 +3,7 @@ import logging
 from dataclasses import dataclass, field
 from datetime import timedelta
 from functools import partial
-from typing import Iterable, Callable, Awaitable, Collection
+from collections.abc import Iterable, Callable, Awaitable, Collection
 
 from aiogram import Bot
 from aiogram.exceptions import TelegramAPIError
@@ -111,7 +111,7 @@ class HintSender:
             await self.file_info_dao.commit()
         except Exception as e:
             # renewing file_id is best-effort and must never break sending
-            logger.error("cant renew file_id for hint with guid %s", guid, exc_info=e)
+            logger.exception("cant renew file_id for hint with guid %s", guid, exc_info=e)
 
     async def send_hints(
         self,

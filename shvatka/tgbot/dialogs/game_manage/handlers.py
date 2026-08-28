@@ -206,7 +206,7 @@ async def select_date(c: CallbackQuery, widget, manager: DialogManager, selected
 async def process_time_message(m: Message, dialog_: Any, manager: DialogManager) -> None:
     assert m.text
     try:
-        time_ = datetime.strptime(m.text, TIME_FORMAT).time()
+        time_ = datetime.strptime(m.text, TIME_FORMAT).time()  # noqa: DTZ007
     except ValueError:
         await m.answer("Некорректный формат времени. Пожалуйста введите время в формате ЧЧ:ММ")
         return

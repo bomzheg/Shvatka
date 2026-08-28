@@ -48,7 +48,7 @@ class ScenarioField(TypeDecorator):
         try:
             return self.retort.load(value, scn.LevelScenario)
         except Exception:
-            logger.error("can't load level scenario from %s", value)
+            logger.exception("can't load level scenario from %s", value)
             raise
 
 

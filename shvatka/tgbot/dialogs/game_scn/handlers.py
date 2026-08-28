@@ -58,6 +58,7 @@ async def process_name(
         data = {}
     data["game_name"] = m.text
     await manager.next()
+    return None
 
 
 @inject
@@ -79,7 +80,7 @@ async def process_zip_scn(
             game = await upsert_game(scenario, player, dao.game_upserter, retort, file_gateway)
     except ScenarioNotCorrect as e:
         await m.reply(f"Ошибка {e}\n попробуйте исправить файл")
-        logger.error("game scenario from player %s has problems", player.id, exc_info=e)
+        logger.exception("game scenario from player %s has problems", player.id, exc_info=e)
         return
     await m.reply("Успешно сохранено")
     await manager.done(result={"game": game})

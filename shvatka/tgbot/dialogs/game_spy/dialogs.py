@@ -1,17 +1,18 @@
 from aiogram import F
 from aiogram_dialog import Dialog, Window
-from aiogram_dialog.widgets.kbd import Button, SwitchTo, Cancel
+from aiogram_dialog.widgets.kbd import Button, Cancel, SwitchTo
 from aiogram_dialog.widgets.text import Const, Jinja, Multi
 
 from shvatka.tgbot import states
-from .getters import get_org, get_spy, get_keys
-from .handlers import keys_handler
 from shvatka.tgbot.dialogs.preview_data import (
     PREVIEW_FINISHED_LEVEL_TIME,
     PREVIEW_NOW,
     PREVIEW_SPY_ORG,
     PREVIEW_SPY_STAT,
 )
+
+from .getters import get_keys, get_org, get_spy
+from .handlers import keys_handler
 
 game_spy = Dialog(
     Window(

@@ -5,9 +5,9 @@ from dishka import FromDishka
 from dishka.integrations.aiogram_dialog import inject
 
 from shvatka.core.services.team import (
-    get_team_by_id,
-    get_team_by_forum_team_id,
     get_free_forum_teams,
+    get_team_by_forum_team_id,
+    get_team_by_id,
 )
 from shvatka.infrastructure.db.dao.holder import HolderDao
 

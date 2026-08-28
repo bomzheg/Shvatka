@@ -9,9 +9,9 @@ Does not require any maintenance - it compares whatever is there at the time.
 """
 
 import pytest
+from dishka import AsyncContainer
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncEngine
-from dishka import AsyncContainer
 
 from shvatka.infrastructure.db.models import Base
 

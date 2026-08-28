@@ -1,6 +1,5 @@
 from collections.abc import Sequence
 
-
 from shvatka.core.models.dto import action, hints
 from shvatka.tgbot.views.keys import render_keys
 

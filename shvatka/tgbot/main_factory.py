@@ -1,25 +1,25 @@
 import logging
 from collections.abc import AsyncIterable
 
-from aiogram import Dispatcher, Bot
-from aiogram.fsm.storage.base import BaseStorage, BaseEventIsolation
+from aiogram import Bot, Dispatcher
+from aiogram.fsm.storage.base import BaseEventIsolation, BaseStorage
 from aiogram.fsm.storage.memory import MemoryStorage
-from aiogram.fsm.storage.redis import RedisStorage, DefaultKeyBuilder, RedisEventIsolation
+from aiogram.fsm.storage.redis import DefaultKeyBuilder, RedisEventIsolation, RedisStorage
 from aiogram.types import TelegramObject
 from aiogram_dialog import BgManagerFactory
 from aiogram_dialog.api.protocols import MessageManagerProtocol
 from aiogram_dialog.manager.message_manager import MessageManager
 from dishka import (
+    STRICT_VALIDATION,
+    AnyOf,
     AsyncContainer,
-    make_async_container,
     Provider,
     Scope,
-    provide,
-    AnyOf,
-    STRICT_VALIDATION,
     from_context,
+    make_async_container,
+    provide,
 )
-from dishka.integrations.aiogram import setup_dishka, AiogramMiddlewareData
+from dishka.integrations.aiogram import AiogramMiddlewareData, setup_dishka
 from redis.asyncio import Redis
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
@@ -54,18 +54,18 @@ from shvatka.tgbot.services.bot_rights import BotRights
 from shvatka.tgbot.services.identity import TgBotIdentityProvider
 from shvatka.tgbot.services.member_tags import MemberTagger
 from shvatka.tgbot.services.used_one_time_token import UsedOneTimeTokenInteractorImpl
+from shvatka.tgbot.tasks import NurseryViewSender
 from shvatka.tgbot.username_resolver.user_getter import UserGetter
 from shvatka.tgbot.utils.router import print_router_tree
-from shvatka.tgbot.tasks import NurseryViewSender
-from shvatka.tgbot.views.game import GameBotLog, BotView, BotOrgNotifier
-from shvatka.tgbot.views.team import BotTeamNotifier
+from shvatka.tgbot.views.game import BotOrgNotifier, BotView, GameBotLog
+from shvatka.tgbot.views.game_release import GameBotReleasePublisher
 from shvatka.tgbot.views.hint_factory.hint_content_resolver import HintContentResolver
 from shvatka.tgbot.views.hint_factory.hint_parser import HintParser
 from shvatka.tgbot.views.hint_sender import HintSender
 from shvatka.tgbot.views.level_testing import LevelBotView
-from shvatka.tgbot.views.game_release import GameBotReleasePublisher
 from shvatka.tgbot.views.pinner import MessagePinner
 from shvatka.tgbot.views.results.rich import ResultsRichSender
+from shvatka.tgbot.views.team import BotTeamNotifier
 
 logger = logging.getLogger(__name__)
 

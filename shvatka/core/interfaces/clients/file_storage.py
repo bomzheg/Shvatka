@@ -1,4 +1,4 @@
-from typing import Protocol, BinaryIO
+from typing import BinaryIO, Protocol
 
 from shvatka.core.models import dto
 from shvatka.core.models.dto import hints

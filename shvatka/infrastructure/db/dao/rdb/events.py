@@ -1,7 +1,7 @@
-from datetime import datetime, tzinfo
 import typing
+from datetime import datetime, tzinfo
 
-from sqlalchemy import select, ScalarResult
+from sqlalchemy import ScalarResult, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 
@@ -10,6 +10,7 @@ from shvatka.core.models import dto
 from shvatka.core.models.dto import action
 from shvatka.core.utils.datetime_utils import tz_utc
 from shvatka.infrastructure.db import models
+
 from .base import BaseDAO
 
 

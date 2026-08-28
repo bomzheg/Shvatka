@@ -1,15 +1,10 @@
 from aiogram import F
 from aiogram_dialog import Dialog, Window
-from aiogram_dialog.widgets.input import TextInput, MessageInput
-from aiogram_dialog.widgets.kbd import SwitchTo, Cancel, ScrollingGroup, Select, Button
-from aiogram_dialog.widgets.text import Const, Jinja, Format
+from aiogram_dialog.widgets.input import MessageInput, TextInput
+from aiogram_dialog.widgets.kbd import Button, Cancel, ScrollingGroup, Select, SwitchTo
+from aiogram_dialog.widgets.text import Const, Format, Jinja
 
 from shvatka.tgbot import states
-from .getters import (
-    get_my_team_,
-    get_team_with_players,
-    get_selected_player,
-)
 from shvatka.tgbot.dialogs.preview_data import (
     PREVIEW_MY_TEAM,
     PREVIEW_SELECTED_TEAM_PLAYER_DATA,
@@ -17,20 +12,26 @@ from shvatka.tgbot.dialogs.preview_data import (
     PreviewStart,
     PreviewSwitchTo,
 )
+
+from .getters import (
+    get_my_team_,
+    get_selected_player,
+    get_team_with_players,
+)
 from .handlers import (
-    rename_team_handler,
     change_captain_handler,
     change_desc_team_handler,
-    select_player,
-    change_permission_handler,
-    remove_player_handler,
-    change_role_handler,
     change_emoji_handler,
-    send_user_request,
-    gotten_user_request,
-    remove_user_request,
-    send_chat_request,
+    change_permission_handler,
+    change_role_handler,
     gotten_chat_request,
+    gotten_user_request,
+    remove_player_handler,
+    remove_user_request,
+    rename_team_handler,
+    select_player,
+    send_chat_request,
+    send_user_request,
     start_merge,
 )
 

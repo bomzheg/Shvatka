@@ -1,16 +1,16 @@
 from typing import Any
 
 from aiogram_dialog import DialogManager
+from dishka import FromDishka
+from dishka.integrations.aiogram_dialog import inject
 
 from shvatka.common.config.models.main import FeaturesConfig
 from shvatka.core.interfaces.identity import IdentityProvider
-from dishka import FromDishka
-from dishka.integrations.aiogram_dialog import inject
 from shvatka.core.models import dto
 from shvatka.core.services import organizers
 from shvatka.core.services.game import get_game
-from shvatka.core.services.level import get_by_id, get_level_by_id_for_org, get_all_my_free_levels
-from shvatka.core.services.organizers import get_org_by_id, get_by_player
+from shvatka.core.services.level import get_all_my_free_levels, get_by_id, get_level_by_id_for_org
+from shvatka.core.services.organizers import get_by_player, get_org_by_id
 from shvatka.infrastructure.db.dao.holder import HolderDao
 
 

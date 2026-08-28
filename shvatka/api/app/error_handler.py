@@ -12,7 +12,6 @@ from starlette.responses import Response
 from shvatka.common.docs import DocsUrlFactory
 from shvatka.core.utils import exceptions
 
-
 logger = logging.getLogger(__name__)
 retort = Retort(recipe=[name_mapping(name_style=adaptix.NameStyle.CAMEL)])
 

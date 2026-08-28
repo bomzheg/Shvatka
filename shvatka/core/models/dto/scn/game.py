@@ -1,13 +1,15 @@
+from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import datetime
 from typing import BinaryIO, Literal
-from collections.abc import Sequence
 
 from shvatka.core.models import enums
+from shvatka.core.models.dto import hints
 from shvatka.core.models.dto.export_stat import GameStat
 from shvatka.core.utils import exceptions
-from .level import LevelScenario, check_all_files_saved as check_all_in_level_saved
-from shvatka.core.models.dto import hints
+
+from .level import LevelScenario
+from .level import check_all_files_saved as check_all_in_level_saved
 
 
 @dataclass

@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta, UTC
+from datetime import UTC, datetime, timedelta
 
 import pytest
 import pytest_asyncio
@@ -15,12 +15,12 @@ from shvatka.core.services.user import upsert_user
 from shvatka.core.utils.defaults_constants import DEFAULT_ROLE
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from tests.fixtures.scn_fixtures import GUID
-from tests.mocks.scheduler_mock import SchedulerMock
 from tests.fixtures.user_constants import (
+    create_dto_draco,
     create_dto_hermione,
     create_dto_ron,
-    create_dto_draco,
 )
+from tests.mocks.scheduler_mock import SchedulerMock
 
 GAME_START_AT = datetime(2025, 4, 12, 16, 0, tzinfo=UTC)
 

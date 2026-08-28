@@ -1,15 +1,14 @@
-from datetime import timedelta, time
+from datetime import time, timedelta
 
-
+from shvatka.core.games.results import (
+    AVERAGE_TITLE,
+    FIRST_TEAM_NAME,
+    GAME_NAME,
+    results_to_table_routed,
+    to_results,
+)
 from shvatka.core.models import dto
 from shvatka.core.utils.datetime_utils import trim_tz
-from shvatka.core.games.results import (
-    to_results,
-    AVERAGE_TITLE,
-    GAME_NAME,
-    FIRST_TEAM_NAME,
-    results_to_table_routed,
-)
 
 # Every block is laid out over the same columns: the game start first (hidden), then
 # one column per level. Rows are counted from the first team of the first block.

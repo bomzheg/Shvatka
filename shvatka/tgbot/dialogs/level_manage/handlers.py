@@ -15,17 +15,18 @@ from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.interfaces.nursery import Nursery
 from shvatka.core.interfaces.scheduler import LevelTestScheduler
 from shvatka.core.models import dto
-from shvatka.core.services.level import get_by_id, unlink_level, delete_level
-from shvatka.core.services.level_testing import start_level_test, check_level_testing_key
+from shvatka.core.services.level import delete_level, get_by_id, unlink_level
+from shvatka.core.services.level_testing import check_level_testing_key, start_level_test
 from shvatka.core.services.organizers import get_org_by_id
 from shvatka.core.utils.key_checker_lock import KeyCheckerFactory
 from shvatka.core.views.game import OrgNotifier
 from shvatka.core.views.level import LevelView
 from shvatka.infrastructure.db.dao.holder import HolderDao
-from shvatka.tgbot import states
 from shvatka.tgbot import keyboards as kb
+from shvatka.tgbot import states
 from shvatka.tgbot.tasks import send_level_hints
 from shvatka.tgbot.views.user import render_small_card_link
+
 from .getters import get_level_and_org, get_org
 
 logger = logging.getLogger(__name__)

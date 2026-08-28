@@ -4,7 +4,7 @@ from aiogram import Bot
 from aiogram.client.session.base import BaseSession
 from aiogram_dialog.api.protocols import MessageManagerProtocol
 from aiogram_dialog.test_tools import MockMessageManager
-from dishka import Provider, provide, Scope
+from dishka import Provider, Scope, provide
 
 from shvatka.tgbot.config.models.bot import BotConfig
 from shvatka.tgbot.config.models.main import TgBotConfig

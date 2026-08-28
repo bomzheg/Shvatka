@@ -1,5 +1,5 @@
-from dataclasses import dataclass, field
 from collections.abc import Sequence
+from dataclasses import dataclass, field
 from uuid import UUID
 
 from shvatka.core.models.dto import hints

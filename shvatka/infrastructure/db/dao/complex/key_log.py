@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from shvatka.core.games.adapters import GameKeysReader
 from shvatka.core.interfaces.dal.complex import TypedKeyGetter
 from shvatka.core.models import dto
-from shvatka.core.models.dto import Team, KeyTime
+from shvatka.core.models.dto import KeyTime, Team
 
 if typing.TYPE_CHECKING:
     from shvatka.infrastructure.db.dao.holder import HolderDao

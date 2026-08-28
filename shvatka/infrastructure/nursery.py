@@ -1,8 +1,8 @@
 import asyncio
 import logging
 import typing
-from typing import Any
 from collections.abc import AsyncIterable
+from typing import Any
 
 from dishka import AsyncContainer, Provider, Scope, provide
 from dishka.integrations.base import wrap_injection

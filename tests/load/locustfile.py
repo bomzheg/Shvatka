@@ -1,4 +1,4 @@
-from locust import HttpUser, task, between  # type: ignore[import, unused-ignore]
+from locust import HttpUser, between, task  # type: ignore[import, unused-ignore]
 
 
 class PlayerUser(HttpUser):

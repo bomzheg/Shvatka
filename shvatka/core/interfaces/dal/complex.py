@@ -3,22 +3,22 @@ from typing import Protocol
 from shvatka.core.interfaces.dal.base import Committer
 from shvatka.core.interfaces.dal.file_info import FileInfoGetter, GameFilesMetaGetter
 from shvatka.core.interfaces.dal.game import (
-    MaxGameNumberGetter,
-    GameNumberUpdater,
-    GameStatusCompleter,
     GameByIdGetter,
+    GameNumberUpdater,
     GameReleaseGetter,
-    GameUpserter,
     GameRenamer,
+    GameStatusCompleter,
+    GameUpserter,
+    MaxGameNumberGetter,
     WaiverStarter,
 )
-from shvatka.core.interfaces.dal.key_log import TeamKeysMerger, GameKeyGetter
+from shvatka.core.interfaces.dal.key_log import GameKeyGetter, TeamKeysMerger
 from shvatka.core.interfaces.dal.level import MaxLevelNumberGetter
-from shvatka.core.interfaces.dal.level_times import TeamLevelsMerger, LevelTimesGetter
+from shvatka.core.interfaces.dal.level_times import LevelTimesGetter, TeamLevelsMerger
 from shvatka.core.interfaces.dal.organizer import OrgByPlayerGetter
 from shvatka.core.interfaces.dal.player import TeamPlayersMerger
 from shvatka.core.interfaces.dal.team import ForumTeamMerger, TeamRemover
-from shvatka.core.interfaces.dal.waiver import WaiverMerger, GameWaiversGetter
+from shvatka.core.interfaces.dal.waiver import GameWaiversGetter, WaiverMerger
 from shvatka.core.models import dto
 
 

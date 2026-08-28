@@ -1,10 +1,10 @@
-from typing import Self
 import typing
-from collections.abc import Sequence, Iterable
+from collections.abc import Iterable, Sequence
 from dataclasses import dataclass, field
-
+from typing import Self
 
 from shvatka.core.utils import exceptions
+
 from .hint_part import AnyHint
 from .time_hint import TimeHint
 

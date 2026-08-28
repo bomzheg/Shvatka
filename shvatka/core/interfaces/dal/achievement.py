@@ -1,8 +1,7 @@
 from typing import Protocol
 
 from shvatka.core.interfaces.dal.base import Committer
-from shvatka.core.models import dto
-from shvatka.core.models import enums
+from shvatka.core.models import dto, enums
 
 
 class AchievementAdder(Committer, Protocol):

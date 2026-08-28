@@ -1,33 +1,22 @@
-from aiogram import Bot
 from adaptix import Retort
+from aiogram import Bot
 from dishka import Provider, Scope, provide
 
 from shvatka.common import Config
 from shvatka.common.url_factory import UrlFactory
-from shvatka.core.games.interactors import (
-    GameFileReaderInteractor,
-    GamePlayReaderInteractor,
-    PassedLevelsReaderInteractor,
-    GameKeysReaderInteractor,
-    GameStatReaderInteractor,
-    GameResultsFileInteractor,
-    GamePlayTimerInteractor,
-    CheckKeyInteractor,
-    GamePlayRoleReader,
-)
-from shvatka.core.games.editor_interactors import (
-    MyGamesInteractor,
-    MyGameInteractor,
-    CreateGameInteractor,
-    ChangeGameScenarioInteractor,
-    PlanGameStartInteractor,
-    ChangeGameStatusInteractor,
-    UploadGameFileInteractor,
-    RenameGameFileInteractor,
-    DeleteGameFileInteractor,
-)
 from shvatka.core.files.adapters import FileGarbageCollectorDao
 from shvatka.core.files.interactors import CollectFileGarbageInteractor
+from shvatka.core.games.adapters import (
+    AdminGameScenarioEditor,
+    AdminGameStatusChanger,
+    AdminLevelResender,
+    GameFileReader,
+    GameKeysReader,
+    GamePlayDao,
+    GameReleaseEditor,
+    GameReleaseReader,
+    GameStatReader,
+)
 from shvatka.core.games.admin_interactors import (
     AdminChangeGameStatusInteractor,
     AdminGamesListInteractor,
@@ -35,87 +24,123 @@ from shvatka.core.games.admin_interactors import (
     AdminUpdateGameScenarioInteractor,
     AdminUploadGameFileInteractor,
 )
-from shvatka.core.games.adapters import (
-    AdminGameScenarioEditor,
-    AdminGameStatusChanger,
-    AdminLevelResender,
-    GameReleaseEditor,
-    GameReleaseReader,
+from shvatka.core.games.editor_interactors import (
+    ChangeGameScenarioInteractor,
+    ChangeGameStatusInteractor,
+    CreateGameInteractor,
+    DeleteGameFileInteractor,
+    MyGameInteractor,
+    MyGamesInteractor,
+    PlanGameStartInteractor,
+    RenameGameFileInteractor,
+    UploadGameFileInteractor,
 )
-from shvatka.core.games.release_interactors import (
-    GetGameReleaseInteractor,
-    SaveGameReleaseInteractor,
-    DeleteGameReleaseInteractor,
+from shvatka.core.games.interactors import (
+    CheckKeyInteractor,
+    GameFileReaderInteractor,
+    GameKeysReaderInteractor,
+    GamePlayReaderInteractor,
+    GamePlayRoleReader,
+    GamePlayTimerInteractor,
+    GameResultsFileInteractor,
+    GameStatReaderInteractor,
+    PassedLevelsReaderInteractor,
 )
 from shvatka.core.games.org_interactors import (
-    ListGameOrgsInteractor,
     AddGameOrgInteractor,
     ChangeOrgPermissionInteractor,
+    ListGameOrgsInteractor,
     RemoveGameOrgInteractor,
+)
+from shvatka.core.games.release_interactors import (
+    DeleteGameReleaseInteractor,
+    GetGameReleaseInteractor,
+    SaveGameReleaseInteractor,
+)
+from shvatka.core.interfaces.bus import Bus
+from shvatka.core.interfaces.clients.file_storage import FileStorage
+from shvatka.core.interfaces.current_game import CurrentGameProvider
+from shvatka.core.interfaces.dal.complex import GameScenarioEditor, GameStatusChanger
+from shvatka.core.interfaces.dal.game import (
+    GameByIdGetter,
+    GameFileDeleter,
+    GameFileRenamer,
+    GameFileUploader,
+)
+from shvatka.core.interfaces.dal.game_play import GamePlayerDao
+from shvatka.core.interfaces.dal.waiver import WaiverApprover
+from shvatka.core.interfaces.scheduler import Scheduler
+from shvatka.core.interfaces.superusers import SuperusersResolver
+from shvatka.core.notifications.adapters import (
+    NotificationWriter,
+    RequestNotifier,
+    RequestStorage,
 )
 from shvatka.core.notifications.interactors import (
     ListNotificationsInteractor,
-    UnreadCountInteractor,
-    MarkNotificationsReadInteractor,
     MarkAllNotificationsReadInteractor,
+    MarkNotificationsReadInteractor,
+    UnreadCountInteractor,
 )
 from shvatka.core.notifications.request_interactors import (
+    AcceptRequestInteractor,
+    CancelRequestInteractor,
+    CreateOrgInviteInteractor,
+    CreatePlayerMergeRequestInteractor,
+    CreatePromotionInviteInteractor,
     CreateTeamJoinInviteInteractor,
     CreateTeamJoinRequestInteractor,
-    CreateOrgInviteInteractor,
-    CreatePromotionInviteInteractor,
     CreateTeamMergeRequestInteractor,
-    CreatePlayerMergeRequestInteractor,
-    AcceptRequestInteractor,
     DeclineRequestInteractor,
-    CancelRequestInteractor,
     ListRequestsInteractor,
 )
-from shvatka.core.interfaces.superusers import SuperusersResolver
-from shvatka.core.notifications.adapters import (
-    RequestNotifier,
-    RequestStorage,
-    NotificationWriter,
+from shvatka.core.players.admin_interactors import (
+    AdminChangePlayerTgInteractor,
+    AdminGetPlayerInteractor,
+    AdminGetPlayerWaiverPointsInteractor,
+    AdminMergePlayersInteractor,
+    AdminSearchPlayersInteractor,
+    AdminSetPlayerEmailInteractor,
+    AdminSetPlayerUsernameInteractor,
 )
-from shvatka.tgbot.config.models.bot import BotConfig
-from shvatka.tgbot.services.action_requests import ActionResolvedInteractorImpl
-from shvatka.tgbot.views.action_request import BotRequestNotifier
 from shvatka.core.players.interactors import (
     GetPlayerInteractor,
     GetPlayerStatInteractor,
     SearchPlayersInteractor,
 )
-from shvatka.core.players.admin_interactors import (
-    AdminSetPlayerEmailInteractor,
-    AdminChangePlayerTgInteractor,
-    AdminSetPlayerUsernameInteractor,
-    AdminMergePlayersInteractor,
-    AdminSearchPlayersInteractor,
-    AdminGetPlayerInteractor,
-    AdminGetPlayerWaiverPointsInteractor,
-)
 from shvatka.core.players.interfaces import (
-    AdminPlayerReader,
     AdminEmailSetter,
+    AdminPlayerMerger,
+    AdminPlayerReader,
+    AdminPlayerWaiverPointsReader,
     AdminTgChanger,
     AdminUsernameSetter,
-    AdminPlayerMerger,
-    AdminPlayerWaiverPointsReader,
+)
+from shvatka.core.scenario.interactors import (
+    AllGameKeysPrintInteractor,
+    AllGameKeysReaderInteractor,
+    GameScenarioTransitionsInteractor,
+)
+from shvatka.core.search.adapters import GlobalSearchDao
+from shvatka.core.search.interactors import GlobalSearchInteractor
+from shvatka.core.services.current_game import CurrentGameProviderImpl
+from shvatka.core.services.key import KeyProcessor, TimerProcessor
+from shvatka.core.services.one_time_link import (
+    GenerateOneTimeLoginLinkForPlayerInteractor,
+    GenerateOneTimeLoginLinkInteractor,
+)
+from shvatka.core.teams.adapters import (
+    AdminTeamMerger,
+    CaptainedTeamsReader,
+    CaptainTeamJoiner,
+    ChatlessTeamCreator,
+    TeamCaptainSetter,
 )
 from shvatka.core.teams.admin_interactors import (
     AdminAddPlayerToTeamInteractor,
     AdminChangeTeamCaptainInteractor,
     AdminMergeTeamsInteractor,
     AdminRemovePlayerFromTeamInteractor,
-)
-from shvatka.core.services.one_time_link import (
-    GenerateOneTimeLoginLinkInteractor,
-    GenerateOneTimeLoginLinkForPlayerInteractor,
-)
-from shvatka.core.waiver.admin_interactors import (
-    AdminPollReaderInteractor,
-    AdminRemovePollVoteInteractor,
-    AdminGameWaiversReaderInteractor,
 )
 from shvatka.core.teams.interactors import (
     AddPlayerToTeamInteractor,
@@ -131,94 +156,56 @@ from shvatka.core.teams.interactors import (
     TeamsListInteractor,
     UpdateTeamPlayerInteractor,
 )
-from shvatka.core.teams.adapters import (
-    AdminTeamMerger,
-    CaptainedTeamsReader,
-    CaptainTeamJoiner,
-    ChatlessTeamCreator,
-    TeamCaptainSetter,
-)
 from shvatka.core.views.game import GameLogWriter, OrgNotifier
 from shvatka.core.views.team import TeamNotifier
-from shvatka.core.interfaces.clients.file_storage import FileStorage
-from shvatka.core.interfaces.dal.complex import GameScenarioEditor, GameStatusChanger
-from shvatka.core.interfaces.scheduler import Scheduler
-from shvatka.core.games.adapters import (
-    GameFileReader,
-    GameKeysReader,
-    GameStatReader,
-    GamePlayDao,
-)
-from shvatka.core.interfaces.bus import Bus
-from shvatka.core.interfaces.current_game import CurrentGameProvider
-from shvatka.core.interfaces.dal.game import (
-    GameByIdGetter,
-    GameFileDeleter,
-    GameFileRenamer,
-    GameFileUploader,
-)
-from shvatka.core.interfaces.dal.game_play import GamePlayerDao
-from shvatka.core.services.current_game import CurrentGameProviderImpl
-from shvatka.core.interfaces.dal.waiver import WaiverApprover
 from shvatka.core.waiver.adapters import (
-    WaiverVoteAdder,
-    WaiverVoteGetter,
+    AdminGameWaiversReader,
+    AdminPollReader,
     PollDraftsReader,
     PollVoteRemover,
-    AdminPollReader,
-    AdminGameWaiversReader,
+    WaiverVoteAdder,
+    WaiverVoteGetter,
 )
-from shvatka.core.scenario.interactors import (
-    AllGameKeysPrintInteractor,
-    AllGameKeysReaderInteractor,
-    GameScenarioTransitionsInteractor,
+from shvatka.core.waiver.admin_interactors import (
+    AdminGameWaiversReaderInteractor,
+    AdminPollReaderInteractor,
+    AdminRemovePollVoteInteractor,
 )
-from shvatka.core.search.adapters import GlobalSearchDao
-from shvatka.core.search.interactors import GlobalSearchInteractor
-from shvatka.core.services.key import KeyProcessor, TimerProcessor
 from shvatka.core.waiver.interactors import (
-    TeamWaiversDraftReaderInteractor,
     AddWaiverVoteInteractor,
-    WaiverCompleteReaderInteractor,
     AllWaiversDraftReaderInteractor,
     ReplaceTeamWaiversInteractor,
+    TeamWaiversDraftReaderInteractor,
+    WaiverCompleteReaderInteractor,
 )
 from shvatka.infrastructure.bus.in_memory import ActionResolvedInteractor, InMemoryBus
-from shvatka.infrastructure.superusers import ConfigSuperusersResolver
-from shvatka.infrastructure.db.dao.complex2.waiver import (
-    WaiverVoteAdderImpl,
-    WaiverVoteGetterImpl,
-    PollDraftsReaderImpl,
-    AdminPollReaderImpl,
-    PollVoteRemoverImpl,
-    AdminGameWaiversReaderImpl,
-)
-from shvatka.infrastructure.db.dao.complex.player import (
-    AdminEmailSetterImpl,
-    AdminTgChangerImpl,
-    AdminUsernameSetterImpl,
-    AdminPlayerMergerImpl,
-    AdminPlayerReaderImpl,
-    AdminPlayerWaiverPointsReaderImpl,
-)
-from shvatka.infrastructure.db.dao.complex.game import (
-    AdminGameScenarioEditorImpl,
-    AdminGameStatusChangerImpl,
-    GameFilesGetterImpl,
-    GameScenarioEditorImpl,
-)
-from shvatka.infrastructure.db.dao.complex.game import (
-    GameFileRenamerImpl,
-    GameFileUploaderImpl,
-    GamePlayDaoImpl,
-    GameReleaseEditorImpl,
-    GameReleaseReaderImpl,
-)
 from shvatka.infrastructure.db.dao.complex.file import (
     FileGarbageCollectorImpl,
     GameFileDeleterImpl,
 )
+from shvatka.infrastructure.db.dao.complex.game import (
+    AdminGameScenarioEditorImpl,
+    AdminGameStatusChangerImpl,
+    GameFileRenamerImpl,
+    GameFilesGetterImpl,
+    GameFileUploaderImpl,
+    GamePlayDaoImpl,
+    GameReleaseEditorImpl,
+    GameReleaseReaderImpl,
+    GameScenarioEditorImpl,
+)
 from shvatka.infrastructure.db.dao.complex.game_play import GamePlayerDaoImpl
+from shvatka.infrastructure.db.dao.complex.key_log import GameKeysReaderImpl
+from shvatka.infrastructure.db.dao.complex.level_times import GameStatReaderImpl
+from shvatka.infrastructure.db.dao.complex.player import (
+    AdminEmailSetterImpl,
+    AdminPlayerMergerImpl,
+    AdminPlayerReaderImpl,
+    AdminPlayerWaiverPointsReaderImpl,
+    AdminTgChangerImpl,
+    AdminUsernameSetterImpl,
+)
+from shvatka.infrastructure.db.dao.complex.search import GlobalSearchDaoImpl
 from shvatka.infrastructure.db.dao.complex.team import (
     AdminTeamMergerImpl,
     CaptainedTeamsReaderImpl,
@@ -226,10 +213,19 @@ from shvatka.infrastructure.db.dao.complex.team import (
     TeamCaptainSetterImpl,
     TeamCreatorImpl,
 )
-from shvatka.infrastructure.db.dao.complex.key_log import GameKeysReaderImpl
-from shvatka.infrastructure.db.dao.complex.level_times import GameStatReaderImpl
-from shvatka.infrastructure.db.dao.complex.search import GlobalSearchDaoImpl
+from shvatka.infrastructure.db.dao.complex2.waiver import (
+    AdminGameWaiversReaderImpl,
+    AdminPollReaderImpl,
+    PollDraftsReaderImpl,
+    PollVoteRemoverImpl,
+    WaiverVoteAdderImpl,
+    WaiverVoteGetterImpl,
+)
 from shvatka.infrastructure.db.dao.holder import HolderDao
+from shvatka.infrastructure.superusers import ConfigSuperusersResolver
+from shvatka.tgbot.config.models.bot import BotConfig
+from shvatka.tgbot.services.action_requests import ActionResolvedInteractorImpl
+from shvatka.tgbot.views.action_request import BotRequestNotifier
 
 
 class ContextProvider(Provider):

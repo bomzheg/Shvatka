@@ -1,22 +1,23 @@
 from aiogram_dialog import Dialog, Window
-from aiogram_dialog.widgets.kbd import ScrollingGroup, Select, Cancel, SwitchTo, Button
-from aiogram_dialog.widgets.text import Const, Format, Jinja, Case
+from aiogram_dialog.widgets.kbd import Button, Cancel, ScrollingGroup, Select, SwitchTo
+from aiogram_dialog.widgets.text import Case, Const, Format, Jinja
 
 from shvatka.tgbot import states
-from .getters import teams_getter, team_getter, my_team_getter, filter_getter
-from .handlers import (
-    select_team,
-    select_player,
-    change_active_filter,
-    change_archive_filter,
-    on_leave_team,
-)
 from shvatka.tgbot.dialogs.common import BOOL_VIEW
 from shvatka.tgbot.dialogs.preview_data import (
     PREVIEW_TEAM_CARD,
     PREVIEW_TEAMS,
     PreviewStart,
     PreviewSwitchTo,
+)
+
+from .getters import filter_getter, my_team_getter, team_getter, teams_getter
+from .handlers import (
+    change_active_filter,
+    change_archive_filter,
+    on_leave_team,
+    select_player,
+    select_team,
 )
 
 team_view = Dialog(

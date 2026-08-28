@@ -2,25 +2,26 @@ from aiogram.types import ContentType
 from aiogram_dialog import Dialog, Window
 from aiogram_dialog.widgets.input import MessageInput
 from aiogram_dialog.widgets.kbd import (
-    ScrollingGroup,
-    Multiselect,
     Button,
-    Select,
     Cancel,
-    SwitchTo,
+    Multiselect,
     Next,
+    ScrollingGroup,
+    Select,
+    SwitchTo,
 )
 from aiogram_dialog.widgets.text import Const, Format, Jinja
 
 from shvatka.tgbot import states
-from .getters import get_game_name, select_my_levels, select_full_game
-from .handlers import process_name, save_game, edit_level, add_level_handler, process_zip_scn
 from shvatka.tgbot.dialogs.preview_data import (
     PREVIEW_FULL_GAME,
     PREVIEW_GAME,
     PREVIEW_LEVELS,
     PreviewStart,
 )
+
+from .getters import get_game_name, select_full_game, select_my_levels
+from .handlers import add_level_handler, edit_level, process_name, process_zip_scn, save_game
 
 game_writer = Dialog(
     Window(

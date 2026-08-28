@@ -1,5 +1,6 @@
 from shvatka.common.config.models.main import MailConfig
 from shvatka.core.interfaces.mail import EmailSender
+
 from .console import ConsoleEmailSender
 from .smtp import SmtpEmailSender
 

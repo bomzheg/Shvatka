@@ -1,6 +1,5 @@
 from shvatka.core.interfaces.dal.achievement import AchievementAdder
-from shvatka.core.models import dto
-from shvatka.core.models import enums
+from shvatka.core.models import dto, enums
 
 
 async def add_achievement(player: dto.Player, name: enums.Achievement, dao: AchievementAdder):

@@ -1,25 +1,25 @@
 import logging
 
 from aiogram import Dispatcher
-from aiogram_dialog.api.protocols import MessageManagerProtocol, BgManagerFactory
+from aiogram_dialog.api.protocols import BgManagerFactory, MessageManagerProtocol
 
 from shvatka.common.docs import DocsUrlFactory
 from shvatka.tgbot import dialogs
 from shvatka.tgbot.config.models.main import TgBotConfig
 from shvatka.tgbot.handlers import (
-    errors,
-    merge,
-    admin,
-    capcha,
-    game,
-    waivers,
-    player,
-    last,
-    superuser,
-    base,
-    team,
     action_request,
+    admin,
+    base,
+    capcha,
+    errors,
+    game,
+    last,
     member_tags,
+    merge,
+    player,
+    superuser,
+    team,
+    waivers,
 )
 
 logger = logging.getLogger(__name__)

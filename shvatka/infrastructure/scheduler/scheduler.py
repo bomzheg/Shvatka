@@ -7,7 +7,7 @@ from apscheduler.jobstores.redis import RedisJobStore
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from dishka import AsyncContainer
 
-from shvatka.core.interfaces.scheduler import Scheduler, LevelTestScheduler
+from shvatka.core.interfaces.scheduler import LevelTestScheduler, Scheduler
 from shvatka.core.models import dto
 from shvatka.core.models.dto import action
 from shvatka.core.utils.datetime_utils import tz_utc

@@ -1,6 +1,7 @@
-from datetime import datetime, tzinfo
 import typing
-from sqlalchemy import select, ScalarResult, update
+from datetime import datetime, tzinfo
+
+from sqlalchemy import ScalarResult, select, update
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -8,6 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from shvatka.core.models import dto
 from shvatka.core.utils import exceptions
 from shvatka.infrastructure.db import models
+
 from .base import BaseDAO
 
 

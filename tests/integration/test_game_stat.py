@@ -1,13 +1,13 @@
-from datetime import timedelta, datetime
+from datetime import datetime, timedelta
 from itertools import pairwise
 
 import pytest
 
 from shvatka.core.models import dto
 from shvatka.core.services.game_stat import (
-    get_typed_keys,
     get_game_spy,
     get_game_stat,
+    get_typed_keys,
 )
 from shvatka.core.utils.datetime_utils import tz_utc
 from shvatka.infrastructure.db.dao.holder import HolderDao

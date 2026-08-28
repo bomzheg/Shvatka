@@ -4,16 +4,16 @@ from dishka import AsyncContainer
 
 from shvatka.core.models import dto
 from shvatka.core.models.enums.played import Played
-from shvatka.core.services.game import start_waivers
 from shvatka.core.players.player import join_team, leave
+from shvatka.core.services.game import start_waivers
+from shvatka.core.utils.exceptions import PlayerRestoredInTeam, WaiverForbidden
+from shvatka.core.waiver.adapters import WaiverVoteAdder, WaiverVoteGetter
 from shvatka.core.waiver.services import (
-    get_vote_to_voted,
     add_vote,
     approve_waivers,
     get_all_played,
+    get_vote_to_voted,
 )
-from shvatka.core.utils.exceptions import PlayerRestoredInTeam, WaiverForbidden
-from shvatka.core.waiver.adapters import WaiverVoteAdder, WaiverVoteGetter
 from shvatka.infrastructure.db import models
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from tests.mocks.team_notifier import TeamNotifierMock

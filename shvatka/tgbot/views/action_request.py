@@ -5,11 +5,11 @@ from aiogram import Bot
 from aiogram.exceptions import AiogramError
 from aiogram.utils.text_decorations import html_decoration as hd
 
+from shvatka.core.interfaces.dal.player import PlayerByIdGetter, TeamPlayersGetter
+from shvatka.core.interfaces.dal.team import TeamByIdGetter
 from shvatka.core.models.enums.request import RequestType
 from shvatka.core.notifications import dto as ndto
 from shvatka.core.notifications.adapters import RequestNotifier, RequestStorage
-from shvatka.core.interfaces.dal.player import PlayerByIdGetter, TeamPlayersGetter
-from shvatka.core.interfaces.dal.team import TeamByIdGetter
 from shvatka.tgbot.keyboards.action_request import get_action_request_kb
 
 logger = logging.getLogger(__name__)

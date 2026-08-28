@@ -1,7 +1,7 @@
 import asyncio
 
 from shvatka.core.models import dto
-from shvatka.core.utils.key_checker_lock import KeyCheckerLock, KeyCheckerFactory
+from shvatka.core.utils.key_checker_lock import KeyCheckerFactory, KeyCheckerLock
 
 
 class MemoryLock(KeyCheckerLock):

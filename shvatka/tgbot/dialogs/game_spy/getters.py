@@ -2,11 +2,11 @@ from collections import defaultdict
 from datetime import datetime
 
 from aiogram_dialog import DialogManager
+from dishka import FromDishka
+from dishka.integrations.aiogram_dialog import inject
 
 from shvatka.core.interfaces.current_game import CurrentGameProvider
 from shvatka.core.interfaces.identity import IdentityProvider
-from dishka import FromDishka
-from dishka.integrations.aiogram_dialog import inject
 from shvatka.core.services.game_stat import get_game_spy
 from shvatka.core.services.organizers import get_by_player
 from shvatka.core.utils.datetime_utils import tz_utc

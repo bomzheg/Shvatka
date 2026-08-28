@@ -1,10 +1,10 @@
 import asyncio
 import json
 import logging
+from collections.abc import Callable, Coroutine
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import BinaryIO, Any
-from collections.abc import Callable, Coroutine
+from typing import Any, BinaryIO
 from zipfile import Path as ZipPath
 
 from adaptix import Retort
@@ -13,14 +13,13 @@ from dishka import make_async_container
 from shvatka.common.config.parser.logging_config import setup_logging
 from shvatka.common.config.parser.paths import common_get_paths
 from shvatka.core.interfaces.clients.file_storage import FileGateway
-from shvatka.core.models import dto
-from shvatka.core.models import enums
+from shvatka.core.models import dto, enums
 from shvatka.core.models.dto import scn  # noqa: F401
 from shvatka.core.models.dto.export_stat import (
     GameStat,
-    TeamIdentity,
     Player,
     PlayerIdentity,
+    TeamIdentity,
 )
 from shvatka.core.services.game import upsert_game
 from shvatka.core.services.scenario.scn_zip import unpack_scn

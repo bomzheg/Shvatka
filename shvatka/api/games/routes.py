@@ -2,55 +2,54 @@ import logging
 from typing import Annotated, Any
 
 from adaptix import Retort
-from dishka.integrations.fastapi import FromDishka
-from dishka.integrations.fastapi import inject
+from dishka.integrations.fastapi import FromDishka, inject
 from fastapi import APIRouter, Body, HTTPException
 from fastapi.params import Path
 from fastapi.responses import Response
 
 from shvatka.api.app.dependencies.auth import ApiIdentityProvider
+from shvatka.api.app.utils.web_input import ApiInput
 from shvatka.api.games import requests, responses
 from shvatka.api.games.responses import MyRoleDto
 from shvatka.api.shared import responses as shared
-from shvatka.api.app.utils.web_input import ApiInput
-from shvatka.core.views.game import EffectsKey, GameFinished, KeyShown
+from shvatka.core.games.editor_interactors import (
+    ChangeGameScenarioInteractor,
+    ChangeGameStatusInteractor,
+    CreateGameInteractor,
+    MyGameInteractor,
+    MyGamesInteractor,
+    PlanGameStartInteractor,
+)
 from shvatka.core.games.interactors import (
-    GamePlayReaderInteractor,
-    GameKeysReaderInteractor,
-    GameStatReaderInteractor,
-    GameResultsFileInteractor,
     CheckKeyInteractor,
+    GameKeysReaderInteractor,
+    GamePlayReaderInteractor,
     GamePlayRoleReader,
+    GameResultsFileInteractor,
+    GameStatReaderInteractor,
     PassedLevelsReaderInteractor,
 )
-from shvatka.core.games.editor_interactors import (
-    MyGamesInteractor,
-    MyGameInteractor,
-    CreateGameInteractor,
-    ChangeGameScenarioInteractor,
-    PlanGameStartInteractor,
-    ChangeGameStatusInteractor,
+from shvatka.core.games.org_interactors import (
+    AddGameOrgInteractor,
+    ChangeOrgPermissionInteractor,
+    ListGameOrgsInteractor,
+    RemoveGameOrgInteractor,
 )
 from shvatka.core.games.release_interactors import (
     DeleteGameReleaseInteractor,
     GetGameReleaseInteractor,
     SaveGameReleaseInteractor,
 )
-from shvatka.core.games.org_interactors import (
-    ListGameOrgsInteractor,
-    AddGameOrgInteractor,
-    ChangeOrgPermissionInteractor,
-    RemoveGameOrgInteractor,
-)
 from shvatka.core.interfaces.current_game import CurrentGameProvider
-from shvatka.core.scenario.interactors import AllGameKeysPrintInteractor
 from shvatka.core.models import enums
 from shvatka.core.models.enums.org_permission import OrgPermission
+from shvatka.core.scenario.interactors import AllGameKeysPrintInteractor
 from shvatka.core.services.game import (
     get_completed_games,
     get_full_game,
 )
 from shvatka.core.services.scenario.files import get_file_metas
+from shvatka.core.views.game import EffectsKey, GameFinished, KeyShown
 from shvatka.infrastructure.db.dao.holder import HolderDao
 
 XLSX_MEDIA_TYPE = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"

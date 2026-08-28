@@ -2,7 +2,7 @@ import os
 
 from aiohttp import ClientSession
 
-from shvatka.infrastructure.crawler.constants import COOKIE_NAME, BASE_URL
+from shvatka.infrastructure.crawler.constants import BASE_URL, COOKIE_NAME
 from shvatka.infrastructure.crawler.models import Credentials
 
 ENV_USERNAME = os.getenv("SH_USERNAME")

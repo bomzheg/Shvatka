@@ -1,6 +1,7 @@
 from shvatka.core.models import dto
-from .game import check_game_editable
 from shvatka.core.utils.exceptions import NotAuthorizedForEdit, SHDataBreach
+
+from .game import check_game_editable
 
 
 def check_is_author(level: dto.Level, player: dto.Player):

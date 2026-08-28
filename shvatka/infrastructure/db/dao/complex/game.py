@@ -1,14 +1,9 @@
-from collections.abc import Collection
-from itertools import pairwise
-from datetime import datetime
 import typing
+from collections.abc import Collection, Iterable
 from dataclasses import dataclass
-from collections.abc import Iterable
+from datetime import datetime
+from itertools import pairwise
 
-from shvatka.core.games.dto import CurrentHintsOnly, Event, PassedLevelHints, PassedLevels
-from shvatka.core.interfaces.current_game import CurrentGameProvider
-
-from shvatka.core.interfaces.dal.complex import GamePackager
 from shvatka.core.games.adapters import (
     AdminGameStatusChanger,
     GameFileReader,
@@ -16,18 +11,20 @@ from shvatka.core.games.adapters import (
     GameReleaseEditor,
     GameReleaseReader,
 )
+from shvatka.core.games.dto import CurrentHintsOnly, Event, PassedLevelHints, PassedLevels
+from shvatka.core.interfaces.current_game import CurrentGameProvider
+from shvatka.core.interfaces.dal.complex import GamePackager
 from shvatka.core.interfaces.dal.game import (
-    GameUpserter,
     GameCreator,
     GameFileRenamer,
     GameFileUploader,
+    GameUpserter,
 )
 from shvatka.core.interfaces.dal.level import LevelDeleter
 from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.models import dto
-from shvatka.core.models.dto import scn
+from shvatka.core.models.dto import hints, scn
 from shvatka.core.models.enums import GameStatus
-from shvatka.core.models.dto import hints
 from shvatka.core.utils import exceptions
 from shvatka.core.utils.datetime_utils import tz_utc
 

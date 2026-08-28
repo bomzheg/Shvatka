@@ -1,5 +1,5 @@
 import logging
-from datetime import datetime, time, date
+from datetime import date, datetime, time
 from typing import Any
 
 from aiogram import Bot
@@ -15,8 +15,8 @@ from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.models import dto
 from shvatka.core.services import game
 from shvatka.core.services.game import get_authors_games, get_completed_games
-from shvatka.core.waiver.services import get_all_played
 from shvatka.core.utils.datetime_utils import tz_game
+from shvatka.core.waiver.services import get_all_played
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.tgbot.views.keys import get_or_create_keys_page
 

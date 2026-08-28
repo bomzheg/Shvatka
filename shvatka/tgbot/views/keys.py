@@ -1,18 +1,18 @@
 import enum
+from collections.abc import Iterable
 from datetime import datetime
 from typing import Any
-from collections.abc import Iterable
 
 from aiogram.utils.text_decorations import html_decoration as hd
 from telegraph.aio import Telegraph
 
 from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.models import dto, enums
-from shvatka.core.models.dto import scn, action
+from shvatka.core.models.dto import action, scn
 from shvatka.core.services.game_stat import get_typed_keys
-from shvatka.core.utils.datetime_utils import tz_game, DATETIME_FORMAT
-from shvatka.infrastructure.db.dao.holder import HolderDao
+from shvatka.core.utils.datetime_utils import DATETIME_FORMAT, tz_game
 from shvatka.core.views.texts import render_effects
+from shvatka.infrastructure.db.dao.holder import HolderDao
 
 
 class KeyEmoji(enum.Enum):

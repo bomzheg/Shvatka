@@ -1,8 +1,8 @@
-from typing import Self, overload
 import typing
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 from datetime import datetime
-from collections.abc import Mapping, Sequence
+from typing import Self, overload
 from uuid import UUID
 
 from adaptix import Retort
@@ -11,6 +11,8 @@ from shvatka.api.files.responses import GameFile
 from shvatka.api.shared.responses import Player, Team
 from shvatka.core.games.dto import (
     BonusEvent as CoreBonusEvent,
+)
+from shvatka.core.games.dto import (
     BonusSource,
     CurrentHintsAndKeys,
     Event,

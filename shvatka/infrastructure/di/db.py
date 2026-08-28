@@ -1,28 +1,28 @@
 from collections.abc import AsyncIterable
 
-from dishka import Provider, Scope, provide, AnyOf
+from dishka import AnyOf, Provider, Scope, provide
 from redis.asyncio.client import Redis
-from sqlalchemy.ext.asyncio import async_sessionmaker, AsyncSession, AsyncEngine
+from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
 
 from shvatka.core.interfaces.dal.level import LevelDeleter
 from shvatka.core.interfaces.dal.organizer import OrgByPlayerGetter
 from shvatka.core.interfaces.dal.player import PlayerTeamChecker
 from shvatka.core.interfaces.dal.waiver import GameWaiversGetter, WaiverGetter
 from shvatka.core.notifications.adapters import (
-    NotificationReader,
     NotificationMarker,
+    NotificationReader,
     NotificationWriter,
     RequestStorage,
 )
 from shvatka.infrastructure.db import dao
-from shvatka.infrastructure.db.dao.complex.game import LevelDeleterImpl
 from shvatka.infrastructure.db.config.models.db import DBConfig, RedisConfig
 from shvatka.infrastructure.db.dao import (
     WaiverDao,
 )
+from shvatka.infrastructure.db.dao.complex.game import LevelDeleterImpl
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.infrastructure.db.dao.memory.level_testing import LevelTestingData
-from shvatka.infrastructure.db.factory import create_engine, create_session_maker, create_redis
+from shvatka.infrastructure.db.factory import create_engine, create_redis, create_session_maker
 
 
 class DbProvider(Provider):

@@ -1,14 +1,14 @@
 from __future__ import annotations
 
-from typing import Self
-
 from dataclasses import dataclass
 from datetime import datetime
+from typing import Self
+
+from shvatka.core.models import enums
 
 from .common import DateRange
 from .player import Player
 from .team import Team
-from shvatka.core.models import enums
 
 
 @dataclass

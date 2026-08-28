@@ -2,8 +2,7 @@ from datetime import datetime, timedelta
 from uuid import UUID
 
 from shvatka.core.models import dto, enums
-from shvatka.core.models.dto import scn, action
-from shvatka.core.models.dto import hints
+from shvatka.core.models.dto import action, hints, scn
 
 gryffindor = dto.Team(
     id=1,

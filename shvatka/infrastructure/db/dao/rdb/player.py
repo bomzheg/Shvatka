@@ -1,19 +1,20 @@
-import uuid
-from datetime import datetime, tzinfo
 import typing
+import uuid
 from collections.abc import Iterable, Sequence
+from datetime import datetime, tzinfo
 
-from sqlalchemy import select, func, distinct, Result, case, delete, ScalarResult, inspect, or_
-from sqlalchemy.sql.elements import ColumnElement
-from sqlalchemy.exc import NoResultFound, MultipleResultsFound
+from sqlalchemy import Result, ScalarResult, case, delete, distinct, func, inspect, or_, select
+from sqlalchemy.exc import MultipleResultsFound, NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import joinedload, selectinload, contains_eager
+from sqlalchemy.orm import contains_eager, joinedload, selectinload
+from sqlalchemy.sql.elements import ColumnElement
 
 from shvatka.core.models import dto, enums
 from shvatka.core.utils import exceptions
 from shvatka.core.utils.username import numbered_username, username_from_names
 from shvatka.infrastructure.db import models
-from .base import BaseDAO, ILIKE_ESCAPE, ilike_pattern
+
+from .base import ILIKE_ESCAPE, BaseDAO, ilike_pattern
 
 
 class PlayerDao(BaseDAO[models.Player]):

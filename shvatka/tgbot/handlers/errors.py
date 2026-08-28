@@ -3,7 +3,7 @@ import logging
 import typing
 from functools import partial
 
-from aiogram import Dispatcher, Bot
+from aiogram import Bot, Dispatcher
 from aiogram.exceptions import AiogramError, TelegramBadRequest
 from aiogram.filters import ExceptionTypeFilter
 from aiogram.types import InlineKeyboardMarkup

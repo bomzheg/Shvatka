@@ -3,34 +3,33 @@ import hashlib
 import hmac
 import logging
 import typing
-from datetime import timedelta, datetime
+from datetime import datetime, timedelta
 from typing import TypedDict, cast
 
-from aiogram.utils.web_app import check_webapp_signature, parse_webapp_init_data, WebAppInitData
-from dishka import Provider, provide, Scope, from_context
+from aiogram.utils.web_app import WebAppInitData, check_webapp_signature, parse_webapp_init_data
+from dishka import Provider, Scope, from_context, provide
 from fastapi import HTTPException
-from jose import jwt, JWTError
+from jose import JWTError, jwt
 from starlette import status
 from starlette.requests import Request
 
 from shvatka.api.app.config.models.auth import AuthConfig
+from shvatka.api.app.utils.cookie_auth import OAuth2PasswordBearerWithCookie
 from shvatka.api.auth.requests import UserTgAuth
 from shvatka.api.auth.responses import Token
-from shvatka.api.app.utils.cookie_auth import OAuth2PasswordBearerWithCookie
 from shvatka.core.interfaces.hasher import PasswordHasher
 from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.interfaces.superusers import SuperusersResolver
 from shvatka.core.models import dto
 from shvatka.core.players.player import (
-    get_my_team,
     get_full_team_player_or_none,
+    get_my_team,
 )
 from shvatka.core.utils import exceptions
 from shvatka.core.utils.datetime_utils import tz_utc
-from shvatka.core.utils.input_validation import validate_email
 from shvatka.core.utils.exceptions import NoUsernameFound
+from shvatka.core.utils.input_validation import validate_email
 from shvatka.infrastructure.db.dao.holder import HolderDao
-
 
 logger = logging.getLogger(__name__)
 

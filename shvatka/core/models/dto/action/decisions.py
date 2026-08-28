@@ -1,15 +1,15 @@
 import logging
+from collections.abc import Iterator, Sequence
 from dataclasses import dataclass
 from typing import Literal, overload
-from collections.abc import Iterator, Sequence
 
 from shvatka.common.log_utils import obfuscate_sensitive
 from shvatka.core.models.dto.action.interface import (
-    DecisionType,
     Decision,
+    DecisionType,
+    EffectsDecision,
     MultipleEffectsDecision,
 )
-from shvatka.core.models.dto.action.interface import EffectsDecision
 
 logger = logging.getLogger(__name__)
 

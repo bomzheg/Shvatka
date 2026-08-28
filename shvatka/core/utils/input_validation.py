@@ -1,6 +1,6 @@
 import re
-from datetime import datetime
 from collections.abc import Iterable
+from datetime import datetime
 
 from shvatka.core.utils import datetime_utils
 

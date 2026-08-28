@@ -5,7 +5,7 @@ from dataclasses import dataclass
 
 from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.notifications import dto
-from shvatka.core.notifications.adapters import NotificationReader, NotificationMarker
+from shvatka.core.notifications.adapters import NotificationMarker, NotificationReader
 
 
 @dataclass

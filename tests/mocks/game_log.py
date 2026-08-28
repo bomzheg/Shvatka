@@ -1,4 +1,4 @@
-from shvatka.core.views.game import GameLogWriter, GameLogEvent
+from shvatka.core.views.game import GameLogEvent, GameLogWriter
 
 
 class GameLogWriterMock(GameLogWriter):

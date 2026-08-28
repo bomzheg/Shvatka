@@ -1,7 +1,6 @@
-from fastapi import HTTPException
-from fastapi import Request
-from fastapi import status
-from fastapi.openapi.models import OAuthFlows as OAuthFlowsModel, OAuthFlowPassword
+from fastapi import HTTPException, Request, status
+from fastapi.openapi.models import OAuthFlowPassword
+from fastapi.openapi.models import OAuthFlows as OAuthFlowsModel
 from fastapi.security import OAuth2
 from fastapi.security.utils import get_authorization_scheme_param
 from starlette.responses import Response

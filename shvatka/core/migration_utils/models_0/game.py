@@ -1,11 +1,12 @@
+from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import datetime
 from typing import BinaryIO, Literal
-from collections.abc import Sequence
 
 from shvatka.core.models import enums
 from shvatka.core.models.dto.export_stat import GameStat
-from . import UploadedFileMeta, FileMetaLightweight
+
+from . import FileMetaLightweight, UploadedFileMeta
 from .file_content import FileMeta
 from .level import LevelScenario
 

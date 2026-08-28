@@ -1,8 +1,7 @@
 import logging
-from abc import abstractmethod, ABCMeta
+from abc import ABCMeta, abstractmethod
 from dataclasses import dataclass
 from typing import Protocol
-
 
 from shvatka.core.interfaces.bus import ActionRequestResolved, Bus, Event, OneTimeTokenUsed
 

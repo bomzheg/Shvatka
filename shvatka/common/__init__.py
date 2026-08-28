@@ -1,4 +1,4 @@
-from .config import Paths, Config, FileStorageConfig, setup_logging
+from .config import Config, FileStorageConfig, Paths, setup_logging
 
 __all__ = [
     "setup_logging",

@@ -7,15 +7,15 @@ from shvatka.core.interfaces.dal.key_log import PlayerKeysMerger
 from shvatka.core.interfaces.dal.level import LevelAuthorMerger
 from shvatka.core.interfaces.dal.organizer import PlayerOrgMerger
 from shvatka.core.interfaces.dal.player import (
-    TeamPlayerHistoryGetter,
-    TeamPlayerHistoryCleaner,
-    TeamPlayerHistorySetter,
     ForumPlayerMerger,
-    PlayerDeleter,
-    PlayerWaiversGetter,
-    WaiverPlayerMerger,
     PlayerByIdGetter,
     PlayerByUserIdGetter,
+    PlayerDeleter,
+    PlayerWaiversGetter,
+    TeamPlayerHistoryCleaner,
+    TeamPlayerHistoryGetter,
+    TeamPlayerHistorySetter,
+    WaiverPlayerMerger,
 )
 from shvatka.core.interfaces.dal.user import UserUpserter
 from shvatka.core.models import dto

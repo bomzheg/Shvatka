@@ -1,7 +1,7 @@
 import logging
+from collections.abc import Sequence
 from pathlib import Path
 from typing import BinaryIO
-from collections.abc import Sequence
 from uuid import uuid4
 
 from shvatka.core.interfaces.clients.file_storage import FileGateway, FileStorage

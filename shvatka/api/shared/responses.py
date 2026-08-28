@@ -5,10 +5,10 @@ Anything that only one subdomain answers with belongs in that subdomain's
 """
 
 import typing
+from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Generic, Self, overload
-from collections.abc import Sequence
 
 from shvatka.core.models import dto
 from shvatka.core.models.enums import GameStatus

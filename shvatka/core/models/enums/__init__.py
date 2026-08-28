@@ -4,10 +4,10 @@ from .game_status import GameStatus
 from .hint_type import HintType
 from .invite_type import InviteType
 from .key_type import KeyType
-from .notification import NotificationType, NotificationSeverity
+from .notification import NotificationSeverity, NotificationType
 from .org_permission import OrgPermission
 from .played import Played
-from .request import RequestType, RequestStatus
+from .request import RequestStatus, RequestType
 from .team_player_permission import TeamPlayerPermission
 
 __all__ = (

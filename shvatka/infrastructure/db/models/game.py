@@ -8,19 +8,19 @@ from typing import Any
 
 from adaptix import Retort
 from sqlalchemy import (
+    BigInteger,
+    DateTime,
+    Enum,
     ForeignKey,
     Index,
     Text,
-    Enum,
-    DateTime,
     TypeDecorator,
     UniqueConstraint,
-    BigInteger,
     text,
 )
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.engine import Dialect
-from sqlalchemy.orm import relationship, Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from shvatka.common.factory import REQUIRED_GAME_RECIPES
 from shvatka.core.models import dto

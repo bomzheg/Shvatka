@@ -1,7 +1,6 @@
 import pytest
 
-from shvatka.core.models.dto import scn
-from shvatka.core.models.dto import hints
+from shvatka.core.models.dto import hints, scn
 from shvatka.core.utils import exceptions
 
 

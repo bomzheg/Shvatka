@@ -1,10 +1,11 @@
 from aiogram_dialog import Dialog, Window
 from aiogram_dialog.widgets.kbd import Cancel
-from aiogram_dialog.widgets.text import Jinja, Const
+from aiogram_dialog.widgets.text import Const, Jinja
 
 from shvatka.tgbot import states
-from .getters import player_getter
 from shvatka.tgbot.dialogs.preview_data import PREVIEW_PLAYER_STAT
+
+from .getters import player_getter
 
 player_dialog = Dialog(
     Window(

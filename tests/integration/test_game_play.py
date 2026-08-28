@@ -4,27 +4,27 @@ from datetime import datetime, timedelta
 import pytest
 from dishka import AsyncContainer
 
+from shvatka.core.games.game_play import send_hint, start_game
 from shvatka.core.games.interactors import (
-    GamePlayReaderInteractor,
     CheckKeyInteractor,
+    GamePlayReaderInteractor,
     PassedLevelsReaderInteractor,
 )
 from shvatka.core.models import dto, enums
 from shvatka.core.models.dto import hints
 from shvatka.core.models.enums import GameStatus
-from shvatka.core.games.game_play import start_game, send_hint
+from shvatka.core.players.player import join_team, leave
 from shvatka.core.services.game_stat import get_typed_keys
 from shvatka.core.services.key import KeyProcessor
 from shvatka.core.services.organizers import get_orgs
-from shvatka.core.players.player import join_team, leave
 from shvatka.core.utils import exceptions
 from shvatka.core.utils.datetime_utils import tz_utc
 from shvatka.core.utils.key_checker_lock import KeyCheckerFactory
 from shvatka.core.views.game import (
-    LevelUp,
     GameLogEvent,
     GameLogType,
     InputContainer,
+    LevelUp,
 )
 from shvatka.infrastructure.db import models
 from shvatka.infrastructure.db.dao.holder import HolderDao
@@ -32,11 +32,11 @@ from tests.fixtures.game_fixtures import CurrentGameProviderMock
 from tests.fixtures.identity import MockIdentityProvider
 from tests.mocks.game_log import GameLogWriterMock
 from tests.mocks.game_view import GameViewMock
-from tests.mocks.view_sender import ViewSenderMock
 from tests.mocks.org_notifier import OrgNotifierMock
 from tests.mocks.scheduler_mock import SchedulerMock
-from tests.utils.time_key import assert_time_key
 from tests.mocks.team_notifier import TeamNotifierMock
+from tests.mocks.view_sender import ViewSenderMock
+from tests.utils.time_key import assert_time_key
 
 
 class MockInputContainer(InputContainer):

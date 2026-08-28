@@ -2,11 +2,11 @@ import random
 
 from aiogram.filters.callback_data import CallbackData
 from aiogram.types import (
-    ReplyKeyboardMarkup,
     InlineKeyboardMarkup,
     KeyboardButton,
-    KeyboardButtonRequestUser,
     KeyboardButtonRequestChat,
+    KeyboardButtonRequestUser,
+    ReplyKeyboardMarkup,
 )
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 

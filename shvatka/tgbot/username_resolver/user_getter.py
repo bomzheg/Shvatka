@@ -15,7 +15,7 @@ from typing import Self
 import pyrogram
 from aiogram.types import User
 from pyrogram import Client
-from pyrogram.errors import RPCError, UsernameNotOccupied, FloodWait
+from pyrogram.errors import FloodWait, RPCError, UsernameNotOccupied
 
 from shvatka.core.utils import exceptions
 from shvatka.tgbot.config.models.bot import TgClientConfig

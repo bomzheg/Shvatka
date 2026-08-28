@@ -1,5 +1,6 @@
 import dataclasses
 from datetime import timedelta
+from uuid import uuid4
 
 import pytest
 
@@ -17,7 +18,6 @@ from shvatka.core.interfaces.printer import CellAddress, CellStyle, Table, Table
 from shvatka.core.models import dto, enums
 from shvatka.core.models.dto import action
 from shvatka.core.utils.exceptions import GameNotFinished
-from uuid import uuid4
 
 WINNER = dto.Team(id=1, name="Gryffindor", captain=None, is_dummy=False, description=None)
 SECOND = dto.Team(id=2, name="Slytherin", captain=None, is_dummy=False, description=None)

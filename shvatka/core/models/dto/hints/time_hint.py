@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 
 from shvatka.core.utils import exceptions
+
 from .hint_part import AnyHint
 
 

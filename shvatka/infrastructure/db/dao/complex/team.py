@@ -1,18 +1,18 @@
 import typing
-from dataclasses import dataclass
 from collections.abc import Sequence
+from dataclasses import dataclass
 
 from shvatka.core.interfaces.dal.complex import TeamMerger
+from shvatka.core.interfaces.dal.player import TeamLeaver
+from shvatka.core.interfaces.dal.team import TeamCreator
+from shvatka.core.models import dto
 from shvatka.core.teams.adapters import (
     AdminTeamMerger,
     CaptainedTeamsReader,
     CaptainTeamJoiner,
+    ChatlessTeamCreator,
     TeamCaptainSetter,
 )
-from shvatka.core.interfaces.dal.player import TeamLeaver
-from shvatka.core.interfaces.dal.team import TeamCreator
-from shvatka.core.teams.adapters import ChatlessTeamCreator
-from shvatka.core.models import dto
 
 if typing.TYPE_CHECKING:
     from shvatka.infrastructure.db.dao.holder import HolderDao

@@ -1,18 +1,17 @@
 import pytest
 
-from shvatka.core.models import dto
-from shvatka.core.models import enums
+from shvatka.core.models import dto, enums
 from shvatka.core.players.player import (
-    join_team,
-    get_my_team,
-    get_my_role,
     flip_permission,
     get_full_team_player,
+    get_my_role,
+    get_my_team,
+    join_team,
     leave,
 )
 from shvatka.core.utils import exceptions
-from shvatka.core.utils.defaults_constants import DEFAULT_ROLE, CAPTAIN_ROLE
-from shvatka.core.utils.exceptions import PlayerAlreadyInTeam, PermissionsError, CantBeAuthor
+from shvatka.core.utils.defaults_constants import CAPTAIN_ROLE, DEFAULT_ROLE
+from shvatka.core.utils.exceptions import CantBeAuthor, PermissionsError, PlayerAlreadyInTeam
 from shvatka.core.views.game import GameLogWriter
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from tests.fixtures.player import promote

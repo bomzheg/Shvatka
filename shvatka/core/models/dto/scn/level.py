@@ -1,20 +1,20 @@
 import logging
-from collections.abc import Sequence, Iterable
+from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
 from datetime import timedelta
 from typing import Literal, Self, TypeVar, overload
 from uuid import UUID
 
 from shvatka.core.models.dto import action, hints
-from shvatka.core.models.dto.hints import TimeHint, AnyHint
-from shvatka.core.models.dto.hints.time_hint import EnumeratedTimeHint
-from shvatka.core.utils import exceptions
 from shvatka.core.models.dto.action.keys import (
-    SHKey,
-    KeyWinCondition,
     KeyCondition,
     KeyEffectsCondition,
+    KeyWinCondition,
+    SHKey,
 )
+from shvatka.core.models.dto.hints import AnyHint, TimeHint
+from shvatka.core.models.dto.hints.time_hint import EnumeratedTimeHint
+from shvatka.core.utils import exceptions
 
 logger = logging.getLogger(__name__)
 T = TypeVar("T", bound=action.AnyCondition)

@@ -1,6 +1,6 @@
 import typing
-from dataclasses import dataclass
 from collections.abc import Sequence
+from dataclasses import dataclass
 
 from shvatka.core.interfaces.dal.waiver import WaiverApprover
 from shvatka.core.models import dto

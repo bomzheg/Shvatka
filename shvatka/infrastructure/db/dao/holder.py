@@ -5,57 +5,58 @@ from redis.asyncio.client import Redis
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from shvatka.core.interfaces.dal.complex import (
+    GamePackager,
+    GameStatDao,
     TeamMerger,
     TypedKeyGetter,
-    GameStatDao,
-    GamePackager,
 )
-from shvatka.core.interfaces.dal.game import GameUpserter, GameCreator
-from shvatka.core.interfaces.dal.game_play import GamePreparer, GamePlayerDao
+from shvatka.core.interfaces.dal.game import GameCreator, GameUpserter
+from shvatka.core.interfaces.dal.game_play import GamePlayerDao, GamePreparer
 from shvatka.core.interfaces.dal.level_testing import LevelTestingDao
 from shvatka.core.interfaces.dal.level_times import GameStarter
 from shvatka.core.interfaces.dal.organizer import OrgAdder
-from shvatka.core.interfaces.dal.player import TeamLeaver, PlayerPromoter
-from shvatka.core.players.interfaces import PlayerMerger
+from shvatka.core.interfaces.dal.player import PlayerPromoter, TeamLeaver
 from shvatka.core.interfaces.dal.team import TeamCreator
 from shvatka.core.interfaces.dal.waiver import WaiverApprover
+from shvatka.core.players.interfaces import PlayerMerger
+
 from .complex.game import (
-    GameUpserterImpl,
     GameCreatorImpl,
     GamePackagerImpl,
+    GameUpserterImpl,
 )
-from .complex.game_play import GamePreparerImpl, GameStarterImpl, GamePlayerDaoImpl
+from .complex.game_play import GamePlayerDaoImpl, GamePreparerImpl, GameStarterImpl
 from .complex.key_log import TypedKeyGetterImpl
 from .complex.level_testing import LevelTestComplex
 from .complex.level_times import GameStatImpl
 from .complex.orgs import OrgAdderImpl
-from .complex.player import PlayerPromoterImpl, PlayerMergerImpl
+from .complex.player import PlayerMergerImpl, PlayerPromoterImpl
 from .complex.team import TeamCreatorImpl, TeamLeaverImpl, TeamMergerImpl
 from .complex.waiver import WaiverApproverImpl
 from .memory.level_testing import LevelTestingData
 from .rdb import (
     ChatDao,
     EmailAccountDao,
-    UserDao,
     FileInfoDao,
+    ForumUserDAO,
     GameDao,
     GameFileDao,
+    KeyTimeDao,
     LevelDao,
     LevelFileDao,
     LevelTimeDao,
-    KeyTimeDao,
     OrganizerDao,
     PlayerDao,
-    TeamPlayerDao,
     TeamDao,
+    TeamPlayerDao,
+    UserDao,
     WaiverDao,
-    ForumUserDAO,
 )
 from .rdb.achievement import AchievementDAO
 from .rdb.events import GameEventDao
 from .rdb.forum_team import ForumTeamDAO
 from .rdb.timers import TimersDAO
-from .redis import PollDao, SecureInvite, OneTimeToken, EmailConfirmationStore, RateLimiter
+from .redis import EmailConfirmationStore, OneTimeToken, PollDao, RateLimiter, SecureInvite
 
 
 class HolderDao:

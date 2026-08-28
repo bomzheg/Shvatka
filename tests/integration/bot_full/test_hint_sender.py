@@ -1,5 +1,5 @@
 import typing
-from datetime import datetime, UTC
+from datetime import UTC, datetime
 from io import BytesIO
 from unittest.mock import MagicMock
 
@@ -8,42 +8,45 @@ import pytest_asyncio
 from aiogram import Bot
 from aiogram.client.session.base import BaseSession
 from aiogram.exceptions import TelegramAPIError
+from aiogram.methods import (
+    SendAnimation,
+    SendAudio,
+    SendDocument,
+    SendPhoto,
+    SendSticker,
+    SendVideo,
+    SendVideoNote,
+    SendVoice,
+    TelegramMethod,
+)
+from aiogram.methods.base import TelegramType
 from aiogram.types import Chat, Message, PhotoSize
 from dishka import AsyncContainer
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
-from aiogram.methods import (
-    SendPhoto,
-    TelegramMethod,
-    SendAudio,
-    SendVideo,
-    SendDocument,
-    SendAnimation,
-    SendVoice,
-    SendVideoNote,
-    SendSticker,
-)
-from aiogram.methods.base import TelegramType
 
 from shvatka.core.interfaces.clients.file_storage import FileStorage
 from shvatka.core.models import dto, enums
 from shvatka.core.models.dto import hints
-from shvatka.core.models.dto.hints import TextHint, GPSHint, PhotoHint, BaseHint
 from shvatka.core.models.dto.hints import (
-    VenueHint,
-    AudioHint,
-    VideoHint,
-    DocumentHint,
     AnimationHint,
-    VoiceHint,
-    VideoNoteHint,
+    AudioHint,
+    BaseHint,
+    DocumentHint,
+    GPSHint,
+    PhotoHint,
     StickerHint,
+    TextHint,
+    VenueHint,
+    VideoHint,
+    VideoNoteHint,
+    VoiceHint,
 )
 from shvatka.infrastructure.db.dao import FileInfoDao
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.tgbot.config.models.main import TgBotConfig
 from shvatka.tgbot.views.hint_factory.hint_content_resolver import HintContentResolver
 from shvatka.tgbot.views.hint_sender import HintSender
-from tests.fixtures.file_storage import FILE_ID, CHAT_ID, FILE_META
+from tests.fixtures.file_storage import CHAT_ID, FILE_ID, FILE_META
 from tests.fixtures.scn_fixtures import GUID
 
 BAD_REQUEST_DESC = (

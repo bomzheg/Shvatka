@@ -6,25 +6,24 @@ from io import BytesIO
 from typing import BinaryIO
 
 from aiohttp import (
-    ClientSession,
     ClientConnectorError,
-    ClientResponseError,
-    ServerDisconnectedError,
     ClientOSError,
+    ClientResponseError,
+    ClientSession,
+    ServerDisconnectedError,
 )
 from lxml import etree
 from lxml.etree import ElementBase
 
 from shvatka.core.models import enums
-from shvatka.core.models.dto import scn, action
-from shvatka.core.models.dto import hints
-from shvatka.core.models.dto.export_stat import LevelTime, Key, GameStat
-from shvatka.core.utils.datetime_utils import tz_utc, tz_game, add_timezone
+from shvatka.core.models.dto import action, hints, scn
+from shvatka.core.models.dto.export_stat import GameStat, Key, LevelTime
+from shvatka.core.utils.datetime_utils import add_timezone, tz_game, tz_utc
 from shvatka.infrastructure.crawler.constants import GAME_URL_TEMPLATE
 from shvatka.infrastructure.crawler.game_scn.parser.parser import (
-    ContentDownloadError,
-    PARSER_ERROR_IMG,
     EVENING_TIME,
+    PARSER_ERROR_IMG,
+    ContentDownloadError,
 )
 
 logger = logging.getLogger(__name__)

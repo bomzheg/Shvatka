@@ -7,10 +7,10 @@ import logging
 import time
 from typing import TYPE_CHECKING
 
+import uvicorn
+
 from shvatka.common.config.parser.logging_config import setup_logging
 from shvatka.common.config.parser.paths import common_get_paths
-
-import uvicorn
 
 if TYPE_CHECKING:
     from fastapi import FastAPI
@@ -24,6 +24,7 @@ def main() -> "FastAPI":
     logger.info("logging configured, loading application modules...")
     started_at = time.monotonic()
     from fastapi import FastAPI
+
     from shvatka.api.app.config.parser.main import load_config
     from shvatka.api.app.dependencies import setup_di
     from shvatka.api.main_factory import create_app

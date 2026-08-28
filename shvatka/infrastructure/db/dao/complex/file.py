@@ -6,9 +6,9 @@ refers to — reads and writes all of them, so each use case gets one adapter
 composing the per-table DAOs it needs.
 """
 
+import typing
 from collections.abc import Collection
 from dataclasses import dataclass
-import typing
 
 from shvatka.core.files.adapters import FileGarbageCollectorDao
 from shvatka.core.files.dto import GameFileLink

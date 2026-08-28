@@ -1,42 +1,42 @@
 from contextlib import suppress
 
-from aiogram import Router, Bot, F
+from aiogram import Bot, F, Router
 from aiogram.enums import ChatType
 from aiogram.exceptions import TelegramAPIError
 from aiogram.filters import Command, or_f
-from aiogram.types import Message, CallbackQuery, LinkPreviewOptions
+from aiogram.types import CallbackQuery, LinkPreviewOptions, Message
 from aiogram.utils.markdown import html_decoration as hd
 from dishka import FromDishka
 from dishka.integrations.aiogram import inject
 
 from shvatka.core.interfaces.current_game import CurrentGameProvider
-from shvatka.core.utils import exceptions
-from shvatka.core.waiver.adapters import WaiverVoteAdder
-from shvatka.core.waiver.interactors import (
-    TeamWaiversDraftReaderInteractor,
-    AddWaiverVoteInteractor,
-)
-from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.core.models import dto
 from shvatka.core.models.enums import GameStatus
 from shvatka.core.models.enums.played import Played
-from shvatka.core.players.player import get_my_team, get_full_team_player
+from shvatka.core.players.player import get_full_team_player, get_my_team
+from shvatka.core.utils import exceptions
+from shvatka.core.utils.exceptions import AnotherGameIsActive, PlayerNotInTeam
+from shvatka.core.waiver.adapters import WaiverVoteAdder
+from shvatka.core.waiver.interactors import (
+    AddWaiverVoteInteractor,
+    TeamWaiversDraftReaderInteractor,
+)
 from shvatka.core.waiver.services import (
     approve_waivers,
     check_allow_approve_waivers,
-    revoke_vote_by_captain,
-    get_not_played_team_players,
     force_add_vote,
+    get_not_played_team_players,
+    revoke_vote_by_captain,
 )
-from shvatka.core.utils.exceptions import PlayerNotInTeam, AnotherGameIsActive
+from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.tgbot import keyboards as kb
 from shvatka.tgbot.filters.game_status import GameStatusFilter
 from shvatka.tgbot.filters.is_team import IsTeamFilter
 from shvatka.tgbot.filters.team_player import TeamPlayerFilter
 from shvatka.tgbot.services.identity import TgBotIdentityProvider
-from shvatka.tgbot.services.waiver import swap_saved_message, get_saved_message
+from shvatka.tgbot.services.waiver import get_saved_message, swap_saved_message
 from shvatka.tgbot.utils.router import disable_router_on_game
-from shvatka.tgbot.views.commands import START_WAIVERS_COMMAND, APPROVE_WAIVERS_COMMAND
+from shvatka.tgbot.views.commands import APPROVE_WAIVERS_COMMAND, START_WAIVERS_COMMAND
 from shvatka.tgbot.views.utils import total_remove_msg
 from shvatka.tgbot.views.waiver import (
     get_waiver_final_text,

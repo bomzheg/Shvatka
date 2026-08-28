@@ -1,8 +1,8 @@
 from functools import partial
 
 from aiogram import Router, types
-from dishka import FromDishka
 from aiogram.filters import Command, CommandObject
+from dishka import FromDishka
 from dishka.integrations.aiogram import inject
 
 from shvatka.core.notifications.request_interactors import CreatePlayerMergeRequestInteractor
@@ -11,7 +11,7 @@ from shvatka.core.views.game import GameLogWriter
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.tgbot.filters import is_superuser
 from shvatka.tgbot.services.identity import TgBotIdentityProvider
-from shvatka.tgbot.views.commands import MERGE_TEAMS, MERGE_PLAYERS
+from shvatka.tgbot.views.commands import MERGE_PLAYERS, MERGE_TEAMS
 
 
 @inject

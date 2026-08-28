@@ -1,5 +1,5 @@
 from shvatka.core.models import dto
-from tests.fixtures.chat_constants import create_tg_chat, create_gryffindor_dto_chat
+from tests.fixtures.chat_constants import create_gryffindor_dto_chat, create_tg_chat
 
 
 def test_mapper_from_aiogram_to_dto():

@@ -8,20 +8,19 @@ from pathlib import Path
 from typing import BinaryIO
 
 from aiohttp import (
-    ClientSession,
     ClientConnectorError,
-    ClientResponseError,
-    ServerDisconnectedError,
     ClientOSError,
+    ClientResponseError,
+    ClientSession,
+    ServerDisconnectedError,
 )
 from lxml import etree
 from lxml.etree import ElementBase
 
 from shvatka.core.models import enums
-from shvatka.core.models.dto import scn, export_stat, action
-from shvatka.core.models.dto import hints
+from shvatka.core.models.dto import action, export_stat, hints, scn
 from shvatka.core.services.scenario.scn_zip import pack_scn
-from shvatka.core.utils.datetime_utils import tz_utc, tz_game, add_timezone
+from shvatka.core.utils.datetime_utils import add_timezone, tz_game, tz_utc
 from shvatka.infrastructure.crawler.auth import get_auth_cookie
 from shvatka.infrastructure.crawler.constants import GAME_URL_TEMPLATE
 from shvatka.infrastructure.crawler.game_scn.common import UNPARSEABLE_GAMES

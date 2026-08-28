@@ -1,15 +1,15 @@
 from contextlib import suppress
 
-from aiogram import Router, Bot, F
+from aiogram import Bot, F, Router
 from aiogram.enums import ChatType, InlineQueryResultType
 from aiogram.filters import Command
 from aiogram.types import (
-    Message,
+    CallbackQuery,
     InlineQuery,
     InlineQueryResultArticle,
     InputTextMessageContent,
-    CallbackQuery,
     LinkPreviewOptions,
+    Message,
 )
 from aiogram.utils.text_decorations import html_decoration as hd
 from aiogram_dialog.api.protocols import BgManagerFactory
@@ -18,21 +18,21 @@ from dishka.integrations.aiogram import inject
 
 from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.players.player import (
-    save_promotion_confirm_invite,
+    agree_promotion,
     check_promotion_invite,
     dismiss_promotion,
-    agree_promotion,
     get_my_team,
-    leave,
     get_team_players,
+    leave,
+    save_promotion_confirm_invite,
 )
-from shvatka.core.views.team import TeamNotifier
 from shvatka.core.utils.exceptions import SaltError, SaltNotExist
+from shvatka.core.views.team import TeamNotifier
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.tgbot import keyboards as kb
 from shvatka.tgbot.filters.is_inviter import is_inviter
 from shvatka.tgbot.utils.router import disable_router_on_game
-from shvatka.tgbot.views.commands import TEAM_COMMAND, LEAVE_COMMAND, PLAYERS_COMMAND
+from shvatka.tgbot.views.commands import LEAVE_COMMAND, PLAYERS_COMMAND, TEAM_COMMAND
 from shvatka.tgbot.views.team import render_team_players
 
 

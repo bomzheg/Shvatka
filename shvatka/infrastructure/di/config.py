@@ -1,10 +1,10 @@
-from dishka import Provider, provide, Scope
+from dishka import Provider, Scope, provide
 
-from shvatka.common import FileStorageConfig, Paths, Config
-from shvatka.common.config.models.main import WebConfig, FeaturesConfig, DocsConfig
+from shvatka.common import Config, FileStorageConfig, Paths
+from shvatka.common.config.models.main import DocsConfig, FeaturesConfig, WebConfig
 from shvatka.common.config.parser.paths import common_get_paths
 from shvatka.core.models import dto
-from shvatka.infrastructure.db.config.models.db import RedisConfig, DBConfig
+from shvatka.infrastructure.db.config.models.db import DBConfig, RedisConfig
 from shvatka.infrastructure.db.config.models.storage import StorageConfig
 from shvatka.infrastructure.version import get_version
 from shvatka.tgbot.config.models.bot import BotConfig, TgClientConfig

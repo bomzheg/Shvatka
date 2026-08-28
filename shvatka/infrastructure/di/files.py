@@ -1,8 +1,8 @@
 from aiogram import Bot
-from dishka import Provider, provide, Scope
+from dishka import Provider, Scope, provide
 
 from shvatka.common import FileStorageConfig
-from shvatka.core.interfaces.clients.file_storage import FileStorage, FileGateway
+from shvatka.core.interfaces.clients.file_storage import FileGateway, FileStorage
 from shvatka.infrastructure.clients.factory import create_file_storage
 from shvatka.infrastructure.clients.file_gateway import BotFileGateway
 from shvatka.infrastructure.clients.file_storage import LocalFileStorage

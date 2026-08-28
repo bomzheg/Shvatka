@@ -6,28 +6,28 @@ from aiogram.enums import ChatType
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.types import (
+    ContentType,
+    InlineKeyboardButton,
+    InlineKeyboardMarkup,
     Message,
     ReplyKeyboardRemove,
-    ContentType,
-    InlineKeyboardMarkup,
-    InlineKeyboardButton,
 )
 from aiogram.utils.markdown import html_decoration as hd
 from dishka import FromDishka
 from dishka.integrations.aiogram import inject
-from prometheus_client import Counter, REGISTRY
+from prometheus_client import REGISTRY, Counter
 
 from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.services.chat import update_chat_id
 from shvatka.core.services.one_time_link import GenerateOneTimeLoginLinkInteractor
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.tgbot.views.commands import (
+    ABOUT_COMMAND,
     CANCEL_COMMAND,
     CHAT_ID_COMMAND,
-    ABOUT_COMMAND,
     CHAT_TYPE_COMMAND,
-    HELP_USER,
     HELP_COMMAND,
+    HELP_USER,
     OTL_COMMAND,
 )
 

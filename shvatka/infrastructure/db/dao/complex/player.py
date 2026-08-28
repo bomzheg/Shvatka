@@ -2,16 +2,16 @@ import typing
 from dataclasses import dataclass
 
 from shvatka.core.interfaces.dal.player import PlayerPromoter
+from shvatka.core.models import dto
 from shvatka.core.players.interfaces import (
-    PlayerMerger,
-    AdminPlayerReader,
     AdminEmailSetter,
+    AdminPlayerMerger,
+    AdminPlayerReader,
+    AdminPlayerWaiverPointsReader,
     AdminTgChanger,
     AdminUsernameSetter,
-    AdminPlayerMerger,
-    AdminPlayerWaiverPointsReader,
+    PlayerMerger,
 )
-from shvatka.core.models import dto
 
 if typing.TYPE_CHECKING:
     from shvatka.infrastructure.db.dao.holder import HolderDao

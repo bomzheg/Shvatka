@@ -1,5 +1,5 @@
-import typing
 import logging
+import typing
 from dataclasses import dataclass
 
 from aiogram import Bot

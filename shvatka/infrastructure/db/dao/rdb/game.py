@@ -1,11 +1,9 @@
-from collections.abc import Collection
+import typing
+from collections.abc import Collection, Sequence
 from dataclasses import asdict
 from datetime import datetime, tzinfo
-import typing
-from collections.abc import Sequence
 
-from sqlalchemy import or_, select, ScalarResult
-from sqlalchemy import update, func
+from sqlalchemy import ScalarResult, func, or_, select, update
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
@@ -18,7 +16,8 @@ from shvatka.core.models.enums.game_status import ACTIVE_STATUSES
 from shvatka.core.utils.datetime_utils import tz_utc
 from shvatka.core.utils.exceptions import GameHasAnotherAuthor
 from shvatka.infrastructure.db import models
-from .base import BaseDAO, ILIKE_ESCAPE, ilike_pattern
+
+from .base import ILIKE_ESCAPE, BaseDAO, ilike_pattern
 
 
 class GameDao(BaseDAO[models.Game]):

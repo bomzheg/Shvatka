@@ -1,12 +1,12 @@
-from typing import Any
 from collections.abc import Sequence
+from typing import Any
 
 from adaptix import Retort
 from aiogram_dialog import DialogManager
 from dishka import FromDishka
 from dishka.integrations.aiogram_dialog import inject
 
-from shvatka.core.models.dto import hints, action
+from shvatka.core.models.dto import action, hints
 from shvatka.core.models.dto.scn.level import (
     get_keys_default_condition,
 )

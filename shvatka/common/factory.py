@@ -1,25 +1,24 @@
 import typing
 
 from adaptix import (
+    Chain,
+    P,
     Retort,
     TypeHint,
-    validator,
-    P,
-    name_mapping,
     loader,
-    Chain,
+    name_mapping,
+    validator,
 )
-from adaptix.load_error import LoadError
 from adaptix._internal.morphing.provider_template import ABCProxy
+from adaptix.load_error import LoadError
 from dishka import Provider, Scope, provide
 from telegraph.aio import Telegraph
 
 from shvatka.common.docs import DocsUrlFactory
 from shvatka.common.url_factory import UrlFactory
-from shvatka.core.models.dto import scn, action
-from shvatka.core.models.dto import hints
+from shvatka.core.models.dto import action, hints, scn
 from shvatka.core.utils import exceptions
-from shvatka.core.utils.input_validation import validate_level_id, is_multiple_keys_normal
+from shvatka.core.utils.input_validation import is_multiple_keys_normal, validate_level_id
 from shvatka.core.views.texts import INVALID_KEY_ERROR
 from shvatka.tgbot.config.models.bot import BotConfig
 

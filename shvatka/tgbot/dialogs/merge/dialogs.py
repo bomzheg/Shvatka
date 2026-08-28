@@ -1,12 +1,10 @@
 from aiogram.enums import ContentType
 from aiogram_dialog import Dialog, Window
 from aiogram_dialog.widgets.input import MessageInput
-from aiogram_dialog.widgets.kbd import Cancel, SwitchTo, ScrollingGroup, Select, Button
-from aiogram_dialog.widgets.text import Jinja, Const
+from aiogram_dialog.widgets.kbd import Button, Cancel, ScrollingGroup, Select, SwitchTo
+from aiogram_dialog.widgets.text import Const, Jinja
 
 from shvatka.tgbot import states
-from .getters import get_team, get_forum_team, get_forum_teams, get_forum_user
-from .handlers import select_forum_team, confirm_merge, player_link_handler, confirm_merge_player
 from shvatka.tgbot.dialogs.preview_data import (
     PREVIEW_FORUM_TEAM,
     PREVIEW_FORUM_TEAMS,
@@ -14,6 +12,9 @@ from shvatka.tgbot.dialogs.preview_data import (
     PREVIEW_TEAM,
     PreviewSwitchTo,
 )
+
+from .getters import get_forum_team, get_forum_teams, get_forum_user, get_team
+from .handlers import confirm_merge, confirm_merge_player, player_link_handler, select_forum_team
 
 merge_teams_dialog = Dialog(
     Window(

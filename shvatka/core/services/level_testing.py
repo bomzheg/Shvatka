@@ -1,6 +1,6 @@
 import logging
-from datetime import datetime
 from collections.abc import Sequence
+from datetime import datetime
 
 from shvatka.core.games.game_play import calculate_first_hint_time, calculate_next_hint_time
 from shvatka.core.interfaces.dal.game import GameByIdGetter
@@ -12,7 +12,7 @@ from shvatka.core.utils.datetime_utils import tz_utc
 from shvatka.core.utils.exceptions import InvalidKey
 from shvatka.core.utils.input_validation import is_key_valid
 from shvatka.core.utils.key_checker_lock import KeyCheckerFactory
-from shvatka.core.views.game import OrgNotifier, LevelTestCompleted
+from shvatka.core.views.game import LevelTestCompleted, OrgNotifier
 from shvatka.core.views.level import LevelView
 
 logger = logging.getLogger(__name__)

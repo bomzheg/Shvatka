@@ -5,7 +5,7 @@ resolving the player from the identity names the inviting captain instead of
 the person who joined — and the accept button then carries the captain's id.
 """
 
-from datetime import datetime, UTC
+from datetime import UTC, datetime
 from unittest.mock import AsyncMock
 
 import pytest

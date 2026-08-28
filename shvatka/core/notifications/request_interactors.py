@@ -19,6 +19,7 @@ import logging
 from collections.abc import Sequence
 from dataclasses import dataclass
 
+from shvatka.core.interfaces.bus import ActionRequestResolved, Bus
 from shvatka.core.interfaces.dal.complex import TeamMerger
 from shvatka.core.interfaces.dal.organizer import OrgAdder
 from shvatka.core.interfaces.dal.player import (
@@ -30,12 +31,11 @@ from shvatka.core.interfaces.dal.player import (
 )
 from shvatka.core.interfaces.dal.team import TeamByIdGetter
 from shvatka.core.interfaces.identity import IdentityProvider
-from shvatka.core.models import dto
-from shvatka.core.models.enums.notification import NotificationType, NotificationSeverity
-from shvatka.core.models.enums.request import RequestType, RequestStatus
-from shvatka.core.notifications import dto as ndto
-from shvatka.core.interfaces.bus import ActionRequestResolved, Bus
 from shvatka.core.interfaces.superusers import SuperusersResolver
+from shvatka.core.models import dto
+from shvatka.core.models.enums.notification import NotificationSeverity, NotificationType
+from shvatka.core.models.enums.request import RequestStatus, RequestType
+from shvatka.core.notifications import dto as ndto
 from shvatka.core.notifications.adapters import (
     NotificationWriter,
     RequestNotifier,
@@ -60,7 +60,7 @@ from shvatka.core.utils.exceptions import (
     RequestNotPending,
     RequestPermissionError,
 )
-from shvatka.core.views.game import GameLogWriter, OrgNotifier, NewOrg
+from shvatka.core.views.game import GameLogWriter, NewOrg, OrgNotifier
 from shvatka.core.views.team import TeamNotifier
 
 logger = logging.getLogger(__name__)

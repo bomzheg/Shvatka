@@ -3,13 +3,13 @@ import pprint
 from datetime import datetime, timedelta
 from io import BytesIO
 from itertools import pairwise
-from typing import NamedTuple, BinaryIO, cast
+from typing import BinaryIO, NamedTuple, cast
 
 import matplotlib.dates as mdates
 from matplotlib import pyplot as plt
 from matplotlib.ticker import MultipleLocator
 
-from shvatka.common.data_examples import game_stat_example, game_example
+from shvatka.common.data_examples import game_example, game_stat_example
 from shvatka.core.models import dto
 from shvatka.core.utils.datetime_utils import tz_game
 

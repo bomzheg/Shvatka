@@ -1,6 +1,6 @@
 import typing
-from dataclasses import dataclass
 from collections.abc import Sequence
+from dataclasses import dataclass
 
 from shvatka.api.shared.responses import Page
 from shvatka.core.search import dto as search_dto

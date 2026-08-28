@@ -4,7 +4,7 @@ import abc
 import enum
 import typing
 from dataclasses import dataclass
-from typing import Protocol, Literal
+from typing import Literal, Protocol
 
 from .effects import Effects
 

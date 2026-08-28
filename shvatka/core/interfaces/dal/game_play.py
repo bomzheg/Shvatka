@@ -1,6 +1,6 @@
+from collections.abc import Iterable
 from datetime import datetime
 from typing import Protocol
-from collections.abc import Iterable
 
 from shvatka.core.interfaces.dal.base import Committer
 from shvatka.core.interfaces.dal.level_times import LevelByTeamGetter

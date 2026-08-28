@@ -1,7 +1,7 @@
 import logging
-
-from datetime import datetime, tzinfo
 import typing
+from datetime import datetime, tzinfo
+
 from redis.asyncio.client import Redis
 
 from shvatka.core.models.enums.played import Played

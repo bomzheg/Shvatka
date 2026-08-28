@@ -1,7 +1,6 @@
 from typing import Annotated
 
-from dishka.integrations.fastapi import FromDishka
-from dishka.integrations.fastapi import inject
+from dishka.integrations.fastapi import FromDishka, inject
 from fastapi import APIRouter
 from fastapi.params import Body, Path, Query
 

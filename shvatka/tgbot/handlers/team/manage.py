@@ -3,27 +3,27 @@ import logging
 from aiogram import Bot, F, Router
 from aiogram.enums import ChatType
 from aiogram.exceptions import TelegramBadRequest
-from dishka import FromDishka
-from dishka.integrations.aiogram import inject
 from aiogram.filters import (
+    IS_MEMBER,
+    IS_NOT_MEMBER,
+    ChatMemberUpdatedFilter,
     Command,
     CommandObject,
     or_f,
-    ChatMemberUpdatedFilter,
-    IS_NOT_MEMBER,
-    IS_MEMBER,
 )
-from aiogram.types import Message, ChatMemberUpdated, CallbackQuery, LinkPreviewOptions
+from aiogram.types import CallbackQuery, ChatMemberUpdated, LinkPreviewOptions, Message
 from aiogram.utils.text_decorations import html_decoration as hd
+from dishka import FromDishka
+from dishka.integrations.aiogram import inject
 
 from shvatka.core.interfaces.dal.player import PlayerTeamChecker
 from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.models import dto
 from shvatka.core.players.player import (
-    get_team_players,
-    get_player_by_id,
-    join_team,
     get_my_team,
+    get_player_by_id,
+    get_team_players,
+    join_team,
     upsert_player,
 )
 from shvatka.core.services.team import create_team
@@ -31,9 +31,9 @@ from shvatka.core.services.user import upsert_user
 from shvatka.core.utils import exceptions
 from shvatka.core.utils.defaults_constants import DEFAULT_ROLE
 from shvatka.core.utils.exceptions import (
-    TeamError,
-    PlayerAlreadyInTeam,
     AnotherTeamInChat,
+    PlayerAlreadyInTeam,
+    TeamError,
 )
 from shvatka.core.views.game import GameLogWriter
 from shvatka.core.views.team import TeamNotifier
@@ -46,12 +46,12 @@ from shvatka.tgbot.filters.team_player import TeamPlayerFilter
 from shvatka.tgbot.services.identity import load_team
 from shvatka.tgbot.utils.router import disable_router_on_game
 from shvatka.tgbot.views.commands import (
+    ADD_IN_TEAM_COMMAND,
     CREATE_TEAM_COMMAND,
+    PLAYERS_COMMAND,
+    TEAM_COMMAND,
     WHICH_TEAM_COMMAND,
     WHO_THERE_COMMAND,
-    ADD_IN_TEAM_COMMAND,
-    TEAM_COMMAND,
-    PLAYERS_COMMAND,
 )
 from shvatka.tgbot.views.errors import player_already_in_team
 from shvatka.tgbot.views.team import render_team_players

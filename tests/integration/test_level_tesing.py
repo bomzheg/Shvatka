@@ -4,9 +4,9 @@ import pytest
 
 from shvatka.core.models import dto
 from shvatka.core.services.level_testing import (
-    start_level_test,
     check_level_testing_key,
     send_testing_level_hint,
+    start_level_test,
 )
 from shvatka.core.utils.datetime_utils import tz_utc
 from shvatka.core.utils.key_checker_lock import KeyCheckerFactory

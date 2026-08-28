@@ -1,5 +1,5 @@
 from shvatka.core.models import dto
-from tests.fixtures.user_constants import create_tg_user, create_dto_harry
+from tests.fixtures.user_constants import create_dto_harry, create_tg_user
 
 
 def test_from_aiogram_to_dto():

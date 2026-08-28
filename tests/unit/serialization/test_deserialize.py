@@ -3,19 +3,22 @@ from copy import deepcopy
 import pytest
 from adaptix import Retort
 
-from shvatka.common.data_examples import game_example, GAME_START_EXAMPLE
-from shvatka.core.models.dto.hints import TextHint, GPSHint, PhotoHint, ContactHint
-from shvatka.core.models.dto.scn import RawGameScenario
+from shvatka.common.data_examples import GAME_START_EXAMPLE, game_example
 from shvatka.core.models.dto.hints import (
-    VenueHint,
-    AudioHint,
-    VideoHint,
-    DocumentHint,
     AnimationHint,
-    VoiceHint,
-    VideoNoteHint,
+    AudioHint,
+    ContactHint,
+    DocumentHint,
+    GPSHint,
+    PhotoHint,
     StickerHint,
+    TextHint,
+    VenueHint,
+    VideoHint,
+    VideoNoteHint,
+    VoiceHint,
 )
+from shvatka.core.models.dto.scn import RawGameScenario
 from shvatka.core.models.enums import HintType
 from shvatka.core.services.level import load_level
 from shvatka.core.services.scenario.game_ops import parse_game, parse_uploaded_game

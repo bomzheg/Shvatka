@@ -1,8 +1,8 @@
-from datetime import datetime, tzinfo
 import typing
 from collections.abc import Sequence
+from datetime import datetime, tzinfo
 
-from sqlalchemy import update, select
+from sqlalchemy import select, update
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import contains_eager
@@ -10,6 +10,7 @@ from sqlalchemy.orm import contains_eager
 from shvatka.core.models import dto
 from shvatka.infrastructure.crawler.models.team import ParsedTeam
 from shvatka.infrastructure.db import models
+
 from .base import BaseDAO
 
 

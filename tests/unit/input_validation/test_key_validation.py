@@ -1,9 +1,9 @@
 import random
 
 from shvatka.core.utils.input_validation import (
-    normalize_key,
-    is_multiple_keys_normal,
     is_key_valid,
+    is_multiple_keys_normal,
+    normalize_key,
 )
 
 

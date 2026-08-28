@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from shvatka.core.models.dto import Player, Team, Game
+from shvatka.core.models.dto import Game, Player, Team
 from shvatka.core.models.enums.played import Played
 
 

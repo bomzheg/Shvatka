@@ -1,7 +1,6 @@
 from aiogram import Router
 
-from shvatka.tgbot.handlers.game import add_organizer, organizer
-from shvatka.tgbot.handlers.game import play, waivers
+from shvatka.tgbot.handlers.game import add_organizer, organizer, play, waivers
 
 
 def setup() -> Router:

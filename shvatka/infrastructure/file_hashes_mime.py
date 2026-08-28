@@ -18,7 +18,7 @@ import logging
 from pathlib import Path
 
 from dishka import make_async_container
-from sqlalchemy import select, ScalarResult
+from sqlalchemy import ScalarResult, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from shvatka.common import setup_logging

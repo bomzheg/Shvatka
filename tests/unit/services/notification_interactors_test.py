@@ -1,16 +1,16 @@
 from collections.abc import Collection, Sequence
-from datetime import datetime, UTC
+from datetime import UTC, datetime
 from types import SimpleNamespace
 
 import pytest
 
-from shvatka.core.models.enums.notification import NotificationType, NotificationSeverity
+from shvatka.core.models.enums.notification import NotificationSeverity, NotificationType
 from shvatka.core.notifications import dto
 from shvatka.core.notifications.interactors import (
     ListNotificationsInteractor,
-    UnreadCountInteractor,
-    MarkNotificationsReadInteractor,
     MarkAllNotificationsReadInteractor,
+    MarkNotificationsReadInteractor,
+    UnreadCountInteractor,
 )
 
 

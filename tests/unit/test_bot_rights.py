@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta, tzinfo, UTC
+from datetime import UTC, datetime, timedelta, tzinfo
 from types import SimpleNamespace
 from unittest.mock import AsyncMock
 

@@ -1,14 +1,14 @@
-from typing import BinaryIO
 from collections.abc import Sequence
+from typing import BinaryIO
 
 from shvatka.core.interfaces.dal.game import GameByIdGetter
 from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.interfaces.printer import (
-    TablePrinter,
-    Table,
+    Cell,
     CellAddress,
     CellStyle,
-    Cell,
+    Table,
+    TablePrinter,
 )
 from shvatka.core.models import dto as core
 from shvatka.core.models.dto import action

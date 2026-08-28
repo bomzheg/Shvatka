@@ -2,9 +2,9 @@ from dataclasses import dataclass
 from datetime import datetime
 
 from .effects import Effects
-from .keys import TypedKeysState, SHKey
-from .timer import LevelTimerState
 from .interface import StateHolder, T
+from .keys import SHKey, TypedKeysState
+from .timer import LevelTimerState
 
 
 @dataclass

@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Any
 
 from aiogram import Bot
-from aiogram.types import Message, ChatMemberAdministrator
+from aiogram.types import ChatMemberAdministrator, Message
 from aiogram_dialog import DialogManager
 from dishka import FromDishka
 from dishka.integrations.aiogram_dialog import inject

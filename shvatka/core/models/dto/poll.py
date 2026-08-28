@@ -1,8 +1,9 @@
 from dataclasses import dataclass
 
+from shvatka.core.models.enums.played import Played
+
 from .player import Player
 from .team_player import TeamPlayer
-from shvatka.core.models.enums.played import Played
 
 
 @dataclass

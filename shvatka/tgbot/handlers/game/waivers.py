@@ -1,18 +1,18 @@
 from aiogram import Router
 from aiogram.filters import Command
-from aiogram.types import Message, LinkPreviewOptions
+from aiogram.types import LinkPreviewOptions, Message
 from dishka import FromDishka
 from dishka.integrations.aiogram import inject
 
 from shvatka.core.interfaces.current_game import CurrentGameProvider
 from shvatka.core.waiver.interactors import (
-    WaiverCompleteReaderInteractor,
     AllWaiversDraftReaderInteractor,
+    WaiverCompleteReaderInteractor,
 )
 from shvatka.tgbot.filters import GameStatusFilter
 from shvatka.tgbot.services.identity import TgBotIdentityProvider
 from shvatka.tgbot.views.commands import GET_WAIVERS_COMMAND, GET_WAIVERS_DRAFT_COMMAND
-from shvatka.tgbot.views.waiver import render_all_teams_waivers, render_all_teams_poll_stat
+from shvatka.tgbot.views.waiver import render_all_teams_poll_stat, render_all_teams_waivers
 
 
 @inject

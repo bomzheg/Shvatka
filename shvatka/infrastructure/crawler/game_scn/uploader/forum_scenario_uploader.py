@@ -5,9 +5,9 @@ from aiohttp import ClientSession, MultipartWriter
 from shvatka.infrastructure.crawler.auth import get_auth_cookie
 from shvatka.infrastructure.crawler.constants import BASE_URL
 from shvatka.infrastructure.crawler.models import (
-    LevelPuzzle,
-    Hint,
     GameForUpload,
+    Hint,
+    LevelPuzzle,
 )
 
 

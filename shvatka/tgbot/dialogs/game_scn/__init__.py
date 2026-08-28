@@ -1,6 +1,6 @@
 from aiogram import Router
 
-from .dialogs import game_writer, game_editor
+from .dialogs import game_editor, game_writer
 
 
 def setup(router: Router):

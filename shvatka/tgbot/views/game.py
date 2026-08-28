@@ -1,44 +1,44 @@
 import asyncio
-from datetime import datetime
 import json
 import logging
 import typing
+from collections.abc import Iterable, Sequence
 from contextlib import suppress
 from dataclasses import dataclass
-from collections.abc import Iterable, Sequence
+from datetime import datetime
 
-from aiogram import Bot
-from aiogram.types import Message, ReactionTypeEmoji, ReactionTypeCustomEmoji, ReactionTypePaid
-from aiogram.exceptions import TelegramAPIError
-from aiogram.utils.markdown import html_decoration as hd
 from adaptix import Retort
+from aiogram import Bot
+from aiogram.exceptions import TelegramAPIError
+from aiogram.types import Message, ReactionTypeCustomEmoji, ReactionTypeEmoji, ReactionTypePaid
+from aiogram.utils.markdown import html_decoration as hd
 
 from shvatka.core.interfaces.dal.game_play import GamePreparer
 from shvatka.core.models import dto, enums
-from shvatka.core.models.dto import hints, action, KeyTime
+from shvatka.core.models.dto import KeyTime, action, hints
 from shvatka.core.utils.datetime_utils import tz_utc
 from shvatka.core.views.game import (
     AnyViewTask,
     DuplicateKey,
     EffectsKey,
+    Event,
     GameFinished,
     GameFinishedByAll,
-    GameViewPreparer,
-    GameView,
-    GameLogWriter,
-    OrgNotifier,
-    Event,
-    LevelUp,
-    NewOrg,
-    LevelTestCompleted,
     GameLogEvent,
     GameLogType,
-    group_by_team,
+    GameLogWriter,
+    GameView,
+    GameViewPreparer,
     InputContainer,
+    LevelTestCompleted,
+    LevelUp,
+    NewOrg,
+    OrgNotifier,
     SendHint,
     SendPuzzle,
     ShowEffects,
     WrongKey,
+    group_by_team,
 )
 from shvatka.tgbot.views.bot_alert import BotAlert
 from shvatka.tgbot.views.hint_sender import HintSender

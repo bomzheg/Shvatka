@@ -1,18 +1,18 @@
 import asyncio
 import logging
-from datetime import timedelta, datetime
+from datetime import datetime, timedelta
 
 from shvatka.core.interfaces.dal.game_play import GamePreparer
 from shvatka.core.interfaces.dal.level_times import GameStarter, LevelByTeamGetter
 from shvatka.core.interfaces.scheduler import Scheduler
 from shvatka.core.models import dto
-from shvatka.core.models.dto import hints, action
+from shvatka.core.models.dto import action, hints
 from shvatka.core.services.organizers import get_orgs
 from shvatka.core.utils.datetime_utils import tz_utc
 from shvatka.core.views.game import (
-    GameViewPreparer,
     GameLogEvent,
     GameLogType,
+    GameViewPreparer,
     SendHint,
     SendPuzzle,
     ShowTasks,

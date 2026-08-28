@@ -9,9 +9,8 @@ from aiogram.methods import TelegramMethod
 from aiogram.methods.base import TelegramType
 from aiogram.webhook.security import IPFilter
 from dishka import AsyncContainer
-from dishka.integrations.fastapi import FromDishka
-from dishka.integrations.fastapi import inject
-from fastapi import FastAPI, Request, Response, HTTPException, APIRouter
+from dishka.integrations.fastapi import FromDishka, inject
+from fastapi import APIRouter, FastAPI, HTTPException, Request, Response
 
 
 def setup_application(app: FastAPI, dishka: AsyncContainer, /, **kwargs: Any) -> None:

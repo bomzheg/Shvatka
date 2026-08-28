@@ -1,21 +1,22 @@
 import abc
 import logging
 from dataclasses import dataclass
-from datetime import timedelta, datetime
+from datetime import datetime, timedelta
 from typing import Literal
 
 from shvatka.core.models.dto.action import (
-    Condition,
     Action,
+    Condition,
+    ConditionType,
+    Decision,
+    DecisionType,
+    NotImplementedActionDecision,
     State,
     StateHolder,
-    Decision,
-    NotImplementedActionDecision,
-    DecisionType,
-    ConditionType,
 )
+
 from .effects import Effects
-from .interface import EffectsDecision, NoActionDecision, EffectsCondition
+from .interface import EffectsCondition, EffectsDecision, NoActionDecision
 
 logger = logging.getLogger(__name__)
 

@@ -7,19 +7,19 @@ from uuid import uuid4
 
 from shvatka.core.models import enums
 from shvatka.core.utils.input_validation import is_key_valid
+
 from . import EffectsCondition
-from .effects import Effects
 from .decisions import NotImplementedActionDecision
+from .effects import Effects
 from .interface import (
     Action,
-    State,
-    Decision,
     Condition,
-    DecisionType,
     ConditionType,
+    Decision,
+    DecisionType,
     EffectsDecision,
+    State,
 )
-
 
 if typing.TYPE_CHECKING:
     from .state_holder import StateHolder

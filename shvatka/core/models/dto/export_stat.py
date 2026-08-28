@@ -1,9 +1,9 @@
-from typing import Self
 import dataclasses
 import enum
 import typing
 from dataclasses import dataclass
 from datetime import datetime
+from typing import Self
 
 from shvatka.core.models import enums
 

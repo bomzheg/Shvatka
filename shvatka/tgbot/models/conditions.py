@@ -1,6 +1,6 @@
 from collections.abc import Sequence
 
-from shvatka.core.models.dto import scn, action
+from shvatka.core.models.dto import action, scn
 from shvatka.core.models.dto.action import AnyCondition
 
 

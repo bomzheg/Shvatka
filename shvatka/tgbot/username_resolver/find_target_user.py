@@ -3,10 +3,11 @@ import logging
 from aiogram.enums import MessageEntityType
 from aiogram.types import Message
 
-from shvatka.infrastructure.db.dao.holder import HolderDao
-from .user_getter import UserGetter
 from shvatka.core.models import dto
 from shvatka.core.utils import exceptions
+from shvatka.infrastructure.db.dao.holder import HolderDao
+
+from .user_getter import UserGetter
 
 logger = logging.getLogger(__name__)
 

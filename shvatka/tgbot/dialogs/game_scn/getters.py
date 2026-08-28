@@ -1,4 +1,5 @@
 from typing import Any
+
 from aiogram_dialog import DialogManager
 from dishka import FromDishka
 from dishka.integrations.aiogram_dialog import inject

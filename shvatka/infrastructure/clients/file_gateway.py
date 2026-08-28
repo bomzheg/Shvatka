@@ -5,7 +5,7 @@ from typing import BinaryIO
 from aiogram import Bot
 from aiogram.types import BufferedInputFile
 
-from shvatka.core.interfaces.clients.file_storage import FileStorage, FileGateway
+from shvatka.core.interfaces.clients.file_storage import FileGateway, FileStorage
 from shvatka.core.models import dto
 from shvatka.core.models.dto import hints
 from shvatka.infrastructure.db.dao import FileInfoDao

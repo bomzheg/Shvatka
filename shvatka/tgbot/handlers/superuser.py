@@ -3,23 +3,23 @@ import logging
 from functools import partial
 
 from aiogram import Bot, Router
-from dishka import FromDishka
-from dishka.integrations.aiogram import inject
 from aiogram.enums import BotCommandScopeType
 from aiogram.exceptions import TelegramAPIError
 from aiogram.filters import Command
-from aiogram.types import Message, BotCommandScopeChat
+from aiogram.types import BotCommandScopeChat, Message
+from dishka import FromDishka
+from dishka.integrations.aiogram import inject
 
 from shvatka.core.models import dto
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.tgbot.filters.superusers import is_superuser
 from shvatka.tgbot.views.commands import (
-    GET_OUT,
     EXCEPTION_COMMAND,
+    GET_OUT,
+    HELP_COMMAND,
+    HELP_USER_ADMIN,
     UPDATE_COMMANDS,
     VERSION_COMMAND,
-    HELP_USER_ADMIN,
-    HELP_COMMAND,
 )
 
 logger = logging.getLogger(__name__)

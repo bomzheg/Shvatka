@@ -3,10 +3,10 @@ import typing
 from typing import Any
 
 from adaptix import Retort
-from sqlalchemy import Index, Integer, Text, ForeignKey, TypeDecorator, UniqueConstraint
-from sqlalchemy.engine import Dialect
+from sqlalchemy import ForeignKey, Index, Integer, Text, TypeDecorator, UniqueConstraint
 from sqlalchemy.dialects.postgresql import JSONB
-from sqlalchemy.orm import relationship, mapped_column, Mapped
+from sqlalchemy.engine import Dialect
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from shvatka.common.factory import REQUIRED_GAME_RECIPES
 from shvatka.core.models import dto

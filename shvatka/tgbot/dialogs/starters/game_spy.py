@@ -6,8 +6,8 @@ from shvatka.tgbot.filters.is_org import OrgFilter
 from shvatka.tgbot.utils.router import register_start_handler
 from shvatka.tgbot.views.commands import (
     SPY_COMMAND,
-    SPY_LEVELS_COMMAND,
     SPY_KEYS_COMMAND,
+    SPY_LEVELS_COMMAND,
     START_COMMAND,
 )
 

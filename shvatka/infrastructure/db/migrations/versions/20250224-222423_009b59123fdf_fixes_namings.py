@@ -5,8 +5,8 @@ Revises: 1659768228ec
 Create Date: 2025-02-24 22:24:23.158449
 
 """
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 from sqlalchemy.dialects import postgresql
 
 from shvatka.infrastructure.db.models.level import ScenarioField

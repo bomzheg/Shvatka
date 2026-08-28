@@ -2,7 +2,7 @@ import logging
 from typing import Any
 
 from aiogram import Bot
-from aiogram.types import Message, CallbackQuery
+from aiogram.types import CallbackQuery, Message
 from aiogram.utils.text_decorations import html_decoration as hd
 from aiogram_dialog import DialogManager
 from aiogram_dialog.widgets.kbd import Button
@@ -12,23 +12,23 @@ from dishka.integrations.aiogram_dialog import inject
 from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.models import enums
 from shvatka.core.players.player import (
-    flip_permission,
-    get_player_by_id,
-    leave,
-    change_role,
     change_emoji,
+    change_role,
+    flip_permission,
+    get_my_team,
+    get_player_by_id,
     get_player_by_user_id,
     join_team,
-    get_my_team,
+    leave,
 )
 from shvatka.core.services.team import (
-    rename_team,
-    change_team_desc,
     change_chat,
+    change_team_desc,
+    rename_team,
 )
 from shvatka.core.teams.interactors import ChangeCaptainInteractor
-from shvatka.core.views.team import TeamNotifier
 from shvatka.core.utils import exceptions
+from shvatka.core.views.team import TeamNotifier
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.tgbot import keyboards as kb
 from shvatka.tgbot import states

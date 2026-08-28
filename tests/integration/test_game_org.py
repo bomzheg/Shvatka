@@ -1,19 +1,18 @@
 import pytest
 
 from shvatka.core.models import dto
-from shvatka.core.models.enums import InviteType
-from shvatka.core.models.enums import OrgPermission
+from shvatka.core.models.enums import InviteType, OrgPermission
 from shvatka.core.services.organizers import (
-    get_orgs,
-    get_spying_orgs,
-    get_secondary_orgs,
+    agree_to_be_org,
     check_allow_manage_orgs,
     check_game_token,
-    save_invite_to_orgs,
     dismiss_to_be_org,
-    agree_to_be_org,
-    flip_permission,
     flip_deleted,
+    flip_permission,
+    get_orgs,
+    get_secondary_orgs,
+    get_spying_orgs,
+    save_invite_to_orgs,
 )
 from shvatka.core.utils.exceptions import SaltNotExist
 from shvatka.core.views.game import NewOrg

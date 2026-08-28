@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime
 
-from .game import Game, FullGame
+from .game import FullGame, Game
 from .team import Team
 
 

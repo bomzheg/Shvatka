@@ -9,10 +9,10 @@ from shvatka.core.models.dto.scn.game import RawGameScenario
 from shvatka.core.models.enums import GameStatus
 from shvatka.core.services.current_game import CurrentGameProviderImpl
 from shvatka.core.services.game import (
-    upsert_game,
+    complete_game,
     get_authors_games,
     start_waivers,
-    complete_game,
+    upsert_game,
 )
 from shvatka.core.services.level import upsert_level
 from shvatka.core.services.organizers import get_orgs

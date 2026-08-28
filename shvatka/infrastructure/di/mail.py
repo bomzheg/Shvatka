@@ -5,9 +5,9 @@ from shvatka.common.url_factory import UrlFactory
 from shvatka.core.interfaces.hasher import PasswordHasher
 from shvatka.core.interfaces.mail import EmailSender
 from shvatka.core.services.email import (
-    EmailRegisterInteractor,
-    EmailLinkInteractor,
     EmailConfirmInteractor,
+    EmailLinkInteractor,
+    EmailRegisterInteractor,
     EmailResendInteractor,
     ForgotPasswordInteractor,
 )

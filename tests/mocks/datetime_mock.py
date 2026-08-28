@@ -1,5 +1,5 @@
 from collections import deque
-from datetime import tzinfo, datetime
+from datetime import datetime, tzinfo
 
 
 class ClockMock:

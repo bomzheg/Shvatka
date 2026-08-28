@@ -3,14 +3,15 @@ from aiogram.enums import ContentType
 from aiogram.filters import Command
 from aiogram_dialog import Dialog, Window
 from aiogram_dialog.widgets.input import MessageInput
-from aiogram_dialog.widgets.kbd import Cancel, Button
+from aiogram_dialog.widgets.kbd import Button, Cancel
 from aiogram_dialog.widgets.text import Const, Jinja
 
 from shvatka.tgbot import states
-from .getters import get_org
-from .handlers import process_publish_message
 from shvatka.tgbot.dialogs.game_manage.handlers import publish_game_forum
 from shvatka.tgbot.dialogs.preview_data import PREVIEW_AUTHOR, PREVIEW_SIMPLE_GAME
+
+from .getters import get_org
+from .handlers import process_publish_message
 
 game_publish = Dialog(
     Window(

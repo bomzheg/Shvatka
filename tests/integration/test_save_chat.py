@@ -7,12 +7,12 @@ from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.tgbot.services.identity import save_chat
 from shvatka.tgbot.utils.data import SHMiddlewareData
 from tests.fixtures.chat_constants import (
-    create_tg_chat,
+    NEW_CHAT_ID,
     create_db_chat,
     create_gryffindor_dto_chat,
-    NEW_CHAT_ID,
+    create_tg_chat,
 )
-from tests.utils.chat import assert_dto_chat, assert_db_chat
+from tests.utils.chat import assert_db_chat, assert_dto_chat
 
 
 @pytest.mark.asyncio

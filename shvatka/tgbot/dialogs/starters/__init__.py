@@ -1,9 +1,10 @@
-from aiogram import Router, F
+from aiogram import F, Router
 from aiogram.enums import ChatType
 
-from . import editor, game_spy, info, manage_team, player, stat, base, organizer
 from shvatka.tgbot.filters import GameStatusFilter
 from shvatka.tgbot.utils.router import disable_router_on_game
+
+from . import base, editor, game_spy, info, manage_team, organizer, player, stat
 
 
 def setup() -> Router:

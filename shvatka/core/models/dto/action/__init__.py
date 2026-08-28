@@ -1,39 +1,39 @@
 import typing
 
+from .decisions import Decisions, NotImplementedActionDecision
+from .effects import Effects
 from .interface import (
-    Condition,
-    EffectsCondition,
-    ConditionType,
     Action,
-    State,
+    Condition,
+    ConditionType,
     Decision,
     DecisionType,
-    StateHolder,
+    EffectsCondition,
     MultipleEffectsDecision,
     NoActionDecision,
+    State,
+    StateHolder,
 )
-from .decisions import NotImplementedActionDecision, Decisions
 from .keys import (
-    SHKey,
     BonusKey,
-    KeyDecision,
-    TypedKeyDecision,
-    KeyWinCondition,
     KeyCondition,
+    KeyDecision,
+    KeyEffectsCondition,
+    KeyEffectsDecision,
+    KeyWinCondition,
+    SHKey,
     TypedKeyAction,
+    TypedKeyDecision,
     TypedKeysState,
     WrongKeyDecision,
-    KeyEffectsDecision,
-    KeyEffectsCondition,
 )
 from .state_holder import InMemoryKeyStateHolder, InMemoryTimerStateHolder
 from .timer import (
     LevelTimerAction,
-    LevelTimerState,
     LevelTimerDecision,
     LevelTimerEffectsCondition,
     LevelTimerEffectsDecision,
+    LevelTimerState,
 )
-from .effects import Effects
 
 AnyCondition: typing.TypeAlias = KeyWinCondition | KeyEffectsCondition | LevelTimerEffectsCondition

@@ -1,9 +1,9 @@
 import pytest
 
 from shvatka.core.models import dto
-from shvatka.core.services.game import complete_game
 from shvatka.core.players.player import get_full_team_player
-from shvatka.core.services.team import rename_team, change_team_desc, get_teams, get_played_games
+from shvatka.core.services.game import complete_game
+from shvatka.core.services.team import change_team_desc, get_played_games, get_teams, rename_team
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from tests.fixtures.chat_constants import GRYFFINDOR_CHAT_DTO
 

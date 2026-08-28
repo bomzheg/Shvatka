@@ -1,8 +1,8 @@
 from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.models import dto
-from shvatka.core.models.enums.org_permission import OrgPermission
 from shvatka.core.models.enums.game_status import ADMIN_MANAGEABLE_STATUSES
-from shvatka.core.utils.exceptions import NotAuthorizedForEdit, CantEditGame, GameNotFound
+from shvatka.core.models.enums.org_permission import OrgPermission
+from shvatka.core.utils.exceptions import CantEditGame, GameNotFound, NotAuthorizedForEdit
 
 
 def check_can_read(game: dto.Game, player: dto.Player):

@@ -4,21 +4,21 @@ from types import SimpleNamespace
 
 import pytest
 
+from shvatka.core.interfaces.bus import ActionRequestResolved
 from shvatka.core.models import dto
 from shvatka.core.models.enums.chat_type import ChatType
-from shvatka.core.models.enums.request import RequestType, RequestStatus
+from shvatka.core.models.enums.request import RequestStatus, RequestType
 from shvatka.core.notifications import dto as ndto
-from shvatka.core.interfaces.bus import ActionRequestResolved
 from shvatka.core.notifications import request_interactors
 from shvatka.core.notifications.request_interactors import (
+    AcceptRequestInteractor,
+    CancelRequestInteractor,
+    CreatePlayerMergeRequestInteractor,
+    CreatePromotionInviteInteractor,
     CreateTeamJoinInviteInteractor,
     CreateTeamJoinRequestInteractor,
-    CreatePromotionInviteInteractor,
     CreateTeamMergeRequestInteractor,
-    CreatePlayerMergeRequestInteractor,
-    CancelRequestInteractor,
     DeclineRequestInteractor,
-    AcceptRequestInteractor,
     ListRequestsInteractor,
 )
 from shvatka.core.players.dto import TimelineItem

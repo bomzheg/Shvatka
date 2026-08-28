@@ -1,14 +1,15 @@
 from typing import Any
-from aiogram_dialog import DialogManager
 
+from aiogram_dialog import DialogManager
+from dishka import FromDishka
+from dishka.integrations.aiogram_dialog import inject
+
+from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.services import organizers
 from shvatka.core.services.game import get_game
 from shvatka.core.services.organizers import get_org_by_id
 from shvatka.core.views.texts import PERMISSION_EMOJI
 from shvatka.infrastructure.db.dao.holder import HolderDao
-from shvatka.core.interfaces.identity import IdentityProvider
-from dishka import FromDishka
-from dishka.integrations.aiogram_dialog import inject
 from shvatka.tgbot import keyboards as kb
 
 

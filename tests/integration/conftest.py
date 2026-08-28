@@ -4,12 +4,12 @@ from unittest.mock import MagicMock
 
 import pytest
 import pytest_asyncio
-from aiogram import Dispatcher, Bot
+from aiogram import Bot, Dispatcher
 from aiogram.client.session.base import BaseSession
 from aiogram_dialog.api.protocols import MessageManagerProtocol
 from alembic.command import upgrade
 from alembic.config import Config as AlembicConfig
-from dishka import make_async_container, AsyncContainer, STRICT_VALIDATION
+from dishka import STRICT_VALIDATION, AsyncContainer, make_async_container
 from telegraph.aio import Telegraph
 
 from shvatka.common import Paths

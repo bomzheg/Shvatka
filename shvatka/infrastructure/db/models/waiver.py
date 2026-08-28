@@ -1,9 +1,9 @@
-from sqlalchemy import ForeignKey, Enum, Index, UniqueConstraint
-from sqlalchemy.orm import relationship, mapped_column, Mapped
+from sqlalchemy import Enum, ForeignKey, Index, UniqueConstraint
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from shvatka.infrastructure.db.models import Base
 from shvatka.core.models import dto
 from shvatka.core.models.enums.played import Played
+from shvatka.infrastructure.db.models import Base
 
 
 class Waiver(Base):

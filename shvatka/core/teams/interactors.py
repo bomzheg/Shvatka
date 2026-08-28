@@ -6,8 +6,8 @@ transport layer (api routes) stays thin.
 """
 
 import contextlib
-from dataclasses import dataclass
 from collections.abc import Sequence
+from dataclasses import dataclass
 
 from shvatka.core.interfaces.dal.player import (
     PlayerByIdGetter,

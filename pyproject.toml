@@ -183,7 +183,7 @@ ignore = [
     "TCH001", "TCH002", "TCH003",
 
     # fixme — worth fixing, just not fixed yet
-    "ANN201", "I001", "PLR0913", "ANN401", "ANN001", "PLR0911", "FBT001",
+    "ANN201", "PLR0913", "ANN401", "ANN001", "PLR0911", "FBT001",
     "ANN003", "ARG002", "ARG001", "BLE001", "FBT002", "N818", "ANN202",
 ]
 

@@ -4,10 +4,10 @@ from dishka import Provider, Scope, provide
 from redis.asyncio import Redis
 from sqlalchemy.engine import make_url
 from sqlalchemy.ext.asyncio import (
-    create_async_engine,
+    AsyncEngine,
     AsyncSession,
     async_sessionmaker,
-    AsyncEngine,
+    create_async_engine,
 )
 
 from shvatka.core.utils.key_checker_lock import KeyCheckerFactory

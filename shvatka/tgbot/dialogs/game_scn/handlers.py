@@ -1,11 +1,11 @@
 import logging
 import typing
-from typing import Any, IO
+from typing import IO, Any
 from zipfile import Path as ZipPath
 
 from adaptix import Retort
 from aiogram import Bot
-from aiogram.types import Message, CallbackQuery
+from aiogram.types import CallbackQuery, Message
 from aiogram.utils.text_decorations import html_decoration as hd
 from aiogram_dialog import DialogManager
 from aiogram_dialog.widgets.kbd import Button, ManagedMultiselect
@@ -18,10 +18,10 @@ from shvatka.core.models import enums
 from shvatka.core.models.dto import scn  # noqa: F401
 from shvatka.core.services.achievement import add_achievement
 from shvatka.core.services.game import (
+    add_level,
     check_new_game_name_available,
     create_game,
     get_full_game,
-    add_level,
     upsert_game,
 )
 from shvatka.core.services.level import get_all_my_free_levels, get_by_id

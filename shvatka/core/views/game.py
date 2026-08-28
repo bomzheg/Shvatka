@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 import enum
-from dataclasses import dataclass, field
-from typing import Protocol, Any
 from collections.abc import Iterable, Sequence
+from dataclasses import dataclass, field
+from typing import Any, Protocol
 
 from shvatka.core.interfaces.dal.game_play import GamePreparer
 from shvatka.core.models import dto

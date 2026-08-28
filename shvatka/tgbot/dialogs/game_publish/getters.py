@@ -2,10 +2,10 @@ from datetime import datetime
 from typing import Any
 
 from aiogram_dialog import DialogManager
-
-from shvatka.core.interfaces.identity import IdentityProvider
 from dishka import FromDishka
 from dishka.integrations.aiogram_dialog import inject
+
+from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.services.game import get_game
 from shvatka.infrastructure.db.dao.holder import HolderDao
 

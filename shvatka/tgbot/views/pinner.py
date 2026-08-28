@@ -2,9 +2,9 @@ import asyncio
 import enum
 import logging
 import typing
+from collections.abc import Iterable
 from dataclasses import dataclass
 from datetime import timedelta
-from collections.abc import Iterable
 
 from aiogram import Bot
 from aiogram.types import Message

@@ -1,44 +1,43 @@
 import logging
-from itertools import pairwise
-from datetime import datetime
 from collections.abc import Sequence
+from datetime import datetime
+from itertools import pairwise
 
-from shvatka.core.players.dto import TimelineItem, WaiverPoint
-from shvatka.core.utils.datetime_utils import tz_utc
 from shvatka.core.interfaces.dal.player import (
-    PlayerUpserter,
-    PlayerTeamChecker,
+    PlayerByIdGetter,
+    PlayerByUserIdGetter,
     PlayerPromoter,
+    PlayerTeamChecker,
+    PlayerUpserter,
+    PlayerWaiversGetter,
     TeamJoiner,
     TeamLeaver,
-    TeamPlayersGetter,
-    TeamPlayerGetter,
-    PlayerByIdGetter,
-    TeamPlayerPermissionFlipper,
-    TeamPlayerRoleUpdater,
     TeamPlayerEmojiUpdater,
     TeamPlayerFullHistoryGetter,
-    PlayerByUserIdGetter,
-    PlayerWaiversGetter,
+    TeamPlayerGetter,
+    TeamPlayerPermissionFlipper,
+    TeamPlayerRoleUpdater,
+    TeamPlayersGetter,
 )
-from shvatka.core.interfaces.dal.secure_invite import InviteSaver, InviteRemover, InviterDao
+from shvatka.core.interfaces.dal.secure_invite import InviterDao, InviteRemover, InviteSaver
 from shvatka.core.interfaces.identity import IdentityProvider
-from shvatka.core.models import dto
-from shvatka.core.models import enums
+from shvatka.core.models import dto, enums
 from shvatka.core.models.enums.invite_type import InviteType
-from shvatka.core.players.interfaces import PlayerUsernameChanger, UserPasswordSetter, PlayerMerger
+from shvatka.core.players.dto import TimelineItem, WaiverPoint
+from shvatka.core.players.interfaces import PlayerMerger, PlayerUsernameChanger, UserPasswordSetter
 from shvatka.core.utils import exceptions
-from shvatka.core.utils.defaults_constants import DEFAULT_ROLE, EMOJI_BY_ROLE, DEFAULT_EMOJI
+from shvatka.core.utils.datetime_utils import tz_utc
+from shvatka.core.utils.defaults_constants import DEFAULT_EMOJI, DEFAULT_ROLE, EMOJI_BY_ROLE
 from shvatka.core.utils.exceptions import (
-    PlayerRestoredInTeam,
     CantBeAuthor,
-    PromoteError,
-    PlayerNotInTeam,
     PermissionsError,
+    PlayerNotInTeam,
+    PlayerRestoredInTeam,
+    PromoteError,
     SaltError,
 )
-from shvatka.core.views.game import GameLogWriter, GameLogEvent, GameLogType
-from shvatka.core.views.team import TeamNotifier, PlayerJoinedTeam, PlayerLeftTeam
+from shvatka.core.views.game import GameLogEvent, GameLogType, GameLogWriter
+from shvatka.core.views.team import PlayerJoinedTeam, PlayerLeftTeam, TeamNotifier
 
 logger = logging.getLogger(__name__)
 

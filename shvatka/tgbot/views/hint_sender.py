@@ -1,9 +1,9 @@
 import asyncio
 import logging
+from collections.abc import Awaitable, Callable, Collection, Iterable
 from dataclasses import dataclass, field
 from datetime import timedelta
 from functools import partial
-from collections.abc import Iterable, Callable, Awaitable, Collection
 
 from aiogram import Bot
 from aiogram.exceptions import TelegramAPIError

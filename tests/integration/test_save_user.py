@@ -6,7 +6,7 @@ from shvatka.infrastructure.db import models
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.tgbot.services.identity import save_user
 from shvatka.tgbot.utils.data import SHMiddlewareData
-from tests.fixtures.user_constants import create_tg_user, create_dto_harry, HARRY_OLD_USERNAME
+from tests.fixtures.user_constants import HARRY_OLD_USERNAME, create_dto_harry, create_tg_user
 from tests.utils.user import assert_user
 
 

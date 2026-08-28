@@ -1,7 +1,8 @@
 import json
 from io import BytesIO
 from typing import BinaryIO
-from zipfile import Path as ZipPath, ZipFile, ZIP_DEFLATED
+from zipfile import ZIP_DEFLATED, ZipFile
+from zipfile import Path as ZipPath
 
 import yaml
 

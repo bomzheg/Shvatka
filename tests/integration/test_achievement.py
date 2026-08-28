@@ -1,7 +1,6 @@
 import pytest
 
-from shvatka.core.models import dto
-from shvatka.core.models import enums
+from shvatka.core.models import dto, enums
 from shvatka.core.services.achievement import add_achievement
 from shvatka.infrastructure.db.dao.holder import HolderDao
 

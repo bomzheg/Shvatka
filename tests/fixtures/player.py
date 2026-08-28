@@ -5,11 +5,11 @@ from shvatka.core.players.player import upsert_player
 from shvatka.core.services.user import upsert_user
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from tests.fixtures.user_constants import (
-    create_dto_hermione,
+    create_dto_draco,
     create_dto_harry,
+    create_dto_hermione,
     create_dto_ron,
     create_dto_rowling,
-    create_dto_draco,
 )
 
 

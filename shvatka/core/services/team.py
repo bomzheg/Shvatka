@@ -3,20 +3,19 @@ from collections.abc import Sequence
 
 from shvatka.core.interfaces.dal.chat import TeamChatChanger
 from shvatka.core.interfaces.dal.complex import TeamMerger
+from shvatka.core.interfaces.dal.player import TeamPlayerGetter
 from shvatka.core.interfaces.dal.team import (
+    ByForumTeamIdGetter,
+    FreeForumTeamGetter,
+    PlayedGamesByTeamGetter,
+    TeamByIdGetter,
     TeamCreator,
+    TeamDescChanger,
     TeamGetter,
     TeamRenamer,
-    TeamDescChanger,
     TeamsGetter,
-    TeamByIdGetter,
-    PlayedGamesByTeamGetter,
-    FreeForumTeamGetter,
-    ByForumTeamIdGetter,
 )
-from shvatka.core.models import dto
-from shvatka.core.models import enums
-from shvatka.core.interfaces.dal.player import TeamPlayerGetter
+from shvatka.core.models import dto, enums
 from shvatka.core.players.player import (
     check_allow_be_author,
     get_full_team_player,
@@ -26,8 +25,8 @@ from shvatka.core.teams.adapters import TeamCaptainSetter
 from shvatka.core.utils import exceptions
 from shvatka.core.utils.defaults_constants import CAPTAIN_ROLE, DEFAULT_ROLE
 from shvatka.core.utils.doc_pages import DocPage
-from shvatka.core.utils.exceptions import SHDataBreach, PermissionsError
-from shvatka.core.views.game import GameLogWriter, GameLogEvent, GameLogType
+from shvatka.core.utils.exceptions import PermissionsError, SHDataBreach
+from shvatka.core.views.game import GameLogEvent, GameLogType, GameLogWriter
 from shvatka.core.views.team import CaptainChanged, TeamNotifier
 
 

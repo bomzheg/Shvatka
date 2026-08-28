@@ -1,11 +1,11 @@
 from typing import Any
 
 from aiogram_dialog import DialogManager
+from dishka import FromDishka
+from dishka.integrations.aiogram_dialog import inject
 
 from shvatka.common.config.models.main import FeaturesConfig
 from shvatka.core.interfaces.identity import IdentityProvider
-from dishka import FromDishka
-from dishka.integrations.aiogram_dialog import inject
 from shvatka.core.players.player import get_team_players
 from shvatka.core.views.texts import PERMISSION_EMOJI
 from shvatka.infrastructure.db.dao.holder import HolderDao

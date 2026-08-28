@@ -1,14 +1,14 @@
-from dishka import Provider, make_async_container, AsyncContainer
+from dishka import AsyncContainer, Provider, make_async_container
 from dishka.integrations.fastapi import setup_dishka
 from fastapi import FastAPI
 
-from shvatka.api.app.dependencies.auth import AuthProvider
 from shvatka.api.app.dependencies.api_only import ApiOnlyProvider
+from shvatka.api.app.dependencies.auth import AuthProvider
 from shvatka.api.app.dependencies.config import ApiConfigProvider
 from shvatka.api.app.dependencies.other import OtherApiProvider
 from shvatka.infrastructure.di import get_providers
-from shvatka.infrastructure.di.interactors import GameEditProvider
 from shvatka.infrastructure.di.interactors import AdminProvider as AdminInteractorProvider
+from shvatka.infrastructure.di.interactors import GameEditProvider
 
 
 def setup_di(app: FastAPI, paths_env: str):

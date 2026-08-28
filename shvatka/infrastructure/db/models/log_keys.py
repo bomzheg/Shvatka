@@ -1,7 +1,7 @@
 from datetime import datetime
 
-from sqlalchemy import Integer, ForeignKey, Index, Text, Boolean, DateTime, func
-from sqlalchemy.orm import relationship, mapped_column, Mapped
+from sqlalchemy import Boolean, DateTime, ForeignKey, Index, Integer, Text, func
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from shvatka.core.models import dto, enums
 from shvatka.core.utils.datetime_utils import tz_utc

@@ -1,10 +1,9 @@
-from datetime import datetime, tzinfo
 import typing
-from typing import TypeVar, Generic
 from collections.abc import Sequence
+from datetime import datetime, tzinfo
+from typing import Generic, TypeVar
 
-from sqlalchemy import delete, func, ScalarResult
-from sqlalchemy import select
+from sqlalchemy import ScalarResult, delete, func, select
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm.interfaces import ORMOption

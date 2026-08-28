@@ -1,11 +1,10 @@
 import typing
 from datetime import datetime
 
-from sqlalchemy import BigInteger, ForeignKey, DateTime, Index, func, Enum
-from sqlalchemy.orm import relationship, Mapped, mapped_column
+from sqlalchemy import BigInteger, DateTime, Enum, ForeignKey, Index, func
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from shvatka.core.models import dto
-from shvatka.core.models import enums
+from shvatka.core.models import dto, enums
 from shvatka.core.utils.datetime_utils import tz_utc
 from shvatka.infrastructure.db.models.base import Base
 

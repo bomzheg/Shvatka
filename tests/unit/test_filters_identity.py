@@ -6,7 +6,7 @@ They are wired through ``@inject``, which only works because aiogram passes
 disable a command rather than fail, so drive them through the real machinery.
 """
 
-from datetime import datetime, UTC
+from datetime import UTC, datetime
 from typing import Any
 from unittest.mock import AsyncMock
 

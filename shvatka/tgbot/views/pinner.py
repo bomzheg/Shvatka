@@ -105,7 +105,7 @@ class MessagePinner:
                 message_id=message_id,
                 disable_notification=not notify,
             )
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001  # pinning is best-effort
             logger.warning("can't pin message %s in chat %s", message_id, chat_id, exc_info=e)
             return False
         return True
@@ -113,5 +113,5 @@ class MessagePinner:
     async def _unpin_one(self, chat_id: int, message_id: int) -> None:
         try:
             await self.bot.unpin_chat_message(chat_id=chat_id, message_id=message_id)
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001  # unpinning is best-effort
             logger.warning("can't unpin message %s in chat %s", message_id, chat_id, exc_info=e)

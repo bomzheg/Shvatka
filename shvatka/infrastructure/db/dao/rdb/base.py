@@ -53,13 +53,13 @@ class BaseDAO(Generic[Model_co]):
             raise NoResultFound
         return result
 
-    def _save(self, obj: Base):
+    def _save(self, obj: Base) -> None:
         self.session.add(obj)
 
     async def delete_all(self):
         await self.session.execute(delete(self.model))
 
-    async def _delete(self, obj: Base):
+    async def _delete(self, obj: Base) -> None:
         await self.session.delete(obj)
 
     async def count(self):
@@ -69,5 +69,5 @@ class BaseDAO(Generic[Model_co]):
     async def commit(self):
         await self.session.commit()
 
-    async def _flush(self, *objects: Base):
+    async def _flush(self, *objects: Base) -> None:
         await self.session.flush(objects)

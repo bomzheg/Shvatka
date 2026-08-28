@@ -117,7 +117,7 @@ class BotRights:
             return cached.rights
         try:
             rights = await self._load(chat_id)
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             # not cached: it can be a temporary error, next time we'll ask again
             logger.warning("can't get bot rights in chat %s", chat_id, exc_info=e)
             return NO_RIGHTS

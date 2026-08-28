@@ -128,7 +128,7 @@ class AuthProperties:
             raise
         try:
             player = await dao.player.get_by_id(player_id)
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001  # any lookup failure is a bad token
             logger.info("player by id %s not found", player_id)
             raise credentials_exception from e
         return player

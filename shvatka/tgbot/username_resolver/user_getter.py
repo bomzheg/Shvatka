@@ -51,7 +51,7 @@ class UserGetter:
             logger.exception("Flood Wait")
             await asyncio.sleep(e.value)
             raise exceptions.UsernameResolverError(username=username) from e
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001  # every pyrogram failure is one for us
             raise exceptions.UsernameResolverError(username=username) from e
         if isinstance(user, list):
             raise exceptions.MultipleUsernameFound(

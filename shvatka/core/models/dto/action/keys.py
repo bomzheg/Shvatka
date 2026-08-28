@@ -191,5 +191,5 @@ class KeyEffectsCondition(KeyCondition, EffectsCondition):
     def get_keys(self) -> set[SHKey]:
         return self.keys
 
-    def _get_key_type(self, action: TypedKeyAction):
+    def _get_key_type(self, action: TypedKeyAction) -> enums.KeyType:
         return enums.KeyType.effects if self._is_correct(action) else enums.KeyType.wrong

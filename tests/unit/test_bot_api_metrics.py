@@ -1,3 +1,4 @@
+from typing import Never
 from unittest.mock import AsyncMock
 
 import pytest
@@ -20,7 +21,7 @@ async def test_success_request_counted():
     responses_before = get_value("tgbot_api_responses_total", {**labels, "status": "success"})
     duration_before = get_value("tgbot_api_request_duration_seconds_count", labels)
 
-    async def make_request(bot, method_):
+    async def make_request(bot, method_) -> str:
         return "result"
 
     result = await RequestMetricsMiddleware()(make_request, AsyncMock(), method)
@@ -44,7 +45,7 @@ async def test_failed_request_counted():
         "tgbot_api_responses_total", {**labels, "status": "TelegramBadRequest"}
     )
 
-    async def make_request(bot, method_):
+    async def make_request(bot, method_) -> Never:
         raise TelegramBadRequest(method=method_, message="chat not found")
 
     with pytest.raises(TelegramBadRequest):

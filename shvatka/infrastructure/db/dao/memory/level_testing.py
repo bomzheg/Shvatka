@@ -60,7 +60,7 @@ class LevelTestingData(LevelTestProtocolDao):
             suite.tester.player.id, dto.LevelTestBucket()
         )
 
-    def _del_bucket(self, suite: dto.LevelTestSuite):
+    def _del_bucket(self, suite: dto.LevelTestSuite) -> None:
         self._buckets.setdefault(suite.level.db_id, {}).pop(suite.tester.player.id, None)
 
     async def delete_all(self):

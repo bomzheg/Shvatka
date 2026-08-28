@@ -14,7 +14,7 @@ class ScheduledContextHolder:
 
 
 def inject(func):
-    async def wrapper(*args: Any, **kwargs: Any):
+    async def wrapper(*args: Any, **kwargs: Any) -> Any:
         async with ScheduledContextHolder.dishka() as request_dishka:
             wrapped = wrap_injection(
                 func=func,

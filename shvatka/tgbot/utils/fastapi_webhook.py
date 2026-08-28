@@ -1,6 +1,7 @@
 import asyncio
 import secrets
 from abc import ABC, abstractmethod
+from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from typing import Any
 
@@ -21,7 +22,7 @@ def setup_application(app: FastAPI, dishka: AsyncContainer, /, **kwargs: Any) ->
     }
 
     @asynccontextmanager
-    async def lifespan(*a: Any, **kw: Any):
+    async def lifespan(*a: Any, **kw: Any) -> AsyncIterator[None]:
         dispatcher = await dishka.get(Dispatcher)
         await dispatcher.emit_startup(**workflow_data, **dispatcher.workflow_data)
         yield

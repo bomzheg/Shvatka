@@ -106,7 +106,7 @@ class WebPushSender:
             if e.response is not None and e.response.status_code in {404, 410}:
                 return True
             logger.warning("web push provider rejected subscription %s", recipient.id, exc_info=e)
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001  # one bad subscription must not stop the rest
             logger.warning("web push send failed for subscription %s", recipient.id, exc_info=e)
         return False
 

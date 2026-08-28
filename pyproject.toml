@@ -184,7 +184,7 @@ ignore = [
 
     # fixme — worth fixing, just not fixed yet
     "ANN201", "PLR0913", "ANN401", "ANN001", "PLR0911", "FBT001",
-    "ANN003", "ARG002", "ARG001", "BLE001", "FBT002", "N818", "ANN202",
+    "ANN003", "ARG002", "ARG001", "FBT002", "N818",
 ]
 
 [tool.ruff.lint.flake8-tidy-imports.banned-api]
@@ -201,7 +201,8 @@ ignore = [
 # compare against a literal — that is the point of a test, not a smell
 "tests/*" = [
     "S105", "S106", "S311", "SLF001", "PLR2004", "PLR0913",
-    "PT004", "PT023", "PT001", "PLR0915", "ARG001", "ARG005", "PTH123",  # fixme
+    "PT004", "PT023", "PT001", "PLR0915", "ARG001", "ARG005", "PTH123",
+    "ANN202", "BLE001",  # fixme
 ]
 "tests/**/conftest.py" = ["F811"]
 "shvatka/api/*" = ["B008"]

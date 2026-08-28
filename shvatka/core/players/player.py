@@ -151,7 +151,7 @@ async def _join_team(
     notifier: TeamNotifier,
     role: str = DEFAULT_ROLE,
     emoji: str | None = None,
-):
+) -> None:
     try:
         await dao.join_team(player, team, role=role, emoji=emoji)
     except PlayerRestoredInTeam:
@@ -245,7 +245,7 @@ async def _leave(
     team: dto.Team,
     dao: TeamLeaver,
     notifier: TeamNotifier,
-):
+) -> None:
     if game := await dao.get_active_game():
         await dao.delete(
             dto.WaiverQuery(

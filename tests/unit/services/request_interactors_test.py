@@ -681,7 +681,7 @@ async def test_accept_team_merge_performs_merge(monkeypatch: pytest.MonkeyPatch)
     requests.rows[1] = _team_merge_request()
     merged = []
 
-    async def fake_merge_teams(manager, primary_, secondary_, game_log, dao):
+    async def fake_merge_teams(manager, primary_, secondary_, game_log, dao) -> None:
         merged.append((manager, primary_, secondary_))
 
     monkeypatch.setattr(request_interactors, "merge_teams", fake_merge_teams)
@@ -719,7 +719,7 @@ async def test_accept_player_merge_performs_merge(monkeypatch: pytest.MonkeyPatc
     )
     merged = []
 
-    async def fake_merge_players(primary, secondary, game_log, dao, timeline=None):
+    async def fake_merge_players(primary, secondary, game_log, dao, timeline=None) -> None:
         merged.append((primary, secondary, timeline))
 
     monkeypatch.setattr(request_interactors, "merge_players", fake_merge_players)
@@ -750,7 +750,7 @@ async def test_accept_player_merge_forwards_timeline(monkeypatch: pytest.MonkeyP
     )
     passed_timelines = []
 
-    async def fake_merge_players(primary, secondary, game_log, dao, timeline=None):
+    async def fake_merge_players(primary, secondary, game_log, dao, timeline=None) -> None:
         passed_timelines.append(timeline)
 
     monkeypatch.setattr(request_interactors, "merge_players", fake_merge_players)

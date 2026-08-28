@@ -72,7 +72,7 @@ the edge-specific twist.
 | **Forum user** | Пользователь форума | An account imported from the old forum, attached to a player. | `dto.ForumUser` |
 | **Merge (player)** | Слияние игроков | Folding a dummy (usually forum-sourced) player into a live one so one person has one history. Requires admin approval and a manually built team timeline. | `player.merge_players`, `RequestType.player_merge` |
 | **Timeline** | История команд | The manually built sequence of team memberships used when merging players. Must cover every *waiver point*. | `players.dto.TimelineItem` |
-| **Waiver point** | — | An interval (`start_at − 12h` … `start_at + 48h`) in which a waiver proves the player was in a given team, so a merged timeline may not contradict it. | `players.dto.WaiverPoint` |
+| **Waiver point** | — | An interval (`start_at − 1h` … `start_at + 48h`) in which a waiver proves the player was in a given team, so a merged timeline may not contradict it. | `players.dto.WaiverPoint` |
 | **One-time login link** | Одноразовая ссылка | A short-lived link that logs a player into the web UI without a password. | `services/one_time_link.py` |
 | **Achievement** | Ачивка | A named thing a player did once, recorded for fun. | `dto.Achievement`, `enums.Achievement` |
 

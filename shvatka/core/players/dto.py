@@ -4,7 +4,7 @@ from datetime import datetime, time, timedelta
 from shvatka.core.models import dto
 from shvatka.core.utils.datetime_utils import tz_game
 
-WAIVER_POINT_BEFORE_GAME = timedelta(hours=12)
+WAIVER_POINT_BEFORE_GAME = timedelta(hours=1)
 WAIVER_POINT_AFTER_GAME = timedelta(hours=48)
 SUNDAY = 6
 
@@ -29,7 +29,7 @@ class PlayerIdentitiesInfo:
 class WaiverPoint:
     """An interval during which a merged timeline must keep the player in the given team.
 
-    Derived from a waiver: around the game start (``start_at - 12h`` .. ``start_at + 48h``)
+    Derived from a waiver: around the game start (``start_at - 1h`` .. ``start_at + 48h``)
     the player provably acted as a member of that team, so any manually built
     team history must cover the whole interval with that team.
     """

@@ -404,7 +404,7 @@ async def test_get_player_waiver_points(
     point = items[0]
     assert point["game"]["id"] == game.id
     assert point["team"]["id"] == gryffindor.id
-    assert datetime.fromisoformat(point["at_since"]) == GAME_START_AT - timedelta(hours=12)
+    assert datetime.fromisoformat(point["at_since"]) == GAME_START_AT - timedelta(hours=1)
     assert datetime.fromisoformat(point["at_until"]) == GAME_START_AT + timedelta(hours=48)
 
 

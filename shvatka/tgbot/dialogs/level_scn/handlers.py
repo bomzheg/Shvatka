@@ -135,7 +135,7 @@ async def process_level_result(
 
     if not keys and not conditions_list:
         return
-    if keys and conditions_list:
+    elif keys and conditions_list:
         conditions = IncompleteConditions(conditions=conditions_list).replace_default_keys(keys)
     elif keys:
         conditions = IncompleteConditions([action.KeyWinCondition(keys=keys)])

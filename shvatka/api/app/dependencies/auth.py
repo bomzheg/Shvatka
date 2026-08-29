@@ -239,8 +239,9 @@ class ApiIdentityProvider(IdentityProvider):
             chat = await self.dao.chat.get_by_tg_id(cast(int, team.get_chat_id()))
             self.cache["chat"] = chat
             return chat
-        self.cache["chat"] = None
-        return None
+        else:
+            self.cache["chat"] = None
+            return None
 
     async def get_full_team_player(self) -> dto.FullTeamPlayer | None:
         if "full_team_player" in self.cache:

@@ -18,7 +18,8 @@ class InMemoryKeyStateHolder(StateHolder):
                 typed_correct=self.typed_correct,
                 all_typed=self.all_typed,
             )
-        raise NotImplementedError(f"unknown state type {type(state_class)}")
+        else:
+            raise NotImplementedError(f"unknown state type {type(state_class)}")
 
 
 @dataclass
@@ -36,4 +37,5 @@ class InMemoryTimerStateHolder(StateHolder):
                 applied_effects=self.applied_effects,
                 started_at=self.started_at,
             )
-        raise NotImplementedError(f"unknown state type {type(state_class)}")
+        else:
+            raise NotImplementedError(f"unknown state type {type(state_class)}")

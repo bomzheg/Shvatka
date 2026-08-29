@@ -117,4 +117,5 @@ async def get_testing_observers(level: dto.Level, dao: GameByIdGetter) -> Sequen
     if level.game_id is not None:
         game = await dao.get_by_id(level.game_id)
         return await get_primary_orgs(game=game)
-    raise NotImplementedError(f"level {level.db_id} without game_id")
+    else:
+        raise NotImplementedError(f"level {level.db_id} without game_id")

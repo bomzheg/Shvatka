@@ -95,11 +95,12 @@ class KeyProcessor:
                 return dto.InsertedKey.from_key_time(
                     saved_key, is_level_up, parsed_key=decision_to_parsed_key(decision)
                 )
-            if isinstance(decision, action.NotImplementedActionDecision):
+            elif isinstance(decision, action.NotImplementedActionDecision):
                 logger.warning("impossible key decision here cant be not implemented")
                 return None
-            logger.warning("impossible key decision here is %s", type(decision))
-            return None
+            else:
+                logger.warning("impossible key decision here is %s", type(decision))
+                return None
 
 
 async def define_next_level(
@@ -115,11 +116,12 @@ async def define_next_level(
         next_level_ = await dao.get_next_level(level, game)
         assert next_level_.number_in_game is not None
         return next_level_.number_in_game
-    next_level = await dao.get_level_by_name(level_name, game)
-    if next_level is None:
-        raise exceptions.ScenarioNotCorrect(text="Level name not found", name_id=level_name)
-    assert next_level.number_in_game is not None
-    return next_level.number_in_game
+    else:
+        next_level = await dao.get_level_by_name(level_name, game)
+        if next_level is None:
+            raise exceptions.ScenarioNotCorrect(text="Level name not found", name_id=level_name)
+        assert next_level.number_in_game is not None
+        return next_level.number_in_game
 
 
 def decision_to_parsed_key(
@@ -193,17 +195,18 @@ class TimerProcessor:
                     team, lvl, [decision.effects], now=now
                 )
                 return [decision.effects]
-            if isinstance(decision, action.MultipleEffectsDecision):
+            elif isinstance(decision, action.MultipleEffectsDecision):
                 await self.find_and_process_level_up_if_needed(
                     team, lvl, decision.effects, now=now
                 )
                 logger.debug("found multiple effects %s", decision.effects)
                 return decision.effects
-            if isinstance(decision, action.NotImplementedActionDecision):
+            elif isinstance(decision, action.NotImplementedActionDecision):
                 logger.warning("impossible timer decision here cant be not implemented")
                 return []
-            logger.warning("impossible timer decision here is %s", type(decision))
-            return []
+            else:
+                logger.warning("impossible timer decision here is %s", type(decision))
+                return []
 
     async def find_and_process_level_up_if_needed(
         self,

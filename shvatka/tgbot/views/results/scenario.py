@@ -189,12 +189,14 @@ class LevelPublisher:
     def get_level_name(self) -> str:
         if self.level.number_in_game is not None:
             return self._level_number()
-        return self._level_name_id()
+        else:
+            return self._level_name_id()
 
     def get_full_level_name(self) -> str:
         if self.level.number_in_game is not None:
             return f"<b>Уровень {self._level_number()}</b> ({self._level_name_id()})"
-        return f"<b>Уровень {self._level_name_id()}</b>"
+        else:
+            return f"<b>Уровень {self._level_name_id()}</b>"
 
     def _level_number(self) -> str:
         assert self.level.number_in_game is not None

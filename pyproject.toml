@@ -175,6 +175,9 @@ ignore = [
     "FIX002", "TD002", "TD003", "TD004", "TD005",  # TODOs need no ceremony
     "ANN101", "ANN102",  # deprecated upstream: self/cls need no annotation
     "TRY301",  # the raise-in-try shape is deliberate where it is used
+    # an if/elif/else chain that returns from every arm is a set of parallel
+    # branches, not a guard clause — keep it readable as one
+    "RET505",
     # `type X = ...` builds a lazy TypeAliasType: it is not callable, so
     # `SHKey("SH123")` breaks, and adaptix cannot resolve it either
     "UP040",

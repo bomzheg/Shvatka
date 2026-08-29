@@ -359,8 +359,9 @@ class LevelScenario:
             return significant_key_decisions.get_exactly_one(self.id)
         if isinstance(action_, action.LevelTimerAction):
             return implemented.get_significant_effects()
-        logger.warning("any other actions isn't implemented. got %s", action_)
-        return action.NotImplementedActionDecision()
+        else:
+            logger.warning("any other actions isn't implemented. got %s", action_)
+            return action.NotImplementedActionDecision()
 
     def get_keys(self) -> set[SHKey]:
         return self.conditions.get_keys()

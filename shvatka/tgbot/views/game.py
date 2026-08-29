@@ -66,13 +66,15 @@ class BotInputContainer(InputContainer):
 async def get_message_id(input_container: InputContainer) -> int | None:
     if isinstance(input_container, BotInputContainer):
         return input_container.get_message_id()
-    return None
+    else:
+        return None
 
 
 def format_bonus(bonus: float) -> str:
     if bonus >= 0:
         return f"Бонус: {bonus:.2f} мин."
-    return f"Штраф: {bonus:.2f} мин."
+    else:
+        return f"Штраф: {bonus:.2f} мин."
 
 
 def format_bonus_key(bonus: float, key: KeyTime) -> str:
@@ -81,7 +83,11 @@ def format_bonus_key(bonus: float, key: KeyTime) -> str:
             f"{KeyEmoji.bonus.value}Бонусный ключ {hd.code(key.text)}.\n"
             f"Бонус: {bonus:.2f} мин."
         )
-    return f"{KeyEmoji.bonus.value}Штрафной ключ {hd.code(key.text)}.\n" f"Штраф: {bonus:.2f} мин."
+    else:
+        return (
+            f"{KeyEmoji.bonus.value}Штрафной ключ {hd.code(key.text)}.\n"
+            f"Штраф: {bonus:.2f} мин."
+        )
 
 
 def map_effect_to_reaction(
@@ -89,13 +95,14 @@ def map_effect_to_reaction(
 ) -> list[ReactionTypeEmoji | ReactionTypeCustomEmoji | ReactionTypePaid]:
     if effect.level_up:
         return [ReactionTypeEmoji(emoji="👍")]
-    if effect.hints_:
+    elif effect.hints_:
         return [ReactionTypeEmoji(emoji="🤓")]
-    if effect.bonus_minutes:
+    elif effect.bonus_minutes:
         return [ReactionTypeEmoji(emoji="🤩")]
-    if effect.is_no_effects():
+    elif effect.is_no_effects():
         return [ReactionTypeEmoji(emoji="👍")]
-    return []
+    else:
+        return []
 
 
 @dataclass

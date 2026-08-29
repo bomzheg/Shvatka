@@ -1,9 +1,10 @@
 import asyncio
 import json
 import logging
+from collections.abc import Callable, Coroutine, Sequence
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import BinaryIO, Any, Callable, Coroutine
+from typing import Any, BinaryIO
 from zipfile import Path as ZipPath
 
 from adaptix import Retort
@@ -12,14 +13,14 @@ from dishka import make_async_container
 from shvatka.common.config.parser.logging_config import setup_logging
 from shvatka.common.config.parser.paths import common_get_paths
 from shvatka.core.interfaces.clients.file_storage import FileGateway
-from shvatka.core.models import dto
-from shvatka.core.models import enums
+from shvatka.core.models import dto, enums
 from shvatka.core.models.dto import scn  # noqa: F401
 from shvatka.core.models.dto.export_stat import (
     GameStat,
-    TeamIdentity,
+    Key,
     Player,
     PlayerIdentity,
+    TeamIdentity,
 )
 from shvatka.core.services.game import upsert_game
 from shvatka.core.services.scenario.scn_zip import unpack_scn
@@ -90,6 +91,23 @@ async def load_scns(
             logger.info("successfully loaded game %s with number %s", game.id, game.number)
 
 
+def is_key_correct(team_keys: Sequence[Key], index: int) -> bool:
+    """Was the key at `index` the one that took the team off its level?
+
+    The export only records the keys a team typed and the level it was on, so
+    correctness has to be read back out of that sequence.
+    """
+    if index == len(team_keys) - 1:
+        # last key always close the game
+        return True
+    elif team_keys[index].level != team_keys[index + 1].level:  # noqa: SIM103
+        # if level changed - key was correct
+        return True
+    else:
+        # otherwise not correct
+        return False
+
+
 async def set_results(game: dto.FullGame, results: GameStat, dao: HolderDao):
     game_start_at = add_timezone(results.start_at, timezone=tz_utc)
     await dao.game.set_start_at(game, game_start_at)
@@ -113,19 +131,13 @@ async def set_results(game: dto.FullGame, results: GameStat, dao: HolderDao):
             player = await get_or_create_player(dao, key.player)
             await join_team_if_already_not(player, team, game_start_at, dao)
             await add_waiver_if_already_not(player, team, game, dao)
-            if i == len(keys) - 1:
-                is_correct = True
-            elif key.level != keys[i + 1].level:
-                is_correct = True
-            else:
-                is_correct = False
             await dao.key_time.save_key(
                 key=key.value,
                 team=team,
                 game=game,
                 player=player,
                 level_time=level_times[key.level - 1],
-                type_=enums.KeyType.simple if is_correct else enums.KeyType.wrong,
+                type_=enums.KeyType.simple if is_key_correct(keys, i) else enums.KeyType.wrong,
                 is_duplicate=False,
                 at=add_timezone(key.at, timezone=tz_utc),
             )
@@ -211,8 +223,7 @@ def load_results(game_zip_scn: BinaryIO, retort: Retort) -> GameStat:
         if unpacked_file.name != "results.json":
             continue
         with unpacked_file.open("r", encoding="utf8") as results_file:
-            results = retort.load(json.load(results_file), GameStat)
-        return results
+            return retort.load(json.load(results_file), GameStat)
     raise ValueError("no results found")
 
 
@@ -227,7 +238,7 @@ async def load_scn(
         with unpack_scn(ZipPath(zip_scn)).open() as scenario:  # type: scn.RawGameScenario
             game = await upsert_game(scenario, player, dao.game_upserter, retort, file_gateway)
     except exceptions.ScenarioNotCorrect as e:
-        logger.error("game scenario from player %s has problems", player.id, exc_info=e)
+        logger.exception("game scenario from player %s has problems", player.id, exc_info=e)
         return None
     logger.info("game scenario with id %s saved", game.id)
     return game

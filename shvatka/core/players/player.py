@@ -1,43 +1,43 @@
 import logging
+from collections.abc import Sequence
 from datetime import datetime
-from typing import Sequence
+from itertools import pairwise
 
-from shvatka.core.players.dto import TimelineItem, WaiverPoint
-from shvatka.core.utils.datetime_utils import tz_utc
 from shvatka.core.interfaces.dal.player import (
-    PlayerUpserter,
-    PlayerTeamChecker,
+    PlayerByIdGetter,
+    PlayerByUserIdGetter,
     PlayerPromoter,
+    PlayerTeamChecker,
+    PlayerUpserter,
+    PlayerWaiversGetter,
     TeamJoiner,
     TeamLeaver,
-    TeamPlayersGetter,
-    TeamPlayerGetter,
-    PlayerByIdGetter,
-    TeamPlayerPermissionFlipper,
-    TeamPlayerRoleUpdater,
     TeamPlayerEmojiUpdater,
     TeamPlayerFullHistoryGetter,
-    PlayerByUserIdGetter,
-    PlayerWaiversGetter,
+    TeamPlayerGetter,
+    TeamPlayerPermissionFlipper,
+    TeamPlayerRoleUpdater,
+    TeamPlayersGetter,
 )
-from shvatka.core.interfaces.dal.secure_invite import InviteSaver, InviteRemover, InviterDao
+from shvatka.core.interfaces.dal.secure_invite import InviterDao, InviteRemover, InviteSaver
 from shvatka.core.interfaces.identity import IdentityProvider
-from shvatka.core.models import dto
-from shvatka.core.models import enums
+from shvatka.core.models import dto, enums
 from shvatka.core.models.enums.invite_type import InviteType
-from shvatka.core.players.interfaces import PlayerUsernameChanger, UserPasswordSetter, PlayerMerger
+from shvatka.core.players.dto import TimelineItem, WaiverPoint
+from shvatka.core.players.interfaces import PlayerMerger, PlayerUsernameChanger, UserPasswordSetter
 from shvatka.core.utils import exceptions
-from shvatka.core.utils.defaults_constants import DEFAULT_ROLE, EMOJI_BY_ROLE, DEFAULT_EMOJI
+from shvatka.core.utils.datetime_utils import tz_utc
+from shvatka.core.utils.defaults_constants import DEFAULT_EMOJI, DEFAULT_ROLE, EMOJI_BY_ROLE
 from shvatka.core.utils.exceptions import (
-    PlayerRestoredInTeam,
     CantBeAuthor,
-    PromoteError,
-    PlayerNotInTeam,
     PermissionsError,
+    PlayerNotInTeam,
+    PlayerRestoredInTeam,
+    PromoteError,
     SaltError,
 )
-from shvatka.core.views.game import GameLogWriter, GameLogEvent, GameLogType
-from shvatka.core.views.team import TeamNotifier, PlayerJoinedTeam, PlayerLeftTeam
+from shvatka.core.views.game import GameLogEvent, GameLogType, GameLogWriter
+from shvatka.core.views.team import PlayerJoinedTeam, PlayerLeftTeam, TeamNotifier
 
 logger = logging.getLogger(__name__)
 
@@ -151,7 +151,7 @@ async def _join_team(
     notifier: TeamNotifier,
     role: str = DEFAULT_ROLE,
     emoji: str | None = None,
-):
+) -> None:
     try:
         await dao.join_team(player, team, role=role, emoji=emoji)
     except PlayerRestoredInTeam:
@@ -245,7 +245,7 @@ async def _leave(
     team: dto.Team,
     dao: TeamLeaver,
     notifier: TeamNotifier,
-):
+) -> None:
     if game := await dao.get_active_game():
         await dao.delete(
             dto.WaiverQuery(
@@ -432,12 +432,15 @@ async def merge_team_history(primary: dto.Player, secondary: dto.Player, dao: Pl
     primary_history = await dao.get_player_teams_history(primary)
     secondary_history = await dao.get_player_teams_history(secondary)
     merged = []
-    if len(primary_history) == 1 and secondary_history[-1].team_id == primary_history[0].team_id:
-        if primary_history[0].date_joined > secondary_history[0].date_joined:
-            merged = secondary_history
+    if (
+        len(primary_history) == 1
+        and secondary_history[-1].team_id == primary_history[0].team_id
+        and primary_history[0].date_joined > secondary_history[0].date_joined
+    ):
+        merged = secondary_history
     if not merged:
         merged = sorted(primary_history + secondary_history, key=lambda tp: tp.date_joined)
-    for tp1, tp2 in zip(merged[:-1:], merged[1::]):
+    for tp1, tp2 in pairwise(merged):
         if tp1.date_left is None or (tp1.date_left > tp2.date_joined):
             raise exceptions.MergeError(
                 player=primary,
@@ -501,7 +504,7 @@ def normalize_timeline(timeline: list[TimelineItem]) -> list[TimelineItem]:
                     text=f"unknown team player permission {permission_name}",
                     notify_user=f"Неизвестное разрешение: {permission_name}",
                 )
-    for current, following in zip(timeline[:-1], timeline[1:]):
+    for current, following in pairwise(timeline):
         if current.date_left is None or current.date_left > following.date_joined:
             raise exceptions.MergeError(
                 text=f"timeline items for teams {current.team_id} "

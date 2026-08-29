@@ -76,20 +76,21 @@ class KeyProcessor:
                     at=now,
                 )
                 is_level_up = False
-                if isinstance(decision, action.KeyEffectsDecision):
-                    if is_level_up := decision.effects.level_up:
-                        await self.dao.level_up(
-                            team=team,
+                if isinstance(decision, action.KeyEffectsDecision) and (
+                    is_level_up := decision.effects.level_up
+                ):
+                    await self.dao.level_up(
+                        team=team,
+                        level=lvl,
+                        game=game,
+                        next_level_number=await define_next_level(
+                            dao=self.dao,
+                            game=await self.current_game.get_required_full_game(),
                             level=lvl,
-                            game=game,
-                            next_level_number=await define_next_level(
-                                dao=self.dao,
-                                game=await self.current_game.get_required_full_game(),
-                                level=lvl,
-                                level_name=decision.effects.next_level,
-                            ),
-                            at=now,
-                        )
+                            level_name=decision.effects.next_level,
+                        ),
+                        at=now,
+                    )
 
                 return dto.InsertedKey.from_key_time(
                     saved_key, is_level_up, parsed_key=decision_to_parsed_key(decision)

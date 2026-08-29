@@ -3,13 +3,12 @@ from typing import Any
 from aiogram.types import CallbackQuery
 from aiogram_dialog import DialogManager
 from aiogram_dialog.widgets.kbd import Button
-
-from shvatka.core.interfaces.identity import IdentityProvider
 from dishka import FromDishka
 from dishka.integrations.aiogram_dialog import inject
 
+from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.models.enums.org_permission import OrgPermission
-from shvatka.core.services.organizers import flip_permission, get_org_by_id, flip_deleted
+from shvatka.core.services.organizers import flip_deleted, flip_permission, get_org_by_id
 from shvatka.core.utils import exceptions
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.tgbot import states

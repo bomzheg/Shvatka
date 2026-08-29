@@ -3,7 +3,7 @@ from io import BytesIO
 from typing import Any
 
 from adaptix import Retort
-from aiogram.types import CallbackQuery, Message, BufferedInputFile
+from aiogram.types import BufferedInputFile, CallbackQuery, Message
 from aiogram_dialog import DialogManager
 from aiogram_dialog.widgets.kbd import Button
 from dishka import FromDishka
@@ -23,14 +23,14 @@ from shvatka.core.scenario.interactors import (
     GameScenarioTransitionsInteractor,
 )
 from shvatka.core.services import game
-from shvatka.core.services.game import rename_game, get_game, get_full_game
+from shvatka.core.services.game import get_full_game, get_game, rename_game
 from shvatka.core.services.game_stat import get_game_stat
 from shvatka.core.services.scenario.scn_zip import pack_scn
 from shvatka.core.utils.datetime_utils import TIME_FORMAT, tz_game
 from shvatka.infrastructure.db.dao.holder import HolderDao
+from shvatka.infrastructure.printer.results import export_results
 from shvatka.tgbot import states
 from shvatka.tgbot.tasks import publish_scenario_to_forum
-from shvatka.infrastructure.printer.results import export_results
 from shvatka.tgbot.views.results.rich import ResultsRichSender
 
 
@@ -206,7 +206,7 @@ async def select_date(c: CallbackQuery, widget, manager: DialogManager, selected
 async def process_time_message(m: Message, dialog_: Any, manager: DialogManager) -> None:
     assert m.text
     try:
-        time_ = datetime.strptime(m.text, TIME_FORMAT).time()
+        time_ = datetime.strptime(m.text, TIME_FORMAT).time()  # noqa: DTZ007
     except ValueError:
         await m.answer("Некорректный формат времени. Пожалуйста введите время в формате ЧЧ:ММ")
         return

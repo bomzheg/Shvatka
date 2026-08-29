@@ -5,7 +5,6 @@ from aiogram_dialog.widgets.text import Const, Format, Jinja
 
 from shvatka.core.models import enums
 from shvatka.tgbot import states
-from .getters import get_promotion_token, get_main
 from shvatka.tgbot.dialogs.preview_data import (
     PREVIEW_AUTHOR,
     PREVIEW_ORG,
@@ -14,6 +13,8 @@ from shvatka.tgbot.dialogs.preview_data import (
     PREVIEW_TEAM_PLAYER,
     PREVIEW_VOTE,
 )
+
+from .getters import get_main, get_promotion_token
 
 main_menu = Dialog(
     Window(

@@ -1,14 +1,14 @@
 import logging
 
-from asgi_monitor.integrations.fastapi import setup_metrics, MetricsConfig
+from asgi_monitor.integrations.fastapi import MetricsConfig, setup_metrics
 from fastapi import FastAPI
 from prometheus_client import REGISTRY
 
 from shvatka.api.app import error_handler, middlewares, router
 from shvatka.api.app.config.models.main import ApiConfig
 from shvatka.common.config.models.paths import Paths
-from shvatka.common.docs import DocsUrlFactory
 from shvatka.common.config.parser.paths import common_get_paths
+from shvatka.common.docs import DocsUrlFactory
 
 logger = logging.getLogger(__name__)
 

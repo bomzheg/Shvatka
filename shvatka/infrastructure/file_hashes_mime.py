@@ -18,7 +18,7 @@ import logging
 from pathlib import Path
 
 from dishka import make_async_container
-from sqlalchemy import select, ScalarResult
+from sqlalchemy import ScalarResult, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from shvatka.common import setup_logging
@@ -64,8 +64,8 @@ async def fill_hashes(
             try:
                 with await file_storage.get(link) as content:
                     data = content.read()
-            except (IOError, OSError) as e:
-                logger.error("cannot read %s: %s", db_file.file_path, e)
+            except OSError:
+                logger.exception("cannot read %s", db_file.file_path)
                 continue
 
             sha256 = compute_sha256(data)
@@ -116,19 +116,18 @@ async def fill_extension(
             extension = db_file.extension or extension_from_mime(mime_type)
 
             db_file.mime_type = mime_type
-            if not db_file.extension and extension:
-                if db_file.extension != extension:
-                    old_path = Path(db_file.file_path)
-                    new_path = db_file.file_path + extension
-                    old_path.rename(new_path)
-                    db_file.extension = extension
-                    db_file.file_path = new_path
-                    logger.info(
-                        "detected extension %s for %s (mime: %s)",
-                        extension,
-                        db_file.guid,
-                        mime_type,
-                    )
+            if not db_file.extension and extension and db_file.extension != extension:
+                old_path = Path(db_file.file_path)
+                new_path = db_file.file_path + extension
+                old_path.rename(new_path)
+                db_file.extension = extension
+                db_file.file_path = new_path
+                logger.info(
+                    "detected extension %s for %s (mime: %s)",
+                    extension,
+                    db_file.guid,
+                    mime_type,
+                )
 
         await session.commit()
         logger.info("processed batch at offset %d", offset)

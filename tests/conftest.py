@@ -7,26 +7,30 @@ import pytest_asyncio
 from adaptix import Retort
 from dishka import make_async_container
 
-from shvatka.common import Paths
-from shvatka.common import setup_logging
+from shvatka.common import Paths, setup_logging
 from shvatka.common.factory import DCFProvider
 from shvatka.tgbot.config.models.main import TgBotConfig
 from shvatka.tgbot.config.parser.main import load_config
 from tests.fixtures.conftest import fixtures_resource_path  # noqa: F401
-from tests.fixtures.player import harry, hermione, ron, author, draco  # noqa: F401
-from tests.fixtures.team import gryffindor, slytherin  # noqa: F401
 from tests.fixtures.game_fixtures import (  # noqa: F401
-    game,
     finished_game,
-    started_game,
+    finished_routed_game,
+    game,
     game_with_waivers,
     routed_game,
     routed_game_with_waivers,
+    started_game,
     started_routed_game,
-    finished_routed_game,
 )
-from tests.fixtures.scn_fixtures import simple_scn, complex_scn, three_lvl_scn, routed_scn  # noqa: F401
 from tests.fixtures.game_results import game_stat, routed_game_stat  # noqa: F401
+from tests.fixtures.player import author, draco, harry, hermione, ron  # noqa: F401
+from tests.fixtures.scn_fixtures import (  # noqa: F401
+    complex_scn,
+    routed_scn,
+    simple_scn,
+    three_lvl_scn,
+)
+from tests.fixtures.team import gryffindor, slytherin  # noqa: F401
 
 
 @pytest.fixture(scope="session", autouse=True)

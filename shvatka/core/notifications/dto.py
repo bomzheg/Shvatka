@@ -5,8 +5,8 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any
 
-from shvatka.core.models.enums.notification import NotificationType, NotificationSeverity
-from shvatka.core.models.enums.request import RequestType, RequestStatus
+from shvatka.core.models.enums.notification import NotificationSeverity, NotificationType
+from shvatka.core.models.enums.request import RequestStatus, RequestType
 
 
 @dataclass

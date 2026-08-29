@@ -2,9 +2,9 @@ import asyncio
 import enum
 import logging
 import typing
+from collections.abc import Iterable
 from dataclasses import dataclass
 from datetime import timedelta
-from typing import Iterable
 
 from aiogram import Bot
 from aiogram.types import Message
@@ -77,7 +77,9 @@ class MessagePinner:
         try:
             await self.dao.save(chat_id=chat_id, category=category.value, message_ids=pinned)
         except Exception as e:
-            logger.error("can't save pinned messages %s of chat %s", pinned, chat_id, exc_info=e)
+            logger.exception(
+                "can't save pinned messages %s of chat %s", pinned, chat_id, exc_info=e
+            )
 
     async def unpin(self, chat_id: int, category: PinCategory) -> None:
         if not await self.rights.can_pin(chat_id):
@@ -87,7 +89,7 @@ class MessagePinner:
         try:
             message_ids = await self.dao.pop_all(chat_id=chat_id, category=category.value)
         except Exception as e:
-            logger.error(
+            logger.exception(
                 "can't get pinned messages (%s) of chat %s", category.value, chat_id, exc_info=e
             )
             return
@@ -103,7 +105,7 @@ class MessagePinner:
                 message_id=message_id,
                 disable_notification=not notify,
             )
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001  # pinning is best-effort
             logger.warning("can't pin message %s in chat %s", message_id, chat_id, exc_info=e)
             return False
         return True
@@ -111,5 +113,5 @@ class MessagePinner:
     async def _unpin_one(self, chat_id: int, message_id: int) -> None:
         try:
             await self.bot.unpin_chat_message(chat_id=chat_id, message_id=message_id)
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001  # unpinning is best-effort
             logger.warning("can't unpin message %s in chat %s", message_id, chat_id, exc_info=e)

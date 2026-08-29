@@ -1,14 +1,15 @@
 import logging
+from collections.abc import Iterator, Sequence
 from dataclasses import dataclass
-from typing import Literal, Sequence, overload
+from typing import Literal, overload
 
 from shvatka.common.log_utils import obfuscate_sensitive
 from shvatka.core.models.dto.action.interface import (
-    DecisionType,
     Decision,
+    DecisionType,
+    EffectsDecision,
     MultipleEffectsDecision,
 )
-from shvatka.core.models.dto.action.interface import EffectsDecision
 
 logger = logging.getLogger(__name__)
 
@@ -19,7 +20,7 @@ class NotImplementedActionDecision(Decision):
 
 
 class Decisions(Sequence[Decision]):
-    def __init__(self, decisions: list[Decision]):
+    def __init__(self, decisions: list[Decision]) -> None:
         self.decisions = decisions
 
     @overload
@@ -33,10 +34,10 @@ class Decisions(Sequence[Decision]):
     def __getitem__(self, index):
         return self.decisions[index]
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.decisions)
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[Decision]:
         return iter(self.decisions)
 
     def get_significant(self) -> "Decisions":

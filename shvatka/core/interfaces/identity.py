@@ -1,7 +1,6 @@
 import logging
 from typing import Protocol
 
-
 from shvatka.core.models import dto
 from shvatka.core.utils import exceptions
 

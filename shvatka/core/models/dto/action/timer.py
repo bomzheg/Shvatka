@@ -1,21 +1,22 @@
 import abc
 import logging
 from dataclasses import dataclass
-from datetime import timedelta, datetime
+from datetime import datetime, timedelta
 from typing import Literal
 
 from shvatka.core.models.dto.action import (
-    Condition,
     Action,
+    Condition,
+    ConditionType,
+    Decision,
+    DecisionType,
+    NotImplementedActionDecision,
     State,
     StateHolder,
-    Decision,
-    NotImplementedActionDecision,
-    DecisionType,
-    ConditionType,
 )
+
 from .effects import Effects
-from .interface import EffectsDecision, NoActionDecision, EffectsCondition
+from .interface import EffectsCondition, EffectsDecision, NoActionDecision
 
 logger = logging.getLogger(__name__)
 
@@ -33,7 +34,7 @@ class LevelTimerState(State):
     started_at: datetime
 
     def contains_effects(self, effects: Effects) -> bool:
-        return any(map(lambda e: e.id == effects.id, self.applied_effects))
+        return any(e.id == effects.id for e in self.applied_effects)
 
 
 @dataclass(kw_only=True, frozen=True)

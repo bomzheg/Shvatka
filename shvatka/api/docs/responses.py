@@ -1,5 +1,5 @@
+from collections.abc import Mapping
 from dataclasses import dataclass
-from typing import Mapping
 
 from shvatka.common.docs import DocsUrlFactory
 from shvatka.core.utils.doc_pages import DocPage

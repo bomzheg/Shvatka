@@ -1,7 +1,7 @@
 import logging
+from collections.abc import Sequence
 from contextlib import suppress
 from dataclasses import dataclass
-from typing import Sequence
 
 from aiogram import Bot
 from aiogram.exceptions import TelegramAPIError
@@ -17,7 +17,7 @@ from shvatka.core.views.team import (
 )
 from shvatka.tgbot.services.member_tags import MemberTagger
 from shvatka.tgbot.views.player import get_emoji
-from shvatka.tgbot.views.user import get_small_card_no_link, get_small_card
+from shvatka.tgbot.views.user import get_small_card, get_small_card_no_link
 
 logger = logging.getLogger(__name__)
 

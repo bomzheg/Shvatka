@@ -1,6 +1,6 @@
 from aiogram import Router
 
-from shvatka.tgbot.dialogs.timers.dialogs import timers_dialog, timer_dialog
+from shvatka.tgbot.dialogs.timers.dialogs import timer_dialog, timers_dialog
 
 
 def setup(router: Router):

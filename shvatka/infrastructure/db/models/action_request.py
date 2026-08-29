@@ -5,7 +5,7 @@ from sqlalchemy import BigInteger, DateTime, Enum, ForeignKey, Index, Text, func
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
-from shvatka.core.models.enums.request import RequestType, RequestStatus
+from shvatka.core.models.enums.request import RequestStatus, RequestType
 from shvatka.core.notifications import dto
 from shvatka.infrastructure.db.models.base import Base
 

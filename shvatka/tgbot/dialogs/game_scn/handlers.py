@@ -1,11 +1,11 @@
 import logging
 import typing
-from typing import Any, IO
+from typing import IO, Any
 from zipfile import Path as ZipPath
 
 from adaptix import Retort
 from aiogram import Bot
-from aiogram.types import Message, CallbackQuery
+from aiogram.types import CallbackQuery, Message
 from aiogram.utils.text_decorations import html_decoration as hd
 from aiogram_dialog import DialogManager
 from aiogram_dialog.widgets.kbd import Button, ManagedMultiselect
@@ -18,10 +18,10 @@ from shvatka.core.models import enums
 from shvatka.core.models.dto import scn  # noqa: F401
 from shvatka.core.services.achievement import add_achievement
 from shvatka.core.services.game import (
+    add_level,
     check_new_game_name_available,
     create_game,
     get_full_game,
-    add_level,
     upsert_game,
 )
 from shvatka.core.services.level import get_all_my_free_levels, get_by_id
@@ -58,6 +58,7 @@ async def process_name(
         data = {}
     data["game_name"] = m.text
     await manager.next()
+    return None
 
 
 @inject
@@ -79,7 +80,7 @@ async def process_zip_scn(
             game = await upsert_game(scenario, player, dao.game_upserter, retort, file_gateway)
     except ScenarioNotCorrect as e:
         await m.reply(f"Ошибка {e}\n попробуйте исправить файл")
-        logger.error("game scenario from player %s has problems", player.id, exc_info=e)
+        logger.exception("game scenario from player %s has problems", player.id, exc_info=e)
         return
     await m.reply("Успешно сохранено")
     await manager.done(result={"game": game})

@@ -8,9 +8,9 @@ from shvatka.api.app.dependencies.auth import ApiIdentityProvider
 from shvatka.api.notifications import requests, responses
 from shvatka.core.notifications.interactors import (
     ListNotificationsInteractor,
-    UnreadCountInteractor,
-    MarkNotificationsReadInteractor,
     MarkAllNotificationsReadInteractor,
+    MarkNotificationsReadInteractor,
+    UnreadCountInteractor,
 )
 
 

@@ -1,5 +1,6 @@
-from datetime import datetime, tzinfo
 import typing
+from datetime import datetime, tzinfo
+
 from sqlalchemy import select, update
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -7,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from shvatka.core.models import dto
 from shvatka.infrastructure.crawler.models.team import ParsedPlayer
 from shvatka.infrastructure.db import models
+
 from .base import BaseDAO
 
 
@@ -17,12 +19,12 @@ class ForumUserDAO(BaseDAO[models.ForumUser]):
         super().__init__(models.ForumUser, session, clock=clock)
 
     async def upsert(self, parsed: ParsedPlayer) -> dto.ForumUser:
-        kwargs = dict(
-            forum_id=parsed.forum_id,
-            url=parsed.url,
-            name=parsed.name,
-            registered=parsed.registered_at,
-        )
+        kwargs = {
+            "forum_id": parsed.forum_id,
+            "url": parsed.url,
+            "name": parsed.name,
+            "registered": parsed.registered_at,
+        }
         saved_team = await self.session.scalars(
             insert(models.ForumUser)
             .values(**kwargs)

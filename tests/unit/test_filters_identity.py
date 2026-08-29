@@ -6,7 +6,7 @@ They are wired through ``@inject``, which only works because aiogram passes
 disable a command rather than fail, so drive them through the real machinery.
 """
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 from unittest.mock import AsyncMock
 
@@ -204,7 +204,7 @@ async def test_disable_router_on_game_through_root_filters(active_game, reaches_
 
     event = Message(
         message_id=1,
-        date=datetime.now(tz=timezone.utc),
+        date=datetime.now(tz=UTC),
         chat=Chat(id=1, type="private"),
         text="/start",
     )

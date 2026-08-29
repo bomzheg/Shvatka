@@ -1,13 +1,9 @@
-from collections.abc import Collection
-from datetime import datetime
 import typing
+from collections.abc import Collection, Iterable
 from dataclasses import dataclass
-from typing import Iterable
+from datetime import datetime
+from itertools import pairwise
 
-from shvatka.core.games.dto import CurrentHintsOnly, Event, PassedLevelHints, PassedLevels
-from shvatka.core.interfaces.current_game import CurrentGameProvider
-
-from shvatka.core.interfaces.dal.complex import GamePackager
 from shvatka.core.games.adapters import (
     AdminGameStatusChanger,
     GameFileReader,
@@ -15,18 +11,20 @@ from shvatka.core.games.adapters import (
     GameReleaseEditor,
     GameReleaseReader,
 )
+from shvatka.core.games.dto import CurrentHintsOnly, Event, PassedLevelHints, PassedLevels
+from shvatka.core.interfaces.current_game import CurrentGameProvider
+from shvatka.core.interfaces.dal.complex import GamePackager
 from shvatka.core.interfaces.dal.game import (
-    GameUpserter,
     GameCreator,
     GameFileRenamer,
     GameFileUploader,
+    GameUpserter,
 )
 from shvatka.core.interfaces.dal.level import LevelDeleter
 from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.models import dto
-from shvatka.core.models.dto import scn
+from shvatka.core.models.dto import hints, scn
 from shvatka.core.models.enums import GameStatus
-from shvatka.core.models.dto import hints
 from shvatka.core.utils import exceptions
 from shvatka.core.utils.datetime_utils import tz_utc
 
@@ -370,7 +368,7 @@ class GamePackagerImpl(GamePackager):
 
 
 class GameFilesGetterImpl(IsGameFileMixin, GameFileReader):
-    def __init__(self, dao: "HolderDao"):
+    def __init__(self, dao: "HolderDao") -> None:
         self.dao = dao
 
     async def get_by_guid(self, guid: str) -> hints.VerifiableFileMeta:
@@ -433,7 +431,7 @@ class GamePlayDaoImpl(GamePlayDao):
         current = await self.get_level_time(identity)
         level_times = await self.dao.level_time.get_team_level_times(team, game)
         passed: list[PassedLevelHints] = []
-        for level_time, next_level_time in zip(level_times, level_times[1:]):
+        for level_time, next_level_time in pairwise(level_times):
             if level_time.id == current.id or level_time.has_finished(game):
                 continue
             level = game.levels[level_time.level_number]
@@ -454,8 +452,7 @@ class GamePlayDaoImpl(GamePlayDao):
         level_time = await self.get_level_time(identity)
         game = await self.current_game.get_required_game()
         team = await identity.get_required_team()
-        keys = await self.dao.key_time.get_team_inserted_keys(game, team, level_time)
-        return keys
+        return await self.dao.key_time.get_team_inserted_keys(game, team, level_time)
 
     async def get_level_time(self, identity: IdentityProvider) -> dto.LevelTime:
         user_id = await identity.get_required_user_db_id()

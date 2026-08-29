@@ -4,7 +4,7 @@ import logging
 import typing
 from datetime import date, datetime
 from pathlib import Path
-from urllib.parse import urlparse, parse_qs
+from urllib.parse import parse_qs, urlparse
 
 from aiohttp import ClientSession
 from lxml import etree
@@ -13,8 +13,8 @@ from shvatka.common.config.parser.logging_config import setup_logging
 from shvatka.infrastructure.crawler.auth import get_auth_cookie
 from shvatka.infrastructure.crawler.constants import TEAMS_URL
 from shvatka.infrastructure.crawler.factory import get_paths
-from shvatka.infrastructure.crawler.retort import create_teams_retort
 from shvatka.infrastructure.crawler.models.team import ParsedPlayer, ParsedTeam
+from shvatka.infrastructure.crawler.retort import create_teams_retort
 
 logger = logging.getLogger(__name__)
 
@@ -22,8 +22,7 @@ logger = logging.getLogger(__name__)
 async def get_all_teams() -> list[ParsedTeam]:
     async with ClientSession(cookies=await get_auth_cookie()) as session:
         teams_html_text = await download_teams(session)
-        teams = await TeamsParser(teams_html_text, session=session).build()
-    return teams
+        return await TeamsParser(teams_html_text, session=session).build()
 
 
 async def download_teams(session: ClientSession) -> str:

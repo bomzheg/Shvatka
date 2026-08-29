@@ -7,19 +7,19 @@ from uuid import uuid4
 
 from shvatka.core.models import enums
 from shvatka.core.utils.input_validation import is_key_valid
+
 from . import EffectsCondition
-from .effects import Effects
 from .decisions import NotImplementedActionDecision
+from .effects import Effects
 from .interface import (
     Action,
-    State,
-    Decision,
     Condition,
-    DecisionType,
     ConditionType,
+    Decision,
+    DecisionType,
     EffectsDecision,
+    State,
 )
-
 
 if typing.TYPE_CHECKING:
     from .state_holder import StateHolder
@@ -27,15 +27,19 @@ if typing.TYPE_CHECKING:
 SHKey: typing.TypeAlias = str
 
 
+MIN_BONUS_MINUTES = -600
+MAX_BONUS_MINUTES = 60
+
+
 @dataclass(frozen=True)
 class BonusKey:
     text: SHKey
     bonus_minutes: float
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         if not is_key_valid(self.text):
             raise ValueError
-        if not (-600 < self.bonus_minutes < 60):
+        if not (MIN_BONUS_MINUTES < self.bonus_minutes < MAX_BONUS_MINUTES):
             raise ValueError("bonus out of available range")
 
     def __eq__(self, other: object) -> bool:
@@ -187,5 +191,5 @@ class KeyEffectsCondition(KeyCondition, EffectsCondition):
     def get_keys(self) -> set[SHKey]:
         return self.keys
 
-    def _get_key_type(self, action: TypedKeyAction):
+    def _get_key_type(self, action: TypedKeyAction) -> enums.KeyType:
         return enums.KeyType.effects if self._is_correct(action) else enums.KeyType.wrong

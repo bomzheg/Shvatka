@@ -13,13 +13,13 @@ from shvatka.core.interfaces.dal.waiver import GameWaiversGetter
 from shvatka.core.models import dto
 from shvatka.core.models.dto.scn.game import RawGameScenario
 from shvatka.core.models.enums.played import Played
-from shvatka.core.services.game import upsert_game, start_waivers
-from shvatka.core.services.key import KeyProcessor
 from shvatka.core.players.player import join_team
-from shvatka.core.waiver.services import add_vote, approve_waivers, get_all_played
+from shvatka.core.services.game import start_waivers, upsert_game
+from shvatka.core.services.key import KeyProcessor
 from shvatka.core.utils.datetime_utils import tz_utc
 from shvatka.core.utils.key_checker_lock import KeyCheckerFactory
 from shvatka.core.waiver.adapters import WaiverVoteAdder
+from shvatka.core.waiver.services import add_vote, approve_waivers, get_all_played
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from tests.mocks.team_notifier import TeamNotifierMock
 

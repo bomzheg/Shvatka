@@ -2,11 +2,11 @@ import random
 
 from aiogram.filters.callback_data import CallbackData
 from aiogram.types import (
-    ReplyKeyboardMarkup,
     InlineKeyboardMarkup,
     KeyboardButton,
-    KeyboardButtonRequestUser,
     KeyboardButtonRequestChat,
+    KeyboardButtonRequestUser,
+    ReplyKeyboardMarkup,
 )
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
@@ -43,7 +43,7 @@ def get_user_request_kb() -> ReplyKeyboardMarkup:
                         user_is_bot=False,
                         request_name=True,
                         request_username=True,
-                        request_id=random.randint(0, 1000),
+                        request_id=random.randint(0, 1000),  # noqa: S311  # only a reply-matching id  # only a reply-matching id
                     ),
                 )
             ]
@@ -58,7 +58,7 @@ def get_chat_request_kb() -> ReplyKeyboardMarkup:
                 KeyboardButton(
                     text="ВЫБРАТЬ ЧАТ В КОМАНДУ\n\n⏩НАЖАТЬ ПРЯМО СЮДА⏪",
                     request_chat=KeyboardButtonRequestChat(
-                        request_id=random.randint(0, 1000),
+                        request_id=random.randint(0, 1000),  # noqa: S311  # only a reply-matching id  # only a reply-matching id
                         bot_is_member=True,
                         chat_is_channel=False,
                         chat_has_username=False,

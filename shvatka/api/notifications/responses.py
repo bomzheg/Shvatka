@@ -1,7 +1,7 @@
 import typing
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Mapping, Sequence
 
 from shvatka.core.notifications.dto import Notification as NotificationDto
 from shvatka.core.notifications.dto import Page as PageDto

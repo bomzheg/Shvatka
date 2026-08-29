@@ -1,15 +1,15 @@
 from typing import Any
 
-from dishka import FromDishka
 from aiogram.types import Message
 from aiogram_dialog import DialogManager
+from dishka import FromDishka
 from dishka.integrations.aiogram_dialog import inject
 
 from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.players.player import set_player_username
-from shvatka.core.services.email import EmailLinkInteractor, EmailConfirmInteractor
+from shvatka.core.services.email import EmailConfirmInteractor, EmailLinkInteractor
 from shvatka.core.utils import exceptions
-from shvatka.core.utils.input_validation import validate_new_username, validate_email
+from shvatka.core.utils.input_validation import validate_email, validate_new_username
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.tgbot import states
 

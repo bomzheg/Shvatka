@@ -7,15 +7,15 @@ from dishka.integrations.fastapi import inject
 from fastapi import APIRouter, Body, File, HTTPException, UploadFile
 from fastapi.params import Path, Query
 
+from shvatka.api.admin import requests, responses
 from shvatka.api.app.config.models.main import ApiConfig
 from shvatka.api.app.dependencies.auth import ApiIdentityProvider
-from shvatka.api.admin import requests, responses
-from shvatka.api.shared import requests as shared_requests
+from shvatka.api.files import responses as files_responses
+from shvatka.api.games import responses as games_responses
 from shvatka.api.players import responses as players_responses
+from shvatka.api.shared import requests as shared_requests
 from shvatka.api.shared import responses as shared
 from shvatka.api.teams import responses as teams_responses
-from shvatka.api.games import responses as games_responses
-from shvatka.api.files import responses as files_responses
 from shvatka.api.waivers import responses as waivers_responses
 from shvatka.core.files.interactors import CollectFileGarbageInteractor
 from shvatka.core.games.admin_interactors import (

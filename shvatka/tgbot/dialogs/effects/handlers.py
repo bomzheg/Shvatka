@@ -19,6 +19,11 @@ from shvatka.tgbot import states
 from shvatka.tgbot.views.hint_factory.hint_parser import HintParser
 from shvatka.tgbot.views.hint_sender import HintSender
 
+# the bonus a key gives, in minutes: anything bigger is a typo, anything
+# smaller than a fraction of a second is indistinguishable from no bonus
+MAX_ABS_BONUS_MINUTES = 10000
+MIN_ABS_BONUS_MINUTES = 0.01
+
 
 async def process_level_up_change(
     callback_query: CallbackQuery,
@@ -111,8 +116,8 @@ async def save_new_bonus(m: Message, dialog_: Any, manager: DialogManager, data:
     if (
         math.isnan(data)
         or math.isinf(data)
-        or math.fabs(data) > 10000
-        or (math.fabs(data) < 0.01 and data != 0)
+        or math.fabs(data) > MAX_ABS_BONUS_MINUTES
+        or (math.fabs(data) < MIN_ABS_BONUS_MINUTES and data != 0)
     ):
         await m.reply(
             "Нужно ввести любое число, "

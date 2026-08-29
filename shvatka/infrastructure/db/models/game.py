@@ -8,19 +8,19 @@ from typing import Any
 
 from adaptix import Retort
 from sqlalchemy import (
+    BigInteger,
+    DateTime,
+    Enum,
     ForeignKey,
     Index,
     Text,
-    Enum,
-    DateTime,
     TypeDecorator,
     UniqueConstraint,
-    BigInteger,
     text,
 )
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.engine import Dialect
-from sqlalchemy.orm import relationship, Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from shvatka.common.factory import REQUIRED_GAME_RECIPES
 from shvatka.core.models import dto
@@ -60,7 +60,7 @@ class ReleaseField(TypeDecorator):
         try:
             return self.retort.dump(value, list[hints.AnyHint])
         except Exception as e:
-            logger.error("can't dump game release", exc_info=e)
+            logger.exception("can't dump game release", exc_info=e)
             raise
 
     def process_result_value(self, value: Any, dialect: Dialect) -> list[hints.AnyHint] | None:
@@ -69,7 +69,7 @@ class ReleaseField(TypeDecorator):
         try:
             return self.retort.load(value, list[hints.AnyHint])
         except Exception as e:
-            logger.error("can't load game release from %s", value, exc_info=e)
+            logger.exception("can't load game release from %s", value, exc_info=e)
             raise
 
 
@@ -86,7 +86,7 @@ class ReleaseBannerField(TypeDecorator):
         try:
             return self.retort.dump(value, hints.PhotoHint)
         except Exception as e:
-            logger.error("can't dump game release banner", exc_info=e)
+            logger.exception("can't dump game release banner", exc_info=e)
             raise
 
     def process_result_value(self, value: Any, dialect: Dialect) -> hints.PhotoHint | None:
@@ -95,7 +95,7 @@ class ReleaseBannerField(TypeDecorator):
         try:
             return self.retort.load(value, hints.PhotoHint)
         except Exception as e:
-            logger.error("can't load game release banner from %s", value, exc_info=e)
+            logger.exception("can't load game release banner from %s", value, exc_info=e)
             raise
 
 

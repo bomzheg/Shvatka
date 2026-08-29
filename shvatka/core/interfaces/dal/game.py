@@ -6,8 +6,7 @@ from shvatka.core.interfaces.dal.file_info import FileInfoGetter, FileUpserter
 from shvatka.core.interfaces.dal.file_link import FileIdsByGuidsGetter, LevelFilesSyncDao
 from shvatka.core.interfaces.dal.level import LevelUpserter
 from shvatka.core.models import dto
-from shvatka.core.models.dto import scn
-from shvatka.core.models.dto import hints
+from shvatka.core.models.dto import hints, scn
 
 
 class GameNameChecker(Protocol):

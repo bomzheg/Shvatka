@@ -100,7 +100,7 @@ async def test_no_notify_without_chat() -> None:
     sent: list = []
 
     class _Bot:
-        async def send_message(self, **kwargs):
+        async def send_message(self, **kwargs) -> None:
             sent.append(kwargs)
 
     ron = _player(2, "ron")

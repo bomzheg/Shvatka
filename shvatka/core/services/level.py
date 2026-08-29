@@ -1,16 +1,16 @@
 from adaptix import Retort
 
 from shvatka.core.interfaces.dal.level import (
-    LevelUpserter,
-    MyLevelsGetter,
     LevelByIdGetter,
     LevelCorrectUnlinker,
     LevelDeleter,
+    LevelUpserter,
+    MyLevelsGetter,
 )
 from shvatka.core.models import dto
 from shvatka.core.models.dto import scn
-from shvatka.core.rules.level import check_is_author, check_is_org, check_can_edit
 from shvatka.core.players.player import check_allow_be_author
+from shvatka.core.rules.level import check_can_edit, check_is_author, check_is_org
 from shvatka.core.services.scenario.files import sync_files_for_level
 from shvatka.core.services.scenario.level_ops import load_level
 

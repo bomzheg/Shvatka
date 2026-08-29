@@ -1,5 +1,5 @@
 import typing
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from io import BytesIO
 from unittest.mock import MagicMock
 
@@ -8,42 +8,45 @@ import pytest_asyncio
 from aiogram import Bot
 from aiogram.client.session.base import BaseSession
 from aiogram.exceptions import TelegramAPIError
+from aiogram.methods import (
+    SendAnimation,
+    SendAudio,
+    SendDocument,
+    SendPhoto,
+    SendSticker,
+    SendVideo,
+    SendVideoNote,
+    SendVoice,
+    TelegramMethod,
+)
+from aiogram.methods.base import TelegramType
 from aiogram.types import Chat, Message, PhotoSize
 from dishka import AsyncContainer
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
-from aiogram.methods import (
-    SendPhoto,
-    TelegramMethod,
-    SendAudio,
-    SendVideo,
-    SendDocument,
-    SendAnimation,
-    SendVoice,
-    SendVideoNote,
-    SendSticker,
-)
-from aiogram.methods.base import TelegramType
 
 from shvatka.core.interfaces.clients.file_storage import FileStorage
 from shvatka.core.models import dto, enums
 from shvatka.core.models.dto import hints
-from shvatka.core.models.dto.hints import TextHint, GPSHint, PhotoHint, BaseHint
 from shvatka.core.models.dto.hints import (
-    VenueHint,
-    AudioHint,
-    VideoHint,
-    DocumentHint,
     AnimationHint,
-    VoiceHint,
-    VideoNoteHint,
+    AudioHint,
+    BaseHint,
+    DocumentHint,
+    GPSHint,
+    PhotoHint,
     StickerHint,
+    TextHint,
+    VenueHint,
+    VideoHint,
+    VideoNoteHint,
+    VoiceHint,
 )
 from shvatka.infrastructure.db.dao import FileInfoDao
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.tgbot.config.models.main import TgBotConfig
 from shvatka.tgbot.views.hint_factory.hint_content_resolver import HintContentResolver
 from shvatka.tgbot.views.hint_sender import HintSender
-from tests.fixtures.file_storage import FILE_ID, CHAT_ID, FILE_META
+from tests.fixtures.file_storage import CHAT_ID, FILE_ID, FILE_META
 from tests.fixtures.scn_fixtures import GUID
 
 BAD_REQUEST_DESC = (
@@ -97,7 +100,7 @@ async def test_send_text(hint_sender: HintSender, bot_session: BaseSession):
     await hint_sender.send_hint(hint, CHAT_ID)
 
     session = typing.cast(MagicMock, bot_session)
-    assert 1 == session.call_count
+    assert session.call_count == 1
     call = session.mock_calls.pop()
     request = call.args[1]
     assert request.__api_method__ == "sendMessage"
@@ -111,7 +114,7 @@ async def test_send_location(hint_sender: HintSender, bot_session: BaseSession):
     await hint_sender.send_hint(hint, CHAT_ID)
 
     session = typing.cast(MagicMock, bot_session)
-    assert 1 == session.call_count
+    assert session.call_count == 1
     call = session.mock_calls.pop()
     request = call.args[1]
 
@@ -127,7 +130,7 @@ async def test_send_venue(hint_sender: HintSender, bot_session: BaseSession):
     await hint_sender.send_hint(hint, CHAT_ID)
 
     session = typing.cast(MagicMock, bot_session)
-    assert 1 == session.call_count
+    assert session.call_count == 1
     call = session.mock_calls.pop()
     request = call.args[1]
     assert request.__api_method__ == "sendVenue"
@@ -156,7 +159,7 @@ async def test_send_photo_by_id(
     await hint_sender.send_hint(hint, CHAT_ID)
 
     session = typing.cast(MagicMock, bot_session)
-    assert 1 == session.call_count
+    assert session.call_count == 1
     call = session.mock_calls.pop()
     request = call.args[1]
     assert request.__api_method__ == method_name
@@ -187,7 +190,7 @@ async def test_send_photo_by_content(
 
     await hint_sender.send_hint(hint, CHAT_ID)
 
-    assert 2 == session.call_count
+    assert session.call_count == 2
 
     call = session.mock_calls.pop()
     request = call.args[1]
@@ -223,7 +226,7 @@ async def test_send_by_content_when_file_id_missing(
     await hint_sender.send_hint(PhotoHint(file_guid=GUID), CHAT_ID)
 
     # no attempt to send by (missing) file_id, straight to content
-    assert 1 == session.call_count
+    assert session.call_count == 1
     call = session.mock_calls.pop()
     request = call.args[1]
     assert request.__api_method__ == "sendPhoto"
@@ -292,7 +295,7 @@ async def test_send_hints_returns_all_sent_messages(
     session.side_effect = [
         Message(
             message_id=message_id,
-            date=datetime.now(tz=timezone.utc),
+            date=datetime.now(tz=UTC),
             chat=Chat(id=CHAT_ID, type="supergroup"),
         )
         for message_id in (1, 2, 3)
@@ -308,7 +311,7 @@ async def test_send_hints_returns_all_sent_messages(
     assert [1, 2, 3] == [message.message_id for message in sent.all()]
     # the caption is told apart from the parts - it is pinned separately
     assert sent.caption is not None
-    assert 1 == sent.caption.message_id
+    assert sent.caption.message_id == 1
     assert [2, 3] == [message.message_id for message in sent.parts]
 
 
@@ -321,7 +324,7 @@ async def test_caption_replies_to_message(
     session.side_effect = [
         Message(
             message_id=2,
-            date=datetime.now(tz=timezone.utc),
+            date=datetime.now(tz=UTC),
             chat=Chat(id=CHAT_ID, type="supergroup"),
         )
     ]
@@ -335,8 +338,8 @@ async def test_caption_replies_to_message(
     )
 
     request = session.mock_calls.pop().args[1]
-    assert "sendMessage" == request.__api_method__
-    assert 17 == request.reply_to_message_id
+    assert request.__api_method__ == "sendMessage"
+    assert request.reply_to_message_id == 17
     # the key a bonus hint answers can be deleted - that must not lose the hint
     assert request.allow_sending_without_reply
 
@@ -350,7 +353,7 @@ async def test_send_hints_without_caption(
     session.side_effect = [
         Message(
             message_id=1,
-            date=datetime.now(tz=timezone.utc),
+            date=datetime.now(tz=UTC),
             chat=Chat(id=CHAT_ID, type="supergroup"),
         )
     ]
@@ -378,7 +381,7 @@ async def test_renew_file_id_after_send_by_content(
     session = typing.cast(MagicMock, bot_session)
     sent_message = Message(
         message_id=1,
-        date=datetime.now(tz=timezone.utc),
+        date=datetime.now(tz=UTC),
         chat=Chat(id=CHAT_ID, type="private"),
         photo=[PhotoSize(file_id="RENEWED_FILE_ID", file_unique_id="u", width=1, height=1)],
     )

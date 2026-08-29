@@ -1,6 +1,7 @@
 import asyncio
 import secrets
 from abc import ABC, abstractmethod
+from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from typing import Any
 
@@ -9,9 +10,8 @@ from aiogram.methods import TelegramMethod
 from aiogram.methods.base import TelegramType
 from aiogram.webhook.security import IPFilter
 from dishka import AsyncContainer
-from dishka.integrations.fastapi import FromDishka
-from dishka.integrations.fastapi import inject
-from fastapi import FastAPI, Request, Response, HTTPException, APIRouter
+from dishka.integrations.fastapi import FromDishka, inject
+from fastapi import APIRouter, FastAPI, HTTPException, Request, Response
 
 
 def setup_application(app: FastAPI, dishka: AsyncContainer, /, **kwargs: Any) -> None:
@@ -22,7 +22,7 @@ def setup_application(app: FastAPI, dishka: AsyncContainer, /, **kwargs: Any) ->
     }
 
     @asynccontextmanager
-    async def lifespan(*a: Any, **kw: Any):
+    async def lifespan(*a: Any, **kw: Any) -> AsyncIterator[None]:
         dispatcher = await dishka.get(Dispatcher)
         await dispatcher.emit_startup(**workflow_data, **dispatcher.workflow_data)
         yield

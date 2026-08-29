@@ -1,5 +1,5 @@
 from aiogram import Router
-from aiogram.filters import CommandObject, Command
+from aiogram.filters import Command, CommandObject
 from aiogram.types import Message
 from dishka import FromDishka
 from dishka.integrations.aiogram import inject

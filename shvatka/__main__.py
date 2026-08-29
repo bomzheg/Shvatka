@@ -6,10 +6,11 @@ of the application (aiogram, pyrogram, matplotlib, sqlalchemy, ...) happens in
 complete silence and the process looks hung for tens of seconds.
 """
 
-import uvicorn
 import logging
 import time
 from typing import TYPE_CHECKING
+
+import uvicorn
 
 from shvatka.common.config.parser.logging_config import setup_logging
 from shvatka.common.config.parser.paths import common_get_paths

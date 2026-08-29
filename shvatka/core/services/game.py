@@ -5,41 +5,43 @@ from adaptix import Retort
 from shvatka.core.interfaces.clients.file_storage import FileGateway
 from shvatka.core.interfaces.dal.complex import GameCompleter, GamePackager, GameScenarioEditor
 from shvatka.core.interfaces.dal.game import (
-    GameUpserter,
-    GameCreator,
+    ActiveGameFinder,
+    CompletedGameFinder,
     GameAuthorsFinder,
     GameByIdGetter,
-    ActiveGameFinder,
-    WaiverStarter,
-    GameStartPlanner,
+    GameCreator,
     GameNameChecker,
     GameRenamer,
-    CompletedGameFinder,
+    GameStartPlanner,
+    GameUpserter,
     PreviewGameByIdGetter,
+    WaiverStarter,
 )
 from shvatka.core.interfaces.dal.level import LevelLinker
 from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.interfaces.scheduler import Scheduler
 from shvatka.core.models import dto
-from shvatka.core.models.dto import scn, export_stat
+from shvatka.core.models.dto import export_stat, scn
+from shvatka.core.models.dto.scn.game import check_all_files_saved
+from shvatka.core.players.player import check_allow_be_author
 from shvatka.core.rules.game import (
     check_can_read,
     check_can_view_scenario,
     check_game_editable,
 )
 from shvatka.core.rules.level import (
-    check_is_author as check_is_level_author,
     check_can_link_to_game,
 )
-from shvatka.core.players.player import check_allow_be_author
+from shvatka.core.rules.level import (
+    check_is_author as check_is_level_author,
+)
 from shvatka.core.services.scenario.files import (
-    upsert_files,
-    get_file_metas,
     get_file_contents,
+    get_file_metas,
     sync_files_for_level,
+    upsert_files,
 )
 from shvatka.core.services.scenario.game_ops import parse_uploaded_game
-from shvatka.core.models.dto.scn.game import check_all_files_saved
 from shvatka.core.utils import exceptions
 from shvatka.core.utils.exceptions import AnotherGameIsActive, CantEditGame
 

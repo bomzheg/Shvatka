@@ -7,9 +7,10 @@ from dishka.integrations.aiogram_dialog import inject
 from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.models import dto
 from shvatka.core.players.player import get_team_players
-from shvatka.core.services.team import get_teams, get_team_by_id, get_played_games
+from shvatka.core.services.team import get_played_games, get_team_by_id, get_teams
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.tgbot.dialogs.outdated import get_actual_team_player
+
 from .common import get_active_filter, get_archive_filter
 
 

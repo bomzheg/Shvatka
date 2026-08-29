@@ -44,7 +44,7 @@ def make_level(number: int, hint_times: list[int]) -> dto.GamedLevel:
         conditions=scn.Conditions([action.KeyWinCondition({f"SH{number}"})]),
         __model_version__=1,
     )
-    level = dto.Level(
+    return dto.GamedLevel(
         db_id=100 + number,
         name_id=f"level{number}",
         author=AUTHOR,
@@ -52,7 +52,6 @@ def make_level(number: int, hint_times: list[int]) -> dto.GamedLevel:
         game_id=10,
         number_in_game=number,
     )
-    return level  # type: ignore[return-value]
 
 
 def make_game(status: GameStatus = GameStatus.started) -> dto.FullGame:

@@ -1,27 +1,27 @@
 from aiogram_dialog import Dialog, Window
 from aiogram_dialog.widgets.input import TextInput
 from aiogram_dialog.widgets.kbd import Cancel, SwitchTo, Url
-from aiogram_dialog.widgets.text import Const, Jinja, Format
+from aiogram_dialog.widgets.text import Const, Format, Jinja
 
 from shvatka.tgbot import states
-from shvatka.tgbot.dialogs.profile.getters import (
-    player_getter,
-    player_stat_getter,
-    player_one_time_url_getter,
-)
 from shvatka.tgbot.dialogs.preview_data import (
     PREVIEW_AUTHOR,
     PREVIEW_PLAYER_STAT,
     PreviewSwitchTo,
 )
+from shvatka.tgbot.dialogs.profile.getters import (
+    player_getter,
+    player_one_time_url_getter,
+    player_stat_getter,
+)
 from shvatka.tgbot.dialogs.profile.handlers import (
+    email_invalid,
+    on_email_code_entered,
+    on_email_entered,
     save_new_username,
-    validate_username,
     username_invalid,
     validate_email_input,
-    email_invalid,
-    on_email_entered,
-    on_email_code_entered,
+    validate_username,
 )
 
 profile_dialog = Dialog(

@@ -1,16 +1,17 @@
-from datetime import datetime, tzinfo
 import typing
-from typing import Sequence
+from collections.abc import Sequence
+from datetime import datetime, tzinfo
 
-from sqlalchemy import select, ScalarResult, Result
+from sqlalchemy import Result, ScalarResult, select
 from sqlalchemy.dialects.postgresql import insert
-from sqlalchemy.exc import NoResultFound, MultipleResultsFound
+from sqlalchemy.exc import MultipleResultsFound, NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from shvatka.core.models import dto
 from shvatka.core.utils import exceptions
 from shvatka.core.utils.exceptions import MultipleUsernameFound, NoUsernameFound
 from shvatka.infrastructure.db.models import User
+
 from .base import BaseDAO
 
 

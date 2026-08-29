@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 
 from shvatka.core.utils import exceptions
+
 from .hint_part import AnyHint
 
 
@@ -14,7 +15,7 @@ class TimeHint:
     time: int
     hint: list[AnyHint]
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         _check_hint_not_empty(self.hint)
 
     def get_guids(self) -> list[str]:

@@ -13,7 +13,7 @@ from shvatka.core.models import dto, enums
 from shvatka.core.utils import exceptions
 from shvatka.core.utils.datetime_utils import tz_utc
 from shvatka.infrastructure.crawler.game_scn.common import UNPARSEABLE_GAMES
-from shvatka.infrastructure.crawler.models.team import ParsedTeam, ParsedPlayer
+from shvatka.infrastructure.crawler.models.team import ParsedPlayer, ParsedTeam
 from shvatka.infrastructure.crawler.retort import create_teams_retort
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.infrastructure.di import get_providers

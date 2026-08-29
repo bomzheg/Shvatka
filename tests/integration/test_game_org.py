@@ -1,19 +1,18 @@
 import pytest
 
 from shvatka.core.models import dto
-from shvatka.core.models.enums import InviteType
-from shvatka.core.models.enums import OrgPermission
+from shvatka.core.models.enums import InviteType, OrgPermission
 from shvatka.core.services.organizers import (
-    get_orgs,
-    get_spying_orgs,
-    get_secondary_orgs,
+    agree_to_be_org,
     check_allow_manage_orgs,
     check_game_token,
-    save_invite_to_orgs,
     dismiss_to_be_org,
-    agree_to_be_org,
-    flip_permission,
     flip_deleted,
+    flip_permission,
+    get_orgs,
+    get_secondary_orgs,
+    get_spying_orgs,
+    save_invite_to_orgs,
 )
 from shvatka.core.utils.exceptions import SaltNotExist
 from shvatka.core.views.game import NewOrg
@@ -24,11 +23,11 @@ from tests.mocks.org_notifier import OrgNotifierMock
 @pytest.mark.asyncio
 async def test_only_org(game: dto.FullGame, author: dto.Player, dao: HolderDao):
     orgs = await get_orgs(game, dao.organizer)
-    assert 1 == len(orgs)
+    assert len(orgs) == 1
     assert author.id == orgs[0].player.id
 
     orgs = await get_spying_orgs(game, dao.organizer)
-    assert 1 == len(orgs)
+    assert len(orgs) == 1
     assert author.id == orgs[0].player.id
 
     assert [] == await get_secondary_orgs(game, dao.organizer)
@@ -61,7 +60,7 @@ async def test_agree_invite(
         dao=dao.org_adder,
     )
     secondary_orgs = await get_secondary_orgs(game, check_dao.organizer)
-    assert 1 == len(secondary_orgs)
+    assert len(secondary_orgs) == 1
     actual = secondary_orgs[0]
 
     assert game.id == actual.game.id
@@ -78,7 +77,7 @@ async def test_agree_invite(
     assert game.id == event.game.id
     assert actual.id == event.org.id
     assert harry.id == event.org.player.id
-    assert 1 == len(event.orgs_list)
+    assert len(event.orgs_list) == 1
     assert author.id == event.orgs_list[0].player.id
 
 

@@ -3,6 +3,12 @@ import typing
 from dataclasses import dataclass
 from datetime import datetime
 
+from shvatka.core.games.adapters import (
+    GameFileReader,
+    GameKeysReader,
+    GamePlayDao,
+    GameStatReader,
+)
 from shvatka.core.games.dto import (
     CurrentHintsAndKeys,
     GameStatWithBonuses,
@@ -12,29 +18,23 @@ from shvatka.core.games.dto import (
 from shvatka.core.games.game_play import schedule_first_hint
 from shvatka.core.games.results import build_results_table, resolve_bonus_levels
 from shvatka.core.interfaces.clients.file_storage import FileGateway
-from shvatka.core.interfaces.printer import TablePrinter
-from shvatka.core.games.adapters import (
-    GameFileReader,
-    GameKeysReader,
-    GameStatReader,
-    GamePlayDao,
-)
 from shvatka.core.interfaces.current_game import CurrentGameProvider
 from shvatka.core.interfaces.dal.game_play import GamePlayerDao
 from shvatka.core.interfaces.dal.organizer import OrgByPlayerGetter
 from shvatka.core.interfaces.dal.waiver import WaiverGetter
 from shvatka.core.interfaces.identity import IdentityProvider
+from shvatka.core.interfaces.printer import TablePrinter
 from shvatka.core.interfaces.scheduler import Scheduler
 from shvatka.core.models import dto, enums
 from shvatka.core.models.dto import action
 from shvatka.core.models.dto.hints import VerifiableFileMeta
 from shvatka.core.services.game_stat import (
-    get_typed_keys,
     get_game_stat,
     get_game_stat_with_hints,
+    get_typed_keys,
 )
-from shvatka.core.services.key import TimerProcessor, KeyProcessor
-from shvatka.core.services.organizers import get_spying_orgs, get_by_player_or_none
+from shvatka.core.services.key import KeyProcessor, TimerProcessor
+from shvatka.core.services.organizers import get_by_player_or_none, get_spying_orgs
 from shvatka.core.utils import exceptions
 from shvatka.core.utils.datetime_utils import tz_utc
 from shvatka.core.utils.key_checker_lock import KeyCheckerFactory
@@ -44,10 +44,10 @@ from shvatka.core.views.game import (
     EffectsKey,
     GameFinished,
     GameFinishedByAll,
-    InputContainer,
-    LevelUp,
     GameLogEvent,
     GameLogType,
+    InputContainer,
+    LevelUp,
     SendPuzzle,
     ShowEffects,
     ShowTasks,
@@ -56,12 +56,11 @@ from shvatka.core.views.game import (
 )
 from shvatka.infrastructure.scheduler import SchedulerContainer
 
-
 logger = logging.getLogger(__name__)
 
 
 class GameKeysReaderInteractor:
-    def __init__(self, dao: GameKeysReader):
+    def __init__(self, dao: GameKeysReader) -> None:
         self.dao = dao
 
     async def __call__(
@@ -73,7 +72,7 @@ class GameKeysReaderInteractor:
 
 
 class GameStatReaderInteractor:
-    def __init__(self, dao: GameStatReader):
+    def __init__(self, dao: GameStatReader) -> None:
         self.dao = dao
 
     async def __call__(self, game_id: int, identity: IdentityProvider) -> GameStatWithBonuses:
@@ -92,7 +91,7 @@ class GameStatReaderInteractor:
 
 
 class GameResultsFileInteractor:
-    def __init__(self, dao: GameStatReader, printer: TablePrinter):
+    def __init__(self, dao: GameStatReader, printer: TablePrinter) -> None:
         self.dao = dao
         self.printer = printer
 
@@ -111,7 +110,7 @@ class GameFileReaderInteractor:
         current_game: CurrentGameProvider,
         game_play_dao: GamePlayDao,
         org_dao: OrgByPlayerGetter,
-    ):
+    ) -> None:
         self.file_gateway = file_gateway
         self.dao = dao
         self.current_game = current_game
@@ -156,8 +155,7 @@ class GameFileReaderInteractor:
                 user=await identity.get_user(),
             )
 
-        meta = await self.dao.get_by_guid(guid)
-        return meta
+        return await self.dao.get_by_guid(guid)
 
     async def can_view_scenario(self, game: dto.Game, player: dto.Player) -> bool:
         org = await self.org_dao.get_by_player_or_none(game=game, player=player)

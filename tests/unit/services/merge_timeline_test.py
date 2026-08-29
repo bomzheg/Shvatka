@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 import pytest
 
@@ -6,10 +6,10 @@ from shvatka.core.models import dto
 from shvatka.core.models.enums import GameStatus
 from shvatka.core.models.enums.played import Played
 from shvatka.core.players.dto import (
+    WAIVER_POINT_AFTER_GAME,
+    WAIVER_POINT_BEFORE_GAME,
     TimelineItem,
     WaiverPoint,
-    WAIVER_POINT_BEFORE_GAME,
-    WAIVER_POINT_AFTER_GAME,
     pending_game_interval,
 )
 from shvatka.core.players.player import (
@@ -20,7 +20,7 @@ from shvatka.core.players.player import (
 from shvatka.core.utils import exceptions
 from shvatka.core.utils.datetime_utils import tz_game
 
-START_AT = datetime(2025, 4, 12, 16, 0, tzinfo=timezone.utc)  # Saturday
+START_AT = datetime(2025, 4, 12, 16, 0, tzinfo=UTC)  # Saturday
 NOW = START_AT
 
 

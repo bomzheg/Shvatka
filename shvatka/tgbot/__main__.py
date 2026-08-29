@@ -18,9 +18,10 @@ async def main():
     setup_logging(paths)
     logger.info("logging configured, loading application modules...")
     started_at = time.monotonic()
-    from aiogram import Dispatcher, Bot
+    from aiogram import Bot, Dispatcher
+
     from shvatka.infrastructure.di.utils import warm_up
-    from shvatka.tgbot.main_factory import resolve_update_types, create_dishka
+    from shvatka.tgbot.main_factory import create_dishka, resolve_update_types
 
     logger.info("application modules loaded in %.2f s", time.monotonic() - started_at)
 

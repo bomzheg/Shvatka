@@ -1,18 +1,17 @@
 import pytest
 
-from shvatka.core.models import dto
-from shvatka.core.models import enums
+from shvatka.core.models import dto, enums
 from shvatka.core.players.player import (
-    join_team,
-    get_my_team,
-    get_my_role,
     flip_permission,
     get_full_team_player,
+    get_my_role,
+    get_my_team,
+    join_team,
     leave,
 )
 from shvatka.core.utils import exceptions
-from shvatka.core.utils.defaults_constants import DEFAULT_ROLE, CAPTAIN_ROLE
-from shvatka.core.utils.exceptions import PlayerAlreadyInTeam, PermissionsError, CantBeAuthor
+from shvatka.core.utils.defaults_constants import CAPTAIN_ROLE, DEFAULT_ROLE
+from shvatka.core.utils.exceptions import CantBeAuthor, PermissionsError, PlayerAlreadyInTeam
 from shvatka.core.views.game import GameLogWriter
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from tests.fixtures.player import promote
@@ -29,14 +28,14 @@ async def test_add_player_to_team(
     dao: HolderDao,
     game_log: GameLogWriter,
 ):
-    assert 1 == await dao.team_player.count()
+    assert await dao.team_player.count() == 1
     assert gryffindor == await get_my_team(harry, dao.team_player)
-    assert CAPTAIN_ROLE == await get_my_role(harry, dao.team_player)
+    assert await get_my_role(harry, dao.team_player) == CAPTAIN_ROLE
 
     await join_team(hermione, gryffindor, harry, dao.team_player, notifier=TeamNotifierMock())
     assert gryffindor == await get_my_team(hermione, dao.team_player)
-    assert 2 == await dao.team_player.count()
-    assert DEFAULT_ROLE == await get_my_role(hermione, dao.team_player)
+    assert await dao.team_player.count() == 2
+    assert await get_my_role(hermione, dao.team_player) == DEFAULT_ROLE
 
     with pytest.raises(PlayerAlreadyInTeam):
         await join_team(harry, gryffindor, harry, dao.team_player, notifier=TeamNotifierMock())
@@ -54,12 +53,12 @@ async def test_add_player_to_team(
     with pytest.raises(PlayerAlreadyInTeam):
         await create_second_team(hermione, dao, game_log)
 
-    assert 2 == await dao.team_player.count()
+    assert await dao.team_player.count() == 2
 
     slytherin = await create_second_team(draco, dao, game_log)
 
-    assert 3 == await dao.team_player.count()
-    assert CAPTAIN_ROLE == await get_my_role(draco, dao.team_player)
+    assert await dao.team_player.count() == 3
+    assert await get_my_role(draco, dao.team_player) == CAPTAIN_ROLE
 
     with pytest.raises(PlayerAlreadyInTeam):
         await join_team(harry, slytherin, draco, dao.team_player, notifier=TeamNotifierMock())
@@ -67,7 +66,7 @@ async def test_add_player_to_team(
     with pytest.raises(PlayerAlreadyInTeam):
         await join_team(hermione, slytherin, draco, dao.team_player, notifier=TeamNotifierMock())
 
-    assert 3 == await dao.team_player.count()
+    assert await dao.team_player.count() == 3
 
 
 @pytest.mark.asyncio
@@ -81,14 +80,14 @@ async def test_restore_player_to_team(
     players = await dao.team_player.get_players(gryffindor)
     assert len(players) == 1
     assert players[0].player_id == harry.id
-    assert 1 == await dao.team_player.count()
-    assert CAPTAIN_ROLE == await get_my_role(harry, dao.team_player)
+    assert await dao.team_player.count() == 1
+    assert await get_my_role(harry, dao.team_player) == CAPTAIN_ROLE
 
     await join_team(hermione, gryffindor, harry, dao.team_player, notifier=TeamNotifierMock())
 
     assert gryffindor == await get_my_team(hermione, dao.team_player)
-    assert 2 == await dao.team_player.count()
-    assert DEFAULT_ROLE == await get_my_role(hermione, dao.team_player)
+    assert await dao.team_player.count() == 2
+    assert await get_my_role(hermione, dao.team_player) == DEFAULT_ROLE
 
     await leave(hermione, harry, dao.team_leaver, notifier=TeamNotifierMock())
 
@@ -98,8 +97,8 @@ async def test_restore_player_to_team(
         await join_team(hermione, gryffindor, harry, dao.team_player, notifier=TeamNotifierMock())
 
     assert gryffindor == await get_my_team(hermione, dao.team_player)
-    assert 2 == await dao.team_player.count()
-    assert DEFAULT_ROLE == await get_my_role(hermione, dao.team_player)
+    assert await dao.team_player.count() == 2
+    assert await get_my_role(hermione, dao.team_player) == DEFAULT_ROLE
 
 
 @pytest.mark.asyncio
@@ -119,7 +118,7 @@ async def test_no_restore_player_to_team_just_add(
     await join_team(hermione, gryffindor, harry, dao.team_player, notifier=TeamNotifierMock())
 
     assert gryffindor == await get_my_team(hermione, dao.team_player)
-    assert DEFAULT_ROLE == await get_my_role(hermione, dao.team_player)
+    assert await get_my_role(hermione, dao.team_player) == DEFAULT_ROLE
 
     await leave(hermione, hermione, dao.team_leaver, notifier=TeamNotifierMock())
 
@@ -131,7 +130,7 @@ async def test_no_restore_player_to_team_just_add(
     await join_team(hermione, gryffindor, harry, dao.team_player, notifier=TeamNotifierMock())
 
     assert gryffindor == await get_my_team(hermione, dao.team_player)
-    assert DEFAULT_ROLE == await get_my_role(hermione, dao.team_player)
+    assert await get_my_role(hermione, dao.team_player) == DEFAULT_ROLE
 
 
 @pytest.mark.asyncio

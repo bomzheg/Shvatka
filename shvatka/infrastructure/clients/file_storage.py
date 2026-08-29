@@ -111,8 +111,7 @@ class LocalFileStorage(FileStorage):
 
     async def get(self, file_link: hints.FileContentLink) -> BinaryIO:
         with Path(file_link.file_path).open("rb") as f:  # noqa: ASYNC101
-            result = BytesIO(f.read())
-        return result
+            return BytesIO(f.read())
 
     async def exists(self, file_link: hints.FileContentLink) -> bool:
         return Path(file_link.file_path).is_file()

@@ -5,8 +5,7 @@ from uuid import uuid4
 import pytest
 
 from shvatka.core.models import enums
-from shvatka.core.models.dto import scn, action
-from shvatka.core.models.dto import hints
+from shvatka.core.models.dto import action, hints, scn
 from shvatka.core.utils import exceptions
 
 

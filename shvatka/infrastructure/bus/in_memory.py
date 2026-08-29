@@ -1,8 +1,7 @@
 import logging
-from abc import abstractmethod, ABCMeta
+from abc import ABCMeta, abstractmethod
 from dataclasses import dataclass
 from typing import Protocol
-
 
 from shvatka.core.interfaces.bus import ActionRequestResolved, Bus, Event, OneTimeTokenUsed
 
@@ -34,4 +33,4 @@ class InMemoryBus(Bus):
                 case ActionRequestResolved(request_id=request_id):
                     await self.action_resolved(request_id=request_id)
         except Exception as e:
-            logger.error("error while processing event %s", event, exc_info=e)
+            logger.exception("error while processing event %s", event, exc_info=e)

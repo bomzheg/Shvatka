@@ -68,7 +68,7 @@ async def test_callback_gets_the_link_as_a_message(bot: mock.AsyncMock):
     await handle_sh_error(error, log_chat_id=0, docs=DOCS, bot=bot)
     (text,) = sent_texts(bot)
     assert KEYS_URL in text
-    assert CHAT_ID == bot.send_message.await_args.kwargs["chat_id"]
+    assert bot.send_message.await_args.kwargs["chat_id"] == CHAT_ID
 
 
 @pytest.mark.asyncio

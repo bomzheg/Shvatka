@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import pytest
 
@@ -8,7 +8,7 @@ from shvatka.core.utils.defaults_constants import CAPTAIN_ROLE, DEFAULT_ROLE
 from shvatka.core.utils.exceptions import PermissionsError, PlayerNotInTeam, TeamError
 from shvatka.core.views.team import CaptainChanged, TeamEvent
 
-JOINED_AT = datetime(2025, 4, 12, 16, 0, tzinfo=timezone.utc)
+JOINED_AT = datetime(2025, 4, 12, 16, 0, tzinfo=UTC)
 
 
 def _player(id_: int, username: str) -> dto.Player:

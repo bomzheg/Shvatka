@@ -2,26 +2,26 @@ from dishka import Provider, Scope, provide
 
 from shvatka.api.app.dependencies.auth import ApiIdentityProvider
 from shvatka.api.app.utils.web_input import (
-    WebGameView,
     WebGameLogWriter,
-    WebGameReleasePublisher,
-    WebOrgNotifier,
     WebGamePreparer,
+    WebGameReleasePublisher,
+    WebGameView,
+    WebOrgNotifier,
     WebTeamNotifier,
 )
 from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.interfaces.nursery import Nursery
-from shvatka.tgbot.tasks import NurseryViewSender
 from shvatka.core.views.game import (
-    GameView,
     GameLogWriter,
-    ViewSender,
     GameReleasePublisher,
-    OrgNotifier,
+    GameView,
     GameViewPreparer,
+    OrgNotifier,
+    ViewSender,
 )
 from shvatka.core.views.team import TeamNotifier
 from shvatka.infrastructure.bus.in_memory import UsedOneTimeTokenInteractor
+from shvatka.tgbot.tasks import NurseryViewSender
 
 
 class MockUsedOneTimeTokenInteractor(UsedOneTimeTokenInteractor):

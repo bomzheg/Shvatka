@@ -1,5 +1,6 @@
+from collections.abc import Iterable
 from datetime import datetime
-from typing import Iterable, Protocol
+from typing import Protocol
 
 from shvatka.core.interfaces.dal.base import Committer
 from shvatka.core.models import dto

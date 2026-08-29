@@ -3,8 +3,8 @@ from adaptix import Retort
 from httpx import AsyncClient
 
 from shvatka.api.app.dependencies.auth import AuthProperties
-from shvatka.common.factory import REQUIRED_GAME_RECIPES
 from shvatka.api.games import responses as game_responses
+from shvatka.common.factory import REQUIRED_GAME_RECIPES
 from shvatka.core.models import dto
 from shvatka.core.models.dto import hints
 from shvatka.core.models.enums import HintType

@@ -1,7 +1,8 @@
 import typing
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Mapping, Sequence
+from typing import Self, overload
 from uuid import UUID
 
 from adaptix import Retort
@@ -10,6 +11,8 @@ from shvatka.api.files.responses import GameFile
 from shvatka.api.shared.responses import Player, Team
 from shvatka.core.games.dto import (
     BonusEvent as CoreBonusEvent,
+)
+from shvatka.core.games.dto import (
     BonusSource,
     CurrentHintsAndKeys,
     Event,
@@ -32,8 +35,18 @@ class Level:
     game_id: int | None = None
     number_in_game: int | None = None
 
+    @overload
     @classmethod
-    def from_core(cls, retort: Retort, core: dto.Level | None = None):
+    def from_core(cls, retort: Retort, core: dto.Level) -> Self:
+        ...
+
+    @overload
+    @classmethod
+    def from_core(cls, retort: Retort, core: None = None) -> None:
+        ...
+
+    @classmethod
+    def from_core(cls, retort: Retort, core: dto.Level | None = None) -> "Self | None":
         if core is None:
             return None
         return cls(
@@ -56,13 +69,27 @@ class FullGame:
     levels: list[Level] = field(default_factory=list)
     files: list[GameFile] = field(default_factory=list)
 
+    @overload
+    @classmethod
+    def from_core(
+        cls, retort: Retort, core: dto.FullGame, files: Sequence[hints.FileMeta] = ()
+    ) -> Self:
+        ...
+
+    @overload
+    @classmethod
+    def from_core(
+        cls, retort: Retort, core: None = None, files: Sequence[hints.FileMeta] = ()
+    ) -> None:
+        ...
+
     @classmethod
     def from_core(
         cls,
         retort: Retort,
         core: dto.FullGame | None = None,
         files: Sequence[hints.FileMeta] = (),
-    ):
+    ) -> "Self | None":
         if core is None:
             return None
         return cls(
@@ -104,8 +131,18 @@ class KeyTime:
     player: Player
     team: Team
 
+    @overload
     @classmethod
-    def from_core(cls, core: dto.KeyTime | None):
+    def from_core(cls, core: dto.KeyTime) -> Self:
+        ...
+
+    @overload
+    @classmethod
+    def from_core(cls, core: None) -> None:
+        ...
+
+    @classmethod
+    def from_core(cls, core: dto.KeyTime | None) -> "Self | None":
         if core is None:
             return None
         return cls(
@@ -190,8 +227,20 @@ class KeyWithEffects:
     team: Team
     effects: Effects | None
 
+    @overload
     @classmethod
-    def from_core(cls, core: dto.InsertedKey | None, level_numbers_by_name_id: Mapping[str, int]):
+    def from_core(cls, core: dto.InsertedKey, level_numbers_by_name_id: Mapping[str, int]) -> Self:
+        ...
+
+    @overload
+    @classmethod
+    def from_core(cls, core: None, level_numbers_by_name_id: Mapping[str, int]) -> None:
+        ...
+
+    @classmethod
+    def from_core(
+        cls, core: dto.InsertedKey | None, level_numbers_by_name_id: Mapping[str, int]
+    ) -> "Self | None":
         if core is None:
             return None
         return cls(
@@ -219,8 +268,18 @@ class LevelTime:
     start_at: datetime
     is_finished: bool
 
+    @overload
     @classmethod
-    def from_core(cls, core: dto.LevelTimeOnGame | None):
+    def from_core(cls, core: dto.LevelTimeOnGame) -> Self:
+        ...
+
+    @overload
+    @classmethod
+    def from_core(cls, core: None) -> None:
+        ...
+
+    @classmethod
+    def from_core(cls, core: dto.LevelTimeOnGame | None) -> "Self | None":
         if core is None:
             return None
         return cls(
@@ -267,8 +326,18 @@ class GameStat:
     bonuses: dict[int, list[BonusEvent]]
     """{team_id: [...]} — only teams that actually have bonuses."""
 
+    @overload
     @classmethod
-    def from_core(cls, core: GameStatWithBonuses | None):
+    def from_core(cls, core: GameStatWithBonuses) -> Self:
+        ...
+
+    @overload
+    @classmethod
+    def from_core(cls, core: None) -> None:
+        ...
+
+    @classmethod
+    def from_core(cls, core: GameStatWithBonuses | None) -> "Self | None":
         if core is None:
             return None
         return cls(
@@ -293,7 +362,7 @@ class GameEvent:
     is_timer: bool = False
 
     @classmethod
-    def from_core(cls, core: Event, level_numbers_by_name_id: Mapping[str, int]):
+    def from_core(cls, core: Event, level_numbers_by_name_id: Mapping[str, int]) -> Self:
         return cls(
             id=core.id,
             level_time_id=core.level_time_id,
@@ -316,9 +385,7 @@ class CurrentHintResponse:
     is_finished: bool
 
     @classmethod
-    def from_core(cls, core: CurrentHintsAndKeys):
-        if core is None:
-            return None
+    def from_core(cls, core: CurrentHintsAndKeys) -> Self:
         level_numbers_by_name_id = core.level_numbers_by_name_id
         return cls(
             game_id=core.game_id,

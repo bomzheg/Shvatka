@@ -8,12 +8,12 @@ from dishka.integrations.aiogram import AiogramMiddlewareData
 from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.interfaces.superusers import SuperusersResolver
 from shvatka.core.models import dto
-from shvatka.core.services.chat import upsert_chat
 from shvatka.core.players.player import (
-    upsert_player,
     get_full_team_player_or_none,
     get_my_team,
+    upsert_player,
 )
+from shvatka.core.services.chat import upsert_chat
 from shvatka.core.services.team import get_by_chat
 from shvatka.core.services.user import upsert_user
 from shvatka.infrastructure.db.dao.holder import HolderDao

@@ -5,6 +5,7 @@ does: it moves a game between statuses, and never touches its content.
 """
 
 from dataclasses import dataclass, field
+from datetime import datetime, timedelta
 
 import pytest
 
@@ -18,8 +19,6 @@ from shvatka.core.models.enums import GameStatus
 from shvatka.core.utils import exceptions
 from shvatka.core.utils.datetime_utils import tz_utc
 from tests.fixtures.identity import MockIdentityProvider
-
-from datetime import datetime, timedelta
 
 
 def make_player(id_: int) -> dto.Player:

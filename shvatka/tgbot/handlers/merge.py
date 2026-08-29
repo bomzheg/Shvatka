@@ -1,9 +1,9 @@
 from functools import partial
 
-from aiogram import Router, Bot
-from dishka import FromDishka
+from aiogram import Bot, Router
 from aiogram.types import CallbackQuery, Message
 from aiogram_dialog.api.protocols import BgManagerFactory
+from dishka import FromDishka
 from dishka.integrations.aiogram import inject
 
 from shvatka.core.players.player import get_player_by_id, merge_players

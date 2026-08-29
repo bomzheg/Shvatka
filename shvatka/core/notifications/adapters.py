@@ -5,9 +5,9 @@ from datetime import datetime
 from typing import Any, Protocol
 
 from shvatka.core.interfaces.dal.base import Committer
-from shvatka.core.models.enums.notification import NotificationType, NotificationSeverity
-from shvatka.core.models.enums.request import RequestType, RequestStatus
 from shvatka.core.models.dto import BotMessage
+from shvatka.core.models.enums.notification import NotificationSeverity, NotificationType
+from shvatka.core.models.enums.request import RequestStatus, RequestType
 from shvatka.core.notifications import dto
 
 

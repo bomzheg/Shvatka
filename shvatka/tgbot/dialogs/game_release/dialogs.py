@@ -6,6 +6,7 @@ from aiogram_dialog.widgets.text import Case, Const, Jinja
 
 from shvatka.tgbot import states
 from shvatka.tgbot.dialogs.preview_data import PREVIEW_GAME, PreviewSwitchTo
+
 from .getters import get_composed_release, get_release
 from .handlers import (
     delete_release,

@@ -12,7 +12,6 @@ from starlette.responses import Response
 from shvatka.common.docs import DocsUrlFactory
 from shvatka.core.utils import exceptions
 
-
 logger = logging.getLogger(__name__)
 retort = Retort(recipe=[name_mapping(name_style=adaptix.NameStyle.CAMEL)])
 
@@ -31,7 +30,7 @@ class ErrorContent:
 def sh_exception_handler(
     request: Request, exc: exceptions.SHError, docs: DocsUrlFactory
 ) -> Response:
-    if not isinstance(exc, (exceptions.IdentityWithoutUser, exceptions.IdentityWithoutPlayer)):
+    if not isinstance(exc, exceptions.IdentityWithoutUser | exceptions.IdentityWithoutPlayer):
         logger.error("got an sh error, during request %s", request.url, exc_info=exc)
     else:
         logger.debug("got an auth sh error, during request %s", request.url, exc_info=exc)
@@ -43,16 +42,17 @@ def sh_exception_handler(
         confidential=exc.confidential,
         doc_url=docs.get_error_url(exc),
     )
-    if isinstance(exc, (exceptions.NotAuthorizedForEdit, exceptions.NotAuthorizedForAdmin)):
+    if isinstance(exc, exceptions.NotAuthorizedForEdit | exceptions.NotAuthorizedForAdmin):
         status_code = 403
-    elif isinstance(exc, (exceptions.IdentityWithoutPlayer, exceptions.IdentityWithoutUser)):
+    elif isinstance(exc, exceptions.IdentityWithoutPlayer | exceptions.IdentityWithoutUser):
         status_code = 401
     elif isinstance(
         exc,
-        (exceptions.UserNotFoundError, exceptions.PlayerNotFoundError, exceptions.GameNotFound),
+        exceptions.FileNotFound
+        | exceptions.GameNotFound
+        | exceptions.PlayerNotFoundError
+        | exceptions.UserNotFoundError,
     ):
-        status_code = 404
-    elif isinstance(exc, exceptions.FileNotFound):
         status_code = 404
     elif isinstance(exc, exceptions.FileIsUsed):
         status_code = 409

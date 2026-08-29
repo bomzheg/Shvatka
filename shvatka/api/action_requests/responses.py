@@ -1,7 +1,7 @@
 import typing
+from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Mapping
 
 from shvatka.core.notifications.dto import ActionRequest as ActionRequestDto
 

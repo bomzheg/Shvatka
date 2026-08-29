@@ -3,9 +3,9 @@ from aiogram.types import Message
 from dishka import FromDishka
 from dishka.integrations.aiogram import inject
 
-from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.games.interactors import CheckKeyInteractor
-from shvatka.tgbot.filters import is_key, IsTeamFilter
+from shvatka.core.interfaces.identity import IdentityProvider
+from shvatka.tgbot.filters import IsTeamFilter, is_key
 from shvatka.tgbot.filters.game_status import GameStatusFilter
 from shvatka.tgbot.filters.team_player import TeamPlayerFilter
 from shvatka.tgbot.views.game import BotInputContainer

@@ -1,8 +1,8 @@
 import uuid
 
+from shvatka.core.models import dto, enums
 from shvatka.core.models.dto import action
 from shvatka.core.services.key import decision_to_parsed_key
-from shvatka.core.models import enums, dto
 from tests.utils.effects import assert_effects_equal
 
 

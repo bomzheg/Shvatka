@@ -6,8 +6,8 @@ from datetime import timedelta
 from shvatka.common.url_factory import UrlFactory
 from shvatka.core.interfaces.dal.email import (
     EmailAccountDao,
-    EmailDao,
     EmailConfirmationStore,
+    EmailDao,
     UsernameOccupiedChecker,
 )
 from shvatka.core.interfaces.hasher import PasswordHasher

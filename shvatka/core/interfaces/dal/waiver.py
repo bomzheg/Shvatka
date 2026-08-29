@@ -1,4 +1,5 @@
-from typing import Iterable, Protocol
+from collections.abc import Iterable
+from typing import Protocol
 
 from shvatka.core.interfaces.dal.base import Committer
 from shvatka.core.interfaces.dal.player import TeamPlayerGetter, TeamPlayersGetter

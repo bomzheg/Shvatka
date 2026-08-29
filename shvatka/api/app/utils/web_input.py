@@ -1,44 +1,44 @@
 import logging
 import typing
+from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
-from typing import Iterable, Sequence
 
 from shvatka.api.app.utils.push import PushMessage, WebPushSender
 from shvatka.core.interfaces.current_game import CurrentGameProvider
 from shvatka.core.interfaces.dal.game_play import GamePreparer
+from shvatka.core.interfaces.dal.player import TeamPlayersGetter
 from shvatka.core.models import dto
 from shvatka.core.models.dto import action
+from shvatka.core.models.enums.notification import NotificationSeverity, NotificationType
+from shvatka.core.notifications.adapters import NotificationWriter
 from shvatka.core.views.game import (
     AnyViewTask,
     DuplicateKey,
     EffectsKey,
+    Event,
     GameFinished,
     GameFinishedByAll,
-    GameView,
+    GameLogEvent,
     GameLogWriter,
     GameReleasePublisher,
-    GameLogEvent,
-    OrgNotifier,
-    Event,
-    LevelUp,
-    NewOrg,
-    LevelTestCompleted,
+    GameView,
     GameViewPreparer,
     InputContainer,
+    LevelTestCompleted,
+    LevelUp,
+    NewOrg,
+    OrgNotifier,
     SendHint,
     SendPuzzle,
     ShowEffects,
     WrongKey,
 )
-from shvatka.core.interfaces.dal.player import TeamPlayersGetter
-from shvatka.core.models.enums.notification import NotificationType, NotificationSeverity
-from shvatka.core.notifications.adapters import NotificationWriter
 from shvatka.core.views.team import (
     CaptainChanged,
-    TeamNotifier,
-    TeamEvent,
     PlayerJoinedTeam,
     PlayerLeftTeam,
+    TeamEvent,
+    TeamNotifier,
 )
 
 logger = logging.getLogger(__name__)

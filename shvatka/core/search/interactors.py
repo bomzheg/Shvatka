@@ -2,7 +2,7 @@ from collections.abc import Iterator, Sequence
 from dataclasses import dataclass
 
 from shvatka.core.models import dto
-from shvatka.core.models.dto import hints, Level, action
+from shvatka.core.models.dto import Level, action, hints
 from shvatka.core.search.adapters import GlobalSearchDao
 from shvatka.core.search.dto import (
     GameHit,

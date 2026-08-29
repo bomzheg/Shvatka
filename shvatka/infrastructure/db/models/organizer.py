@@ -1,5 +1,5 @@
-from sqlalchemy import Integer, ForeignKey, Boolean, Index, UniqueConstraint
-from sqlalchemy.orm import relationship, mapped_column
+from sqlalchemy import Boolean, ForeignKey, Index, Integer, UniqueConstraint
+from sqlalchemy.orm import mapped_column, relationship
 
 from shvatka.core.models import dto
 from shvatka.infrastructure.db.models import Base

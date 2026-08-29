@@ -1,7 +1,6 @@
-from fastapi import HTTPException
-from fastapi import Request
-from fastapi import status
-from fastapi.openapi.models import OAuthFlows as OAuthFlowsModel, OAuthFlowPassword
+from fastapi import HTTPException, Request, status
+from fastapi.openapi.models import OAuthFlowPassword
+from fastapi.openapi.models import OAuthFlows as OAuthFlowsModel
 from fastapi.security import OAuth2
 from fastapi.security.utils import get_authorization_scheme_param
 from starlette.responses import Response
@@ -17,7 +16,7 @@ class OAuth2PasswordBearerWithCookie(OAuth2):
         cookie_name: str = "Authorization",
         scheme_name: str | None = None,
         auto_error: bool = True,
-    ):
+    ) -> None:
         flows = OAuthFlowsModel(password=OAuthFlowPassword(tokenUrl=token_url))
         super().__init__(flows=flows, scheme_name=scheme_name, auto_error=auto_error)
         self.cookie_name = cookie_name
@@ -32,7 +31,7 @@ class OAuth2PasswordBearerWithCookie(OAuth2):
                 detail="Not authenticated",
                 headers={"WWW-Authenticate": "Bearer"},
             )
-        return Token(access_token=param, token_type="bearer")
+        return Token(access_token=param, token_type="bearer")  # noqa: S106
 
 
 def set_auth_response(config: AuthConfig, response: Response, token: Token) -> None:

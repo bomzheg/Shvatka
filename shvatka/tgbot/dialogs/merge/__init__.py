@@ -1,6 +1,6 @@
 from aiogram import Router
 
-from .dialogs import merge_teams_dialog, merge_player_dialog
+from .dialogs import merge_player_dialog, merge_teams_dialog
 
 
 def setup(router: Router):

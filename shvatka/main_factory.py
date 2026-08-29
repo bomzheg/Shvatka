@@ -4,21 +4,21 @@ from functools import partial
 
 from aiogram import Bot, Dispatcher
 from dishka import (
+    STRICT_VALIDATION,
+    AsyncContainer,
     Provider,
     Scope,
-    AsyncContainer,
-    provide,
     make_async_container,
     plotter,
-    STRICT_VALIDATION,
+    provide,
 )
 from dishka.exceptions import NoContextValueError
 from dishka.integrations.fastapi import setup_dishka
 from fastapi import FastAPI
 
+from shvatka.api.app.config.parser.main import load_config as load_api_config
 from shvatka.api.app.dependencies import get_api_specific_providers
 from shvatka.api.app.dependencies.auth import ApiIdentityProvider
-from shvatka.api.app.config.parser.main import load_config as load_api_config
 from shvatka.api.app.utils.web_input import (
     WebGameLogWriter,
     WebGamePreparer,
@@ -31,11 +31,11 @@ from shvatka.common.config.models.paths import Paths
 from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.interfaces.nursery import Nursery
 from shvatka.core.views.game import (
+    GameLogWriter,
+    GameReleasePublisher,
     GameView,
     GameViewPreparer,
-    GameReleasePublisher,
     OrgNotifier,
-    GameLogWriter,
     ViewSender,
 )
 from shvatka.core.views.team import TeamNotifier
@@ -44,19 +44,19 @@ from shvatka.infrastructure.di.utils import warm_up
 from shvatka.tgbot.config.models.bot import WebhookConfig
 from shvatka.tgbot.config.parser.main import load_config as load_bot_config
 from shvatka.tgbot.main_factory import (
-    resolve_update_types,
     get_bot_specific_providers,
+    resolve_update_types,
 )
 from shvatka.tgbot.services.identity import TgBotIdentityProvider
-from shvatka.tgbot.utils.fastapi_webhook import setup_application, SimpleRequestHandler
+from shvatka.tgbot.tasks import NurseryViewSender
+from shvatka.tgbot.utils.fastapi_webhook import SimpleRequestHandler, setup_application
 from shvatka.tgbot.views.game import BotOrgNotifier, BotView, GameBotLog
 from shvatka.tgbot.views.game_release import GameBotReleasePublisher
 from shvatka.tgbot.views.team import BotTeamNotifier
-from shvatka.tgbot.tasks import NurseryViewSender
 from shvatka.views import (
-    ComplexOrgNotifier,
-    ComplexGameViewPreparer,
     ComplexGameLogWriter,
+    ComplexGameViewPreparer,
+    ComplexOrgNotifier,
     ComplexTeamNotifier,
     ComplexView,
 )
@@ -128,7 +128,7 @@ def create_root_app(paths: Paths) -> FastAPI:
     bot_config = load_bot_config(paths)
     webhook_config = bot_config.bot.webhook
     if not webhook_config:
-        raise EnvironmentError("No webhook configuration provided")
+        raise OSError("No webhook configuration provided")
 
     app = create_app(api_config)
     dishka = make_async_container(

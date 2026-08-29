@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass, field, InitVar
+from dataclasses import InitVar, dataclass, field
 
 from .forum_user import ForumUser
 from .user import User
@@ -17,7 +17,7 @@ class Player:
     forum_user: InitVar[ForumUser | None] = field(default=None)
     _forum_user: ForumUser | None = field(init=False)
 
-    def __post_init__(self, user: User | None, forum_user: ForumUser | None):
+    def __post_init__(self, user: User | None, forum_user: ForumUser | None) -> None:
         self._user = user
         self._forum_user = forum_user
 

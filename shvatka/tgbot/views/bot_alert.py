@@ -2,7 +2,7 @@ from aiogram import Bot
 
 
 class BotAlert:
-    def __init__(self, bot: Bot, log_chat_id: int):
+    def __init__(self, bot: Bot, log_chat_id: int) -> None:
         self.bot = bot
         self.log_chat_id = log_chat_id
 

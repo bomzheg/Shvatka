@@ -1,17 +1,18 @@
 import typing
-from datetime import tzinfo, datetime
+from datetime import datetime, tzinfo
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from shvatka.core.models import dto
 from shvatka.core.utils.datetime_utils import tz_utc
 from shvatka.infrastructure.db import models
-from .base import BaseDAO
 from shvatka.infrastructure.db.models import TimerAction
+
+from .base import BaseDAO
 
 
 class TimersDAO(BaseDAO[TimerAction]):
-    def __init__(self, session: AsyncSession, clock: typing.Callable[[tzinfo], datetime]):
+    def __init__(self, session: AsyncSession, clock: typing.Callable[[tzinfo], datetime]) -> None:
         super().__init__(TimerAction, session, clock=clock)
 
     async def save_timer(

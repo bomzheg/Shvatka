@@ -1,10 +1,10 @@
 import typing
 import uuid
+from collections.abc import Sequence
 from dataclasses import dataclass, field
-from typing import Sequence
 
 from shvatka.core.models import dto
-from shvatka.core.models.dto import hints, action
+from shvatka.core.models.dto import action, hints
 from shvatka.core.views.game import (
     AnyViewTask,
     DuplicateKey,

@@ -4,16 +4,15 @@ from datetime import datetime
 from typing import Any
 
 from adaptix import Retort
-from sqlalchemy import Integer, ForeignKey, DateTime, Index, func, TypeDecorator, Dialect
+from sqlalchemy import DateTime, Dialect, ForeignKey, Index, Integer, TypeDecorator, func
 from sqlalchemy.dialects.postgresql import JSONB
-from sqlalchemy.orm import mapped_column, Mapped, relationship
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from shvatka.common.factory import REQUIRED_GAME_RECIPES
 from shvatka.core.models import dto
 from shvatka.core.models.dto import action
 from shvatka.core.utils.datetime_utils import tz_utc
 from shvatka.infrastructure.db.models import Base
-
 
 logger = logging.getLogger(__name__)
 if typing.TYPE_CHECKING:
@@ -49,7 +48,7 @@ class EffectsField(TypeDecorator):
         try:
             return self.retort.load(value, action.Effects)
         except Exception:
-            logger.error("can't load effects from %s", value)
+            logger.exception("can't load effects from %s", value)
             raise
 
 

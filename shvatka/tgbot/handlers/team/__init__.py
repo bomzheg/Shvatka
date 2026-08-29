@@ -1,6 +1,7 @@
 from aiogram import Router
 
 from shvatka.tgbot.utils.router import disable_router_on_game
+
 from . import manage
 
 

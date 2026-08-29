@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Any
 
 from aiogram import Bot
-from aiogram.types import Message, ChatMemberAdministrator
+from aiogram.types import ChatMemberAdministrator, Message
 from aiogram_dialog import DialogManager
 from dishka import FromDishka
 from dishka.integrations.aiogram_dialog import inject
@@ -70,3 +70,4 @@ async def process_publish_message(
     await dao.commit()
     manager.dialog_data["started"] = True
     manager.dialog_data["started_at"] = datetime.now(tz=tz_utc).isoformat()
+    return None

@@ -1,21 +1,21 @@
-from typing import Sequence
+from collections.abc import Sequence
 
-from dishka import Provider, provide, Scope
+from dishka import Provider, Scope, provide
 
 from shvatka.api.app.dependencies.api_only import MockUsedOneTimeTokenInteractor
 from shvatka.core.models import dto
 from shvatka.core.views.game import (
     AnyViewTask,
-    GameView,
-    GameLogWriter,
-    GameLogEvent,
-    GameReleasePublisher,
-    OrgNotifier,
     Event,
+    GameLogEvent,
+    GameLogWriter,
+    GameReleasePublisher,
+    GameView,
+    OrgNotifier,
     ShowTasks,
     ViewSender,
 )
-from shvatka.core.views.team import TeamNotifier, TeamEvent
+from shvatka.core.views.team import TeamEvent, TeamNotifier
 from shvatka.infrastructure.bus.in_memory import UsedOneTimeTokenInteractor
 
 

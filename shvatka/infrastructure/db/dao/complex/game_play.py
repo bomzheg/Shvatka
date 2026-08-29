@@ -1,10 +1,9 @@
 import typing
+from collections.abc import Iterable
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Iterable
 
-
-from shvatka.core.interfaces.dal.game_play import GamePreparer, GamePlayerDao
+from shvatka.core.interfaces.dal.game_play import GamePlayerDao, GamePreparer
 from shvatka.core.interfaces.dal.level_times import GameStarter
 from shvatka.core.models import dto, enums
 from shvatka.core.models.dto import action

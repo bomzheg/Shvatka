@@ -3,24 +3,24 @@ from datetime import datetime
 from unittest.mock import MagicMock
 
 import pytest
-from aiogram import Dispatcher, Bot
+from aiogram import Bot, Dispatcher
 from aiogram.client.session.base import BaseSession
 from aiogram.enums import ChatMemberStatus
-from aiogram.types import Update, Message, ChatMemberOwner, ChatMemberMember
+from aiogram.types import ChatMemberMember, ChatMemberOwner, Message, Update
 
 from shvatka.core.models import dto
 from shvatka.core.models.enums.chat_type import ChatType
-from shvatka.core.players.player import upsert_player, get_my_role
+from shvatka.core.players.player import get_my_role, upsert_player
 from shvatka.core.services.user import upsert_user
 from shvatka.core.utils.datetime_utils import tz_utc
 from shvatka.infrastructure.db.dao.holder import HolderDao
-from shvatka.tgbot.views.commands import CREATE_TEAM_COMMAND, ADD_IN_TEAM_COMMAND
-from tests.fixtures.chat_constants import create_tg_chat, chat_to_full_chat
+from shvatka.tgbot.views.commands import ADD_IN_TEAM_COMMAND, CREATE_TEAM_COMMAND
+from tests.fixtures.chat_constants import chat_to_full_chat, create_tg_chat
 from tests.fixtures.player import promote
 from tests.fixtures.user_constants import (
-    create_tg_user,
     create_dto_hermione,
     create_tg_from_dto,
+    create_tg_user,
 )
 
 

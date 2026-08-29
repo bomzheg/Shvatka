@@ -5,8 +5,8 @@ authorises through ``identity.get_superuser()`` before reading or mutating data.
 """
 
 import logging
+from collections.abc import Iterable
 from dataclasses import dataclass
-from typing import Iterable
 
 from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.models import dto

@@ -1,4 +1,5 @@
-from typing import Protocol, Sequence
+from collections.abc import Sequence
+from typing import Protocol
 
 from shvatka.core.interfaces.dal.base import Committer
 from shvatka.core.interfaces.dal.complex import TeamMerger

@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 
-from shvatka.core.utils.datetime_utils import tz_game, DATETIME_FORMAT, TIME_FORMAT
+from shvatka.core.utils.datetime_utils import DATETIME_FORMAT, TIME_FORMAT, tz_game
 
 
 def time_user_timezone(value: datetime | None) -> str:

@@ -1,4 +1,4 @@
-from shvatka.core.interfaces.dal.complex import TypedKeyGetter, GameStatDao
+from shvatka.core.interfaces.dal.complex import GameStatDao, TypedKeyGetter
 from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.models import dto
 from shvatka.core.services.organizers import (

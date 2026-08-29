@@ -3,7 +3,7 @@ from typing import cast
 import pytest
 
 from shvatka.infrastructure.db.dao.holder import HolderDao
-from shvatka.tgbot.services.identity import save_user, save_player
+from shvatka.tgbot.services.identity import save_player, save_user
 from shvatka.tgbot.utils.data import SHMiddlewareData
 from tests.fixtures.user_constants import create_tg_user
 

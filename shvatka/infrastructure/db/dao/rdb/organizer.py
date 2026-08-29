@@ -1,9 +1,8 @@
-from datetime import datetime, tzinfo
 import typing
-from typing import Sequence
+from collections.abc import Sequence
+from datetime import datetime, tzinfo
 
-from sqlalchemy import select, ScalarResult
-from sqlalchemy import update, not_
+from sqlalchemy import ScalarResult, not_, select, update
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
@@ -11,6 +10,7 @@ from sqlalchemy.orm import joinedload
 from shvatka.core.models import dto
 from shvatka.core.models.enums.org_permission import OrgPermission
 from shvatka.infrastructure.db import models
+
 from .base import BaseDAO
 
 
@@ -100,10 +100,7 @@ class OrganizerDao(BaseDAO[models.Organizer]):
     async def _get_orgs(
         self, game: dto.Game, with_deleted: bool = False
     ) -> Sequence[models.Organizer]:
-        if with_deleted:
-            deleted_clause = []
-        else:
-            deleted_clause = [models.Organizer.deleted == False]  # noqa
+        deleted_clause = [] if with_deleted else [models.Organizer.deleted.is_(False)]
 
         result = await self.session.scalars(
             select(models.Organizer)

@@ -1,12 +1,12 @@
 from aiogram import Router
 
 from .dialogs import (
-    level,
-    keys_dialog,
-    hints_dialog,
-    level_edit_dialog,
     effects_key_dialog,
+    hints_dialog,
     key_effects_condition_dialog,
+    keys_dialog,
+    level,
+    level_edit_dialog,
 )
 
 

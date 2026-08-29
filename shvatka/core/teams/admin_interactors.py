@@ -13,9 +13,9 @@ from shvatka.core.interfaces.dal.team import TeamByIdGetter
 from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.models import dto
 from shvatka.core.players.player import (
+    get_full_team_player,
     superuser_force_join_team,
     superuser_force_leave,
-    get_full_team_player,
 )
 from shvatka.core.services.team import change_captain, get_team_by_id, merge_teams
 from shvatka.core.teams.adapters import (

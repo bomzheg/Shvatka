@@ -80,7 +80,7 @@ async def _repair_file(
     try:
         content = await file_gateway.download_from_tg(file.tg_link)
     except Exception as e:
-        logger.error("can't download file %s from telegram", file.guid, exc_info=e)
+        logger.exception("can't download file %s from telegram", file.guid, exc_info=e)
         return False
     data = content.read()
     if not data:

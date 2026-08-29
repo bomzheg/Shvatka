@@ -1,9 +1,9 @@
 import asyncio
-from _operator import add
 from datetime import timedelta
 from functools import reduce
 from io import BytesIO
 
+from _operator import add
 from aiogram import Bot
 from aiogram.types import BufferedInputFile
 from aiogram.utils.text_decorations import html_decoration as hd
@@ -11,6 +11,7 @@ from telegraph.aio import Telegraph
 
 from shvatka.core.models import dto
 from shvatka.core.utils.datetime_utils import DATE_FORMAT
+from shvatka.infrastructure.printer.results import export_results
 from shvatka.tgbot.config.models.bot import BotConfig
 from shvatka.tgbot.views.hint_sender import HintSender
 from shvatka.tgbot.views.keys import (
@@ -21,7 +22,6 @@ from shvatka.tgbot.views.level import (
     render_effects_key_caption,
     render_effects_timer_caption,
 )
-from shvatka.infrastructure.printer.results import export_results
 from shvatka.tgbot.views.results.rich import ResultsRichSender
 
 

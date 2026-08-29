@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass, field, InitVar
+from dataclasses import InitVar, dataclass, field
 
 from .chat import Chat
 from .forum_team import ForumTeam
@@ -19,7 +19,7 @@ class Team:
     _forum_team: ForumTeam | None = field(init=False)
     forum_team: InitVar[ForumTeam | None] = field(default=None)
 
-    def __post_init__(self, chat: Chat | None, forum_team: ForumTeam | None):
+    def __post_init__(self, chat: Chat | None, forum_team: ForumTeam | None) -> None:
         self._chat = chat
         self._forum_team = forum_team
 
@@ -28,7 +28,7 @@ class Team:
             return False
         return self.id == other.id
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return hash(self.id)
 
     def __repr__(self) -> str:

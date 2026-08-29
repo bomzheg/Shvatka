@@ -1,5 +1,5 @@
+from collections.abc import Iterable
 from dataclasses import dataclass
-from typing import Iterable
 
 from sqlalchemy.exc import NoResultFound
 
@@ -7,12 +7,12 @@ from shvatka.core.models import dto
 from shvatka.core.models.enums import Played
 from shvatka.core.utils import exceptions
 from shvatka.core.waiver.adapters import (
-    WaiverVoteAdder,
-    WaiverVoteGetter,
+    AdminGameWaiversReader,
+    AdminPollReader,
     PollDraftsReader,
     PollVoteRemover,
-    AdminPollReader,
-    AdminGameWaiversReader,
+    WaiverVoteAdder,
+    WaiverVoteGetter,
 )
 from shvatka.infrastructure.db.dao.holder import HolderDao
 

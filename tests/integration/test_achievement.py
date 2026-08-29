@@ -1,7 +1,6 @@
 import pytest
 
-from shvatka.core.models import dto
-from shvatka.core.models import enums
+from shvatka.core.models import dto, enums
 from shvatka.core.services.achievement import add_achievement
 from shvatka.infrastructure.db.dao.holder import HolderDao
 
@@ -12,9 +11,9 @@ async def test_create_achievement(
     dao: HolderDao,
     check_dao: HolderDao,
 ):
-    assert 0 == await check_dao.achievement.count()
+    assert await check_dao.achievement.count() == 0
     await add_achievement(hermione, enums.Achievement.game_name_joke, dao.achievement)
-    assert 1 == await check_dao.achievement.count()
+    assert await check_dao.achievement.count() == 1
     actual, *_ = await check_dao.achievement.get_by_player(hermione)
     assert actual.player.id == hermione.id
     assert actual.name == enums.Achievement.game_name_joke
@@ -28,10 +27,10 @@ async def test_create_second_achievement(
     dao: HolderDao,
     check_dao: HolderDao,
 ):
-    assert 0 == await check_dao.achievement.count()
+    assert await check_dao.achievement.count() == 0
     await add_achievement(hermione, enums.Achievement.game_name_joke, dao.achievement)
     await add_achievement(ron, enums.Achievement.game_name_joke, dao.achievement)
-    assert 2 == await check_dao.achievement.count()
+    assert await check_dao.achievement.count() == 2
     hermi_achievement, *_ = await check_dao.achievement.get_by_player(hermione)
     assert hermi_achievement.player.id == hermione.id
     assert hermi_achievement.first

@@ -7,13 +7,13 @@ from httpx import AsyncClient
 
 from shvatka.api.app.config.models.auth import AuthConfig
 from shvatka.api.app.config.models.main import ApiConfig
+from shvatka.api.app.dependencies.auth import AuthProperties
 from shvatka.api.main_factory import create_app
 from shvatka.core.interfaces.hasher import PasswordHasher
 from shvatka.core.models import dto
-from shvatka.core.services.user import upsert_user
 from shvatka.core.players.player import set_password, upsert_player
+from shvatka.core.services.user import upsert_user
 from shvatka.infrastructure.db.dao.holder import HolderDao
-from shvatka.api.app.dependencies.auth import AuthProperties
 from tests.fixtures.identity import MockIdentityProvider
 from tests.fixtures.player import promote
 from tests.fixtures.user_constants import create_dto_harry

@@ -1,5 +1,5 @@
-from datetime import datetime, tzinfo
 import typing
+from datetime import datetime, tzinfo
 
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -9,6 +9,7 @@ from shvatka.core.models import dto
 from shvatka.core.utils import exceptions
 from shvatka.core.utils.datetime_utils import tz_utc
 from shvatka.infrastructure.db import models
+
 from .base import BaseDAO
 
 

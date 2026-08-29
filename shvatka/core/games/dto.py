@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 from uuid import UUID
 
 from shvatka.core.models import dto, enums
-from shvatka.core.models.dto import hints, action
+from shvatka.core.models.dto import action, hints
 
 
 @dataclass(kw_only=True, frozen=True, slots=True)

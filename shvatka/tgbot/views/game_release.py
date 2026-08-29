@@ -90,7 +90,7 @@ class GameBotReleasePublisher(GameReleasePublisher):
         parts = release.parts
         if len(parts) != len(posted):
             return False
-        for hint, message in zip(parts, posted):
+        for hint, message in zip(parts, posted, strict=False):
             if not await self.edit_one(hint, message):
                 return False
         logger.info("release of game %s edited in chat %s", release.game_id, self.log_chat_id)

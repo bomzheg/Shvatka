@@ -17,8 +17,8 @@ from openpyxl.utils import get_column_letter
 from openpyxl.worksheet.worksheet import Worksheet
 
 from shvatka.core.interfaces.printer import (
-    Chart,
     CellStyle,
+    Chart,
     SeriesKind,
     Table,
     TablePrinter,

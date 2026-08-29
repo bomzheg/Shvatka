@@ -1,6 +1,6 @@
 import re
+from collections.abc import Iterable
 from datetime import datetime
-from typing import Iterable
 
 from shvatka.core.utils import datetime_utils
 
@@ -47,7 +47,7 @@ def validate_email(email_expectant: str) -> str | None:
 
 def date_from_text(text):
     try:
-        return datetime.strptime(text, datetime_utils.DATE_FORMAT).date()
+        return datetime.strptime(text, datetime_utils.DATE_FORMAT).date()  # noqa: DTZ007
     except ValueError as e:
         raise ValueError(
             f"Строка <b>{text}</b> "
@@ -57,7 +57,7 @@ def date_from_text(text):
 
 def time_from_text(text):
     try:
-        return datetime.strptime(text, datetime_utils.TIME_FORMAT).time()
+        return datetime.strptime(text, datetime_utils.TIME_FORMAT).time()  # noqa: DTZ007
     except ValueError as e:
         raise ValueError(
             f"Строка <b>{text}</b> "

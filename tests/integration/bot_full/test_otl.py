@@ -7,8 +7,7 @@ from aiogram.client.session.base import BaseSession
 from aiogram.methods import SendMessage
 from aiogram_dialog.test_tools import BotClient
 
-from shvatka.core.models import dto
-from shvatka.core.models import enums
+from shvatka.core.models import dto, enums
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.tgbot.views.commands import OTL_COMMAND
 from tests.fixtures.chat_constants import create_tg_chat

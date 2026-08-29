@@ -1,6 +1,7 @@
 import logging
+from collections.abc import Sequence
 from pathlib import Path
-from typing import BinaryIO, Sequence
+from typing import BinaryIO
 from uuid import uuid4
 
 from shvatka.core.interfaces.clients.file_storage import FileGateway, FileStorage
@@ -155,9 +156,8 @@ async def check_file_meta_can_read(
     author = await identity.get_required_player()
     if file_meta.author_id == author.id:
         return
-    if org := await identity.get_org(game=game):
-        if not org.deleted and org.view_scenario:
-            return
+    if (org := await identity.get_org(game=game)) and not org.deleted and org.view_scenario:
+        return
     raise NotAuthorizedForEdit(
         permission_name="file_edit",
         player=author,

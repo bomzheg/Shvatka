@@ -1,17 +1,15 @@
 import typing
 from dataclasses import dataclass
 from datetime import datetime, timedelta
+from itertools import pairwise
 
 from shvatka.core.games.dto import BonusEvent
-from shvatka.core.models import dto
-from shvatka.core.utils.datetime_utils import trim_tz
-from shvatka.core.utils.exceptions import GameNotFinished
 from shvatka.core.interfaces.printer import (
     DATETIME_EXCEL_FORMAT,
+    Cell,
     CellAddress,
     CellRange,
     CellStyle,
-    Cell,
     Chart,
     ChartSeries,
     SeriesKind,
@@ -19,6 +17,9 @@ from shvatka.core.interfaces.printer import (
     TableBlock,
     as_time,
 )
+from shvatka.core.models import dto
+from shvatka.core.utils.datetime_utils import trim_tz
+from shvatka.core.utils.exceptions import GameNotFinished
 
 GAME_NAME = CellAddress(row=1, column=1)
 LABEL_COLUMN = 1
@@ -455,7 +456,7 @@ def to_results(
         for lt in levels_times:
             routed_lt.setdefault(lt.level, []).append(lt)
         routed_ltd: dict[int, list[LevelTimedelta]] = {}
-        for previous, current in zip(levels_times[:-1], levels_times[1:]):  # type: LevelTime, LevelTime
+        for previous, current in pairwise(levels_times):  # type: LevelTime, LevelTime
             td = current.time - previous.time
             routed_ltd.setdefault(previous.level, []).append(LevelTimedelta(previous.level, td))
         result.append(

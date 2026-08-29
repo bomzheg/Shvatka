@@ -1,5 +1,5 @@
 import typing
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from io import BytesIO
 from typing import Any
 from unittest.mock import AsyncMock
@@ -41,7 +41,7 @@ def hint_parser() -> HintParser:
 def media_message(**kwargs) -> Message:
     return Message(
         message_id=1,
-        date=datetime.now(tz=timezone.utc),
+        date=datetime.now(tz=UTC),
         chat=Chat(id=1, type="private"),
         **kwargs,
     )

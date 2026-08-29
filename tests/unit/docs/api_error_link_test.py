@@ -30,7 +30,7 @@ def body(error: exceptions.SHError) -> dict[str, typing.Any]:
 
 def test_error_body_carries_the_doc_url():
     content = body(exceptions.InvalidKey())
-    assert "https://docs.example.org/shvatka/3.7.0/player/play.html#keys" == content["docUrl"]
+    assert content["docUrl"] == "https://docs.example.org/shvatka/3.7.0/player/play.html#keys"
 
 
 def test_error_without_a_page_has_no_url():
@@ -39,6 +39,6 @@ def test_error_without_a_page_has_no_url():
 
 def test_the_rest_of_the_body_is_untouched():
     content = body(exceptions.InvalidKey(text="wrong key"))
-    assert "InvalidKey" == content["type"]
-    assert "wrong key" == content["text"]
+    assert content["type"] == "InvalidKey"
+    assert content["text"] == "wrong key"
     assert exceptions.InvalidKey.notify_user == content["description"]

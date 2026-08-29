@@ -1,16 +1,15 @@
 import typing
-from typing import Iterable, Sequence
+from collections.abc import Iterable, Sequence
 
 from shvatka.core.interfaces.dal.waiver import (
-    WaiverApprover,
     GameWaiversGetter,
+    WaiverApprover,
 )
-from shvatka.core.waiver.adapters import WaiverVoteAdder, WaiverVoteGetter
-from shvatka.core.models import dto
-from shvatka.core.models import enums
+from shvatka.core.models import dto, enums
 from shvatka.core.models.enums.played import Played
 from shvatka.core.players.player import get_checked_player_on_team, get_full_team_player
-from shvatka.core.utils.exceptions import WaiverForbidden, PermissionsError, PlayerNotInTeam
+from shvatka.core.utils.exceptions import PermissionsError, PlayerNotInTeam, WaiverForbidden
+from shvatka.core.waiver.adapters import WaiverVoteAdder, WaiverVoteGetter
 
 
 async def get_vote_to_voted(

@@ -1,16 +1,16 @@
 from collections.abc import Collection, Sequence
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from types import SimpleNamespace
 
 import pytest
 
-from shvatka.core.models.enums.notification import NotificationType, NotificationSeverity
+from shvatka.core.models.enums.notification import NotificationSeverity, NotificationType
 from shvatka.core.notifications import dto
 from shvatka.core.notifications.interactors import (
     ListNotificationsInteractor,
-    UnreadCountInteractor,
-    MarkNotificationsReadInteractor,
     MarkAllNotificationsReadInteractor,
+    MarkNotificationsReadInteractor,
+    UnreadCountInteractor,
 )
 
 
@@ -60,8 +60,8 @@ def _notification(id_: int, recipient_id: int, read: bool = False) -> dto.Notifi
         recipient_id=recipient_id,
         type=NotificationType.player_joined_team,
         severity=NotificationSeverity.low,
-        created_at=datetime(2026, 7, 4, tzinfo=timezone.utc),
-        read_at=datetime(2026, 7, 4, tzinfo=timezone.utc) if read else None,
+        created_at=datetime(2026, 7, 4, tzinfo=UTC),
+        read_at=datetime(2026, 7, 4, tzinfo=UTC) if read else None,
     )
 
 

@@ -2,8 +2,10 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime
+from typing import Self
 
 from shvatka.core.models import dto, enums
+
 from . import action
 
 
@@ -27,7 +29,7 @@ class InsertedKey(KeyTime):
         return self.level_up or self.parsed_key.effect.level_up
 
     @classmethod
-    def from_key_time(cls, key_time: KeyTime, is_level_up: bool, parsed_key: ParsedKey):
+    def from_key_time(cls, key_time: KeyTime, is_level_up: bool, parsed_key: ParsedKey) -> Self:
         return cls(
             text=key_time.text,
             type_=key_time.type_,
@@ -49,7 +51,7 @@ class KeyInsertResult:
     game_finished: bool
 
     @classmethod
-    def wrong(cls):
+    def wrong(cls) -> Self:
         return cls(
             type_=enums.KeyType.wrong,
             is_duplicate=False,
@@ -58,7 +60,7 @@ class KeyInsertResult:
         )
 
     @classmethod
-    def correct(cls):
+    def correct(cls) -> Self:
         return cls(
             type_=enums.KeyType.simple,
             is_duplicate=False,
@@ -67,7 +69,7 @@ class KeyInsertResult:
         )
 
     @classmethod
-    def completed(cls):
+    def completed(cls) -> Self:
         return cls(
             type_=enums.KeyType.simple,
             is_duplicate=False,

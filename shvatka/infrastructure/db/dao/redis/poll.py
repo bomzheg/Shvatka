@@ -1,7 +1,7 @@
 import logging
-
-from datetime import datetime, tzinfo
 import typing
+from datetime import datetime, tzinfo
+
 from redis.asyncio.client import Redis
 
 from shvatka.core.models.enums.played import Played
@@ -63,8 +63,7 @@ class PollDao:
         :param team_id:
         :return: список ключей для команды team_id в формате prefix:team_id:player_id
         """
-        rez = await self.redis.keys(f"{self.prefix}:{team_id}:*", encoding="utf-8")
-        return rez
+        return await self.redis.keys(f"{self.prefix}:{team_id}:*", encoding="utf-8")
 
     async def get_polled_teams(self) -> list[int]:
         """
@@ -92,6 +91,7 @@ class PollDao:
             return logger.warning("pool-keys to delete not found")
         logger.warning("Next keys was deleted %s", ", ".join([key.decode() for key in keys]))
         await self.redis.delete(*keys)
+        return None
 
     async def _get(self, key: str, encoding: str = "utf-8") -> str | None:
         value = await self.redis.get(key)

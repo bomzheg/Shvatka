@@ -1,24 +1,22 @@
-from datetime import datetime, tzinfo
 import typing
-from datetime import timedelta
-from typing import Sequence
+from collections.abc import Sequence
+from datetime import datetime, timedelta, tzinfo
 
-from sqlalchemy import select, or_, ScalarResult, Result, ColumnElement, delete
-from sqlalchemy import update, not_
+from sqlalchemy import ColumnElement, Result, ScalarResult, delete, not_, or_, select, update
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 from sqlalchemy.orm.interfaces import ORMOption
 
-from shvatka.core.models import dto
-from shvatka.core.models import enums
+from shvatka.core.models import dto, enums
 from shvatka.core.utils.datetime_utils import tz_utc
 from shvatka.core.utils.exceptions import (
     PlayerAlreadyInTeam,
-    PlayerRestoredInTeam,
     PlayerNotInTeam,
+    PlayerRestoredInTeam,
 )
 from shvatka.infrastructure.db import models
+
 from .base import BaseDAO
 
 
@@ -261,11 +259,7 @@ class TeamPlayerDao(BaseDAO[models.TeamPlayer]):
 
 
 def get_leaved_condition(for_date: datetime | None = None) -> Sequence[ColumnElement["bool"]]:
-    if for_date is None:
-        leaved_condition = not_leaved()
-    else:
-        leaved_condition = not_leaved_for_date(for_date)
-    return leaved_condition
+    return not_leaved() if for_date is None else not_leaved_for_date(for_date)
 
 
 def not_leaved_for_date(for_date: datetime) -> Sequence[ColumnElement["bool"]]:

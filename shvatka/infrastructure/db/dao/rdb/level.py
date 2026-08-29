@@ -1,7 +1,7 @@
-from datetime import datetime, tzinfo
 import typing
-from sqlalchemy import select, ScalarResult, Text, cast, or_
-from sqlalchemy import update
+from datetime import datetime, tzinfo
+
+from sqlalchemy import ScalarResult, Text, cast, or_, select, update
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import contains_eager, joinedload
@@ -13,7 +13,8 @@ from shvatka.core.rules.game import check_game_editable
 from shvatka.core.rules.level import check_can_link_to_game
 from shvatka.core.search.dto import LevelWithGame
 from shvatka.infrastructure.db import models
-from .base import BaseDAO, ILIKE_ESCAPE, ilike_pattern
+
+from .base import ILIKE_ESCAPE, BaseDAO, ilike_pattern
 
 
 class LevelDao(BaseDAO[models.Level]):

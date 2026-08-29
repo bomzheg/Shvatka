@@ -1,18 +1,16 @@
 from aiogram import F
 from aiogram_dialog import Dialog, Window
 from aiogram_dialog.widgets.kbd import (
+    Back,
+    Button,
+    Cancel,
     ScrollingGroup,
     Select,
-    Cancel,
-    Button,
-    Back,
     SwitchInlineQuery,
 )
-from aiogram_dialog.widgets.text import Format, Const, Multi, Jinja
+from aiogram_dialog.widgets.text import Const, Format, Jinja, Multi
 
 from shvatka.tgbot import states
-from .getters import get_orgs, get_org
-from .handlers import select_org, change_permission_handler, change_deleted_handler
 from shvatka.tgbot.dialogs.preview_data import (
     PREVIEW_ORG,
     PREVIEW_ORG_PERMISSIONS,
@@ -20,6 +18,9 @@ from shvatka.tgbot.dialogs.preview_data import (
     PREVIEW_SIMPLE_GAME,
     PreviewSwitchTo,
 )
+
+from .getters import get_org, get_orgs
+from .handlers import change_deleted_handler, change_permission_handler, select_org
 
 game_orgs = Dialog(
     Window(

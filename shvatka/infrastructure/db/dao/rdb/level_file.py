@@ -1,11 +1,12 @@
+import typing
 from collections.abc import Collection
 from datetime import datetime, tzinfo
-import typing
 
 from sqlalchemy import ScalarResult, delete, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from shvatka.infrastructure.db import models
+
 from .base import BaseDAO
 
 

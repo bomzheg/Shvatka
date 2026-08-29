@@ -6,10 +6,11 @@ from typing import Any
 from sqlalchemy import func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from shvatka.core.models.enums.notification import NotificationType, NotificationSeverity
+from shvatka.core.models.enums.notification import NotificationSeverity, NotificationType
 from shvatka.core.notifications import dto
 from shvatka.core.utils.datetime_utils import tz_utc
 from shvatka.infrastructure.db.models import Notification
+
 from .base import BaseDAO
 
 

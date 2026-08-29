@@ -7,9 +7,9 @@ from shvatka.common.url_factory import UrlFactory
 from shvatka.core.models import dto
 from shvatka.core.services import email as email_service
 from shvatka.core.services.email import (
-    EmailRegisterInteractor,
-    EmailLinkInteractor,
     EmailConfirmInteractor,
+    EmailLinkInteractor,
+    EmailRegisterInteractor,
     EmailResendInteractor,
     ForgotPasswordInteractor,
 )

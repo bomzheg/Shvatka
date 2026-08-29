@@ -4,29 +4,29 @@ from aiogram_dialog.widgets.input import MessageInput, TextInput
 from aiogram_dialog.widgets.kbd import (
     Button,
     Cancel,
-    SwitchTo,
-    ScrollingGroup,
     ListGroup,
+    ScrollingGroup,
+    SwitchTo,
 )
-from aiogram_dialog.widgets.text import Jinja, Const, Case
+from aiogram_dialog.widgets.text import Case, Const, Jinja
 
 from shvatka.tgbot import states
-from .getters import get_effects, get_hints
-from .handlers import (
-    process_level_up_change,
-    effects_on_start,
-    save_effects,
-    show_single_hint,
-    delete_single_hint,
-    process_hint,
-    save_new_bonus,
-    wrong_bonus_value,
-    check_level_id,
-    not_correct_id,
-    process_routed_level_id,
-)
 from shvatka.tgbot.dialogs.preview_data import PREVIEW_EFFECTS_DATA, PREVIEW_HINTS_DATA
 
+from .getters import get_effects, get_hints
+from .handlers import (
+    check_level_id,
+    delete_single_hint,
+    effects_on_start,
+    not_correct_id,
+    process_hint,
+    process_level_up_change,
+    process_routed_level_id,
+    save_effects,
+    save_new_bonus,
+    show_single_hint,
+    wrong_bonus_value,
+)
 
 effects = Dialog(
     Window(

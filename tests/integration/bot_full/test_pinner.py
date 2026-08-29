@@ -1,5 +1,5 @@
 import typing
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from unittest.mock import MagicMock
 
 import pytest
@@ -39,7 +39,7 @@ def instant(monkeypatch: pytest.MonkeyPatch) -> None:
 def message(message_id: int) -> Message:
     return Message(
         message_id=message_id,
-        date=datetime.now(tz=timezone.utc),
+        date=datetime.now(tz=UTC),
         chat=Chat(id=CHAT_ID, type="supergroup"),
     )
 
@@ -126,7 +126,7 @@ async def test_unpin_forgets_messages(
     await pinner.unpin(CHAT_ID, PinCategory.level)
     await pinner.unpin(CHAT_ID, PinCategory.level)
 
-    assert 1 == len(requests(bot_session, "unpinChatMessage"))
+    assert len(requests(bot_session, "unpinChatMessage")) == 1
 
 
 @pytest.mark.asyncio

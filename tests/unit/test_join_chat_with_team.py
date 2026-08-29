@@ -5,7 +5,7 @@ resolving the player from the identity names the inviting captain instead of
 the person who joined — and the accept button then carries the captain's id.
 """
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from unittest.mock import AsyncMock
 
 import pytest
@@ -45,7 +45,7 @@ def joined_event(who: User) -> ChatMemberUpdated:
     return ChatMemberUpdated(
         chat=Chat(id=TEAM_CHAT_ID, type="supergroup"),
         from_user=CAPTAIN,
-        date=datetime.now(tz=timezone.utc),
+        date=datetime.now(tz=UTC),
         old_chat_member=ChatMemberLeft(status="left", user=who),
         new_chat_member=ChatMemberMember(status="member", user=who),
     )

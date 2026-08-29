@@ -2,23 +2,10 @@ from aiogram import F
 from aiogram.types import ContentType
 from aiogram_dialog import Dialog, Window
 from aiogram_dialog.widgets.input import MessageInput
-from aiogram_dialog.widgets.kbd import Button, Cancel, SwitchTo, Select, ScrollingGroup
-from aiogram_dialog.widgets.text import Const, Jinja, Format
+from aiogram_dialog.widgets.kbd import Button, Cancel, ScrollingGroup, Select, SwitchTo
+from aiogram_dialog.widgets.text import Const, Format, Jinja
 
 from shvatka.tgbot import states
-from shvatka.tgbot.filters import is_key
-from .getters import get_level_id, get_orgs, get_levels
-from .handlers import (
-    edit_level,
-    show_level,
-    level_testing,
-    cancel_level_test,
-    process_key_message,
-    send_to_testing,
-    select_level_handler,
-    unlink_level_handler,
-    delete_level_handler,
-)
 from shvatka.tgbot.dialogs.preview_data import (
     PREVIEW_FULL_GAME,
     PREVIEW_LEVEL,
@@ -26,6 +13,20 @@ from shvatka.tgbot.dialogs.preview_data import (
     PREVIEW_MANAGED_LEVEL,
     PREVIEW_ORGS,
     PreviewStart,
+)
+from shvatka.tgbot.filters import is_key
+
+from .getters import get_level_id, get_levels, get_orgs
+from .handlers import (
+    cancel_level_test,
+    delete_level_handler,
+    edit_level,
+    level_testing,
+    process_key_message,
+    select_level_handler,
+    send_to_testing,
+    show_level,
+    unlink_level_handler,
 )
 
 levels_list = Dialog(

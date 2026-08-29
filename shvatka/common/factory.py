@@ -1,25 +1,24 @@
 import typing
 
 from adaptix import (
+    Chain,
+    P,
     Retort,
     TypeHint,
-    validator,
-    P,
-    name_mapping,
     loader,
-    Chain,
+    name_mapping,
+    validator,
 )
-from adaptix.load_error import LoadError
 from adaptix._internal.morphing.provider_template import ABCProxy
+from adaptix.load_error import LoadError
 from dishka import Provider, Scope, provide
 from telegraph.aio import Telegraph
 
 from shvatka.common.docs import DocsUrlFactory
 from shvatka.common.url_factory import UrlFactory
-from shvatka.core.models.dto import scn, action
-from shvatka.core.models.dto import hints
+from shvatka.core.models.dto import action, hints, scn
 from shvatka.core.utils import exceptions
-from shvatka.core.utils.input_validation import validate_level_id, is_multiple_keys_normal
+from shvatka.core.utils.input_validation import is_multiple_keys_normal, validate_level_id
 from shvatka.core.views.texts import INVALID_KEY_ERROR
 from shvatka.tgbot.config.models.bot import BotConfig
 
@@ -29,8 +28,7 @@ class TelegraphProvider(Provider):
 
     @provide
     def create_telegraph(self, bot_config: BotConfig) -> Telegraph:
-        telegraph = Telegraph(access_token=bot_config.telegraph_token)
-        return telegraph
+        return Telegraph(access_token=bot_config.telegraph_token)
 
 
 class ConcreteProxy(ABCProxy):
@@ -92,7 +90,7 @@ VALIDATION_GAME_RECIPES = [
     validator(
         pred=P[scn.LevelScenario].keys,
         func=is_multiple_keys_normal,
-        error=lambda x: typing.cast(
+        error=lambda _: typing.cast(
             LoadError,
             exceptions.ScenarioNotCorrect(notify_user=INVALID_KEY_ERROR, text="invalid keys"),
         ),
@@ -105,8 +103,7 @@ class DCFProvider(Provider):
 
     @provide
     def create_retort(self) -> Retort:
-        retort = Retort(recipe=[*REQUIRED_GAME_RECIPES, *VALIDATION_GAME_RECIPES])
-        return retort
+        return Retort(recipe=[*REQUIRED_GAME_RECIPES, *VALIDATION_GAME_RECIPES])
 
 
 class UrlProvider(Provider):

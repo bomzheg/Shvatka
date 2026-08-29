@@ -1,18 +1,18 @@
-from datetime import datetime, tzinfo
 import typing
-from typing import Sequence
+from collections.abc import Sequence
+from datetime import datetime, tzinfo
 
-from sqlalchemy import select, ScalarResult, false, func, distinct
-from sqlalchemy import update
-from sqlalchemy.exc import NoResultFound, IntegrityError
+from sqlalchemy import ScalarResult, distinct, false, func, select, update
+from sqlalchemy.exc import IntegrityError, NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 from sqlalchemy.orm.interfaces import ORMOption
 
 from shvatka.core.models import dto
-from shvatka.core.utils.exceptions import TeamError, AnotherTeamInChat
+from shvatka.core.utils.exceptions import AnotherTeamInChat, TeamError
 from shvatka.infrastructure.db import models
-from .base import BaseDAO, ILIKE_ESCAPE, ilike_pattern
+
+from .base import ILIKE_ESCAPE, BaseDAO, ilike_pattern
 
 
 class TeamDao(BaseDAO[models.Team]):

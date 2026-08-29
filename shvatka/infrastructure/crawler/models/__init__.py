@@ -1,7 +1,7 @@
 from .credentials import Credentials
 from .uploadable_game import (
-    LevelPuzzle,
+    GameForUpload,
     Hint,
     LevelForUpload,
-    GameForUpload,
+    LevelPuzzle,
 )

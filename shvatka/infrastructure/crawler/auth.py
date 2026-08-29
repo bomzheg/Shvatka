@@ -2,7 +2,7 @@ import os
 
 from aiohttp import ClientSession
 
-from shvatka.infrastructure.crawler.constants import COOKIE_NAME, BASE_URL
+from shvatka.infrastructure.crawler.constants import BASE_URL, COOKIE_NAME
 from shvatka.infrastructure.crawler.models import Credentials
 
 ENV_USERNAME = os.getenv("SH_USERNAME")
@@ -54,9 +54,8 @@ async def get_auth_cookie(username: str = ENV_USERNAME, password: str = ENV_PASS
             password=password,
         )
         if not creds.username or not creds.password:
-            raise EnvironmentError(
+            raise OSError(
                 "For run forum parsers, you have to specify "
                 "next env variables: SH_USERNAME, SH_PASSWORD",
             )
-        cookies = await auth(session, creds)
-    return cookies
+        return await auth(session, creds)

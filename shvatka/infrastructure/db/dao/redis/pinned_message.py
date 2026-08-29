@@ -1,6 +1,6 @@
 import logging
+from collections.abc import Iterable
 from datetime import timedelta
-from typing import Iterable
 
 from redis.asyncio.client import Redis
 

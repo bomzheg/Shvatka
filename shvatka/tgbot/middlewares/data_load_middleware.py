@@ -1,4 +1,5 @@
-from typing import Callable, Any, Awaitable
+from collections.abc import Awaitable, Callable
+from typing import Any
 
 from aiogram import BaseMiddleware
 from aiogram.types import TelegramObject
@@ -18,7 +19,7 @@ class LoadDataMiddleware(BaseMiddleware):
     and caches them, so priming it here costs nothing beyond those upserts.
     """
 
-    async def __call__(  # type: ignore
+    async def __call__(  # type: ignore[override]
         self,
         handler: Callable[[TelegramObject, dict[str, Any]], Awaitable[Any]],
         event: TelegramObject,
@@ -31,5 +32,4 @@ class LoadDataMiddleware(BaseMiddleware):
         # loads (and so upserts) the user on the way to the player
         await identity_provider.get_player()
 
-        result = await handler(event, data)  # type: ignore[arg-type]
-        return result
+        return await handler(event, data)  # type: ignore[arg-type]

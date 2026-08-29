@@ -4,34 +4,15 @@ from aiogram_dialog.widgets.input import TextInput
 from aiogram_dialog.widgets.kbd import (
     Button,
     Cancel,
+    Group,
+    ListGroup,
     ScrollingGroup,
     Select,
     SwitchTo,
-    Group,
-    ListGroup,
 )
-from aiogram_dialog.widgets.text import Const, Jinja, Format
+from aiogram_dialog.widgets.text import Const, Format, Jinja
 
 from shvatka.tgbot import states
-from .getters import (
-    get_timers,
-    get_timer,
-)
-from .handlers import (
-    on_start_timers,
-    save_timers,
-    process_timers_result,
-    start_edit_timer,
-    on_start_timer,
-    start_new_timer,
-    process_incorrect_time_message,
-    process_correct_time_message,
-    select_time,
-    start_effects,
-    on_process_timer_result,
-    save_timer,
-    delete_timer,
-)
 from shvatka.tgbot.dialogs.preview_data import (
     PREVIEW_EFFECTS,
     PREVIEW_LEVEL,
@@ -41,6 +22,26 @@ from shvatka.tgbot.dialogs.preview_data import (
     PreviewStart,
 )
 from shvatka.tgbot.dialogs.time_hint.getters import get_available_times
+
+from .getters import (
+    get_timer,
+    get_timers,
+)
+from .handlers import (
+    delete_timer,
+    on_process_timer_result,
+    on_start_timer,
+    on_start_timers,
+    process_correct_time_message,
+    process_incorrect_time_message,
+    process_timers_result,
+    save_timer,
+    save_timers,
+    select_time,
+    start_edit_timer,
+    start_effects,
+    start_new_timer,
+)
 
 timers_dialog = Dialog(
     Window(

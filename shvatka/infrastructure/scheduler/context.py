@@ -1,3 +1,5 @@
+from typing import Any
+
 from dishka import AsyncContainer
 from dishka.integrations.base import wrap_injection
 
@@ -12,7 +14,7 @@ class ScheduledContextHolder:
 
 
 def inject(func):
-    async def wrapper(*args, **kwargs):
+    async def wrapper(*args: Any, **kwargs: Any) -> Any:
         async with ScheduledContextHolder.dishka() as request_dishka:
             wrapped = wrap_injection(
                 func=func,

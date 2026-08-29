@@ -1,6 +1,6 @@
 from abc import ABCMeta, abstractmethod
 from datetime import datetime
-from typing import Protocol
+from typing import Protocol, Self
 
 from shvatka.core.models import dto
 from shvatka.core.models.dto import action
@@ -38,11 +38,11 @@ class Scheduler(Protocol, metaclass=ABCMeta):
     async def close(self):
         raise NotImplementedError
 
-    async def __aenter__(self):
+    async def __aenter__(self) -> Self:
         await self.start()
         return self
 
-    async def __aexit__(self, exc_type, exc_val, exc_tb):
+    async def __aexit__(self, exc_type, exc_val, exc_tb) -> None:
         await self.close()
 
 

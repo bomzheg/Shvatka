@@ -2,15 +2,14 @@ import asyncio
 import logging.config
 
 from alembic import context
-from sqlalchemy import create_engine
-from sqlalchemy import pool
+from sqlalchemy import create_engine, pool
 from sqlalchemy.ext.asyncio import AsyncEngine
 
 from shvatka.infrastructure.db.models import Base
 
 config = context.config
 
-logging.config.fileConfig(config.config_file_name)  # type: ignore
+logging.config.fileConfig(config.config_file_name)  # type: ignore[arg-type]
 
 target_metadata = Base.metadata
 

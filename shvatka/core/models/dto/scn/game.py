@@ -1,12 +1,15 @@
+from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import datetime
-from typing import BinaryIO, Sequence, Literal
+from typing import BinaryIO, Literal
 
 from shvatka.core.models import enums
+from shvatka.core.models.dto import hints
 from shvatka.core.models.dto.export_stat import GameStat
 from shvatka.core.utils import exceptions
-from .level import LevelScenario, check_all_files_saved as check_all_in_level_saved
-from shvatka.core.models.dto import hints
+
+from .level import LevelScenario
+from .level import check_all_files_saved as check_all_in_level_saved
 
 
 @dataclass
@@ -15,7 +18,7 @@ class GameScenario:
     levels: list[LevelScenario]
     __model_version__: Literal[1]
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         levels_ids = {level.id for level in self.levels}
         for level in self.levels:
             for effect in level.get_effects():
@@ -34,7 +37,7 @@ class GameScenario:
 class FullGameScenario(GameScenario):
     files: Sequence[hints.FileMeta]
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         super().__post_init__()
         check_all_files_saved(self, {f.guid for f in self.files})
 
@@ -43,7 +46,7 @@ class FullGameScenario(GameScenario):
 class UploadedGameScenario(GameScenario):
     files: list[hints.UploadedFileMeta]
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         super().__post_init__()
         check_all_files_saved(self, {f.guid for f in self.files})
 
@@ -52,7 +55,7 @@ class UploadedGameScenario(GameScenario):
 class ParsedGameScenario(GameScenario):
     files: list[hints.FileMetaLightweight]
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         super().__post_init__()
         check_all_files_saved(self, {f.guid for f in self.files})
 

@@ -6,7 +6,7 @@ import pytest
 
 from shvatka.api.app.utils.push import PushMessage
 from shvatka.api.app.utils.web_input import WebOrgNotifier
-from shvatka.core.views.game import LevelUp, NewOrg, LevelTestCompleted
+from shvatka.core.views.game import LevelTestCompleted, LevelUp, NewOrg
 
 
 class FakePushSender:

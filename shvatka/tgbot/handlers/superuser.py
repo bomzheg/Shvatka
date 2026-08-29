@@ -3,23 +3,23 @@ import logging
 from functools import partial
 
 from aiogram import Bot, Router
-from dishka import FromDishka
-from dishka.integrations.aiogram import inject
 from aiogram.enums import BotCommandScopeType
 from aiogram.exceptions import TelegramAPIError
 from aiogram.filters import Command
-from aiogram.types import Message, BotCommandScopeChat
+from aiogram.types import BotCommandScopeChat, Message
+from dishka import FromDishka
+from dishka.integrations.aiogram import inject
 
 from shvatka.core.models import dto
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.tgbot.filters.superusers import is_superuser
 from shvatka.tgbot.views.commands import (
-    GET_OUT,
     EXCEPTION_COMMAND,
+    GET_OUT,
+    HELP_COMMAND,
+    HELP_USER_ADMIN,
     UPDATE_COMMANDS,
     VERSION_COMMAND,
-    HELP_USER_ADMIN,
-    HELP_COMMAND,
 )
 
 logger = logging.getLogger(__name__)
@@ -48,7 +48,7 @@ async def clean_commands_menu_handler(message: Message, bot: Bot, dao: FromDishk
                     scope=BotCommandScopeChat(chat_id=user.tg_id, type=BotCommandScopeType.CHAT)
                 )
             except TelegramAPIError as e:
-                logger.error("some error with delete scope", exc_info=e)
+                logger.exception("some error with delete scope", exc_info=e)
             else:
                 logger.debug("updated scope for %s", user.tg_id)
             await asyncio.sleep(1)

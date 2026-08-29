@@ -1,6 +1,6 @@
 import logging
+from collections.abc import Awaitable, Iterable, Sequence
 from dataclasses import dataclass
-from typing import Awaitable, Iterable, Sequence
 
 from shvatka.api.app.utils.web_input import (
     WebGameLogWriter,
@@ -13,14 +13,14 @@ from shvatka.core.interfaces.dal.game_play import GamePreparer
 from shvatka.core.models import dto
 from shvatka.core.views.game import (
     AnyViewTask,
+    Event,
+    GameLogEvent,
+    GameLogWriter,
     GameView,
     GameViewPreparer,
     OrgNotifier,
-    Event,
-    GameLogWriter,
-    GameLogEvent,
 )
-from shvatka.core.views.team import TeamNotifier, TeamEvent
+from shvatka.core.views.team import TeamEvent, TeamNotifier
 from shvatka.tgbot.views.game import BotOrgNotifier, BotView, GameBotLog
 from shvatka.tgbot.views.team import BotTeamNotifier
 

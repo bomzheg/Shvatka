@@ -1,10 +1,9 @@
-from datetime import datetime, tzinfo
 import typing
-from typing import TypeVar, Generic
 from collections.abc import Sequence
+from datetime import datetime, tzinfo
+from typing import Generic, TypeVar
 
-from sqlalchemy import delete, func, ScalarResult
-from sqlalchemy import select
+from sqlalchemy import ScalarResult, delete, func, select
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm.interfaces import ORMOption
@@ -54,13 +53,13 @@ class BaseDAO(Generic[Model_co]):
             raise NoResultFound
         return result
 
-    def _save(self, obj: Base):
+    def _save(self, obj: Base) -> None:
         self.session.add(obj)
 
     async def delete_all(self):
         await self.session.execute(delete(self.model))
 
-    async def _delete(self, obj: Base):
+    async def _delete(self, obj: Base) -> None:
         await self.session.delete(obj)
 
     async def count(self):
@@ -70,5 +69,5 @@ class BaseDAO(Generic[Model_co]):
     async def commit(self):
         await self.session.commit()
 
-    async def _flush(self, *objects: Base):
+    async def _flush(self, *objects: Base) -> None:
         await self.session.flush(objects)

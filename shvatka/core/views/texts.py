@@ -1,4 +1,4 @@
-from typing import Sequence
+from collections.abc import Sequence
 
 from shvatka.core.models.dto import action, hints
 from shvatka.core.models.enums.hint_type import HintType

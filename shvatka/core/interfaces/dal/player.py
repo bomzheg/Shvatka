@@ -1,10 +1,10 @@
-from typing import Protocol, Sequence
+from collections.abc import Sequence
+from typing import Protocol
 
 from shvatka.core.interfaces.dal.base import Committer
 from shvatka.core.interfaces.dal.game import ActiveGameFinder
-from shvatka.core.interfaces.dal.secure_invite import InviteRemover, InviteReader
-from shvatka.core.models import dto
-from shvatka.core.models import enums
+from shvatka.core.interfaces.dal.secure_invite import InviteReader, InviteRemover
+from shvatka.core.models import dto, enums
 
 
 class PlayerUpserter(Committer, Protocol):

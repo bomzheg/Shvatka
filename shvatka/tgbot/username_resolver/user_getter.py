@@ -15,7 +15,7 @@ from typing import Self
 import pyrogram
 from aiogram.types import User
 from pyrogram import Client
-from pyrogram.errors import RPCError, UsernameNotOccupied, FloodWait
+from pyrogram.errors import FloodWait, RPCError, UsernameNotOccupied
 
 from shvatka.core.utils import exceptions
 from shvatka.tgbot.config.models.bot import TgClientConfig
@@ -48,10 +48,10 @@ class UserGetter:
             logger.info("Username not found %s", username)
             raise exceptions.NoUsernameFound(username=username) from e
         except FloodWait as e:
-            logger.error("Flood Wait %s", e, exc_info=e)
+            logger.exception("Flood Wait")
             await asyncio.sleep(e.value)
             raise exceptions.UsernameResolverError(username=username) from e
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001  # every pyrogram failure is one for us
             raise exceptions.UsernameResolverError(username=username) from e
         if isinstance(user, list):
             raise exceptions.MultipleUsernameFound(
@@ -73,7 +73,7 @@ class UserGetter:
         await self.start()
         return self
 
-    async def __aexit__(self, exc_type, exc_val, exc_tb):
+    async def __aexit__(self, exc_type, exc_val, exc_tb) -> None:
         await self.stop()
 
 

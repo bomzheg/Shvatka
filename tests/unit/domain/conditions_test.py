@@ -3,9 +3,8 @@ from datetime import timedelta
 
 import pytest
 
-from shvatka.core.models.dto.action import keys, Effects
-from shvatka.core.models.dto import scn
-from shvatka.core.models.dto import action
+from shvatka.core.models.dto import action, scn
+from shvatka.core.models.dto.action import Effects, keys
 from shvatka.core.utils import exceptions
 
 

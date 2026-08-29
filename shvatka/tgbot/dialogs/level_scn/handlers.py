@@ -10,12 +10,11 @@ from dishka.integrations.aiogram_dialog import inject
 
 from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.models import dto
-from shvatka.core.models.dto import scn, action
-from shvatka.core.models.dto import hints
+from shvatka.core.models.dto import action, hints, scn
 from shvatka.core.models.dto.scn.level import (
     get_keys_default_condition,
 )
-from shvatka.core.services.level import upsert_level, get_by_id
+from shvatka.core.services.level import get_by_id, upsert_level
 from shvatka.core.utils.input_validation import (
     is_multiple_keys_normal,
     validate_level_id,

@@ -4,27 +4,25 @@ from pathlib import PurePosixPath
 from typing import Annotated
 from urllib.parse import quote
 
-from dishka.integrations.fastapi import FromDishka
-from dishka.integrations.fastapi import inject
+from dishka.integrations.fastapi import FromDishka, inject
 from fastapi import APIRouter, Body, File, Query, UploadFile
 from fastapi.params import Path
 from fastapi.responses import Response
 
 from shvatka.api.app.dependencies.auth import ApiIdentityProvider
-from shvatka.api.files import requests, responses
 from shvatka.api.app.utils.error_converter import to_http_error
-from shvatka.core.games.interactors import (
-    GameFileReaderInteractor,
-)
+from shvatka.api.files import requests, responses
 from shvatka.core.games.editor_interactors import (
     DeleteGameFileInteractor,
     RenameGameFileInteractor,
     UploadGameFileInteractor,
 )
+from shvatka.core.games.interactors import (
+    GameFileReaderInteractor,
+)
 from shvatka.core.interfaces.clients.file_storage import FileStorage
 from shvatka.core.models.dto import hints
 from shvatka.core.utils.exceptions import UnsupportedFileFormat
-
 
 logger = logging.getLogger(__name__)
 

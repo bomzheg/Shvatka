@@ -1,10 +1,11 @@
 from datetime import datetime
 
-from sqlalchemy import Integer, ForeignKey, DateTime, Index, func
-from sqlalchemy.orm import mapped_column, relationship, Mapped
+from sqlalchemy import DateTime, ForeignKey, Index, Integer, func
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from shvatka.core.models import dto
 from shvatka.core.utils.datetime_utils import tz_utc
+
 from . import Base
 
 

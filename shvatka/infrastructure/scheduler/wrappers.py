@@ -3,19 +3,19 @@ from datetime import datetime
 
 from dishka.integrations.base import FromDishka
 
-from shvatka.core.games.game_play import send_hint, start_game, prepare_game
+from shvatka.core.games.game_play import prepare_game, send_hint, start_game
 from shvatka.core.games.interactors import GamePlayTimerInteractor
 from shvatka.core.interfaces.current_game import CurrentGameProvider
+from shvatka.core.interfaces.scheduler import LevelTestScheduler, Scheduler
+from shvatka.core.models import dto
+from shvatka.core.services.level_testing import send_testing_level_hint
+from shvatka.core.services.organizers import get_by_player
 from shvatka.core.utils.datetime_utils import tz_utc
 from shvatka.core.views.game import GameViewPreparer, ViewSender
 from shvatka.core.views.level import LevelView
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.infrastructure.scheduler import SchedulerContainer
 from shvatka.infrastructure.scheduler.context import inject
-from shvatka.core.interfaces.scheduler import LevelTestScheduler, Scheduler
-from shvatka.core.models import dto
-from shvatka.core.services.level_testing import send_testing_level_hint
-from shvatka.core.services.organizers import get_by_player
 from shvatka.tgbot.views.bot_alert import BotAlert
 
 logger = logging.getLogger(__name__)

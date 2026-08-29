@@ -28,7 +28,7 @@ class OrgFilter(BaseFilter):
     only_for_running_game: bool = True
 
     @inject
-    async def __call__(  # noqa: C901
+    async def __call__(
         self,
         message: Message,
         dao: FromDishka[HolderDao],
@@ -48,13 +48,13 @@ class OrgFilter(BaseFilter):
             return False
         if self.is_primary is not None:
             return isinstance(org, dto.PrimaryOrganizer)
-        if self.can_spy is not None:
-            if self.can_spy != org.can_spy:
-                return False
-        if self.can_see_log_keys is not None:
-            if self.can_see_log_keys != org.can_see_log_keys:
-                return False
-        if self.can_validate_waivers is not None:
-            if self.can_validate_waivers != org.can_validate_waivers:
-                return False
+        if self.can_spy is not None and self.can_spy != org.can_spy:
+            return False
+        if self.can_see_log_keys is not None and self.can_see_log_keys != org.can_see_log_keys:
+            return False
+        if (
+            self.can_validate_waivers is not None
+            and self.can_validate_waivers != org.can_validate_waivers
+        ):
+            return False
         return {"org": org}

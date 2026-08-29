@@ -1,4 +1,5 @@
-from typing import TypeVar, Sequence
+from collections.abc import Sequence
+from typing import TypeVar
 
 from shvatka.core.models import dto
 from shvatka.core.models.dto import hints

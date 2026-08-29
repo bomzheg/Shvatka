@@ -1,19 +1,20 @@
-import uuid
-from datetime import datetime, tzinfo
 import typing
-from typing import Iterable, Sequence
+import uuid
+from collections.abc import Iterable, Sequence
+from datetime import datetime, tzinfo
 
-from sqlalchemy import select, func, distinct, Result, case, delete, ScalarResult, inspect, or_
-from sqlalchemy.sql.elements import ColumnElement
-from sqlalchemy.exc import NoResultFound, MultipleResultsFound
+from sqlalchemy import Result, ScalarResult, case, delete, distinct, func, inspect, or_, select
+from sqlalchemy.exc import MultipleResultsFound, NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import joinedload, selectinload, contains_eager
+from sqlalchemy.orm import contains_eager, joinedload, selectinload
+from sqlalchemy.sql.elements import ColumnElement
 
 from shvatka.core.models import dto, enums
 from shvatka.core.utils import exceptions
 from shvatka.core.utils.username import numbered_username, username_from_names
 from shvatka.infrastructure.db import models
-from .base import BaseDAO, ILIKE_ESCAPE, ilike_pattern
+
+from .base import ILIKE_ESCAPE, BaseDAO, ilike_pattern
 
 
 class PlayerDao(BaseDAO[models.Player]):
@@ -133,10 +134,7 @@ class PlayerDao(BaseDAO[models.Player]):
             player = result.one()
         except NoResultFound as e:
             raise exceptions.PlayerNotFoundError from e
-        if forum_user_db := player.forum_user:
-            forum_user = forum_user_db.to_dto()
-        else:
-            forum_user = None
+        forum_user = forum_user_db.to_dto() if (forum_user_db := player.forum_user) else None
         return player.to_dto(user=player.user.to_dto(), forum_user=forum_user)
 
     async def create_for_user(self, user: dto.User) -> dto.Player:
@@ -400,12 +398,19 @@ class PlayerDao(BaseDAO[models.Player]):
         """
         state = inspect(player)
         user_loaded = "user" not in state.unloaded and player.user is not None
-        if user_loaded and player.user.username:
-            if not await self.is_username_occupied(player.user.username):
-                return player.user.username
-        if "forum_user" not in state.unloaded and player.forum_user and player.forum_user.name:
-            if not await self.is_username_occupied(player.forum_user.name):
-                return player.forum_user.name
+        if (
+            user_loaded
+            and player.user.username
+            and not await self.is_username_occupied(player.user.username)
+        ):
+            return player.user.username
+        if (
+            "forum_user" not in state.unloaded
+            and player.forum_user
+            and player.forum_user.name
+            and not await self.is_username_occupied(player.forum_user.name)
+        ):
+            return player.forum_user.name
         if user_loaded:
             from_names = username_from_names(player.user.first_name, player.user.last_name)
             if from_names is not None:

@@ -82,7 +82,7 @@ async def test_player_without_telegram_not_tagged() -> None:
 
     await member_tagger.sync(player(tg_id=None), team())
 
-    assert 0 == bot.set_chat_member_tag.await_count
+    assert bot.set_chat_member_tag.await_count == 0
 
 
 @pytest.mark.asyncio
@@ -105,4 +105,4 @@ async def test_telegram_error_not_raised() -> None:
 
     await member_tagger.sync(player(), team())
 
-    assert 2 == bot.set_chat_member_tag.await_count
+    assert bot.set_chat_member_tag.await_count == 2

@@ -2,19 +2,18 @@ from shvatka.core.interfaces.dal.organizer import (
     GameOrgsGetter,
     OrgAdder,
     OrgByIdGetter,
-    OrgPermissionFlipper,
-    OrgDeletedFlipper,
     OrgByPlayerGetter,
+    OrgDeletedFlipper,
+    OrgPermissionFlipper,
 )
-from shvatka.core.interfaces.dal.secure_invite import InviteSaver, InviteRemover
-from shvatka.core.models import dto
-from shvatka.core.models import enums
+from shvatka.core.interfaces.dal.secure_invite import InviteRemover, InviteSaver
+from shvatka.core.models import dto, enums
 from shvatka.core.models.enums.invite_type import InviteType
 from shvatka.core.models.enums.org_permission import OrgPermission
 from shvatka.core.services.game import get_game
 from shvatka.core.utils import exceptions
-from shvatka.core.utils.exceptions import PermissionsError, GameHasAnotherAuthor, SaltError
-from shvatka.core.views.game import OrgNotifier, NewOrg
+from shvatka.core.utils.exceptions import GameHasAnotherAuthor, PermissionsError, SaltError
+from shvatka.core.views.game import NewOrg, OrgNotifier
 
 
 async def get_orgs(game: dto.Game, dao: GameOrgsGetter) -> list[dto.Organizer]:

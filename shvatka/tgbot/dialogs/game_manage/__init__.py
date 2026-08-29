@@ -1,6 +1,6 @@
 from aiogram import Router
 
-from .dialogs import my_games, schedule_game_dialog, games
+from .dialogs import games, my_games, schedule_game_dialog
 
 
 def setup(router: Router):

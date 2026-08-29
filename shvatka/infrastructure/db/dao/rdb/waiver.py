@@ -1,13 +1,14 @@
-from datetime import datetime, tzinfo
 import typing
-from typing import Iterable, Sequence
+from collections.abc import Iterable, Sequence
+from datetime import datetime, tzinfo
 
-from sqlalchemy import select, Row, update, ScalarResult
+from sqlalchemy import Row, ScalarResult, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 
 from shvatka.core.models import dto, enums
 from shvatka.infrastructure.db import models
+
 from .base import BaseDAO
 
 

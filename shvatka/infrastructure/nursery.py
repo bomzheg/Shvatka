@@ -1,7 +1,8 @@
 import asyncio
 import logging
 import typing
-from typing import Any, AsyncIterable
+from collections.abc import AsyncIterable
+from typing import Any
 
 from dishka import AsyncContainer, Provider, Scope, provide
 from dishka.integrations.base import wrap_injection
@@ -51,7 +52,7 @@ class AsyncioNursery(Nursery):
             logger.info("background task %s cancelled", task.__name__)
             raise
         except Exception as e:
-            logger.error("background task %s failed", task.__name__, exc_info=e)
+            logger.exception("background task %s failed", task.__name__, exc_info=e)
 
     async def close(self) -> None:
         """Wait a bounded time for running tasks, then cancel the rest.

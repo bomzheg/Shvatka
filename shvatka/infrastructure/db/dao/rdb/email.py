@@ -1,14 +1,15 @@
-from datetime import datetime, tzinfo
 import typing
+from datetime import datetime, tzinfo
 
-from sqlalchemy import select, func, delete, update
+from sqlalchemy import delete, func, select, update
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import joinedload, contains_eager
+from sqlalchemy.orm import contains_eager, joinedload
 
 from shvatka.core.models import dto
 from shvatka.core.utils import exceptions
 from shvatka.infrastructure.db import models
+
 from .base import BaseDAO
 
 

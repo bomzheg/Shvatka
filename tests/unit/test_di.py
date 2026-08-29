@@ -1,4 +1,4 @@
-from typing import Callable
+from collections.abc import Callable
 
 import pytest
 from dishka import STRICT_VALIDATION, Provider, make_async_container

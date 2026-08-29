@@ -4,8 +4,8 @@ from aiogram_dialog import DialogManager
 from dishka import FromDishka
 from dishka.integrations.aiogram import inject
 
-from shvatka.core.interfaces.scheduler import LevelTestScheduler
 from shvatka.core.interfaces.identity import IdentityProvider
+from shvatka.core.interfaces.scheduler import LevelTestScheduler
 from shvatka.core.models import dto
 from shvatka.core.services.level import get_level_by_id_for_org
 from shvatka.core.services.level_testing import start_level_test

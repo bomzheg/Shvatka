@@ -1,7 +1,7 @@
-import string
-from io import BytesIO
-import zlib
 import base64
+import string
+import zlib
+from io import BytesIO
 
 import aiohttp.client
 

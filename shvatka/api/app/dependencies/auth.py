@@ -3,34 +3,33 @@ import hashlib
 import hmac
 import logging
 import typing
-from datetime import timedelta, datetime
+from datetime import datetime, timedelta
 from typing import TypedDict, cast
 
-from aiogram.utils.web_app import check_webapp_signature, parse_webapp_init_data, WebAppInitData
-from dishka import Provider, provide, Scope, from_context
+from aiogram.utils.web_app import WebAppInitData, check_webapp_signature, parse_webapp_init_data
+from dishka import Provider, Scope, from_context, provide
 from fastapi import HTTPException
-from jose import jwt, JWTError
+from jose import JWTError, jwt
 from starlette import status
 from starlette.requests import Request
 
 from shvatka.api.app.config.models.auth import AuthConfig
+from shvatka.api.app.utils.cookie_auth import OAuth2PasswordBearerWithCookie
 from shvatka.api.auth.requests import UserTgAuth
 from shvatka.api.auth.responses import Token
-from shvatka.api.app.utils.cookie_auth import OAuth2PasswordBearerWithCookie
 from shvatka.core.interfaces.hasher import PasswordHasher
 from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.interfaces.superusers import SuperusersResolver
 from shvatka.core.models import dto
 from shvatka.core.players.player import (
-    get_my_team,
     get_full_team_player_or_none,
+    get_my_team,
 )
 from shvatka.core.utils import exceptions
 from shvatka.core.utils.datetime_utils import tz_utc
-from shvatka.core.utils.input_validation import validate_email
 from shvatka.core.utils.exceptions import NoUsernameFound
+from shvatka.core.utils.input_validation import validate_email
 from shvatka.infrastructure.db.dao.holder import HolderDao
-
 
 logger = logging.getLogger(__name__)
 
@@ -88,7 +87,7 @@ class AuthProperties:
         expire = datetime.now(tz=tz_utc) + expires_delta
         to_encode.update({"exp": expire})
         encoded_jwt = jwt.encode(to_encode, self.secret_key, algorithm=self.algorythm)
-        return Token(access_token=encoded_jwt, token_type="bearer")
+        return Token(access_token=encoded_jwt, token_type="bearer")  # noqa: S106
 
     def create_user_token(self, user: dto.Player) -> Token:
         if user.id is None:
@@ -129,7 +128,7 @@ class AuthProperties:
             raise
         try:
             player = await dao.player.get_by_id(player_id)
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001  # any lookup failure is a bad token
             logger.info("player by id %s not found", player_id)
             raise credentials_exception from e
         return player
@@ -179,7 +178,7 @@ class ApiIdentityProvider(IdentityProvider):
         auth_properties: AuthProperties,
         dao: HolderDao,
         superusers: SuperusersResolver,
-    ):
+    ) -> None:
         self.request = request
         self.cookie_auth = cookie_auth
         self.auth_properties = auth_properties
@@ -277,7 +276,8 @@ class AuthProvider(Provider):
     @provide
     def get_cookie_auth(self, config: AuthConfig) -> OAuth2PasswordBearerWithCookie:
         return OAuth2PasswordBearerWithCookie(
-            token_url="auth/token", cookie_name=config.cookie_name
+            token_url="auth/token",  # noqa: S106
+            cookie_name=config.cookie_name,
         )
 
     idp = provide(ApiIdentityProvider, scope=Scope.REQUEST)

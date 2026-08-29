@@ -3,16 +3,17 @@ from collections.abc import Collection, Sequence
 from datetime import datetime, tzinfo
 from typing import Any
 
-from sqlalchemy import or_, select, ScalarResult
+from sqlalchemy import ScalarResult, or_, select
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from shvatka.core.models.enums.request import RequestType, RequestStatus
 from shvatka.core.models.dto import BotMessage
+from shvatka.core.models.enums.request import RequestStatus, RequestType
 from shvatka.core.notifications import dto
 from shvatka.core.utils.datetime_utils import tz_utc
 from shvatka.core.utils.exceptions import RequestNotFound
 from shvatka.infrastructure.db.models import ActionRequest
+
 from .base import BaseDAO
 
 

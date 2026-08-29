@@ -1,6 +1,6 @@
-from abc import ABC, abstractmethod, ABCMeta
+from abc import ABC, ABCMeta, abstractmethod
 from dataclasses import dataclass
-from typing import BinaryIO, Any
+from typing import Any, BinaryIO
 
 from aiogram import types
 from aiogram.types import BufferedInputFile, InputFile

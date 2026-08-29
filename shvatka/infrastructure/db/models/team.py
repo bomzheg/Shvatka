@@ -1,5 +1,5 @@
 from sqlalchemy import ForeignKey, Index
-from sqlalchemy.orm import mapped_column, relationship, Mapped
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from shvatka.core.models import dto
 from shvatka.infrastructure.db.models import Base, Player

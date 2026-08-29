@@ -1,6 +1,6 @@
 import asyncio
+from collections.abc import AsyncIterable
 from dataclasses import dataclass, field
-from typing import AsyncIterable
 
 import pytest
 from dishka import FromDishka, Provider, Scope, from_context, make_async_container, provide

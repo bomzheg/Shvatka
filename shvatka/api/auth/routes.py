@@ -3,40 +3,40 @@ import typing
 from typing import Annotated
 
 from aiogram.types import User
-from dishka.integrations.fastapi import inject, FromDishka
-from fastapi import Depends as fDepends, Body
-from fastapi import APIRouter, HTTPException
+from dishka.integrations.fastapi import FromDishka, inject
+from fastapi import APIRouter, Body, HTTPException
+from fastapi import Depends as fDepends
 from fastapi.security import OAuth2PasswordRequestForm
 from starlette.responses import HTMLResponse, Response
 
+from shvatka.api.app.config.models.auth import AuthConfig
+from shvatka.api.app.dependencies.auth import AuthProperties, check_tg_hash, check_webapp_hash
+from shvatka.api.app.utils.cookie_auth import delete_auth_response, set_auth_response
 from shvatka.api.auth.requests import (
+    EmailConfirm,
+    EmailLink,
+    EmailLogin,
+    EmailRegister,
+    EmailResend,
+    ForgotPassword,
+    OneTimeToken,
     UserTgAuth,
     WebAppAuth,
-    OneTimeToken,
-    EmailRegister,
-    EmailLogin,
-    EmailConfirm,
-    EmailResend,
-    EmailLink,
-    ForgotPassword,
 )
-from shvatka.api.app.config.models.auth import AuthConfig
-from shvatka.api.app.utils.cookie_auth import delete_auth_response, set_auth_response
 from shvatka.core.interfaces.bus import Bus, OneTimeTokenUsed
 from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.models import dto
 from shvatka.core.players.player import upsert_player
 from shvatka.core.services.email import (
-    EmailRegisterInteractor,
-    EmailLinkInteractor,
     EmailConfirmInteractor,
+    EmailLinkInteractor,
+    EmailRegisterInteractor,
     EmailResendInteractor,
     ForgotPasswordInteractor,
 )
 from shvatka.core.services.user import upsert_user
 from shvatka.core.utils import exceptions
 from shvatka.infrastructure.db.dao.holder import HolderDao
-from shvatka.api.app.dependencies.auth import AuthProperties, check_tg_hash, check_webapp_hash
 
 TG_WIDGET_HTML = """
         <html>

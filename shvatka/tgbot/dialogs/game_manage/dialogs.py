@@ -2,61 +2,62 @@ from aiogram import F
 from aiogram_dialog import Dialog, Window
 from aiogram_dialog.widgets.input import MessageInput
 from aiogram_dialog.widgets.kbd import (
-    ScrollingGroup,
-    Select,
-    SwitchTo,
     Button,
     Calendar,
     Cancel,
+    ScrollingGroup,
+    Select,
     Start,
+    SwitchTo,
     WebApp,
 )
-from aiogram_dialog.widgets.text import Const, Format, Case, Jinja
+from aiogram_dialog.widgets.text import Case, Const, Format, Jinja
 
 from shvatka.tgbot import states
-from .getters import (
-    get_my_games,
-    get_game,
-    get_game_time,
-    get_game_datetime,
-    get_games,
-    get_completed_game,
-    get_game_waivers,
-    get_game_results,
-    get_game_keys,
-    get_game_with_channel,
-)
-from .handlers import (
-    select_my_game,
-    start_waivers,
-    select_date,
-    process_time_message,
-    schedule_game,
-    show_scn,
-    start_schedule_game,
-    show_zip_scn,
-    show_game_orgs,
-    cancel_scheduled_game,
-    rename_game_handler,
-    publish_game,
-    select_game,
-    show_my_game_orgs,
-    show_my_zip_scn,
-    get_excel_results_handler,
-    show_results,
-    to_publish_game_forum,
-    complete_game_handler,
-    show_all_keys,
-    show_all_keys_to_print,
-    show_transitions,
-    show_game_release,
-)
 from shvatka.tgbot.dialogs.preview_data import (
     PREVIEW_GAME,
     PREVIEW_NOW,
     PREVIEW_WAIVERS,
     PreviewStart,
     PreviewSwitchTo,
+)
+
+from .getters import (
+    get_completed_game,
+    get_game,
+    get_game_datetime,
+    get_game_keys,
+    get_game_results,
+    get_game_time,
+    get_game_waivers,
+    get_game_with_channel,
+    get_games,
+    get_my_games,
+)
+from .handlers import (
+    cancel_scheduled_game,
+    complete_game_handler,
+    get_excel_results_handler,
+    process_time_message,
+    publish_game,
+    rename_game_handler,
+    schedule_game,
+    select_date,
+    select_game,
+    select_my_game,
+    show_all_keys,
+    show_all_keys_to_print,
+    show_game_orgs,
+    show_game_release,
+    show_my_game_orgs,
+    show_my_zip_scn,
+    show_results,
+    show_scn,
+    show_transitions,
+    show_zip_scn,
+    start_schedule_game,
+    start_waivers,
+    to_publish_game_forum,
 )
 
 games = Dialog(

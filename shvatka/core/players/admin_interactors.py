@@ -12,15 +12,15 @@ from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.models import dto
 from shvatka.core.players.dto import PlayerIdentitiesInfo, TimelineItem, WaiverPoint
 from shvatka.core.players.interfaces import (
-    PlayerSearcher,
-    AdminPlayerReader,
     AdminEmailSetter,
+    AdminPlayerMerger,
+    AdminPlayerReader,
+    AdminPlayerWaiverPointsReader,
     AdminTgChanger,
     AdminUsernameSetter,
-    AdminPlayerMerger,
-    AdminPlayerWaiverPointsReader,
+    PlayerSearcher,
 )
-from shvatka.core.players.player import merge_players, get_waiver_points, set_player_username
+from shvatka.core.players.player import get_waiver_points, merge_players, set_player_username
 from shvatka.core.utils import exceptions
 from shvatka.core.utils.input_validation import validate_email, validate_new_username
 from shvatka.core.views.game import GameLogWriter

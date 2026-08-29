@@ -3,10 +3,11 @@ import logging
 from aiogram.enums import MessageEntityType
 from aiogram.types import Message
 
-from shvatka.infrastructure.db.dao.holder import HolderDao
-from .user_getter import UserGetter
 from shvatka.core.models import dto
 from shvatka.core.utils import exceptions
+from shvatka.infrastructure.db.dao.holder import HolderDao
+
+from .user_getter import UserGetter
 
 logger = logging.getLogger(__name__)
 
@@ -86,7 +87,7 @@ def get_mentioned_user(message: Message) -> dto.User | None:
             return dto.User.from_aiogram(ent.user)
         elif ent.type == MessageEntityType.MENTION:
             username = ent.extract_from(possible_mentioned_text).lstrip("@")
-            return dto.User(username=username, tg_id=None)  # type: ignore
+            return dto.User(username=username, tg_id=None)  # type: ignore[arg-type]
     return None
 
 

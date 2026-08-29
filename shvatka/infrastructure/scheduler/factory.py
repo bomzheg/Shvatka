@@ -1,8 +1,8 @@
-from typing import AsyncIterable
+from collections.abc import AsyncIterable
 
-from dishka import Provider, Scope, provide, AsyncContainer, AnyOf
+from dishka import AnyOf, AsyncContainer, Provider, Scope, provide
 
-from shvatka.core.interfaces.scheduler import Scheduler, LevelTestScheduler
+from shvatka.core.interfaces.scheduler import LevelTestScheduler, Scheduler
 from shvatka.infrastructure.db.config.models.db import RedisConfig
 from shvatka.infrastructure.scheduler import ApScheduler
 

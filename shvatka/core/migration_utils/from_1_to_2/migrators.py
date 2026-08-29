@@ -1,8 +1,7 @@
 from uuid import uuid4
 
 from shvatka.core.migration_utils import models_0
-from shvatka.core.models.dto import scn, action
-from shvatka.core.models.dto import hints
+from shvatka.core.models.dto import action, hints, scn
 
 
 def bonus_key_0_to_1(bonus_key: models_0.BonusKey) -> action.BonusKey:

@@ -1,7 +1,8 @@
 import json
 from io import BytesIO
 from typing import BinaryIO
-from zipfile import Path as ZipPath, ZipFile, ZIP_DEFLATED
+from zipfile import ZIP_DEFLATED, ZipFile
+from zipfile import Path as ZipPath
 
 import yaml
 
@@ -35,7 +36,7 @@ def unpack_scn(zip_file: ZipPath) -> scn.ParsedZip:
 def pack_scn(game: scn.RawGameScenario) -> BinaryIO:
     output = BytesIO()
     data = yaml.safe_dump(game.scn, allow_unicode=True, sort_keys=False)
-    with ZipFile(output, "a", ZIP_DEFLATED, False) as zipfile:
+    with ZipFile(output, "a", ZIP_DEFLATED, allowZip64=False) as zipfile:
         zipfile.writestr("scn.yaml", data.encode("utf8"))
         zipfile.writestr(RESULTS_FILENAME, json.dumps(game.stat, ensure_ascii=False, indent=2))
         for guid, content in game.files.items():

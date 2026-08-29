@@ -4,27 +4,27 @@ from datetime import datetime, timedelta
 import pytest
 from dishka import AsyncContainer
 
+from shvatka.core.games.game_play import send_hint, start_game
 from shvatka.core.games.interactors import (
-    GamePlayReaderInteractor,
     CheckKeyInteractor,
+    GamePlayReaderInteractor,
     PassedLevelsReaderInteractor,
 )
 from shvatka.core.models import dto, enums
 from shvatka.core.models.dto import hints
 from shvatka.core.models.enums import GameStatus
-from shvatka.core.games.game_play import start_game, send_hint
+from shvatka.core.players.player import join_team, leave
 from shvatka.core.services.game_stat import get_typed_keys
 from shvatka.core.services.key import KeyProcessor
 from shvatka.core.services.organizers import get_orgs
-from shvatka.core.players.player import join_team, leave
 from shvatka.core.utils import exceptions
 from shvatka.core.utils.datetime_utils import tz_utc
 from shvatka.core.utils.key_checker_lock import KeyCheckerFactory
 from shvatka.core.views.game import (
-    LevelUp,
     GameLogEvent,
     GameLogType,
     InputContainer,
+    LevelUp,
 )
 from shvatka.infrastructure.db import models
 from shvatka.infrastructure.db.dao.holder import HolderDao
@@ -32,11 +32,11 @@ from tests.fixtures.game_fixtures import CurrentGameProviderMock
 from tests.fixtures.identity import MockIdentityProvider
 from tests.mocks.game_log import GameLogWriterMock
 from tests.mocks.game_view import GameViewMock
-from tests.mocks.view_sender import ViewSenderMock
 from tests.mocks.org_notifier import OrgNotifierMock
 from tests.mocks.scheduler_mock import SchedulerMock
-from tests.utils.time_key import assert_time_key
 from tests.mocks.team_notifier import TeamNotifierMock
+from tests.mocks.view_sender import ViewSenderMock
+from tests.utils.time_key import assert_time_key
 
 
 class MockInputContainer(InputContainer):
@@ -73,7 +73,7 @@ async def test_start_game(
     dummy_view.assert_send_only_puzzle_for_team(gryffindor, game_with_waivers.levels[0])
     dummy_view.assert_send_only_puzzle_for_team(slytherin, game_with_waivers.levels[0])
     dummy_view.assert_no_unchecked()
-    assert 2 == await check_dao.level_time.count()
+    assert await check_dao.level_time.count() == 2
 
 
 @pytest.mark.asyncio
@@ -113,7 +113,7 @@ async def test_wrong_key(
     identity = MockIdentityProvider(player=author)
     keys = await get_typed_keys(game=game, identity=identity, dao=check_dao.typed_keys)
     assert [gryffindor] == list(keys.keys())
-    assert 1 == len(keys[gryffindor])
+    assert len(keys[gryffindor]) == 1
     expected_first_key = dto.KeyTime(
         text="SHWRONG",
         type_=enums.KeyType.wrong,
@@ -123,7 +123,7 @@ async def test_wrong_key(
         player=harry,
         team=gryffindor,
     )
-    assert_time_key(expected_first_key, list(keys[gryffindor])[0])
+    assert_time_key(expected_first_key, next(iter(keys[gryffindor])))
     dummy_view.assert_wrong_key_only(expected_first_key)
 
 
@@ -166,7 +166,7 @@ async def test_bonus_hint_key(
     identity = MockIdentityProvider(player=author)
     keys = await get_typed_keys(game=game, identity=identity, dao=check_dao.typed_keys)
     assert [gryffindor] == list(keys.keys())
-    assert 1 == len(keys[gryffindor])
+    assert len(keys[gryffindor]) == 1
     expected_first_key = dto.KeyTime(
         text="SHBONUSHINT",
         type_=enums.KeyType.effects,
@@ -176,7 +176,7 @@ async def test_bonus_hint_key(
         player=harry,
         team=gryffindor,
     )
-    assert_time_key(expected_first_key, list(keys[gryffindor])[0])
+    assert_time_key(expected_first_key, next(iter(keys[gryffindor])))
     dummy_view.asser_bonus_hint_key_only(
         expected_first_key,
         (
@@ -291,8 +291,8 @@ async def test_game_play(
     keys = await get_typed_keys(game=game, identity=identity, dao=check_dao.typed_keys)
 
     assert [gryffindor] == list(keys.keys())
-    assert 4 == len(keys[gryffindor])
-    assert_time_key(expected_first_key, list(keys[gryffindor])[0])
+    assert len(keys[gryffindor]) == 4
+    assert_time_key(expected_first_key, next(iter(keys[gryffindor])))
     assert_time_key(expected_second_key, list(keys[gryffindor])[1])
     assert_time_key(expected_third_key, list(keys[gryffindor])[2])
     assert_time_key(expected_fourth_key, list(keys[gryffindor])[3])
@@ -370,7 +370,7 @@ async def test_fast_play_routed_game(
 
     assert list(keys.keys()) == [gryffindor]
     assert len(keys[gryffindor]) == 2
-    assert_time_key(expected_first_key, list(keys[gryffindor])[0])
+    assert_time_key(expected_first_key, next(iter(keys[gryffindor])))
     assert_time_key(expected_second_key, list(keys[gryffindor])[1])
     assert await dao.game_player.is_all_team_finished(game)
     assert GameStatus.finished == (await check_dao.game.get_by_id(game.id, author)).status
@@ -478,7 +478,7 @@ async def test_cycle_play_routed_game(
 
     assert list(keys.keys()) == [gryffindor]
     assert len(keys[gryffindor]) == 4
-    assert_time_key(expected_first_key, list(keys[gryffindor])[0])
+    assert_time_key(expected_first_key, next(iter(keys[gryffindor])))
     assert_time_key(expected_second_key, list(keys[gryffindor])[1])
     assert_time_key(expected_third_key, list(keys[gryffindor])[2])
     assert_time_key(expected_last_key, list(keys[gryffindor])[3])

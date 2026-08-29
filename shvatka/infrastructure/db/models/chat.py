@@ -1,5 +1,5 @@
-from sqlalchemy import Text, BigInteger, Enum, ForeignKey
-from sqlalchemy.orm import relationship, mapped_column
+from sqlalchemy import BigInteger, Enum, ForeignKey, Text
+from sqlalchemy.orm import mapped_column, relationship
 
 from shvatka.core.models import dto
 from shvatka.core.models.enums.chat_type import ChatType

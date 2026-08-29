@@ -2,36 +2,37 @@ from aiogram import F
 from aiogram_dialog import Dialog, Window
 from aiogram_dialog.widgets.input import MessageInput
 from aiogram_dialog.widgets.kbd import (
-    Select,
-    Button,
-    Group,
     Back,
+    Button,
     Cancel,
-    SwitchTo,
-    ScrollingGroup,
+    Group,
     ListGroup,
+    ScrollingGroup,
+    Select,
+    SwitchTo,
 )
-from aiogram_dialog.widgets.text import Const, Format, Case, Jinja
+from aiogram_dialog.widgets.text import Case, Const, Format, Jinja
 
 from shvatka.tgbot import states
-from .getters import get_available_times, get_hints
-from .handlers import (
-    process_time_message,
-    select_time,
-    process_hint,
-    on_finish,
-    hint_on_start,
-    hint_edit_on_start,
-    process_edit_time_message,
-    edit_single_hint,
-    save_edited_time_hint,
-    delete_single_hint,
-    delete_whole_time_hint,
-)
 from shvatka.tgbot.dialogs.preview_data import (
     PREVIEW_HINTS_DATA,
     TIMES_PRESET,
     PreviewSwitchTo,
+)
+
+from .getters import get_available_times, get_hints
+from .handlers import (
+    delete_single_hint,
+    delete_whole_time_hint,
+    edit_single_hint,
+    hint_edit_on_start,
+    hint_on_start,
+    on_finish,
+    process_edit_time_message,
+    process_hint,
+    process_time_message,
+    save_edited_time_hint,
+    select_time,
 )
 
 time_hint = Dialog(

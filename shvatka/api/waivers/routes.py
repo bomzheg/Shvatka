@@ -1,5 +1,6 @@
 import logging
-from typing import Annotated, Iterable
+from collections.abc import Iterable
+from typing import Annotated
 
 from dishka import FromDishka
 from dishka.integrations.fastapi import inject
@@ -13,8 +14,8 @@ from shvatka.core.interfaces.current_game import CurrentGameProvider
 from shvatka.core.models import dto
 from shvatka.core.services.game import get_game
 from shvatka.core.waiver.interactors import (
-    WaiverCompleteReaderInteractor,
     ReplaceTeamWaiversInteractor,
+    WaiverCompleteReaderInteractor,
 )
 from shvatka.infrastructure.db.dao.holder import HolderDao
 

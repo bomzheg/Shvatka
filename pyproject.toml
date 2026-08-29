@@ -156,23 +156,38 @@ exclude = '''
 
 [tool.ruff]
 line-length = 99
+# ruff 0.2 cannot parse `requires-python = ">=3.13"`, so without this it silently
+# falls back to py38 and turns on rules we do not need (FA100/FA102) while
+# holding back the py39+ rewrites. py312 is the newest this ruff knows.
+target-version = "py312"
 
 [tool.ruff.lint]
 select = ["ALL"]
 ignore = [
-    "RUF001", "S101", "D", "ANN101", "S311", "PD008", "UP035", "C408", "C417",
-    "ANN102", "EM101", "TRY003", "PIE790", "RET505", "A003",  "EM102", "RUF003",
-    "RET503", "RET502", "ARG005", "TCH003", "RUF002", "SIM108", "UP024", "ISC001",
-    "FA102", "RUF015", "FIX002", "TD002", "TD003", "TD004", "TD005", "FA100",
+    # Deliberate, not a backlog. Every entry here says "we disagree with the
+    # rule", not "we have not got round to it" — an entry that only means the
+    # latter belongs in the fixme block below, so it can be paid off.
+    "D",  # docstrings are written where they earn their keep, not everywhere
+    "S101",  # asserts narrow types for mypy, they are not input validation
+    "RUF001", "RUF002",  # the domain (and half the strings) is in Russian
+    "EM101", "EM102", "TRY003",  # exception messages read fine inline
+    "ISC001", "COM812",  # both fight `ruff format`
+    "FIX002", "TD002", "TD003", "TD004", "TD005",  # TODOs need no ceremony
+    "ANN101", "ANN102",  # deprecated upstream: self/cls need no annotation
+    "TRY301",  # the raise-in-try shape is deliberate where it is used
+    # an if/elif/else chain that returns from every arm is a set of parallel
+    # branches, not a guard clause — keep it readable as one
+    "RET505",
+    # `type X = ...` builds a lazy TypeAliasType: it is not callable, so
+    # `SHKey("SH123")` breaks, and adaptix cannot resolve it either
+    "UP040",
+    # dishka and pydantic read annotations at runtime, so an import moved into
+    # a TYPE_CHECKING block breaks DI wiring and response models
+    "TCH001", "TCH002", "TCH003",
 
-
-    # fixme
-    "ANN201", "SIM300", "COM812", "I001", "PLR0913", "UP015", "UP015", "B905",
-    "RUF007", "ANN401", "ANN001", "PLR0911", "FBT001", "ANN002", "ANN003",
-    "ARG002", "ARG001", "ANN204", "BLE001", "TRY400", "TCH001", "TCH002",
-    "PGH003", "FBT002", "N818", "PLW2901", "RET504", "PLC1901", "RUF006",
-    "FBT003", "SIM102", "S106", "PLR2004", "DTZ007", "ANN206", "PGH004",
-    "TRY301", "ANN202", "SIM114",
+    # fixme — worth fixing, just not fixed yet
+    "ANN201", "PLR0913", "ANN401", "ANN001", "PLR0911", "FBT001",
+    "ANN003", "ARG002", "ARG001", "FBT002", "N818",
 ]
 
 [tool.ruff.lint.flake8-tidy-imports.banned-api]
@@ -185,14 +200,20 @@ ignore = [
 # to upstream) so it can be pasted into another bot — it must not reach into
 # shvatka, so it manages its own background updates
 "shvatka/tgbot/utils/fastapi_webhook.py" = ["TID251"]
+# a test may reach into the object under test, hard-code a fake secret and
+# compare against a literal — that is the point of a test, not a smell
 "tests/*" = [
-    "SLF001", "PLR2004", "PLR0913", "PT004", "PT023", "PT001",
-    "PLR0915", "ARG001", "PTH123"  # fixme
+    "S105", "S106", "S311", "SLF001", "PLR2004", "PLR0913",
+    "PT004", "PT023", "PT001", "PLR0915", "ARG001", "ARG005", "PTH123",
+    "ANN202", "BLE001",  # fixme
 ]
 "tests/**/conftest.py" = ["F811"]
 "shvatka/api/*" = ["B008"]
 "**/migrations/versions/*" = ["N999"]
-"**/crawler/**parser/*" = ["PLR0912", "B904"]
+# the forum crawler is a one-shot import of another engine's HTML: it parses
+# naive local timestamps and counts columns, and nobody is going to rework it
+"**/crawler/**parser/*" = ["PLR0912", "B904", "DTZ007", "PLR2004"]
+"shvatka/infrastructure/crawler/teams/parse_teams.py" = ["DTZ007"]
 "shvatka/infrastructure/db/models/*" = ["RUF012"]
 "tests/manual/files.py" = ["T201"]
 
@@ -207,10 +228,6 @@ module = "tests.*"
 disable_error_code = ["union-attr", "arg-type"]
 
 [[tool.mypy.overrides]]
-module = "shvatka.infrastructure.di.*"
-disable_error_code = ["call-overload"]
-
-[[tool.mypy.overrides]]
 module = "shvatka.infrastructure.crawler.*"
 disable_error_code = ["union-attr", "arg-type", "index", "misc", "assignment"]
 
@@ -218,14 +235,13 @@ disable_error_code = ["union-attr", "arg-type", "index", "misc", "assignment"]
 module = "tests.manual.*"
 disable_error_code = ["import-untyped"]
 
+# still shipped without type information; matplotlib, aiogram_tests and
+# diagrams used to be here and are typed now, so they are gone from the list
 [[tool.mypy.overrides]]
 module = [
     "telegraph.*",
-    "matplotlib.*",
-    "aiogram_tests.*",
     "apscheduler.*",
     "testcontainers.*",
-    "diagrams.*",
     "pywebpush.*",
     "pillow_heif.*",
 ]

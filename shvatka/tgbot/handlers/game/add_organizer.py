@@ -1,10 +1,10 @@
-from aiogram import Router, F, Bot
+from aiogram import Bot, F, Router
 from aiogram.enums import InlineQueryResultType
 from aiogram.types import (
+    CallbackQuery,
     InlineQuery,
     InlineQueryResultArticle,
     InputTextMessageContent,
-    CallbackQuery,
 )
 from aiogram.utils.text_decorations import html_decoration as hd
 from aiogram_dialog.api.protocols import BgManagerFactory
@@ -14,11 +14,11 @@ from dishka.integrations.aiogram import inject
 from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.services.game import get_game
 from shvatka.core.services.organizers import (
-    check_allow_manage_orgs,
-    save_invite_to_orgs,
-    dismiss_to_be_org,
     agree_to_be_org,
+    check_allow_manage_orgs,
     check_game_token,
+    dismiss_to_be_org,
+    save_invite_to_orgs,
 )
 from shvatka.core.utils import exceptions
 from shvatka.core.views.game import OrgNotifier

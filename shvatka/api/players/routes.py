@@ -1,12 +1,12 @@
 import logging
 from typing import Annotated
 
-from dishka.integrations.fastapi import FromDishka
-from dishka.integrations.fastapi import inject
+from dishka.integrations.fastapi import FromDishka, inject
 from fastapi import APIRouter, HTTPException
 from fastapi.params import Body, Path, Query
 
 from shvatka.api.app.config.models.main import ApiConfig
+from shvatka.api.app.dependencies.auth import AuthProperties
 from shvatka.api.players import requests, responses
 from shvatka.api.shared import responses as shared
 from shvatka.core.interfaces.identity import IdentityProvider
@@ -15,9 +15,8 @@ from shvatka.core.players.interactors import (
     GetPlayerStatInteractor,
     SearchPlayersInteractor,
 )
-from shvatka.core.players.player import set_password, set_player_username, get_player_by_id
+from shvatka.core.players.player import get_player_by_id, set_password, set_player_username
 from shvatka.infrastructure.db.dao.holder import HolderDao
-from shvatka.api.app.dependencies.auth import AuthProperties
 
 logger = logging.getLogger(__name__)
 

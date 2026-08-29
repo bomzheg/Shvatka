@@ -1,6 +1,6 @@
-from datetime import datetime, tzinfo
 import typing
 from collections.abc import Collection, Sequence
+from datetime import datetime, tzinfo
 
 from sqlalchemy import delete, select, update
 from sqlalchemy.dialects.postgresql import insert
@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from shvatka.core.utils.datetime_utils import tz_utc
 from shvatka.infrastructure.db.models import PushSubscription
+
 from .base import BaseDAO
 
 

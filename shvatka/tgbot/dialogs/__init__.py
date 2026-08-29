@@ -1,31 +1,31 @@
 import asyncio
 
-from aiogram import Router, F
+from aiogram import F, Router
 from aiogram.enums import ChatType
 from aiogram_dialog import Dialog, setup_dialogs
-from aiogram_dialog.api.protocols import MessageManagerProtocol, BgManagerFactory
+from aiogram_dialog.api.protocols import BgManagerFactory, MessageManagerProtocol
 from aiogram_dialog.manager.message_manager import MessageManager
 from aiogram_dialog.tools import render_transitions
 
 from shvatka.tgbot.dialogs import (
-    game_orgs,
+    effects,
     game_manage,
-    player_view,
-    merge,
-    level_scn,
-    time_hint,
-    game_scn,
-    level_manage,
-    game_spy,
-    main_menu,
+    game_orgs,
     game_publish,
     game_release,
+    game_scn,
+    game_spy,
+    level_manage,
+    level_scn,
+    main_menu,
+    merge,
+    player_view,
+    profile,
+    starters,
     team_manage,
     team_view,
-    starters,
+    time_hint,
     timers,
-    effects,
-    profile,
 )
 from shvatka.tgbot.dialogs.outdated import OutdatedDialogMiddleware
 from shvatka.tgbot.dialogs.preview import render_dialogs_preview

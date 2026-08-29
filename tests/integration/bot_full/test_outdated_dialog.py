@@ -15,8 +15,7 @@ from aiogram.types import Message
 from aiogram_dialog.test_tools import BotClient, MockMessageManager
 from aiogram_dialog.test_tools.keyboard import InlineButtonTextLocator
 
-from shvatka.core.models import dto
-from shvatka.core.models import enums
+from shvatka.core.models import dto, enums
 from shvatka.core.players.player import (
     flip_permission,
     get_full_team_player,

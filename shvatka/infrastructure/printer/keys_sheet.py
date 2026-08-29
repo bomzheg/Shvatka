@@ -8,9 +8,9 @@ string before drawing it — which is what makes "as large as still fits" possib
 
 from io import BytesIO
 
+from matplotlib import font_manager
 from matplotlib.backends.backend_pdf import FigureCanvasPdf, PdfPages
 from matplotlib.figure import Figure
-from matplotlib import font_manager
 from matplotlib.font_manager import FontProperties
 from matplotlib.patches import Rectangle
 from matplotlib.textpath import TextToPath
@@ -18,11 +18,11 @@ from matplotlib.textpath import TextToPath
 from shvatka.core.scenario import dto
 from shvatka.core.scenario.adapters import KeysSheetPrinter
 from shvatka.infrastructure.printer.keys_layout import (
+    LINE_HEIGHT,
     PAGE_HEIGHT_MM,
     PAGE_WIDTH_MM,
     PT_IN_MM,
     SLIP_PADDING_MM,
-    LINE_HEIGHT,
     KeysSheetLayout,
     Page,
     Sheet,

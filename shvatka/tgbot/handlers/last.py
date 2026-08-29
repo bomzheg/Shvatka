@@ -1,8 +1,8 @@
 import logging
 import re
 
-from aiogram import types, Router
-from aiogram.filters import CommandObject, Command
+from aiogram import Router, types
+from aiogram.filters import Command, CommandObject
 
 from shvatka.tgbot.filters import GameStatusFilter
 

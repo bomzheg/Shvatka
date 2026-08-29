@@ -1,6 +1,6 @@
 from aiogram import Router
 
-from .dialogs import team_view, my_team_view
+from .dialogs import my_team_view, team_view
 
 
 def setup(router: Router):

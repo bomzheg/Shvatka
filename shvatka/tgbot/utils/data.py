@@ -1,6 +1,6 @@
 from aiogram.dispatcher.middlewares.data import MiddlewareData
 from aiogram_dialog import DialogManager
-from aiogram_dialog.api.entities import Stack, Context
+from aiogram_dialog.api.entities import Context, Stack
 from aiogram_dialog.context.storage import StorageProxy
 from dishka import AsyncContainer
 

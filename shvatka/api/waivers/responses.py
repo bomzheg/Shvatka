@@ -1,6 +1,6 @@
+from collections.abc import Iterable
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Iterable
 
 from shvatka.api.shared.responses import Game, Player, Team
 from shvatka.core.models import dto, enums

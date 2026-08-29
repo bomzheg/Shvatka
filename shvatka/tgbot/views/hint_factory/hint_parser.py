@@ -4,7 +4,7 @@ from uuid import uuid4
 
 from aiogram import Bot
 from aiogram.client.default import Default
-from aiogram.types import Message, ContentType, PhotoSize
+from aiogram.types import ContentType, Message, PhotoSize
 
 from shvatka.core.interfaces.clients.file_storage import FileStorage
 from shvatka.core.models import dto, enums

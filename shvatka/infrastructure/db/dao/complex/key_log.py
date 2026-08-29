@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from shvatka.core.games.adapters import GameKeysReader
 from shvatka.core.interfaces.dal.complex import TypedKeyGetter
 from shvatka.core.models import dto
-from shvatka.core.models.dto import Team, KeyTime
+from shvatka.core.models.dto import KeyTime, Team
 
 if typing.TYPE_CHECKING:
     from shvatka.infrastructure.db.dao.holder import HolderDao
@@ -27,7 +27,7 @@ class TypedKeyGetterImpl(TypedKeyGetter):
 
 
 class GameKeysReaderImpl(GameKeysReader):
-    def __init__(self, dao: "HolderDao"):
+    def __init__(self, dao: "HolderDao") -> None:
         self.dao = dao
 
     async def get_typed_keys_grouped(self, game: dto.Game) -> dict[Team, list[KeyTime]]:

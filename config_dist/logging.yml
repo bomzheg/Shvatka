@@ -18,7 +18,10 @@ handlers:
     formatter: simple
     stream: ext://sys.stdout
 root:
-  level: DEBUG
+  # every record is written on the event loop thread, and that thread serves
+  # every request in the process — so DEBUG here costs latency, not just noise.
+  # to debug a subsystem, raise that logger below rather than the root
+  level: INFO
   handlers: [console]
 loggers:
   pyrogram:

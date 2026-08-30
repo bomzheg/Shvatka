@@ -1,5 +1,4 @@
 from fastapi import FastAPI
-from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.middleware.cors import CORSMiddleware
 
 from shvatka.api.app.config.models.main import ApiConfig
@@ -8,7 +7,7 @@ from shvatka.api.app.middlewares.log import LoggingMiddleware
 
 def setup(app: FastAPI, config: ApiConfig) -> None:
     if config.api.enable_logging:
-        app.add_middleware(BaseHTTPMiddleware, dispatch=LoggingMiddleware())
+        app.add_middleware(LoggingMiddleware)
     if config.api.auth.disable_cors:
         patch_for_cors(app)
 

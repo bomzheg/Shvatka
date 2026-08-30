@@ -49,7 +49,7 @@ async def client(app: FastAPI):
 async def harry(dao: HolderDao, auth: AuthProperties) -> dto.Player:
     user_ = await upsert_user(create_dto_harry(), dao.user)
     player = await upsert_player(user_, dao.player)
-    password = auth.get_password_hash("12345")
+    password = await auth.get_password_hash("12345")
     await set_password(MockIdentityProvider(user=user_, player=player), password, dao.player)
     await promote(player, dao)
     return player

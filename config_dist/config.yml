@@ -27,6 +27,14 @@ db:
   login: postgres
   password: "123456"
   name: postgres
+  # one process serves the api, every telegram update and every background job,
+  # and each holds a connection for as long as its own scope lives — so these
+  # two together are the ceiling on how many of them run at once
+  # pool-size: 20
+  # max-overflow: 20
+  # pool-timeout: 30
+  # pool-recycle: 1800
+  # pool-pre-ping: false
 redis:
   url: localhost
   port: 6379
@@ -119,3 +127,15 @@ features:
   merge-team-button: false
   tg-channel-publication: false
   forum-publication: false
+
+# how closely the process watches its own event loop. every value has a default
+# that is safe during a game, so the whole section may be left out
+# monitoring:
+#   probe-interval: 0.1
+#   stall-threshold: 0.25
+#   # log the stack the loop is stuck in when it stalls. costs one thread
+#   stall-traceback: true
+#   stall-report-interval: 10
+#   # size of the pool blocking work (hashing, drawing, disk) is handed to.
+#   # left out, python sizes it itself
+#   blocking-threads: 16

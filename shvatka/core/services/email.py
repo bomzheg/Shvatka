@@ -44,7 +44,7 @@ class EmailRegisterInteractor:
         player = await self.dao.create_player_for_email(
             username=validated_username,
             email=email,
-            hashed_password=self.hasher.hash(password),
+            hashed_password=await self.hasher.hash(password),
         )
         await self.dao.commit()
         await send_new_code(email, player.id, self.store, self.sender)

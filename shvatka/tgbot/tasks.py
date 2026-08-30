@@ -38,6 +38,10 @@ RETRY_BACKOFF: typing.Final = 1.0
 MAX_RETRY_DELAY: typing.Final = 30.0
 # what telegram may recover from on its own; everything else would fail the same
 RETRIABLE_ERRORS: typing.Final = (TelegramRetryAfter, TelegramNetworkError, TelegramServerError)
+PARALLEL_TEAMS: typing.Final = 8
+"""teams shown to at once. a game start is one job with every team in it,
+and each of them is a chain of telegram calls holding a db session — so the
+fan-out is bounded rather than "however many teams signed up"."""
 
 Delivery = Callable[[], Awaitable[None]]
 
@@ -96,8 +100,9 @@ async def show_game(
     game_log: FromDishka[GameLogWriter],
     alerter: FromDishka[BotAlert],
 ) -> None:
+    parallel = asyncio.Semaphore(PARALLEL_TEAMS)
     await asyncio.gather(
-        *(_show_to_team(group, view, alerter) for group in group_by_team(tasks.view))
+        *(_show_to_team(group, view, alerter, parallel) for group in group_by_team(tasks.view))
     )
     for event in tasks.org:
         what = f"{type(event).__name__} to {len(event.orgs_list)} orgs"
@@ -107,9 +112,15 @@ async def show_game(
         await deliver(lambda e=log_event: game_log.log(e), alerter, what)  # type: ignore[misc]
 
 
-async def _show_to_team(tasks: Sequence[AnyViewTask], view: GameView, alerter: BotAlert) -> None:
-    for task in tasks:
-        await deliver(lambda t=task: view.show([t]), alerter, _describe(task))  # type: ignore[misc]
+async def _show_to_team(
+    tasks: Sequence[AnyViewTask],
+    view: GameView,
+    alerter: BotAlert,
+    parallel: asyncio.Semaphore,
+) -> None:
+    async with parallel:
+        for task in tasks:
+            await deliver(lambda t=task: view.show([t]), alerter, _describe(task))  # type: ignore[misc]
 
 
 def _describe(task: AnyViewTask) -> str:

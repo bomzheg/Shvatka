@@ -22,7 +22,7 @@ def main() -> "FastAPI":
 
     from shvatka.api.app.config.parser.main import load_config
     from shvatka.api.app.dependencies import setup_di
-    from shvatka.api.main_factory import create_app
+    from shvatka.api.main_factory import create_app, setup_loop_monitor
 
     logger.info("application modules loaded in %.2f s", time.monotonic() - started_at)
 
@@ -31,6 +31,7 @@ def main() -> "FastAPI":
     app = create_app(api_config)
     root_app = FastAPI()
     root_app.mount(api_config.api.context_path, app)
+    setup_loop_monitor(root_app, api_config)
     setup_di(root_app, "SHVATKA_API_PATH")
     logger.info("app prepared")
     return root_app

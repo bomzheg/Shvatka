@@ -1,3 +1,4 @@
+import asyncio
 from collections.abc import Sequence
 from typing import BinaryIO
 
@@ -33,10 +34,11 @@ class AllGameKeysReaderInteractor:
     async def __call__(self, game_id: int, identity: IdentityProvider) -> BinaryIO:
         game = await self.dao.get_full(game_id)
         await check_can_view_scenario(game, identity)
-        return self.view(game, self.presenter(game))
+        return await self.view(game, self.presenter(game))
 
-    def view(self, game: core.FullGame, keys: list[dto.LevelKeys]) -> BinaryIO:
-        return self.printer.print_table(self.to_table(game, keys))
+    async def view(self, game: core.FullGame, keys: list[dto.LevelKeys]) -> BinaryIO:
+        # openpyxl builds the whole workbook in memory before it writes a byte
+        return await asyncio.to_thread(self.printer.print_table, self.to_table(game, keys))
 
     def to_table(self, game: core.FullGame, keys: list[dto.LevelKeys]) -> Table:
         fields: dict[CellAddress, Cell] = {GAME_NAME: Cell(value=game.name, style=CellStyle.TITLE)}
@@ -74,10 +76,12 @@ class AllGameKeysPrintInteractor:
     async def __call__(self, game_id: int, identity: IdentityProvider) -> BinaryIO:
         game = await self.dao.get_full(game_id)
         await check_can_view_scenario(game, identity)
-        return self.view(self.presenter(game))
+        return await self.view(self.presenter(game))
 
-    def view(self, sheet: dto.KeysSheet) -> BinaryIO:
-        return self.printer.print_keys_sheet(sheet)
+    async def view(self, sheet: dto.KeysSheet) -> BinaryIO:
+        # laying out a sheet measures every string it prints, which is hundreds
+        # of them — too much to do between two turns of the event loop
+        return await asyncio.to_thread(self.printer.print_keys_sheet, sheet)
 
     def presenter(self, game: core.FullGame) -> dto.KeysSheet:
         keys: list[action.SHKey] = []

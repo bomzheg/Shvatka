@@ -217,11 +217,12 @@ Add to the list whenever you add hashing, image or document rendering, parsing
 a whole upload, or anything that touches the filesystem. `asyncio.to_thread`
 is the whole of the tool — no executor to pass, no wrapper to write.
 
-It pays off for two different reasons, and it is worth knowing which one you
-are getting. Native code (bcrypt, `hashlib`, PIL, file io) releases the gil, so
-a thread runs it *beside* the loop. Python code (matplotlib, openpyxl) does
-not, so the total cpu is unchanged — but the stall is broken into slices of
-`sys.getswitchinterval()` and the loop keeps being served, which is the point.
+"The gil means it still blocks" is the recurring objection, and it is half
+right: **throughput gains nothing**, because the gil serialises python bytecode
+either way. **Latency is the win** — the gil is released at the next bytecode
+boundary once another thread asks for it, so the loop reclaims it in
+milliseconds instead of after the whole render. The SHEP has the measurements;
+`taskset -c 0 python tests/load/gil_offload_bench.py` re-runs them.
 
 If you are unsure whether something blocks, the app will tell you: it reports
 `asyncio_loop_lag_seconds`, and logs the traceback of whatever held the loop

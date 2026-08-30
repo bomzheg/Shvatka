@@ -26,7 +26,7 @@ from shvatka.api.app.utils.web_input import (
     WebOrgNotifier,
     WebTeamNotifier,
 )
-from shvatka.api.main_factory import create_app
+from shvatka.api.main_factory import create_app, setup_loop_monitor
 from shvatka.common.config.models.paths import Paths
 from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.interfaces.nursery import Nursery
@@ -144,6 +144,7 @@ def create_root_app(paths: Paths) -> FastAPI:
 
     root_app = FastAPI()
     root_app.mount(api_config.api.context_path, app)
+    setup_loop_monitor(root_app, api_config)
     setup = partial(on_startup, dishka, webhook_config)
     root_app.router.add_event_handler("startup", setup)
     setup_dishka(dishka, root_app)

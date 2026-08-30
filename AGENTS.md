@@ -192,6 +192,41 @@ await self.sender.show_later(tasks)
   show the groups at once. Keep rendering short — shutdown cancels jobs still
   running after `drain_timeout`.
 
+## Blocking work goes to a thread
+
+**Nothing that doesn't `await` may run on the event loop.** One process on one
+event loop serves the whole app — the api and, through the webhook, every
+telegram update — so a function that occupies it for 300 ms adds 300 ms to
+every request in flight. During a game that has been measured as seconds on
+endpoints that do one indexed `COUNT`. See
+`docs/modules/shep/pages/shep-0014-event-loop-latency.adoc`.
+
+Hand it to a thread at the call boundary, and leave the function itself sync —
+it is easier to test that way:
+
+```python
+picture = await asyncio.to_thread(paint_it, game_stat, game)
+```
+
+Where it already happens: `BcryptPasswordHasher` (so `PasswordHasher` is an
+async protocol — a password is verified on *any* request whose token is missing
+or invalid, not only at login), `ResultsPainter`, both print interactors in
+`core/scenario/interactors.py`, all of `LocalFileStorage`, and `WebPushSender`.
+
+Add to the list whenever you add hashing, image or document rendering, parsing
+a whole upload, or anything that touches the filesystem. `asyncio.to_thread`
+is the whole of the tool — no executor to pass, no wrapper to write.
+
+It pays off for two different reasons, and it is worth knowing which one you
+are getting. Native code (bcrypt, `hashlib`, PIL, file io) releases the gil, so
+a thread runs it *beside* the loop. Python code (matplotlib, openpyxl) does
+not, so the total cpu is unchanged — but the stall is broken into slices of
+`sys.getswitchinterval()` and the loop keeps being served, which is the point.
+
+If you are unsure whether something blocks, the app will tell you: it reports
+`asyncio_loop_lag_seconds`, and logs the traceback of whatever held the loop
+past `monitoring.stall-threshold` (`shvatka/common/loop_monitor.py`).
+
 ## DAO layer
 
 - **Writes belong to the table's own DAO.** A DAO may run complex `SELECT`s with

@@ -2296,6 +2296,7 @@ dependencies = [
     { name = "telegraph", extra = ["aio"] },
     { name = "ujson" },
     { name = "uvicorn" },
+    { name = "uvloop", marker = "platform_python_implementation == 'CPython' and sys_platform != 'win32'" },
 ]
 
 [package.dev-dependencies]
@@ -2359,6 +2360,7 @@ requires-dist = [
     { name = "telegraph", extras = ["aio"], specifier = ">=2.2.0,<3.0" },
     { name = "ujson", specifier = ">=5.5.0,<6.0" },
     { name = "uvicorn", specifier = ">=0.30.0,<0.31.0" },
+    { name = "uvloop", marker = "platform_python_implementation == 'CPython' and sys_platform != 'win32'", specifier = ">=0.19,<1.0" },
 ]
 
 [package.metadata.requires-dev]

@@ -26,6 +26,10 @@ dependencies = [
     "apscheduler>=3.9.1,<4.0",
     "fastapi==0.111.1",
     "uvicorn>=0.30.0,<0.31.0",
+    # uvicorn only uses uvloop if it can import it, and the plain uvicorn
+    # dependency does not bring it. a single process serves every request,
+    # so its per-request overhead is on the critical path of all of them
+    "uvloop>=0.19,<1.0; sys_platform != 'win32' and platform_python_implementation == 'CPython'",
     "python-multipart>=0.0.5,<0.1.0",
     "python-jose[cryptography]>=3.3.0,<4.0",
     "passlib>=1.7.4,<2.0",

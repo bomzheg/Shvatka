@@ -78,6 +78,10 @@ came out of it*.
 | xref:shep-0013-undoing-a-false-start.adoc[SHEP-0013]
 | Undoing a false start
 | Accepted, implemented
+
+| xref:shep-0014-event-loop-latency.adoc[SHEP-0014]
+| Event loop latency
+| Accepted, partially implemented
 |===
 
 == Status vocabulary

@@ -10,6 +10,7 @@ from fastapi import FastAPI
 from httpx import ASGITransport, AsyncClient
 
 from shvatka.api.app.middlewares.log import LoggingMiddleware
+from tests.utils.logs import capture_logs
 
 LOGGER = "shvatka.api.app.middlewares.log"
 
@@ -39,17 +40,17 @@ async def test_it_passes_the_request_through(app: FastAPI):
 
 
 @pytest.mark.asyncio
-async def test_it_logs_the_request_and_the_status(app: FastAPI, caplog):
-    with caplog.at_level(logging.DEBUG, logger=LOGGER):
+async def test_it_logs_the_request_and_the_status(app: FastAPI):
+    with capture_logs(LOGGER) as logs:
         await get(app)
 
-    assert "path: /ping" in caplog.text
-    assert "status: 200" in caplog.text
+    assert "path: /ping" in logs.text
+    assert "status: 200" in logs.text
 
 
 @pytest.mark.asyncio
-async def test_it_says_nothing_when_debug_is_off(app: FastAPI, caplog):
-    with caplog.at_level(logging.INFO, logger=LOGGER):
+async def test_it_says_nothing_when_debug_is_off(app: FastAPI):
+    with capture_logs(LOGGER, logging.INFO) as logs:
         await get(app)
 
-    assert LOGGER not in caplog.text
+    assert [] == logs.records

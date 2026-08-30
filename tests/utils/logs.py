@@ -1,14 +1,20 @@
 """Capturing log records without ``caplog``.
 
-``caplog`` collects through a handler it puts on the **root** logger, and the
-app configures logging with ``logging.config.dictConfig``
-(``shvatka/common/config/parser/logging_config.py``), which replaces the root
-logger's handlers wholesale — caplog's included. Whether that happens before a
-test or during it depends on when the session-scoped ``paths`` fixture is first
-asked for, so a caplog assertion here passes or fails by test order.
+Two things in this repository make ``caplog`` unreliable, and both are global
+state a test cannot see:
 
-Listening on the logger under test instead is immune to all of it: its own
-handlers are untouched by a root reconfiguration.
+* the alembic migrations call ``logging.config.fileConfig``
+  (``shvatka/infrastructure/db/migrations/env.py``), which used to leave every
+  already-created logger with ``disabled = True`` — a disabled logger drops its
+  records whatever level or handlers it has;
+* ``setup_logging`` calls ``logging.config.dictConfig``, which replaces the
+  **root** logger's handlers wholesale, and a root handler is exactly how
+  ``caplog`` collects.
+
+Which of them has happened by the time a test runs depends on test order, so an
+assertion on ``caplog.text`` here passes or fails by where it sits in the suite.
+Listening on the logger under test, and making sure it is enabled, depends on
+neither.
 """
 
 import logging
@@ -35,11 +41,13 @@ def capture_logs(name: str, level: int = logging.DEBUG) -> Iterator[RecordingHan
     logger = logging.getLogger(name)
     handler = RecordingHandler()
     handler.setLevel(level)
-    previous = logger.level
+    was_disabled, previous_level = logger.disabled, logger.level
+    logger.disabled = False
     logger.setLevel(level)
     logger.addHandler(handler)
     try:
         yield handler
     finally:
         logger.removeHandler(handler)
-        logger.setLevel(previous)
+        logger.setLevel(previous_level)
+        logger.disabled = was_disabled

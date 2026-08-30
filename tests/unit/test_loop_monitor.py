@@ -18,6 +18,7 @@ from shvatka.api.main_factory import setup_loop_monitor
 from shvatka.common.config.models.main import Config
 from shvatka.common.config.models.monitoring import MonitoringConfig
 from shvatka.common.loop_monitor import LOOP_LAG, LOOP_STALLS, LoopMonitor
+from tests.utils.logs import capture_logs
 
 
 def lag_count() -> float:
@@ -60,14 +61,12 @@ async def test_measures_a_loop_that_is_not_blocked(config: MonitoringConfig):
 
 
 @pytest.mark.asyncio
-async def test_reports_the_stack_that_blocked_the_loop(
-    config: MonitoringConfig, caplog: pytest.LogCaptureFixture
-):
+async def test_reports_the_stack_that_blocked_the_loop(config: MonitoringConfig):
     before = stall_count()
     monitor = LoopMonitor(config)
     await monitor.start()
     try:
-        with caplog.at_level(logging.WARNING, logger="shvatka.common.loop_monitor"):
+        with capture_logs("shvatka.common.loop_monitor", logging.WARNING) as logs:
             await asyncio.sleep(config.probe_interval)
             block_the_loop(config.stall_threshold * 4)
             # the watchdog needs a turn of its own to notice, and the probe
@@ -77,8 +76,8 @@ async def test_reports_the_stack_that_blocked_the_loop(
         await monitor.stop()
 
     assert stall_count() > before, "the stall went uncounted"
-    assert "event loop blocked for" in caplog.text
-    assert "block_the_loop" in caplog.text, "the traceback does not name the culprit"
+    assert "event loop blocked for" in logs.text
+    assert "block_the_loop" in logs.text, "the traceback does not name the culprit"
 
 
 @pytest.mark.asyncio

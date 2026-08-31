@@ -69,7 +69,11 @@ came out of it*.
 
 | xref:shep-0011-player-identity-loading.adoc[SHEP-0011]
 | Loading a player without their forum account
-| Accepted, implemented
+| Accepted, partially implemented
+
+| xref:shep-0012-team-captain-by-id.adoc[SHEP-0012]
+| Carrying the team captain by id
+| Draft
 |===
 
 == Status vocabulary

@@ -1,0 +1,159 @@
+= SHEP-0012 — Carrying the team captain by id
+:navtitle: SHEP-0012 Team captain by id
+
+[cols="1,4"]
+|===
+| SHEP | 0012
+| Title | Carrying the team captain by id
+| Status | `Draft`
+| Created | 2026-08-31
+| Updated | 2026-08-31
+| Related | xref:shep-0011-player-identity-loading.adoc[SHEP-0011], PR #379
+|===
+
+== Summary
+
+`dto.Team` carries its captain as a whole `Player`, so every query that returns
+a team joins `players` and `users` for it — even though most callers only
+compare the captain's id. `teams.captain_id` is already on the row and already
+indexed. Carrying it on the dto answers every identity check for free, removes a
+latent `AttributeError` on captain-less teams, and is the precondition for ever
+dropping the join.
+
+== Context
+
+SHEP-0011 removed the forum join from the player dto. The same question asked of
+the team aggregate gives a different answer, because the cost is not one column
+— it is that `dto.Team` materialises three satellites (`captain`, `_chat`,
+`_forum_team`), and `dto.Waiver` / `dto.FullTeamPlayer` require a whole `Team`.
+
+Compiled join counts of the real option sets:
+
+[cols="4,1,4",options="header"]
+|===
+| query | joins | tables
+
+| `waiver.get_all_by_player(player)` | 8 | teams, chats, forum_teams, games, players, users
+| `waiver.get_all_by_game(game)` | 7 | teams, chats, forum_teams, players, users
+| `team_player.get_full_history(player)` | 7 | teams, chats, forum_teams, players, users
+| `team.get_team_options()` | 4 | chats, forum_teams, players, users
+| `waiver.get_all_by_team(game, team)` | 2 | players, users
+| `team_player.get_players(team)` | 2 | players, users
+|===
+
+The split is not carelessness. The two-join queries take their parent as an
+argument and fill the dto from it; the seven-join ones cannot, because the
+parent varies per row, and then the dto's required fields force the whole
+aggregate. These are all to-one joins, so the cost is width rather than row
+multiplication — a game with 20 teams × 10 players repeats each team's chat,
+forum team, captain and captain's user across 200 rows.
+
+Of the three satellites, `captain` is the one almost nobody dereferences.
+Counting the call sites:
+
+*Need only the id* — `FullTeamPlayer.is_captain`, and through it all five
+permission properties and every `TeamPlayerFilter`; `core/services/team.py`
+(three checks), `core/players/player.py:174`,
+`core/notifications/request_interactors.py:293`,
+`tgbot/filters/team_player.py:34`, `tgbot/dialogs/team_manage/getters.py:36`.
+
+*Need the rendered name* — `api/shared/responses.py` and `api/teams/responses.py`,
+`tgbot/views/team.py:28`, and three dialog templates.
+
+*Need the whole player* — the two merge handlers and `core/services/team.py:183`.
+
+There is also a bug in the current shape. `FullTeamPlayer.is_captain` reads
+
+[source,python]
+----
+return self.team.captain.id == self.player_id
+----
+
+with no `None` guard, while `dto.Team.captain` is `Player | None` and
+`TeamDao.create_by_forum` creates teams with `captain_id=None`. A member of a
+captain-less team raises `AttributeError` from any permission property.
+`tgbot/filters/team_player.py:33` guards it with an ad-hoc `assert` before making
+the same comparison, which is itself evidence that the model is awkward.
+
+== Decision
+
+=== `dto.Team` carries `captain_id`
+
+Add `captain_id: int | None`, filled from `models.Team.captain_id` — a column on
+the row already being selected, under an existing index
+(`ix__teams__captain_id`). It costs nothing to carry.
+
+Every identity check listed above reads it instead of dereferencing `captain`,
+and `is_captain` becomes total:
+
+[source,python]
+----
+@property
+def is_captain(self) -> bool:
+    return self.team.captain_id == self.player_id
+----
+
+This is worth landing on its own: it removes the `AttributeError`, deletes the
+`assert team.captain is not None` dance from the call sites, and stops the
+permission model depending on what a query happened to join.
+
+=== Rendering the captain gets its own type
+
+Following SHEP-0011: a lean `Team` plus `TeamWithCaptain(Team)` carrying
+`captain: Player`, so a caller that renders the captain says so in its
+signature and mypy rejects a lean `Team` there.
+
+The alternative — keep one `Team` and let `captain` be `None` when unloaded —
+loses the same way it would have for the forum account: `None` would mean both
+"this team has no captain" and "this query did not ask", and a page that stopped
+showing the captain would look fine.
+
+=== Dropping the join is gated on the API response
+
+`api/shared/responses.py` `Team` carries `captain` unconditionally, and that
+response is embedded in the waivers, games, players, teams and admin payloads.
+So almost every team-bearing query has a caller that renders the captain today,
+and the join cannot come out until that response is split into a lean embedded
+form and a captain-bearing one for the two places that use it — the team card
+(`team-card.component`) and the admin teams list (`admin-teams.component`).
+
+That is a `shvatka-ui` contract change, which is why it is phase 2 here rather
+than a detail of phase 1. Quietly nulling `captain` on the embedded responses is
+not an option: the UI reads `team.captain.id` for member sorting and the captain
+badge, so it would degrade silently.
+
+== Consequences
+
+* Phase 1 alone fixes a reachable crash and simplifies eight call sites, at the
+  cost of one more field on `dto.Team`. No query changes, no contract changes.
+* Once phases 2 and 3 land, the captain chain comes out of the team-bearing
+  queries: `waiver.get_all_by_game` 7 → 5, `get_all_by_player` 8 → 6,
+  `team_player.get_full_history` 7 → 5, `team.get_team_options` 4 → 2.
+* Two ways to say "who captains this team" exist during the transition —
+  `captain_id` and `captain.id`. Phase 1 should convert every identity check so
+  the second is only ever used for rendering.
+* `_chat` and `_forum_team` stay mandatory. `Team.get_chat_id()` is how the bot
+  addresses every team chat, so they have the same "needed everywhere" shape as
+  `Player._user`; see the open question in SHEP-0011.
+
+== Phases and status
+
+[cols="1,4,2",options="header"]
+|===
+| Phase | Content | Status
+
+| 1 | `captain_id` on `dto.Team`; identity checks read it; `is_captain` stops crashing on captain-less teams | ⏳ not started
+| 2 | Split the API `Team` response into embedded (lean) and captain-bearing forms; follow in `shvatka-ui` | ⏳ not started
+| 3 | `TeamWithCaptain` dto; drop the captain join from queries whose callers no longer render it | ⏳ not started
+|===
+
+== Deviations from the plan
+
+Nothing implemented yet.
+
+== Open questions
+
+Whether `models.Team.captain` should keep its relationship at all once phase 3
+lands, or whether the two merge handlers and `core/services/team.py:183` — the
+only callers wanting the whole player — should load the captain by id through
+`PlayerDao` instead. That would leave `teams` with no player join at all.

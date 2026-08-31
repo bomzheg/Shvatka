@@ -35,6 +35,8 @@ import os
 import random
 import string
 import uuid
+from collections.abc import Iterator
+from contextlib import contextmanager
 from pathlib import Path
 from typing import Any
 
@@ -203,11 +205,11 @@ class ShvatkaUser(HttpUser):
         self.login()
 
     def login(self) -> None:
-        with self.client.post(
+        with self.measured(
+            "POST",
+            "/auth/token",
             "/auth/token",
             data={"username": self.username, "password": self.password},
-            name="/auth/token",
-            catch_response=True,
         ) as resp:
             if not resp.ok:
                 resp.failure(f"login as {self.username} failed: {resp.status_code}")
@@ -220,6 +222,32 @@ class ShvatkaUser(HttpUser):
         # HttpSession is a requests.Session, so the Authorization cookie the
         # login set is carried by everything below without being passed around.
 
+    @contextmanager
+    def measured(self, method: str, url: str, name: str, **kwargs: Any) -> Iterator[Any]:
+        """A ``catch_response`` block that survives a garbage collection.
+
+        Up to locust 2.40, ``ResponseContextManager.__init__`` aliases the
+        response's ``__dict__`` instead of copying it, while ``request_meta``
+        inside that dict points back at the response — so once
+        ``HttpSession.request`` returns, the response object is reachable only
+        through that cycle. A gc pass *inside* the block collects it and clears
+        the very dict the context manager is living in, and ``__exit__`` then
+        fails with ``KeyError: 'name'`` (locustio/locust#3050, #3207). It shows
+        up as an intermittent crash under load, on python 3.13, and the pinned
+        2.39.1 has it.
+
+        Binding the response to a local keeps it reachable until the block ends,
+        which is all the cycle needs to stay uncollectable. On 2.41+, where the
+        response *is* the context manager, the line is a harmless no-op — so
+        this can go once the project's pytest pin allows a newer locust.
+        """
+        catcher = self.client.request(method, url, name=name, catch_response=True, **kwargs)
+        # Not dead code, and it has to happen here rather than inside the block:
+        # the response is already collectable the moment `request` returns.
+        _keep_reachable = catcher.request_meta["response"]
+        with catcher as response:
+            yield response
+
     def read(self, url: str, *, name: str | None = None) -> Any:
         """GET ``url``, returning the decoded body or ``None``.
 
@@ -227,7 +255,7 @@ class ShvatkaUser(HttpUser):
         under, so locust's stats line up with the Grafana panel this profile was
         built from instead of exploding into one row per id.
         """
-        with self.client.get(url, name=name or url, catch_response=True) as resp:
+        with self.measured("GET", url, name or url) as resp:
             if resp.status_code in EXPECTED_STATUSES:
                 resp.success()
                 return None
@@ -590,12 +618,7 @@ class KeySubmittingUser(ShvatkaUser):
             )
 
     def submit(self, key: str, name: str) -> None:
-        with self.client.post(
-            "/games/running/key",
-            json={"text": key},
-            name=name,
-            catch_response=True,
-        ) as resp:
+        with self.measured("POST", "/games/running/key", name, json={"text": key}) as resp:
             if resp.status_code == 422:
                 # not a load problem: the account is not waivered for this game,
                 # or no game is running. Name it so the error table says which.

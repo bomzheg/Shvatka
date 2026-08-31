@@ -139,6 +139,39 @@ the intended way to notice.
 | `SHVATKA_LOAD_KEY_SCENARIO` | `tests/load/scenario.yml` | the scenario of the game on the target |
 
 
+## A note on the locust version
+
+The lockfile pins **locust 2.39.1**, which has a bug that crashes a run at
+random on python 3.13: up to 2.40, `ResponseContextManager` aliases the
+response's `__dict__` rather than copying it, while `request_meta` inside that
+dict points back at the response — so once `HttpSession.request` returns, the
+response is reachable only through that cycle. A garbage collection inside a
+`with ... catch_response=True` block then clears the dict the context manager is
+living in, and `__exit__` dies with `KeyError: 'name'`
+([locustio/locust#3050](https://github.com/locustio/locust/issues/3050),
+[#3207](https://github.com/locustio/locust/issues/3207)).
+
+`ShvatkaUser.measured` works around it by binding the response before entering
+the block, which keeps the cycle reachable for as long as the block runs. That
+is why every request here goes through it rather than calling `self.client.get`
+directly — a plain `with self.client.get(..., catch_response=True)` in this file
+will crash under load.
+
+The workaround can go once locust can be bumped past 2.40. It cannot be bumped
+today: locust >= 2.41 requires `pytest >= 8.3.3` and this project pins
+`pytest < 8.0`, so raising the floor makes the dependencies unsatisfiable.
+Either move the suite to pytest 8 first, or declare the two groups mutually
+exclusive so uv resolves them apart:
+
+```toml
+[tool.uv]
+conflicts = [[{ group = "dev" }, { group = "test" }]]
+```
+
+That resolves (locust 2.46.4 for `dev`, pytest 7.4.4 for `test`, and CI's
+`uv sync --group test` is unaffected), at the cost of not being able to install
+both groups into one environment.
+
 ## Reading the results
 
 Requests are reported under templated names (`/games/{id}/keys`, not

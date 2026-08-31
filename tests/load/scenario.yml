@@ -1,0 +1,109 @@
+# The scenario of the game the key load is pointed at.
+#
+# This file is not decoration: the profile parses it before the run to work out
+# which keys it may submit. It holds one key of every condition back, so no
+# submission ever completes a level and the run leaves the game where it found
+# it — see tests/load/README.md.
+#
+# That guarantee only holds while this file matches the game on the target. A
+# scenario naming *fewer* keys than the real level is safe (the run just never
+# completes anything); one naming *more* is not, because a key this file thinks
+# is one of three may be the real level's only key. Replace this with the
+# scenario of the game you are testing.
+__model_version__: 1
+name: "Load test game"
+levels:
+  - id: warmup
+    __model_version__: 1
+    conditions:
+      - type: WIN_KEY
+        keys:
+          - "SHWARMUP1"
+          - "SHWARMUP2"
+          - "SHWARMUP3"
+    time_hints:
+      - time: 0
+        hint:
+          - type: text
+            text: "загадка первого уровня"
+      - time: 10
+        hint:
+          - type: text
+            text: "подсказка"
+  - id: second
+    __model_version__: 1
+    conditions:
+      - type: WIN_KEY
+        keys:
+          - "SHSECOND1"
+          - "SHSECOND2"
+          - "SHSECOND3"
+          - "SHSECOND4"
+    time_hints:
+      - time: 0
+        hint:
+          - type: text
+            text: "загадка второго уровня"
+      - time: 10
+        hint:
+          - type: text
+            text: "подсказка"
+  - id: third
+    __model_version__: 1
+    conditions:
+      - type: WIN_KEY
+        keys:
+          - "SHTHIRD1"
+          - "SHTHIRD2"
+          - "SHTHIRD3"
+      - type: EFFECTS_KEY
+        keys:
+          - "SHBONUS1"
+          - "SHBONUS2"
+        effects:
+          id: "b0a1c2d3-0000-4000-8000-000000000001"
+          level_up: false
+    time_hints:
+      - time: 0
+        hint:
+          - type: text
+            text: "загадка третьего уровня"
+      - time: 10
+        hint:
+          - type: text
+            text: "подсказка"
+  - id: fourth
+    __model_version__: 1
+    conditions:
+      - type: WIN_KEY
+        keys:
+          - "SHFOURTH1"
+          - "SHFOURTH2"
+          - "SHFOURTH3"
+    time_hints:
+      - time: 0
+        hint:
+          - type: text
+            text: "загадка четвёртого уровня"
+      - time: 10
+        hint:
+          - type: text
+            text: "подсказка"
+  - id: final
+    __model_version__: 1
+    conditions:
+      - type: WIN_KEY
+        keys:
+          - "SHFINAL1"
+          - "SHFINAL2"
+          - "SHFINAL3"
+    time_hints:
+      - time: 0
+        hint:
+          - type: text
+            text: "загадка последнего уровня"
+      - time: 10
+        hint:
+          - type: text
+            text: "подсказка"
+files: []

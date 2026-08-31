@@ -8,12 +8,17 @@ night are ``GET /notifications/unread-count``: the web client polls it, and it
 outweighs every other endpoint by more than an order of magnitude. A load test
 that spreads its calls evenly over the routes tests something the api never does.
 
-The profile is *similar*, not exact. Endpoints are grouped into the three kinds
-of client that generate them, because a rate alone doesn't reproduce the load:
-the orgs' keys/stat dashboards are a handful of clients hammering two expensive
+The profile is *similar*, not exact. Endpoints are grouped into the kinds of
+client that generate them, because a rate alone doesn't reproduce the load: the
+orgs' keys/stat dashboards are a handful of clients hammering two expensive
 queries, while the unread-count poll is hundreds of clients doing something
 cheap. Locust models that with ``fixed_count`` for the few and ``weight`` for
 the crowd.
+
+A fourth class, ``KeySubmittingUser``, types keys at the running game. It is off
+by default and its rates are a judgement call rather than a measurement — key
+traffic reached the api through the bot webhook that night, not through
+``POST /games/running/key`` — so it is kept apart from the observed weights.
 
 Run it against a *staging* copy of the api — it writes (push subscriptions, read
 marks) as the real clients do::
@@ -28,9 +33,12 @@ environment variables that name them.
 import logging
 import os
 import random
+import string
 import uuid
+from pathlib import Path
 from typing import Any
 
+import yaml
 from locust import (  # type: ignore[import, unused-ignore]
     HttpUser,
     between,
@@ -54,11 +62,134 @@ FALLBACK_GAME_ID = os.getenv("SHVATKA_LOAD_GAME_ID")
 # scenario upload — the one genuinely destructive call of the night — is skipped.
 SCENARIO_GAME_ID = os.getenv("SHVATKA_LOAD_SCENARIO_GAME_ID")
 
+# How many clients type keys at the running game, and as whom. Zero (the
+# default) spawns none: unlike everything else here, key submission needs the
+# scenario file to match the game on the target, so it is never on by accident.
+KEY_USERS = int(os.getenv("SHVATKA_LOAD_KEY_USERS", "0"))
+KEY_USERNAME = os.getenv("SHVATKA_LOAD_KEY_USERNAME", PLAYER_USERNAME)
+KEY_PASSWORD = os.getenv("SHVATKA_LOAD_KEY_PASSWORD", PLAYER_PASSWORD)
+KEY_SCENARIO_PATH = Path(
+    os.getenv("SHVATKA_LOAD_KEY_SCENARIO", str(Path(__file__).parent / "scenario.yml"))
+)
+
 # Statuses that are a legitimate answer rather than a broken server: no game is
 # running (404), the level has no files yet (404), this account is not an org of
 # the game it is looking at (403). Reporting them as failures would drown the
 # real errors on a target that simply has no game on right now.
 EXPECTED_STATUSES = (403, 404)
+
+
+KEY_CONDITIONS = ("WIN_KEY", "EFFECTS_KEY")
+WRONG_KEY_ALPHABET = string.ascii_uppercase + string.digits
+
+
+def parse_scenario(path: Path) -> list[list[set[str]]]:
+    """The key sets of every level's key conditions, in level order.
+
+    Level order is the index the api reports as ``level_number`` — it is the
+    level's position in the game, counted from zero, so the list can be indexed
+    with it directly.
+    """
+    raw = yaml.safe_load(path.read_text(encoding="utf-8"))
+    return [
+        [
+            {str(key) for key in condition.get("keys", ())}
+            for condition in level.get("conditions", ())
+            if condition.get("type") in KEY_CONDITIONS and condition.get("keys")
+        ]
+        for level in raw.get("levels", ())
+    ]
+
+
+def load_key_plan() -> tuple[list[list[set[str]]], set[str]]:
+    """Read the scenario, at import, before locust spawns anything.
+
+    Deliberately not deferred to ``test_start``: a handler that raises there is
+    logged and the run carries on, and a key run that quietly found no scenario
+    would type generated keys at a game nobody meant to load-test that way. A
+    missing or keyless file has to stop the run, so it is read where locust
+    still refuses to start.
+    """
+    if KEY_USERS <= 0:
+        return [], set()
+    levels = parse_scenario(KEY_SCENARIO_PATH)
+    all_keys = {key for level in levels for keys in level for key in keys}
+    if not all_keys:
+        msg = f"{KEY_SCENARIO_PATH} holds no key conditions — nothing to type"
+        raise RuntimeError(msg)
+    logger.info(
+        "key load: %s levels, %s keys from %s", len(levels), len(all_keys), KEY_SCENARIO_PATH
+    )
+    return levels, all_keys
+
+
+# Key conditions of the scenario, level by level: LEVEL_KEYS[n] holds the key
+# sets of level n's conditions. Empty unless key users were asked for.
+LEVEL_KEYS, ALL_SCENARIO_KEYS = load_key_plan()
+
+
+def plan_safe_keys(level_number: int | None, typed: set[str]) -> list[str]:
+    """The correct keys that can be typed without completing a level.
+
+    A condition fires when every one of its keys has been typed, so holding one
+    back keeps the level where it is however many times the rest are submitted.
+    Which one is held back depends on what the team has typed already, read from
+    the api rather than assumed — a key someone typed before the run counts
+    towards the condition just the same.
+
+    Keys already typed are always safe to send again: they are duplicates, and a
+    duplicate advances nothing. So a level the team is halfway through gives more
+    safe keys than a fresh one, not fewer. That holds even for a condition whose
+    keys have all been typed, which is why nothing special is done about one:
+    both key conditions test ``is_duplicate`` before ``_is_all_typed``, so a key
+    seen before decides ``NO_ACTION`` and never reaches the level-up branch.
+    """
+    if level_number is None or not 0 <= level_number < len(LEVEL_KEYS):
+        return []
+    safe: list[str] = []
+    for keys in LEVEL_KEYS[level_number]:
+        safe.extend(sorted(keys & typed))
+        untyped = sorted(keys - typed)
+        # the last one would complete the condition, so it is never sent
+        safe.extend(untyped[:-1])
+    return safe
+
+
+def keys_of_other_levels(level_number: int | None) -> list[str]:
+    """Scenario keys belonging to some level other than this one.
+
+    Every key of the current level is excluded, the held-back one above all: it
+    is the only thing keeping the level from advancing, and sending it as a
+    "wrong" key would complete the condition exactly as sending it as a right
+    one would. A key that appears on two levels counts as this level's.
+    """
+    if level_number is None or not 0 <= level_number < len(LEVEL_KEYS):
+        # the scenario doesn't describe the level the team is on, so it cannot
+        # say which keys are this level's — send none of them rather than guess
+        return []
+    mine = {key for keys in LEVEL_KEYS[level_number] for key in keys}
+    others = {
+        key
+        for number, level in enumerate(LEVEL_KEYS)
+        if number != level_number
+        for keys in level
+        for key in keys
+    }
+    return sorted(others - mine)
+
+
+def make_wrong_key() -> str:
+    """A key-shaped string the scenario does not contain.
+
+    It has to pass ``KEY_REGEXP`` — a wrong key is one the game rejects on its
+    own terms, and a string that isn't a key at all would be dropped before the
+    check ever runs, measuring nothing.
+    """
+    for _ in range(10):
+        key = "SH" + "".join(random.choices(WRONG_KEY_ALPHABET, k=7))
+        if key not in ALL_SCENARIO_KEYS:
+            return key
+    return "SH" + uuid.uuid4().hex[:10].upper()
 
 
 class ShvatkaUser(HttpUser):
@@ -401,6 +532,104 @@ class AdminUser(ShvatkaUser):
             f"/admin/players/{random.choice(self.player_ids)}/waiver-points",
             name="/admin/players/{id}/waiver-points",
         )
+
+
+class KeySubmittingUser(ShvatkaUser):
+    """Teams typing keys at the running game.
+
+    Off unless ``SHVATKA_LOAD_KEY_USERS`` says how many, because this is the one
+    class whose safety depends on the scenario file matching the game — see
+    ``plan_safe_keys`` and the README.
+
+    Its rates are the one **judgement call** in this file rather than a
+    measurement: key submission reached the api through the bot webhook on the
+    measured night, not through ``POST /games/running/key``, so the panel says
+    nothing about how often it was called. What is modelled is the shape of what
+    a team types — mostly keys that turn out to be wrong, some that are right,
+    and a good share of both typed more than once, because a team that finds a
+    key sends it and a team that is stuck guesses.
+    """
+
+    # `abstract` is what actually keeps it out of a run: locust reads
+    # fixed_count = 0 as "not set" and falls back to weight, which would spawn
+    # key typists against a target nobody opted in for.
+    abstract = KEY_USERS <= 0
+    fixed_count = KEY_USERS
+    wait_time = between(1, 4)
+    username = KEY_USERNAME
+    password = KEY_PASSWORD
+
+    def on_start(self) -> None:
+        super().on_start()
+        self.level_number: int | None = None
+        self.safe_correct: list[str] = []
+        self.other_level_keys: list[str] = []
+        self.refresh_plan()
+
+    def refresh_plan(self) -> None:
+        """Re-read the level and work out what is safe to type on it.
+
+        Called from a task as well as on start: the team moves between levels
+        during a run (someone playing for real, another shape of load), and the
+        plan is only safe for the level it was built from.
+        """
+        level = self.read("/games/running/level/current", name="/games/running/level/current")
+        if not level:
+            self.level_number, self.safe_correct, self.other_level_keys = None, [], []
+            return
+        self.level_number = level.get("level_number")
+        typed = {key["text"] for key in level.get("typed_keys", ()) if key.get("type_") != "wrong"}
+        self.safe_correct = plan_safe_keys(self.level_number, typed)
+        self.other_level_keys = keys_of_other_levels(self.level_number)
+        if not self.safe_correct and not self.other_level_keys:
+            logger.warning(
+                "scenario %s says nothing about level %s — typing generated keys only. "
+                "Is it the scenario of the game on the target?",
+                KEY_SCENARIO_PATH.name,
+                self.level_number,
+            )
+
+    def submit(self, key: str, name: str) -> None:
+        with self.client.post(
+            "/games/running/key",
+            json={"text": key},
+            name=name,
+            catch_response=True,
+        ) as resp:
+            if resp.status_code == 422:
+                # not a load problem: the account is not waivered for this game,
+                # or no game is running. Name it so the error table says which.
+                body = resp.json() if resp.content else {}
+                resp.failure(f"key refused: {body.get('type', resp.status_code)}")
+            elif resp.status_code in EXPECTED_STATUSES:
+                resp.success()
+
+    @task(70)
+    def wrong_key(self) -> None:
+        """A key that isn't this level's — a misread, or a guess."""
+        self.submit(make_wrong_key(), name="/games/running/key [wrong]")
+
+    @task(15)
+    def stale_key(self) -> None:
+        """A key of another level: right-looking, wrong place.
+
+        Worth its own task because it is the realistic wrong key — a real team
+        retypes what worked before far more often than it invents a string.
+        """
+        if not self.other_level_keys:
+            return
+        self.submit(random.choice(self.other_level_keys), name="/games/running/key [wrong]")
+
+    @task(15)
+    def correct_key(self) -> None:
+        """One of this level's keys — the first time a level-up candidate, then a duplicate."""
+        if not self.safe_correct:
+            return
+        self.submit(random.choice(self.safe_correct), name="/games/running/key [correct]")
+
+    @task(20)
+    def poll_level(self) -> None:
+        self.refresh_plan()
 
 
 def collect_guids(node: Any, found: list[str]) -> list[str]:

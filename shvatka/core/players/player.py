@@ -171,7 +171,7 @@ async def _join_team(
 
 
 def is_team_captain(team: dto.Team, player: dto.Player) -> bool:
-    return team.captain is not None and team.captain.id == player.id
+    return team.is_captain(player.id)
 
 
 async def get_checked_player_on_team(

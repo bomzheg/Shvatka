@@ -23,6 +23,15 @@ class Team:
         self._chat = chat
         self._forum_team = forum_team
 
+    def is_captain(self, player_id: int) -> bool:
+        """Whether this player captains the team.
+
+        A team may have no captain at all — ``TeamDao.create_by_forum`` creates
+        one that way — so the question is answered here rather than by
+        dereferencing ``captain`` at each call site.
+        """
+        return self.captain is not None and self.captain.id == player_id
+
     def __eq__(self, other) -> bool:
         if not isinstance(other, Team):
             return False

@@ -290,7 +290,7 @@ class CreateTeamMergeRequestInteractor:
         captain = await identity.get_required_player()
         primary = await get_team_by_id(primary_team_id, self.team_dao)
         secondary = await get_team_by_id(secondary_team_id, self.team_dao)
-        if primary.captain is None or primary.captain.id != captain.id:
+        if not primary.is_captain(captain.id):
             raise RequestPermissionError(player=captain, team=primary)
         existing = await self.requests.get_pending(
             type_=RequestType.team_merge, team_id=primary.id

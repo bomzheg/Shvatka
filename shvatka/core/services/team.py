@@ -41,9 +41,9 @@ async def create_team(
     try:
         await dao.check_no_team_in_chat(chat)
     except exceptions.AnotherTeamInChat as e:
-        if not e.team or not e.team.captain:
+        if not e.team:
             raise
-        if e.team.captain.id == captain.id:
+        if e.team.is_captain(captain.id):
             team = e.team
             created = False
         else:
@@ -181,7 +181,7 @@ async def change_captain(
             doc_page=DocPage.CHANGE_CAPTAIN,
         )
     old_captain = team.captain
-    if old_captain is not None and old_captain.id == new_captain_id:
+    if team.is_captain(new_captain_id):
         raise exceptions.TeamError(
             team=team,
             player=actor,
@@ -226,8 +226,7 @@ def check_can_change_chat(team: dto.Team, captain: dto.FullTeamPlayer):
             team=team, player=captain.player, notify_user="Вы не игрок этой команды"
         )
     assert captain.player is not None
-    assert team.captain is not None
-    if team.captain.id == captain.player.id:
+    if team.is_captain(captain.player.id):
         return
     raise PermissionsError(
         permission_name="change_chat",  # TODO
@@ -250,8 +249,7 @@ def assert_can_change_name(team: dto.Team, captain: dto.FullTeamPlayer) -> None:
             team=team, player=captain.player, notify_user="Вы не игрок этой команды"
         )
     assert captain.player is not None
-    assert team.captain is not None
-    if team.captain.id == captain.player.id:
+    if team.is_captain(captain.player.id):
         return
     if captain.can_change_team_name:
         return

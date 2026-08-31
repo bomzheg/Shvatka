@@ -5,7 +5,7 @@
 |===
 | SHEP | 0012
 | Title | Carrying the team captain by id
-| Status | `Draft`
+| Status | `Accepted, partially implemented`
 | Created | 2026-08-31
 | Updated | 2026-08-31
 | Related | xref:shep-0011-player-identity-loading.adoc[SHEP-0011], PR #379
@@ -77,25 +77,25 @@ the same comparison, which is itself evidence that the model is awkward.
 
 == Decision
 
-=== `dto.Team` carries `captain_id`
+=== One place asks who the captain is
 
-Add `captain_id: int | None`, filled from `models.Team.captain_id` — a column on
-the row already being selected, under an existing index
-(`ix__teams__captain_id`). It costs nothing to carry.
-
-Every identity check listed above reads it instead of dereferencing `captain`,
-and `is_captain` becomes total:
+`dto.Team` answers `is_captain(player_id)` itself, and every identity check
+listed above calls it instead of dereferencing `captain`:
 
 [source,python]
 ----
-@property
-def is_captain(self) -> bool:
-    return self.team.captain_id == self.player_id
+def is_captain(self, player_id: int) -> bool:
+    return self.captain is not None and self.captain.id == player_id
 ----
 
 This is worth landing on its own: it removes the `AttributeError`, deletes the
-`assert team.captain is not None` dance from the call sites, and stops the
-permission model depending on what a query happened to join.
+`assert team.captain is not None` dance from the call sites, and gives the later
+phases one method to change instead of eight.
+
+Carrying `captain_id` on the dto — filled from the `teams.captain_id` column,
+under the existing `ix__teams__captain_id`, so the check needs no join — is what
+makes the join droppable. It lands with the split in phase 3 rather than on its
+own; see the deviations below for why.
 
 === Rendering the captain gets its own type
 
@@ -142,14 +142,36 @@ badge, so it would degrade silently.
 |===
 | Phase | Content | Status
 
-| 1 | `captain_id` on `dto.Team`; identity checks read it; `is_captain` stops crashing on captain-less teams | ⏳ not started
+| 1 | `Team.is_captain(player_id)` replaces eight hand-written checks and stops crashing on captain-less teams | ✅ done in PR #393
 | 2 | Split the API `Team` response into embedded (lean) and captain-bearing forms; follow in `shvatka-ui` | ⏳ not started
-| 3 | `TeamWithCaptain` dto; drop the captain join from queries whose callers no longer render it | ⏳ not started
+| 3 | `captain_id` on `dto.Team`, `TeamWithCaptain` for the renderers, and drop the captain join | ⏳ not started
 |===
 
 == Deviations from the plan
 
-Nothing implemented yet.
+`captain_id` moved out of phase 1 into phase 3. It first landed in phase 1 as a
+second field beside `captain`, which needed a consistency assert to keep the two
+from disagreeing — an awkward shape to carry for a benefit no query could take
+yet, since nothing may go lean before phase 2.
+
+Splitting the dto instead (a lean `Team` plus `TeamWithCaptain`) was then tried
+on its own, ahead of phase 2, and does not decompose: `dto.Waiver`,
+`dto.FullTeamPlayer`, `dto.KeyTime` and `dto.LevelTime` all embed a whole
+`Team`, and `api/shared/responses.py` renders the captain off every one of them.
+Requiring `TeamWithCaptain` on those aggregates spreads to every function that
+builds one, and from there to every caller holding a team. Each round of
+retyping produced more errors rather than fewer — 18, then 59, 75, 112 — because
+the requirement is viral, not because any one site was wrong. The response split
+has to come first; the phase order was right.
+
+Phase 1 therefore ships only `Team.is_captain(player_id)`: eight call sites were
+doing the same two-part check — a `None` test and an id comparison — and three
+of them wrote it as an `assert` plus a comparison. One method removes the crash
+and gives phases 2 and 3 a single place to change.
+
+`core/services/team.py` `change_captain` still reads `team.captain` for the
+`CaptainChanged` notification, which renders the old captain's name. Only its
+guard moved to `is_captain`.
 
 == Open questions
 

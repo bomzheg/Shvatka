@@ -10,4 +10,5 @@
 ** xref:shep-0009-key-submission-latency.adoc[SHEP-0009 Key submission latency]
 ** xref:shep-0010-message-outbox.adoc[SHEP-0010 Message outbox]
 ** xref:shep-0011-player-identity-loading.adoc[SHEP-0011 Player identity loading]
+** xref:shep-0012-team-captain-by-id.adoc[SHEP-0012 Team captain by id]
 ** xref:template.adoc[SHEP template]

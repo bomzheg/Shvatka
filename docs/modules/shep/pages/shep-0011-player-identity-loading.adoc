@@ -115,7 +115,8 @@ unchanged.
 | Phase | Content | Status
 
 | 1 | Split the dto, add `get_identities_by_id`, drop the join from the bulk queries | ✅ done in PR #379
-| 2 | Same treatment for `models.Player.user` where only `username` is read | ⏳ not started
+| 2 | Same treatment for `models.Player.user` | ❌ not worth it — see the open question
+| 3 | Identify a player by username alone in `export_stat`, then drop the join from `log_keys` | ⏳ not started
 |===
 
 == Deviations from the plan
@@ -127,6 +128,27 @@ splitting it in two to save one more join was not worth the duplication.
 
 == Open questions
 
-Whether `_user` deserves the same split. It is read far more widely — every bot
-player card links to the telegram account — but list endpoints that render only
-`username` do not need it either. Phase 2 above.
+Whether `_user` deserves the same split — investigated, and the answer is no.
+The forum account had six consumers; the telegram one has around forty-six,
+spread across the whole bot view and notification layer, and the hot path needs
+it: `ApiIdentityProvider.get_user()` derives the API's current `dto.User`
+entirely from `player._user`, so `get_by_id` cannot drop it the way it dropped
+the forum join. Checked one by one, every bulk query's player is either linked
+or messaged by some bot view — `file_info.author` through
+`file_gateway.upload_to_tg`, `team.captain` and `team_player.player` through the
+player cards, `organizer.player` and `game.author` through their notifications.
+
+The one exception is `log_keys`: the telegraph log renders `name_mention` only.
+It is blocked because the same query feeds the zip export, and
+`export_stat.Player.from_dto` still reads `has_user()` for its `tg_user_id`
+identity. Dropping that branch the way the `forum_name` branch was dropped —
+`players.username` is unique and non-null since `d4ddc1efb2ff` — unblocks four
+eager-load sites. That is phase 3; it is small, and worth doing only alongside
+other work in the same files.
+
+A type split would also invert badly here: `PlayerWithTg` would be the dominant
+type in the bot and a bare `Player` the exception, which is the signal that the
+split is the wrong way round.
+
+The team aggregate is the better target, and moved to
+xref:shep-0012-team-captain-by-id.adoc[SHEP-0012].

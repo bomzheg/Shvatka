@@ -144,7 +144,6 @@ class WaiverDao(BaseDAO[models.Waiver]):
                 joinedload(models.Waiver.team)
                 .joinedload(models.Team.captain)
                 .joinedload(models.Player.user),
-                joinedload(models.Waiver.team).joinedload(models.Team.captain),
             )
             .where(
                 models.Waiver.game_id == game.id,

@@ -6,7 +6,6 @@ from itertools import pairwise
 from shvatka.core.interfaces.dal.player import (
     PlayerByIdGetter,
     PlayerByUserIdGetter,
-    PlayerIdentitiesGetter,
     PlayerPromoter,
     PlayerTeamChecker,
     PlayerUpserter,
@@ -72,12 +71,6 @@ async def get_my_team(player: dto.Player, dao: PlayerTeamChecker) -> dto.Team | 
 
 async def get_player_by_id(id_: int, dao: PlayerByIdGetter) -> dto.Player:
     return await dao.get_by_id(id_)
-
-
-async def get_player_identities_by_id(
-    id_: int, dao: PlayerIdentitiesGetter
-) -> dto.PlayerWithForum:
-    return await dao.get_identities_by_id(id_)
 
 
 async def get_player_by_user_id(user_id: int, dao: PlayerByUserIdGetter) -> dto.Player:

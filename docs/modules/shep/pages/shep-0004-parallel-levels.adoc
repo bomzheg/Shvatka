@@ -7,7 +7,7 @@
 | Title | Parallel levels
 | Status | `Draft` — the model is agreed in issue #217; nothing is implemented
 | Created | 2026-08-12
-| Updated | 2026-08-12
+| Updated | 2026-08-31
 | Related | issue #217, PR #320
 |===
 
@@ -16,8 +16,9 @@
 A team can work several levels at once. Its position stops being "the level it
 is on" and becomes *a set of open branches*; a branch that closes points at a
 target — another level, or the finish — and *a target opens when no open branch
-can still reach it*. The finish is an ordinary target, which is what makes the
-two motivating mechanics one mechanism instead of two.
+can still reach it*. A target outlives the branch that pointed at it, which is
+what joins two branches back into one. The finish is an ordinary target, which
+is what makes the two motivating mechanics one mechanism instead of two.
 
 The immediate payoff is the *полевой + мозговой* level, today written as a single
 level whose puzzle says «полю: … мозгу: …» and whose win condition needs both
@@ -130,6 +131,12 @@ One new column: *`levels_times.finished_at`*, nullable. Open branches are the
 rows where it is null. A branch is closed when it is *left*, not when the next
 one starts — which is what makes a duration meaningful once two branches overlap.
 
+A team also carries a second set — the targets nominated by its closed branches
+and not yet opened, described under <<nomination>> below. Whether that is a
+further column on `levels_times` (the target a closing branch pointed at, plus
+whether it has been discharged) or a table of its own is a storage question,
+settled alongside the `finished_at` migration in phase 1.
+
 === The one rule
 
 A closing branch *points at a target* — a level, or the finish.
@@ -191,6 +198,24 @@ The finish being an ordinary target is what unifies these. It also replaces
 `has_finished`: a team is finished when it has *no open branches*, not when a
 level number ran off the end of the list.
 
+[[nomination]]
+==== Nomination: which levels are candidates
+
+Read literally, "a target opens when no open branch can still reach it" is true
+of most of the game — no open branch reaches level 9 either, and nothing should
+open it. The rule is evaluated only over *nominated* targets:
+
+* a closing branch *nominates* its target;
+* the nomination is *discharged* — the target opens, as one new branch — as soon
+  as no open branch can still reach it;
+* two branches nominating the same level nominate it once. `6` opens once, as a
+  single `levels_times` row, whichever arm closes last.
+
+*A nomination outlives the branch that made it.* That is the entire join
+mechanism: 5a's nomination of 6 sits in the set while 5b runs, and is discharged
+by 5b closing — not by anything 5a does. Nothing in the scenario declares a join;
+two arms naming the same target is the declaration.
+
 ==== Reachability
 
 "Can still reach" is computed over the routing graph of the scenario — the same
@@ -199,6 +224,61 @@ graph the front-end already builds for the scenario view
 allowed in the engine (see the `allow_level_times_cycles` migration), and a cycle
 upstream of a barrier can leave a target permanently reachable-but-never-reached.
 That deadlock is a real risk and is left open below.
+
+==== The rule in five shapes
+
+Take a fork from 4 into 5a and 5b. What the author writes on the arms is the
+whole of the design; the engine adds nothing.
+
+*1. Both arms name the same target — a join.*
+
+[source]
+----
+4:  {"level_up": true, "next_level": ["5a", "5b"]}
+5a: {"level_up": true, "next_level": ["6"]}
+5b: {"level_up": true, "next_level": ["6"]}
+----
+
+5a closes at +20 and nominates 6; 5b is open and reaches 6, so 6 waits and the
+position is `{5b}`. 5b closes at +50; nothing open reaches 6, so 6 opens.
+Position `{6}`. This is *полевой + мозговой* — the two arms are written
+identically, and neither of them mentions the other.
+
+*2. The arms name different targets — no join.* 5a → `["6"]`, 5b → `["7"]`.
+
+5a closes, nominating 6. The only open branch is 5b, whose chain runs
+`5b → 7 → …` and never touches 6, so the nomination discharges *at once*:
+position `{5b, 6}`. Symmetrically, 5b first gives `{5a, 7}`. This is *одинокий
+рыцарь* — the chains never name a common level, so neither ever waits, and they
+meet only at the finish.
+
+*3. A target held from further upstream.* 5a → `["6"]`, 5b → `["5b2"]`,
+5b2 → `["6"]`.
+
+When 5a closes, 6 is reachable from 5b *transitively*, through 5b2, so 6 waits
+out the whole `5b → 5b2` chain. The barrier is not "every level that names 6 has
+closed" — it is reachability in the graph, and a level two hops upstream holds 6
+just as hard as a direct pointer does.
+
+*4. An arm with an exit that leaves the join.* 5a → `["6"]`; on 5b, one key
+→ `["6"]` and another → `["7"]`.
+
+The team closes 5a, nominating 6, which waits because 5b names it. Then on 5b it
+submits the *second* key. Branch 5b closes and nominates 7. The position is now
+empty, so both nominations discharge: 7 opens — and *so does 6*, because 5a's
+nomination is still in the set and nothing can reach 6 any more. The team lands
+on `{6, 7}`.
+
+Taking the other exit does not retract the sibling's nomination; this model has
+no cancellation. If the author meant "the second key skips 6 entirely", the
+shape does not express it — see the open question below. If 7's own chain leads
+back to 6, the outcome differs again: 6 stays held until that chain closes, and
+joins there instead.
+
+*5. The finish.* `next_level: []` nominates the finish, and discharge is the same
+computation. So a team is finished exactly when its last branch closes and no
+nomination puts it back on a level — shape 4 is precisely the case where one
+does.
 
 === Scenario language
 
@@ -253,8 +333,16 @@ uniqueness *within* a level. With parallel branches that is no longer enough:
 
 * *keys must be unique across levels that can be open simultaneously* — decidable
   statically from the fork graph, and what lets a submitted key be routed to a
-  branch with no player input;
+  branch with no player input. "Simultaneously open" has to be computed by
+  following the graph forward from every fork, not by comparing the arms: shape 2
+  above leaves `{5b, 6}` open together, and those two are not siblings;
 * *fork targets must exist* — every `name_id` in `next_level` resolves;
+* *arms that converge nowhere* — a fork whose arms nominate disjoint, mutually
+  unreachable targets is legitimate (*одинокий рыцарь*) but is also exactly what a
+  mistyped join looks like. Warn, do not refuse;
+* *an arm that can leave a sibling's join* — shape 4. Statically detectable: an
+  exit of one arm that reaches no target nominated by another arm. Warn, because
+  the outcome (both targets open at once) is rarely the picture the author had;
 * *barrier reachability* — refuse, or at least warn about, a target sitting
   behind a cycle such that it can never satisfy the rule.
 
@@ -401,8 +489,8 @@ element — so they can land before the rest of this document is settled.
 | Phase | Content | Status
 
 | 1
-| `finished_at` + backfill migration; position as a set through the DAO and
-  interactors
+| `finished_at` + backfill migration; storage for nominated targets; position as
+  a set through the DAO and interactors
 | ⏳ not started
 
 | 2
@@ -433,6 +521,15 @@ Nothing implemented yet. Filled in as the phases land.
 
 == Open questions
 
+* *Nominations cannot be retracted.* Shape 4 lands the team on both targets.
+  Keep that as the semantics and warn in validation, or give an arm a way to
+  cancel a sibling's nomination — which needs the notion of a fork group, the
+  thing the <<alternatives,level container>> alternative was rejected for? Needs
+  an answer before phase 3 freezes the model.
+* *Discharging onto a level that is already open.* A cycle, or two nominations
+  separated in time, can discharge onto a level the team currently has open.
+  A second branch on the same level means two hint timelines and colliding keys,
+  so the proposal is that it is a no-op — but it has to be decided, not assumed.
 * *Cycles plus barriers can deadlock.* Refuse such scenarios in validation, or
   detect at runtime and force the target open? Needs an answer before phase 4.
 * *Does barrier waiting time count?* Proposal: yes. The total is wall-clock so it

@@ -1,0 +1,132 @@
+= SHEP-0011 — Loading a player without their forum account
+:navtitle: SHEP-0011 Player identity loading
+
+[cols="1,4"]
+|===
+| SHEP | 0011
+| Title | Loading a player without their forum account
+| Status | `Accepted, implemented`
+| Created | 2026-08-27
+| Updated | 2026-08-27
+| Related | PR #379
+|===
+
+== Summary
+
+Every query that loaded a player also joined `forum_users`, even though only the
+profile, the admin panel, global search and the merge flow ever read the forum
+account. The forum identity moves out of `dto.Player` into a separate
+`dto.PlayerWithForum`, so the type says which queries paid for the join — and
+the ~30 bulk queries that never needed it stop joining the table.
+
+== Context
+
+`models.Player.to_dto_user_prefetched()` filled both `user` and `forum_user`,
+and 42 eager-load sites across 11 DAO modules asked for both. That was not
+defensive by accident: `dto.Player` had no way to express "this relation was
+not loaded", so `_forum_user is None` meant both "no forum account" and "we did
+not ask". Loading it everywhere made the two indistinguishable but always safe.
+
+What actually reads the forum identity is narrow:
+
+* `api/players/responses.py` `PlayerWithIdentities` — `/me` and the profile;
+* `api/admin/responses.py` `AdminPlayer` — the admin player list and card;
+* `core/players/player.py` `merge_players` — refuses a second forum account;
+* `core/search/interactors.py` `classify_player_hit` — the `forum_name` hit;
+* `tgbot/dialogs/main_menu` — offers linking a forum account to players without one;
+* `Player.name_mention` — a forum-imported dummy with no real username.
+
+Nothing else: the shared `api/shared/responses.py` `Player` (game authors, team
+captains, poll entries) reads only `id`, `can_be_author`, `name_mention` and
+`username`, and every bot view builds player cards from `username` and the
+telegram link.
+
+Two things made the join redundant rather than merely unused. Migration
+`d4ddc1efb2ff` backfilled `players.username` for every row
+(`coalesce(tg username, forum name, 'id'||id)`), and every creation path since
+sets it through `get_free_and_associated_username`. So `name_mention` returns
+the username without consulting either identity, and a forum-only player is
+already found by their username.
+
+The cost was worst on the hottest path: `PlayerDao.get_by_id`, called for every
+authenticated API request from `api/app/dependencies/auth.py`, used two
+`selectinload` options — three roundtrips to answer a question that almost
+every endpoint asks only for an id.
+
+== Decision
+
+=== The forum identity lives on its own dto
+
+`dto.Player` keeps `_user` and drops `forum_user`, `has_forum_user()` and
+`get_forum_name()`. `dto.PlayerWithForum(Player)` adds a public `forum_user`
+field and those two accessors back, plus the `name_mention` branch for a
+forum-imported dummy.
+
+A subclass, not a sentinel on `Player`: a caller that needs the forum account
+now says so in its signature, and mypy rejects a plain `Player` there. The
+alternative — a `NOT_LOADED` marker so `has_forum_user()` could raise on an
+unloaded player — keeps one type but moves the check to runtime, and every
+consumer would have to be trusted to trigger it.
+
+=== Two ways to load a player by id
+
+`PlayerDao.get_by_id` loads the telegram user only, with `joinedload` — one
+statement instead of three. `PlayerDao.get_identities_by_id` loads both and
+returns `PlayerWithForum`; `core/interfaces/dal/player.py` exposes it as
+`PlayerIdentitiesGetter`, and `PlayerMergeOperandsGetter` composes both for the
+interactors that need each.
+
+`IdentityProvider.get_player()` keeps returning a plain `Player`. `/me` is the
+one endpoint that renders the forum account, so it pays for a second lookup
+instead of every authenticated request carrying the join.
+
+=== The bot asks for the flag, not the account
+
+The main menu offers "Былые свершения" only to players without a forum account.
+`ForumUserDAO.exists_for_player` answers that with one indexed lookup and the
+getter passes `has_forum_user` to the window, rather than the dialog reaching
+into the player dto.
+
+=== Exports identify a player by username
+
+`export_stat.Player.from_dto` loses its `forum_name` fallback: the username
+branch already covers a forum-only player, since the backfill derived their
+username from the forum name. `PlayerIdentity.forum_name` stays — the crawler
+still produces it and the loader still resolves it, so old exports import
+unchanged.
+
+== Consequences
+
+* Every list of games, levels, waivers, key logs, organizers, team players and
+  files loses one `LEFT OUTER JOIN forum_users`, and each authenticated API
+  request loses two roundtrips.
+* `/me` and the admin player card cost one extra query. That is the trade: the
+  rare endpoint pays instead of the common one.
+* Adding a forum read to a bulk path is now a visible type change rather than a
+  silent `None`.
+* A forum-imported dummy whose username is still the `id{N}` placeholder is
+  mentioned as `dummy-{id}` on paths that load a plain `Player`.
+  `renew_id_usernames` exists to remove those placeholders.
+
+== Phases and status
+
+[cols="1,4,2",options="header"]
+|===
+| Phase | Content | Status
+
+| 1 | Split the dto, add `get_identities_by_id`, drop the join from the bulk queries | ✅ done in PR #379
+| 2 | Same treatment for `models.Player.user` where only `username` is read | ⏳ not started
+|===
+
+== Deviations from the plan
+
+`PlayerDao.search_players` keeps the forum join and returns `PlayerWithForum`
+for both its callers, including the public player search which discards it. The
+query is admin-shaped and already outer-joins `users` and `email_accounts`;
+splitting it in two to save one more join was not worth the duplication.
+
+== Open questions
+
+Whether `_user` deserves the same split. It is read far more widely — every bot
+player card links to the telegram account — but list endpoints that render only
+`username` do not need it either. Phase 2 above.

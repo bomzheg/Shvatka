@@ -11,6 +11,7 @@ from shvatka.core.interfaces.dal.player import (
     PlayerByIdGetter,
     PlayerByUserIdGetter,
     PlayerDeleter,
+    PlayerIdentitiesGetter,
     PlayerWaiversGetter,
     TeamPlayerHistoryCleaner,
     TeamPlayerHistoryGetter,
@@ -43,7 +44,7 @@ class PlayerSearcher(Protocol):
         active: bool = True,
         archive: bool = False,
         can_be_author: bool | None = None,
-    ) -> list[dto.Player]:
+    ) -> list[dto.PlayerWithForum]:
         raise NotImplementedError
 
 
@@ -90,8 +91,8 @@ class PlayerMerger(
     pass
 
 
-class AdminPlayerReader(PlayerByIdGetter, EmailByPlayerIdReader, Protocol):
-    """Load a player by id together with their email account."""
+class AdminPlayerReader(PlayerIdentitiesGetter, EmailByPlayerIdReader, Protocol):
+    """Load a player by id together with their email and forum accounts."""
 
 
 class AdminEmailSetter(PlayerByIdGetter, Committer, Protocol):
@@ -105,13 +106,22 @@ class AdminEmailSetter(PlayerByIdGetter, Committer, Protocol):
 
 
 class AdminUsernameSetter(
-    PlayerUsernameChanger, PlayerByIdGetter, EmailByPlayerIdReader, Protocol
+    PlayerUsernameChanger,
+    PlayerByIdGetter,
+    PlayerIdentitiesGetter,
+    EmailByPlayerIdReader,
+    Protocol,
 ):
     """Set the username of an arbitrary player, plus reload them by id."""
 
 
 class AdminTgChanger(
-    UserUpserter, PlayerByIdGetter, PlayerByUserIdGetter, EmailByPlayerIdReader, Protocol
+    UserUpserter,
+    PlayerByIdGetter,
+    PlayerIdentitiesGetter,
+    PlayerByUserIdGetter,
+    EmailByPlayerIdReader,
+    Protocol,
 ):
     async def unlink_user(self, player: dto.Player) -> None:
         raise NotImplementedError
@@ -120,7 +130,7 @@ class AdminTgChanger(
         raise NotImplementedError
 
 
-class AdminPlayerMerger(PlayerMerger, PlayerByIdGetter, Protocol):
+class AdminPlayerMerger(PlayerMerger, PlayerByIdGetter, PlayerIdentitiesGetter, Protocol):
     """Merge one player into another, plus load both by id."""
 
 

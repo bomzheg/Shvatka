@@ -112,7 +112,7 @@ main_menu = Dialog(
             Const("🔮Былые свершения"),
             id="to_merge_player",
             state=states.MergePlayersSG.main,
-            when=~F["player"].has_forum_user(),
+            when=~F["has_forum_user"],
         ),
         Cancel(Const("❌Закрыть")),
         # ачивки
@@ -120,6 +120,7 @@ main_menu = Dialog(
         getter=get_main,
         preview_data={
             "player": PREVIEW_AUTHOR,
+            "has_forum_user": False,
             "game": PREVIEW_SIMPLE_GAME,
             "org": PREVIEW_ORG,
             "team": PREVIEW_TEAM,

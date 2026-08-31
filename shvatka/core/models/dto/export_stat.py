@@ -41,12 +41,8 @@ class Player:
             player_tg_id = player.get_chat_id()
             assert player_tg_id is not None
             return Player(tg_user_id=player_tg_id, identity=PlayerIdentity.tg_user_id)
-        elif player.has_forum_user():
-            player_name = player.get_forum_name()
-            assert player_name is not None
-            return Player(forum_name=player_name, identity=PlayerIdentity.forum_name)
         else:
-            raise RuntimeError("player without user, forum_user and username")
+            raise RuntimeError("player without user and username")
 
 
 @dataclass

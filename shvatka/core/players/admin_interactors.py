@@ -41,7 +41,7 @@ class AdminSearchPlayersInteractor:
         active: bool = True,
         archive: bool = False,
         can_be_author: bool | None = None,
-    ) -> list[dto.Player]:
+    ) -> list[dto.PlayerWithForum]:
         admin = await identity.get_superuser()
         logger.warning(
             "admin %s searched players (username=%s, name=%s, can_be_author=%s)",
@@ -66,7 +66,7 @@ class AdminGetPlayerInteractor:
     async def __call__(self, identity: IdentityProvider, player_id: int) -> PlayerIdentitiesInfo:
         admin = await identity.get_superuser()
         logger.warning("admin %s viewed player %s", admin.id, player_id)
-        player = await self.dao.get_by_id(player_id)
+        player = await self.dao.get_identities_by_id(player_id)
         email = await self.dao.get_email_by_player_id(player.id)
         return PlayerIdentitiesInfo(player=player, email=email)
 
@@ -112,7 +112,7 @@ class AdminSetPlayerUsernameInteractor:
         if normalized is None:
             raise exceptions.PlayerInvalidUsername(text=f"invalid username {username}")
         await set_player_username(player, normalized, self.dao)
-        updated = await self.dao.get_by_id(player.id)
+        updated = await self.dao.get_identities_by_id(player.id)
         email = await self.dao.get_email_by_player_id(updated.id)
         return PlayerIdentitiesInfo(player=updated, email=email)
 
@@ -142,7 +142,7 @@ class AdminChangePlayerTgInteractor:
         await self.dao.unlink_user(player)
         await self.dao.link_user(player, saved)
         await self.dao.commit()
-        updated = await self.dao.get_by_id(player.id)
+        updated = await self.dao.get_identities_by_id(player.id)
         email = await self.dao.get_email_by_player_id(updated.id)
         return PlayerIdentitiesInfo(player=updated, email=email)
 
@@ -182,7 +182,7 @@ class AdminMergePlayersInteractor:
             raise exceptions.MergeError(
                 player_id=primary_id, notify_user="нельзя объединить игрока с самим собой"
             )
-        primary = await self.dao.get_by_id(primary_id)
-        secondary = await self.dao.get_by_id(secondary_id)
+        primary = await self.dao.get_identities_by_id(primary_id)
+        secondary = await self.dao.get_identities_by_id(secondary_id)
         await merge_players(primary, secondary, self.game_log, self.dao, timeline=timeline)
         return await self.dao.get_by_id(primary_id)

@@ -16,6 +16,7 @@ async def get_main(
     current_game: FromDishka[CurrentGameProvider],
     identity: FromDishka[TgBotIdentityProvider],
     interactor: FromDishka[GamePlayRoleReader],
+    dao: FromDishka[HolderDao],
     **_,
 ):
     game = await current_game.get_game()
@@ -32,6 +33,7 @@ async def get_main(
 
     return {
         "player": player,
+        "has_forum_user": await dao.forum_user.exists_for_player(player.id),
         "game": game,
         "org": org,
         "team": team,

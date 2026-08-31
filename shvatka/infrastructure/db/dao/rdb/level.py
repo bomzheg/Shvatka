@@ -92,10 +92,7 @@ class LevelDao(BaseDAO[models.Level]):
     async def get_by_id(self, id_: int) -> dto.Level:
         level = await self._get_by_id(
             id_,
-            (
-                joinedload(models.Level.author).joinedload(models.Player.user),
-                joinedload(models.Level.author).joinedload(models.Player.forum_user),
-            ),
+            (joinedload(models.Level.author).joinedload(models.Player.user),),
         )
         return level.to_dto(level.author.to_dto_user_prefetched())
 
@@ -114,11 +111,9 @@ class LevelDao(BaseDAO[models.Level]):
                 .joinedload(models.Game.author)
                 .options(
                     joinedload(models.Player.user),
-                    joinedload(models.Player.forum_user),
                 ),
                 joinedload(models.Level.author).options(
                     joinedload(models.Player.user),
-                    joinedload(models.Player.forum_user),
                 ),
             )
             .where(
@@ -207,7 +202,6 @@ class LevelDao(BaseDAO[models.Level]):
             )
             .options(
                 joinedload(models.Level.author).joinedload(models.Player.user),
-                joinedload(models.Level.author).joinedload(models.Player.forum_user),
             )
         )
         level: models.Level = result.scalar_one()

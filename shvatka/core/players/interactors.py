@@ -66,7 +66,7 @@ class SearchPlayersInteractor:
         active: bool = True,
         archive: bool = False,
         can_be_author: bool | None = None,
-    ) -> list[dto.Player]:
+    ) -> list[dto.PlayerWithForum]:
         return await self.dao.search_players(
             username=username,
             name=name,

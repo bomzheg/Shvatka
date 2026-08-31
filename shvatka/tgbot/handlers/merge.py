@@ -6,7 +6,7 @@ from aiogram_dialog.api.protocols import BgManagerFactory
 from dishka import FromDishka
 from dishka.integrations.aiogram import inject
 
-from shvatka.core.players.player import get_player_by_id, merge_players
+from shvatka.core.players.player import merge_players
 from shvatka.core.services.team import get_team_by_id, merge_teams
 from shvatka.core.views.game import GameLogWriter
 from shvatka.infrastructure.db.dao.holder import HolderDao
@@ -49,8 +49,8 @@ async def confirm_merge_players(
     bg_manager_factory: FromDishka[BgManagerFactory],
     bot: Bot,
 ):
-    primary = await get_player_by_id(callback_data.primary_player_id, dao.player)
-    secondary = await get_player_by_id(callback_data.secondary_player_id, dao.player)
+    primary = await dao.player.get_identities_by_id(callback_data.primary_player_id)
+    secondary = await dao.player.get_identities_by_id(callback_data.secondary_player_id)
     await merge_players(primary, secondary, game_log, dao.player_merger)
     await callback_query.answer("Успешно объединено")
     assert isinstance(callback_query.message, Message)

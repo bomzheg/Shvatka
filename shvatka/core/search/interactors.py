@@ -122,7 +122,7 @@ def make_hint_part_snippet(
     return result
 
 
-def classify_player_hit(player: dto.Player, query: str) -> PlayerHit | None:
+def classify_player_hit(player: dto.PlayerWithForum, query: str) -> PlayerHit | None:
     if player.username and (snippet := make_snippet(player.username, query)):
         return PlayerHit(player=player, found_in=PlayerMatchField.username, snippet=snippet)
     tg_username = player.get_tg_username()

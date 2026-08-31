@@ -66,6 +66,10 @@ came out of it*.
 | xref:shep-0010-message-outbox.adoc[SHEP-0010]
 | Durable delivery of what the game shows
 | Draft
+
+| xref:shep-0011-player-identity-loading.adoc[SHEP-0011]
+| Loading a player without their forum account
+| Accepted, implemented
 |===
 
 == Status vocabulary

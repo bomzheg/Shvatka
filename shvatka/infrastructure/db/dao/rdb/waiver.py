@@ -86,13 +86,9 @@ class WaiverDao(BaseDAO[models.Waiver]):
                 joinedload(models.Waiver.team).options(
                     joinedload(models.Team.chat),
                     joinedload(models.Team.forum_team),
-                    joinedload(models.Team.captain).options(
-                        joinedload(models.Player.user), joinedload(models.Player.forum_user)
-                    ),
+                    joinedload(models.Team.captain).options(joinedload(models.Player.user)),
                 ),
-                joinedload(models.Waiver.player).options(
-                    joinedload(models.Player.user), joinedload(models.Player.forum_user)
-                ),
+                joinedload(models.Waiver.player).options(joinedload(models.Player.user)),
             )
             .where(models.Waiver.game_id == game.id)
         )
@@ -108,14 +104,10 @@ class WaiverDao(BaseDAO[models.Waiver]):
                 joinedload(models.Waiver.team).options(
                     joinedload(models.Team.chat),
                     joinedload(models.Team.forum_team),
-                    joinedload(models.Team.captain).options(
-                        joinedload(models.Player.user), joinedload(models.Player.forum_user)
-                    ),
+                    joinedload(models.Team.captain).options(joinedload(models.Player.user)),
                 ),
                 joinedload(models.Waiver.game).options(
-                    joinedload(models.Game.author).options(
-                        joinedload(models.Player.user), joinedload(models.Player.forum_user)
-                    ),
+                    joinedload(models.Game.author).options(joinedload(models.Player.user)),
                 ),
             )
             .where(models.Waiver.player_id == player.id)
@@ -133,9 +125,7 @@ class WaiverDao(BaseDAO[models.Waiver]):
         result: ScalarResult[models.Waiver] = await self.session.scalars(
             select(models.Waiver)
             .options(
-                joinedload(models.Waiver.player).options(
-                    joinedload(models.Player.user), joinedload(models.Player.forum_user)
-                ),
+                joinedload(models.Waiver.player).options(joinedload(models.Player.user)),
             )
             .where(
                 models.Waiver.game_id == game.id,
@@ -154,9 +144,6 @@ class WaiverDao(BaseDAO[models.Waiver]):
                 joinedload(models.Waiver.team)
                 .joinedload(models.Team.captain)
                 .joinedload(models.Player.user),
-                joinedload(models.Waiver.team)
-                .joinedload(models.Team.captain)
-                .joinedload(models.Player.forum_user),
             )
             .where(
                 models.Waiver.game_id == game.id,
@@ -171,7 +158,6 @@ class WaiverDao(BaseDAO[models.Waiver]):
             select(models.Waiver, models.TeamPlayer)
             .options(
                 joinedload(models.Waiver.player).joinedload(models.Player.user),
-                joinedload(models.Waiver.player).joinedload(models.Player.forum_user),
             )
             .join(models.TeamPlayer, models.Waiver.player_id == models.TeamPlayer.player_id)
             .where(

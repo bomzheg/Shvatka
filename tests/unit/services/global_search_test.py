@@ -121,7 +121,7 @@ def test_find_level_hits_nothing():
 
 
 def test_classify_player_hit_priority():
-    player = dto.Player(
+    player = dto.PlayerWithForum(
         id=2,
         can_be_author=False,
         is_dummy=False,

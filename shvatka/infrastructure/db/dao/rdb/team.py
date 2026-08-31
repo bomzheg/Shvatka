@@ -208,7 +208,6 @@ class TeamDao(BaseDAO[models.Team]):
             .options(
                 joinedload(models.Game.author).options(
                     joinedload(models.Player.user),
-                    joinedload(models.Player.forum_user),
                 ),
             )
             .join(models.Game.waivers)
@@ -247,7 +246,6 @@ def get_team_options() -> Sequence[ORMOption]:
     return (
         joinedload(models.Team.captain).options(
             joinedload(models.Player.user),
-            joinedload(models.Player.forum_user),
         ),
         joinedload(models.Team.chat),
         joinedload(models.Team.forum_team),

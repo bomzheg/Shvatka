@@ -373,8 +373,8 @@ async def dismiss_promotion(token: str, dao: InviteRemover):
 
 
 async def merge_players(
-    primary: dto.Player,
-    secondary: dto.Player,
+    primary: dto.PlayerWithForum,
+    secondary: dto.PlayerWithForum,
     game_log: GameLogWriter,
     dao: PlayerMerger,
     timeline: list[TimelineItem] | None = None,

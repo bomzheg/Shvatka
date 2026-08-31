@@ -172,7 +172,7 @@ async def test_get_team_stat(
 @pytest.mark.asyncio
 async def test_get_team_by_id(
     client: AsyncClient,
-    gryffindor: dto.Team,
+    gryffindor: dto.TeamWithCaptain,
 ):
     resp = await client.get(f"/teams/{gryffindor.id}")
     assert resp.is_success
@@ -180,7 +180,9 @@ async def test_get_team_by_id(
     body = resp.json()
     assert body["id"] == gryffindor.id
     assert body["name"] == gryffindor.name
+    assert gryffindor.captain is not None
     assert body["captain"]["id"] == gryffindor.captain.id
+    assert body["captain_id"] == gryffindor.captain.id
 
 
 @pytest.mark.asyncio

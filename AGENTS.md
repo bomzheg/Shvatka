@@ -27,6 +27,8 @@ Telegram bot.
 - **Lint and tests run in CI.** You may push to the branch and read the CI
   status instead of running the full (slow, testcontainer-backed) suite
   locally. Running `pytest tests/unit` locally for fast feedback is fine.
+  Run type checks as `mypy .`, not `mypy shvatka` — CI checks `tests/` too,
+  and fixtures and integration tests are where a changed dto surfaces last.
 
 ## Project layout
 

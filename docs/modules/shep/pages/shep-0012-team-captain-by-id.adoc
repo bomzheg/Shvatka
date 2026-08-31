@@ -5,7 +5,7 @@
 |===
 | SHEP | 0012
 | Title | Carrying the team captain by id
-| Status | `Accepted, partially implemented`
+| Status | `Accepted, implemented`
 | Created | 2026-08-31
 | Updated | 2026-08-31
 | Related | xref:shep-0011-player-identity-loading.adoc[SHEP-0011], PR #379
@@ -143,11 +143,16 @@ badge, so it would degrade silently.
 | Phase | Content | Status
 
 | 1 | `Team.is_captain(player_id)` replaces eight hand-written checks and stops crashing on captain-less teams | ✅ done in PR #393
-| 2 | Split the API `Team` response into embedded (lean) and captain-bearing forms; follow in `shvatka-ui` | ⏳ not started
-| 3 | `captain_id` on `dto.Team`, `TeamWithCaptain` for the renderers, and drop the captain join | ⏳ not started
+| 2 | Split the API `Team` response into embedded (lean) and captain-bearing forms; follow in `shvatka-ui` | ✅ done in PR #394 (+ ui#189)
+| 3 | `captain_id` on `dto.Team`, `TeamWithCaptain` for the renderers, and drop the captain join | ✅ done in PR #394
 |===
 
 == Deviations from the plan
+
+Phases 2 and 3 landed together, in one pull request per repository. They are not
+separable: `captain_id` on the lean dto is what lets the aggregates stay plain,
+and the lean API response is what lets the aggregates want to. Attempting either
+half alone fails (below).
 
 `captain_id` moved out of phase 1 into phase 3. It first landed in phase 1 as a
 second field beside `captain`, which needed a consistency assert to keep the two
@@ -173,9 +178,25 @@ and gives phases 2 and 3 a single place to change.
 `CaptainChanged` notification, which renders the old captain's name. Only its
 guard moved to `is_captain`.
 
+== What the type system could not check
+
+Two breakages had to be found by reading, because nothing would have failed:
+
+* `shared.Team.from_core` accepts a `TeamWithCaptain` perfectly happily and drops
+  the captain on the floor. Every route that renders one had to be pointed at
+  `TeamWithCaptain.from_core` by hand; mypy stayed green throughout.
+* The bot's team cards are Jinja templates. `{{team.captain.name_mention}}` on a
+  plain team renders an empty string rather than raising, so the "Капитан:" line
+  would have quietly gone blank. Typing `team_card` and the captain's bridge
+  getter as taking `TeamWithCaptain` is what turned those into mypy errors.
+
+The same hazard is why `shvatka-ui` was grepped for `.captain` across templates
+as well as `.ts` — the first pass, `.ts` only, missed four screens.
+
 == Open questions
 
-Whether `models.Team.captain` should keep its relationship at all once phase 3
-lands, or whether the two merge handlers and `core/services/team.py:183` — the
-only callers wanting the whole player — should load the captain by id through
-`PlayerDao` instead. That would leave `teams` with no player join at all.
+Whether `models.Team.captain` should keep its relationship at all, or whether the
+two merge handlers and `core/services/team.py` `change_captain` — the only callers
+wanting the whole player rather than a rendered name — should load the captain by
+id through `PlayerDao` instead. That would leave `teams` with no player join at
+all outside the team pages.

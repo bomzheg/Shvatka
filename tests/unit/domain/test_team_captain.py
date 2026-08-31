@@ -9,8 +9,8 @@ def _player(id_: int = 7) -> dto.Player:
     return dto.Player(id=id_, can_be_author=False, is_dummy=False, username="harry")
 
 
-def _team(captain: dto.Player | None = None) -> dto.Team:
-    return dto.Team(
+def _team(captain: dto.Player | None = None) -> dto.TeamWithCaptain:
+    return dto.TeamWithCaptain(
         id=1,
         name="Gryffindor",
         captain=captain,
@@ -36,6 +36,45 @@ def _team_player(team: dto.Team, player: dto.Player) -> dto.FullTeamPlayer:
         player=player,
         team=team,
     )
+
+
+def _lean_team(captain_id: int | None = None) -> dto.Team:
+    return dto.Team(
+        id=1,
+        name="Gryffindor",
+        is_dummy=False,
+        description=None,
+        captain_id=captain_id,
+    )
+
+
+def test_is_captain_needs_no_loaded_captain():
+    """The point of the split: the check works on a team that never joined players."""
+    team = _lean_team(captain_id=7)
+    assert team.is_captain(7)
+    assert not team.is_captain(8)
+
+
+def test_captain_id_is_taken_from_a_loaded_captain():
+    assert _team(captain=_player(7)).captain_id == 7
+
+
+def test_captain_id_of_a_captainless_team_is_none():
+    assert _team().captain_id is None
+    assert _lean_team().captain_id is None
+
+
+def test_a_team_with_captain_still_compares_by_id():
+    """`TeamWithCaptain` must keep `Team`'s identity equality — and stay hashable.
+
+    Teams are dict keys throughout the stat code; a generated `__eq__` on the
+    subclass would drop `__hash__` and break every one of those lookups.
+    """
+    with_captain = _team(captain=_player(7))
+    lean = _lean_team(captain_id=7)
+    assert with_captain == lean
+    assert hash(with_captain) == hash(lean)
+    assert len({with_captain, lean}) == 1
 
 
 def test_is_captain_recognises_the_captain():

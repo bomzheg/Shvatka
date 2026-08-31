@@ -12,6 +12,7 @@ from shvatka.core.teams.dto import TeamWithStat as TeamWithStatDto
 class TeamWithStat:
     id: int
     name: str
+    captain_id: int | None
     captain: Player | None
     description: str | None
     played_games_count: int
@@ -21,6 +22,7 @@ class TeamWithStat:
         return cls(
             id=core.team.id,
             name=core.team.name,
+            captain_id=core.team.captain_id,
             captain=Player.from_core(core.team.captain) if core.team.captain else None,
             description=core.team.description,
             played_games_count=core.played_games_count,
@@ -31,6 +33,7 @@ class TeamWithStat:
 class CaptainedTeam:
     id: int
     name: str
+    captain_id: int | None
     captain: Player | None
     description: str | None
     played_games_count: int
@@ -42,6 +45,7 @@ class CaptainedTeam:
         return cls(
             id=core.team.id,
             name=core.team.name,
+            captain_id=core.team.captain_id,
             captain=Player.from_core(core.team.captain) if core.team.captain else None,
             description=core.team.description,
             played_games_count=core.played_games_count,

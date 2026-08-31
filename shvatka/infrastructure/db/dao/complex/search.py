@@ -19,7 +19,7 @@ class GlobalSearchDaoImpl(GlobalSearchDao):
     async def search_levels_of_completed_games(self, text: str) -> list[LevelWithGame]:
         return await self.dao.level.search_in_completed_games(text)
 
-    async def search_teams(self, text: str) -> list[dto.Team]:
+    async def search_teams(self, text: str) -> list[dto.TeamWithCaptain]:
         return await self.dao.team.search_by_name(text)
 
     async def search_players(self, text: str) -> list[dto.PlayerWithForum]:

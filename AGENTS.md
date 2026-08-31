@@ -299,6 +299,20 @@ self-contained and close to upstream.
   are fine when they make a query meaningfully better or faster — just don't
   reach for them without that justification.
 
+## The API and the UI ship together
+
+`bomzheg/Shvatka` and `bomzheg/shvatka-ui` are deployed by the same person in one
+go, so a **breaking API change is allowed as long as both repositories change
+together**. There is no transition window to design for and no need to keep a
+field alive until the front-end stops reading it: change the response, change
+`shvatka-ui` in the same breath, and say in each pull request that the other one
+is its pair.
+
+What this does *not* excuse is a silent break. `mypy` cannot see that a response
+model stopped sending a field the UI reads, so when you narrow or split a
+response, grep `shvatka-ui` for every reader — templates included, not just
+`.ts` — before deciding a field is unused.
+
 ## API layout (subdomain packages)
 
 `shvatka/api/` separates **what the API is about** (subdomains) from **how the

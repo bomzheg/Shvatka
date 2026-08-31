@@ -28,10 +28,10 @@ class TeamPlayerDao(BaseDAO[models.TeamPlayer]):
 
     async def get_team(
         self, player: dto.Player, for_date: datetime | None = None
-    ) -> dto.Team | None:
+    ) -> dto.TeamWithCaptain | None:
         result: Result[tuple[models.TeamPlayer]] = await self.session.execute(
             select(models.TeamPlayer)
-            .options(get_team_load_options())
+            .options(get_team_with_captain_load_options())
             .where(
                 models.TeamPlayer.player_id == player.id,
                 *get_leaved_condition(for_date),
@@ -42,7 +42,7 @@ class TeamPlayerDao(BaseDAO[models.TeamPlayer]):
         except NoResultFound:
             return None
         team: models.Team = team_player.team
-        return team.to_dto_chat_prefetched()
+        return team.to_dto_with_captain_prefetched()
 
     async def have_team(self, player: dto.Player) -> bool:
         return await self.get_team(player) is not None
@@ -283,6 +283,15 @@ def get_player_full_load_options() -> ORMOption:
 
 
 def get_team_load_options() -> ORMOption:
+    """Team without its captain — for the histories, which only name the team."""
+    return joinedload(models.TeamPlayer.team).options(
+        joinedload(models.Team.chat),
+        joinedload(models.Team.forum_team),
+    )
+
+
+def get_team_with_captain_load_options() -> ORMOption:
+    """Team with its captain — for "my team", which renders them."""
     return joinedload(models.TeamPlayer.team).options(
         joinedload(models.Team.chat),
         joinedload(models.Team.forum_team),

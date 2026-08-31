@@ -7,7 +7,7 @@ from shvatka.core.models import dto
 class TeamWithStat:
     """A team together with aggregated statistics for list views."""
 
-    team: dto.Team
+    team: dto.TeamWithCaptain
     played_games_count: int
 
 
@@ -19,7 +19,7 @@ class CaptainedTeam:
     web ui uses ``is_current`` to decide between "вы здесь" and a join button.
     """
 
-    team: dto.Team
+    team: dto.TeamWithCaptain
     played_games_count: int
     is_current: bool
 

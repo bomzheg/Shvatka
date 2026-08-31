@@ -45,10 +45,17 @@ class Player:
 
 @dataclass
 class Team:
+    """A team as it appears inside another payload — no captain loaded.
+
+    `captain_id` answers "does this player captain the team" without the join
+    the captain themselves would cost. Screens that show a captain by name are
+    answered with :class:`TeamWithCaptain` instead.
+    """
+
     id: int
     name: str
-    captain: Player | None
     description: str | None
+    captain_id: int | None
 
     @overload
     @classmethod
@@ -67,8 +74,46 @@ class Team:
         return cls(
             id=core.id,
             name=core.name,
-            captain=Player.from_core(core.captain) if core.captain else None,
             description=core.description,
+            captain_id=core.captain_id,
+        )
+
+
+@dataclass
+class TeamWithCaptain:
+    """A team with its captain rendered — for the team pages and admin tools.
+
+    Deliberately not a subclass of :class:`Team`: it answers from a different
+    core type, and narrowing `from_core` in a subclass would be a lie about
+    what a `Team` accepts.
+    """
+
+    id: int
+    name: str
+    description: str | None
+    captain_id: int | None
+    captain: Player | None
+
+    @overload
+    @classmethod
+    def from_core(cls, core: dto.TeamWithCaptain) -> Self:
+        ...
+
+    @overload
+    @classmethod
+    def from_core(cls, core: None) -> None:
+        ...
+
+    @classmethod
+    def from_core(cls, core: dto.TeamWithCaptain | None) -> "Self | None":
+        if core is None:
+            return None
+        return cls(
+            id=core.id,
+            name=core.name,
+            description=core.description,
+            captain_id=core.captain_id,
+            captain=Player.from_core(core.captain) if core.captain else None,
         )
 
 

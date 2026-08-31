@@ -43,10 +43,12 @@ async def my_team_getter(dao: FromDishka[HolderDao], identity: FromDishka[Identi
     the dialog started: between the two the player may have been removed from
     the team, and then there is no card to show at all.
     """
-    return await team_card((await get_actual_team_player(identity)).team, dao)
+    team_player = await get_actual_team_player(identity)
+    # the team player carries a plain team; this card names the captain
+    return await team_card(await get_team_by_id(team_player.team.id, dao.team), dao)
 
 
-async def team_card(team: dto.Team, dao: HolderDao) -> dict[str, Any]:
+async def team_card(team: dto.TeamWithCaptain, dao: HolderDao) -> dict[str, Any]:
     players = await get_team_players(team=team, dao=dao.team_player)
     games = await get_played_games(team=team, dao=dao.team)
     games_numbers = [str(game.number) for game in games]

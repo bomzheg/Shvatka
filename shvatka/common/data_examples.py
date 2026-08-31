@@ -7,14 +7,12 @@ from shvatka.core.models.dto import action, hints, scn
 gryffindor = dto.Team(
     id=1,
     name="Gryffindor",
-    captain=None,
     description=None,
     is_dummy=False,
 )
 slytherin = dto.Team(
     id=2,
     name="Slytherin",
-    captain=None,
     description=None,
     is_dummy=False,
 )

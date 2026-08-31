@@ -60,7 +60,7 @@ class PollDraftsReaderImpl(PollDraftsReader):
     async def get_dict_player_vote(self, team_id: int) -> dict[int, Played]:
         return await self.dao.poll.get_dict_player_vote(team_id)
 
-    async def get_by_id(self, id_: int) -> dto.Team:
+    async def get_by_id(self, id_: int) -> dto.TeamWithCaptain:
         return await self.dao.team.get_by_id(id_)
 
     async def get_by_player_or_none(
@@ -85,7 +85,7 @@ class AdminPollReaderImpl(AdminPollReader):
     async def get_dict_player_vote(self, team_id: int) -> dict[int, Played]:
         return await self.dao.poll.get_dict_player_vote(team_id)
 
-    async def get_by_id(self, id_: int) -> dto.Team:
+    async def get_by_id(self, id_: int) -> dto.TeamWithCaptain:
         return await self.dao.team.get_by_id(id_)
 
 

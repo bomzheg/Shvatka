@@ -65,7 +65,7 @@ async def have_team(player: dto.Player, dao: PlayerTeamChecker) -> bool:
     return await dao.have_team(player)
 
 
-async def get_my_team(player: dto.Player, dao: PlayerTeamChecker) -> dto.Team | None:
+async def get_my_team(player: dto.Player, dao: PlayerTeamChecker) -> dto.TeamWithCaptain | None:
     return await dao.get_team(player)
 
 

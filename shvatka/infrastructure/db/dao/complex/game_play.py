@@ -160,7 +160,7 @@ class GamePlayerDaoImpl(GamePlayerDao):
     async def commit(self) -> None:
         await self.dao.commit()
 
-    async def get_by_id(self, id_: int) -> dto.Team:
+    async def get_by_id(self, id_: int) -> dto.TeamWithCaptain:
         return await self.dao.team.get_by_id(id_)
 
     async def get_level_time_by_id(

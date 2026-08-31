@@ -31,7 +31,7 @@ NEWCOMER_PLAYER = dto.Player(id=20, can_be_author=False, is_dummy=False, usernam
 
 
 def team() -> dto.Team:
-    return dto.Team(
+    return dto.TeamWithCaptain(
         id=5,
         name="like a team",
         captain=CAPTAIN_PLAYER,

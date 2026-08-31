@@ -86,7 +86,6 @@ class WaiverDao(BaseDAO[models.Waiver]):
                 joinedload(models.Waiver.team).options(
                     joinedload(models.Team.chat),
                     joinedload(models.Team.forum_team),
-                    joinedload(models.Team.captain).options(joinedload(models.Player.user)),
                 ),
                 joinedload(models.Waiver.player).options(joinedload(models.Player.user)),
             )
@@ -104,7 +103,6 @@ class WaiverDao(BaseDAO[models.Waiver]):
                 joinedload(models.Waiver.team).options(
                     joinedload(models.Team.chat),
                     joinedload(models.Team.forum_team),
-                    joinedload(models.Team.captain).options(joinedload(models.Player.user)),
                 ),
                 joinedload(models.Waiver.game).options(
                     joinedload(models.Game.author).options(joinedload(models.Player.user)),
@@ -141,9 +139,6 @@ class WaiverDao(BaseDAO[models.Waiver]):
             .options(
                 joinedload(models.Waiver.team).joinedload(models.Team.chat),
                 joinedload(models.Waiver.team).joinedload(models.Team.forum_team),
-                joinedload(models.Waiver.team)
-                .joinedload(models.Team.captain)
-                .joinedload(models.Player.user),
             )
             .where(
                 models.Waiver.game_id == game.id,

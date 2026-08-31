@@ -10,9 +10,9 @@ def _player(id_: int, username: str) -> dto.Player:
     return dto.Player(id=id_, can_be_author=False, is_dummy=False, username=username)
 
 
-def _team(captain: dto.Player | None = None, *, with_chat: bool = True) -> dto.Team:
+def _team(captain: dto.Player | None = None, *, with_chat: bool = True) -> dto.TeamWithCaptain:
     chat = dto.Chat(tg_id=-100, type=ChatType.group, title="t") if with_chat else None
-    return dto.Team(
+    return dto.TeamWithCaptain(
         id=1,
         name="Gryffindor",
         captain=captain,

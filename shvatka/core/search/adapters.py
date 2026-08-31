@@ -17,7 +17,7 @@ class GlobalSearchDao(Protocol):
         """
         raise NotImplementedError
 
-    async def search_teams(self, text: str) -> list[dto.Team]:
+    async def search_teams(self, text: str) -> list[dto.TeamWithCaptain]:
         """Команды (включая архивные форумные), чьё название содержит text."""
         raise NotImplementedError
 

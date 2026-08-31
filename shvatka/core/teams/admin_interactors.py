@@ -39,7 +39,7 @@ class AdminMergeTeamsInteractor:
 
     async def __call__(
         self, identity: IdentityProvider, primary_id: int, secondary_id: int
-    ) -> dto.Team:
+    ) -> dto.TeamWithCaptain:
         """Merge ``secondary`` team into ``primary``; ``secondary`` is deleted."""
         actor = await identity.get_superuser()
         logger.warning("admin %s merges team %s into %s", actor.id, secondary_id, primary_id)
@@ -64,7 +64,9 @@ class AdminChangeTeamCaptainInteractor:
     dao: TeamCaptainSetter
     notifier: TeamNotifier
 
-    async def __call__(self, identity: IdentityProvider, team_id: int, player_id: int) -> dto.Team:
+    async def __call__(
+        self, identity: IdentityProvider, team_id: int, player_id: int
+    ) -> dto.TeamWithCaptain:
         admin = await identity.get_superuser()
         team = await get_team_by_id(team_id, self.dao)
         logger.warning(

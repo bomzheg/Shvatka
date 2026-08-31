@@ -29,7 +29,7 @@ def create_player(id_: int = 1) -> dto.Player:
 
 
 def create_team(id_: int = 1) -> dto.Team:
-    return dto.Team(id=id_, name=f"team {id_}", captain=None, is_dummy=False, description=None)
+    return dto.Team(id=id_, name=f"team {id_}", is_dummy=False, description=None)
 
 
 def create_game(

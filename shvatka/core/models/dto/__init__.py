@@ -26,7 +26,7 @@ from .levels_times import GameStat, GameStatWithHints, LevelTime, LevelTimeOnGam
 from .organizer import Organizer, PrimaryOrganizer, SecondaryOrganizer
 from .player import Player, PlayerWithCreds, PlayerWithForum, PlayerWithStat
 from .poll import Vote, VotedPlayer
-from .team import Team
+from .team import Team, TeamWithCaptain
 from .team_player import FullTeamPlayer, TeamDataRange, TeamPlayer
 from .time_key import (
     InsertedKey,

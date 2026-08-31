@@ -15,8 +15,8 @@ def _player(id_: int, username: str) -> dto.Player:
     return dto.Player(id=id_, can_be_author=False, is_dummy=False, username=username)
 
 
-def _team(captain: dto.Player | None) -> dto.Team:
-    return dto.Team(
+def _team(captain: dto.Player | None) -> dto.TeamWithCaptain:
+    return dto.TeamWithCaptain(
         id=1,
         name="Gryffindor",
         captain=captain,

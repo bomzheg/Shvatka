@@ -20,7 +20,7 @@ def player(tg_id: int | None = 42) -> dto.Player:
 
 
 def team(name: str = "Gryffindor") -> dto.Team:
-    return dto.Team(id=1, name=name, captain=None, is_dummy=False, description=None)
+    return dto.Team(id=1, name=name, is_dummy=False, description=None)
 
 
 def tagger(*chats: int) -> tuple[MemberTagger, AsyncMock]:

@@ -7,7 +7,7 @@ from shvatka.core.models import dto
 
 
 class TeamGetter(Protocol):
-    async def get_by_chat(self, chat: dto.Chat) -> dto.Team | None:
+    async def get_by_chat(self, chat: dto.Chat) -> dto.TeamWithCaptain | None:
         raise NotImplementedError
 
 
@@ -15,7 +15,7 @@ class TeamCreator(TeamJoiner, Protocol):
     async def check_no_team_in_chat(self, chat: dto.Chat) -> None:
         raise NotImplementedError
 
-    async def create(self, chat: dto.Chat, captain: dto.Player) -> dto.Team:
+    async def create(self, chat: dto.Chat, captain: dto.Player) -> dto.TeamWithCaptain:
         raise NotImplementedError
 
 
@@ -32,17 +32,17 @@ class TeamDescChanger(Committer, Protocol):
 class TeamsGetter(Protocol):
     async def get_teams(
         self, active: bool = True, archive: bool = False, name: str | None = None
-    ) -> list[dto.Team]:
+    ) -> list[dto.TeamWithCaptain]:
         raise NotImplementedError
 
 
 class TeamByIdGetter(Protocol):
-    async def get_by_id(self, id_: int) -> dto.Team:
+    async def get_by_id(self, id_: int) -> dto.TeamWithCaptain:
         raise NotImplementedError
 
 
 class CaptainedTeamsGetter(Protocol):
-    async def get_captained_teams(self, captain: dto.Player) -> list[dto.Team]:
+    async def get_captained_teams(self, captain: dto.Player) -> list[dto.TeamWithCaptain]:
         raise NotImplementedError
 
 
@@ -67,7 +67,7 @@ class FreeForumTeamGetter(Protocol):
 
 
 class ByForumTeamIdGetter(Protocol):
-    async def get_by_forum_team_id(self, forum_team_id: int) -> dto.Team:
+    async def get_by_forum_team_id(self, forum_team_id: int) -> dto.TeamWithCaptain:
         raise NotImplementedError
 
 

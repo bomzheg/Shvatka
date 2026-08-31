@@ -29,7 +29,7 @@ class ChatlessTeamCreator(TeamJoiner, Protocol):
 
     async def create_no_chat(
         self, name: str, description: str | None, captain: dto.Player
-    ) -> dto.Team:
+    ) -> dto.TeamWithCaptain:
         raise NotImplementedError
 
 

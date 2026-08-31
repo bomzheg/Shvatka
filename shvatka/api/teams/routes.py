@@ -45,8 +45,8 @@ async def get_team_stat(
 
 
 @inject
-async def get_my_team(identity: FromDishka[IdentityProvider]) -> shared.Team | None:
-    return shared.Team.from_core(await identity.get_team())
+async def get_my_team(identity: FromDishka[IdentityProvider]) -> shared.TeamWithCaptain | None:
+    return shared.TeamWithCaptain.from_core(await identity.get_team())
 
 
 @inject
@@ -79,9 +79,9 @@ async def change_captain(
     interactor: FromDishka[ChangeCaptainInteractor],
     id_: Annotated[int, Path(alias="id")],
     body: Annotated[requests.NewCaptain, Body()],
-) -> shared.Team:
+) -> shared.TeamWithCaptain:
     team = await interactor(team_id=id_, new_captain_id=body.player_id, identity=identity)
-    result = shared.Team.from_core(team)
+    result = shared.TeamWithCaptain.from_core(team)
     assert result is not None
     return result
 
@@ -107,8 +107,8 @@ async def add_player_to_team(
 async def get_team(
     interactor: FromDishka[GetTeamInteractor],
     id_: Annotated[int, Path(alias="id")],
-) -> shared.Team:
-    return shared.Team.from_core(await interactor(id_))
+) -> shared.TeamWithCaptain:
+    return shared.TeamWithCaptain.from_core(await interactor(id_))
 
 
 @inject
@@ -116,13 +116,13 @@ async def create_team(
     identity: FromDishka[ApiIdentityProvider],
     interactor: FromDishka[CreateTeamInteractor],
     body: Annotated[requests.NewTeam, Body()],
-) -> shared.Team:
+) -> shared.TeamWithCaptain:
     team = await interactor(
         identity=identity,
         name=body.name,
         description=body.description,
     )
-    return shared.Team.from_core(team)
+    return shared.TeamWithCaptain.from_core(team)
 
 
 @inject
@@ -131,14 +131,14 @@ async def edit_team(
     interactor: FromDishka[EditTeamInteractor],
     id_: Annotated[int, Path(alias="id")],
     body: Annotated[requests.TeamSettings, Body()],
-) -> shared.Team:
+) -> shared.TeamWithCaptain:
     team = await interactor(
         team_id=id_,
         identity=identity,
         name=body.name,
         description=body.description,
     )
-    return shared.Team.from_core(team)
+    return shared.TeamWithCaptain.from_core(team)
 
 
 @inject

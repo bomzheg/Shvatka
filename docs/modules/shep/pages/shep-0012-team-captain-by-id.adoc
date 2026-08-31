@@ -143,8 +143,8 @@ badge, so it would degrade silently.
 | Phase | Content | Status
 
 | 1 | `Team.is_captain(player_id)` replaces eight hand-written checks and stops crashing on captain-less teams | ✅ done in PR #393
-| 2 | Split the API `Team` response into embedded (lean) and captain-bearing forms; follow in `shvatka-ui` | ✅ done in PR #394 (+ ui#189)
-| 3 | `captain_id` on `dto.Team`, `TeamWithCaptain` for the renderers, and drop the captain join | ✅ done in PR #394
+| 2 | Split the API `Team` response into embedded (lean) and captain-bearing forms; follow in `shvatka-ui` | ✅ done in PR #393 (+ shvatka-ui#191)
+| 3 | `captain_id` on `dto.Team`, `TeamWithCaptain` for the renderers, and drop the captain join | ✅ done in PR #393
 |===
 
 == Deviations from the plan

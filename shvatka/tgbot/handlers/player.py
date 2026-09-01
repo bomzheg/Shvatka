@@ -33,7 +33,7 @@ from shvatka.tgbot import keyboards as kb
 from shvatka.tgbot.filters.is_inviter import is_inviter
 from shvatka.tgbot.utils.router import disable_router_on_game
 from shvatka.tgbot.views.commands import LEAVE_COMMAND, PLAYERS_COMMAND, TEAM_COMMAND
-from shvatka.tgbot.views.team import render_team_players
+from shvatka.tgbot.views.team import render_leave_confirmation, render_team_players
 
 
 @inject
@@ -157,10 +157,17 @@ async def leave_handler(
     player = await identity.get_required_player()
     team = await get_my_team(player, dao.team_player)
     if team is None:
-        await message.answer("Ты не состоишь в команде")
+        await message.reply("Ты не состоишь в команде")
         return
     await leave(player, player, dao.team_leaver, notifier=team_notifier)
-    await message.answer(f"Ты вышел из команды {hd.quote(team.name)}")
+    text = render_leave_confirmation(
+        player,
+        team,
+        chat_id=message.chat.id,
+        private=message.chat.type == ChatType.PRIVATE,
+    )
+    if text is not None:
+        await message.reply(text)
 
 
 def setup() -> Router:

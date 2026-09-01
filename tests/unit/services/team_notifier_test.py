@@ -3,7 +3,7 @@ import pytest
 from shvatka.core.models import dto
 from shvatka.core.models.enums.chat_type import ChatType
 from shvatka.core.views.team import CaptainChanged, PlayerJoinedTeam, PlayerLeftTeam
-from shvatka.tgbot.views.team import BotTeamNotifier
+from shvatka.tgbot.views.team import BotTeamNotifier, render_leave_confirmation
 
 
 def _player(id_: int, username: str) -> dto.Player:
@@ -46,7 +46,7 @@ def test_left_by_self() -> None:
     assert "вышел" in (BotTeamNotifier._render(event) or "")
 
 
-def test_left_by_captain() -> None:
+def test_left_by_someone_else() -> None:
     harry = _player(1, "harry")
     ron = _player(2, "ron")
     event = PlayerLeftTeam(team=_team(harry), actor=harry, removed=ron)
@@ -54,6 +54,31 @@ def test_left_by_captain() -> None:
     text = BotTeamNotifier._render(event) or ""
     assert "удалён" in text
     assert "harry" in text
+    # the remover is not necessarily the captain: a teammate with the right to
+    # manage players, or an engine admin, may have done it
+    assert "капитан" not in text
+
+
+def test_leave_confirmation_in_private() -> None:
+    ron = _player(2, "ron")
+    text = render_leave_confirmation(ron, _team(), chat_id=ron.id, private=True)
+    assert text == "Ты вышел из команды Gryffindor"
+
+
+def test_leave_confirmation_in_group_names_the_player() -> None:
+    ron = _player(2, "ron")
+    text = render_leave_confirmation(ron, _team(), chat_id=-200, private=False)
+    # a plain message in a group has to say who left, «ты» tells nobody anything
+    assert text is not None
+    assert "ron" in text
+    assert "Ты" not in text
+    assert "Gryffindor" in text
+
+
+def test_no_leave_confirmation_in_team_chat() -> None:
+    ron = _player(2, "ron")
+    # BotTeamNotifier already announces the leave there, no need to say it twice
+    assert render_leave_confirmation(ron, _team(), chat_id=-100, private=False) is None
 
 
 def test_captain_changed_by_old_captain() -> None:

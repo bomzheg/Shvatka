@@ -6,6 +6,7 @@ import pytest
 from shvatka.core.games.editor_interactors import (
     ChangeGameStatusInteractor,
     PlanGameStartInteractor,
+    RenameGameInteractor,
 )
 from shvatka.core.models import dto
 from shvatka.core.models.dto import GameResults, hints
@@ -61,9 +62,17 @@ class FakeGameDao:
     start_at: datetime | None = None
     cancelled: bool = False
     release: dto.GameRelease | None = None
+    taken_names: set[str] = field(default_factory=set)
+    renames: list[str] = field(default_factory=list)
 
     async def get_by_id(self, id_: int, author: dto.Player | None = None) -> dto.Game:
         return self.game
+
+    async def is_name_available(self, name: str) -> bool:
+        return name not in self.taken_names
+
+    async def rename_game(self, game: dto.Game, new_name: str) -> None:
+        self.renames.append(new_name)
 
     async def get_active_game(self) -> dto.Game | None:
         return self.active_game
@@ -210,3 +219,87 @@ async def test_cancel_planned_start_does_not_write_game_log():
 
     assert dao.cancelled is True
     assert game_log.calls == []
+
+
+@pytest.mark.asyncio
+async def test_rename_game_writes_the_trimmed_name():
+    author = make_player(1)
+    game = make_game(author, GameStatus.underconstruction)
+    dao = FakeGameDao(game=game)
+    interactor = RenameGameInteractor(dao=dao)
+
+    renamed = await interactor(
+        game_id=game.id,
+        name="  другое имя  ",
+        identity=MockIdentityProvider(player=author),
+    )
+
+    assert dao.renames == ["другое имя"]
+    assert dao.committed == 1
+    assert renamed.name == "другое имя"
+
+
+@pytest.mark.asyncio
+async def test_rename_game_to_a_taken_name_is_refused():
+    author = make_player(1)
+    game = make_game(author, GameStatus.underconstruction)
+    dao = FakeGameDao(game=game, taken_names={"занято"})
+    interactor = RenameGameInteractor(dao=dao)
+
+    with pytest.raises(exceptions.CantEditGame):
+        await interactor(
+            game_id=game.id,
+            name="занято",
+            identity=MockIdentityProvider(player=author),
+        )
+    assert dao.renames == []
+    assert game.name == "my game"
+
+
+@pytest.mark.asyncio
+async def test_rename_game_to_an_empty_name_is_refused():
+    author = make_player(1)
+    game = make_game(author, GameStatus.underconstruction)
+    dao = FakeGameDao(game=game)
+    interactor = RenameGameInteractor(dao=dao)
+
+    with pytest.raises(exceptions.CantEditGame):
+        await interactor(
+            game_id=game.id,
+            name="   ",
+            identity=MockIdentityProvider(player=author),
+        )
+    assert dao.renames == []
+
+
+@pytest.mark.asyncio
+async def test_rename_game_to_its_own_name_writes_nothing():
+    """The name a game already has is free for it — and nothing to write."""
+    author = make_player(1)
+    game = make_game(author, GameStatus.underconstruction)
+    dao = FakeGameDao(game=game, taken_names={game.name})
+    interactor = RenameGameInteractor(dao=dao)
+
+    await interactor(
+        game_id=game.id,
+        name=game.name,
+        identity=MockIdentityProvider(player=author),
+    )
+
+    assert dao.renames == []
+
+
+@pytest.mark.asyncio
+async def test_rename_started_game_is_refused():
+    author = make_player(1)
+    game = make_game(author, GameStatus.started)
+    dao = FakeGameDao(game=game)
+    interactor = RenameGameInteractor(dao=dao)
+
+    with pytest.raises(exceptions.CantEditGame):
+        await interactor(
+            game_id=game.id,
+            name="поздно",
+            identity=MockIdentityProvider(player=author),
+        )
+    assert dao.renames == []

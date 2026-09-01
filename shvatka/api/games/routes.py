@@ -19,6 +19,7 @@ from shvatka.core.games.editor_interactors import (
     MyGameInteractor,
     MyGamesInteractor,
     PlanGameStartInteractor,
+    RenameGameInteractor,
 )
 from shvatka.core.games.interactors import (
     CheckKeyInteractor,
@@ -89,6 +90,22 @@ async def create_my_game(
 ) -> shared.Game:
     created = await interactor(name=game.name, identity=identity)
     return shared.Game.from_core(created)
+
+
+@inject
+async def rename_my_game(
+    identity: FromDishka[ApiIdentityProvider],
+    interactor: FromDishka[RenameGameInteractor],
+    id_: Annotated[int, Path(alias="id")],
+    body: Annotated[requests.GameName, Body()],
+) -> shared.Game:
+    """Rename the game, leaving its scenario alone.
+
+    Saving a scenario renames the game too, but a draft with no levels yet has
+    no scenario to save — this route is how such a game gets its name fixed.
+    """
+    game = await interactor(game_id=id_, name=body.name, identity=identity)
+    return shared.Game.from_core(game)
 
 
 @inject
@@ -371,6 +388,7 @@ def setup() -> APIRouter:
     games_router.add_api_route("/my", get_my_games_list, methods=["GET"])
     games_router.add_api_route("/my", create_my_game, methods=["POST"])
     games_router.add_api_route("/my/{id}", get_my_game, methods=["GET"])
+    games_router.add_api_route("/my/{id}/name", rename_my_game, methods=["PUT"])
     games_router.add_api_route("/my/{id}/scenario", change_my_game_scenario, methods=["PUT"])
     games_router.add_api_route("/my/{id}/start_at", change_my_game_start_at, methods=["PUT"])
     games_router.add_api_route("/my/{id}/status", change_my_game_status, methods=["PUT"])

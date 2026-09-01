@@ -15,6 +15,7 @@ from shvatka.core.interfaces.dal.game import (
     GameByIdGetter,
     GameReleaseGetter,
     GameReleaseSaver,
+    GameRenamer,
     GameStartPlanner,
 )
 from shvatka.core.interfaces.dal.level_times import LevelByTeamGetter
@@ -27,6 +28,15 @@ from shvatka.core.models.enums import GameStatus
 
 class GameKeysReader(TypedKeyGetter, GameByIdGetter, PlayerByUserGetter, Protocol):
     pass
+
+
+class GameNameEditor(GameByIdGetter, GameRenamer, Protocol):
+    """Rename one game draft, addressed by its id.
+
+    Narrower than :class:`~shvatka.core.interfaces.dal.complex.GameScenarioEditor`
+    on purpose: the name is the one thing a game has before it has a scenario,
+    so changing it must not need a scenario to be valid.
+    """
 
 
 class AdminGameScenarioEditor(GameScenarioEditor, GameAuthorTransferer, Protocol):

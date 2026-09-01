@@ -63,6 +63,20 @@ def check_game_editable(game: dto.Game):
         )
 
 
+def check_game_name(name: str, player: dto.Player) -> None:
+    """Whether a string may be a game's name.
+
+    Only emptiness is refused here — whether the name is *free* is a question
+    for the storage, asked by the caller that writes it.
+    """
+    if not name.strip():
+        raise CantEditGame(
+            player=player,
+            text="game name can not be empty",
+            notify_user="Название игры не может быть пустым",
+        )
+
+
 def check_can_add_file(game: dto.Game, player: dto.Player, is_superuser: bool = False) -> None:
     """Whether a file may still be added to the game.
 

@@ -12,6 +12,7 @@ from shvatka.core.games.adapters import (
     AdminLevelResender,
     GameFileReader,
     GameKeysReader,
+    GameNameEditor,
     GamePlayDao,
     GameReleaseEditor,
     GameReleaseReader,
@@ -33,6 +34,7 @@ from shvatka.core.games.editor_interactors import (
     MyGamesInteractor,
     PlanGameStartInteractor,
     RenameGameFileInteractor,
+    RenameGameInteractor,
     UploadGameFileInteractor,
 )
 from shvatka.core.games.interactors import (
@@ -314,6 +316,12 @@ class GameEditProvider(Provider):
     @provide
     def create_game(self, dao: HolderDao) -> CreateGameInteractor:
         return CreateGameInteractor(dao.game_creator)
+
+    @provide
+    def game_name_editor(self, dao: HolderDao) -> GameNameEditor:
+        return dao.game
+
+    rename_game = provide(RenameGameInteractor)
 
     @provide
     def game_scenario_editor(self, dao: HolderDao) -> GameScenarioEditor:

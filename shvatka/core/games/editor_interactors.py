@@ -12,6 +12,7 @@ from typing import BinaryIO
 
 from adaptix import Retort
 
+from shvatka.core.games.adapters import GameNameEditor
 from shvatka.core.interfaces.clients.file_storage import FileStorage
 from shvatka.core.interfaces.dal.complex import GameScenarioEditor, GameStatusChanger
 from shvatka.core.interfaces.dal.game import (
@@ -36,6 +37,7 @@ from shvatka.core.services.game import (
     get_authors_games,
     get_full_game,
     plain_start,
+    rename_game,
     start_waivers,
     update_game_scenario,
 )
@@ -75,6 +77,24 @@ class CreateGameInteractor:
     async def __call__(self, name: str, identity: IdentityProvider) -> dto.Game:
         author = await identity.get_required_player()
         return await create_game(author=author, name=name, dao=self.dao)
+
+
+@dataclass
+class RenameGameInteractor:
+    """Rename a game draft on its own, without touching its scenario.
+
+    The scenario carries the name too, so saving one renames the game — but a
+    game that has no levels yet has no scenario to save, and that is exactly
+    when a name written in a hurry wants fixing. Hence a route of its own.
+    """
+
+    dao: GameNameEditor
+
+    async def __call__(self, game_id: int, name: str, identity: IdentityProvider) -> dto.Game:
+        author = await identity.get_required_player()
+        check_allow_be_author(author)
+        game = await self.dao.get_by_id(id_=game_id, author=author)
+        return await rename_game(author, game, name, self.dao)
 
 
 @dataclass

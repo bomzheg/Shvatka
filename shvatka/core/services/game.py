@@ -28,6 +28,7 @@ from shvatka.core.rules.game import (
     check_can_read,
     check_can_view_scenario,
     check_game_editable,
+    check_game_name,
 )
 from shvatka.core.rules.level import (
     check_can_link_to_game,
@@ -218,11 +219,30 @@ async def get_game_package(
     )
 
 
-async def rename_game(author: dto.Player, game: dto.Game, new_name: str, dao: GameRenamer):
+async def rename_game(
+    author: dto.Player, game: dto.Game, new_name: str, dao: GameRenamer
+) -> dto.Game:
+    """Give the game another name, answering with the game as it is now.
+
+    Renaming to the name it already has is not an error, it just writes
+    nothing — the caller does not have to compare first.
+    """
     check_can_read(game, author)
     check_game_editable(game)
-    await dao.rename_game(game, new_name)
+    check_game_name(new_name, author)
+    name = new_name.strip()
+    if name != game.name:
+        if not await dao.is_name_available(name):
+            raise CantEditGame(
+                game=game,
+                player=author,
+                text=f"cant rename game to {name} (name is already taken)",
+                notify_user="Игра с таким названием уже есть",
+            )
+        await dao.rename_game(game, name)
+        game.name = name
     await dao.commit()
+    return game
 
 
 async def start_waivers(game: dto.Game, author: dto.Player, dao: WaiverStarter):

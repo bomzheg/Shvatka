@@ -1,0 +1,167 @@
+= SHEP-0013 — Undoing a false start
+:navtitle: SHEP-0013 Undoing a false start
+
+[cols="1,4"]
+|===
+| SHEP | 0013
+| Title | Undoing a false start
+| Status | `Accepted, implemented`
+| Created | 2026-09-01
+| Updated | 2026-09-01
+| Related | xref:shep-0009-key-submission-latency.adoc[SHEP-0009]
+|===
+
+== Summary
+
+A game that was started by mistake cannot be given back. The admin panel can
+already walk its status back to `getting_waivers`, but the run stays in the
+database: the level times say every team is where the false start left it, and
+the keys they typed are already accepted. Replaying the game then starts each
+team halfway through it. This adds a checkbox to the status change — sweep the
+four tables a run writes into — and, next to it, the ability to add and remove a
+single waiver, because a repaired game usually needs its roster repaired too.
+
+== Context
+
+Playing a game writes into exactly four tables:
+
+[cols="2,3,3",options="header"]
+|===
+| table | rows per game | references
+
+| `levels_times` | one per team per level entered | `games`, `teams`
+| `log_keys` | one per key typed, right or wrong | `games`, `teams`, `levels_times`, `event_log`
+| `event_log` | one per effect (bonus, penalty, timer) | `games`, `teams`, `levels_times`
+| `timers_log` | one per timer started | `levels_times`, `event_log`
+|===
+
+Nothing else a run touches is per-run: the waivers are the roster, the scenario
+is the author's, the files are the game's.
+
+`AdminChangeGameStatusInteractor`
+(`shvatka/core/games/admin_interactors.py`) already moves a game between
+statuses and, leaving the active statuses, cancels its planned start — because
+otherwise the scheduler would start it again minutes later and undo the repair.
+The run is the same class of leftover, one step deeper: the status says the
+game has not been played, and the tables say it has.
+
+Today the only way out is `psql`. That is a poor place to remember that
+`log_keys` and `timers_log` both point at `event_log` and at `levels_times`,
+that `timers_log` has no `game_id` of its own, and that deleting in the wrong
+order fails on a foreign key halfway through — leaving the game in a state worse
+than the one being repaired.
+
+== Decision
+
+=== The purge rides on the status change, not on an endpoint of its own
+
+`PUT /admin/games/{id}/status` takes `purge_runtime: bool = false`. One request,
+one transaction: the new status and the deletes commit together, or neither
+does.
+
+A separate `DELETE /admin/games/{id}/runtime` was the obvious alternative and
+loses on exactly that. Two requests can half-succeed, and the half that fails is
+never the harmless one — a game whose rows are gone but whose status still says
+`finished` is unplayable *and* looks fine in the panel. Riding on the status
+change also puts the checkbox where the admin already is, which is the whole
+user-facing point.
+
+=== Only on the way back, and never on the way forward
+
+`check_can_purge_game_runtime` (`shvatka/core/rules/game.py`) allows the purge
+only from `PLAYED_STATUSES` (`started`, `finished`, `complete`) into
+`REWOUND_STATUSES` (`getting_waivers`, `ready`, `underconstruction`). Any other
+combination is refused before anything is written.
+
+The rule is a rule and not a UI decision because the alternatives are all worse.
+Silently ignoring the flag on a move that keeps the run teaches an admin that
+the checkbox sometimes does nothing. Honouring it on a *forward* move — a game
+being completed — would let the panel erase the history of a game that is going
+on, which nothing about the panel should be able to do. Refusing is the only
+option that leaves the admin knowing what happened.
+
+`complete` is in the "played" set rather than only `started` and `finished`,
+because the mistake worth undoing is sometimes discovered after the game was
+closed. Nothing else about `complete` changes: a game rewound out of it keeps
+its number (see `complete_game`), so the archive is not renumbered by a repair.
+
+=== The waivers are deliberately not swept
+
+Rewinding to `getting_waivers` is the common case, and its whole point is that
+the teams who signed up stay signed up. A false start costs the orgs an evening;
+making every team re-submit its roster would cost them one too.
+
+That is also why the roster gets an editing pair rather than a reset:
+`POST /admin/waivers/game/{id}/teams/{team_id}/players` and
+`DELETE …/players/{player_id}` (`AdminAddWaiverInteractor`,
+`AdminRemoveWaiverInteractor`). The panel could already *read* a game's waivers
+and remove a poll vote; what it could not do is fix a roster when the captain is
+gone, unreachable, or missed the deadline.
+
+Two details of that pair are decisions rather than defaults:
+
+* the player must currently play in the team. A waiver for somebody who plays
+  elsewhere would not appear in the roster anyway — `WaiverDao.get_played` reads
+  it through the live membership — so writing one would produce a row that
+  cannot be seen and cannot be removed from the panel. The admin already has
+  `POST /admin/teams/{id}/players` for the other half of that repair.
+* removing a waiver deletes the row rather than setting `played = revoked`. The
+  captain's own revoke marks a player as barred from re-signing
+  (`WaiverDao.is_excluded`); an admin undoing a mistake means the opposite, and
+  the team must be free to sign the player up again.
+
+=== The deletes are per-table; the order is the use case's
+
+Following the DAO rules in `AGENTS.md`: each table is deleted through its own
+dao (`LevelTimeDao`, `KeyTimeDao`, `GameEventDao`, `TimersDAO`), and the
+interactor walks them in the order the foreign keys allow — `timers_log` and
+`log_keys` first, then `event_log`, then `levels_times`. `timers_log` has no
+game of its own, so the interactor reads the game's level time ids first and
+hands them over.
+
+They are composed behind `GameRuntimePurger` and folded into the existing
+`AdminGameStatusChanger`, so the interactor keeps a single dao. That protocol was
+until now "the games table and nothing else"; it is now "the games table, plus
+the deletes that undo a run". The line it was drawn on still holds — the purge
+reads no key, no event and no team's position, it only deletes — but it is worth
+saying out loud, because the next thing added to that protocol will be tempted
+to be a `SELECT`.
+
+== Consequences
+
+* The purge is irreversible and has no dry run. The panel confirms twice (the
+  status change already confirms once) and the interactor logs the acting
+  admin's id and the number of level times it dropped, which is the only trace
+  left afterwards.
+* The four tables are now enumerated in three places: this document, the
+  `GameRuntimePurger` protocol, and its implementation. A fifth table written
+  during a run would have to be added to all three — there is no cascade and no
+  reflection doing it automatically. That is deliberate: a `DELETE` that
+  discovers its own scope is not something to have.
+* `achievements` is not swept, and is not a mistake: an achievement is a
+  player's, not a run's, and nothing about replaying a game invalidates one.
+* Waivers stay editable one player at a time. Replacing a whole team's roster
+  from the panel would need the captain-side `replace_team_waivers` semantics
+  (which delete the players not listed), and no one has asked for it.
+
+== Phases and status
+
+[cols="1,4,2",options="header"]
+|===
+| Phase | Content | Status
+
+| 1 | `purge_runtime` on the status change; per-table deletes; the rewind rule | ✅ done
+| 2 | Admin add/remove of a single waiver | ✅ done
+| 3 | `shvatka-ui`: the checkbox on the status form, add/remove on the waivers page | ✅ done
+|===
+
+== Deviations from the plan
+
+None so far.
+
+== Open questions
+
+Whether a rewound game should also lose its `results` (`published_chanel_id`,
+`results_picture_file_id`, `keys_url`) — they describe a run that is being
+declared not to have happened. Nothing breaks while they stay, and a game
+rewound out of `complete` is rare enough that no one has hit it yet.

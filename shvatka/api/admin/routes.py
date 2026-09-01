@@ -45,9 +45,11 @@ from shvatka.core.teams.admin_interactors import (
 )
 from shvatka.core.utils import exceptions
 from shvatka.core.waiver.admin_interactors import (
+    AdminAddWaiverInteractor,
     AdminGameWaiversReaderInteractor,
     AdminPollReaderInteractor,
     AdminRemovePollVoteInteractor,
+    AdminRemoveWaiverInteractor,
 )
 from shvatka.infrastructure.db.dao.holder import HolderDao
 
@@ -265,6 +267,46 @@ async def get_waivers_by_game(
 
 
 @inject
+async def add_waiver(
+    identity: FromDishka[ApiIdentityProvider],
+    interactor: FromDishka[AdminAddWaiverInteractor],
+    id_: Annotated[int, Path(alias="id")],
+    team_id: Annotated[int, Path()],
+    body: Annotated[requests.AdminAddWaiver, Body()],
+) -> waivers_responses.TeamWaivers:
+    """Sign a player up for the game over the captain's head.
+
+    The player must play in the team right now. A player who already has a
+    waiver here gets it rewritten, so this is also how ``played`` is changed.
+    Answers with the team's waivers as they now are.
+    """
+    result = await interactor(
+        identity=identity,
+        game_id=id_,
+        team_id=team_id,
+        player_id=body.player_id,
+        played=body.played,
+    )
+    return waivers_responses.TeamWaivers.from_core(result.team, result.waivers)
+
+
+@inject
+async def remove_waiver(
+    identity: FromDishka[ApiIdentityProvider],
+    interactor: FromDishka[AdminRemoveWaiverInteractor],
+    id_: Annotated[int, Path(alias="id")],
+    team_id: Annotated[int, Path()],
+    player_id: Annotated[int, Path()],
+) -> None:
+    """Take the player back out of the game's roster.
+
+    The row goes rather than becoming a ``revoked`` one — the team may sign the
+    player up again afterwards.
+    """
+    await interactor(identity=identity, game_id=id_, team_id=team_id, player_id=player_id)
+
+
+@inject
 async def list_games(
     identity: FromDishka[ApiIdentityProvider],
     interactor: FromDishka[AdminGamesListInteractor],
@@ -290,8 +332,19 @@ async def change_game_status(
     Answers with the game as it now is. Moving it to a status an admin may not
     see (``underconstruction``, ``ready``) is allowed and final: the game is
     its author's again, and this endpoint answers 404 for it afterwards.
+
+    With ``purge_runtime`` the move also erases the run — level times, typed
+    keys, events and timers — so a game whose start was a mistake can be played
+    again from the beginning. It is allowed only when a played game is rewound;
+    on any other move the request is refused and nothing changes. The waivers
+    stay: who signed up survives a false start.
     """
-    game = await interactor(game_id=id_, status=body.status, identity=identity)
+    game = await interactor(
+        game_id=id_,
+        status=body.status,
+        identity=identity,
+        purge_runtime=body.purge_runtime,
+    )
     return shared.Game.from_core(game)
 
 
@@ -395,6 +448,17 @@ def setup() -> APIRouter:
         status_code=204,
     )
     router.add_api_route("/waivers/game/{id}", get_waivers_by_game, methods=["GET"])
+    router.add_api_route(
+        "/waivers/game/{id}/teams/{team_id}/players",
+        add_waiver,
+        methods=["POST"],
+    )
+    router.add_api_route(
+        "/waivers/game/{id}/teams/{team_id}/players/{player_id}",
+        remove_waiver,
+        methods=["DELETE"],
+        status_code=204,
+    )
     router.add_api_route("/games", list_games, methods=["GET"])
     router.add_api_route("/games/{id}/status", change_game_status, methods=["PUT"])
     router.add_api_route("/games/{id}/scenario", change_game_scenario, methods=["PUT"])

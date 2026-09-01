@@ -11,9 +11,12 @@ from dataclasses import dataclass
 from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.models import dto
 from shvatka.core.models.enums import Played
+from shvatka.core.players.player import get_checked_player_on_team
+from shvatka.core.waiver import dto as waiver_dto
 from shvatka.core.waiver.adapters import (
     AdminGameWaiversReader,
     AdminPollReader,
+    AdminWaiverEditor,
     PollVoteRemover,
 )
 from shvatka.core.waiver.services import get_all_played, get_vote_to_voted
@@ -60,3 +63,76 @@ class AdminGameWaiversReaderInteractor:
         logger.warning("admin %s read waivers of game %s", admin.id, game_id)
         game = await self.dao.get_by_id(game_id)  # raises GameNotFound if absent
         return await get_all_played(game, self.dao)
+
+
+@dataclass
+class AdminAddWaiverInteractor:
+    """Sign a player up for a game over the captain's head.
+
+    The way in when the captain is gone, missed the deadline, or simply left
+    somebody out: the panel writes the waiver the team would have written. The
+    player has to be *in* the team right now — a waiver for somebody who plays
+    elsewhere would never show up in the game's roster anyway, since that is
+    read through the current membership.
+
+    Re-signing a player who already has a waiver rewrites it, which is how the
+    panel changes a ``no`` into a ``yes`` without a second endpoint.
+    """
+
+    dao: AdminWaiverEditor
+
+    async def __call__(
+        self,
+        identity: IdentityProvider,
+        game_id: int,
+        team_id: int,
+        player_id: int,
+        played: Played = Played.yes,
+    ) -> waiver_dto.TeamWaivers:
+        admin = await identity.get_superuser()
+        game = await self.dao.get_game_by_id(game_id)
+        team = await self.dao.get_team_by_id(team_id)
+        player = await self.dao.get_player_by_id(player_id)
+        await get_checked_player_on_team(player, team, self.dao)
+        await self.dao.upsert(dto.Waiver(player=player, team=team, game=game, played=played))
+        await self.dao.commit()
+        logger.warning(
+            "admin %s set waiver of player %s in team %s for game %s to %s",
+            admin.id,
+            player.id,
+            team.id,
+            game.id,
+            played.name,
+        )
+        return waiver_dto.TeamWaivers(
+            team=team, waivers=await self.dao.get_team_waivers(game, team)
+        )
+
+
+@dataclass
+class AdminRemoveWaiverInteractor:
+    """Take a player back out of a game's roster.
+
+    The row goes rather than turning into a ``revoked`` one: the captain's own
+    revoke marks a player as barred from re-signing, and an admin undoing a
+    mistake means the opposite — the team may sign them up again.
+    """
+
+    dao: AdminWaiverEditor
+
+    async def __call__(
+        self, identity: IdentityProvider, game_id: int, team_id: int, player_id: int
+    ) -> None:
+        admin = await identity.get_superuser()
+        game = await self.dao.get_game_by_id(game_id)
+        team = await self.dao.get_team_by_id(team_id)
+        player = await self.dao.get_player_by_id(player_id)
+        await self.dao.delete(dto.WaiverQuery(player=player, team=team, game=game))
+        await self.dao.commit()
+        logger.warning(
+            "admin %s removed waiver of player %s in team %s for game %s",
+            admin.id,
+            player.id,
+            team.id,
+            game.id,
+        )

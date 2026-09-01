@@ -97,6 +97,7 @@ the edge-specific twist.
 | **Game** | Игра | The aggregate root of the engine: an author, a name, an ordered list of levels, a status, a start time, and results. | `dto.Game`, `dto.FullGame`, `dto.PreviewGame` |
 | **Game status** | Статус игры | Where the game is in its lifecycle — see the table below. Nearly every permission check reads it. | `enums.GameStatus` |
 | **Game number** | Номер игры | The game's place in the archive. Assigned as `max + 1` at completion, so only played games have one. | `Game.number`, `game.complete_game` |
+| **Game run** | Ход игры | Everything playing a game produced: the **level times**, the typed **keys**, the **events** and the **timers**. Not part of the game — the game is what the author wrote — but what a *second* run of the same game would collide with, which is why undoing a false start sweeps it. Four tables, and only these four. | `levels_times`, `log_keys`, `event_log`, `timers_log`; `GameRuntimePurger` |
 | **Organizer (org)** | Организатор (орг) | A player who runs a game rather than playing it. The author is the **primary organizer** and holds every right; anyone else invited is a **secondary organizer** with explicit permissions. | `dto.Organizer`, `dto.PrimaryOrganizer`, `dto.SecondaryOrganizer` |
 | **Org permission** | Полномочие орга | What a secondary organizer may do: spy, see the key log, validate waivers, view the scenario. **Nothing is granted by default.** | `enums.OrgPermission` |
 | **Manage token** | — | The game's secret, checked when someone acts on the game through an invite link. | `Game.manage_token`, `organizers.check_game_token` |
@@ -126,6 +127,15 @@ back out of waivers opened too early) but never read its content while it is not
 complete. A game in `underconstruction` or `ready` is its author's alone and is
 reported as not found there — including the game an admin has just moved back,
 which is the point: the fix hands the game over and ends the admin's part in it.
+
+Two more groups name the two halves of a **rewind** — an admin declaring that a
+run never happened. `PLAYED_STATUSES` = `started`, `finished`, `complete` (the
+ones a game only reaches by being played) and `REWOUND_STATUSES` =
+`getting_waivers`, `ready`, `underconstruction` (the ones before a run). Moving
+from the first group into the second is the only time the **game run** may be
+swept along with the status (`purge_runtime`), because it is the only time the
+run is being disowned rather than made history. The waivers are never part of
+it: who signed up survives a false start. See SHEP-0013.
 
 A game's **release** follows the statuses on its own schedule, wider than
 `EDITABLE_STATUSES`: it may be rewritten up to and including `finished` (it is

@@ -1,7 +1,7 @@
 import typing
 from datetime import datetime, tzinfo
 
-from sqlalchemy import ScalarResult, select
+from sqlalchemy import ScalarResult, delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 
@@ -19,6 +19,12 @@ class GameEventDao(BaseDAO[models.GameEvent]):
         self, session: AsyncSession, clock: typing.Callable[[tzinfo], datetime] = datetime.now
     ) -> None:
         super().__init__(models.GameEvent, session, clock=clock)
+
+    async def delete_by_game(self, game: dto.Game) -> None:
+        """Drop the game's events. Keys and timers pointing at them must go first."""
+        await self.session.execute(
+            delete(models.GameEvent).where(models.GameEvent.game_id == game.id)
+        )
 
     async def get_team_level_events(
         self,

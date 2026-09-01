@@ -1,14 +1,12 @@
 from collections.abc import Iterable
 from dataclasses import dataclass
 
-from sqlalchemy.exc import NoResultFound
-
 from shvatka.core.models import dto
 from shvatka.core.models.enums import Played
-from shvatka.core.utils import exceptions
 from shvatka.core.waiver.adapters import (
     AdminGameWaiversReader,
     AdminPollReader,
+    AdminWaiverEditor,
     PollDraftsReader,
     PollVoteRemover,
     WaiverVoteAdder,
@@ -102,10 +100,7 @@ class AdminGameWaiversReaderImpl(AdminGameWaiversReader):
     dao: HolderDao
 
     async def get_by_id(self, id_: int) -> dto.Game:
-        try:
-            return await self.dao.game.get_by_id(id_)
-        except NoResultFound as e:
-            raise exceptions.GameNotFound(game_id=id_) from e
+        return await self.dao.game.get_by_id(id_)
 
     async def get_played_teams(self, game: dto.Game) -> Iterable[dto.Team]:
         return await self.dao.waiver.get_played_teams(game)
@@ -115,3 +110,40 @@ class AdminGameWaiversReaderImpl(AdminGameWaiversReader):
 
     async def get_all_by_game(self, game: dto.Game) -> list[dto.Waiver]:
         return await self.dao.waiver.get_all_by_game(game)
+
+
+@dataclass
+class AdminWaiverEditorImpl(AdminWaiverEditor):
+    """Writes one waiver row, with the three entities it needs to name it.
+
+    Each getter goes to its own dao, and each of those already answers a missing
+    row with the domain's own "not found" — so an admin fixing a roster gets a
+    404 for a game, a team or a player that is not there, and nothing has to be
+    translated here.
+    """
+
+    dao: HolderDao
+
+    async def get_game_by_id(self, id_: int) -> dto.Game:
+        return await self.dao.game.get_by_id(id_)
+
+    async def get_team_by_id(self, id_: int) -> dto.Team:
+        return await self.dao.team.get_by_id(id_)
+
+    async def get_player_by_id(self, id_: int) -> dto.Player:
+        return await self.dao.player.get_by_id(id_)
+
+    async def get_team_player(self, player: dto.Player) -> dto.TeamPlayer:
+        return await self.dao.team_player.get_team_player(player)
+
+    async def get_team_waivers(self, game: dto.Game, team: dto.Team) -> list[dto.Waiver]:
+        return await self.dao.waiver.get_all_by_team(game, team)
+
+    async def upsert(self, waiver: dto.Waiver) -> None:
+        await self.dao.waiver.upsert(waiver)
+
+    async def delete(self, waiver: dto.WaiverQuery) -> None:
+        await self.dao.waiver.delete(waiver)
+
+    async def commit(self) -> None:
+        await self.dao.commit()

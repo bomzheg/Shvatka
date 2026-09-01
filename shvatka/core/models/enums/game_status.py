@@ -30,3 +30,15 @@ EDITABLE_STATUSES = (
     GameStatus.ready,
     GameStatus.getting_waivers,
 )
+PLAYED_STATUSES = (GameStatus.started, GameStatus.finished, GameStatus.complete)
+"""Statuses a game only reaches by having been played. Everything a run
+produces — level times, typed keys, events, timers — exists exactly for the
+games that got this far."""
+REWOUND_STATUSES = (
+    GameStatus.getting_waivers,
+    GameStatus.ready,
+    GameStatus.underconstruction,
+)
+"""Statuses that put a game back *before* its run. Moving a played game into
+one of them is the admin undoing a start, and the only moment the run's data
+may be swept (see ``AdminChangeGameStatusInteractor``)."""

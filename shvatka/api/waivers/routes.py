@@ -1,12 +1,10 @@
-import logging
 from collections.abc import Iterable
 from typing import Annotated
 
 from dishka import FromDishka
 from dishka.integrations.fastapi import inject
-from fastapi import APIRouter, Body, HTTPException
+from fastapi import APIRouter, Body
 from fastapi.params import Path
-from sqlalchemy.exc import NoResultFound
 
 from shvatka.api.app.dependencies.auth import ApiIdentityProvider
 from shvatka.api.waivers import requests, responses
@@ -18,8 +16,6 @@ from shvatka.core.waiver.interactors import (
     WaiverCompleteReaderInteractor,
 )
 from shvatka.infrastructure.db.dao.holder import HolderDao
-
-logger = logging.getLogger(__name__)
 
 
 @inject
@@ -54,11 +50,9 @@ async def get_waivers_by_game(
     dao: FromDishka[HolderDao],
     id_: Annotated[int, Path(alias="id")],
 ) -> responses.WaiversDto:
-    try:
-        game = await get_game(id_, dao=dao.game)
-    except NoResultFound as e:
-        logger.info("game %s not found", id_, exc_info=e)
-        raise HTTPException(status_code=404, detail={"text": "game not found"}) from e
+    # a game that is not there raises GameNotFound from the dao, which the
+    # error handler already answers with a 404
+    game = await get_game(id_, dao=dao.game)
     waivers: dict[dto.Team, Iterable[dto.VotedPlayer]] = await interactor(game)
     return responses.WaiversDto.from_core(waivers)
 

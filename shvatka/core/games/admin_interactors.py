@@ -15,6 +15,8 @@ A game's *status* is a different matter: the panel may walk a game that
 collects waivers, runs, is finished or is complete to another status (see
 :class:`AdminChangeGameStatusInteractor`), without ever reading a level, a
 hint or a file of it. Games still being written stay invisible even to that.
+Rewinding a played game may take the run with it — the level times, keys,
+events and timers of a false start — which is a delete and never a read.
 
 The same line runs through the one thing the panel may do to a game that is
 being *played* — resending a level's messages to a team that lost them (see
@@ -44,7 +46,7 @@ from shvatka.core.models import dto
 from shvatka.core.models.dto import hints, scn
 from shvatka.core.models.enums import GameStatus
 from shvatka.core.models.enums.game_status import ACTIVE_STATUSES, ADMIN_MANAGEABLE_STATUSES
-from shvatka.core.rules.game import check_admin_can_manage_game
+from shvatka.core.rules.game import check_admin_can_manage_game, check_can_purge_game_runtime
 from shvatka.core.services.game import check_no_other_game_active, complete_game
 from shvatka.core.services.scenario.files import save_file, sync_files_for_level
 from shvatka.core.services.scenario.game_ops import parse_uploaded_game
@@ -201,17 +203,37 @@ class AdminChangeGameStatusInteractor:
     A game the admin may not see (``underconstruction``, ``ready``) is reported
     as not found — including the game the admin has just moved there, which is
     exactly the point: the fix hands the game back to its author.
+
+    Rewinding a game that was *played* leaves the run behind, and that is the
+    one thing the status alone cannot repair: the level times, keys, events and
+    timers of the false start are still there, and the game replayed on the
+    right evening would start with every team already on the level it reached.
+    So the move may take them with it — ``purge_runtime``, the panel's
+    checkbox — and only on that move: see
+    :func:`~shvatka.core.rules.game.check_can_purge_game_runtime`. Nothing of
+    the run is read on the way out; it is four deletes, in the order the
+    foreign keys allow, in the transaction that writes the new status. The
+    waivers are deliberately not among them — who signed up survives a false
+    start, and that is the whole point of rewinding to ``getting_waivers``.
     """
 
     dao: AdminGameStatusChanger
     scheduler: Scheduler
 
     async def __call__(
-        self, game_id: int, status: GameStatus, identity: IdentityProvider
+        self,
+        game_id: int,
+        status: GameStatus,
+        identity: IdentityProvider,
+        purge_runtime: bool = False,
     ) -> dto.Game:
         admin = await identity.get_superuser()
         game = await self.dao.get_by_id(id_=game_id)
         check_admin_can_manage_game(game)
+        if purge_runtime:
+            # refuse before anything is written: an admin who ticked the box on
+            # a move that keeps the run must be told, not quietly obeyed by half
+            check_can_purge_game_runtime(game, status)
         if status == game.status:
             return game
         if status in ACTIVE_STATUSES:
@@ -224,9 +246,31 @@ class AdminChangeGameStatusInteractor:
             await self.dao.set_status(game, status)
             if status not in ACTIVE_STATUSES:
                 await self._cancel_planned_start(game)
+            if purge_runtime:
+                await self._purge_runtime(game, admin)
             await self.dao.commit()
         logger.warning("admin %s changed status of game %s to %s", admin.id, game.id, status.name)
         return game
+
+    async def _purge_runtime(self, game: dto.Game, admin: dto.Player) -> None:
+        """Erase what playing the game produced, deepest reference first.
+
+        ``log_keys`` and ``timers_log`` point at both ``event_log`` and
+        ``levels_times``, and ``event_log`` points at ``levels_times`` — so the
+        order is fixed, and ``timers_log`` (which has no game of its own) is
+        addressed through the level time ids read before anything is dropped.
+        """
+        level_time_ids = await self.dao.get_level_time_ids(game)
+        await self.dao.delete_timers(level_time_ids)
+        await self.dao.delete_typed_keys(game)
+        await self.dao.delete_events(game)
+        await self.dao.delete_level_times(game)
+        logger.warning(
+            "admin %s purged the run of game %s (%s level times)",
+            admin.id,
+            game.id,
+            len(level_time_ids),
+        )
 
     async def _cancel_planned_start(self, game: dto.Game) -> None:
         if game.start_at is None:

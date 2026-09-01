@@ -1,7 +1,7 @@
 import typing
 from datetime import datetime, tzinfo
 
-from sqlalchemy import select, update
+from sqlalchemy import delete, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 
@@ -22,6 +22,19 @@ class LevelTimeDao(BaseDAO[models.LevelTime]):
     async def get_by_id(self, id_: int, team: dto.Team, game: dto.Game) -> dto.LevelTime:
         model = await self._get_by_id(id_)
         return model.to_dto(game=game, team=team)
+
+    async def get_ids_by_game(self, game: dto.Game) -> list[int]:
+        """Ids of every level time of the game — what the run hangs off."""
+        result = await self.session.scalars(
+            select(models.LevelTime.id).where(models.LevelTime.game_id == game.id)
+        )
+        return list(result.all())
+
+    async def delete_by_game(self, game: dto.Game) -> None:
+        """Drop the game's level times. Everything referencing them must go first."""
+        await self.session.execute(
+            delete(models.LevelTime).where(models.LevelTime.game_id == game.id)
+        )
 
     async def set_to_level(
         self,

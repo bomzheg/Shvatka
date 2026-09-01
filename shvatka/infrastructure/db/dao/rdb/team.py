@@ -9,7 +9,7 @@ from sqlalchemy.orm import joinedload
 from sqlalchemy.orm.interfaces import ORMOption
 
 from shvatka.core.models import dto
-from shvatka.core.utils.exceptions import AnotherTeamInChat, TeamError
+from shvatka.core.utils.exceptions import AnotherTeamInChat, TeamError, TeamNotFound
 from shvatka.infrastructure.db import models
 
 from .base import ILIKE_ESCAPE, BaseDAO, ilike_pattern
@@ -118,11 +118,15 @@ class TeamDao(BaseDAO[models.Team]):
             )
 
     async def get_by_id(self, id_: int) -> dto.Team:
-        team = await self._get_by_id(
-            id_,
-            get_team_options(),
-            populate_existing=True,
-        )
+        """The team, or ``TeamNotFound`` — never a bare ``NoResultFound``."""
+        try:
+            team = await self._get_by_id(
+                id_,
+                get_team_options(),
+                populate_existing=True,
+            )
+        except NoResultFound as e:
+            raise TeamNotFound(team_id=id_) from e
         return team.to_dto_chat_prefetched()
 
     async def get_captained_teams(self, captain: dto.Player) -> list[dto.Team]:

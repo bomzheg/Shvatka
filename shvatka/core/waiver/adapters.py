@@ -54,6 +54,43 @@ class AdminPollReader(PollTeamsGetter, WaiverVoteGetter, TeamByIdGetter, Protoco
     pass
 
 
+class AdminWaiverEditor(Protocol):
+    """Add and remove single waivers on behalf of an admin.
+
+    Everything is addressed by id, and the getters are named apart on purpose:
+    a game, a team and a player all answer to ``get_by_id`` in their own dao,
+    so composing the narrow protocols here would collide on the name.
+
+    Only the ``waivers`` table is written. The poll draft is a different thing
+    with its own button in the panel, and a waiver of a game long over has no
+    poll to speak of — so removing one leaves any vote alone.
+    """
+
+    async def get_game_by_id(self, id_: int) -> dto.Game:
+        raise NotImplementedError
+
+    async def get_team_by_id(self, id_: int) -> dto.Team:
+        raise NotImplementedError
+
+    async def get_player_by_id(self, id_: int) -> dto.Player:
+        raise NotImplementedError
+
+    async def get_team_player(self, player: dto.Player) -> dto.TeamPlayer:
+        raise NotImplementedError
+
+    async def get_team_waivers(self, game: dto.Game, team: dto.Team) -> list[dto.Waiver]:
+        raise NotImplementedError
+
+    async def upsert(self, waiver: dto.Waiver) -> None:
+        raise NotImplementedError
+
+    async def delete(self, waiver: dto.WaiverQuery) -> None:
+        raise NotImplementedError
+
+    async def commit(self) -> None:
+        raise NotImplementedError
+
+
 class AdminGameWaiversReader(Protocol):
     """Load a game by id and read its approved waivers, for the admin panel."""
 

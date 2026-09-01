@@ -147,9 +147,11 @@ class AdminGameScenarioEditorImpl(GameScenarioEditorImpl):
 class AdminGameStatusChangerImpl(AdminGameStatusChanger):
     """Status-only view of a game for the admin panel.
 
-    Everything it can reach is the games table: read one by id, list them by
-    status, write a status, a number, a planned start. No level, no hint, no
-    file — an admin has no way to a game's content through here.
+    What it reads is the games table alone: one by id, or the list by status.
+    What it writes is a status, a number, a planned start — and, when the admin
+    rewinds a played game, the deletes that undo its run (level times, typed
+    keys, events, timers), each through that table's own dao. No level, no
+    hint, no file — an admin has no way to a game's content through here.
     """
 
     dao: "HolderDao"
@@ -186,6 +188,21 @@ class AdminGameStatusChangerImpl(AdminGameStatusChanger):
 
     async def cancel_start(self, game: dto.Game) -> None:
         await self.dao.game.cancel_start(game)
+
+    async def get_level_time_ids(self, game: dto.Game) -> list[int]:
+        return await self.dao.level_time.get_ids_by_game(game)
+
+    async def delete_timers(self, level_time_ids: Collection[int]) -> None:
+        await self.dao.timers.delete_by_level_times(level_time_ids)
+
+    async def delete_typed_keys(self, game: dto.Game) -> None:
+        await self.dao.key_time.delete_by_game(game)
+
+    async def delete_events(self, game: dto.Game) -> None:
+        await self.dao.events.delete_by_game(game)
+
+    async def delete_level_times(self, game: dto.Game) -> None:
+        await self.dao.level_time.delete_by_game(game)
 
     async def commit(self) -> None:
         await self.dao.commit()

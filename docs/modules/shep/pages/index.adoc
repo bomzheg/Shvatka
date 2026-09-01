@@ -74,6 +74,10 @@ came out of it*.
 | xref:shep-0012-team-captain-by-id.adoc[SHEP-0012]
 | Carrying the team captain by id
 | Draft
+
+| xref:shep-0013-undoing-a-false-start.adoc[SHEP-0013]
+| Undoing a false start
+| Accepted, implemented
 |===
 
 == Status vocabulary

@@ -1,8 +1,18 @@
 from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.models import dto
-from shvatka.core.models.enums.game_status import ADMIN_MANAGEABLE_STATUSES
+from shvatka.core.models.enums.game_status import (
+    ADMIN_MANAGEABLE_STATUSES,
+    PLAYED_STATUSES,
+    REWOUND_STATUSES,
+    GameStatus,
+)
 from shvatka.core.models.enums.org_permission import OrgPermission
-from shvatka.core.utils.exceptions import CantEditGame, GameNotFound, NotAuthorizedForEdit
+from shvatka.core.utils.exceptions import (
+    CantEditGame,
+    GameNotFound,
+    GameStatusError,
+    NotAuthorizedForEdit,
+)
 
 
 def check_can_read(game: dto.Game, player: dto.Player):
@@ -54,6 +64,34 @@ def check_admin_can_manage_game(game: dto.Game) -> None:
     """
     if game.status not in ADMIN_MANAGEABLE_STATUSES:
         raise GameNotFound(game=game)
+
+
+def check_can_purge_game_runtime(game: dto.Game, status: GameStatus) -> None:
+    """Whether the run of ``game`` may be swept as it moves to ``status``.
+
+    Only on the way back: a game that was played (``started``, ``finished``,
+    ``complete``) moving to a status before its run (``getting_waivers``,
+    ``ready``, ``underconstruction``). That move is the admin declaring the run
+    never happened — a false start, a game opened on the wrong evening — and
+    the level times, keys, events and timers it left behind are what would
+    otherwise make the game unplayable a second time.
+
+    Any other move keeps them: a game that is merely being renumbered or
+    completed still owns its history, and nothing about the panel should be
+    able to erase the history of a game that is going on.
+    """
+    if game.status not in PLAYED_STATUSES or status not in REWOUND_STATUSES:
+        raise GameStatusError(
+            game_status=game.status.name,
+            game=game,
+            text=(
+                f"cant purge the run of a game moving from " f"{game.status.name} to {status.name}"
+            ),
+            notify_user=(
+                "Очистить ход игры можно только возвращая сыгранную игру "
+                "к сбору вейверов или в черновики"
+            ),
+        )
 
 
 def check_game_editable(game: dto.Game):

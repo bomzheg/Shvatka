@@ -30,11 +30,16 @@ class PlayerDao(BaseDAO[models.Player]):
             return await self.create_for_user(user)
 
     async def get_by_id(self, id_: int) -> dto.Player:
-        player = await self._get_by_id(
-            id_,
-            (joinedload(models.Player.user),),
-            populate_existing=True,
-        )
+        """The player, or ``PlayerNotFoundError`` — never a bare ``NoResultFound``,
+        the same way :meth:`get_by_user_id` already answers."""
+        try:
+            player = await self._get_by_id(
+                id_,
+                (joinedload(models.Player.user),),
+                populate_existing=True,
+            )
+        except NoResultFound as e:
+            raise exceptions.PlayerNotFoundError(player_id=id_) from e
         return player.to_dto_user_prefetched()
 
     async def get_identities_by_id(self, id_: int) -> dto.PlayerWithForum:

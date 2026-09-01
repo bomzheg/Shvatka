@@ -14,6 +14,13 @@ class NewGame:
 
 
 @dataclass
+class GameName:
+    """A new name for an existing game."""
+
+    name: str
+
+
+@dataclass
 class GameStartAt:
     start_at: datetime | None = None
 

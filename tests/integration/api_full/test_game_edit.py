@@ -248,6 +248,109 @@ async def test_change_scenario(
 
 
 @pytest.mark.asyncio
+async def test_rename_game(
+    client: AsyncClient,
+    auth: AuthProperties,
+    author: dto.Player,
+    dao: HolderDao,
+    check_dao: HolderDao,
+):
+    game = await create_game(author=author, name="draft to rename", dao=dao.game_creator)
+    resp = await client.put(
+        f"/games/my/{game.id}/name",
+        json={"name": "  переименованная игра  "},
+        cookies=auth_cookies(auth, author),
+    )
+    assert resp.status_code == 200, resp.text
+    assert resp.json()["name"] == "переименованная игра"
+    stored = await check_dao.game.get_by_id(game.id, author)
+    assert stored.name == "переименованная игра"
+
+
+@pytest.mark.asyncio
+async def test_rename_game_without_a_scenario(
+    client: AsyncClient,
+    auth: AuthProperties,
+    author: dto.Player,
+    check_dao: HolderDao,
+):
+    """A game created a moment ago has no levels — and still renames."""
+    cookies = auth_cookies(auth, author)
+    created = await client.post("/games/my", json={"name": "typo in the name"}, cookies=cookies)
+    assert created.status_code == 200, created.text
+    game_id = created.json()["id"]
+
+    resp = await client.put(
+        f"/games/my/{game_id}/name",
+        json={"name": "no typo in the name"},
+        cookies=cookies,
+    )
+    assert resp.status_code == 200, resp.text
+    stored = await check_dao.game.get_by_id(game_id, author)
+    assert stored.name == "no typo in the name"
+
+
+@pytest.mark.asyncio
+async def test_rename_game_to_a_taken_name_forbidden(
+    client: AsyncClient,
+    auth: AuthProperties,
+    author: dto.Player,
+    dao: HolderDao,
+    check_dao: HolderDao,
+):
+    occupied = await create_game(author=author, name="name already used", dao=dao.game_creator)
+    game = await create_game(author=author, name="draft wanting that name", dao=dao.game_creator)
+    resp = await client.put(
+        f"/games/my/{game.id}/name",
+        json={"name": occupied.name},
+        cookies=auth_cookies(auth, author),
+    )
+    assert resp.status_code == 422, resp.text
+    assert resp.json()["type"] == "CantEditGame"
+    stored = await check_dao.game.get_by_id(game.id, author)
+    assert stored.name == "draft wanting that name"
+
+
+@pytest.mark.asyncio
+async def test_rename_game_to_an_empty_name_forbidden(
+    client: AsyncClient,
+    auth: AuthProperties,
+    author: dto.Player,
+    dao: HolderDao,
+    check_dao: HolderDao,
+):
+    game = await create_game(author=author, name="draft keeping its name", dao=dao.game_creator)
+    resp = await client.put(
+        f"/games/my/{game.id}/name",
+        json={"name": "   "},
+        cookies=auth_cookies(auth, author),
+    )
+    assert resp.status_code == 422, resp.text
+    stored = await check_dao.game.get_by_id(game.id, author)
+    assert stored.name == "draft keeping its name"
+
+
+@pytest.mark.asyncio
+async def test_rename_foreign_game_forbidden(
+    client: AsyncClient,
+    auth: AuthProperties,
+    harry: dto.Player,
+    game: dto.FullGame,
+    check_dao: HolderDao,
+):
+    # harry is not the author of `game`
+    resp = await client.put(
+        f"/games/my/{game.id}/name",
+        json={"name": "hacked"},
+        cookies=auth_cookies(auth, harry),
+    )
+    assert resp.status_code == 422, resp.text
+    assert resp.json()["type"] == "GameHasAnotherAuthor"
+    stored = await check_dao.game.get_by_id(game.id)
+    assert stored.name == game.name
+
+
+@pytest.mark.asyncio
 async def test_change_start_at(
     client: AsyncClient,
     auth: AuthProperties,

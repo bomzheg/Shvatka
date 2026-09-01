@@ -54,7 +54,13 @@ class GameCreator(Committer, GameNameChecker, LevelFilesSyncDao, Protocol):
         raise NotImplementedError
 
 
-class GameRenamer(Committer, Protocol):
+class GameRenamer(Committer, GameNameChecker, Protocol):
+    """Rename a game, and tell whether the new name is free.
+
+    Renaming needs the check as much as creating does: the name is what a game
+    is known by, so two games may not share one.
+    """
+
     async def rename_game(self, game: dto.Game, new_name: str):
         raise NotImplementedError
 

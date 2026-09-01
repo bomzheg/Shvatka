@@ -1,6 +1,8 @@
 import typing
+from collections.abc import Collection
 from datetime import datetime, tzinfo
 
+from sqlalchemy import delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from shvatka.core.models import dto
@@ -14,6 +16,18 @@ from .base import BaseDAO
 class TimersDAO(BaseDAO[TimerAction]):
     def __init__(self, session: AsyncSession, clock: typing.Callable[[tzinfo], datetime]) -> None:
         super().__init__(TimerAction, session, clock=clock)
+
+    async def delete_by_level_times(self, level_time_ids: Collection[int]) -> None:
+        """Drop the timers of the given level times.
+
+        ``timers_log`` has no game of its own — it hangs off ``levels_times`` —
+        so the caller resolves the ids there and hands them over.
+        """
+        if not level_time_ids:
+            return
+        await self.session.execute(
+            delete(TimerAction).where(TimerAction.level_time_id.in_(level_time_ids))
+        )
 
     async def save_timer(
         self,

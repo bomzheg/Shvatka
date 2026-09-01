@@ -3,7 +3,7 @@ import uuid
 from collections.abc import Sequence
 from datetime import datetime, tzinfo
 
-from sqlalchemy import ScalarResult, select, update
+from sqlalchemy import ScalarResult, delete, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 
@@ -20,6 +20,10 @@ class KeyTimeDao(BaseDAO[models.KeyTime]):
         self, session: AsyncSession, clock: typing.Callable[[tzinfo], datetime] = datetime.now
     ) -> None:
         super().__init__(models.KeyTime, session, clock=clock)
+
+    async def delete_by_game(self, game: dto.Game) -> None:
+        """Drop every key typed in the game."""
+        await self.session.execute(delete(models.KeyTime).where(models.KeyTime.game_id == game.id))
 
     async def get_correct_typed_keys(
         self,

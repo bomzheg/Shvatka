@@ -163,15 +163,18 @@ from shvatka.core.views.team import TeamNotifier
 from shvatka.core.waiver.adapters import (
     AdminGameWaiversReader,
     AdminPollReader,
+    AdminWaiverEditor,
     PollDraftsReader,
     PollVoteRemover,
     WaiverVoteAdder,
     WaiverVoteGetter,
 )
 from shvatka.core.waiver.admin_interactors import (
+    AdminAddWaiverInteractor,
     AdminGameWaiversReaderInteractor,
     AdminPollReaderInteractor,
     AdminRemovePollVoteInteractor,
+    AdminRemoveWaiverInteractor,
 )
 from shvatka.core.waiver.interactors import (
     AddWaiverVoteInteractor,
@@ -218,6 +221,7 @@ from shvatka.infrastructure.db.dao.complex.team import (
 from shvatka.infrastructure.db.dao.complex2.waiver import (
     AdminGameWaiversReaderImpl,
     AdminPollReaderImpl,
+    AdminWaiverEditorImpl,
     PollDraftsReaderImpl,
     PollVoteRemoverImpl,
     WaiverVoteAdderImpl,
@@ -556,6 +560,7 @@ class AdminProvider(Provider):
     admin_poll_reader_dao = provide(AdminPollReaderImpl, provides=AdminPollReader)
     poll_vote_remover_dao = provide(PollVoteRemoverImpl, provides=PollVoteRemover)
     admin_waivers_reader_dao = provide(AdminGameWaiversReaderImpl, provides=AdminGameWaiversReader)
+    admin_waiver_editor_dao = provide(AdminWaiverEditorImpl, provides=AdminWaiverEditor)
 
     @provide
     def admin_email_setter(self, dao: HolderDao) -> AdminEmailSetter:
@@ -614,6 +619,8 @@ class AdminProvider(Provider):
         )
 
     admin_waivers_reader = provide(AdminGameWaiversReaderInteractor)
+    admin_add_waiver = provide(AdminAddWaiverInteractor)
+    admin_remove_waiver = provide(AdminRemoveWaiverInteractor)
 
     @provide
     def admin_search_players(self, dao: HolderDao) -> AdminSearchPlayersInteractor:

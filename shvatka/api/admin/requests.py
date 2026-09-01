@@ -3,6 +3,7 @@ from typing import Any
 
 from shvatka.api.shared.requests import MergeRequest, TimelineItem
 from shvatka.core.models.enums import GameStatus
+from shvatka.core.models.enums.played import Played
 from shvatka.core.players.dto import TimelineItem as CoreTimelineItem
 
 
@@ -18,11 +19,25 @@ class AdminGameStatusChange:
     status: GameStatus
     """the status to move the game to; the game keeps everything else"""
 
+    purge_runtime: bool = False
+    """also erase what playing the game produced — level times, typed keys,
+    events and timers. Only when a played game (``started``, ``finished``,
+    ``complete``) is rewound to ``getting_waivers``, ``ready`` or
+    ``underconstruction``; any other move is refused rather than half-obeyed.
+    Waivers are never touched."""
+
 
 @dataclass
 class AdminResendLevel:
     team_id: int | None = None
     """the single team to resend to; ``null`` means every team of the game"""
+
+
+@dataclass
+class AdminAddWaiver:
+    player_id: int
+    played: Played = Played.yes
+    """how the player takes part; ``yes`` is the roster, the rest are the ways out"""
 
 
 @dataclass

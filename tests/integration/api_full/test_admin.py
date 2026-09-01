@@ -1445,3 +1445,234 @@ async def test_admin_resend_forbidden_for_non_superuser(
         follow_redirects=True,
     )
     assert resp.status_code == 403, resp.text
+
+
+# ---------------------------------------------------------------------------
+# Purging a false start. Rewinding a played game leaves its run behind, and the
+# game replayed on the right evening would start with every team already on the
+# level it reached — so the move may take the run with it.
+# ---------------------------------------------------------------------------
+
+
+async def count_runtime(dao: HolderDao) -> tuple[int, int, int, int]:
+    """The four tables a game's run writes into."""
+    return (
+        await dao.level_time.count(),
+        await dao.key_time.count(),
+        await dao.events.count(),
+        await dao.timers.count(),
+    )
+
+
+@pytest.mark.asyncio
+async def test_admin_purges_the_run_when_rewinding_a_played_game(
+    client: AsyncClient,
+    admin_token: Token,
+    finished_game: dto.FullGame,
+    check_dao: HolderDao,
+):
+    level_times, keys, events, _ = await count_runtime(check_dao)
+    assert level_times > 0
+    assert keys > 0
+    assert events > 0
+
+    resp = await client.put(
+        f"/admin/games/{finished_game.id}/status",
+        json={"status": GameStatus.getting_waivers.value, "purge_runtime": True},
+        cookies=auth_cookies(admin_token),
+        follow_redirects=True,
+    )
+    assert resp.is_success, resp.text
+    assert resp.json()["status"] == GameStatus.getting_waivers.value
+    assert await count_runtime(check_dao) == (0, 0, 0, 0)
+    stored = await check_dao.game.get_by_id(finished_game.id)
+    assert stored.status == GameStatus.getting_waivers
+
+
+@pytest.mark.asyncio
+async def test_the_purge_keeps_the_waivers(
+    client: AsyncClient,
+    admin_token: Token,
+    finished_game: dto.FullGame,
+    check_dao: HolderDao,
+):
+    """Who signed up survives a false start — that is the point of rewinding to
+    ``getting_waivers`` rather than to a draft."""
+    before = await check_dao.waiver.get_all_by_game(finished_game)
+    assert before
+
+    resp = await client.put(
+        f"/admin/games/{finished_game.id}/status",
+        json={"status": GameStatus.getting_waivers.value, "purge_runtime": True},
+        cookies=auth_cookies(admin_token),
+        follow_redirects=True,
+    )
+    assert resp.is_success, resp.text
+    after = await check_dao.waiver.get_all_by_game(finished_game)
+    assert {(w.player.id, w.team.id, w.played) for w in after} == {
+        (w.player.id, w.team.id, w.played) for w in before
+    }
+
+
+@pytest.mark.asyncio
+async def test_a_status_change_without_the_box_keeps_the_run(
+    client: AsyncClient,
+    admin_token: Token,
+    finished_game: dto.FullGame,
+    check_dao: HolderDao,
+):
+    before = await count_runtime(check_dao)
+    resp = await client.put(
+        f"/admin/games/{finished_game.id}/status",
+        json={"status": GameStatus.getting_waivers.value},
+        cookies=auth_cookies(admin_token),
+        follow_redirects=True,
+    )
+    assert resp.is_success, resp.text
+    assert await count_runtime(check_dao) == before
+
+
+@pytest.mark.asyncio
+async def test_the_purge_is_refused_on_a_move_that_is_not_a_rewind(
+    client: AsyncClient,
+    admin_token: Token,
+    finished_game: dto.FullGame,
+    check_dao: HolderDao,
+):
+    """Completing a game is not undoing it — the run is its history."""
+    before = await count_runtime(check_dao)
+    resp = await client.put(
+        f"/admin/games/{finished_game.id}/status",
+        json={"status": GameStatus.complete.value, "purge_runtime": True},
+        cookies=auth_cookies(admin_token),
+        follow_redirects=True,
+    )
+    assert resp.status_code == 422, resp.text
+    assert resp.json()["type"] == "GameStatusError"
+    assert await count_runtime(check_dao) == before
+    stored = await check_dao.game.get_by_id(finished_game.id)
+    assert stored.status == GameStatus.finished
+
+
+@pytest.mark.asyncio
+async def test_purge_forbidden_for_non_superuser(
+    client: AsyncClient,
+    hermione_token: Token,
+    finished_game: dto.FullGame,
+    check_dao: HolderDao,
+):
+    before = await count_runtime(check_dao)
+    resp = await client.put(
+        f"/admin/games/{finished_game.id}/status",
+        json={"status": GameStatus.getting_waivers.value, "purge_runtime": True},
+        cookies=auth_cookies(hermione_token),
+        follow_redirects=True,
+    )
+    assert resp.status_code == 403, resp.text
+    assert await count_runtime(check_dao) == before
+
+
+# ---------------------------------------------------------------------------
+# Editing a game's roster from the panel: the way in when the captain is gone,
+# missed the deadline, or simply left somebody out.
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.asyncio
+async def test_admin_adds_a_waiver(
+    client: AsyncClient,
+    admin_token: Token,
+    game_with_waivers: dto.FullGame,
+    gryffindor: dto.Team,
+    ron: dto.Player,
+    check_dao: HolderDao,
+):
+    # ron voted `no` and is not in the roster
+    assert ron.id not in {
+        p.player.id for p in await check_dao.waiver.get_played(game_with_waivers, gryffindor)
+    }
+
+    resp = await client.post(
+        f"/admin/waivers/game/{game_with_waivers.id}/teams/{gryffindor.id}/players",
+        json={"player_id": ron.id},
+        cookies=auth_cookies(admin_token),
+        follow_redirects=True,
+    )
+    assert resp.is_success, resp.text
+    body = resp.json()
+    assert body["team"]["id"] == gryffindor.id
+    assert body["players"]
+    stored = await check_dao.waiver.get_player_waiver(game_with_waivers, ron, gryffindor)
+    assert stored is not None
+    assert stored.played == Played.yes
+
+
+@pytest.mark.asyncio
+async def test_admin_removes_a_waiver(
+    client: AsyncClient,
+    admin_token: Token,
+    game_with_waivers: dto.FullGame,
+    gryffindor: dto.Team,
+    harry: dto.Player,
+    check_dao: HolderDao,
+):
+    assert await check_dao.waiver.get_player_waiver(game_with_waivers, harry, gryffindor)
+
+    resp = await client.request(
+        "DELETE",
+        f"/admin/waivers/game/{game_with_waivers.id}" f"/teams/{gryffindor.id}/players/{harry.id}",
+        cookies=auth_cookies(admin_token),
+        follow_redirects=True,
+    )
+    assert resp.status_code == 204, resp.text
+    # the row goes rather than becoming `revoked` — the team may sign the
+    # player up again afterwards
+    assert await check_dao.waiver.get_player_waiver(game_with_waivers, harry, gryffindor) is None
+
+
+@pytest.mark.asyncio
+async def test_admin_cant_sign_up_a_player_of_another_team(
+    client: AsyncClient,
+    admin_token: Token,
+    game_with_waivers: dto.FullGame,
+    gryffindor: dto.Team,
+    draco: dto.Player,
+    check_dao: HolderDao,
+):
+    resp = await client.post(
+        f"/admin/waivers/game/{game_with_waivers.id}/teams/{gryffindor.id}/players",
+        json={"player_id": draco.id},
+        cookies=auth_cookies(admin_token),
+        follow_redirects=True,
+    )
+    assert resp.status_code == 422, resp.text
+    assert resp.json()["type"] == "PlayerNotInTeam"
+    assert await check_dao.waiver.get_player_waiver(game_with_waivers, draco, gryffindor) is None
+
+
+@pytest.mark.asyncio
+async def test_admin_waiver_edit_forbidden_for_non_superuser(
+    client: AsyncClient,
+    hermione_token: Token,
+    game_with_waivers: dto.FullGame,
+    gryffindor: dto.Team,
+    harry: dto.Player,
+    ron: dto.Player,
+    check_dao: HolderDao,
+):
+    added = await client.post(
+        f"/admin/waivers/game/{game_with_waivers.id}/teams/{gryffindor.id}/players",
+        json={"player_id": ron.id},
+        cookies=auth_cookies(hermione_token),
+        follow_redirects=True,
+    )
+    assert added.status_code == 403, added.text
+
+    removed = await client.request(
+        "DELETE",
+        f"/admin/waivers/game/{game_with_waivers.id}" f"/teams/{gryffindor.id}/players/{harry.id}",
+        cookies=auth_cookies(hermione_token),
+        follow_redirects=True,
+    )
+    assert removed.status_code == 403, removed.text
+    assert await check_dao.waiver.get_player_waiver(game_with_waivers, harry, gryffindor)

@@ -11,4 +11,5 @@
 ** xref:shep-0010-message-outbox.adoc[SHEP-0010 Message outbox]
 ** xref:shep-0011-player-identity-loading.adoc[SHEP-0011 Player identity loading]
 ** xref:shep-0012-team-captain-by-id.adoc[SHEP-0012 Team captain by id]
+** xref:shep-0013-undoing-a-false-start.adoc[SHEP-0013 Undoing a false start]
 ** xref:template.adoc[SHEP template]

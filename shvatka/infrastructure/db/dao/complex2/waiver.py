@@ -9,6 +9,7 @@ from shvatka.core.utils import exceptions
 from shvatka.core.waiver.adapters import (
     AdminGameWaiversReader,
     AdminPollReader,
+    AdminWaiverEditor,
     PollDraftsReader,
     PollVoteRemover,
     WaiverVoteAdder,
@@ -115,3 +116,48 @@ class AdminGameWaiversReaderImpl(AdminGameWaiversReader):
 
     async def get_all_by_game(self, game: dto.Game) -> list[dto.Waiver]:
         return await self.dao.waiver.get_all_by_game(game)
+
+
+@dataclass
+class AdminWaiverEditorImpl(AdminWaiverEditor):
+    """Writes one waiver row, with the three entities it needs to name it.
+
+    Each getter goes to its own dao, and a missing row becomes the domain's own
+    "not found" — an admin fixing a roster gets 404 for a game or a player that
+    is not there, not a database error.
+    """
+
+    dao: HolderDao
+
+    async def get_game_by_id(self, id_: int) -> dto.Game:
+        try:
+            return await self.dao.game.get_by_id(id_)
+        except NoResultFound as e:
+            raise exceptions.GameNotFound(game_id=id_) from e
+
+    async def get_team_by_id(self, id_: int) -> dto.Team:
+        try:
+            return await self.dao.team.get_by_id(id_)
+        except NoResultFound as e:
+            raise exceptions.TeamError(team_id=id_, text=f"team {id_} not found") from e
+
+    async def get_player_by_id(self, id_: int) -> dto.Player:
+        try:
+            return await self.dao.player.get_by_id(id_)
+        except NoResultFound as e:
+            raise exceptions.PlayerNotFoundError(player_id=id_) from e
+
+    async def get_team_player(self, player: dto.Player) -> dto.TeamPlayer:
+        return await self.dao.team_player.get_team_player(player)
+
+    async def get_team_waivers(self, game: dto.Game, team: dto.Team) -> list[dto.Waiver]:
+        return await self.dao.waiver.get_all_by_team(game, team)
+
+    async def upsert(self, waiver: dto.Waiver) -> None:
+        await self.dao.waiver.upsert(waiver)
+
+    async def delete(self, waiver: dto.WaiverQuery) -> None:
+        await self.dao.waiver.delete(waiver)
+
+    async def commit(self) -> None:
+        await self.dao.commit()

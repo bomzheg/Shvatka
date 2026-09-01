@@ -59,7 +59,36 @@ class AdminGameScenarioEditor(GameScenarioEditor, GameAuthorTransferer, Protocol
         raise NotImplementedError
 
 
-class AdminGameStatusChanger(GameByIdGetter, GameCompleter, GameStartPlanner, Protocol):
+class GameRuntimePurger(Protocol):
+    """The per-table deletes that undo a game's run.
+
+    Four tables hold what playing a game produces — ``levels_times``,
+    ``log_keys``, ``event_log`` and ``timers_log`` — and each is dropped
+    through its own table's dao. Nothing here decides *when*: the order the
+    foreign keys demand (timers and keys, then events, then level times) is
+    the use case's to walk, and ``timers_log`` has no game of its own, so its
+    level time ids are resolved first and handed over.
+    """
+
+    async def get_level_time_ids(self, game: dto.Game) -> list[int]:
+        raise NotImplementedError
+
+    async def delete_timers(self, level_time_ids: Collection[int]) -> None:
+        raise NotImplementedError
+
+    async def delete_typed_keys(self, game: dto.Game) -> None:
+        raise NotImplementedError
+
+    async def delete_events(self, game: dto.Game) -> None:
+        raise NotImplementedError
+
+    async def delete_level_times(self, game: dto.Game) -> None:
+        raise NotImplementedError
+
+
+class AdminGameStatusChanger(
+    GameByIdGetter, GameCompleter, GameStartPlanner, GameRuntimePurger, Protocol
+):
     """Move a game between statuses on behalf of an admin, and list the ones
     the admin may act on.
 
@@ -67,6 +96,10 @@ class AdminGameStatusChanger(GameByIdGetter, GameCompleter, GameStartPlanner, Pr
     completing one needs — the number — and what leaving the active statuses
     needs — cancelling the planned start). Nothing here reaches a level, a
     hint or a file, so the admin panel cannot read a game's content through it.
+
+    The purge (``GameRuntimePurger``) is the one thing it reaches past the
+    games table for, and it only *deletes*: sweeping the run of a game the
+    admin is rewinding never reads a key, an event or where a team got to.
     """
 
     async def set_status(self, game: dto.Game, status: GameStatus) -> None:

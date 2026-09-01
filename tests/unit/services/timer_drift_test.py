@@ -11,13 +11,18 @@ from datetime import UTC, datetime, timedelta
 
 import pytest
 
-from shvatka.core.games.game_play import calculate_hint_time, send_hint
+from shvatka.core.games.game_play import (
+    calculate_hint_time,
+    schedule_first_hint,
+    send_hint,
+)
 from shvatka.core.models import dto
 from shvatka.core.models.dto import action, hints, scn
 from shvatka.core.models.enums import GameStatus
 from shvatka.core.services.key import calculate_timer_level_up_time
+from shvatka.core.services.level_testing import send_testing_level_hint
 from shvatka.core.views.game import ShowTasks, ViewSender
-from tests.mocks.scheduler_mock import SchedulerMock
+from tests.mocks.scheduler_mock import LevelSchedulerMock, SchedulerMock
 
 LEVEL_STARTED_AT = datetime(2025, 4, 12, 22, 0, tzinfo=UTC)
 LEVEL_UP_EFFECTS = action.Effects(id=uuid.uuid4(), level_up=True)
@@ -191,4 +196,79 @@ async def test_next_hint_is_planned_from_level_start():
     *_, hint_number, lt_id, run_at = scheduler.plain_hint_calls[0]
     assert hint_number == 2
     assert lt_id == level_time.id
+    assert run_at == LEVEL_STARTED_AT + timedelta(minutes=12)
+
+
+@pytest.mark.asyncio
+async def test_first_hint_and_timers_are_planned_from_level_start():
+    """Уровень целиком планируется от своего начала, а не от «сейчас»."""
+    level = create_level(timer_minutes=30)
+    scheduler = SchedulerMock()
+
+    await schedule_first_hint(
+        scheduler=scheduler,
+        team=create_team(),
+        next_level=level,
+        lt_id=7,
+        level_started_at=LEVEL_STARTED_AT,
+    )
+
+    assert len(scheduler.plain_hint_calls) == 1
+    *_, run_at = scheduler.plain_hint_calls[0]
+    assert run_at == LEVEL_STARTED_AT + timedelta(minutes=5)
+
+    assert len(scheduler.plain_level_event_calls) == 1
+    *_, effects, run_at = scheduler.plain_level_event_calls[0]
+    assert effects == LEVEL_UP_EFFECTS
+    assert run_at == LEVEL_STARTED_AT + timedelta(minutes=30)
+
+
+class LevelTestingDaoStub:
+    def __init__(self, started_at: datetime) -> None:
+        self.started_at = started_at
+
+    async def is_still_testing(self, suite: dto.LevelTestSuite) -> bool:
+        return True
+
+    async def get_started_at(self, suite: dto.LevelTestSuite) -> datetime:
+        return self.started_at
+
+
+class LevelViewStub:
+    def __init__(self) -> None:
+        self.sent: list[int] = []
+
+    async def send_hint(self, hint_number: int, suite: dto.LevelTestSuite) -> None:
+        self.sent.append(hint_number)
+
+
+@pytest.mark.asyncio
+async def test_testing_hint_is_planned_from_testing_start():
+    """Тестирование уровня оргом считает подсказки так же, как игра."""
+    suite = dto.LevelTestSuite(
+        level=create_level(),
+        tester=dto.SecondaryOrganizer(
+            id=1,
+            player=create_player(),
+            game=create_game(),
+            deleted=False,
+            can_spy=True,
+            can_see_log_keys=True,
+            can_validate_waivers=True,
+            view_scenario=True,
+        ),
+    )
+    scheduler = LevelSchedulerMock()
+
+    await send_testing_level_hint(
+        suite=suite,
+        hint_number=1,
+        view=LevelViewStub(),
+        scheduler=scheduler,
+        dao=LevelTestingDaoStub(LEVEL_STARTED_AT),
+    )
+
+    assert len(scheduler.calls) == 1
+    _, hint_number, run_at = scheduler.calls[0]
+    assert hint_number == 2
     assert run_at == LEVEL_STARTED_AT + timedelta(minutes=12)

@@ -308,14 +308,12 @@ class GamePlayBaseInteractor:
         lt = await self.dao.get_current_level_time(team, game)
 
         tasks.view.append(SendPuzzle(team=team, level=next_level))
-        # отсчитываем от записанного начала уровня, не от текущего момента:
-        # иначе задержка планировщика попадает в план следующего уровня и копится
         await schedule_first_hint(
             scheduler=self.scheduler,
             team=team,
             next_level=next_level,
             lt_id=lt.id,
-            now=lt.start_at,
+            level_started_at=lt.start_at,
         )
         level_up_event = LevelUp(
             team=team, new_level=next_level, orgs_list=await get_spying_orgs(game, self.dao)

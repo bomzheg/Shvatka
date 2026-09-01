@@ -13,6 +13,9 @@ class LevelTestProtocolDao(Committer, Protocol):
     async def is_still_testing(self, suite: dto.LevelTestSuite) -> bool:
         raise NotImplementedError
 
+    async def get_started_at(self, suite: dto.LevelTestSuite) -> datetime:
+        raise NotImplementedError
+
     async def save_key(self, key: str, suite: dto.LevelTestSuite, is_correct: bool):
         raise NotImplementedError
 

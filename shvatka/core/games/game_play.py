@@ -74,7 +74,13 @@ async def start_game(
 
     await asyncio.gather(
         *[
-            schedule_first_hint(scheduler, team, game.levels[0], level_times[team.id].id, now)
+            schedule_first_hint(
+                scheduler=scheduler,
+                team=team,
+                next_level=game.levels[0],
+                lt_id=level_times[team.id].id,
+                level_started_at=level_times[team.id].start_at,
+            )
             for team in teams
         ]
     )
@@ -140,9 +146,14 @@ async def schedule_first_hint(
     team: dto.Team,
     next_level: dto.Level,
     lt_id: int,
-    now: datetime,
+    level_started_at: datetime,
 ):
-    if (next_hint_at := calculate_first_hint_time(next_level, now)) is not None:
+    """
+    Всё, что уровень должен сделать сам по себе, отсчитывается от его записанного начала,
+    а не от текущего момента: иначе задержка планировщика попадает в план следующего
+    уровня и копится от уровня к уровню.
+    """
+    if (next_hint_at := calculate_first_hint_time(next_level, level_started_at)) is not None:
         await scheduler.plain_hint(
             level=next_level,
             team=team,
@@ -155,35 +166,27 @@ async def schedule_first_hint(
             await scheduler.plain_level_event(
                 team=team,
                 lt_id=lt_id,
-                run_at=now + condition.get_action_time(),
+                run_at=level_started_at + condition.get_action_time(),
                 effects=condition.effects,
             )
 
 
-def calculate_first_hint_time(next_level: dto.Level, now: datetime) -> datetime | None:
+def calculate_first_hint_time(
+    next_level: dto.Level, level_started_at: datetime
+) -> datetime | None:
     if next_level.is_last_hint(0):
         return None
-    return calculate_next_hint_time(next_level.get_hint(0), next_level.get_hint(1), now)
+    return calculate_hint_time(level_started_at, next_level.get_hint(1))
 
 
 def calculate_hint_time(level_started_at: datetime, hint: hints.TimeHint) -> datetime:
-    """Момент отправки подсказки — фиксированное смещение от начала уровня."""
+    """
+    Момент отправки подсказки — фиксированное смещение от начала уровня.
+
+    Единственный правильный способ её посчитать: если считать от предыдущей подсказки,
+    задержки доставки будут копиться от подсказки к подсказке.
+    """
     return level_started_at + timedelta(minutes=hint.time)
-
-
-def calculate_next_hint_time(
-    current: hints.TimeHint, next_: hints.TimeHint, now: datetime | None = None
-) -> datetime:
-    if now is None:
-        now = datetime.now(tz=tz_utc)
-    return now + calculate_next_hint_timedelta(current, next_)
-
-
-def calculate_next_hint_timedelta(
-    current_hint: hints.TimeHint,
-    next_hint: hints.TimeHint,
-) -> timedelta:
-    return timedelta(minutes=(next_hint.time - current_hint.time))
 
 
 def need_start_now(game: dto.Game) -> bool:

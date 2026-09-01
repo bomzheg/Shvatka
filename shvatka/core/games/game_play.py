@@ -21,6 +21,9 @@ from shvatka.core.views.game import (
 
 logger = logging.getLogger(__name__)
 
+START_SNAP = timedelta(seconds=2)
+"""На столько планировщик имеет право промахнуться мимо назначенного старта игры."""
+
 
 async def prepare_game(
     game: dto.Game,
@@ -65,9 +68,12 @@ async def start_game(
     logger.info("game %s started", game.id)
     teams = await dao.get_played_teams(game)
 
+    started_at = snap_to_planned_start(game.start_at, now)
     level_times = {}
     for team in teams:
-        level_times[team.id] = await dao.set_to_level(team=team, game=game, level_number=0, at=now)
+        level_times[team.id] = await dao.set_to_level(
+            team=team, game=game, level_number=0, at=started_at
+        )
     await dao.commit()
 
     tasks = ShowTasks(view=[SendPuzzle(team=team, level=game.levels[0]) for team in teams])
@@ -187,6 +193,28 @@ def calculate_hint_time(level_started_at: datetime, hint: hints.TimeHint) -> dat
     задержки доставки будут копиться от подсказки к подсказке.
     """
     return level_started_at + timedelta(minutes=hint.time)
+
+
+def snap_to_planned_start(planned: datetime | None, now: datetime) -> datetime:
+    """
+    Начало игры — назначенное время, если планировщик проснулся почти вовремя.
+
+    Вся сетка игры отсчитывается от начала нулевого уровня, поэтому назначенное время
+    даёт ровные значения вместо «плюс сколько-то миллисекунд». Но проснуться можно
+    и сильно позже (например, после перезапуска), а тогда назначенное время означало бы,
+    что часть первого уровня уже прошла, — в этом случае берём фактическое.
+    """
+    if planned is None:
+        return now
+    if abs(now - planned) <= START_SNAP:
+        return planned
+    logger.info(
+        "game started at %s, %s away from planned %s, so planned start is not used",
+        now,
+        abs(now - planned),
+        planned,
+    )
+    return now
 
 
 def need_start_now(game: dto.Game) -> bool:

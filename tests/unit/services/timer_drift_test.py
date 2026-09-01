@@ -12,9 +12,11 @@ from datetime import UTC, datetime, timedelta
 import pytest
 
 from shvatka.core.games.game_play import (
+    START_SNAP,
     calculate_hint_time,
     schedule_first_hint,
     send_hint,
+    snap_to_planned_start,
 )
 from shvatka.core.models import dto
 from shvatka.core.models.dto import action, hints, scn
@@ -272,3 +274,40 @@ async def test_testing_hint_is_planned_from_testing_start():
     _, hint_number, run_at = scheduler.calls[0]
     assert hint_number == 2
     assert run_at == LEVEL_STARTED_AT + timedelta(minutes=12)
+
+
+GAME_PLANNED_AT = datetime(2025, 4, 12, 22, 0, tzinfo=UTC)
+
+
+@pytest.mark.parametrize(
+    "actual",
+    [
+        GAME_PLANNED_AT,
+        GAME_PLANNED_AT + timedelta(milliseconds=300),
+        GAME_PLANNED_AT + START_SNAP,
+        GAME_PLANNED_AT - timedelta(milliseconds=300),
+        GAME_PLANNED_AT - START_SNAP,
+    ],
+)
+def test_start_snaps_to_planned_time(actual: datetime):
+    """Планировщик проснулся почти вовремя — вся сетка игры встаёт на ровное время."""
+    assert snap_to_planned_start(GAME_PLANNED_AT, actual) == GAME_PLANNED_AT
+
+
+@pytest.mark.parametrize(
+    "actual",
+    [
+        GAME_PLANNED_AT + START_SNAP + timedelta(milliseconds=1),
+        GAME_PLANNED_AT + timedelta(minutes=20),
+        GAME_PLANNED_AT - START_SNAP - timedelta(milliseconds=1),
+    ],
+)
+def test_late_start_keeps_the_wall_clock(actual: datetime):
+    """Опоздали ощутимо — иначе первый уровень начался бы задним числом."""
+    assert snap_to_planned_start(GAME_PLANNED_AT, actual) == actual
+
+
+def test_start_without_planned_time():
+    now = GAME_PLANNED_AT + timedelta(minutes=3)
+
+    assert snap_to_planned_start(None, now) == now

@@ -207,11 +207,11 @@ async def merge_teams(
     identity: FromDishka[ApiIdentityProvider],
     interactor: FromDishka[AdminMergeTeamsInteractor],
     body: Annotated[shared_requests.MergeRequest, Body()],
-) -> shared.Team:
+) -> shared.TeamWithCaptain:
     team = await interactor(
         identity=identity, primary_id=body.primary_id, secondary_id=body.secondary_id
     )
-    result = shared.Team.from_core(team)
+    result = shared.TeamWithCaptain.from_core(team)
     assert result is not None
     return result
 
@@ -222,9 +222,9 @@ async def change_team_captain(
     interactor: FromDishka[AdminChangeTeamCaptainInteractor],
     id_: Annotated[int, Path(alias="id")],
     body: Annotated[requests.AdminNewCaptain, Body()],
-) -> shared.Team:
+) -> shared.TeamWithCaptain:
     team = await interactor(identity=identity, team_id=id_, player_id=body.player_id)
-    result = shared.Team.from_core(team)
+    result = shared.TeamWithCaptain.from_core(team)
     assert result is not None
     return result
 

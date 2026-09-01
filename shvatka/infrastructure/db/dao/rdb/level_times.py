@@ -77,9 +77,6 @@ class LevelTimeDao(BaseDAO[models.LevelTime]):
             select(models.LevelTime)
             .where(models.LevelTime.game_id == game.id)
             .options(
-                joinedload(models.LevelTime.team)
-                .joinedload(models.Team.captain)
-                .joinedload(models.Player.user),
                 joinedload(models.LevelTime.team).joinedload(models.Team.chat),
                 joinedload(models.LevelTime.team).joinedload(models.Team.forum_team),
             )

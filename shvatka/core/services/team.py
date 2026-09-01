@@ -35,16 +35,19 @@ async def create_team(
     captain: dto.Player,
     dao: TeamCreator,
     game_log: GameLogWriter,
-) -> dto.Team:
+) -> dto.TeamWithCaptain:
     check_allow_be_author(captain)
     await dao.check_player_free(captain)
     try:
         await dao.check_no_team_in_chat(chat)
     except exceptions.AnotherTeamInChat as e:
-        if not e.team or not e.team.captain:
+        existing = e.team
+        # the only raiser carrying a team is TeamDao.check_no_team_in_chat, which
+        # takes it from get_by_chat; the error type is simply too general to say so
+        if not isinstance(existing, dto.TeamWithCaptain):
             raise
-        if e.team.captain.id == captain.id:
-            team = e.team
+        if existing.is_captain(captain.id):
+            team = existing
             created = False
         else:
             raise
@@ -67,7 +70,7 @@ async def create_team(
     return team
 
 
-async def get_by_chat(chat: dto.Chat, dao: TeamGetter) -> dto.Team | None:
+async def get_by_chat(chat: dto.Chat, dao: TeamGetter) -> dto.TeamWithCaptain | None:
     return await dao.get_by_chat(chat)
 
 
@@ -89,11 +92,11 @@ async def change_team_desc(
 
 async def get_teams(
     dao: TeamsGetter, active: bool = True, archive: bool = False, name: str | None = None
-) -> list[dto.Team]:
+) -> list[dto.TeamWithCaptain]:
     return await dao.get_teams(active, archive, name)
 
 
-async def get_team_by_id(team_id: int, dao: TeamByIdGetter) -> dto.Team:
+async def get_team_by_id(team_id: int, dao: TeamByIdGetter) -> dto.TeamWithCaptain:
     return await dao.get_by_id(team_id)
 
 
@@ -157,12 +160,12 @@ async def merge_teams(
 
 
 async def change_captain(
-    team: dto.Team,
+    team: dto.TeamWithCaptain,
     actor: dto.Player,
     new_captain_id: int,
     dao: TeamCaptainSetter,
     notifier: TeamNotifier,
-) -> dto.Team:
+) -> dto.TeamWithCaptain:
     """Hand the team over to another of its players.
 
     The new captain has to play in the team already — the captaincy is not an
@@ -181,7 +184,7 @@ async def change_captain(
             doc_page=DocPage.CHANGE_CAPTAIN,
         )
     old_captain = team.captain
-    if old_captain is not None and old_captain.id == new_captain_id:
+    if team.is_captain(new_captain_id):
         raise exceptions.TeamError(
             team=team,
             player=actor,
@@ -226,8 +229,7 @@ def check_can_change_chat(team: dto.Team, captain: dto.FullTeamPlayer):
             team=team, player=captain.player, notify_user="Вы не игрок этой команды"
         )
     assert captain.player is not None
-    assert team.captain is not None
-    if team.captain.id == captain.player.id:
+    if team.is_captain(captain.player.id):
         return
     raise PermissionsError(
         permission_name="change_chat",  # TODO
@@ -250,8 +252,7 @@ def assert_can_change_name(team: dto.Team, captain: dto.FullTeamPlayer) -> None:
             team=team, player=captain.player, notify_user="Вы не игрок этой команды"
         )
     assert captain.player is not None
-    assert team.captain is not None
-    if team.captain.id == captain.player.id:
+    if team.is_captain(captain.player.id):
         return
     if captain.can_change_team_name:
         return

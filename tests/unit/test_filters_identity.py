@@ -30,7 +30,7 @@ from shvatka.tgbot.utils.router import disable_router_on_game
 
 PLAYER = dto.Player(id=1, can_be_author=True, is_dummy=False, username="harry")
 NO_AUTHOR = dto.Player(id=2, can_be_author=False, is_dummy=False, username="ron")
-TEAM = dto.Team(id=1, name="Gryffindor", captain=None, is_dummy=False, description=None)
+TEAM = dto.Team(id=1, name="Gryffindor", is_dummy=False, description=None)
 
 
 def identity(

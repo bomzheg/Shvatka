@@ -21,7 +21,7 @@ class TeamDao(BaseDAO[models.Team]):
     ) -> None:
         super().__init__(models.Team, session, clock=clock)
 
-    async def create(self, chat: dto.Chat, captain: dto.Player) -> dto.Team:
+    async def create(self, chat: dto.Chat, captain: dto.Player) -> dto.TeamWithCaptain:
         chat_db = await self.session.get(models.Chat, chat.db_id)
         assert chat_db
         team = models.Team(
@@ -39,7 +39,7 @@ class TeamDao(BaseDAO[models.Team]):
                 player=captain,
                 text="can't create team",
             ) from e
-        return dto.Team(
+        return dto.TeamWithCaptain(
             id=team.id,
             chat=chat,
             name=team.name,
@@ -50,7 +50,7 @@ class TeamDao(BaseDAO[models.Team]):
 
     async def create_no_chat(
         self, name: str, description: str | None, captain: dto.Player
-    ) -> dto.Team:
+    ) -> dto.TeamWithCaptain:
         team = models.Team(
             captain_id=captain.id,
             name=name,
@@ -64,7 +64,7 @@ class TeamDao(BaseDAO[models.Team]):
                 player=captain,
                 text="can't create team",
             ) from e
-        return dto.Team(
+        return dto.TeamWithCaptain(
             id=team.id,
             chat=None,
             name=team.name,
@@ -73,7 +73,9 @@ class TeamDao(BaseDAO[models.Team]):
             is_dummy=team.is_dummy,
         )
 
-    async def create_by_forum(self, forum: dto.ForumTeam, captain: dto.Player | None) -> dto.Team:
+    async def create_by_forum(
+        self, forum: dto.ForumTeam, captain: dto.Player | None
+    ) -> dto.TeamWithCaptain:
         forum_team_db = await self.session.get(models.ForumTeam, forum.id)
         assert forum_team_db
         if forum_team_db.team_id:
@@ -94,9 +96,9 @@ class TeamDao(BaseDAO[models.Team]):
                     player=captain,
                     text="can't create team",
                 ) from e
-        return team.to_dto(forum_team=forum, captain=captain)
+        return team.to_dto_with_captain(forum_team=forum, captain=captain)
 
-    async def get_by_chat(self, chat: dto.Chat) -> dto.Team | None:
+    async def get_by_chat(self, chat: dto.Chat) -> dto.TeamWithCaptain | None:
         result: ScalarResult[models.Team] = await self.session.scalars(
             select(models.Team)
             .join(models.Team.chat)
@@ -107,7 +109,7 @@ class TeamDao(BaseDAO[models.Team]):
             team = result.one()
         except NoResultFound:
             return None
-        return team.to_dto_chat_prefetched()
+        return team.to_dto_with_captain_prefetched()
 
     async def check_no_team_in_chat(self, chat: dto.Chat) -> None:
         if team := await self.get_by_chat(chat):
@@ -117,15 +119,15 @@ class TeamDao(BaseDAO[models.Team]):
                 text="team in this chat exists",
             )
 
-    async def get_by_id(self, id_: int) -> dto.Team:
+    async def get_by_id(self, id_: int) -> dto.TeamWithCaptain:
         team = await self._get_by_id(
             id_,
             get_team_options(),
             populate_existing=True,
         )
-        return team.to_dto_chat_prefetched()
+        return team.to_dto_with_captain_prefetched()
 
-    async def get_captained_teams(self, captain: dto.Player) -> list[dto.Team]:
+    async def get_captained_teams(self, captain: dto.Player) -> list[dto.TeamWithCaptain]:
         """Every team this player is the captain of, whether they play in it or not."""
         teams: ScalarResult[models.Team] = await self.session.scalars(
             select(models.Team)
@@ -133,7 +135,7 @@ class TeamDao(BaseDAO[models.Team]):
             .where(models.Team.captain_id == captain.id)
             .order_by(models.Team.id)
         )
-        return [team.to_dto_chat_prefetched() for team in teams]
+        return [team.to_dto_with_captain_prefetched() for team in teams]
 
     async def change_captain(self, team: dto.Team, captain: dto.Player) -> None:
         await self.session.execute(
@@ -150,14 +152,14 @@ class TeamDao(BaseDAO[models.Team]):
             update(models.Team).where(models.Team.id == team.id).values(description=new_desc)
         )
 
-    async def get_by_name(self, name: str) -> dto.Team:
+    async def get_by_name(self, name: str) -> dto.TeamWithCaptain:
         result: ScalarResult[models.Team] = await self.session.scalars(
             select(models.Team).options(*get_team_options()).where(models.Team.name == name)
         )
         team = result.one()
-        return team.to_dto_chat_prefetched()
+        return team.to_dto_with_captain_prefetched()
 
-    async def get_by_forum_team_name(self, name: str) -> dto.Team:
+    async def get_by_forum_team_name(self, name: str) -> dto.TeamWithCaptain:
         result: ScalarResult[models.Team] = await self.session.scalars(
             select(models.Team)
             .join(models.Team.forum_team)
@@ -165,20 +167,20 @@ class TeamDao(BaseDAO[models.Team]):
             .where(models.ForumTeam.name == name)
         )
         team = result.one()
-        return team.to_dto_chat_prefetched()
+        return team.to_dto_with_captain_prefetched()
 
-    async def get_by_forum_team_id(self, forum_team_id: int) -> dto.Team:
+    async def get_by_forum_team_id(self, forum_team_id: int) -> dto.TeamWithCaptain:
         result: ScalarResult[models.Team] = await self.session.scalars(
             select(models.Team)
             .join(models.Team.forum_team)
             .options(*get_team_options())
             .where(models.ForumTeam.id == forum_team_id)
         )
-        return result.one().to_dto_chat_prefetched()
+        return result.one().to_dto_with_captain_prefetched()
 
     async def get_teams(
         self, active: bool = True, archive: bool = False, name: str | None = None
-    ) -> list[dto.Team]:
+    ) -> list[dto.TeamWithCaptain]:
         query = select(models.Team).options(*get_team_options())
         if not active and not archive:
             query = query.where(false())
@@ -189,9 +191,9 @@ class TeamDao(BaseDAO[models.Team]):
         if name:
             query = query.where(models.Team.name.ilike(f"%{name}%"))
         teams: ScalarResult[models.Team] = await self.session.scalars(query)
-        return [team.to_dto_chat_prefetched() for team in teams]
+        return [team.to_dto_with_captain_prefetched() for team in teams]
 
-    async def search_by_name(self, text: str) -> list[dto.Team]:
+    async def search_by_name(self, text: str) -> list[dto.TeamWithCaptain]:
         """Поиск по названию среди всех команд, включая архивные (форумные)."""
         teams: ScalarResult[models.Team] = await self.session.scalars(
             select(models.Team)
@@ -199,7 +201,7 @@ class TeamDao(BaseDAO[models.Team]):
             .where(models.Team.name.ilike(ilike_pattern(text), escape=ILIKE_ESCAPE))
             .order_by(models.Team.id)
         )
-        return [team.to_dto_chat_prefetched() for team in teams]
+        return [team.to_dto_with_captain_prefetched() for team in teams]
 
     async def get_played_games(self, team: dto.Team) -> list[dto.Game]:
         result = await self.session.scalars(

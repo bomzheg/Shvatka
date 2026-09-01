@@ -41,8 +41,10 @@ def _player_with_forum(id_: int, username: str = "p") -> dto.PlayerWithForum:
     return dto.PlayerWithForum(id=id_, can_be_author=False, is_dummy=False, username=username)
 
 
-def _team(captain: dto.Player | None = None, id_: int = 1, name: str = "Gryffindor") -> dto.Team:
-    return dto.Team(
+def _team(
+    captain: dto.Player | None = None, id_: int = 1, name: str = "Gryffindor"
+) -> dto.TeamWithCaptain:
+    return dto.TeamWithCaptain(
         id=id_,
         name=name,
         captain=captain,

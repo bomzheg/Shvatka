@@ -23,7 +23,10 @@ logger = logging.getLogger(__name__)
 
 
 def render_team_players(
-    team: dto.Team, players: Sequence[dto.FullTeamPlayer], *, notification: bool = False
+    team: dto.TeamWithCaptain,
+    players: Sequence[dto.FullTeamPlayer],
+    *,
+    notification: bool = False,
 ) -> str:
     cap = team.captain
     cap_card = get_small_card_no_link(cap) if cap else "отсутствует"

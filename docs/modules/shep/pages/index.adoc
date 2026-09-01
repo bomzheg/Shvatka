@@ -73,7 +73,7 @@ came out of it*.
 
 | xref:shep-0012-team-captain-by-id.adoc[SHEP-0012]
 | Carrying the team captain by id
-| Draft
+| Accepted, implemented
 |===
 
 == Status vocabulary

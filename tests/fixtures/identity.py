@@ -8,7 +8,7 @@ from shvatka.core.models import dto
 class MockIdentityProvider(IdentityProvider):
     user: dto.User | None = None
     player: dto.Player | None = None
-    team: dto.Team | None = None
+    team: dto.TeamWithCaptain | None = None
     chat: dto.Chat | None = None
     full_team_player: dto.FullTeamPlayer | None = None
     organizer: dict[int, dto.Organizer | None] = field(default_factory=dict)
@@ -20,7 +20,7 @@ class MockIdentityProvider(IdentityProvider):
     async def get_player(self) -> dto.Player | None:
         return self.player
 
-    async def get_team(self) -> dto.Team | None:
+    async def get_team(self) -> dto.TeamWithCaptain | None:
         return self.team
 
     async def get_user(self) -> dto.User | None:

@@ -164,7 +164,7 @@ class LoadedData(TypedDict, total=False):
     user: dto.User | None
     chat: dto.Chat | None
     player: dto.Player | None
-    team: dto.Team | None
+    team: dto.TeamWithCaptain | None
     full_team_player: dto.FullTeamPlayer | None
     organizer: dict[int, dto.Organizer | None]
 
@@ -223,7 +223,7 @@ class ApiIdentityProvider(IdentityProvider):
         self.cache["player"] = player
         return player
 
-    async def get_team(self) -> dto.Team | None:
+    async def get_team(self) -> dto.TeamWithCaptain | None:
         if "team" in self.cache:
             return self.cache["team"]
         player = await self.get_required_player()

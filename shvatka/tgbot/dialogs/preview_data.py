@@ -72,7 +72,7 @@ PREVIEW_FORUM_TEAM = dto.ForumTeam(
 )
 PREVIEW_FORUM_TEAMS = [PREVIEW_FORUM_TEAM]
 
-PREVIEW_TEAM = dto.Team(
+PREVIEW_TEAM = dto.TeamWithCaptain(
     id=1,
     name="Пони",
     captain=PREVIEW_AUTHOR,
@@ -86,7 +86,7 @@ PREVIEW_TEAM = dto.Team(
     ),
 )
 
-PREVIEW_ANOTHER_TEAM = dto.Team(
+PREVIEW_ANOTHER_TEAM = dto.TeamWithCaptain(
     id=2,
     name="Дискорд",
     captain=PREVIEW_PLAYER,

@@ -25,12 +25,12 @@ class TeamCreatorImpl(TeamCreator, ChatlessTeamCreator):
     async def check_no_team_in_chat(self, chat: dto.Chat) -> None:
         return await self.dao.team.check_no_team_in_chat(chat)
 
-    async def create(self, chat: dto.Chat, captain: dto.Player) -> dto.Team:
+    async def create(self, chat: dto.Chat, captain: dto.Player) -> dto.TeamWithCaptain:
         return await self.dao.team.create(chat, captain)
 
     async def create_no_chat(
         self, name: str, description: str | None, captain: dto.Player
-    ) -> dto.Team:
+    ) -> dto.TeamWithCaptain:
         return await self.dao.team.create_no_chat(name, description, captain)
 
     async def join_team(
@@ -62,7 +62,7 @@ class TeamLeaverImpl(TeamLeaver):
     async def del_player_vote(self, team_id: int, player_id: int) -> None:
         return await self.dao.poll.del_player_vote(team_id, player_id)
 
-    async def get_team(self, player: dto.Player) -> dto.Team | None:
+    async def get_team(self, player: dto.Player) -> dto.TeamWithCaptain | None:
         return await self.dao.team_player.get_team(player)
 
     async def leave_team(self, player: dto.Player) -> None:
@@ -109,7 +109,7 @@ class TeamMergerImpl(TeamMerger):
 
 @dataclass
 class AdminTeamMergerImpl(TeamMergerImpl, AdminTeamMerger):
-    async def get_by_id(self, id_: int) -> dto.Team:
+    async def get_by_id(self, id_: int) -> dto.TeamWithCaptain:
         return await self.dao.team.get_by_id(id_)
 
 
@@ -117,7 +117,7 @@ class AdminTeamMergerImpl(TeamMergerImpl, AdminTeamMerger):
 class TeamCaptainSetterImpl(TeamCaptainSetter):
     dao: "HolderDao"
 
-    async def get_by_id(self, id_: int) -> dto.Team:
+    async def get_by_id(self, id_: int) -> dto.TeamWithCaptain:
         return await self.dao.team.get_by_id(id_)
 
     async def get_players(self, team: dto.Team) -> Sequence[dto.FullTeamPlayer]:
@@ -137,10 +137,10 @@ class TeamCaptainSetterImpl(TeamCaptainSetter):
 class CaptainedTeamsReaderImpl(CaptainedTeamsReader):
     dao: "HolderDao"
 
-    async def get_captained_teams(self, captain: dto.Player) -> list[dto.Team]:
+    async def get_captained_teams(self, captain: dto.Player) -> list[dto.TeamWithCaptain]:
         return await self.dao.team.get_captained_teams(captain)
 
-    async def get_team(self, player: dto.Player) -> dto.Team | None:
+    async def get_team(self, player: dto.Player) -> dto.TeamWithCaptain | None:
         return await self.dao.team_player.get_team(player)
 
     async def get_played_games_counts(self, team_ids: Sequence[int]) -> dict[int, int]:
@@ -151,7 +151,7 @@ class CaptainedTeamsReaderImpl(CaptainedTeamsReader):
 class CaptainTeamJoinerImpl(TeamLeaverImpl, CaptainTeamJoiner):
     """Leaving the current team and joining the captained one, in one adapter."""
 
-    async def get_by_id(self, id_: int) -> dto.Team:
+    async def get_by_id(self, id_: int) -> dto.TeamWithCaptain:
         return await self.dao.team.get_by_id(id_)
 
     async def join_team(

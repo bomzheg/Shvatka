@@ -19,7 +19,7 @@ BASE_TIME = datetime(2026, 7, 26, 20, 0, tzinfo=tz_utc)
 
 @pytest.fixture
 def team() -> dto.Team:
-    return dto.Team(id=1, name="Gryffindor", captain=None, is_dummy=False, description=None)
+    return dto.Team(id=1, name="Gryffindor", is_dummy=False, description=None)
 
 
 @pytest.fixture

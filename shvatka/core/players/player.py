@@ -65,7 +65,7 @@ async def have_team(player: dto.Player, dao: PlayerTeamChecker) -> bool:
     return await dao.have_team(player)
 
 
-async def get_my_team(player: dto.Player, dao: PlayerTeamChecker) -> dto.Team | None:
+async def get_my_team(player: dto.Player, dao: PlayerTeamChecker) -> dto.TeamWithCaptain | None:
     return await dao.get_team(player)
 
 
@@ -171,7 +171,7 @@ async def _join_team(
 
 
 def is_team_captain(team: dto.Team, player: dto.Player) -> bool:
-    return team.captain is not None and team.captain.id == player.id
+    return team.is_captain(player.id)
 
 
 async def get_checked_player_on_team(

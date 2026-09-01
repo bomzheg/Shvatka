@@ -24,7 +24,7 @@ class LoadedData(TypedDict, total=False):
     user: dto.User | None
     chat: dto.Chat | None
     player: dto.Player | None
-    team: dto.Team | None
+    team: dto.TeamWithCaptain | None
     full_team_player: dto.FullTeamPlayer | None
     organizer: dict[int, dto.Organizer | None]
 
@@ -91,7 +91,7 @@ class TgBotIdentityProvider(IdentityProvider):
         self.cache["player"] = player
         return player
 
-    async def get_team(self) -> dto.Team | None:
+    async def get_team(self) -> dto.TeamWithCaptain | None:
         if "team" in self.cache:
             return self.cache["team"]
         team = await load_team(await self.get_chat(), self.dao)
@@ -146,7 +146,7 @@ async def save_chat(data: SHMiddlewareData, holder_dao: HolderDao) -> dto.Chat |
     return await upsert_chat(dto.Chat.from_aiogram(chat), holder_dao.chat)
 
 
-async def load_team(chat: dto.Chat | None, holder_dao: HolderDao) -> dto.Team | None:
+async def load_team(chat: dto.Chat | None, holder_dao: HolderDao) -> dto.TeamWithCaptain | None:
     if not chat:
         return None
     return await get_by_chat(chat, holder_dao.team)

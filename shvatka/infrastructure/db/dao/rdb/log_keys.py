@@ -141,7 +141,6 @@ class KeyTimeDao(BaseDAO[models.KeyTime]):
                 joinedload(models.KeyTime.team).options(
                     joinedload(models.Team.chat),
                     joinedload(models.Team.forum_team),
-                    joinedload(models.Team.captain).options(joinedload(models.Player.user)),
                 ),
                 joinedload(models.KeyTime.player).options(joinedload(models.Player.user)),
             )

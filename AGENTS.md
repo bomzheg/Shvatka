@@ -27,6 +27,8 @@ Telegram bot.
 - **Lint and tests run in CI.** You may push to the branch and read the CI
   status instead of running the full (slow, testcontainer-backed) suite
   locally. Running `pytest tests/unit` locally for fast feedback is fine.
+  Run type checks as `mypy .`, not `mypy shvatka` — CI checks `tests/` too,
+  and fixtures and integration tests are where a changed dto surfaces last.
 
 ## Project layout
 
@@ -298,6 +300,20 @@ self-contained and close to upstream.
   Dialect-specific helpers (e.g. `postgresql.insert(...).on_conflict_do_nothing()`)
   are fine when they make a query meaningfully better or faster — just don't
   reach for them without that justification.
+
+## The API and the UI ship together
+
+`bomzheg/Shvatka` and `bomzheg/shvatka-ui` are deployed by the same person in one
+go, so a **breaking API change is allowed as long as both repositories change
+together**. There is no transition window to design for and no need to keep a
+field alive until the front-end stops reading it: change the response, change
+`shvatka-ui` in the same breath, and say in each pull request that the other one
+is its pair.
+
+What this does *not* excuse is a silent break. `mypy` cannot see that a response
+model stopped sending a field the UI reads, so when you narrow or split a
+response, grep `shvatka-ui` for every reader — templates included, not just
+`.ts` — before deciding a field is unused.
 
 ## API layout (subdomain packages)
 

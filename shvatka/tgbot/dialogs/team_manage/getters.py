@@ -7,6 +7,7 @@ from dishka.integrations.aiogram_dialog import inject
 from shvatka.common.config.models.main import FeaturesConfig
 from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.players.player import get_team_players
+from shvatka.core.services.team import get_team_by_id
 from shvatka.core.views.texts import PERMISSION_EMOJI
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.tgbot.dialogs.outdated import get_actual_team_player, get_actual_teammate
@@ -29,11 +30,12 @@ async def get_team_with_players(
     dao: FromDishka[HolderDao], identity: FromDishka[IdentityProvider], **_
 ) -> dict[str, Any]:
     team_player = await get_actual_team_player(identity)
-    team = team_player.team
+    # the captain's bridge names the captain, and the team player carries a plain team
+    team = await get_team_by_id(team_player.team.id, dao.team)
     players = await get_team_players(team=team, dao=dao.team_player)
     excluded = [team_player.player.id]
-    if team.captain:
-        excluded.append(team.captain.id)
+    if team.captain_id is not None:
+        excluded.append(team.captain_id)
     return {
         "team": team,
         "team_player": team_player,

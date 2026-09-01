@@ -49,7 +49,7 @@ class TeamPlayerGetter(Protocol):
 
 
 class TeamByPlayerGetter(Protocol):
-    async def get_team(self, player: dto.Player) -> dto.Team | None:
+    async def get_team(self, player: dto.Player) -> dto.TeamWithCaptain | None:
         raise NotImplementedError
 
 
@@ -92,7 +92,7 @@ class TeamLeaver(Committer, ActiveGameFinder, WaiverRemover, TeamPlayerGetter, P
     async def del_player_vote(self, team_id: int, player_id: int) -> None:
         raise NotImplementedError
 
-    async def get_team(self, player: dto.Player) -> dto.Team | None:
+    async def get_team(self, player: dto.Player) -> dto.TeamWithCaptain | None:
         raise NotImplementedError
 
     async def leave_team(self, player: dto.Player) -> None:

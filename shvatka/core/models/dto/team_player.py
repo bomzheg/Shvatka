@@ -51,8 +51,8 @@ class FullTeamPlayer(TeamPlayer):
     team: Team
 
     @property
-    def is_captain(self):
-        return self.team.captain.id == self.player_id
+    def is_captain(self) -> bool:
+        return self.team.is_captain(self.player_id)
 
     @property
     def can_manage_waivers(self) -> bool:

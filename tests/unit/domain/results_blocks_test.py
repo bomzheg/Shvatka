@@ -19,9 +19,9 @@ from shvatka.core.models import dto, enums
 from shvatka.core.models.dto import action
 from shvatka.core.utils.exceptions import GameNotFinished
 
-WINNER = dto.Team(id=1, name="Gryffindor", captain=None, is_dummy=False, description=None)
-SECOND = dto.Team(id=2, name="Slytherin", captain=None, is_dummy=False, description=None)
-LOSER = dto.Team(id=3, name="Hufflepuff", captain=None, is_dummy=False, description=None)
+WINNER = dto.Team(id=1, name="Gryffindor", is_dummy=False, description=None)
+SECOND = dto.Team(id=2, name="Slytherin", is_dummy=False, description=None)
+LOSER = dto.Team(id=3, name="Hufflepuff", is_dummy=False, description=None)
 
 
 @pytest.fixture

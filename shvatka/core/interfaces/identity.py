@@ -17,7 +17,7 @@ class IdentityProvider(Protocol):
     async def get_chat(self) -> dto.Chat | None:
         raise NotImplementedError
 
-    async def get_team(self) -> dto.Team | None:
+    async def get_team(self) -> dto.TeamWithCaptain | None:
         raise NotImplementedError
 
     async def get_full_team_player(self) -> dto.FullTeamPlayer | None:
@@ -80,7 +80,7 @@ class IdentityProvider(Protocol):
             raise exceptions.IdentityWithoutPlayer
         return player
 
-    async def get_required_team(self) -> dto.Team:
+    async def get_required_team(self) -> dto.TeamWithCaptain:
         team = await self.get_team()
         if team is None:
             raise exceptions.PlayerNotInTeam(

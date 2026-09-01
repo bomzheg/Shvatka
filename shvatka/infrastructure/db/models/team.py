@@ -58,11 +58,8 @@ class Team(Base):
         self,
         chat: dto.Chat | None = None,
         forum_team: dto.ForumTeam | None = None,
-        captain: dto.Player | None = None,
     ) -> dto.Team:
-        if not captain and self.captain:
-            captain = self.captain.to_dto_user_prefetched()
-
+        """DTO of a team without its captain: `captain_id` comes from the row."""
         return dto.Team(
             id=self.id,
             chat=chat,
@@ -70,11 +67,39 @@ class Team(Base):
             name=self.name,
             is_dummy=self.is_dummy,
             description=self.description,
+            captain_id=self.captain_id,
+        )
+
+    def to_dto_with_captain(
+        self,
+        chat: dto.Chat | None = None,
+        forum_team: dto.ForumTeam | None = None,
+        captain: dto.Player | None = None,
+    ) -> dto.TeamWithCaptain:
+        """Only for queries that eagerly loaded `captain` — it is read here."""
+        if not captain and self.captain:
+            captain = self.captain.to_dto_user_prefetched()
+
+        return dto.TeamWithCaptain(
+            id=self.id,
+            chat=chat,
+            forum_team=forum_team,
+            name=self.name,
+            is_dummy=self.is_dummy,
+            description=self.description,
             captain=captain,
+            captain_id=self.captain_id,
         )
 
     def to_dto_chat_prefetched(self) -> dto.Team:
+        """Chat and forum team prefetched, captain left unloaded."""
         return self.to_dto(
+            chat=self.chat.to_dto() if self.chat else None,
+            forum_team=self.forum_team.to_dto() if self.forum_team else None,
+        )
+
+    def to_dto_with_captain_prefetched(self) -> dto.TeamWithCaptain:
+        return self.to_dto_with_captain(
             chat=self.chat.to_dto() if self.chat else None,
             forum_team=self.forum_team.to_dto() if self.forum_team else None,
         )

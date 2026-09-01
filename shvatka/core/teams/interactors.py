@@ -92,7 +92,7 @@ class CreateTeamInteractor:
         identity: IdentityProvider,
         name: str,
         description: str | None = None,
-    ) -> dto.Team:
+    ) -> dto.TeamWithCaptain:
         captain = await identity.get_required_player()
         name = name.strip()
         if not name:
@@ -123,7 +123,7 @@ class CreateTeamInteractor:
 class GetTeamInteractor:
     dao: TeamByIdGetter
 
-    async def __call__(self, team_id: int) -> dto.Team:
+    async def __call__(self, team_id: int) -> dto.TeamWithCaptain:
         return await get_team_by_id(team_id, self.dao)
 
 
@@ -313,7 +313,7 @@ class ChangeCaptainInteractor:
 
     async def __call__(
         self, team_id: int, new_captain_id: int, identity: IdentityProvider
-    ) -> dto.Team:
+    ) -> dto.TeamWithCaptain:
         actor = await identity.get_required_player()
         team = await get_team_by_id(team_id, self.dao)
         check_can_change_captain(actor, team)
@@ -331,7 +331,7 @@ class EditTeamInteractor:
         identity: IdentityProvider,
         name: str | None = None,
         description: str | None = None,
-    ) -> dto.Team:
+    ) -> dto.TeamWithCaptain:
         manager = await identity.get_required_player()
         team = await get_team_by_id(team_id, self.dao)
         await check_can_change_name(manager, team, self.team_player_dao)

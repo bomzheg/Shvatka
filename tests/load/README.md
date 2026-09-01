@@ -90,14 +90,37 @@ SHVATKA_LOAD_KEY_USERS=5 uv run locust -f tests/load/locustfile.py \
     --host https://staging.example.org
 ```
 
-**These rates are the one judgement call in the profile, not a measurement.**
-On the measured night keys arrived through the bot webhook (`/webhook/bot`,
-3.54K) rather than through the api, so the panel says nothing about how often
-this endpoint was called. What is modelled is the *shape* of what a team types —
-mostly wrong, some right, plenty of repeats — at weights chosen to look like a
-team playing, not to reproduce a measured rate. Faking the webhook itself was
-considered and dropped: it would mean forging Telegram updates and having the
-bot answer them, which is a different test.
+Keys arrived through the bot webhook (`/webhook/bot`, 3.54K) rather than
+through the api that night, so the http panel says nothing about this endpoint.
+The **rate** is measured all the same, from the bot's own outgoing counters:
+
+```promql
+sum by (method) (increase(tgbot_api_requests_total[6h]))
+```
+
+which for the measured game gives `SendMessage` 994, `PinChatMessage` 580,
+`UnpinChatMessage` 287, **`SetMessageReaction` 235**, `SendPhoto` 44,
+`GetChatMember` 44, `SendVideo` 28, and a long tail — about 2.3K outgoing calls
+against 3.54K incoming updates, so most of what the bot reads it answers with
+nothing.
+
+`SetMessageReaction` is the useful one. `BotView` sets a reaction on exactly
+three key outcomes — 😴 for a duplicate, 👎 for a wrong key, and the
+`map_effect_to_reaction` emoji for one carrying effects — and on nothing else. A
+plain correct key that doesn't finish a level only sends a message, so **235 over
+six hours is a floor on keys typed**: roughly 40 an hour across every team.
+
+That is much less traffic than it feels like from inside a game, and it is worth
+saying plainly because the first version of this class was **150x** over it. Each
+client now submits about 20 keys an hour, so two of them reproduce the night and
+anything more is deliberate stress rather than an accident.
+
+What is still an estimate is the *split* between wrong, stale and correct keys: a
+reaction doesn't say which of the three it was. The weights model a team that
+mostly guesses wrong, retypes what worked before, and occasionally lands one.
+
+Faking the webhook itself was considered and dropped: it would mean forging
+Telegram updates and having the bot answer them, which is a different test.
 
 ### `scenario.yml` is part of the test, not documentation
 

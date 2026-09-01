@@ -569,13 +569,21 @@ class KeySubmittingUser(ShvatkaUser):
     class whose safety depends on the scenario file matching the game — see
     ``plan_safe_keys`` and the README.
 
-    Its rates are the one **judgement call** in this file rather than a
-    measurement: key submission reached the api through the bot webhook on the
-    measured night, not through ``POST /games/running/key``, so the panel says
-    nothing about how often it was called. What is modelled is the shape of what
-    a team types — mostly keys that turn out to be wrong, some that are right,
-    and a good share of both typed more than once, because a team that finds a
-    key sends it and a team that is stuck guesses.
+    Keys reached the api through the bot webhook on the measured night, not
+    through ``POST /games/running/key``, so the http panel says nothing about
+    them. The **rate** still comes from that night, out of the bot's outgoing
+    counters: ``tgbot_api_requests_total`` shows 235 ``SetMessageReaction`` calls
+    over the six hours, and ``BotView`` sets a reaction on exactly three key
+    outcomes — 😴 for a duplicate, 👎 for a wrong key, and the
+    ``map_effect_to_reaction`` emoji for one carrying effects. A plain correct
+    key that doesn't finish a level only sends a message, so 235 is a floor on
+    keys typed, not the whole count: call it 40 an hour across every team.
+
+    That is *far* less traffic than it feels like from the inside, and the
+    ``wait_time`` below says so — about 20 submissions an hour per client, so
+    two of them reproduce the night and more is deliberate stress. Only the
+    split between wrong, stale and correct is still an estimate: a reaction
+    doesn't say which of the three it was.
     """
 
     # `abstract` is what actually keeps it out of a run: locust reads
@@ -583,7 +591,9 @@ class KeySubmittingUser(ShvatkaUser):
     # key typists against a target nobody opted in for.
     abstract = KEY_USERS <= 0
     fixed_count = KEY_USERS
-    wait_time = between(1, 4)
+    # ~20 keys/hour/client: 83% of tasks submit, so a 150s mean wait lands on the
+    # measured rate. between(1, 4) — the first guess here — was 150x too hot.
+    wait_time = between(60, 240)
     username = KEY_USERNAME
     password = KEY_PASSWORD
 

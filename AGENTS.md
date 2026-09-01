@@ -544,6 +544,14 @@ with a curated ignore list, mypy overrides) lives in `pyproject.toml`.
   (`FromDishka[...]` on an `@inject`-decorated handler) rather than reaching
   into `manager.middleware_data` / event middleware data. That includes
   `dao: FromDishka[HolderDao]`.
+- **Every change to a team goes through `TeamNotifier`.** Joining, leaving,
+  handing over the captaincy and renaming all raise a `TeamEvent`
+  (`core/views/team.py`), because both edges hang behavior off it: the bot
+  announces the change in the team chat and keeps the players' member tags in
+  public chats in sync (the tag *is* the team name, so a rename has to retag
+  every member), and the web persists a notification and sends a push. A new
+  kind of change means a new event class plus a branch in `BotTeamNotifier` and
+  `WebTeamNotifier` — never a silent write to the teams table.
 - **Superuser rights resolve through `SuperusersResolver`**
   (`core/interfaces/superusers.py`) — the single source for who the configured
   admins are. `IdentityProvider` derives `get_superuser` / `is_superuser` from

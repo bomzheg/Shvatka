@@ -4,8 +4,10 @@ from shvatka.core.models import dto
 from shvatka.core.players.player import get_full_team_player
 from shvatka.core.services.game import complete_game
 from shvatka.core.services.team import change_team_desc, get_played_games, get_teams, rename_team
+from shvatka.core.views.team import TeamRenamed
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from tests.fixtures.chat_constants import GRYFFINDOR_CHAT_DTO
+from tests.mocks.team_notifier import TeamNotifierMock
 
 
 @pytest.mark.asyncio
@@ -14,9 +16,15 @@ async def test_rename(
 ):
     assert GRYFFINDOR_CHAT_DTO.title == gryffindor.name
     team_player = await get_full_team_player(player=harry, team=gryffindor, dao=dao.team_player)
-    await rename_team(gryffindor, team_player, "Гриффиндор", dao.team)
+    notifier = TeamNotifierMock()
+    renamed = await rename_team(gryffindor, team_player, "Гриффиндор", dao.team, notifier)
+    assert renamed.name == "Гриффиндор"
     actual_team = await check_dao.team.get_by_id(id_=gryffindor.id)
     assert actual_team.name == "Гриффиндор"
+    (event,) = notifier.events
+    assert isinstance(event, TeamRenamed)
+    assert event.old_name == GRYFFINDOR_CHAT_DTO.title
+    assert event.new_name == "Гриффиндор"
 
 
 @pytest.mark.asyncio

@@ -223,6 +223,12 @@ class GameToolsProvider(Provider):
     ) -> HintContentResolver:
         return HintContentResolver(dao=dao.file_info, file_storage=file_storage)
 
+    @provide(scope=Scope.REQUEST)
+    def get_bot_team_notifier(
+        self, bot: Bot, tagger: MemberTagger, dao: HolderDao
+    ) -> BotTeamNotifier:
+        return BotTeamNotifier(bot=bot, tagger=tagger, team_players_dao=dao.team_player)
+
     @provide(scope=Scope.APP)
     def get_bot_rights(self, bot: Bot) -> BotRights:
         return BotRights(bot=bot)
@@ -267,7 +273,6 @@ class GameToolsProvider(Provider):
     message_pinner = provide(MessagePinner, scope=Scope.REQUEST)
     member_tagger = provide(MemberTagger, scope=Scope.REQUEST)
     get_bot_game_view = provide(BotView, scope=Scope.REQUEST)
-    get_bot_team_notifier = provide(BotTeamNotifier, scope=Scope.REQUEST)
     get_bot_org_notifier = provide(BotOrgNotifier, scope=Scope.REQUEST)
     level_bot_view = provide(LevelBotView, scope=Scope.REQUEST, provides=LevelView)
     hint_parser = provide(HintParser, scope=Scope.REQUEST)

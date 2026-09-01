@@ -47,9 +47,16 @@ async def rename_team_handler(
     new_name: str,
     identity: FromDishka[IdentityProvider],
     dao: FromDishka[HolderDao],
+    team_notifier: FromDishka[TeamNotifier],
 ):
     team_player = await get_actual_team_player(identity)
-    await rename_team(team=team_player.team, captain=team_player, new_name=new_name, dao=dao.team)
+    await rename_team(
+        team=team_player.team,
+        captain=team_player,
+        new_name=new_name,
+        dao=dao.team,
+        notifier=team_notifier,
+    )
 
 
 @inject

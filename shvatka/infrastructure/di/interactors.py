@@ -508,8 +508,8 @@ class TeamProvider(Provider):
         )
 
     @provide
-    def edit_team(self, dao: HolderDao) -> EditTeamInteractor:
-        return EditTeamInteractor(dao=dao.team, team_player_dao=dao.team_player)
+    def edit_team(self, dao: HolderDao, notifier: TeamNotifier) -> EditTeamInteractor:
+        return EditTeamInteractor(dao=dao.team, team_player_dao=dao.team_player, notifier=notifier)
 
     @provide
     def captained_teams_reader(self, dao: HolderDao) -> CaptainedTeamsReader:

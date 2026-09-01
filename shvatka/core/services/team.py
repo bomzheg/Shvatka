@@ -27,7 +27,7 @@ from shvatka.core.utils.defaults_constants import CAPTAIN_ROLE, DEFAULT_ROLE
 from shvatka.core.utils.doc_pages import DocPage
 from shvatka.core.utils.exceptions import PermissionsError, SHDataBreach
 from shvatka.core.views.game import GameLogEvent, GameLogType, GameLogWriter
-from shvatka.core.views.team import CaptainChanged, TeamNotifier
+from shvatka.core.views.team import CaptainChanged, TeamNotifier, TeamRenamed
 
 
 async def create_team(
@@ -72,11 +72,20 @@ async def get_by_chat(chat: dto.Chat, dao: TeamGetter) -> dto.Team | None:
 
 
 async def rename_team(
-    team: dto.Team, captain: dto.FullTeamPlayer, new_name: str, dao: TeamRenamer
-):
+    team: dto.Team,
+    captain: dto.FullTeamPlayer,
+    new_name: str,
+    dao: TeamRenamer,
+    notifier: TeamNotifier,
+) -> dto.Team:
     assert_can_change_name(team=team, captain=captain)
+    if new_name == team.name:
+        return team
     await dao.rename_team(team=team, new_name=new_name)
     await dao.commit()
+    renamed = await dao.get_by_id(team.id)
+    await notifier.notify(TeamRenamed(team=renamed, actor=captain.player, old_name=team.name))
+    return renamed
 
 
 async def change_team_desc(

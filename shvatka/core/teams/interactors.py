@@ -59,7 +59,7 @@ from shvatka.core.utils.exceptions import (
     TeamError,
 )
 from shvatka.core.views.game import GameLogEvent, GameLogType, GameLogWriter
-from shvatka.core.views.team import TeamNotifier
+from shvatka.core.views.team import TeamNotifier, TeamRenamed
 
 
 @dataclass
@@ -324,6 +324,7 @@ class ChangeCaptainInteractor:
 class EditTeamInteractor:
     dao: TeamEditor
     team_player_dao: TeamPlayerGetter
+    notifier: TeamNotifier
 
     async def __call__(
         self,
@@ -335,9 +336,15 @@ class EditTeamInteractor:
         manager = await identity.get_required_player()
         team = await get_team_by_id(team_id, self.dao)
         await check_can_change_name(manager, team, self.team_player_dao)
+        renamed = name is not None and name != team.name
         if name is not None:
             await self.dao.rename_team(team, name)
         if description is not None:
             await self.dao.change_team_desc(team, description)
         await self.dao.commit()
-        return await get_team_by_id(team_id, self.dao)
+        updated = await get_team_by_id(team_id, self.dao)
+        if renamed:
+            await self.notifier.notify(
+                TeamRenamed(team=updated, actor=manager, old_name=team.name)
+            )
+        return updated

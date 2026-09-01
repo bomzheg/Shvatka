@@ -7,6 +7,7 @@ from aiogram import Bot
 from aiogram.exceptions import TelegramAPIError
 from aiogram.utils.markdown import html_decoration as hd
 
+from shvatka.core.interfaces.dal.player import TeamPlayersGetter
 from shvatka.core.models import dto
 from shvatka.core.views.team import (
     CaptainChanged,
@@ -14,6 +15,7 @@ from shvatka.core.views.team import (
     PlayerLeftTeam,
     TeamEvent,
     TeamNotifier,
+    TeamRenamed,
 )
 from shvatka.tgbot.services.member_tags import MemberTagger
 from shvatka.tgbot.views.player import get_emoji
@@ -62,6 +64,7 @@ def render_leave_confirmation(
 class BotTeamNotifier(TeamNotifier):
     bot: Bot
     tagger: MemberTagger
+    team_players_dao: TeamPlayersGetter
 
     async def notify(self, event: TeamEvent) -> None:
         await self._retag(event)
@@ -74,6 +77,11 @@ class BotTeamNotifier(TeamNotifier):
                 await self.tagger.sync(event.invited, event.team)
             case PlayerLeftTeam():
                 await self.tagger.sync(event.removed, None)
+            case TeamRenamed():
+                # the tag is the team name, so every member of the team carries
+                # the old one until it is set again
+                for team_player in await self.team_players_dao.get_players(event.team):
+                    await self.tagger.sync(team_player.player, event.team)
 
     async def _send_to_team_chat(self, event: TeamEvent) -> None:
         if not event.team.has_chat():
@@ -109,5 +117,10 @@ class BotTeamNotifier(TeamNotifier):
                 if not event.by_old_captain:
                     text += f" Капитанство передал {hd.quote(event.actor.name_mention)}."
                 return text
+            case TeamRenamed():
+                return (
+                    f"🚩Команда {hd.quote(event.old_name)} теперь называется "
+                    f"{hd.quote(event.new_name)}."
+                )
             case _:
                 return None

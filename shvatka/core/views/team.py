@@ -54,3 +54,18 @@ class CaptainChanged(TeamEvent):
     @property
     def by_old_captain(self) -> bool:
         return self.old_captain is not None and self.actor.id == self.old_captain.id
+
+
+@dataclass
+class TeamRenamed(TeamEvent):
+    """The team changed its name.
+
+    ``team`` already carries the new name — ``old_name`` is the one it had
+    before, so a notifier can tell what exactly changed.
+    """
+
+    old_name: str
+
+    @property
+    def new_name(self) -> str:
+        return self.team.name

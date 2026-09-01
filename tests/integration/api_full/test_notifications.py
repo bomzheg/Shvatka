@@ -10,9 +10,11 @@ from httpx import AsyncClient
 from shvatka.api.app.dependencies.auth import AuthProperties
 from shvatka.api.auth.responses import Token
 from shvatka.core.models import dto
+from shvatka.core.players.player import join_team
 from shvatka.core.utils.datetime_utils import tz_utc
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from tests.fixtures.chat_constants import create_tg_chat
+from tests.mocks.team_notifier import TeamNotifierMock
 
 
 def auth_cookies(token: Token) -> dict[str, str]:
@@ -27,6 +29,38 @@ def harry_token(harry: dto.Player, auth: AuthProperties) -> Token:
 @pytest.fixture
 def hermione_token(hermione: dto.Player, auth: AuthProperties) -> Token:
     return auth.create_user_token(hermione)
+
+
+@pytest.mark.asyncio
+async def test_feed_after_team_rename(
+    client: AsyncClient,
+    harry: dto.Player,
+    hermione: dto.Player,
+    gryffindor: dto.Team,
+    harry_token: Token,
+    hermione_token: Token,
+    dao: HolderDao,
+):
+    await join_team(hermione, gryffindor, harry, dao.team_player, notifier=TeamNotifierMock())
+    old_name = gryffindor.name
+
+    edit = await client.put(
+        f"/teams/{gryffindor.id}",
+        cookies=auth_cookies(harry_token),
+        json={"name": "New Gryffindor"},
+        follow_redirects=True,
+    )
+    assert edit.is_success
+
+    resp = await client.get(
+        "/notifications", cookies=auth_cookies(hermione_token), follow_redirects=True
+    )
+    assert resp.is_success
+    resp.read()
+    items = resp.json()["items"]
+    renamed = next(n for n in items if n["type"] == "team_renamed")
+    assert renamed["payload"]["old_team_name"] == old_name
+    assert renamed["payload"]["team_name"] == "New Gryffindor"
 
 
 @pytest.mark.asyncio

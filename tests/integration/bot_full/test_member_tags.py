@@ -9,7 +9,8 @@ from aiogram.client.session.base import BaseSession
 from dishka import AsyncContainer
 
 from shvatka.core.models import dto
-from shvatka.core.players.player import join_team, leave
+from shvatka.core.players.player import get_full_team_player, join_team, leave
+from shvatka.core.services.team import rename_team
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.tgbot.config.models.bot import BotConfig
 from shvatka.tgbot.services.bot_rights import BotRights, ChatRights
@@ -30,7 +31,7 @@ def tags(bot_session: BaseSession) -> list:
 
 
 @pytest_asyncio.fixture
-async def notifier(dishka: AsyncContainer, bot: Bot):
+async def notifier(dishka: AsyncContainer, bot: Bot, dao: HolderDao):
     config = await dishka.get(BotConfig)
     rights = await dishka.get(BotRights)
     # rights are cached, so the tagger doesn't ask telegram about them
@@ -43,6 +44,7 @@ async def notifier(dishka: AsyncContainer, bot: Bot):
             config=dataclasses.replace(config, public_chats=[PUBLIC_CHAT]),
             bot_rights=rights,
         ),
+        team_players_dao=dao.team_player,
     )
 
 
@@ -68,3 +70,22 @@ async def test_tag_set_and_cleared_on_team_ops(
     _, cleared = tags(bot_session)
     assert hermione.get_chat_id() == cleared.user_id
     assert cleared.tag is None
+
+
+@pytest.mark.asyncio
+async def test_tags_follow_team_rename(
+    harry: dto.Player,
+    hermione: dto.Player,
+    gryffindor: dto.Team,
+    dao: HolderDao,
+    notifier: BotTeamNotifier,
+    bot_session: BaseSession,
+):
+    await join_team(hermione, gryffindor, harry, dao.team_player, notifier=notifier)
+    captain = await get_full_team_player(harry, gryffindor, dao.team_player)
+
+    await rename_team(gryffindor, captain, "Гриффиндор", dao.team, notifier)
+
+    _, *retagged = tags(bot_session)
+    assert {harry.get_chat_id(), hermione.get_chat_id()} == {tag.user_id for tag in retagged}
+    assert {render_tag("Гриффиндор")} == {tag.tag for tag in retagged}

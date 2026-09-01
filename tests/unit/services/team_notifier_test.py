@@ -1,8 +1,15 @@
+from datetime import UTC, datetime
+
 import pytest
 
 from shvatka.core.models import dto
 from shvatka.core.models.enums.chat_type import ChatType
-from shvatka.core.views.team import CaptainChanged, PlayerJoinedTeam, PlayerLeftTeam
+from shvatka.core.views.team import (
+    CaptainChanged,
+    PlayerJoinedTeam,
+    PlayerLeftTeam,
+    TeamRenamed,
+)
 from shvatka.tgbot.views.team import BotTeamNotifier, render_leave_confirmation
 
 
@@ -112,6 +119,33 @@ def test_captain_changed_for_team_without_captain() -> None:
     assert "ron" in (BotTeamNotifier._render(event) or "")
 
 
+def _team_player(player: dto.Player, team: dto.Team) -> dto.FullTeamPlayer:
+    return dto.FullTeamPlayer(
+        id=player.id * 10,
+        player_id=player.id,
+        team_id=team.id,
+        date_joined=datetime(2025, 4, 12, 16, 0, tzinfo=UTC),
+        date_left=None,
+        role="боец",
+        emoji=None,
+        _can_manage_waivers=False,
+        _can_manage_players=False,
+        _can_change_team_name=False,
+        _can_add_players=False,
+        _can_remove_players=False,
+        player=player,
+        team=team,
+    )
+
+
+class _PlayersDao:
+    def __init__(self, players: list[dto.FullTeamPlayer]) -> None:
+        self.players = players
+
+    async def get_players(self, team: dto.Team) -> list[dto.FullTeamPlayer]:
+        return self.players
+
+
 class _Tagger:
     def __init__(self) -> None:
         self.synced: list = []
@@ -129,7 +163,7 @@ async def test_no_notify_without_chat() -> None:
             sent.append(kwargs)
 
     ron = _player(2, "ron")
-    notifier = BotTeamNotifier(bot=_Bot(), tagger=_Tagger())
+    notifier = BotTeamNotifier(bot=_Bot(), tagger=_Tagger(), team_players_dao=_PlayersDao([]))
     await notifier.notify(PlayerLeftTeam(team=_team(with_chat=False), actor=ron, removed=ron))
     assert sent == []
 
@@ -139,10 +173,36 @@ async def test_tag_synced_even_without_team_chat() -> None:
     # the tag lives in a public chat, the team chat has nothing to do with it
     ron = _player(2, "ron")
     tagger = _Tagger()
-    notifier = BotTeamNotifier(bot=None, tagger=tagger)
+    notifier = BotTeamNotifier(bot=None, tagger=tagger, team_players_dao=_PlayersDao([]))
     team = _team(with_chat=False)
 
     await notifier.notify(PlayerJoinedTeam(team=team, actor=ron, invited=ron))
     await notifier.notify(PlayerLeftTeam(team=team, actor=ron, removed=ron))
 
     assert [(ron, team), (ron, None)] == tagger.synced
+
+
+@pytest.mark.asyncio
+async def test_rename_retags_every_member() -> None:
+    # the tag is the team name, so a rename leaves the whole team mistagged
+    harry = _player(1, "harry")
+    ron = _player(2, "ron")
+    team = _team(harry, with_chat=False)
+    tagger = _Tagger()
+    notifier = BotTeamNotifier(
+        bot=None,
+        tagger=tagger,
+        team_players_dao=_PlayersDao([_team_player(harry, team), _team_player(ron, team)]),
+    )
+
+    await notifier.notify(TeamRenamed(team=team, actor=harry, old_name="Gryffindor old"))
+
+    assert [(harry, team), (ron, team)] == tagger.synced
+
+
+def test_rename_announced_in_team_chat() -> None:
+    harry = _player(1, "harry")
+    event = TeamRenamed(team=_team(harry), actor=harry, old_name="Gryffindor old")
+    text = BotTeamNotifier._render(event) or ""
+    assert "Gryffindor old" in text
+    assert "Gryffindor" in text

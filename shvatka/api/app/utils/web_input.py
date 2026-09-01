@@ -39,6 +39,7 @@ from shvatka.core.views.team import (
     PlayerLeftTeam,
     TeamEvent,
     TeamNotifier,
+    TeamRenamed,
 )
 
 logger = logging.getLogger(__name__)
@@ -308,6 +309,8 @@ class WebTeamNotifier(TeamNotifier):
                 await self._notify(event, self._left_spec(event))
             case CaptainChanged():
                 await self._notify(event, self._captain_changed_spec(event))
+            case TeamRenamed():
+                await self._notify(event, self._renamed_spec(event))
             case _:
                 logger.warning("unknown team event %s, no notification persisted", type(event))
 
@@ -397,6 +400,28 @@ class WebTeamNotifier(TeamNotifier):
                 url="/team",
                 tag=f"team-captain-{event.team.id}",
                 data={"kind": "team_captain_changed", "team_id": event.team.id},
+            ),
+        )
+
+    @staticmethod
+    def _renamed_spec(event: TeamRenamed) -> "_TeamNotificationSpec":
+        payload = {
+            "team_id": event.team.id,
+            "team_name": event.new_name,
+            "old_team_name": event.old_name,
+            "player_id": event.actor.id,
+            "player_name": event.actor.name_mention,
+        }
+        return _TeamNotificationSpec(
+            type=NotificationType.team_renamed,
+            severity=NotificationSeverity.normal,
+            payload=payload,
+            push=PushMessage(
+                title=f"{event.new_name}: новое название",
+                body=f"Команда {event.old_name} теперь называется {event.new_name}",
+                url="/team",
+                tag=f"team-renamed-{event.team.id}",
+                data={"kind": "team_renamed", "team_id": event.team.id},
             ),
         )
 

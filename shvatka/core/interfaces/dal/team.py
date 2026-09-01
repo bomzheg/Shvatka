@@ -19,7 +19,14 @@ class TeamCreator(TeamJoiner, Protocol):
         raise NotImplementedError
 
 
-class TeamRenamer(Committer, Protocol):
+class TeamByIdGetter(Protocol):
+    async def get_by_id(self, id_: int) -> dto.Team:
+        raise NotImplementedError
+
+
+class TeamRenamer(Committer, TeamByIdGetter, Protocol):
+    """Rename a team and read it back — the new name is what a notifier shows."""
+
     async def rename_team(self, team: dto.Team, new_name: str) -> None:
         raise NotImplementedError
 
@@ -33,11 +40,6 @@ class TeamsGetter(Protocol):
     async def get_teams(
         self, active: bool = True, archive: bool = False, name: str | None = None
     ) -> list[dto.Team]:
-        raise NotImplementedError
-
-
-class TeamByIdGetter(Protocol):
-    async def get_by_id(self, id_: int) -> dto.Team:
         raise NotImplementedError
 
 

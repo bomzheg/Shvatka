@@ -3,7 +3,6 @@ from datetime import UTC, datetime, timedelta
 import pytest
 import pytest_asyncio
 from httpx import AsyncClient
-from sqlalchemy.exc import NoResultFound
 
 from shvatka.api.app.dependencies.auth import AuthProperties
 from shvatka.api.auth.responses import Token
@@ -12,6 +11,7 @@ from shvatka.core.models.enums import GameStatus
 from shvatka.core.models.enums.played import Played
 from shvatka.core.players.player import upsert_player
 from shvatka.core.services.user import upsert_user
+from shvatka.core.utils import exceptions
 from shvatka.core.utils.defaults_constants import DEFAULT_ROLE
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from tests.fixtures.scn_fixtures import GUID
@@ -361,7 +361,7 @@ async def test_merge_players(
     assert resp.is_success, resp.text
     assert resp.json()["id"] == primary.id
     assert (await check_dao.player.get_by_id(primary.id)).id == primary.id
-    with pytest.raises(NoResultFound):
+    with pytest.raises(exceptions.PlayerNotFoundError):
         await check_dao.player.get_by_id(secondary.id)
 
 
@@ -505,7 +505,7 @@ async def test_merge_players_with_timeline(
     )
     assert resp.is_success, resp.text
     assert resp.json()["id"] == primary.id
-    with pytest.raises(NoResultFound):
+    with pytest.raises(exceptions.PlayerNotFoundError):
         await check_dao.player.get_by_id(secondary.id)
     history = await check_dao.team_player.get_history(primary)
     assert [tp.team_id for tp in history] == [slytherin.id, gryffindor.id]
@@ -636,7 +636,7 @@ async def test_merge_teams(
     assert resp.is_success, resp.text
     assert resp.json()["id"] == primary.id
     assert (await check_dao.team.get_by_id(primary.id)).id == primary.id
-    with pytest.raises(NoResultFound):
+    with pytest.raises(exceptions.TeamNotFound):
         await check_dao.team.get_by_id(secondary.id)
 
 

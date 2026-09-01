@@ -69,7 +69,7 @@ class FakeWaiverDao:
 
     async def get_team_by_id(self, id_: int) -> dto.Team:
         if id_ != self.team.id:
-            raise exceptions.TeamError(team_id=id_)
+            raise exceptions.TeamNotFound(team_id=id_)
         return self.team
 
     async def get_player_by_id(self, id_: int) -> dto.Player:

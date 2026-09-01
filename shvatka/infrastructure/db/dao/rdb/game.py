@@ -14,7 +14,7 @@ from shvatka.core.models.dto.scn.game import GameScenario
 from shvatka.core.models.enums import GameStatus
 from shvatka.core.models.enums.game_status import ACTIVE_STATUSES
 from shvatka.core.utils.datetime_utils import tz_utc
-from shvatka.core.utils.exceptions import GameHasAnotherAuthor
+from shvatka.core.utils.exceptions import GameHasAnotherAuthor, GameNotFound
 from shvatka.infrastructure.db import models
 
 from .base import ILIKE_ESCAPE, BaseDAO, ilike_pattern
@@ -78,18 +78,26 @@ class GameDao(BaseDAO[models.Game]):
         return game.to_full_game(levels=levels)
 
     async def get_by_id(self, id_: int, author: dto.Player | None = None) -> dto.Game:
-        if not author:
-            options = (
-                joinedload(models.Game.author).options(
-                    joinedload(models.Player.user),
-                ),
-            )
-            game = await self._get_by_id(id_, options)
-            author = game.author.to_dto_user_prefetched()
-        else:
-            game = await self._get_by_id(id_)
-            if author and game.author_id != author.id:
-                raise GameHasAnotherAuthor(game_id=game.id, player=author)
+        """The game, or ``GameNotFound`` — never a bare ``NoResultFound``.
+
+        The domain word for a missing row belongs with the query that can fail
+        to find one, so every caller gets it without wrapping the call.
+        """
+        try:
+            if not author:
+                options = (
+                    joinedload(models.Game.author).options(
+                        joinedload(models.Player.user),
+                    ),
+                )
+                game = await self._get_by_id(id_, options)
+                author = game.author.to_dto_user_prefetched()
+            else:
+                game = await self._get_by_id(id_)
+        except NoResultFound as e:
+            raise GameNotFound(game_id=id_) from e
+        if author and game.author_id != author.id:
+            raise GameHasAnotherAuthor(game_id=game.id, player=author)
         return game.to_dto(author)
 
     async def get_preview(self, id_: int, author: dto.Player | None = None) -> dto.PreviewGame:

@@ -1,11 +1,8 @@
 from collections.abc import Iterable
 from dataclasses import dataclass
 
-from sqlalchemy.exc import NoResultFound
-
 from shvatka.core.models import dto
 from shvatka.core.models.enums import Played
-from shvatka.core.utils import exceptions
 from shvatka.core.waiver.adapters import (
     AdminGameWaiversReader,
     AdminPollReader,
@@ -103,10 +100,7 @@ class AdminGameWaiversReaderImpl(AdminGameWaiversReader):
     dao: HolderDao
 
     async def get_by_id(self, id_: int) -> dto.Game:
-        try:
-            return await self.dao.game.get_by_id(id_)
-        except NoResultFound as e:
-            raise exceptions.GameNotFound(game_id=id_) from e
+        return await self.dao.game.get_by_id(id_)
 
     async def get_played_teams(self, game: dto.Game) -> Iterable[dto.Team]:
         return await self.dao.waiver.get_played_teams(game)
@@ -122,30 +116,22 @@ class AdminGameWaiversReaderImpl(AdminGameWaiversReader):
 class AdminWaiverEditorImpl(AdminWaiverEditor):
     """Writes one waiver row, with the three entities it needs to name it.
 
-    Each getter goes to its own dao, and a missing row becomes the domain's own
-    "not found" — an admin fixing a roster gets 404 for a game or a player that
-    is not there, not a database error.
+    Each getter goes to its own dao, and each of those already answers a missing
+    row with the domain's own "not found" — so an admin fixing a roster gets a
+    404 for a game, a team or a player that is not there, and nothing has to be
+    translated here.
     """
 
     dao: HolderDao
 
     async def get_game_by_id(self, id_: int) -> dto.Game:
-        try:
-            return await self.dao.game.get_by_id(id_)
-        except NoResultFound as e:
-            raise exceptions.GameNotFound(game_id=id_) from e
+        return await self.dao.game.get_by_id(id_)
 
     async def get_team_by_id(self, id_: int) -> dto.Team:
-        try:
-            return await self.dao.team.get_by_id(id_)
-        except NoResultFound as e:
-            raise exceptions.TeamError(team_id=id_, text=f"team {id_} not found") from e
+        return await self.dao.team.get_by_id(id_)
 
     async def get_player_by_id(self, id_: int) -> dto.Player:
-        try:
-            return await self.dao.player.get_by_id(id_)
-        except NoResultFound as e:
-            raise exceptions.PlayerNotFoundError(player_id=id_) from e
+        return await self.dao.player.get_by_id(id_)
 
     async def get_team_player(self, player: dto.Player) -> dto.TeamPlayer:
         return await self.dao.team_player.get_team_player(player)

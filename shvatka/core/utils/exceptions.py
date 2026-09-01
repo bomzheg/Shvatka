@@ -278,6 +278,10 @@ class TeamError(SHError):
     doc_page = DocPage.CREATE_TEAM
 
 
+class TeamNotFound(TeamError):
+    notify_user = "Команда не найдена"
+
+
 class PlayerNotFoundError(SHError):
     notify_user = "Игрок не найден"
 

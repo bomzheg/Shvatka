@@ -51,6 +51,7 @@ def sh_exception_handler(
         exceptions.FileNotFound
         | exceptions.GameNotFound
         | exceptions.PlayerNotFoundError
+        | exceptions.TeamNotFound
         | exceptions.UserNotFoundError,
     ):
         status_code = 404

@@ -427,11 +427,13 @@ class GamePlayDaoImpl(GamePlayDao):
         if level_time.has_finished(game):
             is_finished = True
             hints_ = []
+            is_last_hint_shown = False
         else:
             is_finished = False
             level = await self.dao.level.get_by_number(game, level_time.level_number)
             td = datetime.now(tz=tz_utc) - level_time.start_at
             hints_ = level.get_hints_for_timedelta(td)
+            is_last_hint_shown = level.is_last_hint_shown(len(hints_))
         return CurrentHintsOnly(
             hints=hints_,
             level_number=level_time.level_number,
@@ -439,6 +441,7 @@ class GamePlayDaoImpl(GamePlayDao):
             started_at=level_time.start_at,
             level_time_id=level_time.id,
             is_finished=is_finished,
+            is_last_hint_shown=is_last_hint_shown,
         )
 
     async def get_passed_levels(self, identity: IdentityProvider) -> PassedLevels:
@@ -452,15 +455,15 @@ class GamePlayDaoImpl(GamePlayDao):
             if level_time.id == current.id or level_time.has_finished(game):
                 continue
             level = game.levels[level_time.level_number]
+            shown = level.get_hints_for_timedelta(next_level_time.start_at - level_time.start_at)
             passed.append(
                 PassedLevelHints(
                     level_number=level_time.level_number,
                     level_time_id=level_time.id,
                     started_at=level_time.start_at,
                     finished_at=next_level_time.start_at,
-                    hints=level.get_hints_for_timedelta(
-                        next_level_time.start_at - level_time.start_at
-                    ),
+                    hints=shown,
+                    is_last_hint_shown=level.is_last_hint_shown(len(shown)),
                 )
             )
         return PassedLevels(game_id=game.id, levels=passed)

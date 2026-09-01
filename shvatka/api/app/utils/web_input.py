@@ -98,11 +98,16 @@ class WebGameView(GameView):
         )
 
     async def send_hint(self, team: dto.Team, hint_number: int, level: dto.Level) -> None:
+        is_last = level.is_last_hint(hint_number)
         await self._send_to_played(
             team,
             PushMessage(
-                title="Новая подсказка",
-                body=f"{team.name}: подсказка #{hint_number}",
+                title="Последняя подсказка" if is_last else "Новая подсказка",
+                body=(
+                    f"{team.name}: последняя подсказка уровня {self._level_label(level)}"
+                    if is_last
+                    else f"{team.name}: подсказка #{hint_number}"
+                ),
                 url="/games/running",
                 tag=f"hint-{team.id}-{level.db_id}-{hint_number}",
                 data={

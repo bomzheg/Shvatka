@@ -383,6 +383,8 @@ class CurrentHintResponse:
     level_time_id: int
     started_at: datetime
     is_finished: bool
+    is_last_hint_shown: bool
+    """Whether the last of ``hints`` is the level's last — the client says so."""
 
     @classmethod
     def from_core(cls, core: CurrentHintsAndKeys) -> Self:
@@ -398,6 +400,7 @@ class CurrentHintResponse:
             started_at=core.started_at,
             level_time_id=core.level_time_id,
             is_finished=core.is_finished,
+            is_last_hint_shown=core.is_last_hint_shown,
         )
 
 
@@ -408,6 +411,8 @@ class PassedLevel:
     started_at: datetime
     finished_at: datetime
     hints: list[hints.TimeHint]
+    is_last_hint_shown: bool
+    """Whether the last of ``hints`` is the level's last — the client says so."""
 
     @classmethod
     def from_core(cls, core: PassedLevelHints) -> "PassedLevel":
@@ -417,6 +422,7 @@ class PassedLevel:
             started_at=core.started_at,
             finished_at=core.finished_at,
             hints=core.hints,
+            is_last_hint_shown=core.is_last_hint_shown,
         )
 
 

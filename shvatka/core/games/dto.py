@@ -86,6 +86,8 @@ class CurrentHintsAndKeys:
     started_at: datetime
     game_id: int
     is_finished: bool
+    is_last_hint_shown: bool
+    """Whether the last of ``hints`` is the last time hint the level has."""
     level_numbers_by_name_id: dict[str, int]
     """Mapping of level name_id to its number_in_game, used to resolve effects' next_level."""
 
@@ -98,6 +100,8 @@ class CurrentHintsOnly:
     started_at: datetime
     game_id: int
     is_finished: bool
+    is_last_hint_shown: bool
+    """Whether the last of ``hints`` is the last time hint the level has."""
 
     def get_guids(self) -> list[str]:
         return [g for h in self.hints for g in h.get_guids()]
@@ -118,6 +122,8 @@ class PassedLevelHints:
     started_at: datetime
     finished_at: datetime
     hints: list[hints.TimeHint]
+    is_last_hint_shown: bool
+    """Whether the last of ``hints`` is the last time hint the level has."""
 
     @property
     def duration(self) -> timedelta:

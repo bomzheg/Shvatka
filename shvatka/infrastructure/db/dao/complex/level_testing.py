@@ -19,6 +19,9 @@ class LevelTestComplex(LevelTestingDao):
     async def is_still_testing(self, suite: dto.LevelTestSuite) -> bool:
         return await self.dao.level_test.is_still_testing(suite)
 
+    async def get_started_at(self, suite: dto.LevelTestSuite) -> datetime:
+        return await self.dao.level_test.get_started_at(suite)
+
     async def save_key(self, key: str, suite: dto.LevelTestSuite, is_correct: bool):
         return await self.dao.level_test.save_key(key, suite, is_correct)
 

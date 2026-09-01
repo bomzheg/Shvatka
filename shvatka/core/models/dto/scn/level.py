@@ -257,6 +257,16 @@ class Conditions(Sequence[action.AnyCondition]):
                 return condition.get_action_time()
         return None
 
+    def get_timer_action_time(self, effects_id: UUID) -> timedelta | None:
+        """Через сколько от начала уровня должен сработать таймер с такими эффектами."""
+        for condition in self.conditions:
+            if (
+                isinstance(condition, action.LevelTimerEffectsCondition)
+                and condition.effects.id == effects_id
+            ):
+                return condition.get_action_time()
+        return None
+
     def get_effects(self) -> Sequence[action.Effects]:
         result: list[action.Effects] = []
         result.extend(
@@ -383,6 +393,9 @@ class LevelScenario:
 
     def get_hints_for_timedelta(self, delta: timedelta) -> list[TimeHint]:
         return self.time_hints.get_hints_for_timedelta(delta)
+
+    def get_timer_action_time(self, effects_id: UUID) -> timedelta | None:
+        return self.conditions.get_timer_action_time(effects_id)
 
 
 def check_all_files_saved(level: LevelScenario, guids: set[str]):

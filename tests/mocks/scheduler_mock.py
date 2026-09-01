@@ -20,6 +20,7 @@ class SchedulerMock(Scheduler):
         self.plain_prepare_calls: list[dto.Game] = []
         self.plain_start_calls: list[dto.Game] = []
         self.plain_hint_calls: list[tuple[dto.Level, dto.Team, int, int, datetime]] = []
+        self.plain_level_event_calls: list[tuple[dto.Team, int, action.Effects, datetime]] = []
         self.cancel_scheduled_game_calls: list[dto.Game] = []
 
     def assert_one_planned_hint(self, level: dto.Level, team: dto.Team, hint_number: int) -> None:
@@ -64,7 +65,7 @@ class SchedulerMock(Scheduler):
     async def plain_level_event(
         self, team: dto.Team, lt_id: int, effects: action.Effects, run_at: datetime
     ):
-        pass
+        self.plain_level_event_calls.append((team, lt_id, effects, run_at))
 
     async def start(self) -> None:
         pass

@@ -26,6 +26,11 @@ class LevelTestingData(LevelTestProtocolDao):
             return False
         return bucket.protocol.stop is None
 
+    async def get_started_at(self, suite: dto.LevelTestSuite) -> datetime:
+        bucket = self._get_bucket(suite)
+        assert bucket.protocol.start
+        return bucket.protocol.start
+
     async def save_key(self, key: str, suite: dto.LevelTestSuite, is_correct: bool):
         bucket = self._get_bucket(suite)
         bucket.all_typed.append(

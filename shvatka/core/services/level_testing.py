@@ -2,7 +2,7 @@ import logging
 from collections.abc import Sequence
 from datetime import datetime
 
-from shvatka.core.games.game_play import calculate_first_hint_time, calculate_next_hint_time
+from shvatka.core.games.game_play import calculate_first_hint_time, calculate_hint_time
 from shvatka.core.interfaces.dal.game import GameByIdGetter
 from shvatka.core.interfaces.dal.level_testing import LevelTestingDao
 from shvatka.core.interfaces.scheduler import LevelTestScheduler
@@ -62,8 +62,9 @@ async def send_testing_level_hint(
             suite.level.name_id,
         )
         return
-    next_hint_time = calculate_next_hint_time(
-        suite.level.get_hint(hint_number),
+    # как и в игре, считаем от начала тестирования, чтобы задержки не копились
+    next_hint_time = calculate_hint_time(
+        await dao.get_started_at(suite),
         suite.level.get_hint(next_hint_number),
     )
     await scheduler.plain_test_hint(

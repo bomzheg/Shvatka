@@ -216,3 +216,10 @@ def test_third_key_of_three(level_three_keys: scn.LevelScenario):
     assert decision.type == action.DecisionType.EFFECTS
     assert decision.is_level_up()
     assert not decision.duplicate
+
+
+def test_last_hint_shown(level_one_key: scn.LevelScenario):
+    """The level has two hints: only both of them shown mean the last one is out."""
+    assert not level_one_key.is_last_hint_shown(0)
+    assert not level_one_key.is_last_hint_shown(1)
+    assert level_one_key.is_last_hint_shown(2)

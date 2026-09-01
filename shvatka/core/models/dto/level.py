@@ -26,6 +26,9 @@ class Level:
     def is_last_hint(self, hint_number: int) -> bool:
         return self.scenario.is_last_hint(hint_number)
 
+    def is_last_hint_shown(self, shown_hints_count: int) -> bool:
+        return self.scenario.is_last_hint_shown(shown_hints_count)
+
     def get_keys(self) -> set[str]:
         return self.scenario.get_keys()
 

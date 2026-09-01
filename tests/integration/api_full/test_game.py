@@ -271,6 +271,41 @@ async def test_game_hints(
     assert resp_json["level_number"] == 0
     assert resp_json["game_id"] == started_game.id
     assert resp_json["level_time_id"] == level_time.id
+    # the level has four hints (0, 2, 4, 6 min.), two of them are out so far
+    assert resp_json["is_last_hint_shown"] is False
+
+
+@pytest.mark.asyncio
+async def test_game_last_hint_shown(
+    client: AsyncClient,
+    auth: AuthProperties,
+    harry: dto.Player,
+    gryffindor: dto.Team,
+    started_game: dto.FullGame,
+    dao: HolderDao,
+):
+    """The last hint of the level is marked as such, like the bot does."""
+    await dao.level_time.delete_all()
+    level_time = models.LevelTime(
+        game_id=started_game.id,
+        team_id=gryffindor.id,
+        level_number=0,
+        # the level's last hint comes out at 6 minutes
+        start_at=datetime.now(tz=tz_utc) - timedelta(minutes=7),
+    )
+    dao.level_time._save(level_time)
+    await dao.commit()
+    token = auth.create_user_token(harry)
+
+    resp = await client.get(
+        "/games/running/level/current",
+        cookies={"Authorization": "Bearer " + token.access_token},
+    )
+
+    assert resp.status_code == 200
+    resp_json = resp.json()
+    assert [hint["time"] for hint in resp_json["hints"]] == [0, 2, 4, 6]
+    assert resp_json["is_last_hint_shown"] is True
 
 
 @pytest.mark.asyncio
@@ -315,6 +350,7 @@ async def test_game_passed_levels(
     assert passed["level_time_id"] == first.id
     # three minutes on the level: only the hints of 0 and 2 minutes were shown
     assert [hint["time"] for hint in passed["hints"]] == [0, 2]
+    assert passed["is_last_hint_shown"] is False
 
 
 @pytest.mark.asyncio

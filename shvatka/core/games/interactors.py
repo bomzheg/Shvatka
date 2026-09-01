@@ -240,6 +240,7 @@ class GamePlayReaderInteractor:
             level_time_id=hints_.level_time_id,
             events=events,
             is_finished=hints_.is_finished,
+            is_last_hint_shown=hints_.is_last_hint_shown,
             level_numbers_by_name_id=level_numbers_by_name_id,
         )
 

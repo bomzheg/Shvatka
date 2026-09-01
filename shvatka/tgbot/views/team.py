@@ -42,6 +42,22 @@ def render_team_players(
     return rez
 
 
+def render_leave_confirmation(
+    player: dto.Player, team: dto.Team, *, chat_id: int, private: bool
+) -> str | None:
+    """What the bot says in the chat where ``/leave`` was typed.
+
+    «Ты» is unambiguous only in a private chat — elsewhere the bot answers with a
+    plain message, so the player has to be named. In the team's own chat there is
+    nothing to add: :class:`BotTeamNotifier` already announces the leave there.
+    """
+    if private:
+        return f"Ты вышел из команды {hd.quote(team.name)}"
+    if team.get_chat_id() == chat_id:
+        return None
+    return f"Игрок {hd.quote(player.name_mention)} вышел из команды {hd.quote(team.name)}"
+
+
 @dataclass
 class BotTeamNotifier(TeamNotifier):
     bot: Bot
@@ -86,7 +102,7 @@ class BotTeamNotifier(TeamNotifier):
                     return f"Игрок {hd.quote(event.removed.name_mention)} вышел из команды."
                 return (
                     f"Игрок {hd.quote(event.removed.name_mention)} удалён из команды "
-                    f"(капитан {hd.quote(event.actor.name_mention)})."
+                    f"(удалил {hd.quote(event.actor.name_mention)})."
                 )
             case CaptainChanged():
                 text = f"👑Новый капитан команды — {hd.quote(event.new_captain.name_mention)}."

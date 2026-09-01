@@ -320,7 +320,7 @@ class PlayerUser(ShvatkaUser):
         if level:
             self.file_guids = collect_guids(level.get("hints"), [])
 
-    @task(15_700)
+    @task(100)
     def unread_count(self) -> None:
         """The poll that is four fifths of everything the api answers."""
         self.read("/notifications/unread-count")

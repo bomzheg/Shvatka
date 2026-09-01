@@ -47,9 +47,9 @@ def render_leave_confirmation(
 ) -> str | None:
     """What the bot says in the chat where ``/leave`` was typed.
 
-    «Ты» is unambiguous only in a private chat — elsewhere the bot answers with a
-    plain message, so the player has to be named. In the team's own chat there is
-    nothing to add: :class:`BotTeamNotifier` already announces the leave there.
+    «Ты» belongs to a private chat — in a group the player is named instead. In
+    the team's own chat there is nothing to add: :class:`BotTeamNotifier` already
+    announces the leave there.
     """
     if private:
         return f"Ты вышел из команды {hd.quote(team.name)}"

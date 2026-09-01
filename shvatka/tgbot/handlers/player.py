@@ -167,7 +167,7 @@ async def leave_handler(
         private=message.chat.type == ChatType.PRIVATE,
     )
     if text is not None:
-        await message.answer(text)
+        await message.reply(text)
 
 
 def setup() -> Router:

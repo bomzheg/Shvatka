@@ -288,7 +288,6 @@ class GamePlayBaseInteractor:
         input_container: InputContainer,
         team: dto.Team,
         game: dto.FullGame,
-        at: datetime,
     ) -> ShowTasks:
         tasks = ShowTasks()
         async with self.locker.lock_globally():
@@ -297,25 +296,26 @@ class GamePlayBaseInteractor:
                 if await self.dao.is_all_team_finished(game):
                     tasks.extend(await self.all_teams_finished(game))
                 return tasks
-        return await self.process_plain_level_up(team, game, at)
+        return await self.process_plain_level_up(team, game)
 
     async def process_plain_level_up(
         self,
         team: dto.Team,
         game: dto.FullGame,
-        now: datetime,
     ) -> ShowTasks:
         tasks = ShowTasks()
         next_level = await self.dao.get_current_level(team, game)
         lt = await self.dao.get_current_level_time(team, game)
 
         tasks.view.append(SendPuzzle(team=team, level=next_level))
+        # отсчитываем от записанного начала уровня, не от текущего момента:
+        # иначе задержка планировщика попадает в план следующего уровня и копится
         await schedule_first_hint(
             scheduler=self.scheduler,
             team=team,
             next_level=next_level,
             lt_id=lt.id,
-            now=now,
+            now=lt.start_at,
         )
         level_up_event = LevelUp(
             team=team, new_level=next_level, orgs_list=await get_spying_orgs(game, self.dao)
@@ -369,7 +369,6 @@ class CheckKeyInteractor(GamePlayBaseInteractor):
                     input_container=input_container,
                     team=team,
                     game=game,
-                    at=now,
                 )
             )
         # nothing is shown until this lands: until now the tasks are only a list
@@ -446,7 +445,6 @@ class GamePlayTimerInteractor(GamePlayBaseInteractor):
                     input_container=input_container,
                     team=team,
                     game=game,
-                    at=now,
                 )
             )
         await self.dao.commit()

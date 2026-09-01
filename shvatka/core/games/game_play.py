@@ -129,10 +129,9 @@ async def send_hint(
             level.db_id,
         )
         return
-    next_hint_time = calculate_next_hint_time(
-        level.get_hint(hint_number),
-        level.get_hint(next_hint_number),
-    )
+    # время подсказки считаем от начала уровня, не от момента отправки предыдущей:
+    # иначе задержки планировщика копятся от подсказки к подсказке
+    next_hint_time = calculate_hint_time(lt.start_at, level.get_hint(next_hint_number))
     await scheduler.plain_hint(level, team, next_hint_number, lt_id, next_hint_time)
 
 
@@ -165,6 +164,11 @@ def calculate_first_hint_time(next_level: dto.Level, now: datetime) -> datetime 
     if next_level.is_last_hint(0):
         return None
     return calculate_next_hint_time(next_level.get_hint(0), next_level.get_hint(1), now)
+
+
+def calculate_hint_time(level_started_at: datetime, hint: hints.TimeHint) -> datetime:
+    """Момент отправки подсказки — фиксированное смещение от начала уровня."""
+    return level_started_at + timedelta(minutes=hint.time)
 
 
 def calculate_next_hint_time(

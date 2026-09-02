@@ -27,12 +27,15 @@ AUTHOR = dto.Player(id=1, can_be_author=True, is_dummy=False, username="author")
 class _UpsertRecordingDao:
     def __init__(self) -> None:
         self.upserted: hints.FileMeta | None = None
+        self.file_ids: dict[str, str] = {}
 
     async def upsert(self, file: hints.FileMeta, author: dto.Player) -> None:
         self.upserted = file
 
     async def update_file_id(self, guid: str, file_id: str) -> None:
-        pass
+        # the real one is an UPDATE: a guid with no row yet is a no-op
+        if self.upserted is not None and self.upserted.guid == guid:
+            self.file_ids[guid] = file_id
 
 
 class _StreamDrainingGateway(BotFileGateway):
@@ -147,3 +150,43 @@ async def test_telegram_refusal_is_translated_to_a_domain_error():
     # the author is told which file and what telegram said about it
     assert "huge.jpg" in str(rejected.notify_user)
     assert "Request Entity Too Large" in str(rejected.notify_user)
+
+
+class _FileIdKeepingGateway(BotFileGateway):
+    """Telegram answering with a file_id, as the real upload does with it."""
+
+    def __init__(self, storage: LocalFileStorage, dao: _UpsertRecordingDao) -> None:
+        self.storage = storage
+        self.dao = dao  # type: ignore[assignment]
+
+    async def upload_to_tg(
+        self, author: dto.Player, content: BinaryIO, file_meta: hints.FileMetaLightweight
+    ) -> None:
+        await self.dao.update_file_id(file_meta.guid, "from-telegram")
+
+
+@pytest.mark.asyncio
+async def test_put_keeps_the_file_id_telegram_answered_with():
+    """The file_id is written onto the file's row, so the row has to exist by
+    the time it is sent: an update of a row that isn't there yet is lost, and
+    the game would go on sending that file by content forever."""
+    storage = LocalFileStorage(
+        FileStorageConfig(
+            path=Path(tempfile.mkdtemp()) / "files",
+            mkdir=True,
+            parents=True,
+            exist_ok=True,
+        )
+    )
+    dao = _UpsertRecordingDao()
+    gateway = _FileIdKeepingGateway(storage, dao)
+    file_meta = hints.UploadedFileMeta(
+        guid="4d8e3131-4041-7d4e-2f40-3b4c5d6e7f80",
+        original_filename="screenshot",
+        extension=".jpg",
+        content_type=enums.HintType.photo,
+    )
+
+    await gateway.put(file_meta, BytesIO(CONTENT), author=AUTHOR)
+
+    assert dao.file_ids == {file_meta.guid: "from-telegram"}

@@ -1,5 +1,5 @@
 from io import BytesIO
-from zipfile import Path as ZipPath
+from typing import Any
 from zipfile import ZipFile
 
 import pytest
@@ -8,22 +8,63 @@ from httpx import AsyncClient
 
 from shvatka.api.app.dependencies.auth import AuthProperties
 from shvatka.core.models import dto
-from shvatka.core.models.dto.scn.game import RawGameScenario  # noqa: F401
-from shvatka.core.services.scenario.scn_zip import pack_scn, unpack_scn
+from shvatka.core.models.dto.scn.game import RawGameScenario
+from shvatka.core.services.scenario.scn_zip import pack_scn
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from tests.fixtures.scn_fixtures import GUID
 from tests.mocks.file_gateway import FakeTelegram
+
+IMPORTED_GUID = "5f0c2b1a-77c9-4a9f-9a2f-6f1c2d3e4a5b"
 
 
 def auth_cookies(auth: AuthProperties, player: dto.Player) -> dict[str, str]:
     return {"Authorization": "Bearer " + auth.create_user_token(player).access_token}
 
 
-def rename(zip_bytes: bytes, name: str) -> bytes:
-    """The package names the game, so this is how one is imported as another."""
-    with unpack_scn(ZipPath(BytesIO(zip_bytes))).open() as package:  # type: RawGameScenario
-        package.scn["name"] = name
-        return pack_scn(package).read()
+def package(name: str) -> bytes:
+    """A zip as an author would bring it: a scenario naming its own file.
+
+    Level ids belong to their author, not to a game, so a package written here
+    uses its own — importing the export of another game would collide with the
+    levels that game already has.
+    """
+    scenario: dict[str, Any] = {
+        "name": name,
+        "__model_version__": 1,
+        "files": [
+            {
+                "guid": IMPORTED_GUID,
+                "original_filename": "картинка",
+                "extension": ".jpg",
+                "content_type": "photo",
+            }
+        ],
+        "levels": [
+            {
+                "id": "imported-first",
+                "__model_version__": 1,
+                "conditions": [{"type": "WIN_KEY", "keys": ["SH123"]}],
+                "time_hints": [
+                    {
+                        "time": 0,
+                        "hint": [
+                            {"type": "text", "text": "загадка"},
+                            {"type": "photo", "file_guid": IMPORTED_GUID},
+                        ],
+                    },
+                ],
+            },
+        ],
+    }
+    return pack_scn(RawGameScenario(scn=scenario, files={IMPORTED_GUID: BytesIO(b"123")})).read()
+
+
+async def import_zip(client: AsyncClient, cookies: dict[str, str], zip_bytes: bytes):
+    return await client.post(
+        "/games/my/zip",
+        files={"file": ("scenario.zip", zip_bytes, "application/zip")},
+        cookies=cookies,
+    )
 
 
 @pytest.mark.asyncio
@@ -43,9 +84,10 @@ async def test_export_game_as_zip(
     names = ZipFile(BytesIO(resp.content)).namelist()
     assert "scn.yaml" in names
     assert GUID in names
-    with unpack_scn(ZipPath(BytesIO(resp.content))).open() as package:  # type: RawGameScenario
-        assert package.scn["name"] == game.name
-        assert len(package.scn["levels"]) == len(game.levels)
+    # the scenario travels as yaml, so it can be read and fixed by hand
+    scenario = yaml.safe_load(ZipFile(BytesIO(resp.content)).read("scn.yaml"))
+    assert scenario["name"] == game.name
+    assert len(scenario["levels"]) == len(game.levels)
 
 
 @pytest.mark.asyncio
@@ -53,26 +95,39 @@ async def test_import_zip_writes_a_new_game(
     client: AsyncClient,
     auth: AuthProperties,
     author: dto.Player,
-    game: dto.FullGame,
     check_dao: HolderDao,
+    telegram: FakeTelegram,
 ):
-    exported = await client.get(
-        f"/games/my/{game.id}/scenario/zip", cookies=auth_cookies(auth, author)
-    )
-    package = rename(exported.content, "imported from zip")
-
-    resp = await client.post(
-        "/games/my/zip",
-        files={"file": ("scenario.zip", package, "application/zip")},
-        cookies=auth_cookies(auth, author),
-    )
+    resp = await import_zip(client, auth_cookies(auth, author), package("из архива"))
 
     assert resp.status_code == 200, resp.text
     imported = resp.json()
-    assert imported["name"] == "imported from zip"
-    assert len(imported["levels"]) == len(game.levels)
-    assert imported["id"] != game.id
-    assert await check_dao.game.count() == 2
+    assert imported["name"] == "из архива"
+    assert [level["name_id"] for level in imported["levels"]] == ["imported-first"]
+    # the media came with it, and went to telegram on the way in
+    assert telegram.sent == [IMPORTED_GUID]
+    (file_id,) = await check_dao.file_info.get_ids_by_guids([IMPORTED_GUID])
+    assert await check_dao.game_file.get_file_ids(imported["id"]) == {file_id}
+
+
+@pytest.mark.asyncio
+async def test_importing_the_same_package_twice_rewrites_the_same_game(
+    client: AsyncClient,
+    auth: AuthProperties,
+    author: dto.Player,
+    check_dao: HolderDao,
+):
+    """The package names the game: the author's own game of that name is the
+    one it rewrites, rather than a second game appearing under it."""
+    cookies = auth_cookies(auth, author)
+    first = await import_zip(client, cookies, package("игра из архива"))
+    assert first.status_code == 200, first.text
+
+    second = await import_zip(client, cookies, package("игра из архива"))
+
+    assert second.status_code == 200, second.text
+    assert second.json()["id"] == first.json()["id"]
+    assert await check_dao.game.count() == 1
 
 
 @pytest.mark.asyncio
@@ -80,26 +135,20 @@ async def test_import_refuses_a_package_telegram_wont_take(
     client: AsyncClient,
     auth: AuthProperties,
     author: dto.Player,
-    game: dto.FullGame,
     check_dao: HolderDao,
     telegram: FakeTelegram,
 ):
     """An import is expected to be correct — there is no forcing one through."""
-    exported = await client.get(
-        f"/games/my/{game.id}/scenario/zip", cookies=auth_cookies(auth, author)
-    )
-    package = rename(exported.content, "package telegram refuses")
     telegram.refuse = True
 
-    resp = await client.post(
-        "/games/my/zip",
-        files={"file": ("scenario.zip", package, "application/zip")},
-        cookies=auth_cookies(auth, author),
-    )
+    resp = await import_zip(client, auth_cookies(auth, author), package("игра с плохим файлом"))
 
     assert resp.status_code == 422, resp.text
-    assert resp.json()["type"] == "FilesCantBeSentToTg"
-    assert await check_dao.game.count() == 1
+    body = resp.json()
+    assert body["type"] == "FilesCantBeSentToTg"
+    # the author is told which file to fix, not just that something failed
+    assert "картинка.jpg" in body["description"]
+    assert await check_dao.game.count() == 0
 
 
 @pytest.mark.asyncio
@@ -108,27 +157,30 @@ async def test_import_refuses_what_is_not_a_zip(
     auth: AuthProperties,
     author: dto.Player,
 ):
-    resp = await client.post(
-        "/games/my/zip",
-        files={"file": ("scenario.zip", b"not a zip at all", "application/zip")},
-        cookies=auth_cookies(auth, author),
-    )
+    resp = await import_zip(client, auth_cookies(auth, author), b"not a zip at all")
 
     assert resp.status_code == 422, resp.text
     assert resp.json()["type"] == "ScenarioNotCorrect"
 
 
 @pytest.mark.asyncio
-async def test_exported_zip_is_yaml_the_import_takes(
+async def test_exported_package_can_be_imported_back(
     client: AsyncClient,
     auth: AuthProperties,
     author: dto.Player,
     game: dto.FullGame,
+    check_dao: HolderDao,
 ):
-    """The scenario travels as yaml, so it can be read and fixed by hand."""
-    resp = await client.get(
+    """Export and import are the two ends of one format: a game written here
+    reads back into the same game, levels and files included."""
+    exported = await client.get(
         f"/games/my/{game.id}/scenario/zip", cookies=auth_cookies(auth, author)
     )
+    assert exported.status_code == 200, exported.text
 
-    scenario = yaml.safe_load(ZipFile(BytesIO(resp.content)).read("scn.yaml"))
-    assert scenario["name"] == game.name
+    resp = await import_zip(client, auth_cookies(auth, author), exported.content)
+
+    assert resp.status_code == 200, resp.text
+    assert resp.json()["id"] == game.id
+    assert len(resp.json()["levels"]) == len(game.levels)
+    assert await check_dao.game.count() == 1

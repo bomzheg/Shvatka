@@ -31,14 +31,18 @@ class BotFileGateway(FileGateway):
         self.tech_chat_id = tech_chat_id
 
     async def put(self, file_meta: hints.UploadedFileMeta, content: BinaryIO, author: dto.Player):
-        if not file_meta.tg_link:
-            # uploading consumes the stream, so buffer it: otherwise the storage
-            # below would read nothing and save an empty file
-            data = content.read()
-            await self.upload_to_tg(author, BytesIO(data), file_meta)
-            content = BytesIO(data)
-        saved_file = await self.storage.put(file_meta, content)
+        if file_meta.tg_link:
+            saved_file = await self.storage.put(file_meta, content)
+            await self.dao.upsert(saved_file, author)
+            return
+        # both the storage and telegram read the whole stream, so buffer it once
+        data = content.read()
+        saved_file = await self.storage.put(file_meta, BytesIO(data))
         await self.dao.upsert(saved_file, author)
+        # sent after the row exists: the file_id telegram answers with is written
+        # onto that row, and an update of a row that isn't there yet is lost.
+        # A refusal raises with the row uncommitted, so nothing is kept either way.
+        await self.upload_to_tg(author, BytesIO(data), file_meta)
 
     async def get(self, file: hints.FileMeta) -> BinaryIO:
         try:

@@ -2,7 +2,6 @@ from datetime import date, datetime, time
 from io import BytesIO
 from typing import Any
 
-from adaptix import Retort
 from aiogram.types import BufferedInputFile, CallbackQuery, Message
 from aiogram_dialog import DialogManager
 from aiogram_dialog.widgets.kbd import Button
@@ -11,9 +10,9 @@ from dishka.integrations.aiogram_dialog import inject
 
 from shvatka.core.games.editor_interactors import (
     ChangeGameStatusInteractor,
+    ExportGameZipInteractor,
     PlanGameStartInteractor,
 )
-from shvatka.core.interfaces.clients.file_storage import FileGateway
 from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.interfaces.nursery import Nursery
 from shvatka.core.models import enums
@@ -22,10 +21,8 @@ from shvatka.core.scenario.interactors import (
     AllGameKeysReaderInteractor,
     GameScenarioTransitionsInteractor,
 )
-from shvatka.core.services import game
 from shvatka.core.services.game import get_full_game, get_game, rename_game
 from shvatka.core.services.game_stat import get_game_stat
-from shvatka.core.services.scenario.scn_zip import pack_scn
 from shvatka.core.utils.datetime_utils import TIME_FORMAT, tz_game
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.infrastructure.printer.results import export_results
@@ -78,12 +75,10 @@ async def show_zip_scn(
     widget: Button,
     manager: DialogManager,
     identity: FromDishka[IdentityProvider],
-    file_gateway: FromDishka[FileGateway],
-    dao: FromDishka[HolderDao],
-    retort: FromDishka[Retort],
+    interactor: FromDishka[ExportGameZipInteractor],
 ):
     game_id = manager.dialog_data["game_id"]
-    await common_show_zip(c, game_id, identity, file_gateway, dao, retort)
+    await common_show_zip(c, game_id, identity, interactor)
 
 
 @inject
@@ -92,12 +87,10 @@ async def show_my_zip_scn(
     widget: Button,
     manager: DialogManager,
     identity: FromDishka[IdentityProvider],
-    file_gateway: FromDishka[FileGateway],
-    dao: FromDishka[HolderDao],
-    retort: FromDishka[Retort],
+    interactor: FromDishka[ExportGameZipInteractor],
 ):
     game_id = manager.dialog_data["my_game_id"]
-    await common_show_zip(c, game_id, identity, file_gateway, dao, retort)
+    await common_show_zip(c, game_id, identity, interactor)
 
 
 @inject
@@ -159,12 +152,9 @@ async def common_show_zip(
     c: CallbackQuery,
     game_id: int,
     identity: IdentityProvider,
-    file_gateway: FileGateway,
-    dao: HolderDao,
-    retort: Retort,
+    interactor: ExportGameZipInteractor,
 ):
-    game_ = await game.get_game_package(game_id, identity, dao.game_packager, retort, file_gateway)
-    zip_ = pack_scn(game_)
+    zip_ = await interactor(game_id=game_id, identity=identity)
     assert isinstance(c.message, Message)
     await c.message.answer_document(BufferedInputFile(file=zip_.read(), filename="scenario.zip"))
 

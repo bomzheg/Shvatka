@@ -70,7 +70,7 @@ class FileGatewayMock(BotFileGateway):
                 text=f"telegram rejected file {file_meta.guid}",
                 guid=file_meta.guid,
                 filename=file_meta.public_filename,
-                notify_user=f"«{file_meta.public_filename}»: {self.telegram.reason}",
+                reason=self.telegram.reason,
             )
         await self.dao.update_file_id(file_meta.guid, SENT_FILE_ID)
 

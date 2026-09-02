@@ -135,17 +135,28 @@ class UnsupportedFileFormat(SHError):
 class FileRejectedByTelegram(SHError):
     """Telegram refused a file sent to check it can be delivered as a hint
 
-    (too large, unsupported codec, etc.).
+    (too large, unsupported codec, etc.). ``reason`` is what telegram said
+    about it — the only thing that tells the author what to fix.
     """
 
     notify_user = "Telegram отклонил файл"
 
     def __init__(
-        self, *args: Any, guid: str | None = None, filename: str | None = None, **kwargs
+        self,
+        *args: Any,
+        guid: str | None = None,
+        filename: str | None = None,
+        reason: str | None = None,
+        **kwargs,
     ) -> None:
         super().__init__(*args, **kwargs)
         self.guid = guid
         self.filename = filename
+        self.reason = reason
+        if not kwargs.get("notify_user") and filename:
+            # naming the file is the whole point: an author uploading a package
+            # has to know which one of them to fix
+            self.notify_user = f"«{filename}»: {reason}" if reason else f"«{filename}»"
 
 
 class FilesCantBeSentToTg(SHError):
@@ -163,6 +174,10 @@ class FilesCantBeSentToTg(SHError):
     def __init__(self, errors: list[FileRejectedByTelegram], *args: Any, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self.errors = errors
+        if not kwargs.get("notify_user"):
+            # every edge shows notify_user, and "some files failed" is no use
+            # without naming them — so the list is part of the message itself
+            self.notify_user = "; ".join(str(e.notify_user) for e in errors)
 
 
 class ActionCantBeNow(SHError):

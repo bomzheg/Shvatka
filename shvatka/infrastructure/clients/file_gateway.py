@@ -72,7 +72,7 @@ class BotFileGateway(FileGateway):
                 f"({file_meta.public_filename}): {e.message}",
                 guid=file_meta.guid,
                 filename=file_meta.public_filename,
-                notify_user=f"«{file_meta.public_filename}»: {e.message}",
+                reason=e.message,
             ) from e
         await msg.delete()
         tg_link = parse_message(msg)

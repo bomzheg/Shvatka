@@ -82,3 +82,18 @@ async def test_upsert_files_keeps_no_guid_of_a_rejected_file() -> None:
 
     (rejected,) = exc_info.value.errors
     assert rejected.guid == "bad"
+
+
+@pytest.mark.asyncio
+async def test_the_error_names_the_files_by_itself() -> None:
+    """Every edge shows ``notify_user``: on its own it has to say which files,
+    or the author is told that something failed and nothing more."""
+    gateway = FakeFileGateway(rejected_guids={"bad-1", "bad-2"})
+    files = [make_file("bad-1"), make_file("bad-2")]
+    contents = {f.guid: BytesIO(b"data") for f in files}
+
+    with pytest.raises(FilesCantBeSentToTg) as exc_info:
+        await upsert_files(make_player(), contents, files, FakeGuidOwnershipDao(), gateway)
+
+    assert "bad-1.jpg" in str(exc_info.value.notify_user)
+    assert "bad-2.jpg" in str(exc_info.value.notify_user)

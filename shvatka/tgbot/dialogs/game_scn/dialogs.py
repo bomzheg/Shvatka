@@ -18,10 +18,18 @@ from shvatka.tgbot.dialogs.preview_data import (
     PREVIEW_GAME,
     PREVIEW_LEVELS,
     PreviewStart,
+    PreviewSwitchTo,
 )
 
 from .getters import get_game_name, select_full_game, select_my_levels
-from .handlers import add_level_handler, edit_level, process_name, process_zip_scn, save_game
+from .handlers import (
+    add_level_handler,
+    edit_level,
+    force_save_zip_scn,
+    process_name,
+    process_zip_scn,
+    save_game,
+)
 
 game_writer = Dialog(
     Window(
@@ -73,6 +81,32 @@ game_writer = Dialog(
         Cancel(Const("🔙Отменить")),
         MessageInput(func=process_zip_scn, content_types=ContentType.DOCUMENT),
         state=states.GameWriteSG.from_zip,
+        preview_add_transitions=[PreviewSwitchTo(states.GameWriteSG.confirm_force)],
+    ),
+    Window(
+        Jinja(
+            "Telegram не принял {{ dialog_data['file_errors'] | length }} "
+            "файл(ов) из этого сценария:\n"
+            "{% for e in dialog_data['file_errors'] %}"
+            "— {{ e.filename }}: {{ e.reason }}\n"
+            "{% endfor %}"
+            "\nМожно сохранить игру как есть — эти файлы будут отправляться "
+            "напрямую при показе подсказок, либо исправить файлы и "
+            "загрузить сценарий заново."
+        ),
+        Button(Const("💾Сохранить как есть"), id="force_save", on_click=force_save_zip_scn),
+        SwitchTo(
+            Const("🔧Исправить и загрузить заново"),
+            id="retry_zip",
+            state=states.GameWriteSG.from_zip,
+        ),
+        Cancel(Const("🔙Отменить")),
+        state=states.GameWriteSG.confirm_force,
+        preview_data={
+            "dialog_data": {
+                "file_errors": [{"filename": "hint.mp4", "reason": "Request Entity Too Large"}]
+            }
+        },
     ),
 )
 

@@ -11,7 +11,12 @@ from shvatka.core.interfaces.dal.game import GameFileRenamer, GameUpserter
 from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.models import dto, enums
 from shvatka.core.models.dto import hints
-from shvatka.core.utils.exceptions import FileNotFound, NotAuthorizedForEdit
+from shvatka.core.utils.exceptions import (
+    FileNotFound,
+    FileRejectedByTelegram,
+    FilesCantBeSentToTg,
+    NotAuthorizedForEdit,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -105,12 +110,27 @@ async def upsert_files(
     files: list[hints.UploadedFileMeta],
     dao: GameUpserter,
     file_gateway: FileGateway,
+    force: bool = False,
 ) -> set[str]:
+    """Store every file the scenario references, checking each can reach telegram.
+
+    Tries every file rather than stopping at the first rejection, so a caller
+    that got ``FilesCantBeSentToTg`` sees the whole list at once. With
+    ``force=True`` a rejected file is stored anyway (see ``FileGateway.put``)
+    and nothing is raised.
+    """
     guids = set()
+    errors: list[FileRejectedByTelegram] = []
     for file in files:
         await dao.check_author_can_own_guid(author, file.guid)
-        await file_gateway.put(file, contents[file.guid], author)
+        try:
+            await file_gateway.put(file, contents[file.guid], author, force=force)
+        except FileRejectedByTelegram as e:
+            errors.append(e)
+            continue
         guids.add(file.guid)
+    if errors:
+        raise FilesCantBeSentToTg(errors=errors)
     return guids
 
 

@@ -132,6 +132,39 @@ class UnsupportedFileFormat(SHError):
     notify_user = "Формат файла не поддерживается"
 
 
+class FileRejectedByTelegram(SHError):
+    """Telegram refused a file sent to check it can be delivered as a hint
+
+    (too large, unsupported codec, etc.).
+    """
+
+    notify_user = "Telegram отклонил файл"
+
+    def __init__(
+        self, *args: Any, guid: str | None = None, filename: str | None = None, **kwargs
+    ) -> None:
+        super().__init__(*args, **kwargs)
+        self.guid = guid
+        self.filename = filename
+
+
+class FilesCantBeSentToTg(SHError):
+    """Saving a scenario found files telegram won't accept.
+
+    Collected across every file instead of failing on the first, so the caller
+    can show the whole list and let the author choose: fix the files, or save
+    anyway (``force=True``) — a file that failed upload is still stored, just
+    without a telegram file_id, and is sent by content the first time it is
+    shown in a game.
+    """
+
+    notify_user = "Не все файлы удалось отправить в Telegram"
+
+    def __init__(self, errors: list[FileRejectedByTelegram], *args: Any, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+        self.errors = errors
+
+
 class ActionCantBeNow(SHError):
     notify_user = "Действие не может быть выполнено сейчас"
 

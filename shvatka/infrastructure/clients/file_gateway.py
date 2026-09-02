@@ -3,11 +3,13 @@ from io import BytesIO
 from typing import BinaryIO
 
 from aiogram import Bot
+from aiogram.exceptions import TelegramAPIError
 from aiogram.types import BufferedInputFile
 
 from shvatka.core.interfaces.clients.file_storage import FileGateway, FileStorage
 from shvatka.core.models import dto
 from shvatka.core.models.dto import hints
+from shvatka.core.utils.exceptions import FileRejectedByTelegram
 from shvatka.infrastructure.db.dao import FileInfoDao
 from shvatka.tgbot.views import hint_sender
 from shvatka.tgbot.views.hint_factory.hint_parser import parse_message
@@ -28,12 +30,26 @@ class BotFileGateway(FileGateway):
         self.bot = bot
         self.tech_chat_id = tech_chat_id
 
-    async def put(self, file_meta: hints.UploadedFileMeta, content: BinaryIO, author: dto.Player):
+    async def put(
+        self,
+        file_meta: hints.UploadedFileMeta,
+        content: BinaryIO,
+        author: dto.Player,
+        force: bool = False,
+    ):
         if not file_meta.tg_link:
             # uploading consumes the stream, so buffer it: otherwise the storage
             # below would read nothing and save an empty file
             data = content.read()
-            await self.upload_to_tg(author, BytesIO(data), file_meta)
+            try:
+                await self.upload_to_tg(author, BytesIO(data), file_meta)
+            except FileRejectedByTelegram:
+                if not force:
+                    raise
+                logger.warning(
+                    "telegram rejected file %s, storing without a file_id anyway (forced)",
+                    file_meta.guid,
+                )
             content = BytesIO(data)
         saved_file = await self.storage.put(file_meta, content)
         await self.dao.upsert(saved_file, author)
@@ -57,11 +73,21 @@ class BotFileGateway(FileGateway):
         self, author: dto.Player, content: BinaryIO, file_meta: hints.FileMetaLightweight
     ):
         assert file_meta.content_type is not None
-        msg = await hint_sender.METHODS[file_meta.content_type](
-            self.bot,
-            author.get_tech_chat_id(reserve_chat_id=self.tech_chat_id),
-            BufferedInputFile(file=content.read(), filename=file_meta.public_filename),
-        )
+        try:
+            msg = await hint_sender.METHODS[file_meta.content_type](
+                self.bot,
+                author.get_tech_chat_id(reserve_chat_id=self.tech_chat_id),
+                BufferedInputFile(file=content.read(), filename=file_meta.public_filename),
+            )
+        except TelegramAPIError as e:
+            logger.warning("telegram rejected file %s", file_meta.guid, exc_info=e)
+            raise FileRejectedByTelegram(
+                text=f"telegram rejected file {file_meta.guid} "
+                f"({file_meta.public_filename}): {e.message}",
+                guid=file_meta.guid,
+                filename=file_meta.public_filename,
+                notify_user=f"«{file_meta.public_filename}»: {e.message}",
+            ) from e
         await msg.delete()
         tg_link = parse_message(msg)
         assert tg_link

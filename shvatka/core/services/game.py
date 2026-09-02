@@ -53,7 +53,16 @@ async def upsert_game(
     dao: GameUpserter,
     retort: Retort,
     file_gateway: FileGateway,
+    force: bool = False,
 ) -> dto.FullGame:
+    """Save the scenario, failing up front if telegram would reject one of its files.
+
+    ``force=False`` (the default) checks every file can reach telegram before
+    anything is saved, raising ``FilesCantBeSentToTg`` with the full list of
+    problem files if not. ``force=True`` saves regardless — a file telegram
+    rejected is kept without a ``file_id`` and sent by content instead, the
+    first time it is shown in a game.
+    """
     check_allow_be_author(author)
     game_scn = parse_uploaded_game(raw_scn, retort)
     if not await dao.is_name_available(name=game_scn.name):
@@ -63,7 +72,7 @@ async def upsert_game(
             )
         game = await dao.get_game_by_name(name=game_scn.name, author=author)
         check_game_editable(game)
-    guids = await upsert_files(author, raw_scn.files, game_scn.files, dao, file_gateway)
+    guids = await upsert_files(author, raw_scn.files, game_scn.files, dao, file_gateway, force)
     check_all_files_saved(game=game_scn, guids=guids)
     game = await dao.upsert_game(author, game_scn)
     await dao.unlink_all(game)

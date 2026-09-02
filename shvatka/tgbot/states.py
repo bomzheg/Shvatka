@@ -89,6 +89,7 @@ class GameWriteSG(StatesGroup):
     game_name = State()
     levels = State()
     from_zip = State()
+    confirm_force = State()
 
 
 class GameEditSG(StatesGroup):

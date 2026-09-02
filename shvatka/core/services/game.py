@@ -54,13 +54,6 @@ async def upsert_game(
     retort: Retort,
     file_gateway: FileGateway,
 ) -> dto.FullGame:
-    """Save an uploaded scenario package, files and all.
-
-    Every file is sent to telegram before anything is saved; if telegram
-    refuses any of them, nothing is written and ``FilesCantBeSentToTg`` names
-    all the problem files at once. A package is imported whole or not at all —
-    there is no saving it half-deliverable.
-    """
     check_allow_be_author(author)
     game_scn = parse_uploaded_game(raw_scn, retort)
     if not await dao.is_name_available(name=game_scn.name):

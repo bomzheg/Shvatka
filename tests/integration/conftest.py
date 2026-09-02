@@ -24,6 +24,7 @@ from shvatka.tgbot.username_resolver.user_getter import UserGetter
 from shvatka.tgbot.views.hint_factory.hint_parser import HintParser
 from tests.fixtures.di import get_test_providers
 from tests.mocks.datetime_mock import ClockMock
+from tests.mocks.file_gateway import FakeTelegram
 from tests.mocks.file_storage import MemoryFileStorage
 from tests.mocks.game_log import GameLogWriterMock
 
@@ -172,6 +173,17 @@ async def file_gateway(dishka_request: AsyncContainer) -> FileGateway:
 @pytest_asyncio.fixture
 async def game_log(dishka: AsyncContainer) -> GameLogWriterMock:
     return await dishka.get(GameLogWriterMock)
+
+
+@pytest_asyncio.fixture
+async def telegram(dishka: AsyncContainer) -> FakeTelegram:
+    """What the fake telegram does with files — set it up before uploading."""
+    return await dishka.get(FakeTelegram)
+
+
+@pytest.fixture(autouse=True)
+def clean_up_telegram(telegram: FakeTelegram):
+    telegram.clear()
 
 
 @pytest.fixture(autouse=True)

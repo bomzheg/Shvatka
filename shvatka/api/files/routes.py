@@ -73,7 +73,15 @@ async def upload_game_file(
     file: Annotated[UploadFile, File()],
     allow_conversion: Annotated[bool, Query()] = False,
     save_unsupported_as_is: Annotated[bool, Query()] = False,
+    force: Annotated[bool, Query()] = False,
 ) -> responses.UploadedFile:
+    """Store a file for the game, after telegram has accepted it.
+
+    The file is sent to telegram as part of the upload, because that is how a
+    hint reaches a team: one telegram refuses is refused here too, with
+    ``FileRejectedByTelegram``. ``force=true`` keeps it regardless — for the
+    author who knows what they are doing and wants the file anyway.
+    """
     options = hints.FileUploadOptions(
         allow_conversion=allow_conversion,
         save_unsupported_as_is=save_unsupported_as_is,
@@ -86,6 +94,7 @@ async def upload_game_file(
             original_filename=file.filename or "document",
             identity=identity,
             options=options,
+            force=force,
         )
     except UnsupportedFileFormat as e:
         raise to_http_error(e, code=415) from e

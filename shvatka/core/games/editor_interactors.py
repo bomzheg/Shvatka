@@ -6,15 +6,22 @@ on internal domain models (FullGame, GameScenario, ...) so the transport layer
 """
 
 import logging
+from contextlib import AbstractContextManager
 from dataclasses import dataclass
 from datetime import datetime
 from typing import BinaryIO
+from zipfile import BadZipFile
+from zipfile import Path as ZipPath
 
 from adaptix import Retort
 
 from shvatka.core.games.adapters import GameNameEditor
-from shvatka.core.interfaces.clients.file_storage import FileStorage
-from shvatka.core.interfaces.dal.complex import GameScenarioEditor, GameStatusChanger
+from shvatka.core.interfaces.clients.file_storage import FileGateway, FileStorage
+from shvatka.core.interfaces.dal.complex import (
+    GamePackager,
+    GameScenarioEditor,
+    GameStatusChanger,
+)
 from shvatka.core.interfaces.dal.game import (
     GameAuthorsFinder,
     GameByIdGetter,
@@ -23,11 +30,12 @@ from shvatka.core.interfaces.dal.game import (
     GameFileRenamer,
     GameFileUploader,
     GameStartPlanner,
+    GameUpserter,
 )
 from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.interfaces.scheduler import Scheduler
 from shvatka.core.models import dto, enums
-from shvatka.core.models.dto import hints
+from shvatka.core.models.dto import hints, scn
 from shvatka.core.players.player import check_allow_be_author
 from shvatka.core.rules.game import check_can_add_file
 from shvatka.core.services.game import (
@@ -36,12 +44,15 @@ from shvatka.core.services.game import (
     create_game,
     get_authors_games,
     get_full_game,
+    get_game_package,
     plain_start,
     rename_game,
     start_waivers,
     update_game_scenario,
+    upsert_game,
 )
 from shvatka.core.services.scenario.files import rename_file, save_file
+from shvatka.core.services.scenario.scn_zip import pack_scn, unpack_scn
 from shvatka.core.utils import exceptions
 from shvatka.core.utils.datetime_utils import DATETIME_FORMAT, tz_game
 from shvatka.core.views.game import (
@@ -110,6 +121,55 @@ class ChangeGameScenarioInteractor:
 
 
 @dataclass
+class ImportGameZipInteractor:
+    """Write a whole game from a zip package — the scenario and its files together.
+
+    The package carries its own name, so this is the bot's zip import from the
+    web: a new draft, or the author's own game of that name rewritten. Every
+    file goes to telegram on the way in, and a package telegram won't take is
+    refused whole (``FilesCantBeSentToTg``) — an import is expected to be
+    correct, so there is nothing to force here.
+    """
+
+    dao: GameUpserter
+    retort: Retort
+    file_gateway: FileGateway
+
+    async def __call__(self, zip_file: BinaryIO, identity: IdentityProvider) -> dto.FullGame:
+        author = await identity.get_required_player()
+        with self.unpack(zip_file) as package:
+            return await upsert_game(package, author, self.dao, self.retort, self.file_gateway)
+
+    def unpack(self, zip_file: BinaryIO) -> AbstractContextManager[scn.RawGameScenario]:
+        try:
+            return unpack_scn(ZipPath(zip_file)).open()
+        except BadZipFile as e:
+            raise exceptions.ScenarioNotCorrect(
+                text="uploaded file is not a zip archive",
+                notify_user="Это не zip-архив",
+            ) from e
+
+
+@dataclass
+class ExportGameZipInteractor:
+    """The game as a zip package: the scenario, its files, and the results if it has any.
+
+    The same package :class:`ImportGameZipInteractor` takes, so a game moves
+    between the web, the bot and another engine as one file.
+    """
+
+    dao: GamePackager
+    retort: Retort
+    file_gateway: FileGateway
+
+    async def __call__(self, game_id: int, identity: IdentityProvider) -> BinaryIO:
+        package = await get_game_package(
+            game_id, identity, self.dao, self.retort, self.file_gateway
+        )
+        return pack_scn(package)
+
+
+@dataclass
 class PlanGameStartInteractor:
     getter: GameByIdGetter
     dao: GameStartPlanner
@@ -170,8 +230,18 @@ class ChangeGameStatusInteractor:
 
 @dataclass
 class UploadGameFileInteractor:
+    """Take one file for a game, checking telegram will accept it.
+
+    A hint reaches a team as a telegram message, so a file telegram refuses is
+    a hint that can never be shown: the upload fails and nothing is kept. That
+    is what an author wants nearly always — but not always, and ``force`` is
+    for the rare deliberate exception, which stores the file with no ``file_id``
+    and leaves the author with a file their game cannot deliver.
+    """
+
     storage: FileStorage
     dao: GameFileUploader
+    file_gateway: FileGateway
 
     async def __call__(
         self,
@@ -180,6 +250,7 @@ class UploadGameFileInteractor:
         original_filename: str,
         identity: IdentityProvider,
         options: hints.FileUploadOptions = hints.DEFAULT_UPLOAD_OPTIONS,
+        force: bool = False,
     ) -> hints.SavedFileMeta:
         author = await identity.get_required_player()
         is_superuser = await identity.is_superuser()
@@ -193,8 +264,27 @@ class UploadGameFileInteractor:
         # the file is uploaded for later use in this game even though it is not yet
         # assigned to any level, so register it as usable in the game.
         await self.dao.add_game_file(game.id, saved.id)
+        await self.send_to_tg(author, saved, force)
         await self.dao.commit()
         return saved
+
+    async def send_to_tg(
+        self, author: dto.Player, saved: hints.SavedFileMeta, force: bool
+    ) -> None:
+        """Send the stored file to telegram, keeping the file_id it answers with.
+
+        Sending it now is what turns "telegram will refuse this" from a problem
+        found during a game into one found while uploading. Nothing is committed
+        yet, so a refusal that is not forced leaves no file behind.
+        """
+        try:
+            await self.file_gateway.renew_file_id(author, saved)
+        except exceptions.FileRejectedByTelegram as e:
+            if not force:
+                raise
+            logger.warning(
+                "author %s keeps file %s telegram refused", author.id, saved.guid, exc_info=e
+            )
 
 
 @dataclass

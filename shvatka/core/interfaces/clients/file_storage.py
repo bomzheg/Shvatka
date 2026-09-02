@@ -5,24 +5,24 @@ from shvatka.core.models.dto import hints
 
 
 class FileGateway(Protocol):
-    async def put(
-        self,
-        file_meta: hints.UploadedFileMeta,
-        content: BinaryIO,
-        author: dto.Player,
-        force: bool = False,
-    ):
+    async def put(self, file_meta: hints.UploadedFileMeta, content: BinaryIO, author: dto.Player):
         """Store the file, uploading it to telegram first if it has no ``tg_link`` yet.
 
-        If telegram rejects the upload, ``force=False`` (the default) lets
-        ``FileRejectedByTelegram`` propagate and nothing is stored. With
-        ``force=True`` the rejection is swallowed and the file is stored anyway,
-        without a ``file_id`` — it will be sent by content the first time it is
-        shown in a game.
+        Raises ``FileRejectedByTelegram`` when telegram refuses the upload, and
+        stores nothing: a file the game can't deliver is not a file worth
+        keeping. A caller that wants it anyway catches that and stores it
+        itself (see ``UploadGameFileInteractor``).
         """
         raise NotImplementedError
 
     async def get(self, file_link: hints.FileMeta) -> BinaryIO:
+        raise NotImplementedError
+
+    async def renew_file_id(self, author: dto.Player, file_meta: hints.SavedFileMeta) -> None:
+        """Send a stored file to telegram again and remember the fresh file_id.
+
+        Raises ``FileRejectedByTelegram`` when telegram refuses it.
+        """
         raise NotImplementedError
 
 

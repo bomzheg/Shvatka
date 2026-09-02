@@ -23,7 +23,7 @@ class FakeGuidOwnershipDao:
 
 
 class FakeFileGateway:
-    """Rejects the given guids, unless told to save anyway (``force``)."""
+    """Refuses the given guids the way telegram would."""
 
     def __init__(self, rejected_guids: set[str]) -> None:
         self.rejected_guids = rejected_guids
@@ -34,10 +34,9 @@ class FakeFileGateway:
         file_meta: hints.UploadedFileMeta,
         content: BinaryIO,
         author: dto.Player,
-        force: bool = False,
     ) -> None:
         self.put_calls.append(file_meta.guid)
-        if file_meta.guid in self.rejected_guids and not force:
+        if file_meta.guid in self.rejected_guids:
             raise FileRejectedByTelegram(guid=file_meta.guid, filename=file_meta.public_filename)
 
 
@@ -71,18 +70,15 @@ async def test_upsert_files_returns_guids_of_files_saved_without_errors() -> Non
 
 
 @pytest.mark.asyncio
-async def test_upsert_files_force_saves_rejected_files_anyway() -> None:
-    """``force=True`` never raises: a rejected file is still counted as saved.
-
-    ``FileGateway.put`` is the one that actually stores it without a file_id
-    when forced — this only checks the loop stops treating a rejection as fatal.
-    """
+async def test_upsert_files_keeps_no_guid_of_a_rejected_file() -> None:
+    """A refused file is not counted as saved, so the caller's own
+    ``check_all_files_saved`` cannot pass on a half-imported package."""
     gateway = FakeFileGateway(rejected_guids={"bad"})
     files = [make_file("ok"), make_file("bad")]
     contents = {f.guid: BytesIO(b"data") for f in files}
 
-    guids = await upsert_files(
-        make_player(), contents, files, FakeGuidOwnershipDao(), gateway, force=True
-    )
+    with pytest.raises(FilesCantBeSentToTg) as exc_info:
+        await upsert_files(make_player(), contents, files, FakeGuidOwnershipDao(), gateway)
 
-    assert guids == {"ok", "bad"}
+    (rejected,) = exc_info.value.errors
+    assert rejected.guid == "bad"

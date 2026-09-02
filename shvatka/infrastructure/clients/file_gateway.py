@@ -30,26 +30,12 @@ class BotFileGateway(FileGateway):
         self.bot = bot
         self.tech_chat_id = tech_chat_id
 
-    async def put(
-        self,
-        file_meta: hints.UploadedFileMeta,
-        content: BinaryIO,
-        author: dto.Player,
-        force: bool = False,
-    ):
+    async def put(self, file_meta: hints.UploadedFileMeta, content: BinaryIO, author: dto.Player):
         if not file_meta.tg_link:
             # uploading consumes the stream, so buffer it: otherwise the storage
             # below would read nothing and save an empty file
             data = content.read()
-            try:
-                await self.upload_to_tg(author, BytesIO(data), file_meta)
-            except FileRejectedByTelegram:
-                if not force:
-                    raise
-                logger.warning(
-                    "telegram rejected file %s, storing without a file_id anyway (forced)",
-                    file_meta.guid,
-                )
+            await self.upload_to_tg(author, BytesIO(data), file_meta)
             content = BytesIO(data)
         saved_file = await self.storage.put(file_meta, content)
         await self.dao.upsert(saved_file, author)

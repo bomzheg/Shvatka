@@ -83,47 +83,26 @@ async def process_zip_scn(
         logger.exception("game scenario from player %s has problems", player.id, exc_info=e)
         return
     except FilesCantBeSentToTg as e:
-        manager.dialog_data["zip_file_id"] = m.document.file_id
-        manager.dialog_data["file_errors"] = [
-            {"filename": err.filename, "reason": err.notify_user} for err in e.errors
-        ]
-        await manager.switch_to(states.GameWriteSG.confirm_force)
+        await m.reply(render_tg_rejections(e))
+        logger.warning(
+            "telegram refused %s files of the scenario from player %s",
+            len(e.errors),
+            player.id,
+            exc_info=e,
+        )
         return
     await m.reply("Успешно сохранено")
     await manager.done(result={"game": game})
 
 
-@inject
-async def force_save_zip_scn(
-    c: CallbackQuery,
-    button: Button,
-    manager: DialogManager,
-    file_gateway: FromDishka[FileGateway],
-    identity: FromDishka[IdentityProvider],
-    dao: FromDishka[HolderDao],
-    retort: FromDishka[Retort],
-) -> None:
-    """Re-fetch the zip the author already uploaded and save it, ignoring telegram.
-
-    The author already saw the per-file errors (``confirm_force`` window) and
-    chose to save anyway. The zip itself was never stored — only its
-    ``file_id`` — so it is downloaded again the same way ``process_zip_scn``
-    downloaded it the first time.
-    """
-    player = await identity.get_required_player()
-    bot: Bot = manager.middleware_data["bot"]
-    file_id: str = manager.dialog_data["zip_file_id"]
-    document: IO[bytes] = await bot.download(file_id)  # type: ignore[assignment]
-    with unpack_scn(ZipPath(document)).open() as scenario:  # type: scn.RawGameScenario
-        game = await upsert_game(
-            scenario, player, dao.game_upserter, retort, file_gateway, force=True
-        )
-    assert isinstance(c.message, Message)
-    await c.message.answer(
-        "Сохранено. Файлы, которые не отправились в Telegram, "
-        "будут отправляться напрямую при показе подсказок"
+def render_tg_rejections(error: FilesCantBeSentToTg) -> str:
+    """The refused files, one per line, as the author sees them in the chat."""
+    problems = "\n".join(f"• {hd.quote(str(e.notify_user))}" for e in error.errors)
+    return (
+        "Telegram не принял часть файлов, игра не сохранена:\n"
+        f"{problems}\n\n"
+        "Исправьте эти файлы и загрузите zip заново."
     )
-    await manager.done(result={"game": game})
 
 
 @inject

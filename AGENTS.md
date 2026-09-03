@@ -464,6 +464,17 @@ with a curated ignore list, mypy overrides) lives in `pyproject.toml`.
 - DB migrations: `python -m alembic upgrade head` (DB URL in `alembic.ini`).
 - Entry points: `shvatka-tgbot`, `shvatka-api` (see `[project.scripts]`).
 - Config: copy `config_dist` → `config` and fill it in.
+- **The docker image is two halves, and the heavy one is published by hash.**
+  The `deps` stage of the `Dockerfile` — python, the apt packages, the whole
+  venv, ~160 MB — is built once per lock file and pushed as
+  `bomzheg/shvatka:deps-<hash>`; the app image starts `FROM` that tag, so a
+  code-only commit adds about a megabyte and the servers pull about a megabyte.
+  Reinstalling the same `lock.txt` does not produce the same bytes (pyc
+  timestamps, RECORD ordering), so it is the tag, not a build cache, that keeps
+  the layer reusable — don't replace it with `cache-from`. Touching `lock.txt`
+  or the `Dockerfile` makes CI publish a new `deps-<hash>` on its own; there is
+  nothing to do by hand. A plain `docker build .` still builds both halves,
+  because `DEPS_IMAGE` defaults to the stage.
 
 ## Conventions cheat sheet
 

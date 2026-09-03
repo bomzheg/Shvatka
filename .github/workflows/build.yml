@@ -47,15 +47,47 @@ jobs:
           registry: docker.io
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
+      # The ~160 MB dependency half of the image (see the Dockerfile) is
+      # published under a tag naming everything it is made of, so a commit that
+      # touches none of that reuses the layers already on the servers instead of
+      # making them pull a freshly installed venv again.
+      - name: Name the dependency image after what it is made of
+        id: deps
+        run: |
+          set -euo pipefail
+          hash=$(
+            {
+              # the whole Dockerfile, not just the half that builds the
+              # dependencies: cheap to over-rebuild, expensive to under-rebuild
+              cat lock.txt Dockerfile
+              # the base images too, so their security updates still land
+              grep -oE '^FROM python:[^ ]+' Dockerfile | cut -d' ' -f2 | sort -u |
+                while read -r base; do
+                  docker buildx imagetools inspect "$base" --format '{{.Manifest.Digest}}'
+                done
+            } | sha256sum | cut -c1-16
+          )
+          echo "IMAGE=bomzheg/shvatka:deps-${hash}" >> "$GITHUB_OUTPUT"
+      - name: Build the dependency image, unless that exact one is published
+        env:
+          DEPS_IMAGE: ${{ steps.deps.outputs.IMAGE }}
+        run: |
+          set -euo pipefail
+          if docker buildx imagetools inspect "$DEPS_IMAGE" > /dev/null 2>&1; then
+            echo "::notice::reusing $DEPS_IMAGE as it is"
+          else
+            docker buildx build --target deps --tag "$DEPS_IMAGE" --push .
+          fi
       - uses: docker/build-push-action@v7
         with:
           context: .
           push: true
           tags: bomzheg/shvatka:${{ steps.tag.outputs.TAG }}
+          # No build cache: what was expensive to build now comes from
+          # DEPS_IMAGE, and copying the sources on top of it takes seconds.
           build-args: |
+            DEPS_IMAGE=${{ steps.deps.outputs.IMAGE }}
             BUILD_AT=${{ steps.date.outputs.BUILD_AT }}
             VCS_HASH=${{ steps.date.outputs.VCS_HASH }}
             COMMIT_AT=${{ steps.date.outputs.COMMIT_AT }}
             VCS_NAME=${{ steps.date.outputs.VCS_NAME }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max

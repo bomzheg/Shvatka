@@ -464,6 +464,13 @@ with a curated ignore list, mypy overrides) lives in `pyproject.toml`.
 - DB migrations: `python -m alembic upgrade head` (DB URL in `alembic.ini`).
 - Entry points: `shvatka-tgbot`, `shvatka-api` (see `[project.scripts]`).
 - Config: copy `config_dist` → `config` and fill it in.
+- **The heavy half of the docker image is a published tag, not a build cache.**
+  Everything above `COPY . ` in the `Dockerfile` is ~160 MB decided by
+  `lock.txt`; `.github/workflows/deps.yml` publishes it as
+  `bomzheg/shvatka:deps-<hash>` and the app image is built `FROM` it, so a
+  code-only commit ships ~1.5 MB. Rebuilding never reproduces those bytes, so a
+  cache miss costs every server the whole 160 MB — `type=gha` and
+  `type=registry` were both tried and both missed. Nothing to do by hand.
 
 ## Conventions cheat sheet
 

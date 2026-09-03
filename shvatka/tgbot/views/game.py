@@ -314,7 +314,7 @@ class BotView(GameViewPreparer, GameView):
         await self.unpin_all(chat_id)
 
     async def game_finished_by_all(self, team: dto.Team) -> None:
-        """todo change bot commands"""
+        # TODO change bot commands
         if (chat_id := team.get_chat_id()) is None:
             return
         await self.unpin_all(chat_id)

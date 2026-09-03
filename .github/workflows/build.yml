@@ -18,8 +18,11 @@ jobs:
   lint-and-test:
     uses: ./.github/workflows/test.yml
     secrets: inherit
+  deps:
+    uses: ./.github/workflows/deps.yml
+    secrets: inherit
   build:
-    needs: lint-and-test
+    needs: [lint-and-test, deps]
     runs-on: ubuntu-latest
 
     steps:
@@ -53,9 +56,8 @@ jobs:
           push: true
           tags: bomzheg/shvatka:${{ steps.tag.outputs.TAG }}
           build-args: |
+            DEPS_IMAGE=bomzheg/shvatka:${{ needs.deps.outputs.tag }}
             BUILD_AT=${{ steps.date.outputs.BUILD_AT }}
             VCS_HASH=${{ steps.date.outputs.VCS_HASH }}
             COMMIT_AT=${{ steps.date.outputs.COMMIT_AT }}
             VCS_NAME=${{ steps.date.outputs.VCS_NAME }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max

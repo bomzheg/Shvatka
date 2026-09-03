@@ -60,7 +60,7 @@ jobs:
           # No build cache: what is expensive to build arrives as DEPS_IMAGE,
           # and copying the sources on top of it takes seconds.
           build-args: |
-            DEPS_IMAGE=${{ needs.deps.outputs.image }}
+            DEPS_IMAGE=bomzheg/shvatka:${{ needs.deps.outputs.tag }}
             BUILD_AT=${{ steps.date.outputs.BUILD_AT }}
             VCS_HASH=${{ steps.date.outputs.VCS_HASH }}
             COMMIT_AT=${{ steps.date.outputs.COMMIT_AT }}

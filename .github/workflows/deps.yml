@@ -13,15 +13,19 @@ name: ShvatkaDeps
 on:
   workflow_call:
     outputs:
-      image:
-        description: The dependency image the app image must be built FROM.
-        value: ${{ jobs.deps.outputs.image }}
+      tag:
+        description: >
+          The tag, within this repository, of the image the app must be built
+          FROM. Only the tag: the owner is the DOCKERHUB_USERNAME secret, and
+          github blanks any reusable-workflow output that contains a secret,
+          which is a silent empty string at the other end.
+        value: ${{ jobs.deps.outputs.tag }}
 
 jobs:
   deps:
     runs-on: ubuntu-latest
     outputs:
-      image: ${{ steps.name.outputs.IMAGE }}
+      tag: ${{ steps.name.outputs.TAG }}
     steps:
       - uses: actions/checkout@v5
       - uses: docker/setup-buildx-action@v4
@@ -46,10 +50,10 @@ jobs:
                 done
             } | sha256sum | cut -c1-16
           )
-          echo "IMAGE=bomzheg/shvatka:deps-${hash}" >> "$GITHUB_OUTPUT"
+          echo "TAG=deps-${hash}" >> "$GITHUB_OUTPUT"
       - name: Build it, unless that exact one is published
         env:
-          IMAGE: ${{ steps.name.outputs.IMAGE }}
+          IMAGE: bomzheg/shvatka:${{ steps.name.outputs.TAG }}
         run: |
           set -euo pipefail
           if docker buildx imagetools inspect "$IMAGE" > /dev/null 2>&1; then

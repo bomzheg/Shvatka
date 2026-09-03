@@ -18,8 +18,6 @@ jobs:
   lint-and-test:
     uses: ./.github/workflows/test.yml
     secrets: inherit
-  # Publishes (or, almost always, just names) the ~160 MB dependency half of
-  # the image. Everything that decides when to rebuild it lives in there.
   deps:
     uses: ./.github/workflows/deps.yml
     secrets: inherit
@@ -57,8 +55,6 @@ jobs:
           context: .
           push: true
           tags: bomzheg/shvatka:${{ steps.tag.outputs.TAG }}
-          # No build cache: what is expensive to build arrives as DEPS_IMAGE,
-          # and copying the sources on top of it takes seconds.
           build-args: |
             DEPS_IMAGE=bomzheg/shvatka:${{ needs.deps.outputs.tag }}
             BUILD_AT=${{ steps.date.outputs.BUILD_AT }}

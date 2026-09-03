@@ -7,9 +7,6 @@ README.md
 README.adoc
 __pycache__
 *.pyc
-# local-only directories: they never belong in the image, and letting them into
-# the build context makes the sources layer differ between two builds of the
-# same commit
 .venv/
 venv/
 .mypy_cache/

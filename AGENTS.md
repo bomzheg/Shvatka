@@ -464,22 +464,13 @@ with a curated ignore list, mypy overrides) lives in `pyproject.toml`.
 - DB migrations: `python -m alembic upgrade head` (DB URL in `alembic.ini`).
 - Entry points: `shvatka-tgbot`, `shvatka-api` (see `[project.scripts]`).
 - Config: copy `config_dist` → `config` and fill it in.
-- **The docker image is two halves, and the heavy one is a published tag.**
-  Everything in the `Dockerfile` above `COPY . ` — python, the apt packages,
-  the venv — is ~160 MB and is decided by `lock.txt`;
-  `.github/workflows/deps.yml` publishes it as `bomzheg/shvatka:deps-<hash of
-  lock.txt, the Dockerfile and the base image digests>` and the app image is
-  built `FROM` that tag, so a code-only commit ships ~1.5 MB and the servers
-  pull ~1.5 MB. Nothing to do by hand: touch `lock.txt` or the `Dockerfile` and
-  CI publishes a new one; a plain `docker build .` still builds both halves,
-  because `DEPS_IMAGE` defaults to the stage.
-  **Don't replace this with a build cache.** A step that actually runs produces
-  new bytes from identical inputs — the same `lock.txt` reinstalled differs in
-  pyc timestamps and RECORD ordering, the same `apt-get install` differs in its
-  dpkg state — so a cache *miss* costs every server a 160 MB pull. `type=gha`
-  (branch-scoped, evicted at 10 GB) and `type=registry` (measured: imports
-  fine, still misses on the `uv pip install` step) were both tried and both
-  missed. Also don't add a step above `COPY . ` that changes per commit.
+- **The heavy half of the docker image is a published tag, not a build cache.**
+  Everything above `COPY . ` in the `Dockerfile` is ~160 MB decided by
+  `lock.txt`; `.github/workflows/deps.yml` publishes it as
+  `bomzheg/shvatka:deps-<hash>` and the app image is built `FROM` it, so a
+  code-only commit ships ~1.5 MB. Rebuilding never reproduces those bytes, so a
+  cache miss costs every server the whole 160 MB — `type=gha` and
+  `type=registry` were both tried and both missed. Nothing to do by hand.
 
 ## Conventions cheat sheet
 

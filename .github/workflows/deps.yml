@@ -1,24 +1,10 @@
-# Publishes the heavy half of the image — python, the apt packages, the whole
-# venv, ~160 MB — as bomzheg/shvatka:deps-<hash>, and tells the caller what it
-# is called. Almost every run does nothing but look the tag up and return it:
-# the tag is named after what goes into it, so it only gets built when one of
-# those things actually changes.
-#
-# The tag is a content hash rather than a version number on purpose. A git tag
-# would rebuild this on every release that changed no dependency, and would not
-# rebuild it for a lock.txt bump between releases. A hash rebuilds exactly when
-# the contents change, and nobody has to remember to bump anything.
 name: ShvatkaDeps
 
 on:
   workflow_call:
     outputs:
       tag:
-        description: >
-          The tag, within this repository, of the image the app must be built
-          FROM. Only the tag: the owner is the DOCKERHUB_USERNAME secret, and
-          github blanks any reusable-workflow output that contains a secret,
-          which is a silent empty string at the other end.
+        description: Tag, in this repository, of the image to build the app FROM.
         value: ${{ jobs.deps.outputs.tag }}
 
 jobs:
@@ -40,10 +26,7 @@ jobs:
           set -euo pipefail
           hash=$(
             {
-              # the whole Dockerfile, not just the half that builds the
-              # dependencies: cheap to over-rebuild, expensive to under-rebuild
               cat lock.txt Dockerfile
-              # the base images too, so their security updates still land
               grep -oE '^FROM python:[^ ]+' Dockerfile | cut -d' ' -f2 | sort -u |
                 while read -r base; do
                   docker buildx imagetools inspect "$base" --format '{{.Manifest.Digest}}'
@@ -57,7 +40,7 @@ jobs:
         run: |
           set -euo pipefail
           if docker buildx imagetools inspect "$IMAGE" > /dev/null 2>&1; then
-            echo "::notice::$IMAGE is published already — reusing its layers as they are"
+            echo "::notice::$IMAGE is published already"
           else
             docker buildx build --target deps --tag "$IMAGE" --push .
           fi

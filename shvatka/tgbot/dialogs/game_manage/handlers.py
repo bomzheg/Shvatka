@@ -77,8 +77,9 @@ async def show_zip_scn(
     identity: FromDishka[IdentityProvider],
     interactor: FromDishka[ExportGameZipInteractor],
 ):
-    game_id = manager.dialog_data["game_id"]
-    await common_show_zip(c, game_id, identity, interactor)
+    zip_ = await interactor(game_id=manager.dialog_data["game_id"], identity=identity)
+    assert isinstance(c.message, Message)
+    await c.message.answer_document(BufferedInputFile(file=zip_.read(), filename="scenario.zip"))
 
 
 @inject
@@ -89,8 +90,9 @@ async def show_my_zip_scn(
     identity: FromDishka[IdentityProvider],
     interactor: FromDishka[ExportGameZipInteractor],
 ):
-    game_id = manager.dialog_data["my_game_id"]
-    await common_show_zip(c, game_id, identity, interactor)
+    zip_ = await interactor(game_id=manager.dialog_data["my_game_id"], identity=identity)
+    assert isinstance(c.message, Message)
+    await c.message.answer_document(BufferedInputFile(file=zip_.read(), filename="scenario.zip"))
 
 
 @inject
@@ -146,17 +148,6 @@ async def show_transitions(
             filename="transitions.png",
         )
     )
-
-
-async def common_show_zip(
-    c: CallbackQuery,
-    game_id: int,
-    identity: IdentityProvider,
-    interactor: ExportGameZipInteractor,
-):
-    zip_ = await interactor(game_id=game_id, identity=identity)
-    assert isinstance(c.message, Message)
-    await c.message.answer_document(BufferedInputFile(file=zip_.read(), filename="scenario.zip"))
 
 
 @inject

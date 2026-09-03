@@ -5,6 +5,7 @@ from tests.fixtures.db_provider import TestDbProvider
 from tests.fixtures.file_storage import MemoryFileStorageProvider
 from tests.mocks.bot import MockBotProvider, MockMessageManagerProvider
 from tests.mocks.di import MocksProvider
+from tests.mocks.file_gateway import FileGatewayMockProvider
 
 TEST_PATHS_ENV = "SHVATKA_TEST_PATH"
 
@@ -33,4 +34,5 @@ def get_test_override_providers() -> list[Provider]:
         MockBotProvider(),
         MockMessageManagerProvider(),
         MocksProvider(),
+        FileGatewayMockProvider(),
     ]

@@ -30,6 +30,8 @@ from shvatka.core.games.editor_interactors import (
     ChangeGameStatusInteractor,
     CreateGameInteractor,
     DeleteGameFileInteractor,
+    ExportGameZipInteractor,
+    ImportGameZipInteractor,
     MyGameInteractor,
     MyGamesInteractor,
     PlanGameStartInteractor,
@@ -60,14 +62,19 @@ from shvatka.core.games.release_interactors import (
     SaveGameReleaseInteractor,
 )
 from shvatka.core.interfaces.bus import Bus
-from shvatka.core.interfaces.clients.file_storage import FileStorage
+from shvatka.core.interfaces.clients.file_storage import FileGateway, FileStorage
 from shvatka.core.interfaces.current_game import CurrentGameProvider
-from shvatka.core.interfaces.dal.complex import GameScenarioEditor, GameStatusChanger
+from shvatka.core.interfaces.dal.complex import (
+    GamePackager,
+    GameScenarioEditor,
+    GameStatusChanger,
+)
 from shvatka.core.interfaces.dal.game import (
     GameByIdGetter,
     GameFileDeleter,
     GameFileRenamer,
     GameFileUploader,
+    GameUpserter,
 )
 from shvatka.core.interfaces.dal.game_play import GamePlayerDao
 from shvatka.core.interfaces.dal.waiver import WaiverApprover
@@ -338,6 +345,26 @@ class GameEditProvider(Provider):
         return ChangeGameScenarioInteractor(dao=dao, retort=retort)
 
     @provide
+    def game_upserter(self, dao: HolderDao) -> GameUpserter:
+        return dao.game_upserter
+
+    @provide
+    def game_packager(self, dao: HolderDao) -> GamePackager:
+        return dao.game_packager
+
+    @provide
+    def import_zip(
+        self, dao: GameUpserter, retort: Retort, file_gateway: FileGateway
+    ) -> ImportGameZipInteractor:
+        return ImportGameZipInteractor(dao=dao, retort=retort, file_gateway=file_gateway)
+
+    @provide
+    def export_zip(
+        self, dao: GamePackager, retort: Retort, file_gateway: FileGateway
+    ) -> ExportGameZipInteractor:
+        return ExportGameZipInteractor(dao=dao, retort=retort, file_gateway=file_gateway)
+
+    @provide
     def change_start_at(
         self, dao: HolderDao, scheduler: Scheduler, game_log: GameLogWriter
     ) -> PlanGameStartInteractor:
@@ -356,8 +383,10 @@ class GameEditProvider(Provider):
         return GameFileUploaderImpl(dao=dao)
 
     @provide
-    def upload_file(self, dao: GameFileUploader, storage: FileStorage) -> UploadGameFileInteractor:
-        return UploadGameFileInteractor(storage=storage, dao=dao)
+    def upload_file(
+        self, dao: GameFileUploader, storage: FileStorage, file_gateway: FileGateway
+    ) -> UploadGameFileInteractor:
+        return UploadGameFileInteractor(storage=storage, dao=dao, file_gateway=file_gateway)
 
     @provide
     def game_file_renamer(self, dao: HolderDao) -> GameFileRenamer:

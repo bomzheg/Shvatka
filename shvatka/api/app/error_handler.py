@@ -55,7 +55,8 @@ def sh_exception_handler(
         | exceptions.UserNotFoundError,
     ):
         status_code = 404
-    elif isinstance(exc, exceptions.FileIsUsed):
+    elif isinstance(exc, exceptions.FileIsUsed | exceptions.GameWouldBeRewritten):
+        # a conflict the caller can resolve by asking and repeating the request
         status_code = 409
     elif isinstance(exc, exceptions.SHError):
         status_code = 422

@@ -132,6 +132,54 @@ class UnsupportedFileFormat(SHError):
     notify_user = "Формат файла не поддерживается"
 
 
+class FileRejectedByTelegram(SHError):
+    """Telegram refused a file sent to check it can be delivered as a hint
+
+    (too large, unsupported codec, etc.). ``reason`` is what telegram said
+    about it — the only thing that tells the author what to fix.
+    """
+
+    notify_user = "Telegram отклонил файл"
+
+    def __init__(
+        self,
+        *args: Any,
+        guid: str | None = None,
+        filename: str | None = None,
+        reason: str | None = None,
+        **kwargs,
+    ) -> None:
+        super().__init__(*args, **kwargs)
+        self.guid = guid
+        self.filename = filename
+        self.reason = reason
+        if not kwargs.get("notify_user") and filename:
+            # naming the file is the whole point: an author uploading a package
+            # has to know which one of them to fix
+            self.notify_user = f"«{filename}»: {reason}" if reason else f"«{filename}»"
+
+
+class FilesCantBeSentToTg(SHError):
+    """Saving a scenario found files telegram won't accept.
+
+    Collected across every file instead of failing on the first, so the caller
+    can show the whole list and let the author choose: fix the files, or save
+    anyway (``force=True``) — a file that failed upload is still stored, just
+    without a telegram file_id, and is sent by content the first time it is
+    shown in a game.
+    """
+
+    notify_user = "Не все файлы удалось отправить в Telegram"
+
+    def __init__(self, errors: list[FileRejectedByTelegram], *args: Any, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+        self.errors = errors
+        if not kwargs.get("notify_user"):
+            # every edge shows notify_user, and "some files failed" is no use
+            # without naming them — so the list is part of the message itself
+            self.notify_user = "; ".join(str(e.notify_user) for e in errors)
+
+
 class ActionCantBeNow(SHError):
     notify_user = "Действие не может быть выполнено сейчас"
 
@@ -156,6 +204,23 @@ class GameError(SHError):
 
 class GameHasAnotherAuthor(GameError):
     notify_user = "У этой игры другой автор"
+
+
+class GameWouldBeRewritten(GameError):
+    """An imported package names a game its author already has.
+
+    Not a refusal on its own — the author may well mean to rewrite it. It is
+    raised so that they are asked first, and the import is repeated with
+    ``overwrite``.
+    """
+
+    notify_user = "Игра с таким названием уже есть"
+
+    def __init__(self, *args: Any, game_name: str | None = None, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+        self.game_name = game_name
+        if not kwargs.get("notify_user") and game_name:
+            self.notify_user = f"Игра «{game_name}» уже есть, импорт перезапишет её"
 
 
 class GameStatusError(GameError):

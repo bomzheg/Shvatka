@@ -6,9 +6,23 @@ from shvatka.core.models.dto import hints
 
 class FileGateway(Protocol):
     async def put(self, file_meta: hints.UploadedFileMeta, content: BinaryIO, author: dto.Player):
+        """Store the file, uploading it to telegram first if it has no ``tg_link`` yet.
+
+        Raises ``FileRejectedByTelegram`` when telegram refuses the upload, and
+        stores nothing: a file the game can't deliver is not a file worth
+        keeping. A caller that wants it anyway catches that and stores it
+        itself (see ``UploadGameFileInteractor``).
+        """
         raise NotImplementedError
 
     async def get(self, file_link: hints.FileMeta) -> BinaryIO:
+        raise NotImplementedError
+
+    async def renew_file_id(self, author: dto.Player, file_meta: hints.SavedFileMeta) -> None:
+        """Send a stored file to telegram again and remember the fresh file_id.
+
+        Raises ``FileRejectedByTelegram`` when telegram refuses it.
+        """
         raise NotImplementedError
 
 

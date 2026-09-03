@@ -11,7 +11,12 @@ from shvatka.core.interfaces.dal.game import GameFileRenamer, GameUpserter
 from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.models import dto, enums
 from shvatka.core.models.dto import hints
-from shvatka.core.utils.exceptions import FileNotFound, NotAuthorizedForEdit
+from shvatka.core.utils.exceptions import (
+    FileNotFound,
+    FileRejectedByTelegram,
+    FilesCantBeSentToTg,
+    NotAuthorizedForEdit,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -62,6 +67,9 @@ async def save_file(
     sha256/mime) and saves the resulting meta to the DB. The actual content type is
     derived from the detected mime type. ``options`` controls how an unsupported
     image (e.g. HEIC) is handled — converted, stored as-is, or rejected.
+
+    Does not commit: the meta row and the link that makes the file reachable
+    belong in one transaction, so the caller commits once both are written.
     """
     guid = str(uuid4())
     extension = "".join(Path(original_filename).suffixes)
@@ -73,9 +81,7 @@ async def save_file(
     )
     stored = await storage.put(file_meta, content, options)
     stored.content_type = hint_type_by_mime(stored.mime_type)
-    saved = await dao.upsert(stored, author)
-    await dao.commit()
-    return saved
+    return await dao.upsert(stored, author)
 
 
 async def rename_file(
@@ -106,11 +112,25 @@ async def upsert_files(
     dao: GameUpserter,
     file_gateway: FileGateway,
 ) -> set[str]:
+    """Store every file the scenario references, checking each can reach telegram.
+
+    An uploaded scenario is expected to be whole, so a file telegram refuses
+    fails the save — but the loop still tries every remaining file, so the
+    raised ``FilesCantBeSentToTg`` names all of them at once and the author
+    fixes the package in one pass instead of one file per attempt.
+    """
     guids = set()
+    errors: list[FileRejectedByTelegram] = []
     for file in files:
         await dao.check_author_can_own_guid(author, file.guid)
-        await file_gateway.put(file, contents[file.guid], author)
+        try:
+            await file_gateway.put(file, contents[file.guid], author)
+        except FileRejectedByTelegram as e:
+            errors.append(e)
+            continue
         guids.add(file.guid)
+    if errors:
+        raise FilesCantBeSentToTg(errors=errors)
     return guids
 
 

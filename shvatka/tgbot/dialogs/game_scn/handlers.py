@@ -1,9 +1,7 @@
 import logging
 import typing
-from typing import IO, Any
-from zipfile import Path as ZipPath
+from typing import Any, BinaryIO
 
-from adaptix import Retort
 from aiogram import Bot
 from aiogram.types import CallbackQuery, Message
 from aiogram.utils.text_decorations import html_decoration as hd
@@ -12,21 +10,18 @@ from aiogram_dialog.widgets.kbd import Button, ManagedMultiselect
 from dishka import FromDishka
 from dishka.integrations.aiogram_dialog import inject
 
-from shvatka.core.interfaces.clients.file_storage import FileGateway
+from shvatka.core.games.editor_interactors import ImportGameZipInteractor
 from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.models import enums
-from shvatka.core.models.dto import scn  # noqa: F401
 from shvatka.core.services.achievement import add_achievement
 from shvatka.core.services.game import (
     add_level,
     check_new_game_name_available,
     create_game,
     get_full_game,
-    upsert_game,
 )
 from shvatka.core.services.level import get_all_my_free_levels, get_by_id
-from shvatka.core.services.scenario.scn_zip import unpack_scn
-from shvatka.core.utils.exceptions import ScenarioNotCorrect
+from shvatka.core.utils.exceptions import FilesCantBeSentToTg, ScenarioNotCorrect
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.tgbot import states
 
@@ -66,24 +61,42 @@ async def process_zip_scn(
     m: Message,
     dialog_: Any,
     manager: DialogManager,
-    file_gateway: FromDishka[FileGateway],
+    interactor: FromDishka[ImportGameZipInteractor],
     identity: FromDishka[IdentityProvider],
-    dao: FromDishka[HolderDao],
-    retort: FromDishka[Retort],
 ) -> None:
     player = await identity.get_required_player()
     bot: Bot = manager.middleware_data["bot"]
     assert m.document
-    document: IO[bytes] = await bot.download(m.document.file_id)  # type: ignore[assignment]
+    document: BinaryIO = await bot.download(m.document.file_id)  # type: ignore[assignment]
     try:
-        with unpack_scn(ZipPath(document)).open() as scenario:  # type: scn.RawGameScenario
-            game = await upsert_game(scenario, player, dao.game_upserter, retort, file_gateway)
+        # the bot has always rewritten the author's game of that name, and its
+        # dialog has nowhere to ask — the web is where the question is put
+        game = await interactor(zip_file=document, identity=identity, overwrite=True)
     except ScenarioNotCorrect as e:
         await m.reply(f"Ошибка {e}\n попробуйте исправить файл")
         logger.exception("game scenario from player %s has problems", player.id, exc_info=e)
         return
+    except FilesCantBeSentToTg as e:
+        await m.reply(render_tg_rejections(e))
+        logger.warning(
+            "telegram refused %s files of the scenario from player %s",
+            len(e.errors),
+            player.id,
+            exc_info=e,
+        )
+        return
     await m.reply("Успешно сохранено")
     await manager.done(result={"game": game})
+
+
+def render_tg_rejections(error: FilesCantBeSentToTg) -> str:
+    """The refused files, one per line, as the author sees them in the chat."""
+    problems = "\n".join(f"• {hd.quote(str(e.notify_user))}" for e in error.errors)
+    return (
+        "Telegram не принял часть файлов, игра не сохранена:\n"
+        f"{problems}\n\n"
+        "Исправьте эти файлы и загрузите zip заново."
+    )
 
 
 @inject

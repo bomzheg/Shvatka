@@ -1,9 +1,10 @@
 import logging
+from io import BytesIO
 from typing import Annotated, Any
 
 from adaptix import Retort
 from dishka.integrations.fastapi import FromDishka, inject
-from fastapi import APIRouter, Body, HTTPException
+from fastapi import APIRouter, Body, File, HTTPException, Query, UploadFile
 from fastapi.params import Path
 from fastapi.responses import Response
 
@@ -16,6 +17,8 @@ from shvatka.core.games.editor_interactors import (
     ChangeGameScenarioInteractor,
     ChangeGameStatusInteractor,
     CreateGameInteractor,
+    ExportGameZipInteractor,
+    ImportGameZipInteractor,
     MyGameInteractor,
     MyGamesInteractor,
     PlanGameStartInteractor,
@@ -55,6 +58,7 @@ from shvatka.infrastructure.db.dao.holder import HolderDao
 
 XLSX_MEDIA_TYPE = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 PDF_MEDIA_TYPE = "application/pdf"
+ZIP_MEDIA_TYPE = "application/zip"
 
 
 logger = logging.getLogger(__name__)
@@ -120,6 +124,45 @@ async def change_my_game_scenario(
     game = await interactor(game_id=id_, raw_scn=scenario, identity=identity)
     files = await get_file_metas(game, identity, dao.game_packager)
     return responses.FullGame.from_core(retort, game, files)
+
+
+@inject
+async def import_my_game_zip(
+    identity: FromDishka[ApiIdentityProvider],
+    interactor: FromDishka[ImportGameZipInteractor],
+    dao: FromDishka[HolderDao],
+    retort: FromDishka[Retort],
+    file: Annotated[UploadFile, File()],
+    overwrite: Annotated[bool, Query()] = False,
+) -> responses.FullGame:
+    """Write a whole game from a zip package — scenario and media in one file.
+
+    The package names the game: an unknown name creates a draft, while the
+    author's own game of that name is only rewritten with ``overwrite=true``,
+    so nobody loses a game to an import they misread (409 without it). A
+    package with a file telegram won't take is refused whole, naming every
+    such file.
+    """
+    game = await interactor(
+        zip_file=BytesIO(await file.read()), identity=identity, overwrite=overwrite
+    )
+    files = await get_file_metas(game, identity, dao.game_packager)
+    return responses.FullGame.from_core(retort, game, files)
+
+
+@inject
+async def export_my_game_zip(
+    identity: FromDishka[ApiIdentityProvider],
+    interactor: FromDishka[ExportGameZipInteractor],
+    id_: Annotated[int, Path(alias="id")],
+) -> Response:
+    """The game as a zip package, ready to be imported here or into the bot."""
+    file = await interactor(game_id=id_, identity=identity)
+    return Response(
+        content=file.read(),
+        media_type=ZIP_MEDIA_TYPE,
+        headers={"Content-Disposition": f'attachment; filename="game_{id_}.zip"'},
+    )
 
 
 @inject
@@ -389,7 +432,9 @@ def setup() -> APIRouter:
     games_router.add_api_route("/my", create_my_game, methods=["POST"])
     games_router.add_api_route("/my/{id}", get_my_game, methods=["GET"])
     games_router.add_api_route("/my/{id}/name", rename_my_game, methods=["PUT"])
+    games_router.add_api_route("/my/zip", import_my_game_zip, methods=["POST"])
     games_router.add_api_route("/my/{id}/scenario", change_my_game_scenario, methods=["PUT"])
+    games_router.add_api_route("/my/{id}/scenario/zip", export_my_game_zip, methods=["GET"])
     games_router.add_api_route("/my/{id}/start_at", change_my_game_start_at, methods=["PUT"])
     games_router.add_api_route("/my/{id}/status", change_my_game_status, methods=["PUT"])
     games_router.add_api_route("/my/{id}/keys/print", export_game_keys_to_print, methods=["GET"])

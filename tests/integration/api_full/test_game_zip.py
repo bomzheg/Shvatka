@@ -59,9 +59,11 @@ def package(name: str) -> bytes:
     return pack_scn(RawGameScenario(scn=scenario, files={IMPORTED_GUID: BytesIO(b"123")})).read()
 
 
-async def import_zip(client: AsyncClient, cookies: dict[str, str], zip_bytes: bytes):
+async def import_zip(
+    client: AsyncClient, cookies: dict[str, str], zip_bytes: bytes, overwrite: bool = False
+):
     return await client.post(
-        "/games/my/zip",
+        f"/games/my/zip{'?overwrite=true' if overwrite else ''}",
         files={"file": ("scenario.zip", zip_bytes, "application/zip")},
         cookies=cookies,
     )
@@ -111,19 +113,41 @@ async def test_import_zip_writes_a_new_game(
 
 
 @pytest.mark.asyncio
-async def test_importing_the_same_package_twice_rewrites_the_same_game(
+async def test_import_asks_before_rewriting_a_game_of_that_name(
     client: AsyncClient,
     auth: AuthProperties,
     author: dto.Player,
     check_dao: HolderDao,
 ):
-    """The package names the game: the author's own game of that name is the
-    one it rewrites, rather than a second game appearing under it."""
+    """Nobody loses a game to an import they misread: the second one stops,
+    naming the game it would have written over."""
     cookies = auth_cookies(auth, author)
     first = await import_zip(client, cookies, package("игра из архива"))
     assert first.status_code == 200, first.text
 
     second = await import_zip(client, cookies, package("игра из архива"))
+
+    assert second.status_code == 409, second.text
+    body = second.json()
+    assert body["type"] == "GameWouldBeRewritten"
+    assert "игра из архива" in body["description"]
+    assert await check_dao.game.count() == 1
+
+
+@pytest.mark.asyncio
+async def test_overwrite_rewrites_the_same_game(
+    client: AsyncClient,
+    auth: AuthProperties,
+    author: dto.Player,
+    check_dao: HolderDao,
+):
+    """Once the author has agreed, the package rewrites their game of that
+    name rather than a second game appearing under it."""
+    cookies = auth_cookies(auth, author)
+    first = await import_zip(client, cookies, package("игра из архива"))
+    assert first.status_code == 200, first.text
+
+    second = await import_zip(client, cookies, package("игра из архива"), overwrite=True)
 
     assert second.status_code == 200, second.text
     assert second.json()["id"] == first.json()["id"]
@@ -178,7 +202,7 @@ async def test_exported_package_can_be_imported_back(
     )
     assert exported.status_code == 200, exported.text
 
-    resp = await import_zip(client, auth_cookies(auth, author), exported.content)
+    resp = await import_zip(client, auth_cookies(auth, author), exported.content, overwrite=True)
 
     assert resp.status_code == 200, resp.text
     assert resp.json()["id"] == game.id

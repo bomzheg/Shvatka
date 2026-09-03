@@ -4,7 +4,7 @@ from typing import Annotated, Any
 
 from adaptix import Retort
 from dishka.integrations.fastapi import FromDishka, inject
-from fastapi import APIRouter, Body, File, HTTPException, UploadFile
+from fastapi import APIRouter, Body, File, HTTPException, Query, UploadFile
 from fastapi.params import Path
 from fastapi.responses import Response
 
@@ -133,14 +133,19 @@ async def import_my_game_zip(
     dao: FromDishka[HolderDao],
     retort: FromDishka[Retort],
     file: Annotated[UploadFile, File()],
+    overwrite: Annotated[bool, Query()] = False,
 ) -> responses.FullGame:
     """Write a whole game from a zip package — scenario and media in one file.
 
-    The package names the game: an unknown name creates a draft, the author's
-    own game of that name is rewritten. A package with a file telegram won't
-    take is refused whole, naming every such file.
+    The package names the game: an unknown name creates a draft, while the
+    author's own game of that name is only rewritten with ``overwrite=true``,
+    so nobody loses a game to an import they misread (409 without it). A
+    package with a file telegram won't take is refused whole, naming every
+    such file.
     """
-    game = await interactor(zip_file=BytesIO(await file.read()), identity=identity)
+    game = await interactor(
+        zip_file=BytesIO(await file.read()), identity=identity, overwrite=overwrite
+    )
     files = await get_file_metas(game, identity, dao.game_packager)
     return responses.FullGame.from_core(retort, game, files)
 

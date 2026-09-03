@@ -52,6 +52,7 @@ from shvatka.core.services.game import (
     upsert_game,
 )
 from shvatka.core.services.scenario.files import rename_file, save_file
+from shvatka.core.services.scenario.game_ops import parse_uploaded_game
 from shvatka.core.services.scenario.scn_zip import pack_scn, unpack_scn
 from shvatka.core.utils import exceptions
 from shvatka.core.utils.datetime_utils import DATETIME_FORMAT, tz_game
@@ -129,16 +130,42 @@ class ImportGameZipInteractor:
     file goes to telegram on the way in, and a package telegram won't take is
     refused whole (``FilesCantBeSentToTg``) — an import is expected to be
     correct, so there is nothing to force here.
+
+    Rewriting a game the author already has is not something to discover
+    afterwards, so it takes ``overwrite``: without it the import stops at
+    ``GameWouldBeRewritten``, naming the game, and the caller asks.
     """
 
     dao: GameUpserter
     retort: Retort
     file_gateway: FileGateway
 
-    async def __call__(self, zip_file: BinaryIO, identity: IdentityProvider) -> dto.FullGame:
+    async def __call__(
+        self, zip_file: BinaryIO, identity: IdentityProvider, overwrite: bool = False
+    ) -> dto.FullGame:
         author = await identity.get_required_player()
         with self.unpack(zip_file) as package:
+            if not overwrite:
+                await self.check_writes_nothing_over(package, author)
             return await upsert_game(package, author, self.dao, self.retort, self.file_gateway)
+
+    async def check_writes_nothing_over(
+        self, package: scn.RawGameScenario, author: dto.Player
+    ) -> None:
+        """Stop while the author's own game of that name would be rewritten.
+
+        A name taken by somebody else is not this error — the import refuses
+        that one on its own, and no permission of the author's can allow it.
+        """
+        name = parse_uploaded_game(package, self.retort).name
+        if await self.dao.is_name_available(name=name):
+            return
+        if await self.dao.is_author_game_by_name(name=name, author=author):
+            raise exceptions.GameWouldBeRewritten(
+                text=f"import would rewrite game {name} of player {author.id}",
+                game_name=name,
+                player=author,
+            )
 
     def unpack(self, zip_file: BinaryIO) -> AbstractContextManager[scn.RawGameScenario]:
         try:

@@ -69,7 +69,9 @@ async def process_zip_scn(
     assert m.document
     document: BinaryIO = await bot.download(m.document.file_id)  # type: ignore[assignment]
     try:
-        game = await interactor(zip_file=document, identity=identity)
+        # the bot has always rewritten the author's game of that name, and its
+        # dialog has nowhere to ask — the web is where the question is put
+        game = await interactor(zip_file=document, identity=identity, overwrite=True)
     except ScenarioNotCorrect as e:
         await m.reply(f"Ошибка {e}\n попробуйте исправить файл")
         logger.exception("game scenario from player %s has problems", player.id, exc_info=e)

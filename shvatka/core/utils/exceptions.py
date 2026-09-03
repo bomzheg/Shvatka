@@ -206,6 +206,23 @@ class GameHasAnotherAuthor(GameError):
     notify_user = "У этой игры другой автор"
 
 
+class GameWouldBeRewritten(GameError):
+    """An imported package names a game its author already has.
+
+    Not a refusal on its own — the author may well mean to rewrite it. It is
+    raised so that they are asked first, and the import is repeated with
+    ``overwrite``.
+    """
+
+    notify_user = "Игра с таким названием уже есть"
+
+    def __init__(self, *args: Any, game_name: str | None = None, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+        self.game_name = game_name
+        if not kwargs.get("notify_user") and game_name:
+            self.notify_user = f"Игра «{game_name}» уже есть, импорт перезапишет её"
+
+
 class GameStatusError(GameError):
     def __init__(self, game_status: str | None = None, *args: Any, **kwargs) -> None:
         super().__init__(*args, **kwargs)

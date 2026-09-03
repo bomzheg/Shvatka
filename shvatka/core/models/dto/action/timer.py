@@ -97,10 +97,6 @@ class LevelTimerCondition(Condition, metaclass=abc.ABCMeta):
 
 @dataclass(kw_only=True, frozen=True)
 class LevelTimerEffectsCondition(LevelTimerCondition, EffectsCondition):
-    """
-    action_time - minutes
-    """
-
     action_time: int
     """minutes"""
     effects: Effects

@@ -22,14 +22,23 @@ ARG DEPS_IMAGE=deps
 FROM python:3.13-bookworm AS venv-builder
 ENV VIRTUAL_ENV=/opt/venv
 ENV CODE_PATH=/code
-# ship .pyc alongside the .py, otherwise every fresh container compiles the
-# whole venv on the first import, which more than doubles the startup time
-ENV UV_COMPILE_BYTECODE=1
 RUN pip install --no-cache-dir uv
 RUN python3 -m venv $VIRTUAL_ENV
 WORKDIR $CODE_PATH
 COPY lock.txt ${CODE_PATH}/
-RUN uv pip install --no-cache --python $VIRTUAL_ENV/bin/python -r lock.txt
+# ship .pyc alongside the .py, otherwise every fresh container compiles the
+# whole venv on the first import, which more than doubles the startup time.
+# compileall rather than UV_COMPILE_BYTECODE, for `--invalidation-mode
+# unchecked-hash`: the .pyc then records a hash of its source instead of the
+# source's mtime, so compiling the same file twice gives the same bytes rather
+# than two layers the servers each have to pull. `-f` because a few wheels
+# ship a .pyc of their own, and those would otherwise be left as they came.
+# Only for the venv: nothing edits site-packages inside the image. Don't reach
+# for it for code somebody might bind-mount over — python stops checking
+# whether the .py it came from has changed.
+RUN uv pip install --no-cache --python $VIRTUAL_ENV/bin/python -r lock.txt && \
+    $VIRTUAL_ENV/bin/python -m compileall -q -f \
+        --invalidation-mode unchecked-hash $VIRTUAL_ENV/lib
 
 FROM python:3.13-slim-bookworm AS deps
 ENV VIRTUAL_ENV=/opt/venv

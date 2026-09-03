@@ -464,16 +464,22 @@ with a curated ignore list, mypy overrides) lives in `pyproject.toml`.
 - DB migrations: `python -m alembic upgrade head` (DB URL in `alembic.ini`).
 - Entry points: `shvatka-tgbot`, `shvatka-api` (see `[project.scripts]`).
 - Config: copy `config_dist` → `config` and fill it in.
-- **The docker build cache lives in the registry — never in the github cache.**
-  Everything in the `Dockerfile` above `COPY . ` is the venv, ~160 MB of the
-  image; everything below it is ~1.5 MB. Reinstalling the same `lock.txt` does
-  not produce the same bytes (pyc timestamps, RECORD ordering), so a cache miss
-  means the servers pull that 160 MB again for a two-line commit. `type=gha` is
-  scoped per branch and evicted at 10 GB, so it missed constantly here;
-  `type=registry` on `bomzheg/shvatka:buildcache-<tag>` doesn't, and the layer
-  it reuses is already a blob of the image repository, so neither the push nor
-  `docker pull` transfers it. Don't move the cache back, and don't add a step
-  above `COPY . ` that changes per commit.
+- **The docker image is two halves, and the heavy one is a published tag.**
+  Everything in the `Dockerfile` above `COPY . ` — python, the apt packages,
+  the venv — is ~160 MB and is decided by `lock.txt`;
+  `.github/workflows/deps.yml` publishes it as `bomzheg/shvatka:deps-<hash of
+  lock.txt, the Dockerfile and the base image digests>` and the app image is
+  built `FROM` that tag, so a code-only commit ships ~1.5 MB and the servers
+  pull ~1.5 MB. Nothing to do by hand: touch `lock.txt` or the `Dockerfile` and
+  CI publishes a new one; a plain `docker build .` still builds both halves,
+  because `DEPS_IMAGE` defaults to the stage.
+  **Don't replace this with a build cache.** A step that actually runs produces
+  new bytes from identical inputs — the same `lock.txt` reinstalled differs in
+  pyc timestamps and RECORD ordering, the same `apt-get install` differs in its
+  dpkg state — so a cache *miss* costs every server a 160 MB pull. `type=gha`
+  (branch-scoped, evicted at 10 GB) and `type=registry` (measured: imports
+  fine, still misses on the `uv pip install` step) were both tried and both
+  missed. Also don't add a step above `COPY . ` that changes per commit.
 
 ## Conventions cheat sheet
 

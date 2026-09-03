@@ -1,6 +1,6 @@
 ARG DEPS_IMAGE=deps
 
-FROM python:3.13-bookworm AS venv-builder
+FROM python:3.14-bookworm AS venv-builder
 ENV VIRTUAL_ENV=/opt/venv
 ENV CODE_PATH=/code
 RUN pip install --no-cache-dir uv
@@ -13,7 +13,7 @@ RUN uv pip install --no-cache --python $VIRTUAL_ENV/bin/python -r lock.txt && \
     $VIRTUAL_ENV/bin/python -m compileall -q -f \
         --invalidation-mode unchecked-hash $VIRTUAL_ENV/lib
 
-FROM python:3.13-slim-bookworm AS deps
+FROM python:3.14-slim-bookworm AS deps
 ENV VIRTUAL_ENV=/opt/venv
 ENV CODE_PATH=/code
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"

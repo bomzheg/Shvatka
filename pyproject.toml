@@ -7,7 +7,7 @@ authors = [
 ]
 license = {file = "LICENSE"}
 readme = "README.md"
-requires-python = ">=3.13,<3.15"
+requires-python = ">=3.14,<3.16"
 dependencies = [
     "pyyaml>=6.0,<7.0",
     "python-dateutil>=2.8.2,<3.0",
@@ -32,7 +32,7 @@ dependencies = [
     "bcrypt==4.0.1",
     "telegraph[aio]>=2.2.0,<3.0",
     "openpyxl>=3.0.10,<4.0",
-    "lxml>=5.0.0,<6.0",
+    "lxml>=6.0.0,<7.0",
     "matplotlib>=3.7.1,<4.0",
     "greenlet<4.0.0",
     "dishka==1.5.2",
@@ -41,7 +41,7 @@ dependencies = [
     "python-magic>=0.4.27,<0.5.0",
     "aiosmtplib>=3.0,<4.0",
     "pillow>=10.1,<13.0",
-    "pillow-heif>=0.16,<1.0",
+    "pillow-heif>=1.0,<2.0",
 ]
 
 [dependency-groups]
@@ -156,7 +156,7 @@ exclude = '''
 
 [tool.ruff]
 line-length = 99
-# ruff 0.2 cannot parse `requires-python = ">=3.13"`, so without this it silently
+# ruff 0.2 cannot parse `requires-python = ">=3.14"`, so without this it silently
 # falls back to py38 and turns on rules we do not need (FA100/FA102) while
 # holding back the py39+ rewrites. py312 is the newest this ruff knows.
 target-version = "py312"

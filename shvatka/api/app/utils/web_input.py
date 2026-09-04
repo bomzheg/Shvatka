@@ -50,6 +50,14 @@ class ApiInput(InputContainer):
 
 
 class WebGameView(GameView):
+    """A push tag is the notification's identity in the phone's tray: showing a
+    push with a tag that is already there replaces it instead of adding a line.
+    So an in-game tag names *what* happened to *which team* and never the level
+    or the hint number — the tray keeps the last level up and the last hint, not
+    the whole run. The ui closes the ones a newer push makes pointless (the
+    hints of a level the team has left), see ``push-sw.js``.
+    """
+
     def __init__(self, push_sender: WebPushSender, current_game: CurrentGameProvider) -> None:
         self.push_sender = push_sender
         self.current_game = current_game
@@ -93,7 +101,7 @@ class WebGameView(GameView):
                 title="Новый уровень",
                 body=f"{team.name}: открыт уровень {self._level_label(level)}",
                 url="/games/running",
-                tag=f"level-{team.id}-{level.db_id}",
+                tag=f"level-{team.id}",
                 data={"kind": "puzzle", "team_id": team.id, "level_id": level.db_id},
             ),
         )
@@ -110,7 +118,7 @@ class WebGameView(GameView):
                     else f"{team.name}: подсказка #{hint_number}"
                 ),
                 url="/games/running",
-                tag=f"hint-{team.id}-{level.db_id}-{hint_number}",
+                tag=f"hint-{team.id}",
                 data={
                     "kind": "hint",
                     "team_id": team.id,
@@ -151,7 +159,7 @@ class WebGameView(GameView):
                 title="Событие на уровне",
                 body=f"{team.name}: сработал эффект",
                 url="/games/running",
-                tag=f"effects-{team.id}-{effects.id}",
+                tag=f"effects-{team.id}",
                 data={"kind": "effects", "team_id": team.id, "effects_id": str(effects.id)},
             ),
         )
@@ -215,6 +223,7 @@ class WebOrgNotifier(OrgNotifier):
         )
 
     async def _notify_level_up(self, event: LevelUp) -> None:
+        # per team, not per level: an org watching a team wants where it is now
         await self._notify_orgs(
             event,
             PushMessage(
@@ -222,7 +231,7 @@ class WebOrgNotifier(OrgNotifier):
                 body=f"Команда {event.team.name} перешла на уровень "
                 f"{self._level_label(event.new_level)}",
                 url="/games/running",
-                tag=f"org-level-up-{event.team.id}-{event.new_level.db_id}",
+                tag=f"org-level-up-{event.team.id}",
                 data={
                     "kind": "org_level_up",
                     "team_id": event.team.id,

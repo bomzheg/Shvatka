@@ -3,9 +3,14 @@ from types import SimpleNamespace
 
 import pytest
 
-from shvatka.api.app.utils.push import PushMessage
+from shvatka.api.app.utils.push import PushMessage, PushUrgency
 from shvatka.api.app.utils.web_input import WebTeamNotifier
-from shvatka.core.views.team import CaptainChanged, PlayerJoinedTeam, PlayerLeftTeam
+from shvatka.core.views.team import (
+    CaptainChanged,
+    PlayerJoinedTeam,
+    PlayerLeftTeam,
+    TeamRenamed,
+)
 
 
 class FakePushSender:
@@ -122,3 +127,37 @@ async def test_no_recipients_no_calls() -> None:
     assert notification_dao.created == []
     assert notification_dao.commits == 0
     assert sender.calls == []
+
+
+@pytest.mark.asyncio
+async def test_team_pushes_keep_for_a_day() -> None:
+    """Who joined the team is still true tomorrow, so a phone that was off all
+    evening should be told when it comes back on.
+    """
+    sender = FakePushSender()
+    notifier = WebTeamNotifier(FakeNotificationDao(), FakeTeamPlayersDao([10, 42]), sender)
+    team = _team()
+
+    for event in (
+        PlayerJoinedTeam(team=team, actor=_player(10), invited=_player(42)),
+        PlayerLeftTeam(team=team, actor=_player(10), removed=_player(42)),
+        CaptainChanged(
+            team=team, actor=_player(10), new_captain=_player(42), old_captain=_player(10)
+        ),
+        TeamRenamed(team=team, actor=_player(10), old_name="Ravenclaw"),
+    ):
+        await notifier.notify(event)
+
+    assert len(sender.calls) == 4
+    assert {message.ttl for _, message in sender.calls} == {24 * 60 * 60}
+
+
+@pytest.mark.asyncio
+async def test_team_news_is_not_worth_waking_a_sleeping_phone() -> None:
+    sender = FakePushSender()
+    notifier = WebTeamNotifier(FakeNotificationDao(), FakeTeamPlayersDao([10]), sender)
+
+    await notifier.notify(PlayerJoinedTeam(team=_team(), actor=_player(10), invited=_player(42)))
+
+    _, message = sender.calls[0]
+    assert message.urgency == PushUrgency.normal

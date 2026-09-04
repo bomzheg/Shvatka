@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import enum
 import json
 import logging
 import typing
@@ -17,6 +18,29 @@ from shvatka.infrastructure.db.models.push_subscription import PushSubscription
 logger = logging.getLogger(__name__)
 
 
+class PushUrgency(enum.StrEnum):
+    """RFC 8030 urgency: how much battery the push is worth to the receiver.
+
+    Anything below ``high`` is the sender's permission to hold the message until
+    the device wakes up on its own, which android does readily — a backgrounded
+    browser in doze gets its pushes at the next maintenance window, minutes to
+    tens of minutes later. Only ``high`` asks for delivery now.
+    """
+
+    very_low = "very-low"
+    low = "low"
+    normal = "normal"
+    high = "high"
+
+
+# In-game news goes stale in minutes: a hint delivered after the level is over is
+# noise, so let the push service drop it rather than wake the phone for it.
+IN_GAME_TTL = 10 * 60
+# Team news keeps: whoever joined is still on the team tomorrow. A phone that was
+# off all evening should get it when it comes back.
+TEAM_TTL = 24 * 60 * 60
+
+
 @dataclass(frozen=True, slots=True)
 class PushMessage:
     title: str
@@ -24,6 +48,10 @@ class PushMessage:
     url: str = "/"
     tag: str | None = None
     data: dict[str, Any] | None = None
+    # How hard the push service should try, as opposed to what the push says.
+    # Never part of ``to_json``: the browser is not told any of this.
+    urgency: PushUrgency = PushUrgency.normal
+    ttl: int = IN_GAME_TTL
 
     def to_json(self) -> str:
         payload: dict[str, Any] = {
@@ -123,5 +151,6 @@ class WebPushSender:
             data=message.to_json(),
             vapid_private_key=self.config.vapid_private_key,
             vapid_claims={"sub": self.config.vapid_claims_sub},
-            ttl=10 * 60,
+            ttl=message.ttl,
+            headers={"Urgency": message.urgency.value},
         )

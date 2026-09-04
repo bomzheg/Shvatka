@@ -56,7 +56,6 @@ class EmailAccountDao(BaseDAO[models.EmailAccount]):
     async def set_player_email(
         self, player_id: int, email: str, is_verified: bool
     ) -> dto.EmailAccount:
-        """Set (create or replace) the email of a player. Used by the admin panel."""
         result = await self.session.scalars(
             select(models.EmailAccount).where(models.EmailAccount.player_id == player_id)
         )
@@ -79,7 +78,6 @@ class EmailAccountDao(BaseDAO[models.EmailAccount]):
         account.is_verified = True
 
     async def get_verified_player_by_email(self, email: str) -> dto.PlayerWithCreds:
-        """Use only for authentication, where the password is actually checked."""
         player = await self._get_verified_player_model_or_raise(email)
         return player.to_dto_user_prefetched().add_password(player.hashed_password)
 

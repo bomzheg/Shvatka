@@ -1,11 +1,3 @@
-"""
-Планировщик просыпается чуть позже назначенного времени. Если это «чуть позже»
-становится началом следующего уровня, оно копится: после десятка уровней команды,
-которые весь путь прошли по таймеру, финишируют с разбросом в секунду и больше.
-Здесь проверяем, что и уровни, и подсказки отсчитываются от записанного начала
-уровня, а не от момента пробуждения планировщика.
-"""
-
 import uuid
 from datetime import UTC, datetime, timedelta
 
@@ -107,7 +99,6 @@ def test_level_up_time_is_when_timer_was_due():
 
 
 def test_level_up_time_is_not_in_future():
-    """Страховка: записанное время окончания уровня не должно опережать реальное."""
     level = create_level(timer_minutes=30)
     now = LEVEL_STARTED_AT + timedelta(minutes=10)
 
@@ -133,7 +124,6 @@ def test_level_up_time_falls_back_to_now_for_unknown_effects():
 
 
 def test_timer_level_ups_do_not_accumulate_delay():
-    """Двенадцать уровней по таймеру — финиш ровно через сумму таймеров."""
     level = create_level(timer_minutes=30)
     started_at = LEVEL_STARTED_AT
     for i in range(12):
@@ -178,7 +168,6 @@ class ViewSenderStub(ViewSender):
 
 @pytest.mark.asyncio
 async def test_next_hint_is_planned_from_level_start():
-    """Подсказка, отправленная с опозданием, не сдвигает следующую."""
     level = create_level()
     level_time = create_level_time()
     scheduler = SchedulerMock()
@@ -203,7 +192,6 @@ async def test_next_hint_is_planned_from_level_start():
 
 @pytest.mark.asyncio
 async def test_first_hint_and_timers_are_planned_from_level_start():
-    """Уровень целиком планируется от своего начала, а не от «сейчас»."""
     level = create_level(timer_minutes=30)
     scheduler = SchedulerMock()
 
@@ -246,7 +234,6 @@ class LevelViewStub:
 
 @pytest.mark.asyncio
 async def test_testing_hint_is_planned_from_testing_start():
-    """Тестирование уровня оргом считает подсказки так же, как игра."""
     suite = dto.LevelTestSuite(
         level=create_level(),
         tester=dto.SecondaryOrganizer(
@@ -290,7 +277,6 @@ GAME_PLANNED_AT = datetime(2025, 4, 12, 22, 0, tzinfo=UTC)
     ],
 )
 def test_start_snaps_to_planned_time(actual: datetime):
-    """Планировщик проснулся почти вовремя — вся сетка игры встаёт на ровное время."""
     assert snap_to_planned_start(GAME_PLANNED_AT, actual) == GAME_PLANNED_AT
 
 
@@ -303,7 +289,6 @@ def test_start_snaps_to_planned_time(actual: datetime):
     ],
 )
 def test_late_start_keeps_the_wall_clock(actual: datetime):
-    """Опоздали ощутимо — иначе первый уровень начался бы задним числом."""
     assert snap_to_planned_start(GAME_PLANNED_AT, actual) == actual
 
 

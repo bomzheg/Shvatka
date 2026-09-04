@@ -60,8 +60,6 @@ async def test_save_team_no_chat(dao: HolderDao, game_log: GameLogWriter):
 
 @pytest.mark.asyncio
 async def test_link_chat_to_team_without_chat(dao: HolderDao, game_log: GameLogWriter):
-    """The captain's bridge "move team to another chat" flow must also work
-    when the team has no chat yet: it links the team to its first chat."""
     user = await upsert_user(create_dto_harry(), dao.user)
     player = await upsert_player(user, dao.player)
     await promote(player, dao)

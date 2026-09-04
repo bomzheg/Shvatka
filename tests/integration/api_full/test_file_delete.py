@@ -58,7 +58,6 @@ async def test_cant_delete_file_used_by_a_level(
     game: dto.FullGame,
     check_dao: HolderDao,
 ):
-    """The scenario refers to it — deleting would break the game."""
     resp = await client.delete(
         f"/cdn/games/{game.id}/files/{GUID}",
         cookies=auth_cookies(auth, author),
@@ -76,7 +75,6 @@ async def test_cant_delete_file_used_by_the_release(
     dao: HolderDao,
     check_dao: HolderDao,
 ):
-    """A release refers to files without any ``level_files`` row of its own."""
     game = await create_game(author=author, name="draft release file", dao=dao.game_creator)
     cookies = auth_cookies(auth, author)
     guid = await upload(client, game.id, cookies)

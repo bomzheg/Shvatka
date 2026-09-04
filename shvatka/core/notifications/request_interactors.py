@@ -1,19 +1,3 @@
-"""Interactors for user-to-user action requests: team-join invites, ask-to-join
-requests, org invites and merge requests, plus accept / decline / cancel and
-listing.
-
-Creating a request is the primary business operation (errors surface). Accepting
-one that performs a real change reuses the existing domain services
-(:func:`join_team`, org adding, :func:`merge_teams`, :func:`merge_players`) so
-the change and the request resolution commit together.
-
-Merge requests (team/player with their forum copies) target no particular
-player: they are answered by any superuser, either from the web admin panel or
-from the game-log channel message the bot posts. Resolving one emits
-:class:`ActionRequestResolved` so every bot message for the request is removed,
-and the merge itself writes the usual game-log entry.
-"""
-
 import contextlib
 import logging
 from collections.abc import Sequence
@@ -71,8 +55,6 @@ MERGE_REQUEST_TYPES = (RequestType.team_merge, RequestType.player_merge)
 
 @dataclass
 class CreateTeamJoinInviteInteractor:
-    """A team manager invites a player to join their team."""
-
     requests: RequestStorage
     notifications: NotificationWriter
     team_dao: TeamByIdGetter
@@ -129,8 +111,6 @@ class CreateTeamJoinInviteInteractor:
 
 @dataclass
 class CreateTeamJoinRequestInteractor:
-    """A player asks to join a team; team managers are notified."""
-
     requests: RequestStorage
     notifications: NotificationWriter
     team_dao: TeamByIdGetter
@@ -177,8 +157,6 @@ class CreateTeamJoinRequestInteractor:
 
 @dataclass
 class CreateOrgInviteInteractor:
-    """A game author invites a player to become an organizer."""
-
     requests: RequestStorage
     notifications: NotificationWriter
     player_dao: PlayerByIdGetter
@@ -227,12 +205,6 @@ class CreateOrgInviteInteractor:
 
 @dataclass
 class CreatePromotionInviteInteractor:
-    """An author invites a player to be promoted to author (get "аппрув").
-
-    The target accepts the request to actually receive author rights, mirroring
-    the inline-invite / confirm flow the bot exposes.
-    """
-
     requests: RequestStorage
     notifications: NotificationWriter
     player_dao: PlayerByIdGetter
@@ -276,8 +248,6 @@ class CreatePromotionInviteInteractor:
 
 @dataclass
 class CreateTeamMergeRequestInteractor:
-    """A captain asks the admins to merge their team with its forum copy."""
-
     requests: RequestStorage
     notifications: NotificationWriter
     team_dao: TeamByIdGetter
@@ -326,12 +296,6 @@ class CreateTeamMergeRequestInteractor:
 
 @dataclass
 class CreatePlayerMergeRequestInteractor:
-    """A player asks the admins to merge their achievements with a forum copy.
-
-    An admin may also file the request on behalf of another player (``primary``
-    differs from the actor), mirroring the old superuser-only bot command.
-    """
-
     requests: RequestStorage
     notifications: NotificationWriter
     player_dao: PlayerByIdGetter
@@ -406,13 +370,6 @@ class AcceptRequestInteractor:
         request_id: int,
         timeline: list[TimelineItem] | None = None,
     ) -> ndto.ActionRequest:
-        """Accept the request.
-
-        ``timeline`` only applies to player merge requests: when the players'
-        team histories are not compatible, the admin passes a manually built
-        history which replaces both (validated against the waiver points of
-        both players).
-        """
         actor = await identity.get_required_player()
         request = await self.requests.get_by_id(request_id)
         if not request.is_pending:
@@ -639,8 +596,6 @@ class DeclineRequestInteractor:
 
 @dataclass
 class CancelRequestInteractor:
-    """The initiator withdraws their own pending request."""
-
     requests: RequestStorage
     bus: Bus
 

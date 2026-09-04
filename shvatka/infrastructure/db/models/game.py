@@ -44,12 +44,6 @@ _RELEASE_RETORT = Retort(
 
 
 class ReleaseField(TypeDecorator):
-    """The body of a game's release — a plain list of hints — stored as jsonb.
-
-    The banner that leads the release lives in its own column: the site needs
-    to render it alone, above the header, without reading the rest.
-    """
-
     impl = JSONB
     cache_ok = True
     retort = _RELEASE_RETORT
@@ -74,8 +68,6 @@ class ReleaseField(TypeDecorator):
 
 
 class ReleaseBannerField(TypeDecorator):
-    """The release's banner — a wide title picture with a caption — as jsonb."""
-
     impl = JSONB
     cache_ok = True
     retort = _RELEASE_RETORT

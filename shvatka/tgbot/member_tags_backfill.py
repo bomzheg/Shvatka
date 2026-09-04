@@ -1,12 +1,3 @@
-"""
-One-time backfill of member tags in public chats.
-
-Telegram doesn't let a bot list the members of a chat, so the chats that
-existed before tagging was introduced can't be walked through. The players
-are known from the database instead: every player of every active team gets
-tagged, and the ones who are not in the chat are simply skipped by telegram.
-"""
-
 import asyncio
 import logging
 

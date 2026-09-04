@@ -35,7 +35,6 @@ async def upload(client: AsyncClient, game_id: int, cookies: dict[str, str]) -> 
 
 
 def age(path: str) -> None:
-    """Backdate the content so the garbage collector stops sparing it."""
     when = (datetime.now(tz=tz_utc) - STORAGE_ORPHAN_MIN_AGE - timedelta(hours=1)).timestamp()
     os.utime(path, (when, when))
 
@@ -134,7 +133,6 @@ async def test_gc_keeps_files_the_release_uses(
     check_dao: HolderDao,
     local_storage: LocalFileStorage,
 ):
-    """A banner has no ``level_files`` row — only the release itself knows it."""
     game = await create_game(author=author, name="draft with a banner", dao=dao.game_creator)
     author_auth = author_cookies(auth, author)
     guid = await upload(client, game.id, author_auth)

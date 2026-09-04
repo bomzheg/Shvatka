@@ -23,12 +23,6 @@ def is_heic(mime_type: str | None) -> bool:
 
 
 def convert_heic_to_jpeg(data: bytes) -> bytes:
-    """Transcode HEIC/HEIF image bytes to JPEG.
-
-    Returns the original bytes unchanged if the conversion can't be performed
-    (missing optional dependency, corrupted image, unsupported feature); the
-    caller decides what to do with an unconverted file based on its upload policy.
-    """
     try:
         import pillow_heif
 

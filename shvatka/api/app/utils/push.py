@@ -40,10 +40,6 @@ class PushMessage:
 
 @dataclass(frozen=True, slots=True)
 class _Recipient:
-    """Plain values for the sending thread: reading orm attributes off the event
-    loop could emit a query on a session another coroutine is using.
-    """
-
     id: int
     endpoint: str
     p256dh: str
@@ -96,9 +92,6 @@ class WebPushSender:
     async def _send_one(
         self, semaphore: asyncio.Semaphore, recipient: _Recipient, message: PushMessage
     ) -> bool:
-        """Returns whether the subscription is gone for good. Disabling it is the
-        caller's job: the dao's session takes one coroutine at a time.
-        """
         try:
             async with semaphore:
                 await asyncio.to_thread(self._send_sync, recipient, message)

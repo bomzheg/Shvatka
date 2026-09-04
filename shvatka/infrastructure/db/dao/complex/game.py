@@ -34,11 +34,6 @@ if typing.TYPE_CHECKING:
 
 @dataclass
 class FileLinkMixin:
-    """Pass-through to the per-table file-link DAOs.
-
-    These are plain operations; deciding *when* to sync (e.g. after a level
-    upsert) is up to the use case, not the DAO."""
-
     dao: "HolderDao"
 
     async def get_ids_by_guids(self, guids: Collection[str]) -> list[int]:
@@ -52,8 +47,6 @@ class FileLinkMixin:
 
 
 class IsGameFileMixin:
-    """Tells whether a file (by guid) is usable in a given game."""
-
     dao: "HolderDao"
 
     async def is_game_file(self, game_id: int, guid: str) -> bool:
@@ -104,9 +97,6 @@ class GameUpserterImpl(FileLinkMixin, GameUpserter):
 
 @dataclass
 class GameScenarioEditorImpl(GameUpserterImpl):
-    """Combines game upsert, rename, reading by id and file checks for editing
-    an existing game draft (identified by id) from the web UI."""
-
     async def get_by_id(self, id_: int, author: dto.Player | None = None) -> dto.Game:
         return await self.dao.game.get_by_id(id_, author)
 
@@ -125,11 +115,6 @@ class GameScenarioEditorImpl(GameUpserterImpl):
 
 @dataclass
 class AdminGameScenarioEditorImpl(GameScenarioEditorImpl):
-    """Scenario editor for admins: also reassigns the game's author.
-
-    ``transfer`` moves the game to another author; ``get_player_by_id`` resolves
-    the target player. Everything else is inherited from the regular editor."""
-
     async def transfer(self, game: dto.Game, new_author: dto.Player) -> None:
         await self.dao.game.transfer(game, new_author)
 
@@ -145,15 +130,6 @@ class AdminGameScenarioEditorImpl(GameScenarioEditorImpl):
 
 @dataclass
 class AdminGameStatusChangerImpl(AdminGameStatusChanger):
-    """Status-only view of a game for the admin panel.
-
-    What it reads is the games table alone: one by id, or the list by status.
-    What it writes is a status, a number, a planned start — and, when the admin
-    rewinds a played game, the deletes that undo its run (level times, typed
-    keys, events, timers), each through that table's own dao. No level, no
-    hint, no file — an admin has no way to a game's content through here.
-    """
-
     dao: "HolderDao"
 
     async def get_by_id(self, id_: int, author: dto.Player | None = None) -> dto.Game:
@@ -225,8 +201,6 @@ class GameCreatorImpl(FileLinkMixin, GameCreator):
 
 @dataclass
 class LevelDeleterImpl(LevelDeleter):
-    """Deletes a level together with its file links (no DB cascade)."""
-
     dao: "HolderDao"
 
     async def delete_level_files(self, level_id: int) -> None:

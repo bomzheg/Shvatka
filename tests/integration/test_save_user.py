@@ -40,11 +40,6 @@ async def test_upsert_user(dao: HolderDao):
 
 @pytest.mark.asyncio
 async def test_upsert_user_refreshes_already_loaded_user(dao: HolderDao):
-    """An upsert must win over the copy of the user the session already holds.
-
-    The session does not expire on commit, so a stale user would otherwise be
-    handed out both by the upsert itself and by every relationship loading it.
-    """
     old = await dao.user.upsert_user(create_dto_harry())
     await dao.commit()
     # keep the mapped instance alive, so it can't leave the identity map

@@ -428,8 +428,6 @@ class GameEditProvider(Provider):
 
 
 class GameReleaseProvider(Provider):
-    """Game releases — used by both edges, so shared instead of api-only."""
-
     scope = Scope.REQUEST
 
     # these two take a `HolderDao` the impl only imports under TYPE_CHECKING,

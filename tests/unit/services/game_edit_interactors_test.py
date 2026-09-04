@@ -53,8 +53,6 @@ class RecordingLogWriter(GameLogWriter):
 
 @dataclass
 class FakeGameDao:
-    """In-memory stand-in covering the game-edit DAO protocols we need."""
-
     game: dto.Game
     active_game: dto.Game | None = None
     started: bool = False
@@ -131,7 +129,6 @@ async def test_change_status_to_waivers_writes_game_log():
 
 @pytest.mark.asyncio
 async def test_starting_waivers_puts_the_release_in_front_of_people():
-    """What the release was waiting for: the waivers opening."""
     author = make_player(1)
     game = make_game(author, GameStatus.ready)
     release = dto.GameRelease(game_id=game.id, hints=[hints.TextHint(text="тема игры")])
@@ -274,7 +271,6 @@ async def test_rename_game_to_an_empty_name_is_refused():
 
 @pytest.mark.asyncio
 async def test_rename_game_to_its_own_name_writes_nothing():
-    """The name a game already has is free for it — and nothing to write."""
     author = make_player(1)
     game = make_game(author, GameStatus.underconstruction)
     dao = FakeGameDao(game=game, taken_names={game.name})

@@ -11,8 +11,6 @@ from tests.mocks.user_getter import UserGetterMock
 
 
 class MocksProvider(Provider):
-    """Replaces everything talking to the outer world with in-memory mocks."""
-
     scope = Scope.APP
 
     clock = provide(ClockMock)

@@ -83,13 +83,6 @@ async def update_game_scenario(
     dao: GameScenarioEditor,
     retort: Retort,
 ) -> dto.FullGame:
-    """Replace the whole scenario of an existing game draft identified by ``id_``.
-
-    Unlike :func:`upsert_game`, this does not receive file contents: files are
-    expected to be already uploaded (e.g. via the cdn endpoint) and the scenario
-    only references their guids. The game is looked up by id (and ownership is
-    enforced) instead of by name, so the game can be safely renamed.
-    """
     check_allow_be_author(author)
     game_scn = parse_uploaded_game(scn.RawGameScenario(scn=raw_scn, files={}), retort)
     game = await dao.get_by_id(id_=id_, author=author)
@@ -222,11 +215,6 @@ async def get_game_package(
 async def rename_game(
     author: dto.Player, game: dto.Game, new_name: str, dao: GameRenamer
 ) -> dto.Game:
-    """Give the game another name, answering with the game as it is now.
-
-    Renaming to the name it already has is not an error, it just writes
-    nothing — the caller does not have to compare first.
-    """
     check_can_read(game, author)
     check_game_editable(game)
     check_game_name(new_name, author)

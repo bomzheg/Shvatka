@@ -78,11 +78,6 @@ class GameDao(BaseDAO[models.Game]):
         return game.to_full_game(levels=levels)
 
     async def get_by_id(self, id_: int, author: dto.Player | None = None) -> dto.Game:
-        """The game, or ``GameNotFound`` — never a bare ``NoResultFound``.
-
-        The domain word for a missing row belongs with the query that can fail
-        to find one, so every caller gets it without wrapping the call.
-        """
         try:
             if not author:
                 options = (
@@ -135,7 +130,6 @@ class GameDao(BaseDAO[models.Game]):
         return [game.to_dto(game.author.to_dto_user_prefetched()) for game in games]
 
     async def get_by_statuses(self, statuses: Collection[GameStatus]) -> list[dto.Game]:
-        """Every game in one of the given statuses, newest first."""
         result = await self.session.scalars(
             select(models.Game)
             .options(
@@ -314,12 +308,6 @@ class GameDao(BaseDAO[models.Game]):
         )
 
     async def get_release_guids(self) -> dict[int, set[str]]:
-        """Files every game's release refers to, by game id.
-
-        A release is jsonb on the game rather than rows in ``level_files``, so
-        it is the one reference to a file nothing else records — whoever counts
-        references has to read the releases too.
-        """
         result = await self.session.execute(
             select(models.Game.id, models.Game.release, models.Game.release_banner).where(
                 or_(models.Game.release.isnot(None), models.Game.release_banner.isnot(None))
@@ -353,12 +341,6 @@ class GameDao(BaseDAO[models.Game]):
         )
 
     async def get_release_post(self, game_id: int) -> list[dto.BotMessage]:
-        """The messages the release was posted as, in order. Empty if none.
-
-        The bot's own bookkeeping: stored beside the game but deliberately kept
-        out of `to_dto`, so no chat or message id ever reaches the domain —
-        the same arrangement as `action_requests.bot_messages`.
-        """
         result = await self.session.scalars(
             select(models.Game.release_post).where(models.Game.id == game_id)
         )

@@ -1,8 +1,3 @@
-"""Entrypoint of the standalone api application.
-
-Kept free of heavy imports on purpose, see shvatka/__main__.py for details.
-"""
-
 import logging
 import time
 from typing import TYPE_CHECKING

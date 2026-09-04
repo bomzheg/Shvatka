@@ -92,7 +92,6 @@ async def get_game_results(
     dao: FromDishka[HolderDao],
     **_,
 ):
-    """The results themselves are a rich message of their own; the window only frames it."""
     data: dict[str, Any] = dialog_manager.start_data  # type: ignore[assignment]
     game_id = dialog_manager.dialog_data.get("game_id", None) or data["game_id"]
     return {

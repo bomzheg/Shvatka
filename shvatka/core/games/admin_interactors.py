@@ -1,30 +1,3 @@
-"""Interactors backing admin edits of **completed** games.
-
-Unlike the author-facing editor interactors in :mod:`editor_interactors`, these
-take the acting user via an ``IdentityProvider`` and authorise through
-``identity.get_superuser()``. They skip the game-ownership check and the
-``check_game_editable`` guard (which forbids editing a finished game), so an
-admin may fix up an already completed game — edit its scenario, reassign its
-author and upload new media files.
-
-Admin access to a game's *content* is limited to completed games — a
-completed game is public anyway — so any game in another status is treated as
-not found there (an admin cannot even see it exists).
-
-A game's *status* is a different matter: the panel may walk a game that
-collects waivers, runs, is finished or is complete to another status (see
-:class:`AdminChangeGameStatusInteractor`), without ever reading a level, a
-hint or a file of it. Games still being written stay invisible even to that.
-Rewinding a played game may take the run with it — the level times, keys,
-events and timers of a false start — which is a delete and never a read.
-
-The same line runs through the one thing the panel may do to a game that is
-being *played* — resending a level's messages to a team that lost them (see
-:class:`AdminResendCurrentLevelInteractor`). The admin presses the button;
-the puzzle and the hints go from the engine straight to the team, and neither
-they nor the team's position in the game ever pass through the panel.
-"""
-
 import logging
 from dataclasses import dataclass
 from datetime import datetime
@@ -82,13 +55,6 @@ class AdminUpdateGameScenarioInteractor:
         identity: IdentityProvider,
         new_author_id: int | None = None,
     ) -> dto.FullGame:
-        """Replace the whole scenario of a completed game.
-
-        Files are expected to be already uploaded (only their guids are
-        referenced). When ``new_author_id`` is given, the game (and the levels
-        upserted here) is reassigned to that player first. A game that is not
-        completed is reported as not found.
-        """
         admin = await identity.get_superuser()
         game_scn = parse_uploaded_game(scn.RawGameScenario(scn=raw_scn, files={}), self.retort)
         game = await self.dao.get_by_id(id_=game_id)
@@ -149,12 +115,6 @@ class AdminUploadGameFileInteractor:
         original_filename: str,
         identity: IdentityProvider,
     ) -> hints.SavedFileMeta:
-        """Upload a new media file for a completed game.
-
-        The file is owned by the game's author (not the acting admin) so that the
-        regular author-facing editing flow keeps working with it afterwards. A
-        game that is not completed is reported as not found.
-        """
         admin = await identity.get_superuser()
         game = await self.dao.get_by_id(id_=game_id)
         if not game.is_complete():
@@ -170,13 +130,6 @@ class AdminUploadGameFileInteractor:
 
 @dataclass
 class AdminGamesListInteractor:
-    """The games the admin panel may act on — status and nothing more.
-
-    Only the ones an admin is allowed to see: active (collecting waivers,
-    running, finished) and complete. A game still being written belongs to its
-    author and does not show up here.
-    """
-
     dao: AdminGameStatusChanger
 
     async def __call__(self, identity: IdentityProvider) -> list[dto.Game]:
@@ -186,19 +139,6 @@ class AdminGamesListInteractor:
 
 @dataclass
 class AdminChangeGameStatusInteractor:
-    """Move a game to another status over the author's head.
-
-    Only the status changes — nothing here reads or writes the game's content.
-    Two things ride along, because leaving them behind would undo the move: a
-    game leaving the active statuses loses its planned start, and a game moving
-    to ``complete`` goes through the author's own domain service.
-
-    With ``purge_runtime`` the move also sweeps the run the false start left
-    behind. Allowed only on the way back — see
-    :func:`~shvatka.core.rules.game.check_can_purge_game_runtime` — and never
-    touching the waivers. SHEP-0013.
-    """
-
     dao: AdminGameStatusChanger
     scheduler: Scheduler
 
@@ -235,13 +175,6 @@ class AdminChangeGameStatusInteractor:
         return game
 
     async def _purge_runtime(self, game: dto.Game, admin: dto.Player) -> None:
-        """Erase what playing the game produced, deepest reference first.
-
-        ``log_keys`` and ``timers_log`` point at both ``event_log`` and
-        ``levels_times``, and ``event_log`` points at ``levels_times`` — so the
-        order is fixed, and ``timers_log`` (which has no game of its own) is
-        addressed through the level time ids read before anything is dropped.
-        """
         level_time_ids = await self.dao.get_level_time_ids(game)
         await self.dao.delete_timers(level_time_ids)
         await self.dao.delete_typed_keys(game)
@@ -264,18 +197,6 @@ class AdminChangeGameStatusInteractor:
 
 @dataclass
 class AdminResendCurrentLevelInteractor:
-    """Send a running level's messages to a team again, without reading them.
-
-    Out goes what the team is entitled to have right now: the puzzle of the
-    level it is on and every hint whose time has come. It goes from the engine
-    to the views directly, so the admin sends the hints without seeing one.
-
-    The answer is the teams the request covered and nothing else — not the
-    level any of them is on, not whether it is still playing. A team past the
-    last level is answered for like the rest and simply has nothing to resend,
-    so the panel cannot read a team's progress off the difference.
-    """
-
     dao: AdminLevelResender
     sender: ViewSender
     current_game: CurrentGameProvider
@@ -307,12 +228,6 @@ class AdminResendCurrentLevelInteractor:
         return teams
 
     async def _resolve_teams(self, game: dto.FullGame, team_id: int | None) -> list[dto.Team]:
-        """The teams to resend to — always taken from the ones playing.
-
-        A team that did not sign up for this game has no level to be sent, so
-        naming one is a mistake rather than a way to find out anything: the
-        answer is the same refusal whether the team exists or not.
-        """
         played = list(await self.dao.get_played_teams(game))
         if team_id is None:
             return played

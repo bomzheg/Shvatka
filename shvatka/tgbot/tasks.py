@@ -1,18 +1,3 @@
-"""Background tasks of the bot: work spawned through the app :class:`Nursery`.
-
-A task is an ordinary async function. Its plain parameters are the data of one
-run, passed to :meth:`Nursery.spawn`; its ``FromDishka[...]`` parameters are
-resolved in the fresh scope the nursery opens for it, so the session-bound
-things it works with (a :class:`HintSender` and its dao, for one) are acquired
-and finalized by that scope rather than borrowed from the handler's, which is
-gone by the time the task starts.
-
-Entities travel as arguments: they are plain dataclasses, detached from any
-session, so handing a loaded game or level to a task is free. What must never
-cross is a resource tied to the caller's scope — a dao, a session, a sender —
-those are what ``FromDishka`` is for.
-"""
-
 import asyncio
 import logging
 import typing
@@ -58,11 +43,6 @@ Delivery = Callable[[], Awaitable[None]]
 
 
 async def deliver(call: Delivery, alerter: BotAlert, what: str) -> None:
-    """Nothing watches a background send, so a failure is alerted, not raised.
-
-    ``what`` names the team whose message was lost — an alert nobody can act on
-    is not worth sending.
-    """
     try:
         await _with_retry(call, what)
     except Exception as e:
@@ -74,9 +54,6 @@ async def deliver(call: Delivery, alerter: BotAlert, what: str) -> None:
 
 
 async def _with_retry(call: Delivery, what: str) -> None:
-    """A retry re-runs the whole call, so a puzzle that failed halfway resends
-    the parts that arrived — better than leaving the team half a puzzle.
-    """
     for attempt in range(1, DELIVERY_ATTEMPTS + 1):
         try:
             await call()
@@ -105,13 +82,6 @@ def _retry_delay(error: Exception, attempt: int) -> float | None:
 
 @dataclass
 class NurseryViewSender(ViewSender):
-    """The nursery, between an interactor and the views.
-
-    One job for the whole request, so its messages keep their order. What the
-    job shows through is whatever di binds the views to — telegram, the site or
-    both; neither this nor the job knows which.
-    """
-
     nursery: Nursery
 
     async def show_later(self, tasks: ShowTasks) -> None:
@@ -126,7 +96,6 @@ async def show_game(
     game_log: FromDishka[GameLogWriter],
     alerter: FromDishka[BotAlert],
 ) -> None:
-    """In order within a team; all teams at once, or a game start is teams × fan-out."""
     await asyncio.gather(
         *(_show_to_team(group, view, alerter) for group in group_by_team(tasks.view))
     )

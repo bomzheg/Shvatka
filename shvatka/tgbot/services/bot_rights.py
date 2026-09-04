@@ -21,8 +21,6 @@ logger = logging.getLogger(__name__)
 
 @dataclass(frozen=True)
 class ChatRights:
-    """What the bot is allowed to do in a chat."""
-
     can_pin_messages: bool
     can_manage_tags: bool
 
@@ -31,13 +29,6 @@ NO_RIGHTS = ChatRights(can_pin_messages=False, can_manage_tags=False)
 
 
 def rights_of_member(member: ChatMember) -> ChatRights | None:
-    """
-    Rights granted by the membership itself.
-
-    None means the membership grants nothing on its own: an ordinary member
-    can do only what is allowed to everyone, so the default permissions of
-    the chat have to be checked (see ``rights_of_chat``).
-    """
     match member:
         case ChatMemberOwner():
             return ChatRights(can_pin_messages=True, can_manage_tags=True)
@@ -66,7 +57,6 @@ def rights_of_member(member: ChatMember) -> ChatRights | None:
 
 
 def rights_of_chat(chat: Chat) -> ChatRights:
-    """What is allowed to everyone in the chat."""
     if chat.type == ChatType.PRIVATE:
         return ChatRights(can_pin_messages=True, can_manage_tags=False)
     permissions = chat.permissions
@@ -87,15 +77,6 @@ class _CachedRights:
 
 
 class BotRights:
-    """
-    Rights of the bot in chats, cached in memory.
-
-    The bot may or may not be an admin in a team chat, and asking telegram
-    about it before every action is too expensive. So rights are kept for
-    TTL and refreshed either on expiration or when telegram itself reports
-    a change of the bot's membership (see BotRightsMiddleware).
-    """
-
     TTL = timedelta(minutes=30)
 
     def __init__(
@@ -130,7 +111,6 @@ class BotRights:
         return rights_of_chat(await self.bot.get_chat(chat_id))
 
     def update(self, chat_id: int, member: ChatMember) -> None:
-        """Telegram reported the new membership of the bot, no need to ask it again."""
         rights = rights_of_member(member)
         if rights is None:
             # ordinary member, rights depend on the chat - ask telegram when needed

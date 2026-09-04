@@ -1,10 +1,3 @@
-"""Interactors used by the web UI to read and manage teams.
-
-They wrap the domain services from :mod:`shvatka.core.services.team` and
-:mod:`shvatka.core.players.player` and operate on internal domain models so the
-transport layer (api routes) stays thin.
-"""
-
 import contextlib
 from collections.abc import Sequence
 from dataclasses import dataclass
@@ -78,12 +71,6 @@ class TeamsListInteractor:
 
 @dataclass
 class CreateTeamInteractor:
-    """Creates a team without a telegram chat, so it can play only via web.
-
-    A chat can be linked later in the tgbot captain's bridge (the "move team to
-    another chat" flow).
-    """
-
     dao: ChatlessTeamCreator
     game_log: GameLogWriter
 
@@ -232,8 +219,6 @@ class UpdateTeamPlayerInteractor:
 
 @dataclass
 class MyCaptainedTeamsInteractor:
-    """Every team the acting player captains — including ones they don't play in."""
-
     dao: CaptainedTeamsReader
 
     async def __call__(self, identity: IdentityProvider) -> list[CaptainedTeam]:
@@ -255,13 +240,6 @@ class MyCaptainedTeamsInteractor:
 
 @dataclass
 class JoinCaptainedTeamInteractor:
-    """A captain returning to a team they already lead.
-
-    No invite is involved — the captaincy is the permission. Since a player is in
-    at most one team at a time, joining while playing elsewhere means leaving
-    that team first, and the caller has to ask for it explicitly.
-    """
-
     dao: CaptainTeamJoiner
     notifier: TeamNotifier
 
@@ -306,8 +284,6 @@ class JoinCaptainedTeamInteractor:
 
 @dataclass
 class ChangeCaptainInteractor:
-    """The captain hands their team over to another of its players."""
-
     dao: TeamCaptainSetter
     notifier: TeamNotifier
 

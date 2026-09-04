@@ -9,7 +9,6 @@ def factory(**kwargs) -> DocsUrlFactory:
 
 
 def test_defaults_point_at_the_docs_of_master():
-    """Antora drops the segment for the latest version, so master has none."""
     assert (
         factory().get_page_url(DocPage.PLAY)
         == "https://bomzheg.github.io/Shvatka/shvatka/player/play.html"

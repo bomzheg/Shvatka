@@ -9,9 +9,6 @@ from shvatka.infrastructure.db.dao import PlayerDao
 
 @dataclass
 class ConfigSuperusersResolver(SuperusersResolver):
-    """Reads the configured superuser tg ids and exposes them as the single
-    source of admin rights (as tg ids, as player ids, and as a membership check)."""
-
     config: Config
     player_dao: PlayerDao
 

@@ -162,9 +162,6 @@ def apply_style(cell: typing.Any, style: CellStyle) -> None:
 
 
 def resize_columns(worksheet: Worksheet, widths: dict[int, int]) -> None:
-    """Fit every column to its data. Headers are wrapped rather than fitted — a long
-    level name would otherwise stretch a column of eight-character times.
-    """
     for column, width in widths.items():
         worksheet.column_dimensions[get_column_letter(column)].width = min(
             max(width * DATA_FONT_SCALE + COLUMN_PADDING, MIN_COLUMN_WIDTH), MAX_COLUMN_WIDTH
@@ -172,11 +169,6 @@ def resize_columns(worksheet: Worksheet, widths: dict[int, int]) -> None:
 
 
 def _display_len(cell: typing.Any) -> int:
-    """Width the cell takes on screen — what is shown, not what is stored.
-
-    A datetime stored behind ``HH:MM:SS`` shows eight characters, not the
-    nineteen its ``str()`` has, so the number format is the better measure.
-    """
     if cell.value is None:
         return 0
     if cell.number_format != GENERAL_FORMAT:
@@ -265,7 +257,6 @@ def _hairline() -> GraphicalProperties:
 
 
 def _color(rgb: str) -> ColorChoice:
-    """openpyxl takes a plain hex string here, whatever the type stubs promise."""
     color = ColorChoice()
     color.RGB = rgb
     return color

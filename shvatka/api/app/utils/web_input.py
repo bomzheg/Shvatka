@@ -46,24 +46,15 @@ logger = logging.getLogger(__name__)
 
 
 class ApiInput(InputContainer):
-    """Empty: a bot handler passes the message to reply to, http has none."""
+    pass
 
 
 class WebGameView(GameView):
-    """A push tag is the notification's identity in the phone's tray: showing a
-    push with a tag that is already there replaces it instead of adding a line.
-    So an in-game tag names *what* happened to *which team* and never the level
-    or the hint number — the tray keeps the last level up and the last hint, not
-    the whole run. The ui closes the ones a newer push makes pointless (the
-    hints of a level the team has left), see ``push-sw.js``.
-    """
-
     def __init__(self, push_sender: WebPushSender, current_game: CurrentGameProvider) -> None:
         self.push_sender = push_sender
         self.current_game = current_game
 
     async def _voted_player_ids(self, team: dto.Team) -> set[int]:
-        """Only players who voted yes for the current game should get in-game pushes."""
         waivers = await self.current_game.get_team_waivers_by_team(team)
         return {voted.player.id for voted in waivers}
 
@@ -188,8 +179,6 @@ class WebGameLogWriter(GameLogWriter):
 
 
 class WebGameReleasePublisher(GameReleasePublisher):
-    """The site has no announcement to keep: it reads the release as it is."""
-
     async def publish(self, game: dto.Game, release: dto.GameRelease) -> None:
         pass
 

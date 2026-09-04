@@ -168,12 +168,6 @@ class GameFileReaderInteractor:
         return guid in release.get_guids()
 
     async def is_guid_available_to_team(self, identity: IdentityProvider, guid: str) -> bool:
-        """Whether the team has already been shown the file.
-
-        A hint the team saw stays readable after it left the level — that's
-        what makes the passed levels browsable — but a hint it never reached
-        does not become readable by passing the level.
-        """
         return (
             await self.is_guid_in_current_hint(identity, guid)
             or await self.is_guid_in_applied_effects(identity, guid)
@@ -247,13 +241,6 @@ class GamePlayReaderInteractor:
 
 @dataclass(kw_only=True, slots=True, frozen=True)
 class PassedLevelsReaderInteractor:
-    """Hints of the levels the team has already passed.
-
-    Kept apart from :class:`GamePlayReaderInteractor` on purpose: the current
-    level is polled every few seconds, while the passed ones only grow when a
-    level is left, so the client asks for them separately and only on demand.
-    """
-
     game_play_dao: GamePlayDao
 
     async def __call__(self, identity: IdentityProvider) -> PassedLevels:

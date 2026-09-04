@@ -1,10 +1,3 @@
-"""What happens when a dialog says the state it was opened for is gone.
-
-The user must learn why the window stopped working, and must land somewhere
-built out of current data - otherwise every next click hits the same dead
-state. See issue #339.
-"""
-
 from datetime import datetime
 from typing import Any
 from unittest.mock import AsyncMock, patch
@@ -85,7 +78,6 @@ async def test_typed_answer_is_replied_and_menu_restarted():
 
 @pytest.mark.asyncio
 async def test_dialogs_under_the_broken_one_are_dropped_too():
-    """They kept their own data from the same state that turned out to be gone."""
     manager = create_manager()
 
     with patch.object(CallbackQuery, "answer", new_callable=AsyncMock):
@@ -105,7 +97,6 @@ async def test_user_is_still_notified_without_a_dialog_manager():
 
 @pytest.mark.parametrize("observer", ["callback_query", "message"])
 def test_installed_inside_the_aiogram_dialog_manager(observer: str):
-    """Without `dialog_manager` in the data there is no dialog to restart."""
     router = Router()
     setup_dialogs(router)
     setup_outdated_dialogs(router)

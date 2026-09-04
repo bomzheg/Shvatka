@@ -134,11 +134,6 @@ async def superuser_force_join_team(
     role: str = DEFAULT_ROLE,
     emoji: str | None = None,
 ):
-    """Add a player to a team without asking whether the manager may.
-
-    For the engine's admins, who act above the team permissions rather than
-    inside them. A player still can be in only one team at a time.
-    """
     await dao.check_player_free(player)
     await _join_team(player, team, manager, dao, notifier, role=role, emoji=emoji)
 
@@ -229,10 +224,6 @@ async def superuser_force_leave(
     dao: TeamLeaver,
     notifier: TeamNotifier,
 ):
-    """Remove a player from their team without asking whether the remover may.
-
-    The counterpart of :func:`force_join_team` for the engine's admins.
-    """
     team = await dao.get_team(player)
     if not team:
         raise PlayerNotInTeam(player=player)
@@ -458,12 +449,6 @@ async def merge_team_history(primary: dto.Player, secondary: dto.Player, dao: Pl
 async def get_waiver_points(
     player: dto.Player, dao: PlayerWaiversGetter, now: datetime | None = None
 ) -> list[WaiverPoint]:
-    """Return intervals in which the player's team membership is fixed by waivers.
-
-    Only waivers with vote ``yes`` pin the player to a team: around the game start
-    the player certainly acted as a team member. A game that is still getting
-    waivers has no start date yet, so its point is the current week.
-    """
     if now is None:
         now = datetime.now(tz=tz_utc)
     waivers = await dao.get_player_waivers(player)
@@ -477,7 +462,6 @@ async def get_waiver_points(
 
 
 def normalize_timeline(timeline: list[TimelineItem]) -> list[TimelineItem]:
-    """Sort the timeline and check that it forms a valid membership history."""
     if not timeline:
         raise exceptions.MergeError(
             text="timeline is empty",
@@ -540,11 +524,6 @@ async def set_merged_team_history(
     timeline: list[TimelineItem],
     dao: PlayerMerger,
 ) -> None:
-    """Replace both players' team histories with the manually built timeline.
-
-    Role, emoji and permissions come from the timeline items themselves; unset
-    values get the same defaults as a regular team join.
-    """
     merged = []
     for item in timeline:
         permissions = {p.name: False for p in enums.TeamPlayerPermission}

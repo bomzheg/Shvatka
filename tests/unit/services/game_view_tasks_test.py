@@ -19,7 +19,6 @@ from shvatka.core.views.game import (
 
 
 def stub(name: str) -> typing.Any:
-    """A stand-in for a dto the code under test only passes along."""
     return typing.cast(typing.Any, name)
 
 

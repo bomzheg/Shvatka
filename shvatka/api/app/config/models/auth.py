@@ -26,5 +26,4 @@ class AuthConfig:
 
     @property
     def cookie_domain(self) -> str | None:
-        """The Domain attribute to write, treating an empty value as host-only."""
         return self.domain or None

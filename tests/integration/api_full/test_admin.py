@@ -47,7 +47,6 @@ def auth_cookies(token: Token) -> dict[str, str]:
 
 
 async def complete_game(game: dto.FullGame, dao: HolderDao) -> None:
-    """Bring a freshly built game to the ``complete`` status (uneditable by author)."""
     await dao.game.set_number(game, await dao.game.get_max_number() + 1)
     await dao.game.set_completed(game)
     await dao.commit()
@@ -295,7 +294,6 @@ async def test_change_own_username_to_the_same_one(
     hermione: dto.Player,
     check_dao: HolderDao,
 ):
-    """Keeping a player's current username must not trip the occupied check."""
     current = (await check_dao.player.get_by_id(hermione.id)).username
     assert current is not None
     resp = await client.put(
@@ -426,11 +424,6 @@ async def prepare_incompatible_players(
     gryffindor: dto.Team,
     slytherin: dto.Team,
 ) -> tuple[dto.Player, dto.Player]:
-    """Primary (tg) and secondary (dummy) with overlapping current memberships.
-
-    The secondary played the game as a member of slytherin, so a waiver pins
-    them to that team around the game start date.
-    """
     await dao.game.set_start_at(game, GAME_START_AT)
     primary = await upsert_player(await upsert_user(create_dto_ron(), dao.user), dao.player)
     secondary = await dao.player.upsert_author_dummy()
@@ -804,12 +797,6 @@ async def test_admin_cant_read_non_completed_game_scenario(
     admin_token: Token,
     game: dto.FullGame,
 ):
-    """Being a superuser grants no sight of a game still being written.
-
-    The scenario of a game that is not complete belongs to its author and to
-    the orgs the author gave ``view_scenario`` — admin rights are not a way in,
-    not even knowing the game's id (the games list shows completed games only).
-    """
     resp = await client.get(
         f"/games/{game.id}",
         cookies=auth_cookies(admin_token),
@@ -873,11 +860,6 @@ async def test_admin_reads_the_scenario_once_the_game_is_complete(
     game: dto.FullGame,
     dao: HolderDao,
 ):
-    """The other side of the rule — and what makes the admin editor work.
-
-    A complete game is public: the admin reads its scenario like everybody
-    else, which is what the admin scenario editor loads before saving.
-    """
     await complete_game(game, dao)
     resp = await client.get(
         f"/games/{game.id}",
@@ -1001,12 +983,6 @@ async def test_admin_returns_game_from_waivers_to_under_construction(
     check_dao: HolderDao,
     scheduler: SchedulerMock,
 ):
-    """The point of the whole feature — issue #164.
-
-    Waivers were opened too early: the admin hands the game back to its author,
-    and the start it was planned for goes with it, or the scheduler would start
-    the game anyway a few minutes later.
-    """
     await dao.game.set_start_at(game, GAME_START_AT)
     await set_status(game, GameStatus.getting_waivers, dao)
     resp = await client.put(
@@ -1030,8 +1006,6 @@ async def test_admin_loses_the_game_once_it_is_a_draft_again(
     game: dto.FullGame,
     dao: HolderDao,
 ):
-    """After the save the game is the author's again — the admin cannot walk it
-    back, and does not see it in the list any more."""
     await set_status(game, GameStatus.getting_waivers, dao)
     resp = await client.put(
         f"/admin/games/{game.id}/status",
@@ -1122,7 +1096,6 @@ async def test_admin_keeps_the_number_of_a_completed_game(
     dao: HolderDao,
     check_dao: HolderDao,
 ):
-    """A round trip out of `complete` and back must not renumber the archive."""
     await set_status(game, GameStatus.finished, dao)
     await complete_game(game, dao)
     number = (await check_dao.game.get_by_id(game.id)).number
@@ -1182,12 +1155,6 @@ async def test_admin_cant_read_content_of_a_running_game(
     status_code: int,
     type_: str,
 ):
-    """A game being played is the one an admin must least be able to read.
-
-    Seeing its status (and being able to change it) opens nothing else: the
-    scenario, the key log, the results and the media all stay with the author
-    and the orgs until the game is complete.
-    """
     await set_status(game, GameStatus.started, dao)
     resp = await client.get(
         path.format(id=game.id),
@@ -1394,11 +1361,6 @@ async def test_admin_cant_resend_to_a_team_that_does_not_play(
     started_game: dto.FullGame,
     gryffindor: dto.Team,
 ):
-    """Naming a team that is not in the game answers the same either way.
-
-    A refusal that told a stranger's id from a player's would be a way to read
-    the game's roster out of the panel one guess at a time.
-    """
     resp = await client.post(
         "/admin/games/running/resend",
         json={"team_id": gryffindor.id + 1000},
@@ -1449,7 +1411,6 @@ async def test_admin_resend_forbidden_for_non_superuser(
 
 
 async def count_runtime(dao: HolderDao) -> tuple[int, int, int, int]:
-    """The four tables a game's run writes into."""
     return (
         await dao.level_time.count(),
         await dao.key_time.count(),
@@ -1490,8 +1451,6 @@ async def test_the_purge_keeps_the_waivers(
     finished_game: dto.FullGame,
     check_dao: HolderDao,
 ):
-    """Who signed up survives a false start — that is the point of rewinding to
-    ``getting_waivers`` rather than to a draft."""
     before = await check_dao.waiver.get_all_by_game(finished_game)
     assert before
 
@@ -1533,7 +1492,6 @@ async def test_the_purge_is_refused_on_a_move_that_is_not_a_rewind(
     finished_game: dto.FullGame,
     check_dao: HolderDao,
 ):
-    """Completing a game is not undoing it — the run is its history."""
     before = await count_runtime(check_dao)
     resp = await client.put(
         f"/admin/games/{finished_game.id}/status",

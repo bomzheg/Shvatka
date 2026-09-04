@@ -16,8 +16,6 @@ class TransitionsPrinter(Protocol):
 
 
 class KeysSheetPrinter(Protocol):
-    """Renders the keys of a game as a file ready to be printed on A4."""
-
     file_extension: typing.ClassVar[str]
 
     def print_keys_sheet(self, sheet: dto.KeysSheet) -> BytesIO:

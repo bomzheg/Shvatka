@@ -10,15 +10,11 @@ from shvatka.infrastructure.nursery import AsyncioNursery
 
 @dataclass
 class Journal:
-    """What the spawned tasks did, in order."""
-
     events: list[str] = field(default_factory=list)
     done: asyncio.Event = field(default_factory=asyncio.Event)
 
 
 class Resource:
-    """Stands for a db session: acquired and finalized by the task's own scope."""
-
     def __init__(self, journal: Journal) -> None:
         self.journal = journal
 

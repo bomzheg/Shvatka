@@ -21,7 +21,6 @@ class GameEventDao(BaseDAO[models.GameEvent]):
         super().__init__(models.GameEvent, session, clock=clock)
 
     async def delete_by_game(self, game: dto.Game) -> None:
-        """Drop the game's events. Keys and timers pointing at them must go first."""
         await self.session.execute(
             delete(models.GameEvent).where(models.GameEvent.game_id == game.id)
         )
@@ -73,7 +72,6 @@ class GameEventDao(BaseDAO[models.GameEvent]):
         return [self.map_to_event(event) for event in result.all()]
 
     async def get_game_bonuses_by_teams(self, game: dto.Game) -> dict[int, list[BonusEvent]]:
-        """All teams' bonuses and penalties for the game, grouped by team id."""
         result: ScalarResult[models.GameEvent] = await self.session.scalars(
             select(models.GameEvent)
             .options(

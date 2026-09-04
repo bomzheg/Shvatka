@@ -8,8 +8,6 @@ from shvatka.core.models.dto import action
 
 @dataclass(frozen=True, kw_only=True)
 class SearchFilters:
-    """Где искать. По умолчанию — везде."""
-
     games: bool = True
     levels: bool = True
     teams: bool = True
@@ -18,8 +16,6 @@ class SearchFilters:
 
 @dataclass(frozen=True, kw_only=True)
 class LevelWithGame:
-    """Кандидат для поиска по уровням: уровень вместе с игрой, к которой он привязан."""
-
     level: dto.Level
     game: dto.Game
 

@@ -165,12 +165,6 @@ class FileInfoDao(BaseDAO[models.FileInfo]):
     async def get_unlinked(
         self, ignored_game_link_ids: typing.Collection[int] = ()
     ) -> list[hints.VerifiableFileMeta]:
-        """Files no level and no game links to.
-
-        ``ignored_game_link_ids`` are ``game_files`` rows to read as if they were
-        deleted already, so a caller about to delete them can see what that
-        would orphan without doing it first.
-        """
         game_link = select(models.GameFile.id).where(models.GameFile.file_id == models.FileInfo.id)
         if ignored_game_link_ids:
             game_link = game_link.where(models.GameFile.id.notin_(set(ignored_game_link_ids)))

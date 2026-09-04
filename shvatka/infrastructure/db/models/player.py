@@ -94,7 +94,6 @@ class Player(Base):
         )
 
     def to_dto_user_prefetched(self) -> dto.Player:
-        """DTO of a player loaded with ``user``, but without the forum identity."""
         return self.to_dto(user=self.user.to_dto() if self.user else None)
 
     def to_dto_with_forum(
@@ -110,11 +109,6 @@ class Player(Base):
         )
 
     def to_dto_with_forum_prefetched(self) -> dto.PlayerWithForum:
-        """DTO of a player loaded with both ``user`` and ``forum_user``.
-
-        Only for queries that eagerly loaded the forum identity — everything
-        else must use :meth:`to_dto_user_prefetched` and leave it unjoined.
-        """
         return self.to_dto_with_forum(
             user=self.user.to_dto() if self.user else None,
             forum_user=self.forum_user.to_dto() if self.forum_user else None,

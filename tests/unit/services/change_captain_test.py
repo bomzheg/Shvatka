@@ -46,8 +46,6 @@ def _team_player(player: dto.Player, team: dto.Team, role: str) -> dto.FullTeamP
 
 
 class FakeCaptainSetterDao:
-    """Enough of ``TeamCaptainSetter`` to watch what the service writes."""
-
     def __init__(self, team: dto.Team, players: list[dto.FullTeamPlayer]) -> None:
         self.team = team
         self.players = players

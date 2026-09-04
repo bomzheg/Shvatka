@@ -1,9 +1,3 @@
-"""Rendering every dialog window into one static html page.
-
-The preview never touches a bot, a database or the DI container: windows are
-rendered from their ``preview_data`` (see :mod:`shvatka.tgbot.dialogs.preview_data`).
-"""
-
 from collections.abc import Iterable
 from pathlib import Path
 
@@ -20,11 +14,6 @@ DEFAULT_PREVIEW_FILE = "out/shvatka-dialogs-preview.html"
 async def render_dialogs_preview(
     dialogs: Iterable[Dialog], filename: str = DEFAULT_PREVIEW_FILE
 ) -> None:
-    """Render the given dialogs into an html page.
-
-    Takes dialogs rather than a router: they are module-level singletons and can
-    be attached to a router only once per process, which the bot itself does.
-    """
     # There is neither Bot nor Dispatcher while rendering a preview, so the Jinja
     # widget falls back to the library-wide default environment. Teach that one
     # our filters, otherwise every window using them fails to render.

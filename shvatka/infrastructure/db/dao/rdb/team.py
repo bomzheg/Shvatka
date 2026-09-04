@@ -118,7 +118,6 @@ class TeamDao(BaseDAO[models.Team]):
             )
 
     async def get_by_id(self, id_: int) -> dto.Team:
-        """The team, or ``TeamNotFound`` — never a bare ``NoResultFound``."""
         try:
             team = await self._get_by_id(
                 id_,
@@ -130,7 +129,6 @@ class TeamDao(BaseDAO[models.Team]):
         return team.to_dto_chat_prefetched()
 
     async def get_captained_teams(self, captain: dto.Player) -> list[dto.Team]:
-        """Every team this player is the captain of, whether they play in it or not."""
         teams: ScalarResult[models.Team] = await self.session.scalars(
             select(models.Team)
             .options(*get_team_options())
@@ -196,7 +194,6 @@ class TeamDao(BaseDAO[models.Team]):
         return [team.to_dto_chat_prefetched() for team in teams]
 
     async def search_by_name(self, text: str) -> list[dto.Team]:
-        """Поиск по названию среди всех команд, включая архивные (форумные)."""
         teams: ScalarResult[models.Team] = await self.session.scalars(
             select(models.Team)
             .options(*get_team_options())

@@ -90,7 +90,6 @@ async def process_zip_scn(
 
 
 def render_tg_rejections(error: FilesCantBeSentToTg) -> str:
-    """The refused files, one per line, as the author sees them in the chat."""
     problems = "\n".join(f"• {hd.quote(str(e.notify_user))}" for e in error.errors)
     return (
         "Telegram не принял часть файлов, игра не сохранена:\n"

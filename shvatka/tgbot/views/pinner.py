@@ -24,14 +24,6 @@ class PinCategory(enum.StrEnum):
 
 @dataclass
 class MessagePinner:
-    """
-    Pins messages sent to a team chat and unpins them when they get outdated.
-
-    The bot is not necessarily an admin in a team chat (and even an admin may
-    have no rights to pin), so pinning is a best-effort action: rights are
-    checked first and any error is logged, but never breaks the game flow.
-    """
-
     bot: Bot
     dao: PinnedMessageDao
     rights: BotRights
@@ -51,15 +43,6 @@ class MessagePinner:
         category: PinCategory,
         caption: Message | None = None,
     ) -> None:
-        """
-        Pins ``messages`` quietly and ``caption`` (e.g. "Подсказка 2 (15 мин.)")
-        after them, notifying the whole chat.
-
-        Telegram shows the last pinned message at the top of the chat, so the
-        caption is pinned after the hint parts it describes - that way the team
-        sees what the pin is about, and the notification tells everyone (even
-        those who muted the chat) a new hint has come.
-        """
         if not await self.rights.can_pin(chat_id):
             logger.info("bot can't pin messages in chat %s", chat_id)
             return

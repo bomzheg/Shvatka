@@ -52,7 +52,6 @@ async def handle_sh_error(error: ErrorEvent, log_chat_id: int, docs: DocsUrlFact
 
 
 def find_chat_id(error: ErrorEvent, exception: SHError) -> int | None:
-    """Where to write to the user who caused the error."""
     if (c := error.update.callback_query) is not None and c.message is not None:
         return c.message.chat.id
     if chat_id := (exception.chat_id or exception.user_id):

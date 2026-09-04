@@ -32,7 +32,6 @@ async def pinner(dishka_request: AsyncContainer):
 
 @pytest.fixture
 def instant(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Unpins wait a second apart; no test needs to sit through that."""
     monkeypatch.setattr(MessagePinner, "SLEEP", timedelta(0))
 
 

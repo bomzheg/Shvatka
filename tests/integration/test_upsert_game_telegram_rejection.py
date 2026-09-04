@@ -14,9 +14,6 @@ from tests.mocks.file_gateway import FakeTelegram
 
 
 def _scn_with_file_not_yet_in_tg(complex_scn: RawGameScenario) -> RawGameScenario:
-    """``complex_scn`` declares its file with a ``file_id`` already, so saving it
-    never goes near telegram. Drop it so the file is new and must be uploaded —
-    what these tests are here to exercise."""
     scn = deepcopy(complex_scn.scn)
     (file_meta,) = (f for f in scn["files"] if f["guid"] == GUID)
     del file_meta["file_id"]
@@ -33,8 +30,6 @@ async def test_upsert_game_saves_nothing_when_telegram_refuses_a_file(
     file_gateway: FileGateway,
     telegram: FakeTelegram,
 ):
-    """A package is imported whole or not at all: the game must not appear
-    carrying a file it could never deliver."""
     telegram.refuse = True
 
     with pytest.raises(FilesCantBeSentToTg) as exc_info:

@@ -23,8 +23,6 @@ class FakeGuidOwnershipDao:
 
 
 class FakeFileGateway:
-    """Refuses the given guids the way telegram would."""
-
     def __init__(self, rejected_guids: set[str]) -> None:
         self.rejected_guids = rejected_guids
         self.put_calls: list[str] = []
@@ -42,11 +40,6 @@ class FakeFileGateway:
 
 @pytest.mark.asyncio
 async def test_upsert_files_collects_every_rejection_before_raising() -> None:
-    """A rejected file must not stop the loop early.
-
-    Every file is tried, and the raised error covers all the rejected ones, not
-    just the first — so the caller can show the whole list at once.
-    """
     gateway = FakeFileGateway(rejected_guids={"bad-1", "bad-2"})
     files = [make_file("ok"), make_file("bad-1"), make_file("bad-2")]
     contents = {f.guid: BytesIO(b"data") for f in files}
@@ -71,8 +64,6 @@ async def test_upsert_files_returns_guids_of_files_saved_without_errors() -> Non
 
 @pytest.mark.asyncio
 async def test_upsert_files_keeps_no_guid_of_a_rejected_file() -> None:
-    """A refused file is not counted as saved, so the caller's own
-    ``check_all_files_saved`` cannot pass on a half-imported package."""
     gateway = FakeFileGateway(rejected_guids={"bad"})
     files = [make_file("ok"), make_file("bad")]
     contents = {f.guid: BytesIO(b"data") for f in files}
@@ -86,8 +77,6 @@ async def test_upsert_files_keeps_no_guid_of_a_rejected_file() -> None:
 
 @pytest.mark.asyncio
 async def test_the_error_names_the_files_by_itself() -> None:
-    """Every edge shows ``notify_user``: on its own it has to say which files,
-    or the author is told that something failed and nothing more."""
     gateway = FakeFileGateway(rejected_guids={"bad-1", "bad-2"})
     files = [make_file("bad-1"), make_file("bad-2")]
     contents = {f.guid: BytesIO(b"data") for f in files}

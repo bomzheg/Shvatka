@@ -30,8 +30,6 @@ class PlayerDao(BaseDAO[models.Player]):
             return await self.create_for_user(user)
 
     async def get_by_id(self, id_: int) -> dto.Player:
-        """The player, or ``PlayerNotFoundError`` — never a bare ``NoResultFound``,
-        the same way :meth:`get_by_user_id` already answers."""
         try:
             player = await self._get_by_id(
                 id_,
@@ -43,11 +41,6 @@ class PlayerDao(BaseDAO[models.Player]):
         return player.to_dto_user_prefetched()
 
     async def get_identities_by_id(self, id_: int) -> dto.PlayerWithForum:
-        """Like :meth:`get_by_id`, but also loads the forum identity.
-
-        For the few places that show or check it (profile, admin panel, merge);
-        every other caller must use the cheaper :meth:`get_by_id`.
-        """
         player = await self._get_by_id(
             id_,
             (
@@ -212,7 +205,6 @@ class PlayerDao(BaseDAO[models.Player]):
         return [player.to_dto_with_forum_prefetched() for player in result.unique().all()]
 
     async def search_by_any_name(self, text: str) -> list[dto.PlayerWithForum]:
-        """Поиск по любому имени: username, tg-username, имени в tg и имени на форуме."""
         pattern = ilike_pattern(text)
         tg_name = func.concat_ws(" ", models.User.first_name, models.User.last_name)
         result: ScalarResult[models.Player] = await self.session.scalars(
@@ -285,11 +277,6 @@ class PlayerDao(BaseDAO[models.Player]):
         user_db.player_id = player.id
 
     async def unlink_user(self, player: dto.Player) -> None:
-        """Detach any telegram user currently linked to this player.
-
-        ``users.player_id`` is unique, so a player's telegram identity must be
-        cleared before a different one can be linked in its place.
-        """
         result = await self.session.scalars(
             select(models.User).where(models.User.player_id == player.id)
         )
@@ -395,12 +382,6 @@ class PlayerDao(BaseDAO[models.Player]):
         return await self._free_id_username(player)
 
     async def find_associated_username(self, player: models.Player) -> str | None:
-        """Free username based on names of identities linked to the player.
-
-        Telegram username is the best one, then a forum name, then the telegram
-        first and last name transliterated to latin. Returns None if the player has
-        no name to build a username from (or all of them are occupied).
-        """
         state = inspect(player)
         user_loaded = "user" not in state.unloaded and player.user is not None
         if (
@@ -423,7 +404,6 @@ class PlayerDao(BaseDAO[models.Player]):
         return None
 
     async def _free_variant(self, username: str) -> str | None:
-        """The username itself, or a numbered variant of it, if it's occupied."""
         if not await self.is_username_occupied(username):
             return username
         for i in range(1, 100):
@@ -441,12 +421,6 @@ class PlayerDao(BaseDAO[models.Player]):
         return uuid.uuid4().hex
 
     async def renew_id_usernames(self) -> list[tuple[str, str]]:
-        """Replace `id{id}` usernames with ones based on names of linked identities.
-
-        Players saved before username generation from names was introduced (or before
-        they got any identity linked) still carry the id-based placeholder. Returns
-        pairs of old and new username of every renamed player.
-        """
         renamed = []
         for player in await self._get_with_id_username():
             new_username = await self.find_associated_username(player)

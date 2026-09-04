@@ -39,19 +39,6 @@ INPUT_MEDIA: dict[enums.HintType, type[EditableMedia]] = {
 
 @dataclass
 class GameBotReleasePublisher(GameReleasePublisher):
-    """Keeps a game's release in the announcements channel, one message per part.
-
-    A release is posted once and edited in place afterwards, so the channel
-    keeps a single announcement per game instead of a pile of revisions. When
-    the shape of the release changed too much for telegram to edit it (a hint
-    added, removed or turned into another kind of content), the old messages
-    are dropped and the release is posted anew.
-
-    Which messages those are is the bot's own bookkeeping: it is stored beside
-    the game but read and written only here, never through the domain — the
-    same arrangement as an action request's bot messages.
-    """
-
     bot: Bot
     hint_sender: HintSender
     resolver: HintContentResolver
@@ -67,7 +54,6 @@ class GameBotReleasePublisher(GameReleasePublisher):
         await self.post(release)
 
     async def update(self, game: dto.Game, release: dto.GameRelease) -> None:
-        """Only refresh what is already up — never announce a game by itself."""
         posted = await self.dao.get_release_post(game.id)
         if not posted:
             return
@@ -86,7 +72,6 @@ class GameBotReleasePublisher(GameReleasePublisher):
         logger.info("release of game %s posted to chat %s", release.game_id, self.log_chat_id)
 
     async def edit(self, release: dto.GameRelease, posted: list[dto.BotMessage]) -> bool:
-        """Update the posted messages in place. False if telegram won't have it."""
         parts = release.parts
         if len(parts) != len(posted):
             return False
@@ -123,7 +108,6 @@ class GameBotReleasePublisher(GameReleasePublisher):
 
     @staticmethod
     def to_input_media(type_: enums.HintType, view: BaseHintLinkView) -> EditableMedia | None:
-        """The posted message's new content, when it is a kind telegram can swap."""
         input_media = INPUT_MEDIA.get(type_)
         file_id = getattr(view, "file_id", None)
         if input_media is None or file_id is None:

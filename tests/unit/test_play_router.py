@@ -1,12 +1,3 @@
-"""A key may be typed once and then fixed by editing the message.
-
-Telegram delivers that as an ``edited_message`` update, which the bot only
-receives when the router asks for it — and which reaches the handler only if
-every filter in front of it agrees. Both are silent when broken: an update type
-missing from ``allowed_updates`` never arrives, and a filter returning ``False``
-just makes the bot go quiet. So drive the real router.
-"""
-
 from datetime import UTC, datetime, timedelta
 from typing import Any
 from unittest.mock import AsyncMock
@@ -96,7 +87,6 @@ async def feed(
 
 
 def test_edited_message_is_asked_for():
-    """Telegram sends an update type only while a handler for it is registered."""
     dp = Dispatcher()
     dp.include_router(play.setup())
     assert "edited_message" in resolve_update_types(dp)
@@ -132,7 +122,6 @@ async def test_edit_outside_a_running_game_is_ignored():
 
 @pytest.mark.asyncio
 async def test_a_key_sent_as_a_new_message_is_still_checked():
-    """The edit path is an addition; typing the key straight away is the normal one."""
     interactor = await feed(
         edited("SHMONKEY", GAME_START + timedelta(minutes=5)), update_type="message"
     )

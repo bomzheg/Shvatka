@@ -1,8 +1,3 @@
-"""Entrypoint of the standalone (long polling) bot application.
-
-Kept free of heavy imports on purpose, see shvatka/__main__.py for details.
-"""
-
 import asyncio
 import logging
 import time

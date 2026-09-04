@@ -33,7 +33,6 @@ class EmailRegisterInteractor:
     sender: EmailSender
 
     async def __call__(self, username: str, email: str, password: str) -> dto.Player:
-        """Create a brand-new player identified by email and send a confirmation code."""
         email = normalize_email_or_raise(email)
         validated_username = validate_new_username(username)
         if validated_username is None:
@@ -59,14 +58,6 @@ class EmailLinkInteractor:
     sender: EmailSender
 
     async def __call__(self, player: dto.Player, email: str) -> None:
-        """
-        Attach an email to an already existing player (e.g. a telegram user),
-        or move the player to another email.
-
-        A pending (unconfirmed) email is replaced right away — nothing usable is
-        at stake. A *verified* one keeps working until the new address is
-        confirmed, so a typo can never lock its owner out of their account.
-        """
         email = normalize_email_or_raise(email)
         occupant = await self.dao.get_by_email(email)
         if occupant is not None and occupant.player_id != player.id:

@@ -167,13 +167,6 @@ async def user_join_chat_with_team(
     dao: FromDishka[HolderDao],
     identity: FromDishka[IdentityProvider],
 ) -> None:
-    """Offer the captain to take the newcomer into the team.
-
-    The offer is about whoever joined, which is not who the identity resolves
-    to: an update about a membership change carries the member who *caused* it
-    as its user, so an invite by the captain would otherwise ask to accept the
-    captain themselves.
-    """
     team = await identity.get_required_team()
     joined = event.new_chat_member.user
     if joined.is_bot or team.get_chat_id() != event.chat.id:

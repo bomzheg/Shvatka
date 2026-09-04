@@ -17,8 +17,6 @@ class FileInfoGetter(Protocol):
 
 
 class GameFilesMetaGetter(Protocol):
-    """Reads the files usable in a game (the ``game_files`` table) as metas."""
-
     async def get_game_file_ids(self, game_id: int) -> set[int]:
         raise NotImplementedError
 

@@ -1,11 +1,3 @@
-"""Filters resolve who is acting from the container, not from middleware data.
-
-They are wired through ``@inject``, which only works because aiogram passes
-``dishka_container`` to anything it calls through a ``FilterObject`` — including
-``BaseFilter`` subclasses. A filter that silently returned ``False`` here would
-disable a command rather than fail, so drive them through the real machinery.
-"""
-
 from datetime import UTC, datetime, timedelta
 from typing import Any
 from unittest.mock import AsyncMock
@@ -157,7 +149,6 @@ async def test_is_inviter(inviter_id, expected):
     ],
 )
 async def test_disable_router_on_game(active_game, expected):
-    """`GameStatusFilter(running=False)` gates almost every router in the bot."""
     provider = current_game(game(active_game) if active_game else None)
     assert await call(GameStatusFilter(running=False), identity(), provider) is expected
 
@@ -196,12 +187,6 @@ async def test_game_status_active():
     [(None, True), (GameStatus.getting_waivers, True), (GameStatus.started, False)],
 )
 async def test_disable_router_on_game_through_root_filters(active_game, reaches_handlers):
-    """`disable_router_on_game` registers *root* filters, not handler filters.
-
-    Those run through `check_root_filters`, so an `@inject` that worked on a
-    handler filter is not by itself proof that this path works — and this one
-    gates nearly every router in the bot.
-    """
     router = Router(name="test")
     disable_router_on_game(router)
     provider = current_game(game(active_game) if active_game else None)
@@ -244,7 +229,6 @@ async def test_disable_router_on_game_through_root_filters(active_game, reaches_
     ],
 )
 async def test_sent_after_game_start(sent_at, expected):
-    """An edited message keeps the date it was first sent — that is what is checked."""
     provider = current_game(game(GameStatus.started, start_at=GAME_START))
     filter_ = SentAfterGameStartFilter()
     assert await call(filter_, identity(), provider, event=message(sent_at)) is expected
@@ -256,7 +240,6 @@ async def test_sent_after_game_start(sent_at, expected):
     [None, game(GameStatus.started, start_at=None)],
 )
 async def test_sent_after_game_start_without_a_planned_start(active_game):
-    """No game, or one whose start was never set: nothing to compare against."""
     provider = current_game(active_game)
     filter_ = SentAfterGameStartFilter()
     sent_at = GAME_START + timedelta(minutes=5)

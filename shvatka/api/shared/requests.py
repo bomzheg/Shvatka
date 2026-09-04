@@ -1,5 +1,3 @@
-"""Request models used by more than one subdomain."""
-
 from dataclasses import dataclass
 from datetime import datetime
 

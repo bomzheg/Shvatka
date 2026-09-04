@@ -86,12 +86,6 @@ WRONG_KEY_ALPHABET = string.ascii_uppercase + string.digits
 
 
 def parse_scenario(path: Path) -> list[list[set[str]]]:
-    """The key sets of every level's key conditions, in level order.
-
-    Level order is the index the api reports as ``level_number`` — it is the
-    level's position in the game, counted from zero, so the list can be indexed
-    with it directly.
-    """
     raw = yaml.safe_load(path.read_text(encoding="utf-8"))
     return [
         [
@@ -104,14 +98,6 @@ def parse_scenario(path: Path) -> list[list[set[str]]]:
 
 
 def load_key_plan() -> tuple[list[list[set[str]]], set[str]]:
-    """Read the scenario, at import, before locust spawns anything.
-
-    Deliberately not deferred to ``test_start``: a handler that raises there is
-    logged and the run carries on, and a key run that quietly found no scenario
-    would type generated keys at a game nobody meant to load-test that way. A
-    missing or keyless file has to stop the run, so it is read where locust
-    still refuses to start.
-    """
     if KEY_USERS <= 0:
         return [], set()
     levels = parse_scenario(KEY_SCENARIO_PATH)
@@ -131,21 +117,6 @@ LEVEL_KEYS, ALL_SCENARIO_KEYS = load_key_plan()
 
 
 def plan_safe_keys(level_number: int | None, typed: set[str]) -> list[str]:
-    """The correct keys that can be typed without completing a level.
-
-    A condition fires when every one of its keys has been typed, so holding one
-    back keeps the level where it is however many times the rest are submitted.
-    Which one is held back depends on what the team has typed already, read from
-    the api rather than assumed — a key someone typed before the run counts
-    towards the condition just the same.
-
-    Keys already typed are always safe to send again: they are duplicates, and a
-    duplicate advances nothing. So a level the team is halfway through gives more
-    safe keys than a fresh one, not fewer. That holds even for a condition whose
-    keys have all been typed, which is why nothing special is done about one:
-    both key conditions test ``is_duplicate`` before ``_is_all_typed``, so a key
-    seen before decides ``NO_ACTION`` and never reaches the level-up branch.
-    """
     if level_number is None or not 0 <= level_number < len(LEVEL_KEYS):
         return []
     safe: list[str] = []
@@ -158,13 +129,6 @@ def plan_safe_keys(level_number: int | None, typed: set[str]) -> list[str]:
 
 
 def keys_of_other_levels(level_number: int | None) -> list[str]:
-    """Scenario keys belonging to some level other than this one.
-
-    Every key of the current level is excluded, the held-back one above all: it
-    is the only thing keeping the level from advancing, and sending it as a
-    "wrong" key would complete the condition exactly as sending it as a right
-    one would. A key that appears on two levels counts as this level's.
-    """
     if level_number is None or not 0 <= level_number < len(LEVEL_KEYS):
         # the scenario doesn't describe the level the team is on, so it cannot
         # say which keys are this level's — send none of them rather than guess
@@ -181,12 +145,6 @@ def keys_of_other_levels(level_number: int | None) -> list[str]:
 
 
 def make_wrong_key() -> str:
-    """A key-shaped string the scenario does not contain.
-
-    It has to pass ``KEY_REGEXP`` — a wrong key is one the game rejects on its
-    own terms, and a string that isn't a key at all would be dropped before the
-    check ever runs, measuring nothing.
-    """
     for _ in range(10):
         key = "SH" + "".join(random.choices(WRONG_KEY_ALPHABET, k=7))
         if key not in ALL_SCENARIO_KEYS:
@@ -195,8 +153,6 @@ def make_wrong_key() -> str:
 
 
 class ShvatkaUser(HttpUser):
-    """Logs in once and keeps the auth cookie on the session, like a browser."""
-
     abstract = True
     username = PLAYER_USERNAME
     password = PLAYER_PASSWORD
@@ -224,23 +180,6 @@ class ShvatkaUser(HttpUser):
 
     @contextmanager
     def measured(self, method: str, url: str, name: str, **kwargs: Any) -> Iterator[Any]:
-        """A ``catch_response`` block that survives a garbage collection.
-
-        Up to locust 2.40, ``ResponseContextManager.__init__`` aliases the
-        response's ``__dict__`` instead of copying it, while ``request_meta``
-        inside that dict points back at the response — so once
-        ``HttpSession.request`` returns, the response object is reachable only
-        through that cycle. A gc pass *inside* the block collects it and clears
-        the very dict the context manager is living in, and ``__exit__`` then
-        fails with ``KeyError: 'name'`` (locustio/locust#3050, #3207). It shows
-        up as an intermittent crash under load, on python 3.13, and the pinned
-        2.39.1 has it.
-
-        Binding the response to a local keeps it reachable until the block ends,
-        which is all the cycle needs to stay uncollectable. On 2.41+, where the
-        response *is* the context manager, the line is a harmless no-op — so
-        this can go once the project's pytest pin allows a newer locust.
-        """
         catcher = self.client.request(method, url, name=name, catch_response=True, **kwargs)
         # Not dead code, and it has to happen here rather than inside the block:
         # the response is already collectable the moment `request` returns.
@@ -249,12 +188,6 @@ class ShvatkaUser(HttpUser):
             yield response
 
     def read(self, url: str, *, name: str | None = None) -> Any:
-        """GET ``url``, returning the decoded body or ``None``.
-
-        ``name`` is the templated path (``/games/{id}``) the request is counted
-        under, so locust's stats line up with the Grafana panel this profile was
-        built from instead of exploding into one row per id.
-        """
         with self.measured("GET", url, name or url) as resp:
             if resp.status_code in EXPECTED_STATUSES:
                 resp.success()
@@ -268,12 +201,6 @@ class ShvatkaUser(HttpUser):
 
 
 class PlayerUser(ShvatkaUser):
-    """The crowd: a phone in a car with the game open, polling.
-
-    This is what ``-u`` spawns. Weights are the observed 2xx counts, so the
-    unread-count poll dominates here exactly as it does in production.
-    """
-
     weight = 1
     wait_time = between(1, 3)
 
@@ -288,11 +215,6 @@ class PlayerUser(ShvatkaUser):
         self.discover()
 
     def discover(self) -> None:
-        """Find a game, a team and some file guids to ask for.
-
-        Everything the parametrised tasks need is read from the target itself,
-        so the profile runs against any environment without a fixture dump.
-        """
         game = self.read("/games/active", name="/games/active")
         if game:
             self.game_id = game.get("id")
@@ -322,7 +244,6 @@ class PlayerUser(ShvatkaUser):
 
     @task(100)
     def unread_count(self) -> None:
-        """The poll that is four fifths of everything the api answers."""
         self.read("/notifications/unread-count")
 
     @task(909)
@@ -331,7 +252,6 @@ class PlayerUser(ShvatkaUser):
 
     @task(789)
     def game_file(self) -> None:
-        """A hint's picture. The heaviest response a player pulls."""
         if self.game_id is None or not self.file_guids:
             return
         guid = random.choice(self.file_guids)
@@ -360,11 +280,6 @@ class PlayerUser(ShvatkaUser):
 
     @task(210)
     def current_level(self) -> None:
-        """The other poll: what the team is looking at right now.
-
-        It also refreshes the guids the file task downloads, so a level change
-        during the run moves the load onto the new level's pictures.
-        """
         self.refresh_level()
 
     @task(201)
@@ -399,11 +314,6 @@ class PlayerUser(ShvatkaUser):
 
     @task(51)
     def push_subscription(self) -> None:
-        """Subscribe and unsubscribe a synthetic endpoint.
-
-        Paired on purpose: the subscription is deleted again, so a load run
-        doesn't leave a row per virtual user behind on the target.
-        """
         subscription = {
             "endpoint": f"https://fcm.googleapis.com/fcm/send/{uuid.uuid4()}",
             "keys": {"p256dh": "BL" + "a" * 85, "auth": "b" * 22},
@@ -448,7 +358,6 @@ class PlayerUser(ShvatkaUser):
 
     @task(16)
     def mark_read(self) -> None:
-        """Marking read is what the list is opened for, so it follows it."""
         if not self.unread_ids:
             return
         batch, self.unread_ids = self.unread_ids[:10], self.unread_ids[10:]
@@ -456,14 +365,6 @@ class PlayerUser(ShvatkaUser):
 
 
 class OrganizerUser(ShvatkaUser):
-    """A few people watching the game from the other side.
-
-    ``fixed_count`` rather than ``weight``: there are three orgs on a night
-    whether two hundred players are playing or two thousand, and it is the
-    absolute number that matters — these two dashboards are the expensive
-    queries of the profile, and their cost does not scale with the crowd.
-    """
-
     fixed_count = 3
     wait_time = between(2, 8)
     username = ORG_USERNAME
@@ -484,7 +385,6 @@ class OrganizerUser(ShvatkaUser):
 
     @task(394)
     def game_keys(self) -> None:
-        """The keys table, reloaded over and over while the game runs."""
         if self.game_id is None:
             return
         self.read(f"/games/{self.game_id}/keys", name="/games/{id}/keys")
@@ -497,12 +397,6 @@ class OrganizerUser(ShvatkaUser):
 
     @task(105)
     def upload_scenario(self) -> None:
-        """Rewrite a draft game's scenario — the heaviest write of the night.
-
-        Off unless ``SHVATKA_LOAD_SCENARIO_GAME_ID`` names a game that may be
-        overwritten: unlike everything else here, this one destroys what it
-        touches, so it is never pointed at a game by discovery.
-        """
         if SCENARIO_GAME_ID is None:
             return
         self.client.put(
@@ -529,8 +423,6 @@ class OrganizerUser(ShvatkaUser):
 
 
 class AdminUser(ShvatkaUser):
-    """One person in the admin panel, mostly looking players up."""
-
     fixed_count = 1
     wait_time = between(5, 15)
     username = ADMIN_USERNAME
@@ -563,29 +455,6 @@ class AdminUser(ShvatkaUser):
 
 
 class KeySubmittingUser(ShvatkaUser):
-    """Teams typing keys at the running game.
-
-    Off unless ``SHVATKA_LOAD_KEY_USERS`` says how many, because this is the one
-    class whose safety depends on the scenario file matching the game — see
-    ``plan_safe_keys`` and the README.
-
-    Keys reached the api through the bot webhook on the measured night, not
-    through ``POST /games/running/key``, so the http panel says nothing about
-    them. The **rate** still comes from that night, out of the bot's outgoing
-    counters: ``tgbot_api_requests_total`` shows 235 ``SetMessageReaction`` calls
-    over the six hours, and ``BotView`` sets a reaction on exactly three key
-    outcomes — 😴 for a duplicate, 👎 for a wrong key, and the
-    ``map_effect_to_reaction`` emoji for one carrying effects. A plain correct
-    key that doesn't finish a level only sends a message, so 235 is a floor on
-    keys typed, not the whole count: call it 40 an hour across every team.
-
-    That is *far* less traffic than it feels like from the inside, and the
-    ``wait_time`` below says so — about 20 submissions an hour per client, so
-    two of them reproduce the night and more is deliberate stress. Only the
-    split between wrong, stale and correct is still an estimate: a reaction
-    doesn't say which of the three it was.
-    """
-
     # `abstract` is what actually keeps it out of a run: locust reads
     # fixed_count = 0 as "not set" and falls back to weight, which would spawn
     # key typists against a target nobody opted in for.
@@ -605,12 +474,6 @@ class KeySubmittingUser(ShvatkaUser):
         self.refresh_plan()
 
     def refresh_plan(self) -> None:
-        """Re-read the level and work out what is safe to type on it.
-
-        Called from a task as well as on start: the team moves between levels
-        during a run (someone playing for real, another shape of load), and the
-        plan is only safe for the level it was built from.
-        """
         level = self.read("/games/running/level/current", name="/games/running/level/current")
         if not level:
             self.level_number, self.safe_correct, self.other_level_keys = None, [], []
@@ -639,23 +502,16 @@ class KeySubmittingUser(ShvatkaUser):
 
     @task(70)
     def wrong_key(self) -> None:
-        """A key that isn't this level's — a misread, or a guess."""
         self.submit(make_wrong_key(), name="/games/running/key [wrong]")
 
     @task(15)
     def stale_key(self) -> None:
-        """A key of another level: right-looking, wrong place.
-
-        Worth its own task because it is the realistic wrong key — a real team
-        retypes what worked before far more often than it invents a string.
-        """
         if not self.other_level_keys:
             return
         self.submit(random.choice(self.other_level_keys), name="/games/running/key [wrong]")
 
     @task(15)
     def correct_key(self) -> None:
-        """One of this level's keys — the first time a level-up candidate, then a duplicate."""
         if not self.safe_correct:
             return
         self.submit(random.choice(self.safe_correct), name="/games/running/key [correct]")
@@ -666,11 +522,6 @@ class KeySubmittingUser(ShvatkaUser):
 
 
 def collect_guids(node: Any, found: list[str]) -> list[str]:
-    """Every ``file_guid`` anywhere in a hints tree.
-
-    Hint parts nest (a hint holds parts, a part may carry a thumbnail), and the
-    shape differs per hint type, so walking the json beats mirroring the models.
-    """
     if isinstance(node, dict):
         for key, value in node.items():
             if key in ("file_guid", "thumb_guid") and isinstance(value, str):
@@ -684,13 +535,6 @@ def collect_guids(node: Any, found: list[str]) -> list[str]:
 
 
 def build_scenario() -> dict[str, Any]:
-    """A structurally real scenario for the upload task.
-
-    Shaped after ``tests/fixtures/resources/simple_scn.yml`` — the endpoint
-    parses and stores the whole tree, so a payload that skips the model version
-    or the conditions would be rejected before any of that work happens, and
-    would measure the validator instead of the write.
-    """
     return {
         "__model_version__": 1,
         "name": f"load-test-{uuid.uuid4().hex[:8]}",

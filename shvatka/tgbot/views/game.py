@@ -320,7 +320,6 @@ class BotView(GameViewPreparer, GameView):
         await self.unpin_all(chat_id)
 
     async def unpin_all(self, chat_id: int) -> None:
-        """Game is over - unpin both level and bonus hints."""
         await self.pinner.unpin(chat_id, PinCategory.level)
         await self.pinner.unpin(chat_id, PinCategory.bonus)
 

@@ -52,11 +52,7 @@ class GameCompleter(
 
 
 class GameStatusChanger(GameByIdGetter, WaiverStarter, GameCompleter, GameReleaseGetter, Protocol):
-    """Everything moving a game to its next status needs of storage.
-
-    The release comes along because starting the waivers is what finally puts
-    it in front of people.
-    """
+    pass
 
 
 class GamePackager(

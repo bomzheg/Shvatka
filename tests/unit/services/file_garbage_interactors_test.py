@@ -30,8 +30,6 @@ def make_meta(guid: str, path: str | None = None) -> hints.VerifiableFileMeta:
 
 @dataclass
 class FakeGarbageDao:
-    """In-memory stand-in for the garbage collector's DAO."""
-
     links: list[GameFileLink] = field(default_factory=list)
     guids_by_id: dict[int, str] = field(default_factory=dict)
     unlinked: list[hints.VerifiableFileMeta] = field(default_factory=list)
@@ -137,7 +135,6 @@ async def test_dry_run_reports_the_same_and_deletes_nothing():
 
 @pytest.mark.asyncio
 async def test_keeps_files_a_release_refers_to():
-    """A release is the one reference no ``level_files`` row records."""
     dao = FakeGarbageDao(
         links=[GameFileLink(id=7, game_id=1, file_id=42)],
         guids_by_id={42: "banner"},
@@ -158,7 +155,6 @@ async def test_keeps_files_a_release_refers_to():
 
 @pytest.mark.asyncio
 async def test_keeps_just_written_content():
-    """Content lands on the storage before its meta row is committed."""
     dao = FakeGarbageDao(paths_by_guid={"other": "/files/other"})
     storage = FakeStorage(
         files={"/files/other": old(), "/files/uploading": datetime.now(tz=tz_utc)}
@@ -173,7 +169,6 @@ async def test_keeps_just_written_content():
 
 @pytest.mark.asyncio
 async def test_keeps_content_a_surviving_meta_shares():
-    """Two metas may point at one physical file — the last one owns it."""
     dao = FakeGarbageDao(
         unlinked=[make_meta("copy", path="/files/shared")],
         paths_by_guid={"copy": "/files/shared", "original": "/files/shared"},

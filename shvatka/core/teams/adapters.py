@@ -51,15 +51,11 @@ class TeamEditor(TeamRenamer, TeamDescChanger, TeamByIdGetter, Protocol):
 
 
 class TeamPlayedGamesCounter(Protocol):
-    """Counts for many teams at once: one query, never one per team."""
-
     async def get_played_games_counts(self, team_ids: Sequence[int]) -> dict[int, int]:
         raise NotImplementedError
 
 
 class PlayerPlayedGamesCounter(Protocol):
-    """Counts for many players at once: one query, never one per player."""
-
     async def get_played_games_counts(self, player_ids: Sequence[int]) -> dict[int, int]:
         raise NotImplementedError
 

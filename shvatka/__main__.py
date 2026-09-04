@@ -1,11 +1,3 @@
-"""Entrypoint of the combined (api + tgbot webhook) application.
-
-This module is deliberately kept free of heavy imports: it must be able to
-configure logging before anything else is loaded, otherwise the whole import
-of the application (aiogram, pyrogram, matplotlib, sqlalchemy, ...) happens in
-complete silence and the process looks hung for tens of seconds.
-"""
-
 import logging
 import time
 from typing import TYPE_CHECKING

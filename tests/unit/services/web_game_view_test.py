@@ -57,7 +57,6 @@ async def test_puzzle_pushed_to_voted_players_only() -> None:
 
 @pytest.mark.asyncio
 async def test_level_up_replaces_the_previous_one() -> None:
-    """Moving to level 4 must hide the push about moving to level 3."""
     view, sender = _view(1)
     team = _team()
 
@@ -74,7 +73,6 @@ async def test_level_up_replaces_the_previous_one() -> None:
 
 @pytest.mark.asyncio
 async def test_every_hint_of_a_team_shares_one_tag() -> None:
-    """The tray keeps the last hint, not the whole history of them."""
     view, sender = _view(1)
     team = _team()
     level = _level(3)

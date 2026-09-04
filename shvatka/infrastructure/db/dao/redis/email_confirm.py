@@ -25,7 +25,6 @@ class EmailConfirmationStore:
         return f"{self.prefix}:{email}"
 
     def _player_key(self, player_id: int) -> str:
-        """Reverse index: which email this player is currently asked to confirm."""
         return f"{self.prefix}:player:{player_id}"
 
     async def save_code(self, email: str, code: str, player_id: int) -> None:

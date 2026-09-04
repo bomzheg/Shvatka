@@ -1,9 +1,3 @@
-"""The admin panel's status-only handle on a game (issue shvatka-ui#164).
-
-What these pin down is as much what the interactor *cannot* reach as what it
-does: it moves a game between statuses, and never touches its content.
-"""
-
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 
@@ -46,8 +40,6 @@ def make_game(
 
 @dataclass
 class FakeGameDao:
-    """In-memory stand-in for ``AdminGameStatusChanger``."""
-
     game: dto.Game
     active_game: dto.Game | None = None
     listed: list[dto.Game] = field(default_factory=list)
@@ -136,8 +128,6 @@ async def test_returns_a_waivers_game_to_its_author():
 
 @pytest.mark.asyncio
 async def test_leaving_the_active_statuses_takes_the_planned_start_with_it():
-    """Otherwise the scheduler starts the game minutes after the admin pulled
-    it back, and the whole repair is undone."""
     start_at = datetime.now(tz=tz_utc) + timedelta(days=1)
     game = make_game(GameStatus.getting_waivers, start_at=start_at)
     dao = FakeGameDao(game=game)
@@ -204,7 +194,6 @@ async def test_completing_gives_the_game_its_number():
 
 @pytest.mark.asyncio
 async def test_a_game_that_already_has_a_number_keeps_it():
-    """Out of `complete` and back in must not renumber the archive."""
     game = make_game(GameStatus.finished, number=3)
     dao = FakeGameDao(game=game, max_number=7)
     interactor = AdminChangeGameStatusInteractor(dao=dao, scheduler=FakeScheduler())
@@ -273,11 +262,6 @@ async def test_only_a_superuser_may_list_the_games():
 
 @pytest.mark.asyncio
 async def test_rewinding_a_played_game_can_take_its_run_with_it():
-    """The false start: the game is handed back, and so is every row it wrote.
-
-    Without this the game replayed on the right evening would start with each
-    team already on the level it reached the first time.
-    """
     game = make_game(GameStatus.started)
     dao = FakeGameDao(game=game, level_time_ids=[4, 5, 6])
     interactor = AdminChangeGameStatusInteractor(dao=dao, scheduler=FakeScheduler())

@@ -27,7 +27,7 @@ class InputContainer(Protocol):
 
 @dataclass(frozen=True)
 class ViewTask:
-    """One thing to show. Collected before a commit, rendered after it."""
+    pass
 
 
 @dataclass(frozen=True)
@@ -81,8 +81,6 @@ class GameFinishedByAll(ViewTask):
 
 @dataclass(frozen=True)
 class ShowEffects(ViewTask):
-    """Effects without a key: the level timer fired."""
-
     team: dto.Team
     effects: action.Effects
     input_container: InputContainer
@@ -102,7 +100,6 @@ AnyViewTask = (
 
 
 def group_by_team(tasks: Sequence[AnyViewTask]) -> list[list[AnyViewTask]]:
-    """One list per team, each in order. Different teams may be shown at once."""
     groups: dict[int, list[AnyViewTask]] = {}
     for task in tasks:
         groups.setdefault(task.team.id, []).append(task)
@@ -111,7 +108,6 @@ def group_by_team(tasks: Sequence[AnyViewTask]) -> list[list[AnyViewTask]]:
 
 class GameView(Protocol):
     async def show(self, tasks: Sequence[AnyViewTask]) -> None:
-        """Show these. Called after the transaction committed, never before."""
         raise NotImplementedError
 
 
@@ -121,30 +117,18 @@ class GameLogWriter(Protocol):
 
 
 class GameReleasePublisher(Protocol):
-    """Announces a game where the audience is (a telegram channel, ...).
-
-    Whether the release is currently on show, and where — a chat, some message
-    ids — is the view's own business, kept by the view and never handed to the
-    domain, exactly as pinned messages are.
-    """
-
     async def publish(self, game: dto.Game, release: dto.GameRelease) -> None:
-        """Show the release: put it up, or bring what is up to date."""
         raise NotImplementedError
 
     async def update(self, game: dto.Game, release: dto.GameRelease) -> None:
-        """Bring an already shown release up to date. Show nothing new."""
         raise NotImplementedError
 
     async def unpublish(self, game: dto.Game) -> None:
-        """Take the release out of the channel, if it is there."""
         raise NotImplementedError
 
 
 @dataclass
 class ShowTasks:
-    """What one request decided to show, one list per sender."""
-
     view: list[AnyViewTask] = field(default_factory=list)
     org: list[Event] = field(default_factory=list)
     log: list[GameLogEvent] = field(default_factory=list)
@@ -156,8 +140,6 @@ class ShowTasks:
 
 
 class ViewSender(Protocol):
-    """Between an interactor and the views: takes what to show, shows nothing."""
-
     async def show_later(self, tasks: ShowTasks) -> None:
         raise NotImplementedError
 

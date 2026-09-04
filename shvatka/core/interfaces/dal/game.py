@@ -55,12 +55,6 @@ class GameCreator(Committer, GameNameChecker, LevelFilesSyncDao, Protocol):
 
 
 class GameRenamer(Committer, GameNameChecker, Protocol):
-    """Rename a game, and tell whether the new name is free.
-
-    Renaming needs the check as much as creating does: the name is what a game
-    is known by, so two games may not share one.
-    """
-
     async def rename_game(self, game: dto.Game, new_name: str):
         raise NotImplementedError
 
@@ -108,14 +102,6 @@ class GameFileRenamer(GameByIdGetter, Committer, Protocol):
 
 
 class GameFileDeleter(GameByIdGetter, FileInfoGetter, FileIdsByGuidsGetter, Committer, Protocol):
-    """Reads and writes the deletion of one file from one game needs.
-
-    Everything a file can still be referenced by has a reader here: the levels
-    of the game, the releases of every game, and the remaining links of any
-    kind. Which of them make a file undeletable — and when the file itself may
-    follow its last link — is the interactor's call, not the DAO's.
-    """
-
     async def get_game_file_ids(self, game_id: int) -> set[int]:
         raise NotImplementedError
 
@@ -129,7 +115,6 @@ class GameFileDeleter(GameByIdGetter, FileInfoGetter, FileIdsByGuidsGetter, Comm
         raise NotImplementedError
 
     async def count_links_for_file(self, file_id: int) -> int:
-        """How many ``game_files`` and ``level_files`` rows point at the file."""
         raise NotImplementedError
 
     async def delete_file_meta(self, guid: str) -> None:

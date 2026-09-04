@@ -29,11 +29,6 @@ async def main():
 
 
 async def renew_id_usernames(dao: HolderDao) -> list[tuple[str, str]]:
-    """Give players with an `id{id}` username a name-based one instead.
-
-    Players are renamed only if their telegram or forum identity provides a free
-    username, so those without any name keep the id-based one.
-    """
     renamed = await dao.player.renew_id_usernames()
     for old, new in renamed:
         logger.info("username %s renewed to %s", old, new)

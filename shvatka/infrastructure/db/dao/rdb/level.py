@@ -97,11 +97,6 @@ class LevelDao(BaseDAO[models.Level]):
         return level.to_dto(level.author.to_dto_user_prefetched())
 
     async def search_in_completed_games(self, text: str) -> list[LevelWithGame]:
-        """Уровни завершённых игр с вхождением text в name_id или где-то внутри сценария.
-
-        Фильтр по сценарию грубый (ilike по json-тексту): точное место совпадения
-        ищет вызывающая сторона, обходя загруженный сценарий.
-        """
         pattern = ilike_pattern(text)
         result: ScalarResult[models.Level] = await self.session.scalars(
             select(models.Level)
@@ -163,7 +158,6 @@ class LevelDao(BaseDAO[models.Level]):
         )
 
     async def transfer_game_levels(self, game: dto.Game, new_author: dto.Player) -> None:
-        """Reassign every level of ``game`` to ``new_author`` (used by admin edits)."""
         await self.session.execute(
             update(models.Level)
             .where(models.Level.game_id == game.id)

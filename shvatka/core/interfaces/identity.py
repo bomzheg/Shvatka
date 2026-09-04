@@ -27,21 +27,9 @@ class IdentityProvider(Protocol):
         raise NotImplementedError
 
     async def _get_optional_superuser(self) -> dto.Player | None:
-        """Return the acting player if they may use the admin panel, else ``None``.
-
-        This is the single per-edge hook for admin rights: edges that expose the
-        admin panel override it (checking the player against the configured
-        superusers); everything else derives from it. By default nobody is a
-        superuser.
-        """
         return None
 
     async def get_superuser(self) -> dto.Player:
-        """Resolve the acting player and ensure they may use the admin panel.
-
-        Non-superusers always raise :class:`exceptions.NotAuthorizedForAdmin`;
-        the attempt is logged.
-        """
         player = await self._get_optional_superuser()
         if player is None:
             actor = await self.get_player()
@@ -53,7 +41,6 @@ class IdentityProvider(Protocol):
         return player
 
     async def is_superuser(self) -> bool:
-        """Quiet check of admin rights: no logging, no exceptions."""
         return await self._get_optional_superuser() is not None
 
     async def get_required_user(self) -> dto.User:

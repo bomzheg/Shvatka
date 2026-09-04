@@ -12,11 +12,6 @@ from .base import BaseDAO
 
 
 class GameFileDao(BaseDAO[models.GameFile]):
-    """DAO for the ``game_files`` m2m table (which files CAN be used in a game).
-
-    Add-only: files registered here are never removed when a level is unlinked.
-    """
-
     def __init__(
         self, session: AsyncSession, clock: typing.Callable[[tzinfo], datetime] = datetime.now
     ) -> None:
@@ -29,7 +24,6 @@ class GameFileDao(BaseDAO[models.GameFile]):
         return set(result.all())
 
     async def add_game_files(self, game_id: int, file_ids: Collection[int]) -> None:
-        """Register files as usable in the game. Idempotent, never removes."""
         existing = await self.get_file_ids(game_id)
         for file_id in set(file_ids) - existing:
             self._save(models.GameFile(game_id=game_id, file_id=file_id))
@@ -41,13 +35,6 @@ class GameFileDao(BaseDAO[models.GameFile]):
         return result.scalar_one()
 
     async def get_unused_links(self) -> list[GameFileLink]:
-        """Links to files no level of the same game refers to.
-
-        Add-only means the table keeps a link after the hint that needed it is
-        rewritten away, so this is where the leftovers show up. A file the
-        game's release uses has no ``level_files`` row either — the caller
-        decides what to do about that, this only reports the rows.
-        """
         used_by_level = (
             select(models.LevelFile.id)
             .join(models.Level, models.Level.id == models.LevelFile.level_id)

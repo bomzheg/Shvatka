@@ -46,15 +46,6 @@ async def main():
 async def repair_empty_files(
     dao: FileInfoDao, storage: FileStorage, file_gateway: BotFileGateway
 ) -> tuple[int, int]:
-    """Restore files that were saved with no content, from their telegram copy.
-
-    Uploading to telegram used to consume the content stream, so the storage
-    wrote an empty file while the telegram upload itself succeeded. Those files
-    are recognisable by the sha256 of empty content and still carry a usable
-    file_id, so the content can be downloaded back.
-
-    Returns how many files were repaired and how many were left alone.
-    """
     broken = await dao.get_by_sha256(EMPTY_CONTENT_SHA256)
     logger.info("found %s empty files", len(broken))
     repaired = skipped = 0

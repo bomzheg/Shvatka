@@ -1,9 +1,3 @@
-"""Interactors used by the web UI to read player information.
-
-They wrap the domain services from :mod:`shvatka.core.players.player` and operate
-on internal domain models so the transport layer (api routes) stays thin.
-"""
-
 from dataclasses import dataclass
 
 from shvatka.core.interfaces.dal.player import (

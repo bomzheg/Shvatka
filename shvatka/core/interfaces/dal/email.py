@@ -50,7 +50,6 @@ class EmailConfirmationStore(typing.Protocol):
         raise NotImplementedError
 
     async def get_pending_email(self, player_id: int) -> str | None:
-        """The email a player is currently asked to confirm, if any."""
         raise NotImplementedError
 
 

@@ -26,6 +26,5 @@ async def test_a_page_carries_its_url_and_title(client: AsyncClient):
 
 @pytest.mark.asyncio
 async def test_the_pages_need_no_authentication(client: AsyncClient):
-    """The ui asks for them before anybody has logged in."""
     resp = await client.get("/docs/pages")
     assert resp.status_code == 200

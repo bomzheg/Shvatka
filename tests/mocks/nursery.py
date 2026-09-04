@@ -4,8 +4,6 @@ from shvatka.core.interfaces.nursery import BackgroundTask, Nursery
 
 
 class FakeNursery(Nursery):
-    """Remembers what was spawned instead of running it."""
-
     def __init__(self) -> None:
         self.spawned: list[tuple[BackgroundTask, dict[str, Any]]] = []
 

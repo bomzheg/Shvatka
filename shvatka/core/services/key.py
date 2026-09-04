@@ -257,12 +257,6 @@ def calculate_timer_level_up_time(
     started_at: datetime,
     now: datetime,
 ) -> datetime:
-    """
-    Момент окончания уровня по таймеру — это момент, когда таймер должен был сработать,
-    а не момент, когда планировщик до него добрался. Иначе задержка планировщика
-    (обычно доли секунды) попадает в начало следующего уровня и копится от уровня
-    к уровню: после десятка уровней команды финишируют с разбросом в секунду и больше.
-    """
     action_time = lvl.scenario.get_timer_action_time(effects.id)
     if action_time is None:
         logger.warning(

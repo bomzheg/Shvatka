@@ -26,11 +26,9 @@ class CurrentGameProvider(Protocol):
         return full_game
 
     async def get_waivers(self) -> dict[dto.Team, Iterable[dto.VotedPlayer]]:
-        """All teams (with players) which voted yes for the current game."""
         raise NotImplementedError
 
     async def get_team_waivers_by_team(self, team: dto.Team) -> Iterable[dto.VotedPlayer]:
-        """Players of the identity's team which voted yes for the current game."""
         raise NotImplementedError
 
     async def get_team_waivers(self, identity: IdentityProvider) -> Iterable[dto.VotedPlayer]:

@@ -22,12 +22,6 @@ logger = logging.getLogger(__name__)
 
 
 async def sync_files_for_level(level: dto.Level, dao: LevelFilesSyncDao) -> None:
-    """Reconcile a level's file links after its scenario was saved.
-
-    ``level_files`` is made to match exactly the files the level references; for a
-    level that belongs to a game, those files are additionally registered as
-    usable in that game (``game_files``, add-only).
-    """
     file_ids = await dao.get_ids_by_guids(level.get_guids())
     await dao.sync_level_files(level.db_id, file_ids)
     if level.game_id is not None:
@@ -42,10 +36,6 @@ _MIME_PREFIX_TO_HINT_TYPE = {
 
 
 def hint_type_by_mime(mime_type: str | None) -> enums.HintType:
-    """Best-effort mapping of a detected mime type to a HintType.
-
-    Anything that is not a recognised image/video/audio is treated as a document.
-    """
     if mime_type:
         prefix = mime_type.split("/", maxsplit=1)[0]
         if prefix in _MIME_PREFIX_TO_HINT_TYPE:
@@ -61,16 +51,6 @@ async def save_file(
     dao: FileUpserter,
     options: hints.FileUploadOptions = hints.DEFAULT_UPLOAD_OPTIONS,
 ) -> hints.SavedFileMeta:
-    """Store a single uploaded file (from the web UI) and persist its FileInfo.
-
-    Generates a fresh guid, stores the content via the file storage (which detects
-    sha256/mime) and saves the resulting meta to the DB. The actual content type is
-    derived from the detected mime type. ``options`` controls how an unsupported
-    image (e.g. HEIC) is handled — converted, stored as-is, or rejected.
-
-    Does not commit: the meta row and the link that makes the file reachable
-    belong in one transaction, so the caller commits once both are written.
-    """
     guid = str(uuid4())
     extension = "".join(Path(original_filename).suffixes)
     name = original_filename[: -len(extension)] if extension else original_filename
@@ -90,12 +70,6 @@ async def rename_file(
     filename: str,
     dao: GameFileRenamer,
 ) -> hints.VerifiableFileMeta:
-    """Rename a file (its human-readable ``original_filename``) by guid.
-
-    The file must be usable in the given game (registered in ``game_files``);
-    the physical content and the guid are left untouched, only the display name
-    is changed. The extension is kept as-is.
-    """
     if not await dao.is_game_file(game_id, guid):
         raise FileNotFound(
             text=f"There is no file with uuid {guid} associated with game id {game_id}",
@@ -112,13 +86,6 @@ async def upsert_files(
     dao: GameUpserter,
     file_gateway: FileGateway,
 ) -> set[str]:
-    """Store every file the scenario references, checking each can reach telegram.
-
-    An uploaded scenario is expected to be whole, so a file telegram refuses
-    fails the save — but the loop still tries every remaining file, so the
-    raised ``FilesCantBeSentToTg`` names all of them at once and the author
-    fixes the package in one pass instead of one file per attempt.
-    """
     guids = set()
     errors: list[FileRejectedByTelegram] = []
     for file in files:
@@ -137,13 +104,6 @@ async def upsert_files(
 async def get_file_metas(
     game: dto.FullGame, identity: IdentityProvider, dao: GameFilesMetaGetter
 ) -> Sequence[hints.FileMeta]:
-    """Files usable in the game — the whole ``game_files`` set, not just the files
-    referenced by the current scenario.
-
-    ``game_files`` is expected to be a superset of the scenario's files; if the
-    scenario references a file that is not registered there, it is logged as a
-    warning (and the file is omitted, since it is not a usable game file).
-    """
     metas = await dao.get_game_file_metas(game.id)
     available = {meta.guid for meta in metas}
     for guid in game.get_guids():

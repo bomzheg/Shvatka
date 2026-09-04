@@ -37,7 +37,6 @@ def _player(id_: int, username: str = "p") -> dto.Player:
 
 
 def _player_with_forum(id_: int, username: str = "p") -> dto.PlayerWithForum:
-    """A merge operand: merging checks the forum identity, so it must be loaded."""
     return dto.PlayerWithForum(id=id_, can_be_author=False, is_dummy=False, username=username)
 
 

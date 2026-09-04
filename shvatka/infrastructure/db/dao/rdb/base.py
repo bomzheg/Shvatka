@@ -17,7 +17,6 @@ ILIKE_ESCAPE = "!"
 
 
 def ilike_pattern(text: str) -> str:
-    """Паттерн для ilike(..., escape=ILIKE_ESCAPE): ищем подстроку, спецсимволы экранированы."""
     escaped = (
         text.replace(ILIKE_ESCAPE, ILIKE_ESCAPE * 2)
         .replace("%", ILIKE_ESCAPE + "%")

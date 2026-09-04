@@ -147,12 +147,6 @@ async def file_storage(dishka: AsyncContainer) -> MemoryFileStorage:
 
 @pytest_asyncio.fixture(scope="session")
 async def local_storage(dishka: AsyncContainer) -> LocalFileStorage:
-    """The storage the app itself writes to.
-
-    ``file_storage`` above is the in-memory double for services called by hand;
-    anything going through the container — an upload through the api, the file
-    gateway — lands here, in a real directory.
-    """
     return await dishka.get(LocalFileStorage)
 
 
@@ -177,7 +171,6 @@ async def game_log(dishka: AsyncContainer) -> GameLogWriterMock:
 
 @pytest_asyncio.fixture
 async def telegram(dishka: AsyncContainer) -> FakeTelegram:
-    """What the fake telegram does with files — set it up before uploading."""
     return await dishka.get(FakeTelegram)
 
 

@@ -22,8 +22,6 @@ class GenerateOneTimeLoginLinkInteractor:
 
 @dataclass
 class GenerateOneTimeLoginLinkForPlayerInteractor:
-    """Admin-panel variant: mint a one-time login link for an arbitrary player."""
-
     player_getter: PlayerByIdGetter
     token_creator: OneTimeTokenCreator
     url_factory: UrlFactory

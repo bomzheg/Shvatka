@@ -105,8 +105,6 @@ class FullGame:
 
 @dataclass
 class GameRelease:
-    """A game's release: a banner leading some text, a map — as plain hints."""
-
     game_id: int
     banner: hints.PhotoHint | None
     """The wide title picture, shown alone above the site's header."""
@@ -158,13 +156,6 @@ class KeyTime:
 
 @dataclass(kw_only=True, frozen=True, slots=True)
 class Effects:
-    """Effects addressing ``next_level`` by number, hiding the level's name_id.
-
-    For endpoints a playing team can read, where a name_id would leak part of
-    the scenario. Resolving it needs the game's levels — see
-    ``EffectsWithNameId`` for the places that don't have to hide anything.
-    """
-
     id: UUID
     hints_: Sequence[hints.AnyHint]
     bonus_minutes: float
@@ -191,13 +182,6 @@ class Effects:
 
 @dataclass(kw_only=True, frozen=True, slots=True)
 class EffectsWithNameId:
-    """Effects as stored, addressing ``next_level`` by the level's name_id.
-
-    For endpoints where name_ids are not secret anyway — game results, readable
-    only by orgs until the game is complete, and already carrying level name_ids
-    in ``LevelTime``. Needs no level mapping, so no extra query.
-    """
-
     id: UUID
     hints_: Sequence[hints.AnyHint]
     bonus_minutes: float
@@ -294,12 +278,6 @@ class LevelTime:
 
 @dataclass(kw_only=True, frozen=True, slots=True)
 class BonusEvent:
-    """An event that changed a team's time, with the whole effects that caused it.
-
-    The bonus itself is ``effects.bonus_minutes``: positive is a bonus, negative
-    a penalty. Only events that carry bonus minutes are returned.
-    """
-
     at: datetime
     effects: EffectsWithNameId
     source: BonusSource

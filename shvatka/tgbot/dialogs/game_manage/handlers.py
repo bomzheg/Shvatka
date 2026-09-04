@@ -272,7 +272,6 @@ async def show_results(
     dao: FromDishka[HolderDao],
     results_sender: FromDishka[ResultsRichSender],
 ):
-    """Post the results as a rich message and open the window of what else can be done."""
     game_id = manager.dialog_data["game_id"]
     full_game = await get_full_game(id_=game_id, identity=identity, dao=dao.game)
     game_stat = await get_game_stat(game=full_game, identity=identity, dao=dao.game_stat)

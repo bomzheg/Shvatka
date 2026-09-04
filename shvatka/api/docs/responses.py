@@ -17,12 +17,6 @@ class DocPageLink:
 
 @dataclass(kw_only=True, frozen=True, slots=True)
 class DocPages:
-    """Every documentation page the ui may link to, keyed by ``DocPage`` name.
-
-    The name is the contract, not the path: a page renamed in the docs changes
-    the url here and the ui keeps linking to it without knowing.
-    """
-
     pages: Mapping[str, DocPageLink]
 
     @classmethod

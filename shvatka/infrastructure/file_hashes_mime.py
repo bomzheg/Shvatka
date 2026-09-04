@@ -88,12 +88,6 @@ async def fill_extension(
     session: AsyncSession,
     batch_size: int = 100,
 ) -> None:
-    """Backfill a missing extension and rename the physical file to match.
-
-    For files whose extension is empty, derive it from the detected mime type,
-    rename the physical file to include it and keep file_path in sync with the
-    new on-disk name (file_path is authoritative for serving).
-    """
     offset = 0
     while True:
         result: ScalarResult[models.FileInfo] = await session.scalars(
@@ -138,13 +132,6 @@ async def repair_file_path_extensions(
     session: AsyncSession,
     batch_size: int = 100,
 ) -> None:
-    """Repair file_path values that are missing their extension.
-
-    An earlier fill_extension run renamed the physical file to include the
-    extension but did not update file_path. Since serving now resolves the
-    physical file by file_path, bring file_path back in sync with the on-disk
-    name (file_path + extension) for any such row. Idempotent.
-    """
     offset = 0
     repaired = 0
     while True:

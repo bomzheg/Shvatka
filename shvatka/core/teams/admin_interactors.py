@@ -1,9 +1,3 @@
-"""Interactors backing the admin panel team operations.
-
-Each interactor takes the acting user via an ``IdentityProvider`` argument and
-authorises through ``identity.get_superuser()`` before performing the operation.
-"""
-
 import contextlib
 import logging
 from dataclasses import dataclass
@@ -40,7 +34,6 @@ class AdminMergeTeamsInteractor:
     async def __call__(
         self, identity: IdentityProvider, primary_id: int, secondary_id: int
     ) -> dto.Team:
-        """Merge ``secondary`` team into ``primary``; ``secondary`` is deleted."""
         actor = await identity.get_superuser()
         logger.warning("admin %s merges team %s into %s", actor.id, secondary_id, primary_id)
         if primary_id == secondary_id:
@@ -55,12 +48,6 @@ class AdminMergeTeamsInteractor:
 
 @dataclass
 class AdminChangeTeamCaptainInteractor:
-    """Give a team another captain, over the head of the current one.
-
-    The way out of the deadlock the captain themselves can't solve: a captain
-    who is gone, or one who left without handing the team over.
-    """
-
     dao: TeamCaptainSetter
     notifier: TeamNotifier
 
@@ -75,8 +62,6 @@ class AdminChangeTeamCaptainInteractor:
 
 @dataclass
 class AdminAddPlayerToTeamInteractor:
-    """Put a player into a team without the team's permissions applying."""
-
     dao: TeamPlayerAdder
     team_dao: TeamByIdGetter
     player_dao: PlayerByIdGetter
@@ -112,8 +97,6 @@ class AdminAddPlayerToTeamInteractor:
 
 @dataclass
 class AdminRemovePlayerFromTeamInteractor:
-    """Take a player out of whichever team they are in."""
-
     dao: TeamLeaver
     player_dao: PlayerByIdGetter
     notifier: TeamNotifier

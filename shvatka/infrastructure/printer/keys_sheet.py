@@ -1,11 +1,3 @@
-"""Keys of a game as a PDF to print on A4 and cut into slips.
-
-Matplotlib is used as a plain drawing surface: a figure the exact size of an A4
-sheet, text placed on it in millimetres. It is already a dependency (the results
-plot lives on it), it ships a font with Cyrillic in it, and it can measure a
-string before drawing it — which is what makes "as large as still fits" possible.
-"""
-
 from io import BytesIO
 
 from matplotlib import font_manager
@@ -55,11 +47,6 @@ _text_to_path = TextToPath()
 
 
 def font_family() -> str:
-    """The first font of the list this machine really has.
-
-    Asking matplotlib for a family it doesn't have works, but complains into the
-    log on every single string — and a sheet is hundreds of them.
-    """
     available = set(font_manager.get_font_names())
     return next((family for family in FONT_FAMILIES if family in available), FONT_FAMILIES[-1])
 
@@ -68,7 +55,6 @@ FONT = font_family()
 
 
 def measure(text: str, font_pt: float) -> float:
-    """Width of a key printed at this size, in millimetres."""
     if not text:
         return 0.0
     prop = FontProperties(family=FONT, size=font_pt, weight=KEY_WEIGHT)
@@ -177,5 +163,4 @@ def _text(
 
 
 def _point(x_mm: float, y_mm: float) -> tuple[float, float]:
-    """Millimetres from the top left corner -> figure coordinates."""
     return x_mm / PAGE_WIDTH_MM, 1 - y_mm / PAGE_HEIGHT_MM

@@ -1,5 +1,3 @@
-"""``check_is_org`` — the org lookup read as the permission check it is."""
-
 import pytest
 
 from shvatka.core.models import dto
@@ -57,7 +55,6 @@ def test_not_an_org_is_refused():
 
 
 def test_another_players_org_is_refused():
-    """The row that came back has to be the acting player's, not just any."""
     author = make_player(1)
     game = make_game(10, author)
     org = make_org(make_player(3), game)
@@ -67,7 +64,6 @@ def test_another_players_org_is_refused():
 
 
 def test_an_org_of_another_game_is_refused():
-    """Being an org somewhere is not being an org here."""
     author = make_player(1)
     player = make_player(2)
     org = make_org(player, make_game(11, author))

@@ -17,12 +17,6 @@ SENT_FILE_ID = "sent-to-telegram"
 
 @dataclass
 class FakeTelegram:
-    """What the fake telegram does with the files it is sent.
-
-    App-scoped, while the gateway using it is built per request: a test sets up
-    what telegram will do here, then drives the request that uploads.
-    """
-
     refuse: bool = False
     """refuse every file, the way telegram refuses one too large to send"""
     refused_guids: set[str] = field(default_factory=set)
@@ -41,13 +35,6 @@ class FakeTelegram:
 
 
 class FileGatewayMock(BotFileGateway):
-    """The real gateway with telegram faked out.
-
-    Storage and dao behave exactly as in production — the file lands on disk and
-    its meta row is written the same way — only the send is canned, so a test
-    can have telegram accept or refuse a file without a bot.
-    """
-
     def __init__(
         self, file_storage: FileStorage, dao: FileInfoDao, telegram: FakeTelegram
     ) -> None:
@@ -79,8 +66,6 @@ class FileGatewayMock(BotFileGateway):
 
 
 class FileGatewayMockProvider(Provider):
-    """Telegram is faked for uploads: they happen in every file-touching test."""
-
     scope = Scope.REQUEST
 
     @provide(scope=Scope.APP)

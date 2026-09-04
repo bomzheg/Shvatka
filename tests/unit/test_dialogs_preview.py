@@ -24,7 +24,6 @@ def test_every_state_has_window(dialogs: list[Dialog]) -> None:
 
 @pytest.mark.asyncio
 async def test_render_preview(dialogs: list[Dialog], tmp_path) -> None:
-    """Every window renders from its preview_data, without a bot or a database."""
     file = tmp_path / "preview.html"
 
     await render_dialogs_preview(dialogs, str(file))

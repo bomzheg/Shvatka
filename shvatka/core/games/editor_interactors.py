@@ -1,10 +1,3 @@
-"""Interactors used by the web UI to create and edit game drafts.
-
-They wrap the domain services from :mod:`shvatka.core.services.game` and operate
-on internal domain models (FullGame, GameScenario, ...) so the transport layer
-(api routes) stays thin.
-"""
-
 import logging
 from contextlib import AbstractContextManager
 from dataclasses import dataclass
@@ -93,13 +86,6 @@ class CreateGameInteractor:
 
 @dataclass
 class RenameGameInteractor:
-    """Rename a game draft on its own, without touching its scenario.
-
-    The scenario carries the name too, so saving one renames the game — but a
-    game that has no levels yet has no scenario to save, and that is exactly
-    when a name written in a hurry wants fixing. Hence a route of its own.
-    """
-
     dao: GameNameEditor
 
     async def __call__(self, game_id: int, name: str, identity: IdentityProvider) -> dto.Game:
@@ -123,19 +109,6 @@ class ChangeGameScenarioInteractor:
 
 @dataclass
 class ImportGameZipInteractor:
-    """Write a whole game from a zip package — the scenario and its files together.
-
-    The package carries its own name, so this is the bot's zip import from the
-    web: a new draft, or the author's own game of that name rewritten. Every
-    file goes to telegram on the way in, and a package telegram won't take is
-    refused whole (``FilesCantBeSentToTg``) — an import is expected to be
-    correct, so there is nothing to force here.
-
-    Rewriting a game the author already has is not something to discover
-    afterwards, so it takes ``overwrite``: without it the import stops at
-    ``GameWouldBeRewritten``, naming the game, and the caller asks.
-    """
-
     dao: GameUpserter
     retort: Retort
     file_gateway: FileGateway
@@ -152,11 +125,6 @@ class ImportGameZipInteractor:
     async def check_writes_nothing_over(
         self, package: scn.RawGameScenario, author: dto.Player
     ) -> None:
-        """Stop while the author's own game of that name would be rewritten.
-
-        A name taken by somebody else is not this error — the import refuses
-        that one on its own, and no permission of the author's can allow it.
-        """
         name = parse_uploaded_game(package, self.retort).name
         if await self.dao.is_name_available(name=name):
             return
@@ -179,12 +147,6 @@ class ImportGameZipInteractor:
 
 @dataclass
 class ExportGameZipInteractor:
-    """The game as a zip package: the scenario, its files, and the results if it has any.
-
-    The same package :class:`ImportGameZipInteractor` takes, so a game moves
-    between the web, the bot and another engine as one file.
-    """
-
     dao: GamePackager
     retort: Retort
     file_gateway: FileGateway
@@ -257,15 +219,6 @@ class ChangeGameStatusInteractor:
 
 @dataclass
 class UploadGameFileInteractor:
-    """Take one file for a game, checking telegram will accept it.
-
-    A hint reaches a team as a telegram message, so a file telegram refuses is
-    a hint that can never be shown: the upload fails and nothing is kept. That
-    is what an author wants nearly always — but not always, and ``force`` is
-    for the rare deliberate exception, which stores the file with no ``file_id``
-    and leaves the author with a file their game cannot deliver.
-    """
-
     storage: FileStorage
     dao: GameFileUploader
     file_gateway: FileGateway
@@ -298,12 +251,6 @@ class UploadGameFileInteractor:
     async def send_to_tg(
         self, author: dto.Player, saved: hints.SavedFileMeta, force: bool
     ) -> None:
-        """Send the stored file to telegram, keeping the file_id it answers with.
-
-        Sending it now is what turns "telegram will refuse this" from a problem
-        found during a game into one found while uploading. Nothing is committed
-        yet, so a refusal that is not forced leaves no file behind.
-        """
         try:
             await self.file_gateway.renew_file_id(author, saved)
         except exceptions.FileRejectedByTelegram as e:
@@ -316,20 +263,6 @@ class UploadGameFileInteractor:
 
 @dataclass
 class DeleteGameFileInteractor:
-    """Detach a file from a game, and delete the file itself with its last link.
-
-    A file may be detached only while nothing in the game refers to it — neither
-    a level's scenario nor the release — so the button can never break a game
-    that is written already. Once the link is gone and no other game, level or
-    release refers to the file, its meta row and its content go too: keeping a
-    file nothing can reach any more is what fills the storage up.
-
-    Like renaming, and unlike uploading, this changes a file that already exists
-    rather than bringing a new one, so it stays the author's to do. What an
-    admin needs is the broom, not this button — see
-    :class:`shvatka.core.files.interactors.CollectFileGarbageInteractor`.
-    """
-
     dao: GameFileDeleter
     storage: FileStorage
 
@@ -384,8 +317,6 @@ class DeleteGameFileInteractor:
         meta: hints.VerifiableFileMeta,
         release_guids: dict[int, set[str]],
     ) -> hints.FileContentLink | None:
-        """Delete the meta if that was its last reference; answer with the content
-        to remove, which is only the file's own when no other meta shares it."""
         if await self.dao.count_links_for_file(file_id):
             return None
         if any(guid in guids for guids in release_guids.values()):

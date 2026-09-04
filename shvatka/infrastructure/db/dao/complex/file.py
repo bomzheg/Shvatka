@@ -1,11 +1,3 @@
-"""Single-adapter views over the tables a file lives in.
-
-``files_info`` describes a file, ``level_files`` and ``game_files`` link it, and
-the storage holds its content. Deleting one — or sweeping every file nothing
-refers to — reads and writes all of them, so each use case gets one adapter
-composing the per-table DAOs it needs.
-"""
-
 import typing
 from collections.abc import Collection
 from dataclasses import dataclass

@@ -17,21 +17,12 @@ class PlayerMainInfo:
 
 @dataclass(frozen=True, slots=True)
 class PlayerIdentitiesInfo:
-    """A player together with their email account (telegram/forum live on the player)."""
-
     player: dto.PlayerWithForum
     email: dto.EmailAccount | None
 
 
 @dataclass(frozen=True, slots=True)
 class WaiverPoint:
-    """An interval during which a merged timeline must keep the player in the given team.
-
-    Derived from a waiver: around the game start (``start_at - 1h`` .. ``start_at + 48h``)
-    the player provably acted as a member of that team, so any manually built
-    team history must cover the whole interval with that team.
-    """
-
     game: dto.Game
     team: dto.Team
     at_since: datetime
@@ -55,12 +46,6 @@ class WaiverPoint:
 
 
 def pending_game_interval(now: datetime) -> tuple[datetime, datetime]:
-    """The interval fixed by a waiver for a game that is still getting waivers.
-
-    The game has no start date yet, so assume it happens this week: the point is
-    the current week. On Sunday the game is likely next week, so the point spans
-    from today until the end of the next week.
-    """
     today = now.astimezone(tz_game).date()
     if today.weekday() == SUNDAY:
         since_day = today
@@ -76,12 +61,6 @@ def pending_game_interval(now: datetime) -> tuple[datetime, datetime]:
 
 @dataclass(frozen=True, slots=True)
 class TimelineItem:
-    """One interval of a manually built team membership history.
-
-    Role, emoji and permissions are set explicitly by the admin; unset values
-    fall back to the same defaults as a regular team join.
-    """
-
     team_id: int
     date_joined: datetime
     date_left: datetime | None = None
@@ -92,12 +71,6 @@ class TimelineItem:
 
 @dataclass(frozen=True, slots=True)
 class PlayerStat:
-    """Aggregated player statistics for the web UI.
-
-    Includes the player together with key counters, the full history of team
-    memberships and the list of games the player took part in.
-    """
-
     player: dto.PlayerWithStat
     team_history: list[dto.FullTeamPlayer]
     played_games: list[dto.Game]

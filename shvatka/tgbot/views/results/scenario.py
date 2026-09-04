@@ -69,7 +69,6 @@ class GamePublisher:
         return msg.message_id
 
     async def publish_results(self) -> int:
-        """Post the results as a table under the chart, with the file itself after it."""
         msg = await self.results_sender.send_results(
             chat_id=self.channel_id,
             game=self.game,

@@ -20,12 +20,6 @@ class LevelKeys:
 
 @dataclass
 class KeysSheet:
-    """Keys of a game prepared to be printed and cut into slips for the orgs.
-
-    Nothing but the keys themselves — every slip is signed with the name and the
-    date of the game, so a slip found later still says where it is from.
-    """
-
     game_name: str
     game_date: datetime | None
     keys: list[action.SHKey]

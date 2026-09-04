@@ -18,11 +18,6 @@ FILE_META = hints.FileMeta(
 
 
 class MemoryFileStorageProvider(Provider):
-    """Not an override: the app's local storage stays for container-resolved
-    code (it's the one tested against a real dir), the in-memory one is for
-    services called by hand.
-    """
-
     scope = Scope.APP
 
     memory_storage = provide(MemoryFileStorage)

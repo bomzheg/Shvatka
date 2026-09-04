@@ -10,13 +10,6 @@ from shvatka.core.interfaces.current_game import CurrentGameProvider
 
 @dataclass
 class SentAfterGameStartFilter(BaseFilter):
-    """Passes a message that was first sent after the game had started.
-
-    Telegram keeps the original ``date`` on an edited message and reports the
-    edit itself in ``edit_date``, so this is what tells a key typed during the
-    game (and fixed afterwards) from an edit of something written before it.
-    """
-
     @inject
     async def __call__(
         self, message: Message, current_game: FromDishka[CurrentGameProvider]

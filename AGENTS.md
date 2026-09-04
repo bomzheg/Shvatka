@@ -274,7 +274,7 @@ overrides) lives in `pyproject.toml`.
 
 ## Environment & tooling
 
-- Python **>=3.13,<3.15**. Package/dependency manager: **uv**.
+- Python **>=3.14,<3.16**. Package/dependency manager: **uv**.
 - Setup: `uv venv && uv sync --group test`.
 - Key stack: FastAPI, aiogram 3 + aiogram_dialog, SQLAlchemy 2 (async,
   asyncpg), Alembic, **dishka** (DI), **adaptix** (serialization),

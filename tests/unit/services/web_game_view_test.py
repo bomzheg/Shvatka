@@ -3,9 +3,15 @@ from types import SimpleNamespace
 
 import pytest
 
-from shvatka.api.app.utils.push import PushMessage
-from shvatka.api.app.utils.web_input import WebGameView
-from shvatka.core.views.game import SendHint, SendPuzzle
+from shvatka.api.app.utils.push import PushMessage, PushUrgency
+from shvatka.api.app.utils.web_input import ApiInput, WebGameView
+from shvatka.core.views.game import (
+    GameFinished,
+    GameFinishedByAll,
+    SendHint,
+    SendPuzzle,
+    ShowEffects,
+)
 
 
 class FakePushSender:
@@ -104,3 +110,37 @@ async def test_a_hint_never_replaces_a_level_up() -> None:
 
     puzzle, hint = (message.tag for _, message in sender.calls)
     assert puzzle != hint
+
+
+@pytest.mark.asyncio
+async def test_every_in_game_push_is_high_urgency() -> None:
+    """A phone in a pocket holds normal-urgency pushes until it wakes up, and a
+    hint delivered at the next doze window is delivered after the level.
+    """
+    view, sender = _view(1)
+    team = _team()
+    level = _level(3)
+
+    await view.show(
+        [
+            SendPuzzle(team=team, level=level),
+            SendHint(team=team, hint_number=1, level=level),
+            ShowEffects(team=team, effects=SimpleNamespace(id="e1"), input_container=ApiInput()),
+            GameFinished(team=team, input_container=ApiInput()),
+            GameFinishedByAll(team=team),
+        ]
+    )
+
+    assert len(sender.calls) == 5
+    assert {message.urgency for _, message in sender.calls} == {PushUrgency.high}
+
+
+@pytest.mark.asyncio
+async def test_an_in_game_push_still_dies_in_ten_minutes() -> None:
+    """Urgency asks for it now; ttl says a hint an hour late is noise, not news."""
+    view, sender = _view(1)
+
+    await view.show([SendPuzzle(team=_team(), level=_level(3))])
+
+    _, message = sender.calls[0]
+    assert message.ttl == 10 * 60

@@ -3,7 +3,7 @@ import typing
 from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
 
-from shvatka.api.app.utils.push import PushMessage, WebPushSender
+from shvatka.api.app.utils.push import TEAM_TTL, PushMessage, PushUrgency, WebPushSender
 from shvatka.core.interfaces.current_game import CurrentGameProvider
 from shvatka.core.interfaces.dal.game_play import GamePreparer
 from shvatka.core.interfaces.dal.player import TeamPlayersGetter
@@ -56,6 +56,11 @@ class WebGameView(GameView):
     or the hint number — the tray keeps the last level up and the last hint, not
     the whole run. The ui closes the ones a newer push makes pointless (the
     hints of a level the team has left), see ``push-sw.js``.
+
+    Every push here is ``high`` urgency. A game is played with the phone in a
+    pocket and the browser in the background, which is exactly the state android
+    holds normal-urgency pushes in until it wakes up on its own; a hint that
+    arrives at the next doze maintenance window arrives after the level.
     """
 
     def __init__(self, push_sender: WebPushSender, current_game: CurrentGameProvider) -> None:
@@ -103,6 +108,7 @@ class WebGameView(GameView):
                 url="/games/running",
                 tag=f"level-{team.id}",
                 data={"kind": "puzzle", "team_id": team.id, "level_id": level.db_id},
+                urgency=PushUrgency.high,
             ),
         )
 
@@ -125,6 +131,7 @@ class WebGameView(GameView):
                     "level_id": level.db_id,
                     "hint_number": hint_number,
                 },
+                urgency=PushUrgency.high,
             ),
         )
 
@@ -137,6 +144,7 @@ class WebGameView(GameView):
                 url="/games/running",
                 tag=f"finish-{team.id}",
                 data={"kind": "team_finished", "team_id": team.id},
+                urgency=PushUrgency.high,
             ),
         )
 
@@ -149,6 +157,7 @@ class WebGameView(GameView):
                 url="/games/running",
                 tag="game-finished",
                 data={"kind": "game_finished", "team_id": team.id},
+                urgency=PushUrgency.high,
             ),
         )
 
@@ -161,6 +170,7 @@ class WebGameView(GameView):
                 url="/games/running",
                 tag=f"effects-{team.id}",
                 data={"kind": "effects", "team_id": team.id, "effects_id": str(effects.id)},
+                urgency=PushUrgency.high,
             ),
         )
 
@@ -300,6 +310,12 @@ class WebOrgNotifier(OrgNotifier):
 
 
 class WebTeamNotifier(TeamNotifier):
+    """Team news keeps, so its pushes get a day of ttl instead of the in-game ten
+    minutes: who joined, who left and who is captain now is still true tomorrow,
+    and a phone that spent the evening off should be told when it comes back.
+    Urgency stays ``normal`` — none of this is worth waking a sleeping device.
+    """
+
     def __init__(
         self,
         notification_dao: NotificationWriter,
@@ -363,6 +379,7 @@ class WebTeamNotifier(TeamNotifier):
                 url="/teams",
                 tag=f"team-join-{event.team.id}-{event.invited.id}",
                 data={"kind": "player_joined_team", "team_id": event.team.id},
+                ttl=TEAM_TTL,
             ),
         )
 
@@ -385,6 +402,7 @@ class WebTeamNotifier(TeamNotifier):
                 url="/teams",
                 tag=f"team-leave-{event.team.id}-{event.removed.id}",
                 data={"kind": "player_left_team", "team_id": event.team.id},
+                ttl=TEAM_TTL,
             ),
         )
 
@@ -409,6 +427,7 @@ class WebTeamNotifier(TeamNotifier):
                 url="/team",
                 tag=f"team-captain-{event.team.id}",
                 data={"kind": "team_captain_changed", "team_id": event.team.id},
+                ttl=TEAM_TTL,
             ),
         )
 
@@ -431,6 +450,7 @@ class WebTeamNotifier(TeamNotifier):
                 url="/team",
                 tag=f"team-renamed-{event.team.id}",
                 data={"kind": "team_renamed", "team_id": event.team.id},
+                ttl=TEAM_TTL,
             ),
         )
 

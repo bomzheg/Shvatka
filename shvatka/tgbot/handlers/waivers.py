@@ -359,7 +359,6 @@ def setup() -> Router:
     player_router = router.include_router(Router(name=__name__ + ".player"))
     fallback_router = router.include_router(Router(name=__name__ + ".fallback"))
 
-    # filters
     router.message.filter(
         GameStatusFilter(status=GameStatus.getting_waivers),
     )
@@ -368,9 +367,7 @@ def setup() -> Router:
     )
     player_router.callback_query.filter(TeamPlayerFilter())
     captain_router.callback_query.filter(TeamPlayerFilter(can_manage_waivers=True))
-    # middlewares
 
-    # handlers
     captain_router.message.register(
         start_waivers,
         Command(START_WAIVERS_COMMAND),

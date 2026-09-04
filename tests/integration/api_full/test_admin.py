@@ -888,11 +888,9 @@ async def test_admin_reads_the_scenario_once_the_game_is_complete(
     assert len(resp.json()["levels"]) == len(game.levels)
 
 
-# ---------------------------------------------------------------------------
 # Game statuses. An admin sees the games that stopped being drafts, and of them
 # only the status — never the scenario, the keys or the files (that stays true
 # for a running game: the tests below check it while the game is played).
-# ---------------------------------------------------------------------------
 
 
 async def set_status(game: dto.Game, status: GameStatus, dao: HolderDao) -> None:
@@ -1346,11 +1344,9 @@ async def test_admin_remove_player_forbidden_for_non_superuser(
     assert await check_dao.team_player.get_team(draco) is not None
 
 
-# ---------------------------------------------------------------------------
 # Resending the running level's messages (issue shvatka-ui#185). The one thing
 # the panel may do to a game being played — and it does it blind: the answer
 # names the teams the request covered and nothing about where any of them is.
-# ---------------------------------------------------------------------------
 
 
 @pytest.mark.asyncio
@@ -1447,11 +1443,9 @@ async def test_admin_resend_forbidden_for_non_superuser(
     assert resp.status_code == 403, resp.text
 
 
-# ---------------------------------------------------------------------------
 # Purging a false start. Rewinding a played game leaves its run behind, and the
 # game replayed on the right evening would start with every team already on the
 # level it reached — so the move may take the run with it.
-# ---------------------------------------------------------------------------
 
 
 async def count_runtime(dao: HolderDao) -> tuple[int, int, int, int]:
@@ -1572,10 +1566,8 @@ async def test_purge_forbidden_for_non_superuser(
     assert await count_runtime(check_dao) == before
 
 
-# ---------------------------------------------------------------------------
 # Editing a game's roster from the panel: the way in when the captain is gone,
 # missed the deadline, or simply left somebody out.
-# ---------------------------------------------------------------------------
 
 
 @pytest.mark.asyncio

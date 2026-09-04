@@ -22,7 +22,6 @@ class Results:
 def main() -> None:
     session = auth()
 
-    # 2. Get games.
     response = session.get(f"{BASE_URL}/api/games")
     response.raise_for_status()
 
@@ -31,7 +30,6 @@ def main() -> None:
 
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
-    # 3. Get every game's JSON and download its files.
     total_files = 0
     errors = []
 
@@ -49,7 +47,6 @@ def main_single(game) -> None:
 
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
-    # 3. Get every game's JSON and download its files.
     total_files = 0
     errors = []
 
@@ -64,7 +61,6 @@ def main_single(game) -> None:
 def auth() -> Session:
     session = requests.Session()
 
-    # 1. Authenticate.
     response = session.post(
         f"{BASE_URL}/api/auth/token",
         files={

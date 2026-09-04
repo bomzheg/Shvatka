@@ -112,9 +112,6 @@ async def test_a_hint_never_replaces_a_level_up() -> None:
 
 @pytest.mark.asyncio
 async def test_every_in_game_push_is_high_urgency() -> None:
-    """A phone in a pocket holds normal-urgency pushes until it wakes up, and a
-    hint delivered at the next doze window is delivered after the level.
-    """
     view, sender = _view(1)
     team = _team()
     level = _level(3)
@@ -135,7 +132,6 @@ async def test_every_in_game_push_is_high_urgency() -> None:
 
 @pytest.mark.asyncio
 async def test_an_in_game_push_still_dies_in_ten_minutes() -> None:
-    """Urgency asks for it now; ttl says a hint an hour late is noise, not news."""
     view, sender = _view(1)
 
     await view.show([SendPuzzle(team=_team(), level=_level(3))])

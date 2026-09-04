@@ -19,14 +19,6 @@ logger = logging.getLogger(__name__)
 
 
 class PushUrgency(enum.StrEnum):
-    """RFC 8030 urgency: how much battery the push is worth to the receiver.
-
-    Anything below ``high`` is the sender's permission to hold the message until
-    the device wakes up on its own, which android does readily — a backgrounded
-    browser in doze gets its pushes at the next maintenance window, minutes to
-    tens of minutes later. Only ``high`` asks for delivery now.
-    """
-
     very_low = "very-low"
     low = "low"
     normal = "normal"

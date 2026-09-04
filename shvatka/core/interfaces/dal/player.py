@@ -30,7 +30,7 @@ class PlayerIdentitiesGetter(Protocol):
 
 
 class PlayerMergeOperandsGetter(PlayerByIdGetter, PlayerIdentitiesGetter, Protocol):
-    """Load players by id, plus the two sides of a merge with their forum identity."""
+    pass
 
 
 class PlayerByUserIdGetter(Protocol):

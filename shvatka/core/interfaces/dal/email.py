@@ -55,4 +55,4 @@ class EmailConfirmationStore(typing.Protocol):
 
 
 class EmailDao(EmailAccountDao, Committer, typing.Protocol):
-    """EmailAccountDao that can commit its changes."""
+    pass

@@ -188,33 +188,15 @@ class AdminGamesListInteractor:
 class AdminChangeGameStatusInteractor:
     """Move a game to another status over the author's head.
 
-    The way back out of a mistake: a game whose waivers were opened too early
-    returns to ``underconstruction`` and its author can edit it again. Only the
-    status changes — nothing here reads or writes the game's content.
+    Only the status changes — nothing here reads or writes the game's content.
+    Two things ride along, because leaving them behind would undo the move: a
+    game leaving the active statuses loses its planned start, and a game moving
+    to ``complete`` goes through the author's own domain service.
 
-    Two things follow the move, because leaving them behind would undo it:
-
-    * a game leaving the active statuses loses its planned start, or the
-      scheduler would start it anyway, minutes after the admin pulled it back;
-    * a game moving to ``complete`` goes through the same domain service the
-      author's own button uses, so it is closed the one way there is (and must
-      be finished first).
-
-    A game the admin may not see (``underconstruction``, ``ready``) is reported
-    as not found — including the game the admin has just moved there, which is
-    exactly the point: the fix hands the game back to its author.
-
-    Rewinding a game that was *played* leaves the run behind, and that is the
-    one thing the status alone cannot repair: the level times, keys, events and
-    timers of the false start are still there, and the game replayed on the
-    right evening would start with every team already on the level it reached.
-    So the move may take them with it — ``purge_runtime``, the panel's
-    checkbox — and only on that move: see
-    :func:`~shvatka.core.rules.game.check_can_purge_game_runtime`. Nothing of
-    the run is read on the way out; it is four deletes, in the order the
-    foreign keys allow, in the transaction that writes the new status. The
-    waivers are deliberately not among them — who signed up survives a false
-    start, and that is the whole point of rewinding to ``getting_waivers``.
+    With ``purge_runtime`` the move also sweeps the run the false start left
+    behind. Allowed only on the way back — see
+    :func:`~shvatka.core.rules.game.check_can_purge_game_runtime` — and never
+    touching the waivers. SHEP-0013.
     """
 
     dao: AdminGameStatusChanger
@@ -284,24 +266,14 @@ class AdminChangeGameStatusInteractor:
 class AdminResendCurrentLevelInteractor:
     """Send a running level's messages to a team again, without reading them.
 
-    Telegram drops a message now and then, and a team is left staring at a
-    chat with no puzzle in it. Putting that right used to need an org; the
-    panel can do it now, for one team or for every team of the running game at
-    once.
+    Out goes what the team is entitled to have right now: the puzzle of the
+    level it is on and every hint whose time has come. It goes from the engine
+    to the views directly, so the admin sends the hints without seeing one.
 
-    What goes out is exactly what the team is entitled to have at this moment:
-    the puzzle of the level it is on, and every hint whose time has already
-    come — the same list its own screen shows, built here from the level and
-    the team's level time. It goes from the engine to the views directly, so
-    the admin sends the hints without ever seeing one.
-
-    The answer is the teams the request covered, in the order the panel asked
-    for them, and nothing else. Not the level any of them is on, not how many
-    hints it has had, not even whether it is still playing: a team that is
-    through the last level is answered for like all the others and simply has
-    nothing to resend. So the button says what it did, and the game keeps its
-    secrets — the panel cannot ask the same question twice and read the team's
-    progress off the difference.
+    The answer is the teams the request covered and nothing else — not the
+    level any of them is on, not whether it is still playing. A team past the
+    last level is answered for like the rest and simply has nothing to resend,
+    so the panel cannot read a team's progress off the difference.
     """
 
     dao: AdminLevelResender

@@ -22,7 +22,6 @@ class KeyTimeDao(BaseDAO[models.KeyTime]):
         super().__init__(models.KeyTime, session, clock=clock)
 
     async def delete_by_game(self, game: dto.Game) -> None:
-        """Drop every key typed in the game."""
         await self.session.execute(delete(models.KeyTime).where(models.KeyTime.game_id == game.id))
 
     async def get_correct_typed_keys(

@@ -241,8 +241,6 @@ class LevelDeleterImpl(LevelDeleter):
 
 @dataclass
 class GameFileUploaderImpl(GameFileUploader):
-    """Single DAO for uploading a file directly for a game (cdn endpoint)."""
-
     dao: "HolderDao"
 
     async def get_by_id(self, id_: int, author: dto.Player | None = None) -> dto.Game:
@@ -269,8 +267,6 @@ class GameFileUploaderImpl(GameFileUploader):
 
 @dataclass
 class GameFileRenamerImpl(IsGameFileMixin, GameFileRenamer):
-    """Single DAO for renaming a file usable in a game (cdn endpoint)."""
-
     dao: "HolderDao"
 
     async def get_by_id(self, id_: int, author: dto.Player | None = None) -> dto.Game:
@@ -294,8 +290,6 @@ class GameFileRenamerImpl(IsGameFileMixin, GameFileRenamer):
 
 @dataclass
 class GameReleaseReaderImpl(GameReleaseReader):
-    """Single DAO for reading a game's announcement."""
-
     dao: "HolderDao"
 
     async def get_by_id(self, id_: int, author: dto.Player | None = None) -> dto.Game:
@@ -313,8 +307,6 @@ class GameReleaseReaderImpl(GameReleaseReader):
 
 @dataclass
 class GameReleaseEditorImpl(FileLinkMixin, GameReleaseEditor):
-    """Single DAO for writing a game's announcement and linking its files."""
-
     async def get_by_id(self, id_: int, author: dto.Player | None = None) -> dto.Game:
         return await self.dao.game.get_by_id(id_, author)
 

@@ -262,13 +262,6 @@ class PassedLevelsReaderInteractor:
 
 @dataclass(kw_only=True)
 class GamePlayBaseInteractor:
-    """
-    :param dao: Слой доступа к бд.
-    :param sender: Отправляет то, что надо показать, во вьюхи (после коммита).
-    :param locker: Локи для обеспечения последовательного исполнения определённых операций.
-    :param scheduler: Планировщик подсказок.
-    """
-
     dao: GamePlayerDao
     sender: ViewSender
     locker: KeyCheckerFactory

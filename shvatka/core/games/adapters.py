@@ -147,7 +147,7 @@ class GameFileReader(
 
 
 class GameReleaseReader(GameByIdGetter, GameReleaseGetter, Protocol):
-    """Reads a game's announcement (and the game it belongs to)."""
+    pass
 
 
 class GameReleaseEditor(

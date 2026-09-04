@@ -30,8 +30,6 @@ class ReleaseGuidsMixin:
 
 @dataclass
 class GameFileDeleterImpl(ReleaseGuidsMixin, GameFileDeleter):
-    """Single DAO for deleting one file from one game (cdn endpoint)."""
-
     async def get_by_id(self, id_: int, author: dto.Player | None = None) -> dto.Game:
         return await self.dao.game.get_by_id(id_, author)
 
@@ -73,8 +71,6 @@ class GameFileDeleterImpl(ReleaseGuidsMixin, GameFileDeleter):
 
 @dataclass
 class FileGarbageCollectorImpl(ReleaseGuidsMixin, FileGarbageCollectorDao):
-    """Single DAO for a garbage collection run."""
-
     async def get_unused_game_file_links(self) -> list[GameFileLink]:
         return await self.dao.game_file.get_unused_links()
 

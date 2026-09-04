@@ -1,10 +1,3 @@
-"""The join offer is about the newcomer, not about whoever let them in.
-
-A chat_member update carries the member who caused the change as its user, so
-resolving the player from the identity names the inviting captain instead of
-the person who joined — and the accept button then carries the captain's id.
-"""
-
 from datetime import UTC, datetime
 from unittest.mock import AsyncMock
 

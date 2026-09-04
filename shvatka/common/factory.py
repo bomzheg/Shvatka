@@ -32,25 +32,11 @@ class TelegraphProvider(Provider):
 
 
 class ConcreteProxy(ABCProxy):
-    """Load/dump an abstract type as a fixed concrete one.
-
-    ``ABCProxy`` parametrises its target with the generic args of the abstract
-    type, which only works for a still-generic abstract like ``Sequence``.
-    ``HintsList``/``Conditions`` are plain, already parametrised subclasses of
-    ``Sequence[...]``, so the target type is complete as given.
-    """
-
     def _get_proxy_target(self, tp: TypeHint) -> TypeHint:
         return self._impl
 
 
 def flatten_legacy_tg_link(data):
-    """Accept scenarios written before file_id/content_type were inlined.
-
-    Older zips nested them under ``tg_link``; that key is unknown now, so
-    without this the values would be silently dropped and the file would end
-    up with no content_type at all.
-    """
     if not isinstance(data, dict):
         return data
     tg_link = data.get("tg_link")

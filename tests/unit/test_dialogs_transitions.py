@@ -1,14 +1,3 @@
-"""Guard the transitions diagram against handler-driven jumps nobody declared.
-
-`render_transitions` only sees Start/SwitchTo/Next/Back/Cancel widgets in a
-window's keyboard plus its `preview_add_transitions`. What a handler does at
-runtime (`manager.start(...)` / `manager.switch_to(...)`) is invisible, so every
-such jump has to be declared with PreviewStart / PreviewSwitchTo.
-
-This is a static check: it reads the dialog modules instead of importing them,
-so a jump is spotted even when no test ever clicks that button.
-"""
-
 import ast
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -21,7 +10,6 @@ JUMP_METHODS = frozenset({"start", "switch_to"})
 
 
 def _state_name(node: ast.AST) -> str | None:
-    """`states.SomeSG.window` -> `"SomeSG:window"`."""
     if (
         isinstance(node, ast.Attribute)
         and isinstance(node.value, ast.Attribute)
@@ -56,7 +44,6 @@ def _parse_function(node: ast.FunctionDef | ast.AsyncFunctionDef) -> Func:
 
 
 def _parse_functions(path: Path) -> dict[str, Func]:
-    """Every function of a module, with the states it jumps to."""
     functions = {
         node.name: _parse_function(node)
         for node in ast.walk(ast.parse(path.read_text(encoding="utf-8")))
@@ -82,7 +69,6 @@ def _module(dotted: str) -> dict[str, Func]:
 
 
 def _imported_from(path: Path) -> dict[str, str]:
-    """Local name -> module it was imported from."""
     package = ".".join(path.parent.relative_to(REPO_ROOT).parts)
     imports: dict[str, str] = {}
     for node in ast.walk(ast.parse(path.read_text(encoding="utf-8"))):

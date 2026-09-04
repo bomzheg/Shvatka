@@ -11,8 +11,6 @@ from .base import BaseDAO
 
 
 class LevelFileDao(BaseDAO[models.LevelFile]):
-    """DAO for the ``level_files`` m2m table (which files a level references)."""
-
     def __init__(
         self, session: AsyncSession, clock: typing.Callable[[tzinfo], datetime] = datetime.now
     ) -> None:
@@ -25,7 +23,6 @@ class LevelFileDao(BaseDAO[models.LevelFile]):
         return set(result.all())
 
     async def sync_level_files(self, level_id: int, file_ids: Collection[int]) -> None:
-        """Make the level's file links match exactly ``file_ids``."""
         existing = await self.get_file_ids(level_id)
         wanted = set(file_ids)
         for file_id in wanted - existing:
@@ -45,7 +42,6 @@ class LevelFileDao(BaseDAO[models.LevelFile]):
         )
 
     async def get_level_ids_by_file(self, game_id: int, file_id: int) -> set[int]:
-        """Levels of the given game that refer to the file."""
         result: ScalarResult[int] = await self.session.scalars(
             select(models.LevelFile.level_id)
             .join(models.Level, models.Level.id == models.LevelFile.level_id)

@@ -63,7 +63,6 @@ async def test_puzzle_pushed_to_voted_players_only() -> None:
 
 @pytest.mark.asyncio
 async def test_level_up_replaces_the_previous_one() -> None:
-    """Moving to level 4 must hide the push about moving to level 3."""
     view, sender = _view(1)
     team = _team()
 
@@ -80,7 +79,6 @@ async def test_level_up_replaces_the_previous_one() -> None:
 
 @pytest.mark.asyncio
 async def test_every_hint_of_a_team_shares_one_tag() -> None:
-    """The tray keeps the last hint, not the whole history of them."""
     view, sender = _view(1)
     team = _team()
     level = _level(3)
@@ -114,9 +112,6 @@ async def test_a_hint_never_replaces_a_level_up() -> None:
 
 @pytest.mark.asyncio
 async def test_every_in_game_push_is_high_urgency() -> None:
-    """A phone in a pocket holds normal-urgency pushes until it wakes up, and a
-    hint delivered at the next doze window is delivered after the level.
-    """
     view, sender = _view(1)
     team = _team()
     level = _level(3)
@@ -137,7 +132,6 @@ async def test_every_in_game_push_is_high_urgency() -> None:
 
 @pytest.mark.asyncio
 async def test_an_in_game_push_still_dies_in_ten_minutes() -> None:
-    """Urgency asks for it now; ttl says a hint an hour late is noise, not news."""
     view, sender = _view(1)
 
     await view.show([SendPuzzle(team=_team(), level=_level(3))])

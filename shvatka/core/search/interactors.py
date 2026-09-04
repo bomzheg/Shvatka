@@ -20,7 +20,6 @@ SNIPPET_RADIUS = 40
 
 
 def make_snippet(text: str, query: str, radius: int = SNIPPET_RADIUS) -> str | None:
-    """Кусочек текста вокруг найденного вхождения (без учёта регистра) или None."""
     index = text.lower().find(query.lower())
     if index < 0:
         return None
@@ -32,7 +31,6 @@ def make_snippet(text: str, query: str, radius: int = SNIPPET_RADIUS) -> str | N
 
 
 def iter_hint_texts(hint: hints.AnyHint) -> Iterator[str]:
-    """Все текстовые поля подсказки, в которых имеет смысл искать."""
     if isinstance(hint, hints.TextHint):
         yield hint.text
     elif isinstance(hint, hints.VenueHint):

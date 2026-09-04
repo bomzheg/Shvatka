@@ -102,20 +102,6 @@ async def replace_team_waivers(
     votes: dict[int, Played],
     dao: WaiverApprover,
 ) -> list[dto.Waiver]:
-    """
-    Полностью заменяет вейверы команды на игру.
-
-    Доступно капитану или игроку с правом ``can_manage_waivers``. Игроки,
-    переданные в ``votes`` (player_id -> статус участия), сохраняются/обновляются,
-    а вейверы игроков, отсутствующих в ``votes``, удаляются.
-
-    :param game: игра, для которой заменяются вейверы
-    :param team: команда, чьи вейверы заменяются
-    :param approver: игрок, выполняющий замену (как правило — капитан)
-    :param votes: маппинг id игрока -> статус участия
-    :param dao:
-    :return: итоговый список вейверов команды
-    """
     team_player = await get_full_team_player(approver, team, dao)
     check_allow_approve_waivers(team_player)
     members = {tp.player.id: tp for tp in await dao.get_players(team)}

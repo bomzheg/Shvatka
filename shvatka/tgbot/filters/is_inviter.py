@@ -17,6 +17,5 @@ async def is_inviter(
     callback_data: InviterCD,
     identity: FromDishka[IdentityProvider],
 ) -> bool:
-    """Whether the player who clicked is the one who sent the invite."""
     player = await identity.get_player()
     return player is not None and callback_data.inviter_id == player.id

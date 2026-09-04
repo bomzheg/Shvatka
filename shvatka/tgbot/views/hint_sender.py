@@ -20,13 +20,10 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class SentHint:
-    """Messages of one sent hint: the parts themselves and their caption."""
-
     parts: list[Message] = field(default_factory=list)
     caption: Message | None = None
 
     def all(self) -> list[Message]:
-        """All sent messages, caption first (the order they were sent in)."""
         return [self.caption, *self.parts] if self.caption is not None else list(self.parts)
 
 
@@ -92,14 +89,6 @@ class HintSender:
         return message
 
     async def _renew_file_id(self, hint_container: hints.BaseHint, message: Message) -> None:
-        """
-        After a hint was sent by content telegram returns a fresh file_id.
-        Persist it in a dedicated session (separate transaction) so that
-        the next time the hint can be sent by file_id again.
-
-        This is best-effort: the hint is already delivered, so a failure to
-        renew the file_id must not propagate.
-        """
         guid = getattr(hint_container, "file_guid", None)
         if guid is None:
             return
@@ -154,14 +143,4 @@ class HintSender:
 
 
 def _is_file_id_missing(hint_link: object) -> bool:
-    """
-    Only file-based link views (photo, audio, video, ...) carry a ``file_id``
-    attribute. When that attribute exists but is ``None`` the file was never
-    uploaded to telegram, so we can't send by file_id and must fall back to
-    sending by content.
-
-    Views without a ``file_id`` attribute at all (text, gps, venue, contact)
-    have nothing to be missing - they are always sendable as a link, so the
-    sentinel default keeps them out of the content fallback.
-    """
     return getattr(hint_link, "file_id", _MISSING) is None

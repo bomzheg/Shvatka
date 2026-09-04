@@ -47,12 +47,6 @@ def render_team_players(
 def render_leave_confirmation(
     player: dto.Player, team: dto.Team, *, chat_id: int, private: bool
 ) -> str | None:
-    """What the bot says in the chat where ``/leave`` was typed.
-
-    «Ты» belongs to a private chat — in a group the player is named instead. In
-    the team's own chat there is nothing to add: :class:`BotTeamNotifier` already
-    announces the leave there.
-    """
     if private:
         return f"Ты вышел из команды {hd.quote(team.name)}"
     if team.get_chat_id() == chat_id:
@@ -71,7 +65,6 @@ class BotTeamNotifier(TeamNotifier):
         await self._send_to_team_chat(event)
 
     async def _retag(self, event: TeamEvent) -> None:
-        """Team membership defines the tag of the player in public chats."""
         match event:
             case PlayerJoinedTeam():
                 await self.tagger.sync(event.invited, event.team)

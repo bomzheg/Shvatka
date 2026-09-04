@@ -57,8 +57,6 @@ class TeamWaivers:
 
 @dataclass(kw_only=True, frozen=True, slots=True)
 class WaiverPoint:
-    """Interval in which the player must stay in the given team (fixed by a waiver)."""
-
     game: Game
     team: Team | None
     at_since: datetime

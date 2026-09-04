@@ -10,14 +10,12 @@ PAGES_ROOT = Path(__file__).resolve().parents[3] / "docs" / "modules" / "ROOT" /
 
 @pytest.mark.parametrize("page", list(DocPage))
 def test_every_page_exists_in_docs(page: DocPage):
-    """A link handed to a user must not 404 — the .adoc has to be there."""
     path, _, _ = page.value.partition("#")
     assert (PAGES_ROOT / f"{path}.adoc").is_file()
 
 
 @pytest.mark.parametrize("page", [p for p in DocPage if "#" in p.value])
 def test_every_anchor_is_declared_in_its_page(page: DocPage):
-    """An anchor asciidoctor doesn't generate leaves the link at the page top."""
     path, _, anchor = page.value.partition("#")
     assert f"[#{anchor}]" in (PAGES_ROOT / f"{path}.adoc").read_text()
 

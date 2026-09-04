@@ -1,20 +1,3 @@
-"""Interactors for a game's release — the promo published before a game.
-
-A release is a banner — a wide title picture with a caption — followed by a
-plain list of hints (the theme, a map, the rules). Writing it and announcing it
-are separate steps:
-
-* it can be written and rewritten at any time, up to and including a finished
-  game (a complete one is history — only an admin may still touch it);
-* it goes to the announcements channel when the game starts collecting waivers
-  — or right away if it is written while the game is already collecting them;
-* a release written after the game has started is only stored, never posted:
-  the audience it was meant for is already playing;
-* editing an already posted release edits those channel messages in place.
-
-A release is optional: nothing in the game flow requires one.
-"""
-
 import logging
 from dataclasses import dataclass
 
@@ -36,10 +19,6 @@ class GetGameReleaseInteractor:
     dao: GameReleaseReader
 
     async def __call__(self, game_id: int) -> dto.GameRelease | None:
-        """The game's release, or ``None`` when it has none.
-
-        Readable by anyone — a release is promo, shown to guests too.
-        """
         return await self.dao.get_release(game_id)
 
 
@@ -80,12 +59,6 @@ class SaveGameReleaseInteractor:
 
     @staticmethod
     def should_announce(game: dto.Game) -> bool:
-        """Whether saving this release should also put it in front of people.
-
-        Only while the game is collecting waivers: before that the release
-        waits for them to start, after that its audience is already playing.
-        A release already on show is kept up to date either way.
-        """
         return game.status == GameStatus.getting_waivers
 
     async def link_files(
@@ -95,12 +68,6 @@ class SaveGameReleaseInteractor:
         author: dto.Player,
         is_superuser: bool = False,
     ) -> None:
-        """Make every file the release references usable in the game.
-
-        The files may have been uploaded straight into the release (that's how
-        the bot works), so they are not registered for the game yet, and
-        without that the cdn endpoint would refuse to serve the banner.
-        """
         guids = [guid for hint in hints_ for guid in hint.get_guids()]
         for guid in guids:
             if is_superuser:

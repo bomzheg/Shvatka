@@ -8,8 +8,6 @@ DATETIME_EXCEL_FORMAT = "HH:MM:SS"
 
 
 class CellStyle(enum.Enum):
-    """How a cell should look. The printer decides what that means in a real file."""
-
     PLAIN = enum.auto()
     TITLE = enum.auto()
     """Name of the whole document."""
@@ -86,13 +84,6 @@ class Chart:
 
 @dataclass(kw_only=True, frozen=True)
 class TableBlock:
-    """One block of a table: what it is called, and the rows it occupies.
-
-    A file shows every block of a table at once, one under another. Anything
-    that cannot (a chat message, a web page) needs to know where one block ends
-    and the next begins, and what to call each — that is all this says.
-    """
-
     caption: str
     first_row: int
     """Row of the block's own header, the one carrying its caption."""

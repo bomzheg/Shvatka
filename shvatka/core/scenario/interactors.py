@@ -67,8 +67,6 @@ class AllGameKeysReaderInteractor:
 
 
 class AllGameKeysPrintInteractor:
-    """The same keys, but as a sheet to print, cut and hand out to the orgs."""
-
     def __init__(self, dao: GameByIdGetter, printer: KeysSheetPrinter) -> None:
         self.dao = dao
         self.printer = printer

@@ -2,8 +2,6 @@ import enum
 
 
 class RequestType(enum.Enum):
-    """A user-to-user request that needs a decision. Stored as its ``name`` (Text)."""
-
     team_join_invite = enum.auto()
     """A team manager invites a player to join their team."""
     team_join_request = enum.auto()

@@ -15,8 +15,6 @@ class NewGame:
 
 @dataclass
 class GameName:
-    """A new name for an existing game."""
-
     name: str
 
 
@@ -32,8 +30,6 @@ class GameStatusChange:
 
 @dataclass
 class GameRelease:
-    """The whole release of a game — replaces the published one."""
-
     banner: dict[str, Any] | None = None
     """The wide title picture leading the release, with its caption."""
     hints: list[dict[str, Any]] = field(default_factory=list)

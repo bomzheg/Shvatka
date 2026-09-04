@@ -27,8 +27,6 @@ GAME = dto.Game(
 
 @dataclass
 class FakeUploaderDao:
-    """In-memory stand-in for the GameFileUploader protocol."""
-
     saved: hints.SavedFileMeta | None = None
     game_files: list[int] = field(default_factory=list)
     committed: int = 0
@@ -58,8 +56,6 @@ class FakeUploaderDao:
 
 
 class FakeFileGateway:
-    """A telegram that refuses everything, or takes everything."""
-
     def __init__(self, refuses: bool) -> None:
         self.refuses = refuses
         self.sent: list[str] = []
@@ -105,8 +101,6 @@ async def test_uploaded_file_is_sent_to_telegram() -> None:
 
 @pytest.mark.asyncio
 async def test_file_telegram_refuses_is_not_kept() -> None:
-    """The upload fails and nothing is committed: a hint reaches a team as a
-    telegram message, so a file telegram won't take could never be shown."""
     dao = FakeUploaderDao()
     gateway = FakeFileGateway(refuses=True)
 
@@ -123,8 +117,6 @@ async def test_file_telegram_refuses_is_not_kept() -> None:
 
 @pytest.mark.asyncio
 async def test_force_keeps_the_file_telegram_refused() -> None:
-    """The rare deliberate exception: the author gets the file, without a
-    file_id, and the game will have to send it by content."""
     dao = FakeUploaderDao()
     gateway = FakeFileGateway(refuses=True)
 

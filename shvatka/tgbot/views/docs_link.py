@@ -5,7 +5,6 @@ from shvatka.core.utils.exceptions import SHError
 
 
 def error_doc_link(error: SHError, docs: DocsUrlFactory) -> str | None:
-    """An html link to the page explaining this error, when it has one."""
     url = docs.get_error_url(error)
     if url is None:
         return None

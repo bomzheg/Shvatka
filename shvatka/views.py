@@ -28,11 +28,6 @@ logger = logging.getLogger(__name__)
 
 
 async def show_on_both(*, bot: Awaitable[None], web: Awaitable[None]) -> None:
-    """The site first: a push is one https call, telegram is minutes of them.
-
-    A web failure is logged and the bot half still runs; a bot failure is left
-    to the caller, which retries and alerts it.
-    """
     try:
         await web
     except Exception as e:

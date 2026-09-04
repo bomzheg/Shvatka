@@ -1,9 +1,3 @@
-"""Interactors backing the admin panel poll and waiver operations.
-
-Each interactor takes the acting user via an ``IdentityProvider`` argument and
-authorises through ``identity.get_superuser()`` before reading or mutating data.
-"""
-
 import logging
 from collections.abc import Iterable
 from dataclasses import dataclass
@@ -67,18 +61,6 @@ class AdminGameWaiversReaderInteractor:
 
 @dataclass
 class AdminAddWaiverInteractor:
-    """Sign a player up for a game over the captain's head.
-
-    The way in when the captain is gone, missed the deadline, or simply left
-    somebody out: the panel writes the waiver the team would have written. The
-    player has to be *in* the team right now — a waiver for somebody who plays
-    elsewhere would never show up in the game's roster anyway, since that is
-    read through the current membership.
-
-    Re-signing a player who already has a waiver rewrites it, which is how the
-    panel changes a ``no`` into a ``yes`` without a second endpoint.
-    """
-
     dao: AdminWaiverEditor
 
     async def __call__(
@@ -111,13 +93,6 @@ class AdminAddWaiverInteractor:
 
 @dataclass
 class AdminRemoveWaiverInteractor:
-    """Take a player back out of a game's roster.
-
-    The row goes rather than turning into a ``revoked`` one: the captain's own
-    revoke marks a player as barred from re-signing, and an admin undoing a
-    mistake means the opposite — the team may sign them up again.
-    """
-
     dao: AdminWaiverEditor
 
     async def __call__(

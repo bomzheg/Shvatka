@@ -37,7 +37,6 @@ CAPTION = "Время взятия"
 
 
 def _table(fields: dict[tuple[int, int], Cell], hidden: list[int] | None = None) -> Table:
-    """A table of one block, addressed the way the file builder addresses its own."""
     rows = [row for row, _ in fields]
     return Table(
         fields={
@@ -73,7 +72,6 @@ def test_rendered_block_is_a_rectangle() -> None:
 
 
 def test_only_the_rows_of_the_block_are_rendered() -> None:
-    """A file lays every block over one grid; a message shows one block at a time."""
     table = Table(
         fields={
             CellAddress(row=1, column=1): Cell(value="взятия", style=CellStyle.SECTION),
@@ -117,7 +115,6 @@ def test_header_cells_are_marked_and_values_are_not() -> None:
 
 
 def test_the_best_value_of_a_column_is_underlined() -> None:
-    """Bold is what telegram draws a header cell with, so a bold value reads as a header."""
     table = _table({(1, 1): Cell(value=1, style=CellStyle.BEST)})
 
     ((cell,),) = _render(table).cells
@@ -142,7 +139,6 @@ def test_time_is_rendered_the_way_the_cell_asks() -> None:
 
 
 def test_hidden_columns_are_not_rendered() -> None:
-    """The file keeps a column to line its blocks up; a message has nothing to line up."""
     table = _table(
         {
             (1, 1): Cell(value="Команда"),
@@ -187,7 +183,6 @@ def test_results_message_without_a_picture() -> None:
 
 @pytest.mark.asyncio
 async def test_a_table_too_wide_falls_back_to_the_picture() -> None:
-    """A game with more levels than a table may have columns still shows its chart."""
     bot = _bot()
     bot.send_rich_message = mock.AsyncMock(  # type: ignore[method-assign]
         side_effect=TelegramBadRequest(

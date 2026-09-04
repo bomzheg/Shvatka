@@ -8,7 +8,6 @@ def _forum_user(name: str = "forum_harry", player_id: int = 3) -> dto.ForumUser:
 
 
 def test_plain_player_does_not_carry_the_forum_identity():
-    """The base dto must not grow the forum account back: it costs a join everywhere."""
     player = dto.Player(id=1, can_be_author=False, is_dummy=False, username="harry")
     assert not hasattr(player, "forum_user")
     assert not hasattr(player, "has_forum_user")

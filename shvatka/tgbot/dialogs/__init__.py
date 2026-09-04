@@ -53,12 +53,6 @@ DIALOG_PACKAGES = (
 
 
 def collect_all_dialogs() -> list[Dialog]:
-    """Every dialog of the bot, without attaching it to a router.
-
-    Dialogs are module-level singletons, so `setup` can run only once per
-    process - which the bot itself does. Tools that only need to read the
-    dialogs (the preview) go through here instead.
-    """
     found: dict[int, Dialog] = {}
     for package in DIALOG_PACKAGES:
         for obj in vars(package).values():
@@ -82,12 +76,6 @@ def setup(router: Router, message_manager: MessageManagerProtocol) -> BgManagerF
 
 
 def setup_outdated_dialogs(dialogs_router: Router) -> None:
-    """Let any dialog handler or getter bail out by raising `DialogOutdated`.
-
-    Must run after `setup_dialogs`: inner middlewares are applied in
-    registration order, and this one needs `dialog_manager` in the data, which
-    aiogram_dialog's own middleware puts there.
-    """
     middleware = OutdatedDialogMiddleware()
     dialogs_router.callback_query.middleware(middleware)
     dialogs_router.message.middleware(middleware)

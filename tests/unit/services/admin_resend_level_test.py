@@ -1,10 +1,3 @@
-"""Resending a running level's messages from the admin panel (shvatka-ui#185).
-
-Telegram loses a message and a team is left without its puzzle. The panel can
-put that right — and these pin down that it does so blind: what the admin gets
-back says which teams were covered and nothing about where any of them is.
-"""
-
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 
@@ -70,8 +63,6 @@ def make_game(status: GameStatus = GameStatus.started) -> dto.FullGame:
 
 @dataclass
 class FakeResenderDao:
-    """In-memory stand-in for ``AdminLevelResender``."""
-
     teams: list[dto.Team]
     level_times: dict[int, dto.LevelTime] = field(default_factory=dict)
 
@@ -133,7 +124,6 @@ def build(game: dto.FullGame, dao: FakeResenderDao) -> tuple:
 
 @pytest.mark.asyncio
 async def test_resends_the_puzzle_and_the_hints_already_released():
-    """Exactly what the team should have on screen right now, no more."""
     game = make_game()
     team = make_team(1)
     dao = FakeResenderDao(
@@ -191,7 +181,6 @@ async def test_without_a_team_every_playing_team_gets_its_own_level():
 
 @pytest.mark.asyncio
 async def test_a_team_that_has_finished_is_answered_for_like_the_others():
-    """The answer must not tell the admin who is through the last level."""
     game = make_game()
     playing, finished = make_team(1), make_team(2)
     dao = FakeResenderDao(

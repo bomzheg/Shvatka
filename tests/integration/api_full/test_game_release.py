@@ -114,7 +114,6 @@ async def test_banner_can_be_uploaded_after_the_game_started(
     auth: AuthProperties,
     author: dto.Player,
 ):
-    """The scenario is frozen by then, but the release — and its banner — is not."""
     await dao.game.start(game)
     await dao.commit()
 
@@ -147,7 +146,6 @@ async def test_admin_brings_a_banner_to_a_complete_game(
     author: dto.Player,
     harry: dto.Player,
 ):
-    """A complete game's release is the admin's to fix — banner included."""
     await dao.game.set_number(game, await dao.game.get_max_number() + 1)
     await dao.game.set_completed(game)
     await dao.commit()
@@ -185,7 +183,6 @@ async def test_admin_rewrites_a_release_keeping_the_authors_banner(
     author: dto.Player,
     harry: dto.Player,
 ):
-    """The banner stays the author's file — that must not block the admin."""
     up = await client.post(
         f"/cdn/games/{game.id}/files",
         files={"file": ("banner.png", b"\x89PNG\r\n\x1a\n binary", "image/png")},

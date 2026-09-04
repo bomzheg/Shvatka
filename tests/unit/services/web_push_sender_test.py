@@ -129,7 +129,6 @@ async def test_nothing_sent_when_push_is_not_configured(monkeypatch) -> None:
 
 @pytest.mark.asyncio
 async def test_urgency_and_ttl_reach_the_push_service(monkeypatch) -> None:
-    """They are the whole point of the fields: nothing else carries them."""
     sent: list[dict] = []
     monkeypatch.setattr(push_module, "webpush", lambda **kwargs: sent.append(kwargs))
     sender = WebPushSender(config=CONFIG, dao=FakeDao())
@@ -159,9 +158,6 @@ async def test_a_push_is_normal_urgency_and_dies_in_ten_minutes_by_default(monke
 
 
 def test_delivery_is_not_told_to_the_browser() -> None:
-    """``to_json`` is the payload the service worker sees; urgency is between us
-    and the push service.
-    """
     message = PushMessage(title="t", body="b", urgency=PushUrgency.high, ttl=TEAM_TTL)
 
     assert "urgency" not in message.to_json()

@@ -37,12 +37,6 @@ async def team_getter(dao: FromDishka[HolderDao], dialog_manager: DialogManager,
 
 @inject
 async def my_team_getter(dao: FromDishka[HolderDao], identity: FromDishka[IdentityProvider], **_):
-    """The card of the team the player is in *at this moment*.
-
-    Deliberately resolved on every render instead of remembering a team id when
-    the dialog started: between the two the player may have been removed from
-    the team, and then there is no card to show at all.
-    """
     return await team_card((await get_actual_team_player(identity)).team, dao)
 
 

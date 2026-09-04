@@ -18,11 +18,6 @@ class TimersDAO(BaseDAO[TimerAction]):
         super().__init__(TimerAction, session, clock=clock)
 
     async def delete_by_level_times(self, level_time_ids: Collection[int]) -> None:
-        """Drop the timers of the given level times.
-
-        ``timers_log`` has no game of its own — it hangs off ``levels_times`` —
-        so the caller resolves the ids there and hands them over.
-        """
         if not level_time_ids:
             return
         await self.session.execute(

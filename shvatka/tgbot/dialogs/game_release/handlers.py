@@ -25,7 +25,6 @@ def _game_id(manager: DialogManager) -> int:
 
 
 def _composed(manager: DialogManager) -> list[dict[str, Any]]:
-    """The body of the release being composed. It lives in dialog data until saved."""
     return manager.dialog_data.setdefault("hints", [])
 
 
@@ -46,7 +45,6 @@ async def to_compose_release(
     retort: FromDishka[Retort],
     interactor: FromDishka[GetGameReleaseInteractor],
 ):
-    """Start composing from the stored release, if the game has one."""
     release = await interactor(game_id=_game_id(manager))
     manager.dialog_data["banner"] = (
         retort.dump(release.banner, hints.PhotoHint) if release and release.banner else None
@@ -66,7 +64,6 @@ async def process_banner(
     parser: FromDishka[HintParser],
     idp: FromDishka[IdentityProvider],
 ) -> None:
-    """The banner is a photo with a caption — anything else is not one."""
     hint = await parser.parse(m, await idp.get_required_player())
     if not isinstance(hint, hints.PhotoHint):
         await m.reply("Баннер — это картинка (можно с подписью). Пришли фото.")
@@ -109,7 +106,6 @@ async def preview_release(
     retort: FromDishka[Retort],
     hint_sender: FromDishka[HintSender],
 ):
-    """Send the composed release back, exactly as the channel will see it."""
     banner = load_banner(manager, retort)
     composed = load_composed(manager, retort)
     assert c.message is not None

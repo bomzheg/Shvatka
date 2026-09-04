@@ -78,16 +78,6 @@ class Player:
 
 @dataclass
 class PlayerWithForum(Player):
-    """A player together with their forum identity.
-
-    Reading the forum account means joining ``forum_users``, and almost nothing
-    needs it: a player carries their own ``username``, and telegram links come
-    from ``_user``. So only the paths that actually render or check the forum
-    account ask for this type — the profile, the admin panel, global search,
-    the merge flow and forum-driven lookups — and everywhere else a plain
-    :class:`Player` is loaded without touching the forum table.
-    """
-
     forum_user: ForumUser | None = None
 
     @property

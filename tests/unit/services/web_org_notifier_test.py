@@ -115,9 +115,6 @@ async def test_level_test_completed_pushes_to_all_orgs() -> None:
 
 @pytest.mark.asyncio
 async def test_org_pushes_keep_the_in_game_defaults() -> None:
-    """Orgs are watching from a laptop, not playing with a phone in a pocket: the
-    urgency their pushes deserve has not been looked at yet.
-    """
     sender = FakePushSender()
     notifier = WebOrgNotifier(sender, FakeNotificationDao())
     team = SimpleNamespace(id=7, name="Gryffindor")

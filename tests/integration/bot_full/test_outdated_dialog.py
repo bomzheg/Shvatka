@@ -1,9 +1,3 @@
-"""A dialog opened before the player left the team must not crash on a click.
-
-Between opening a window and pressing a button in it any amount of time may
-pass - the captain can remove the player meanwhile. See issue #339.
-"""
-
 import typing
 from unittest.mock import MagicMock
 
@@ -110,7 +104,6 @@ async def open_main_menu(client: BotClient, message_manager: MockMessageManager)
 
 
 def assert_main_menu_without(message: Message, gone: str) -> None:
-    """The user is dropped into a menu built from current data."""
     assert InlineButtonTextLocator(TEAMS_BUTTON).find_button(message) is not None
     assert InlineButtonTextLocator(gone).find_button(message) is None
 

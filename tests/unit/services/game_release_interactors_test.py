@@ -49,8 +49,6 @@ def make_release(
 
 @dataclass
 class FakeReleaseDao:
-    """In-memory stand-in for the release reader/editor protocols."""
-
     game: dto.Game
     release: dto.GameRelease | None = None
     linked_files: list[int] = field(default_factory=list)
@@ -91,12 +89,6 @@ class FakeReleaseDao:
 
 
 class RecordingPublisher(GameReleasePublisher):
-    """A stand-in for the announcing view, recording what it was asked to show.
-
-    Like the real one it remembers on its own whether it is showing anything —
-    the domain never tells it, and never asks.
-    """
-
     def __init__(self) -> None:
         self.posted: list[dto.GameRelease] = []
         self.edited: list[dto.GameRelease] = []
@@ -301,7 +293,6 @@ async def test_deleting_a_published_release_takes_it_out_of_the_channel():
 
 @pytest.mark.asyncio
 async def test_a_release_may_be_just_a_banner():
-    """The banner alone is a release — the site can show it above the header."""
     author = make_player(1)
     dao = FakeReleaseDao(game=make_game(author, GameStatus.getting_waivers))
 

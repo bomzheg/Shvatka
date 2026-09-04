@@ -169,7 +169,6 @@ async def test_photo_hint_spoiler_round_trip(
     author: dto.Player,
     dao: HolderDao,
 ):
-    """A photo hint uploaded with ``has_spoiler`` keeps it when read back."""
     game = await create_game(author=author, name="draft with spoiler", dao=dao.game_creator)
     cookies = auth_cookies(auth, author)
     up = await client.post(
@@ -274,7 +273,6 @@ async def test_rename_game_without_a_scenario(
     author: dto.Player,
     check_dao: HolderDao,
 ):
-    """A game created a moment ago has no levels — and still renames."""
     cookies = auth_cookies(auth, author)
     created = await client.post("/games/my", json={"name": "typo in the name"}, cookies=cookies)
     assert created.status_code == 200, created.text

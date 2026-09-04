@@ -92,11 +92,6 @@ async def load_scns(
 
 
 def is_key_correct(team_keys: Sequence[Key], index: int) -> bool:
-    """Was the key at `index` the one that took the team off its level?
-
-    The export only records the keys a team typed and the level it was on, so
-    correctness has to be read back out of that sequence.
-    """
     if index == len(team_keys) - 1:
         # last key always close the game
         return True

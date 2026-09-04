@@ -39,9 +39,6 @@ class _UpsertRecordingDao:
 
 
 class _StreamDrainingGateway(BotFileGateway):
-    """Uses the real ``put``, but replaces the telegram upload with something
-    that only drains the stream — which is all the real one does to it."""
-
     def __init__(self, storage: LocalFileStorage, dao: _UpsertRecordingDao) -> None:
         self.storage = storage
         self.dao = dao  # type: ignore[assignment]
@@ -55,11 +52,6 @@ class _StreamDrainingGateway(BotFileGateway):
 
 @pytest.mark.asyncio
 async def test_put_stores_content_of_file_uploaded_to_tg():
-    """Uploading to telegram must not eat the content before it is stored.
-
-    A file with no file_id is first sent to telegram, which reads the whole
-    stream; the storage must still receive the full content afterwards.
-    """
     storage = LocalFileStorage(
         FileStorageConfig(
             path=Path(tempfile.mkdtemp()) / "files",
@@ -89,7 +81,6 @@ async def test_put_stores_content_of_file_uploaded_to_tg():
 
 @pytest.mark.asyncio
 async def test_put_stores_content_of_file_already_in_tg():
-    """A file that already has a file_id is not re-uploaded, and is stored as is."""
     storage = LocalFileStorage(
         FileStorageConfig(
             path=Path(tempfile.mkdtemp()) / "files",
@@ -117,7 +108,6 @@ async def test_put_stores_content_of_file_already_in_tg():
 
 
 def _refusing_bot(error: TelegramAPIError) -> Bot:
-    """A bot whose every request comes back as that error."""
     bot = Bot(token="42:TESTTESTTESTTESTTESTTESTTESTTESTTES", session=mock.AsyncMock(BaseSession))
     typing.cast(mock.MagicMock, bot.session).side_effect = error
     return bot
@@ -125,8 +115,6 @@ def _refusing_bot(error: TelegramAPIError) -> Bot:
 
 @pytest.mark.asyncio
 async def test_telegram_refusal_is_translated_to_a_domain_error():
-    """``core`` decides what a refused file means, so it must never see an
-    aiogram error: the gateway is where telegram stops."""
     error = TelegramAPIError(message="Request Entity Too Large", method=SendPhoto)
     gateway = BotFileGateway(
         file_storage=None,
@@ -153,8 +141,6 @@ async def test_telegram_refusal_is_translated_to_a_domain_error():
 
 
 class _FileIdKeepingGateway(BotFileGateway):
-    """Telegram answering with a file_id, as the real upload does with it."""
-
     def __init__(self, storage: LocalFileStorage, dao: _UpsertRecordingDao) -> None:
         self.storage = storage
         self.dao = dao  # type: ignore[assignment]
@@ -167,9 +153,6 @@ class _FileIdKeepingGateway(BotFileGateway):
 
 @pytest.mark.asyncio
 async def test_put_keeps_the_file_id_telegram_answered_with():
-    """The file_id is written onto the file's row, so the row has to exist by
-    the time it is sent: an update of a row that isn't there yet is lost, and
-    the game would go on sending that file by content forever."""
     storage = LocalFileStorage(
         FileStorageConfig(
             path=Path(tempfile.mkdtemp()) / "files",

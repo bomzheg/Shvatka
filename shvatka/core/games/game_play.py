@@ -154,11 +154,6 @@ async def schedule_first_hint(
     lt_id: int,
     level_started_at: datetime,
 ):
-    """
-    Всё, что уровень должен сделать сам по себе, отсчитывается от его записанного начала,
-    а не от текущего момента: иначе задержка планировщика попадает в план следующего
-    уровня и копится от уровня к уровню.
-    """
     if (next_hint_at := calculate_first_hint_time(next_level, level_started_at)) is not None:
         await scheduler.plain_hint(
             level=next_level,
@@ -196,14 +191,6 @@ def calculate_hint_time(level_started_at: datetime, hint: hints.TimeHint) -> dat
 
 
 def snap_to_planned_start(planned: datetime | None, now: datetime) -> datetime:
-    """
-    Начало игры — назначенное время, если планировщик проснулся почти вовремя.
-
-    Вся сетка игры отсчитывается от начала нулевого уровня, поэтому назначенное время
-    даёт ровные значения вместо «плюс сколько-то миллисекунд». Но проснуться можно
-    и сильно позже (например, после перезапуска), а тогда назначенное время означало бы,
-    что часть первого уровня уже прошла, — в этом случае берём фактическое.
-    """
     if planned is None:
         return now
     if abs(now - planned) <= START_SNAP:

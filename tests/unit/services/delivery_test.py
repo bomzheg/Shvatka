@@ -13,8 +13,6 @@ from shvatka.tgbot.tasks import deliver
 
 
 class FlakySender:
-    """Fails with the given errors, in order, then succeeds."""
-
     def __init__(self, journal: list[str], errors: list[Exception] | None = None) -> None:
         self.journal = journal
         self.errors = errors or []

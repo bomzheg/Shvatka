@@ -601,7 +601,6 @@ async def test_get_passed_levels_requires_waiver(
     harry: dto.Player,
     gryffindor: dto.Team,
 ):
-    """Same guard as ``get_current_hints``: no waiver, no access — to any level."""
     await leave(ron, ron, dao.team_leaver, notifier=TeamNotifierMock())
     dao.level_time._save(
         models.LevelTime(

@@ -84,12 +84,6 @@ class LocalFileStorage(FileStorage):
         extension: str,
         options: hints.FileUploadOptions,
     ) -> tuple[bytes, str, str]:
-        """Apply the upload policy to an unsupported image (HEIC/HEIF).
-
-        HEIC/HEIF can't be shown in browsers and isn't supported by Telegram
-        (see issue #289), so depending on the caller's options it is either
-        transcoded to JPEG, stored untouched, or rejected.
-        """
         if options.allow_conversion:
             converted = convert_heic_to_jpeg(data)
             if converted is not data:

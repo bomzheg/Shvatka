@@ -92,7 +92,7 @@ class PlayerMerger(
 
 
 class AdminPlayerReader(PlayerIdentitiesGetter, EmailByPlayerIdReader, Protocol):
-    """Load a player by id together with their email and forum accounts."""
+    pass
 
 
 class AdminEmailSetter(PlayerByIdGetter, Committer, Protocol):
@@ -112,7 +112,7 @@ class AdminUsernameSetter(
     EmailByPlayerIdReader,
     Protocol,
 ):
-    """Set the username of an arbitrary player, plus reload them by id."""
+    pass
 
 
 class AdminTgChanger(
@@ -131,8 +131,8 @@ class AdminTgChanger(
 
 
 class AdminPlayerMerger(PlayerMerger, PlayerByIdGetter, PlayerIdentitiesGetter, Protocol):
-    """Merge one player into another, plus load both by id."""
+    pass
 
 
 class AdminPlayerWaiverPointsReader(PlayerByIdGetter, PlayerWaiversGetter, Protocol):
-    """Load a player and their waivers to compute unchangeable timeline points."""
+    pass

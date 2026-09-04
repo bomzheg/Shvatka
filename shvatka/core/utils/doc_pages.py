@@ -2,15 +2,6 @@ from enum import StrEnum
 
 
 class DocPage(StrEnum):
-    """A page of the user documentation an error can point the user at.
-
-    The value is the page path inside the ROOT module of the docs
-    (``docs/modules/ROOT/pages/<value>.adoc``), without the extension — the same
-    string an ``xref:`` in the docs would use. An anchor may be appended with
-    ``#``. Turning a page into a URL belongs to the edge, not here: see
-    ``shvatka.common.docs.DocsUrlFactory``.
-    """
-
     AUTH = "player/auth"
     JOIN_TEAM = "player/join_team"
     LEAVE_TEAM = "player/leave_team"
@@ -40,11 +31,6 @@ class DocPage(StrEnum):
 
     @property
     def nav_title(self) -> str:
-        """The page title, as the docs navigation names it (in Russian).
-
-        Not ``title`` — ``str`` already has one, and shadowing it would change
-        what ``"...".title()`` means for every DocPage.
-        """
         return DOC_PAGE_TITLES[self]
 
 

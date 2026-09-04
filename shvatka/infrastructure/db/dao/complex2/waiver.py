@@ -114,14 +114,6 @@ class AdminGameWaiversReaderImpl(AdminGameWaiversReader):
 
 @dataclass
 class AdminWaiverEditorImpl(AdminWaiverEditor):
-    """Writes one waiver row, with the three entities it needs to name it.
-
-    Each getter goes to its own dao, and each of those already answers a missing
-    row with the domain's own "not found" — so an admin fixing a roster gets a
-    404 for a game, a team or a player that is not there, and nothing has to be
-    translated here.
-    """
-
     dao: HolderDao
 
     async def get_game_by_id(self, id_: int) -> dto.Game:

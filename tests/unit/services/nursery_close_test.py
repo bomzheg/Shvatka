@@ -7,8 +7,6 @@ from shvatka.infrastructure.nursery import AsyncioNursery
 
 
 class FakeContainer:
-    """Enough of a dishka container for a task with no injected parameters."""
-
     def __call__(self) -> "FakeContainer":
         return self
 

@@ -1,5 +1,3 @@
-"""Interactors backing the web "notifications" tab: read the feed and mark read."""
-
 from collections.abc import Collection
 from dataclasses import dataclass
 

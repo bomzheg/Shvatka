@@ -19,5 +19,4 @@ from tests.fixtures.di import get_test_providers
     ],
 )
 def test_container_can_be_built(providers_factory: Callable[[], list[Provider]]):
-    """Every dependency is resolvable and every test double really overrides one."""
     make_async_container(*providers_factory(), validation_settings=STRICT_VALIDATION)

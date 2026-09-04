@@ -1,10 +1,3 @@
-"""Interactors backing the admin panel player operations.
-
-Each interactor takes the acting user via an ``IdentityProvider`` argument and
-authorises through ``identity.get_superuser()`` before performing the operation
-on an arbitrary player.
-"""
-
 import logging
 from dataclasses import dataclass
 
@@ -152,7 +145,6 @@ class AdminGetPlayerWaiverPointsInteractor:
     dao: AdminPlayerWaiverPointsReader
 
     async def __call__(self, identity: IdentityProvider, player_id: int) -> list[WaiverPoint]:
-        """List intervals in which the player's team membership is fixed by waivers."""
         admin = await identity.get_superuser()
         logger.warning("admin %s viewed waiver points of player %s", admin.id, player_id)
         return await get_waiver_points(await self.dao.get_by_id(player_id), self.dao)
@@ -170,12 +162,6 @@ class AdminMergePlayersInteractor:
         secondary_id: int,
         timeline: list[TimelineItem] | None = None,
     ) -> dto.Player:
-        """Merge ``secondary`` player into ``primary``; ``secondary`` is deleted.
-
-        When the players' team histories are not compatible, the admin can pass a
-        manually built ``timeline`` which replaces both histories; it is validated
-        against the waiver points of both players.
-        """
         admin = await identity.get_superuser()
         logger.warning("admin %s merges player %s into %s", admin.id, secondary_id, primary_id)
         if primary_id == secondary_id:

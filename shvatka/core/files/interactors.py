@@ -1,15 +1,3 @@
-"""Garbage collection of files nothing refers to any more.
-
-A file lives in three layers: the ``game_files`` row that makes it usable in a
-game, the ``files_info`` row that describes it, and the content on the storage.
-Deleting a file from a game (see ``DeleteGameFileInteractor``) keeps all three
-consistent, but rows predating that button — and content whose upload was
-interrupted halfway — are already there. This is the broom for them.
-
-It runs when an admin asks it to, never on a schedule: it is a rare, destructive
-sweep, and ``dry_run`` is there so what it would delete can be read first.
-"""
-
 import logging
 from dataclasses import dataclass
 from datetime import datetime, timedelta

@@ -23,6 +23,4 @@ class LevelFilesDeleter(Protocol):
 
 
 class LevelFilesSyncDao(FileIdsByGuidsGetter, LevelFilesSyncer, GameFilesAdder, Protocol):
-    """Methods a use case needs to reconcile a level's files (and a game's usable
-    files). The DAO only provides these operations; sequencing them is the use
-    case's job."""
+    pass

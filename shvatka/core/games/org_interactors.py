@@ -1,9 +1,3 @@
-"""Interactors used by the web UI / API to manage organizers of a game.
-
-They wrap the domain services from :mod:`shvatka.core.services.organizers` so the
-transport layer (api routes) stays thin and the access rules live in one place.
-"""
-
 import logging
 from dataclasses import dataclass
 
@@ -119,7 +113,6 @@ class RemoveGameOrgInteractor:
 
 
 async def check_can_view_orgs(game: dto.Game, identity: IdentityProvider) -> None:
-    """Completed games are public; for the rest only the author and orgs may look."""
     if game.is_complete():
         return
     org = await identity.get_org(game)

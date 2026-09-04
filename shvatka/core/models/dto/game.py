@@ -132,23 +132,6 @@ class FullGame(Game):
 
 @dataclass
 class GameRelease:
-    """A game's release — the promo published before it.
-
-    It leads with a *banner*: a wide title picture with a caption, the one part
-    of a release small enough to stand above the site's header. Everything
-    after it — the theme, the map, the rules — is a plain list of hints, so the
-    whole existing hint machinery (editors, senders, renderers) works for it as
-    is.
-
-    Both halves are optional, and so is the release itself: a game without one
-    is played exactly as before.
-
-    Saving a release and announcing it are separate: it can be written and
-    rewritten any time, and it goes to the channel when the game starts
-    collecting waivers. Where it stands once announced is the announcing view's
-    business, not the game's.
-    """
-
     game_id: int
     banner: hints.PhotoHint | None = None
     hints: list[hints.AnyHint] = field(default_factory=list)
@@ -159,7 +142,6 @@ class GameRelease:
 
     @property
     def parts(self) -> list[AnyHint]:
-        """The whole release in the order it is shown — the banner leads."""
         if self.banner is None:
             return list(self.hints)
         return [self.banner, *self.hints]

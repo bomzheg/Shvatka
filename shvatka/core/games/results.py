@@ -61,14 +61,12 @@ class TeamLevels(typing.NamedTuple):
     """Bonuses and penalties routed by level number. The None key means level unknown."""
 
     def get_level_bonus(self, level_number: int) -> timedelta:
-        """Total bonus for a single level (a penalty is negative)."""
         return sum(
             (be.td for be in self.bonuses.get(level_number, [])),
             start=timedelta(seconds=0),
         )
 
     def get_total_bonus(self) -> timedelta:
-        """Total bonus for the whole game, including events with no resolved level."""
         return sum(
             (be.td for bes in self.bonuses.values() for be in bes),
             start=timedelta(seconds=0),
@@ -109,13 +107,6 @@ def build_results_table(
 
 
 def results_to_table_routed(game: dto.FullGame, results: Results) -> Table:
-    """Lay the game out block by block, every block over the same columns.
-
-    Column ``START_COLUMN`` is the start of the game — the same instant for
-    every team, so only the chronology has anything to say there. It is kept as
-    a column all the same, to line the blocks up, and hidden by default.
-    Column ``START_COLUMN + n`` is level ``n`` counted from one.
-    """
     results.data.sort(key=lambda team_levels: _result_key(team_levels, len(game.levels)))
     table = {GAME_NAME: Cell(value=game.name, style=CellStyle.TITLE)}
     blocks = []
@@ -146,11 +137,6 @@ def results_to_table_routed(game: dto.FullGame, results: Results) -> Table:
 
 
 def _result_key(team_levels: TeamLevels, levels_count: int) -> tuple[bool, datetime, int, str]:
-    """Order the teams the way the results are read.
-
-    Who finished first, then who got furthest; a team that never finished is
-    ordered by how far it got and how fast it got there.
-    """
     finish = team_levels.get_level_time(levels_count)
     last = max(
         (lt.time for level_times in team_levels.levels_times.values() for lt in level_times),
@@ -166,8 +152,6 @@ def _result_key(team_levels: TeamLevels, levels_count: int) -> tuple[bool, datet
 
 @dataclass(frozen=True)
 class DurationsBlock:
-    """Where the per-level durations landed — the chart is drawn from them."""
-
     names_row: int
     """Row of the level names — what the chart labels its bars with."""
     first_team_row: int
@@ -181,7 +165,6 @@ def _add_levels_header(
     row: int,
     caption: str,
 ) -> int:
-    """Caption plus a two row header — level name over level number. Returns the first data row."""
     table[CellAddress(row=row, column=LABEL_COLUMN)] = Cell(value=caption, style=CellStyle.SECTION)
     table[CellAddress(row=row + 1, column=START_COLUMN)] = Cell(
         value=START_TITLE, style=CellStyle.HEADER
@@ -198,7 +181,6 @@ def _add_levels_header(
 
 
 def _level_column(level_number: int) -> int:
-    """Column of level ``level_number`` (counted from zero) in every block but the chronology."""
     return START_COLUMN + level_number + 1
 
 
@@ -208,7 +190,6 @@ def _add_level_times_part(
     results: Results,
     row: int,
 ) -> int:
-    """When each team took each level. The level after the last one is the finish."""
     first_row = _add_levels_header(table, game, row, LEVEL_TIMES_TITLE)
     _fill_grid(
         table,
@@ -240,7 +221,6 @@ def _add_durations_part(
     results: Results,
     row: int,
 ) -> DurationsBlock:
-    """How long each team spent on each level, with the fastest marked and an average under it."""
     first_row = _add_levels_header(table, game, row, LEVEL_DURATIONS_TITLE)
     _fill_grid(
         table,
@@ -282,7 +262,6 @@ def _add_chronology_part(
     results: Results,
     row: int,
 ) -> int:
-    """Every team's levels in the order it took them — the level number under its time."""
     table[CellAddress(row=row, column=LABEL_COLUMN)] = Cell(
         value=CHRONOLOGY_TITLE, style=CellStyle.SECTION
     )
@@ -308,7 +287,6 @@ def _fill_grid(
     rows: int,
     columns: int,
 ) -> None:
-    """Draw an empty grid, so a team that never took a level still keeps its row intact."""
     for row in range(rows):
         for column in range(columns):
             table[top_left.shift(rows=row, columns=column)] = Cell(
@@ -325,13 +303,11 @@ def _keep_best(
     value: _Best,
     row: int,
 ) -> None:
-    """Remember the smallest value of a column and the row it is on."""
     if column not in best or value < best[column][0]:
         best[column] = (value, row)
 
 
 def _mark_best(table: dict[CellAddress, Cell], best: dict[int, tuple[_Best, int]]) -> None:
-    """Repaint the leader of every column, the way the hand-made tables do it."""
     for column, (_, row) in best.items():
         table[CellAddress(row=row, column=column)].style = CellStyle.BEST
 
@@ -359,7 +335,6 @@ def _build_charts(
     durations: DurationsBlock,
     anchor_row: int,
 ) -> list[Chart]:
-    """One bar per team per level, plus the average as a reference line over them."""
     if not game.levels or not results.data:
         return []
     first_column = _level_column(0)
@@ -405,11 +380,6 @@ def _add_bonuses_part(
     results: Results,
     row: int,
 ) -> int:
-    """Block of bonuses and penalties in minutes: team x level plus a total.
-
-    Adjusted times are not computed — the file carries the raw numbers so they
-    can be worked out in Excel itself. Returns the last row the table occupies.
-    """
     if not any(team_levels.bonuses for team_levels in results.data):
         return row - BLOCK_GAP_ROWS
     total_column = _level_column(len(game.levels))
@@ -469,13 +439,6 @@ def resolve_bonus_levels(
     level_times: typing.Sequence[dto.LevelTime],
     bonuses: typing.Iterable[BonusEvent],
 ) -> list[BonusEvent]:
-    """Set on each bonus the number of the level it was earned on.
-
-    The level comes from the event's ``level_time_id``. When that is missing (the
-    column is nullable), the level is resolved by the event's time: the one the
-    team was on at ``at``. What cannot be resolved keeps ``level_number=None``
-    and only counts towards the total.
-    """
     levels_by_time_id = {lt.id: lt.level_number for lt in level_times}
     result = []
     for bonus in bonuses:
@@ -492,7 +455,6 @@ def route_bonuses(
     level_times: typing.Sequence[dto.LevelTime],
     bonuses: typing.Iterable[BonusEvent],
 ) -> dict[int | None, list[BonusEvent]]:
-    """Route a team's bonuses by level number. The None key means level unknown."""
     routed: dict[int | None, list[BonusEvent]] = {}
     for bonus in resolve_bonus_levels(level_times, bonuses):
         routed.setdefault(bonus.level_number, []).append(bonus)
@@ -502,7 +464,6 @@ def route_bonuses(
 def _resolve_level_by_time(
     level_times: typing.Sequence[dto.LevelTime], at: datetime
 ) -> int | None:
-    """Find the level the team was on at ``at``."""
     ordered = sorted(level_times, key=lambda lt: lt.start_at)
     result = None
     for lt in ordered:

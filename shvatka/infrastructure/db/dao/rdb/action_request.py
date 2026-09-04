@@ -97,7 +97,6 @@ class ActionRequestDAO(BaseDAO[ActionRequest]):
     async def get_incoming(
         self, player_id: int, *, only_pending: bool = False
     ) -> Sequence[dto.ActionRequest]:
-        """Requests addressed to this player (as a named target)."""
         stmt = select(ActionRequest).where(ActionRequest.target_player_id == player_id)
         if only_pending:
             stmt = stmt.where(ActionRequest.status == RequestStatus.pending)
@@ -108,7 +107,6 @@ class ActionRequestDAO(BaseDAO[ActionRequest]):
     async def get_outgoing(
         self, player_id: int, *, only_pending: bool = False
     ) -> Sequence[dto.ActionRequest]:
-        """Requests this player initiated."""
         stmt = select(ActionRequest).where(ActionRequest.initiator_id == player_id)
         if only_pending:
             stmt = stmt.where(ActionRequest.status == RequestStatus.pending)
@@ -133,7 +131,6 @@ class ActionRequestDAO(BaseDAO[ActionRequest]):
     async def get_pending_by_types(
         self, types: Collection[RequestType]
     ) -> Sequence[dto.ActionRequest]:
-        """Pending requests of the given types, newest first (e.g. merges for admins)."""
         if not types:
             return []
         stmt = (
@@ -148,7 +145,6 @@ class ActionRequestDAO(BaseDAO[ActionRequest]):
         return [request.to_dto() for request in result.all()]
 
     async def get_pending_for_teams(self, team_ids: Sequence[int]) -> Sequence[dto.ActionRequest]:
-        """Pending team-join requests answerable by managers of the given teams."""
         if not team_ids:
             return []
         stmt = select(ActionRequest).where(

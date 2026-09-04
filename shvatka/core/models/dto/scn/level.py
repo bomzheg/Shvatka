@@ -258,7 +258,6 @@ class Conditions(Sequence[action.AnyCondition]):
         return None
 
     def get_timer_action_time(self, effects_id: UUID) -> timedelta | None:
-        """Через сколько от начала уровня должен сработать таймер с такими эффектами."""
         for condition in self.conditions:
             if (
                 isinstance(condition, action.LevelTimerEffectsCondition)
@@ -345,11 +344,6 @@ class LevelScenario:
         return len(self.time_hints) == hint_number + 1
 
     def is_last_hint_shown(self, shown_hints_count: int) -> bool:
-        """Whether the first ``shown_hints_count`` hints already include the last one.
-
-        Hints are published in order, so the count is enough: a team that has
-        seen them all has nothing more to wait for on this level.
-        """
         return shown_hints_count > 0 and self.is_last_hint(shown_hints_count - 1)
 
     def check(self, action_: action.Action, state: action.StateHolder) -> action.Decision:

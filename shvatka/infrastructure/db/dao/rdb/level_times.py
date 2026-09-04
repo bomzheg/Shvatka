@@ -24,14 +24,12 @@ class LevelTimeDao(BaseDAO[models.LevelTime]):
         return model.to_dto(game=game, team=team)
 
     async def get_ids_by_game(self, game: dto.Game) -> list[int]:
-        """Ids of every level time of the game — what the run hangs off."""
         result = await self.session.scalars(
             select(models.LevelTime.id).where(models.LevelTime.game_id == game.id)
         )
         return list(result.all())
 
     async def delete_by_game(self, game: dto.Game) -> None:
-        """Drop the game's level times. Everything referencing them must go first."""
         await self.session.execute(
             delete(models.LevelTime).where(models.LevelTime.game_id == game.id)
         )
@@ -74,7 +72,6 @@ class LevelTimeDao(BaseDAO[models.LevelTime]):
         return result.scalar_one_or_none()
 
     async def get_team_level_times(self, team: dto.Team, game: dto.Game) -> list[dto.LevelTime]:
-        """Every level the team has been on in the game, oldest first."""
         result = await self.session.scalars(
             select(models.LevelTime)
             .where(

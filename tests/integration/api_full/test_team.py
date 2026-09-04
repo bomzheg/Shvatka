@@ -329,11 +329,6 @@ async def test_remove_player_from_team(
 
 @pytest_asyncio.fixture
 async def dumbledores_army(harry: dto.Player, dao: HolderDao) -> dto.Team:
-    """A team harry captains without playing in it — he plays in gryffindor.
-
-    That is what a captain who moved to another team as a field player looks
-    like: the captaincy stays with them, the membership does not.
-    """
     team = await dao.team.create_no_chat(name="Dumbledore's Army", description=None, captain=harry)
     await dao.commit()
     return team

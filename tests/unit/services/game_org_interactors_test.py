@@ -34,8 +34,6 @@ def make_game(id_: int, author: dto.Player, status: GameStatus) -> dto.Game:
 
 @dataclass
 class FakeOrgDao:
-    """In-memory stand-in for the organizer DAO covering the protocols we need."""
-
     game: dto.Game
     orgs: dict[int, dto.SecondaryOrganizer] = field(default_factory=dict)
     _seq: int = 0

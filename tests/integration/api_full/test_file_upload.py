@@ -30,8 +30,6 @@ async def test_uploaded_file_is_sent_to_telegram(
     check_dao: HolderDao,
     telegram: FakeTelegram,
 ):
-    """A hint is shown by sending its file, so the file goes to telegram while
-    the author is still looking at the upload — not during the game."""
     game = await create_game(author=author, name="draft upload ok", dao=dao.game_creator)
 
     resp = await upload(client, game.id, auth_cookies(auth, author))
@@ -75,8 +73,6 @@ async def test_force_keeps_the_file_telegram_refused(
     check_dao: HolderDao,
     telegram: FakeTelegram,
 ):
-    """The rare deliberate exception: the author gets the file anyway, and the
-    game will have to send it by content."""
     game = await create_game(author=author, name="draft upload forced", dao=dao.game_creator)
     telegram.refuse = True
 
@@ -99,8 +95,6 @@ async def test_refused_upload_leaves_no_half_written_file(
     check_dao: HolderDao,
     telegram: FakeTelegram,
 ):
-    """The meta row and the game link are written before the file is sent, so a
-    refusal has to take both back with it."""
     game = await create_game(author=author, name="draft upload rollback", dao=dao.game_creator)
     telegram.refuse = True
 

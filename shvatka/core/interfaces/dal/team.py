@@ -25,8 +25,6 @@ class TeamByIdGetter(Protocol):
 
 
 class TeamRenamer(Committer, TeamByIdGetter, Protocol):
-    """Rename a team and read it back — the new name is what a notifier shows."""
-
     async def rename_team(self, team: dto.Team, new_name: str) -> None:
         raise NotImplementedError
 

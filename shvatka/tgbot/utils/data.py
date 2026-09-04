@@ -13,15 +13,4 @@ class DialogMiddlewareData(MiddlewareData, total=False):
 
 
 class SHMiddlewareData(DialogMiddlewareData, total=False):
-    """
-    Data every handler receives by name.
-
-    Nothing but the container: everything a handler needs it asks the container
-    for with ``FromDishka``, including the dao and the retort. Who is acting
-    comes from ``IdentityProvider`` and what is being played from
-    ``CurrentGameProvider``.
-
-    The key itself is written by dishka's aiogram integration, not by us.
-    """
-
     dishka_container: AsyncContainer

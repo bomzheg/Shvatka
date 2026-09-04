@@ -123,8 +123,6 @@ class FileNotFound(SHError, AttributeError):
 
 
 class FileIsUsed(SHError):
-    """The file is still referenced, so it can't be detached from the game."""
-
     notify_user = "Файл используется"
 
 
@@ -133,12 +131,6 @@ class UnsupportedFileFormat(SHError):
 
 
 class FileRejectedByTelegram(SHError):
-    """Telegram refused a file sent to check it can be delivered as a hint
-
-    (too large, unsupported codec, etc.). ``reason`` is what telegram said
-    about it — the only thing that tells the author what to fix.
-    """
-
     notify_user = "Telegram отклонил файл"
 
     def __init__(
@@ -160,15 +152,6 @@ class FileRejectedByTelegram(SHError):
 
 
 class FilesCantBeSentToTg(SHError):
-    """Saving a scenario found files telegram won't accept.
-
-    Collected across every file instead of failing on the first, so the caller
-    can show the whole list and let the author choose: fix the files, or save
-    anyway (``force=True``) — a file that failed upload is still stored, just
-    without a telegram file_id, and is sent by content the first time it is
-    shown in a game.
-    """
-
     notify_user = "Не все файлы удалось отправить в Telegram"
 
     def __init__(self, errors: list[FileRejectedByTelegram], *args: Any, **kwargs) -> None:
@@ -207,13 +190,6 @@ class GameHasAnotherAuthor(GameError):
 
 
 class GameWouldBeRewritten(GameError):
-    """An imported package names a game its author already has.
-
-    Not a refusal on its own — the author may well mean to rewrite it. It is
-    raised so that they are asked first, and the import is repeated with
-    ``overwrite``.
-    """
-
     notify_user = "Игра с таким названием уже есть"
 
     def __init__(self, *args: Any, game_name: str | None = None, **kwargs) -> None:

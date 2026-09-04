@@ -131,9 +131,6 @@ async def test_no_recipients_no_calls() -> None:
 
 @pytest.mark.asyncio
 async def test_team_pushes_keep_for_a_day() -> None:
-    """Who joined the team is still true tomorrow, so a phone that was off all
-    evening should be told when it comes back on.
-    """
     sender = FakePushSender()
     notifier = WebTeamNotifier(FakeNotificationDao(), FakeTeamPlayersDao([10, 42]), sender)
     team = _team()

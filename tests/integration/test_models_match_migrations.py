@@ -1,13 +1,3 @@
-"""
-Test can find indexes that exist in one place only: created by a migration but
-never declared on the model, or declared on a model but never created by any
-migration. Both drift silently — the first makes `alembic revision --autogenerate`
-propose dropping an index the database really uses, the second means an index the
-code expects was never actually built.
-
-Does not require any maintenance - it compares whatever is there at the time.
-"""
-
 import pytest
 from dishka import AsyncContainer
 from sqlalchemy import text

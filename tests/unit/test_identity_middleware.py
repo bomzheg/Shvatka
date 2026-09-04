@@ -1,10 +1,3 @@
-"""The identity middleware is what keeps telegram's view of a user in our db.
-
-Handlers resolve who is acting through ``IdentityProvider`` and nothing forces
-them to touch every entity, so the writes those lookups perform have to be
-triggered for every update instead of being left to whoever happens to ask.
-"""
-
 from typing import Any, cast
 from unittest.mock import AsyncMock
 
@@ -71,7 +64,6 @@ async def test_player_is_created_for_a_user_seen_for_the_first_time():
 
 @pytest.mark.asyncio
 async def test_identity_is_not_copied_into_middleware_data():
-    """Handlers must read it from the provider, so nothing stale can be passed."""
     _, data = await run_middleware()
     for key in ("user", "chat", "player", "team", "team_player"):
         assert key not in data

@@ -11,8 +11,6 @@ from shvatka.core.models.enums.request import RequestStatus, RequestType
 
 @dataclass
 class Page[T]:
-    """A slice of a listing: the fetched items plus the applied window and filters."""
-
     items: Sequence[T]
     limit: int
     offset: int
@@ -21,8 +19,6 @@ class Page[T]:
 
 @dataclass
 class Notification:
-    """One inbox item delivered to exactly one recipient."""
-
     id: int
     recipient_id: int
     type: NotificationType
@@ -40,8 +36,6 @@ class Notification:
 
 @dataclass
 class ActionRequest:
-    """A user-to-user request with a lifecycle (pending -> accepted/declined/...)."""
-
     id: int
     type: RequestType
     status: RequestStatus

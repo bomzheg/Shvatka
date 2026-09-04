@@ -63,7 +63,6 @@ async def test_error_without_a_page_says_nothing_about_docs(bot: mock.AsyncMock)
 
 @pytest.mark.asyncio
 async def test_callback_gets_the_link_as_a_message(bot: mock.AsyncMock):
-    """An alert renders no html, so the link has to arrive as a message."""
     error = ErrorEvent(update=callback_update(bot), exception=exceptions.InvalidKey())
     await handle_sh_error(error, log_chat_id=0, docs=DOCS, bot=bot)
     (text,) = sent_texts(bot)

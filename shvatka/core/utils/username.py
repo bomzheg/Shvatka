@@ -1,5 +1,3 @@
-"""Generation of shvatka usernames from names of linked identities."""
-
 import re
 import unicodedata
 
@@ -52,12 +50,6 @@ NOT_LATIN_OR_DIGIT = re.compile(r"[^a-z0-9]+")
 
 
 def transliterate(text: str) -> str:
-    """Lowercase latin-only representation of text, suitable for a username part.
-
-    Cyrillic is transliterated char by char, diacritics of latin-based scripts are
-    dropped (é -> e), everything else (emoji, hieroglyphs, punctuation) becomes a
-    separator and is squashed into a single underscore.
-    """
     normalized = unicodedata.normalize("NFC", text.lower())
     latin = "".join(CYRILLIC_TO_LATIN.get(char, char) for char in normalized)
     decomposed = unicodedata.normalize("NFKD", latin)
@@ -66,7 +58,6 @@ def transliterate(text: str) -> str:
 
 
 def username_from_names(first_name: str | None, last_name: str | None) -> str | None:
-    """Username built from a person's names, or None if nothing usable is left of them."""
     parts = [
         part for part in (transliterate(first_name or ""), transliterate(last_name or "")) if part
     ]
@@ -77,6 +68,5 @@ def username_from_names(first_name: str | None, last_name: str | None) -> str | 
 
 
 def numbered_username(username: str, number: int) -> str:
-    """Variant of username with a number appended, still short enough to be valid."""
     suffix = f"_{number}"
     return username[: MAX_USERNAME_LENGTH - len(suffix)].rstrip("_") + suffix

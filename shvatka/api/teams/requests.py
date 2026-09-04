@@ -22,12 +22,6 @@ class JoinTeam:
 
 @dataclass
 class JoinCaptainedTeam:
-    """Ask to join a team the caller captains.
-
-    ``leave_current`` is the ui's checkbox: a player is in one team at a time, so
-    entering the next one means leaving the current one in the same request.
-    """
-
     leave_current: bool = False
 
 

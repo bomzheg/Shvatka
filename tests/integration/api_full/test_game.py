@@ -284,7 +284,6 @@ async def test_game_last_hint_shown(
     started_game: dto.FullGame,
     dao: HolderDao,
 ):
-    """The last hint of the level is marked as such, like the bot does."""
     await dao.level_time.delete_all()
     level_time = models.LevelTime(
         game_id=started_game.id,
@@ -362,7 +361,6 @@ async def test_game_file_from_passed_level(
     started_game: dto.FullGame,
     dao: HolderDao,
 ):
-    """A photo the team saw stays readable after it left the level."""
     await dao.level_time.delete_all()
     now = datetime.now(tz=tz_utc)
     dao.level_time._save(
@@ -431,7 +429,6 @@ async def test_typed_key_is_shown_in_telegram_after_the_answer(
     dishka: AsyncContainer,
     bot_session: BaseSession,
 ):
-    """Telegram is written to by a background job, not by the request."""
     token = auth.create_user_token(harry)
 
     resp = await client.post(
@@ -511,7 +508,6 @@ async def test_game_stat_bonuses(
     auth: AuthProperties,
     harry: dto.Player,
 ):
-    """Bonuses and penalties come with the stat, carrying their level number."""
     token = auth.create_user_token(harry)
     await dao.game.set_completed(finished_game)
     await dao.game.set_number(finished_game, 1)

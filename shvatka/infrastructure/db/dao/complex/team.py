@@ -149,8 +149,6 @@ class CaptainedTeamsReaderImpl(CaptainedTeamsReader):
 
 @dataclass
 class CaptainTeamJoinerImpl(TeamLeaverImpl, CaptainTeamJoiner):
-    """Leaving the current team and joining the captained one, in one adapter."""
-
     async def get_by_id(self, id_: int) -> dto.Team:
         return await self.dao.team.get_by_id(id_)
 

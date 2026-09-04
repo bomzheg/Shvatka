@@ -9,12 +9,6 @@ from shvatka.core.models.enums.hint_type import HintType
 
 @dataclass(frozen=True)
 class FileUploadOptions:
-    """How to treat a file that can't be shown as-is (e.g. HEIC) on upload.
-
-    Both flags default to ``False`` — an unsupported file is rejected unless the
-    caller explicitly opts into conversion or into storing it untouched.
-    """
-
     allow_conversion: bool = False
     """convert an unsupported image to a browser/Telegram-friendly format (JPEG)"""
     save_unsupported_as_is: bool = False
@@ -42,14 +36,6 @@ class FileContentLink:
 
 @dataclass(frozen=True)
 class StoredFile:
-    """A file as the storage itself sees it, without any DB knowledge.
-
-    ``modified_at`` is what lets a caller tell a leftover apart from a file
-    whose meta row is still on its way: content reaches the storage before the
-    ``files_info`` row is committed, so a just-written file looks unreferenced
-    for a moment.
-    """
-
     link: FileContentLink
     modified_at: datetime
 
@@ -81,11 +67,6 @@ class FileMetaLightweight:
 
     @property
     def tg_link(self) -> TgLink | None:
-        """Telegram link derived from ``file_id``/``content_type``.
-
-        ``None`` while the file has not been uploaded to telegram yet (no
-        file_id), in which case it must be sent by content instead.
-        """
         if self.file_id is None or self.content_type is None:
             return None
         return TgLink(file_id=self.file_id, content_type=self.content_type)

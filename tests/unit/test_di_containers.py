@@ -1,11 +1,3 @@
-"""Every app's dependency graph must be complete before it starts.
-
-A use case that lives in the shared providers is wired differently in each
-app — a bot view here, a web one there — and it is easy to bind it in one
-container and forget another. Dishka checks the whole graph when the container
-is built, so building it is the test.
-"""
-
 import pytest
 from dishka import STRICT_VALIDATION, Provider, make_async_container
 
@@ -34,9 +26,4 @@ def api_providers() -> list[Provider]:
     ],
 )
 def test_container_graph_is_complete(providers):
-    """No missing factory anywhere in the app's graph.
-
-    Nothing is resolved here, so no config or database is needed — the
-    container is built and thrown away.
-    """
     make_async_container(*providers(), validation_settings=STRICT_VALIDATION)

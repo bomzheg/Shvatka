@@ -15,15 +15,6 @@ DEFAULT_DRAIN_TIMEOUT: typing.Final = 15.0
 
 
 class AsyncioNursery(Nursery):
-    """The one place in the app allowed to start a detached asyncio task.
-
-    Keeping ``create_task`` here is what makes such a task supervised: a strong
-    reference is held until it finishes (so the loop can't garbage collect it
-    mid-flight), a failure is logged instead of disappearing into a
-    never-awaited task, and whatever is still running on shutdown is given a
-    moment to finish before it is cancelled and awaited.
-    """
-
     def __init__(
         self, container: AsyncContainer, drain_timeout: float = DEFAULT_DRAIN_TIMEOUT
     ) -> None:
@@ -55,11 +46,6 @@ class AsyncioNursery(Nursery):
             logger.exception("background task %s failed", task.__name__, exc_info=e)
 
     async def close(self) -> None:
-        """Wait a bounded time for running tasks, then cancel the rest.
-
-        Nothing will re-run a cancelled job, so a team would be left with half a
-        puzzle. Bounded because some jobs (publishing a scenario) take minutes.
-        """
         if not self.tasks:
             return
         logger.info(

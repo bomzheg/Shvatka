@@ -84,8 +84,6 @@ class UnusedGameFile:
 
 @dataclass(kw_only=True, frozen=True, slots=True)
 class FileGarbage:
-    """What a garbage collection run removed, or would have on a dry run."""
-
     dry_run: bool
     game_links: list[UnusedGameFile]
     file_guids: list[str]

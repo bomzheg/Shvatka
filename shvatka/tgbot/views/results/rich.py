@@ -1,10 +1,3 @@
-"""Results as a telegram rich message: the chart with the standings table under it.
-
-A rich message (Bot API 10.1) carries structured blocks rather than one string,
-so the table the game exports to a file is shown right in the chat — the file
-stays available, but nobody has to open it to see who won.
-"""
-
 import logging
 from collections.abc import Sequence
 from datetime import datetime, time
@@ -63,13 +56,6 @@ EXCEL_TIME_DIRECTIVES = {"HH": "%H", "MM": "%M", "SS": "%S"}
 
 
 def render_table(table: Table, block: TableBlock) -> InputRichBlockTable:
-    """Draw one block of a table as a telegram table block.
-
-    A file lays every block over one grid of addresses; a message shows them one
-    at a time, so a block is the rows it occupies and the columns those rows
-    reach. What the grid has no cell for is drawn as an empty cell, and the
-    caption of the block is the caption of the table rather than a cell in it.
-    """
     rows = range(block.first_row, block.last_row + 1)
     hidden = set(table.hidden_columns)
     columns = [
@@ -106,11 +92,6 @@ def build_results_message(
     blocks: Sequence[TableBlock],
     photo_file_id: str | None = None,
 ) -> InputRichMessage:
-    """The whole results post: what game it is, the chart of it, and its blocks under it.
-
-    The blocks are the same ones the file is made of — when a level was taken,
-    how long it took — each carrying the caption it has there.
-    """
     rich_blocks: list[InputRichBlockUnion] = [
         InputRichBlockSectionHeading(text=results_title(game), size=HEADING_SIZE)
     ]
@@ -126,13 +107,10 @@ def build_results_message(
 
 
 def message_blocks(table: Table) -> list[TableBlock]:
-    """The blocks of the results a message is worth showing, in the file's order."""
     return [block for block in table.blocks if block.caption in MESSAGE_CAPTIONS]
 
 
 class ResultsRichSender:
-    """Sends the results of a game as a rich message, painting the chart if needed."""
-
     def __init__(self, bot: Bot, results_painter: ResultsPainter) -> None:
         self.bot = bot
         self.results_painter = results_painter
@@ -173,7 +151,6 @@ class ResultsRichSender:
             return await self.send_picture(chat_id, game, photo_file_id)
 
     async def send_picture(self, chat_id: int, game: dto.Game, photo_file_id: str) -> Message:
-        """The results as they were shown before the tables: the chart and nothing else."""
         return await self.bot.send_photo(
             chat_id=chat_id,
             photo=photo_file_id,
@@ -204,7 +181,6 @@ def _render_value(cell: Cell) -> RichTextUnion | None:
 
 
 def _time_format(excel_format: str | None) -> str:
-    """Translate the excel number format of a cell into a ``strftime`` one."""
     if excel_format is None:
         return TIME_FORMAT
     result = excel_format

@@ -26,7 +26,6 @@ LOSER = dto.Team(id=3, name="Hufflepuff", captain=None, is_dummy=False, descript
 
 @pytest.fixture
 def game_stat() -> dto.GameStat:
-    """Two teams finished, the third gave up on the third level. Nobody is in result order."""
     return dto.GameStat(
         level_times={
             LOSER: _level_times(LOSER, {0: 0, 1: 40, 2: 80}),
@@ -50,7 +49,6 @@ def _level_times(team: dto.Team, offsets: dict[int, int]) -> list[dto.LevelTime]
 
 
 def test_teams_are_ordered_by_result(game_stat: dto.GameStat) -> None:
-    """Who finished first, then who got furthest — whatever order the stat came in."""
     table = build_results_table(game_example, game_stat)
     times = next(block for block in table.blocks if block.caption == LEVEL_TIMES_TITLE)
 
@@ -75,7 +73,6 @@ def test_blocks_do_not_overlap(game_stat: dto.GameStat) -> None:
 
 
 def test_a_block_covers_its_own_rows(game_stat: dto.GameStat) -> None:
-    """Every row of a block belongs to it: the caption, the header and the teams."""
     table = build_results_table(game_example, game_stat)
     times = next(block for block in table.blocks if block.caption == LEVEL_TIMES_TITLE)
 
@@ -107,7 +104,6 @@ def test_of_unfinished_game(game_stat: dto.GameStat) -> None:
 
 
 def _teams_of(table: Table, block: TableBlock) -> list[str]:
-    """Names down the label column of a block, in the order they are laid out."""
     return [
         str(cell.value)
         for row in range(block.first_row, block.last_row + 1)

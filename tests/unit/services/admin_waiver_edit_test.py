@@ -1,10 +1,3 @@
-"""Adding and removing one waiver from the admin panel.
-
-The captain is gone, or missed the deadline, and a team's roster is wrong on
-the evening of the game. These pin down the two ways the panel puts it right —
-and the one thing it refuses: signing up somebody who does not play in the team.
-"""
-
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 
@@ -51,8 +44,6 @@ def make_game(id_: int = 10) -> dto.Game:
 
 @dataclass
 class FakeWaiverDao:
-    """In-memory stand-in for ``AdminWaiverEditor``."""
-
     game: dto.Game
     team: dto.Team
     players: dict[int, dto.Player] = field(default_factory=dict)
@@ -148,7 +139,6 @@ async def test_admin_signs_a_player_up():
 
 @pytest.mark.asyncio
 async def test_signing_a_player_up_twice_rewrites_the_waiver():
-    """How the panel turns a `no` into a `yes` without a second endpoint."""
     dao = make_dao()
     interactor = AdminAddWaiverInteractor(dao=dao)
 
@@ -172,8 +162,6 @@ async def test_signing_a_player_up_twice_rewrites_the_waiver():
 
 @pytest.mark.asyncio
 async def test_a_player_of_another_team_cant_be_signed_up():
-    """A waiver for somebody who plays elsewhere would never show in the roster
-    anyway — it is read through the current membership."""
     dao = make_dao()
     interactor = AdminAddWaiverInteractor(dao=dao)
 

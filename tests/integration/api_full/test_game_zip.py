@@ -22,12 +22,6 @@ def auth_cookies(auth: AuthProperties, player: dto.Player) -> dict[str, str]:
 
 
 def package(name: str) -> bytes:
-    """A zip as an author would bring it: a scenario naming its own file.
-
-    Level ids belong to their author, not to a game, so a package written here
-    uses its own — importing the export of another game would collide with the
-    levels that game already has.
-    """
     scenario: dict[str, Any] = {
         "name": name,
         "__model_version__": 1,
@@ -76,7 +70,6 @@ async def test_export_game_as_zip(
     author: dto.Player,
     game: dto.FullGame,
 ):
-    """The package holds the scenario and the media, so a game moves as one file."""
     resp = await client.get(
         f"/games/my/{game.id}/scenario/zip", cookies=auth_cookies(auth, author)
     )
@@ -119,8 +112,6 @@ async def test_import_asks_before_rewriting_a_game_of_that_name(
     author: dto.Player,
     check_dao: HolderDao,
 ):
-    """Nobody loses a game to an import they misread: the second one stops,
-    naming the game it would have written over."""
     cookies = auth_cookies(auth, author)
     first = await import_zip(client, cookies, package("игра из архива"))
     assert first.status_code == 200, first.text
@@ -141,8 +132,6 @@ async def test_overwrite_rewrites_the_same_game(
     author: dto.Player,
     check_dao: HolderDao,
 ):
-    """Once the author has agreed, the package rewrites their game of that
-    name rather than a second game appearing under it."""
     cookies = auth_cookies(auth, author)
     first = await import_zip(client, cookies, package("игра из архива"))
     assert first.status_code == 200, first.text
@@ -162,7 +151,6 @@ async def test_import_refuses_a_package_telegram_wont_take(
     check_dao: HolderDao,
     telegram: FakeTelegram,
 ):
-    """An import is expected to be correct — there is no forcing one through."""
     telegram.refuse = True
 
     resp = await import_zip(client, auth_cookies(auth, author), package("игра с плохим файлом"))
@@ -195,8 +183,6 @@ async def test_exported_package_can_be_imported_back(
     game: dto.FullGame,
     check_dao: HolderDao,
 ):
-    """Export and import are the two ends of one format: a game written here
-    reads back into the same game, levels and files included."""
     exported = await client.get(
         f"/games/my/{game.id}/scenario/zip", cookies=auth_cookies(auth, author)
     )

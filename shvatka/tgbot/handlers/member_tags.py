@@ -20,10 +20,6 @@ async def user_joined_public_chat(
     tagger: FromDishka[MemberTagger],
     dao: FromDishka[HolderDao],
 ) -> None:
-    """
-    A tag lives in the chat, not in the database, so a player who joins the
-    chat later than their team has no tag until they get one here.
-    """
     user = event.new_chat_member.user
     if user.is_bot:
         return

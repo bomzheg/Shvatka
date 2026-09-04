@@ -1,9 +1,3 @@
-"""The sheet of keys an org prints, cuts and takes to the game.
-
-The layout is checked with a made up font where every character is the same
-width — the real one only makes the numbers less round.
-"""
-
 import uuid
 from datetime import datetime
 
@@ -115,7 +109,6 @@ def test_long_game_name_is_shortened_to_the_slip(layout: KeysSheetLayout):
 
 
 def test_abnormal_key_gets_pages_of_its_own(layout: KeysSheetLayout):
-    """We once had a key of more than 200 characters — it fits nowhere in a grid."""
     abnormal = "СХ" + "ОЧЕНЬДЛИННЫЙКЛЮЧ" * 20
 
     sheet = layout.plan(sheet_of("СХКЛЮЧ", abnormal, "СХДРУГОЙКЛЮЧ"))
@@ -179,8 +172,6 @@ def test_page_is_filled_by_the_grid(layout: KeysSheetLayout):
 
 
 def test_slip_is_cut_out_by_the_width_of_its_key(layout: KeysSheetLayout):
-    """The name of the game starts under the first letter of the key, the date
-    ends under the last one — so the piece of paper to carry is a small one."""
     sheet = layout.plan(sheet_of("СХДЛИННЫЙКЛЮЧИГРЫ", "СХКОРОЧЕ"))
 
     long_key, short_key = sheet.pages[0].slips[0], sheet.pages[0].slips[-1]
@@ -214,11 +205,6 @@ def columns_of(sheet: Sheet) -> int:
 
 
 def test_real_font_makes_the_sheet_of_the_game_document():
-    """A game of ordinary keys comes out as the orgs used to lay it out by hand.
-
-    Times New Roman (or the stand-in this machine has instead), keys at 14 pt,
-    signed at 10 pt — and every key printed more than once.
-    """
     from shvatka.infrastructure.printer import keys_sheet
 
     printer = keys_sheet.PdfKeysSheetPrinter()

@@ -1,11 +1,3 @@
-"""Single-adapter views over the tables a file lives in.
-
-``files_info`` describes a file, ``level_files`` and ``game_files`` link it, and
-the storage holds its content. Deleting one — or sweeping every file nothing
-refers to — reads and writes all of them, so each use case gets one adapter
-composing the per-table DAOs it needs.
-"""
-
 import typing
 from collections.abc import Collection
 from dataclasses import dataclass
@@ -30,8 +22,6 @@ class ReleaseGuidsMixin:
 
 @dataclass
 class GameFileDeleterImpl(ReleaseGuidsMixin, GameFileDeleter):
-    """Single DAO for deleting one file from one game (cdn endpoint)."""
-
     async def get_by_id(self, id_: int, author: dto.Player | None = None) -> dto.Game:
         return await self.dao.game.get_by_id(id_, author)
 
@@ -73,8 +63,6 @@ class GameFileDeleterImpl(ReleaseGuidsMixin, GameFileDeleter):
 
 @dataclass
 class FileGarbageCollectorImpl(ReleaseGuidsMixin, FileGarbageCollectorDao):
-    """Single DAO for a garbage collection run."""
-
     async def get_unused_game_file_links(self) -> list[GameFileLink]:
         return await self.dao.game_file.get_unused_links()
 

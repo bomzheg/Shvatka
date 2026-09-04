@@ -1,9 +1,3 @@
-"""Response models used by more than one subdomain.
-
-Anything that only one subdomain answers with belongs in that subdomain's
-``responses`` module instead.
-"""
-
 import typing
 from collections.abc import Sequence
 from dataclasses import dataclass

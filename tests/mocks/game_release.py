@@ -3,8 +3,6 @@ from shvatka.core.views.game import GameReleasePublisher
 
 
 class GameReleasePublisherMock(GameReleasePublisher):
-    """Stands in for the bot view, remembering what it was asked to show."""
-
     def __init__(self) -> None:
         self.published: list[dto.GameRelease] = []
         self.updated: list[dto.GameRelease] = []

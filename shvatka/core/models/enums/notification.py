@@ -2,8 +2,6 @@ import enum
 
 
 class NotificationType(enum.Enum):
-    """What happened. Stored as its ``name`` (Text) so new types need no migration."""
-
     player_joined_team = enum.auto()
     player_left_team = enum.auto()
     team_captain_changed = enum.auto()
@@ -22,8 +20,6 @@ class NotificationType(enum.Enum):
 
 
 class NotificationSeverity(enum.Enum):
-    """How much a notification matters. Drives UI emphasis in the feed."""
-
     low = enum.auto()
     normal = enum.auto()
     important = enum.auto()

@@ -172,13 +172,6 @@ async def change_captain(
     dao: TeamCaptainSetter,
     notifier: TeamNotifier,
 ) -> dto.Team:
-    """Hand the team over to another of its players.
-
-    The new captain has to play in the team already — the captaincy is not an
-    invitation. Roles follow the handover: the newcomer becomes «капитан», and
-    the previous captain, if they are still in the team and still carry that
-    role, goes back to the default one.
-    """
     players = await dao.get_players(team)
     target = next((tp for tp in players if tp.player_id == new_captain_id), None)
     if target is None:
@@ -217,7 +210,6 @@ async def change_captain(
 
 
 def check_can_change_captain(actor: dto.Player, team: dto.Team) -> None:
-    """Only the captain hands their own team over; anyone else needs an admin."""
     if is_team_captain(team, actor):
         return
     raise PermissionsError(

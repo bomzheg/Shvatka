@@ -42,8 +42,6 @@ requests_in_progress = Gauge(
 
 
 class RequestMetricsMiddleware(BaseRequestMiddleware):
-    """Collects prometheus metrics of outgoing Telegram Bot API requests."""
-
     async def __call__(
         self,
         make_request: NextRequestMiddlewareType[TelegramType],

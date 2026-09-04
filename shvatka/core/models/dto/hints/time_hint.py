@@ -8,7 +8,6 @@ from .hint_part import AnyHint
 @dataclass
 class TimeHint:
     time: int
-    """minutes"""
     hint: list[AnyHint]
 
     def __post_init__(self) -> None:

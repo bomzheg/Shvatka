@@ -214,8 +214,10 @@ game and only then fall back to author or organizer rights.
 | **Action request** | Заявка | A user-to-user request that needs someone's decision, with a lifecycle: `pending` → `accepted` / `declined` / `cancelled` / `expired`. *Заявка* is the term — plain *запрос* is too generic, though it reads fine mid-sentence ("ваш запрос на вступление в команду"). | `notifications.dto.ActionRequest`, `enums.RequestStatus` |
 | **Request type** | Тип запроса | `team_join_invite`, `team_join_request`, `org_invite`, `team_merge`, `player_merge`, `promotion`. | `enums.RequestType` |
 | **Notification** | Уведомление | One inbox item for exactly one recipient — the record that something happened. A request produces notifications; a notification is not itself actionable. | `notifications.dto.Notification`, `enums.NotificationType` |
-| **Severity** | Важность | How much a notification matters (`low` / `normal` / `important`); drives UI emphasis and push urgency. | `enums.NotificationSeverity` |
+| **Severity** | Важность | How much a notification matters (`low` / `normal` / `important`); drives UI emphasis in the feed. | `enums.NotificationSeverity` |
 | **Push subscription** | Подписка на пуши | A browser endpoint registered for web push. | `push_subscriptions` table |
+| **Push urgency** | Срочность пуша | RFC 8030 delivery priority. Anything below `high` lets the push service hold the message until the device wakes on its own; in-game pushes are `high`, everything else `normal`. | `PushUrgency` |
+| **Push TTL** | Время жизни пуша | How long the push service may keep trying before dropping the message. In-game news dies in ten minutes, team news keeps for a day. | `IN_GAME_TTL`, `TEAM_TTL` |
 
 ## Search
 

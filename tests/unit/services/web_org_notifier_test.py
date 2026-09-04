@@ -4,7 +4,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from shvatka.api.app.utils.push import PushMessage
+from shvatka.api.app.utils.push import PushMessage, PushUrgency
 from shvatka.api.app.utils.web_input import WebOrgNotifier
 from shvatka.core.views.game import LevelTestCompleted, LevelUp, NewOrg
 
@@ -111,3 +111,21 @@ async def test_level_test_completed_pushes_to_all_orgs() -> None:
     assert "tester" in message.body
     assert "2 минут 5 с" in message.body
     assert _data(message)["kind"] == "level_test_completed"
+
+
+@pytest.mark.asyncio
+async def test_org_pushes_keep_the_in_game_defaults() -> None:
+    """Orgs are watching from a laptop, not playing with a phone in a pocket: the
+    urgency their pushes deserve has not been looked at yet.
+    """
+    sender = FakePushSender()
+    notifier = WebOrgNotifier(sender, FakeNotificationDao())
+    team = SimpleNamespace(id=7, name="Gryffindor")
+    level = SimpleNamespace(db_id=3, name_id="lvl-1", number_in_game=0)
+    event = LevelUp(orgs_list=[_org(1)], team=team, new_level=level)
+
+    await notifier.notify(event)
+
+    _, message = sender.calls[0]
+    assert message.urgency == PushUrgency.normal
+    assert message.ttl == 10 * 60

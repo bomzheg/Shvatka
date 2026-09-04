@@ -332,6 +332,14 @@ overrides) lives in `pyproject.toml`.
   answers the user and restarts them in the main menu. Use
   `get_actual_team_player(identity)` / `get_actual_teammate`, or better, resolve
   the state in the getter on every render (see `my_team_getter`). SHEP-0005.
+- **A web push says how urgently it wants to be delivered, and for how long.**
+  `PushMessage` carries `urgency` and `ttl`; below `PushUrgency.high` a push
+  service is free to hold the message until the device wakes up on its own,
+  which is minutes on a backgrounded android. In-game pushes (`WebGameView`) are
+  `high` and die in ten minutes — late is worse than never for a hint. Team news
+  (`WebTeamNotifier`) keeps for a day at `normal`. Orgs have not been looked at
+  yet and take the defaults. Severity does **not** drive urgency: the audience
+  does.
 - **Every change to a team goes through `TeamNotifier`.** Joining, leaving,
   handing over the captaincy and renaming all raise a `TeamEvent`
   (`core/views/team.py`); both edges hang behavior off it (chat announcement and

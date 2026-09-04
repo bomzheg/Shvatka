@@ -6,7 +6,7 @@ from pywebpush import WebPushException
 
 from shvatka.api.app.config.models.push import PushConfig
 from shvatka.api.app.utils import push as push_module
-from shvatka.api.app.utils.push import PushMessage, WebPushSender
+from shvatka.api.app.utils.push import TEAM_TTL, PushMessage, PushUrgency, WebPushSender
 
 CONFIG = PushConfig(
     vapid_public_key="public",
@@ -125,3 +125,44 @@ async def test_nothing_sent_when_push_is_not_configured(monkeypatch) -> None:
     sender = WebPushSender(config=PushConfig(), dao=FakeDao())
 
     await sender.send_to_players([1, 2], MESSAGE)
+
+
+@pytest.mark.asyncio
+async def test_urgency_and_ttl_reach_the_push_service(monkeypatch) -> None:
+    """They are the whole point of the fields: nothing else carries them."""
+    sent: list[dict] = []
+    monkeypatch.setattr(push_module, "webpush", lambda **kwargs: sent.append(kwargs))
+    sender = WebPushSender(config=CONFIG, dao=FakeDao())
+    message = PushMessage(
+        title="Новая подсказка",
+        body="подсказка #1",
+        urgency=PushUrgency.high,
+        ttl=TEAM_TTL,
+    )
+
+    await sender.send_many([subscription(1)], message)
+
+    assert sent[0]["headers"] == {"Urgency": "high"}
+    assert sent[0]["ttl"] == 24 * 60 * 60
+
+
+@pytest.mark.asyncio
+async def test_a_push_is_normal_urgency_and_dies_in_ten_minutes_by_default(monkeypatch) -> None:
+    sent: list[dict] = []
+    monkeypatch.setattr(push_module, "webpush", lambda **kwargs: sent.append(kwargs))
+    sender = WebPushSender(config=CONFIG, dao=FakeDao())
+
+    await sender.send_many([subscription(1)], MESSAGE)
+
+    assert sent[0]["headers"] == {"Urgency": "normal"}
+    assert sent[0]["ttl"] == 10 * 60
+
+
+def test_delivery_is_not_told_to_the_browser() -> None:
+    """``to_json`` is the payload the service worker sees; urgency is between us
+    and the push service.
+    """
+    message = PushMessage(title="t", body="b", urgency=PushUrgency.high, ttl=TEAM_TTL)
+
+    assert "urgency" not in message.to_json()
+    assert "ttl" not in message.to_json()

@@ -22,7 +22,7 @@ class NotificationType(enum.Enum):
 
 
 class NotificationSeverity(enum.Enum):
-    """How much a notification matters. Drives UI emphasis and push urgency."""
+    """How much a notification matters. Drives UI emphasis in the feed."""
 
     low = enum.auto()
     normal = enum.auto()

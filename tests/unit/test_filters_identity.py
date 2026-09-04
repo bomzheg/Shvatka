@@ -6,7 +6,7 @@ They are wired through ``@inject``, which only works because aiogram passes
 disable a command rather than fail, so drive them through the real machinery.
 """
 
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from typing import Any
 from unittest.mock import AsyncMock
 
@@ -25,12 +25,14 @@ from shvatka.tgbot.filters.can_be_author import can_be_author
 from shvatka.tgbot.filters.game_status import GameStatusFilter
 from shvatka.tgbot.filters.is_inviter import is_inviter
 from shvatka.tgbot.filters.is_team import IsTeamFilter
+from shvatka.tgbot.filters.sent_after_game_start import SentAfterGameStartFilter
 from shvatka.tgbot.filters.team_player import TeamPlayerFilter
 from shvatka.tgbot.utils.router import disable_router_on_game
 
 PLAYER = dto.Player(id=1, can_be_author=True, is_dummy=False, username="harry")
 NO_AUTHOR = dto.Player(id=2, can_be_author=False, is_dummy=False, username="ron")
 TEAM = dto.Team(id=1, name="Gryffindor", captain=None, is_dummy=False, description=None)
+GAME_START = datetime(2026, 8, 29, 12, 0, tzinfo=UTC)
 
 
 def identity(
@@ -45,18 +47,27 @@ def identity(
     return idp
 
 
-def game(status: GameStatus) -> dto.Game:
+def game(status: GameStatus, start_at: datetime | None = None) -> dto.Game:
     return dto.Game(
         id=1,
         author=PLAYER,
         name="Alice",
         status=status,
         manage_token="token",
-        start_at=None,
+        start_at=start_at,
         number=1,
         results=dto.GameResults(
             published_chanel_id=None, results_picture_file_id=None, keys_url=None
         ),
+    )
+
+
+def message(date: datetime) -> Message:
+    return Message(
+        message_id=1,
+        date=date,
+        chat=Chat(id=1, type="supergroup"),
+        text="SHMONKEY",
     )
 
 
@@ -67,7 +78,11 @@ def current_game(active: dto.Game | None) -> AsyncMock:
 
 
 async def call(
-    filter_: Any, idp: AsyncMock, game_provider: AsyncMock | None = None, **kwargs: Any
+    filter_: Any,
+    idp: AsyncMock,
+    game_provider: AsyncMock | None = None,
+    event: Any = None,
+    **kwargs: Any,
 ) -> Any:
     class IdpProvider(Provider):
         scope = Scope.REQUEST
@@ -84,7 +99,7 @@ async def call(
     try:
         async with container() as request_container:
             return await FilterObject(filter_).call(
-                None, **{CONTAINER_NAME: request_container, **kwargs}
+                event, **{CONTAINER_NAME: request_container, **kwargs}
             )
     finally:
         await container.close()
@@ -217,3 +232,32 @@ async def test_disable_router_on_game_through_root_filters(active_game, reaches_
     finally:
         await container.close()
     assert bool(passed) is reaches_handlers
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("sent_at", "expected"),
+    [
+        (GAME_START + timedelta(minutes=5), True),
+        (GAME_START - timedelta(minutes=5), False),
+        (GAME_START, False),
+    ],
+)
+async def test_sent_after_game_start(sent_at, expected):
+    """An edited message keeps the date it was first sent — that is what is checked."""
+    provider = current_game(game(GameStatus.started, start_at=GAME_START))
+    filter_ = SentAfterGameStartFilter()
+    assert await call(filter_, identity(), provider, event=message(sent_at)) is expected
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "active_game",
+    [None, game(GameStatus.started, start_at=None)],
+)
+async def test_sent_after_game_start_without_a_planned_start(active_game):
+    """No game, or one whose start was never set: nothing to compare against."""
+    provider = current_game(active_game)
+    filter_ = SentAfterGameStartFilter()
+    sent_at = GAME_START + timedelta(minutes=5)
+    assert await call(filter_, identity(), provider, event=message(sent_at)) is False

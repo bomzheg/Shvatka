@@ -10,6 +10,10 @@ from shvatka.infrastructure.db.config.models.db import DBConfigProperties, Redis
 @dataclass
 class AppConfig:
     name: str
+    # size of the pool asyncio.to_thread hands blocking work to — hashing a
+    # password, painting results, reading a hint off disk. None keeps
+    # python's own default of min(32, cpu_count + 4)
+    blocking_threads: int | None = None
 
 
 @dataclass

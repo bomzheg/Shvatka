@@ -1,6 +1,7 @@
 import asyncio
 import logging
 from concurrent.futures import ThreadPoolExecutor
+from functools import partial
 
 from asgi_monitor.integrations.fastapi import MetricsConfig, setup_metrics
 from fastapi import FastAPI
@@ -37,21 +38,24 @@ def create_app(config: ApiConfig) -> FastAPI:
     return app
 
 
+def setup_blocking_pool(root_app: FastAPI, config: Config) -> None:
+    # the pool every offloaded call lands in, so it is sized whatever else the
+    # process is or isn't watching about itself
+    root_app.router.add_event_handler(
+        "startup", partial(set_blocking_threads, config.app.blocking_threads)
+    )
+
+
 def setup_loop_monitor(root_app: FastAPI, config: Config) -> None:
     if not config.monitoring.enabled:
         logger.info("loop monitor disabled by config")
         return
     monitor = LoopMonitor(config.monitoring)
-
-    async def start() -> None:
-        set_blocking_threads(config.monitoring.blocking_threads)
-        await monitor.start()
-
-    root_app.router.add_event_handler("startup", start)
+    root_app.router.add_event_handler("startup", monitor.start)
     root_app.router.add_event_handler("shutdown", monitor.stop)
 
 
-def set_blocking_threads(size: int | None) -> None:
+async def set_blocking_threads(size: int | None) -> None:
     if size is None:
         return
     executor = ThreadPoolExecutor(max_workers=size, thread_name_prefix="shvatka-blocking")

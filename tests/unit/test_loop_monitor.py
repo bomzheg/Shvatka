@@ -123,10 +123,11 @@ async def test_disabled_starts_nothing(bot_config: Config):
 async def test_it_runs_when_the_app_is_mounted_under_a_root(bot_config: Config):
     root_app = FastAPI()
     root_app.mount("/context/path", FastAPI())
-    setup_loop_monitor(root_app, bot_config)
+    enabled = replace(bot_config, monitoring=MonitoringConfig(enabled=True))
+    setup_loop_monitor(root_app, enabled)
     before = lag_count()
 
     async with LifespanManager(root_app):
-        await asyncio.sleep(bot_config.monitoring.probe_interval * 3)
+        await asyncio.sleep(enabled.monitoring.probe_interval * 3)
 
     assert lag_count() > before, "the monitor never started"

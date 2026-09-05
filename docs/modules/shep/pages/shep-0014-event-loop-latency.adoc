@@ -83,9 +83,15 @@ setting is only consulted while the loop runs in debug mode, and debug mode
 adds bookkeeping to every task in the app. The stalls worth catching happen
 during a game, which is exactly when that overhead is least affordable.
 
-Everything is configured under a `monitoring` section
-(`shvatka/common/config/models/monitoring.py`) whose every field has a default
-that is safe on a live game, so the section may be left out.
+The monitor is configured under a `monitoring` section
+(`shvatka/common/config/models/monitoring.py`) and is **off by default**:
+`enabled` is checked before anything is constructed, so off means no probe task
+and no watchdog thread rather than idle ones. A deployment that wants the
+numbers asks for them.
+
+Sizing the pool `asyncio.to_thread` hands work to is *not* part of that — it is
+about how work runs, not about watching it, so `app.blocking-threads` lives in
+the `app` section and applies whether or not the monitor is on.
 
 === Blocking work goes to a thread
 

@@ -1,5 +1,8 @@
 app:
   name: shvatka
+  # size of the pool blocking work (hashing, drawing, disk) is handed to.
+  # left out, python sizes it itself
+  # blocking-threads: 16
 superusers:
   - 666
 bot:
@@ -131,13 +134,10 @@ features:
 # how closely the process watches its own event loop. every value has a default
 # that is safe during a game, so the whole section may be left out
 # monitoring:
-#   # false stops the probe and the watchdog being created at all
+#   # off by default: nothing is created until it is asked for
 #   enabled: true
 #   probe-interval: 0.1
 #   stall-threshold: 0.25
 #   # log the stack the loop is stuck in when it stalls. costs one thread
 #   stall-traceback: true
 #   stall-report-interval: 10
-#   # size of the pool blocking work (hashing, drawing, disk) is handed to.
-#   # left out, python sizes it itself
-#   blocking-threads: 16

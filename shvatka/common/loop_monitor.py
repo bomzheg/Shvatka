@@ -1,12 +1,3 @@
-"""Self-observation of the event loop: how long it goes without a turn, and why.
-
-The whole app — the api and, through the webhook, every telegram update — runs
-on one event loop in one process. So a request that does nothing but count rows
-can still take seconds: it waits its turn behind whatever else is occupying that
-loop. Request duration alone can't tell that apart from a slow query or a
-database connection that isn't free, which is what this module is for.
-"""
-
 import asyncio
 import logging
 import sys
@@ -34,27 +25,6 @@ LOOP_STALLS = Counter(
 
 
 class LoopMonitor:
-    """Two views of the same thing: that the loop stalled, and what stalled it.
-
-    The lag histogram is the continuous one — a sleep that asks for a fixed
-    interval and records how much later than that it woke up. It costs one
-    timer per interval and is what a dashboard reads: when its p99 tracks the
-    p99 of request duration, the loop *is* the queue.
-
-    The watchdog is the one that names the culprit. It runs in a thread of its
-    own, watching a heartbeat the loop updates, and dumps the stack the loop
-    thread is stuck in when the heartbeat goes stale. A thread rather than
-    ``loop.slow_callback_duration``, because that is only consulted while the
-    loop runs in debug mode, and debug mode adds bookkeeping to every task in
-    the app — too much to leave on during a game, which is the only time the
-    stalls we are after happen.
-
-    The watchdog can only report a stall once python lets it run. Pure-python
-    work hands the gil over every few milliseconds, so it is seen almost at
-    once; a c call that holds the gil for its whole duration is only reported
-    after it returns.
-    """
-
     def __init__(self, config: MonitoringConfig) -> None:
         self.config = config
         self._heartbeat = time.monotonic()
@@ -108,7 +78,6 @@ class LoopMonitor:
             self._heartbeat = woke_at
 
     def _watch(self) -> None:
-        """Runs in its own thread; everything it reads is a plain float."""
         reported_this_stall = False
         last_report = 0.0
         while not self._stopping.wait(self.config.probe_interval):

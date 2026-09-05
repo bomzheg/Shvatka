@@ -1,23 +1,3 @@
-"""Does `asyncio.to_thread` actually keep the event loop served?
-
-The claim behind the offloads in SHEP-0014 is narrow and easy to misread, so it
-is worth being able to re-check it rather than trust it:
-
-* **throughput gains nothing.** The gil serialises python bytecode, so the
-  process burns the same cpu either way — watch the wall column grow linearly
-  with concurrency.
-* **latency is what improves.** The gil is not held until a thread finishes:
-  when another thread wants it the eval loop sets `gil_drop_request` and the
-  holder drops it at the next bytecode boundary, within
-  `sys.getswitchinterval()`. So the loop reclaims it about 5 ms after asking
-  rather than after the whole render.
-
-Run it — pin it to one cpu to model the container:
-
-    taskset -c 0 python tests/load/gil_offload_bench.py
-    taskset -c 0 python tests/load/gil_offload_bench.py matplotlib
-"""
-
 import asyncio
 import sys
 import time
@@ -27,7 +7,6 @@ PROBE_INTERVAL = 0.010
 
 
 async def _probe(stop: asyncio.Event, lags: list[float]) -> None:
-    """Asks the loop for a turn every 10 ms and records how late it came."""
     while not stop.is_set():
         started = time.perf_counter()
         await asyncio.sleep(PROBE_INTERVAL)

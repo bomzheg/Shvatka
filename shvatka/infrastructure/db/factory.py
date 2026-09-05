@@ -33,13 +33,6 @@ def create_engine(db_config: DBConfig) -> AsyncEngine:
 
 
 def pool_options(db_config: DBConfig, url: URL) -> dict[str, Any]:
-    """Sizing for the pool, where the backend has one worth sizing.
-
-    One process serves the api, every telegram update and every background job,
-    and each of them holds a connection for the length of its own scope, so the
-    pool is a queue everything shares. Sqlite is left alone: it runs on a pool
-    that takes no sizing arguments at all.
-    """
     if url.get_backend_name() == "sqlite":
         return {}
     return {

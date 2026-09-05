@@ -38,18 +38,6 @@ def create_app(config: ApiConfig) -> FastAPI:
 
 
 def setup_loop_monitor(root_app: FastAPI, config: Config) -> None:
-    """Watch the loop this process runs on.
-
-    Registered on the **root** app, not on the one ``create_app`` builds:
-    starlette does not run the lifespan of a mounted sub-application, so a
-    startup handler added there would never fire. Both entrypoints — the
-    combined api + bot webhook and the standalone api — mount that sub-app, so
-    both call this on the root themselves.
-
-    The probe is held here rather than handed to the ``Nursery``: the nursery
-    drains what it supervises for fifteen seconds on shutdown, and a probe that
-    never finishes on its own would sit through all of it.
-    """
     monitor = LoopMonitor(config.monitoring)
 
     async def start() -> None:
@@ -61,13 +49,6 @@ def setup_loop_monitor(root_app: FastAPI, config: Config) -> None:
 
 
 def set_blocking_threads(size: int | None) -> None:
-    """Size the pool ``asyncio.to_thread`` hands blocking work to.
-
-    Left alone (``None``) python sizes it itself, which is usually enough. It
-    is worth naming the threads once several kinds of work share the pool —
-    hashing a password, painting results, reading a hint off disk — because a
-    stack dump then says which of them is holding it.
-    """
     if size is None:
         return
     executor = ThreadPoolExecutor(max_workers=size, thread_name_prefix="shvatka-blocking")

@@ -6,15 +6,6 @@ logger = logging.getLogger(__name__)
 
 
 class LoggingMiddleware:
-    """Logs the request and the status it got, as plain asgi.
-
-    Not ``BaseHTTPMiddleware``: that one runs every request through an anyio
-    task group and a pair of memory streams to give a ``dispatch`` function a
-    ``Request`` object it can await — real cost on every request, on a loop the
-    whole app shares, in exchange for a debug line. Reading the two values this
-    wants straight off the asgi scope costs nothing.
-    """
-
     def __init__(self, app: ASGIApp) -> None:
         self.app = app
 

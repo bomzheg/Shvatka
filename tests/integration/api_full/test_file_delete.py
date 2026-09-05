@@ -6,6 +6,7 @@ from shvatka.api.app.dependencies.auth import AuthProperties
 from shvatka.core.models import dto
 from shvatka.core.services.game import create_game
 from shvatka.infrastructure.clients.file_storage import LocalFileStorage
+from shvatka.infrastructure.db.dao.complex.game import GameCreatorImpl
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from tests.fixtures.scn_fixtures import GUID
 
@@ -33,7 +34,7 @@ async def test_delete_unused_game_file(
     check_dao: HolderDao,
     local_storage: LocalFileStorage,
 ):
-    game = await create_game(author=author, name="draft delete file", dao=dao.game_creator)
+    game = await create_game(author=author, name="draft delete file", dao=GameCreatorImpl(dao))
     cookies = auth_cookies(auth, author)
     guid = await upload(client, game.id, cookies)
     (file_id,) = await check_dao.file_info.get_ids_by_guids([guid])
@@ -75,7 +76,7 @@ async def test_cant_delete_file_used_by_the_release(
     dao: HolderDao,
     check_dao: HolderDao,
 ):
-    game = await create_game(author=author, name="draft release file", dao=dao.game_creator)
+    game = await create_game(author=author, name="draft release file", dao=GameCreatorImpl(dao))
     cookies = auth_cookies(auth, author)
     guid = await upload(client, game.id, cookies)
     saved = await client.put(
@@ -100,8 +101,8 @@ async def test_delete_keeps_a_file_another_game_still_uses(
     check_dao: HolderDao,
     local_storage: LocalFileStorage,
 ):
-    game = await create_game(author=author, name="draft shared file", dao=dao.game_creator)
-    other = await create_game(author=author, name="draft shared file 2", dao=dao.game_creator)
+    game = await create_game(author=author, name="draft shared file", dao=GameCreatorImpl(dao))
+    other = await create_game(author=author, name="draft shared file 2", dao=GameCreatorImpl(dao))
     cookies = auth_cookies(auth, author)
     guid = await upload(client, game.id, cookies)
     (file_id,) = await check_dao.file_info.get_ids_by_guids([guid])
@@ -126,7 +127,7 @@ async def test_delete_file_not_in_game(
     author: dto.Player,
     dao: HolderDao,
 ):
-    game = await create_game(author=author, name="draft delete missing", dao=dao.game_creator)
+    game = await create_game(author=author, name="draft delete missing", dao=GameCreatorImpl(dao))
     resp = await client.delete(
         f"/cdn/games/{game.id}/files/00000000-0000-0000-0000-000000000000",
         cookies=auth_cookies(auth, author),
@@ -143,7 +144,9 @@ async def test_delete_foreign_game_file_forbidden(
     dao: HolderDao,
     check_dao: HolderDao,
 ):
-    game = await create_game(author=author, name="draft delete forbidden", dao=dao.game_creator)
+    game = await create_game(
+        author=author, name="draft delete forbidden", dao=GameCreatorImpl(dao)
+    )
     guid = await upload(client, game.id, auth_cookies(auth, author))
 
     # harry is not the author of `game`

@@ -7,6 +7,7 @@ from aiogram_dialog import DialogManager
 from dishka import FromDishka
 from dishka.integrations.aiogram_dialog import inject
 
+from shvatka.core.interfaces.dal.complex import GameStatDao, TypedKeyGetter
 from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.interfaces.nursery import Nursery
 from shvatka.core.services.game import get_full_game
@@ -25,6 +26,8 @@ async def process_publish_message(
     dao: FromDishka[HolderDao],
     idp: FromDishka[IdentityProvider],
     nursery: FromDishka[Nursery],
+    game_stat_dao: FromDishka[GameStatDao],
+    typed_keys: FromDishka[TypedKeyGetter],
 ):
     if not message.forward_from_chat or message.forward_from_chat.type != "channel":
         return await message.reply("Это не пересланное из канала сообщение.")
@@ -48,8 +51,8 @@ async def process_publish_message(
     data: dict[str, Any] = manager.start_data  # type: ignore[assignment]
     game_id: int = data["game_id"]
     game = await get_full_game(id_=game_id, identity=idp, dao=dao.game)
-    game_stat = await get_game_stat(game=game, identity=idp, dao=dao.game_stat)
-    keys = await get_typed_keys(game=game, identity=idp, dao=dao.typed_keys)
+    game_stat = await get_game_stat(game=game, identity=idp, dao=game_stat_dao)
+    keys = await get_typed_keys(game=game, identity=idp, dao=typed_keys)
     approximate_time = GamePublisher.get_approximate_time_of(game)
     await message.answer(
         "Начинаю отправку сценария в канал, в связи с ограничениями платформы, "

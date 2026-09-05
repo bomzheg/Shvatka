@@ -4,6 +4,7 @@ from aiogram_dialog import DialogManager
 from dishka import FromDishka
 from dishka.integrations.aiogram import inject
 
+from shvatka.core.interfaces.dal.level_testing import LevelTestingDao
 from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.interfaces.scheduler import LevelTestScheduler
 from shvatka.core.models import dto
@@ -27,6 +28,7 @@ async def start_test_level(
     identity: FromDishka[IdentityProvider],
     scheduler: FromDishka[LevelTestScheduler],
     level_view: FromDishka[LevelView],
+    level_testing: FromDishka[LevelTestingDao],
 ):
     player = await identity.get_required_player()
     org = await get_org_by_id(callback_data.org_id, dao.organizer)
@@ -44,9 +46,7 @@ async def start_test_level(
         states.LevelTestSG.wait_key,
         data={"level_id": callback_data.level_id, "org_id": org.id},
     )
-    await start_level_test(
-        suite=suite, scheduler=scheduler, view=level_view, dao=dao.level_testing_complex
-    )
+    await start_level_test(suite=suite, scheduler=scheduler, view=level_view, dao=level_testing)
 
 
 def setup() -> Router:

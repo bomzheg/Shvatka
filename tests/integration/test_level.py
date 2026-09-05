@@ -6,6 +6,7 @@ from shvatka.core.models.dto.scn.level import LevelScenario
 from shvatka.core.players.player import upsert_player
 from shvatka.core.services.level import upsert_raw_level
 from shvatka.core.services.user import upsert_user
+from shvatka.infrastructure.db.dao.complex.game import GameUpserterImpl
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from tests.fixtures.user_constants import create_dto_harry
 
@@ -16,7 +17,9 @@ async def test_simple_level(simple_scn: RawGameScenario, dao: HolderDao, retort:
     await dao.player.promote(author, author)
     await dao.commit()
     author.can_be_author = True
-    lvl = await upsert_raw_level(simple_scn.scn["levels"][0], author, retort, dao.game_upserter)
+    lvl = await upsert_raw_level(
+        simple_scn.scn["levels"][0], author, retort, GameUpserterImpl(dao)
+    )
 
     assert lvl.db_id is not None
     assert await dao.level.count() == 1

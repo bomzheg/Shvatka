@@ -10,6 +10,7 @@ from shvatka.core.models import dto
 from shvatka.core.models.enums import GameStatus
 from shvatka.core.services.game import create_game
 from shvatka.core.utils.datetime_utils import tz_utc
+from shvatka.infrastructure.db.dao.complex.game import GameCreatorImpl
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from tests.fixtures.scn_fixtures import GUID
 
@@ -72,7 +73,7 @@ async def test_my_games_list(
     author: dto.Player,
     dao: HolderDao,
 ):
-    game = await create_game(author=author, name="draft for list", dao=dao.game_creator)
+    game = await create_game(author=author, name="draft for list", dao=GameCreatorImpl(dao))
     resp = await client.get("/games/my", cookies=auth_cookies(auth, author))
     assert resp.status_code == 200, resp.text
     ids = [g["id"] for g in resp.json()["content"]]
@@ -110,7 +111,7 @@ async def test_scenario_files_round_trip(
     author: dto.Player,
     dao: HolderDao,
 ):
-    game = await create_game(author=author, name="draft with file ref", dao=dao.game_creator)
+    game = await create_game(author=author, name="draft with file ref", dao=GameCreatorImpl(dao))
     cookies = auth_cookies(auth, author)
     # upload a file and reference it from a hint
     up = await client.post(
@@ -169,7 +170,7 @@ async def test_photo_hint_spoiler_round_trip(
     author: dto.Player,
     dao: HolderDao,
 ):
-    game = await create_game(author=author, name="draft with spoiler", dao=dao.game_creator)
+    game = await create_game(author=author, name="draft with spoiler", dao=GameCreatorImpl(dao))
     cookies = auth_cookies(auth, author)
     up = await client.post(
         f"/cdn/games/{game.id}/files",
@@ -228,7 +229,7 @@ async def test_change_scenario(
     dao: HolderDao,
     retort: Retort,
 ):
-    game = await create_game(author=author, name="draft to fill", dao=dao.game_creator)
+    game = await create_game(author=author, name="draft to fill", dao=GameCreatorImpl(dao))
     resp = await client.put(
         f"/games/my/{game.id}/scenario",
         json=SNAKE_SCENARIO,
@@ -254,7 +255,7 @@ async def test_rename_game(
     dao: HolderDao,
     check_dao: HolderDao,
 ):
-    game = await create_game(author=author, name="draft to rename", dao=dao.game_creator)
+    game = await create_game(author=author, name="draft to rename", dao=GameCreatorImpl(dao))
     resp = await client.put(
         f"/games/my/{game.id}/name",
         json={"name": "  переименованная игра  "},
@@ -296,8 +297,10 @@ async def test_rename_game_to_a_taken_name_forbidden(
     dao: HolderDao,
     check_dao: HolderDao,
 ):
-    occupied = await create_game(author=author, name="name already used", dao=dao.game_creator)
-    game = await create_game(author=author, name="draft wanting that name", dao=dao.game_creator)
+    occupied = await create_game(author=author, name="name already used", dao=GameCreatorImpl(dao))
+    game = await create_game(
+        author=author, name="draft wanting that name", dao=GameCreatorImpl(dao)
+    )
     resp = await client.put(
         f"/games/my/{game.id}/name",
         json={"name": occupied.name},
@@ -317,7 +320,9 @@ async def test_rename_game_to_an_empty_name_forbidden(
     dao: HolderDao,
     check_dao: HolderDao,
 ):
-    game = await create_game(author=author, name="draft keeping its name", dao=dao.game_creator)
+    game = await create_game(
+        author=author, name="draft keeping its name", dao=GameCreatorImpl(dao)
+    )
     resp = await client.put(
         f"/games/my/{game.id}/name",
         json={"name": "   "},
@@ -355,7 +360,7 @@ async def test_change_start_at(
     author: dto.Player,
     dao: HolderDao,
 ):
-    game = await create_game(author=author, name="draft to schedule", dao=dao.game_creator)
+    game = await create_game(author=author, name="draft to schedule", dao=GameCreatorImpl(dao))
     start_at = datetime.now(tz=tz_utc) + timedelta(days=1)
     resp = await client.put(
         f"/games/my/{game.id}/start_at",
@@ -384,7 +389,7 @@ async def test_change_status(
     author: dto.Player,
     dao: HolderDao,
 ):
-    game = await create_game(author=author, name="draft to publish", dao=dao.game_creator)
+    game = await create_game(author=author, name="draft to publish", dao=GameCreatorImpl(dao))
     resp = await client.put(
         f"/games/my/{game.id}/status",
         json={"status": GameStatus.getting_waivers.value},
@@ -403,7 +408,7 @@ async def test_upload_game_file(
     author: dto.Player,
     dao: HolderDao,
 ):
-    game = await create_game(author=author, name="draft with files", dao=dao.game_creator)
+    game = await create_game(author=author, name="draft with files", dao=GameCreatorImpl(dao))
     resp = await client.post(
         f"/cdn/games/{game.id}/files",
         files={"file": ("note.txt", b"hello world", "text/plain")},
@@ -425,7 +430,7 @@ async def test_rename_game_file(
     author: dto.Player,
     dao: HolderDao,
 ):
-    game = await create_game(author=author, name="draft rename file", dao=dao.game_creator)
+    game = await create_game(author=author, name="draft rename file", dao=GameCreatorImpl(dao))
     cookies = auth_cookies(auth, author)
     up = await client.post(
         f"/cdn/games/{game.id}/files",
@@ -457,7 +462,9 @@ async def test_rename_foreign_game_file_forbidden(
     harry: dto.Player,
     dao: HolderDao,
 ):
-    game = await create_game(author=author, name="draft rename forbidden", dao=dao.game_creator)
+    game = await create_game(
+        author=author, name="draft rename forbidden", dao=GameCreatorImpl(dao)
+    )
     up = await client.post(
         f"/cdn/games/{game.id}/files",
         files={"file": ("note.txt", b"hello world", "text/plain")},
@@ -481,7 +488,7 @@ async def test_rename_file_not_in_game(
     author: dto.Player,
     dao: HolderDao,
 ):
-    game = await create_game(author=author, name="draft rename missing", dao=dao.game_creator)
+    game = await create_game(author=author, name="draft rename missing", dao=GameCreatorImpl(dao))
     resp = await client.patch(
         f"/cdn/games/{game.id}/files/00000000-0000-0000-0000-000000000000",
         json={"filename": "renamed"},
@@ -497,7 +504,7 @@ async def test_uploaded_file_listed_without_reference(
     author: dto.Player,
     dao: HolderDao,
 ):
-    game = await create_game(author=author, name="draft unref file", dao=dao.game_creator)
+    game = await create_game(author=author, name="draft unref file", dao=GameCreatorImpl(dao))
     cookies = auth_cookies(auth, author)
     # upload a file for the game but never reference it from any level
     up = await client.post(

@@ -13,6 +13,7 @@ from dishka import make_async_container
 from shvatka.common.config.parser.logging_config import setup_logging
 from shvatka.common.config.parser.paths import common_get_paths
 from shvatka.core.interfaces.clients.file_storage import FileGateway
+from shvatka.core.interfaces.dal.game import GameUpserter
 from shvatka.core.models import dto, enums
 from shvatka.core.models.dto import scn  # noqa: F401
 from shvatka.core.models.dto.export_stat import (
@@ -45,12 +46,14 @@ async def main():
         config = await dishka.get(TgBotConfig)
         async with dishka() as request_dishka:
             dao = await request_dishka.get(HolderDao)
+            game_upserter = await request_dishka.get(GameUpserter)
             file_gateway = await request_dishka.get(FileGateway)
             bot_player = await dao.player.upsert_author_dummy()
             await dao.commit()
             await load_scns(
                 bot_player=bot_player,
                 dao=dao,
+                game_upserter=game_upserter,
                 file_gateway=file_gateway,
                 retort=await dishka.get(Retort),
                 path=config.file_storage_config.path.parent / "scn",
@@ -62,6 +65,7 @@ async def main():
 async def load_scns(
     bot_player: dto.Player,
     dao: HolderDao,
+    game_upserter: GameUpserter,
     file_gateway: FileGateway,
     retort: Retort,
     path: Path,
@@ -73,7 +77,7 @@ async def load_scns(
             with file.open("rb") as game_zip_scn:
                 game = await load_scn(
                     player=bot_player,
-                    dao=dao,
+                    dao=game_upserter,
                     file_gateway=file_gateway,
                     retort=retort,
                     zip_scn=game_zip_scn,
@@ -224,14 +228,14 @@ def load_results(game_zip_scn: BinaryIO, retort: Retort) -> GameStat:
 
 async def load_scn(
     player: dto.Player,
-    dao: HolderDao,
+    dao: GameUpserter,
     file_gateway: FileGateway,
     retort: Retort,
     zip_scn: BinaryIO,
 ) -> dto.FullGame | None:
     try:
         with unpack_scn(ZipPath(zip_scn)).open() as scenario:  # type: scn.RawGameScenario
-            game = await upsert_game(scenario, player, dao.game_upserter, retort, file_gateway)
+            game = await upsert_game(scenario, player, dao, retort, file_gateway)
     except exceptions.ScenarioNotCorrect as e:
         logger.exception("game scenario from player %s has problems", player.id, exc_info=e)
         return None

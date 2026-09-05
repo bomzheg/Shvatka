@@ -20,6 +20,9 @@ from shvatka.core.utils.datetime_utils import tz_utc
 from shvatka.core.utils.key_checker_lock import KeyCheckerFactory
 from shvatka.core.waiver.adapters import WaiverVoteAdder
 from shvatka.core.waiver.services import add_vote, approve_waivers, get_all_played
+from shvatka.infrastructure.db.dao.complex.game import GameUpserterImpl
+from shvatka.infrastructure.db.dao.complex.game_play import GamePlayerDaoImpl
+from shvatka.infrastructure.db.dao.complex.waiver import WaiverApproverImpl
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from tests.mocks.team_notifier import TeamNotifierMock
 
@@ -35,7 +38,7 @@ async def game(
     return await upsert_game(
         complex_scn,
         author,
-        dao.game_upserter,
+        GameUpserterImpl(dao),
         retort,
         file_gateway,
     )
@@ -92,7 +95,9 @@ async def finished_game(
 ) -> dto.FullGame:
     game = started_game
     current_game = CurrentGameProviderMock(game, dao.waiver)
-    key_processor = KeyProcessor(dao=dao.game_player, current_game=current_game, locker=locker)
+    key_processor = KeyProcessor(
+        dao=GamePlayerDaoImpl(dao), current_game=current_game, locker=locker
+    )
     await key_processor.submit_key(
         key="SHWRONG",
         player=ron,
@@ -123,7 +128,7 @@ async def finished_game(
         player=draco,
         now=datetime.now(tz_utc),
     )
-    await dao.game_player.level_up(slytherin, game.levels[0], game, 1)
+    await GamePlayerDaoImpl(dao).level_up(slytherin, game.levels[0], game, 1)
     await asyncio.sleep(0.1)
     await key_processor.submit_key(
         key="SH123",
@@ -131,7 +136,7 @@ async def finished_game(
         player=ron,
         now=datetime.now(tz_utc),
     )
-    await dao.game_player.level_up(gryffindor, game.levels[0], game, 1)
+    await GamePlayerDaoImpl(dao).level_up(gryffindor, game.levels[0], game, 1)
     await asyncio.sleep(0.2)
     await key_processor.submit_key(
         key="SHOOT",
@@ -139,7 +144,7 @@ async def finished_game(
         player=hermione,
         now=datetime.now(tz_utc),
     )
-    await dao.game_player.level_up(gryffindor, game.levels[1], game, 2)
+    await GamePlayerDaoImpl(dao).level_up(gryffindor, game.levels[1], game, 2)
     await asyncio.sleep(0.1)
     await key_processor.submit_key(
         key="SHOOT",
@@ -147,7 +152,7 @@ async def finished_game(
         player=draco,
         now=datetime.now(tz_utc),
     )
-    await dao.game_player.level_up(slytherin, game.levels[1], game, 2)
+    await GamePlayerDaoImpl(dao).level_up(slytherin, game.levels[1], game, 2)
     await dao.game.set_finished(game)
     await dao.commit()
 
@@ -162,7 +167,7 @@ async def routed_game(
     file_gateway: FileGateway,
     retort: Retort,
 ):
-    game = await upsert_game(routed_scn, author, dao.game_upserter, retort, file_gateway)
+    game = await upsert_game(routed_scn, author, GameUpserterImpl(dao), retort, file_gateway)
     await dao.game.set_start_at(game, datetime.fromisoformat("2025-04-12T16:00:00Z"))
     await dao.commit()
     return game
@@ -219,7 +224,9 @@ async def finished_routed_game(
 ) -> dto.FullGame:
     game = started_routed_game
     current_game = CurrentGameProviderMock(game, dao.waiver)
-    key_processor = KeyProcessor(dao=dao.game_player, current_game=current_game, locker=locker)
+    key_processor = KeyProcessor(
+        dao=GamePlayerDaoImpl(dao), current_game=current_game, locker=locker
+    )
     await key_processor.submit_key(
         key="SHWRONG",
         player=ron,
@@ -232,21 +239,21 @@ async def finished_routed_game(
         team=gryffindor,
         now=datetime.now(tz_utc),
     )
-    await dao.game_player.level_up(gryffindor, game.levels[0], game, 2)
+    await GamePlayerDaoImpl(dao).level_up(gryffindor, game.levels[0], game, 2)
     await key_processor.submit_key(
         key="SHTO3",
         player=draco,
         team=slytherin,
         now=datetime.now(tz_utc),
     )
-    await dao.game_player.level_up(slytherin, game.levels[0], game, 2)
+    await GamePlayerDaoImpl(dao).level_up(slytherin, game.levels[0], game, 2)
     await key_processor.submit_key(
         key="SHTO1",
         player=ron,
         team=gryffindor,
         now=datetime.now(tz_utc),
     )
-    await dao.game_player.level_up(gryffindor, game.levels[0], game, 0)
+    await GamePlayerDaoImpl(dao).level_up(gryffindor, game.levels[0], game, 0)
     await key_processor.submit_key(
         key="SHTO3",
         player=harry,
@@ -259,14 +266,14 @@ async def finished_routed_game(
         team=gryffindor,
         now=datetime.now(tz_utc),
     )
-    await dao.game_player.level_up(slytherin, game.levels[0], game, 3)
+    await GamePlayerDaoImpl(dao).level_up(slytherin, game.levels[0], game, 3)
     await key_processor.submit_key(
         key="SHT3",
         player=draco,
         team=slytherin,
         now=datetime.now(tz_utc),
     )
-    await dao.game_player.level_up(slytherin, game.levels[0], game, 3)
+    await GamePlayerDaoImpl(dao).level_up(slytherin, game.levels[0], game, 3)
     await dao.game.set_finished(game)
     await dao.commit()
 
@@ -295,8 +302,8 @@ async def add_waivers(
     await add_vote(game, gryffindor, ron, Played.no, waiver_vote_adder)
     await add_vote(game, slytherin, draco, Played.yes, waiver_vote_adder)
 
-    await approve_waivers(game, gryffindor, harry, dao.waiver_approver)
-    await approve_waivers(game, slytherin, draco, dao.waiver_approver)
+    await approve_waivers(game, gryffindor, harry, WaiverApproverImpl(dao))
+    await approve_waivers(game, slytherin, draco, WaiverApproverImpl(dao))
     return game
 
 

@@ -6,6 +6,7 @@ from aiogram_dialog.widgets.kbd import Button
 from dishka import FromDishka
 from dishka.integrations.aiogram_dialog import inject
 
+from shvatka.core.interfaces.dal.player import TeamLeaver
 from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.players.player import leave
 from shvatka.core.views.team import TeamNotifier
@@ -40,7 +41,8 @@ async def on_leave_team(
     identity: FromDishka[IdentityProvider],
     team_notifier: FromDishka[TeamNotifier],
     dao: FromDishka[HolderDao],
+    team_leaver: FromDishka[TeamLeaver],
 ):
     player = (await get_actual_team_player(identity)).player
-    await leave(player, player, dao.team_leaver, notifier=team_notifier)
+    await leave(player, player, team_leaver, notifier=team_notifier)
     await dialog_manager.done()

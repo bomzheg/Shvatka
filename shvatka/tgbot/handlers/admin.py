@@ -5,6 +5,7 @@ from aiogram.filters import Command, CommandObject
 from dishka import FromDishka
 from dishka.integrations.aiogram import inject
 
+from shvatka.core.interfaces.dal.complex import TeamMerger
 from shvatka.core.notifications.request_interactors import CreatePlayerMergeRequestInteractor
 from shvatka.core.services.team import get_team_by_id, merge_teams
 from shvatka.core.views.game import GameLogWriter
@@ -20,6 +21,7 @@ async def merge_teams_command(
     command: CommandObject,
     game_log: FromDishka[GameLogWriter],
     dao: FromDishka[HolderDao],
+    team_merger: FromDishka[TeamMerger],
 ):
     if not command.args:
         await message.reply(
@@ -31,7 +33,7 @@ async def merge_teams_command(
     primary = await get_team_by_id(new_id, dao.team)
     assert primary.captain
     secondary = await get_team_by_id(old_id, dao.team)
-    await merge_teams(primary.captain, primary, secondary, game_log, dao.team_merger)
+    await merge_teams(primary.captain, primary, secondary, game_log, team_merger)
     await message.reply(f"Успешно объединены {primary.name} и {secondary.name}")
 
 

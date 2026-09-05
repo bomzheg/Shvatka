@@ -13,6 +13,7 @@ from shvatka.core.games.editor_interactors import (
     ExportGameZipInteractor,
     PlanGameStartInteractor,
 )
+from shvatka.core.interfaces.dal.complex import GameStatDao
 from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.interfaces.nursery import Nursery
 from shvatka.core.models import enums
@@ -271,10 +272,11 @@ async def show_results(
     identity: FromDishka[IdentityProvider],
     dao: FromDishka[HolderDao],
     results_sender: FromDishka[ResultsRichSender],
+    game_stat_dao: FromDishka[GameStatDao],
 ):
     game_id = manager.dialog_data["game_id"]
     full_game = await get_full_game(id_=game_id, identity=identity, dao=dao.game)
-    game_stat = await get_game_stat(game=full_game, identity=identity, dao=dao.game_stat)
+    game_stat = await get_game_stat(game=full_game, identity=identity, dao=game_stat_dao)
     assert isinstance(c.message, Message)
     await results_sender.send_results(
         chat_id=c.message.chat.id,
@@ -291,10 +293,11 @@ async def get_excel_results_handler(
     manager: DialogManager,
     identity: FromDishka[IdentityProvider],
     dao: FromDishka[HolderDao],
+    game_stat_dao: FromDishka[GameStatDao],
 ):
     game_id = manager.dialog_data["game_id"]
     full_game = await get_full_game(id_=game_id, identity=identity, dao=dao.game)
-    game_stat = await get_game_stat(game=full_game, identity=identity, dao=dao.game_stat)
+    game_stat = await get_game_stat(game=full_game, identity=identity, dao=game_stat_dao)
     file = BytesIO()
     export_results(game=full_game, game_stat=game_stat, file=file)
     file.seek(0)

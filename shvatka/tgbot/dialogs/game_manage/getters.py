@@ -11,6 +11,7 @@ from telegraph.aio import Telegraph
 
 from shvatka.common.config.models.main import FeaturesConfig
 from shvatka.common.url_factory import UrlFactory
+from shvatka.core.interfaces.dal.complex import TypedKeyGetter
 from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.models import dto
 from shvatka.core.services import game
@@ -70,6 +71,7 @@ async def get_game_keys(
     dialog_manager: DialogManager,
     telegraph: FromDishka[Telegraph],
     identity: FromDishka[IdentityProvider],
+    typed_keys: FromDishka[TypedKeyGetter],
     **_,
 ):
     data: dict[str, Any] = dialog_manager.start_data  # type: ignore[assignment]
@@ -81,7 +83,11 @@ async def get_game_keys(
     return {
         "game": current_game,
         "key_link": await get_or_create_keys_page(
-            game=current_game, telegraph=telegraph, dao=dao, identity=identity
+            game=current_game,
+            telegraph=telegraph,
+            dao=dao,
+            typed_keys=typed_keys,
+            identity=identity,
         ),
     }
 

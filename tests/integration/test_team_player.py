@@ -13,6 +13,7 @@ from shvatka.core.utils import exceptions
 from shvatka.core.utils.defaults_constants import CAPTAIN_ROLE, DEFAULT_ROLE
 from shvatka.core.utils.exceptions import CantBeAuthor, PermissionsError, PlayerAlreadyInTeam
 from shvatka.core.views.game import GameLogWriter
+from shvatka.infrastructure.db.dao.complex.team import TeamLeaverImpl
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from tests.fixtures.player import promote
 from tests.fixtures.team import create_second_team
@@ -89,7 +90,7 @@ async def test_restore_player_to_team(
     assert await dao.team_player.count() == 2
     assert await get_my_role(hermione, dao.team_player) == DEFAULT_ROLE
 
-    await leave(hermione, harry, dao.team_leaver, notifier=TeamNotifierMock())
+    await leave(hermione, harry, TeamLeaverImpl(dao), notifier=TeamNotifierMock())
 
     players = await dao.team_player.get_players(gryffindor)
     assert len(players) == 1
@@ -120,10 +121,10 @@ async def test_no_restore_player_to_team_just_add(
     assert gryffindor == await get_my_team(hermione, dao.team_player)
     assert await get_my_role(hermione, dao.team_player) == DEFAULT_ROLE
 
-    await leave(hermione, hermione, dao.team_leaver, notifier=TeamNotifierMock())
+    await leave(hermione, hermione, TeamLeaverImpl(dao), notifier=TeamNotifierMock())
 
     await join_team(hermione, slytherin, draco, dao.team_player, notifier=TeamNotifierMock())
-    await leave(hermione, hermione, dao.team_leaver, notifier=TeamNotifierMock())
+    await leave(hermione, hermione, TeamLeaverImpl(dao), notifier=TeamNotifierMock())
 
     players = await dao.team_player.get_players(gryffindor)
     assert len(players) == 1

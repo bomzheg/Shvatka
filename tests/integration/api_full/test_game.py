@@ -26,6 +26,7 @@ from shvatka.core.services.game import create_game
 from shvatka.core.services.organizers import flip_permission
 from shvatka.core.utils.datetime_utils import tz_utc
 from shvatka.infrastructure.db import models
+from shvatka.infrastructure.db.dao.complex.game import GameCreatorImpl
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.infrastructure.nursery import AsyncioNursery
 from tests.fixtures.scn_fixtures import GUID, GUID_2
@@ -186,7 +187,7 @@ async def test_game_file_uploaded_not_referenced(
 ):
     # a file uploaded for the game but never referenced by a hint must still be
     # readable by the author (authorization is based on game_files, not scenario).
-    game = await create_game(author=author, name="game with unref file", dao=dao.game_creator)
+    game = await create_game(author=author, name="game with unref file", dao=GameCreatorImpl(dao))
     cookies = {"Authorization": "Bearer " + auth.create_user_token(author).access_token}
     up = await client.post(
         f"/cdn/games/{game.id}/files",

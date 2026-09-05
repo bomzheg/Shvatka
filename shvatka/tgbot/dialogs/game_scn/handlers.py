@@ -11,6 +11,7 @@ from dishka import FromDishka
 from dishka.integrations.aiogram_dialog import inject
 
 from shvatka.core.games.editor_interactors import ImportGameZipInteractor
+from shvatka.core.interfaces.dal.game import GameCreator
 from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.models import enums
 from shvatka.core.services.achievement import add_achievement
@@ -43,7 +44,7 @@ async def process_name(
             player=author, name=enums.Achievement.game_name_joke, dao=dao.achievement
         )
         return await m.answer(
-            "Лол, я ждал эту шутку. " "Но нет, игра не может называться {name}".format(
+            "Лол, я ждал эту шутку. Но нет, игра не может называться {name}".format(
                 name=hd.bold(hd.quote(game_name))
             )
         )
@@ -105,13 +106,14 @@ async def save_game(
     manager: DialogManager,
     identity: FromDishka[IdentityProvider],
     dao: FromDishka[HolderDao],
+    game_creator: FromDishka[GameCreator],
 ):
     author = await identity.get_required_player()
     name: str = manager.dialog_data["game_name"]
     levels = await get_all_my_free_levels(author, dao.level)
     multiselect = typing.cast(ManagedMultiselect, manager.find("my_free_level_ids"))
     levels = list(filter(lambda level: multiselect.is_checked(level.db_id), levels))
-    game = await create_game(author=author, name=name, dao=dao.game_creator, levels=levels)
+    game = await create_game(author=author, name=name, dao=game_creator, levels=levels)
     assert isinstance(c.message, Message)
     await c.message.edit_text("Игра успешно сохранена")
     await manager.done(result={"game": game})
@@ -129,11 +131,12 @@ async def add_level_handler(
     item_id: str,
     idp: FromDishka[IdentityProvider],
     dao: FromDishka[HolderDao],
+    game_creator: FromDishka[GameCreator],
 ):
     data: dict[str, Any] = manager.start_data  # type: ignore[assignment]
     game_id = data["game_id"]
     author = await idp.get_required_player()
     game = await get_full_game(game_id, identity=idp, dao=dao.game)
     level = await get_by_id(int(item_id), author=author, dao=dao.level)
-    await add_level(game=game, level=level, author=author, dao=dao.game_creator)
+    await add_level(game=game, level=level, author=author, dao=game_creator)
     await manager.switch_to(state=states.GameEditSG.current_levels)

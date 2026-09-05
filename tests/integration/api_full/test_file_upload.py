@@ -5,6 +5,7 @@ from sqlalchemy.exc import NoResultFound
 from shvatka.api.app.dependencies.auth import AuthProperties
 from shvatka.core.models import dto
 from shvatka.core.services.game import create_game
+from shvatka.infrastructure.db.dao.complex.game import GameCreatorImpl
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from tests.mocks.file_gateway import FakeTelegram
 
@@ -30,7 +31,7 @@ async def test_uploaded_file_is_sent_to_telegram(
     check_dao: HolderDao,
     telegram: FakeTelegram,
 ):
-    game = await create_game(author=author, name="draft upload ok", dao=dao.game_creator)
+    game = await create_game(author=author, name="draft upload ok", dao=GameCreatorImpl(dao))
 
     resp = await upload(client, game.id, auth_cookies(auth, author))
 
@@ -50,7 +51,7 @@ async def test_file_telegram_refuses_is_not_stored(
     check_dao: HolderDao,
     telegram: FakeTelegram,
 ):
-    game = await create_game(author=author, name="draft upload refused", dao=dao.game_creator)
+    game = await create_game(author=author, name="draft upload refused", dao=GameCreatorImpl(dao))
     telegram.refuse = True
 
     resp = await upload(client, game.id, auth_cookies(auth, author))
@@ -73,7 +74,7 @@ async def test_force_keeps_the_file_telegram_refused(
     check_dao: HolderDao,
     telegram: FakeTelegram,
 ):
-    game = await create_game(author=author, name="draft upload forced", dao=dao.game_creator)
+    game = await create_game(author=author, name="draft upload forced", dao=GameCreatorImpl(dao))
     telegram.refuse = True
 
     resp = await upload(client, game.id, auth_cookies(auth, author), force=True)
@@ -95,7 +96,7 @@ async def test_refused_upload_leaves_no_half_written_file(
     check_dao: HolderDao,
     telegram: FakeTelegram,
 ):
-    game = await create_game(author=author, name="draft upload rollback", dao=dao.game_creator)
+    game = await create_game(author=author, name="draft upload rollback", dao=GameCreatorImpl(dao))
     telegram.refuse = True
 
     await upload(client, game.id, auth_cookies(auth, author))

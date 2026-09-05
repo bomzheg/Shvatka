@@ -1,4 +1,3 @@
-import typing
 from collections.abc import Sequence
 from dataclasses import dataclass
 
@@ -13,14 +12,12 @@ from shvatka.core.teams.adapters import (
     ChatlessTeamCreator,
     TeamCaptainSetter,
 )
-
-if typing.TYPE_CHECKING:
-    from shvatka.infrastructure.db.dao.holder import HolderDao
+from shvatka.infrastructure.db.dao.holder import HolderDao
 
 
 @dataclass
 class TeamCreatorImpl(TeamCreator, ChatlessTeamCreator):
-    dao: "HolderDao"
+    dao: HolderDao
 
     async def check_no_team_in_chat(self, chat: dto.Chat) -> None:
         return await self.dao.team.check_no_team_in_chat(chat)
@@ -57,7 +54,7 @@ class TeamCreatorImpl(TeamCreator, ChatlessTeamCreator):
 
 @dataclass
 class TeamLeaverImpl(TeamLeaver):
-    dao: "HolderDao"
+    dao: HolderDao
 
     async def del_player_vote(self, team_id: int, player_id: int) -> None:
         return await self.dao.poll.del_player_vote(team_id, player_id)
@@ -83,7 +80,7 @@ class TeamLeaverImpl(TeamLeaver):
 
 @dataclass
 class TeamMergerImpl(TeamMerger):
-    dao: "HolderDao"
+    dao: HolderDao
 
     async def replace_team_waiver(self, primary: dto.Team, secondary: dto.Team):
         return await self.dao.waiver.replace_team_waiver(primary, secondary)
@@ -115,7 +112,7 @@ class AdminTeamMergerImpl(TeamMergerImpl, AdminTeamMerger):
 
 @dataclass
 class TeamCaptainSetterImpl(TeamCaptainSetter):
-    dao: "HolderDao"
+    dao: HolderDao
 
     async def get_by_id(self, id_: int) -> dto.Team:
         return await self.dao.team.get_by_id(id_)
@@ -135,7 +132,7 @@ class TeamCaptainSetterImpl(TeamCaptainSetter):
 
 @dataclass
 class CaptainedTeamsReaderImpl(CaptainedTeamsReader):
-    dao: "HolderDao"
+    dao: HolderDao
 
     async def get_captained_teams(self, captain: dto.Player) -> list[dto.Team]:
         return await self.dao.team.get_captained_teams(captain)

@@ -6,6 +6,7 @@ from dishka import FromDishka
 from dishka.integrations.aiogram_dialog import inject
 
 from shvatka.core.interfaces.current_game import CurrentGameProvider
+from shvatka.core.interfaces.dal.complex import GameStatDao
 from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.services.game_stat import get_game_spy
 from shvatka.core.services.organizers import get_by_player
@@ -40,12 +41,13 @@ async def get_spy(
     dialog_manager: DialogManager,
     identity: FromDishka[IdentityProvider],
     current_game: FromDishka[CurrentGameProvider],
+    game_stat: FromDishka[GameStatDao],
     **_,
 ):
     game = await current_game.get_required_game()
     player = await identity.get_required_player()
     stat = sorted(
-        await get_game_spy(game, player, dao.game_stat),
+        await get_game_spy(game, player, game_stat),
         key=lambda x: (-x.level_number, x.start_at),
     )
     result = defaultdict(list)

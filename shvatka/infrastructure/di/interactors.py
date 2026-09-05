@@ -68,6 +68,7 @@ from shvatka.core.interfaces.dal.complex import (
     GamePackager,
     GameScenarioEditor,
     GameStatusChanger,
+    TeamMerger,
 )
 from shvatka.core.interfaces.dal.game import (
     GameByIdGetter,
@@ -77,7 +78,8 @@ from shvatka.core.interfaces.dal.game import (
     GameUpserter,
 )
 from shvatka.core.interfaces.dal.game_play import GamePlayerDao
-from shvatka.core.interfaces.dal.waiver import WaiverApprover
+from shvatka.core.interfaces.dal.organizer import OrgAdder
+from shvatka.core.interfaces.dal.player import PlayerPromoter, TeamLeaver
 from shvatka.core.interfaces.scheduler import Scheduler
 from shvatka.core.interfaces.superusers import SuperusersResolver
 from shvatka.core.notifications.adapters import (
@@ -124,6 +126,7 @@ from shvatka.core.players.interfaces import (
     AdminPlayerWaiverPointsReader,
     AdminTgChanger,
     AdminUsernameSetter,
+    PlayerMerger,
 )
 from shvatka.core.scenario.interactors import (
     AllGameKeysPrintInteractor,
@@ -206,7 +209,6 @@ from shvatka.infrastructure.db.dao.complex.game import (
     GameReleaseReaderImpl,
     GameScenarioEditorImpl,
 )
-from shvatka.infrastructure.db.dao.complex.game_play import GamePlayerDaoImpl
 from shvatka.infrastructure.db.dao.complex.key_log import GameKeysReaderImpl
 from shvatka.infrastructure.db.dao.complex.level_times import GameStatReaderImpl
 from shvatka.infrastructure.db.dao.complex.player import (
@@ -223,7 +225,6 @@ from shvatka.infrastructure.db.dao.complex.team import (
     CaptainedTeamsReaderImpl,
     CaptainTeamJoinerImpl,
     TeamCaptainSetterImpl,
-    TeamCreatorImpl,
 )
 from shvatka.infrastructure.db.dao.complex2.waiver import (
     AdminGameWaiversReaderImpl,
@@ -268,34 +269,22 @@ class ContextProvider(Provider):
 class GamePlayProvider(Provider):
     scope = Scope.REQUEST
 
-    @provide
-    def get_game_keys(self, dao: HolderDao) -> GameKeysReader:
-        return GameKeysReaderImpl(dao)
-
+    game_keys_reader_dao = provide(GameKeysReaderImpl, provides=GameKeysReader)
     get_game_keys_interactor = provide(GameKeysReaderInteractor)
 
-    @provide
-    def get_game_state(self, dao: HolderDao) -> GameStatReader:
-        return GameStatReaderImpl(dao)
-
+    game_stat_reader_dao = provide(GameStatReaderImpl, provides=GameStatReader)
     get_game_state_interactor = provide(GameStatReaderInteractor)
     get_game_results_file_interactor = provide(GameResultsFileInteractor)
 
-    @provide
-    def get_game_files(self, dao: HolderDao) -> GameFileReader:
-        return GameFilesGetterImpl(dao)
-
+    game_files_reader_dao = provide(GameFilesGetterImpl, provides=GameFileReader)
     file_reader = provide(GameFileReaderInteractor)
     game_play_reader_interactor = provide(GamePlayReaderInteractor)
     passed_levels_reader_interactor = provide(PassedLevelsReaderInteractor)
 
     @provide
     def game_play_dao(self, dao: HolderDao, current_game: CurrentGameProvider) -> GamePlayDao:
+        # `cache` is per-request scratch space, not a dependency dishka can build
         return GamePlayDaoImpl(dao=dao, current_game=current_game, cache={})
-
-    @provide
-    def game_player_dao(self, dao: HolderDao) -> GamePlayerDao:
-        return GamePlayerDaoImpl(dao)
 
     game_play_role_reader = provide(GamePlayRoleReader)
 
@@ -324,9 +313,7 @@ class GameEditProvider(Provider):
     def my_game(self, dao: HolderDao) -> MyGameInteractor:
         return MyGameInteractor(dao.game)
 
-    @provide
-    def create_game(self, dao: HolderDao) -> CreateGameInteractor:
-        return CreateGameInteractor(dao.game_creator)
+    create_game = provide(CreateGameInteractor)
 
     @provide
     def game_name_editor(self, dao: HolderDao) -> GameNameEditor:
@@ -334,23 +321,13 @@ class GameEditProvider(Provider):
 
     rename_game = provide(RenameGameInteractor)
 
-    @provide
-    def game_scenario_editor(self, dao: HolderDao) -> GameScenarioEditor:
-        return GameScenarioEditorImpl(dao=dao)
+    game_scenario_editor = provide(GameScenarioEditorImpl, provides=GameScenarioEditor)
 
     @provide
     def change_scenario(
         self, dao: GameScenarioEditor, retort: Retort
     ) -> ChangeGameScenarioInteractor:
         return ChangeGameScenarioInteractor(dao=dao, retort=retort)
-
-    @provide
-    def game_upserter(self, dao: HolderDao) -> GameUpserter:
-        return dao.game_upserter
-
-    @provide
-    def game_packager(self, dao: HolderDao) -> GamePackager:
-        return dao.game_packager
 
     @provide
     def import_zip(
@@ -378,9 +355,7 @@ class GameEditProvider(Provider):
 
     change_status = provide(ChangeGameStatusInteractor)
 
-    @provide
-    def game_file_uploader(self, dao: HolderDao) -> GameFileUploader:
-        return GameFileUploaderImpl(dao=dao)
+    game_file_uploader = provide(GameFileUploaderImpl, provides=GameFileUploader)
 
     @provide
     def upload_file(
@@ -388,17 +363,13 @@ class GameEditProvider(Provider):
     ) -> UploadGameFileInteractor:
         return UploadGameFileInteractor(storage=storage, dao=dao, file_gateway=file_gateway)
 
-    @provide
-    def game_file_renamer(self, dao: HolderDao) -> GameFileRenamer:
-        return GameFileRenamerImpl(dao=dao)
+    game_file_renamer = provide(GameFileRenamerImpl, provides=GameFileRenamer)
 
     @provide
     def rename_file(self, dao: GameFileRenamer) -> RenameGameFileInteractor:
         return RenameGameFileInteractor(dao=dao)
 
-    @provide
-    def game_file_deleter(self, dao: HolderDao) -> GameFileDeleter:
-        return GameFileDeleterImpl(dao=dao)
+    game_file_deleter = provide(GameFileDeleterImpl, provides=GameFileDeleter)
 
     @provide
     def delete_file(self, dao: GameFileDeleter, storage: FileStorage) -> DeleteGameFileInteractor:
@@ -409,12 +380,12 @@ class GameEditProvider(Provider):
         return ListGameOrgsInteractor(game_dao=dao.game, org_dao=dao.organizer)
 
     @provide
-    def add_org(self, dao: HolderDao) -> AddGameOrgInteractor:
+    def add_org(self, dao: HolderDao, org_adder: OrgAdder) -> AddGameOrgInteractor:
         return AddGameOrgInteractor(
             game_dao=dao.game,
             player_dao=dao.player,
             org_getter=dao.organizer,
-            org_adder=dao.org_adder,
+            org_adder=org_adder,
             org_deleted_flipper=dao.organizer,
         )
 
@@ -430,16 +401,8 @@ class GameEditProvider(Provider):
 class GameReleaseProvider(Provider):
     scope = Scope.REQUEST
 
-    # these two take a `HolderDao` the impl only imports under TYPE_CHECKING,
-    # so dishka cannot build them from the annotation — same as every other
-    # complex dao here (`game_scenario_editor`, `admin_game_scenario_editor`)
-    @provide
-    def game_release_reader(self, dao: HolderDao) -> GameReleaseReader:
-        return GameReleaseReaderImpl(dao=dao)
-
-    @provide
-    def game_release_editor(self, dao: HolderDao) -> GameReleaseEditor:
-        return GameReleaseEditorImpl(dao=dao)
+    game_release_reader = provide(GameReleaseReaderImpl, provides=GameReleaseReader)
+    game_release_editor = provide(GameReleaseEditorImpl, provides=GameReleaseEditor)
 
     get_release = provide(GetGameReleaseInteractor)
     save_release = provide(SaveGameReleaseInteractor)
@@ -458,10 +421,6 @@ class WaiverProvider(Provider):
     waiver_vote_adder_dao = provide(WaiverVoteAdderImpl, provides=WaiverVoteAdder)
     waiver_vote_getter_dao = provide(WaiverVoteGetterImpl, provides=WaiverVoteGetter)
     poll_drafts_reader_dao = provide(PollDraftsReaderImpl, provides=PollDraftsReader)
-
-    @provide
-    def waiver_approver(self, dao: HolderDao) -> WaiverApprover:
-        return dao.waiver_approver
 
 
 class PlayerProvider(Provider):
@@ -522,10 +481,10 @@ class TeamProvider(Provider):
 
     @provide
     def remove_player(
-        self, dao: HolderDao, notifier: TeamNotifier
+        self, dao: HolderDao, team_leaver: TeamLeaver, notifier: TeamNotifier
     ) -> RemovePlayerFromTeamInteractor:
         return RemovePlayerFromTeamInteractor(
-            dao=dao.team_leaver, player_dao=dao.player, notifier=notifier
+            dao=team_leaver, player_dao=dao.player, notifier=notifier
         )
 
     @provide
@@ -538,27 +497,17 @@ class TeamProvider(Provider):
     def edit_team(self, dao: HolderDao, notifier: TeamNotifier) -> EditTeamInteractor:
         return EditTeamInteractor(dao=dao.team, team_player_dao=dao.team_player, notifier=notifier)
 
-    @provide
-    def captained_teams_reader(self, dao: HolderDao) -> CaptainedTeamsReader:
-        return CaptainedTeamsReaderImpl(dao=dao)
+    captained_teams_reader = provide(CaptainedTeamsReaderImpl, provides=CaptainedTeamsReader)
 
     my_captained_teams = provide(MyCaptainedTeamsInteractor)
 
-    @provide
-    def captain_team_joiner(self, dao: HolderDao) -> CaptainTeamJoiner:
-        return CaptainTeamJoinerImpl(dao=dao)
+    captain_team_joiner = provide(CaptainTeamJoinerImpl, provides=CaptainTeamJoiner)
 
     join_captained_team = provide(JoinCaptainedTeamInteractor)
 
-    @provide
-    def team_captain_setter(self, dao: HolderDao) -> TeamCaptainSetter:
-        return TeamCaptainSetterImpl(dao=dao)
+    team_captain_setter = provide(TeamCaptainSetterImpl, provides=TeamCaptainSetter)
 
     change_captain = provide(ChangeCaptainInteractor)
-
-    @provide
-    def chatless_team_creator(self, dao: HolderDao) -> ChatlessTeamCreator:
-        return TeamCreatorImpl(dao=dao)
 
     @provide
     def create_team(
@@ -570,9 +519,7 @@ class TeamProvider(Provider):
 class SearchProvider(Provider):
     scope = Scope.REQUEST
 
-    @provide
-    def global_search_dao(self, dao: HolderDao) -> GlobalSearchDao:
-        return GlobalSearchDaoImpl(dao)
+    global_search_dao = provide(GlobalSearchDaoImpl, provides=GlobalSearchDao)
 
     global_search = provide(GlobalSearchInteractor)
 
@@ -580,42 +527,21 @@ class SearchProvider(Provider):
 class AdminProvider(Provider):
     scope = Scope.REQUEST
 
-    # DAO adapters. complex2/waiver impls import HolderDao directly, so dishka can
-    # analyse the class-provide shorthand. complex/player and complex/team impls
-    # import HolderDao under TYPE_CHECKING (to break a circular import), so they
-    # need an explicit factory instead.
+    # DAO adapters
     admin_poll_reader_dao = provide(AdminPollReaderImpl, provides=AdminPollReader)
     poll_vote_remover_dao = provide(PollVoteRemoverImpl, provides=PollVoteRemover)
     admin_waivers_reader_dao = provide(AdminGameWaiversReaderImpl, provides=AdminGameWaiversReader)
     admin_waiver_editor_dao = provide(AdminWaiverEditorImpl, provides=AdminWaiverEditor)
 
-    @provide
-    def admin_email_setter(self, dao: HolderDao) -> AdminEmailSetter:
-        return AdminEmailSetterImpl(dao)
-
-    @provide
-    def admin_tg_changer(self, dao: HolderDao) -> AdminTgChanger:
-        return AdminTgChangerImpl(dao)
-
-    @provide
-    def admin_username_setter(self, dao: HolderDao) -> AdminUsernameSetter:
-        return AdminUsernameSetterImpl(dao)
-
-    @provide
-    def admin_player_reader(self, dao: HolderDao) -> AdminPlayerReader:
-        return AdminPlayerReaderImpl(dao)
-
-    @provide
-    def admin_player_merger_dao(self, dao: HolderDao) -> AdminPlayerMerger:
-        return AdminPlayerMergerImpl(dao)
-
-    @provide
-    def admin_player_waiver_points_dao(self, dao: HolderDao) -> AdminPlayerWaiverPointsReader:
-        return AdminPlayerWaiverPointsReaderImpl(dao)
-
-    @provide
-    def admin_team_merger_dao(self, dao: HolderDao) -> AdminTeamMerger:
-        return AdminTeamMergerImpl(dao)
+    admin_email_setter = provide(AdminEmailSetterImpl, provides=AdminEmailSetter)
+    admin_tg_changer = provide(AdminTgChangerImpl, provides=AdminTgChanger)
+    admin_username_setter = provide(AdminUsernameSetterImpl, provides=AdminUsernameSetter)
+    admin_player_reader = provide(AdminPlayerReaderImpl, provides=AdminPlayerReader)
+    admin_player_merger_dao = provide(AdminPlayerMergerImpl, provides=AdminPlayerMerger)
+    admin_player_waiver_points_dao = provide(
+        AdminPlayerWaiverPointsReaderImpl, provides=AdminPlayerWaiverPointsReader
+    )
+    admin_team_merger_dao = provide(AdminTeamMergerImpl, provides=AdminTeamMerger)
 
     # Interactors
     admin_set_email = provide(AdminSetPlayerEmailInteractor)
@@ -639,10 +565,10 @@ class AdminProvider(Provider):
 
     @provide
     def admin_remove_player_from_team(
-        self, dao: HolderDao, notifier: TeamNotifier
+        self, dao: HolderDao, team_leaver: TeamLeaver, notifier: TeamNotifier
     ) -> AdminRemovePlayerFromTeamInteractor:
         return AdminRemovePlayerFromTeamInteractor(
-            dao=dao.team_leaver, player_dao=dao.player, notifier=notifier
+            dao=team_leaver, player_dao=dao.player, notifier=notifier
         )
 
     admin_waivers_reader = provide(AdminGameWaiversReaderInteractor)
@@ -656,9 +582,9 @@ class AdminProvider(Provider):
     admin_update_scenario = provide(AdminUpdateGameScenarioInteractor)
     admin_upload_file = provide(AdminUploadGameFileInteractor)
 
-    @provide
-    def file_garbage_collector_dao(self, dao: HolderDao) -> FileGarbageCollectorDao:
-        return FileGarbageCollectorImpl(dao=dao)
+    file_garbage_collector_dao = provide(
+        FileGarbageCollectorImpl, provides=FileGarbageCollectorDao
+    )
 
     @provide
     def collect_file_garbage(
@@ -666,13 +592,12 @@ class AdminProvider(Provider):
     ) -> CollectFileGarbageInteractor:
         return CollectFileGarbageInteractor(dao=dao, storage=storage)
 
-    @provide
-    def admin_game_scenario_editor(self, dao: HolderDao) -> AdminGameScenarioEditor:
-        return AdminGameScenarioEditorImpl(dao=dao)
-
-    @provide
-    def admin_game_status_changer(self, dao: HolderDao) -> AdminGameStatusChanger:
-        return AdminGameStatusChangerImpl(dao=dao)
+    admin_game_scenario_editor = provide(
+        AdminGameScenarioEditorImpl, provides=AdminGameScenarioEditor
+    )
+    admin_game_status_changer = provide(
+        AdminGameStatusChangerImpl, provides=AdminGameStatusChanger
+    )
 
     @provide
     def admin_level_resender(self, dao: GamePlayerDao) -> AdminLevelResender:
@@ -745,13 +670,14 @@ class RequestProvider(Provider):
         dao: HolderDao,
         requests: RequestStorage,
         notifications: NotificationWriter,
+        org_adder: OrgAdder,
         notifier: RequestNotifier,
     ) -> CreateOrgInviteInteractor:
         return CreateOrgInviteInteractor(
             requests=requests,
             notifications=notifications,
             player_dao=dao.player,
-            org_adder=dao.org_adder,
+            org_adder=org_adder,
             notifier=notifier,
         )
 
@@ -810,6 +736,10 @@ class RequestProvider(Provider):
         dao: HolderDao,
         requests: RequestStorage,
         notifications: NotificationWriter,
+        org_adder: OrgAdder,
+        team_merger: TeamMerger,
+        player_merger: PlayerMerger,
+        player_promoter: PlayerPromoter,
         team_notifier: TeamNotifier,
         org_notifier: OrgNotifier,
         game_log: GameLogWriter,
@@ -822,10 +752,10 @@ class RequestProvider(Provider):
             team_dao=dao.team,
             team_player_dao=dao.team_player,
             player_dao=dao.player,
-            org_adder=dao.org_adder,
-            team_merger=dao.team_merger,
-            player_merger=dao.player_merger,
-            player_promoter=dao.player_promoter,
+            org_adder=org_adder,
+            team_merger=team_merger,
+            player_merger=player_merger,
+            player_promoter=player_promoter,
             game_log=game_log,
             team_notifier=team_notifier,
             org_notifier=org_notifier,

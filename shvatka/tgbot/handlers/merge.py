@@ -6,6 +6,8 @@ from aiogram_dialog.api.protocols import BgManagerFactory
 from dishka import FromDishka
 from dishka.integrations.aiogram import inject
 
+from shvatka.core.interfaces.dal.complex import TeamMerger
+from shvatka.core.players.interfaces import PlayerMerger
 from shvatka.core.players.player import merge_players
 from shvatka.core.services.team import get_team_by_id, merge_teams
 from shvatka.core.views.game import GameLogWriter
@@ -26,12 +28,13 @@ async def confirm_merge_team(
     dao: FromDishka[HolderDao],
     game_log: FromDishka[GameLogWriter],
     bg_manager_factory: FromDishka[BgManagerFactory],
+    team_merger: FromDishka[TeamMerger],
     bot: Bot,
 ):
     primary = await get_team_by_id(callback_data.primary_team_id, dao.team)
     assert primary.captain
     secondary = await get_team_by_id(callback_data.secondary_team_id, dao.team)
-    await merge_teams(primary.captain, primary, secondary, game_log, dao.team_merger)
+    await merge_teams(primary.captain, primary, secondary, game_log, team_merger)
     await callback_query.answer("Успешно объединено")
     assert isinstance(callback_query.message, Message)
     await callback_query.message.edit_reply_markup(reply_markup=None)
@@ -47,11 +50,12 @@ async def confirm_merge_players(
     dao: FromDishka[HolderDao],
     game_log: FromDishka[GameLogWriter],
     bg_manager_factory: FromDishka[BgManagerFactory],
+    player_merger: FromDishka[PlayerMerger],
     bot: Bot,
 ):
     primary = await dao.player.get_identities_by_id(callback_data.primary_player_id)
     secondary = await dao.player.get_identities_by_id(callback_data.secondary_player_id)
-    await merge_players(primary, secondary, game_log, dao.player_merger)
+    await merge_players(primary, secondary, game_log, player_merger)
     await callback_query.answer("Успешно объединено")
     assert isinstance(callback_query.message, Message)
     await callback_query.message.edit_reply_markup(reply_markup=None)

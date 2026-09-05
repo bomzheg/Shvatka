@@ -16,6 +16,7 @@ from shvatka.core.players.player import (
     join_team,
     leave,
 )
+from shvatka.infrastructure.db.dao.complex.team import TeamLeaverImpl
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.tgbot.dialogs.outdated import NOT_IN_TEAM
 from shvatka.tgbot.views.commands import START_COMMAND
@@ -56,7 +57,9 @@ async def test_my_team_opened_after_removed_from_team(
     await join_team(hermione, gryffindor, harry, dao.team_player, notifier=TeamNotifierMock())
     main_menu = await open_main_menu(hermione_client, message_manager)
 
-    await leave(player=hermione, remover=harry, dao=dao.team_leaver, notifier=TeamNotifierMock())
+    await leave(
+        player=hermione, remover=harry, dao=TeamLeaverImpl(dao), notifier=TeamNotifierMock()
+    )
 
     message_manager.reset_history()
     await hermione_client.click(main_menu, InlineButtonTextLocator(MY_TEAM_BUTTON))
@@ -88,7 +91,9 @@ async def test_captains_bridge_opened_after_removed_from_team(
     await hermione_client.click(main_menu, InlineButtonTextLocator(MANAGE_TEAM_BUTTON))
     captains_bridge = message_manager.last_message()
 
-    await leave(player=hermione, remover=harry, dao=dao.team_leaver, notifier=TeamNotifierMock())
+    await leave(
+        player=hermione, remover=harry, dao=TeamLeaverImpl(dao), notifier=TeamNotifierMock()
+    )
 
     message_manager.reset_history()
     await hermione_client.click(captains_bridge, InlineButtonTextLocator(PLAYERS_BUTTON))

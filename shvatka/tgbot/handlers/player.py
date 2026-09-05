@@ -16,6 +16,7 @@ from aiogram_dialog.api.protocols import BgManagerFactory
 from dishka import FromDishka
 from dishka.integrations.aiogram import inject
 
+from shvatka.core.interfaces.dal.player import PlayerPromoter, TeamLeaver
 from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.players.player import (
     agree_promotion,
@@ -101,6 +102,7 @@ async def agree_promotion_handler(
     bot: Bot,
     identity: FromDishka[IdentityProvider],
     bg_manager_factory: FromDishka[BgManagerFactory],
+    player_promoter: FromDishka[PlayerPromoter],
 ):
     player = await identity.get_required_player()
     try:
@@ -108,7 +110,7 @@ async def agree_promotion_handler(
             token=callback_data.token,
             inviter_id=callback_data.inviter_id,
             target=player,
-            dao=dao.player_promoter,
+            dao=player_promoter,
         )
     except SaltNotExist:
         await bot.edit_message_text(
@@ -153,13 +155,14 @@ async def leave_handler(
     dao: FromDishka[HolderDao],
     identity: FromDishka[IdentityProvider],
     team_notifier: FromDishka[TeamNotifier],
+    team_leaver: FromDishka[TeamLeaver],
 ):
     player = await identity.get_required_player()
     team = await get_my_team(player, dao.team_player)
     if team is None:
         await message.reply("Ты не состоишь в команде")
         return
-    await leave(player, player, dao.team_leaver, notifier=team_notifier)
+    await leave(player, player, team_leaver, notifier=team_notifier)
     text = render_leave_confirmation(
         player,
         team,

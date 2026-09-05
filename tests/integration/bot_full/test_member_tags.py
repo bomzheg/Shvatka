@@ -11,6 +11,7 @@ from dishka import AsyncContainer
 from shvatka.core.models import dto
 from shvatka.core.players.player import get_full_team_player, join_team, leave
 from shvatka.core.services.team import rename_team
+from shvatka.infrastructure.db.dao.complex.team import TeamLeaverImpl
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.tgbot.config.models.bot import BotConfig
 from shvatka.tgbot.services.bot_rights import BotRights, ChatRights
@@ -65,7 +66,7 @@ async def test_tag_set_and_cleared_on_team_ops(
     # the team name is longer than the 16 characters telegram allows in a tag
     assert render_tag(gryffindor.name) == tag.tag
 
-    await leave(hermione, hermione, dao.team_leaver, notifier=notifier)
+    await leave(hermione, hermione, TeamLeaverImpl(dao), notifier=notifier)
 
     _, cleared = tags(bot_session)
     assert hermione.get_chat_id() == cleared.user_id

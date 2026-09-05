@@ -45,6 +45,7 @@ from shvatka.core.games.release_interactors import (
     SaveGameReleaseInteractor,
 )
 from shvatka.core.interfaces.current_game import CurrentGameProvider
+from shvatka.core.interfaces.dal.complex import GamePackager
 from shvatka.core.models import enums
 from shvatka.core.models.enums.org_permission import OrgPermission
 from shvatka.core.scenario.interactors import AllGameKeysPrintInteractor
@@ -79,10 +80,11 @@ async def get_my_game(
     interactor: FromDishka[MyGameInteractor],
     dao: FromDishka[HolderDao],
     retort: FromDishka[Retort],
+    game_packager: FromDishka[GamePackager],
     id_: Annotated[int, Path(alias="id")],
 ) -> responses.FullGame:
     game = await interactor(game_id=id_, identity=identity)
-    files = await get_file_metas(game, identity, dao.game_packager)
+    files = await get_file_metas(game, identity, game_packager)
     return responses.FullGame.from_core(retort, game, files)
 
 
@@ -118,11 +120,12 @@ async def change_my_game_scenario(
     interactor: FromDishka[ChangeGameScenarioInteractor],
     dao: FromDishka[HolderDao],
     retort: FromDishka[Retort],
+    game_packager: FromDishka[GamePackager],
     id_: Annotated[int, Path(alias="id")],
     scenario: Annotated[dict[str, Any], Body()],
 ) -> responses.FullGame:
     game = await interactor(game_id=id_, raw_scn=scenario, identity=identity)
-    files = await get_file_metas(game, identity, dao.game_packager)
+    files = await get_file_metas(game, identity, game_packager)
     return responses.FullGame.from_core(retort, game, files)
 
 
@@ -132,6 +135,7 @@ async def import_my_game_zip(
     interactor: FromDishka[ImportGameZipInteractor],
     dao: FromDishka[HolderDao],
     retort: FromDishka[Retort],
+    game_packager: FromDishka[GamePackager],
     file: Annotated[UploadFile, File()],
     overwrite: Annotated[bool, Query()] = False,
 ) -> responses.FullGame:
@@ -146,7 +150,7 @@ async def import_my_game_zip(
     game = await interactor(
         zip_file=BytesIO(await file.read()), identity=identity, overwrite=overwrite
     )
-    files = await get_file_metas(game, identity, dao.game_packager)
+    files = await get_file_metas(game, identity, game_packager)
     return responses.FullGame.from_core(retort, game, files)
 
 
@@ -219,10 +223,11 @@ async def get_game_card(
     dao: FromDishka[HolderDao],
     identity: FromDishka[ApiIdentityProvider],
     retort: FromDishka[Retort],
+    game_packager: FromDishka[GamePackager],
     id_: Annotated[int, Path(alias="id")],
 ):
     game = await get_full_game(id_, identity, dao.game)
-    files = await get_file_metas(game, identity, dao.game_packager)
+    files = await get_file_metas(game, identity, game_packager)
     return responses.FullGame.from_core(retort, game, files)
 
 

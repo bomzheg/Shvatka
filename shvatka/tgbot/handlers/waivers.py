@@ -10,6 +10,7 @@ from dishka import FromDishka
 from dishka.integrations.aiogram import inject
 
 from shvatka.core.interfaces.current_game import CurrentGameProvider
+from shvatka.core.interfaces.dal.waiver import WaiverApprover
 from shvatka.core.models import dto
 from shvatka.core.models.enums import GameStatus
 from shvatka.core.models.enums.played import Played
@@ -189,6 +190,7 @@ async def confirm_approve_waivers_handler(
     identity_provider: FromDishka[TgBotIdentityProvider],
     interactor: FromDishka[TeamWaiversDraftReaderInteractor],
     current_game: FromDishka[CurrentGameProvider],
+    waiver_approver: FromDishka[WaiverApprover],
 ):
     game = await current_game.get_required_game()
     player = await identity_provider.get_required_player()
@@ -196,7 +198,7 @@ async def confirm_approve_waivers_handler(
     team = await get_my_team(player, dao.team_player)
     check_same_team(callback_data, player, team)
     assert team
-    await approve_waivers(game=game, team=team, approver=player, dao=dao.waiver_approver)
+    await approve_waivers(game=game, team=team, approver=player, dao=waiver_approver)
     waiver_results = await interactor(game_id=game.id, identity=identity_provider)
     await bot.send_message(
         chat_id=team.get_chat_id(),  # type: ignore[arg-type]
@@ -260,6 +262,7 @@ async def waiver_remove_user_vote(
     identity_provider: FromDishka[TgBotIdentityProvider],
     read_interactor: FromDishka[TeamWaiversDraftReaderInteractor],
     current_game: FromDishka[CurrentGameProvider],
+    waiver_approver: FromDishka[WaiverApprover],
 ):
     game = await current_game.get_required_game()
     player = await identity_provider.get_required_player()
@@ -269,7 +272,7 @@ async def waiver_remove_user_vote(
         raise PlayerNotInTeam(player=player, team=team)
     check_same_team(callback_data, player, team)
     target = await dao.player.get_by_id(callback_data.player_id)
-    await revoke_vote_by_captain(game, team, player, target, dao.waiver_approver)
+    await revoke_vote_by_captain(game, team, player, target, waiver_approver)
     waiver_results = await read_interactor(game_id=game.id, identity=identity_provider)
     await c.message.edit_text(  # type: ignore[union-attr]
         **start_approve_waivers(game, team, waiver_results)
@@ -283,6 +286,7 @@ async def waiver_add_force_menu(
     dao: FromDishka[HolderDao],
     identity_provider: FromDishka[TgBotIdentityProvider],
     current_game: FromDishka[CurrentGameProvider],
+    waiver_approver: FromDishka[WaiverApprover],
 ):
     game = await current_game.get_required_game()
     player = await identity_provider.get_required_player()
@@ -291,8 +295,8 @@ async def waiver_add_force_menu(
     if team is None:
         raise PlayerNotInTeam(player=player, team=team)
     check_same_team(callback_data, player, team)
-    check_allow_approve_waivers(await get_full_team_player(player, team, dao.waiver_approver))
-    players = await get_not_played_team_players(team=team, dao=dao.waiver_approver)
+    check_allow_approve_waivers(await get_full_team_player(player, team, waiver_approver))
+    players = await get_not_played_team_players(team=team, dao=waiver_approver)
     await c.message.edit_text(  # type: ignore[union-attr]
         text="Кого из игроков добавить в список вейверов принудительно?",
         reply_markup=kb.get_kb_force_add_waivers(team, players, game),
@@ -308,6 +312,7 @@ async def add_force_player(
     identity_provider: FromDishka[TgBotIdentityProvider],
     waiver_vote_adder_dao: FromDishka[WaiverVoteAdder],
     current_game: FromDishka[CurrentGameProvider],
+    waiver_approver: FromDishka[WaiverApprover],
 ):
     game = await current_game.get_required_game()
     player = await identity_provider.get_required_player()
@@ -316,10 +321,10 @@ async def add_force_player(
     if team is None:
         raise PlayerNotInTeam(player=player, team=team)
     check_same_team(callback_data, player, team)
-    check_allow_approve_waivers(await get_full_team_player(player, team, dao.waiver_approver))
+    check_allow_approve_waivers(await get_full_team_player(player, team, waiver_approver))
     target = await dao.player.get_by_id(callback_data.player_id)
     await force_add_vote(game, team, target, Played.yes, dao=waiver_vote_adder_dao)
-    players = await get_not_played_team_players(team=team, dao=dao.waiver_approver)
+    players = await get_not_played_team_players(team=team, dao=waiver_approver)
     await c.message.edit_text(  # type: ignore[union-attr]
         text="Кого из игроков добавить в список вейверов принудительно?",
         reply_markup=kb.get_kb_force_add_waivers(team, players, game),

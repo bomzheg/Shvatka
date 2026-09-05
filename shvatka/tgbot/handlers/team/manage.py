@@ -17,6 +17,7 @@ from dishka import FromDishka
 from dishka.integrations.aiogram import inject
 
 from shvatka.core.interfaces.dal.player import PlayerTeamChecker
+from shvatka.core.interfaces.dal.team import TeamCreator
 from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.models import dto
 from shvatka.core.players.player import (
@@ -68,6 +69,7 @@ async def cmd_create_team(
     bot: Bot,
     identity: FromDishka[IdentityProvider],
     game_log: FromDishka[GameLogWriter],
+    team_creator: FromDishka[TeamCreator],
 ):
     chat = await identity.get_required_chat()
     player = await identity.get_required_player()
@@ -80,7 +82,7 @@ async def cmd_create_team(
 
     chat.description = (await bot.get_chat(chat.tg_id)).description
     try:
-        await create_team(chat, player, dao.team_creator, game_log)
+        await create_team(chat, player, team_creator, game_log)
     except PlayerAlreadyInTeam as e:
         team_name = hd.quote(e.team.name)  # type: ignore[union-attr]
         return await message.reply(

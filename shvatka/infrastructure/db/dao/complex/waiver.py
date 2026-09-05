@@ -6,14 +6,12 @@ from shvatka.core.interfaces.dal.waiver import WaiverApprover
 from shvatka.core.models import dto
 from shvatka.core.models.enums import Played
 from shvatka.core.waiver.adapters import WaiverVoteGetter
-
-if typing.TYPE_CHECKING:
-    from shvatka.infrastructure.db.dao.holder import HolderDao
+from shvatka.infrastructure.db.dao.holder import HolderDao
 
 
 @dataclass
 class WaiverApproverImpl(WaiverApprover, WaiverVoteGetter):
-    dao: "HolderDao"
+    dao: HolderDao
 
     async def upsert(self, waiver: dto.Waiver) -> None:
         return await self.dao.waiver.upsert(waiver)

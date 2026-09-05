@@ -8,8 +8,9 @@ Telegram bot.
 
 - **Write new code as `Interactor` classes** (callable, DI-wired), not as free
   service functions. The project is mid-migration — see below.
-- **Don't add new HolderDAO properties** and **don't add new middleware data
-  keys** — prefer DI.
+- **`HolderDao` holds per-table daos only** — a complex dao is never a property
+  on it; register it in `ComplexDaoProvider` and take it from DI. **Don't add new
+  middleware data keys** either — prefer DI.
 - **Don't rewrite existing code** unless the task requires it. Leave working
   service functions alone; only new functionality should adopt the new style.
 - **Capture review feedback as rules.** When a code-review comment states a
@@ -94,12 +95,14 @@ onto its Protocol:
 class GamePlayProvider(Provider):
     scope = Scope.REQUEST
 
-    @provide
-    def get_game_state(self, dao: HolderDao) -> GameStatReader:
-        return GameStatReaderImpl(dao)
-
+    game_stat_reader_dao = provide(GameStatReaderImpl, provides=GameStatReader)
     get_game_state_interactor = provide(GameStatReaderInteractor)
 ```
+
+A `dao/complex/*` impl takes `HolderDao` as its only constructor argument, so the
+class-provide shorthand is enough — write an explicit `@provide` factory only
+when the impl needs something dishka can't build (`GamePlayDaoImpl`'s per-request
+`cache`, say).
 
 Consume them at the edges via `FromDishka[...]` on an `@inject`-decorated
 route/handler.
@@ -201,6 +204,11 @@ await self.sender.show_later(tasks)
   those methods behind one Protocol, but it should not drive the sequence.
 - **At most one DAO per interactor.** Compose what it needs behind a single
   Protocol and a single `dao/complex/*` adapter.
+- **A complex dao reaches its consumer through DI**, never as a `HolderDao`
+  attribute. Cross-table adapters live in `dao/complex/*` (or `dao/complex2/*`),
+  import `HolderDao` directly, and are registered once in `ComplexDaoProvider`
+  (`infrastructure/di/db.py`) so both edges see them. Handlers, interactors and
+  scheduler wrappers take the Protocol, not `HolderDao`.
 - **Generic SQLAlchemy by default.** Dialect-specific helpers (e.g.
   `postgresql.insert(...).on_conflict_do_nothing()`) are fine when they make a
   query meaningfully better or faster — not by reflex.

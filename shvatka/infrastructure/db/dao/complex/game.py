@@ -1,4 +1,3 @@
-import typing
 from collections.abc import Collection, Iterable
 from dataclasses import dataclass
 from datetime import datetime
@@ -27,14 +26,12 @@ from shvatka.core.models.dto import hints, scn
 from shvatka.core.models.enums import GameStatus
 from shvatka.core.utils import exceptions
 from shvatka.core.utils.datetime_utils import tz_utc
-
-if typing.TYPE_CHECKING:
-    from shvatka.infrastructure.db.dao.holder import HolderDao
+from shvatka.infrastructure.db.dao.holder import HolderDao
 
 
 @dataclass
 class FileLinkMixin:
-    dao: "HolderDao"
+    dao: HolderDao
 
     async def get_ids_by_guids(self, guids: Collection[str]) -> list[int]:
         return await self.dao.file_info.get_ids_by_guids(guids)
@@ -47,7 +44,7 @@ class FileLinkMixin:
 
 
 class IsGameFileMixin:
-    dao: "HolderDao"
+    dao: HolderDao
 
     async def is_game_file(self, game_id: int, guid: str) -> bool:
         file_ids = await self.dao.file_info.get_ids_by_guids([guid])
@@ -130,7 +127,7 @@ class AdminGameScenarioEditorImpl(GameScenarioEditorImpl):
 
 @dataclass
 class AdminGameStatusChangerImpl(AdminGameStatusChanger):
-    dao: "HolderDao"
+    dao: HolderDao
 
     async def get_by_id(self, id_: int, author: dto.Player | None = None) -> dto.Game:
         return await self.dao.game.get_by_id(id_, author)
@@ -201,7 +198,7 @@ class GameCreatorImpl(FileLinkMixin, GameCreator):
 
 @dataclass
 class LevelDeleterImpl(LevelDeleter):
-    dao: "HolderDao"
+    dao: HolderDao
 
     async def delete_level_files(self, level_id: int) -> None:
         await self.dao.level_file.delete_for_level(level_id)
@@ -215,7 +212,7 @@ class LevelDeleterImpl(LevelDeleter):
 
 @dataclass
 class GameFileUploaderImpl(GameFileUploader):
-    dao: "HolderDao"
+    dao: HolderDao
 
     async def get_by_id(self, id_: int, author: dto.Player | None = None) -> dto.Game:
         return await self.dao.game.get_by_id(id_, author)
@@ -241,7 +238,7 @@ class GameFileUploaderImpl(GameFileUploader):
 
 @dataclass
 class GameFileRenamerImpl(IsGameFileMixin, GameFileRenamer):
-    dao: "HolderDao"
+    dao: HolderDao
 
     async def get_by_id(self, id_: int, author: dto.Player | None = None) -> dto.Game:
         return await self.dao.game.get_by_id(id_, author)
@@ -264,7 +261,7 @@ class GameFileRenamerImpl(IsGameFileMixin, GameFileRenamer):
 
 @dataclass
 class GameReleaseReaderImpl(GameReleaseReader):
-    dao: "HolderDao"
+    dao: HolderDao
 
     async def get_by_id(self, id_: int, author: dto.Player | None = None) -> dto.Game:
         return await self.dao.game.get_by_id(id_, author)
@@ -310,7 +307,7 @@ class GameReleaseEditorImpl(FileLinkMixin, GameReleaseEditor):
 
 @dataclass
 class GamePackagerImpl(GamePackager):
-    dao: "HolderDao"
+    dao: HolderDao
 
     async def get_played_teams(self, game: dto.Game) -> Iterable[dto.Team]:
         return await self.dao.waiver.get_played_teams(game)
@@ -351,7 +348,7 @@ class GamePackagerImpl(GamePackager):
 
 
 class GameFilesGetterImpl(IsGameFileMixin, GameFileReader):
-    def __init__(self, dao: "HolderDao") -> None:
+    def __init__(self, dao: HolderDao) -> None:
         self.dao = dao
 
     async def get_by_guid(self, guid: str) -> hints.VerifiableFileMeta:
@@ -383,7 +380,7 @@ class CacheItem:
 
 @dataclass(kw_only=True, slots=True)
 class GamePlayDaoImpl(GamePlayDao):
-    dao: "HolderDao"
+    dao: HolderDao
     current_game: CurrentGameProvider
     cache: dict[int, CacheItem]
 

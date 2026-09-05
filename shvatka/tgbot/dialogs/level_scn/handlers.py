@@ -8,6 +8,7 @@ from aiogram_dialog.widgets.kbd import Button
 from dishka import FromDishka
 from dishka.integrations.aiogram_dialog import inject
 
+from shvatka.core.interfaces.dal.game import GameUpserter
 from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.models import dto
 from shvatka.core.models.dto import action, hints, scn
@@ -303,6 +304,7 @@ async def save_level(
     identity: FromDishka[IdentityProvider],
     retort: FromDishka[Retort],
     dao: FromDishka[HolderDao],
+    game_upserter: FromDishka[GameUpserter],
 ):
     author = await identity.get_required_player()
     data = manager.dialog_data
@@ -316,7 +318,7 @@ async def save_level(
         conditions=conditions,
         __model_version__=1,
     )
-    level = await upsert_level(author=author, scenario=level_scn, dao=dao.game_upserter)
+    level = await upsert_level(author=author, scenario=level_scn, dao=game_upserter)
     await manager.done(result={"level": retort.dump(level)})
     await c.answer(text="Уровень успешно сохранён")
 

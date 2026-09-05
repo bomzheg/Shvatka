@@ -10,6 +10,8 @@ from shvatka.core.services.game_stat import (
     get_typed_keys,
 )
 from shvatka.core.utils.datetime_utils import tz_utc
+from shvatka.infrastructure.db.dao.complex.key_log import TypedKeyGetterImpl
+from shvatka.infrastructure.db.dao.complex.level_times import GameStatImpl
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from tests.fixtures.identity import MockIdentityProvider
 from tests.mocks.datetime_mock import ClockMock
@@ -18,7 +20,7 @@ from tests.mocks.datetime_mock import ClockMock
 @pytest.mark.asyncio
 async def test_game_level_times(finished_game: dto.FullGame, dao: HolderDao):
     game_stat = await get_game_stat(
-        finished_game, MockIdentityProvider(player=finished_game.author), dao.game_stat
+        finished_game, MockIdentityProvider(player=finished_game.author), GameStatImpl(dao)
     )
     for team, level_times in game_stat.level_times.items():
         assert all(team.id == lt.team.id for lt in level_times)
@@ -34,7 +36,7 @@ async def test_game_log_keys(
     actual = await get_typed_keys(
         game=finished_game,
         identity=MockIdentityProvider(player=finished_game.author),
-        dao=dao.typed_keys,
+        dao=TypedKeyGetterImpl(dao),
     )
     assert len(actual[gryffindor]) == 5
     assert len(actual[slytherin]) == 3
@@ -46,7 +48,7 @@ async def test_game_spy_started(started_game: dto.FullGame, dao: HolderDao, cloc
     clock.clear()
     clock.add_mock(tz=tz_utc, result=started_game.start_at + timedelta(seconds=10))
     clock.add_mock(tz=tz_utc, result=started_game.start_at + timedelta(seconds=10))
-    game_stat = await get_game_spy(started_game, started_game.author, dao.game_stat)
+    game_stat = await get_game_spy(started_game, started_game.author, GameStatImpl(dao))
     assert len(clock.calls) == 2
     assert len(game_stat) == 2
     for level_time in game_stat:
@@ -65,7 +67,7 @@ async def test_game_spy_with_first_and_last_hint(
     clock.clear()
     clock.add_mock(tz=tz_utc, result=started_game.start_at + timedelta(seconds=10))
     clock.add_mock(tz=tz_utc, result=started_game.start_at + timedelta(minutes=6, seconds=1))
-    game_stat = await get_game_spy(started_game, started_game.author, dao.game_stat)
+    game_stat = await get_game_spy(started_game, started_game.author, GameStatImpl(dao))
     assert len(clock.calls) == 2
     assert len(game_stat) == 2
     assert game_stat[1].hint.number == 3
@@ -96,7 +98,7 @@ async def test_game_spy_with_second_level_first_and_last_hint(
     clock.add_mock(tz=tz_utc, result=datetime.now(tz_utc) + timedelta(minutes=1))
     clock.add_mock(tz=tz_utc, result=datetime.now(tz_utc) + timedelta(seconds=10))
     clock.add_mock(tz=tz_utc, result=datetime.now(tz_utc) + timedelta(minutes=5))
-    game_stat = await get_game_spy(started_game, started_game.author, dao.game_stat)
+    game_stat = await get_game_spy(started_game, started_game.author, GameStatImpl(dao))
     assert len(clock.calls) == 4
     assert len(game_stat) == 2
     assert game_stat[1].hint.number == 3

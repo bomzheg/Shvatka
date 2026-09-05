@@ -1,17 +1,14 @@
-import typing
 from dataclasses import dataclass
 from datetime import datetime
 
 from shvatka.core.interfaces.dal.level_testing import LevelTestingDao
 from shvatka.core.models import dto
-
-if typing.TYPE_CHECKING:
-    from shvatka.infrastructure.db.dao.holder import HolderDao
+from shvatka.infrastructure.db.dao.holder import HolderDao
 
 
 @dataclass
 class LevelTestComplex(LevelTestingDao):
-    dao: "HolderDao"
+    dao: HolderDao
 
     async def save_started_level_test(self, suite: dto.LevelTestSuite, now: datetime):
         return await self.dao.level_test.save_started_level_test(suite, now)

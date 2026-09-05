@@ -12,6 +12,7 @@ from shvatka.core.models import dto
 from shvatka.core.services.game import create_game
 from shvatka.core.utils.datetime_utils import tz_utc
 from shvatka.infrastructure.clients.file_storage import LocalFileStorage
+from shvatka.infrastructure.db.dao.complex.game import GameCreatorImpl
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from tests.fixtures.scn_fixtures import GUID
 
@@ -48,7 +49,7 @@ async def test_gc_dry_run_changes_nothing(
     dao: HolderDao,
     check_dao: HolderDao,
 ):
-    game = await create_game(author=author, name="draft for gc dry run", dao=dao.game_creator)
+    game = await create_game(author=author, name="draft for gc dry run", dao=GameCreatorImpl(dao))
     guid = await upload(client, game.id, author_cookies(auth, author))
     (file_id,) = await check_dao.file_info.get_ids_by_guids([guid])
 
@@ -75,7 +76,7 @@ async def test_gc_deletes_unused_link_and_meta(
     check_dao: HolderDao,
     local_storage: LocalFileStorage,
 ):
-    game = await create_game(author=author, name="draft for gc", dao=dao.game_creator)
+    game = await create_game(author=author, name="draft for gc", dao=GameCreatorImpl(dao))
     guid = await upload(client, game.id, author_cookies(auth, author))
     (file_id,) = await check_dao.file_info.get_ids_by_guids([guid])
     meta = await check_dao.file_info.get_by_guid(guid)
@@ -133,7 +134,7 @@ async def test_gc_keeps_files_the_release_uses(
     check_dao: HolderDao,
     local_storage: LocalFileStorage,
 ):
-    game = await create_game(author=author, name="draft with a banner", dao=dao.game_creator)
+    game = await create_game(author=author, name="draft with a banner", dao=GameCreatorImpl(dao))
     author_auth = author_cookies(auth, author)
     guid = await upload(client, game.id, author_auth)
     (file_id,) = await check_dao.file_info.get_ids_by_guids([guid])

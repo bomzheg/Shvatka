@@ -25,6 +25,7 @@ from shvatka.core.games.admin_interactors import (
     AdminUpdateGameScenarioInteractor,
     AdminUploadGameFileInteractor,
 )
+from shvatka.core.interfaces.dal.complex import GamePackager
 from shvatka.core.models import dto
 from shvatka.core.players.admin_interactors import (
     AdminChangePlayerTgInteractor,
@@ -354,6 +355,7 @@ async def change_game_scenario(
     interactor: FromDishka[AdminUpdateGameScenarioInteractor],
     dao: FromDishka[HolderDao],
     retort: FromDishka[Retort],
+    game_packager: FromDishka[GamePackager],
     id_: Annotated[int, Path(alias="id")],
     body: Annotated[requests.AdminGameScenarioEdit, Body()],
 ) -> games_responses.FullGame:
@@ -363,7 +365,7 @@ async def change_game_scenario(
         new_author_id=body.author_id,
         identity=identity,
     )
-    files = await get_file_metas(game, identity, dao.game_packager)
+    files = await get_file_metas(game, identity, game_packager)
     return games_responses.FullGame.from_core(retort, game, files)
 
 

@@ -8,6 +8,7 @@ from shvatka.core.interfaces.clients.file_storage import FileGateway
 from shvatka.core.models import dto
 from shvatka.core.models.dto.scn.game import RawGameScenario
 from shvatka.core.services.game import upsert_game
+from shvatka.infrastructure.db.dao.complex.game import GameUpserterImpl
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from tests.fixtures.scn_fixtures import GUID
 
@@ -21,7 +22,7 @@ async def test_upsert_game_fills_level_and_game_files(
     retort: Retort,
     file_gateway: FileGateway,
 ):
-    game = await upsert_game(complex_scn, author, dao.game_upserter, retort, file_gateway)
+    game = await upsert_game(complex_scn, author, GameUpserterImpl(dao), retort, file_gateway)
     (file_id,) = await check_dao.file_info.get_ids_by_guids([GUID])
 
     first, second = game.levels[0], game.levels[1]
@@ -41,7 +42,7 @@ async def test_removing_file_syncs_level_files_but_keeps_game_files(
     retort: Retort,
     file_gateway: FileGateway,
 ):
-    game = await upsert_game(complex_scn, author, dao.game_upserter, retort, file_gateway)
+    game = await upsert_game(complex_scn, author, GameUpserterImpl(dao), retort, file_gateway)
     (file_id,) = await check_dao.file_info.get_ids_by_guids([GUID])
     first = game.levels[0]
     assert await check_dao.level_file.get_file_ids(first.db_id) == {file_id}
@@ -53,7 +54,7 @@ async def test_removing_file_syncs_level_files_but_keeps_game_files(
     await upsert_game(
         RawGameScenario(scn=stripped, files={GUID: BytesIO(b"123")}),
         author,
-        dao.game_upserter,
+        GameUpserterImpl(dao),
         retort,
         file_gateway,
     )

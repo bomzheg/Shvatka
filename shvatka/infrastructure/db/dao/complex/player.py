@@ -1,4 +1,3 @@
-import typing
 from dataclasses import dataclass
 
 from shvatka.core.interfaces.dal.player import PlayerPromoter
@@ -12,14 +11,12 @@ from shvatka.core.players.interfaces import (
     AdminUsernameSetter,
     PlayerMerger,
 )
-
-if typing.TYPE_CHECKING:
-    from shvatka.infrastructure.db.dao.holder import HolderDao
+from shvatka.infrastructure.db.dao.holder import HolderDao
 
 
 @dataclass
 class PlayerPromoterImpl(PlayerPromoter):
-    dao: "HolderDao"
+    dao: HolderDao
 
     async def promote(self, actor: dto.Player, target: dto.Player) -> None:
         return await self.dao.player.promote(actor, target)
@@ -39,7 +36,7 @@ class PlayerPromoterImpl(PlayerPromoter):
 
 @dataclass
 class PlayerMergerImpl(PlayerMerger):
-    dao: "HolderDao"
+    dao: HolderDao
 
     async def replace_games_author(self, primary: dto.Player, secondary: dto.Player) -> None:
         return await self.dao.game.transfer_all(primary, secondary)
@@ -101,7 +98,7 @@ class AdminPlayerMergerImpl(PlayerMergerImpl, AdminPlayerMerger):
 
 @dataclass
 class AdminPlayerWaiverPointsReaderImpl(AdminPlayerWaiverPointsReader):
-    dao: "HolderDao"
+    dao: HolderDao
 
     async def get_by_id(self, id_: int) -> dto.Player:
         return await self.dao.player.get_by_id(id_)
@@ -112,7 +109,7 @@ class AdminPlayerWaiverPointsReaderImpl(AdminPlayerWaiverPointsReader):
 
 @dataclass
 class AdminPlayerReaderImpl(AdminPlayerReader):
-    dao: "HolderDao"
+    dao: HolderDao
 
     async def get_identities_by_id(self, id_: int) -> dto.PlayerWithForum:
         return await self.dao.player.get_identities_by_id(id_)
@@ -123,7 +120,7 @@ class AdminPlayerReaderImpl(AdminPlayerReader):
 
 @dataclass
 class AdminEmailSetterImpl(AdminEmailSetter):
-    dao: "HolderDao"
+    dao: HolderDao
 
     async def get_by_id(self, id_: int) -> dto.Player:
         return await self.dao.player.get_by_id(id_)
@@ -142,7 +139,7 @@ class AdminEmailSetterImpl(AdminEmailSetter):
 
 @dataclass
 class AdminUsernameSetterImpl(AdminUsernameSetter):
-    dao: "HolderDao"
+    dao: HolderDao
 
     async def get_by_id(self, id_: int) -> dto.Player:
         return await self.dao.player.get_by_id(id_)
@@ -165,7 +162,7 @@ class AdminUsernameSetterImpl(AdminUsernameSetter):
 
 @dataclass
 class AdminTgChangerImpl(AdminTgChanger):
-    dao: "HolderDao"
+    dao: HolderDao
 
     async def upsert_user(self, user: dto.User) -> dto.User:
         return await self.dao.user.upsert_user(user)

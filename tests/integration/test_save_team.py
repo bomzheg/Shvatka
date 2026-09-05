@@ -20,7 +20,7 @@ async def test_save_team(dao: HolderDao, game_log: GameLogWriter):
     user = await upsert_user(create_dto_harry(), dao.user)
     player = await upsert_player(user, dao.player)
     await promote(player, dao)
-    team = await create_team(chat, player, dao.team_creator, game_log)
+    team = await create_team(chat, player, TeamCreatorImpl(dao), game_log)
     assert team.id is not None
     assert team.name == chat.name
 

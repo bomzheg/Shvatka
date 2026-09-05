@@ -9,6 +9,7 @@ from aiogram_dialog.widgets.kbd import Button
 from dishka import FromDishka
 from dishka.integrations.aiogram_dialog import inject
 
+from shvatka.core.interfaces.dal.player import TeamLeaver
 from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.models import enums
 from shvatka.core.players.player import (
@@ -119,6 +120,7 @@ async def remove_player_handler(
     identity: FromDishka[IdentityProvider],
     team_notifier: FromDishka[TeamNotifier],
     dao: FromDishka[HolderDao],
+    team_leaver: FromDishka[TeamLeaver],
 ):
     captain_team_player = await get_actual_team_player(identity)
     player_id = manager.dialog_data["selected_player_id"]
@@ -127,7 +129,7 @@ async def remove_player_handler(
     await leave(
         player=player,
         remover=captain_team_player.player,
-        dao=dao.team_leaver,
+        dao=team_leaver,
         notifier=team_notifier,
     )
     await manager.switch_to(state=states.CaptainsBridgeSG.players)
@@ -244,7 +246,7 @@ async def gotten_chat_request(
     except exceptions.AnotherTeamInChat:
         await bot.send_message(
             chat_id=captain.get_chat_id(),  # type: ignore[arg-type]
-            text=f"‼️Другая команда уже находится в чате " f"({hd.quote(chat.name)}).\n",
+            text=f"‼️Другая команда уже находится в чате ({hd.quote(chat.name)}).\n",
         )
         return
     if old_chat_id is None:

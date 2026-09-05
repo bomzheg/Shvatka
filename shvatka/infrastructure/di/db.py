@@ -4,22 +4,56 @@ from dishka import AnyOf, Provider, Scope, provide
 from redis.asyncio.client import Redis
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
 
+from shvatka.core.interfaces.dal.complex import (
+    GamePackager,
+    GameStatDao,
+    TeamMerger,
+    TypedKeyGetter,
+)
+from shvatka.core.interfaces.dal.game import GameCreator, GameUpserter
+from shvatka.core.interfaces.dal.game_play import GamePlayerDao, GamePreparer
 from shvatka.core.interfaces.dal.level import LevelDeleter
-from shvatka.core.interfaces.dal.organizer import OrgByPlayerGetter
-from shvatka.core.interfaces.dal.player import PlayerTeamChecker
-from shvatka.core.interfaces.dal.waiver import GameWaiversGetter, WaiverGetter
+from shvatka.core.interfaces.dal.level_testing import LevelTestingDao
+from shvatka.core.interfaces.dal.level_times import GameStarter
+from shvatka.core.interfaces.dal.organizer import OrgAdder, OrgByPlayerGetter
+from shvatka.core.interfaces.dal.player import PlayerPromoter, PlayerTeamChecker, TeamLeaver
+from shvatka.core.interfaces.dal.team import TeamCreator
+from shvatka.core.interfaces.dal.waiver import GameWaiversGetter, WaiverApprover, WaiverGetter
 from shvatka.core.notifications.adapters import (
     NotificationMarker,
     NotificationReader,
     NotificationWriter,
     RequestStorage,
 )
+from shvatka.core.players.interfaces import PlayerMerger
+from shvatka.core.teams.adapters import ChatlessTeamCreator
 from shvatka.infrastructure.db import dao
 from shvatka.infrastructure.db.config.models.db import DBConfig, RedisConfig
 from shvatka.infrastructure.db.dao import (
     WaiverDao,
 )
-from shvatka.infrastructure.db.dao.complex.game import LevelDeleterImpl
+from shvatka.infrastructure.db.dao.complex.game import (
+    GameCreatorImpl,
+    GamePackagerImpl,
+    GameUpserterImpl,
+    LevelDeleterImpl,
+)
+from shvatka.infrastructure.db.dao.complex.game_play import (
+    GamePlayerDaoImpl,
+    GamePreparerImpl,
+    GameStarterImpl,
+)
+from shvatka.infrastructure.db.dao.complex.key_log import TypedKeyGetterImpl
+from shvatka.infrastructure.db.dao.complex.level_testing import LevelTestComplex
+from shvatka.infrastructure.db.dao.complex.level_times import GameStatImpl
+from shvatka.infrastructure.db.dao.complex.orgs import OrgAdderImpl
+from shvatka.infrastructure.db.dao.complex.player import PlayerMergerImpl, PlayerPromoterImpl
+from shvatka.infrastructure.db.dao.complex.team import (
+    TeamCreatorImpl,
+    TeamLeaverImpl,
+    TeamMergerImpl,
+)
+from shvatka.infrastructure.db.dao.complex.waiver import WaiverApproverImpl
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.infrastructure.db.dao.memory.level_testing import LevelTestingData
 from shvatka.infrastructure.db.factory import create_engine, create_redis, create_session_maker
@@ -66,10 +100,6 @@ class DAOProvider(Provider):
     @provide
     async def get_game_dao(self, holder: HolderDao) -> dao.GameDao:
         return holder.game
-
-    @provide
-    def level_deleter(self, holder: HolderDao) -> LevelDeleter:
-        return LevelDeleterImpl(dao=holder)
 
     @provide
     def get_file_info_dao(self, holder: HolderDao) -> dao.FileInfoDao:
@@ -166,6 +196,30 @@ class DAOProvider(Provider):
         self, session: AsyncSession
     ) -> AnyOf[dao.ActionRequestDAO, RequestStorage]:
         return dao.ActionRequestDAO(session=session)
+
+
+class ComplexDaoProvider(Provider):
+    """Daos composed over several tables — one narrow Protocol each, built from HolderDao."""
+
+    scope = Scope.REQUEST
+
+    level_deleter = provide(LevelDeleterImpl, provides=LevelDeleter)
+    waiver_approver = provide(WaiverApproverImpl, provides=WaiverApprover)
+    game_upserter = provide(GameUpserterImpl, provides=GameUpserter)
+    game_creator = provide(GameCreatorImpl, provides=GameCreator)
+    game_packager = provide(GamePackagerImpl, provides=GamePackager)
+    game_preparer = provide(GamePreparerImpl, provides=GamePreparer)
+    game_starter = provide(GameStarterImpl, provides=GameStarter)
+    game_player = provide(GamePlayerDaoImpl, provides=GamePlayerDao)
+    game_stat = provide(GameStatImpl, provides=GameStatDao)
+    typed_keys = provide(TypedKeyGetterImpl, provides=TypedKeyGetter)
+    level_testing = provide(LevelTestComplex, provides=LevelTestingDao)
+    org_adder = provide(OrgAdderImpl, provides=OrgAdder)
+    player_promoter = provide(PlayerPromoterImpl, provides=PlayerPromoter)
+    player_merger = provide(PlayerMergerImpl, provides=PlayerMerger)
+    team_creator = provide(TeamCreatorImpl, provides=AnyOf[TeamCreator, ChatlessTeamCreator])
+    team_leaver = provide(TeamLeaverImpl, provides=TeamLeaver)
+    team_merger = provide(TeamMergerImpl, provides=TeamMerger)
 
 
 class RedisProvider(Provider):

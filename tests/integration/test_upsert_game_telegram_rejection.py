@@ -8,6 +8,7 @@ from shvatka.core.models import dto
 from shvatka.core.models.dto.scn.game import RawGameScenario
 from shvatka.core.services.game import upsert_game
 from shvatka.core.utils.exceptions import FilesCantBeSentToTg
+from shvatka.infrastructure.db.dao.complex.game import GameUpserterImpl
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from tests.fixtures.scn_fixtures import GUID
 from tests.mocks.file_gateway import FakeTelegram
@@ -36,7 +37,7 @@ async def test_upsert_game_saves_nothing_when_telegram_refuses_a_file(
         await upsert_game(
             _scn_with_file_not_yet_in_tg(complex_scn),
             author,
-            dao.game_upserter,
+            GameUpserterImpl(dao),
             retort,
             file_gateway,
         )
@@ -59,7 +60,7 @@ async def test_upsert_game_saves_the_files_telegram_took(
     game = await upsert_game(
         _scn_with_file_not_yet_in_tg(complex_scn),
         author,
-        dao.game_upserter,
+        GameUpserterImpl(dao),
         retort,
         file_gateway,
     )

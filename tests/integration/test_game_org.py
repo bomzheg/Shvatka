@@ -16,6 +16,7 @@ from shvatka.core.services.organizers import (
 )
 from shvatka.core.utils.exceptions import SaltNotExist
 from shvatka.core.views.game import NewOrg
+from shvatka.infrastructure.db.dao.complex.orgs import OrgAdderImpl
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from tests.mocks.org_notifier import OrgNotifierMock
 
@@ -57,7 +58,7 @@ async def test_agree_invite(
         inviter_id=author.id,
         player=harry,
         org_notifier=org_notifier,
-        dao=dao.org_adder,
+        dao=OrgAdderImpl(dao),
     )
     secondary_orgs = await get_secondary_orgs(game, check_dao.organizer)
     assert len(secondary_orgs) == 1

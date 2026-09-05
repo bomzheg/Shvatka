@@ -11,6 +11,7 @@ from aiogram_dialog.api.protocols import BgManagerFactory
 from dishka import FromDishka
 from dishka.integrations.aiogram import inject
 
+from shvatka.core.interfaces.dal.organizer import OrgAdder
 from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.services.game import get_game
 from shvatka.core.services.organizers import (
@@ -88,6 +89,7 @@ async def agree_to_be_org_handler(
     identity: FromDishka[IdentityProvider],
     org_notifier: FromDishka[OrgNotifier],
     bg_manager_factory: FromDishka[BgManagerFactory],
+    org_adder: FromDishka[OrgAdder],
 ):
     player = await identity.get_required_player()
     try:
@@ -96,7 +98,7 @@ async def agree_to_be_org_handler(
             inviter_id=callback_data.inviter_id,
             player=player,
             org_notifier=org_notifier,
-            dao=dao.org_adder,
+            dao=org_adder,
         )
     except exceptions.SaltNotExist:
         await bot.edit_message_text(

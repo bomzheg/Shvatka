@@ -4,6 +4,7 @@ from shvatka.core.models import dto
 from shvatka.core.services.chat import upsert_chat
 from shvatka.core.services.team import create_team
 from shvatka.core.views.game import GameLogWriter
+from shvatka.infrastructure.db.dao.complex.team import TeamCreatorImpl
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from tests.fixtures.chat_constants import create_gryffindor_dto_chat, create_slytherin_dto_chat
 
@@ -24,7 +25,7 @@ async def create_team_(
     return await create_team(
         await upsert_chat(chat, dao.chat),
         captain,
-        dao.team_creator,
+        TeamCreatorImpl(dao),
         game_log,
     )
 
@@ -35,6 +36,6 @@ async def create_second_team(
     return await create_team(
         await upsert_chat(create_slytherin_dto_chat(), dao.chat),
         captain,
-        dao.team_creator,
+        TeamCreatorImpl(dao),
         game_log,
     )

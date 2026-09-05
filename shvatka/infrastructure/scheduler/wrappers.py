@@ -6,6 +6,9 @@ from dishka.integrations.base import FromDishka
 from shvatka.core.games.game_play import prepare_game, send_hint, start_game
 from shvatka.core.games.interactors import GamePlayTimerInteractor
 from shvatka.core.interfaces.current_game import CurrentGameProvider
+from shvatka.core.interfaces.dal.game_play import GamePreparer
+from shvatka.core.interfaces.dal.level_testing import LevelTestingDao
+from shvatka.core.interfaces.dal.level_times import GameStarter
 from shvatka.core.interfaces.scheduler import LevelTestScheduler, Scheduler
 from shvatka.core.models import dto
 from shvatka.core.services.level_testing import send_testing_level_hint
@@ -27,12 +30,13 @@ async def prepare_game_wrapper(
     author_id: int,
     dao: FromDishka[HolderDao],
     view_preparer: FromDishka[GameViewPreparer],
+    game_preparer: FromDishka[GamePreparer],
 ) -> None:
     author = await dao.player.get_by_id(author_id)
     game = await dao.game.get_by_id(game_id, author)
     await prepare_game(
         game=game,
-        game_preparer=dao.game_preparer,
+        game_preparer=game_preparer,
         view_preparer=view_preparer,
     )
 
@@ -45,13 +49,14 @@ async def start_game_wrapper(
     scheduler: FromDishka[Scheduler],
     sender: FromDishka[ViewSender],
     alerter: FromDishka[BotAlert],
+    game_starter: FromDishka[GameStarter],
 ):
     try:
         game = await dao.game.get_full(game_id)
         assert author_id == game.author.id
         await start_game(
             game=game,
-            dao=dao.game_starter,
+            dao=game_starter,
             sender=sender,
             scheduler=scheduler,
         )
@@ -110,6 +115,7 @@ async def send_hint_for_testing_wrapper(
     dao: FromDishka[HolderDao],
     level_view: FromDishka[LevelView],
     scheduler: FromDishka[LevelTestScheduler],
+    level_testing: FromDishka[LevelTestingDao],
 ):
     level = await dao.level.get_by_id(level_id)
     game = await dao.game.get_by_id(game_id)
@@ -121,7 +127,7 @@ async def send_hint_for_testing_wrapper(
         hint_number=hint_number,
         view=level_view,
         scheduler=scheduler,
-        dao=dao.level_testing_complex,
+        dao=level_testing,
     )
 
 

@@ -1,17 +1,14 @@
-import typing
 from dataclasses import dataclass
 
 from shvatka.core.models import dto
 from shvatka.core.search.adapters import GlobalSearchDao
 from shvatka.core.search.dto import LevelWithGame
-
-if typing.TYPE_CHECKING:
-    from shvatka.infrastructure.db.dao.holder import HolderDao
+from shvatka.infrastructure.db.dao.holder import HolderDao
 
 
 @dataclass
 class GlobalSearchDaoImpl(GlobalSearchDao):
-    dao: "HolderDao"
+    dao: HolderDao
 
     async def search_completed_games(self, text: str) -> list[dto.Game]:
         return await self.dao.game.search_completed(text)

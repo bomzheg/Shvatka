@@ -11,6 +11,7 @@ from dishka.integrations.aiogram import CONTAINER_NAME
 from dishka.integrations.aiogram_dialog import inject
 
 from shvatka.core.interfaces.dal.level import LevelDeleter
+from shvatka.core.interfaces.dal.level_testing import LevelTestingDao
 from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.interfaces.nursery import Nursery
 from shvatka.core.interfaces.scheduler import LevelTestScheduler
@@ -90,6 +91,7 @@ async def level_testing(
     view: FromDishka[LevelView],
     identity: FromDishka[IdentityProvider],
     dao: FromDishka[HolderDao],
+    level_testing: FromDishka[LevelTestingDao],
 ) -> None:
     data: dict[str, Any] = manager.start_data  # type: ignore[assignment]
     level_id = data["level_id"]
@@ -102,9 +104,7 @@ async def level_testing(
         return
     suite = dto.LevelTestSuite(tester=org, level=level)
     await manager.start(state=states.LevelTestSG.wait_key, data={"level_id": level_id})
-    await start_level_test(
-        suite=suite, scheduler=scheduler, view=view, dao=dao.level_testing_complex
-    )
+    await start_level_test(suite=suite, scheduler=scheduler, view=view, dao=level_testing)
 
 
 @inject
@@ -161,7 +161,11 @@ async def cancel_level_test(
 
 @inject
 async def process_key_message(
-    m: Message, dialog_: Any, manager: DialogManager, identity: FromDishka[IdentityProvider]
+    m: Message,
+    dialog_: Any,
+    manager: DialogManager,
+    identity: FromDishka[IdentityProvider],
+    level_testing: FromDishka[LevelTestingDao],
 ) -> None:
     dishka: AsyncContainer = manager.middleware_data[CONTAINER_NAME]
     author = await identity.get_required_player()
@@ -181,7 +185,7 @@ async def process_key_message(
         view=view,
         org_notifier=org_notifier,
         locker=locker,
-        dao=dao.level_testing_complex,
+        dao=level_testing,
     )
     if insert_result.level_completed:
         await manager.done()

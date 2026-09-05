@@ -1,4 +1,3 @@
-import typing
 from collections.abc import Collection
 from dataclasses import dataclass
 
@@ -7,14 +6,12 @@ from shvatka.core.files.dto import GameFileLink
 from shvatka.core.interfaces.dal.game import GameFileDeleter
 from shvatka.core.models import dto
 from shvatka.core.models.dto import hints
-
-if typing.TYPE_CHECKING:
-    from shvatka.infrastructure.db.dao.holder import HolderDao
+from shvatka.infrastructure.db.dao.holder import HolderDao
 
 
 @dataclass
 class ReleaseGuidsMixin:
-    dao: "HolderDao"
+    dao: HolderDao
 
     async def get_release_guids(self) -> dict[int, set[str]]:
         return await self.dao.game.get_release_guids()

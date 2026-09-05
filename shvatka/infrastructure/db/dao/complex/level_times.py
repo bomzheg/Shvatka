@@ -1,18 +1,15 @@
-import typing
 from dataclasses import dataclass
 
 from shvatka.core.games.adapters import GameStatReader
 from shvatka.core.games.dto import BonusEvent
 from shvatka.core.interfaces.dal.complex import GameStatDao
 from shvatka.core.models import dto
-
-if typing.TYPE_CHECKING:
-    from shvatka.infrastructure.db.dao.holder import HolderDao
+from shvatka.infrastructure.db.dao.holder import HolderDao
 
 
 @dataclass
 class GameStatImpl(GameStatDao):
-    dao: "HolderDao"
+    dao: HolderDao
 
     async def get_game_level_times(self, game: dto.Game) -> list[dto.LevelTime]:
         return await self.dao.level_time.get_game_level_times(game)
@@ -49,7 +46,7 @@ class GameStatImpl(GameStatDao):
 
 
 class GameStatReaderImpl(GameStatReader):
-    def __init__(self, dao: "HolderDao") -> None:
+    def __init__(self, dao: HolderDao) -> None:
         self.dao = dao
 
     async def get_game_level_times(self, game: dto.Game) -> list[dto.LevelTime]:

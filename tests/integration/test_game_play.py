@@ -27,6 +27,9 @@ from shvatka.core.views.game import (
     LevelUp,
 )
 from shvatka.infrastructure.db import models
+from shvatka.infrastructure.db.dao.complex.game_play import GamePlayerDaoImpl, GameStarterImpl
+from shvatka.infrastructure.db.dao.complex.key_log import TypedKeyGetterImpl
+from shvatka.infrastructure.db.dao.complex.team import TeamLeaverImpl
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from tests.fixtures.game_fixtures import CurrentGameProviderMock
 from tests.fixtures.identity import MockIdentityProvider
@@ -62,7 +65,7 @@ async def test_start_game(
     game_with_waivers.start_at = datetime.now(tz=tz_utc)
 
     sender = ViewSenderMock(dummy_view, OrgNotifierMock(), dummy_log)
-    await start_game(game_with_waivers, dao.game_starter, sender, scheduler)
+    await start_game(game_with_waivers, GameStarterImpl(dao), sender, scheduler)
 
     dummy_log.assert_one_event(
         GameLogEvent(GameLogType.GAME_STARTED, {"game": game_with_waivers.name})
@@ -90,13 +93,15 @@ async def test_wrong_key(
 ):
     game = started_game
     current_game = CurrentGameProviderMock(game, dao.waiver)
-    key_processor = KeyProcessor(dao=dao.game_player, current_game=current_game, locker=locker)
+    key_processor = KeyProcessor(
+        dao=GamePlayerDaoImpl(dao), current_game=current_game, locker=locker
+    )
     dummy_view = GameViewMock()
     dummy_log = GameLogWriterMock()
 
     dummy_org_notifier = OrgNotifierMock()
     key_checker = CheckKeyInteractor(
-        dao=dao.game_player,
+        dao=GamePlayerDaoImpl(dao),
         sender=ViewSenderMock(dummy_view, dummy_org_notifier, dummy_log),
         locker=locker,
         scheduler=scheduler,
@@ -111,7 +116,7 @@ async def test_wrong_key(
     )
 
     identity = MockIdentityProvider(player=author)
-    keys = await get_typed_keys(game=game, identity=identity, dao=check_dao.typed_keys)
+    keys = await get_typed_keys(game=game, identity=identity, dao=TypedKeyGetterImpl(check_dao))
     assert [gryffindor] == list(keys.keys())
     assert len(keys[gryffindor]) == 1
     expected_first_key = dto.KeyTime(
@@ -140,13 +145,15 @@ async def test_bonus_hint_key(
 ):
     game = started_game
     current_game = CurrentGameProviderMock(game, dao.waiver)
-    key_processor = KeyProcessor(dao=dao.game_player, current_game=current_game, locker=locker)
+    key_processor = KeyProcessor(
+        dao=GamePlayerDaoImpl(dao), current_game=current_game, locker=locker
+    )
     dummy_view = GameViewMock()
     dummy_log = GameLogWriterMock()
 
     dummy_org_notifier = OrgNotifierMock()
     check_key = CheckKeyInteractor(
-        dao=dao.game_player,
+        dao=GamePlayerDaoImpl(dao),
         sender=ViewSenderMock(dummy_view, dummy_org_notifier, dummy_log),
         locker=locker,
         scheduler=scheduler,
@@ -164,7 +171,7 @@ async def test_bonus_hint_key(
     )
 
     identity = MockIdentityProvider(player=author)
-    keys = await get_typed_keys(game=game, identity=identity, dao=check_dao.typed_keys)
+    keys = await get_typed_keys(game=game, identity=identity, dao=TypedKeyGetterImpl(check_dao))
     assert [gryffindor] == list(keys.keys())
     assert len(keys[gryffindor]) == 1
     expected_first_key = dto.KeyTime(
@@ -201,9 +208,11 @@ async def test_game_play(
 ):
     game = started_game
     current_game = CurrentGameProviderMock(game, dao.waiver)
-    key_processor = KeyProcessor(dao=dao.game_player, current_game=current_game, locker=locker)
+    key_processor = KeyProcessor(
+        dao=GamePlayerDaoImpl(dao), current_game=current_game, locker=locker
+    )
     # delete slytherin from game
-    await leave(draco, draco, dao.team_leaver, notifier=TeamNotifierMock())
+    await leave(draco, draco, TeamLeaverImpl(dao), notifier=TeamNotifierMock())
 
     dummy_view = GameViewMock()
     dummy_log = GameLogWriterMock()
@@ -225,7 +234,7 @@ async def test_game_play(
     orgs = await get_orgs(game, dao.organizer)
     identity = MockIdentityProvider(player=harry, team=gryffindor)
     check_key = CheckKeyInteractor(
-        dao=dao.game_player,
+        dao=GamePlayerDaoImpl(dao),
         sender=ViewSenderMock(dummy_view, dummy_org_notifier, dummy_log),
         locker=locker,
         scheduler=scheduler,
@@ -288,7 +297,7 @@ async def test_game_play(
     dummy_view.assert_game_finished_all({gryffindor})
 
     identity = MockIdentityProvider(player=author)
-    keys = await get_typed_keys(game=game, identity=identity, dao=check_dao.typed_keys)
+    keys = await get_typed_keys(game=game, identity=identity, dao=TypedKeyGetterImpl(check_dao))
 
     assert [gryffindor] == list(keys.keys())
     assert len(keys[gryffindor]) == 4
@@ -296,7 +305,7 @@ async def test_game_play(
     assert_time_key(expected_second_key, list(keys[gryffindor])[1])
     assert_time_key(expected_third_key, list(keys[gryffindor])[2])
     assert_time_key(expected_fourth_key, list(keys[gryffindor])[3])
-    assert await dao.game_player.is_all_team_finished(game)
+    assert await GamePlayerDaoImpl(dao).is_all_team_finished(game)
     assert GameStatus.finished == (await check_dao.game.get_by_id(game.id, author)).status
     dummy_view.assert_no_unchecked()
     dummy_org_notifier.assert_no_calls()
@@ -317,9 +326,11 @@ async def test_fast_play_routed_game(
 ):
     game = started_routed_game
     current_game = CurrentGameProviderMock(game, dao.waiver)
-    key_processor = KeyProcessor(dao=dao.game_player, current_game=current_game, locker=locker)
+    key_processor = KeyProcessor(
+        dao=GamePlayerDaoImpl(dao), current_game=current_game, locker=locker
+    )
     # delete slytherin from game
-    await leave(draco, draco, dao.team_leaver, notifier=TeamNotifierMock())
+    await leave(draco, draco, TeamLeaverImpl(dao), notifier=TeamNotifierMock())
     dummy_view = GameViewMock()
     dummy_log = GameLogWriterMock()
 
@@ -327,7 +338,7 @@ async def test_fast_play_routed_game(
     orgs = await get_orgs(game, dao.organizer)
     identity = MockIdentityProvider(player=harry, team=gryffindor)
     check_key = CheckKeyInteractor(
-        dao=dao.game_player,
+        dao=GamePlayerDaoImpl(dao),
         sender=ViewSenderMock(dummy_view, dummy_org_notifier, dummy_log),
         locker=locker,
         scheduler=scheduler,
@@ -366,13 +377,13 @@ async def test_fast_play_routed_game(
     dummy_view.assert_game_finished_all({gryffindor})
 
     identity = MockIdentityProvider(player=author)
-    keys = await get_typed_keys(game=game, identity=identity, dao=check_dao.typed_keys)
+    keys = await get_typed_keys(game=game, identity=identity, dao=TypedKeyGetterImpl(check_dao))
 
     assert list(keys.keys()) == [gryffindor]
     assert len(keys[gryffindor]) == 2
     assert_time_key(expected_first_key, next(iter(keys[gryffindor])))
     assert_time_key(expected_second_key, list(keys[gryffindor])[1])
-    assert await dao.game_player.is_all_team_finished(game)
+    assert await GamePlayerDaoImpl(dao).is_all_team_finished(game)
     assert GameStatus.finished == (await check_dao.game.get_by_id(game.id, author)).status
     dummy_view.assert_no_unchecked()
     dummy_org_notifier.assert_no_calls()
@@ -393,9 +404,11 @@ async def test_cycle_play_routed_game(
 ):
     game = started_routed_game
     current_game = CurrentGameProviderMock(game, dao.waiver)
-    key_processor = KeyProcessor(dao=dao.game_player, current_game=current_game, locker=locker)
+    key_processor = KeyProcessor(
+        dao=GamePlayerDaoImpl(dao), current_game=current_game, locker=locker
+    )
     # delete slytherin from game
-    await leave(draco, draco, dao.team_leaver, notifier=TeamNotifierMock())
+    await leave(draco, draco, TeamLeaverImpl(dao), notifier=TeamNotifierMock())
     dummy_view = GameViewMock()
     dummy_log = GameLogWriterMock()
 
@@ -403,7 +416,7 @@ async def test_cycle_play_routed_game(
     orgs = await get_orgs(game, dao.organizer)
     identity = MockIdentityProvider(player=harry, team=gryffindor)
     check_key = CheckKeyInteractor(
-        dao=dao.game_player,
+        dao=GamePlayerDaoImpl(dao),
         sender=ViewSenderMock(dummy_view, dummy_org_notifier, dummy_log),
         locker=locker,
         scheduler=scheduler,
@@ -474,7 +487,7 @@ async def test_cycle_play_routed_game(
     dummy_view.assert_game_finished_all({gryffindor})
 
     identity = MockIdentityProvider(player=author)
-    keys = await get_typed_keys(game=game, identity=identity, dao=check_dao.typed_keys)
+    keys = await get_typed_keys(game=game, identity=identity, dao=TypedKeyGetterImpl(check_dao))
 
     assert list(keys.keys()) == [gryffindor]
     assert len(keys[gryffindor]) == 4
@@ -482,7 +495,7 @@ async def test_cycle_play_routed_game(
     assert_time_key(expected_second_key, list(keys[gryffindor])[1])
     assert_time_key(expected_third_key, list(keys[gryffindor])[2])
     assert_time_key(expected_last_key, list(keys[gryffindor])[3])
-    assert await dao.game_player.is_all_team_finished(game)
+    assert await GamePlayerDaoImpl(dao).is_all_team_finished(game)
     assert GameStatus.finished == (await check_dao.game.get_by_id(game.id, author)).status
     dummy_view.assert_no_unchecked()
     dummy_org_notifier.assert_no_calls()
@@ -499,7 +512,7 @@ async def test_get_current_hints(
     hermione: dto.Player,
     gryffindor: dto.Team,
 ):
-    await leave(ron, ron, dao.team_leaver, notifier=TeamNotifierMock())
+    await leave(ron, ron, TeamLeaverImpl(dao), notifier=TeamNotifierMock())
     level_time = models.LevelTime(
         game_id=game_with_waivers.id,
         team_id=gryffindor.id,
@@ -601,7 +614,7 @@ async def test_get_passed_levels_requires_waiver(
     harry: dto.Player,
     gryffindor: dto.Team,
 ):
-    await leave(ron, ron, dao.team_leaver, notifier=TeamNotifierMock())
+    await leave(ron, ron, TeamLeaverImpl(dao), notifier=TeamNotifierMock())
     dao.level_time._save(
         models.LevelTime(
             game_id=game_with_waivers.id,

@@ -1,4 +1,3 @@
-import typing
 from collections.abc import Iterable
 from dataclasses import dataclass
 from datetime import datetime
@@ -7,14 +6,12 @@ from shvatka.core.interfaces.dal.game_play import GamePlayerDao, GamePreparer
 from shvatka.core.interfaces.dal.level_times import GameStarter
 from shvatka.core.models import dto, enums
 from shvatka.core.models.dto import action
-
-if typing.TYPE_CHECKING:
-    from shvatka.infrastructure.db.dao.holder import HolderDao
+from shvatka.infrastructure.db.dao.holder import HolderDao
 
 
 @dataclass
 class GamePreparerImpl(GamePreparer):
-    dao: "HolderDao"
+    dao: HolderDao
 
     async def delete_poll_data(self) -> None:
         return await self.dao.poll.delete_all()
@@ -35,7 +32,7 @@ class GamePreparerImpl(GamePreparer):
 
 @dataclass
 class GameStarterImpl(GameStarter):
-    dao: "HolderDao"
+    dao: HolderDao
 
     async def set_game_started(self, game: dto.Game) -> None:
         return await self.dao.game.set_started(game)
@@ -60,7 +57,7 @@ class GameStarterImpl(GameStarter):
 
 @dataclass
 class GamePlayerDaoImpl(GamePlayerDao):
-    dao: "HolderDao"
+    dao: HolderDao
 
     async def check_waiver(self, player: dto.Player, team: dto.Team, game: dto.Game) -> bool:
         return await self.dao.waiver.check_waiver(player, team, game)

@@ -17,6 +17,7 @@ from shvatka.core.services.game import (
 from shvatka.core.services.level import upsert_level
 from shvatka.core.services.organizers import get_orgs
 from shvatka.core.utils.exceptions import CantEditGame
+from shvatka.infrastructure.db.dao.complex.game import GameUpserterImpl
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from tests.fixtures.identity import MockIdentityProvider
 
@@ -29,7 +30,7 @@ async def test_game_simple(
     retort: Retort,
     file_gateway: FileGateway,
 ):
-    game = await upsert_game(three_lvl_scn, author, dao.game_upserter, retort, file_gateway)
+    game = await upsert_game(three_lvl_scn, author, GameUpserterImpl(dao), retort, file_gateway)
 
     assert await dao.game.count() == 1
     assert await dao.level.count() == 3
@@ -49,7 +50,11 @@ async def test_game_simple(
     another_scn["levels"].append(another_scn["levels"].pop(0))
 
     game = await upsert_game(
-        RawGameScenario(scn=another_scn, files={}), author, dao.game_upserter, retort, file_gateway
+        RawGameScenario(scn=another_scn, files={}),
+        author,
+        GameUpserterImpl(dao),
+        retort,
+        file_gateway,
     )
 
     assert await dao.game.count() == 1
@@ -69,7 +74,11 @@ async def test_game_simple(
     another_scn["levels"].pop()
 
     game = await upsert_game(
-        RawGameScenario(scn=another_scn, files={}), author, dao.game_upserter, retort, file_gateway
+        RawGameScenario(scn=another_scn, files={}),
+        author,
+        GameUpserterImpl(dao),
+        retort,
+        file_gateway,
     )
 
     assert await dao.game.count() == 1
@@ -102,7 +111,9 @@ async def test_game_get_full(
     retort: Retort,
     file_gateway: FileGateway,
 ):
-    game_expected = await upsert_game(simple_scn, author, dao.game_upserter, retort, file_gateway)
+    game_expected = await upsert_game(
+        simple_scn, author, GameUpserterImpl(dao), retort, file_gateway
+    )
     game_actual = await dao.game.get_full(game_expected.id)
     assert game_expected == game_actual
 
@@ -115,7 +126,9 @@ async def test_game_get_preview(
     retort: Retort,
     file_gateway: FileGateway,
 ):
-    game_expected = await upsert_game(simple_scn, author, dao.game_upserter, retort, file_gateway)
+    game_expected = await upsert_game(
+        simple_scn, author, GameUpserterImpl(dao), retort, file_gateway
+    )
     game_actual = await dao.game.get_preview(game_expected.id)
     assert len(game_expected.levels) == game_actual.levels_count
     assert game_expected.id == game_actual.id
@@ -128,7 +141,7 @@ async def test_game_get_preview(
 async def test_cant_change_finished(finished_game: dto.FullGame, dao: HolderDao):
     level = finished_game.levels[0]
     with pytest.raises(CantEditGame):
-        await upsert_level(finished_game.author, level.scenario, dao.game_upserter)
+        await upsert_level(finished_game.author, level.scenario, GameUpserterImpl(dao))
 
 
 @pytest.mark.asyncio

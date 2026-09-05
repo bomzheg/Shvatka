@@ -1,16 +1,13 @@
-import typing
 from dataclasses import dataclass
 
 from shvatka.core.interfaces.dal.organizer import OrgAdder
 from shvatka.core.models import dto
-
-if typing.TYPE_CHECKING:
-    from shvatka.infrastructure.db.dao.holder import HolderDao
+from shvatka.infrastructure.db.dao.holder import HolderDao
 
 
 @dataclass
 class OrgAdderImpl(OrgAdder):
-    dao: "HolderDao"
+    dao: HolderDao
 
     async def add_new_org(self, game: dto.Game, player: dto.Player) -> dto.SecondaryOrganizer:
         return await self.dao.organizer.add_new(game, player)

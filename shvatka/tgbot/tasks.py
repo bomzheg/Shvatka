@@ -38,10 +38,6 @@ RETRY_BACKOFF: typing.Final = 1.0
 MAX_RETRY_DELAY: typing.Final = 30.0
 # what telegram may recover from on its own; everything else would fail the same
 RETRIABLE_ERRORS: typing.Final = (TelegramRetryAfter, TelegramNetworkError, TelegramServerError)
-# a team waiting for a slot gets its level late, and a level everyone gets at
-# a different time is not the same game — so this is a ceiling against a
-# runaway fan-out, not a throttle: it sits above any field we actually run
-PARALLEL_TEAMS: typing.Final = 20
 
 Delivery = Callable[[], Awaitable[None]]
 
@@ -100,9 +96,8 @@ async def show_game(
     game_log: FromDishka[GameLogWriter],
     alerter: FromDishka[BotAlert],
 ) -> None:
-    parallel = asyncio.Semaphore(PARALLEL_TEAMS)
     await asyncio.gather(
-        *(_show_to_team(group, view, alerter, parallel) for group in group_by_team(tasks.view))
+        *(_show_to_team(group, view, alerter) for group in group_by_team(tasks.view))
     )
     for event in tasks.org:
         what = f"{type(event).__name__} to {len(event.orgs_list)} orgs"
@@ -112,15 +107,9 @@ async def show_game(
         await deliver(lambda e=log_event: game_log.log(e), alerter, what)  # type: ignore[misc]
 
 
-async def _show_to_team(
-    tasks: Sequence[AnyViewTask],
-    view: GameView,
-    alerter: BotAlert,
-    parallel: asyncio.Semaphore,
-) -> None:
-    async with parallel:
-        for task in tasks:
-            await deliver(lambda t=task: view.show([t]), alerter, _describe(task))  # type: ignore[misc]
+async def _show_to_team(tasks: Sequence[AnyViewTask], view: GameView, alerter: BotAlert) -> None:
+    for task in tasks:
+        await deliver(lambda t=task: view.show([t]), alerter, _describe(task))  # type: ignore[misc]
 
 
 def _describe(task: AnyViewTask) -> str:

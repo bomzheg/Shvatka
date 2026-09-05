@@ -207,7 +207,7 @@ that is the point of landing them first.
 
 | 1
 | Loop lag, stall watchdog, pool metrics; uvloop; pool sizing by config; the
-  blocking work moved to threads; bounded fan-out in `show_game`
+  blocking work moved to threads
 | ✅ landed together
 
 | 2
@@ -221,6 +221,16 @@ that is the point of landing them first.
 |===
 
 == Deviations from the plan
+
+A bound on the `show_game` fan-out was written and then taken out again. It was
+added on the belief that each team's chain of messages holds its own db session
+— it does not: `show_game` takes one `view` from one dishka scope, so every team
+shares the single session that job opened, and the fan-out never multiplied
+them. What was left was a semaphore that could make one team wait for another's
+telegram calls to finish, at a moment when the whole point is that every team
+gets its level at the same time. Telegram's own rate limiting is the real
+constraint there, and `_with_retry` already answers it through
+`TelegramRetryAfter`.
 
 The monitor is registered on the **root** app, by `setup_loop_monitor` called
 from both entrypoints, not inside `create_app`. Starlette does not run the

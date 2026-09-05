@@ -1,0 +1,235 @@
+= SHEP-0014 — Event loop latency
+:navtitle: SHEP-0014 Event loop latency
+
+[cols="1,4"]
+|===
+| SHEP | 0014
+| Title | Event loop latency
+| Status | `Accepted, partially implemented`
+| Created | 2026-08-30
+| Updated | 2026-08-30
+| Related | xref:shep-0009-key-submission-latency.adoc[SHEP-0009]
+|===
+
+== Summary
+
+During a game, endpoints that do almost nothing take seconds. The cause is not
+in those endpoints: the whole app is one process on one event loop, and work
+that occupies that loop is added to the latency of everything else on it. This
+SHEP makes the loop *measurable* — it now reports how long it goes without a
+turn, and names the stack that blocked it — and moves the blocking work the
+measurement was going to find off it.
+
+== Context
+
+`GET /notifications/unread-count` is one `COUNT` covered by a partial index
+(`ix__notifications_unread`) plus the player lookup every authenticated request
+does. During a game at roughly one request a second it has been observed at
+**5.4 seconds**. `POST /webhook/bot` reaches four, `POST /auth/login/data` 2.8,
+and `/games/{id}/keys` and `/games/{id}/stat` seconds each. The spikes get
+worse as the night goes on.
+
+Nothing about the slow requests is slow in itself. What they have in common is
+where they run:
+
+* `shvatka/__main__.py` starts **one** uvicorn worker. `create_root_app`
+  (`shvatka/main_factory.py`) mounts the api app and registers the aiogram
+  webhook on it, with `SimpleRequestHandler(handle_in_background=False)` — so
+  every telegram update is processed inline, in the http request, on the same
+  loop that serves the api.
+* Blocking work sat on that loop. Before this SHEP there was exactly **one**
+  `asyncio.to_thread` in the codebase (`shvatka/api/app/utils/push.py`);
+  bcrypt, matplotlib, openpyxl, PIL and every file read and write ran on the
+  loop thread.
+* `uvloop` was never installed. `pyproject.toml` depended on plain `uvicorn`,
+  not `uvicorn[standard]`, and `lock.txt` — what the image installs — had no
+  `uvloop` line, so production ran on the stock asyncio loop.
+* `create_async_engine` (`shvatka/infrastructure/db/factory.py`) was called
+  with no pool arguments at all, so sqlalchemy's defaults applied: `pool_size=5`,
+  `max_overflow=10`. Fifteen connections shared by the api, every webhook
+  update and every nursery job — and a job opens a dishka scope of its own, so
+  it holds one for as long as it runs.
+
+The four candidates — a blocked loop, an exhausted pool, a slow query, and
+uvicorn's own per-request overhead — produce *the same symptom*, and the
+metrics that existed (asgi-monitor's request duration) cannot tell them apart.
+That is what made the first decision below the important one.
+
+== Decision
+
+=== Measure before fixing
+
+Three metrics, on the global prometheus registry `setup_metrics` already
+exposes through `/metrics`:
+
+`asyncio_loop_lag_seconds`:: a task sleeps a fixed interval and records how
+much later than that it woke (`shvatka/common/loop_monitor.py`). When its p99
+tracks the p99 of request duration, the loop *is* the queue.
+
+`db_pool_checked_out` / `db_pool_size` / `db_pool_overflow` and
+`db_pool_checkout_seconds`:: sqlalchemy pool events
+(`shvatka/infrastructure/db/metrics.py`). The gauges pinned at
+`pool_size + max_overflow` mean the pool is the queue; the histogram says what
+put it there, because a connection held for seconds is one being carried across
+network io rather than across a query.
+
+`asyncio_loop_stalls_total`, and the traceback with it:: a watchdog thread
+watching a heartbeat the loop updates. When the heartbeat goes stale it dumps
+`sys._current_frames()` for the loop thread — which *names the function* that
+blocked it.
+
+The watchdog is a thread rather than `loop.slow_callback_duration` because that
+setting is only consulted while the loop runs in debug mode, and debug mode
+adds bookkeeping to every task in the app. The stalls worth catching happen
+during a game, which is exactly when that overhead is least affordable.
+
+Everything is configured under a `monitoring` section
+(`shvatka/common/config/models/monitoring.py`) whose every field has a default
+that is safe on a live game, so the section may be left out.
+
+=== Blocking work goes to a thread
+
+The convention, now written down in `AGENTS.md`: **anything that does not await
+belongs in `asyncio.to_thread`.** The sync function stays sync — it is easier
+to test that way — and the hop happens at the call boundary.
+
+==== What a thread does and does not buy
+
+This is the part worth being precise about, because the obvious objection —
+"the gil means it still blocks, just from the other side" — is half right, and
+the half it gets right is not the half that matters here.
+
+**Throughput gains nothing.** The gil serialises python bytecode, so the
+process burns the same cpu whether the render happens on the loop or beside it.
+
+**Latency is what improves.** The gil is not held until a thread finishes. When
+another thread wants it, the eval loop sets `gil_drop_request` and the holder
+releases it at the next bytecode boundary — within `sys.getswitchinterval()`,
+5 ms by default. So the loop thread reclaims the gil about a switch interval
+after asking, instead of after the whole render.
+
+Measured with `tests/load/gil_offload_bench.py`, one matplotlib render of
+roughly 200 ms, *pinned to a single cpu* (`taskset -c 0`) to model the
+container:
+
+[cols="3,2,2,2",options="header"]
+|===
+| | wall | loop lag p99 | loop lag max
+
+| inline on the loop | 207 ms | — | *196.77 ms* — a hard stall
+| `to_thread`, 1 at a time | 196 ms | 3.38 ms | 3.38 ms
+| `to_thread`, 4 at once | 365 ms | 29.92 ms | 29.92 ms
+| `to_thread`, 16 at once | 2793 ms | 17.80 ms | 87.02 ms
+|===
+
+Read the wall column to see the objection is right about throughput: sixteen
+renders cost 2.8 s either way, and bounding the pool does not make that better.
+Read the lag columns to see what the offload is actually for — a request that
+arrives mid-render waits milliseconds rather than the rest of the render. The
+reported symptom is p99 latency on endpoints that do nothing, so latency is the
+axis that matters, and it costs about 5% of wall time.
+
+Where the objection *would* be right and this change would not help: a process
+that is simply cpu-saturated for the length of a game. Threads do nothing for
+that; fewer or cheaper renders, or another process, would be the answer. The
+metrics above are what will say which of the two we have.
+
+Native code (bcrypt, `hashlib`, PIL, file io) releases the gil outright, so for
+those a thread really does run beside the loop rather than interleaved with it.
+The benchmark takes `bcrypt` as a second workload for comparison.
+
+Moved: `BcryptPasswordHasher` (both methods are now async, and so is the
+`PasswordHasher` protocol — a password is verified on *any* request whose token
+is missing or invalid, not only at login), `ResultsPainter.paint_game_results`,
+both print interactors in `shvatka/core/scenario/interactors.py`, and all of
+`LocalFileStorage`, whose sniffing, transcoding and hashing now happen in a
+single hop rather than four.
+
+=== The pool is sized by config
+
+`DBConfigProperties` grew `pool-size`, `max-overflow`, `pool-timeout`,
+`pool-recycle` and `pool-pre-ping`, defaulting to what sqlalchemy already did,
+so this change alone moves nothing — it makes the ceiling visible and
+adjustable once the metrics say whether it is the one being hit. Sqlite is
+skipped: its pool takes no sizing arguments.
+
+=== Alternatives considered
+
+Running several uvicorn workers:: the obvious fix for a saturated loop, and the
+one that is not available yet. Key submission is serialised by an in-process
+`asyncio.Lock` (`MemoryLockFactory`, used from `shvatka/core/services/key.py`
+and `shvatka/core/games/interactors.py`) and `LevelTestingData` is in-process
+memory, so a second worker would let two submissions of the same key race. A
+redis-backed `KeyCheckerFactory` is the prerequisite. Deferred, not rejected.
+
+Handling telegram updates in the background:: `handle_in_background=True` would
+take the whole aiogram pipeline out of the http request. It also changes what a
+delivery failure means, since telegram would be told the update was accepted
+before it was processed. Left for its own decision.
+
+Reworking `GET /games/{id}/keys`:: it selects every key of a game, unpaginated,
+with seven nested `joinedload`s, and grows all night — which matches the spikes
+worsening. It is the largest single cpu consumer left, but fixing it properly
+means paginating or adding a cursor, which the org ui has to agree to. Left for
+its own decision.
+
+== Consequences
+
+The `PasswordHasher` protocol is async, so every implementation and call site
+changed — including test fakes. That is the only source-compatibility break.
+
+The monitor costs one timer per `probe-interval` and, when
+`stall-traceback` is on, one thread. Both are configurable and can be switched
+off without a redeploy of anything but the config.
+
+`config_dist/logging.yml` now sets the root logger to `INFO`. Every record is
+written on the loop thread by a synchronous handler, so `DEBUG` there was
+latency, not only noise.
+
+The api's request log is a plain asgi middleware now instead of
+`BaseHTTPMiddleware`, which ran every request through an anyio task group and a
+pair of memory streams.
+
+Once the metrics come back from a real game they should decide the next phase —
+that is the point of landing them first.
+
+== Phases and status
+
+[cols="1,4,2",options="header"]
+|===
+| Phase | Content | Status
+
+| 1
+| Loop lag, stall watchdog, pool metrics; uvloop; pool sizing by config; the
+  blocking work moved to threads; bounded fan-out in `show_game`
+| ✅ landed together
+
+| 2
+| Read one game's metrics and act on what they say — pool sizing, or whatever
+  the stall tracebacks name
+| ⏳ waiting for a game
+
+| 3
+| `GET /games/{id}/keys`, the telegram webhook, several workers
+| ⏳ each needs its own decision
+|===
+
+== Deviations from the plan
+
+The monitor is registered on the **root** app, by `setup_loop_monitor` called
+from both entrypoints, not inside `create_app`. Starlette does not run the
+lifespan of a mounted sub-application, and `create_root_app` mounts the app
+`create_app` builds — a startup handler added there would never fire. There is
+a test for exactly this (`tests/unit/test_loop_monitor.py`).
+
+The same is true of `setup_application` in `create_root_app`, which registers
+aiogram's `emit_startup` / `emit_shutdown` on the mounted app. Those hooks do
+not run today. Noted here rather than changed, because starting to run them is
+a behaviour change of its own.
+
+== Open questions
+
+How large the pool should actually be, and whether the second session
+`push_subscription_dao` opens per request
+(`shvatka/infrastructure/di/db.py`) is worth its cost. Both are questions for
+the metrics, not for this document.

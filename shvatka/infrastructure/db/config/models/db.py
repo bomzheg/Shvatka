@@ -9,6 +9,11 @@ logger = logging.getLogger(__name__)
 
 class DBConfig(Protocol):
     echo: bool
+    pool_size: int
+    max_overflow: int
+    pool_timeout: float
+    pool_recycle: int
+    pool_pre_ping: bool
 
     @property
     def uri(self):
@@ -26,6 +31,12 @@ class DBConfigProperties(DBConfig):
     name: str | None = None
     path: str | None = None
     echo: bool = False
+
+    pool_size: int = 5
+    max_overflow: int = 10
+    pool_timeout: float = 30.0
+    pool_recycle: int = 1800
+    pool_pre_ping: bool = False
 
     @property
     def uri(self):

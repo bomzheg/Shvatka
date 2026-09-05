@@ -9,7 +9,13 @@ from shvatka.infrastructure.db.models import Base
 
 config = context.config
 
-logging.config.fileConfig(config.config_file_name)  # type: ignore[arg-type]
+# disable_existing_loggers defaults to True, which switches off every logger
+# already created — the whole shvatka tree included, so a migration would run
+# with the app's own logging silenced
+logging.config.fileConfig(
+    config.config_file_name,  # type: ignore[arg-type]
+    disable_existing_loggers=False,
+)
 
 target_metadata = Base.metadata
 

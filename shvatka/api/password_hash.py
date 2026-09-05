@@ -1,3 +1,4 @@
+import asyncio
 import logging
 import sys
 
@@ -13,12 +14,16 @@ logger = logging.getLogger(__name__)
 
 
 def generate():
+    return asyncio.run(generate_async())
+
+
+async def generate_async():
     paths = get_paths()
 
     setup_logging(paths)
     config = load_config(paths)
     auth = AuthProperties(config.api.auth, BcryptPasswordHasher())
-    return auth.get_password_hash(sys.argv[1])
+    return await auth.get_password_hash(sys.argv[1])
 
 
 if __name__ == "__main__":

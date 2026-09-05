@@ -23,7 +23,10 @@ class PlotData(NamedTuple):
 
 def paint_it(stat: dto.GameStat, game: dto.FullGame) -> BinaryIO:
     converted = convert(stat, game)
-    logger.debug("converted \n%s\nto\n%s\n", pprint.pformat(stat), pprint.pformat(converted))
+    if logger.isEnabledFor(logging.DEBUG):
+        # pformat runs whether or not the record is emitted — only the
+        # interpolation is lazy, not the arguments
+        logger.debug("converted \n%s\nto\n%s\n", pprint.pformat(stat), pprint.pformat(converted))
     plot_it(converted, game)
     result = BytesIO()
     plt.savefig(result, format="png")

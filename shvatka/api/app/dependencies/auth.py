@@ -45,11 +45,11 @@ class AuthProperties:
         self.algorythm = "HS256"
         self.access_token_expire = config.token_expire
 
-    def verify_password(self, plain_password: str, hashed_password: str) -> bool:
-        return self.hasher.verify(plain_password, hashed_password)
+    async def verify_password(self, plain_password: str, hashed_password: str) -> bool:
+        return await self.hasher.verify(plain_password, hashed_password)
 
-    def get_password_hash(self, password: str) -> str:
-        return self.hasher.hash(password)
+    async def get_password_hash(self, password: str) -> str:
+        return await self.hasher.hash(password)
 
     async def authenticate_user(self, username: str, password: str, dao: HolderDao) -> dto.Player:
         http_status_401 = HTTPException(
@@ -61,7 +61,7 @@ class AuthProperties:
             player = await dao.player.get_by_username_with_password(username)
         except NoUsernameFound as e:
             raise http_status_401 from e
-        if not self.verify_password(password, player.hashed_password or ""):
+        if not await self.verify_password(password, player.hashed_password or ""):
             raise http_status_401
         return player.without_password()
 
@@ -78,7 +78,7 @@ class AuthProperties:
             player = await dao.email.get_verified_player_by_email(normalized)
         except exceptions.EmailNotVerified as e:
             raise http_status_401 from e
-        if not self.verify_password(password, player.hashed_password or ""):
+        if not await self.verify_password(password, player.hashed_password or ""):
             raise http_status_401
         return player.without_password()
 

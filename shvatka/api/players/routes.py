@@ -88,7 +88,7 @@ async def set_password_route(
     dao: FromDishka[HolderDao],
     password: str = Body(),  # type: ignore[assignment]
 ) -> None:
-    hashed_password = auth.get_password_hash(password)
+    hashed_password = await auth.get_password_hash(password)
     await set_password(identity, hashed_password, dao.player)
     raise HTTPException(status_code=200)
 

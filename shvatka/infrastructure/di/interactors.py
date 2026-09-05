@@ -226,7 +226,7 @@ from shvatka.infrastructure.db.dao.complex.team import (
     CaptainTeamJoinerImpl,
     TeamCaptainSetterImpl,
 )
-from shvatka.infrastructure.db.dao.complex2.waiver import (
+from shvatka.infrastructure.db.dao.complex.waiver import (
     AdminGameWaiversReaderImpl,
     AdminPollReaderImpl,
     AdminWaiverEditorImpl,

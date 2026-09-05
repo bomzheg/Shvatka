@@ -39,9 +39,6 @@ MAX_RETRY_DELAY: typing.Final = 30.0
 # what telegram may recover from on its own; everything else would fail the same
 RETRIABLE_ERRORS: typing.Final = (TelegramRetryAfter, TelegramNetworkError, TelegramServerError)
 PARALLEL_TEAMS: typing.Final = 8
-"""teams shown to at once. a game start is one job with every team in it,
-and each of them is a chain of telegram calls holding a db session — so the
-fan-out is bounded rather than "however many teams signed up"."""
 
 Delivery = Callable[[], Awaitable[None]]
 

@@ -1,13 +1,3 @@
-"""How busy the connection pool is, and for how long each connection is held.
-
-A request that waits for a free connection is indistinguishable, from the
-outside, from a request that is slow on its own — both show up only as request
-duration. These two metrics separate them: ``db_pool_checked_out`` pinned at
-``pool_size + max_overflow`` says the pool is the queue, and the checkout
-histogram says what put it there, because a connection held for seconds is one
-that is being carried across network io rather than across a query.
-"""
-
 import logging
 import time
 
@@ -40,7 +30,6 @@ DB_POOL_CHECKOUT_SECONDS = Histogram(
 
 
 def instrument_pool(engine: AsyncEngine) -> None:
-    """Report the pool of ``engine``. A no-op for pools that don't queue."""
     pool = engine.pool
     if not isinstance(pool, QueuePool):
         logger.info("pool %s does not queue, not reporting it", type(pool).__name__)

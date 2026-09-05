@@ -82,10 +82,6 @@ class LocalFileStorage(FileStorage):
         data: bytes,
         options: hints.FileUploadOptions,
     ) -> tuple[bytes, str, str, str]:
-        """Everything about the content that is worked out before it is stored.
-
-        Runs in a thread, so it touches nothing but its arguments.
-        """
         mime_type = detect_mime_type(data)
         extension = file_meta.extension or extension_from_mime(mime_type)
         if is_heic(mime_type):
@@ -134,7 +130,6 @@ class LocalFileStorage(FileStorage):
         return await asyncio.to_thread(self._list_files)
 
     def _list_files(self) -> list[hints.StoredFile]:
-        """A stat syscall per file in the directory, so: in a thread."""
         return [
             hints.StoredFile(
                 link=hints.FileContentLink(file_path=str(path)),

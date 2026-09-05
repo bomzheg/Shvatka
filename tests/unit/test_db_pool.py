@@ -1,10 +1,3 @@
-"""Sizing of the connection pool, and reporting how busy it is.
-
-One process serves the api, every telegram update and every background job, so
-the pool is a queue all of them share — and a request waiting in it is
-indistinguishable from a slow request unless the pool says so itself.
-"""
-
 from prometheus_client.metrics import MetricWrapperBase
 from sqlalchemy.engine import make_url
 from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
@@ -20,7 +13,6 @@ from shvatka.infrastructure.db.metrics import (
 from tests.mocks.config import DBConfig
 
 URI = "postgresql+asyncpg://u:p@localhost:5432/db"
-"""never connected to — everything here is about the pool in front of it"""
 
 
 def test_postgres_pool_is_sized_from_config():
@@ -36,7 +28,6 @@ def test_postgres_pool_is_sized_from_config():
 
 
 def test_sqlite_gets_no_pool_sizing():
-    """Its pool takes no sizing arguments at all, so passing them would raise."""
     config = DBConfig("sqlite+aiosqlite:///:memory:")
 
     assert {} == pool_options(config, make_url(config.uri))
@@ -70,8 +61,6 @@ def test_a_checkout_is_measured_and_the_gauges_follow():
 
 
 def test_a_checkin_without_a_checkout_measures_nothing():
-    """A connection the pool re-establishes is checked in without ever having
-    been handed out, and there is no duration to report for it."""
     engine = create_engine(DBConfig(URI))
     before = checkout_count()
 
@@ -89,8 +78,6 @@ def test_a_pool_that_does_not_queue_is_left_alone():
 
 
 class FakeRecord:
-    """Stands for the pool's record of one physical connection."""
-
     def __init__(self) -> None:
         self.info: dict[str, object] = {}
 

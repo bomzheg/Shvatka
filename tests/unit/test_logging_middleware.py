@@ -1,7 +1,3 @@
-"""The api's request log, which is plain asgi rather than a starlette
-``BaseHTTPMiddleware`` — see the middleware's own docstring for why.
-"""
-
 import logging
 
 import pytest

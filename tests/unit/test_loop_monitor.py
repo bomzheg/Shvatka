@@ -1,10 +1,3 @@
-"""The monitor that says when the event loop stopped serving, and why.
-
-Everything here is about a loop that is deliberately blocked, so the tests
-block it with ``time.sleep`` — which is exactly the mistake the monitor exists
-to catch in production code.
-"""
-
 import asyncio
 import logging
 import time
@@ -105,16 +98,11 @@ async def test_watchdog_can_be_switched_off(config: MonitoringConfig):
 
 
 def block_the_loop(seconds: float) -> None:
-    """Named so that the reported traceback is recognisable."""
     time.sleep(seconds)
 
 
 @pytest.mark.asyncio
 async def test_it_runs_when_the_app_is_mounted_under_a_root(bot_config: Config):
-    """Starlette does not run the lifespan of a mounted sub-application, so the
-    monitor is registered on the root app. Moving it onto the one ``create_app``
-    builds would silently stop it from ever starting.
-    """
     root_app = FastAPI()
     root_app.mount("/context/path", FastAPI())
     setup_loop_monitor(root_app, bot_config)

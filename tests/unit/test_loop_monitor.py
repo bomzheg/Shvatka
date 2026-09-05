@@ -1,6 +1,8 @@
 import asyncio
 import logging
+import threading
 import time
+from dataclasses import replace
 
 import pytest
 from asgi_lifespan import LifespanManager
@@ -99,6 +101,22 @@ async def test_watchdog_can_be_switched_off(config: MonitoringConfig):
 
 def block_the_loop(seconds: float) -> None:
     time.sleep(seconds)
+
+
+@pytest.mark.asyncio
+async def test_disabled_starts_nothing(bot_config: Config):
+    disabled = replace(bot_config, monitoring=MonitoringConfig(enabled=False))
+    root_app = FastAPI()
+    root_app.mount("/context/path", FastAPI())
+    setup_loop_monitor(root_app, disabled)
+    before = lag_count()
+
+    async with LifespanManager(root_app):
+        await asyncio.sleep(disabled.monitoring.probe_interval * 3)
+        watchdogs = [t for t in threading.enumerate() if t.name == "loop-watchdog"]
+
+    assert lag_count() == before, "the probe ran anyway"
+    assert watchdogs == [], "the watchdog thread was started"
 
 
 @pytest.mark.asyncio

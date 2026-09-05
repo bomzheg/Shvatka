@@ -38,6 +38,9 @@ def create_app(config: ApiConfig) -> FastAPI:
 
 
 def setup_loop_monitor(root_app: FastAPI, config: Config) -> None:
+    if not config.monitoring.enabled:
+        logger.info("loop monitor disabled by config")
+        return
     monitor = LoopMonitor(config.monitoring)
 
     async def start() -> None:

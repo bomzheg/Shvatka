@@ -3,6 +3,8 @@ from dataclasses import dataclass
 
 @dataclass
 class MonitoringConfig:
+    # off means nothing is started at all: no probe task, no watchdog thread
+    enabled: bool = True
     probe_interval: float = 0.1
     stall_threshold: float = 0.25
     stall_traceback: bool = True

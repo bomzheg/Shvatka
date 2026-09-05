@@ -38,7 +38,10 @@ RETRY_BACKOFF: typing.Final = 1.0
 MAX_RETRY_DELAY: typing.Final = 30.0
 # what telegram may recover from on its own; everything else would fail the same
 RETRIABLE_ERRORS: typing.Final = (TelegramRetryAfter, TelegramNetworkError, TelegramServerError)
-PARALLEL_TEAMS: typing.Final = 8
+# a team waiting for a slot gets its level late, and a level everyone gets at
+# a different time is not the same game — so this is a ceiling against a
+# runaway fan-out, not a throttle: it sits above any field we actually run
+PARALLEL_TEAMS: typing.Final = 20
 
 Delivery = Callable[[], Awaitable[None]]
 

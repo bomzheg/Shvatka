@@ -205,10 +205,11 @@ await self.sender.show_later(tasks)
 - **At most one DAO per interactor.** Compose what it needs behind a single
   Protocol and a single `dao/complex/*` adapter.
 - **A complex dao reaches its consumer through DI**, never as a `HolderDao`
-  attribute. Cross-table adapters live in `dao/complex/*` (or `dao/complex2/*`),
-  import `HolderDao` directly, and are registered once in `ComplexDaoProvider`
-  (`infrastructure/di/db.py`) so both edges see them. Handlers, interactors and
-  scheduler wrappers take the Protocol, not `HolderDao`.
+  attribute. Cross-table adapters all live in `dao/complex/*`, one module per
+  area — there is no second package. They import `HolderDao` directly and are
+  registered once in `ComplexDaoProvider` (`infrastructure/di/db.py`), so both
+  edges see them. Handlers, interactors and scheduler wrappers take the
+  Protocol, not `HolderDao`.
 - **Generic SQLAlchemy by default.** Dialect-specific helpers (e.g.
   `postgresql.insert(...).on_conflict_do_nothing()`) are fine when they make a
   query meaningfully better or faster — not by reflex.

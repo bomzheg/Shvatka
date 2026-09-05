@@ -3,7 +3,7 @@ import enum
 import logging
 import typing
 from collections.abc import Iterable
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import timedelta
 
 from aiogram import Bot
@@ -27,6 +27,13 @@ class MessagePinner:
     bot: Bot
     dao: PinnedMessageDao
     rights: BotRights
+
+    unpinned_chats: set[int] = field(default_factory=set, init=False)
+    """Chats this pinner already unpinned in - the next unpin there waits :attr:`SLEEP`.
+
+    Unpins are spread out per chat, not per call: preparing a game unpins both
+    categories of every team in a row, and telegram counts them all the same.
+    """
 
     SLEEP: typing.ClassVar[timedelta] = timedelta(seconds=1)
     """Between unpins: a level's worth of them at once is flood control.
@@ -76,9 +83,10 @@ class MessagePinner:
                 "can't get pinned messages (%s) of chat %s", category.value, chat_id, exc_info=e
             )
             return
-        for number, message_id in enumerate(message_ids):
-            if number:
+        for message_id in message_ids:
+            if chat_id in self.unpinned_chats:
                 await asyncio.sleep(self.SLEEP.total_seconds())
+            self.unpinned_chats.add(chat_id)
             await self._unpin_one(chat_id=chat_id, message_id=message_id)
 
     async def _pin_one(self, chat_id: int, message_id: int, notify: bool = False) -> bool:

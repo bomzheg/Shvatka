@@ -5,6 +5,7 @@ from sqlalchemy.pool import NullPool, QueuePool
 
 from shvatka.infrastructure.db.factory import create_engine, pool_options
 from shvatka.infrastructure.db.metrics import (
+    DB_POOL_CAPACITY,
     DB_POOL_CHECKED_OUT,
     DB_POOL_CHECKOUT_SECONDS,
     DB_POOL_SIZE,
@@ -58,6 +59,7 @@ def test_a_checkout_is_measured_and_the_gauges_follow():
     assert checkout_count() == before + 1
     assert sample(DB_POOL_SIZE) == 9
     assert sample(DB_POOL_CHECKED_OUT) == 0, "nothing was really checked out"
+    assert sample(DB_POOL_CAPACITY) == 9 + 10, "pool_size plus the default max_overflow"
 
 
 def test_a_checkin_without_a_checkout_measures_nothing():

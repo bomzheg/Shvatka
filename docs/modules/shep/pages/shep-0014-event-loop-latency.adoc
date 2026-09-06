@@ -66,12 +66,14 @@ exposes through `/metrics`:
 much later than that it woke (`shvatka/common/loop_monitor.py`). When its p99
 tracks the p99 of request duration, the loop *is* the queue.
 
-`db_pool_checked_out` / `db_pool_size` / `db_pool_overflow` and
+`db_pool_checked_out` / `db_pool_size` / `db_pool_capacity` and
 `db_pool_checkout_seconds`:: sqlalchemy pool events
-(`shvatka/infrastructure/db/metrics.py`). The gauges pinned at
-`pool_size + max_overflow` mean the pool is the queue; the histogram says what
-put it there, because a connection held for seconds is one being carried across
-network io rather than across a query.
+(`shvatka/infrastructure/db/metrics.py`). `checked_out` riding its `capacity`
+(`pool_size + max_overflow`) means the pool is the queue; the histogram says
+what put it there, because a connection held for seconds is one being carried
+across network io rather than across a query. Sqlalchemy's own `overflow()` is
+deliberately not exported: it starts at `0 - pool_size`, so it reads `-5` on an
+idle pool and would be read as a bug by whoever met it on a dashboard.
 
 `asyncio_loop_stalls_total`, and the traceback with it:: a watchdog thread
 watching a heartbeat the loop updates. When the heartbeat goes stale it dumps

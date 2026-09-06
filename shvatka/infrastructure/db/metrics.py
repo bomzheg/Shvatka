@@ -18,9 +18,9 @@ DB_POOL_SIZE = Gauge(
     "db_pool_size",
     "connections the pool keeps open",
 )
-DB_POOL_OVERFLOW = Gauge(
-    "db_pool_overflow",
-    "connections opened past pool_size; equals max_overflow when the pool is exhausted",
+DB_POOL_CAPACITY = Gauge(
+    "db_pool_capacity",
+    "connections the pool will hand out at most: pool_size + max_overflow",
 )
 DB_POOL_CHECKOUT_SECONDS = Histogram(
     "db_pool_checkout_seconds",
@@ -52,4 +52,6 @@ def _observe_pool(engine: AsyncEngine) -> None:
     pool = engine.pool
     DB_POOL_CHECKED_OUT.set(pool.checkedout())  # type: ignore[attr-defined]
     DB_POOL_SIZE.set(pool.size())  # type: ignore[attr-defined]
-    DB_POOL_OVERFLOW.set(pool.overflow())  # type: ignore[attr-defined]
+    # not pool.overflow(): sqlalchemy starts that counter at -pool_size, so it
+    # reads -5 on an idle pool. the ceiling is what a dashboard needs anyway
+    DB_POOL_CAPACITY.set(pool.size() + pool._max_overflow)  # type: ignore[attr-defined]  # noqa: SLF001

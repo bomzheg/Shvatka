@@ -217,7 +217,7 @@ async def test_unpins_are_spread_out(
 
     # a level's worth of unpins at once is flood control, and telegram then
     # refuses the whole chat for the better part of a minute
-    assert slept == [MessagePinner.SLEEP.total_seconds()] * 2
+    assert slept == [MessagePinner.SLEEP.total_seconds()] * 3
     assert [1, 2, 3] == [
         request.message_id for request in requests(bot_session, "unpinChatMessage")
     ]

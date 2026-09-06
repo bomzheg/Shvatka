@@ -120,41 +120,52 @@ class BotView(GameViewPreparer, GameView):
         dao: GamePreparer,
     ) -> None:
         # TODO set bot commands for orgs, hide bot commands for players
+        if not game.start_at:
+            await self.bot_alert.alert(f"Not set up game.start_at for game_id={game.id}")
+            logger.error("not set up game.start_at", extra={"game_id": game.id})
+            raise RuntimeError("not set up game.start_at")
+        prepared: list[int] = []
         for team in teams:
             if (chat_id := team.get_chat_id()) is None:
                 continue
-            # a previous game could be finished abnormally and leave pinned messages
+            await self._prepare_team(game=game, team=team, chat_id=chat_id, dao=dao)
+            prepared.append(chat_id)
+        # a previous game could be finished abnormally and leave pinned messages.
+        # cleaning them up is the least important part of the preparation, so it
+        # goes last: a flood limit hit here doesn't cost anyone the prepare message
+        for chat_id in prepared:
             await self.unpin_all(chat_id)
-            try:
-                await self.bot.edit_message_reply_markup(
-                    chat_id=team.get_chat_id(),
-                    message_id=await dao.get_poll_msg(team=team, game=game),
-                    reply_markup=None,
-                )
-            except TelegramAPIError as e:
-                logger.warning("can't remove waivers keyboard for team %s", team.id, exc_info=e)
-            try:
-                if not game.start_at:
-                    await self.bot_alert.alert(f"Not set up game.start_at for game_id={game.id}")
-                    logger.error("not set up game.start_at", extra={"game_id": game.id})
-                    raise RuntimeError("not set up game.start_at")
-                await self.bot.send_message(
-                    chat_id=team.get_chat_id(),  # type: ignore[arg-type]
-                    text=PREPARE_GAME_TEMPLATE.format(
-                        game_name=hd.quote(game.name),
-                        second_left=(game.start_at - datetime.now(tz_utc)).seconds,
-                        team_name=hd.quote(team.name),
-                    ),
-                )
-            except TelegramAPIError as e:
-                logger.exception(
-                    "can't send prepare message to team",
-                    exc_info=e,
-                    extra={"team_id": team.id, "chat_id": team.get_chat_id()},
-                )
-                await self.bot_alert.alert(
-                    f"can't send prepare message to team {team.id} [{e.__class__.__name__}]"
-                )
+
+    async def _prepare_team(
+        self, game: dto.Game, team: dto.Team, chat_id: int, dao: GamePreparer
+    ) -> None:
+        assert game.start_at is not None
+        try:
+            await self.bot.send_message(
+                chat_id=chat_id,
+                text=PREPARE_GAME_TEMPLATE.format(
+                    game_name=hd.quote(game.name),
+                    second_left=(game.start_at - datetime.now(tz_utc)).seconds,
+                    team_name=hd.quote(team.name),
+                ),
+            )
+        except TelegramAPIError as e:
+            logger.exception(
+                "can't send prepare message to team",
+                exc_info=e,
+                extra={"team_id": team.id, "chat_id": chat_id},
+            )
+            await self.bot_alert.alert(
+                f"can't send prepare message to team {team.id} [{e.__class__.__name__}]"
+            )
+        try:
+            await self.bot.edit_message_reply_markup(
+                chat_id=chat_id,
+                message_id=await dao.get_poll_msg(team=team, game=game),
+                reply_markup=None,
+            )
+        except TelegramAPIError as e:
+            logger.warning("can't remove waivers keyboard for team %s", team.id, exc_info=e)
 
     async def show(self, tasks: Sequence[AnyViewTask]) -> None:
         await asyncio.gather(*(self._show_to_team(group) for group in group_by_team(tasks)))

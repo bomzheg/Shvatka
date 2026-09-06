@@ -29,12 +29,6 @@ class MessagePinner:
     rights: BotRights
 
     SLEEP: typing.ClassVar[timedelta] = timedelta(seconds=1)
-    """Between unpins: a level's worth of them at once is flood control.
-
-    Pins need none — they follow sends that are already a second apart
-    (:class:`~shvatka.tgbot.views.hint_sender.HintSender`), while a level up
-    unpins everything the level pinned in one go.
-    """
 
     async def pin(
         self,
@@ -76,9 +70,8 @@ class MessagePinner:
                 "can't get pinned messages (%s) of chat %s", category.value, chat_id, exc_info=e
             )
             return
-        for number, message_id in enumerate(message_ids):
-            if number:
-                await asyncio.sleep(self.SLEEP.total_seconds())
+        for message_id in message_ids:
+            await asyncio.sleep(self.SLEEP.total_seconds())
             await self._unpin_one(chat_id=chat_id, message_id=message_id)
 
     async def _pin_one(self, chat_id: int, message_id: int, notify: bool = False) -> bool:

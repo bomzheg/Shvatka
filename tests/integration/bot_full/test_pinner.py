@@ -217,28 +217,7 @@ async def test_unpins_are_spread_out(
 
     # a level's worth of unpins at once is flood control, and telegram then
     # refuses the whole chat for the better part of a minute
-    assert slept == [MessagePinner.SLEEP.total_seconds()] * 2
+    assert slept == [MessagePinner.SLEEP.total_seconds()] * 3
     assert [1, 2, 3] == [
         request.message_id for request in requests(bot_session, "unpinChatMessage")
     ]
-
-
-@pytest.mark.asyncio
-async def test_unpins_of_both_categories_are_spread_out(
-    pinner: MessagePinner, bot_session: BaseSession, monkeypatch: pytest.MonkeyPatch
-):
-    slept: list[float] = []
-
-    async def record(delay: float) -> None:
-        slept.append(delay)
-
-    monkeypatch.setattr(pinner_module.asyncio, "sleep", record)
-    await pinner.pin(CHAT_ID, [message(1)], PinCategory.level)
-    await pinner.pin(CHAT_ID, [message(2)], PinCategory.bonus)
-
-    await pinner.unpin(CHAT_ID, PinCategory.level)
-    await pinner.unpin(CHAT_ID, PinCategory.bonus)
-
-    # telegram counts unpins of a chat, not of a category
-    assert slept == [MessagePinner.SLEEP.total_seconds()]
-    assert [1, 2] == [request.message_id for request in requests(bot_session, "unpinChatMessage")]

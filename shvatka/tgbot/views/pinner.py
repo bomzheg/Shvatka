@@ -3,7 +3,7 @@ import enum
 import logging
 import typing
 from collections.abc import Iterable
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import timedelta
 
 from aiogram import Bot
@@ -28,17 +28,12 @@ class MessagePinner:
     dao: PinnedMessageDao
     rights: BotRights
 
-    unpinned_chats: set[int] = field(default_factory=set, init=False)
-    """Chats this pinner already unpinned in - the next unpin there waits :attr:`SLEEP`.
-
-    Unpins are spread out per chat, not per call: preparing a game unpins both
-    categories of every team in a row, and telegram counts them all the same.
-    """
-
     SLEEP: typing.ClassVar[timedelta] = timedelta(seconds=1)
-    """Between unpins: a level's worth of them at once is flood control.
+    """Before every unpin: a level's worth of them at once is flood control.
 
-    Pins need none — they follow sends that are already a second apart
+    Preparing a game unpins both categories of every team in a row, so waiting
+    only between the unpins of one call would not spread them out at all.
+    Pins need no wait — they follow sends that are already a second apart
     (:class:`~shvatka.tgbot.views.hint_sender.HintSender`), while a level up
     unpins everything the level pinned in one go.
     """
@@ -84,9 +79,7 @@ class MessagePinner:
             )
             return
         for message_id in message_ids:
-            if chat_id in self.unpinned_chats:
-                await asyncio.sleep(self.SLEEP.total_seconds())
-            self.unpinned_chats.add(chat_id)
+            await asyncio.sleep(self.SLEEP.total_seconds())
             await self._unpin_one(chat_id=chat_id, message_id=message_id)
 
     async def _pin_one(self, chat_id: int, message_id: int, notify: bool = False) -> bool:

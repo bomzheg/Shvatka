@@ -12,7 +12,7 @@ from shvatka.core.models.enums import GameStatus
 from shvatka.core.utils.datetime_utils import tz_utc
 from shvatka.tgbot.services.bot_rights import ChatRights
 from shvatka.tgbot.views.game import BotView
-from shvatka.tgbot.views.pinner import PinCategory
+from shvatka.tgbot.views.pinner import MessagePinner, PinCategory
 from tests.integration.bot_full.test_pinner import message
 
 CAN_PIN = ChatRights(can_pin_messages=True, can_manage_tags=False)
@@ -68,7 +68,9 @@ async def test_prepare_sends_before_unpinning(
     gryffindor: dto.Team,
     dishka_request: AsyncContainer,
     bot_session: BaseSession,
+    monkeypatch: pytest.MonkeyPatch,
 ):
+    monkeypatch.setattr(MessagePinner, "SLEEP", timedelta(0))
     view = await dishka_request.get(BotView)
     chat_id = gryffindor.get_chat_id()
     assert chat_id is not None

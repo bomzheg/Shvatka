@@ -29,14 +29,6 @@ class MessagePinner:
     rights: BotRights
 
     SLEEP: typing.ClassVar[timedelta] = timedelta(seconds=1)
-    """Before every unpin: a level's worth of them at once is flood control.
-
-    Preparing a game unpins both categories of every team in a row, so waiting
-    only between the unpins of one call would not spread them out at all.
-    Pins need no wait — they follow sends that are already a second apart
-    (:class:`~shvatka.tgbot.views.hint_sender.HintSender`), while a level up
-    unpins everything the level pinned in one go.
-    """
 
     async def pin(
         self,

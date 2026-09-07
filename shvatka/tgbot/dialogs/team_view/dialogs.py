@@ -1,9 +1,10 @@
 from aiogram_dialog import Dialog, Window
-from aiogram_dialog.widgets.kbd import Button, Cancel, ScrollingGroup, Select, SwitchTo
+from aiogram_dialog.widgets.kbd import Button, Cancel, Select, SwitchTo
 from aiogram_dialog.widgets.text import Case, Const, Format, Jinja
 
 from shvatka.tgbot import states
 from shvatka.tgbot.dialogs.common import BOOL_VIEW
+from shvatka.tgbot.dialogs.paging import SmartScrollingGroup
 from shvatka.tgbot.dialogs.preview_data import (
     PREVIEW_TEAM_CARD,
     PREVIEW_TEAMS,
@@ -28,7 +29,7 @@ team_view = Dialog(
             "{{archive|bool_emoji}} Архивные"
         ),
         SwitchTo(Const("🔣Фильтр"), state=states.TeamsSg.filter, id="to_filter"),
-        ScrollingGroup(
+        SmartScrollingGroup(
             Select(
                 Format("🚩{item.name}"),
                 id="teams",
@@ -52,7 +53,7 @@ team_view = Dialog(
             "Капитан: {{team.captain.name_mention}}\n"
             "Сыгранные игры: {{' '.join(game_numbers)}}"
         ),
-        ScrollingGroup(
+        SmartScrollingGroup(
             Select(
                 Jinja("{{item|player_emoji}}{{item.player.name_mention}}"),
                 id="players",

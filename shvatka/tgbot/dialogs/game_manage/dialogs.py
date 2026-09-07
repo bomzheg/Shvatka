@@ -5,7 +5,6 @@ from aiogram_dialog.widgets.kbd import (
     Button,
     Calendar,
     Cancel,
-    ScrollingGroup,
     Select,
     Start,
     SwitchTo,
@@ -14,6 +13,7 @@ from aiogram_dialog.widgets.kbd import (
 from aiogram_dialog.widgets.text import Case, Const, Format, Jinja
 
 from shvatka.tgbot import states
+from shvatka.tgbot.dialogs.paging import SmartScrollingGroup
 from shvatka.tgbot.dialogs.preview_data import (
     PREVIEW_GAME,
     PREVIEW_NOW,
@@ -63,7 +63,7 @@ from .handlers import (
 games = Dialog(
     Window(
         Const("Список прошедших"),
-        ScrollingGroup(
+        SmartScrollingGroup(
             Select(
                 Format("{item.name}"),
                 id="games",
@@ -252,7 +252,7 @@ my_games = Dialog(
         Start(Const("✍Написать игру"), id="write_game", state=states.GameWriteSG.game_name),
         Start(Const("✍Написать уровень"), id="write_level", state=states.LevelSG.level_id),
         Start(Const("🗂Уровни"), id="levels", state=states.LevelListSG.levels),
-        ScrollingGroup(
+        SmartScrollingGroup(
             Select(
                 Format("{item.name}"),
                 id="my_games",

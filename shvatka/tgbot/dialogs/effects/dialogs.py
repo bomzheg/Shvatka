@@ -5,12 +5,12 @@ from aiogram_dialog.widgets.kbd import (
     Button,
     Cancel,
     ListGroup,
-    ScrollingGroup,
     SwitchTo,
 )
 from aiogram_dialog.widgets.text import Case, Const, Jinja
 
 from shvatka.tgbot import states
+from shvatka.tgbot.dialogs.paging import SmartScrollingGroup
 from shvatka.tgbot.dialogs.preview_data import PREVIEW_EFFECTS_DATA, PREVIEW_HINTS_DATA
 
 from .getters import get_effects, get_hints
@@ -119,7 +119,7 @@ effects = Dialog(
     ),
     Window(
         Jinja("💡Подсказки\n\n{{hints | hints}}"),
-        ScrollingGroup(
+        SmartScrollingGroup(
             ListGroup(
                 Button(
                     Jinja("{{item[1] | single_hint}}"),

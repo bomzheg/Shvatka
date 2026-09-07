@@ -6,13 +6,13 @@ from aiogram_dialog.widgets.kbd import (
     Cancel,
     Group,
     ListGroup,
-    ScrollingGroup,
     Select,
     SwitchTo,
 )
 from aiogram_dialog.widgets.text import Const, Format, Jinja
 
 from shvatka.tgbot import states
+from shvatka.tgbot.dialogs.paging import SmartScrollingGroup
 from shvatka.tgbot.dialogs.preview_data import (
     PREVIEW_EFFECTS,
     PREVIEW_LEVEL,
@@ -52,7 +52,7 @@ timers_dialog = Dialog(
             "{{ timer.action_time }}: {{ timer.effects | effects }}\n"
             "{% endfor %}"
         ),
-        ScrollingGroup(
+        SmartScrollingGroup(
             ListGroup(
                 Button(
                     Jinja("{{item.action_time}}: {{item.effects | effects}}"),

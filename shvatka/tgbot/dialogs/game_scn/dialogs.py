@@ -6,13 +6,13 @@ from aiogram_dialog.widgets.kbd import (
     Cancel,
     Multiselect,
     Next,
-    ScrollingGroup,
     Select,
     SwitchTo,
 )
 from aiogram_dialog.widgets.text import Const, Format, Jinja
 
 from shvatka.tgbot import states
+from shvatka.tgbot.dialogs.paging import SmartScrollingGroup
 from shvatka.tgbot.dialogs.preview_data import (
     PREVIEW_FULL_GAME,
     PREVIEW_GAME,
@@ -46,7 +46,7 @@ game_writer = Dialog(
     Window(
         Jinja("Игра <b>{{game_name}}</b>\n\n"),
         Const("<b>Уровни</b>\n\nВыбери уровни которые нужно добавить"),
-        ScrollingGroup(
+        SmartScrollingGroup(
             Multiselect(
                 Format("✓ {item.name_id}"),
                 Format("{item.name_id}"),
@@ -86,7 +86,7 @@ game_editor = Dialog(
             id="to_add_level",
             state=states.GameEditSG.add_level,
         ),
-        ScrollingGroup(
+        SmartScrollingGroup(
             Select(
                 Format("{item.name_id}"),
                 id="game_level_ids",
@@ -109,7 +109,7 @@ game_editor = Dialog(
     Window(
         Jinja("Игра <b>{{game.name}}</b>\n\n"),
         Const("<b>Уровни</b>\n\nВыбери уровни которые нужно добавить"),
-        ScrollingGroup(
+        SmartScrollingGroup(
             Select(
                 Format("{item.name_id}"),
                 id="level_select",

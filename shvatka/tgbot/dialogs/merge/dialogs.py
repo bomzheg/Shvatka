@@ -1,10 +1,11 @@
 from aiogram.enums import ContentType
 from aiogram_dialog import Dialog, Window
 from aiogram_dialog.widgets.input import MessageInput
-from aiogram_dialog.widgets.kbd import Button, Cancel, ScrollingGroup, Select, SwitchTo
+from aiogram_dialog.widgets.kbd import Button, Cancel, Select, SwitchTo
 from aiogram_dialog.widgets.text import Const, Jinja
 
 from shvatka.tgbot import states
+from shvatka.tgbot.dialogs.paging import SmartScrollingGroup
 from shvatka.tgbot.dialogs.preview_data import (
     PREVIEW_FORUM_TEAM,
     PREVIEW_FORUM_TEAMS,
@@ -36,7 +37,7 @@ merge_teams_dialog = Dialog(
     ),
     Window(
         Jinja("Итак мы ищем форумную версию для команды {{team.name}}"),
-        ScrollingGroup(
+        SmartScrollingGroup(
             Select(
                 Jinja("🚩{{item.name}}"),
                 id="forum_teams",

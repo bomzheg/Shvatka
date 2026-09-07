@@ -1,0 +1,131 @@
+= SHEP-0015 — Smart pagers
+:navtitle: SHEP-0015 Smart pagers
+
+[cols="1,4"]
+|===
+| SHEP | 0015
+| Title | Smart pagers
+| Status | `Accepted`
+| Created | 2026-09-07
+| Updated | 2026-09-07
+| Related | issue #118
+|===
+
+== Summary
+
+Every scrolling list in the bot showed the same five-button pager, even when
+there was a single page to switch between. `SmartScrollingGroup`
+(`shvatka/tgbot/dialogs/paging.py`) replaces it with a pager whose shape follows
+the number of pages: nothing for one page, a button per page for a few, and the
+endless `⏮ ◀️ 7/13 ▶️ ⏭` row for many.
+
+== Context
+
+Lists in the bot are `ScrollingGroup`s with `height=10`: teams, games, levels,
+hints, timers, orgs. `aiogram_dialog`'s `ScrollingGroup` draws its own pager —
+a fixed `1 < 2 > 12` row — and it draws it whenever there is at least one page,
+so a team with three players spent a keyboard row on `1 < 1 > 1`. Its
+`hide_on_single_page` flag fixes that one case and nothing else: with four pages
+the same row still makes page 3 two taps away, when four buttons would fit.
+
+`aiogram_dialog` 2.6 has the pieces for something better. A `ScrollingGroup`
+built with `hide_pager=True` renders only its contents, and separate pager
+widgets — `NumberedPager`, `FirstPage`, `PrevPage`, `CurrentPage`, `NextPage`,
+`LastPage` — attach to any scroll by id and can be placed anywhere in a window.
+The same widgets attach to a `StubScroll`, which counts pages of *text* rather
+than buttons. What the library does not have is a pager that picks a shape:
+`when` conditions see the getter's data, not the page count, so the choice
+cannot be expressed at the call site.
+
+== Decision
+
+=== One widget decides, three shapes come out
+
+`SmartPager` counts pages once and renders one of three things:
+
+* `pages <= 1` — nothing. A list that fits on one page needs no pager, and with
+  `height=10` that is exactly the "fewer than ten items" case from the issue;
+* `pages <= MAX_NUMBERED_PAGES` (8) — `NumberedPager`, a button per page, the
+  current one bracketed: `1 2 [ 3 ] 4 5`. Any page is one tap away, and eight
+  buttons is as wide as a keyboard row goes before the labels stop being
+  readable;
+* more — the endless row `⏮ ◀️ 7/13 ▶️ ⏭`, which also says where in the list the
+  reader is, something the library's own pager never showed.
+
+The three shapes are built from the library's widgets rather than from raw
+`InlineKeyboardButton`s, so styles, text widgets and callback handling stay
+whatever `aiogram_dialog` does with them.
+
+=== The page count is passed in, not asked for
+
+`ScrollingGroup.get_page_count` renders every button of every page to count the
+rows. A pager assembled the library's way asks the scroll for that count once
+per page button — six full renders of the list for the endless row alone, each
+one running a `Jinja` template per item.
+
+So `SmartPager.render_pages` takes `pages` and `current_page` as arguments, and
+`SmartScrollingGroup` — which had to render the contents anyway to cut the
+current page out of them — passes the number it already has.
+`SmartPager._render_keyboard` still resolves the count from the scroll itself,
+which is what a standalone pager over a `StubScroll` (where counting is free)
+needs.
+
+=== The pager shares the group's widget id
+
+Every button of every shape does one thing: switch the scroll to a page number.
+They all carry the group's own widget id, so `sg:3` arrives at
+`ScrollingGroup._process_item_callback` and is handled by the code that always
+handled it. No new callback prefix, no extra routing, and `manager.find("sg")`
+still returns the scroll.
+
+=== Alternatives that lost
+
+*`hide_on_single_page=True` and nothing else.* Solves the first line of the
+issue and leaves the other two. The five-button row stays wrong for four pages.
+
+*A pager per window.* `aiogram_dialog`'s composition already allows
+`ScrollingGroup(hide_pager=True)` plus a `NumberedPager` next to it. That is two
+widgets and one shape decision at each of the seventeen call sites — the
+decision this SHEP exists to make once.
+
+== Consequences
+
+* Lists shorter than a page gain a row of screen and lose a dead button.
+* `SmartScrollingGroup` is a drop-in for `ScrollingGroup`: same arguments
+  (minus `hide_pager` / `hide_on_single_page`, which it decides itself), same
+  widget ids, so `preview_data.py` and the dialog tests needed no changes.
+* `SmartPager` works over a `StubScroll` too, so paging a long *text* — a
+  scenario, a results table — is now a solved problem rather than a new one.
+* One more widget of ours between the dialogs and the library: an
+  `aiogram_dialog` release that reshapes `ScrollingGroup._render_keyboard` or
+  `NumberedPager._prepare_data` will need this file looked at.
+
+== Phases and status
+
+[cols="1,4,2",options="header"]
+|===
+| Phase | Content | Status
+
+| 1
+| `SmartPager` / `SmartScrollingGroup` in `tgbot/dialogs/paging.py`, unit tests
+| ✅ done
+
+| 2
+| Every `ScrollingGroup` in the bot switched over (17 call sites, 11 modules)
+| ✅ done
+
+| 3
+| Page long texts with `StubScroll` + `SmartPager` where a window is truncated
+  today
+| ⏳ not started
+|===
+
+== Deviations from the plan
+
+None so far.
+
+== Open questions
+
+* Should `MAX_NUMBERED_PAGES` be per-window? Eight is right for a list of teams
+  in a one-button-wide group; a two-wide group of hints reaches eight pages much
+  later. One constant until a window disagrees in practice.

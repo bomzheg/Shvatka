@@ -7,13 +7,13 @@ from aiogram_dialog.widgets.kbd import (
     Cancel,
     Group,
     ListGroup,
-    ScrollingGroup,
     Select,
     SwitchTo,
 )
 from aiogram_dialog.widgets.text import Case, Const, Format, Jinja
 
 from shvatka.tgbot import states
+from shvatka.tgbot.dialogs.paging import SmartScrollingGroup
 from shvatka.tgbot.dialogs.preview_data import (
     PREVIEW_HINTS_DATA,
     TIMES_PRESET,
@@ -94,7 +94,7 @@ time_hint_edit = Dialog(
             id="change_time",
             state=states.TimeHintEditSG.time,
         ),
-        ScrollingGroup(
+        SmartScrollingGroup(
             ListGroup(
                 Button(
                     Jinja("{{item[1] | single_hint}}"),

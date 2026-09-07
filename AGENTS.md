@@ -358,6 +358,12 @@ overrides) lives in `pyproject.toml`.
 - **In aiogram / aiogram_dialog handlers, take dependencies from DI**
   (`FromDishka[...]` on an `@inject`-decorated handler), including
   `dao: FromDishka[HolderDao]` — not `manager.middleware_data`.
+- **A scrolling list uses `SmartScrollingGroup`** (`tgbot/dialogs/paging.py`),
+  never `ScrollingGroup` straight from the library. It takes the same arguments
+  and shows a pager only when there is something to page: nothing for a single
+  page, a button per page up to eight, the endless `⏮ ◀️ 7/13 ▶️ ⏭` row beyond
+  that. Pair `SmartPager` with a `StubScroll` to page a long text the same way.
+  SHEP-0015.
 - **Every aiogram_dialog `Window` with a getter needs `preview_data`** (getters
   aren't called in preview mode). Reuse/add fixtures in
   `tgbot/dialogs/preview_data.py`. Every state of a `StatesGroup` needs a window.

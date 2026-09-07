@@ -4,13 +4,13 @@ from aiogram_dialog.widgets.kbd import (
     Back,
     Button,
     Cancel,
-    ScrollingGroup,
     Select,
     SwitchInlineQuery,
 )
 from aiogram_dialog.widgets.text import Const, Format, Jinja, Multi
 
 from shvatka.tgbot import states
+from shvatka.tgbot.dialogs.paging import SmartScrollingGroup
 from shvatka.tgbot.dialogs.preview_data import (
     PREVIEW_ORG,
     PREVIEW_ORG_PERMISSIONS,
@@ -30,7 +30,7 @@ game_orgs = Dialog(
             Format("{inline_query}"),
             when=~F["game"].is_complete(),
         ),
-        ScrollingGroup(
+        SmartScrollingGroup(
             Select(
                 Multi(
                     Const("🗑", when=F["item"].deleted),

@@ -1,3 +1,4 @@
+import asyncio
 import hashlib
 import logging
 import mimetypes
@@ -56,14 +57,12 @@ class LocalFileStorage(FileStorage):
         content: BinaryIO,
         options: hints.FileUploadOptions = hints.DEFAULT_UPLOAD_OPTIONS,
     ) -> hints.FileMeta:
-        data = content.read()
-        mime_type = detect_mime_type(data)
-        extension = file_meta.extension or extension_from_mime(mime_type)
-        if is_heic(mime_type):
-            data, mime_type, extension = self._handle_unsupported(
-                data, mime_type, extension, options
-            )
-        sha256 = compute_sha256(data)
+        # sniffing the type, hashing the bytes and transcoding an image are all
+        # cpu over the whole upload, and a hint can be tens of megabytes. one
+        # hop into a thread for the lot of them rather than one hop each
+        data, mime_type, extension, sha256 = await asyncio.to_thread(
+            self._inspect, file_meta, content.read(), options
+        )
         local_name = file_meta.guid + extension
         file_content_link = await self.put_content(local_name, BytesIO(data))
         return hints.FileMeta(
@@ -76,6 +75,20 @@ class LocalFileStorage(FileStorage):
             sha256=sha256,
             mime_type=mime_type,
         )
+
+    def _inspect(
+        self,
+        file_meta: hints.UploadedFileMeta,
+        data: bytes,
+        options: hints.FileUploadOptions,
+    ) -> tuple[bytes, str, str, str]:
+        mime_type = detect_mime_type(data)
+        extension = file_meta.extension or extension_from_mime(mime_type)
+        if is_heic(mime_type):
+            data, mime_type, extension = self._handle_unsupported(
+                data, mime_type, extension, options
+            )
+        return data, mime_type, extension, compute_sha256(data)
 
     def _handle_unsupported(
         self,
@@ -99,21 +112,24 @@ class LocalFileStorage(FileStorage):
 
     async def put_content(self, local_file_name: str, content: BinaryIO) -> hints.FileContentLink:
         result_path = self.path / local_file_name
-        with result_path.open("wb") as f:
-            f.write(content.read())
+        await asyncio.to_thread(result_path.write_bytes, content.read())
         return hints.FileContentLink(file_path=str(result_path))
 
     async def get(self, file_link: hints.FileContentLink) -> BinaryIO:
-        with Path(file_link.file_path).open("rb") as f:  # noqa: ASYNC101
-            return BytesIO(f.read())
+        # a hint is read off disk to be sent whenever telegram has forgotten its
+        # file_id, which during a game is once per team
+        return BytesIO(await asyncio.to_thread(Path(file_link.file_path).read_bytes))
 
     async def exists(self, file_link: hints.FileContentLink) -> bool:
-        return Path(file_link.file_path).is_file()
+        return await asyncio.to_thread(Path(file_link.file_path).is_file)
 
     async def delete(self, file_link: hints.FileContentLink) -> None:
-        Path(file_link.file_path).unlink(missing_ok=True)
+        await asyncio.to_thread(Path(file_link.file_path).unlink, missing_ok=True)
 
     async def list_files(self) -> list[hints.StoredFile]:
+        return await asyncio.to_thread(self._list_files)
+
+    def _list_files(self) -> list[hints.StoredFile]:
         return [
             hints.StoredFile(
                 link=hints.FileContentLink(file_path=str(path)),

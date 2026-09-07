@@ -17,10 +17,10 @@ from shvatka.core.utils import exceptions
 
 
 class FakeHasher:
-    def hash(self, password: str) -> str:
+    async def hash(self, password: str) -> str:
         return f"hashed:{password}"
 
-    def verify(self, plain_password: str, hashed_password: str) -> bool:
+    async def verify(self, plain_password: str, hashed_password: str) -> bool:
         return hashed_password == f"hashed:{plain_password}"
 
 

@@ -1,3 +1,5 @@
+import asyncio
+
 from aiogram import Bot
 from aiogram.types import BufferedInputFile
 
@@ -34,7 +36,9 @@ class ResultsPainter:
     async def paint_game_results(self, game: dto.FullGame, game_stat: dto.GameStat) -> str:
         if game.results.results_picture_file_id:
             return game.results.results_picture_file_id
-        picture = paint_it(game_stat, game)
+        # matplotlib is seconds of drawing; on the loop it is seconds in
+        # which nothing else in the process is served
+        picture = await asyncio.to_thread(paint_it, game_stat, game)
         msg = await self.bot.send_photo(
             self.chat_id, BufferedInputFile(picture.read(), "results.png")
         )

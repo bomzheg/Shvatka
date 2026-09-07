@@ -325,7 +325,9 @@ uvicorn==0.30.6
     #   fastapi
     #   fastapi-cli
 uvloop==0.22.1
-    # via uvicorn
+    # via
+    #   shvatka (pyproject.toml)
+    #   uvicorn
 virtualenv==21.7.8
     # via pre-commit
 watchfiles==1.2.0

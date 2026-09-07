@@ -3,12 +3,17 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from shvatka.common.config.models.monitoring import MonitoringConfig
 from shvatka.infrastructure.db.config.models.db import DBConfigProperties, RedisConfig
 
 
 @dataclass
 class AppConfig:
     name: str
+    # size of the pool asyncio.to_thread hands blocking work to — hashing a
+    # password, painting results, reading a hint off disk. None keeps
+    # python's own default of min(32, cpu_count + 4)
+    blocking_threads: int | None = None
 
 
 @dataclass
@@ -52,6 +57,7 @@ class Config:
     web: WebConfig
     docs: DocsConfig = field(default_factory=DocsConfig)
     mail: MailConfig = field(default_factory=MailConfig)
+    monitoring: MonitoringConfig = field(default_factory=MonitoringConfig)
     features: FeaturesConfig
     superusers: list[int] = field(default_factory=list)
     """tg ids of users allowed to use the admin panel / superuser bot commands"""

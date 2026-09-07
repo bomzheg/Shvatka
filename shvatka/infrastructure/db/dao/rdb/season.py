@@ -10,15 +10,27 @@ from sqlalchemy.orm import joinedload, selectinload
 from shvatka.core.season import dto
 from shvatka.core.utils import exceptions
 from shvatka.core.utils.datetime_utils import tz_utc
-from shvatka.infrastructure.db.models import Season, SeasonChange, SeasonSlot, SeasonSlotOrg
+from shvatka.infrastructure.db.models import (
+    Player,
+    Season,
+    SeasonChange,
+    SeasonSlot,
+    SeasonSlotOrg,
+    Team,
+)
 
 from .base import BaseDAO
 
 _SLOT_OPTIONS = (
-    joinedload(SeasonSlot.owner),
-    joinedload(SeasonSlot.team),
+    # `to_dto` walks into the owner's user, the team's chat and captain, and
+    # every org's user — an async session raises rather than lazy-loading any
+    # of them, so each one is asked for here
+    joinedload(SeasonSlot.owner).joinedload(Player.user),
+    joinedload(SeasonSlot.team).joinedload(Team.chat),
+    joinedload(SeasonSlot.team).joinedload(Team.forum_team),
+    joinedload(SeasonSlot.team).joinedload(Team.captain).joinedload(Player.user),
     joinedload(SeasonSlot.game),
-    selectinload(SeasonSlot.orgs).joinedload(SeasonSlotOrg.player),
+    selectinload(SeasonSlot.orgs).joinedload(SeasonSlotOrg.player).joinedload(Player.user),
 )
 
 

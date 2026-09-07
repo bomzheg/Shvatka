@@ -197,7 +197,9 @@ async def test_a_player_without_promotion_may_not_take_a_date(
 
     resp = await take(client, hermione_token, slot_id)
 
-    assert resp.status_code == 403
+    # the api answers a missing promotion 422 everywhere (see test_team.py);
+    # only "this date is someone else's" is a 403
+    assert resp.status_code == 422
     assert resp.json()["type"] == "CantBeAuthor"
 
 

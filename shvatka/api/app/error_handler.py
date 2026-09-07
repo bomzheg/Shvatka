@@ -42,8 +42,15 @@ def sh_exception_handler(
         confidential=exc.confidential,
         doc_url=docs.get_error_url(exc),
     )
-    if isinstance(exc, exceptions.PermissionsError):
-        # every "you may not do this" is a 403, whatever the permission is
+    if isinstance(
+        exc,
+        exceptions.NotAuthorizedForEdit
+        | exceptions.NotAuthorizedForAdmin
+        | exceptions.NotSlotOwner
+        | exceptions.SlotAuthorInvalid,
+    ):
+        # the api answers most PermissionsErrors 422 (see test_team.py); these
+        # say "this belongs to someone else", which is a 403 and nothing else
         status_code = 403
     elif isinstance(exc, exceptions.IdentityWithoutPlayer | exceptions.IdentityWithoutUser):
         status_code = 401

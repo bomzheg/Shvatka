@@ -807,14 +807,17 @@ Phase 1 landed as described, with these differences.
   `PermissionsError`, so it maps to 403 like the rest.
 * *`SlotNotFound` too*, for a date id that belongs to another season or to no
   season: 404 rather than a 500 from the dao.
-* *Permission failures map to 403 by widening the existing branch.* The plan
-  says «permission failures to 403 through the existing `error_converter`», but
-  that converter only listed `NotAuthorizedForEdit` and `NotAuthorizedForAdmin`,
-  so `CantBeAuthor` — what a player without promotion gets when taking a date —
-  answered 422. The branch now tests `PermissionsError`, which subsumes both
-  names it listed. `PromoteError`, `CantBeAuthor` and `TestingNotAllowed` change
-  from 422 to 403 on their existing endpoints too; the web ui keys off the
-  error's `type`, not its status.
+* *Only the two new ownership errors answer 403.* The plan says «permission
+  failures to 403 through the existing `error_converter`», and the first attempt
+  read that as widening the branch to `PermissionsError`. That broke five
+  existing integration tests which assert 422 for exactly this, with
+  `# PermissionsError -> SHError` written next to them: 422 is the api's
+  deliberate answer today, not an oversight. So `NotSlotOwner` and
+  `SlotAuthorInvalid` — «this date is someone else's», which no endpoint could
+  raise before — are named in the 403 branch, and `CantBeAuthor` keeps the 422
+  it answers everywhere else. Making promotion failures 403 across the api is a
+  real improvement and a separate change, with five test expectations to update
+  with it.
 * *A published date must fall inside the season's year.* The plan does not say
   so, but `CalendarConfig` pins both edges' views to the year, so a date outside
   it would be invisible. `PublishSeasonInteractor` and the add/move interactors

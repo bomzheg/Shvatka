@@ -10,6 +10,7 @@ from shvatka.api.notifications import routes as notifications
 from shvatka.api.players import routes as players
 from shvatka.api.push import routes as push
 from shvatka.api.search import routes as search
+from shvatka.api.seasons import routes as seasons
 from shvatka.api.teams import routes as teams
 from shvatka.api.version import routes as version
 from shvatka.api.waivers import routes as waivers
@@ -23,6 +24,7 @@ def setup() -> APIRouter:
     router.include_router(waivers.setup())
     router.include_router(teams.setup())
     router.include_router(search.setup())
+    router.include_router(seasons.setup())
     router.include_router(push.setup())
     router.include_router(notifications.setup())
     router.include_router(action_requests.setup())

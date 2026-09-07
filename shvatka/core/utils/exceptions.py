@@ -458,3 +458,41 @@ class InvalidKey(SHError):
     def __init__(self, key: str | None = None, *args: Any, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self.key = key
+
+
+class SeasonError(SHError):
+    notify_user = "Ошибка расписания сезона"
+
+
+class SeasonNotFound(SeasonError):
+    notify_user = "Расписание на этот год ещё не опубликовано"
+
+
+class SeasonAlreadyExists(SeasonError):
+    notify_user = "Расписание на этот год уже опубликовано"
+
+
+class SlotNotFound(SeasonError):
+    notify_user = "Такой даты в расписании нет"
+
+
+class SlotAlreadyTaken(SeasonError):
+    notify_user = "Дата уже занята"
+
+
+class NotSlotOwner(SeasonError, PermissionsError):
+    notify_user = "Дата принадлежит другому автору"
+    permission_name = "slot_owner"
+
+
+class SlotAuthorInvalid(SeasonError, PermissionsError):
+    notify_user = "Записать команду на дату может только капитан"
+    permission_name = "slot_author"
+
+
+class SlotAlreadyLinked(SeasonError):
+    notify_user = "К этой дате уже привязана игра"
+
+
+class GameAlreadyInSchedule(SeasonError):
+    notify_user = "Эта игра уже стоит в расписании на другую дату"

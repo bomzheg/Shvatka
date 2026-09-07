@@ -9,6 +9,7 @@ from shvatka.api.app.utils.web_input import (
     WebGameReleasePublisher,
     WebGameView,
     WebOrgNotifier,
+    WebSeasonAnnouncer,
     WebTeamNotifier,
 )
 from shvatka.core.interfaces.current_game import CurrentGameProvider
@@ -43,6 +44,10 @@ class OtherApiProvider(Provider):
     @provide
     def release_publisher(self) -> WebGameReleasePublisher:
         return WebGameReleasePublisher()
+
+    @provide
+    def season_announcer(self) -> WebSeasonAnnouncer:
+        return WebSeasonAnnouncer()
 
     @provide
     def org_notifier(

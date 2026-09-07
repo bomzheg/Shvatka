@@ -11,6 +11,7 @@ from shvatka.core.interfaces.dal.level_testing import LevelTestingDao
 from shvatka.core.interfaces.dal.level_times import GameStarter
 from shvatka.core.interfaces.scheduler import LevelTestScheduler, Scheduler
 from shvatka.core.models import dto
+from shvatka.core.season.interactors import PublishSeasonDigestInteractor
 from shvatka.core.services.level_testing import send_testing_level_hint
 from shvatka.core.services.organizers import get_by_player
 from shvatka.core.utils.datetime_utils import tz_utc
@@ -153,3 +154,16 @@ async def event_wrapper(
     logger.info(
         "finished processing timer event for team %s at %s", team_id, started_level_time_id
     )
+
+
+@inject
+async def publish_season_digest_wrapper(
+    interactor: FromDishka[PublishSeasonDigestInteractor],
+    alerter: FromDishka[BotAlert],
+) -> None:
+    try:
+        await interactor(now=datetime.now(tz=tz_utc))
+    except Exception as e:
+        await alerter.alert(f"season digest wasn't published because of {e!s}")
+        logger.exception("got an error during publishing the season digest", exc_info=e)
+        raise

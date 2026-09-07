@@ -10,11 +10,13 @@ from dishka import AsyncContainer
 from shvatka.core.interfaces.scheduler import LevelTestScheduler, Scheduler
 from shvatka.core.models import dto
 from shvatka.core.models.dto import action
-from shvatka.core.utils.datetime_utils import tz_utc
+from shvatka.core.utils.datetime_utils import tz_game, tz_utc
 from shvatka.infrastructure.db.config.models.db import RedisConfig
 from shvatka.infrastructure.scheduler.context import ScheduledContextHolder
 
 logger = logging.getLogger(__name__)
+
+SEASON_DIGEST_JOB_ID = "season_digest_daily"
 
 
 class ApScheduler(Scheduler, LevelTestScheduler):
@@ -142,7 +144,21 @@ class ApScheduler(Scheduler, LevelTestScheduler):
             name="plain_test_hint",
         )
 
+    def _plain_season_digest(self) -> None:
+        """The only recurring job in the project: everything else is a one-shot."""
+        self.scheduler.add_job(
+            func="shvatka.infrastructure.scheduler.wrappers:publish_season_digest_wrapper",
+            trigger="cron",
+            hour=10,
+            minute=0,
+            timezone=tz_game,
+            id=SEASON_DIGEST_JOB_ID,
+            name="season_digest_daily",
+            replace_existing=True,
+        )
+
     async def start(self):
+        self._plain_season_digest()
         self.scheduler.start()
 
     async def close(self):

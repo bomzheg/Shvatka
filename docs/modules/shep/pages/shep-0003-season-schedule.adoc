@@ -5,9 +5,9 @@
 |===
 | SHEP | 0003
 | Title | Season schedule
-| Status | `Accepted` — nothing implemented yet, phase 1 not started
+| Status | `Accepted` — phase 1 (engine) landed; phases 2 and 3 not started
 | Created | 2026-07-26
-| Updated | 2026-08-12
+| Updated | 2026-09-07
 | Related | issue #167, PR #306; xref:shep-0001-notifications-and-action-requests.adoc[SHEP-0001] (which defers `season_schedule_changed` to this one)
 |===
 
@@ -730,7 +730,7 @@ a default time in the schedule would be a number nobody meant.
 
 | 1
 | Tables + migration, `core/season/`, DAOs, DI, REST API, `SeasonAnnouncer` and its bot implementation, publication with pinning, the daily digest and unpin job, the notification audience, and the §Ubiquitous language entries in *both* `context.md` files
-| ⏳ not started
+| ✅ done
 
 | 2
 | `SeasonSG` dialogs with compose-in-`dialog_data`, the `SeasonCalendar` subclass, and the link offer grafted onto `GameScheduleSG`
@@ -749,27 +749,27 @@ either order.
 Tests follow `AGENTS.md` — new domain classes get unit tests, new endpoints get
 integration tests — and are listed inside the phase that introduces them.
 
-=== Phase 1 — engine ⏳
+=== Phase 1 — engine ✅
 
-* [ ] `seasons`, `season_slots`, `season_slot_orgs`, `season_changes` + migration
-* [ ] `core/season/` — `dto`, `rules`, `adapters`, `interactors`
-* [ ] per-table DAOs behind one composed `SeasonScheduleDao`, wired in
+* [x] `seasons`, `season_slots`, `season_slot_orgs`, `season_changes` + migration
+* [x] `core/season/` — `dto`, `rules`, `adapters`, `interactors`
+* [x] per-table DAOs behind one composed `SeasonScheduleDao`, wired in
   `infrastructure/di/`
-* [ ] `SeasonAnnouncer` + `BotSeasonAnnouncer` (send, pin, edit, unpin) and the
+* [x] `SeasonAnnouncer` + `BotSeasonAnnouncer` (send, pin, edit, unpin) and the
   no-op web side, fanned out by `ComplexSeasonAnnouncer`
-* [ ] `PublishSeasonInteractor`, the per-date edit interactors, take/release,
+* [x] `PublishSeasonInteractor`, the per-date edit interactors, take/release,
   link/unlink, `FindSlotsNearGameStartInteractor`, `SyncLinkedSlotInteractor`
-* [ ] `publish_season_digest_wrapper` on a 10:00 MSK cron trigger — digest *and*
+* [x] `publish_season_digest_wrapper` on a 10:00 MSK cron trigger — digest *and*
   end-of-season unpin
-* [ ] `SeasonAudienceReader` and `season_schedule_changed` notifications
-* [ ] `/seasons` routes
-* [ ] glossary rows in `context.md` here *and* in shvatka-ui
-* [ ] unit tests (`tests/unit/season/`): `default_slot_dates` across years
+* [x] `SeasonAudienceReader` and `season_schedule_changed` notifications
+* [x] `/seasons` routes
+* [x] glossary rows in `context.md` here *and* in shvatka-ui
+* [x] unit tests (`tests/unit/season/`): `default_slot_dates` across years
   including the 9-May-is-Saturday case; the ownership matrix of free / owner /
   superuser / captain; the ±3-day search including ties; digest collapsing —
   repeated moves of one date become one line, move-and-move-back becomes
   nothing, take then release becomes nothing
-* [ ] integration tests (`tests/integration/api_full/test_season.py`): publish,
+* [x] integration tests (`tests/integration/api_full/test_season.py`): publish,
   then publish the same year again → 409; take → 409 for a second taker and 403
   for a non-author; link a game → the date syncs; re-plan the game → the date
   follows; run the digest → changes marked published and notifications written;
@@ -799,7 +799,39 @@ integration tests — and are listed inside the phase that introduces them.
 [[deviations]]
 == Deviations from the plan
 
-Nothing is implemented yet. This section is filled in as the phases land.
+Phase 1 landed as described, with these differences.
+
+* *`SlotAuthorInvalid` joins the new exceptions.* The plan lists six; taking a
+  date *for a team* has a seventh failure — the actor does not captain that team,
+  or named no team at all — and it is not `NotSlotOwner`. It is a
+  `PermissionsError`, so it maps to 403 like the rest.
+* *`SlotNotFound` too*, for a date id that belongs to another season or to no
+  season: 404 rather than a 500 from the dao.
+* *Permission failures map to 403 by widening the existing branch.* The plan
+  says «permission failures to 403 through the existing `error_converter`», but
+  that converter only listed `NotAuthorizedForEdit` and `NotAuthorizedForAdmin`,
+  so `CantBeAuthor` — what a player without promotion gets when taking a date —
+  answered 422. The branch now tests `PermissionsError`, which subsumes both
+  names it listed. `PromoteError`, `CantBeAuthor` and `TestingNotAllowed` change
+  from 422 to 403 on their existing endpoints too; the web ui keys off the
+  error's `type`, not its status.
+* *A published date must fall inside the season's year.* The plan does not say
+  so, but `CalendarConfig` pins both edges' views to the year, so a date outside
+  it would be invisible. `PublishSeasonInteractor` and the add/move interactors
+  refuse one.
+* *`PUT /seasons/{year}/slots/{id}/orgs`*, one endpoint more than the plan's
+  list: `SetSlotOrgsInteractor` is in the plan's interactor table and had no way
+  in otherwise. Re-taking your own date still sets the orgs in one call, as
+  described.
+* *`SlotDigest.day`, not `.date`.* A field named `date` in the collapsing
+  dataclass shadows the `date` type for every annotation after it.
+* *Collapsed changes are grouped by the payload's date when the slot is gone.*
+  `season_changes.slot_id` is `ON DELETE SET NULL`, so deleting a date orphans
+  every row that described it; the payload already denormalizes the date, and
+  the grouping falls back to it.
+* *A taken date cannot be released while a game is linked to it* —
+  `SlotAlreadyLinked`. Unlink first, so the game never sits in a date with no
+  owner.
 
 == Open questions
 

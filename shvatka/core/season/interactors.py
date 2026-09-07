@@ -211,6 +211,8 @@ class MoveSlotInteractor(SeasonInteractor):
         _check_slot_year(year, day, author)
         if slot.date == day:
             return slot
+        # read what the payload needs before the write that changes it
+        previous = slot.date
         await self.dao.move_slot(slot_id, day)
         await self._record(
             season,
@@ -219,7 +221,7 @@ class MoveSlotInteractor(SeasonInteractor):
             actor=author,
             by_superuser=by_superuser,
             payload={
-                "from": slot.date.isoformat(),
+                "from": previous.isoformat(),
                 "to": day.isoformat(),
                 "date": day.isoformat(),
             },
@@ -342,6 +344,7 @@ class ReleaseSlotInteractor(SeasonInteractor):
             raise exceptions.SlotAlreadyLinked(
                 player=actor, text="unlink the game before releasing the date"
             )
+        released_from = slot.author_name
         await self.dao.release_slot(slot_id)
         await self.dao.set_slot_orgs(slot_id, [])
         await self._record(
@@ -350,7 +353,7 @@ class ReleaseSlotInteractor(SeasonInteractor):
             slot_id=slot_id,
             actor=actor,
             by_superuser=by_superuser,
-            payload={"date": slot.date.isoformat(), "author": slot.author_name},
+            payload={"date": slot.date.isoformat(), "author": released_from},
         )
         await self.dao.commit()
         self._log_superuser(actor, by_superuser, "released", slot_id)
@@ -474,6 +477,7 @@ class LinkGameToSlotInteractor(SeasonInteractor):
         started = game.start_at.astimezone(tz_game).date()
         if started == slot.date:
             return
+        previous = slot.date
         await self.dao.move_slot(slot.id, started)
         await self._record(
             season,
@@ -482,7 +486,7 @@ class LinkGameToSlotInteractor(SeasonInteractor):
             actor=actor,
             by_superuser=by_superuser,
             payload={
-                "from": slot.date.isoformat(),
+                "from": previous.isoformat(),
                 "to": started.isoformat(),
                 "date": started.isoformat(),
                 "reason": "game_linked",
@@ -502,6 +506,7 @@ class UnlinkGameFromSlotInteractor(SeasonInteractor):
         check_can_edit_slot(slot, actor, is_superuser=by_superuser)
         if slot.game is None:
             return slot
+        unlinked = slot.game
         await self.dao.unlink_game(slot_id)
         await self._record(
             season,
@@ -511,8 +516,8 @@ class UnlinkGameFromSlotInteractor(SeasonInteractor):
             by_superuser=by_superuser,
             payload={
                 "date": slot.date.isoformat(),
-                "game": slot.game.name,
-                "game_id": slot.game.id,
+                "game": unlinked.name,
+                "game_id": unlinked.id,
             },
         )
         await self.dao.commit()
@@ -540,6 +545,7 @@ class SyncLinkedSlotInteractor(SeasonInteractor):
         season = await self.dao.get_season_by_id(slot.season_id)
         if season is None:
             return True
+        previous = slot.date
         await self.dao.move_slot(slot.id, started)
         await self._record(
             season,
@@ -548,7 +554,7 @@ class SyncLinkedSlotInteractor(SeasonInteractor):
             actor=actor,
             by_superuser=False,
             payload={
-                "from": slot.date.isoformat(),
+                "from": previous.isoformat(),
                 "to": started.isoformat(),
                 "date": started.isoformat(),
                 "reason": "game_rescheduled",

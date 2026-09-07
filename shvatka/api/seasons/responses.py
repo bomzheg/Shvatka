@@ -1,6 +1,9 @@
 from collections.abc import Sequence
 from dataclasses import dataclass
-from datetime import date, datetime
+
+# see requests.py: a field named `date` would shadow the type here too
+from datetime import date as date_
+from datetime import datetime
 from typing import Self
 
 from shvatka.api.shared.responses import Player, Team
@@ -22,7 +25,7 @@ class LinkedGame:
 @dataclass
 class Slot:
     id: int
-    date: date
+    date: date_
     note: str | None
     owner: Player | None
     author_kind: str | None
@@ -75,4 +78,4 @@ class SeasonYears:
 @dataclass
 class DefaultSlotDates:
     year: int
-    dates: Sequence[date]
+    dates: Sequence[date_]

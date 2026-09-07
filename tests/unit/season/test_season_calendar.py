@@ -1,10 +1,18 @@
 from datetime import date, datetime
 
 import pytest
+from aiogram_dialog.widgets.kbd import CalendarScope
 
 from shvatka.core.season import dto as season_dto
 from shvatka.core.utils.datetime_utils import tz_utc
-from shvatka.tgbot.dialogs.season.calendar import FREE, LINKED, MINE, TAKEN, SlotMark
+from shvatka.tgbot.dialogs.season.calendar import (
+    FREE,
+    LINKED,
+    MINE,
+    TAKEN,
+    SeasonCalendar,
+    SlotMark,
+)
 from shvatka.tgbot.dialogs.season.getters import mark_of, marks_of
 from tests.unit.season.conftest import make_player, make_slot
 
@@ -69,3 +77,33 @@ async def test_today_keeps_its_brackets():
     data = {"date": DAY, "data": {}}
 
     assert await SlotMark(today=True).render_text(data, None) == "[15]"
+
+
+def test_the_days_view_is_re_texted_with_the_marks():
+    views = SeasonCalendar(id="season_calendar")._init_views()
+    days = views[CalendarScope.DAYS]
+
+    assert isinstance(days.date_text, SlotMark)
+    assert isinstance(days.today_text, SlotMark)
+    # the other scopes keep the library's own rendering
+    assert set(views) == set(CalendarScope)
+
+
+@pytest.mark.asyncio
+async def test_the_view_is_pinned_to_the_seasons_year():
+    calendar = SeasonCalendar(id="season_calendar")
+
+    config = await calendar._get_user_config({"year": 2027}, None)
+
+    assert config.min_date == date(2027, 1, 1)
+    assert config.max_date == date(2027, 12, 31)
+
+
+@pytest.mark.asyncio
+async def test_without_a_year_the_calendar_is_not_pinned():
+    calendar = SeasonCalendar(id="season_calendar")
+
+    config = await calendar._get_user_config({}, None)
+
+    assert config.min_date is None
+    assert config.max_date is None

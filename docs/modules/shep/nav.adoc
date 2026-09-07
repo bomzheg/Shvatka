@@ -13,4 +13,5 @@
 ** xref:shep-0012-team-captain-by-id.adoc[SHEP-0012 Team captain by id]
 ** xref:shep-0013-undoing-a-false-start.adoc[SHEP-0013 Undoing a false start]
 ** xref:shep-0014-event-loop-latency.adoc[SHEP-0014 Event loop latency]
+** xref:shep-0015-smart-pagers.adoc[SHEP-0015 Smart pagers]
 ** xref:template.adoc[SHEP template]

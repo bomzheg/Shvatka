@@ -82,6 +82,10 @@ came out of it*.
 | xref:shep-0014-event-loop-latency.adoc[SHEP-0014]
 | Event loop latency
 | Accepted, partially implemented
+
+| xref:shep-0015-smart-pagers.adoc[SHEP-0015]
+| Smart pagers
+| Accepted, partially implemented
 |===
 
 == Status vocabulary

@@ -2,10 +2,11 @@ from aiogram import F
 from aiogram.types import ContentType
 from aiogram_dialog import Dialog, Window
 from aiogram_dialog.widgets.input import MessageInput
-from aiogram_dialog.widgets.kbd import Button, Cancel, ScrollingGroup, Select, SwitchTo
+from aiogram_dialog.widgets.kbd import Button, Cancel, Select, SwitchTo
 from aiogram_dialog.widgets.text import Const, Format, Jinja
 
 from shvatka.tgbot import states
+from shvatka.tgbot.dialogs.paging import SmartScrollingGroup
 from shvatka.tgbot.dialogs.preview_data import (
     PREVIEW_FULL_GAME,
     PREVIEW_LEVEL,
@@ -32,7 +33,7 @@ from .handlers import (
 levels_list = Dialog(
     Window(
         Const("Уровни"),
-        ScrollingGroup(
+        SmartScrollingGroup(
             Select(
                 Format("{item.name_id}"),
                 id="levels_select",
@@ -112,7 +113,7 @@ level_manage = Dialog(
             "Кому отправить его на тестирование?\n\n"
             "ℹЧтобы добавить кого-то в этот список, нужно добавить организатора из меню игры"
         ),
-        ScrollingGroup(
+        SmartScrollingGroup(
             Select(
                 Jinja("{{item.player.name_mention}}"),
                 id="game_orgs",

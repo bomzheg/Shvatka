@@ -6,12 +6,12 @@ from aiogram_dialog.widgets.kbd import (
     Cancel,
     ListGroup,
     Next,
-    ScrollingGroup,
     Select,
 )
 from aiogram_dialog.widgets.text import Const, Jinja
 
 from shvatka.tgbot import states
+from shvatka.tgbot.dialogs.paging import SmartScrollingGroup
 from shvatka.tgbot.dialogs.preview_data import (
     PREVIEW_EFFECTS,
     PREVIEW_EFFECTS_CONDITIONS,
@@ -246,7 +246,7 @@ hints_dialog = Dialog(
             "пока нет ни одной"
             "{% endif %}"
         ),
-        ScrollingGroup(
+        SmartScrollingGroup(
             Select(
                 Jinja("{{item | time_hint}}"),
                 id="level_hints",
@@ -301,7 +301,7 @@ effects_key_dialog = Dialog(
             "{% endfor %}",
             when=F["effects_conditions"],
         ),
-        ScrollingGroup(
+        SmartScrollingGroup(
             ListGroup(
                 Button(
                     Jinja("{{item[0] + 1}} - {{item[1].effects | effects}}"),

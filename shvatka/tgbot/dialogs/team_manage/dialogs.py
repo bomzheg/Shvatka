@@ -1,10 +1,11 @@
 from aiogram import F
 from aiogram_dialog import Dialog, Window
 from aiogram_dialog.widgets.input import MessageInput, TextInput
-from aiogram_dialog.widgets.kbd import Button, Cancel, ScrollingGroup, Select, SwitchTo
+from aiogram_dialog.widgets.kbd import Button, Cancel, Select, SwitchTo
 from aiogram_dialog.widgets.text import Const, Format, Jinja
 
 from shvatka.tgbot import states
+from shvatka.tgbot.dialogs.paging import SmartScrollingGroup
 from shvatka.tgbot.dialogs.preview_data import (
     PREVIEW_MY_TEAM,
     PREVIEW_SELECTED_TEAM_PLAYER_DATA,
@@ -109,7 +110,7 @@ captains_bridge = Dialog(
     ),
     Window(
         Jinja("Игроки команды 🚩<b>{{team.name}}</b>"),
-        ScrollingGroup(
+        SmartScrollingGroup(
             Select(
                 Jinja("{{item|player_emoji}}{{item.player.name_mention}}"),
                 id="players",

@@ -1,0 +1,264 @@
+= SHEP-0000 — The three surfaces of Shvatka
+:navtitle: SHEP-0000 The three surfaces
+
+[cols="1,4"]
+|===
+| SHEP | 0000
+| Title | The three surfaces of Shvatka
+| Status | `Accepted, partially implemented`
+| Created | 2026-09-07
+| Updated | 2026-09-07
+| Related | replaces `docs/modules/ROOT/pages/technical-task.adoc`
+|===
+
+== Summary
+
+Shvatka is one engine behind three surfaces: a *Telegram bot* that can do
+everything, a *web ui* for reading the archive and writing scenarios, and a
+*Telegram mini app* that shows the archive inside Telegram with its native
+theme. This SHEP is the retrospective record of that split — the original
+Russian _техническое задание_, rewritten as a decision record and brought up to
+date with what actually shipped.
+
+Nothing here is new work. It is written down because everything after it —
+SHEP-0001 and on — assumes this shape and never states it.
+
+== Context
+
+The original scope document lived at
+`docs/modules/ROOT/pages/technical-task.adoc`: a Russian bullet list of the
+three parts of the application and the feature tree of the web ui, down to
+individual buttons of the scenario editor. It had three problems.
+
+*It was in the wrong module.* `ROOT` is the user manual — Russian, addressed to
+players, captains and authors. A scope document is developer-facing, and the
+register for developer-facing decisions is the `shep` module.
+
+*It was a plan with no status.* Written before the code, never touched after.
+A reader could not tell which of its bullets were shipped, which were dropped,
+and which never had an owner. The SHEP index calls that out by name: "a stale
+SHEP is worse than no SHEP, because it is trusted" — the same holds for a stale
+_техническое задание_, which is what it had become.
+
+*It recorded no reasoning.* It said the mini app exists; it did not say why it
+is not simply the bot, or why an archive reader was worth a second front end at
+all. A scope list is not an argument, and the arguments are what a reader needs
+before changing the split.
+
+The nearest thing to a scope statement that survives is
+`docs/modules/ROOT/pages/index.adoc` — the core-functionality list aimed at
+users. It describes what the engine does, not how it is split.
+
+== Decision
+
+=== One engine, three surfaces
+
+The domain lives in `shvatka/core/` and knows about no surface at all. Two
+process entry points expose it (`[project.scripts]`: `shvatka-api`,
+`shvatka-tgbot`), and the surfaces sit on top:
+
+[cols="2,3,4",options="header"]
+|===
+| Surface | Where it lives | What it is for
+
+| Telegram bot
+| `shvatka/tgbot/` (this repo)
+| The complete interface. Playing a game happens here — keys are typed in a
+  team chat, hints arrive as messages.
+
+| Web ui
+| https://github.com/bomzheg/shvatka-ui[shvatka-ui], against `shvatka/api/`
+| Reading: the archive of games, their scenarios, results and key logs.
+  Writing: the scenario editor, which a chat interface renders badly.
+
+| Telegram mini app
+| the same shvatka-ui build, opened inside Telegram
+| The archive and a game card, in Telegram's native theme, without leaving the
+  client.
+|===
+
+The split is by *what the medium is good at*, not by user role. A key is one
+short word typed under time pressure in the chat where the team already is —
+the bot wins. A twenty-level scenario with per-hint timings is a form — the web
+wins. Anything that is only *read* should be readable from wherever the reader
+already is, which is what the mini app buys.
+
+The consequence the layering depends on: *no surface owns domain behaviour.*
+`core` reaches the outside through Protocols in `core/interfaces/` and
+`core/views/`, and each edge binds its own implementation. That is what lets a
+third surface be added without touching a rule.
+
+=== What the web ui is for
+
+Two jobs, in this order.
+
+*The archive.* A finished game has a card carrying its scenario, its results,
+its key log, and its waivers. This is the part with no bot equivalent worth
+having: a results table is a table, and a key log is hundreds of rows.
+
+*Authentication of its own.* The web ui is not a bot session, so it needs
+sign-in on its own terms: login and password, or Auth with Telegram for a player
+who has never set a password. Password change belongs to the same surface,
+because that is the only surface a password is for.
+
+=== The scenario editor is the reason the web ui exists
+
+The editor is the one place the web is not a convenience but a requirement. It
+edits a level scenario as a tree:
+
+* levels — add, remove, reorder, edit;
+* per level: keys, `name_id`, and the time hints;
+* per time hint: its release time and its content parts — add, remove, edit.
+
+Reordering deserves its own note, because it is where the chat interface
+genuinely cannot follow. Hints are ordered *by time*, so "move this hint one
+earlier" is not a swap: it is a re-timing of everything it passes. The scope
+document called this out and it remains the sharpest argument for a form-shaped
+editor.
+
+=== The mini app is a rendering of the web ui, not a third client
+
+A player looking at last week's results from inside Telegram gets the web ui,
+detected at runtime and themed from `Telegram.WebApp` — light or dark, following
+the client. It is scoped to reading: the archive, a game card, its scenario, key
+log and results.
+
+It is deliberately *not* a place to play from. Playing from a mini app would put
+a second, silent path into the same game state as the team chat, and split where
+a team's keys come from.
+
+=== Alternatives considered
+
+[cols="2,3",options="header"]
+|===
+| Option | Why it lost
+
+| Bot only
+| Where the project started, and it is still the surface a game runs on. It
+  cannot show an archive: a results table, a key log and a scenario tree are all
+  worse as chat messages, and none of them can be linked to.
+
+| Web only
+| A game is played in a team chat, at night, on phones, under time pressure.
+  Asking a team to keep a browser tab open instead of the chat they already have
+  loses the medium's whole advantage.
+
+| A separate native mini app
+| A second front end to build and keep in step with the API for a strictly
+  smaller feature set than the web ui already has. Theming the existing SPA is
+  most of what "native" meant here.
+
+| Mini app can play, too
+| Rejected above: two live inputs into one game state, and no answer to which
+  one the team is looking at.
+|===
+
+== Consequences
+
+*Made easy.* A new read-only view is a web-ui change and nothing else. Everything
+archival is linkable, which is what makes results shareable outside Telegram.
+And the surfaces stay independently deployable — the SPA ships as its own
+container.
+
+*Made hard.* Every player-visible feature has to answer "which surfaces?" and,
+when the answer is more than one, gets built more than once. The convention that
+keeps that honest is in `AGENTS.md`: an interactor that needs the chat to change
+takes a view Protocol from `core/views/`, and each container binds its own — the
+bot's in `tgbot/main_factory.py`, the web's in `api/app/dependencies/`, a no-op
+in `infrastructure/di/infra.py`. Showing something in Telegram never leaks into
+the shared providers.
+
+*The standing costs.*
+
+* Two repositories move together. The glossary in `context.md` is duplicated in
+  shvatka-ui and has to be changed in both (SHEP-0002 hit this).
+* The mini app inherits every web-ui regression, because it is the web ui.
+* Language is split by audience and stays that way: developer-facing docs and
+  code comments in English, user-facing strings and the `ROOT` manual in
+  Russian.
+
+*The one-way door* is the layering, not the feature list. `core` never importing
+`api`, `tgbot` or `infrastructure` is what has made each surface additive; a
+single domain rule reaching for a bot API would end that quietly.
+
+== Phases and status
+
+The original document was a feature tree, not a plan. It is read here as one
+phase per area, with what is actually in `master` today.
+
+[cols="1,4,2",options="header"]
+|===
+| Phase | Content | Status
+
+| 1 | Telegram bot — the complete interface | ✅ done
+| 2 | Web ui — sign-in, archive, game card | ✅ done
+| 3 | Web ui — scenario editor | ✅ done, minus hint reordering
+| 4 | Telegram mini app — archive in native theme | ✅ done
+|===
+
+=== Phase 2 — sign-in and the archive ✅
+
+* [x] Login and password, and Auth with Telegram — `src/app/auth/`
+* [x] Change password — `src/app/profile/profile-account.component.ts`
+* [x] Games list — `/games`
+* [x] Game card: scenario, results, key log, waivers — `/games/:id`, with
+  `game_scenario.part`, `game_chart.part`, `game_log.part` and the waivers
+  section of `game.component.html`
+
+=== Phase 3 — the scenario editor ✅ (partial)
+
+`/games/constructor/:id`, in `src/app/constructor/`.
+
+* [x] Levels: add, remove, edit, reorder (drag handle plus up/down —
+  `moveLevel`)
+* [x] Level keys and `name_id`
+* [x] Time hints: add, remove, edit the release time
+* [x] Hint parts: add (`hint-type-picker`), remove, edit (`hint-editor`)
+* [ ] *Hint reordering as an operation.* Order is edited by typing a new time,
+  which is the underlying model but not what the scope asked for: it asked for
+  a move that re-times the hints it passes.
+* [ ] *Reordering the parts within a hint.* Never built.
+
+=== Phase 4 — the mini app ✅
+
+* [x] Archive and game card, reusing the web ui
+* [x] Telegram-native theming, following `Telegram.WebApp.colorScheme` at
+  runtime — `src/app/theme/theme.service.ts`
+
+== Deviations from the plan
+
+*The mini app became a mode of the web ui, not a separate application.* The
+scope listed it as a third part. It shipped as runtime detection plus theme
+sync in `theme.service.ts`. This is the deviation most worth knowing: there is
+no separate mini-app codebase to look for.
+
+*The web ui grew well past "archive and editor".* The scope covers sign-in, the
+archive and the editor. `app.routes.ts` also carries teams and team cards,
+player cards, the captain's bridge, waivers, notifications with web push, search,
+live game play (`/games/running`), game charts, the release page, and a full
+admin section (players, teams, games, files, polls, and merging players or
+teams). None of it was in the scope document, and it is why that document read
+as stale rather than merely old.
+
+*Live play on the web exists.* `/games/running` contradicts the reading that
+playing is bot-only. The mini app restriction above is the one that held; the
+web ui itself became a place a team can play from.
+
+*Waivers were listed only on the game card.* They are also an admin view and a
+team flow. The scope saw the archival half.
+
+*Hint and hint-part reordering never landed.* Tracked above rather than quietly
+dropped, since the scope document argued for it specifically.
+
+== Open questions
+
+* *Does the register want more retrospective SHEPs?* This is the only one:
+  0000 was free, and the scope document already existed in prose. Reconstructing
+  further history has no such starting point and is unlikely to be worth it.
+* *Where does the growth beyond the scope get recorded?* Admin, search, push and
+  the notification centre each landed without a SHEP. That was the right call
+  per SHEP-0001's own bar — they add surface, not conventions — but it means the
+  answer to "what is the web ui for" now lives only in `app.routes.ts`.
+* *Does live play on the web change the mini app decision?* If a team can play
+  in a browser, the argument against playing in the mini app is weaker than it
+  was. Nothing forces the question today.

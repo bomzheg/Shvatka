@@ -1,4 +1,3 @@
-* xref:technical-task.adoc[Техническое задание]
 * Игроку
 ** xref:player/auth.adoc[Вход]
 ** xref:player/join_team.adoc[Как вступить в команду]

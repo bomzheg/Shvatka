@@ -27,6 +27,10 @@ came out of it*.
 |===
 | SHEP | Title | Status
 
+| xref:shep-0000-product-scope.adoc[SHEP-0000]
+| The three surfaces of Shvatka
+| Accepted, partially implemented
+
 | xref:shep-0001-notifications-and-action-requests.adoc[SHEP-0001]
 | Notifications and action requests
 | Accepted, partially implemented
@@ -124,7 +128,8 @@ came out of it*.
   `docs/modules/shep/pages/shep-XXXX-short-slug.adoc`.
 . Take the next free number from the register above. Numbers are assigned when
   the SHEP is merged, so two open pull requests never fight over one — renumber
-  on rebase if needed.
+  on rebase if needed. `0000` is taken: it is the retrospective record of the
+  product scope the project started from, written after the fact.
 . Add the page to `docs/modules/shep/nav.adoc` and a row to the register.
 . Write it in English, like the rest of the developer-facing documentation.
   (User-facing pages under `ROOT` stay Russian.)

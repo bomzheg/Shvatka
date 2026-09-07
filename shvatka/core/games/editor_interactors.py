@@ -178,17 +178,19 @@ class PlanGameStartInteractor:
             await cancel_planed_start(game, author, self.scheduler, self.dao)
         else:
             await plain_start(game, author, start_at, self.dao, self.scheduler)
+            # the schedule follows the game, never the other way round — and it
+            # is the one that knows whether anybody expected this game today
+            in_schedule = await self.slot_sync(game, author)
             await self.game_log.log(
                 GameLogEvent(
                     GameLogType.GAME_PLANED,
                     {
                         "game": game.name,
                         "at": start_at.astimezone(tz_game).strftime(DATETIME_FORMAT),
+                        "in_schedule": "yes" if in_schedule else "no",
                     },
                 )
             )
-            # the schedule follows the game, never the other way round
-            await self.slot_sync(game, author)
         return game
 
 

@@ -17,9 +17,16 @@ from shvatka.tgbot.dialogs.paging import SmartScrollingGroup
 from shvatka.tgbot.dialogs.preview_data import (
     PREVIEW_GAME,
     PREVIEW_NOW,
+    PREVIEW_SLOT_OFFER_DATA,
     PREVIEW_WAIVERS,
     PreviewStart,
     PreviewSwitchTo,
+)
+from shvatka.tgbot.dialogs.season.handlers import (
+    add_and_link,
+    link_to_slot,
+    move_nearest_and_link,
+    skip_schedule,
 )
 
 from .getters import (
@@ -33,6 +40,7 @@ from .getters import (
     get_game_with_channel,
     get_games,
     get_my_games,
+    get_slot_offer,
 )
 from .handlers import (
     cancel_scheduled_game,
@@ -448,5 +456,41 @@ schedule_game_dialog = Dialog(
         getter=get_game_datetime,
         preview_data={"game": PREVIEW_GAME, "scheduled_datetime": PREVIEW_NOW},
         state=states.GameScheduleSG.confirm,
+        preview_add_transitions=[PreviewSwitchTo(states.GameScheduleSG.slot_offer)],
+    ),
+    Window(
+        Jinja(
+            "{% if has_candidates %}"
+            "Рядом есть дата в расписании сезона. Привязать к ней игру "
+            "<b>{{game.name}}</b>?"
+            "{% else %}"
+            "❗️Игра <b>{{game.name}}</b> запланирована на {{game_day}}, "
+            "а в расписании сезона на эти дни ничего не стоит."
+            "{% endif %}"
+        ),
+        Select(
+            Format("📌Привязать к {item[label]}"),
+            id="link_slot",
+            item_id_getter=lambda slot: slot["id"],
+            items="candidates",
+            on_click=link_to_slot,
+            when=F["has_candidates"],
+        ),
+        Button(
+            Format("➕Добавить дату {game_day} и привязать"),
+            id="add_and_link",
+            on_click=add_and_link,
+            when=~F["has_candidates"],
+        ),
+        Button(
+            Format("↔Перенести ближайшую дату {nearest[label]} на {game_day}"),
+            id="move_nearest",
+            on_click=move_nearest_and_link,
+            when=~F["has_candidates"] & F["has_nearest"],
+        ),
+        Button(Const("🚫Без расписания"), id="skip_schedule", on_click=skip_schedule),
+        getter=get_slot_offer,
+        preview_data=PREVIEW_SLOT_OFFER_DATA,
+        state=states.GameScheduleSG.slot_offer,
     ),
 )

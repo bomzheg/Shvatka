@@ -5,7 +5,7 @@
 |===
 | SHEP | 0003
 | Title | Season schedule
-| Status | `Accepted` — phase 1 (engine) landed; phases 2 and 3 not started
+| Status | `Accepted` — all three phases landed
 | Created | 2026-07-26
 | Updated | 2026-09-07
 | Related | issue #167, PR #306; xref:shep-0001-notifications-and-action-requests.adoc[SHEP-0001] (which defers `season_schedule_changed` to this one)
@@ -734,11 +734,11 @@ a default time in the schedule would be a number nobody meant.
 
 | 2
 | `SeasonSG` dialogs with compose-in-`dialog_data`, the `SeasonCalendar` subclass, and the link offer grafted onto `GameScheduleSG`
-| ⏳ not started
+| ✅ done
 
 | 3
 | The web season calendar, compose mode, extend-months controls, and the `season_schedule_changed` renderer
-| ⏳ not started
+| ✅ done
 |===
 
 Phase 1 leaves the schedule complete for anything that speaks HTTP: composed,
@@ -777,24 +777,24 @@ integration tests — and are listed inside the phase that introduces them.
   through `check_dao`, with announcer and notification effects through mocks in
   the style of `tests/mocks/org_notifier.py`
 
-=== Phase 2 — bot ⏳
+=== Phase 2 — bot ✅
 
-* [ ] `SeasonSG` with `compose` holding the working list in `dialog_data`
-* [ ] `SeasonCalendar(Calendar)` with per-day marks and the season's year pinned
+* [x] `SeasonSG` with `compose` holding the working list in `dialog_data`
+* [x] `SeasonCalendar(Calendar)` with per-day marks and the season's year pinned
   by `CalendarConfig`
-* [ ] date window: take / release / change author / edit orgs / move / delete /
+* [x] date window: take / release / change author / edit orgs / move / delete /
   open the linked game
-* [ ] the link offer and the no-date warning after `GameScheduleSG.confirm`
-* [ ] «(вне расписания сезона)» on the `GAME_PLANED` log line
+* [x] the link offer and the no-date warning after `GameScheduleSG.confirm`
+* [x] «(вне расписания сезона)» on the `GAME_PLANED` log line
 
-=== Phase 3 — web UI ⏳
+=== Phase 3 — web UI ✅
 
-* [ ] `src/app/season/` component + service, routes `/season` and `/season/:year`
-* [ ] the May–October grid with extend-months controls and auto-extension for
+* [x] `src/app/season/` component + service, routes `/season` and `/season/:year`
+* [x] the May–October grid with extend-months controls and auto-extension for
   dates outside it
-* [ ] compose mode backed by `localStorage`, with 409 handling
-* [ ] take / release / add / move for authors; read-only for everyone else
-* [ ] `season_schedule_changed` in `notification-render.ts`
+* [x] compose mode backed by `localStorage`, with 409 handling
+* [x] take / release / add / move for authors; read-only for everyone else
+* [x] `season_schedule_changed` in `notification-render.ts`
 
 [[deviations]]
 == Deviations from the plan
@@ -833,13 +833,43 @@ Phase 1 landed as described, with these differences.
   `SlotAlreadyLinked`. Unlink first, so the game never sits in a date with no
   owner.
 
+Phase 2 (bot):
+
+* *Moving a date is picked on the calendar itself.* `SeasonSG` has no state for
+  it, and a calendar is where one picks a day: the date window sets a `moving`
+  flag and returns to `calendar`, whose next tap moves the date instead of
+  opening one.
+* *«Открыть игру» is a link to the game's page on the site*, not a jump into a
+  bot dialog. A linked game may be in any status, and `MyGamesPanelSG` is the
+  author's own panel — a reader who is not its author has no business there.
+* *`FindSlotsNearGameStartInteractor` gained a `window` argument.* The plan's
+  «no dates nearby» warning offers to move the nearest date, which means looking
+  further than the ±3 days the offer itself uses; ±3 stays the default and the
+  warning asks for ±21.
+* *`SyncLinkedSlotInteractor` returns whether the game sits in a date.* That is
+  what tells the `GAME_PLANED` line whether to say «вне расписания сезона»:
+  `core` puts an `in_schedule` flag in the log event's data and the bot view
+  writes the Russian, so no user-facing string reaches `core`.
+* *The org picker takes a shvatka username*, resolved with
+  `PlayerDao.get_by_username_or_none` — the same names the web ui's player
+  search offers, not a Telegram one.
+
+Phase 3 (web):
+
+* *The compose-mode conflict is resolved by discarding and reloading*, the
+  proposal the open question below carries: nine dates are cheap to re-pick, and
+  merging two lists is not obviously right in any direction.
+* *`HttpAdapter` gained `patch`* — editing one date is the first PATCH the ui
+  makes.
+
 == Open questions
 
-Both are implementation details that block nothing today.
+Both were settled as the phases landed.
 
 * *Digest wording* once collapsing exists: a date that was taken and then moved
-  on the same day — one line or two? Proposal: one line per date, stating its net
-  state change.
+  on the same day — one line or two? *Settled: one line per date.* `SlotDigest`
+  holds the whole net change of one date and the announcer renders it as one
+  «дата — перенесена с … на …; занял …» line.
 * *Compose-mode conflict UX* on the web: when someone else published first,
   merge the local list into the published season, or discard and reload?
-  Proposal: discard and reload — the local list is nine dates.
+  *Settled: discard and reload*, as proposed — the local list is nine dates.

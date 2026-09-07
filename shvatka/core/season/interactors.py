@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 from collections.abc import Collection, Sequence
 from dataclasses import dataclass
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from typing import Any
 
 from shvatka.core.interfaces.identity import IdentityProvider
@@ -13,6 +13,7 @@ from shvatka.core.players.player import check_allow_be_author
 from shvatka.core.season import dto as season_dto
 from shvatka.core.season.adapters import SeasonScheduleDao
 from shvatka.core.season.rules import (
+    SLOT_SUGGEST_WINDOW,
     SlotDigest,
     check_can_add_slot,
     check_can_edit_slot,
@@ -396,13 +397,18 @@ class FindSlotsNearGameStartInteractor:
 
     dao: SeasonScheduleDao
 
-    async def __call__(self, at: datetime, identity: IdentityProvider) -> list[season_dto.Slot]:
+    async def __call__(
+        self,
+        at: datetime,
+        identity: IdentityProvider,
+        window: timedelta = SLOT_SUGGEST_WINDOW,
+    ) -> list[season_dto.Slot]:
         player = await identity.get_player()
         local = at.astimezone(tz_game).date()
         season = await self.dao.get_season(local.year)
         if season is None:
             return []
-        return find_slots_near(season.slots, local, player)
+        return find_slots_near(season.slots, local, player, window)
 
 
 @dataclass
@@ -516,20 +522,24 @@ class UnlinkGameFromSlotInteractor(SeasonInteractor):
 
 @dataclass
 class SyncLinkedSlotInteractor(SeasonInteractor):
-    """A re-planned game drags its date along. Cancelling a start unlinks nothing."""
+    """A re-planned game drags its date along. Cancelling a start unlinks nothing.
 
-    async def __call__(self, game: dto.Game, actor: dto.Player) -> None:
+    Returns whether the game sits in a date at all, which is what tells the
+    game log to mark a start planned outside the season schedule.
+    """
+
+    async def __call__(self, game: dto.Game, actor: dto.Player) -> bool:
         if game.start_at is None:
-            return
+            return False
         slot = await self.dao.get_slot_by_game(game.id)
         if slot is None:
-            return
+            return False
         started = game.start_at.astimezone(tz_game).date()
         if started == slot.date:
-            return
+            return True
         season = await self.dao.get_season_by_id(slot.season_id)
         if season is None:
-            return
+            return True
         await self.dao.move_slot(slot.id, started)
         await self._record(
             season,
@@ -546,6 +556,7 @@ class SyncLinkedSlotInteractor(SeasonInteractor):
         )
         await self.dao.commit()
         await self._announce_update(season.year)
+        return True
 
 
 @dataclass

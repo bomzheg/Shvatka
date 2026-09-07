@@ -44,6 +44,8 @@ class SeasonAnnouncerMock(SeasonAnnouncer):
 class SlotSyncMock(SyncLinkedSlotInteractor):
     def __init__(self) -> None:
         self.calls: list[tuple[dto.Game, dto.Player]] = []
+        self.in_schedule = False
 
-    async def __call__(self, game: dto.Game, actor: dto.Player) -> None:
+    async def __call__(self, game: dto.Game, actor: dto.Player) -> bool:
         self.calls.append((game, actor))
+        return self.in_schedule

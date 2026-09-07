@@ -11,6 +11,18 @@ class GameScheduleSG(StatesGroup):
     date = State()
     time = State()
     confirm = State()
+    slot_offer = State()
+
+
+class SeasonSG(StatesGroup):
+    """The season schedule — «расписание», SHEP-0003."""
+
+    calendar = State()
+    slot = State()
+    take = State()
+    orgs = State()
+    compose = State()
+    confirm_publish = State()
 
 
 class TimeHintSG(StatesGroup):

@@ -194,13 +194,41 @@ async def test_plan_start_writes_game_log():
     assert game_log.calls == [
         GameLogEvent(
             GameLogType.GAME_PLANED,
-            {"game": game.name, "at": start_at.astimezone(tz_game).strftime(DATETIME_FORMAT)},
+            {
+                "game": game.name,
+                "at": start_at.astimezone(tz_game).strftime(DATETIME_FORMAT),
+                # nobody was expecting this game: the channel line says so
+                "in_schedule": "no",
+            },
         )
     ]
     # the schedule follows the game
     assert [(sync_game.id, actor.id) for sync_game, actor in slot_sync.calls] == [
         (game.id, author.id)
     ]
+
+
+@pytest.mark.asyncio
+async def test_plan_start_of_a_scheduled_game_is_not_marked_out_of_schedule():
+    author = make_player(1)
+    game = make_game(author, GameStatus.ready)
+    dao = FakeGameDao(game=game)
+    scheduler = FakeScheduler()
+    game_log = RecordingLogWriter()
+    slot_sync = SlotSyncMock()
+    slot_sync.in_schedule = True
+    interactor = PlanGameStartInteractor(
+        getter=dao, dao=dao, scheduler=scheduler, game_log=game_log, slot_sync=slot_sync
+    )
+    start_at = datetime.now(tz=tz_utc) + timedelta(days=1)
+
+    await interactor(
+        game_id=game.id,
+        start_at=start_at,
+        identity=MockIdentityProvider(player=author),
+    )
+
+    assert game_log.calls[0].data["in_schedule"] == "yes"
 
 
 @pytest.mark.asyncio

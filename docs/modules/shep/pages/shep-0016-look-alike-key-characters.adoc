@@ -8,7 +8,7 @@
 | Status | `Accepted`, implemented
 | Created | 2026-09-08
 | Updated | 2026-09-08
-| Related | —
+| Related | PR #416
 |===
 
 == Summary
@@ -136,7 +136,7 @@ Exact duplicates keep raising, as before.
 | 1
 | `key_folding.py`, folded comparisons in the play path, level testing and the
   format check; look-alike keys of one level logged
-| ✅ done
+| ✅ done in PR #416
 
 | 2
 | Search by key (`core/search/interactors.py`) still matches by substring on the

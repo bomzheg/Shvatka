@@ -12,6 +12,7 @@ from shvatka.core.utils.datetime_utils import tz_utc
 from shvatka.core.utils.exceptions import InvalidKey
 from shvatka.core.utils.input_validation import is_key_valid
 from shvatka.core.utils.key_checker_lock import KeyCheckerFactory
+from shvatka.core.utils.key_folding import fold_key, fold_keys
 from shvatka.core.views.game import LevelTestCompleted, OrgNotifier
 from shvatka.core.views.level import LevelView
 
@@ -85,8 +86,8 @@ async def check_level_testing_key(
     if not is_key_valid(key):
         raise InvalidKey(key=key, player=suite.tester.player)
     async with locker.lock_player(suite.tester.player):
-        keys = suite.level.get_keys()
-        is_correct_key = key in keys
+        folded_keys = fold_keys(suite.level.get_keys())
+        is_correct_key = fold_key(key) in folded_keys
         await dao.save_key(
             key=key,
             suite=suite,
@@ -94,7 +95,7 @@ async def check_level_testing_key(
         )
         typed_keys = await dao.get_correct_tested_keys(suite=suite)
         is_completed = False
-        if typed_keys == keys:
+        if fold_keys(typed_keys) == folded_keys:
             await dao.complete_test(suite=suite)
             is_completed = True
         await dao.commit()

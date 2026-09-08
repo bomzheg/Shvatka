@@ -90,6 +90,10 @@ came out of it*.
 | xref:shep-0015-smart-pagers.adoc[SHEP-0015]
 | Smart pagers
 | Accepted, partially implemented
+
+| xref:shep-0016-look-alike-key-characters.adoc[SHEP-0016]
+| Look-alike characters in keys
+| Accepted, implemented
 |===
 
 == Status vocabulary

@@ -15,4 +15,5 @@
 ** xref:shep-0013-undoing-a-false-start.adoc[SHEP-0013 Undoing a false start]
 ** xref:shep-0014-event-loop-latency.adoc[SHEP-0014 Event loop latency]
 ** xref:shep-0015-smart-pagers.adoc[SHEP-0015 Smart pagers]
+** xref:shep-0016-look-alike-key-characters.adoc[SHEP-0016 Look-alike key characters]
 ** xref:template.adoc[SHEP template]

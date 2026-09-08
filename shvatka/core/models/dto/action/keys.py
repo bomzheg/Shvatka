@@ -2,11 +2,13 @@ import abc
 import typing
 from abc import abstractmethod
 from dataclasses import dataclass
+from functools import cached_property
 from typing import Literal
 from uuid import uuid4
 
 from shvatka.core.models import enums
 from shvatka.core.utils.input_validation import is_key_valid
+from shvatka.core.utils.key_folding import fold_key, fold_keys
 
 from . import EffectsCondition
 from .decisions import NotImplementedActionDecision
@@ -61,8 +63,16 @@ class TypedKeysState(State):
     typed_correct: set[SHKey]
     all_typed: set[SHKey]
 
+    @cached_property
+    def folded_typed_correct(self) -> set[SHKey]:
+        return fold_keys(self.typed_correct)
+
+    @cached_property
+    def folded_all_typed(self) -> set[SHKey]:
+        return fold_keys(self.all_typed)
+
     def is_duplicate(self, action: TypedKeyAction) -> bool:
-        return action.key in self.all_typed
+        return fold_key(action.key) in self.folded_all_typed
 
 
 @dataclass(kw_only=True, frozen=True)
@@ -104,11 +114,14 @@ class KeyCondition(Condition, metaclass=abc.ABCMeta):
     def get_keys(self) -> set[SHKey]:
         raise NotImplementedError
 
+    def get_folded_keys(self) -> set[SHKey]:
+        return fold_keys(self.get_keys())
+
     def _is_correct(self, action: TypedKeyAction) -> bool:
-        return action.key in self.get_keys()
+        return fold_key(action.key) in self.get_folded_keys()
 
     def _is_all_typed(self, action: TypedKeyAction, state: TypedKeysState) -> bool:
-        return self.get_keys().issubset({*state.typed_correct, action.key})
+        return self.get_folded_keys().issubset({*state.folded_typed_correct, fold_key(action.key)})
 
 
 @dataclass

@@ -19,6 +19,7 @@ from shvatka.core.services.game import get_authors_games, get_completed_games
 from shvatka.core.utils.datetime_utils import tz_game
 from shvatka.core.waiver.services import get_all_played
 from shvatka.infrastructure.db.dao.holder import HolderDao
+from shvatka.tgbot.dialogs.season.getters import SLOT_DATE_FORMAT
 from shvatka.tgbot.views.keys import get_or_create_keys_page
 
 logger = logging.getLogger(__name__)
@@ -184,3 +185,20 @@ async def get_game_datetime(
         tzinfo=tz_game,
     )
     return result
+
+
+@inject
+async def get_slot_offer(dialog_manager: DialogManager, dao: FromDishka[HolderDao], **_):
+    """Whatever `offer_slots` found, as the window needs it."""
+    data: dict[str, Any] = dialog_manager.start_data  # type: ignore[assignment]
+    candidates = dialog_manager.dialog_data.get("candidates") or []
+    nearest = dialog_manager.dialog_data.get("nearest")
+    game_day = dialog_manager.dialog_data.get("game_date", "")
+    return {
+        "game": await game.get_game(id_=int(data["my_game_id"]), dao=dao.game),
+        "candidates": candidates,
+        "has_candidates": bool(candidates),
+        "nearest": nearest,
+        "has_nearest": bool(nearest),
+        "game_day": date.fromisoformat(game_day).strftime(SLOT_DATE_FORMAT) if game_day else "",
+    }

@@ -28,6 +28,7 @@ from shvatka.core.utils.datetime_utils import TIME_FORMAT, tz_game
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.infrastructure.printer.results import export_results
 from shvatka.tgbot import states
+from shvatka.tgbot.dialogs.season.handlers import offer_slots
 from shvatka.tgbot.tasks import publish_scenario_to_forum
 from shvatka.tgbot.views.results.rich import ResultsRichSender
 
@@ -214,7 +215,9 @@ async def schedule_game(
     game_id = int(data["my_game_id"])
     await interactor(game_id=game_id, start_at=at, identity=identity)
     await c.answer("Запланировано успешно")
-    await manager.done()
+    # nothing is linked automatically — the engine offers, the author decides
+    await offer_slots(manager=manager, at=at)
+    await manager.switch_to(states.GameScheduleSG.slot_offer)
 
 
 async def show_game_orgs(c: CallbackQuery, widget: Button, manager: DialogManager):

@@ -217,6 +217,25 @@ game and only then fall back to author or organizer rights.
 | **Severity** | Важность | How much a notification matters (`low` / `normal` / `important`); drives UI emphasis in the feed. | `enums.NotificationSeverity` |
 | **Push subscription** | Подписка на пуши | A browser endpoint registered for web push. | `push_subscriptions` table |
 
+## Season schedule
+
+Сезон — план игр на календарный год. См. SHEP-0003.
+
+| Term | Русский | Meaning | Where |
+| --- | --- | --- | --- |
+| **Season** | Сезон | One calendar year's plan of games, as a list of dates. Exists in the engine only once published — there is no draft. | `season.dto.Season`, `seasons` |
+| **Slot** | Дата игры (в разговоре — просто «дата») | One planned date in a season, before there is a game to put in it. Date-only; free or taken; may be linked to exactly one game. Никаких «слотов» в русских строках — только «дата». | `season.dto.Slot`, `season_slots` |
+| **Taking a slot** | Взять дату | An author claiming a date, declaring whether the game will be authored by them or by their team. It records intent, not exclusive access. Naming a *team* needs its captain — or the engine admin, booking on the captain's behalf. | `TakeSlotInteractor` |
+| **Slot owner** | Владелец даты | The author who took it — who means to make the game there. Any author may still move, release or delete the date; the change trail says who did. | `season_slots.owner_id` |
+| **Slot org** | Орг на дату | A player the owner names as a co-organizer of the future game. Declared intent — it becomes an `Organizer` when the game exists. | `season_slot_orgs` |
+| **Schedule publication** | Публикация расписания | Confirming a composed season: written to the database, announced in the game-log channel, pinned. Not to be confused with *публикация результатов* — a different act on a different aggregate. | `PublishSeasonInteractor` |
+| **Schedule change** | Изменение расписания | One recorded edit of a published season — the audit trail and the digest's raw material. | `season.dto.ScheduleChange`, `season_changes` |
+| **Change digest** | Сводка изменений | The once-a-day message collapsing every unpublished change to its net effect per date. | `PublishSeasonDigestInteractor` |
+
+Unqualified **расписание** means the season schedule. Planning one game's start
+is *планирование старта игры* (`PlanGameStartInteractor`) — `GameScheduleSG` is
+named against the glossary, noted and left alone for now.
+
 ## Search
 
 | Term | Русский | Meaning | Where |
@@ -263,6 +282,7 @@ where that is so, the row says as much.
 | Announcement, анонс | **Release** — релиз | Организаторы говорят *релиз* про промо перед игрой; *анонс* размывает его с любым другим объявлением. |
 | Fine, malus | **Penalty** (negative `bonus_minutes`) | A penalty is a negative bonus, not another field. |
 | Group, squad, crew | **Team** (`Team`) | Group means a Telegram chat here. |
+| Слот | **Дата игры** — «дата» (`Slot` in code) | People say «дата игры»; inventing a borrowed word for something the domain already names is what this glossary exists to prevent. `Slot` stays in code because `date` is a builtin, a column type, and would give `season_dates.date`. |
 | Member | **Team player** (`TeamPlayer`) | Membership is an interval with permissions, not a flag. |
 | Finished = complete | **Finished** ≠ **complete** | Finished means all teams passed the last level; complete means the game is closed and numbered. |
 

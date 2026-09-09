@@ -379,6 +379,10 @@ class GameBotLog(GameLogWriter):
                 text = "Начался сбор вейверов на игру {game}"
             case GameLogEvent(GameLogType.GAME_PLANED):
                 text = "Начало игры {game} запланировано на {at}"
+                if event_log.data.get("in_schedule") == "no":
+                    # nobody was expecting a game that day — say so where the
+                    # orgs will see it
+                    text += " (вне расписания сезона)"
             case GameLogEvent(GameLogType.GAME_STARTED):
                 text = "Игра {game} началась"
             case GameLogEvent(GameLogType.GAME_FINISHED):

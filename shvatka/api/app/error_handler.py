@@ -42,7 +42,14 @@ def sh_exception_handler(
         confidential=exc.confidential,
         doc_url=docs.get_error_url(exc),
     )
-    if isinstance(exc, exceptions.NotAuthorizedForEdit | exceptions.NotAuthorizedForAdmin):
+    if isinstance(
+        exc,
+        exceptions.NotAuthorizedForEdit
+        | exceptions.NotAuthorizedForAdmin
+        | exceptions.SlotAuthorInvalid,
+    ):
+        # the api answers most PermissionsErrors 422 (see test_team.py); these
+        # say "this is not yours to do", which is a 403 and nothing else
         status_code = 403
     elif isinstance(exc, exceptions.IdentityWithoutPlayer | exceptions.IdentityWithoutUser):
         status_code = 401
@@ -52,10 +59,19 @@ def sh_exception_handler(
         | exceptions.GameNotFound
         | exceptions.PlayerNotFoundError
         | exceptions.TeamNotFound
-        | exceptions.UserNotFoundError,
+        | exceptions.UserNotFoundError
+        | exceptions.SeasonNotFound
+        | exceptions.SlotNotFound,
     ):
         status_code = 404
-    elif isinstance(exc, exceptions.FileIsUsed | exceptions.GameWouldBeRewritten):
+    elif isinstance(
+        exc,
+        exceptions.FileIsUsed
+        | exceptions.GameWouldBeRewritten
+        | exceptions.SeasonAlreadyExists
+        | exceptions.SlotAlreadyLinked
+        | exceptions.GameAlreadyInSchedule,
+    ):
         # a conflict the caller can resolve by asking and repeating the request
         status_code = 409
     elif isinstance(exc, exceptions.SHError):

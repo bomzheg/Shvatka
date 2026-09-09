@@ -26,6 +26,7 @@ from shvatka.core.notifications.adapters import (
     RequestStorage,
 )
 from shvatka.core.players.interfaces import PlayerMerger
+from shvatka.core.season.adapters import SeasonScheduleDao
 from shvatka.core.teams.adapters import ChatlessTeamCreator
 from shvatka.infrastructure.db import dao
 from shvatka.infrastructure.db.config.models.db import DBConfig, RedisConfig
@@ -48,6 +49,7 @@ from shvatka.infrastructure.db.dao.complex.level_testing import LevelTestComplex
 from shvatka.infrastructure.db.dao.complex.level_times import GameStatImpl
 from shvatka.infrastructure.db.dao.complex.orgs import OrgAdderImpl
 from shvatka.infrastructure.db.dao.complex.player import PlayerMergerImpl, PlayerPromoterImpl
+from shvatka.infrastructure.db.dao.complex.season import SeasonScheduleDaoImpl
 from shvatka.infrastructure.db.dao.complex.team import (
     TeamCreatorImpl,
     TeamLeaverImpl,
@@ -216,6 +218,7 @@ class ComplexDaoProvider(Provider):
     level_testing = provide(LevelTestComplex, provides=LevelTestingDao)
     org_adder = provide(OrgAdderImpl, provides=OrgAdder)
     player_promoter = provide(PlayerPromoterImpl, provides=PlayerPromoter)
+    season_schedule = provide(SeasonScheduleDaoImpl, provides=SeasonScheduleDao)
     player_merger = provide(PlayerMergerImpl, provides=PlayerMerger)
     team_creator = provide(TeamCreatorImpl, provides=AnyOf[TeamCreator, ChatlessTeamCreator])
     team_leaver = provide(TeamLeaverImpl, provides=TeamLeaver)

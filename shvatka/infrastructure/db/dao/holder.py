@@ -18,6 +18,10 @@ from .rdb import (
     LevelTimeDao,
     OrganizerDao,
     PlayerDao,
+    SeasonChangeDao,
+    SeasonDao,
+    SeasonSlotDao,
+    SeasonSlotOrgDao,
     TeamDao,
     TeamPlayerDao,
     UserDao,
@@ -55,6 +59,10 @@ class HolderDao:
         self.team_player = TeamPlayerDao(self.session, clock=clock)
         self.team = TeamDao(self.session, clock=clock)
         self.waiver = WaiverDao(self.session, clock=clock)
+        self.season = SeasonDao(self.session, clock=clock)
+        self.season_slot = SeasonSlotDao(self.session, clock=clock)
+        self.season_slot_org = SeasonSlotOrgDao(self.session, clock=clock)
+        self.season_change = SeasonChangeDao(self.session, clock=clock)
         self.achievement = AchievementDAO(self.session, clock=clock)
         self.forum_user = ForumUserDAO(self.session, clock=clock)
         self.forum_team = ForumTeamDAO(self.session, clock=clock)

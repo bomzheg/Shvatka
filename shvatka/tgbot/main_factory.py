@@ -36,6 +36,7 @@ from shvatka.core.views.game import (
     ViewSender,
 )
 from shvatka.core.views.level import LevelView
+from shvatka.core.views.season import SeasonAnnouncer
 from shvatka.core.views.team import TeamNotifier
 from shvatka.infrastructure.bus.in_memory import UsedOneTimeTokenInteractor
 from shvatka.infrastructure.db.config.models.storage import StorageConfig, StorageType
@@ -65,6 +66,7 @@ from shvatka.tgbot.views.hint_sender import HintSender
 from shvatka.tgbot.views.level_testing import LevelBotView
 from shvatka.tgbot.views.pinner import MessagePinner
 from shvatka.tgbot.views.results.rich import ResultsRichSender
+from shvatka.tgbot.views.season import BotSeasonAnnouncer
 from shvatka.tgbot.views.team import BotTeamNotifier
 
 logger = logging.getLogger(__name__)
@@ -215,6 +217,10 @@ class BotOnlyProvider(Provider):
     def get_release_publisher(self, publisher: GameBotReleasePublisher) -> GameReleasePublisher:
         return publisher
 
+    @provide
+    def get_season_announcer(self, announcer: BotSeasonAnnouncer) -> SeasonAnnouncer:
+        return announcer
+
 
 class GameToolsProvider(Provider):
     @provide(scope=Scope.REQUEST)
@@ -236,6 +242,12 @@ class GameToolsProvider(Provider):
     @provide(scope=Scope.REQUEST)
     def get_bot_game_log(self, bot: Bot, config: BotConfig) -> GameBotLog:
         return GameBotLog(bot=bot, log_chat_id=config.game_log_chat)
+
+    @provide(scope=Scope.REQUEST)
+    def get_bot_season_announcer(
+        self, bot: Bot, rights: BotRights, config: BotConfig
+    ) -> BotSeasonAnnouncer:
+        return BotSeasonAnnouncer(bot=bot, rights=rights, log_chat_id=config.game_log_chat)
 
     @provide(scope=Scope.REQUEST)
     async def get_hint_sender(

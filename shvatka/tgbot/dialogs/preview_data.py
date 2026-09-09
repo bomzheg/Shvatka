@@ -5,7 +5,7 @@ the real getter is never called, so a window without it renders against an
 empty dict and usually just blows up on the first missing key.
 """
 
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 from uuid import UUID
 
 from aiogram.fsm.state import State
@@ -17,6 +17,7 @@ from shvatka.core.models.dto import action, hints
 from shvatka.core.models.dto.scn.level import Conditions, HintsList, LevelScenario
 from shvatka.core.models.enums import GameStatus
 from shvatka.core.models.enums.played import Played
+from shvatka.core.season import dto as season_dto
 from shvatka.core.utils.datetime_utils import tz_utc
 from shvatka.core.views.texts import PERMISSION_EMOJI
 
@@ -337,6 +338,84 @@ PREVIEW_FINISHED_LEVEL_TIME = dto.LevelTimeOnGame(
 PREVIEW_SPY_STAT = {PREVIEW_LEVEL_TIME.level_number: [PREVIEW_LEVEL_TIME]}
 
 TIMES_PRESET = [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60]
+
+PREVIEW_SEASON_YEAR = 2027
+PREVIEW_FREE_SLOT = season_dto.Slot(
+    id=1,
+    season_id=1,
+    date=date(PREVIEW_SEASON_YEAR, 5, 15),
+)
+PREVIEW_TAKEN_SLOT = season_dto.Slot(
+    id=2,
+    season_id=1,
+    date=date(PREVIEW_SEASON_YEAR, 6, 5),
+    note="зимняя игра",
+    owner=PREVIEW_AUTHOR,
+    author_kind=season_dto.SlotAuthorKind.player,
+    orgs=[PREVIEW_PLAYER],
+    taken_at=PREVIEW_NOW,
+)
+PREVIEW_SEASON = season_dto.Season(
+    id=1,
+    year=PREVIEW_SEASON_YEAR,
+    published_by_id=PREVIEW_AUTHOR.id,
+    published_at=PREVIEW_NOW,
+    updated_at=PREVIEW_NOW,
+    slots=[PREVIEW_FREE_SLOT, PREVIEW_TAKEN_SLOT],
+)
+PREVIEW_SLOT_MARKS = {
+    PREVIEW_FREE_SLOT.date.isoformat(): "🟢",
+    PREVIEW_TAKEN_SLOT.date.isoformat(): "⭐",
+}
+PREVIEW_SEASON_DATA = {
+    "year": PREVIEW_SEASON_YEAR,
+    "season": PREVIEW_SEASON,
+    "slot_marks": PREVIEW_SLOT_MARKS,
+    "is_missing": False,
+    "can_compose": False,
+    "is_author": True,
+    "moving": False,
+}
+PREVIEW_SLOT_DATA = {
+    "year": PREVIEW_SEASON_YEAR,
+    "slot": PREVIEW_TAKEN_SLOT,
+    "picked_date": "05.06",
+    "is_author": True,
+    "is_free": False,
+    "is_mine": True,
+    "can_edit": True,
+    "author_name": PREVIEW_AUTHOR.name_mention,
+    "orgs": [PREVIEW_PLAYER],
+    "game_url": "https://shvatka.ru/games/1",
+}
+PREVIEW_TAKE_DATA = {
+    **PREVIEW_SLOT_DATA,
+    "teams": PREVIEW_TEAMS,
+    "has_teams": True,
+    "any_team": False,
+    "as_team": False,
+    "team_id": None,
+}
+PREVIEW_ORGS_DATA = {
+    "year": PREVIEW_SEASON_YEAR,
+    "orgs": [PREVIEW_PLAYER],
+    "has_orgs": True,
+}
+PREVIEW_COMPOSE_DATA = {
+    "year": PREVIEW_SEASON_YEAR,
+    "slot_marks": PREVIEW_SLOT_MARKS,
+    "dates": ["15.05", "05.06"],
+    "dates_count": 2,
+    "has_dates": True,
+}
+PREVIEW_SLOT_OFFER_DATA = {
+    "game": PREVIEW_GAME,
+    "candidates": [{"id": 1, "date": "2027-05-15", "label": "15.05"}],
+    "has_candidates": True,
+    "nearest": {"id": 2, "date": "2027-06-05", "label": "05.06"},
+    "has_nearest": True,
+    "game_day": "16.05",
+}
 
 
 class PreviewStart(Start):

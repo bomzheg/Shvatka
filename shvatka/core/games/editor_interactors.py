@@ -31,6 +31,7 @@ from shvatka.core.models import dto, enums
 from shvatka.core.models.dto import hints, scn
 from shvatka.core.players.player import check_allow_be_author
 from shvatka.core.rules.game import check_can_add_file
+from shvatka.core.season.interactors import SyncLinkedSlotInteractor
 from shvatka.core.services.game import (
     cancel_planed_start,
     complete_game,
@@ -164,6 +165,7 @@ class PlanGameStartInteractor:
     dao: GameStartPlanner
     scheduler: Scheduler
     game_log: GameLogWriter
+    slot_sync: SyncLinkedSlotInteractor
 
     async def __call__(
         self, game_id: int, start_at: datetime | None, identity: IdentityProvider
@@ -171,15 +173,21 @@ class PlanGameStartInteractor:
         author = await identity.get_required_player()
         game = await self.getter.get_by_id(id_=game_id, author=author)
         if start_at is None:
+            # cancelling unlinks nothing: the date keeps the game, it just has
+            # no start to follow any more
             await cancel_planed_start(game, author, self.scheduler, self.dao)
         else:
             await plain_start(game, author, start_at, self.dao, self.scheduler)
+            # the schedule follows the game, never the other way round — and it
+            # is the one that knows whether anybody expected this game today
+            in_schedule = await self.slot_sync(game, author)
             await self.game_log.log(
                 GameLogEvent(
                     GameLogType.GAME_PLANED,
                     {
                         "game": game.name,
                         "at": start_at.astimezone(tz_game).strftime(DATETIME_FORMAT),
+                        "in_schedule": "yes" if in_schedule else "no",
                     },
                 )
             )

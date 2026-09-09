@@ -51,15 +51,23 @@ def check_can_take_slot(
     *,
     author_kind: season_dto.SlotAuthorKind,
     team: dto.Team | None,
+    is_superuser: bool = False,
 ) -> None:
-    """Claiming a date. Signing a *team* up for one is still the captain's call."""
+    """Claiming a date. Signing a *team* up for one is normally the captain's call.
+
+    This is the one place the season still asks about a superuser, and it is
+    not an override of ownership: putting a team on a date speaks for people
+    who did not press the button, so ordinarily only their captain may. The
+    engine operator books a date on a team's behalf when the captain asks them
+    to, which is the whole of the exception.
+    """
     check_can_edit_schedule(player)
     if author_kind == season_dto.SlotAuthorKind.team:
         if team is None:
             raise exceptions.SlotAuthorInvalid(
                 player=player, text="a team author needs a team to author the game"
             )
-        if not is_team_captain(team, player):
+        if not (is_superuser or is_team_captain(team, player)):
             raise exceptions.SlotAuthorInvalid(
                 player=player,
                 team=team,

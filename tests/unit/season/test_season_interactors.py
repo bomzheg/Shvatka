@@ -63,8 +63,8 @@ def make_dao(**kwargs) -> FakeSeasonDao:
     )
 
 
-def identity(player: dto.Player = AUTHOR) -> MockIdentityProvider:
-    return MockIdentityProvider(player=player)
+def identity(player: dto.Player = AUTHOR, *, superuser: bool = False) -> MockIdentityProvider:
+    return MockIdentityProvider(player=player, superuser=player if superuser else None)
 
 
 async def publish(dao: FakeSeasonDao, announcer: SeasonAnnouncerMock, dates=(FIRST, SECOND)):
@@ -330,6 +330,42 @@ async def test_a_team_date_records_the_team_as_the_author():
 
     assert slot.team == TEAM
     assert slot.author_name == TEAM.name
+
+
+@pytest.mark.asyncio
+async def test_only_the_captain_signs_their_team_up():
+    dao, announcer = make_dao(), SeasonAnnouncerMock()
+    season = await publish(dao, announcer)
+
+    with pytest.raises(exceptions.SlotAuthorInvalid):
+        await TakeSlotInteractor(dao=dao, announcer=announcer)(
+            YEAR,
+            season.slots[0].id,
+            author_kind=season_dto.SlotAuthorKind.team,
+            team_id=TEAM.id,
+            org_player_ids=[],
+            identity=identity(OTHER),
+        )
+
+
+@pytest.mark.asyncio
+async def test_the_engine_admin_signs_up_a_team_they_do_not_captain():
+    dao, announcer = make_dao(), SeasonAnnouncerMock()
+    season = await publish(dao, announcer)
+
+    slot = await TakeSlotInteractor(dao=dao, announcer=announcer)(
+        YEAR,
+        season.slots[0].id,
+        author_kind=season_dto.SlotAuthorKind.team,
+        team_id=TEAM.id,
+        org_player_ids=[],
+        identity=identity(OTHER, superuser=True),
+    )
+
+    assert slot.team == TEAM
+    # the change reads like any other: it names the actor, not a role
+    assert dao.changes[-1].actor_id == OTHER.id
+    assert dao.changes[-1].payload["author"] == TEAM.name
 
 
 @pytest.mark.asyncio

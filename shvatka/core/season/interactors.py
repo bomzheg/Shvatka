@@ -9,6 +9,7 @@ from typing import Any
 from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.models import dto
 from shvatka.core.models.enums.notification import NotificationSeverity, NotificationType
+from shvatka.core.players.player import is_team_captain
 from shvatka.core.season import dto as season_dto
 from shvatka.core.season.adapters import SeasonScheduleDao
 from shvatka.core.season.rules import (
@@ -281,7 +282,12 @@ class TakeSlotInteractor(SeasonInteractor):
         # whoever else is taking the same date right now waits here
         slot = await self.dao.lock_slot(slot_id)
         team = await self.dao.get_team_by_id(team_id) if team_id is not None else None
-        check_can_take_slot(actor, author_kind=author_kind, team=team)
+        by_superuser = await identity.is_superuser()
+        check_can_take_slot(actor, author_kind=author_kind, team=team, is_superuser=by_superuser)
+        if by_superuser and team is not None and not is_team_captain(team, actor):
+            # AGENTS.md: an action taken on the strength of being an admin is
+            # logged with the admin's id. It is not shown to anyone else.
+            logger.warning("admin %s signed team %s up for slot %s", actor.id, team.id, slot_id)
         await self.dao.take_slot(
             slot_id,
             owner_id=actor.id,

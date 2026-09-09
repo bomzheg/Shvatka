@@ -141,9 +141,10 @@ Three existing terms fix wording issue #167 phrased differently:
 * *Author / Автор* (`can_be_author`) is the glossary's name for an "approved
   player". *Approved player* is not a term; this document says author
   throughout. The «аппрув» that grants the right is *promotion*.
-* *Superuser / Админ движка* is the engine operator. The season needs none of
-  them: promotion is the whole gate, so `SuperusersResolver` is not consulted
-  anywhere in this feature and the digest never says «изменено админом движка».
+* *Superuser / Админ движка* is the engine operator. The season asks about one
+  in exactly one place — putting a *team* on a date when its captain asked for
+  it — and nowhere else: promotion is the whole gate for everything else, and
+  the digest never says «изменено админом движка».
 * *Organizer / org* is a player who runs *a game*. The people named on a date
   are not organizers yet — there is no game — so they get their own term.
 
@@ -530,8 +531,14 @@ collectively.
 Two rules survive on top of it:
 
 * `author_kind = team` requires the actor to captain that team
-  (`is_team_captain`) — signing somebody else's team up for a game is not the
-  same act as claiming a date;
+  (`is_team_captain`), *or* to be a superuser — signing somebody else's team up
+  for a game speaks for people who did not press the button, so ordinarily only
+  their captain may, and the engine operator books a date on a team's behalf
+  when its captain asks them to. This is the one superuser check in the
+  feature. It is logged with the admin's id per `AGENTS.md` and shown to nobody:
+  the change row reads like any other, naming the actor rather than a role.
+  Both edges follow it — the bot's and the web's team picker offers the
+  captained teams to everyone else and all of them to an admin;
 * the named slot orgs may be any player: being an org does not require
   promotion.
 
@@ -803,13 +810,17 @@ integration tests — and are listed inside the phase that introduces them.
 
 Phase 1 landed as described, with these differences.
 
-* *No superuser override, and no owner lock.* The plan gave a taken date to its
-  owner and let a superuser overrule that, marking such edits `by_superuser` so
-  the digest could say «изменено админом движка». Both are gone, on the owner's
-  call after using it: an admin panel for something every promoted author is
-  already trusted with is a role nobody needed, and the marking mislabelled an
-  ordinary edit by a player who happens to be listed in `superusers` as an
-  administrative act. Promotion is now the whole gate — see §Slot ownership.
+* *No superuser override of ownership, and no owner lock.* The plan gave a
+  taken date to its owner and let a superuser overrule that, marking such edits
+  `by_superuser` so the digest could say «изменено админом движка». Both are
+  gone, on the owner's call after using it: an admin panel for something every
+  promoted author is already trusted with is a role nobody needed, and the
+  marking mislabelled an ordinary edit by a player who happens to be listed in
+  `superusers` as an administrative act. Promotion is the gate for every date
+  action — see §Slot ownership. The one superuser check that remains is
+  narrower than the plan's and is not about ownership at all: an admin may put
+  a *team* on a date without captaining it, because a captain who asks the
+  operator to book a date should not need an account of their own for it.
   `SlotAlreadyTaken` and `NotSlotOwner` are removed with it (nothing raises
   them), so the api no longer answers 409 for a second taker or 403 for a
   non-owner. The cost is real and accepted: ownership is advisory, and one

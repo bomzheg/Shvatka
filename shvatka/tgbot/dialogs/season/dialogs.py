@@ -5,6 +5,7 @@ from aiogram_dialog.widgets.kbd import Button, Cancel, Select, SwitchTo, Url
 from aiogram_dialog.widgets.text import Const, Format, Jinja
 
 from shvatka.tgbot import states
+from shvatka.tgbot.dialogs.paging import SmartScrollingGroup
 from shvatka.tgbot.dialogs.preview_data import (
     PREVIEW_COMPOSE_DATA,
     PREVIEW_ORGS_DATA,
@@ -168,14 +169,21 @@ season = Dialog(
             "{% if slot %}{{ slot.date.strftime('%d.%m') }}{% else %}{{ picked_date }}{% endif %}?"
             "\n\nСейчас выбрано: "
             "{% if as_team %}команда{% else %}вы сами{% endif %}"
+            "{% if any_team %}\n\nВам доступна любая команда — вы админ движка."
+            "{% endif %}"
         ),
         Button(Const("🙋Я сам(а)"), id="as_player", on_click=as_player),
-        Select(
-            Format("🚩{item.name}"),
-            id="as_team",
-            item_id_getter=lambda team: team.id,
-            items="teams",
-            on_click=as_team,
+        SmartScrollingGroup(
+            Select(
+                Format("🚩{item.name}"),
+                id="as_team",
+                item_id_getter=lambda team: team.id,
+                items="teams",
+                on_click=as_team,
+            ),
+            id="teams_sg",
+            width=1,
+            height=8,
             when=F["has_teams"],
         ),
         Button(Const("✅Взять дату"), id="take_slot", on_click=take_slot),

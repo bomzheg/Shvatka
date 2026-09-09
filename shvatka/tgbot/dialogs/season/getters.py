@@ -136,12 +136,16 @@ async def get_take(
 ) -> dict[str, Any]:
     player = await identity.get_required_player()
     data = await slot_data(dialog_manager, interactor, player, url_factory)
-    teams = await dao.team.get_captained_teams(player)
+    # the engine operator books a date for a team whose captain asked them to,
+    # so they pick from all of them; everyone else from the ones they captain
+    any_team = await identity.is_superuser()
+    teams = await dao.team.get_teams() if any_team else await dao.team.get_captained_teams(player)
     kind = dialog_manager.dialog_data.get("author_kind", season_dto.SlotAuthorKind.player.name)
     return {
         **data,
         "teams": teams,
         "has_teams": bool(teams),
+        "any_team": any_team,
         "as_team": kind == season_dto.SlotAuthorKind.team.name,
         "team_id": dialog_manager.dialog_data.get("team_id"),
     }

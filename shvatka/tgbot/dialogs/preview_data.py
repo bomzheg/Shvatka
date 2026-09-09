@@ -392,6 +392,7 @@ PREVIEW_TAKE_DATA = {
     **PREVIEW_SLOT_DATA,
     "teams": PREVIEW_TEAMS,
     "has_teams": True,
+    "any_team": False,
     "as_team": False,
     "team_id": None,
 }

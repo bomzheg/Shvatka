@@ -210,7 +210,6 @@ class SeasonChangeDao(BaseDAO[SeasonChange]):
         type_: dto.ChangeType,
         slot_id: int | None = None,
         actor_id: int | None = None,
-        by_superuser: bool = False,
         payload: dict[str, Any] | None = None,
     ) -> dto.ScheduleChange:
         change = SeasonChange(
@@ -218,7 +217,6 @@ class SeasonChangeDao(BaseDAO[SeasonChange]):
             slot_id=slot_id,
             type=type_.name,
             actor_id=actor_id,
-            by_superuser=by_superuser,
             payload=payload or {},
         )
         self._save(change)

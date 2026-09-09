@@ -63,8 +63,8 @@ def make_dao(**kwargs) -> FakeSeasonDao:
     )
 
 
-def identity(player: dto.Player = AUTHOR, *, superuser: bool = False) -> MockIdentityProvider:
-    return MockIdentityProvider(player=player, superuser=player if superuser else None)
+def identity(player: dto.Player = AUTHOR) -> MockIdentityProvider:
+    return MockIdentityProvider(player=player)
 
 
 async def publish(dao: FakeSeasonDao, announcer: SeasonAnnouncerMock, dates=(FIRST, SECOND)):
@@ -333,7 +333,7 @@ async def test_a_team_date_records_the_team_as_the_author():
 
 
 @pytest.mark.asyncio
-async def test_a_second_taker_loses():
+async def test_a_date_can_be_handed_to_another_author():
     dao, announcer = make_dao(), SeasonAnnouncerMock()
     season = await publish(dao, announcer)
     taker = TakeSlotInteractor(dao=dao, announcer=announcer)
@@ -346,15 +346,16 @@ async def test_a_second_taker_loses():
         identity=identity(),
     )
 
-    with pytest.raises(exceptions.SlotAlreadyTaken):
-        await taker(
-            YEAR,
-            season.slots[0].id,
-            author_kind=season_dto.SlotAuthorKind.player,
-            team_id=None,
-            org_player_ids=[],
-            identity=identity(OTHER),
-        )
+    slot = await taker(
+        YEAR,
+        season.slots[0].id,
+        author_kind=season_dto.SlotAuthorKind.player,
+        team_id=None,
+        org_player_ids=[],
+        identity=identity(OTHER),
+    )
+
+    assert slot.owner == OTHER
 
 
 @pytest.mark.asyncio
@@ -380,7 +381,7 @@ async def test_releasing_a_date_frees_it_and_forgets_its_orgs():
 
 
 @pytest.mark.asyncio
-async def test_someone_elses_date_may_not_be_released():
+async def test_another_author_may_free_a_date_and_the_trail_says_who():
     dao, announcer = make_dao(), SeasonAnnouncerMock()
     season = await publish(dao, announcer)
     slot_id = season.slots[0].id
@@ -393,10 +394,12 @@ async def test_someone_elses_date_may_not_be_released():
         identity=identity(),
     )
 
-    with pytest.raises(exceptions.NotSlotOwner):
-        await ReleaseSlotInteractor(dao=dao, announcer=announcer)(
-            YEAR, slot_id, identity=identity(OTHER)
-        )
+    released = await ReleaseSlotInteractor(dao=dao, announcer=announcer)(
+        YEAR, slot_id, identity=identity(OTHER)
+    )
+
+    assert released.is_free
+    assert dao.changes[-1].actor_id == OTHER.id
 
 
 @pytest.mark.asyncio
@@ -650,20 +653,13 @@ async def test_a_failed_digest_post_still_marks_the_changes():
 
 
 @pytest.mark.asyncio
-async def test_a_superuser_edit_is_marked_as_one():
+async def test_every_change_records_who_made_it():
     dao, announcer = make_dao(), SeasonAnnouncerMock()
     season = await publish(dao, announcer)
-    await TakeSlotInteractor(dao=dao, announcer=announcer)(
-        YEAR,
-        season.slots[0].id,
-        author_kind=season_dto.SlotAuthorKind.player,
-        team_id=None,
-        org_player_ids=[],
-        identity=identity(),
-    )
 
     await RemoveSlotInteractor(dao=dao, announcer=announcer)(
-        YEAR, season.slots[0].id, identity=identity(OTHER, superuser=True)
+        YEAR, season.slots[0].id, identity=identity(OTHER)
     )
 
-    assert dao.changes[-1].by_superuser is True
+    # no admin flag to set: the trail names the author who did it
+    assert dao.changes[-1].actor_id == OTHER.id

@@ -204,7 +204,6 @@ class FakeSeasonDao(SeasonScheduleDao):
         type_: season_dto.ChangeType,
         slot_id: int | None = None,
         actor_id: int | None = None,
-        by_superuser: bool = False,
         payload: dict[str, Any] | None = None,
     ) -> season_dto.ScheduleChange:
         change = season_dto.ScheduleChange(
@@ -214,7 +213,6 @@ class FakeSeasonDao(SeasonScheduleDao):
             created_at=self.now,
             slot_id=slot_id,
             actor_id=actor_id,
-            by_superuser=by_superuser,
             payload=payload or {},
         )
         self.changes.append(change)

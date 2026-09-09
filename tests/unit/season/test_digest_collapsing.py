@@ -14,7 +14,6 @@ def change(
     payload: dict[str, Any],
     *,
     slot_id: int | None = 1,
-    by_superuser: bool = False,
 ) -> season_dto.ScheduleChange:
     return season_dto.ScheduleChange(
         id=id_,
@@ -22,7 +21,6 @@ def change(
         type=type_,
         created_at=BASE + timedelta(minutes=id_),
         slot_id=slot_id,
-        by_superuser=by_superuser,
         payload=payload,
     )
 
@@ -164,18 +162,3 @@ def test_each_date_gets_its_own_line_ordered_by_date():
     )
 
     assert [digest.day for digest in digests] == [date(2027, 6, 27), date(2027, 7, 17)]
-
-
-def test_a_superuser_edit_is_marked_on_the_line():
-    digests = collapse_changes(
-        [
-            change(
-                1,
-                season_dto.ChangeType.slot_note_changed,
-                {"date": date(2027, 6, 26).isoformat(), "note": "город"},
-                by_superuser=True,
-            )
-        ]
-    )
-
-    assert digests[0].by_superuser is True

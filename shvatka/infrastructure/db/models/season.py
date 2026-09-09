@@ -177,7 +177,6 @@ class SeasonChange(Base):
     actor_id: Mapped[int | None] = mapped_column(
         ForeignKey("players.id", ondelete="SET NULL"), nullable=True
     )
-    by_superuser: Mapped[bool] = mapped_column(nullable=False, default=False, server_default="f")
     payload: Mapped[dict[str, Any]] = mapped_column(
         JSONB, nullable=False, server_default="{}", default=dict
     )
@@ -204,7 +203,6 @@ class SeasonChange(Base):
             created_at=self.created_at,
             slot_id=self.slot_id,
             actor_id=self.actor_id,
-            by_superuser=self.by_superuser,
             payload=dict(self.payload or {}),
             published_at=self.published_at,
         )

@@ -106,10 +106,7 @@ def render_digest(season: dto.Season, digests: Sequence[SlotDigest]) -> str:
 
 
 def render_digest_line(digest: SlotDigest) -> str:
-    line = f"{_day(digest.day)} — {'; '.join(_digest_parts(digest))}"
-    if digest.by_superuser:
-        line += " (изменено админом движка)"
-    return line
+    return f"{_day(digest.day)} — {'; '.join(_digest_parts(digest))}"
 
 
 def _digest_parts(digest: SlotDigest) -> list[str]:

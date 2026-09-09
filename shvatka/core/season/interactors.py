@@ -9,14 +9,12 @@ from typing import Any
 from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.models import dto
 from shvatka.core.models.enums.notification import NotificationSeverity, NotificationType
-from shvatka.core.players.player import check_allow_be_author
 from shvatka.core.season import dto as season_dto
 from shvatka.core.season.adapters import SeasonScheduleDao
 from shvatka.core.season.rules import (
     SLOT_SUGGEST_WINDOW,
     SlotDigest,
-    check_can_add_slot,
-    check_can_edit_slot,
+    check_can_edit_schedule,
     check_can_take_slot,
     collapse_changes,
     default_slot_dates,
@@ -66,7 +64,6 @@ class SeasonInteractor:
         *,
         slot_id: int | None,
         actor: dto.Player,
-        by_superuser: bool,
         payload: dict[str, Any],
     ) -> None:
         # the audit trail shares the transaction with the write it describes
@@ -75,7 +72,6 @@ class SeasonInteractor:
             type_=type_,
             slot_id=slot_id,
             actor_id=actor.id,
-            by_superuser=by_superuser,
             payload=payload,
         )
         await self.dao.touch_season(season.id)
@@ -88,11 +84,6 @@ class SeasonInteractor:
                 await self.announcer.update(season)
         except Exception as e:  # noqa: BLE001
             logger.warning("can't update the schedule message of %s", year, exc_info=e)
-
-    @staticmethod
-    def _log_superuser(actor: dto.Player, by_superuser: bool, what: str, slot_id: int) -> None:
-        if by_superuser:
-            logger.warning("admin %s %s slot %s", actor.id, what, slot_id)
 
 
 @dataclass
@@ -126,7 +117,7 @@ class PublishSeasonInteractor(SeasonInteractor):
         identity: IdentityProvider,
     ) -> season_dto.Season:
         author = await identity.get_required_player()
-        check_allow_be_author(author)
+        check_can_edit_schedule(author)
         if not slots:
             raise exceptions.SeasonError(player=author, text="a season needs at least one date")
         for draft in slots:
@@ -181,7 +172,7 @@ class AddSlotInteractor(SeasonInteractor):
         self, year: int, day: date, note: str | None, identity: IdentityProvider
     ) -> season_dto.Slot:
         author = await identity.get_required_player()
-        check_can_add_slot(author)
+        check_can_edit_schedule(author)
         _check_slot_year(year, day, author)
         season = await self._get_season(year)
         slot = await self.dao.add_slot(season.id, day, note)
@@ -190,7 +181,6 @@ class AddSlotInteractor(SeasonInteractor):
             season_dto.ChangeType.slot_added,
             slot_id=slot.id,
             actor=author,
-            by_superuser=await identity.is_superuser(),
             payload={"date": day.isoformat(), "note": note},
         )
         await self.dao.commit()
@@ -204,10 +194,9 @@ class MoveSlotInteractor(SeasonInteractor):
         self, year: int, slot_id: int, day: date, identity: IdentityProvider
     ) -> season_dto.Slot:
         author = await identity.get_required_player()
-        by_superuser = await identity.is_superuser()
         season = await self._get_season(year)
         slot = self._get_slot(season, slot_id)
-        check_can_edit_slot(slot, author, is_superuser=by_superuser)
+        check_can_edit_schedule(author)
         _check_slot_year(year, day, author)
         if slot.date == day:
             return slot
@@ -219,7 +208,6 @@ class MoveSlotInteractor(SeasonInteractor):
             season_dto.ChangeType.slot_moved,
             slot_id=slot_id,
             actor=author,
-            by_superuser=by_superuser,
             payload={
                 "from": previous.isoformat(),
                 "to": day.isoformat(),
@@ -227,7 +215,6 @@ class MoveSlotInteractor(SeasonInteractor):
             },
         )
         await self.dao.commit()
-        self._log_superuser(author, by_superuser, "moved", slot_id)
         await self._announce_update(year)
         return await self.dao.get_slot(slot_id)
 
@@ -238,17 +225,15 @@ class EditSlotNoteInteractor(SeasonInteractor):
         self, year: int, slot_id: int, note: str | None, identity: IdentityProvider
     ) -> season_dto.Slot:
         author = await identity.get_required_player()
-        by_superuser = await identity.is_superuser()
         season = await self._get_season(year)
         slot = self._get_slot(season, slot_id)
-        check_can_edit_slot(slot, author, is_superuser=by_superuser)
+        check_can_edit_schedule(author)
         await self.dao.set_slot_note(slot_id, note)
         await self._record(
             season,
             season_dto.ChangeType.slot_note_changed,
             slot_id=slot_id,
             actor=author,
-            by_superuser=by_superuser,
             payload={"date": slot.date.isoformat(), "note": note},
         )
         await self.dao.commit()
@@ -260,22 +245,19 @@ class EditSlotNoteInteractor(SeasonInteractor):
 class RemoveSlotInteractor(SeasonInteractor):
     async def __call__(self, year: int, slot_id: int, identity: IdentityProvider) -> None:
         author = await identity.get_required_player()
-        by_superuser = await identity.is_superuser()
         season = await self._get_season(year)
         slot = self._get_slot(season, slot_id)
-        check_can_edit_slot(slot, author, is_superuser=by_superuser)
+        check_can_edit_schedule(author)
         # the change row outlives the date it describes, holding its payload
         await self._record(
             season,
             season_dto.ChangeType.slot_removed,
             slot_id=slot_id,
             actor=author,
-            by_superuser=by_superuser,
             payload={"date": slot.date.isoformat()},
         )
         await self.dao.remove_slot(slot_id)
         await self.dao.commit()
-        self._log_superuser(author, by_superuser, "removed", slot_id)
         await self._announce_update(year)
 
 
@@ -294,15 +276,12 @@ class TakeSlotInteractor(SeasonInteractor):
         identity: IdentityProvider,
     ) -> season_dto.Slot:
         actor = await identity.get_required_player()
-        by_superuser = await identity.is_superuser()
         season = await self._get_season(year)
         self._get_slot(season, slot_id)
         # whoever else is taking the same date right now waits here
         slot = await self.dao.lock_slot(slot_id)
         team = await self.dao.get_team_by_id(team_id) if team_id is not None else None
-        check_can_take_slot(
-            slot, actor, author_kind=author_kind, team=team, is_superuser=by_superuser
-        )
+        check_can_take_slot(actor, author_kind=author_kind, team=team)
         await self.dao.take_slot(
             slot_id,
             owner_id=actor.id,
@@ -316,7 +295,6 @@ class TakeSlotInteractor(SeasonInteractor):
             season_dto.ChangeType.slot_taken,
             slot_id=slot_id,
             actor=actor,
-            by_superuser=by_superuser,
             payload={
                 "date": slot.date.isoformat(),
                 "author": team.name if team is not None else actor.name_mention,
@@ -325,7 +303,6 @@ class TakeSlotInteractor(SeasonInteractor):
             },
         )
         await self.dao.commit()
-        self._log_superuser(actor, by_superuser, "took", slot_id)
         await self._announce_update(year)
         return await self.dao.get_slot(slot_id)
 
@@ -336,10 +313,9 @@ class ReleaseSlotInteractor(SeasonInteractor):
         self, year: int, slot_id: int, identity: IdentityProvider
     ) -> season_dto.Slot:
         actor = await identity.get_required_player()
-        by_superuser = await identity.is_superuser()
         season = await self._get_season(year)
         slot = self._get_slot(season, slot_id)
-        check_can_edit_slot(slot, actor, is_superuser=by_superuser)
+        check_can_edit_schedule(actor)
         if slot.is_linked:
             raise exceptions.SlotAlreadyLinked(
                 player=actor, text="unlink the game before releasing the date"
@@ -352,11 +328,9 @@ class ReleaseSlotInteractor(SeasonInteractor):
             season_dto.ChangeType.slot_released,
             slot_id=slot_id,
             actor=actor,
-            by_superuser=by_superuser,
             payload={"date": slot.date.isoformat(), "author": released_from},
         )
         await self.dao.commit()
-        self._log_superuser(actor, by_superuser, "released", slot_id)
         await self._announce_update(year)
         return await self.dao.get_slot(slot_id)
 
@@ -371,10 +345,9 @@ class SetSlotOrgsInteractor(SeasonInteractor):
         identity: IdentityProvider,
     ) -> season_dto.Slot:
         actor = await identity.get_required_player()
-        by_superuser = await identity.is_superuser()
         season = await self._get_season(year)
         slot = self._get_slot(season, slot_id)
-        check_can_edit_slot(slot, actor, is_superuser=by_superuser)
+        check_can_edit_schedule(actor)
         # being named on a date is not being an author: no promotion required
         orgs = [await self.dao.get_player_by_id(id_) for id_ in dict.fromkeys(org_player_ids)]
         await self.dao.set_slot_orgs(slot_id, [org.id for org in orgs])
@@ -383,7 +356,6 @@ class SetSlotOrgsInteractor(SeasonInteractor):
             season_dto.ChangeType.slot_orgs_changed,
             slot_id=slot_id,
             actor=actor,
-            by_superuser=by_superuser,
             payload={
                 "date": slot.date.isoformat(),
                 "orgs": [org.name_mention for org in orgs],
@@ -420,7 +392,6 @@ class LinkGameToSlotInteractor(SeasonInteractor):
         self, year: int, slot_id: int, game_id: int, identity: IdentityProvider
     ) -> season_dto.Slot:
         actor = await identity.get_required_player()
-        by_superuser = await identity.is_superuser()
         season = await self._get_season(year)
         self._get_slot(season, slot_id)
         game = await self.dao.get_game_by_id(game_id)
@@ -436,7 +407,7 @@ class LinkGameToSlotInteractor(SeasonInteractor):
             raise exceptions.SlotAlreadyLinked(
                 player=actor, text=f"slot {slot_id} already holds game {slot.game.id}"
             )
-        check_can_edit_slot(slot, actor, is_superuser=by_superuser)
+        check_can_edit_schedule(actor)
         if slot.is_free:
             # the date follows the game, so it belongs to whoever wrote it
             await self.dao.take_slot(
@@ -451,14 +422,13 @@ class LinkGameToSlotInteractor(SeasonInteractor):
             season_dto.ChangeType.slot_game_linked,
             slot_id=slot_id,
             actor=actor,
-            by_superuser=by_superuser,
             payload={
                 "date": slot.date.isoformat(),
                 "game": game.name,
                 "game_id": game.id,
             },
         )
-        await self._follow_game(season, slot, game, actor=actor, by_superuser=by_superuser)
+        await self._follow_game(season, slot, game, actor=actor)
         await self.dao.commit()
         await self._announce_update(year)
         return await self.dao.get_slot(slot_id)
@@ -470,7 +440,6 @@ class LinkGameToSlotInteractor(SeasonInteractor):
         game: dto.Game,
         *,
         actor: dto.Player,
-        by_superuser: bool,
     ) -> None:
         if game.start_at is None:
             return
@@ -484,7 +453,6 @@ class LinkGameToSlotInteractor(SeasonInteractor):
             season_dto.ChangeType.slot_moved,
             slot_id=slot.id,
             actor=actor,
-            by_superuser=by_superuser,
             payload={
                 "from": previous.isoformat(),
                 "to": started.isoformat(),
@@ -500,10 +468,9 @@ class UnlinkGameFromSlotInteractor(SeasonInteractor):
         self, year: int, slot_id: int, identity: IdentityProvider
     ) -> season_dto.Slot:
         actor = await identity.get_required_player()
-        by_superuser = await identity.is_superuser()
         season = await self._get_season(year)
         slot = self._get_slot(season, slot_id)
-        check_can_edit_slot(slot, actor, is_superuser=by_superuser)
+        check_can_edit_schedule(actor)
         if slot.game is None:
             return slot
         unlinked = slot.game
@@ -513,7 +480,6 @@ class UnlinkGameFromSlotInteractor(SeasonInteractor):
             season_dto.ChangeType.slot_game_unlinked,
             slot_id=slot_id,
             actor=actor,
-            by_superuser=by_superuser,
             payload={
                 "date": slot.date.isoformat(),
                 "game": unlinked.name,
@@ -552,7 +518,6 @@ class SyncLinkedSlotInteractor(SeasonInteractor):
             season_dto.ChangeType.slot_moved,
             slot_id=slot.id,
             actor=actor,
-            by_superuser=False,
             payload={
                 "from": previous.isoformat(),
                 "to": started.isoformat(),

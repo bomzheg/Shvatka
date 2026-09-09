@@ -94,7 +94,6 @@ class ScheduleChangeWriter(Committer, Protocol):
         type_: dto.ChangeType,
         slot_id: int | None = ...,
         actor_id: int | None = ...,
-        by_superuser: bool = ...,
         payload: dict[str, Any] | None = ...,
     ) -> dto.ScheduleChange:
         raise NotImplementedError

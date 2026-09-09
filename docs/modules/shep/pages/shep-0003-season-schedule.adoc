@@ -23,7 +23,7 @@ Every later edit is recorded, and once a day at 10:00 MSK the accumulated edits
 are collapsed to their net effect and published — as a new channel message and
 as a `low`-severity notification to everyone who has played or organized
 recently. Any author may claim a free date for themselves or for their team; a
-taken date is locked to its owner. A real game can be linked to a date, and the
+taken date records who means to make the game there. A real game can be linked to a date, and the
 engine offers the link when a game start is planned near one.
 
 == Context
@@ -141,9 +141,9 @@ Three existing terms fix wording issue #167 phrased differently:
 * *Author / Автор* (`can_be_author`) is the glossary's name for an "approved
   player". *Approved player* is not a term; this document says author
   throughout. The «аппрув» that grants the right is *promotion*.
-* *Superuser / Админ движка* is the engine operator, resolved only through
-  `SuperusersResolver`. The digest therefore says «изменено админом движка»: in
-  this glossary *admin* means the superuser, and a game has *organizers*.
+* *Superuser / Админ движка* is the engine operator. The season needs none of
+  them: promotion is the whole gate, so `SuperusersResolver` is not consulted
+  anywhere in this feature and the digest never says «изменено админом движка».
 * *Organizer / org* is a player who runs *a game*. The people named on a date
   are not organizers yet — there is no game — so they get their own term.
 
@@ -165,12 +165,12 @@ New entries:
 
 | *Taking a slot*
 | Взять дату
-| An author claiming a date, declaring whether the game will be authored by them or by their team. A taken date is locked to its owner.
+| An author claiming a date, declaring whether the game will be authored by them or by their team. It records intent, not exclusive access.
 | `TakeSlotInteractor`
 
 | *Slot owner*
 | Владелец даты
-| The author who took it. Besides the superuser, the only person who may move, release or delete it.
+| The author who took it — who means to make the game there. Any author may still move, release or delete the date; the change trail says who did.
 | `season_slots.owner_id`
 
 | *Slot org*
@@ -319,7 +319,6 @@ the digest's source.
 | `slot_id` | FK `season_slots.id` ON DELETE SET NULL, nullable | null once the date is gone
 | `type` | text, not null | `slot_added`, `slot_moved`, `slot_removed`, `slot_taken`, `slot_released`, `slot_orgs_changed`, `slot_note_changed`, `slot_game_linked`, `slot_game_unlinked`
 | `actor_id` | FK `players.id`, nullable | who did it
-| `by_superuser` | bool, not null, default false | drives the «изменено админом движка» wording
 | `payload` | JSONB, not null, default `{}` | denormalized old/new date, owner, team, game and org names — so the digest renders with no joins and survives later renames and deletes
 | `published_at` | timestamptz, nullable | null ⇒ not yet in a digest
 | `created_at` | timestamptz, not null |
@@ -363,7 +362,7 @@ one composed `SeasonScheduleDao` Protocol, implemented by
 stay in its own DAO, and the interactor decides the ordering.
 
 New exceptions in `core/utils/exceptions.py`: `SeasonAlreadyExists`,
-`SeasonNotFound`, `SlotAlreadyTaken`, `NotSlotOwner`, `SlotAlreadyLinked`,
+`SeasonNotFound`, `SlotNotFound`, `SlotAuthorInvalid`, `SlotAlreadyLinked`,
 `GameAlreadyInSchedule`.
 
 The lifecycle of one date:
@@ -523,27 +522,30 @@ channel keeps a permanent record of the year.
 
 === Slot ownership
 
-Taking requires `can_be_author` (`check_allow_be_author`), and:
+*Promotion is the whole gate.* `check_can_edit_schedule` is `can_be_author` and
+nothing else, and every date-level use case calls it: adding, moving, renaming,
+taking, releasing, deleting, linking. A published season belongs to the authors
+collectively.
 
-* the date must be free, *or* already owned by the acting player — re-taking
-  your own date is how you change its author or its orgs — *or* the actor is a
-  superuser, asked through `SuperusersResolver`, never by re-reading config;
-* `author_kind = team` additionally requires the actor to captain that team
-  (`is_team_captain`);
-* the named slot orgs may be any player: being an org does not require promotion
-  to author.
+Two rules survive on top of it:
 
-Locking:
+* `author_kind = team` requires the actor to captain that team
+  (`is_team_captain`) — signing somebody else's team up for a game is not the
+  same act as claiming a date;
+* the named slot orgs may be any player: being an org does not require
+  promotion.
 
-* a *taken* date may be released, re-assigned, moved or deleted only by its
-  owner, or by a superuser. Anyone else gets `NotSlotOwner`;
-* a *free* date may be added, moved or deleted by any author;
-* superuser actions take the same routes and set `by_superuser`, so the digest
-  can say «изменено админом движка», and are logged with the acting admin's id
-  per `AGENTS.md`.
+*Owning a date is intent, not access.* `owner_id` records who means to make the
+game there, which is what the calendar shows and what the digest reports. It
+does not lock the row: another author may move, re-assign or free the date, and
+`season_changes.actor_id` says who did. That is deliberate — an org who claimed
+a date in March and went quiet by July should not need a database edit to
+unstick, and the engine should not grow an admin override for something every
+author is trusted with anyway.
 
-`TakeSlotInteractor` re-reads the row `FOR UPDATE` inside the transaction and
-raises `SlotAlreadyTaken` → 409 if someone won the race.
+`TakeSlotInteractor` still re-reads the row `FOR UPDATE` inside the
+transaction: two people taking the same date at once should end with one
+coherent row, not an interleaved one.
 
 === Notification audience
 
@@ -623,7 +625,7 @@ GET    /seasons/slots/suggest?at=<iso datetime>   ±3-day candidates for the off
 Thin routes following the existing pattern — `@inject`,
 `FromDishka[SomeInteractor]`, `ApiIdentityProvider`, request and response models
 with `.from_core` / `.to_core`. Conflicts map to 409 (`SeasonAlreadyExists`,
-`SlotAlreadyTaken`, `GameAlreadyInSchedule`), permission failures to 403 through
+`GameAlreadyInSchedule`), permission failures to 403 through
 the existing `error_converter`.
 
 === Bot
@@ -766,7 +768,7 @@ integration tests — and are listed inside the phase that introduces them.
 * [x] glossary rows in `context.md` here *and* in shvatka-ui
 * [x] unit tests (`tests/unit/season/`): `default_slot_dates` across years
   including the 9-May-is-Saturday case; the ownership matrix of free / owner /
-  superuser / captain; the ±3-day search including ties; digest collapsing —
+  captain; the ±3-day search including ties; digest collapsing —
   repeated moves of one date become one line, move-and-move-back becomes
   nothing, take then release becomes nothing
 * [x] integration tests (`tests/integration/api_full/test_season.py`): publish,
@@ -801,21 +803,31 @@ integration tests — and are listed inside the phase that introduces them.
 
 Phase 1 landed as described, with these differences.
 
+* *No superuser override, and no owner lock.* The plan gave a taken date to its
+  owner and let a superuser overrule that, marking such edits `by_superuser` so
+  the digest could say «изменено админом движка». Both are gone, on the owner's
+  call after using it: an admin panel for something every promoted author is
+  already trusted with is a role nobody needed, and the marking mislabelled an
+  ordinary edit by a player who happens to be listed in `superusers` as an
+  administrative act. Promotion is now the whole gate — see §Slot ownership.
+  `SlotAlreadyTaken` and `NotSlotOwner` are removed with it (nothing raises
+  them), so the api no longer answers 409 for a second taker or 403 for a
+  non-owner. The cost is real and accepted: ownership is advisory, and one
+  author can take or free another's date. `season_changes.actor_id` is what
+  makes that safe to live with.
 * *`SlotAuthorInvalid` joins the new exceptions.* The plan lists six; taking a
-  date *for a team* has a seventh failure — the actor does not captain that team,
-  or named no team at all — and it is not `NotSlotOwner`. It is a
-  `PermissionsError`, so it maps to 403 like the rest.
+  date *for a team* has a failure of its own — the actor does not captain that
+  team, or named no team at all. It is a `PermissionsError`, and the only one
+  this feature maps to 403.
 * *`SlotNotFound` too*, for a date id that belongs to another season or to no
   season: 404 rather than a 500 from the dao.
-* *Only the two new ownership errors answer 403.* The plan says «permission
-  failures to 403 through the existing `error_converter`», and the first attempt
-  read that as widening the branch to `PermissionsError`. That broke five
-  existing integration tests which assert 422 for exactly this, with
+* *Only `SlotAuthorInvalid` answers 403.* The plan says «permission failures to
+  403 through the existing `error_converter`», and the first attempt read that
+  as widening the branch to `PermissionsError`. That broke five existing
+  integration tests which assert 422 for exactly this, with
   `# PermissionsError -> SHError` written next to them: 422 is the api's
-  deliberate answer today, not an oversight. So `NotSlotOwner` and
-  `SlotAuthorInvalid` — «this date is someone else's», which no endpoint could
-  raise before — are named in the 403 branch, and `CantBeAuthor` keeps the 422
-  it answers everywhere else. Making promotion failures 403 across the api is a
+  deliberate answer today, not an oversight. So `CantBeAuthor` keeps the 422 it
+  answers everywhere else. Making promotion failures 403 across the api is a
   real improvement and a separate change, with five test expectations to update
   with it.
 * *A published date must fall inside the season's year.* The plan does not say

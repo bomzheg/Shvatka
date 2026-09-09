@@ -102,8 +102,8 @@ async def slot_data(
         "is_author": is_author,
         "is_free": slot is not None and slot.is_free,
         "is_mine": slot is not None and slot.is_mine(player),
-        # a free date is any author's to edit; a taken one only its owner's
-        "can_edit": is_author and slot is not None and (slot.is_free or slot.is_mine(player)),
+        # promotion is the whole gate: any author may edit any date
+        "can_edit": is_author and slot is not None,
         "author_name": slot.author_name if slot is not None else None,
         "orgs": list(slot.orgs) if slot is not None else [],
         "game_url": (

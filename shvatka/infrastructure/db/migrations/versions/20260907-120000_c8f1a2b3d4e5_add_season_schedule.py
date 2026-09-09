@@ -139,7 +139,6 @@ def upgrade():
         sa.Column("slot_id", sa.BigInteger(), nullable=True),
         sa.Column("type", sa.Text(), nullable=False),
         sa.Column("actor_id", sa.BigInteger(), nullable=True),
-        sa.Column("by_superuser", sa.Boolean(), server_default="f", nullable=False),
         sa.Column("payload", postgresql.JSONB(), server_default="{}", nullable=False),
         sa.Column("published_at", sa.DateTime(timezone=True), nullable=True),
         sa.Column(

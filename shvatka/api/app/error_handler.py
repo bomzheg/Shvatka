@@ -46,11 +46,10 @@ def sh_exception_handler(
         exc,
         exceptions.NotAuthorizedForEdit
         | exceptions.NotAuthorizedForAdmin
-        | exceptions.NotSlotOwner
         | exceptions.SlotAuthorInvalid,
     ):
         # the api answers most PermissionsErrors 422 (see test_team.py); these
-        # say "this belongs to someone else", which is a 403 and nothing else
+        # say "this is not yours to do", which is a 403 and nothing else
         status_code = 403
     elif isinstance(exc, exceptions.IdentityWithoutPlayer | exceptions.IdentityWithoutUser):
         status_code = 401
@@ -70,7 +69,6 @@ def sh_exception_handler(
         exceptions.FileIsUsed
         | exceptions.GameWouldBeRewritten
         | exceptions.SeasonAlreadyExists
-        | exceptions.SlotAlreadyTaken
         | exceptions.SlotAlreadyLinked
         | exceptions.GameAlreadyInSchedule,
     ):

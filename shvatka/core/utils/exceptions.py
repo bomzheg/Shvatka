@@ -476,15 +476,6 @@ class SlotNotFound(SeasonError):
     notify_user = "Такой даты в расписании нет"
 
 
-class SlotAlreadyTaken(SeasonError):
-    notify_user = "Дата уже занята"
-
-
-class NotSlotOwner(SeasonError, PermissionsError):
-    notify_user = "Дата принадлежит другому автору"
-    permission_name = "slot_owner"
-
-
 class SlotAuthorInvalid(SeasonError, PermissionsError):
     notify_user = "Записать команду на дату может только капитан"
     permission_name = "slot_author"

@@ -108,7 +108,6 @@ class SeasonScheduleDaoImpl(SeasonScheduleDao):
         type_: season_dto.ChangeType,
         slot_id: int | None = None,
         actor_id: int | None = None,
-        by_superuser: bool = False,
         payload: dict[str, Any] | None = None,
     ) -> season_dto.ScheduleChange:
         return await self.dao.season_change.add_change(
@@ -116,7 +115,6 @@ class SeasonScheduleDaoImpl(SeasonScheduleDao):
             type_=type_,
             slot_id=slot_id,
             actor_id=actor_id,
-            by_superuser=by_superuser,
             payload=payload,
         )
 

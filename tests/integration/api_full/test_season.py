@@ -152,26 +152,21 @@ async def test_reading_a_season_needs_no_authentication(
 
 
 @pytest.mark.asyncio
-async def test_taking_a_date_locks_it_to_its_owner(
+async def test_taking_a_date_records_its_owner_and_orgs(
     client: AsyncClient,
     harry: dto.Player,
     harry_token: Token,
     draco: dto.Player,
-    draco_token: Token,
     check_dao: HolderDao,
 ):
     published = await publish(client, harry_token)
     slot_id = published.json()["slots"][0]["id"]
 
     taken = await take(client, harry_token, slot_id, org_player_ids=[draco.id])
+
     assert taken.is_success
     assert taken.json()["owner"]["id"] == harry.id
     assert [org["id"] for org in taken.json()["orgs"]] == [draco.id]
-
-    # a second taker is a conflict, not a silent overwrite
-    second = await take(client, draco_token, slot_id)
-    assert second.status_code == 409
-    assert second.json()["type"] == "SlotAlreadyTaken"
 
     slot = await check_dao.season_slot.get_slot(slot_id)
     assert slot.owner is not None
@@ -197,33 +192,40 @@ async def test_a_player_without_promotion_may_not_take_a_date(
 
     resp = await take(client, hermione_token, slot_id)
 
-    # the api answers a missing promotion 422 everywhere (see test_team.py);
-    # only "this date is someone else's" is a 403
+    # promotion is the whole gate, and the api answers a missing one 422
+    # everywhere (see test_team.py)
     assert resp.status_code == 422
     assert resp.json()["type"] == "CantBeAuthor"
 
 
 @pytest.mark.asyncio
-async def test_someone_elses_date_may_not_be_moved(
+async def test_another_author_may_move_a_taken_date(
     client: AsyncClient,
     harry: dto.Player,
     harry_token: Token,
     draco: dto.Player,
     draco_token: Token,
+    check_dao: HolderDao,
 ):
     published = await publish(client, harry_token)
     slot_id = published.json()["slots"][0]["id"]
     assert (await take(client, harry_token, slot_id)).is_success
+    moved_to = FIRST + timedelta(days=1)
 
     resp = await client.patch(
         f"/seasons/{YEAR}/slots/{slot_id}",
         cookies=auth_cookies(draco_token),
-        json={"date": (FIRST + timedelta(days=1)).isoformat()},
+        json={"date": moved_to.isoformat()},
         follow_redirects=True,
     )
 
-    assert resp.status_code == 403
-    assert resp.json()["type"] == "NotSlotOwner"
+    # a date belongs to the authors collectively; the trail names who moved it
+    assert resp.is_success
+    assert (await check_dao.season_slot.get_slot(slot_id)).date == moved_to
+    season = await check_dao.season.get_season(YEAR)
+    assert season is not None
+    changes = await check_dao.season_change.get_unpublished_changes(season.id)
+    assert changes[-1].actor_id == draco.id
 
 
 @pytest.mark.asyncio

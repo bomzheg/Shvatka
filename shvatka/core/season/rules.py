@@ -34,45 +34,32 @@ def first_saturday_after(day: date) -> date:
     return day + timedelta(days=delta or 7)
 
 
-def check_can_add_slot(player: dto.Player) -> None:
-    """Adding a date to a published season is open to any author."""
-    check_allow_be_author(player)
+def check_can_edit_schedule(player: dto.Player) -> None:
+    """Composing, adding, moving, taking, releasing, deleting — one right for all of it.
 
-
-def check_can_edit_slot(
-    slot: season_dto.Slot, player: dto.Player, *, is_superuser: bool = False
-) -> None:
-    """Moving, renaming or deleting a date. A taken date is locked to its owner."""
+    A published season belongs to the authors collectively: promotion is the
+    whole gate, and there is no second one. Owning a date records who intends
+    to make the game there, not who is permitted to touch the row — so an org
+    who has gone quiet is not a database ticket, and the engine needs no
+    superuser override to fix a schedule. `season_changes` says who did what.
+    """
     check_allow_be_author(player)
-    if is_superuser or slot.is_free or slot.is_mine(player):
-        return
-    raise exceptions.NotSlotOwner(
-        player=player,
-        text=f"slot {slot.id} at {slot.date.isoformat()} belongs to someone else",
-    )
 
 
 def check_can_take_slot(
-    slot: season_dto.Slot,
     player: dto.Player,
     *,
     author_kind: season_dto.SlotAuthorKind,
     team: dto.Team | None,
-    is_superuser: bool = False,
 ) -> None:
-    """Taking a free date, or re-taking your own to change its author or orgs."""
-    check_allow_be_author(player)
-    if not (is_superuser or slot.is_free or slot.is_mine(player)):
-        raise exceptions.SlotAlreadyTaken(
-            player=player,
-            text=f"slot {slot.id} at {slot.date.isoformat()} is already taken",
-        )
+    """Claiming a date. Signing a *team* up for one is still the captain's call."""
+    check_can_edit_schedule(player)
     if author_kind == season_dto.SlotAuthorKind.team:
         if team is None:
             raise exceptions.SlotAuthorInvalid(
                 player=player, text="a team author needs a team to author the game"
             )
-        if not (is_superuser or is_team_captain(team, player)):
+        if not is_team_captain(team, player):
             raise exceptions.SlotAuthorInvalid(
                 player=player,
                 team=team,
@@ -88,8 +75,9 @@ def find_slots_near(
 ) -> list[season_dto.Slot]:
     """Dates the engine may offer for a game starting on `at`, nearest first.
 
-    Only dates that are free or already the player's own — offering someone
-    else's date would be an offer the engine has to refuse afterwards.
+    Only dates that are free or already the player's own. Any author *may*
+    take someone else's date, but the engine should not be the one suggesting
+    it — whoever claimed it is planning a game there.
     """
     candidates = [
         slot
@@ -120,7 +108,6 @@ class SlotDigest:
     orgs_changed: bool = False
     game: str | None = None
     game_unlinked: bool = False
-    by_superuser: bool = False
 
     @property
     def moved(self) -> bool:
@@ -172,7 +159,6 @@ def _group_key(change: season_dto.ScheduleChange) -> object:
 
 def _apply(digest: SlotDigest, change: season_dto.ScheduleChange) -> None:
     payload = change.payload
-    digest.by_superuser = digest.by_superuser or change.by_superuser
     match change.type:
         case season_dto.ChangeType.slot_added:
             digest.added = True

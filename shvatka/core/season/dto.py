@@ -108,6 +108,5 @@ class ScheduleChange:
     created_at: datetime
     slot_id: int | None = None
     actor_id: int | None = None
-    by_superuser: bool = False
     payload: dict[str, Any] = field(default_factory=dict)
     published_at: datetime | None = None

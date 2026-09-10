@@ -585,7 +585,7 @@ async def test_rich_hint_round_trip(
     )
     assert up.status_code == 200, up.text
     f = up.json()
-    markup = '<h1>Загадка</h1><p>смотри <img src="pic"></p>'
+    markup = '<h1>Загадка</h1><p>смотри <img src="tg://photo?id=pic"/></p>'
     scenario = {
         "name": "with rich hint",
         "__model_version__": 1,

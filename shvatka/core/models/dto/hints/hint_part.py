@@ -41,9 +41,13 @@ class TextHint(BaseHint):
 class RichMedia:
     """A file embedded into the markup of a rich hint.
 
-    The markup refers to the file by ``id`` (an ``<img src="id">`` in Rich HTML,
-    an ``![](id)`` in Rich Markdown), while the game keeps the file itself under
-    ``file_guid`` like any other hint file.
+    The markup points at the file through a telegram link built from ``id``:
+    ``tg://photo?id=<id>``, ``tg://video?id=<id>`` or ``tg://audio?id=<id>``
+    (``<img src="tg://photo?id=pic"/>`` in Rich HTML, ``![](tg://photo?id=pic)``
+    in Rich Markdown). The game keeps the file itself under ``file_guid``, like
+    any other hint file.
+
+    Telegram allows 1-64 characters of ``A-Za-z0-9_-`` in an ``id``.
     """
 
     id: str

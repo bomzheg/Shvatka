@@ -7,7 +7,7 @@ from shvatka.core.models import enums
 from shvatka.core.utils import exceptions
 from shvatka.tgbot.models.hint import RichHintContentView, RichHintLinkView, RichMediaView
 
-HTML = '<h1>Загадка</h1><p>смотри <img src="pic"></p>'
+HTML = '<h1>Загадка</h1><p>смотри <img src="tg://photo?id=pic"/></p>'
 MARKDOWN = "# Загадка\n\nсмотри ![](pic)"
 
 

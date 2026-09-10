@@ -76,7 +76,7 @@ levels:
         hint:
           - type: rich
             format: html
-            text: "<h1>заголовок</h1><p>и <b>картинка</b> <img src=\"pic\"></p>"
+            text: "<h1>заголовок</h1><p>и <b>картинка</b> <img src=\"tg://photo?id=pic\"/></p>"
             media:
               - id: pic
                 file_guid: a3bc9b96-3bb8-4dbc-b996-ce1015e66e53

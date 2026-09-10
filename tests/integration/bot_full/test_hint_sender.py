@@ -434,7 +434,7 @@ async def test_send_rich_media_by_id(
     await hint_sender.resolver.dao.upsert(file=FILE_META, author=harry)
     await hint_sender.resolver.dao.commit()
     hint = hints.RichHint(
-        text='<p><img src="pic"></p>',
+        text='<p><img src="tg://photo?id=pic"/></p>',
         media=[hints.RichMedia(id="pic", file_guid=GUID)],
     )
 
@@ -470,7 +470,7 @@ async def test_send_rich_media_by_content_when_file_id_missing(
     session = typing.cast(MagicMock, bot_session)
     session.side_effect = [{}]
     hint = hints.RichHint(
-        text='<p><img src="pic"></p>',
+        text='<p><img src="tg://photo?id=pic"/></p>',
         media=[hints.RichMedia(id="pic", file_guid=GUID)],
     )
 

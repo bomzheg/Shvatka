@@ -8,6 +8,7 @@ from .notification import NotificationSeverity, NotificationType
 from .org_permission import OrgPermission
 from .played import Played
 from .request import RequestStatus, RequestType
+from .rich_format import RichFormat
 from .team_player_permission import TeamPlayerPermission
 
 __all__ = (
@@ -22,6 +23,7 @@ __all__ = (
     "Played",
     "RequestType",
     "RequestStatus",
+    "RichFormat",
     "TeamPlayerPermission",
     "KeyType",
 )

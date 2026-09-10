@@ -24,6 +24,8 @@ from .hint_part import (
     GPSHint,
     LinkPreview,
     PhotoHint,
+    RichHint,
+    RichMedia,
     StickerHint,
     TextHint,
     VenueHint,

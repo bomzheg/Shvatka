@@ -14,3 +14,4 @@ class HintType(enum.Enum):
     video_note = "video_note"
     contact = "contact"
     sticker = "sticker"
+    rich = "rich"

@@ -7,10 +7,13 @@ from shvatka.api.app.utils.web_input import (
     WebGamePreparer,
     WebGameView,
     WebOrgNotifier,
+    WebSeasonAnnouncer,
     WebTeamNotifier,
 )
 from shvatka.core.interfaces.dal.game_play import GamePreparer
 from shvatka.core.models import dto
+from shvatka.core.season import dto as season_dto
+from shvatka.core.season.rules import SlotDigest
 from shvatka.core.views.game import (
     AnyViewTask,
     Event,
@@ -20,8 +23,10 @@ from shvatka.core.views.game import (
     GameViewPreparer,
     OrgNotifier,
 )
+from shvatka.core.views.season import Announcement, SeasonAnnouncer
 from shvatka.core.views.team import TeamEvent, TeamNotifier
 from shvatka.tgbot.views.game import BotOrgNotifier, BotView, GameBotLog
+from shvatka.tgbot.views.season import BotSeasonAnnouncer
 from shvatka.tgbot.views.team import BotTeamNotifier
 
 logger = logging.getLogger(__name__)
@@ -75,6 +80,35 @@ class ComplexGameLogWriter(GameLogWriter):
 
     async def log(self, log_event: GameLogEvent) -> None:
         await show_on_both(bot=self.bot.log(log_event), web=self.web.log(log_event))
+
+
+@dataclass
+class ComplexSeasonAnnouncer(SeasonAnnouncer):
+    """Only the bot has a channel, so only the bot can hand a message back."""
+
+    bot: BotSeasonAnnouncer
+    web: WebSeasonAnnouncer
+
+    async def publish(self, season: season_dto.Season) -> Announcement | None:
+        try:
+            await self.web.publish(season)
+        except Exception as e:
+            logger.exception("web season publish error", exc_info=e)
+        return await self.bot.publish(season)
+
+    async def update(self, season: season_dto.Season) -> None:
+        await show_on_both(bot=self.bot.update(season), web=self.web.update(season))
+
+    async def announce_digest(
+        self, season: season_dto.Season, digests: Sequence[SlotDigest]
+    ) -> None:
+        await show_on_both(
+            bot=self.bot.announce_digest(season, digests),
+            web=self.web.announce_digest(season, digests),
+        )
+
+    async def close(self, season: season_dto.Season) -> None:
+        await show_on_both(bot=self.bot.close(season), web=self.web.close(season))
 
 
 @dataclass

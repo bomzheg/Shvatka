@@ -5,7 +5,7 @@
 |===
 | SHEP | 0003
 | Title | Season schedule
-| Status | `Accepted` — nothing implemented yet. One pull request per phase.
+| Status | `Accepted` — phase 1 landed. One pull request per phase.
 | Created | 2026-07-26
 | Updated | 2026-09-15
 | Related | issue #167, PR #306; xref:shep-0001-notifications-and-action-requests.adoc[SHEP-0001] (which defers `season_schedule_changed` to this one)
@@ -828,7 +828,7 @@ a default time in the schedule would be a number nobody meant.
 
 | 1
 | Tables + migration, `core/season/`, DAOs, DI, REST API, `SeasonAnnouncer` and its bot implementation, publication with pinning, the daily digest and unpin job, the notification audience, and the §Ubiquitous language entries in *both* `context.md` files
-| ⏳ not started
+| ✅ landed
 
 | 2
 | `SeasonSG` dialogs with compose-in-`dialog_data`, the `SeasonCalendar` subclass, and the link offer grafted onto `GameScheduleSG`
@@ -887,29 +887,29 @@ expensive to diagnose, and each has a fast test worth writing alongside it.
   days view the base class hands back, using only names the `kbd` package
   exports. Also: clear `.mypy_cache` before trusting a local mypy run.
 
-=== Phase 1 — engine ⏳
+=== Phase 1 — engine ✅
 
-* [ ] `seasons`, `season_slots`, `season_slot_orgs`, `season_changes` + migration
-* [ ] `core/season/` — `dto`, `rules`, `adapters`, `interactors`
-* [ ] per-table DAOs behind one composed `SeasonScheduleDao`, wired in
+* [x] `seasons`, `season_slots`, `season_slot_orgs`, `season_changes` + migration
+* [x] `core/season/` — `dto`, `rules`, `adapters`, `interactors`
+* [x] per-table DAOs behind one composed `SeasonScheduleDao`, wired in
   `infrastructure/di/`
-* [ ] `SeasonAnnouncer` + `BotSeasonAnnouncer` (send, pin, edit, unpin) and the
+* [x] `SeasonAnnouncer` + `BotSeasonAnnouncer` (send, pin, edit, unpin) and the
   no-op web side, fanned out by `ComplexSeasonAnnouncer`
-* [ ] `PublishSeasonInteractor`, the per-date edit interactors, take/release,
+* [x] `PublishSeasonInteractor`, the per-date edit interactors, take/release,
   link/unlink, `FindSlotsNearGameStartInteractor`, `SyncLinkedSlotInteractor`
-* [ ] `publish_season_digest_wrapper` on a 10:00 MSK cron trigger — digest *and*
+* [x] `publish_season_digest_wrapper` on a 10:00 MSK cron trigger — digest *and*
   end-of-season unpin
-* [ ] `SeasonAudienceReader` and `season_schedule_changed` notifications
-* [ ] `/seasons` routes
-* [ ] glossary rows in `context.md` here *and* in shvatka-ui
-* [ ] unit tests (`tests/unit/season/`): `default_slot_dates` across years
+* [x] `SeasonAudienceReader` and `season_schedule_changed` notifications
+* [x] `/seasons` routes
+* [x] glossary rows in `context.md` here *and* in shvatka-ui
+* [x] unit tests (`tests/unit/season/`): `default_slot_dates` across years
   including the 9-May-is-Saturday case; permissions — promotion is the gate,
   any author may edit any date, only a captain may name their team; the ±3-day
   search including ties; digest collapsing — repeated moves of one date become
   one line, move-and-move-back becomes nothing, take then release becomes
   nothing. An in-memory `SeasonScheduleDao` makes the interactors testable
   without a database and is what catches the payload-ordering trap above
-* [ ] integration tests (`tests/integration/api_full/test_season.py`): publish,
+* [x] integration tests (`tests/integration/api_full/test_season.py`): publish,
   then publish the same year again → 409; take, then another author re-assigns
   the same date → the trail names them both; a player without promotion → 422;
   link a game → the date syncs; re-plan the game → the date follows; run the
@@ -958,7 +958,25 @@ expensive to diagnose, and each has a fast test worth writing alongside it.
 [[deviations]]
 == Deviations from the plan
 
-Nothing is implemented yet. This section is filled in as the phases land.
+Filled in as the phases land.
+
+=== Phase 1
+
+* *A linked date cannot be released.* `ReleaseSlotInteractor` raises
+  `SlotAlreadyLinked` when a game sits in the date. Freeing it would leave the
+  game pointing at a date nobody owns, and unlinking first says what you mean.
+* *`FindSlotsNearGameStartInteractor` takes a `window`*, defaulting to the ±3
+  days the offer uses. The interactor is the only way into `find_slots_near`
+  from an edge, and the pure rule already had the parameter.
+* *A date outside the season's year raises a bare `SeasonError`*, not an
+  exception of its own. It is one guard (`_check_slot_year`) shared by publish,
+  add and move, it carries the Russian in `notify_user`, and nothing branches on
+  the type — a named class would only be there to be caught by nobody.
+* *`ComplexSeasonAnnouncer.publish` returns the bot's announcement*, rather than
+  gathering one per edge. Only the bot has a channel, and the season has exactly
+  one message to store; anything else would push the choice of which message to
+  keep onto the interactor. The web side is still called, and its failure is
+  still swallowed and logged, exactly like `ComplexGameLogWriter`.
 
 == Open questions
 

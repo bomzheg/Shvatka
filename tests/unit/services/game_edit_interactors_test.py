@@ -16,6 +16,7 @@ from shvatka.core.utils.datetime_utils import DATETIME_FORMAT, tz_game, tz_utc
 from shvatka.core.views.game import GameLogEvent, GameLogType, GameLogWriter
 from shvatka.infrastructure.di.infra import NoOpGameReleasePublisher
 from tests.fixtures.identity import MockIdentityProvider
+from tests.mocks.season import SlotSyncMock
 
 
 def make_player(id_: int) -> dto.Player:
@@ -177,8 +178,9 @@ async def test_plan_start_writes_game_log():
     dao = FakeGameDao(game=game)
     scheduler = FakeScheduler()
     game_log = RecordingLogWriter()
+    slot_sync = SlotSyncMock()
     interactor = PlanGameStartInteractor(
-        getter=dao, dao=dao, scheduler=scheduler, game_log=game_log
+        getter=dao, dao=dao, scheduler=scheduler, game_log=game_log, slot_sync=slot_sync
     )
     start_at = datetime.now(tz=tz_utc) + timedelta(days=1)
 
@@ -195,6 +197,10 @@ async def test_plan_start_writes_game_log():
             {"game": game.name, "at": start_at.astimezone(tz_game).strftime(DATETIME_FORMAT)},
         )
     ]
+    # the schedule follows the game
+    assert [(sync_game.id, actor.id) for sync_game, actor in slot_sync.calls] == [
+        (game.id, author.id)
+    ]
 
 
 @pytest.mark.asyncio
@@ -204,8 +210,9 @@ async def test_cancel_planned_start_does_not_write_game_log():
     dao = FakeGameDao(game=game)
     scheduler = FakeScheduler()
     game_log = RecordingLogWriter()
+    slot_sync = SlotSyncMock()
     interactor = PlanGameStartInteractor(
-        getter=dao, dao=dao, scheduler=scheduler, game_log=game_log
+        getter=dao, dao=dao, scheduler=scheduler, game_log=game_log, slot_sync=slot_sync
     )
 
     await interactor(
@@ -216,6 +223,8 @@ async def test_cancel_planned_start_does_not_write_game_log():
 
     assert dao.cancelled is True
     assert game_log.calls == []
+    # cancelling unlinks nothing: there is just no start to follow
+    assert slot_sync.calls == []
 
 
 @pytest.mark.asyncio

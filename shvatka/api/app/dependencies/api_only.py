@@ -7,6 +7,7 @@ from shvatka.api.app.utils.web_input import (
     WebGameReleasePublisher,
     WebGameView,
     WebOrgNotifier,
+    WebSeasonAnnouncer,
     WebTeamNotifier,
 )
 from shvatka.core.interfaces.identity import IdentityProvider
@@ -19,6 +20,7 @@ from shvatka.core.views.game import (
     OrgNotifier,
     ViewSender,
 )
+from shvatka.core.views.season import SeasonAnnouncer
 from shvatka.core.views.team import TeamNotifier
 from shvatka.infrastructure.bus.in_memory import UsedOneTimeTokenInteractor
 from shvatka.tgbot.tasks import NurseryViewSender
@@ -61,6 +63,10 @@ class ApiOnlyProvider(Provider):
     @provide
     def web_only_team_notifier(self, team_notifier: WebTeamNotifier) -> TeamNotifier:
         return team_notifier
+
+    @provide
+    def web_only_season_announcer(self, announcer: WebSeasonAnnouncer) -> SeasonAnnouncer:
+        return announcer
 
     @provide
     def web_only_preparer_view(self, preparer: WebGamePreparer) -> GameViewPreparer:

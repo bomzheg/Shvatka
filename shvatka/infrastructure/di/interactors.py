@@ -135,6 +135,25 @@ from shvatka.core.scenario.interactors import (
 )
 from shvatka.core.search.adapters import GlobalSearchDao
 from shvatka.core.search.interactors import GlobalSearchInteractor
+from shvatka.core.season.interactors import (
+    AddSlotInteractor,
+    EditSlotNoteInteractor,
+    FindSlotsNearGameStartInteractor,
+    GetCurrentSeasonInteractor,
+    GetDefaultSlotDatesInteractor,
+    GetSeasonInteractor,
+    LinkGameToSlotInteractor,
+    ListSeasonsInteractor,
+    MoveSlotInteractor,
+    PublishSeasonDigestInteractor,
+    PublishSeasonInteractor,
+    ReleaseSlotInteractor,
+    RemoveSlotInteractor,
+    SetSlotOrgsInteractor,
+    SyncLinkedSlotInteractor,
+    TakeSlotInteractor,
+    UnlinkGameFromSlotInteractor,
+)
 from shvatka.core.services.current_game import CurrentGameProviderImpl
 from shvatka.core.services.key import KeyProcessor, TimerProcessor
 from shvatka.core.services.one_time_link import (
@@ -343,10 +362,18 @@ class GameEditProvider(Provider):
 
     @provide
     def change_start_at(
-        self, dao: HolderDao, scheduler: Scheduler, game_log: GameLogWriter
+        self,
+        dao: HolderDao,
+        scheduler: Scheduler,
+        game_log: GameLogWriter,
+        slot_sync: SyncLinkedSlotInteractor,
     ) -> PlanGameStartInteractor:
         return PlanGameStartInteractor(
-            getter=dao.game, dao=dao.game, scheduler=scheduler, game_log=game_log
+            getter=dao.game,
+            dao=dao.game,
+            scheduler=scheduler,
+            game_log=game_log,
+            slot_sync=slot_sync,
         )
 
     @provide
@@ -626,6 +653,28 @@ class NotificationProvider(Provider):
     unread_count = provide(UnreadCountInteractor)
     mark_read = provide(MarkNotificationsReadInteractor)
     mark_all_read = provide(MarkAllNotificationsReadInteractor)
+
+
+class SeasonProvider(Provider):
+    scope = Scope.REQUEST
+
+    default_slot_dates = provide(GetDefaultSlotDatesInteractor)
+    get_season = provide(GetSeasonInteractor)
+    get_current_season = provide(GetCurrentSeasonInteractor)
+    list_seasons = provide(ListSeasonsInteractor)
+    publish_season = provide(PublishSeasonInteractor)
+    add_slot = provide(AddSlotInteractor)
+    move_slot = provide(MoveSlotInteractor)
+    edit_slot_note = provide(EditSlotNoteInteractor)
+    remove_slot = provide(RemoveSlotInteractor)
+    take_slot = provide(TakeSlotInteractor)
+    release_slot = provide(ReleaseSlotInteractor)
+    set_slot_orgs = provide(SetSlotOrgsInteractor)
+    find_slots_near = provide(FindSlotsNearGameStartInteractor)
+    link_game = provide(LinkGameToSlotInteractor)
+    unlink_game = provide(UnlinkGameFromSlotInteractor)
+    sync_linked_slot = provide(SyncLinkedSlotInteractor)
+    publish_digest = provide(PublishSeasonDigestInteractor)
 
 
 class RequestProvider(Provider):

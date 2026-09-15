@@ -17,6 +17,7 @@ from shvatka.infrastructure.di.interactors import (
     PlayerProvider,
     RequestProvider,
     SearchProvider,
+    SeasonProvider,
     TeamProvider,
     WaiverProvider,
 )
@@ -49,6 +50,7 @@ def get_providers(paths_env):
         NotificationProvider(),
         RequestProvider(),
         SearchProvider(),
+        SeasonProvider(),
         PrinterProvider(),
         LockProvider(),
         NurseryProvider(),

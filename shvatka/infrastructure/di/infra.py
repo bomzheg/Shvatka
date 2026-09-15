@@ -4,8 +4,6 @@ from dishka import Provider, Scope, provide
 
 from shvatka.api.app.dependencies.api_only import MockUsedOneTimeTokenInteractor
 from shvatka.core.models import dto
-from shvatka.core.season import dto as season_dto
-from shvatka.core.season.rules import SlotDigest
 from shvatka.core.views.game import (
     AnyViewTask,
     Event,
@@ -17,7 +15,6 @@ from shvatka.core.views.game import (
     ShowTasks,
     ViewSender,
 )
-from shvatka.core.views.season import Announcement, SeasonAnnouncer
 from shvatka.core.views.team import TeamEvent, TeamNotifier
 from shvatka.infrastructure.bus.in_memory import UsedOneTimeTokenInteractor
 
@@ -58,22 +55,6 @@ class NoOpTeamNotifier(TeamNotifier):
         pass
 
 
-class NoOpSeasonAnnouncer(SeasonAnnouncer):
-    async def publish(self, season: season_dto.Season) -> Announcement | None:
-        return None
-
-    async def update(self, season: season_dto.Season) -> None:
-        pass
-
-    async def announce_digest(
-        self, season: season_dto.Season, digests: Sequence[SlotDigest]
-    ) -> None:
-        pass
-
-    async def close(self, season: season_dto.Season) -> None:
-        pass
-
-
 class InfrastructureProvider(Provider):
     scope = Scope.APP
 
@@ -104,10 +85,6 @@ class InfrastructureProvider(Provider):
     @provide
     def team_notifier(self) -> TeamNotifier:
         return NoOpTeamNotifier()
-
-    @provide
-    def season_announcer(self) -> SeasonAnnouncer:
-        return NoOpSeasonAnnouncer()
 
 
 def get_infra_only_providers() -> list[Provider]:

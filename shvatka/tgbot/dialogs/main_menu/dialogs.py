@@ -109,11 +109,6 @@ main_menu = Dialog(
             state=states.TeamsSg.list,
         ),
         Start(
-            Const("📅Расписание сезона"),
-            id="to_season",
-            state=states.SeasonSG.calendar,
-        ),
-        Start(
             Const("🔮Былые свершения"),
             id="to_merge_player",
             state=states.MergePlayersSG.main,

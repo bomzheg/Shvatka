@@ -16,7 +16,10 @@ from .notification import NotificationDAO
 from .organizer import OrganizerDao
 from .player import PlayerDao
 from .push_subscription import PushSubscriptionDAO
-from .season import SeasonChangeDao, SeasonDao, SeasonSlotDao, SeasonSlotOrgDao
+from .season import SeasonDao
+from .season_change import SeasonChangeDao
+from .season_slot import SeasonSlotDao
+from .season_slot_org import SeasonSlotOrgDao
 from .team import TeamDao
 from .team_player import TeamPlayerDao
 from .timers import TimersDAO

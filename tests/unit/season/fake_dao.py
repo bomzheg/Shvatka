@@ -73,6 +73,12 @@ class FakeSeasonDao(SeasonScheduleDao):
         season.slots = self._slots_of(season.id)
         return season
 
+    async def get_required_season(self, year: int) -> season_dto.Season:
+        season = await self.get_season(year)
+        if season is None:
+            raise exceptions.SeasonNotFound(text=f"no season for {year}")
+        return season
+
     async def get_season_by_id(self, season_id: int) -> season_dto.Season | None:
         for season in self.seasons.values():
             if season.id == season_id:

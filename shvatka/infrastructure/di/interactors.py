@@ -150,10 +150,10 @@ from shvatka.core.season.interactors import (
     ReleaseSlotInteractor,
     RemoveSlotInteractor,
     SetSlotOrgsInteractor,
-    SyncLinkedSlotInteractor,
     TakeSlotInteractor,
     UnlinkGameFromSlotInteractor,
 )
+from shvatka.core.season.services import LinkedSlotSync, ScheduleChangeLog
 from shvatka.core.services.current_game import CurrentGameProviderImpl
 from shvatka.core.services.key import KeyProcessor, TimerProcessor
 from shvatka.core.services.one_time_link import (
@@ -366,7 +366,7 @@ class GameEditProvider(Provider):
         dao: HolderDao,
         scheduler: Scheduler,
         game_log: GameLogWriter,
-        slot_sync: SyncLinkedSlotInteractor,
+        slot_sync: LinkedSlotSync,
     ) -> PlanGameStartInteractor:
         return PlanGameStartInteractor(
             getter=dao.game,
@@ -658,6 +658,9 @@ class NotificationProvider(Provider):
 class SeasonProvider(Provider):
     scope = Scope.REQUEST
 
+    change_log = provide(ScheduleChangeLog)
+    slot_sync = provide(LinkedSlotSync)
+
     default_slot_dates = provide(GetDefaultSlotDatesInteractor)
     get_season = provide(GetSeasonInteractor)
     get_current_season = provide(GetCurrentSeasonInteractor)
@@ -673,7 +676,6 @@ class SeasonProvider(Provider):
     find_slots_near = provide(FindSlotsNearGameStartInteractor)
     link_game = provide(LinkGameToSlotInteractor)
     unlink_game = provide(UnlinkGameFromSlotInteractor)
-    sync_linked_slot = provide(SyncLinkedSlotInteractor)
     publish_digest = provide(PublishSeasonDigestInteractor)
 
 

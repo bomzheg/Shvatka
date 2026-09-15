@@ -33,6 +33,9 @@ class SeasonScheduleDaoImpl(SeasonScheduleDao):
     async def get_season(self, year: int) -> season_dto.Season | None:
         return await self.dao.season.get_season(year)
 
+    async def get_required_season(self, year: int) -> season_dto.Season:
+        return await self.dao.season.get_required_season(year)
+
     async def get_season_by_id(self, season_id: int) -> season_dto.Season | None:
         return await self.dao.season.get_season_by_id(season_id)
 

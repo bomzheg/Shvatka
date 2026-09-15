@@ -13,7 +13,7 @@ from sqlalchemy import select
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.orm import selectinload
 
-from shvatka.infrastructure.db.dao.rdb.season import _SLOT_OPTIONS
+from shvatka.infrastructure.db.dao.rdb.season_slot import SLOT_OPTIONS
 from shvatka.infrastructure.db.models import Season, SeasonSlot
 
 
@@ -23,7 +23,7 @@ def joined_tables(statement) -> set[str]:
 
 
 def test_a_date_carries_its_owner_team_orgs_and_game():
-    tables = joined_tables(select(SeasonSlot).options(*_SLOT_OPTIONS))
+    tables = joined_tables(select(SeasonSlot).options(*SLOT_OPTIONS))
 
     # the owner and their telegram user
     assert {"players", "users"} <= tables
@@ -34,7 +34,7 @@ def test_a_date_carries_its_owner_team_orgs_and_game():
 
 
 def test_a_season_loads_its_dates_the_same_way():
-    statement = select(Season).options(selectinload(Season.slots).options(*_SLOT_OPTIONS))
+    statement = select(Season).options(selectinload(Season.slots).options(*SLOT_OPTIONS))
 
     # the dates come in their own select, so the joins are not in this one —
     # what matters is that the options compile against the relationship at all

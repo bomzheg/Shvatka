@@ -31,7 +31,7 @@ from shvatka.core.models import dto, enums
 from shvatka.core.models.dto import hints, scn
 from shvatka.core.players.player import check_allow_be_author
 from shvatka.core.rules.game import check_can_add_file
-from shvatka.core.season.interactors import SyncLinkedSlotInteractor
+from shvatka.core.season.services import LinkedSlotSync
 from shvatka.core.services.game import (
     cancel_planed_start,
     complete_game,
@@ -165,7 +165,7 @@ class PlanGameStartInteractor:
     dao: GameStartPlanner
     scheduler: Scheduler
     game_log: GameLogWriter
-    slot_sync: SyncLinkedSlotInteractor
+    slot_sync: LinkedSlotSync
 
     async def __call__(
         self, game_id: int, start_at: datetime | None, identity: IdentityProvider

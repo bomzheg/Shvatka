@@ -2,8 +2,8 @@ from collections.abc import Sequence
 
 from shvatka.core.models import dto
 from shvatka.core.season import dto as season_dto
-from shvatka.core.season.interactors import SyncLinkedSlotInteractor
 from shvatka.core.season.rules import SlotDigest
+from shvatka.core.season.services import LinkedSlotSync
 from shvatka.core.views.season import Announcement, SeasonAnnouncer
 
 MOCK_CHAT_ID = -1001
@@ -41,7 +41,7 @@ class SeasonAnnouncerMock(SeasonAnnouncer):
         self.closed.clear()
 
 
-class SlotSyncMock(SyncLinkedSlotInteractor):
+class SlotSyncMock(LinkedSlotSync):
     def __init__(self) -> None:
         self.calls: list[tuple[dto.Game, dto.Player]] = []
 

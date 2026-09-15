@@ -7,6 +7,7 @@ from datetime import date, datetime
 from typing import Any
 
 from shvatka.core.models import dto
+from shvatka.core.utils import exceptions
 
 
 class SlotAuthorKind(enum.Enum):
@@ -98,6 +99,13 @@ class Season:
     @property
     def last_date(self) -> date | None:
         return max((slot.slot_date for slot in self.slots), default=None)
+
+    def get_slot(self, slot_id: int) -> Slot:
+        """The date with that id, or `SlotNotFound` — an id from another season is a 404."""
+        for slot in self.slots:
+            if slot.id == slot_id:
+                return slot
+        raise exceptions.SlotNotFound(text=f"season {self.year} has no slot {slot_id}")
 
 
 @dataclass

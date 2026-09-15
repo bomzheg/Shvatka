@@ -20,6 +20,7 @@ from shvatka.core.season.rules import (
     default_slot_dates,
     find_slots_near,
 )
+from shvatka.core.season.services import ScheduleChangeLog
 from shvatka.core.utils import exceptions
 from shvatka.core.utils.datetime_utils import tz_game
 from shvatka.core.views.season import SeasonAnnouncer
@@ -38,64 +39,19 @@ class GetDefaultSlotDatesInteractor:
 
 
 @dataclass
-class SeasonInteractor:
-    """What every season use case shares: the dao and the channel message."""
-
+class GetSeasonInteractor:
     dao: SeasonScheduleDao
-    announcer: SeasonAnnouncer
 
-    async def _get_season(self, year: int) -> season_dto.Season:
-        season = await self.dao.get_season(year)
-        if season is None:
-            raise exceptions.SeasonNotFound(text=f"no season for {year}")
-        return season
-
-    @staticmethod
-    def _get_slot(season: season_dto.Season, slot_id: int) -> season_dto.Slot:
-        for slot in season.slots:
-            if slot.id == slot_id:
-                return slot
-        raise exceptions.SlotNotFound(text=f"season {season.year} has no slot {slot_id}")
-
-    async def _record(
-        self,
-        season: season_dto.Season,
-        type_: season_dto.ChangeType,
-        *,
-        slot_id: int | None,
-        actor: dto.Player,
-        payload: dict[str, Any],
-    ) -> None:
-        # the audit trail shares the transaction with the write it describes
-        await self.dao.add_change(
-            season_id=season.id,
-            type_=type_,
-            slot_id=slot_id,
-            actor_id=actor.id,
-            payload=payload,
-        )
-        await self.dao.touch_season(season.id)
-
-    async def _announce_update(self, year: int) -> None:
-        """Post-commit and best-effort: the pin must show current truth."""
-        try:
-            season = await self.dao.get_season(year)
-            if season is not None:
-                await self.announcer.update(season)
-        except Exception as e:  # noqa: BLE001
-            logger.warning("can't update the schedule message of %s", year, exc_info=e)
-
-
-@dataclass
-class GetSeasonInteractor(SeasonInteractor):
     async def __call__(self, year: int) -> season_dto.Season:
-        return await self._get_season(year)
+        return await self.dao.get_required_season(year)
 
 
 @dataclass
-class GetCurrentSeasonInteractor(SeasonInteractor):
+class GetCurrentSeasonInteractor:
+    dao: SeasonScheduleDao
+
     async def __call__(self, now: datetime) -> season_dto.Season:
-        return await self._get_season(now.astimezone(tz_game).year)
+        return await self.dao.get_required_season(now.astimezone(tz_game).year)
 
 
 @dataclass
@@ -107,8 +63,11 @@ class ListSeasonsInteractor:
 
 
 @dataclass
-class PublishSeasonInteractor(SeasonInteractor):
+class PublishSeasonInteractor:
     """Create the season and all its dates in one transaction, then announce."""
+
+    dao: SeasonScheduleDao
+    announcer: SeasonAnnouncer
 
     async def __call__(
         self,
@@ -129,14 +88,14 @@ class PublishSeasonInteractor(SeasonInteractor):
             await self.dao.add_slot(season.id, draft.slot_date, draft.note)
         await self.dao.commit()
 
-        published = await self._get_season(year)
+        published = await self.dao.get_required_season(year)
         await self._announce_published(published)
         await self._notify(
             published,
             actor=author,
             payload={"year": year, "published": True, "slots": len(published.slots)},
         )
-        return await self._get_season(year)
+        return await self.dao.get_required_season(year)
 
     async def _announce_published(self, season: season_dto.Season) -> None:
         # a channel that refuses the post must not roll back a published season
@@ -167,16 +126,19 @@ class PublishSeasonInteractor(SeasonInteractor):
 
 
 @dataclass
-class AddSlotInteractor(SeasonInteractor):
+class AddSlotInteractor:
+    dao: SeasonScheduleDao
+    changes: ScheduleChangeLog
+
     async def __call__(
         self, year: int, day: date, note: str | None, identity: IdentityProvider
     ) -> season_dto.Slot:
         author = await identity.get_required_player()
         check_can_edit_schedule(author)
         _check_slot_year(year, day, author)
-        season = await self._get_season(year)
+        season = await self.dao.get_required_season(year)
         slot = await self.dao.add_slot(season.id, day, note)
-        await self._record(
+        await self.changes.record(
             season,
             season_dto.ChangeType.slot_added,
             slot_id=slot.id,
@@ -184,18 +146,21 @@ class AddSlotInteractor(SeasonInteractor):
             payload={"date": day.isoformat(), "note": note},
         )
         await self.dao.commit()
-        await self._announce_update(year)
+        await self.changes.announce_update(year)
         return await self.dao.get_slot(slot.id)
 
 
 @dataclass
-class MoveSlotInteractor(SeasonInteractor):
+class MoveSlotInteractor:
+    dao: SeasonScheduleDao
+    changes: ScheduleChangeLog
+
     async def __call__(
         self, year: int, slot_id: int, day: date, identity: IdentityProvider
     ) -> season_dto.Slot:
         author = await identity.get_required_player()
-        season = await self._get_season(year)
-        slot = self._get_slot(season, slot_id)
+        season = await self.dao.get_required_season(year)
+        slot = season.get_slot(slot_id)
         check_can_edit_schedule(author)
         _check_slot_year(year, day, author)
         if slot.slot_date == day:
@@ -203,7 +168,7 @@ class MoveSlotInteractor(SeasonInteractor):
         # read what the payload needs before the write that changes it
         previous = slot.slot_date
         await self.dao.move_slot(slot_id, day)
-        await self._record(
+        await self.changes.record(
             season,
             season_dto.ChangeType.slot_moved,
             slot_id=slot_id,
@@ -215,21 +180,24 @@ class MoveSlotInteractor(SeasonInteractor):
             },
         )
         await self.dao.commit()
-        await self._announce_update(year)
+        await self.changes.announce_update(year)
         return await self.dao.get_slot(slot_id)
 
 
 @dataclass
-class EditSlotNoteInteractor(SeasonInteractor):
+class EditSlotNoteInteractor:
+    dao: SeasonScheduleDao
+    changes: ScheduleChangeLog
+
     async def __call__(
         self, year: int, slot_id: int, note: str | None, identity: IdentityProvider
     ) -> season_dto.Slot:
         author = await identity.get_required_player()
-        season = await self._get_season(year)
-        slot = self._get_slot(season, slot_id)
+        season = await self.dao.get_required_season(year)
+        slot = season.get_slot(slot_id)
         check_can_edit_schedule(author)
         await self.dao.set_slot_note(slot_id, note)
-        await self._record(
+        await self.changes.record(
             season,
             season_dto.ChangeType.slot_note_changed,
             slot_id=slot_id,
@@ -237,19 +205,22 @@ class EditSlotNoteInteractor(SeasonInteractor):
             payload={"date": slot.slot_date.isoformat(), "note": note},
         )
         await self.dao.commit()
-        await self._announce_update(year)
+        await self.changes.announce_update(year)
         return await self.dao.get_slot(slot_id)
 
 
 @dataclass
-class RemoveSlotInteractor(SeasonInteractor):
+class RemoveSlotInteractor:
+    dao: SeasonScheduleDao
+    changes: ScheduleChangeLog
+
     async def __call__(self, year: int, slot_id: int, identity: IdentityProvider) -> None:
         author = await identity.get_required_player()
-        season = await self._get_season(year)
-        slot = self._get_slot(season, slot_id)
+        season = await self.dao.get_required_season(year)
+        slot = season.get_slot(slot_id)
         check_can_edit_schedule(author)
         # the change row outlives the date it describes, holding its payload
-        await self._record(
+        await self.changes.record(
             season,
             season_dto.ChangeType.slot_removed,
             slot_id=slot_id,
@@ -258,12 +229,15 @@ class RemoveSlotInteractor(SeasonInteractor):
         )
         await self.dao.remove_slot(slot_id)
         await self.dao.commit()
-        await self._announce_update(year)
+        await self.changes.announce_update(year)
 
 
 @dataclass
-class TakeSlotInteractor(SeasonInteractor):
+class TakeSlotInteractor:
     """Claim a free date, or re-take your own to change its author or orgs."""
+
+    dao: SeasonScheduleDao
+    changes: ScheduleChangeLog
 
     async def __call__(
         self,
@@ -276,8 +250,8 @@ class TakeSlotInteractor(SeasonInteractor):
         identity: IdentityProvider,
     ) -> season_dto.Slot:
         actor = await identity.get_required_player()
-        season = await self._get_season(year)
-        self._get_slot(season, slot_id)
+        season = await self.dao.get_required_season(year)
+        season.get_slot(slot_id)
         # whoever else is taking the same date right now waits here
         slot = await self.dao.lock_slot(slot_id)
         team = await self.dao.get_team_by_id(team_id) if team_id is not None else None
@@ -290,7 +264,7 @@ class TakeSlotInteractor(SeasonInteractor):
         )
         orgs = [await self.dao.get_player_by_id(id_) for id_ in dict.fromkeys(org_player_ids)]
         await self.dao.set_slot_orgs(slot_id, [org.id for org in orgs])
-        await self._record(
+        await self.changes.record(
             season,
             season_dto.ChangeType.slot_taken,
             slot_id=slot_id,
@@ -303,18 +277,21 @@ class TakeSlotInteractor(SeasonInteractor):
             },
         )
         await self.dao.commit()
-        await self._announce_update(year)
+        await self.changes.announce_update(year)
         return await self.dao.get_slot(slot_id)
 
 
 @dataclass
-class ReleaseSlotInteractor(SeasonInteractor):
+class ReleaseSlotInteractor:
+    dao: SeasonScheduleDao
+    changes: ScheduleChangeLog
+
     async def __call__(
         self, year: int, slot_id: int, identity: IdentityProvider
     ) -> season_dto.Slot:
         actor = await identity.get_required_player()
-        season = await self._get_season(year)
-        slot = self._get_slot(season, slot_id)
+        season = await self.dao.get_required_season(year)
+        slot = season.get_slot(slot_id)
         check_can_edit_schedule(actor)
         if slot.is_linked:
             raise exceptions.SlotAlreadyLinked(
@@ -323,7 +300,7 @@ class ReleaseSlotInteractor(SeasonInteractor):
         released_from = slot.author_name
         await self.dao.release_slot(slot_id)
         await self.dao.set_slot_orgs(slot_id, [])
-        await self._record(
+        await self.changes.record(
             season,
             season_dto.ChangeType.slot_released,
             slot_id=slot_id,
@@ -331,12 +308,15 @@ class ReleaseSlotInteractor(SeasonInteractor):
             payload={"date": slot.slot_date.isoformat(), "author": released_from},
         )
         await self.dao.commit()
-        await self._announce_update(year)
+        await self.changes.announce_update(year)
         return await self.dao.get_slot(slot_id)
 
 
 @dataclass
-class SetSlotOrgsInteractor(SeasonInteractor):
+class SetSlotOrgsInteractor:
+    dao: SeasonScheduleDao
+    changes: ScheduleChangeLog
+
     async def __call__(
         self,
         year: int,
@@ -345,13 +325,13 @@ class SetSlotOrgsInteractor(SeasonInteractor):
         identity: IdentityProvider,
     ) -> season_dto.Slot:
         actor = await identity.get_required_player()
-        season = await self._get_season(year)
-        slot = self._get_slot(season, slot_id)
+        season = await self.dao.get_required_season(year)
+        slot = season.get_slot(slot_id)
         check_can_edit_schedule(actor)
         # being named on a date is not being an author: no promotion required
         orgs = [await self.dao.get_player_by_id(id_) for id_ in dict.fromkeys(org_player_ids)]
         await self.dao.set_slot_orgs(slot_id, [org.id for org in orgs])
-        await self._record(
+        await self.changes.record(
             season,
             season_dto.ChangeType.slot_orgs_changed,
             slot_id=slot_id,
@@ -362,7 +342,7 @@ class SetSlotOrgsInteractor(SeasonInteractor):
             },
         )
         await self.dao.commit()
-        await self._announce_update(year)
+        await self.changes.announce_update(year)
         return await self.dao.get_slot(slot_id)
 
 
@@ -387,13 +367,16 @@ class FindSlotsNearGameStartInteractor:
 
 
 @dataclass
-class LinkGameToSlotInteractor(SeasonInteractor):
+class LinkGameToSlotInteractor:
+    dao: SeasonScheduleDao
+    changes: ScheduleChangeLog
+
     async def __call__(
         self, year: int, slot_id: int, game_id: int, identity: IdentityProvider
     ) -> season_dto.Slot:
         actor = await identity.get_required_player()
-        season = await self._get_season(year)
-        self._get_slot(season, slot_id)
+        season = await self.dao.get_required_season(year)
+        season.get_slot(slot_id)
         game = await self.dao.get_game_by_id(game_id)
         occupied = await self.dao.get_slot_by_game(game_id)
         if occupied is not None and occupied.id != slot_id:
@@ -417,7 +400,7 @@ class LinkGameToSlotInteractor(SeasonInteractor):
                 team_id=None,
             )
         await self.dao.link_game(slot_id, game_id)
-        await self._record(
+        await self.changes.record(
             season,
             season_dto.ChangeType.slot_game_linked,
             slot_id=slot_id,
@@ -430,7 +413,7 @@ class LinkGameToSlotInteractor(SeasonInteractor):
         )
         await self._follow_game(season, slot, game, actor=actor)
         await self.dao.commit()
-        await self._announce_update(year)
+        await self.changes.announce_update(year)
         return await self.dao.get_slot(slot_id)
 
     async def _follow_game(
@@ -448,7 +431,7 @@ class LinkGameToSlotInteractor(SeasonInteractor):
             return
         previous = slot.slot_date
         await self.dao.move_slot(slot.id, started)
-        await self._record(
+        await self.changes.record(
             season,
             season_dto.ChangeType.slot_moved,
             slot_id=slot.id,
@@ -463,19 +446,22 @@ class LinkGameToSlotInteractor(SeasonInteractor):
 
 
 @dataclass
-class UnlinkGameFromSlotInteractor(SeasonInteractor):
+class UnlinkGameFromSlotInteractor:
+    dao: SeasonScheduleDao
+    changes: ScheduleChangeLog
+
     async def __call__(
         self, year: int, slot_id: int, identity: IdentityProvider
     ) -> season_dto.Slot:
         actor = await identity.get_required_player()
-        season = await self._get_season(year)
-        slot = self._get_slot(season, slot_id)
+        season = await self.dao.get_required_season(year)
+        slot = season.get_slot(slot_id)
         check_can_edit_schedule(actor)
         if slot.game is None:
             return slot
         unlinked = slot.game
         await self.dao.unlink_game(slot_id)
-        await self._record(
+        await self.changes.record(
             season,
             season_dto.ChangeType.slot_game_unlinked,
             slot_id=slot_id,
@@ -487,47 +473,16 @@ class UnlinkGameFromSlotInteractor(SeasonInteractor):
             },
         )
         await self.dao.commit()
-        await self._announce_update(year)
+        await self.changes.announce_update(year)
         return await self.dao.get_slot(slot_id)
 
 
 @dataclass
-class SyncLinkedSlotInteractor(SeasonInteractor):
-    """A re-planned game drags its date along. Cancelling a start unlinks nothing."""
-
-    async def __call__(self, game: dto.Game, actor: dto.Player) -> None:
-        if game.start_at is None:
-            return
-        slot = await self.dao.get_slot_by_game(game.id)
-        if slot is None:
-            return
-        started = game.start_at.astimezone(tz_game).date()
-        if started == slot.slot_date:
-            return
-        season = await self.dao.get_season_by_id(slot.season_id)
-        if season is None:
-            return
-        previous = slot.slot_date
-        await self.dao.move_slot(slot.id, started)
-        await self._record(
-            season,
-            season_dto.ChangeType.slot_moved,
-            slot_id=slot.id,
-            actor=actor,
-            payload={
-                "from": previous.isoformat(),
-                "to": started.isoformat(),
-                "date": started.isoformat(),
-                "reason": "game_rescheduled",
-            },
-        )
-        await self.dao.commit()
-        await self._announce_update(season.year)
-
-
-@dataclass
-class PublishSeasonDigestInteractor(SeasonInteractor):
+class PublishSeasonDigestInteractor:
     """The 10:00 MSK job: the day's net changes, and the end-of-season unpin."""
+
+    dao: SeasonScheduleDao
+    announcer: SeasonAnnouncer
 
     async def __call__(self, now: datetime) -> None:
         for season_id in await self.dao.get_season_ids_with_unpublished_changes():

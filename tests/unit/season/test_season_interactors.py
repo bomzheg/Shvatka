@@ -22,10 +22,10 @@ from shvatka.core.season.interactors import (
     ReleaseSlotInteractor,
     RemoveSlotInteractor,
     SetSlotOrgsInteractor,
-    SyncLinkedSlotInteractor,
     TakeSlotInteractor,
     UnlinkGameFromSlotInteractor,
 )
+from shvatka.core.season.services import LinkedSlotSync, ScheduleChangeLog
 from shvatka.core.utils import exceptions
 from shvatka.core.utils.datetime_utils import tz_game
 from tests.fixtures.identity import MockIdentityProvider
@@ -63,6 +63,10 @@ def make_dao(**kwargs) -> FakeSeasonDao:
     )
 
 
+def changes_of(dao: FakeSeasonDao, announcer: SeasonAnnouncerMock) -> ScheduleChangeLog:
+    return ScheduleChangeLog(dao=dao, announcer=announcer)
+
+
 def identity(player: dto.Player = AUTHOR) -> MockIdentityProvider:
     return MockIdentityProvider(player=player)
 
@@ -95,7 +99,7 @@ async def test_default_dates_persist_nothing():
 @pytest.mark.asyncio
 async def test_an_unpublished_year_is_not_found():
     with pytest.raises(exceptions.SeasonNotFound):
-        await GetSeasonInteractor(dao=make_dao(), announcer=SeasonAnnouncerMock())(YEAR)
+        await GetSeasonInteractor(dao=make_dao())(YEAR)
 
 
 @pytest.mark.asyncio
@@ -103,9 +107,7 @@ async def test_the_current_season_is_the_one_of_today_in_msk():
     dao, announcer = make_dao(), SeasonAnnouncerMock()
     await publish(dao, announcer)
 
-    season = await GetCurrentSeasonInteractor(dao=dao, announcer=announcer)(
-        datetime(YEAR, 12, 31, 23, tzinfo=tz_game)
-    )
+    season = await GetCurrentSeasonInteractor(dao=dao)(datetime(YEAR, 12, 31, 23, tzinfo=tz_game))
 
     assert season.year == YEAR
 
@@ -217,7 +219,7 @@ async def test_adding_a_date_records_it_and_refreshes_the_message():
     dao, announcer = make_dao(), SeasonAnnouncerMock()
     await publish(dao, announcer)
 
-    slot = await AddSlotInteractor(dao=dao, announcer=announcer)(
+    slot = await AddSlotInteractor(dao=dao, changes=changes_of(dao, announcer))(
         YEAR, date(YEAR, 7, 3), "зимняя игра", identity=identity()
     )
 
@@ -232,7 +234,7 @@ async def test_moving_a_date_records_where_it_came_from():
     season = await publish(dao, announcer)
     slot_id = season.slots[0].id
 
-    moved = await MoveSlotInteractor(dao=dao, announcer=announcer)(
+    moved = await MoveSlotInteractor(dao=dao, changes=changes_of(dao, announcer))(
         YEAR, slot_id, date(YEAR, 5, 22), identity=identity()
     )
 
@@ -246,7 +248,7 @@ async def test_moving_a_date_onto_itself_changes_nothing():
     dao, announcer = make_dao(), SeasonAnnouncerMock()
     season = await publish(dao, announcer)
 
-    await MoveSlotInteractor(dao=dao, announcer=announcer)(
+    await MoveSlotInteractor(dao=dao, changes=changes_of(dao, announcer))(
         YEAR, season.slots[0].id, FIRST, identity=identity()
     )
 
@@ -258,7 +260,7 @@ async def test_moving_a_date_onto_itself_changes_nothing():
 async def test_a_note_is_recorded_and_can_be_cleared():
     dao, announcer = make_dao(), SeasonAnnouncerMock()
     season = await publish(dao, announcer)
-    editor = EditSlotNoteInteractor(dao=dao, announcer=announcer)
+    editor = EditSlotNoteInteractor(dao=dao, changes=changes_of(dao, announcer))
 
     await editor(YEAR, season.slots[0].id, "город", identity=identity())
     cleared = await editor(YEAR, season.slots[0].id, None, identity=identity())
@@ -273,7 +275,9 @@ async def test_removing_a_date_keeps_the_change_that_describes_it():
     season = await publish(dao, announcer)
     slot_id, survivor_id = season.slots[0].id, season.slots[1].id
 
-    await RemoveSlotInteractor(dao=dao, announcer=announcer)(YEAR, slot_id, identity=identity())
+    await RemoveSlotInteractor(dao=dao, changes=changes_of(dao, announcer))(
+        YEAR, slot_id, identity=identity()
+    )
 
     assert [slot.id for slot in dao.slots] == [survivor_id]
     assert dao.changes[0].type == season_dto.ChangeType.slot_removed
@@ -288,7 +292,7 @@ async def test_an_unknown_date_is_not_found():
     await publish(dao, announcer)
 
     with pytest.raises(exceptions.SlotNotFound):
-        await MoveSlotInteractor(dao=dao, announcer=announcer)(
+        await MoveSlotInteractor(dao=dao, changes=changes_of(dao, announcer))(
             YEAR, 9999, SECOND, identity=identity()
         )
 
@@ -302,7 +306,7 @@ async def test_taking_a_date_locks_it_and_names_its_orgs():
     season = await publish(dao, announcer)
     slot_id = season.slots[0].id
 
-    slot = await TakeSlotInteractor(dao=dao, announcer=announcer)(
+    slot = await TakeSlotInteractor(dao=dao, changes=changes_of(dao, announcer))(
         YEAR,
         slot_id,
         author_kind=season_dto.SlotAuthorKind.player,
@@ -322,7 +326,7 @@ async def test_a_team_date_records_the_team_as_the_author():
     dao, announcer = make_dao(), SeasonAnnouncerMock()
     season = await publish(dao, announcer)
 
-    slot = await TakeSlotInteractor(dao=dao, announcer=announcer)(
+    slot = await TakeSlotInteractor(dao=dao, changes=changes_of(dao, announcer))(
         YEAR,
         season.slots[0].id,
         author_kind=season_dto.SlotAuthorKind.team,
@@ -339,7 +343,7 @@ async def test_a_team_date_records_the_team_as_the_author():
 async def test_a_date_can_be_handed_to_another_author():
     dao, announcer = make_dao(), SeasonAnnouncerMock()
     season = await publish(dao, announcer)
-    taker = TakeSlotInteractor(dao=dao, announcer=announcer)
+    taker = TakeSlotInteractor(dao=dao, changes=changes_of(dao, announcer))
     await taker(
         YEAR,
         season.slots[0].id,
@@ -366,7 +370,7 @@ async def test_releasing_a_date_frees_it_and_forgets_its_orgs():
     dao, announcer = make_dao(), SeasonAnnouncerMock()
     season = await publish(dao, announcer)
     slot_id = season.slots[0].id
-    await TakeSlotInteractor(dao=dao, announcer=announcer)(
+    await TakeSlotInteractor(dao=dao, changes=changes_of(dao, announcer))(
         YEAR,
         slot_id,
         author_kind=season_dto.SlotAuthorKind.player,
@@ -375,7 +379,7 @@ async def test_releasing_a_date_frees_it_and_forgets_its_orgs():
         identity=identity(),
     )
 
-    released = await ReleaseSlotInteractor(dao=dao, announcer=announcer)(
+    released = await ReleaseSlotInteractor(dao=dao, changes=changes_of(dao, announcer))(
         YEAR, slot_id, identity=identity()
     )
 
@@ -388,7 +392,7 @@ async def test_another_author_may_free_a_date_and_the_trail_says_who():
     dao, announcer = make_dao(), SeasonAnnouncerMock()
     season = await publish(dao, announcer)
     slot_id = season.slots[0].id
-    await TakeSlotInteractor(dao=dao, announcer=announcer)(
+    await TakeSlotInteractor(dao=dao, changes=changes_of(dao, announcer))(
         YEAR,
         slot_id,
         author_kind=season_dto.SlotAuthorKind.player,
@@ -397,7 +401,7 @@ async def test_another_author_may_free_a_date_and_the_trail_says_who():
         identity=identity(),
     )
 
-    released = await ReleaseSlotInteractor(dao=dao, announcer=announcer)(
+    released = await ReleaseSlotInteractor(dao=dao, changes=changes_of(dao, announcer))(
         YEAR, slot_id, identity=identity(OTHER)
     )
 
@@ -410,7 +414,7 @@ async def test_the_orgs_of_a_date_can_be_changed_on_their_own():
     dao, announcer = make_dao(), SeasonAnnouncerMock()
     season = await publish(dao, announcer)
 
-    slot = await SetSlotOrgsInteractor(dao=dao, announcer=announcer)(
+    slot = await SetSlotOrgsInteractor(dao=dao, changes=changes_of(dao, announcer))(
         YEAR, season.slots[0].id, [PLAIN.id], identity=identity()
     )
 
@@ -427,7 +431,7 @@ async def test_linking_a_game_takes_the_date_for_its_author_and_moves_it():
     dao, announcer = make_dao(), SeasonAnnouncerMock()
     season = await publish(dao, announcer)
 
-    slot = await LinkGameToSlotInteractor(dao=dao, announcer=announcer)(
+    slot = await LinkGameToSlotInteractor(dao=dao, changes=changes_of(dao, announcer))(
         YEAR, season.slots[0].id, GAME.id, identity=identity()
     )
 
@@ -444,7 +448,7 @@ async def test_linking_a_game_takes_the_date_for_its_author_and_moves_it():
 async def test_one_game_sits_in_one_date():
     dao, announcer = make_dao(), SeasonAnnouncerMock()
     season = await publish(dao, announcer)
-    linker = LinkGameToSlotInteractor(dao=dao, announcer=announcer)
+    linker = LinkGameToSlotInteractor(dao=dao, changes=changes_of(dao, announcer))
     await linker(YEAR, season.slots[0].id, GAME.id, identity=identity())
 
     with pytest.raises(exceptions.GameAlreadyInSchedule):
@@ -456,16 +460,16 @@ async def test_a_linked_date_cannot_be_released_before_it_is_unlinked():
     dao, announcer = make_dao(), SeasonAnnouncerMock()
     season = await publish(dao, announcer)
     slot_id = season.slots[0].id
-    await LinkGameToSlotInteractor(dao=dao, announcer=announcer)(
+    await LinkGameToSlotInteractor(dao=dao, changes=changes_of(dao, announcer))(
         YEAR, slot_id, GAME.id, identity=identity()
     )
 
     with pytest.raises(exceptions.SlotAlreadyLinked):
-        await ReleaseSlotInteractor(dao=dao, announcer=announcer)(
+        await ReleaseSlotInteractor(dao=dao, changes=changes_of(dao, announcer))(
             YEAR, slot_id, identity=identity()
         )
 
-    unlinked = await UnlinkGameFromSlotInteractor(dao=dao, announcer=announcer)(
+    unlinked = await UnlinkGameFromSlotInteractor(dao=dao, changes=changes_of(dao, announcer))(
         YEAR, slot_id, identity=identity()
     )
     assert unlinked.game is None
@@ -477,7 +481,7 @@ async def test_unlinking_a_date_that_holds_no_game_does_nothing():
     dao, announcer = make_dao(), SeasonAnnouncerMock()
     season = await publish(dao, announcer)
 
-    await UnlinkGameFromSlotInteractor(dao=dao, announcer=announcer)(
+    await UnlinkGameFromSlotInteractor(dao=dao, changes=changes_of(dao, announcer))(
         YEAR, season.slots[0].id, identity=identity()
     )
 
@@ -489,7 +493,7 @@ async def test_a_replanned_game_drags_its_date_along():
     dao, announcer = make_dao(), SeasonAnnouncerMock()
     season = await publish(dao, announcer)
     slot_id = season.slots[0].id
-    await LinkGameToSlotInteractor(dao=dao, announcer=announcer)(
+    await LinkGameToSlotInteractor(dao=dao, changes=changes_of(dao, announcer))(
         YEAR, slot_id, GAME.id, identity=identity()
     )
     dao.changes.clear()
@@ -504,7 +508,7 @@ async def test_a_replanned_game_drags_its_date_along():
         results=GAME.results,
     )
 
-    await SyncLinkedSlotInteractor(dao=dao, announcer=announcer)(moved_game, AUTHOR)
+    await LinkedSlotSync(dao=dao, changes=changes_of(dao, announcer))(moved_game, AUTHOR)
 
     assert (await dao.get_slot(slot_id)).slot_date == date(YEAR, 5, 24)
     assert dao.changes[0].payload["reason"] == "game_rescheduled"
@@ -515,7 +519,7 @@ async def test_a_game_in_no_date_changes_nothing():
     dao, announcer = make_dao(), SeasonAnnouncerMock()
     await publish(dao, announcer)
 
-    await SyncLinkedSlotInteractor(dao=dao, announcer=announcer)(GAME, AUTHOR)
+    await LinkedSlotSync(dao=dao, changes=changes_of(dao, announcer))(GAME, AUTHOR)
 
     assert dao.changes == []
 
@@ -535,7 +539,7 @@ async def test_a_game_with_no_start_changes_nothing():
         results=GAME.results,
     )
 
-    await SyncLinkedSlotInteractor(dao=dao, announcer=announcer)(unplanned, AUTHOR)
+    await LinkedSlotSync(dao=dao, changes=changes_of(dao, announcer))(unplanned, AUTHOR)
 
     assert dao.changes == []
 
@@ -569,7 +573,7 @@ async def test_the_digest_collapses_marks_published_and_notifies():
     dao, announcer = make_dao(), SeasonAnnouncerMock()
     season = await publish(dao, announcer)
     slot_id = season.slots[0].id
-    mover = MoveSlotInteractor(dao=dao, announcer=announcer)
+    mover = MoveSlotInteractor(dao=dao, changes=changes_of(dao, announcer))
     await mover(YEAR, slot_id, date(YEAR, 5, 16), identity=identity())
     await mover(YEAR, slot_id, date(YEAR, 5, 17), identity=identity())
     dao.notifications.clear()
@@ -589,7 +593,7 @@ async def test_changes_that_cancel_out_are_still_marked_but_said_nothing_about()
     dao, announcer = make_dao(), SeasonAnnouncerMock()
     season = await publish(dao, announcer)
     slot_id = season.slots[0].id
-    mover = MoveSlotInteractor(dao=dao, announcer=announcer)
+    mover = MoveSlotInteractor(dao=dao, changes=changes_of(dao, announcer))
     await mover(YEAR, slot_id, date(YEAR, 5, 16), identity=identity())
     await mover(YEAR, slot_id, FIRST, identity=identity())
     dao.notifications.clear()
@@ -650,7 +654,7 @@ async def test_a_failed_digest_post_still_marks_the_changes():
 
     dao, announcer = make_dao(), Refusing()
     season = await publish(dao, announcer)
-    await MoveSlotInteractor(dao=dao, announcer=announcer)(
+    await MoveSlotInteractor(dao=dao, changes=changes_of(dao, announcer))(
         YEAR, season.slots[0].id, date(YEAR, 5, 16), identity=identity()
     )
 
@@ -664,7 +668,7 @@ async def test_every_change_records_who_made_it():
     dao, announcer = make_dao(), SeasonAnnouncerMock()
     season = await publish(dao, announcer)
 
-    await RemoveSlotInteractor(dao=dao, announcer=announcer)(
+    await RemoveSlotInteractor(dao=dao, changes=changes_of(dao, announcer))(
         YEAR, season.slots[0].id, identity=identity(OTHER)
     )
 

@@ -70,6 +70,7 @@ def sh_exception_handler(
         | exceptions.GameWouldBeRewritten
         | exceptions.SeasonAlreadyExists
         | exceptions.SlotAlreadyLinked
+        | exceptions.SlotIsBusy
         | exceptions.GameAlreadyInSchedule,
     ):
         # a conflict the caller can resolve by asking and repeating the request

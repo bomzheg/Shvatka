@@ -369,19 +369,40 @@ note, the owner, the author kind, the team, the slot orgs, the linked game, plus
 | `TakeSlotInteractor` / `ReleaseSlotInteractor` / `SetSlotOrgsInteractor` | ownership
 | `LinkGameToSlotInteractor` / `UnlinkGameFromSlotInteractor` | the game link
 | `FindSlotsNearGameStartInteractor` | read-only ±3-day lookup used by both edges
-| `SyncLinkedSlotInteractor` | move a linked date when its game's start moves
 | `PublishSeasonDigestInteractor` | the 10:00 MSK job — digest *and* end-of-season unpin
 |===
 
 Per the "at most one DAO per interactor" rule in `AGENTS.md`, all of them take
 one composed `SeasonScheduleDao` Protocol, implemented by
 `infrastructure/db/dao/complex/season.py` over per-table DAOs `SeasonDao`,
-`SeasonSlotDao`, `SeasonSlotOrgDao` and `SeasonChangeDao` — each table's writes
-stay in its own DAO, and the interactor decides the ordering.
+`SeasonSlotDao`, `SeasonSlotOrgDao` and `SeasonChangeDao` — one class per
+module, each table's writes in its own DAO, and the interactor decides the
+ordering. `get_required_season(year)` lives on the dao beside `get_season`, so
+"the season of that year or `SeasonNotFound`" is asked for once rather than
+unwrapped at every call site.
+
+==== `services.py` — what a use case leans on but is not
+
+Two things in `core/season/` are deliberately *not* interactors:
+
+* `ScheduleChangeLog` — `record()` writes the `season_changes` row inside the
+  caller's transaction, `announce_update()` refreshes the pinned message after
+  the commit. Every edit does both, and an interactor that edits takes it as a
+  dependency. It replaced a `SeasonInteractor` base class the use cases
+  inherited: a base class hands every subclass the union of what any of them
+  needs, so `GetSeasonInteractor` carried an announcer it never called. Injected
+  instead, each use case's fields say exactly what it touches.
+* `LinkedSlotSync` — a re-planned game drags its date along.
+  `PlanGameStartInteractor` applies it after a successful re-plan.
+  *An interactor never calls another interactor*, and this is why it is a
+  service: the rule belongs to the season, the moment belongs to the game, and
+  a plain class dishka can build lets the game's interactor depend on it
+  without reaching into another use case.
 
 New exceptions in `core/utils/exceptions.py`: `SeasonAlreadyExists`,
 `SeasonNotFound`, `SlotNotFound`, `SlotAuthorInvalid`, `SlotAlreadyLinked`,
-`GameAlreadyInSchedule`. There is no `NotSlotOwner` or `SlotAlreadyTaken` —
+`SlotIsBusy`, `GameAlreadyInSchedule`. There is no `NotSlotOwner` or
+`SlotAlreadyTaken` —
 see <<slot-ownership>>. `SlotAuthorInvalid` covers naming a team you do not
 captain, or naming none at all; `SlotNotFound` covers a date id belonging to
 another season or to no season, which is a 404 rather than a 500 from the dao.
@@ -571,9 +592,14 @@ is advisory, one author can take or free another's date, and the change trail
 is what makes that recoverable. There is therefore no `NotSlotOwner`, and
 taking an already-taken date is not a 409 — it is a re-assignment.
 
-`TakeSlotInteractor` still re-reads the row `FOR UPDATE` inside the
+`TakeSlotInteractor` still re-reads the row `FOR UPDATE NOWAIT` inside the
 transaction: two people taking the same date at once should end with one
-coherent row, not an interleaved one.
+coherent row, not an interleaved one. *Nowait, not a wait.* Whoever queues
+behind an open edit would be deciding against the date as it was *before* that
+edit and would then write their own version over it — the very overwrite the
+lock is there to prevent. So the second taker gets `SlotIsBusy` → 409 and looks
+again, which is honest: re-assignment is allowed, but only ever on purpose and
+only ever against what is actually in the row.
 
 *A superuser acting in the ordinary schedule is acting as an author.* Their
 edits are recorded and rendered exactly like anyone's — no flag on the change
@@ -622,7 +648,7 @@ in MSK, takes the date for the game's author if it was free, and records
 `slot_game_linked` — plus `slot_moved` when the date actually changed.
 
 *Keeping it synced.* `PlanGameStartInteractor` gains one dependency,
-`SyncLinkedSlotInteractor`, invoked after a successful re-plan: if the game
+`LinkedSlotSync`, applied after a successful re-plan: if the game
 already sits in a date, that date follows the new `start_at` and a `slot_moved`
 change is recorded with the reason `game_rescheduled`. Cancelling a planned
 start unlinks nothing — the date keeps the game, it just has no start to sync
@@ -907,7 +933,7 @@ expensive to diagnose, and each has a fast test worth writing alongside it.
 * [x] `SeasonAnnouncer` + `BotSeasonAnnouncer` (send, pin, edit, unpin) and the
   no-op web side, fanned out by `ComplexSeasonAnnouncer`
 * [x] `PublishSeasonInteractor`, the per-date edit interactors, take/release,
-  link/unlink, `FindSlotsNearGameStartInteractor`, `SyncLinkedSlotInteractor`
+  link/unlink, `FindSlotsNearGameStartInteractor`, `LinkedSlotSync`
 * [x] `publish_season_digest_wrapper` on a 10:00 MSK cron trigger — digest *and*
   end-of-season unpin
 * [x] `SeasonAudienceReader` and `season_schedule_changed` notifications
@@ -983,6 +1009,14 @@ Filled in as the phases land.
   exception of its own. It is one guard (`_check_slot_year`) shared by publish,
   add and move, it carries the Russian in `notify_user`, and nothing branches on
   the type — a named class would only be there to be caught by nobody.
+* *An interactor never calls another interactor.* `PlanGameStartInteractor`
+  needs the season's sync rule, so that rule is a *service* — `LinkedSlotSync`
+  in `core/season/services.py` — not an interactor. `ScheduleChangeLog` moved
+  there with it, replacing the `SeasonInteractor` base class the use cases used
+  to inherit: injected, each interactor's fields name exactly what it uses.
+* *Taking a date uses `FOR UPDATE NOWAIT`*, not a waiting lock, and a held row
+  raises `SlotIsBusy` → 409. Queueing would let the loser decide against a
+  stale row and overwrite the winner.
 * *`ComplexSeasonAnnouncer.publish` returns the bot's announcement*, rather than
   gathering one per edge. Only the bot has a channel, and the season has exactly
   one message to store; anything else would push the choice of which message to

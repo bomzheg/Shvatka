@@ -12,6 +12,10 @@ class SeasonReader(Protocol):
     async def get_season(self, year: int) -> dto.Season | None:
         raise NotImplementedError
 
+    async def get_required_season(self, year: int) -> dto.Season:
+        """The season of that year, or `SeasonNotFound`."""
+        raise NotImplementedError
+
     async def get_season_by_id(self, season_id: int) -> dto.Season | None:
         raise NotImplementedError
 
@@ -44,7 +48,12 @@ class SlotReader(Protocol):
         raise NotImplementedError
 
     async def lock_slot(self, slot_id: int) -> dto.Slot:
-        """Re-read the row `FOR UPDATE`, so two takers cannot both win."""
+        """Re-read the row `FOR UPDATE`, so two takers cannot both win.
+
+        Raises `SlotIsBusy` when somebody else's edit holds the row: waiting
+        for it would mean reading the date as it was before their edit and
+        then writing over it.
+        """
         raise NotImplementedError
 
 

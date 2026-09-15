@@ -5,9 +5,9 @@
 |===
 | SHEP | 0003
 | Title | Season schedule
-| Status | `Accepted` — nothing implemented yet, phase 1 not started
+| Status | `Accepted` — nothing implemented yet. One pull request per phase.
 | Created | 2026-07-26
-| Updated | 2026-08-12
+| Updated | 2026-09-15
 | Related | issue #167, PR #306; xref:shep-0001-notifications-and-action-requests.adoc[SHEP-0001] (which defers `season_schedule_changed` to this one)
 |===
 
@@ -22,9 +22,12 @@ that is edited in place ever after, and exposes it over the REST API.
 Every later edit is recorded, and once a day at 10:00 MSK the accumulated edits
 are collapsed to their net effect and published — as a new channel message and
 as a `low`-severity notification to everyone who has played or organized
-recently. Any author may claim a free date for themselves or for their team; a
-taken date is locked to its owner. A real game can be linked to a date, and the
-engine offers the link when a game start is planned near one.
+recently. Any promoted author may claim a free date for themselves or for their
+team, and may move, release or re-take any date — owning a date records intent,
+it does not hand out access. A real game can be linked to a date, and the engine
+offers the link when a game start is planned near one. Assigning a date to *some
+other* player or team is the one thing the ordinary schedule does not do; that
+lives in the admin panel, which otherwise shows exactly what everyone else sees.
 
 == Context
 
@@ -93,7 +96,10 @@ Nothing named `season` exists in the codebase — this is a new domain area.
 | Topic | Decision
 
 | Permissions
-| Any *author* (`can_be_author`) may compose, publish, edit and take. No new role.
+| Any *author* (`can_be_author`) may compose, publish, edit and take — a date someone else took included. No owner lock, no superuser override.
+
+| Admin panel
+| Assigning *any* player or *any* team to a date is an admin-panel action. The ordinary schedule view is identical for an admin and for everyone else.
 
 | Draft state
 | *None.* A season row exists only once published; composing happens in client state.
@@ -120,7 +126,7 @@ Nothing named `season` exists in the codebase — this is a new domain area.
 | Offered within ±3 days; one game per date; the date follows the game's real start.
 
 | Taking
-| Records the owner, optionally their team (captains only), and a list of slot orgs.
+| Records the owner, optionally their team (captains only, or an admin from the admin panel), and a list of slot orgs. Ownership is intent, not exclusive access.
 
 | Creation
 | Manual. No auto-created calendar for next year.
@@ -141,9 +147,12 @@ Three existing terms fix wording issue #167 phrased differently:
 * *Author / Автор* (`can_be_author`) is the glossary's name for an "approved
   player". *Approved player* is not a term; this document says author
   throughout. The «аппрув» that grants the right is *promotion*.
-* *Superuser / Админ движка* is the engine operator, resolved only through
-  `SuperusersResolver`. The digest therefore says «изменено админом движка»: in
-  this glossary *admin* means the superuser, and a game has *organizers*.
+* *Superuser / Админ движка* is the engine operator. In this glossary *admin*
+  means the superuser, and a game has *organizers*. The season gives the admin
+  no standing in the ordinary schedule: their edits there are an author's
+  edits, recorded and rendered like anyone's, and the digest never says
+  «изменено админом движка». What they can do that an author cannot lives in
+  the admin panel — see <<admin-panel>>.
 * *Organizer / org* is a player who runs *a game*. The people named on a date
   are not organizers yet — there is no game — so they get their own term.
 
@@ -165,12 +174,12 @@ New entries:
 
 | *Taking a slot*
 | Взять дату
-| An author claiming a date, declaring whether the game will be authored by them or by their team. A taken date is locked to its owner.
+| An author claiming a date, declaring whether the game will be authored by them or by their team. It records intent, not exclusive access.
 | `TakeSlotInteractor`
 
 | *Slot owner*
 | Владелец даты
-| The author who took it. Besides the superuser, the only person who may move, release or delete it.
+| The author who took it — who means to make the game there. Any author may still move, release or delete the date; the change trail says who did.
 | `season_slots.owner_id`
 
 | *Slot org*
@@ -319,7 +328,6 @@ the digest's source.
 | `slot_id` | FK `season_slots.id` ON DELETE SET NULL, nullable | null once the date is gone
 | `type` | text, not null | `slot_added`, `slot_moved`, `slot_removed`, `slot_taken`, `slot_released`, `slot_orgs_changed`, `slot_note_changed`, `slot_game_linked`, `slot_game_unlinked`
 | `actor_id` | FK `players.id`, nullable | who did it
-| `by_superuser` | bool, not null, default false | drives the «изменено админом движка» wording
 | `payload` | JSONB, not null, default `{}` | denormalized old/new date, owner, team, game and org names — so the digest renders with no joins and survives later renames and deletes
 | `published_at` | timestamptz, nullable | null ⇒ not yet in a digest
 | `created_at` | timestamptz, not null |
@@ -363,8 +371,11 @@ one composed `SeasonScheduleDao` Protocol, implemented by
 stay in its own DAO, and the interactor decides the ordering.
 
 New exceptions in `core/utils/exceptions.py`: `SeasonAlreadyExists`,
-`SeasonNotFound`, `SlotAlreadyTaken`, `NotSlotOwner`, `SlotAlreadyLinked`,
-`GameAlreadyInSchedule`.
+`SeasonNotFound`, `SlotNotFound`, `SlotAuthorInvalid`, `SlotAlreadyLinked`,
+`GameAlreadyInSchedule`. There is no `NotSlotOwner` or `SlotAlreadyTaken` —
+see <<slot-ownership>>. `SlotAuthorInvalid` covers naming a team you do not
+captain, or naming none at all; `SlotNotFound` covers a date id belonging to
+another season or to no season, which is a 404 rather than a 500 from the dao.
 
 The lifecycle of one date:
 
@@ -521,29 +532,45 @@ naturally follows dates that moved or synced to a late game.
 The message itself is kept and stays editable — only the pin is released, so the
 channel keeps a permanent record of the year.
 
+[[slot-ownership]]
 === Slot ownership
 
-Taking requires `can_be_author` (`check_allow_be_author`), and:
+*Promotion is the whole gate.* `check_can_edit_schedule` is
+`check_allow_be_author` and nothing else, and every date-level use case calls
+it: adding, moving, renaming, taking, releasing, deleting, linking. A published
+season belongs to the authors collectively.
 
-* the date must be free, *or* already owned by the acting player — re-taking
-  your own date is how you change its author or its orgs — *or* the actor is a
-  superuser, asked through `SuperusersResolver`, never by re-reading config;
-* `author_kind = team` additionally requires the actor to captain that team
-  (`is_team_captain`);
-* the named slot orgs may be any player: being an org does not require promotion
-  to author.
+Two rules sit on top of it:
 
-Locking:
+* `author_kind = team` requires the actor to captain that team
+  (`is_team_captain`) — signing somebody else's team up for a game speaks for
+  people who did not press the button. The admin panel is the exception, and
+  the only one: see <<admin-panel>>;
+* the named slot orgs may be any player: being an org does not require
+  promotion.
 
-* a *taken* date may be released, re-assigned, moved or deleted only by its
-  owner, or by a superuser. Anyone else gets `NotSlotOwner`;
-* a *free* date may be added, moved or deleted by any author;
-* superuser actions take the same routes and set `by_superuser`, so the digest
-  can say «изменено админом движка», and are logged with the acting admin's id
-  per `AGENTS.md`.
+*Owning a date is intent, not access.* `owner_id` records who means to make the
+game there, which is what the calendar shows and what the digest reports. It
+does not lock the row: another author may move, re-assign or free the date, and
+`season_changes.actor_id` says who did.
 
-`TakeSlotInteractor` re-reads the row `FOR UPDATE` inside the transaction and
-raises `SlotAlreadyTaken` → 409 if someone won the race.
+That is deliberate, and it is what removes the need for an admin override here.
+An org who claimed a date in March and went quiet by July should not need a
+database edit to unstick, and the engine should not grow a role for something
+every promoted author is already trusted with. The cost is accepted: ownership
+is advisory, one author can take or free another's date, and the change trail
+is what makes that recoverable. There is therefore no `NotSlotOwner`, and
+taking an already-taken date is not a 409 — it is a re-assignment.
+
+`TakeSlotInteractor` still re-reads the row `FOR UPDATE` inside the
+transaction: two people taking the same date at once should end with one
+coherent row, not an interleaved one.
+
+*A superuser acting in the ordinary schedule is acting as an author.* Their
+edits are recorded and rendered exactly like anyone's — no flag on the change
+row, no «изменено админом движка» in the digest, no admin-only buttons in the
+`/season` view or the bot dialog. Being listed in `superusers` must not change
+what an ordinary edit looks like to everyone else.
 
 === Notification audience
 
@@ -617,14 +644,65 @@ POST   /seasons/{year}/slots/{id}/take
 DELETE /seasons/{year}/slots/{id}/take          release
 POST   /seasons/{year}/slots/{id}/game {game_id}  link
 DELETE /seasons/{year}/slots/{id}/game            unlink
+PUT    /seasons/{year}/slots/{id}/orgs {org_player_ids} set the slot orgs
 GET    /seasons/slots/suggest?at=<iso datetime>   ±3-day candidates for the offer
 ----
+
+`PUT …/orgs` is not in the original list and is needed: `SetSlotOrgsInteractor`
+has no other way in, and re-taking a date to change its orgs is a heavier act
+than changing them.
 
 Thin routes following the existing pattern — `@inject`,
 `FromDishka[SomeInteractor]`, `ApiIdentityProvider`, request and response models
 with `.from_core` / `.to_core`. Conflicts map to 409 (`SeasonAlreadyExists`,
-`SlotAlreadyTaken`, `GameAlreadyInSchedule`), permission failures to 403 through
-the existing `error_converter`.
+`GameAlreadyInSchedule`).
+
+On status codes: the api answers most `PermissionsError`s **422** today, and
+`tests/integration/api_full/test_team.py` asserts that on purpose, with
+`# PermissionsError -> SHError` written beside it. So `CantBeAuthor` — a player
+without promotion — is 422 here too, and only `SlotAuthorInvalid` (signing up a
+team you do not captain) is 403. Widening the converter to `PermissionsError`
+looks tempting and breaks five existing tests; making promotion failures 403
+across the api is a worthwhile separate change, not this one's to make.
+
+A published date must fall inside the season's year: both edges pin their
+calendar to it, so a date outside would be invisible. `PublishSeasonInteractor`
+and the add/move interactors refuse one.
+
+[[admin-panel]]
+=== Admin panel
+
+Two things an author cannot do, because they speak for somebody else:
+
+* *put any player on a date* as its owner — the person who will actually write
+  the game, who may not have pressed anything themselves;
+* *put any team on a date* as its author, without captaining it.
+
+Both belong to the engine operator, and both live in the *admin panel* —
+`/admin/season` in the web ui, behind `adminGuard`, next to the existing
+players, teams, games and waivers pages. Not in `/season`, and not as extra
+buttons that appear there for some readers.
+
+[source]
+----
+GET /admin/seasons/{year}                     the season, as the admin panel shows it
+PUT /admin/seasons/{year}/slots/{id}/author
+    {owner_player_id, author_kind, team_id?, org_player_ids?}
+----
+
+`AdminSetSlotAuthorInteractor` lives in `core/season/admin_interactors.py`
+beside the other `admin_interactors.py` modules, takes `identity.get_superuser()`
+rather than a flag, and logs with the acting admin's id per `AGENTS.md`. The
+change row it writes is an ordinary `slot_taken`: it names the actor like any
+other, and nothing downstream can tell it came from the panel.
+
+*The ordinary view is identical for everyone.* `/season` and `SeasonSG` render
+the same for an admin as for a player with promotion — the same buttons, the
+same team picker (the teams you captain), the same copy. An admin who wants to
+act as an admin goes to the admin panel to do it. This is a requirement, not a
+nicety: a view that quietly gains powers for some readers is one nobody can
+reason about, and the operator loses the ability to see what everyone else
+sees.
 
 === Bot
 
@@ -655,7 +733,9 @@ away.
 
 On a published season, tapping a day with a date opens take / release / change
 author / edit orgs / move / delete / open the linked game; tapping an empty day
-offers «Добавить дату» to authors.
+offers «Добавить дату» to authors. *Tapping never writes* — the empty-day window
+offers the date, it does not add it. The team picker offers the teams you
+captain, for an admin too: the panel is where an admin acts as one.
 
 *The link offer* is one extra window after `GameScheduleSG.confirm`: candidates
 ⇒ offer the nearest with «Привязать» / «Не привязывать»; none ⇒ the warning with
@@ -675,12 +755,30 @@ A standalone `src/app/season/` component and service, routes `/season` and
 * *Compose mode* for a year with no season: fetch the defaults, edit in component
   state mirrored to `localStorage`, publish in one request. A 409 means someone
   published first — offer to reload.
-* *Actions* for authors: take (choosing self or team, with an org picker reusing
-  the existing player search), release, add, move. Everything else is read-only,
-  and a published season renders for anonymous visitors.
+* *Actions* for authors: take (choosing self or a team you captain, with an org
+  picker reusing the existing player search), release, add, move, delete.
+  Everything else is read-only, and a published season renders for anonymous
+  visitors. The page looks the same to an admin — see <<admin-panel>>.
 * *Notifications tab*: a `season_schedule_changed` renderer in
   `notification-render.ts` producing «Расписание сезона 2027: 3 изменения»,
   linking to `/season/2027`.
+
+==== A tap opens a modal, it never writes
+
+Every tap on a day opens a modal and stops there. An empty day offers
+«Добавить дату?»; a planned one shows the date, its author, orgs, note and
+linked game, with the actions for whoever may edit. Adding a date on the tap
+itself — which the first implementation did — leaves no way back short of
+deleting it again, and a calendar that writes while you are reading it is one
+you stop trusting.
+
+The actions must live *in that modal*, not in a panel under the grid. On a
+phone the grid is twelve month cards tall: a panel below it means scrolling
+past all of them to reach the buttons for the day you just tapped, by which
+point you can no longer see which day it was. Follow the pattern the app
+already has for waivers and the upload prompt — backdrop, `Escape`,
+click-outside — and under 480px make it a bottom sheet with full-width buttons
+and a `safe-area-inset` so the actions clear the home bar.
 
 [[alternatives]]
 === Alternatives considered
@@ -739,15 +837,55 @@ a default time in the schedule would be a number nobody meant.
 | 3
 | The web season calendar, compose mode, extend-months controls, and the `season_schedule_changed` renderer
 | ⏳ not started
+
+| 4
+| The admin panel: `AdminSetSlotAuthorInteractor`, the `/admin/seasons` routes, and the `/admin/season` page
+| ⏳ not started
 |===
+
+*One phase, one pull request.* All four in one branch was tried and is not
+worth repeating: the diff outgrew what anyone can review in a sitting, every CI
+round re-ran everything, and a change of mind about permissions in phase 1
+rippled through three edges at once. Phase 1 is the only prerequisite — phases
+2, 3 and 4 depend on it and on nothing else, and may land in any order.
 
 Phase 1 leaves the schedule complete for anything that speaks HTTP: composed,
 published, announced, edited and digested. Phase 2 is what makes it usable from
-Telegram, phase 3 from the browser; the two are independent and may land in
-either order.
+Telegram, phase 3 from the browser, phase 4 from the operator's chair.
 
 Tests follow `AGENTS.md` — new domain classes get unit tests, new endpoints get
 integration tests — and are listed inside the phase that introduces them.
+
+[[traps]]
+=== Traps this feature has already sprung
+
+Each of these cost a CI round on the first attempt. They are cheap to avoid and
+expensive to diagnose, and each has a fast test worth writing alongside it.
+
+* *Do not name a dataclass field after its own type.* `date: date | None = None`
+  puts the default in the class namespace, which is where pydantic evaluates
+  annotations from — `date` resolves to `None`, `date | None` becomes
+  `None | None`, and FastAPI cannot build the route table. The whole api fails
+  to start and every integration test dies on the `app` fixture, which looks
+  nothing like the one-word cause. Import the type under another name, and add
+  a unit test that builds `shvatka.api.app.router.setup()`.
+* *Load every relationship `to_dto` walks.* `SeasonSlot.to_dto` reaches the
+  owner's user, the team's chat, forum team and captain, and every org's user.
+  An async session raises `MissingGreenlet` rather than lazy-loading, so the
+  loader options must cover all of it. A *free* date walks into nothing, so
+  publishing passes and taking does not — a confusing signal. A unit test can
+  compile the query and assert the joins without a database.
+* *Read a change payload's values before the write that changes them.* An
+  interactor that calls `move_slot` and then reads `slot.date` for the «from»
+  field records the day it moved *to*. The rdb dao returns a fresh dto per call
+  so it happens to work, which is exactly what makes it a trap: against an
+  in-memory dao — which the interactor tests want — it is wrong.
+* *Do not import `aiogram_dialog.widgets.kbd.calendar_kbd`.* Pulling that
+  submodule into mypy's graph makes it mis-resolve `OnPageChangedVariants` in
+  the library's own `widgets.common.scroll`, turning `tgbot/dialogs/paging.py`
+  red — a file the change never touched. Subclass `Calendar` and re-text the
+  days view the base class hands back, using only names the `kbd` package
+  exports. Also: clear `.mypy_cache` before trusting a local mypy run.
 
 === Phase 1 — engine ⏳
 
@@ -765,17 +903,20 @@ integration tests — and are listed inside the phase that introduces them.
 * [ ] `/seasons` routes
 * [ ] glossary rows in `context.md` here *and* in shvatka-ui
 * [ ] unit tests (`tests/unit/season/`): `default_slot_dates` across years
-  including the 9-May-is-Saturday case; the ownership matrix of free / owner /
-  superuser / captain; the ±3-day search including ties; digest collapsing —
-  repeated moves of one date become one line, move-and-move-back becomes
-  nothing, take then release becomes nothing
+  including the 9-May-is-Saturday case; permissions — promotion is the gate,
+  any author may edit any date, only a captain may name their team; the ±3-day
+  search including ties; digest collapsing — repeated moves of one date become
+  one line, move-and-move-back becomes nothing, take then release becomes
+  nothing. An in-memory `SeasonScheduleDao` makes the interactors testable
+  without a database and is what catches the payload-ordering trap above
 * [ ] integration tests (`tests/integration/api_full/test_season.py`): publish,
-  then publish the same year again → 409; take → 409 for a second taker and 403
-  for a non-author; link a game → the date syncs; re-plan the game → the date
-  follows; run the digest → changes marked published and notifications written;
-  run it on a season whose last date has passed → `unpinned_at` set. Assert
-  through `check_dao`, with announcer and notification effects through mocks in
-  the style of `tests/mocks/org_notifier.py`
+  then publish the same year again → 409; take, then another author re-assigns
+  the same date → the trail names them both; a player without promotion → 422;
+  link a game → the date syncs; re-plan the game → the date follows; run the
+  digest → changes marked published and notifications written; run it on a
+  season whose last date has passed → `unpinned_at` set. Assert through
+  `check_dao`, with announcer and notification effects through mocks in the
+  style of `tests/mocks/org_notifier.py`
 
 === Phase 2 — bot ⏳
 
@@ -785,16 +926,34 @@ integration tests — and are listed inside the phase that introduces them.
 * [ ] date window: take / release / change author / edit orgs / move / delete /
   open the linked game
 * [ ] the link offer and the no-date warning after `GameScheduleSG.confirm`
-* [ ] «(вне расписания сезона)» on the `GAME_PLANED` log line
+* [ ] «(вне расписания сезона)» on the `GAME_PLANED` log line — the flag travels
+  as data on the log event; the Russian belongs to the bot view, never to `core`
 
 === Phase 3 — web UI ⏳
 
 * [ ] `src/app/season/` component + service, routes `/season` and `/season/:year`
 * [ ] the May–October grid with extend-months controls and auto-extension for
   dates outside it
-* [ ] compose mode backed by `localStorage`, with 409 handling
-* [ ] take / release / add / move for authors; read-only for everyone else
-* [ ] `season_schedule_changed` in `notification-render.ts`
+* [ ] compose mode backed by `localStorage`, with 409 handling — discard the
+  local list and load the published season
+* [ ] a tap opens a modal and never writes: an empty day offers the date, a
+  planned one shows it; a bottom sheet under 480px, not a panel under the grid
+* [ ] take / release / add / move / delete for authors; read-only for everyone
+  else; identical for an admin
+* [ ] `season_schedule_changed` in `notification-render.ts`, declining the
+  count the way Russian does
+
+=== Phase 4 — admin panel ⏳
+
+* [ ] `core/season/admin_interactors.py` — `AdminSetSlotAuthorInteractor`,
+  taking `identity.get_superuser()` and logging with the admin's id
+* [ ] `GET /admin/seasons/{year}` and `PUT /admin/seasons/{year}/slots/{id}/author`
+* [ ] `src/app/admin/admin-season.component` behind `adminGuard`, routed at
+  `/admin/season`, with a player search for the owner and the full team list
+* [ ] unit tests: a non-superuser is refused; the change row it writes is an
+  ordinary `slot_taken` naming the actor
+* [ ] integration test: an admin assigns a player who is not them and a team
+  they do not captain; the same call from a plain author is refused
 
 [[deviations]]
 == Deviations from the plan
@@ -803,11 +962,15 @@ Nothing is implemented yet. This section is filled in as the phases land.
 
 == Open questions
 
-Both are implementation details that block nothing today.
+Both of the original ones are settled and folded into the decisions above.
 
-* *Digest wording* once collapsing exists: a date that was taken and then moved
-  on the same day — one line or two? Proposal: one line per date, stating its net
-  state change.
-* *Compose-mode conflict UX* on the web: when someone else published first,
-  merge the local list into the published season, or discard and reload?
-  Proposal: discard and reload — the local list is nine dates.
+* *Digest wording* once collapsing exists: a date taken and then moved on the
+  same day — one line or two? *One line per date.* `SlotDigest` holds the whole
+  net change of one date and the announcer renders it as one
+  «дата — перенесена с … на …; занял …» line.
+* *Compose-mode conflict UX* on the web: merge the local list into the season
+  someone else published first, or discard and reload? *Discard and reload* —
+  the local list is nine dates and merging two calendars has no obviously right
+  answer.
+
+Nothing is open today.

@@ -55,7 +55,7 @@ def upgrade():
         "season_slots",
         sa.Column("id", sa.BigInteger(), nullable=False),
         sa.Column("season_id", sa.BigInteger(), nullable=False),
-        sa.Column("date", sa.Date(), nullable=False),
+        sa.Column("slot_date", sa.Date(), nullable=False),
         sa.Column("note", sa.Text(), nullable=True),
         sa.Column("owner_id", sa.BigInteger(), nullable=True),
         sa.Column("author_kind", slot_author_kind, nullable=True),
@@ -103,7 +103,7 @@ def upgrade():
         sa.UniqueConstraint("game_id", name="uq__season_slots__game_id"),
     )
     op.create_index(
-        "ix__season_slots__season_date", "season_slots", ["season_id", "date"], unique=False
+        "ix__season_slots__season_date", "season_slots", ["season_id", "slot_date"], unique=False
     )
     op.create_index("ix__season_slots__owner_id", "season_slots", ["owner_id"], unique=False)
     op.create_index("ix__season_slots__team_id", "season_slots", ["team_id"], unique=False)

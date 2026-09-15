@@ -64,7 +64,7 @@ class SeasonDao(BaseDAO[Season]):
     async def get_seasons_to_close(self, today: date) -> Sequence[dto.Season]:
         """Announced seasons still pinned whose latest date is behind us."""
         last_date = (
-            select(SeasonSlot.season_id, func.max(SeasonSlot.date).label("last_date"))
+            select(SeasonSlot.season_id, func.max(SeasonSlot.slot_date).label("last_date"))
             .group_by(SeasonSlot.season_id)
             .subquery()
         )
@@ -136,13 +136,13 @@ class SeasonSlotDao(BaseDAO[SeasonSlot]):
         return result.unique().one_or_none()
 
     async def add_slot(self, season_id: int, day: date, note: str | None = None) -> dto.Slot:
-        slot = SeasonSlot(season_id=season_id, date=day, note=note)
+        slot = SeasonSlot(season_id=season_id, slot_date=day, note=note)
         self._save(slot)
         await self._flush(slot)
-        return dto.Slot(id=slot.id, season_id=season_id, date=day, note=note)
+        return dto.Slot(id=slot.id, season_id=season_id, slot_date=day, note=note)
 
     async def move_slot(self, slot_id: int, day: date) -> None:
-        await self._update(slot_id, date=day)
+        await self._update(slot_id, slot_date=day)
 
     async def set_slot_note(self, slot_id: int, note: str | None) -> None:
         await self._update(slot_id, note=note)

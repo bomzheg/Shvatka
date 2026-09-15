@@ -42,7 +42,7 @@ class LinkedGame:
 class SlotDraft:
     """One date of a season being composed. Nothing of it is persisted yet."""
 
-    date: date
+    slot_date: date
     note: str | None = None
 
 
@@ -50,7 +50,7 @@ class SlotDraft:
 class Slot:
     id: int
     season_id: int
-    date: date
+    slot_date: date
     note: str | None = None
     owner: dto.Player | None = None
     author_kind: SlotAuthorKind | None = None
@@ -97,7 +97,7 @@ class Season:
 
     @property
     def last_date(self) -> date | None:
-        return max((slot.date for slot in self.slots), default=None)
+        return max((slot.slot_date for slot in self.slots), default=None)
 
 
 @dataclass

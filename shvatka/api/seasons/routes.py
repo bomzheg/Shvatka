@@ -86,7 +86,7 @@ async def add_slot(
     year: int,
     body: Annotated[requests.AddSlot, Body()],
 ) -> responses.Slot:
-    slot = await interactor(year, body.date, body.note, identity=identity)
+    slot = await interactor(year, body.slot_date, body.note, identity=identity)
     return responses.Slot.from_core(slot)
 
 
@@ -101,8 +101,8 @@ async def edit_slot(
     body: Annotated[requests.EditSlot, Body()],
 ) -> responses.Slot:
     slot = None
-    if body.date is not None:
-        slot = await mover(year, slot_id, body.date, identity=identity)
+    if body.slot_date is not None:
+        slot = await mover(year, slot_id, body.slot_date, identity=identity)
     if body.note is not None:
         # an omitted note leaves it alone, an empty one clears it
         slot = await note_editor(year, slot_id, body.note or None, identity=identity)

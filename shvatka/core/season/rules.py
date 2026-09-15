@@ -82,12 +82,12 @@ def find_slots_near(
     candidates = [
         slot
         for slot in slots
-        if abs((slot.date - at).days) <= window.days
+        if abs((slot.slot_date - at).days) <= window.days
         and (slot.is_free or slot.is_mine(player))
         and not slot.is_linked
     ]
     # a tie (one date before, one after, equally far) resolves to the earlier one
-    return sorted(candidates, key=lambda slot: (abs((slot.date - at).days), slot.date))
+    return sorted(candidates, key=lambda slot: (abs((slot.slot_date - at).days), slot.slot_date))
 
 
 @dataclass

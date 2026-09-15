@@ -49,7 +49,7 @@ class Season(Base):
         "SeasonSlot",
         back_populates="season",
         foreign_keys="SeasonSlot.season_id",
-        order_by="SeasonSlot.date",
+        order_by="SeasonSlot.slot_date",
     )
 
     __table_args__ = (Index("ix__seasons__published_by_id", "published_by_id"),)
@@ -79,7 +79,7 @@ class SeasonSlot(Base):
     season_id: Mapped[int] = mapped_column(
         ForeignKey("seasons.id", ondelete="CASCADE"), nullable=False
     )
-    date: Mapped[date] = mapped_column(Date, nullable=False)
+    slot_date: Mapped[date] = mapped_column(Date, nullable=False)
     note: Mapped[str | None] = mapped_column(Text, nullable=True)
     owner_id: Mapped[int | None] = mapped_column(
         ForeignKey("players.id", ondelete="SET NULL"), nullable=True
@@ -115,7 +115,7 @@ class SeasonSlot(Base):
     )
 
     __table_args__ = (
-        Index("ix__season_slots__season_date", "season_id", "date"),
+        Index("ix__season_slots__season_date", "season_id", "slot_date"),
         Index("ix__season_slots__owner_id", "owner_id"),
         Index("ix__season_slots__team_id", "team_id"),
         # one game sits in at most one date; many dates may be free of games
@@ -126,7 +126,7 @@ class SeasonSlot(Base):
         return dto.Slot(
             id=self.id,
             season_id=self.season_id,
-            date=self.date,
+            slot_date=self.slot_date,
             note=self.note,
             owner=self.owner.to_dto_user_prefetched() if self.owner else None,
             author_kind=self.author_kind,

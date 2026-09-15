@@ -70,7 +70,7 @@ def identity(player: dto.Player = AUTHOR) -> MockIdentityProvider:
 async def publish(dao: FakeSeasonDao, announcer: SeasonAnnouncerMock, dates=(FIRST, SECOND)):
     await PublishSeasonInteractor(dao=dao, announcer=announcer)(
         YEAR,
-        [season_dto.SlotDraft(date=day) for day in dates],
+        [season_dto.SlotDraft(slot_date=day) for day in dates],
         identity=identity(),
     )
     announcer.clear()
@@ -115,7 +115,7 @@ async def test_the_years_are_listed_newest_first():
     dao, announcer = make_dao(), SeasonAnnouncerMock()
     await publish(dao, announcer)
     await PublishSeasonInteractor(dao=dao, announcer=announcer)(
-        YEAR + 1, [season_dto.SlotDraft(date=date(YEAR + 1, 5, 13))], identity=identity()
+        YEAR + 1, [season_dto.SlotDraft(slot_date=date(YEAR + 1, 5, 13))], identity=identity()
     )
 
     assert list(await ListSeasonsInteractor(dao=dao)()) == [YEAR + 1, YEAR]
@@ -130,11 +130,14 @@ async def test_publishing_stores_announces_and_notifies():
 
     season = await PublishSeasonInteractor(dao=dao, announcer=announcer)(
         YEAR,
-        [season_dto.SlotDraft(date=SECOND), season_dto.SlotDraft(date=FIRST, note="город")],
+        [
+            season_dto.SlotDraft(slot_date=SECOND),
+            season_dto.SlotDraft(slot_date=FIRST, note="город"),
+        ],
         identity=identity(),
     )
 
-    assert [slot.date for slot in season.slots] == [FIRST, SECOND]
+    assert [slot.slot_date for slot in season.slots] == [FIRST, SECOND]
     assert season.log_chat_id == MOCK_CHAT_ID
     assert season.log_message_id == MOCK_MESSAGE_ID
     assert [one.year for one in announcer.published] == [YEAR]
@@ -165,7 +168,7 @@ async def test_a_channel_that_refuses_the_post_does_not_lose_the_season():
     dao, announcer = make_dao(), Refusing()
 
     season = await PublishSeasonInteractor(dao=dao, announcer=announcer)(
-        YEAR, [season_dto.SlotDraft(date=FIRST)], identity=identity()
+        YEAR, [season_dto.SlotDraft(slot_date=FIRST)], identity=identity()
     )
 
     assert season.log_message_id is None
@@ -194,7 +197,7 @@ async def test_a_season_needs_at_least_one_date():
 async def test_a_date_outside_the_year_is_refused():
     with pytest.raises(exceptions.SeasonError):
         await PublishSeasonInteractor(dao=make_dao(), announcer=SeasonAnnouncerMock())(
-            YEAR, [season_dto.SlotDraft(date=date(YEAR + 1, 5, 15))], identity=identity()
+            YEAR, [season_dto.SlotDraft(slot_date=date(YEAR + 1, 5, 15))], identity=identity()
         )
 
 
@@ -202,7 +205,7 @@ async def test_a_date_outside_the_year_is_refused():
 async def test_only_an_author_publishes():
     with pytest.raises(exceptions.CantBeAuthor):
         await PublishSeasonInteractor(dao=make_dao(), announcer=SeasonAnnouncerMock())(
-            YEAR, [season_dto.SlotDraft(date=FIRST)], identity=identity(PLAIN)
+            YEAR, [season_dto.SlotDraft(slot_date=FIRST)], identity=identity(PLAIN)
         )
 
 
@@ -233,7 +236,7 @@ async def test_moving_a_date_records_where_it_came_from():
         YEAR, slot_id, date(YEAR, 5, 22), identity=identity()
     )
 
-    assert moved.date == date(YEAR, 5, 22)
+    assert moved.slot_date == date(YEAR, 5, 22)
     assert dao.changes[0].payload["from"] == FIRST.isoformat()
     assert dao.changes[0].payload["to"] == date(YEAR, 5, 22).isoformat()
 
@@ -430,7 +433,7 @@ async def test_linking_a_game_takes_the_date_for_its_author_and_moves_it():
 
     assert slot.game is not None
     assert slot.owner == GAME.author
-    assert slot.date == GAME.start_at.astimezone(tz_game).date()
+    assert slot.slot_date == GAME.start_at.astimezone(tz_game).date()
     assert [change.type for change in dao.changes] == [
         season_dto.ChangeType.slot_game_linked,
         season_dto.ChangeType.slot_moved,
@@ -503,7 +506,7 @@ async def test_a_replanned_game_drags_its_date_along():
 
     await SyncLinkedSlotInteractor(dao=dao, announcer=announcer)(moved_game, AUTHOR)
 
-    assert (await dao.get_slot(slot_id)).date == date(YEAR, 5, 24)
+    assert (await dao.get_slot(slot_id)).slot_date == date(YEAR, 5, 24)
     assert dao.changes[0].payload["reason"] == "game_rescheduled"
 
 
@@ -546,7 +549,7 @@ async def test_dates_are_suggested_near_a_planned_start():
         datetime(YEAR, 5, 16, 20, tzinfo=tz_game), identity()
     )
 
-    assert [slot.date for slot in found] == [FIRST]
+    assert [slot.slot_date for slot in found] == [FIRST]
 
 
 @pytest.mark.asyncio
@@ -613,7 +616,7 @@ async def test_a_quiet_day_says_nothing():
 async def test_a_finished_season_is_unpinned_once():
     dao, announcer = make_dao(), SeasonAnnouncerMock()
     await PublishSeasonInteractor(dao=dao, announcer=announcer)(
-        2020, [season_dto.SlotDraft(date=date(2020, 5, 16))], identity=identity()
+        2020, [season_dto.SlotDraft(slot_date=date(2020, 5, 16))], identity=identity()
     )
     announcer.clear()
     digest = PublishSeasonDigestInteractor(dao=dao, announcer=announcer)

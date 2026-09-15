@@ -216,6 +216,15 @@ glossary already carries pairs whose halves are unrelated words — *Promotion /
 Аппрув*, *Puzzle / Загадка уровня*, *Waiver / Вейвер* — so `Slot` ↔ «дата игры»
 fits the pattern. What matters is that no Russian string says *слот*.
 
+The date a slot falls on is `slot_date` everywhere — the column, the orm
+attribute, the core dto, the api request and the api response. A field called
+`date` shadows `datetime.date` in the class namespace, which is exactly where
+pydantic and SQLAlchemy resolve annotations from, and the way out is either an
+aliased import (`from datetime import date as date_`) in every module that
+declares one or a name that does not collide. The name is the cheaper fix: an
+alias is a workaround a reader has to decode at each import, and it spreads to
+every new module that holds a date.
+
 ==== Two collisions to resolve in the glossary
 
 . *Публикация* already means posting a finished game's *results* to a channel
@@ -286,7 +295,7 @@ a failed channel post must not roll back a published season.
 
 | `id` | bigint PK |
 | `season_id` | FK `seasons.id` ON DELETE CASCADE, not null | indexed
-| `date` | date, not null | *date only*, read in MSK (`tz_game`)
+| `slot_date` | date, not null | *date only*, read in MSK (`tz_game`). Not `date`: a field of that name shadows its own type in the class namespace, which pydantic and SQLAlchemy both read annotations from
 | `note` | text, nullable | free text — «зимняя игра», a city
 | `owner_id` | FK `players.id`, nullable | null ⇒ free
 | `author_kind` | text, nullable | `player` or `team`; null while free
@@ -635,9 +644,9 @@ GET    /seasons                                 list of years
 GET    /seasons/current                         the current year's season
 GET    /seasons/{year}                          season + dates
 GET    /seasons/defaults?year=2027              the 9 default dates, nothing persisted
-POST   /seasons  {year, slots: [{date, note?}]} publish a composed season
-POST   /seasons/{year}/slots   {date, note?}    add a date
-PATCH  /seasons/{year}/slots/{id}  {date?, note?}
+POST   /seasons  {year, slots: [{slot_date, note?}]}  publish a composed season
+POST   /seasons/{year}/slots   {slot_date, note?}      add a date
+PATCH  /seasons/{year}/slots/{id}  {slot_date?, note?}
 DELETE /seasons/{year}/slots/{id}
 POST   /seasons/{year}/slots/{id}/take
        {author_kind, team_id?, org_player_ids?} take / re-assign
@@ -867,8 +876,10 @@ expensive to diagnose, and each has a fast test worth writing alongside it.
   annotations from — `date` resolves to `None`, `date | None` becomes
   `None | None`, and FastAPI cannot build the route table. The whole api fails
   to start and every integration test dies on the `app` fixture, which looks
-  nothing like the one-word cause. Import the type under another name, and add
-  a unit test that builds `shvatka.api.app.router.setup()`.
+  nothing like the one-word cause. *Rename the field, not the import*: an
+  aliased `from datetime import date as date_` fixes the one module and then
+  has to be repeated, and decoded, in every module that declares a date. Hence
+  `slot_date`. Add a unit test that builds `shvatka.api.app.router.setup()`.
 * *Load every relationship `to_dto` walks.* `SeasonSlot.to_dto` reaches the
   owner's user, the team's chat, forum team and captain, and every org's user.
   An async session raises `MissingGreenlet` rather than lazy-loading, so the

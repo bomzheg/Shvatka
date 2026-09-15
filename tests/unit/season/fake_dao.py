@@ -63,7 +63,7 @@ class FakeSeasonDao(SeasonScheduleDao):
     def _slots_of(self, season_id: int) -> list[season_dto.Slot]:
         return sorted(
             (slot for slot in self.slots if slot.season_id == season_id),
-            key=lambda slot: slot.date,
+            key=lambda slot: slot.slot_date,
         )
 
     async def get_season(self, year: int) -> season_dto.Season | None:
@@ -144,12 +144,12 @@ class FakeSeasonDao(SeasonScheduleDao):
     async def add_slot(
         self, season_id: int, day: date, note: str | None = None
     ) -> season_dto.Slot:
-        slot = season_dto.Slot(id=self._take_id(), season_id=season_id, date=day, note=note)
+        slot = season_dto.Slot(id=self._take_id(), season_id=season_id, slot_date=day, note=note)
         self.slots.append(slot)
         return slot
 
     async def move_slot(self, slot_id: int, day: date) -> None:
-        (await self.get_slot(slot_id)).date = day
+        (await self.get_slot(slot_id)).slot_date = day
 
     async def set_slot_note(self, slot_id: int, note: str | None) -> None:
         (await self.get_slot(slot_id)).note = note

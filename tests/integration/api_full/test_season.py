@@ -43,8 +43,8 @@ def author_token(author: dto.Player, auth: AuthProperties) -> Token:
 
 async def publish(client: AsyncClient, token: Token, year: int = YEAR, slots=None):
     slots = slots or [
-        {"date": FIRST.isoformat()},
-        {"date": SECOND.isoformat(), "note": "зимняя игра"},
+        {"slot_date": FIRST.isoformat()},
+        {"slot_date": SECOND.isoformat(), "note": "зимняя игра"},
     ]
     return await client.post(
         "/seasons",
@@ -98,12 +98,12 @@ async def test_publish_writes_announces_and_notifies(
     assert resp.is_success
     body = resp.json()
     assert body["year"] == YEAR
-    assert [slot["date"] for slot in body["slots"]] == [FIRST.isoformat(), SECOND.isoformat()]
+    assert [slot["slot_date"] for slot in body["slots"]] == [FIRST.isoformat(), SECOND.isoformat()]
 
     season = await check_dao.season.get_season(YEAR)
     assert season is not None
     assert season.log_message_id == MOCK_MESSAGE_ID
-    assert [slot.date for slot in season.slots] == [FIRST, SECOND]
+    assert [slot.slot_date for slot in season.slots] == [FIRST, SECOND]
     assert [one.year for one in announcer.published] == [YEAR]
 
     # everyone who has been in a team recently hears about it
@@ -132,7 +132,7 @@ async def test_publishing_the_same_year_twice_is_a_conflict(
 async def test_a_date_outside_the_season_year_is_refused(
     client: AsyncClient, harry: dto.Player, harry_token: Token
 ):
-    resp = await publish(client, harry_token, slots=[{"date": f"{YEAR + 1}-05-15"}])
+    resp = await publish(client, harry_token, slots=[{"slot_date": f"{YEAR + 1}-05-15"}])
 
     assert resp.status_code == 422
 
@@ -215,13 +215,13 @@ async def test_another_author_may_move_a_taken_date(
     resp = await client.patch(
         f"/seasons/{YEAR}/slots/{slot_id}",
         cookies=auth_cookies(draco_token),
-        json={"date": moved_to.isoformat()},
+        json={"slot_date": moved_to.isoformat()},
         follow_redirects=True,
     )
 
     # a date belongs to the authors collectively; the trail names who moved it
     assert resp.is_success
-    assert (await check_dao.season_slot.get_slot(slot_id)).date == moved_to
+    assert (await check_dao.season_slot.get_slot(slot_id)).slot_date == moved_to
     season = await check_dao.season.get_season(YEAR)
     assert season is not None
     changes = await check_dao.season_change.get_unpublished_changes(season.id)
@@ -282,7 +282,7 @@ async def test_linking_a_game_takes_the_date_and_syncs_it(
     assert slot.game is not None
     assert slot.game.id == game.id
     # the date follows the game, and taking it happens on the way
-    assert slot.date == start_at.date()
+    assert slot.slot_date == start_at.date()
     assert slot.owner is not None
     assert slot.owner.id == game.author.id
 
@@ -329,7 +329,7 @@ async def test_replanning_the_game_drags_its_date_along(
 
     assert replanned.is_success
     slot = await check_dao.season_slot.get_slot(slot_id)
-    assert slot.date == moved_to.date()
+    assert slot.slot_date == moved_to.date()
 
 
 @pytest.mark.asyncio
@@ -346,7 +346,7 @@ async def test_suggested_dates_are_the_nearby_free_ones(
     )
 
     assert resp.is_success
-    assert [slot["date"] for slot in resp.json()] == [FIRST.isoformat()]
+    assert [slot["slot_date"] for slot in resp.json()] == [FIRST.isoformat()]
 
 
 @pytest.mark.asyncio
@@ -365,7 +365,7 @@ async def test_the_digest_collapses_marks_and_notifies(
         moved = await client.patch(
             f"/seasons/{YEAR}/slots/{slot_id}",
             cookies=auth_cookies(harry_token),
-            json={"date": day.isoformat()},
+            json={"slot_date": day.isoformat()},
             follow_redirects=True,
         )
         assert moved.is_success
@@ -399,7 +399,9 @@ async def test_a_finished_season_is_unpinned_once(
     dishka: AsyncContainer,
 ):
     past = 2020
-    published = await publish(client, harry_token, year=past, slots=[{"date": f"{past}-05-16"}])
+    published = await publish(
+        client, harry_token, year=past, slots=[{"slot_date": f"{past}-05-16"}]
+    )
     assert published.is_success
     announcer = await dishka.get(SeasonAnnouncerMock)
     announcer.clear()

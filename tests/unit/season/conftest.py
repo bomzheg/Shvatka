@@ -22,7 +22,7 @@ def make_slot(
     return season_dto.Slot(
         id=id_,
         season_id=1,
-        date=day,
+        slot_date=day,
         owner=owner,
         author_kind=season_dto.SlotAuthorKind.player if owner else None,
         game=game,

@@ -1,20 +1,17 @@
 from collections.abc import Sequence
 from dataclasses import dataclass, field
-
-# a field named `date` shadows the type in the class namespace, and pydantic
-# evaluates the annotations there — so the type travels under its own name
-from datetime import date as date_
+from datetime import date
 
 from shvatka.core.season import dto
 
 
 @dataclass
 class SlotDraft:
-    date: date_
+    slot_date: date
     note: str | None = None
 
     def to_core(self) -> dto.SlotDraft:
-        return dto.SlotDraft(date=self.date, note=self.note)
+        return dto.SlotDraft(slot_date=self.slot_date, note=self.note)
 
 
 @dataclass
@@ -25,13 +22,13 @@ class PublishSeason:
 
 @dataclass
 class AddSlot:
-    date: date_
+    slot_date: date
     note: str | None = None
 
 
 @dataclass
 class EditSlot:
-    date: date_ | None = None
+    slot_date: date | None = None
     note: str | None = None
     """Omitted leaves the note alone; an empty string clears it."""
 

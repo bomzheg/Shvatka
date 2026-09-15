@@ -80,12 +80,12 @@ class BotSeasonAnnouncer(SeasonAnnouncer):
 
 def render_season(season: dto.Season) -> str:
     lines = [hd.bold(f"Расписание сезона {season.year}"), ""]
-    lines.extend(render_slot(slot) for slot in sorted(season.slots, key=lambda s: s.date))
+    lines.extend(render_slot(slot) for slot in sorted(season.slots, key=lambda s: s.slot_date))
     return "\n".join(lines)
 
 
 def render_slot(slot: dto.Slot) -> str:
-    day = _day(slot.date)
+    day = _day(slot.slot_date)
     if slot.game is not None:
         line = f"{LINKED} {day} — {hd.quote(slot.game.name)}"
     elif slot.owner is not None:

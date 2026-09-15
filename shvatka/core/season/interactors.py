@@ -121,12 +121,12 @@ class PublishSeasonInteractor(SeasonInteractor):
         if not slots:
             raise exceptions.SeasonError(player=author, text="a season needs at least one date")
         for draft in slots:
-            _check_slot_year(year, draft.date, author)
+            _check_slot_year(year, draft.slot_date, author)
         if await self.dao.get_season(year) is not None:
             raise exceptions.SeasonAlreadyExists(player=author, text=f"season {year} exists")
         season = await self.dao.create_season(year, published_by_id=author.id)
-        for draft in sorted(slots, key=lambda draft: draft.date):
-            await self.dao.add_slot(season.id, draft.date, draft.note)
+        for draft in sorted(slots, key=lambda draft: draft.slot_date):
+            await self.dao.add_slot(season.id, draft.slot_date, draft.note)
         await self.dao.commit()
 
         published = await self._get_season(year)
@@ -198,10 +198,10 @@ class MoveSlotInteractor(SeasonInteractor):
         slot = self._get_slot(season, slot_id)
         check_can_edit_schedule(author)
         _check_slot_year(year, day, author)
-        if slot.date == day:
+        if slot.slot_date == day:
             return slot
         # read what the payload needs before the write that changes it
-        previous = slot.date
+        previous = slot.slot_date
         await self.dao.move_slot(slot_id, day)
         await self._record(
             season,
@@ -234,7 +234,7 @@ class EditSlotNoteInteractor(SeasonInteractor):
             season_dto.ChangeType.slot_note_changed,
             slot_id=slot_id,
             actor=author,
-            payload={"date": slot.date.isoformat(), "note": note},
+            payload={"date": slot.slot_date.isoformat(), "note": note},
         )
         await self.dao.commit()
         await self._announce_update(year)
@@ -254,7 +254,7 @@ class RemoveSlotInteractor(SeasonInteractor):
             season_dto.ChangeType.slot_removed,
             slot_id=slot_id,
             actor=author,
-            payload={"date": slot.date.isoformat()},
+            payload={"date": slot.slot_date.isoformat()},
         )
         await self.dao.remove_slot(slot_id)
         await self.dao.commit()
@@ -296,7 +296,7 @@ class TakeSlotInteractor(SeasonInteractor):
             slot_id=slot_id,
             actor=actor,
             payload={
-                "date": slot.date.isoformat(),
+                "date": slot.slot_date.isoformat(),
                 "author": team.name if team is not None else actor.name_mention,
                 "author_kind": author_kind.name,
                 "orgs": [org.name_mention for org in orgs],
@@ -328,7 +328,7 @@ class ReleaseSlotInteractor(SeasonInteractor):
             season_dto.ChangeType.slot_released,
             slot_id=slot_id,
             actor=actor,
-            payload={"date": slot.date.isoformat(), "author": released_from},
+            payload={"date": slot.slot_date.isoformat(), "author": released_from},
         )
         await self.dao.commit()
         await self._announce_update(year)
@@ -357,7 +357,7 @@ class SetSlotOrgsInteractor(SeasonInteractor):
             slot_id=slot_id,
             actor=actor,
             payload={
-                "date": slot.date.isoformat(),
+                "date": slot.slot_date.isoformat(),
                 "orgs": [org.name_mention for org in orgs],
             },
         )
@@ -423,7 +423,7 @@ class LinkGameToSlotInteractor(SeasonInteractor):
             slot_id=slot_id,
             actor=actor,
             payload={
-                "date": slot.date.isoformat(),
+                "date": slot.slot_date.isoformat(),
                 "game": game.name,
                 "game_id": game.id,
             },
@@ -444,9 +444,9 @@ class LinkGameToSlotInteractor(SeasonInteractor):
         if game.start_at is None:
             return
         started = game.start_at.astimezone(tz_game).date()
-        if started == slot.date:
+        if started == slot.slot_date:
             return
-        previous = slot.date
+        previous = slot.slot_date
         await self.dao.move_slot(slot.id, started)
         await self._record(
             season,
@@ -481,7 +481,7 @@ class UnlinkGameFromSlotInteractor(SeasonInteractor):
             slot_id=slot_id,
             actor=actor,
             payload={
-                "date": slot.date.isoformat(),
+                "date": slot.slot_date.isoformat(),
                 "game": unlinked.name,
                 "game_id": unlinked.id,
             },
@@ -502,12 +502,12 @@ class SyncLinkedSlotInteractor(SeasonInteractor):
         if slot is None:
             return
         started = game.start_at.astimezone(tz_game).date()
-        if started == slot.date:
+        if started == slot.slot_date:
             return
         season = await self.dao.get_season_by_id(slot.season_id)
         if season is None:
             return
-        previous = slot.date
+        previous = slot.slot_date
         await self.dao.move_slot(slot.id, started)
         await self._record(
             season,

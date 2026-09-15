@@ -1,0 +1,155 @@
+= SHEP-0016 — Look-alike characters in keys
+:navtitle: SHEP-0016 Look-alike key characters
+
+[cols="1,4"]
+|===
+| SHEP | 0016
+| Title | Look-alike characters in keys
+| Status | `Accepted`, implemented
+| Created | 2026-09-08
+| Updated | 2026-09-08
+| Related | PR #416
+|===
+
+== Summary
+
+A key typed with a cyrillic letter where the author wrote the latin twin — or
+with `0` for `O`, `1` for `I`, `Е` for `Ё` — is now the same key. Every
+comparison of two keys goes through `fold_key`
+(`shvatka/core/utils/key_folding.py`), which replaces each character with the
+representative of the group of characters it can't be told apart from.
+
+Folding is comparison-only: what the author wrote and what the player typed are
+stored and shown unchanged, so the key log still says what actually happened.
+
+== Context
+
+A key is a string the player retypes from a photo, a sign, a note or a chat
+message, on whichever keyboard layout is at hand. The alphabet the format allows
+(`[A-Z\dА-ЯЁ]`, see `input_validation.py`) contains three sets of characters
+that are *drawn the same*:
+
+* latin and cyrillic twins — `A`/`А`, `B`/`В`, `C`/`С`, `E`/`Е`, `H`/`Н`,
+  `K`/`К`, `M`/`М`, `O`/`О`, `P`/`Р`, `T`/`Т`, `X`/`Х`, `Y`/`У`;
+* letters and digits — `O` and `0`, `I` and `1`, the cyrillic ze and `3`;
+* `Ё`, which half of the russian-writing world types as `Е`.
+
+Nothing in the play path knew about that. Keys met each other as plain strings:
+
+* `KeyCondition._is_correct` — `action.key in self.get_keys()`;
+* `KeyCondition._is_all_typed` — the level's keys as a subset of what the team
+  has typed;
+* `TypedKeysState.is_duplicate` — `action.key in self.all_typed`;
+* `check_level_testing_key` — the same two checks for a level under test;
+* `normalize_key` — the format check, matching a regexp built from
+  `KEY_PREFIXES`.
+
+So a team that typed the right word in the wrong alphabet got 👎, a wrong key in
+the log and, in a game where wrong keys cost time, a penalty for a key they
+*had* found. The author's side of the same problem: the only defence was to
+write every look-alike spelling of the key into the level, and the two prefixes
+made even that unreliable.
+
+== Decision
+
+=== One folded form, compared everywhere
+
+`fold_key(key)` maps every character to the representative of its group and
+keeps the length; `fold_keys(keys)` folds a set. Two keys are equal when their
+folded forms are equal, and that is the only definition of key equality in the
+engine. It replaced the five string comparisons listed above.
+
+The groups live in one table, `CONFUSABLE_GROUPS`, representative first. A pair
+belongs there when the two characters are drawn the same in the fonts a key is
+read in, or when writing routinely substitutes one for the other (`Е` for `Ё`,
+`4` for the cyrillic che). Characters that merely look related — `5` and `S`,
+`6` and the cyrillic be — are left apart: every folded pair costs key space, and
+those two pairs are told apart by anyone who is reading rather than guessing.
+
+The representative is the latin letter or the digit, so a folded key stays
+readable in a log line. Nothing else depends on the choice.
+
+=== Folding is comparison-only
+
+The key that reaches the database, the key log, the results table and the chat
+reply is the string the player sent, and the key in the scenario is the string
+the author wrote. Only the comparison folds.
+
+The alternative — normalising the key on the way in, so that everything
+downstream compares by `==` — was rejected on two counts. It rewrites history:
+the log would show the folded form (`SH2O24` for a key typed `SH2024`), and the
+team's own list of typed keys would stop matching what they sent. And it is a
+one-way door: a folding rule that turns out too aggressive can be narrowed for
+future comparisons, but not for keys already stored folded.
+
+A second alternative, an `SHKey` class carrying folded `__eq__`/`__hash__`, was
+rejected too: the scenario is (de)serialised by adaptix as `set[str]`, so a
+folded key type would silently degrade to `str` wherever a retort rebuilt it —
+equality that depends on which of two identical-looking types you happen to hold
+is worse than an explicit `fold_key` at each comparison.
+
+=== The format check folds first
+
+`normalize_key` folds the candidate before matching it against the key regexp,
+which is now written in folded characters (`FOLDED_KEY_REGEXP`, prefixes `SH`
+and `CX` — the folded forms of `SH` and `СХ`). A key whose *prefix* is typed in
+the other alphabet is therefore a key, not an unrecognised message, and so is a
+key containing a character that is a look-alike of an allowed one but is itself
+outside the allowed alphabet (`Ë`, the cyrillic byelorussian-ukrainian i, the
+cyrillic je, dze and straight u).
+
+`KEY_PREFIXES` stays the pair the user-facing texts are built from: `SH` and
+`СХ` is what an author is told to write.
+
+=== A level whose own keys fold together is logged, not refused
+
+Two keys of one level that fold into each other are one key for the player:
+whichever is typed matches every condition they belong to, and
+`Decisions.get_exactly_one` answers by the first of them.
+
+`Conditions.validate_keys_unique` reports that as a warning rather than raising.
+Raising would be the better feedback for an author writing the level — but the
+same constructor runs when a *stored* scenario is loaded, and an old game whose
+author wrote both spellings of a key on purpose (the workaround this SHEP
+removes) would stop loading altogether: no results page, no key log, no replay.
+Exact duplicates keep raising, as before.
+
+== Consequences
+
+* A key is now accepted in more spellings than the author wrote, which is the
+  point. The key space shrinks accordingly: `SHKOT` and the same word in
+  cyrillic can no longer be two different keys of one level.
+* Keys already typed in past games are unaffected — they are compared, not
+  rewritten, and folding only ever makes an old comparison stay true.
+* `fold_key` is `str.translate` over a table built once at import, so the play
+  path pays a copy of a short string per comparison.
+* Adding a pair to `CONFUSABLE_GROUPS` is a behavioural change to every game at
+  once: it can turn a level's two keys into one. The bar for an entry is
+  "indistinguishable when read", not "confusable when guessed".
+
+== Phases and status
+
+[cols="1,4,2",options="header"]
+|===
+| Phase | Content | Status
+
+| 1
+| `key_folding.py`, folded comparisons in the play path, level testing and the
+  format check; look-alike keys of one level logged
+| ✅ done in PR #416
+
+| 2
+| Search by key (`core/search/interactors.py`) still matches by substring on the
+  raw text, so a key is found only in the spelling it was written in
+| ⏳ not started
+|===
+
+== Open questions
+
+* *Lowercase.* A key typed in lowercase is still not a key at all — folding case
+  would make every capitalised word in the chat look like one, so it needs a
+  different mechanism (an explicit answer to the player, say) rather than an
+  entry in this table.
+* *Custom prefixes* (xref:shep-0002-custom-key-prefixes.adoc[SHEP-0002]) will be
+  folded the same way when they land: the prefix goes through `fold_key` with
+  the rest of the key.

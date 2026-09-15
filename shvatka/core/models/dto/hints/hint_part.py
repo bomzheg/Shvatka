@@ -2,10 +2,11 @@ from __future__ import annotations
 
 import typing
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Literal
 
 from shvatka.core.models.enums.hint_type import HintType
+from shvatka.core.models.enums.rich_format import RichFormat
 
 
 @dataclass(kw_only=True)
@@ -34,6 +35,41 @@ class TextHint(BaseHint):
 
     def get_guids(self) -> list[str]:
         return []
+
+
+@dataclass(kw_only=True)
+class RichMedia:
+    """A file embedded into the markup of a rich hint.
+
+    The markup points at the file through a telegram link built from ``id``:
+    ``tg://photo?id=<id>``, ``tg://video?id=<id>`` or ``tg://audio?id=<id>``
+    (``<img src="tg://photo?id=pic"/>`` in Rich HTML, ``![](tg://photo?id=pic)``
+    in Rich Markdown). The game keeps the file itself under ``file_guid``, like
+    any other hint file.
+
+    Telegram allows 1-64 characters of ``A-Za-z0-9_-`` in an ``id``.
+    """
+
+    id: str
+    file_guid: str
+
+
+@dataclass(kw_only=True)
+class RichHint(BaseHint):
+    """A hint written as a rich message - headings, lists, tables and so on.
+
+    ``text`` holds the markup itself, in the language named by ``format``.
+    """
+
+    text: str
+    type: Literal["rich"] = HintType.rich.name
+    format: RichFormat = RichFormat.html
+    is_rtl: bool | None = None
+    skip_entity_detection: bool | None = None
+    media: list[RichMedia] = field(default_factory=list)
+
+    def get_guids(self) -> list[str]:
+        return [media.file_guid for media in self.media]
 
 
 @dataclass(kw_only=True)
@@ -172,6 +208,7 @@ class StickerHint(BaseHint, FileMixin):
 
 AnyHint: typing.TypeAlias = (
     TextHint
+    | RichHint
     | GPSHint
     | VenueHint
     | ContactHint

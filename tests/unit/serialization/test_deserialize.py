@@ -11,6 +11,7 @@ from shvatka.core.models.dto.hints import (
     DocumentHint,
     GPSHint,
     PhotoHint,
+    RichHint,
     StickerHint,
     TextHint,
     VenueHint,
@@ -104,7 +105,7 @@ def test_deserialize_legacy_scenario_without_tg_file_id(
 def test_deserialize_all_types(all_types_scn: RawGameScenario, retort: Retort):
     game_scn = parse_game(all_types_scn, retort)
     hints = game_scn.levels[0].time_hints
-    assert len(hints) == 12
+    assert len(hints) == 13
     for i, type_ in enumerate(
         [
             TextHint,
@@ -119,6 +120,7 @@ def test_deserialize_all_types(all_types_scn: RawGameScenario, retort: Retort):
             VideoNoteHint,
             ContactHint,
             StickerHint,
+            RichHint,
         ]
     ):
         assert isinstance(hints[i].hint[0], type_)
@@ -128,8 +130,8 @@ def test_deserialize_all_types(all_types_scn: RawGameScenario, retort: Retort):
 def test_render_all_types(all_types_scn: RawGameScenario, retort: Retort):
     game_scn = parse_game(all_types_scn, retort)
     hints = [time_hint.hint[0] for time_hint in game_scn.levels[0].time_hints]
-    assert len(hints) == 12
-    assert render_hints(hints) == "📃📡🧭📷🎼🎬📎🌀🎤🤳🪪🏷"
+    assert len(hints) == 13
+    assert render_hints(hints) == "📃📡🧭📷🎼🎬📎🌀🎤🤳🪪🏷📰"
 
 
 def test_serialize_simple(retort: Retort):

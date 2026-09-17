@@ -337,7 +337,7 @@ the digest's source.
 | `slot_id` | FK `season_slots.id` ON DELETE SET NULL, nullable | null once the date is gone
 | `type` | text, not null | `slot_added`, `slot_moved`, `slot_removed`, `slot_taken`, `slot_released`, `slot_orgs_changed`, `slot_note_changed`, `slot_game_linked`, `slot_game_unlinked`
 | `actor_id` | FK `players.id`, nullable | who did it
-| `payload` | JSONB, not null, default `{}` | denormalized old/new date, owner, team, game and org names — so the digest renders with no joins and survives later renames and deletes
+| `payload` | JSONB, not null, default `{}` | denormalized old/new date, owner, team, game and org names — including the org list *as it was*, since "было … стало …" cannot be reconstructed from the rows — so the digest renders with no joins and survives later renames and deletes
 | `published_at` | timestamptz, nullable | null ⇒ not yet in a digest
 | `created_at` | timestamptz, not null |
 |===
@@ -613,7 +613,9 @@ Everyone in a team now, or in a team during the current or previous year, plus
 everyone who was an org for a game in that window even with no team now.
 
 One DAO method — `SeasonAudienceReader.get_recipient_ids(since)` where `since`
-is 1 January of `now(MSK).year - 1` — as a `UNION` of:
+is 1 January of `now(MSK).year - 1`. It answers about *players*, so it is
+`PlayerDao.get_active_player_ids` and the composed `SeasonScheduleDao` only
+proxies it: a `dao/complex/*` class holds no query of its own. A `UNION` of:
 
 * `team_players` where `date_left is null or date_left >= since`, i.e. a
   membership overlapping the window;
@@ -623,10 +625,14 @@ is 1 January of `now(MSK).year - 1` — as a `UNION` of:
 The window is relative to *today*, not to the season's year, so a 2027 season
 published in 2026 still reaches the people active in 2025–2026.
 
-Recipients get `season_schedule_changed`, severity `low`, with a payload
-carrying the year and a short summary so `notification-render.ts` can render it
-without another fetch. Web push follows through the existing `WebPushSender`
-path.
+Recipients get `season_schedule_changed`, severity `low`. The payload carries
+the year *and the digests themselves* — `SlotDigest.to_payload()` per date,
+dates as iso strings and only the parts that actually changed — so
+`notification-render.ts` renders «перенесена с 15.05 на 17.05; занял @harry»
+rather than «3 изменения» and a dead end. A count would leave the reader with
+nowhere to go: `season_changes` is the engine's audit trail, not an endpoint,
+and the feed item is the only place the web learns what happened. Web push
+follows through the existing `WebPushSender` path.
 
 === Linking a game to a date
 
@@ -1017,6 +1023,13 @@ Filled in as the phases land.
 * *Taking a date uses `FOR UPDATE NOWAIT`*, not a waiting lock, and a held row
   raises `SlotIsBusy` → 409. Queueing would let the loser decide against a
   stale row and overwrite the winner.
+* *A `dao/complex/*` class is a proxy and nothing else.* The audience `UNION`
+  started life in `SeasonScheduleDaoImpl`, where it was the only query in a
+  class whose whole job is to forward. It answers about players, so it is
+  `PlayerDao.get_active_player_ids(since)` now.
+* *The digest notification carries the digests, not a count.* See §Notification
+  audience: a feed item saying «3 изменения» gives the reader no way to learn
+  which three.
 * *`ComplexSeasonAnnouncer.publish` returns the bot's announcement*, rather than
   gathering one per edge. Only the bot has a channel, and the season has exactly
   one message to store; anything else would push the choice of which message to

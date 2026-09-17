@@ -3,8 +3,6 @@ from dataclasses import dataclass
 from datetime import date, datetime
 from typing import Any
 
-from sqlalchemy import select, union
-
 from shvatka.core.models import dto
 from shvatka.core.models.enums.notification import NotificationSeverity, NotificationType
 from shvatka.core.notifications import dto as notification_dto
@@ -12,16 +10,15 @@ from shvatka.core.notifications.adapters import NotificationWriter
 from shvatka.core.season import dto as season_dto
 from shvatka.core.season.adapters import SeasonScheduleDao
 from shvatka.infrastructure.db.dao.holder import HolderDao
-from shvatka.infrastructure.db.models import Game, Organizer, TeamPlayer
 
 
 @dataclass
 class SeasonScheduleDaoImpl(SeasonScheduleDao):
     """The four season tables and the notification feed behind one Protocol.
 
-    Every write still belongs to its own table's dao — this only puts them in
-    one place, so a season interactor takes a single dao. The ordering is the
-    interactor's, not this class's.
+    A proxy and nothing else: every query and every write belongs to its own
+    table's dao, this only puts them in one place so a season interactor takes
+    a single dao. The ordering is the interactor's, not this class's.
     """
 
     dao: HolderDao
@@ -140,22 +137,7 @@ class SeasonScheduleDaoImpl(SeasonScheduleDao):
         return await self.dao.game.get_by_id(id_)
 
     async def get_recipient_ids(self, since: datetime) -> set[int]:
-        """Anyone in a team in the window, plus everyone who organized in it.
-
-        Rooted at no single table, so it lives here rather than on one of the
-        per-table daos — one union, run at most once a day per season.
-        """
-        in_a_team = select(TeamPlayer.player_id).where(
-            TeamPlayer.date_left.is_(None) | (TeamPlayer.date_left >= since)
-        )
-        organized = (
-            select(Organizer.player_id)
-            .join(Game, Game.id == Organizer.game_id)
-            .where(Organizer.deleted.is_(False), Game.start_at >= since)
-        )
-        authored = select(Game.author_id).where(Game.start_at >= since)
-        result = await self.dao.session.scalars(union(in_a_team, organized, authored))
-        return set(result.all())
+        return await self.dao.player.get_active_player_ids(since)
 
     async def create(
         self,

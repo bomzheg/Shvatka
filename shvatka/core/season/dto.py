@@ -107,6 +107,15 @@ class Season:
                 return slot
         raise exceptions.SlotNotFound(text=f"season {self.year} has no slot {slot_id}")
 
+    def ensure_have_slot(self, slot_id: int) -> None:
+        """`SlotNotFound` unless the date is this season's.
+
+        For the callers that only need the id checked before they lock the row
+        or read it back — they would otherwise discard a whole `get_slot`, and
+        a discarded return value reads like a mistake.
+        """
+        self.get_slot(slot_id)
+
 
 @dataclass
 class ScheduleChange:

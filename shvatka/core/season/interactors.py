@@ -95,7 +95,9 @@ class PublishSeasonInteractor:
             actor=author,
             payload={"year": year, "published": True, "slots": len(published.slots)},
         )
-        return await self.dao.get_required_season(year)
+        # announcing only stores the chat and message ids, which no reader of
+        # this sees — so `published` is already what the caller gets
+        return published
 
     async def _announce_published(self, season: season_dto.Season) -> None:
         # a channel that refuses the post must not roll back a published season
@@ -251,7 +253,7 @@ class TakeSlotInteractor:
     ) -> season_dto.Slot:
         actor = await identity.get_required_player()
         season = await self.dao.get_required_season(year)
-        season.get_slot(slot_id)
+        season.ensure_have_slot(slot_id)
         # whoever else is taking the same date right now waits here
         slot = await self.dao.lock_slot(slot_id)
         team = await self.dao.get_team_by_id(team_id) if team_id is not None else None
@@ -328,6 +330,9 @@ class SetSlotOrgsInteractor:
         season = await self.dao.get_required_season(year)
         slot = season.get_slot(slot_id)
         check_can_edit_schedule(actor)
+        # read before the write that replaces them: "было … стало …" is the
+        # whole point of recording this, and the digest cannot reconstruct it
+        orgs_before = [org.name_mention for org in slot.orgs]
         # being named on a date is not being an author: no promotion required
         orgs = [await self.dao.get_player_by_id(id_) for id_ in dict.fromkeys(org_player_ids)]
         await self.dao.set_slot_orgs(slot_id, [org.id for org in orgs])
@@ -339,6 +344,7 @@ class SetSlotOrgsInteractor:
             payload={
                 "date": slot.slot_date.isoformat(),
                 "orgs": [org.name_mention for org in orgs],
+                "orgs_before": orgs_before,
             },
         )
         await self.dao.commit()
@@ -376,7 +382,7 @@ class LinkGameToSlotInteractor:
     ) -> season_dto.Slot:
         actor = await identity.get_required_player()
         season = await self.dao.get_required_season(year)
-        season.get_slot(slot_id)
+        season.ensure_have_slot(slot_id)
         game = await self.dao.get_game_by_id(game_id)
         occupied = await self.dao.get_slot_by_game(game_id)
         if occupied is not None and occupied.id != slot_id:
@@ -502,7 +508,12 @@ class PublishSeasonDigestInteractor:
                 recipient_ids=await self.dao.get_recipient_ids(_audience_since(now)),
                 type_=NotificationType.season_schedule_changed,
                 severity=NotificationSeverity.low,
-                payload={"year": season.year, "changes": len(digests)},
+                # the digests themselves: a feed item that only counted them
+                # would leave the reader with no way to learn what changed
+                payload={
+                    "year": season.year,
+                    "changes": [digest.to_payload() for digest in digests],
+                },
             )
         await self.dao.commit()
         if digests:

@@ -585,7 +585,17 @@ async def test_the_digest_collapses_marks_published_and_notifies():
     assert len(digests) == 1
     assert digests[0].date_before == FIRST
     assert digests[0].date_after == date(YEAR, 5, 17)
-    assert dao.notifications[0].payload == {"year": YEAR, "changes": 1}
+    # the feed carries what changed, not just how many things did
+    assert dao.notifications[0].payload == {
+        "year": YEAR,
+        "changes": [
+            {
+                "date": date(YEAR, 5, 17).isoformat(),
+                "moved_from": FIRST.isoformat(),
+                "moved_to": date(YEAR, 5, 17).isoformat(),
+            }
+        ],
+    }
 
 
 @pytest.mark.asyncio

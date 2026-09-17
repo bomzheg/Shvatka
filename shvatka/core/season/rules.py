@@ -9,6 +9,7 @@ from __future__ import annotations
 from collections.abc import Iterable, Sequence
 from dataclasses import dataclass, field
 from datetime import date, timedelta
+from typing import Any
 
 from shvatka.core.models import dto
 from shvatka.core.players.player import check_allow_be_author, is_team_captain
@@ -105,6 +106,8 @@ class SlotDigest:
     owner: str | None = None
     released: bool = False
     orgs: list[str] = field(default_factory=list)
+    orgs_before: list[str] = field(default_factory=list)
+    """Who was named on the date when the window opened, not before the last edit."""
     orgs_changed: bool = False
     game: str | None = None
     game_unlinked: bool = False
@@ -116,6 +119,37 @@ class SlotDigest:
             and self.date_after is not None
             and self.date_before != self.date_after
         )
+
+    def to_payload(self) -> dict[str, Any]:
+        """The net change as plain json, for the notification the web renders.
+
+        A feed item has to say *what* changed, not just that something did, and
+        it cannot go back to `season_changes` for it — the rows are the engine's
+        audit trail, not an endpoint. So the digest travels whole, dates as iso
+        strings, and only the parts that actually changed are present.
+        """
+        payload: dict[str, Any] = {"date": self.day.isoformat() if self.day else None}
+        if self.added:
+            payload["added"] = True
+        if self.removed:
+            payload["removed"] = True
+        if self.moved:
+            payload["moved_from"] = self.date_before.isoformat()  # type: ignore[union-attr]
+            payload["moved_to"] = self.date_after.isoformat()  # type: ignore[union-attr]
+        if self.owner is not None:
+            payload["owner"] = self.owner
+        if self.released:
+            payload["released"] = True
+        if self.orgs_changed:
+            payload["orgs"] = list(self.orgs)
+            payload["orgs_before"] = list(self.orgs_before)
+        if self.note_changed:
+            payload["note"] = self.note
+        if self.game is not None:
+            payload["game"] = self.game
+        if self.game_unlinked:
+            payload["game_unlinked"] = True
+        return payload
 
     @property
     def is_empty(self) -> bool:
@@ -189,6 +223,10 @@ def _apply(digest: SlotDigest, change: season_dto.ScheduleChange) -> None:
                 digest.released = True
             digest.day = _payload_date(payload, "date") or digest.day
         case season_dto.ChangeType.slot_orgs_changed:
+            if not digest.orgs_changed:
+                # the first edit of the window holds the list to compare against;
+                # later ones only move the "after" side
+                digest.orgs_before = list(payload.get("orgs_before") or [])
             digest.orgs = list(payload.get("orgs") or [])
             digest.orgs_changed = True
             digest.day = _payload_date(payload, "date") or digest.day
@@ -215,6 +253,7 @@ def _reset_digest(digest: SlotDigest) -> None:
     digest.owner = None
     digest.released = False
     digest.orgs = []
+    digest.orgs_before = []
     digest.orgs_changed = False
     digest.note = None
     digest.note_changed = False

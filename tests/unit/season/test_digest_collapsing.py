@@ -162,3 +162,53 @@ def test_each_date_gets_its_own_line_ordered_by_date():
     )
 
     assert [digest.day for digest in digests] == [date(2027, 6, 27), date(2027, 7, 17)]
+
+
+def test_the_orgs_line_keeps_who_was_named_before_the_window():
+    day = date(2027, 6, 26).isoformat()
+    digests = collapse_changes(
+        [
+            change(
+                1,
+                season_dto.ChangeType.slot_orgs_changed,
+                {"date": day, "orgs": ["@ron"], "orgs_before": ["@harry"]},
+            ),
+            change(
+                2,
+                season_dto.ChangeType.slot_orgs_changed,
+                {"date": day, "orgs": ["@ron", "@hermione"], "orgs_before": ["@ron"]},
+            ),
+        ]
+    )
+
+    # two edits in one day collapse to one line, and the "before" side is where
+    # the date actually started — not where the last edit found it
+    assert len(digests) == 1
+    assert digests[0].orgs_before == ["@harry"]
+    assert digests[0].orgs == ["@ron", "@hermione"]
+
+
+def test_a_digest_travels_to_the_feed_as_plain_json():
+    day = date(2027, 6, 26)
+    digests = collapse_changes(
+        [
+            moved(1, day, date(2027, 6, 27)),
+            change(
+                2,
+                season_dto.ChangeType.slot_taken,
+                {"date": date(2027, 6, 27).isoformat(), "author": "@harry"},
+            ),
+        ]
+    )
+
+    payload = digests[0].to_payload()
+
+    # dates as iso strings, and only what changed — the web renders this as is
+    assert payload == {
+        "date": "2027-06-27",
+        "moved_from": "2027-06-26",
+        "moved_to": "2027-06-27",
+        "owner": "@harry",
+    }
+    assert "released" not in payload
+    assert "orgs" not in payload

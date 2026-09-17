@@ -386,7 +386,17 @@ async def test_the_digest_collapses_marks_and_notifies(
     assert digests[0].date_after == FIRST + timedelta(days=2)
 
     changed = [one for one in await feed_of(client, harry_token) if "changes" in one["payload"]]
-    assert [one["payload"]["changes"] for one in changed] == [1]
+    # the feed item says what changed, so the web needs no second request:
+    # two moves of one date arrive as its net move, from the first day to the last
+    assert [one["payload"]["changes"] for one in changed] == [
+        [
+            {
+                "date": (FIRST + timedelta(days=2)).isoformat(),
+                "moved_from": FIRST.isoformat(),
+                "moved_to": (FIRST + timedelta(days=2)).isoformat(),
+            }
+        ]
+    ]
 
 
 @pytest.mark.asyncio

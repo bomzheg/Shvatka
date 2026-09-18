@@ -19,9 +19,7 @@ class Season(Base):
 
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
     year: Mapped[int] = mapped_column(nullable=False, unique=True)
-    published_by_id: Mapped[int] = mapped_column(
-        ForeignKey("players.id", ondelete="CASCADE"), nullable=False
-    )
+    published_by_id: Mapped[int] = mapped_column(ForeignKey("players.id"), nullable=False)
     published_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )

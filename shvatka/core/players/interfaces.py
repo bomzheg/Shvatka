@@ -18,6 +18,7 @@ from shvatka.core.interfaces.dal.player import (
     TeamPlayerHistorySetter,
     WaiverPlayerMerger,
 )
+from shvatka.core.interfaces.dal.season import SeasonPlayerMerger
 from shvatka.core.interfaces.dal.user import UserUpserter
 from shvatka.core.models import dto
 
@@ -85,6 +86,7 @@ class PlayerMerger(
     PlayerWaiversGetter,
     FileInfoMerger,
     EmailMerger,
+    SeasonPlayerMerger,
     Committer,
     Protocol,
 ):

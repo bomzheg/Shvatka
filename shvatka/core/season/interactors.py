@@ -221,11 +221,16 @@ class RemoveSlotInteractor:
         season = await self.dao.get_required_season(year)
         slot = season.get_slot(slot_id)
         check_can_edit_schedule(author)
-        # the change row outlives the date it describes, holding its payload
+        # nothing cascades: the date's own rows go first, in the order the
+        # foreign keys allow, and the use case is what knows that order
+        await self.dao.set_slot_orgs(slot_id, [])
+        await self.dao.detach_slot(slot_id)
+        # the change row outlives the date it describes, holding its payload —
+        # which is why it is recorded with no slot to point at
         await self.changes.record(
             season,
             season_dto.ChangeType.slot_removed,
-            slot_id=slot_id,
+            slot_id=None,
             actor=author,
             payload={"date": slot.slot_date.isoformat()},
         )

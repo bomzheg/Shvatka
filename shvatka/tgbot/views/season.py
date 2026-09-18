@@ -53,6 +53,9 @@ class BotSeasonAnnouncer(SeasonAnnouncer):
         await self.bot.send_message(
             chat_id=season.log_chat_id or self.log_chat_id,
             text=render_digest(season, digests),
+            # hang the digest off the schedule itself, so a reader of one line
+            # about a moved date can reach the plan that line changed
+            reply_to_message_id=season.log_message_id,
         )
 
     async def close(self, season: dto.Season) -> None:

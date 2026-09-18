@@ -18,16 +18,10 @@ class SeasonChange(Base):
     __mapper_args__ = {"eager_defaults": True}
 
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
-    season_id: Mapped[int] = mapped_column(
-        ForeignKey("seasons.id", ondelete="CASCADE"), nullable=False
-    )
-    slot_id: Mapped[int | None] = mapped_column(
-        ForeignKey("season_slots.id", ondelete="SET NULL"), nullable=True
-    )
+    season_id: Mapped[int] = mapped_column(ForeignKey("seasons.id"), nullable=False)
+    slot_id: Mapped[int | None] = mapped_column(ForeignKey("season_slots.id"), nullable=True)
     type: Mapped[str] = mapped_column(Text, nullable=False)
-    actor_id: Mapped[int | None] = mapped_column(
-        ForeignKey("players.id", ondelete="SET NULL"), nullable=True
-    )
+    actor_id: Mapped[int | None] = mapped_column(ForeignKey("players.id"), nullable=True)
     payload: Mapped[dict[str, Any]] = mapped_column(
         JSONB, nullable=False, server_default="{}", default=dict
     )

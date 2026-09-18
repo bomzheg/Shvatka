@@ -19,12 +19,8 @@ class SeasonSlotOrg(Base):
     __mapper_args__ = {"eager_defaults": True}
 
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
-    slot_id: Mapped[int] = mapped_column(
-        ForeignKey("season_slots.id", ondelete="CASCADE"), nullable=False
-    )
-    player_id: Mapped[int] = mapped_column(
-        ForeignKey("players.id", ondelete="CASCADE"), nullable=False
-    )
+    slot_id: Mapped[int] = mapped_column(ForeignKey("season_slots.id"), nullable=False)
+    player_id: Mapped[int] = mapped_column(ForeignKey("players.id"), nullable=False)
 
     slot: Mapped[SeasonSlot] = relationship(
         "SeasonSlot", back_populates="orgs", foreign_keys=[slot_id]

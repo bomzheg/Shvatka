@@ -294,13 +294,13 @@ a failed channel post must not roll back a published season.
 | column | type | notes
 
 | `id` | bigint PK |
-| `season_id` | FK `seasons.id` ON DELETE CASCADE, not null | indexed
+| `season_id` | FK `seasons.id`, not null | indexed
 | `slot_date` | date, not null | *date only*, read in MSK (`tz_game`). Not `date`: a field of that name shadows its own type in the class namespace, which pydantic and SQLAlchemy both read annotations from
 | `note` | text, nullable | free text — «зимняя игра», a city
 | `owner_id` | FK `players.id`, nullable | null ⇒ free
 | `author_kind` | text, nullable | `player` or `team`; null while free
 | `team_id` | FK `teams.id`, nullable | only when `author_kind` is `team`
-| `game_id` | FK `games.id` ON DELETE SET NULL, nullable, *unique* | at most one game per date, and a game sits in at most one date
+| `game_id` | FK `games.id`, nullable, *unique* | at most one game per date, and a game sits in at most one date
 | `taken_at` | timestamptz, nullable |
 | `created_at` / `updated_at` | timestamptz, not null |
 |===
@@ -315,12 +315,31 @@ plan.
 
 ==== `season_slot_orgs`
 
-`id` PK, `slot_id` FK ON DELETE CASCADE, `player_id` FK ON DELETE CASCADE,
-unique `(slot_id, player_id)`.
+`id` PK, `slot_id` FK, `player_id` FK, unique `(slot_id, player_id)`.
 
 These are the *slot orgs*: the co-orgs an owner names for a game that does not
 exist yet. Declared intent only, independent of the `organizers` table, which
 gets rows once there is a real game to organize.
+
+==== No cascades, anywhere
+
+Not one foreign key carries `ON DELETE`, and no relationship carries an ORM
+`cascade=`. Deleting is a use case's job, in the order the keys allow, which is
+also the only order that leaves a correct audit trail:
+
+. `RemoveSlotInteractor` clears the date's orgs, detaches the change rows that
+  point at it, records `slot_removed` with no slot to point at, and only then
+  deletes the date;
+. merging two players moves their dates, org seats and change rows to the
+  survivor — `replace_player_season`, beside the merge's other transfers —
+  before the loser is deleted. `ON DELETE SET NULL` would have made that
+  invisible instead: the date would quietly go free, with nothing in the trail
+  to say why.
+
+A cascade is a deletion nobody wrote and no change row describes. The cost is
+that a caller who forgets an order hits a foreign key; the in-memory dao the
+interactor tests use asserts the same order, so that is caught without a
+database.
 
 ==== `season_changes` — the accumulator
 
@@ -333,8 +352,8 @@ the digest's source.
 | column | type | notes
 
 | `id` | bigint PK |
-| `season_id` | FK `seasons.id` ON DELETE CASCADE, not null |
-| `slot_id` | FK `season_slots.id` ON DELETE SET NULL, nullable | null once the date is gone
+| `season_id` | FK `seasons.id`, not null |
+| `slot_id` | FK `season_slots.id`, nullable | *nullable on purpose*: the row outlives the date it describes, and removing a date nulls it explicitly. The payload is what the digest renders, so the trail survives the delete
 | `type` | text, not null | `slot_added`, `slot_moved`, `slot_removed`, `slot_taken`, `slot_released`, `slot_orgs_changed`, `slot_note_changed`, `slot_game_linked`, `slot_game_unlinked`
 | `actor_id` | FK `players.id`, nullable | who did it
 | `payload` | JSONB, not null, default `{}` | denormalized old/new date, owner, team, game and org names — including the org list *as it was*, since "было … стало …" cannot be reconstructed from the rows — so the digest renders with no joins and survives later renames and deletes
@@ -1023,6 +1042,11 @@ Filled in as the phases land.
 * *Taking a date uses `FOR UPDATE NOWAIT`*, not a waiting lock, and a held row
   raises `SlotIsBusy` → 409. Queueing would let the loser decide against a
   stale row and overwrite the winner.
+* *No cascades and no `ON DELETE`* — see the data model. The consequence is
+  `replace_player_season` in the player merge and an explicit teardown order in
+  `RemoveSlotInteractor`; both are covered against a real database.
+* *The digest replies to the pinned schedule message*, so a reader of one line
+  about a moved date can reach the plan that line changed.
 * *A `dao/complex/*` class is a proxy and nothing else.* The audience `UNION`
   started life in `SeasonScheduleDaoImpl`, where it was the only query in a
   class whose whole job is to forward. It answers about players, so it is

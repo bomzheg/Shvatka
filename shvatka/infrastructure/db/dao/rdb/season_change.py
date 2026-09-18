@@ -39,6 +39,19 @@ class SeasonChangeDao(BaseDAO[SeasonChange]):
         await self._flush(change)
         return change.to_dto()
 
+    async def detach_slot(self, slot_id: int) -> None:
+        await self.session.execute(
+            update(SeasonChange).where(SeasonChange.slot_id == slot_id).values(slot_id=None)
+        )
+
+    async def replace_actor(self, primary_id: int, secondary_id: int) -> None:
+        """The trail keeps saying who did what, under the name that survived."""
+        await self.session.execute(
+            update(SeasonChange)
+            .where(SeasonChange.actor_id == secondary_id)
+            .values(actor_id=primary_id)
+        )
+
     async def get_unpublished_changes(self, season_id: int) -> Sequence[dto.ScheduleChange]:
         result = await self.session.scalars(
             select(SeasonChange)

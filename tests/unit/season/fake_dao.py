@@ -160,13 +160,20 @@ class FakeSeasonDao(SeasonScheduleDao):
     async def set_slot_note(self, slot_id: int, note: str | None) -> None:
         (await self.get_slot(slot_id)).note = note
 
-    async def remove_slot(self, slot_id: int) -> None:
-        slot = await self.get_slot(slot_id)
-        self.slots.remove(slot)
-        # the fk is ON DELETE SET NULL: the change rows outlive the date
+    async def detach_slot(self, slot_id: int) -> None:
         for change in self.changes:
             if change.slot_id == slot_id:
                 change.slot_id = None
+
+    async def remove_slot(self, slot_id: int) -> None:
+        # nothing cascades, here or in postgres: a caller that has not detached
+        # the change rows and cleared the orgs would hit a foreign key
+        assert not any(
+            change.slot_id == slot_id for change in self.changes
+        ), "detach the change rows before removing the date"
+        slot = await self.get_slot(slot_id)
+        assert not slot.orgs, "clear the orgs before removing the date"
+        self.slots.remove(slot)
 
     async def take_slot(
         self,

@@ -30,23 +30,15 @@ class SeasonSlot(Base):
     __mapper_args__ = {"eager_defaults": True}
 
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
-    season_id: Mapped[int] = mapped_column(
-        ForeignKey("seasons.id", ondelete="CASCADE"), nullable=False
-    )
+    season_id: Mapped[int] = mapped_column(ForeignKey("seasons.id"), nullable=False)
     slot_date: Mapped[date] = mapped_column(Date, nullable=False)
     note: Mapped[str | None] = mapped_column(Text, nullable=True)
-    owner_id: Mapped[int | None] = mapped_column(
-        ForeignKey("players.id", ondelete="SET NULL"), nullable=True
-    )
+    owner_id: Mapped[int | None] = mapped_column(ForeignKey("players.id"), nullable=True)
     author_kind: Mapped[dto.SlotAuthorKind | None] = mapped_column(
         Enum(dto.SlotAuthorKind, name="slot_author_kind"), nullable=True
     )
-    team_id: Mapped[int | None] = mapped_column(
-        ForeignKey("teams.id", ondelete="SET NULL"), nullable=True
-    )
-    game_id: Mapped[int | None] = mapped_column(
-        ForeignKey("games.id", ondelete="SET NULL"), nullable=True
-    )
+    team_id: Mapped[int | None] = mapped_column(ForeignKey("teams.id"), nullable=True)
+    game_id: Mapped[int | None] = mapped_column(ForeignKey("games.id"), nullable=True)
     taken_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
@@ -65,7 +57,6 @@ class SeasonSlot(Base):
         "SeasonSlotOrg",
         back_populates="slot",
         foreign_keys="SeasonSlotOrg.slot_id",
-        cascade="all, delete-orphan",
     )
 
     __table_args__ = (

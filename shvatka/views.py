@@ -94,7 +94,14 @@ class ComplexSeasonAnnouncer(SeasonAnnouncer):
             await self.web.publish(season)
         except Exception as e:
             logger.exception("web season publish error", exc_info=e)
-        return await self.bot.publish(season)
+        try:
+            return await self.bot.publish(season)
+        except Exception as e:
+            # a channel that refuses the post must not roll back a published
+            # season; no announcement back means no message id to store, and
+            # `update` no-ops until one exists
+            logger.exception("bot season publish error", exc_info=e)
+            return None
 
     async def update(self, season: season_dto.Season) -> None:
         await show_on_both(bot=self.bot.update(season), web=self.web.update(season))

@@ -7,6 +7,7 @@ from httpx import AsyncClient
 from shvatka.api.app.dependencies.auth import AuthProperties
 from shvatka.api.auth.responses import Token
 from shvatka.core.models import dto
+from shvatka.core.season import dto as season_dto
 from shvatka.core.season.interactors import PublishSeasonDigestInteractor
 from shvatka.core.utils.datetime_utils import tz_game, tz_utc
 from shvatka.infrastructure.db.dao.holder import HolderDao
@@ -253,6 +254,84 @@ async def test_another_author_may_re_assign_a_taken_date(
     changes = await check_dao.season_change.get_unpublished_changes(season.id)
     # the trail names them both, which is what makes the re-assignment recoverable
     assert [change.actor_id for change in changes] == [harry.id, draco.id]
+
+
+@pytest.mark.asyncio
+async def test_removing_a_taken_date_takes_its_orgs_and_keeps_its_trail(
+    client: AsyncClient,
+    harry: dto.Player,
+    harry_token: Token,
+    hermione: dto.Player,
+    check_dao: HolderDao,
+):
+    published = await publish(client, harry_token)
+    slot_id = published.json()["slots"][0]["id"]
+    assert (await take(client, harry_token, slot_id, org_player_ids=[hermione.id])).is_success
+
+    resp = await client.delete(
+        f"/seasons/{YEAR}/slots/{slot_id}",
+        cookies=auth_cookies(harry_token),
+        follow_redirects=True,
+    )
+
+    # nothing cascades in the schema, so the date's orgs and the trail pointing
+    # at it are dealt with by hand — and getting that wrong is a foreign key
+    assert resp.is_success, resp.text
+    season = await check_dao.season.get_season(YEAR)
+    assert season is not None
+    assert [slot.id for slot in season.slots] == [published.json()["slots"][1]["id"]]
+    changes = await check_dao.season_change.get_unpublished_changes(season.id)
+    # the trail outlives the date: taken, then removed, both with no slot left
+    assert [change.type.name for change in changes] == ["slot_taken", "slot_removed"]
+    assert [change.slot_id for change in changes] == [None, None]
+    assert changes[-1].payload["date"] == FIRST.isoformat()
+
+
+@pytest.mark.asyncio
+async def test_merging_a_player_carries_their_dates_over(
+    client: AsyncClient,
+    harry: dto.Player,
+    harry_token: Token,
+    hermione: dto.Player,
+    dao: HolderDao,
+    check_dao: HolderDao,
+):
+    published = await publish(client, harry_token)
+    slot_id = published.json()["slots"][0]["id"]
+    # a dummy author: the merge refuses a secondary who has a telegram account
+    dummy = await dao.player.upsert_author_dummy()
+    await dao.season_slot.take_slot(
+        slot_id, owner_id=dummy.id, author_kind=season_dto.SlotAuthorKind.player
+    )
+    await dao.season_slot_org.set_slot_orgs(slot_id, [dummy.id, hermione.id])
+    season_row = await dao.season.get_season(YEAR)
+    assert season_row is not None
+    await dao.season_change.add_change(
+        season_id=season_row.id,
+        type_=season_dto.ChangeType.slot_taken,
+        slot_id=slot_id,
+        actor_id=dummy.id,
+        payload={"date": FIRST.isoformat()},
+    )
+    await dao.commit()
+
+    # merging is the one place a player is really deleted, and with no
+    # ON DELETE SET NULL the date holding them would refuse to let go
+    resp = await client.post(
+        "/admin/players/merge",
+        json={"primary_id": hermione.id, "secondary_id": dummy.id},
+        cookies=auth_cookies(harry_token),
+        follow_redirects=True,
+    )
+
+    assert resp.is_success, resp.text
+    slot = await check_dao.season_slot.get_slot(slot_id)
+    assert slot.owner is not None
+    assert slot.owner.id == hermione.id
+    # hermione was already named on that date; she is not seated twice
+    assert [org.id for org in slot.orgs] == [hermione.id]
+    changes = await check_dao.season_change.get_unpublished_changes(season_row.id)
+    assert {change.actor_id for change in changes} == {hermione.id}
 
 
 @pytest.mark.asyncio

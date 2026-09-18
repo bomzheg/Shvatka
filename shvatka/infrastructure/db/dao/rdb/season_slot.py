@@ -112,6 +112,14 @@ class SeasonSlotDao(BaseDAO[SeasonSlot]):
     async def unlink_game(self, slot_id: int) -> None:
         await self._update(slot_id, game_id=None)
 
+    async def replace_owner(self, primary_id: int, secondary_id: int) -> None:
+        """A merged-away player's dates become the surviving player's."""
+        await self.session.execute(
+            update(SeasonSlot)
+            .where(SeasonSlot.owner_id == secondary_id)
+            .values(owner_id=primary_id, updated_at=self.clock(tz_utc))
+        )
+
     async def _update(self, slot_id: int, **values: Any) -> None:
         # every caller has looked the slot up (or locked it) first
         await self.session.execute(

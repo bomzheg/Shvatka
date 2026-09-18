@@ -101,6 +101,9 @@ class SeasonScheduleDaoImpl(SeasonScheduleDao):
     async def set_slot_orgs(self, slot_id: int, player_ids: Collection[int]) -> None:
         await self.dao.season_slot_org.set_slot_orgs(slot_id, player_ids)
 
+    async def detach_slot(self, slot_id: int) -> None:
+        return await self.dao.season_change.detach_slot(slot_id)
+
     async def add_change(
         self,
         *,

@@ -5,6 +5,7 @@ from datetime import date, datetime
 from typing import Any, Protocol
 
 from shvatka.core.interfaces.dal.base import Committer
+from shvatka.core.models import dto as dto_
 from shvatka.core.season import dto
 
 
@@ -96,6 +97,15 @@ class SlotOrgWriter(Committer, Protocol):
 
 
 class ScheduleChangeWriter(Committer, Protocol):
+    async def detach_slot(self, slot_id: int) -> None:
+        """Forget which date these rows described, keeping the rows.
+
+        A change row outlives the date it is about — the payload is what the
+        digest renders — so removing a date detaches its trail rather than
+        deleting it. There is no `ON DELETE SET NULL` doing this by itself.
+        """
+        raise NotImplementedError
+
     async def add_change(
         self,
         *,
@@ -116,6 +126,17 @@ class ScheduleChangeReader(Protocol):
         raise NotImplementedError
 
     async def get_season_ids_with_unpublished_changes(self) -> Sequence[int]:
+        raise NotImplementedError
+
+
+class SeasonPlayerMerger(Protocol):
+    async def replace_player_season(self, primary: dto_.Player, secondary: dto_.Player) -> None:
+        """Hand the loser of a merge's dates, org seats and change rows to the winner.
+
+        Nothing cascades and nothing is set to null, so a player who owns a
+        date cannot simply be deleted — every reference moves first, like every
+        other table the merge walks.
+        """
         raise NotImplementedError
 
 

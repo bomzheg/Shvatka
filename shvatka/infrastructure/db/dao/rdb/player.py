@@ -3,7 +3,18 @@ import uuid
 from collections.abc import Iterable, Sequence
 from datetime import datetime, tzinfo
 
-from sqlalchemy import Result, ScalarResult, case, delete, distinct, func, inspect, or_, select
+from sqlalchemy import (
+    Result,
+    ScalarResult,
+    case,
+    delete,
+    distinct,
+    func,
+    inspect,
+    or_,
+    select,
+    union,
+)
 from sqlalchemy.exc import MultipleResultsFound, NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import contains_eager, joinedload, selectinload
@@ -121,6 +132,26 @@ class PlayerDao(BaseDAO[models.Player]):
             .group_by(models.Waiver.player_id)
         )
         return dict(result.tuples().all())
+
+    async def get_active_player_ids(self, since: datetime) -> set[int]:
+        """Everyone in a team since `since`, plus everyone who organized in that window.
+
+        Three ways of being around, unioned: a membership that overlaps the
+        window, organizing a game started inside it, and authoring one — an
+        author is an org too. It reads other tables but answers about players,
+        which is why it lives here.
+        """
+        in_a_team = select(models.TeamPlayer.player_id).where(
+            models.TeamPlayer.date_left.is_(None) | (models.TeamPlayer.date_left >= since)
+        )
+        organized = (
+            select(models.Organizer.player_id)
+            .join(models.Game, models.Game.id == models.Organizer.game_id)
+            .where(models.Organizer.deleted.is_(False), models.Game.start_at >= since)
+        )
+        authored = select(models.Game.author_id).where(models.Game.start_at >= since)
+        result = await self.session.scalars(union(in_a_team, organized, authored))
+        return set(result.all())
 
     async def get_by_user(self, user: dto.User) -> dto.Player:
         return await self.get_by_user_id(user.tg_id)

@@ -5,7 +5,7 @@
 |===
 | SHEP | 0003
 | Title | Season schedule
-| Status | `Accepted` — nothing implemented yet. One pull request per phase.
+| Status | `Accepted` — phase 1 landed. One pull request per phase.
 | Created | 2026-07-26
 | Updated | 2026-09-15
 | Related | issue #167, PR #306; xref:shep-0001-notifications-and-action-requests.adoc[SHEP-0001] (which defers `season_schedule_changed` to this one)
@@ -216,6 +216,15 @@ glossary already carries pairs whose halves are unrelated words — *Promotion /
 Аппрув*, *Puzzle / Загадка уровня*, *Waiver / Вейвер* — so `Slot` ↔ «дата игры»
 fits the pattern. What matters is that no Russian string says *слот*.
 
+The date a slot falls on is `slot_date` everywhere — the column, the orm
+attribute, the core dto, the api request and the api response. A field called
+`date` shadows `datetime.date` in the class namespace, which is exactly where
+pydantic and SQLAlchemy resolve annotations from, and the way out is either an
+aliased import (`from datetime import date as date_`) in every module that
+declares one or a name that does not collide. The name is the cheaper fix: an
+alias is a workaround a reader has to decode at each import, and it spreads to
+every new module that holds a date.
+
 ==== Two collisions to resolve in the glossary
 
 . *Публикация* already means posting a finished game's *results* to a channel
@@ -285,13 +294,13 @@ a failed channel post must not roll back a published season.
 | column | type | notes
 
 | `id` | bigint PK |
-| `season_id` | FK `seasons.id` ON DELETE CASCADE, not null | indexed
-| `date` | date, not null | *date only*, read in MSK (`tz_game`)
+| `season_id` | FK `seasons.id`, not null | indexed
+| `slot_date` | date, not null | *date only*, read in MSK (`tz_game`). Not `date`: a field of that name shadows its own type in the class namespace, which pydantic and SQLAlchemy both read annotations from
 | `note` | text, nullable | free text — «зимняя игра», a city
 | `owner_id` | FK `players.id`, nullable | null ⇒ free
 | `author_kind` | text, nullable | `player` or `team`; null while free
 | `team_id` | FK `teams.id`, nullable | only when `author_kind` is `team`
-| `game_id` | FK `games.id` ON DELETE SET NULL, nullable, *unique* | at most one game per date, and a game sits in at most one date
+| `game_id` | FK `games.id`, nullable, *unique* | at most one game per date, and a game sits in at most one date
 | `taken_at` | timestamptz, nullable |
 | `created_at` / `updated_at` | timestamptz, not null |
 |===
@@ -306,12 +315,31 @@ plan.
 
 ==== `season_slot_orgs`
 
-`id` PK, `slot_id` FK ON DELETE CASCADE, `player_id` FK ON DELETE CASCADE,
-unique `(slot_id, player_id)`.
+`id` PK, `slot_id` FK, `player_id` FK, unique `(slot_id, player_id)`.
 
 These are the *slot orgs*: the co-orgs an owner names for a game that does not
 exist yet. Declared intent only, independent of the `organizers` table, which
 gets rows once there is a real game to organize.
+
+==== No cascades, anywhere
+
+Not one foreign key carries `ON DELETE`, and no relationship carries an ORM
+`cascade=`. Deleting is a use case's job, in the order the keys allow, which is
+also the only order that leaves a correct audit trail:
+
+. `RemoveSlotInteractor` clears the date's orgs, detaches the change rows that
+  point at it, records `slot_removed` with no slot to point at, and only then
+  deletes the date;
+. merging two players moves their dates, org seats and change rows to the
+  survivor — `replace_player_season`, beside the merge's other transfers —
+  before the loser is deleted. `ON DELETE SET NULL` would have made that
+  invisible instead: the date would quietly go free, with nothing in the trail
+  to say why.
+
+A cascade is a deletion nobody wrote and no change row describes. The cost is
+that a caller who forgets an order hits a foreign key; the in-memory dao the
+interactor tests use asserts the same order, so that is caught without a
+database.
 
 ==== `season_changes` — the accumulator
 
@@ -324,11 +352,11 @@ the digest's source.
 | column | type | notes
 
 | `id` | bigint PK |
-| `season_id` | FK `seasons.id` ON DELETE CASCADE, not null |
-| `slot_id` | FK `season_slots.id` ON DELETE SET NULL, nullable | null once the date is gone
+| `season_id` | FK `seasons.id`, not null |
+| `slot_id` | FK `season_slots.id`, nullable | *nullable on purpose*: the row outlives the date it describes, and removing a date nulls it explicitly. The payload is what the digest renders, so the trail survives the delete
 | `type` | text, not null | `slot_added`, `slot_moved`, `slot_removed`, `slot_taken`, `slot_released`, `slot_orgs_changed`, `slot_note_changed`, `slot_game_linked`, `slot_game_unlinked`
 | `actor_id` | FK `players.id`, nullable | who did it
-| `payload` | JSONB, not null, default `{}` | denormalized old/new date, owner, team, game and org names — so the digest renders with no joins and survives later renames and deletes
+| `payload` | JSONB, not null, default `{}` | denormalized old/new date, owner, team, game and org names — including the org list *as it was*, since "было … стало …" cannot be reconstructed from the rows — so the digest renders with no joins and survives later renames and deletes
 | `published_at` | timestamptz, nullable | null ⇒ not yet in a digest
 | `created_at` | timestamptz, not null |
 |===
@@ -360,19 +388,40 @@ note, the owner, the author kind, the team, the slot orgs, the linked game, plus
 | `TakeSlotInteractor` / `ReleaseSlotInteractor` / `SetSlotOrgsInteractor` | ownership
 | `LinkGameToSlotInteractor` / `UnlinkGameFromSlotInteractor` | the game link
 | `FindSlotsNearGameStartInteractor` | read-only ±3-day lookup used by both edges
-| `SyncLinkedSlotInteractor` | move a linked date when its game's start moves
 | `PublishSeasonDigestInteractor` | the 10:00 MSK job — digest *and* end-of-season unpin
 |===
 
 Per the "at most one DAO per interactor" rule in `AGENTS.md`, all of them take
 one composed `SeasonScheduleDao` Protocol, implemented by
 `infrastructure/db/dao/complex/season.py` over per-table DAOs `SeasonDao`,
-`SeasonSlotDao`, `SeasonSlotOrgDao` and `SeasonChangeDao` — each table's writes
-stay in its own DAO, and the interactor decides the ordering.
+`SeasonSlotDao`, `SeasonSlotOrgDao` and `SeasonChangeDao` — one class per
+module, each table's writes in its own DAO, and the interactor decides the
+ordering. `get_required_season(year)` lives on the dao beside `get_season`, so
+"the season of that year or `SeasonNotFound`" is asked for once rather than
+unwrapped at every call site.
+
+==== `services.py` — what a use case leans on but is not
+
+Two things in `core/season/` are deliberately *not* interactors:
+
+* `ScheduleChangeLog` — `record()` writes the `season_changes` row inside the
+  caller's transaction, `announce_update()` refreshes the pinned message after
+  the commit. Every edit does both, and an interactor that edits takes it as a
+  dependency. It replaced a `SeasonInteractor` base class the use cases
+  inherited: a base class hands every subclass the union of what any of them
+  needs, so `GetSeasonInteractor` carried an announcer it never called. Injected
+  instead, each use case's fields say exactly what it touches.
+* `LinkedSlotSync` — a re-planned game drags its date along.
+  `PlanGameStartInteractor` applies it after a successful re-plan.
+  *An interactor never calls another interactor*, and this is why it is a
+  service: the rule belongs to the season, the moment belongs to the game, and
+  a plain class dishka can build lets the game's interactor depend on it
+  without reaching into another use case.
 
 New exceptions in `core/utils/exceptions.py`: `SeasonAlreadyExists`,
 `SeasonNotFound`, `SlotNotFound`, `SlotAuthorInvalid`, `SlotAlreadyLinked`,
-`GameAlreadyInSchedule`. There is no `NotSlotOwner` or `SlotAlreadyTaken` —
+`SlotIsBusy`, `GameAlreadyInSchedule`. There is no `NotSlotOwner` or
+`SlotAlreadyTaken` —
 see <<slot-ownership>>. `SlotAuthorInvalid` covers naming a team you do not
 captain, or naming none at all; `SlotNotFound` covers a date id belonging to
 another season or to no season, which is a 404 rather than a 500 from the dao.
@@ -562,9 +611,14 @@ is advisory, one author can take or free another's date, and the change trail
 is what makes that recoverable. There is therefore no `NotSlotOwner`, and
 taking an already-taken date is not a 409 — it is a re-assignment.
 
-`TakeSlotInteractor` still re-reads the row `FOR UPDATE` inside the
+`TakeSlotInteractor` still re-reads the row `FOR UPDATE NOWAIT` inside the
 transaction: two people taking the same date at once should end with one
-coherent row, not an interleaved one.
+coherent row, not an interleaved one. *Nowait, not a wait.* Whoever queues
+behind an open edit would be deciding against the date as it was *before* that
+edit and would then write their own version over it — the very overwrite the
+lock is there to prevent. So the second taker gets `SlotIsBusy` → 409 and looks
+again, which is honest: re-assignment is allowed, but only ever on purpose and
+only ever against what is actually in the row.
 
 *A superuser acting in the ordinary schedule is acting as an author.* Their
 edits are recorded and rendered exactly like anyone's — no flag on the change
@@ -578,7 +632,9 @@ Everyone in a team now, or in a team during the current or previous year, plus
 everyone who was an org for a game in that window even with no team now.
 
 One DAO method — `SeasonAudienceReader.get_recipient_ids(since)` where `since`
-is 1 January of `now(MSK).year - 1` — as a `UNION` of:
+is 1 January of `now(MSK).year - 1`. It answers about *players*, so it is
+`PlayerDao.get_active_player_ids` and the composed `SeasonScheduleDao` only
+proxies it: a `dao/complex/*` class holds no query of its own. A `UNION` of:
 
 * `team_players` where `date_left is null or date_left >= since`, i.e. a
   membership overlapping the window;
@@ -588,10 +644,14 @@ is 1 January of `now(MSK).year - 1` — as a `UNION` of:
 The window is relative to *today*, not to the season's year, so a 2027 season
 published in 2026 still reaches the people active in 2025–2026.
 
-Recipients get `season_schedule_changed`, severity `low`, with a payload
-carrying the year and a short summary so `notification-render.ts` can render it
-without another fetch. Web push follows through the existing `WebPushSender`
-path.
+Recipients get `season_schedule_changed`, severity `low`. The payload carries
+the year *and the digests themselves* — `SlotDigest.to_payload()` per date,
+dates as iso strings and only the parts that actually changed — so
+`notification-render.ts` renders «перенесена с 15.05 на 17.05; занял @harry»
+rather than «3 изменения» and a dead end. A count would leave the reader with
+nowhere to go: `season_changes` is the engine's audit trail, not an endpoint,
+and the feed item is the only place the web learns what happened. Web push
+follows through the existing `WebPushSender` path.
 
 === Linking a game to a date
 
@@ -613,7 +673,7 @@ in MSK, takes the date for the game's author if it was free, and records
 `slot_game_linked` — plus `slot_moved` when the date actually changed.
 
 *Keeping it synced.* `PlanGameStartInteractor` gains one dependency,
-`SyncLinkedSlotInteractor`, invoked after a successful re-plan: if the game
+`LinkedSlotSync`, applied after a successful re-plan: if the game
 already sits in a date, that date follows the new `start_at` and a `slot_moved`
 change is recorded with the reason `game_rescheduled`. Cancelling a planned
 start unlinks nothing — the date keeps the game, it just has no start to sync
@@ -635,9 +695,9 @@ GET    /seasons                                 list of years
 GET    /seasons/current                         the current year's season
 GET    /seasons/{year}                          season + dates
 GET    /seasons/defaults?year=2027              the 9 default dates, nothing persisted
-POST   /seasons  {year, slots: [{date, note?}]} publish a composed season
-POST   /seasons/{year}/slots   {date, note?}    add a date
-PATCH  /seasons/{year}/slots/{id}  {date?, note?}
+POST   /seasons  {year, slots: [{slot_date, note?}]}  publish a composed season
+POST   /seasons/{year}/slots   {slot_date, note?}      add a date
+PATCH  /seasons/{year}/slots/{id}  {slot_date?, note?}
 DELETE /seasons/{year}/slots/{id}
 POST   /seasons/{year}/slots/{id}/take
        {author_kind, team_id?, org_player_ids?} take / re-assign
@@ -828,7 +888,7 @@ a default time in the schedule would be a number nobody meant.
 
 | 1
 | Tables + migration, `core/season/`, DAOs, DI, REST API, `SeasonAnnouncer` and its bot implementation, publication with pinning, the daily digest and unpin job, the notification audience, and the §Ubiquitous language entries in *both* `context.md` files
-| ⏳ not started
+| ✅ landed
 
 | 2
 | `SeasonSG` dialogs with compose-in-`dialog_data`, the `SeasonCalendar` subclass, and the link offer grafted onto `GameScheduleSG`
@@ -867,8 +927,10 @@ expensive to diagnose, and each has a fast test worth writing alongside it.
   annotations from — `date` resolves to `None`, `date | None` becomes
   `None | None`, and FastAPI cannot build the route table. The whole api fails
   to start and every integration test dies on the `app` fixture, which looks
-  nothing like the one-word cause. Import the type under another name, and add
-  a unit test that builds `shvatka.api.app.router.setup()`.
+  nothing like the one-word cause. *Rename the field, not the import*: an
+  aliased `from datetime import date as date_` fixes the one module and then
+  has to be repeated, and decoded, in every module that declares a date. Hence
+  `slot_date`. Add a unit test that builds `shvatka.api.app.router.setup()`.
 * *Load every relationship `to_dto` walks.* `SeasonSlot.to_dto` reaches the
   owner's user, the team's chat, forum team and captain, and every org's user.
   An async session raises `MissingGreenlet` rather than lazy-loading, so the
@@ -887,29 +949,29 @@ expensive to diagnose, and each has a fast test worth writing alongside it.
   days view the base class hands back, using only names the `kbd` package
   exports. Also: clear `.mypy_cache` before trusting a local mypy run.
 
-=== Phase 1 — engine ⏳
+=== Phase 1 — engine ✅
 
-* [ ] `seasons`, `season_slots`, `season_slot_orgs`, `season_changes` + migration
-* [ ] `core/season/` — `dto`, `rules`, `adapters`, `interactors`
-* [ ] per-table DAOs behind one composed `SeasonScheduleDao`, wired in
+* [x] `seasons`, `season_slots`, `season_slot_orgs`, `season_changes` + migration
+* [x] `core/season/` — `dto`, `rules`, `adapters`, `interactors`
+* [x] per-table DAOs behind one composed `SeasonScheduleDao`, wired in
   `infrastructure/di/`
-* [ ] `SeasonAnnouncer` + `BotSeasonAnnouncer` (send, pin, edit, unpin) and the
+* [x] `SeasonAnnouncer` + `BotSeasonAnnouncer` (send, pin, edit, unpin) and the
   no-op web side, fanned out by `ComplexSeasonAnnouncer`
-* [ ] `PublishSeasonInteractor`, the per-date edit interactors, take/release,
-  link/unlink, `FindSlotsNearGameStartInteractor`, `SyncLinkedSlotInteractor`
-* [ ] `publish_season_digest_wrapper` on a 10:00 MSK cron trigger — digest *and*
+* [x] `PublishSeasonInteractor`, the per-date edit interactors, take/release,
+  link/unlink, `FindSlotsNearGameStartInteractor`, `LinkedSlotSync`
+* [x] `publish_season_digest_wrapper` on a 10:00 MSK cron trigger — digest *and*
   end-of-season unpin
-* [ ] `SeasonAudienceReader` and `season_schedule_changed` notifications
-* [ ] `/seasons` routes
-* [ ] glossary rows in `context.md` here *and* in shvatka-ui
-* [ ] unit tests (`tests/unit/season/`): `default_slot_dates` across years
+* [x] `SeasonAudienceReader` and `season_schedule_changed` notifications
+* [x] `/seasons` routes
+* [x] glossary rows in `context.md` here *and* in shvatka-ui
+* [x] unit tests (`tests/unit/season/`): `default_slot_dates` across years
   including the 9-May-is-Saturday case; permissions — promotion is the gate,
   any author may edit any date, only a captain may name their team; the ±3-day
   search including ties; digest collapsing — repeated moves of one date become
   one line, move-and-move-back becomes nothing, take then release becomes
   nothing. An in-memory `SeasonScheduleDao` makes the interactors testable
   without a database and is what catches the payload-ordering trap above
-* [ ] integration tests (`tests/integration/api_full/test_season.py`): publish,
+* [x] integration tests (`tests/integration/api_full/test_season.py`): publish,
   then publish the same year again → 409; take, then another author re-assigns
   the same date → the trail names them both; a player without promotion → 422;
   link a game → the date syncs; re-plan the game → the date follows; run the
@@ -958,7 +1020,45 @@ expensive to diagnose, and each has a fast test worth writing alongside it.
 [[deviations]]
 == Deviations from the plan
 
-Nothing is implemented yet. This section is filled in as the phases land.
+Filled in as the phases land.
+
+=== Phase 1
+
+* *A linked date cannot be released.* `ReleaseSlotInteractor` raises
+  `SlotAlreadyLinked` when a game sits in the date. Freeing it would leave the
+  game pointing at a date nobody owns, and unlinking first says what you mean.
+* *`FindSlotsNearGameStartInteractor` takes a `window`*, defaulting to the ±3
+  days the offer uses. The interactor is the only way into `find_slots_near`
+  from an edge, and the pure rule already had the parameter.
+* *A date outside the season's year raises a bare `SeasonError`*, not an
+  exception of its own. It is one guard (`_check_slot_year`) shared by publish,
+  add and move, it carries the Russian in `notify_user`, and nothing branches on
+  the type — a named class would only be there to be caught by nobody.
+* *An interactor never calls another interactor.* `PlanGameStartInteractor`
+  needs the season's sync rule, so that rule is a *service* — `LinkedSlotSync`
+  in `core/season/services.py` — not an interactor. `ScheduleChangeLog` moved
+  there with it, replacing the `SeasonInteractor` base class the use cases used
+  to inherit: injected, each interactor's fields name exactly what it uses.
+* *Taking a date uses `FOR UPDATE NOWAIT`*, not a waiting lock, and a held row
+  raises `SlotIsBusy` → 409. Queueing would let the loser decide against a
+  stale row and overwrite the winner.
+* *No cascades and no `ON DELETE`* — see the data model. The consequence is
+  `replace_player_season` in the player merge and an explicit teardown order in
+  `RemoveSlotInteractor`; both are covered against a real database.
+* *The digest replies to the pinned schedule message*, so a reader of one line
+  about a moved date can reach the plan that line changed.
+* *A `dao/complex/*` class is a proxy and nothing else.* The audience `UNION`
+  started life in `SeasonScheduleDaoImpl`, where it was the only query in a
+  class whose whole job is to forward. It answers about players, so it is
+  `PlayerDao.get_active_player_ids(since)` now.
+* *The digest notification carries the digests, not a count.* See §Notification
+  audience: a feed item saying «3 изменения» gives the reader no way to learn
+  which three.
+* *`ComplexSeasonAnnouncer.publish` returns the bot's announcement*, rather than
+  gathering one per edge. Only the bot has a channel, and the season has exactly
+  one message to store; anything else would push the choice of which message to
+  keep onto the interactor. The web side is still called, and its failure is
+  still swallowed and logged, exactly like `ComplexGameLogWriter`.
 
 == Open questions
 

@@ -24,6 +24,7 @@ from shvatka.api.app.utils.web_input import (
     WebGamePreparer,
     WebGameView,
     WebOrgNotifier,
+    WebSeasonAnnouncer,
     WebTeamNotifier,
 )
 from shvatka.api.main_factory import create_app, setup_blocking_pool, setup_loop_monitor
@@ -38,6 +39,7 @@ from shvatka.core.views.game import (
     OrgNotifier,
     ViewSender,
 )
+from shvatka.core.views.season import SeasonAnnouncer
 from shvatka.core.views.team import TeamNotifier
 from shvatka.infrastructure.di import get_providers
 from shvatka.infrastructure.di.utils import warm_up
@@ -52,11 +54,13 @@ from shvatka.tgbot.tasks import NurseryViewSender
 from shvatka.tgbot.utils.fastapi_webhook import SimpleRequestHandler, setup_application
 from shvatka.tgbot.views.game import BotOrgNotifier, BotView, GameBotLog
 from shvatka.tgbot.views.game_release import GameBotReleasePublisher
+from shvatka.tgbot.views.season import BotSeasonAnnouncer
 from shvatka.tgbot.views.team import BotTeamNotifier
 from shvatka.views import (
     ComplexGameLogWriter,
     ComplexGameViewPreparer,
     ComplexOrgNotifier,
+    ComplexSeasonAnnouncer,
     ComplexTeamNotifier,
     ComplexView,
 )
@@ -99,6 +103,12 @@ class ComplexOnlyProvider(Provider):
     @provide
     def complex_log_writer(self, bot: GameBotLog, web: WebGameLogWriter) -> GameLogWriter:
         return ComplexGameLogWriter(bot, web)
+
+    @provide
+    def complex_season_announcer(
+        self, bot: BotSeasonAnnouncer, web: WebSeasonAnnouncer
+    ) -> SeasonAnnouncer:
+        return ComplexSeasonAnnouncer(bot, web)
 
     @provide
     def complex_release_publisher(self, bot: GameBotReleasePublisher) -> GameReleasePublisher:

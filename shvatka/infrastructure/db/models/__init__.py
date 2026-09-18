@@ -16,6 +16,10 @@ from .notification import Notification
 from .organizer import Organizer
 from .player import Player
 from .push_subscription import PushSubscription
+from .season import Season
+from .season_change import SeasonChange
+from .season_slot import SeasonSlot
+from .season_slot_org import SeasonSlotOrg
 from .team import Team
 from .team_player import TeamPlayer
 from .timer_actions import TimerAction

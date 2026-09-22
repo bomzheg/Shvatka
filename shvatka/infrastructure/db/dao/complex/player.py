@@ -71,6 +71,13 @@ class PlayerMergerImpl(PlayerMerger):
     async def replace_forum_player(self, primary: dto.Player, secondary: dto.Player) -> None:
         return await self.dao.forum_user.replace_player(primary, secondary)
 
+    async def replace_player_season(self, primary: dto.Player, secondary: dto.Player) -> None:
+        # the season references a player from three tables, and none of them
+        # cascades or nulls itself, so all three move before the delete
+        await self.dao.season_slot.replace_owner(primary.id, secondary.id)
+        await self.dao.season_slot_org.replace_player(primary.id, secondary.id)
+        await self.dao.season_change.replace_actor(primary.id, secondary.id)
+
     async def delete_player(self, player: dto.Player) -> None:
         return await self.dao.player.delete(player)
 

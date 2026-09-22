@@ -458,3 +458,43 @@ class InvalidKey(SHError):
     def __init__(self, key: str | None = None, *args: Any, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self.key = key
+
+
+class SeasonError(SHError):
+    notify_user = "Ошибка расписания сезона"
+
+
+class SeasonNotFound(SeasonError):
+    notify_user = "Расписание на этот год ещё не опубликовано"
+
+
+class SeasonAlreadyExists(SeasonError):
+    notify_user = "Расписание на этот год уже опубликовано"
+
+
+class SlotNotFound(SeasonError):
+    notify_user = "Такой даты в расписании нет"
+
+
+class SlotIsBusy(SeasonError):
+    """Somebody else's edit of this date has not finished yet.
+
+    Queueing behind it would mean deciding against the row as it was *before*
+    their edit and then writing over it, so the answer is to say so and let
+    the caller look again.
+    """
+
+    notify_user = "Эту дату прямо сейчас редактирует кто-то ещё, попробуйте ещё раз"
+
+
+class SlotAuthorInvalid(SeasonError, PermissionsError):
+    notify_user = "Записать команду на дату может только капитан"
+    permission_name = "slot_author"
+
+
+class SlotAlreadyLinked(SeasonError):
+    notify_user = "К этой дате уже привязана игра"
+
+
+class GameAlreadyInSchedule(SeasonError):
+    notify_user = "Эта игра уже стоит в расписании на другую дату"

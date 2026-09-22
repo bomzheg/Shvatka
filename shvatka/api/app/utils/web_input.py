@@ -11,6 +11,8 @@ from shvatka.core.models import dto
 from shvatka.core.models.dto import action
 from shvatka.core.models.enums.notification import NotificationSeverity, NotificationType
 from shvatka.core.notifications.adapters import NotificationWriter
+from shvatka.core.season import dto as season_dto
+from shvatka.core.season.rules import SlotDigest
 from shvatka.core.views.game import (
     AnyViewTask,
     DuplicateKey,
@@ -33,6 +35,7 @@ from shvatka.core.views.game import (
     ShowEffects,
     WrongKey,
 )
+from shvatka.core.views.season import Announcement, SeasonAnnouncer
 from shvatka.core.views.team import (
     CaptainChanged,
     PlayerJoinedTeam,
@@ -180,6 +183,24 @@ class WebGamePreparer(GameViewPreparer):
 
 class WebGameLogWriter(GameLogWriter):
     async def log(self, log_event: GameLogEvent) -> None:
+        pass
+
+
+class WebSeasonAnnouncer(SeasonAnnouncer):
+    """The web is served by the rest endpoint and the feed: nothing to announce."""
+
+    async def publish(self, season: season_dto.Season) -> Announcement | None:
+        return None
+
+    async def update(self, season: season_dto.Season) -> None:
+        pass
+
+    async def announce_digest(
+        self, season: season_dto.Season, digests: Sequence[SlotDigest]
+    ) -> None:
+        pass
+
+    async def close(self, season: season_dto.Season) -> None:
         pass
 
 

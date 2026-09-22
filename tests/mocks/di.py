@@ -2,11 +2,13 @@ from dishka import Provider, Scope, provide
 
 from shvatka.core.interfaces.scheduler import LevelTestScheduler, Scheduler
 from shvatka.core.views.game import GameReleasePublisher
+from shvatka.core.views.season import SeasonAnnouncer
 from shvatka.tgbot.username_resolver.user_getter import UserGetter
 from tests.mocks.datetime_mock import ClockMock
 from tests.mocks.game_log import GameLogWriterMock
 from tests.mocks.game_release import GameReleasePublisherMock
 from tests.mocks.scheduler_mock import LevelSchedulerMock, SchedulerMock
+from tests.mocks.season import SeasonAnnouncerMock
 from tests.mocks.user_getter import UserGetterMock
 
 
@@ -14,9 +16,15 @@ class MocksProvider(Provider):
     scope = Scope.APP
 
     clock = provide(ClockMock)
+    # nothing reaches telegram in tests, but the tests still read what it said
+    season_announcer_mock = provide(SeasonAnnouncerMock)
     # not an override: the app's own (complex) writer stays in place for
     # container-resolved code, the mock is for services called by hand
     game_log = provide(GameLogWriterMock)
+
+    @provide(override=True, scope=Scope.REQUEST)
+    def season_announcer(self, announcer: SeasonAnnouncerMock) -> SeasonAnnouncer:
+        return announcer
 
     @provide(override=True)
     def release_publisher(self) -> GameReleasePublisher:

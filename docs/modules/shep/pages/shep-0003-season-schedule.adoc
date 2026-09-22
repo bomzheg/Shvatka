@@ -5,9 +5,9 @@
 |===
 | SHEP | 0003
 | Title | Season schedule
-| Status | `Accepted` — phase 1 landed. One pull request per phase.
+| Status | `Accepted` — phases 1 and 3 landed. One pull request per phase.
 | Created | 2026-07-26
-| Updated | 2026-09-15
+| Updated | 2026-09-22
 | Related | issue #167, PR #306; xref:shep-0001-notifications-and-action-requests.adoc[SHEP-0001] (which defers `season_schedule_changed` to this one)
 |===
 
@@ -896,7 +896,7 @@ a default time in the schedule would be a number nobody meant.
 
 | 3
 | The web season calendar, compose mode, extend-months controls, and the `season_schedule_changed` renderer
-| ⏳ not started
+| ✅ landed
 
 | 4
 | The admin panel: `AdminSetSlotAuthorInteractor`, the `/admin/seasons` routes, and the `/admin/season` page
@@ -991,19 +991,24 @@ expensive to diagnose, and each has a fast test worth writing alongside it.
 * [ ] «(вне расписания сезона)» on the `GAME_PLANED` log line — the flag travels
   as data on the log event; the Russian belongs to the bot view, never to `core`
 
-=== Phase 3 — web UI ⏳
+=== Phase 3 — web UI ✅
 
-* [ ] `src/app/season/` component + service, routes `/season` and `/season/:year`
-* [ ] the May–October grid with extend-months controls and auto-extension for
+* [x] `src/app/season/` component + service, routes `/season` and `/season/:year`
+* [x] the May–October grid with extend-months controls and auto-extension for
   dates outside it
-* [ ] compose mode backed by `localStorage`, with 409 handling — discard the
+* [x] compose mode backed by `localStorage`, with 409 handling — discard the
   local list and load the published season
-* [ ] a tap opens a modal and never writes: an empty day offers the date, a
+* [x] a tap opens a modal and never writes: an empty day offers the date, a
   planned one shows it; a bottom sheet under 480px, not a panel under the grid
-* [ ] take / release / add / move / delete for authors; read-only for everyone
+* [x] take / release / add / move / delete for authors; read-only for everyone
   else; identical for an admin
-* [ ] `season_schedule_changed` in `notification-render.ts`, declining the
+* [x] `season_schedule_changed` in `notification-render.ts`, declining the
   count the way Russian does
+* [x] unit tests (`src/app/season/*.spec.ts`): the grid's month range and week
+  alignment, the marks, the composed list and what survives a refresh, the
+  endpoints the service calls, and the page's own decisions — the 409 discard,
+  a tap that writes nothing, and waiting for the reader before calling a year
+  read-only. `notification-render.spec.ts` covers the digest wording
 
 === Phase 4 — admin panel ⏳
 
@@ -1059,6 +1064,42 @@ Filled in as the phases land.
   one message to store; anything else would push the choice of which message to
   keep onto the interactor. The web side is still called, and its failure is
   still swallowed and logged, exactly like `ComplexGameLogWriter`.
+
+=== Phase 3
+
+* *The names live in a list under the grid, not in the day cells.* A month-card
+  cell is some forty pixels wide, which truncates «bomzheg» to «bom…» and every
+  free date to «своб…». The cells carry the marks and the day, and a «Даты
+  сезона» list under them carries date, author, orgs, note and game — which is
+  the plan the pinned channel message shows anyway. It is not the panel the
+  decision rejects: the actions stay in the modal, and a row of the list opens
+  that same modal.
+* *The page waits for the reader before deciding a year is read-only.* The user
+  is loaded by the header, asynchronously, so a page opened by its url first
+  renders not knowing whose it is. Deciding then would show an author
+  «расписание ещё не опубликовано» and stay there. A fourth state, `waiting`,
+  holds until `AuthStateService` answers.
+* *The empty-day window adds in one step*, with the note field in the window
+  itself rather than behind a second «Добавить дату» — two buttons with the
+  same label, one of which only opened a form, is a step nobody asked for.
+* *Moving a date is confirmed in the target day's window.* «Перенести» arms the
+  move and a sticky bar says which date is in hand; tapping a day opens
+  «Перенести дату 16.05 на 23.05?». The tap that picks the target is still a
+  tap that opens a window rather than one that writes, and the bar is sticky
+  because the target may be a year-tall grid away from where the move started.
+* *`HttpAdapter` grew a `patch`* — `PATCH /seasons/{year}/slots/{id}` is the
+  first one the ui sends — and `isProtectedUrl` lists the date-level paths
+  rather than `/seasons`: reading a season is public, and the whole prefix
+  would fail an anonymous reader's `GET` fast for no reason.
+* *The composed list is keyed by day*, so two dates on one day cannot be
+  composed — they are added to the published season instead. The generator
+  never produces a duplicate, and the alternative is a second identical cell in
+  a calendar being edited by hand.
+* *Linking a game is not in this phase.* The grid shows a linked game and opens
+  it; offering the link belongs to planning a game start, which is phase 2's
+  seam, and `POST …/slots/{id}/game` has no other caller in the browser yet.
+* *The mock api learned the season* (`tools/mock-api/`), so the page can be
+  looked at, and screenshotted for the docs, without a backend.
 
 == Open questions
 

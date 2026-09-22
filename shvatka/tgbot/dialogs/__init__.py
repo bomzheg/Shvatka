@@ -21,6 +21,7 @@ from shvatka.tgbot.dialogs import (
     merge,
     player_view,
     profile,
+    season,
     starters,
     team_manage,
     team_view,
@@ -49,6 +50,7 @@ DIALOG_PACKAGES = (
     timers,
     effects,
     game_spy,
+    season,
 )
 
 
@@ -102,6 +104,7 @@ def setup_all_dialogs() -> Router:
     player_view.setup(router)
     timers.setup(router)
     effects.setup(router)
+    season.setup(router)
 
     return router
 

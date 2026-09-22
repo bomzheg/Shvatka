@@ -5,7 +5,7 @@ the real getter is never called, so a window without it renders against an
 empty dict and usually just blows up on the first missing key.
 """
 
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 from uuid import UUID
 
 from aiogram.fsm.state import State
@@ -17,8 +17,10 @@ from shvatka.core.models.dto import action, hints
 from shvatka.core.models.dto.scn.level import Conditions, HintsList, LevelScenario
 from shvatka.core.models.enums import GameStatus
 from shvatka.core.models.enums.played import Played
+from shvatka.core.season import dto as season_dto
 from shvatka.core.utils.datetime_utils import tz_utc
 from shvatka.core.views.texts import PERMISSION_EMOJI
+from shvatka.tgbot.views.season import render_season, render_slot
 
 PREVIEW_NOW = datetime(2024, 5, 18, 18, 0, tzinfo=tz_utc)
 
@@ -337,6 +339,107 @@ PREVIEW_FINISHED_LEVEL_TIME = dto.LevelTimeOnGame(
 PREVIEW_SPY_STAT = {PREVIEW_LEVEL_TIME.level_number: [PREVIEW_LEVEL_TIME]}
 
 TIMES_PRESET = [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60]
+
+
+PREVIEW_SEASON_YEAR = 2026
+PREVIEW_FREE_SLOT = season_dto.Slot(
+    id=1,
+    season_id=1,
+    slot_date=date(PREVIEW_SEASON_YEAR, 5, 16),
+)
+PREVIEW_TAKEN_SLOT = season_dto.Slot(
+    id=2,
+    season_id=1,
+    slot_date=date(PREVIEW_SEASON_YEAR, 6, 6),
+    note="зимняя игра",
+    owner=PREVIEW_AUTHOR,
+    author_kind=season_dto.SlotAuthorKind.player,
+    orgs=[PREVIEW_PLAYER],
+    taken_at=PREVIEW_NOW,
+)
+PREVIEW_LINKED_SLOT = season_dto.Slot(
+    id=3,
+    season_id=1,
+    slot_date=date(PREVIEW_SEASON_YEAR, 6, 27),
+    owner=PREVIEW_AUTHOR,
+    author_kind=season_dto.SlotAuthorKind.team,
+    team=PREVIEW_TEAM,
+    game=season_dto.LinkedGame(
+        id=PREVIEW_GAME.id,
+        name=PREVIEW_GAME.name,
+        start_at=PREVIEW_GAME.start_at,
+        number=PREVIEW_GAME.number,
+    ),
+    taken_at=PREVIEW_NOW,
+)
+PREVIEW_SLOTS = [PREVIEW_FREE_SLOT, PREVIEW_TAKEN_SLOT, PREVIEW_LINKED_SLOT]
+PREVIEW_SEASON = season_dto.Season(
+    id=1,
+    year=PREVIEW_SEASON_YEAR,
+    published_by_id=PREVIEW_AUTHOR.id,
+    published_at=PREVIEW_NOW,
+    updated_at=PREVIEW_NOW,
+    slots=PREVIEW_SLOTS,
+)
+PREVIEW_SEASON_MARKS = {
+    PREVIEW_FREE_SLOT.slot_date.isoformat(): "🟢",
+    PREVIEW_TAKEN_SLOT.slot_date.isoformat(): "⭐",
+    PREVIEW_LINKED_SLOT.slot_date.isoformat(): "🎮",
+}
+PREVIEW_SEASON_CALENDAR = {
+    "year": PREVIEW_SEASON_YEAR,
+    "prev_year": PREVIEW_SEASON_YEAR - 1,
+    "next_year": PREVIEW_SEASON_YEAR + 1,
+    "season": PREVIEW_SEASON,
+    "slots": PREVIEW_SLOTS,
+    "marks": PREVIEW_SEASON_MARKS,
+    "season_text": render_season(PREVIEW_SEASON),
+    "has_season": True,
+    "can_edit": True,
+}
+PREVIEW_SEASON_SLOT = {
+    "year": PREVIEW_SEASON_YEAR,
+    "day": PREVIEW_TAKEN_SLOT.slot_date,
+    "day_title": PREVIEW_TAKEN_SLOT.slot_date.strftime(r"%d.%m.%Y"),
+    "nothing_planed": "На 07.06.2026 в расписании сезона ничего не запланировано",
+    "day_slots": [PREVIEW_TAKEN_SLOT],
+    "has_many": False,
+    "can_edit": True,
+    "is_my_game": False,
+    "slot": PREVIEW_TAKEN_SLOT,
+    "slot_text": render_slot(PREVIEW_TAKEN_SLOT),
+    "is_free": False,
+    "is_taken": True,
+    "is_linked": False,
+    "can_release": True,
+    "orgs": list(PREVIEW_TAKEN_SLOT.orgs),
+    "author": PREVIEW_TAKEN_SLOT.author_name,
+    "mark": "⭐",
+}
+PREVIEW_SEASON_TAKE = {
+    **PREVIEW_SEASON_SLOT,
+    "teams": [PREVIEW_TEAM],
+    "has_teams": True,
+}
+PREVIEW_SEASON_ORGS = {
+    **PREVIEW_SEASON_SLOT,
+    "query": "rainbow",
+    "found": [PREVIEW_PLAYER],
+    "has_found": True,
+}
+PREVIEW_SEASON_MOVE = {
+    **PREVIEW_SEASON_SLOT,
+    "marks": {**PREVIEW_SEASON_MARKS, PREVIEW_TAKEN_SLOT.slot_date.isoformat(): "📆"},
+}
+PREVIEW_COMPOSE_DAYS = [slot.slot_date for slot in PREVIEW_SLOTS]
+PREVIEW_SEASON_COMPOSE = {
+    "year": PREVIEW_SEASON_YEAR,
+    "days": PREVIEW_COMPOSE_DAYS,
+    "count": len(PREVIEW_COMPOSE_DAYS),
+    "has_days": True,
+    "days_text": "\n".join(day.strftime(r"%d.%m.%Y") for day in PREVIEW_COMPOSE_DAYS),
+    "marks": {day.isoformat(): "✅" for day in PREVIEW_COMPOSE_DAYS},
+}
 
 
 class PreviewStart(Start):

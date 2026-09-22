@@ -70,6 +70,11 @@ main_menu = Dialog(
             state=states.CompletedGamesPanelSG.list,
         ),
         Start(
+            Const("📅Расписание сезона"),
+            id="to_season",
+            state=states.SeasonSG.calendar,
+        ),
+        Start(
             Const("🗂Мои игры"),
             id="my_games",
             state=states.MyGamesPanelSG.choose_game,

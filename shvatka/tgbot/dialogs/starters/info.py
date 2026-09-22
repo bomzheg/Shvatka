@@ -3,7 +3,7 @@ from aiogram.filters import Command
 
 from shvatka.tgbot import states
 from shvatka.tgbot.utils.router import register_start_handler
-from shvatka.tgbot.views.commands import TEAMS_COMMAND
+from shvatka.tgbot.views.commands import SEASON_COMMAND, TEAMS_COMMAND
 
 
 def setup() -> Router:
@@ -11,6 +11,11 @@ def setup() -> Router:
     register_start_handler(
         Command(commands=TEAMS_COMMAND),
         state=states.TeamsSg.list,
+        router=router,
+    )
+    register_start_handler(
+        Command(commands=SEASON_COMMAND),
+        state=states.SeasonSG.calendar,
         router=router,
     )
     return router

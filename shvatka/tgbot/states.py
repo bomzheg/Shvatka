@@ -11,6 +11,19 @@ class GameScheduleSG(StatesGroup):
     date = State()
     time = State()
     confirm = State()
+    link_slot = State()
+    no_slot = State()
+
+
+class SeasonSG(StatesGroup):
+    calendar = State()
+    slot = State()
+    take = State()
+    orgs = State()
+    move = State()
+    confirm_delete = State()
+    compose = State()
+    confirm_publish = State()
 
 
 class TimeHintSG(StatesGroup):

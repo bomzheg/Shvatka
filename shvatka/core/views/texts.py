@@ -18,6 +18,7 @@ WAIVER_STATUS_MEANING = {
 
 HINTS_EMOJI: dict[HintType, str] = {
     HintType.text: "📃",
+    HintType.rich: "📰",
     HintType.gps: "📡",
     HintType.venue: "🧭",
     HintType.photo: "📷",

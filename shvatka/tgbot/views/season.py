@@ -7,6 +7,7 @@ from aiogram import Bot
 from aiogram import html as hd
 from aiogram.exceptions import TelegramAPIError, TelegramBadRequest
 
+from shvatka.core.models import dto as core_dto
 from shvatka.core.season import dto
 from shvatka.core.season.rules import SlotDigest
 from shvatka.core.views.season import Announcement, SeasonAnnouncer
@@ -19,6 +20,22 @@ SLOT_DATE_FORMAT = r"%d.%m"
 FREE = "🟢"
 TAKEN = "🔒"
 LINKED = "🎮"
+MINE = "⭐"
+
+
+def slot_mark(slot: dto.Slot, player: core_dto.Player | None) -> str:
+    """The one character a calendar day carries.
+
+    Your own date wins over «taken»: the calendar is read to find out what
+    is left and what is yours, and a lock says neither.
+    """
+    if slot.is_linked:
+        return LINKED
+    if slot.is_mine(player):
+        return MINE
+    if slot.is_free:
+        return FREE
+    return TAKEN
 
 
 @dataclass

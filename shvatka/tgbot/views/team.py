@@ -33,7 +33,7 @@ def render_team_players(
     rez += f"🔢ID{team.id}\n"
     rez += f"👑Капитан: {cap_card}\n"
     if team.description is not None:
-        rez += f"📃Девиз: {hd.quote(team.description)}"
+        rez += f"📃Девиз: {hd.quote(team.description)}\n"
     rez += "Список игроков:\n"
     for team_player in players:
         rez += (

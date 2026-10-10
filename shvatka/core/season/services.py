@@ -69,18 +69,19 @@ class LinkedSlotSync:
     dao: SeasonScheduleDao
     changes: ScheduleChangeLog
 
-    async def __call__(self, game: dto.Game, actor: dto.Player) -> None:
-        if game.start_at is None:
-            return
+    async def __call__(self, game: dto.Game, actor: dto.Player) -> bool:
+        """Returns whether the game sits in a date — what «вне расписания» reads."""
         slot = await self.dao.get_slot_by_game(game.id)
         if slot is None:
-            return
+            return False
+        if game.start_at is None:
+            return True
         started = game.start_at.astimezone(tz_game).date()
         if started == slot.slot_date:
-            return
+            return True
         season = await self.dao.get_season_by_id(slot.season_id)
         if season is None:
-            return
+            return True
         previous = slot.slot_date
         await self.dao.move_slot(slot.id, started)
         await self.changes.record(
@@ -97,3 +98,4 @@ class LinkedSlotSync:
         )
         await self.dao.commit()
         await self.changes.announce_update(season.year)
+        return True

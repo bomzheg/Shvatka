@@ -1,5 +1,5 @@
 import logging
-from datetime import date, datetime, time
+from datetime import date, datetime, time, timedelta
 from typing import Any
 
 from aiogram import Bot
@@ -14,9 +14,10 @@ from shvatka.common.url_factory import UrlFactory
 from shvatka.core.interfaces.dal.complex import TypedKeyGetter
 from shvatka.core.interfaces.identity import IdentityProvider
 from shvatka.core.models import dto
+from shvatka.core.season.interactors import FindSlotsNearGameStartInteractor
 from shvatka.core.services import game
 from shvatka.core.services.game import get_authors_games, get_completed_games
-from shvatka.core.utils.datetime_utils import tz_game
+from shvatka.core.utils.datetime_utils import DATE_FORMAT, tz_game
 from shvatka.core.waiver.services import get_all_played
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.tgbot.views.keys import get_or_create_keys_page
@@ -176,11 +177,63 @@ async def get_game_datetime(
     **_,
 ):
     result = await _my_game(dao, await identity.get_required_player(), dialog_manager)
-    date_: str = dialog_manager.dialog_data["scheduled_date"]
-    time_: str = dialog_manager.dialog_data["scheduled_time"]
-    result["scheduled_datetime"] = datetime.combine(
-        date=date.fromisoformat(date_),
-        time=time.fromisoformat(time_),
-        tzinfo=tz_game,
+    result["scheduled_datetime"] = _scheduled_at(dialog_manager)
+    return result
+
+
+SEASON_WIDE_WINDOW = timedelta(days=366)
+"""The whole season, for «перенести ближайшую дату сюда»."""
+
+NEAREST_SLOTS = 2
+"""One date before and one after is a choice; a list of nine is a search."""
+
+
+@inject
+async def get_slots_near_game(
+    dao: FromDishka[HolderDao],
+    dialog_manager: DialogManager,
+    identity: FromDishka[IdentityProvider],
+    suggester: FromDishka[FindSlotsNearGameStartInteractor],
+    **_,
+):
+    result = await _my_game(dao, await identity.get_required_player(), dialog_manager)
+    at = _scheduled_at(dialog_manager)
+    slots = await suggester(at, identity)
+    result.update(
+        scheduled_datetime=at,
+        scheduled_day=at.astimezone(tz_game).date(),
+        scheduled_day_text=at.astimezone(tz_game).strftime(DATE_FORMAT),
+        slots=slots,
+        nearest=slots[0] if slots else None,
     )
     return result
+
+
+@inject
+async def get_no_slot_near_game(
+    dao: FromDishka[HolderDao],
+    dialog_manager: DialogManager,
+    identity: FromDishka[IdentityProvider],
+    suggester: FromDishka[FindSlotsNearGameStartInteractor],
+    **_,
+):
+    result = await _my_game(dao, await identity.get_required_player(), dialog_manager)
+    at = _scheduled_at(dialog_manager)
+    # nothing is within ±3 days, so the offer widens to the whole season
+    nearest = (await suggester(at, identity, SEASON_WIDE_WINDOW))[:NEAREST_SLOTS]
+    result.update(
+        scheduled_datetime=at,
+        scheduled_day=at.astimezone(tz_game).date(),
+        scheduled_day_text=at.astimezone(tz_game).strftime(DATE_FORMAT),
+        slots=nearest,
+        has_slots=bool(nearest),
+    )
+    return result
+
+
+def _scheduled_at(dialog_manager: DialogManager) -> datetime:
+    return datetime.combine(
+        date=date.fromisoformat(dialog_manager.dialog_data["scheduled_date"]),
+        time=time.fromisoformat(dialog_manager.dialog_data["scheduled_time"]),
+        tzinfo=tz_game,
+    )

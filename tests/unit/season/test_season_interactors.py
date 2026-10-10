@@ -508,10 +508,12 @@ async def test_a_replanned_game_drags_its_date_along():
         results=GAME.results,
     )
 
-    await LinkedSlotSync(dao=dao, changes=changes_of(dao, announcer))(moved_game, AUTHOR)
+    synced = await LinkedSlotSync(dao=dao, changes=changes_of(dao, announcer))(moved_game, AUTHOR)
 
     assert (await dao.get_slot(slot_id)).slot_date == date(YEAR, 5, 24)
     assert dao.changes[0].payload["reason"] == "game_rescheduled"
+    # what the GAME_PLANED log line reads to decide «вне расписания сезона»
+    assert synced is True
 
 
 @pytest.mark.asyncio
@@ -519,9 +521,10 @@ async def test_a_game_in_no_date_changes_nothing():
     dao, announcer = make_dao(), SeasonAnnouncerMock()
     await publish(dao, announcer)
 
-    await LinkedSlotSync(dao=dao, changes=changes_of(dao, announcer))(GAME, AUTHOR)
+    synced = await LinkedSlotSync(dao=dao, changes=changes_of(dao, announcer))(GAME, AUTHOR)
 
     assert dao.changes == []
+    assert synced is False
 
 
 @pytest.mark.asyncio
@@ -539,9 +542,36 @@ async def test_a_game_with_no_start_changes_nothing():
         results=GAME.results,
     )
 
-    await LinkedSlotSync(dao=dao, changes=changes_of(dao, announcer))(unplanned, AUTHOR)
+    synced = await LinkedSlotSync(dao=dao, changes=changes_of(dao, announcer))(unplanned, AUTHOR)
 
     assert dao.changes == []
+    assert synced is False
+
+
+@pytest.mark.asyncio
+async def test_a_linked_game_whose_start_was_cancelled_stays_in_its_date():
+    """Cancelling a start unlinks nothing — the date keeps the game."""
+    dao, announcer = make_dao(), SeasonAnnouncerMock()
+    season = await publish(dao, announcer)
+    await LinkGameToSlotInteractor(dao=dao, changes=changes_of(dao, announcer))(
+        YEAR, season.slots[0].id, GAME.id, identity=identity()
+    )
+    dao.changes.clear()
+    unplanned = dto.Game(
+        id=GAME.id,
+        author=AUTHOR,
+        name=GAME.name,
+        status=GAME.status,
+        manage_token=GAME.manage_token,
+        start_at=None,
+        number=None,
+        results=GAME.results,
+    )
+
+    synced = await LinkedSlotSync(dao=dao, changes=changes_of(dao, announcer))(unplanned, AUTHOR)
+
+    assert dao.changes == []
+    assert synced is True
 
 
 @pytest.mark.asyncio

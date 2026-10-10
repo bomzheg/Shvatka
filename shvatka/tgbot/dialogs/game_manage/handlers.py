@@ -22,12 +22,20 @@ from shvatka.core.scenario.interactors import (
     AllGameKeysReaderInteractor,
     GameScenarioTransitionsInteractor,
 )
+from shvatka.core.season.interactors import (
+    AddSlotInteractor,
+    FindSlotsNearGameStartInteractor,
+    GetSeasonInteractor,
+    LinkGameToSlotInteractor,
+    MoveSlotInteractor,
+)
 from shvatka.core.services.game import get_full_game, get_game, rename_game
 from shvatka.core.services.game_stat import get_game_stat
 from shvatka.core.utils.datetime_utils import TIME_FORMAT, tz_game
 from shvatka.infrastructure.db.dao.holder import HolderDao
 from shvatka.infrastructure.printer.results import export_results
 from shvatka.tgbot import states
+from shvatka.tgbot.dialogs.season.getters import season_or_none
 from shvatka.tgbot.tasks import publish_scenario_to_forum
 from shvatka.tgbot.views.results.rich import ResultsRichSender
 
@@ -197,23 +205,97 @@ async def process_time_message(m: Message, dialog_: Any, manager: DialogManager)
     await manager.switch_to(states.GameScheduleSG.confirm)
 
 
+def scheduled_at(manager: DialogManager) -> datetime:
+    return datetime.combine(
+        date=date.fromisoformat(manager.dialog_data["scheduled_date"]),
+        time=time.fromisoformat(manager.dialog_data["scheduled_time"]),
+        tzinfo=tz_game,
+    )
+
+
+def scheduled_game_id(manager: DialogManager) -> int:
+    data: dict[str, Any] = manager.start_data  # type: ignore[assignment]
+    return int(data["my_game_id"])
+
+
 @inject
 async def schedule_game(
     c: CallbackQuery,
     widget: Button,
     manager: DialogManager,
     interactor: FromDishka[PlanGameStartInteractor],
+    suggester: FromDishka[FindSlotsNearGameStartInteractor],
+    reader: FromDishka[GetSeasonInteractor],
     identity: FromDishka[IdentityProvider],
 ):
-    at = datetime.combine(
-        date=date.fromisoformat(manager.dialog_data["scheduled_date"]),
-        time=time.fromisoformat(manager.dialog_data["scheduled_time"]),
-        tzinfo=tz_game,
-    )
-    data: dict[str, Any] = manager.start_data  # type: ignore[assignment]
-    game_id = int(data["my_game_id"])
-    await interactor(game_id=game_id, start_at=at, identity=identity)
+    at = scheduled_at(manager)
+    await interactor(game_id=scheduled_game_id(manager), start_at=at, identity=identity)
     await c.answer("Запланировано успешно")
+    if await season_or_none(reader, at.astimezone(tz_game).year) is None:
+        # nothing to offer: the year has no published schedule at all
+        await manager.done()
+        return
+    # the engine offers, it never links by itself — see SHEP-0003
+    if await suggester(at, identity):
+        await manager.switch_to(states.GameScheduleSG.link_slot)
+        return
+    await manager.switch_to(states.GameScheduleSG.no_slot)
+
+
+@inject
+async def link_game_to_slot(
+    c: CallbackQuery,
+    widget: Any,
+    manager: DialogManager,
+    item_id: str,
+    interactor: FromDishka[LinkGameToSlotInteractor],
+    identity: FromDishka[IdentityProvider],
+):
+    at = scheduled_at(manager)
+    await interactor(
+        at.astimezone(tz_game).year,
+        int(item_id),
+        scheduled_game_id(manager),
+        identity=identity,
+    )
+    await c.answer("Игра привязана к дате")
+    await manager.done()
+
+
+@inject
+async def add_slot_and_link(
+    c: CallbackQuery,
+    widget: Button,
+    manager: DialogManager,
+    adder: FromDishka[AddSlotInteractor],
+    linker: FromDishka[LinkGameToSlotInteractor],
+    identity: FromDishka[IdentityProvider],
+):
+    at = scheduled_at(manager)
+    year = at.astimezone(tz_game).year
+    slot = await adder(year, at.astimezone(tz_game).date(), None, identity=identity)
+    # linking takes the date for the game's author, so the two calls are the
+    # whole of «добавить дату и взять её»
+    await linker(year, slot.id, scheduled_game_id(manager), identity=identity)
+    await c.answer("Дата добавлена и привязана к игре")
+    await manager.done()
+
+
+@inject
+async def move_slot_and_link(
+    c: CallbackQuery,
+    widget: Any,
+    manager: DialogManager,
+    item_id: str,
+    mover: FromDishka[MoveSlotInteractor],
+    linker: FromDishka[LinkGameToSlotInteractor],
+    identity: FromDishka[IdentityProvider],
+):
+    at = scheduled_at(manager)
+    year = at.astimezone(tz_game).year
+    await mover(year, int(item_id), at.astimezone(tz_game).date(), identity=identity)
+    await linker(year, int(item_id), scheduled_game_id(manager), identity=identity)
+    await c.answer("Дата перенесена и привязана к игре")
     await manager.done()
 
 

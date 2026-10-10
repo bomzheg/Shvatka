@@ -15,8 +15,10 @@ from aiogram_dialog.widgets.text import Case, Const, Format, Jinja
 from shvatka.tgbot import states
 from shvatka.tgbot.dialogs.paging import SmartScrollingGroup
 from shvatka.tgbot.dialogs.preview_data import (
+    PREVIEW_FREE_SLOT,
     PREVIEW_GAME,
     PREVIEW_NOW,
+    PREVIEW_SLOTS,
     PREVIEW_WAIVERS,
     PreviewStart,
     PreviewSwitchTo,
@@ -33,11 +35,16 @@ from .getters import (
     get_game_with_channel,
     get_games,
     get_my_games,
+    get_no_slot_near_game,
+    get_slots_near_game,
 )
 from .handlers import (
+    add_slot_and_link,
     cancel_scheduled_game,
     complete_game_handler,
     get_excel_results_handler,
+    link_game_to_slot,
+    move_slot_and_link,
     process_time_message,
     publish_game,
     rename_game_handler,
@@ -448,5 +455,68 @@ schedule_game_dialog = Dialog(
         getter=get_game_datetime,
         preview_data={"game": PREVIEW_GAME, "scheduled_datetime": PREVIEW_NOW},
         state=states.GameScheduleSG.confirm,
+        preview_add_transitions=[
+            PreviewSwitchTo(states.GameScheduleSG.link_slot),
+            PreviewSwitchTo(states.GameScheduleSG.no_slot),
+            Cancel(),
+        ],
+    ),
+    Window(
+        Jinja(
+            "Игра <b>{{game.name}}</b> запланирована на "
+            "{{scheduled_datetime|user_timezone}}.\n"
+            "Привязать её к дате расписания сезона?"
+        ),
+        Select(
+            Format("📆Привязать к {item.slot_date:%d.%m}"),
+            id="link_slots",
+            item_id_getter=lambda slot: slot.id,
+            items="slots",
+            on_click=link_game_to_slot,
+        ),
+        Cancel(Const("❌Не привязывать")),
+        getter=get_slots_near_game,
+        preview_data={
+            "game": PREVIEW_GAME,
+            "scheduled_datetime": PREVIEW_NOW,
+            "scheduled_day": PREVIEW_FREE_SLOT.slot_date,
+            "scheduled_day_text": "16.05.26",
+            "slots": [PREVIEW_FREE_SLOT],
+            "nearest": PREVIEW_FREE_SLOT,
+        },
+        state=states.GameScheduleSG.link_slot,
+        preview_add_transitions=[Cancel()],
+    ),
+    Window(
+        Jinja(
+            "Игра <b>{{game.name}}</b> запланирована на "
+            "{{scheduled_datetime|user_timezone}}, "
+            "но в расписании сезона рядом нет подходящей даты."
+        ),
+        Button(
+            Format("➕Добавить дату {scheduled_day_text} и взять её"),
+            id="add_slot_and_link",
+            on_click=add_slot_and_link,
+        ),
+        Select(
+            Format("📆Перенести {item.slot_date:%d.%m} на этот день"),
+            id="move_slots",
+            item_id_getter=lambda slot: slot.id,
+            items="slots",
+            on_click=move_slot_and_link,
+            when=F["has_slots"],
+        ),
+        Cancel(Const("🙈Без расписания")),
+        getter=get_no_slot_near_game,
+        preview_data={
+            "game": PREVIEW_GAME,
+            "scheduled_datetime": PREVIEW_NOW,
+            "scheduled_day": PREVIEW_FREE_SLOT.slot_date,
+            "scheduled_day_text": "16.05.26",
+            "slots": PREVIEW_SLOTS[:2],
+            "has_slots": True,
+        },
+        state=states.GameScheduleSG.no_slot,
+        preview_add_transitions=[Cancel()],
     ),
 )

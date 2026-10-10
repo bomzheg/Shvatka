@@ -374,28 +374,37 @@ class GameBotLog(GameLogWriter):
     log_chat_id: int
 
     async def log(self, event_log: GameLogEvent) -> None:
-        match event_log:
-            case GameLogEvent(GameLogType.GAME_WAIVERS_STARTED):
-                text = "Начался сбор вейверов на игру {game}"
-            case GameLogEvent(GameLogType.GAME_PLANED):
-                text = "Начало игры {game} запланировано на {at}"
-            case GameLogEvent(GameLogType.GAME_STARTED):
-                text = "Игра {game} началась"
-            case GameLogEvent(GameLogType.GAME_FINISHED):
-                text = "Игра {game} завершена"
-            case GameLogEvent(GameLogType.TEAMS_MERGED):
-                text = (
-                    "Капитан {captain} объединил "
-                    "свою команду {primary_team} с форумной {secondary_team}"
-                )
-            case GameLogEvent(GameLogType.PLAYERS_MERGED):
-                text = "Игрок в боте {primary} объединён с форумным {secondary}"
-            case GameLogEvent(GameLogType.TEAM_CREATED):
-                text = "Создана команда {team}. Капитан: {captain}"
-            case _:
-                raise ValueError
-        data = {k: hd.quote(v) for k, v in event_log.data.items()}
-        await self.bot.send_message(chat_id=self.log_chat_id, text=text.format_map(data))
+        await self.bot.send_message(chat_id=self.log_chat_id, text=render_game_log(event_log))
+
+
+def render_game_log(event_log: GameLogEvent) -> str:
+    """The channel line for one log event. Pure, so it can be read in a test."""
+    match event_log:
+        case GameLogEvent(GameLogType.GAME_WAIVERS_STARTED):
+            text = "Начался сбор вейверов на игру {game}"
+        case GameLogEvent(GameLogType.GAME_PLANED):
+            text = "Начало игры {game} запланировано на {at}"
+            if not event_log.data.get("in_schedule", True):
+                text += " (вне расписания сезона)"
+        case GameLogEvent(GameLogType.GAME_STARTED):
+            text = "Игра {game} началась"
+        case GameLogEvent(GameLogType.GAME_FINISHED):
+            text = "Игра {game} завершена"
+        case GameLogEvent(GameLogType.TEAMS_MERGED):
+            text = (
+                "Капитан {captain} объединил "
+                "свою команду {primary_team} с форумной {secondary_team}"
+            )
+        case GameLogEvent(GameLogType.PLAYERS_MERGED):
+            text = "Игрок в боте {primary} объединён с форумным {secondary}"
+        case GameLogEvent(GameLogType.TEAM_CREATED):
+            text = "Создана команда {team}. Капитан: {captain}"
+        case _:
+            raise ValueError
+    # a flag is data, not text: only the strings the message interpolates
+    # need escaping
+    data = {k: hd.quote(v) if isinstance(v, str) else v for k, v in event_log.data.items()}
+    return text.format_map(data)
 
 
 @dataclass

@@ -5,9 +5,9 @@
 |===
 | SHEP | 0003
 | Title | Season schedule
-| Status | `Accepted` — phase 1 landed. One pull request per phase.
+| Status | `Accepted` — phases 1 and 2 landed. One pull request per phase.
 | Created | 2026-07-26
-| Updated | 2026-09-15
+| Updated | 2026-09-22
 | Related | issue #167, PR #306; xref:shep-0001-notifications-and-action-requests.adoc[SHEP-0001] (which defers `season_schedule_changed` to this one)
 |===
 
@@ -892,7 +892,7 @@ a default time in the schedule would be a number nobody meant.
 
 | 2
 | `SeasonSG` dialogs with compose-in-`dialog_data`, the `SeasonCalendar` subclass, and the link offer grafted onto `GameScheduleSG`
-| ⏳ not started
+| ✅ landed
 
 | 3
 | The web season calendar, compose mode, extend-months controls, and the `season_schedule_changed` renderer
@@ -947,7 +947,11 @@ expensive to diagnose, and each has a fast test worth writing alongside it.
   the library's own `widgets.common.scroll`, turning `tgbot/dialogs/paging.py`
   red — a file the change never touched. Subclass `Calendar` and re-text the
   days view the base class hands back, using only names the `kbd` package
-  exports. Also: clear `.mypy_cache` before trusting a local mypy run.
+  exports. `_init_views` is typed as returning the `CalendarScopeView`
+  *protocol*, which declares only `render`, so assigning `date_text` on the
+  view it hands back needs a `# type: ignore[attr-defined]` — that ignore is
+  the price of not importing the submodule, and it is the cheaper one.
+  Also: clear `.mypy_cache` before trusting a local mypy run.
 
 === Phase 1 — engine ✅
 
@@ -980,16 +984,22 @@ expensive to diagnose, and each has a fast test worth writing alongside it.
   `check_dao`, with announcer and notification effects through mocks in the
   style of `tests/mocks/org_notifier.py`
 
-=== Phase 2 — bot ⏳
+=== Phase 2 — bot ✅
 
-* [ ] `SeasonSG` with `compose` holding the working list in `dialog_data`
-* [ ] `SeasonCalendar(Calendar)` with per-day marks and the season's year pinned
+* [x] `SeasonSG` with `compose` holding the working list in `dialog_data`
+* [x] `SeasonCalendar(Calendar)` with per-day marks and the season's year pinned
   by `CalendarConfig`
-* [ ] date window: take / release / change author / edit orgs / move / delete /
+* [x] date window: take / release / change author / edit orgs / move / delete /
   open the linked game
-* [ ] the link offer and the no-date warning after `GameScheduleSG.confirm`
-* [ ] «(вне расписания сезона)» on the `GAME_PLANED` log line — the flag travels
+* [x] the link offer and the no-date warning after `GameScheduleSG.confirm`
+* [x] «(вне расписания сезона)» on the `GAME_PLANED` log line — the flag travels
   as data on the log event; the Russian belongs to the bot view, never to `core`
+* [x] the entry points: «📅Расписание сезона» in the main menu and `/season`
+* [x] unit tests (`tests/unit/season/test_bot_marks.py`): the mark of a free,
+  a taken, your own and a linked date, including an anonymous reader's; a day
+  cell with and without a mark and the today brackets; and the log line with
+  and without «вне расписания сезона». `tests/unit/test_dialogs_preview.py` and
+  `test_dialogs_transitions.py` cover the windows themselves
 
 === Phase 3 — web UI ⏳
 
@@ -1059,6 +1069,47 @@ Filled in as the phases land.
   one message to store; anything else would push the choice of which message to
   keep onto the interactor. The web side is still called, and its failure is
   still swallowed and logged, exactly like `ComplexGameLogWriter`.
+
+=== Phase 2
+
+* *`SeasonSG` has eight windows, not six.* `move` and `confirm_delete` are the
+  two the state list did not name. Moving needs a day to move *to*, and the
+  only widget that asks for one is a calendar — so it is a window, where the
+  tap answers the question the window asks rather than writing while somebody
+  reads. Deleting a date others planned around is worth a confirmation, and
+  the codebase already spells that as a state (`CaptainsBridgeSG.confirm_delete`).
+* *The date window also unlinks a game.* `ReleaseSlotInteractor` refuses a
+  linked date on purpose, so without «Отвязать игру» a date holding a game
+  could never be freed from the bot and the user would be sent to the web for
+  it. It is the same `UnlinkGameFromSlotInteractor` the api already exposes.
+* *Composing toggles a day; there is no separate move.* Tapping a chosen day
+  removes it and tapping another adds one, which is the two taps a move would
+  cost anyway, and it needs no "what is selected" state on a list that is not
+  persisted.
+* *The bot does not edit a date's note.* It is not in the date window's list,
+  the pinned message already shows the note, and the web keeps
+  `EditSlotNoteInteractor` in phase 3.
+* *The orgs window searches by message, not by inline query.* Adding a *game*
+  org uses `SwitchInlineQuery` with a per-game token; a date has no manage
+  token and would need an inline handler of its own. A name typed into the
+  window reuses `SearchPlayersInteractor`, keeps adding and removing in one
+  window, and leaves nothing to guard.
+* *A day can hold two dates*, which the schema allows deliberately, so the
+  date window lists the day's dates and remembers which one it is about
+  instead of silently picking one.
+* *The out-of-schedule flag comes from `LinkedSlotSync`*, which now returns
+  whether the game sits in a date, and `PlanGameStartInteractor` logs *after*
+  the sync instead of before it. The sync already reads the date for exactly
+  this game; asking a second time would be a second query answering a question
+  something in the call just answered.
+* *`render_game_log` was split out of `GameBotLog.log`.* The suffix is a view
+  decision and deserves a test, and a test of it should not need a `Bot`. The
+  same split made the escaping honest: a flag is data, so only the strings the
+  message interpolates go through `hd.quote`.
+* *The calendar window walks between years.* The SHEP pins the *calendar* to
+  the season's year and says nothing about reaching another one; composing next
+  year's plan needs a way to get there, so «◀️2026» / «2028▶️» switch the year
+  and the pinned view follows.
 
 == Open questions
 

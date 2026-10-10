@@ -400,3 +400,9 @@ overrides) lives in `pyproject.toml`.
   `DocPage` needs its `.adoc` to exist (the unit suite checks it), and the web ui
   keys off the **member name**, so renaming a member is a breaking change.
   SHEP-0007.
+- **Two keys meet folded, never with a bare `==`.** Characters a player can't
+  tell apart are one character to the engine — latin/cyrillic twins, `O`/`0`,
+  `I`/`1`, `Е`/`Ё` — so put both sides of any key comparison through `fold_key`
+  / `fold_keys` (`core/utils/key_folding.py`), including membership in a set of
+  keys. Folding is comparison-only: what is stored, logged and shown stays the
+  string the author wrote or the player typed. SHEP-0016.

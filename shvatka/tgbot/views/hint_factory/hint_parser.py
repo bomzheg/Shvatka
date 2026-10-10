@@ -4,12 +4,13 @@ from uuid import uuid4
 
 from aiogram import Bot
 from aiogram.client.default import Default
-from aiogram.types import ContentType, Message, PhotoSize
+from aiogram.types import ContentType, Message, PhotoSize, RichMessage
 
 from shvatka.core.interfaces.clients.file_storage import FileStorage
 from shvatka.core.models import dto, enums
 from shvatka.core.models.dto import hints
 from shvatka.infrastructure.db.dao import FileInfoDao
+from shvatka.tgbot.views.hint_factory.rich_html import rich_message_to_html
 
 
 class HintParser:
@@ -103,8 +104,31 @@ class HintParser:
                 )
             case ContentType.STICKER:
                 return hints.StickerHint(file_guid=guid)
+            case ContentType.RICH_MESSAGE:
+                assert message.rich_message
+                return await self.parse_rich(message.rich_message, author)
             case _:
                 raise ValueError
+
+    async def parse_rich(self, rich_message: RichMessage, author: dto.Player) -> hints.RichHint:
+        """Store an incoming rich message as the markup it was written in.
+
+        Telegram hands a rich message over as parsed blocks, so the markup is
+        rendered back from them, and every file the message embeds is saved
+        under a guid of its own - the markup points at it by the media id.
+        """
+        rendered = rich_message_to_html(rich_message)
+        media = []
+        for source in rendered.media:
+            saved = await self.save_content(
+                tg_link=hints.ParsedTgLink(
+                    file_id=source.file_id, content_type=source.content_type
+                ),
+                author=author,
+                guid=str(uuid4()),
+            )
+            media.append(hints.RichMedia(id=source.id, file_guid=saved.guid))
+        return hints.RichHint(text=rendered.html, media=media)
 
     async def save_file(
         self, message: Message, author: dto.Player, guid: str

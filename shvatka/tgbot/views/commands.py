@@ -18,6 +18,7 @@ START_COMMAND = BotCommand(command="start", description="начало работ
 HELP_COMMAND = BotCommand(command="help", description="помощь")
 ABOUT_COMMAND = BotCommand(command="about", description="о боте")
 CANCEL_COMMAND = BotCommand(command="cancel", description="отмена начатого диалога")
+CANCEL2_COMMAND = BotCommand(command="cancel2", description="строгая отмена начатого диалога")
 CHAT_ID_COMMAND = BotCommand(command="chat_id", description="узнать chat_id данного чата")
 CHAT_TYPE_COMMAND = BotCommand(command="chat_type", description="узнать chat_id данного чата")
 
@@ -28,6 +29,7 @@ HELP_BASE = CommandsGroup(
         HELP_COMMAND,
         ABOUT_COMMAND,
         CANCEL_COMMAND,
+        CANCEL2_COMMAND,
         CHAT_ID_COMMAND,
         CHAT_TYPE_COMMAND,
     ],

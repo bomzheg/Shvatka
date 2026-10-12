@@ -6,7 +6,9 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, ReplyKeyboardRemove
 from aiogram_dialog import DialogManager
 
-from shvatka.tgbot.views.commands import CANCEL_COMMAND
+from shvatka.tgbot import states
+from shvatka.tgbot.utils.router import register_start_handler
+from shvatka.tgbot.views.commands import OTL_COMMAND, CANCEL_COMMAND
 
 logger = logging.getLogger(__name__)
 
@@ -26,4 +28,9 @@ async def cancel_state(message: Message, state: FSMContext, dialog_manager: Dial
 def setup() -> Router:
     router = Router(name=__name__)
     router.message.register(cancel_state, Command(commands=CANCEL_COMMAND))
+    register_start_handler(
+        Command(commands=OTL_COMMAND),
+        state=states.ProfileSG.one_time_login,
+        router=router,
+    )
     return router

@@ -3,10 +3,16 @@ import re
 
 from aiogram import Router, types
 from aiogram.filters import Command, CommandObject
+from aiogram.types import Message
 
 from shvatka.tgbot.filters import GameStatusFilter
+from shvatka.tgbot.views.commands import OTL_COMMAND
 
 logger = logging.getLogger(__name__)
+
+
+async def one_time_link_wrong_chat_type(message: Message):
+    await message.reply("Одноразовую ссылку для входа можно получить только в личке с ботом")
 
 
 async def message_in_state(message: types.Message, command: CommandObject):
@@ -45,6 +51,7 @@ async def not_supported_callback(callback_query: types.CallbackQuery):
 
 def setup() -> Router:
     router = Router(name=__name__)
+    router.message.register(one_time_link_wrong_chat_type, Command(commands=OTL_COMMAND))
     router.message.register(
         message_in_state,
         Command(commands=re.compile(".*")),

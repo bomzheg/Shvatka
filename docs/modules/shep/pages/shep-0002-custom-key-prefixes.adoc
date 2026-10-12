@@ -31,12 +31,17 @@ Key format lives in one constant and one regexp
 [source,python]
 ----
 KEY_PREFIXES = ("SH", "СХ")
-KEY_PREFIXES_REGEXP = "|".join(KEY_PREFIXES)
-KEY_REGEXP = re.compile(rf"^(?:{KEY_PREFIXES_REGEXP})[A-Z\dА-ЯЁ]+$")
+FOLDED_KEY_PREFIXES = tuple(dict.fromkeys(fold_key(prefix) for prefix in KEY_PREFIXES))
+KEY_PREFIXES_REGEXP = "|".join(FOLDED_KEY_PREFIXES)
+FOLDED_KEY_REGEXP = re.compile(rf"^(?:{KEY_PREFIXES_REGEXP})[A-Z\dА-ЯЁ]+$")
 ----
 
 Everything that asks "is this a key" reads that one constant, so nothing can
-vary per level. The consumers, ordered by how much level context each one has:
+vary per level. (The regexp matches the *folded* key since
+xref:shep-0016-look-alike-key-characters.adoc[SHEP-0016]; a custom prefix will
+be folded the same way, which changes nothing about the decision below.)
+
+The consumers, ordered by how much level context each one has:
 
 [cols="3,2,4",options="header"]
 |===

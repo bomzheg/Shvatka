@@ -8,7 +8,7 @@ from aiogram_dialog import DialogManager
 
 from shvatka.tgbot import states
 from shvatka.tgbot.utils.router import register_start_handler
-from shvatka.tgbot.views.commands import OTL_COMMAND, CANCEL_COMMAND
+from shvatka.tgbot.views.commands import CANCEL_COMMAND, OTL_COMMAND
 
 logger = logging.getLogger(__name__)
 

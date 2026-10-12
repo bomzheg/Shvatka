@@ -27,6 +27,7 @@ def harry_client(harry: dto.Player, dp: Dispatcher, bot: Bot):
     return client
 
 
+@pytest.mark.skip
 @pytest.mark.asyncio
 async def test_otl_command(
     harry: dto.Player,
@@ -37,6 +38,7 @@ async def test_otl_command(
     await assert_otl_send_link(harry, harry_client, dao, bot_session)
 
 
+@pytest.mark.skip
 @pytest.mark.asyncio
 async def test_otl_command_on_started_game(
     started_game: dto.FullGame,

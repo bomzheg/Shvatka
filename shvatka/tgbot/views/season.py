@@ -47,7 +47,7 @@ class BotSeasonAnnouncer(SeasonAnnouncer):
     log_chat_id: int
 
     async def publish(self, season: dto.Season) -> Announcement | None:
-        message = await self.bot.send_message(chat_id=self.log_chat_id, text=render_season(season))
+        message = await self.bot.send_message(chat_id=self.log_chat_id, text=render_season(season, None))
         await self._pin(message.message_id)
         return Announcement(chat_id=self.log_chat_id, message_id=message.message_id)
 
@@ -59,7 +59,7 @@ class BotSeasonAnnouncer(SeasonAnnouncer):
             await self.bot.edit_message_text(
                 chat_id=season.log_chat_id,
                 message_id=season.log_message_id,
-                text=render_season(season),
+                text=render_season(season, None),
             )
         except TelegramBadRequest as e:
             if "message is not modified" not in str(e):
@@ -98,20 +98,21 @@ class BotSeasonAnnouncer(SeasonAnnouncer):
             logger.warning("can't pin the schedule message %s", message_id, exc_info=e)
 
 
-def render_season(season: dto.Season) -> str:
+def render_season(season: dto.Season, player: core_dto.Player | None) -> str:
     lines = [hd.bold(f"Расписание сезона {season.year}"), ""]
-    lines.extend(render_slot(slot) for slot in sorted(season.slots, key=lambda s: s.slot_date))
+    lines.extend(render_slot(slot, player) for slot in sorted(season.slots, key=lambda s: s.slot_date))
     return "\n".join(lines)
 
 
-def render_slot(slot: dto.Slot) -> str:
+def render_slot(slot: dto.Slot, player: core_dto.Player | None) -> str:
     day = _day(slot.slot_date)
+    line = f"{slot_mark(slot, player)} {day} — "
     if slot.game is not None:
-        line = f"{LINKED} {day} — {hd.quote(slot.game.name)}"
+        line += f"{hd.quote(slot.game.name)}"
     elif slot.owner is not None:
-        line = f"{TAKEN} {day} — {hd.quote(slot.author_name or '')}"
+        line += f"{hd.quote(slot.author_name or '')}"
     else:
-        line = f"{FREE} {day} — свободно"
+        line += f"свободно"
     if slot.orgs:
         line += " (орги: " + ", ".join(hd.quote(org.name_mention) for org in slot.orgs) + ")"
     if slot.note:

@@ -99,7 +99,7 @@ def require_slot(slot: dto.Slot | None) -> dto.Slot:
 
 def _slot_data(slot: dto.Slot | None, player: core_dto.Player | None) -> dict[str, Any]:
     return {
-        "slot_text": render_slot(slot) if slot is not None else None,
+        "slot_text": render_slot(slot, player) if slot is not None else None,
         "slot": slot,
         "is_free": slot is not None and slot.is_free,
         "is_taken": slot is not None and not slot.is_free,
@@ -129,7 +129,7 @@ async def get_calendar(
         "season": season,
         "slots": slots,
         "marks": {slot.slot_date.isoformat(): slot_mark(slot, player) for slot in slots},
-        "season_text": render_season(season) if season else NO_SEASON.format(year=year),
+        "season_text": render_season(season, player) if season else NO_SEASON.format(year=year),
         "has_season": season is not None,
         "can_edit": player is not None and player.can_be_author,
     }

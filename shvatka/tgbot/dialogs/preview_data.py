@@ -393,7 +393,7 @@ PREVIEW_SEASON_CALENDAR = {
     "season": PREVIEW_SEASON,
     "slots": PREVIEW_SLOTS,
     "marks": PREVIEW_SEASON_MARKS,
-    "season_text": render_season(PREVIEW_SEASON),
+    "season_text": render_season(PREVIEW_SEASON, PREVIEW_PLAYER),
     "has_season": True,
     "can_edit": True,
 }
@@ -407,7 +407,7 @@ PREVIEW_SEASON_SLOT = {
     "can_edit": True,
     "is_my_game": False,
     "slot": PREVIEW_TAKEN_SLOT,
-    "slot_text": render_slot(PREVIEW_TAKEN_SLOT),
+    "slot_text": render_slot(PREVIEW_TAKEN_SLOT, PREVIEW_PLAYER),
     "is_free": False,
     "is_taken": True,
     "is_linked": False,

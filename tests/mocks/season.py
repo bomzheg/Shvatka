@@ -42,8 +42,10 @@ class SeasonAnnouncerMock(SeasonAnnouncer):
 
 
 class SlotSyncMock(LinkedSlotSync):
-    def __init__(self) -> None:
+    def __init__(self, in_schedule: bool = False) -> None:
         self.calls: list[tuple[dto.Game, dto.Player]] = []
+        self.in_schedule = in_schedule
 
-    async def __call__(self, game: dto.Game, actor: dto.Player) -> None:
+    async def __call__(self, game: dto.Game, actor: dto.Player) -> bool:
         self.calls.append((game, actor))
+        return self.in_schedule

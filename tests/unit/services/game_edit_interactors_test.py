@@ -194,13 +194,43 @@ async def test_plan_start_writes_game_log():
     assert game_log.calls == [
         GameLogEvent(
             GameLogType.GAME_PLANED,
-            {"game": game.name, "at": start_at.astimezone(tz_game).strftime(DATETIME_FORMAT)},
+            {
+                "game": game.name,
+                "at": start_at.astimezone(tz_game).strftime(DATETIME_FORMAT),
+                # nothing in the schedule holds this game
+                "in_schedule": False,
+            },
         )
     ]
     # the schedule follows the game
     assert [(sync_game.id, actor.id) for sync_game, actor in slot_sync.calls] == [
         (game.id, author.id)
     ]
+
+
+@pytest.mark.asyncio
+async def test_plan_start_of_a_game_in_the_schedule():
+    author = make_player(1)
+    game = make_game(author, GameStatus.ready)
+    dao = FakeGameDao(game=game)
+    game_log = RecordingLogWriter()
+    interactor = PlanGameStartInteractor(
+        getter=dao,
+        dao=dao,
+        scheduler=FakeScheduler(),
+        game_log=game_log,
+        slot_sync=SlotSyncMock(in_schedule=True),
+    )
+    start_at = datetime.now(tz=tz_utc) + timedelta(days=1)
+
+    await interactor(
+        game_id=game.id,
+        start_at=start_at,
+        identity=MockIdentityProvider(player=author),
+    )
+
+    # the log line carries the flag, never the Russian the bot view adds
+    assert game_log.calls[0].data["in_schedule"] is True
 
 
 @pytest.mark.asyncio

@@ -5,6 +5,7 @@ from datetime import timedelta
 from typing import Literal, Self, TypeVar, overload
 from uuid import UUID
 
+from shvatka.common.log_utils import obfuscate_sensitive
 from shvatka.core.models.dto import action, hints
 from shvatka.core.models.dto.action.keys import (
     KeyCondition,
@@ -15,6 +16,7 @@ from shvatka.core.models.dto.action.keys import (
 from shvatka.core.models.dto.hints import AnyHint, TimeHint
 from shvatka.core.models.dto.hints.time_hint import EnumeratedTimeHint
 from shvatka.core.utils import exceptions
+from shvatka.core.utils.key_folding import fold_key
 
 logger = logging.getLogger(__name__)
 T = TypeVar("T", bound=action.AnyCondition)
@@ -147,7 +149,7 @@ class Conditions(Sequence[action.AnyCondition]):
 
     @staticmethod
     def validate_keys_unique(conditions: Sequence[action.AnyCondition]) -> None:
-        keys: set[str] = set()
+        keys: set[SHKey] = set()
         for c in conditions:
             if not isinstance(c, KeyCondition):
                 continue
@@ -157,6 +159,26 @@ class Conditions(Sequence[action.AnyCondition]):
                     confidential=f"{keys.intersection(c.get_keys())}",
                 )
             keys = keys.union(c.get_keys())
+        Conditions.warn_confusable_keys(keys)
+
+    @staticmethod
+    def warn_confusable_keys(keys: set[SHKey]) -> None:
+        """
+        Keys folding into one another (`shvatka.core.utils.key_folding`) are one
+        key for a player - whichever of them is typed matches every condition
+        they belong to, and the level answers by the first one. That's an
+        ambiguity of the level, not a broken level: raising here would stop an
+        already played game from loading, so it's logged instead.
+        """
+        by_folded: dict[SHKey, list[SHKey]] = {}
+        for key in sorted(keys):
+            by_folded.setdefault(fold_key(key), []).append(key)
+        confusable = [group for group in by_folded.values() if len(group) > 1]
+        if confusable:
+            logger.warning(
+                "level keys differ only in look-alike characters %s",
+                obfuscate_sensitive(confusable),
+            )
 
     @staticmethod
     def validate_unique_effects(conditions: Sequence[action.AnyCondition]) -> None:

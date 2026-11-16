@@ -5,7 +5,8 @@ from typing import Any
 
 from aiogram.types import CallbackQuery, Message
 from aiogram_dialog import DialogManager
-from aiogram_dialog.widgets.kbd import Button
+from aiogram_dialog.api.entities import ChatEvent
+from aiogram_dialog.widgets.kbd import Button, ManagedCalendar
 from dishka import FromDishka
 from dishka.integrations.aiogram_dialog import inject
 
@@ -70,7 +71,9 @@ async def to_next_year(c: CallbackQuery, widget: Button, manager: DialogManager)
     _switch_year(manager, current_year(manager) + 1)
 
 
-async def select_day(c: CallbackQuery, widget: Any, manager: DialogManager, day: date) -> None:
+async def select_day(
+    event: ChatEvent, widget: ManagedCalendar, manager: DialogManager, day: date, /
+) -> None:
     # a tap never writes: it opens the window that offers what may be done
     manager.dialog_data[SLOT_DATE_KEY] = day.isoformat()
     manager.dialog_data.pop(SLOT_ID_KEY, None)
@@ -281,7 +284,7 @@ async def reset_compose(
 
 
 async def toggle_compose_day(
-    c: CallbackQuery, widget: Any, manager: DialogManager, day: date
+    event: ChatEvent, widget: ManagedCalendar, manager: DialogManager, day: date, /
 ) -> None:
     days = compose_dates(manager)
     if day in days:

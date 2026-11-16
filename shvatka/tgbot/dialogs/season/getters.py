@@ -27,8 +27,6 @@ MOVED_MARK = "📆"
 
 SLOT_GONE = "Эта дата уже удалена из расписания. Окно устарело, открой расписание заново"
 NO_SEASON = "Расписание на {year} год ещё не опубликовано"
-NOTHING_PLANED = "На {day} в расписании сезона ничего не запланировано"
-
 DAY_FORMAT = r"%d.%m.%Y"
 
 
@@ -154,7 +152,6 @@ async def get_slot(
         "year": year,
         "day": day,
         "day_title": day_text(day),
-        "nothing_planed": NOTHING_PLANED.format(day=day_text(day)),
         "day_slots": of_day,
         "has_many": len(of_day) > 1,
         "can_edit": player is not None and player.can_be_author,

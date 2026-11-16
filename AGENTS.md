@@ -372,10 +372,24 @@ overrides) lives in `pyproject.toml`.
   `preview_add_transitions`** — a `manager.start(...)` / `switch_to(...)` inside
   `on_click` / `on_success` / `MessageInput` is invisible to the diagram, so add
   `PreviewStart(state)` / `PreviewSwitchTo(state)` (and `Cancel()` when closing
-  the dialog is the normal outcome, not for error-only `done()` paths).
+  the dialog is the normal outcome, not for error-only `done()` paths). `Cancel()`
+  is declared only when the window has **no** real Cancel button of its own — a
+  window that already shows one gets a duplicated button in the preview.
   `tests/unit/test_dialogs_transitions.py` fails on an undeclared jump.
   `python -m shvatka.tgbot.dialogs.__init__` writes both the preview page and
   the diagram to `out/` (the diagram needs graphviz).
+- **Dialog text is Jinja, and formatting lives in a filter.** A widget never
+  renders a pre-computed `*_text` key a filter could produce (a getter that
+  `strftime`s a date for one button is redundant); take a filter from
+  `tgbot/views/jinja_filters` (`user_timezone` for datetimes, `user_date` for
+  dates) or add one there. Conditional text is one `Jinja` with `{% if %}`
+  instead of several `when=`-ed texts merged by `Multi`. The Jinja environment
+  autoescapes, so a value carrying markup (`slot_text`, `season_text`) goes
+  through `|safe` — the view helpers already escape the user data inside it.
+- **A calendar's `on_click` matches `OnDateSelected` exactly**:
+  `(event: ChatEvent, widget: ManagedCalendar, manager: DialogManager, day: date, /)`.
+  `CallbackQuery` or `Any` as the event type, or named params without the
+  positional-only `/`, is rejected by mypy — no `# type: ignore` to paper over it.
 - **A dialog re-checks the state it was opened for.** A telegram window stays
   clickable forever, so anything captured on start may be false by the time the
   button is pressed. Don't `assert` and don't quietly `done()`: raise

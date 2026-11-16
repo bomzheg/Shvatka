@@ -62,9 +62,11 @@ from .handlers import (
     show_scn,
     show_transitions,
     show_zip_scn,
+    start_link_game,
     start_schedule_game,
     start_waivers,
     to_publish_game_forum,
+    unlink_game_from_menu,
 )
 
 games = Dialog(
@@ -375,6 +377,18 @@ my_games = Dialog(
             on_click=cancel_scheduled_game,
             when=F["game"].start_at & F["game"].can_set_start_datetime,
         ),
+        Button(
+            Const("🔗Привязать к расписанию"),
+            id="link_to_schedule",
+            on_click=start_link_game,
+            when=F["game"].start_at & ~F["is_linked"],
+        ),
+        Button(
+            Const("🔓Отвязать от расписания"),
+            id="unlink_from_schedule",
+            on_click=unlink_game_from_menu,
+            when=F["is_linked"],
+        ),
         SwitchTo(
             Const("🔙Назад к списку игр"),
             id="to_my_games",
@@ -382,7 +396,7 @@ my_games = Dialog(
         ),
         state=states.MyGamesPanelSG.game_menu,
         getter=get_game,
-        preview_data={"game": PREVIEW_GAME},
+        preview_data={"game": PREVIEW_GAME, "schedule_slot": None, "is_linked": False},
         preview_add_transitions=[
             PreviewStart(states.GameEditSG.current_levels),
             PreviewStart(states.GameOrgsSG.orgs_list),
@@ -391,6 +405,8 @@ my_games = Dialog(
             PreviewStart(states.GamePublishSG.forum),
             Cancel(),
             PreviewStart(states.GameScheduleSG.date),
+            PreviewStart(states.GameScheduleSG.link_slot),
+            PreviewStart(states.GameScheduleSG.no_slot),
         ],
     ),
     Window(
@@ -407,7 +423,7 @@ my_games = Dialog(
 schedule_game_dialog = Dialog(
     Window(
         Jinja("Выбор даты начала игры <b>{{game.name}}</b>"),
-        Calendar(id="select_game_play_date", on_click=select_date),  # type: ignore[arg-type]
+        Calendar(id="select_game_play_date", on_click=select_date),
         Cancel(Const("🔙Назад")),
         state=states.GameScheduleSG.date,
         getter=get_game,
@@ -458,7 +474,6 @@ schedule_game_dialog = Dialog(
         preview_add_transitions=[
             PreviewSwitchTo(states.GameScheduleSG.link_slot),
             PreviewSwitchTo(states.GameScheduleSG.no_slot),
-            Cancel(),
         ],
     ),
     Window(
@@ -468,7 +483,7 @@ schedule_game_dialog = Dialog(
             "Привязать её к дате расписания сезона?"
         ),
         Select(
-            Format("📆Привязать к {item.slot_date:%d.%m}"),
+            Jinja("📆Привязать к {{item.slot_date|user_date('%d.%m')}}"),
             id="link_slots",
             item_id_getter=lambda slot: slot.id,
             items="slots",
@@ -479,13 +494,10 @@ schedule_game_dialog = Dialog(
         preview_data={
             "game": PREVIEW_GAME,
             "scheduled_datetime": PREVIEW_NOW,
-            "scheduled_day": PREVIEW_FREE_SLOT.slot_date,
-            "scheduled_day_text": "16.05.26",
             "slots": [PREVIEW_FREE_SLOT],
             "nearest": PREVIEW_FREE_SLOT,
         },
         state=states.GameScheduleSG.link_slot,
-        preview_add_transitions=[Cancel()],
     ),
     Window(
         Jinja(
@@ -494,12 +506,12 @@ schedule_game_dialog = Dialog(
             "но в расписании сезона рядом нет подходящей даты."
         ),
         Button(
-            Format("➕Добавить дату {scheduled_day_text} и взять её"),
+            Jinja("➕Добавить дату {{scheduled_datetime|user_timezone}} и взять её"),
             id="add_slot_and_link",
             on_click=add_slot_and_link,
         ),
         Select(
-            Format("📆Перенести {item.slot_date:%d.%m} на этот день"),
+            Jinja("📆Перенести {{item.slot_date|user_date('%d.%m')}} на этот день"),
             id="move_slots",
             item_id_getter=lambda slot: slot.id,
             items="slots",
@@ -511,12 +523,9 @@ schedule_game_dialog = Dialog(
         preview_data={
             "game": PREVIEW_GAME,
             "scheduled_datetime": PREVIEW_NOW,
-            "scheduled_day": PREVIEW_FREE_SLOT.slot_date,
-            "scheduled_day_text": "16.05.26",
             "slots": PREVIEW_SLOTS[:2],
             "has_slots": True,
         },
         state=states.GameScheduleSG.no_slot,
-        preview_add_transitions=[Cancel()],
     ),
 )

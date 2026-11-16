@@ -7,7 +7,7 @@
 | Title | Season schedule
 | Status | `Accepted` — phases 1 and 2 landed. One pull request per phase.
 | Created | 2026-07-26
-| Updated | 2026-09-22
+| Updated | 2026-11-16
 | Related | issue #167, PR #306; xref:shep-0001-notifications-and-action-requests.adoc[SHEP-0001] (which defers `season_schedule_changed` to this one)
 |===
 
@@ -1000,6 +1000,11 @@ expensive to diagnose, and each has a fast test worth writing alongside it.
   cell with and without a mark and the today brackets; and the log line with
   and without «вне расписания сезона». `tests/unit/test_dialogs_preview.py` and
   `test_dialogs_transitions.py` cover the windows themselves
+* [x] the CR follow-up: explicit «Привязать / Отвязать» in the game window, and
+  a game rescheduled beyond `SLOT_SUGGEST_WINDOW` unlinks itself instead of
+  dragging its date (a date dragged into another year would sit in a season
+  that can no longer show it). A regression pass stays tracked as an issue
+  like #419
 
 === Phase 3 — web UI ⏳
 
@@ -1110,6 +1115,19 @@ Filled in as the phases land.
   the season's year and says nothing about reaching another one; composing next
   year's plan needs a way to get there, so «◀️2026» / «2028▶️» switch the year
   and the pinned view follows.
+* *The game window links and unlinks explicitly.* In the confirm state a game
+  that is already linked can be linked by nobody and unlinked by no button,
+  so «🔗Привязать к расписанию» (offering the same near dates as the planning
+  flow) and «🔓Отвязать от расписания» live in the game menu. Unlinking speaks
+  in games, the schedule in dates — `UnlinkGameInteractor` takes a `game_id`
+  and finds the date itself, keeping that translation out of the bot layer.
+* *A game rescheduled beyond the suggest window unlinks itself.* `LinkedSlotSync`
+  moved the linked date to the new start no matter how far it went, which let a
+  date cross the New Year line and sit in a season that can no longer show it
+  honestly. Within `SLOT_SUGGEST_WINDOW` the date still follows the game (a
+  small correction replans the same evening); beyond it the game leaves the
+  date — still held by its author, logged as «вне расписания сезона» — and
+  `_follow_game` refuses to drag a date into another year at all.
 
 == Open questions
 

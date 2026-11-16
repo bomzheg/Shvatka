@@ -2,7 +2,7 @@ from aiogram import F
 from aiogram_dialog import Dialog, Window
 from aiogram_dialog.widgets.input import MessageInput
 from aiogram_dialog.widgets.kbd import Button, Cancel, Select, SwitchTo
-from aiogram_dialog.widgets.text import Const, Format, Jinja, Multi
+from aiogram_dialog.widgets.text import Const, Jinja
 
 from shvatka.tgbot import states
 from shvatka.tgbot.dialogs.paging import SmartScrollingGroup
@@ -42,30 +42,26 @@ from .handlers import (
     unlink_game,
 )
 
-LEGEND = Const("\n🟢 свободна · 🔒 занята · ⭐ твоя · 🎮 с игрой")
-
 season = Dialog(
     Window(
-        Multi(Format("{season_text}"), LEGEND, when=F["has_season"]),
-        Multi(
-            Format("{season_text}"),
-            Const("\nЛюбой автор может составить его и опубликовать."),
-            when=~F["has_season"],
+        Jinja(
+            "{{season_text|safe}}\n\n🟢 свободна · 🔒 занята · ⭐ твоя · 🎮 с игрой"
+            "{% if not has_season %}\n\nЛюбой автор может составить его и опубликовать.{% endif %}"
         ),
         SeasonCalendar(
             id="season_calendar",
-            on_click=select_day,  # type: ignore[arg-type]
+            on_click=select_day,
             config=SEASON_CALENDAR_CONFIG,
             when=F["has_season"],
         ),
         Button(
-            Format("📝Составить расписание {year}"),
+            Jinja("📝Составить расписание {{year}}"),
             id="compose_season",
             on_click=start_compose,
             when=~F["has_season"] & F["can_edit"],
         ),
-        Button(Format("◀️{prev_year}"), id="prev_year", on_click=to_prev_year),
-        Button(Format("{next_year}▶️"), id="next_year", on_click=to_next_year),
+        Button(Jinja("◀️{{prev_year}}"), id="prev_year", on_click=to_prev_year),
+        Button(Jinja("{{next_year}}▶️"), id="next_year", on_click=to_next_year),
         Cancel(Const("🔙Назад")),
         state=states.SeasonSG.calendar,
         getter=get_calendar,
@@ -76,15 +72,14 @@ season = Dialog(
         ],
     ),
     Window(
-        Multi(
-            Jinja("<b>{{day_title}}</b>"),
-            Format("{slot_text}", when=F["slot"]),
-            Format("{nothing_planed}", when=~F["slot"]),
-            sep="\n",
+        Jinja(
+            "<b>{{day_title}}</b>\n"
+            "{% if slot %}{{slot_text|safe}}"
+            "{% else %}На {{day_title}} в расписании сезона ничего не запланировано{% endif %}"
         ),
         SmartScrollingGroup(
             Select(
-                Format("{item.slot_date:%d.%m} #{item.id}"),
+                Jinja("{{item.slot_date|user_date('%d.%m')}} #{{item.id}}"),
                 id="day_slots",
                 item_id_getter=lambda slot: slot.id,
                 items="day_slots",
@@ -163,7 +158,7 @@ season = Dialog(
         Button(Const("👤Я сам"), id="take_as_player", on_click=take_as_player),
         SmartScrollingGroup(
             Select(
-                Format("🚩{item.name}"),
+                Jinja("🚩{{item.name}}"),
                 id="take_teams",
                 item_id_getter=lambda team: team.id,
                 items="teams",
@@ -184,16 +179,14 @@ season = Dialog(
         preview_data=PREVIEW_SEASON_TAKE,
     ),
     Window(
-        Multi(
-            Jinja("Орги на дату <b>{{day_title}}</b>"),
-            Format("{slot_text}"),
-            Const("\nПришли имя или @username, чтобы найти игрока"),
-            sep="\n",
+        Jinja(
+            "Орги на дату <b>{{day_title}}</b>\n{{slot_text|safe}}\n\n"
+            "Пришли имя или @username, чтобы найти игрока"
         ),
         MessageInput(func=search_orgs),
         SmartScrollingGroup(
             Select(
-                Format("➕{item.name_mention}"),
+                Jinja("➕{{item.name_mention}}"),
                 id="found_orgs",
                 item_id_getter=lambda player: player.id,
                 items="found",
@@ -206,7 +199,7 @@ season = Dialog(
         ),
         SmartScrollingGroup(
             Select(
-                Format("🗑{item.name_mention}"),
+                Jinja("🗑{{item.name_mention}}"),
                 id="slot_orgs",
                 item_id_getter=lambda player: player.id,
                 items="orgs",
@@ -235,11 +228,9 @@ season = Dialog(
         preview_add_transitions=[PreviewSwitchTo(states.SeasonSG.slot)],
     ),
     Window(
-        Multi(
-            Jinja("Удалить дату <b>{{day_title}}</b> из расписания?"),
-            Format("{slot_text}"),
-            Const("\nЭто изменение попадёт в сводку и увидят все."),
-            sep="\n",
+        Jinja(
+            "Удалить дату <b>{{day_title}}</b> из расписания?\n{{slot_text|safe}}\n\n"
+            "Это изменение попадёт в сводку и увидят все."
         ),
         Button(Const("🗑Удалить"), id="remove_slot", on_click=remove_slot),
         SwitchTo(Const("❌Отменить"), id="to_slot", state=states.SeasonSG.slot),
@@ -249,15 +240,13 @@ season = Dialog(
         preview_add_transitions=[PreviewSwitchTo(states.SeasonSG.calendar)],
     ),
     Window(
-        Multi(
-            Jinja("Составляем расписание сезона <b>{{year}}</b>. Дат: {{count}}"),
-            Format("{days_text}", when=F["has_days"]),
-            Const("Отметь дни игр на календаре"),
-            sep="\n",
+        Jinja(
+            "Составляем расписание сезона <b>{{year}}</b>. Дат: {{count}}\n"
+            "{% if has_days %}{{days_text}}\n{% endif %}Отметь дни игр на календаре"
         ),
         SeasonCalendar(
             id="compose_calendar",
-            on_click=toggle_compose_day,  # type: ignore[arg-type]
+            on_click=toggle_compose_day,
             config=SEASON_CALENDAR_CONFIG,
         ),
         Button(Const("♻️Вернуть даты по умолчанию"), id="reset_compose", on_click=reset_compose),
@@ -273,11 +262,9 @@ season = Dialog(
         preview_data=PREVIEW_SEASON_COMPOSE,
     ),
     Window(
-        Multi(
-            Jinja("Опубликовать расписание сезона <b>{{year}}</b>?"),
-            Format("{days_text}"),
-            Const("\nОб этом узнают все, кто играл или организовывал в этом сезоне."),
-            sep="\n",
+        Jinja(
+            "Опубликовать расписание сезона <b>{{year}}</b>?\n{{days_text}}\n\n"
+            "Об этом узнают все, кто играл или организовывал в этом сезоне."
         ),
         Button(Const("✅Опубликовать"), id="publish_season", on_click=publish_season),
         SwitchTo(Const("🔙Назад"), id="to_compose", state=states.SeasonSG.compose),

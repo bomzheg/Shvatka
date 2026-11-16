@@ -401,7 +401,6 @@ PREVIEW_SEASON_SLOT = {
     "year": PREVIEW_SEASON_YEAR,
     "day": PREVIEW_TAKEN_SLOT.slot_date,
     "day_title": PREVIEW_TAKEN_SLOT.slot_date.strftime(r"%d.%m.%Y"),
-    "nothing_planed": "На 07.06.2026 в расписании сезона ничего не запланировано",
     "day_slots": [PREVIEW_TAKEN_SLOT],
     "has_many": False,
     "can_edit": True,

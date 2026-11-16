@@ -398,7 +398,8 @@ async def test_replanning_the_game_drags_its_date_along(
         )
     ).is_success
 
-    moved_to = datetime(YEAR, 5, 22, 20, tzinfo=tz_game)
+    moved_to = datetime(YEAR, 5, 18, 20, tzinfo=tz_game)
+    # exactly the suggest window: a small correction replans the same evening
     replanned = await client.put(
         f"/games/my/{game.id}/start_at",
         cookies=auth_cookies(author_token),
@@ -409,6 +410,45 @@ async def test_replanning_the_game_drags_its_date_along(
     assert replanned.is_success
     slot = await check_dao.season_slot.get_slot(slot_id)
     assert slot.slot_date == moved_to.date()
+
+
+@pytest.mark.asyncio
+async def test_replanning_the_game_beyond_the_window_leaves_its_date(
+    client: AsyncClient,
+    author: dto.Player,
+    author_token: Token,
+    game: dto.FullGame,
+    dao: HolderDao,
+    check_dao: HolderDao,
+):
+    await dao.game.set_start_at(game, datetime(YEAR, 5, 15, 20, tzinfo=tz_game))
+    await dao.commit()
+    published = await publish(client, author_token)
+    slot_id = published.json()["slots"][0]["id"]
+    assert (
+        await client.post(
+            f"/seasons/{YEAR}/slots/{slot_id}/game",
+            cookies=auth_cookies(author_token),
+            json={"game_id": game.id},
+            follow_redirects=True,
+        )
+    ).is_success
+
+    moved_to = datetime(YEAR, 5, 22, 20, tzinfo=tz_game)
+    replanned = await client.put(
+        f"/games/my/{game.id}/start_at",
+        cookies=auth_cookies(author_token),
+        json={"start_at": moved_to.isoformat()},
+        follow_redirects=True,
+    )
+
+    assert replanned.is_success
+    slot = await check_dao.season_slot.get_slot(slot_id)
+    # a 7-day move is a new plan: the date keeps its place, the game leaves it
+    assert slot.slot_date == FIRST
+    assert slot.game is None
+    assert slot.owner is not None
+    assert slot.owner.id == author.id
 
 
 @pytest.mark.asyncio

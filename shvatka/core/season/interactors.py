@@ -440,6 +440,11 @@ class LinkGameToSlotInteractor:
         started = game.start_at.astimezone(tz_game).date()
         if started == slot.slot_date:
             return
+        if started.year != season.year:
+            # the date follows the game, but a season is a year: dragging the
+            # date across the New Year line would leave it in a season whose
+            # schedule can no longer show it honestly
+            return
         previous = slot.slot_date
         await self.dao.move_slot(slot.id, started)
         await self.changes.record(
@@ -486,6 +491,47 @@ class UnlinkGameFromSlotInteractor:
         await self.dao.commit()
         await self.changes.announce_update(year)
         return await self.dao.get_slot(slot_id)
+
+
+@dataclass
+class UnlinkGameInteractor:
+    """Unlink a game from whatever date holds it — the game is the address.
+
+    The game window speaks in games, the schedule in dates: the caller has a
+    `game_id` and no idea which season or slot to name. Finding the date here
+    keeps that translation out of the bot layer.
+    """
+
+    dao: SeasonScheduleDao
+    changes: ScheduleChangeLog
+
+    async def __call__(self, game_id: int, identity: IdentityProvider) -> season_dto.Slot | None:
+        actor = await identity.get_required_player()
+        slot = await self.dao.get_slot_by_game(game_id)
+        if slot is None:
+            return None
+        season = await self.dao.get_season_by_id(slot.season_id)
+        if season is None:
+            return None
+        check_can_edit_schedule(actor)
+        if slot.game is None:
+            return slot
+        unlinked = slot.game
+        await self.dao.unlink_game(slot.id)
+        await self.changes.record(
+            season,
+            season_dto.ChangeType.slot_game_unlinked,
+            slot_id=slot.id,
+            actor=actor,
+            payload={
+                "date": slot.slot_date.isoformat(),
+                "game": unlinked.name,
+                "game_id": unlinked.id,
+            },
+        )
+        await self.dao.commit()
+        await self.changes.announce_update(season.year)
+        return await self.dao.get_slot(slot.id)
 
 
 @dataclass

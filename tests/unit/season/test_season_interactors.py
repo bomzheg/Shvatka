@@ -24,6 +24,7 @@ from shvatka.core.season.interactors import (
     SetSlotOrgsInteractor,
     TakeSlotInteractor,
     UnlinkGameFromSlotInteractor,
+    UnlinkGameInteractor,
 )
 from shvatka.core.season.services import LinkedSlotSync, ScheduleChangeLog
 from shvatka.core.utils import exceptions
@@ -489,7 +490,73 @@ async def test_unlinking_a_date_that_holds_no_game_does_nothing():
 
 
 @pytest.mark.asyncio
+async def test_a_game_is_unlinked_by_being_the_address():
+    """The game window speaks in games: the interactor finds the date itself."""
+    dao, announcer = make_dao(), SeasonAnnouncerMock()
+    season = await publish(dao, announcer)
+    slot_id = season.slots[0].id
+    await LinkGameToSlotInteractor(dao=dao, changes=changes_of(dao, announcer))(
+        YEAR, slot_id, GAME.id, identity=identity()
+    )
+    dao.changes.clear()
+
+    slot = await UnlinkGameInteractor(dao=dao, changes=changes_of(dao, announcer))(
+        GAME.id, identity=identity()
+    )
+
+    assert slot is not None
+    assert slot.id == slot_id
+    assert slot.game is None
+    assert slot.owner == GAME.author
+    assert [change.type for change in dao.changes] == [season_dto.ChangeType.slot_game_unlinked]
+
+
+@pytest.mark.asyncio
+async def test_unlinking_a_game_that_sits_nowhere_changes_nothing():
+    dao, announcer = make_dao(), SeasonAnnouncerMock()
+    await publish(dao, announcer)
+
+    slot = await UnlinkGameInteractor(dao=dao, changes=changes_of(dao, announcer))(
+        GAME.id, identity=identity()
+    )
+
+    assert slot is None
+    assert dao.changes == []
+
+
+@pytest.mark.asyncio
 async def test_a_replanned_game_drags_its_date_along():
+    dao, announcer = make_dao(), SeasonAnnouncerMock()
+    season = await publish(dao, announcer)
+    slot_id = season.slots[0].id
+    await LinkGameToSlotInteractor(dao=dao, changes=changes_of(dao, announcer))(
+        YEAR, slot_id, GAME.id, identity=identity()
+    )
+    dao.changes.clear()
+    moved_game = dto.Game(
+        id=GAME.id,
+        author=AUTHOR,
+        name=GAME.name,
+        status=GAME.status,
+        manage_token=GAME.manage_token,
+        # exactly the suggest window: a small correction replans the same evening
+        start_at=datetime(YEAR, 5, 18, 20, tzinfo=tz_game),
+        number=None,
+        results=GAME.results,
+    )
+
+    synced = await LinkedSlotSync(dao=dao, changes=changes_of(dao, announcer))(moved_game, AUTHOR)
+
+    assert (await dao.get_slot(slot_id)).slot_date == date(YEAR, 5, 18)
+    assert dao.changes[0].payload["reason"] == "game_rescheduled"
+    # what the GAME_PLANED log line reads to decide «вне расписания сезона»
+    assert synced is True
+
+
+@pytest.mark.asyncio
+async def test_a_replanned_game_beyond_the_window_leaves_its_date():
+    """A far reschedule is a new plan: the game unlinks instead of dragging
+    its date across the schedule — and a fortiori across the New Year line."""
     dao, announcer = make_dao(), SeasonAnnouncerMock()
     season = await publish(dao, announcer)
     slot_id = season.slots[0].id
@@ -508,10 +575,47 @@ async def test_a_replanned_game_drags_its_date_along():
         results=GAME.results,
     )
 
-    await LinkedSlotSync(dao=dao, changes=changes_of(dao, announcer))(moved_game, AUTHOR)
+    synced = await LinkedSlotSync(dao=dao, changes=changes_of(dao, announcer))(moved_game, AUTHOR)
 
-    assert (await dao.get_slot(slot_id)).slot_date == date(YEAR, 5, 24)
-    assert dao.changes[0].payload["reason"] == "game_rescheduled"
+    slot = await dao.get_slot(slot_id)
+    # the date stays where the link left it, still held by the author, no longer linked
+    assert slot.slot_date == GAME.start_at.astimezone(tz_game).date()
+    assert slot.game is None
+    assert slot.owner is not None
+    assert slot.owner.id == AUTHOR.id
+    assert dao.changes[-1].type == season_dto.ChangeType.slot_game_unlinked
+    assert dao.changes[-1].payload["reason"] == "game_rescheduled_far"
+    # the game log says «вне расписания сезона»
+    assert synced is False
+
+
+@pytest.mark.asyncio
+async def test_a_replanned_game_in_another_year_unlinks():
+    dao, announcer = make_dao(), SeasonAnnouncerMock()
+    season = await publish(dao, announcer)
+    slot_id = season.slots[0].id
+    await LinkGameToSlotInteractor(dao=dao, changes=changes_of(dao, announcer))(
+        YEAR, slot_id, GAME.id, identity=identity()
+    )
+    dao.changes.clear()
+    moved_game = dto.Game(
+        id=GAME.id,
+        author=AUTHOR,
+        name=GAME.name,
+        status=GAME.status,
+        manage_token=GAME.manage_token,
+        start_at=datetime(YEAR + 1, 5, 17, 20, tzinfo=tz_game),
+        number=None,
+        results=GAME.results,
+    )
+
+    synced = await LinkedSlotSync(dao=dao, changes=changes_of(dao, announcer))(moved_game, AUTHOR)
+
+    slot = await dao.get_slot(slot_id)
+    # a season is a year: its schedule must not show a slot from another one
+    assert slot.slot_date == GAME.start_at.astimezone(tz_game).date()
+    assert slot.game is None
+    assert synced is False
 
 
 @pytest.mark.asyncio
@@ -519,9 +623,10 @@ async def test_a_game_in_no_date_changes_nothing():
     dao, announcer = make_dao(), SeasonAnnouncerMock()
     await publish(dao, announcer)
 
-    await LinkedSlotSync(dao=dao, changes=changes_of(dao, announcer))(GAME, AUTHOR)
+    synced = await LinkedSlotSync(dao=dao, changes=changes_of(dao, announcer))(GAME, AUTHOR)
 
     assert dao.changes == []
+    assert synced is False
 
 
 @pytest.mark.asyncio
@@ -539,9 +644,36 @@ async def test_a_game_with_no_start_changes_nothing():
         results=GAME.results,
     )
 
-    await LinkedSlotSync(dao=dao, changes=changes_of(dao, announcer))(unplanned, AUTHOR)
+    synced = await LinkedSlotSync(dao=dao, changes=changes_of(dao, announcer))(unplanned, AUTHOR)
 
     assert dao.changes == []
+    assert synced is False
+
+
+@pytest.mark.asyncio
+async def test_a_linked_game_whose_start_was_cancelled_stays_in_its_date():
+    """Cancelling a start unlinks nothing — the date keeps the game."""
+    dao, announcer = make_dao(), SeasonAnnouncerMock()
+    season = await publish(dao, announcer)
+    await LinkGameToSlotInteractor(dao=dao, changes=changes_of(dao, announcer))(
+        YEAR, season.slots[0].id, GAME.id, identity=identity()
+    )
+    dao.changes.clear()
+    unplanned = dto.Game(
+        id=GAME.id,
+        author=AUTHOR,
+        name=GAME.name,
+        status=GAME.status,
+        manage_token=GAME.manage_token,
+        start_at=None,
+        number=None,
+        results=GAME.results,
+    )
+
+    synced = await LinkedSlotSync(dao=dao, changes=changes_of(dao, announcer))(unplanned, AUTHOR)
+
+    assert dao.changes == []
+    assert synced is True
 
 
 @pytest.mark.asyncio

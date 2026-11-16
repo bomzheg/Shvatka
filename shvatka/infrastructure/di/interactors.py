@@ -152,6 +152,7 @@ from shvatka.core.season.interactors import (
     SetSlotOrgsInteractor,
     TakeSlotInteractor,
     UnlinkGameFromSlotInteractor,
+    UnlinkGameInteractor,
 )
 from shvatka.core.season.services import LinkedSlotSync, ScheduleChangeLog
 from shvatka.core.services.current_game import CurrentGameProviderImpl
@@ -676,6 +677,7 @@ class SeasonProvider(Provider):
     find_slots_near = provide(FindSlotsNearGameStartInteractor)
     link_game = provide(LinkGameToSlotInteractor)
     unlink_game = provide(UnlinkGameFromSlotInteractor)
+    unlink_game_itself = provide(UnlinkGameInteractor)
     publish_digest = provide(PublishSeasonDigestInteractor)
 
 
